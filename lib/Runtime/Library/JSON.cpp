@@ -29,11 +29,11 @@ namespace JSON
 
         Js::ScriptContext* scriptContext = function->GetScriptContext();
         AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"JSON.parse");
-        Assert(!(callInfo.Flags & Js::CallFlags_New)); 
+        Assert(!(callInfo.Flags & Js::CallFlags_New));
 
         if(args.Info.Count < 2)
         {
-            // if the text argument is missing it is assumed to be undefined. 
+            // if the text argument is missing it is assumed to be undefined.
             // ToString(undefined) returns "undefined" which is not a JSON grammar correct construct.  Shortcut and throw here
             Js::JavascriptError::ThrowSyntaxError(scriptContext, ERRsyntax);
         }
@@ -131,10 +131,10 @@ namespace JSON
         }
         if (value && Js::JavascriptString::Is(value))
         {
-            // Only validate size when about to modify it. We skip over all other (non-vaid) replacement elements
+            // Only validate size when about to modify it. We skip over all other (non-valid) replacement elements.
             if (tableLen == size)
             {
-                Js::Throw::FatalInternalError(); //nameTable buffer calculation is wrong
+                Js::Throw::FatalInternalError(); // nameTable buffer calculation is wrong
             }
             Js::JavascriptString *propertyName = Js::JavascriptString::FromVar(value);
             nameTable[tableLen].propName = propertyName;
@@ -166,8 +166,8 @@ namespace JSON
 
         if (args.Info.Count < 2)
         {
-            // if value is missing it is assumed to be 'undefined'. 
-            // shortcut: the stringify algorithm returns undefined in this case. 
+            // if value is missing it is assumed to be 'undefined'.
+            // shortcut: the stringify algorithm returns undefined in this case.
             return library->GetUndefined();
         }
 
@@ -254,7 +254,7 @@ namespace JSON
                     if (count < MAX_JSON_STRINGIFY_NAMES_ON_STACK)
                     {
                          PROBE_STACK(scriptContext, (sizeof(StringifySession::StringTable) * count)) ;
-                         nameTable = (StringifySession::StringTable*)_alloca(sizeof(StringifySession::StringTable) * count); 
+                         nameTable = (StringifySession::StringTable*)_alloca(sizeof(StringifySession::StringTable) * count);
                     }
                     else
                     {
@@ -286,7 +286,7 @@ namespace JSON
                         BVSparse<ArenaAllocator>* propIdMap = AllocateMap(tempAlloc); //Anew(tempAlloc, BVSparse<ArenaAllocator>, tempAlloc);
 
                         // TODO: Potential arithmetic overflow for table size/count/tableLen if large replacement args are specified.
-                        // tableLen is ensured by AddToNameTable but this doesn't propagate as an annoation so we assume here to fix the OACR warning.
+                        // tableLen is ensured by AddToNameTable but this doesn't propagate as an annotation so we assume here to fix the OACR warning.
                         _Analysis_assume_(tableLen <= count);
                         Assert(tableLen <= count);
 
@@ -305,7 +305,7 @@ namespace JSON
                         }
                         tableLen = j;
                     }
-                    END_TEMP_ALLOCATOR(tempAlloc, scriptContext); 
+                    END_TEMP_ALLOCATOR(tempAlloc, scriptContext);
                 }
 
                 stringifySession.InitReplacer(nameTable, tableLen);
@@ -338,7 +338,7 @@ namespace JSON
 
     void StringifySession::CompleteInit(Js::Var space, ArenaAllocator* tempAlloc)
     {
-        //set the stack, gap 
+        //set the stack, gap
         wchar_t buffer[JSONspaceSize];
         wmemset(buffer, L' ', JSONspaceSize);
         size_t len = 0;
@@ -421,15 +421,15 @@ namespace JSON
     Js::Var StringifySession::Str(Js::JavascriptString* key, Js::PropertyId keyId, Js::Var holder)
     {
         Js::Var value;
-        // We should look only into object's own properties here. When an object is serialized, only the own properties are considered, 
-        // the prototype chain is not considered. However, the property names can be selected via an array replacer. In this case 
-        // ES5 spec doesn't say the property has to own property or even to be enumerable. So, properties from the prototype, or non enum properties, 
-        // can end up being serialized. Well, that is the ES5 spec word. 
+        // We should look only into object's own properties here. When an object is serialized, only the own properties are considered,
+        // the prototype chain is not considered. However, the property names can be selected via an array replacer. In this case
+        // ES5 spec doesn't say the property has to own property or even to be enumerable. So, properties from the prototype, or non enum properties,
+        // can end up being serialized. Well, that is the ES5 spec word.
         //if(!Js::RecyclableObject::FromVar(holder)->GetType()->GetProperty(holder, keyId, &value))
 
         if(!Js::JavascriptOperators::GetProperty(Js::RecyclableObject::FromVar(holder),keyId, &value, scriptContext))
         {
-            return scriptContext->GetLibrary()->GetUndefined();;
+            return scriptContext->GetLibrary()->GetUndefined();
         }
         return StrHelper(key, value, holder);
     }
@@ -674,7 +674,7 @@ namespace JSON
                                 StringifyMemberObject(propertyName, id, value, (Js::ConcatStringBuilder*)result, indentString, memberSeparator, isFirstMember, isEmpty);
                             }
                         }
-                    } 
+                    }
                     else // case: ES5 && ReplacerFunction == replacerType.
                     {
                         Js::Var* nameTable = nullptr;
@@ -685,7 +685,7 @@ namespace JSON
                             precisePropertyCount = this->GetPropertyCount(object, enumerator);
                         }
 
-                        // pick the property names before walking the object 
+                        // pick the property names before walking the object
                         DECLARE_TEMP_GUEST_ALLOCATOR(nameTableAlloc);
                         if (precisePropertyCount > 0)
                         {
@@ -746,7 +746,7 @@ namespace JSON
                 {
                     indentString = GetIndentString(this->indent);
                 }
-                // Note: it's better to use strings with length = 1 as the are cached/new istances are not created every time.
+                // Note: it's better to use strings with length = 1 as the are cached/new instances are not created every time.
                 Js::ConcatStringN<7>* retVal = Js::ConcatStringN<7>::New(this->scriptContext);
                 retVal->SetItem(0, scriptContext->GetLibrary()->CreateStringFromCppLiteral(L"{"));
                 retVal->SetItem(1, scriptContext->GetLibrary()->CreateStringFromCppLiteral(L"\n"));
@@ -821,7 +821,7 @@ namespace JSON
                 bool isFirstMember = true;
 
                 // Total node count: number of array elements (N = length) + indents [including member separators] (N = length - 1).
-                result = Js::ConcatStringBuilder::New(this->scriptContext, length * 2 - 1); 
+                result = Js::ConcatStringBuilder::New(this->scriptContext, length * 2 - 1);
                 for (uint32 k = 0; k < length; k++)
                 {
                     if (!isFirstMember)
@@ -902,7 +902,7 @@ namespace JSON
         }
     }
 
-    void StringifySession::StringifyMemberObject( Js::JavascriptString* propertyName, Js::PropertyId id, Js::Var value, Js::ConcatStringBuilder* result, Js::JavascriptString* &indentString, Js::JavascriptString* &memberSeparator, bool &isFirstMember, bool &isEmpty ) 
+    void StringifySession::StringifyMemberObject( Js::JavascriptString* propertyName, Js::PropertyId id, Js::Var value, Js::ConcatStringBuilder* result, Js::JavascriptString* &indentString, Js::JavascriptString* &memberSeparator, bool &isFirstMember, bool &isEmpty )
     {
         Js::Var propertyObjectString = Str(propertyName, id, value);
         if(!Js::JavascriptOperators::IsUndefinedObject(propertyObjectString, scriptContext))
@@ -951,7 +951,7 @@ namespace JSON
     // Parameters:
     // - object: the object to get the number of properties for.
     // - enumerator: the enumerator to enumerate the object.
-    // - [out] pIsPrecise: recives a boolean indicting whether the value returned is presize or just guessed.
+    // - [out] pIsPrecise: receives a boolean indicting whether the value returned is precise or just guessed.
     inline uint32 StringifySession::GetPropertyCount(Js::RecyclableObject* object, Js::JavascriptEnumerator* enumerator, bool* pIsPresise)
     {
         Assert(pIsPresise);
@@ -960,8 +960,8 @@ namespace JSON
         uint32 count = object->GetPropertyCount();
         if (Js::DynamicObject::Is(object) && Js::DynamicObject::FromVar(object)->HasObjectArray())
         {
-            // Can't use array->GetLength() as this can be sparse array for which we stringify only real/set properties. 
-            // Do one walk through the elements. 
+            // Can't use array->GetLength() as this can be sparse array for which we stringify only real/set properties.
+            // Do one walk through the elements.
             // This would account for prototype property as well.
             count = this->GetPropertyCount(object, enumerator);
             *pIsPresise = true;

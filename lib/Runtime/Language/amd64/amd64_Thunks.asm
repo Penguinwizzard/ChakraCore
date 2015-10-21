@@ -25,7 +25,7 @@ align 16
         mov qword ptr [rsp + 10h], rdx
         mov qword ptr [rsp + 18h], r8
         mov qword ptr [rsp + 20h], r9
-        
+
         push rbp
         .pushreg rbp
         lea  rbp, [rsp]
@@ -36,7 +36,7 @@ align 16
         call ?EnsureDynamicInterpreterThunk@InterpreterStackFrame@Js@@CAP6APEAXPEAVRecyclableObject@2@UCallInfo@2@ZZPEAVScriptFunction@2@@Z
 
 ifdef _CONTROL_FLOW_GUARD
-        mov rcx, rax                            ; __guard_check_icall_fptr requires the call target in rcx. 
+        mov rcx, rax                            ; __guard_check_icall_fptr requires the call target in rcx.
         call [__guard_check_icall_fptr]         ; verify that the call target is valid
         mov rax, rcx                            ;restore call target
 endif
@@ -52,10 +52,10 @@ endif
         mov rdx, qword ptr [rsp + 10h]
         mov r8,  qword ptr [rsp + 18h]
         mov r9,  qword ptr [rsp + 20h]
-        
+
         rex_jmp_reg rax
 ?DelayDynamicInterpreterThunk@InterpreterStackFrame@Js@@SAPEAXPEAVRecyclableObject@2@UCallInfo@2@ZZ ENDP
-    
+
 ;;============================================================================================================
 ;; InterpreterStackFrame::AsmJsDelayDynamicInterpreterThunk
 ;;============================================================================================================
@@ -71,7 +71,7 @@ align 16
         mov qword ptr [rsp + 10h], rdx
         mov qword ptr [rsp + 18h], r8
         mov qword ptr [rsp + 20h], r9
-        
+
         push rbp
         .pushreg rbp
         lea  rbp, [rsp]
@@ -87,7 +87,7 @@ align 16
 ifdef _CONTROL_FLOW_GUARD
         call ?EnsureDynamicInterpreterThunk@InterpreterStackFrame@Js@@CAP6APEAXPEAVRecyclableObject@2@UCallInfo@2@ZZPEAVScriptFunction@2@@Z
 
-        mov rcx, rax                            ; __guard_check_icall_fptr requires the call target in rcx. 
+        mov rcx, rax                            ; __guard_check_icall_fptr requires the call target in rcx.
         call [__guard_check_icall_fptr]         ; verify that the call target is valid
         mov rax, rcx                            ;restore call target
 else
@@ -108,10 +108,10 @@ endif
         mov rdx, qword ptr [rsp + 10h]
         mov r8,  qword ptr [rsp + 18h]
         mov r9,  qword ptr [rsp + 20h]
-        
+
         rex_jmp_reg rax
 ?AsmJsDelayDynamicInterpreterThunk@InterpreterStackFrame@Js@@SAPEAXPEAVRecyclableObject@2@UCallInfo@2@ZZ ENDP
-     
+
 ;;============================================================================================================
 ;; DynamicProfileInfo::EnsureDynamicProfileInfoThunk
 ;;============================================================================================================
@@ -126,7 +126,7 @@ align 16
         mov qword ptr [rsp + 10h], rdx
         mov qword ptr [rsp + 18h], r8
         mov qword ptr [rsp + 20h], r9
-        
+
         push rbp
         .pushreg rbp
         lea  rbp, [rsp]
@@ -137,11 +137,11 @@ align 16
         call ?EnsureDynamicProfileInfo@DynamicProfileInfo@Js@@CAP6APEAXPEAVRecyclableObject@2@UCallInfo@2@ZZPEAVScriptFunction@2@@Z
 
 ifdef _CONTROL_FLOW_GUARD
-        mov rcx, rax                            ; __guard_check_icall_fptr requires the call target in rcx. 
+        mov rcx, rax                            ; __guard_check_icall_fptr requires the call target in rcx.
         call [__guard_check_icall_fptr]         ; verify that the call target is valid
         mov rax, rcx                            ;restore call target
 endif
-        
+
         add rsp, 20h
 
         lea rsp, [rbp]
@@ -152,10 +152,10 @@ endif
         mov rdx, qword ptr [rsp + 10h]
         mov r8,  qword ptr [rsp + 18h]
         mov r9,  qword ptr [rsp + 20h]
-        
+
         rex_jmp_reg rax
-?EnsureDynamicProfileInfoThunk@DynamicProfileInfo@Js@@SAPEAXPEAVRecyclableObject@2@UCallInfo@2@ZZ ENDP   
- 
+?EnsureDynamicProfileInfoThunk@DynamicProfileInfo@Js@@SAPEAXPEAVRecyclableObject@2@UCallInfo@2@ZZ ENDP
+
 
 ;;============================================================================================================
 ;; ScriptContext::ProfileModeDeferredParsingThunk
@@ -172,7 +172,7 @@ align 16
         mov qword ptr [rsp + 10h], rdx
         mov qword ptr [rsp + 18h], r8
         mov qword ptr [rsp + 20h], r9
-        
+
         push rbp
         .pushreg rbp
         lea  rbp, [rsp]
@@ -184,7 +184,7 @@ align 16
         call ?ProfileModeDeferredParse@ScriptContext@Js@@SAP6APEAXPEAVRecyclableObject@2@UCallInfo@2@ZZPEAPEAVScriptFunction@2@@Z
 
 ifdef _CONTROL_FLOW_GUARD
-        mov rcx, rax                            ; __guard_check_icall_fptr requires the call target in rcx. 
+        mov rcx, rax                            ; __guard_check_icall_fptr requires the call target in rcx.
         call [__guard_check_icall_fptr]         ; verify that the call target is valid
         mov rax, rcx                            ;restore call target
 endif
@@ -198,7 +198,7 @@ endif
         mov rdx, qword ptr [rsp + 10h]
         mov r8,  qword ptr [rsp + 18h]
         mov r9,  qword ptr [rsp + 20h]
-        
+
         rex_jmp_reg rax
 ?ProfileModeDeferredParsingThunk@ScriptContext@Js@@SAPEAXPEAVRecyclableObject@2@UCallInfo@2@ZZ ENDP
 
@@ -220,7 +220,7 @@ align 16
         mov qword ptr [rsp + 10h], rdx
         mov qword ptr [rsp + 18h], r8
         mov qword ptr [rsp + 20h], r9
-        
+
         push rbp
         .pushreg rbp
         lea  rbp, [rsp]
@@ -231,7 +231,7 @@ align 16
         call ?ProfileModeDeferredDeserialize@ScriptContext@Js@@SAP6APEAXPEAVRecyclableObject@2@UCallInfo@2@ZZPEAVScriptFunction@2@@Z
 
 ifdef _CONTROL_FLOW_GUARD
-        mov rcx, rax                            ; __guard_check_icall_fptr requires the call target in rcx. 
+        mov rcx, rax                            ; __guard_check_icall_fptr requires the call target in rcx.
         call [__guard_check_icall_fptr]         ; verify that the call target is valid
         mov rax, rcx                            ;restore call target
 endif
@@ -245,7 +245,7 @@ endif
         mov rdx, qword ptr [rsp + 10h]
         mov r8,  qword ptr [rsp + 18h]
         mov r9,  qword ptr [rsp + 20h]
-        
+
         rex_jmp_reg rax
 ?ProfileModeDeferredDeserializeThunk@ScriptContext@Js@@SAPEAXPEAVRecyclableObject@2@UCallInfo@2@ZZ ENDP
 
@@ -263,7 +263,7 @@ align 16
         mov qword ptr [rsp + 10h], rdx
         mov qword ptr [rsp + 18h], r8
         mov qword ptr [rsp + 20h], r9
-        
+
         push rbp
         .pushreg rbp
         lea  rbp, [rsp]
@@ -282,7 +282,7 @@ align 16
         call ?GetAsmJsInterpreterEntryPoint@InterpreterStackFrame@Js@@SAPEAXPEAUAsmJsCallStackLayout@2@@Z
 
 ifdef _CONTROL_FLOW_GUARD
-        mov rcx, rax                            ; __guard_check_icall_fptr requires the call target in rcx. 
+        mov rcx, rax                            ; __guard_check_icall_fptr requires the call target in rcx.
         call [__guard_check_icall_fptr]         ; verify that the call target is valid
         mov rax, rcx                            ;restore call target
 endif
@@ -316,7 +316,7 @@ align 16
         mov qword ptr [rsp + 10h], rdx
         mov qword ptr [rsp + 18h], r8
         mov qword ptr [rsp + 20h], r9
-        
+
         push rbp
         .pushreg rbp
         lea  rbp, [rsp]
@@ -327,14 +327,14 @@ align 16
 
         mov [rsp + 28h], rsi
         mov [rsp + 30h], rdi
-        
+
         mov rsi, rcx ; store entryObject in rsi
         mov rdi, rdx ; store callInfo in rdi
 
         ; allocate stack space for unboxed values
         ; int GetStackSizeForAsmJsUnboxing(ScriptFunction* func)
         call ?GetStackSizeForAsmJsUnboxing@Js@@YAHPEAVScriptFunction@1@@Z
-        
+
         mov r9, rdi
         mov rdx, rsp ; orig stack pointer is arg for the unboxing helper
         mov rdi, rdx ; save orig stack pointer, so that we can add it back later
@@ -345,10 +345,10 @@ align 16
         mov rcx, rsi
         mov r8, rsp
 
-        sub rsp, 20h ; so stack space for unboxing function isn't same as where it is unboxing into. allocate args spill spce for unboxing function.
+        sub rsp, 20h ; so stack space for unboxing function isn't same as where it is unboxing into. allocate args spill space for unboxing function.
         ; unboxing function also does stack probe
         call ?UnboxAsmJsArguments@Js@@YAPEAXPEAVScriptFunction@1@PEAPEAXPEADUCallInfo@1@@Z
-        ; rax = target function address 
+        ; rax = target function address
 
 ifdef _CONTROL_FLOW_GUARD
         mov     rcx, rax
@@ -379,7 +379,7 @@ endif
         push rsi
         ; rsi->unboxed args
         lea rsi, [rsp + 18h] ; rsp + size of(rdi + rsi + ScriptFunction*)
-        
+
         ; rdi is arg size
         cmp dword ptr [rdi], 10h
         je SIMDArg2
@@ -397,7 +397,7 @@ endif
         movq xmm2, qword ptr [rsi]
         add rsi, 8h
         jmp Arg4
-    SIMDArg3: 
+    SIMDArg3:
         movups xmm2, xmmword ptr[rsi]
         add rsi, 10h
     Arg4:
@@ -408,20 +408,20 @@ endif
         jmp ArgsDone
    SIMDArg4:
         movups xmm3, xmmword ptr [rsi]
-  
+
    ArgsDone:
         pop rsi
         pop rdi
 
         ; call entry point
         call rax
-        
+
         ; Var BoxAsmJsReturnValue(ScriptFunction* func, int intRetVal, double doubleRetVal, float floatRetVal)
         mov rcx, rsi
         mov edx, eax
         movsd xmm2, xmm0
         movss xmm3, xmm0
-        
+
 
         ; store SIMD xmm value and pointer to it as argument to box function
         sub rsp, 40h
@@ -434,7 +434,7 @@ endif
     Epilogue:
         mov rsi, [rsp + 28h]
         mov rdi, [rsp + 30h]
-        
+
         lea  rsp, [rbp]
         pop rbp
 

@@ -135,9 +135,9 @@ namespace Js
         uint firstUnknownJumpInfo;
         int nextBranchIslandOffset;
 
-        // Size of emiting a jump around byte code instruction
+        // Size of emitting a jump around byte code instruction
         static size_t const JumpAroundSize = sizeof(byte) + sizeof(OpLayoutBr);
-        // Size of emiting a long jump byte code instruction
+        // Size of emitting a long jump byte code instruction
         CompileAssert(OpCodeInfo<Js::OpCode::BrLong>::IsExtendedOpcode); // extended opcode, opcode size is always sizeof(OpCode)
         static size_t const LongBranchSize = sizeof(OpCode) + sizeof(OpLayoutBrLong);
 #endif
@@ -372,7 +372,7 @@ namespace Js
         bool DoProfileNewScObjectOp(OpCode op)
         {
             return
-                !PHASE_OFF(InlineConstructorsPhase, m_functionWrite) && 
+                !PHASE_OFF(InlineConstructorsPhase, m_functionWrite) &&
                 (op == OpCode::NewScObject || op == OpCode::NewScObjectSpread);
         }
 
@@ -403,7 +403,6 @@ namespace Js
         bool IsInUse() const { return isInUse; }
 #endif
     };
-
 }
 
 namespace JsUtil
@@ -417,5 +416,4 @@ namespace JsUtil
             this->value = 0;
         }
     };
-
 };

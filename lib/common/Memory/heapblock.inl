@@ -2,6 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
+
 #pragma once
 
 template <class TBlockAttributes>
@@ -77,7 +78,7 @@ void SmallHeapBlockT<TBlockAttributes>::ForEachAllocatedObject(ObjectInfoBits at
 template <class TBlockAttributes>
 template <typename Fn>
 void SmallHeapBlockT<TBlockAttributes>::ScanNewImplicitRootsBase(Fn fn)
-{    
+{
     uint const localObjectCount = this->objectCount;
 
     // NOTE: we no longer track the mark count as we mark.  So this value
@@ -105,7 +106,7 @@ void SmallHeapBlockT<TBlockAttributes>::ScanNewImplicitRootsBase(Fn fn)
     Assert(localObjectSize <= HeapConstants::MaxMediumObjectSize);
     SmallHeapBlockBitVector * mark = this->GetMarkedBitVector();
     char * address = this->GetAddress();
-    
+
     for (uint i = 0; i < localObjectCount; i++)
     {
         if ((this->ObjectInfo(i) & ImplicitRootBit) != 0
@@ -153,7 +154,7 @@ SmallHeapBlockT<TBlockAttributes>::FindImplicitRootObject(void* candidate, Recyc
 }
 
 template <typename Fn>
-bool 
+bool
 HeapBlock::UpdateAttributesOfMarkedObjects(MarkContext * markContext, void * objectAddress, size_t objectSize, unsigned char attributes, Fn fn)
 {
     bool noOOMDuringMark = true;

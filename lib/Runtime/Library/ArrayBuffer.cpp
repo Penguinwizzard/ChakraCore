@@ -7,7 +7,7 @@
 namespace Js
 {
     /*static*/
-    PropertyId ArrayBuffer::specialPropertyIds[] = 
+    PropertyId ArrayBuffer::specialPropertyIds[] =
     {
         PropertyIds::byteLength
     };
@@ -71,7 +71,7 @@ namespace Js
     ArrayBufferDetachedStateBase* ArrayBuffer::DetachAndGetState()
     {
         Assert(!this->isDetached);
-       
+
         AutoPtr<ArrayBufferDetachedStateBase> arrayBufferState(this->CreateDetachedState(this->buffer, this->bufferLength));
 
         this->buffer = nullptr;
@@ -82,12 +82,12 @@ namespace Js
         {
             this->primaryParent = nullptr;
         }
-        
+
         if (this->primaryParent != nullptr)
         {
             this->ClearParentsLength(this->primaryParent->Get());
         }
-        
+
         if (this->otherParents != nullptr)
         {
             this->otherParents->Map([&](int index, RecyclerWeakReference<ArrayBufferParent>* item)
@@ -309,7 +309,7 @@ namespace Js
         {
             JavascriptError::ThrowTypeError(scriptContext, JSERR_NeedArrayBufferObject);
         }
-        
+
         JavascriptLibrary* library = scriptContext->GetLibrary();
         ArrayBuffer* arrayBuffer = ArrayBuffer::FromVar(args[0]);
 
@@ -380,7 +380,7 @@ namespace Js
                 JavascriptError::ThrowTypeError(scriptContext, JSERR_NeedArrayBufferObject);
             }
 
-            if (newBuffer->bufferLength < byteLength) // 24.1.4.3: 23.If the value of new’s [[ArrayBufferByteLength]] internal slot < newLen, then throw a TypeError exception.
+            if (newBuffer->bufferLength < byteLength) // 24.1.4.3: 23.If the value of new's [[ArrayBufferByteLength]] internal slot < newLen, then throw a TypeError exception.
             {
                 JavascriptError::ThrowTypeError(scriptContext, JSERR_ArgumentOutOfRange, L"ArrayBuffer.prototype.slice");
             }
@@ -521,7 +521,7 @@ namespace Js
     // Returns the number of special non-enumerable properties this type has.
     uint ArrayBuffer::GetSpecialPropertyCount() const
     {
-        return this->GetScriptContext()->GetConfig()->IsES6TypedArrayExtensionsEnabled() ? 
+        return this->GetScriptContext()->GetConfig()->IsES6TypedArrayExtensionsEnabled() ?
             0 : _countof(specialPropertyIds);
     }
 
@@ -745,7 +745,7 @@ namespace Js
         return TRUE;
     }
 
-    
+
 
     JavascriptArrayBuffer::JavascriptArrayBuffer(uint32 length, DynamicType * type) :
         ArrayBuffer(length, type, (IsValidVirtualBufferLength(length)) ? AllocWrapper : malloc)
@@ -780,7 +780,7 @@ namespace Js
 
     ArrayBufferDetachedStateBase* JavascriptArrayBuffer::CreateDetachedState(BYTE* buffer, uint32 bufferLength)
     {
-#if _WIN64     
+#if _WIN64
         if (IsValidVirtualBufferLength(bufferLength))
         {
             return HeapNew(ArrayBufferDetachedState<FreeFn>, buffer, bufferLength, FreeMemAlloc, ArrayBufferAllocationType::MemAlloc);
@@ -796,7 +796,7 @@ namespace Js
 
     bool JavascriptArrayBuffer::IsValidAsmJsBufferLength(uint length, bool forceCheck)
     {
-#if _WIN64 
+#if _WIN64
         /*
         1. length >= 2^16
         2. length is power of 2 or (length > 2^24 and length is multiple of 2^24)
@@ -827,7 +827,7 @@ namespace Js
     bool JavascriptArrayBuffer::IsValidVirtualBufferLength(uint length)
     {
 
-#if _WIN64 
+#if _WIN64
         /*
         1. length >= 2^16
         2. length is power of 2 or (length > 2^24 and length is multiple of 2^24)
@@ -860,9 +860,9 @@ namespace Js
 
     void JavascriptArrayBuffer::Dispose(bool isShutdown)
     {
-        
+
 #if _WIN64
-        //AsmJS Virtual Free 
+        //AsmJS Virtual Free
         //TOD - see if isBufferCleared need to be added for free too
         if (IsValidVirtualBufferLength(this->bufferLength) && !isBufferCleared)
         {
@@ -904,7 +904,7 @@ namespace Js
                 recycler->ReportExternalMemoryFree(this->bufferLength - newBufferLength);
             }
         }
-        
+
         if (newBufferLength == 0 || this->bufferLength == 0)
         {
             newArrayBuffer = GetLibrary()->CreateArrayBuffer(newBufferLength);
@@ -969,7 +969,7 @@ namespace Js
                 }
             }
             newArrayBuffer = GetLibrary()->CreateArrayBuffer(newBuffer, newBufferLength);
-            
+
         }
         AutoDiscardPTR<Js::ArrayBufferDetachedStateBase> state(DetachAndGetState());
         state->MarkAsClaimed();

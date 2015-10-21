@@ -67,7 +67,7 @@ void CDirectory::WaitLock()
             this->GetDirectoryPath(), sec);
 
         // Force this message to be seen immediately. This breaks our usual
-        // rules for interleaving output, but that is probably ok in this
+        // rules for interleaving output, but that is probably okay in this
         // rare situation.
         FlushOutput();
 
@@ -169,7 +169,7 @@ void CDirectory::TryEndDirectory()
     UpdateState();
 }
 
-// Notify CDirectory that run counts have been changed. 
+// Notify CDirectory that run counts have been changed.
 // Check to see if directory is just being started or finished.
 // Output summary if needed and TODO: enter/end directory
 void CDirectory::UpdateState()
@@ -185,7 +185,7 @@ void CDirectory::UpdateState()
             WriteDirectoryFinishSummary();
         }
     }
-    else 
+    else
     {
         start_dir = time(NULL);
         _isDirStarted = true;
@@ -214,7 +214,7 @@ void CDirectory::WriteDirectoryFinishSummary()
 {
     WriteSummary(GetDirectoryName(), IsBaseline(), NumVariations, NumDiffs, NumFailures);
 
-    if (Timing & TIME_DIR) 
+    if (Timing & TIME_DIR)
     {
         Message("RL: Directory elapsed time (%s): %02d:%02d", GetDirectoryName(), elapsed_dir / 60, elapsed_dir % 60);
     }
@@ -237,7 +237,7 @@ void CDirectory::Dump()
 
 CDirectoryQueue::~CDirectoryQueue()
 {
-    // We must clean up the directory list rooted at _head if FSingleThreadPerDir is 
+    // We must clean up the directory list rooted at _head if FSingleThreadPerDir is
     // false. Might as well just always clean up if there is anything here.
     CDirectory* prev = NULL;
     CDirectory* temp = _head;
@@ -508,7 +508,7 @@ void COutputBuffer::Flush()
                 // We might not be able to open the log or full log output
                 // files because someone is grepping or otherwise looking
                 // through them while rl is active. In that case, we don't
-                // want to just kill rl, so just keep accummulating output
+                // want to just kill rl, so just keep accumulating output
                 // and try again next time. Output a warning to the log so
                 // they know it happened (but they won't see it unless the
                 // output is flushed!). We could consider having a maximum,

@@ -58,7 +58,7 @@ namespace Js
         }
         else
         {
-            // TODO: Implement this case to handle sublcassing feature
+            // TODO: Implement this case to handle subclassing feature
 
             // ES6 Spec changed since Map was implemented regarding subclassing; passed in objects to a Map call
             // must have [[MapData]] on them already, via @@create method.  We do not currently support @@create,
@@ -70,12 +70,12 @@ namespace Js
             JavascriptError::ThrowTypeErrorVar(scriptContext, JSERR_NeedObjectOfType, L"Map", L"Map");
         }
         Assert(mapObject != nullptr);
-        
+
         Var iterable = (args.Info.Count > 1) ? args[1] : library->GetUndefined();
 
         RecyclableObject* iter = nullptr;
         RecyclableObject* adder = nullptr;
-        
+
         if (JavascriptConversion::CheckObjectCoercible(iterable, scriptContext))
         {
             iter = JavascriptOperators::GetIterator(iterable, scriptContext);

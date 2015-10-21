@@ -253,16 +253,16 @@ namespace Js
             Assert(!throwIfNotExtensible);
         }
 
-        return 
+        return
             this->InitProperty(propertyId, value, flags) &&
             this->SetAttributes(propertyId, attributes);
     }
 
     void RecyclableObject::ThrowIfCannotDefineProperty(PropertyId propId, PropertyDescriptor descriptor)
-    {        
+    {
         // Do nothing
     }
-    
+
     BOOL RecyclableObject::GetDefaultPropertyDescriptor(PropertyDescriptor& descriptor)
     {
         // By default, when GetOwnPropertyDescriptor is called for a nonexistent property,
@@ -271,9 +271,9 @@ namespace Js
     }
 
     HRESULT RecyclableObject::QueryObjectInterface(REFIID riid, void **ppvObj)
-    { 
-        Assert(!this->GetScriptContext()->GetThreadContext()->IsScriptActive()); 
-        return E_NOINTERFACE; 
+    {
+        Assert(!this->GetScriptContext()->GetThreadContext()->IsScriptActive());
+        return E_NOINTERFACE;
     }
     RecyclableObject* RecyclableObject::GetThisObjectOrUnWrap()
     {
@@ -284,9 +284,9 @@ namespace Js
         return this;
     }
 
-    // In order to avoid a branch, every object has an entry point if it gets called like a 
+    // In order to avoid a branch, every object has an entry point if it gets called like a
     // function - however, if it can't be called like a function, it's set to DefaultEntryPoint
-    // which will emit an error.  
+    // which will emit an error.
     Var RecyclableObject::DefaultEntryPoint(RecyclableObject* function, CallInfo callInfo, ...)
     {
         ARGUMENTS(args, callInfo);
@@ -502,7 +502,7 @@ namespace Js
                 int leftValue = TaggedInt::ToInt32(aLeft);
                 __int64 rightValue = JavascriptInt64Number::FromVar(aRight)->GetValue();
                 *value = leftValue == rightValue;
-                Assert(!(*value));  // currently it cannot be true. more for future extension if we allow arithmatic calculation
+                Assert(!(*value));  // currently it cannot be true. more for future extension if we allow arithmetic calculation
                 return TRUE;
             }
             case TypeIds_UInt64Number:
@@ -511,7 +511,7 @@ namespace Js
                 unsigned __int64 rightValue = JavascriptInt64Number::FromVar(aRight)->GetValue();
                 // TODO: yongqu to review whether we need to check for neg value
                 *value = (/*leftValue >= 0 && */(unsigned __int64)leftValue == rightValue);
-                Assert(!(*value));  // currently it cannot be true. more for future extension if we allow arithmatic calculation
+                Assert(!(*value));  // currently it cannot be true. more for future extension if we allow arithmetic calculation
                 return TRUE;
             }
             case TypeIds_Number:
@@ -535,7 +535,7 @@ namespace Js
                 __int64 leftValue = JavascriptInt64Number::FromVar(aLeft)->GetValue();
                 int rightValue = TaggedInt::ToInt32(aRight);
                 *value = leftValue == rightValue;
-                Assert(!(*value));  // currently it cannot be true. more for future extension if we allow arithmatic calculation
+                Assert(!(*value));  // currently it cannot be true. more for future extension if we allow arithmetic calculation
                 return TRUE;
             }
             case TypeIds_Number:
@@ -568,7 +568,7 @@ namespace Js
                 __int64 rightValue = TaggedInt::ToInt32(aRight);
                 // TODO: yongqu to review whether we need to check for neg value
                 *value = rightValue >= 0 && leftValue == (unsigned __int64)rightValue;
-                Assert(!(*value));  // currently it cannot be true. more for future extension if we allow arithmatic calculation
+                Assert(!(*value));  // currently it cannot be true. more for future extension if we allow arithmetic calculation
                 return TRUE;
             }
             case TypeIds_Number:
@@ -749,7 +749,7 @@ namespace Js
     {
         // Handle x(y) = z.
         // Native jscript object behavior: throw an error in all such cases.
-        JavascriptError::ThrowReferenceError(GetScriptContext(), JSERR_CantAsgCall);        
+        JavascriptError::ThrowReferenceError(GetScriptContext(), JSERR_CantAsgCall);
     }
 
     BOOL RecyclableObject::GetRemoteTypeId(TypeId * typeId)

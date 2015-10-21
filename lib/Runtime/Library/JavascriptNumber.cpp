@@ -99,7 +99,7 @@ namespace Js
         {
             return TaggedInt::ToVarUnchecked(nValue);
         }
-        
+
         return JavascriptNumber::NewInlined(value,scriptContext);
     }
 
@@ -167,10 +167,10 @@ namespace Js
     extern "C" double __cdecl __libm_sse2_pow(double, double);
 
     static const double d1_0 = 1.0;
-   
+
     __declspec(naked)
     double JavascriptNumber::DirectPow(double x, double y)
-    {      
+    {
         UNREFERENCED_PARAMETER(x);
         UNREFERENCED_PARAMETER(y);
 
@@ -179,18 +179,18 @@ namespace Js
         // Check for pow(1, Infinity/NaN) and return NaN in that case; otherwise,
         // go to the fast CRT helper.
         __asm {
-            // check y for 1.0 
+            // check y for 1.0
             ucomisd xmm1, d1_0
             jne pow_full
             jp pow_full
             ret
-       pow_full:        
+       pow_full:
             // Check y for non-finite value
             pextrw eax, xmm1, 3
             not eax
             test eax, 0x7ff0
             je y_infinite
-            
+
        normal:
             jmp dword ptr [__libm_sse2_pow]
 
@@ -200,7 +200,7 @@ namespace Js
             andpd xmm2, AbsDoubleCst
             movsd xmm3, d1_0
             ucomisd xmm2, xmm3
-            lahf        
+            lahf
             test ah, 68
             jp normal
 
@@ -211,14 +211,14 @@ namespace Js
 
 
 #elif defined(_M_AMD64) || defined(_M_ARM32_OR_ARM64)
-    
+
     double JavascriptNumber::DirectPow(double x, double y)
     {
         if(y == 1.0)
         {
             return x;
         }
-        
+
         // For AMD64/ARM calling convention already uses SSE2/VFP registers so we don't have to use assembler.
         // We can't just use "if (0 == y)" because NaN compares
         // equal to 0 according to our compilers.
@@ -298,7 +298,7 @@ namespace Js
             JavascriptNumberObject* obj = scriptContext->GetLibrary()->CreateNumberObject(result);
             result = obj;
         }
-    
+
         return isCtorSuperCall ?
             JavascriptOperators::OrdinaryCreateFromConstructor(RecyclableObject::FromVar(newTarget), RecyclableObject::FromVar(result), nullptr, scriptContext) :
             result;
@@ -312,7 +312,7 @@ namespace Js
     /// Note: This is the same as the global parseInt() function as described in
     ///       (ES6.0: S18.2.5)
     ///
-    /// We actually reuse GlobalObject::EntryParseInt, so no implemenation here.
+    /// We actually reuse GlobalObject::EntryParseInt, so no implementation here.
     ///----------------------------------------------------------------------------
     //Var JavascriptNumber::EntryParseInt(RecyclableObject* function, CallInfo callInfo, ...)
 
@@ -353,7 +353,7 @@ namespace Js
 
         return JavascriptBoolean::ToVar(
             JavascriptNumber::IsNan(JavascriptConversion::ToNumber(args[1],scriptContext)),
-            scriptContext);        
+            scriptContext);
     }
 
     ///----------------------------------------------------------------------------
@@ -381,7 +381,7 @@ namespace Js
 
         return JavascriptBoolean::ToVar(
             NumberUtilities::IsFinite(JavascriptConversion::ToNumber(args[1],scriptContext)),
-            scriptContext);        
+            scriptContext);
     }
 
     ///----------------------------------------------------------------------------
@@ -447,7 +447,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0)
         {
@@ -456,7 +456,7 @@ namespace Js
 
         AssertMsg(args.Info.Count > 0, "negative arg count");
 
-        // spec implies ToExp is not generic. 'this' must be a number 
+        // spec implies ToExp is not generic. 'this' must be a number
         double value;
         if (!GetThisValue(args[0], &value))
         {
@@ -511,7 +511,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0)
         {
@@ -553,8 +553,8 @@ namespace Js
             else
             {
                 double fractionDigitsRaw = JavascriptConversion::ToInteger(aFractionDigits, scriptContext);
-                isFractionDigitsInfinite = 
-                    fractionDigitsRaw == JavascriptNumber::NEGATIVE_INFINITY || 
+                isFractionDigitsInfinite =
+                    fractionDigitsRaw == JavascriptNumber::NEGATIVE_INFINITY ||
                     fractionDigitsRaw == JavascriptNumber::POSITIVE_INFINITY;
                 fractionDigits = (int)fractionDigitsRaw;
             }
@@ -585,7 +585,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0)
         {
@@ -593,7 +593,7 @@ namespace Js
         }
         AssertMsg(args.Info.Count > 0, "negative arg count");
 
-        // spec implies ToPrec is not generic. 'this' must be a number 
+        // spec implies ToPrec is not generic. 'this' must be a number
         double value;
         if (!GetThisValue(args[0], &value))
         {
@@ -610,12 +610,12 @@ namespace Js
         }
         if(args.Info.Count < 2 || JavascriptOperators::GetTypeId(args[1]) == TypeIds_Undefined)
         {
-            // .toPrecision(undefined): 
+            // .toPrecision(undefined):
             //   - IE7 compat: throws a range error.
             //   - In ES5 the spec explicitly says to use toString().
             //   - IE8 works same as ES5.
             // .toPrecision():
-            //   - IE7, IE8 and ES5 work same same way: no error, return same number.
+            //   - IE7, IE8 and ES5 work same way: no error, return same number.
             return JavascriptConversion::ToString(args[0], scriptContext);
         }
 
@@ -650,7 +650,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0)
         {
@@ -660,7 +660,7 @@ namespace Js
 #ifdef ENABLE_INTL_OBJECT
         if(CONFIG_FLAG(IntlBuiltIns) && scriptContext->GetConfig()->IsIntlEnabled()){
             scriptContext->GetLibrary()->EnsureIntlObjectReady();
-            
+
             EngineInterfaceObject* nativeEngineInterfaceObj = scriptContext->GetLibrary()->GetEngineInterfaceObject();
             if (nativeEngineInterfaceObj)
             {
@@ -699,7 +699,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0)
         {
@@ -739,7 +739,7 @@ namespace Js
                 radix = TaggedInt::ToInt32(aRadix);
             }
             else if(!JavascriptOperators::GetTypeId(aRadix) == TypeIds_Undefined)
-            {           
+            {
                 radix = (int)JavascriptConversion::ToInteger(aRadix,scriptContext);
             }
 
@@ -751,7 +751,7 @@ namespace Js
 
         if( radix < 2 || radix >36 )
         {
-            JavascriptError::ThrowRangeError(scriptContext, JSERR_FunctionArgument_Invalid, L"Number.prototype.toString");            
+            JavascriptError::ThrowRangeError(scriptContext, JSERR_FunctionArgument_Invalid, L"Number.prototype.toString");
         }
 
         return ToStringRadixHelper(value, radix, scriptContext);
@@ -765,13 +765,13 @@ namespace Js
         ScriptContext* scriptContext = function->GetScriptContext();
         Var value = args[0];
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0)
         {
             JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NeedNumber, L"Number.prototype.valueOf");
         }
-        
+
         //avoid creation of a new Number
         if (TaggedInt::Is(value) || JavascriptNumber::Is_NoTaggedIntCheck(value))
         {
@@ -789,7 +789,7 @@ namespace Js
         else if (Js::JavascriptOperators::GetTypeId(value) == TypeIds_UInt64Number)
         {
             return value;
-        }        
+        }
         else
         {
             if (JavascriptOperators::GetTypeId(value) == TypeIds_HostDispatch)
@@ -832,7 +832,7 @@ namespace Js
     static const int bufSize = 256;
 
     JavascriptString* JavascriptNumber::ToStringRadix10(double value, ScriptContext* scriptContext)
-    {  
+    {
         JavascriptString* string = ToStringNanOrInfiniteOrZero(value, scriptContext);
         if (string != nullptr)
         {
@@ -842,11 +842,11 @@ namespace Js
         string = scriptContext->GetLastNumberToStringRadix10(value);
         if (string == nullptr)
         {
-            wchar_t szBuffer[bufSize]; //TODO: This seems overly generous         
+            wchar_t szBuffer[bufSize]; //TODO: This seems overly generous
 
             if(!Js::NumberUtilities::FNonZeroFiniteDblToStr(value, szBuffer, bufSize))
             {
-                Js::JavascriptError::ThrowOutOfMemoryError(scriptContext);  // out of memory is for for back compat with V5.8 
+                Js::JavascriptError::ThrowOutOfMemoryError(scriptContext);  // out of memory is for back compat with V5.8
             }
             string = JavascriptString::NewCopySz(szBuffer, scriptContext);
             scriptContext->SetLastNumberToStringRadix10(value, string);
@@ -879,12 +879,12 @@ namespace Js
     BOOL JavascriptNumber::GetThisValue(Var aValue, double* pDouble)
     {
         TypeId typeId = JavascriptOperators::GetTypeId(aValue);
-  
+
         if (typeId == TypeIds_Null || typeId == TypeIds_Undefined)
         {
             return FALSE;
-        }        
-        
+        }
+
         if (TaggedInt::Is(aValue))
         {
             *pDouble = TaggedInt::ToDouble(aValue);
@@ -949,12 +949,12 @@ namespace Js
     }
 
     JavascriptString* JavascriptNumber::ToLocaleString(double value, ScriptContext* scriptContext)
-    {        
+    {
         WCHAR   szRes[bufSize];
         WCHAR * pszRes = NULL;
         WCHAR * pszToBeFreed = NULL;
         int     count;
-        
+
         if (!Js::NumberUtilities::IsFinite(value))
         {
             //
@@ -1012,7 +1012,7 @@ namespace Js
         return result;
     }
 
-    Var JavascriptNumber::CloneToScriptContext(Var aValue, ScriptContext* requestContext) 
+    Var JavascriptNumber::CloneToScriptContext(Var aValue, ScriptContext* requestContext)
     {
         return JavascriptNumber::New(JavascriptNumber::GetValue(aValue), requestContext);
     }
@@ -1022,7 +1022,7 @@ namespace Js
     {
         if (ThreadContext::IsOnStack(instance) && JavascriptNumber::Is(instance))
         {
-            return BoxStackInstance(JavascriptNumber::FromVar(instance), scriptContext);            
+            return BoxStackInstance(JavascriptNumber::FromVar(instance), scriptContext);
         }
         else
         {
@@ -1032,9 +1032,9 @@ namespace Js
 
     Var JavascriptNumber::BoxStackInstance(Var instance, ScriptContext* scriptContext)
     {
-        Assert(ThreadContext::IsOnStack(instance));        
+        Assert(ThreadContext::IsOnStack(instance));
         double value = JavascriptNumber::FromVar(instance)->GetValue();
-        return JavascriptNumber::New(value, scriptContext);        
+        return JavascriptNumber::New(value, scriptContext);
     }
 
     JavascriptNumber * JavascriptNumber::NewUninitialized(Recycler * recycler)
@@ -1042,4 +1042,4 @@ namespace Js
         return RecyclerNew(recycler, JavascriptNumber, VirtualTableInfoCtorValue);
     }
 #endif
-} 
+}

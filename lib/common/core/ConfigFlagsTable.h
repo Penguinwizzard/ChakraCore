@@ -27,7 +27,7 @@ namespace Js
         FlagNumberSet,
         FlagNumberPairSet,
         FlagNumberRange
-    };  
+    };
 
     // Shadow of enum SCRIPTHOSTTYPE defined in activscp.idl.
     enum HostType
@@ -45,7 +45,7 @@ namespace Js
     ///
     /// enum Flag
     ///
-    /// All the flags available. The list of flags are described in the file 
+    /// All the flags available. The list of flags are described in the file
     /// ConfigFlagsList.h
     ///
     ///----------------------------------------------------------------------------
@@ -68,7 +68,7 @@ namespace Js
     ///
     /// enum Phase
     ///
-    /// Different Phases/Subphases of the backend. The list of phases is described 
+    /// Different Phases/Subphases of the backend. The list of phases is described
     /// in the file ConfigFlagsList.h
     ///
     ///----------------------------------------------------------------------------
@@ -98,10 +98,10 @@ namespace Js
     ///
     /// A simple string wrapper for storing strings for the flags. It creates a
     /// copy of the string which it releases in the destructor. Simple operator
-    /// juglary to make this class as interoperable with strings as possible :-
+    /// fiddling to make this class as interoperable with strings as possible :-
     ///
     ///     1.  Single argument constructor takes care of initialization
-    ///     2.  Assigment operator overloaded for wchar_t*
+    ///     2.  Assignment operator overloaded for wchar_t*
     ///     3.  JavascriptConversion to const wchar_t * is defined. Making this constant ensures
     ///         that a non constant wchar_t * does not point to our buffer which can
     ///         potentially corrupt it.
@@ -118,20 +118,20 @@ namespace Js
     // Data
     private:
                 LPWSTR           pszValue;
-    
+
     // Construction
     public:
         inline String();
         inline String(__in_opt LPWSTR psz);
         inline ~String();
-    
+
 
     // Methods
     public:
-    
+
         ///----------------------------------------------------------------------------
         ///
-        /// Assigment operator defined for easy access
+        /// Assignment operator defined for easy access
         ///
         ///----------------------------------------------------------------------------
 
@@ -140,7 +140,7 @@ namespace Js
             Set(psz);
             return *this;
         }
-    
+
         String &operator =(const String &other)
         {
             return (*this = other.pszValue);
@@ -152,7 +152,7 @@ namespace Js
         ///
         ///----------------------------------------------------------------------------
 
-        operator LPCWSTR () const 
+        operator LPCWSTR () const
         {
             return this->pszValue;
         }
@@ -239,8 +239,8 @@ namespace Js
     ///
     /// class Range
     ///
-    /// Datastruture to store a range of integers. (Can trivially be templatized
-    /// but resisting the temptation for the sake of simplicity)
+    /// Data structure to store a range of integers. (Can trivially be templatized
+    /// but resisting the temptation for the sake of simplicity.)
     ///
     /// Sample:     1,3-11,15,20
     ///
@@ -259,7 +259,7 @@ namespace Js
     protected:
         SList<Unit, NoCheckHeapAllocator>      range;
 
-    // Construction 
+    // Construction
     public:
         RangeBase() : range(&NoCheckHeapAllocator::Instance) {}
 
@@ -304,11 +304,11 @@ namespace Js
         ///
         /// struct UnitPhase
         ///
-        /// Stores information about a particual phase. Current information is :
-        ///     1.  Is is the phase enabled/disabled?
+        /// Stores information about a particular phase. Current information is :
+        ///     1.  Is the phase enabled/disabled?
         ///     2.  A range of numbers for the given phase. This range can represent a
-        ///         variety of infomation. For example, this range can be the function
-        ///         numbers of all the functions where a particual optimization is
+        ///         variety of information. For example, this range can be the function
+        ///         numbers of all the functions where a particular optimization is
         ///         enabled or where opcode dump is enabled.
         ///
         ///
@@ -318,10 +318,10 @@ namespace Js
         ///----------------------------------------------------------------------------
         ///----------------------------------------------------------------------------
 
-        // TODO: Get rid of this struct as soon as bitvector is available.
+        // TODO: Get rid of this struct as soon as bit vector is available.
         struct UnitPhase
         {
-        
+
         // Construction
         public:
             UnitPhase() : valid(false) { }
@@ -332,7 +332,7 @@ namespace Js
                 Range           range;
 
         };
-                
+
     // Data
     private:
                 UnitPhase       phaseList[PhaseCount];
@@ -344,7 +344,7 @@ namespace Js
     // Methods
     public:
 
-        void            Enable(Phase phase);       
+        void            Enable(Phase phase);
         bool            IsEnabled(Phase phase);
         bool            IsEnabled(Phase phase, uint sourceContextId, Js::LocalFunctionId functionId);
         bool            IsEnabledForAll(Phase phase);
@@ -360,7 +360,7 @@ namespace Js
     /// Maintains the list of all the flags. Individual flags can be accessed by :-
     ///
     ///     1.  flagTable->verbose;     // here verbose is the name of the flag
-    ///                                 // It will be strongly typed with the 
+    ///                                 // It will be strongly typed with the
     ///                                 // type of the flag is as described in
     ///                                 // ConfigFlagsTable.h
     ///
@@ -371,7 +371,7 @@ namespace Js
     ///
     /// The former access should be used in the code for reading the flag values
     /// while the later is useful for adding values into the table.
-    ///     
+    ///
     ///----------------------------------------------------------------------------
     ///----------------------------------------------------------------------------
 
@@ -386,10 +386,10 @@ namespace Js
     // Methods
     public:
 
-        static  Flag            GetFlag(__in LPCWSTR str);    
-        static  Phase           GetPhase(__in LPCWSTR str);           
+        static  Flag            GetFlag(__in LPCWSTR str);
+        static  Phase           GetPhase(__in LPCWSTR str);
         static  void            PrintUsageString();
-        
+
         static  FlagTypes       GetFlagType(Flag flag);
 
                 String*         GetAsString(Flag flag) const;
@@ -421,15 +421,15 @@ namespace Js
 
     // Data
     public:
-        
+
         ///----------------------------------------------------------------------------
         ///
         /// Declaration of each flag as a member variable of the corresponding type.
         /// These variables are made public because get/set are too ugly for simple
-        /// flags. Besides there are flags like phase lists which are not simple and 
+        /// flags. Besides there are flags like phase lists which are not simple and
         /// its better to have a uniform way to access them.
         ///
-        ///     if(ConfigFlag->dump)     is much better than 
+        ///     if(ConfigFlag->dump)     is much better than
         ///     if(ConfigFlag->GetDump())
         ///
         ///----------------------------------------------------------------------------
@@ -453,7 +453,7 @@ namespace Js
                 bool            flagIsParent[FlagMax + 1];
 
     // Implementation
-    private:        
+    private:
                 void *      GetProperty(Flag flag) const;
 
                 void        SetAllParentFlagsAsDefaultValue();
@@ -506,12 +506,12 @@ namespace Js
         bool IsHybridDebugging();
 
         // Public in case the client wants to have
-        // a seperate config from the global one
+        // a separate config from the global one
         Configuration();
 
     private:
-        GUID hybridDebuggingGuid; // Set to HybridDebuggingGuid when hybrid debugging - set by the out of process debugging component - jscript9diag. 
-                                  // Otherwise, remains un-itialized
+        GUID hybridDebuggingGuid; // Set to HybridDebuggingGuid when hybrid debugging - set by the out of process debugging component - jscript9diag.
+                                  // Otherwise, remains un-initialized
         bool isHybridDebugging;
     };
 

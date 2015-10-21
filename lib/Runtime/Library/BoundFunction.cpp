@@ -5,7 +5,7 @@
 #include "RuntimeLibraryPch.h"
 
 namespace Js
-{    
+{
     FunctionInfo BoundFunction::functionInfo(&BoundFunction::NewInstance, FunctionInfo::DoNotProfile);
 
     BoundFunction::BoundFunction(DynamicType * type)
@@ -33,12 +33,12 @@ namespace Js
 
         // Let proto be targetFunction.[[GetPrototypeOf]]().
         RecyclableObject* proto = JavascriptOperators::GetPrototype(targetFunction);
-        if (proto != type->GetPrototype()) 
+        if (proto != type->GetPrototype())
         {
             type->SetPrototype(proto);
         }
         // If targetFunction is proxy, need to make sure that traps are called in right order as per 19.2.3.2 in RC#4 dated April 3rd 2015.
-        // Here although we won't use value of length, this is just to make sure that we call traps envoled for HasOwnProperty(Target, "length") and Get(Target, "length")
+        // Here although we won't use value of length, this is just to make sure that we call traps involved with HasOwnProperty(Target, "length") and Get(Target, "length")
         if (JavascriptProxy::Is(targetFunction))
         {
             if (JavascriptOperators::HasOwnProperty(targetFunction, PropertyIds::length, scriptContext) == TRUE)
@@ -135,7 +135,7 @@ namespace Js
             Arguments proxyArgs(CallInfo(CallFlags_New, 1), &targetFunction);
             args.Values[0] = newVarInstance = proxy->ConstructorTrap(proxyArgs, scriptContext, 0);
           }
-          else 
+          else
           {
             args.Values[0] = newVarInstance = JavascriptOperators::NewScObjectNoCtor(targetFunction, scriptContext);
           }
@@ -206,7 +206,7 @@ namespace Js
         }
 
         return aReturnValue;
-    }   
+    }
 
     JavascriptFunction * BoundFunction::GetTargetFunction() const
     {
@@ -223,7 +223,7 @@ namespace Js
                 return JavascriptFunction::FromVar(_targetFunction);
             }
 
-            // targetfunction should always be a javascriptfunction.
+            // targetFunction should always be a JavascriptFunction.
             Assert(FALSE);
         }
         return nullptr;

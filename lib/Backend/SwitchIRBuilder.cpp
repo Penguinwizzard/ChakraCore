@@ -569,7 +569,7 @@ SwitchIRBuilder::BuildOptimizedIntegerCaseInstrs(uint32 targetOffset)
     *   Algorithm to find chunks of consecutive integers in a given set of case arms(sorted)
     *   -Start and end indices for jump table and binary tree are maintained.
     *   -The corresponding start and end indices indicate that they are suitable candidate for their respective category(binaryTree/jumpTable)
-    *   -All holes are filled with an offset corresponding to the default fallthr instruction and each block is filled with an offset corresponding to the start of the next block
+    *   -All holes are filled with an offset corresponding to the default fallthrough instruction and each block is filled with an offset corresponding to the start of the next block
     *    A Block here refers either to a jump table or to a binary tree.
     *   -Blocks of BinaryTrav/Jump table are traversed in a linear fashion.
     **/
@@ -676,7 +676,7 @@ SwitchIRBuilder::TryBuildBinaryTreeOrMultiBrForSwitchInts(IR::MultiBranchInstr *
     multiBranchInstr = BuildMultiBrCaseInstrForInts(startjmpTableIndex, endjmpTableIndex, defaultTargetOffset);
 
     //We currently assign the offset of the multiBr Instr same as the offset of the last instruction of the case arm selected for building the jump table
-    //AssertMsg(m_lastInstr->GetByteCodeOffset() == fallthrOffset, "The fallthr offset to the multi branch instruction is wrong");
+    //AssertMsg(m_lastInstr->GetByteCodeOffset() == fallthrOffset, "The fallthrough offset to the multi branch instruction is wrong");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -754,7 +754,7 @@ SwitchIRBuilder::BuildBailOnNotString()
 #if ENABLE_DEBUG_CONFIG_OPTIONS
     wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
 #endif
-    PHASE_PRINT_TESTTRACE1(Js::SwitchOptPhase, L"Func %s, Switch %d:Optimized for Strings\n", 
+    PHASE_PRINT_TESTTRACE1(Js::SwitchOptPhase, L"Func %s, Switch %d:Optimized for Strings\n",
         m_profiledSwitchInstr->m_func->GetJnFunction()->GetDebugNumberSet(debugStringBuffer),
         m_profiledSwitchInstr->AsProfiledInstr()->u.profileId);
 }

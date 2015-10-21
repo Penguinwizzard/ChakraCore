@@ -20,7 +20,7 @@ namespace Js
     }
 
     SIMDValue SIMDFloat64x2Operation::OpFloat64x2(const SIMDValue& v)
-    {// overload function with input paramter as SIMDValue for completeness
+    {// overload function with input parameter as SIMDValue for completeness
         SIMDValue result;
 
         result = v;
@@ -124,7 +124,7 @@ namespace Js
     {
         SIMDValue result;
 
-        result.f64[SIMD_X] = 1.0/(value.f64[SIMD_X]); 
+        result.f64[SIMD_X] = 1.0/(value.f64[SIMD_X]);
         result.f64[SIMD_Y] = 1.0/(value.f64[SIMD_Y]);
 
         return result;
@@ -322,7 +322,7 @@ namespace Js
     }
 
     SIMDValue SIMDFloat64x2Operation::OpClamp(const SIMDValue& value, const SIMDValue& lower, const SIMDValue& upper)
-    { 
+    {
         SIMDValue result;
 
         // lower clamp

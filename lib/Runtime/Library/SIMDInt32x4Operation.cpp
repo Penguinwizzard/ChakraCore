@@ -22,7 +22,7 @@ namespace Js
     }
 
     SIMDValue SIMDInt32x4Operation::OpInt32x4(const SIMDValue& v)
-    {// overload function with input paramter as SIMDValue for completeness, may not need
+    {// overload function with input parameter as SIMDValue for completeness, may not need
         SIMDValue result;
 
         result = v;
@@ -83,7 +83,7 @@ namespace Js
         Assert(v.i32[SIMD_Y] == 0 || v.i32[SIMD_Y] == -1);
         Assert(v.i32[SIMD_Z] == 0 || v.i32[SIMD_Z] == -1);
         Assert(v.i32[SIMD_W] == 0 || v.i32[SIMD_W] == -1);
-        
+
         result = v;
         return result;
     }
@@ -366,7 +366,7 @@ namespace Js
     {
         int result;
 
-        // shift right 31 bits while shiftting in with zero 
+        // shift right 31 bits while shifting in with zero
         SIMDValue value = SIMDInt32x4Operation::OpShiftRightLogical(v, 31);
 
         // extract sign bit from each lane

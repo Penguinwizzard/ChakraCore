@@ -71,7 +71,7 @@ HRESULT Helpers::LoadScriptFromFile(LPCWSTR filename, LPCWSTR& contents, bool* i
     // Warning: The UNICODE buffer for parsing is supposed to be provided by the host.
     // this is temporary code to read from Unicode and ANSI files.
     // It is not a complete read of the encoding. Some encodings like UTF7, UTF1, EBCDIC, SCSU, BOCU could be
-    // wrongly classified as ANSI
+    // wrongly classified as ANSI.
     //
     byte * pRawBytes = (byte*)contentsRaw;
     if ((0xEF == *pRawBytes && 0xBB == *(pRawBytes + 1) && 0xBF == *(pRawBytes + 2)))
@@ -133,5 +133,3 @@ Error:
 
     return hr;
 }
-
-

@@ -61,7 +61,7 @@ PeepsMD::PeepAssign(IR::Instr *instr)
         {
             Assert(instr->GetSrc2() == NULL);
 
-            // 32-bit XOR has a smaler encoding
+            // 32-bit XOR has a smaller encoding
             if (TySize[dst->GetType()] == MachPtr)
             {
                 dst->SetType(TyInt32);
@@ -83,7 +83,7 @@ PeepsMD::PeepAssign(IR::Instr *instr)
                 dst->SetType(TyUint32);
             }
         }
-    } 
+    }
     else if (((instr->m_opcode == Js::OpCode::MOVSD || instr->m_opcode == Js::OpCode::MOVSS)
                 && src->IsRegOpnd()
                 && dst->IsRegOpnd()

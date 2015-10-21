@@ -47,7 +47,7 @@
 
 #include "ksarm.h"
 
-    OPT 1       ; reenable listing
+    OPT 1       ; re-enable listing
 
     TTL Lib\Common\arm\arm_CallEhFrame.asm
 
@@ -91,7 +91,7 @@
     ; Verify that the call target is valid
 #if 0 && defined(_CONTROL_FLOW_GUARD)
     ; we have used the r1-r3 info to set up the fake frame
-    ; they aren't needed by the jitted code that we're going to thunk to 
+    ; they aren't needed by the jitted code that we're going to thunk to
     ; so we don't preserve them across the __guard_check_icall_fptr call
     mov     r5, r0
 
@@ -158,7 +158,7 @@
     ; Verify that the call target is valid
 #if 0 && defined(_CONTROL_FLOW_GUARD)
     ; we have used the r1-r3 info to set up the fake frame
-    ; they aren't needed by the jitted code that we're going to thunk to 
+    ; they aren't needed by the jitted code that we're going to thunk to
     ; so we don't preserve them across the __guard_check_icall_fptr call
     mov     r5, r0
 

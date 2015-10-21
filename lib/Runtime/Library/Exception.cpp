@@ -17,7 +17,7 @@ namespace Js
             switch (kind) {
             case ExceptionKind_OutOfMemory:
                 AssertMsg(returnAddress == NULL, "should not have returnAddress passed in");
-                JavascriptError::ThrowOutOfMemoryError(scriptContext);                
+                JavascriptError::ThrowOutOfMemoryError(scriptContext);
 
             case ExceptionKind_StackOverflow:
                 JavascriptError::ThrowStackOverflowError(scriptContext, returnAddress);
@@ -32,7 +32,7 @@ namespace Js
 
     // Recover/Release unused memory and give it back to OS.
     // The function doesn't throw if the attempt to recover memory fails, in which case it simply does nothing.
-    // Useful when running out of memory e.g. for Arena but there is some recycler memory which has been committed but is unusued.
+    // Useful when running out of memory e.g. for Arena but there is some recycler memory which has been committed but is unused.
     //
     // static
     void Exception::RecoverUnusedMemory()

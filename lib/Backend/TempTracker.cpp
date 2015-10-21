@@ -8,26 +8,26 @@
  * TempTracker runs the mark temp algorithm.  The template parameter provides information
  * what are valid temp use, temp transfer, or temp producing operations and what bit to
  * set once a symbol def can be marked temp.
- * 
+ *
  * NumberTemp mark temp JavascriptNumber creation for math operations, run during deadstore
  *
  * ObjectTemp mark temp object allocations, run during backward pass so that it can provide
  * information to the globopt to install pre op bailout on implicit call while during stack
  * allocation objects.
  *
- * ObjectTempVerify runs a similar mark temp during deadstore in debug mode to assert 
+ * ObjectTempVerify runs a similar mark temp during deadstore in debug mode to assert
  * that globopt have install the pre op necessary and a marked temp def is still valid
  * as a mark temp
- * 
+ *
  * The basic of the mark temp algorithm is very simple: we keep track if we have seen
  * any use of a symbol that is not a valid mark temp (the nonTempSyms bitvector)
  * and on definition of the symbol, if the all the use allow temp object (not in nonTempSyms
  * bitvector) then it is mark them able.
  *
  * However, the complication comes when the stack object is transfered to another symbol
- * and we are in a loop.  We need to make sure that the stack object isn't still refered
+ * and we are in a loop.  We need to make sure that the stack object isn't still referred
  * by another symbol when we allocate the number/object in the next iteration
- * 
+ *
  * For example:
  *      Loop top:
  *          s1 = NewScObject
@@ -35,13 +35,13 @@
  *          s6 = s1
  *          Goto Loop top
  *
- * We cannot mark them this case because when s1 is created, the object might still be 
- * refered to by s6 from previous iteration, and thus if we mark them we would have 
+ * We cannot mark them this case because when s1 is created, the object might still be
+ * referred to by s6 from previous iteration, and thus if we mark them we would have
  * change the content of s6 as well.
  *
- * To detect this dependency, we conservatively collect "all" transfers in the pre pass 
- * of the loop.  We have toe conservtive to detect reverse dependency with out
- * iterating it more then 2 time for the loop.
+ * To detect this dependency, we conservatively collect "all" transfers in the pre pass
+ * of the loop.  We have to be conservative to detect reverse dependencies without
+ * iterating more than 2 times for the loop.
  * =================================================================================== */
 
 JitArenaAllocator *
@@ -80,14 +80,14 @@ void
 TempTrackerBase::MergeData(TempTrackerBase * fromData, bool deleteData)
 {
     nonTempSyms.Or(&fromData->nonTempSyms);
-    tempTransferredSyms.Or(&fromData->tempTransferredSyms);    
+    tempTransferredSyms.Or(&fromData->tempTransferredSyms);
     MergeDependencies(tempTransferDependencies, fromData->tempTransferDependencies, deleteData);
 }
 
 void
 TempTrackerBase::AddTransferDependencies(int sourceId, SymID dstSymID, HashTable<BVSparse<JitArenaAllocator> *> * dependencies)
 {
-    // Add to the transfer depencencies set
+    // Add to the transfer dependencies set
     BVSparse<JitArenaAllocator> ** pBVSparse = dependencies->FindOrInsertNew(sourceId);
     if (*pBVSparse == nullptr)
     {
@@ -96,7 +96,7 @@ TempTrackerBase::AddTransferDependencies(int sourceId, SymID dstSymID, HashTable
     AddTransferDependencies(*pBVSparse, dstSymID);
 }
 
-void 
+void
 TempTrackerBase::AddTransferDependencies(BVSparse<JitArenaAllocator> * bv, SymID dstSymID)
 {
     bv->Set(dstSymID);
@@ -122,14 +122,14 @@ TempTracker<T>::MergeData(TempTracker<T> * fromData, bool deleteData)
 {
     TempTrackerBase::MergeData(fromData, deleteData);
     T::MergeData(fromData, deleteData);
-    
+
     if (deleteData)
     {
         JitAdelete(this->GetAllocator(), fromData);
     }
 }
 
-void 
+void
 TempTrackerBase::OrHashTableOfBitVector(HashTable<BVSparse<JitArenaAllocator> *> * toData, HashTable<BVSparse<JitArenaAllocator> *> *& fromData, bool deleteData)
 {
     Assert(toData != nullptr);
@@ -201,8 +201,8 @@ TempTrackerBase::Dump(wchar_t const * traceName)
 template <typename T>
 void
 TempTracker<T>::ProcessUse(StackSym * sym, BackwardPass * backwardPass)
-{    
-    // Don't care about type specialied syms
+{
+    // Don't care about type specialized syms
     if (!sym->IsVar())
     {
         return;
@@ -217,20 +217,20 @@ TempTracker<T>::ProcessUse(StackSym * sym, BackwardPass * backwardPass)
     }
 #if DBG
     if (T::DoTrace(backwardPass))
-    { 
-        Output::Print(L"%s: %8s%4sTemp Use (s%-3d): ", T::GetTraceName(), 
+    {
+        Output::Print(L"%s: %8s%4sTemp Use (s%-3d): ", T::GetTraceName(),
             backwardPass->IsPrePass() ? L"Prepass " : L"", isTempUse ? L"" : L"Non ", usedSymID);
         instr->DumpSimple();
         Output::Flush();
     }
 #endif
     if (T::IsTempTransfer(instr))
-    {        
+    {
         this->tempTransferredSyms.Set(usedSymID);
 
-        // Track dependencies if we are in loop only        
+        // Track dependencies if we are in loop only
         if (this->tempTransferDependencies != nullptr)
-        {            
+        {
             IR::Opnd * dstOpnd = instr->GetDst();
             if (dstOpnd->IsRegOpnd())
             {
@@ -238,7 +238,7 @@ TempTracker<T>::ProcessUse(StackSym * sym, BackwardPass * backwardPass)
 
                 if (dstSymID != usedSymID)
                 {
-                    // Record that the usedSymID may propagate to dstSymID and all the symbols 
+                    // Record that the usedSymID may propagate to dstSymID and all the symbols
                     // that it may propagate to as well
                     AddTransferDependencies(usedSymID, dstSymID, this->tempTransferDependencies);
 #if DBG_DUMP
@@ -248,11 +248,11 @@ TempTracker<T>::ProcessUse(StackSym * sym, BackwardPass * backwardPass)
                             backwardPass->IsPrePass() ? L"Prepass " : L"", dstSymID, usedSymID);
                         (*this->tempTransferDependencies->Get(usedSymID))->Dump();
                     }
-#endif   
+#endif
                 }
             }
         }
-    }    
+    }
 
     if (isTempPropertyTransferStore)
     {
@@ -276,7 +276,7 @@ TempTracker<T>::ProcessUse(StackSym * sym, BackwardPass * backwardPass)
                 Output::Print(L"[]\n");
             }
         }
-#endif   
+#endif
     }
 };
 
@@ -284,16 +284,16 @@ template <typename T>
 void
 TempTracker<T>::MarkTemp(StackSym * sym, BackwardPass * backwardPass)
 {
-    // Don't care about type specialied syms
+    // Don't care about type specialized syms
     Assert(sym->IsVar());
-    
+
     IR::Instr * instr = backwardPass->currentInstr;
     BOOLEAN nonTemp = this->nonTempSyms.TestAndClear(sym->m_id);
     BOOLEAN isTempTransfered;
     BVSparse<JitArenaAllocator> * bvTempTransferDependencies = nullptr;
 
-    bool const isTransferOperation = 
-        T::IsTempTransfer(instr) 
+    bool const isTransferOperation =
+        T::IsTempTransfer(instr)
         || T::IsTempPropertyTransferLoad(instr, backwardPass)
         || T::IsTempIndirTransferLoad(instr, backwardPass);
 
@@ -315,7 +315,7 @@ TempTracker<T>::MarkTemp(StackSym * sym, BackwardPass * backwardPass)
         // We only need to look at the dependencies if we are in a loop because of the back edge
         // Also we don't need to if we are in pre pass
         if (isTempTransfered)
-        {            
+        {
             if (!backwardPass->IsPrePass())
             {
                 if (isTransferOperation)
@@ -331,7 +331,7 @@ TempTracker<T>::MarkTemp(StackSym * sym, BackwardPass * backwardPass)
                 {
                     // Non transfer operation, load and clear the information and the dst value is replaced
                     bvTempTransferDependencies = this->tempTransferDependencies->GetAndClear(sym->m_id);
-                }                
+                }
             }
             else if (!isTransferOperation)
             {
@@ -345,8 +345,8 @@ TempTracker<T>::MarkTemp(StackSym * sym, BackwardPass * backwardPass)
     {
         isTempTransfered = this->tempTransferredSyms.TestAndClear(sym->m_id);
     }
-    
-    // Reset the dst is temp bit (we set it optimisticly on the loop pre pass)
+
+    // Reset the dst is temp bit (we set it optimistically on the loop pre pass)
     bool dstIsTemp = false;
     bool dstIsTempTransferred = false;
 
@@ -364,20 +364,20 @@ TempTracker<T>::MarkTemp(StackSym * sym, BackwardPass * backwardPass)
     {
         // On pre pass, we don't have complete information about whether it is tempable or
         // not from the back edge.  If we already discovered that it is not a temp (above), then
-        // we don't mark it, other wise, assume that it is ok to be tempable and have the
-        // second pass set the bit correctly.  The only works on depencency chain that is in order
+        // we don't mark it, other wise, assume that it is okay to be tempable and have the
+        // second pass set the bit correctly.  The only works on dependency chain that is in order
         // e.g.
         //      s1 = Add
         //      s2 = s1
         //      s3 = s2
-        // The depencencies tracking to catch the case whether the depencency chain is out of order
+        // The dependencies tracking to catch the case whether the dependency chain is out of order
         // e.g
         //      s1 = Add
         //      s3 = s2
         //      s2 = s3
 
-        Assert(isTransferOperation == T::IsTempTransfer(instr) 
-            || T::IsTempPropertyTransferLoad(instr, backwardPass) 
+        Assert(isTransferOperation == T::IsTempTransfer(instr)
+            || T::IsTempPropertyTransferLoad(instr, backwardPass)
             || T::IsTempIndirTransferLoad(instr, backwardPass));
         if (isTransferOperation)
         {
@@ -385,14 +385,14 @@ TempTracker<T>::MarkTemp(StackSym * sym, BackwardPass * backwardPass)
         }
     }
     else if (T::CanMarkTemp(instr, backwardPass))
-    {               
+    {
         dstIsTemp = true;
 
         if (isTempTransfered)
         {
             // Track whether the dst is transfered or not, and allocate separate stack slot for them
             // so that another dst will not overrides the value
-            dstIsTempTransferred = true;  
+            dstIsTempTransferred = true;
 
             // The temp is aliased, need to trace if there is another use of the set of aliased
             // sym that is still live so that we won't mark them this symbol and destroy the value
@@ -434,32 +434,32 @@ TempTracker<T>::MarkTemp(StackSym * sym, BackwardPass * backwardPass)
                         instr->DumpSimple();
                         Output::Print(L"       Transfered exposed uses: ");
                         JitArenaAllocator tempAllocator(L"temp", this->GetAllocator()->GetPageAllocator(), Js::Throw::OutOfMemory);
-                        bvTempTransferDependencies->AndNew(upwardExposedUses, &tempAllocator)->Dump();                        
+                        bvTempTransferDependencies->AndNew(upwardExposedUses, &tempAllocator)->Dump();
                     }
 #endif
 
                     dstIsTemp = false;
                     dstIsTempTransferred = false;
 #if DBG
-                    if (IsObjectTempVerify<T>()) 
+                    if (IsObjectTempVerify<T>())
                     {
                         dstIsTemp = ObjectTempVerify::DependencyCheck(instr, bvTempTransferDependencies, backwardPass);
                     }
 #endif
                     // Only ObjectTmepVerify would do the do anything here. All other returns false
                 }
-            }      
+            }
         }
     }
 
-    T::SetDstIsTemp(dstIsTemp, dstIsTempTransferred, instr, backwardPass);    
+    T::SetDstIsTemp(dstIsTemp, dstIsTempTransferred, instr, backwardPass);
 }
 
-NumberTemp::NumberTemp(JitArenaAllocator * alloc, bool inLoop) 
-    : TempTrackerBase(alloc, inLoop), elemLoadDependencies(alloc), nonTempElemLoad(false), 
+NumberTemp::NumberTemp(JitArenaAllocator * alloc, bool inLoop)
+    : TempTrackerBase(alloc, inLoop), elemLoadDependencies(alloc), nonTempElemLoad(false),
       upwardExposedMarkTempObjectLiveFields(alloc), upwardExposedMarkTempObjectSymsProperties(nullptr)
 {
-    propertyIdsTempTransferDependencies = inLoop ? HashTable<BVSparse<JitArenaAllocator> *>::New(alloc, 16) : nullptr;        
+    propertyIdsTempTransferDependencies = inLoop ? HashTable<BVSparse<JitArenaAllocator> *>::New(alloc, 16) : nullptr;
 }
 
 void
@@ -471,8 +471,8 @@ NumberTemp::MergeData(NumberTemp * fromData, bool deleteData)
         if (IsInLoop())
         {
             // in loop
-            elemLoadDependencies.Or(&fromData->elemLoadDependencies);            
-        }        
+            elemLoadDependencies.Or(&fromData->elemLoadDependencies);
+        }
         MergeDependencies(propertyIdsTempTransferDependencies, fromData->propertyIdsTempTransferDependencies, deleteData);
 
         if (fromData->upwardExposedMarkTempObjectSymsProperties)
@@ -489,18 +489,18 @@ NumberTemp::MergeData(NumberTemp * fromData, bool deleteData)
             else
             {
                 upwardExposedMarkTempObjectSymsProperties = HashTable<BVSparse<JitArenaAllocator> *>::New(this->GetAllocator(), 16);
-                OrHashTableOfBitVector(upwardExposedMarkTempObjectSymsProperties, fromData->upwardExposedMarkTempObjectSymsProperties, deleteData);                    
+                OrHashTableOfBitVector(upwardExposedMarkTempObjectSymsProperties, fromData->upwardExposedMarkTempObjectSymsProperties, deleteData);
             }
         }
-        
-        upwardExposedMarkTempObjectLiveFields.Or(&fromData->upwardExposedMarkTempObjectLiveFields);        
-    }    
+
+        upwardExposedMarkTempObjectLiveFields.Or(&fromData->upwardExposedMarkTempObjectLiveFields);
+    }
 }
 
-bool 
+bool
 NumberTemp::IsTempUse(IR::Instr * instr, Sym * sym, BackwardPass * backwardPass)
 {
-    Js::OpCode opcode = instr->m_opcode;    
+    Js::OpCode opcode = instr->m_opcode;
     if (OpCodeAttr::NonTempNumberSources(opcode)
         || (OpCodeAttr::TempNumberTransfer(opcode) && !instr->dstIsTempNumber))
     {
@@ -548,7 +548,7 @@ NumberTemp::IsTempProducing(IR::Instr * instr)
 
 bool
 NumberTemp::CanMarkTemp(IR::Instr * instr, BackwardPass * backwardPass)
-{        
+{
     if (IsTempTransfer(instr) || IsTempProducing(instr))
     {
         return true;
@@ -559,7 +559,7 @@ NumberTemp::CanMarkTemp(IR::Instr * instr, BackwardPass * backwardPass)
     {
         return true;
     }
-    
+
     if (NumberTemp::IsTempIndirTransferLoad(instr, backwardPass)
         || NumberTemp::IsTempPropertyTransferLoad(instr, backwardPass))
     {
@@ -577,12 +577,12 @@ NumberTemp::ProcessInstr(IR::Instr * instr, BackwardPass * backwardPass)
 #if DBG
     if (instr->m_opcode == Js::OpCode::BailOnNoProfile)
     {
-        // If we see BailOnNoProfile, we shouldn't have any successor to have have any non temp syms
+        // If we see BailOnNoProfile, we shouldn't have any successor to have any non temp syms
         Assert(!this->nonTempElemLoad);
         Assert(this->nonTempSyms.IsEmpty());
-        Assert(this->tempTransferredSyms.IsEmpty());        
+        Assert(this->tempTransferredSyms.IsEmpty());
         Assert(this->elemLoadDependencies.IsEmpty());
-        Assert(this->upwardExposedMarkTempObjectLiveFields.IsEmpty());        
+        Assert(this->upwardExposedMarkTempObjectLiveFields.IsEmpty());
     }
 #endif
     // TODO: CallDirect
@@ -595,7 +595,7 @@ NumberTemp::ProcessInstr(IR::Instr * instr, BackwardPass * backwardPass)
 
     IR::Opnd * dst = instr->GetDst();
     if (dst == nullptr || !dst->IsRegOpnd())
-    {        
+    {
         return;
     }
     StackSym * dstSym = dst->AsRegOpnd()->m_sym;
@@ -618,7 +618,7 @@ NumberTemp::ProcessInstr(IR::Instr * instr, BackwardPass * backwardPass)
             // Clear the upward exposed live fields of all the property sym id associated to dstSym
             this->upwardExposedMarkTempObjectLiveFields.Minus(dstBv);
             if (ObjectTemp::IsTempTransfer(instr) && instr->GetSrc1()->IsRegOpnd())
-            {               
+            {
                 // If it is transfer, copy the dst info to the src
                 SymID srcStackSymId = instr->GetSrc1()->AsRegOpnd()->m_sym->AsStackSym()->m_id;
 
@@ -638,7 +638,7 @@ NumberTemp::ProcessInstr(IR::Instr * instr, BackwardPass * backwardPass)
                 {
                     (*srcBv)->Or(dstBv);
                     JitAdelete(this->GetAllocator(), dstBv);
-                }                
+                }
             }
             else
             {
@@ -683,7 +683,7 @@ NumberTemp::IsTempPropertyTransferLoad(IR::Instr * instr, BackwardPass * backwar
         };
 
         // All other opcode shouldn't have sym opnd that can store temp, See ObjectTemp::IsTempUseOpCodeSym.
-        Assert(instr->GetSrc1() == nullptr 
+        Assert(instr->GetSrc1() == nullptr
             || instr->GetDst() == nullptr              // this isn't a value loading instruction
             || instr->GetSrc1()->IsIndirOpnd()      // this is detected in IsTempIndirTransferLoad
             || !instr->GetSrc1()->CanStoreTemp());
@@ -693,7 +693,7 @@ NumberTemp::IsTempPropertyTransferLoad(IR::Instr * instr, BackwardPass * backwar
 
 bool
 NumberTemp::IsTempPropertyTransferStore(IR::Instr * instr, BackwardPass * backwardPass)
-{    
+{
     if (DoMarkTempNumbersOnTempObjects(backwardPass))
     {
         switch (instr->m_opcode)
@@ -718,8 +718,8 @@ NumberTemp::IsTempPropertyTransferStore(IR::Instr * instr, BackwardPass * backwa
         };
 
         // All other opcode shouldn't have sym opnd that can store temp, See ObjectTemp::IsTempUseOpCodeSym.
-        // We also never mark the dst indir as can store temp for StElemI_A because we don't know what property 
-        // it is storing in (or it could be an array index). 
+        // We also never mark the dst indir as can store temp for StElemI_A because we don't know what property
+        // it is storing in (or it could be an array index).
         Assert(instr->GetDst() == nullptr || !instr->GetDst()->CanStoreTemp());
     }
     return false;
@@ -749,15 +749,15 @@ NumberTemp::IsTempIndirTransferLoad(IR::Instr * instr, BackwardPass * backwardPa
     }
     return false;
 }
-void 
+void
 NumberTemp::PropagateTempPropertyTransferStoreDependencies(SymID usedSymID, PropertySym * propertySym, BackwardPass * backwardPass)
 {
     Assert(!this->nonTempElemLoad);
-    upwardExposedMarkTempObjectLiveFields.Clear(propertySym->m_id);   
+    upwardExposedMarkTempObjectLiveFields.Clear(propertySym->m_id);
 
     if (!this->IsInLoop())
     {
-        // Don't need to track dependencies outside of loop, as we already marked the 
+        // Don't need to track dependencies outside of loop, as we already marked the
         // use as temp transfer already and we won't have a case where the "dst" is reused again (outside of loop
         return;
     }
@@ -767,7 +767,7 @@ NumberTemp::PropagateTempPropertyTransferStoreDependencies(SymID usedSymID, Prop
     AddTransferDependencies(usedSymID, dstSymID, this->tempTransferDependencies);
 
     Js::PropertyId storedPropertyId = propertySym->m_propertyId;
-    // The the symbol this properties are transfered to
+    // The symbol this properties are transfered to
     BVSparse<JitArenaAllocator> ** pPropertyTransferDependencies = this->propertyIdsTempTransferDependencies->Get(storedPropertyId);
     BVSparse<JitArenaAllocator> * transferDependencies = nullptr;
     if (pPropertyTransferDependencies == nullptr)
@@ -794,7 +794,7 @@ NumberTemp::PropagateTempPropertyTransferStoreDependencies(SymID usedSymID, Prop
     {
         (*pBVSparse)->Or(transferDependencies);
     }
-   
+
     if (transferDependencies != &elemLoadDependencies)
     {
         // Always include the element load dependencies as well
@@ -808,9 +808,9 @@ NumberTemp::PropagateTempPropertyTransferStoreDependencies(SymID usedSymID, Prop
     //              f = o.x
     //                = f
     //              e = e + blah
-    // Here, although we can detect that e and f has dependent relationship, f's life time doesn't cross with e's. 
-    // But o.x will keep the value of e alive, so e can't be mark temp because o.x is still in use (not f)   
-    // We will will add the property sym int he dependency set and check with the upward exposed mark temp object live fields 
+    // Here, although we can detect that e and f has dependent relationship, f's life time doesn't cross with e's.
+    // But o.x will keep the value of e alive, so e can't be mark temp because o.x is still in use (not f)
+    // We will add the property sym int he dependency set and check with the upward exposed mark temp object live fields
     // that we keep track of in NumberTemp
     (*pBVSparse)->Set(propertySym->m_id);
 }
@@ -842,7 +842,7 @@ NumberTemp::ProcessIndirUse(IR::IndirOpnd * indirOpnd, IR::Instr * instr, Backwa
     bool isTempUse = instr->dstIsTempNumber;
     if (!isTempUse)
     {
-        nonTempElemLoad = true;        
+        nonTempElemLoad = true;
     }
     else if (this->IsInLoop())
     {
@@ -850,7 +850,7 @@ NumberTemp::ProcessIndirUse(IR::IndirOpnd * indirOpnd, IR::Instr * instr, Backwa
         IR::Opnd * dstOpnd = instr->GetDst();
         Assert(dstOpnd->IsRegOpnd());
         SymID dstSymID = dstOpnd->AsRegOpnd()->m_sym->m_id;
-               
+
         // Use the no property id as a place holder for elem dependencies
         AddTransferDependencies(&elemLoadDependencies, dstSymID);
 #if DBG_DUMP
@@ -860,7 +860,7 @@ NumberTemp::ProcessIndirUse(IR::IndirOpnd * indirOpnd, IR::Instr * instr, Backwa
                 backwardPass->IsPrePass() ? L"Prepass " : L"", dstSymID);
             elemLoadDependencies.Dump();
         }
-#endif    
+#endif
     }
 
 #if DBG_DUMP
@@ -870,7 +870,7 @@ NumberTemp::ProcessIndirUse(IR::IndirOpnd * indirOpnd, IR::Instr * instr, Backwa
             backwardPass->IsPrePass() ? L"Prepass " : L"", isTempUse ? L"" : L"Non ");
         instr->DumpSimple();
     }
-#endif    
+#endif
 }
 
 void
@@ -920,7 +920,7 @@ NumberTemp::ProcessPropertySymUse(IR::SymOpnd * symOpnd, IR::Instr * instr, Back
                 backwardPass->func->GetScriptContext()->GetPropertyNameLocked(propertySym->m_propertyId)->GetBuffer());
             (*this->propertyIdsTempTransferDependencies->Get(propertySym->m_propertyId))->Dump();
         }
-#endif  
+#endif
     }
 
 #if DBG_DUMP
@@ -935,7 +935,7 @@ NumberTemp::ProcessPropertySymUse(IR::SymOpnd * symOpnd, IR::Instr * instr, Back
 }
 
 
-bool 
+bool
 NumberTemp::HasExposedFieldDependencies(BVSparse<JitArenaAllocator> * bvTempTransferDependencies, BackwardPass * backwardPass)
 {
     if (!DoMarkTempNumbersOnTempObjects(backwardPass))
@@ -952,7 +952,7 @@ NumberTemp::DoMarkTempNumbersOnTempObjects(BackwardPass * backwardPass) const
 }
 
 #if DBG
-void 
+void
 NumberTemp::Dump(wchar_t const * traceName)
 {
     if (nonTempElemLoad)
@@ -974,16 +974,16 @@ NumberTemp::Dump(wchar_t const * traceName)
 //=================================================================================================
 // ObjectTemp
 //=================================================================================================
-bool 
+bool
 ObjectTemp::IsTempUse(IR::Instr * instr, Sym * sym, BackwardPass * backwardPass)
 {
     Js::OpCode opcode = instr->m_opcode;
 
     // If the opcode has implicit call and the profile say we have implicit call, then it is not a temp use
     // TODO: More precise implicit call tracking
-    if (instr->HasAnyImplicitCalls() 
+    if (instr->HasAnyImplicitCalls()
         &&
-        ((backwardPass->currentBlock->loop != nullptr ? 
+        ((backwardPass->currentBlock->loop != nullptr ?
             !GlobOpt::ImplicitCallFlagsAllowOpts(backwardPass->currentBlock->loop) :
             !GlobOpt::ImplicitCallFlagsAllowOpts(backwardPass->func))
         || instr->CallsAccessor())
@@ -995,15 +995,15 @@ ObjectTemp::IsTempUse(IR::Instr * instr, Sym * sym, BackwardPass * backwardPass)
     return IsTempUseOpCodeSym(instr, opcode, sym);
 }
 
-bool 
+bool
 ObjectTemp::IsTempUseOpCodeSym(IR::Instr * instr, Js::OpCode opcode, Sym * sym)
-{    
+{
     // Special case ArgOut_A which communicate information about CallDirect
     switch (opcode)
     {
     case Js::OpCode::ArgOut_A:
-        return instr->dstIsTempObject;    
-    case Js::OpCode::LdFld:        
+        return instr->dstIsTempObject;
+    case Js::OpCode::LdFld:
     case Js::OpCode::LdFldForTypeOf:
     case Js::OpCode::LdMethodFld:
     case Js::OpCode::LdFldForCallApplyTarget:
@@ -1020,8 +1020,8 @@ ObjectTemp::IsTempUseOpCodeSym(IR::Instr * instr, Js::OpCode opcode, Sym * sym)
         // Fall through
     case Js::OpCode::StFld:
     case Js::OpCode::StFldStrict:
-        return 
-            !(instr->GetSrc1() && instr->GetSrc1()->GetStackSym() == sym) && 
+        return
+            !(instr->GetSrc1() && instr->GetSrc1()->GetStackSym() == sym) &&
             !(instr->GetSrc2() && instr->GetSrc2()->GetStackSym() == sym) &&
             instr->GetDst()->AsPropertySymOpnd()->GetObjectSym() == sym;
     case Js::OpCode::LdElemI_A:
@@ -1031,7 +1031,7 @@ ObjectTemp::IsTempUseOpCodeSym(IR::Instr * instr, Js::OpCode opcode, Sym * sym)
         return instr->GetDst()->AsIndirOpnd()->GetBaseOpnd()->m_sym == sym;
     case Js::OpCode::Memset:
     case Js::OpCode::Memcopy:
-        return instr->GetDst()->AsIndirOpnd()->GetBaseOpnd()->m_sym == sym || instr->GetSrc1()->AsIndirOpnd()->GetBaseOpnd()->m_sym == sym;;
+        return instr->GetDst()->AsIndirOpnd()->GetBaseOpnd()->m_sym == sym || instr->GetSrc1()->AsIndirOpnd()->GetBaseOpnd()->m_sym == sym;
 
     // Special case FromVar for now until we can allow CallsValueOf opcode to be accept temp use
     case Js::OpCode::FromVar:
@@ -1073,20 +1073,20 @@ ObjectTemp::IsTempProducing(IR::Instr * instr)
 bool
 ObjectTemp::CanStoreTemp(IR::Instr * instr)
 {
-    // In order to allow storing temp number on temp objects,  
+    // In order to allow storing temp number on temp objects,
     // We have to make sure that if the instr is marked as dstIsTempObject
     // we will always generate the code to allocate the object on the stack (so no helper call)
-    // Currently, we only do this for NewRegEx, NewScObjectSimple, NewScObjectLiteral and 
+    // Currently, we only do this for NewRegEx, NewScObjectSimple, NewScObjectLiteral and
     // NewScObjectNoCtor (where the ctor is inlined)
 
-    // CONSIDER: review lowering of other TempObjectProducing opcode and see if we can always allocate on th estack
-    // (for example, NewScArray should be able to, but plain NewScObject can't because the size depends on the 
+    // CONSIDER: review lowering of other TempObjectProducing opcode and see if we can always allocate on the stack
+    // (for example, NewScArray should be able to, but plain NewScObject can't because the size depends on the
     // number inline slots)
     Js::OpCode opcode = instr->m_opcode;
     if (OpCodeAttr::TempObjectCanStoreTemp(opcode))
     {
         // Special cases where stack allocation doesn't happen
-#if ENABLE_REGEX_CONFIG_OPTIONS    
+#if ENABLE_REGEX_CONFIG_OPTIONS
         if (opcode == Js::OpCode::NewRegEx && REGEX_CONFIG_FLAG(RegexTracing))
         {
             return false;
@@ -1098,7 +1098,7 @@ ObjectTemp::CanStoreTemp(IR::Instr * instr)
             {
                 return false;
             }
-            
+
             // Only if we have BailOutFailedCtorGuardCheck would we generate that we generate a stack object
             // Otherwise we will call the helper, which will not generate stack object
             return instr->HasBailOutInfo();
@@ -1111,7 +1111,7 @@ ObjectTemp::CanStoreTemp(IR::Instr * instr)
 
 bool
 ObjectTemp::CanMarkTemp(IR::Instr * instr, BackwardPass * backwardPass)
-{        
+{
     // We mark the ArgOut with the call in ProcessInstr, no need to do it here
     return IsTempProducing(instr) || IsTempTransfer(instr);
 }
@@ -1133,23 +1133,23 @@ ObjectTemp::ProcessBailOnNoProfile(IR::Instr * instr)
 
 void
 ObjectTemp::ProcessInstr(IR::Instr * instr)
-{    
+{
     if (instr->m_opcode != Js::OpCode::CallDirect)
     {
         return;
     }
 
-    IR::HelperCallOpnd * helper = instr->GetSrc1()->AsHelperCallOpnd();    
+    IR::HelperCallOpnd * helper = instr->GetSrc1()->AsHelperCallOpnd();
     switch (helper->m_fnHelper)
     {
         case IR::JnHelperMethod::HelperString_Match:
         case IR::JnHelperMethod::HelperString_Replace:
         {
             // First (non-this) parameter is either an regexp or search string
-            // It doesn't excape
+            // It doesn't escape
             IR::Instr * instrArgDef;
             instr->FindCallArgumentOpnd(2, &instrArgDef);
-            instrArgDef->dstIsTempObject = true;            
+            instrArgDef->dstIsTempObject = true;
             break;
         }
 
@@ -1157,7 +1157,7 @@ ObjectTemp::ProcessInstr(IR::Instr * instr)
         {
             IR::Instr * instrArgDef;
             instr->FindCallArgumentOpnd(1, &instrArgDef);
-            instrArgDef->dstIsTempObject = true;            
+            instrArgDef->dstIsTempObject = true;
             break;
         }
     };
@@ -1167,14 +1167,14 @@ ObjectTemp::ProcessInstr(IR::Instr * instr)
 void
 ObjectTemp::SetDstIsTemp(bool dstIsTemp, bool dstIsTempTransferred, IR::Instr * instr, BackwardPass * backwardPass)
 {
-    Assert(dstIsTemp || !dstIsTempTransferred);  
+    Assert(dstIsTemp || !dstIsTempTransferred);
 
     // ArgOut_A are marked by CallDirect and don't need to be set
     if (instr->m_opcode == Js::OpCode::ArgOut_A)
     {
         return;
     }
-    instr->dstIsTempObject = dstIsTemp;  
+    instr->dstIsTempObject = dstIsTemp;
 
     if (!backwardPass->IsPrePass())
     {
@@ -1183,8 +1183,8 @@ ObjectTemp::SetDstIsTemp(bool dstIsTemp, bool dstIsTempTransferred, IR::Instr * 
             backwardPass->func->SetHasMarkTempObjects();
 #if DBG_DUMP
             backwardPass->numMarkTempObject += dstIsTemp;
-#endif 
-        }     
+#endif
+        }
     }
 }
 
@@ -1194,25 +1194,25 @@ ObjectTemp::GetStackSym(IR::Opnd * opnd, IR::PropertySymOpnd ** pPropertySymOpnd
     StackSym * stackSym = nullptr;
     switch (opnd->GetKind())
     {
-        case IR::OpndKindReg:   
+        case IR::OpndKindReg:
             stackSym = opnd->AsRegOpnd()->m_sym;
             break;
         case IR::OpndKindSym:
-        {                        
+        {
             IR::SymOpnd * symOpnd = opnd->AsSymOpnd();
             if (symOpnd->IsPropertySymOpnd())
             {
                 IR::PropertySymOpnd * propertySymOpnd = symOpnd->AsPropertySymOpnd();
                 *pPropertySymOpnd = propertySymOpnd;
-                stackSym = propertySymOpnd->GetObjectSym();               
+                stackSym = propertySymOpnd->GetObjectSym();
             }
             else if (symOpnd->m_sym->IsPropertySym())
-            {                
+            {
                 stackSym = symOpnd->m_sym->AsPropertySym()->m_stackSym;
             }
             break;
         }
-        case IR::OpndKindIndir:                    
+        case IR::OpndKindIndir:
             stackSym = opnd->AsIndirOpnd()->GetBaseOpnd()->m_sym;
             break;
     };
@@ -1223,43 +1223,43 @@ ObjectTemp::GetStackSym(IR::Opnd * opnd, IR::PropertySymOpnd ** pPropertySymOpnd
 //=================================================================================================
 // ObjectTempVerify
 //=================================================================================================
-ObjectTempVerify::ObjectTempVerify(JitArenaAllocator * alloc, bool inLoop) 
+ObjectTempVerify::ObjectTempVerify(JitArenaAllocator * alloc, bool inLoop)
     : TempTrackerBase(alloc, inLoop), removedUpwardExposedUse(alloc)
 {
 }
 
 
-bool 
+bool
 ObjectTempVerify::IsTempUse(IR::Instr * instr, Sym * sym, BackwardPass * backwardPass)
 {
-    Js::OpCode opcode = instr->m_opcode;    
+    Js::OpCode opcode = instr->m_opcode;
 
     // If the opcode has implicit call and the profile say we have implicit call, then it is not a temp use
     // TODO: More precise implicit call tracking
     bool isLandingPad = backwardPass->currentBlock->IsLandingPad();
     if (OpCodeAttr::HasImplicitCall(opcode) && !isLandingPad
-        && 
-        ((backwardPass->currentBlock->loop != nullptr ? 
+        &&
+        ((backwardPass->currentBlock->loop != nullptr ?
             !GlobOpt::ImplicitCallFlagsAllowOpts(backwardPass->currentBlock->loop) :
             !GlobOpt::ImplicitCallFlagsAllowOpts(backwardPass->func))
         || instr->CallsAccessor())
        )
-    {        
-        return false;
-    }    
-    
-    if (!ObjectTemp::IsTempUseOpCodeSym(instr, opcode, sym))
     {
-        // the opcode and sym is not a tmep use, just return
         return false;
     }
 
-    // In the backward pass, this would have been a temp use already.  Continue to verify 
+    if (!ObjectTemp::IsTempUseOpCodeSym(instr, opcode, sym))
+    {
+        // the opcode and sym is not a temp use, just return
+        return false;
+    }
+
+    // In the backward pass, this would have been a temp use already.  Continue to verify
     // if we have install sufficient bailout on implicit call
 
     if (isLandingPad || !GlobOpt::MayNeedBailOnImplicitCall(instr, nullptr, nullptr))
     {
-        // Implicit call would not happen, or we are in the landin pad where implicit call is disabled.
+        // Implicit call would not happen, or we are in the landing pad where implicit call is disabled.
         return true;
     }
 
@@ -1267,7 +1267,7 @@ ObjectTempVerify::IsTempUse(IR::Instr * instr, Sym * sym, BackwardPass * backwar
     {
         // make sure we have mark the bailout for mark temp object,
         // so that we won't optimize it away in DeadStoreImplicitCalls
-        return ((instr->GetBailOutKind() & IR::BailOutMarkTempObject) != 0);        
+        return ((instr->GetBailOutKind() & IR::BailOutMarkTempObject) != 0);
     }
 
     // Review (ObjTypeSpec): This is a bit conservative now that we don't revert from obj type specialized operations to live cache
@@ -1285,8 +1285,8 @@ bool
 ObjectTempVerify::IsTempTransfer(IR::Instr * instr)
 {
 
-    if (ObjectTemp::IsTempTransfer(instr) 
-        // Add the Ld_I4, and LdC_A_I4 as the forward pass might have chnaged Ld_A to these
+    if (ObjectTemp::IsTempTransfer(instr)
+        // Add the Ld_I4, and LdC_A_I4 as the forward pass might have changed Ld_A to these
         || instr->m_opcode == Js::OpCode::Ld_I4
         || instr->m_opcode == Js::OpCode::LdC_A_I4)
     {
@@ -1305,10 +1305,10 @@ ObjectTempVerify::IsTempTransfer(IR::Instr * instr)
 
 bool
 ObjectTempVerify::CanMarkTemp(IR::Instr * instr, BackwardPass * backwardPass)
-{        
+{
     // We mark the ArgOut with the call in ProcessInstr, no need to do it here
     return ObjectTemp::IsTempProducing(instr)
-        || IsTempTransfer(instr);        
+        || IsTempTransfer(instr);
 }
 
 void
@@ -1320,20 +1320,20 @@ ObjectTempVerify::ProcessInstr(IR::Instr * instr, BackwardPass * backwardPass)
         this->removedUpwardExposedUse.Or(backwardPass->currentBlock->byteCodeUpwardExposedUsed);
         return;
     }
-    
+
     if (instr->m_opcode != Js::OpCode::CallDirect)
     {
         return;
     }
 
-    IR::HelperCallOpnd * helper = instr->GetSrc1()->AsHelperCallOpnd();    
+    IR::HelperCallOpnd * helper = instr->GetSrc1()->AsHelperCallOpnd();
     switch (helper->m_fnHelper)
     {
         case IR::JnHelperMethod::HelperString_Match:
         case IR::JnHelperMethod::HelperString_Replace:
         {
             // First (non-this) parameter is either an regexp or search string
-            // It doesn't excape
+            // It doesn't escape
             IR::Instr * instrArgDef;
             instr->FindCallArgumentOpnd(2, &instrArgDef);
             Assert(instrArgDef->dstIsTempObject);
@@ -1344,7 +1344,7 @@ ObjectTempVerify::ProcessInstr(IR::Instr * instr, BackwardPass * backwardPass)
         {
             IR::Instr * instrArgDef;
             instr->FindCallArgumentOpnd(1, &instrArgDef);
-            Assert(instrArgDef->dstIsTempObject);      
+            Assert(instrArgDef->dstIsTempObject);
             break;
         }
     };
@@ -1354,13 +1354,13 @@ ObjectTempVerify::ProcessInstr(IR::Instr * instr, BackwardPass * backwardPass)
 void
 ObjectTempVerify::SetDstIsTemp(bool dstIsTemp, bool dstIsTempTransferred, IR::Instr * instr, BackwardPass * backwardPass)
 {
-    Assert(dstIsTemp || !dstIsTempTransferred);  
+    Assert(dstIsTemp || !dstIsTempTransferred);
 
     // ArgOut_A are marked by CallDirect and don't need to be set
     if (instr->m_opcode == Js::OpCode::ArgOut_A)
     {
         return;
-    }    
+    }
 
     if (OpCodeAttr::TempObjectProducing(instr->m_opcode))
     {
@@ -1370,7 +1370,7 @@ ObjectTempVerify::SetDstIsTemp(bool dstIsTemp, bool dstIsTempTransferred, IR::In
             {
                 // Don't assert if we have detected a removed upward exposed use that could
                 // expose a new mark temp object. Don't assert if it is set in removedUpwardExposedUse
-                bool isBailOnNoProfileUpwardExposedUse = 
+                bool isBailOnNoProfileUpwardExposedUse =
                     !!this->removedUpwardExposedUse.Test(instr->GetDst()->AsRegOpnd()->m_sym->m_id);
 #if DBG
                 if (DoTrace(backwardPass) && !instr->dstIsTempObject && !isBailOnNoProfileUpwardExposedUse)
@@ -1381,14 +1381,14 @@ ObjectTempVerify::SetDstIsTemp(bool dstIsTemp, bool dstIsTempTransferred, IR::In
                 }
 #endif
                 // TODO: Unfortunately we still hit this a lot as we are not accounting for some of the globopt changes
-                // to the IR.  It is just reporting that we have missed mark temp object oppurtunity, so it doesn't
+                // to the IR.  It is just reporting that we have missed mark temp object opportunity, so it doesn't
                 // indicate a functional failure.  Disable for now.
                 // Assert(instr->dstIsTempObject || isBailOnNoProfileUpwardExposedUse);
             }
             else
             {
-                // If we have marked the dst is temp in the backward pass, the globopt 
-                // should have maintained it, and it will be wrong to have detect that it is not 
+                // If we have marked the dst is temp in the backward pass, the globopt
+                // should have maintained it, and it will be wrong to have detect that it is not
                 // temp now in the deadstore pass (whether there is BailOnNoProfile or not)
 #if DBG
                 if (DoTrace(backwardPass) && instr->dstIsTempObject)
@@ -1401,10 +1401,10 @@ ObjectTempVerify::SetDstIsTemp(bool dstIsTemp, bool dstIsTempTransferred, IR::In
                 Assert(!instr->dstIsTempObject);
             }
         }
-    }    
+    }
     else if (IsTempTransfer(instr))
     {
-        // Only set the transfer        
+        // Only set the transfer
         instr->dstIsTempObject = dstIsTemp;
     }
     else
@@ -1414,7 +1414,7 @@ ObjectTempVerify::SetDstIsTemp(bool dstIsTemp, bool dstIsTempTransferred, IR::In
     }
 
     // clear or transfer the bailOnNoProfile upward exposed use
-    if (this->removedUpwardExposedUse.TestAndClear(instr->GetDst()->AsRegOpnd()->m_sym->m_id) 
+    if (this->removedUpwardExposedUse.TestAndClear(instr->GetDst()->AsRegOpnd()->m_sym->m_id)
         && IsTempTransfer(instr) && instr->GetSrc1()->IsRegOpnd())
     {
         this->removedUpwardExposedUse.Set(instr->GetSrc1()->AsRegOpnd()->m_sym->m_id);
@@ -1436,14 +1436,14 @@ ObjectTempVerify::MergeDeadData(BasicBlock * block)
         // We there was dead flow to a block that is not dead, it might expose
         // new mark temp object, so all its current used (upwardExposedUsed) and optimized
         // use (byteCodeupwardExposedUsed) might not be trace for "missed" mark temp object
-        this->removedUpwardExposedUse.Or(block->upwardExposedUses);        
+        this->removedUpwardExposedUse.Or(block->upwardExposedUses);
         if (block->byteCodeUpwardExposedUsed)
         {
             this->removedUpwardExposedUse.Or(block->byteCodeUpwardExposedUsed);
         }
     }
 }
-   
+
 void
 ObjectTempVerify::NotifyBailOutRemoval(IR:: Instr * instr, BackwardPass * backwardPass)
 {
@@ -1485,7 +1485,7 @@ ObjectTempVerify::NotifyDeadStore(IR::Instr * instr, BackwardPass * backwardPass
     IR::Opnd * src1 = instr->GetSrc1();
     if (src1)
     {
-        IR::PropertySymOpnd * propertySymOpnd;      
+        IR::PropertySymOpnd * propertySymOpnd;
         StackSym * stackSym = ObjectTemp::GetStackSym(src1, &propertySymOpnd);
         if (stackSym)
         {
@@ -1499,7 +1499,7 @@ ObjectTempVerify::NotifyDeadStore(IR::Instr * instr, BackwardPass * backwardPass
             if (stackSym)
             {
                 ((TempTracker<ObjectTempVerify> *)this)->ProcessUse(stackSym, backwardPass);
-            }            
+            }
         }
     }
 }
@@ -1517,7 +1517,7 @@ ObjectTempVerify::NotifyDeadByteCodeUses(IR::Instr * instr)
     IR::ByteCodeUsesInstr *byteCodeUsesInstr = instr->AsByteCodeUsesInstr();
     BVSparse<JitArenaAllocator> * byteCodeUpwardExposedUsed = byteCodeUsesInstr->byteCodeUpwardExposedUsed;
     if (byteCodeUpwardExposedUsed != nullptr)
-    {        
+    {
         this->removedUpwardExposedUse.Or(byteCodeUpwardExposedUsed);
     }
 }
@@ -1538,23 +1538,23 @@ ObjectTempVerify::DependencyCheck(IR::Instr * instr, BVSparse<JitArenaAllocator>
     //      s1 = LdRootFld
     //      s6 = s1
     //      s1 = NewScObject            // s1 is dependent of s6, and s6 is upward exposed.
-    //         = s6.blah                    
+    //         = s6.blah
     //      s6 = s1
-    // Here, although s1 is mark temp able becaue the s6.blah use is not related, we only know that s1 is depdent of s6
-    // so it looks like s1 may overlap thru the iterations.  The backward pass will be able to catch that and not mark temp them
+    // Here, although s1 is mark temp able because the s6.blah use is not related, we only know that s1 is dependent of s6
+    // so it looks like s1 may overlap through the iterations.  The backward pass will be able to catch that and not mark temp them
 
-    // However, the globopt may create situtation like the above while it wasn't there in the backward phase
+    // However, the globopt may create situation like the above while it wasn't there in the backward phase
     // For example:
     //         = s6.blah
     //      s1 = LdRootFld g
     //      s6 = s1
-    //      s1 = NewScObject           
+    //      s1 = NewScObject
     //      s7 = LdRootFld g
     //         = s7.blah                // Globopt copy prop s7 -> s6, creating the example above.
     //      s6 = s1
-    // This make it impposible to verify whether we did the right thing using the conservative algorithm.
+    // This make it impossible to verify whether we did the right thing using the conservative algorithm.
 
-    // Luckly, this case is very rare (ExprGen didn't hit it with > 100K test cases)
+    // Luckily, this case is very rare (ExprGen didn't hit it with > 100K test cases)
     // So we can use this rather expensive algorithm to find out if any of upward exposed used that we think overlaps
     // really get their value from the marked temp sym or not.
 
@@ -1586,18 +1586,18 @@ ObjectTempVerify::DependencyCheck(IR::Instr * instr, BVSparse<JitArenaAllocator>
             {
                 initial = false;
             }
-            else if (currentInstr == instr)       
+            else if (currentInstr == instr)
             {
                 if (dependentSyms->Test(markTempSymId))
                 {
-                    // One of the dependent sym from the origial set get it's value from the current marked temp dst
+                    // One of the dependent sym from the original set get it's value from the current marked temp dst
                     // The dst definitely cannot be temp because it's lifetime overlaps across iterations
                     return false;
                 }
 
-                // If we have already check the same dependent sym, no need to do it again. 
+                // If we have already check the same dependent sym, no need to do it again.
                 // It will produce the same result anyway
-                dependentSyms->Minus(initialDependentSyms);                
+                dependentSyms->Minus(initialDependentSyms);
                 if (dependentSyms->IsEmpty())
                 {
                     break;
@@ -1610,13 +1610,13 @@ ObjectTempVerify::DependencyCheck(IR::Instr * instr, BVSparse<JitArenaAllocator>
             {
                 // Clear the def and mark the src if it is transfered
 
-                // If the dst sym is a type specialied sym, clear the var sym instead.
+                // If the dst sym is a type specialized sym, clear the var sym instead.
                 StackSym * dstSym = currentInstr->GetDst()->AsRegOpnd()->m_sym;
                 if (!dstSym->IsVar())
                 {
                     dstSym = dstSym->GetVarEquivSym(nullptr);
                 }
-                if (dstSym && dependentSyms->TestAndClear(dstSym->m_id) && 
+                if (dstSym && dependentSyms->TestAndClear(dstSym->m_id) &&
                     IsTempTransfer(currentInstr) && currentInstr->GetSrc1()->IsRegOpnd())
                 {
                     // We only really care about var syms uses for object temp
@@ -1624,7 +1624,7 @@ ObjectTempVerify::DependencyCheck(IR::Instr * instr, BVSparse<JitArenaAllocator>
                     if (srcSym->IsVar())
                     {
                         dependentSyms->Set(srcSym->m_id);
-                    }                    
+                    }
                 }
 
                 if (dependentSyms->IsEmpty())
@@ -1632,18 +1632,18 @@ ObjectTempVerify::DependencyCheck(IR::Instr * instr, BVSparse<JitArenaAllocator>
                     // No more dependent sym, we found the def of all of them we can move on to the next block
                     break;
                 }
-            }               
+            }
             currentInstr = currentInstr->m_prev;
         }
-               
+
         if (currentBlock->isLoopHeader && !dependentSyms->IsEmpty())
         {
             Assert(currentInstr == currentBlock->GetFirstInstr());
-            // If we have try to propagate the symbol thru the loop before, we don't need to propagate it again
+            // If we have try to propagate the symbol through the loop before, we don't need to propagate it again
             BVSparse<JitArenaAllocator> * currentLoopProcessedSyms = processedSyms.Lookup(currentBlock, nullptr);
             if (currentLoopProcessedSyms == nullptr)
             {
-                processedSyms.Add(currentBlock, dependentSyms->CopyNew());                    
+                processedSyms.Add(currentBlock, dependentSyms->CopyNew());
             }
             else
             {
@@ -1668,7 +1668,7 @@ ObjectTempVerify::DependencyCheck(IR::Instr * instr, BVSparse<JitArenaAllocator>
                 record.dependentSyms = dependentSyms->CopyNew();
                 blockStack.Prepend(record);
             }
-            NEXT_PREDECESSOR_BLOCK;            
+            NEXT_PREDECESSOR_BLOCK;
         }
         JitAdelete(&tempAllocator, dependentSyms);
 

@@ -424,7 +424,7 @@ LowererMDArch::LoadFuncExpression(IR::Instr *instrFuncExpr)
 }
 
 //
-// Load the parameter in the the first argument slot
+// Load the parameter in the first argument slot
 //
 
 IR::Instr *
@@ -440,7 +440,7 @@ LowererMDArch::LoadNewScObjFirstArg(IR::Instr * instr, IR::Opnd * dst, ushort ex
 int32
 LowererMDArch::LowerCallArgs(IR::Instr *callInstr, ushort callFlags, Js::ArgSlot extraParams, IR::IntConstOpnd **callInfoOpndRef /* = nullptr */)
 {
-    AssertMsg(this->helperCallArgsCount == 0, "We don't support nested helpercalls yet");
+    AssertMsg(this->helperCallArgsCount == 0, "We don't support nested helper calls yet");
 
     const Js::ArgSlot       argOffset       = 1;
     uint32                  argCount        = 0;
@@ -483,8 +483,8 @@ LowererMDArch::LowerCallArgs(IR::Instr *callInstr, ushort callFlags, Js::ArgSlot
         cfgInsertLoc = argInstr->GetPrevRealInstr();
 
         // The arg sym isn't assigned a constant directly anymore
-        // TODO: We can just move the instruction down next to the call if it is just an constant assignement
-        // but AMD64 doens't have the MOV mem,imm64 encoding, and we have no code to detect if the value can fit
+        // TODO: We can just move the instruction down next to the call if it is just an constant assignment
+        // but AMD64 doesn't have the MOV mem,imm64 encoding, and we have no code to detect if the value can fit
         // into imm32 and hoist the src if it is not.
         argLinkSym->m_isConst = false;
         argLinkSym->m_isIntConst = false;
@@ -593,7 +593,7 @@ LowererMDArch::GenerateFunctionObjectTest(IR::Instr * callInstr, IR::RegOpnd  *f
 
     IR::RegOpnd *functionObjRegOpnd = functionObjOpnd->AsRegOpnd();
     IR::Instr * insertBeforeInstr = callInstr;
-    
+
     // Need check and error if we are calling a tagged int.
     if (!functionObjRegOpnd->IsNotTaggedValue())
     {
@@ -613,7 +613,7 @@ LowererMDArch::GenerateFunctionObjectTest(IR::Instr * callInstr, IR::RegOpnd  *f
 
             if (continueAfterExLabel)
             {
-                // Under debugger the RuntimeError (exception) can be ignored, generate branch to jmp to safe place 
+                // Under debugger the RuntimeError (exception) can be ignored, generate branch to jmp to safe place
                 // (which would normally be debugger bailout check).
                 IR::BranchInstr* continueAfterEx = IR::BranchInstr::New(LowererMD::MDUncondBranchOpcode, continueAfterExLabel, this->m_func);
                 insertBeforeInstr->InsertBefore(continueAfterEx);
@@ -695,7 +695,7 @@ LowererMDArch::GeneratePreCall(IR::Instr * callInstr, IR::Opnd  *functionObjOpnd
         this->lowererMD->GenerateCFGCheck(entryPointRegOpnd, insertBeforeInstrForCFGCheck);
     }
 #endif
-    
+
     // Setup the first call argument - pointer to the function being called.
     {
         IR::Instr *mov = IR::Instr::New(Js::OpCode::MOV, GetArgSlotOpnd(1), functionObjOpnd, m_func);
@@ -706,12 +706,12 @@ LowererMDArch::GeneratePreCall(IR::Instr * callInstr, IR::Opnd  *functionObjOpnd
 IR::Instr *
 LowererMDArch::LowerCallI(IR::Instr * callInstr, ushort callFlags, bool isHelper, IR::Instr * insertBeforeInstrForCFG)
 {
-    AssertMsg(this->helperCallArgsCount == 0, "We don't support nested helpercalls yet");
+    AssertMsg(this->helperCallArgsCount == 0, "We don't support nested helper calls yet");
 
     IR::Opnd * functionObjOpnd = callInstr->UnlinkSrc1();
     IR::Instr * insertBeforeInstrForCFGCheck = callInstr;
 
-    // If this is a call for new, we already pass the function operand thru NewScObject,
+    // If this is a call for new, we already pass the function operand through NewScObject,
     // which checks if the function operand is a real function or not, don't need to add a check again
     // If this is a call to a fixed function, we've already verified that the target is, indeed, a function.
     if (callInstr->m_opcode != Js::OpCode::CallIFixed && !(callFlags & Js::CallFlags_New))
@@ -839,7 +839,7 @@ LowererMDArch::LowerCall(IR::Instr * callInstr, uint32 argCount)
             callInstr);
         --argsLeft;
     }
-    
+
 
     //
     // load the address into a register because we cannot directly access 64 bit constants
@@ -882,7 +882,7 @@ LowererMDArch::GetArgSlotOpnd(uint16 index, StackSym * argSym)
     Assert(index != 0);
 
     uint16 argPosition = index;
-    
+
     // Without SIMD the index is the Var offset and is also the argument index. Since each arg = 1 Var.
     // With SIMD, args are of variable length and we need to the argument position in the args list.
     if (m_func->GetScriptContext()->GetConfig()->IsSimdjsEnabled() &&
@@ -1148,7 +1148,7 @@ LowererMDArch::LoadHelperArgument(IR::Instr *instr, IR::Opnd *opndArg)
 
     helperCallArgs[helperCallArgsCount++] = destOpnd;
     AssertMsg(helperCallArgsCount < LowererMDArch::MaxArgumentsToHelper,
-              "We donot yet support any no. of arguments to the helper");
+              "We do not yet support any no. of arguments to the helper");
 
     return instrToReturn;
 }
@@ -1207,7 +1207,7 @@ void
 LowererMDArch::GenerateStackAllocation(IR::Instr *instr, uint32 size)
 {
     Assert(size > 0);
-    
+
     IR::RegOpnd *       rspOpnd         = IR::RegOpnd::New(nullptr, RegRSP, TyMachReg, this->m_func);
 
     //review: size should fit in 32bits
@@ -1230,7 +1230,7 @@ LowererMDArch::GenerateStackAllocation(IR::Instr *instr, uint32 size)
         //
         // REVIEW: Call to helper functions assume the address of the variable to be present in
         // RAX. But _chkstk method accepts argument in RAX. Hence handling this one manually.
-        // fix this later when CALLHELPER leaved dependancy on RAX.
+        // fix this later when CALLHELPER leaved dependency on RAX.
         //
 
         IR::RegOpnd *raxOpnd = IR::RegOpnd::New(nullptr, RegRAX, TyMachReg, this->m_func);
@@ -1398,7 +1398,7 @@ LowererMDArch::LowerEntryInstr(IR::EntryInstr * entryInstr)
     }
 
     //
-    // This is the last instruction so should have been emmitted before, register saves.
+    // This is the last instruction so should have been emitted before, register saves.
     // But we did not have 'savedRegSize' by then. So we saved secondInstr. We now insert w.r.t that
     // instruction.
     //
@@ -1416,14 +1416,14 @@ LowererMDArch::LowerEntryInstr(IR::EntryInstr * entryInstr)
     else
     {
         this->GenerateStackAllocation(secondInstr->m_prev, stackArgsSize);
-        m_func->m_prologEncoder.RecordAlloca(stackArgsSize);                
-        
+        m_func->m_prologEncoder.RecordAlloca(stackArgsSize);
+
         // Allocate frame.
         if (stackLocalsSize)
         {
             this->GenerateStackAllocation(entryInstr, stackLocalsSize);
             m_func->m_prologEncoder.RecordAlloca(stackLocalsSize);
-        }        
+        }
     }
 
     lastPrologInstr = secondInstr->m_prev;
@@ -1597,7 +1597,7 @@ LowererMDArch::GeneratePrologueStackProbe(IR::Instr *entryInstr, IntConstType fr
         // Load the current stack limit from the ThreadContext and add the current frame size.
         {
             void *pLimit = threadContext->GetAddressOfStackLimitForCurrentThread();
-            IR::RegOpnd *baseOpnd = IR::RegOpnd::New(nullptr, RegRAX, TyMachReg, this->m_func);            
+            IR::RegOpnd *baseOpnd = IR::RegOpnd::New(nullptr, RegRAX, TyMachReg, this->m_func);
             this->lowererMD->CreateAssign(baseOpnd, IR::AddrOpnd::New(pLimit, IR::AddrOpndKindDynamicMisc, this->m_func), insertInstr);
             IR::IndirOpnd *indirOpnd = IR::IndirOpnd::New(baseOpnd, 0, TyMachReg, this->m_func);
 
@@ -1627,7 +1627,7 @@ LowererMDArch::GeneratePrologueStackProbe(IR::Instr *entryInstr, IntConstType fr
     instr->SetSrc2(stackLimitOpnd);
     insertInstr->InsertBefore(instr);
 
-    
+
     IR::LabelInstr * doneLabel = nullptr;
     if (!PHASE_OFF(Js::LayoutPhase, this->m_func))
     {
@@ -1736,7 +1736,7 @@ LowererMDArch::LowerExitInstr(IR::ExitInstr * exitInstr)
     }
 
     Assert(savedRegSize == (uint)this->m_func->GetSavedRegSize());
-    
+
 
     // Generate ADD RSP, argsStackSize before the register restore (if there are any)
     uint32 stackArgsSize = this->m_func->GetArgsSize();
@@ -2200,9 +2200,9 @@ LowererMDArch::EmitLoadVar(IR::Instr *instrLoad, bool isFromUint32, bool isHelpe
         instrLoad->InsertBefore(instr);
     }
 
-    // The previous operation clears the top 32 bits.    
+    // The previous operation clears the top 32 bits.
     // BTS r1, VarTag_Shift
-    this->lowererMD->GenerateInt32ToVarConversion(r1, instrLoad);   
+    this->lowererMD->GenerateInt32ToVarConversion(r1, instrLoad);
 
     // REVIEW: We need r1 only if we could generate sn = Ld_A_I4 sn. i.e. the destination and
     // source are the same.
@@ -2801,7 +2801,7 @@ LowererMDArch::LowerEHRegionReturn(IR::Instr * insertBeforeInstr, IR::Opnd * tar
         m_func);
     leaveInstr->InsertBefore(jmp);
 #endif
- 
+
     IR::IntConstOpnd *intSrc = IR::IntConstOpnd::New(0, TyInt32, this->m_func);
     IR::Instr * retInstr = IR::Instr::New(Js::OpCode::RET, this->m_func);
     retInstr->SetSrc1(intSrc);

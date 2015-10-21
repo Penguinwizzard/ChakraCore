@@ -45,7 +45,7 @@ namespace Js
 
     struct PolymorphicCallSiteInfo;
     // Information about dynamic profile information loaded from cache.
-    // Used to verify whether the loaded information matches the paried function body.
+    // Used to verify whether the loaded information matches the paired function body.
     class DynamicProfileFunctionInfo
     {
     public:
@@ -93,12 +93,12 @@ namespace Js
 
         // Implicit call that is not caused by operations for the instruction (e.g. QC and GC dispose)
         // where we left script and enter script again. (Also see BEGIN_LEAVE_SCRIPT_INTERNAL)
-        // This doesn't count as an implicit call on the recorded profile, but if it happend on JIT'ed code
-        // it will still cause a bailout.  Should happen very rarely.
+        // This doesn't count as an implicit call on the recorded profile, but if it happens on JIT'ed code
+        // it will still cause a bailout. Should happen very rarely.
         ImplicitCall_AsyncHostOperation     = 0x80
     };
 
-    // Todo:: include ImplicitCallFlags in this structure
+    // TODO: include ImplicitCallFlags in this structure
     struct LoopFlags
     {
         // maintain the bits and the enum at the same time, it must match
@@ -110,7 +110,7 @@ namespace Js
             MEMOP_MIN_COUNT_FOUND,
             COUNT
         };
-        
+
         LoopFlags() :
             isInterpreted(false),
             memopMinCountReached(false)
@@ -165,7 +165,7 @@ namespace Js
             return !valueType.IsUninitialized();
         }
 
-        uint32 GetOffsetOfFlags() { return offsetof(FldInfo, flags); } 
+        uint32 GetOffsetOfFlags() { return offsetof(FldInfo, flags); }
     };
     CompileAssert(sizeof(FldInfo::TSize) == sizeof(FldInfo));
 
@@ -296,13 +296,13 @@ namespace Js
 #if DBG
         uint functionNumber;
         ProfileId callSiteNumber;
-#endif  
+#endif
 
 
         bool IsNativeIntArray() const { return !(bits & NotNativeIntBit) && !PHASE_OFF1(NativeArrayPhase); }
         bool IsNativeFloatArray() const { return !(bits & NotNativeFloatBit) && !PHASE_OFF1(NativeArrayPhase); }
         bool IsNativeArray() const { return IsNativeFloatArray(); }
-        void SetIsNotNativeIntArray();        
+        void SetIsNotNativeIntArray();
         void SetIsNotNativeFloatArray();
         void SetIsNotNativeArray();
 
@@ -372,7 +372,7 @@ namespace Js
         void RecordCallSiteInfo(FunctionBody* functionBody, ProfileId callSiteId, FunctionInfo * calleeFunctionInfo, JavascriptFunction* calleeFunction, ArgSlot actualArgCount, bool isConstructorCall, InlineCacheIndex ldFldInlnlineCacheId = Js::Constants::NoInlineCacheIndex);
         void RecordConstParameterAtCallSite(ProfileId callSiteId, int argNum);
         bool HasCallSiteInfo(FunctionBody* functionBody);
-        bool HasCallSiteInfo(FunctionBody* functionBody, ProfileId callSiteId); //Does perticular callsite has ProfileInfo.
+        bool HasCallSiteInfo(FunctionBody* functionBody, ProfileId callSiteId); // Does a particular callsite have ProfileInfo?
         FunctionInfo * GetCallSiteInfo(FunctionBody* functionBody, ProfileId callSiteId, bool *isConstructorCall, bool *isPolymorphicCall);
         uint16 GetConstantArgInfo(ProfileId callSiteId);
         uint GetLdFldCacheIndexFromCallSiteInfo(FunctionBody* functionBody, ProfileId callSiteId);
@@ -402,7 +402,7 @@ namespace Js
 
         bool CallSiteHasProfileData(ProfileId callSiteId)
         {
-            return this->callSiteInfo[callSiteId].isPolymorphic 
+            return this->callSiteInfo[callSiteId].isPolymorphic
                 || this->callSiteInfo[callSiteId].u.functionData.sourceId != NoSourceId
                 || this->callSiteInfo[callSiteId].dontInline;
         }
@@ -447,14 +447,14 @@ namespace Js
             uint16 isPolymorphic : 1;
             ValueType returnType;
             InlineCacheIndex ldFldInlineCacheId;
-            union 
+            union
             {
-                struct 
+                struct
                 {
                     Js::SourceId sourceId;
                     Js::LocalFunctionId functionId;
                 } functionData;
-                //As of now polymorphic info is allocated only if the source Id is current 
+                //As of now polymorphic info is allocated only if the source Id is current
                 PolymorphicCallSiteInfo* polymorphicCallSiteInfo;
             } u;
         } * callSiteInfo;
@@ -486,7 +486,7 @@ namespace Js
             bool disableDivIntTypeSpec : 1;
             bool disableDivIntTypeSpec_jitLoopBody : 1;
             bool disableLossyIntTypeSpec : 1;
-            // Todo:: put this flag in LoopFlags if we can find a reliable way to determine the loopNumber in bailout for a hoisted instr
+            // TODO: put this flag in LoopFlags if we can find a reliable way to determine the loopNumber in bailout for a hoisted instr
             bool disableMemOp : 1;
             bool disableTrackCompoundedIntOverflow : 1;
             bool disableFloatTypeSpec : 1;
@@ -548,7 +548,7 @@ namespace Js
         template <typename T>
         static void WriteData(T data, FILE * file);
         template <>
-        static void WriteData<wchar_t const *>(wchar_t const * sz, FILE * file);        
+        static void WriteData<wchar_t const *>(wchar_t const * sz, FILE * file);
         template <>
         static void WriteData<FunctionInfo *>(FunctionInfo * functionInfo, FILE * file);    // Not defined, to prevent accidentally writing function info
         template <>
@@ -584,7 +584,7 @@ namespace Js
         bool MatchFunctionBody(FunctionBody * functionBody);
 
         DynamicProfileInfo(FunctionBody * functionBody);
-        
+
         friend class SourceDynamicProfileManager;
 
     public:
@@ -742,7 +742,7 @@ namespace Js
             }
         }
 
-        bool IsLdLenIntSpecDisabled() const { return this->bits.disableLdLenIntSpec; }        
+        bool IsLdLenIntSpecDisabled() const { return this->bits.disableLdLenIntSpec; }
         void DisableLdLenIntSpec() { this->bits.disableLdLenIntSpec = true; }
 
         bool IsBoundCheckHoistDisabled(const bool isJitLoopBody) const
@@ -787,7 +787,7 @@ namespace Js
         void DisableFloorInlining() { this->bits.disableFloorInlining = true; }
         bool IsNoProfileBailoutsDisabled() const { return this->bits.disableNoProfileBailouts; }
         void DisableNoProfileBailouts() { this->bits.disableNoProfileBailouts = true; }
-        bool IsSwitchOptDisabled() const { return this->bits.disableSwitchOpt; }        
+        bool IsSwitchOptDisabled() const { return this->bits.disableSwitchOpt; }
         void DisableSwitchOpt() { this->bits.disableSwitchOpt = true; }
         bool IsEquivalentObjTypeSpecDisabled() const { return this->bits.disableEquivalentObjTypeSpec; }
         void DisableEquivalentObjTypeSpec() { this->bits.disableEquivalentObjTypeSpec = true; }
@@ -800,7 +800,7 @@ namespace Js
 #endif
     private:
         static void InstantiateForceInlinedMembers();
-    };    
+    };
 
     struct PolymorphicCallSiteInfo
     {
@@ -812,7 +812,7 @@ namespace Js
                 Assert(index < DynamicProfileInfo::maxPolymorphicInliningSize);
                 Assert(functionId);
                 Assert(sourceId);
-                if (DynamicProfileInfo::IsCallSiteNoInfo(functionIds[index])) 
+                if (DynamicProfileInfo::IsCallSiteNoInfo(functionIds[index]))
                 {
                     return false;
                 }
@@ -881,7 +881,7 @@ namespace Js
             return WriteArray(&data, 1);
         }
 
-#if DBG_DUMP 
+#if DBG_DUMP
         void Log(DynamicProfileInfo* info) {}
 #endif
 
@@ -906,7 +906,7 @@ namespace Js
             return WriteArray(&data, 1);
         }
 
-#if DBG_DUMP 
+#if DBG_DUMP
         void Log(DynamicProfileInfo* info);
 #endif
         template <typename T>

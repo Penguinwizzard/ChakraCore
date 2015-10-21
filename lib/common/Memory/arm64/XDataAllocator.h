@@ -9,7 +9,7 @@ CompileAssert(false)
 struct XDataAllocation sealed  : public SecondaryAllocation
 {
     // ---- Methods ----- //
-    XDataAllocation() : 
+    XDataAllocation() :
         pdataCount(0)
         , functionTable(NULL)
         , xdataSize(0)
@@ -35,13 +35,13 @@ struct XDataAllocation sealed  : public SecondaryAllocation
 
     // ---- Data members ---- //
     ushort pdataCount;                   // ARM requires more than 1 pdata/function
-    FunctionTableHandle functionTable;   // stores the handle to the the growable function table
-    ushort xdataSize;                    
+    FunctionTableHandle functionTable;   // stores the handle to the growable function table
+    ushort xdataSize;
 };
 
 //
 // Allocates xdata and pdata entries for ARM architecture on the heap. They are freed when released.
-// 
+//
 //
 class XDataAllocator sealed : public SecondaryAllocator
 {
@@ -53,7 +53,7 @@ private:
 // --------- Public functions ---------/
 public:
     XDataAllocator(BYTE* address, uint size) { }
-    
+
     bool Initialize(_In_ void* segmentStart, _In_ void* segmentEnd) { __debugbreak(); return 0; }
     void Delete() { __debugbreak(); }
     bool Alloc(ULONG_PTR functionStart, DWORD functionSize, ushort pdataCount, ushort xdataSize, SecondaryAllocation* allocation) { __debugbreak(); return 0; }

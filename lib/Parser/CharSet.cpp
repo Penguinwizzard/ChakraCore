@@ -9,7 +9,7 @@ namespace UnifiedRegex
     // ----------------------------------------------------------------------
     // CharBitVec
     // ----------------------------------------------------------------------
-    
+
 #ifndef USE_BITCOUNTS
     inline uint32 popcnt(uint32 x)
     {
@@ -19,7 +19,7 @@ namespace UnifiedRegex
         x = (x & 0x33333333u) + ((x >> 2) & 0x33333333u);
         // sum quads into octets
         x = (x + (x >> 4)) & 0x0f0f0f0fu;
-        // sum octects into topmost octet
+        // sum octets into topmost octet
         x *= 0x01010101u;
         return x >> 24;
     }
@@ -339,7 +339,7 @@ namespace UnifiedRegex
     {
         return lim(level) + 1;
     }
-    
+
     _Success_(return)
     bool CharSetFull::GetNextRange(uint level, Char searchCharStart, _Out_ Char *outLowerChar, _Out_ Char *outHigherChar) const
     {
@@ -669,13 +669,13 @@ namespace UnifiedRegex
     }
 
     _Success_(return)
-    bool CharSetInner::GetNextRange(uint level, Char searchCharStart, _Out_ Char *outLowerChar, _Out_ Char *outHigherChar) const 
+    bool CharSetInner::GetNextRange(uint level, Char searchCharStart, _Out_ Char *outLowerChar, _Out_ Char *outHigherChar) const
     {
         Assert(searchCharStart < this->lim(level) + 1);
         uint innerIndex = innerIdx(level--, searchCharStart);
 
         Char currentLowChar = 0, currentHighChar = 0;
-        
+
         for (; innerIndex < branchingPerInnerLevel; innerIndex++)
         {
             if (children[innerIndex] != nullptr && children[innerIndex]->GetNextRange(level, (Char)remain(level, searchCharStart), &currentLowChar, &currentHighChar))
@@ -688,7 +688,7 @@ namespace UnifiedRegex
                 searchCharStart = (Char)indexToValue(level + 1, innerIndex + 1, 0);
             }
         }
-        
+
         if (innerIndex == branchingPerInnerLevel)
         {
             return false;
@@ -696,9 +696,9 @@ namespace UnifiedRegex
 
         currentLowChar = (Char)indexToValue(level + 1, innerIndex, currentLowChar);
         currentHighChar = (Char)indexToValue(level + 1, innerIndex, currentHighChar);
-        
+
         innerIndex += 1;
-        
+
         for (; remain(level, currentHighChar) == lim(level) && innerIndex < branchingPerInnerLevel; innerIndex++)
         {
             Char tempLower, tempHigher;
@@ -706,7 +706,7 @@ namespace UnifiedRegex
             {
                 break;
             }
-            
+
             currentHighChar = (Char)indexToValue(level + 1, innerIndex, tempHigher);
         }
 
@@ -722,7 +722,7 @@ namespace UnifiedRegex
         return false;
     }
 #endif
-    
+
     // ----------------------------------------------------------------------
     // CharSetLeaf
     // ----------------------------------------------------------------------
@@ -738,7 +738,7 @@ namespace UnifiedRegex
     }
 
     CharSetNode* CharSetLeaf::Clone(ArenaAllocator* allocator) const
-    { 
+    {
         return Anew(allocator, CharSetLeaf, *this);
     }
 
@@ -766,7 +766,7 @@ namespace UnifiedRegex
         }
 
         vec.ClearRange(leafIdx(l), leafIdx(h));
-        
+
         if (vec.IsEmpty())
         {
             FreeSelf(allocator);
@@ -776,7 +776,7 @@ namespace UnifiedRegex
         return this;
     }
 
-    CharSetNode* CharSetLeaf::UnionInPlace(ArenaAllocator* allocator, uint level, const CharSetNode* other) 
+    CharSetNode* CharSetLeaf::UnionInPlace(ArenaAllocator* allocator, uint level, const CharSetNode* other)
     {
         Assert(level == 0);
         Assert(other != nullptr && other->IsLeaf());
@@ -848,7 +848,7 @@ namespace UnifiedRegex
     }
 
     _Success_(return)
-    bool CharSetLeaf::GetNextRange(uint level, Char searchCharStart, _Out_ Char *outLowerChar, _Out_ Char *outHigherChar) const 
+    bool CharSetLeaf::GetNextRange(uint level, Char searchCharStart, _Out_ Char *outLowerChar, _Out_ Char *outHigherChar) const
     {
         Assert(searchCharStart < lim(level) + 1);
         int nextSet = vec.NextSet(searchCharStart);
@@ -857,13 +857,13 @@ namespace UnifiedRegex
         {
             return false;
         }
-        
+
         *outLowerChar = (wchar_t)nextSet;
-        
+
         int nextClear = vec.NextClear(nextSet);
 
         *outHigherChar = UTC(nextClear == -1 ? lim(level) : nextClear - 1);
-        
+
         return true;
     }
 
@@ -981,7 +981,7 @@ namespace UnifiedRegex
                 }
             }
         }
-        else 
+        else
         {
             other.rep.full.direct.CloneFrom(rep.full.direct);
             if (rep.full.root == nullptr)
@@ -1010,7 +1010,7 @@ namespace UnifiedRegex
                 }
             }
         }
-        else 
+        else
         {
             other.rep.full.direct.CloneFrom(rep.full.direct);
             if (rep.full.root == nullptr)
@@ -1087,7 +1087,7 @@ namespace UnifiedRegex
                     {
                         __assume(l <= MaxUChar);
                         if (l <= MaxUChar && i < MaxCompact) // always true, keep prefast happy
-                        {    
+                        {
                             if (this->GetCompactCharU(i) == l)
                                 break;
                         }
@@ -1112,7 +1112,7 @@ namespace UnifiedRegex
                 // else: fall-through to general case for remaining chars
             }
             // else: no use even trying
-            
+
             SwitchRepresentations(allocator);
         }
 
@@ -1268,9 +1268,9 @@ namespace UnifiedRegex
                 if (nextSet != -1)
                 {
                     found = true;
-        
+
                     *outLowerChar = (wchar_t)nextSet;
-        
+
                     int nextClear = rep.full.direct.NextClear(nextSet);
 
                     if (nextClear != -1)
@@ -1279,7 +1279,7 @@ namespace UnifiedRegex
                         return true;
                     }
 
-                    *outHigherChar = CharSetNode::directSize - 1; 
+                    *outHigherChar = CharSetNode::directSize - 1;
                 }
             }
 
@@ -1546,7 +1546,7 @@ namespace UnifiedRegex
     // ----------------------------------------------------------------------
     // CharSet<codepoint_t>
     // ----------------------------------------------------------------------
-    CharSet<codepoint_t>::CharSet() 
+    CharSet<codepoint_t>::CharSet()
     {
 #if DBG
         for (int i = 0; i < NumberOfPlanes; i++)
@@ -1602,13 +1602,13 @@ namespace UnifiedRegex
             // Do the partial ranges
             wchar_t partialLower = this->RemoveOffset(lc);
             wchar_t partialHigher = this->RemoveOffset(hc);
-                
+
             if (partialLower != 0)
             {
                 this->characterPlanes[lowerIndex].SetRange(allocator, partialLower, Chars<wchar_t>::MaxUChar);
                 lowerIndex++;
             }
-                
+
             for(; lowerIndex < upperIndex; lowerIndex++)
             {
                 this->characterPlanes[lowerIndex].SetRange(allocator, 0, Chars<wchar_t>::MaxUChar);
@@ -1680,7 +1680,7 @@ namespace UnifiedRegex
         wchar_t currentLowChar = 1, currentHighChar = 0;
         int index = this->CharToIndex(searchCharStart);
         wchar_t offsetLessSearchCharStart = this->RemoveOffset(searchCharStart);
-        
+
         for (; index < NumberOfPlanes; index++)
         {
             if (this->characterPlanes[index].GetNextRange(offsetLessSearchCharStart, &currentLowChar, &currentHighChar))
@@ -1739,7 +1739,7 @@ namespace UnifiedRegex
             this->characterPlanes[i].ToEquivClassCP(allocator, result, AddOffset(0, i));
         }
     }
-    
+
     void CharSet<codepoint_t>::ToSurrogateEquivClass(ArenaAllocator* allocator, CharSet<Char>& result)
     {
         this->CloneSimpleCharsTo(allocator, result.characterPlanes[0]);
@@ -1753,7 +1753,7 @@ namespace UnifiedRegex
     void CharSet<codepoint_t>::Print(DebugWriter* w) const
     {
         w->Print(L"Characters 0 - 65535");
-        
+
         for (int i = 0; i < NumberOfPlanes; i++)
         {
             int base = (i + 1) * 0x10000;
@@ -1800,7 +1800,7 @@ namespace UnifiedRegex
                     if (root == nullptr)
                         root = Anew(allocator, CharSetInner);
 #if DBG
-                    CharSetNode* newRoot = 
+                    CharSetNode* newRoot =
 #endif
                     root->Set(allocator, CharSetNode::levels - 1, k, k);
 #if DBG
@@ -1817,7 +1817,7 @@ namespace UnifiedRegex
             direct.CloneFrom(other.rep.full.direct);
         }
     }
-   
+
     bool RuntimeCharSet<wchar_t>::Get_helper(uint k) const
     {
         CharSetNode* curr = root;

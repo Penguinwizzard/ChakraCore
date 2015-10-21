@@ -6,7 +6,7 @@
 #include "Types\NullTypeHandler.h"
 
 namespace Js
-{    
+{
     Var JavascriptObject::NewInstance(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
@@ -16,8 +16,8 @@ namespace Js
 
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
 
-        // SkipDefaultNewObject function flag should have revent the default object
-        // being created, except when call true a host dispatch
+        // SkipDefaultNewObject function flag should have prevented the default object from
+        // being created, except when call true a host dispatch.
         Var newTarget = callInfo.Flags & CallFlags_NewTarget ? args.Values[args.Info.Count] : args[0];
         bool isCtorSuperCall = (callInfo.Flags & CallFlags_New) && newTarget != nullptr && RecyclableObject::Is(newTarget);
         Assert(isCtorSuperCall || !(callInfo.Flags & CallFlags_New) || args[0] == nullptr
@@ -81,7 +81,7 @@ namespace Js
         ScriptContext* scriptContext = function->GetScriptContext();
 
         Assert(!(callInfo.Flags & CallFlags_New));
-        
+
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
 
         RecyclableObject* dynamicObject = nullptr;
@@ -123,7 +123,7 @@ namespace Js
         {
             JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NullOrUndefined, L"Object.prototype.propertyIsEnumerable");
         }
-        
+
         if (args.Info.Count >= 2)
         {
             const PropertyRecord* propertyRecord;
@@ -255,7 +255,7 @@ namespace Js
         if (dynamicObject->GetTypeId() == TypeIds_GlobalObject)
         {
             dynamicObject = RecyclableObject::FromVar(static_cast<Js::GlobalObject*>(dynamicObject)->ToThis());
-        }       
+        }
 
         while (JavascriptOperators::GetTypeId(value) != TypeIds_Null)
         {
@@ -276,8 +276,8 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
         Assert(!(callInfo.Flags & CallFlags_New));
-        
-        AssertMsg(args.Info.Count, "Should always have implicit 'this'");     
+
+        AssertMsg(args.Info.Count, "Should always have implicit 'this'");
 
         /* Per ES5 spec we need to convert to object and then perform ToString operation */
         RecyclableObject* dynamicObject = nullptr;
@@ -321,7 +321,7 @@ namespace Js
                 {
                     tagVar = JavascriptOperators::GetProperty(thisArgObject, PropertyIds::_symbolToStringTag, scriptContext); // Let tag be the result of Get(O, @@toStringTag).
                 }
-                catch (JavascriptExceptionObject*) 
+                catch (JavascriptExceptionObject*)
                 {
                     // tag = "???"
                     return library->CreateStringFromCppLiteral(L"[object ???]"); // If tag is an abrupt completion, let tag be NormalCompletion("???").
@@ -329,14 +329,14 @@ namespace Js
 
                 if (!JavascriptString::Is(tagVar))
                 {
-                    // tag = "???"  
+                    // tag = "???"
                     return library->CreateStringFromCppLiteral(L"[object ???]"); // If Type(tag) is not String, let tag be "???".
                 }
 
                 tag = JavascriptString::FromVar(tagVar);
             }
         }
-        
+
 
         // If tag is any of "Arguments", "Array", "Boolean", "Date", "Error", "Function", "Number", "RegExp", or "String" and
         // SameValue(tag, builtinTag) is false, then let tag be the string value "~" concatenated with the current value of tag.
@@ -502,14 +502,14 @@ namespace Js
         case TypeIds_Undefined:
             return library->CreateStringFromCppLiteral(L"[object Undefined]");
         case TypeIds_Null:
-            return library->CreateStringFromCppLiteral(L"[object Null]");            
+            return library->CreateStringFromCppLiteral(L"[object Null]");
         case TypeIds_Enumerator:
         case TypeIds_Proxy:
         case TypeIds_Object:
             if (scriptContext->GetConfig()->IsES6ToStringTagEnabled())
             {
                 // Math, Object and JSON handled by toStringTag now,
-                return ToStringTagHelper(thisArg, scriptContext, type); 
+                return ToStringTagHelper(thisArg, scriptContext, type);
             }
 
             if (thisArg == scriptContext->GetLibrary()->GetMathObject())
@@ -564,12 +564,12 @@ namespace Js
         case TypeIds_NativeIntArray:
         case TypeIds_CopyOnAccessNativeIntArray:
         case TypeIds_NativeFloatArray:
-        case TypeIds_Function:            
+        case TypeIds_Function:
         case TypeIds_String:
         case TypeIds_StringObject:
         case TypeIds_Arguments:
             return ToStringTagHelper(thisArg, scriptContext, type);
-                
+
         case TypeIds_GlobalObject:
             {
                 GlobalObject* globalObject = static_cast<Js::GlobalObject*>(thisArg);
@@ -640,13 +640,13 @@ namespace Js
                     toStringValue = ToStringTagHelper(thisArg, scriptContext, type);
                 }
                 return toStringValue;
-                 
+
             }
             else
             {
                 return LegacyToStringHelper(scriptContext, type);
             }
-            
+
         }
     }
 
@@ -670,9 +670,9 @@ namespace Js
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
 
         TypeId argType = JavascriptOperators::GetTypeId(args[0]);
-       
+
         // throw a TypeError if TypeId is null or undefined, and apply ToObject to the 'this' value otherwise.
-        
+
         if ((argType == TypeIds_Null) || (argType == TypeIds_Undefined))
         {
             JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NullOrUndefined, L"Object.prototype.valueOf");
@@ -684,7 +684,7 @@ namespace Js
             // For now, we can follow v5.8.
             // We may consider to look into the external objects, later.
             return JavascriptOperators::ToObject(args[0], scriptContext);
-        }      
+        }
     }
 
     Var JavascriptObject::EntryGetOwnPropertyDescriptor(RecyclableObject* function, CallInfo callInfo, ...)
@@ -843,13 +843,13 @@ namespace Js
 
 
         RecyclableObject *object = RecyclableObject::FromVar(args[1]);
-        
+
         GlobalObject* globalObject = object->GetLibrary()->GetGlobalObject();
         if (globalObject != object && globalObject && (globalObject->ToThis() == object))
         {
             globalObject->Seal();
         }
-        
+
         object->Seal();
         return object;
     }
@@ -1173,7 +1173,7 @@ namespace Js
         {
             newArr->DirectSetItemAt(propertyIndex++, newArrForSymbols->DirectGetItem(symIndex));
         }
-        
+
         return newArr;
     }
 
@@ -1205,7 +1205,7 @@ namespace Js
                 return obj;
             }
         }
-        
+
         Var propertyKey = args.Info.Count > 2 ? args[2] : obj->GetLibrary()->GetUndefined();
         PropertyRecord const * propertyRecord;
         JavascriptConversion::ToPropertyKey(propertyKey, scriptContext, &propertyRecord);
@@ -1678,7 +1678,7 @@ namespace Js
 
         // TODO: use Recycler::Free when we implemented that.
         ENTER_PINNED_SCOPE(DescriptorMap, descriptors);
-        descriptors = RecyclerNewArray(scriptContext->GetRecycler(), DescriptorMap, descSize);        
+        descriptors = RecyclerNewArray(scriptContext->GetRecycler(), DescriptorMap, descSize);
 
         PropertyId propId;
         PropertyRecord const * propertyRecord;
@@ -1794,7 +1794,7 @@ namespace Js
         //        4.  ReturnIfAbrupt(desc).
         //        5.  Append the pair(a two element List) consisting of nextKey and desc to the end of descriptors.
         Var nextKey;
-        
+
         const PropertyRecord* propertyRecord = nullptr;
         PropertyId propertyId;
         Var descObj;
@@ -1902,12 +1902,12 @@ namespace Js
         if (propertyLength > 0)
         {
             size_t totalChars;
-            const size_t getSetLength = 4;    // 4 = 3 (get or set) +1 (for space) 
-            if (SizeTAdd(propertyLength, getSetLength, &totalChars) == S_OK) 
+            const size_t getSetLength = 4;    // 4 = 3 (get or set) +1 (for space)
+            if (SizeTAdd(propertyLength, getSetLength, &totalChars) == S_OK)
             {
                 finalName = RecyclerNewArrayLeaf(scriptContext->GetRecycler(), wchar_t, totalChars);
                 Assert(finalName != nullptr);
-                
+
                 Assert(getOrSetStr != nullptr);
                 Assert(wcslen(getOrSetStr) == 4);
                 wcscpy_s(finalName, totalChars, getOrSetStr);
@@ -1915,7 +1915,7 @@ namespace Js
                 const wchar_t* propertyName = propertyRecord->GetBuffer();
                 Assert(propertyName != nullptr);
                 js_wmemcpy_s(finalName + getSetLength, propertyLength, propertyName, propertyLength);
-                
+
             }
         }
         return finalName;
@@ -1929,7 +1929,7 @@ namespace Js
         if (descriptor.GetterSpecified() || descriptor.SetterSpecified())
         {
             if (descriptor.GetterSpecified()
-                && Js::ScriptFunction::Is(descriptor.GetGetter()) 
+                && Js::ScriptFunction::Is(descriptor.GetGetter())
                 && _wcsicmp(Js::ScriptFunction::FromVar(descriptor.GetGetter())->GetFunctionProxy()->GetDisplayName(), L"get") == 0)
             {
                 // modify to name.get
@@ -2015,7 +2015,7 @@ namespace Js
         {
             if (obj->GetType() == oldType)
             {
-                // Also, if the object's type has not changed, we need to ensure that 
+                // Also, if the object's type has not changed, we need to ensure that
                 // the cached property string for this property, if any, does not
                 // specify this object's type.
                 scriptContext->InvalidatePropertyStringCache(propId, obj->GetType());

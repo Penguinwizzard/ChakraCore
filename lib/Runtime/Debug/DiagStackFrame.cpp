@@ -41,12 +41,12 @@ namespace Js
         return GetFunction()->GetExternalDisplayName();
     }
 
-    bool DiagStackFrame::IsInterpreterFrame() 
+    bool DiagStackFrame::IsInterpreterFrame()
     {
         return false;
     }
 
-    InterpreterStackFrame* DiagStackFrame::AsInterpreterFrame() 
+    InterpreterStackFrame* DiagStackFrame::AsInterpreterFrame()
     {
         AssertMsg(FALSE, "AsInterpreterFrame called for non-interpreter frame.");
         return nullptr;
@@ -99,13 +99,13 @@ namespace Js
             "This only supports interpreter stack frames running in debug mode.");
     }
 
-    JavascriptFunction* DiagInterpreterStackFrame::GetJavascriptFunction() 
-    { 
-        return m_interpreterFrame->GetJavascriptFunction(); 
+    JavascriptFunction* DiagInterpreterStackFrame::GetJavascriptFunction()
+    {
+        return m_interpreterFrame->GetJavascriptFunction();
     }
 
     ScriptContext* DiagInterpreterStackFrame::GetScriptContext()
-    { 
+    {
         return m_interpreterFrame->GetScriptContext();
     }
 
@@ -121,14 +121,14 @@ namespace Js
         return m_interpreterFrame->GetStackAddress();
     }
 
-    bool DiagInterpreterStackFrame::IsInterpreterFrame() 
+    bool DiagInterpreterStackFrame::IsInterpreterFrame()
     {
         return true;
     }
 
-    InterpreterStackFrame* DiagInterpreterStackFrame::AsInterpreterFrame() 
-    { 
-        return m_interpreterFrame; 
+    InterpreterStackFrame* DiagInterpreterStackFrame::AsInterpreterFrame()
+    {
+        return m_interpreterFrame;
     }
 
     Var DiagInterpreterStackFrame::GetRegValue(RegSlot slotId, bool allowTemp)
@@ -171,7 +171,7 @@ namespace Js
         m_localVarChangedOffset(InvalidOffset)
     {
         Assert(m_stackAddr != NULL);
-        AssertMsg(m_function && m_function->GetScriptContext() && m_function->GetScriptContext()->IsInDebugMode(), 
+        AssertMsg(m_function && m_function->GetScriptContext() && m_function->GetScriptContext()->IsInDebugMode(),
             "This only supports functions in debug mode.");
 
         FunctionEntryPointInfo * entryPointInfo = GetFunction()->GetEntryPointFromNativeAddress((DWORD_PTR)codeAddr);
@@ -187,13 +187,13 @@ namespace Js
         OUTPUT_TRACE(Js::DebuggerPhase, L"DiagNativeStackFrame::DiagNativeStackFrame: e.p(addr %p)=%p varOff=%d changedOff=%d\n", codeAddr, entryPointInfo, m_localVarSlotsOffset, m_localVarChangedOffset);
     }
 
-    JavascriptFunction* DiagNativeStackFrame::GetJavascriptFunction() 
-    { 
+    JavascriptFunction* DiagNativeStackFrame::GetJavascriptFunction()
+    {
         return m_function;
     }
 
     ScriptContext* DiagNativeStackFrame::GetScriptContext()
-    { 
+    {
         return m_function->GetScriptContext();
     }
 
@@ -225,7 +225,7 @@ namespace Js
             Assert(m_localVarSlotsOffset != InvalidOffset);
             slotOffset = m_localVarSlotsOffset + slotOffset;
 
-            // We will have the var offset only (which is always the Var size. With TypeSpecialization, below will change to accomodate double offset.
+            // We will have the var offset only (which is always the Var size. With TypeSpecialization, below will change to accommodate double offset.
             return (Js::Var *)(((char *)m_stackAddr) + slotOffset);
         }
 

@@ -72,7 +72,7 @@ static BOOL AttachProcess(HANDLE hmod)
     return DynamicProfileStorage::Initialize();
 #else
     return TRUE;
-#endif    
+#endif
 }
 
 static void DetachProcess()
@@ -87,7 +87,7 @@ static void DetachProcess()
     JsrtRuntime::Uninitialize();
     JsrtContext::Uninitialize();
 
-    // threadbound entrypoint should be able to get cleanup correctly, however tlsentry
+    // thread-bound entrypoint should be able to get cleanup correctly, however tlsentry
     // for current thread might be left behind if this thread was initialized.
     ThreadContextTLSEntry::CleanupThread();
 
@@ -119,10 +119,10 @@ EXTERN_C BOOL WINAPI DllMain(HINSTANCE hmod, DWORD dwReason, PVOID pvReserved)
         return TRUE;
 
     case DLL_THREAD_DETACH:
-        // If we are not doing DllCanUnloadNow, so we should clean up. Otherwise, DllCanUnloadNow is already running, 
-        // so the ThreadContext global lock is already taken.  If we try to clean up, we will block on the ThreadContext 
-        // global lock while holding the loader lock, which DllCanUnloadNow may block on waiting for thread temination
-        // which requires the loader lock. DllCanUnloadNow will clean up for us anyway, so we can just skip the whole thing.        
+        // If we are not doing DllCanUnloadNow, so we should clean up. Otherwise, DllCanUnloadNow is already running,
+        // so the ThreadContext global lock is already taken.  If we try to clean up, we will block on the ThreadContext
+        // global lock while holding the loader lock, which DllCanUnloadNow may block on waiting for thread termination
+        // which requires the loader lock. DllCanUnloadNow will clean up for us anyway, so we can just skip the whole thing.
         ThreadBoundThreadContextManager::DestroyContextAndEntryForCurrentThread();
         return TRUE;
 
@@ -131,7 +131,7 @@ EXTERN_C BOOL WINAPI DllMain(HINSTANCE hmod, DWORD dwReason, PVOID pvReserved)
         lockedDll = ::DeleteAtom(lockedDll);
         AssertMsg(lockedDll == 0, "Failed to release the lock for chakracore.dll");
 
-#ifdef DYNAMIC_PROFILE_STORAGE    
+#ifdef DYNAMIC_PROFILE_STORAGE
         DynamicProfileStorage::Uninitialize();
 #endif
 #ifdef ENABLE_JS_ETW

@@ -19,7 +19,7 @@ namespace Js
 
     private:
         InterpreterHaltState* pCurrentInterpreterLocation; // NULL if not Halted at a Probe
-        DWORD_PTR secondaryCurrentSourceContext;           // For resolving ambiguity among generated files, eg. eval, anonymous, etc.
+        DWORD_PTR secondaryCurrentSourceContext;           // For resolving ambiguity among generated files, e.g. eval, anonymous, etc.
         ulong debugSessionNumber;                          // A unique number, which will be used to sync all probecontainer when on break
         RecyclerRootPtr<Js::DynamicObject> pConsoleScope;
         ThreadContext* pThreadContext;

@@ -15,7 +15,7 @@ namespace UnifiedRegex
     {
         if (upper != CharCountFlag && lower == (CharCount)upper)
             w->Print(L"[%u]", lower);
-        else 
+        else
         {
             w->Print(L"[%u-", lower);
             if (upper == CharCountFlag)
@@ -42,7 +42,7 @@ namespace UnifiedRegex
     //     - Number of ticks from a previous QC needed to cause another QC. The value affects how often QC will be triggered, so
     //       on slower machines or debug builds, the value needs to be smaller to maintain a reasonable frequency of QCs.
     // - TicksPerQcTimeCheck
-    //     - Number of ticks from a previous QC needed to trigger a time check. Elapsed time from the previuos QC is checked to
+    //     - Number of ticks from a previous QC needed to trigger a time check. Elapsed time from the previous QC is checked to
     //       see if a QC needs to be triggered. The value must be less than TicksPerQc and small enough to reasonably guarantee
     //       a QC every TimePerQc milliseconds without affecting perf.
     // - TimePerQc
@@ -57,7 +57,7 @@ namespace UnifiedRegex
         >> 2
 #endif
         ;
-    
+
     const uint Matcher::TicksPerQcTimeCheck = Matcher::TicksPerQc >> 2;
     const uint Matcher::TimePerQc = AutoSystemInfo::ShouldQCMoreFrequently() ? 50 : 100; // milliseconds
 
@@ -196,12 +196,12 @@ namespace UnifiedRegex
 #endif
         contStack.PopTo(info->contStackPosition);
 
-        // succeeeded  isNegation  action
-        // ----------  ----------  ----------------------------------------------------------------------------------
-        // false       false       Fail into outer continuations (inner group bindings will have been undone)
-        // true        false       Jump to next label (inner group bindings are now frozen)
-        // false       true        Jump to next label (inner group bindings will have been undone and are now frozen)
-        // true        true        Fail into outer continuations (inner group binding MUST BE CLEARED)
+        // succeeded  isNegation  action
+        // ---------  ----------  ----------------------------------------------------------------------------------
+        // false      false       Fail into outer continuations (inner group bindings will have been undone)
+        // true       false       Jump to next label (inner group bindings are now frozen)
+        // false      true        Jump to next label (inner group bindings will have been undone and are now frozen)
+        // true       true        Fail into outer continuations (inner group binding MUST BE CLEARED)
 
         if (succeeded && begin->isNegation)
             ResetInnerGroups(begin->minBodyGroupId, begin->maxBodyGroupId);
@@ -328,7 +328,7 @@ namespace UnifiedRegex
     // ----------------------------------------------------------------------
     // Mixins
     // ----------------------------------------------------------------------
-    
+
 #if ENABLE_REGEX_CONFIG_OPTIONS
     void BackupMixin::Print(DebugWriter* w, const wchar_t* litbuf) const
     {
@@ -404,21 +404,21 @@ namespace UnifiedRegex
         }
     }
 #endif
-    
+
     // ----------------------------------------------------------------------
     // Char2LiteralScannerMixin
     // ----------------------------------------------------------------------
 
     bool Char2LiteralScannerMixin::Match(Matcher& matcher, const wchar_t* const input, const CharCount inputLength, CharCount& inputOffset) const
-    {   
+    {
         if (inputLength == 0)
-        {           
+        {
             return false;
         }
 
         const uint matchC0 = Chars<wchar_t>::CTU(cs[0]);
         const uint matchC1 = Chars<wchar_t>::CTU(cs[1]);
-                
+
         const wchar_t * currentInput = input + inputOffset;
         const wchar_t * endInput = input + inputLength - 1;
 
@@ -426,7 +426,7 @@ namespace UnifiedRegex
         {
 #if ENABLE_REGEX_CONFIG_OPTIONS
             matcher.CompStats();
-#endif  
+#endif
             while (true)
             {
                 const uint c1 = Chars<wchar_t>::CTU(currentInput[1]);
@@ -445,7 +445,7 @@ namespace UnifiedRegex
                 }
 #if ENABLE_REGEX_CONFIG_OPTIONS
                 matcher.CompStats();
-#endif     
+#endif
                 // Check the first character
                 const uint c0 = Chars<wchar_t>::CTU(*currentInput);
                 if (c0 == matchC0)
@@ -462,29 +462,29 @@ namespace UnifiedRegex
                 {
                     return false;
                 }
-            }          
+            }
 
-            // If the second character in the buffer match the first in the pattern continue 
+            // If the second character in the buffer match the first in the pattern continue
             // to see if the next character has the second in the pattern
             currentInput++;
             while (currentInput < endInput)
-            {           
+            {
 #if ENABLE_REGEX_CONFIG_OPTIONS
                 matcher.CompStats();
-#endif  
+#endif
                 const uint c1 = Chars<wchar_t>::CTU(currentInput[1]);
                 if (c1 == matchC1)
                 {
                     inputOffset = (CharCount)(currentInput - input);
                     return true;
-                }                
+                }
                 if (c1 != matchC0)
                 {
                     currentInput += 2;
                     break;
                 }
                 currentInput++;
-            }                 
+            }
         }
         return false;
     }
@@ -493,7 +493,7 @@ namespace UnifiedRegex
     void Char2LiteralScannerMixin::Print(DebugWriter* w, const wchar_t * litbuf) const
     {
         Char2Mixin::Print(w, litbuf);
-        w->Print(L" (with two character literal scanner)");            
+        w->Print(L" (with two character literal scanner)");
     }
 #endif
 
@@ -507,10 +507,10 @@ namespace UnifiedRegex
         scanner.FreeBody(rtAllocator, length);
     }
 
-    template <typename ScannerT>    
-    __inline bool 
+    template <typename ScannerT>
+    __inline bool
     ScannerMixinT<ScannerT>::Match(Matcher& matcher, const wchar_t * const input, const CharCount inputLength, CharCount& inputOffset) const
-    {        
+    {
         Assert(length <= matcher.program->rep.insts.litbufLen - offset);
         return scanner.Match<1>
             ( input
@@ -528,22 +528,22 @@ namespace UnifiedRegex
     template <typename ScannerT>
     void ScannerMixinT<ScannerT>::Print(DebugWriter* w, const wchar_t* litbuf, bool isEquivClass) const
     {
-        LiteralMixin::Print(w, litbuf, isEquivClass);        
-        w->Print(L" (with %s scanner)", ScannerT::GetName());        
+        LiteralMixin::Print(w, litbuf, isEquivClass);
+        w->Print(L" (with %s scanner)", ScannerT::GetName());
     }
 #endif
 
     // explicit instantiation
-    template ScannerMixinT<TextbookBoyerMoore<wchar_t>>;    
+    template ScannerMixinT<TextbookBoyerMoore<wchar_t>>;
     template ScannerMixinT<TextbookBoyerMooreWithLinearMap<wchar_t>>;
-    
+
     // ----------------------------------------------------------------------
     // EquivScannerMixinT
-    // ----------------------------------------------------------------------       
+    // ----------------------------------------------------------------------
 
     template <uint lastPatCharEquivClassSize>
     __inline bool EquivScannerMixinT<lastPatCharEquivClassSize>::Match(Matcher& matcher, const wchar_t* const input, const CharCount inputLength, CharCount& inputOffset) const
-    {        
+    {
         Assert(length * CaseInsensitive::EquivClassSize <= matcher.program->rep.insts.litbufLen - offset);
         CompileAssert(lastPatCharEquivClassSize >= 1 && lastPatCharEquivClassSize <= CaseInsensitive::EquivClassSize);
         return scanner.Match<CaseInsensitive::EquivClassSize, lastPatCharEquivClassSize>
@@ -555,15 +555,15 @@ namespace UnifiedRegex
 #if ENABLE_REGEX_CONFIG_OPTIONS
             , matcher.stats
 #endif
-            );            
+            );
     }
 
 #if ENABLE_REGEX_CONFIG_OPTIONS
     template <uint lastPatCharEquivClassSize>
     void EquivScannerMixinT<lastPatCharEquivClassSize>::Print(DebugWriter* w, const wchar_t* litbuf) const
     {
-        __super::Print(w, litbuf, true); 
-        w->Print(L" (last char equiv size:%d)", lastPatCharEquivClassSize);     
+        __super::Print(w, litbuf, true);
+        w->Print(L" (last char equiv size:%d)", lastPatCharEquivClassSize);
     }
 
     // explicit instantiation
@@ -774,7 +774,7 @@ namespace UnifiedRegex
     }
 
 #if ENABLE_REGEX_CONFIG_OPTIONS
-    int FailInst::Print(DebugWriter* w, Label label, const Char* litbuf) const 
+    int FailInst::Print(DebugWriter* w, Label label, const Char* litbuf) const
     {
         w->PrintEOL(L"L%04x: Fail()", label);
         return sizeof(*this);
@@ -1453,7 +1453,7 @@ namespace UnifiedRegex
 
         if (length > inputLength - inputOffset)
             return matcher.Fail(FAIL_PARAMETERS);
-        
+
         const Char *const literalBuffer = matcher.program->rep.insts.litbuf;
         const Char * literalCurr = literalBuffer + offset;
         const Char * inputCurr = input + inputOffset;
@@ -1483,12 +1483,12 @@ namespace UnifiedRegex
             }
             literalCurr++;
         }
-        
+
         inputOffset = (CharCount)(inputCurr - input);
         instPointer += sizeof(*this);
         return false;
     }
-    
+
 #if ENABLE_REGEX_CONFIG_OPTIONS
     int MatchLiteralInst::Print(DebugWriter* w, Label label, const Char* litbuf) const
     {
@@ -1497,7 +1497,7 @@ namespace UnifiedRegex
         w->PrintEOL(L")");
         return sizeof(*this);
     }
-#endif 
+#endif
 
     // ----------------------------------------------------------------------
     // MatchLiteralEquivInst
@@ -1535,7 +1535,7 @@ namespace UnifiedRegex
         instPointer += sizeof(*this);
         return false;
     }
-    
+
 #if ENABLE_REGEX_CONFIG_OPTIONS
     int MatchLiteralEquivInst::Print(DebugWriter* w, Label label, const Char* litbuf) const
     {
@@ -1544,7 +1544,7 @@ namespace UnifiedRegex
         w->PrintEOL(L")");
         return sizeof(*this);
     }
-#endif 
+#endif
 
     // ----------------------------------------------------------------------
     // MatchTrieInst (optimized instruction)
@@ -1561,11 +1561,11 @@ namespace UnifiedRegex
 #endif
             ))
             return matcher.Fail(FAIL_PARAMETERS);
-        
+
         instPointer += sizeof(*this);
         return false;
     }
-    
+
     void MatchTrieInst::FreeBody(ArenaAllocator* rtAllocator)
     {
         trie.FreeBody(rtAllocator);
@@ -1579,7 +1579,7 @@ namespace UnifiedRegex
         w->PrintEOL(L")");
         return sizeof(*this);
     }
-#endif 
+#endif
 
     // ----------------------------------------------------------------------
     // OptMatchCharInst (optimized instruction)
@@ -1592,7 +1592,7 @@ namespace UnifiedRegex
 #endif
         if (inputOffset < inputLength && input[inputOffset] == c)
             inputOffset++;
-                
+
         instPointer += sizeof(*this);
         return false;
     }
@@ -1618,7 +1618,7 @@ namespace UnifiedRegex
 #endif
         if (inputOffset < inputLength && set.Get(input[inputOffset]))
             inputOffset++;
-                
+
         instPointer += sizeof(*this);
         return false;
     }
@@ -1736,7 +1736,7 @@ namespace UnifiedRegex
         return sizeof(*this);
     }
 #endif
-    
+
     // ----------------------------------------------------------------------
     // SyncToLiteralAndContinueInst (optimized instruction)
     // ----------------------------------------------------------------------
@@ -1764,12 +1764,12 @@ namespace UnifiedRegex
 
     // explicit instantiation
     template struct SyncToLiteralAndContinueInstT<Char2LiteralScannerMixin>;
-    template struct SyncToLiteralAndContinueInstT<ScannerMixin>;    
-    template struct SyncToLiteralAndContinueInstT<ScannerMixin_WithLinearCharMap>;    
+    template struct SyncToLiteralAndContinueInstT<ScannerMixin>;
+    template struct SyncToLiteralAndContinueInstT<ScannerMixin_WithLinearCharMap>;
     template struct SyncToLiteralAndContinueInstT<EquivScannerMixin>;
     template struct SyncToLiteralAndContinueInstT<EquivTrivialLastPatCharScannerMixin>;
 #endif
-   
+
     // ----------------------------------------------------------------------
     // SyncToCharAndConsumeInst (optimized instruction)
     // ----------------------------------------------------------------------
@@ -1888,7 +1888,7 @@ namespace UnifiedRegex
     template <typename ScannerT>
     __inline bool SyncToLiteralAndConsumeInstT<ScannerT>::Exec(REGEX_INST_EXEC_PARAMETERS) const
     {
-        if (!Match(matcher, input, inputLength, inputOffset))        
+        if (!Match(matcher, input, inputLength, inputOffset))
             return matcher.HardFail(HARDFAIL_PARAMETERS(ImmediateFail));
 
         matchStart = inputOffset;
@@ -1913,7 +1913,7 @@ namespace UnifiedRegex
     template struct SyncToLiteralAndConsumeInstT<ScannerMixin_WithLinearCharMap>;
     template struct SyncToLiteralAndConsumeInstT<EquivScannerMixin>;
     template struct SyncToLiteralAndConsumeInstT<EquivTrivialLastPatCharScannerMixin>;
-#endif  
+#endif
 
     // ----------------------------------------------------------------------
     // SyncToCharAndBackupInst (optimized instruction)
@@ -1945,7 +1945,7 @@ namespace UnifiedRegex
 #endif
             inputOffset++;
         }
-        
+
         if (inputOffset >= inputLength)
             return matcher.HardFail(HARDFAIL_PARAMETERS(ImmediateFail));
 
@@ -2008,7 +2008,7 @@ namespace UnifiedRegex
 #endif
             inputOffset++;
         }
-        
+
         if (inputOffset >= inputLength)
             return matcher.HardFail(HARDFAIL_PARAMETERS(ImmediateFail));
 
@@ -2021,7 +2021,7 @@ namespace UnifiedRegex
             matchStart = inputOffset - min(maxBackup, (CharCount)backup.upper);
         }
         // else: leave start where it is
-        
+
         // Move input to new match start
         inputOffset = matchStart;
         instPointer += sizeof(*this);
@@ -2062,7 +2062,7 @@ namespace UnifiedRegex
         if (backup.lower > inputOffset - matchStart)
             // No use looking for match until minimum backup is possible
             inputOffset = matchStart + backup.lower;
-        
+
         if (!Match(matcher, input, inputLength, inputOffset))
             return matcher.HardFail(HARDFAIL_PARAMETERS(ImmediateFail));
 
@@ -2075,10 +2075,10 @@ namespace UnifiedRegex
             matchStart = inputOffset - min(maxBackup, (CharCount)backup.upper);
         }
         // else: leave start where it is
-        
+
         // Move input to new match start
         inputOffset = matchStart;
-        
+
         instPointer += sizeof(*this);
         return false;
     }
@@ -2097,12 +2097,12 @@ namespace UnifiedRegex
 
     // explicit instantiation
     template struct SyncToLiteralAndBackupInstT<Char2LiteralScannerMixin>;
-    template struct SyncToLiteralAndBackupInstT<ScannerMixin>;    
+    template struct SyncToLiteralAndBackupInstT<ScannerMixin>;
     template struct SyncToLiteralAndBackupInstT<ScannerMixin_WithLinearCharMap>;
     template struct SyncToLiteralAndBackupInstT<EquivScannerMixin>;
     template struct SyncToLiteralAndBackupInstT<EquivTrivialLastPatCharScannerMixin>;
 #endif
-   
+
     // ----------------------------------------------------------------------
     // SyncToLiteralsAndBackupInst (optimized instruction)
     // ----------------------------------------------------------------------
@@ -2131,7 +2131,7 @@ namespace UnifiedRegex
         for (int i = 0; i < numLiterals; i++)
         {
             CharCount thisMatchOffset = inputOffset;
-            
+
             if (infos[i]->isEquivClass ?
                     (infos[i]->scanner.Match<CaseInsensitive::EquivClassSize>
                     ( input
@@ -2175,7 +2175,7 @@ namespace UnifiedRegex
             matchStart = bestMatchOffset - min(maxBackup, (CharCount)backup.upper);
         }
         // else: leave start where it is
-        
+
         // Move input to new match start
         inputOffset = matchStart;
         instPointer += sizeof(*this);
@@ -2197,7 +2197,7 @@ namespace UnifiedRegex
     // ----------------------------------------------------------------------
     // MatchGroupInst
     // ----------------------------------------------------------------------
-    
+
     __inline bool MatchGroupInst::Exec(REGEX_INST_EXEC_PARAMETERS) const
     {
         GroupInfo* const info = matcher.GroupIdToGroupInfo(groupId);
@@ -2333,7 +2333,7 @@ namespace UnifiedRegex
         w->PrintEOL(L")");
         return sizeof(*this);
     }
-#endif 
+#endif
 
     // ----------------------------------------------------------------------
     // BeginDefineGroupInst
@@ -2379,7 +2379,7 @@ namespace UnifiedRegex
         Assert(groupInfo->IsUndefined());
         Assert(inputOffset >= groupInfo->offset);
         groupInfo->length = inputOffset - groupInfo->offset;
-        
+
         instPointer += sizeof(*this);
         return false;
     }
@@ -2556,14 +2556,14 @@ namespace UnifiedRegex
         {
             // The minimum number of iterations has been satisfied but the last iteration made no progress.
             //   - With greedy & deterministic body, FAIL so as to undo that iteration and restore group bindings.
-            //   - With greedy & non-determinstic body, FAIL so as to try another body alternative
+            //   - With greedy & non-deterministic body, FAIL so as to try another body alternative
             //   - With non-greedy, we're trying an additional iteration because the follow failed. But
             //     since we didn't consume anything the follow will fail again, so fail
             //
             // TODO: Actually, if the body of the non-greedy look has a positive assertion with a group
             //       definition, and the follow has a group reference used in a negative assertion,
             //       it could be possible to make progress even with an empty loop. But need an example.
-            // 
+            //
             return matcher.Fail(FAIL_PARAMETERS);
         }
         else if (begin->repeats.upper != CharCountFlag && loopInfo->number >= (CharCount)begin->repeats.upper)
@@ -2627,11 +2627,11 @@ namespace UnifiedRegex
                 Assert(matcher.GroupIdToGroupInfo(i)->IsUndefined());
             }
 #endif
-            
+
             // There's no need to save the starting input offset since we don't need to check for progress
             // loopInfo->startInputOffset = inputOffset;
             loopInfo->number = 0;
-            instPointer += sizeof(*this); 
+            instPointer += sizeof(*this);
             return false;
         }
 
@@ -2849,7 +2849,7 @@ namespace UnifiedRegex
     {
         LoopInfo* loopInfo = matcher.LoopIdToLoopInfo(loopId);
 
-        // If loop is contained in an outer loop, continuation stack may already have a RewindLoopFixed entry for 
+        // If loop is contained in an outer loop, continuation stack may already have a RewindLoopFixed entry for
         // this loop. We must make sure it's state is preserved on backtrack.
         if (hasOuterLoops)
         {
@@ -2912,7 +2912,7 @@ namespace UnifiedRegex
             // Matched maximum number of iterations. Continue with follow.
             if (begin->repeats.lower < begin->repeats.upper)
             {
-                // Failure of follow will try one fewer iterations (subject to repeats.lower). 
+                // Failure of follow will try one fewer iterations (subject to repeats.lower).
                 // Since loop body is non-deterministic and does not define groups the rewind continuation must be on top of the stack.
                 Cont *top = contStack.Top();
                 Assert(top != 0);
@@ -2929,7 +2929,7 @@ namespace UnifiedRegex
             // try follow.
             if (loopInfo->number == begin->repeats.lower)
             {
-                // Ie begin->repeats.lower > 0, so continuation won't have been pushed in BeginLoopFixed
+                // i.e. begin->repeats.lower > 0, so continuation won't have been pushed in BeginLoopFixed
                 PUSH(contStack, RewindLoopFixedCont, beginLabel, true);
 #if ENABLE_REGEX_CONFIG_OPTIONS
                 matcher.PushStats(contStack, input);
@@ -2958,7 +2958,7 @@ namespace UnifiedRegex
     {
         LoopInfo* loopInfo = matcher.LoopIdToLoopInfo(loopId);
 
-        // If loop is contained in an outer loop, continuation stack may already have a RewindLoopFixed entry for 
+        // If loop is contained in an outer loop, continuation stack may already have a RewindLoopFixed entry for
         // this loop. We must make sure it's state is preserved on backtrack.
         if (hasOuterLoops)
         {
@@ -3108,7 +3108,7 @@ namespace UnifiedRegex
             // Matched maximum number of iterations. Continue with follow.
             if (begin->repeats.lower < begin->repeats.upper)
             {
-                // Failure of follow will try one fewer iterations (subject to repeats.lower). 
+                // Failure of follow will try one fewer iterations (subject to repeats.lower).
                 // Since loop body is non-deterministic and does not define groups the rewind continuation must be on top of the stack.
                 Cont *top = contStack.Top();
                 Assert(top != 0);
@@ -3131,7 +3131,7 @@ namespace UnifiedRegex
             // try follow.
             if (loopInfo->number == begin->repeats.lower)
             {
-                // Ie begin->repeats.lower > 0, so continuation won't have been pushed in BeginLoopFixed
+                // i.e. begin->repeats.lower > 0, so continuation won't have been pushed in BeginLoopFixed
                 PUSH(contStack, RewindLoopFixedGroupLastIterationCont, beginLabel, true);
 #if ENABLE_REGEX_CONFIG_OPTIONS
                 matcher.PushStats(contStack, input);
@@ -3791,7 +3791,7 @@ namespace UnifiedRegex
         {
             // If the positive assertion binds some groups then on success any RestoreGroup continuations pushed
             // in the assertion body will be cut. Hence if the entire assertion is backtracked over we must restore
-            // the current inner group bindnings.
+            // the current inner group bindings.
             matcher.SaveInnerGroups(minBodyGroupId, maxBodyGroupId, false, input, contStack);
         }
 
@@ -3800,7 +3800,7 @@ namespace UnifiedRegex
 #if ENABLE_REGEX_CONFIG_OPTIONS
         matcher.PushStats(contStack, input);
 #endif
-                
+
         instPointer += sizeof(*this);
         return false;
     }
@@ -4052,7 +4052,7 @@ namespace UnifiedRegex
 
         // Rewind input
         inputOffset = loopInfo->startInputOffset + loopInfo->number * begin->length;
-        
+
         if (loopInfo->number > begin->repeats.lower)
         {
             // Un-pop the continuation ready for next time
@@ -4061,8 +4061,8 @@ namespace UnifiedRegex
             matcher.UnPopStats(contStack, input);
 #endif
         }
-        // else: Can't try any fewer iterations if follow fails, so leave continuation as popped and let failure propogate
-        
+        // else: Can't try any fewer iterations if follow fails, so leave continuation as popped and let failure propagate
+
         instPointer = matcher.LabelToInstPointer(begin->exitLabel);
         return true; // STOP BACKTRACKING
     }
@@ -4093,7 +4093,7 @@ namespace UnifiedRegex
 
         // Rewind input
         inputOffset = loopInfo->startInputOffset + loopInfo->number;
-        
+
         if (loopInfo->number > begin->repeats.lower)
         {
             // Un-pop the continuation ready for next time
@@ -4102,8 +4102,8 @@ namespace UnifiedRegex
             matcher.UnPopStats(contStack, input);
 #endif
         }
-        // else: Can't try any fewer iterations if follow fails, so leave continuation as popped and let failure propogate
-        
+        // else: Can't try any fewer iterations if follow fails, so leave continuation as popped and let failure propagate
+
         instPointer = matcher.LabelToInstPointer(beginLabel + sizeof(LoopSetInst));
         return true; // STOP BACKTRACKING
     }
@@ -4162,7 +4162,7 @@ namespace UnifiedRegex
             matcher.UnPopStats(contStack, input);
 #endif
         }
-        // else: Can't try any fewer iterations if follow fails, so leave continuation as popped and let failure propogate
+        // else: Can't try any fewer iterations if follow fails, so leave continuation as popped and let failure propagate
 
         instPointer = matcher.LabelToInstPointer(begin->exitLabel);
         return true; // STOP BACKTRACKING
@@ -4288,7 +4288,7 @@ namespace UnifiedRegex
                 pattern->rep.unified.matcher = nullptr;
 
                 const auto scriptContext = pattern->GetScriptContext();
-                regexStacks = scriptContext->SaveRegexStacks();                
+                regexStacks = scriptContext->SaveRegexStacks();
             }
 
             ~AutoCleanup()
@@ -4296,7 +4296,7 @@ namespace UnifiedRegex
                 pattern->rep.unified.matcher = matcher;
 
                 const auto scriptContext = pattern->GetScriptContext();
-                scriptContext->RestoreRegexStacks(regexStacks);                
+                scriptContext->RestoreRegexStacks(regexStacks);
             }
         } autoCleanup(pattern, this);
 
@@ -4358,8 +4358,8 @@ namespace UnifiedRegex
 #include "RegexContcodes.h"
 #undef M
             default:
-                Assert(false); // should never reached 
-                return false;  // however, can't use complier optimization if we wnat to return false here    
+                Assert(false); // should never reached
+                return false;  // however, can't use complier optimization if we want to return false here
             }
         }
         return true;
@@ -4542,7 +4542,7 @@ namespace UnifiedRegex
     }
 
     __inline bool Matcher::MatchBoundedWord(const Char* const input, const CharCount inputLength, CharCount offset)
-    {        
+    {
         const StandardChars<Char>& stdchrs = *standardChars;
 
         if (offset >= inputLength)
@@ -4631,7 +4631,7 @@ namespace UnifiedRegex
         {
             Assert(offset == inputLength);
             if (program->rep.leadingTrailingSpaces.endMinMatch == 0 ||
-                (offset == 0 && program->rep.leadingTrailingSpaces.beginMinMatch == 0))                
+                (offset == 0 && program->rep.leadingTrailingSpaces.beginMinMatch == 0))
             {
                 info->offset = offset;
                 info->length = 0;
@@ -4656,7 +4656,7 @@ namespace UnifiedRegex
                 info->offset = 0;
                 info->length = offset;
                 return true;
-            }                
+            }
         }
 
         Assert(inputLength > 0);
@@ -4713,7 +4713,7 @@ namespace UnifiedRegex
             CompileAssert(sizeof(Char) == 2);
             const Program * program = this->program;
             if (program->rep.boiLiteral2.literal == *(DWORD *)input)
-            {        
+            {
                 GroupInfo* const info = GroupIdToGroupInfo(0);
                 info->offset = 0;
                 info->length = 2;
@@ -4761,7 +4761,7 @@ namespace UnifiedRegex
             AssertMsg(prog->tag == Program::BOIInstructionsTag || isStickyPresent, "prog->tag should be BOIInstructionsForStickyFlagTag if sticky = true.");
 
             loopMatchHere = false;
-            
+
             // fall through
 
         case Program::InstructionsTag:
@@ -4797,7 +4797,7 @@ namespace UnifiedRegex
             {
                 res = MatchSingleCharCaseSensitive(input, inputLength, offset, prog->rep.singleChar.c);
             }
-            
+
             break;
 
         case Program::BoundedWordTag:
@@ -4820,7 +4820,7 @@ namespace UnifiedRegex
             Assert(false);
             __assume(false);
         }
-        
+
 #if ENABLE_REGEX_CONFIG_OPTIONS
         this->stats = 0;
         this->w = 0;
@@ -5030,7 +5030,7 @@ namespace UnifiedRegex
             w->PrintEOL(L"special form: <match bounded word>");
             break;
         case LeadingTrailingSpacesTag:
-            w->PrintEOL(L"special form: <match leading/trailing spaces: minBegin=%d minEnd=%d>", 
+            w->PrintEOL(L"special form: <match leading/trailing spaces: minBegin=%d minEnd=%d>",
                 rep.leadingTrailingSpaces.beginMinMatch, rep.leadingTrailingSpaces.endMinMatch);
             break;
         case OctoquadTag:

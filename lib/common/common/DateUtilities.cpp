@@ -20,7 +20,7 @@ namespace Js
     const INT64 DateUtilities::ticksPerHour = ticksPerMinute * 60;
     const INT64 DateUtilities::ticksPerDay = ticksPerHour * 24;
     const INT64 DateUtilities::jsEpochMilliseconds = 11644473600000;
-    const INT64 DateUtilities::jsEpochTicks = jsEpochMilliseconds * ticksPerMillisecond; 
+    const INT64 DateUtilities::jsEpochTicks = jsEpochMilliseconds * ticksPerMillisecond;
 
     // The day numbers for the months of a leap year.
     static const int g_rgday[12] =
@@ -85,7 +85,7 @@ namespace Js
             return E_INVALIDARG;
         }
 
-        // Divide as INT64 to ensure truncation of all decimal digits, 
+        // Divide as INT64 to ensure truncation of all decimal digits,
         // since any remaining after conversion will be truncated as a Date value.
         INT64 milliseconds = ticks / ticksPerMillisecond;
 
@@ -97,7 +97,7 @@ namespace Js
     //
     // Convert an ES5 date based on double to a WinRT DateTime
     // DateTime is the number of ticks that have elapsed since 1/1/1601 00:00:00 in 100ns precision
-    // If we return a failure HRESULT other than E_INVALIDARG, the es5 date can't be expressed 
+    // If we return a failure HRESULT other than E_INVALIDARG, the es5 date can't be expressed
     // in the WinRT scheme
     //
     HRESULT DateUtilities::ES5DateToWinRTDate(double es5Date, __out INT64* pRet)
@@ -114,7 +114,7 @@ namespace Js
         if (!NumberUtilities::IsValidTryToInt64(es5DateAsInt64)) return INTSAFE_E_ARITHMETIC_OVERFLOW;
 
         INT64 numTicks;
-        // We use the LongLong* functions since that's type-defed to int64
+        // We use the LongLong* functions since that's typedef'd to int64
         // First, we rebase it to the WinRT epoch, then we convert the time in milliseconds to ticks
         if (SUCCEEDED(::Int64Add(es5DateAsInt64, jsEpochMilliseconds, reinterpret_cast<LONGLONG*>(&numTicks))))
         {
@@ -169,7 +169,7 @@ namespace Js
         {
             return INTSAFE_E_ARITHMETIC_OVERFLOW;
         }
-         
+
         //Multiply before converting to Int64, in order to get the 100-nanosecond precision which will get truncated
         INT64 spanAsInt64 = NumberUtilities::TryToInt64(span * ticksPerMillisecondDouble);
 
@@ -193,8 +193,8 @@ namespace Js
             dateTimeTicks = ticksPerDay + dateTimeTicks;
         }
 
-        __int32 hours =    (__int32) ((dateTimeTicks / ticksPerHour) % 24); 
-        __int32 minutes =     (__int32) ((dateTimeTicks / ticksPerMinute) % 60); 
+        __int32 hours =    (__int32) ((dateTimeTicks / ticksPerHour) % 24);
+        __int32 minutes =     (__int32) ((dateTimeTicks / ticksPerMinute) % 60);
         __int32 seconds =     (__int32) ((dateTimeTicks / ticksPerSecond) % 60);
         __int32 nanos = (__int32) ((dateTimeTicks % ticksPerSecond) * 100);
 
@@ -223,7 +223,7 @@ namespace Js
     ///
     /// Returns number of milliseconds since Jan 1, 1970
     ///------------------------------------------------------------------------------
-    double 
+    double
     DateUtilities::TimeFromSt(SYSTEMTIME *pst)
     {
         return TvFromDate(pst->wYear,pst->wMonth-1,pst->wDay-1, DayTimeFromSt(pst));
@@ -234,7 +234,7 @@ namespace Js
     ///
     /// Returns number of milliseconds since 12:00 AM
     ///------------------------------------------------------------------------------
-    double 
+    double
     DateUtilities::DayTimeFromSt(SYSTEMTIME *pst)
     {
         return (pst->wHour * 3600000.0) + (pst->wMinute * 60000.0) + (pst->wSecond * 1000.0) + pst->wMilliseconds;
@@ -243,7 +243,7 @@ namespace Js
     ///------------------------------------------------------------------------------
     /// Get a time value from (year, mon, day, time) values.
     ///------------------------------------------------------------------------------
-    double 
+    double
     DateUtilities::TvFromDate(double year, double mon, double day, double time)
     {
         // For positive month, use fast path: '/' and '%' rather than 'floor()' and 'fmod()'.
@@ -275,7 +275,7 @@ namespace Js
     ///------------------------------------------------------------------------------
     /// Get the non-negative remainder.
     ///------------------------------------------------------------------------------
-    double 
+    double
     DateUtilities::DblModPos(double dbl, double dblDen)
     {
         AssertMsg(dblDen > 0, "value not positive");
@@ -293,7 +293,7 @@ namespace Js
     ///    365 * y + floor((y+1)/4) - floor((y+69)/100) + floor((y+369)/400).
     /// where y is the calendar year minus 1970.
     ///------------------------------------------------------------------------------
-    double 
+    double
     DateUtilities::DayFromYear(double year)
     {
         double day = 365 * (year -= 1970);

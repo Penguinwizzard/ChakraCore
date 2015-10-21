@@ -6,17 +6,17 @@
 
 namespace Js
 {
-    // A wrapper corrsponds to a named item coming from the host. 
+    // A wrapper corresponds to a named item coming from the host.
     // it maintains the IDispatch* pointer of the named item.
     // this is used in setting up the scope for scoped operations. see javascriptoperators.cpp
     class ModuleRoot : public RootObjectBase
-    {        
+    {
     protected:
         DEFINE_VTABLE_CTOR(ModuleRoot, RootObjectBase);
         DEFINE_MARSHAL_OBJECT_TO_SCRIPT_CONTEXT(ModuleRoot);
 
     public:
-        ModuleRoot(DynamicType * type);      
+        ModuleRoot(DynamicType * type);
         void SetHostObject(ModuleID moduleID, HostObjectBase * hostObject);
 
         virtual BOOL InitPropertyScoped(PropertyId propertyId, Var value) override;

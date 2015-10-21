@@ -7,7 +7,7 @@
 //=============================
 // Enabled Warnings
 //=============================
-#pragma warning(default:4242)   // convertion possible loss of data
+#pragma warning(default:4242)   // conversion possible loss of data
 
 //=============================
 // Disabled Warnings

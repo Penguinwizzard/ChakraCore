@@ -65,7 +65,7 @@ namespace Js
         //   a) a pointer to the object array holding numeric properties of this object, or
         //   b) a bitfield of flags.
         // Because object arrays are not commonly used, the storage space can be reused to carry information that
-        // can improve performance for typical objects. To indicate the bitfiled usage we set the least significant bit to 1.
+        // can improve performance for typical objects. To indicate the bitfield usage we set the least significant bit to 1.
         // Object array pointer always trumps the flags, such that when the first numeric property is added to an
         // object, its flags will be wiped out.  Hence flags can only be used as a form of cache to improve performance.
         // For functional correctness, some other fallback mechanism must exist to convey the information contained in flags.
@@ -73,7 +73,7 @@ namespace Js
         // bits it uses are DynamicObjectFlags::AllArrayFlags.
 
         union
-        {            
+        {
             ArrayObject * objectArray;          // Only if !IsAnyArray
             struct                                  // Only if IsAnyArray
             {
@@ -156,7 +156,7 @@ namespace Js
         }
 
         bool HasObjectArray() const
-        {            
+        {
             // Only JavascriptArray uses the objectArrayOrFlags as flags.
             Assert(DynamicObject::IsAnyArray((Var)this) || !UsesObjectArrayOrFlagsAsFlags() || IsObjectHeaderInlinedTypeHandler());
             return ((objectArray != nullptr) && !UsesObjectArrayOrFlagsAsFlags() && !IsObjectHeaderInlinedTypeHandler());
@@ -171,7 +171,7 @@ namespace Js
         {
             return ((objectArray != nullptr) && !UsesObjectArrayOrFlagsAsFlags() && !IsObjectHeaderInlinedTypeHandlerUnchecked());
         }
-       
+
         BOOL HasObjectArrayItem(uint32 index);
         BOOL DeleteObjectArrayItem(uint32 index, PropertyOperationFlags flags);
         BOOL GetObjectArrayItem(Var originalInstance, uint32 index, Var* value, ScriptContext* requestContext);
@@ -250,7 +250,7 @@ namespace Js
 
         virtual void RemoveFromPrototype(ScriptContext * requestContext) override;
         virtual void AddToPrototype(ScriptContext * requestContext) override;
-        virtual void SetPrototype(RecyclableObject* newPrototype) override;                
+        virtual void SetPrototype(RecyclableObject* newPrototype) override;
 
         virtual BOOL IsCrossSiteObject() const { return FALSE; }
 
@@ -285,7 +285,7 @@ namespace Js
         DynamicObjectFlags GetArrayFlags() const;
         DynamicObjectFlags GetArrayFlags_Unchecked() const; // do not use except in extreme circumstances
         void SetArrayFlags(const DynamicObjectFlags flags);
-        
+
         ProfileId GetArrayCallSiteIndex() const;
         void SetArrayCallSiteIndex(ProfileId profileId);
 
@@ -293,7 +293,7 @@ namespace Js
     private:
         ArrayObject* EnsureObjectArray();
         ArrayObject* GetObjectArrayOrFlagsAsArray() const { return objectArray; }
-        
+
         template <PropertyId propertyId>
         BOOL ToPrimitiveImpl(Var* result, ScriptContext * requestContext);
         BOOL CallToPrimitiveFunction(Var toPrimitiveFunction, PropertyId propertyId, Var* result, ScriptContext * requestContext);

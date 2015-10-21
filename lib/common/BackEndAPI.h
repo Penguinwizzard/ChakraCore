@@ -110,10 +110,10 @@ struct InlinedFrameLayout
     Js::InlineeCallInfo     callInfo;
     Js::JavascriptFunction *function;
     Js::Var                 arguments;  // The arguments object.
-    //Js::Var               argv[0];    // Here it would be embedded arguments array (callInfo.count elements) 
-                                        // but can't have 0-zise arr in base class, so we define it in derived class.
+    //Js::Var               argv[0];    // Here it would be embedded arguments array (callInfo.count elements)
+                                        // but can't have 0-size arr in base class, so we define it in derived class.
                                         // It's not really needed actually, just for convenience.
-    
+
     Js::Var* GetArguments()
     {
         return (Js::Var*)(this + 1);
@@ -140,7 +140,7 @@ class BailOutRecord;
 
 struct LazyBailOutRecord
 {
-    uint32 offset; 
+    uint32 offset;
     BYTE* instructionPointer; // Instruction pointer of the bailout code
     BailOutRecord* bailoutRecord;
 
@@ -150,7 +150,7 @@ struct LazyBailOutRecord
         offset(offset), instructionPointer(address),
         bailoutRecord(record)
     {}
-    
+
     void SetBailOutKind();
 #if DBG
     void Dump(Js::FunctionBody* functionBody);

@@ -10,11 +10,10 @@ namespace Js
 static inline BOOL FNzDigit(int ch)
 { return ch >= '1' && ch <= '9'; }
 
-static const long klwMaxExp10 = 310;    // Upper bound on base 10 exponent
+static const long klwMaxExp10 = 310;     // Upper bound on base 10 exponent
 static const long klwMinExp10 = -325;    // Lower bound on base 10 exponent
 static const int kcbMaxRgb = 50;
 static const int kcchMaxSig = 20;        // 20 significant digits. ECMA allows this.
-
 
 // Small powers of ten. These are all the powers of ten that have an exact
 // representation in IEEE double precision format.
@@ -24,7 +23,6 @@ static const double g_rgdblTens[] =
     1e10, 1e11, 1e12, 1e13, 1e14, 1e15, 1e16, 1e17, 1e18, 1e19,
     1e20, 1e21, 1e22, 1e23, 1e24, 1e25, 1e26, 1e27, 1e28
 };
-
 
 static inline wchar_t ToDigit(long wVal)
 {
@@ -292,7 +290,7 @@ void BIGNUM::MulTenAdd(byte bAdd, ulong *pluExtra)
 
     ulong rglu[5];
 
-    // First "multipy" by eight
+    // First "multiply" by eight
     m_wExp += 3;
     Assert(m_wExp >= 4);
 
@@ -706,7 +704,7 @@ double BIGNUM::GetDbl(void)
 The double contains a binary value, M * 2^n, which is off by at most 1
 in the least significant bit; (prgch, cch, lwExp) represents a decimal
 value, D * 10^e. Note that (prgch, cch) may contain a decimal point and
-lwExp is as if there is an implied decimal point immediately preceeding
+lwExp is as if there is an implied decimal point immediately preceding
 the digits.
 
 The general scheme is to find an integer N (the smaller the better) such
@@ -714,9 +712,9 @@ that N * M * 2^n and N * D * 10^e are both integers. We then compare
 N * M * 2^n to N * D * 10^e (at full precision). If the binary value is
 greater, we adjust it to be exactly half way to the next value that can
 come from a double. We then compare again to decided whether to bump the
-double up to the next value. Similary if the binary value is smaller,
+double up to the next value. Similarly if the binary value is smaller,
 we adjust it to be exactly half way to the previous representable value
-and recompare.
+and re-compare.
 ***************************************************************************/
 template <typename EncodedChar>
 static double AdjustDbl(double dbl, const EncodedChar *prgch, long cch, long lwExp)
@@ -1027,7 +1025,7 @@ LGetExp:
     {
     case '-':
         signExp = -1;
-        // fall thru
+        // fall-through
     case '+':
         pch++;
         if (Js::NumberUtilities::IsDigit(*pch))
@@ -1230,17 +1228,17 @@ LEnd:
 
     // Need to use big integer arithmetic. There's too much error in
     // our result and it's close to a boundary value. This is rare,
-    // but does happen. Eg,
+    // but does happen, e.g.:
     // x = 1.2345678901234568347913049445e+200;
     //
     Assert(pchLimDig - pchMinDig >= 0 && pchLimDig - pchMinDig <= LONG_MAX);
     dbl = AdjustDbl(num.GetDbl(), pchMinDig, (long)(pchLimDig - pchMinDig), lwExp);
 
 LDone:
-    // This assert was removed because it would fire on VERY rare occasions. Not 
+    // This assert was removed because it would fire on VERY rare occasions. Not
     // repro on all machines and very hard to repro even on machines that could repro it.
     // The numbers (dblLowPrec and dbl) were different in their two least sig bits only
-    // which is _probably_ within expected errror. I did not take the time to fully 
+    // which is _probably_ within expected error. I did not take the time to fully
     // investigate whether this really does meet the ECMA spec...
     //
     //    Assert(Js::NumberUtilities::IsNan(dblLowPrec) || dblLowPrec == dbl);
@@ -1868,14 +1866,14 @@ static BOOL FormatDigits(_In_reads_(pbLim - pbSrc) byte *pbSrc, byte *pbLim, int
     AnalysisAssert(pbLim > pbSrc);
 
     if (pbLim <= pbSrc)
-    { 
+    {
         Assert(0);
         return FALSE;
     }
 
     // check the expected size of the resulting string...
     size_t nCount;
-    if ((wExp10 <= -6) ||(wExp10 > 21)) 
+    if ((wExp10 <= -6) ||(wExp10 > 21))
     {
         nCount = (pbLim - pbSrc) + 6;
         if (wExp10 >= 100)
@@ -1885,7 +1883,7 @@ static BOOL FormatDigits(_In_reads_(pbLim - pbSrc) byte *pbSrc, byte *pbLim, int
     }
     else if (wExp10 <= 0)
         nCount = (pbLim - pbSrc) + 3 + abs(wExp10);
-    else 
+    else
         nCount = (pbLim - pbSrc) + 1 + wExp10;
     if ((int)nCount >= cchDst)
     {
@@ -1964,7 +1962,7 @@ static BOOL FormatDigits(_In_reads_(pbLim - pbSrc) byte *pbSrc, byte *pbLim, int
 }
 
 
-__success(return <= nDstBufSize) 
+__success(return <= nDstBufSize)
 static int FormatDigitsFixed(byte *pbSrc, byte *pbLim, int wExp10, int nFractionDigits, __out_ecount_part(nDstBufSize, return) wchar_t *pchDst, int nDstBufSize){
     AnalysisAssert(pbLim > pbSrc);
     AssertArrMem(pbSrc, pbLim - pbSrc);
@@ -2049,13 +2047,13 @@ static int FormatDigitsFixed(byte *pbSrc, byte *pbLim, int wExp10, int nFraction
     return n;
 }
 
-__success(return <= cchDst) 
+__success(return <= cchDst)
 static int FormatDigitsExponential(
-                            byte *  pbSrc, 
-                            byte *  pbLim, 
-                            int     wExp10, 
-                            int     nFractionDigits, 
-                            __out_ecount_part(cchDst,return) wchar_t * pchDst, 
+                            byte *  pbSrc,
+                            byte *  pbLim,
+                            int     wExp10,
+                            int     nFractionDigits,
+                            __out_ecount_part(cchDst,return) wchar_t * pchDst,
                             int     cchDst
                             )
 {
@@ -2071,7 +2069,7 @@ static int FormatDigitsExponential(
 
     int n = 1; // first digit
 
-    if (nFractionDigits < 0) // ouput as many fractional digits as we can
+    if (nFractionDigits < 0) // output as many fractional digits as we can
     {
         int cch = (int)(pbLim - (1 + pbSrc)); // 1 == first digit
         if (cch > 0)
@@ -2087,7 +2085,7 @@ static int FormatDigitsExponential(
     // 'e' and exponent sign
     n += 2;
 
-    // Exponent Digits 
+    // Exponent Digits
     int wExp10Abs = ((wExp10-1) >= 0) ? (wExp10-1) : -(wExp10-1);
     if (wExp10Abs >= 100)
     {
@@ -2112,7 +2110,7 @@ static int FormatDigitsExponential(
     // First digit
     *pchDst++ = '0' + *pbSrc++;
 
-    if (nFractionDigits < 0) // ouput as many fractional digits as we can
+    if (nFractionDigits < 0) // output as many fractional digits as we can
     {
         if (pbSrc < pbLim)
         {
@@ -2168,7 +2166,7 @@ static int FormatDigitsExponential(
 }
 
 /*
-*RoundTo:Rounds off the BCD represenation of a number to a specified number of digits
+*RoundTo:Rounds off the BCD representation of a number to a specified number of digits
 * The input number is contained in  [pbSrc .. pbSrc + pbLim -1] and the output number
 * will be contained in [pbDst .. *ppbLimRes - 1]. 'nDigits' is the number of digits
 * to which the number should be rounded up.
@@ -2214,7 +2212,7 @@ static int RoundTo(byte *pbSrc, byte *pbLim, int nDigits, __out_bcount(nDigits+1
                 }
             }
             if( i < 0 && pbDst[0] == 0 )
-            {   
+            {
                 // An extra leading '1' is required. Move the number in pbDst to the right
                 // and tack it on.
                 memmove(pbDst + 1, pbDst, nDigits);
@@ -2313,7 +2311,7 @@ int Js::NumberUtilities::FDblToStr(double dbl, Js::NumberUtilities::FormatType f
     case Js::NumberUtilities::FormatFixed:
         if( nDigits >= 0 )
         {
-            //Either session pointer is null or session is in compat mode switch to compat handling              
+            //Either session pointer is null or session is in compat mode switch to compat handling
             if ((wExp10 + nDigits) > 0)
             {
                 Assert(wExp10 + nDigits + 1 <= kcbMaxRgb);
@@ -2327,7 +2325,7 @@ int Js::NumberUtilities::FDblToStr(double dbl, Js::NumberUtilities::FormatType f
                     rgbAdj[0] = 1;
                     wExp10 += 1;
                 }
-                else 
+                else
                     rgbAdj[0] = 0;
                 pbLimAdj = rgbAdj + 1;
             }
@@ -2478,7 +2476,7 @@ BOOL Js::NumberUtilities::FNonZeroFiniteDblToStr(double dbl, _In_range_(2, 36) i
 
     // convert to string with radix
     //( back compat port of FDblToStrRadix())
-        
+
     int cbitDigit;
     double valueDen, valueT;
     int wExp2, wExp, wDig;
@@ -2558,7 +2556,7 @@ BOOL Js::NumberUtilities::FNonZeroFiniteDblToStr(double dbl, _In_range_(2, 36) i
 
         // First digit.
         wDig = (int)dbl;
-        if (len < 2) 
+        if (len < 2)
         {
             return FALSE; //We run out of buffer size.
         }
@@ -2570,7 +2568,7 @@ BOOL Js::NumberUtilities::FNonZeroFiniteDblToStr(double dbl, _In_range_(2, 36) i
         // Radix point and remaining digits.
         if (0 != dbl)
         {
-            if (len < maxOutDigits + 2) 
+            if (len < maxOutDigits + 2)
             {
                 return FALSE; //We run out of buffer size.
             }
@@ -2670,7 +2668,7 @@ BOOL Js::NumberUtilities::FNonZeroFiniteDblToStr(double dbl, _In_range_(2, 36) i
     }
     else
     {
-        if (len < 2) 
+        if (len < 2)
         {
             return FALSE; //We run out of buffer size.
         }
@@ -2683,7 +2681,7 @@ BOOL Js::NumberUtilities::FNonZeroFiniteDblToStr(double dbl, _In_range_(2, 36) i
     if (0 != dbl && cchSig < maxOutDigits)
     {
         // Output the radix point.
-        if (len < 3) 
+        if (len < 3)
         {
             return FALSE; //We run out of buffer size.
         }
@@ -2697,7 +2695,7 @@ BOOL Js::NumberUtilities::FNonZeroFiniteDblToStr(double dbl, _In_range_(2, 36) i
             {
                 wDig = radix - 1;
             }
-            if (len < 2) 
+            if (len < 2)
             {
                 return FALSE; //We run out of buffer size.
             }
@@ -2711,7 +2709,7 @@ BOOL Js::NumberUtilities::FNonZeroFiniteDblToStr(double dbl, _In_range_(2, 36) i
         } while (0 != dbl && cchSig < maxOutDigits);
     }
 
-    if (len < 1) 
+    if (len < 1)
     {
         return FALSE; //We run out of buffer size.
     }
@@ -2778,4 +2776,4 @@ bool Js::NumberUtilities::IsInSupplementaryPlane(codepoint_t codePointValue)
     return codePointValue >= 0x10000;
 }
 
-}; // namespace Js
+} // namespace Js

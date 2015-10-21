@@ -9,7 +9,7 @@
 
 namespace Js
 {
-    // SIMD.Int32x4 operation wrappers that cover instrinsics for x86/x64 system 
+    // SIMD.Int32x4 operation wrappers that cover intrinsics for x86/x64 system
     SIMDValue SIMDInt32x4Operation::OpInt32x4(int x, int y, int z, int w)
     {
         X86SIMDValue x86Result;
@@ -77,7 +77,7 @@ namespace Js
     {
         X86SIMDValue x86Result;
 
-        // assuming incoming value is any number, construct a new instance of SIMD.int32x4 with 
+        // assuming incoming value is any number, construct a new instance of SIMD.int32x4 with
         // 0xFFFFFFFF or 0x0 in each lane
         int x = value.i32[SIMD_X] ? 0xFFFFFFFF : 0x0;
         int y = value.i32[SIMD_Y] ? 0xFFFFFFFF : 0x0;
@@ -94,7 +94,7 @@ namespace Js
         X86SIMDValue x86Result;
         X86SIMDValue v = X86SIMDValue::ToX86SIMDValue(value);
 
-        // Converts the 4 single-precision, floating-point values to signed 32-bit integer values 
+        // Converts the 4 single-precision, floating-point values to signed 32-bit integer values
         // using truncate, using truncate one instead of _mm_cvtps_epi32
         x86Result.m128i_value = _mm_cvttps_epi32(v.m128_value);
 
@@ -106,7 +106,7 @@ namespace Js
         X86SIMDValue x86Result;
         X86SIMDValue v = X86SIMDValue::ToX86SIMDValue(value);
 
-        // Converts the 2 double-precision, floating-point values to 32-bit signed integers 
+        // Converts the 2 double-precision, floating-point values to 32-bit signed integers
         // using truncate. using truncate one instead of _mm_cvtpd_epi32
         x86Result.m128i_value = _mm_cvttpd_epi32(v.m128d_value);
 
@@ -137,7 +137,7 @@ namespace Js
         X86SIMDValue v = X86SIMDValue::ToX86SIMDValue(value);
         if (AutoSystemInfo::Data.SSE3Available())
         {
-            x86Result.m128i_value = _mm_abs_epi32(v.m128i_value); // only available after SSE3 
+            x86Result.m128i_value = _mm_abs_epi32(v.m128i_value); // only available after SSE3
             result = X86SIMDValue::ToSIMDValue(x86Result);
         }
         else if (AutoSystemInfo::Data.SSE2Available())
@@ -169,7 +169,7 @@ namespace Js
 
         temp.m128i_value = _mm_andnot_si128(v.m128i_value, negativeOnes.m128i_value); // (~value) & (negative ones)
         SIGNMASK.m128i_value = _mm_set1_epi32(0x00000001);                            // set SIGNMASK to 1
-        x86Result.m128i_value = _mm_add_epi32(SIGNMASK.m128i_value, temp.m128i_value);// add 4 integers respectively   
+        x86Result.m128i_value = _mm_add_epi32(SIGNMASK.m128i_value, temp.m128i_value);// add 4 integers respectively
 
         return X86SIMDValue::ToSIMDValue(x86Result);
     }
@@ -204,7 +204,7 @@ namespace Js
 
         x86Result.m128i_value = _mm_sub_epi32(tmpaValue.m128i_value, tmpbValue.m128i_value); // a - b
 
-        return X86SIMDValue::ToSIMDValue(x86Result);;
+        return X86SIMDValue::ToSIMDValue(x86Result);
     }
 
     SIMDValue SIMDInt32x4Operation::OpMul(const SIMDValue& aValue, const SIMDValue& bValue)
@@ -216,7 +216,7 @@ namespace Js
 
         if (AutoSystemInfo::Data.SSE4_1Available())
         {   // a * b, only available in SSE4
-            x86Result.m128i_value = _mm_mullo_epi32(tmpaValue.m128i_value, tmpbValue.m128i_value);  
+            x86Result.m128i_value = _mm_mullo_epi32(tmpaValue.m128i_value, tmpbValue.m128i_value);
             result = X86SIMDValue::ToSIMDValue(x86Result);
         }
         else if (AutoSystemInfo::Data.SSE2Available())
@@ -225,8 +225,8 @@ namespace Js
             __m128i tmp1 = _mm_mul_epu32(tmpaValue.m128i_value, tmpbValue.m128i_value);
             // mul 3,1: r0=a1*b1; r1=a3*b3
             __m128i tmp2 = _mm_mul_epu32(_mm_srli_si128(tmpaValue.m128i_value, 4), _mm_srli_si128(tmpbValue.m128i_value, 4));
-            // shuffle x86Results to [63..0] and pack 
-            x86Result.m128i_value = _mm_unpacklo_epi32(_mm_shuffle_epi32(tmp1, _MM_SHUFFLE(0, 0, 2, 0)), _mm_shuffle_epi32(tmp2, _MM_SHUFFLE(0, 0, 2, 0))); 
+            // shuffle x86Results to [63..0] and pack
+            x86Result.m128i_value = _mm_unpacklo_epi32(_mm_shuffle_epi32(tmp1, _MM_SHUFFLE(0, 0, 2, 0)), _mm_shuffle_epi32(tmp2, _MM_SHUFFLE(0, 0, 2, 0)));
             result = X86SIMDValue::ToSIMDValue(x86Result);
         }
         else
@@ -285,7 +285,7 @@ namespace Js
             x86Result.m128i_value = _mm_min_epi32(tmpaValue.m128i_value, tmpbValue.m128i_value);
             result = X86SIMDValue::ToSIMDValue(x86Result);
         }
-        else 
+        else
         {
             result.i32[SIMD_X] = (aValue.i32[SIMD_X] < bValue.i32[SIMD_X]) ? aValue.i32[SIMD_X] : bValue.i32[SIMD_X];
             result.i32[SIMD_Y] = (aValue.i32[SIMD_Y] < bValue.i32[SIMD_Y]) ? aValue.i32[SIMD_Y] : bValue.i32[SIMD_Y];
@@ -355,7 +355,7 @@ namespace Js
         X86SIMDValue x86Result;
         X86SIMDValue tmpValue = X86SIMDValue::ToX86SIMDValue(value);
         // Shifts the 4 signed 32-bit integers in a left by count bits while shifting in zeros
-        x86Result.m128i_value = _mm_slli_epi32(tmpValue.m128i_value, count); 
+        x86Result.m128i_value = _mm_slli_epi32(tmpValue.m128i_value, count);
 
         return X86SIMDValue::ToSIMDValue(x86Result);
     }

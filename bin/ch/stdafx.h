@@ -78,4 +78,3 @@ typedef void * Var;
 #include "HostConfigFlags.h"
 #include "MessageQueue.h"
 #include "WScriptJsrt.h"
-

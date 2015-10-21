@@ -46,7 +46,7 @@ MACRO       ( Break                     , Empty        , None            )
 MACRO       ( Ret                       , Empty        , None            )
 
 // External Function calls
-MACRO       ( StartCall                 , StartCall    , None            ) // Initialise memory for a call
+MACRO       ( StartCall                 , StartCall    , None            ) // Initialize memory for a call
 MACRO_WMS   ( Call                      , AsmCall      , None            ) // Execute call and place return value in register
 MACRO_WMS   ( ArgOut_Db                 , Reg1Double1  , None            ) // convert double to var and place it for function call
 MACRO_WMS   ( ArgOut_Int                , Reg1Int1     , None            ) // convert int to var and place it for function call
@@ -54,7 +54,7 @@ MACRO_WMS   ( Conv_VTD                  , Double1Reg1  , None            ) // co
 MACRO_WMS   ( Conv_VTI                  , Int1Reg1     , None            ) // convert var to int
 MACRO_WMS   ( Conv_VTF                  , Float1Reg1   , None            ) // convert var to float
 // Internal calls
-MACRO       ( I_StartCall               , StartCall    , None         ) // Initialise memory for a call
+MACRO       ( I_StartCall               , StartCall    , None         ) // Initialize memory for a call
 MACRO_WMS   ( I_Call                    , AsmCall      , None         ) // Execute call and place return value in register
 MACRO_WMS   ( I_ArgOut_Db               , Reg1Double1  , None         ) // convert double to var and place it for function call
 MACRO_WMS   ( I_ArgOut_Int              , Reg1Int1     , None         ) // convert int to var and place it for function call
@@ -98,13 +98,13 @@ MACRO_WMS   ( StSlot_Flt                , ElementSlot  , None            ) // Se
 MACRO_WMS   ( LdArr_Func                , ElementSlot  , None            ) // opcode to load func from function tables
 
 // Array Buffer manipulations
-MACRO_WMS   ( LdArr                     , AsmTypedArr  , None            ) 
-MACRO_WMS   ( LdArrConst                , AsmTypedArr  , None            ) 
-MACRO_WMS   ( StArr                     , AsmTypedArr  , None            ) 
-MACRO_WMS   ( StArrConst                , AsmTypedArr  , None            ) 
+MACRO_WMS   ( LdArr                     , AsmTypedArr  , None            )
+MACRO_WMS   ( LdArrConst                , AsmTypedArr  , None            )
+MACRO_WMS   ( StArr                     , AsmTypedArr  , None            )
+MACRO_WMS   ( StArrConst                , AsmTypedArr  , None            )
 
 // Int math
-MACRO_WMS   ( Ld_IntConst               , Int1Const1   , None            ) // Sets an int register from a const int 
+MACRO_WMS   ( Ld_IntConst               , Int1Const1   , None            ) // Sets an int register from a const int
 MACRO_WMS   ( Ld_Int                    , Int2         , None            ) // Sets an int from another int register
 MACRO_WMS   ( Neg_Int                   , Int2         , None            ) // int unary '-'
 MACRO_WMS   ( Not_Int                   , Int2         , None            ) // int unary '~'
@@ -137,7 +137,7 @@ MACRO_WMS   ( Mul_Db                    , Double3       , None           ) // Do
 MACRO_WMS   ( Div_Db                    , Double3       , None           ) // Double Arithmetic '/'
 MACRO_WMS   ( Rem_Db                    , Double3       , None           ) // Double Arithmetic '%'
 
-//float math 
+//float math
 MACRO_WMS   ( Ld_Flt                    , Float2        , None           ) // Sets a float from another float register
 MACRO_WMS   ( Neg_Flt                   , Float2        , None           ) // Float  Unary '-'
 MACRO_WMS   ( Add_Flt                   , Float3        , None           ) // Float Arithmetic '+'

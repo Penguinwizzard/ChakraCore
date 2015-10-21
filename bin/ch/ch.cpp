@@ -93,6 +93,7 @@ LPCWSTR JsErrorCodeToString(JsErrorCode jsErrorCode)
         break;
     }
 }
+
 #define IfJsErrorFailLog(expr) do { JsErrorCode jsErrorCode = expr; if ((jsErrorCode) != JsNoError) { fwprintf(stderr, L"ERROR: " TEXT(#expr) L" failed. JsErrorCode=0x%x (%s)\n", jsErrorCode, JsErrorCodeToString(jsErrorCode)); fflush(stderr); goto Error; } } while (0)
 
 int HostExceptionFilter(int exceptionCode, _EXCEPTION_POINTERS *ep)
@@ -113,14 +114,13 @@ int HostExceptionFilter(int exceptionCode, _EXCEPTION_POINTERS *ep)
     return EXCEPTION_EXECUTE_HANDLER;
 }
 
-
 void __stdcall PrintUsage()
 {
     wprintf(L"\nUsage: ch.exe [flaglist] [filename]\n");
     wprintf(L"Try 'ch.exe -?' for help\n");
 }
 
-// On success the param byteCodeBuffer will be allocated in the function. 
+// On success the param byteCodeBuffer will be allocated in the function.
 // The caller of this function should de-allocate the memory.
 HRESULT GetSerializedBuffer(LPCOLESTR fileContents, __out BYTE **byteCodeBuffer, __out DWORD *byteCodeBufferSize)
 {
@@ -176,10 +176,13 @@ HRESULT CreateLibraryByteCodeHeader(LPCOLESTR fileContents, BYTE * contentsRaw, 
 
     DWORD written;
 
-    //For validating the header file against the library file
+    // For validating the header file against the library file
     auto outputStr =
+        "//-------------------------------------------------------------------------------------------------------\r\n"
         "// Copyright (C) Microsoft. All rights reserved.\r\n"
-        "#if 0 \r\n";
+        "// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.\r\n"
+        "//-------------------------------------------------------------------------------------------------------\r\n"
+        "#if 0\r\n";
     IfFalseGo(WriteFile(bcFileHandle, outputStr, (DWORD)strlen(outputStr), &written, nullptr));
     IfFalseGo(WriteFile(bcFileHandle, contentsRaw, lengthBytes, &written, nullptr));
     if (lengthBytes < 2 || contentsRaw[lengthBytes - 2] != '\r' || contentsRaw[lengthBytes - 1] != '\n')
@@ -193,37 +196,37 @@ HRESULT CreateLibraryByteCodeHeader(LPCOLESTR fileContents, BYTE * contentsRaw, 
     IfFalseGo(WriteFile(bcFileHandle, outputStr, (DWORD)strlen(outputStr), &written, nullptr));
 
     // Write out the bytecode
-    outputStr = "namespace Js \r\n{\r\n    const char Library_Bytecode_";
+    outputStr = "namespace Js\r\n{\r\n    const char Library_Bytecode_";
     IfFalseGo(WriteFile(bcFileHandle, outputStr, (DWORD)strlen(outputStr), &written, nullptr));
     size_t convertedChars;
     char libraryNameNarrow[MAX_PATH + 1];
     IfFalseGo((wcstombs_s(&convertedChars, libraryNameNarrow, libraryNameWide, _TRUNCATE) == 0));
     IfFalseGo(WriteFile(bcFileHandle, libraryNameNarrow, (DWORD)strlen(libraryNameNarrow), &written, nullptr));
-    outputStr = "[] = \r\n/* 00000000 */ {";
+    outputStr = "[] = {\r\n/* 00000000 */";
     IfFalseGo(WriteFile(bcFileHandle, outputStr, (DWORD)strlen(outputStr), &written, nullptr));
 
     for (unsigned int i = 0; i < bcBufferSize; i++)
     {
-        char scratch[5];
+        char scratch[6];
         auto scratchLen = sizeof(scratch);
-        int num = _snprintf_s(scratch, scratchLen, "0x%02X", bcBuffer[i]);
-        Assert(num == 4);
+        int num = _snprintf_s(scratch, scratchLen, " 0x%02X", bcBuffer[i]);
+        Assert(num == 5);
         IfFalseGo(WriteFile(bcFileHandle, scratch, (DWORD)(scratchLen - 1), &written, nullptr));
 
-        //Add a comma and a space if this is not the last item
+        // Add a comma and a space if this is not the last item
         if (i < bcBufferSize - 1)
         {
-            char commaSpace[3];
-            _snprintf_s(commaSpace, sizeof(commaSpace), ", ");  // close quote, new line, offset and open quote
+            char commaSpace[2];
+            _snprintf_s(commaSpace, sizeof(commaSpace), ",");  // close quote, new line, offset and open quote
             IfFalseGo(WriteFile(bcFileHandle, commaSpace, (DWORD)strlen(commaSpace), &written, nullptr));
         }
 
-        //Add a line break every 16 scratches, primarily so the compiler doesn't complain about the string being too long.
-        //Also, won't add for the last scratch
+        // Add a line break every 16 scratches, primarily so the compiler doesn't complain about the string being too long.
+        // Also, won't add for the last scratch
         if (i % 16 == 15 && i < bcBufferSize - 1)
         {
-            char offset[18];
-            _snprintf_s(offset, sizeof(offset), "\r\n/* %08X */ ", i + 1);  // close quote, new line, offset and open quote
+            char offset[17];
+            _snprintf_s(offset, sizeof(offset), "\r\n/* %08X */", i + 1);  // close quote, new line, offset and open quote
             IfFalseGo(WriteFile(bcFileHandle, offset, (DWORD)strlen(offset), &written, nullptr));
         }
     }
@@ -268,11 +271,11 @@ HRESULT RunScript(LPCWSTR fileName, LPCWSTR fileContents, BYTE *bcBuffer, wchar_
     JsErrorCode runScript;
     if (bcBuffer != nullptr)
     {
-        runScript = ChakraRTInterface::JsRunSerializedScript(fileContents, bcBuffer, WScriptJsrt::GetNextSourceContext(), fullPath, nullptr/*result*/);
+        runScript = ChakraRTInterface::JsRunSerializedScript(fileContents, bcBuffer, WScriptJsrt::GetNextSourceContext(), fullPath, nullptr /*result*/);
     }
     else
     {
-        runScript = ChakraRTInterface::JsRunScript(fileContents, WScriptJsrt::GetNextSourceContext(), fullPath, nullptr/*result*/);
+        runScript = ChakraRTInterface::JsRunScript(fileContents, WScriptJsrt::GetNextSourceContext(), fullPath, nullptr /*result*/);
     }
 
     if (runScript != JsNoError)
@@ -281,8 +284,8 @@ HRESULT RunScript(LPCWSTR fileName, LPCWSTR fileContents, BYTE *bcBuffer, wchar_
     }
     else
     {
-        // Repeatedly flush the message queue until it's empty.  It is necessary to loop on this
-        // because setTimeout can add scripts to execute
+        // Repeatedly flush the message queue until it's empty. It is necessary to loop on this
+        // because setTimeout can add scripts to execute.
         do
         {
             IfFailGo(messageQueue->ProcessAll(fileName));
@@ -394,7 +397,7 @@ HRESULT ExecuteTest(LPCWSTR fileName)
             }
             else
             {
-                fwprintf(stderr, L"FATAL ERROR: -GenerateLibraryByteCodeHeader must provide the file name eg. -GenerateLibraryByteCodeHeader:<bytecode file name>, exiting\n");
+                fwprintf(stderr, L"FATAL ERROR: -GenerateLibraryByteCodeHeader must provide the file name, i.e., -GenerateLibraryByteCodeHeader:<bytecode file name>, exiting\n");
                 IfFailGo(E_FAIL);
             }
         }
@@ -438,14 +441,14 @@ HRESULT ExecuteTestWithMemoryCheck(BSTR fileName)
 {
     HRESULT hr = E_FAIL;
 #ifdef CHECK_MEMORY_LEAK
-    // Always check memory leak, unless user specfied the flag already
+    // Always check memory leak, unless user specified the flag already
     if (!ChakraRTInterface::IsEnabledCheckMemoryFlag())
     {
         ChakraRTInterface::SetCheckMemoryLeakFlag(true);
     }
 
     // Disable the output in case an unhandled exception happens
-    // We will reenable it if there is no unhandled exceptions
+    // We will re-enable it if there is no unhandled exceptions
     ChakraRTInterface::SetEnableCheckMemoryLeakOutput(false);
 #endif
 
@@ -457,14 +460,14 @@ HRESULT ExecuteTestWithMemoryCheck(BSTR fileName)
     {
         _flushall();
 
-        // Exception happened, so we probably didn't clean up properly, 
+        // Exception happened, so we probably didn't clean up properly,
         // Don't exit normally, just terminate
         TerminateProcess(::GetCurrentProcess(), GetExceptionCode());
     }
 
     _flushall();
 #ifdef CHECK_MEMORY_LEAK
-    // temporary work around ucrt limitation.
+    // temporary work around UCRT limitation.
 #if defined(_MSC_VER) && (_MSC_VER <= 1800)
     ChakraRTInterface::SetEnableCheckMemoryLeakOutput(true);
 #endif
@@ -486,7 +489,7 @@ int _cdecl wmain(int argc, __in_ecount(argc) LPWSTR argv[])
     HostConfigFlags::HandleArgsFlag(argc, argv);
 
     CComBSTR fileName;
-    
+
     ChakraRTInterface::ArgInfo argInfo = { argc, argv, PrintUsage, &fileName.m_str };
     HINSTANCE chakraLibrary = ChakraRTInterface::LoadChakraDll(argInfo);
 
@@ -498,4 +501,3 @@ int _cdecl wmain(int argc, __in_ecount(argc) LPWSTR argv[])
 
     return 0;
 }
-

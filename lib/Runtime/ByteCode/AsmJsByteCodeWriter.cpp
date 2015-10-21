@@ -64,7 +64,7 @@ namespace Js {
         return offset;
     }
 
-    
+
     void AsmJsByteCodeWriter::InitData( ArenaAllocator* alloc, long initCodeBufferSize )
     {
         ByteCodeWriter::InitData( alloc, initCodeBufferSize );
@@ -196,7 +196,7 @@ namespace Js {
         return false;
     }
 
-    template <typename SizePolicy> 
+    template <typename SizePolicy>
     bool AsmJsByteCodeWriter::TryWriteDouble1Addr1( OpCodeAsmJs op, RegSlot R0, const double* A1 )
     {
         OpLayoutT_Double1Addr1<SizePolicy> layout;
@@ -208,7 +208,7 @@ namespace Js {
         return false;
     }
 
-    template <typename SizePolicy> 
+    template <typename SizePolicy>
     bool AsmJsByteCodeWriter::TryWriteInt1Const2( OpCodeAsmJs op, RegSlot R0, int C1, int C2 )
     {
         OpLayoutT_Int1Const2<SizePolicy> layout;
@@ -220,7 +220,7 @@ namespace Js {
         return false;
     }
 
-    template <typename SizePolicy> 
+    template <typename SizePolicy>
     bool AsmJsByteCodeWriter::TryWriteInt2Const1( OpCodeAsmJs op, RegSlot R0, RegSlot R1, int C2 )
     {
         OpLayoutT_Int2Const1<SizePolicy> layout;
@@ -232,7 +232,7 @@ namespace Js {
         return false;
     }
 
-    template <typename SizePolicy> 
+    template <typename SizePolicy>
     bool AsmJsByteCodeWriter::TryWriteAsmBrReg1( OpCodeAsmJs op, ByteCodeLabel labelID, RegSlot R1 )
     {
         OpLayoutT_BrInt1<SizePolicy> layout;
@@ -247,7 +247,7 @@ namespace Js {
         return false;
     }
 
-    template <typename SizePolicy> 
+    template <typename SizePolicy>
     bool AsmJsByteCodeWriter::TryWriteAsmBrReg2( OpCodeAsmJs op, ByteCodeLabel labelID, RegSlot R1, RegSlot R2 )
     {
         OpLayoutT_BrInt2<SizePolicy> layout;
@@ -262,7 +262,7 @@ namespace Js {
         return false;
     }
 
-    template <typename SizePolicy> 
+    template <typename SizePolicy>
     bool AsmJsByteCodeWriter::TryWriteAsmCall( OpCodeAsmJs op, RegSlot returnValueRegister, RegSlot functionRegister, ArgSlot givenArgCount, AsmJsRetType retType )
     {
         OpLayoutT_AsmCall<SizePolicy> layout;
@@ -275,7 +275,7 @@ namespace Js {
         return false;
     }
 
-    template <typename SizePolicy> 
+    template <typename SizePolicy>
     bool AsmJsByteCodeWriter::TryWriteAsmSlot( OpCodeAsmJs op, RegSlot value, RegSlot instance, int32 slotId )
     {
         OpLayoutT_ElementSlot<SizePolicy> layout;
@@ -288,7 +288,7 @@ namespace Js {
         return false;
     }
 
-    template <typename SizePolicy> 
+    template <typename SizePolicy>
     bool AsmJsByteCodeWriter::TryWriteAsmTypedArr( OpCodeAsmJs op, RegSlot value, uint32 slotIndex, ArrayBufferView::ViewType viewType )
     {
         OpLayoutT_AsmTypedArr<SizePolicy> layout;
@@ -300,8 +300,8 @@ namespace Js {
         }
         return false;
     }
-    
-    template <typename SizePolicy> 
+
+    template <typename SizePolicy>
     bool AsmJsByteCodeWriter::TryWriteAsmSimdTypedArr(OpCodeAsmJs op, RegSlot value, uint32 slotIndex, uint8 dataWidth, ArrayBufferView::ViewType viewType)
     {
         OpLayoutT_AsmSimdTypedArr<SizePolicy> layout;
@@ -353,7 +353,7 @@ namespace Js {
     {
         MULTISIZE_LAYOUT_WRITE( AsmReg4, op, R0, R1, R2, R3 );
     }
-    
+
     void AsmJsByteCodeWriter::AsmReg5( OpCodeAsmJs op, RegSlot R0, RegSlot R1, RegSlot R2, RegSlot R3, RegSlot R4 )
     {
         MULTISIZE_LAYOUT_WRITE(AsmReg5, op, R0, R1, R2, R3, R4);
@@ -419,7 +419,7 @@ namespace Js {
     }
 
     void AsmJsByteCodeWriter::AsmTypedArr( OpCodeAsmJs op, RegSlot value, uint32 slotIndex, ArrayBufferView::ViewType viewType)
-    { 
+    {
         MULTISIZE_LAYOUT_WRITE( AsmTypedArr, op, value, slotIndex, viewType );
     }
 
@@ -439,13 +439,13 @@ namespace Js {
     {
         uint loopId = m_functionWrite->IncrLoopCount();
         Assert((uint)m_loopHeaders->Count() == loopId);
-		
+
         m_loopHeaders->Add(LoopHeaderData(m_byteCodeData.GetCurrentOffset(), 0, m_loopNest > 0));
         m_loopNest++;
         Js::OpCodeAsmJs loopBodyOpcode = Js::OpCodeAsmJs::AsmJsLoopBodyStart;
         this->MarkAsmJsLabel(loopEntrance);
         this->AsmJsUnsigned1(loopBodyOpcode, loopId);
-        
+
         return loopId;
     }
 

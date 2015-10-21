@@ -25,7 +25,7 @@ extrn __guard_check_icall_fptr:QWORD
 ;          the *guard_check_icall_fptr home parameter region.)
 ;
 ;   N.B. The (*guard_check_icall_fptr) call is guaranteed to preserve rcx.
-;        This stub preserves that behaviour, allowing callers to assume rcx
+;        This stub preserves that behavior, allowing callers to assume rcx
 ;        is preserved across the call.
 ;
 ; Arguments:
@@ -72,7 +72,7 @@ amd64_CallFunction PROC FRAME
         ;;
         ;;  Stack layout: A, B, C indicate what the stack looks like at specific
         ;;  points in code.
-        ;; 
+        ;;
         ;;            ----------------------------
         ;;             argv
         ;;  rbp + 48h ----------------------------
@@ -83,7 +83,7 @@ amd64_CallFunction PROC FRAME
         ;;             entryPoint [rdx]             |
         ;;  rbp + 30h ----------------------------  |
         ;;             function   [rcx]            -/
-        ;;  rbp + 28h ---------------------------- 
+        ;;  rbp + 28h ----------------------------
         ;;             return address
         ;;  rbp + 20h ---------------------------- <-- (A) function entry
         ;;             rbx                         -\
@@ -94,8 +94,8 @@ amd64_CallFunction PROC FRAME
         ;;  rbp + 08h ----------------------------  |
         ;;             rbp                         -/
         ;;  rbp       ----------------------------  <-- (B) frame pointer established
-        ;;             padding                     
-        ;;            ---------------------------- 
+        ;;             padding
+        ;;            ----------------------------
         ;;            ~                          ~
         ;;            ~ (argc&1)?(argc+1):argc   ~
         ;;            ~ QWORDS                   ~ <-- argv[2] ... argv[N - 1] + padding
@@ -112,7 +112,7 @@ amd64_CallFunction PROC FRAME
         ;;
 
         ;; (A) function entry
-        
+
         push rbx
         .pushreg rbx
         push rsi
@@ -128,7 +128,7 @@ amd64_CallFunction PROC FRAME
         ;; (B) frame pointer established
 
         ;; The first 4 QWORD args are passed in rcx, rdx, r8 and r9. rcx = function *,
-        ;; rdx = CallInfo. 
+        ;; rdx = CallInfo.
         ;; upon entry rcx contains function *.
         sub rsp, 8h
 
@@ -137,7 +137,7 @@ amd64_CallFunction PROC FRAME
 
 ifdef _CONTROL_FLOW_GUARD
         mov     rsi, r8                 ; save CallInfo
-        mov     rdi, rcx                ; save function * 
+        mov     rdi, rcx                ; save function *
         mov     rcx, rdx                ; save entry point (the call target)
                                         ; it is guaranteed that icall check will preserve rcx
         call    amd64_CheckICall        ; verify that the call target is valid
@@ -191,13 +191,13 @@ stack_alloc:
         sub r10, 3h
         shl r10, 3h
         lea r11, [rsi + 10h]
-copy_stack_args:        
-        mov rdi, qword ptr [r11 + r10] 
+copy_stack_args:
+        mov rdi, qword ptr [r11 + r10]
         mov qword ptr [rsp + r10], rdi
         sub r10, 8h
         cmp r10, 0
-        jge copy_stack_args      
-        
+        jge copy_stack_args
+
         ;; The first two script args are passed in r8 and r9.
 setup_reg_args_2:
         mov r9, qword ptr [rsi + 8h]
@@ -280,13 +280,13 @@ align 16
         ; upon entry rcx contains function *.
         sub rsp, 8h
 
-        
+
 
         ;; rbx = argc
         mov rbx, r8
 
 ifdef _CONTROL_FLOW_GUARD
-        mov     rdi, rcx                ; save function * 
+        mov     rdi, rcx                ; save function *
         mov     rcx, rdx                ; save entry point (the call target)
                                         ; it is guaranteed that icall check will preserve rcx
         ;[b-namost]:  are the push/pops necessary ?
@@ -310,7 +310,7 @@ endif
         ;; rsi = argv
         mov rsi, r9
         add rsi, 8h
-        
+
         ; get map of args sizes for this function
          push rax
          push rcx
@@ -333,25 +333,25 @@ endif
         pop rax
 
 setup_stack_and_reg_args:
-        
+
         ; OP_CallAsmInternal checks stack space
 
 stack_alloc:
         sub  rsp, r13
 
-        ;; copy all args to the new stack frame. 
+        ;; copy all args to the new stack frame.
         lea r11, [rsi]
         lea r10, [rsp + 8] ; copy after ScriptFunction*
-copy_stack_args:        
-        mov rdi, qword ptr [r11] 
+copy_stack_args:
+        mov rdi, qword ptr [r11]
         mov qword ptr [r10], rdi
         add r11, 8
         add r10, 8
         sub r13, 8
         cmp r13, 0
         jg copy_stack_args
-        
-        ; r12 points to arg size map    
+
+        ; r12 points to arg size map
 setup_reg_args_1:
         lea r11, [rsi]
         ; argc < 1 ?
@@ -361,7 +361,7 @@ setup_reg_args_1:
         je SIMDArg1
         mov rdx, qword ptr [r11]
         movq xmm1, qword ptr [r11]
-        add r11, 8h               
+        add r11, 8h
         jmp setup_reg_args_2
 SIMDArg1:
         movups xmm1, xmmword ptr [r11]
@@ -371,7 +371,7 @@ setup_reg_args_2:
         ; argc < 2 ?
         cmp rbx, 2h
         jl setup_args_done
-        
+
         add r12, 4
         cmp dword ptr[r12], 10h
         je SIMDArg2
@@ -409,7 +409,7 @@ done:
 
 ??$CallAsmJsFunction@H@JavascriptFunction@Js@@SAHPEAVRecyclableObject@1@PEAXIPEAPEAX@Z ENDP
 
-extrn ?DeferredParse@JavascriptFunction@Js@@SAP6APEAXPEAVRecyclableObject@2@UCallInfo@2@ZZPEAPEAVScriptFunction@2@@Z : PROC      
+extrn ?DeferredParse@JavascriptFunction@Js@@SAP6APEAXPEAVRecyclableObject@2@UCallInfo@2@ZZPEAPEAVScriptFunction@2@@Z : PROC
 align 16
 ?DeferredParsingThunk@JavascriptFunction@Js@@SAPEAXPEAVRecyclableObject@2@UCallInfo@2@ZZ PROC FRAME
         ;; save volatile registers
@@ -429,7 +429,7 @@ align 16
         call ?DeferredParse@JavascriptFunction@Js@@SAP6APEAXPEAVRecyclableObject@2@UCallInfo@2@ZZPEAPEAVScriptFunction@2@@Z
 
 ifdef _CONTROL_FLOW_GUARD
-        mov rcx, rax                            ; __guard_check_icall_fptr requires the call target in rcx. 
+        mov rcx, rax                            ; __guard_check_icall_fptr requires the call target in rcx.
         call [__guard_check_icall_fptr]         ; verify that the call target is valid
         mov rax, rcx                            ;restore call target
 endif
@@ -448,7 +448,7 @@ endif
         rex_jmp_reg rax
 ?DeferredParsingThunk@JavascriptFunction@Js@@SAPEAXPEAVRecyclableObject@2@UCallInfo@2@ZZ ENDP
 
-extrn ?DeferredDeserialize@JavascriptFunction@Js@@SAP6APEAXPEAVRecyclableObject@2@UCallInfo@2@ZZPEAVScriptFunction@2@@Z : PROC      
+extrn ?DeferredDeserialize@JavascriptFunction@Js@@SAP6APEAXPEAVRecyclableObject@2@UCallInfo@2@ZZPEAVScriptFunction@2@@Z : PROC
 align 16
 ?DeferredDeserializeThunk@JavascriptFunction@Js@@SAPEAXPEAVRecyclableObject@2@UCallInfo@2@ZZ PROC FRAME
         ;; save volatile registers
@@ -467,7 +467,7 @@ align 16
         call ?DeferredDeserialize@JavascriptFunction@Js@@SAP6APEAXPEAVRecyclableObject@2@UCallInfo@2@ZZPEAVScriptFunction@2@@Z
 
 ifdef _CONTROL_FLOW_GUARD
-        mov rcx, rax                            ; __guard_check_icall_fptr requires the call target in rcx. 
+        mov rcx, rax                            ; __guard_check_icall_fptr requires the call target in rcx.
         call [__guard_check_icall_fptr]         ; verify that the call target is valid
         mov rax, rcx                            ;restore call target
 endif

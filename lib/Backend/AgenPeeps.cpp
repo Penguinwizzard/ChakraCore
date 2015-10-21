@@ -8,8 +8,8 @@
 ///
 /// AgenPeeps::PeepFunc
 ///
-///     Looks for AGEN dependencies between a MOV and anoher instruction. The heuristic works as follows:
-///     - Look for an AGEN depenency. If found, move the first instruction upwards in the BB as far as possible.
+///     Looks for AGEN dependencies between a MOV and another instruction. The heuristic works as follows:
+///     - Look for an AGEN dependency. If found, move the first instruction upwards in the BB as far as possible.
 ///     - For subsequent dependencies (dep. chain), we move the instruction at least 3 slots from the previous instruction.
 ///     - We assume no dependency between different dep. chains.
 ///     Example:
@@ -21,13 +21,13 @@
 ///         ...
 ///         s5 = MOV [xxxx]             ; new dep chain. Move instruction up as far as possible
 ///         s6 = MOV [s5 + offset]
-///---------------------------------------------------------------------------- 
+///----------------------------------------------------------------------------
 void AgenPeeps::PeepFunc()
 {
     int distance = 0;
     IR::Instr *blockStart, *nextRealInstr;
     const uint stall_cycles = 3;
-   
+
     if (AutoSystemInfo::Data.IsAtomPlatform())
     {
         // On Atom, always optimize unless phase is off
@@ -40,7 +40,7 @@ void AgenPeeps::PeepFunc()
         if (!PHASE_FORCE(Js::AtomPhase, func) && !PHASE_FORCE(Js::AgenPeepsPhase, func))
             return;
     }
-    
+
     blockStart = nullptr;
     FOREACH_INSTR_IN_FUNC_EDITING(instr, instrNext, this->func)
     {
@@ -56,7 +56,7 @@ void AgenPeeps::PeepFunc()
         }
         nextRealInstr = instr->GetNextRealInstrOrLabel();
         // Check for AGEN dependency with the next instruction in the same BB
-        if (!nextRealInstr->EndsBasicBlock() && !nextRealInstr->StartsBasicBlock() && 
+        if (!nextRealInstr->EndsBasicBlock() && !nextRealInstr->StartsBasicBlock() &&
             AgenDependentInstrs(instr, nextRealInstr))
         {
             Assert(blockStart);
@@ -72,9 +72,9 @@ void AgenPeeps::PeepFunc()
 ///
 /// AgenPeeps::MoveInstrUp
 ///
-///     Moves an instruction up in the BB up to a bound or until it hits 
+///     Moves an instruction up in the BB up to a bound or until it hits
 ///     a dependent instruction. If  bound <= 0, move as far as possible.
-///---------------------------------------------------------------------------- 
+///----------------------------------------------------------------------------
 
 int AgenPeeps::MoveInstrUp(IR::Instr *instrToMove, IR::Instr *blockStart, int bound)
 {
@@ -109,7 +109,7 @@ int AgenPeeps::MoveInstrUp(IR::Instr *instrToMove, IR::Instr *blockStart, int bo
 ///
 ///     Determines if two instructions are Agen dependent
 ///
-///---------------------------------------------------------------------------- 
+///----------------------------------------------------------------------------
 bool AgenPeeps::AgenDependentInstrs(IR::Instr *instr1, IR::Instr *instr2)
 {
     // We only deal with assign instructions for now.
@@ -131,7 +131,7 @@ bool AgenPeeps::AgenDependentInstrs(IR::Instr *instr1, IR::Instr *instr2)
             return (base && regOpnd->IsSameRegUntyped(base)) || (index && regOpnd->IsSameRegUntyped(index));
         }
 
-        if (src2) 
+        if (src2)
         {
             base = src2->GetBaseOpnd();
             index = src2->GetIndexOpnd();
@@ -154,13 +154,13 @@ bool AgenPeeps::AgenDependentInstrs(IR::Instr *instr1, IR::Instr *instr2)
 ///
 ///     Determines if two instructions are dependent
 ///
-///---------------------------------------------------------------------------- 
+///----------------------------------------------------------------------------
 bool AgenPeeps::DependentInstrs(IR::Instr *instr1, IR::Instr *instr2)
 {
 
     if (AlwaysDependent(instr1) || AlwaysDependent(instr2))
         return true;
-    
+
     // Check for RAW, WAR and WAW dependence
     return \
         DependentOpnds(instr1->GetSrc1(), instr2->GetDst()) ||
@@ -173,7 +173,7 @@ bool AgenPeeps::DependentInstrs(IR::Instr *instr1, IR::Instr *instr2)
             DependentOpnds(instr2->GetSrc2(), instr1->GetSrc2()))) ||
         (instr2->m_opcode == Js::OpCode::XCHG &&                    // XCHG's src2 is also a dst
             (DependentOpnds(instr1->GetSrc1(), instr2->GetSrc2()) ||
-            DependentOpnds(instr1->GetSrc2(), instr2->GetSrc2())));            
+            DependentOpnds(instr1->GetSrc2(), instr2->GetSrc2())));
 }
 
 // Being conservative here about instructions that implicitly reads/writes memory/regs without explicit Opnds
@@ -193,7 +193,7 @@ bool AgenPeeps::AlwaysDependent(IR::Instr *instr)
 ///
 ///     Determines if two operands are dependent. This function is commutative.
 ///
-///---------------------------------------------------------------------------- 
+///----------------------------------------------------------------------------
 bool AgenPeeps::DependentOpnds(IR::Opnd *opnd1, IR::Opnd *opnd2)
 {
 #if defined (_M_IX86)
@@ -203,7 +203,7 @@ bool AgenPeeps::DependentOpnds(IR::Opnd *opnd1, IR::Opnd *opnd2)
 #else
     AssertMsg(false, "Optimization not supported for ARM");
 #endif
-    
+
     if (!opnd1 || !opnd2)
         return false;
 
@@ -218,9 +218,9 @@ bool AgenPeeps::DependentOpnds(IR::Opnd *opnd1, IR::Opnd *opnd2)
             // SymOpnd do not alias with  MemRefOpnd/IndirOpnd
             if (opnd1->IsMemRefOpnd() || opnd2->IsMemRefOpnd() || opnd1->IsIndirOpnd() || opnd2->IsIndirOpnd())
                 return false;
-            
+
             // Two symOpnds are dependent if they point to the same stack symbol
-            if (symOpnd1 && symOpnd2 && 
+            if (symOpnd1 && symOpnd2 &&
                 symOpnd1->m_sym->IsStackSym() && symOpnd2->m_sym->IsStackSym() )
             {
                 return symOpnd1->m_sym->AsStackSym()->m_offset == symOpnd2->m_sym->AsStackSym()->m_offset;
@@ -240,7 +240,7 @@ bool AgenPeeps::DependentOpnds(IR::Opnd *opnd1, IR::Opnd *opnd2)
         if (opnd2->IsRegOpnd() && regOpnd->IsSameRegUntyped(opnd2->AsRegOpnd()))
             return true;
 
-        // opnd2 = [base + indx + offset] and (opnd1 = base or opnd1 = indx) 
+        // opnd2 = [base + indx + offset] and (opnd1 = base or opnd1 = indx)
         if (opnd2->IsIndirOpnd())
         {
             base = opnd2->AsIndirOpnd()->GetBaseOpnd();

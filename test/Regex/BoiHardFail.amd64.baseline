@@ -239,7 +239,7 @@ Program {
     numGroups:    2
     numLoops:     0
     instructions: {
-        L0000: SyncToLiteralAndBackup(literal: "token" (with full map boyer-moore scanner), backup: [0-1])
+        L0000: SyncToLiteralAndBackup(literal: "token" (with full map Boyer-Moore scanner), backup: [0-1])
         L0458: TryMatchSet(set: [0-9A-Z_a-z], failLabel: L04b8)
         L0498: DefineGroupFixed(groupId: 1, length: 1, noNeedToSave: false)
         L04b8: BOITest(hardFail: false)
@@ -280,7 +280,7 @@ Program {
     numGroups:    1
     numLoops:     0
     instructions: {
-        L0000: SyncToLiteralAndConsume(literal: "token" (with full map boyer-moore scanner))
+        L0000: SyncToLiteralAndConsume(literal: "token" (with full map Boyer-Moore scanner))
         L0450: Succ()
     }
 }
@@ -473,7 +473,7 @@ Program {
     numGroups:    1
     numLoops:     0
     instructions: {
-        L0000: SyncToLiteralAndConsume(literal: "token" (with full map boyer-moore scanner))
+        L0000: SyncToLiteralAndConsume(literal: "token" (with full map Boyer-Moore scanner))
         L0450: BOITest(hardFail: true)
         L0468: Succ()
     }
@@ -581,7 +581,7 @@ Program {
     numGroups:    1
     numLoops:     0
     instructions: {
-        L0000: SyncToLiteralAndConsume(literal: "token" (with full map boyer-moore scanner))
+        L0000: SyncToLiteralAndConsume(literal: "token" (with full map Boyer-Moore scanner))
         L0450: BOITest(hardFail: true)
         L0468: MatchLiteral(literal: "token")
         L0480: Succ()
@@ -1671,7 +1671,7 @@ Program {
     numGroups:    1
     numLoops:     1
     instructions: {
-        L0000: SyncToLiteralAndBackup(literal: "abc" (with linear map boyer-moore scanner), backup: [0-inf])
+        L0000: SyncToLiteralAndBackup(literal: "abc" (with linear map Boyer-Moore scanner), backup: [0-inf])
         L0050: BeginLoop(loopId: 0, repeats: [1-inf], exitLabel: L00c8, hasOuterLoops: false, hasInnerNondet: false, minBodyGroupId: 1, maxBodyGroupId: -1, greedy: false)
         L0080: BOITest(hardFail: true)
         L0098: MatchLiteral(literal: "abc")

@@ -61,7 +61,7 @@ namespace Js
 #endif
         }
 
-        __inline Var JavascriptMath::ShiftLeft(Var aLeft,Var aRight,ScriptContext* scriptContext) 
+        __inline Var JavascriptMath::ShiftLeft(Var aLeft,Var aRight,ScriptContext* scriptContext)
         {
             return
                 TaggedInt::IsPair(aLeft, aRight) ?
@@ -69,7 +69,7 @@ namespace Js
                 ShiftLeft_Full(aLeft, aRight,scriptContext);
         }
 
-        __inline Var JavascriptMath::ShiftRight(Var aLeft, Var aRight, ScriptContext* scriptContext) 
+        __inline Var JavascriptMath::ShiftRight(Var aLeft, Var aRight, ScriptContext* scriptContext)
         {
             return
                 TaggedInt::IsPair(aLeft, aRight) ?
@@ -77,7 +77,7 @@ namespace Js
                 ShiftRight_Full(aLeft, aRight,scriptContext);
         }
 
-        __inline Var JavascriptMath::ShiftRightU(Var aLeft, Var aRight, ScriptContext* scriptContext) 
+        __inline Var JavascriptMath::ShiftRightU(Var aLeft, Var aRight, ScriptContext* scriptContext)
         {
             return
                 TaggedInt::IsPair(aLeft, aRight) ?
@@ -287,7 +287,7 @@ namespace Js
             //  T3 = sign(T1) * floor(abs(T1))
             //  T4 = T3 % 2^32
             //
-            // Casting gives equivalient result, except when T1 > INT64_MAX, or T1 < INT64_MIN (or NaN Inf Zero),
+            // Casting gives equivalent result, except when T1 > INT64_MAX, or T1 < INT64_MIN (or NaN Inf Zero),
             // in which case we'll use slow path.
 
             // Try casting to int32 first. Results in 0x80000000 if it overflows.
@@ -333,15 +333,15 @@ namespace Js
         }
 
         __inline int64 JavascriptMath::TryToInt64(double T1)
-        {        
+        {
             return Js::NumberUtilities::TryToInt64(T1);
         }
 
         __inline int32 JavascriptMath::ToInt32(Var aValue, ScriptContext* scriptContext)
         {
             return
-                TaggedInt::Is(aValue) ? 
-                TaggedInt::ToInt32(aValue) : 
+                TaggedInt::Is(aValue) ?
+                TaggedInt::ToInt32(aValue) :
                 ToInt32_Full(aValue, scriptContext);
         }
 #ifdef SSE2MATH

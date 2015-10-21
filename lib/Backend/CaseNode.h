@@ -6,15 +6,15 @@
 using namespace JsUtil;
 
 /*
-*	CaseNode - represents the case statements (not the case block) in the switch statement
+*   CaseNode - represents the case statements (not the case block) in the switch statement
 */
 class CaseNode
 {
-private:    
+private:
     uint32              offset;          //offset - indicates the bytecode offset of the case instruction
     uint32              targetOffset;    //targetOffset - indicates the bytecode offset of the target instruction (case block)
     IR::BranchInstr*    caseInstr; // caseInstr - stores the case instruction
-    IR::Opnd*           lowerBound;	//lower bound - used for integer cases
+    IR::Opnd*           lowerBound; //lower bound - used for integer cases
 
 public:
     CaseNode(IR::BranchInstr* caseInstr, uint32 offset, uint32 targetOffset, IR::Opnd* lowerBound = nullptr)
@@ -65,7 +65,7 @@ public:
     {
         return lowerBound;
     }
-    
+
     void SetLowerBound(IR::Opnd* lowerBound)
     {
         this->lowerBound = lowerBound;
@@ -78,11 +78,11 @@ public:
 };
 
 template <>
-struct DefaultComparer<CaseNode *> 
+struct DefaultComparer<CaseNode *>
 {
-public:    
+public:
     static int Compare(CaseNode* caseNode1, CaseNode* caseNode2);
-    static bool Equals(CaseNode* x, CaseNode* y);    
+    static bool Equals(CaseNode* x, CaseNode* y);
     static uint GetHashCode(CaseNode * caseNode);
 };
 

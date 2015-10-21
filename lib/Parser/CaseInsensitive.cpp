@@ -4,9 +4,9 @@
 //-------------------------------------------------------------------------------------------------------
 //
 // Map Unicode characters to their equivalence classes induced by the modified ToUpper map.
-// Ie c1 and c2 are in the same class if ToUpper(c1) == ToUpper(c2).
+// i.e.: c1 and c2 are in the same class if ToUpper(c1) == ToUpper(c2).
 //
-// The ToUpper map takes any character to its Unicode upper case eqivalent, with the modification that
+// The ToUpper map takes any character to its Unicode upper case equivalent, with the modification that
 // a non-7-bit-ASCII character cannot be mapped to 7-bit-ASCII characters.
 //
 
@@ -49,7 +49,7 @@ namespace UnifiedRegex
                     outEquiv[2] = Chars<Char>::ITC((int)c + delta2);
                     outEquiv[3] = Chars<Char>::ITC((int)c + delta3);
                 }
-                else 
+                else
                 {
                     outEquiv[1] = outEquiv[2] = outEquiv[3] = Chars<Char>::UTC(c);
                 }
@@ -573,7 +573,7 @@ END {
 
                 if (tblidx < numTransforms)
                 {
-                    // Does current transform intesect the desired range?
+                    // Does current transform intersect the desired range?
                     uint interl = max(l, static_cast<uint>(transforms[tblidx].lo));
                     uint interh = min(h, static_cast<uint>(transforms[tblidx].skipCountOfRange == 1 ? transforms[tblidx].hi : interl));
                     if (interl <= interh)

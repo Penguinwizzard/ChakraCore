@@ -542,11 +542,11 @@ namespace Js
         ScriptContext* scriptContext = library->GetScriptContext();
 
         scriptContext->CheckEvalRestriction();
-        
+
         return EntryEvalHelper(scriptContext, function, callInfo, args);
     }
 
-    // This function is used to decipher eval function parameters and we dont want the stack arguments optimization by C++ compiler so turning off the optimization
+    // This function is used to decipher eval function parameters and we don't want the stack arguments optimization by C++ compiler so turning off the optimization
     Var GlobalObject::EntryEval(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
@@ -560,7 +560,7 @@ namespace Js
         return EntryEvalHelper(scriptContext, function, callInfo, args);
     }
 
-    Var GlobalObject::VEval(JavascriptLibrary* library, FrameDisplay* environment, ModuleID moduleID, bool strictMode, bool isIndirect, 
+    Var GlobalObject::VEval(JavascriptLibrary* library, FrameDisplay* environment, ModuleID moduleID, bool strictMode, bool isIndirect,
         Arguments& args, bool isLibraryCode, bool registerDocument, ulong additionalGrfscr)
     {
         Assert(library);
@@ -586,7 +586,7 @@ namespace Js
         }
 
         // It might happen that no script parsed on this context (scriptContext) till now,
-        // so this Eval acts as the first source compile for scriptContext, tranisition to debugMode as needed
+        // so this Eval acts as the first source compile for scriptContext, transition to debugMode as needed
         scriptContext->TransitionToDebugModeIfFirstSource(/* utf8SourceInfo = */ nullptr);
 
         JavascriptString *argString = JavascriptString::FromVar(evalArg);
@@ -601,7 +601,7 @@ namespace Js
             {
                 grfscr |= fscrIsLibraryCode;
             }
-            pfuncScript = library->GetGlobalObject()->EvalHelper(scriptContext, argString->GetSz(), argString->GetLength(), moduleID, 
+            pfuncScript = library->GetGlobalObject()->EvalHelper(scriptContext, argString->GetSz(), argString->GetLength(), moduleID,
                 grfscr, Constants::EvalCode, doRegisterDocument, isIndirect, strictMode);
             Assert(!pfuncScript->GetFunctionInfo()->IsGenerator());
 
@@ -610,7 +610,7 @@ namespace Js
             {
                 if (!(pfuncScript->GetFunctionBody()->GetUtf8SourceInfo()->GetIsLibraryCode() || pfuncScript->GetFunctionBody()->IsByteCodeDebugMode()))
                 {
-                    // Identifing if any function escaped for not being in debug mode. (This can be removed as a part of TFS : 935011)
+                    // Identifying if any function escaped for not being in debug mode. (This can be removed as a part of TFS : 935011)
                     Throw::FatalInternalError();
                 }
             }
@@ -625,7 +625,7 @@ namespace Js
             {
                 if (!(pfuncScript->GetFunctionBody()->GetUtf8SourceInfo()->GetIsLibraryCode() || pfuncScript->GetFunctionBody()->IsByteCodeDebugMode()))
                 {
-                    // Identifing if any function escaped for not being in debug mode. (This can be removed as a part of TFS : 935011)
+                    // Identifying if any function escaped for not being in debug mode. (This can be removed as a part of TFS : 935011)
                     Throw::FatalInternalError();
                 }
             }
@@ -717,7 +717,7 @@ namespace Js
         Assert(pEvalFunction);
         Js::FunctionProxy *proxy = pEvalFunction->GetFunctionProxy();
         Assert(proxy);
-        
+
         OUTPUT_TRACE(Js::ScriptProfilerPhase, L"GlobalObject::ProfileModeEvalHelper FunctionNumber : %s, Entrypoint : 0x%08X IsFunctionDefer : %d\n",
                                     proxy->GetDebugNumberSet(debugStringBuffer), pEvalFunction->GetEntryPoint(), proxy->IsDeferred());
 
@@ -863,12 +863,12 @@ namespace Js
                 Js::AutoDynamicCodeReference dynamicFunctionReference(scriptContext);
 
                 Assert(cchSource < MAXLONG);
-                uint sourceIndex = scriptContext->SaveSourceNoCopy(sourceInfo, cchSource, true);                
+                uint sourceIndex = scriptContext->SaveSourceNoCopy(sourceInfo, cchSource, true);
 
                 // Tell byte code gen not to attempt to interact with the caller's context if this is indirect eval.
                 // TODO: Handle strict mode.
-                if (isIndirect && 
-                    !strictMode && 
+                if (isIndirect &&
+                    !strictMode &&
                     !parseTree->sxFnc.GetStrictMode())
                 {
                     grfscr &= ~fscrEval;
@@ -963,7 +963,7 @@ namespace Js
         int sourceLength, ModuleID moduleID, ulong grfscr, LPCOLESTR pszTitle,
         BOOL registerDocument, BOOL isIndirect, BOOL strictMode)
     {
-        // TODO (t-doilij) clean up this function, specifically used for ir dump (don't execute bytecode; potentially dangerous)
+        // TODO (t-doilij) clean up this function, specifically used for IR dump (don't execute bytecode; potentially dangerous)
 
         Assert(sourceLength >= 0);
 
@@ -1505,7 +1505,7 @@ LHexError:
         }
 
         return bs;
-    }  
+    }
 
 #if DBG
     void DebugClearStack()
@@ -1539,7 +1539,7 @@ LHexError:
 
         if (!scriptContext->GetConfig()->IsCollectGarbageEnabled())
         {
-            //We expose the CollectGarbage API with flag for compat reasons. Though we don't trigger GC if CollectGarbage key is not present. 
+            //We expose the CollectGarbage API with flag for compat reasons. Though we don't trigger GC if CollectGarbage key is not present.
             return scriptContext->GetLibrary()->GetUndefined();
         }
 
@@ -1868,7 +1868,7 @@ LHexError:
         }
 
         // Windows 8 430092: When we set a new property on globalObject there may be stale inline caches holding onto directHostObject->prototype
-        // properties of the same name. So we need to clear proto caches in this sceanrio. But check for same property in directHostObject->prototype
+        // properties of the same name. So we need to clear proto caches in this scenario. But check for same property in directHostObject->prototype
         // chain is expensive (call to DOM) compared to just invalidating the cache.
         // If this blind invalidation is expensive in any scenario then we need to revisit this.
         // Another solution proposed was not to cache any of the properties of window->directHostObject->prototype.
@@ -1923,7 +1923,7 @@ LHexError:
         }
 
         // Windows 8 430092: When we set a new property on globalObject there may be stale inline caches holding onto directHostObject->prototype
-        // properties of the same name. So we need to clear proto caches in this sceanrio. But check for same property in directHostObject->prototype
+        // properties of the same name. So we need to clear proto caches in this scenario. But check for same property in directHostObject->prototype
         // chain is expensive (call to DOM) compared to just invalidating the cache.
         // If this blind invalidation is expensive in any scenario then we need to revisit this.
         // Another solution proposed was not to cache any of the properties of window->directHostObject->prototype.
@@ -2031,7 +2031,7 @@ LHexError:
             return this->hostObject->DeleteProperty(propertyId, flags);
         }
 
-        // Non existant property
+        // Non-existent property
         return TRUE;
     }
 
@@ -2050,7 +2050,7 @@ LHexError:
             return this->hostObject->DeleteProperty(propertyId, flags);
         }
 
-        // Non existant property
+        // Non-existent property
         return TRUE;
     }
 

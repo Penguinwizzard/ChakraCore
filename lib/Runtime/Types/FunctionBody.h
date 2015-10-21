@@ -54,9 +54,9 @@ namespace Js
     {
         DiagUnknownScope,           // Unknown scope set when deserializing bytecode and the scope is not yet known.
         DiagWithScope,              // With scope.
-        DiagCatchScopeDirect,       // Catchscope in regslot
-        DiagCatchScopeInSlot,       // Catchscope in slot array
-        DiagCatchScopeInObject,     // Catchscope in scope object
+        DiagCatchScopeDirect,       // Catch scope in regslot
+        DiagCatchScopeInSlot,       // Catch scope in slot array
+        DiagCatchScopeInObject,     // Catch scope in scope object
         DiagBlockScopeDirect,       // Block scope in regslot
         DiagBlockScopeInSlot,       // Block scope in slot array
         DiagBlockScopeInObject,     // Block scope in activation object
@@ -161,7 +161,7 @@ namespace Js
         bool isLoadedFromProto;
         bool hasFixedValue;
 
-        EquivalentTypeCache(): nextEvictionVictim(EQUIVALENT_TYPE_CACHE_SIZE) {}        
+        EquivalentTypeCache(): nextEvictionVictim(EQUIVALENT_TYPE_CACHE_SIZE) {}
         bool ClearUnusedTypes(Recycler *recycler);
         void SetGuard(PropertyGuard *theGuard) { this->guard = theGuard; }
         void SetIsLoadedFromProto() { this->isLoadedFromProto = true; }
@@ -169,7 +169,7 @@ namespace Js
         void SetHasFixedValue() { this->hasFixedValue = true; }
         bool HasFixedValue() const { return this->hasFixedValue; }
     };
-    
+
     class JitEquivalentTypeGuard : public JitIndexedPropertyGuard
     {
         // This pointer is allocated from background thread first, and then transferred to recycler,
@@ -311,13 +311,13 @@ namespace Js
     public:
         // These are public because we don't manage them nor their consistency;
         // the user of this class does.
-        void * address;        
+        void * address;
 
         ProxyEntryPointInfo(void* address, ThreadContext* context = nullptr):
             ExpirableObject(context),
             address(address)
         {
-        }        
+        }
         static DWORD GetAddressOffset() { return offsetof(ProxyEntryPointInfo, address); }
         virtual void Expire()
         {
@@ -334,7 +334,7 @@ namespace Js
 
 
     // Not thread safe.
-    // Note that instances of this class are read from and writen to from the
+    // Note that instances of this class are read from and written to from the
     // main and JIT threads.
     class EntryPointInfo : public ProxyEntryPointInfo
     {
@@ -345,7 +345,7 @@ namespace Js
             CodeGenPending,     // code gen job has been scheduled
             CodeGenQueued,      // code gen has been queued and all the code gen data has been gathered.
             CodeGenRecorded,    // backend completed, but job still pending
-            CodeGenDone,        // code gen job succesfully completed
+            CodeGenDone,        // code gen job successfully completed
             JITCapReached,      // workitem created but JIT cap reached
             PendingCleanup,     // workitem needs to be cleaned up but couldn't for some reason- it'll be cleaned up at the next opportunity
             CleanedUp           // the entry point has been cleaned up
@@ -634,7 +634,7 @@ namespace Js
             this->workItem = workItem;
             this->state = CodeGenPending;
         }
-       
+
         void SetCodeGenPending()
         {
             Assert(this->GetState() == CodeGenQueued);
@@ -745,7 +745,7 @@ namespace Js
 
             return this->workItem;
         }
-        //set codesize , used by TJ to set the code size
+        // set code size, used by TJ to set the code size
         void SetCodeSize(ptrdiff_t size)
         {
             Assert(isAsmJsFunction);
@@ -828,7 +828,7 @@ namespace Js
          void DumpNativeOffsetMaps();
          void DumpNativeThrowSpanSequence();
          NativeOffsetMap* GetNativeOffsetMap(int index)
-         {             
+         {
              Assert(index >= 0);
              Assert(index < GetNativeOffsetMapCount());
 
@@ -848,7 +848,7 @@ namespace Js
     };
 
     class FunctionEntryPointInfo : public EntryPointInfo
-    {    
+    {
     public:
         FunctionProxy * functionProxy;
         FunctionEntryPointInfo* nextEntryPoint;
@@ -861,15 +861,15 @@ namespace Js
         uint entryPointIndex;
 
         uint8 callsCount;
-        uint8 lastCallsCount;        
+        uint8 lastCallsCount;
         bool nativeEntryPointProcessed;
 
     private:
         ExecutionMode jitMode;
         typedef JsUtil::List<NativeOffsetInlineeFramePair, HeapAllocator> InlineeFrameMap;
         InlineeFrameMap*  inlineeFrameMap;
-        FunctionEntryPointInfo* mOldFunctionEntryPointInfo; // strong ref to oldEntryPointInfo(Int or TJ) in asm to ensure we dont collect it before JIT is completed
-        bool       mIsTemplatizedJitMode; // true only if in TJ mode , used only for debugging   
+        FunctionEntryPointInfo* mOldFunctionEntryPointInfo; // strong ref to oldEntryPointInfo(Int or TJ) in asm to ensure we don't collect it before JIT is completed
+        bool       mIsTemplatizedJitMode; // true only if in TJ mode , used only for debugging
     public:
         static const uint8 GetDecrCallCountPerBailout()
         {
@@ -977,9 +977,9 @@ namespace Js
         uint endOffset;
         uint interpretCount;
         uint profiledLoopCounter;
-        bool isNested; 
+        bool isNested;
         bool isInTry;
-        // Todo: This should be interpreted function body
+        // TODO: This should be interpreted function body
         FunctionBody * functionBody;
 
 #if DBG_DUMP
@@ -1163,7 +1163,7 @@ namespace Js
 
         // Used only in the library function stringify (toString, DiagGetValueString).
         // If we need more often to give the short name, we should create a member variable which points to the short name
-        // this is also now being used for function.name. 
+        // this is also now being used for function.name.
         const wchar_t* GetShortDisplayName(size_t* shortNameLength);
 
         bool IsJitLoopBodyPhaseEnabled() const
@@ -1292,9 +1292,9 @@ namespace Js
         bool GetIsStrictMode() const { return m_isStrictMode; }
         void SetIsStrictMode() { m_isStrictMode = true; }
         bool GetIsAsmjsMode() const { return m_isAsmjsMode; }
-        void SetIsAsmjsMode(bool value) 
+        void SetIsAsmjsMode(bool value)
         {
-            m_isAsmjsMode = value; 
+            m_isAsmjsMode = value;
     #if DBG
             if (value)
             {
@@ -1348,8 +1348,8 @@ namespace Js
         void SetInitialDefaultEntryPoint();
         void SetDeferredParsingEntryPoint();
 
-        void SetEntryPoint(ProxyEntryPointInfo* entryPoint, Js::JavascriptMethod address) { 
-            entryPoint->address = address;         
+        void SetEntryPoint(ProxyEntryPointInfo* entryPoint, Js::JavascriptMethod address) {
+            entryPoint->address = address;
         }
 
         bool IsDynamicScript() const;
@@ -1424,7 +1424,7 @@ namespace Js
         virtual const wchar_t* GetDisplayName() const override;
         void SetDisplayName(const wchar_t* displayName);
         virtual void SetDisplayName(const wchar_t* displayName, uint displayNameLength, SetDisplayNameFlags flags = SetDisplayNameFlagsNone) override;
-        
+
         virtual void Finalize(bool isShutdown) override;
 
         Var GetCachedSourceString()
@@ -1447,7 +1447,7 @@ namespace Js
         void SetCapturesThis() { attributes = (Attributes)(attributes | Attributes::CapturesThis); }
         bool GetCapturesThis() { return (attributes & Attributes::CapturesThis) != 0; }
 
-        void BuildDeferredStubs(ParseNode *pnodeFnc);        
+        void BuildDeferredStubs(ParseNode *pnodeFnc);
         DeferredFunctionStub *GetDeferredStubs() const { return this->deferredStubs; }
         void SetDeferredStubs(DeferredFunctionStub *stub) { this->deferredStubs = stub; }
         void RegisterFuncToDiag(ScriptContext * scriptContext, wchar_t const * pszTitle);
@@ -1507,7 +1507,7 @@ namespace Js
         NoWriteBarrierField<Js::LocalFunctionId> deferredParseNextFunctionId;
 #endif
 #if DBG
-        NoWriteBarrierField<UINT> scopeObjectSize; // If the scope is an acivation object - it's size
+        NoWriteBarrierField<UINT> scopeObjectSize; // If the scope is an activation object - its size
 #endif
     };
 
@@ -1708,12 +1708,12 @@ namespace Js
         static DWORD GetLiteralRegexesOffset() { return offsetof(FunctionBody, literalRegexes); }
         static DWORD GetDerivedSizeOffset() { return offsetof(FunctionBody, m_derivedSize); }
         static DWORD GetReferencedPropertyIdMapOffset() { return offsetof(FunctionBody, referencedPropertyIdMap); }
-        static DWORD GetCacheIdToPropertyIdMapOffset() { return offsetof(FunctionBody, cacheIdToPropertyIdMap); }       
-        static DWORD GetAsmJsTotalLoopCountOffset(){ return offsetof(FunctionBody, m_asmJsTotalLoopCount); }        
+        static DWORD GetCacheIdToPropertyIdMapOffset() { return offsetof(FunctionBody, cacheIdToPropertyIdMap); }
+        static DWORD GetAsmJsTotalLoopCountOffset(){ return offsetof(FunctionBody, m_asmJsTotalLoopCount); }
 #if DBG
         int m_DEBUG_executionCount;     // Count of outstanding on InterpreterStackFrame
-        bool m_nativeEntryPointIsInterpreterThunk; //NativeEntry entry point is infact InterpreterThunk.
-                                                   //Set by bgjit in OutOfMemory scenario during codegen.
+        bool m_nativeEntryPointIsInterpreterThunk; // NativeEntry entry point is in fact InterpreterThunk.
+                                                   // Set by bgjit in OutOfMemory scenario during codegen.
 #endif
 #if ENABLE_DEBUG_CONFIG_OPTIONS
         NoWriteBarrierField<uint> regAllocStoreCount;
@@ -1801,13 +1801,13 @@ namespace Js
 
         bool m_isFromNativeCodeModule : 1;
         bool m_isPartialDeserializedFunction : 1;
-        bool m_isAsmJsScheduledForFullJIT : 1;        
+        bool m_isAsmJsScheduledForFullJIT : 1;
 #ifdef PERF_COUNTERS
         bool m_isDeserializedFunction : 1;
 #endif
 #if DBG
         // Indicates that nested functions can be allocated on the stack (but may not be)
-        bool m_canDoStackNestedFunc : 1; 
+        bool m_canDoStackNestedFunc : 1;
 #endif
 
 #if DBG
@@ -1851,7 +1851,7 @@ namespace Js
         NoWriteBarrierField<int> serializationIndex;
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
         static bool shareInlineCaches;
-#endif     
+#endif
         WriteBarrierPtr<DynamicType*> objLiteralTypes;
         WriteBarrierPtr<FunctionEntryPointInfo> defaultFunctionEntryPointInfo;
         WriteBarrierPtr<FunctionEntryPointInfo> simpleJitEntryPointInfo;
@@ -1950,7 +1950,7 @@ namespace Js
         {
             Assert(this->loopHeaderArray != nullptr);
             return this->loopHeaderArray;
-        }       
+        }
         void SetIsAsmJsFullJitScheduled(bool val){ m_isAsmJsScheduledForFullJIT = val; }
         bool GetIsAsmJsFullJitScheduled(){ return m_isAsmJsScheduledForFullJIT; }
         uint32 GetAsmJSTotalLoopCount() const
@@ -1959,7 +1959,7 @@ namespace Js
         }
 
         void SetIsAsmJsFunction(bool isAsmJsFunction)
-        {            
+        {
             m_isAsmJsFunction = isAsmJsFunction;
         }
 
@@ -2335,7 +2335,7 @@ namespace Js
         {
             return  !PHASE_OFF(Js::InlinePhase, this) && !PHASE_OFF(Js::InlinePhase, topFunctionBody) &&
                     !PHASE_OFF(Js::PolymorphicInlinePhase, this) && !PHASE_OFF(Js::PolymorphicInlinePhase, topFunctionBody) &&
-                    !PHASE_OFF(Js::FixedMethodsPhase, this) && !PHASE_OFF(Js::FixedMethodsPhase, topFunctionBody) && 
+                    !PHASE_OFF(Js::FixedMethodsPhase, this) && !PHASE_OFF(Js::FixedMethodsPhase, topFunctionBody) &&
                     !PHASE_OFF(Js::PolymorphicInlineFixedMethodsPhase, this) && !PHASE_OFF(Js::PolymorphicInlineFixedMethodsPhase, topFunctionBody);
         }
 
@@ -2368,7 +2368,7 @@ namespace Js
             }
         }
     public:
-        bool GetHasThis() const { return (flags & Flags_HasThis) != 0;; }
+        bool GetHasThis() const { return (flags & Flags_HasThis) != 0; }
         void SetHasThis(bool has) { SetFlags(has, Flags_HasThis); }
 
         bool GetHasTry() const { return (flags & Flags_HasTry) != 0; }
@@ -2519,7 +2519,7 @@ namespace Js
         bool ProbeAtOffset(int offsest, OpCode* pOriginalOpcode);
 
         FunctionBody * Clone(ScriptContext *scriptContext, uint sourceIndex = Js::Constants::InvalidSourceIndex);
-                
+
         static bool ShouldShareInlineCaches() { return CONFIG_FLAG(ShareInlineCaches); }
 
         uint GetInlineCacheCount() const { return inlineCacheCount; }
@@ -2772,7 +2772,7 @@ namespace Js
     private:
         inline  void            CheckEmpty();
         inline  void            CheckNotExecuting();
-        
+
         SmallSpanSequence *GetThrowSpanSequence(DWORD_PTR codeAddress, uint loopNum);
         BOOL               GetMatchingStatementMap(StatementData &data, int statementIndex, FunctionBody *inlinee);
         int                GetStatementIndexFromNativeOffset(SmallSpanSequence *pThrowSpanSequence, uint32 nativeOffset);
@@ -3049,17 +3049,17 @@ namespace Js
         // Trys to match passed bytecode in the statement, and returns the statement which includes that.
         BOOL GetMatchingStatementFromBytecode(int bytecode, SmallSpanSequenceIter &iter, StatementData & data);
 
-        // Record the statement data in the statement buffer in the commpressed manner.
+        // Record the statement data in the statement buffer in the compressed manner.
         BOOL RecordARange(SmallSpanSequenceIter &iter, StatementData * data);
 
-        // It will reset the accumulaters state and value.
+        // Reset the accumulator's state and value.
         void Reset(SmallSpanSequenceIter &iter);
 
         int Count() const { return pStatementBuffer ? pStatementBuffer->Count() : 0; }
 
         BOOL Item(int index, SmallSpanSequenceIter &iter, StatementData &data);
 
-        // Below function will not change any state, it means it will not alter accumulated index and value
+        // Below function will not change any state, so it will not alter accumulated index and value
         BOOL Seek(int index, StatementData & data);
 
         SmallSpanSequence * Clone();
@@ -3101,7 +3101,7 @@ namespace Js
     public:
         Js::PropertyId propId;              // The property ID of the scope variable.
         RegSlot location;                   // Contains the location of the scope variable (regslot, slotarray, direct).
-        int byteCodeInitializationOffset;   // The byte code offset used when comparing let/const variables for dead zone exclusion debuggger side.
+        int byteCodeInitializationOffset;   // The byte code offset used when comparing let/const variables for dead zone exclusion debugger side.
         DebuggerScopePropertyFlags flags;   // Flags for the property.
 
         bool IsConst() const { return (flags & DebuggerScopePropertyFlags_Const) != 0; }
@@ -3214,7 +3214,7 @@ namespace Js
             pScopeChain = RecyclerNew(recycler, ScopeObjectChainList, recycler);
         }
 
-        // This function will return debuggerscopeproperty when the property is found and correctly in the range.
+        // This function will return DebuggerScopeProperty when the property is found and correctly in the range.
         // If the property is found, but the scope is not in the range, it will return false, but the out param (isPropertyInDebuggerScope) will set to true,
         // and isConst will be updated.
         // If the property is not found at all, it will return false, and isPropertyInDebuggerScope will be false.

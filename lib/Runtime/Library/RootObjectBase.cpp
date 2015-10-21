@@ -5,15 +5,15 @@
 #include "RuntimeLibraryPch.h"
 
 namespace Js
-{ 
+{
     RootObjectInlineCache::RootObjectInlineCache(InlineCacheAllocator * allocator):
         inlineCache(nullptr), refCount(1)
     {
-        inlineCache = AllocatorNewZ(InlineCacheAllocator, 
+        inlineCache = AllocatorNewZ(InlineCacheAllocator,
             allocator, Js::InlineCache);
-    }   
+    }
 
-    RootObjectBase::RootObjectBase(DynamicType * type) : 
+    RootObjectBase::RootObjectBase(DynamicType * type) :
         DynamicObject(type), hostObject(nullptr), loadInlineCacheMap(nullptr), loadMethodInlineCacheMap(nullptr), storeInlineCacheMap(nullptr)
     {}
 
@@ -41,7 +41,7 @@ namespace Js
     {
         Assert(hostObject == nullptr || Js::JavascriptOperators::GetTypeId(hostObject) == TypeIds_HostObject);
         return this->hostObject;
-  
+
     }
     void RootObjectBase::SetHostObject(HostObjectBase * hostObject)
     {
@@ -49,7 +49,7 @@ namespace Js
         this->hostObject = hostObject;
     }
 
-    Js::InlineCache * 
+    Js::InlineCache *
     RootObjectBase::GetInlineCache(Js::PropertyRecord const* propertyRecord, bool isLoadMethod, bool isStore)
     {
         Js::RootObjectInlineCache * rootObjectInlineCache = GetRootInlineCache(propertyRecord, isLoadMethod, isStore);
@@ -94,13 +94,13 @@ namespace Js
 
     // TODO: Switch to take PropertyRecord instead once we clean up the function body to hold onto propertyRecord
     // instead of propertyId.
-    void 
+    void
     RootObjectBase::ReleaseInlineCache(Js::PropertyId propertyId, bool isLoadMethod, bool isStore, bool isShutdown)
     {
-        RootObjectInlineCacheMap * inlineCacheMap = isStore ? storeInlineCacheMap : 
+        RootObjectInlineCacheMap * inlineCacheMap = isStore ? storeInlineCacheMap :
             isLoadMethod ? loadMethodInlineCacheMap : loadInlineCacheMap;
         bool found = false;
-        inlineCacheMap->RemoveIfWithKey(propertyId, 
+        inlineCacheMap->RemoveIfWithKey(propertyId,
             [this, isShutdown, &found](PropertyRecord const * propertyRecord, RootObjectInlineCache * rootObjectInlineCache)
             {
                 found = true;
@@ -109,7 +109,7 @@ namespace Js
                     // If we're not shutting down, we need to remove this cache from thread context's invalidation list (if any),
                     // and release memory back to the arena.  During script context shutdown, we leave everything in place, because
                     // the inline cache arena will stay alive until script context is destroyed (as in destructor called as opposed to
-                    // Close called) and thus the invadation lists are safe to keep references to caches from this script context.
+                    // Close called) and thus the invalidation lists are safe to keep references to caches from this script context.
                     if (!isShutdown)
                     {
                         rootObjectInlineCache->GetInlineCache()->RemoveFromInvalidationList();
@@ -128,7 +128,7 @@ namespace Js
     {
         if (!RootObjectBase::HasOwnPropertyCheckNoRedecl(propertyId))
         {
-            this->InitProperty(propertyId, this->GetLibrary()->GetUndefined(), 
+            this->InitProperty(propertyId, this->GetLibrary()->GetUndefined(),
                 static_cast<Js::PropertyOperationFlags>(PropertyOperation_PreInit | PropertyOperation_SpecialValue));
         }
         return true;

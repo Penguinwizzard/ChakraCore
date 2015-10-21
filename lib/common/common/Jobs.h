@@ -24,7 +24,7 @@ namespace JsUtil
 
     // -------------------------------------------------------------------------------------------------------------------------
     // Job
-    // 
+    //
     // Base class for jobs that can be sent to a job processor for processing
     // -------------------------------------------------------------------------------------------------------------------------
 
@@ -65,7 +65,7 @@ namespace JsUtil
 
     // -------------------------------------------------------------------------------------------------------------------------
     // JobManager
-    // 
+    //
     // Base class for job managers that provide and know how to process jobs. Implementers who wish to be able to wait for a job
     // or job manager should derive from WaitableJobManager.
     // -------------------------------------------------------------------------------------------------------------------------
@@ -122,12 +122,12 @@ namespace JsUtil
         // aforementioned functions are templates that take the actual type of the manager, so derived job managers that wish to
         // use the aforementioned functions should implement these functions (and hence hide the base bare-bones
         // implementations).
-        // 
+        //
         // Job *GetJobToProcessProactively();
         //     Called by the job processor as part of PrioritizeManagerAndWait (outside the lock) when its job queue depletes,
         //     to obtain a job to process proactively. A job manager that does not have a job to provide should return 0. Jobs
         //     provided by this function will be processed in the calling thread, so the job manager must support this.
-        // 
+        //
         // Job *GetJob(const <job holder type> jobHolder) const;
         //     Called in response to PrioritizeJob or PrioritizeJobAndWait (inside the lock), to get the job from the job
         //     holder. The purpose of this is that the job processor does not know the lifetime of a job. When a job manager
@@ -138,7 +138,7 @@ namespace JsUtil
         //     already processed. This function and JobProcessed are both called from inside the lock to enable deterministic
         //     determination of whether a job is already processed, and if it hasn't been processed, to ensure that is won't be
         //     processed until it is prioritized and the lock is released.
-        // 
+        //
         // bool WasAddedToJobProcessor(JsUtil::Job *const job) const;
         //     Called in response to PrioritizeJob or PrioritizeJobAndWait (inside the lock), to determine whether the job to
         //     prioritize was actually added to the job processor. Again, the job processor does not know this if the job
@@ -147,29 +147,29 @@ namespace JsUtil
         //     PrioritizeJobAndWait on the job processor to prioritize jobs that have or have not been added to the job
         //     processor, and then use the return value of this function to indicate to the job processor whether the job was
         //     added to the job processor.
-        // 
+        //
         // bool ShouldProcessInForeground(const bool willWaitForJob, const unsigned int numJobsInQueue) const;
         //     Called by the BackgroundJobProcessor in response to PrioritizeJob or PrioritizeJobAndWait (inside the lock), to
         //     determine whether the job may be processed in the current (foreground) thread synchronously.
-        // 
+        //
         // void Prioritize(JsUtil::Job *const job, const bool forceAddJobToProcessor = false);
         //     Called in response to PrioritizeJob or PrioritizeJobAndWait (inside the lock), if false is returned from
         //     WasAddedToJobProcessor. If the initial call was PrioritizeJobAndWait, the job processor will pass
         //     forceAddToJobProcessor = true since it needs to wait for the job, and the job manager should ensure to add the
         //     job to the job processor during the Prioritize call in that case.
-        // 
+        //
         // void PrioritizedButNotYetProcessed(JsUtil::Job *const job) const;
         //     Called in response to PrioritizeJob (inside the lock), if the job was not yet processed. May be useful for
         //     tracking how often the job manager asks to prioritize jobs and the jobs are not yet processed. Although the
         //     return value of PrioritizeJob also indicates whether the job was already processed, work done in this function
         //     may need to use the job object, in which case it's necessary to ensure that the job won't be deleted during that
         //     time, and hence the existence of this function and why it's called inside the lock.
-        // 
+        //
         // void BeforeWaitForJob(Js::FunctionBody *const functionBody) const;
         // void AfterWaitForJob(Js::FunctionBody *const functionBody) const;
         //     Called in response to PrioritizeJobAndWait (outside the lock), before and after waiting for the prioritized job
         //     to be processed, respectively.
-        // 
+        //
         // The following are bare-bones implementations of some of the above functions and should be hidden if a job manager
         // wishes to provide its own implementation.
         Job *GetJobToProcessProactively();
@@ -182,7 +182,7 @@ namespace JsUtil
 
     // -------------------------------------------------------------------------------------------------------------------------
     // WaitableJobManager
-    // 
+    //
     // Base class for job managers that provide and know how to process jobs, and wish to be able to wait for a job or job
     // manager.
     // -------------------------------------------------------------------------------------------------------------------------
@@ -203,7 +203,7 @@ namespace JsUtil
 
     // -------------------------------------------------------------------------------------------------------------------------
     // SingleJobManager
-    // 
+    //
     // Base class for a job manager that queues a single job, to quickly create the job processing implementation inline and
     // queue the job. Since this class derives from JobManager, it does not support waiting and hence, it must be heap-allocated
     // and a derived class should override LastJobProcessed to remove itself from the job processor and delete itself. Derived
@@ -234,7 +234,7 @@ namespace JsUtil
 
     // -------------------------------------------------------------------------------------------------------------------------
     // WaitableSingleJobManager
-    // 
+    //
     // Base class for a job manager that queues a single job, to quickly create the job processing implementation inline and
     // queue the job. This class supports waiting for a job and hence, does not delete itself automatically. As a result, it's
     // possible to instantiate this class on the stack, and queue the job and wait for it, all inline without any heap
@@ -266,7 +266,7 @@ namespace JsUtil
 
     // -------------------------------------------------------------------------------------------------------------------------
     // JobProcessor
-    // 
+    //
     // Base class for job processors.
     // -------------------------------------------------------------------------------------------------------------------------
 
@@ -320,7 +320,7 @@ namespace JsUtil
         // Must be called from inside the lock
         virtual bool RemoveJob(Job *const job);
 
-        template<class TJobManager, class TJobHolder> 
+        template<class TJobManager, class TJobHolder>
         void AddJobAndProcessProactively(TJobManager *const jobManager, const TJobHolder holder);
 
         // Prioritizes a job by moving it to the front of the queue. For details on what more happens during this and on why
@@ -342,7 +342,7 @@ namespace JsUtil
         void LastJobProcessed(JobManager *const manager);
 
     public:
-        // Closes the job processor and closes the handle of background threads. 
+        // Closes the job processor and closes the handle of background threads.
         virtual void Close();
     };
 
@@ -363,7 +363,7 @@ namespace JsUtil
             TJobManager *const manager,
             const unsigned int milliseconds = INFINITE);
 
-        template<class TJobManager, class TJobHolder> 
+        template<class TJobManager, class TJobHolder>
         void AddJobAndProcessProactively(TJobManager *const jobManager, const TJobHolder holder);
 
         template<class TJobManager, class TJobHolder> bool PrioritizeJob(
@@ -399,16 +399,16 @@ namespace JsUtil
         Event threadStartedOrClosing; //This is only used for shutdown scenario to indicate background thread is shutting down or starting
         PageAllocator backgroundPageAllocator;
         ArenaAllocator *threadArena;
-        BackgroundJobProcessor *processor; 
+        BackgroundJobProcessor *processor;
         Parser *parser;
         CompileScriptException *pse;
 
         ParallelThreadData(AllocationPolicyManager* policyManager) :
-            threadHandle(0), 
+            threadHandle(0),
             isWaitingForJobs(false),
             canDecommit(true),
             currentJob(nullptr),
-            threadStartedOrClosing(false), 
+            threadStartedOrClosing(false),
             backgroundPageAllocator(policyManager, Js::Configuration::Global.flags, PageAllocatorType_BGJIT,
                                     (AutoSystemInfo::Data.IsLowMemoryProcess() ?
                                      PageAllocator::DefaultLowMaxFreePageCount :
@@ -428,7 +428,7 @@ namespace JsUtil
     {
     private:
         CriticalSection criticalSection;
-        Event jobReady;                 //This is an auto reset event, only one thread wakes up when the event is signalled. 
+        Event jobReady;                 //This is an auto reset event, only one thread wakes up when the event is signaled.
         Event wakeAllBackgroundThreads; //This is a manual reset event.
         unsigned int numJobs;
         ThreadContextId threadId;
@@ -452,7 +452,7 @@ namespace JsUtil
 
         bool WaitWithThreadForThreadStartedOrClosingEvent(ParallelThreadData *parallelThreadData, const unsigned int milliseconds = INFINITE);
         void WaitWithAllThreadsForThreadStartedOrClosingEvent();
-        bool WaitForJobReadyOrShutdown(ParallelThreadData *threadData); //Returns true for JobReady event is signalled.
+        bool WaitForJobReadyOrShutdown(ParallelThreadData *threadData); //Returns true for JobReady event is signaled.
         void IndicateNewJob();
         bool AreAllThreadsWaitingForJobs();
         uint NumberOfThreadsWaitingForJobs ();
@@ -474,7 +474,7 @@ namespace JsUtil
         virtual void AddJob(Job *const job, const bool prioritize = false) override;
         virtual bool RemoveJob(Job *const job) override;
 
-        template<class TJobManager, class TJobHolder> 
+        template<class TJobManager, class TJobHolder>
         void AddJobAndProcessProactively(TJobManager *const jobManager, const TJobHolder holder);
 
         template<class TJobManager, class TJobHolder> bool PrioritizeJob(
@@ -493,7 +493,7 @@ namespace JsUtil
 
         CriticalSection * GetCriticalSection() { return &criticalSection; }
 
-        //Iterates each background thread, callback returns true when it needs to terminate the iteration. 
+        //Iterates each background thread, callback returns true when it needs to terminate the iteration.
         template<class Fn>
         bool IterateBackgroundThreads(Fn callback)
         {

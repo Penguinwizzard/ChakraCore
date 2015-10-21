@@ -35,11 +35,11 @@ namespace Js
         return m_content[itemIndex];
     }
 
-    ByteBlock *ByteBlock::New(Recycler *alloc,const byte * initialContent,int initialContentSize)  
+    ByteBlock *ByteBlock::New(Recycler *alloc,const byte * initialContent,int initialContentSize)
     {
         // initialContent may be 'null' if no data to copy
         AssertMsg(initialContentSize > 0, "Must have valid data size");
- 
+
         ByteBlock *newBlock = RecyclerNew(alloc,ByteBlock,initialContentSize,alloc);
         //
         // Copy any optional data into the block:
@@ -54,11 +54,11 @@ namespace Js
         return newBlock;
     }
 
-    ByteBlock *ByteBlock::NewFromArena(ArenaAllocator *alloc,const byte * initialContent,int initialContentSize)  
+    ByteBlock *ByteBlock::NewFromArena(ArenaAllocator *alloc,const byte * initialContent,int initialContentSize)
     {
         // initialContent may be 'null' if no data to copy
         AssertMsg(initialContentSize > 0, "Must have valid data size");
- 
+
         ByteBlock *newBlock = Anew(alloc,ByteBlock,initialContentSize,alloc);
         //
         // Copy any optional data into the block:
@@ -78,11 +78,11 @@ namespace Js
         return ByteBlock::New(alloc, this->m_content, this->m_contentSize);
     }
 
-    ByteBlock *ByteBlock::New(Recycler *alloc,const byte * initialContent,int initialContentSize, ScriptContext * requestContext)  
+    ByteBlock *ByteBlock::New(Recycler *alloc,const byte * initialContent,int initialContentSize, ScriptContext * requestContext)
     {
         // initialContent may be 'null' if no data to copy
         AssertMsg(initialContentSize > 0, "Must have valid data size");
- 
+
         ByteBlock *newBlock = RecyclerNew(alloc,ByteBlock,initialContentSize,alloc);
 
         //
@@ -93,7 +93,7 @@ namespace Js
         if (initialContent != nullptr)
         {
             //
-            // Treat initialcontent as array of vars
+            // Treat initialContent as array of vars
             // Clone vars to the requestContext
             //
 

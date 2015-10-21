@@ -11,7 +11,7 @@ namespace Js
 {
     template<size_t size>
     SimpleTypeHandler<size>::SimpleTypeHandler(SimpleTypeHandler<size> * typeHandler)
-        : DynamicTypeHandler(sizeof(descriptors) / sizeof(SimplePropertyDescriptor), 
+        : DynamicTypeHandler(sizeof(descriptors) / sizeof(SimplePropertyDescriptor),
             typeHandler->GetInlineSlotCapacity(), typeHandler->GetOffsetOfInlineSlots()), propertyCount(typeHandler->propertyCount)
     {
         Assert(typeHandler->GetIsInlineSlotCapacityLocked());
@@ -22,7 +22,7 @@ namespace Js
             descriptors[i] = typeHandler->descriptors[i];
         }
     }
-    
+
     template<size_t size>
     SimpleTypeHandler<size>::SimpleTypeHandler(Recycler*) :
          DynamicTypeHandler(sizeof(descriptors) / sizeof(SimplePropertyDescriptor)),
@@ -48,7 +48,7 @@ namespace Js
     }
 
     template<size_t size>
-    
+
     SimpleTypeHandler<size>::SimpleTypeHandler(SimplePropertyDescriptor(&SharedFunctionPropertyDescriptors)[size], PropertyTypes propertyTypes, uint16 inlineSlotCapacity, uint16 offsetOfInlineSlots) :
          DynamicTypeHandler(sizeof(descriptors) / sizeof(SimplePropertyDescriptor),
          inlineSlotCapacity, offsetOfInlineSlots, DefaultFlags | IsLockedFlag | MayBecomeSharedFlag | IsSharedFlag), propertyCount(size)
@@ -71,7 +71,7 @@ namespace Js
         ScriptContext* scriptContext = instance->GetScriptContext();
         Recycler* recycler = scriptContext->GetRecycler();
 
-        
+
         CompileAssert(_countof(descriptors) == size);
 
         SimpleTypeHandler * newTypeHandler = RecyclerNew(recycler, SimpleTypeHandler, this);
@@ -107,7 +107,7 @@ namespace Js
         // guarantees that any existing fast path field stores (which could quietly overwrite a fixed field
         // on this instance) will be invalidated.  It is safe to mark all fields as fixed.
         bool const allowFixedFields = hasSingletonInstance && instance->HasLockedType();
-        
+
         for (int i = 0; i < propertyCount; i++)
         {
             Var value = instance->GetSlot(i);
@@ -116,7 +116,7 @@ namespace Js
                 (JavascriptFunction::Is(value) ? ShouldFixMethodProperties() : false);
             newTypeHandler->Add(descriptors[i].Id, descriptors[i].Attributes, true, markAsFixed, false, scriptContext);
         }
-        
+
         newTypeHandler->SetFlags(IsPrototypeFlag | HasKnownSlot0Flag, this->GetFlags());
         // We don't expect to convert to a PathTypeHandler.  If we change this later we need to review if we want the new type handler to have locked
         // inline slot capacity, or if we want to allow shrinking of the SimpleTypeHandler's inline slot capacity.
@@ -567,12 +567,12 @@ namespace Js
 
             instance->ChangeType();
 
-            
+
             CompileAssert(_countof(descriptors) == size);
             SetSlotUnchecked(instance, index, nullptr);
 
             // TODO (jedmiad): Create two different flavors of NullTypeHandler: with and without read-only properties.
-            NullTypeHandlerBase* nullTypeHandler = ((this->GetFlags() & IsPrototypeFlag) != 0) ? 
+            NullTypeHandlerBase* nullTypeHandler = ((this->GetFlags() & IsPrototypeFlag) != 0) ?
                 (NullTypeHandlerBase*)NullTypeHandler<true>::GetDefaultInstance() : (NullTypeHandlerBase*)NullTypeHandler<false>::GetDefaultInstance();
             if (instance->HasReadOnlyPropertiesInvisibleToTypeHandler())
             {
@@ -1004,14 +1004,14 @@ namespace Js
     }
 
     template<size_t size>
-    void SimpleTypeHandler<size>::SetAllPropertiesToUndefined(DynamicObject* instance, bool invalidateFixedFields) 
+    void SimpleTypeHandler<size>::SetAllPropertiesToUndefined(DynamicObject* instance, bool invalidateFixedFields)
     {
         // Note: This method is currently only called from ResetObject, which in turn only applies to external objects.
         // Before using for other purposes, make sure the assumptions made here make sense in the new context.  In particular,
         // the invalidateFixedFields == false is only correct if a) the object is known not to have any, or b) the type of the
         // object has changed and/or property guards have already been invalidated through some other means.
 
-        // We can ingore invalidateFixeFields, because SimpleTypeHandler doesn't support fixed fields at this point.
+        // We can ignore invalidateFixeFields, because SimpleTypeHandler doesn't support fixed fields at this point.
         Js::RecyclableObject* undefined = instance->GetLibrary()->GetUndefined();
         for (int propertyIndex = 0; propertyIndex < this->propertyCount; propertyIndex++)
         {
@@ -1020,14 +1020,14 @@ namespace Js
     }
 
     template<size_t size>
-    void SimpleTypeHandler<size>::MarshalAllPropertiesToScriptContext(DynamicObject* instance, ScriptContext* targetScriptContext, bool invalidateFixedFields) 
+    void SimpleTypeHandler<size>::MarshalAllPropertiesToScriptContext(DynamicObject* instance, ScriptContext* targetScriptContext, bool invalidateFixedFields)
     {
         // Note: This method is currently only called from ResetObject, which in turn only applies to external objects.
         // Before using for other purposes, make sure the assumptions made here make sense in the new context.  In particular,
         // the invalidateFixedFields == false is only correct if a) the object is known not to have any, or b) the type of the
         // object has changed and/or property guards have already been invalidated through some other means.
 
-        // We can ingore invalidateFixeFields, because SimpleTypeHandler doesn't support fixed fields at this point.
+        // We can ignore invalidateFixeFields, because SimpleTypeHandler doesn't support fixed fields at this point.
         for (int propertyIndex = 0; propertyIndex < this->propertyCount; propertyIndex++)
         {
             SetSlotUnchecked(instance, propertyIndex, CrossSite::MarshalVar(targetScriptContext, GetSlot(instance, propertyIndex)));
@@ -1045,7 +1045,7 @@ namespace Js
     void SimpleTypeHandler<size>::SetIsPrototype(DynamicObject* instance)
     {
         // Don't return if IsPrototypeFlag is set, because we may still need to do a type transition and
-        // set fixed bits.  If this handler is shared, this instance may not even be a prototype yet.  
+        // set fixed bits.  If this handler is shared, this instance may not even be a prototype yet.
         // In this case we may need to convert to a non-shared type handler.
         if (!ChangeTypeOnProto() && !(GetIsOrMayBecomeShared() && IsolatePrototypes()))
         {
@@ -1057,7 +1057,7 @@ namespace Js
 
 #if DBG
     template<size_t size>
-    bool SimpleTypeHandler<size>::CanStorePropertyValueDirectly(const DynamicObject* instance, PropertyId propertyId, bool allowLetConst) 
+    bool SimpleTypeHandler<size>::CanStorePropertyValueDirectly(const DynamicObject* instance, PropertyId propertyId, bool allowLetConst)
     {
         Assert(!allowLetConst);
         int index;

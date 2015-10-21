@@ -25,15 +25,15 @@ namespace Js {
         {
             JavascriptError::ThrowRangeError(scriptContext, JSERR_SimdLaneRangeError);
         }
-        
+
         return int32Value;
     }
-    
+
     // Is Number with int32 value.
     int32 SIMDCheckInt32Number(ScriptContext* scriptContext, Var value)
     {
         int32 int32Value;
-        
+
         if (JavascriptNumber::Is(value))
         {
             if (!JavascriptNumber::TryGetInt32Value(JavascriptNumber::GetValue(value), &int32Value))
@@ -80,13 +80,13 @@ namespace Js {
 
         int32 lane0Value = 0;
         int32 lane1Value = 0;
-        int32 lane2Value = 0; 
-        int32 lane3Value = 0; 
+        int32 lane2Value = 0;
+        int32 lane3Value = 0;
 
         SIMDValue src1Value = a->GetValue();
         SIMDValue src2Value = b->GetValue();
         SIMDValue result;
-        
+
         CompileAssert(laneCount == 4 || laneCount == 2);
 
         if (laneCount == 4)
@@ -154,16 +154,16 @@ namespace Js {
         result.i32[lane] = value;
         return result;
     }
-	static inline int SIMD128GetLaneValue(JavascriptSIMDInt32x4 *jsVal, const int laneValue)
-	{
+    static inline int SIMD128GetLaneValue(JavascriptSIMDInt32x4 *jsVal, const int laneValue)
+    {
         Assert(jsVal);
         return SIMD128InnerExtractLaneI4(jsVal->GetValue(), laneValue);
-	}
-	static inline SIMDValue SIMD128SetLaneValue(JavascriptSIMDInt32x4 *jsVal, const int laneValue, int value)
-	{
+    }
+    static inline SIMDValue SIMD128SetLaneValue(JavascriptSIMDInt32x4 *jsVal, const int laneValue, int value)
+    {
         Assert(jsVal);
         return SIMD128InnerReplaceLaneI4(jsVal->GetValue(), laneValue, value);
-	}
+    }
     //Float32x4 LaneAccess
     inline float SIMD128InnerExtractLaneF4(const SIMDValue& src1, const int32 lane)
     {
@@ -176,15 +176,15 @@ namespace Js {
         return result;
     }
     static inline float SIMD128GetLaneValue(JavascriptSIMDFloat32x4 *jsVal, const int laneValue)
-	{
+    {
         Assert(jsVal);
         return SIMD128InnerExtractLaneF4(jsVal->GetValue(), laneValue);
-	}
-	static inline SIMDValue SIMD128SetLaneValue(JavascriptSIMDFloat32x4 *jsVal, const int laneValue, float value)
-	{
+    }
+    static inline SIMDValue SIMD128SetLaneValue(JavascriptSIMDFloat32x4 *jsVal, const int laneValue, float value)
+    {
         Assert(jsVal);
         return SIMD128InnerReplaceLaneF4(jsVal->GetValue(), laneValue, value);
-	}
+    }
 
 
     template<class SIMDType, int laneCount, typename T>
@@ -214,7 +214,7 @@ namespace Js {
     template int8  SIMD128ExtractLane<JavascriptSIMDInt8x16, 16, int8>(Var src, Var lane, ScriptContext* scriptContext);
     template SIMDValue SIMD128ReplaceLane<JavascriptSIMDInt8x16, 16, int8>(Var src, Var lane, int8 value, ScriptContext* scriptContext);
     template int   SIMD128ExtractLane<JavascriptSIMDInt32x4, 4, int>(Var src, Var lane, ScriptContext* scriptContext);
-    template SIMDValue SIMD128ReplaceLane<JavascriptSIMDInt32x4, 4, int>(Var src, Var lane, int value, ScriptContext* scriptContext);    
+    template SIMDValue SIMD128ReplaceLane<JavascriptSIMDInt32x4, 4, int>(Var src, Var lane, int value, ScriptContext* scriptContext);
     template float SIMD128ExtractLane<JavascriptSIMDFloat32x4, 4, float>(Var src, Var lane, ScriptContext* scriptContext);
     template SIMDValue SIMD128ReplaceLane<JavascriptSIMDFloat32x4, 4, float>(Var src, Var lane, float value, ScriptContext* scriptContext);
 
@@ -230,7 +230,7 @@ namespace Js {
     2. Lane index is a Number/TaggedInt and int32 value
     3. Lane index is within array bounds
     */
-    
+
     SIMDValue* SIMDCheckTypedArrayAccess(Var arg1, Var arg2, TypedArrayBase **tarray, int32 *index, uint32 dataWidth, ScriptContext *scriptContext)
     {
         if (!SIMDIsSupportedTypedArray(arg1))
@@ -249,7 +249,7 @@ namespace Js {
         }
         return (SIMDValue*)((*tarray)->GetByteBuffer() + offset);
     }
-    
+
     SIMDValue SIMDLdData(SIMDValue *data, uint8 dataWidth)
     {
         SIMDValue result = { 0, 0, 0, 0 };
@@ -294,7 +294,7 @@ namespace Js {
         default:
             Assert(UNREACHED);
         }
-        
+
     }
 
     template <class SIMDType>
@@ -305,13 +305,13 @@ namespace Js {
         TypedArrayBase *tarray = NULL;
         int32 index = -1;
         SIMDValue* data = NULL;
-        
+
         data = SIMDCheckTypedArrayAccess(arg1, arg2, &tarray, &index, dataWidth, scriptContext);
 
         Assert(tarray != NULL);
         Assert(index >= 0);
         Assert(data != NULL);
-        
+
         SIMDValue result = SIMDLdData(data, (uint8)dataWidth);
 
         return SIMDType::New(&result, scriptContext);

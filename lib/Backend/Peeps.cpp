@@ -22,7 +22,7 @@ Peeps::PeepFunc()
     // Since it can reveal load elimination opportunities for the normal peeps pass, we do it separately.
     this->peepsAgen.PeepFunc();
 #endif
-    
+
     this->peepsMD.Init(this);
 
     // Init regMap
@@ -109,7 +109,7 @@ Peeps::PeepFunc()
                 break;
             }
             instrNext = Peeps::PeepBranch(instr->AsBranchInstr());
-#if defined(_M_IX86) || defined(_M_X64)         
+#if defined(_M_IX86) || defined(_M_X64)
             Assert(instrNext && instrNext->m_prev);
             if (instrNext->m_prev->IsBranchInstr())
             {
@@ -159,11 +159,11 @@ Peeps::PeepFunc()
             }
             else if ( (instr->m_opcode == Js::OpCode::INC ) || (instr->m_opcode == Js::OpCode::DEC) )
             {
-                // Check for any of the following patterns which can cause partial flag dependecy
-                //  
+                // Check for any of the following patterns which can cause partial flag dependency
+                //
                 //                                                        Jcc or SHL or SHR or SAR or SHLD(in case of x64)
                 // Jcc or SHL or SHR or SAR or SHLD(in case of x64)       Any Instruction
-                // INC or DEC                                             INC or DEC 
+                // INC or DEC                                             INC or DEC
                 // -------------------------------------------------- OR -----------------------
                 // INC or DEC                                             INC or DEC
                 // Jcc or SHL or SHR or SAR or SHLD(in case of x64)       Any Instruction
@@ -171,11 +171,11 @@ Peeps::PeepFunc()
                 //
                 // With this optimization if any of the above pattern found, substitute INC/DEC with ADD/SUB respectively.
                 if (!peepsEnabled)
-                { 
+                {
                     break;
                 }
-                
-                if (AutoSystemInfo::Data.IsAtomPlatform() || PHASE_FORCE(Js::AtomPhase, this->func)) 
+
+                if (AutoSystemInfo::Data.IsAtomPlatform() || PHASE_FORCE(Js::AtomPhase, this->func))
                 {
                     bool pattern_found=false;
 
@@ -185,28 +185,28 @@ Peeps::PeepFunc()
                         if ( IsJccOrShiftInstr(prevInstr)  )
                         {
                             pattern_found = true;
-                        }  
+                        }
                         else if ( !(prevInstr->IsEntryInstr()) && IsJccOrShiftInstr(prevInstr->GetPrevRealInstr()) )
                         {
                             pattern_found=true;
                         }
                     }
-                
+
                     if ( !pattern_found && !(instr->IsExitInstr()) )
                     {
                         IR::Instr *nextInstr = instr->GetNextRealInstr();
                         if ( IsJccOrShiftInstr(nextInstr) )
                         {
                             pattern_found = true;
-                        } 
-                        else if ( !(nextInstr->IsExitInstr() ) && (IsJccOrShiftInstr(nextInstr->GetNextRealInstr())) ) 
+                        }
+                        else if ( !(nextInstr->IsExitInstr() ) && (IsJccOrShiftInstr(nextInstr->GetNextRealInstr())) )
                         {
                             pattern_found = true;
                         }
-                    } 
+                    }
 
                     if (pattern_found)
-                    { 
+                    {
                         IR::IntConstOpnd* constOne  = IR::IntConstOpnd::New((IntConstType) 1, TyInt32, instr->m_func);
                         IR::Instr * addOrSubInstr = IR::Instr::New(Js::OpCode::ADD, instr->GetDst(), instr->GetDst(), constOne, instr->m_func);
 
@@ -239,8 +239,8 @@ Peeps::PeepFunc()
                 }
 #if defined(_M_IX86) || defined(_M_X64)
                instr = this->PeepRedundant(instr);
-#endif                
-                
+#endif
+
                 IR::Opnd *dst = instr->GetDst();
 
                 // Look for explicit reg kills
@@ -264,12 +264,12 @@ Peeps::PeepFunc()
                         instr->GetSrc2()->SetType(TyInt8);
                     }
                 }
-                
+
                 if (instr->m_opcode == Js::OpCode::CVTSI2SD)
                 {
                     IR::Instr *xorps = IR::Instr::New(Js::OpCode::XORPS, instr->GetDst(), instr->GetDst(), instr->GetDst(), instr->m_func);
                     instr->InsertBefore(xorps);
-                }   
+                }
 #endif
             }
         }
@@ -279,8 +279,8 @@ Peeps::PeepFunc()
 #if defined(_M_IX86) || defined(_M_X64)
 // Peeps::IsJccOrShiftInstr()
 // Check if instruction is any of the Shift or conditional jump variant
-bool 
-Peeps::IsJccOrShiftInstr(IR::Instr *instr) 
+bool
+Peeps::IsJccOrShiftInstr(IR::Instr *instr)
 {
     bool instrFound = (instr->IsBranchInstr() && instr->AsBranchInstr()->IsConditional()) ||
         (instr->m_opcode == Js::OpCode::SHL) || (instr->m_opcode == Js::OpCode::SHR) || (instr->m_opcode == Js::OpCode::SAR);
@@ -344,10 +344,10 @@ Peeps::PeepAssign(IR::Instr *assign)
                 return instrNext;
             }
         }
-        else 
+        else
         {
             // We could copy the a of the src, but we don't have
-            // a way to track 2 regs on the sym...  So let's just clear 
+            // a way to track 2 regs on the sym...  So let's just clear
             // the info of the dst.
             RegNum dstReg = dst->AsRegOpnd()->GetReg();
             this->ClearReg(dstReg);
@@ -441,7 +441,7 @@ Peeps::PeepBranch(IR::BranchInstr *branchInstr, bool *const peepedRef)
                 {
                     Assert(!branchInstr->m_func->GetJnFunction()->GetIsAsmjsMode());
                     // if (x > y) might trigger a call to valueof() or something for x and y.
-                    // We can't just delete them.  
+                    // We can't just delete them.
                     Js::OpCode newOpcode;
                     switch(branchInstr->m_opcode)
                     {
@@ -543,7 +543,7 @@ Peeps::PeepBranch(IR::BranchInstr *branchInstr, bool *const peepedRef)
             //
             // Invert condBranch/uncondBranch/label:
             //
-            //      JCC L1                   JinvCC L3   
+            //      JCC L1                   JinvCC L3
             //      JMP L3       =>
             //      L1:
             IR::BranchInstr *uncondBranch = instrNext->AsBranchInstr();
@@ -584,40 +584,40 @@ Peeps::PeepBranch(IR::BranchInstr *branchInstr, bool *const peepedRef)
     {
         RetargetBrToBr(branchInstr, targetInstr);
     }
-    
+
     return branchInstr->m_next;
 }
 
 #if defined(_M_IX86) || defined(_M_X64)
 //
-// For conditional branch JE $LTarget, if both target and fallthrough branch has the same 
+// For conditional branch JE $LTarget, if both target and fallthrough branch has the same
 // instruction B, hoist it up and tail dup target branch:
 //
-//      A                      <unconditional branch>        
-//      JE  $LTarget           $LTarget:                         
-//      B                           B                          
-//      ...                         JMP $L2                   
+//      A                      <unconditional branch>
+//      JE  $LTarget           $LTarget:
+//      B                           B
+//      ...                         JMP $L2
 //
-//====> hoist B up: move B up from fallthrough branch, remove B in target branch, retarget to $L2  
+//====> hoist B up: move B up from fallthrough branch, remove B in target branch, retarget to $L2
 // $LTarget to $L2
 //
-//      A                      <unconditional branch>                      
-//      B                      $LTarget:                         
-//      JE  $L2                     JMP $L2                                                 
-//      ...                
+//      A                      <unconditional branch>
+//      B                      $LTarget:
+//      JE  $L2                     JMP $L2
+//      ...
 //
 //====> now $LTarget becomes to be an empty BB, which can be removed if it's an unreferenced label
 //
-//      A                      
-//      B                      
-//      JE  $L2                 
+//      A
+//      B
+//      JE  $L2
 //      ...
 //
 //====> Note B will be hoist above compare instruction A if there are no dependency between A and B
 //
-//      B                      
+//      B
 //      A          (cmp instr)
-//      JE  $L2                 
+//      JE  $L2
 //      ...
 //
 IR::Instr *
@@ -631,7 +631,7 @@ Peeps::HoistSameInstructionAboveSplit(IR::BranchInstr *branchInstr, IR::Instr *i
 
     IR::LabelInstr *targetLabel = branchInstr->GetTarget();
     Assert(targetLabel);
-    
+
     // give up if there are other branch entries to the target label
     if (targetLabel->labelRefs.Count() > 1)
     {
@@ -641,9 +641,9 @@ Peeps::HoistSameInstructionAboveSplit(IR::BranchInstr *branchInstr, IR::Instr *i
     // Give up if previous instruction before target label has fallthrough, cannot hoist up
     IR::Instr *targetPrev = targetLabel->GetPrevRealInstrOrLabel();
     Assert(targetPrev);
-    if (targetPrev->HasFallThrough()) 
+    if (targetPrev->HasFallThrough())
     {
-        return instrNext;   
+        return instrNext;
     }
 
     IR::Instr *instrSetCondition = NULL;
@@ -659,7 +659,7 @@ Peeps::HoistSameInstructionAboveSplit(IR::BranchInstr *branchInstr, IR::Instr *i
 
     if (branchPrev && branchPrev->IsLabelInstr() && branchPrev->AsLabelInstr()->isOpHelper)
     {   // don't apply the optimization when branch is in helper section
-        return instrNext; 
+        return instrNext;
     }
 
     if (!instrSetCondition)
@@ -684,24 +684,24 @@ Peeps::HoistSameInstructionAboveSplit(IR::BranchInstr *branchInstr, IR::Instr *i
     while (!instr->EndsBasicBlock() && !instr->IsLabelInstr() && instr->IsEqual(targetInstr) &&
         !EncoderMD::UsesConditionCode(instr) && !EncoderMD::SetsConditionCode(instr) &&
         !this->peepsAgen.DependentInstrs(instrSetCondition, instr))
-    {  
+    {
         branchNextInstr = instr->GetNextRealInstrOrLabel();
         targetNextInstr = targetInstr->GetNextRealInstrOrLabel();
-        
+
         instr->Unlink();                            // hoist up instr in fallthrough branch
         if (hoistAboveSetConditionInstr)
-        {   
+        {
             instrSetCondition->InsertBefore(instr); // hoist above compare instruction
         }
         else
-        {   
+        {
             branchInstr->InsertBefore(instr);       // hoist above branch split
         }
         targetInstr->Remove();                      // remove the same instruction in target branch
-        
+
         if (!instrHasHoisted)
             instrHasHoisted = instr;                // points to the first hoisted instruction
-        
+
         instr = branchNextInstr;
         targetInstr = targetNextInstr;
         Assert(instr && targetInstr);
@@ -710,7 +710,7 @@ Peeps::HoistSameInstructionAboveSplit(IR::BranchInstr *branchInstr, IR::Instr *i
     if (instrHasHoisted)
     {   // instructions have been hoisted, now check tail branch to see if it can be duplicated
         if (targetInstr->IsBranchInstr())
-        {   
+        {
             IR::BranchInstr *tailBranch = targetInstr->AsBranchInstr();
             if (tailBranch->IsUnconditional() && !tailBranch->IsMultiBranch())
             {   // target can be replaced since tail branch is a single unconditional jmp
@@ -749,7 +749,7 @@ Peeps::RetargetBrToBr(IR::BranchInstr *branchInstr, IR::LabelInstr * targetInstr
 #if DBG
     uint counter = 0;
 #endif
-    
+
     IR::LabelInstr *lastLoopTop = NULL;
 
     while (targetInstrNext->IsBranchInstr() && targetInstrNext->AsBranchInstr()->IsUnconditional())
@@ -785,7 +785,7 @@ Peeps::RetargetBrToBr(IR::BranchInstr *branchInstr, IR::LabelInstr * targetInstr
         Assert(reTargetLabel);
         if (targetInstr == reTargetLabel)
         {
-            // Infinite loop.  
+            // Infinite loop.
             //    JCC $L1
             // L1:
             //    JMP $L1
@@ -814,7 +814,7 @@ Peeps::RetargetBrToBr(IR::BranchInstr *branchInstr, IR::LabelInstr * targetInstr
 }
 
 // TODO: looks like we don't peep standalone unreachable labels (not as part of peep branch), make sure we do that.
-IR::Instr * 
+IR::Instr *
 Peeps::PeepUnreachableLabel(IR::LabelInstr *deadLabel, const bool isInHelper, bool *const peepedRef)
 {
     Assert(deadLabel);
@@ -868,9 +868,9 @@ Peeps::PeepUnreachableLabel(IR::LabelInstr *deadLabel, const bool isInHelper, bo
     return instrReturn;
 }
 
-IR::Instr * 
+IR::Instr *
 Peeps::CleanupLabel(IR::LabelInstr * instr, IR::LabelInstr * instrNext)
-{   
+{
     IR::Instr * returnInstr;
 
     IR::LabelInstr * labelToRemove;
@@ -889,7 +889,7 @@ Peeps::CleanupLabel(IR::LabelInstr * instr, IR::LabelInstr * instrNext)
         labelToKeep = instrNext;
         returnInstr = instrNext;
     }
-    else 
+    else
     {
         labelToRemove = instrNext;
         labelToKeep = instr;
@@ -900,7 +900,7 @@ Peeps::CleanupLabel(IR::LabelInstr * instr, IR::LabelInstr * instrNext)
         bool replaced = labelToRemove->labelRefs.Head()->ReplaceTarget(labelToRemove, labelToKeep);
         Assert(replaced);
     }
-    
+
     if (labelToRemove->isOpHelper)
     {
         labelToKeep->isOpHelper = true;
@@ -995,7 +995,7 @@ Peeps::PeepRedundant(IR::Instr *instr)
 #else
     RegNum edx = RegRDX;
 #endif
-    if (instr->m_opcode == Js::OpCode::NOP && instr->GetDst() != NULL 
+    if (instr->m_opcode == Js::OpCode::NOP && instr->GetDst() != NULL
         && instr->GetDst()->IsRegOpnd() && instr->GetDst()->AsRegOpnd()->GetReg() == edx)
     {
         // dummy def used for non-32bit ovf check for IMUL
@@ -1053,7 +1053,7 @@ IR::Instr*
 Peeps::PeepCondMove(IR::LabelInstr *labelInstr, IR::Instr *nextInstr, const bool isInHelper)
 {
     IR::Instr *instr = labelInstr->GetPrevRealInstrOrLabel();
-    
+
     Js::OpCode newOpCode;
 
     // Check if BB is all MOVs with both RegOpnd
@@ -1065,13 +1065,13 @@ Peeps::PeepCondMove(IR::LabelInstr *labelInstr, IR::Instr *nextInstr, const bool
     }
 
     // Did we hit a conditional branch ?
-    if (instr->IsBranchInstr() && instr->AsBranchInstr()->IsConditional() && 
-        !instr->AsBranchInstr()->IsMultiBranch() && 
+    if (instr->IsBranchInstr() && instr->AsBranchInstr()->IsConditional() &&
+        !instr->AsBranchInstr()->IsMultiBranch() &&
         instr->AsBranchInstr()->GetTarget() == labelInstr &&
         instr->m_opcode != Js::OpCode::Leave)
     {
         IR::BranchInstr *brInstr = instr->AsBranchInstr();
-        
+
         // Get the correct CMOVcc
         switch(brInstr->m_opcode)
         {
@@ -1114,7 +1114,7 @@ Peeps::PeepCondMove(IR::LabelInstr *labelInstr, IR::Instr *nextInstr, const bool
         case Js::OpCode::JO:
                 newOpCode = Js::OpCode::CMOVNO;
                 break;
-        case Js::OpCode::JP: 
+        case Js::OpCode::JP:
                 newOpCode = Js::OpCode::CMOVNP;
                 break;
         case Js::OpCode::JNSB:
@@ -1126,8 +1126,8 @@ Peeps::PeepCondMove(IR::LabelInstr *labelInstr, IR::Instr *nextInstr, const bool
         default:
                 Assert(UNREACHED);
                 __assume(UNREACHED);
-        }   
-       
+        }
+
         // convert the entire block to CMOVs
         instr = brInstr->GetNextRealInstrOrLabel();
         while(instr != labelInstr)

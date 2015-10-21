@@ -15,7 +15,7 @@ namespace Js
         static PropertyId specialPropertyIds[];
 
     public:
-        // we need to install cross-site thunk on the nested arraybuffer when marshalling
+        // we need to install cross-site thunk on the nested array buffer when marshaling
         // typed array.
         DEFINE_VTABLE_CTOR_ABSTRACT(ArrayBuffer, DynamicObject);
         virtual void MarshalToScriptContext(Js::ScriptContext * scriptContext) = 0;
@@ -44,7 +44,7 @@ namespace Js
             virtual void DiscardState() override
             {
                 if (this->buffer != nullptr)
-                {                    
+                {
                     freeFunction(this->buffer);
                     this->buffer = nullptr;
                 }
@@ -72,7 +72,7 @@ namespace Js
             static FunctionInfo GetterSymbolSpecies;
             static FunctionInfo Transfer;
         };
-        
+
         static Var NewInstance(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntrySlice(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryIsView(RecyclableObject* function, CallInfo callInfo, ...);
@@ -125,13 +125,13 @@ namespace Js
         //maximum 2G -1  for amd64
         static const uint32 MaxArrayBufferLength = 0x7FFFFFFF;
 #else
-        // maximum 1G to avoid arithmatic overflow.
+        // maximum 1G to avoid arithmetic overflow.
         static const uint32 MaxArrayBufferLength = 1 << 30;
 #endif
         virtual bool IsValidAsmJsBufferLength(uint length, bool forceCheck = false) { return false; }
         virtual bool IsValidVirtualBufferLength(uint length) { return false; }
     protected:
-        typedef void __cdecl FreeFn(void* ptr);   
+        typedef void __cdecl FreeFn(void* ptr);
         virtual ArrayBufferDetachedStateBase* CreateDetachedState(BYTE* buffer, uint32 bufferLength) = 0;
         virtual ArrayBuffer * TransferInternal(uint32 newBufferLength) = 0;
 
@@ -205,7 +205,7 @@ namespace Js
         DEFINE_MARSHAL_OBJECT_TO_SCRIPT_CONTEXT(JavascriptArrayBuffer);
 
     public:
-        static JavascriptArrayBuffer* Create(uint32 length, DynamicType * type);        
+        static JavascriptArrayBuffer* Create(uint32 length, DynamicType * type);
         static JavascriptArrayBuffer* Create(byte* buffer, uint32 length, DynamicType * type);
         virtual void Dispose(bool isShutdown) override;
         virtual void Finalize(bool isShutdown) override;
@@ -246,7 +246,7 @@ namespace Js
         virtual ArrayBuffer * TransferInternal(uint32 newBufferLength) override;
     private:
         JavascriptArrayBuffer(uint32 length, DynamicType * type);
-        JavascriptArrayBuffer(byte* buffer, uint32 length, DynamicType * type);        
+        JavascriptArrayBuffer(byte* buffer, uint32 length, DynamicType * type);
     };
 
     // the memory must be allocated via CoTaskMemAlloc.
@@ -257,7 +257,7 @@ namespace Js
         DEFINE_MARSHAL_OBJECT_TO_SCRIPT_CONTEXT(ProjectionArrayBuffer);
         typedef void __stdcall FreeFn(LPVOID ptr);
         virtual ArrayBufferDetachedStateBase* CreateDetachedState(BYTE* buffer, uint32 bufferLength) override
-        { 
+        {
             return HeapNew(ArrayBufferDetachedState<FreeFn>, buffer, bufferLength, CoTaskMemFree, ArrayBufferAllocationType::CoTask);
         }
         virtual ArrayBuffer * TransferInternal(uint32 newBufferLength) override;

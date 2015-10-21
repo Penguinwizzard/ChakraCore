@@ -60,7 +60,7 @@ namespace Js
             // TODO: when we support assigning a mark temp object as property to another mark temp object
             // we will need to box them too.
             // TODO: Beware of bailout in the middle of initializing a object literal.  Some slots
-            // might not be initialized yet.            
+            // might not be initialized yet.
             // dstSlots[i] = JavascriptOperators::BoxStackInstance(srcSlots[i], this->GetScriptContext());
 
 #if !FLOATVAR
@@ -69,7 +69,7 @@ namespace Js
 #else
             dstSlots[i] = srcSlots[i];
 #endif
-            
+
         }
 
         if (propertyCount > inlineSlotCapacity)
@@ -198,7 +198,7 @@ namespace Js
     {
         const auto result = EnsureObjectArray()->SetItem(index, value, flags);
 
-        // We don't track non-enumerable items in object arrays.  Any object with an object array reports having 
+        // We don't track non-enumerable items in object arrays.  Any object with an object array reports having
         // enumerable properties.  See comment in DynamicObject::GetHasNoEnumerableProperties.
         //SetHasNoEnumerableProperties(false);
 
@@ -209,7 +209,7 @@ namespace Js
     {
         const auto result = EnsureObjectArray()->SetItemWithAttributes(index, value, attributes);
 
-        // We don't track non-enumerable items in object arrays.  Any object with an object array reports having 
+        // We don't track non-enumerable items in object arrays.  Any object with an object array reports having
         // enumerable properties.  See comment in DynamicObject::GetHasNoEnumerableProperties.
         //if (attributes & PropertyEnumerable)
         //{
@@ -227,7 +227,7 @@ namespace Js
     {
         const auto result = HasObjectArray() && GetObjectArrayOrFlagsAsArray()->SetItemAttributes(index, attributes);
 
-        // We don't track non-enumerable items in object arrays.  Any object with an object array reports having 
+        // We don't track non-enumerable items in object arrays.  Any object with an object array reports having
         // enumerable properties.  See comment in DynamicObject::GetHasNoEnumerableProperties.
         //if (attributes & PropertyEnumerable)
         //{
@@ -546,7 +546,7 @@ namespace Js
 
         if (PHASE_TRACE1(Js::ObjectHeaderInliningPhase))
         {
-            Output::Print(L"ObjectHeaderInlining: Deoptimizing the object.\n");
+            Output::Print(L"ObjectHeaderInlining: De-optimizing the object.\n");
             Output::Flush();
         }
 
@@ -593,12 +593,12 @@ namespace Js
     }
 
     void DynamicObject::InitArrayFlags(const DynamicObjectFlags flags)
-    {        
+    {
         Assert(IsAnyArray(this));
-        Assert(this->objectArray == nullptr);            
+        Assert(this->objectArray == nullptr);
         Assert((flags & DynamicObjectFlags::ObjectArrayFlagsTag) == DynamicObjectFlags::ObjectArrayFlagsTag);
         Assert((flags & ~DynamicObjectFlags::AllFlags) == DynamicObjectFlags::None);
-        this->arrayFlags = flags;     
+        this->arrayFlags = flags;
     }
 
     void DynamicObject::SetArrayFlags(const DynamicObjectFlags flags)
@@ -608,7 +608,7 @@ namespace Js
         // Make sure we don't attempt to set any flags outside of the range of array flags.
         Assert((arrayFlags & ~DynamicObjectFlags::AllArrayFlags) == DynamicObjectFlags::ObjectArrayFlagsTag);
         Assert((flags & ~DynamicObjectFlags::AllArrayFlags) == DynamicObjectFlags::None);
-        arrayFlags = flags | DynamicObjectFlags::ObjectArrayFlagsTag;          
+        arrayFlags = flags | DynamicObjectFlags::ObjectArrayFlagsTag;
     }
 
     ProfileId DynamicObject::GetArrayCallSiteIndex() const
@@ -653,7 +653,7 @@ namespace Js
             objectArray->SetIsPrototype();
         }
 
-#if DBG            
+#if DBG
         Assert(currentTypeHandler->SupportsPrototypeInstances());
         Assert(!DynamicTypeHandler::IsolatePrototypes() || !currentTypeHandler->RespectsIsolatePrototypes() || !currentTypeHandler->GetIsOrMayBecomeShared());
         Assert((wasPrototype && !wasShared) || !DynamicTypeHandler::ChangeTypeOnProto() || !currentTypeHandler->RespectsChangeTypeOnProto() || this->GetDynamicType() != oldType);
@@ -688,13 +688,13 @@ namespace Js
         // This is what's going on here.  The newType comes from the (potentially) new script context, but the object is
         // described by the old type handler, so we want to keep that type handler.  We set the new type on the object, but
         // then re-set the type handler of that type back to the old type handler.  In the process, we may actually change
-        // the type of the object again (if the new type was locked) via DuplicateType, the new new type will then also be
+        // the type of the object again (if the new type was locked) via DuplicateType; the newer type will then also be
         // from the new script context.
         DynamicType * oldType = this->GetDynamicType();
         DynamicTypeHandler* oldTypeHandler = oldType->GetTypeHandler();
 
-        // TODO: Because we've disabled fixed properties on DOM objects, we don't need to rely on a type change here to 
-        // invalidate fixed properties.  Apparently, under some circumstances (with F12 tools enabled) an object which 
+        // TODO: Because we've disabled fixed properties on DOM objects, we don't need to rely on a type change here to
+        // invalidate fixed properties.  Apparently, under some circumstances (with F12 tools enabled) an object which
         // is already in the new context can be reset and newType == oldType.  This seems like a bug in Trident.  If we
         // re-enable fixed properties on DOM object we'll have to investigate and address this issue.
         // Assert(newType != oldType);
@@ -748,10 +748,10 @@ namespace Js
 
         if (keepProperties)
         {
-            this->GetTypeHandler()->MarshalAllPropertiesToScriptContext(this, this->GetScriptContext(), false); 
+            this->GetTypeHandler()->MarshalAllPropertiesToScriptContext(this, this->GetScriptContext(), false);
 
             // TODO: We need to marshal Var in object arrays, but we have no way to do that  yet, as the object array
-            // is accessed directly and not thru the type handler.
+            // is accessed directly and not through the type handler.
 
             if (stackTraceValue)
             {
@@ -807,7 +807,7 @@ namespace Js
         return this->GetTypeHandler()->GetPropertyIndexFromAuxSlotIndex(auxIndex);
     }
 
-    BOOL 
+    BOOL
     DynamicObject::GetAttributesWithPropertyIndex(PropertyId propertyId, BigPropertyIndex index, PropertyAttributes * attributes)
     {
         return this->GetTypeHandler()->GetAttributesWithPropertyIndex(this, propertyId, index, attributes);
@@ -819,7 +819,7 @@ namespace Js
         return GetRecycler()->CreateWeakReferenceHandle(this);
     }
 
-    DynamicObject * 
+    DynamicObject *
     DynamicObject::BoxStackInstance(DynamicObject * instance)
     {
         Assert(ThreadContext::IsOnStack(instance));
@@ -840,7 +840,7 @@ namespace Js
         {
             boxedInstance = RecyclerNew(instance->GetRecycler(), DynamicObject, instance);
         }
-        
+
         *boxedInstanceRef = boxedInstance;
         return boxedInstance;
     }
@@ -859,7 +859,7 @@ namespace Js
     }
 
     void DynamicObject::Dispose(bool isShutdown)
-    { 
+    {
         // If -RecyclerTrackStress is enabled, DynamicObject will be allocated as Track (and thus Finalize too).
         // Just ignore this.
         if (Js::Configuration::Global.flags.RecyclerTrackStress)
@@ -869,19 +869,19 @@ namespace Js
 
         RecyclableObject::Dispose(isShutdown);
     }
-    
+
     void DynamicObject::Mark(Recycler *recycler)
-    { 
+    {
         // If -RecyclerTrackStress is enabled, DynamicObject will be allocated as Track (and thus Finalize too).
         // Process the mark now.
-        
+
         if (Js::Configuration::Global.flags.RecyclerTrackStress)
         {
             size_t inlineSlotsSize = this->GetDynamicType()->GetTypeHandler()->GetInlineSlotsSize();
             size_t objectSize = sizeof(DynamicObject) + inlineSlotsSize;
             void ** obj = (void **)this;
             void ** objEnd = obj + (objectSize / sizeof(void *));
-            
+
             do
             {
                 recycler->TryMarkNonInterior(*obj, nullptr);

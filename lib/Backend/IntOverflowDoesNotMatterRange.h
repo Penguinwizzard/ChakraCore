@@ -13,7 +13,7 @@ private:
     // These syms are required to have int values before the first instruction (before we start ignoring int overflows in this
     // on instructions in this range). Any bailouts necessary to force them to ints need to be inserted before the range.
     BVSparse<JitArenaAllocator> symsRequiredToBeInt;
-    BVSparse<JitArenaAllocator> symsRequiredToBeLossyInt; // these are a subset of the the above bit-vector
+    BVSparse<JitArenaAllocator> symsRequiredToBeLossyInt; // these are a subset of the above bit-vector
 
     IntOverflowDoesNotMatterRange *const next;
 

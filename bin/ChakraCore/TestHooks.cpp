@@ -160,4 +160,3 @@ HRESULT OnChakraCoreLoaded()
 }
 
 #endif // ENABLE_TEST_HOOKS
-

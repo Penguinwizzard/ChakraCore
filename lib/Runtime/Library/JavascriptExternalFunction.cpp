@@ -14,35 +14,35 @@ namespace Js
     // . wrap the result value with potential cross site access
 
     JavascriptExternalFunction::JavascriptExternalFunction(ExternalMethod entryPoint, DynamicType* type)
-        : RuntimeFunction(type, &EntryInfo::ExternalFunctionThunk), nativeMethod(entryPoint), signature(nullptr), callbackState(nullptr), initMethod(nullptr), 
+        : RuntimeFunction(type, &EntryInfo::ExternalFunctionThunk), nativeMethod(entryPoint), signature(nullptr), callbackState(nullptr), initMethod(nullptr),
         oneBit(1), typeSlots(0), hasAccessors(0), callCount(0), prototypeTypeId(-1), flags(0)
     {
         DebugOnly(VerifyEntryPoint());
     }
 
     JavascriptExternalFunction::JavascriptExternalFunction(ExternalMethod entryPoint, DynamicType* type, InitializeMethod method, unsigned short deferredSlotCount, bool accessors)
-        : RuntimeFunction(type, &EntryInfo::ExternalFunctionThunk), nativeMethod(entryPoint), signature(nullptr), callbackState(nullptr), initMethod(method), 
+        : RuntimeFunction(type, &EntryInfo::ExternalFunctionThunk), nativeMethod(entryPoint), signature(nullptr), callbackState(nullptr), initMethod(method),
         oneBit(1), typeSlots(deferredSlotCount), hasAccessors(accessors), callCount(0), prototypeTypeId(-1), flags(0)
     {
         DebugOnly(VerifyEntryPoint());
     }
 
     JavascriptExternalFunction::JavascriptExternalFunction(JavascriptExternalFunction* entryPoint, DynamicType* type)
-        : RuntimeFunction(type, &EntryInfo::WrappedFunctionThunk), wrappedMethod(entryPoint), callbackState(nullptr), initMethod(nullptr), 
+        : RuntimeFunction(type, &EntryInfo::WrappedFunctionThunk), wrappedMethod(entryPoint), callbackState(nullptr), initMethod(nullptr),
         oneBit(1), typeSlots(0), hasAccessors(0), callCount(0), prototypeTypeId(-1), flags(0)
     {
         DebugOnly(VerifyEntryPoint());
     }
 
     JavascriptExternalFunction::JavascriptExternalFunction(StdCallJavascriptMethod entryPoint, DynamicType* type)
-        : RuntimeFunction(type, &EntryInfo::StdCallExternalFunctionThunk), stdCallNativeMethod(entryPoint), signature(nullptr), callbackState(nullptr), initMethod(nullptr), 
+        : RuntimeFunction(type, &EntryInfo::StdCallExternalFunctionThunk), stdCallNativeMethod(entryPoint), signature(nullptr), callbackState(nullptr), initMethod(nullptr),
         oneBit(1), typeSlots(0), hasAccessors(0), callCount(0), prototypeTypeId(-1), flags(0)
     {
         DebugOnly(VerifyEntryPoint());
     }
 
     JavascriptExternalFunction::JavascriptExternalFunction(DynamicType *type)
-        : RuntimeFunction(type, &EntryInfo::ExternalFunctionThunk), nativeMethod(nullptr), signature(nullptr), callbackState(nullptr), initMethod(nullptr), 
+        : RuntimeFunction(type, &EntryInfo::ExternalFunctionThunk), nativeMethod(nullptr), signature(nullptr), callbackState(nullptr), initMethod(nullptr),
         oneBit(1), typeSlots(0), hasAccessors(0), callCount(0), prototypeTypeId(-1), flags(0)
     {
         DebugOnly(VerifyEntryPoint());
@@ -87,7 +87,7 @@ namespace Js
         }
 
         JavascriptString * functionName = nullptr;
-        if (scriptContext->GetConfig()->IsES6FunctionNameEnabled() &&  
+        if (scriptContext->GetConfig()->IsES6FunctionNameEnabled() &&
             object->GetFunctionName(&functionName))
         {
             object->SetPropertyWithAttributes(PropertyIds::name, functionName, PropertyConfigurable, nullptr);
@@ -117,7 +117,7 @@ namespace Js
         {
             JavascriptFunction* caller = nullptr;
 
-            // Lot the caller function if the call count of the external function pass certain treshhold (randomly pick 256)
+            // Lot the caller function if the call count of the external function pass certain threshold (randomly pick 256)
             // we don't want to call stackwalk too often. The threshold can be adjusted as needed.
             if (callCount >= ETW_MIN_COUNT_FOR_CALLER && ((callCount % ETW_MIN_COUNT_FOR_CALLER) == 0))
             {
@@ -206,7 +206,7 @@ namespace Js
                         {
                             thisVar = directHostObject;
                         }
-                        
+
                     }
                     break;
                 case Js::TypeIds_Undefined:
@@ -265,7 +265,7 @@ namespace Js
 #ifdef ENABLE_DIRECTCALL_TELEMETRY
         DirectCallTelemetry::AutoLogger logger(scriptContext, externalFunction, &args);
 #endif
-        
+
         externalFunction->PrepareExternalCall(&args);
 
         Var result = nullptr;

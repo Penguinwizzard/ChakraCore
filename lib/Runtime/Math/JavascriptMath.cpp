@@ -209,7 +209,7 @@ namespace Js
                 return JavascriptString::Concat(JavascriptString::FromVar(aLeft), JavascriptString::FromVar(aRight));
             }
             return Add_FullHelper_Wrapper(aLeft, aRight, scriptContext, nullptr, false);
-         }         
+         }
 #else
         Var JavascriptMath::Add_Full(Var aLeft, Var aRight, ScriptContext* scriptContext)
         {
@@ -354,7 +354,7 @@ StringCommon:
                         goto StringCommon;
                 }
             }
-            
+
             if (TaggedInt::Is(aLeft))
             {
                 if (TaggedInt::Is(aRight))
@@ -382,9 +382,9 @@ StringCommon:
 
         Var JavascriptMath::Add_FullHelper_Wrapper(Var aLeft, Var aRight, ScriptContext* scriptContext, JavascriptNumber* result, bool leftIsDead)
         {
-            Var aLeftToPrim = JavascriptConversion::ToPrimitive(aLeft, JavascriptHint::None, scriptContext);;
-            Var aRightToPrim = JavascriptConversion::ToPrimitive(aRight, JavascriptHint::None, scriptContext);;
-            return Add_FullHelper(aLeftToPrim, aRightToPrim, scriptContext, result, leftIsDead);            
+            Var aLeftToPrim = JavascriptConversion::ToPrimitive(aLeft, JavascriptHint::None, scriptContext);
+            Var aRightToPrim = JavascriptConversion::ToPrimitive(aRight, JavascriptHint::None, scriptContext);
+            return Add_FullHelper(aLeftToPrim, aRightToPrim, scriptContext, result, leftIsDead);
         }
 
         Var JavascriptMath::Add_FullHelper(Var primLeft, Var primRight, ScriptContext* scriptContext, JavascriptNumber *result, bool leftIsDead)
@@ -908,9 +908,9 @@ StringCommon:
             Assert(args.Info.Count == 2);
             Var thisArg = args[0];
             Var arrayArg = args[1];
-            
+
             ScriptContext * scriptContext = function->GetScriptContext();
-            
+
             TypeId typeId = JavascriptOperators::GetTypeId(arrayArg);
             if (!JavascriptNativeArray::Is(typeId) && !(TypedArrayBase::Is(typeId) && typeId != TypeIds_CharArray && typeId != TypeIds_BoolArray))
             {
@@ -931,7 +931,7 @@ StringCommon:
                     return scriptContext->GetLibrary()->GetNegativeInfinite();
                 }
 
-                if (((Js::SparseArraySegmentBase*)argsArray->GetHead())->next != nullptr || !argsArray->HasNoMissingValues() || 
+                if (((Js::SparseArraySegmentBase*)argsArray->GetHead())->next != nullptr || !argsArray->HasNoMissingValues() ||
                     ((Js::SparseArraySegmentBase*)argsArray->GetHead())->length != len)
                 {
                     return JavascriptFunction::CalloutHelper<false>(function, thisArg, /* overridingNewTarget = */nullptr, arrayArg, scriptContext);
@@ -955,7 +955,7 @@ StringCommon:
                 return max;
             }
         }
-		
+
         Var JavascriptMath::MinInAnArray(RecyclableObject * function, CallInfo callInfo, ...)
         {
             PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
@@ -966,7 +966,7 @@ StringCommon:
             Var arrayArg = args[1];
 
             ScriptContext * scriptContext = function->GetScriptContext();
-            
+
             TypeId typeId = JavascriptOperators::GetTypeId(arrayArg);
             if (!JavascriptNativeArray::Is(typeId) && !(TypedArrayBase::Is(typeId) && typeId != TypeIds_CharArray && typeId != TypeIds_BoolArray))
             {
@@ -1033,7 +1033,7 @@ StringCommon:
                 }
 #endif
 
-                temp = s0.LowPart ^ multiplier.LowPart; 
+                temp = s0.LowPart ^ multiplier.LowPart;
                 // Put bytes in order 0213.
                 temp = ((temp & 0xFF000000) >>24) | ((temp & 0x000000FF) <<24) | (temp & 0x00FFFF00);
 
@@ -1063,8 +1063,8 @@ StringCommon:
 
             uint64 sn;
             sn = (seed * multiplier.QuadPart + 11) & 0x0000FFFFFFFFFFFFull; // apply linear recurrence and keep just 48 bits
-            double res = double((uint)(sn >> 21)); //use for the result the high 27 bits of the 45 bits above 
-        
+            double res = double((uint)(sn >> 21)); //use for the result the high 27 bits of the 45 bits above
+
             // one more iteration and keep only 48 bits
             seed = (sn * multiplier.QuadPart + 11) & 0x0000FFFFFFFFFFFFull;
 
@@ -1091,7 +1091,7 @@ StringCommon:
         }
 
         int32 JavascriptMath::ToInt32(double T1)
-        {        
+        {
             return JavascriptMath::ToInt32Core(T1);
         }
 
@@ -1108,7 +1108,7 @@ StringCommon:
             {
                 return JavascriptMath::ToInt32Core(JavascriptNumber::GetValue(aValue));
             }
-            
+
             return JavascriptConversion::ToInt32_Full(aValue, scriptContext);
         }
 #ifdef SSE2MATH

@@ -98,7 +98,7 @@ struct HeapAllocator
     template <bool noThrow>
     char * AllocT(size_t byteSize);
 
-    // This exists soley to make the AllocateXXX macros more polymorphic
+    // This exists solely to make the AllocateXXX macros more polymorphic
     char * AllocLeaf(size_t byteSize)
     {
         return Alloc(byteSize);
@@ -221,7 +221,7 @@ public:
         if (buffer == nullptr)
         {
             // NoCheck heap allocator is only used by debug only code, and if we fail to allocate
-            // memory, we will just raise an exceptio nand kill the process
+            // memory, we will just raise an exception and kill the process
             DebugHeap_OOM_fatal_error();
         }
         return buffer;
@@ -236,7 +236,7 @@ public:
         if (buffer == nullptr)
         {
             // NoCheck heap allocator is only used by debug only code, and if we fail to allocate
-            // memory, we will just raise an exceptio nand kill the process
+            // memory, we will just raise an exception and kill the process
             DebugHeap_OOM_fatal_error();
         }
         return buffer;

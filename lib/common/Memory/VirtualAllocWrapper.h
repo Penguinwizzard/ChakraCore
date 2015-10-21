@@ -26,9 +26,9 @@ public:
 
 /*
 * PreReservedVirtualAllocWrapper class takes care of Reserving a large memory region initially
-* and then commiting mem regions for the size requested.
+* and then committing mem regions for the size requested.
 * Committed pages are being tracked with a bitVector.
-* Committing memory outside of the preReserved Memeory region is not handled by this allocator
+* Committing memory outside of the preReserved Memory region is not handled by this allocator
 */
 
 class PreReservedVirtualAllocWrapper
@@ -39,7 +39,7 @@ public:
 #else // _M_X64_OR_ARM64
     static const uint PreReservedAllocationSegmentCount = 4096; //(4096 * 64K) == 256MB, if 64k is the AllocationGranularity
 #endif
-    
+
 public:
     PreReservedVirtualAllocWrapper();
     BOOL Shutdown();

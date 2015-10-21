@@ -761,7 +761,7 @@ namespace Js
     #else
         CompileAssert(sizeof(void *) == sizeof(int32));
 
-        // On 32-bit architectures, it will be attempted to fit both pieces of into into one pointer by using 16 bits for the
+        // On 32-bit architectures, it will be attempted to fit both pieces of into one pointer by using 16 bits for the
         // start index, 15 for the length, and 1 for the tag. If it does not fit, an additional pointer will be used.
         if(startIndex <= static_cast<CharCount>(0xffff) && length <= static_cast<CharCount>(0x7fff))
         {
@@ -817,7 +817,7 @@ namespace Js
     #else
         CompileAssert(sizeof(void *) == sizeof(int32));
 
-        // On 32-bit architectures, it will be attempted to fit both pieces of into into one pointer by using 16 bits for the
+        // On 32-bit architectures, it will be attempted to fit both pieces of into one pointer by using 16 bits for the
         // start index, 15 for the length, and 1 for the tag. If it does not fit, an additional pointer will be used.
         if(!pointer2)
         {
@@ -1162,7 +1162,7 @@ namespace Js
                 else
                 {
                     Assert(recursionDepth <= MaxCopyRecursionDepth);
-                    s->Copy(&buffer[remainingCharLengthToCopy], nestedStringTreeCopyInfos, recursionDepth + 1);                    
+                    s->Copy(&buffer[remainingCharLengthToCopy], nestedStringTreeCopyInfos, recursionDepth + 1);
                 }
             }
         }

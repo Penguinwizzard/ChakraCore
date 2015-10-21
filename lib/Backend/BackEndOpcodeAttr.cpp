@@ -7,7 +7,7 @@
 namespace OpCodeAttr
 {
 // OpSideEffect:
-//      Opcode has side effect not just to the dst/src on the instruction. 
+//      Opcode has side effect not just to the dst/src on the instruction.
 //      The opcode cannot be deadstored. (e.g. StFld, LdFld from DOM, call valueOf/toString/getter/setter)
 //      Doesn't include all "exit" script (e.g. LdThis doesn't have side effect for HostDispatch for exiting script to getting the name space parent)
 // OpHasImplicitCall:
@@ -22,14 +22,14 @@ enum OpCodeAttrEnum
 
     OpTempNumberSources         = 0x00000004, // OpCode does support temp values as source
     OpTempNumberProducing       = 0x00000008, // OpCode can produce a temp value
-    OpTempNumberTransfer        = 0x00000010 | OpTempNumberSources, // OpCode transfers a temp value    
+    OpTempNumberTransfer        = 0x00000010 | OpTempNumberSources, // OpCode transfers a temp value
 
     OpTempObjectSources         = 0x00000020, // OpCode does support temp values as source
     OpTempObjectProducing       = 0x00000040, // OpCode can produce a temp value
     OpTempObjectTransfer        = 0x00000080 | OpTempObjectSources, // OpCode transfers a temp value
     OpTempObjectCanStoreTemp    = 0x00000100 | OpTempObjectProducing,  // OpCode can produce a temp value, and once marked, it will always produce a temp value so we can store other temp value in the object
 
-    OpInlineCallInstr           = 0x00000200, 
+    OpInlineCallInstr           = 0x00000200,
     OpCallsValueOf              = 0x00000400, // Could have valueOf/ToString side-effect
     OpCallInstr                 = 0x00000800,
     OpDoNotTransfer             = 0x00001000,
@@ -37,13 +37,13 @@ enum OpCodeAttrEnum
     OpFastFldInstr              = 0x00004000,
     OpBailOutRec                = 0x00008000,
 
-    OpInlinableBuiltIn          = 0x00010000, // OpCode is inlinable built-in, such as InlineMathSin, etc.
+    OpInlinableBuiltIn          = 0x00010000, // OpCode is an inlineable built-in, such as InlineMathSin, etc.
     OpNonIntTransfer            = 0x00020000, // OpCode may transfer a non-integer value from the non-constant source to the destination
     OpIsInt32                   = 0x00040000, // OpCode converts its srcs to int32 or a narrower int type, and produces an int32
-    OpProducesNumber            = 0x00080000, // OpCode always produces a number    
+    OpProducesNumber            = 0x00080000, // OpCode always produces a number
     OpCanLoadFixedFields        = 0x00100000, // OpCode can use fixed fields
     OpCanCSE                    = 0x00200000, // Opcode has not side-effect and always produces the same value for a given input (InlineMathAbs is OK, InlineMathRandom is not)
-    OpNoFallThrough             = 0x00400000, // Opcode doesn't fallthrough in flow  and its always jump to the return from this opcode. 
+    OpNoFallThrough             = 0x00400000, // Opcode doesn't fallthrough in flow and it always jumps to the return from this opcode
     OpPostOpDbgBailOut          = 0x00800000, // Generate bail out after this opcode. This must be a helper call and needs bailout on return from it. Used for Fast F12.
 
     OpHasMultiSizeLayout        = 0x01000000,
@@ -56,29 +56,29 @@ enum OpCodeAttrEnum
     OpByteCodeOnly              = 0x80000000,
 };
 
-static const int OpcodeAttributes[] = 
+static const int OpcodeAttributes[] =
 {
-#define DEF_OP(name, jnLayout, attrib, ...) attrib, 
+#define DEF_OP(name, jnLayout, attrib, ...) attrib,
 #include "ByteCode\OpCodeList.h"
 #undef DEF_OP
 };
 
-static const int ExtendedOpcodeAttributes[] = 
+static const int ExtendedOpcodeAttributes[] =
 {
-#define DEF_OP(name, jnLayout, attrib, ...) attrib, 
+#define DEF_OP(name, jnLayout, attrib, ...) attrib,
 #include "ByteCode\ExtendedOpCodeList.h"
 #undef DEF_OP
 };
 
-static const int BackendOpCodeAttributes[] = 
+static const int BackendOpCodeAttributes[] =
 {
-#define DEF_OP(name, jnLayout, attrib, ...) attrib, 
+#define DEF_OP(name, jnLayout, attrib, ...) attrib,
 #include "BackendOpCodeList.h"
 #undef DEF_OP
 };
 
 static const int GetOpCodeAttributes(Js::OpCode op)
-{    
+{
     if (op <= Js::OpCode::MaxByteSizedOpcodes)
     {
         Assert(op < _countof(OpcodeAttributes));
@@ -89,7 +89,7 @@ static const int GetOpCodeAttributes(Js::OpCode op)
         uint opIndex = op - (Js::OpCode::MaxByteSizedOpcodes + 1);
         Assert(opIndex < _countof(ExtendedOpcodeAttributes));
         __analysis_assume(opIndex < _countof(ExtendedOpcodeAttributes));
-        return ExtendedOpcodeAttributes[opIndex];        
+        return ExtendedOpcodeAttributes[opIndex];
     }
     uint opIndex = op - (Js::OpCode::ByteCodeLast + 1);
     Assert(opIndex < _countof(BackendOpCodeAttributes));

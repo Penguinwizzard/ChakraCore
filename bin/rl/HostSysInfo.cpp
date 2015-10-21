@@ -28,4 +28,3 @@ HostSystemInfo::HostSystemInfo()
         deviceInfoRetrieved = false;
     }
 }
-

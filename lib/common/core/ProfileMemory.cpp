@@ -43,7 +43,7 @@ MemoryProfiler::EnsureMemoryProfiler()
     if (memoryProfiler == nullptr)
     {
         memoryProfiler = NoCheckHeapNew(MemoryProfiler);
-        
+
         {
             AutoCriticalSection autocs(&s_cs);
             memoryProfiler->next = MemoryProfiler::profilers.Detach();
@@ -231,8 +231,8 @@ MemoryProfiler::Print()
     }
     if (hasData)
     {
-        Output::Print(L"%-10s:%-20s | %-15s | %-15s | %10s | %10s | %10s | %10s\n", L"", L"         Current", L"   Alloc Seg", L"    Free Seg",
-            L"Request", L"Released", L"Decommited", L"Recommited");
+        Output::Print(L"%-10s:%-20s | %-15s | %-15s | %10s | %10s | %11s | %11s\n", L"", L"         Current", L"   Alloc Seg", L"    Free Seg",
+            L"Request", L"Released", L"Decommitted", L"Recommitted");
         Output::Print(L"%-10s:%9s %10s | %4s %10s | %4s %10s | %10s | %10s | %10s | %10s\n", L"", L"Bytes", L"Peak", L"#", L"Bytes", L"#", L"Bytes",
              L"Bytes", L"Bytes", L"Bytes",  L"Bytes");
         Output::Print(L"------------------------------------------------------------------------------------------------------------------\n");

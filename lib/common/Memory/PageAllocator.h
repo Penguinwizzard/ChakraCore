@@ -78,7 +78,7 @@ struct SecondaryAllocation
 //
 // For every page segment a page allocator can create a secondary allocator which can have a specified
 // number of pages reserved for secondary allocations. These pages are always reserved at the end of the
-// segment. The PageAllocator itself cannot allocate from the region demarkated for the secondary allocator.
+// segment. The PageAllocator itself cannot allocate from the region demarcated for the secondary allocator.
 // Currently this is used for xdata allocations.
 //
 class SecondaryAllocator
@@ -129,7 +129,7 @@ public:
         return false;
     }
 #endif
-    
+
     bool IsInSegment(void* address) const
     {
         void* start = static_cast<void*>(GetAddress());
@@ -241,7 +241,7 @@ public:
     {
         return this->freePageCount == this->GetAvailablePageCount();
     }
-    
+
     //
     // If a segment has decommitted pages - then it's not considered full as allocations can take place from it
     // However, if secondary allocations cannot be made from it - it's considered full nonetheless
@@ -304,7 +304,7 @@ private:
 
     PageBitVector freePages;
     PageBitVector decommitPages;
-    
+
     uint     freePageCount;
     uint     decommitPageCount;
 };
@@ -356,7 +356,7 @@ public:
 
     static uint const DefaultMaxAllocPageCount = 32;        // 128K
     static uint const DefaultSecondaryAllocPageCount = 0;
-    
+
     static size_t GetProcessUsedBytes();
 
     static size_t GetAndResetMaxUsedBytes();
@@ -382,7 +382,7 @@ public:
     {
         Assert(false);
     }
-    
+
     virtual void TrackDecommitedPages(void * address, uint pageCount, __in void* segment)
     {
         Assert(false);
@@ -427,7 +427,7 @@ public:
     AllocationPolicyManager * GetAllocationPolicyManager() { return policyManager; }
 
     uint GetMaxAllocPageCount();
-    
+
     //VirtualAllocator APIs
     TVirtualAlloc * GetVirtualAllocator() { return virtualAllocator; }
     void SetVirtualAllocator(TVirtualAlloc * virtualAllocator)
@@ -441,7 +441,7 @@ public:
 
     PageAllocation * AllocPagesForBytes(size_t requestedBytes);
     PageAllocation * AllocAllocation(size_t pageCount);
-    
+
     void ReleaseAllocation(PageAllocation * allocation);
     void ReleaseAllocationNoSuspend(PageAllocation * allocation);
 
@@ -487,11 +487,11 @@ public:
     bool ValidThreadAccess()
     {
         DWORD currentThreadId = ::GetCurrentThreadId();
-        return disableThreadAccessCheck || 
+        return disableThreadAccessCheck ||
             (this->concurrentThreadId == -1 && this->threadContextHandle == NULL) ||  // JIT thread after close
             (this->concurrentThreadId != -1 && this->concurrentThreadId == currentThreadId) ||
             this->threadContextHandle == GetCurrentThreadContextId();
-    }   
+    }
     virtual void UpdateThreadContextHandle(ThreadContextId updatedThreadContextHandle) { threadContextHandle = updatedThreadContextHandle; }
     void SetConcurrentThreadId(DWORD threadId) { this->concurrentThreadId = threadId; }
     void ClearConcurrentThreadId() { this->concurrentThreadId = (DWORD)-1; }
@@ -548,13 +548,13 @@ protected:
     bool HasZeroPageQueue() const;
     bool ZeroPages() const { return zeroPages; }
     bool QueueZeroPages() const { return queueZeroPages; }
-    
+
     FreePageEntry * PopPendingZeroPage();
 #if DBG
     void Check();
     bool disableThreadAccessCheck;
 #endif
-    
+
 protected:
     // Data
     DListBase<PageSegmentBase<TVirtualAlloc>> segments;
@@ -740,7 +740,7 @@ class HeapPageAllocator : public PageAllocatorBase<TVirtualAlloc>
 {
 public:
     HeapPageAllocator(AllocationPolicyManager * policyManager, bool allocXdata, bool excludeGuardPages);
-    
+
     BOOL ProtectPages(__in char* address, size_t pageCount, __in void* segment, DWORD dwVirtualProtectFlags, DWORD* dwOldVirtualProtectFlags, DWORD desiredOldProtectFlag);
     bool AllocSecondary(void* segment, ULONG_PTR functionStart, DWORD functionSize, ushort pdataCount, ushort xdataSize, SecondaryAllocation* allocation);
     void ReleaseSecondary(const SecondaryAllocation& allocation, void* segment);
@@ -753,7 +753,7 @@ public:
     char *  InitPageSegment();
 
     PageSegmentBase<TVirtualAlloc> * AddPageSegment(DListBase<PageSegmentBase<TVirtualAlloc>>& segmentList);
-    
+
 
 private:
     bool         allocXdata;

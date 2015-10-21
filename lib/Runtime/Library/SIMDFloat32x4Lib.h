@@ -5,7 +5,7 @@
 #pragma once
 
 namespace Js {
-    
+
 
     class SIMDFloat32x4Lib
     {
@@ -54,15 +54,15 @@ namespace Js {
             static FunctionInfo Clamp;
             static FunctionInfo Select;
 
-			//Lane access
-			static FunctionInfo ExtractLane;
-			static FunctionInfo ReplaceLane;
+            //Lane access
+            static FunctionInfo ExtractLane;
+            static FunctionInfo ReplaceLane;
 
             static FunctionInfo Load;
             static FunctionInfo Load1;
             static FunctionInfo Load2;
             static FunctionInfo Load3;
-            
+
             static FunctionInfo Store;
             static FunctionInfo Store1;
             static FunctionInfo Store2;
@@ -81,10 +81,10 @@ namespace Js {
         static Var EntryFromFloat64x2Bits(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryFromInt32x4(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryFromInt32x4Bits(RecyclableObject* function, CallInfo callInfo, ...);
-        
-		// Lane Access
-		static Var EntryExtractLane(RecyclableObject* function, CallInfo callInfo, ...);
-		static Var EntryReplaceLane(RecyclableObject* function, CallInfo callInfo, ...);
+
+        // Lane Access
+        static Var EntryExtractLane(RecyclableObject* function, CallInfo callInfo, ...);
+        static Var EntryReplaceLane(RecyclableObject* function, CallInfo callInfo, ...);
 
         // UnaryOps
         static Var EntryAbs(RecyclableObject* function, CallInfo callInfo, ...);
@@ -93,7 +93,7 @@ namespace Js {
         static Var EntryReciprocal(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryReciprocalSqrt(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntrySqrt(RecyclableObject* function, CallInfo callInfo, ...);
-        // BinaryOps    
+        // BinaryOps
         static Var EntryAdd(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntrySub(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryMul(RecyclableObject* function, CallInfo callInfo, ...);
@@ -119,12 +119,12 @@ namespace Js {
         static Var EntrySelect(RecyclableObject* function, CallInfo callInfo, ...);
 
         static Var EntryLoad(RecyclableObject* function, CallInfo callInfo, ...);
-        static Var EntryLoad1(RecyclableObject* function, CallInfo callInfo, ...); // load X 
+        static Var EntryLoad1(RecyclableObject* function, CallInfo callInfo, ...); // load X
         static Var EntryLoad2(RecyclableObject* function, CallInfo callInfo, ...); // load XY
         static Var EntryLoad3(RecyclableObject* function, CallInfo callInfo, ...); // load XYZ
 
         static Var EntryStore(RecyclableObject* function, CallInfo callInfo, ...);
-        static Var EntryStore1(RecyclableObject* function, CallInfo callInfo, ...); // store X 
+        static Var EntryStore1(RecyclableObject* function, CallInfo callInfo, ...); // store X
         static Var EntryStore2(RecyclableObject* function, CallInfo callInfo, ...); // store XY
         static Var EntryStore3(RecyclableObject* function, CallInfo callInfo, ...); // store XYZ
         // End entry points

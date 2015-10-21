@@ -14,13 +14,13 @@ enum IdleDecommitSignal
 class IdleDecommitPageAllocator : public PageAllocator
 {
 public:
-    IdleDecommitPageAllocator(AllocationPolicyManager * policyManager, PageAllocatorType type, 
+    IdleDecommitPageAllocator(AllocationPolicyManager * policyManager, PageAllocatorType type,
 #ifndef JD_PRIVATE
-        Js::ConfigFlagsTable& flagTable, 
+        Js::ConfigFlagsTable& flagTable,
 #endif
         size_t maxFreePageCount = 0,
         size_t maxIdleFreePageCount = DefaultMaxFreePageCount,
-        bool zeroPages = false, BackgroundPageQueue * backgroundPageQueue = nullptr, 
+        bool zeroPages = false, BackgroundPageQueue * backgroundPageQueue = nullptr,
         size_t maxAllocPageCount = PageAllocator::DefaultMaxAllocPageCount);
 
     void EnterIdleDecommit();
@@ -74,7 +74,7 @@ public:
 
     virtual void SetEnableThreadAccessCheck() override
     {
-        // Can't reenable thread access check for idle decommit page allocator
+        // Can't re-enable thread access check for idle decommit page allocator
         Assert(false);
     }
 #endif

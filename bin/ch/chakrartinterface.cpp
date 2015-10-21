@@ -157,5 +157,3 @@ HRESULT ChakraRTInterface::OnChakraCoreLoaded(TestHooks& testHooks)
 
     return S_OK;
 }
-
-

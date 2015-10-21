@@ -243,7 +243,7 @@ namespace JsUtil
         return false;
     }
 
-    template<class Fn> 
+    template<class Fn>
     void JobProcessor::ForEachManager(Fn fn)
     {
         for (JobManager *curManager = managers.Head(); curManager != NULL; curManager = curManager->Next())
@@ -485,7 +485,7 @@ namespace JsUtil
         else
         {
             int processorCount = AutoSystemInfo::Data.GetNumberOfPhysicalProcessors();
-            //There is 2 threads already in play, one UI (main) thread and a GC thread. So substract 2 from processorCount to account for the same.
+            //There is 2 threads already in play, one UI (main) thread and a GC thread. So subtract 2 from processorCount to account for the same.
             this->maxThreadCount = max(1, min(processorCount - 2, CONFIG_FLAG(MaxJitThreadCount)));
         }
     }
@@ -515,7 +515,7 @@ namespace JsUtil
                     HeapDeleteArray(this->maxThreadCount, this->parallelThreadData);
                     Js::Throw::OutOfMemory();
                 }
-                //Atleast one thread is created, continue
+                // At least one thread is created, continue
                 break;
             }
 
@@ -530,7 +530,7 @@ namespace JsUtil
                 {
                     Js::Throw::OutOfMemory();
                 }
-                //Atleast one thread is created, continue
+                // At least one thread is created, continue
                 break;
             }
 
@@ -544,7 +544,7 @@ namespace JsUtil
                 {
                     Js::Throw::OutOfMemory();
                 }
-                //Atleast one thread is created, continue
+                // At least one thread is created, continue
                 break;
             }
 
@@ -595,8 +595,8 @@ namespace JsUtil
 
     BackgroundJobProcessor::BackgroundJobProcessor(AllocationPolicyManager* policyManager, JsUtil::ThreadService *threadService, bool disableParallelThreads)
         : JobProcessor(true),
-        jobReady(true), 
-        wakeAllBackgroundThreads(false), 
+        jobReady(true),
+        wakeAllBackgroundThreads(false),
         numJobs(0),
         threadId(GetCurrentThreadContextId()),
         threadService(threadService),
@@ -632,7 +632,7 @@ namespace JsUtil
     void BackgroundJobProcessor::WaitWithAllThreadsForThreadStartedOrClosingEvent()
     {
         bool continueWaiting = true;
-        this->IterateBackgroundThreads([&](ParallelThreadData *threadData) 
+        this->IterateBackgroundThreads([&](ParallelThreadData *threadData)
         {
             if (continueWaiting)
             {
@@ -640,7 +640,7 @@ namespace JsUtil
             }
             else
             {
-                //one of the thread is terminated, its sure shutdown scneario. Just reset the waitingForjobs.
+                //one of the thread is terminated, its sure shutdown scenario. Just reset the waitingForjobs.
                 threadData->isWaitingForJobs = false;
             }
             return false;
@@ -725,7 +725,7 @@ namespace JsUtil
         return result == WAIT_OBJECT_0;
 
     }
-   
+
     void BackgroundJobProcessor::AddManager(JobManager *const manager)
     {
         Assert(manager);
@@ -747,31 +747,31 @@ namespace JsUtil
     void BackgroundJobProcessor::IndicateNewJob()
     {
         Assert(criticalSection.IsLocked());
-        
+
         if(NumberOfThreadsWaitingForJobs ())
         {
             if (threadService->HasCallback())
             {
                 Assert(this->threadCount == 1);
                 this->parallelThreadData[0]->isWaitingForJobs = false;
-                
+
                 // Reset the thread event, so we can wait for it on shutdown.
                 this->parallelThreadData[0]->threadStartedOrClosing.Reset();
-                
+
                 // Submit a request to the thread service.
                 bool success = threadService->Invoke(ThreadServiceCallback, this);
                 if (!success)
                 {
                     // The thread service denied our request.
                     // Leave the job in the queue.  If it's needed, it will be processed
-                    // in-thread during PrioritizeJob.  Or alternatively, if a subsequent 
+                    // in-thread during PrioritizeJob.  Or alternatively, if a subsequent
                     // thread service request succeeds, this job will be processed then.
                     this->parallelThreadData[0]->isWaitingForJobs = true;
                 }
             }
             else
             {
-                // Signal the background thread to wake up and process jobs.                
+                // Signal the background thread to wake up and process jobs.
                 jobReady.Set();
             }
         }
@@ -933,7 +933,7 @@ namespace JsUtil
             waitableManager->jobBeingWaitedUpon = 0;
         }
         criticalSection.Leave();
-    }      
+    }
 
     void BackgroundJobProcessor::AddJob(Job *const job, const bool prioritize)
     {
@@ -1015,10 +1015,10 @@ namespace JsUtil
         {
             // Make sure we take decommit action before the threadArena is torn down, in case the
             // thread context goes away and the loop exits.
-            struct AutoDecommit 
+            struct AutoDecommit
             {
                 AutoDecommit(JobProcessor *proc, ParallelThreadData *data) : processor(proc), threadData(data) {}
-                ~AutoDecommit() 
+                ~AutoDecommit()
                 {
                     processor->ForEachManager([this](JobManager *manager){
                         manager->OnDecommit(this->threadData);
@@ -1049,7 +1049,7 @@ namespace JsUtil
                         // When new jobs are submitted, we will be called to process again.
                         return;
                     }
-                
+
                     WaitForJobReadyOrShutdown(threadData);
 
                     JS_ETW(EventWriteJSCRIPT_NATIVECODEGEN_START(this, 0));
@@ -1146,7 +1146,7 @@ namespace JsUtil
                     LastJobProcessed(manager); // the manager may be deleted during this and should not be used afterwards
                 }
             }
-                
+
             // Managers will remove themselves, so not removing managers here
 
             JobProcessor::Close();
@@ -1165,7 +1165,7 @@ namespace JsUtil
 
         if (threadsWaitingForJobs)
         {
-            //There is no reset for this. It will be signalled until all the threads get out of their hibernation.
+            //There is no reset for this. It will be signaled until all the threads get out of their hibernation.
             wakeAllBackgroundThreads.Set();
         }
 
@@ -1222,21 +1222,21 @@ namespace JsUtil
         ParallelThreadData * threadData = static_cast<ParallelThreadData *>(lpParam);
         BackgroundJobProcessor *const processor = threadData->processor;
 
-        // Indicate to the constructor that the thread has fully started. 
+        // Indicate to the constructor that the thread has fully started.
         threadData->threadStartedOrClosing.Set();
 
 #if DBG
         threadData->backgroundPageAllocator.SetConcurrentThreadId(GetCurrentThreadId());
 #endif
-        __try 
+        __try
         {
             processor->Run(threadData);
         }
         __except(ExceptFilter(GetExceptionInformation()))
-        {        
+        {
             Assert(false);
         }
-            
+
         // Indicate to Close that the thread is about to exit. This has to be done before CoUninitialize because CoUninitialize
         // may require the loader lock and if Close was called while holding the loader lock during DLL_THREAD_DETACH, it could
         // end up waiting forever, causing a deadlock.
@@ -1285,11 +1285,11 @@ namespace JsUtil
 
         Assert(jobProcessor->threadCount == 1);
 #if DBG
-        jobProcessor->parallelThreadData[0]->backgroundPageAllocator.SetConcurrentThreadId(GetCurrentThreadId()); 
+        jobProcessor->parallelThreadData[0]->backgroundPageAllocator.SetConcurrentThreadId(GetCurrentThreadId());
 #endif
-       
+
         jobProcessor->Run(jobProcessor->parallelThreadData[0]);
-        
+
 #if DBG
         jobProcessor->parallelThreadData[0]->backgroundPageAllocator.ClearConcurrentThreadId();
 #endif
@@ -1310,7 +1310,7 @@ namespace JsUtil
             {
                 return false;
             }
-            //Atleast one thread was not waiting for jobs.
+            // At least one thread was not waiting for jobs.
             isAnyThreadNotWaitingForJobs = true;
             return true;
         });
@@ -1328,7 +1328,7 @@ namespace JsUtil
         {
             if (parallelThreadData->isWaitingForJobs)
             {
-                //Atleast one thread is waiting for jobs.
+                // At least one thread is waiting for jobs.
                 countOfThreadsWaitingForJobs++;
             }
             return false;
@@ -1366,7 +1366,7 @@ namespace JsUtil
     void BackgroundJobProcessor::DissociatePageAllocator(PageAllocator* const pageAllocator)
     {
         // This function is called from the foreground thread
-#if DBG      
+#if DBG
         // Assert that the dissociation is happening in the same thread that created the background job processor
         Assert(GetCurrentThreadContextId() == this->threadId);
         pageAllocator->ClearConcurrentThreadId();
@@ -1383,7 +1383,7 @@ namespace JsUtil
         L"BackgroundJobProcessor thread 5",
         L"BackgroundJobProcessor thread 6",
         L"BackgroundJobProcessor thread 7",
-        L"BackgroundJobProcessor thread 8" 
+        L"BackgroundJobProcessor thread 8"
         L"BackgroundJobProcessor thread 9",
         L"BackgroundJobProcessor thread 10",
         L"BackgroundJobProcessor thread 11",

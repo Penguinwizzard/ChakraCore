@@ -12,11 +12,11 @@ namespace Js
         static PropertyId specialPropertyIds[];
 
     protected:
-        DEFINE_VTABLE_CTOR_ABSTRACT(ArgumentsObject, DynamicObject);         
+        DEFINE_VTABLE_CTOR_ABSTRACT(ArgumentsObject, DynamicObject);
     public:
-        ArgumentsObject(DynamicType * type) : DynamicObject(type) 
-        { 
-            Assert(type->GetTypeId() == TypeIds_Arguments); 
+        ArgumentsObject(DynamicType * type) : DynamicObject(type)
+        {
+            Assert(type->GetTypeId() == TypeIds_Arguments);
         }
         Var GetCaller(ScriptContext * scriptContext);
         static Var GetCaller(ScriptContext * scriptContext, JavascriptStackWalker *walker, bool skipGlobal);
@@ -24,7 +24,7 @@ namespace Js
         static bool Is(Var aValue);
 
         virtual BOOL GetDiagValueString(StringBuilder<ArenaAllocator>* stringBuilder, ScriptContext* requestContext) override;
-        virtual BOOL GetDiagTypeString(StringBuilder<ArenaAllocator>* stringBuilder, ScriptContext* requestContext) override;        
+        virtual BOOL GetDiagTypeString(StringBuilder<ArenaAllocator>* stringBuilder, ScriptContext* requestContext) override;
         virtual BOOL GetEnumerator(BOOL enumNonEnumerable, Var* enumerator, ScriptContext * requestContext, bool preferSnapshotSemantics = true, bool enumSymbols = false) override;
 
         virtual uint32 GetNumberOfArguments() const = 0;
@@ -37,14 +37,14 @@ namespace Js
     class ES5HeapArgumentsObject;
 
     // The arguments passed to a function are cached as follows:
-    //   1) any formal (ie. named) arguments are copied to the ActivationObject hung off
+    //   1) any formal (i.e. named) arguments are copied to the ActivationObject hung off
     //      a HeapArgumentObject where they can be referenced by name
-    //   2) any additional actual arguments are stored as an index property on that HeapArgumentObject 
+    //   2) any additional actual arguments are stored as an index property on that HeapArgumentObject
     //
     // See JavascriptOperators::LoadHeapArguments for details of HeapArgumentObject creation.
     //
-    // If a function has named arguments, the array elements of the Arguments object are synonymous for 
-    // the local variables that hold the function arguments. This no longer holds true, however, if an 
+    // If a function has named arguments, the array elements of the Arguments object are synonymous for
+    // the local variables that hold the function arguments. This no longer holds true, however, if an
     // array element of the Argument object is deleted.
 
     class HeapArgumentsObject : public ArgumentsObject
@@ -58,7 +58,7 @@ namespace Js
         uint32              numOfArguments:31;
         uint32              callerDeleted:1;
 
-        DEFINE_MARSHAL_OBJECT_TO_SCRIPT_CONTEXT(HeapArgumentsObject);   
+        DEFINE_MARSHAL_OBJECT_TO_SCRIPT_CONTEXT(HeapArgumentsObject);
 
     protected:
         uint32              formalCount;
@@ -82,7 +82,7 @@ namespace Js
         virtual BOOL GetProperty(Var originalInstance, JavascriptString* propertyNameString, Var* value, PropertyValueInfo* info, ScriptContext* requestContext) override;
         virtual BOOL GetPropertyReference(Var originalInstance, PropertyId propertyId, Var* value, PropertyValueInfo* info, ScriptContext* requestContext) override;
         virtual BOOL SetProperty(PropertyId propertyId, Var value, PropertyOperationFlags flags, PropertyValueInfo* info) override;
-        virtual BOOL SetProperty(JavascriptString* propertyNameString, Var value, PropertyOperationFlags flags, PropertyValueInfo* info) override;        
+        virtual BOOL SetProperty(JavascriptString* propertyNameString, Var value, PropertyOperationFlags flags, PropertyValueInfo* info) override;
         virtual BOOL HasItem(uint32 index) override;
         virtual BOOL GetItem(Var originalInstance, uint32 index, Var* value, ScriptContext * requestContext) override;
         virtual BOOL GetItemReference(Var originalInstance, uint32 index, Var* value, ScriptContext * requestContext) override;
@@ -93,7 +93,7 @@ namespace Js
         virtual uint32 GetNextFormalArgIndex(uint32 index, BOOL enumNonEnumerable = FALSE, PropertyAttributes* attributes = nullptr) const override;
         virtual Var GetHeapArguments() { return this; }
         virtual void SetHeapArguments(HeapArgumentsObject *args)
-        { 
+        {
             AssertMsg(false, "Should never get here");
         }
         virtual BOOL AdvanceWalkerToArgsFrame(JavascriptStackWalker *walker) override;
@@ -122,17 +122,17 @@ namespace Js
         BOOL IsFormalArgument(PropertyId propertyId);
         BOOL IsFormalArgument(PropertyId propertyId, uint32* pIndex);    // Checks whether property is numeric, and on success sets that index.
         BOOL IsArgumentDeleted(uint32 index) const;
-        const ActivationObject* const GetFrameObject() { return frameObject; }        
+        const ActivationObject* const GetFrameObject() { return frameObject; }
     };
 
     // ES5 version of the HeapArgumentsObject: support for attributes on formal arguments.
     //   - Unless the user deals with SetWritable/Enumerable/Configurable/Accessors, regular HeapArgumentsObject is used.
     //   - When SetWritable/Enumerable/Configurable/Accessors is called, convert HeapArgumentsObject  to ES5HeapArgumentsObject by swapping vtable.
     //   - Override GetItemAt/SetItemAt -- for disconnected items force GetItem/SetItem to use "this" rather than from frameObject.
-    //   - Override GetEnumerator -- take care of enumerable = false arbuments.
+    //   - Override GetEnumerator -- take care of enumerable = false arguments.
     //   - The “disconnect” happens when (as ES5 spec says) setting writable to false and setting accessors.
     // Note: This implementation depends on v-table swapping so that HeapArgumentsObject instance can be
-    //       converted to ES5HeapArgumentsObject at runtime when ES5 attribute/getter/setter support is needed. 
+    //       converted to ES5HeapArgumentsObject at runtime when ES5 attribute/getter/setter support is needed.
     //       Thus, CAUTION: as a result, this class can't add any new instance fields,
     //       as the size of the instance must be same.
     class ES5HeapArgumentsObject : public HeapArgumentsObject
@@ -154,7 +154,7 @@ namespace Js
 
     private:
         DEFINE_VTABLE_CTOR(ES5HeapArgumentsObject, HeapArgumentsObject);
-        DEFINE_MARSHAL_OBJECT_TO_SCRIPT_CONTEXT(ES5HeapArgumentsObject);   
+        DEFINE_MARSHAL_OBJECT_TO_SCRIPT_CONTEXT(ES5HeapArgumentsObject);
         uint32 GetNextFormalArgIndexHelper(uint32 index, BOOL enumNonEnumerable, PropertyAttributes* attributes = nullptr) const;
 
     public:

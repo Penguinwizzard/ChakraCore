@@ -368,7 +368,7 @@ namespace Js
         // list is cleared. The list is also cleared before garbage collection so that it does not keep growing, and so, it can
         // hold strong references to the types.
         //
-        // The cache is used by the type-without-property local inline cache. When setting a property on a type that doens't
+        // The cache is used by the type-without-property local inline cache. When setting a property on a type that doesn't
         // have the property, to determine whether to promote the object like an object of that type was last promoted, we need
         // to ensure that objects in the prototype chain have not acquired a readonly property or setter (ideally, only for that
         // property ID, but we just check for any such property). This cache is used to avoid doing this many times, especially
@@ -467,7 +467,7 @@ namespace Js
         void Initialize(ScriptContext* scriptContext, GlobalObject * globalObject);
         void Uninitialize();
         GlobalObject* GetGlobalObject() const { return globalObject; }
-        ScriptContext* GetScriptContext() const { return scriptContext; }        
+        ScriptContext* GetScriptContext() const { return scriptContext; }
 
         Recycler * GetRecycler() const { return recycler; }
         Var GetPI() { return pi; }
@@ -743,7 +743,7 @@ namespace Js
         JavascriptExternalFunction* CreateExternalConstructor(Js::ExternalMethod entryPoint, PropertyId nameId, InitializeMethod method, unsigned short deferredTypeSlots, bool hasAccessors);
         static DynamicTypeHandler * GetDeferredPrototypeGeneratorFunctionTypeHandler(ScriptContext* scriptContext);
         DynamicType * CreateDeferredPrototypeGeneratorFunctionType(JavascriptMethod entrypoint, bool isAnonymousFunction, bool isShared = false);
-        
+
         static DynamicTypeHandler * GetDeferredPrototypeFunctionTypeHandler(ScriptContext* scriptContext);
         static DynamicTypeHandler * GetDeferredAnonymousPrototypeFunctionTypeHandler();
         static DynamicTypeHandler * GetDeferredAnonymousPrototypeGeneratorFunctionTypeHandler();
@@ -755,7 +755,7 @@ namespace Js
         static DynamicTypeHandler * GetDeferredFunctionTypeHandlerBase();
         template<bool isNameAvailable, bool isPrototypeAvailable = true>
         static DynamicTypeHandler * GetDeferredGeneratorFunctionTypeHandlerBase();
-        
+
         DynamicType * CreateDeferredPrototypeFunctionType(JavascriptMethod entrypoint);
         DynamicType * CreateDeferredPrototypeFunctionTypeNoProfileThunk(JavascriptMethod entrypoint, bool isShared = false);
         DynamicType * CreateFunctionType(JavascriptMethod entrypoint, RecyclableObject* prototype = nullptr);
@@ -782,7 +782,7 @@ namespace Js
         JavascriptExternalFunction* CreateExternalFunction(ExternalMethod entryPointer, PropertyId nameId, Var signature, JavascriptTypeId prototypeTypeId, UINT64 flags);
         JavascriptExternalFunction* CreateExternalFunction(ExternalMethod entryPointer, Var nameId, Var signature, JavascriptTypeId prototypeTypeId, UINT64 flags);
         JavascriptExternalFunction* CreateStdCallExternalFunction(StdCallJavascriptMethod entryPointer, PropertyId nameId, void *callbackState);
-        JavascriptExternalFunction* CreateStdCallExternalFunction(StdCallJavascriptMethod entryPointer, Var nameId, void *callbackState);        
+        JavascriptExternalFunction* CreateStdCallExternalFunction(StdCallJavascriptMethod entryPointer, Var nameId, void *callbackState);
         JavascriptPromiseAsyncSpawnExecutorFunction* CreatePromiseAsyncSpawnExecutorFunction(JavascriptMethod entryPoint, JavascriptGenerator* generatorFunction, Var target);
         JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction* CreatePromiseAsyncSpawnStepArgumentExecutorFunction(JavascriptMethod entryPoint, JavascriptGenerator* generator, Var argument, JavascriptFunction* resolve = NULL, JavascriptFunction* reject = NULL, bool isReject = false);
         JavascriptPromiseCapabilitiesExecutorFunction* CreatePromiseCapabilitiesExecutorFunction(JavascriptMethod entryPoint, JavascriptPromiseCapability* capability);
@@ -871,7 +871,7 @@ namespace Js
             {
                 Assert(!builtInFuncs[index] || (index == GetBuiltInForFuncInfo(builtInFuncs[index]->GetFunctionInfo(), scriptContext)));
             }
-           
+
         }
 #endif
         static BOOL CanFloatPreferenceFunc(BuiltinFunction index);
@@ -1072,7 +1072,7 @@ namespace Js
                 RECYCLER_PERF_COUNTER_SUB(PropertyRecordBindReference, this->referencedPropertyRecords->Count());
             }
         }
-        
+
 #if DBG
         void DumpLibraryByteCode();
 #endif

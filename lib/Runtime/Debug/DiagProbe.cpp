@@ -161,7 +161,7 @@ namespace Js
         returnedValueRecordingDepth--;
     }
 
-    void StepController::ResetReturnedValueList() 
+    void StepController::ResetReturnedValueList()
     {
         returnedValueRecordingDepth = 0;
         if (this->returnedValueList != nullptr)
@@ -210,7 +210,7 @@ namespace Js
         stepType = STEP_NONE;
         byteOffset = Js::Constants::NoByteCodeOffset;
         statementMap = NULL;
-        
+
         frameCountWhenSet = 0;
         scriptIdWhenSet = InvalidScriptId;
         frameAddrWhenSet = (size_t)-1;
@@ -265,7 +265,7 @@ namespace Js
             OUTPUT_TRACE(Js::DebuggerPhase, L"StepController::IsStepComplete(stepType = %d) returning false ", stepType);
             return false;
         }
-        else if (STEP_OUT == stepType) 
+        else if (STEP_OUT == stepType)
         {
             fCanHalt = this->frameCountWhenSet > currentFrameCount && canPossiblyHalt;
         }
@@ -334,7 +334,7 @@ namespace Js
 
         if (body != nullptr)
         {
-            // FYI - Different script blocks within a html page will have different source Info ids even though they have the same backing file.
+            // FYI - Different script blocks within a HTML page will have different source Info ids even though they have the same backing file.
             // It might imply we notify the debugger a bit more than needed - thus can be TODO for performance improvements of the Just-My-Code
             // or step to next document boundary mode.
             AssertMsg(body->GetUtf8SourceInfo() != nullptr, "body->GetUtf8SourceInfo() == nullptr");
@@ -366,7 +366,7 @@ namespace Js
 
     bool AsyncBreakController::IsAtStoppingLocation(InterpreterHaltState* haltState)
     {
-        HaltCallback* callback = this->haltCallback;        
+        HaltCallback* callback = this->haltCallback;
         if (callback)
         {
             return callback->CanHalt(haltState);
@@ -376,7 +376,7 @@ namespace Js
 
     void AsyncBreakController::DispatchAndReset(InterpreterHaltState* haltState)
     {
-        HaltCallback* callback = this->haltCallback;        
+        HaltCallback* callback = this->haltCallback;
         Deactivate();
         if (callback)
         {

@@ -66,7 +66,7 @@ namespace Js
         guestArena(nullptr),
         raiseMessageToDebuggerFunctionType(nullptr),
         transitionToDebugModeIfFirstSourceFn(nullptr),
-        lastTimeZoneUpdateTickCount(0),        
+        lastTimeZoneUpdateTickCount(0),
         sourceSize(0),
         deferredBody(false),
         isScriptContextActuallyClosed(false),
@@ -132,7 +132,7 @@ namespace Js
 #endif
 #ifdef FIELD_ACCESS_STATS
         , fieldAccessStatsByFunctionNumber(nullptr)
-#endif        
+#endif
         , webWorkerId(Js::Constants::NonWebWorkerContextId)
         , url(L"")
         , startupComplete(false)
@@ -273,7 +273,7 @@ namespace Js
     }
 
     void ScriptContext::InitializeAllocations()
-    {        
+    {
         this->charClassifier = Anew(GeneralAllocator(), CharClassifier, this);
 
         this->valueOfInlineCache = AllocatorNewZ(InlineCacheAllocator, GetInlineCacheAllocator(), InlineCache);
@@ -300,9 +300,9 @@ namespace Js
         intConstPropsOnGlobalObject = Anew(GeneralAllocator(), PropIdSetForConstProp, GeneralAllocator());
         intConstPropsOnGlobalUserObject = Anew(GeneralAllocator(), PropIdSetForConstProp, GeneralAllocator());
 
-        // ToDo (SaAgarwa): DebugContext should only be needed during debugLaunch/Attach it should be created then
+        // TODO (SaAgarwa): DebugContext should only be needed during debugLaunch/Attach it should be created then
         // Will do it in next checkin as I have moved ProbeContainer from ScriptContext to DebugContext which was a field on ScriptContext and not a pointer
-        // All places which access scriptContext.diagProbesContainer needs to have check of IsInDebugOrSourceRundownMode to gurantee DebugContext
+        // All places which access scriptContext.diagProbesContainer needs to have check of IsInDebugOrSourceRundownMode to guarantee DebugContext
         this->debugContext = HeapNew(DebugContext, this);
     }
 #ifdef BODLOG
@@ -666,7 +666,7 @@ namespace Js
             this->debugContext = nullptr;
         }
 
-        // Need to print this out beform the native code gen is deleted
+        // Need to print this out before the native code gen is deleted
         // which will delete the codegenProfiler
 
 #ifdef PROFILE_EXEC
@@ -768,7 +768,7 @@ namespace Js
         return true;
     }
 
-    PropertyString* ScriptContext::GetPropertyString2(wchar_t ch1, wchar_t ch2) 
+    PropertyString* ScriptContext::GetPropertyString2(wchar_t ch1, wchar_t ch2)
     {
         if (ch1 < '0' || ch1 > 'z' || ch2 < '0' || ch2 > 'z')
         {
@@ -854,7 +854,7 @@ namespace Js
             BOOL isIndex = JavascriptArray::GetIndex(name->GetBuffer(), &index);
             if (isNumericPropertyId != isIndex)
             {
-                // WOOB 1137798: JavascriptArray::GetIndex does not handle embeded NULLs. So if we have a property
+                // WOOB 1137798: JavascriptArray::GetIndex does not handle embedded NULLs. So if we have a property
                 // name "1234\0", JavascriptArray::GetIndex would incorrectly accepts it as an array index property
                 // name.
                 Assert((size_t)(name->GetLength()) != wcslen(name->GetBuffer()));
@@ -2080,16 +2080,16 @@ namespace Js
             charcount_t len = key.str.GetLength();
             if (dict->TryGetValue(key, ppFuncScript))
             {
-                Output::Print(L"EvalMap cache hit:\t souce size = %d\n", len);
+                Output::Print(L"EvalMap cache hit:\t source size = %d\n", len);
             }
             else
             {
-                Output::Print(L"EvalMap cache miss:\t souce size = %d\n", len);
+                Output::Print(L"EvalMap cache miss:\t source size = %d\n", len);
             }
         }
 #endif
 
-        // If eval map cleanup is false, to preserve existing behavior, add it to the eval map mru list
+        // If eval map cleanup is false, to preserve existing behavior, add it to the eval map MRU list
         bool success = dict->TryGetValue(key, ppFuncScript);
 
         if (success)
@@ -2162,7 +2162,7 @@ namespace Js
             return false;
         }
 
-        // If eval map cleanup is false, to preserve existing behavior, add it to the eval map mru list
+        // If eval map cleanup is false, to preserve existing behavior, add it to the eval map MRU list
         bool success = this->cache->newFunctionCache->TryGetValue(key, ppFuncBody);
         if (success)
         {
@@ -2532,7 +2532,7 @@ namespace Js
                 {
                     pProfilerCallback3->SetWebWorkerId(webWorkerId);
                     pProfilerCallback3->Release();
-                    // Omitting the HRESULT since it is up to the callback to make use of the webworker information.
+                    // Omitting the HRESULT since it is up to the callback to make use of the webWorker information.
                 }
             }
 
@@ -2587,7 +2587,7 @@ namespace Js
 
         OUTPUT_TRACE(Js::ScriptProfilerPhase, L"ScriptContext::DeRegisterProfileProbe\n");
 
-        // Aquire the code gen working queue - we are going to change the thunks
+        // Acquire the code gen working queue - we are going to change the thunks
         NativeCodeGenerator *pNativeCodeGen = this->GetNativeCodeGenerator();
         Assert(pNativeCodeGen);
         {
@@ -2679,7 +2679,7 @@ namespace Js
 
     HRESULT ScriptContext::RegisterAllScripts()
     {
-        AssertMsg(m_pProfileCallback != nullptr, "Called register scripts when we dont have profile callback");
+        AssertMsg(m_pProfileCallback != nullptr, "Called register scripts when we don't have profile callback");
 
         OUTPUT_TRACE(Js::ScriptProfilerPhase, L"ScriptContext::RegisterAllScripts started\n");
 
@@ -2757,18 +2757,18 @@ namespace Js
             shouldPerformSourceRundown = true;
         }
 
-        // Rundown on all exisiting functions and change their thunks so that they will go to debug mode once they are called.
+        // Rundown on all existing functions and change their thunks so that they will go to debug mode once they are called.
 
         HRESULT hr = OnDebuggerAttachedDetached(/*attach*/ true);
         if (SUCCEEDED(hr))
         {
-            // Disable QC while functions are re-parsed as this can be time consuming 
+            // Disable QC while functions are re-parsed as this can be time consuming
             AutoDisableInterrupt autoDisableInterrupt(this->threadContext->GetInterruptPoller(), true);
 
             if ((hr = this->GetDebugContext()->RundownSourcesAndReparse(shouldPerformSourceRundown, /*shouldReparseFunctions*/ true)) == S_OK)
             {
                 HRESULT hr2 = this->GetLibrary()->EnsureReadyIfHybridDebugging(); // Prepare library if hybrid debugging attach
-                Assert(hr2 != E_FAIL);   // Ommiting hresult
+                Assert(hr2 != E_FAIL);   // Omitting HRESULT
             }
 
             if (!this->IsClosed())
@@ -2778,7 +2778,7 @@ namespace Js
 #ifdef ASMJS_PLAT
                     TempArenaAllocatorObject* tmpAlloc = GetTemporaryAllocator(L"DebuggerTransition");
                     debugTransitionAlloc = tmpAlloc->GetAllocator();
-                    
+
                     asmJsEnvironmentMap = Anew(debugTransitionAlloc, AsmFunctionMap, debugTransitionAlloc);
 #endif
 
@@ -2849,7 +2849,7 @@ namespace Js
             // Move the debugger into source rundown mode.
             this->GetDebugContext()->SetInSourceRundownMode();
 
-            // Disable QC while functions are re-parsed as this can be time consuming 
+            // Disable QC while functions are re-parsed as this can be time consuming
             AutoDisableInterrupt autoDisableInterrupt(this->threadContext->GetInterruptPoller(), true);
 
             // Force a reparse so that indirect function caches are updated.
@@ -3053,7 +3053,7 @@ namespace Js
         if (FAILED(hr = this->javascriptLibrary->ProfilerRegisterBuiltIns()))
         {
             return hr;
-        }        
+        }
 
         // External Library
         if (RegisterExternalLibrary != NULL)
@@ -3168,7 +3168,7 @@ namespace Js
         }
         Assert(pFunction->IsScriptFunction());
 
-        // Excluding the internal library code, which is not debugg-able already
+        // Excluding the internal library code, which is not debuggable already
         if (!proxy->GetUtf8SourceInfo()->GetIsLibraryCode())
         {
             // Reset the constructor cache to default, so that it will not pick up the cached type, created before debugging.
@@ -3197,7 +3197,7 @@ namespace Js
         {
             if (!(proxy->GetUtf8SourceInfo()->GetIsLibraryCode() || pBody->IsByteCodeDebugMode()))
             {
-                // Identifing if any function escaped for not being in debug mode. (This can be removed as a part of TFS : 935011)
+                // Identifying if any function escaped for not being in debug mode. (This can be removed as a part of TFS : 935011)
                 Throw::FatalInternalError();
             }
         }
@@ -3326,7 +3326,7 @@ namespace Js
         {
             function->SetEntryPoint(function->GetFunctionInfo()->GetOriginalEntryPoint());
         }
-    }     
+    }
 
     JavascriptMethod ScriptContext::GetProfileModeThunk(JavascriptMethod entryPoint)
     {
@@ -3453,7 +3453,7 @@ namespace Js
 
         JavascriptMethod entryPoint = Js::JavascriptFunction::DeferredDeserialize(function);
 
-        //To get the scriptContext; we only need the functionproxy
+        //To get the scriptContext; we only need the FunctionProxy
         FunctionProxy *pRootBody = function->GetFunctionProxy();
         ScriptContext *pScriptContext = pRootBody->GetScriptContext();
         if (pScriptContext->IsProfiling() && !pRootBody->GetFunctionBody()->HasFunctionCompiledSent())
@@ -3565,7 +3565,7 @@ namespace Js
         HRESULT hrOfEnterEvent = S_OK;
 
         // We can come here when profiling is not on
-        // eg. User starts profiling, we update all thinks and then stop profiling - we dont update thunk
+        // e.g. User starts profiling, we update all thinks and then stop profiling - we don't update thunk
         // So we still get this call
         const bool fProfile = (isUserCode || isProfilingUserCode) // Only report user code or entry library code
             && scriptContext->GetProfileInfo(function, scriptId, functionId);
@@ -3589,7 +3589,7 @@ namespace Js
                     OUTPUT_TRACE_DEBUGONLY(Js::ScriptProfilerPhase, L"ScriptContext::ProfileProbeThunk, ProfileSession does not match (%d != %d), functionNumber : %s, functionName : %s\n",
                         pBody->GetProfileSession(), pBody->GetScriptContext()->GetProfileSession(), pBody->GetDebugNumberSet(debugStringBuffer), pBody->GetDisplayName());
                 }
-                AssertMsg(pBody == NULL || pBody->GetProfileSession() == pBody->GetScriptContext()->GetProfileSession(), "Function info wasnt reported for this profile session");
+                AssertMsg(pBody == NULL || pBody->GetProfileSession() == pBody->GetScriptContext()->GetProfileSession(), "Function info wasn't reported for this profile session");
             }
 #endif
 
@@ -3668,7 +3668,7 @@ namespace Js
             if (useDebugWrapper)
             {
                 // For native use wrapper and bail out on to ignore exception.
-                // Extract try-catch out of hot path in normal profile mode (presense of try-catch in a function is bad for perf).
+                // Extract try-catch out of hot path in normal profile mode (presence of try-catch in a function is bad for perf).
                 aReturn = ProfileModeThunk_DebugModeWrapper(function, scriptContext, origEntryPoint, args);
             }
             else
@@ -3875,7 +3875,7 @@ namespace Js
 
         // Create the propertyId as object.functionName if it is not global function
         // the global functions would be recognized by just functionName
-        // eg. with functionName, toString, depending on objectName, it could be Object.toString, or Date.toString
+        // e.g. with functionName, toString, depending on objectName, it could be Object.toString, or Date.toString
         wchar_t szTempName[70];
         if (pwszObjectName != NULL)
         {
@@ -3893,7 +3893,7 @@ namespace Js
             if (cachedFunctionId != functionPropertyId)
             {
                 // This is the scenario where we could be using same function for multiple builtin functions
-                // eg. Error.toString, WinRTError.toString etc.
+                // e.g. Error.toString, WinRTError.toString etc.
                 // We would ignore these extra entrypoints because while profiling, identifying which object's toString is too costly for its worth
                 return S_OK;
             }
@@ -3934,9 +3934,9 @@ namespace Js
         Assert(!this->isClosed);
         Assert(this->guestArena);
         Assert(recycler->IsValidObject(addr));
-#if DBG        
+#if DBG
         Assert(!bindRef.ContainsKey(addr));     // Make sure we don't bind the same pointer twice
-        bindRef.AddNew(addr);       
+        bindRef.AddNew(addr);
 #endif
         if (bindRefChunkCurrent == bindRefChunkEnd)
         {
@@ -4132,7 +4132,7 @@ namespace Js
         if (EnableEvalMapCleanup())
         {
             // The eval map is not re-entrant, so make sure it's not in the middle of adding an entry
-            // Also, dont clean the eval map if the debugger is attached
+            // Also, don't clean the eval map if the debugger is attached
             if (!this->IsInDebugMode())
             {
                 if (this->cache->evalCacheDictionary != nullptr)
@@ -4159,7 +4159,7 @@ namespace Js
         {
             GetDynamicRegexMap()->RemoveRecentlyUnusedItems();
         }
-       
+
         CleanSourceListInternal(true);
     }
 

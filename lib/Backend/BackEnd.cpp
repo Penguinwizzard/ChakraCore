@@ -4,19 +4,19 @@
 //-------------------------------------------------------------------------------------------------------
 #include "BackEnd.h"
 
-NativeCodeGenerator * 
+NativeCodeGenerator *
 NewNativeCodeGenerator(Js::ScriptContext * scriptContext)
 {
     return HeapNew(NativeCodeGenerator, scriptContext);
 }
 
-void 
+void
 DeleteNativeCodeGenerator(NativeCodeGenerator * nativeCodeGen)
 {
     HeapDelete(nativeCodeGen);
 }
-     
-void 
+
+void
 CloseNativeCodeGenerator(NativeCodeGenerator * nativeCodeGen)
 {
     nativeCodeGen->Close();
@@ -42,18 +42,18 @@ CriticalSection *GetNativeCodeGenCriticalSection(NativeCodeGenerator *pNativeCod
 {
     return pNativeCodeGen->Processor()->GetCriticalSection();
 }
-     
+
 ///----------------------------------------------------------------------------
 ///
 /// GenerateFunction
 ///
-///     This is the main entry point for the runtime to call the native code 
-///     generator for js funciton.
+///     This is the main entry point for the runtime to call the native code
+///     generator for js function.
 ///
 ///----------------------------------------------------------------------------
 
-void 
-GenerateFunction(NativeCodeGenerator * nativeCodeGen, Js::FunctionBody * fn, Js::ScriptFunction * function) 
+void
+GenerateFunction(NativeCodeGenerator * nativeCodeGen, Js::FunctionBody * fn, Js::ScriptFunction * function)
 {
     nativeCodeGen->GenerateFunction(fn, function);
 }
@@ -62,8 +62,8 @@ CodeGenAllocators* GetForegroundAllocator(NativeCodeGenerator * nativeCodeGen, P
     return nativeCodeGen->GetCodeGenAllocator(pageallocator);
 }
 #ifdef ENABLE_PREJIT
-void 
-GenerateAllFunctions(NativeCodeGenerator * nativeCodeGen, Js::FunctionBody *fn) 
+void
+GenerateAllFunctions(NativeCodeGenerator * nativeCodeGen, Js::FunctionBody *fn)
 {
     nativeCodeGen->GenerateAllFunctions(fn);
 }
@@ -76,7 +76,7 @@ RejitIRViewerFunction(NativeCodeGenerator *nativeCodeGen, Js::FunctionBody *fn, 
 }
 #endif
 
-void 
+void
 GenerateLoopBody(NativeCodeGenerator *nativeCodeGen, Js::FunctionBody *fn, Js::LoopHeader * loopHeader, Js::EntryPointInfo* info, uint localCount, Js::Var localSlots[])
 {
     nativeCodeGen->GenerateLoopBody(fn, loopHeader, info, localCount, localSlots);
@@ -112,10 +112,10 @@ uint GetBailOutRegisterSaveSlotCount()
     return LinearScanMD::GetRegisterSaveSlotCount();
 }
 
-uint 
+uint
 GetBailOutReserveSlotCount()
 {
-    return 1; //For arugments id
+    return 1; //For arguments id
 }
 
 
@@ -123,9 +123,9 @@ GetBailOutReserveSlotCount()
 void CheckIsExecutable(Js::RecyclableObject * function, Js::JavascriptMethod entrypoint)
 {
     Js::ScriptContext * scriptContext = function->GetScriptContext();
-    // it's easy to call the default entrypoint from RecyclableObject.
+    // it's easy to call the default entry point from RecyclableObject.
     AssertMsg((Js::JavascriptFunction::Is(function) && Js::JavascriptFunction::FromVar(function)->IsExternalFunction())
-        || Js::CrossSite::IsThunk(entrypoint) || !scriptContext->IsActuallyClosed() || 
+        || Js::CrossSite::IsThunk(entrypoint) || !scriptContext->IsActuallyClosed() ||
         (scriptContext->GetThreadContext()->IsScriptActive() && !Js::JavascriptConversion::IsCallable(function)),
         "Can't call function when the script context is closed");
 
@@ -139,7 +139,7 @@ void CheckIsExecutable(Js::RecyclableObject * function, Js::JavascriptMethod ent
     }
     if (Js::JavascriptOperators::GetTypeId(function) == Js::TypeIds_HostDispatch)
     {
-        AssertMsg(false, "Has to go thru CallRootFunction to start calling javascript function");
+        AssertMsg(false, "Has to go through CallRootFunction to start calling Javascript function");
     }
     else if (Js::JavascriptFunction::Is(function))
     {
@@ -153,12 +153,12 @@ void CheckIsExecutable(Js::RecyclableObject * function, Js::JavascriptMethod ent
         }
         else
         {
-            AssertMsg(false, "Has to go thru CallRootFunction to start calling javascript function");
+            AssertMsg(false, "Has to go through CallRootFunction to start calling Javascript function");
         }
     }
     else
     {
-        AssertMsg(false, "Has to go thru CallRootFunction to start calling javascript function");
+        AssertMsg(false, "Has to go through CallRootFunction to start calling Javascript function");
     }
 }
 #endif

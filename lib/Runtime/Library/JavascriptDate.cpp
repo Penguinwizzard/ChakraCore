@@ -10,14 +10,14 @@
 #endif
 
 namespace Js
-{    
-    JavascriptDate::JavascriptDate(double value, DynamicType * type) 
+{
+    JavascriptDate::JavascriptDate(double value, DynamicType * type)
         : DynamicObject(type), m_date(value, type->GetScriptContext())
     {
         Assert(IsDateTypeId(type->GetTypeId()));
     }
 
-    JavascriptDate::JavascriptDate(DynamicType * type) 
+    JavascriptDate::JavascriptDate(DynamicType * type)
         : DynamicObject(type), m_date(0, type->GetScriptContext())
     {
         Assert(type->GetTypeId() == TypeIds_Date);
@@ -62,15 +62,15 @@ namespace Js
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        
+
         //
         // Determine if called as a constructor or a function.
         //
 
-        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");     
+        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
 
-        // SkipDefaultNewObject function flag should have revent the default object
-        // being created, except when call true a host dispatch
+        // SkipDefaultNewObject function flag should have prevented the default object from
+        // being created, except when call true a host dispatch.
         Var newTarget = callInfo.Flags & CallFlags_NewTarget ? args.Values[args.Info.Count] : args[0];
         bool isCtorSuperCall = (callInfo.Flags & CallFlags_New) && newTarget != nullptr && RecyclableObject::Is(newTarget);
         Assert(isCtorSuperCall || !(callInfo.Flags & CallFlags_New) || args[0] == nullptr
@@ -81,17 +81,17 @@ namespace Js
             //
             // Called as a function.
             //
-          
+
             //
             // Be sure the latest time zone info is loaded
-            //    
-           
+            //
+
             // ES5 15.9.2.1: Date() should returns a string exactly the same as (new Date().toString()).
             JavascriptDate* pDate = NewInstanceAsConstructor(args, scriptContext, /* forceCurrentDate */ true);
 
             return JavascriptDate::ToString(pDate);
 
-            // Note: alternative a bit better for perf but less modification-stable approach: 
+            // Note: alternative a bit better for perf but less modification-stable approach:
             // return DateImplementation::Now(scriptContext).GetString(DateImplementation::DateStringFormat::Default);
         }
         else
@@ -176,7 +176,7 @@ namespace Js
                 return pDate;
             }
         }
-        
+
         for (uint i=0; i < parameterCount; i++)
         {
             if ( i >= args.Info.Count-1 )
@@ -184,8 +184,8 @@ namespace Js
                 values[i] = ( i == 2 );
                 continue;
             }
-            // MakeTime (ES5 15.9.1.11) && MakeDay (ES5 15.9.1.12) always 
-            // call ToInteger (which is same as JavascriptConversion::ToInteger) on arguments. 
+            // MakeTime (ES5 15.9.1.11) && MakeDay (ES5 15.9.1.12) always
+            // call ToInteger (which is same as JavascriptConversion::ToInteger) on arguments.
             // All are finite (not Inf or Nan) as we check them explicitly in the previous loop.
             // +-0 & +0 are same in this context.
 #pragma prefast(suppress:6001, "value index i < args.Info.Count - 1 are initialized")
@@ -223,7 +223,7 @@ namespace Js
             if (JavascriptString::Is(args[1]))
             {
                 JavascriptString* StringObject = JavascriptString::FromVar(args[1]);
-                
+
                 if (wcscmp(StringObject->UnsafeGetBuffer(), L"default") == 0 || wcscmp(StringObject->UnsafeGetBuffer(), L"string") == 0)
                 {
                     // Date objects, are unique among built-in ECMAScript object in that they treat "default" as being equivalent to "string"
@@ -238,7 +238,7 @@ namespace Js
                     return JavascriptConversion::OrdinaryToPrimitive(args[0], JavascriptHint::HintNumber/*tryFirst*/, scriptContext);
                 }
                 //anything else should throw a type error
-            }        
+            }
         }
         else if (args.Info.Count == 1)
         {
@@ -256,7 +256,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !JavascriptDate::Is(args[0]))
         {
@@ -283,7 +283,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !JavascriptDate::Is(args[0]))
         {
@@ -310,7 +310,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !JavascriptDate::Is(args[0]))
         {
@@ -364,7 +364,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !JavascriptDate::Is(args[0]))
         {
@@ -446,7 +446,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !JavascriptDate::Is(args[0]))
         {
@@ -473,7 +473,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !JavascriptDate::Is(args[0]))
         {
@@ -500,7 +500,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !JavascriptDate::Is(args[0]))
         {
@@ -523,7 +523,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !JavascriptDate::Is(args[0]))
         {
@@ -569,7 +569,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !JavascriptDate::Is(args[0]))
         {
@@ -592,7 +592,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !JavascriptDate::Is(args[0]))
         {
@@ -615,7 +615,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !JavascriptDate::Is(args[0]))
         {
@@ -638,7 +638,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !JavascriptDate::Is(args[0]))
         {
@@ -661,7 +661,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !JavascriptDate::Is(args[0]))
         {
@@ -684,7 +684,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !JavascriptDate::Is(args[0]))
         {
@@ -707,7 +707,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !JavascriptDate::Is(args[0]))
         {
@@ -730,7 +730,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !JavascriptDate::Is(args[0]))
         {
@@ -755,13 +755,13 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         double dblRetVal = JavascriptNumber::NaN;
 
         if (args.Info.Count > 1)
         {
-            // We convert to primitive value based on hint == String, which JavascriptConversion::ToString does. 
+            // We convert to primitive value based on hint == String, which JavascriptConversion::ToString does.
             JavascriptString *pParseString = JavascriptConversion::ToString(args[1], scriptContext);
             dblRetVal = ParseHelper(scriptContext, pParseString);
         }
@@ -775,7 +775,7 @@ namespace Js
 
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         double dblRetVal = DateImplementation::NowInMilliSeconds(scriptContext);
         return JavascriptNumber::ToVarNoCheck(dblRetVal,scriptContext);
@@ -788,7 +788,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         double dblRetVal = DateImplementation::DateFncUTC(scriptContext,args);
         return JavascriptNumber::ToVarNoCheck(dblRetVal,scriptContext);
@@ -824,7 +824,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !JavascriptDate::Is(args[0]))
         {
@@ -847,7 +847,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !JavascriptDate::Is(args[0]))
         {
@@ -870,7 +870,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !JavascriptDate::Is(args[0]))
         {
@@ -893,7 +893,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !JavascriptDate::Is(args[0]))
         {
@@ -916,7 +916,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !JavascriptDate::Is(args[0]))
         {
@@ -939,7 +939,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !JavascriptDate::Is(args[0]))
         {
@@ -962,7 +962,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !JavascriptDate::Is(args[0]))
         {
@@ -985,7 +985,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !JavascriptDate::Is(args[0]))
         {
@@ -1008,7 +1008,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !JavascriptDate::Is(args[0]))
         {
@@ -1048,7 +1048,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !JavascriptDate::Is(args[0]))
         {
@@ -1071,7 +1071,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !JavascriptDate::Is(args[0]))
         {
@@ -1094,7 +1094,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !JavascriptDate::Is(args[0]))
         {
@@ -1117,7 +1117,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !JavascriptDate::Is(args[0]))
         {
@@ -1140,7 +1140,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !JavascriptDate::Is(args[0]))
         {
@@ -1163,7 +1163,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !JavascriptDate::Is(args[0]))
         {
@@ -1186,7 +1186,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !JavascriptDate::Is(args[0]))
         {
@@ -1209,7 +1209,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !JavascriptDate::Is(args[0]))
         {
@@ -1260,8 +1260,8 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
-        
+        Assert(!(callInfo.Flags & CallFlags_New));
+
         if (args.Info.Count == 0)
         {
             JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NeedObject, L"Data.prototype.toJSON");
@@ -1291,7 +1291,7 @@ namespace Js
             JavascriptError::ThrowTypeError(scriptContext, JSERR_Property_NeedFunction, scriptContext->GetPropertyName(PropertyIds::toISOString)->GetBuffer());
         }
         RecyclableObject* toISOFunc = RecyclableObject::FromVar(toISO);
-        return toISOFunc->GetEntryPoint()(toISOFunc, 1, thisObj);       
+        return toISOFunc->GetEntryPoint()(toISOFunc, 1, thisObj);
     }
 
     Var JavascriptDate::EntryToLocaleDateString(RecyclableObject* function, CallInfo callInfo, ...)
@@ -1301,7 +1301,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !JavascriptDate::Is(args[0]))
         {
@@ -1341,10 +1341,10 @@ namespace Js
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
         ARGUMENTS(args, callInfo);
-        
+
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !JavascriptDate::Is(args[0]))
         {
@@ -1439,7 +1439,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !JavascriptDate::Is(args[0]))
         {
@@ -1476,7 +1476,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !JavascriptDate::Is(args[0]))
         {
@@ -1502,7 +1502,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !JavascriptDate::Is(args[0]))
         {
@@ -1527,7 +1527,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !JavascriptDate::Is(args[0]))
         {

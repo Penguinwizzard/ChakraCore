@@ -22,10 +22,10 @@ class TreeNode
 // Data
 private:
     T                   value;
-    TreeNode *          children[N];                                                            
+    TreeNode *          children[N];
     TreeNode<T, N> *    parent;
 
-// Contructor
+// Constructor
 public:
     TreeNode(TreeNode<T, N> * parent = NULL)
     {

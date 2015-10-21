@@ -4,20 +4,20 @@
 //-------------------------------------------------------------------------------------------------------
 #include "CommonMemoryPch.h"
 
-IdleDecommitPageAllocator::IdleDecommitPageAllocator(AllocationPolicyManager * policyManager, PageAllocatorType type, 
+IdleDecommitPageAllocator::IdleDecommitPageAllocator(AllocationPolicyManager * policyManager, PageAllocatorType type,
 #ifndef JD_PRIVATE
-    Js::ConfigFlagsTable& flagTable, 
+    Js::ConfigFlagsTable& flagTable,
 #endif
-    size_t maxFreePageCount, size_t maxIdleFreePageCount, 
+    size_t maxFreePageCount, size_t maxIdleFreePageCount,
     bool zeroPages, BackgroundPageQueue *  backgroundPageQueue, size_t maxAllocPageCount) :
 #ifdef IDLE_DECOMMIT_ENABLED
-    idleDecommitTryEnterWaitFactor(0),    
+    idleDecommitTryEnterWaitFactor(0),
     hasDecommitTimer(false),
     hadDecommitTimer(false),
 #endif
-    PageAllocator(policyManager, 
+    PageAllocator(policyManager,
 #ifndef JD_PRIVATE
-        flagTable, 
+        flagTable,
 #endif
     type, maxFreePageCount, zeroPages, backgroundPageQueue, maxAllocPageCount),
     maxIdleDecommitFreePageCount(maxIdleFreePageCount),
@@ -34,9 +34,9 @@ IdleDecommitPageAllocator::IdleDecommitPageAllocator(AllocationPolicyManager * p
 
 
 void
-IdleDecommitPageAllocator::EnterIdleDecommit() 
+IdleDecommitPageAllocator::EnterIdleDecommit()
 {
-    this->idleDecommitEnterCount++;  
+    this->idleDecommitEnterCount++;
     if (this->idleDecommitEnterCount != 1)
     {
         return;
@@ -46,11 +46,11 @@ IdleDecommitPageAllocator::EnterIdleDecommit()
 
     this->isUsed = false;
     this->hadDecommitTimer = hasDecommitTimer;
-    PAGE_ALLOC_VERBOSE_TRACE(L"EnterIdleDecommit");   
+    PAGE_ALLOC_VERBOSE_TRACE(L"EnterIdleDecommit");
     if (hasDecommitTimer)
     {
-        // Cancel the decommit timmer
-        Assert(this->maxFreePageCount == maxIdleDecommitFreePageCount); 
+        // Cancel the decommit timer
+        Assert(this->maxFreePageCount == maxIdleDecommitFreePageCount);
         hasDecommitTimer = false;
         PAGE_ALLOC_TRACE(L"Cancel Decommit Timer");
     }
@@ -58,12 +58,12 @@ IdleDecommitPageAllocator::EnterIdleDecommit()
     {
         // Switch to maxIdleDecommitFreePageCount
         Assert(this->maxFreePageCount == maxNonIdleDecommitFreePageCount);
-        Assert(minFreePageCount == 0);    
+        Assert(minFreePageCount == 0);
         this->maxFreePageCount = maxIdleDecommitFreePageCount;
-    }        
+    }
 
-    cs.Leave();  
-    
+    cs.Leave();
+
     Assert(!hasDecommitTimer);
 #else
     Assert(this->maxFreePageCount == maxNonIdleDecommitFreePageCount);
@@ -74,28 +74,28 @@ IdleDecommitPageAllocator::EnterIdleDecommit()
 IdleDecommitSignal
 IdleDecommitPageAllocator::LeaveIdleDecommit(bool allowTimer)
 {
-    
+
     Assert(this->idleDecommitEnterCount > 0);
     Assert(this->maxFreePageCount == maxIdleDecommitFreePageCount);
 
 #ifdef IDLE_DECOMMIT_ENABLED
-    Assert(!hasDecommitTimer);  
+    Assert(!hasDecommitTimer);
 #endif
 
     this->idleDecommitEnterCount--;
     if (this->idleDecommitEnterCount != 0)
-    {   
+    {
         return IdleDecommitSignal_None;
     }
 
 #ifdef IDLE_DECOMMIT_ENABLED
     if (allowTimer)
     {
-        cs.Enter();    
-     
-        PAGE_ALLOC_VERBOSE_TRACE(L"LeaveIdleDecommit");    
-        Assert(maxIdleDecommitFreePageCount != maxNonIdleDecommitFreePageCount);        
-       
+        cs.Enter();
+
+        PAGE_ALLOC_VERBOSE_TRACE(L"LeaveIdleDecommit");
+        Assert(maxIdleDecommitFreePageCount != maxNonIdleDecommitFreePageCount);
+
         IdleDecommitSignal idleDecommitSignal = IdleDecommitSignal_None;
         if (freePageCount == 0 && !isUsed && !hadDecommitTimer)
         {
@@ -109,7 +109,7 @@ IdleDecommitPageAllocator::LeaveIdleDecommit(bool allowTimer)
         else
         {
             UpdateMinFreePageCount();
-        
+
             hasDecommitTimer = true;
             idleDecommitSignal = IdleDecommitSignal_NeedTimer;
 
@@ -117,8 +117,8 @@ IdleDecommitPageAllocator::LeaveIdleDecommit(bool allowTimer)
             {
                 // Reschedule the timer
                 decommitTime = ::GetTickCount() + IdleDecommitTimeout;
-                PAGE_ALLOC_TRACE( L"Schedule idle decommit at %d (%d)", decommitTime, IdleDecommitTimeout);    
-            } 
+                PAGE_ALLOC_TRACE( L"Schedule idle decommit at %d (%d)", decommitTime, IdleDecommitTimeout);
+            }
             else
             {
                 int timeDiff = (int)decommitTime - ::GetTickCount();
@@ -126,14 +126,14 @@ IdleDecommitPageAllocator::LeaveIdleDecommit(bool allowTimer)
                 {
                     idleDecommitSignal = IdleDecommitSignal_NeedSignal;
                 }
-            
-                PAGE_ALLOC_TRACE(L"Reschedule idle decommit at %d (%d)", decommitTime, decommitTime - ::GetTickCount());     
+
+                PAGE_ALLOC_TRACE(L"Reschedule idle decommit at %d (%d)", decommitTime, decommitTime - ::GetTickCount());
             }
-        
-        }    
+
+        }
         cs.Leave();
         return idleDecommitSignal;
-    }    
+    }
 #endif
     this->maxFreePageCount = maxNonIdleDecommitFreePageCount;
     __super::DecommitNow();
@@ -148,7 +148,7 @@ IdleDecommitPageAllocator::DecommitNow(bool all)
     SuspendIdleDecommit();
 
     // If we are in non-idle-decommit mode, then always decommit all.
-    // Otherwise, we will end up with some undecommitted pages and get confused later.
+    // Otherwise, we will end up with some un-decommitted pages and get confused later.
     if (maxFreePageCount == maxNonIdleDecommitFreePageCount)
         all = true;
 
@@ -163,18 +163,18 @@ IdleDecommitPageAllocator::DecommitNow(bool all)
             this->hasDecommitTimer = false;
             this->maxFreePageCount = maxNonIdleDecommitFreePageCount;
         }
-        else  
+        else
         {
             Assert((idleDecommitEnterCount > 0? maxIdleDecommitFreePageCount : maxNonIdleDecommitFreePageCount)
                 == this->maxFreePageCount);
-        }   
+        }
         ClearMinFreePageCount();
     }
     else
     {
         ResetMinFreePageCount();
     }
-    
+
     ResumeIdleDecommit();
 }
 
@@ -191,7 +191,7 @@ IdleDecommitPageAllocator::IdleDecommit()
     if (!cs.TryEnter())
     {
         // Failed to acquire the lock, wait for a variable time.
-        PAGE_ALLOC_TRACE(L"IdleDecommit Retry");  
+        PAGE_ALLOC_TRACE(L"IdleDecommit Retry");
 
         // Varies the wait time between 11 - 99
         idleDecommitTryEnterWaitFactor++;
@@ -199,7 +199,7 @@ IdleDecommitPageAllocator::IdleDecommit()
         {
             idleDecommitTryEnterWaitFactor = 1;
         }
-        DWORD waitTime = 11 * idleDecommitTryEnterWaitFactor;       
+        DWORD waitTime = 11 * idleDecommitTryEnterWaitFactor;
         return waitTime;      // Retry time
     }
     idleDecommitTryEnterWaitFactor = 0;
@@ -214,16 +214,16 @@ IdleDecommitPageAllocator::IdleDecommit()
         }
         else
         {
-            // Do the decommit in normal prioirty so that we don't block the main thread for too long           
-            PAGE_ALLOC_TRACE(L"IdleDecommit");   
+            // Do the decommit in normal priority so that we don't block the main thread for too long
+            PAGE_ALLOC_TRACE(L"IdleDecommit");
 #if DBG_DUMP
             idleDecommitCount++;
 #endif
             __super::DecommitNow();
-            hasDecommitTimer = false;            
+            hasDecommitTimer = false;
             ClearMinFreePageCount();
-            this->maxFreePageCount = maxNonIdleDecommitFreePageCount;           
-        }        
+            this->maxFreePageCount = maxNonIdleDecommitFreePageCount;
+        }
     }
     cs.Leave();
     return waitTime;
@@ -257,14 +257,14 @@ IdleDecommitPageAllocator::HasMultiThreadAccess() const
 #endif
 }
 
-void 
-IdleDecommitPageAllocator::ShutdownIdleDecommit() 
-{ 
-    // The recycler thread should have died already        
+void
+IdleDecommitPageAllocator::ShutdownIdleDecommit()
+{
+    // The recycler thread should have died already
     // Just set the state
-    idleDecommitEnterCount = 1; 
+    idleDecommitEnterCount = 1;
 #ifdef IDLE_DECOMMIT_ENABLED
-    hasDecommitTimer = false; 
+    hasDecommitTimer = false;
 #endif
 }
 #endif
@@ -274,9 +274,9 @@ IdleDecommitPageAllocator::ShutdownIdleDecommit()
 void
 IdleDecommitPageAllocator::DumpStats() const
 {
-    __super::DumpStats();                      
-    Output::Print(L"  Idle Decommit Count       : %4d\n", 
-        this->idleDecommitCount);    
+    __super::DumpStats();
+    Output::Print(L"  Idle Decommit Count       : %4d\n",
+        this->idleDecommitCount);
 }
 #endif
 #endif

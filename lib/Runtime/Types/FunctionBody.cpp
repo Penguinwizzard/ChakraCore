@@ -374,7 +374,7 @@ namespace Js
 #endif
     }
 
-    
+
     FunctionBody::FunctionBody(ScriptContext* scriptContext, const wchar_t* displayName, uint displayNameLength, uint nestedCount,
         Utf8SourceInfo* utf8SourceInfo, uint uFunctionNumber, uint uScriptId,
         Js::LocalFunctionId  functionId, Js::PropertyRecordList* boundPropertyRecords, Attributes attributes
@@ -617,7 +617,7 @@ namespace Js
     uint32
     FunctionBody::GetFirstNonTempLocalIndex()
     {
-        // First loval var starts when the const vars end.
+        // First local var starts when the const vars end.
         return m_constCount;
     }
 
@@ -1029,8 +1029,8 @@ namespace Js
         if (reference)
         {
             // Tag the reference so that the child function doesn't
-            // keep the parent alive. If the parent funtion is going away,
-            // it'll clear it's childrens references
+            // keep the parent alive. If the parent function is going away,
+            // it'll clear its children's references.
             this->m_referenceInParentFunction = reference;
         }
         else
@@ -1167,11 +1167,11 @@ namespace Js
         uint newFunctionNumber = scriptContext->GetThreadContext()->NewFunctionNumber();
         if (!sourceInfo->GetSourceContextInfo()->IsDynamic())
         {
-            PHASE_PRINT_TESTTRACE1(Js::DeferParsePhase, L"Function was defered from parsing - ID: %d; Display Name: %s; Utf8SourceInfo ID: %d; Source Length: %d; Source Url:%s\n", newFunctionNumber, displayName, sourceInfo->GetSourceInfoId(), sourceInfo->GetCchLength(), sourceInfo->GetSourceContextInfo()->url);
+            PHASE_PRINT_TESTTRACE1(Js::DeferParsePhase, L"Function was deferred from parsing - ID: %d; Display Name: %s; Utf8SourceInfo ID: %d; Source Length: %d; Source Url:%s\n", newFunctionNumber, displayName, sourceInfo->GetSourceInfoId(), sourceInfo->GetCchLength(), sourceInfo->GetSourceContextInfo()->url);
         }
         else
         {
-            PHASE_PRINT_TESTTRACE1(Js::DeferParsePhase, L"Function was defered from parsing - ID: %d; Display Name: %s; Utf8SourceInfo ID: %d; Source Length: %d;\n", newFunctionNumber, displayName, sourceInfo->GetSourceInfoId(), sourceInfo->GetCchLength());
+            PHASE_PRINT_TESTTRACE1(Js::DeferParsePhase, L"Function was deferred from parsing - ID: %d; Display Name: %s; Utf8SourceInfo ID: %d; Source Length: %d;\n", newFunctionNumber, displayName, sourceInfo->GetSourceInfoId(), sourceInfo->GetCchLength());
         }
 
         // When generating a new defer parse function, we always use a new function number
@@ -1213,7 +1213,7 @@ namespace Js
 
     //
     // Returns the start line for the script buffer (code buffer for the entire script tag) of this current function.
-    // We subtract the lnMinHost because it is the number of lines we have added to augment scriplets passed through
+    // We subtract the lnMinHost because it is the number of lines we have added to augment scriptlets passed through
     // ParseProcedureText to have a function name.
     //
     ULONG FunctionProxy::GetHostStartLine() const
@@ -1270,7 +1270,7 @@ namespace Js
     ParseableFunctionInfo::GetLineNumber() const
     {
         return this->ComputeAbsoluteLineNumber(this->m_lineNumber);
-        
+
     }
 
     //
@@ -1282,7 +1282,7 @@ namespace Js
         return ComputeAbsoluteColumnNumber(this->m_lineNumber, m_columnNumber);
     }
 
-    LPCWSTR 
+    LPCWSTR
     ParseableFunctionInfo::GetSourceName() const
     {
         return GetSourceName(this->GetSourceContextInfo());
@@ -1300,13 +1300,13 @@ namespace Js
         return this->m_grfscr;
     }
 
-    ProxyEntryPointInfo* 
+    ProxyEntryPointInfo*
     FunctionProxy::GetDefaultEntryPointInfo() const
     {
         return this->m_defaultEntryPointInfo;
     }
 
-    FunctionEntryPointInfo* 
+    FunctionEntryPointInfo*
     FunctionBody::GetDefaultFunctionEntryPointInfo() const
     {
         Assert(((ProxyEntryPointInfo*) this->defaultFunctionEntryPointInfo) == this->m_defaultEntryPointInfo);
@@ -1682,7 +1682,7 @@ namespace Js
                 PHASE_PRINT_TESTTRACE1(Js::DeferParsePhase, L"TestTrace: Deferred function parsed - ID: %d; Display Name: %s; Length: %d; Nested Function Count: %d; Utf8SourceInfo: %d; Source Length: %d\n; Is Top Level: %s;", m_functionNumber, m_displayName, this->m_cchLength, this->GetNestedCount(),  this->m_utf8SourceInfo->GetSourceInfoId(), this->m_utf8SourceInfo->GetCchLength(), this->GetIsTopLevel() ? L"True" : L"False");
             }
 
-            if (!this->GetIsTopLevel() && 
+            if (!this->GetIsTopLevel() &&
                 !this->GetSourceContextInfo()->IsDynamic() &&
                 this->m_scriptContext->DoUndeferGlobalFunctions())
             {
@@ -1889,7 +1889,7 @@ namespace Js
             this->UpdateFunctionBodyImpl(funcBody);
             this->m_hasBeenParsed = true;
         }
-        
+
         returnFunctionBody = GetFunctionBody();
 
         LEAVE_PINNED_SCOPE();
@@ -1922,7 +1922,7 @@ namespace Js
             (Attributes)(this->GetAttributes() & ~(Attributes::DeferredDeserialize | Attributes::DeferredParse))
 #ifdef PERF_COUNTERS
             , false /* is function from deferred deserialized proxy */
-#endif            
+#endif
             );
 
         this->Copy(funcBody);
@@ -2018,7 +2018,7 @@ namespace Js
 
         if (IsDynamicScript() && GetUtf8SourceInfo()->GetDebugDocumentName(sourceName))
         {
-            return true;            
+            return true;
         }
 
         *sourceName = ::SysAllocString(GetSourceName());
@@ -2056,12 +2056,12 @@ namespace Js
 
         // TODO (update) shortening for string literal names will not work for "*[" cases
         // need a place to store short names and return them here before we do the shortening
-        // (upate 2) forgive the uglyness of this function the next change will store the short name offsets
+        // (update 2) forgive the ugliness of this function the next change will store the short name offsets
         // giving us the start and end of the buffer simplifying this function significantly.
 
         const wchar_t * shortName = wcsrchr(name, L'.'); // use of wcsrchr bites us when we have nulls in object names like so var o = { "\0a" : { foo : function() {} }}
         const wchar_t * shorterName = wcsrchr(name, L'[');
-       
+
 
         if (shortName != nullptr)
         {
@@ -2071,7 +2071,7 @@ namespace Js
 
         //if the period is after the "]" or shorterName is a nullptr
         const wchar_t *endingBracket = nullptr;
-        if (shorterName == nullptr || (shortName > (endingBracket = wcsrchr(name, L']')) 
+        if (shorterName == nullptr || (shortName > (endingBracket = wcsrchr(name, L']'))
             && endingBracket != nullptr))
         {
             if (shortName)
@@ -2092,7 +2092,7 @@ namespace Js
         // this will fix any [[*] excluding '[' case. Still need a fix for [*[]
         while (name != shorterName && *(shorterName-1) == L'[')
         {
-            
+
             shorterName--;
         }
 
@@ -2111,11 +2111,11 @@ namespace Js
             wchar_t * finalshorterName = RecyclerNewArrayLeaf(this->GetScriptContext()->GetRecycler(), wchar_t, deltaNameLength); // size of number in brackets + ] which will be used by the null terminator
             js_wmemcpy_s(finalshorterName, deltaNameLength, shorterName, deltaNameLength - 1); // we don't want the last character in shorterName
             finalshorterName[deltaNameLength - 1] = L'\0';
-            
+
             return finalshorterName;
         }
 
-        return shorterName; 
+        return shorterName;
     }
 
     /*static*/
@@ -2406,7 +2406,7 @@ namespace Js
         StatementMapList * pStatementMaps = this->GetStatementMaps();
         if (pStatementMaps == nullptr)
         {
-            // eg. internal library.
+            // e.g. internal library.
             return -1;
         }
 
@@ -2447,15 +2447,15 @@ namespace Js
 #endif
         if(!!pnode->sxFnc.ChildCallsEval() != this->GetChildCallsEval())
         {
-            OUTPUT_VERBOSE_TRACE(Js::DebuggerPhase, L"Child calls eval is differerent on debug reparse: %s(%s)\n", this->GetExternalDisplayName(), this->GetDebugNumberSet(debugStringBuffer));
+            OUTPUT_VERBOSE_TRACE(Js::DebuggerPhase, L"Child calls eval is different on debug reparse: %s(%s)\n", this->GetExternalDisplayName(), this->GetDebugNumberSet(debugStringBuffer));
         }
         if(!!pnode->sxFnc.CallsEval() != this->GetCallsEval())
         {
-            OUTPUT_VERBOSE_TRACE(Js::DebuggerPhase, L"Calls eval is differerent on debug reparse: %s(%s)\n", this->GetExternalDisplayName(), this->GetDebugNumberSet(debugStringBuffer));
+            OUTPUT_VERBOSE_TRACE(Js::DebuggerPhase, L"Calls eval is different on debug reparse: %s(%s)\n", this->GetExternalDisplayName(), this->GetDebugNumberSet(debugStringBuffer));
         }
         if(!!pnode->sxFnc.HasReferenceableBuiltInArguments() != this->HasReferenceableBuiltInArguments())
         {
-            OUTPUT_VERBOSE_TRACE(Js::DebuggerPhase, L"Referencable Built in args is differerent on debug reparse: %s(%s)\n", this->GetExternalDisplayName(), this->GetDebugNumberSet(debugStringBuffer));
+            OUTPUT_VERBOSE_TRACE(Js::DebuggerPhase, L"Referencable Built in args is different on debug reparse: %s(%s)\n", this->GetExternalDisplayName(), this->GetDebugNumberSet(debugStringBuffer));
         }
 
         pnode->sxFnc.SetChildCallsEval(this->GetChildCallsEval());
@@ -2466,7 +2466,7 @@ namespace Js
     // Retrieves statement map for given byte code offset.
     // Parameters:
     // - sourceOffset: byte code offset to get map for.
-    // - mapIndex: if not NULL, receives the index of founf map.
+    // - mapIndex: if not NULL, receives the index of found map.
     FunctionBody::StatementMap* FunctionBody::GetMatchingStatementMapFromSource(int sourceOffset, int* pMapIndex /* = nullptr */)
     {
         StatementMapList * pStatementMaps = this->GetStatementMaps();
@@ -2496,7 +2496,7 @@ namespace Js
     }
 
     //
-    // The function determine the the line and column for a bytecode offset within the current script buffer.
+    // The function determine the line and column for a bytecode offset within the current script buffer.
     //
     bool FunctionBody::GetLineCharOffset(int byteCodeOffset, ULONG* _line, LONG* _charOffset, bool canAllocateLineCache /*= true*/)
     {
@@ -3069,7 +3069,7 @@ namespace Js
         // This may be first call to the function, make sure we have dynamic profile info
         //
         // We need to ensure dynamic profile info even if we didn't generate a dynamic interpreter thunk
-        // This happens when we go thru CheckCodeGen thunk, to DelayDynamicInterpreterThunk, to here
+        // This happens when we go through CheckCodeGen thunk, to DelayDynamicInterpreterThunk, to here
         // but the back ground code gen thread updated the entry point with the native entry point.
 
         this->EnsureDynamicProfileInfo();
@@ -3551,7 +3551,7 @@ namespace Js
         }
 
         FunctionBody * newFunctionBody = FunctionBody::NewFromRecycler(scriptContext, this->GetDisplayName(), this->GetDisplayNameLength(),
-                this->m_nestedCount, sourceInfo, this->m_functionNumber, this->m_uScriptId, 
+                this->m_nestedCount, sourceInfo, this->m_functionNumber, this->m_uScriptId,
                 this->GetLocalFunctionId(), this->m_boundPropertyRecords,
                 this->GetAttributes()
 #ifdef PERF_COUNTERS
@@ -4123,7 +4123,7 @@ namespace Js
     }
 
     void FunctionBody::PrintStatementSourceLineFromStartOffset(uint cchStartOffset)
-    {        
+    {
         ULONG line;
         LONG col;
 
@@ -4251,7 +4251,7 @@ namespace Js
         // calculate source line info
         //
 
-        size_t cbStartOffset = utf8::CharacterIndexToByteIndex(source, sourceInfo->GetCbLength(), (const charcount_t)startOffset, (size_t)this->m_cbStartOffset, (charcount_t)this->m_cchStartOffset);;
+        size_t cbStartOffset = utf8::CharacterIndexToByteIndex(source, sourceInfo->GetCbLength(), (const charcount_t)startOffset, (size_t)this->m_cbStartOffset, (charcount_t)this->m_cchStartOffset);
         GetLineCharOffsetFromStartChar(startOffset, line, col);
 
         size_t lastOffset = StartOffset() + LengthInBytes();
@@ -4548,12 +4548,12 @@ namespace Js
 #ifdef ENABLE_NATIVE_CODEGEN
         AssertMsg(this->m_scriptContext->CurrentThunk == ProfileEntryThunk, "ScriptContext not in profile mode");
 #if DBG
-        AssertMsg(m_iProfileSession == m_scriptContext->GetProfileSession(), "Changing mode to profile for function that didnt send compile event");
+        AssertMsg(m_iProfileSession == m_scriptContext->GetProfileSession(), "Changing mode to profile for function that didn't send compile event");
 #endif
-        // This is always done when bg thread is paused hence we dont need any kind of thread - synchronisation at this point.
+        // This is always done when bg thread is paused hence we don't need any kind of thread - synchronization at this point.
 
         // Change entry points to Profile Thunk
-        //  If the entrypoint is CodeGenOnDemand or CodeGen - then we dont change the entry points
+        //  If the entrypoint is CodeGenOnDemand or CodeGen - then we don't change the entry points
         ProxyEntryPointInfo* defaultEntryPointInfo = this->GetDefaultEntryPointInfo();
 
         if (!IsIntermediateCodeGenThunk((JavascriptMethod) defaultEntryPointInfo->address)
@@ -4858,7 +4858,7 @@ namespace Js
         return (ushort)diff;
     }
 
-    // Get Values of the beginnig of the statement at particular index.
+    // Get Values of the beginning of the statement at particular index.
     BOOL SmallSpanSequence::GetRangeAt(int index, SmallSpanSequenceIter &iter, int * pCountOfMissed, StatementData & data)
     {
         Assert(index < pStatementBuffer->Count());
@@ -4921,7 +4921,7 @@ namespace Js
             if (bytecode < iter.accumulatedBytecodeBegin
                 || iter.accumulatedIndex <= 0 || iter.accumulatedIndex >= Count())
             {
-                // re-initialize the accumulaters
+                // re-initialize the accumulators
                 Reset(iter);
             }
 
@@ -6670,7 +6670,7 @@ namespace Js
                 (skipSimpleJit || simpleJitLimit < DEFAULT_CONFIG_MinSimpleJitIterations) &&
                 !PHASE_FORCE(Phase::SimpleJitPhase, this))
             {
-                // Simple JIT code has not yet been generated, and was either requested to be skipped, or the limit ws scaled
+                // Simple JIT code has not yet been generated, and was either requested to be skipped, or the limit was scaled
                 // down too much. Skip simple JIT by moving any remaining iterations to an equivalent interpreter execution
                 // mode.
                 (IsNewSimpleJit() ? autoProfilingInterpreter1Limit : profilingInterpreter1Limit) += simpleJitLimit;
@@ -6841,7 +6841,7 @@ namespace Js
             return;
         }
 
-        // Requeue the full JIT work item after this many iterations
+        // Re-queue the full JIT work item after this many iterations
         fullJitRequeueThreshold = static_cast<uint16>(DEFAULT_CONFIG_FullJitRequeueThreshold);
     }
 
@@ -7364,7 +7364,7 @@ namespace Js
         // If we're not shutting down (as in closing the script context), we need to remove our inline caches from
         // thread context's invalidation lists, and release memory back to the arena.  During script context shutdown,
         // we leave everything in place, because the inline cache arena will stay alive until script context is destroyed
-        // (as in destructor has been called) and thus the invadation lists are safe to keep references to caches from this
+        // (as in destructor has been called) and thus the invalidation lists are safe to keep references to caches from this
         // script context.  We will, however, zero all inline caches so that we don't have to process them on subsequent
         // collections, which may still happen from other script contexts.
 
@@ -7393,7 +7393,7 @@ namespace Js
                     entryPoint->Finalize(isShutdown);
 
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
-                    // Do this seperately since calling EntryPoint::Finalize doesn't capture the stack trace
+                    // Do this separately since calling EntryPoint::Finalize doesn't capture the stack trace
                     // and in some calls to CleanupRecyclerData, we do want the stack trace captured.
 
                     if (doEntryPointCleanupCaptureStack)
@@ -7546,7 +7546,7 @@ namespace Js
 
     void FunctionBody::InitDisableInlineApply()
     {
-        SetDisableInlineApply(this->functionId != Js::Constants::NoFunctionId && PHASE_OFF(Js::InlinePhase, this) || PHASE_OFF(Js::InlineApplyPhase, this));        
+        SetDisableInlineApply(this->functionId != Js::Constants::NoFunctionId && PHASE_OFF(Js::InlinePhase, this) || PHASE_OFF(Js::InlineApplyPhase, this));
     }
 
     bool FunctionBody::CheckCalleeContextForInlining(FunctionProxy* calleeFunctionProxy)
@@ -7595,12 +7595,12 @@ namespace Js
             FunctionBody *pFunc = scriptContext->GetDebugContext()->GetProbeContainer()->GetGlobalFunc(scriptContext, GetSecondaryHostSourceContext());
             if (pFunc)
             {
-                // Existing behaviour here is to ignore the OOM and since this function
+                // Existing behavior here is to ignore the OOM and since this function
                 // can throw now, we simply ignore the OOM here
                 try
                 {
                     // Register the function to the PDM as eval code (the debugger app will show file as 'eval code')
-                    pFunc->RegisterFuncToDiag(scriptContext, Constants::EvalCode);                    
+                    pFunc->RegisterFuncToDiag(scriptContext, Constants::EvalCode);
                 }
                 catch (Js::OutOfMemoryException)
                 {
@@ -8285,7 +8285,7 @@ namespace Js
 
     void EntryPointInfo::RecordBailOutMap(JsUtil::List<LazyBailOutRecord, ArenaAllocator>* bailoutMap)
     {
-        Assert(this->bailoutRecordMap == nullptr);       
+        Assert(this->bailoutRecordMap == nullptr);
         this->bailoutRecordMap = HeapNew(BailOutRecordMap, &HeapAllocator::Instance);
         this->bailoutRecordMap->Copy(bailoutMap);
     }
@@ -8328,7 +8328,7 @@ namespace Js
         }
         else
         {
-            AssertMsg(false, "Lazy Bailout addresss mapping missing");
+            AssertMsg(false, "Lazy Bailout address mapping missing");
         }
     }
 
@@ -8568,7 +8568,7 @@ namespace Js
             this->cleanupStack = nullptr;
         }
 #endif
-        
+
         this->library = nullptr;
     }
 
@@ -8647,8 +8647,8 @@ namespace Js
 
             this->polymorphicInlineCacheInfo = nullptr;
 
-#if DBG_DUMP | defined(VTUNE_PROFILING) 
-            this->nativeOffsetMaps.Reset();            
+#if DBG_DUMP | defined(VTUNE_PROFILING)
+            this->nativeOffsetMaps.Reset();
 #endif
         }
     }
@@ -8711,7 +8711,7 @@ namespace Js
         nextEntryPoint(nullptr),
         mIsTemplatizedJitMode(false),
         inlineeFrameMap(nullptr)
-    { 
+    {
     }
 
     void FunctionEntryPointInfo::SetOldFunctionEntryPointInfo(FunctionEntryPointInfo* entrypointInfo)
@@ -8752,10 +8752,10 @@ namespace Js
     void FunctionEntryPointInfo::ReleasePendingWorkItem()
     {
         // Do this outside of Cleanup since cleanup can be called from the background thread
-        // We remove any workitems corresponding to the function body being reclaimed
+        // We remove any work items corresponding to the function body being reclaimed
         // so that the background thread doesn't try to use them. ScriptContext != null => this
         // is a function entry point
-        // In general this is not needed for loop bodies since loop bodies aren't in the low pri
+        // In general this is not needed for loop bodies since loop bodies aren't in the low priority
         // queue, they should be jitted before the entry point is finalized
         if (!this->IsNotScheduled() && !this->IsCleanedUp())
         {
@@ -8800,7 +8800,7 @@ namespace Js
             FunctionBody* functionBody = this->functionProxy->GetFunctionBody();
             if (this->GetIsTJMode())
             {
-                // release LoopHeaders here if the entrypointInfo is TJ 
+                // release LoopHeaders here if the entrypointInfo is TJ
                 this->GetFunctionBody()->ReleaseLoopHeaders();
             }
             if(functionBody->GetSimpleJitEntryPointInfo() == this)
@@ -8846,7 +8846,7 @@ namespace Js
     void FunctionEntryPointInfo::EnterExpirableCollectMode()
     {
         this->lastCallsCount = this->callsCount;
-        //For code that is not jited yet we dont want to expire since there is nothing to free here
+        // For code that is not jitted yet we don't want to expire since there is nothing to free here
         if (this->IsCodeGenPending())
         {
             this->SetIsObjectUsed();
@@ -9057,7 +9057,7 @@ namespace Js
         return loopHeader->functionBody;
     }
 
-    //End AsmJs Support 
+    //End AsmJs Support
 
     void LoopEntryPointInfo::OnCleanup(bool isShutdown)
     {
@@ -9181,7 +9181,7 @@ namespace Js
     bool FunctionBody::CanInlineRecursively(uint depth, bool tryAggressive)
     {
         uint recursiveInlineSpan = this->GetNumberOfRecursiveCallSites();
-    
+
         uint minRecursiveInlineDepth = (uint)CONFIG_FLAG(RecursiveInlineDepthMin);
 
         if (recursiveInlineSpan != this->GetProfiledCallSiteCount() || tryAggressive == false)
@@ -9193,12 +9193,12 @@ namespace Js
         uint maxRecursiveBytecodeBudget = (uint)CONFIG_FLAG(RecursiveInlineThreshold);
         uint numberOfAllowedFuncs = maxRecursiveBytecodeBudget / this->m_byteCodeWithoutLDACount;
         uint maxDepth;
-        
+
         if (recursiveInlineSpan == 1)
         {
             maxDepth = numberOfAllowedFuncs;
         }
-        else 
+        else
         {
             maxDepth = (uint)ceil(log((double)((double)numberOfAllowedFuncs) / log((double)recursiveInlineSpan)));
         }
@@ -9206,7 +9206,7 @@ namespace Js
         maxDepth = maxDepth < maxRecursiveInlineDepth ? maxDepth : maxRecursiveInlineDepth;
         return depth < maxDepth;
     }
-    
+
 
     static const wchar_t LoopWStr[] = L"Loop";
     size_t FunctionBody::GetLoopBodyName(uint loopNumber, _Out_writes_opt_z_(size) wchar_t* nameBuffer, _In_ size_t size)

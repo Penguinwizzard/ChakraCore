@@ -187,7 +187,7 @@ namespace Js
         virtual BOOL HasInstance(Var instance, ScriptContext* scriptContext, IsInstInlineCache* inlineCache = NULL);
         static BOOL HasInstance(Var funcPrototype, Var instance, ScriptContext* scriptContext, IsInstInlineCache* inlineCache, JavascriptFunction* function);
 
-        // This will be overriden for the BoundFunction
+        // This will be overridden for the BoundFunction
         virtual bool IsBoundFunction() const { return false; }
         virtual bool IsGeneratorFunction() const { return false; }
 

@@ -12,7 +12,7 @@ namespace Js {
     {
         // We don't need to create slot for or save "arguments"
         if (!sym->GetIsArguments()
-            // Function expression may not have nonlocalreference, exclude them.
+            // Function expression may not have nonLocalReference, exclude them.
             && (!sym->GetFuncExpr() || sym->GetHasNonLocalReference()))
         {
             // Any symbol may have non-local ref from deferred child. Allocate slot for it.
@@ -186,7 +186,7 @@ namespace Js {
     void ScopeInfo::SaveScopeInfoForDeferParse(ByteCodeGenerator* byteCodeGenerator, FuncInfo* parentFunc, FuncInfo* funcInfo)
     {
         // TODO: Not technically necessary, as we always do scope look up on eval if it is
-        // not found in the scope chain, and block scopes are always objcts in eval.
+        // not found in the scope chain, and block scopes are always objects in eval.
         // But if we save the global eval block scope for deferred child so that we can look up
         // let/const in that scope with slot index instead of doing a scope lookup.
         // We will have to implement encoding block scope info to enable, which will also
@@ -305,7 +305,7 @@ namespace Js {
                 SymbolType symbolType = GetSymbolType(i);
                 SymbolName symName(name->GetBuffer(), name->GetLength());
                 Symbol *sym = Anew(alloc, Symbol, symName, nullptr, symbolType);
-                
+
                 sym->SetScopeSlot(static_cast<PropertyId>(i));
                 sym->SetIsBlockVar(GetIsBlockVariable(i));
                 if (GetHasFuncAssignment(i))
@@ -339,5 +339,4 @@ namespace Js {
     {
         scope->SetCapturesAll(oldCapturesAll);
     }
-
-}; // namespace Js
+} // namespace Js

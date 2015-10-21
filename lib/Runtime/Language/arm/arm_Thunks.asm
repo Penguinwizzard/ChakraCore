@@ -4,12 +4,12 @@
 ;-------------------------------------------------------------------------------------------------------
     OPT 2   ; disable listing
 #include "ksarm.h"
-    OPT 1   ; reenable listing
+    OPT 1   ; re-enable listing
 
     TTL Lib\Runtime\Language\arm\arm_DelayDynamicInterpreterThunk.asm
-    
+
     ;Var InterpreterStackFrame::DelayDynamicInterpreterThunk(RecyclableObject* function, CallInfo callInfo, ...)
-    EXPORT  |?DelayDynamicInterpreterThunk@InterpreterStackFrame@Js@@SAPAXPAVRecyclableObject@2@UCallInfo@2@ZZ|   
+    EXPORT  |?DelayDynamicInterpreterThunk@InterpreterStackFrame@Js@@SAPAXPAVRecyclableObject@2@UCallInfo@2@ZZ|
     ;Var DynamicProfileInfo::EnsureDynamicProfileInfoThunk(RecyclableObject* function, CallInfo callInfo, ...)
     EXPORT  |?EnsureDynamicProfileInfoThunk@DynamicProfileInfo@Js@@SAPAXPAVRecyclableObject@2@UCallInfo@2@ZZ|
     ; Var ScriptContext::ProfileModeDeferredParsingThunk(RecyclableObject* function, CallInfo callInfo, ...)
@@ -33,9 +33,9 @@
     NESTED_ENTRY ?DelayDynamicInterpreterThunk@InterpreterStackFrame@Js@@SAPAXPAVRecyclableObject@2@UCallInfo@2@ZZ
 
     PROLOG_PUSH r0-r5,r11,lr      ; save volatile registers and non-volatile registers; r5 is pushed for aligned purposes
-    
+
     bl   |?EnsureDynamicInterpreterThunk@InterpreterStackFrame@Js@@CAP6APAXPAVRecyclableObject@2@UCallInfo@2@ZZPAVScriptFunction@2@@Z|  ; call InterpreterStackFrame::EnsureDynamicInterpreterThunk
-    
+
 #if defined(_CONTROL_FLOW_GUARD)
     mov     r4, r0                ; save entryPoint in r4
 

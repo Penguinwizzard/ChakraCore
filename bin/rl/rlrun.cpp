@@ -27,13 +27,13 @@
 static char *PogoForceErrors = "-we4951 -we4952 -we4953 -we4961 -we4962 -we4963";
 
 //
-// Global variables set before worker threads start, and only accesssed
+// Global variables set before worker threads start, and only accessed
 // (not set) by the worker threads.
 //
 // sets of options to iterate over
 char *OptFlags[MAXOPTIONS + 1], *PogoOptFlags[MAXOPTIONS + 1];
 
-// use a big global array as scratchpad for passing the child process env vars
+// use a big global array as scratch pad for passing the child process env vars
 #define MAX_ENV_LEN 10000
 __declspec(thread) char EnvFlags[MAX_ENV_LEN];
 
@@ -246,7 +246,7 @@ void
 
 BOOL
     CheckForPass(char * filename, char * optReportBuf, char * cmdbuf, BOOL fDumpOutputFile = TRUE)
-{    
+{
     FILE * fp;
     char buf[BUFFER_SIZE];
 
@@ -491,7 +491,7 @@ int
             }
         }
 
-        char* cmd = JCBinary; 
+        char* cmd = JCBinary;
         if (kind != TK_JSCRIPT && kind != TK_HTML)
         {
             cmd = pTestVariant->testInfo.data[TIK_COMMAND];
@@ -752,7 +752,7 @@ BOOL
     BOOL fLinkOnly,    // relink only
     BOOL fSuppressNoGPF
     )
-{    
+{
     int rc;
     char *p = NULL;
     char cmdbuf[BUFFER_SIZE*2];

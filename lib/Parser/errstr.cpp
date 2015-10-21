@@ -5,7 +5,7 @@
 #include "ParserPch.h"
 #include "errstr.h"
 
-// scafolding - get a g_hInstance from scrbgase.cpp
+// scaffolding - get a g_hInstance from scrbgase.cpp
 HANDLE g_hInstance;
 
 // Used as a prefix to generate the resource dll name.

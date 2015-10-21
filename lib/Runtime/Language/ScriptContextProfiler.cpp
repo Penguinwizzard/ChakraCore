@@ -5,20 +5,20 @@
 #include "RuntimeLanguagePch.h"
 
 #ifdef PROFILE_EXEC
-namespace Js 
+namespace Js
 {
     ULONG
     ScriptContextProfiler::AddRef()
     {
         return refcount++;
     }
-    
+
     ULONG
     ScriptContextProfiler::Release()
     {
         ULONG count = --refcount;
         if (count == 0)
-        {            
+        {
             if (recycler != nullptr && this->profiler == recycler->GetProfiler())
             {
                 recycler->SetProfiler(nullptr, nullptr);
@@ -30,12 +30,12 @@ namespace Js
 
     ScriptContextProfiler::ScriptContextProfiler() :
         refcount(1), profilerArena(nullptr), profiler(nullptr), backgroundRecyclerProfilerArena(nullptr), backgroundRecyclerProfiler(nullptr), recycler(nullptr), pageAllocator(nullptr), next(nullptr)
-    {                
+    {
     }
-    
+
     void
     ScriptContextProfiler::Initialize(PageAllocator * pageAllocator, Recycler * recycler)
-    {        
+    {
         Assert(!IsInitialized());
         profilerArena = HeapNew(ArenaAllocator, L"Profiler", pageAllocator, Js::Throw::OutOfMemory);
         profiler = Anew(profilerArena, Profiler, profilerArena);
@@ -45,7 +45,7 @@ namespace Js
             backgroundRecyclerProfiler = Anew(profilerArena, Profiler, backgroundRecyclerProfilerArena);
 
 #if DBG
-            //backgroundRecyclerProfiler is allocated from background and its gauranteed to assert below if we don't disable thread access check.
+            //backgroundRecyclerProfiler is allocated from background and its guaranteed to assert below if we don't disable thread access check.
             backgroundRecyclerProfiler->alloc->GetPageAllocator()->SetDisableThreadAccessCheck();
 #endif
 
@@ -66,7 +66,7 @@ namespace Js
         if (!IsInitialized())
         {
             return;
-        }        
+        }
         profiler->End(Js::AllPhase);
         profiler->Print(phase);
         if (this->backgroundRecyclerProfiler)
@@ -79,7 +79,7 @@ namespace Js
     }
 
     ScriptContextProfiler::~ScriptContextProfiler()
-    {       
+    {
         if (profilerArena)
         {
             HeapDelete(profilerArena);
@@ -88,7 +88,7 @@ namespace Js
         if (recycler && backgroundRecyclerProfilerArena)
         {
 #if DBG
-            //We are freeing from main thread, disable thread check assert. 
+            //We are freeing from main thread, disable thread check assert.
             backgroundRecyclerProfilerArena->GetPageAllocator()->SetDisableThreadAccessCheck();
 #endif
             recycler->ReleaseBackgroundProfilerArena(backgroundRecyclerProfilerArena);

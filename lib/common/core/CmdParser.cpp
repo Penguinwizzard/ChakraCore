@@ -19,16 +19,16 @@ using namespace Js;
 ///         2. UnQuoted - End of string is indicated by a space/end of stream.
 ///                       If fTreatColonAsSeperator is mentioned, then we break
 ///                       at colon also.
-///                       
+///
 ///
 ///     Empty string "" is treated as Exception()
 ///
 ///----------------------------------------------------------------------------
 
 LPWSTR
-CmdLineArgsParser::ParseString(__inout_ecount(ceBuffer) LPWSTR buffer, size_t ceBuffer, bool fTreatColonAsSeperator) 
+CmdLineArgsParser::ParseString(__inout_ecount(ceBuffer) LPWSTR buffer, size_t ceBuffer, bool fTreatColonAsSeperator)
 {
-    
+
     wchar_t *out = buffer;
     size_t len = 0;
 
@@ -44,7 +44,7 @@ CmdLineArgsParser::ParseString(__inout_ecount(ceBuffer) LPWSTR buffer, size_t ce
             }
 
             //
-            // MaxTokenSize - 1 because we need 1 extra postion for null termination
+            // MaxTokenSize - 1 because we need 1 extra position for null termination
             //
             if (len >= ceBuffer - 1)
             {
@@ -60,7 +60,7 @@ CmdLineArgsParser::ParseString(__inout_ecount(ceBuffer) LPWSTR buffer, size_t ce
     else
     {
         bool fDone = false;
-        
+
         while(!fDone)
         {
             switch(CurChar())
@@ -164,7 +164,7 @@ CmdLineArgsParser::ParseSourceFunctionIds()
 ///----------------------------------------------------------------------------
 
 int
-CmdLineArgsParser::ParseInteger() 
+CmdLineArgsParser::ParseInteger()
 {
     int result  = 0;
     int sign    = 1;
@@ -213,7 +213,7 @@ CmdLineArgsParser::ParseInteger()
         result = result * base + (int)(CurChar() - '0');
         if(result < 0)
         {
-            // overflow or underflow incase sign = -1
+            // overflow or underflow in case sign = -1
             throw Exception(L"Integer too large to parse");
         }
 
@@ -228,13 +228,13 @@ CmdLineArgsParser::ParseInteger()
 ///
 /// CmdLineArgsParser::ParseRange
 ///
-/// Parses :- 
+/// Parses :-
 /// range = int | int '-' int | range, range
 ///
 ///----------------------------------------------------------------------------
 
 void
-CmdLineArgsParser::ParseRange(Js::Range *pRange) 
+CmdLineArgsParser::ParseRange(Js::Range *pRange)
 {
     SourceFunctionNode r1 = ParseSourceFunctionIds();
     SourceFunctionNode r2;
@@ -253,7 +253,7 @@ CmdLineArgsParser::ParseRange(Js::Range *pRange)
         {
             throw Exception(L"Left functionId must be smaller than the Right functionId when Source file is the same");
         }
-        
+
         pRange->Add(r1, r2);
         switch(CurChar())
         {
@@ -276,16 +276,16 @@ CmdLineArgsParser::ParseRange(Js::Range *pRange)
         NextChar();
         ParseRange(pRange);
         break;
-    
+
     case ' ':
     case 0:
         pRange->Add(r1);
         break;
-    
+
     default:
         throw Exception(L"Unexpected character while parsing Range");
     }
-        
+
 }
 
 
@@ -343,7 +343,7 @@ CmdLineArgsParser::ParseNumberRange(Js::NumberRange *pRange)
 ///
 /// CmdLineArgsParser::ParsePhase
 ///
-/// Parses comma seperated list of:
+/// Parses comma separated list of:
 ///     phase[:range]
 /// phase is a string defined in Js:PhaseNames.
 ///
@@ -382,8 +382,8 @@ CmdLineArgsParser::ParseNumberSet(Js::NumberSet * numberPairSet)
 {
     while (true)
     {
-        int x = ParseInteger();       
-        numberPairSet->Add(x);   
+        int x = ParseInteger();
+        numberPairSet->Add(x);
 
         if (CurChar() != ';')
         {
@@ -405,8 +405,8 @@ CmdLineArgsParser::ParseNumberPairSet(Js::NumberPairSet * numberPairSet)
             NextChar();
             col = ParseInteger();
         }
-        
-        numberPairSet->Add(line, col);   
+
+        numberPairSet->Add(line, col);
 
         if (CurChar() != ';')
         {
@@ -433,17 +433,17 @@ CmdLineArgsParser::ParseBoolean()
     }
 }
 
-BSTR 
-CmdLineArgsParser::GetCurrentString() 
-{ 
+BSTR
+CmdLineArgsParser::GetCurrentString()
+{
     wchar_t buffer[MaxTokenSize];
     ZeroMemory(buffer, sizeof(buffer));
-	
+
     switch (CurChar())
     {
     case ':':
         NextChar();
-        return SysAllocString(ParseString(buffer, MaxTokenSize, false)); 
+        return SysAllocString(ParseString(buffer, MaxTokenSize, false));
     case ' ':
     case 0:
         NextChar();
@@ -466,7 +466,7 @@ CmdLineArgsParser::GetCurrentString()
 ///     3. Boolean
 ///     4. Phase
 ///
-/// Incase of boolean the presence no parameter is expected. the value of the
+/// In case of boolean the presence no parameter is expected. the value of the
 /// boolean flag is set to 'true'
 ///
 ///----------------------------------------------------------------------------
@@ -521,7 +521,7 @@ CmdLineArgsParser::ParseFlag()
 
             case FlagNumber:
                 *this->flagTable.GetAsNumber(flag) = ParseInteger();
-                break; 
+                break;
 
             case FlagNumberSet:
                 ParseNumberSet(this->flagTable.GetAsNumberSet(flag));
@@ -557,7 +557,7 @@ CmdLineArgsParser::ParseFlag()
 ///----------------------------------------------------------------------------
 
 int
-CmdLineArgsParser::Parse(int argc, __in_ecount(argc) LPWSTR argv[]) 
+CmdLineArgsParser::Parse(int argc, __in_ecount(argc) LPWSTR argv[])
 {
     int err = 0;
 
@@ -576,7 +576,7 @@ int CmdLineArgsParser::Parse(__in LPWSTR oneArg) throw()
     int err = 0;
     wchar_t buffer[MaxTokenSize];
     ZeroMemory(buffer, sizeof(buffer));
-	
+
     this->pszCurrentArg = oneArg;
     AssertMsg(NULL != this->pszCurrentArg, "How can command line give NULL argv's");
     try
@@ -623,7 +623,7 @@ int CmdLineArgsParser::Parse(__in LPWSTR oneArg) throw()
 ///
 ///----------------------------------------------------------------------------
 
-CmdLineArgsParser::CmdLineArgsParser(ICustomConfigFlags * pCustomConfigFlags, Js::ConfigFlagsTable& flagTable) : 
+CmdLineArgsParser::CmdLineArgsParser(ICustomConfigFlags * pCustomConfigFlags, Js::ConfigFlagsTable& flagTable) :
     flagTable(flagTable), pCustomConfigFlags(pCustomConfigFlags)
 {
     this->pszCurrentArg = NULL;

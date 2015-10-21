@@ -10,7 +10,6 @@
 //
 //----------------------------------------------------------------------------
 
-
 class FakeCount
 {
 protected:
@@ -43,16 +42,16 @@ typedef FakeCount DefaultCount;
 template <typename TData, typename TCount = DefaultCount> class SListBase;
 template <typename TData> class SListNode;
 template <typename TData>
-class SListNodeBase 
+class SListNodeBase
 {
-public: 
+public:
     SListNodeBase<TData> * Next() const { return next.base; }
     SListNodeBase<TData> *& Next() { return next.base; }
 protected:
     // The next node can be a real node with data, or  it point back to the start of the list
     // Use a union to show it in the debugger (instead of casting everywhere)
     union
-    {        
+    {
         SListNodeBase<TData> * base;
         SListNode<TData> * node;
         SListBase<TData> * list;
@@ -83,7 +82,7 @@ private:
 
 template<typename TData, typename TCount>
 class SListBase : protected SListNodeBase<TData>, public TCount
-{    
+{
 private:
     typedef SListNodeBase<TData> NodeBase;
     typedef SListNode<TData> Node;
@@ -91,10 +90,10 @@ private:
     {
         return (node == this);
     }
-public:   
+public:
     class Iterator
     {
-    public:        
+    public:
         Iterator() : list(nullptr), current(nullptr) {}
         Iterator(SListBase const * list) : list(list), current(list) {};
 
@@ -106,7 +105,7 @@ public:
         {
             current = list;
         }
-        // ToDo: only needed for SListBase<FlowEdge *, RealCount>::Iterator::Next()
+        // TODO: only needed for SListBase<FlowEdge *, RealCount>::Iterator::Next()
         __forceinline
         bool Next()
         {
@@ -124,7 +123,7 @@ public:
             Assert(this->IsValid());
             return ((Node *)current)->data;
         }
-        TData& Data() 
+        TData& Data()
         {
             Assert(this->IsValid());
             return ((Node *)current)->data;
@@ -136,7 +135,7 @@ public:
 
     class EditingIterator : public Iterator
     {
-    public:        
+    public:
         EditingIterator() : Iterator(), last(nullptr) {};
         EditingIterator(SListBase  * list) : Iterator(list), last(nullptr) {};
 
@@ -152,7 +151,7 @@ public:
             }
             return Iterator::Next();
         }
-        
+
         void UnlinkCurrent()
         {
             UnlinkCurrentNode();
@@ -238,24 +237,24 @@ public:
             const_cast<NodeBase *>(last)->Next() = current->Next();
             current = last;
             last = nullptr;
-            const_cast<SListBase *>(list)->DecrementCount();;
+            const_cast<SListBase *>(list)->DecrementCount();
             return unlinkedNode;
         }
     };
 
     explicit SListBase()
-    {        
+    {
         Reset();
     }
 
     ~SListBase()
-    {        
-        AssertMsg(this->Empty(), "SListBase need to be cleared explicity with an allocator");
+    {
+        AssertMsg(this->Empty(), "SListBase need to be cleared explicitly with an allocator");
     }
 
     void Reset()
     {
-        this->Next() = this;        
+        this->Next() = this;
         this->SetCount(0);
     }
 
@@ -274,14 +273,14 @@ public:
             current = next;
         }
 
-        this->Reset();        
+        this->Reset();
     }
     bool Empty() const { return this->IsHead(this->Next()); }
     bool HasOne() const { return !Empty() && this->IsHead(this->Next()->Next()); }
     bool HasTwo() const { return !Empty() && this->IsHead(this->Next()->Next()->Next()); }
     TData const& Head() const { Assert(!Empty()); return ((Node *)this->Next())->data; }
-    TData& Head() 
-    { 
+    TData& Head()
+    {
         Assert(!Empty());
         Node * node = this->next.node;
         return node->data;
@@ -290,11 +289,11 @@ public:
     template <typename TAllocator>
     bool Prepend(TAllocator * allocator, TData const& data)
     {
-        Node * newNode = AllocatorNew(TAllocator, allocator, Node, data);    
+        Node * newNode = AllocatorNew(TAllocator, allocator, Node, data);
         if (newNode)
         {
             newNode->Next() = this->Next();
-            this->Next() = newNode;     
+            this->Next() = newNode;
             this->IncrementCount();
             return true;
         }
@@ -304,11 +303,11 @@ public:
     template <typename TAllocator>
     bool PrependNoThrow(TAllocator * allocator, TData const& data)
     {
-        Node * newNode = AllocatorNewNoThrow(TAllocator, allocator, Node, data);    
+        Node * newNode = AllocatorNewNoThrow(TAllocator, allocator, Node, data);
         if (newNode)
         {
             newNode->Next() = this->Next();
-            this->Next() = newNode;     
+            this->Next() = newNode;
             this->IncrementCount();
             return true;
         }
@@ -318,11 +317,11 @@ public:
     template <typename TAllocator>
     TData * PrependNode(TAllocator * allocator)
     {
-        Node * newNode = AllocatorNew(TAllocator, allocator, Node);   
+        Node * newNode = AllocatorNew(TAllocator, allocator, Node);
         if (newNode)
         {
             newNode->Next() = this->Next();
-            this->Next() = newNode;     
+            this->Next() = newNode;
             this->IncrementCount();
             return &newNode->data;
         }
@@ -332,11 +331,11 @@ public:
     template <typename TAllocator, typename TParam>
     TData * PrependNode(TAllocator * allocator, TParam param)
     {
-        Node * newNode = AllocatorNew(TAllocator, allocator, Node, param);    
+        Node * newNode = AllocatorNew(TAllocator, allocator, Node, param);
         if (newNode)
         {
             newNode->Next() = this->Next();
-            this->Next() = newNode;     
+            this->Next() = newNode;
             this->IncrementCount();
             return &newNode->data;
         }
@@ -346,11 +345,11 @@ public:
     template <typename TAllocator, typename TParam1, typename TParam2>
     TData * PrependNode(TAllocator * allocator, TParam1 param1, TParam2 param2)
     {
-        Node * newNode = AllocatorNew(TAllocator, allocator, Node, param1, param2);    
+        Node * newNode = AllocatorNew(TAllocator, allocator, Node, param1, param2);
         if (newNode)
         {
             newNode->Next() = this->Next();
-            this->Next() = newNode;     
+            this->Next() = newNode;
             this->IncrementCount();
             return &newNode->data;
         }
@@ -361,9 +360,9 @@ public:
     void RemoveHead(TAllocator * allocator)
     {
         Assert(!this->Empty());
-        
+
         NodeBase * node = this->Next();
-        this->Next() = node->Next();        
+        this->Next() = node->Next();
 
         auto freeFunc = TypeAllocatorFunc<TAllocator, TData>::GetFreeFunc();
         AllocatorFree(allocator, freeFunc, (Node *) node, sizeof(Node));
@@ -375,10 +374,10 @@ public:
     {
         EditingIterator iter(this);
         while (iter.Next())
-        {            
-            if (iter.Data() == data) 
+        {
+            if (iter.Data() == data)
             {
-                iter.RemoveCurrent(allocator);                
+                iter.RemoveCurrent(allocator);
                 return true;
             }
         }
@@ -397,7 +396,7 @@ public:
         }
         return false;
     }
- 
+
     void MoveTo(SListBase * list)
     {
         while (!Empty())
@@ -418,7 +417,7 @@ public:
         this->DecrementCount();
     }
 
-    // Moves the first element that satisfies the predicate to the tolist
+    // Moves the first element that satisfies the predicate to the toList
     template<class Fn>
     TData* MoveTo(SListBase* toList, Fn predicate)
     {
@@ -426,8 +425,8 @@ public:
 
         EditingIterator iter(this);
         while (iter.Next())
-        {            
-            if (predicate(iter.Data())) 
+        {
+            if (predicate(iter.Data()))
             {
                 TData* data = &iter.Data();
                 iter.MoveCurrentTo(toList);
@@ -484,11 +483,11 @@ public:
             if (!iter2.Next() || iter.Data() != iter2.Data())
             {
                 return false;
-            }           
+            }
         }
         return !iter2.Next();
     }
-    
+
     template <typename TAllocator>
     bool CopyTo(TAllocator * allocator, SListBase& to) const
     {
@@ -497,7 +496,7 @@ public:
 
     template <void (*CopyElement)(TData const& from, TData& to), typename TAllocator>
     bool CopyTo(TAllocator * allocator, SListBase& to) const
-    {      
+    {
         to.Clear(allocator);
         SListBase::Iterator iter(this);
         NodeBase ** next = &to.Next();
@@ -511,9 +510,9 @@ public:
             CopyElement(iter.Data(), node->data);
             *next = node;
             next = &node->Next();
-            *next = &to;            // Do this every time in cas OOM exception occur to keap the list correct
+            *next = &to;            // Do this every time in case OOM exception occur to keep the list correct
             to.IncrementCount();
-        }                
+        }
         return true;
     }
 
@@ -540,7 +539,7 @@ private:
 
     static void DefaultCopyElement(TData const& from, TData& to) { to = from; }
     // disable copy constructor
-    SListBase(SListBase const& list); 
+    SListBase(SListBase const& list);
 };
 
 
@@ -571,7 +570,7 @@ public:
             return __super::InsertBefore(Allocator(), data);
         }
     private:
-        TAllocator * Allocator() const 
+        TAllocator * Allocator() const
         {
             return ((SList const *)list)->allocator;
         }
@@ -654,32 +653,31 @@ class SListCounted : public SList<TData, TAllocator, RealCount>
         T& data = iter.Data();
 
 #define _NEXT_LIST_ENTRY_EX  \
-    } 
+    }
 
 #define _FOREACH_LIST_ENTRY(List, T, data, list) { _FOREACH_LIST_ENTRY_EX(List, T, Iterator, __iter, data, list)
 #define _NEXT_LIST_ENTRY _NEXT_LIST_ENTRY_EX }
 
-#define FOREACH_SLISTBASE_ENTRY(T, data, list) _FOREACH_LIST_ENTRY(SListBase, T, data, list)     
-#define NEXT_SLISTBASE_ENTRY _NEXT_LIST_ENTRY 
+#define FOREACH_SLISTBASE_ENTRY(T, data, list) _FOREACH_LIST_ENTRY(SListBase, T, data, list)
+#define NEXT_SLISTBASE_ENTRY _NEXT_LIST_ENTRY
 
-#define FOREACH_SLISTBASE_ENTRY_EDITING(T, data, list, iter) _FOREACH_LIST_ENTRY_EX(SListBase, T, EditingIterator, iter, data, list)         
+#define FOREACH_SLISTBASE_ENTRY_EDITING(T, data, list, iter) _FOREACH_LIST_ENTRY_EX(SListBase, T, EditingIterator, iter, data, list)
 #define NEXT_SLISTBASE_ENTRY_EDITING _NEXT_LIST_ENTRY_EX
 
-#define FOREACH_SLISTBASECOUNTED_ENTRY(T, data, list) _FOREACH_LIST_ENTRY(SListBaseCounted, T, data, list)     
+#define FOREACH_SLISTBASECOUNTED_ENTRY(T, data, list) _FOREACH_LIST_ENTRY(SListBaseCounted, T, data, list)
 #define NEXT_SLISTBASECOUNTED_ENTRY _NEXT_LIST_ENTRY
 
-#define FOREACH_SLISTBASECOUNTED_ENTRY_EDITING(T, data, list, iter) _FOREACH_LIST_ENTRY_EX(SListBaseCounted, T, EditingIterator, iter, data, list)         
+#define FOREACH_SLISTBASECOUNTED_ENTRY_EDITING(T, data, list, iter) _FOREACH_LIST_ENTRY_EX(SListBaseCounted, T, EditingIterator, iter, data, list)
 #define NEXT_SLISTBASECOUNTED_ENTRY_EDITING _NEXT_LIST_ENTRY_EX
 
-#define FOREACH_SLIST_ENTRY(T, data, list) _FOREACH_LIST_ENTRY(SList, T, data, list)     
-#define NEXT_SLIST_ENTRY _NEXT_LIST_ENTRY 
+#define FOREACH_SLIST_ENTRY(T, data, list) _FOREACH_LIST_ENTRY(SList, T, data, list)
+#define NEXT_SLIST_ENTRY _NEXT_LIST_ENTRY
 
-#define FOREACH_SLIST_ENTRY_EDITING(T, data, list, iter) _FOREACH_LIST_ENTRY_EX(SList, T, EditingIterator, iter, data, list)         
+#define FOREACH_SLIST_ENTRY_EDITING(T, data, list, iter) _FOREACH_LIST_ENTRY_EX(SList, T, EditingIterator, iter, data, list)
 #define NEXT_SLIST_ENTRY_EDITING _NEXT_LIST_ENTRY_EX
-    
-#define FOREACH_SLISTCOUNTED_ENTRY(T, data, list) _FOREACH_LIST_ENTRY(SListCounted, T, data, list)     
-#define NEXT_SLISTCOUNTED_ENTRY _NEXT_LIST_ENTRY 
 
-#define FOREACH_SLISTCOUNTED_ENTRY_EDITING(T, data, list, iter) _FOREACH_LIST_ENTRY_EX(SListCounted, T, EditingIterator, iter, data, list)         
+#define FOREACH_SLISTCOUNTED_ENTRY(T, data, list) _FOREACH_LIST_ENTRY(SListCounted, T, data, list)
+#define NEXT_SLISTCOUNTED_ENTRY _NEXT_LIST_ENTRY
+
+#define FOREACH_SLISTCOUNTED_ENTRY_EDITING(T, data, list, iter) _FOREACH_LIST_ENTRY_EX(SListCounted, T, EditingIterator, iter, data, list)
 #define NEXT_SLISTCOUNTED_ENTRY_EDITING _NEXT_LIST_ENTRY_EX
-

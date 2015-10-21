@@ -10,23 +10,18 @@
 #define CHECKHR(x) {hr = x; if (FAILED(hr)) goto CleanUp;}
 #define SAFERELEASE(p) {if (p) {(p)->Release(); p = NULL;}}
 
-
 namespace Xml
 {
 
-
 IXMLDOMDocument *pDoc = NULL;
 
-
 Node * Node::TopNode;
-
 
 //-----------------------------------------------------------------------------
 //
 // Description:
 //
 //    Constructor for Attribute class.
-//
 //
 //-----------------------------------------------------------------------------
 
@@ -273,7 +268,7 @@ ConvertDoc
    }
    else if (childList == childLast)
    {
-      // This is a bit ugly but will do.  If we have a single child with data
+      // This is a bit ugly but will do. If we have a single child with data
       // called "#text", then pull the data up to this node.
 
       if ((childList->Data != NULL)
@@ -293,12 +288,12 @@ Init()
    HRESULT hr;
 
    CoInitializeEx(NULL, HostSystemInfo::SupportsOnlyMultiThreadedCOM() ? COINIT_MULTITHREADED : COINIT_APARTMENTTHREADED);
-   hr = CoCreateInstance(HostSystemInfo::SupportsOnlyMultiThreadedCOM() ? 
+   hr = CoCreateInstance(HostSystemInfo::SupportsOnlyMultiThreadedCOM() ?
 #if defined (_M_AMD64) || defined(_M_ARM64)
        __uuidof(DOMDocument)
 #else
        __uuidof(DOMDocument60)
-#endif       
+#endif
        : __uuidof(DOMDocument), NULL, CLSCTX_INPROC_SERVER,
        __uuidof(IXMLDOMDocument), (void**)&pDoc);
 
@@ -381,6 +376,5 @@ ReadFile
 
    return topNode;
 }
-
 
 }  // namespace Xml

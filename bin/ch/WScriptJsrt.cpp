@@ -40,7 +40,7 @@ bool WScriptJsrt::CreateArgumentsObject(JsValueRef *argsObject)
 JsValueRef __stdcall WScriptJsrt::EchoCallback(JsValueRef callee, bool isConstructCall, JsValueRef *arguments, unsigned short argumentCount, void *callbackState)
 {
     for (unsigned int i = 1; i < argumentCount; i++)
-    {          
+    {
         JsValueRef strValue;
         JsErrorCode error = ChakraRTInterface::JsConvertValueToString(arguments[i], &strValue);
         if (error == JsNoError)
@@ -241,7 +241,6 @@ JsValueRef WScriptJsrt::LoadScript(LPCWSTR fileName, size_t fileNameLength, LPCW
         errorMessage = L"Unsupported argument type inject type.";
     }
 
-
 Error:
     JsValueRef value = returnValue;
     if (errorCode != JsNoError)
@@ -376,6 +375,7 @@ bool WScriptJsrt::Initialize()
     {
         return false;
     }
+
     JsPropertyIdRef argsName;
     IfJsrtErrorFail(ChakraRTInterface::JsGetPropertyIdFromName(L"Arguments", &argsName), false);
     IfJsrtErrorFail(ChakraRTInterface::JsSetProperty(wscript, argsName, argsObject, true), false);
@@ -549,4 +549,3 @@ HRESULT WScriptJsrt::CallbackMessage::Call(LPCWSTR fileName)
 Error:
     return hr;
 }
-

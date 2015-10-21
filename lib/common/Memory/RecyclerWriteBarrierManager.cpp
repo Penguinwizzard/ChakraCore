@@ -33,7 +33,7 @@ BYTE RecyclerWriteBarrierManager::cardTable[1 * 1024 * 1024];
 #endif
 
 #else
-// Each *bit* in the card table covers 128 bytes. So each DWORD covers 4096 bytes and therefore the cardtable covers 4GB
+// Each *bit* in the card table covers 128 bytes. So each DWORD covers 4096 bytes and therefore the cardTable covers 4GB
 DWORD RecyclerWriteBarrierManager::cardTable[1 * 1024 * 1024];
 #endif
 
@@ -66,7 +66,7 @@ X64WriteBarrierCardTableManager::OnSegmentAlloc(_In_ char* segmentAddress, size_
 
     if (segmentAddress >= AutoSystemInfo::Data.lpMaximumApplicationAddress)
     {
-        Assert(false); // How did this happen? 
+        Assert(false); // How did this happen?
         SetCommitState(FailedMaxAddressExceeded);
         Js::Throw::FatalInternalError();
     }
@@ -76,7 +76,7 @@ X64WriteBarrierCardTableManager::OnSegmentAlloc(_In_ char* segmentAddress, size_
     size_t  pageSize = AutoSystemInfo::PageSize;
 
     // First, check if the pages for this segment have already been committed
-    // If they have, there is nothing for us to do here.    
+    // If they have, there is nothing for us to do here.
     void*   segmentEndAddress = segmentAddress + (numPages * pageSize);
     void*   segmentLastWritableAddress = (char*)segmentEndAddress - 1;
     BVIndex sectionStartIndex = GetSectionIndex(segmentAddress);
@@ -101,8 +101,8 @@ X64WriteBarrierCardTableManager::OnSegmentAlloc(_In_ char* segmentAddress, size_
 
     if (!needCommit)
     {
-        // The pages for this segment have already been committed. 
-        // We don't need to do anything more, since write barriers can 
+        // The pages for this segment have already been committed.
+        // We don't need to do anything more, since write barriers can
         // already be set for writes to this segment
         return true;
     }
@@ -110,7 +110,7 @@ X64WriteBarrierCardTableManager::OnSegmentAlloc(_In_ char* segmentAddress, size_
     SetCommitState(OnNeedCommit);
 
     // There are uncommitted pages in this range. We'll commit the full range
-    // We might commit some pages that are already committed but that's ok
+    // We might commit some pages that are already committed but that's okay
     const uintptr_t startIndex = RecyclerWriteBarrierManager::GetCardTableIndex(segmentAddress);
     const uintptr_t endIndex   = RecyclerWriteBarrierManager::GetCardTableIndex(segmentEndAddress);
 
@@ -136,7 +136,7 @@ X64WriteBarrierCardTableManager::OnSegmentAlloc(_In_ char* segmentAddress, size_
     LPVOID ret = ::VirtualAlloc((LPVOID) sectionStart, commitSize, MEM_COMMIT, PAGE_READWRITE);
     if (!ret)
     {
-        // If this is the error that occurred while trying to commit the page, this likely means 
+        // If this is the error that occurred while trying to commit the page, this likely means
         // that the page we tried to commit is outside out reservation, which means that our reservation
         // was too small. This can happen if Windows increases the maximum process address space size
         // If this happens, X64WriteBarrierCardTableManager::Initialize will have to be updated
@@ -184,7 +184,7 @@ X64WriteBarrierCardTableManager::OnSegmentAlloc(_In_ char* segmentAddress, size_
     return true;
 }
 
-bool 
+bool
 X64WriteBarrierCardTableManager::OnSegmentFree(_In_ char* segmentAddress, size_t numPages)
 {
     Assert(_cardTable);
@@ -195,7 +195,7 @@ X64WriteBarrierCardTableManager::OnSegmentFree(_In_ char* segmentAddress, size_t
     return true;
 }
 
-X64WriteBarrierCardTableManager::~X64WriteBarrierCardTableManager() 
+X64WriteBarrierCardTableManager::~X64WriteBarrierCardTableManager()
 {
     if (_cardTable != nullptr)
     {
@@ -223,9 +223,9 @@ X64WriteBarrierCardTableManager::Initialize()
     {
         // We have two sizes for the card table on 64 bit builds
         // On Win8.1 and later, the process address space size is 128 TB, so we reserve 32 GB for the card table
-        // On Win7, the max address space size is 192 GB, so we reserve 48 MB for the card table. 
+        // On Win7, the max address space size is 192 GB, so we reserve 48 MB for the card table.
         // On Win8, reserving 32 GB is fine since reservations don't incur a cost. On Win7, the cost
-        // of a reservation can be approximated as 2KB per MB of reserved size. In our case, we take 
+        // of a reservation can be approximated as 2KB per MB of reserved size. In our case, we take
         // an overhead of 96KB for our card table.
         const unsigned __int64 maxUmProcessAddressSpace = (__int64) AutoSystemInfo::Data.lpMaximumApplicationAddress;
         _cardTableNumEntries = Math::Align<size_t>(maxUmProcessAddressSpace / AutoSystemInfo::PageSize, AutoSystemInfo::PageSize) /* s_writeBarrierPageSize */;
@@ -266,7 +266,7 @@ RecyclerWriteBarrierManager::OnSegmentFree(_In_ char* segmentAddress, size_t num
 #error Not implemented for bit-array card table
 #endif
 
-void 
+void
 RecyclerWriteBarrierManager::WriteBarrier(void * address)
 {
 #ifdef RECYCLER_WRITE_BARRIER_BYTE
@@ -288,7 +288,7 @@ RecyclerWriteBarrierManager::WriteBarrier(void * address)
 }
 
 
-void 
+void
 RecyclerWriteBarrierManager::WriteBarrier(void * address, size_t ptrCount)
 {
 #ifdef RECYCLER_WRITE_BARRIER_BYTE
@@ -314,13 +314,13 @@ RecyclerWriteBarrierManager::WriteBarrier(void * address, size_t ptrCount)
         return;
     }
     cardTable[cardIndex] |= bitMask;
-    
+
     size_t remainingBytes = endAddress - alignedAddress;
     size_t fullMaskCount = remainingBytes  / g_WriteBarrierPageSize;
     memset(&cardTable[cardIndex + 1], 0xFFFFFFFF, fullMaskCount * sizeof(DWORD));
 
     uint endAddressShift = (((uint)endAddress) >> s_BitArrayCardTableShift);
-    uint endAddressBitMask = 0xFFFFFFFF << endAddressShift;    
+    uint endAddressBitMask = 0xFFFFFFFF << endAddressShift;
     cardTable[cardIndex + 1 + fullMaskCount] |= ~endAddressBitMask;
 #endif
 }

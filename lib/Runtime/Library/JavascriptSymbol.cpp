@@ -28,8 +28,8 @@ namespace Js
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         CHAKRATEL_LANGSTATS_INC_BUILTINCOUNT(SymbolCount);
 
-        // SkipDefaultNewObject function flag should have revent the default object
-        // being created, except when call true a host dispatch
+        // SkipDefaultNewObject function flag should have prevented the default object from
+        // being created, except when call true a host dispatch.
         Var newTarget = callInfo.Flags & CallFlags_NewTarget ? args.Values[args.Info.Count] : args[0];
         bool isCtorSuperCall = (callInfo.Flags & CallFlags_New) && newTarget != nullptr && RecyclableObject::Is(newTarget);
         Assert(isCtorSuperCall || !(callInfo.Flags & CallFlags_New) || args[0] == nullptr
@@ -135,7 +135,7 @@ namespace Js
         const Js::PropertyRecord* propertyRecord = scriptContext->GetThreadContext()->GetSymbolFromRegistrationMap(key->GetString());
 
         // If we didn't find a PropertyRecord in the map, we'll create a new symbol with description equal to the key string.
-        // This is the only place we add new PropertyRecords to the map, so we should never have multiple PropertyRecords in the 
+        // This is the only place we add new PropertyRecords to the map, so we should never have multiple PropertyRecords in the
         // map with the same string key value (since we would return the one we found above instead of creating a new one).
         if (propertyRecord == nullptr)
         {
@@ -172,7 +172,7 @@ namespace Js
         // There will only be one symbol in the map with that string key value.
         const Js::PropertyRecord* propertyRecord = scriptContext->GetThreadContext()->GetSymbolFromRegistrationMap(key);
 
-        // If we found a PropertyRecord in the map, make sure it is the same symbol that was passed to Symbol.keyFor. 
+        // If we found a PropertyRecord in the map, make sure it is the same symbol that was passed to Symbol.keyFor.
         // If the two are different, it means the symbol passed to keyFor has the same description as a symbol registered via
         // Symbol.for _but_ is not the symbol returned from Symbol.for.
         if (propertyRecord != nullptr && propertyRecord == sym->GetValue())
@@ -209,7 +209,7 @@ namespace Js
 
     RecyclableObject * JavascriptSymbol::CloneToScriptContext(ScriptContext* requestContext)
     {
-        // PropertyRecords are per-ThreadContext so we can just create a new primitive wrapper 
+        // PropertyRecords are per-ThreadContext so we can just create a new primitive wrapper
         // around the PropertyRecord stored in this symbol via the other context library.
         return requestContext->GetLibrary()->CreateSymbol(this->GetValue());
     }
@@ -294,7 +294,7 @@ namespace Js
             threadContext->AddImplicitCallFlags(Js::ImplicitCall_External);
             return nullptr;
         }
-        // This keeps getting revisted but as of ES6 spec revision 20, 
+        // This keeps getting revisited but as of ES6 spec revision 20,
         // implicit string conversion of symbol primitives is supposed to throw a TypeError.
         JavascriptError::ThrowTypeError(requestContext, VBSERR_OLENoPropOrMethod, L"ToString");
     }

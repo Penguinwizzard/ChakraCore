@@ -8,7 +8,7 @@
 #include "Library\StackScriptFunction.h"
 
 namespace Js
-{ 
+{
     JavascriptFunction *
     StackScriptFunction::EnsureBoxed(BOX_PARAM(JavascriptFunction * function, void * returnAddress, wchar_t const * reason))
     {
@@ -30,10 +30,10 @@ namespace Js
             // Just give out the function we boxed before
             return boxedFunction;
         }
-        
+
         PHASE_PRINT_TESTTRACE(Js::StackFuncPhase, function->GetFunctionProxy(),
             L"StackScriptFunction (%s): box and disable stack function: %s (function %s)\n",
-            reason, function->GetFunctionProxy()->IsDeferredDeserializeFunction()? 
+            reason, function->GetFunctionProxy()->IsDeferredDeserializeFunction()?
             L"<DeferDeserialize>" : function->GetParseableFunctionInfo()->GetDisplayName(),
             function->GetFunctionProxy()->GetDebugNumberSet(debugStringBuffer));
 
@@ -78,8 +78,8 @@ namespace Js
 
         FunctionBody * functionParent = stackScriptFunction->GetFunctionBody()->GetStackNestedFuncParent();
         Assert(functionParent != nullptr);
-        
-        ScriptContext * scriptContext = stackScriptFunction->GetScriptContext(); 
+
+        ScriptContext * scriptContext = stackScriptFunction->GetScriptContext();
         ScriptFunction * boxedFunction;
         BEGIN_TEMP_ALLOCATOR(tempAllocator, scriptContext, L"BoxStackFunction");
         {
@@ -95,7 +95,7 @@ namespace Js
 
     void StackScriptFunction::Box(Js::FunctionBody * parent, ScriptFunction ** functionRef)
     {
-        ScriptContext * scriptContext = parent->GetScriptContext();        
+        ScriptContext * scriptContext = parent->GetScriptContext();
         BEGIN_TEMP_ALLOCATOR(tempAllocator, scriptContext, L"BoxStackFunction");
         {
             BoxState state(tempAllocator, parent, scriptContext);
@@ -116,7 +116,7 @@ namespace Js
     StackScriptFunction::BoxState::BoxState(ArenaAllocator * alloc, FunctionBody * functionBody, ScriptContext * scriptContext, void * returnAddress) :
         frameToBox(alloc), functionObjectToBox(alloc), boxedValues(alloc), scriptContext(scriptContext), returnAddress(returnAddress)
     {
-        Assert(functionBody->DoStackNestedFunc() && functionBody->GetNestedCount() != 0);       
+        Assert(functionBody->DoStackNestedFunc() && functionBody->GetNestedCount() != 0);
         FunctionBody * current = functionBody;
         do
         {
@@ -130,7 +130,7 @@ namespace Js
                 {
                     nested->GetFunctionBody()->ClearStackNestedFuncParent();
                 }
-            }  
+            }
             current = current->GetAndClearStackNestedFuncParent();
         }
         while (current && current->DoStackNestedFunc());
@@ -159,13 +159,13 @@ namespace Js
             }
 
             ScriptFunction * callerScriptFunction = ScriptFunction::FromVar(caller);
-            FunctionBody * callerFunctionBody = callerScriptFunction->GetFunctionBody();            
+            FunctionBody * callerFunctionBody = callerScriptFunction->GetFunctionBody();
             if (hasInlineeToBox || this->NeedBoxFrame(callerFunctionBody))
             {
                 // Box the frame display, but don't need to box the function unless we see them
-                // in the slots.   
-                        
-                // If the frame display has any stack nested function, then it must have given to one of the 
+                // in the slots.
+
+                // If the frame display has any stack nested function, then it must have given to one of the
                 // stack functions.  If it doesn't appear in  on eof the stack function , the frame display
                 // doesn't contain any stack function
                 InterpreterStackFrame * interpreterFrame = walker.GetCurrentInterpreterFrame();
@@ -194,17 +194,17 @@ namespace Js
                     {
                         frameKind = L"Native for Inlinee";
                     }
-                    
+
                     PHASE_PRINT_TESTTRACE(Js::StackFuncPhase, callerFunctionBody,
                         L"Boxing Frame [%s]: %s %s\n", frameKind,
                         callerFunctionBody->GetDisplayName(), callerFunctionBody->GetDebugNumberSet(debugStringBuffer));
                 }
 #endif
-                
+
                 if (interpreterFrame)
                 {
                     Assert(!hasInlineeToBox);
-                    
+
                     Assert(StackScriptFunction::GetCurrentFunctionObject(interpreterFrame->GetJavascriptFunction()) == caller);
 
                     if (callerFunctionBody->DoStackFrameDisplay())
@@ -232,7 +232,7 @@ namespace Js
                     for (uint i = 0; i < nestedCount; i++)
                     {
                         // Box the stack function, even if they might not be "created" in the byte code yet.
-                        // Some of them will not be captured in slots, so we just need to box them and record it with the 
+                        // Some of them will not be captured in slots, so we just need to box them and record it with the
                         // stack func so that when we can just use the boxed value when we need it.
                         StackScriptFunction * stackFunction = interpreterFrame->GetStackNestedFunction(i);
                         ScriptFunction * boxedFunction = this->BoxStackFunction(stackFunction);
@@ -242,14 +242,14 @@ namespace Js
 
                     if (walker.IsBailedOutFromInlinee())
                     {
-                        // this is the interpret frame from bailing out of inline frame 
+                        // this is the interpret frame from bailing out of inline frame
                         // Just mark we have inlinee to box so we will walk the native frame's list when we get there.
                         hasInlineeToBox = true;
                     }
                     else if (walker.IsBailedOutFromFunction())
                     {
                         // The current interpret frame is from bailing out of a native frame.
-                        // Walk native frame that was bailed out as well. 
+                        // Walk native frame that was bailed out as well.
                         // The stack walker is pointing to the native frame already.
                         this->BoxNativeFrame(walker, callerFunctionBody);
 
@@ -307,7 +307,7 @@ namespace Js
                 {
                     frameDisplay = (Js::FrameDisplay*)walker.GetCurrentArgv()[
 #if _M_IX86 || _M_AMD64
-                        callerFunctionBody->GetInParamsCount() == 0 ? 
+                        callerFunctionBody->GetInParamsCount() == 0 ?
                         JavascriptFunctionArgIndex_StackFrameDisplayNoArg :
 #endif
                         JavascriptFunctionArgIndex_StackFrameDisplay];
@@ -343,7 +343,7 @@ namespace Js
 
             ScriptFunction * boxedCaller = nullptr;
             if (this->NeedBoxScriptFunction(callerScriptFunction))
-            {                
+            {
                 // TODO-STACK-NESTED-FUNC: Can't assert this yet, JIT might not do stack func allocation
                 // if the function hasn't been parse or deserialize yet.
                 // Assert(ThreadContext::IsOnStack(callerScriptFunction));
@@ -370,7 +370,7 @@ namespace Js
                 }
             }
         }
-       
+
         Assert(!hasInlineeToBox);
 
         // We have to find one nested function
@@ -415,7 +415,7 @@ namespace Js
             if (this->NeedBoxScriptFunction(func))
             {
                 // Box the stack function, even if they might not be "created" in the byte code yet.
-                // Some of them will not be captured in slots, so we just need to box them and record it with the 
+                // Some of them will not be captured in slots, so we just need to box them and record it with the
                 // stack func so that when we can just use the boxed value when we need it.
                 this->BoxStackFunction(func);
             }
@@ -506,7 +506,7 @@ namespace Js
 
         void **argv = walker.GetCurrentArgv();
         // On arm, we always have an argument slot fo frames that has stack nested func
-        Js::Var curr = 
+        Js::Var curr =
 #if _M_IX86 || _M_AMD64
             callerFunctionBody->GetInParamsCount() == 0?
             argv[JavascriptFunctionArgIndex_StackNestedFuncListWithNoArg]:
@@ -519,7 +519,7 @@ namespace Js
         // when we start support JIT'ing that.
 
         if (curr != nullptr)
-        {                        
+        {
             do
             {
                 StackScriptFunction *func = StackScriptFunction::FromVar(curr);
@@ -545,7 +545,7 @@ namespace Js
         {
             return frameDisplay;
         }
-                         
+
         FrameDisplay * boxedFrameDisplay;
         if (boxedValues.TryGetValue(frameDisplay, (void **)&boxedFrameDisplay))
         {
@@ -571,7 +571,7 @@ namespace Js
             size_t scopeSlotcount = ScopeSlots(scopeSlots).GetCount();//(size_t)scopeSlots[Js::ScopeSlots::EncodedSlotCountSlotIndex];
             // We don't do stack slots if we exceed max encoded slot count
             if (scopeSlotcount < ScopeSlots::MaxEncodedSlotCount)
-            {                
+            {
                 scopeSlots = BoxScopeSlots(scopeSlots, static_cast<uint>(scopeSlotcount));
             }
             boxedFrameDisplay->SetItem(i, scopeSlots);
@@ -596,7 +596,7 @@ namespace Js
         }
         else
         {
-            // Create new scope slots when we allocate them on the stack 
+            // Create new scope slots when we allocate them on the stack
             boxedSlotArray = RecyclerNewArray(scriptContext->GetRecycler(), Var, count + ScopeSlots::FirstSlotIndex);
         }
         boxedValues.Add(slotArray, boxedSlotArray);
@@ -607,18 +607,18 @@ namespace Js
         boxedScopeSlots.SetCount(count);
         boxedScopeSlots.SetScope(scopeSlots.GetScope());
 
-        // Box all the stack function in the parent's scope slot as well 
+        // Box all the stack function in the parent's scope slot as well
         for (uint i = 0; i < count; i++)
         {
             Js::Var slotValue = scopeSlots.Get(i);
             if (ThreadContext::IsOnStack(slotValue) && JavascriptFunction::Is(slotValue))
-            {            
+            {
                 // A stack javascript function can only be script function
-                StackScriptFunction * stackFunction = StackScriptFunction::FromVar(slotValue);            
+                StackScriptFunction * stackFunction = StackScriptFunction::FromVar(slotValue);
                 slotValue = BoxStackFunction(stackFunction);
             }
             boxedScopeSlots.Set(i, slotValue);
-        }      
+        }
         return boxedSlotArray;
     }
 
@@ -628,22 +628,22 @@ namespace Js
 
         // Box the frame display first, which may in turn box the function
         FrameDisplay * frameDisplay = stackFunction->GetEnvironment();
-        FrameDisplay * boxedFrameDisplay = BoxFrameDisplay(frameDisplay);        
+        FrameDisplay * boxedFrameDisplay = BoxFrameDisplay(frameDisplay);
 
         ScriptFunction * boxedFunction = stackFunction->boxedScriptFunction;
         if (boxedFunction != nullptr)
         {
             return boxedFunction;
         }
-        
+
         Assert(functionObjectToBox.Contains(stackFunction->GetFunctionProxy()->GetFunctionProxy()));
 
         if (PHASE_TESTTRACE(Js::StackFuncPhase, stackFunction->GetFunctionProxy()))
         {
             wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
-            
-            Output::Print(L"Boxing StackScriptFunction Object: %s (functiond Id: %s)",
-                stackFunction->GetFunctionProxy()->IsDeferredDeserializeFunction()? 
+
+            Output::Print(L"Boxing StackScriptFunction Object: %s (function Id: %s)",
+                stackFunction->GetFunctionProxy()->IsDeferredDeserializeFunction()?
                     L"<DeferDeserialize>" : stackFunction->GetParseableFunctionInfo()->GetDisplayName(),
                 stackFunction->GetFunctionProxy()->GetDebugNumberSet(debugStringBuffer));
             if (PHASE_VERBOSE_TESTTRACE(Js::StackFuncPhase, stackFunction->GetFunctionProxy()))
@@ -659,7 +659,7 @@ namespace Js
 
         // Make sure we use the latest function proxy (if it is parsed or deserialized)
         FunctionProxy * functionBody = stackFunction->GetFunctionProxy()->GetFunctionProxy();
-        boxedFunction = ScriptFunction::OP_NewScFunc(boxedFrameDisplay, &functionBody);        
+        boxedFunction = ScriptFunction::OP_NewScFunc(boxedFrameDisplay, &functionBody);
         stackFunction->boxedScriptFunction = boxedFunction;
         stackFunction->SetEnvironment(boxedFrameDisplay);
         return boxedFunction;
@@ -679,11 +679,11 @@ namespace Js
             Assert(!functionProxy->IsFunctionBody() || functionProxy->GetFunctionBody()->GetStackNestedFuncParent() != nullptr);
             stackFunction->SetEnvironment(environment);
 
-            
+
             PHASE_PRINT_VERBOSE_TRACE(Js::StackFuncPhase, functionProxy,
                 L"Stack alloc nested function: %s %s (address: %p)\n",
                     functionProxy->IsFunctionBody()?
-                        functionProxy->GetFunctionBody()->GetDisplayName() : L"<deferred>", 
+                        functionProxy->GetFunctionBody()->GetDisplayName() : L"<deferred>",
                         functionProxy->GetDebugNumberSet(debugStringBuffer), stackFunction);
             return stackFunction;
         }

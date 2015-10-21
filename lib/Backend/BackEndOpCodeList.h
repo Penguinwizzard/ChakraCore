@@ -8,7 +8,7 @@
 //
 #if !defined(DEF_OP)
 #error DEF_OP must be defined before including this file
-#endif      
+#endif
 
 // -----------------------------------------------------------------------------------------------
 // Additional machine independent opcode used byte backend
@@ -21,7 +21,7 @@ DEF_OP(MDStart, Empty, None)
 
 #define MACRO DEF_OP
 
-// TODO (louisl): can we move the definition below into Runtim instead?
+// TODO (louisl): can we move the definition below into Runtime instead?
 // TODO (louisl): how do we deal with different backends?
 #ifdef _M_AMD64
     #include "..\..\BackEnd\amd64\MdOpcodes.h"

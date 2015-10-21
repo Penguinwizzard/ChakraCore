@@ -46,9 +46,9 @@ namespace Js {
             static FunctionInfo WithFlagY;
             static FunctionInfo WithFlagZ;
             static FunctionInfo WithFlagW;
-			//Lane access
-			static FunctionInfo ExtractLane;
-			static FunctionInfo ReplaceLane;
+            //Lane access
+            static FunctionInfo ExtractLane;
+            static FunctionInfo ReplaceLane;
             // ShiftOps
             static FunctionInfo ShiftLeft;
             static FunctionInfo ShiftRightLogical;
@@ -105,10 +105,10 @@ namespace Js {
         static Var EntryWithFlagX(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryWithFlagY(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryWithFlagZ(RecyclableObject* function, CallInfo callInfo, ...);
-		static Var EntryWithFlagW(RecyclableObject* function, CallInfo callInfo, ...);
-		// Lane Access
-		static Var EntryExtractLane(RecyclableObject* function, CallInfo callInfo, ...);
-		static Var EntryReplaceLane(RecyclableObject* function, CallInfo callInfo, ...);
+        static Var EntryWithFlagW(RecyclableObject* function, CallInfo callInfo, ...);
+        // Lane Access
+        static Var EntryExtractLane(RecyclableObject* function, CallInfo callInfo, ...);
+        static Var EntryReplaceLane(RecyclableObject* function, CallInfo callInfo, ...);
         // ShiftOps
         static Var EntryShiftLeft(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryShiftRightLogical(RecyclableObject* function, CallInfo callInfo, ...);
@@ -119,12 +119,12 @@ namespace Js {
         static Var EntrySelect(RecyclableObject* function, CallInfo callInfo, ...);
 
         static Var EntryLoad(RecyclableObject* function, CallInfo callInfo, ...);
-        static Var EntryLoad1(RecyclableObject* function, CallInfo callInfo, ...); // load X 
+        static Var EntryLoad1(RecyclableObject* function, CallInfo callInfo, ...); // load X
         static Var EntryLoad2(RecyclableObject* function, CallInfo callInfo, ...); // load XY
         static Var EntryLoad3(RecyclableObject* function, CallInfo callInfo, ...); // load XYZ
 
         static Var EntryStore(RecyclableObject* function, CallInfo callInfo, ...);
-        static Var EntryStore1(RecyclableObject* function, CallInfo callInfo, ...); // store X 
+        static Var EntryStore1(RecyclableObject* function, CallInfo callInfo, ...); // store X
         static Var EntryStore2(RecyclableObject* function, CallInfo callInfo, ...); // store XY
         static Var EntryStore3(RecyclableObject* function, CallInfo callInfo, ...); // store XYZ
         // End entry points

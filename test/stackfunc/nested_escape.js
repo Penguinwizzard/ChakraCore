@@ -5,7 +5,6 @@
 
 function test(param)
 {
-
     function nested()
     {
         var nested_escape = function()
@@ -24,4 +23,3 @@ function test(param)
 
 WScript.Echo((test("test1"))());
 WScript.Echo((test("test2"))());
-

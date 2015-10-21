@@ -4,7 +4,7 @@
 ;-------------------------------------------------------------------------------------------------------
 
 ;Var arm64_CallFunction(JavascriptFunction* function, CallInfo info, Var* values, JavascriptMethod entryPoint)
-;  
+;
 ;   This method should be called as follows
 ;       varResult = arm64_CallFunction((JavascriptFunction*)function, args.Info, args.Values, entryPoint);
 ;
@@ -29,7 +29,7 @@
 ;
 ;   Since the 1st two parameters are the same for this method and the entry point, we don't need to touch them.
 ;
-    OPT	2	; disable listing
+    OPT 2   ; disable listing
 
 #include "ksarm64.h"
 
@@ -37,18 +37,18 @@
         IMPORT __guard_check_icall_fptr
 #endif
 
-    OPT	1	; reenable listing
+    OPT 1   ; re-enable listing
 
-    TTL	Lib\Runtime\Library\arm64\arm64_CallFunction.asm
-    
+    TTL Lib\Runtime\Library\arm64\arm64_CallFunction.asm
+
     EXPORT  arm64_CallFunction
     IMPORT  __chkstk            ;See \\cpvsbuild\drops\dev11\Main\raw\current\sources\vctools\crt\crtw32\startup\arm64\chkstk.asm.
 
     TEXTAREA
 
     NESTED_ENTRY arm64_CallFunction
-    
-    PROLOG_SAVE_REG_PAIR fp, lr, #-16!			; save fp/lr (implicitly saves SP in FP)
+
+    PROLOG_SAVE_REG_PAIR fp, lr, #-16!          ; save fp/lr (implicitly saves SP in FP)
 
     mov     x15, x3                             ; copy entry point to x15
 
@@ -57,26 +57,26 @@
     ldr     x16, [x16, __guard_check_icall_fptr]; fetch address of guard check handler
     blr     x16                                 ; call it
 #endif
-    
+
     and     x4, x1, #0xffffff                   ; clear high order 40 bits of x1(callInfo)
                                                 ;   (clean callInfo.Flags which shares same word as callInfo.Count)
     subs    x5, x4, #6                          ; more than 6 parameters?
     bgt     StackAlloc                          ; if so, allocate necessary stack
 
-    adr		x5, CopyZero                        ; get bottom of parameter copy loop
-    sub		x5, x5, x4, lsl #2                  ; compute address of where to start
-    br		x5									; branch there
-CopyAll	
-    ldr		x7, [x2, #40]                       ; load remanining 6 registers here
-    ldr		x6, [x2, #32]                       ;
-    ldr		x5, [x2, #24]                       ;
-    ldr		x4, [x2, #16]                       ;
-    ldr		x3, [x2, #8]                        ;
-    ldr		x2, [x2, #0]                        ;
+    adr     x5, CopyZero                        ; get bottom of parameter copy loop
+    sub     x5, x5, x4, lsl #2                  ; compute address of where to start
+    br      x5                                  ; branch there
+CopyAll
+    ldr     x7, [x2, #40]                       ; load remaining 6 registers here
+    ldr     x6, [x2, #32]                       ;
+    ldr     x5, [x2, #24]                       ;
+    ldr     x4, [x2, #16]                       ;
+    ldr     x3, [x2, #8]                        ;
+    ldr     x2, [x2, #0]                        ;
 CopyZero
-    blr     x15                                 ; call saved entry point    
+    blr     x15                                 ; call saved entry point
 
-    mov 	sp, fp                              ; explicitly restore sp
+    mov     sp, fp                              ; explicitly restore sp
     EPILOG_RESTORE_REG_PAIR fp, lr, #16!        ; restore FP/LR
     EPILOG_RETURN                               ; return
 

@@ -76,7 +76,7 @@ BOOL HashTbl::Init(uint cidHash)
 void HashTbl::Grow()
 {
     // Grow the bucket size by grow factor
-    // Has the side-effect of inverting the order the pid's appear in their respective buckets. 
+    // Has the side-effect of inverting the order the pid's appear in their respective buckets.
     uint cidHash = m_luMask + 1;
     uint n_cidHash = cidHash * GrowFactor;
     Assert(n_cidHash > 0 && 0 == (n_cidHash & (n_cidHash - 1)));
@@ -239,7 +239,7 @@ IdentPtr HashTbl::PidHashNameLenWithHash(_In_reads_(cch) CharType const * prgch,
     IdentPtr pid;
     long cb;
     long bucketCount;
-    
+
 
 #if PROFILE_DICTIONARY
     int depth = 0;
@@ -260,7 +260,7 @@ IdentPtr HashTbl::PidHashNameLenWithHash(_In_reads_(cch) CharType const * prgch,
         Grow();
 
         // ppid is now invalid because the Grow() moves the entries around.
-        // Find the correct ppid by repeating the find of the the end of the bucket
+        // Find the correct ppid by repeating the find of the end of the bucket
         // the new item will be placed in.
         // Note this is similar to the main find loop but does not count nor does it
         // look at the entries because we already proved above the entry is not in the
@@ -277,14 +277,14 @@ IdentPtr HashTbl::PidHashNameLenWithHash(_In_reads_(cch) CharType const * prgch,
         stats->Insert(depth);
 #endif
 
-    //Windows OS Bug 1795286 : CENTRAL PREFAST RUN: inetcore\scriptengines\src\src\core\hash.cpp : 
-    //               'sizeof((*pid))+((cch+1))*sizeof(OLECHAR)' may be smaller than 
-    //               '((cch+1))*sizeof(OLECHAR)'. This can be caused by integer overflows 
+    //Windows OS Bug 1795286 : CENTRAL PREFAST RUN: inetcore\scriptengines\src\src\core\hash.cpp :
+    //               'sizeof((*pid))+((cch+1))*sizeof(OLECHAR)' may be smaller than
+    //               '((cch+1))*sizeof(OLECHAR)'. This can be caused by integer overflows
     //               or underflows. This could yield an incorrect buffer all
     /* Allocate space for the identifier */
     ULONG Len;
 
-    if (FAILED(ULongAdd(cch, 1, &Len)) || 
+    if (FAILED(ULongAdd(cch, 1, &Len)) ||
         FAILED(ULongMult(Len, sizeof(OLECHAR), &Len)) ||
         FAILED(ULongAdd(Len, sizeof(*pid), &Len)) ||
         FAILED(ULongToLong(Len, &cb)))
@@ -320,10 +320,10 @@ IdentPtr HashTbl::PidHashNameLenWithHash(_In_reads_(cch) CharType const * prgch,
 
 template <typename CharType>
 IdentPtr HashTbl::FindExistingPid(
-    CharType const * prgch, 
-    long cch, 
-    ulong luHash, 
-    IdentPtr **pppInsert, 
+    CharType const * prgch,
+    long cch,
+    ulong luHash,
+    IdentPtr **pppInsert,
     long *pBucketCount
 #if PROFILE_DICTIONARY
     , int& depth
@@ -403,8 +403,8 @@ bool HashTbl::Contains(_In_reads_(cch) LPCOLESTR prgch, long cch)
 
 #pragma warning(push)
 #pragma warning(disable:4740)  // flow in or out of inline asm code suppresses global optimization
-// Decide if token is keyword by string matching - 
-// This method is used during colorizing when scanner isnt interested in storing the actual id and does not care about conversion of escape sequences
+// Decide if token is keyword by string matching -
+// This method is used during colorizing when scanner isn't interested in storing the actual id and does not care about conversion of escape sequences
 tokens HashTbl::TkFromNameLenColor(_In_reads_(cch) LPCOLESTR prgch, ulong cch)
 {
     ulong luHash = CaseSensitiveComputeHashCch(prgch, cch);
@@ -430,8 +430,8 @@ LDefault:
 #pragma warning(push)
 #pragma warning(disable:4740)  // flow in or out of inline asm code suppresses global optimization
 
-// Decide if token is keyword by string matching - 
-// This method is used during colorizing when scanner isnt interested in storing the actual id and does not care about conversion of escape sequences
+// Decide if token is keyword by string matching -
+// This method is used during colorizing when scanner isn't interested in storing the actual id and does not care about conversion of escape sequences
 tokens HashTbl::TkFromNameLen(_In_reads_(cch) LPCOLESTR prgch, ulong cch, bool isStrictMode)
 {
     ulong luHash = CaseSensitiveComputeHashCch(prgch, cch);

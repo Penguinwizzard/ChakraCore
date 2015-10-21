@@ -10,7 +10,7 @@
 // Buckets and entries are allocated as contiguous arrays to maintain good locality of reference.
 //
 // COLLISION STRATEGY
-// This dictionary uses a chaining collision resolution strategy. Chains are implented using indexes to the 'buckets' array.
+// This dictionary uses a chaining collision resolution strategy. Chains are implemented using indexes to the 'buckets' array.
 //
 // STORAGE (TAllocator)
 // This dictionary works for both arena and recycler based allocation using TAllocator template parameter.
@@ -19,8 +19,8 @@
 //
 // INITIAL SIZE and BUCKET MAPPING (SizePolicy)
 // This can be specified using TSizePolicy template parameter. There are 2 implementations:
-//         - PrimeSizePolicy (Better distribuion): Initial size is a prime number. Mapping to bucket is done using modulus operation (costlier).
-//         - PowerOf2SizePolicy (faster): Initial size is a power of 2. Mapping to bucket is done by a fast truncating the MSB bits upto the size of the table.
+//         - PrimeSizePolicy (Better distribution): Initial size is a prime number. Mapping to bucket is done using modulus operation (costlier).
+//         - PowerOf2SizePolicy (faster): Initial size is a power of 2. Mapping to bucket is done by a fast truncating the MSB bits up to the size of the table.
 //
 // COMPARISONS AND HASHCODE (Comparer)
 // Enables custom comparisons for TKey and TValue. For example, for strings we use string comparison instead of comparing pointers.
@@ -50,7 +50,7 @@ namespace JsUtil
         void BeginResize() {}
         void EndResize() {}
     };
-    
+
     class AsymetricResizeLock
     {
     public:
@@ -61,7 +61,7 @@ namespace JsUtil
     private:
         CriticalSection cs;
     };
-   
+
     template <class TKey, class TValue> class SimpleDictionaryEntry;
 
     template <
@@ -109,7 +109,7 @@ namespace JsUtil
             Insert_AddNew,          // Ignore add if the item already exist
             Insert_Item             // Replace the item if it already exist
         };
-        
+
         class AutoDoResize
         {
         public:
@@ -439,7 +439,7 @@ namespace JsUtil
             }
             return false;
         }
-        
+
         bool Remove(const TKey& key)
         {
             int i, last;
@@ -615,23 +615,23 @@ namespace JsUtil
                 Resize();
                 return true;
             }
-        
+
             return false;
         }
-        
+
         int GetNextIndex()
-        { 
+        {
             if (freeCount != 0)
             {
                 Assert(freeCount > 0);
                 Assert(freeList >= 0);
                 Assert(freeList < count);
                 return freeList;
-            }            
-        
+            }
+
             return count;
         }
-        
+
         int GetLastIndex()
         {
             return count - 1;
@@ -641,7 +641,7 @@ namespace JsUtil
         {
             return AllocatorNew(AllocatorType, alloc, BaseDictionary, *this);
         }
-      
+
         void Copy(const BaseDictionary *const other)
         {
             DoCopy(other);
@@ -653,7 +653,7 @@ namespace JsUtil
         }
 
         void UnlockResize()
-        {            
+        {
             __super::UnlockResize();
         }
     protected:
@@ -733,7 +733,7 @@ namespace JsUtil
 
     private:
         template <typename TLookup>
-        static hash_t GetHashCodeWithKey(const TLookup& key) 
+        static hash_t GetHashCodeWithKey(const TLookup& key)
         {
             // set last bit to 1 to avoid false positive to make hash appears to be an valid recycler address.
             // In the same line, 0 should be use to indicate a non-existing entry.
@@ -881,7 +881,7 @@ namespace JsUtil
                 Initialize(0);
                 localBuckets = buckets;
             }
-            
+
 #if DBG || PROFILE_DICTIONARY
             // Always search and verify
             const bool needSearch = true;
@@ -952,7 +952,7 @@ namespace JsUtil
             {
                 // If there's nothing free, then in general, we set index to count, and increment count
                 // If we resize, we also need to recalculate the target
-                // However, if cleanup is supported, then before resize, we should try and clean up and see 
+                // However, if cleanup is supported, then before resize, we should try and clean up and see
                 // if something got freed, and if it did, reuse that index
                 if (count == size)
                 {
@@ -1002,7 +1002,7 @@ namespace JsUtil
             if (newBucketCount == bucketCount)
             {
                 // no need to rehash
-                newEntries = AllocateEntries(newSize);                
+                newEntries = AllocateEntries(newSize);
                 js_memcpy_s(newEntries, sizeof(EntryType) * newSize, entries, sizeof(EntryType) * count);
 
                 DeleteEntries(entries, size);
@@ -1030,7 +1030,7 @@ namespace JsUtil
                     newBuckets[bucket] = i;
                 }
             }
-            
+
             DeleteBuckets(buckets, bucketCount);
             DeleteEntries(entries, size);
 
@@ -1506,17 +1506,17 @@ namespace JsUtil
         {
             return __super::EnsureCapacity();
         }
-        
+
         int GetNextIndex()
         {
             return __super::GetNextIndex();
         }
-        
+
         int GetLastIndex()
         {
             return __super::GetLastIndex();
         }
-        
+
         using Base::GetValueAt;
 
         bool TryGetValueAt(int index, TElement * value) const
@@ -1535,12 +1535,12 @@ namespace JsUtil
         }
 
         void LockResize()
-        {            
+        {
             __super::LockResize();
         }
 
         void UnlockResize()
-        {            
+        {
             __super::UnlockResize();
         }
     public:

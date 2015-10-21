@@ -14,7 +14,7 @@ namespace Js
         lastMatch() // undefined
     {
         DebugOnly(VerifyEntryPoint());
-        ScriptContext* scriptContext = this->GetScriptContext();        
+        ScriptContext* scriptContext = this->GetScriptContext();
         JavascriptString* emptyString = scriptContext->GetLibrary()->GetEmptyString();
         this->lastInput = emptyString;
         this->index = JavascriptNumber::ToVar(-1, scriptContext);
@@ -68,8 +68,8 @@ namespace Js
             int numGroups = pattern->NumGroups();
             if (numGroups > 1)
             {
-                // The RegExp constructor's lastMatch holds the last *successfull* match on any regular expression.
-                // That regular expression may since have been used for *unseccessfull* matches, in which case
+                // The RegExp constructor's lastMatch holds the last *successful* match on any regular expression.
+                // That regular expression may since have been used for *unsuccessful* matches, in which case
                 // its groups will have been reset. Updating the RegExp constructor with the group binding after
                 // every match is prohibitively slow. Instead, run the match again using the known last input string.
                 if (!pattern->WasLastMatchSuccessful())
@@ -312,7 +312,7 @@ namespace Js
         {
         case PropertyIds::input:
         case PropertyIds::$_:
-            //TODO: review: although the 'input' property is marked as readonly, it has a set on V5.8. There is no spec on this. 
+            //TODO: review: although the 'input' property is marked as readonly, it has a set on V5.8. There is no spec on this.
             EnsureValues(); // The last match info relies on the last input. Use it before it is changed.
             this->lastInput = JavascriptConversion::ToString(value, this->GetScriptContext());
             *result = true;

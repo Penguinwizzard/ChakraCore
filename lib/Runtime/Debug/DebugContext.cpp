@@ -213,7 +213,7 @@ namespace Js
                 {
                     if (this->scriptContext == nullptr || this->scriptContext->IsClosed())
                     {
-                        // scriptContext can be closed in previous call 
+                        // scriptContext can be closed in previous call
                         hr = E_FAIL;
                         return true;
                     }
@@ -282,8 +282,8 @@ namespace Js
         Assert(sourceInfo != nullptr);
 
         HRESULT hr = S_OK;
-        //
-        // Get functionbodies which are distinctly parseable, ie. they are not enclosed in any other function (finding out root node of the sub-tree, in which root node is
+
+        // Get FunctionBodys which are distinctly parseable, i.e. they are not enclosed in any other function (finding out root node of the sub-tree, in which root node is
         // not enclosed in any other available function) this is by walking over all function and comparing their range.
         // functions and store in them in the temp container, by comparing their source range.
 
@@ -371,7 +371,7 @@ namespace Js
             }
             else if (!callerScriptContext->IsInDebugOrSourceRundownMode())
             {
-                // The caller scriptContext is not in run down/debug mode so let's save the relationship so that we can reparent callees afterwards 
+                // The caller scriptContext is not in run down/debug mode so let's save the relationship so that we can re-parent callees afterwards
                 callerScriptContext->AddCalleeSourceInfoToList(sourceInfo);
             }
         }

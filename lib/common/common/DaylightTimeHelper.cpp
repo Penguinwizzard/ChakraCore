@@ -216,7 +216,7 @@ namespace Js {
     }
 
     // in slow path we use system API to perform conversion, but we still need to know whether current time is
-    // standart or daylight savings in order to create a string representation of a date.
+    // standard or daylight savings in order to create a string representation of a date.
     // So just compare whether difference between local and utc time equal to bias.
     bool DaylightTimeHelper::IsDaylightSavings(double utcTime, double localTime, int bias)
     {

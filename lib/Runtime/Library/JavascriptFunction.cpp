@@ -51,7 +51,7 @@ namespace Js
         if (GetTypeHandler()->GetFlags() & DynamicTypeHandler::IsPrototypeFlag)
         {
             // No need to invalidate store field caches for non-writable properties here.  Since this type is just being created, it cannot represent
-            // an object that is already a prototype.  If it becomes a prototype and then we attempt to add a property to an object dervied from this
+            // an object that is already a prototype.  If it becomes a prototype and then we attempt to add a property to an object derived from this
             // object, then we will check if this property is writable, and only if it is will we do the fast path for add property.
             // GetScriptContext()->InvalidateStoreFieldCaches(PropertyIds::length);
             GetLibrary()->NoPrototypeChainsAreEnsuredToHaveOnlyWritableDataProperties();
@@ -67,7 +67,7 @@ namespace Js
         if (GetTypeHandler()->GetFlags() & DynamicTypeHandler::IsPrototypeFlag)
         {
             // No need to invalidate store field caches for non-writable properties here.  Since this type is just being created, it cannot represent
-            // an object that is already a prototype.  If it becomes a prototype and then we attempt to add a property to an object dervied from this
+            // an object that is already a prototype.  If it becomes a prototype and then we attempt to add a property to an object derived from this
             // object, then we will check if this property is writable, and only if it is will we do the fast path for add property.
             // GetScriptContext()->InvalidateStoreFieldCaches(PropertyIds::length);
             GetLibrary()->NoPrototypeChainsAreEnsuredToHaveOnlyWritableDataProperties();
@@ -155,8 +155,8 @@ namespace Js
 
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
 
-        // SkipDefaultNewObject function flag should have revent the default object
-        // being created, except when call true a host dispatch
+        // SkipDefaultNewObject function flag should have prevented the default object from
+        // being created, except when call true a host dispatch.
         Var newTarget = callInfo.Flags & CallFlags_NewTarget ? args.Values[args.Info.Count] : args[0];
         bool isCtorSuperCall = (callInfo.Flags & CallFlags_New) && newTarget != nullptr && RecyclableObject::Is(newTarget);
         Assert(isCtorSuperCall || !(callInfo.Flags & CallFlags_New) || args[0] == nullptr
@@ -201,7 +201,7 @@ namespace Js
 
         // Bug 1105479. Get the module id from the caller
         ModuleID moduleID = kmodGlobal;
-       
+
         // In IE9 mode, it should always be evaluated in the global context
         //
 
@@ -215,8 +215,8 @@ namespace Js
         EvalMapString key(sourceString, sourceLen, moduleID, strictMode, /* isLibraryCode = */ false);
         if (!scriptContext->IsInNewFunctionMap(key, &pfuncBodyCache))
         {
-            // ES3 and ES5 specs require validation of the formal list and the function body            
-            
+            // ES3 and ES5 specs require validation of the formal list and the function body
+
             // Validate fmls here....
             scriptContext->GetGlobalObject()->ValidateSyntax(scriptContext, fmls->GetSz(), fmls->GetLength(), isGenerator, &Parser::ValidateFormals);
             if (fnBody != NULL)
@@ -456,7 +456,7 @@ namespace Js
 
             if (len >= CallInfo::kMaxCountArgs)
             {
-                JavascriptError::ThrowRangeError(scriptContext, JSERR_ArgListTooLarge);                
+                JavascriptError::ThrowRangeError(scriptContext, JSERR_ArgListTooLarge);
             }
 
             outArgs.Info.Count = (uint)len + 1;
@@ -621,7 +621,7 @@ namespace Js
             {
                 ret = CallRootFunctionInternal(args, scriptContext, inScript);
             }
-            __finally 
+            __finally
             {
                 Js::FaultInjection::pfnHandleAV = nullptr;
             }
@@ -809,7 +809,7 @@ namespace Js
         }
 
         // Call the constructor function:
-        // - If this is not already specified as the overriding new target in Reflect.construct a class case, then 
+        // - If this is not already specified as the overriding new target in Reflect.construct a class case, then
         // - Pass in the new empty object as the 'this' parameter. This can be null if an empty object was not created.
 
         if (!thisAlreadySpecified)
@@ -913,7 +913,7 @@ namespace Js
 
         // Iterate over the arguments, spreading inline. We skip 'this'.
         Var undefined = scriptContext->GetLibrary()->GetUndefined();
-        
+
         for (unsigned i = 1, argsIndex = 1, spreadArgIndex = 0; i < callInfo.Count; ++i)
         {
             size_t spreadIndex = spreadIndices->elements[spreadArgIndex]; // Next index to be spread.
@@ -1002,7 +1002,7 @@ namespace Js
                         }
                     }
                 }
-                
+
             if (spreadArgIndex < spreadIndices->count - 1)
             {
                 spreadArgIndex++;
@@ -1012,7 +1012,7 @@ namespace Js
     }
 
     Var JavascriptFunction::CallSpreadFunction(RecyclableObject* function, JavascriptMethod entryPoint, Arguments args, const Js::AuxArray<uint32> *spreadIndices)
-    {        
+    {
         ScriptContext* scriptContext = function->GetScriptContext();
 
         // Work out the expanded number of arguments.
@@ -1037,7 +1037,7 @@ namespace Js
         }
 
         SpreadArgs(args, outArgs, spreadIndices, scriptContext);
-        
+
         return JavascriptFunction::CallFunction<true>(function, entryPoint, outArgs);
     }
 
@@ -1458,7 +1458,7 @@ LABEL1:
 
         // This is the first call to the function, ensure dynamic profile info
         funcBody->EnsureDynamicProfileInfo();
-        
+
         (*functionRef)->UpdateUndeferredBody(funcBody);
     }
 
@@ -1472,7 +1472,7 @@ LABEL1:
         {
             push ebp
             mov ebp, esp
-            lea eax, [esp+8]                // load the address of the funciton os that if we need to box, we can patch it up
+            lea eax, [esp+8]                // load the address of the function os that if we need to box, we can patch it up
             push eax
             call JavascriptFunction::DeferredParse
 #ifdef _CONTROL_FLOW_GUARD
@@ -1594,7 +1594,7 @@ LABEL1:
 #if DBG_DUMP
     void JavascriptFunction::Dump()
     {
-        //Note: This code has been commented since August 2010; if it becomes uncommented it can be decided at that time if the function body has to be deserialzied at this point.
+        //Note: This code has been commented since August 2010; if it becomes uncommented it can be decided at that time if the function body has to be deserialized at this point.
         FunctionBody* pFuncBody = this->GetFunctionBody();
         if(pFuncBody)
         {
@@ -1612,29 +1612,29 @@ LABEL1:
     *****************************************************************************************************************
                                 Conditions checked by instruction decoder (In sequential order)
     ******************************************************************************************************************
-    1)	Exception Code is AV i.e STATUS_ACCESS_VIOLATION
+    1)  Exception Code is AV i.e STATUS_ACCESS_VIOLATION
     2)  Check if Rip is Native address
-    3)	Get the function object from RBP (a fixed offset from RBP) and check for the following
-        a.	Not Null
+    3)  Get the function object from RBP (a fixed offset from RBP) and check for the following
+        a.  Not Null
         b.  Ensure that the function object is heap allocated
         c.  Ensure that the entrypointInfo is heap allocated
         d.  Ensure that the functionbody is heap allocated
-        e.	Is a function
-        f.	Is AsmJs Function object for asmjs
-    4)	Check if Array BufferLength > 0x10000 (64K), power of 2 if length is less than 2^24 or multiple of 2^24  and multiple of 0x1000(4K) for asmjs
-    5)	Check If the instruction is valid
-        a.	Is one of the move instructions , i.e. mov, movsx, movzx, movsxd, movss or movsd               
-        b.	Get the array buffer register and its value for asmjs
-        c.	Get the dst register(in case of load)
-        d.	Calculate the number of bytes read in order to get the length of the instruction , ensure that the length should never be greater than 15 bytes
-    6)	Check that the Array buffer value is same as the one we passed in EntryPointInfo in asmjs
-    7)	Set the dst reg if the instr type is load
-    8)	Add the bytes read to Rip and set it as new Rip
-    9)	Return EXCEPTION_CONTINUE_EXECUTION
+        e.  Is a function
+        f.  Is AsmJs Function object for asmjs
+    4)  Check if Array BufferLength > 0x10000 (64K), power of 2 if length is less than 2^24 or multiple of 2^24  and multiple of 0x1000(4K) for asmjs
+    5)  Check If the instruction is valid
+        a.  Is one of the move instructions , i.e. mov, movsx, movzx, movsxd, movss or movsd
+        b.  Get the array buffer register and its value for asmjs
+        c.  Get the dst register(in case of load)
+        d.  Calculate the number of bytes read in order to get the length of the instruction , ensure that the length should never be greater than 15 bytes
+    6)  Check that the Array buffer value is same as the one we passed in EntryPointInfo in asmjs
+    7)  Set the dst reg if the instr type is load
+    8)  Add the bytes read to Rip and set it as new Rip
+    9)  Return EXCEPTION_CONTINUE_EXECUTION
 
     */
 #ifdef _M_X64
-    ArrayAccessDecoder::InstructionData ArrayAccessDecoder::CheckValidInstr(BYTE* &pc, PEXCEPTION_POINTERS exceptionInfo, FunctionBody* funcBody) // get the reg operand and isLoad and 
+    ArrayAccessDecoder::InstructionData ArrayAccessDecoder::CheckValidInstr(BYTE* &pc, PEXCEPTION_POINTERS exceptionInfo, FunctionBody* funcBody) // get the reg operand and isLoad and
     {
         InstructionData instrData;
         uint prefixValue = 0;
@@ -1644,11 +1644,11 @@ LABEL1:
         uint dispBytes = 0;
         bool isImmediate = false;
         bool isSIB = false;
-        // Read first  byte - check for prefix 
+        // Read first  byte - check for prefix
         BYTE* beginPc = pc;
         if (((*pc) == 0x0F2) || ((*pc) == 0x0F3))
         {
-            //MOVSD or MOVSS                   
+            //MOVSD or MOVSS
             prefixValue = *pc;
             isFloat = true;
             pc++;
@@ -1659,9 +1659,9 @@ LABEL1:
             pc++;
         }
 
-        // Check for Rex Byte - After prefix we should have a rexbyte if there is one 
+        // Check for Rex Byte - After prefix we should have a rexByte if there is one
         if (*pc >= 0x40 && *pc <= 0x4F)
-        {            
+        {
             rexByteValue.rexValue = *pc;
             uint rexByte = *pc - 0x40;
             if (rexByte & 0x8)
@@ -1683,7 +1683,7 @@ LABEL1:
             pc++;
         }
 
-        // read opcode 
+        // read opcode
         // Is one of the move instructions , i.e. mov, movsx, movzx, movsxd, movss or movsd
         switch (*pc)
         {
@@ -1707,40 +1707,40 @@ LABEL1:
         {
             // more than one byte opcode and hence we will read pc multiple times
             pc++;
-            //MOVSX  , MOVSXD  
+            //MOVSX  , MOVSXD
             if (*pc == 0xBE || *pc == 0xBF)
-            {                                             
+            {
                 instrData.isLoad = true;
             }
             //MOVZX
-            else if (*pc == 0xB6 || *pc == 0xB7) 
-            {                         
-                instrData.isLoad = true;                         
+            else if (*pc == 0xB6 || *pc == 0xB7)
+            {
+                instrData.isLoad = true;
             }
             //MOVSS - Load
             else if (*pc == 0x10 && prefixValue == 0xF3)
-            {                         
+            {
                 Assert(isFloat);
                 instrData.isLoad = true;
                 instrData.isFloat32 = true;
             }
             //MOVSS - Store
             else if (*pc == 0x11 && prefixValue == 0xF3)
-            {                         
+            {
                 Assert(isFloat);
                 instrData.isLoad = false;
                 instrData.isFloat32 = true;
             }
             //MOVSD - Load
             else if (*pc == 0x10 && prefixValue == 0xF2)
-            {                         
+            {
                 Assert(isFloat);
                 instrData.isLoad = true;
                 instrData.isFloat64 = true;
             }
             //MOVSD - Store
             else if (*pc == 0x11 && prefixValue == 0xF2)
-            {                         
+            {
                 Assert(isFloat);
                 instrData.isLoad = false;
                 instrData.isFloat64 = true;
@@ -1764,13 +1764,13 @@ LABEL1:
             pc++;
             break;
         }
-        //Support Mov Immediates
-        // MOV 
+        // Support Mov Immediates
+        // MOV
         case 0xC6:
         case 0xC7:
         {
             instrData.isLoad = false;
-            instrData.isFloat64 = false; 
+            instrData.isFloat64 = false;
             isImmediate = true;
             if (*pc == 0xC6)
             {
@@ -1806,8 +1806,8 @@ LABEL1:
         }
 
         //Read ModR/M
-        // Read the Src Reg and also check for SIB 
-        // Add the isR bit to SrcReg and get the actual SRCReg 
+        // Read the Src Reg and also check for SIB
+        // Add the isR bit to SrcReg and get the actual SRCReg
         // Get the number of bytes for displacement
 
         //get mod bits
@@ -1816,7 +1816,7 @@ LABEL1:
 
         //get the R/M bits
         BYTE rmVal = (*pc) & 0x07; // last 3 bits ( 0,1 and 2nd bits)
-        
+
         //get the reg value
         BYTE dstReg = (*pc) & 0x38; // mask reg bits (3rd 4th and 5th bits)
         dstReg >>= 3;
@@ -1855,22 +1855,22 @@ LABEL1:
         {
             instrData.bufferReg = rmVal;
         }
-        //Get the RegByes from ModRM 
+        // Get the RegByes from ModRM
 
         instrData.dstReg = dstReg;
 
-        //increment the modrm byte 
+        // increment the modrm byte
         pc++;
-        //Check if we have SIB and in that case bufferReg should not be set
+        // Check if we have SIB and in that case bufferReg should not be set
         if (isSIB)
         {
             Assert(!instrData.bufferReg);
-            // Get the Base and Index Reg from SIB and ensure that Scale is zero 
-            // We dont care about the Index reg 
-            // Add the isB value from Rex and get the actual Base Reg             
-            //Get the base register        
+            // Get the Base and Index Reg from SIB and ensure that Scale is zero
+            // We don't care about the Index reg
+            // Add the isB value from Rex and get the actual Base Reg
+            // Get the base register
 
-            //6f. Get the array buffer register and its value
+            // 6f. Get the array buffer register and its value
             instrData.bufferReg = (*pc % 8);
             pc++;
         }
@@ -1885,7 +1885,7 @@ LABEL1:
             instrData.dstReg |= 1 << 3;
         }
 
-        // Get the buffer address - this is always 64 bit GPR        
+        // Get the buffer address - this is always 64 bit GPR
         switch (instrData.bufferReg)
         {
         case 0x0:
@@ -1942,7 +1942,7 @@ LABEL1:
             Assert(false);// should never reach here as validation is done before itself
             return instrData;
         }
-        // add the pc for displacement , we dont need the displacement Byte value
+        // add the pc for displacement , we don't need the displacement Byte value
         if (dispBytes > 0)
         {
             pc = pc + dispBytes;
@@ -1981,7 +1981,7 @@ LABEL1:
         {
             return EXCEPTION_CONTINUE_SEARCH;
         }
-        
+
         Js::ScriptFunction* func = (ScriptFunction::Is(*addressOfFuncObj))?(Js::ScriptFunction*)(*addressOfFuncObj):nullptr;
         if (!func)
         {
@@ -2035,7 +2035,7 @@ LABEL1:
         {
             return EXCEPTION_CONTINUE_SEARCH;
         }
-        
+
         // If we didn't find the array buffer, ignore
         if (!instrData.bufferValue)
         {
@@ -2059,7 +2059,7 @@ LABEL1:
         {
             Var exceptionInfoReg = exceptionInfo->ContextRecord;
             Var* exceptionInfoIntReg = (Var*)((uint64)exceptionInfoReg + offsetof(CONTEXT, CONTEXT::Rax)); // offset in the contextRecord for RAX , the assert below checks for any change in the exceptionInfo struct
-            Var* exceptionInfoFloatReg = (Var*)((uint64)exceptionInfoReg + offsetof(CONTEXT, CONTEXT::Xmm0));// offset in the contextRecord for XMM0 , the assert below checks for any change in the exceptionInfo struct                                    
+            Var* exceptionInfoFloatReg = (Var*)((uint64)exceptionInfoReg + offsetof(CONTEXT, CONTEXT::Xmm0));// offset in the contextRecord for XMM0 , the assert below checks for any change in the exceptionInfo struct
             Assert((DWORD64)*exceptionInfoIntReg == exceptionInfo->ContextRecord->Rax);
             Assert((uint64)*exceptionInfoFloatReg == exceptionInfo->ContextRecord->Xmm0.Low);
 
@@ -2108,7 +2108,7 @@ LABEL1:
                 || callEntryPoint == DOMFastPathInfo::CrossSiteSimpleSlotAccessorThunk);
 #else
             Assert(callEntryPoint == originalEntryPoint || callEntryPoint == ProfileEntryThunk);
-#endif                
+#endif
         }
     }
 #endif
@@ -2389,8 +2389,8 @@ LABEL1:
 
             if (funcCaller->GetScriptContext() != requestContext && funcCaller->GetTypeId() == TypeIds_Null)
             {
-                //There are cases where Stackwalker might return null value from different scriptContext
-                //Caller of this function expects nullValue from the requestContext.
+                // There are cases where StackWalker might return null value from different scriptContext
+                // Caller of this function expects nullValue from the requestContext.
                 funcCaller = nullValue;
             }
         }
@@ -2900,7 +2900,7 @@ LABEL1:
         ScriptContext* scriptContext = this->GetScriptContext();
         FunctionProxy* proxy = this->GetFunctionProxy();
         JavascriptLibrary* library = scriptContext->GetLibrary();
-        
+
         if (proxy)
         {
             ParseableFunctionInfo * func = proxy->EnsureDeserialized();
@@ -2992,18 +2992,18 @@ LABEL1:
         }
 
         // If we have an instance of inline cache, let's try to use it to speed up the operation.
-        // We would like to catch all cases when we already know (by having checked previously) 
+        // We would like to catch all cases when we already know (by having checked previously)
         // that an object on the left of instance of has been created by a function on the right,
         // as well as when we already know the object on the left has not been created by a function on the right.
         // In practice, we can do so only if the function matches the function in the cache, and the object's type matches the
         // type in the cache.  Notably, this typically means that if some of the objects evolved after construction,
         // while others did not, we will miss the cache for one of the two (sets of objects).
-        // An important subtelty here arises when a function is called from different script contexts.
+        // An important subtlety here arises when a function is called from different script contexts.
         // Suppose we called function foo from script context A, and we pass it an object o created in the same script context.
         // When function foo checks if object o is an instance of itself (function foo) for the first time (from context A) we will
         // populate the cache with function foo and object o's type (which is permanently bound to the script context A,
-        // in which object o was created). If we later later invoked function foo from script context B and perform the same instance-of check,
-        // the function will still match the function in the cache (because objects' identities do not change during cross-context marshalling). 
+        // in which object o was created). If we later invoked function foo from script context B and perform the same instance-of check,
+        // the function will still match the function in the cache (because objects' identities do not change during cross-context marshalling).
         // However, object o's type (even if it is of the same "shape" as before) will be different, because the object types are permanently
         // bound and unique to the script context from which they were created.  Hence, the cache may miss, even if the function matches.
         if (inlineCache != nullptr)
@@ -3023,13 +3023,13 @@ LABEL1:
         //    prototype property has been changed (see JavascriptFunction::SetProperty and ThreadContext::InvalidateIsInstInlineCachesForFunction).
         // TODO (jedmiad): Create unit tests for each of the above conditions.
         // Curiously, we may even miss the cache if we ask again about the very same object the very same function the cache was populated with.
-        // This subtelty arises when a function is called from two (or more) different script contexts.
+        // This subtlety arises when a function is called from two (or more) different script contexts.
         // Suppose we called function foo from script context A, and passed it an object o created in the same script context.
         // When function foo checks if object o is an instance of itself (function foo) for the first time (from context A) we will
         // populate the cache with function foo and object o's type (which is permanently bound to the script context A,
-        // in which object o was created). If we later later invoked function foo from script context B and perform the same instance of check,
-        // the function will still match the function in the cache (because objects' identities do not change during cross-context marshalling). 
-        // However, object o's type (even if it is of the same "shape" as before, and even if o is the very same object) will be different, 
+        // in which object o was created). If we later invoked function foo from script context B and perform the same instance of check,
+        // the function will still match the function in the cache (because objects' identities do not change during cross-context marshalling).
+        // However, object o's type (even if it is of the same "shape" as before, and even if o is the very same object) will be different,
         // because the object types are permanently bound and unique to the script context from which they were created.
 
         Var prototype = JavascriptOperators::GetPrototype(RecyclableObject::FromVar(instance));
@@ -3040,7 +3040,7 @@ LABEL1:
         }
 
         // Since we missed the cache, we must now walk the prototype chain of the object to check if the given function's prototype is somewhere in
-        // that chain.  If it is, we return true.  Otherwise, i.e. we hit the end of the chain before finding the function's prototype, we return false.
+        // that chain. If it is, we return true. Otherwise (i.e., we hit the end of the chain before finding the function's prototype) we return false.
         while (JavascriptOperators::GetTypeId(prototype) != TypeIds_Null)
         {
             if (prototype == funcPrototype)
@@ -3061,8 +3061,8 @@ LABEL1:
             Type * instanceType = RecyclableObject::FromVar(instance)->GetType();
 
             if (!instanceType->HasSpecialPrototype()
-                && scriptContext == function->GetScriptContext()) // only register when function has same scriptContext, otherwise when scriptContext close 
-                                                                  // and the isinst inline cache chain will be broken by clearing the arenaAllocator
+                && scriptContext == function->GetScriptContext()) // only register when function has same scriptContext, otherwise when scriptContext close
+                                                                  // and the isInst inline cache chain will be broken by clearing the arenaAllocator
             {
                 inlineCache->Cache(instanceType, function, boolResult, scriptContext);
             }

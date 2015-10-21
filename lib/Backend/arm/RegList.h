@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
-// Internal  Listing  Machine        
+// Internal  Listing  Machine
 // Name      Name     Encode    Type        BitVec
 //------------------------------------------------------------------------
 
@@ -52,7 +52,7 @@ REGDAT(D13,     d13,      13,   TyFloat64,  RA_CALLEESAVE)
 REGDAT(D14,     d14,      14,   TyFloat64,  RA_CALLEESAVE)
 REGDAT(D15,     d15,      15,   TyFloat64,  RA_CALLEESAVE)
 /* -- Following registers only in VFPv3-D32 and current hardware supports only VFPv3-D16
-** -- enable these before shipping as final windows 8 harware support D32 registers
+** -- enable these before shipping as final windows 8 hardware support D32 registers
 ** -- Also fix VPUSH which can only push 16 registers in one VPUSH.
 REGDAT(D16,     d16,      16,   TyFloat64,  0)
 REGDAT(D17,     d17,      17,   TyFloat64,  0)

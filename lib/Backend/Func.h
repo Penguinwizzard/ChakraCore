@@ -15,8 +15,8 @@ class FlowGraph;
 
 struct Cloner
 {
-    Cloner(Lowerer *lowerer, JitArenaAllocator *alloc) : 
-        alloc(alloc), 
+    Cloner(Lowerer *lowerer, JitArenaAllocator *alloc) :
+        alloc(alloc),
         symMap(nullptr),
         labelMap(nullptr),
         lowerer(lowerer),
@@ -68,24 +68,24 @@ public:
 public:
     ArenaAllocator *GetCodeGenAllocator() const { return &this->m_codeGenAllocators->allocator; }
     CodeGenAllocators * const GetCodeGenAllocators()
-    { 
-        return this->GetTopFunc()->m_codeGenAllocators; 
+    {
+        return this->GetTopFunc()->m_codeGenAllocators;
     }
-    NativeCodeData::Allocator *GetNativeCodeDataAllocator() 
-    { 
-        return &this->GetTopFunc()->nativeCodeDataAllocator; 
+    NativeCodeData::Allocator *GetNativeCodeDataAllocator()
+    {
+        return &this->GetTopFunc()->nativeCodeDataAllocator;
     }
-    NativeCodeData::Allocator *GetTransferDataAllocator() 
-    { 
-        return &this->GetTopFunc()->transferDataAllocator; 
+    NativeCodeData::Allocator *GetTransferDataAllocator()
+    {
+        return &this->GetTopFunc()->transferDataAllocator;
     }
     CodeGenNumberAllocator * GetNumberAllocator()
     {
-        return this->numberAllocator; 
+        return this->numberAllocator;
     }
-    EmitBufferManager<CriticalSection> *GetEmitBufferManager() const 
-    { 
-        return &this->m_codeGenAllocators->emitBufferManager; 
+    EmitBufferManager<CriticalSection> *GetEmitBufferManager() const
+    {
+        return &this->m_codeGenAllocators->emitBufferManager;
     }
 
     Js::ScriptContextProfiler *GetCodeGenProfiler() const
@@ -170,17 +170,17 @@ public:
     static inline uint32 GetDiagLocalSlotSize()
     {
         // For the debug purpose we will have fixed stack slot size
-        // We will allcated the 8 bytes for each variable.
+        // We will allocated the 8 bytes for each variable.
         return MachDouble;
     }
 
 #ifdef DBG
-    // The pattern used to pre-fill locals for CHK builds. 
-    // When we restore bailout values we check for this pattern, this is how we assert for non-initialized variabled/garbage.
+    // The pattern used to pre-fill locals for CHK builds.
+    // When we restore bailout values we check for this pattern, this is how we assert for non-initialized variables/garbage.
 
 static const uint32 c_debugFillPattern4 = 0xcececece;
 static const unsigned __int64 c_debugFillPattern8 = 0xcececececececece;
-    
+
 #if defined(_M_IX86) || defined (_M_ARM)
     static const uint32 c_debugFillPattern = c_debugFillPattern4;
 #elif defined(_M_X64) || defined(_M_ARM64)
@@ -199,11 +199,11 @@ static const unsigned __int64 c_debugFillPattern8 = 0xcececececececece;
     Func * GetTopFunc();
 
     void SetFirstArgOffset(IR::Instr* inlineeStart);
-    
+
     uint GetFunctionNumber() const
     {
         Assert(this->IsTopFunc());
-        return this->m_workItem->GetFunctionNumber();     
+        return this->m_workItem->GetFunctionNumber();
     }
     uint GetLocalFunctionId() const
     {
@@ -239,8 +239,8 @@ static const unsigned __int64 c_debugFillPattern8 = 0xcececececececece;
     }
 
     RecyclerWeakReference<Js::FunctionBody> *GetWeakFuncRef() const;
-    Js::FunctionBody * GetJnFunction() const { return m_jnFunction; }   
-   
+    Js::FunctionBody * GetJnFunction() const { return m_jnFunction; }
+
     StackSym *EnsureLoopParamSym();
 
     StackSym *GetFuncObjSym() const { return m_funcObjSym; }
@@ -448,8 +448,8 @@ public:
     IntConstType        m_argsSize;
     IntConstType        m_savedRegSize;
     PrologEncoder       m_prologEncoder;
-#endif         
-        
+#endif
+
     SymTable *          m_symTable;
     StackSym *          m_loopParamSym;
     StackSym *          m_funcObjSym;
@@ -464,7 +464,7 @@ public:
     int32               m_localStackHeight;
     uint                frameSize;
     uint32              inlineDepth;
-    uint32              postCallByteCodeOffset;  
+    uint32              postCallByteCodeOffset;
     Js::RegSlot         returnValueRegSlot;
     Js::ArgSlot         actualCount;
     int32               firstActualStackOffset;
@@ -474,7 +474,7 @@ public:
     //Offset to arguments from sp + m_localStackHeight;
     //For non leaf functions this is (callee saved register count + LR + R11) * MachRegInt
     //For leaf functions this is (saved registers) * MachRegInt
-    int32               m_ArgumentsOffset; 
+    int32               m_ArgumentsOffset;
     UnwindInfoManager   m_unwindInfo;
     IR::LabelInstr *    m_epilogLabel;
 #endif
@@ -482,17 +482,17 @@ public:
     IR::LabelInstr *    m_funcEndLabel;
 
     // Keep track of the maximum number of args on the stack.
-    uint32              m_argSlotsForFunctionsCalled;    
+    uint32              m_argSlotsForFunctionsCalled;
 #if DBG
     uint32              m_callSiteCount;
 #endif
     FlowGraph *         m_fg;
-    unsigned int        m_labelCount;    
+    unsigned int        m_labelCount;
     BitVector           m_regsUsed;
     StackSym *          tempSymDouble;
     uint32              loopCount;
     Js::ProfileId       callSiteIdInParentFunc;
-    bool                m_isLeaf: 1;  // This is set in the IRBuilder and might be innacurate after inlining
+    bool                m_isLeaf: 1;  // This is set in the IRBuilder and might be inaccurate after inlining
     bool                m_hasCalls: 1; // This is more accurate compared to m_isLeaf
     bool                m_hasInlineArgsOpt : 1;
     bool                m_doFastPaths : 1;
@@ -506,7 +506,7 @@ public:
     bool                isGetterSetter : 1;
     const bool          isInlinedConstructor: 1;
     bool                hasImplicitCalls: 1;
-    bool                hasTempObjectProducingInstr:1; //Atleast one instruction which can produce temp object
+    bool                hasTempObjectProducingInstr:1; // At least one instruction which can produce temp object
     bool                isTJLoopBody : 1;
     bool                isFlowGraphValid : 1;
 #if DBG
@@ -524,7 +524,7 @@ public:
 #endif
 
     void                BeginPhase(Js::Phase tag);
-    void                EndPhase(Js::Phase tag, bool dump = true);    
+    void                EndPhase(Js::Phase tag, bool dump = true);
     void                EndProfiler(Js::Phase tag);
 
     void                BeginClone(Lowerer *lowerer, JitArenaAllocator *alloc);
@@ -539,12 +539,12 @@ public:
     Func *              GetParentFunc() const { return parentFunc; }
     uint                GetMaxInlineeArgOutCount() const { return maxInlineeArgOutCount; }
     void                UpdateMaxInlineeArgOutCount(uint inlineeArgOutCount);
-#if DBG_DUMP    
+#if DBG_DUMP
     ptrdiff_t           m_codeSize;
-#endif 
+#endif
     bool                GetHasCalls() const { return this->m_hasCalls; }
     void                SetHasCalls() { this->m_hasCalls = true; }
-    void                SetHasCallsOnSelfAndParents() 
+    void                SetHasCallsOnSelfAndParents()
     {
                         Func *curFunc = this;
                         while (curFunc)
@@ -567,8 +567,8 @@ public:
     void                SetHasArgumentObject() { this->hasArgumentObject = true;}
 
     bool                GetHasUnoptimizedArgumentsAcccess() const { return this->hasUnoptimizedArgumentsAcccess; }
-    void                SetHasUnoptimizedArgumentsAccess(bool args) 
-    { 
+    void                SetHasUnoptimizedArgumentsAccess(bool args)
+    {
                         // Once set to 'true' make sure this does not become false
                         if (!this->hasUnoptimizedArgumentsAcccess)
                         {
@@ -605,8 +605,8 @@ public:
 
     bool                GetHasImplicitCalls() const { return this->hasImplicitCalls;}
     void                SetHasImplicitCalls(bool has) { this->hasImplicitCalls = has;}
-    void                SetHasImplicitCallsOnSelfAndParents() 
-                        { 
+    void                SetHasImplicitCallsOnSelfAndParents()
+                        {
                             this->SetHasImplicitCalls(true);
                             Func *curFunc = this->GetParentFunc();
                             while (curFunc && !curFunc->IsTopFunc())
@@ -620,9 +620,9 @@ public:
     void                SetHasTempObjectProducingInstr(bool has) { this->hasTempObjectProducingInstr = has; }
 
     Js::ReadOnlyDynamicProfileInfo * GetProfileInfo() const { return this->profileInfo; }
-    bool                HasProfileInfo() { return this->profileInfo->HasProfileInfo(); }    
-    bool                HasArrayInfo() 
-    { 
+    bool                HasProfileInfo() { return this->profileInfo->HasProfileInfo(); }
+    bool                HasArrayInfo()
+    {
         const auto top = this->GetTopFunc();
         return this->HasProfileInfo() && this->GetWeakFuncRef() && !(top->HasTry() && !top->DoOptimizeTryCatch()) &&
             top->DoGlobOpt() && !PHASE_OFF(Js::LoopFastPathPhase, top);
@@ -711,12 +711,12 @@ public:
     void MarkConstantAddressSyms(BVSparse<JitArenaAllocator> * bv);
     void DisableConstandAddressLoadHoist() { canHoistConstantAddressLoad = false; }
 
-#if DBG   
+#if DBG
     bool                allowRemoveBailOutArgInstr;
 #endif
 
 #if defined(_M_ARM32_OR_ARM64)
-    int32               GetInlineeArgumentStackSize() 
+    int32               GetInlineeArgumentStackSize()
     {
         int32 count = this->GetMaxInlineeArgOutCount();
         if (count)
@@ -727,7 +727,7 @@ public:
     }
 #endif
 
-public: 
+public:
     BVSparse<JitArenaAllocator> *  argObjSyms;
     BVSparse<JitArenaAllocator> *  m_nonTempLocalVars;  // Only populated in debug mode as part of IRBuilder. Used in GlobOpt and BackwardPass.
     InlineeFrameInfo*              frameInfo;
@@ -740,15 +740,15 @@ private:
     Js::ScriptContextProfiler *const m_codeGenProfiler;
 #endif
     Js::FunctionBody*   m_jnFunction;
-    Func * const        parentFunc;  
-    StackSym *          m_inlineeFrameStartSym;     
+    Func * const        parentFunc;
+    StackSym *          m_inlineeFrameStartSym;
     uint                maxInlineeArgOutCount;
     const bool          m_isBackgroundJIT;
-    bool                hasInstrNumber;  
+    bool                hasInstrNumber;
     bool                maintainByteCodeOffset;
     bool                hasInlinee;
     bool                thisOrParentInlinerHasArguments;
-    bool                useRuntimeStats;    
+    bool                useRuntimeStats;
     bool                stackNestedFunc;
     bool                stackClosure;
     bool                hasAnyStackNestedFunc;
@@ -763,12 +763,12 @@ private:
     int32           m_hasLocalVarChangedOffset;    // Offset on stack of 1 byte which indicates if any local var has changed.
     CodeGenAllocators *const m_codeGenAllocators;
     YieldOffsetResumeLabelList * m_yieldOffsetResumeLabelList;
-    
+
     StackSym *CreateInlineeStackSym();
     IR::SymOpnd *GetInlineeOpndAtOffset(int32 offset);
     bool HasLocalVarSlotCreated() const { return m_localVarSlotsOffset != Js::Constants::InvalidOffset; }
     void EnsureLocalVarSlots();
-   
+
     SList<IR::RegOpnd *> constantAddressRegOpnd;
     IR::Instr * lastConstantAddressRegLoadInstr;
     bool canHoistConstantAddressLoad;
@@ -809,6 +809,6 @@ private:
     bool dump;
     bool isPhaseComplete;
 };
-#define BEGIN_CODEGEN_PHASE(func, phase) { AutoCodeGenPhase __autoCodeGen(func, phase); 
+#define BEGIN_CODEGEN_PHASE(func, phase) { AutoCodeGenPhase __autoCodeGen(func, phase);
 #define END_CODEGEN_PHASE(func, phase) __autoCodeGen.EndPhase(func, phase, true, true); }
 #define END_CODEGEN_PHASE_NO_DUMP(func, phase) __autoCodeGen.EndPhase(func, phase, false, true); }

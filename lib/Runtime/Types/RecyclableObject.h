@@ -9,7 +9,7 @@ namespace Js {
     // Cache property index and IsWritable info for UpdatePatch
     class PropertyValueInfo
     {
-        enum CacheInfoFlag 
+        enum CacheInfoFlag
         {
             preventFalseReferenceFlag = 0x1, // avoid false positive for GC
             disablePrototypeCacheFlag = 0x2,
@@ -113,7 +113,7 @@ namespace Js {
             }
         }
 
-        static bool PrototypeCacheDisabled(const PropertyValueInfo* info) 
+        static bool PrototypeCacheDisabled(const PropertyValueInfo* info)
         {
             return (info != NULL) && !!info->IsInfoFlagSet(disablePrototypeCacheFlag);
         }
@@ -126,7 +126,7 @@ namespace Js {
             }
         }
 
-        static bool IsStoreFieldCacheEnabled(const PropertyValueInfo* info) 
+        static bool IsStoreFieldCacheEnabled(const PropertyValueInfo* info)
         {
             return (info != NULL) && !!info->IsInfoFlagSet(enableStoreFieldCacheFlag);
         }
@@ -143,26 +143,26 @@ namespace Js {
        SideEffects_None     = 0,
        SideEffects_MathFunc = 0x1,
        SideEffects_ValueOf  = 0x2,
-       SideEffects_ToString = 0x4,       
+       SideEffects_ToString = 0x4,
        SideEffects_Accessor = 0x8,
-              
+
        SideEffects_ToPrimitive = SideEffects_ValueOf | SideEffects_ToString,
        SideEffects_Any      = SideEffects_MathFunc | SideEffects_ValueOf | SideEffects_ToString | SideEffects_Accessor
     };
-    
+
     // int32 used in JIT code to pass the flag
     // Used to tweak type system methods behavior.
     // Normally, use: PropertyOperation_None.
-    enum PropertyOperationFlags : int32 
-    { 
+    enum PropertyOperationFlags : int32
+    {
         PropertyOperation_None                          = 0x00,
         PropertyOperation_StrictMode                    = 0x01,
         PropertyOperation_Root                          = 0x02,  // Operation doesn't specify base
-        
+
         // In particular, used by SetProperty/WithAttributes to throw, rather than return false, when then instance object is not extensible.
         PropertyOperation_ThrowIfNotExtensible          = 0x04,
-        
-        // Intent: avoid any checks and force the operation. 
+
+        // Intent: avoid any checks and force the operation.
         // In particular, used by SetProperty/WithAttributes to force adding a property when an object is not extensible.
         PropertyOperation_Force                         = 0x08,
 
@@ -246,7 +246,7 @@ namespace Js {
         virtual PropertyId GetPropertyId(PropertyIndex index) { return Constants::NoProperty; }
         virtual PropertyId GetPropertyId(BigPropertyIndex index) { return Constants::NoProperty; }
         virtual PropertyIndex GetPropertyIndex(PropertyId propertyId) { return Constants::NoSlot; }
-        virtual int GetPropertyCount() { return 0; }        
+        virtual int GetPropertyCount() { return 0; }
         virtual BOOL HasProperty(PropertyId propertyId);
         virtual BOOL HasOwnProperty( PropertyId propertyId);
         virtual BOOL HasOwnPropertyNoHostObject( PropertyId propertyId);
@@ -298,20 +298,20 @@ namespace Js {
         virtual BOOL SetConfigurable(PropertyId propertyId, BOOL value) { return false; }
         virtual BOOL SetEnumerable(PropertyId propertyId, BOOL value) { return false; }
         virtual BOOL SetAttributes(PropertyId propertyId, PropertyAttributes attributes) { return false; }
-         
+
         virtual BOOL GetSpecialPropertyName(uint32 index, Var *propertyName, ScriptContext * requestContext) { return false; }
         virtual uint GetSpecialPropertyCount() const { return 0; }
         virtual PropertyId* GetSpecialPropertyIds() const { return nullptr; }
-        virtual RecyclableObject* GetThisObjectOrUnWrap(); // Do to the withscope object there are times we need to unwrap
-        
-        virtual BOOL HasInstance(Var instance, ScriptContext* scriptContext, IsInstInlineCache* inlineCache = NULL);        
+        virtual RecyclableObject* GetThisObjectOrUnWrap(); // Due to the withScope object there are times we need to unwrap
+
+        virtual BOOL HasInstance(Var instance, ScriptContext* scriptContext, IsInstInlineCache* inlineCache = NULL);
 
         BOOL SkipsPrototype() const;
         BOOL CanHaveInterceptors() const;
         BOOL IsExternal() const;
         // Used only in JsVarToExtension where it may be during dispose and the type is not available
         virtual BOOL IsExternalVirtual() const { return FALSE; }
-        
+
         virtual RecyclableObject* GetConfigurablePrototype(ScriptContext * requestContext) { return GetPrototype(); }
         virtual Js::JavascriptString* GetClassName(ScriptContext * requestContext);
         virtual RecyclableObject* GetProxiedObjectForHeapEnum();
@@ -327,7 +327,7 @@ namespace Js {
         // TODO: This is to consolidate all the ToString functionality in one location
         virtual BOOL ToString(Js::Var* value, Js::ScriptContext* scriptContext) { AssertMsg(FALSE, "Do not use this function."); return false; }
 
-        // don't need crosssite: in HostDispatch it's IDispatchEx based; in CustomExternalObject we have marshalling code explicitly.
+        // don't need cross-site: in HostDispatch it's IDispatchEx based; in CustomExternalObject we have marshalling code explicitly.
         virtual Var GetNamespaceParent(Js::Var aChild) { return nullptr; }
         virtual HRESULT QueryObjectInterface(REFIID riid, void **ppvObj);
 
@@ -336,36 +336,36 @@ namespace Js {
         virtual RecyclableObject* ToObject(ScriptContext * requestContext);
         virtual Var GetTypeOfString(ScriptContext* requestContext);
 
-        // don't need crosssite: only supported in HostDispatch.
+        // don't need cross-site: only supported in HostDispatch.
         virtual Var InvokePut(Arguments args);
         virtual BOOL GetRemoteTypeId(TypeId* typeId);
 
         // Only implemented by the HostDispatch object for cross-thread support
-        // Only supports a subset of entry points to be called remotely. 
+        // Only supports a subset of entry points to be called remotely.
         // For a list of supported entry points see the BuiltInOperation enum defined in JscriptInfo.idl
         virtual BOOL InvokeBuiltInOperationRemotely(JavascriptMethod entryPoint, Arguments args, Var* result) { return FALSE; };
 
-        // don't need crosssite: only supported in HostDispatch.
+        // don't need cross-site: only supported in HostDispatch.
         virtual DynamicObject* GetRemoteObject();
 
-        // don't need crosssite:  get the HostDispatch for global object/module root. don't need marshalling. 
+        // don't need cross-site: get the HostDispatch for global object/module root. don't need marshalling.
         virtual Var GetHostDispatchVar();
 
         virtual RecyclableObject * CloneToScriptContext(ScriptContext* requestContext);
 
-        // If dtor is called, that means that OOM happened (mostly), then the vtable might not be initalized
-        // to the base class', so wecan't assert.
+        // If dtor is called, that means that OOM happened (mostly), then the vtable might not be initialized
+        // to the base class', so we can't assert.
         virtual void Finalize(bool isShutdown) override {
 #ifdef DBG_EXTRAFIELD
-            AssertMsg(dtorCalled, "Can't allocate a finalizable object without implementing Finalize"); 
+            AssertMsg(dtorCalled, "Can't allocate a finalizable object without implementing Finalize");
 #endif
         }
-        virtual void Dispose(bool isShutdown) override { 
+        virtual void Dispose(bool isShutdown) override {
 #ifdef DBG_EXTRAFIELD
-            AssertMsg(dtorCalled, "Can't allocate a finalizable object without implementing Dispose"); 
+            AssertMsg(dtorCalled, "Can't allocate a finalizable object without implementing Dispose");
 #endif
         }
-        virtual void Mark(Recycler *recycler) override { AssertMsg(false, "Mark called on object that isnt TrackableObject"); }
+        virtual void Mark(Recycler *recycler) override { AssertMsg(false, "Mark called on object that isn't TrackableObject"); }
 
         static uint32 GetOffsetOfType();
 

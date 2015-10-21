@@ -138,7 +138,7 @@ Func::Func(JitArenaAllocator *alloc, CodeGenWorkItem* workItem, const Js::Functi
     {
         if (m_jnFunction->GetDoBackendArgumentsOptimization() && !m_jnFunction->GetHasTry())
         {
-            // doBackendArgumentsOptimization bit is set when there is no eval inside a function 
+            // doBackendArgumentsOptimization bit is set when there is no eval inside a function
             // as determined by the bytecode generator.
             SetHasStackArgs(true);
         }
@@ -185,7 +185,7 @@ Func::Func(JitArenaAllocator *alloc, CodeGenWorkItem* workItem, const Js::Functi
     this->constructorCacheCount = 0;
     this->constructorCaches = AnewArrayZ(this->m_alloc, Js::JitTimeConstructorCache*, this->m_jnFunction->GetProfiledCallSiteCount());
 
-#if DBG_DUMP        
+#if DBG_DUMP
     m_codeSize = -1;
 #endif
 
@@ -231,7 +231,7 @@ void
 Func::Codegen()
 {
     Assert(!IsJitInDebugMode() || !m_jnFunction->GetHasTry());
-    
+
     Js::ScriptContext* scriptContext = this->GetScriptContext();
 
     {
@@ -267,8 +267,8 @@ Func::Codegen()
     {
         if (this->IsLoopBody())
         {
-            Output::Print(L"---BeginBackEnd: function: %s, loop:%d---\r\n", this->GetJnFunction()->GetDisplayName(), 
-                static_cast<JsLoopBodyCodeGen *>(this->m_workItem)->GetLoopNumber());            
+            Output::Print(L"---BeginBackEnd: function: %s, loop:%d---\r\n", this->GetJnFunction()->GetDisplayName(),
+                static_cast<JsLoopBodyCodeGen *>(this->m_workItem)->GetLoopNumber());
         }
         else
         {
@@ -328,12 +328,12 @@ Func::Codegen()
         if (this->m_jitTimeData->inlineCacheStats)
         {
             auto stats = this->m_jitTimeData->inlineCacheStats;
-            Output::Print(L"ObjTypeSpec: jit-ing function %s (#%s): inline cache stats:\n", this->GetJnFunction()->GetDisplayName(), this->GetJnFunction()->GetDebugNumberSet(debugStringBuffer));
+            Output::Print(L"ObjTypeSpec: jitting function %s (#%s): inline cache stats:\n", this->GetJnFunction()->GetDisplayName(), this->GetJnFunction()->GetDebugNumberSet(debugStringBuffer));
             Output::Print(L"    overall: total %u, no profile info %u\n", stats->totalInlineCacheCount, stats->noInfoInlineCacheCount);
-            Output::Print(L"    mono: total %u, empty %u, cloned %u\n", 
+            Output::Print(L"    mono: total %u, empty %u, cloned %u\n",
                 stats->monoInlineCacheCount, stats->emptyMonoInlineCacheCount, stats->clonedMonoInlineCacheCount);
             Output::Print(L"    poly: total %u (high %u, low %u), null %u, empty %u, ignored %u, disabled %u, equivalent %u, non-equivalent %u, cloned %u\n",
-                stats->polyInlineCacheCount, stats->highUtilPolyInlineCacheCount, stats->lowUtilPolyInlineCacheCount, 
+                stats->polyInlineCacheCount, stats->highUtilPolyInlineCacheCount, stats->lowUtilPolyInlineCacheCount,
                 stats->nullPolyInlineCacheCount, stats->emptyPolyInlineCacheCount, stats->ignoredPolyInlineCacheCount, stats->disabledPolyInlineCacheCount,
                 stats->equivPolyInlineCacheCount, stats->nonEquivPolyInlineCacheCount, stats->clonedPolyInlineCacheCount);
         }
@@ -419,7 +419,7 @@ Func::Codegen()
 
         // Lowering
         Lowerer lowerer(this);
-        BEGIN_CODEGEN_PHASE(this, Js::LowererPhase);        
+        BEGIN_CODEGEN_PHASE(this, Js::LowererPhase);
         lowerer.Lower();
         END_CODEGEN_PHASE(this, Js::LowererPhase);
 
@@ -431,7 +431,7 @@ Func::Codegen()
 
         Security security(this);
 
-        BEGIN_CODEGEN_PHASE(this, Js::EncodeConstantsPhase)              
+        BEGIN_CODEGEN_PHASE(this, Js::EncodeConstantsPhase)
         security.EncodeLargeConstants();
         END_CODEGEN_PHASE(this, Js::EncodeConstantsPhase);
 
@@ -456,7 +456,7 @@ Func::Codegen()
 #endif /* IR_VIEWER */
 
         ThrowIfScriptClosed();
-        
+
         // Peephole optimizations
 
         BEGIN_CODEGEN_PHASE(this, Js::PeepsPhase);
@@ -639,7 +639,7 @@ Func::Codegen()
 /// Func::StackAllocate
 ///     Allocate stack space of given size.
 ///----------------------------------------------------------------------------
-int32 
+int32
 Func::StackAllocate(int size)
 {
     Assert(this->IsTopFunc());
@@ -653,7 +653,7 @@ Func::StackAllocate(int size)
     offset = m_localStackHeight;
     m_localStackHeight += size;
 #else
-    // Locals have negative offsets and are allocated from top to bottom.    
+    // Locals have negative offsets and are allocated from top to bottom.
     m_localStackHeight += size;
     m_localStackHeight = Math::Align(m_localStackHeight, min(size, MachStackAlignment));
 
@@ -671,18 +671,18 @@ Func::StackAllocate(int size)
 ///
 ///----------------------------------------------------------------------------
 
-int32               
+int32
 Func::StackAllocate(StackSym *stackSym, int size)
 {
     Assert(size > 0);
     if (stackSym->IsArgSlotSym() || stackSym->IsParamSlotSym() || stackSym->IsAllocated())
-    {        
+    {
         return stackSym->m_offset;
     }
     Assert(stackSym->m_offset == 0);
     stackSym->m_allocated = true;
     stackSym->m_offset = StackAllocate(size);
-   
+
     return stackSym->m_offset;
 }
 
@@ -696,11 +696,11 @@ Func::SetArgOffset(StackSym *stackSym, int32 offset)
 
 ///
 /// Ensures that local var slots are created, if the function has locals.
-///     Allocate stack space for locals used for debugging 
+///     Allocate stack space for locals used for debugging
 ///     (for local non-temp vars we write-through memory so that locals inspection can make use of that.).
 //      On stack, after local slots we allocate space for metadata (in particular, whether any the locals was changed in debugger).
 ///
-void 
+void
 Func::EnsureLocalVarSlots()
 {
     Assert(IsJitInDebugMode());
@@ -755,7 +755,7 @@ void Func::SetFirstArgOffset(IR::Instr* inlineeStart)
     this->firstActualStackOffset = firstActualStackOffset;
 }
 
-int32 
+int32
 Func::GetLocalVarSlotOffset(int32 slotId)
 {
     this->EnsureLocalVarSlots();
@@ -776,11 +776,11 @@ void Func::OnAddSym(Sym* sym)
     }
 }
 
-/// 
+///
 /// Returns offset of the flag (1 byte) whether any local was changed (in debugger).
 /// If the function does not have any locals, returns -1.
 ///
-int32 
+int32
 Func::GetHasLocalVarChangedOffset()
 {
     this->EnsureLocalVarSlots();
@@ -790,8 +790,8 @@ Func::GetHasLocalVarChangedOffset()
 bool
 Func::IsJitInDebugMode()
 {
-    return 
-        Js::Configuration::Global.EnableJitInDebugMode() && 
+    return
+        Js::Configuration::Global.EnableJitInDebugMode() &&
         this->m_workItem->IsJitInDebugMode();
 }
 
@@ -825,7 +825,7 @@ Func::AjustLocalVarSlotOffset()
 
         int localsOffset = m_localVarSlotsOffset - (m_localStackHeight + m_ArgumentsOffset);
         int valueChangeOffset = m_hasLocalVarChangedOffset - (m_localStackHeight + m_ArgumentsOffset);
-        
+
         Js::FunctionEntryPointInfo * entryPointInfo = static_cast<Js::FunctionEntryPointInfo*>(this->m_workItem->GetEntryPoint());
         Assert(entryPointInfo != nullptr);
 
@@ -848,7 +848,7 @@ Func::SetDoFastPaths()
 {
     // Make sure we only call this once!
     Assert(!this->hasCalledSetDoFastPaths);
-    
+
     bool isLeaf = this->m_isLeaf && !PHASE_OFF(Js::LeafFastPathPhase, this);
     bool doFastPaths = false;
 
@@ -857,7 +857,7 @@ Func::SetDoFastPaths()
         if (isLeaf || this->GetScriptContext()->GetThreadContext()->GetSourceSize() < (size_t)CONFIG_FLAG(FastPathCap) || CONFIG_FLAG(ForceFastPath))
         {
             doFastPaths = true;
-        } 
+        }
     }
 
     this->m_doFastPaths = doFastPaths;
@@ -899,12 +899,12 @@ void Func::InitStackClosureSyms()
     Js::RegSlot regSlot = this->GetJnFunction()->GetStackScopeSlotsReg();
     this->m_localClosureSym = StackSym::FindOrCreate(static_cast<SymID>(regSlot), (Js::RegSlot)-1, this);
     regSlot = this->GetJnFunction()->GetStackFrameDisplayReg();
-    this->m_localFrameDisplaySym = StackSym::FindOrCreate(static_cast<SymID>(regSlot), (Js::RegSlot)-1, this); 
+    this->m_localFrameDisplaySym = StackSym::FindOrCreate(static_cast<SymID>(regSlot), (Js::RegSlot)-1, this);
 }
 
 bool Func::CanAllocInPreReservedHeapPageSegment ()
 {
-#ifdef _CONTROL_FLOW_GUARD 
+#ifdef _CONTROL_FLOW_GUARD
     return PHASE_FORCE1(Js::PreReservedHeapAllocPhase) || (!PHASE_OFF1(Js::PreReservedHeapAllocPhase) &&
         !IsJitInDebugMode() && !GetScriptContext()->IsInDebugMode() && GetScriptContext()->GetThreadContext()->IsCFGEnabled()
 #if _M_IX86
@@ -914,7 +914,7 @@ bool Func::CanAllocInPreReservedHeapPageSegment ()
 #else
         && false); //Not yet implemented for architectures other than x86 and amd64.
 #endif  //_M_ARCH
-#else 
+#else
     return false;
 #endif//_CONTROL_FLOW_GUARD
 }
@@ -961,7 +961,7 @@ Func::NumberInstrs()
 
     FOREACH_INSTR_IN_FUNC(instr, this)
     {
-        instr->SetNumber(instrCount++); 
+        instr->SetNumber(instrCount++);
     }
     NEXT_INSTR_IN_FUNC;
 }
@@ -1004,7 +1004,7 @@ Func::BeginPhase(Js::Phase tag)
     AssertMsg((this->m_codeGenProfiler != nullptr) == Js::Configuration::Global.flags.IsEnabled(Js::ProfileFlag),
         "Profiler tag is supplied but the profiler pointer is NULL");
     if (this->m_codeGenProfiler)
-    {        
+    {
         this->m_codeGenProfiler->ProfileBegin(tag);
     }
 #endif
@@ -1042,13 +1042,13 @@ Func::EndPhase(Js::Phase tag, bool dump)
 {
     this->EndProfiler(tag);
 #if DBG_DUMP
-    if(dump && (PHASE_DUMP(tag, this) 
+    if(dump && (PHASE_DUMP(tag, this)
         || PHASE_DUMP(Js::BackEndPhase, this)))
     {
         Output::Print(L"-----------------------------------------------------------------------------\n");
 
         if (m_workItem->Type() == JsLoopBodyWorkItemType)
-        {            
+        {
             Output::Print(L"************   IR after %s (%S) Loop %d ************\n", Js::PhaseNames[tag], ExecutionModeName(m_workItem->GetJitMode()), ((JsLoopBodyCodeGen*)m_workItem)->GetLoopNumber());
         }
         else
@@ -1098,7 +1098,7 @@ Func::EndPhase(Js::Phase tag, bool dump)
 
 }
 
-Func const * 
+Func const *
 Func::GetTopFunc() const
 {
     Func const * func = this;
@@ -1107,9 +1107,9 @@ Func::GetTopFunc() const
         func = func->parentFunc;
     }
     return func;
-} 
-Func * 
-Func::GetTopFunc() 
+}
+Func *
+Func::GetTopFunc()
 {
     Func * func = this;
     while (!func->IsTopFunc())
@@ -1120,7 +1120,7 @@ Func::GetTopFunc()
 }
 
 #if 0
-FunctionBailOutRecord * 
+FunctionBailOutRecord *
 Func::EnsureFunctionBailOutRecord()
 {
     Js::FunctionBody * topFuncBody = this->GetTopFunc()->m_jnFunction;
@@ -1218,7 +1218,7 @@ Func::GetCallsCountAddress() const
     Assert(this->m_workItem->Type() == JsFunctionType);
 
     JsFunctionCodeGen * functionCodeGen = static_cast<JsFunctionCodeGen *>(this->m_workItem);
-    
+
     return functionCodeGen->GetFunctionBody()->GetCallsCountAddress(functionCodeGen->GetEntryPoint());
 }
 
@@ -1258,7 +1258,7 @@ Func::GetRuntimePolymorphicInlineCache(const uint index) const
     return nullptr;
 }
 
-byte 
+byte
 Func::GetPolyCacheUtilToInitialize(const uint index) const
 {
     return this->GetRuntimePolymorphicInlineCache(index) ? this->GetPolyCacheUtil(index) : PolymorphicInlineCacheUtilizationMinValue;
@@ -1312,7 +1312,7 @@ Func::PinTypeRef(void* typeRef)
     this->pinnedTypeRefs->AddNew(typeRef);
 }
 
-void 
+void
 Func::EnsureSingleTypeGuards()
 {
     if (this->singleTypeGuards == nullptr)
@@ -1321,7 +1321,7 @@ Func::EnsureSingleTypeGuards()
     }
 }
 
-Js::JitTypePropertyGuard* 
+Js::JitTypePropertyGuard*
 Func::GetOrCreateSingleTypeGuard(Js::Type* type)
 {
     EnsureSingleTypeGuards();
@@ -1341,7 +1341,7 @@ Func::GetOrCreateSingleTypeGuard(Js::Type* type)
     return guard;
 }
 
-void 
+void
 Func::EnsureEquivalentTypeGuards()
 {
     if (this->equivalentTypeGuards == nullptr)
@@ -1350,7 +1350,7 @@ Func::EnsureEquivalentTypeGuards()
     }
 }
 
-Js::JitEquivalentTypeGuard* 
+Js::JitEquivalentTypeGuard*
 Func::CreateEquivalentTypeGuard(Js::Type* type, uint32 objTypeSpecFldId)
 {
     EnsureEquivalentTypeGuards();
@@ -1385,7 +1385,7 @@ Func::EnsureCtorCachesByPropertyId()
     }
 }
 
-void 
+void
 Func::LinkGuardToPropertyId(Js::PropertyId propertyId, Js::JitIndexedPropertyGuard* guard)
 {
     Assert(guard != nullptr);
@@ -1403,7 +1403,7 @@ Func::LinkGuardToPropertyId(Js::PropertyId propertyId, Js::JitIndexedPropertyGua
     set->Item(guard);
 }
 
-void 
+void
 Func::LinkCtorCacheToPropertyId(Js::PropertyId propertyId, Js::JitTimeConstructorCache* cache)
 {
     Assert(cache != nullptr);
@@ -1539,13 +1539,13 @@ void Func::ThrowIfScriptClosed()
 
 IR::IndirOpnd * Func::GetConstantAddressIndirOpnd(void * address, IR::AddrOpndKind kind, IRType type, Js::OpCode loadOpCode)
 {
-    Assert(this->GetTopFunc() == this);    
+    Assert(this->GetTopFunc() == this);
     if (!canHoistConstantAddressLoad)
     {
         // We can't hoist constant address load after lower, as we can't mark the sym as
         // live on back edge
         return nullptr;
-    }    
+    }
     int offset = 0;
     IR::RegOpnd ** foundRegOpnd = this->constantAddressRegOpnd.Find([address, &offset](IR::RegOpnd * regOpnd)
     {
@@ -1564,7 +1564,7 @@ IR::IndirOpnd * Func::GetConstantAddressIndirOpnd(void * address, IR::AddrOpndKi
     IR::RegOpnd * addressRegOpnd;
     if (foundRegOpnd != nullptr)
     {
-        addressRegOpnd = *foundRegOpnd;              
+        addressRegOpnd = *foundRegOpnd;
     }
     else
     {
@@ -1586,7 +1586,7 @@ IR::IndirOpnd * Func::GetConstantAddressIndirOpnd(void * address, IR::AddrOpndKi
         }
         insertBeforeInstr->InsertBefore(newInstr);
     }
-    IR::IndirOpnd * indirOpnd =  IR::IndirOpnd::New(addressRegOpnd, offset, type, this, true);    
+    IR::IndirOpnd * indirOpnd =  IR::IndirOpnd::New(addressRegOpnd, offset, type, this, true);
 #if DBG_DUMP
     indirOpnd->SetAddrKind(kind, address);
 #endif
@@ -1605,7 +1605,7 @@ void Func::MarkConstantAddressSyms(BVSparse<JitArenaAllocator> * bv)
 
 IR::Instr *
 Func::GetFunctionEntryInsertionPoint()
-{    
+{
     Assert(this->GetTopFunc() == this);
     IR::Instr * insertInsert = this->lastConstantAddressRegLoadInstr;
     if (insertInsert != nullptr)
@@ -1659,7 +1659,7 @@ Func::DumpHeader()
 ///
 ///----------------------------------------------------------------------------
 
-void 
+void
 Func::Dump(IRDumpFlags flags)
 {
     this->DumpHeader();
@@ -1717,7 +1717,7 @@ bool Func::DoRecordNativeMap() const
 #endif
 #if DBG_DUMP
     return PHASE_DUMP(Js::EncoderPhase, this) && Js::Configuration::Global.flags.Verbose;
-#else 
+#else
     return false;
 #endif
 }

@@ -77,7 +77,7 @@ void Scope::SetIsObject()
     this->isObject = true;
 
     // We might set the scope to be object after we have process the symbol
-    // (e.g. "With" scope referencing a symbol in an outter scope)
+    // (e.g. "With" scope referencing a symbol in an outer scope)
     // If we have func assignment, we need to mark the function to not do stack nested function
     // as these are now assigned to a scope object.
     FuncInfo * funcInfo = this->GetFunc();

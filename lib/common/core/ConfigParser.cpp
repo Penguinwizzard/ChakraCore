@@ -64,15 +64,15 @@ void ConfigParser::ParseRegistry(CmdLineArgsParser &parser)
     {
         DWORD dwValue;
         DWORD dwSize = sizeof(dwValue);
-        
+
         ParseRegistryKey(hk, parser);
-    
+
         // HKLM can prevent user config from being read.
         if (NOERROR == RegGetValueW(hk, nullptr, L"AllowUserConfig", RRF_RT_DWORD, nullptr, (LPBYTE)&dwValue, &dwSize) && dwValue == 0)
         {
             includeUserHive = false;
-        }   
-        
+        }
+
         RegCloseKey(hk);
     }
 
@@ -107,8 +107,8 @@ void ConfigParser::ParseRegistryKey(HKEY hk, CmdLineArgsParser &parser)
     }
 #endif
 
-    // MemSpect - This setting controls whether MemSpect intrumentation is enabled.
-    // The value is treated as a bit field with the follong bits:
+    // MemSpect - This setting controls whether MemSpect instrumentation is enabled.
+    // The value is treated as a bit field with the following bits:
     //   0x01 - Track Arena memory
     //   0x02 - Track Recycler memory
     //   0x04 - Track Page allocations
@@ -431,8 +431,8 @@ void ConfigParser::ProcessConfiguration(HANDLE hmod)
     if (Js::Configuration::Global.flags.ForceSerialized)
     {
         // Can't generate or execute byte code under forced serialize
-        Js::Configuration::Global.flags.GenerateByteCodeBufferReturnsCantGenerate = true;        
-        Js::Configuration::Global.flags.ExecuteByteCodeBufferReturnsInvalidByteCode = true;        
+        Js::Configuration::Global.flags.GenerateByteCodeBufferReturnsCantGenerate = true;
+        Js::Configuration::Global.flags.ExecuteByteCodeBufferReturnsInvalidByteCode = true;
     }
 
     ForcedMemoryConstraint::Apply();

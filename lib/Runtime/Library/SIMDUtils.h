@@ -121,20 +121,20 @@ CompileAssert(sizeof(SIMDValue) == 16);
 
 namespace Js {
     int32 SIMDCheckTypedArrayIndex(ScriptContext* scriptContext, Var index);
-	int32 SIMDCheckLaneIndex(ScriptContext* scriptContext, Var lane, const int32 range = 4);
-    
+    int32 SIMDCheckLaneIndex(ScriptContext* scriptContext, Var lane, const int32 range = 4);
+
     template <int laneCount = 4>
     SIMDValue SIMD128InnerShuffle(SIMDValue src1, SIMDValue src2, int32 lane0, int32 lane1, int32 lane2, int32 lane3);
 
-    template <class SIMDType, int laneCount = 4> 
+    template <class SIMDType, int laneCount = 4>
     Var SIMD128SlowShuffle(Var src1, Var src2, Var lane0, Var lane1, Var lane2, Var lane3, int range, ScriptContext* scriptContext);
 
-	//Lane Access
-	template<class SIMDType, int laneCount, typename T>
+    //Lane Access
+    template<class SIMDType, int laneCount, typename T>
     inline T SIMD128ExtractLane(Var src, Var lane, ScriptContext* scriptContext);
-	template<class SIMDType, int laneCount, typename T>
-	inline SIMDValue SIMD128ReplaceLane(Var src, Var lane, T value, ScriptContext* scriptContext);
-    
+    template<class SIMDType, int laneCount, typename T>
+    inline SIMDValue SIMD128ReplaceLane(Var src, Var lane, T value, ScriptContext* scriptContext);
+
     //Lane Access
     template<class SIMDType, int laneCount, typename T>
     inline T SIMD128ExtractLane(Var src, Var lane, ScriptContext* scriptContext);
@@ -159,6 +159,6 @@ namespace Js {
     void SIMDStData(AsmJsSIMDValue *data, AsmJsSIMDValue simdValue, uint8 dataWidth);
     template <class SIMDType>
     Var   SIMD128TypedArrayLoad(Var arg1, Var arg2, uint32 dataWidth, ScriptContext *scriptContext);
-    template <class SIMDType> 
+    template <class SIMDType>
     void  SIMD128TypedArrayStore(Var arg1, Var arg2, Var simdVar, uint32 dataWidth, ScriptContext *scriptContext);
 }

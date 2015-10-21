@@ -21,7 +21,7 @@ void ArenaMemoryTracking::ArenaCreated(Allocator *arena,  __in LPCWSTR name)
 
 void ArenaMemoryTracking::ArenaDestroyed(Allocator *arena)
 {
-    // Called when arena is destoryed
+    // Called when arena is destroyed
 }
 
 void ArenaMemoryTracking::ReportAllocation(Allocator *arena, void *address, size_t size)
@@ -32,7 +32,7 @@ void ArenaMemoryTracking::ReportAllocation(Allocator *arena, void *address, size
 void ArenaMemoryTracking::ReportReallocation(Allocator *arena, void *address, size_t existingSize, size_t newSize)
 {
     // Called when a reallocation where newSize < exsitingSize.
-    
+
     // This will only be called if newSize < existingSize.
 
     // This is to inform a tracking that a realloc is taking place and ReportFree() will be called on address + newSize soon
@@ -43,7 +43,7 @@ void ArenaMemoryTracking::ReportFree(Allocator *arena, void *address, size_t siz
 {
     // Called when the when size bytes at address are freed. address was either reported by ReportAllocation() or as a
     // result of a buffer being split reported by ReportReallocation().
-    
+
     // IMPORTANT: ReportFree() will always be called after ReportReallocation() to report the newly free memory of address + newSize.
 }
 
@@ -90,7 +90,7 @@ void RecyclerMemoryTracking::ReportUnallocated(Recycler * recycler, __in void* a
 {
     // Even though them memory is not really allocated between address and endAddress,
     // the recycler initially treats it as allocated and a ReportFree() will be called on it even
-    // though ReportAllocation() is never called. This can be treated as equivilent of the parent
+    // though ReportAllocation() is never called. This can be treated as equivalent of the parent
     // requesting the following be performed:
     //
     //  while (address + sizeCat <= endAddress)

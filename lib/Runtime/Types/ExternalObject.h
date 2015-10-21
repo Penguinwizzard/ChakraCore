@@ -4,7 +4,7 @@
 //-------------------------------------------------------------------------------------------------------
 interface ITypeOperations;
 class JavascriptDispatch;
-// forward declcaration from edgescriptdirect.h as we don't want to include it in library.
+// forward declaration from edgescriptdirect.h as we don't want to include it in library.
 
 typedef int JavascriptTypeId;
 
@@ -143,8 +143,8 @@ namespace Js
 
         virtual BOOL Equals(Var other, BOOL* value, ScriptContext * requestContext) override;
         virtual BOOL StrictEquals(Var other, BOOL* value, ScriptContext * requestContext) override;
-        
-        // Used only in JsVarToExtension where it may be during dispose and the type is not availible
+
+        // Used only in JsVarToExtension where it may be during dispose and the type is not available
         virtual BOOL IsExternalVirtual() const override { return TRUE; }
         virtual JavascriptString* GetClassName(ScriptContext * requestContext) override sealed;
 
@@ -162,7 +162,7 @@ namespace Js
         HRESULT Reinitialize(ExternalType* type, BOOL keepProperties);
 
 #if DBG
-    private:        
+    private:
         virtual BOOL DbgCanHaveInterceptors() const override { return TRUE; }
 #endif
     };

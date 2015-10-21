@@ -7,7 +7,7 @@
 namespace Js
 {
     class ScriptContext;
-    struct InlineCache;    
+    struct InlineCache;
     class DebugManager;
     class CodeGenRecyclableData;
     struct ReturnedValue;
@@ -104,7 +104,7 @@ public:
 };
 
 // This function is called before we step out of script (currently only for WinRT callout).
-// Debugger would put a breakpoint on this function if they want to detect the point at which we step 
+// Debugger would put a breakpoint on this function if they want to detect the point at which we step
 // over the boundary.
 // It is intentionally left blank and the next operation should be the callout.
 extern "C" void* MarkerForExternalDebugStep();
@@ -137,25 +137,25 @@ extern "C" void* MarkerForExternalDebugStep();
         LEAVE_SCRIPT_START_EX(scriptContext, /* stackProbe */ true, /* leaveForHost */ true, /* isFPUControlRestoreNeeded */ true)
 
 // BEGIN_LEAVE_SCRIPT_INTERNAL is used when there are no explicit external call after leave script,
-// but we might have external call when allocation memory doing QC or GC Dispose, which may enter script again. 
+// but we might have external call when allocation memory doing QC or GC Dispose, which may enter script again.
 // This will record the reentry as an implicit call (ImplicitCall_AsyncHostOperation)
 #define BEGIN_LEAVE_SCRIPT_INTERNAL(scriptContext) \
         LEAVE_SCRIPT_START_EX(scriptContext, /* stackProbe */ true, /* leaveForHost */ false, /* isFPUControlRestoreNeeded */ false)
 
 #define BEGIN_LEAVE_SCRIPT_NO_STACK_PROBE(scriptContext) \
-        LEAVE_SCRIPT_START_EX(scriptContext, /* stackProbe */ false, /* leaveForHost */ true, /* isFPUControlRestoreNeeded */ false)   
+        LEAVE_SCRIPT_START_EX(scriptContext, /* stackProbe */ false, /* leaveForHost */ true, /* isFPUControlRestoreNeeded */ false)
 
 #define END_LEAVE_SCRIPT(scriptContext) \
-        LEAVE_SCRIPT_END_EX(scriptContext) 
+        LEAVE_SCRIPT_END_EX(scriptContext)
 
 #define END_LEAVE_SCRIPT_RESTORE_FPU_CONTROL(scriptContext) \
-        LEAVE_SCRIPT_END_EX(scriptContext) 
+        LEAVE_SCRIPT_END_EX(scriptContext)
 
 #define END_LEAVE_SCRIPT_INTERNAL(scriptContext) \
-        LEAVE_SCRIPT_END_EX(scriptContext) 
+        LEAVE_SCRIPT_END_EX(scriptContext)
 
 #define END_LEAVE_SCRIPT_NO_STACK_PROBE(scriptContext) \
-        LEAVE_SCRIPT_END_EX(scriptContext) 
+        LEAVE_SCRIPT_END_EX(scriptContext)
 
 #define BEGIN_LEAVE_SCRIPT_WITH_EXCEPTION(scriptContext) \
         BEGIN_LEAVE_SCRIPT(scriptContext)
@@ -343,13 +343,13 @@ private:
     }
 };
 
-class ThreadContext sealed : 
+class ThreadContext sealed :
     public DefaultRecyclerCollectionWrapper,
     public JsUtil::DoublyLinkedListElement<ThreadContext>
 {
 public:
     static void GlobalInitialize();
-    static const DWORD NoThread = 0xFFFFFFFF;    
+    static const DWORD NoThread = 0xFFFFFFFF;
 
     struct CollectCallBack
     {
@@ -359,7 +359,7 @@ public:
 
     struct WorkerThread
     {
-        //Abstract notion to hold onto threadhandle of worker thread
+        // Abstract notion to hold onto threadHandle of worker thread
         HANDLE threadHandle;
         WorkerThread(HANDLE handle = nullptr) :threadHandle(handle){};
     };
@@ -369,23 +369,23 @@ public:
 
     void SetCurrentThreadId(DWORD threadId) { this->currentThreadId = threadId; }
     DWORD GetCurrentThreadId() const { return this->currentThreadId; }
-    void SetIsThreadBound() 
+    void SetIsThreadBound()
     {
         if (this->recycler)
         {
             this->recycler->SetIsThreadBound();
         }
-        this->isThreadBound = true; 
+        this->isThreadBound = true;
     }
     bool GetIsThreadBound() const { return this->isThreadBound; }
     void SetStackProber(StackProber * stackProber);
     PBYTE GetScriptStackLimit() const;
     static DWORD GetStackLimitForCurrentThreadOffset() { return offsetof(ThreadContext, stackLimitForCurrentThread); }
-    void * GetAddressOfStackLimitForCurrentThread() 
-    { 
+    void * GetAddressOfStackLimitForCurrentThread()
+    {
         FAULTINJECT_SCRIPT_TERMINATION
 
-        return &this->stackLimitForCurrentThread; 
+        return &this->stackLimitForCurrentThread;
     }
     void InitAvailableCommit();
 
@@ -415,13 +415,13 @@ private:
 
     static uint const MaxTemporaryArenaAllocators = 5;
 
-    static CriticalSection s_csThreadContext;    
+    static CriticalSection s_csThreadContext;
 
     StackProber * GetStackProber() const { return this->stackProber; }
     PBYTE GetStackLimitForCurrentThread() const;
     void SetStackLimitForCurrentThread(PBYTE limit);
 
-#if !_M_X64_OR_ARM64 && _CONTROL_FLOW_GUARD 
+#if !_M_X64_OR_ARM64 && _CONTROL_FLOW_GUARD
     static uint numOfThreadContextsWithPreReserveSegment;
 #endif
 
@@ -441,7 +441,7 @@ private:
         // The sharedGuard is strongly referenced and will be kept alive by ThreadContext::propertyGuards until it's invalidated or
         // the property record itself is collected.  If the code using the guard needs access to it after it's been invalidated, it
         // (the code) is responsible for keeping it alive.  Each unique guard, is weakly referenced, such that it can be reclaimed
-        // if not referenced elsewhere even without being invalidated.  It's up to the owner of that guard to keep it alive as long 
+        // if not referenced elsewhere even without being invalidated.  It's up to the owner of that guard to keep it alive as long
         // as necessary.
         Js::PropertyGuard* sharedGuard;
         PropertyGuardHashSet uniqueGuards;
@@ -451,7 +451,7 @@ private:
     };
 
 public:
-    typedef JsUtil::BaseHashSet<const Js::PropertyRecord *, HeapAllocator, PrimeSizePolicy, const Js::PropertyRecord *, 
+    typedef JsUtil::BaseHashSet<const Js::PropertyRecord *, HeapAllocator, PrimeSizePolicy, const Js::PropertyRecord *,
         Js::PropertyRecordStringHashComparer, JsUtil::SimpleHashedEntry, JsUtil::AsymetricResizeLock> PropertyMap;
 
     typedef JsUtil::BaseHashSet<Js::CaseInvariantPropertyListWithHashCode*, Recycler, PowerOf2SizePolicy, Js::CaseInvariantPropertyListWithHashCode*, JsUtil::NoCaseComparer, JsUtil::SimpleDictionaryEntry>
@@ -459,7 +459,7 @@ public:
     typedef JsUtil::WeaklyReferencedKeyDictionary<Js::Type, bool> TypeHashSet;
     typedef JsUtil::BaseDictionary<Js::PropertyId, TypeHashSet *, Recycler, PowerOf2SizePolicy> PropertyIdToTypeHashSetDictionary;
     typedef JsUtil::WeaklyReferencedKeyDictionary<const Js::PropertyRecord, PropertyGuardEntry*, Js::PropertyRecordPointerComparer> PropertyGuardDictionary;
-    
+
 private:
     typedef JsUtil::BaseDictionary<uint, Js::SourceDynamicProfileManager*, Recycler, PowerOf2SizePolicy> SourceDynamicProfileManagerMap;
     typedef JsUtil::BaseDictionary<const wchar_t*, const Js::PropertyRecord*, Recycler, PowerOf2SizePolicy> SymbolRegistrationMap;
@@ -497,7 +497,7 @@ private:
         // them from the throw point to where they are caught.
         Js::JavascriptExceptionObject oomErrorObject;
 
-        // This is for JsRT scenario where a runtime is not usable after a suspend request, before a resumeruntime call is made
+        // This is for JsRT scenario where a runtime is not usable after a suspend request, before a resume runtime call is made
         Js::JavascriptExceptionObject terminatedErrorObject;
 
         Js::JavascriptExceptionObject* unhandledExceptionObject;
@@ -522,7 +522,7 @@ private:
 
 
         PropertyNoCaseSetType * caseInvariantPropertySet;
-        
+
         JsUtil::List<Js::PropertyRecord const*>* boundPropertyStrings; // Recycler allocated list of property strings that we need to strongly reference so that they're not reclaimed
 
         SourceProfileManagersByUrlMap* sourceProfileManagersByUrl;
@@ -595,7 +595,7 @@ private:
     uint functionCount;
     uint sourceInfoCount;
 
-    Js::TypeId nextTypeId;    
+    Js::TypeId nextTypeId;
     uint32 polymorphicCacheState;
     Js::TypeId wellKnownHostTypeHTMLAllCollectionTypeId;
 
@@ -646,7 +646,7 @@ private:
 
     uint registeredInlineCacheCount;
     uint unregisteredInlineCacheCount;
-    
+
     typedef JsUtil::BaseDictionary<Js::Var, Js::IsInstInlineCache*, ArenaAllocator> IsInstInlineCacheListMapByFunction;
     IsInstInlineCacheListMapByFunction isInstInlineCacheByFunction;
 
@@ -665,13 +665,13 @@ private:
     void* jsrtRuntime;
 
     bool hasUnhandledException;
-    bool hasCatchHandler;    
+    bool hasCatchHandler;
     DisableImplicitFlags disableImplicitFlags;
 
     // Used for identifying that any particular time, the caller chain has try/catch blocks belong to the user code.
     // If all try/catch blocks in the current stack marked as non-user code then this member will remain false.
     bool hasCatchHandlerToUserCode;
-    
+
     Js::DelayLoadWinRtString delayLoadWinRtString;
 #ifdef ENABLE_PROJECTION
     Js::DelayLoadWinRtError delayLoadWinRtError;
@@ -744,7 +744,7 @@ public:
     static uint DecrementActiveScriptSiteCount() { return --activeScriptSiteCount; }
 
     static ThreadContext * GetThreadContextList() { return globalListFirst; }
-    void ValidateThreadContext(); 
+    void ValidateThreadContext();
 
     bool IsInScript() const { return callRootLevel != 0; }
     uint GetCallRootLevel() const { return callRootLevel; }
@@ -753,7 +753,7 @@ public:
 
     AllocationPolicyManager * GetAllocationPolicyManager() { return allocationPolicyManager; }
     PreReservedVirtualAllocWrapper * GetPreReservedVirtualAllocator() { return &preReservedVirtualAllocator; }
-    
+
     void ResetIsAllJITCodeInPreReservedRegion() { isAllJITCodeInPreReservedRegion = false; }
     bool IsAllJITCodeInPreReservedRegion() { return isAllJITCodeInPreReservedRegion; }
 
@@ -812,7 +812,7 @@ public:
         ParserTelemetry.Reset();
     }
 
-    
+
     double maxGlobalFunctionExecTime;
     double GetAndResetMaxGlobalFunctionExecTime()
     {
@@ -836,7 +836,7 @@ public:
 
     bool DoInterruptProbe(Js::FunctionBody *const func) const
     {
-        return 
+        return
             (this->TestThreadContextFlag(ThreadContextFlagCanDisableExecution) &&
              !PHASE_OFF(Js::InterruptProbePhase, func)) ||
             PHASE_ON(Js::InterruptProbePhase, func);
@@ -844,7 +844,7 @@ public:
 
     bool DoInterruptProbe() const
     {
-        return 
+        return
             (this->TestThreadContextFlag(ThreadContextFlagCanDisableExecution) &&
              !PHASE_OFF1(Js::InterruptProbePhase)) ||
             PHASE_ON1(Js::InterruptProbePhase);
@@ -868,9 +868,9 @@ public:
 #endif
 
     void SetReturnedValueList(Js::ReturnedValueList *returnedValueList)
-    { 
+    {
         Assert(this->recyclableData != nullptr);
-        this->recyclableData->returnedValueList = returnedValueList; 
+        this->recyclableData->returnedValueList = returnedValueList;
     }
 #if DBG
     void EnsureNoReturnedValueList()
@@ -885,7 +885,7 @@ public:
 
 #if DBG_DUMP || defined(PROFILE_EXEC)
     void SetTopLevelScriptSite(ScriptSite* topScriptSite) { this->topLevelScriptSite = topScriptSite; }
-    ScriptSite* GetTopLevelScriptSite () { return this->topLevelScriptSite; }    
+    ScriptSite* GetTopLevelScriptSite () { return this->topLevelScriptSite; }
 #endif
 #if DBG || defined(PROFILE_EXEC)
     virtual bool AsyncHostOperationStart(void *) override;
@@ -919,7 +919,7 @@ public:
     void CloseForJSRT();
 
     //Call back is called for one or more handles
-    //It does multiple callbacks (For example: seperate call back for GC thread handle & JIT thread handles)
+    //It does multiple callbacks (For example: separate call back for GC thread handle & JIT thread handles)
 //    template<class Fn>
     //void ShutdownThreads(Fn callback);
 
@@ -952,7 +952,7 @@ public:
 
 public:
     void SetTelemetryBlock(ThreadContextWatsonTelemetryBlock * telemetryBlock) { this->telemetryBlock = telemetryBlock; }
-    
+
     static ThreadContext* GetContextForCurrentThread();
 
     Recycler* GetRecycler() { return recycler; }
@@ -972,7 +972,7 @@ public:
 
     Js::PropertyRecord const * GetPropertyName(Js::PropertyId propertyId);
     Js::PropertyRecord const * GetPropertyNameLocked(Js::PropertyId propertyId);
-    
+
 private:
     template <bool locked> Js::PropertyRecord const * GetPropertyNameImpl(Js::PropertyId propertyId);
 public:
@@ -990,14 +990,14 @@ public:
     {
         return GetOrAddPropertyRecordImpl(propertyName, false);
     }
-    const Js::PropertyRecord * GetOrAddPropertyRecordBind(JsUtil::CharacterBuffer<wchar_t> propertyName)        
+    const Js::PropertyRecord * GetOrAddPropertyRecordBind(JsUtil::CharacterBuffer<wchar_t> propertyName)
     {
         return GetOrAddPropertyRecordImpl(propertyName, true);
     }
     void AddBuiltInPropertyRecord(const Js::PropertyRecord *propertyRecord);
-    
+
     void GetOrAddPropertyId(__in LPCWSTR propertyName, __in int propertyNameLength, Js::PropertyRecord const** propertyRecord);
-    void GetOrAddPropertyId(JsUtil::CharacterBuffer<WCHAR> const& propertName, Js::PropertyRecord const** propertyRecord);   
+    void GetOrAddPropertyId(JsUtil::CharacterBuffer<WCHAR> const& propertName, Js::PropertyRecord const** propertyRecord);
     Js::PropertyRecord const * UncheckedAddPropertyId(JsUtil::CharacterBuffer<WCHAR> const& propertyName, bool bind, bool isSymbol = false);
     Js::PropertyRecord const * UncheckedAddPropertyId(__in LPCWSTR propertyName, __in int propertyNameLength, bool bind = false, bool isSymbol = false);
 
@@ -1005,17 +1005,17 @@ public:
     void EtwLogPropertyIdList();
 #endif
 
-private:    
+private:
     const Js::PropertyRecord * GetOrAddPropertyRecordImpl(JsUtil::CharacterBuffer<wchar_t> propertyName, bool bind);
     void AddPropertyRecordInternal(const Js::PropertyRecord * propertyRecord);
     void BindPropertyRecord(const Js::PropertyRecord * propertyRecord);
     bool IsDirectPropertyName(const wchar_t * propertyName, int propertyNameLength);
-    
+
     RecyclerWeakReference<const Js::PropertyRecord> * CreatePropertyRecordWeakRef(const Js::PropertyRecord * propertyRecord);
     void AddCaseInvariantPropertyRecord(const Js::PropertyRecord * propertyRecord);
 
     uint scriptContextCount;
-    
+
 public:
     void UncheckedAddBuiltInPropertyId();
 
@@ -1341,24 +1341,24 @@ public:
     {
         SetImplicitCallFlags((Js::ImplicitCallFlags)(implicitCallFlags | flags));
     }
-    
+
     void CheckAndResetImplicitCallAccessorFlag();
 
     template <class Fn>
     __inline Js::Var ExecuteImplicitCall(Js::RecyclableObject * function, Js::ImplicitCallFlags flags, Fn implicitCall)
-    {               
+    {
         // TODO:  For now, we will not allow Function that is marked as HasNoSideEffect to be called, and we will just bailout.
         // These function may still throw exceptions, so we will need to add checks with RecordImplicitException
-        // so that we don't throw exception when disableImplicitCall is set before we allow these function to be called 
+        // so that we don't throw exception when disableImplicitCall is set before we allow these function to be called
         // as an optimization.  (These functions are valueOf and toString calls for built-in non primitive types)
 
         Js::FunctionInfo::Attributes attributes = Js::FunctionInfo::GetAttributes(function);
 
-        // we can hoist out const method if we know the function doesn't have side effect, 
+        // we can hoist out const method if we know the function doesn't have side effect,
         // and the value can be hoisted.
         if (this->HasNoSideEffect(function, attributes))
-        {        
-            // Has no side effect means the function does not change global value or 
+        {
+            // Has no side effect means the function does not change global value or
             // will check for implicit call flags
             return implicitCall();
         }
@@ -1370,11 +1370,11 @@ public:
             // Return "undefined" just so we have a valid var, in case subsequent instructions are executed
             // before we bail out.
             return function->GetScriptContext()->GetLibrary()->GetUndefined();
-        } 
+        }
 
         if ((attributes & Js::FunctionInfo::HasNoSideEffect) != 0)
-        {        
-            // Has no side effect means the function does not change global value or 
+        {
+            // Has no side effect means the function does not change global value or
             // will check for implicit call flags
             return implicitCall();
         }
@@ -1384,7 +1384,7 @@ public:
         Js::ImplicitCallFlags saveImplicitCallFlags = this->GetImplicitCallFlags();
         Js::Var result = implicitCall();
         this->SetImplicitCallFlags((Js::ImplicitCallFlags)(saveImplicitCallFlags | flags));
-        return result;        
+        return result;
     }
     bool HasNoSideEffect(Js::RecyclableObject * function) const;
     bool HasNoSideEffect(Js::RecyclableObject * function, Js::FunctionInfo::Attributes attr) const;
@@ -1407,7 +1407,7 @@ public:
 #ifdef FAULT_INJECTION
     virtual void DisposeScriptContextByFaultInjectionCallBack() override;
 #endif
-    virtual void DisposeObjects(Recycler * recycler) override;   
+    virtual void DisposeObjects(Recycler * recycler) override;
 
     typedef DList<ExpirableObject*, ArenaAllocator> ExpirableObjectList;
     ExpirableObjectList* expirableObjectList;
@@ -1429,8 +1429,8 @@ public:
     bool IsScriptActive() const { return isScriptActive; }
     void SetIsScriptActive(bool isActive) { isScriptActive = isActive; }
     bool IsExecutionDisabled() const
-    { 
-        return this->GetStackLimitForCurrentThread() == Js::Constants::StackLimitForScriptInterrupt; 
+    {
+        return this->GetStackLimitForCurrentThread() == Js::Constants::StackLimitForScriptInterrupt;
     }
     void DisableExecution();
     void EnableExecution();
@@ -1497,13 +1497,13 @@ private:
 
     // !!! DON'T REMOVE THIS!!! Used in GetOrAddPropertyId
     // This is a workaround for aggressive C++ compiler optimization. When a propertyRecord is added throughout jscript9 source code,
-    // we usually have the pattern of 
-    // PropertyRecord const* propertyRecord; 
+    // we usually have the pattern of
+    // PropertyRecord const* propertyRecord;
     //  scriptContext->GetOrAddPropertyRecord(..., &propertyRecord);
     // JavascriptOperators::GetProperty(... propertyRecord->GetPropertyId()...);
     // C++ compiler can inline the JavascriptOperators method, and given that propertyRecord is not used after getting the propertyId,
     // it can reuse the stack space for propertyRecord, causing it to be reclaimed right away.
-    // The workaround here is to provide an escape path to use the stack variable so the compiler cannot reclaim the stack rightaway.
+    // The workaround here is to provide an escape path to use the stack variable so the compiler cannot reclaim the stack right away.
     Js::PropertyRecord const ** dummyPropertyRecord;
     InterruptPoller *interruptPoller;
 
@@ -1529,11 +1529,11 @@ public:
         entryPointToBuiltInOperationIdCache.Add(entryPoint, id);
     }
 
-    void ResetEntryPointToBuiltInOperationIdCache() 
+    void ResetEntryPointToBuiltInOperationIdCache()
     {
         entryPointToBuiltInOperationIdCache.ResetNoDelete();
     }
-    
+
     uint8 LoopDepth() const
     {
         return loopDepth;
@@ -1561,15 +1561,15 @@ public:
     }
 
 #if defined(CHECK_MEMORY_LEAK) || defined(LEAK_REPORT)
-    static void ReportAndCheckLeaksOnProcessDetach();    
+    static void ReportAndCheckLeaksOnProcessDetach();
 #endif
 #ifdef LEAK_REPORT
     // HACK HACK: heuristically figure out which one is the root tracker script engine
-    // and force close on it  
+    // and force close on it
     void SetRootTrackerScriptContext(Js::ScriptContext * scriptContext);
     void ClearRootTrackerScriptContext(Js::ScriptContext * scriptContext);
 
-private:    
+private:
     Js::ScriptContext * rootTrackerScriptContext;
 
     DWORD threadId;

@@ -37,7 +37,7 @@ namespace Js
     }
 
     SIMDValue SIMDInt8x16Operation::OpInt8x16(const SIMDValue& v)
-    {// overload function with input paramter as SIMDValue for completeness, may not need
+    {// overload function with input parameter as SIMDValue for completeness, may not need
         SIMDValue result;
 
         result = v;
@@ -61,7 +61,7 @@ namespace Js
         return result;
     }
 
-    SIMDValue SIMDInt8x16Operation::OpSplat(const SIMDValue& v)  //not in polyfill or spec
+    SIMDValue SIMDInt8x16Operation::OpSplat(const SIMDValue& v) // not in polyfill or spec
     {
         SIMDValue result;
 
@@ -204,7 +204,7 @@ namespace Js
         return result;
     }
 
-    SIMDValue SIMDInt8x16Operation::OpLessThan(const SIMDValue& aValue, const SIMDValue& bValue) //arun::ToDo return bool types
+    SIMDValue SIMDInt8x16Operation::OpLessThan(const SIMDValue& aValue, const SIMDValue& bValue) // TODO arun: return bool types
     {
         SIMDValue result;
 
@@ -215,7 +215,7 @@ namespace Js
         return result;
     }
 
-    SIMDValue SIMDInt8x16Operation::OpEqual(const SIMDValue& aValue, const SIMDValue& bValue) //arun::ToDo return bool types
+    SIMDValue SIMDInt8x16Operation::OpEqual(const SIMDValue& aValue, const SIMDValue& bValue) // TODO arun: return bool types
     {
         SIMDValue result;
 
@@ -227,25 +227,26 @@ namespace Js
         return result;
     }
 
-
-    SIMDValue SIMDInt8x16Operation::OpGreaterThan(const SIMDValue& aValue, const SIMDValue& bValue) //arun::ToDo return bool types
+    SIMDValue SIMDInt8x16Operation::OpGreaterThan(const SIMDValue& aValue, const SIMDValue& bValue) // TODO arun: return bool types
     {
         SIMDValue result;
 
         for(uint idx = 0; idx < 16; ++idx)
         {
-            result.i8[idx] = (aValue.i8[idx] > bValue.i8[idx]) ? 0xff : 0x0; //Return should be bool vector accordig to spec
+            result.i8[idx] = (aValue.i8[idx] > bValue.i8[idx]) ? 0xff : 0x0; //Return should be bool vector according to spec
         }
 
         return result;
     }
 
- 
     SIMDValue SIMDInt8x16Operation::OpShiftLeftByScalar(const SIMDValue& value, int8 count)
     {
         SIMDValue result;
-        if (count < 0 || count > 8)   //Similar to polifyll, maximum shift will happen if the shift amounts and invalid
-            count = 8; 
+        if (count < 0 || count > 8) // Similar to polyfill, maximum shift will happen if the shift amounts and invalid
+        {
+            count = 8;
+        }
+
         for(uint idx = 0; idx < 16; ++idx)
         {
             result.i8[idx] = value.i8[idx] << count;
@@ -261,7 +262,7 @@ namespace Js
         int nIntMin = INT_MIN; // INT_MIN = -2147483648 = 0x80000000
         int mask = ~((nIntMin >> count) << 1); // now first count bits are 0
         // right shift count bits and shift in with 0
-        
+
         for (uint idx = 0; idx < 16; ++idx)
         {
             result.i8[idx] = (value.i8[idx] >> count) & mask;
@@ -273,8 +274,10 @@ namespace Js
     {
         SIMDValue result;
 
-        if (count < 0 || count > 8)   //Similar to polifyll, maximum shift will happen if the shift amounts and invalid
-            count = 8; 
+        if (count < 0 || count > 8) // Similar to polyfill, maximum shift will happen if the shift amounts and invalid
+        {
+            count = 8;
+        }
 
         for(uint idx = 0; idx < 16; ++idx)
         {

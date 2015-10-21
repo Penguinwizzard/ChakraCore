@@ -9,8 +9,8 @@
 
 // Build SCC liveness.  SCC stands for Strongly Connected Components.  It's a simple
 // conservative algorithm which has the advantage of being O(N).  A simple forward walk
-// of the IR looks at the first and last use of each symbols and creates the lifetimes.  
-// The code assumes the blocks are in R-DFO order to start with.  For loops, the lifetimes 
+// of the IR looks at the first and last use of each symbols and creates the lifetimes.
+// The code assumes the blocks are in R-DFO order to start with.  For loops, the lifetimes
 // are simply extended to cover the whole loop.
 //
 // The disadvantages are:
@@ -19,7 +19,7 @@
 //
 // Single-def symbols do not have the first issue.  We also try to make up for number 2
 // by not extending the lifetime of symbols if the first def and the last use are in
-// same loop.  
+// same loop.
 //
 // The code builds a list of lifetimes sorted in start order.
 // We actually build the list in reverse start order, and then reverse it.
@@ -47,11 +47,11 @@ SCCLiveness::Build()
 
         // End of loop?
         if (this->curLoop && instrNum >= this->curLoop->regAlloc.loopEnd)
-        {            
+        {
             AssertMsg(this->loopNest > 0, "Loop nest is messed up");
             AssertMsg(instr->IsBranchInstr(), "Loop tail should be a branchInstr");
             AssertMsg(instr->AsBranchInstr()->IsLoopTail(this->func), "Loop tail not marked correctly");
-            
+
             FOREACH_SLIST_ENTRY(Lifetime *, lifetime, this->curLoop->regAlloc.extendedLifetime)
             {
                 if (this->curLoop->regAlloc.hasNonOpHelperCall)
@@ -67,7 +67,7 @@ SCCLiveness::Build()
                     lifetime->totalOpHelperLengthByEnd = this->totalOpHelperFullVisitedLength + CurrentOpHelperVisitedLength(instr);
                 }
             }
-            NEXT_SLIST_ENTRY;         
+            NEXT_SLIST_ENTRY;
 
             this->curLoop->regAlloc.helperLength = this->totalOpHelperFullVisitedLength + CurrentOpHelperVisitedLength(instr);
             while (this->curLoop && instrNum >= this->curLoop->regAlloc.loopEnd)
@@ -76,7 +76,7 @@ SCCLiveness::Build()
                 this->loopNest--;
             }
         }
-      
+
         if (instr->HasBailOutInfo())
         {
             // At this point, the bailout should be lowered to a CALL to BailOut
@@ -84,7 +84,7 @@ SCCLiveness::Build()
             Assert(LowererMD::IsCall(instr));
             IR::Opnd * helperOpnd = nullptr;
             if (instr->GetSrc1()->IsHelperCallOpnd())
-            { 
+            {
                 helperOpnd = instr->GetSrc1();
             }
             else if (instr->GetSrc1()->AsRegOpnd()->m_sym)
@@ -93,7 +93,7 @@ SCCLiveness::Build()
                 helperOpnd = instr->GetSrc1()->AsRegOpnd()->m_sym->m_instrDef->GetSrc1();
             }
             Assert(!helperOpnd || BailOutInfo::IsBailOutHelper(helperOpnd->AsHelperCallOpnd()->m_fnHelper));
-#endif     
+#endif
             ProcessBailOutUses(instr);
         }
 
@@ -146,8 +146,8 @@ SCCLiveness::Build()
             this->ProcessDst(dst, instr);
         }
 
-        
-        if (instr->IsLabelInstr())         
+
+        if (instr->IsLabelInstr())
         {
             IR::LabelInstr * labelInstr = instr->AsLabelInstr();
 
@@ -187,7 +187,7 @@ SCCLiveness::Build()
 
             // Look for start of loop
             if (labelInstr->m_isLoopTop)
-            {               
+            {
                 this->loopNest++;       // used in spill cost calculation.
 
                 IR::LabelInstr * labelInstr = instr->AsLabelInstr();
@@ -199,7 +199,7 @@ SCCLiveness::Build()
                     if (ref->GetNumber() > lastBranchNum)
                     {
                         lastBranchInstr = ref;
-                        lastBranchNum = lastBranchInstr->GetNumber();                        
+                        lastBranchNum = lastBranchInstr->GetNumber();
                     }
                 }
                 NEXT_SLISTCOUNTED_ENTRY;
@@ -214,7 +214,7 @@ SCCLiveness::Build()
                 loop->regAlloc.loopEnd = lastBranchNum;
 
                 // Tail duplication can result in cases in which an outer loop lexically ends before the inner loop.
-                // The register allocator could then thrash in the inner loop registers used for a live-on-back-edge 
+                // The register allocator could then thrash in the inner loop registers used for a live-on-back-edge
                 // sym on the outer loop. To prevent this, we need to mark the end of the outer loop as the end of the
                 // inner loop and update the lifetimes already extended in the outer loop in keeping with this change.
                 for (Loop* parentLoop = loop->parent; parentLoop != nullptr; parentLoop = parentLoop->parent)
@@ -222,7 +222,7 @@ SCCLiveness::Build()
                     if (parentLoop->regAlloc.loopEnd < loop->regAlloc.loopEnd)
                     {
                         // We need to go over extended lifetimes in outer loops to update the lifetimes of symbols that might
-                        // have had their lifetime extended to the outer loop end (which is before the current loop end) and 
+                        // have had their lifetime extended to the outer loop end (which is before the current loop end) and
                         // may not have any uses in the current loop to extend their lifetimes to the current loop end.
                         FOREACH_SLIST_ENTRY(Lifetime *, lifetime, parentLoop->regAlloc.extendedLifetime)
                         {
@@ -248,7 +248,7 @@ SCCLiveness::Build()
             }
             if (labelInstr->isOpHelper && !PHASE_OFF(Js::OpHelperRegOptPhase, this->func))
             {
-                this->lastOpHelperLabel = labelInstr;                
+                this->lastOpHelperLabel = labelInstr;
             }
         }
         else if (instr->IsBranchInstr() && !instr->AsBranchInstr()->IsMultiBranch())
@@ -351,7 +351,7 @@ SCCLiveness::EndOpHelper(IR::Instr * instr)
 }
 
 // SCCLiveness::ProcessSrc
-void            
+void
 SCCLiveness::ProcessSrc(IR::Opnd *src, IR::Instr *instr)
 {
     if (src->IsRegOpnd())
@@ -377,7 +377,7 @@ SCCLiveness::ProcessSrc(IR::Opnd *src, IR::Instr *instr)
 }
 
 // SCCLiveness::ProcessDst
-void            
+void
 SCCLiveness::ProcessDst(IR::Opnd *dst, IR::Instr *instr)
 {
     if (dst->IsIndirOpnd())
@@ -435,9 +435,9 @@ SCCLiveness::ProcessBailOutUses(IR::Instr * instr)
         ProcessSrc(bailOutInfo->branchConditionOpnd, instr);
     }
 
-    // BailOnNoProfile might have caused the deletion of a cloned InlineeEnd. As a result, argument 
+    // BailOnNoProfile might have caused the deletion of a cloned InlineeEnd. As a result, argument
     // lifetimes wouldn't have been extended beyond the bailout point (InlineeEnd extends the lifetimes)
-    // Extend argument lifetimes upto the bail out point to allow LinearScan::SpillInlineeArgs to spill
+    // Extend argument lifetimes up to the bail out point to allow LinearScan::SpillInlineeArgs to spill
     // inlinee args.
     if ((instr->GetBailOutKind() == IR::BailOutOnNoProfile) && !instr->m_func->IsTopFunc())
     {
@@ -465,7 +465,7 @@ void
 SCCLiveness::ProcessStackSymUse(StackSym * stackSym, IR::Instr * instr, int usageSize)
 {
     Lifetime * lifetime = stackSym->scratch.linearScan.lifetime;
-    
+
     if (lifetime == nullptr)
     {
 #if DBG
@@ -497,31 +497,31 @@ SCCLiveness::ProcessStackSymUse(StackSym * stackSym, IR::Instr * instr, int usag
         lifetime->isLiveAcrossUserCalls = true;
     }
     lifetime->isDeadStore = false;
-    
+
     lifetime->intUsageBv.Set(usageSize);
 }
 
 // SCCLiveness::ProcessRegUse
-void            
+void
 SCCLiveness::ProcessRegUse(IR::RegOpnd *regUse, IR::Instr *instr)
 {
-    StackSym * stackSym = regUse->m_sym;  
+    StackSym * stackSym = regUse->m_sym;
 
     if (stackSym == nullptr)
     {
         return;
     }
 
-    ProcessStackSymUse(stackSym, instr, TySize[regUse->GetType()]);      
-    
+    ProcessStackSymUse(stackSym, instr, TySize[regUse->GetType()]);
+
 }
 
 // SCCLiveness::ProcessRegDef
-void            
+void
 SCCLiveness::ProcessRegDef(IR::RegOpnd *regDef, IR::Instr *instr)
 {
     StackSym * stackSym = regDef->m_sym;
-   
+
     // PhysReg
     if (stackSym == nullptr || regDef->GetReg() != RegNOREG)
     {
@@ -546,7 +546,7 @@ SCCLiveness::ProcessRegDef(IR::RegOpnd *regDef, IR::Instr *instr)
         }
     }
 
-    // Arg slot sym can be in an RegOpnd for param passed via registers  
+    // Arg slot sym can be in an RegOpnd for param passed via registers
     // Skip creating a lifetime for those.
     if (stackSym->IsArgSlotSym())
     {
@@ -601,7 +601,7 @@ SCCLiveness::ExtendLifetime(Lifetime *lifetime, IR::Instr *instr)
     bool loopAddedToList = false;
 
     while (loop)
-    {          
+    {
         if (loop->regAlloc.liveOnBackEdgeSyms->Test(sym->m_id))
         {
             isLiveOnBackEdge = true;
@@ -638,14 +638,14 @@ SCCLiveness::ExtendLifetime(Lifetime *lifetime, IR::Instr *instr)
     }
     else
     {
-        // extend lifetime to the outter most loop boundary that have the symbol live on back edge.
+        // extend lifetime to the outer most loop boundary that have the symbol live on back edge.
         bool isLifetimeExtended = false;
         if (lifetime->start > extendedLifetimeStart)
         {
             isLifetimeExtended = true;
             lifetime->start = extendedLifetimeStart;
         }
-        
+
         if (lifetime->end < extendedLifetimeEnd)
         {
             isLifetimeExtended = true;
@@ -663,20 +663,20 @@ SCCLiveness::ExtendLifetime(Lifetime *lifetime, IR::Instr *instr)
             NEXT_SLISTBASE_ENTRY
         }
         AssertMsg(lifetime->end > instr->GetNumber(), "Lifetime end not set correctly");
-    } 
+    }
     this->extendedLifetimesLoopList->Clear(this->tempAlloc);
 }
 
 // SCCLiveness::InsertLifetime
 //      Insert a new lifetime in the list of lifetime.  The lifetime are inserted
-//      in the reverse order of the lifetime starts.  
+//      in the reverse order of the lifetime starts.
 Lifetime *
 SCCLiveness::InsertLifetime(StackSym *stackSym, RegNum reg, IR::Instr *const currentInstr)
 {
     const uint start = currentInstr->GetNumber(), end = start;
     Lifetime * lifetime = JitAnew(tempAlloc, Lifetime, tempAlloc, stackSym, reg, start, end, this->func);
     lifetime->totalOpHelperLengthByEnd = this->totalOpHelperFullVisitedLength + CurrentOpHelperVisitedLength(currentInstr);
-    
+
     // Find insertion point
     // This looks like a search, but we should almost exit on the first iteration, except
     // when we have loops and some lifetimes where extended.
@@ -684,14 +684,14 @@ SCCLiveness::InsertLifetime(StackSym *stackSym, RegNum reg, IR::Instr *const cur
     {
         if (lifetime->start <= start)
         {
-            break;           
-        }  
-    }     
+            break;
+        }
+    }
     NEXT_SLIST_ENTRY_EDITING;
 
     iter.InsertBefore(lifetime);
 
-    // let's say 'var a = 10;'. if a is not used in the function, we still want to have the instr, otherwise the writethrough will not happen and upon debug bailout
+    // let's say 'var a = 10;'. if a is not used in the function, we still want to have the instr, otherwise the write-through will not happen and upon debug bailout
     // we would not be able to restore the values to see in locals window.
     if (this->func->IsJitInDebugMode() && stackSym->HasByteCodeRegSlot() && this->func->IsNonTempLocalVar(stackSym->GetByteCodeRegSlot()))
     {

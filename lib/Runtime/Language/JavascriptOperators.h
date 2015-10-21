@@ -19,7 +19,7 @@ namespace Js
     EXCEPTION_RECORD        ep##er;                 \
     CONTEXT                 ep##c;                  \
     EXCEPTION_POINTERS      ep = {&ep##er, &ep##c};
-    
+
 #define TYPEOF_ERROR_HANDLER_CATCH(scriptContext, var) \
     } \
     catch (Js::JavascriptExceptionObject *exceptionObject) \
@@ -88,7 +88,7 @@ namespace Js
         functionBody->GetDynamicProfileInfo()->RecordFieldAccess(functionBody, inlineCacheIndex, var, FldInfo_NoInfo); \
     TYPEOF_ERROR_HANDLER_THROW(scriptContext, var)
 
-    
+
     class JavascriptOperators  /* All static */
     {
     // Methods
@@ -362,7 +362,7 @@ namespace Js
         static Var OP_CmGe_A(Js::Var a,Js::Var b,ScriptContext* scriptContext);
 
         static FunctionInfo * JavascriptOperators::GetConstructorFunctionInfo(Var instance, ScriptContext * scriptContext);
-        // Neutuers the object, if possible, and returns the state of the object which can be used to initialize another object
+        // Detach the type array buffer, if possible, and returns the state of the object which can be used to initialize another object
         static DetachedStateBase* DetachVarAndGetState(Var var);
         static bool IsObjectDetached(Var var);
         // This will return a new object from the state returned by the above operation
@@ -435,14 +435,14 @@ namespace Js
         template <bool IsFromFullJit, class TInlineCache> static Var PatchGetValue(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId);
         template <bool IsFromFullJit, class TInlineCache> static Var PatchGetValueWithThisPtr(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var thisInstance);
         template <bool IsFromFullJit, class TInlineCache> static Var PatchGetValueForTypeOf(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId);
-        
+
         static Var PatchGetValueUsingSpecifiedInlineCache(InlineCache * inlineCache, Var instance, RecyclableObject * object, PropertyId propertyId, ScriptContext* scriptContext);
         static Var PatchGetValueNoFastPath(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId);
         static Var PatchGetValueWithThisPtrNoFastPath(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var thisInstance);
 
         template <bool IsFromFullJit, class TInlineCache> static Var PatchGetRootValue(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, DynamicObject* object, PropertyId propertyId);
         template <bool IsFromFullJit, class TInlineCache> static Var PatchGetRootValueForTypeOf(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, DynamicObject* object, PropertyId propertyId);
-        
+
         static Var PatchGetRootValueNoFastPath_Var(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId);
         static Var PatchGetRootValueNoFastPath(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, DynamicObject* object, PropertyId propertyId);
 
@@ -450,7 +450,7 @@ namespace Js
         template <bool IsFromFullJit, class TInlineCache> static void PatchSetPropertyScoped(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, FrameDisplay *pScope, PropertyId propertyId, Var newValue, Var defaultInstance, PropertyOperationFlags flags = PropertyOperation_None);
 
         template <bool IsFromFullJit, class TInlineCache> static Var PatchGetPropertyForTypeOfScoped(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, FrameDisplay *pScope, PropertyId propertyId, Var defaultInstance);
-        
+
         template <bool IsFromFullJit, class TInlineCache> static void PatchPutValue(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var obj, PropertyId propertyId, Var newValue, PropertyOperationFlags flags = PropertyOperation_None);
         template <bool IsFromFullJit, class TInlineCache> static void PatchPutValueWithThisPtr(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var obj, PropertyId propertyId, Var newValue, Var thisInstance, PropertyOperationFlags flags = PropertyOperation_None);
         template <bool IsFromFullJit, class TInlineCache> static void PatchPutRootValue(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var obj, PropertyId propertyId, Var newValue, PropertyOperationFlags flags = PropertyOperation_None);
@@ -498,7 +498,7 @@ namespace Js
         template <bool needToSetProperty>
         static BOOL ValidateAndApplyPropertyDescriptor(RecyclableObject* obj, PropertyId propId, const PropertyDescriptor& descriptor,
             PropertyDescriptor* currentPropertyDescriptor, bool isExtensible, bool throwOnError, ScriptContext* scriptContext);
-        
+
         template <bool isAccessor>
         static PropertyDescriptor FillMissingPropertyDescriptorFields(PropertyDescriptor descriptor, ScriptContext* scriptContext);
 
@@ -506,7 +506,7 @@ namespace Js
 
         static Var DefaultAccessor(RecyclableObject* function, CallInfo callInfo, ...);
         static bool IsUndefinedAccessor(Var accessor, ScriptContext* scriptContext);
-        
+
         static void SetAttributes(RecyclableObject* object, PropertyId propId, const PropertyDescriptor& descriptor, bool force);
 
         static void OP_ClearAttributes(Var instance, PropertyId propertyId);
@@ -587,7 +587,7 @@ namespace Js
         static BOOL IsPropertyObject(RecyclableObject * instance);
 #endif
         template<typename PropertyKeyType, bool doFastProtoChainCheck, bool isRoot>
-        static BOOL CheckPrototypesForAccessorOrNonWritablePropertyCore(RecyclableObject* instance, 
+        static BOOL CheckPrototypesForAccessorOrNonWritablePropertyCore(RecyclableObject* instance,
             PropertyKeyType propertyKey, Var* setterValue, DescriptorFlags* flags, PropertyValueInfo* info, ScriptContext* scriptContext);
         static RecyclableObject * GetPrototypeObject(RecyclableObject * constructorFunction, ScriptContext * scriptContext);
         static RecyclableObject * GetPrototypeObjectForConstructorCache(RecyclableObject * constructor, ScriptContext * scriptContext, bool& canBeCached);
@@ -598,7 +598,7 @@ namespace Js
         static BOOL Reject(bool throwOnError, ScriptContext* scriptContext, long errorCode, PropertyId propertyId);
         static bool AreSamePropertyDescriptors(const PropertyDescriptor* x, const PropertyDescriptor* y, ScriptContext* scriptContext);
         static Var CanonicalizeAccessor(Var accessor, ScriptContext* scriptContext);
-        
+
         static void BuildHandlerScope(Var argThis, RecyclableObject * hostObject, FrameDisplay * pScopes, ScriptContext * scriptContext);
         static void TryLoadRoot(Var& thisVar, TypeId typeId, int moduleID, ScriptContext* scriptContext);
 

@@ -94,7 +94,7 @@ public:
     virtual BOOL IsValidObject(void* objectAddress) override;
 
     void Mark(void* objectAddress, MarkContext * markContext);
-    virtual byte* GetRealAddressFromInterior(void* interiorAddress) override;    
+    virtual byte* GetRealAddressFromInterior(void* interiorAddress) override;
     bool TestObjectMarkedBit(void* objectAddress) override;
     void SetObjectMarkedBit(void* objectAddress) override;
     bool FindHeapObject(void* objectAddress, Recycler * recycler, FindHeapObjectFlags flags, RecyclerHeapObjectInfo& heapObject) override;
@@ -106,7 +106,7 @@ public:
     void SetNextBlock(LargeHeapBlock * next) { this->next = next; }
     size_t GetFreeSize() const { return addressEnd - allocAddressEnd; }
     static LargeHeapBlock * New(__in char * address, size_t pageCount, Segment * segment, uint objectCount, LargeHeapBucket* bucket);
-    static void Delete(LargeHeapBlock * heapBlock);   
+    static void Delete(LargeHeapBlock * heapBlock);
     bool IsInPendingDisposeList() { return isInPendingDisposeList; }
     void SetIsInPendingDisposeList(bool isInPendingDisposeList) { this->isInPendingDisposeList = isInPendingDisposeList; }
 
@@ -117,9 +117,9 @@ public:
     LargeHeapBlockFreeList* GetFreeList() { return &this->freeList; }
 
     ~LargeHeapBlock();
-    
+
 #if defined(PARTIAL_GC_ENABLED) || defined(CONCURRENT_GC_ENABLED)
-    size_t Rescan(Recycler* recycler, bool isPartialSwept, RescanFlags flags); 
+    size_t Rescan(Recycler* recycler, bool isPartialSwept, RescanFlags flags);
 #endif
 #if defined(PARTIAL_GC_ENABLED) && defined(CONCURRENT_GC_ENABLED)
     void PartialTransferSweptObjects();
@@ -137,8 +137,8 @@ public:
     SweepState Sweep(RecyclerSweep& recyclerSweep, bool queuePendingSweep);
     template <bool pageheap, SweepMode mode>
     void SweepObjects(Recycler * recycler);
-    bool TransferSweptObjects();   
-    void DisposeObjects(Recycler * recycler);    
+    bool TransferSweptObjects();
+    void DisposeObjects(Recycler * recycler);
     void FinalizeObjects(Recycler* recycler);
     void FinalizeAllObjects();
 
@@ -148,8 +148,8 @@ public:
     void SetEndAllocAddress(__in char* endAllocAddress) { allocAddressEnd = endAllocAddress; }
 #endif
 
-    char * Alloc(size_t size, ObjectInfoBits attributes);    
-    char * TryAllocFromFreeList(size_t size, ObjectInfoBits attributes);    
+    char * Alloc(size_t size, ObjectInfoBits attributes);
+    char * TryAllocFromFreeList(size_t size, ObjectInfoBits attributes);
 
     static size_t GetPagesNeeded(size_t size, bool multiplyRequest);
     static uint GetMaxLargeObjectCount(size_t pageCount, size_t firstAllocationSize);
@@ -216,23 +216,23 @@ private:
 
     void FillFreeMemory(Recycler * recycler, __in_bcount(size) void * address, size_t size);
 #if defined(PARTIAL_GC_ENABLED) && defined(CONCURRENT_GC_ENABLED)
-    bool IsPartialSweptHeader(LargeObjectHeader * header) const 
-    { 
+    bool IsPartialSweptHeader(LargeObjectHeader * header) const
+    {
         Assert(this->hasPartialFreeObjects || (((size_t)header & PartialFreeBit) != PartialFreeBit));
-        return ((size_t)header & PartialFreeBit) == PartialFreeBit; 
+        return ((size_t)header & PartialFreeBit) == PartialFreeBit;
     }
     static const size_t PartialFreeBit = 0x1;
 #endif
-    size_t pageCount;    
+    size_t pageCount;
     size_t actualPageCount;
 
     // The number of allocations that have occurred from this heap block
     // This only increases, never decreases. Instead, we rely on the mark/weakRef/finalize counts
-    // to determine if an object has been freed or not. So when we alloc, we keep allocing 
+    // to determine if an object has been freed or not. So when we alloc, we keep alloc'ing
     // from the last allocation even if there are holes in the large heap block. If we free an object,
     // we simply set its header to null. But otherwise, we simply constantly keep increasing allocCount
     // till the heap block is full.
-    uint allocCount;   
+    uint allocCount;
 
     // Maximum number of objects that can be fit into this heap block
     // This is based on the fact that the largest small object size is 1024
@@ -244,9 +244,9 @@ private:
     // where 1 is the initial object that was used to create the heap block
     uint objectCount;
     char * allocAddressEnd;
-    char * addressEnd;    
+    char * addressEnd;
 
-    LargeHeapBlock* next;   
+    LargeHeapBlock* next;
     LargeObjectHeader * pendingDisposeObject;
 
     LargeHeapBucket* bucket;
@@ -257,7 +257,7 @@ private:
 
     bool isInPendingDisposeList;
 
-#if DBG    
+#if DBG
     bool hasDisposeBeenCalled;
     bool hasPartialFreeObjects;
     uint expectedSweepCount;
@@ -270,7 +270,7 @@ private:
 #endif
     friend class HeapInfo;
     HeapInfo * heapInfo;
-#ifdef PROFILE_RECYCLER_ALLOC    
+#ifdef PROFILE_RECYCLER_ALLOC
     void ** GetTrackerDataArray();
 #endif
 };

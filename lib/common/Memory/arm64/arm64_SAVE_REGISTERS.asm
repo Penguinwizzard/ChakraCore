@@ -4,7 +4,7 @@
 ;-------------------------------------------------------------------------------------------------------
 
 ;void arm64_SAVE_REGISTERS(void*)
-;  
+;
 ;   This method pushes sp and x1-x12 onto an array of 13 ULONG_PTR at x0.
 ;   By convention, sp is at offset 0
 ;   TODO: From talking to SaRavind, the commented out register copies below
@@ -13,14 +13,14 @@
 ;       ULONG_PTR registers[13];
 ;       arm64_SAVE_REGISTERS(registers);
 ;
-    OPT	2	; disable listing
+    OPT 2   ; disable listing
 
 #include "ksarm64.h"
 
-    OPT	1	; reenable listing
+    OPT 1   ; re-enable listing
 
-    TTL	Lib\Common\Memory\arm64\arm64_SAVE_REGISTERS.asm
-    
+    TTL Lib\Common\Memory\arm64\arm64_SAVE_REGISTERS.asm
+
     EXPORT  arm64_SAVE_REGISTERS
 
     TEXTAREA
@@ -46,7 +46,7 @@
     ;stp   x24, x25, [x0, #0xC0]
     ;stp   x26, x27, [x0, #0xD0]
     ;str   x28,      [x0, #0xE0]
-    
+
     br      lr
 
     LEAF_END arm64_SAVE_REGISTERS

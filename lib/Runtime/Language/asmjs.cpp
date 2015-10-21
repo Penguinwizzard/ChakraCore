@@ -52,7 +52,7 @@ namespace Js
         //Check for all the duplicates here.
         return true;
     }
-    
+
 
     bool
     AsmJSCompiler::CheckFunctionHead(AsmJsModuleCompiler &m, ParseNode *fn, bool isGlobal /*= true*/)
@@ -74,7 +74,7 @@ namespace Js
 
         if (fnc.IsLambda())
         {
-            return m.Fail(fn, L"lamda functions are not allowed");
+            return m.Fail(fn, L"lambda functions are not allowed");
         }
 
         if (!isGlobal && fnc.nestedCount != 0)
@@ -104,7 +104,7 @@ namespace Js
             *coercion = AsmJS_ToInt32;
             if( coercedExpr )
             {
-                
+
                 if( rhs->nop == knopInt && rhs->sxInt.lw == 0 )
                 {
                     if( rhs->nop == knopAnd )
@@ -118,7 +118,7 @@ namespace Js
                         *coercedExpr = ParserWrapper::GetBinaryLeft( coercionNode );
                     }
                 }
-                else 
+                else
                 {
                     *coercedExpr = coercionNode;
                 }
@@ -140,12 +140,12 @@ namespace Js
             AsmJsSIMDFunction* simdSym;
 
             target = coercionNode->sxCall.pnodeTarget;
-            
+
             if (!target || target->nop != knopName)
             {
                 return m.Fail(coercionNode, L"Call must be of the form id(...)");
             }
-            
+
             simdSym = m.LookupSimdTypeCheck(target->name());
             // var x = f4(ffi.field)
             if (simdSym)
@@ -180,12 +180,12 @@ namespace Js
 
             }
             // not a SIMD coercion, fall through
-            
+
 
             *coercion = AsmJS_FRound;
             sym = m.LookupFunction(target->name());
             mathSym = (AsmJsMathFunction*)sym;
-            
+
             if (!(mathSym && mathSym->GetMathBuiltInFunction() == AsmJSMathBuiltin_fround))
             {
                 return m.Fail( coercionNode, L"call must be to fround coercion" );
@@ -287,7 +287,7 @@ namespace Js
         {
             return m.Fail(arg, L"duplicate argument name not allowed");
         }
-        
+
         if (!CheckModuleLevelName(m, arg, *name))
         {
             return false;
@@ -334,14 +334,14 @@ namespace Js
 
         return true;
     }
-    
+
     bool
     AsmJSCompiler::CheckPrecedingStatements(AsmJsModuleCompiler &m, ParseNode *stmtList)
     {
-        //TODO: 
+        //TODO:
         return true;
     }
-    
+
     bool AsmJSCompiler::CheckGlobalVariableImportExpr( AsmJsModuleCompiler &m, PropertyName varName, AsmJSCoercion coercion, ParseNode *coercedExpr )
     {
         if( !ParserWrapper::IsDotMember(coercedExpr) )
@@ -361,7 +361,7 @@ namespace Js
         {
             return m.FailName(coercedExpr, L"base of import expression must be '%s'", importName);
         }
-        return m.AddGlobalVarImport(varName, field, coercion);              
+        return m.AddGlobalVarImport(varName, field, coercion);
     }
 
     bool AsmJSCompiler::CheckGlobalVariableInitImport( AsmJsModuleCompiler &m, PropertyName varName, ParseNode *initNode, bool isMutable /*= true*/)
@@ -480,7 +480,7 @@ namespace Js
             return m.FailName( bufArg, L"argument to array view constructor must be '%s'", bufferName );
         }
 
-        
+
         if( !m.AddArrayView( varName, type ) )
         {
             return m.FailName( ctorExpr, L"Failed to define array view to var %s", varName );
@@ -519,10 +519,10 @@ namespace Js
                 }
             }
         }
-        
+
         if( ParserWrapper::IsNameDeclaration(base) && base->name() == m.GetStdLibArgName() )
         {
-            
+
             if (m.GetScriptContext()->GetConfig()->IsSimdjsEnabled())
             {
                 if (lib && lib->GetPropertyId() == PropertyIds::SIMD)
@@ -632,7 +632,7 @@ namespace Js
             m.AddSimdBuiltinUse(operation->GetSimdBuiltInFunction());
             return true;
         }
-      
+
         return m.Fail(initNode, L"expecting c.y where c is either the global or foreign parameter");
     }
 
@@ -654,7 +654,7 @@ namespace Js
         {
             return false;
         }
-        
+
         if (!var->sxVar.pnodeInit)
         {
             return m.Fail(var, L"module import needs initializer");
@@ -662,7 +662,7 @@ namespace Js
 
         ParseNode *initNode = var->sxVar.pnodeInit;
 
-        
+
         if( ParserWrapper::IsNumericLiteral( initNode ) )
         {
             if (m.AddNumericVar(name, initNode, false, isMutable))
@@ -701,14 +701,14 @@ namespace Js
         {
            return CheckNewArrayView(m, var->name(), initNode);
         }
-        
+
         if (ParserWrapper::IsDotMember(initNode))
         {
             return CheckGlobalDotImport(m, name, initNode);
         }
 
 
-        return m.Fail( initNode, L"Failed to recognise global variable" );
+        return m.Fail( initNode, L"Failed to recognize global variable" );
     }
 
     bool
@@ -796,7 +796,7 @@ varDeclEnd:
         m.SetCurrentParseNode(varStmts);
         return true;
     }
-    
+
 
     bool AsmJSCompiler::CheckFunction( AsmJsModuleCompiler &m, ParseNode* fncNode )
     {
@@ -824,7 +824,7 @@ varDeclEnd:
     {
         AsmJSParser& list = m.GetCurrentParserNode();
         Assert( list->nop == knopList );
-        
+
 
         ParseNode* pnode = ParserWrapper::GetBinaryLeft(list);
 
@@ -834,7 +834,7 @@ varDeclEnd:
             {
                 return false;
             }
-            
+
             if(ParserWrapper::GetBinaryRight(list)->nop == knopEndCode)
             {
                 break;
@@ -842,7 +842,7 @@ varDeclEnd:
             list = ParserWrapper::GetBinaryRight(list);
             pnode = ParserWrapper::GetBinaryLeft(list);
         }
-        
+
         m.SetCurrentParseNode( list );
 
         return true;
@@ -918,7 +918,7 @@ varDeclEnd:
                 AsmJsSymbol* sym = m.LookupIdentifier( name );
                 if( !sym )
                 {
-                    return m.FailName( node, L"Symbol %s not recognised inside module", name );
+                    return m.FailName( node, L"Symbol %s not recognized inside module", name );
                 }
 
                 if( sym->GetSymbolType() != AsmJsSymbol::ModuleFunction )
@@ -967,7 +967,7 @@ varDeclEnd:
                 AsmJsSymbol* sym = m.LookupIdentifier( value->name() );
                 if( !sym )
                 {
-                    return m.FailName( node, L"Symbol %s not recognised inside module", value->name() );
+                    return m.FailName( node, L"Symbol %s not recognized inside module", value->name() );
                 }
 
                 if( sym->GetSymbolType() != AsmJsSymbol::ModuleFunction )
@@ -1008,7 +1008,7 @@ varDeclEnd:
             }
 
             PropertyName tableName = varStmt->name();
-            
+
             AsmJsSymbol* sym = m.LookupIdentifier(tableName);
             if( !sym )
             {
@@ -1116,7 +1116,7 @@ varDeclEnd:
         }
 
         m.AccumulateCompileTime(AsmJsCompilation::Module);
-        
+
         if( !CheckFunctionHead( m, m.GetModuleFunctionNode() ) )
         {
             goto AsmJsCompilationError;
@@ -1143,7 +1143,7 @@ varDeclEnd:
         {
             goto AsmJsCompilationError;
         }
-        
+
         m.AccumulateCompileTime();
         m.InitMemoryOffsets();
 
@@ -1167,7 +1167,7 @@ varDeclEnd:
             m.RevertAllFunctions();
             return false;
         }
-        
+
         m.CommitFunctions();
         m.CommitModule();
         m.AccumulateCompileTime(AsmJsCompilation::Module);
@@ -1183,7 +1183,7 @@ AsmJsCompilationError:
             FunctionBody* body = moduleNode->sxFnc.funcInfo->GetParsedFunctionBody();
             body->ResetByteCodeGenState();
         }
-        
+
         cx->byteCodeGenerator->Writer()->Reset();
         return false;
     }

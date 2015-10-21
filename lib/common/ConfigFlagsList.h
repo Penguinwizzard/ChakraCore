@@ -350,8 +350,8 @@ PHASE(All)
 #endif
 #define DEFAULT_CONFIG_ASMJS                (true)
 #define DEFAULT_CONFIG_AsmJsEdge            (false)
-#define DEFAULT_CONFIG_AsmJsStopOnError     (false) 
-#define DEFAULT_CONFIG_SIMDJS               (false) 
+#define DEFAULT_CONFIG_AsmJsStopOnError     (false)
+#define DEFAULT_CONFIG_SIMDJS               (false)
 #define DEFAULT_CONFIG_BgJitDelayFgBuffer   (0)
 #define DEFAULT_CONFIG_BgJitPendingFuncCap  (31)
 #define DEFAULT_CONFIG_CurrentSourceInfo     (true)
@@ -475,10 +475,10 @@ PHASE(All)
 #define DEFAULT_CONFIG_ES6                     (true)  // master flag to gate all P0-spec-test compliant ES6 features
 
 //CollectGarbage is legacy IE specific global function disabled in Edge.
-//Disabled due to security implications. 
+//Disabled due to security implications.
 #define DEFAULT_CONFIG_CollectGarbage          (false)
 
-// ES6 sub-feature gate - to enable-disable ES6 subfeature when ES6 flag is enabled
+// ES6 sub-feature gate - to enable-disable ES6 sub-feature when ES6 flag is enabled
 #define DEFAULT_CONFIG_ES6Species              (true)
 #define DEFAULT_CONFIG_ES6AsyncAwait           (false)
 #define DEFAULT_CONFIG_ES6Classes              (true)
@@ -489,7 +489,7 @@ PHASE(All)
 #define DEFAULT_CONFIG_ES6FunctionNameFull     (false)
 #define DEFAULT_CONFIG_ES6Generators           (true)
 #define DEFAULT_CONFIG_ES6Iterators            (true)
-#define DEFAULT_CONFIG_ES6IsConcatSpreadable   (false) 
+#define DEFAULT_CONFIG_ES6IsConcatSpreadable   (false)
 #define DEFAULT_CONFIG_ES6Lambda               (true)
 #define DEFAULT_CONFIG_ES6Math                 (true)
 #define DEFAULT_CONFIG_ES6Object               (true)
@@ -747,7 +747,7 @@ FLAGNR(Boolean, AsmJsEdge             , "Enable asm.js features which may have b
 FLAGPR_REGOVR_EXP(Boolean, ES6, Simdjs, "Enable Simdjs", DEFAULT_CONFIG_SIMDJS)
 FLAGR(Boolean, Simd128TypeSpec, "Enable type-specialization of Simd128 symbols", false)
 
-FLAGNR(Boolean, AssertBreak           , "Debugbreak on assert", false)
+FLAGNR(Boolean, AssertBreak           , "Debug break on assert", false)
 FLAGNR(Boolean, AssertPopUp           , "Pop up asserts (default: false)", false)
 FLAGNR(Boolean, AssertIgnore          , "Ignores asserts if set", false)
 FLAGNR(Boolean, AsyncDebugging, "Enable async debugging feature (default: false)", DEFAULT_CONFIG_AsyncDebugging)
@@ -858,7 +858,7 @@ FLAGR(Boolean, ES6                         , "Enable ES6 stable features",      
 // Master ES6 flag to enable ALL sub ES6 features/flags
 FLAGNRC(Boolean, ES6All                    , "Enable all ES6 features, both stable and unstable", DEFAULT_CONFIG_ES6All)
 
-// Master ES6 flag to enable Threshold ES6 featues/flags
+// Master ES6 flag to enable Threshold ES6 features/flags
 FLAGNRC(Boolean, ES6Experimental           , "Enable all experimental features",                  DEFAULT_CONFIG_ES6All)
 
 // Per ES6 feature/flag
@@ -893,20 +893,20 @@ FLAGPR           (Boolean, ES6, ES6Symbol              , "Enable ES6 Symbol feat
 FLAGPR           (Boolean, ES6, ES6ToPrimitive         , "Enable ES6 ToPrimitve symbol"                             , DEFAULT_CONFIG_ES6ToPrimitive)
 FLAGPR           (Boolean, ES6, ES6ToLength            , "Enable ES6 ToLength fixes"                                , DEFAULT_CONFIG_ES6ToLength)
 FLAGPR           (Boolean, ES6, ES6ToStringTag         , "Enable ES6 ToStringTag symbol"                            , DEFAULT_CONFIG_ES6ToStringTag)
-FLAGPR           (Boolean, ES6, ES6TypedArrayExtensions, "Enable ES6 TypedArray extentions"                         , DEFAULT_CONFIG_ES6TypedArrayExtensions)
+FLAGPR           (Boolean, ES6, ES6TypedArrayExtensions, "Enable ES6 TypedArray extensions"                         , DEFAULT_CONFIG_ES6TypedArrayExtensions)
 FLAGPR           (Boolean, ES6, ES6Unicode             , "Enable ES6 Unicode 6.0 extensions"                        , DEFAULT_CONFIG_ES6Unicode)
 FLAGPR           (Boolean, ES6, ES6UnicodeVerbose      , "Enable ES6 Unicode 6.0 verbose failure output"            , DEFAULT_CONFIG_ES6UnicodeVerbose)
 FLAGPR           (Boolean, ES6, ES6Unscopables         , "Enable ES6 With Statement Unscopables"                    , DEFAULT_CONFIG_ES6Unscopables)
 FLAGPR           (Boolean, ES6, ES6WeakSet             , "Enable ES6 WeakSet"                                       , DEFAULT_CONFIG_ES6WeakSet)
 FLAGPR           (Boolean, ES6, ES6RegExSticky         , "Enable ES6 RegEx sticky flag"                             , DEFAULT_CONFIG_ES6RegExSticky)
-FLAGPR           (Boolean, ES6, ES6HasInstance       , "Enable ES6 @@hasInstance symbol"                        , DEFAULT_CONFIG_ES6HasInstanceOf)
+FLAGPR           (Boolean, ES6, ES6HasInstance         , "Enable ES6 @@hasInstance symbol"                          , DEFAULT_CONFIG_ES6HasInstanceOf)
 FLAGPR           (Boolean, ES6, ES6Verbose             , "Enable ES6 verbose trace"                                 , DEFAULT_CONFIG_ES6Verbose)
 FLAGPR_REGOVR_EXP(Boolean, ES6, ArrayBufferTransfer    , "Enable ArrayBuffer.transfer"                              , DEFAULT_CONFIG_ArrayBufferTransfer)
 // /ES6 (BLUE+1) features/flags
 
 #ifdef ENABLE_PROJECTION
-FLAGNR(Boolean, WinRTDelegateInterfaces , "Treat WinRT Delegates as Interfaces when determing their resolvability.", DEFAULT_CONFIG_WinRTDelegateInterfaces)
-FLAGR(Boolean, WinRTAdaptiveApps        , "Enable the adaptive apps feature, allowing for variable proejction."     , DEFAULT_CONFIG_WinRTAdaptiveApps)
+FLAGNR(Boolean, WinRTDelegateInterfaces , "Treat WinRT Delegates as Interfaces when determining their resolvability.", DEFAULT_CONFIG_WinRTDelegateInterfaces)
+FLAGR(Boolean, WinRTAdaptiveApps        , "Enable the adaptive apps feature, allowing for variable projection."      , DEFAULT_CONFIG_WinRTAdaptiveApps)
 #endif
 
 // This flag to be removed once JITing generator functions is stable
@@ -930,7 +930,7 @@ FLAGNR(Boolean, ForceDeferParse       , "Defer parsing of all function bodies", 
 FLAGNR(Boolean, ForceDiagnosticsMode  , "Enable diagnostics mode and debug interpreter loop", false)
 FLAGNR(Boolean, ForceGetWriteWatchOOM , "Force GetWriteWatch to go into OOM codepath in HeapBlockMap rescan", false)
 FLAGNR(Boolean, DumpDbgControllerBytecode, "Dump dbgcontroller.js bytecode when -dump:bytecode is specified (default false)", false)
-FLAGNR(Boolean, ForcePostLowerGlobOptInstrString, "Force tracking of globop tinstr string post lower", DEFAULT_CONFIG_ForcePostLowerGlobOptInstrString)
+FLAGNR(Boolean, ForcePostLowerGlobOptInstrString, "Force tracking of globopt instr string post lower", DEFAULT_CONFIG_ForcePostLowerGlobOptInstrString)
 FLAGNR(Boolean, EnumerateSpecialPropertiesInDebugger, "Enable enumeration of special debug properties", DEFAULT_CONFIG_EnumerateSpecialPropertiesInDebugger)
 FLAGNR(Boolean, EnableJitInDiagMode   , "Enable Fast F12 (only applicable with ForceDiagnosticsMode or while under debugger)", DEFAULT_CONFIG_EnableJitInDiagMode)
 FLAGR (Boolean, EnableJitInHybridDebugging, "Enable Fast Debugging for Hybrid Debugging. Node: to turn this ON in full, EnableJitInDiagMode must be ON as well.", DEFAULT_CONFIG_EnableJitInHybridDebugging)
@@ -973,7 +973,7 @@ FLAGNR(String,  FaultInjectionFilter  , "A string to restrict the fault injectio
 FLAGNR(Number,  FaultInjectionAllocSize, "Do fault injection only this size", -1)
 FLAGNR(String,  FaultInjectionStackFile   , "Stacks to match, default: stack.txt in current directory", L"stack.txt")
 FLAGNR(Number,  FaultInjectionStackLineCount   , "Count of lines in the stack file used for matching", -1)
-FLAGNR(String,  FaultInjectionStackHash, "Match stacks hash on chakra frames to inject the fault, hex string", L"0")
+FLAGNR(String,  FaultInjectionStackHash, "Match stacks hash on Chakra frames to inject the fault, hex string", L"0")
 FLAGNR(Number,  FaultInjectionScriptContextToTerminateCount, "Script context# COUNT % (Number of script contexts) to terminate", 1)
 //FLAGNR(Number,  FaultInjectionStackHashFrameCount , "Stack frame count for FaultInjectionStackHash, default: MAX_FRAME_COUNT",64)
 #endif
@@ -1016,7 +1016,7 @@ FLAGNR(Phases,  Memspect,              "Enables memspect tracking to perform mem
 FLAGNR(Number,  PolymorphicInlineThreshold     , "Maximum size in bytecodes of an polymorphic inline candidate", DEFAULT_CONFIG_PolymorphicInlineThreshold)
 FLAGNR(Boolean, PrimeRecycler         , "Prime the recycler first", DEFAULT_CONFIG_PrimeRecycler)
 #if defined(CHECK_MEMORY_LEAK) || defined(LEAK_REPORT)
-FLAGNR(Boolean, LeakStackTrace ,        "Include stack trace on laaked pinned object and healp objects", false)
+FLAGNR(Boolean, LeakStackTrace ,        "Include stack trace on leaked pinned object and heap objects", false)
 FLAGNR(Boolean, ForceMemoryLeak ,       "Fake leak some memory to test leak report and check memory leak", false)
 #endif
 FLAGNR(Boolean, TDZ                   , "Emit temporal dead zone code for let/const", DEFAULT_CONFIG_TDZ)
@@ -1028,18 +1028,18 @@ FLAGNR(Number,  LoopBodySizeThresholdToDisableOpts, "Minimum bytecode size of a 
 FLAGNR(Number,  MaxJitThreadCount     , "Number of maximum allowed parallel jit threads (actual number is factor of number of processors and other heuristics)", DEFAULT_CONFIG_MaxJitThreadCount)
 FLAGNR(Boolean, ForceMaxJitThreadCount, "Force the number of parallel jit threads as specified by MaxJitThreadCount flag (creation guaranteed)", DEFAULT_CONFIG_ForceMaxJitThreadCount)
 
-FLAGNR(Number,  MinInterpretCount     , "Mininum number of times a function must be interpreted", 0)
-FLAGNR(Number,  MinSimpleJitRunCount  , "Mininum number of times a function must be run in simple jit", 0)
+FLAGNR(Number,  MinInterpretCount     , "Minimum number of times a function must be interpreted", 0)
+FLAGNR(Number,  MinSimpleJitRunCount  , "Minimum number of times a function must be run in simple jit", 0)
 FLAGNRA(Number, MaxInterpretCount     , Mic, "Maximum number of times a function can be interpreted", 0)
 FLAGNRA(Number, MaxSimpleJitRunCount  , Msjrc, "Maximum number of times a function will be run in SimpleJitted code", 0)
-FLAGNRA(Number, MinMemOpCount         , Mmoc, "Minimum count of a loop to ctivate MemOp", DEFAULT_CONFIG_MinMemOpCount)
+FLAGNRA(Number, MinMemOpCount         , Mmoc, "Minimum count of a loop to activate MemOp", DEFAULT_CONFIG_MinMemOpCount)
 
 FLAGNR(Number,  MaxCopyOnAccessArrayLength, "Maximum length of copy-on-access array", DEFAULT_CONFIG_MaxCopyOnAccessArrayLength)
 FLAGNR(Number,  MinCopyOnAccessArrayLength, "Minimum length of copy-on-access array", DEFAULT_CONFIG_MinCopyOnAccessArrayLength)
 FLAGNR(Number,  CopyOnAccessArraySegmentCacheSize, "Size of copy-on-access array segment cache (1-32)", DEFAULT_CONFIG_CopyOnAccessArraySegmentCacheSize)
 
-FLAGNR(Number, MinTemplatizedJitRunCount, "Mininum number of times a function must be Templatized Jited", DEFAULT_CONFIG_MinTemplatizedJitRunCount)
-FLAGNR(Number, MinAsmJsInterpreterRunCount, "Mininum number of times a function must be Asm Interpreted", DEFAULT_CONFIG_MinAsmJsInterpreterRunCount)
+FLAGNR(Number, MinTemplatizedJitRunCount, "Minimum number of times a function must be Templatized Jitted", DEFAULT_CONFIG_MinTemplatizedJitRunCount)
+FLAGNR(Number, MinAsmJsInterpreterRunCount, "Minimum number of times a function must be Asm Interpreted", DEFAULT_CONFIG_MinAsmJsInterpreterRunCount)
 
 FLAGNR(Number, MinTemplatizedJitLoopRunCount, "Minimum LoopCount run of the Templatized Jit function to run FullJited", DEFAULT_CONFIG_MinTemplatizedJitLoopRunCount)
 FLAGNRA(Number, MaxTemplatizedJitRunCount, Mtjrc, "Maximum number of times a function must be templatized jit", DEFAULT_CONFIG_MaxTemplatizedJitRunCount)
@@ -1072,7 +1072,7 @@ FLAGNR(Number,  MaxJITFunctionBytecodeSize, "The biggest function we'll JIT (byt
 FLAGNR(Number,  MaxLoopsPerFunction   , "Maximum number of loops in any function in the script", DEFAULT_CONFIG_MaxLoopsPerFunction)
 FLAGNR(Number,  FuncObjectInlineCacheThreshold  , "Maximum number of inline caches a function body may have to allow for inline caches to be allocated on the function object", DEFAULT_CONFIG_FuncObjectInlineCacheThreshold)
 FLAGNR(Boolean, NoDeferParse          , "Disable deferred parsing", false)
-FLAGNR(Boolean, NoLogo                , "No logo, which we dont display anyways", false)
+FLAGNR(Boolean, NoLogo                , "No logo, which we don't display anyways", false)
 #ifdef _ARM64_
 FLAGR (Boolean, NoNative              , "Disable native codegen", true)
 #else
@@ -1229,7 +1229,7 @@ FLAGR (Number,  HostType              , "Host type in which to run the jscript e
 #endif
 FLAGR (Boolean, WERExceptionSupport   , "WER feature for extended exception support. Enabled when WinRT is enabled", false )
 #ifdef ENABLE_PROJECTION
-FLAGR (Boolean, WinRTConstructorAllowed, "Whether WinRT contructors is allowed in WebView host type. Constructor is always allowed in other host type ", false)
+FLAGR (Boolean, WinRTConstructorAllowed, "Whether WinRT constructors is allowed in WebView host type. Constructor is always allowed in other host type ", false)
 #endif
 FLAGNR(Boolean, ExtendedErrorStackForTestHost, "Enable passing extended error stack string to test host.", DEFAULT_CONFIG_ExtendedErrorStackForTestHost)
 FLAGNR(Boolean, errorStackTrace       , "error.StackTrace feature. Remove when feature complete", DEFAULT_CONFIG_errorStackTrace)
@@ -1314,7 +1314,7 @@ FLAGNR(Number, InlineCacheInvalidationListCompactionThreshold, "Compact inline c
 FLAGNR(Boolean, IRViewer, "Enable IRViewer functionality (improved UI for various stages of IR generation)", false)
 #endif /* IR_VIEWER */
 
-FLAGNR(Boolean, InvalidateSolutionContextsForGetStructure, "To reduce memory consumption, in the end of GetStructure call, invalidate script contexts used only for GetStructure -- this would ivalidate ones associated with solution files (not top-most references such as helpers.js)", DEFAULT_CONFIG_InvalidateSolutionContextsForGetStructure)
+FLAGNR(Boolean, InvalidateSolutionContextsForGetStructure, "To reduce memory consumption, in the end of GetStructure call, invalidate script contexts used only for GetStructure -- this would invalidate ones associated with solution files (not top-most references such as helpers.js)", DEFAULT_CONFIG_InvalidateSolutionContextsForGetStructure)
 FLAGNR(Boolean, GCPauseTel, "Enable GC Pause telemetry in the product code.", false)
 FLAGNR(Boolean, ES5LangTel, "Print ES5 language telemetry output.", false)
 FLAGNR(Boolean, ES6LangTel, "Print ES6 language telemetry output.", false)

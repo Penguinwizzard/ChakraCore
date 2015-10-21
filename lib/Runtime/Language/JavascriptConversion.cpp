@@ -43,19 +43,21 @@ namespace Js
         return RecyclableObject::DefaultEntryPoint != entryPoint;
     }
 
-//ES5 9.12 SameValue algorithm implementation.
-//1.    If Type(x) is different from Type(y), return false.
-//2.    If Type(x) is Undefined, return true.
-//3.    If Type(x) is Null, return true.
-//4.    If Type(x) is Number, then.
-//          a.  If x is NaN and y is NaN, return true.
-//          b.  If x is +0 and y is -0, return false.
-//          c.  If x is -0 and y is +0, return false.
-//          d.  If x is the same number value as y, return true.
-//          e.  Return false.
-//5.    If Type(x) is String, then return true if x and y are exactly the same sequence of characters (same length and same characters in corresponding positions); otherwise, return false.
-//6.    If Type(x) is Boolean, return true if x and y are both true or both false; otherwise, return false.
-//7.    Return true if x and y refer to the same object. Otherwise, return false.
+    //----------------------------------------------------------------------------
+    // ES5 9.12 SameValue algorithm implementation.
+    // 1.    If Type(x) is different from Type(y), return false.
+    // 2.    If Type(x) is Undefined, return true.
+    // 3.    If Type(x) is Null, return true.
+    // 4.    If Type(x) is Number, then.
+    //          a.  If x is NaN and y is NaN, return true.
+    //          b.  If x is +0 and y is -0, return false.
+    //          c.  If x is -0 and y is +0, return false.
+    //          d.  If x is the same number value as y, return true.
+    //          e.  Return false.
+    // 5.    If Type(x) is String, then return true if x and y are exactly the same sequence of characters (same length and same characters in corresponding positions); otherwise, return false.
+    // 6.    If Type(x) is Boolean, return true if x and y are both true or both false; otherwise, return false.
+    // 7.    Return true if x and y refer to the same object. Otherwise, return false.
+    //----------------------------------------------------------------------------
     template<bool zero>
     bool JavascriptConversion::SameValueCommon(Var aLeft, Var aRight)
     {
@@ -328,7 +330,7 @@ CommonNumber:
     //    Object:   Return a default value for the Object.
     //              The default value of an object is retrieved by calling the [[DefaultValue]]
     //              internal method of the object, passing the optional hint PreferredType.
-    //              The behaviour of the [[DefaultValue]] internal method is defined by this specification
+    //              The behavior of the [[DefaultValue]] internal method is defined by this specification
     //              for all native ECMAScript objects (8.12.9).
     //----------------------------------------------------------------------------
     Var JavascriptConversion::ToPrimitive(Var aValue, JavascriptHint hint, ScriptContext * requestContext)
@@ -408,7 +410,7 @@ CommonNumber:
                         // if IsES6ToPrimitiveEnabled flag is off we also fall back to OrdinaryToPrimitive
                         return MethodCallToPrimitive(aValue, hint, requestContext);
                     }
-                    //TODO: Preferrably pass requestContext to JavascriptDate::ToString, but that requires bigger code change.
+                    //TODO: Preferably pass requestContext to JavascriptDate::ToString, but that requires bigger code change.
                     return CrossSite::MarshalVar(requestContext, JavascriptDate::ToString(dateObject));
                 }
             }
@@ -426,12 +428,14 @@ CommonNumber:
         }
     }
 
+    //----------------------------------------------------------------------------
     //7.1.16 CanonicalNumericIndexString(argument)
     //1. Assert : Type(argument) is String.
     //2. If argument is "-0", then return -0.
     //3. Let n be ToNumber(argument).
     //4. If SameValue(ToString(n), argument) is false, then return undefined.
     //5. Return n.
+    //----------------------------------------------------------------------------
     BOOL JavascriptConversion::CanonicalNumericIndexString(Var aValue, double *indexValue, ScriptContext * scriptContext)
     {
         AssertMsg(JavascriptString::Is(aValue), "CanonicalNumericIndexString expects only string");
@@ -572,7 +576,6 @@ CommonNumber:
         return ToString(aValue, scriptContext);
     }
 
-
     //----------------------------------------------------------------------------
     // ToString - abstract operation
     // ES5 9.8
@@ -591,8 +594,7 @@ CommonNumber:
     //    Apply the following steps:
     // 1. Let primValue be ToPrimitive(input argument, hint String).
     // 2. Return ToString(primValue).
-
-
+    //----------------------------------------------------------------------------
     JavascriptString *JavascriptConversion::ToString(Var aValue, ScriptContext* scriptContext)
     {
         Assert(scriptContext->GetThreadContext()->IsScriptActive());
@@ -731,6 +733,7 @@ CommonNumber:
     }
 
     //----------------------------------------------------------------------------
+    // ToBoolean_Full:
     // (ES3.0: S9.2):
     //
     // Input        Output
@@ -745,7 +748,6 @@ CommonNumber:
     // Object       'true'
     // Falsy Object 'false'
     //----------------------------------------------------------------------------
-
     BOOL JavascriptConversion::ToBoolean_Full(Var aValue, ScriptContext* scriptContext)
     {
         AssertMsg(!TaggedInt::Is(aValue), "Should be detected");
@@ -846,17 +848,17 @@ CommonNumber:
     }
 
     //----------------------------------------------------------------------------
-    // implements ES6 Draft Rev 26 July 18, 2014
+    // ToNumber_Full:
+    // Implements ES6 Draft Rev 26 July 18, 2014
     //
-    //  Undefined: NaN
-    //  Null:      0
-    //  boolean:   v==true ? 1 : 0 ;
-    //  number:    v (original number)
-    //  String:    conversion by spec algorithm
-    //  object:    ToNumber(PrimitiveValue(v, hint_number))
-    //  Symbol:    TypeError
+    // Undefined: NaN
+    // Null:      0
+    // boolean:   v==true ? 1 : 0 ;
+    // number:    v (original number)
+    // String:    conversion by spec algorithm
+    // object:    ToNumber(PrimitiveValue(v, hint_number))
+    // Symbol:    TypeError
     //----------------------------------------------------------------------------
-
     double JavascriptConversion::ToNumber_Full(Var aValue,ScriptContext* scriptContext)
     {
         AssertMsg(!TaggedInt::Is(aValue), "Should be detected");
@@ -916,11 +918,9 @@ CommonNumber:
         }
     }
 
-
     //----------------------------------------------------------------------------
     // second part of the ToInteger() implementation.(ES5.0: S9.4).
     //----------------------------------------------------------------------------
-
     double JavascriptConversion::ToInteger_Full(Var aValue,ScriptContext* scriptContext)
     {
         AssertMsg(!TaggedInt::Is(aValue), "Should be detected");
@@ -973,7 +973,6 @@ CommonNumber:
         }
     }
 
-
     double JavascriptConversion::ToInteger(double val)
     {
         if(JavascriptNumber::IsNan(val))
@@ -1005,12 +1004,10 @@ CommonNumber:
         //return val;
     }
 
-
     //----------------------------------------------------------------------------
     // ToInt32() converts the given Var to an Int32 value, as described in
     // (ES3.0: S9.5).
     //----------------------------------------------------------------------------
-
     int32 JavascriptConversion::ToInt32_Full(Var aValue, ScriptContext* scriptContext)
     {
         Assert(Js::JavascriptStackWalker::ValidateTopJitFrame(scriptContext));
@@ -1184,7 +1181,6 @@ CommonNumber:
                 }
             }
         }
-
     }
 
     int32 JavascriptConversion::ToInt32(double T1)
@@ -1255,10 +1251,10 @@ CommonNumber:
             return true;
         }
     }
+
     //----------------------------------------------------------------------------
     // (ES3.0: S9.6).
     //----------------------------------------------------------------------------
-
     uint32 JavascriptConversion::ToUInt32_Full(Var aValue, ScriptContext* scriptContext)
     {
         AssertMsg(!TaggedInt::Is(aValue), "Should be detected");
@@ -1333,7 +1329,6 @@ CommonNumber:
     // ToUInt16() converts the given Var to a UInt16 value, as described in
     // (ES3.0: S9.6).
     //----------------------------------------------------------------------------
-
     uint16 JavascriptConversion::ToUInt16_Full(IN  Var aValue, ScriptContext* scriptContext)
     {
         AssertMsg(!TaggedInt::Is(aValue), "Should be detected");

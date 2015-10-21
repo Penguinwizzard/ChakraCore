@@ -71,7 +71,7 @@ var testRunner = function testRunner() {
         }
       }
 
-      helpers.writeln("Summary of tests: total executed: ", executedTestCount, 
+      helpers.writeln("Summary of tests: total executed: ", executedTestCount,
         "; passed: ", passedTestCount, "; failed: ", executedTestCount - passedTestCount);
     },
 
@@ -94,7 +94,7 @@ var testRunner = function testRunner() {
       } else {
         helpers.writeln("FAILED");
       }
-      
+
       ++executedTestCount;
     }
   }
@@ -155,7 +155,7 @@ var assert = function assert() {
       }
     },
 
-    // Makes sure that the function specified by the 'testFunction' parameter 
+    // Makes sure that the function specified by the 'testFunction' parameter
     // throws the exception specified by the 'expectedException' parameter.
     // Note: currently we check only for specific exception and not "all exceptions derived from specified".
     // Example:
@@ -181,9 +181,9 @@ var assert = function assert() {
 }(); // assert.
 
 var tests = {
-    // Note: each test has name (string) and body (function) properties. 
+    // Note: each test has name (string) and body (function) properties.
     //       Success is when the body does not throw, failure -- when it throws.
-    
+
     //---------------------- normal identifier property names -------------------------------
     test01: {
       name: "8.12.9.4.a (variation 1): define generic property, check default attrbitues",
@@ -196,7 +196,7 @@ var tests = {
         assert.areEqual(expected, Object.getOwnPropertyDescriptor(o, propertyName), "wrong value of getOwnPropertyDescriptor");
       }
     },
-    
+
     test02: {
       name: "8.12.9.4.a (variation 2): define data property, check default attrbitues",
       body: function () {
@@ -208,7 +208,7 @@ var tests = {
         assert.areEqual(expected, Object.getOwnPropertyDescriptor(o, propertyName), "wrong value of getOwnPropertyDescriptor");
       }
     },
-    
+
     test03: {
       name: "8.12.9.4.a (variation 3): define generic property by specifying some attributes, check attrbitues",
       body: function () {
@@ -220,7 +220,7 @@ var tests = {
         assert.areEqual(expected, Object.getOwnPropertyDescriptor(o, propertyName), "wrong value of getOwnPropertyDescriptor");
       }
     },
-    
+
     test04: {
       name: "8.12.9.4.b: define accessor property, check default attrbitues",
       body: function () {
@@ -233,7 +233,7 @@ var tests = {
         assert.areEqual(expected, Object.getOwnPropertyDescriptor(o, propertyName), "wrong value of getOwnPropertyDescriptor");
       }
     },
-    
+
     test05: {
       name: "8.12.9.5: re-define property: use descriptor with all fields absent, check that nothing happens to previous descriptor",
       body: function () {
@@ -245,7 +245,7 @@ var tests = {
         assert.areEqual(expected, Object.getOwnPropertyDescriptor(o, propertyName), "wrong value of getOwnPropertyDescriptor");
       }
     },
-    
+
     test06: {
       name: "8.12.9.6: re-define property: use equal descriptor with data field, check that nothing happens to previous descriptor",
       body: function () {
@@ -257,12 +257,12 @@ var tests = {
         assert.areEqual(expected, Object.getOwnPropertyDescriptor(o, propertyName), "wrong value of getOwnPropertyDescriptor");
       }
     },
-    
+
     // where we are:
     // - re-define
     // - desc is not empty
     // - desc and current are not the same
-    
+
     test07: {
       name: "8.12.9.7.a: re-define property: current descriptor is not configurable and descriptor is configurable, check that it throws TypeError",
       body: function () {
@@ -274,7 +274,7 @@ var tests = {
         assert.throws(function() { Object.defineProperty(o, propertyName, pd); }, TypeError);
       }
     },
-    
+
     test08: {
       name: "8.12.9.7.b (variation 1): re-define property: current descriptor is not configurable and descriptor enumerable is specified and it's negation of current enumerable, check that it throws TypeError",
       body: function () {
@@ -286,7 +286,7 @@ var tests = {
         assert.throws(function() { Object.defineProperty(o, propertyName, pd); }, TypeError);
       }
     },
-    
+
     test09: {
       name: "8.12.9.7.b (variation 2): re-define property: current descriptor is not configurable and descriptor enumerable is not specified, check that it does not throw",
       body: function () {
@@ -300,7 +300,7 @@ var tests = {
         assert.areEqual(expected, Object.getOwnPropertyDescriptor(o, propertyName), "wrong value of getOwnPropertyDescriptor");
       }
     },
-    
+
     test10: {
       name: "8.12.9.7.b (variation 3): re-define property: current descriptor is not configurable and descriptor enumerable is same as current enumerable, check that it does not throw",
       body: function () {
@@ -314,7 +314,7 @@ var tests = {
         assert.areEqual(expected, Object.getOwnPropertyDescriptor(o, propertyName), "wrong value of getOwnPropertyDescriptor");
       }
     },
-    
+
     test11: {
       name: "8.12.9.8: re-define property: descriptor is not empty, generic and is different from current",
       body: function () {
@@ -328,13 +328,13 @@ var tests = {
         assert.areEqual(expected, Object.getOwnPropertyDescriptor(o, propertyName), "wrong value of getOwnPropertyDescriptor");
       }
     },
-    
+
     // where we are:
     // - re-define
     // - desc is not empty
     // - desc and current are not the same
     // - descriptor.IsData != current.IsData
-    
+
     test12: {
       name: "8.12.9.9.a: re-define property: descriptor.IsData != current.IsData and current is not configurable, check that it throws TypeError",
       body: function () {
@@ -346,7 +346,7 @@ var tests = {
         assert.throws(function() { Object.defineProperty(o, propertyName, pd); }, TypeError);
       }
     },
-    
+
     test13: {
       name: "8.12.9.9.b (variation 1): re-define property: convert from data to accessor descriptor, check that configurable/enumerable (true) are preserved",
       body: function () {
@@ -361,7 +361,7 @@ var tests = {
         assert.areEqual(expected, Object.getOwnPropertyDescriptor(o, propertyName), "wrong value of getOwnPropertyDescriptor");
       }
     },
-    
+
     test14: {
       name: "8.12.9.9.b (variation 2): re-define property: convert from data to accessor descriptor, check that enumerable (false) is preserved",
       body: function () {
@@ -376,7 +376,7 @@ var tests = {
         assert.areEqual(expected, Object.getOwnPropertyDescriptor(o, propertyName), "wrong value of getOwnPropertyDescriptor");
       }
     },
-    
+
     test15: {
       name: "8.12.9.9.b (variation 3): re-define property: convert from data to accessor descriptor, check that configurable/enumerable not preserved when specified by descriptor",
       body: function () {
@@ -391,7 +391,7 @@ var tests = {
         assert.areEqual(expected, Object.getOwnPropertyDescriptor(o, propertyName), "wrong value of getOwnPropertyDescriptor");
       }
     },
-    
+
     test16: {
       name: "8.12.9.9.c (variation 1): re-define property: convert from accessor to data descriptor, check that configurable/enumerable (true) are preserved",
       body: function () {
@@ -409,7 +409,7 @@ var tests = {
         assert.areEqual(expected, Object.getOwnPropertyDescriptor(o, propertyName), "wrong value of getOwnPropertyDescriptor");
       }
     },
-    
+
     test17: {
       name: "8.12.9.9.c (variation 2): re-define property: convert from accessor to data descriptor, check that enumerable (false) is preserved",
       body: function () {
@@ -427,7 +427,7 @@ var tests = {
         assert.areEqual(expected, Object.getOwnPropertyDescriptor(o, propertyName), "wrong value of getOwnPropertyDescriptor");
       }
     },
-    
+
     test18: {
       name: "8.12.9.9.c (variation 3): re-define property: convert from accessor to data descriptor, check that configurable/enumerable (true/false) not preserved when specified by descriptor (false/absent)",
       body: function () {
@@ -446,7 +446,7 @@ var tests = {
         assert.areEqual(expected, Object.getOwnPropertyDescriptor(o, propertyName), "wrong value of getOwnPropertyDescriptor");
       }
     },
-    
+
     test19: {
       name: "8.12.9.9.c (variation 4): re-define property: convert from accessor to data descriptor, check that configurable/enumerable (true/true) not preserved when specified by descriptor (absent/false)",
       body: function () {
@@ -465,13 +465,13 @@ var tests = {
         assert.areEqual(expected, Object.getOwnPropertyDescriptor(o, propertyName), "wrong value of getOwnPropertyDescriptor");
       }
     },
-    
+
     // where we are:
     // - re-define
     // - desc is not empty
     // - desc and current are not the same
     // - descriptor is data, current is data
-    
+
     test20: {
       name: "8.12.9.10.a (variation 1): re-define data property: current is not configurable/not writable and descriptor writable is absent/value is same",
       body: function () {
@@ -485,7 +485,7 @@ var tests = {
         assert.areEqual(expected, Object.getOwnPropertyDescriptor(o, propertyName), "wrong value of getOwnPropertyDescriptor");
       }
     },
-    
+
     test21: {
       name: "8.12.9.10.a.i: re-define data property: current is not configurable/not writable and descriptor is writable, check that it throws TypeError",
       body: function () {
@@ -498,7 +498,7 @@ var tests = {
         return true;
       }
     },
-    
+
     test22: {
       name: "8.12.9.10.a.ii: re-define data property: current is not configurable/not writable and descriptor writable is false and value is different, check that it throws TypeError",
       body: function () {
@@ -510,7 +510,7 @@ var tests = {
         assert.throws(function() { Object.defineProperty(o, propertyName, pd); }, TypeError);
       }
     },
-    
+
     test23: {
       name: "8.12.9.10.a (variation 2): re-define data property: current is configurable",
       body: function () {
@@ -532,9 +532,9 @@ var tests = {
       name: "Test: 8.12.9.11 (variation 1): re-define accessor property: curent configurable is true: valid case",
       body: function () {
         var propertyName = "foo24";
-        var o = { 
-          get foo24() { return this.Value; }, 
-          set foo24(arg) { helpers.writeln("old setter"); this.Value = arg; } 
+        var o = {
+          get foo24() { return this.Value; },
+          set foo24(arg) { helpers.writeln("old setter"); this.Value = arg; }
         };
         var newGetter = function() { return 2; };
         var newSetter = function(arg) { helpers.writeln("new setter"); }
@@ -544,7 +544,7 @@ var tests = {
         assert.areEqual(expected, Object.getOwnPropertyDescriptor(o, propertyName), "wrong value of getOwnPropertyDescriptor");
       }
     },
-    
+
     test25: {
       name: "8.12.9.11.a.i: re-define accessor property: curent configurable is false, descriptor specifies setter as different, expect TypeError",
       body: function () {
@@ -552,12 +552,12 @@ var tests = {
         var o = helpers.getDummyObject();
         var pd = { set: function(arg) { helpers.writeln("old setter"); this.Value = arg; } };
         Object.defineProperty(o, propertyName, pd);
-    
+
         pd = { set: function(arg) { helpers.writeln("new setter"); } };
         assert.throws(function() { Object.defineProperty(o, propertyName, pd); }, TypeError);
       }
     },
-    
+
     test26: {
       name: "8.12.9.11.a.ii: re-define accessor property: curent configurable is false, descriptor specifies getter as different, expect TypeError",
       body: function () {
@@ -565,28 +565,28 @@ var tests = {
         var o = helpers.getDummyObject();
         var pd = { get: function() { return this.Value; }, };
         Object.defineProperty(o, propertyName, pd);
-    
+
         pd = { get: function() { helpers.writeln("new getter"); return 2; } };
         assert.throws(function() { Object.defineProperty(o, propertyName, pd); }, TypeError);
       }
     },
-    
+
     test27: {
       name: "8.12.9.11 (variation 2): re-define accessor property: curent configurable is true and no getter, descriptor specifies getter as undefined, setter as same",
       body: function () {
         var propertyName = "foo27";
         var o = helpers.getDummyObject();
-        var setter = function(arg) { helpers.writeln("setter") }; 
+        var setter = function(arg) { helpers.writeln("setter") };
         var pd = { set: setter };
         Object.defineProperty(o, propertyName, pd);
-    
+
         pd = { get: undefined, set: setter };
         Object.defineProperty(o, propertyName, pd);
         var expected = { get: undefined, set: setter, configurable: false, enumerable: false };
         assert.areEqual(expected, Object.getOwnPropertyDescriptor(o, propertyName), "wrong value of getOwnPropertyDescriptor");
       }
     },
-    
+
     test28: {
       name: "Re-define property from data to accessor property. Make sure that setter is called when setting the value.",
       body: function () {
@@ -595,19 +595,19 @@ var tests = {
         var o = helpers.getDummyObject();
         var pd = { value: 1, configurable: true };
         Object.defineProperty(o, propertyName, pd);
-    
+
         // re-define the property to be accessor property.
         var log = "";
         var getter = function() { log += "getter was called."; return this.Value; }
-        var setter = function(arg) { log += "setter was called."; this.Value = arg; }; 
+        var setter = function(arg) { log += "setter was called."; this.Value = arg; };
         pd = { get: getter, set: setter };
         Object.defineProperty(o, propertyName, pd);
-    
+
         // set the value and get it.
         var newValue = 2;
         o[propertyName] = newValue;
         var actualValue = o[propertyName];
-    
+
         // validate.
         var expected = { get: getter, set: setter, configurable: true, enumerable: false };
         assert.areEqual(expected, Object.getOwnPropertyDescriptor(o, propertyName), "wrong value of getOwnPropertyDescriptor");
@@ -615,7 +615,7 @@ var tests = {
         assert.areEqual(newValue, actualValue, "wrong value");
       }
     },
-    
+
     test29: {
       name: "Define property 'length' as accessor property on array: check that it throws TypeError.",
       body: function () {
@@ -627,7 +627,7 @@ var tests = {
           TypeError);
       }
     },
-    
+
     // Where we are: some tests for specific issues.
     test30: {
       name: "Define property with getter specified as undefined, then access the property (WOOB bug 1123281)",
@@ -639,7 +639,7 @@ var tests = {
         assert.areEqual(undefined, o[propertyName]);
       }
     },
-    
+
     test31: {
       name: "Define property with setter specified as undefined, then set the property (WOOB bug 1123281)",
       body: function () {
@@ -651,7 +651,7 @@ var tests = {
         assert.areEqual(undefined, o[propertyName]); // Just in case try to access the property.
       }
     },
-    
+
     test32: {
       name: "Convert data to accessor property with getter specified as undefined, then access the property (WOOB bug 1123281)",
       body: function () {
@@ -659,13 +659,13 @@ var tests = {
         var propertyName = "foo32";
         var pd = { configurable: true, value: 0 };
         Object.defineProperty(o, propertyName, pd);
-    
+
         pd = { get: undefined };
         Object.defineProperty(o, propertyName, pd);
         assert.areEqual(undefined, o[propertyName]);
       }
     },
-    
+
     test33: {
       name: "Convert data to accessor property with setter specified as undefined, then set the property (WOOB bug 1123281)",
       body: function () {
@@ -673,15 +673,15 @@ var tests = {
         var propertyName = "foo33";
         var pd = { configurable: true, value: 0 };
         Object.defineProperty(o, propertyName, pd);
-    
+
         pd = { set: undefined };
         Object.defineProperty(o, propertyName, pd);
         o[propertyName] = 1; // Make sure this does not throw.
         assert.areEqual(undefined, o[propertyName]); // Just in case try to access the property.
       }
     },
-    
-    // Note: this test irreversibly changes the dummy object (that's important when dummy object is document/window), 
+
+    // Note: this test irreversibly changes the dummy object (that's important when dummy object is document/window),
     //       it should in the very end.
     test34: {
       name: "8.12.9.3: define property for non-extensible object, check that it throws TypeError",
@@ -1043,9 +1043,9 @@ var tests = {
         name: "Test: 8.12.9.11 (variation 1): re-define accessor property: curent configurable is true: valid case",
         body: function () {
           var propertyName = "24";
-          var o = { 
-            get 24() { return this.Value; }, 
-            set 24(arg) { helpers.writeln("old setter"); this.Value = arg; } 
+          var o = {
+            get 24() { return this.Value; },
+            set 24(arg) { helpers.writeln("old setter"); this.Value = arg; }
           };
           var newGetter = function() { return 2; };
           var newSetter = function(arg) { helpers.writeln("new setter"); }
@@ -1192,7 +1192,7 @@ var tests = {
         }
     },
 
-    // Note: this test irreversibly changes the dummy object (that's important when dummy object is document/window), 
+    // Note: this test irreversibly changes the dummy object (that's important when dummy object is document/window),
     //       it should in the very end.
     test_134: {
         name: "8.12.9.3: define property for non-extensible object, check that it throws TypeError",
@@ -1499,12 +1499,12 @@ var tests = {
                 });
 
                 var o = helpers.getDummyObject();
-                o.length = 10; // Makes propName in length range, also prepare for indexOf                
+                o.length = 10; // Makes propName in length range, also prepare for indexOf
                 assert.areEqual(123, o[propName], "Should read data on prototype");
                 o.tmp = 456;
                 assert.areEqual(456, o[propName], "Should read data on o");
                 var i = Array.prototype.indexOf.apply(o, [456]);
-                assert.areEqual(propName, i.toString(), "getter should find data on o, not on prototpye!");
+                assert.areEqual(propName, i.toString(), "getter should find data on o, not on prototype!");
             } finally {
                 delete Object.prototype[propName];
                 delete Object.prototype.tmp;
@@ -1595,7 +1595,7 @@ var tests = {
             assert.areEqual(false, Object.isExtensible(o), "NOT extensible");
             assert.areEqual(true, Object.isSealed(o), "IS sealed");
             assert.areEqual(true, Object.isFrozen(o) || Array.isArray(o), "IS frozen, unless isArray (length writable)");
-                        
+
             o[1] = 11;
             assert.areEqual(undefined, o[1], "Write failed, not extensible");
         }
@@ -1685,8 +1685,8 @@ var tests = {
       body: function () {
         var o = helpers.getDummyObject();
         var propertyName = "1";
-  
-        Object.defineProperty(o, propertyName, { 
+
+        Object.defineProperty(o, propertyName, {
           get: function() { return 0; },
           set: function(val) { helpers.writeln("setter was called although it shouldn't"); },
           configurable: true
@@ -1694,7 +1694,7 @@ var tests = {
         Object.preventExtensions(o);
         var val = 1;
         Object.defineProperty(o, propertyName, { value: val, });
-  
+
         var expected = { value: val, configurable: true, enumerable: false, writable: false };
         assert.areEqual(expected, Object.getOwnPropertyDescriptor(o, propertyName), "wrong value of getOwnPropertyDescriptor");
         assert.areEqual(val, o[propertyName], "the property value is wrong");

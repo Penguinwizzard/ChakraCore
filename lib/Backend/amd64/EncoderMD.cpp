@@ -7,7 +7,7 @@
 #include "X64Encode.h"
 
 static const BYTE OpcodeByte2[]={
-#define MACRO(name, jnLayout, attrib, byte2, ...) byte2, 
+#define MACRO(name, jnLayout, attrib, byte2, ...) byte2,
 #include "MdOpcodes.h"
 #undef MACRO
 };
@@ -17,7 +17,7 @@ struct FormTemplate{ BYTE form[6]; };
 #define f(form) TEMPLATE_FORM_ ## form
 static const struct FormTemplate OpcodeFormTemplate[] =
 {
-#define MACRO(name, jnLayout, attrib, byte2, form, ...) form , 
+#define MACRO(name, jnLayout, attrib, byte2, form, ...) form ,
 #include "MdOpcodes.h"
 #undef MACRO
 };
@@ -25,28 +25,28 @@ static const struct FormTemplate OpcodeFormTemplate[] =
 
 struct OpbyteTemplate { byte opbyte[6]; };
 
-static const struct OpbyteTemplate Opbyte[] = 
+static const struct OpbyteTemplate Opbyte[] =
 {
-#define MACRO(name, jnLayout, attrib, byte2, form, opbyte, ...) opbyte, 
+#define MACRO(name, jnLayout, attrib, byte2, form, opbyte, ...) opbyte,
 #include "MdOpcodes.h"
 #undef MACRO
 };
 
-static const uint32 Opdope[] = 
+static const uint32 Opdope[] =
 {
-#define MACRO(name, jnLayout, attrib, byte2, form, opbyte, dope, ...) dope, 
+#define MACRO(name, jnLayout, attrib, byte2, form, opbyte, dope, ...) dope,
 #include "MdOpcodes.h"
 #undef MACRO
 };
 
-static const BYTE OpEncoding[] = 
+static const BYTE OpEncoding[] =
 {
 #define REGDAT(name,  dispName, encoding, ...) encoding ,
 #include "RegList.h"
 #undef MACRO
 };
 
-static const uint32 OpcodeLeadIn[] = 
+static const uint32 OpcodeLeadIn[] =
 {
 #define MACRO(name, jnLayout, attrib, byte2, form, opByte, dope, leadIn, ...) leadIn,
 #include "MdOpcodes.h"
@@ -55,7 +55,7 @@ static const uint32 OpcodeLeadIn[] =
 
 static const enum Forms OpcodeForms[] =
 {
-#define MACRO(name, jnLayout, attrib, byte2, form, ...) form, 
+#define MACRO(name, jnLayout, attrib, byte2, form, ...) form,
 #include "MdOpcodes.h"
 #undef MACRO
 };
@@ -101,7 +101,7 @@ EncoderMD::Init(Encoder *encoder)
 ///
 ///----------------------------------------------------------------------------
 
-const BYTE 
+const BYTE
 EncoderMD::GetOpcodeByte2(IR::Instr *instr)
 {
     return OpcodeByte2[instr->m_opcode - (Js::OpCode::MDStart+1)];
@@ -160,12 +160,12 @@ const BYTE
 EncoderMD::GetRegEncode(RegNum reg)
 {
     AssertMsg(reg != RegNOREG, "should have valid reg in encoder");
-   
+
     //
     // Instead of lookup. We can also AND with 0x7.
     //
 
-   
+
     return (BYTE)(OpEncoding[1 + reg - RegRAX]);
 }
 
@@ -222,7 +222,7 @@ EncoderMD::FitsInByte(size_t value)
 
 BYTE
 EncoderMD::GetMod(IR::IndirOpnd * indirOpnd, int* pDispSize)
-{    
+{
     RegNum reg = indirOpnd->GetBaseOpnd()->GetReg();
     return GetMod(indirOpnd->GetOffset(), (reg == RegR13 || reg == RegRBP), pDispSize);
 }
@@ -230,15 +230,15 @@ EncoderMD::GetMod(IR::IndirOpnd * indirOpnd, int* pDispSize)
 BYTE
 EncoderMD::GetMod(IR::SymOpnd * symOpnd, int * pDispSize, RegNum& rmReg)
 {
-    StackSym * stackSym = symOpnd->m_sym->AsStackSym();       
-    int32 offset = stackSym->m_offset;    
+    StackSym * stackSym = symOpnd->m_sym->AsStackSym();
+    int32 offset = stackSym->m_offset;
     rmReg = RegRBP;
     if (stackSym->IsArgSlotSym() && !stackSym->m_isOrphanedArg)
     {
         if (stackSym->m_isInlinedArgSlot)
         {
             Assert(offset >= 0);
-            offset -= this->m_func->m_localStackHeight;     
+            offset -= this->m_func->m_localStackHeight;
             stackSym->m_offset = offset;
             stackSym->m_allocated = true;
         }
@@ -246,7 +246,7 @@ EncoderMD::GetMod(IR::SymOpnd * symOpnd, int * pDispSize, RegNum& rmReg)
         {
             rmReg = RegRSP;
         }
-    }         
+    }
     else
     {
         Assert(offset != 0);
@@ -292,7 +292,7 @@ EncoderMD::GetMod(size_t offset, bool regIsRbpOrR13, int * pDispSize)
 // review: ugly function. multiple returns. clean it up
 BYTE
 EncoderMD::EmitModRM(IR::Instr * instr, IR::Opnd *opnd, BYTE reg1)
-{    
+{
     int dispSize = -1; // Initialize to suppress C4701 false positive
     IR::IndirOpnd *indirOpnd;
     IR::RegOpnd *regOpnd;
@@ -306,7 +306,7 @@ EncoderMD::EmitModRM(IR::Instr * instr, IR::Opnd *opnd, BYTE reg1)
 
     AssertMsg( (reg1 & 7) == reg1, "Invalid reg1");
 
-    reg1 = (reg1 & 7) << 3;       // mask and put in reg field 
+    reg1 = (reg1 & 7) << 3;       // mask and put in reg field
 
     switch (opnd->GetKind())
     {
@@ -328,7 +328,7 @@ EncoderMD::EmitModRM(IR::Instr * instr, IR::Opnd *opnd, BYTE reg1)
         }
 
     case IR::OpndKindSym:
-        AssertMsg(opnd->AsSymOpnd()->m_sym->IsStackSym(), "Should only see stackSym syms in encoder.");               
+        AssertMsg(opnd->AsSymOpnd()->m_sym->IsStackSym(), "Should only see stackSym syms in encoder.");
 
         BYTE byte;
         RegNum rmReg;
@@ -338,25 +338,25 @@ EncoderMD::EmitModRM(IR::Instr * instr, IR::Opnd *opnd, BYTE reg1)
         byte = (BYTE)(mod | reg1 | baseRegEncode);
         *(m_pc++) = byte;
         if (rmReg == RegRSP)
-        {                       
+        {
             byte = (BYTE)(((baseRegEncode & 7) << 3) | (baseRegEncode & 7));
             *(m_pc++) = byte;
         }
         else
         {
-            AssertMsg(opnd->AsSymOpnd()->m_sym->AsStackSym()->m_offset, "Expected stackSym offset to be set.");           
+            AssertMsg(opnd->AsSymOpnd()->m_sym->AsStackSym()->m_offset, "Expected stackSym offset to be set.");
         }
         break;
 
     case IR::OpndKindIndir:
-        
+
         indirOpnd = opnd->AsIndirOpnd();
         AssertMsg(indirOpnd->GetBaseOpnd() != nullptr, "Expected base to be set in indirOpnd");
 
         baseOpnd = indirOpnd->GetBaseOpnd();
         indexOpnd = indirOpnd->GetIndexOpnd();
         AssertMsg(!indexOpnd || indexOpnd->GetReg() != RegRSP, "ESP cannot be the index of an indir.");
-        
+
         regBase = this->GetRegEncode(baseOpnd);
 
         if (indexOpnd != nullptr)
@@ -364,7 +364,7 @@ EncoderMD::EmitModRM(IR::Instr * instr, IR::Opnd *opnd, BYTE reg1)
             regIndex = this->GetRegEncode(indexOpnd);
             *(m_pc++) = (this->GetMod(indirOpnd, &dispSize) | reg1 | 0x4);
             *(m_pc++) = (((indirOpnd->GetScale() & 3) << 6) | ((regIndex & 7) << 3) | (regBase & 7));
-            
+
             rexEncoding |= this->GetRexByte(this->REXX, indexOpnd);
             rexEncoding |= this->GetRexByte(this->REXB, baseOpnd);
         }
@@ -418,27 +418,27 @@ EncoderMD::EmitConst(size_t val, int size, bool allowImm64 /* = false */)
 {
     AssertMsg(allowImm64 || size != 8, "Invalid size of immediate. It can only be 8 for certain instructions, MOV being the most popular");
 
-    switch (size) 
+    switch (size)
     {
     case 0:
         return;
-        
+
     case 1:
         *(uint8*)m_pc = (char)val;
         break;
-        
+
     case 2:
         *(uint16*)m_pc = (short)val;
         break;
-        
+
     case 4:
         *(uint32*)m_pc = (uint32)val;
         break;
-        
+
     case 8:
         *(uint64*)m_pc = (uint64)val;
         break;
-        
+
     default:
         AssertMsg(UNREACHED, "Unexpected size");
     }
@@ -471,7 +471,7 @@ EncoderMD::EmitImmed(IR::Opnd * opnd, int opSize, int sbit, bool allow64Immediat
     case IR::OpndKindIntConst:
         value = opnd->AsIntConstOpnd()->m_value;
 intConst:
-        if (sbit && opSize > 1 && this->FitsInByte(value)) 
+        if (sbit && opSize > 1 && this->FitsInByte(value))
         {
             opSize = 1;
             retval = 0x2;   /* set S bit */
@@ -527,12 +527,12 @@ EncoderMD::GetOpndSize(IR::Opnd * opnd)
 ///
 /// EncoderMD::Encode
 ///
-///     Emit the x64 encoding for the given instruction in the passed in 
+///     Emit the x64 encoding for the given instruction in the passed in
 ///     buffer ptr.
 ///
 ///----------------------------------------------------------------------------
 
-ptrdiff_t           
+ptrdiff_t
 EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
 {
     BYTE     *popcodeByte         = nullptr,
@@ -545,7 +545,7 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
     IR::Opnd *opr1               = nullptr;
     IR::Opnd *opr2               = nullptr;
     int       instrSize          = -1;
-    bool      skipRexByte        = false;    
+    bool      skipRexByte        = false;
 
     m_pc = pc;
 
@@ -573,13 +573,13 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
         {
             IR::Instr *int3 = IR::Instr::New(Js::OpCode::INT, m_func);
             int3->SetSrc1(IR::IntConstOpnd::New(3, TyInt32, m_func));
-            
+
             return this->Encode(int3, m_pc);
         }
 #endif
         return 0;
     }
-    
+
     const BYTE *form = EncoderMD::GetFormTemplate(instr);
     const BYTE *opcodeTemplate = EncoderMD::GetOpbyte(instr);
     const uint32 leadIn = EncoderMD::GetLeadIn(instr);
@@ -593,12 +593,12 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
         opr1 = dst;
         opr2 = src1;
     }
-    else 
+    else
     {
         opr1 = src1;
         opr2 = src2;
     }
-    
+
     if (opr1)
     {
         instrSize = this->GetOpndSize(opr1);
@@ -658,7 +658,7 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
 
     instrRestart = instrStart = m_pc;
 
-    // put out 16bit override if any 
+    // put out 16bit override if any
     if (instrSize == 2 && (opdope & (DNO16 | DFLT)) == 0)
     {
         *instrRestart++ = 0x66;
@@ -667,12 +667,12 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
     //
     // Instruction format is REX [0xF] OP_BYTE ...
     //
-    
+
     // Emit the leading byte(s) of multibyte instructions.
     if (opdope & D66EX)
     {
         Assert((opdope & (D66EX | D66 | DF2 | DF3 )) == D66EX);
-        if (opr1->IsFloat64() || opr2->IsFloat64()) 
+        if (opr1->IsFloat64() || opr2->IsFloat64())
         {
             *instrRestart++ = 0x66;
         }
@@ -690,7 +690,7 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
         *instrRestart++ = 0xf2;
     }
     else if (opdope & DF3)
-    {        
+    {
         Assert(leadIn == OLB_0F);
         *instrRestart++ = 0xf3;
     }
@@ -699,7 +699,7 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
     prexByte = instrRestart;
 
     // This is a heuristic to determine whether we really need to have the Rex bytes
-    // This heurstics is always correct for instrSize == 8
+    // This heuristics is always correct for instrSize == 8
     // For instrSize < 8, we might use extended registers and we will have to adjust in EmitRexByte
     bool reservedRexByte = (instrSize == 8);
     if (reservedRexByte)
@@ -716,7 +716,7 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
         break;
     case OLB_0F3A:
         *instrRestart++ = 0x0f;
-        *instrRestart++ = 0x3a;        
+        *instrRestart++ = 0x3a;
         break;
     default:
         Assert(UNREACHED);
@@ -724,21 +724,21 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
     }
     // Actual opcode byte.
     popcodeByte = instrRestart++;
-    
+
     //
     // Try each form 1 by 1, until we find the one appropriate for this instruction
     // and its operands.
     //
-    for (;; opcodeTemplate++, form++) 
+    for (;; opcodeTemplate++, form++)
     {
         m_pc = instrRestart;
-        AssertMsg(m_pc - instrStart <= MachMaxInstrSize, "MachMaxInstrSize not set correctly");        
+        AssertMsg(m_pc - instrStart <= MachMaxInstrSize, "MachMaxInstrSize not set correctly");
 
         // Setup default values.
         BYTE opcodeByte = *opcodeTemplate;
         BYTE rexByte = REXOVERRIDE | REXW;
-        
-        switch ((*form) & FORM_MASK) 
+
+        switch ((*form) & FORM_MASK)
         {
             //
             // This would only be required for mov rax, [64bit memory address].
@@ -752,15 +752,15 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
             if (opr1->IsRegOpnd() && RegRAX == opr1->AsRegOpnd()->GetReg())
             {
                 AssertMsg(opr2, "Operand 2 must be present in AX_MEM mode");
-                
+
                 if (TyInt64 == instrSize)
                 {
-                    this->EmitImmed(opr2, instrSize, 0);                    
+                    this->EmitImmed(opr2, instrSize, 0);
                 }
                 else
                 {
                     //
-                    // we dont have a 64 bit opnd. Hence we can will have to use 
+                    // we don't have a 64 bit opnd. Hence we can will have to use
                     // the normal MODRM/SIB encoding.
                     //
                     continue;
@@ -816,7 +816,7 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
             {
                 continue;
             }
-                     
+
             opcodeByte |= this->GetRegEncode(opr1->AsRegOpnd());
             rexByte    |= this->GetRexByte(this->REXB, opr1);
 
@@ -824,7 +824,7 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
             {
                 opcodeByte |= 0x8; /* set the W bit */
             }
-            
+
             this->EmitImmed(opr2, instrSize, 0, true);  /* S bit known to be 0 */
             break;
 
@@ -837,21 +837,21 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
             // FALLTHROUGH
         case MODRM:
         modrm:
-            if (opr2 == nullptr) 
+            if (opr2 == nullptr)
             {
                 BYTE byte2  = (this->GetOpcodeByte2(instr) >> 3);
                 rexByte    |= this->EmitModRM(instr, opr1, byte2);
             }
-            else if (opr1->IsRegOpnd()) 
+            else if (opr1->IsRegOpnd())
             {
                 rexByte    |= this->GetRexByte(this->REXR, opr1);
                 rexByte    |= this->EmitModRM(instr, opr2, this->GetRegEncode(opr1->AsRegOpnd()));
                 if ((*form) & DBIT)
                 {
-                    opcodeByte |= 0x2;     // set D bit 
+                    opcodeByte |= 0x2;     // set D bit
                 }
-            } 
-            else 
+            }
+            else
             {
                 AssertMsg(opr2->IsRegOpnd(), "Expected opr2 to be a valid reg");
                 AssertMsg(instrSize == this->GetOpndSize(opr2), "sf");
@@ -872,7 +872,7 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
             rexByte    |= this->GetRexByte(this->REXB, opr1);
             break;
 
-        // short form immed. (must be unary) 
+        // short form immed. (must be unary)
         case SH_IM:
             if (!opr1->IsIntConstOpnd() && !opr1->IsAddrOpnd())
             {
@@ -916,7 +916,7 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
                 AssertMsg(sizeof(size_t) == sizeof(void*), "Sizes of void* assumed to be 64-bits");
                 AssertMsg(instr->IsBranchInstr(), "Invalid LABREL2 form");
                 AppendRelocEntry(RelocTypeBranch, (void*)m_pc, instr->AsBranchInstr()->GetTarget());
-                this->EmitConst(0 , 4);                
+                this->EmitConst(0 , 4);
             }
             else if (opr1->IsIntConstOpnd())
             {
@@ -927,30 +927,30 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
             {
                 continue;
             }
-            break;    
+            break;
 
         // Special form which doesn't fit any existing patterns.
         case SPECIAL:
             switch (instr->m_opcode)
             {
-            case Js::OpCode::RET: 
+            case Js::OpCode::RET:
             {
                 AssertMsg(opr1->IsIntConstOpnd(), "RET should have intConst as src");
                 IntConstType value = opr1->AsIntConstOpnd()->m_value;
-                if (value==0) 
+                if (value==0)
                 {
-                    opcodeByte |= 0x1; // no imm16 follows 
+                    opcodeByte |= 0x1; // no imm16 follows
                 }
-                else 
+                else
                 {
                     this->EmitConst(value, 2);
                 }
                 break;
-            }         
+            }
 
             case Js::OpCode::BT:
             case Js::OpCode::BTR:
-            case Js::OpCode::BTS:                
+            case Js::OpCode::BTS:
                 /*
                  *       0F A3 /r      BT  r/m32, r32
                  * REX.W 0F A3 /r      BT  r/m64, r64
@@ -965,20 +965,20 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
                  *       0F AB /r      BTS r/m32, r32
                  * REX.W 0F AB /r      BTS r/m64, r64
                  *       0F BA /5 ib   BTS r/m32, imm8
-                 * REX.W 0F BA /5 ib   BTS r/m64, imm8                 
+                 * REX.W 0F BA /5 ib   BTS r/m64, imm8
                  */
                 Assert(instr->m_opcode != Js::OpCode::BT || dst == nullptr);
                 AssertMsg(instr->m_opcode == Js::OpCode::BT ||
                     dst && (dst->IsRegOpnd() || dst->IsMemRefOpnd() || dst->IsIndirOpnd()), "Invalid dst type on BTR/BTS instruction.");
 
-                if (src2->IsImmediateOpnd()) 
+                if (src2->IsImmediateOpnd())
                 {
                     rexByte |= this->GetRexByte(this->REXR, src1);
                     rexByte |= this->EmitModRM(instr, src1, this->GetOpcodeByte2(instr) >> 3);
                     Assert(src2->IsIntConstOpnd() && src2->GetType() == TyInt8);
-                    opcodeByte |= EmitImmed(src2, 1, 0);                    
-                } 
-                else 
+                    opcodeByte |= EmitImmed(src2, 1, 0);
+                }
+                else
                 {
                     /* this is special dbit modrm in which opr1 can be a reg*/
                     Assert(src2->IsRegOpnd());
@@ -1034,7 +1034,7 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
                 break;
 
             case Js::OpCode::INT:
-                if (opr1->AsIntConstOpnd()->m_value != 3) 
+                if (opr1->AsIntConstOpnd()->m_value != 3)
                 {
                     opcodeByte |= 1;
                     *(m_pc)++ = (char)opr1->AsIntConstOpnd()->m_value;
@@ -1047,7 +1047,7 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
                     // If the second operand is an XMM register, use the "store" form.
                     if (opr1->IsRegOpnd())
                     {
-                        // Swap opearnds to get right behavior from MODRM.
+                        // Swap operands to get right behavior from MODRM.
                         IR::Opnd *tmp = opr1;
                         opr1 = opr2;
                         opr2 = tmp;
@@ -1075,11 +1075,11 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
             case Js::OpCode::MOVAPS:
             case Js::OpCode::MOVUPS:
             case Js::OpCode::MOVHPD:
-                if (!opr1->IsRegOpnd()) 
+                if (!opr1->IsRegOpnd())
                 {
                     Assert(opr1->IsIndirOpnd() || opr1->IsMemRefOpnd() || opr1->IsSymOpnd());
                     Assert(opr2->IsRegOpnd());
-                    Assert(REGNUM_ISXMMXREG(opr2->AsRegOpnd()->GetReg()));                    
+                    Assert(REGNUM_ISXMMXREG(opr2->AsRegOpnd()->GetReg()));
                     opcodeByte |= 0x01;
                 }
                 goto modrm;
@@ -1098,7 +1098,7 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
                     {
                         *(m_pc)++ = nopEncoding[i];
                     }
-                }              
+                }
                 skipRexByte = true;
                 break;
 
@@ -1149,7 +1149,7 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
         // If instr has W bit, set it appropriately.
         if ((*form & WBIT) && !(opdope & DFLT) && instrSize != 1)
         {
-            opcodeByte |= 0x1; // set WBIT 
+            opcodeByte |= 0x1; // set WBIT
         }
 
         *popcodeByte = opcodeByte;
@@ -1198,8 +1198,8 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
         }
 
 #if DEBUG
-        // Verify that the dissassembly code for out-of-bounds typedArray handling can decode all the MOVs we emit.
-        // Call it on every MOV 
+        // Verify that the disassembly code for out-of-bounds typedArray handling can decode all the MOVs we emit.
+        // Call it on every MOV
         if (LowererMD::IsAssign(instr) && (instr->GetDst()->IsIndirOpnd() || instr->GetSrc1()->IsIndirOpnd()))
         {
             CONTEXT context = { 0 };
@@ -1224,7 +1224,7 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
 
 void
 EncoderMD::EmitRexByte(BYTE * prexByte, BYTE rexByte, bool skipRexByte, bool reservedRexByte)
-{    
+{
     if (skipRexByte)
     {
         // REX byte is not needed - let's remove it and move everything else by 1 byte
@@ -1243,7 +1243,7 @@ EncoderMD::EmitRexByte(BYTE * prexByte, BYTE rexByte, bool skipRexByte, bool res
 
                 if (m_relocList != nullptr)
                 {
-                    // if a reloc record was added as part of encoding this instruction - fix the pc in the reloc 
+                    // if a reloc record was added as part of encoding this instruction - fix the pc in the reloc
                     EncodeRelocAndLabels &lastRelocEntry = m_relocList->Item(m_relocList->Count() - 1);
                     if (lastRelocEntry.m_ptr > prexByte && lastRelocEntry.m_ptr < m_pc)
                     {
@@ -1273,7 +1273,7 @@ EncoderMD::EmitRexByte(BYTE * prexByte, BYTE rexByte, bool skipRexByte, bool res
 
         if (m_relocList != nullptr)
         {
-            // if a reloc record was added as part of encoding this instruction - fix the pc in the reloc 
+            // if a reloc record was added as part of encoding this instruction - fix the pc in the reloc
             EncodeRelocAndLabels &lastRelocEntry = m_relocList->Item(m_relocList->Count() - 1);
             if (lastRelocEntry.m_ptr > prexByte && lastRelocEntry.m_ptr < m_pc)
             {
@@ -1283,7 +1283,7 @@ EncoderMD::EmitRexByte(BYTE * prexByte, BYTE rexByte, bool skipRexByte, bool res
             }
         }
         m_pc++;
-    }    
+    }
 
     // Emit the rex byte
     *prexByte = rexByte;
@@ -1300,7 +1300,7 @@ EncoderMD::AppendRelocEntry(RelocType type, void *ptr, IR::LabelInstr *label)
 {
     if (m_relocList == nullptr)
         m_relocList = Anew(m_encoder->m_tempAlloc, RelocList, m_encoder->m_tempAlloc);
-    
+
     EncodeRelocAndLabels reloc;
     reloc.init(type, ptr, label);
     return m_relocList->Add(reloc);
@@ -1335,7 +1335,7 @@ EncoderMD::FixRelocListEntry(uint32 index, int totalBytesSaved, BYTE *buffStart,
                 // new label pc
                 newPC += nopCount;
                 relocRecord.setLabelNopCount(nopCount);
-                // adjust bytes saved            
+                // adjust bytes saved
                 result -= nopCount;
             }
         }
@@ -1354,7 +1354,7 @@ EncoderMD::FixRelocListEntry(uint32 index, int totalBytesSaved, BYTE *buffStart,
                 size_t field = *((size_t*) relocRecord.m_origPtr);
                 size_t offset = field >> 4;
                 uint32 count = field & 0xf;
-                                    
+
                 AssertMsg(offset < (size_t)(buffEnd - buffStart), "Inlinee entry offset out of range");
                 *((size_t*) relocRecord.m_origPtr) = ((offset - totalBytesSaved) << 4) | count;
             }
@@ -1374,7 +1374,7 @@ void EncoderMD::AddLabelReloc(BYTE* relocAddress)
 ///
 /// EncoderMD::FixMaps
 /// Fixes the inlinee frame records and map based on BR shortening
-/// 
+///
 ///----------------------------------------------------------------------------
 void
 EncoderMD::FixMaps(uint32 brOffset, uint32 bytesSaved, uint32 *inlineeFrameRecordsIndex, uint32 *inlineeFrameMapIndex,  uint32 *pragmaInstToRecordOffsetIndex, uint32 *offsetBuffIndex)
@@ -1413,10 +1413,10 @@ EncoderMD::FixMaps(uint32 brOffset, uint32 bytesSaved, uint32 *inlineeFrameRecor
 ///
 ///----------------------------------------------------------------------------
 
-void 
+void
 EncoderMD::ApplyRelocs(size_t codeBufferAddress_)
 {
-    
+
     for (int32 i = 0; i < m_relocList->Count(); i++)
     {
         EncodeRelocAndLabels *reloc = &m_relocList->Item(i);
@@ -1425,10 +1425,10 @@ EncoderMD::ApplyRelocs(size_t codeBufferAddress_)
 
         switch (reloc->m_type)
         {
-        case RelocTypeCallPcrel: 
+        case RelocTypeCallPcrel:
             AssertMsg(UNREACHED, "PC relative calls not yet supported on amd64");
 #if 0
-            {                
+            {
                 pcrel = (uint32)(codeBufferAddress + (BYTE*)reloc->m_ptr - m_encoder->m_encodeBuffer + 4);
                  *(uint32 *)relocAddress -= pcrel;
                 break;
@@ -1446,22 +1446,22 @@ EncoderMD::ApplyRelocs(size_t codeBufferAddress_)
                     AssertMsg((int32)pcrel >= -128 && (int32)pcrel <= 127, "Offset doesn't fit in imm8.");
                     *(BYTE*)relocAddress = (BYTE)pcrel;
                 }
-                else 
+                else
                 {
                     pcrel = (uint32)(labelInstr->GetPC() - ((BYTE*)reloc->m_ptr + 4));
                     *(uint32 *)relocAddress = pcrel;
                 }
                 break;
-                
+
             }
 
         case RelocTypeLabelUse:
             {
                 IR::LabelInstr *labelInstr = *(IR::LabelInstr**)relocAddress;
                 AssertMsg(labelInstr->GetPC() != nullptr, "Branch to unemitted label?");
-                *(size_t *)relocAddress = (size_t)(labelInstr->GetPC() - m_encoder->m_encodeBuffer + codeBufferAddress_);                
+                *(size_t *)relocAddress = (size_t)(labelInstr->GetPC() - m_encoder->m_encodeBuffer + codeBufferAddress_);
                 break;
-            }     
+            }
         case RelocTypeLabel:
         case RelocTypeAlignedLabel:
         case RelocTypeInlineeEntryOffset:
@@ -1483,7 +1483,7 @@ void
 EncoderMD::VerifyRelocList(BYTE *buffStart, BYTE *buffEnd)
 {
     BYTE *last_pc = 0, *pc;
-    
+
     for (int32 i = 0; i < m_relocList->Count(); i ++)
     {
         EncodeRelocAndLabels &p = m_relocList->Item(i);
@@ -1503,7 +1503,7 @@ EncoderMD::VerifyRelocList(BYTE *buffStart, BYTE *buffEnd)
             if (last_pc)
                 AssertMsg(pc >= last_pc, "Unordered reloc list.");
             last_pc = pc;
-        } 
+        }
     }
 }
 #endif
@@ -1531,13 +1531,13 @@ void
 EncoderMD::EncodeInlineeCallInfo(IR::Instr *instr, uint32 codeOffset)
 {
     Assert(instr->GetSrc1() &&
-        instr->GetSrc1()->IsAddrOpnd() && 
+        instr->GetSrc1()->IsAddrOpnd() &&
         (instr->GetSrc1()->AsAddrOpnd()->m_address == (Js::Var)((size_t)instr->GetSrc1()->AsAddrOpnd()->m_address & 0xF)));
     Js::Var inlineeCallInfo = 0;
     // 60 (AMD64) bits on the InlineeCallInfo to store the
     // offset of the start of the inlinee. We shouldn't have gotten here with more arguments
     // than can fit in as many bits.
-    const bool encodeResult = Js::InlineeCallInfo::Encode(inlineeCallInfo, 
+    const bool encodeResult = Js::InlineeCallInfo::Encode(inlineeCallInfo,
         ::Math::PointerCastToIntegral<uint32>(instr->GetSrc1()->AsAddrOpnd()->m_address), codeOffset);
     Assert(encodeResult);
 

@@ -106,7 +106,7 @@ Term ::= ... | '(' '?' '=' Disjunction ')' [removed] | '(' '?' '!' Disjunction '
 
 namespace UnifiedRegex
 {
-    ParseError::ParseError(bool isBody, CharCount pos, CharCount encodedPos, HRESULT error) 
+    ParseError::ParseError(bool isBody, CharCount pos, CharCount encodedPos, HRESULT error)
         : isBody(isBody), pos(pos), encodedPos(encodedPos), error(error)
     {
     }
@@ -244,7 +244,7 @@ namespace UnifiedRegex
         {
             return 0;
         }
-        
+
         //The first character is mandatory to consume escape sequence, so we check for it above, at this stage we can set it as we already checked.
         codepoint_t codePoint = standardEncodedChars->DigitValue(ECLookahead(1));
 
@@ -266,7 +266,7 @@ namespace UnifiedRegex
         {
             return 0;
         }
-        
+
         uint consumptionNumber = i + 1;
         Assert(consumptionNumber >= 3);
 
@@ -291,7 +291,7 @@ namespace UnifiedRegex
             Js::NumberUtilities::CodePointAsSurrogatePair(codePoint, &other, &c);
             ECConsumeMultiUnit(consumptionNumber);
         }
-        else 
+        else
         {
             previousSurrogatePart = true;
             Js::NumberUtilities::CodePointAsSurrogatePair(codePoint, &c, &other);
@@ -321,7 +321,7 @@ namespace UnifiedRegex
             this->tempLocationOfSurrogatePair = location;
             this->codePointAtTempLocation = codePoint;
         }
-        else 
+        else
         {
             if(Js::NumberUtilities::IsSurrogateUpperPart(codePoint) && this->tempLocationOfSurrogatePair != nullptr)
             {
@@ -330,7 +330,7 @@ namespace UnifiedRegex
                 codePoint = Js::NumberUtilities::SurrogatePairAsCodePoint(codePointAtTempLocation, codePoint);
                 location = this->tempLocationOfSurrogatePair;
             }
-            // At this point we can clear previous location, and then if codePoint is bigger than 0xFFFF store it, as we either recived it or conmbined it above
+            // At this point we can clear previous location, and then if codePoint is bigger than 0xFFFF store it, as we either received it or combined it above
             this->tempLocationOfSurrogatePair = nullptr;
             this->codePointAtTempLocation = 0;
         }
@@ -339,8 +339,8 @@ namespace UnifiedRegex
         {
             this->positionAfterLastSurrogate = location + consumptionLength;
             this->valueOfLastSurrogate = codePoint;
-            
-            // When parsing without AST we aren't given an allocator. In addition, only the 2 lines above are used during Pass 0; 
+
+            // When parsing without AST we aren't given an allocator. In addition, only the 2 lines above are used during Pass 0;
             // while the bottom is used during Pass 1 (which isn't done when ParseNoAST)
             if(this->ctAllocator != nullptr)
             {
@@ -351,7 +351,7 @@ namespace UnifiedRegex
                     surrogatePairList = node;
                     currentSurrogatePairNode = node;
                 }
-                else 
+                else
                 {
                     Assert(currentSurrogatePairNode != nullptr);
                     currentSurrogatePairNode->next = node;
@@ -371,20 +371,20 @@ namespace UnifiedRegex
 
         return literalNode;
     }
-     
+
     // This function will create appropriate pairs of ranges and add them to the disjunction node.
     // Terms used in comments:
     //      - A minor codePoint is smaller than major codePoint, and both define a range of codePoints above 0x10000; to avoid confusion between lower/upper denoting codeUnits composing the surrogate pair.
     //      - A boundary is a mod 0x400 alignment marker due to the nature of surrogate pairs representation. So the codepoint 0x10300 lies between boundaries 0x10000 and 0x10400.
     //      - A prefix is the range set used to represent the values from minorCodePoint to the first boundary above minorCodePoint if applicable.
-    //      - A suffix is the range setused to represent the values from first boundary below majorCodePoint to the majorCodePoint if applicable.
+    //      - A suffix is the range set used to represent the values from first boundary below majorCodePoint to the majorCodePoint if applicable.
     //      - A full range is the range set used to represent the values from first boundary above minorCodePoint to first boundary below majorCodePoint if applicable.
     // The algorithm works as follows:
     //      1. Determine minorBoundary (minorCodePoint - mod 0x400 +0x400) and majorBoundary (majorCodePoint - mod 0x400). minorBoundary > minorCodePoint and majorBoundary < majorCodePoint
     //      2. Based on the codePoints and the boundaries, prefix, suffix, and full range is determined. Here are the rules:
     //          2-a. If minorBoundary > majorBoundary, we have an inner boundary range, output just that.
-    //          2-b. If minorBoundary - 0x400u != minorCodepoint (ie. codePoint doesn't lie right on a boundary to be part of a full range) we have a prefix.
-    //          2-c. If majorBoundary + 0x3FFu != majorCodepoint (ie. codePoint doesn't lie right before a boundary to be part of a full range) we have a suffix.
+    //          2-b. If minorBoundary - 0x400u != minorCodepoint (i.e. codePoint doesn't lie right on a boundary to be part of a full range) we have a prefix.
+    //          2-c. If majorBoundary + 0x3FFu != majorCodepoint (i.e. codePoint doesn't lie right before a boundary to be part of a full range) we have a suffix.
     //          2-d. We have a full range, if the two boundaries don't equal, OR the codePoints lie on the range boundaries opposite to what constitutes a prefix/suffix.
     // Visual representation for sample range 0x10300 - 0x10900
     //          |     [ _   |    ^ ]     |
@@ -413,7 +413,7 @@ namespace UnifiedRegex
         // major boundary is the first boundary below or equal to majorCodePoint
         codepoint_t minorBoundary = minorCodePoint - (minorCodePoint % 0x400u) + 0x400u;
         codepoint_t majorBoundary = majorCodePoint - (majorCodePoint % 0x400u);
-        
+
         Assert(minorBoundary >= 0x10000);
         Assert(majorBoundary >= 0x10000);
 
@@ -427,20 +427,20 @@ namespace UnifiedRegex
         {
             Assert(majorCodePoint - minorCodePoint < 0x400u);
             Assert(lowerMinorCodeUnit == lowerMajorCodeUnit);
-            
+
             MatchCharNode* lowerCharNode = Anew(ctAllocator, MatchCharNode, lowerMinorCodeUnit);
             MatchSetNode* setNode = Anew(ctAllocator, MatchSetNode, false, false);
             setNode->set.SetRange(ctAllocator, (Char)upperMinorCodeUnit, (Char)upperMajorCodeUnit);
             ConcatNode* concatNode = Anew(ctAllocator, ConcatNode, lowerCharNode, Anew(ctAllocator, ConcatNode, setNode, nullptr));
-            
+
             tailToAdd = Anew(ctAllocator, AltNode, concatNode, nullptr);
         }
-        else 
+        else
         {
             Node* prefixNode = nullptr, *suffixNode = nullptr;
             const bool twoConsecutiveRanges = minorBoundary == majorBoundary;
-            
-            //For minorBoundary, 
+
+            //For minorBoundary,
             if (minorBoundary - minorCodePoint == 1) // Single character in minor range
             {
                 // The prefix is only a surrogate pair atom
@@ -498,7 +498,7 @@ namespace UnifiedRegex
                 Node* lowerOfFullRange;
                 wchar_t lowerMinorBoundary, lowerMajorBoundary, ignore;
                 Js::NumberUtilities::CodePointAsSurrogatePair(minorBoundary, &lowerMinorBoundary, &ignore);
-                
+
                 bool singleFullRange = majorBoundary == minorBoundary;
                 if (singleFullRange)
                 {
@@ -533,7 +533,7 @@ namespace UnifiedRegex
         if (lastAltNode != nullptr)
         {
             Assert(lastAltNode->tail == nullptr);
-            lastAltNode->tail = tailToAdd; 
+            lastAltNode->tail = tailToAdd;
         }
 
         return tailToAdd;
@@ -544,14 +544,14 @@ namespace UnifiedRegex
     {
         wchar_t lower, upper;
         Js::NumberUtilities::CodePointAsSurrogatePair(codePoint, &lower, &upper);
-        
+
         AltNode* tailNode = Anew(ctAllocator, AltNode, CreateSurrogatePairAtom(lower, upper), nullptr);
-        
+
         if (lastAltNode != nullptr)
         {
             lastAltNode->tail = tailNode;
         }
-        
+
         return tailNode;
     }
 
@@ -693,7 +693,7 @@ namespace UnifiedRegex
                     prevSet->set.UnionInPlace(ctAllocator, currSet->set);
                     return prevSet;
                 }
-            } 
+            }
             else
                 // Can't merge
                 return 0;
@@ -1031,10 +1031,10 @@ namespace UnifiedRegex
     Node* Parser<P, IsLiteral>::NewLoopNode(CharCount lower, CharCountOrFlag upper, bool isGreedy, Node* body)
     {
         //
-        // NOTE: We'd like to represent r? (ie r{0,1}) as r|<empty> since the loop representation has high overhead.
+        // NOTE: We'd like to represent r? (i.e. r{0,1}) as r|<empty> since the loop representation has high overhead.
         //       HOWEVER if r contains a group definition and could match empty then we must execute as a loop
-        //       so that group bindings are correctly reset on no progress (eg: /(a*)?/.exec("")). Thus we defer
-        //       this optimization untill pass 4 of the optimizer, at which point we know whether r could match empty.
+        //       so that group bindings are correctly reset on no progress (e.g.: /(a*)?/.exec("")). Thus we defer
+        //       this optimization until pass 4 of the optimizer, at which point we know whether r could match empty.
         //
         if (lower == 1 && upper == 1)
             return body;
@@ -1223,7 +1223,7 @@ namespace UnifiedRegex
             }
             break;
         }
-        
+
         if (clearLocationIfPresent && this->tempLocationOfSurrogatePair != nullptr)
         {
             this->tempLocationOfSurrogatePair = nullptr;
@@ -1393,7 +1393,7 @@ namespace UnifiedRegex
         case '+':
         case '?':
         case '{':
-            // SPEC DEVIATION: These shold be syntax errors, instead accept as themselves unless looks like a quantifier
+            // SPEC DEVIATION: These should be syntax errors, instead accept as themselves unless looks like a quantifier
             Assert(!AtQuantifier());
             deferredCharNode->cs[0] = NextChar();
             node = deferredCharNode;
@@ -1623,7 +1623,7 @@ namespace UnifiedRegex
                 digits++;
             }
             while (digits < 3 && standardEncodedChars->IsOctal(ECLookahead())); // terminating 0 is not an octal
-            
+
             deferredCharNode->cs[0] = UTC((UChar)n);
             node = deferredCharNode;
             return false; // not an assertion
@@ -1776,7 +1776,7 @@ namespace UnifiedRegex
                 for (int i = 0; i < CaseInsensitive::EquivClassSize; i++)
                 {
                     bool alreadyAdded = false;
-                    
+
                     for (int j = 0; j < i; j++)
                     {
                         if (equivClass[i] == equivClass[j])
@@ -1816,7 +1816,7 @@ namespace UnifiedRegex
                     }
                     node = altNode;
                 }
-            }    
+            }
             else
             {
                 Js::NumberUtilities::CodePointAsSurrogatePair(this->currentSurrogatePairNode->value, &lower, &upper);
@@ -1839,7 +1839,7 @@ namespace UnifiedRegex
     //
     // Classes
     //
-        
+
     template <typename P, const bool IsLiteral>
     bool Parser<P, IsLiteral>::AtSecondSingletonClassAtom()
     {
@@ -1897,7 +1897,7 @@ namespace UnifiedRegex
                 {
                     lastCodepoint = outChar;
                 }
-                else 
+                else
                 {
                     // Last codepoint isn't a singleton, so no codepoint tracking for the sake of ranges is needed.
                     lastCodepoint = INVALID_CODEPOINT;
@@ -1986,7 +1986,7 @@ namespace UnifiedRegex
                 {
                     pendingRangeEnd = lastCodepoint;
                 }
-                
+
                 //If we get here, and pendingRangeEnd is set. Then one of the above has caused it to be set, or the previous iteration of the loop.
                 if (pendingRangeEnd != INVALID_CODEPOINT)
                 {
@@ -2000,7 +2000,7 @@ namespace UnifiedRegex
                     {
                         leftSingleChar = (wchar_t)pendingRangeStart;
                     }
-                    
+
                     if (pendingRangeEnd >= 0x10000)
                     {
                         Js::NumberUtilities::CodePointAsSurrogatePair(pendingRangeEnd, &rightSingleChar, &ignore);
@@ -2040,7 +2040,7 @@ namespace UnifiedRegex
             nextChar = ECLookahead();
         }
 
-        // We should never havea  pendingRangeEnd set when we exit the loop
+        // We should never have a pendingRangeEnd set when we exit the loop
         Assert(pendingRangeEnd == INVALID_CODEPOINT);
     }
 
@@ -2052,7 +2052,7 @@ namespace UnifiedRegex
         Assert(containsSurrogates ? unicodeFlagPresent : true);
 
         CharSet<codepoint_t> codePointSet;
-        
+
         MatchSetNode defferedSetNode(false, false);
         MatchCharNode defferedCharNode(0);
 
@@ -2161,10 +2161,10 @@ namespace UnifiedRegex
         {
             codePointSet.Set(ctAllocator, pendingCodePoint);
         }
-        
+
         // At this point, we have a complete set of codepoints representing the range.
         // Before performing translation of any kind, we need to do some case filling.
-        // At the point of this comment, there are no case mappings going cross-plane between simple 
+        // At the point of this comment, there are no case mappings going cross-plane between simple
         // characters (< 0x10000) and supplementary characters (>= 0x10000)
         // However, it might still be the case, and this has to be handled.
 
@@ -2172,7 +2172,7 @@ namespace UnifiedRegex
         // At least for simple characters.
 
         // The simple case, is when the unicode flag isn't specified, we can go ahead and return the simple set.
-        // Negase and case mappings will be handled later.
+        // Negations and case mappings will be handled later.
         if (!unicodeFlagPresent)
         {
             Assert(codePointSet.SimpleCharCount() == codePointSet.Count());
@@ -2181,7 +2181,7 @@ namespace UnifiedRegex
             return simpleToReturn;
         }
 
-        //Everything past here must be under the flag
+        // Everything past here must be under the flag
         Assert(scriptContext->GetConfig()->IsES6UnicodeExtensionsEnabled());
 
         if (codePointSet.IsEmpty())
@@ -2237,7 +2237,7 @@ namespace UnifiedRegex
                 codePointSet.FreeBody(ctAllocator);
             }
         }
-        else 
+        else
         {
             CharSet<codepoint_t> caseEquivalent;
             codePointSet.ToEquivClass(ctAllocator, caseEquivalent);
@@ -2303,9 +2303,9 @@ namespace UnifiedRegex
             }
             else
             {
-                currentTail = this->AppendSurrogateRangeToDisjunction(lowerCharOfRange, upperCharOfRange, currentTail);   
+                currentTail = this->AppendSurrogateRangeToDisjunction(lowerCharOfRange, upperCharOfRange, currentTail);
             }
-            
+
             if (headToReturn == nullptr)
             {
                 headToReturn = currentTail;
@@ -2351,7 +2351,7 @@ namespace UnifiedRegex
             do
             {
                 uint m = n * 8  + standardEncodedChars->DigitValue(ECLookahead());
-                if (m > Chars<uint8>::MaxUChar) //Regex octal codes only support single byte (ASCII) characters. 
+                if (m > Chars<uint8>::MaxUChar) //Regex octal codes only support single byte (ASCII) characters.
                     break;
                 n = m;
                 ECConsume();
@@ -2484,7 +2484,7 @@ namespace UnifiedRegex
             do
             {
                 uint m = n * 8  + standardEncodedChars->DigitValue(ECLookahead());
-                if (m > Chars<uint8>::MaxUChar) //Regex octal codes only support single byte (ASCII) characters. 
+                if (m > Chars<uint8>::MaxUChar) //Regex octal codes only support single byte (ASCII) characters.
                     break;
                 n = m;
                 ECConsume();
@@ -2544,7 +2544,7 @@ namespace UnifiedRegex
                 }
                 else
                 {
-                    // SPEC DEVIATION: For non-letters, still take lower 5 bits, eg [\c1] == [\x11]
+                    // SPEC DEVIATION: For non-letters, still take lower 5 bits, e.g. [\c1] == [\x11]
                     //                 However, '-' and ']' or EOF make the \c just a 'c'. Makes sense?
                     if (!IsEOF())
                     {
@@ -2638,8 +2638,8 @@ namespace UnifiedRegex
                 {
                     Fail(JSERR_RegExpSyntax);
                     return;
-                } 
-                else 
+                }
+                else
                 {
                     uint32 n = (standardEncodedChars->DigitValue(ECLookahead(2)) << 12) |
                                (standardEncodedChars->DigitValue(ECLookahead(3)) << 8) |
@@ -2688,7 +2688,7 @@ namespace UnifiedRegex
                     flags = (RegexFlags)(flags | UnicodeRegexFlag);
                     //For telemetry
                     CHAKRATEL_LANGSTATS_INC_LANGFEATURECOUNT(UnicodeRegexFlagCount, scriptContext);
-                
+
                     break;
                 }
             case 'y':
@@ -2701,7 +2701,7 @@ namespace UnifiedRegex
                     flags = (RegexFlags)(flags | StickyRegexFlag);
                     //For telemetry
                     CHAKRATEL_LANGSTATS_INC_LANGFEATURECOUNT(StickyRegexFlagCount, scriptContext);
-                   
+
                     break;
                 }
             default:
@@ -2753,7 +2753,7 @@ namespace UnifiedRegex
             this->caseInsensitiveFlagPresent = (flags & UnifiedRegex::IgnoreCaseRegexFlag) == UnifiedRegex::IgnoreCaseRegexFlag;
             Assert(!this->unicodeFlagPresent || scriptContext->GetConfig()->IsES6UnicodeExtensionsEnabled());
         }
-        else 
+        else
         {
             this->unicodeFlagPresent = false;
             this->caseInsensitiveFlagPresent = false;
@@ -2775,7 +2775,7 @@ namespace UnifiedRegex
         SetPosition(body, bodyLim, true);
         Node* root = PatternPass1();
         Assert(IsEOF());
-        
+
 
         return root;
     }
@@ -2824,7 +2824,7 @@ namespace UnifiedRegex
 
         //Used below to proceed to the end of the regex
         const EncodedChar *pastOptions = next;
-        
+
         this->currentSurrogatePairNode = this->surrogatePairList;
 
         // Body, pass 1
@@ -2837,7 +2837,7 @@ namespace UnifiedRegex
         outTotalEncodedChars = Chars<EncodedChar>::OSB(next, input);
         outTotalChars = Pos();
 
-        return root;   
+        return root;
     }
 
     template <typename P, const bool IsLiteral>
@@ -2884,13 +2884,13 @@ namespace UnifiedRegex
     RegexPattern * Parser<P, IsLiteral>::CompileProgram
         ( Node* root,
           const EncodedChar*& currentCharacter,
-          const CharCount totalLen, 
-          const CharCount bodyChars, 
-          const CharCount totalChars, 
+          const CharCount totalLen,
+          const CharCount bodyChars,
+          const CharCount totalChars,
           const RegexFlags flags )
     {
         Assert(IsLiteral);
-        
+
         Program* program = nullptr;
 
         if (buildAST)
@@ -3020,7 +3020,7 @@ namespace UnifiedRegex
             default:
                 AssertMsg(false, "");
             }
-            
+
             partialPrefixSetNode->set.SubtractRange(ctAllocator, (Char)0xD800u, (Char)0xDBFFu);
 
             MatchSetNode* partialSuffixSetNode = Anew(ctAllocator, MatchSetNode, false, false);
@@ -3051,7 +3051,7 @@ namespace UnifiedRegex
             }
             nodeToReturn = setNode;
         }
-        
+
         return nodeToReturn;
     }
 

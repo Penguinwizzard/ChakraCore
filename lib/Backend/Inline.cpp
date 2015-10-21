@@ -149,7 +149,7 @@ Inline::Optimize(Func *func, __in_ecount_opt(callerArgOutCount) IR::Instr *calle
                 {
                     break;
                 }
-                // fall through
+                // fall-through
 
             case Js::OpCode::CallI:
                 {
@@ -196,7 +196,7 @@ Inline::Optimize(Func *func, __in_ecount_opt(callerArgOutCount) IR::Instr *calle
 #if defined(DBG_DUMP) || defined(ENABLE_DEBUG_CONFIG_OPTIONS)
                             wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
 #endif
-                            POLYMORPHIC_INLINE_TESTTRACE(L"INLINING (Polymorphic): Skip Inline: Inlining polymorphic call site outisde loop\tIsConstructorCall: %s \tisTopFunc: %s\tCaller: %s (%s)\n",
+                            POLYMORPHIC_INLINE_TESTTRACE(L"INLINING (Polymorphic): Skip Inline: Inlining polymorphic call site outside loop\tIsConstructorCall: %s \tisTopFunc: %s\tCaller: %s (%s)\n",
                                      (isCtor? L"true": L"false"), (this->topFunc != func? L"true":L"false"),
                                      inlinerData->GetFunctionBody()->GetDisplayName(), inlinerData->GetFunctionBody()->GetDebugNumberSet(debugStringBuffer));
 
@@ -599,7 +599,7 @@ Inline::InlinePolymorphicFunctionUsingFixedMethods(IR::Instr *callInstr, const J
                  inlineeJitTimeData->GetFunctionBody()->GetDisplayName(), inlineeJitTimeData->GetFunctionBody()->GetDebugNumberSet(debugStringBuffer),
                  inlinerData->GetFunctionBody()->GetDisplayName(), inlinerData->GetFunctionBody()->GetDebugNumberSet(debugStringBuffer2));
 
-        //There are no multiple codegen jittime data allocated for this call site, not sure how is this possible, abort
+        //There are no multiple codegen jit-time data allocated for this call site, not sure how is this possible, abort
         TryResetObjTypeSpecFldInfoOn(methodValueOpnd);
         TryDisableRuntimePolymorphicCacheOn(methodValueOpnd);
         return instrNext;
@@ -651,7 +651,7 @@ Inline::InlinePolymorphicFunctionUsingFixedMethods(IR::Instr *callInstr, const J
     {
         if ((tmpInstr->m_opcode != Js::OpCode::ArgOut_A) && (tmpInstr->m_opcode != Js::OpCode::Ld_A))
         {
-            POLYMORPHIC_INLINE_TESTTRACE(L"INLINING (Polymorphic; Using Fixed Methods): Skip Inline: ArgOuts may have side efffects Inlinee: %s (%s):\tCaller: %s (%s)\n",
+            POLYMORPHIC_INLINE_TESTTRACE(L"INLINING (Polymorphic; Using Fixed Methods): Skip Inline: ArgOuts may have side effects Inlinee: %s (%s):\tCaller: %s (%s)\n",
                     inlineeJitTimeData->GetFunctionBody()->GetDisplayName(), inlineeJitTimeData->GetFunctionBody()->GetDebugNumberSet(debugStringBuffer),
                     inlinerData->GetFunctionBody()->GetDisplayName(), inlinerData->GetFunctionBody()->GetDebugNumberSet(debugStringBuffer2));
             return InlinePolymorphicFunction(callInstr, inlinerData, symCallerThis, profileId, pIsInlined, recursiveInlineDepth, true);
@@ -704,13 +704,13 @@ Inline::InlinePolymorphicFunctionUsingFixedMethods(IR::Instr *callInstr, const J
 
     Js::FixedFieldInfo* fixedFunctionInfoArray = methodPropertyOpnd->GetFixedFieldInfoArray();
 
-    // It might so be the case that two objects of different types call the same function (body), for eg., if they share the prototype on which the function is defined.
+    // It might so be the case that two objects of different types call the same function (body), for e.g., if they share the prototype on which the function is defined.
     uint uniqueFixedFunctionCount = HandleDifferentTypesSameFunction(fixedFunctionInfoArray, cachedFixedInlineeCount);
 
     if (uniqueFixedFunctionCount != inlineeCount)
     {
         // inlineeCount obtained from the inlineeJitTimeData is more accurate than cached number of fixed methods for inlinees.
-        POLYMORPHIC_INLINE_TESTTRACE(L"INLINING (Polymorphic; Using Fixed Methods): Skip Inline: cached fixed function count (%d) doesnt match inlinee count (%d); (Max: %d)\tInlinee: %s (%s):\tCaller: %s (%s)\n",
+        POLYMORPHIC_INLINE_TESTTRACE(L"INLINING (Polymorphic; Using Fixed Methods): Skip Inline: cached fixed function count (%d) doesn't match inlinee count (%d); (Max: %d)\tInlinee: %s (%s):\tCaller: %s (%s)\n",
                     uniqueFixedFunctionCount, inlineeCount, Js::DynamicProfileInfo::maxPolymorphicInliningSize,
                     inlineeJitTimeData->GetFunctionBody()->GetDisplayName(), inlineeJitTimeData->GetFunctionBody()->GetDebugNumberSet(debugStringBuffer),
                     inlinerData->GetFunctionBody()->GetDisplayName(), inlinerData->GetFunctionBody()->GetDebugNumberSet(debugStringBuffer2));
@@ -783,7 +783,7 @@ Inline::InlinePolymorphicFunctionUsingFixedMethods(IR::Instr *callInstr, const J
         Js::TypeId typeId = methodPropertyOpnd->GetTypeId(i);
         if(!(typeId > Js::TypeIds_LastJavascriptPrimitiveType && typeId <= Js::TypeIds_LastTrueJavascriptObjectType))
         {
-            // Dont eliminate CheckThis if it cannot be done for any one of the inlinees
+            // Don't eliminate CheckThis if it cannot be done for any one of the inlinees
             safeThis = false;
         }
         while (fixedFunctionInfoArray[i].nextHasSameFixedField)
@@ -922,7 +922,7 @@ Inline::InlinePolymorphicFunction(IR::Instr *callInstr, const Js::FunctionCodeGe
                     inlineeJitTimeData->GetFunctionBody()->GetDisplayName(), inlineeJitTimeData->GetFunctionBody()->GetDebugNumberSet(debugStringBuffer),
                      inlinerData->GetFunctionBody()->GetDisplayName(), inlinerData->GetFunctionBody()->GetDebugNumberSet(debugStringBuffer2));
 
-            //There are no multiple codegen jittime data allocated for this call site, not sure how is this possible, abort
+            //There are no multiple codegen jit-time data allocated for this call site, not sure how is this possible, abort
             return instrNext;
         }
 
@@ -1354,7 +1354,7 @@ Inline::TryOptimizeCallInstrWithFixedMethod(IR::Instr *callInstr, Js::FunctionIn
 
     IR::PropertySymOpnd* methodPropertyOpnd = ldMethodFldInstr->GetSrc1()->AsPropertySymOpnd();
 
-    // TODO (jedmiad): Consider double-checking if the function is a built-in in cases when we do have a fixed function
+    // TODO (jedmiad): Consider double-checking if the function is a built-in cases when we do have a fixed function
     // object in the inline cache.
     if ((isCtor &&
             ((isInlined && PHASE_OFF(Js::FixedCtorInliningPhase, callInstr->m_func->GetJnFunction())) ||
@@ -1498,7 +1498,7 @@ Inline::TryOptimizeCallInstrWithFixedMethod(IR::Instr *callInstr, Js::FunctionIn
                     callerFunctionBody->GetDisplayName(), callerFunctionBody->GetDebugNumberSet(debugStringBuffer),
                     methodPropertyRecord->GetBuffer(), fixedFunctionNumbers, functionObject, functionObject->GetFunctionInfo(),
                     profileFunctionName, profileFunctionNumbers, functionInfo,
-                    methodPropertyOpnd->m_inlineCacheIndex, isProto ? L"proto" : isAccessor ? L"acccessor" : L"local",
+                    methodPropertyOpnd->m_inlineCacheIndex, isProto ? L"proto" : isAccessor ? L"accessor" : L"local",
                     methodPropertyOpnd->GetType(), protoObject, protoObject != nullptr ? protoObject->GetType() : nullptr);
             }
             if (PHASE_TESTTRACE(Js::FixedMethodsPhase, callInstr->m_func->GetJnFunction()))
@@ -1506,7 +1506,7 @@ Inline::TryOptimizeCallInstrWithFixedMethod(IR::Instr *callInstr, Js::FunctionIn
                 Output::Print(L"FixedFields: function %s (%s): function body mismatch for inlinee: %s (%s) != %s (%s) (cache id: %d, layout: %s).\n",
                     callerFunctionBody->GetDisplayName(), callerFunctionBody->GetDebugNumberSet(debugStringBuffer),
                     methodPropertyRecord->GetBuffer(), fixedFunctionNumbers, profileFunctionName, profileFunctionNumbers,
-                    methodPropertyOpnd->m_inlineCacheIndex, isProto ? L"proto" : isAccessor ? L"acccessor" : L"local");
+                    methodPropertyOpnd->m_inlineCacheIndex, isProto ? L"proto" : isAccessor ? L"accessor" : L"local");
             }
             Output::Flush();
         }
@@ -1602,7 +1602,7 @@ Inline::TryOptimizeCallInstrWithFixedMethod(IR::Instr *callInstr, Js::FunctionIn
                 // we must make sure the same cache cannot be used multiple times in the flow.
                 if (constructorCache->isUsed)
                 {
-                    // It's ok to allocate a JitTimeConstructorCache from the func's allocator (rather than recycler),
+                    // It's okay to allocate a JitTimeConstructorCache from the func's allocator (rather than recycler),
                     // because we only use these during JIT. We use the underlying runtime cache as a guard that must
                     // live after JIT, and these are added to the EntryPointInfo during work item creation and thus kept alive.
                     constructorCache = constructorCache->Clone(this->topFunc->m_alloc);
@@ -1707,14 +1707,14 @@ Inline::TryOptimizeInstrWithFixedDataProperty(IR::Instr *&instr)
 //      We convert them to ArgOut_A_InlineBuiltIn.
 // Example for Math.pow(x, y), x86 case.
 // Original:
-//     instrS: dstS = StartCall <N=count>, NULL -- N is actual number of parameters, inlcuding "this".
+//     instrS: dstS = StartCall <N=count>, NULL -- N is actual number of parameters, including "this".
 //     instr0: arg0 = ArgOut t, link(->instrS)  -- "this" arg
 //     instr1: arg1 = ArgOut x, link(->instr0)  -- src1
 //     instr2: arg2 = ArgOut y, link(->instr1)  -- src2
 //     instr3: dstC = CallI fn, link(->instr2)  -- links to instr2, etc.
 // After Inline:
-//     instrS: dstS = StartCall <N=count>, NULL -- N is actual number of parameters, inlcuding "this".
-//             tmpt = BytecodeArgOutCapture t                                     -- create assigns to temps to snaphot argout values in case they are modified later before the call
+//     instrS: dstS = StartCall <N=count>, NULL -- N is actual number of parameters, including "this".
+//             tmpt = BytecodeArgOutCapture t                                     -- create assigns to temps to snapshot argout values in case they are modified later before the call
 //             tmpx = BytecodeArgOutCapture x
 //             tmpy = BytecodeArgOutCapture y
 //     instr1: arg1 = ArgOut_InlineBuiltIn tmpx, link(->instr0)  -- src1
@@ -1724,8 +1724,8 @@ Inline::TryOptimizeInstrWithFixedDataProperty(IR::Instr *&instr)
 //             dstC = InlineMathPow, tmpx, tmpy       -- actual native math call.
 //             NULL = InlineBuiltInEnd <N=count>, link(->instr2)
 // After Globopt:
-//     instrS: dstS = StartCall <N=count>, NULL -- N is actual number of parameters, inlcuding "this".
-//             tmpt = BytecodeArgOutCapture t                                     -- create assigns to temps to snaphot argout values in case they are modified later before the call
+//     instrS: dstS = StartCall <N=count>, NULL -- N is actual number of parameters, including "this".
+//             tmpt = BytecodeArgOutCapture t                                     -- create assigns to temps to snapshot argout values in case they are modified later before the call
 //             tmpx = BytecodeArgOutCapture x
 //             Bailout 1
 //             tmpy = BytecodeArgOutCapture y
@@ -1850,7 +1850,7 @@ Inline::InlineBuiltInFunction(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, 
         return callInstr->m_next;
     }
 
-    // TODO: when adding support for other type spec args (array, string) doappropriate check as well.
+    // TODO: when adding support for other type spec args (array, string) do appropriate check as well.
 
     Assert(callInstr->GetSrc1());
     Assert(callInstr->GetSrc1()->IsRegOpnd());
@@ -1899,7 +1899,7 @@ Inline::InlineBuiltInFunction(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, 
             return callInstr->m_next;
         }
     }
-    // TODO: check for each arg type in profie matching expected type and don't inline otherwise?
+    // TODO: check for each arg type in profile matching expected type and don't inline otherwise?
 
     IR::Instr *inlineBuiltInEndInstr = nullptr;
     if (inlineCallOpCode ==  Js::OpCode::InlineFunctionApply)
@@ -2069,7 +2069,7 @@ Inline::InlineBuiltInFunction(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, 
                 }
             }
 
-            // Convert the arg out ot built in arg out, and get the src of the arg out
+            // Convert the arg out to built in arg out, and get the src of the arg out
             IR::Opnd * argOpnd = ConvertToInlineBuiltInArgOut(argInstr);
 
             // SIMD_JS
@@ -2243,20 +2243,20 @@ IR::Instr* Inline::InlineApply(IR::Instr *callInstr, Js::FunctionInfo *funcInfo,
     // if isArrayOpndArgumentsObject == false, the array opnd can still be the arguments object; we just can't say that for sure
     bool isArrayOpndArgumentsObject = arrayArgOpnd->IsArgumentsObject();
 
-	IR::Instr * returnInstr = nullptr;
-	if (!PHASE_OFF(Js::InlineApplyTargetPhase, this->topFunc))
-	{
+    IR::Instr * returnInstr = nullptr;
+    if (!PHASE_OFF(Js::InlineApplyTargetPhase, this->topFunc))
+    {
         if (InlineApplyTarget(callInstr, inlinerData, &inlineeData, funcInfo, symCallerThis, &returnInstr, recursiveInlineDepth))
         {
-	        *pIsInlined = true;
-	        Assert(returnInstr);
-	        return returnInstr;
+            *pIsInlined = true;
+            Assert(returnInstr);
+            return returnInstr;
         }
-	}
+    }
 
 #if defined(ENABLE_DEBUG_CONFIG_OPTIONS)
-	InliningDecider::TraceInlining(inlinerData->GetFunctionBody(), Js::JavascriptLibrary::GetNameForBuiltIn(builtInId),
-		nullptr, 0, this->topFunc->m_workItem->GetFunctionBody(), 0, nullptr, callSiteId, builtInId);
+    InliningDecider::TraceInlining(inlinerData->GetFunctionBody(), Js::JavascriptLibrary::GetNameForBuiltIn(builtInId),
+        nullptr, 0, this->topFunc->m_workItem->GetFunctionBody(), 0, nullptr, callSiteId, builtInId);
     wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
 #endif
 
@@ -2270,8 +2270,8 @@ IR::Instr* Inline::InlineApply(IR::Instr *callInstr, Js::FunctionInfo *funcInfo,
         }
         else
         {
-            INLINE_TESTTRACE(L"INLINING: Skip Inline: Supporting inlining func.apply(this, array) or func.apply(this, arguments) with formals in the parent function only when func is a built-in inlinable as apply target \tCaller: %s (%s)\n",
-	            inlinerData->GetFunctionBody()->GetDisplayName(), inlinerData->GetFunctionBody()->GetDebugNumberSet(debugStringBuffer));
+            INLINE_TESTTRACE(L"INLINING: Skip Inline: Supporting inlining func.apply(this, array) or func.apply(this, arguments) with formals in the parent function only when func is a built-in inlineable as apply target \tCaller: %s (%s)\n",
+                inlinerData->GetFunctionBody()->GetDisplayName(), inlinerData->GetFunctionBody()->GetDebugNumberSet(debugStringBuffer));
             return callInstr;
         }
     }
@@ -2471,7 +2471,7 @@ IR::Instr * Inline::InlineApplyWithArray(IR::Instr * callInstr, Js::FunctionInfo
 }
 
 bool Inline::InlineApplyTarget(IR::Instr *callInstr, const Js::FunctionCodeGenJitTimeData* inlinerData, const Js::FunctionCodeGenJitTimeData** pInlineeData, Js::FunctionInfo *applyFuncInfo,
-							const StackSym *symCallerThis, IR::Instr ** returnInstr, uint recursiveInlineDepth)
+                            const StackSym *symCallerThis, IR::Instr ** returnInstr, uint recursiveInlineDepth)
 {
 #if ENABLE_DEBUG_CONFIG_OPTIONS
     wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
@@ -2520,7 +2520,7 @@ bool Inline::InlineApplyTarget(IR::Instr *callInstr, const Js::FunctionCodeGenJi
     if (callInstr->m_func->IsTopFunc())
     {
         INLINE_TESTTRACE(L"INLINING: Skip Inline: Skipping apply target inlining in top func\tCaller: %s\t(%s) \tTop Func:%s\t(%s)\n", inlinerData->GetFunctionBody()->GetDisplayName(),
-	        inlinerData->GetFunctionBody()->GetDebugNumberSet(debugStringBuffer), this->topFunc->GetJnFunction()->GetDisplayName(), this->topFunc->GetJnFunction()->GetDebugNumberSet(debugStringBuffer2));
+            inlinerData->GetFunctionBody()->GetDebugNumberSet(debugStringBuffer), this->topFunc->GetJnFunction()->GetDisplayName(), this->topFunc->GetJnFunction()->GetDebugNumberSet(debugStringBuffer2));
         return false;
     }
 
@@ -3516,9 +3516,9 @@ Inline::InlineFunctionCommon(IR::Instr *callInstr, StackSym* originalCallTargetS
 }
 
 #ifdef ENABLE_DOM_FAST_PATH
-// we have ldfld, src1 obj, src2: null; dest: return value
+// we have LdFld, src1 obj, src2: null; dest: return value
 // We need to convert it to inlined method call.
-// We cannot do CallDirect as it requires ArgOut and that cannot be hoisted/copyproped
+// We cannot do CallDirect as it requires ArgOut and that cannot be hoisted/copyprop'd
 // Create a new OpCode, DOMFastPathGetter. The OpCode takes three arguments:
 // The function object, the "this" instance object, and the helper routine as we have one for each index
 // A functionInfo->Index# table is created in scriptContext (and potentially movable to threadContext if WS is not a concern).
@@ -4345,7 +4345,7 @@ Inline::MapActuals(IR::Instr *callInstr, __inout_ecount(maxParamCount) IR::Instr
                     argFixupInstr->GenerateArgOutSnapshot();
                     fixupArgoutCount++;
                 }
-                // Now that the arguments object has been expanded, we dont require the sym corresponding to it.
+                // Now that the arguments object has been expanded, we don't require the sym corresponding to it.
                 IR::IntConstOpnd* callSiteIdOpnd = IR::IntConstOpnd::New(callSiteId, TyUint16, argInstr->m_func);
                 argInstr->ReplaceSrc1(callSiteIdOpnd);
                 // Don't count ArgOut_A_FromStackArgs as an actual, when it has been expanded
@@ -4541,7 +4541,7 @@ Inline::MapFormals(Func *inlinee,
                         }
                         else if(fixedFunctionSafeThis)
                         {
-                            //Note this need to come after we determined that this pointer is not const (undefined\null)
+                            //Note this need to come after we determined that this pointer is not const (undefined/null)
                             fUsesSafeThis = true;
                         }
                     }
@@ -4596,7 +4596,7 @@ Inline::MapFormals(Func *inlinee,
                         break;
                     }
 
-                    Assert(!argInstr->HasByteCodeArgOutCapture()); // ArgOut_A_FixupForStackArgs should not be restored on bailout, so we dont generate ByteCodeArgOutCapture for these argouts.
+                    Assert(!argInstr->HasByteCodeArgOutCapture()); // ArgOut_A_FixupForStackArgs should not be restored on bailout, so we don't generate ByteCodeArgOutCapture for these argouts.
 
                     IR::Instr* currentArgOutInstr = nullptr;
                     if(argOuts[argIndex])
@@ -4892,7 +4892,7 @@ Inline::RemoveExtraFixupArgouts(IR::Instr* instr, uint argoutRemoveCount, Js::Pr
     for(uint argIndex = 0; argIndex < argoutRemoveCount; argIndex++)
     {
         Assert(argInstr->m_opcode == Js::OpCode::ArgOut_A_FixupForStackArgs);
-        Assert(!argInstr->HasByteCodeArgOutCapture()); // ArgOut_A_FixupForStackArgs should not be restored on bailout, so we dont generate ByteCodeArgOutCapture for these argouts.
+        Assert(!argInstr->HasByteCodeArgOutCapture()); // ArgOut_A_FixupForStackArgs should not be restored on bailout, so we don't generate ByteCodeArgOutCapture for these argouts.
 
         instr->ReplaceSrc2(argInstr->GetSrc2());
         argSym->DecrementArgSlotNum();
@@ -4935,7 +4935,7 @@ Inline::DoCheckThisOpt(IR::Instr * instr)
     }
 
     // If the instr is an inlined LdThis, try to replace it with a CheckThis
-    // that will bail out if a helper call is required to get the ereal "this" ointer.
+    // that will bail out if a helper call is required to get the real "this" pointer.
 
     Assert(instr->m_opcode == Js::OpCode::LdThis || instr->m_opcode == Js::OpCode::StrictLdThis);
     Assert(instr->IsInlined());

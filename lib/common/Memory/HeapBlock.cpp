@@ -60,7 +60,7 @@ HeapBlock::CapturePageHeapAllocStack()
 {
     Assert(this->InPageHeapMode());
 
-    // These asserts are true because explicit free is disallowed in 
+    // These asserts are true because explicit free is disallowed in
     // page heap mode. If they weren't, we'd have to modify the asserts
     Assert(this->pageHeapFreeStack == nullptr);
     Assert(this->pageHeapAllocStack == nullptr);
@@ -82,7 +82,7 @@ HeapBlock::CapturePageHeapFreeStack()
 {
     Assert(this->InPageHeapMode());
 
-    // These asserts are true because explicit free is disallowed in 
+    // These asserts are true because explicit free is disallowed in
     // page heap mode. If they weren't, we'd have to modify the asserts
     Assert(this->pageHeapFreeStack == nullptr);
     Assert(this->pageHeapAllocStack != nullptr);
@@ -122,14 +122,14 @@ SmallHeapBlockT<TBlockAttributes>::GetAllocPlusSize(uint objectCount)
 
 
 template <class TBlockAttributes>
-void 
+void
 SmallHeapBlockT<TBlockAttributes>::ConstructorCommon(HeapBucket * bucket, ushort objectSize, ushort objectCount, HeapBlockType heapBlockType)
 {
     this->heapBucket = bucket;
     this->Init(objectSize, objectCount);
     Assert(heapBlockType < HeapBlock::HeapBlockType::SmallAllocBlockTypeCount + HeapBlock::HeapBlockType::MediumAllocBlockTypeCount);
     Assert(objectCount > 1 && objectCount == (this->GetPageCount() * AutoSystemInfo::PageSize) / objectSize);
-#ifdef RECYCLER_SLOW_CHECK_ENABLED   
+#ifdef RECYCLER_SLOW_CHECK_ENABLED
     heapBucket->heapInfo->heapBlockCount[heapBlockType]++;
 #endif
 
@@ -147,8 +147,8 @@ SmallHeapBlockT<TBlockAttributes>::ConstructorCommon(HeapBucket * bucket, ushort
 
 template <class TBlockAttributes>
 SmallHeapBlockT<TBlockAttributes>::SmallHeapBlockT(HeapBucket * bucket, ushort objectSize, ushort objectCount, HeapBlockType heapBlockType)
-    : HeapBlock(heapBlockType), 
-    bucketIndex(HeapInfo::GetBucketIndex(objectSize)), 
+    : HeapBlock(heapBlockType),
+    bucketIndex(HeapInfo::GetBucketIndex(objectSize)),
     validPointers(HeapInfo::smallAllocValidPointersMap.GetValidPointersForIndex(HeapInfo::GetBucketIndex(objectSize))),
     objectSize(objectSize), objectCount(objectCount)
 {
@@ -157,7 +157,7 @@ SmallHeapBlockT<TBlockAttributes>::SmallHeapBlockT(HeapBucket * bucket, ushort o
 
 template <>
 SmallHeapBlockT<MediumAllocationBlockAttributes>::SmallHeapBlockT(HeapBucket * bucket, ushort objectSize, ushort objectCount, HeapBlockType heapBlockType)
-    : HeapBlock((HeapBlockType)(heapBlockType)), 
+    : HeapBlock((HeapBlockType)(heapBlockType)),
     bucketIndex(HeapInfo::GetMediumBucketIndex(objectSize)),
     validPointers(HeapInfo::mediumAllocValidPointersMap.GetValidPointersForIndex(HeapInfo::GetMediumBucketIndex(objectSize))),
     objectSize(objectSize), objectCount(objectCount)
@@ -185,7 +185,7 @@ SmallHeapBlockT<TBlockAttributes>::~SmallHeapBlockT()
     }
 
     // REVIEW: This means that the old free stack is lost when we get free the heap block
-    // Is this ok? Should we delay freeing heap blocks till process/thread shutdown time?
+    // Is this okay? Should we delay freeing heap blocks till process/thread shutdown time?
     if (this->pageHeapFreeStack != nullptr)
     {
         this->pageHeapFreeStack->Delete(&NoCheckHeapAllocator::Instance);
@@ -322,7 +322,7 @@ SmallHeapBlockT<TBlockAttributes>::Init(ushort objectSize, ushort objectCount)
     }
 
     // REVIEW: This means that the old free stack is lost when we get reuse the heap block
-    // Is this ok? Should we never reuse heap blocks in page heap mode?
+    // Is this okay? Should we never reuse heap blocks in page heap mode?
     if (this->pageHeapFreeStack != nullptr)
     {
         this->pageHeapFreeStack->Delete(&NoCheckHeapAllocator::Instance);
@@ -415,12 +415,12 @@ SmallHeapBlockT<TBlockAttributes>::SetPage(__in_ecount_pagesize char * baseAddre
             size_t pageCount = this->GetPageHeapModePageCount<true>();
             Assert(pageCount == TBlockAttributes::PageCount + 1 || (!this->InPageHeapMode() && pageCount == TBlockAttributes::PageCount));
 
-            if (this->pageHeapMode == PageHeapMode::PageHeapModeBlockStart) 
+            if (this->pageHeapMode == PageHeapMode::PageHeapModeBlockStart)
             {
                 address = baseAddress + AutoSystemInfo::PageSize;
                 this->guardPageAddress = baseAddress;
             }
-            else if (this->pageHeapMode == PageHeapMode::PageHeapModeBlockEnd) 
+            else if (this->pageHeapMode == PageHeapMode::PageHeapModeBlockEnd)
             {
                 address = baseAddress;
                 this->guardPageAddress = baseAddress + (TBlockAttributes::PageCount * AutoSystemInfo::PageSize);
@@ -552,7 +552,7 @@ SmallHeapBlockT<TBlockAttributes>::BackgroundReleasePagesSweep(Recycler* recycle
             ClearPageHeapState();
             if (guardPageAddress != nullptr)
             {
-                if (this->pageHeapMode == PageHeapMode::PageHeapModeBlockStart) 
+                if (this->pageHeapMode == PageHeapMode::PageHeapModeBlockStart)
                 {
                     address = guardPageAddress;
                 }
@@ -749,7 +749,7 @@ SmallHeapBlockT<TBlockAttributes>::FindHeapObjectImpl(void* objectAddress, Recyc
         ((flags & FindHeapObjectFlags_VerifyFreeBitForAttribute) != 0 && !this->HasPendingDisposeObjects());
     if (!disableCheck)
     {
-        // REVIEW: Checking if an object if free is strictly not necessary 
+        // REVIEW: Checking if an object if free is strictly not necessary
         // In all case, we should have a valid object, For memory protect heap, this is just to make sure we don't
         // free pointers that are invalid.
         if (recycler->IsConcurrentSweepExecutingState())
@@ -812,14 +812,14 @@ SmallHeapBlockT<TBlockAttributes>::IsInAllocator() const
 template <class TBlockAttributes>
 bool
 SmallHeapBlockT<TBlockAttributes>::HasPendingDisposeObjects()
-{ 
+{
     return this->IsAnyFinalizableBlock() && this->AsFinalizableBlock<TBlockAttributes>()->HasPendingDisposeObjects();
 }
 
 template <class TBlockAttributes>
 bool
 SmallHeapBlockT<TBlockAttributes>::HasAnyDisposeObjects()
-{ 
+{
     return this->IsAnyFinalizableBlock() && this->AsFinalizableBlock<TBlockAttributes>()->HasAnyDisposeObjects();
 }
 
@@ -855,7 +855,7 @@ SmallHeapBlockT<TBlockAttributes>::IsFreeObject(void * objectAddress)
 template <class TBlockAttributes>
 void
 SmallHeapBlockT<TBlockAttributes>::VerifyMarkBitVector()
-{    
+{
     this->GetRecycler()->heapBlockMap.VerifyMarkCountForPages<TBlockAttributes::BitVectorCount>(this->address, TBlockAttributes::PageCount);
 }
 
@@ -1019,8 +1019,7 @@ template <class TBlockAttributes>
 void
 SmallHeapBlockT<TBlockAttributes>::VerifyMark(void * objectAddress)
 {
-    
-    // Because we mark thru new object, we might have a false reference
+    // Because we mark through new object, we might have a false reference
     // somewhere that we have scanned before this new block is allocated
     // so the object will not be marked even though it looks like a reference
     // Can't verify when the block is new
@@ -1128,7 +1127,7 @@ SmallHeapBlockT<TBlockAttributes>::AdjustPartialUncollectedAllocBytes(RecyclerSw
     uint newObjectExpectSweepCount = expectSweepCount;
 #ifdef CONCURRENT_GC_ENABLED
     if (expectSweepCount != 0 && !recyclerSweep.InPartialCollect())
-    {              
+    {
         // We don't know which objects that we are going sweep are old and which object are new
         // So just assume one way or the other by the amount of old vs. new object in the block
         const uint allocatedObjectCount = allObjectCount - currentFreeCount;
@@ -1161,11 +1160,11 @@ SmallHeapBlockT<TBlockAttributes>::AdjustPartialUncollectedAllocBytes(RecyclerSw
 
 #ifdef RECYCLER_PAGE_HEAP
 template <class TBlockAttributes>
-char * 
+char *
 SmallHeapBlockT<TBlockAttributes>::GetPageHeapObjectAddress()
 {
     Assert(InPageHeapMode());
-    
+
     if (this->pageHeapMode == PageHeapMode::PageHeapModeBlockStart)
     {
         return this->address;
@@ -1208,8 +1207,8 @@ SmallHeapBlockT<TBlockAttributes>::GetMarkCountForSweep()
 
     // Remove any invalid bits that may have been set
     temp.Minus(this->GetInvalidBitVector());
-    
-    // Remove the mark bit for things that are still free    
+
+    // Remove the mark bit for things that are still free
     if (this->freeCount != 0)
     {
         temp.Minus(this->GetFreeBitVector());
@@ -1225,7 +1224,7 @@ SmallHeapBlockT<TBlockAttributes>::Sweep(RecyclerSweep& recyclerSweep, bool queu
 {
     Assert(this->address != nullptr);
     Assert(this->segment != nullptr);
-    Assert(!this->isPendingConcurrentSweep);  
+    Assert(!this->isPendingConcurrentSweep);
     DebugOnly(VerifyMarkBitVector());
 
     if (allocable)
@@ -1257,7 +1256,7 @@ SmallHeapBlockT<TBlockAttributes>::Sweep(RecyclerSweep& recyclerSweep, bool queu
 
     const uint expectFreeCount = objectCount - localMarkCount;
     Assert(expectFreeCount >= this->freeCount);
-    
+
     const uint expectSweepCount = expectFreeCount - this->freeCount;
     Assert(!this->IsLeafBlock() || finalizeCount == 0);
 
@@ -1341,7 +1340,7 @@ SmallHeapBlockT<TBlockAttributes>::Sweep(RecyclerSweep& recyclerSweep, bool queu
 
     // We need to sweep in thread if there are any finalizable object.
     // So that the PrepareFinalize() can be called before concurrent sweep
-    // and other finalizer.  This gives the object an oppurtunity before any
+    // and other finalizer.  This gives the object an opportunity before any
     // other script can be ran to clean up their references/states that are not
     // valid since we determine the object is not live any more.
     //
@@ -1421,10 +1420,10 @@ SmallHeapBlockT<TBlockAttributes>::SweepObjects(Recycler * recycler)
 
         // We know that the object is not live, or we wouldn't be here.
         Assert(this->markCount == 0);
-        
+
         // However, it's possible that the PageHeap object is already free.
         // This can happen when the block was in PendingDispose state, and then
-        // we did the dispose and freed the object in TransferDisposeObjects.  
+        // we did the dispose and freed the object in TransferDisposeObjects.
         // So check for this.
         if (this->GetFreeBitVector()->Test(bitIndex))
         {
@@ -1455,7 +1454,7 @@ SmallHeapBlockT<TBlockAttributes>::SweepObjects(Recycler * recycler)
 #ifdef RECYCLER_PAGE_HEAP
         Assert(!this->InPageHeapMode());
 #endif
-        
+
         DebugOnly(const uint expectedSweepCount = objectCount - freeCount - markCount);
         Assert(expectedSweepCount != 0 || this->isForceSweeping);
         DebugOnly(uint sweepCount = 0);
@@ -1502,7 +1501,7 @@ SmallHeapBlockT<TBlockAttributes>::SweepObjects(Recycler * recycler)
 
             objectAddress += localSize;
         }
-        
+
         Assert(sweepCount == expectedSweepCount);
         this->isPendingConcurrentSweep = false;
 
@@ -1631,7 +1630,7 @@ SmallHeapBlockT<TBlockAttributes>::Check(bool expectFull, bool expectPending)
         CheckDebugFreeBitVector(false);
     }
 
-    Assert(expectPending == HasAnyDisposeObjects());    
+    Assert(expectPending == HasAnyDisposeObjects());
 
     if (this->isInAllocator || this->isClearedFromAllocator)
     {
@@ -1720,7 +1719,7 @@ SmallHeapBlockT<TBlockAttributes>::CheckFreeBitVector(bool isCollecting)
     temp.Copy(free);
     temp.And(this->GetInvalidBitVector());
     Assert(temp.IsAllClear());
-    
+
     uint verifyFreeCount = 0;
     FreeObject * freeObject = this->freeObjectList;
     while (freeObject != nullptr)
@@ -1740,7 +1739,7 @@ SmallHeapBlockT<TBlockAttributes>::CheckFreeBitVector(bool isCollecting)
     {
         auto finalizableBlock = this->AsFinalizableBlock<TBlockAttributes>();
 
-        // Include pending dispose objects        
+        // Include pending dispose objects
         finalizableBlock->ForEachPendingDisposeObject([&] (uint index) {
             uint bitIndex = ((uint)index) * this->GetObjectBitDelta();
             Assert(IsValidBitIndex(bitIndex));
@@ -1804,7 +1803,7 @@ SmallHeapBlockT<TBlockAttributes>::BuildFreeBitVector(SmallHeapBlockBitVector * 
     {
         auto finalizableBlock = this->AsFinalizableBlock<TBlockAttributes>();
 
-        // Include pending dispose objects        
+        // Include pending dispose objects
         finalizableBlock->ForEachPendingDisposeObject([&] (uint index) {
             uint bitIndex = ((uint)index) * this->GetObjectBitDelta();
             Assert(IsValidBitIndex(bitIndex));
@@ -1833,7 +1832,7 @@ SmallHeapBlockT<TBlockAttributes>::MarkImplicitRoots()
 #if DBG
     uint localObjectSize = this->GetObjectSize();
     Assert(localObjectSize <= HeapConstants::MaxMediumObjectSize);
-    
+
     ushort markCountPerPage[TBlockAttributes::PageCount];
     for (uint i = 0; i < TBlockAttributes::PageCount; i++)
     {
@@ -1843,7 +1842,7 @@ SmallHeapBlockT<TBlockAttributes>::MarkImplicitRoots()
 
     for (uint i = 0; i < localObjectCount; i++)
     {
-        // REVIEW: This may include free object.  It is ok to mark them and scan them
+        // REVIEW: This may include free object.  It is okay to mark them and scan them
         // But kind inefficient.
         if (this->ObjectInfo(i) & ImplicitRootBit)
         {
@@ -1882,7 +1881,7 @@ SmallHeapBlockT<TBlockAttributes>::EnumerateObjects(ObjectInfoBits infoBits, voi
 }
 
 template <class TBlockAttributes>
-__inline 
+__inline
 void SmallHeapBlockT<TBlockAttributes>::FillFreeMemory(__in_bcount(size) void * address, size_t size)
 {
 #ifdef RECYCLER_MEMORY_VERIFY
@@ -1984,10 +1983,10 @@ void SmallHeapBlockT<TBlockAttributes>::Verify(bool pendingDispose)
     if (HasPendingDisposeObjects())
     {
         Assert(pendingDispose);
-        
+
         // Pending object are not free yet, they don't have memory cleared.
         this->AsFinalizableBlock<TBlockAttributes>()->ForEachPendingDisposeObject([&](uint index) {
-        
+
             uint bitIndex = ((uint)index) * this->GetObjectBitDelta();
             Assert(IsValidBitIndex(bitIndex));
             Assert(!this->GetDebugFreeBitVector()->Test(bitIndex));
@@ -2096,7 +2095,7 @@ SmallHeapBlockT<TBlockAttributes>::AggregateBlockStats(HeapBucketStats& stats, b
     {
         objectCount = blockObjectCount;
 
-        // If this is an allocator block, remove the free objects on the allocator 
+        // If this is an allocator block, remove the free objects on the allocator
         // from this count. Otherwise, remove the free objects found in the free bit vector
         if (freeObjectList)
         {
@@ -2115,7 +2114,7 @@ SmallHeapBlockT<TBlockAttributes>::AggregateBlockStats(HeapBucketStats& stats, b
     }
 
     // If we have a block that's on the allocator, it could also be on the heap block list
-    // In that case, we need to make sure we don't double-count this. To do that, we take out 
+    // In that case, we need to make sure we don't double-count this. To do that, we take out
     // the block's allocatorCount/freeCount and adjust it later when we see the block
     if (isAllocatorBlock)
     {
@@ -2212,10 +2211,10 @@ SmallHeapBlockT<TBlockAttributes>::IsWithBarrier() const
 template class SmallHeapBlockT<SmallAllocationBlockAttributes>;
 template class SmallHeapBlockT<MediumAllocationBlockAttributes>;
 
-#define TBlockTypeAttributes SmallAllocationBlockAttributes  
+#define TBlockTypeAttributes SmallAllocationBlockAttributes
 #include "SmallBlockDeclarations.inl"
 #undef TBlockTypeAttributes
 
-#define TBlockTypeAttributes MediumAllocationBlockAttributes    
+#define TBlockTypeAttributes MediumAllocationBlockAttributes
 #include "SmallBlockDeclarations.inl"
 #undef TBlockTypeAttributes

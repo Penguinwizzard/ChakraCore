@@ -61,7 +61,7 @@ namespace Js
                 headSegmentLength = head->length;
             }
             else if(TypedArrayBase::TryGetLengthForOptimizedTypedArray(base, &headSegmentLength, &arrayTypeId))
-            {                                
+            {
                 bool isVirtual = (VirtualTableInfoBase::GetVirtualTable(base) == ValueType::GetVirtualTypedArrayVtable(arrayTypeId));
                 ldElemInfo.arrayType = ValueType::FromTypeId(arrayTypeId, isVirtual).ToLikely();
             }
@@ -450,14 +450,14 @@ namespace Js
                 profileId,
                 arrayProfileId);
     }
-        
+
     Var ProfilingHelpers::ProfiledNewScObjArraySpread_Jit(
-        const Js::AuxArray<uint32> *spreadIndices, 
-        const Var callee, 
-        void *const framePointer, 
-        const ProfileId profileId, 
-        const ProfileId arrayProfileId, 
-        CallInfo callInfo, 
+        const Js::AuxArray<uint32> *spreadIndices,
+        const Var callee,
+        void *const framePointer,
+        const ProfileId profileId,
+        const ProfileId arrayProfileId,
+        CallInfo callInfo,
         ...)
     {
         ARGUMENTS(args, callInfo);
@@ -587,7 +587,7 @@ namespace Js
         {
             array = JavascriptArray::NewInstance(RecyclableObject::FromVar(callee), args);
         }
-        
+
         return CrossSite::MarshalVar(scriptContext, array);
     }
 
@@ -1218,7 +1218,7 @@ namespace Js
             const bool canInline = functionBody->GetDynamicProfileInfo()->RecordLdFldCallSiteInfo(functionBody, callee, false /*callApplyTarget*/);
             if(canInline)
             {
-                //updates this fldInfoFlags passed by referrence.
+                //updates this fldInfoFlags passed by reference.
                 fldInfoFlags = DynamicProfileInfo::MergeFldInfoFlags(fldInfoFlags, FldInfo_InlineCandidate);
             }
         }
@@ -1237,7 +1237,7 @@ namespace Js
             const bool canInline = functionBody->GetDynamicProfileInfo()->RecordLdFldCallSiteInfo(functionBody, callee, true /*callApplyTarget*/);
             if(canInline)
             {
-                //updates the fldInfoFlags passed by referrence.
+                //updates the fldInfoFlags passed by reference.
                 fldInfoFlags = DynamicProfileInfo::MergeFldInfoFlags(fldInfoFlags, FldInfo_InlineCandidate);
             }
         }

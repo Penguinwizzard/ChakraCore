@@ -25,9 +25,9 @@ bool
 DynamicProfileInfo::NeedProfileInfoList()
 {
 #pragma prefast(suppress: 6235 6286, "(<non-zero constant> || <expression>) is always a non-zero constant. - This is wrong, DBG_DUMP is not set in some build variants")
-    return DBG_DUMP 
+    return DBG_DUMP
 #ifdef DYNAMIC_PROFILE_STORAGE
-        || DynamicProfileStorage::IsEnabled() 
+        || DynamicProfileStorage::IsEnabled()
 #endif
 #ifdef RUNTIME_DATA_COLLECTION
         || (Configuration::Global.flags.RuntimeDataOutputFile != nullptr)
@@ -38,27 +38,27 @@ DynamicProfileInfo::NeedProfileInfoList()
 
 void ArrayCallSiteInfo::SetIsNotNativeIntArray()
 {
-    OUTPUT_TRACE_WITH_STACK(Js::NativeArrayConversionPhase, L"SetIsNotNativeIntArray \n"); 
+    OUTPUT_TRACE_WITH_STACK(Js::NativeArrayConversionPhase, L"SetIsNotNativeIntArray \n");
     bits |= NotNativeIntBit;
 }
 
-void ArrayCallSiteInfo::SetIsNotNativeFloatArray() 
-{ 
-    OUTPUT_TRACE_WITH_STACK(Js::NativeArrayConversionPhase, L"SetIsNotNativeFloatArray \n"); 
-    bits |= NotNativeFloatBit; 
+void ArrayCallSiteInfo::SetIsNotNativeFloatArray()
+{
+    OUTPUT_TRACE_WITH_STACK(Js::NativeArrayConversionPhase, L"SetIsNotNativeFloatArray \n");
+    bits |= NotNativeFloatBit;
 }
 
-void ArrayCallSiteInfo::SetIsNotNativeArray() 
-{ 
-    OUTPUT_TRACE_WITH_STACK(Js::NativeArrayConversionPhase, L"SetIsNotNativeArray \n");   
-    bits = NotNativeIntBit | NotNativeFloatBit; 
+void ArrayCallSiteInfo::SetIsNotNativeArray()
+{
+    OUTPUT_TRACE_WITH_STACK(Js::NativeArrayConversionPhase, L"SetIsNotNativeArray \n");
+    bits = NotNativeIntBit | NotNativeFloatBit;
 }
 
 
 DynamicProfileInfo* DynamicProfileInfo::New(Recycler* recycler, FunctionBody* functionBody, bool persistsAcrossScriptContexts)
 {
     size_t totalAlloc = 0;
-    Allocation batch[] = { 
+    Allocation batch[] = {
         { (uint)offsetof(DynamicProfileInfo, callSiteInfo), functionBody->GetProfiledCallSiteCount() * sizeof(CallSiteInfo) },
         { (uint)offsetof(DynamicProfileInfo, ldElemInfo), functionBody->GetProfiledLdElemCount() * sizeof(LdElemInfo) },
         { (uint)offsetof(DynamicProfileInfo, stElemInfo), functionBody->GetProfiledStElemCount() * sizeof(StElemInfo) },
@@ -72,7 +72,7 @@ DynamicProfileInfo* DynamicProfileInfo::New(Recycler* recycler, FunctionBody* fu
         { (uint)offsetof(DynamicProfileInfo, loopImplicitCallFlags), (EnableImplicitCallFlags(functionBody) ? (functionBody->GetLoopCount() * sizeof(ImplicitCallFlags)) : 0) },
         { (uint)offsetof(DynamicProfileInfo, loopFlags), functionBody->GetLoopCount() ? BVFixed::GetAllocSize(functionBody->GetLoopCount() * LoopFlags::COUNT) : 0 }
     };
-    
+
     for(uint i = 0; i < _countof(batch); i++)
     {
         totalAlloc += batch[i].size;
@@ -81,12 +81,12 @@ DynamicProfileInfo* DynamicProfileInfo::New(Recycler* recycler, FunctionBody* fu
     DynamicProfileInfo* info = nullptr;
 
     // In the profile storage case (-only), always allocate a non-leaf profile
-    // In the regular profile case, we need to allocate it as non-leaf only if it's 
+    // In the regular profile case, we need to allocate it as non-leaf only if it's
     // a profile being used in the in-memory cache. This is because in that case, the profile
     // also allocates dynamicProfileFunctionInfo, which it uses to match functions across
     // script contexts. In the normal case, since we don't allocate that structure, we
     // can be a leaf allocation.
-    if (persistsAcrossScriptContexts) 
+    if (persistsAcrossScriptContexts)
     {
         info = RecyclerNewPlusZ(recycler, totalAlloc, DynamicProfileInfo, functionBody);
 #if DBG
@@ -107,7 +107,7 @@ DynamicProfileInfo* DynamicProfileInfo::New(Recycler* recycler, FunctionBody* fu
         }
     }
     BYTE* current = (BYTE*)info + sizeof(DynamicProfileInfo);
-    
+
     for(uint i = 0; i < _countof(batch); i++)
     {
         if(batch[i].size > 0)
@@ -316,11 +316,11 @@ DynamicProfileInfo::EnsureDynamicProfileInfo(ScriptFunction * function)
     FunctionBody * functionBody = function->GetFunctionBody();
 
     // This is used only if the first entry point codegen completes.
-    // So there is no concurrency concern with background code gen thread modifying the entry point.        
+    // So there is no concurrency concern with background code gen thread modifying the entry point.
     EntryPointInfo * entryPoint = functionBody->GetEntryPointInfo(0);
     Assert(entryPoint == function->GetEntryPointInfo());
     Assert(entryPoint->IsCodeGenDone());
-    
+
     JavascriptMethod directEntryPoint = (JavascriptMethod)entryPoint->address;
 
     // Check if have changed already
@@ -335,7 +335,7 @@ DynamicProfileInfo::EnsureDynamicProfileInfo(ScriptFunction * function)
         {
             directEntryPoint = (JavascriptMethod)entryPoint->GetNativeAddress();
         }
-        
+
         entryPoint->address = directEntryPoint;
     }
     else
@@ -347,7 +347,7 @@ DynamicProfileInfo::EnsureDynamicProfileInfo(ScriptFunction * function)
     return function->UpdateThunkEntryPoint(static_cast<FunctionEntryPointInfo*>(entryPoint), directEntryPoint);
 }
 
-bool 
+bool
 DynamicProfileInfo::hasLdFldCallSiteInfo()
 {
     return bits.hasLdFldCallSite;
@@ -387,7 +387,7 @@ DynamicProfileInfo::RecordLdFldCallSiteInfo(FunctionBody* functionBody, Recyclab
     return false;
 }
 
-void 
+void
 DynamicProfileInfo::RecordConstParameterAtCallSite(ProfileId callSiteId, int argNum)
 {
    Assert(argNum < Js::InlineeCallInfo::MaxInlineeArgoutCount);
@@ -405,7 +405,7 @@ void
 DynamicProfileInfo::RecordCallSiteInfo(FunctionBody* functionBody, ProfileId callSiteId, FunctionInfo* calleeFunctionInfo, JavascriptFunction* calleeFunction, ArgSlot actualArgCount, bool isConstructorCall, InlineCacheIndex ldFldInlineCacheId)
 {
 #if DBG_DUMP || defined(DYNAMIC_PROFILE_STORAGE) || defined(RUNTIME_DATA_COLLECTION)
-    // If we persistsAcrossScriptContext, the dynamic profile info may be refered to by multiple function body from
+    // If we persistsAcrossScriptContext, the dynamic profile info may be referred to by multiple function body from
     // different script context
     Assert(!DynamicProfileInfo::NeedProfileInfoList() || this->persistsAcrossScriptContexts || this->functionBody == functionBody);
 #endif
@@ -419,7 +419,7 @@ DynamicProfileInfo::RecordCallSiteInfo(FunctionBody* functionBody, ProfileId cal
     // mark the callsite bit where caller and callee is same function
     if (functionBody == calleeFunctionInfo && callSiteId < 32)
     {
-        this->m_recursiveInlineInfo = this->m_recursiveInlineInfo | (1 << callSiteId); 
+        this->m_recursiveInlineInfo = this->m_recursiveInlineInfo | (1 << callSiteId);
     }
 
     if (!callSiteInfo[callSiteId].isPolymorphic)
@@ -449,7 +449,7 @@ DynamicProfileInfo::RecordCallSiteInfo(FunctionBody* functionBody, ProfileId cal
             else
             {
                 functionId = CallSiteCrossContext;
-            }   
+            }
         }
         else
         {
@@ -460,8 +460,8 @@ DynamicProfileInfo::RecordCallSiteInfo(FunctionBody* functionBody, ProfileId cal
             {
                 if(functionBody->GetSecondaryHostSourceContext() == calleeFunctionProxy->GetSecondaryHostSourceContext())
                 {
-                    if (functionBody->GetHostSourceContext() == calleeFunctionProxy->GetHostSourceContext()) 
-                    { 
+                    if (functionBody->GetHostSourceContext() == calleeFunctionProxy->GetHostSourceContext())
+                    {
                         sourceId = CurrentSourceId;    // Caller and callee in same file
                     }
                     else
@@ -536,7 +536,7 @@ DynamicProfileInfo::IsPolymorphicCallSite(Js::LocalFunctionId curFunctionId, Js:
 }
 
 
-void 
+void
 DynamicProfileInfo::CreatePolymorphicDynamicProfileCallSiteInfo(FunctionBody *funcBody, ProfileId callSiteId, Js::LocalFunctionId functionId, Js::LocalFunctionId oldFunctionId, Js::SourceId sourceId, Js::SourceId oldSourceId)
 {
         PolymorphicCallSiteInfo *localPolyCallSiteInfo = RecyclerNewStructZ(funcBody->GetScriptContext()->GetRecycler(), PolymorphicCallSiteInfo);
@@ -557,7 +557,7 @@ DynamicProfileInfo::CreatePolymorphicDynamicProfileCallSiteInfo(FunctionBody *fu
         callSiteInfo[callSiteId].u.polymorphicCallSiteInfo = localPolyCallSiteInfo;
         funcBody->SetPolymorphicCallSiteInfoHead(localPolyCallSiteInfo);
 }
-void 
+void
 DynamicProfileInfo::ResetAllPolymorphicCallSiteInfo()
 {
     if (dynamicProfileFunctionInfo)
@@ -572,7 +572,7 @@ DynamicProfileInfo::ResetAllPolymorphicCallSiteInfo()
     }
 }
 
-void 
+void
 DynamicProfileInfo::ResetPolymorphicCallSiteInfo(ProfileId callSiteId, Js::LocalFunctionId functionId)
 {
     callSiteInfo[callSiteId].isPolymorphic = false;
@@ -586,7 +586,7 @@ DynamicProfileInfo::SetFunctionIdSlotForNewPolymorphicCall(ProfileId callSiteId,
 {
     for(int i = 0; i < maxPolymorphicInliningSize; i++)
     {
-        if(callSiteInfo[callSiteId].u.polymorphicCallSiteInfo->functionIds[i] == curFunctionId && 
+        if(callSiteInfo[callSiteId].u.polymorphicCallSiteInfo->functionIds[i] == curFunctionId &&
             callSiteInfo[callSiteId].u.polymorphicCallSiteInfo->sourceIds[i] == curSourceId)
         {
             //we have it already
@@ -602,14 +602,14 @@ DynamicProfileInfo::SetFunctionIdSlotForNewPolymorphicCall(ProfileId callSiteId,
     }
 
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
-    if (Js::Configuration::Global.flags.TestTrace.IsEnabled(Js::PolymorphicInlinePhase)) 
+    if (Js::Configuration::Global.flags.TestTrace.IsEnabled(Js::PolymorphicInlinePhase))
     {
         wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
-        
+
         Output::Print(L"INLINING (Polymorphic): More than 4 functions at this call site \t callSiteId: %d\t calleeFunctionId: %d TopFunc %s (%s)\n",
-                            callSiteId, 
+                            callSiteId,
                             curFunctionId,
-                            inliner->GetDisplayName(), 
+                            inliner->GetDisplayName(),
                             inliner->GetDebugNumberSet(debugStringBuffer)
                             );
         Output::Flush();
@@ -690,10 +690,10 @@ DynamicProfileInfo::GetPolymorphicCallSiteInfo(FunctionBody* functionBody, Profi
             Js::SourceId localSourceId;
             if (!polymorphicCallSiteInfo->GetFunction(i, &localFunctionId, &localSourceId))
             {
-                AssertMsg(i >= 2, "We found atleast two function Body");
+                AssertMsg(i >= 2, "We found at least two function Body");
                 return true;
             }
-    
+
             FunctionBody* matchedFunctionBody;
 
             if (localSourceId == CurrentSourceId)  // caller and callee in same file
@@ -809,7 +809,7 @@ DynamicProfileInfo::GetCallSiteInfo(FunctionBody* functionBody, ProfileId callSi
     return nullptr;
 }
 
-uint 
+uint
 DynamicProfileInfo::GetLdFldCacheIndexFromCallSiteInfo(FunctionBody* functionBody, ProfileId callSiteId)
 {
     Assert(functionBody);
@@ -850,7 +850,7 @@ void DynamicProfileInfo::RecordElementStoreAsProfiled(FunctionBody *const functi
     stElemInfo[stElemId].wasProfiled = true;
 }
 
-ArrayCallSiteInfo * 
+ArrayCallSiteInfo *
 DynamicProfileInfo::GetArrayCallSiteInfo(FunctionBody *functionBody, ProfileId index) const
 {
     Assert(index < functionBody->GetProfiledArrayCallSiteCount());
@@ -906,9 +906,9 @@ void DynamicProfileInfo::RecordDivideResultType(FunctionBody* body, ProfileId di
     divideTypeInfo[divideId] = divideTypeInfo[divideId].Merge(object);
 }
 
-// 
+//
 // We are overloading the value types to store whether it is a mod by power of 2
-// TaggedInt: 
+// TaggedInt:
 __inline
 void DynamicProfileInfo::RecordModulusOpType(FunctionBody* body, ProfileId profileId, bool isModByPowerOf2)
 {
@@ -944,14 +944,14 @@ ValueType DynamicProfileInfo::GetDivideResultType(FunctionBody* body, ProfileId 
 }
 
 __inline
-void 
+void
 DynamicProfileInfo::RecordSwitchType(FunctionBody* body, ProfileId switchId, Var object)
 {
     Assert(switchId < body->GetProfiledSwitchCount());
     switchTypeInfo[switchId] = switchTypeInfo[switchId].Merge(object);
 }
 
-ValueType 
+ValueType
 DynamicProfileInfo::GetSwitchType(FunctionBody* body, ProfileId switchId) const
 {
     Assert(switchId < body->GetProfiledSwitchCount());
@@ -1101,7 +1101,7 @@ void DynamicProfileInfo::UpdateFunctionInfo(FunctionBody* functionBody, Recycler
     this->dynamicProfileFunctionInfo->ldElemInfoCount = functionBody->GetProfiledLdElemCount();
     this->dynamicProfileFunctionInfo->stElemInfoCount = functionBody->GetProfiledStElemCount();
     this->dynamicProfileFunctionInfo->arrayCallSiteCount = functionBody->GetProfiledArrayCallSiteCount();
-    this->dynamicProfileFunctionInfo->fldInfoCount = functionBody->GetProfiledFldCount();    
+    this->dynamicProfileFunctionInfo->fldInfoCount = functionBody->GetProfiledFldCount();
     this->dynamicProfileFunctionInfo->slotInfoCount = functionBody->GetProfiledSlotCount();
 }
 
@@ -1117,7 +1117,7 @@ DynamicProfileInfo::Save(ScriptContext * scriptContext)
 
     if (scriptContext->GetSourceContextInfoMap() == nullptr)
     {
-        // We don't have saveable code
+        // We don't have savable code
         Assert(!scriptContext->GetProfileInfoList() || scriptContext->GetProfileInfoList()->Empty() || scriptContext->GetNoContextSourceContextInfo()->nextLocalFunctionId != 0);
         return;
     }
@@ -1144,7 +1144,7 @@ DynamicProfileInfo::MatchFunctionBody(FunctionBody * functionBody)
         || this->dynamicProfileFunctionInfo->ldElemInfoCount != functionBody->GetProfiledLdElemCount()
         || this->dynamicProfileFunctionInfo->stElemInfoCount != functionBody->GetProfiledStElemCount()
         || this->dynamicProfileFunctionInfo->arrayCallSiteCount != functionBody->GetProfiledArrayCallSiteCount()
-        || this->dynamicProfileFunctionInfo->fldInfoCount != functionBody->GetProfiledFldCount()       
+        || this->dynamicProfileFunctionInfo->fldInfoCount != functionBody->GetProfiledFldCount()
         || this->dynamicProfileFunctionInfo->slotInfoCount != functionBody->GetProfiledSlotCount()
         || this->dynamicProfileFunctionInfo->callSiteInfoCount != functionBody->GetProfiledCallSiteCount()
         || this->dynamicProfileFunctionInfo->returnTypeInfoCount != functionBody->GetProfiledReturnTypeCount()
@@ -1290,7 +1290,7 @@ DynamicProfileInfo::DumpProfiledValue(wchar_t const * name, CallSiteInfo * callS
     }
 }
 
-void 
+void
 DynamicProfileInfo::DumpProfiledValue(wchar_t const * name, ArrayCallSiteInfo * arrayCallSiteInfo, uint count)
 {
     if (count != 0)
@@ -1301,7 +1301,7 @@ DynamicProfileInfo::DumpProfiledValue(wchar_t const * name, ArrayCallSiteInfo * 
         {
             Output::Print(i != 0 && (i % 10) == 0? L"\n                          ": L" ");
             Output::Print(L"%4d:", i);
-            Output::Print(L"  Function Number:  %2d, CallSite Number:  %2d, IsNativeIntArray:  %2d, IsNativeFloatArray:  %2d", 
+            Output::Print(L"  Function Number:  %2d, CallSite Number:  %2d, IsNativeIntArray:  %2d, IsNativeFloatArray:  %2d",
                 arrayCallSiteInfo[i].functionNumber, arrayCallSiteInfo[i].callSiteNumber, !arrayCallSiteInfo[i].isNotNativeInt, !arrayCallSiteInfo[i].isNotNativeFloat);
             Output::Print(L"\n");
         }
@@ -1443,7 +1443,7 @@ DynamicProfileInfo::DumpProfiledValuesGroupedByValue(
     });
 }
 
-void 
+void
 DynamicProfileInfo::DumpFldInfoFlags(wchar_t const * name, FldInfo * fldInfo, uint count, FldInfoFlags value, wchar_t const * valueName)
 {
     bool header = true;
@@ -1529,7 +1529,7 @@ void DynamicProfileInfo::Dump(FunctionBody* functionBody, ArenaAllocator * dynam
     if(Configuration::Global.flags.Verbose)
     {
         DumpProfiledValue(L"Div result type", this->divideTypeInfo, functionBody->GetProfiledDivOrRemCount());
-        DumpProfiledValue(L"Swith opt type", this->switchTypeInfo, functionBody->GetProfiledSwitchCount());
+        DumpProfiledValue(L"Switch opt type", this->switchTypeInfo, functionBody->GetProfiledSwitchCount());
         DumpProfiledValue(L"Param type", this->parameterInfo, paramcount);
         DumpProfiledValue(L"Callsite", this->callSiteInfo, functionBody->GetProfiledCallSiteCount());
         DumpProfiledValue(L"ArrayCallSite", this->arrayCallSiteInfo, functionBody->GetProfiledArrayCallSiteCount());
@@ -1649,12 +1649,12 @@ void DynamicProfileInfo::Dump(FunctionBody* functionBody, ArenaAllocator * dynam
             IsTrueOrFalse( this->bits.disableNoProfileBailouts),
             IsTrueOrFalse( this->bits.disableSwitchOpt),
             IsTrueOrFalse( this->bits.disableEquivalentObjTypeSpec),
-            IsTrueOrFalse( this->bits.disableObjTypeSpec_jitLoopBody)); 
+            IsTrueOrFalse( this->bits.disableObjTypeSpec_jitLoopBody));
     }
 }
 
 void
-DynamicProfileInfo::DumpList(SListBase<DynamicProfileInfo *> * profileInfoList, ArenaAllocator * dynamicProfileInfoAllocator)    
+DynamicProfileInfo::DumpList(SListBase<DynamicProfileInfo *> * profileInfoList, ArenaAllocator * dynamicProfileInfoAllocator)
 {
     AUTO_NESTED_HANDLED_EXCEPTION_TYPE(ExceptionType_DisableCheck);
     if (Configuration::Global.flags.Dump.IsEnabled(DynamicProfilePhase))
@@ -1671,7 +1671,7 @@ DynamicProfileInfo::DumpList(SListBase<DynamicProfileInfo *> * profileInfoList, 
 
     if (Configuration::Global.flags.Dump.IsEnabled(JITLoopBodyPhase) && !Configuration::Global.flags.Dump.IsEnabled(DynamicProfilePhase))
     {
-        FOREACH_SLISTBASE_ENTRY(DynamicProfileInfo *, info, profileInfoList)        
+        FOREACH_SLISTBASE_ENTRY(DynamicProfileInfo *, info, profileInfoList)
         {
             if (info->functionBody->GetLoopCount() > 0)
             {
@@ -1680,7 +1680,7 @@ DynamicProfileInfo::DumpList(SListBase<DynamicProfileInfo *> * profileInfoList, 
                 DumpLoopInfo(info->functionBody);
             }
         }
-        NEXT_SLISTBASE_ENTRY;        
+        NEXT_SLISTBASE_ENTRY;
     }
 
     if (PHASE_STATS1(DynamicProfilePhase))
@@ -1691,8 +1691,8 @@ DynamicProfileInfo::DumpList(SListBase<DynamicProfileInfo *> * profileInfoList, 
         uint callSiteSaved = 0;
         uint elementAccessSaved = 0;
         uint fldAccessSaved = 0;
-        
-        FOREACH_SLISTBASE_ENTRY(DynamicProfileInfo *, info, profileInfoList) 
+
+        FOREACH_SLISTBASE_ENTRY(DynamicProfileInfo *, info, profileInfoList)
         {
             bool hasHotLoop = false;
             if (info->functionBody->DoJITLoopBody())
@@ -1727,17 +1727,17 @@ DynamicProfileInfo::DumpList(SListBase<DynamicProfileInfo *> * profileInfoList, 
                 }
 
                 elementAccessSaved += info->functionBody->GetProfiledLdElemCount() + info->functionBody->GetProfiledStElemCount();
-                fldAccessSaved += info->functionBody->GetProfiledFldCount();                
+                fldAccessSaved += info->functionBody->GetProfiledFldCount();
                 estimatedSavedBytes += (info->functionBody->GetProfiledLdElemCount() + info->functionBody->GetProfiledStElemCount() + 7) / 8; // temp array access
             }
         }
         NEXT_SLISTBASE_ENTRY;
 
-        
+
         if (estimatedSavedBytes != sizeof(uint))
         {
             Output::Print(L"Estimated save size (Memory used): %6d (%6d): %3d %3d %4d %4d %3d\n",
-                estimatedSavedBytes, dynamicProfileInfoAllocator->Size(), functionSaved, loopSaved, callSiteSaved, 
+                estimatedSavedBytes, dynamicProfileInfoAllocator->Size(), functionSaved, loopSaved, callSiteSaved,
                 elementAccessSaved, fldAccessSaved);
         }
     }
@@ -2047,14 +2047,14 @@ DynamicProfileInfo::Deserialize(T * reader, Recycler* recycler, Js::LocalFunctio
         dynamicProfileFunctionInfo->ldElemInfoCount = ldElemInfoCount;
         dynamicProfileFunctionInfo->stElemInfoCount = stElemInfoCount;
         dynamicProfileFunctionInfo->arrayCallSiteCount = arrayCallSiteCount;
-        dynamicProfileFunctionInfo->fldInfoCount = fldInfoCount; 
+        dynamicProfileFunctionInfo->fldInfoCount = fldInfoCount;
         dynamicProfileFunctionInfo->slotInfoCount = slotInfoCount;
         dynamicProfileFunctionInfo->callSiteInfoCount = callSiteInfoCount;
         dynamicProfileFunctionInfo->divCount = divCount;
         dynamicProfileFunctionInfo->switchCount = switchCount;
         dynamicProfileFunctionInfo->returnTypeInfoCount = returnTypeInfoCount;
         dynamicProfileFunctionInfo->loopCount = loopCount;
-        
+
         DynamicProfileInfo * dynamicProfileInfo = RecyclerNew(recycler, DynamicProfileInfo);
         dynamicProfileInfo->dynamicProfileFunctionInfo = dynamicProfileFunctionInfo;
         dynamicProfileInfo->parameterInfo = paramInfo;
@@ -2097,8 +2097,8 @@ template bool DynamicProfileInfo::Serialize<BufferWriter>(BufferWriter*);
 void
 DynamicProfileInfo::UpdateSourceDynamicProfileManagers(ScriptContext * scriptContext)
 {
-    // We don't clear old dynamic data here, because if a function is inlined,it will never go thru the
-    // EnsureDynamicProfileThunk and thus not appear in the list.   We would want to keep those data as well.
+    // We don't clear old dynamic data here, because if a function is inlined,it will never go through the
+    // EnsureDynamicProfileThunk and thus not appear in the list. We would want to keep those data as well.
     // Just save/update the data from function that has execute.
 
     // That means that the data will never go away, probably not a good policy if this is cached for web page
@@ -2111,7 +2111,7 @@ DynamicProfileInfo::UpdateSourceDynamicProfileManagers(ScriptContext * scriptCon
         SourceDynamicProfileManager * sourceDynamicProfileManager = functionBody->GetSourceContextInfo()->sourceDynamicProfileManager;
         sourceDynamicProfileManager->SaveDynamicProfileInfo(functionBody->GetLocalFunctionId(), info);
     }
-    NEXT_SLISTBASE_ENTRY    
+    NEXT_SLISTBASE_ENTRY
 }
 #endif
 
@@ -2193,7 +2193,7 @@ DynamicProfileInfo::DumpScriptContextToFile(ScriptContext * scriptContext)
         });
     }
 
-    FOREACH_SLISTBASE_ENTRY(DynamicProfileInfo *, info, scriptContext->GetProfileInfoList())      
+    FOREACH_SLISTBASE_ENTRY(DynamicProfileInfo *, info, scriptContext->GetProfileInfoList())
     {
         WriteData((byte)1, file);
         WriteData(info->functionBody, file);
@@ -2218,7 +2218,7 @@ DynamicProfileInfo::DumpScriptContextToFile(ScriptContext * scriptContext)
         WriteArray(info->functionBody->GetProfiledCallSiteCount(), info->callSiteInfo, file);
     }
     NEXT_SLISTBASE_ENTRY;
-        
+
     WriteData((byte)0, file);
     fflush(file);
     fclose(file);
@@ -2255,7 +2255,7 @@ void DynamicProfileInfo::InstantiateForceInlinedMembers()
 bool IR::IsTypeCheckBailOutKind(IR::BailOutKind kind)
 {
     IR::BailOutKind kindWithoutBits = kind & ~IR::BailOutKindBits;
-    return 
+    return
         kindWithoutBits == IR::BailOutFailedTypeCheck ||
         kindWithoutBits == IR::BailOutFailedFixedFieldTypeCheck ||
         kindWithoutBits == IR::BailOutFailedEquivalentTypeCheck ||
@@ -2265,7 +2265,7 @@ bool IR::IsTypeCheckBailOutKind(IR::BailOutKind kind)
 bool IR::IsEquivalentTypeCheckBailOutKind(IR::BailOutKind kind)
 {
     IR::BailOutKind kindWithoutBits = kind & ~IR::BailOutKindBits;
-    return 
+    return
         kindWithoutBits == IR::BailOutFailedEquivalentTypeCheck ||
         kindWithoutBits == IR::BailOutFailedEquivalentFixedFieldTypeCheck;
 }
@@ -2300,7 +2300,7 @@ IR::BailOutKind BailOutKindValidBits[] =
 {
 #define BAIL_OUT_KIND(n, bits)               (IR::BailOutKind)bits,
 #define BAIL_OUT_KIND_VALUE_LAST(n, v)
-#define BAIL_OUT_KIND_VALUE(n, v)          
+#define BAIL_OUT_KIND_VALUE(n, v)
 #define BAIL_OUT_KIND_LAST(n)
 #include "BailOutKind.h"
 };
@@ -2478,7 +2478,7 @@ const char* GetBailOutKindName(IR::BailOutKind kind)
         kind ^= BailOutMarkTempObject;
         position += ConcatBailOutKindBits(name, sizeof(name), position, offset);
     }
-    
+
     ++offset;
     // BailOutKindBits
 

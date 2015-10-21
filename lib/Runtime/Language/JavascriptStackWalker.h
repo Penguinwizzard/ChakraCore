@@ -43,7 +43,7 @@ namespace Js
         Js::JavascriptFunction * functionObject;
         Js::CallInfo callInfo;
         Js::Var args[0];
-        Js::ArgumentsObject * GetArgumentsObject() const;        
+        Js::ArgumentsObject * GetArgumentsObject() const;
         Js::Var * GetArgumentsObjectLocation() const;
         void SetArgumentsObject(Js::ArgumentsObject* obj);
         Js::Var* GetArgv() const;
@@ -55,25 +55,25 @@ namespace Js
 
         static JavascriptCallStackLayout *FromFramePointer(void *const framePointer);
         static void* const ToFramePointer(JavascriptCallStackLayout* callstackLayout);
-    private:       
+    private:
         JavascriptCallStackLayout() : callInfo(0) {};
     };
 
     /*
-     * The InlinedFrameStackWalker knows how to walk an inlinee's virtual frames inside a 
-     * physical frame. If the stack walker is in the inlineeFramesBeingWalked mode it 
-     * defers pretty much all functionality to its helpers. The virtual stack frames themselves 
-     * are laid out in the reverse order on the stack. So we do one pass to find out the count of 
-     * frames and another to construct an array of pointers to frames in the correct order 
-     * (top most first like a real stack). Each frame begins with a count. Since frames are laid 
-     * out continuously in memory, this is all the stack walker needs to find the next frame. 
-     * We don't maintain explicit prev, next pointers. We also clear the count field of the frame 
-     * next to the top most frame to indicate that the top most frame is, well, the top most frame. 
-     * Whenever an inlieee's code ends, the count field in its frame gets set to 0 indicating this 
-     * frame isn't valid anymore. This keeps the fast case fast and offloads the heavy lifting 
-     * to the stack walker. 
+     * The InlinedFrameStackWalker knows how to walk an inlinee's virtual frames inside a
+     * physical frame. If the stack walker is in the inlineeFramesBeingWalked mode it
+     * defers pretty much all functionality to its helpers. The virtual stack frames themselves
+     * are laid out in the reverse order on the stack. So we do one pass to find out the count of
+     * frames and another to construct an array of pointers to frames in the correct order
+     * (top most first like a real stack). Each frame begins with a count. Since frames are laid
+     * out continuously in memory, this is all the stack walker needs to find the next frame.
+     * We don't maintain explicit prev, next pointers. We also clear the count field of the frame
+     * next to the top most frame to indicate that the top most frame is, well, the top most frame.
+     * Whenever an inlinee's code ends, the count field in its frame gets set to 0 indicating this
+     * frame isn't valid anymore. This keeps the fast case fast and offloads the heavy lifting
+     * to the stack walker.
      */
-    class InlinedFrameWalker 
+    class InlinedFrameWalker
     {
     public:
         InlinedFrameWalker()
@@ -156,7 +156,7 @@ namespace Js
         friend Js::ScriptContext;
 
     public:
-        JavascriptStackWalker(ScriptContext * scriptContext, bool useEERContext = TRUE /* use leafinterpreterframe of entryexit record*/, PVOID returnAddress = NULL, bool _forceFullWalk = false);
+        JavascriptStackWalker(ScriptContext * scriptContext, bool useEERContext = TRUE /* use leafinterpreterframe of entryexit record */, PVOID returnAddress = NULL, bool _forceFullWalk = false);
         ~JavascriptStackWalker() { inlinedFrameWalker.Close(); }
         BOOL Walk(bool includeInlineFrames = true);
         BOOL GetCaller(JavascriptFunction ** ppFunc, bool includeInlineFrames = true);
@@ -170,12 +170,12 @@ namespace Js
         BOOL IsEvalCaller() const;
         bool IsJavascriptFrame() const { return inlinedFramesBeingWalked || isJavascriptFrame; }
         bool IsInlineFrame() const { return inlinedFramesBeingWalked; }
-        bool IsBailedOutFromInlinee() const 
+        bool IsBailedOutFromInlinee() const
         {
             Assert(this->IsJavascriptFrame() && this->interpreterFrame);
             return IsInlineFrame();
         }
-        bool IsBailedOutFromFunction() const 
+        bool IsBailedOutFromFunction() const
         {
             Assert(this->IsJavascriptFrame() && this->interpreterFrame);
             return !!JavascriptFunction::IsNativeAddress(this->scriptContext, this->currentFrame.GetInstructionPointer());
@@ -200,7 +200,7 @@ namespace Js
             Assert(this->IsJavascriptFrame());
             return interpreterFrame;
         }
-        
+
         bool GetSourcePosition(const WCHAR** sourceFileName, ULONG* line, LONG* column);
 
         static bool TryIsTopJavaScriptFrameNative(ScriptContext* scriptContext, bool* istopFrameNative, bool ignoreLibraryCode = false);
@@ -304,7 +304,7 @@ namespace Js
         void SetCurrentArgumentsObject(Var args);
         Var GetCurrentNativeArgumentsObject() const;
         void SetCurrentNativeArgumentsObject(Var args);
-        
+
         void *lastInternalFrameAddress;
         InternalFrameType lastInternalFrameType;
         InternalFrameType lastInternalLoopBodyFrameType;

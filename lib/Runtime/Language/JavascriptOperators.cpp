@@ -178,7 +178,7 @@ namespace Js
         }
 
         // Fix callInfo: expect result/value, and none of other flags are currently applicable.
-        //   OP_ApplyArgs expects a result. Neither of {jit, intereted} mode sends correct callFlags:
+        //   OP_ApplyArgs expects a result. Neither of {jit, interpreted} mode sends correct callFlags:
         //   LdArgCnt -- jit sends whatever was passed to current function, interpreter always sends 0.
         //   See Win8 bug 490489.
         callInfo.Flags = CallFlags_Value;
@@ -669,7 +669,7 @@ Redo:
             break;
 
         // we cannot do double conversion between 2 int64 numbers as we can get wrong result after conversion
-        // ie, two different numbers become the same after losing precision. We'll continue dbl comparision
+        // i.e., two different numbers become the same after losing precision. We'll continue dbl comparison
         // if either number is not an int64 number.
         case TypeIds_UInt64Number:
             {
@@ -2300,7 +2300,7 @@ CommonNumber:
                     JavascriptError::ThrowCantAssignIfStrictMode(propertyOperationFlags, requestContext);
                     return FALSE;
                 }
-            } 
+            }
             else if (!JavascriptOperators::IsObject(receiver))
             {
                 JavascriptError::ThrowCantAssignIfStrictMode(propertyOperationFlags, requestContext);
@@ -2577,7 +2577,7 @@ CommonNumber:
     template<bool unscopables>
     BOOL JavascriptOperators::DeleteProperty_Impl(RecyclableObject* instance, PropertyId propertyId, PropertyOperationFlags propertyOperationFlags)
     {
-        
+
         if (unscopables && JavascriptOperators::IsPropertyUnscopable(instance, propertyId))
         {
             return false;
@@ -2591,7 +2591,7 @@ CommonNumber:
         }
 #endif
          // !unscopables will hit the return statement on the first iteration
-         return instance->DeleteProperty(propertyId, propertyOperationFlags);    
+         return instance->DeleteProperty(propertyId, propertyOperationFlags);
     }
 
     Var JavascriptOperators::OP_DeleteProperty(Var instance, PropertyId propertyId, ScriptContext* scriptContext, PropertyOperationFlags propertyOperationFlags)
@@ -3021,8 +3021,8 @@ CommonNumber:
         // TODO: Perf optimization: If IsStringTypeHandler is true, convert indexVal to string instead of PropertyRecord and let
         // type handler decide whether to turn it into a string or not.  Perf is gained if PropertyRecords are avoided altogether
         // when dealing with a string based type handler.
-        bool createIfNotFound = (DynamicType::Is(object->GetTypeId()) && 
-            static_cast<DynamicObject*>(object)->GetTypeHandler()->IsStringTypeHandler()) || 
+        bool createIfNotFound = (DynamicType::Is(object->GetTypeId()) &&
+            static_cast<DynamicObject*>(object)->GetTypeHandler()->IsStringTypeHandler()) ||
             JavascriptProxy::Is(object);
         if (GetIndexType(index, scriptContext, &indexVal, &propertyRecord, createIfNotFound) == IndexType_Number)
         {
@@ -4145,7 +4145,7 @@ CommonNumber:
             }
 
             JavascriptError::ThrowTypeError(scriptContext, JSERR_Property_CannotSet_NullOrUndefined, GetPropertyDisplayNameForError(index, scriptContext));
-        } 
+        }
 
         return JavascriptOperators::SetElementIHelper(instance, object, index, value, scriptContext, flags);
     }
@@ -5097,7 +5097,7 @@ CommonNumber:
         }
 #endif
         JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_OBJECT(instance));
-        // can't autoproxy here as object literal is not exactly "new" object and cannot be intercepted as proxy.
+        // can't auto-proxy here as object literal is not exactly "new" object and cannot be intercepted as proxy.
         return instance;
     }
 
@@ -5597,7 +5597,7 @@ CommonNumber:
 
         if (JavascriptProxy::Is(function))
         {
-            // We can still call into NewScObjectNoCtor variations in JIT code for performance; however for proxy we dont
+            // We can still call into NewScObjectNoCtor variations in JIT code for performance; however for proxy we don't
             // really need the new object as the trap will handle the "this" pointer separately. pass back nullptr to ensure
             // failure in invalid case.
             return  nullptr;
@@ -5630,7 +5630,7 @@ CommonNumber:
         {
             // If we are calling new on a class constructor, the contract is that we pass new.target as the 'this' argument.
             // function is the constructor on which we called new - which is new.target.
-            // If we are trying to construct the object for a base class constructor as part of a super call, we should not 
+            // If we are trying to construct the object for a base class constructor as part of a super call, we should not
             // store new.target in the 'this' argument.
             return function;
         }
@@ -5994,7 +5994,7 @@ CommonNumber:
     void JavascriptOperators::TraceUseConstructorCache(const ConstructorCache* ctorCache, const JavascriptFunction* ctor, bool isHit)
     {
 #if DBG_DUMP
-        // We are under debug, so we can incurr the extra check here.
+        // We are under debug, so we can incur the extra check here.
         FunctionProxy* ctorBody = ctor->GetFunctionProxy();
         if (ctorBody != nullptr && !ctorBody->GetScriptContext()->IsClosed())
         {
@@ -6358,7 +6358,7 @@ CommonNumber:
 
         if (scriptContext->GetConfig()->Is__proto__Enabled())
         {
-            // B.3.1    __proto___ Property Names in Object Initialisers
+            // B.3.1    __proto___ Property Names in Object Initializers
             //6.If propKey is the string value "__proto__" and if isComputedPropertyName(propKey) is false, then
             //    a.If Type(v) is either Object or Null, then
             //        i.Return the result of calling the [[SetInheritance]] internal method of object with argument propValue.
@@ -6392,7 +6392,7 @@ CommonNumber:
 
         argumentsObject = argumentsObject->ConvertToUnmappedArgumentsObject();
 
-        // Now as the unmapping is done we need to fill those frame object with undecl
+        // Now as the unmapping is done we need to fill those frame object with Undecl
         for (i = 0; i < formalsCount; i++)
         {
             frameObject->SetSlot(SetSlotArguments(propIds != nullptr ? propIds->elements[i] : Js::Constants::NoProperty, i, scriptContext->GetLibrary()->GetUndeclBlockVar()));
@@ -6425,8 +6425,8 @@ CommonNumber:
         if (propIds != nullptr)
         {
             ActivationObject* frameObject = (ActivationObject*)frameObj;
-            // No fixed fields for formal parameters of the arguments object.  Also, mark all fields as inititalized up-front, because
-            // we will set them directly using SetSlot below, so the type handler will not have a chance to mark them as intitialized later.
+            // No fixed fields for formal parameters of the arguments object.  Also, mark all fields as initialized up-front, because
+            // we will set them directly using SetSlot below, so the type handler will not have a chance to mark them as initialized later.
             // TODO (jedmiad): When we delay type sharing until the second instance is created, pass an argument indicating we want the types
             // and handlers created here to be marked as shared up-front. This is to ensure we don't get any fixed fields and that the handler
             // is ready for storing values directly to slots.
@@ -6678,7 +6678,7 @@ CommonNumber:
         RecyclableObject * ctor = RecyclableObject::FromVar(constructor);
 
         // This is a circular reference to the constructor, it associate the constructor with the class and also allows us to check if a
-        // function is a construcor by comparing the homeObj to the this pointer. see ScriptFunction::IsClassConstructor() for implementation
+        // function is a constructor by comparing the homeObj to the this pointer. see ScriptFunction::IsClassConstructor() for implementation
         JavascriptOperators::OP_SetHomeObj(constructor, constructor);
 
         if (extends)
@@ -7261,7 +7261,7 @@ CommonNumber:
         if (TELEMETRY_PROPERTY_OPCODE_FILTER(propertyId))
         {
             // `successful` will be true as PatchGetMethod throws an exception if not found.
-            scriptContext->GetTelemetry().GetOpcodeTelemetry().GetMethodProperty(object, propertyId, value, /*succesful:*/ true);
+            scriptContext->GetTelemetry().GetOpcodeTelemetry().GetMethodProperty(object, propertyId, value, /*successful:*/ true);
         }
 #endif
         return value;
@@ -8106,7 +8106,7 @@ CommonNumber:
 
                         // It is valid for some objects to not-support getters and setters, specifically, for projection of an ABI method
                         // (CustomExternalObject => MapWithStringKey) which SetAccessors returns VBSErr_ActionNotSupported.
-                        // But for non-extenal objects SetAccessors should succeed.
+                        // But for non-external objects SetAccessors should succeed.
                         Assert(isSetAccessorsSuccess || obj->CanHaveInterceptors());
 
                         // If SetAccessors failed, the property wasn't created, so no need to change the attributes.
@@ -8148,14 +8148,14 @@ CommonNumber:
             }
         }
 
-        // Whether to merge attrbiutes from tempDescriptor into descriptor to keep original values
+        // Whether to merge attributes from tempDescriptor into descriptor to keep original values
         // of some attributes from the object/use tempDescriptor for SetAttributes, or just use descriptor.
         // This is optimization to avoid 2 calls to SetAttributes.
         bool mergeDescriptors = false;
 
-        // Whether to call SetAttributes with 'force' flag which forces setting all attrbiutes
+        // Whether to call SetAttributes with 'force' flag which forces setting all attributes
         // rather than only specified or which have true values.
-        // This is to make sure that the object has correct attrbiutes, as default values in the object are not for ES5.
+        // This is to make sure that the object has correct attributes, as default values in the object are not for ES5.
         bool forceSetAttributes = false;
 
         PropertyDescriptor tempDescriptor;
@@ -8184,7 +8184,7 @@ CommonNumber:
 
                         // It is valid for some objects to not-support getters and setters, specifically, for projection of an ABI method
                         // (CustomExternalObject => MapWithStringKey) which SetAccessors returns VBSErr_ActionNotSupported.
-                        // But for non-extenal objects SetAccessors should succeed.
+                        // But for non-external objects SetAccessors should succeed.
                         Assert(isSetAccessorsSuccess || obj->CanHaveInterceptors());
 
                         if (isSetAccessorsSuccess)
@@ -8200,7 +8200,7 @@ CommonNumber:
                         // Preserve the existing values of the converted property's [[Configurable]] and [[Enumerable]] attributes
                         // and set the rest of the property's attributes to their default values.
                         // Note: avoid using SetProperty/SetPropertyWithAttributes here because they has undesired side-effects:
-                        //       it calls previous setter and in some cases of attrbute values throws.
+                        //       it calls previous setter and in some cases of attribute values throws.
                         //       To walk around, call DeleteProperty and then AddProperty.
                         PropertyAttributes preserveFromObject = currentDescriptor->GetAttributes() & (PropertyConfigurable | PropertyEnumerable);
 
@@ -8547,7 +8547,7 @@ CommonNumber:
         {
             descriptor->SetEnumerable(JavascriptConversion::ToBoolean(value, scriptContext) ? true : false);
         }
-      
+
         if (JavascriptOperators::GetProperty(propertySpecObj, PropertyIds::configurable, &value, scriptContext))
         {
             descriptor->SetConfigurable(JavascriptConversion::ToBoolean(value, scriptContext) ? true : false);
@@ -8932,7 +8932,7 @@ CommonNumber:
             CallFlags flags = CallFlags_Value;
             Var putValue = value;
 
-            // TODO: we should have requestContext everywhere, even in the setproperty related codepath. It's too big a change at this time. Let me
+            // TODO: we should have requestContext everywhere, even in the setProperty related codepath. It's too big a change at this time. Let me
             // fix this for now and have the separate change going in parallel.
             if (requestContext)
             {
@@ -8984,7 +8984,7 @@ CommonNumber:
         // If we're not shutting down (as in closing the script context), we need to remove our inline caches from
         // thread context's invalidation lists, and release memory back to the arena.  During script context shutdown,
         // we leave everything in place, because the inline cache arena will stay alive until script context is destroyed
-        // (as in destructor has been called) and thus the invadation lists are safe to keep references to caches from this
+        // (as in destructor has been called) and thus the invalidation lists are safe to keep references to caches from this
         // script context.  We will, however, zero all inline caches so that we don't have to process them on subsequent
         // collections, which may still happen from other script contexts.
         if (isShutdown)
@@ -9035,7 +9035,7 @@ CommonNumber:
 
     JavascriptString * JavascriptOperators::Concat3(Var aLeft, Var aCenter, Var aRight, ScriptContext * scriptContext)
     {
-        // Make sure we do the concversion in order from left to right
+        // Make sure we do the conversion in order from left to right
         JavascriptString * strLeft = JavascriptConversion::ToPrimitiveString(aLeft, scriptContext);
         JavascriptString * strCenter = JavascriptConversion::ToPrimitiveString(aCenter, scriptContext);
         JavascriptString * strRight = JavascriptConversion::ToPrimitiveString(aRight, scriptContext);
@@ -9045,7 +9045,7 @@ CommonNumber:
     JavascriptString *
     JavascriptOperators::NewConcatStrMulti(Var a1, Var a2, uint count, ScriptContext * scriptContext)
     {
-        // Make sure we do the concversion in order
+        // Make sure we do the conversion in order
         JavascriptString * str1 = JavascriptConversion::ToPrimitiveString(a1, scriptContext);
         JavascriptString * str2 = JavascriptConversion::ToPrimitiveString(a2, scriptContext);
         return ConcatStringMulti::New(count, str1, str2, scriptContext);
@@ -9284,7 +9284,7 @@ CommonNumber:
 #if !FLOATVAR
             return JavascriptNumber::BoxStackInstance(instance, scriptContext);
 #endif
-            // Fall thru for FLOATVAR
+            // fall-through
         case Js::TypeIds_Integer:
             return instance;
         case Js::TypeIds_RegEx:
@@ -9405,7 +9405,7 @@ CommonNumber:
             {
                 element = GetElementAtIndex(arrayObject, i, scriptContext);
                 AnalysisAssert((i + 1) * sizeof(int8) <= allocSize);
-                ((int8*)buffer)[i] = Js::JavascriptConversion::ToInt8(element, scriptContext);                
+                ((int8*)buffer)[i] = Js::JavascriptConversion::ToInt8(element, scriptContext);
             }
             break;
         case JsUint8Type:
@@ -9414,7 +9414,7 @@ CommonNumber:
             {
                 element = GetElementAtIndex(arrayObject, i, scriptContext);
                 AnalysisAssert((i + 1) * sizeof(uint8) <= allocSize);
-                ((uint8*)buffer)[i] = Js::JavascriptConversion::ToUInt8(element, scriptContext);                
+                ((uint8*)buffer)[i] = Js::JavascriptConversion::ToUInt8(element, scriptContext);
             }
             break;
         case JsInt16Type:
@@ -9423,7 +9423,7 @@ CommonNumber:
             {
                 element = GetElementAtIndex(arrayObject, i, scriptContext);
                 AnalysisAssert((i + 1) * sizeof(int16) <= allocSize);
-                ((int16*)buffer)[i] = Js::JavascriptConversion::ToInt16(element, scriptContext);                
+                ((int16*)buffer)[i] = Js::JavascriptConversion::ToInt16(element, scriptContext);
             }
             break;
         case JsUint16Type:
@@ -9432,7 +9432,7 @@ CommonNumber:
             {
                 element = GetElementAtIndex(arrayObject, i, scriptContext);
                 AnalysisAssert((i + 1) * sizeof(uint16) <= allocSize);
-                ((uint16*)buffer)[i] = Js::JavascriptConversion::ToUInt16(element, scriptContext);                
+                ((uint16*)buffer)[i] = Js::JavascriptConversion::ToUInt16(element, scriptContext);
             }
             break;
         case JsInt32Type:
@@ -9441,7 +9441,7 @@ CommonNumber:
             {
                 element = GetElementAtIndex(arrayObject, i, scriptContext);
                 AnalysisAssert((i + 1) * sizeof(int32) <= allocSize);
-                ((int32*)buffer)[i] = Js::JavascriptConversion::ToInt32(element, scriptContext);                
+                ((int32*)buffer)[i] = Js::JavascriptConversion::ToInt32(element, scriptContext);
             }
             break;
         case JsUint32Type:
@@ -9450,7 +9450,7 @@ CommonNumber:
             {
                 element = GetElementAtIndex(arrayObject, i, scriptContext);
                 AnalysisAssert((i + 1) * sizeof(uint32) <= allocSize);
-                ((uint32*)buffer)[i] = Js::JavascriptConversion::ToUInt32(element, scriptContext);                
+                ((uint32*)buffer)[i] = Js::JavascriptConversion::ToUInt32(element, scriptContext);
             }
             break;
         case JsInt64Type:
@@ -9459,7 +9459,7 @@ CommonNumber:
             {
                 element = GetElementAtIndex(arrayObject, i, scriptContext);
                 AnalysisAssert((i + 1) * sizeof(int64) <= allocSize);
-                ((int64*)buffer)[i] = Js::JavascriptConversion::ToInt64(element, scriptContext);                
+                ((int64*)buffer)[i] = Js::JavascriptConversion::ToInt64(element, scriptContext);
             }
             break;
         case JsUint64Type:
@@ -9468,7 +9468,7 @@ CommonNumber:
             {
                 element = GetElementAtIndex(arrayObject, i, scriptContext);
                 AnalysisAssert((i + 1) * sizeof(uint64) <= allocSize);
-                ((uint64*)buffer)[i] = Js::JavascriptConversion::ToUInt64(element, scriptContext);                
+                ((uint64*)buffer)[i] = Js::JavascriptConversion::ToUInt64(element, scriptContext);
             }
             break;
         case JsFloatType:
@@ -9477,7 +9477,7 @@ CommonNumber:
             {
                 element = GetElementAtIndex(arrayObject, i, scriptContext);
                 AnalysisAssert((i + 1) * sizeof(float) <= allocSize);
-                ((float*)buffer)[i] = Js::JavascriptConversion::ToFloat(element, scriptContext);                
+                ((float*)buffer)[i] = Js::JavascriptConversion::ToFloat(element, scriptContext);
             }
             break;
         case JsDoubleType:
@@ -9486,7 +9486,7 @@ CommonNumber:
             {
                 element = GetElementAtIndex(arrayObject, i, scriptContext);
                 AnalysisAssert((i + 1) * sizeof(double) <= allocSize);
-                ((double*)buffer)[i] = Js::JavascriptConversion::ToNumber(element, scriptContext);                
+                ((double*)buffer)[i] = Js::JavascriptConversion::ToNumber(element, scriptContext);
             }
             break;
         case JsNativeStringType:
@@ -9497,7 +9497,7 @@ CommonNumber:
                 AnalysisAssert((i + 1) * sizeof(JsNativeString) <= allocSize);
                 Js::JavascriptString* string = Js::JavascriptConversion::ToString(element, scriptContext);
                 (((JsNativeString*)buffer)[i]).str = string->GetSz();
-                (((JsNativeString*)buffer)[i]).length = string->GetLength();                
+                (((JsNativeString*)buffer)[i]).length = string->GetLength();
             }
             break;
         default:
@@ -9867,7 +9867,7 @@ CommonNumber:
         }
 
         return JavascriptNumber::ToVarNoCheck(JavascriptConversion::ToNumber_Full(aRight, scriptContext), scriptContext);
-    }    
+    }
 
     BOOL JavascriptOperators::IsObject(Var aValue)
     {

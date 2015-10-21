@@ -57,7 +57,7 @@ template <class TBlockType>
 size_t
 SmallFinalizableHeapBucketBaseT<TBlockType>::GetNonEmptyHeapBlockCount(bool checkCount) const
 {
-    size_t currentHeapBlockCount =  __super::GetNonEmptyHeapBlockCount(false) 
+    size_t currentHeapBlockCount =  __super::GetNonEmptyHeapBlockCount(false)
         + HeapBlockList::Count(pendingDisposeList)
         + HeapBlockList::Count(tempPendingDisposeList);
     RECYCLER_SLOW_CHECK(Assert(!checkCount || heapBlockCount == currentHeapBlockCount));
@@ -110,7 +110,7 @@ template<class TBlockType>
 template<bool pageheap>
 void
 SmallFinalizableHeapBucketBaseT<TBlockType>::Sweep(RecyclerSweep& recyclerSweep)
-{    
+{
     Assert(!recyclerSweep.IsBackground());
 
 #if DBG || defined(RECYCLER_SLOW_CHECK_ENABLED)
@@ -137,7 +137,7 @@ SmallFinalizableHeapBucketBaseT<TBlockType>::Sweep(RecyclerSweep& recyclerSweep)
             Assert(false);
         }
 #endif
-        
+
         HeapBucketT<TBlockType>::SweepHeapBlockList<pageheap>(recyclerSweep, currentDisposeList, false);
 
 #if DBG || defined(RECYCLER_SLOW_CHECK_ENABLED)
@@ -146,13 +146,13 @@ SmallFinalizableHeapBucketBaseT<TBlockType>::Sweep(RecyclerSweep& recyclerSweep)
 #endif
         RECYCLER_SLOW_CHECK(this->VerifyHeapBlockCount(recyclerSweep.IsBackground()));
     });
-    
+
 }
 
 template <class TBlockType>
 void
 SmallFinalizableHeapBucketBaseT<TBlockType>::DisposeObjects()
-{    
+{
     HeapBlockList::ForEach(this->pendingDisposeList, [](TBlockType * heapBlock)
     {
         Assert(heapBlock->HasAnyDisposeObjects());
@@ -185,7 +185,7 @@ SmallFinalizableHeapBucketBaseT<TBlockType>::TransferDisposedObjects()
         {
             // In pageheap mode, we can't reuse the empty blocks since they are not close enough to the guard page
             // treat it as full and ready to be released
-            
+
             HeapBlockList::Tail(currentPendingDisposeList)->SetNextBlock(this->fullBlockList);
             this->fullBlockList = currentPendingDisposeList;
         }
@@ -193,7 +193,7 @@ SmallFinalizableHeapBucketBaseT<TBlockType>::TransferDisposedObjects()
 #endif
         {
             // For partial collect, dispose will modify the object, and we
-            // also touch the page by chainng the object thru the free list
+            // also touch the page by chaining the object through the free list
             // might as well reuse the block for partial collect
             this->AppendAllocableHeapBlockList(currentPendingDisposeList);
         }

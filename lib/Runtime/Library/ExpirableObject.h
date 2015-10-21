@@ -6,7 +6,7 @@ class ThreadContext;
 
 class ExpirableObject: public FinalizableObject
 {
-public:    
+public:
     friend class ThreadContext;
     ExpirableObject(ThreadContext* threadContext);
 
@@ -14,7 +14,7 @@ public:
 
     virtual void Dispose(bool isShutdown) override;
 
-    virtual void Mark(Recycler *recycler) override { AssertMsg(false, "Mark called on object that isnt TrackableObject"); }
+    virtual void Mark(Recycler *recycler) override { AssertMsg(false, "Mark called on object that isn't TrackableObject"); }
 
     // Called when an expirable object gets expired
     virtual void Expire() = 0;

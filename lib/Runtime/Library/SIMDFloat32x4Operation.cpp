@@ -22,7 +22,7 @@ namespace Js
     }
 
     SIMDValue SIMDFloat32x4Operation::OpFloat32x4(const SIMDValue& v)
-    { // overload function with input paramter as SIMDValue for completeness
+    { // overload function with input parameter as SIMDValue for completeness
         SIMDValue result;
 
         result = v;
@@ -132,7 +132,7 @@ namespace Js
     {
         SIMDValue result;
 
-        result.f32[SIMD_X] = (float)(1.0 / (value.f32[SIMD_X])); 
+        result.f32[SIMD_X] = (float)(1.0 / (value.f32[SIMD_X]));
         result.f32[SIMD_Y] = (float)(1.0 / (value.f32[SIMD_Y]));
         result.f32[SIMD_Z] = (float)(1.0 / (value.f32[SIMD_Z]));
         result.f32[SIMD_W] = (float)(1.0 / (value.f32[SIMD_W]));
@@ -362,7 +362,7 @@ namespace Js
     }
 
     SIMDValue SIMDFloat32x4Operation::OpClamp(const SIMDValue& value, const SIMDValue& lower, const SIMDValue& upper)
-    { 
+    {
         SIMDValue result;
 
         // lower clamp

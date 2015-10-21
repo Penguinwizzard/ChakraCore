@@ -160,7 +160,7 @@ namespace Js
             JavascriptError::ThrowTypeError(scriptContext, JSERR_NeedArrayBufferObject);
         }
 
-        
+
         ArrayBuffer* newArrayBuffer = ArrayBuffer::FromVar(args[1]);
         if (newArrayBuffer->IsDetached() || newArrayBuffer->GetByteLength() & 0xffffff || newArrayBuffer->GetByteLength() <= 0xffffff || newArrayBuffer->GetByteLength() > 0x80000000)
         {
@@ -219,7 +219,7 @@ namespace Js
         argDst = argDst + MachPtr; // add one first so as to skip the ScriptFunction argument
         for (uint i = 0; i < info->GetArgCount(); i++)
         {
-            
+
             if (info->GetArgType(i).isInt())
             {
                 int32 intVal;
@@ -231,10 +231,10 @@ namespace Js
                 {
                     intVal = 0;
                 }
-                
+
                 *(int64*)(argDst) = 0;
                 *(int32*)argDst = intVal;
-                
+
                 argDst = argDst + MachPtr;
             }
             else if (info->GetArgType(i).isFloat())
@@ -250,7 +250,7 @@ namespace Js
                 }
                 *(int64*)(argDst) = 0;
                 *(float*)argDst = floatVal;
-                argDst = argDst + MachPtr;;
+                argDst = argDst + MachPtr;
             }
             else if (info->GetArgType(i).isDouble())
             {
@@ -300,7 +300,7 @@ namespace Js
                     Assert(UNREACHED);
                 }
                 *(AsmJsSIMDValue*)argDst = simdVal;
-                argDst = argDst + sizeof(AsmJsSIMDValue); 
+                argDst = argDst + sizeof(AsmJsSIMDValue);
             }
             ++origArgs;
         }
@@ -561,7 +561,7 @@ namespace Js
             }
                 returnValue = JavascriptSIMDFloat32x4::New(&simdVal, func->GetScriptContext());
                 break;
-            
+
         case AsmJsRetType::Float64x2:
             simdVal.Zero();
             __asm

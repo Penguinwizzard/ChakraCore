@@ -4,7 +4,7 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
-// Note: this file is to work around linker unresolved extenals WRT templatized types.
+// Note: this file is to work around linker unresolved externals WRT templatized types.
 //       It's better than putting function bodies in .h file because bodies depend on other classes, such as ScriptContext,
 //       for which normally only forward declarations would be available in .h file.
 //       The reason why these are available in .inl is because .inl files are included in the very end in Runtime.h.
@@ -36,7 +36,7 @@ namespace Js
     /////////////////////// ConcatStringN //////////////////////////
 
     template<int N>
-    ConcatStringN<N>::ConcatStringN(StaticType* stringTypeStatic, bool doZeroSlotsAndLength) : 
+    ConcatStringN<N>::ConcatStringN(StaticType* stringTypeStatic, bool doZeroSlotsAndLength) :
         ConcatStringBase(stringTypeStatic)
     {
         Assert(stringTypeStatic);
@@ -89,9 +89,9 @@ namespace Js
 
     template<wchar_t L, wchar_t R>
     ConcatStringWrapping<L, R>::ConcatStringWrapping(JavascriptString* inner) :
-        ConcatStringBase(inner->GetLibrary()->GetStringTypeStatic()),     
+        ConcatStringBase(inner->GetLibrary()->GetStringTypeStatic()),
         m_inner(CompoundString::GetImmutableOrScriptUnreferencedString(inner))
-    {        
+    {
         this->SetLength(inner->GetLength() + 2); // does not include null character
     }
 
@@ -102,7 +102,7 @@ namespace Js
         //return RecyclerNew(recycler, ConcatStringWrapping<L, R>, inner);
         // Expand the RecyclerNew macro as it breaks for more than one template arguments.
 #ifdef TRACK_ALLOC
-        return new (recycler->TrackAllocInfo(TrackAllocData::CreateTrackAllocData(typeid(ConcatStringWrapping<L, R>), 0, (size_t)-1, __FILE__, __LINE__)), 
+        return new (recycler->TrackAllocInfo(TrackAllocData::CreateTrackAllocData(typeid(ConcatStringWrapping<L, R>), 0, (size_t)-1, __FILE__, __LINE__)),
             &Recycler::Alloc) ConcatStringWrapping<L, R>(inner);
 #else
         return new (recycler, &Recycler::Alloc) ConcatStringWrapping<L, R>(inner);
@@ -111,7 +111,7 @@ namespace Js
 
     template<wchar_t L, wchar_t R>
     inline const wchar_t * ConcatStringWrapping<L, R>::GetSz()
-    {        
+    {
         const wchar_t * sz = GetSzImpl<ConcatStringWrapping>();
         m_inner = nullptr;
         memset(m_slots, 0, sizeof(m_slots));
@@ -120,18 +120,18 @@ namespace Js
 
     template<wchar_t L, wchar_t R>
     inline JavascriptString* ConcatStringWrapping<L, R>::GetFirstItem() const
-    { 
+    {
         Assert(m_inner);
-        wchar_t lBuf[2] = { L, '\0' }; 
-        return this->GetLibrary()->CreateStringFromCppLiteral(lBuf); 
+        wchar_t lBuf[2] = { L, '\0' };
+        return this->GetLibrary()->CreateStringFromCppLiteral(lBuf);
     }
 
     template<wchar_t L, wchar_t R>
     inline JavascriptString* ConcatStringWrapping<L, R>::GetLastItem() const
-    { 
+    {
         Assert(m_inner);
-        wchar_t rBuf[2] = { R, '\0' }; 
-        return this->GetLibrary()->CreateStringFromCppLiteral(rBuf); 
+        wchar_t rBuf[2] = { R, '\0' };
+        return this->GetLibrary()->CreateStringFromCppLiteral(rBuf);
     }
-    
+
 } // namespace Js.

@@ -183,7 +183,7 @@ public:
 GlobOpt::GlobOpt(Func * func)
     : func(func),
     intConstantToStackSymMap(nullptr),
-    intConstantToValueMap(nullptr),    
+    intConstantToValueMap(nullptr),
     currentValue(FirstNewValueNumber),
     prePassLoop(nullptr),
     alloc(nullptr),
@@ -301,11 +301,11 @@ GlobOpt::Optimize()
 
         // The forward passes uses info (upwardExposedUses) from the backwards pass.  This info
         // isn't available for some of the symbols created during the backward pass, or the forward pass.
-        // Keep track of the last symbol for which we're guaranteeed to have data.
+        // Keep track of the last symbol for which we're guaranteed to have data.
         this->maxInitialSymID = this->func->m_symTable->GetMaxSymID();
         this->BackwardPass(Js::BackwardPhase);
         this->ForwardPass();
-    } 
+    }
     this->BackwardPass(Js::DeadStorePhase);
     this->TailDupPass();
 }
@@ -324,7 +324,7 @@ bool GlobOpt::ShouldExpectConventionalArrayIndexValue(IR::IndirOpnd *const indir
     {
         // Typically, single-def or any sym-specific information for type-specialized syms should not be used because all of
         // their defs will not have been accounted for until after the forward pass. But m_isNotInt is only ever changed from
-        // false to true, so it's ok in this case.
+        // false to true, so it's okay in this case.
         return false;
     }
 
@@ -413,7 +413,7 @@ ValueType GlobOpt::GetDivValueType(IR::Instr* instr, Value* src1Val, Value* src2
         return ValueType::Number;
     }
     if (src2IntConstantValue     // Avoid divide by zero
-        && !(src1IntConstantValue == 0x80000000 && src2IntConstantValue == -1)  // Avoid interger overflow
+        && !(src1IntConstantValue == 0x80000000 && src2IntConstantValue == -1)  // Avoid integer overflow
         && (src1IntConstantValue % src2IntConstantValue) != 0)
     {
         return ValueType::Float;
@@ -436,15 +436,15 @@ GlobOpt::ForwardPass()
         this->TraceSettings();
     }
 #endif
-    
+
     // GetConstantCount() is gives us the right size to pick for the SparseArray, but we may need more if we've inlined
     // functions with constants.  There will be a gap in the symbol numbering between the main constants and
     // the inlined ones, so we'll most likely need a new array chunk.  Make the min size of the array chunks be 64
-    // in case we have a main function with very few constants and a bunch of constanst from inlined functions.
+    // in case we have a main function with very few constants and a bunch of constants from inlined functions.
     this->byteCodeConstantValueArray = SparseArray<Value>::New(this->alloc, max((int)this->func->GetJnFunction()->GetConstantCount(), 64));
     this->byteCodeConstantValueNumbersBv = JitAnew(this->alloc, BVSparse<JitArenaAllocator>, this->alloc);
     this->tempBv = JitAnew(this->alloc, BVSparse<JitArenaAllocator>, this->alloc);
-    this->prePassCopyPropSym = JitAnew(this->alloc, BVSparse<JitArenaAllocator>, this->alloc);;
+    this->prePassCopyPropSym = JitAnew(this->alloc, BVSparse<JitArenaAllocator>, this->alloc);
     this->byteCodeUses = nullptr;
     this->propertySymUse = nullptr;
 #if DBG
@@ -464,7 +464,7 @@ GlobOpt::ForwardPass()
     IntConstantToValueMap localIntConstantToValueMap(alloc);
     this->intConstantToValueMap = &localIntConstantToValueMap;
     AddrConstantToValueMap localAddrConstantToValueMap(alloc);
-    this->addrConstantToValueMap = &localAddrConstantToValueMap;    
+    this->addrConstantToValueMap = &localAddrConstantToValueMap;
     StringConstantToValueMap localStringConstantToValueMap(alloc);
     this->stringConstantToValueMap = &localStringConstantToValueMap;
     SymIdToInstrMap localPrePassInstrMap(alloc);
@@ -492,7 +492,7 @@ GlobOpt::ForwardPass()
     this->noImplicitCallUsesToInsert = nullptr;
     this->intConstantToStackSymMap = nullptr;
     this->intConstantToValueMap = nullptr;
-    this->addrConstantToValueMap = nullptr;   
+    this->addrConstantToValueMap = nullptr;
     this->stringConstantToValueMap = nullptr;
 #if DBG
     this->finishedStackLiteralInitFld = nullptr;
@@ -563,7 +563,7 @@ GlobOpt::OptBlock(BasicBlock *block)
 
     this->currentBlock = block;
     PrepareLoopArrayCheckHoist();
-    
+
     this->MergePredBlocksValueMaps(block);
 
     this->intOverflowCurrentlyMattersInRange = true;
@@ -1195,7 +1195,7 @@ GlobOpt::MergePredBlocksValueMaps(BasicBlock *block)
         // SIMD_JS
         // Simd128 type-spec syms
         BVSparse<JitArenaAllocator> tempBv2(this->tempAlloc);
-        
+
         // For syms we made alive in loop header because of hoisting, use-before-def, or def in Loop body, set their valueInfo to definite.
         // Made live on header AND in one of forceSimd128* or likelySimd128* vectors.
         tempBv->Or(loop->likelySimd128F4SymsUsedBeforeDefined, loop->symsDefInLoop);
@@ -1311,11 +1311,11 @@ GlobOpt::MergePredBlocksValueMaps(BasicBlock *block)
         tempBv4.Minus(this->blockData.liveFloat64Syms, pred->globOptData.liveFloat64Syms);
 
         bool symIVNeedsSpecializing = (symIV && !pred->globOptData.liveInt32Syms->Test(symIV->m_id) && !tempBv3.Test(symIV->m_id));
-        
+
         // SIMD_JS
         simd128F4SymsToUnbox.Minus(this->blockData.liveSimd128F4Syms, pred->globOptData.liveSimd128F4Syms);
         simd128I4SymsToUnbox.Minus(this->blockData.liveSimd128I4Syms, pred->globOptData.liveSimd128I4Syms);
-        
+
 
         if (!this->tempBv->IsEmpty() ||
             !tempBv2.IsEmpty() ||
@@ -1341,7 +1341,7 @@ GlobOpt::MergePredBlocksValueMaps(BasicBlock *block)
                 BasicBlock *airlockBlock = nullptr;
                 if (!orgPred)
                 {
-                    GOPT_TRACE(L"Inserting airlock block to convert syms to var between block block %d and %d\n",
+                    GOPT_TRACE(L"Inserting airlock block to convert syms to var between block %d and %d\n",
                         pred->GetBlockNum(), block->GetBlockNum());
                     airlockBlock = this->func->m_fg->InsertAirlockBlock(edge);
                 }
@@ -1406,7 +1406,7 @@ GlobOpt::MergePredBlocksValueMaps(BasicBlock *block)
         BasicBlock *pred = edge->GetPred();
         if (!block->isLoopHeader || block->loop != pred->loop)
         {
-            //skip airlock compensation block as we are not going to walk this block. 
+            //skip airlock compensation block as we are not going to walk this block.
             if (pred->isAirLockCompensationBlock)
             {
                 pred->DecrementDataUseCount();
@@ -1456,7 +1456,7 @@ GlobOpt::MergePredBlocksValueMaps(BasicBlock *block)
 
         loop->simd128I4SymsOnEntry = JitAnew(this->alloc, BVSparse<JitArenaAllocator>, this->alloc);
         loop->simd128I4SymsOnEntry->Copy(block->globOptData.liveSimd128I4Syms);
-        
+
 
         loop->liveFieldsOnEntry = JitAnew(this->alloc, BVSparse<JitArenaAllocator>, this->alloc);
         loop->liveFieldsOnEntry->Copy(block->globOptData.liveFields);
@@ -1505,7 +1505,7 @@ GlobOpt::NulloutBlockData(GlobOptBlockData *data)
     data->availableIntBoundChecks = nullptr;
     data->callSequence = nullptr;
     data->startCallCount = 0;
-    data->argOutCount = 0;    
+    data->argOutCount = 0;
     data->totalOutParamCount = 0;
     data->inlinedArgOutCount = 0;
     data->hasCSECandidates = false;
@@ -1535,7 +1535,7 @@ GlobOpt::InitBlockData()
     // SIMD_JS
     data->liveSimd128F4Syms = JitAnew(alloc, BVSparse<JitArenaAllocator>, alloc);
     data->liveSimd128I4Syms = JitAnew(alloc, BVSparse<JitArenaAllocator>, alloc);
-    
+
     data->hoistableFields = nullptr;
     data->argObjSyms = JitAnew(alloc, BVSparse<JitArenaAllocator>, alloc);
     data->maybeTempObjectSyms = nullptr;
@@ -1551,7 +1551,7 @@ GlobOpt::InitBlockData()
     data->maybeWrittenTypeSyms = nullptr;
     data->callSequence = nullptr;
     data->startCallCount = 0;
-    data->argOutCount = 0;    
+    data->argOutCount = 0;
     data->totalOutParamCount = 0;
     data->inlinedArgOutCount = 0;
     data->hasCSECandidates = false;
@@ -1580,7 +1580,7 @@ GlobOpt::ReuseBlockData(GlobOptBlockData *toData, GlobOptBlockData *fromData)
     // SIMD_JS
     toData->liveSimd128F4Syms = fromData->liveSimd128F4Syms;
     toData->liveSimd128I4Syms = fromData->liveSimd128I4Syms;
-    
+
     if (TrackHoistableFields())
     {
         toData->hoistableFields = fromData->hoistableFields;
@@ -1627,7 +1627,7 @@ GlobOpt::CopyBlockData(GlobOptBlockData *toData, GlobOptBlockData *fromData)
     // SIMD_JS
     toData->liveSimd128F4Syms = fromData->liveSimd128F4Syms;
     toData->liveSimd128I4Syms = fromData->liveSimd128I4Syms;
-    
+
     toData->hoistableFields = fromData->hoistableFields;
     toData->argObjSyms = fromData->argObjSyms;
     toData->maybeTempObjectSyms = fromData->maybeTempObjectSyms;
@@ -1746,11 +1746,11 @@ void GlobOpt::CloneBlockData(BasicBlock *const toBlock, GlobOptBlockData *const 
     toData->hasCSECandidates = fromData->hasCSECandidates;
 
     // Although we don't need the data on loop pre pass, we need to do it for the loop header
-    // because we cature the loop header bailout on loop prepass
+    // because we capture the loop header bailout on loop prepass
     if (fromData->stackLiteralInitFldDataMap != nullptr &&
         (!this->IsLoopPrePass() || (toBlock->isLoopHeader && toBlock->loop == this->rootLoopPrePass)))
     {
-        toData->stackLiteralInitFldDataMap = fromData->stackLiteralInitFldDataMap->Clone();        
+        toData->stackLiteralInitFldDataMap = fromData->stackLiteralInitFldDataMap->Clone();
     }
     else
     {
@@ -1955,12 +1955,12 @@ GlobOpt::MergeBlockData(
         BVSparse<JitArenaAllocator> simdSymsToVar(this->tempAlloc);
         {
             // SIMD_JS
-            // If we have simd128 type-spec sym live as one type on one side, but not of same type on the other, we look at the merged ValueType. 
+            // If we have simd128 type-spec sym live as one type on one side, but not of same type on the other, we look at the merged ValueType.
             // If it's Likely the simd128 type, we choose to keep the type-spec sym (compensate with a FromVar), if the following is true:
-            // 1. We are not in jitLoopBody:   Introducing a FromVar for compensation extends bytecode syms lifetime. If the value is actually dead, and we enter the loop-body after bailing out from SimpleJit, the value will not be restored in the bailout code. 
+            // 1. We are not in jitLoopBody:   Introducing a FromVar for compensation extends bytecode syms lifetime. If the value is actually dead, and we enter the loop-body after bailing out from SimpleJit, the value will not be restored in the bailout code.
             // 2. Value was never Undefined/Null: Avoid unboxing of possibly uninitialized values.
             // 3. Not loop back-edge. To keep unboxed value, the value has to be used-before def in the loop-body. This is done separately in forceSimd128*SymsOnEntry and included in loop-header.
-            
+
             // Live syms as F4 on one edge only
             tempBv1.Xor(fromData->liveSimd128F4Syms, toData->liveSimd128F4Syms);
             FOREACH_BITSET_IN_SPARSEBV(id, &tempBv1)
@@ -1971,10 +1971,10 @@ GlobOpt::MergeBlockData(
                 ValueInfo * valueInfo = value ? value->GetValueInfo() : nullptr;
 
                 // There are two possible representations for Simd128F4 Value: F4 or Var.
-                // If the merged ValueType is LikelySimd128F4, then on the edge where F4 is dead,  Var must be alive. 
+                // If the merged ValueType is LikelySimd128F4, then on the edge where F4 is dead,  Var must be alive.
                 // Unbox to F4 type-spec sym.
                 if (
-                    valueInfo && valueInfo->IsLikelySimd128Float32x4() && 
+                    valueInfo && valueInfo->IsLikelySimd128Float32x4() &&
                     !valueInfo->HasBeenUndefined() && !valueInfo->HasBeenNull() &&
                     !isLoopBackEdge && !func->IsLoopBody()
                    )
@@ -2002,7 +2002,7 @@ GlobOpt::MergeBlockData(
                 Value *const value = this->FindValue(toData->symToValueMap, stackSym);
                 ValueInfo * valueInfo = value ? value->GetValueInfo() : nullptr;
                 if (
-                    valueInfo && valueInfo->IsLikelySimd128Int32x4() && 
+                    valueInfo && valueInfo->IsLikelySimd128Int32x4() &&
                     !valueInfo->HasBeenUndefined() && !valueInfo->HasBeenNull() &&
                     !isLoopBackEdge && !func->IsLoopBody()
                    )
@@ -2170,21 +2170,21 @@ GlobOpt::MergeBlockData(
     Assert(toData->totalOutParamCount == fromData->totalOutParamCount);
     Assert(toData->inlinedArgOutCount == fromData->inlinedArgOutCount);
 
-    // stackLiteralInitFldDataMap is a union of the the stack literal from two path
+    // stackLiteralInitFldDataMap is a union of the stack literal from two path
     // Although we don't need the data on loop pre pass, we need to do it for the loop header
-    // because we cature the loop header bailout on loop prepass
-    if (fromData->stackLiteralInitFldDataMap != nullptr && 
+    // because we capture the loop header bailout on loop prepass
+    if (fromData->stackLiteralInitFldDataMap != nullptr &&
         (!this->IsLoopPrePass() || (toBlock->isLoopHeader && toBlock->loop == this->rootLoopPrePass)))
     {
         if (toData->stackLiteralInitFldDataMap == nullptr)
-        {            
+        {
             toData->stackLiteralInitFldDataMap = fromData->stackLiteralInitFldDataMap->Clone();
         }
         else
         {
             StackLiteralInitFldDataMap * toMap = toData->stackLiteralInitFldDataMap;
             fromData->stackLiteralInitFldDataMap->Map([toMap](StackSym * stackSym, StackLiteralInitFldData const& data)
-            {                
+            {
                 if (toMap->AddNew(stackSym, data) == -1)
                 {
                     // If there is an existing data for the stackSym, both path should match
@@ -2192,7 +2192,7 @@ GlobOpt::MergeBlockData(
                     Assert(toMap->TryGetReference(stackSym, &currentData));
                     Assert(currentData->currentInitFldCount == data.currentInitFldCount);
                     Assert(currentData->propIds == data.propIds);
-                }               
+                }
             });
         }
     }
@@ -2217,11 +2217,11 @@ GlobOpt::DeleteBlockData(GlobOptBlockData *data)
     JitAdelete(alloc, data->liveInt32Syms);
     JitAdelete(alloc, data->liveLossyInt32Syms);
     JitAdelete(alloc, data->liveFloat64Syms);
-    
+
     // SIMD_JS
     JitAdelete(alloc, data->liveSimd128F4Syms);
     JitAdelete(alloc, data->liveSimd128I4Syms);
-    
+
     if (data->hoistableFields)
     {
         JitAdelete(alloc, data->hoistableFields);
@@ -2242,7 +2242,7 @@ GlobOpt::DeleteBlockData(GlobOptBlockData *data)
     {
         Assert(!data->canStoreTempObjectSyms);
     }
-    
+
     JitAdelete(alloc, data->valuesToKillOnCalls);
 
     if(data->inductionVariables)
@@ -2339,7 +2339,7 @@ GlobOpt::ToTypeSpec(BVSparse<JitArenaAllocator> *bv, BasicBlock *block, IRType t
         }
         else if (block->globOptData.liveFloat64Syms->Test(id))
         {
-        
+
             fromType = TyFloat64;
             stackSym = stackSym->GetFloat64EquivSym(this->func);
         }
@@ -2357,7 +2357,7 @@ GlobOpt::ToTypeSpec(BVSparse<JitArenaAllocator> *bv, BasicBlock *block, IRType t
                 stackSym = stackSym->GetSimd128I4EquivSym(this->func);
             }
         }
-        
+
 
         IR::RegOpnd *newOpnd = IR::RegOpnd::New(stackSym, fromType, this->func);
         IR::Instr *lastInstr = block->GetLastInstr();
@@ -2459,7 +2459,7 @@ GlobOpt::CleanUpValueMaps()
                 {
                     // Make sure the type sym is added to the dead syms vector as well, because type syms are
                     // created in backward pass and so their symIds > maxIntitialSymID. Perhaps we could remove
-                    // it explicitly here, but would it work ok with the iterator?
+                    // it explicitly here, but would it work alright with the iterator?
                     if (sym->IsStackSym() && sym->AsStackSym()->HasObjectTypeSym())
                     {
                         deadSymsBv.Set(sym->AsStackSym()->GetObjectTypeSym()->m_id);
@@ -2616,8 +2616,8 @@ GlobOpt::CleanUpValueMaps()
 
 PRECandidatesList * GlobOpt::FindBackEdgePRECandidates(BasicBlock *block, JitArenaAllocator *alloc)
 {
-    // Iterate over the value table looking for propertySyms which are candidates to 
-    // pre-load in the landing pad for for field PRE
+    // Iterate over the value table looking for propertySyms which are candidates to
+    // pre-load in the landing pad for field PRE
 
     GlobHashTable *valueTable = block->globOptData.symToValueMap;
     Loop *loop = block->loop;
@@ -2707,7 +2707,7 @@ PRECandidatesList * GlobOpt::FindBackEdgePRECandidates(BasicBlock *block, JitAre
 
 PRECandidatesList * GlobOpt::RemoveUnavailableCandidates(BasicBlock *block, PRECandidatesList *candidates, JitArenaAllocator *alloc)
 {
-    // In case of multiple back-edges to the loop, make sure the canditates are still valid 
+    // In case of multiple back-edges to the loop, make sure the candidates are still valid
     FOREACH_SLIST_ENTRY_EDITING(GlobHashBucket*, candidate, (SList<GlobHashBucket*>*)candidates, iter)
     {
         Value *candidateValue = candidate->element;
@@ -2972,7 +2972,7 @@ void GlobOpt::FieldPRE(Loop *loop)
 void GlobOpt::InsertCloneStrs(BasicBlock *toBlock, GlobOptBlockData *toData, GlobOptBlockData *fromData)
 {
     if (toBlock->isLoopHeader   // isLoopBackEdge
-        && toBlock->cloneStrCandidates 
+        && toBlock->cloneStrCandidates
         && !IsLoopPrePass())
     {
         Loop *loop = toBlock->loop;
@@ -3032,7 +3032,7 @@ void GlobOpt::InsertCloneStrs(BasicBlock *toBlock, GlobOptBlockData *toData, Glo
 #if !DBG
 __inline // only one hot call site, many args
 #endif
-void 
+void
 GlobOpt::MergeValueMaps(
     GlobOptBlockData *toData,
     BasicBlock *toBlock,
@@ -3114,7 +3114,7 @@ GlobOpt::MergeValueMaps(
         if (isLoopPrepass && !this->rootLoopPrePass->allFieldsKilled)
         {
             while (iter2.IsValid())
-            {                
+            {
                 iter2.Next();
             }
         }
@@ -3390,7 +3390,7 @@ JsTypeValueInfo* GlobOpt::MergeJsTypeValueInfo(JsTypeValueInfo * toValueInfo, Js
     // On loop back edges we must be conservative and only consider type values which are invariant throughout the loop.
     // That's because in dead store pass we can't correctly track object pointer assignments (o = p), and we may not
     // be able to register correct type checks for the right properties upstream.  If we ever figure out how to enhance
-    // the dead store pass to track this info we could go more agressively, as below.
+    // the dead store pass to track this info we could go more aggressively, as below.
     if (isLoopBackEdge && !sameValueNumber)
     {
         return nullptr;
@@ -3864,7 +3864,7 @@ GlobOpt::OptArguments(IR::Instr *instr)
 
     if (instr->m_opcode == Js::OpCode::LdHeapArguments || instr->m_opcode == Js::OpCode::LdLetHeapArguments)
     {
-        //Stackargs optimization is designed to work with only when function doesn't have formals.
+        // Stackargs optimization is designed to work with only when function doesn't have formals.
         if (instr->m_func->GetJnFunction()->GetInParamsCount() != 1)
         {
 #ifdef PERF_HINT
@@ -3879,7 +3879,7 @@ GlobOpt::OptArguments(IR::Instr *instr)
         return;
     }
     // Keep track of arguments objects and its aliases
-    // LdHeapArguments loads the arguments object and Ld_A trackes the aliases.
+    // LdHeapArguments loads the arguments object and Ld_A tracks the aliases.
     if ((instr->m_opcode == Js::OpCode::Ld_A || instr->m_opcode == Js::OpCode::BytecodeArgOutCapture) && (src1->IsRegOpnd() && IsArgumentsOpnd(src1)))
     {
         // In the debug mode, we don't want to optimize away the aliases. Since we may have to show them on the inspection.
@@ -3897,11 +3897,11 @@ GlobOpt::OptArguments(IR::Instr *instr)
 
     if (!TestAnyArgumentsSym())
     {
-        //There are no sym to track yet, don't start tracking arguments sym.
+        // There are no sym to track yet, don't start tracking arguments sym.
         return;
     }
 
-    //Avoid loop prepass
+    // Avoid loop prepass
     if (this->currentBlock->loop && this->IsLoopPrePass())
     {
         return;
@@ -3917,7 +3917,7 @@ GlobOpt::OptArguments(IR::Instr *instr)
             IR::RegOpnd *indexOpnd = src1->AsIndirOpnd()->GetIndexOpnd();
             if (indexOpnd && IsArgumentsSymID(indexOpnd->m_sym->m_id, this->blockData))
             {
-                //Pathalogical test cases such as a[arguments]
+                // Pathological test cases such as a[arguments]
                 CannotAllocateArgumentsObjectOnStack();
                 return;
             }
@@ -3942,19 +3942,19 @@ GlobOpt::OptArguments(IR::Instr *instr)
         }
     case Js::OpCode::ArgOut_A_InlineBuiltIn:
     {
-        if (IsArgumentsOpnd(src1) && 
+        if (IsArgumentsOpnd(src1) &&
             src1->AsRegOpnd()->m_sym->GetInstrDef()->m_opcode == Js::OpCode::BytecodeArgOutCapture)
         {
             // Apply inlining results in such usage - this is really hack to ignore this sym that is def'd by ByteCodeArgOutCapture
             // It's needed because we do not have block level merging of arguments object and this def due to inlining can turn off stack args opt.
             IR::Instr* builtinStart = instr->GetNextRealInstr();
             if (builtinStart->m_opcode == Js::OpCode::InlineBuiltInStart)
-            {   
+            {
                 IR::Opnd* builtinOpnd = builtinStart->GetSrc1();
                 if (builtinStart->GetSrc1()->IsAddrOpnd())
                 {
                     Assert(builtinOpnd->AsAddrOpnd()->m_isFunction);
-                    
+
                     Js::BuiltinFunction builtinFunction = Js::JavascriptLibrary::GetBuiltInForFuncInfo(((Js::JavascriptFunction*)builtinOpnd->AsAddrOpnd()->m_address)->GetFunctionInfo(), func->GetScriptContext());
                     if (builtinFunction == Js::BuiltinFunction::Function_Apply)
                     {
@@ -3981,7 +3981,7 @@ GlobOpt::OptArguments(IR::Instr *instr)
     default:
         {
             // Super conservative here, if we see the arguments or any of its alias being used in any
-            // other opcode just don't do this optimization. TODO: Revist this to optimize further if we see any common
+            // other opcode just don't do this optimization. TODO: Revisit this to optimize further if we see any common
             // case is missed.
 
             if (src1)
@@ -4198,6 +4198,7 @@ GlobOpt::IsAllowedForMemOpt(IR::Instr* instr, IR::RegOpnd *baseOpnd, IR::Opnd *i
         }
     }
 
+    // Process the Index Operand
     if (!this->OptIsInvariant(baseOpnd, this->currentBlock, loop, this->FindValue(baseOpnd->m_sym), false, true))
     {
         TRACE_MEMOP_VERBOSE(loop, instr, L"Base (s%d) is not invariant", GetVarSymID(baseOpnd->GetStackSym()));
@@ -4309,7 +4310,7 @@ bool GlobOpt::CollectMemsetStElementI(IR::Instr *instr, Loop *loop)
     {
         return false;
     }
-    // Process the Index Operand 
+    // Process the Index Operand
 
     Assert(indexOp->GetStackSym());
     SymID inductionSymID = GetVarSymID(indexOp->GetStackSym());
@@ -4390,7 +4391,7 @@ bool GlobOpt::CollectMemcopyStElementI(IR::Instr *instr, Loop *loop)
         return false;
     }
 
-    // todo:: remove count? 
+    // todo:: remove count?
     memcopyInfo->count++;
     memcopyInfo->base = baseSymID;
 
@@ -4423,7 +4424,7 @@ bool GlobOpt::CollectMemOpInfo(IR::Instr *instr, Value *src1Val, Value *src2Val)
 
     if (!loop->blockList.HasTwo())
     {
-        //  We support memcopy and memset for loops which have only two blocks. 
+        //  We support memcopy and memset for loops which have only two blocks.
         return false;
     }
 
@@ -4594,7 +4595,7 @@ GlobOpt::OptInstr(IR::Instr *&instr, bool* isInstrRemoved)
     Value *src1Val = nullptr, *src2Val = nullptr, *dstVal = nullptr;
     Value *src1IndirIndexVal = nullptr, *dstIndirIndexVal = nullptr;
     IR::Instr *instrPrev = instr->m_prev;
-    IR::Instr *instrNext = instr->m_next;   
+    IR::Instr *instrNext = instr->m_next;
 
     if (instr->IsLabelInstr() && this->func->HasTry() && this->func->DoOptimizeTryCatch())
     {
@@ -4650,14 +4651,14 @@ GlobOpt::OptInstr(IR::Instr *&instr, bool* isInstrRemoved)
     src2 = instr->GetSrc2();
 
     if (src1)
-    {        
-        src1Val = this->OptSrc(src1, &instr, &src1IndirIndexVal);       
-        
+    {
+        src1Val = this->OptSrc(src1, &instr, &src1IndirIndexVal);
+
         instr = this->SetTypeCheckBailOut(instr->GetSrc1(), instr, nullptr);
 
         if (src2)
-        {            
-            src2Val = this->OptSrc(src2, &instr);            
+        {
+            src2Val = this->OptSrc(src2, &instr);
         }
     }
     if(instr->GetDst() && instr->GetDst()->IsIndirOpnd())
@@ -4669,7 +4670,7 @@ GlobOpt::OptInstr(IR::Instr *&instr, bool* isInstrRemoved)
     CSEOptimize(this->currentBlock, &instr, &src1Val, &src2Val, &src1IndirIndexVal);
     OptArraySrc(&instr);
     OptNewScObject(&instr, src1Val);
-    
+
 
     instr = this->OptPeep(instr, src1Val, src2Val);
 
@@ -4685,7 +4686,7 @@ GlobOpt::OptInstr(IR::Instr *&instr, bool* isInstrRemoved)
             this->InsertByteCodeUses(instr);
         }
         *isInstrRemoved = true;
-        this->currentBlock->RemoveInstr(instr);        
+        this->currentBlock->RemoveInstr(instr);
         return instrNext;
     }
     else if (instr->m_opcode == Js::OpCode::GetNewScObject && src1Val->GetValueInfo()->IsPrimitive())
@@ -4705,9 +4706,9 @@ GlobOpt::OptInstr(IR::Instr *&instr, bool* isInstrRemoved)
     else if (instr->m_opcode == Js::OpCode::BrOnException)
     {
         // BrOnException was added to model flow from try region to the catch region to assist
-        // the backward pass in propagating bytecode upward exposed info from the catch block 
-        // to the try, and to handle break blocks. Removing it here as it has served its purpose 
-        // and keeping it around might also have unintended effects while merging block data for 
+        // the backward pass in propagating bytecode upward exposed info from the catch block
+        // to the try, and to handle break blocks. Removing it here as it has served its purpose
+        // and keeping it around might also have unintended effects while merging block data for
         // the catch block's predecessors.
         // NOTE that the Deadstore pass will still be able to propagate bytecode upward exposed info
         // because it doesn't skip dead blocks for that.
@@ -4774,7 +4775,7 @@ GlobOpt::OptInstr(IR::Instr *&instr, bool* isInstrRemoved)
     }
 
     // Track calls after any pre-op bailouts have been inserted before the call, because they will need to restore out params
-    // we dont inline in asmjs and hence we dont need to track calls in asmjs too, skipping this step for asmjs
+    // we don't inline in asmjs and hence we don't need to track calls in asmjs too, skipping this step for asmjs
     if (!GetIsAsmJSFunc())
     {
         this->TrackCalls(instr);
@@ -4792,7 +4793,7 @@ GlobOpt::OptInstr(IR::Instr *&instr, bool* isInstrRemoved)
         CopyPropDstUses(dst, instr, src1Val);
     }
 
-    // Track mark temp oject before we process the dst so we can generate pre op bailout
+    // Track mark temp object before we process the dst so we can generate pre op bailout
     instr = this->TrackMarkTempObject(instrPrev->m_next, instr);
 
     bool removed = OptTagChecks(instr);
@@ -4815,7 +4816,7 @@ GlobOpt::OptInstr(IR::Instr *&instr, bool* isInstrRemoved)
         instr = this->SetTypeCheckBailOut(dst, instr, nullptr);
         this->UpdateObjPtrValueType(dst, instr);
     }
-    
+
     BVSparse<JitArenaAllocator> instrByteCodeStackSymUsedAfter(this->alloc);
     PropertySym *propertySymUseAfter = nullptr;
     if (this->byteCodeUses != nullptr)
@@ -4889,7 +4890,7 @@ GlobOpt::OptInstr(IR::Instr *&instr, bool* isInstrRemoved)
             // We can't have a byte code reg slot as dst to generate a
             // pre-op implicit call after we have process the dst
 
-            // TREVIEW: this might miss an oppurtunity to use a copy prop sym to restore
+            // TREVIEW: this might miss an opportunity to use a copy prop sym to restore
             // some other byte code reg if the dst is that copy prop that we already killed
             Assert(!instr->GetDst()
                 || !instr->GetDst()->IsRegOpnd()
@@ -4965,7 +4966,7 @@ bool GlobOpt::OptTagChecks(IR::Instr *instr)
                 return true;
             }
 
-            if (valueType.CanBeTaggedValue() && 
+            if (valueType.CanBeTaggedValue() &&
                 !valueType.HasBeenNumber() &&
                 (this->IsLoopPrePass() || !this->currentBlock->loop))
             {
@@ -5011,7 +5012,7 @@ bool GlobOpt::OptTagChecks(IR::Instr *instr)
 bool GlobOpt::TypeSpecializeBailoutExpectedInteger(IR::Instr* instr, Value* src1Val, Value** dstVal)
 {
     bool isAlreadyTypeSpecialized = false;
-        
+
     if(instr->GetSrc1()->IsRegOpnd())
     {
         if (!src1Val || !src1Val->GetValueInfo()->IsLikelyInt() || instr->GetSrc1()->AsRegOpnd()->m_sym->m_isNotInt)
@@ -5022,7 +5023,7 @@ bool GlobOpt::TypeSpecializeBailoutExpectedInteger(IR::Instr* instr, Value* src1
 
         //Attach the BailOutExpectingInteger to FromVar and Remove the bail out info on the Ld_A (Begin Switch) instr.
         this->ToTypeSpecUse(instr, instr->GetSrc1(), this->currentBlock, src1Val, nullptr, TyInt32, IR::BailOutExpectingInteger, false, instr);
-                                
+
         //TypeSpecialize the dst of Ld_A
         TypeSpecializeIntDst(instr, instr->m_opcode, src1Val, src1Val, nullptr, IR::BailOutInvalid, IntConstMin, IntConstMax, dstVal);
         isAlreadyTypeSpecialized = true;
@@ -5272,10 +5273,10 @@ void GlobOpt::SetLoopFieldInitialValue(Loop *loop, IR::Instr *instr, PropertySym
         return;
     }
 
-    // If this initial value was already added, we would find in in the current value table.
+    // If this initial value was already added, we would find in the current value table.
     Assert(!loop->initialValueFieldMap.TryGetValue(propertySym, &initialValue));
 
-       
+
     // If propertySym is live in landingPad, we don't need an initial value.
     if (loop->landingPad->globOptData.liveFields->Test(propertySym->m_id))
     {
@@ -5299,7 +5300,7 @@ void GlobOpt::SetLoopFieldInitialValue(Loop *loop, IR::Instr *instr, PropertySym
     Assert(!profiledValueType.IsDefinite()); // hence the values created here don't need to be tracked for kills
     initialValue = this->NewGenericValue(profiledValueType, propertySym);
     symStore = StackSym::New(this->func);
-        
+
     initialValue->GetValueInfo()->SetSymStore(symStore);
     loop->initialValueFieldMap.Add(propertySym, initialValue->Copy(this->alloc, initialValue->GetValueNumber()));
 
@@ -5312,7 +5313,7 @@ void GlobOpt::SetLoopFieldInitialValue(Loop *loop, IR::Instr *instr, PropertySym
 #if DBG_DUMP
     if (PHASE_TRACE(Js::FieldPREPhase, this->func))
     {
-        Output::Print(L"** TRACE:  Field PRE initial value for loop head #%d. Val:%d symStore:", 
+        Output::Print(L"** TRACE:  Field PRE initial value for loop head #%d. Val:%d symStore:",
             loop->GetHeadBlock()->GetBlockNum(), initialValue->GetValueNumber());
         symStore->Dump();
         Output::Print(L"\n    Instr: ");
@@ -5443,8 +5444,8 @@ GlobOpt::OptSrc(IR::Opnd *opnd, IR::Instr * *pInstr, Value **indirIndexValRef, I
             objectValue ? objectValue->GetValueInfo()->Type() : ValueType::Uninitialized);
 
         if (!FieldHoistOptSrc(opnd->AsSymOpnd(), instr, originalPropertySym))
-        {            
-            sym = this->CopyPropPropertySymObj(opnd->AsSymOpnd(), instr);                   
+        {
+            sym = this->CopyPropPropertySymObj(opnd->AsSymOpnd(), instr);
 
             // REVIEW: this doesn't detect hoistability of a property sym after object pointer copy prop
             // on loop prepass.  But if it so happened that the property sym is hoisted, we might as well do so
@@ -5480,8 +5481,8 @@ GlobOpt::OptSrc(IR::Opnd *opnd, IR::Instr * *pInstr, Value **indirIndexValRef, I
                 {
                     return nullptr;
                 }
-                    
-                
+
+
 
                 if (this->IsLoopPrePass() && this->DoFieldPRE(this->rootLoopPrePass))
                 {
@@ -5500,7 +5501,7 @@ GlobOpt::OptSrc(IR::Opnd *opnd, IR::Instr * *pInstr, Value **indirIndexValRef, I
                     }
                 }
 
-               
+
                 break;
             }
         }
@@ -5568,14 +5569,14 @@ GlobOpt::OptSrc(IR::Opnd *opnd, IR::Instr * *pInstr, Value **indirIndexValRef, I
                         rootLoopPrePass->likelyIntSymsUsedBeforeDefined->Set(sym->m_id);
                     }
                 }
-                
+
                 // SIMD_JS
                 // For uses before defs, we set likelySimd128*SymsUsedBeforeDefined bits for syms that have landing pad value info that allow type-spec to happen in the loop body.
-                // The BV will be added to loop header if the backedge has a live matching type-spec value. We then compensate in the loop header to unbox the value. 
+                // The BV will be added to loop header if the backedge has a live matching type-spec value. We then compensate in the loop header to unbox the value.
                 // This allows type-spec in the landing pad instead of boxing/unboxing on each iteration.
                 if (Js::IsSimd128Opcode(instr->m_opcode))
                 {
-                    // Simd ops are strongly typed. We type-spec only if the type is likely/Definitely the expected type or if we have object which can come from merging different Simd types. 
+                    // Simd ops are strongly typed. We type-spec only if the type is likely/Definitely the expected type or if we have object which can come from merging different Simd types.
                     // Simd value must be initialized properly on all paths before the loop entry. Cannot be merged with Undefined/Null.
                     Js::JavascriptLibrary::SimdFuncSignature funcSignature;
                     bool found = instr->m_func->GetScriptContext()->GetLibrary()->GetSimdFuncSignatureFromOpcode(instr->m_opcode, funcSignature);
@@ -5584,9 +5585,9 @@ GlobOpt::OptSrc(IR::Opnd *opnd, IR::Instr * *pInstr, Value **indirIndexValRef, I
 
                     if (expectedType.IsSimd128Float32x4())
                     {
-                        if  ( 
+                        if  (
                                 (landingPadValueInfo->IsLikelySimd128Float32x4() || (landingPadValueInfo->IsLikelyObject() && landingPadValueInfo->GetObjectType() == ObjectType::Object))
-                                && 
+                                &&
                                 !landingPadValueInfo->HasBeenUndefined() && !landingPadValueInfo->HasBeenNull()
                             )
                         {
@@ -5595,9 +5596,9 @@ GlobOpt::OptSrc(IR::Opnd *opnd, IR::Instr * *pInstr, Value **indirIndexValRef, I
                     }
                     else if (expectedType.IsSimd128Int32x4())
                     {
-                        if ( 
+                        if (
                             (landingPadValueInfo->IsLikelySimd128Int32x4() || (landingPadValueInfo->IsLikelyObject() && landingPadValueInfo->GetObjectType() == ObjectType::Object))
-                            && 
+                            &&
                             !landingPadValueInfo->HasBeenUndefined() && !landingPadValueInfo->HasBeenNull()
                           )
                         {
@@ -5683,7 +5684,7 @@ GlobOpt::OptSrc(IR::Opnd *opnd, IR::Instr * *pInstr, Value **indirIndexValRef, I
                 valueType = valueType.Merge(profiledArrayType).SetHasNoMissingValues(valueType.HasNoMissingValues());
                 ChangeValueType(currentBlock, FindValue(blockData.symToValueMap, opnd->AsRegOpnd()->m_sym), valueType, false);
             }
-        }        
+        }
         opnd->SetValueType(valueType);
 
         if(!IsLoopPrePass() && opnd->IsSymOpnd() && valueType.IsDefinite())
@@ -5692,7 +5693,7 @@ GlobOpt::OptSrc(IR::Opnd *opnd, IR::Instr * *pInstr, Value **indirIndexValRef, I
             if(sym->IsPropertySym())
             {
                 // A property sym can only be guaranteed to have a definite value type when implicit calls are disabled from the
-                // point where the sym was defined with the definte value type. Insert an instruction to indicate to the
+                // point where the sym was defined with the definite value type. Insert an instruction to indicate to the
                 // dead-store pass that implicit calls need to be kept disabled until after this instruction.
                 Assert(DoFieldCopyProp());
                 CaptureNoImplicitCallUses(opnd, false, instr);
@@ -5709,8 +5710,8 @@ GlobOpt::OptSrc(IR::Opnd *opnd, IR::Instr * *pInstr, Value **indirIndexValRef, I
 
 /*
 *   GlobOpt::TryOptimizeInstrWithFixedDataProperty
-*       Converts Ld[Root]Fld instr to 
-*            * CheckFixedFld 
+*       Converts Ld[Root]Fld instr to
+*            * CheckFixedFld
 *            * Dst = Ld_A <int Constant value>
 *   This API assumes that the source operand is a Sym/PropertySym kind.
 */
@@ -5727,7 +5728,7 @@ GlobOpt::TryOptimizeInstrWithFixedDataProperty(IR::Instr ** const pInstr)
         return;
     }
 
-    if (!this->IsLoopPrePass() && !this->isRecursiveCallOnLandingPad && 
+    if (!this->IsLoopPrePass() && !this->isRecursiveCallOnLandingPad &&
         OpCodeAttr::CanLoadFixedFields(instr->m_opcode))
     {
         instr->TryOptimizeInstrWithFixedDataProperty(&instr, this);
@@ -5744,7 +5745,7 @@ GlobOpt::TransferSrcValue(IR::Instr * instr)
     // No point creating an unknown value for the src of a binary instr, as the dst will just be a different
     // Don't create value for instruction without dst as well.  The value don't go anywhere.
 
-    // TODO: src2 == nullptr Disable copy prop for ScopedLdFld/ScopeStFld, etc., consider enabling thet in the future
+    // TODO: src2 == nullptr Disable copy prop for ScopedLdFld/ScopeStFld, etc., consider enabling that in the future
     // TODO: To add opcode attribute to indicate whether the opcode would use the value or not
 
     return instr->GetDst() != nullptr && instr->GetSrc2() == nullptr && !OpCodeAttr::DoNotTransfer(instr->m_opcode) && !instr->CallsAccessor();
@@ -6032,13 +6033,12 @@ GlobOpt::CopyProp(IR::Opnd *opnd, IR::Instr *instr, Value *val, IR::IndirOpnd *p
     }
 
     // SIMD_JS
-    
+
     // Don't copy-prop link operands of ExtendedArgs
     if (instr->m_opcode == Js::OpCode::ExtendArg_A && opnd == instr->GetSrc2())
     {
         return opnd;
     }
-    
 
     // Don't copy-prop operand of SIMD instr with ExtendedArg operands. Each instr should have its exclusive EA sequence.
     if (Js::IsSimd128Opcode(instr->m_opcode) && instr->GetSrc1() != nullptr && instr->GetSrc2() == nullptr &&  instr->GetSrc1()->GetStackSym()->IsSingleDef())
@@ -6049,7 +6049,7 @@ GlobOpt::CopyProp(IR::Opnd *opnd, IR::Instr *instr, Value *val, IR::IndirOpnd *p
             return opnd;
         }
     }
-    
+
     ValueInfo *valueInfo = val->GetValueInfo();
 
     // Constant prop?
@@ -6297,8 +6297,8 @@ GlobOpt::CopyPropReplaceOpnd(IR::Instr * instr, IR::Opnd * opnd, StackSym * copy
                 // We only set guarded properties in the dead store pass, so they shouldn't be set here yet. If they were
                 // we would need to move them from this operand to the operand which is being copy propagated.
                 Assert(propertySymOpnd->GetGuardedPropOps() == nullptr);
-                // We're creating a copy of this operand to be reused in the same spot in the flow, so we can copy all 
-                // flow sensitive fields.  However, we will do only a type check here (no property access) and only for 
+                // We're creating a copy of this operand to be reused in the same spot in the flow, so we can copy all
+                // flow sensitive fields.  However, we will do only a type check here (no property access) and only for
                 // the sake of downstream instructions, so the flags pertaining to this property access are irrelevant.
                 IR::PropertySymOpnd* checkObjTypeOpnd = propertySymOpnd->CopyForTypeCheckOnly(instr->m_func);
                 IR::Instr* checkObjTypeInstr = IR::Instr::New(Js::OpCode::CheckObjType, instr->m_func);
@@ -6491,7 +6491,7 @@ GlobOpt::GetIntConstantValue(const IntConstType intConst, IR::Instr * instr, IR:
         Sym *const symStore = cachedValue->GetValueInfo()->GetSymStore();
         if (symStore && IsLive(symStore, &blockData))
         {
-            
+
             Value *const symStoreValue = FindValue(symStore);
             IntConstType symStoreIntConstantValue;
             if (symStoreValue &&
@@ -6523,9 +6523,9 @@ GlobOpt::NewIntConstantValue(const IntConstType intConst, IR::Instr * instr, boo
     {
         // When creating a new int constant value, make sure it gets a symstore. If the int const doesn't have a symstore,
         // any downstream instruction using the same int will have to create a new value (object) for the int.
-        // This gets in way of CSE.            
+        // This gets in way of CSE.
         value = HoistConstantLoadAndPropagateValueBackward(Js::TaggedInt::ToVarUnchecked(intConst), instr, value);
-        if (!value->GetValueInfo()->GetSymStore() && 
+        if (!value->GetValueInfo()->GetSymStore() &&
             instr->m_opcode == Js::OpCode::LdC_A_I4 || instr->m_opcode == Js::OpCode::Ld_I4)
         {
             StackSym * sym = instr->GetDst()->GetStackSym();
@@ -6552,7 +6552,7 @@ GlobOpt::NewIntRangeValueInfo(const IntConstType min, const IntConstType max, co
 {
     if (min == max)
     {
-        // Since int constant values are const-propped, negative zero tracking does not track them, and so it's ok to ignore
+        // Since int constant values are const-propped, negative zero tracking does not track them, and so it's okay to ignore
         // 'wasNegativeZeroPreventedByBailout'
         return IntConstantValueInfo::New(this->alloc, max);
     }
@@ -6570,7 +6570,7 @@ ValueInfo *GlobOpt::NewIntRangeValueInfo(
     ValueInfo *valueInfo;
     if(min == max)
     {
-        // Since int constant values are const-propped, negative zero tracking does not track them, and so it's ok to ignore
+        // Since int constant values are const-propped, negative zero tracking does not track them, and so it's okay to ignore
         // 'wasNegativeZeroPreventedByBailout'
         valueInfo = IntConstantValueInfo::New(alloc, min);
     }
@@ -6737,7 +6737,7 @@ GlobOpt::HoistConstantLoadAndPropagateValueBackward(Js::Var varConst, IR::Instr 
         return value;
     }
 
-    // Only hoisting taggable int const loads for now. Could be extended to other constants (floats, strings, addr opnds) if we see some benefit. 
+    // Only hoisting taggable int const loads for now. Could be extended to other constants (floats, strings, addr opnds) if we see some benefit.
     Assert(Js::TaggedInt::Is(varConst));
 
     // Insert a load of the constant at the top of the function
@@ -6767,8 +6767,8 @@ GlobOpt::HoistConstantLoadAndPropagateValueBackward(Js::Var varConst, IR::Instr 
     bv = typeSpecedToInt ? &GlobOptBlockData::liveInt32Syms : &GlobOptBlockData::liveVarSyms; // will need to be expanded when we start hoisting float constants.
     if (this->currentBlock != this->func->m_fg->blockList)
     {
-        for (InvariantBlockBackwardIterator it(this, this->currentBlock, this->func->m_fg->blockList, nullptr); 
-             it.IsValid(); 
+        for (InvariantBlockBackwardIterator it(this, this->currentBlock, this->func->m_fg->blockList, nullptr);
+             it.IsValid();
              it.MoveNext())
         {
             BasicBlock * block = it.Block();
@@ -6816,7 +6816,7 @@ GlobOpt::NewFixedFunctionValue(Js::JavascriptFunction *function, IR::AddrOpnd *a
             }
         }
     }
-    
+
     if(!val)
     {
         VarConstantValueInfo *valueInfo = VarConstantValueInfo::New(this->alloc, function, addrOpnd->GetValueType(), true);
@@ -7024,16 +7024,16 @@ GlobOpt::ValueNumberDst(IR::Instr **pInstr, Value *src1Val, Value *src2Val)
             break;
         }
         instr->m_opcode = Js::OpCode::Conv_Str;
-        // fall thru
+        // fall-through
     case Js::OpCode::Conv_Str:
     /*
-        This opcode is commented since we don't track regex information in Globopt.
+        This opcode is commented out since we don't track regex information in GlobOpt.
         case Js::OpCode::Coerse_Regex:
     */
     case Js::OpCode::Coerse_Str:
         AssertMsg(instr->GetDst()->GetValueType().IsString(),
             "Creator of this instruction should have set the type");
-        // fall thru
+        // fall-through
     case Js::OpCode::Coerse_StrOrRegex:
         // We don't set the ValyueType of src1 for Coerse_StrOrRegex, hence skip the ASSERT
         if (this->IsLoopPrePass() || src1ValueInfo == nullptr || !src1ValueInfo->IsString())
@@ -7041,13 +7041,13 @@ GlobOpt::ValueNumberDst(IR::Instr **pInstr, Value *src1Val, Value *src2Val)
             break;
         }
         instr->m_opcode = Js::OpCode::Ld_A;
+        // fall-through
 
-        // fall thru
     case Js::OpCode::BytecodeArgOutCapture:
     case Js::OpCode::InitConst:
     case Js::OpCode::Ld_A:
     case Js::OpCode::Ld_I4:
-    
+
         // Propagate sym attributes across the reg copy.
         if (!this->IsLoopPrePass() && instr->GetSrc1()->IsRegOpnd())
         {
@@ -7091,7 +7091,7 @@ GlobOpt::ValueNumberDst(IR::Instr **pInstr, Value *src1Val, Value *src2Val)
 
         if (dstVal == nullptr)
         {
-            // Ld_A is just transfering of the value
+            // Ld_A is just transferring the value
             dstVal = this->ValueNumberTransferDst(instr, src1Val);
         }
 
@@ -7099,7 +7099,7 @@ GlobOpt::ValueNumberDst(IR::Instr **pInstr, Value *src1Val, Value *src2Val)
 
     case Js::OpCode::ExtendArg_A:
     {     // SIMD_JS
-        // We avoid transforming EAs to Lds to keep the IR shape consistent and avoid CSEing of EAs. 
+        // We avoid transforming EAs to Lds to keep the IR shape consistent and avoid CSEing of EAs.
         // CSEOptimize only assigns a Value to the EA dst, and doesn't turn it to a Ld. If this happened, we shouldn't assign a new Value here.
         if (DoCSE())
         {
@@ -7121,7 +7121,7 @@ GlobOpt::ValueNumberDst(IR::Instr **pInstr, Value *src1Val, Value *src2Val)
     case Js::OpCode::LdSlotArr:
     case Js::OpCode::LdSlotChkUndecl:
     case Js::OpCode::LdFld:
-    case Js::OpCode::LdFldForTypeOf: 
+    case Js::OpCode::LdFldForTypeOf:
     case Js::OpCode::LdFldForCallApplyTarget:
     // Do not transfer value type on ldFldForTypeOf to prevent copy-prop to LdRootFld in case the field doesn't exist since LdRootFldForTypeOf does not throw
     //case Js::OpCode::LdRootFldForTypeOf:
@@ -7329,7 +7329,7 @@ GlobOpt::ValueNumberDst(IR::Instr **pInstr, Value *src1Val, Value *src2Val)
                 const bool isLikelyTagged = src1ValueInfo->IsLikelyTaggedInt() && src2ValueInfo->IsLikelyTaggedInt();
                 if(src1ValueInfo->IsNumber() && src2ValueInfo->IsNumber())
                 {
-                    // If both of them are number then we can definate say that the result is a number
+                    // If both of them are numbers then we can definitely say that the result is a number
                     valueType = ValueType::GetNumberAndLikelyInt(isLikelyTagged);
                 }
                 else
@@ -7401,8 +7401,8 @@ GlobOpt::ValueNumberDst(IR::Instr **pInstr, Value *src1Val, Value *src2Val)
                 return CreateDstUntransferredValue(divValueType, instr, src1Val, src2Val);
             }
         }
+        // fall-through
 
-        // FALLTHROUGH
     case Js::OpCode::Sub_A:
     case Js::OpCode::Mul_A:
     case Js::OpCode::Rem_A:
@@ -7562,11 +7562,11 @@ GlobOpt::ValueNumberDst(IR::Instr **pInstr, Value *src1Val, Value *src2Val)
     // SIMD_JS
     if (Js::IsSimd128Opcode(instr->m_opcode) && !func->m_workItem->GetFunctionBody()->GetIsAsmjsMode())
     {
-        Js::JavascriptLibrary::SimdFuncSignature simdFuncSignature; 
+        Js::JavascriptLibrary::SimdFuncSignature simdFuncSignature;
         this->func->GetScriptContext()->GetLibrary()->GetSimdFuncSignatureFromOpcode(instr->m_opcode, simdFuncSignature);
         return this->NewGenericValue(simdFuncSignature.returnType, dst);
     }
-    
+
     if (dstVal == nullptr)
     {
         return this->NewGenericValue(dst->GetValueType(), dst);
@@ -8017,7 +8017,7 @@ GlobOpt::ValueNumberTransferDstInPrepass(IR::Instr *const instr, Value *const sr
     // TODO: This conflicts with new values created by the type specialization code
     //       We should re-enable if we change that code to avoid the new values.
 
-#if 0  
+#if 0
     if (this->IsSafeToTransferInPrePass(instr->GetSrc1(), src1Val))
     {
         return src1Val;
@@ -8068,11 +8068,11 @@ GlobOpt::ValueNumberTransferDstInPrepass(IR::Instr *const instr, Value *const sr
     }
 #endif
 
-    // Src1's value could change later in the loop, so the value wouldn't be the same for each 
+    // Src1's value could change later in the loop, so the value wouldn't be the same for each
     // iteration.  Since we don't iterate over loops "while (!changed)", go conservative on the
     // first pass when transferring a value that is live on the back-edge.
 
-    // In prepass we are going to copy the value but with a different value number 
+    // In prepass we are going to copy the value but with a different value number
     // for aggressive int type spec
     const ValueType valueType(GetPrepassValueTypeForDst(src1ValueInfo->Type(), instr, src1Val, nullptr, &isValueInfoPrecise));
     if(isValueInfoPrecise || valueType == src1ValueInfo->Type() && src1ValueInfo->IsGeneric())
@@ -8171,7 +8171,7 @@ GlobOpt::PropagateIntRangeBinary(IR::Instr *instr, IntConstType min1, IntConstTy
             max = min;
         }
 
-        // If max is negative, max let's assume it could be -1, so resut in MAX_INT
+        // If max is negative, max let's assume it could be -1, so result in MAX_INT
         if (max < 0)
         {
             max = IntConstMax;
@@ -8293,7 +8293,7 @@ GlobOpt::PropagateIntRangeBinary(IR::Instr *instr, IntConstType min1, IntConstTy
         break;
 
     case Js::OpCode::ShrU_A:
-        
+
         // shift count is constant zero
         if ((min2 == max2) && (max2 & 0x1f) == 0)
         {
@@ -8313,7 +8313,7 @@ GlobOpt::PropagateIntRangeBinary(IR::Instr *instr, IntConstType min1, IntConstTy
 
         Assert(min2 <= max2);
         // zero shift count is only allowed if result is used as int32 and/or value is positive
-        Assert(min2 > 0 || instr->ignoreIntOverflow || min1 >= 0); 
+        Assert(min2 > 0 || instr->ignoreIntOverflow || min1 >= 0);
 
         UIntConstType umin1 = (UIntConstType)min1;
         UIntConstType umax1 = (UIntConstType)max1;
@@ -8345,7 +8345,7 @@ GlobOpt::PropagateIntRangeBinary(IR::Instr *instr, IntConstType min1, IntConstTy
         {
             min = umin1 >> max2;
         }
-        
+
         // We should be able to fit uint32 range as int32
         Assert(instr->ignoreIntOverflow || (min >= 0 && max >= 0) );
         if (min > max)
@@ -8355,7 +8355,7 @@ GlobOpt::PropagateIntRangeBinary(IR::Instr *instr, IntConstType min1, IntConstTy
             min = Int32ConstMin;
             max = Int32ConstMax;
         }
-        
+
         break;
     }
 
@@ -8373,7 +8373,7 @@ GlobOpt::TypeSpecialization(
     bool *const forceInvariantHoistingRef)
 {
     Value *&src1Val = *pSrc1Val;
-    Value *&src2Val = *pSrc2Val;    
+    Value *&src2Val = *pSrc2Val;
     *redoTypeSpecRef = false;
     Assert(!*forceInvariantHoistingRef);
 
@@ -8389,12 +8389,12 @@ GlobOpt::TypeSpecialization(
     Value *const src2OriginalVal = src2Val;
 
     // SIMD_JS
-    
+
     if (TypeSpecializeSimd128(instr, pSrc1Val, pSrc2Val, pDstVal))
     {
         return instr;
     }
-    
+
 
     if(!instr->ShouldCheckForIntOverflow())
     {
@@ -8549,7 +8549,7 @@ GlobOpt::TypeSpecialization(
 
         // Handling for instructions other than built-ins that may require only dst type specialization
         // should be added here.
-        if(OpCodeAttr::IsInlineBuiltIn(instr->m_opcode) && !GetIsAsmJSFunc()) // dont need to do typespec for asmjs
+        if(OpCodeAttr::IsInlineBuiltIn(instr->m_opcode) && !GetIsAsmJSFunc()) // don't need to do typespec for asmjs
         {
             this->TypeSpecializeInlineBuiltInDst(&instr, pDstVal);
             return instr;
@@ -8637,7 +8637,7 @@ GlobOpt::OptConstPeep(IR::Instr *instr, IR::Opnd *constSrc, Value **pDstVal, Val
             // "Foo" + 0 != "Foo
             return false;
         }
-        // FALLTHROUGH
+        // fall-through
 
     case Js::OpCode::Add_Ptr:
     case Js::OpCode::Add_I4:
@@ -9387,8 +9387,8 @@ GlobOpt::TypeSpecializeUnary(
 {
     Assert(pSrc1Val);
     Value *&src1Val = *pSrc1Val;
-    Assert(src1Val);   
-    //dont need to do typespec for asmjs
+    Assert(src1Val);
+    // don't need to do typespec for asmjs
     if (IsTypeSpecPhaseOff(this->func) || GetIsAsmJSFunc())
     {
         return false;
@@ -9456,14 +9456,14 @@ GlobOpt::TypeSpecializeInlineBuiltInUnary(IR::Instr **pInstr, Value **pSrc1Val, 
         // Type-spec the src.
         src1Val = src1OriginalVal;
         bool retVal = this->TypeSpecializeFloatUnary(pInstr, src1Val, pDstVal, /* skipDst = */ true);
-        AssertMsg(retVal, "For inline built-ins the args have to be type-specifialized to float, but something failed during the process.");
+        AssertMsg(retVal, "For inline built-ins the args have to be type-specialized to float, but something failed during the process.");
 
         // Type-spec the dst.
         this->TypeSpecializeFloatDst(instr, nullptr, src1Val, nullptr, pDstVal);
     }
     else if (instr->m_opcode == Js::OpCode::InlineMathAbs)
     {
-        // TODO: consider the case when the value is unknown - because of bailout in abs we may disable type spec for the whole funciton which is too much.
+        // TODO: consider the case when the value is unknown - because of bailout in abs we may disable type spec for the whole function which is too much.
         // First, try int.
         int minVal, maxVal;
         bool shouldTypeSpecToInt = src1Val->GetValueInfo()->GetIntValMinMax(&minVal, &maxVal, /* doAggressiveIntTypeSpec = */ true);
@@ -9471,7 +9471,7 @@ GlobOpt::TypeSpecializeInlineBuiltInUnary(IR::Instr **pInstr, Value **pSrc1Val, 
         {
             Assert(this->DoAggressiveIntTypeSpec());
             bool retVal = this->TypeSpecializeIntUnary(pInstr, &src1Val, pDstVal, minVal, maxVal, src1OriginalVal, redoTypeSpecRef, true);
-            AssertMsg(retVal, "For inline built-ins the args have to be type-specifialized (int), but something failed during the process.");
+            AssertMsg(retVal, "For inline built-ins the args have to be type-specialized (int), but something failed during the process.");
 
             if (!this->IsLoopPrePass())
             {
@@ -9492,11 +9492,11 @@ GlobOpt::TypeSpecializeInlineBuiltInUnary(IR::Instr **pInstr, Value **pSrc1Val, 
         }
         else
         {
-            // If we counldn't do int, do float.
+            // If we couldn't do int, do float.
             Assert(this->DoFloatTypeSpec());
             src1Val = src1OriginalVal;
             bool retVal = this->TypeSpecializeFloatUnary(pInstr, src1Val, pDstVal, true);
-            AssertMsg(retVal, "For inline built-ins the args have to be type-specifialized (float), but something failed during the process.");
+            AssertMsg(retVal, "For inline built-ins the args have to be type-specialized (float), but something failed during the process.");
 
             this->TypeSpecializeFloatDst(instr, nullptr, src1Val, nullptr, pDstVal);
         }
@@ -9594,7 +9594,7 @@ GlobOpt::TypeSpecializeInlineBuiltInBinary(IR::Instr **pInstr, Value *src1Val, V
             src1Val = src1OriginalVal;
             src2Val = src2OriginalVal;
             bool retVal = this->TypeSpecializeFloatBinary(instr, src1Val, src2Val, pDstVal);
-            AssertMsg(retVal, "For pow and atnan2 the args have to be type-specifialized to float, but something failed during the process.");
+            AssertMsg(retVal, "For pow and atnan2 the args have to be type-specialized to float, but something failed during the process.");
 
             break;
         }
@@ -9643,7 +9643,7 @@ GlobOpt::TypeSpecializeInlineBuiltInBinary(IR::Instr **pInstr, Value *src1Val, V
                 src1Val = src1OriginalVal;
                 src2Val = src2OriginalVal;
                 bool retVal = this->TypeSpecializeFloatBinary(instr, src1Val, src2Val, pDstVal);
-                AssertMsg(retVal, "For min and max, the args have to be type-specifialized to float if any one of the src is a float, but something failed during the process.");
+                AssertMsg(retVal, "For min and max, the args have to be type-specialized to float if any one of the src is a float, but something failed during the process.");
             }
             break;
         }
@@ -9732,9 +9732,9 @@ GlobOpt::TryTypeSpecializeUnaryToFloatHelper(IR::Instr** pInstr, Value** pSrc1Va
 }
 
 bool
-GlobOpt::TypeSpecializeIntBinary(IR::Instr **pInstr, Value *src1Val, Value *src2Val, Value **pDstVal, IntConstType min, IntConstType max, bool skipDst /* = faslse */)
+GlobOpt::TypeSpecializeIntBinary(IR::Instr **pInstr, Value *src1Val, Value *src2Val, Value **pDstVal, IntConstType min, IntConstType max, bool skipDst /* = false */)
 {
-    //TODO move the code for int type spec-ing binary functions here.
+    // TODO move the code for int type spec-ing binary functions here.
     IR::Instr *&instr = *pInstr;
     bool lossy = false;
 
@@ -9750,7 +9750,7 @@ GlobOpt::TypeSpecializeIntBinary(IR::Instr **pInstr, Value *src1Val, Value *src2
                 IntConstType intValue = intConstantValue;
                 isIntConstMissingItem = Js::SparseArraySegment<int>::IsMissingItem(&intValue);
             }
-            
+
             //Don't specialize if the element is not likelyInt or a IntConst which is a missing item value.
             if(!src2Val || !(src2Val->GetValueInfo()->IsLikelyInt()) || isIntConstMissingItem)
             {
@@ -9795,7 +9795,7 @@ GlobOpt::TypeSpecializeIntUnary(
     IntConstType max,
     Value *const src1OriginalVal,
     bool *redoTypeSpecRef,
-    bool skipDst /* = faslse */)
+    bool skipDst /* = false */)
 {
     IR::Instr *&instr = *pInstr;
 
@@ -9826,7 +9826,7 @@ GlobOpt::TypeSpecializeIntUnary(
             StackSym *sym = instr->GetSrc1()->AsRegOpnd()->m_sym;
             if (this->IsInt32TypeSpecialized(sym, this->currentBlock) == false)
             {
-                // Type specializing an Ld_A isn't worthit, unless the src
+                // Type specializing an Ld_A isn't worth it, unless the src
                 // is already type specialized
                 return false;
             }
@@ -10353,7 +10353,7 @@ void GlobOpt::TypeSpecializeIntDst(IR::Instr* instr, Js::OpCode originalOpCode, 
         Assert(!ignoredIntOverflowForCurrentInstr);
 
         // Track bounds for add or sub with a constant. For instance, consider (b = a + 2). The value of 'b' should track that
-        // it is equal to (the value of 'a') + 2. Additionally, the value of 'b' should inherit the bounds of 'a', offsetted by
+        // it is equal to (the value of 'a') + 2. Additionally, the value of 'b' should inherit the bounds of 'a', offset by
         // the constant value.
         if(!valueType.IsInt() || !isValueInfoPrecise)
         {
@@ -10439,8 +10439,8 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
     Js::OpCode opcode;
     IR::Opnd *src1, *src2;
     Value *&src1Val = *pSrc1Val;
-    Value *&src2Val = *pSrc2Val;    
-    //dont need to do typespec for asmjs
+    Value *&src2Val = *pSrc2Val;
+    // don't need to do typespec for asmjs
     if (IsTypeSpecPhaseOff(this->func) || GetIsAsmJSFunc())
     {
         return false;
@@ -10788,22 +10788,22 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
                 // And integrate to the overall min and max.
 
                 // If the result is positive (positive/positive or negative/negative):
-                //      The min should be the  smallest magnatude numerator   (positive_Min1 | negative_Max1)
+                //      The min should be the  smallest magnitude numerator   (positive_Min1 | negative_Max1)
                 //                divided by   ---------------------------------------------------------------
-                //                             largest magnatude denominator  (positive_Max2 | negative_Min2)
+                //                             largest magnitude denominator  (positive_Max2 | negative_Min2)
                 //
-                //      The max should be the  largest magnatude numerator    (positive_Max1 | negative_Max1)
+                //      The max should be the  largest magnitude numerator    (positive_Max1 | negative_Max1)
                 //                divided by   ---------------------------------------------------------------
-                //                             smallest magnatude denominator (positive_Min2 | negative_Max2)
+                //                             smallest magnitude denominator (positive_Min2 | negative_Max2)
 
                 // If the result is negative (positive/negative or positive/negative):
-                //      The min should be the  largest magnatude numerator    (positive_Max1 | negative_Min1)
+                //      The min should be the  largest magnitude numerator    (positive_Max1 | negative_Min1)
                 //                divided by   ---------------------------------------------------------------
-                //                             smallest magnatude denominator (negative_Max2 | positive_Min2)
+                //                             smallest magnitude denominator (negative_Max2 | positive_Min2)
                 //
-                //      The max should be the  smallest magnatude numerator   (positive_Min1 | negative_Max1)
+                //      The max should be the  smallest magnitude numerator   (positive_Min1 | negative_Max1)
                 //                divided by   ---------------------------------------------------------------
-                //                             largest magnatude denominator  (negative_Min2 | positive_Max2)
+                //                             largest magnitude denominator  (negative_Min2 | positive_Max2)
 
                 // TODO: The range can be slightly more precise if we take care of the rounding
 
@@ -10904,11 +10904,11 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
                     }
                 }
                 Assert(newMin <= newMax);
-                // Contintue to int type spec
+                // Continue to int type spec
                 break;
             }
         }
-        // FALLTHROUGH
+        // fall-through
     default:
         {
             const bool involesLargeInt32 =
@@ -10981,9 +10981,9 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
                     if (this->IsInt32TypeSpecialized(sym, this->currentBlock))
                     {
                         opcode = instr->m_opcode;
-                        skipDst = true;     // We should keep dst as is, othewise the link opnd for next ArgOut/InlineBuiltInStart would be broken.
+                        skipDst = true;     // We should keep dst as is, otherwise the link opnd for next ArgOut/InlineBuiltInStart would be broken.
                         skipSrc2 = true;    // src2 is linkOpnd. We don't need to type-specialize it.
-                        newMin = min1; newMax = max1; // Values don't matter, these are unsued.
+                        newMin = min1; newMax = max1; // Values don't matter, these are unused.
                         goto LOutsideSwitch;    // Continue to int-type-specialize.
                     }
                     else if (this->IsFloat64TypeSpecialized(sym, this->currentBlock))
@@ -10998,7 +10998,7 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
                         // We should be already using the SIMD type-spec sym. See TypeSpecializeSimd128.
                         Assert(IRType_IsSimd128(instr->GetSrc1()->GetType()));
                     }
-                    
+
                 }
                 return false;
 
@@ -11313,13 +11313,13 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
                         // Always overflows
                         return trySpecializeToFloat(true);
                     }
-                    
-                    // CSE only if two MULs have the same overflow check behavior. 
+
+                    // CSE only if two MULs have the same overflow check behavior.
                     // Currently this is set to be ignore int32 overflow, but not 53-bit, or int32 overflow matters.
                     if (!instr->ShouldCheckFor32BitOverflow() && instr->ignoreOverflowBitCount == 53)
                         ignoredIntOverflow = true;
                 }
-                
+
                 if (newMin <= 0 && newMax >= 0 &&                   // new range crosses zero
                     (min1 < 0 || min2 < 0) &&                       // an operand's range contains a negative integer
                     !(min1 > 0 || min2 > 0) &&                      // neither operand's range contains only positive integers
@@ -11848,7 +11848,7 @@ GlobOpt::IsWorthSpecializingToInt32Branch(IR::Instr * instr, Value * src1Val, Va
                 StackSym *sym = instr->GetSrc2()->AsRegOpnd()->m_sym;
                 if (this->IsInt32TypeSpecialized(sym, this->currentBlock) == false)
                 {
-                    // Type specializing an Br itself isn't worthit, unless one src
+                    // Type specializing an Br itself isn't worth it, unless one src
                     // is already type specialized
                     return false;
                 }
@@ -12063,10 +12063,10 @@ bool GlobOpt::TryOptConstFoldBrUnsignedGreaterThan(
 void GlobOpt::SetPathDependentInfo(const bool conditionToBranch, const PathDependentInfo &info)
 {
     Assert(this->currentBlock->GetSuccList()->Count() == 2);
-    IR::Instr * fallthru = this->currentBlock->GetNext()->GetFirstInstr();
+    IR::Instr * fallthrough = this->currentBlock->GetNext()->GetFirstInstr();
     FOREACH_SLISTBASECOUNTED_ENTRY(FlowEdge*, edge, this->currentBlock->GetSuccList())
     {
-        if (conditionToBranch == (edge->GetSucc()->GetFirstInstr() != fallthru))
+        if (conditionToBranch == (edge->GetSucc()->GetFirstInstr() != fallthrough))
         {
             edge->SetPathDependentInfo(info, alloc);
             return;
@@ -12217,7 +12217,7 @@ GlobOpt::TypeSpecializeFloatUnary(IR::Instr **pInstr, Value *src1Val, Value **pD
         {
         case Js::OpCode::ArgOut_A_InlineBuiltIn:
             skipDst = true;
-            // Fall through.
+            // fall-through
 
         case Js::OpCode::Ld_A:
         case Js::OpCode::BrTrue_A:
@@ -12227,7 +12227,7 @@ GlobOpt::TypeSpecializeFloatUnary(IR::Instr **pInstr, Value *src1Val, Value **pD
                 StackSym *sym = instr->GetSrc1()->AsRegOpnd()->m_sym;
                 if (this->IsFloat64TypeSpecialized(sym, this->currentBlock) == false)
                 {
-                    // Type specializing an Ld_A isn't worthit, unless the src
+                    // Type specializing an Ld_A isn't worth it, unless the src
                     // is already type specialized
                     return false;
                 }
@@ -13017,7 +13017,7 @@ GlobOpt::ToVar(IR::Instr *instr, IR::RegOpnd *regOpnd, BasicBlock *block, Value 
     }
     else if (block->globOptData.liveFloat64Syms->Test(varSym->m_id))
     {
-        
+
         fromType = TyFloat64;
         typeSpecSym = varSym->GetFloat64EquivSym(this->func);
 
@@ -13061,7 +13061,7 @@ GlobOpt::ToVar(IR::Instr *instr, IR::RegOpnd *regOpnd, BasicBlock *block, Value 
             Assert(IsLiveAsSimd128I4(varSym, &block->globOptData));
             fromType = TySimd128I4;
         }
-        
+
         if (valueInfo)
         {
             if (fromType == TySimd128F4 && !valueInfo->Type().IsSimd128Float32x4())
@@ -13135,7 +13135,7 @@ GlobOpt::ToVar(IR::Instr *instr, IR::RegOpnd *regOpnd, BasicBlock *block, Value 
     if (instr == block->GetLastInstr() &&
         (instr->IsBranchInstr() || instr->m_opcode == Js::OpCode::BailTarget))
     {
-        // Don't insert code between the branch and the preceeding ByteCodeUses instrs...
+        // Don't insert code between the branch and the preceding ByteCodeUses instrs...
         while(insertAfterInstr->m_opcode == Js::OpCode::ByteCodeUses)
         {
             insertAfterInstr = insertAfterInstr->m_prev;
@@ -13220,7 +13220,7 @@ GlobOpt::ToTypeSpecUse(IR::Instr *instr, IR::Opnd *opnd, BasicBlock *block, Valu
         insertBeforeInstr = block->GetLastInstr();
         if (insertBeforeInstr->IsBranchInstr() || insertBeforeInstr->m_opcode == Js::OpCode::BailTarget)
         {
-            // Don't insert code between the branch and the preceeding ByteCodeUses instrs...
+            // Don't insert code between the branch and the preceding ByteCodeUses instrs...
             while(insertBeforeInstr->m_prev->m_opcode == Js::OpCode::ByteCodeUses)
             {
                 insertBeforeInstr = insertBeforeInstr->m_prev;
@@ -13467,7 +13467,7 @@ GlobOpt::ToTypeSpecUse(IR::Instr *instr, IR::Opnd *opnd, BasicBlock *block, Valu
                     if (symStore && symStore != varSym
                         && this->OptIsInvariant(symStore, block, this->prePassLoop, this->FindValue(block->globOptData.symToValueMap, symStore), false, true))
                     {
-                        // If symStore is assignd to sym and we want sym to be type-specialized, for symStore to be specialized
+                        // If symStore is assigned to sym and we want sym to be type-specialized, for symStore to be specialized
                         // outside the loop.
                         this->prePassLoop->forceFloat64SymsOnEntry->Set(symStore->m_id);
                     }
@@ -13546,7 +13546,7 @@ GlobOpt::ToTypeSpecUse(IR::Instr *instr, IR::Opnd *opnd, BasicBlock *block, Valu
             if (this->IsLoopPrePass())
             {
                 // FromVar Hoisting
-                
+
                 BVSparse<Memory::JitArenaAllocator> * forceSimd128SymsOnEntry;
                 forceSimd128SymsOnEntry = \
                     toType == TySimd128F4 ? this->prePassLoop->forceSimd128F4SymsOnEntry : this->prePassLoop->forceSimd128I4SymsOnEntry;
@@ -13555,7 +13555,7 @@ GlobOpt::ToTypeSpecUse(IR::Instr *instr, IR::Opnd *opnd, BasicBlock *block, Valu
                     livenessBv->Set(varSym->m_id);
                 }
 
-                // Be aggressive with hoisting only if value is always initialied to SIMD type before entering loop. 
+                // Be aggressive with hoisting only if value is always initialized to SIMD type before entering loop.
                 // This reduces the chance that the FromVar gets executed while the specialized instruction in the loop is not. Leading to unnecessary excessive bailouts.
                 if (val && !val->GetValueInfo()->HasBeenUndefined() &&  !val->GetValueInfo()->HasBeenNull() &&
                     this->OptIsInvariant(opnd, block, this->prePassLoop, val, false, true))
@@ -13568,16 +13568,16 @@ GlobOpt::ToTypeSpecUse(IR::Instr *instr, IR::Opnd *opnd, BasicBlock *block, Valu
                     Value * value = symStore ? this->FindValue(block->globOptData.symToValueMap, symStore) : nullptr;
 
                     if (symStore && symStore != varSym
-                        && value 
-                        && !value->GetValueInfo()->HasBeenUndefined() && !value->GetValueInfo()->HasBeenNull() 
+                        && value
+                        && !value->GetValueInfo()->HasBeenUndefined() && !value->GetValueInfo()->HasBeenNull()
                         && this->OptIsInvariant(symStore, block, this->prePassLoop, value, true, true))
                     {
-                        // If symStore is assignd to sym and we want sym to be type-specialized, for symStore to be specialized
+                        // If symStore is assigned to sym and we want sym to be type-specialized, for symStore to be specialized
                         // outside the loop.
                         forceSimd128SymsOnEntry->Set(symStore->m_id);
                     }
                 }
-                
+
                 Assert(bailOutKind == IR::BailOutSimd128F4Only || bailOutKind == IR::BailOutSimd128I4Only);
                 // we are in loop prepass, we haven't propagated the value info to the src. Do it now.
                 if (valueInfo)
@@ -13702,12 +13702,12 @@ GlobOpt::ToTypeSpecUse(IR::Instr *instr, IR::Opnd *opnd, BasicBlock *block, Valu
             //      x = str + float;  -> need to bailout if str is a string
             //
             //      x = obj * 0.1;
-            //      y = obj * 0.2;  -> if obj has valueof, we'll only call valueof once on the FromVar convertion...
+            //      y = obj * 0.2;  -> if obj has valueof, we'll only call valueof once on the FromVar conversion...
             Assert(bailOutKind != IR::BailOutInvalid);
             isBailout = true;
         }
-        else if (IRType_IsSimd128(toType) 
-            && opcode == Js::OpCode::FromVar 
+        else if (IRType_IsSimd128(toType)
+            && opcode == Js::OpCode::FromVar
             && (!valueInfo || !valueInfo->IsSimd128(toType)))
         {
                 Assert(toType == TySimd128F4 && bailOutKind == IR::BailOutSimd128F4Only
@@ -14120,7 +14120,7 @@ GlobOpt::ToVarStackSym(StackSym *varSym, BasicBlock *block)
     // SIMD_JS
     block->globOptData.liveSimd128F4Syms->Clear(varSym->m_id);
     block->globOptData.liveSimd128I4Syms->Clear(varSym->m_id);
-    
+
 }
 
 void
@@ -14149,7 +14149,7 @@ GlobOpt::ToInt32Dst(IR::Instr *instr, IR::RegOpnd *dst, BasicBlock *block)
     // SIMD_JS
     block->globOptData.liveSimd128F4Syms->Clear(varSym->m_id);
     block->globOptData.liveSimd128I4Syms->Clear(varSym->m_id);
-    
+
 }
 
 void
@@ -14167,7 +14167,7 @@ GlobOpt::ToUInt32Dst(IR::Instr *instr, IR::RegOpnd *dst, BasicBlock *block)
     // SIMD_JS
     block->globOptData.liveSimd128F4Syms->Clear(varSym->m_id);
     block->globOptData.liveSimd128I4Syms->Clear(varSym->m_id);
-    
+
 }
 
 void
@@ -14196,7 +14196,7 @@ GlobOpt::ToFloat64Dst(IR::Instr *instr, IR::RegOpnd *dst, BasicBlock *block)
     // SIMD_JS
     block->globOptData.liveSimd128F4Syms->Clear(varSym->m_id);
     block->globOptData.liveSimd128I4Syms->Clear(varSym->m_id);
-    
+
 }
 
 // SIMD_JS
@@ -14229,8 +14229,8 @@ GlobOpt::ToSimd128Dst(IRType toType, IR::Instr *instr, IR::RegOpnd *dst, BasicBl
     // SIMD_JS
     block->globOptData.liveSimd128F4Syms->Clear(varSym->m_id);
     block->globOptData.liveSimd128I4Syms->Clear(varSym->m_id);
-    
-    
+
+
     livenessBV->Set(varSym->m_id);
 }
 
@@ -14329,7 +14329,7 @@ GlobOpt::IsSimd128I4TypeSpecialized(Sym *sym, GlobOptBlockData *data)
 }
 
 
-BOOL 
+BOOL
 GlobOpt::IsLiveAsSimd128(Sym *sym, GlobOptBlockData *data)
 {
     sym = StackSym::GetVarEquivStackSym_NoCreate(sym);
@@ -14337,7 +14337,7 @@ GlobOpt::IsLiveAsSimd128(Sym *sym, GlobOptBlockData *data)
         sym &&
         (
         data->liveSimd128F4Syms->Test(sym->m_id) ||
-        data->liveSimd128I4Syms->Test(sym->m_id) 
+        data->liveSimd128I4Syms->Test(sym->m_id)
         );
 }
 
@@ -14428,7 +14428,7 @@ void GlobOpt::MakeLive(StackSym *const sym, GlobOptBlockData *const blockData, c
             blockData->liveSimd128I4Syms->Set(varSymId);
             return;
         }
-       
+
     }
 
     blockData->liveVarSyms->Set(sym->m_id);
@@ -14643,7 +14643,7 @@ bool GlobOpt::AreValueInfosCompatible(const ValueInfo *const v0, const ValueInfo
     {
         return true;
     }
-    
+
     const bool doAggressiveIntTypeSpec = DoAggressiveIntTypeSpec();
     if(doAggressiveIntTypeSpec && (v0->IsInt() || v1->IsInt()))
     {
@@ -14667,12 +14667,12 @@ bool GlobOpt::AreValueInfosCompatible(const ValueInfo *const v0, const ValueInfo
     if (SIMD128_TYPE_SPEC_FLAG && v0->Type().IsSimd128())
     {
         // we only type-spec Undefined values, Objects (possibly merged SIMD values), or actual SIMD values.
-        
+
         if (v1->Type().IsLikelyUndefined() || v1->Type().IsLikelyNull())
         {
             return true;
         }
-        
+
         if (v1->Type().IsLikelyObject() && v1->Type().GetObjectType() == ObjectType::Object)
         {
             return true;
@@ -14823,7 +14823,7 @@ void GlobOpt::DoTrackNewValueForKills(Value *const value)
     Assert(valueInfo->IsAnyOptimizedArray());
     Assert(!valueInfo->IsArrayValueInfo());
 
-    // The value and value info here are new, so it's ok to modify the value info in-place
+    // The value and value info here are new, so it's okay to modify the value info in-place
     Assert(!valueInfo->GetSymStore());
 
     const bool isJsArray = valueInfo->IsArrayOrObjectWithArray();
@@ -15253,7 +15253,7 @@ void GlobOpt::ProcessValueKillsForLoopHeaderAfterBackEdgeMerge(BasicBlock *const
         // Similarly, if the loop contains an operation that kills JS array segments, don't make the segment or other related
         // syms available initially inside the loop
         ArrayValueInfo *const arrayValueInfo = valueInfo->AsArrayValueInfo();
-        const bool removeHeadSegment = loopKills.KillsArrayHeadSegments() && arrayValueInfo->HeadSegmentSym();;
+        const bool removeHeadSegment = loopKills.KillsArrayHeadSegments() && arrayValueInfo->HeadSegmentSym();
         const bool removeHeadSegmentLength = loopKills.KillsArrayHeadSegmentLengths() && arrayValueInfo->HeadSegmentLengthSym();
         const bool removeLength = loopKills.KillsArrayLengths() && arrayValueInfo->LengthSym();
         if(removeHeadSegment || removeHeadSegmentLength || removeLength)
@@ -15440,9 +15440,9 @@ void GlobOpt::OptArraySrc(IR::Instr * *const instrRef)
         return;
     }
     ValueInfo *baseValueInfo = baseValue->GetValueInfo();
-    ValueType baseValueType(baseValueInfo->Type());   
+    ValueType baseValueType(baseValueInfo->Type());
 
-    baseOpnd->SetValueType(baseValueType);    
+    baseOpnd->SetValueType(baseValueType);
     if(!baseValueType.IsLikelyAnyOptimizedArray() ||
         !DoArrayCheckHoist(baseValueType, currentBlock->loop, instr) ||
         baseOwnerIndir && !ShouldExpectConventionalArrayIndexValue(baseOwnerIndir))
@@ -15594,7 +15594,7 @@ void GlobOpt::OptArraySrc(IR::Instr * *const instrRef)
             ( (baseValueType.GetObjectType() == ObjectType::Float32VirtualArray ||
               baseValueType.GetObjectType() == ObjectType::Float64VirtualArray) &&
               !instr->IsDstNotAlwaysConvertedToNumber()
-            )             
+            )
            )
         {
             eliminatedLowerBoundCheck = true;
@@ -15757,7 +15757,7 @@ void GlobOpt::OptArraySrc(IR::Instr * *const instrRef)
                 //     - The native array type may be made more conservative based on profile data by an instruction in the loop
                 Assert(
                     baseValueInLoopLandingPad->GetValueInfo()->CanMergeToSpecificObjectType() ||
-                    baseValueInLoopLandingPad->GetValueInfo()->Type().SetCanBeTaggedValue(false) == 
+                    baseValueInLoopLandingPad->GetValueInfo()->Type().SetCanBeTaggedValue(false) ==
                         baseValueType.SetCanBeTaggedValue(false) ||
                     baseValueInLoopLandingPad->GetValueInfo()->Type().SetHasNoMissingValues(false).SetCanBeTaggedValue(false) ==
                         baseValueType.SetHasNoMissingValues(false).SetCanBeTaggedValue(false) ||
@@ -17479,8 +17479,8 @@ GlobOpt::PrepareForIgnoringIntOverflow(IR::Instr *const instr)
                 if(!DoAggressiveIntTypeSpec() || !value->GetValueInfo()->IsLikelyInt())
                 {
                     // When aggressive int specialization is off, syms with "likely int" values cannot be forced to int since
-                    // int bail-out checks are not allowed in that mode. Similiarly, with aggressive int specialization on, it
-                    // wouldn't make sense to force non-"likley int" values to int since it would almost guarantee a bail-out at
+                    // int bail-out checks are not allowed in that mode. Similarly, with aggressive int specialization on, it
+                    // wouldn't make sense to force non-"likely int" values to int since it would almost guarantee a bail-out at
                     // runtime. In both cases, just disable ignoring overflow for this range.
 #if DBG_DUMP
                     couldNotConvertSymId = id;
@@ -17641,7 +17641,7 @@ GlobOpt::VerifyIntSpecForIgnoringIntOverflow(IR::Instr *const instr)
         return;
     }
 
-    Assert(instr->m_opcode != Js::OpCode::Mul_I4 || 
+    Assert(instr->m_opcode != Js::OpCode::Mul_I4 ||
         (instr->m_opcode == Js::OpCode::Mul_I4 && !instr->ShouldCheckFor32BitOverflow() && instr->ShouldCheckForNon32BitOverflow() ));
 
 
@@ -17712,7 +17712,7 @@ GlobOpt::PreLowerCanonicalize(IR::Instr *instr, Value **pSrc1Val, Value **pSrc2V
 
     if (src1->IsImmediateOpnd())
     {
-        // Swap for cst, src
+        // Swap for dst, src
     }
     else if (src2 && dst && src2->IsRegOpnd())
     {
@@ -18116,7 +18116,7 @@ GlobOpt::OptIsInvariant(Sym *sym, BasicBlock *block, Loop *loop, Value *srcVal, 
         return false;
     }
 
-    // Can't hoist non-primitives, unless we have safeguard againts valueof/tostring.
+    // Can't hoist non-primitives, unless we have safeguard against valueof/tostring.
     if (!allowNonPrimitives && !srcVal->GetValueInfo()->IsPrimitive() && !this->IsTypeSpecialized(sym, loop->landingPad))
     {
         return false;
@@ -18126,11 +18126,11 @@ GlobOpt::OptIsInvariant(Sym *sym, BasicBlock *block, Loop *loop, Value *srcVal, 
     {
         // Typically, a sym is considered invariant if it has the same value in the current block and in the loop landing pad.
         // The sym may have had a different value earlier in the loop or on the back-edge, but as long as it's reassigned to its
-        // value outside the loop, it would be considered invaraint in this block. Consider that case:
+        // value outside the loop, it would be considered invariant in this block. Consider that case:
         //     s1 = s2[invariant]
         //     <loop start>
         //         s1 = s2[invariant]
-        //         // s1 now has the same value as in the landing pad, and is considered invaraint
+        //         // s1 now has the same value as in the landing pad, and is considered invariant
         //         s1 += s3
         //         // s1 is not invariant here, or on the back-edge
         //         ++s3 // s3 is not invariant, so the add above cannot be hoisted
@@ -18148,7 +18148,7 @@ GlobOpt::OptIsInvariant(Sym *sym, BasicBlock *block, Loop *loop, Value *srcVal, 
         // in the loop without a reassignment at (s1 = s2) inside the loop, and (s1 += s3) would then use an incorrect value of
         // s1 (it would use the value of s1 from the previous loop iteration, instead of using the value of s2).
         //
-        // The problem here, is that we cannot hoist the conversion of s1 into its specilaized version across the assignment
+        // The problem here, is that we cannot hoist the conversion of s1 into its specialized version across the assignment
         // (s1 = s2) inside the loop. So for the purposes of type specialization, don't consider a sym invariant if it has a def
         // inside the loop.
         return false;
@@ -18205,8 +18205,8 @@ GlobOpt::OptIsInvariant(
 
     switch(instr->m_opcode)
     {
-    
-    // Can't legaly hoist these
+
+    // Can't legally hoist these
     case Js::OpCode::LdLen_A:
         return false;
 
@@ -18255,7 +18255,7 @@ GlobOpt::OptIsInvariant(
             return false;
         }
 
-        IR::Opnd *src2 = instr->GetSrc2();;
+        IR::Opnd *src2 = instr->GetSrc2();
 
         if (src2)
         {
@@ -18389,7 +18389,7 @@ GlobOpt::OptHoistInvariant(
                         block->globOptData.liveSimd128I4Syms->Set(copyVarSym->m_id);
                         copySym = copySym->GetSimd128I4EquivSym(instr->m_func);
                     }
-                    
+
                 }
                 copyReg = IR::RegOpnd::New(copySym, copySym->GetType(), instr->m_func);
             }
@@ -18537,7 +18537,7 @@ GlobOpt::OptHoistInvariant(
         {
             // check if we should have CSE'ed this EA
             Assert(instr->GetSrc1());
-            
+
             // if the dstVal symstore is not the dst itself, then we copied the Value from another expression.
             if (dstVal->GetValueInfo()->GetSymStore() != instr->GetDst()->GetStackSym())
             {
@@ -18646,7 +18646,7 @@ GlobOpt::OptHoistInvariant(
 
     #if DBG
         // TODO: There are some odd cases with field hoisting where the sym is invariant in only part of the loop and the info
-        // does not flow through all blocks. Uncommnet the verification below after PRE replaces field hoisting.
+        // does not flow through all blocks. Un-comment the verification below after PRE replaces field hoisting.
 
         //// Verify that the src sym is live as the required type, and that the conversion is valid
         //Assert(IsLive(dstVarSym, &hoistBlockData));
@@ -18900,7 +18900,7 @@ GlobOpt::DoInlineArgsOpt(Func* func)
 {
     Func* topFunc = func->GetTopFunc();
     Assert(topFunc != func);
-    bool doInlineArgsOpt = 
+    bool doInlineArgsOpt =
         !PHASE_OFF(Js::InlineArgsOptPhase, topFunc) &&
         !func->GetHasCalls() &&
         !func->GetHasUnoptimizedArgumentsAcccess() &&
@@ -18912,7 +18912,7 @@ bool
 GlobOpt::IsSwitchOptEnabled(Func* func)
 {
     Assert(func->IsTopFunc());
-    return !PHASE_OFF(Js::SwitchOptPhase, func) && !func->GetProfileInfo()->IsSwitchOptDisabled() && !IsTypeSpecPhaseOff(func) 
+    return !PHASE_OFF(Js::SwitchOptPhase, func) && !func->GetProfileInfo()->IsSwitchOptDisabled() && !IsTypeSpecPhaseOff(func)
         && func->DoGlobOpt() && !func->HasTry();
 }
 
@@ -19905,7 +19905,7 @@ void ValueInfo::Dump()
     }
 }
 
-void 
+void
 GlobOpt::Dump()
 {
     this->DumpSymToValueMap();
@@ -20131,7 +20131,7 @@ GlobOpt::TrackMarkTempObject(IR::Instr * instrStart, IR::Instr * instrLast)
 void
 GlobOpt::TrackTempObjectSyms(IR::Instr * instr, IR::RegOpnd * opnd)
 {
-    // If it is marked as dstIsTempObject, we should have mark temped it, or type specialied it to Ld_I4
+    // If it is marked as dstIsTempObject, we should have mark temped it, or type specialized it to Ld_I4
     Assert(!instr->dstIsTempObject || ObjectTempVerify::CanMarkTemp(instr, nullptr));
     GlobOptBlockData& globOptData = this->currentBlock->globOptData;
     bool canStoreTemp = false;
@@ -20140,8 +20140,8 @@ GlobOpt::TrackTempObjectSyms(IR::Instr * instr, IR::RegOpnd * opnd)
     {
         maybeTemp = instr->dstIsTempObject;
 
-        // We have to make sure that lower will always generate code to do stack allocation 
-        // before we can store any other stack instance onto it.  Otherwise, we would not 
+        // We have to make sure that lower will always generate code to do stack allocation
+        // before we can store any other stack instance onto it.  Otherwise, we would not
         // walk object to box the stack property
         canStoreTemp = instr->dstIsTempObject && ObjectTemp::CanStoreTemp(instr);
     }
@@ -20184,23 +20184,23 @@ GlobOpt::TrackTempObjectSyms(IR::Instr * instr, IR::RegOpnd * opnd)
         globOptData.maybeTempObjectSyms->Set(symId);
 
         if (canStoreTemp)
-        {           
+        {
             if (instr->m_opcode == Js::OpCode::NewScObjectLiteral && !this->IsLoopPrePass())
             {
-                // For object literal, we install the final type up front
-                // If there are bailout before we finish initializing all the fields, we need to 
-                // zero out the rest if we stack allocate the literal, so that the boxing would not 
+                // For object literal, we install the final type up front.
+                // If there are bailout before we finish initializing all the fields, we need to
+                // zero out the rest if we stack allocate the literal, so that the boxing would not
                 // try to box trash pointer in the properties.
 
-                // Although object Literal initialization can be done lexially, BailOnNoProfile may cause some path 
-                // to disappear.  Do it is flow base make it easier to stop propagate those entries                                                   
+                // Although object Literal initialization can be done lexically, BailOnNoProfile may cause some path
+                // to disappear. Do it is flow base make it easier to stop propagate those entries.
 
                 IR::IntConstOpnd * propertyArrayIdOpnd = instr->GetSrc1()->AsIntConstOpnd();
                 const Js::PropertyIdArray * propIds = Js::ByteCodeReader::ReadPropertyIdArray(propertyArrayIdOpnd->m_value, instr->m_func->GetJnFunction());
 
                 // duplicates are removed by parser
                 Assert(!propIds->hadDuplicates);
-                
+
                 if (globOptData.stackLiteralInitFldDataMap == nullptr)
                 {
                     globOptData.stackLiteralInitFldDataMap = JitAnew(alloc, StackLiteralInitFldDataMap, alloc);
@@ -20209,10 +20209,10 @@ GlobOpt::TrackTempObjectSyms(IR::Instr * instr, IR::RegOpnd * opnd)
                 {
                     Assert(!globOptData.stackLiteralInitFldDataMap->ContainsKey(sym));
                 }
-                StackLiteralInitFldData data = { propIds, 0};                
+                StackLiteralInitFldData data = { propIds, 0};
                 globOptData.stackLiteralInitFldDataMap->AddNew(sym, data);
             }
-  
+
             if (globOptData.canStoreTempObjectSyms == nullptr)
             {
                 globOptData.canStoreTempObjectSyms = JitAnew(this->alloc, BVSparse<JitArenaAllocator>, this->alloc);
@@ -20244,13 +20244,13 @@ GlobOpt::TrackTempObjectSyms(IR::Instr * instr, IR::RegOpnd * opnd)
         Assert(this->IsLoopPrePass() ||
             globOptData.stackLiteralInitFldDataMap == nullptr
             || globOptData.stackLiteralInitFldDataMap->Count() == 0
-            || !globOptData.stackLiteralInitFldDataMap->ContainsKey(sym));       
+            || !globOptData.stackLiteralInitFldDataMap->ContainsKey(sym));
     }
 }
 
 IR::Instr *
 GlobOpt::GenerateBailOutMarkTempObjectIfNeeded(IR::Instr * instr, IR::Opnd * opnd, bool isDst)
-{    
+{
     Assert(opnd);
     Assert(isDst == (opnd == instr->GetDst()));
     Assert(opnd != instr->GetDst() || !opnd->IsRegOpnd());
@@ -20268,7 +20268,7 @@ GlobOpt::GenerateBailOutMarkTempObjectIfNeeded(IR::Instr * instr, IR::Opnd * opn
 
     IR::PropertySymOpnd * propertySymOpnd = nullptr;
     StackSym * stackSym = ObjectTemp::GetStackSym(opnd, &propertySymOpnd);
-    // It is ok to not get the var equiv sym here, as use of a type specialized sym is not use of the temp object
+    // It is okay to not get the var equiv sym here, as use of a type specialized sym is not use of the temp object
     // so no need to add mark temp bailout.
     // TempObjectSysm doesn't contain any type spec sym, so we will get false here for all type spec sym
     if (stackSym && globOptData.maybeTempObjectSyms->Test(stackSym->m_id))
@@ -20279,7 +20279,6 @@ GlobOpt::GenerateBailOutMarkTempObjectIfNeeded(IR::Instr * instr, IR::Opnd * opn
         }
         else
         {
-
             // On insert the pre op bailout if it is not Direct field access do nothing, don't check the dst yet.
             // SetTypeCheckBailout will clear this out if it is direct field access
             if (isDst
@@ -20298,7 +20297,7 @@ GlobOpt::GenerateBailOutMarkTempObjectIfNeeded(IR::Instr * instr, IR::Opnd * opn
             // If the opnd is a src, that means that the object pointer may be a stack object
             // so the load may be a temp object/number and we need to track its use
 
-            // Don't mark start of indir as can store temp, because we don't actually know 
+            // Don't mark start of indir as can store temp, because we don't actually know
             // what it is assigning to
             if (!isDst || !opnd->IsIndirOpnd())
             {
@@ -20312,7 +20311,7 @@ GlobOpt::GenerateBailOutMarkTempObjectIfNeeded(IR::Instr * instr, IR::Opnd * opn
                 {
                     const Js::PropertyId propertyId = propertySymOpnd->m_sym->AsPropertySym()->m_propertyId;
 
-                    // We don't need to track numeric properies init
+                    // We don't need to track numeric properties init
                     if (!this->func->GetScriptContext()->GetPropertyNameLocked(propertyId)->IsNumeric())
                     {
                         DebugOnly(bool found = false);
@@ -20356,7 +20355,7 @@ GlobOpt::GenerateBailOutMarkTempObjectIfNeeded(IR::Instr * instr, IR::Opnd * opn
                     }
                 }
             }
-        }          
+        }
     }
     return instr;
 }
@@ -20470,7 +20469,7 @@ GlobOpt::GenerateInductionVariableChangeForMemOp(Loop *loop, byte unroll, IR::In
     {
         IRType type = loopCount->LoopCountMinusOneSym()->GetType();
 
-        // loop count is off by one, so add one 
+        // loop count is off by one, so add one
         IR::RegOpnd *loopCountOpnd = IR::RegOpnd::New(type, localFunc);
         IR::RegOpnd *minusOneOpnd = IR::RegOpnd::New(loopCount->LoopCountMinusOneSym(), type, localFunc);
         minusOneOpnd->SetIsJITOptimizedReg(true);

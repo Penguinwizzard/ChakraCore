@@ -38,7 +38,7 @@ namespace Js
     // Info: Finalizer to release stored IErrorInfo
     void JavascriptErrorDebug::Finalize(bool isShutdown)
     {
-        // Finalize can be called mulitple times (from recycler and from ScriptSite::Close)
+        // Finalize can be called multiple times (from recycler and from ScriptSite::Close)
         // Check if that is the case and don't do anything
         if (isShutdown)
         {
@@ -101,7 +101,7 @@ namespace Js
 #endif
         // Get error type if hr is a runtime error.
         GetErrorTypeFromNumber(hr, &errorType);
-        
+
         EXCEPINFO excepinfo;
         EXCEPINFO baseline;
         memset(&baseline, 0, sizeof(baseline));
@@ -161,10 +161,10 @@ namespace Js
             if (message == nullptr)
             {
                 // Default argument array of empty strings, for CLR parity
-                DWORD_PTR pArgs[] = { (DWORD_PTR)L"", (DWORD_PTR)L"", (DWORD_PTR)L"", (DWORD_PTR)L"", (DWORD_PTR)L"", 
+                DWORD_PTR pArgs[] = { (DWORD_PTR)L"", (DWORD_PTR)L"", (DWORD_PTR)L"", (DWORD_PTR)L"", (DWORD_PTR)L"",
                     (DWORD_PTR)L"", (DWORD_PTR)L"", (DWORD_PTR)L"", (DWORD_PTR)L"", (DWORD_PTR)L"" };
 
-                if (FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | 
+                if (FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM |
                     FORMAT_MESSAGE_ARGUMENT_ARRAY,
                     NULL,
                     hr,
@@ -184,10 +184,10 @@ namespace Js
             {
                 length += SysStringLen(message);
             }
-        } 
+        }
 
         // If length == 1, we didn't find any description strings - leave allocatedString null.
-        if (length > 1) 
+        if (length > 1)
         {
              // If we have a restricted description, the error message format is ("%s\r\n%s", message, restrictedMessage).
              if (restrictedDescription != nullptr)
@@ -332,7 +332,7 @@ namespace Js
             SysFreeString(bstrReference);
             bstrReference = nullptr;
         }
-        
+
         if (!errorInfoMatch)
         {
             if (nullptr != pexcepinfo->bstrSource)

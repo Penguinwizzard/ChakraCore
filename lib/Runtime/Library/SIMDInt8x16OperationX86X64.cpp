@@ -9,7 +9,7 @@
 
 namespace Js
 {
-    // SIMD.Int8x16 operation wrappers that cover instrinsics for x86/x64 system 
+    // SIMD.Int8x16 operation wrappers that cover intrinsics for x86/x64 system
     SIMDValue SIMDInt8x16Operation::OpInt8x16(int8 x0, int8 x1, int8 x2, int8 x3
         , int8 x4, int8 x5, int8 x6, int8 x7
         , int8 x8, int8 x9, int8 x10, int8 x11
@@ -51,11 +51,11 @@ namespace Js
         return X86SIMDValue::ToSIMDValue(x86Result);
     }
 
-    SIMDValue SIMDInt8x16Operation::OpSplat(const SIMDValue& v)  //arun::ToDo  not in spec
+    SIMDValue SIMDInt8x16Operation::OpSplat(const SIMDValue& v) // TODO arun: not in spec
     {
         X86SIMDValue x86Result;
-        // set 16 signed 8-bit integers values to input value(v.i8[SIMD_X]) 
-        x86Result.m128i_value = _mm_set1_epi8(v.i8[0]); 
+        // set 16 signed 8-bit integers values to input value(v.i8[SIMD_X])
+        x86Result.m128i_value = _mm_set1_epi8(v.i8[0]);
 
         return X86SIMDValue::ToSIMDValue(x86Result);
     }
@@ -69,7 +69,7 @@ namespace Js
 
         return X86SIMDValue::ToSIMDValue(x86Result);
     }
-    SIMDValue SIMDInt8x16Operation::OpFromInt32x4Bits(const SIMDValue& value)  
+    SIMDValue SIMDInt8x16Operation::OpFromInt32x4Bits(const SIMDValue& value)
     {
         X86SIMDValue x86Result;
 
@@ -93,7 +93,7 @@ namespace Js
 
         temp.m128i_value = _mm_andnot_si128(v.m128i_value, negativeOnes.m128i_value); // (~value) & (negative ones)
         SIGNMASK.m128i_value = _mm_set1_epi8(0x00000001);                            // set SIGNMASK to 1
-        x86Result.m128i_value = _mm_add_epi8(SIGNMASK.m128i_value, temp.m128i_value);// add 16 integers respectively   
+        x86Result.m128i_value = _mm_add_epi8(SIGNMASK.m128i_value, temp.m128i_value);// add 16 integers respectively
 
         return X86SIMDValue::ToSIMDValue(x86Result);
     }
@@ -128,7 +128,7 @@ namespace Js
 
         x86Result.m128i_value = _mm_sub_epi8(tmpaValue.m128i_value, tmpbValue.m128i_value); // a - b
 
-        return X86SIMDValue::ToSIMDValue(x86Result);;
+        return X86SIMDValue::ToSIMDValue(x86Result);
     }
 
     SIMDValue SIMDInt8x16Operation::OpMul(const SIMDValue& aValue, const SIMDValue& bValue)
@@ -146,11 +146,11 @@ namespace Js
         if (AutoSystemInfo::Data.SSE2Available())
         {
             // (ah* 2^8 + al) * (bh *2^8 + bl) = (ah*bh* 2^8 + al*bh + ah* bl) * 2^8 + al * bl
-            x86tmp1.m128i_value = _mm_mullo_epi16(tmpaValue.m128i_value, tmpbValue.m128i_value); 
+            x86tmp1.m128i_value = _mm_mullo_epi16(tmpaValue.m128i_value, tmpbValue.m128i_value);
             x86tmp2.m128i_value = _mm_and_si128(x86tmp1.m128i_value, X86_LOWBYTE_MASK.m128i_value);
 
-            tmpaValue.m128i_value = _mm_srli_epi16(tmpaValue.m128i_value, 8);                  
-            tmpbValue.m128i_value = _mm_srli_epi16(tmpbValue.m128i_value, 8);                  
+            tmpaValue.m128i_value = _mm_srli_epi16(tmpaValue.m128i_value, 8);
+            tmpbValue.m128i_value = _mm_srli_epi16(tmpbValue.m128i_value, 8);
             x86tmp3.m128i_value   = _mm_mullo_epi16(tmpaValue.m128i_value, tmpbValue.m128i_value);
             x86tmp3.m128i_value   = _mm_slli_epi16(x86tmp3.m128i_value, 8);
 
@@ -163,7 +163,7 @@ namespace Js
             for (uint idx = 0; idx < 16; ++idx)
             {
                 result.i8[idx] = aValue.i8[idx] * bValue.i8[idx];
-            }   
+            }
         }
 
         return result;
@@ -241,8 +241,8 @@ namespace Js
 
         const _x86_SIMDValue X86_LOWBYTE_MASK  = { 0x00ff00ff, 0x00ff00ff, 0x00ff00ff, 0x00ff00ff };
         const _x86_SIMDValue X86_HIGHBYTE_MASK = { 0xff00ff00, 0xff00ff00, 0xff00ff00, 0xff00ff00 };
-        
-        if (count < 0 || count > 8)   
+
+        if (count < 0 || count > 8)
             count = 8;
 
         if (AutoSystemInfo::Data.SSE2Available())

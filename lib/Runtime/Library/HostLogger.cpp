@@ -23,7 +23,7 @@ namespace Js
             Assert(Js::Configuration::Global.flags.IsEnabled(Js::HostLoggingFlag));
             CloseLogFile();
         }
-       
+
         void HostLogger::OpenLogFile()
         {
             Assert(Js::Configuration::Global.flags.IsEnabled(Js::HostLoggingFlag));
@@ -37,7 +37,7 @@ namespace Js
             }
         }
 
-        void HostLogger::DumpType(Var value) 
+        void HostLogger::DumpType(Var value)
         {
             if (!TaggedNumber::Is(value) &&
                 JavascriptOperators::IsUndefinedObject(value, RecyclableObject::FromVar(value)->GetLibrary()->GetUndefined()))
@@ -55,10 +55,10 @@ namespace Js
                     case TypeIds_Number:
                     case TypeIds_Int64Number:
                     case TypeIds_UInt64Number:
-                        fprintf(m_logfile, "Number:");                
+                        fprintf(m_logfile, "Number:");
                         break;
                     case TypeIds_Boolean:
-                        fprintf(m_logfile, "Boolean:");                
+                        fprintf(m_logfile, "Boolean:");
                         break;
                     case TypeIds_Function:
                         fprintf(m_logfile, "[object Function]:");
@@ -293,7 +293,7 @@ namespace Js
         {
             // create the IDispatch->DISPIDCache cache
             propertyNameCache = Anew(threadContext->GetThreadAlloc(), propertyNameCache_t,
-                    threadContext->GetThreadAlloc(), 
+                    threadContext->GetThreadAlloc(),
                     17
                 );
         }
@@ -311,7 +311,7 @@ namespace Js
             }
 
             // we don't own the property name, so make a copy to save
-            wchar_t *name = (wchar_t*)threadContext->GetThreadAlloc()->Alloc((wcslen(str)+1)*sizeof(wchar_t));;
+            wchar_t *name = (wchar_t*)threadContext->GetThreadAlloc()->Alloc((wcslen(str)+1)*sizeof(wchar_t));
             wcscpy_s(name, wcslen(str)+1, str);
 
             // cache the {pdex, id, name} tuple

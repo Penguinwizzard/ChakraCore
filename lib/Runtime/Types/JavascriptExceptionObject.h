@@ -9,11 +9,11 @@ namespace Js {
     const DWORD ExceptionCode = ('jsc' | 0xE0000000);
 
     // As magic numbers increase, we have to keep track of the versions that we are
-    // backwards compatible with. 
+    // backwards compatible with.
     // Old CRTs also recognize unknown magic numbers with a >= test.  Therefore, we just increment the
     // the magic number by one every time we need another.
     //
-    
+
     const DWORD  ExceptionParameters = 1;
     const int    ExceptionObjectIndex = 0;
 
@@ -23,12 +23,12 @@ namespace Js {
     {
     public:
         typedef Var (__stdcall *HostWrapperCreateFuncType)(Var var, ScriptContext * sourceScriptContext, ScriptContext * destScriptContext);
-        
-        JavascriptExceptionObject(Var object, ScriptContext * scriptContext, JavascriptExceptionContext* exceptionContextIn, bool isPendingExceptionObject = false) : 
+
+        JavascriptExceptionObject(Var object, ScriptContext * scriptContext, JavascriptExceptionContext* exceptionContextIn, bool isPendingExceptionObject = false) :
             thrownObject(object), isPendingExceptionObject(isPendingExceptionObject),
             scriptContext(scriptContext), tag(true), isDebuggerSkip(false), byteCodeOffsetAfterDebuggerSkip(Constants::InvalidByteCodeOffset), hasDebuggerLogged(false),
             isFirstChance(false), isExceptionCaughtInNonUserCode(false), ignoreAdvanceToNextStatement(false), hostWrapperCreateFunc(nullptr), isGeneratorReturnException(false)
-        { 
+        {
             if (exceptionContextIn)
             {
                 exceptionContext = *exceptionContextIn;
@@ -37,7 +37,7 @@ namespace Js {
             {
                 memset(&exceptionContext, 0, sizeof(exceptionContext));
             }
-#if DBG 
+#if DBG
             this->stackBackTrace = nullptr;
 #endif
         }
@@ -51,11 +51,11 @@ namespace Js {
         }
 
         FunctionBody * GetFunctionBody() const;
-        JavascriptFunction* GetFunction() const 
+        JavascriptFunction* GetFunction() const
         {
             return exceptionContext.ThrowingFunction();
         }
-       
+
         const JavascriptExceptionContext* GetExceptionContext() const
         {
             return &exceptionContext;
@@ -63,7 +63,7 @@ namespace Js {
 #if DBG
         void FillStackBackTrace();
 #endif
-        
+
         void FillError(JavascriptExceptionContext& exceptionContext, ScriptContext *scriptContext, HostWrapperCreateFuncType hostWrapperCreateFunc = NULL);
         void ClearError();
 
@@ -165,14 +165,14 @@ namespace Js {
 
         bool IsGeneratorReturnException()
         {
-            // Used by the genarators to throw an exception to indicate the return from generator function
+            // Used by the generators to throw an exception to indicate the return from generator function
             return isGeneratorReturnException;
         }
 
     private:
         Var      thrownObject;
         ScriptContext * scriptContext;
-        
+
         int        byteCodeOffsetAfterDebuggerSkip;
         const bool tag : 1;               // Tag the low bit to prevent possible GC false references
         bool       isPendingExceptionObject : 1;
@@ -181,10 +181,10 @@ namespace Js {
         bool       isDebuggerSkip : 1;
         bool       hasDebuggerLogged : 1;
         bool       isFirstChance : 1;      // Mentions whether the current exception is a handled exception or not
-        bool       isExceptionCaughtInNonUserCode : 1; // Mentions if in the caller chain the exception will be handled by the non-user code.        
+        bool       isExceptionCaughtInNonUserCode : 1; // Mentions if in the caller chain the exception will be handled by the non-user code.
         bool       ignoreAdvanceToNextStatement : 1;  // This will be set when user had setnext while sitting on the exception
                                                 // So the exception eating logic shouldn't try and advance to next statement again.
-        
+
         HostWrapperCreateFuncType hostWrapperCreateFunc;
 
         JavascriptExceptionContext exceptionContext;

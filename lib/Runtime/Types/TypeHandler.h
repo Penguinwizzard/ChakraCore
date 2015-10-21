@@ -27,13 +27,13 @@ namespace Js
         bool isAuxSlot;
         bool isWritable;
 
-        PropertyEquivalenceInfo(): 
+        PropertyEquivalenceInfo():
             slotIndex(Constants::NoSlot), isAuxSlot(false), isWritable(false) {}
-        PropertyEquivalenceInfo(PropertyIndex slotIndex, bool isAuxSlot, bool isWritable): 
+        PropertyEquivalenceInfo(PropertyIndex slotIndex, bool isAuxSlot, bool isWritable):
             slotIndex(slotIndex), isAuxSlot(isAuxSlot), isWritable(isWritable) {}
     };
 
-    struct EquivalentPropertyEntry 
+    struct EquivalentPropertyEntry
     {
         Js::PropertyId propertyId;
         Js::PropertyIndex slotIndex;
@@ -47,7 +47,7 @@ namespace Js
         EquivalentPropertyEntry* properties;
     };
 
-    typedef void (__cdecl *DeferredTypeInitializer)(DynamicObject* instance, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);    
+    typedef void (__cdecl *DeferredTypeInitializer)(DynamicObject* instance, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
 
     class DynamicTypeHandler
     {
@@ -248,7 +248,7 @@ namespace Js
 
         void ClearFlags(BYTE values)
         {
-            // Don't clear the the locked, shared or prototype flags.
+            // Don't clear the locked, shared or prototype flags.
             Assert((values & IsLockedFlag) == 0 && (values & IsSharedFlag) == 0 && (values & IsPrototypeFlag) == 0);
 
             this->flags &= ~values;
@@ -261,7 +261,7 @@ namespace Js
 
         void ChangeFlags(BYTE selector, BYTE values)
         {
-            // Don't clear the the locked, shared or prototype flags.
+            // Don't clear the locked, shared or prototype flags.
             Assert((this->flags & IsLockedFlag) == 0 || (selector & IsLockedFlag) == 0 || (values & IsLockedFlag) != 0);
             Assert((this->flags & IsSharedFlag) == 0 || (selector & IsSharedFlag) == 0 || (values & IsSharedFlag) != 0);
             Assert((this->flags & IsPrototypeFlag) == 0 || (selector & IsPrototypeFlag) == 0 || (values & IsPrototypeFlag) != 0);
@@ -551,31 +551,31 @@ namespace Js
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
         virtual void DumpFixedFields() const {};
 #endif
-            
+
     public:
         virtual RecyclerWeakReference<DynamicObject>* GetSingletonInstance() const { return nullptr; }
 
-        bool SetSingletonInstanceIfNeeded(DynamicObject* instance) 
-        { 
+        bool SetSingletonInstanceIfNeeded(DynamicObject* instance)
+        {
             if (AreSingletonInstancesNeeded() && CanBeSingletonInstance(instance))
             {
-                SetSingletonInstance(instance->CreateWeakReferenceToSelf()); 
+                SetSingletonInstance(instance->CreateWeakReferenceToSelf());
                 return true;
             }
             return false;
         }
 
-        void SetSingletonInstanceIfNeeded(RecyclerWeakReference<DynamicObject>* instance) 
-        { 
-            if (AreSingletonInstancesNeeded()) 
+        void SetSingletonInstanceIfNeeded(RecyclerWeakReference<DynamicObject>* instance)
+        {
+            if (AreSingletonInstancesNeeded())
             {
-                SetSingletonInstance(instance); 
+                SetSingletonInstance(instance);
             }
         }
 
-        void SetSingletonInstance(RecyclerWeakReference<DynamicObject>* instance) 
+        void SetSingletonInstance(RecyclerWeakReference<DynamicObject>* instance)
         {
-            Assert(AreSingletonInstancesNeeded()); 
+            Assert(AreSingletonInstancesNeeded());
             SetSingletonInstanceUnchecked(instance);
         }
 

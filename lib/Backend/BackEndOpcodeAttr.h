@@ -56,7 +56,7 @@ namespace OpCodeAttr
     bool IsInt32(Js::OpCode opcode);
     // True if the opcode always produces a number in the specified script context's version
     bool ProducesNumber(Js::OpCode opcode, Js::ScriptContext *const scriptContext);
-    // False if the opcode results in jump to end of the function and there cannot be fallthrough. 
+    // False if the opcode results in jump to end of the function and there cannot be fallthrough.
     bool HasFallThrough(Js::OpCode opcode);
     // True if we need to generate bailout after this opcode when in debug mode (b/o on return from helper).
     bool NeedsPostOpDbgBailOut(Js::OpCode opcode);

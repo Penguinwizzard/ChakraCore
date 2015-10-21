@@ -4,7 +4,7 @@
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
 
-namespace Js 
+namespace Js
 {
     double HiResTimer::GetSystemTime()
     {
@@ -12,7 +12,7 @@ namespace Js
         ::GetSystemTime(&stTime);
         return DateImplementation::TimeFromSt(&stTime);
     }
-    
+
     // determine if the system time is being adjusted every tick to gradually
     // bring it inline with a time server.
     double HiResTimer::GetAdjustFactor()
@@ -56,37 +56,37 @@ namespace Js
             fHiResAvailable = false;
             return GetSystemTime();
         }
-        
+
         double time = GetSystemTime();
 
-        // there is a base time and count set. 
-        if (!fReset 
+        // there is a base time and count set.
+        if (!fReset
             && (count >= baseMsCount))                    // Make sure we don't regress
-        {                        
+        {
             double elapsed = ((double)(count - baseMsCount)) * 1000 / freq;
-            
-            // if the system time is being adjusted every tick, adjust the 
+
+            // if the system time is being adjusted every tick, adjust the
             // precise time delta accordingly.
             if (dAdjustFactor != 1)
             {
                 elapsed = elapsed * dAdjustFactor;
             }
 
-            double preciseTime = dBaseTime + elapsed;            
-            
+            double preciseTime = dBaseTime + elapsed;
+
             if (fabs(preciseTime - time) < 25              // the time computed via perf counter is off by 25ms
                 && preciseTime >= dLastTime)              // the time computed via perf counter is running backwards
-            {                
+            {
                 dLastTime = preciseTime;
                 return dLastTime;
-            }            
+            }
         }
 
         //reset
         dBaseTime = time;
         dAdjustFactor = GetAdjustFactor();
         baseMsCount = count;
-        
+
         double dSinceLast = time - dLastTime;
         if (dSinceLast < -3000)                           // if new time is significantly behind (3s), use it:
         {                                                 // the clock may have been set backwards.
@@ -94,10 +94,10 @@ namespace Js
         }
         else
         {
-            dLastTime = max(dLastTime, time);             // otherwise, make sure we don't regress the time.        
+            dLastTime = max(dLastTime, time);             // otherwise, make sure we don't regress the time.
         }
 
         fReset = false;
         return dLastTime;
     }
-} // namepsace Js.
+} // namespace Js.

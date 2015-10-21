@@ -6,7 +6,7 @@
 
 namespace IR {
 
-inline IRKind          
+inline IRKind
 Instr::GetKind() const
 {
     return this->m_kind;
@@ -33,7 +33,7 @@ Instr::IsEntryInstr() const
 ///----------------------------------------------------------------------------
 
 inline EntryInstr *
-Instr::AsEntryInstr() 
+Instr::AsEntryInstr()
 {
     AssertMsg(this->IsEntryInstr(), "Bad call to AsEntryInstr()");
 
@@ -61,7 +61,7 @@ Instr::IsExitInstr() const
 ///----------------------------------------------------------------------------
 
 inline ExitInstr *
-Instr::AsExitInstr() 
+Instr::AsExitInstr()
 {
     AssertMsg(this->IsExitInstr(), "Bad call to AsExitInstr()");
 
@@ -89,7 +89,7 @@ Instr::IsBranchInstr() const
 ///----------------------------------------------------------------------------
 
 inline BranchInstr *
-Instr::AsBranchInstr() 
+Instr::AsBranchInstr()
 {
     AssertMsg(this->IsBranchInstr(), "Bad call to AsBranchInstr()");
 
@@ -117,7 +117,7 @@ Instr::IsLabelInstr() const
 ///----------------------------------------------------------------------------
 
 inline LabelInstr *
-Instr::AsLabelInstr() 
+Instr::AsLabelInstr()
 {
     AssertMsg(this->IsLabelInstr(), "Bad call to AsLabelInstr()");
 
@@ -131,7 +131,7 @@ Instr::AsLabelInstr()
 ///     Return this as a MultiBrInstr *
 ///
 ///----------------------------------------------------------------------------
-inline MultiBranchInstr *  
+inline MultiBranchInstr *
 BranchInstr::AsMultiBrInstr()
 {
     AssertMsg(this->IsMultiBranch(), "Bad call to AsMultiBrInstr()");
@@ -152,7 +152,7 @@ Instr::IsPragmaInstr() const
 }
 
 inline PragmaInstr *
-Instr::AsPragmaInstr() 
+Instr::AsPragmaInstr()
 {
     AssertMsg(this->IsPragmaInstr(), "Bad call to AsPragmaInstr()");
 
@@ -166,7 +166,7 @@ Instr::IsJitProfilingInstr() const
 }
 
 inline JitProfilingInstr *
-Instr::AsJitProfilingInstr() 
+Instr::AsJitProfilingInstr()
 {
     AssertMsg(this->IsJitProfilingInstr(), "Bad call to AsProfiledInstr()");
 
@@ -180,7 +180,7 @@ Instr::IsProfiledInstr() const
 }
 
 inline ProfiledInstr *
-Instr::AsProfiledInstr() 
+Instr::AsProfiledInstr()
 {
     AssertMsg(this->IsProfiledInstr(), "Bad call to AsProfiledInstr()");
 
@@ -194,7 +194,7 @@ Instr::IsProfiledLabelInstr() const
 }
 
 inline ProfiledLabelInstr *
-Instr::AsProfiledLabelInstr() 
+Instr::AsProfiledLabelInstr()
 {
     AssertMsg(this->IsProfiledLabelInstr(), "Bad call to AsProfiledlLabelInstr()");
 
@@ -207,7 +207,7 @@ Instr::IsByteCodeUsesInstr() const
     return GetKind() == IR::InstrKindByteCodeUses;
 }
 
-inline ByteCodeUsesInstr * 
+inline ByteCodeUsesInstr *
 Instr::AsByteCodeUsesInstr()
 {
     AssertMsg(this->IsByteCodeUsesInstr(), "Bad call to AsByteCodeUsesInstr()");
@@ -218,7 +218,7 @@ Instr::AsByteCodeUsesInstr()
 ///
 /// Instr::IsLowered
 ///
-///     Is this instr lowered to machine dependant opcode?
+///     Is this instr lowered to machine dependent opcode?
 ///
 ///----------------------------------------------------------------------------
 
@@ -253,10 +253,10 @@ Instr::StartsBasicBlock() const
 inline bool
 Instr::EndsBasicBlock() const
 {
-    return 
-        this->IsBranchInstr() || 
+    return
+        this->IsBranchInstr() ||
         this->IsExitInstr() ||
-        this->m_opcode == Js::OpCode::Ret || 
+        this->m_opcode == Js::OpCode::Ret ||
         this->m_opcode == Js::OpCode::Throw ||
         this->m_opcode == Js::OpCode::RuntimeTypeError ||
         this->m_opcode == Js::OpCode::RuntimeReferenceError;
@@ -305,8 +305,8 @@ Instr::GetInvalidInstr()
 
 inline Opnd *
 Instr::GetDst() const
-{ 
-    return this->m_dst; 
+{
+    return this->m_dst;
 }
 
 ///----------------------------------------------------------------------------
@@ -316,9 +316,9 @@ Instr::GetDst() const
 ///----------------------------------------------------------------------------
 
 inline Opnd *
-Instr::GetSrc1() const 
-{ 
-    return this->m_src1; 
+Instr::GetSrc1() const
+{
+    return this->m_src1;
 }
 
 ///----------------------------------------------------------------------------
@@ -330,12 +330,12 @@ Instr::GetSrc1() const
 ///----------------------------------------------------------------------------
 
 inline Opnd *
-Instr::SetSrc1(Opnd * newSrc) 
-{ 
+Instr::SetSrc1(Opnd * newSrc)
+{
     AssertMsg(this->m_src1 == NULL, "Trying to overwrite existing src.");
 
     newSrc = newSrc->Use(m_func);
-    this->m_src1 = newSrc; 
+    this->m_src1 = newSrc;
 
     return newSrc;
 }
@@ -347,9 +347,9 @@ Instr::SetSrc1(Opnd * newSrc)
 ///----------------------------------------------------------------------------
 
 inline Opnd *
-Instr::GetSrc2() const 
-{ 
-    return this->m_src2; 
+Instr::GetSrc2() const
+{
+    return this->m_src2;
 }
 
 ///----------------------------------------------------------------------------
@@ -361,12 +361,12 @@ Instr::GetSrc2() const
 ///----------------------------------------------------------------------------
 
 inline Opnd *
-Instr::SetSrc2(Opnd * newSrc) 
-{ 
+Instr::SetSrc2(Opnd * newSrc)
+{
     AssertMsg(this->m_src2 == NULL, "Trying to overwrite existing src.");
 
     newSrc = newSrc->Use(m_func);
-    this->m_src2 = newSrc; 
+    this->m_src2 = newSrc;
 
     return newSrc;
 }
@@ -451,7 +451,7 @@ inline void
 BranchInstr::ClearTarget()
 {
     if (this->IsMultiBranch())
-    {        
+    {
         this->AsMultiBrInstr()->ClearTarget();
     }
     else
@@ -490,14 +490,14 @@ BranchInstr::IsMultiBranch() const
     if (m_branchTarget)
     {
         Assert(!m_isMultiBranch);
-        return false;   
+        return false;
     }
     else
     {
         Assert(m_isMultiBranch);
         return true;    //it's a multi branch instr
     }
-    
+
 }
 
 ///----------------------------------------------------------------------------
@@ -533,7 +533,7 @@ MultiBranchInstr::AddtoDictionary(uint32 offset, TBranchKey key)
 {
     Assert(this->m_kind == StrDictionary);
     Assert(key);
-    this->GetBranchDictionary()->dictionary.AddNew(key, (void*)offset);    
+    this->GetBranchDictionary()->dictionary.AddNew(key, (void*)offset);
 }
 
 inline void
@@ -541,10 +541,10 @@ MultiBranchInstr::AddtoJumpTable(uint32 offset, uint32 jmpIndex)
 {
     Assert(this->m_kind == IntJumpTable || this->m_kind == SingleCharStrJumpTable);
     Assert(jmpIndex != -1);
-    this->GetBranchJumpTable()->jmpTable[jmpIndex] = (void*)offset;    
+    this->GetBranchJumpTable()->jmpTable[jmpIndex] = (void*)offset;
 }
 
-inline void 
+inline void
 MultiBranchInstr::FixMultiBrDefaultTarget(uint32 targetOffset)
 {
     this->GetBranchJumpTable()->defaultTarget = (void *)targetOffset;
@@ -580,7 +580,7 @@ MultiBranchInstr::CreateBranchTargetsAndSetDefaultTarget(int size, Kind kind, ui
     };
 }
 
-inline MultiBranchInstr::BranchDictionaryWrapper *		
+inline MultiBranchInstr::BranchDictionaryWrapper *
 MultiBranchInstr::GetBranchDictionary()
 {
     return reinterpret_cast<MultiBranchInstr::BranchDictionaryWrapper *>(m_branchTargets);
@@ -611,7 +611,7 @@ MultiBranchInstr::ChangeLabelRef(LabelInstr * oldTarget, LabelInstr * newTarget)
 ///
 ///----------------------------------------------------------------------------
 
-inline void 
+inline void
 LabelInstr::SetPC(BYTE * pc)
 {
     this->m_pc.pc = pc;
@@ -634,7 +634,7 @@ LabelInstr::GetPC(void) const
 ///
 ///----------------------------------------------------------------------------
 
-inline void 
+inline void
 LabelInstr::ResetOffset(uint32 offset)
 {
     AssertMsg(this->isInlineeEntryInstr, "As of now only InlineeEntryInstr overwrites the offset at encoder stage");
@@ -647,7 +647,7 @@ LabelInstr::ResetOffset(uint32 offset)
 ///
 ///----------------------------------------------------------------------------
 
-inline void 
+inline void
 LabelInstr::SetOffset(uint32 offset)
 {
     AssertMsg(this->m_pc.offset == 0, "Overwriting existing byte offset");
@@ -675,7 +675,7 @@ LabelInstr::GetOffset(void) const
 ///
 ///----------------------------------------------------------------------------
 
-inline void 
+inline void
 LabelInstr::SetBasicBlock(BasicBlock * block)
 {
     AssertMsg(this->m_block == nullptr || block == nullptr, "Overwriting existing block pointer");
@@ -694,7 +694,7 @@ LabelInstr::GetBasicBlock(void) const
     return this->m_block;
 }
 
-inline void 
+inline void
 LabelInstr::SetLoop(Loop* loop)
 {
     Assert(this->m_isLoopTop);

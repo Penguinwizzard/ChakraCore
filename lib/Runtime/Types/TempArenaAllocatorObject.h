@@ -17,7 +17,7 @@ namespace Js
         TempArenaAllocatorWrapper(__in LPCWSTR name, PageAllocator * pageAllocator, void (*outOfMemoryFunc)());
 
     public:
-        
+
 
         static TempArenaAllocatorWrapper* Create(ThreadContext * threadContext);
 
@@ -26,7 +26,7 @@ namespace Js
         }
 
         virtual void Dispose(bool isShutdown) override;
-        virtual void Mark(Recycler *recycler) override { AssertMsg(false, "Mark called on object that isnt TrackableObject"); }
+        virtual void Mark(Recycler *recycler) override { AssertMsg(false, "Mark called on object that isn't TrackableObject"); }
 
         ArenaAllocator *GetAllocator()
         {

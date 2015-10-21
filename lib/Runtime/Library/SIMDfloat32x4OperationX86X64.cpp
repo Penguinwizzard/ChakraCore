@@ -61,13 +61,13 @@ namespace Js
         X86SIMDValue x86Result;
         X86SIMDValue v = X86SIMDValue::ToX86SIMDValue(value);
 
-        // Converts the two double-precision, floating-point values of v.m128d_value 
+        // Converts the two double-precision, floating-point values of v.m128d_value
         // to single-precision, floating-point values.
         x86Result.m128_value = _mm_cvtpd_ps(v.m128d_value);
 
         return X86SIMDValue::ToSIMDValue(x86Result);
     }
-    
+
     SIMDValue SIMDFloat32x4Operation::OpFromFloat64x2Bits(const SIMDValue& value)
     {
         X86SIMDValue x86Result;
@@ -194,7 +194,7 @@ namespace Js
 
         x86Result.m128_value = _mm_sub_ps(tmpaValue.m128_value, tmpbValue.m128_value);  // a - b
 
-        return X86SIMDValue::ToSIMDValue(x86Result);;
+        return X86SIMDValue::ToSIMDValue(x86Result);
     }
 
     SIMDValue SIMDFloat32x4Operation::OpMul(const SIMDValue& aValue, const SIMDValue& bValue)
@@ -205,7 +205,7 @@ namespace Js
 
         x86Result.m128_value = _mm_mul_ps(tmpaValue.m128_value, tmpbValue.m128_value); // a * b
 
-        return X86SIMDValue::ToSIMDValue(x86Result);;
+        return X86SIMDValue::ToSIMDValue(x86Result);
     }
 
     SIMDValue SIMDFloat32x4Operation::OpDiv(const SIMDValue& aValue, const SIMDValue& bValue)
@@ -216,7 +216,7 @@ namespace Js
 
         x86Result.m128_value = _mm_div_ps(tmpaValue.m128_value, tmpbValue.m128_value); // a / b
 
-        return X86SIMDValue::ToSIMDValue(x86Result);;
+        return X86SIMDValue::ToSIMDValue(x86Result);
     }
 
     SIMDValue SIMDFloat32x4Operation::OpAnd(const SIMDValue& aValue, const SIMDValue& bValue)
@@ -259,7 +259,7 @@ namespace Js
         X86SIMDValue tmpbValue = X86SIMDValue::ToX86SIMDValue(bValue);
 
         // choose the smaller value of the two parameters a and b
-        x86Result.m128_value = _mm_min_ps(tmpaValue.m128_value, tmpbValue.m128_value); 
+        x86Result.m128_value = _mm_min_ps(tmpaValue.m128_value, tmpbValue.m128_value);
 
         return X86SIMDValue::ToSIMDValue(x86Result);
     }
@@ -334,7 +334,7 @@ namespace Js
         X86SIMDValue tmpaValue = X86SIMDValue::ToX86SIMDValue(aValue);
         X86SIMDValue tmpbValue = X86SIMDValue::ToX86SIMDValue(bValue);
         x86Result.m128_value = _mm_cmpgt_ps(tmpaValue.m128_value, tmpbValue.m128_value); // a > b?
-        
+
         return X86SIMDValue::ToSIMDValue(x86Result);
     }
 
@@ -349,7 +349,7 @@ namespace Js
     }
 
     SIMDValue SIMDFloat32x4Operation::OpClamp(const SIMDValue& value, const SIMDValue& lower, const SIMDValue& upper)
-    { // SIMD review: do we have intrinsic for the implemenation?
+    { // SIMD review: do we have intrinsic for the implementation?
         SIMDValue result;
 
         // lower clamp

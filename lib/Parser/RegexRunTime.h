@@ -173,7 +173,7 @@ namespace UnifiedRegex
 
     struct CountDomain : private Chars<wchar_t>
     {
-        CharCount lower;       
+        CharCount lower;
         CharCountOrFlag upper; // CharCountFlag => unbounded
 
         inline CountDomain() : lower(0), upper(CharCountFlag) {}
@@ -361,7 +361,7 @@ namespace UnifiedRegex
     struct Char2LiteralScannerMixin : Char2Mixin
     {
         // scanner must be setup
-        Char2LiteralScannerMixin(CharCount offset, CharCount length) : Char2Mixin(0, 0) { Assert(length == 2); } 
+        Char2LiteralScannerMixin(CharCount offset, CharCount length) : Char2Mixin(0, 0) { Assert(length == 2); }
         void Setup(wchar_t c0, wchar_t c1) { cs[0] = c0; cs[1] = c1; }
         CharCount GetLiteralLength() const { return 2; }
         bool Match(Matcher& matcher, const wchar_t* const input, const CharCount inputLength, CharCount& inputOffset) const;
@@ -377,26 +377,26 @@ namespace UnifiedRegex
         ScannerT scanner;
 
         // scanner must be setup
-        ScannerMixinT(CharCount offset, CharCount length) : LiteralMixin(offset, length) {}        
+        ScannerMixinT(CharCount offset, CharCount length) : LiteralMixin(offset, length) {}
         CharCount GetLiteralLength() const { return length; }
         bool Match(Matcher& matcher, const wchar_t* const input, const CharCount inputLength, CharCount& inputOffset) const;
-        
+
         void FreeBody(ArenaAllocator* rtAllocator);
 #if ENABLE_REGEX_CONFIG_OPTIONS
         void Print(DebugWriter* w, const wchar_t* litbuf, bool isEquivClass = false) const;
 #endif
     };
 
-    typedef ScannerMixinT<TextbookBoyerMoore<wchar_t>> ScannerMixin;    
-    typedef ScannerMixinT<TextbookBoyerMooreWithLinearMap<wchar_t>> ScannerMixin_WithLinearCharMap;    
+    typedef ScannerMixinT<TextbookBoyerMoore<wchar_t>> ScannerMixin;
+    typedef ScannerMixinT<TextbookBoyerMooreWithLinearMap<wchar_t>> ScannerMixin_WithLinearCharMap;
 
     template <uint lastPatCharEquivCLassSize>
     struct EquivScannerMixinT : ScannerMixin
     {
         // scanner must be setup
-        EquivScannerMixinT(CharCount offset, CharCount length) : ScannerMixin(offset, length) {}        
-        
-        bool Match(Matcher& matcher, const wchar_t* const input, const CharCount inputLength, CharCount& inputOffset) const;   
+        EquivScannerMixinT(CharCount offset, CharCount length) : ScannerMixin(offset, length) {}
+
+        bool Match(Matcher& matcher, const wchar_t* const input, const CharCount inputLength, CharCount& inputOffset) const;
 
 #if ENABLE_REGEX_CONFIG_OPTIONS
         void Print(DebugWriter* w, const wchar_t* litbuf) const;
@@ -409,7 +409,7 @@ namespace UnifiedRegex
     struct ScannerInfo : ScannerMixin
     {
         bool isEquivClass;
-               
+
         // scanner must be setup
         inline ScannerInfo(CharCount offset, CharCount length, bool isEquivClass) : ScannerMixin(offset, length), isEquivClass(isEquivClass) {}
 
@@ -438,7 +438,7 @@ namespace UnifiedRegex
         void Print(DebugWriter* w, const wchar_t* litbuf) const;
 #endif
     };
-    
+
     struct HardFailMixin
     {
         bool canHardFail;
@@ -493,7 +493,7 @@ namespace UnifiedRegex
     {
         int minBodyGroupId;
         int maxBodyGroupId;
-        
+
         inline BodyGroupsMixin(int minBodyGroupId, int maxBodyGroupId) : minBodyGroupId(minBodyGroupId), maxBodyGroupId(maxBodyGroupId) {}
 
 #if ENABLE_REGEX_CONFIG_OPTIONS
@@ -539,7 +539,7 @@ namespace UnifiedRegex
         Label failLabel;
 
         // failLabel must always be fixed up
-        inline TryMixin() 
+        inline TryMixin()
         {
 #if DBG
             failLabel = (Label)-1;
@@ -582,7 +582,7 @@ namespace UnifiedRegex
         void Print(DebugWriter* w) const;
 #endif
     };
-    
+
     template <int n>
     struct SwitchMixin
     {
@@ -593,7 +593,7 @@ namespace UnifiedRegex
         SwitchCase cases[MaxCases];
 
         // Cases must always be added
-        inline SwitchMixin() : numCases(0) 
+        inline SwitchMixin() : numCases(0)
         {
 #if DBG
             for (int i = 0; i < MaxCases; i++)
@@ -626,7 +626,7 @@ namespace UnifiedRegex
 #undef M
 #undef MTemplate
         };
-        
+
         InstTag tag;
 
         inline Inst(InstTag tag) : tag(tag) {}
@@ -656,7 +656,7 @@ namespace UnifiedRegex
 
     //
     // Control flow
-    // 
+    //
 
     struct FailInst : Inst
     {
@@ -835,7 +835,7 @@ namespace UnifiedRegex
     struct MatchLiteralInst : Inst, LiteralMixin
     {
         inline MatchLiteralInst(CharCount offset, CharCount length) : Inst(MatchLiteral), LiteralMixin(offset, length) {}
-        
+
         INST_BODY
     };
 
@@ -874,7 +874,7 @@ namespace UnifiedRegex
     };
 
     //
-    // Syncronization:
+    // Synchronization:
     //   SyncTo(Char|Char2Set|Set|Char2Literal|Literal|LiteralEquiv|Literals)And(Consume|Continue|Backup)
     //
 
@@ -909,47 +909,47 @@ namespace UnifiedRegex
 
         INST_BODY
     };
-    
+
     // Specialized version of the SyncToLiteralAndContinueInst for a length 2 literal
     struct SyncToChar2LiteralAndContinueInst : SyncToLiteralAndContinueInstT<Char2LiteralScannerMixin>
-    {        
-        SyncToChar2LiteralAndContinueInst(Char c0, Char c1) : 
-            SyncToLiteralAndContinueInstT(SyncToChar2LiteralAndContinue, 0, 2) { Char2LiteralScannerMixin::Setup(c0, c1); }    
+    {
+        SyncToChar2LiteralAndContinueInst(Char c0, Char c1) :
+            SyncToLiteralAndContinueInstT(SyncToChar2LiteralAndContinue, 0, 2) { Char2LiteralScannerMixin::Setup(c0, c1); }
     };
 
     struct SyncToLiteralAndContinueInst : SyncToLiteralAndContinueInstT<ScannerMixin>
     {
         // scanner must be setup
-        SyncToLiteralAndContinueInst(CharCount offset, CharCount length) : 
+        SyncToLiteralAndContinueInst(CharCount offset, CharCount length) :
             SyncToLiteralAndContinueInstT(SyncToLiteralAndContinue, offset, length) {}
-        
+
         INST_BODY_FREE(ScannerMixin)
     };
 
     struct SyncToLinearLiteralAndContinueInst : SyncToLiteralAndContinueInstT<ScannerMixin_WithLinearCharMap>
     {
         // scanner must be setup
-        SyncToLinearLiteralAndContinueInst(CharCount offset, CharCount length) : 
+        SyncToLinearLiteralAndContinueInst(CharCount offset, CharCount length) :
             SyncToLiteralAndContinueInstT(SyncToLinearLiteralAndContinue, offset, length) {}
-        
+
         INST_BODY_FREE(ScannerMixin_WithLinearCharMap)
     };
 
     struct SyncToLiteralEquivAndContinueInst : SyncToLiteralAndContinueInstT<EquivScannerMixin>
     {
         // scanner must be setup
-        SyncToLiteralEquivAndContinueInst(CharCount offset, CharCount length) : 
+        SyncToLiteralEquivAndContinueInst(CharCount offset, CharCount length) :
             SyncToLiteralAndContinueInstT(SyncToLiteralEquivAndContinue, offset, length) {}
-        
+
         INST_BODY_FREE(EquivScannerMixin)
     };
 
     struct SyncToLiteralEquivTrivialLastPatCharAndContinueInst : SyncToLiteralAndContinueInstT<EquivTrivialLastPatCharScannerMixin>
     {
         // scanner must be setup
-        SyncToLiteralEquivTrivialLastPatCharAndContinueInst(CharCount offset, CharCount length) : 
+        SyncToLiteralEquivTrivialLastPatCharAndContinueInst(CharCount offset, CharCount length) :
             SyncToLiteralAndContinueInstT(SyncToLiteralEquivTrivialLastPatCharAndContinue, offset, length) {}
-        
+
         INST_BODY_FREE(EquivTrivialLastPatCharScannerMixin)
     };
 
@@ -984,36 +984,36 @@ namespace UnifiedRegex
 
         INST_BODY
     };
-    
+
     // Specialized version of the SyncToLiteralAndConsumeInst for a length 2 literal
     struct SyncToChar2LiteralAndConsumeInst : SyncToLiteralAndConsumeInstT<Char2LiteralScannerMixin>
-    {        
-        SyncToChar2LiteralAndConsumeInst(Char c0, Char c1) : 
-            SyncToLiteralAndConsumeInstT(SyncToChar2LiteralAndConsume, 0, 2) { Char2LiteralScannerMixin::Setup(c0, c1); }    
+    {
+        SyncToChar2LiteralAndConsumeInst(Char c0, Char c1) :
+            SyncToLiteralAndConsumeInstT(SyncToChar2LiteralAndConsume, 0, 2) { Char2LiteralScannerMixin::Setup(c0, c1); }
     };
 
     struct SyncToLiteralAndConsumeInst : SyncToLiteralAndConsumeInstT<ScannerMixin>
     {
         // scanner must be setup
-        SyncToLiteralAndConsumeInst(CharCount offset, CharCount length) : 
+        SyncToLiteralAndConsumeInst(CharCount offset, CharCount length) :
             SyncToLiteralAndConsumeInstT(SyncToLiteralAndConsume, offset, length) {}
-        
+
         INST_BODY_FREE(ScannerMixin)
     };
 
     struct SyncToLinearLiteralAndConsumeInst : SyncToLiteralAndConsumeInstT<ScannerMixin_WithLinearCharMap>
     {
         // scanner must be setup
-        SyncToLinearLiteralAndConsumeInst(CharCount offset, CharCount length) : 
+        SyncToLinearLiteralAndConsumeInst(CharCount offset, CharCount length) :
             SyncToLiteralAndConsumeInstT(SyncToLinearLiteralAndConsume, offset, length) {}
-        
+
         INST_BODY_FREE(ScannerMixin_WithLinearCharMap)
     };
 
     struct SyncToLiteralEquivAndConsumeInst : SyncToLiteralAndConsumeInstT<EquivScannerMixin>
     {
         // scanner must be setup
-        SyncToLiteralEquivAndConsumeInst(CharCount offset, CharCount length) : 
+        SyncToLiteralEquivAndConsumeInst(CharCount offset, CharCount length) :
             SyncToLiteralAndConsumeInstT(SyncToLiteralEquivAndConsume,offset, length) {}
 
         INST_BODY_FREE(EquivScannerMixin)
@@ -1022,7 +1022,7 @@ namespace UnifiedRegex
     struct SyncToLiteralEquivTrivialLastPatCharAndConsumeInst : SyncToLiteralAndConsumeInstT<EquivTrivialLastPatCharScannerMixin>
     {
         // scanner must be setup
-        SyncToLiteralEquivTrivialLastPatCharAndConsumeInst(CharCount offset, CharCount length) : 
+        SyncToLiteralEquivTrivialLastPatCharAndConsumeInst(CharCount offset, CharCount length) :
             SyncToLiteralAndConsumeInstT(SyncToLiteralEquivTrivialLastPatCharAndConsume, offset, length) {}
 
         INST_BODY_FREE(EquivTrivialLastPatCharScannerMixin)
@@ -1052,47 +1052,47 @@ namespace UnifiedRegex
 
         INST_BODY
     };
-    
+
     // Specialized version of the SyncToLiteralAndConsumeInst for a length 2 literal
     struct SyncToChar2LiteralAndBackupInst : SyncToLiteralAndBackupInstT<Char2LiteralScannerMixin>
-    {        
-        SyncToChar2LiteralAndBackupInst(Char c0, Char c1, const CountDomain& backup) : 
-            SyncToLiteralAndBackupInstT(SyncToChar2LiteralAndBackup, 0, 2, backup) { Char2LiteralScannerMixin::Setup(c0, c1); }    
+    {
+        SyncToChar2LiteralAndBackupInst(Char c0, Char c1, const CountDomain& backup) :
+            SyncToLiteralAndBackupInstT(SyncToChar2LiteralAndBackup, 0, 2, backup) { Char2LiteralScannerMixin::Setup(c0, c1); }
     };
 
     struct SyncToLiteralAndBackupInst : SyncToLiteralAndBackupInstT<ScannerMixin>
     {
         // scanner must be setup
-        SyncToLiteralAndBackupInst(CharCount offset, CharCount length, const CountDomain& backup) : 
+        SyncToLiteralAndBackupInst(CharCount offset, CharCount length, const CountDomain& backup) :
             SyncToLiteralAndBackupInstT(SyncToLiteralAndBackup, offset, length, backup) {}
-        
+
         INST_BODY_FREE(ScannerMixin)
     };
 
     struct SyncToLinearLiteralAndBackupInst : SyncToLiteralAndBackupInstT<ScannerMixin_WithLinearCharMap>
     {
         // scanner must be setup
-        SyncToLinearLiteralAndBackupInst(CharCount offset, CharCount length, const CountDomain& backup) : 
+        SyncToLinearLiteralAndBackupInst(CharCount offset, CharCount length, const CountDomain& backup) :
             SyncToLiteralAndBackupInstT(SyncToLinearLiteralAndBackup, offset, length, backup) {}
-        
+
         INST_BODY_FREE(ScannerMixin_WithLinearCharMap)
     };
 
     struct SyncToLiteralEquivAndBackupInst : SyncToLiteralAndBackupInstT<EquivScannerMixin>
     {
         // scanner must be setup
-         SyncToLiteralEquivAndBackupInst(CharCount offset, CharCount length, const CountDomain& backup) : 
+         SyncToLiteralEquivAndBackupInst(CharCount offset, CharCount length, const CountDomain& backup) :
              SyncToLiteralAndBackupInstT(SyncToLiteralEquivAndBackup, offset, length, backup) {}
-        
+
         INST_BODY_FREE(EquivScannerMixin)
     };
 
     struct SyncToLiteralEquivTrivialLastPatCharAndBackupInst : SyncToLiteralAndBackupInstT<EquivTrivialLastPatCharScannerMixin>
     {
         // scanner must be setup
-         SyncToLiteralEquivTrivialLastPatCharAndBackupInst(CharCount offset, CharCount length, const CountDomain& backup) : 
+         SyncToLiteralEquivTrivialLastPatCharAndBackupInst(CharCount offset, CharCount length, const CountDomain& backup) :
              SyncToLiteralAndBackupInstT(SyncToLiteralEquivTrivialLastPatCharAndBackup, offset, length, backup) {}
-        
+
         INST_BODY_FREE(EquivTrivialLastPatCharScannerMixin)
     };
 
@@ -1395,7 +1395,7 @@ namespace UnifiedRegex
     struct BeginAssertionInst : Inst, BodyGroupsMixin
     {
         bool isNegation;
-        Label nextLabel; 
+        Label nextLabel;
 
         // nextLabel must always be fixed up
         inline BeginAssertionInst(bool isNegation, int minBodyGroupId, int maxBodyGroupId) : Inst(BeginAssertion), isNegation(isNegation), BodyGroupsMixin(minBodyGroupId, maxBodyGroupId)
@@ -1645,10 +1645,10 @@ namespace UnifiedRegex
 
     struct RegexStacks
     {
-        RegexStacks(PageAllocator * pageAllocator) : 
+        RegexStacks(PageAllocator * pageAllocator) :
             contStack(pageAllocator, Js::Throw::OutOfMemory),
             assertionStack(pageAllocator, Js::Throw::OutOfMemory) {};
-      
+
 
         ContStack contStack;
         AssertionStack assertionStack;
@@ -1681,7 +1681,7 @@ namespace UnifiedRegex
         template <typename ScannerT>
         friend struct SyncToLiteralAndBackupInstT;
         template <typename ScannerT>
-        friend struct ScannerMixinT;        
+        friend struct ScannerMixinT;
         friend struct Char2LiteralScannerMixin;
         template <uint lastPatCharEquivClassSize>
         friend struct EquivScannerMixinT;
@@ -1728,12 +1728,12 @@ namespace UnifiedRegex
         {
             return !groupInfos[0].IsUndefined();
         }
-        
+
         __inline int NumGroups() const
         {
             return program->numGroups;
         }
-        
+
         __inline GroupInfo GetGroup(int groupId) const
         {
             return *GroupIdToGroupInfo(groupId);
@@ -1809,7 +1809,7 @@ namespace UnifiedRegex
     private:
 
         typedef bool (UnifiedRegex::Matcher::*ComparerForSingleChar)(const Char left, const Char right);
-        ComparerForSingleChar comparerForSingleChar; 
+        ComparerForSingleChar comparerForSingleChar;
 
         // Specialized matcher for regex c - case insensitive
         __inline bool MatchSingleCharCaseInsensitive(const Char* const input, const CharCount inputLength, CharCount offset, const Char c);
@@ -1822,7 +1822,7 @@ namespace UnifiedRegex
         __inline bool MatchBoundedWord(const Char* const input, const CharCount inputLength, CharCount offset);
 
         // Specialized matcher for regex ^\s*|\s*$
-        __inline bool MatchLeadingTrailingSpaces(const Char* const input, const CharCount inputLength, CharCount offset);        
+        __inline bool MatchLeadingTrailingSpaces(const Char* const input, const CharCount inputLength, CharCount offset);
 
         // Specialized matcher for octoquad patterns
         __inline bool MatchOctoquad(const Char* const input, const CharCount inputLength, CharCount offset, OctoquadMatcher* matcher);

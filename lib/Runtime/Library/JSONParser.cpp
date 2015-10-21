@@ -11,8 +11,8 @@ using namespace Js;
 namespace JSON
 {
     // -------- Parser implementation ------------//
-    void JSONParser::Finalizer() 
-    { 
+    void JSONParser::Finalizer()
+    {
         m_scanner.Finalizer();
         if(arenaAllocatorObject)
         {
@@ -41,7 +41,7 @@ namespace JSON
     }
 
     Js::Var JSONParser::Parse(Js::JavascriptString* input)
-    {        
+    {
         return Parse(input->GetSz(), input->GetLength());
     }
 
@@ -125,21 +125,21 @@ namespace JSON
             {
                 Js::Var enumeratorVar;
 
-                // normally we should have a JSON object here and the enumerator shold be always be succesfull. However, the objects can be 
-                // modified by user code. It is better to skip a damaged object. ES5 spec doesn't specify an error here. 
+                // normally we should have a JSON object here and the enumerator should be always be successful. However, the objects can be
+                // modified by user code. It is better to skip a damaged object. ES5 spec doesn't specify an error here.
                 if(Js::RecyclableObject::FromVar(value)->GetEnumerator(FALSE, &enumeratorVar, scriptContext))
                 {
                     Js::JavascriptEnumerator* enumerator = static_cast<Js::JavascriptEnumerator*>(enumeratorVar);
                     Js::Var propertyNameVar;
                     Js::PropertyId idMember;
-                    
+
                     while(enumerator->MoveNext())
                     {
-                        propertyNameVar  = enumerator->GetCurrentIndex(); 
+                        propertyNameVar  = enumerator->GetCurrentIndex();
                         //NOTE: If testing key value call enumerator->GetCurrentValue() to confirm value is correct;
-                       
+
                         AssertMsg(!Js::JavascriptOperators::IsUndefinedObject(propertyNameVar,  undefined) && Js::JavascriptString::Is(propertyNameVar) , "bad enumeration on a JSON Object");
-                       
+
                         if (enumerator->GetCurrentPropertyId(&idMember))
                         {
                             Js::Var newElement = Walk(Js::JavascriptString::FromVar(propertyNameVar), idMember, value);
@@ -153,7 +153,7 @@ namespace JSON
                             }
                         }
                         // For the numeric cases the enumerator is set to a NullEnumerator (see class in ForInObjectEnumerator.h)
-                        // Numerals do noy have property Ids so we need to set and delete items
+                        // Numerals do not have property Ids so we need to set and delete items
                         else
                         {
                             uint32 propertyIndex = enumerator->GetCurrentItemIndex();
@@ -162,13 +162,13 @@ namespace JSON
                             if (Js::JavascriptOperators::IsUndefinedObject(newElement, undefined))
                             {
                                 Js::JavascriptOperators::DeleteItem(Js::RecyclableObject::FromVar(value), propertyIndex);
-                               
+
                             }
                             else
                             {
                                 Js::JavascriptOperators::SetItem(value, Js::RecyclableObject::FromVar(value), propertyIndex, newElement, scriptContext);
                             }
-                            
+
                         }
                     }
                 }
@@ -282,7 +282,7 @@ namespace JSON
                 }
 
                 // first, create the object
-                
+
                 Js::DynamicObject* object = scriptContext->GetLibrary()->CreateObject();
                 JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_OBJECT(object));
 #if ENABLE_DEBUG_CONFIG_OPTIONS
@@ -298,7 +298,7 @@ namespace JSON
                 //if empty object "{}" return;
                 if(tkRCurly == m_token.tk)
                 {
-                    Scan();  
+                    Scan();
                     return object;
                 }
                 JsonTypeCache* previousCache = nullptr;
@@ -318,7 +318,7 @@ namespace JSON
                     // currentStrLength = length w/o null-termination
                     WCHAR* currentStr = m_scanner.GetCurrentString();
                     uint currentStrLength = m_scanner.GetCurrentStringLen();
-                    
+
                     DynamicType* typeWithoutProperty = object->GetDynamicType();
                     if(IsCaching())
                     {
@@ -327,7 +327,7 @@ namespace JSON
                             // This is the first property in the list - see if we have an existing cache for it.
                             currentCache = typeCacheList->LookupWithKey(Js::HashedCharacterBuffer<WCHAR>(currentStr, currentStrLength), nullptr);
                         }
-                        if(currentCache && currentCache->typeWithoutProperty == typeWithoutProperty && 
+                        if(currentCache && currentCache->typeWithoutProperty == typeWithoutProperty &&
                             currentCache->propertyRecord->Equals(JsUtil::CharacterBuffer<WCHAR>(currentStr, currentStrLength)))
                         {
                             //check and consume ":"
@@ -343,14 +343,14 @@ namespace JSON
                             PropertyIndex propertyIndex = currentCache->propertyIndex;
                             previousCache = currentCache;
                             currentCache = currentCache->next;
-                            
+
                             // fast path for type transition and property set
-                            object->EnsureSlots(typeWithoutProperty->GetTypeHandler()->GetSlotCapacity(), 
+                            object->EnsureSlots(typeWithoutProperty->GetTypeHandler()->GetSlotCapacity(),
                                 typeWithProperty->GetTypeHandler()->GetSlotCapacity(), scriptContext, typeWithProperty->GetTypeHandler());
                             object->ReplaceType(typeWithProperty);
                             Js::Var value = ParseObject();
                             object->SetSlot(SetSlotArguments(propertyId, propertyIndex, value));
-                            
+
                             // if the next token is not a comma consider the list of members done.
                             if (tkComma != m_token.tk)
                                 break;
@@ -358,11 +358,11 @@ namespace JSON
                             continue;
                         }
                     }
-                    
+
                     // slow path
                     Js::PropertyRecord const * propertyRecord;
                     scriptContext->GetOrAddPropertyRecord(currentStr, currentStrLength, &propertyRecord);
-                    
+
                     //check and consume ":"
                     if(Scan() != tkColon )
                     {
@@ -372,12 +372,12 @@ namespace JSON
                     Js::Var value = ParseObject();
                     PropertyValueInfo info;
                     object->SetProperty(propertyRecord->GetPropertyId(), value, PropertyOperation_None, &info);
-                    
+
                     DynamicType* typeWithProperty = object->GetDynamicType();
-                    if(IsCaching() && !propertyRecord->IsNumeric() && !info.IsNoCache() && typeWithProperty->GetIsShared() && typeWithProperty->GetTypeHandler()->IsPathTypeHandler()) 
-                    {               
+                    if(IsCaching() && !propertyRecord->IsNumeric() && !info.IsNoCache() && typeWithProperty->GetIsShared() && typeWithProperty->GetTypeHandler()->IsPathTypeHandler())
+                    {
                         PropertyIndex propertyIndex = info.GetPropertyIndex();
-                        
+
                         if(!previousCache)
                         {
                             // This is the first property in the set add it to the dictionary.
@@ -387,7 +387,7 @@ namespace JSON
                         else if(!currentCache)
                         {
                             currentCache = JsonTypeCache::New(this->arenaAllocator, propertyRecord, typeWithoutProperty, typeWithProperty, propertyIndex);
-                            previousCache->next = currentCache;    
+                            previousCache->next = currentCache;
                         }
                         else
                         {

@@ -289,7 +289,7 @@ C_ASSERT(sizeof(PropertyId)==sizeof(int32));
 //  33      4       Expected Built In PropertyCount
 //  37      4       Expected Op Code Count
 //  41      4       Size of Original Source Code
-//  45      4       Count of Auxilliary Structures
+//  45      4       Count of Auxiliary Structures
 //  49      4       Smallest Literal Object ID
 //  53      4       Largest Literal Object ID
 //  57      4       Offset from start of this file
@@ -297,7 +297,7 @@ C_ASSERT(sizeof(PropertyId)==sizeof(int32));
 //  61      4       Offset to Source Spans
 //  65      4       Count of Functions
 //  69      4       Offset to Functions
-//  73      4       Offset to Auxilliary Structures
+//  73      4       Offset to Auxiliary Structures
 //  77      4       Count of Strings
 // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -578,7 +578,7 @@ public:
             // Get a pointer to the previous entry of isPropertyRecord
             indexEntry.isProprertyRecord = static_cast<BufferBuilderByte*>(string16IndexTable.list->First());
 
-            // Subesquent strings indexes point one past the end. This way, the size is always computable by subtracting indexes.
+            // Subsequent strings indexes point one past the end. This way, the size is always computable by subtracting indexes.
             auto stringIndexEntry = Anew(alloc, BufferBuilderRelativeOffset, L"String16 Index", stringEntry, sizeInBytes);
             string16IndexTable.list = string16IndexTable.list->Prepend(stringIndexEntry, alloc);
 
@@ -1223,7 +1223,7 @@ public:
     uint32 PrependStringConstant(BufferBuilderList & builder, Var var)
     {
         auto str = JavascriptString::FromVar(var);
-        uint32 size = 0; 
+        uint32 size = 0;
 
 #ifdef BYTE_CODE_MAGIC_CONSTANTS
         size += PrependInt32(builder, L"Start String Constant", magicStartStringConstant);
@@ -1246,7 +1246,7 @@ public:
         auto size = PrependInt32(builder, L"String Template Callsite Constant String Count", (int)callsite->GetLength());
 
         for (uint32 i = 0; i < callsite->GetLength(); i++)
-        {   
+        {
             callsite->DirectGetItemAt(i, &element);
             size += PrependStringConstant(builder, element);
         }
@@ -1541,7 +1541,7 @@ public:
         size += PrependGrowingUint32Array(builder, L"Actual Offset List", spanSequence->pActualOffsetList);
         return size;
     }
-    
+
     template <typename TStructType>
     uint32 PrependStruct(BufferBuilderList & builder, LPWSTR clue, TStructType * value)
     {
@@ -1569,7 +1569,7 @@ public:
             return ByteCodeSerializer::CantGenerate;
         }
         PrependString16(builder, L"Display Name", function->m_displayName, (function->m_displayNameLength +1)* sizeof(wchar_t));
-        
+
         if (function->m_lineNumber != 0)
         {
             definedFields.has_m_lineNumber = true;
@@ -2680,14 +2680,14 @@ public:
         auto displayName = deferDeserializeFunctionInfo != nullptr ?
             deferDeserializeFunctionInfo->GetDisplayName() :
             GetString16ById(displayNameId);
-        
+
         uint displayNameLength = deferDeserializeFunctionInfo ? deferDeserializeFunctionInfo->GetDisplayNameLength() : GetString16LengthById(displayNameId);
         int functionId;
         current = ReadInt32(current, &functionId);
         int serializationIndex;
         current = ReadInt32(current, &serializationIndex);
         int32 attributes;
-        current = ReadInt32(current, &attributes);        
+        current = ReadInt32(current, &attributes);
 
         uint32 offsetIntoSource = 0;
         current = ReadUInt32(current, &offsetIntoSource);
@@ -2791,7 +2791,7 @@ public:
             }
 #include "SerializableFunctionFields.h"
 
-            // TODO-STACK-NESTED-FUNC: Defer deserilaize function doesn't have parent pointer, can't do stack nested func yet
+            // TODO-STACK-NESTED-FUNC: Defer deserialize function doesn't have parent pointer, can't do stack nested func yet
             // The flags field is set to by default to Flags_HasNoExplicitReturnValue which means if it's serialized, the field will be set
             // in the definedFields struct. If it's not set, that means that the flag was explicitly set to Flags_None so we'll have to set
             // that here.
@@ -3214,11 +3214,11 @@ void ByteCodeCache::PopulateLookupPropertyId(ScriptContext * scriptContext, int 
 // Serialize function body
 HRESULT ByteCodeSerializer::SerializeToBuffer(ScriptContext * scriptContext, ArenaAllocator * alloc, DWORD sourceByteLength, LPCUTF8 utf8Source, DWORD dwFunctionTableLength, BYTE * functionTable, FunctionBody * function, SRCINFO const* srcInfo, bool allocateBuffer, byte ** buffer, DWORD * bufferBytes, DWORD dwFlags)
 {
-    
+
     int builtInPropertyCount = (dwFlags & GENERATE_BYTE_CODE_BUFFER_LIBRARY) != 0 ?  PropertyIds::_countJSOnlyProperty : TotalNumberOfBuiltInProperties;
 
     Utf8SourceInfo *utf8SourceInfo = function->GetUtf8SourceInfo();
-    
+
     HRESULT hr = utf8SourceInfo->EnsureLineOffsetCacheNoThrow();
 
     if (FAILED(hr))

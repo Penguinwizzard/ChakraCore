@@ -6,7 +6,7 @@
 
 /*
  * RUNTIME_ARGUMENTS is a simple wrapper around the variadic calling convention
- * used by Javascript functions. It is a low level macro that does not try to
+ * used by JavaScript functions. It is a low level macro that does not try to
  * differentiate between script usable Vars and runtime data structures.
  * To be able to access only script usable args use the ARGUMENTS macro instead.
  */

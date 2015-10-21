@@ -4,7 +4,7 @@
 ;-------------------------------------------------------------------------------------------------------
 
 ;Var Js:JavascriptFunction::DeferredDeserializeThunk(function, info, values[0], values[1], ..., values[n-2], values[n-1])
-;  
+;
 ;   This method should be called as follows
 ;       varResult = JavascriptFunction::DeferredDeserializeThunk(function, info, values[0], values[1], ..., values[n-2], values[n-1]);
 ;
@@ -13,15 +13,15 @@
 ;           return entryPoint(function, info, values[0], values[1], ..., values[n-2], values[n-1]);
 ;   where n = info.Count
 ;
-    OPT	2	; disable listing
+    OPT 2   ; disable listing
 
 #include "ksarm.h"
 
-    OPT	1	; reenable listing
+    OPT 1   ; re-enable listing
 
-    TTL	Lib\Runtime\Library\arm\arm_DeferredDeserializeThunk.asm
+    TTL Lib\Runtime\Library\arm\arm_DeferredDeserializeThunk.asm
 
-    
+
     EXPORT  |?DeferredDeserializeThunk@JavascriptFunction@Js@@SAPAXPAVRecyclableObject@2@UCallInfo@2@ZZ|      ;Js:JavascriptFunction::DeferredDeserializeThunk(function, info, values[0], values[1], ..., values[n-2], values[n-1])
     IMPORT  |?DeferredDeserialize@JavascriptFunction@Js@@SAP6APAXPAVRecyclableObject@2@UCallInfo@2@ZZPAVScriptFunction@2@@Z|  ;Js::JavascriptMethod JavascriptFunction::DeferredDeserialize(ScriptFunction* function)
 

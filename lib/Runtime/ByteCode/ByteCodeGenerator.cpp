@@ -228,7 +228,7 @@ void Visit(ParseNode *pnode, ByteCodeGenerator* byteCodeGenerator, PrefixFn pref
     case knopStrTemplate:
     {
         // Visit the string node lists only if we do not have a tagged template
-        // We never need to visit the raw strings as they are not used in non-tagged templates and 
+        // We never need to visit the raw strings as they are not used in non-tagged templates and
         // tagged templates will register them as part of the callsite constant object.
         if (!pnode->sxStrTemplate.isTaggedTemplate)
         {
@@ -462,7 +462,7 @@ void Bind(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator);
 void BindReference(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator);
 void AssignRegisters(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator);
 
-// TODO[ianhall]: This should be in a shared AST Utililty header or source file
+// TODO[ianhall]: This should be in a shared AST Utility header or source file
 bool IsExpressionStatement(ParseNode* stmt, const Js::ScriptContext *const scriptContext)
 {
     if (stmt->nop == knopFncDecl)
@@ -714,9 +714,9 @@ FuncInfo * ByteCodeGenerator::TopFuncInfo() const
 void ByteCodeGenerator::EnterLoop()
 {
     if (this->TopFuncInfo())
-    { 
-        this->TopFuncInfo()->hasLoop = true; 
-    } 
+    {
+        this->TopFuncInfo()->hasLoop = true;
+    }
     loopDepth++;
 }
 
@@ -1159,7 +1159,7 @@ FuncInfo * ByteCodeGenerator::StartBindFunction(const wchar_t *name, int nameLen
         bool createFunctionBody = !isDeferParsed;
         if (!CONFIG_FLAG(CreateFunctionProxy)) createFunctionBody = true;
 
-        Js::FunctionInfo::Attributes attributes = Js::FunctionInfo::Attributes::None;        
+        Js::FunctionInfo::Attributes attributes = Js::FunctionInfo::Attributes::None;
         if (pnode->sxFnc.IsAsync())
         {
             attributes = (Js::FunctionInfo::Attributes)(attributes | Js::FunctionInfo::Attributes::ErrorOnNew | Js::FunctionInfo::Attributes::Async);
@@ -1675,7 +1675,7 @@ bool ByteCodeGenerator::CanStackNestedFunc(FuncInfo * funcInfo, bool trace)
     wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
 #endif
     Assert(!funcInfo->IsGlobalFunction());
-	bool const doStackNestedFunc = !funcInfo->HasMaybeEscapedNestedFunc() && !IsInDebugMode() && !funcInfo->byteCodeFunction->IsGenerator();
+    bool const doStackNestedFunc = !funcInfo->HasMaybeEscapedNestedFunc() && !IsInDebugMode() && !funcInfo->byteCodeFunction->IsGenerator();
     if (!doStackNestedFunc)
     {
         return false;
@@ -1745,7 +1745,7 @@ Scope * ByteCodeGenerator::FindScopeForSym(Scope *symScope, Scope *scope, Js::Pr
     return scope;
 }
 
-/* static */ 
+/* static */
 Js::OpCode ByteCodeGenerator::GetStFldOpCode(FuncInfo* funcInfo, bool isRoot, bool isLetDecl, bool isConstDecl, bool isClassMemberInit)
 {
     return GetStFldOpCode(funcInfo->GetIsStrictMode(), isRoot, isLetDecl, isConstDecl, isClassMemberInit);
@@ -2048,7 +2048,7 @@ void BindReference(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
     {
         pnode->sxPid.sym = byteCodeGenerator->FindSymbol(pnode->sxPid.symRef, pnode->sxPid.pid, isCallNode);
 
-        if (funcEscapes && 
+        if (funcEscapes &&
             pnode->sxPid.sym &&
             pnode->sxPid.sym->GetSymbolType() == STFunction &&
             (!pnode->sxPid.sym->GetIsGlobal() || (byteCodeGenerator->GetFlags() & fscrEval)))
@@ -2426,7 +2426,7 @@ FuncInfo* PostVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerat
     // If this is a named function expression and has deferred child, mark has non-local reference.
     if (funcExprWithName)
     {
-        // If we are reparsing this fuction due to being in debug mode - we should restore the state of this from the earlier parse
+        // If we are reparsing this function due to being in debug mode - we should restore the state of this from the earlier parse
         if(top->byteCodeFunction->IsFunctionParsed() && top->GetParsedFunctionBody()->HasFuncExprNameReference())
         {
             top->SetFuncExprNameReference(true);
@@ -2558,7 +2558,7 @@ FuncInfo* PostVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerat
                 // The function also needs to construct a frame display if:
                 // 1. it calls eval;
                 // 2. it has a child function.
-                // 3. When has arguments and in debug mode. So that frame display be there along with frameobject register.
+                // 3. When has arguments and in debug mode. So that frame display be there along with frame object register.
                 if (top->GetCallsEval() ||
                     pnode->sxFnc.nestedCount != 0
                     || (top->GetHasArguments()
@@ -2715,7 +2715,7 @@ FuncInfo* PostVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerat
             }
         }
 
-        // Progagate HasMaybeEscapedNestedFunc
+        // Propagate HasMaybeEscapedNestedFunc
         if (!byteCodeGenerator->CanStackNestedFunc(top, false) ||
             byteCodeGenerator->NeedObjectAsFunctionScope(top, pnode))
         {
@@ -2761,7 +2761,7 @@ FuncInfo* PostVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerat
     }
 
     if (top->HasSuperReference())
-    {        
+    {
         top->AssignSuperRegister();
     }
 
@@ -2937,7 +2937,7 @@ void VisitNestedScopes(ParseNode* pnodeScopeList, ParseNode* pnodeParent, ByteCo
             {
                 if (!byteCodeGenerator->IsInNonDebugMode() && pLastReuseFunc != nullptr && byteCodeGenerator->pCurrentFunction == nullptr)
                 {
-                    // Patch current non-parsed function's functionbodyimpl with the new generated function body.
+                    // Patch current non-parsed function's FunctionBodyImpl with the new generated function body.
                     // So  that the function object (pointing to the old function body) can able to get to the new one.
 
                     Js::FunctionProxy* proxy = pLastReuseFunc->GetNestedFunc((*pIndex));
@@ -3295,7 +3295,7 @@ void BindFuncSymbol(ParseNode *pnodeFnc, ByteCodeGenerator *byteCodeGenerator)
 
 // expand using hash table for library function names
 
-bool IsMathLibraryId(Js::PropertyId propertyId) 
+bool IsMathLibraryId(Js::PropertyId propertyId)
 {
     return (propertyId >= Js::PropertyIds::abs) && (propertyId <= Js::PropertyIds::fround);
 }
@@ -3307,7 +3307,7 @@ bool IsLibraryFunction(ParseNode* expr,Js::ScriptContext* scriptContext) {
         if ((lhs!=nullptr)&&(rhs!=nullptr)&&(lhs->nop==knopName)&&(rhs->nop==knopName)) {
             Symbol* lsym=lhs->sxPid.sym;
             if ((lsym == nullptr || lsym->GetIsGlobal()) && lhs->sxPid.PropertyIdFromNameNode() == Js::PropertyIds::Math)
-            {             
+            {
                 return IsMathLibraryId(rhs->sxPid.PropertyIdFromNameNode());
             }
         }
@@ -3807,7 +3807,7 @@ void Bind(ParseNode *pnode,ByteCodeGenerator *byteCodeGenerator)
             }
             else if (globFuncInfo->byteCodeFunction)
             {
-                // If the current global code wasn't marked to be treated as global code (eg from deferred parsing),we don't need to send a register script event for it.
+                // If the current global code wasn't marked to be treated as global code (e.g. from deferred parsing),we don't need to send a register script event for it.
                 globFuncInfo->byteCodeFunction->SetIsTopLevel(false);
             }
             if (pnode->sxFnc.CallsEval())
@@ -4112,10 +4112,10 @@ void CheckMaybeEscapedUse(ParseNode * pnode, ByteCodeGenerator * byteCodeGenerat
         {
             break;
         }
-        // use of an assignemnt assignment (e.g.  (y = function() {}) + "1"), just make y an escaped use.
+        // use of an assignment (e.g.  (y = function() {}) + "1"), just make y an escaped use.
         pnode = pnode->sxBin.pnode1;
         isCall = false;
-        // fall thru
+        // fall-through
     case knopName:
         if (!isCall)
         {
@@ -4129,7 +4129,7 @@ void CheckMaybeEscapedUse(ParseNode * pnode, ByteCodeGenerator * byteCodeGenerat
 
     case knopFncDecl:
         // A function declaration has an unknown use (not assignment nor call),
-        // mark the function as having childe escaped
+        // mark the function as having child escaped
         topFunc->SetHasMaybeEscapedNestedFunc(DebugOnly(L"UnknownUse"));
         break;
     }
@@ -4154,7 +4154,7 @@ void CheckFuncAssignment(Symbol * sym, ParseNode * pnode2, ByteCodeGenerator * b
             {
                 return;
             }
-            // Use not as an assignemnt or assignment to an outer function's sym, or assigned to a formal
+            // Use not as an assignment or assignment to an outer function's sym, or assigned to a formal
             // or assigned to multiple names
 
             if (sym == nullptr
@@ -4475,7 +4475,7 @@ void AssignRegisters(ParseNode *pnode,ByteCodeGenerator *byteCodeGenerator)
         FuncInfo* func = byteCodeGenerator->TopFuncInfo();
         pnode->location = func->AssignSuperRegister();
         func->AssignThisRegister();
-        
+
         FuncInfo* nonLambdaFunc = func;
         if (func->IsLambda())
         {
@@ -4507,7 +4507,7 @@ void AssignRegisters(ParseNode *pnode,ByteCodeGenerator *byteCodeGenerator)
                 func->AssignNewTargetRegister();
             }
         }
-    
+
         if (nonLambdaFunc->IsGlobalFunction())
         {
             if (!(byteCodeGenerator->GetFlags() & fscrEval))
@@ -4557,7 +4557,7 @@ void AssignRegisters(ParseNode *pnode,ByteCodeGenerator *byteCodeGenerator)
                 byteCodeGenerator->MarkThisUsedInLambda();
             }
 
-            // If this is a super call we need to have new.target 
+            // If this is a super call we need to have new.target
             if (pnode->sxCall.pnodeTarget->nop == knopSuper)
             {
                 byteCodeGenerator->AssignNewTargetRegister();
@@ -4639,7 +4639,7 @@ void AssignRegisters(ParseNode *pnode,ByteCodeGenerator *byteCodeGenerator)
             {
                 FuncInfo *funcInfo = byteCodeGenerator->TopFuncInfo();
 
-                // Check the function assignment for the sym that we have, even if we we remap it to function level sym below
+                // Check the function assignment for the sym that we have, even if we remap it to function level sym below
                 // as we are going assign to the original sym
                 CheckFuncAssignment(sym, pnode->sxVar.pnodeInit, byteCodeGenerator);
 
@@ -4653,7 +4653,7 @@ void AssignRegisters(ParseNode *pnode,ByteCodeGenerator *byteCodeGenerator)
                     {
                         Assert(funcInfo->bodyScope != sym->GetScope() || !byteCodeGenerator->GetScriptContext()->GetConfig()->IsBlockScopeEnabled());  // catch cannot be at function scope and let and var at function scope is redeclaration error
                     }
-#endif                    
+#endif
                     auto symName = sym->GetName();
                     sym = funcInfo->bodyScope->FindLocalSymbol(symName);
                     if (sym == nullptr)
@@ -4843,15 +4843,15 @@ Js::FunctionBody * ByteCodeGenerator::MakeGlobalFunctionBody(ParseNode *pnode)
     ENTER_PINNED_SCOPE(Js::PropertyRecordList, propertyRecordList);
     propertyRecordList = EnsurePropertyRecordList();
 
-    func = 
+    func =
         Js::FunctionBody::NewFromRecycler(
-            scriptContext, 
-            Js::Constants::GlobalFunction, 
-            Js::Constants::GlobalFunctionLength, 
-            pnode->sxFnc.nestedCount, 
+            scriptContext,
+            Js::Constants::GlobalFunction,
+            Js::Constants::GlobalFunctionLength,
+            pnode->sxFnc.nestedCount,
             m_utf8SourceInfo,
-            m_utf8SourceInfo->GetSrcInfo()->sourceContextInfo->sourceContextId, 
-            pnode->sxFnc.functionId, 
+            m_utf8SourceInfo->GetSrcInfo()->sourceContextInfo->sourceContextId,
+            pnode->sxFnc.functionId,
             propertyRecordList,
             Js::FunctionInfo::Attributes::None
 #ifdef PERF_COUNTERS
@@ -4860,7 +4860,7 @@ Js::FunctionBody * ByteCodeGenerator::MakeGlobalFunctionBody(ParseNode *pnode)
             );
 
     func->SetIsGlobalFunc(TRUE);
-    scriptContext->RegisterDynamicFunctionReference(func);        
+    scriptContext->RegisterDynamicFunctionReference(func);
     LEAVE_PINNED_SCOPE();
 
     return func;

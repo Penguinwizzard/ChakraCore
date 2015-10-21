@@ -99,7 +99,7 @@ SmallFinalizableHeapBlockT<TBlockAttributes>::SetAttributes(void * address, unsi
 #ifdef RECYCLER_FINALIZE_CHECK
     HeapInfo * heapInfo = this->heapBucket->heapInfo;
     heapInfo->liveFinalizableObjectCount++;
-    heapInfo->newFinalizableObjectCount++;    
+    heapInfo->newFinalizableObjectCount++;
 #endif
 }
 
@@ -115,13 +115,13 @@ SmallFinalizableHeapBlockT<TBlockAttributes>::ProcessMarkedObject(void* objectAd
         // Not a valid offset within the block.  No further processing necessary.
         return;
     }
-    
+
     unsigned char * attributes = &ObjectInfo(objectIndex);
 
     if (!UpdateAttributesOfMarkedObjects(markContext, objectAddress, objectSize, *attributes,
         [&](unsigned char _attributes) { *attributes = _attributes; }))
     {
-        // Couldn't mark children- bail out and come back later        
+        // Couldn't mark children- bail out and come back later
         this->SetNeedOOMRescan(markContext->GetRecycler());
     }
 }
@@ -130,23 +130,23 @@ SmallFinalizableHeapBlockT<TBlockAttributes>::ProcessMarkedObject(void* objectAd
 // static
 template <class TBlockAttributes>
 bool
-SmallFinalizableHeapBlockT<TBlockAttributes>::CanRescanFullBlock() 
-{ 
+SmallFinalizableHeapBlockT<TBlockAttributes>::CanRescanFullBlock()
+{
     // Finalizable block need to rescan object one at a time.
-    return false; 
+    return false;
 }
 
 // static
 template <class TBlockAttributes>
 bool
-SmallFinalizableHeapBlockT<TBlockAttributes>::RescanObject(SmallFinalizableHeapBlockT<TBlockAttributes> * block, __in_ecount(localObjectSize) char * objectAddress, uint localObjectSize, 
+SmallFinalizableHeapBlockT<TBlockAttributes>::RescanObject(SmallFinalizableHeapBlockT<TBlockAttributes> * block, __in_ecount(localObjectSize) char * objectAddress, uint localObjectSize,
     uint objectIndex, Recycler * recycler)
 {
     unsigned char const attributes = block->ObjectInfo(objectIndex);
     Assert(block->IsAnyFinalizableBlock());
-    
+
     if ((attributes & LeafBit) == 0)
-    {                
+    {
         Assert(block->GetAddressIndex(objectAddress) != SmallHeapBlockT<TBlockAttributes>::InvalidAddressBit);
 
         if (!recycler->AddMark(objectAddress, localObjectSize))
@@ -159,13 +159,13 @@ SmallFinalizableHeapBlockT<TBlockAttributes>::RescanObject(SmallFinalizableHeapB
         RECYCLER_STATS_ADD(recycler, markData.rescanObjectByteCount, localObjectSize);
     }
 
-    // Since we mark thru unallocated objects, we might have marked an object before it
+    // Since we mark through unallocated objects, we might have marked an object before it
     // is allocated as an tracked object.   The object will not be queue up in the
     // tracked object list, and NewTrackBit will still be on.   Queue it up now.
 
-    // NewTrackBit will also be on for tracked object that we weren't able to queue 
-    // because of OOM.  In those case, the page is forced to be rescan, and we will 
-    // try to process those again here.        
+    // NewTrackBit will also be on for tracked object that we weren't able to queue
+    // because of OOM.  In those case, the page is forced to be rescan, and we will
+    // try to process those again here.
     if ((attributes & (TrackBit | NewTrackBit)) == (TrackBit | NewTrackBit))
     {
         if (!block->RescanTrackedObject((FinalizableObject*) objectAddress, objectIndex, recycler))
@@ -179,13 +179,13 @@ SmallFinalizableHeapBlockT<TBlockAttributes>::RescanObject(SmallFinalizableHeapB
     {
         // Concurrent thread mark the object before the attribute is set and missed the finalize count
         // For finalized object, we will always write a dummy vtable before returning to the call,
-        // so the page will always need to be rescaned, and we can count those here.
-           
+        // so the page will always need to be rescanned, and we can count those here.
+
         // NewFinalizeBit is cleared if the background thread has already counted the object.
         // So if it is still set here, we need to count it
-            
+
         RECYCLER_STATS_INC_IF(attributes & NewFinalizeBit, recycler, finalizeCount);
-        block->ObjectInfo(objectIndex) &= ~NewFinalizeBit;            
+        block->ObjectInfo(objectIndex) &= ~NewFinalizeBit;
     }
 #endif
 
@@ -206,19 +206,19 @@ SmallFinalizableHeapBlockT<TBlockAttributes>::RescanTrackedObject(FinalizableObj
 #endif
     {
         Assert(recycler->DoQueueTrackedObject());
-        
+
         if (!recycler->QueueTrackedObject(object))
         {
             // Failed to add to track stack due to OOM.
             return false;
         }
     }
-    
-    RECYCLER_STATS_INC(recycler, trackCount);
-    RECYCLER_STATS_INC_IF(ObjectInfo(objectIndex) & FinalizeBit, recycler, finalizeCount);    
 
-    // We have processed this object as tracked, we can clear the NewTrackBit  
-    ObjectInfo(objectIndex) &= ~NewTrackBit; 
+    RECYCLER_STATS_INC(recycler, trackCount);
+    RECYCLER_STATS_INC_IF(ObjectInfo(objectIndex) & FinalizeBit, recycler, finalizeCount);
+
+    // We have processed this object as tracked, we can clear the NewTrackBit
+    ObjectInfo(objectIndex) &= ~NewTrackBit;
 
     return true;
 }
@@ -238,8 +238,8 @@ SmallFinalizableHeapBlockT<TBlockAttributes>::Sweep(RecyclerSweep& recyclerSweep
     Assert(!queuePendingSweep);
 
     // If there are finalizable objects in this heap block, they need to be swept
-    // in-thread and not in the concurent thread, so don't queue pending sweep
-    
+    // in-thread and not in the concurrent thread, so don't queue pending sweep
+
     return SmallNormalHeapBlockT<TBlockAttributes>::Sweep<pageheap>(recyclerSweep, false, allocable, this->finalizeCount, HasAnyDisposeObjects());
 }
 
@@ -252,7 +252,7 @@ SmallFinalizableHeapBlockT<TBlockAttributes>::DisposeObjects()
 
     // PARTIALGC-CONSIDER: page with finalizable/disposable object will always be modified
     // because calling dispose probably will modify object itself, and it may call other
-    // script that might touch the page as well.  We can't distiguish between these two kind
+    // script that might touch the page as well.  We can't distinguish between these two kind
     // of write to the page.
     //
     // Possible mitigation include:
@@ -268,7 +268,7 @@ SmallFinalizableHeapBlockT<TBlockAttributes>::DisposeObjects()
         // Note that Dispose can cause reentrancy, which can cause allocation, which can cause collection.
         // The object we're disposing is still considered PendingDispose until the Dispose call completes.
         // So in case we call CheckFreeBitVector or similar, we should still see correct state re this object.
-        
+
         ((FinalizableObject *)objectAddress)->Dispose(false);
 
         Assert(finalizeCount != 0);
@@ -302,7 +302,7 @@ SmallFinalizableHeapBlockT<TBlockAttributes>::TransferDisposedObjects()
     Assert(this->IsFreeBitsValid());
     Assert(this->isPendingDispose);
     Assert(this->pendingDisposeCount == 0);
-    
+
     DebugOnly(this->isPendingDispose = false);
 
     TransferProcessedObjects(this->disposedObjectList, this->disposedObjectListTail);
@@ -312,7 +312,7 @@ SmallFinalizableHeapBlockT<TBlockAttributes>::TransferDisposedObjects()
     // We already updated the bit vector on TransferSweptObjects
     // So just update the free object head.
     this->lastFreeObjectHead = this->freeObjectList;
-    
+
     RECYCLER_SLOW_CHECK(CheckFreeBitVector(true));
 }
 
@@ -376,7 +376,7 @@ SmallFinalizableHeapBlockT<TBlockAttributes>::FinalizeAllObjects()
 #endif
             DebugOnly(processedCount++);
         });
-        
+
         Assert(this->finalizeCount == processedCount);
     }
 }

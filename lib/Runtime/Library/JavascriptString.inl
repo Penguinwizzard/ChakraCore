@@ -17,7 +17,7 @@ namespace Js
         {
             Throw::InternalError();
         }
-        
+
         if (IsFinalized())
         {
             CopyHelper(buffer, GetString(), stringLen);
@@ -28,6 +28,6 @@ namespace Js
         // where they need to be copied, and copy them at the end. This is done to avoid excessive recursion during the copy.
         StringCopyInfoStack nestedStringTreeCopyInfos(GetScriptContext());
         ((StringType *)this)->StringType::CopyVirtual(buffer, nestedStringTreeCopyInfos, 0);
-        FinishCopy(buffer, nestedStringTreeCopyInfos);        
+        FinishCopy(buffer, nestedStringTreeCopyInfos);
     }
 } // namespace Js

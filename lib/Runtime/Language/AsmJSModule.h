@@ -23,7 +23,7 @@ namespace Js {
     // and call js::Invoke. However, we'd like to be able to specialize FFI calls
     // to be more efficient in several cases:
     //
-    //  - for calls to JS functions which have been jitted, we'd like to call
+    //  - for calls to JS functions which have been JITed, we'd like to call
     //    directly into JIT code without going through C++.
     //
     //  - for calls to certain builtins, we'd like to be call directly into the C++
@@ -58,7 +58,7 @@ namespace Js {
     // (which holds the exit pairing) and the value is an index into the
     // Vector<Exit> stored in the AsmJSModule.
     //
-    // Rooting note: ModuleCompiler is a stack class that contains unrooted
+    // Rooting note: ModuleCompiler is a stack class that contains un-rooted
     // PropertyName (JSAtom) pointers.  This is safe because it cannot be
     // constructed without a TokenStream reference.  TokenStream is itself a stack
     // class that cannot be constructed without an AutoKeepAtoms being live on the
@@ -104,7 +104,7 @@ namespace Js {
         static const RegSlot ArrayBufferRegister = 2;
         static const RegSlot ArraySizeRegister = 3;
         static const RegSlot ScriptContextBufferRegister = 4;
-        //Var Return register and Module Environnement and Array Buffer
+        //Var Return register and Module Environment and Array Buffer
         static const int32 RequiredVarConstants = 5;
     };
     namespace AsmJsCompilation
@@ -145,7 +145,7 @@ namespace Js {
         inline bool LookupStdLibSIMDNameInMap   (PropertyName name, AsmJsSIMDFunction **simdFunc, SIMDNameMap* map) const;
         bool AddStandardLibrarySIMDNameInMap    (PropertyId id, AsmJsSIMDFunction* simdFunc, SIMDNameMap* map);
 
-        // Keep allocator first to free Dictionnary before deleting the allocator
+        // Keep allocator first to free Dictionary before deleting the allocator
         ArenaAllocator                  mAllocator;
         ExclusiveContext *              mCx;
         AsmJSParser &                   mCurrentParserNode;
@@ -162,11 +162,11 @@ namespace Js {
         ModuleImportFunctions           mImportFunctions;
 
         // Maps functions names to func symbols. Three maps since names are not unique across SIMD types (e.g. SIMD.{float32x4|int32x4}.add)
-        // Also used to find if an operation is supported on a SIMD type. 
+        // Also used to find if an operation is supported on a SIMD type.
         SIMDNameMap                         mStdLibSIMDInt32x4Map;
         SIMDNameMap                         mStdLibSIMDFloat32x4Map;
         SIMDNameMap                         mStdLibSIMDFloat64x2Map;
-        // global simd values space. 
+        // global SIMD values space.
         ModuleSIMDVars                  mSimdVarSpace;
         BVStatic<ASMSIMD_BUILTIN_SIZE>  mAsmSimdBuiltinUsedBV;
 
@@ -208,7 +208,7 @@ namespace Js {
         AsmJsSIMDFunction *LookupSimdOperation(PropertyName name);
 
         void AddSimdBuiltinUse(int index){ mAsmSimdBuiltinUsedBV.Set(index); }
-        // adds simd constant var to module 
+        // adds SIMD constant var to module
         bool AddSimdValueVar(PropertyName name, ParseNode* pnode, AsmJsSIMDFunction* simdFunc);
 
         AsmJsCompileTime GetTick();
@@ -309,7 +309,6 @@ namespace Js {
         bool ValidateSimdConstructor(ParseNode* pnode, AsmJsSIMDFunction* simdFunc, AsmJsSIMDValue& value);
         bool IsSimdjsEnabled() { return GetScriptContext()->GetConfig()->IsSimdjsEnabled(); }
     };
-
 
     struct AsmJsSlot
     {
@@ -572,6 +571,4 @@ namespace Js {
         static void EnsureHeapAttached(ScriptFunction * func);
         static void * ConvertFrameForJavascript(void* asmJsMemory, ScriptFunction * func);
     };
-
-
 };

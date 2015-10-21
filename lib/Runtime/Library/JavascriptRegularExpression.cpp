@@ -22,7 +22,7 @@ namespace Js
         // See JavascriptRegExp::IsWritable for special non-writable properties
         // The JavascriptLibrary should have cleared the bits already
         Assert(!this->GetTypeHandler()->GetHasOnlyWritableDataProperties());
-        Assert(!this->GetType()->AreThisAndPrototypesEnsuredToHaveOnlyWritableDataProperties());        
+        Assert(!this->GetType()->AreThisAndPrototypesEnsuredToHaveOnlyWritableDataProperties());
 
 #if ENABLE_REGEX_CONFIG_OPTIONS
         if (REGEX_CONFIG_FLAG(RegexTracing))
@@ -64,9 +64,9 @@ namespace Js
         splitPattern(instance->GetSplitPattern()),
         lastIndexVar(instance->lastIndexVar),
         lastIndexOrFlag(instance->lastIndexOrFlag)
-    {       
-        // For boxing stack instance        
-        Assert(ThreadContext::IsOnStack(instance));   
+    {
+        // For boxing stack instance
+        Assert(ThreadContext::IsOnStack(instance));
     }
 
     bool JavascriptRegExp::Is(Var aValue)
@@ -92,13 +92,13 @@ namespace Js
     }
 
     InternalString JavascriptRegExp::GetSource() const
-    { 
-        return GetPattern()->GetSource(); 
+    {
+        return GetPattern()->GetSource();
     }
 
     UnifiedRegex::RegexFlags JavascriptRegExp::GetFlags() const
-    { 
-        return GetPattern()->GetFlags(); 
+    {
+        return GetPattern()->GetFlags();
     }
 
     JavascriptRegExp* JavascriptRegExp::GetJavascriptRegExp(Var var, ScriptContext* scriptContext)
@@ -132,8 +132,8 @@ namespace Js
 
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
 
-        // SkipDefaultNewObject function flag should have revent the default object
-        // being created, except when call true a host dispatch
+        // SkipDefaultNewObject function flag should have prevented the default object from
+        // being created, except when call true a host dispatch.
         Var newTarget = callInfo.Flags & CallFlags_NewTarget ? args.Values[args.Info.Count] : args[0];
         bool isCtorSuperCall = (callInfo.Flags & CallFlags_New) && newTarget != nullptr && RecyclableObject::Is(newTarget);
         Assert(isCtorSuperCall || !(callInfo.Flags & CallFlags_New) || args[0] == nullptr
@@ -149,7 +149,7 @@ namespace Js
         }
         else if (JavascriptRegExp::Is(args[1]))
         {
-            if (!(callInfo.Flags & CallFlags_New) && 
+            if (!(callInfo.Flags & CallFlags_New) &&
                 (callInfo.Count == 2 || JavascriptOperators::IsUndefinedObject(args[2], scriptContext)) &&
                 regex == nullptr)
             {
@@ -188,7 +188,7 @@ namespace Js
                 pattern = source->GetPattern();
                 splitPattern = source->GetSplitPattern();
             }
-            
+
         }
         else
         {
@@ -260,7 +260,7 @@ namespace Js
 
     JavascriptRegExp* JavascriptRegExp::CreateRegEx(Var aValue, Var options, ScriptContext *scriptContext)
     {
-        // This is called as helper from OpCode::CoerseRegEx. If aValue is regex pattern /a/, CreatePattern converts 
+        // This is called as helper from OpCode::CoerseRegEx. If aValue is regex pattern /a/, CreatePattern converts
         // it to pattern "/a/" instead of "a". So if we know that aValue is regex, then just return the same object
         if (JavascriptRegExp::Is(aValue))
         {
@@ -279,7 +279,7 @@ namespace Js
         if (lastIndexVar == nullptr)
             lastIndexOrFlag = 0;
         else
-        {            
+        {
             // Does ToInteger(lastIndex) yield an integer in [0, MaxCharCount]?
             double v = JavascriptConversion::ToInteger(lastIndexVar, GetScriptContext());
             if (JavascriptNumber::IsNan(v))
@@ -290,7 +290,7 @@ namespace Js
                 v > (double)MaxCharCount)
                 lastIndexOrFlag = InvalidValue;
             else
-                lastIndexOrFlag = (CharCount)v;            
+                lastIndexOrFlag = (CharCount)v;
         }
     }
 
@@ -312,7 +312,7 @@ namespace Js
             // Need to ensure that the resulting static regex is functionally equivalent (as written) to 'this' regex. This
             // involves the following:
             //   - Empty regex should result in /(?:)/ rather than //, which is a comment
-            //   - Unescaped '/' needs to be be escaped so that it doesn't end the static regex prematurely
+            //   - Unescaped '/' needs to be escaped so that it doesn't end the static regex prematurely
             //   - Line terminators need to be escaped since they're not allowed in a static regex
             if (str.GetLength() == 0)
             {
@@ -384,7 +384,7 @@ namespace Js
         if (!sourceOnly)
         {
             builder->AppendChars(L'/');
-            
+
             // Cross-browser compatibility - flags are listed in alphabetical order in the spec and by other browsers
             if (pattern->IsGlobal())
             {
@@ -445,7 +445,7 @@ namespace Js
             // second arg must be undefined if a reg expression is passed
             if(callInfo.Count > 2 &&  JavascriptOperators::GetTypeId(args[2]) != TypeIds_Undefined)
             {
-                JavascriptError::ThrowSyntaxError(scriptContext, JSERR_RegExpSyntax);                
+                JavascriptError::ThrowSyntaxError(scriptContext, JSERR_RegExpSyntax);
             }
         }
         else
@@ -614,7 +614,7 @@ namespace Js
 
     JavascriptRegExp * JavascriptRegExp::BoxStackInstance(JavascriptRegExp * instance)
     {
-        Assert(ThreadContext::IsOnStack(instance));        
+        Assert(ThreadContext::IsOnStack(instance));
         // On the stack, the we reserved a pointer before the object as to store the boxed value
         JavascriptRegExp ** boxedInstanceRef = ((JavascriptRegExp **)instance) - 1;
         JavascriptRegExp * boxedInstance = *boxedInstanceRef;
@@ -663,7 +663,7 @@ namespace Js
         case PropertyIds::ignoreCase:
         case PropertyIds::source:
         case PropertyIds::options:
-            return true;        
+            return true;
         case PropertyIds::unicode:
             if (this->GetScriptContext()->GetConfig()->IsES6UnicodeExtensionsEnabled())
             {
@@ -681,13 +681,13 @@ namespace Js
         }
     }
 
-    BOOL JavascriptRegExp::GetPropertyReference(Var originalInstance, PropertyId propertyId, Var* value, PropertyValueInfo* info, ScriptContext* requestContext) 
+    BOOL JavascriptRegExp::GetPropertyReference(Var originalInstance, PropertyId propertyId, Var* value, PropertyValueInfo* info, ScriptContext* requestContext)
     {
         return JavascriptRegExp::GetProperty(originalInstance, propertyId, value, info, requestContext);
     }
 
     BOOL JavascriptRegExp::GetProperty(Var originalInstance, PropertyId propertyId, Var* value, PropertyValueInfo* info, ScriptContext* requestContext)
-    {        
+    {
         BOOL result;
         if (GetPropertyBuiltIns(propertyId, value, &result))
         {
@@ -760,7 +760,7 @@ namespace Js
             }
         case PropertyIds::source:
             {
-                *value = this->ToString(true);                
+                *value = this->ToString(true);
                 *result = true;
                 return true;
             }
@@ -770,7 +770,7 @@ namespace Js
             BEGIN_TEMP_ALLOCATOR(tempAlloc, scriptContext, L"JavascriptRegExp")
             {
                 StringBuilder<ArenaAllocator> bs(tempAlloc, 4);
-                
+
                 if(GetPattern()->IsGlobal())
                 {
                     bs.Append(L'g');
@@ -793,7 +793,7 @@ namespace Js
                 }
                 *value = Js::JavascriptString::NewCopyBuffer(bs.Detach(), bs.Count(), scriptContext);
             }
-            END_TEMP_ALLOCATOR(tempAlloc, scriptContext);           
+            END_TEMP_ALLOCATOR(tempAlloc, scriptContext);
             *result = true;
             return true;
         }
@@ -814,7 +814,7 @@ namespace Js
     }
 
     BOOL JavascriptRegExp::SetProperty(JavascriptString* propertyNameString, Var value, PropertyOperationFlags flags, PropertyValueInfo* info)
-    {        
+    {
         BOOL result;
         PropertyRecord const * propertyRecord;
         this->GetScriptContext()->FindPropertyRecord(propertyNameString, &propertyRecord);
@@ -917,7 +917,7 @@ namespace Js
         DescriptorFlags result;
         PropertyRecord const * propertyRecord;
         this->GetScriptContext()->FindPropertyRecord(propertyNameString, &propertyRecord);
-        
+
         if (propertyRecord != nullptr && GetSetterBuiltIns(propertyRecord->GetPropertyId(), info, &result))
         {
             return result;
@@ -938,7 +938,7 @@ namespace Js
         case PropertyIds::options:
             PropertyValueInfo::SetNoCache(info, this);
             *result = JavascriptRegExp::IsWritable(propertyId) ? WritableData : Data;
-            return true;       
+            return true;
         case PropertyIds::unicode:
             if (this->GetScriptContext()->GetConfig()->IsES6UnicodeExtensionsEnabled())
             {
@@ -972,7 +972,7 @@ namespace Js
         stringBuilder->AppendCppLiteral(JS_DIAG_TYPE_JavascriptRegExp);
         return TRUE;
     }
-    
+
     BOOL JavascriptRegExp::IsEnumerable(PropertyId propertyId)
     {
         switch (propertyId)
@@ -1060,7 +1060,7 @@ namespace Js
     BOOL JavascriptRegExp::GetSpecialPropertyName(uint32 index, Var *propertyName, ScriptContext * requestContext)
     {
         uint length = GetSpecialPropertyCount();
-      
+
         if (index < length)
         {
             *propertyName = requestContext->GetPropertyString(GetSpecialPropertyIdsInlined()[index]);

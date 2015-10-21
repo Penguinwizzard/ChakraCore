@@ -169,9 +169,9 @@ namespace Js
         // Version
         // TODO: Revisit this and check what other flags are required
         bool SupportsES3()                      const { return true; }
-        bool SupportsES3Extensions()            const { 
+        bool SupportsES3Extensions()            const {
 #ifdef ENABLE_PROJECTION
-            return HostType != HostTypeApplication; 
+            return HostType != HostTypeApplication;
 #else
             return true;
 #endif
@@ -195,16 +195,16 @@ namespace Js
 
         void SetCanOptimizeGlobalLookupFlag(BOOL f){ this->fCanOptimizeGlobalLookup = f;}
         BOOL CanOptimizeGlobalLookup() const { return this->fCanOptimizeGlobalLookup;}
-        bool IsOptimizedForManyInstances() const { return isOptimizedForManyInstances; }        
+        bool IsOptimizedForManyInstances() const { return isOptimizedForManyInstances; }
         bool IsBlockScopeEnabled() const { return true; }
-        void CopyFrom(ScriptConfiguration& other) 
-        { 
-            this->NoNative = other.NoNative; 
-            this->fCanOptimizeGlobalLookup = other.fCanOptimizeGlobalLookup; 
+        void CopyFrom(ScriptConfiguration& other)
+        {
+            this->NoNative = other.NoNative;
+            this->fCanOptimizeGlobalLookup = other.fCanOptimizeGlobalLookup;
 #ifdef ENABLE_PROJECTION
             this->HostType = other.HostType;
             this->WinRTConstructorAllowed = other.WinRTConstructorAllowed;
-            this->projectionConfiguration = other.projectionConfiguration; 
+            this->projectionConfiguration = other.projectionConfiguration;
 #endif
         }
 
@@ -217,7 +217,7 @@ namespace Js
 
         ProjectionConfiguration const * GetProjectionConfig() const
         {
-            return &projectionConfiguration;            
+            return &projectionConfiguration;
         }
         void SetHostType(long hostType) { this->HostType = hostType; }
         void SetWinRTConstructorAllowed(bool allowed) { this->WinRTConstructorAllowed = allowed; }
@@ -231,7 +231,7 @@ namespace Js
 #endif
     private:
 
-        // Per script configurations     
+        // Per script configurations
         bool NoNative;
         BOOL fCanOptimizeGlobalLookup;
         const bool isOptimizedForManyInstances;
@@ -288,7 +288,7 @@ namespace Js
     // This is the dictionary used by script context to cache the eval.
     typedef TwoLevelHashDictionary<FastEvalMapString, ScriptFunction*, EvalMapRecord, EvalCacheTopLevelDictionary, EvalMapString> EvalCacheDictionary;
 
-    struct PropertyStringMap 
+    struct PropertyStringMap
     {
         PropertyString* strLen2[80];
 
@@ -323,7 +323,7 @@ namespace Js
         EvalCacheDictionary* evalCacheDictionary;
         EvalCacheDictionary* indirectEvalCacheDictionary;
         NewFunctionCache* newFunctionCache;
-        RegexPatternMruMap *dynamicRegexMap;        
+        RegexPatternMruMap *dynamicRegexMap;
         SourceContextInfoMap* sourceContextInfoMap;   // maps host provided context cookie to the URL of the script buffer passed.
         DynamicSourceContextInfoMap* dynamicSourceContextInfoMap;
         SourceContextInfo* noContextSourceContextInfo;
@@ -338,7 +338,7 @@ namespace Js
     public:
         static DWORD GetThreadContextOffset() { return offsetof(ScriptContext, threadContext); }
         static DWORD GetOptimizationOverridesOffset() { return offsetof(ScriptContext, optimizationOverrides); }
-        static DWORD GetRecyclerOffset() { return offsetof(ScriptContext, recycler); }        
+        static DWORD GetRecyclerOffset() { return offsetof(ScriptContext, recycler); }
         static DWORD GetNumberAllocatorOffset() { return offsetof(ScriptContext, numberAllocator); }
         static DWORD GetAsmIntDbValOffset() { return offsetof(ScriptContext, retAsmIntDbVal); }
 
@@ -372,7 +372,7 @@ namespace Js
         bool DoUndeferGlobalFunctions() const;
 
         bool IsUndeclBlockVar(Var var) const { return this->javascriptLibrary->IsUndeclBlockVar(var); }
-        
+
         void TrackPid(const PropertyRecord* propertyRecord);
         void TrackPid(PropertyId propertyId);
 
@@ -451,7 +451,7 @@ namespace Js
         ScriptContext ** entryInScriptContextWithInlineCachesRegistry;
         ScriptContext ** entryInScriptContextWithIsInstInlineCachesRegistry;
         ScriptContext ** registeredPrototypeChainEnsuredToHaveOnlyWritableDataPropertiesScriptContext;
-        
+
         ArenaAllocator generalAllocator;
 #ifdef ENABLE_BASIC_TELEMETRY
         ArenaAllocator telemetryAllocator;
@@ -478,7 +478,7 @@ namespace Js
 
         InlineCache * valueOfInlineCache;
         InlineCache * toStringInlineCache;
-        
+
         typedef JsUtil::BaseHashSet<Js::PropertyId, ArenaAllocator> PropIdSetForConstProp;
         PropIdSetForConstProp * intConstPropsOnGlobalObject;
         PropIdSetForConstProp * intConstPropsOnGlobalUserObject;
@@ -611,7 +611,7 @@ public:
         uint *rejitReasonCounts;
 #endif
 #ifdef ENABLE_BASIC_TELEMETRY
-        
+
     private:
         ScriptContextTelemetry* telemetry;
     public:
@@ -715,7 +715,7 @@ private:
         HaltCallback* scriptEngineHaltCallback;
         EventHandler scriptStartEventHandler;
         EventHandler scriptEndEventHandler;
-#ifdef FAULT_INJECTION    
+#ifdef FAULT_INJECTION
         EventHandler disposeScriptByFaultInjectionEventHandler;
 #endif
 
@@ -737,7 +737,7 @@ private:
         bool hasRegisteredInlineCache;
         bool hasRegisteredIsInstInlineCache;
         bool deferredBody;
-        bool isPerformingNonreentrantWork;        
+        bool isPerformingNonreentrantWork;
         bool isDiagnosticsScriptContext;   // mentions that current script context belongs to the diagnostics OM.
 
         size_t sourceSize;
@@ -759,7 +759,7 @@ private:
         IActiveScriptProfilerCallback2 *m_pProfileCallback2;
         BOOL m_fTraceDomCall;
         BOOL m_inProfileCallback;
-        
+
 #if DBG_DUMP || defined(DYNAMIC_PROFILE_STORAGE) || defined(RUNTIME_DATA_COLLECTION)
         RecyclerRootPtr<SListBase<DynamicProfileInfo *>> profileInfoList;
 #endif
@@ -787,7 +787,7 @@ private:
         DOMFastPathIRHelperMap* domFastPathIRHelperMap;
 #endif
 
-                
+
         ScriptContext(ThreadContext* threadContext);
         void InitializeAllocations();
         void InitializePreGlobal();
@@ -825,11 +825,11 @@ private:
 
         bool IsClosed() const { return isClosed; }
         bool IsActuallyClosed() const { return isScriptContextActuallyClosed; }
-        bool IsClosedNativeCodeGenerator() const 
-        { 
+        bool IsClosedNativeCodeGenerator() const
+        {
             return !nativeCodeGen || ::IsClosedNativeCodeGenerator(nativeCodeGen);
         }
-        
+
         void SetDirectHostTypeId(TypeId typeId) {directHostTypeId = typeId; }
         TypeId GetDirectHostTypeId() const { return directHostTypeId; }
 
@@ -869,7 +869,7 @@ private:
 
         // if the current context is for webworker
         DWORD webWorkerId;
-       
+
         static ScriptContext * New(ThreadContext * threadContext);
         static void Delete(ScriptContext* scriptContext);
 
@@ -939,7 +939,7 @@ private:
         void AddToEvalMap(FastEvalMapString const& key, BOOL isIndirect, ScriptFunction *pFuncScript);
 
         template <typename TCacheType>
-        void CleanDynamicFunctionCache(TCacheType* cacheType);        
+        void CleanDynamicFunctionCache(TCacheType* cacheType);
         void CleanEvalMapCache(Js::EvalCacheTopLevelDictionary * cacheType);
 
         template <class TDelegate>
@@ -960,7 +960,7 @@ private:
         SourceContextInfo * GetSourceContextInfo(DWORD_PTR hostSourceContext, IActiveScriptDataCache* profileDataCache);
         SourceContextInfo * GetSourceContextInfo(uint hash);
         SourceContextInfo * CreateSourceContextInfo(uint hash, DWORD_PTR hostSourceContext);
-        SourceContextInfo * CreateSourceContextInfo(DWORD_PTR hostSourceContext, wchar_t const * url, size_t len, 
+        SourceContextInfo * CreateSourceContextInfo(DWORD_PTR hostSourceContext, wchar_t const * url, size_t len,
             IActiveScriptDataCache* profileDataCache, wchar_t const * sourceMapUrl = nullptr, size_t sourceMapUrlLen = 0);
 
 #if defined(LEAK_REPORT) || defined(CHECK_MEMORY_LEAK)
@@ -1012,8 +1012,8 @@ private:
         void SetProjectionTargetVersion(DWORD version) { config.SetProjectionTargetVersion(version); }
 #endif
         void SetCanOptimizeGlobalLookupFlag(BOOL f){ config.SetCanOptimizeGlobalLookupFlag(f);}
-        BOOL CanOptimizeGlobalLookup(){ return config.CanOptimizeGlobalLookup();}        
-        
+        BOOL CanOptimizeGlobalLookup(){ return config.CanOptimizeGlobalLookup();}
+
 
         bool IsClosed() { return isClosed; }
         bool IsFastDOMEnabled() { return fastDOMenabled; }
@@ -1024,9 +1024,9 @@ private:
 
         void BindReference(void* addr);
 
-        void InitPropertyStringMap(int i);        
+        void InitPropertyStringMap(int i);
         PropertyString* AddPropertyString2(const Js::PropertyRecord* propertyRecord);
-        PropertyString* CachePropertyString2(const Js::PropertyRecord* propertyRecord);        
+        PropertyString* CachePropertyString2(const Js::PropertyRecord* propertyRecord);
         PropertyString* GetPropertyString2(wchar_t ch1, wchar_t ch2);
         void FindPropertyRecord(__in LPCWSTR pszPropertyName, __in int propertyNameLength, PropertyRecord const** propertyRecord);
         JsUtil::List<const RecyclerWeakReference<Js::PropertyRecord const>*>* FindPropertyIdNoCase(__in LPCWSTR pszPropertyName, __in int propertyNameLength);
@@ -1300,13 +1300,13 @@ private:
 
         int GetProfileSession()
         {
-            AssertMsg(m_pProfileCallback != nullptr, "Asking for profile session when we arent in any");
+            AssertMsg(m_pProfileCallback != nullptr, "Asking for profile session when we aren't in one.");
             return m_iProfileSession;
         }
 
         void StartNewProfileSession()
         {
-            AssertMsg(m_pProfileCallback != nullptr, "New Session when the profiler isnt set to any callback");
+            AssertMsg(m_pProfileCallback != nullptr, "New Session when the profiler isn't set to any callback.");
             m_iProfileSession++;
         }
 
@@ -1332,7 +1332,7 @@ private:
         // Register static and dynamic scripts
         HRESULT RegisterAllScripts();
 
-        // Iterate thru utf8sourceinfo and clear debug document if they are there.
+        // Iterate through utf8sourceinfo and clear debug document if they are there.
         void EnsureClearDebugDocument();
 
         // To be called directly only when the thread context is shutting down
@@ -1414,7 +1414,7 @@ private:
         typedef JsUtil::BaseDictionary<JavascriptMethod, Js::PropertyId, ArenaAllocator, PrimeSizePolicy> BuiltinFunctionIdDictionary;
         BuiltinFunctionIdDictionary *m_pBuiltinFunctionIdMap;
         Js::PropertyId GetFunctionNumber(JavascriptMethod entryPoint);
-        
+
         static const wchar_t* CopyString(const wchar_t* str, size_t charCount, ArenaAllocator* alloc);
         static charcount_t AppendWithEscapeCharacters(Js::StringBuilder<ArenaAllocator>* stringBuilder, const WCHAR* sourceString, charcount_t sourceStringLen, WCHAR escapeChar, WCHAR charToEscape);
 
@@ -1539,7 +1539,7 @@ private:
             {
                 Output::Print(L"EvalMap: Removing Dynamic Function String from dynamic function cache: %s\n", key.str.GetBuffer()); Output::Flush();
             }
-#endif            
+#endif
         });
     }
 

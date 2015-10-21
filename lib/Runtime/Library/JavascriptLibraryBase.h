@@ -4,9 +4,9 @@
 //-------------------------------------------------------------------------------------------------------
 
 //////////////////////////////////////////////////////////
-// JavascriptLibraryBase.h is used by static lib shared between trident and chakra. We need to keep
+// JavascriptLibraryBase.h is used by static lib shared between Trident and Chakra. We need to keep
 // the size consistent and try not to change its size. We need to have matching mshtml.dll
-// if the size changed here. 
+// if the size changed here.
 /////////////////////////////////////////////////////////
 #pragma once
 #pragma once
@@ -155,7 +155,7 @@ namespace Js
         RuntimeFunction* referenceErrorConstructor;
         RuntimeFunction* syntaxErrorConstructor;
         RuntimeFunction* typeErrorConstructor;
-        RuntimeFunction* uriErrorConstructor;        
+        RuntimeFunction* uriErrorConstructor;
         RuntimeFunction* proxyConstructor;
         RuntimeFunction* promiseConstructor;
         RuntimeFunction* generatorFunctionConstructor;
@@ -232,7 +232,7 @@ namespace Js
         DynamicObject* referenceErrorPrototype;
         DynamicObject* syntaxErrorPrototype;
         DynamicObject* typeErrorPrototype;
-        DynamicObject* uriErrorPrototype; 
+        DynamicObject* uriErrorPrototype;
 
         JavascriptBoolean* booleanTrue;
         JavascriptBoolean* booleanFalse;
@@ -258,10 +258,10 @@ namespace Js
     public:
         ScriptContext* scriptContext;
 
-    private: 
+    private:
         virtual void Dispose(bool isShutdown) override;
         virtual void Finalize(bool isShutdown) override;
-        virtual void Mark(Recycler *recycler) override { AssertMsg(false, "Mark called on object that isnt TrackableObject"); }
+        virtual void Mark(Recycler *recycler) override { AssertMsg(false, "Mark called on object that isn't TrackableObject"); }
 
     };
 }

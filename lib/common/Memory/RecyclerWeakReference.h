@@ -23,7 +23,7 @@ class Recycler;
 /// point to an object.
 /// When the referenced object is collected, the strong reference is set to NULL
 ///
-/// Clients should not use this class but instead use RecyclerWeakReference<type> 
+/// Clients should not use this class but instead use RecyclerWeakReference<type>
 /// which provides for automatic type conversion of the underlying reference
 class RecyclerWeakReferenceBase
 {
@@ -61,7 +61,7 @@ public:
     }
 
     __inline T* Get() const
-    {        
+    {
         // Don't resolve weak references if the recycler is exiting
         // Disabling the assert for now, because we can't get the ThreadContext on the JIT thread.
         //Assert(!ThreadContext::GetContextForCurrentThread()->GetRecycler()->IsExiting());
@@ -83,7 +83,7 @@ private:
     RecyclerWeakReference<T> * weakReference;
 public:
     WeakReferenceCache() : weakReference(nullptr) {};
-    RecyclerWeakReference<T> * GetWeakReference(Recycler * recycler) 
+    RecyclerWeakReference<T> * GetWeakReference(Recycler * recycler)
     {
         RecyclerWeakReference<T> * weakRef = this->weakReference;
         if (weakRef == nullptr)
@@ -97,7 +97,7 @@ public:
 
 ///
 /// Hashtable class that maps strong references to weak references
-/// This is slightly uniqe in that the weak reference is a complete entry in the hashtable 
+/// This is slightly unique in that the weak reference is a complete entry in the hashtable
 /// but is treated as the value for the client. The key is the strong reference.
 /// The hash table is a standard closed-addressing hash table where the strong references are
 /// hashed into buckets, and then stored in that buckets corresponding doubly linked list
@@ -201,7 +201,7 @@ public:
         {
             if (DefaultComparer<char*>::Equals(key, current->strongRef))
             {
-                 *pprev = current->next;                           
+                 *pprev = current->next;
                 if (pOut != nullptr)
                 {
                     (*pOut) = current;
@@ -231,7 +231,7 @@ public:
         uint countedEntries = 0;
 #endif
 
-        for (uint i=0;i<size;i++) 
+        for (uint i=0;i<size;i++)
         {
             RecyclerWeakReferenceBase ** pprev = &buckets[i];
             RecyclerWeakReferenceBase *current = *pprev;
@@ -293,7 +293,7 @@ private:
     {
         RecyclerWeakReferenceBase* first = (*bucket);
 
-        entry->next = first;      
+        entry->next = first;
         (*bucket) = entry;
     }
 
@@ -344,7 +344,7 @@ private:
         }
 
         RecyclerWeakReferenceBase* entry;
-        entry = AllocatorNewBase(Recycler, recycler, AllocWeakReferenceEntry, RecyclerWeakReferenceBase);            
+        entry = AllocatorNewBase(Recycler, recycler, AllocWeakReferenceEntry, RecyclerWeakReferenceBase);
         entry->strongRef = strongReference;
         entry->strongRefHeapBlock = recycler->FindHeapBlock(strongReference);
         Assert(entry->strongRefHeapBlock != nullptr);

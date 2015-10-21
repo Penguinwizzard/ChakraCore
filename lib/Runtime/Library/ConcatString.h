@@ -10,7 +10,7 @@ namespace Js
     // Concat string is a virtual string, or a non-leaf node in concat string tree.
     // It does not hold characters by itself but has one or more child nodes.
     // Only leaf nodes (which are not concat strings) hold the actual characters.
-    // The flattenig happens on demand (call GetString() or GetSz()),
+    // The flattening happens on demand (call GetString() or GetSz()),
     // until then we don't create actual big wchar_t* buffer, just keep concat tree as a tree.
     // The result of flattening the concat string tree is concat of all leaf nodes from left to right.
     // Usage pattern:
@@ -30,10 +30,10 @@ namespace Js
             int itemCount, _In_reads_(itemCount) JavascriptString * const * items,
             StringCopyInfoStack &nestedStringTreeCopyInfos, const byte recursionDepth);
 
-        // Subclass can call this to implement GetSz and use the actualy type to avoid virtual call to Copy.
-        template <typename ConcatStringType> const wchar_t * GetSzImpl();        
-    public:        
-        virtual const wchar_t* GetSz() = 0;     // Force subclass to call GetSzImpl with the real type to avoid virtual calss
+        // Subclass can call this to implement GetSz and use the actual type to avoid virtual call to Copy.
+        template <typename ConcatStringType> const wchar_t * GetSzImpl();
+    public:
+        virtual const wchar_t* GetSz() = 0;     // Force subclass to call GetSzImpl with the real type to avoid virtual calls
         using JavascriptString::Copy;
         virtual bool IsTree() const override sealed;
     };
@@ -56,7 +56,7 @@ namespace Js
         ConcatStringN(StaticType* stringTypeStatic, bool doZeroSlotsAndLength = true);
         DEFINE_VTABLE_CTOR(ConcatStringN<N>, ConcatStringBase);
         DECLARE_CONCRETE_STRING_CLASS;
-        
+
         virtual void CopyVirtual(_Out_writes_(m_charLength) wchar_t *const buffer, StringCopyInfoStack &nestedStringTreeCopyInfos, const byte recursionDepth) override
         {
             __super::CopyImpl(buffer, N, m_slots, nestedStringTreeCopyInfos, recursionDepth);
@@ -66,11 +66,11 @@ namespace Js
             items = m_slots;
             return N;
         }
-        
+
     public:
         static ConcatStringN<N>* New(ScriptContext* scriptContext);
         const wchar_t * GetSz() override sealed;
-        void SetItem(_In_range_(0, N - 1) int index, JavascriptString* value);        
+        void SetItem(_In_range_(0, N - 1) int index, JavascriptString* value);
 
     protected:
         JavascriptString* m_slots[N];   // These contain the child nodes. 1 slot is per 1 item (JavascriptString*).
@@ -105,7 +105,7 @@ namespace Js
     // - uses chunks, max chunk size is specified by c_maxChunkSlotCount, until we fit into that, we realloc, otherwise create new chunk.
     // - We use chunks in order to avoid big allocations, we don't expect lots of reallocs, that why chunk size is relatively big.
     // - the chunks are linked using m_prevChunk field. flattening happens from left to right, i.e. first we need to get
-    //   head chunk -- the one that havs m_prevChunk == NULL.
+    //   head chunk -- the one that has m_prevChunk == NULL.
     class ConcatStringBuilder sealed : public ConcatStringBase
     {
         friend JavascriptString;
@@ -116,11 +116,11 @@ namespace Js
 
     protected:
         DEFINE_VTABLE_CTOR(ConcatStringBuilder, ConcatStringBase);
-        DECLARE_CONCRETE_STRING_CLASS;        
+        DECLARE_CONCRETE_STRING_CLASS;
         virtual void CopyVirtual(_Out_writes_(m_charLength) wchar_t *const buffer, StringCopyInfoStack &nestedStringTreeCopyInfos, const byte recursionDepth) override sealed;
 
     public:
-        static ConcatStringBuilder* New(ScriptContext* scriptContext, int initialSlotCount); 
+        static ConcatStringBuilder* New(ScriptContext* scriptContext, int initialSlotCount);
         const wchar_t * GetSz() override sealed;
         void Append(JavascriptString* str);
 
@@ -149,15 +149,15 @@ namespace Js
 
     protected:
         DEFINE_VTABLE_CTOR(ConcatStringWrapping, ConcatStringBase);
-        DECLARE_CONCRETE_STRING_CLASS;        
+        DECLARE_CONCRETE_STRING_CLASS;
         virtual void CopyVirtual(_Out_writes_(m_charLength) wchar_t *const buffer, StringCopyInfoStack &nestedStringTreeCopyInfos, const byte recursionDepth) override sealed
         {
-            const_cast<ConcatStringWrapping *>(this)->EnsureAllSlots();           
+            const_cast<ConcatStringWrapping *>(this)->EnsureAllSlots();
             __super::CopyImpl(buffer, _countof(m_slots), m_slots, nestedStringTreeCopyInfos, recursionDepth);
         }
         virtual int GetRandomAccessItemsFromConcatString(Js::JavascriptString * const *& items) const override sealed
         {
-            const_cast<ConcatStringWrapping *>(this)->EnsureAllSlots(); 
+            const_cast<ConcatStringWrapping *>(this)->EnsureAllSlots();
             items = m_slots;
             return _countof(m_slots);
         }
@@ -174,22 +174,22 @@ namespace Js
         JavascriptString * m_inner;
 
         // Use the padding space for the concat
-        JavascriptString * m_slots[3];  
+        JavascriptString * m_slots[3];
     };
 
-    // Makesure the padding doesn't add tot he size of ConcatStringWrapping
+    // Make sure the padding doesn't add tot he size of ConcatStringWrapping
 #if defined(_M_X64_OR_ARM64)
     CompileAssert(sizeof(ConcatStringWrapping<L'"', L'"'>) == 64);
 #else
     CompileAssert(sizeof(ConcatStringWrapping<L'"', L'"'>) == 32);
 #endif
-    
-    // Concat string with N child nodes. Use it when you don't know the number of children at compile time.    
+
+    // Concat string with N child nodes. Use it when you don't know the number of children at compile time.
     // Usage pattern:
     //   ConcatStringMulti* tree = ConcatStringMulti::New(3, scriptContext);
     //   tree->SetItem(0, javascriptString1);
     //   tree->SetItem(1, javascriptString2);
-    //   tree->SetItem(2, javascriptString3);    
+    //   tree->SetItem(2, javascriptString3);
     class ConcatStringMulti sealed : public ConcatStringBase
     {
         friend JavascriptString;
@@ -198,7 +198,7 @@ namespace Js
         ConcatStringMulti(uint slotCount, JavascriptString * a1, JavascriptString * a2, StaticType* stringTypeStatic);
         DEFINE_VTABLE_CTOR(ConcatStringMulti, ConcatStringBase);
         DECLARE_CONCRETE_STRING_CLASS;
-        
+
         virtual void CopyVirtual(_Out_writes_(m_charLength) wchar_t *const buffer, StringCopyInfoStack &nestedStringTreeCopyInfos, const byte recursionDepth) override
         {
             Assert(IsFilled());
@@ -210,19 +210,19 @@ namespace Js
             items = m_slots;
             return slotCount;
         }
-               
+
     public:
         static ConcatStringMulti * New(uint slotCount, JavascriptString * a1, JavascriptString * a2, ScriptContext* scriptContext);
         const wchar_t * GetSz() override sealed;
-        static bool Is(Var var); 
-        static ConcatStringMulti * FromVar(Var value);        
+        static bool Is(Var var);
+        static ConcatStringMulti * FromVar(Var value);
         static size_t GetAllocSize(uint slotCount);
         void SetItem(_In_range_(0, slotCount - 1) uint index, JavascriptString* value);
 
         static uint32 GetOffsetOfSlotCount() { return offsetof(ConcatStringMulti, slotCount); }
         static uint32 GetOffsetOfSlots() { return offsetof(ConcatStringMulti, m_slots); }
     protected:
-        uint slotCount;        
+        uint slotCount;
         JavascriptString* m_slots[];   // These contain the child nodes.
 
 #if DBG

@@ -87,13 +87,13 @@ namespace Js
     }
 
     ReturnedValueList* ProbeContainer::GetReturnedValueList() const
-    { 
-        return this->debugManager->stepController.GetReturnedValueList(); 
+    {
+        return this->debugManager->stepController.GetReturnedValueList();
     }
 
     void ProbeContainer::ResetReturnedValueList()
-    { 
-        this->debugManager->stepController.ResetReturnedValueList(); 
+    {
+        this->debugManager->stepController.ResetReturnedValueList();
     }
 
     void ProbeContainer::UpdateFramePointers(bool fMatchWithCurrentScriptContext)
@@ -117,7 +117,7 @@ namespace Js
                 if (!fMatchWithCurrentScriptContext && !frameScriptContext->IsInDebugMode() && tempFramePointers->Count() == 0)
                 {
                     // this means the top frame is not in the debug mode. We shouldn't be stopping for this break.
-                    // This could happen if the exception happens on the diagnosticsScriptEngine. 
+                    // This could happen if the exception happens on the diagnosticsScriptEngine.
                     return true;
                 }
 
@@ -152,7 +152,7 @@ namespace Js
 
             return false;
         });
-        OUTPUT_TRACE(Js::DebuggerPhase, L"ProbeContainer::UpdateFramePointers: detected %d frames (this=%p, fMatchWithCurrentScriptContext=%d)\n", 
+        OUTPUT_TRACE(Js::DebuggerPhase, L"ProbeContainer::UpdateFramePointers: detected %d frames (this=%p, fMatchWithCurrentScriptContext=%d)\n",
             tempFramePointers->Count(), this, fMatchWithCurrentScriptContext);
 
         while (tempFramePointers->Count())
@@ -164,7 +164,7 @@ namespace Js
     WeakDiagStack * ProbeContainer::GetFramePointers()
     {
         if (framePointers == nullptr || this->debugSessionNumber < debugManager->GetDebugSessionNumber())
-        {            
+        {
             UpdateFramePointers(/*fMatchWithCurrentScriptContext*/true);
             this->debugSessionNumber = debugManager->GetDebugSessionNumber();
         }
@@ -172,7 +172,7 @@ namespace Js
         ReferencedArenaAdapter* pRefArena = debugManager->GetDiagnosticArena();
         return HeapNew(WeakDiagStack,pRefArena,framePointers);
     }
-    
+
     bool ProbeContainer::InitializeLocation(InterpreterHaltState* pHaltState, bool fMatchWithCurrentScriptContext)
     {
         Assert(debugManager);
@@ -211,7 +211,7 @@ namespace Js
 
         framePointers = nullptr;
 
-        // Reset the exception onject.
+        // Reset the exception object.
 
         jsExceptionObject = nullptr;
 
@@ -223,7 +223,7 @@ namespace Js
         // Guarding if the probe engine goes away when we are sitting at breakpoint.
         if (haltCallbackProbe)
         {
-            // The clean up is called here to scriptengine's object to remove all debugstackframes
+            // The clean up is called here to scriptengine's object to remove all DebugStackFrames
             haltCallbackProbe->CleanupHalt();
         }
     }
@@ -244,7 +244,7 @@ namespace Js
             InitializeLocation(pHaltState);
             OUTPUT_TRACE(Js::DebuggerPhase, L"ProbeContainer::DispatchStepHandler: initialized location: pHaltState=%p, pHaltState->IsValid()=%d\n",
                 pHaltState, pHaltState->IsValid());
-            
+
             if (pHaltState->IsValid()) // Only proceed if we find a valid top frame and that is the executing function
             {
                 if (debugManager->stepController.IsStepComplete(pHaltState, haltCallbackProbe, *pOriginalOpcode))
@@ -258,7 +258,7 @@ namespace Js
 
                     if (oldOpcode == OpCode::Break && debugManager->stepController.stepType == STEP_DOCUMENT)
                     {
-                         // that means we have delievered the stepping to the debugger, where we had the breakpoint already, however it is possible that debugger can initiate the step_document. In that case debugger did not break
+                         // that means we have delivered the stepping to the debugger, where we had the breakpoint already, however it is possible that debugger can initiate the step_document. In that case debugger did not break
                         // due to break. so we have break as a breakpoint reason.
                         *pOriginalOpcode = OpCode::Break;
                     }
@@ -291,12 +291,12 @@ namespace Js
         __try
         {
             InitializeLocation(pHaltState, /* We don't need to match script context, stop at any available script function */ false);
-            OUTPUT_TRACE(Js::DebuggerPhase, L"ProbeContainer::DispatchAsyncBreak: initialized location: pHaltState=%p, pHaltState->IsValid()=%d\n", 
+            OUTPUT_TRACE(Js::DebuggerPhase, L"ProbeContainer::DispatchAsyncBreak: initialized location: pHaltState=%p, pHaltState->IsValid()=%d\n",
                 pHaltState, pHaltState->IsValid());
 
             if (pHaltState->IsValid())
             {
-                // Activate the current haltcallback with asyncstepcontroller.
+                // Activate the current haltCallback with asyncStepController.
                 debugManager->asyncBreakController.Activate(this->pAsyncHaltCallback);
                 if (debugManager->asyncBreakController.IsAtStoppingLocation(pHaltState))
                 {
@@ -338,7 +338,7 @@ namespace Js
 
             Assert(pHaltState->IsValid());
 
-            // The bytecodereader should be available at this point, but because of possibility of garbled frame, we shouldn't hit AV
+            // The ByteCodeReader should be available at this point, but because of possibility of garbled frame, we shouldn't hit AV
             if (pHaltState->IsValid())
             {
 #if DBG
@@ -385,7 +385,7 @@ namespace Js
             OUTPUT_TRACE(Js::DebuggerPhase, L"ProbeContainer::DispatchExceptionBreakpoint: initialized location: pHaltState=%p, IsInterpreterFrame=%d\n",
                 pHaltState, pHaltState->IsValid(), pHaltState->topFrame && pHaltState->topFrame->IsInterpreterFrame());
 
-            // The bytecodereader should be available at this point, but because of possibility of garbled frame, we shouldn't hit AV
+            // The ByteCodeReader should be available at this point, but because of possibility of garbled frame, we shouldn't hit AV
             if (pHaltState->IsValid() && pHaltState->GetFunction()->GetScriptContext()->IsInDebugMode())
             {
 #if DBG
@@ -416,7 +416,7 @@ namespace Js
                 // So in that case we will consider the top function's context and break on that context.
                 if (pTopFuncContext != pScriptContext)
                 {
-                    OUTPUT_TRACE(Js::DebuggerPhase, L"ProbeContainer::DispatchExceptionBreakpoint: top function's context is different from the current context: pHaltState=%p, haltCallbackProbe=%p\n", 
+                    OUTPUT_TRACE(Js::DebuggerPhase, L"ProbeContainer::DispatchExceptionBreakpoint: top function's context is different from the current context: pHaltState=%p, haltCallbackProbe=%p\n",
                         pHaltState, pTopFuncContext->GetDebugContext()->GetProbeContainer()->haltCallbackProbe);
                     if (pTopFuncContext->GetDebugContext()->GetProbeContainer()->haltCallbackProbe)
                     {
@@ -424,7 +424,7 @@ namespace Js
                         fSuccess = true;
                     }
                 }
-                else 
+                else
                 {
                     haltCallbackProbe->DispatchHalt(pHaltState);
                     fSuccess = true;
@@ -562,7 +562,7 @@ namespace Js
     void ProbeContainer::UpdateStep(bool fDuringSetupDebugApp/*= false*/)
     {
         // This function indicate that when the page is being refreshed and the last action we have done was stepping.
-        // so update the state of the current stepcontroller.
+        // so update the state of the current stepController.
         if (debugManager)
         {
             // Usually we need to be in debug mode to UpdateStep. But during setting up new engine to debug mode we have an
@@ -654,7 +654,7 @@ namespace Js
 
             Assert(currentOffset < *nextStatementOffset);
 
-            if (IsTmpRegCountIncreased(functionBody, reader, originalCurrentOffset, *nextStatementOffset, true /*restoreoffset*/))
+            if (IsTmpRegCountIncreased(functionBody, reader, originalCurrentOffset, *nextStatementOffset, true /*restoreOffset*/))
             {
                 currentOffset = *nextStatementOffset;
             }
@@ -663,7 +663,7 @@ namespace Js
                 return true;
             }
         }
-                
+
         return false;
     }
 
@@ -682,7 +682,7 @@ namespace Js
     {
         Assert(functionBody);
         Assert(nextStatementOffset);
-        
+
         FunctionBody::StatementMapList* pStatementMaps = functionBody->GetStatementMaps();
         if (pStatementMaps && pStatementMaps->Count() > 1)
         {
@@ -775,23 +775,22 @@ namespace Js
 
     // The logic below makes use of number of tmp (temp) registers of A and B.
     // Set next statement is not allowed.
-    // if numberoftmpreg(A) < numberoftmpreg(B)
-    // or if any statement between A and B has number of tmpreg more than the lowest found.
-
+    // if numberOfTmpReg(A) < numberOfTmpReg(B)
+    // or if any statement between A and B has number of tmpReg more than the lowest found.
+    //
     // Get the temp register count for the A
     // This is a base and will store the lowest tmp reg count we have got yet, while walking the skipped statements.
     bool ProbeContainer::IsTmpRegCountIncreased(Js::FunctionBody* functionBody, ByteCodeReader* reader, int currentOffset, int nextStmOffset, bool restoreOffset)
     {
-        Js::FunctionBody::StatementMapList* pStatementMaps = functionBody->GetStatementMaps();       
-        Assert(pStatementMaps && pStatementMaps->Count() > 0); 
+        Js::FunctionBody::StatementMapList* pStatementMaps = functionBody->GetStatementMaps();
+        Assert(pStatementMaps && pStatementMaps->Count() > 0);
 
         int direction = currentOffset < nextStmOffset ? 1 : -1;
         int startIndex = functionBody->GetEnclosingStatementIndexFromByteCode(currentOffset, true);
         uint32 tmpRegCountLowest = 0;
 
-
         // In the native code-gen (or interpreter which created from bailout points) the EmitTmpRegCount is not handled,
-        // so lets calculate it by going thru all statements backward from the current offset 
+        // so lets calculate it by going through all statements backward from the current offset
         int index = startIndex;
         for (; index > 0; index--)
         {
@@ -802,7 +801,7 @@ namespace Js
                 break;
             }
         }
-        
+
         // Reset to the current offset.
         reader->SetCurrentOffset(currentOffset);
 
@@ -819,7 +818,7 @@ namespace Js
             }
 
             if (direction == 1) // NOTE: Direction & corresponding condition
-            {                
+            {
                 if (nextStmOffset < pStatementMap->byteCodeSpan.begin) // check only till nextstatement offset
                 {
                     break;
@@ -832,9 +831,9 @@ namespace Js
             if (tmpRegCountOnNext < tmpRegCountLowest)
             {
                 tmpRegCountLowest = tmpRegCountOnNext;
-            }                        
+            }
 
-            // On the reverse direction stop only when we find the tmpregcount info for the setnext or below.
+            // On the reverse direction stop only when we find the tmpRegCount info for the setnext or below.
             if (direction == -1 && (op == Js::OpCode::EmitTmpRegCount))
             {
                 if (nextStmOffset >= pStatementMap->byteCodeSpan.begin)
@@ -845,15 +844,15 @@ namespace Js
             index += direction;
         }
 
-        // On the reverse way if we have reached the first statement, then our tmpRegCountOnNext is 0. 
+        // On the reverse way if we have reached the first statement, then our tmpRegCountOnNext is 0.
         if (direction == -1 && index == 0)
         {
             tmpRegCountOnNext = 0;
         }
-        
+
         if (restoreOffset)
         {
-            // Restore back the original ip.
+            // Restore back the original IP.
             reader->SetCurrentOffset(currentOffset);
         }
 
@@ -862,11 +861,11 @@ namespace Js
 
     bool ProbeContainer::AdvanceToNextUserStatement(Js::FunctionBody* functionBody, ByteCodeReader* reader)
     {
-        // Move back a byte to make sure we are within the bounds of 
+        // Move back a byte to make sure we are within the bounds of
         // our current statement (See DispatchExceptionBreakpoint)
         int currentOffset = reader->GetCurrentOffset() - 1;
-        int nextStatementOffset;       
-        
+        int nextStatementOffset;
+
         if (this->GetNextUserStatementOffsetForAdvance(functionBody, reader, currentOffset, &nextStatementOffset))
         {
             reader->SetCurrentOffset(nextStatementOffset);
@@ -933,7 +932,7 @@ namespace Js
     FunctionBody * ProbeContainer::GetGlobalFunc(ScriptContext* scriptContext, DWORD_PTR secondaryHostSourceContext)
     {
         return scriptContext->FindFunction([&secondaryHostSourceContext] (FunctionBody* pFunc) {
-            return ((pFunc->GetSecondaryHostSourceContext() == secondaryHostSourceContext) && 
+            return ((pFunc->GetSecondaryHostSourceContext() == secondaryHostSourceContext) &&
                      pFunc->GetIsGlobalFunc());
         });
     }
@@ -964,7 +963,7 @@ namespace Js
                 // We must determine if the exception is in user code AND if it's first chance as some debuggers
                 // ask for both and filter later.
 
-                // first validate if the throwing function is nonusercode function, if not then verify if the exception is being caught in nonuser code.
+                // first validate if the throwing function is NonUserCode function, if not then verify if the exception is being caught in nonuser code.
                 if (exceptionObject && exceptionObject->GetFunctionBody() != nullptr && !exceptionObject->GetFunctionBody()->IsNonUserCode())
                 {
                     fIsInNonUserCode = IsNonUserCodeSupportEnabled() && !debugManager->pThreadContext->IsUserCode();

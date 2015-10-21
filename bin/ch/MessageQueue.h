@@ -50,7 +50,7 @@ public:
 
         auto it = m_queue.begin();
         MessageBase *tmp = it->second;
-        
+
         m_queue.erase(it);
 
         int waitTime = tmp->GetTime() - GetTickCount();
@@ -69,7 +69,7 @@ public:
 
     void RemoveById(unsigned int id)
     {
-        // Search for the message with the correct id, and delete it.  Can be updated
+        // Search for the message with the correct id, and delete it. Can be updated
         // to a hash to improve speed, if necessary.
         for(auto it = m_queue.begin(); it != m_queue.end(); ++it)
         {
@@ -88,7 +88,7 @@ public:
         while(!IsEmpty())
         {
             MessageBase *msg = PopAndWait();
-            msg->Call(fileName);                     // Ommiting return value, its async function call it shouldn't affect others.
+            msg->Call(fileName); // Omitting return value, its async function call it shouldn't affect others.
             delete msg;
         }
         return S_OK;

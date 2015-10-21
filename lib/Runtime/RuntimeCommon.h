@@ -5,7 +5,7 @@
 #pragma once
 
 // Runtime.h has both definitions and #include other runtime files.
-// Definitions here are extracted definitions (not #include's) from Runtime.h that core Runtime .h's can be used without #include'ing full Runtime.h
+// Definitions here are extracted definitions (not #include's) from Runtime.h that core Runtime .h's can be used without #including full Runtime.h
 
 extern int TotalNumberOfBuiltInProperties;
 
@@ -31,7 +31,7 @@ namespace Js
     typedef uint16 ArgSlot;
     typedef uint16 PropertyIndex;
     typedef int32 BigPropertyIndex;
-    typedef unsigned char PropertyAttributes;    
+    typedef unsigned char PropertyAttributes;
     typedef uint32 SourceId;
     typedef uint16 ProfileId;
     typedef uint32 InlineCacheIndex;
@@ -81,7 +81,7 @@ namespace Js
 #include "Library\JnDirectFields.h"
         _countJSOnlyProperty,
     END_ENUM_UINT()
-    
+
     inline BOOL IsBuiltInPropertyId(PropertyId propertyId)
     {
         return propertyId < TotalNumberOfBuiltInProperties;
@@ -92,7 +92,7 @@ namespace Js
     #define PropertyTypesWritableDataOnly          0x10  // Indicates that a type handler has only writable data properties
                                                          // (no accessors or non-writable properties)
     #define PropertyTypesWritableDataOnlyDetection 0x20  // Set on each call to DynamicTypeHandler::SetHasOnlyWritableDataProperties.
-    #define PropertyTypesInlineSlotCapacityLocked  0x40  // Indicates that the inline slot capacity has been shrunk already and should't be touched again.
+    #define PropertyTypesInlineSlotCapacityLocked  0x40  // Indicates that the inline slot capacity has been shrunk already and shouldn't be touched again.
     #define PropertyTypesAll                       0x70
     typedef unsigned char PropertyTypes;                 // Holds flags that represent general information about the types of properties
                                                          // handled by a type handler.
