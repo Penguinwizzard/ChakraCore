@@ -12,7 +12,7 @@ using namespace Windows::Foundation::Diagnostics;
     if (FAILED(hr=(op))) { return NULL; }; \
 
 namespace Js
-{    
+{
     __inline DelayLoadWinRtString* WindowsFoundationAdapter::GetWinRtStringLibrary(_In_ ScriptContext* scriptContext)
     {
         return scriptContext->GetThreadContext()->GetWinRTStringLibrary();
@@ -32,11 +32,11 @@ namespace Js
             HSTRING_HEADER hStringHdr;
             LPCWSTR factoryName = L"Windows.Foundation.Diagnostics.AsyncCausalityTracer";
             UINT32 factoryNameLen = _countof(L"Windows.Foundation.Diagnostics.AsyncCausalityTracer") - 1;
-            IID factoryIID = __uuidof(IAsyncCausalityTracerStatics);            
-            
+            IID factoryIID = __uuidof(IAsyncCausalityTracerStatics);
+
             IfFailReturnNULL(GetWinRtStringLibrary(scriptContext)->WindowsCreateStringReference(factoryName, factoryNameLen, &hStringHdr, &hString));
             IfFailReturnNULL(GetWinRtFoundationLibrary(scriptContext)->RoGetActivationFactory(hString, factoryIID, &asyncCausalityTracerActivationFactory));
-            
+
             Assert(asyncCausalityTracerActivationFactory != NULL);
         }
 
@@ -48,7 +48,7 @@ namespace Js
         if (! asyncCausalityTracerStatics)
         {
             IActivationFactory* factory = GetAsyncCausalityTracerActivationFactory(scriptContext);
-            if (!factory) 
+            if (!factory)
             {
                 return NULL;
             }
@@ -63,12 +63,12 @@ namespace Js
     }
 
     HRESULT WindowsFoundationAdapter::TraceOperationCreation(
-        _In_ ScriptContext* scriptContext, 
-        _In_ INT traceLevel, 
-        _In_ INT source, 
-        _In_ GUID platformId, 
-        _In_ UINT64 operationId, 
-        _In_z_ PCWSTR operationName, 
+        _In_ ScriptContext* scriptContext,
+        _In_ INT traceLevel,
+        _In_ INT source,
+        _In_ GUID platformId,
+        _In_ UINT64 operationId,
+        _In_z_ PCWSTR operationName,
         _In_ UINT64 relatedContext)
     {
         HRESULT hr;
@@ -84,7 +84,7 @@ namespace Js
         }
 
         IFFAILRET(GetWinRtStringLibrary(scriptContext)->WindowsCreateStringReference(operationName, static_cast<UINT32>(operationNameLen), &hStringHdr, &hString));
-        
+
         IAsyncCausalityTracerStatics* tracerStatics = GetAsyncCausalityTracerStatics(scriptContext);
 
         if (!tracerStatics)
@@ -96,7 +96,7 @@ namespace Js
     }
 
     HRESULT WindowsFoundationAdapter::TraceOperationCompletion(
-        _In_ ScriptContext* scriptContext, 
+        _In_ ScriptContext* scriptContext,
         _In_ INT traceLevel,
         _In_ INT source,
         _In_ GUID platformId,
@@ -118,11 +118,11 @@ namespace Js
     }
 
     HRESULT WindowsFoundationAdapter::TraceOperationRelation(
-        _In_ ScriptContext* scriptContext, 
+        _In_ ScriptContext* scriptContext,
         _In_ INT traceLevel,
         _In_ INT source,
-        _In_ GUID platformId, 
-        _In_ UINT64 operationId, 
+        _In_ GUID platformId,
+        _In_ UINT64 operationId,
         _In_ INT relation)
     {
         Assert(traceLevel <= CausalityTraceLevel::CausalityTraceLevel_Verbose && traceLevel >= CausalityTraceLevel_Required);
@@ -140,11 +140,11 @@ namespace Js
     }
 
     HRESULT WindowsFoundationAdapter::TraceSynchronousWorkStart(
-        _In_ ScriptContext* scriptContext, 
-        _In_ INT traceLevel, 
-        _In_ INT source, 
-        _In_ GUID platformId, 
-        _In_ UINT64 operationId, 
+        _In_ ScriptContext* scriptContext,
+        _In_ INT traceLevel,
+        _In_ INT source,
+        _In_ GUID platformId,
+        _In_ UINT64 operationId,
         _In_ INT work)
     {
         Assert(traceLevel <= CausalityTraceLevel::CausalityTraceLevel_Verbose && traceLevel >= CausalityTraceLevel_Required);
@@ -162,9 +162,9 @@ namespace Js
     }
 
     HRESULT WindowsFoundationAdapter::TraceSynchronousWorkCompletion(
-        _In_ ScriptContext* scriptContext, 
-        _In_ INT traceLevel, 
-        _In_ INT source, 
+        _In_ ScriptContext* scriptContext,
+        _In_ INT traceLevel,
+        _In_ INT source,
         _In_ INT work)
     {
         Assert(traceLevel <= CausalityTraceLevel::CausalityTraceLevel_Verbose && traceLevel >= CausalityTraceLevel_Required);

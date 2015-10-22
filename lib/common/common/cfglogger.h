@@ -11,7 +11,7 @@ public:
 private:
     CFGLogger() {}
     ~CFGLogger();
-    
+
     typedef void(__fastcall * PfnGuardCheckFunction)(_In_ uintptr_t Target);
     static PfnGuardCheckFunction oldGuardCheck;
     static bool inGuard;

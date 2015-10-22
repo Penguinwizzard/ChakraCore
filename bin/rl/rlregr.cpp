@@ -10,9 +10,9 @@
 #include "rl.h"
 
 
-#define TMP_PREFIX "di"   // 2 characters!
+#define TMP_PREFIX "di"   // 2 characters
 
-// Currently not overrideable...
+// Currently not overrideable
 #define REGR_PERL "perl"
 
 #define DIR_START_CMD "startdir.cmd"

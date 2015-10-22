@@ -250,7 +250,6 @@ Output::VPrint(const wchar_t *form, va_list argptr)
     {
         size = 2048;
     }
-    //AssertMsg(size != -1, "Print error: output exceeds buffer space");
     return Output::PrintBuffer(buf, size);
 }
 
@@ -416,7 +415,7 @@ Output::SkipToColumn(size_t column)
 
     size_t dist = column - Output::s_Column;
 
-    // Print at least one space...
+    // Print at least one space
     while (dist > 0)
     {
         Output::Print(L" ");

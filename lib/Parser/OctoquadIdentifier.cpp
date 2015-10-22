@@ -14,7 +14,7 @@ namespace UnifiedRegex
     {
         isTrigramPattern=true;
         hasCachedResultString = false;
-        
+
         int k;
         triPat1=0;
         triPat2=0;
@@ -40,7 +40,7 @@ namespace UnifiedRegex
                 trigramMap[i]=(char)((t1<<4)+(t2<<2)+t3);
             }
         }
-        
+
         for (int j=0;j<TrigramCount;j++) {
             trigramStarts[j].count=0;
         }
@@ -139,7 +139,7 @@ namespace UnifiedRegex
             c3=alphaBits[input[k]&UpperCaseMask];
         }
     }
-    
+
     // ----------------------------------------------------------------------
     // OctoquadIdentifier
     // ----------------------------------------------------------------------
@@ -244,9 +244,9 @@ namespace UnifiedRegex
     void OctoquadIdentifier::SetTrigramAlphabet(Js::ScriptContext * scriptContext,
         __in_xcount(regex::TrigramAlphabet::AlphaCount) char* alpha
         , __in_xcount(regex::TrigramAlphabet::AsciiTableSize) char* alphaBits)
-    {        
+    {
         ArenaAllocator* alloc = scriptContext->RegexAllocator();
-        TrigramAlphabet * trigramAlphabet = AnewStruct(alloc, UnifiedRegex::TrigramAlphabet);        
+        TrigramAlphabet * trigramAlphabet = AnewStruct(alloc, UnifiedRegex::TrigramAlphabet);
         for (uint i = 0; i < UnifiedRegex::TrigramAlphabet::AsciiTableSize; i++) {
             trigramAlphabet->alphaBits[i] = UnifiedRegex::TrigramAlphabet::BitsNotInAlpha;
         }
@@ -313,7 +313,6 @@ namespace UnifiedRegex
         return RecyclerNewLeaf(recycler, OctoquadMatcher, standardChars, mappingSource, identifier);
     }
 
-    // This version of popcnt is courtesy of Paul Harrington, inspired by Steve Steiner, inspired by HACKMEM169.
     // It exploits the fact that each quad of bits has at most only one bit set.
     __inline bool oneBitSetInEveryQuad(uint32 x)
     {

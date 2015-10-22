@@ -102,8 +102,7 @@
 //
 // Currently, condition nodes may have only a single condition (target or
 // compile-flags) and non-target conditions must appear after target
-// conditions.  This is purely an implementation choice (I don't have any time
-// to do even what I have already done.)
+// conditions.
 
 
 // Tags processing
@@ -139,11 +138,9 @@
 // 3. rl.full.log contains all the output from all the tests,
 //    delimited by +++ <test variation> +++
 // Notes:
-// 1. to upload the results to http://vctr page, the rl.results.log and
-//    rl.full.log can be used if -nothreadid is used.
-// 2. The test output in these files is not synchronized on MP,
+// 1. The test output in these files is not synchronized on MP,
 //    without the -sync option.
-// 3. rl.results.log can be used as a baseline database to track regressions,
+// 2. rl.results.log can be used as a baseline database to track regressions,
 //    if -time is not used.
 
 // -genlst mode and lst file format
@@ -245,7 +242,7 @@ TARGETINFO TargetInfo[] = {
 // Target OS information
 // Any changes made here should have corresponding name added
 // to TARGET_OS in rl.h. NOTE: The TARGET_OS enum is in exactly
-// the same order as the TargetOSNames array is initialized!
+// the same order as the TargetOSNames array is initialized
 const char* const TargetOSNames[] = {
     "unknown",
     "win7",
@@ -629,7 +626,7 @@ __cdecl LogError(const char *fmt, ...)
    va_start(arg_ptr, fmt);
    vsprintf_s(tempBuf, fmt, arg_ptr);
    ASSERT(strlen(tempBuf) < BUFFER_SIZE);
-   ThreadOut->Add("%sError: %s\n", buf, tempBuf);  // TODO: use stderr not stdout?
+   ThreadOut->Add("%sError: %s\n", buf, tempBuf);
    ThreadLog->Add("%sError: %s\n", buf, tempBuf);
    ThreadFull->Add("%sError: %s\n", buf, tempBuf);
 }
@@ -654,9 +651,8 @@ __inline void FlushOutput(
 // sits around grabbing handles. It seems to be worse with CLR testing and
 // issuerun/readrun cross-compiler testing. To deal with this, loop and sleep
 // between delete tries for some calls. Keep track of how many failures there
-// were, just so we know. Since we can't figure out why this happens, don't
-// clog the log files with "error 5" unless the sleep doesn't fix the problem,
-// or the user specifies verbose.
+// were. Don't clog the log files with "error 5" unless the
+// sleep doesn't fix the problem, or the user specifies verbose.
 
 BOOL
 DeleteFileIfFoundInternal(
@@ -747,7 +743,7 @@ DeleteFileRetryMsg(
       }
 
       if (++tries > MAX_DELETE_FILE_TRIES) {
-         LogError("Giving up trying to delete file %s. Further related errors are likely!", filename);
+         LogError("Giving up trying to delete file %s. Further related errors are likely", filename);
          CntDeleteFileFatals++;
          break;
       }
@@ -903,7 +899,7 @@ DoCompare(
    char *file2
 )
 {
-   CHandle h1, h2;     // automagically closes open handles
+   CHandle h1, h2;     // automatically closes open handles
    DWORD count1, count2;
    BOOL b1, b2;
    DWORD size1, size2;
@@ -929,7 +925,7 @@ DoCompare(
 
    // Short circuit by first checking for different file lengths.
 
-   size1 = GetFileSize(h1, NULL);  // assume <4GB files!
+   size1 = GetFileSize(h1, NULL);  // assume < 4GB files
    if (size1 == 0xFFFFFFFF) {
       LogError("Unable to get file size for %s - error %d", file1, GetLastError());
       return -1;
@@ -1487,7 +1483,7 @@ AddToStringList
 {
    StringList * p = new StringList;
 
-   p->string = string; // NOTE: we store the pointer; we don't copy the string!
+   p->string = string; // NOTE: we store the pointer; we don't copy the string
    p->next = NULL;
 
    if (list == NULL)
@@ -1547,7 +1543,7 @@ ParseStringList(char* p, char* delim)
       return list;
    }
 
-   p = _strdup(p); // don't trash passed-in memory!
+   p = _strdup(p); // don't trash passed-in memory
 
    p = mystrtok(p, delim, delim);
 
@@ -1729,7 +1725,7 @@ GetLINKFLAGS()
          if (b2 == NULL) {
             Warning("/B2: in LINKFLAGS (%s) but not in EXTRA_CC_FLAGS (%s)", readLINKFLAGS, EXTRA_CC_FLAGS);
          } else {
-            // Make sure they are the same!
+            // Make sure they are the same
             if (0 != _stricmp(s + 4, b2)) {
                Warning("/B2 flags in EXTRA_CC_FLAGS (%s) conflict with -B2: in LINKFLAGS(%s)", EXTRA_CC_FLAGS, readLINKFLAGS);
             }
@@ -1756,7 +1752,7 @@ GetLINKFLAGS()
 }
 
 // WARNING: we are liberally using _putenv. As a result, it is dangerous to
-// hold onto a pointer returned from getenv(), so always make a copy!
+// hold onto a pointer returned from getenv(), so always make a copy
 
 void
 GetEnvironment(
@@ -3036,11 +3032,6 @@ ParseCommandLine(
 
    ProgramName = argv[0];
 
-   //if (argc == 1) {
-   //   Usage(FALSE);
-   //   exit(0);
-   //}
-
    ParseEnvVar(RL_PRE_ENV_VAR);
 
    for (i = 1; i < argc; i++) {
@@ -3299,7 +3290,7 @@ ParseCommandLine(
       SetPriorityClass(GetCurrentProcess(), IDLE_PRIORITY_CLASS);
    }
 
-   // Initialize parallel stuff
+   // Initialize parallel data
 
    if (NumberOfThreads == 0) {
       SYSTEM_INFO SystemInfo;
@@ -3422,7 +3413,7 @@ GetTestInfoFromNode
          if (i == TIK_ENV)
          {
             ASSERT(childNode->ChildList != NULL);
-            testInfo->data[i] = (char*)childNode; // c-style cast
+            testInfo->data[i] = (char*)childNode;
          }
          else
          {
@@ -3759,27 +3750,21 @@ mystrtok(
    }
 
    // EOS?
-
    if (!*str) {
 
       // If we reached EOS because there are no more tokens, return NULL now.
-
       if (ret == str)
          return nullptr;
 
       // Otherwise, set up for NULL return on next call.
-
       str = nullptr;
    }
-
    // Skip terminator.
-
    else {
       str++;
    }
 
    // Trim trailing space.
-
    if (!strchr(term, *lastNonDelim))
       ++lastNonDelim;
    *lastNonDelim = '\0';
@@ -3892,7 +3877,7 @@ ProcessConfig
    static int unnamedCount = 0;
    const char * szOrder;
 
-   ASSERT(!IsRelativePath(CfgFile)); // must be full path!
+   ASSERT(!IsRelativePath(CfgFile)); // must be full path
 
    Xml::Node * topNode = Xml::ReadFile(CfgFile);
 
@@ -3932,8 +3917,8 @@ ProcessConfig
 
       char * testName = testNode->GetAttributeValue("name");
 
-      // Technically, we should have a name because that's how we resume or exclude tests.  However,
-      // the user may opt not to provide a name, to make it easier to add tests.  In that case we
+      // Technically, we should have a name because that's how we resume or exclude tests. However,
+      // the user may opt not to provide a name, to make it easier to add tests. In that case we
       // just give the test a number.
       if (testName == NULL)
       {
@@ -3990,7 +3975,7 @@ ProcessConfig
       }
 
       // We should sort the children in condition order since we can't trust
-      // that Xml nodes are read in the proper order.  Since I know that
+      // that Xml nodes are read in the proper order. Since I know that
       // xmlreader.cpp does the right thing, I'm going to enforce the
       // ordering here rather than correct it.
 
@@ -4388,8 +4373,7 @@ UpdateTitleStatus()
    strcpy_s(TitleStatus, s);
    s = strchr(TitleStatus, '\0');
 
-   // start at 1: skip primary thread 0 (unless we decide to let it do real
-   // work)
+   // start at 1: skip primary thread 0 (unless we decide to let it do real work)
    for (i = 1; i <= NumberOfThreads; i++) {
       ThreadInfo[i].GetCurrentTest(tempBuf);
       s += sprintf_s(s, REMAININGARRAYLEN(TitleStatus, s), "; %s", tempBuf);
@@ -4814,7 +4798,7 @@ main(int argc, char *argv[])
    // Set up output for primary thread.
    ThreadOut = new COutputBuffer(stdout, true);
 
-   // WARNING: while parsing flags, these are aliased to ThreadOut!
+   // WARNING: while parsing flags, these are aliased to ThreadOut
    ThreadLog = ThreadOut;  // no LogName yet
    ThreadFull = ThreadOut;
    ThreadRes = ThreadOut;
@@ -4908,7 +4892,6 @@ main(int argc, char *argv[])
          ThreadWorker, (LPVOID *)i, 0, &dwThreadId );
       if (newThread == INVALID_HANDLE_VALUE)
          Fatal("Couldn't create thread %d", i);
-      // set priority?
    }
 
    /*
@@ -4920,7 +4903,6 @@ main(int argc, char *argv[])
       if (newThread == INVALID_HANDLE_VALUE)
          Fatal("Couldn't create status thread");
       CloseHandle(newThread);
-      // set priority?
    }
 
    // flush all output for the primary thread

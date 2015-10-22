@@ -44,7 +44,7 @@ public:
     }
 protected:
     SmallNormalHeapBlockT(HeapBucket * bucket, ushort objectSize, ushort objectCount, HeapBlockType heapBlockType);
-    
+
 private:
     SmallNormalHeapBlockT(HeapBucketT<SmallNormalHeapBlockT> * bucket, ushort objectSize, ushort objectCount);
 

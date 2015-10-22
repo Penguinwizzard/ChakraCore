@@ -61,7 +61,8 @@ void CDirectory::WaitLock()
             break;
         if (GetLastError() != ERROR_SHARING_VIOLATION) {
             LogError("Creating lock file %s - error %d\n", full, GetLastError());
-            break;  // proceed anyway and see what happens...
+            // Continue execution regardless
+            break;
         }
         Message("Waiting for directory %s (%d seconds elapsed)",
             this->GetDirectoryPath(), sec);
@@ -511,7 +512,7 @@ void COutputBuffer::Flush()
                 // want to just kill rl, so just keep accumulating output
                 // and try again next time. Output a warning to the log so
                 // they know it happened (but they won't see it unless the
-                // output is flushed!). We could consider having a maximum,
+                // output is flushed). We could consider having a maximum,
                 // after which we "turn off" this output buffer, but we're
                 // unlikely to ever have so much output that it causes a
                 // problem.

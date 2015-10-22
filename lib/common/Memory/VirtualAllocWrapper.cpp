@@ -4,9 +4,6 @@
 //-------------------------------------------------------------------------------------------------------
 #include "CommonMemoryPch.h"
 
-
-
-
 /*
 * class VirtualAllocWrapper
 */
@@ -168,7 +165,7 @@ LPVOID PreReservedVirtualAllocWrapper::Alloc(LPVOID lpAddress, size_t dwSize, DW
 #endif
             if (PHASE_FORCE1(Js::PreReservedHeapAllocPhase))
             {
-                //This code is used for debugging purposes on a non-threshold machine (where CFG is not available, but still PreReserve optimization for CFG can be tested)
+                //This code is used where CFG is not available, but still PreReserve optimization for CFG can be tested
                 preReservedStartAddress = VirtualAlloc(NULL, bytes, MEM_RESERVE, protectFlags);
                 PreReservedHeapTrace(L"Reserving PreReservedSegment For the first time(CFG Non-Enabled). Address: 0x%p\n", preReservedStartAddress);
             }

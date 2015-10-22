@@ -32,7 +32,7 @@ bool XDataAllocator::Initialize(void* segmentStart, void* segmentEnd)
     Assert(segmentEnd > segmentStart);
     Assert(this->pdataEntries == nullptr);
     Assert(this->functionTableHandles == nullptr);
-    
+
     bool success = true;
 
     this->pdataEntries = HeapNewNoThrowArrayZ(RUNTIME_FUNCTION, GetTotalPdataCount());
@@ -142,7 +142,7 @@ void XDataAllocator::Release(const SecondaryAllocation& allocation)
     }
 
     Assert(this->pdataEntries != nullptr);
-    
+
     // Delete the table
     if (AutoSystemInfo::Data.IsWin8OrLater())
     {
@@ -172,7 +172,7 @@ bool XDataAllocator::CanAllocate()
 void XDataAllocator::ReleaseAll()
 {
 #ifdef RECYCLER_MEMORY_VERIFY
-    memset(this->start, Recycler::VerifyMemFill, this->size); 
+    memset(this->start, Recycler::VerifyMemFill, this->size);
 #endif
     this->current = this->start;
     ClearFreeList();
@@ -191,7 +191,7 @@ void XDataAllocator::ClearFreeList()
     this->freeList = NULL;
 }
 
-void XDataAllocator::Register(XDataAllocation* const xdata, ULONG_PTR functionStart, DWORD functionSize) 
+void XDataAllocator::Register(XDataAllocation* const xdata, ULONG_PTR functionStart, DWORD functionSize)
 {
     RUNTIME_FUNCTION* pdata = this->GetPdataEntry(xdata->pdataIndex);
 
@@ -203,13 +203,13 @@ void XDataAllocator::Register(XDataAllocation* const xdata, ULONG_PTR functionSt
     if (AutoSystemInfo::Data.IsWin8OrLater())
     {
         Assert(this->functionTableHandles[xdata->pdataIndex] == NULL);
-        DWORD status = NtdllLibrary::Instance->AddGrowableFunctionTable(&this->functionTableHandles[xdata->pdataIndex], 
-            pdata, 
-            /*MaxEntryCount*/ 1, 
-            /*Valid entry count*/ 1, 
-            /*RangeBase*/ functionStart, 
+        DWORD status = NtdllLibrary::Instance->AddGrowableFunctionTable(&this->functionTableHandles[xdata->pdataIndex],
+            pdata,
+            /*MaxEntryCount*/ 1,
+            /*Valid entry count*/ 1,
+            /*RangeBase*/ functionStart,
             /*RangeEnd*/ functionStart + functionSize);
-        success = NT_SUCCESS(status);        
+        success = NT_SUCCESS(status);
         if (success)
         {
             Assert(this->functionTableHandles[xdata->pdataIndex]);
@@ -223,7 +223,7 @@ void XDataAllocator::Register(XDataAllocation* const xdata, ULONG_PTR functionSt
 
 #if DBG
     // Validate that the PDATA registration succeeded
-    ULONG64            imageBase       = 0;    
+    ULONG64            imageBase       = 0;
     RUNTIME_FUNCTION  *runtimeFunction = RtlLookupFunctionEntry((DWORD64)functionStart, &imageBase, nullptr);
     Assert(runtimeFunction != NULL);
 #endif

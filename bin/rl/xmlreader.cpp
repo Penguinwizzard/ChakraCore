@@ -268,8 +268,7 @@ ConvertDoc
    }
    else if (childList == childLast)
    {
-      // This is a bit ugly but will do. If we have a single child with data
-      // called "#text", then pull the data up to this node.
+      // If we have a single child with data called "#text", then pull the data up to this node.
 
       if ((childList->Data != NULL)
        && (_stricmp(childList->Name, "#text") == 0))

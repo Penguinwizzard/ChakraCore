@@ -1006,7 +1006,7 @@ inline BucketId GetBucketForSize(size_t bytes)
 // If there is any space left after that due to alignment, fill it with 0.
 // static
 void FillDebugBreak(__out_bcount_full(byteCount) BYTE* buffer, __in size_t byteCount)
-{   
+{
 #if defined(_M_ARM)
     // On ARM there is breakpoint instruction (BKPT) which is 0xBEii, where ii (immediate 8) can be any value, 0xBE in particular.
     // While it could be easier to put 0xBE (same way as 0xCC on x86), BKPT is not recommended -- it may cause unexpected side effects.

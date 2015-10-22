@@ -9,7 +9,7 @@
 
 #include "rl.h"
 
-#define TMP_PREFIX "ex"   // 2 characters!
+#define TMP_PREFIX "ex"   // 2 characters
 
 
 #define POGO_PGD "rlpogo.pgd"
@@ -309,8 +309,6 @@ void CopyRebaseFile(PCSTR testout, PCSTR baseline)
 //   build: build the test (OPT=compile options)
 //   run: run the test
 //   copy: copy the generated files to a subdirectory (COPYDIR=subdir)
-//
-// JScript tests TODO:ARJUNB
 //
 int
     DoOneExternalTest(
@@ -898,41 +896,6 @@ BOOL
     Message("    %s", cmdbuf);
 
     rc = ExecuteCommand(pDir->GetDirectoryPath(), cmdbuf);
-
-    // Some machines require assembly of the compiler output.
-
-#if 0 // nobody needs this currently...
-    if (rc == 0) {
-        switch (TargetMachine) {
-
-        case TM_...:
-            if (REGR_ASM) {
-                for (pFile = pTest; pFile && (rc == 0);
-                    pFile = pFile->link) {
-
-                        // Build up the assembler command string.
-
-                        strcpy_s(cmdbuf, REGR_ASM);
-                        strcat_s(cmdbuf, " ");
-                        strcat_s(cmdbuf, pTest->name);
-                        p = strrchr(cmdbuf, '.');
-                        strcpy_s(p + 1, "asm");
-
-                        // Do the assembly.
-
-                        Message("Assembling:");
-                        Message("    %s", cmdbuf);
-                        rc = ExecuteCommand(pDir->GetDirectoryPath(), cmdbuf);
-                }
-            }
-            break;
-
-        default:
-            // Assembly not required
-            break;
-        }
-    }
-#endif // 0
 
     // Some machines require separate linking of the
     // compiler and/or assembler output.

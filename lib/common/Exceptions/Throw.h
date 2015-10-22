@@ -8,7 +8,7 @@ class StackBackTrace;
 
 namespace Js {
 
-    class ScriptContext;    
+    class ScriptContext;
 
     class Throw
     {
@@ -125,7 +125,7 @@ namespace Js {
     catch (Js::ScriptAbortException)  \
     {   \
         hr = E_ABORT; \
-    } 
+    }
 
 #define CATCH_UNHANDLED_EXCEPTION(hr) \
     catch (...) \
@@ -230,5 +230,5 @@ namespace Js {
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
 #define RAISE_FATL_INTERNAL_ERROR_IFFAILED(hr) if (hr != S_OK) Js::Throw::FatalInternalError();
 #else
-#define RAISE_FATL_INTERNAL_ERROR_IFFAILED(hr) 
+#define RAISE_FATL_INTERNAL_ERROR_IFFAILED(hr)
 #endif

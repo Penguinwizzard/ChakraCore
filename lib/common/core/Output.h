@@ -25,9 +25,9 @@ namespace Js
     }
 #define OUTPUT_FLUSH() Output::Flush()
 #else
-#define OUTPUT_TRACE(Phase, ...) 
+#define OUTPUT_TRACE(Phase, ...)
 #define OUTPUT_TRACE_2(Phase, ...)
-#define OUTPUT_VERBOSE_TRACE(Phase, ...) 
+#define OUTPUT_VERBOSE_TRACE(Phase, ...)
 #define OUTPUT_STATS(Phase, ...)
 #define OUTPUT_VERBOSE_STATS(Phase, ...)
 #define OUTPUT_FLUSH()
@@ -46,7 +46,6 @@ namespace Js
 {
     // Logging interfaces:
     // decouple implementation so that in common.lib we don't have dependency on memory.lib
-    // which otherwise would break building jscript9diag which doesn't link with memory.lib.
     struct ILogger
     {
         virtual void Write(const wchar_t* msg) = 0;
@@ -104,7 +103,7 @@ public:
 
     static WORD     SetConsoleForeground(WORD color);
     static void     CaptureStart();
-    static wchar_t* CaptureEnd(); 
+    static wchar_t* CaptureEnd();
 
 private:
     static void     DirectPrint(const wchar_t * string);
@@ -128,7 +127,7 @@ private:
     THREAD_ST static FILE * s_file;
     THREAD_ST static wchar_t * buffer;
     THREAD_ST static size_t bufferFreeSize;
-    THREAD_ST static size_t bufferAllocSize;     
+    THREAD_ST static size_t bufferAllocSize;
     THREAD_ST static size_t s_Column;
     THREAD_ST static WORD s_color;
     THREAD_ST static bool s_hasColor;

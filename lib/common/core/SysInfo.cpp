@@ -92,8 +92,8 @@ AutoSystemInfo::InitPhysicalProcessorCount()
 
     Assert(!this->initialized);
 
-    //Initialize physical processor to number of logical processors.
-    //If anything below fails, we still need an approximate value
+    // Initialize physical processor to number of logical processors.
+    // If anything below fails, we still need an approximate value
 
     this->dwNumberOfPhyscialProcessors = this->dwNumberOfProcessors;
 

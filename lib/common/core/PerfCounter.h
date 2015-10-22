@@ -22,7 +22,7 @@ namespace PerfCounter
     protected:
         InstanceBase(Provider& provider, GUID const& guid);
         ~InstanceBase();
-    
+
         bool IsProviderInitialized() const;
         bool Initialize(wchar_t const * wszInstanceName, DWORD id);
         DWORD * InitializeSharedMemory(DWORD numCounter, HANDLE& handle);
@@ -46,7 +46,6 @@ namespace PerfCounter
         void Initialize(InstanceBase& instance, DWORD id, DWORD * count);
         void Uninitialize(InstanceBase& instance, DWORD id);
 
-        /* TODO: 64-bit? */
         Counter& operator+=(size_t value);
         Counter& operator-=(size_t value);
         Counter& operator++();
@@ -54,6 +53,7 @@ namespace PerfCounter
         DWORD GetValue() { return *count; }
 
     private:
+        /* TODO: 64-bit */
         DWORD * count;
     };
 
@@ -138,7 +138,7 @@ namespace PerfCounter
 
 #define DECLARE_RECYCLER_TRACKER_PERF_COUNTER_INDEX(type) \
     static uint const type##CounterIndex; \
-    static uint const type##SizeCounterIndex; 
+    static uint const type##SizeCounterIndex;
 
 #define DECLARE_RECYCLER_TRACKER_ARRAY_PERF_COUNTER_INDEX(type) \
     static uint const type##ArrayCounterIndex; \

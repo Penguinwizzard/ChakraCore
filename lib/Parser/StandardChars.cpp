@@ -13,7 +13,7 @@ namespace UnifiedRegex
 
 /*
 To get these two tables run:
-  jc ascii.js
+  ch.exe ascii.js
 where ascii.js is:
 ----------------------------------------------------------------------
 function echo(s) { WScript.Echo(s); }
@@ -156,7 +156,7 @@ echo("    };");
 /*
 To get the whitespaces string, run:
   gawk -f spaces.gawk http://www.unicode.org/Public/UNIDATA/UnicodeData.txt
-where spaces.gawk is 
+where spaces.gawk is
 ----------------------------------------------------------------------
 BEGIN {
   FS = ";";

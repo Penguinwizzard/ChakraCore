@@ -271,7 +271,7 @@ namespace Js {
     void Throw::LogAssert()
     {
         IsInAssert = true;
-        // We don't really need to worry about leak: this should be the last thing happen in the process.
+        // This should be the last thing to happen in the process. Therefore, leaks are not an issue.
         stackBackTrace = StackBackTrace::Capture(&NoCheckHeapAllocator::Instance, Throw::StackToSkip, Throw::StackTraceDepth);
     }
 
@@ -308,7 +308,6 @@ namespace Js {
 #endif
         }
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
-        // Actually following code is dead in jshost. AssertsToConsole is always true in jshost, it can be false in JC.exe
         // Then if DumpOncrashFlag is not specified it directly returns,
         // otherwise if will raise a non-continuable exception, generate the dump and terminate the process.
         // the popup message box might be useful when testing in IE

@@ -14,7 +14,7 @@ public:
     typedef typename TBlockType::HeapBlockAttributes TBlockAttributes;
 
     SmallNormalHeapBucketBase();
-    
+
     CompileAssert(!IsLeafBucket);
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
     friend class ScriptMemoryDumper;
@@ -28,14 +28,14 @@ protected:
     friend class HeapBucketGroup;
     friend class HeapInfo;
     friend class HeapBlockMap32;
-    
+
     void ScanInitialImplicitRoots(Recycler * recycler);
     void ScanNewImplicitRoots(Recycler * recycler);
 
 #if defined(PARTIAL_GC_ENABLED) || defined(CONCURRENT_GC_ENABLED)
     static bool RescanObjectsOnPage(TBlockType * block, char * address, char * blockStartAddress, BVStatic<TBlockAttributes::BitVectorCount>* markBits, const uint localObjectSize, uint bucketIndex, __out_opt bool* anyObjectRescanned, Recycler* recycler);
 
-    void SweepPendingObjects(RecyclerSweep& recyclerSweep);    
+    void SweepPendingObjects(RecyclerSweep& recyclerSweep);
     template <SweepMode mode>
     static TBlockType * SweepPendingObjects(Recycler * recycler, TBlockType * list);
 #endif
@@ -52,7 +52,7 @@ protected:
 
     void EnumerateObjects(ObjectInfoBits infoBits, void (*CallBackFunction)(void * address, size_t size));
 
-#if DBG    
+#if DBG
     void ResetMarks(ResetMarkFlags flags);
     static void SweepVerifyPartialBlocks(Recycler * recycler, TBlockType * heapBlockList);
 #endif
@@ -71,7 +71,7 @@ protected:
 #endif
 protected:
     TBlockType * partialHeapBlockList;      // list of blocks that is partially collected
-                                            // This list exists to keep track of heap blocks that 
+                                            // This list exists to keep track of heap blocks that
                                             // are not full but don't have a large amount of free space
                                             // where allocating from it causing a write watch to be triggered
                                             // is not worth the effort

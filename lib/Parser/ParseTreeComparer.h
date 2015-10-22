@@ -93,7 +93,7 @@ namespace Js
             double distance = ComputeDistance(left, right);
 
             // We don't want to return an exact match, because there
-            // must be something different, since we got here 
+            // must be something different, since we got here
             return (distance == ExactMatchDistance) ? EpsilonDistance : distance;
         }
 
@@ -178,8 +178,8 @@ namespace Js
             case knopFlt:
                 return left->sxFlt.dbl == right->sxFlt.dbl ? ExactMatchDistance : 1.0;
 
-            case knopRegExp: //TODO: sxPid.regexPattern                
-                break;                                
+            case knopRegExp: //TODO: sxPid.regexPattern
+                break;
             }
 
             // Other token nodes with fixed strings, e.g. "true", "null", always match exactly
@@ -452,7 +452,7 @@ namespace Js
                     && pid1->Cch() == pid2->Cch()
                     && wcsncmp(pid1->Psz(), pid2->Psz(), pid1->Cch()) == 0;
             }
-            
+
             // PIDs may be null, e.g. anonymous function declarations
             return pid1 == pid2;
         }
@@ -548,7 +548,7 @@ namespace Js
                 *result = false; // Different implicit tokens, e.g. "var x" vs "var y"
                 return true;
             }
-            
+
             return false; // This pair is ok, but not sure about children
         }
     };

@@ -80,7 +80,6 @@ namespace JsUtil
         typedef TValue ValueType;
         typedef typename AllocatorInfo<TAllocator, TValue>::AllocatorType AllocatorType;
         typedef SizePolicy CurrentSizePolicy;
-        // REVIEW: This should protected?
         typedef Entry<TKey, TValue> EntryType;
 
         template<class TDictionary> class EntryIterator;
@@ -1549,7 +1548,7 @@ namespace JsUtil
 
         friend class Base;
 
-        // For some reason, the following syntax works in BaseDictionary (where the classes are defined), but not in derived
+        // The following syntax works in BaseDictionary (where the classes are defined), but not in derived
         // classes such as BaseHashSet
         //     template<class TDictionary, class Leaf> friend class IteratorBase;
         //     template<class TDictionary> friend class EntryIterator;

@@ -29,7 +29,7 @@ namespace UnifiedRegex
         int resultCount;
         int offsets[MaxResults];
         Js::JavascriptString * cachedResult[MaxResults];
-        
+
 #ifndef PARTIAL_GC_DEFAULT_ON_REGEX_NOSLEEP
         int cacheUsedCount;
 #endif
@@ -139,7 +139,7 @@ namespace UnifiedRegex
 
         Char codeToChar[TrigramAlphabet::AlphaCount];
 
-        // Maps characters (0..AsciTableSize-1) to 0 if not in alphabet, or 0x1, 0x2, 0x4 or 0x8. 
+        // Maps characters (0..AsciTableSize-1) to 0 if not in alphabet, or 0x1, 0x2, 0x4 or 0x8.
         // Allocated and filled only if invoke Match below.
         uint8 charToBits[TrigramAlphabet::AsciiTableSize];
 

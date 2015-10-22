@@ -46,7 +46,7 @@ namespace JsUtil
                     return true;
                 }
             }
-            
+
             return false;
         }
 
@@ -122,7 +122,7 @@ namespace JsUtil
     };
 
     template <
-        class TKey, 
+        class TKey,
         class TValue,
         class TAllocator,
         class SizePolicy,
@@ -206,7 +206,7 @@ namespace JsUtil
             {
                 // Queue up items to be removed
                 // TODO: Don't use Contains since that's linear- store pointers to the eval map key instead, and set a bit indicating that its in the dictionary?
-                cacheStore->MapAndRemoveIf([this, callback](const CacheStore::EntryType &entry) {    
+                cacheStore->MapAndRemoveIf([this, callback](const CacheStore::EntryType &entry) {
                     if (this->cachePolicyType.CanEvict(entry.Key()) || CONFIG_FLAG(ForceCleanCacheOnCollect))
                     {
                         callback(entry.Key(), entry.Value());
@@ -231,7 +231,7 @@ namespace JsUtil
         void CleanAll(Fn callback)
         {
             Assert(!this->cacheStore->IsInAdd());
-            cacheStore->MapAndRemoveIf([this, callback](const CacheStore::EntryType &entry) -> bool { 
+            cacheStore->MapAndRemoveIf([this, callback](const CacheStore::EntryType &entry) -> bool {
                 callback(entry.Key(), entry.Value());
                 return true;
             });
@@ -246,5 +246,5 @@ namespace JsUtil
         CacheStore* cacheStore;
         CacheRetentionPolicy cachePolicyType;
     };
-    
+
 }

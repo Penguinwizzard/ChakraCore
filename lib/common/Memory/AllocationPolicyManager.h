@@ -12,7 +12,7 @@
 
 class AllocationPolicyManager
 {
-public:    
+public:
     enum MemoryAllocateEvent
     {
         MemoryAllocate = 0,
@@ -20,7 +20,7 @@ public:
         MemoryFailure = 2,
         MemoryMax = 2,
     };
-typedef bool (__stdcall * PageAllocatorMemoryAllocationCallback)(__in LPVOID context, 
+typedef bool (__stdcall * PageAllocatorMemoryAllocationCallback)(__in LPVOID context,
     __in AllocationPolicyManager::MemoryAllocateEvent allocationEvent,
     __in size_t allocationSize);
 
@@ -59,9 +59,9 @@ public:
     }
 
     void SetLimit(size_t newLimit)
-    {        
-        memoryLimit = newLimit;        
-    }  
+    {
+        memoryLimit = newLimit;
+    }
 
     bool RequestAlloc(size_t byteCount)
     {
@@ -104,29 +104,29 @@ public:
     }
 
     void SetMemoryAllocationCallback(LPVOID newContext, PageAllocatorMemoryAllocationCallback callback)
-    {        
+    {
         this->memoryAllocationCallback = callback;
-        
+
         if (callback == NULL)
         {
-            // doesn't make sense to have non-null context when the callback is NULL. 
+            // doesn't make sense to have non-null context when the callback is NULL.
             this->context = NULL;
         }
         else
         {
             this->context = newContext;
-        }                
+        }
     }
 
 private:
     __inline bool RequestAllocImpl(size_t byteCount)
-    {        
-        size_t newCurrentMemory = currentMemory + byteCount;        
+    {
+        size_t newCurrentMemory = currentMemory + byteCount;
 
         if (newCurrentMemory < currentMemory ||
             newCurrentMemory > memoryLimit ||
             memoryAllocationCallback != NULL && !memoryAllocationCallback(context, MemoryAllocateEvent::MemoryAllocate, byteCount))
-        {           
+        {
             if (memoryAllocationCallback != NULL)
             {
                 memoryAllocationCallback(context, MemoryAllocateEvent::MemoryFailure, byteCount);
@@ -138,19 +138,19 @@ private:
         {
             currentMemory = newCurrentMemory;
             return true;
-        }                      
+        }
     }
 
     __inline void ReportFreeImpl(MemoryAllocateEvent allocationEvent, size_t byteCount)
     {
-        Assert(currentMemory >= byteCount);      
+        Assert(currentMemory >= byteCount);
 
         currentMemory = currentMemory - byteCount;
 
         if (memoryAllocationCallback != NULL)
         {
-            // The callback should be minimal, with no possibility of calling back to us. 
-            // Note that this can be called both in script or out of script. 
+            // The callback should be minimal, with no possibility of calling back to us.
+            // Note that this can be called both in script or out of script.
             memoryAllocationCallback(context, allocationEvent, byteCount);
         }
     }

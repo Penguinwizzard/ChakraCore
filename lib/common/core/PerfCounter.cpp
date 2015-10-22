@@ -9,28 +9,28 @@
 namespace PerfCounter
 {
     Counter& Counter::operator+=(size_t value)
-    { 
-        Assert(count); 
-        ::InterlockedExchangeAdd(count, (DWORD)value); 
-        return *this; 
+    {
+        Assert(count);
+        ::InterlockedExchangeAdd(count, (DWORD)value);
+        return *this;
     }
     Counter& Counter::operator-=(size_t value)
-    { 
-        Assert(count); 
-        ::InterlockedExchangeSubtract(count, (DWORD)value); 
-        return *this; 
+    {
+        Assert(count);
+        ::InterlockedExchangeSubtract(count, (DWORD)value);
+        return *this;
     }
     Counter& Counter::operator++()
-    { 
-        Assert(count); 
+    {
+        Assert(count);
         ::InterlockedIncrement(count);
-        return *this; 
+        return *this;
     }
     Counter& Counter::operator--()
-    { 
-        Assert(count); 
-        ::InterlockedDecrement(count); 
-        return *this; 
+    {
+        Assert(count);
+        ::InterlockedDecrement(count);
+        return *this;
     }
 }
 #endif

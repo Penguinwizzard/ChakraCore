@@ -107,7 +107,6 @@ struct InlinedFrameLayout
     Js::Var                 arguments;  // The arguments object.
     //Js::Var               argv[0];    // Here it would be embedded arguments array (callInfo.count elements)
                                         // but can't have 0-size arr in base class, so we define it in derived class.
-                                        // It's not really needed actually, just for convenience.
 
     Js::Var* GetArguments()
     {
@@ -168,7 +167,6 @@ struct StackFrameConstants
     static const size_t StackCheckCodeHeightNotThreadBound = StackFrameConstants::StackCheckCodeHeight;
     static const size_t StackCheckCodeHeightWithInterruptProbe = StackFrameConstants::StackCheckCodeHeight;
 #elif defined(_M_ARM64)
-// ARM64_WORKITEM: ???
     static const size_t StackCheckCodeHeight = 58*2;
     static const size_t StackCheckCodeHeightThreadBound = StackFrameConstants::StackCheckCodeHeight;
     static const size_t StackCheckCodeHeightNotThreadBound = StackFrameConstants::StackCheckCodeHeight;
@@ -307,9 +305,3 @@ enum NumberAllocatorValue {
     NumberAllocatorEndAddress,
     NumberAllocatorFreeObjectList
 };
-
-// This is just a magic number
-#define PE_MAJOR_VERSION 0x43
-// This is the version of the PE format, bumping this will make old PEs
-// not be recognized
-#define PE_MINOR_VERSION 0x01

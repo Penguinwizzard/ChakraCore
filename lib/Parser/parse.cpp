@@ -4554,10 +4554,8 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
                 m_pscan->SeekTo(afterFnc);
             }
 
-            // REVIEW: Is it enough that we checked in the above if already?
             if (buildAST)
             {
-                // TODO REVIEW: There is a bug here, deferred parsing of function eval::x() { "use strict"; } won't check for the illegal usage of 'eval'
                 if (pnodeFnc->sxFnc.pnodeName != nullptr && knopVarDecl == pnodeFnc->sxFnc.pnodeName->nop)
                 {
                     CheckStrictModeEvalArgumentsUsage(pnodeFnc->sxFnc.pnodeName->sxVar.pid, pnodeFnc->sxFnc.pnodeName);
@@ -4982,7 +4980,7 @@ bool Parser::FastScanFormalsAndBody()
                 // fall through to rewind to function start
             case tkScanError:
             case tkEOF:
-                // Weirdness. Quit.
+                // Unexpected token.
                 if (PHASE_TRACE1(Js::ParallelParsePhase))
                 {
                     Output::Print(L"Failed fast seek: %d. %s -- %d...%d\n",
@@ -6847,7 +6845,6 @@ LPCOLESTR Parser::ConstructNameHint(ParseNodePtr pNode, ulong* fullNameHintLengt
             pNode->sxBin.pnode2, fullNameHintLength);
     }
 
-    // REVIEW:Should the right side will always be dot or name?
     Assert(pNode->sxBin.pnode2->nop == knopDot || pNode->sxBin.pnode2->nop == knopName);
 
     LPCOLESTR rightNode = nullptr;
@@ -9968,10 +9965,7 @@ ParseNodePtr Parser::Parse(LPCUTF8 pszSrc, size_t offset, size_t length, charcou
     if (tkEOF != m_token.tk)
         Error(ERRsyntax);
 
-    // Append an EndCode node. Give it a zero range so it generates
-    // a Bos0.
-    // the runtime (jscript!PcFindBos) expects an OP_Bos0, OP_FuncEnd
-    // in the global scope
+    // Append an EndCode node.
     AddToNodeList(&pnodeProg->sxFnc.pnodeBody, &lastNodeRef,
         CreateNodeWithScanner<knopEndCode>());
     AssertMem(lastNodeRef);
@@ -10111,9 +10105,7 @@ bool Parser::CheckStrictModeStrPid(IdentPtr pid)
 bool Parser::CheckAsmjsModeStrPid(IdentPtr pid)
 {
 #ifdef ASMJS_PLAT
-    //Two flags are ugly, though we don't have ON flag in release bits
-    //Once asmjs switches to ON mode by default, replace two switches with single switch
-    if (!(PHASE_ON1(Js::AsmjsPhase) || CONFIG_FLAG_RELEASE(Asmjs)))
+    if (!CONFIG_FLAG_RELEASE(Asmjs))
     {
         return false;
     }

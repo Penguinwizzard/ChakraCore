@@ -122,8 +122,8 @@ namespace UnifiedRegex
             toEquivs((uint64) -1),
             fallbackMapper(fallbackMapper)
         {
-            Assert(sizeof(wchar_t) == 2); // of course
-            Assert(sizeof(uint) > sizeof(wchar_t));
+            CompileAssert(sizeof(wchar_t) == 2);
+            CompileAssert(sizeof(uint) > sizeof(wchar_t));
 
             const uint maxUChar = Chars<wchar_t>::MaxUChar;
             uint l = 0;

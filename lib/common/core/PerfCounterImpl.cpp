@@ -41,7 +41,7 @@ private:
     PERFLIBREQUEST pfnNotificationCallBack;
     static ULONG WINAPI NotificationCallBack(ULONG RequestCode, PVOID Buffer, ULONG BufferSize);
 #endif
-    HANDLE& handle; 
+    HANDLE& handle;
     bool isInitialized;
     friend class InstanceBase;
     friend class Counter;
@@ -112,8 +112,8 @@ static const size_t OBJECT_NAME_LEN = GUID_LEN + _countof(s_wszObjectNamePrefix)
 static
 void GetSharedMemoryObjectName(__inout_ecount(OBJECT_NAME_LEN) wchar_t wszObjectName[OBJECT_NAME_LEN], DWORD pid, GUID const& guid)
 {
-    swprintf_s(wszObjectName, OBJECT_NAME_LEN, L"%s%d_%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x", 
-        s_wszObjectNamePrefix, pid, 
+    swprintf_s(wszObjectName, OBJECT_NAME_LEN, L"%s%d_%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+        s_wszObjectNamePrefix, pid,
         guid.Data1,
         guid.Data2,
         guid.Data3,
@@ -156,7 +156,7 @@ InstanceBase::InitializeSharedMemory(DWORD numCounter, HANDLE& handle)
 }
 
 DWORD *
-InstanceBase::OpenSharedMemory(__in_ecount(MAX_OBJECT_NAME_PREFIX) wchar_t const wszObjectNamePrefix[MAX_OBJECT_NAME_PREFIX], 
+InstanceBase::OpenSharedMemory(__in_ecount(MAX_OBJECT_NAME_PREFIX) wchar_t const wszObjectNamePrefix[MAX_OBJECT_NAME_PREFIX],
     DWORD pid, DWORD numCounter, HANDLE& handle)
 {
     DWORD size = numCounter * sizeof(DWORD);
@@ -186,7 +186,7 @@ InstanceBase::UninitializeSharedMemory(DWORD * data, HANDLE handle)
 }
 
 void
-Counter::Initialize(InstanceBase& instance, DWORD id, DWORD * count) 
+Counter::Initialize(InstanceBase& instance, DWORD id, DWORD * count)
 {
     this->count = count;
     if (instance.IsEnabled())
