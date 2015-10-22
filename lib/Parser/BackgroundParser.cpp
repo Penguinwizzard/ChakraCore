@@ -66,7 +66,7 @@ bool BackgroundParser::Process(JsUtil::Job *const job, JsUtil::ParallelThreadDat
         if (threadData->parser != nullptr)
         {
             // "canDecommit" means the previous parse finished.
-            // Don't leave a parser with stale state in the thread data, or we'll screw up the bindings.
+            // Don't leave a parser with stale state in the thread data, or we'll mess up the bindings.
             threadData->backgroundPageAllocator.DecommitNow();
             this->OnDecommit(threadData);
         }

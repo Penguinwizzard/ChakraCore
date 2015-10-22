@@ -85,15 +85,15 @@ namespace UnifiedRegex
                     int lw = l / wordSize;
                     int hw = h / wordSize;
                     int lo = l % wordSize;
-                    int ho = h % wordSize;
+                    int hio = h % wordSize;
                     if (lw == hw)
-                        setrng(vec[lw], lo, ho);
+                        setrng(vec[lw], lo, hio);
                     else
                     {
                         setrng(vec[lw], lo, wordSize-1);
                         for (int w = lw + 1; w < hw; w++)
                             vec[w] = ones;
-                        setrng(vec[hw], 0, ho);
+                        setrng(vec[hw], 0, hio);
                     }
                 }
             }
@@ -116,17 +116,17 @@ namespace UnifiedRegex
                     int lw = l / wordSize;
                     int hw = h / wordSize;
                     int lo = l % wordSize;
-                    int ho = h % wordSize;
+                    int hio = h % wordSize;
                     if (lw == hw)
                     {
-                        clearrng(vec[lw], lo, ho);
+                        clearrng(vec[lw], lo, hio);
                     }
                     else
                     {
                         clearrng(vec[lw], lo, wordSize-1);
                         for (int w = lw + 1; w < hw; w++)
                             vec[w] = 0;
-                        clearrng(vec[hw], 0, ho);
+                        clearrng(vec[hw], 0, hio);
                     }
                 }
             }

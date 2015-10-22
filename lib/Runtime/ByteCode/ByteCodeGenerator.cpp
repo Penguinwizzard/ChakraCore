@@ -1634,7 +1634,7 @@ Symbol * ByteCodeGenerator::AddSymbolToScope(Scope *scope, const wchar_t *key, i
 
         if (sym->GetScope() != scope && sym->GetScope()->GetScopeType() != ScopeType_Parameter)
         {
-            // Nasty. This can happen when we have a function declared at global eval scope, and it has
+            // This can happen when we have a function declared at global eval scope, and it has
             // references in deferred function bodies inside the eval. The BCG creates a new global scope
             // on such compiles, so we essentially have to migrate the symbol to the new scope.
             // We check fscrEvalCode, not fscrEval, because the same thing can happen in indirect eval,

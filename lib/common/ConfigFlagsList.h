@@ -474,8 +474,8 @@ PHASE(All)
 // ES6 DEFAULT BEHAVIOR
 #define DEFAULT_CONFIG_ES6                     (true)  // master flag to gate all P0-spec-test compliant ES6 features
 
-//CollectGarbage is legacy IE specific global function disabled in Edge.
-//Disabled due to security implications.
+//CollectGarbage is legacy IE specific global function disabled in Microsoft Edge.
+//Disabled due to security implications. 
 #define DEFAULT_CONFIG_CollectGarbage          (false)
 
 // ES6 sub-feature gate - to enable-disable ES6 sub-feature when ES6 flag is enabled

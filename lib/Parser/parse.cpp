@@ -3780,7 +3780,7 @@ ParseNodePtr Parser::ParseFncDecl(ushort flags, LPCOLESTR pNameHint, const bool 
 
             if (needsBlockNode)
             {
-                // Well, hell. We have a function declaration like "if (a) function f() {}". We didn't see
+                // We have a function declaration like "if (a) function f() {}". We didn't see
                 // a block scope on the way in, so we need to pretend we did.
                 pnodeFncBlockScope = StartParseBlock<buildAST>(PnodeBlockType::Regular, ScopeType_Block);
                 if (buildAST)
