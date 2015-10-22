@@ -69,10 +69,8 @@ namespace Js
         int m_inSlotsCount;             // Count of actual incoming parameters to this function
         Js::CallFlags m_callFlags;      // CallFlags passed to the current function
         Var* m_inParams;                // Range of 'in' parameters
-        Var* m_outParams;               // Range of 'out' parameters (offset in m_localSlots)
-        Var* m_outIntParams;            // Range of 'out' parameters (offset in m_localSlots)
-        Var* m_outSp;                   // Stack pointer for next outparam
-        Var* m_outIntSp;                // Stack pointer for next outparam
+        Var* m_outParams;               // Range of 'out' parameters (offset in m_localSlots)        
+        Var* m_outSp;                   // Stack pointer for next outparam        
         Var  m_arguments;               // Dedicated location for this frame's arguments object
         StackScriptFunction * stackNestedFunctions;
         FrameDisplay * localFrameDisplay;

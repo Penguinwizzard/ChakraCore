@@ -18,8 +18,6 @@
 #include "Types\DynamicObjectSnapshotEnumeratorWPCache.h"
 #include "Library\ForInObjectEnumerator.h"
 
-#pragma warning(disable:4302)  // truncation from 'pointer' to 'integral'
-
 #ifndef SCRIPT_DIRECT_TYPE
 typedef enum JsNativeValueType
 {
