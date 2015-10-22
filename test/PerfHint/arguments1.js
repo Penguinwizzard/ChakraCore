@@ -3,7 +3,7 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-// -trace:perfhint d:\testbins1\test.js -off:simplejit -maxinterpretcount:1
+// jshost -trace:perfhint d:\testbins1\test.js -off:simplejit -maxinterpretcount:1
 
 var target = function (arg) {
     var string = "that: " + this.that +

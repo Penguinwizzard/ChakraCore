@@ -3,7 +3,7 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-// -trace:perfhint -off:simplejit -maxinterpretcount:5 polymorphictest.js
+// jshost.exe -trace:perfhint -off:simplejit -maxinterpretcount:5 polymorphictest.js
 
 var arg = "arg";
 var iter = 100;

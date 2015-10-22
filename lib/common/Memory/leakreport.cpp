@@ -159,7 +159,7 @@ LeakReport::EnsureLeakReportFile()
 }
 
 LeakReport::UrlRecord *
-LeakReport::LogUrl(wchar_t const * url, void * library)
+LeakReport::LogUrl(wchar_t const * url, void * globalObject)
 {
     UrlRecord * record = NoCheckHeapNewStruct(UrlRecord);
 
@@ -173,7 +173,7 @@ LeakReport::LogUrl(wchar_t const * url, void * library)
     record->tid = ::GetCurrentThreadId();
     record->next = nullptr;       
     record->scriptEngine = nullptr;
-    record->library = library;
+    record->globalObject = globalObject;        // TODO: Switch it to JavascriptLibrary when Yong change to use Library in the type
    
     AutoCriticalSection autocs(&s_cs);
     if (LeakReport::urlRecordHead == nullptr)
@@ -212,7 +212,7 @@ LeakReport::DumpUrl(DWORD tid)
             _localtime64_s(&local_time, &curr->time);
             _wasctime_s(timeStr, &local_time);
             timeStr[wcslen(timeStr) - 1] = 0;                  
-            Print(L"%s - (%p, %p) %s\n", timeStr, curr->scriptEngine, curr->library, curr->url);
+            Print(L"%s - (%p, %p) %s\n", timeStr, curr->scriptEngine, curr->globalObject, curr->url);
             *pprev = curr->next;   
             NoCheckHeapDeleteArray(wcslen(curr->url) + 1, curr->url);
             NoCheckHeapDelete(curr);

@@ -13,6 +13,7 @@ function asmModule(stdlib, imports, buffer) {
     var i4fromFloat64x2Bits = i4.fromFloat64x2Bits;
     var i4fromFloat32x4 = i4.fromFloat32x4;
     var i4fromFloat32x4Bits = i4.fromFloat32x4Bits;
+    //var i4abs = i4.abs;
     var i4neg = i4.neg;
     var i4add = i4.add;
     var i4sub = i4.sub;
@@ -37,6 +38,10 @@ function asmModule(stdlib, imports, buffer) {
     var i4store2 = i4.store2;
     var i4store3 = i4.store3;
     
+    //var i4shiftLeftByScalar = i4.shiftLeftByScalar;
+    //var i4shiftRightByScalar = i4.shiftRightByScalar;
+    //var i4shiftRightArithmeticByScalar = i4.shiftRightArithmeticByScalar;
+
     var f4 = stdlib.SIMD.Float32x4; 
     var f4check = f4.check;    
     var f4splat = f4.splat;

@@ -7,6 +7,7 @@ function Hat(fabric, color) {
     this.fabric = fabric;
     this.color = color;
 
+    /// TODO: Remove this line when explicit propagation is added
     return undefined;
 }
 
