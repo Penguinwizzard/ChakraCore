@@ -93,7 +93,6 @@ function test5() {
     assert.throws(
         function () { var dv = new DataView(new ArrayBuffer(0x100000), 1, 0xffffffff); },
         RangeError,
-        "DataView byteLength must be in range",
         "DataView constructor argument byteLength is invalid");
 }
 

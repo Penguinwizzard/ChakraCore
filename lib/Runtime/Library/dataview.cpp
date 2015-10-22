@@ -116,7 +116,7 @@ namespace Js
             {
                 Var thirdArgument = args[3];
                 mappedLength = (uint32)JavascriptConversion::ToLength(thirdArgument, scriptContext);
-                uint32 viewRange = (uint32)(mappedLength + offset);
+                uint32 viewRange = mappedLength + offset;
 
                 if (viewRange > byteLength || viewRange < mappedLength) // overflow indicates out-of-range
                 {
