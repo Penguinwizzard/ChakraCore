@@ -52,12 +52,8 @@ var tests = {
   test03: {
     name: "Updating $1, $2,.. behavior",
     body: function() {
-      // Disabled for IE9-compat mode due to Win8 xxxxxxx.
-      // TODO: re-enable when the bug is fixed.
-      if (helpers.isVersion10OrLater) {
         "this".match(x.rep);
         assert.areEqual("t", RegExp.$1, "RegExp.$1 in local context wasn't updated to the capture group");
-      }
     }
   },
 

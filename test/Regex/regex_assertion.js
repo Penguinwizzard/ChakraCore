@@ -4,12 +4,9 @@
 //-------------------------------------------------------------------------------------------------------
 
 // This is a variant of the prototype regex for finding CSS classes
-// that was causing problems on CNN.com because it had classes
+// that was causing problems on classes
 // with -'s in their names 
 WScript.Echo("b-b".match(/([\w\-\*]+)\b/));
 
 // Here is a simpler repro of the above:
 WScript.Echo("one two".match(/.*\b/));
-
-// TODO - fix this:
-//WScript.Echo(("a a a aa").match(/([a ]\b)*\b/));

@@ -8,8 +8,6 @@
 // Testcase Number: 1664
 // Bailout Testing: ON
 // -maxinterpretcount:1  -off:floattypespec 
-// Branch:  fbl_ie_dev1(saagarwa.
-// Build: 20529-1700)
 
 var Failed = 0;
 

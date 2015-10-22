@@ -23,7 +23,6 @@ var types = [
     "Array",
     "Boolean",
     "Date",
-    //"Function", // TODO: Check the function.toString
     "Number",
     "RegExp",
     "String"

@@ -38,9 +38,6 @@ function asmModule(stdlib, imports, buffer) {
     var i4store2 = i4.store2;
     var i4store3 = i4.store3;
     
-    //var i4shiftLeftByScalar = i4.shiftLeftByScalar;
-    //var i4shiftRightByScalar = i4.shiftRightByScalar;
-    //var i4shiftRightArithmeticByScalar = i4.shiftRightArithmeticByScalar;
     var f4 = stdlib.SIMD.Float32x4; 
     var f4check = f4.check;    
     var f4splat = f4.splat;

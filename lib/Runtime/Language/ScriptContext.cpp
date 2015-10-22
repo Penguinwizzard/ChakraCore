@@ -536,7 +536,7 @@ namespace Js
 #ifdef LEAK_REPORT
         if (Js::Configuration::Global.flags.IsEnabled(Js::LeakReportFlag))
         {
-            this->urlRecord = LeakReport::LogUrl(urlCopy, this->globalObject);
+            this->urlRecord = LeakReport::LogUrl(urlCopy, this->GetLibrary());
         }
 #endif
     }

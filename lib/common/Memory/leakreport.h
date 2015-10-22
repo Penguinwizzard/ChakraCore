@@ -22,7 +22,7 @@ public:
         DWORD tid;
         UrlRecord * next;          
         
-        void * globalObject;
+        void * library;
         friend class LeakReport;
     };
 
@@ -33,7 +33,7 @@ public:
     static void EndSection();
     static void Print(wchar_t const * msg, ...);
 
-    static UrlRecord * LogUrl(wchar_t const * url, void * globalObject);
+    static UrlRecord * LogUrl(wchar_t const * url, void * library);
     static void DumpUrl(DWORD tid);
 private:
     static CriticalSection s_cs;
