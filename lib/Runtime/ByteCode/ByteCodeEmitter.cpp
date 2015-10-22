@@ -750,7 +750,11 @@ void BeginEmitBlock(ParseNode *pnodeBlock, ByteCodeGenerator *byteCodeGenerator,
                     // So we'll supply a temp that we allocate and release here.
                     if (frameDisplayLoc == Js::Constants::NoRegister)
                     {
-                        if (funcInfo->frameDisplayRegister != Js::Constants::NoRegister)
+                        if (tmpEnvReg != Js::Constants::NoRegister)
+                        {
+                            frameDisplayLoc = tmpEnvReg;
+                        }
+                        else if (funcInfo->frameDisplayRegister != Js::Constants::NoRegister)
                         {
                             frameDisplayLoc = funcInfo->frameDisplayRegister;
                         }
@@ -761,7 +765,7 @@ void BeginEmitBlock(ParseNode *pnodeBlock, ByteCodeGenerator *byteCodeGenerator,
                         tmpInnerEnvReg = funcInfo->AcquireTmpRegister();
                         frameDisplayLoc = byteCodeGenerator->PrependLocalScopes(frameDisplayLoc, tmpInnerEnvReg, funcInfo);
                     }
-                    byteCodeGenerator->DefineOneFunction(pnodeScope, funcInfo, true, frameDisplayLoc, tmpEnvReg);
+                    byteCodeGenerator->DefineOneFunction(pnodeScope, funcInfo, true, frameDisplayLoc);
                 }
 
                 // If this is the global eval block scope, the function is actually assigned to the global

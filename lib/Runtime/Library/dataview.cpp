@@ -22,7 +22,7 @@ namespace Js
         bool isCtorSuperCall = (callInfo.Flags & CallFlags_New) && newTarget != nullptr && RecyclableObject::Is(newTarget);
         Assert(isCtorSuperCall || !(callInfo.Flags & CallFlags_New) || args[0] == nullptr);
         uint32 byteLength = 0;
-        int32 mappedLength;
+        uint32 mappedLength;
         int32 offset = 0;
         double numberOffset = 0;
         ArrayBuffer* arrayBuffer = NULL;
@@ -117,12 +117,10 @@ namespace Js
         if (args.Info.Count > 3 && !JavascriptOperators::IsUndefinedObject(args[3]))
             {
                 Var thirdArgument = args[3];
-                // TODO: Change length of ArrayObject from uint32 to uint64?
-                mappedLength = (int32)JavascriptConversion::ToLength(thirdArgument, scriptContext);
-                AssertMsg(mappedLength >= 0, "Mapped Length of dataview should never be less than 0.");
+                mappedLength = (uint32)JavascriptConversion::ToLength(thirdArgument, scriptContext);
+                uint32 viewRange = mappedLength + offset;
 
-                // mappedLength and offset will always be >= 0, so no need to typecast to uint64
-                if ((uint32)(mappedLength + offset) > byteLength)
+                if (viewRange > byteLength || viewRange < mappedLength) // overflow indicates out-of-range
                 {
                     JavascriptError::ThrowRangeError(
                         scriptContext, JSERR_DataView_InvalidArugment, L"length");
