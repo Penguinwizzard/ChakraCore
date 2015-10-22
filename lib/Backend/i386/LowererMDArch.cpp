@@ -82,14 +82,12 @@ LowererMDArch::GetRegIMulHighDestLower()
 RegNum
 LowererMDArch::GetRegArgI4(int32 argNum)
 {
-    // TODO: decide on registers to use for int
     return RegNOREG;
 }
 
 RegNum
 LowererMDArch::GetRegArgR8(int32 argNum)
 {
-    // TODO: decide on registers to use for double
     return RegNOREG;
 }
 
@@ -203,7 +201,6 @@ LowererMDArch::LoadStackArgPtr(IR::Instr * instrArgPtr)
         // Allocate space on the callee's frame for a copy of the formals, plus the callee object pointer
         // and the callinfo.
         // Be sure to double-align the allocation.
-        // REVIEW: Do we ever need to generate a chkstk call here?
         int formalsBytes = (formalsCount + 2) * sizeof(Js::Var);
         formalsBytes = Math::Align<size_t>(formalsBytes, MachStackAlignment);
         IR::RegOpnd * espOpnd = IR::RegOpnd::New(nullptr, this->GetRegStackPointer(), TyMachReg, this->m_func);
@@ -238,7 +235,7 @@ LowererMDArch::LoadHeapArguments(IR::Instr *instrArgs, bool force, IR::Opnd* opn
     IR::Instr * instrPrev = instrArgs->m_prev;
     if (!force && func->GetHasStackArgs() && this->m_func->GetHasStackArgs()) //both inlinee & inliner has stack args. We don't support other scenarios.
     {
-        // The initial args slot value is zero. (TODO: it should be possible to dead-store the LdHeapArgs in this case.)
+        // The initial args slot value is zero.
         instrArgs->m_opcode = Js::OpCode::MOV;
         instrArgs->ReplaceSrc1(IR::IntConstOpnd::New(0, TyMachReg, func));
         instrArgs->FreeSrc2();
@@ -2022,7 +2019,6 @@ br2_Common:
     default:
         AssertMsg(UNREACHED, "Un-implemented int4 opcode");
     }
-    // OpEq's
 
     if(legalize)
     {
@@ -2801,7 +2797,6 @@ bool
 
     if (instrShift->HasBailOutInfo())
     {
-        // FIELDHOIST-TODO: Get this out of the fast path's way
         IR::Instr * bailOutInstr = this->lowererMD->m_lowerer->SplitBailOnImplicitCall(instrShift);
         this->lowererMD->m_lowerer->LowerBailOnEqualOrNotEqual(bailOutInstr);
     }
@@ -3665,7 +3660,7 @@ LowererMDArch::GenerateArgOutForStackArgs(IR::Instr* callInstr, IR::Instr* stack
 
     IR::RegOpnd* ldLenDstOpnd = IR::RegOpnd::New(TyUint32, func);
     IR::Instr* ldLen = IR::Instr::New(Js::OpCode::LdLen_A, ldLenDstOpnd, stackArgs, func);
-    ldLenDstOpnd->SetValueType(ValueType::GetTaggedInt()); //LdLen_A works only on stack arguments
+    ldLenDstOpnd->SetValueType(ValueType::GetTaggedInt()); // LdLen_A works only on stack arguments
     callInstr->InsertBefore(ldLen);
     this->lowererMD->m_lowerer->GenerateFastRealStackArgumentsLdLen(ldLen);
 
@@ -3708,7 +3703,7 @@ LowererMDArch::GenerateArgOutForStackArgs(IR::Instr* callInstr, IR::Instr* stack
 
     loop->regAlloc.liveOnBackEdgeSyms->Set(ldLenDstOpnd->m_sym->m_id);
 
-    //return the length which will be used for callInfo generations & stack allocation
+    // return the length which will be used for callInfo generations & stack allocation
     return saveLenInstr->GetDst()->AsRegOpnd();
 }
 
