@@ -38,8 +38,23 @@ set _HadFailures=0
 :: ============================================================================
 :main
 
+  call :parseArgs %*
+
+  if not "%fShowUsage%" == "" (
+    call :printUsage
+    goto :eof
+  )
+
+  call :validateArgs
+
+  if not "%fShowGetHelp%" == "" (
+    call :printGetHelp
+    goto :eof
+  )
+
   if not "%TF_BUILD%" == "True" (
-    echo This script must be run under a TF Build Agent environment
+    echo Error: TF_BUILD environment variable is not set to "True".
+    echo   This script must be run under a TF Build Agent environment.
     exit /b 2
   )
 
@@ -48,12 +63,18 @@ set _HadFailures=0
 
   call :doSilent rd /s/q %_TestDir%\logs
 
-  call :runTests x86debug
-  call :runTests x86test
-  call :runTests x64debug
-  call :runTests x64test
+  if not "%_RunAll%" == "" (
+    call :runTests x86 debug
+    call :runTests x86 test
+    call :runTests x64 debug
+    call :runTests x64 test
 
-  call :summarizeLogs
+    call :summarizeLogs summary.log
+  ) else (
+    call :runTests %_BuildArch% %_BuildType%
+    call :summarizeLogs summary.%_BuildArch%%_BuildType%.log
+  )
+
   call :copyLogsToDrop
 
   echo.
@@ -73,7 +94,12 @@ set _HadFailures=0
 :: ============================================================================
 :runTests
 
-  call :do %_TestDir%\runtests.cmd -%1 -quiet -cleanupall -binDir %_StagingDir%\bin
+  :: Cannot run tests for arm on build machine and release builds
+  :: do not work with ch.exe so no-op those configurations.
+  if "%1" == "arm" goto :eof
+  if "%2" == "release" goto :eof
+
+  call :do %_TestDir%\runtests.cmd -%1%2 -quiet -cleanupall -binDir %_StagingDir%\bin
 
   if ERRORLEVEL 1 set _HadFailures=1
 
@@ -99,10 +125,104 @@ set _HadFailures=0
 :summarizeLogs
 
   pushd %_TestDir%\logs
-  findstr /sp failed rl.results.log > summary.log
+  findstr /sp failed rl.results.log > %1
   rem Echo to stderr so that VSO includes the output in the build summary
-  type summary.log 1>&2
+  type %1 1>&2
   popd
+
+:: ============================================================================
+:: Print usage
+:: ============================================================================
+:printUsage
+
+  echo runcitests.cmd -x86^|-x64^|-arm -debug^|-test^|-release
+  echo.
+  echo Runs tests post-build for automated VSO TFS Builds.
+  echo Depends on TFS Build environment.
+  echo.
+  echo Required switches:
+  echo.
+  echo   Specify architecture of build to test:
+  echo.
+  echo   -x86           Build arch of binaries is x86
+  echo   -x64           Build arch of binaries is x64
+  echo   -arm           Build arch of binaries is ARM
+  echo.
+  echo   Specify type of of build to test:
+  echo.
+  echo   -debug         Build type of binaries is debug
+  echo   -test          Build type of binaries is test
+  echo   -release       Build type of binaries is release
+  echo.
+  echo   Shorthand combinations can be used, e.g. -x64debug
+  echo.
+  echo   Note: No tests are run for ARM or release as they are
+  echo   not supported.  The switches are provided for tooling
+  echo   convenience.
+
+  goto :eof
+
+:: ============================================================================
+:: Print how to get help
+:: ============================================================================
+:printGetHelp
+
+  echo For help use runcitests.cmd -?
+
+  goto :eof
+
+:: ============================================================================
+:: Parse the user arguments into environment variables
+:: ============================================================================
+:parseArgs
+
+  :NextArgument
+
+  if "%1" == "-?" set fShowUsage=1& goto :ArgOk
+  if "%1" == "/?" set fShowUsage=1& goto :ArgOk
+
+  if /i "%1" == "-x86"              set _BuildArch=x86&                                         goto :ArgOk
+  if /i "%1" == "-x64"              set _BuildArch=x64&                                         goto :ArgOk
+  if /i "%1" == "-arm"              set _BuildArch=arm&                                         goto :ArgOk
+  if /i "%1" == "-debug"            set _BuildType=debug&                                       goto :ArgOk
+  if /i "%1" == "-test"             set _BuildType=test&                                        goto :ArgOk
+  if /i "%1" == "-release"          set _BuildType=release&                                     goto :ArgOk
+
+  if /i "%1" == "-x86debug"         set _BuildArch=x86&set _BuildType=debug&                    goto :ArgOk
+  if /i "%1" == "-x64debug"         set _BuildArch=x64&set _BuildType=debug&                    goto :ArgOk
+  if /i "%1" == "-armdebug"         set _BuildArch=arm&set _BuildType=debug&                    goto :ArgOk
+  if /i "%1" == "-x86test"          set _BuildArch=x86&set _BuildType=test&                     goto :ArgOk
+  if /i "%1" == "-x64test"          set _BuildArch=x64&set _BuildType=test&                     goto :ArgOk
+  if /i "%1" == "-armtest"          set _BuildArch=arm&set _BuildType=test&                     goto :ArgOk
+  if /i "%1" == "-x86release"       set _BuildArch=x86&set _BuildType=release&                  goto :ArgOk
+  if /i "%1" == "-x64release"       set _BuildArch=x64&set _BuildType=release&                  goto :ArgOk
+  if /i "%1" == "-armrelease"       set _BuildArch=arm&set _BuildType=release&                  goto :ArgOk
+
+  if /i "%1" == "-all"              set _RunAll=1&                                              goto :ArgOk
+
+  if not "%1" == "" echo Unknown argument: %1 & set fShowGetHelp=1
+
+  goto :eof
+
+  :ArgOk
+  shift
+
+  goto :NextArgument
+
+:: ============================================================================
+:: Validate arguments; if non specified default to -all
+:: ============================================================================
+:validateArgs
+
+  if "%_BuildArch%" == "" (
+    set _RunAll=1
+  )
+
+  if "%_BuildType%" == "" (
+    set _RunAll=1
+  )
+
+  goto :eof
 
 :: ============================================================================
 :: Echo a command line before executing it
