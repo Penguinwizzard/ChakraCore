@@ -161,13 +161,49 @@ namespace Js {
 
     int32 SIMDCheckInt32Number(ScriptContext* scriptContext, Var value);
     bool        SIMDIsSupportedTypedArray(Var value);
-    SIMDValue*  SIMDCheckTypedArrayAccess(Var arg1, Var arg2, TypedArrayBase **tarray, int32 *index, uint8 dataWidth, ScriptContext *scriptContext);
+    SIMDValue*  SIMDCheckTypedArrayAccess(Var arg1, Var arg2, TypedArrayBase **tarray, int32 *index, uint32 dataWidth, ScriptContext *scriptContext);
     AsmJsSIMDValue SIMDLdData(AsmJsSIMDValue *data, uint8 dataWidth);
     void SIMDStData(AsmJsSIMDValue *data, AsmJsSIMDValue simdValue, uint8 dataWidth);
+
     template <class SIMDType>
-    Var   SIMD128TypedArrayLoad(Var arg1, Var arg2, uint32 dataWidth, ScriptContext *scriptContext);
-    template <class SIMDType> 
-    void  SIMD128TypedArrayStore(Var arg1, Var arg2, Var simdVar, uint32 dataWidth, ScriptContext *scriptContext);
+    Var SIMD128TypedArrayLoad(Var arg1, Var arg2, uint32 dataWidth, ScriptContext *scriptContext)
+    {
+        Assert(dataWidth >= 4 && dataWidth <= 16);
+
+        TypedArrayBase *tarray = NULL;
+        int32 index = -1;
+        SIMDValue* data = NULL;
+
+        data = SIMDCheckTypedArrayAccess(arg1, arg2, &tarray, &index, dataWidth, scriptContext);
+
+        Assert(tarray != NULL);
+        Assert(index >= 0);
+        Assert(data != NULL);
+
+        SIMDValue result = SIMDLdData(data, (uint8)dataWidth);
+
+        return SIMDType::New(&result, scriptContext);
+
+    }
+
+    template <class SIMDType>
+    void SIMD128TypedArrayStore(Var arg1, Var arg2, Var simdVar, uint32 dataWidth, ScriptContext *scriptContext)
+    {
+        Assert(dataWidth >= 4 && dataWidth <= 16);
+
+        TypedArrayBase *tarray = NULL;
+        int32 index = -1;
+        SIMDValue* data = NULL;
+
+        data = SIMDCheckTypedArrayAccess(arg1, arg2, &tarray, &index, dataWidth, scriptContext);
+
+        Assert(tarray != NULL);
+        Assert(index >= 0);
+        Assert(data != NULL);
+
+        SIMDValue simdValue = SIMDType::FromVar(simdVar)->GetValue();
+        SIMDStData(data, simdValue, (uint8)dataWidth);
+    }
 
     //SIMD Type conversion
     SIMDValue FromSimdBits(SIMDValue value);

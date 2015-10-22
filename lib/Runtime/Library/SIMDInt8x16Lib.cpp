@@ -743,6 +743,38 @@ namespace Js
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt8x16TypeMismatch, L"shiftRightByScalar");
     }
 
+    Var SIMDInt8x16Lib::EntryLoad(RecyclableObject* function, CallInfo callInfo, ...)
+    {
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+
+        ARGUMENTS(args, callInfo);
+        ScriptContext* scriptContext = function->GetScriptContext();
+
+        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
+        Assert(!(callInfo.Flags & CallFlags_New));
+
+
+        return SIMD128TypedArrayLoad<JavascriptSIMDInt8x16>(args[1], args[2], 8 * TySize[TyInt16], scriptContext);
+    }
+
+    Var SIMDInt8x16Lib::EntryStore(RecyclableObject* function, CallInfo callInfo, ...)
+    {
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+
+        ARGUMENTS(args, callInfo);
+        ScriptContext* scriptContext = function->GetScriptContext();
+
+        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
+        Assert(!(callInfo.Flags & CallFlags_New));
+
+        if (args.Info.Count >= 4 && JavascriptSIMDInt8x16::Is(args[3]))
+        {
+            SIMD128TypedArrayStore<JavascriptSIMDInt8x16>(args[1], args[2], args[3], 8 * TySize[TyInt16], scriptContext);
+            return NULL;
+        }
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInvalidArgType, L"SIMD.Int16x8.store");
+    }
+
     //Shuffle/Swizzle
     Var SIMDInt8x16Lib::EntrySwizzle(RecyclableObject* function, CallInfo callInfo, ...)
     {

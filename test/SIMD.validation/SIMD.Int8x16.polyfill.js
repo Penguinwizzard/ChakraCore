@@ -1034,8 +1034,8 @@ function fail(str) {
 function test(name, func) {
   
   if(name.indexOf(int8x16.name) !== 0) return;
-  if(name.indexOf('Int8x16 load') > -1) return; //negative index fatal error bug
-  if(name.indexOf('Int8x16 store') > -1) return; //negative index fatal error bug
+//  if(name.indexOf('Int8x16 load') > -1) return; //negative index fatal error bug
+//  if(name.indexOf('Int8x16 store') > -1) return; //negative index fatal error bug
   if(name.indexOf('Int8x16 fromUint8x16Bits') > -1) return; //unsupported function
   if(name.indexOf('Int8x16 fromUint16x8Bits') > -1) return; //unsupported function
   if(name.indexOf('Int8x16 fromUint32x4Bits') > -1) return; //unsupported function

@@ -419,6 +419,10 @@ BUILTIN(SIMDInt8x16Lib, GreaterThanOrEqual  , EntryGreaterThanOrEqual   , Functi
 BUILTIN(SIMDInt8x16Lib, ShiftLeftByScalar           , EntryShiftLeftByScalar            , FunctionInfo::None)
 BUILTIN(SIMDInt8x16Lib, ShiftRightByScalar          , EntryShiftRightByScalar , FunctionInfo::None)
 
+// Load/Store
+BUILTIN(SIMDInt8x16Lib, Load, EntryLoad, FunctionInfo::None)
+BUILTIN(SIMDInt8x16Lib, Store, EntryStore, FunctionInfo::None)
+
 //Shuffle/Swizzle
 BUILTIN(SIMDInt8x16Lib, Swizzle, EntrySwizzle, FunctionInfo::None)
 BUILTIN(SIMDInt8x16Lib, Shuffle, EntryShuffle, FunctionInfo::None)
@@ -427,7 +431,6 @@ BUILTIN(SIMDInt8x16Lib, Select,  EntrySelect,  FunctionInfo::None)
 // Lane Access
 BUILTIN(SIMDInt8x16Lib, ExtractLane, EntryExtractLane, FunctionInfo::None)
 BUILTIN(SIMDInt8x16Lib, ReplaceLane, EntryReplaceLane, FunctionInfo::None)
-
 
 // SIMDFloat64x2Lib entry points
 BUILTIN(SIMDFloat64x2Lib, Float64x2, EntryFloat64x2, FunctionInfo::None)

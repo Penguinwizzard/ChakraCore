@@ -643,7 +643,7 @@ namespace Js
         Assert(!(callInfo.Flags & CallFlags_New));
 
 
-        return SIMD128TypedArrayLoad<JavascriptSIMDInt16x8>(args[1], args[2], 2 * TySize[TyInt16], scriptContext);
+        return SIMD128TypedArrayLoad<JavascriptSIMDInt16x8>(args[1], args[2], 8 * TySize[TyInt16], scriptContext);
     }
 
     Var SIMDInt16x8Lib::EntryStore(RecyclableObject* function, CallInfo callInfo, ...)
@@ -658,7 +658,7 @@ namespace Js
 
         if (args.Info.Count >= 4 && JavascriptSIMDInt16x8::Is(args[3]))
         {
-            SIMD128TypedArrayStore<JavascriptSIMDInt16x8>(args[1], args[2], args[3], 4 * TySize[TyFloat32], scriptContext);
+            SIMD128TypedArrayStore<JavascriptSIMDInt16x8>(args[1], args[2], args[3], 8 * TySize[TyInt16], scriptContext);
             return NULL;
         }
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInvalidArgType, L"SIMD.Int16x8.store");

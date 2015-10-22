@@ -47,6 +47,12 @@ passed
 ******* Int16x8 shuffle *******
 passed
 
+******* Int16x8 load *******
+passed
+
+******* Int16x8 store *******
+passed
+
 ******* Int16x8 and *******
 passed
 

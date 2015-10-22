@@ -41,6 +41,12 @@ passed
 ******* Int32x4 shuffle *******
 passed
 
+******* Int32x4 load *******
+passed
+
+******* Int32x4 store *******
+passed
+
 ******* Int32x4 and *******
 passed
 
@@ -48,6 +54,24 @@ passed
 passed
 
 ******* Int32x4 xor *******
+passed
+
+******* Int32x4 load1 *******
+passed
+
+******* Int32x4 load2 *******
+passed
+
+******* Int32x4 load3 *******
+passed
+
+******* Int32x4 store1 *******
+passed
+
+******* Int32x4 store1 *******
+passed
+
+******* Int32x4 store3 *******
 passed
 
 ******* Int32x4 neg *******
