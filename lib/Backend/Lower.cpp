@@ -2062,7 +2062,6 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
 
         case Js::OpCode::MultiBr:
         {
-            //Lower the MultiBr Instr
             IR::MultiBranchInstr * multiBranchInstr = instr->AsBranchInstr()->AsMultiBrInstr();
             switch (multiBranchInstr->m_kind)
             {
@@ -5518,6 +5517,9 @@ Lowerer::GenerateLdFldWithCachedType(IR::Instr * instrLdFld, bool* continueAsHel
         propertySymOpnd->UpdateSlotForFinalType();
     }
 
+    // TODO (ObjTypeSpec): If ((PropertySym*)propertySymOpnd->m_sym)->m_stackSym->m_isIntConst consider emitting a direct
+    // jump to helper or bailout.  If we have a type check bailout, we could even abort compilation.
+
     bool hasTypeCheckBailout = instrLdFld->HasBailOutInfo() && IR::IsTypeCheckBailOutKind(instrLdFld->GetBailOutKind());
 
     // If the hard-coded type is not available here, do a type check, and branch to the helper if the check fails.
@@ -6586,6 +6588,9 @@ Lowerer::GenerateStFldWithCachedType(IR::Instr *instrStFld, bool* continueAsHelp
 
     Func* func = instrStFld->m_func;
 
+    // TODO (ObjTypeSpec): If ((PropertySym*)propertySymOpnd->m_sym)->m_stackSym->m_isIntConst consider emitting a direct
+    // jump to helper or bailout.  If we have a type check bailout, we could even abort compilation.
+
     bool hasTypeCheckBailout = instrStFld->HasBailOutInfo() && IR::IsTypeCheckBailOutKind(instrStFld->GetBailOutKind());
 
     // If the type hasn't been checked upstream, see if it makes sense to check it here.
@@ -6777,6 +6782,10 @@ Lowerer::GenerateCachedTypeCheck(IR::Instr *instrChk, IR::PropertySymOpnd *prope
 
     if (doEquivTypeCheck)
     {
+        // TODO (ObjTypeSpec): For isolated equivalent type checks it would be good to emit a check if the cache is still valid, and
+        // if not go straight to live polymorphic cache.  This way we wouldn't have to bail out and re-JIT, and also wouldn't continue
+        // to try the equivalent type cache, miss it and do the slow comparison. This may be as easy as sticking a null on the main
+        // type in the equivalent type cache.
         IR::LabelInstr* labelCheckEquivalentType = IR::LabelInstr::New(Js::OpCode::Label, func, true);
         InsertCompareBranch(typeOpnd, expectedTypeOpnd, Js::OpCode::BrNeq_A, labelCheckEquivalentType, instrChk);
 
@@ -6795,6 +6804,11 @@ Lowerer::GenerateCachedTypeCheck(IR::Instr *instrChk, IR::PropertySymOpnd *prope
         this->m_lowererMD.LowerCall(equivalentTypeCheckCallInstr, 0);
 
         InsertTestBranch(equivalentTypeCheckResultOpnd, equivalentTypeCheckResultOpnd, Js::OpCode::BrEq_A, labelTypeCheckFailed, instrChk);
+
+        // TODO (ObjTypeSpec): Consider emitting a shared bailout to which a specific bailout kind is written at runtime. This would allow us to distinguish
+        // between non-equivalent type and other cases, such as invalidated guard (due to fixed field overwrite, perhaps) or too much thrashing on the
+        // equivalent type cache. We could determine bailout kind based on the value returned by the helper. In the case of cache thrashing we could just
+        // turn off the whole optimization for a given function.
 
         instrChk->InsertBefore(labelTypeCheckSucceeded);
     }
@@ -6901,6 +6915,11 @@ Lowerer::CreateTypePropertyGuardForGuardedProperties(Js::Type* type, IR::Propert
 
     if (entryPointInfo->HasSharedPropertyGuards())
     {
+        // Consider (ObjTypeSpec): Because we allocate these guards from the JIT thread we can't share guards for the same type across multiple functions.
+        // This leads to proliferation of property guards on the thread context.  The alternative would be to pre-allocate shared (by value) guards
+        // from the thread context during work item creation.  We would create too many of them (because some types aren't actually used as guards),
+        // but we could share a guard for a given type between functions.  This may ultimately be better.
+
         LinkGuardToGuardedProperties(entryPointInfo, propertySymOpnd->GetGuardedPropOps(), [this, type, &guard](Js::PropertyId propertyId)
         {
             if (DoLazyFixedTypeBailout(this->m_func))
@@ -6965,6 +6984,11 @@ Lowerer::CreateEquivalentTypeGuardAndLinkToGuardedProperties(Js::Type* type, IR:
     Assert(guard->GetCache() != nullptr);
     Js::EquivalentTypeCache* cache = guard->GetCache();
 
+    // TODO (ObjTypeSpec): If we delayed populating the types until encoder, we could bulk allocate all equivalent type caches
+    // in one block from the heap. This would allow us to not allocate them from the native code data allocator and free them
+    // when no longer needed. However, we would need to store the global property operation ID in the guard, so we can look up
+    // the info in the encoder. Perhaps we could overload the cache pointer to be the ID until encoder.
+
     // Copy types from the type set to the guard's cache
     Js::EquivalentTypeSet* typeSet = propertySymOpnd->GetEquivalentTypeSet();
     uint16 cachedTypeCount = typeSet->GetCount() < EQUIVALENT_TYPE_CACHE_SIZE ? typeSet->GetCount() : EQUIVALENT_TYPE_CACHE_SIZE;
@@ -7018,10 +7042,10 @@ Lowerer::CreateEquivalentTypeGuardAndLinkToGuardedProperties(Js::Type* type, IR:
             }
             else
             {
-                // This is an odd corner case. Due to some unfortunate inline cache sharing we have the same property accessed
-                // using different caches with inconsistent info. This means a guaranteed bailout on the equivalent type check.
-                // We'll just let it happen and turn off the optimization for this function. We could avoid this problem by
-                // tracking property information on the value type in glob opt.
+                // Due to inline cache sharing we have the same property accessed using different caches
+                // with inconsistent info. This means a guaranteed bailout on the equivalent type check.
+                // We'll just let it happen and turn off the optimization for this function. We could avoid
+                // this problem by tracking property information on the value type in glob opt.
                 if (PHASE_TRACE(Js::EquivObjTypeSpecPhase, this->m_func))
                 {
                     wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
@@ -8094,7 +8118,7 @@ Lowerer::LowerStElemI(IR::Instr * instr, Js::PropertyOperationFlags flags, bool 
 
     if (srcType == TyFloat64)
     {
-        // Ooh, nasty. We don't support the X64 floating-point calling convention. So put this parameter on the end
+        // We don't support the X64 floating-point calling convention. So put this parameter on the end
         // and save directly to the stack slot.
 #if _M_X64
         IR::Opnd *argOpnd = IR::SymOpnd::New(m_func->m_symTable->GetArgSlotSym(5), TyFloat64, m_func);
