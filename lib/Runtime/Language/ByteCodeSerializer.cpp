@@ -97,7 +97,7 @@ enum FileVersionScheme
     ReleaseVersioningScheme = 20
 };
 
-const FileVersionScheme currentFileVersionScheme = EngineeringVersioningScheme;
+const FileVersionScheme currentFileVersionScheme = ReleaseVersioningScheme;
 
 #ifdef USE_DATE_TIME_MACRO
 const DWORD buildDateHash = JsUtil::CharacterBuffer<char>::StaticGetHashCode(__DATE__, _countof(__DATE__));
