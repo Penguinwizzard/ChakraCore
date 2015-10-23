@@ -2120,7 +2120,7 @@ ParseNodePtr Parser::ParseTerm(BOOL fAllowCall,
     ulong *pHintLength,
     _Inout_opt_ IdentToken* pToken/*= nullptr*/,
     bool fUnaryOrParen /*= false*/,
-    _Inout_opt_ BOOL* pfCanAssign /* = nullptr*/,
+    _Out_opt_ BOOL* pfCanAssign /* = nullptr*/,
     _Inout_opt_ BOOL* pfLikelyPattern /* = nullptr*/)
 {
     ParseNodePtr pnode = nullptr;
@@ -4353,6 +4353,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
             pnodeInnerBlock = StartParseBlock<buildAST>(PnodeBlockType::Function, ScopeType_FunctionBody);
             // Set the parameter block's child to the function body block.
             *m_ppnodeScope = pnodeInnerBlock;
+            Assert(pnodeFnc);
             pnodeFnc->sxFnc.pnodeBodyScope = pnodeInnerBlock;
 
             // This synthetic block scope will contain all the nested scopes.
@@ -4569,6 +4570,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
 
         if (fDeferred)
         {
+            Assert(pnodeFnc);
             pnodeFnc->sxFnc.pnodeVars = nullptr;
         }
 
