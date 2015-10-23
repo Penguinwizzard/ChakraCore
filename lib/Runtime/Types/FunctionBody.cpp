@@ -9000,10 +9000,6 @@ namespace Js
                         functionType->SetEntryPoint(this->functionProxy->GetDirectEntryPoint(newEntryPoint));
                     }
                 }
-                else
-                {
-                    Assert((DWORD_PTR)functionType->GetEntryPoint() != this->GetNativeAddress());
-                }
             });
 
             if(expiringSimpleJitEntryPointInfo)

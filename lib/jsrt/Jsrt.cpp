@@ -129,8 +129,7 @@ STDAPI_(JsErrorCode) JsCreateRuntime(_In_ JsRuntimeAttributes attributes, _In_op
         }
 
         AllocationPolicyManager * policyManager = HeapNew(AllocationPolicyManager, (attributes & JsRuntimeAttributeDisableBackgroundWork) == 0);
-        bool enableExperimentalFeatures = (attributes & JsRuntimeAttributeEnableExperimentalFeatures) != 0;
-        ThreadContext * threadContext = HeapNew(ThreadContext, policyManager, threadService, enableExperimentalFeatures);
+        ThreadContext * threadContext = HeapNew(ThreadContext, policyManager, threadService);
 
         if (((attributes & JsRuntimeAttributeDisableBackgroundWork) == 0)
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
@@ -169,6 +168,11 @@ STDAPI_(JsErrorCode) JsCreateRuntime(_In_ JsRuntimeAttributes attributes, _In_op
         if (attributes & JsRuntimeAttributeDisableNativeCodeGeneration)
         {
             threadContext->SetThreadContextFlag(ThreadContextFlagNoJIT);
+        }
+
+        if (attributes & JsRuntimeAttributeEnableExperimentalFeatures)
+        {
+            threadContext->SetThreadContextFlag(ThreadContextFlagExperimentalFeaturesEnabled);
         }
 
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS

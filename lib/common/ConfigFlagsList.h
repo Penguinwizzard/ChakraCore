@@ -670,11 +670,7 @@ PHASE(All)
 // Default values for stings must be prefixed with 'L'. See AsmDumpMode
 // Scroll till the extreme right to see the default values
 
-#if defined(FLAG) || defined(FLAG_REGOVR_EXP)
-
-#ifndef FLAG
-#define FLAG(...)
-#endif
+#ifdef FLAG
 
 #ifndef FLAG_REGOVR_ASMJS
 #define FLAG_REGOVR_ASMJS FLAG
