@@ -248,7 +248,7 @@ Instr::InsertRangeBefore(Instr *startInstr, Instr *endInstr)
 
 ///----------------------------------------------------------------------------
 ///
-/// Instr::InsertMultipleBefore - Insert's multiple instr
+/// Instr::InsertMultipleBefore - Insert multiple instr
 ///
 ///----------------------------------------------------------------------------
 void
@@ -256,7 +256,7 @@ Instr::InsertMultipleBefore(Instr *endInstr)
 {
     Instr *startInstr = endInstr->m_prev;
 
-    if (startInstr) //more than one instruction to insert
+    if (startInstr) // more than one instruction to insert
     {
         while (startInstr->m_prev)
         {
@@ -289,7 +289,7 @@ Instr::InsertRangeAfter(Instr *startInstr, Instr *endInstr)
 
 ///----------------------------------------------------------------------------
 ///
-/// Instr::InsertMultipleAfter - Insert's multiple instr
+/// Instr::InsertMultipleAfter - Insert multiple instr
 ///
 ///----------------------------------------------------------------------------
 void
@@ -315,15 +315,11 @@ Instr::InsertMultipleAfter(Instr *endInstr)
 ///
 ///     Free this instruction by putting it on a free list.
 ///
-///     Note: not yet implemented
-///
 ///----------------------------------------------------------------------------
 
 void
 Instr::Free()
 {
-    // TODO:  Implement
-
     AssertMsg(!this->IsLabelInstr() || !this->AsLabelInstr()->m_hasNonBranchRef,
         "Cannot free label with non-branch reference");
 
@@ -589,7 +585,6 @@ PragmaInstr::ClonePragma()
 PragmaInstr *
 PragmaInstr::CopyPragma()
 {
-    // It doesn't seem correct to copy the statement index; is there something else we can/should do here?
     IR::PragmaInstr * instrPragma = IR::PragmaInstr::New(this->m_opcode, 0, this->m_func);
     return instrPragma;
 }
@@ -786,7 +781,7 @@ JitProfilingInstr::New(Js::OpCode opcode, Opnd *dstOpnd, Opnd *src1Opnd, Func * 
 JitProfilingInstr*
 JitProfilingInstr::CloneJitProfiling() const
 {
-    //Adapted from Profiled::CloneProfiledInstr. Note that the dst and srcs are not set.
+    // Adapted from Profiled::CloneProfiledInstr. Note that the dst and srcs are not set.
 
     Assert(!(this->HasBailOutInfo() || this->HasAuxBailOut())); // Shouldn't have bailout info in a jitprofiling instr
 
@@ -797,7 +792,7 @@ JitProfilingInstr::CloneJitProfiling() const
 JitProfilingInstr*
 JitProfilingInstr::CopyJitProfiling() const
 {
-    //Adapted from Profiled::CopyProfiledInstr. Note that the dst and srcs are not set.
+    // Adapted from Profiled::CopyProfiledInstr. Note that the dst and srcs are not set.
 
     IR::JitProfilingInstr * jitProfInstr;
 
@@ -814,7 +809,6 @@ JitProfilingInstr::CopyJitProfiling() const
     jitProfInstr->inlineCacheIndex = this->inlineCacheIndex;
     Assert(jitProfInstr->loopNumber == this->loopNumber);
 
-    // TODO: SimpleJit: Kount wants to look at this later.
     return jitProfInstr;
 }
 
@@ -1282,8 +1276,8 @@ BailOutInstrTemplate<InstrType>::New(Js::OpCode opcode, BailOutKind kind, BailOu
         }
         else
         {
-            //Rare cases where we have already generated the bailout record. Unlikely they share the same bailout kind as this is hit only when we try to
-            //share bailout in lowerer. See Instr::ShareBailOut.
+            // Rare cases where we have already generated the bailout record. Unlikely they share the same bailout kind as this is hit only when we try to
+            // share bailout in lowerer. See Instr::ShareBailOut.
             bailOutInfo->sharedBailOutKind = false;
         }
     }
@@ -1404,7 +1398,7 @@ LabelInstr::AddLabelRef(BranchInstr *branchRef)
 ///
 /// LabelInstr::RemoveLabelRef
 ///
-///     Remove a branch to the list of label references.
+///     Remove a branch from the list of label references.
 ///
 ///----------------------------------------------------------------------------
 
@@ -2549,7 +2543,7 @@ Instr *
 Instr::HoistSymOffsetAsAdd(IR::SymOpnd *orgOpnd, IR::Opnd *baseOpnd, int offset, RegNum regNum)
 {
         IR::IndirOpnd *newIndirOpnd = IR::IndirOpnd::New(baseOpnd->AsRegOpnd(), 0, TyMachPtr, this->m_func);
-        this->Replace(orgOpnd, newIndirOpnd); //Replace SymOpnd with IndirOpnd
+        this->Replace(orgOpnd, newIndirOpnd); // Replace SymOpnd with IndirOpnd
         return this->HoistIndirOffsetAsAdd(newIndirOpnd, baseOpnd, offset, regNum);
 }
 
@@ -2974,10 +2968,6 @@ Instr::ConvertToBailOutInstr(IR::Instr * bailOutTarget, IR::BailOutKind kind)
 IR::Instr *
 Instr::ConvertToBailOutInstr(BailOutInfo * bailOutInfo, IR::BailOutKind kind, bool useAuxBailOut /* = false */)
 {
-    // TODO: consider removing auxBailOutKind and putting Debugger/IgnoreException bailout when shared with
-    //       non-debugger bailout on bailOutKind. This would make it more special case/less confusing why we use auxBailOutKind.
-    //       Looks like this would cause fixing quite a lot of places in globopt by making sure we don't
-
     Assert(!this->HasBailOutInfo());
 
     AssertMsg(!useAuxBailOut || !this->HasAuxBailOut(), "Already aux bail out!");
@@ -3618,7 +3608,7 @@ bool Instr::BinaryCalculator(IntConstType src1Const, IntConstType src2Const, Int
         if (src2Const == 0)
         {
             // Could fold to INF/-INF
-            //instr->HoistSrc1(Js::OpCode::Ld_A);
+            // instr->HoistSrc1(Js::OpCode::Ld_A);
             return false;
         }
         if (src1Const == 0 && src2Const < 0)

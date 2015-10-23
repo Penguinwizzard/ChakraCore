@@ -41,7 +41,7 @@ public:
                                 Func *topFunc,
                                 Js::ProfileId,
                                 bool isConstructorCall,
-                                bool isFixedMethod,
+                                bool isFixedMethodCall,
                                 bool isCallOutsideLoopInTopFunc,
                                 bool isCallInsideLoop,
                                 uint recursiveInlineDepth,

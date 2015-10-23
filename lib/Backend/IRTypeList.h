@@ -20,15 +20,10 @@ IRTYPE(Uint64,    Uint,      8,        3,   b(8),        1,        u64)
 IRTYPE(Float32,   Float,     4,        2,   b(4),        1,        f32)
 IRTYPE(Float64,   Float,     8,        3,   b(8),        1,        f64)
 
-//IRTYPE(Simd128, Simd, 16, 4, b(16), 1, simd128)
+// IRTYPE(Simd128, Simd, 16, 4, b(16), 1, simd128)
 IRTYPE(Simd128F4,   Simd,     16,        4,   b(16),       1,        simd128)
 IRTYPE(Simd128I4,   Simd,     16,        4,   b(16),       1,        simd128)
 IRTYPE(Simd128D2,   Simd,     16,        4,   b(16),       1,        simd128)
-
-//
-// review: MachPtr->Align is incorrect on AMD64. We don't use this value today (6/29/09) so its fine
-// for now. make sure it is either fixed to removed.
-//
 
 IRTYPE(Var,       Var,       MachPtr,  2,   b(MachPtr),  1,        var)
 IRTYPE(Condcode, Condcode,   0,        0,   4,           1,        cc)

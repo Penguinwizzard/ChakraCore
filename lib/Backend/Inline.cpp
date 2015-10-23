@@ -46,7 +46,6 @@ Inline::Optimize(Func *func, __in_ecount_opt(callerArgOutCount) IR::Instr *calle
         bool isCtor = false;
         if (doInline)
         {
-            // TODO: Use the InlineCallInstr opcode attribute?
             switch (instr->m_opcode)
             {
             case Js::OpCode::StatementBoundary:
@@ -57,8 +56,8 @@ Inline::Optimize(Func *func, __in_ecount_opt(callerArgOutCount) IR::Instr *calle
                 {
                     if (!loopTop && instr->AsLabelInstr()->m_isLoopTop)
                     {
-                        //We only need to know how if we are inside loop or not, it doesn't matter how many nested levels we are in.
-                        //This is the cheap way of doing so.
+                        // We only need to know if we are inside loop or not, it doesn't matter how many nested levels we are in.
+                        // This is the cheap way of doing so.
                         loopTop = instr->AsLabelInstr();
                         this->isInLoop++;
                         backEdgeCount = loopTop->labelRefs.Count();
@@ -200,7 +199,7 @@ Inline::Optimize(Func *func, __in_ecount_opt(callerArgOutCount) IR::Instr *calle
                                      (isCtor? L"true": L"false"), (this->topFunc != func? L"true":L"false"),
                                      inlinerData->GetFunctionBody()->GetDisplayName(), inlinerData->GetFunctionBody()->GetDebugNumberSet(debugStringBuffer));
 
-                            //TODO: Constructor polymorphic inlining
+                            // TODO: Constructor polymorphic inlining
 
                             TryResetObjTypeSpecFldInfoOn(methodValueOpnd);
                             TryDisableRuntimePolymorphicCacheOn(methodValueOpnd);
@@ -225,7 +224,7 @@ Inline::Optimize(Func *func, __in_ecount_opt(callerArgOutCount) IR::Instr *calle
                         Js::OpCode builtInInlineCandidateOpCode;
                         ValueType builtInReturnType;
 
-                        // If the inlinee info is th array constructor, just change the opcode to NewScObjArray
+                        // If the inlinee info is the array constructor, just change the opcode to NewScObjArray
                         // so that we will inline the array allocation in lower
                         if (isCtor && functionInfo == &Js::JavascriptArray::EntryInfo::NewInstance)
                         {
@@ -291,7 +290,7 @@ Inline::Optimize(Func *func, __in_ecount_opt(callerArgOutCount) IR::Instr *calle
                         else
                         {
 
-                            if (!inlineeData->GetFunctionBody()->HasDynamicProfileInfo())        //Don't try to inline a function if it doesn't have profile data
+                            if (!inlineeData->GetFunctionBody()->HasDynamicProfileInfo())        // Don't try to inline a function if it doesn't have profile data
                             {
                                 break;
                             }
@@ -343,7 +342,7 @@ Inline::Optimize(Func *func, __in_ecount_opt(callerArgOutCount) IR::Instr *calle
                     }
                     if(++this->inlineesProcessed == inlinerData->InlineeCount())
                     {
-                        //getterSetter inline caches are shared and we have no way of knowing how many more are present
+                        // getterSetter inline caches are shared and we have no way of knowing how many more are present
                         if (!inlinerData->IsLdFldInlineePresent() && !doFixedMethods)
                         {
                             return ;
@@ -395,7 +394,6 @@ Inline::Optimize(Func *func, __in_ecount_opt(callerArgOutCount) IR::Instr *calle
                 break;
 
             case Js::OpCode::CheckThis:
-                // Is this possible? Can we be walking an inlinee here? Doesn't hurt to support this case...
                 Assert(instr->GetSrc1() && instr->GetSrc1()->IsRegOpnd());
                 Assert(symThis == nullptr);
 
@@ -406,13 +404,13 @@ Inline::Optimize(Func *func, __in_ecount_opt(callerArgOutCount) IR::Instr *calle
                 {
                     if (loopTop && instr->IsBranchInstr())
                     {
-                        //Look for the back edge to loopTop.
+                        // Look for the back edge to loopTop.
                         IR::BranchInstr *branch = instr->AsBranchInstr();
                         IR::LabelInstr *labelDestination = branch->GetTarget();
-                        if (labelDestination == loopTop) //We found the back edge
+                        if (labelDestination == loopTop) // We found the back edge
                         {
                             backEdgeCount--;
-                            if (backEdgeCount == 0) //We have seen all the back edges, hence we are outside loop now.
+                            if (backEdgeCount == 0) // We have seen all the back edges, hence we are outside loop now.
                             {
                                 Assert(this->isInLoop > 0);
                                 --this->isInLoop;
@@ -487,7 +485,7 @@ uint Inline::FillInlineesDataArray(
     {
         if (inlineeCount >= inlineesDataArrayLength)
         {
-            //Count the actual number of inlinees for logging.
+            // Count the actual number of inlinees for logging.
             while (inlineeJitTimeData)
             {
                 inlineeCount++;
@@ -599,7 +597,7 @@ Inline::InlinePolymorphicFunctionUsingFixedMethods(IR::Instr *callInstr, const J
                  inlineeJitTimeData->GetFunctionBody()->GetDisplayName(), inlineeJitTimeData->GetFunctionBody()->GetDebugNumberSet(debugStringBuffer),
                  inlinerData->GetFunctionBody()->GetDisplayName(), inlinerData->GetFunctionBody()->GetDebugNumberSet(debugStringBuffer2));
 
-        //There are no multiple codegen jit-time data allocated for this call site, not sure how is this possible, abort
+        // There are no multiple codegen jit-time data allocated for this call site, not sure how is this possible, abort
         TryResetObjTypeSpecFldInfoOn(methodValueOpnd);
         TryDisableRuntimePolymorphicCacheOn(methodValueOpnd);
         return instrNext;
@@ -847,13 +845,13 @@ Inline::InlinePolymorphicFunctionUsingFixedMethods(IR::Instr *callInstr, const J
         {
             dispatchStartLabel->InsertBefore(IR::BranchInstr::New(Js::OpCode::BrAddr_A, inlineeStartLabel, typeOpnd, IR::AddrOpnd::New(methodPropertyOpnd->GetType(i),
                 IR::AddrOpndKindDynamicType, dispatchStartLabel->m_func), dispatchStartLabel->m_func));
-            this->topFunc->PinTypeRef(methodPropertyOpnd->GetType(i)); // Keep the types alive as the types may not be equivalent and, hence, wont be kept alive by EquivalentTypeCache
+            this->topFunc->PinTypeRef(methodPropertyOpnd->GetType(i)); // Keep the types alive as the types may not be equivalent and, hence, won't be kept alive by EquivalentTypeCache
             i++;
         }
 
         dispatchStartLabel->InsertBefore(IR::BranchInstr::New(Js::OpCode::BrAddr_A, inlineeStartLabel,
             typeOpnd, IR::AddrOpnd::New(methodPropertyOpnd->GetType(i), IR::AddrOpndKindDynamicType, dispatchStartLabel->m_func), dispatchStartLabel->m_func));
-        this->topFunc->PinTypeRef(methodPropertyOpnd->GetType(i)); // Keep the types alive as the types may not be equivalent and, hence, wont be kept alive by EquivalentTypeCache
+        this->topFunc->PinTypeRef(methodPropertyOpnd->GetType(i)); // Keep the types alive as the types may not be equivalent and, hence, won't be kept alive by EquivalentTypeCache
     }
 
     ldMethodFldInstr->Unlink();
@@ -960,7 +958,7 @@ Inline::InlinePolymorphicFunction(IR::Instr *callInstr, const Js::FunctionCodeGe
         return instrNext;
     }
 
-    //Begin inlining.
+    // Begin inlining.
     POLYMORPHIC_INLINE_TESTTRACE(L"------------------------------------------------\n");
     for (uint i = 0; i < inlineeCount; i++)
     {
@@ -1069,7 +1067,7 @@ void Inline::CompletePolymorphicInlining(IR::Instr* callInstr, IR::RegOpnd* retu
     }
     callInstr->InsertBefore(endCallInstr);
     callInstr->InsertBefore(doneLabel);
-    callInstr->Remove(); //We don't need callInstr anymore.
+    callInstr->Remove(); // We don't need callInstr anymore.
 }
 
 //
@@ -1116,7 +1114,7 @@ void Inline::InsertOneInlinee(IR::Instr* callInstr, IR::RegOpnd* returnValueOpnd
         currentCallInstr->m_func = inlinee;
 
         // Put the meta arguments that the stack walker expects to find on the stack.
-        //As all the argouts are shared among the inlinees, do this only once.
+        // As all the argouts are shared among the inlinees, do this only once.
         SetupInlineeFrame(inlinee, currentCallInstr, actualCount, currentCallInstr->GetSrc1());
 
         IR::Instr* inlineeEndInstr = IR::Instr::New(Js::OpCode::InlineeEnd, inlinee);
@@ -1125,9 +1123,9 @@ void Inline::InsertOneInlinee(IR::Instr* callInstr, IR::RegOpnd* returnValueOpnd
         inlineeEndInstr->SetSrc2(currentCallInstr->GetDst());
         inlinee->m_tailInstr->InsertBefore(inlineeEndInstr);
 
-        //JMP to done at the end
+        // JMP to done at the end
         IR::Instr* doneInstr = IR::BranchInstr::New(Js::OpCode::Br, doneLabel, currentCallInstr->m_func);
-        inlinee->m_tailInstr->InsertBefore(doneInstr); //JMP to done at the end
+        inlinee->m_tailInstr->InsertBefore(doneInstr);
         currentCallInstr->InsertRangeAfter(inlinee->m_headInstr->m_next, inlinee->m_tailInstr->m_prev);
 
         inlinee->m_headInstr->Free();
@@ -1326,7 +1324,7 @@ Inline::TryOptimizeCallInstrWithFixedMethod(IR::Instr *callInstr, Js::FunctionIn
     }
 
     IR::Instr* ldMethodFldInstr = methodValueSym->GetInstrDef();
-    // We can only optimize calls whose targets come from ScopedLdMethodFld\LdRootMethodFld\LdMethodFld\LdRootFld\LdFld.
+    // We can only optimize calls whose targets come from ScopedLdMethodFld\LdRootMethodFld\LdMethodFld\LdRootFld\LdFld\LdFldForCallApplyTarget\LdMethodFromFlags.
     if (ldMethodFldInstr->m_opcode != Js::OpCode::ScopedLdMethodFld
         && ldMethodFldInstr->m_opcode != Js::OpCode::LdRootMethodFld
         && ldMethodFldInstr->m_opcode != Js::OpCode::LdMethodFld
@@ -1354,8 +1352,6 @@ Inline::TryOptimizeCallInstrWithFixedMethod(IR::Instr *callInstr, Js::FunctionIn
 
     IR::PropertySymOpnd* methodPropertyOpnd = ldMethodFldInstr->GetSrc1()->AsPropertySymOpnd();
 
-    // TODO (jedmiad): Consider double-checking if the function is a built-in cases when we do have a fixed function
-    // object in the inline cache.
     if ((isCtor &&
             ((isInlined && PHASE_OFF(Js::FixedCtorInliningPhase, callInstr->m_func->GetJnFunction())) ||
             (!isInlined && PHASE_OFF(Js::FixedCtorCallsPhase, callInstr->m_func->GetJnFunction())) ||
@@ -1449,7 +1445,7 @@ Inline::TryOptimizeCallInstrWithFixedMethod(IR::Instr *callInstr, Js::FunctionIn
 
     // Certain built-ins that we decide not to inline will get a fast path emitted by the lowerer.
     // The lowering code cannot handle a call with a fixed function target, because it needs access to
-    // the original property sym.  Turn off fixed method calls for these cases.
+    // the original property sym. Turn off fixed method calls for these cases.
     if (functionInfo == nullptr && Func::IsBuiltInInlinedInLowerer(callInstr->GetSrc1()))
     {
 #if TRACE_FIXED_FIELDS
@@ -1511,7 +1507,7 @@ Inline::TryOptimizeCallInstrWithFixedMethod(IR::Instr *callInstr, Js::FunctionIn
             Output::Flush();
         }
 #endif
-        // It appears that under certain bailout and re-JIT conditions we may end up with and updated
+        // It appears that under certain bailout and re-JIT conditions we may end up with an updated
         // inline cache pointing to a new function object, while the call site profile info still
         // holds the old function body.  If the two don't match, let's fall back on the regular LdMethodFld.
         return false;
@@ -1765,7 +1761,6 @@ Inline::InlineBuiltInFunction(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, 
     if(inlineCallOpCode == Js::OpCode::InlineMathFloor || inlineCallOpCode == Js::OpCode::InlineMathCeil || inlineCallOpCode == Js::OpCode::InlineMathRound)
     {
 #if defined(_M_IX86) || defined(_M_X64)
-        // TODO: Might still want to inline if SSE4.1 is not available to call the helper directly instead of lowering to ROUNDSD
         if (!AutoSystemInfo::Data.SSE4_1Available())
         {
             INLINE_TESTTRACE(L"INLINING: Skip Inline: SSE4.1 not available\tInlinee: %s (#%d)\tCaller: %s\n", Js::JavascriptLibrary::GetNameForBuiltIn(builtInId), (int)builtInId, inlinerData->GetFunctionBody()->GetDisplayName());
@@ -1815,7 +1810,6 @@ Inline::InlineBuiltInFunction(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, 
         return callInstr->m_next;
     }
 
-    // TODO: should we care about lossy int type spec/benefit from it when aggressive is off?
     bool isAnyArgInt = (builtInFlags & (Js::BuiltInFlags::BIF_TypeSpecDstToInt | Js::BuiltInFlags::BIF_TypeSpecSrc1ToInt | Js::BuiltInFlags::BIF_TypeSpecSrc2ToInt)) != 0;
     if (isAnyArgInt && !GlobOpt::DoAggressiveIntTypeSpec(this->topFunc))
     {
@@ -1899,7 +1893,6 @@ Inline::InlineBuiltInFunction(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, 
             return callInstr->m_next;
         }
     }
-    // TODO: check for each arg type in profile matching expected type and don't inline otherwise?
 
     IR::Instr *inlineBuiltInEndInstr = nullptr;
     if (inlineCallOpCode ==  Js::OpCode::InlineFunctionApply)
@@ -1936,12 +1929,12 @@ Inline::InlineBuiltInFunction(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, 
     }
     else
     {
-        //FunctionObject check for built-ins
+        // FunctionObject check for built-ins
         IR::BailOutInstr * bailOutInstr = IR::BailOutInstr::New(Js::OpCode::BailOnNotBuiltIn, IR::BailOutOnInlineFunction, callInstr, callInstr->m_func);
         InsertFunctionObjectCheck(callInstr, callInstr, bailOutInstr, funcInfo);
     }
 
-    //To push function object for cases when we have to make calls to helper method to assist in inlining
+    // To push function object for cases when we have to make calls to helper method to assist in inlining
     if(inlineCallOpCode == Js::OpCode::CallDirect)
     {
         IR::Instr* argoutInstr;
@@ -1967,8 +1960,8 @@ Inline::InlineBuiltInFunction(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, 
     {
         inlineBuiltInEndInstr = InsertInlineeBuiltInStartEndTags(callInstr, actualCount);
 
-        //InlineArrayPop - TrackCalls Need to be done at InlineArrayPop and not at the InlineBuiltInEnd
-        //Hence we use a new opcode, to detect that it is a InlineArrayPop and we don't track the call during End of inlineBuiltInCall sequence
+        // InlineArrayPop - TrackCalls Need to be done at InlineArrayPop and not at the InlineBuiltInEnd
+        // Hence we use a new opcode, to detect that it is a InlineArrayPop and we don't track the call during End of inlineBuiltInCall sequence
         if(inlineCallOpCode == Js::OpCode::InlineArrayPop)
         {
             inlineBuiltInEndInstr->m_opcode = Js::OpCode::InlineNonTrackingBuiltInEnd;
@@ -1981,9 +1974,9 @@ Inline::InlineBuiltInFunction(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, 
     callInstr->InsertBefore(useCallTargetInstr);
 
     if(Js::JavascriptLibrary::IsTypeSpecRequired(builtInFlags)
-//SIMD_JS
+// SIMD_JS
         || IsSimd128Opcode(inlineCallOpCode)
-
+//
         )
     {
         // Emit byteCodeUses for function object
@@ -2034,7 +2027,7 @@ Inline::InlineBuiltInFunction(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, 
         callInstr->UnlinkSrc2();
         callInstr->m_opcode = inlineCallOpCode;
 
-        int argIndex = inlineCallArgCount;    // We'll used it to fill call instr srcs from upper to lower.
+        int argIndex = inlineCallArgCount;    // We'll use it to fill call instr srcs from upper to lower.
 
 
         IR::ByteCodeUsesInstr * byteCodeUsesInstr = IR::ByteCodeUsesInstr::New(callInstr->m_func);
@@ -2042,7 +2035,7 @@ Inline::InlineBuiltInFunction(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, 
         byteCodeUsesInstr->byteCodeUpwardExposedUsed = JitAnew(callInstr->m_func->m_alloc, BVSparse<JitArenaAllocator>, callInstr->m_func->m_alloc);
         IR::Instr *argInsertInstr = inlineBuilitInStartInstr;
 
-//SIMD_JS
+// SIMD_JS
         IR::Instr *eaInsertInstr = callInstr;
         IR::Opnd *eaLinkOpnd = nullptr;
         Js::JavascriptLibrary::SimdFuncSignature simdFuncSignature;
@@ -2176,14 +2169,14 @@ Inline::InlineBuiltInFunction(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, 
 
         if(OpCodeAttr::BailOutRec(inlineCallOpCode))
         {
-            //callInstr->InsertBefore(byteCodeUsesInstr);
+            // callInstr->InsertBefore(byteCodeUsesInstr);
             inlineBuiltInEndInstr->InsertBefore(byteCodeUsesInstr);
         }
 
         Assert(linkOpnd->AsRegOpnd()->m_sym->GetInstrDef()->m_opcode == Js::OpCode::StartCall);
         Assert(linkOpnd->AsRegOpnd()->m_sym->GetInstrDef()->GetArgOutCount(/*getInterpreterArgOutCount*/ false) == actualCount);
 
-        // Mark the StartCall's dst as an inlined arg slot as well so we know this is a inlined start call
+        // Mark the StartCall's dst as an inlined arg slot as well so we know this is an inlined start call
         // and not adjust the stack height on x86
         linkOpnd->AsRegOpnd()->m_sym->m_isInlinedArgSlot = true;
 
@@ -2344,7 +2337,7 @@ IR::Instr * Inline::InlineApplyWithArgumentsObject(IR::Instr * callInstr, IR::In
         callInstr->InsertBefore(useCallTargetInstr);
     }
 
-    //Optimize .init.apply(this, arguments);
+    // Optimize .init.apply(this, arguments);
     IR::Instr* builtInStartInstr;
     InsertInlineeBuiltInStartEndTags(callInstr, 3, &builtInStartInstr); //3 args (implicit this + explicit this + arguments = 3)
 
@@ -2368,7 +2361,7 @@ IR::Instr * Inline::InlineApplyWithArgumentsObject(IR::Instr * callInstr, IR::In
     symDst = callInstr->m_func->m_symTable->GetArgSlotSym((uint16)(1));
     IR::Opnd *linkOpnd2 = IR::SymOpnd::New(symDst, 0, TyMachPtr, callInstr->m_func);
 
-    //This keeps the stack args alive for bailout to recover
+    // This keeps the stack args alive for bailout to recover
     IR::Instr* argout = IR::Instr::New(Js::OpCode::ArgOut_A_FromStackArgs, linkOpnd1, ldHeapArguments->GetDst(), startCall->GetDst(), callInstr->m_func);
     callInstr->InsertBefore(argout);
 
@@ -2376,7 +2369,7 @@ IR::Instr * Inline::InlineApplyWithArgumentsObject(IR::Instr * callInstr, IR::In
     callInstr->ReplaceSrc2(linkOpnd2);
     callInstr->m_opcode = Js::OpCode::CallIDynamic;
 
-    argout = IR::Instr::New(Js::OpCode::ArgOut_A_Dynamic, linkOpnd2, explicitThisArgOut->GetSrc1(), linkOpnd1, callInstr->m_func);//push explicit this as this pointer
+    argout = IR::Instr::New(Js::OpCode::ArgOut_A_Dynamic, linkOpnd2, explicitThisArgOut->GetSrc1(), linkOpnd1, callInstr->m_func); // push explicit this as this pointer
     callInstr->InsertBefore(argout);
     return callInstr;
 }
@@ -2425,7 +2418,7 @@ IR::Instr * Inline::InlineApplyWithArray(IR::Instr * callInstr, Js::FunctionInfo
         callInstr->InsertBefore(useCallTargetInstr);
     }
 
-    IR::Instr* builtInEndInstr = InsertInlineeBuiltInStartEndTags(callInstr, 3); //3 args (implicit this + explicit this + array = 3)
+    IR::Instr* builtInEndInstr = InsertInlineeBuiltInStartEndTags(callInstr, 3); // 3 args (implicit this + explicit this + array = 3)
     builtInEndInstr->m_opcode = Js::OpCode::InlineNonTrackingBuiltInEnd; // We will call EndTrackCall when we see CallDirect for reasons explained in GlobOpt::TrackCalls
 
     IR::Instr * startCall = IR::Instr::New(Js::OpCode::StartCall,
@@ -2705,12 +2698,12 @@ Inline::InlineCall(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, const Js::F
         return callInstr;
     }
 
-    //Convert all the current ARG_OUT to  ArgOut_A_InlineBuiltIn
+    // Convert all the current ARG_OUT to  ArgOut_A_InlineBuiltIn
     IR::Opnd *linkOpnd = callInstr->GetSrc2();
 
     if (!GetDefInstr(linkOpnd)->GetSrc2()->IsSymOpnd())
     {
-        //There is no benefit of inlining.call() with no arguments.
+        // There is no benefit of inlining.call() with no arguments.
         return callInstr;
     }
 
@@ -2735,8 +2728,8 @@ Inline::InlineCall(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, const Js::F
     uint actualCount = 0;
     Assert(linkOpnd->IsSymOpnd());
 
-    //We are trying to optimize this.superConstructor.call(this, a, b,c);
-    //argImplicitInstr represents this.superConstructor which we need to call directly.
+    // We are trying to optimize this.superConstructor.call(this, a, b,c);
+    // argImplicitInstr represents this.superConstructor which we need to call directly.
     IR::Instr *argImplicitInstr;
     IR::Instr* argInsertInstr = callInstr;
     callInstr->IterateArgInstrs([&](IR::Instr* argInstr) {
@@ -2759,7 +2752,7 @@ Inline::InlineCall(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, const Js::F
     // the call instruction gets transformed to CallIFixed.
     StackSym* originalCallTargetStackSym = callInstr->GetSrc1()->GetStackSym();
     bool safeThis = false;
-    if (!TryOptimizeCallInstrWithFixedMethod(callInstr, funcInfo, false /*isPolymorphic*/, true /*isBuiltIn*/, false /*isConstructorInlining*/, true /*isInlined*/, safeThis))
+    if (!TryOptimizeCallInstrWithFixedMethod(callInstr, funcInfo, false /*isPolymorphic*/, true /*isBuiltIn*/, false /*isCtor*/, true /*isInlined*/, safeThis))
     {
         PrepareInsertionPoint(callInstr, funcInfo, callInstr);
     }
@@ -2778,7 +2771,7 @@ Inline::InlineCall(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, const Js::F
 
     IR::Instr *startCall = IR::Instr::New(Js::OpCode::StartCall, func);
     startCall->SetDst(IR::RegOpnd::New(TyVar, func));
-    startCall->SetSrc1(IR::IntConstOpnd::New(actualCountToInlinedCall, TyInt32, func)); //New call will have one less parameter.
+    startCall->SetSrc1(IR::IntConstOpnd::New(actualCountToInlinedCall, TyInt32, func)); // New call will have one less parameter.
 
     callInstr->InsertBefore(startCall);
 
@@ -2897,7 +2890,7 @@ Inline::InlineCallTarget(IR::Instr *callInstr, const Js::FunctionCodeGenJitTimeD
 
     IR::Instr * bytecodeArgOutUse = IR::Instr::New(Js::OpCode::BytecodeArgOutUse, callInstr->m_func);
     bytecodeArgOutUse->SetSrc1(implicitThisArgOut->GetSrc1());
-    callInstr->InsertBefore(bytecodeArgOutUse); //Need to keep the implicit "this" argout live till the call instruction for it to be captured by any bailout in the call sequence.
+    callInstr->InsertBefore(bytecodeArgOutUse); // Need to keep the implicit "this" argout live till the call instruction for it to be captured by any bailout in the call sequence.
     implicitThisArgOut->Remove();
 
     startCall->SetSrc2(IR::IntConstOpnd::New(startCall->GetArgOutCount(/*getInterpreterArgOutCount*/ false), TyUint32, startCall->m_func));
@@ -2983,14 +2976,14 @@ Inline::TryGetFixedMethodsForBuiltInAndTarget(IR::Instr *callInstr, const Js::Fu
     Js::FunctionInfo* targetFunctionInfo = inlineeData->GetFunctionInfo();
     safeThis = false;
     // Check if we can get fixed method for call
-    if (TryOptimizeCallInstrWithFixedMethod(callInstr, builtInFuncInfo/*funcinfo for call*/, false /*isPolymorphic*/, false /*isBuiltIn*/, false /*isConstructorInlining*/, true /*isInlined*/,
+    if (TryOptimizeCallInstrWithFixedMethod(callInstr, builtInFuncInfo/*funcinfo for call*/, false /*isPolymorphic*/, false /*isBuiltIn*/, false /*isCtor*/, true /*isInlined*/,
         safeThis /*unused here*/, true /*dontOptimizeJustCheck*/))
     {
         Assert(callInstr->m_opcode == originalCallOpCode); // check that we didn't change the opcode to CallIFixed.
         callInstr->ReplaceSrc1(targetLdInstr->GetDst());
         safeThis = false;
         // Check if we can get fixed method for call target
-        if (!TryOptimizeCallInstrWithFixedMethod(callInstr, targetFunctionInfo, false /*isPolymorphic*/, false /*isBuiltIn*/, false /*isConstructorInlining*/, true /*isInlined*/,
+        if (!TryOptimizeCallInstrWithFixedMethod(callInstr, targetFunctionInfo, false /*isPolymorphic*/, false /*isBuiltIn*/, false /*isCtor*/, true /*isInlined*/,
             safeThis /*unused here*/, true /*dontOptimizeJustCheck*/))
         {
             callInstr->ReplaceSrc1(builtInLdInstr->GetDst());
@@ -3018,9 +3011,9 @@ Inline::TryGetFixedMethodsForBuiltInAndTarget(IR::Instr *callInstr, const Js::Fu
     Assert(callInstr->m_opcode == originalCallOpCode);
     callInstr->ReplaceSrc1(builtInLdInstr->GetDst());
 
-    //Emit Fixed Method check for apply/call
+    // Emit Fixed Method check for apply/call
     safeThis = false;
-    TryOptimizeCallInstrWithFixedMethod(callInstr, builtInFuncInfo/*funcinfo for apply/call */, false /*isPolymorphic*/, false /*isBuiltIn*/, false /*isConstructorInlining*/, true /*isInlined*/, safeThis /*unused here*/);
+    TryOptimizeCallInstrWithFixedMethod(callInstr, builtInFuncInfo/*funcinfo for apply/call */, false /*isPolymorphic*/, false /*isBuiltIn*/, false /*isCtor*/, true /*isInlined*/, safeThis /*unused here*/);
 
     // If we optimized the call instruction for a fixed function, we must extend the function object's lifetime until after
     // the bailout on non-stack arguments.
@@ -3034,7 +3027,7 @@ Inline::TryGetFixedMethodsForBuiltInAndTarget(IR::Instr *callInstr, const Js::Fu
     //Emit Fixed Method check for apply/call target
     originalCallTargetStackSym = callInstr->GetSrc1()->GetStackSym();
     safeThis = false;
-    TryOptimizeCallInstrWithFixedMethod(callInstr, targetFunctionInfo, false /*isPolymorphic*/, false /*isBuiltIn*/, false /*isConstructorInlining*/, true /*isInlined*/, safeThis /*unused here*/);
+    TryOptimizeCallInstrWithFixedMethod(callInstr, targetFunctionInfo, false /*isPolymorphic*/, false /*isBuiltIn*/, false /*isCtor*/, true /*isInlined*/, safeThis /*unused here*/);
 
     // If we optimized the call instruction for a fixed function, we must extend the function object's lifetime until after
     // the bailout on non-stack arguments.
@@ -3405,7 +3398,7 @@ Inline::InlineGetterSetterFunction(IR::Instr *accessorInstr, const Js::FunctionC
                          UINT16_MAX,
                          true);
 
-    //funcBody->GetInParamsCount() can be greater than one even if it is all undefined. Example defineProperty(a,"foo", {get:function(a,b,c){}});
+    // funcBody->GetInParamsCount() can be greater than one even if it is all undefined. Example defineProperty(a,"foo", {get:function(a,b,c){}});
 
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
     if (Js::Configuration::Global.flags.TestTrace.IsEnabled(Js::InlinePhase) ||
@@ -3544,8 +3537,6 @@ IR::Instr * Inline::InlineDOMGetterSetterFunction(IR::Instr *ldFldInstr, const J
     IR::RegOpnd * instanceOpnd = IR::RegOpnd::New(fieldSym->m_stackSym, TyMachPtr, ldFldInstr->m_func);
 
     // Find the function object from getter inline cache. Need bailout to verify.
-    // TODO: make LdMethodFromFlags hoistable. we need to mark the OpCode as OpCanCSE, update the copyprop check for the OpCode, update the
-    // cloning of Opcode after hoisting extra.
     IR::Instr *ldMethodFld = IR::Instr::New(Js::OpCode::LdMethodFromFlags, IR::RegOpnd::New(TyVar, ldFldInstr->m_func), ldFldInstr->GetSrc1(), ldFldInstr->m_func);
     ldFldInstr->InsertBefore(ldMethodFld);
     ldMethodFld = ldMethodFld->ConvertToBailOutInstr(ldFldInstr, IR::BailOutFailedInlineTypeCheck);
@@ -3559,9 +3550,9 @@ IR::Instr * Inline::InlineDOMGetterSetterFunction(IR::Instr *ldFldInstr, const J
     // We have three arguments to pass to the OpCode. Create a new ExtendArg_A opcode to chain up the argument. It is similar to ArgOut chain
     // except that it is not argout.
     // The Opcode sequence is like:
-    //(dst)helpArg1: ExtendArg_A (src1)thisObject (src2)null
-    //(dst)helpArg2: ExtendArg_A (src1)funcObject (src2)helpArg1
-    //method: DOMFastPathGetter (src1)HelperCall (src2)helpArg2
+    // (dst)helpArg1: ExtendArg_A (src1)thisObject (src2)null
+    // (dst)helpArg2: ExtendArg_A (src1)funcObject (src2)helpArg1
+    // method: DOMFastPathGetter (src1)HelperCall (src2)helpArg2
     IR::Instr* extendArg0 = IR::Instr::New(Js::OpCode::ExtendArg_A, IR::RegOpnd::New(TyVar, ldFldInstr->m_func), instanceOpnd, ldFldInstr->m_func);
     ldFldInstr->InsertBefore(extendArg0);
     IR::Instr* extendArg1 = IR::Instr::New(Js::OpCode::ExtendArg_A, IR::RegOpnd::New(TyVar, ldFldInstr->m_func), ldMethodFld->GetDst(), extendArg0->GetDst(), ldFldInstr->m_func);
@@ -3796,9 +3787,6 @@ Inline::SplitConstructorCallCommon(
 
     // For new Object() and new Array() we have special fast helpers.  We'll let the lowerer convert this instruction directly
     // into a call to one of these helpers.
-    // TODO (ObjTypeSpecNewObj): Alternatively, we could split these also, and check for them when lowering CallI.  Also, if we plan
-    // to bail out on constructor mismatch, we could set a definitive value type for the results of these constructors, either
-    // here or in glob opt.
     if (skipNewScObj)
     {
         Js::JavascriptFunction* ctor = newObjInstr->GetFixedFunction();
@@ -3945,14 +3933,14 @@ Inline::InsertFunctionTypeIdCheck(IR::Instr *callInstr, IR::Instr* insertBeforeI
 void
 Inline::InsertJsFunctionCheck(IR::Instr *callInstr, IR::Instr *insertBeforeInstr, IR::BailOutKind bailOutKind)
 {
-    //This function only inserts bailout for tagged int & TypeIds_Function.
-    //As of now this is only used for polymorphic inlining.
+    // This function only inserts bailout for tagged int & TypeIds_Function.
+    // As of now this is only used for polymorphic inlining.
     Assert(bailOutKind == IR::BailOutOnPolymorphicInlineFunction);
 
     Assert(insertBeforeInstr);
     Assert(insertBeforeInstr->m_func == callInstr->m_func);
 
-    //bailOutIfNotFunction is primary bailout instruction
+    // bailOutIfNotFunction is primary bailout instruction
     IR::Instr* bailOutIfNotFunction = IR::BailOutInstr::New(Js::OpCode::BailOnNotEqual, bailOutKind, insertBeforeInstr, callInstr->m_func);
 
     IR::Instr *bailOutIfNotObject = IR::BailOutInstr::New(Js::OpCode::BailOnNotObject, bailOutKind, bailOutIfNotFunction->GetBailOutInfo(),callInstr->m_func);
@@ -3972,7 +3960,7 @@ Inline::InsertFunctionBodyCheck(IR::Instr *callInstr, IR::Instr *insertBeforeIns
     bailoutInstr->SetSrc1(funcBody);
     bailoutInstr->SetSrc2(inlinedFuncBody);
 
-    //IR::BranchInstr::New(Js::OpCode::BrNeq_I4, noInlineLabel, indir, addrOpnd, this->topFunc);
+    // IR::BranchInstr::New(Js::OpCode::BrNeq_I4, noInlineLabel, indir, addrOpnd, this->topFunc);
     insertBeforeInstr->InsertBefore(bailoutInstr);
 }
 
@@ -3994,21 +3982,21 @@ Inline::PrepareInsertionPoint(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, 
     Assert(insertBeforeInstr->m_func == callInstr->m_func);
     Assert(bailOutKind == IR::BailOutOnInlineFunction);
 
-    //FunctionBody check is the primary bailout instruction, create it first
+    // FunctionBody check is the primary bailout instruction, create it first
     IR::BailOutInstr* primaryBailOutInstr = IR::BailOutInstr::New(Js::OpCode::BailOnNotEqual, bailOutKind, insertBeforeInstr, callInstr->m_func);
 
-    //1. Bailout if function object is not an object.
+    // 1. Bailout if function object is not an object.
     IR::Instr *bailOutIfNotObject = IR::BailOutInstr::New(Js::OpCode::BailOnNotObject,
                                                           bailOutKind,
                                                           primaryBailOutInstr->GetBailOutInfo(),
                                                           callInstr->m_func);
     InsertObjectCheck(callInstr, insertBeforeInstr, bailOutIfNotObject);
 
-    //2. Bailout if function object is not a TypeId_Function
+    // 2. Bailout if function object is not a TypeId_Function
     IR::Instr* bailOutIfNotJsFunction = IR::BailOutInstr::New(Js::OpCode::BailOnNotEqual, bailOutKind, primaryBailOutInstr->GetBailOutInfo(), callInstr->m_func);
     InsertFunctionTypeIdCheck(callInstr, insertBeforeInstr, bailOutIfNotJsFunction);
 
-    //3. Bailout if function body doesn't match funcInfo
+    // 3. Bailout if function body doesn't match funcInfo
     InsertFunctionBodyCheck(callInstr, insertBeforeInstr, primaryBailOutInstr, funcInfo);
 
     return primaryBailOutInstr;
@@ -4080,7 +4068,7 @@ bool Inline::InlConstFold(IR::Instr *instr, IntConstType *pValue, __in_ecount_op
     switch (src1->GetKind())
     {
     case IR::OpndKindReg:
-        // Walk the tree bellow
+        // Walk the tree below
         break;
 
     case IR::OpndKindIntConst:
@@ -4407,7 +4395,7 @@ Inline::MapActuals(IR::Instr *callInstr, __inout_ecount(maxParamCount) IR::Instr
 
     Assert(linkOpnd->AsRegOpnd()->m_sym->m_instrDef->GetArgOutCount(/*getInterpreterArgOutCount*/ false) == actualCount);
 
-    // Mark the StartCall's dst as an inlined arg slot as well so we know this is a inlined start call
+    // Mark the StartCall's dst as an inlined arg slot as well so we know this is an inlined start call
     // and not adjust the stack height on x86
     linkOpnd->AsRegOpnd()->m_sym->m_isInlinedArgSlot = true;
 
@@ -4541,7 +4529,7 @@ Inline::MapFormals(Func *inlinee,
                         }
                         else if(fixedFunctionSafeThis)
                         {
-                            //Note this need to come after we determined that this pointer is not const (undefined/null)
+                            // Note this need to come after we determined that this pointer is not const (undefined/null)
                             fUsesSafeThis = true;
                         }
                     }
@@ -4583,7 +4571,7 @@ Inline::MapFormals(Func *inlinee,
                 if(actualCount < formalCountForInlinee)
                 {
                     RemoveExtraFixupArgouts(instr, formalCountForInlinee - actualCount, callSiteId);
-                    startCallForInlinee->GetSrc1()->AsIntConstOpnd()->m_value -= formalCountForInlinee - actualCount; //account for the extra formals
+                    startCallForInlinee->GetSrc1()->AsIntConstOpnd()->m_value -= formalCountForInlinee - actualCount; // account for the extra formals
                 }
 
                 linkOpnd = instr->GetSrc2();
@@ -4627,7 +4615,7 @@ Inline::MapFormals(Func *inlinee,
                 if (formalCountForInlinee < actualCount)
                 {
                     FixupExtraActualParams(instr, argOuts, argOutsExtra, formalCountForInlinee, actualCount, callSiteId);
-                    startCallForInlinee->GetSrc1()->AsIntConstOpnd()->m_value += actualCount - formalCountForInlinee; //account for the extra actuals
+                    startCallForInlinee->GetSrc1()->AsIntConstOpnd()->m_value += actualCount - formalCountForInlinee; // account for the extra actuals
                 }
 
                 break;
@@ -4829,7 +4817,6 @@ Inline::SetupInlineeFrame(Func *inlinee, IR::Instr *inlineeStart, Js::ArgSlot ac
         this->topFunc->SetArgOffset(stackSym, (currentInlineeFrameSlot + instrIndex) * MachPtr);
         IR::SymOpnd *symOpnd  = IR::SymOpnd::New(stackSym, 0, types[instrIndex], inlinee);
 
-        // TODO: These could simply be ArgOut_A instructions that can be inserted into the linked list.
         IR::Instr   *instr    = IR::Instr::New(Js::OpCode::InlineeMetaArg, inlinee);
         instr->SetDst(symOpnd);
         if (srcs[instrIndex])
@@ -5034,7 +5021,7 @@ Inline::HasArgumentsAccess(IR::Instr * instr, SymID argumentsSymId)
 
     if (dst)
     {
-        //For dst no need to check for RegOpnd
+        // For dst no need to check for RegOpnd
         if (dst->IsSymOpnd() || dst->IsIndirOpnd())
         {
             if (IsArgumentsOpnd(dst, argumentsSymId))
@@ -5052,28 +5039,28 @@ Inline::GetInlineeHasArgumentObject(Func * inlinee)
 {
     if (!inlinee->GetHasArgumentObject())
     {
-        //If inlinee has no arguments access return false
+        // If inlinee has no arguments access return false
         return false;
     }
 
-    //Inlinee has arguments access
+    // Inlinee has arguments access
 
     if (!inlinee->GetHasApplyTargetInlining())
     {
-        //There is no apply target inlining (this.init.apply(this, arguments))
-        //So arguments access continues to exist
+        // There is no apply target inlining (this.init.apply(this, arguments))
+        // So arguments access continues to exist
         return true;
     }
 
-    //Its possible there is no more arguments access after we inline apply target validate the same.
-    //This sounds expensive, but we are only walking inlinee which has apply target inlining optimization enabled.
-    //Also we walk only instruction in that inlinee and not nested inlinees. So it is not expensive.
+    // Its possible there is no more arguments access after we inline apply target validate the same.
+    // This sounds expensive, but we are only walking inlinee which has apply target inlining optimization enabled.
+    // Also we walk only instruction in that inlinee and not nested inlinees. So it is not expensive.
     SymID argumentsSymId = 0;
     FOREACH_INSTR_IN_FUNC(instr, inlinee)
     {
         if (instr->m_func != inlinee)
         {
-            //Skip nested inlinees;
+            // Skip nested inlinees
             continue;
         }
 
@@ -5123,7 +5110,7 @@ Inline::GetInlineeHasArgumentObject(Func * inlinee)
                 case Js::OpCode::ArgOut_A_InlineBuiltIn:
                 case Js::OpCode::BytecodeArgOutCapture:
                 case Js::OpCode::BytecodeArgOutUse:
-                    //These are part of arguments optimization and we are fine if they access stack args.
+                    // These are part of arguments optimization and we are fine if they access stack args.
                     break;
 
                 case Js::OpCode::ArgOut_A_FromStackArgs:

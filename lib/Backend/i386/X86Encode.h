@@ -142,7 +142,7 @@ enum Forms : BYTE
 #define OPBYTE_ANDPS    {0x54}                  // modrm
 #define OPBYTE_BSR      {0xbd}                  // modrm
 #define OPBYTE_BT       {0xba, 0xa3}            // special, modrm
-#define OPBYTE_BTR      {0xba, 0xb3}             // special, modrm
+#define OPBYTE_BTR      {0xba, 0xb3}            // special, modrm
 #define OPBYTE_CALL     {0xe8, 0xff}            // call, byte2=2 
 #define OPBYTE_CDQ      {0x99}                  // no
 #define OPBYTE_CMOVA    {0x47}                  // modrm
@@ -172,7 +172,7 @@ enum Forms : BYTE
 
 #define OPBYTE_CVTDQ2PS {0x5B}                  // special (modrm)
 #define OPBYTE_CVTPD2PS {0x5A}                  // modrm
-#define OPBYTE_CVTTPS2DQ {0x5B}                  // special (modrm)
+#define OPBYTE_CVTTPS2DQ {0x5B}                 // special (modrm)
 #define OPBYTE_CVTTPD2DQ {0xE6}                 // modrm
 
 #define OPBYTE_CVTSD2SI {0x2D}                  // modrm
