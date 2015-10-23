@@ -37,7 +37,6 @@ enum ThreadContextFlags
     ThreadContextFlagCanDisableExecution           = 0x00000001,
     ThreadContextFlagEvalDisabled                  = 0x00000002,
     ThreadContextFlagNoJIT                         = 0x00000004,
-    ThreadContextFlagExperimentalFeaturesEnabled   = 0x00000008,
 };
 
 const int LS_MAX_STACK_SIZE_KB = 300;
@@ -312,19 +311,23 @@ public:
 class ThreadConfiguration
 {
 public:
-    ThreadConfiguration()
+    ThreadConfiguration(bool enableExperimentalFeatures)
     {
         CopyGlobalFlags();
+        if (enableExperimentalFeatures)
+        {
+            EnableExperimentalFeatures();
+        }
     }
 
-#define DEFINE_FLAG(flag) \
+#define DEFINE_FLAG(threadFlag, globalFlag) \
     public: \
-        inline bool flag() const { return m_##flag##; } \
+        inline bool threadFlag() const { return m_##globalFlag##; } \
     \
     private: \
-        bool m_##flag##;
-#define FLAG(threadFlag, globalFlag) DEFINE_FLAG(threadFlag)
-#define FLAG_RELEASE(threadFlag, globalFlag) DEFINE_FLAG(threadFlag)
+        bool m_##globalFlag##;
+#define FLAG(threadFlag, globalFlag) DEFINE_FLAG(threadFlag, globalFlag)
+#define FLAG_RELEASE(threadFlag, globalFlag) DEFINE_FLAG(threadFlag, globalFlag)
 #include "ThreadConfigFlagsList.h"
 #undef FLAG_RELEASE
 #undef FLAG
@@ -335,11 +338,18 @@ private:
     {
         AutoCriticalSection autocs(&Js::Configuration::Global.flags.csExperimentalFlags);
 
-#define FLAG(threadFlag, globalFlag) m_##threadFlag## = CONFIG_FLAG(globalFlag);
-#define FLAG_RELEASE(threadFlag, globalFlag) m_##threadFlag## = CONFIG_FLAG_RELEASE(globalFlag);
+#define FLAG(threadFlag, globalFlag) m_##globalFlag## = CONFIG_FLAG(globalFlag);
+#define FLAG_RELEASE(threadFlag, globalFlag) m_##globalFlag## = CONFIG_FLAG_RELEASE(globalFlag);
 #include "ThreadConfigFlagsList.h"
 #undef FLAG_RELEASE
 #undef FLAG
+    }
+
+    void EnableExperimentalFeatures()
+    {
+#define FLAG_REGOVR_EXP(type, name, ...) m_##name## = true;
+#include "ConfigFlagsList.h"
+#undef FLAG_REGOVR_EXP
     }
 };
 
@@ -734,7 +744,7 @@ private:
     // entering and leaving a loop.
     uint8 loopDepth;
 
-    ThreadConfiguration configuration;
+    const ThreadConfiguration configuration;
 
 public:
     static ThreadContext * globalListFirst;
@@ -945,7 +955,7 @@ public:
     ArenaAllocator* GetThreadAlloc() { return &threadAlloc; }
     static CriticalSection * GetCriticalSection() { return &s_csThreadContext; }
 
-    ThreadContext(AllocationPolicyManager * allocationPolicyManager = nullptr, JsUtil::ThreadService::ThreadServiceCallback threadServiceCallback = nullptr);
+    ThreadContext(AllocationPolicyManager * allocationPolicyManager = nullptr, JsUtil::ThreadService::ThreadServiceCallback threadServiceCallback = nullptr, bool enableExperimentalFeatures = false);
     static void Add(ThreadContext *threadContext);
 
     ThreadConfiguration const * GetConfig() const { return &configuration; }

@@ -86,7 +86,7 @@ ThreadContext::RecyclableData::RecyclableData(Recycler *const recycler) :
 {
 }
 
-ThreadContext::ThreadContext(AllocationPolicyManager * allocationPolicyManager, JsUtil::ThreadService::ThreadServiceCallback threadServiceCallback) :
+ThreadContext::ThreadContext(AllocationPolicyManager * allocationPolicyManager, JsUtil::ThreadService::ThreadServiceCallback threadServiceCallback, bool enableExperimentalFeatures) :
     currentThreadId(::GetCurrentThreadId()),
     stackLimitForCurrentThread(0),
     stackProber(nullptr),
@@ -156,6 +156,7 @@ ThreadContext::ThreadContext(AllocationPolicyManager * allocationPolicyManager, 
     dynamicObjectEnumeratorCacheMap(&HeapAllocator::Instance, 16),
     //threadContextFlags(ThreadContextFlagNoFlag),
     telemetryBlock(&localTelemetryBlock),
+    configuration(enableExperimentalFeatures),
     jsrtRuntime(nullptr),
     rootPendingClose(nullptr),
     wellKnownHostTypeHTMLAllCollectionTypeId(Js::TypeIds_Undefined),
@@ -3795,12 +3796,6 @@ bool ThreadContext::TestThreadContextFlag(ThreadContextFlags contextFlag) const
 void ThreadContext::SetThreadContextFlag(ThreadContextFlags contextFlag)
 {
     this->threadContextFlags = (ThreadContextFlags)(this->threadContextFlags | contextFlag);
-
-    // We have to enable the flag in ConfigFlagsTable too
-    if (contextFlag & ThreadContextFlagExperimentalFeaturesEnabled)
-    {
-        Js::Configuration::Global.flags.EnableExperimentalFlag();
-    }
 }
 
 void ThreadContext::ClearThreadContextFlag(ThreadContextFlags contextFlag)
