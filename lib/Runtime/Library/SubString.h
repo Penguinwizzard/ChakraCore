@@ -19,7 +19,7 @@ namespace Js {
         static JavascriptString* New(const wchar_t* stringStr, charcount_t start, charcount_t length, ScriptContext *scriptContext);
         virtual const wchar_t* GetSz() override;     
         virtual void const * GetOriginalStringReference() override;
-        virtual uint GetAllocatedByteCount() const override;
+        virtual size_t GetAllocatedByteCount() const override;
         virtual bool IsSubstring() const override;
     };
 }

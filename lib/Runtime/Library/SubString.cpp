@@ -78,7 +78,7 @@ namespace Js
         return __super::GetOriginalStringReference();
     }
 
-    uint SubString::GetAllocatedByteCount() const
+    size_t SubString::GetAllocatedByteCount() const
     {
         if (originalFullStringReference)
         {

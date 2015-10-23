@@ -622,7 +622,11 @@ SECOND_PASS:
     template<typename T>
     SparseArraySegment<T>* JavascriptArray::PrepareSegmentForMemOp(uint32 startIndex, uint32 length)
     {
-        uint32 endIndex = startIndex + length - 1;
+        uint32 endIndex;
+        if(UInt32Math::Add(startIndex, length - 1, &endIndex))
+        {
+            JavascriptError::ThrowRangeError(this->GetScriptContext(), JSERR_ArrayLengthAssignIncorrect);
+        }
         if (endIndex >= this->length)
         {
             if (endIndex < JavascriptArray::InvalidIndex)

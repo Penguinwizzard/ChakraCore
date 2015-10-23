@@ -1234,6 +1234,7 @@ namespace Js
         // If the computed length of the new TypedArray would be negative, it is clamped to zero.
         if (begin < 0)
         {
+            CompileAssert(ArrayBuffer::MaxArrayBufferLength <= INT_MAX);
             begin += length;
         }
         if (begin > (int32)length)
@@ -1251,6 +1252,7 @@ namespace Js
             end = JavascriptConversion::ToInt32(args[2], scriptContext);
             if (end < 0 )
             {
+                CompileAssert(ArrayBuffer::MaxArrayBufferLength <= INT_MAX);
                 end += length;
             }
             if (end > (int32)length)

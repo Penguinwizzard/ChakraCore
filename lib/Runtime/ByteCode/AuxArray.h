@@ -17,7 +17,7 @@ namespace Js
         }
 
         void SetCount(uint count) { this->count = count; }
-        uint32 GetDataSize() const { return sizeof(AuxArray) + sizeof(T) * count; }
+        size_t GetDataSize() const { return sizeof(AuxArray) + sizeof(T) * count; }
     };
     typedef AuxArray<Var> VarArray;
 

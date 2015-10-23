@@ -341,7 +341,7 @@ namespace JSON
         //set the stack, gap
         wchar_t buffer[JSONspaceSize];
         wmemset(buffer, L' ', JSONspaceSize);
-        size_t len = 0;
+        charcount_t len = 0;
         switch (Js::JavascriptOperators::GetTypeId(space))
         {
         case Js::TypeIds_Integer:

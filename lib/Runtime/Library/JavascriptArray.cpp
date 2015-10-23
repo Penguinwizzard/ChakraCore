@@ -6,11 +6,6 @@
 #include "Types\PathTypeHandler.h"
 #include "Types\SpreadArgument.h"
 
-#ifdef _M_X64_OR_ARM64
-// TODO: Clean this warning up
-#pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
-#endif
-
 namespace Js
 {
     // Make sure EmptySegment points to read-only memory.
@@ -721,7 +716,7 @@ namespace Js
         return length <= SparseArraySegmentBase::INLINE_CHUNK_SIZE;
     }
 
-    Var JavascriptArray::OP_NewScArray(int32 elementCount, ScriptContext* scriptContext)
+    Var JavascriptArray::OP_NewScArray(uint32 elementCount, ScriptContext* scriptContext)
     {
         // Called only to create array literals: size is known.
         return scriptContext->GetLibrary()->CreateArrayLiteral(elementCount);
@@ -743,7 +738,7 @@ namespace Js
         return arr;
     }
 
-    Var JavascriptArray::OP_NewScArrayWithMissingValues(int32 elementCount, ScriptContext* scriptContext)
+    Var JavascriptArray::OP_NewScArrayWithMissingValues(uint32 elementCount, ScriptContext* scriptContext)
     {
         // Called only to create array literals: size is known.
         JavascriptArray *const array = static_cast<JavascriptArray *>(OP_NewScArray(elementCount, scriptContext));
@@ -754,7 +749,7 @@ namespace Js
         return array;
     }
 
-    Var JavascriptArray::ProfiledNewScArray(int32 elementCount, ScriptContext *scriptContext, ArrayCallSiteInfo *arrayInfo, RecyclerWeakReference<FunctionBody> *weakFuncRef)
+    Var JavascriptArray::ProfiledNewScArray(uint32 elementCount, ScriptContext *scriptContext, ArrayCallSiteInfo *arrayInfo, RecyclerWeakReference<FunctionBody> *weakFuncRef)
     {
         if (arrayInfo->IsNativeIntArray())
         {
@@ -3359,7 +3354,8 @@ namespace Js
             }
             else
             {
-                fromIndex = max(0, (int)(intValue + length));
+                // (intValue + length) may exceed 2^31 or may be < 0, so promote to int64
+                fromIndex = (uint32)max(0i64, (int64)(length) + intValue);
             }
         }
         else
@@ -4348,8 +4344,10 @@ Case0:
         Assert(JavascriptNativeArray::Is(nativeArray));
         JavascriptArray * arr = JavascriptArray::FromVar(nativeArray);
 
-        uint32 index = arr->GetLength() - 1;
+        // we will bailout on length 0
+        Assert(arr->GetLength() != 0);
 
+        uint32 index = arr->GetLength() - 1;
         arr->SetLength(index);
     }
 
@@ -4365,6 +4363,8 @@ Case0:
     {
         Assert(JavascriptNativeIntArray::Is(object));
         JavascriptNativeIntArray * arr = JavascriptNativeIntArray::FromVar(object);
+
+        Assert(arr->GetLength() != 0);
 
         uint32 index = arr->length - 1;
 
@@ -4390,6 +4390,8 @@ Case0:
     {
         Assert(JavascriptNativeFloatArray::Is(object));
         JavascriptNativeFloatArray * arr = JavascriptNativeFloatArray::FromVar(object);
+
+        Assert(arr->GetLength() != 0);
 
         uint32 index = arr->length - 1;
 
@@ -4541,8 +4543,8 @@ Case0:
             Assert(!nativeIntArray->IsCrossSiteObject());
             uint32 n = nativeIntArray->length;
 
-            //Only handle, if the length is within UINT_MAX
-            if(n < UINT_MAX)
+            //Only handle, if the length is within MaxArrayLength
+            if(n < JavascriptArray::MaxArrayLength)
             {
                 nativeIntArray->SetItem(n, value);
 
@@ -4570,8 +4572,8 @@ Case0:
             Assert(!nativeFloatArray->IsCrossSiteObject());
             uint32 n = nativeFloatArray->length;
 
-            //Only handle, if the length is within UINT_MAX and the array is not a crossSiteObject
-            if(n < UINT_MAX)
+            //Only handle, if the length is within MaxArrayLength and the array is not a crossSiteObject
+            if(n < JavascriptArray::MaxArrayLength)
             {
                 nativeFloatArray->SetItem(n, value);
 
@@ -4637,7 +4639,7 @@ Case0:
             }
             // First handle "small" indices.
             uint index;
-            for (index=1; index < argCount && n < UINT_MAX; ++index, ++n)
+            for (index=1; index < argCount && n < JavascriptArray::MaxArrayLength; ++index, ++n)
             {
                 if (h.IsThrowTypeError(JavascriptOperators::SetItem(obj, obj, n.GetSmallIndex(), args[index], scriptContext, PropertyOperation_ThrowIfNotExtensible)))
                 {
@@ -4652,7 +4654,7 @@ Case0:
                 }
             }
 
-            // Use BigIndex if we need to push indices >= UINT_MAX
+            // Use BigIndex if we need to push indices >= MaxArrayLength
             if (index < argCount)
             {
                 BigIndex big = n;
@@ -4673,7 +4675,7 @@ Case0:
 
                 }
 
-                // Set the new length; for objects it is all right for this to be >= UINT_MAX
+                // Set the new length; for objects it is all right for this to be >= MaxArrayLength
                 if (h.IsThrowTypeError(JavascriptOperators::SetProperty(obj, obj, PropertyIds::length, big.ToNumber(scriptContext), scriptContext, PropertyOperation_ThrowIfNotExtensible)))
                 {
                     if(scriptContext->GetThreadContext()->RecordImplicitException())
@@ -4720,7 +4722,7 @@ Case0:
         ThrowTypeErrorOnFailureHelper h(scriptContext, L"Array.prototype.push");
 
         // Fast Path for one push for small indexes
-        if (argCount == 2 && n < UINT_MAX)
+        if (argCount == 2 && n < JavascriptArray::MaxArrayLength)
         {
             // Set Item is overridden by CrossSiteObject, so no need to check for IsCrossSiteObject()
             h.ThrowTypeErrorOnFailure(arr->SetItem(n, args[1], PropertyOperation_None));
@@ -4728,12 +4730,12 @@ Case0:
         }
 
         // Fast Path for multiple push for small indexes
-        if (UINT_MAX - argCount + 1 > n && JavascriptArray::IsVarArray(arr) && scriptContext == arr->GetScriptContext())
+        if (JavascriptArray::MaxArrayLength - argCount + 1 > n && JavascriptArray::IsVarArray(arr) && scriptContext == arr->GetScriptContext())
         {
             uint index;
             for (index = 1; index < argCount; ++index, ++n)
             {
-                Assert(n != UINT_MAX);
+                Assert(n != JavascriptArray::MaxArrayLength);
                 // Set Item is overridden by CrossSiteObject, so no need to check for IsCrossSiteObject()
                 arr->JavascriptArray::DirectSetItemAt(n, args[index]);
             }
@@ -4751,18 +4753,18 @@ Case0:
 
         // First handle "small" indices.
         uint index;
-        for (index = 1; index < argCount && n < UINT_MAX; ++index, ++n)
+        for (index = 1; index < argCount && n < JavascriptArray::MaxArrayLength; ++index, ++n)
         {
             // Set Item is overridden by CrossSiteObject, so no need to check for IsCrossSiteObject()
             h.ThrowTypeErrorOnFailure(arr->SetItem(n, args[index], PropertyOperation_None));
         }
 
-        // Use BigIndex if we need to push indices >= UINT_MAX
+        // Use BigIndex if we need to push indices >= MaxArrayLength
         if (index < argCount)
         {
             // Not supporting native array with BigIndex.
             arr = EnsureNonNativeArray(arr);
-            Assert(n == UINT_MAX);
+            Assert(n == JavascriptArray::MaxArrayLength);
             for (BigIndex big = n; index < argCount; ++index, ++big)
             {
                 h.ThrowTypeErrorOnFailure(big.SetItem(arr, args[index]));
@@ -4771,7 +4773,7 @@ Case0:
 #ifdef VALIDATE_ARRAY
             arr->ValidateArray();
 #endif
-            // This is where we should set the length, but for arrays it cannot be >= UINT_MAX
+            // This is where we should set the length, but for arrays it cannot be >= MaxArrayLength
             JavascriptError::ThrowRangeError(scriptContext, JSERR_ArrayLengthAssignIncorrect);
         }
 
@@ -5016,7 +5018,7 @@ Case0:
         }
         else if (typedArrayBase)
         {
-            Assert(length <= UINT_MAX);
+            Assert(length <= JavascriptArray::MaxArrayLength);
             if (typedArrayBase->GetLength() == length)
             {
                 // If typedArrayBase->length == length then we know that the TypedArray will have all items < length
@@ -5601,7 +5603,7 @@ Case0:
             // The helpers below which do the element copying require the source and destination arrays to have the same native type.
             if (pArr && constructor == library->GetArrayConstructor())
             {
-                if (newLenT > UINT_MAX)
+                if (newLenT > JavascriptArray::MaxArrayLength)
                 {
                     JavascriptError::ThrowRangeError(scriptContext, JSERR_ArrayLengthConstructIncorrect);
                 }
@@ -5651,7 +5653,7 @@ Case0:
                 pArr->GetArrayTypeAndConvert(&isIntArray, &isFloatArray);
             }
 
-            if (newLenT > UINT_MAX)
+            if (newLenT > JavascriptArray::MaxArrayLength)
             {
                 JavascriptError::ThrowRangeError(scriptContext, JSERR_ArrayLengthConstructIncorrect);
             }
@@ -10741,7 +10743,7 @@ Case0:
 
         for (unsigned i = 0; i < spreadIndices->count; ++i)
         {
-            actualLength += GetSpreadArgLen(array->DirectGetItem(spreadIndices->elements[i]), scriptContext) - 1;
+            actualLength = UInt32Math::Add(actualLength - 1, GetSpreadArgLen(array->DirectGetItem(spreadIndices->elements[i]), scriptContext));
         }
 
         JavascriptArray *result = FromVar(OP_NewScArrayWithMissingValues(actualLength, scriptContext));
@@ -10749,7 +10751,7 @@ Case0:
         // Now we copy each element and expand the spread parameters inline.
         for (unsigned i = 0, spreadArrIndex = 0, resultIndex = 0; i < array->GetLength() && resultIndex < actualLength; ++i)
         {
-            size_t spreadIndex = spreadIndices->elements[spreadArrIndex]; // The index of the next element to be spread.
+            uint32 spreadIndex = spreadIndices->elements[spreadArrIndex]; // The index of the next element to be spread.
 
             // An array needs a slow copy if it is a cross-site object or we have missing values that need to be set to undefined.
             auto needArraySlowCopy = [&](Var instance) {

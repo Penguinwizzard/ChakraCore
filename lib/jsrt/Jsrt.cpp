@@ -879,7 +879,12 @@ STDAPI_(JsErrorCode) JsPointerToString(_In_reads_(stringLength) const wchar_t *s
         PARAM_NOT_NULL(stringValue);
         PARAM_NOT_NULL(string);
 
-        *string = Js::JavascriptString::NewCopyBuffer(stringValue, stringLength, scriptContext);
+        if (!Js::IsValidCharCount(stringLength))
+        {
+            Js::JavascriptError::ThrowOutOfMemoryError(scriptContext);
+        }
+
+        *string = Js::JavascriptString::NewCopyBuffer(stringValue, static_cast<charcount_t>(stringLength), scriptContext);
         return JsNoError;
     });
 }

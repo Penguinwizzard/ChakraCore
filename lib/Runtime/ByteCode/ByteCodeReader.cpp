@@ -235,7 +235,7 @@ namespace Js
         return propIds;
     }
 
-    uint32
+    size_t
     VarArrayVarCount::GetDataSize() const
     {
         return sizeof(VarArrayVarCount) + sizeof(Var) * TaggedInt::ToInt32(count);

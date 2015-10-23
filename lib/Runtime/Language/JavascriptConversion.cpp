@@ -646,7 +646,7 @@ CommonNumber:
                 }
 
             case TypeIds_String:
-                return JavascriptString::FromVar(aValue);
+                return JavascriptString::FromVar(CrossSite::MarshalVar(scriptContext, aValue));
 
             case TypeIds_VariantDate:
                 return JavascriptVariantDate::FromVar(aValue)->GetValueString(scriptContext);

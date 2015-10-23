@@ -8,11 +8,6 @@
 #include "Library\EngineInterfaceObject.h"
 #include "Library\IntlEngineInterfaceExtensionObject.h"
 
-#ifdef _M_X64_OR_ARM64
-// TODO: Clean this warning up
-#pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
-#endif
-
 namespace Js
 {
     // White Space characters are defined in ES6 Section 11.2
@@ -57,7 +52,7 @@ namespace Js
     }
 
     template <typename T, bool copyBuffer>
-    JavascriptString* JavascriptString::NewWithBufferT(const wchar_t * content, size_t cchUseLength, ScriptContext * scriptContext)
+    JavascriptString* JavascriptString::NewWithBufferT(const wchar_t * content, charcount_t cchUseLength, ScriptContext * scriptContext)
     {
         AssertMsg(content != nullptr, "NULL value passed to JavascriptString::New");
         AssertMsg(IsValidCharCount(cchUseLength), "String length will overflow an int");
@@ -95,12 +90,12 @@ namespace Js
         return NewWithArenaBuffer(content, GetBufferLength(content), scriptContext);
     }
 
-    JavascriptString* JavascriptString::NewWithBuffer(__in_ecount(cchUseLength) const wchar_t * content, size_t cchUseLength, ScriptContext * scriptContext)
+    JavascriptString* JavascriptString::NewWithBuffer(__in_ecount(cchUseLength) const wchar_t * content, charcount_t cchUseLength, ScriptContext * scriptContext)
     {
         return NewWithBufferT<LiteralString, false>(content, cchUseLength, scriptContext);
     }
 
-    JavascriptString* JavascriptString::NewWithArenaBuffer(__in_ecount(cchUseLength) const wchar_t* content, size_t cchUseLength, ScriptContext* scriptContext)
+    JavascriptString* JavascriptString::NewWithArenaBuffer(__in_ecount(cchUseLength) const wchar_t* content, charcount_t cchUseLength, ScriptContext* scriptContext)
     {
         return NewWithBufferT<ArenaLiteralString, false>(content, cchUseLength, scriptContext);
     }
@@ -110,7 +105,7 @@ namespace Js
         return NewCopyBuffer(content, GetBufferLength(content), scriptContext);
     }
 
-    JavascriptString* JavascriptString::NewCopyBuffer(__in_ecount(cchUseLength) const wchar_t* content, size_t cchUseLength, ScriptContext* scriptContext)
+    JavascriptString* JavascriptString::NewCopyBuffer(__in_ecount(cchUseLength) const wchar_t* content, charcount_t cchUseLength, ScriptContext* scriptContext)
     {
         return NewWithBufferT<LiteralString, true>(content, cchUseLength, scriptContext);
     }
@@ -765,7 +760,7 @@ case_2:
         JavascriptString * pThis = nullptr;
         GetThisStringArgument(args, scriptContext, L"String.prototype.charCodeAt", &pThis);
 
-        int idxPosition = 0;
+        charcount_t idxPosition = 0;
         if (args.Info.Count > 1)
         {
             idxPosition = ConvertToIndex(args[1], scriptContext);
@@ -775,8 +770,8 @@ case_2:
         // Get the character at the specified position.
         //
 
-        int charLength = pThis->GetLength();
-        if ((idxPosition < 0) || (idxPosition >= charLength))
+        charcount_t charLength = pThis->GetLength();
+        if (idxPosition >= charLength)
         {
             return scriptContext->GetLibrary()->GetNaN();
         }
@@ -796,14 +791,14 @@ case_2:
         JavascriptString * pThis = nullptr;
         GetThisStringArgument(args, scriptContext, L"String.prototype.codePointAt", &pThis);
 
-        int idxPosition = 0;
+        charcount_t idxPosition = 0;
         if (args.Info.Count > 1)
         {
             idxPosition = ConvertToIndex(args[1], scriptContext);
         }
 
-        int charLength = pThis->GetLength();
-        if ((idxPosition < 0) || (idxPosition >= charLength))
+        charcount_t charLength = pThis->GetLength();
+        if (idxPosition >= charLength)
         {
             return scriptContext->GetLibrary()->GetUndefined();
         }
@@ -2207,18 +2202,18 @@ case_2:
             return pThis;
         }
 
-        size_t bufLen = AllocSizeMath::Add(AllocSizeMath::Mul(count, thisStrLen), 1);
-        wchar_t* buffer = RecyclerNewArrayLeaf(scriptContext->GetRecycler(), wchar_t, bufLen);
+        charcount_t charCount = UInt32Math::Add(UInt32Math::Mul(count, thisStrLen), 1);
+        wchar_t* buffer = RecyclerNewArrayLeaf(scriptContext->GetRecycler(), wchar_t, charCount);
 
         if (thisStrLen == 1)
         {
-            wmemset(buffer, thisStr[0], bufLen - 1);
-            buffer[bufLen - 1] = '\0';
+            wmemset(buffer, thisStr[0], charCount - 1);
+            buffer[charCount - 1] = '\0';
         }
         else
         {
             wchar_t* bufferDst = buffer;
-            size_t bufferDstSize = bufLen;
+            size_t bufferDstSize = charCount;
 
             for (charcount_t i = 0; i < count; i += 1)
             {
@@ -2230,7 +2225,7 @@ case_2:
             *bufferDst = '\0';
         }
 
-        return JavascriptString::NewWithBuffer(buffer, bufLen - 1, scriptContext);
+        return JavascriptString::NewWithBuffer(buffer, charCount - 1, scriptContext);
     }
 
     ///----------------------------------------------------------------------------
@@ -2438,7 +2433,7 @@ case_2:
         return GetString();
     }
 
-    uint JavascriptString::GetAllocatedByteCount() const
+    size_t JavascriptString::GetAllocatedByteCount() const
     {
         if (!this->IsFinalized())
         {
@@ -2844,8 +2839,8 @@ case_2:
         JavascriptString * pPropertyValue = nullptr;
         const wchar_t * propertyValueStr = nullptr;
         uint quotesCount = 0;
-        wchar_t quotStr[] = L"&quot;";
-        charcount_t quotStrLen = _countof(quotStr) - 1;
+        const wchar_t quotStr[] = L"&quot;";
+        const charcount_t quotStrLen = _countof(quotStr) - 1;
         bool ES6FixesEnabled = scriptContext->GetConfig()->IsES6StringPrototypeFixEnabled();
 
         // Assemble the component pieces of a string tag function (ex: String.prototype.link).
@@ -2891,9 +2886,11 @@ case_2:
         }
 
         cchThis = pThis->GetLength();
-        // 5 is for the <></> characters
-        cchTotalChars = (cchTag + cchTag + 5);
+        cchTotalChars = UInt32Math::Add(cchTag, cchTag);
 
+        // 5 is for the <></> characters
+        cchTotalChars = UInt32Math::Add(cchTotalChars, 5);
+        
         if (nullptr != pszProp)
         {
             // Need one string argument.
@@ -2928,13 +2925,15 @@ case_2:
                 }
             }
 
+            cchTotalChars = UInt32Math::Add(cchTotalChars, cchProp);
+
             // 4 is for the _="" characters
-            cchTotalChars += (cchProp + 4);
+            cchTotalChars = UInt32Math::Add(cchTotalChars, 4);
 
             if (ES6FixesEnabled)
             {
                 // Account for the " escaping (&quot;)
-                cchTotalChars += (quotesCount * quotStrLen) - quotesCount;
+                cchTotalChars = UInt32Math::Add(cchTotalChars, UInt32Math::Mul(quotesCount, quotStrLen)) - quotesCount;
             }
         }
         else
@@ -2942,7 +2941,8 @@ case_2:
             cchPropertyValue = 0;
             cchProp = 0;
         }
-        cchTotalChars += cchThis + cchPropertyValue;
+        cchTotalChars = UInt32Math::Add(cchTotalChars, cchThis);
+        cchTotalChars = UInt32Math::Add(cchTotalChars, cchPropertyValue);
         if (!IsValidCharCount(cchTotalChars) || cchTotalChars < cchThis || cchTotalChars < cchPropertyValue)
         {
             Js::JavascriptError::ThrowOutOfMemoryError(scriptContext);
@@ -3471,10 +3471,10 @@ case_2:
             return true;
         }
         ScriptContext* scriptContext = GetScriptContext();
-        uint32 index;
+        charcount_t index;
         if (scriptContext->IsNumericPropertyId(propertyId, &index))
         {
-            if (index < (uint32)this->GetLength())
+            if (index < this->GetLength())
             {
                 return true;
             }
@@ -3485,10 +3485,10 @@ case_2:
     BOOL JavascriptString::IsEnumerable(PropertyId propertyId)
     {
         ScriptContext* scriptContext = GetScriptContext();
-        uint32 index;
+        charcount_t index;
         if (scriptContext->IsNumericPropertyId(propertyId, &index))
         {
-            if (index < (uint32)this->GetLength())
+            if (index < this->GetLength())
             {
                 return true;
             }

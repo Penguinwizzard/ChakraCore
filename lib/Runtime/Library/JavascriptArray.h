@@ -126,10 +126,10 @@ namespace Js
         JavascriptArray(uint32 length, uint32 size, DynamicType * type);
         JavascriptArray(DynamicType * type, uint32 size);
 
-        static Var OP_NewScArray(int32 argLength, ScriptContext* scriptContext);
+        static Var OP_NewScArray(uint32 argLength, ScriptContext* scriptContext);
         static Var OP_NewScArrayWithElements(uint32 argLength, Var *elements, ScriptContext* scriptContext);
-        static Var ProfiledNewScArray(int32 argLength, ScriptContext *scriptContext, ArrayCallSiteInfo *arrayInfo, RecyclerWeakReference<FunctionBody> *weakFuncRef);
-        static Var OP_NewScArrayWithMissingValues(int32 argLength, ScriptContext* scriptContext);
+        static Var ProfiledNewScArray(uint32 argLength, ScriptContext *scriptContext, ArrayCallSiteInfo *arrayInfo, RecyclerWeakReference<FunctionBody> *weakFuncRef);
+        static Var OP_NewScArrayWithMissingValues(uint32 argLength, ScriptContext* scriptContext);
         static Var OP_NewScIntArray(AuxArray<int32> *ints, ScriptContext* scriptContext);
         static Var ProfiledNewScIntArray(AuxArray<int32> *ints, ScriptContext* scriptContext, ArrayCallSiteInfo *arrayInfo, RecyclerWeakReference<FunctionBody> *weakFuncRef);
         static Var OP_NewScFltArray(AuxArray<double> *doubles, ScriptContext* scriptContext);

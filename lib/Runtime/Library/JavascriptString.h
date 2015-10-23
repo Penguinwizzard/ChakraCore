@@ -70,7 +70,7 @@ namespace Js
         wchar_t GetItem(charcount_t index);
 
         _Ret_range_(m_charLength, m_charLength) charcount_t GetLength() const;
-        virtual uint GetAllocatedByteCount() const;
+        virtual size_t GetAllocatedByteCount() const;
         virtual bool IsSubstring() const;
         int GetLengthAsSignedInt() const;
         const wchar_t* UnsafeGetBuffer() const;
@@ -159,7 +159,7 @@ namespace Js
         static charcount_t ConvertToIndex(Var varIndex, ScriptContext *scriptContext);
 
         template <typename T, bool copyBuffer>
-        static JavascriptString* NewWithBufferT(const wchar_t * content, size_t charLength, ScriptContext * scriptContext);
+        static JavascriptString* NewWithBufferT(const wchar_t * content, charcount_t charLength, ScriptContext * scriptContext);
 
         bool GetPropertyBuiltIns(PropertyId propertyId, Var* value);
         static const char stringToIntegerMap[128];
@@ -182,12 +182,12 @@ namespace Js
 
     public:
         static JavascriptString* NewWithSz(__in_z const wchar_t * content, ScriptContext* scriptContext);
-        static JavascriptString* NewWithBuffer(__in_ecount(charLength) const wchar_t * content, size_t charLength, ScriptContext * scriptContext);
+        static JavascriptString* NewWithBuffer(__in_ecount(charLength) const wchar_t * content, charcount_t charLength, ScriptContext * scriptContext);
         static JavascriptString* NewCopySz(__in_z const wchar_t* content, ScriptContext* scriptContext);
-        static JavascriptString* NewCopyBuffer(__in_ecount(charLength)  const wchar_t* content, size_t charLength, ScriptContext* scriptContext);
+        static JavascriptString* NewCopyBuffer(__in_ecount(charLength)  const wchar_t* content, charcount_t charLength, ScriptContext* scriptContext);
 
         static JavascriptString* NewWithArenaSz(__in_z const wchar_t * content, ScriptContext* scriptContext);
-        static JavascriptString* NewWithArenaBuffer(__in_ecount(charLength) const wchar_t * content, size_t charLength, ScriptContext * scriptContext);
+        static JavascriptString* NewWithArenaBuffer(__in_ecount(charLength) const wchar_t * content, charcount_t charLength, ScriptContext * scriptContext);
 
         static JavascriptString* NewCopySzFromArena(__in_z const wchar_t* content, ScriptContext* scriptContext, ArenaAllocator *arena);
 

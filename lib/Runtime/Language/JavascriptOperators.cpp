@@ -4388,7 +4388,10 @@ CommonNumber:
 
         TypeId instanceType = JavascriptOperators::GetTypeId(srcInstance);
 
-        Assert(instanceType == JavascriptOperators::GetTypeId(dstInstance));
+        if (instanceType != JavascriptOperators::GetTypeId(dstInstance))
+        {
+            return false;
+        }
 
         BOOL  returnValue = false;
         switch (instanceType)

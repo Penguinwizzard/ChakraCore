@@ -258,22 +258,33 @@ namespace Js
             TypeName* dstBuffer = (TypeName*)buffer;
             TypeName* srcBuffer = (TypeName*)fromArray->buffer;
             Assert(srcBuffer && dstBuffer);
+            Assert(length <= ArrayBuffer::MaxArrayBufferLength / sizeof(TypeName));
+
+            if (this->IsDetachedBuffer() || fromArray->IsDetachedBuffer())
+            {
+                JavascriptError::ThrowTypeError(GetScriptContext(), JSERR_DetachedTypedArray);
+            }
 
             // Fixup destination start in case it's negative
             uint32 dstStart = iDstStart;
             if (iDstStart < 0)
             {
-                if ((uint32)-iDstStart >= length)
+                if ((int64)(length) + iDstStart < 0)
                 {
                     // nothing to do, all index are no-op
                     return true;
                 }
+
                 // negative index are no-op on TypedArrays
-                iSrcStart -= iDstStart;
+                if (Int32Math::Sub(iSrcStart, iDstStart, &iSrcStart))
+                {
+                    ::Math::DefaultOverflowPolicy();
+                }
                 length += iDstStart;
                 dstStart = 0;
             }
-            uint32 dstLength = (dstStart + length) < GetLength() ? length : GetLength() > dstStart ? GetLength() - dstStart : 0;
+
+            uint32 dstLength = UInt32Math::Add(dstStart, length) < GetLength() ? length : GetLength() > dstStart ? GetLength() - dstStart : 0;
 
             // Fixup source start in case it's negative
             uint32 srcStart = iSrcStart;
@@ -286,7 +297,7 @@ namespace Js
                     dstBuffer[dstStart++] = undefinedValue;
                     --dstLength;
                 }
-                if ((uint32)-iSrcStart >= length)
+                if ((int64)(length) + iSrcStart < 0)
                 {
                     // all read operation we're undefined, no need to continue
                     return true;
@@ -294,7 +305,7 @@ namespace Js
                 length -= iSrcStart;
                 srcStart = 0;
             }
-            uint32 srcLength = (srcStart + length) < fromArray->GetLength() ? length : (fromArray->GetLength() > srcStart ? fromArray->GetLength() - srcStart : 0);
+            uint32 srcLength = UInt32Math::Add(srcStart, length) < fromArray->GetLength() ? length : (fromArray->GetLength() > srcStart ? fromArray->GetLength() - srcStart : 0);
 
             // length is the minimum of length, srcLength and dstLength
             length = length < srcLength ? (length < dstLength ? length : dstLength) : (srcLength < dstLength ? srcLength : dstLength);
@@ -331,11 +342,16 @@ namespace Js
 
             if (start < 0)
             {
+                if ((int64)(length) + start < 0)
+                {
+                    // nothing to do, all index are no-op
+                    return true;
+                }
                 newStart = 0;
                 // fixup the length with the change
                 newLength += start;
             }
-            if (newStart + newLength > GetLength())
+            if (UInt32Math::Add(newStart, newLength) > GetLength())
             {
                 newLength = GetLength() - newStart;
             }
