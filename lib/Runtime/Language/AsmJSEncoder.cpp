@@ -220,12 +220,14 @@ namespace Js
             functionBody->GetScriptContext()->GetThreadContext()->SetValidCallTargetForCFG(buffer);
 
             // TODO: improve this once EntryPoint cleanup work is complete!
+#if 0
+            const wchar_t *const functionName = functionBody->GetDisplayName();
             const wchar_t *const suffix = L"TJ";
             wchar_t functionNameArray[256];
-            const wchar_t *const functionName = functionBody->GetDisplayName();
             const size_t functionNameCharLength = functionBody->GetDisplayNameLength();
             wcscpy_s(functionNameArray, 256, functionName);
             wcscpy_s(&functionNameArray[functionNameCharLength], 256 - functionNameCharLength, suffix);
+#endif
             JS_ETW(EventWriteMethodLoad(functionBody->GetScriptContext(),
                 (void *)buffer,
                 codeSize,
@@ -235,7 +237,7 @@ namespace Js
                 EtwTrace::GetSourceId(functionBody),
                 functionBody->GetLineNumber(),
                 functionBody->GetColumnNumber(),
-                functionNameArray));
+                functionBody->GetDisplayName()));
             entryPointInfo->SetTJCodeGenDone(); // set the codegen to done state for TJ
             entryPointInfo->SetCodeSize(codeSize);
             return buffer;
