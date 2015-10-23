@@ -43,9 +43,5 @@ var count = 0;
 for (var i=0; i<objs.length ; i++) {
     for (var j=0; j<objs.length; j++) {
         check(objs[i] + " instanceof " + objs[j]);
-        /* TODO: Enable this test later once flags stuff is sorted out
-        check("Array.prototype.join.prototype = " + objs[j] + "; count++;");
-        check(objs[i] + " instanceof Array.prototype.join");
-        */
     }
 }

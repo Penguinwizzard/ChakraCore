@@ -4,15 +4,6 @@
 //-------------------------------------------------------------------------------------------------------
 
 
-//Configuration: ..\simpleassignments.xml
-//Testcase Number: 44543
-//Bailout Testing: ON
-//Switches:  -maxinterpretcount:3  
-//Branch:  fbl_ie_script
-//Build: 130130-2000
-//Arch: AMD64
-//MachineName: BPT22730
-
 function FAILED()
 {
     WScript.Echo("FAILED");

@@ -385,7 +385,7 @@ function toString(o, quoteStrings) {
         for (var i = 0; i < o.length; ++i) {
             if (i)
                 s += ", ";
-            // TODO: file bug - shouldn't need 'this.'; IE, but not JC, is going to some other toString function
+
             s += this.toString(o[i], true);
         }
         return s + "]";
@@ -398,7 +398,6 @@ function toString(o, quoteStrings) {
 }
 
 function echo(o) {
-    // TODO: file bug - shouldn't need 'this.'; IE, but not JC, is going to some other toString function
     var s = this.toString(o);
     try {
         document.write(s + "<br/>");
