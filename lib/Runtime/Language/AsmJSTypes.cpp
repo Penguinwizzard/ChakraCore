@@ -678,7 +678,6 @@ namespace Js
         }
 #else
         Assert(UNREACHED);
-        return 0;
 #endif
         if (argSize >= (1 << 16))
         {
