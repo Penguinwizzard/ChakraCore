@@ -752,6 +752,13 @@ namespace Js
         Assert(args.Info.Flags & CallFlags_New);
         Assert(scriptContext);
 
+        // newCount is ushort. If args count is greater than or equal to 65535, an integer 
+        // overflow will occur when newCount is incremented.
+        if (args.Info.Count >= 65535)
+        {
+            JavascriptError::ThrowRangeError(scriptContext, JSERR_ArgListTooLarge);
+        }
+
         // Create the empty object if necessary:
         // - Built-in constructor functions will return a new object of a specific type, so a new empty object does not need to
         //   be created
@@ -773,6 +780,7 @@ namespace Js
 
         Var* newValues = args.Values;
         CallFlags newFlags = args.Info.Flags;
+
         ushort newCount = args.Info.Count;
         bool thisAlreadySpecified = false;
 
