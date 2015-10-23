@@ -161,7 +161,6 @@ SmallHeapBlockAllocator<TBlockType>::PageHeapAlloc(Recycler * recycler, size_t s
         this->freeObjectList = (FreeObject*) this->endAddress;
 
 #ifdef RECYCLER_TRACK_NATIVE_ALLOCATED_OBJECTS
-        // HACK- figure out a better way here?
         this->lastNonNativeBumpAllocatedBlock = (char*) this->freeObjectList - sizeCat;
 #endif
 

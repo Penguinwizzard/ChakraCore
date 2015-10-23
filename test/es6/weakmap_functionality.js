@@ -16,7 +16,6 @@ var tests = [
         body: function () {
             // WeakMap is no longer allowed to be called as a function unless the object it is given
             // for its this argument already has the [[WeakMapData]] property on it.
-            // TODO: When we implement @@create support, update this test to reflect it.
             //
             // For IE11 we simply throw if WeakMap() is called as a function instead of in a new expression
             assert.throws(function () { WeakMap.call(undefined); }, TypeError, "WeakMap.call() throws TypeError given undefined");
@@ -46,7 +45,6 @@ var tests = [
 
             // WeakMap is no longer allowed to be called as a function unless the object it is given
             // for its this argument already has the [[WeakMapData]] property on it.
-            // TODO: When we implement @@create support, update this test to reflect it.
             /*
             var obj = {};
             WeakMap.call(obj);

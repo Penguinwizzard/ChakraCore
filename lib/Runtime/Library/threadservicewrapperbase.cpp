@@ -125,13 +125,7 @@ bool ThreadServiceWrapperBase::IdleCollect()
         // See if we pass the time for the next scheduled Idle GC
         if (timeDiff > 0)
         {
-            // IDLEGC-TODO:  since we might have activated another GC outside of script,
-            // We should recheck the GC heuristic to make sure we will still activate a GC
-            // when we do activate the idle GC and kill the timer if not.
-
             // Not time yet, wait for the next heart beat
-            // IDLEGC-CONSIDER: may be we want to schedule it to call on when we want the idle GC (timeDiff)
-            // instead of a heart beat using full timeout amount?
             ScheduleIdleCollect(IdleTicks, false /* not schedule as task */);
 
             IDLE_COLLECT_TRACE(L"Idle callback: nop until next collection: %d\n", timeDiff);

@@ -7,7 +7,7 @@ namespace Memory
     /*
     * Telemetry timestamp macros
     *
-    * To record a particular timestamp, use RECORD_TIMESTAMP. This overwrite the previous timestamp.
+    * To record a particular timestamp, use RECORD_TIMESTAMP. This overwrites the previous timestamp.
     * To have auto-start/end events logged, use the AUTO_TIMESTAMP macro.
     */
     class AutoTimestamp

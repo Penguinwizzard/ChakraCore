@@ -1404,8 +1404,6 @@ ThreadContext::IsStackAvailable(size_t size)
     Assert(((uintptr_t)sp & (AutoSystemInfo::StackAlign - 1)) == (sizeof(void*) & (AutoSystemInfo::StackAlign - 1)));
 
 #if DBG
-    // TODO: make this work for JITted code.
-    // Assert(sp > knownStackLimit);
     this->GetStackProber()->AdjustKnownStackLimit(sp, size);
 #endif
 
@@ -3991,7 +3989,7 @@ void ThreadContext::ReportAndCheckLeaksOnProcessDetach()
             AUTO_LEAK_REPORT_SECTION(Js::Configuration::Global.flags, L"Thread Context (%p): Process Termination (TID: %d)", current, current->threadId);
             LeakReport::DumpUrl(current->threadId);
 
-            // HACK HACK: heuristically figure out which one is the root tracker script engine
+            // Heuristically figure out which one is the root tracker script engine
             // and force close on it
             if (current->rootTrackerScriptContext != nullptr)
             {

@@ -67,8 +67,6 @@ public:
     virtual void TryInterruptPoll(Js::ScriptContext *scriptContext) = 0;
 
     // Default: throw up QC dialog after 5M statements == 2 minutes
-    // TODO: Track leave-script events for WebOC's (only) so we can bring
-    // the timeout back to a reasonable limit.
     static const DWORD TicksToStatements = (5000000 / 120000);
 
 protected:
@@ -1357,7 +1355,7 @@ public:
     template <class Fn>
     __inline Js::Var ExecuteImplicitCall(Js::RecyclableObject * function, Js::ImplicitCallFlags flags, Fn implicitCall)
     {
-        // TODO:  For now, we will not allow Function that is marked as HasNoSideEffect to be called, and we will just bailout.
+        // For now, we will not allow Function that is marked as HasNoSideEffect to be called, and we will just bailout.
         // These function may still throw exceptions, so we will need to add checks with RecordImplicitException
         // so that we don't throw exception when disableImplicitCall is set before we allow these function to be called
         // as an optimization.  (These functions are valueOf and toString calls for built-in non primitive types)
@@ -1574,8 +1572,6 @@ public:
     static void ReportAndCheckLeaksOnProcessDetach();
 #endif
 #ifdef LEAK_REPORT
-    // HACK HACK: heuristically figure out which one is the root tracker script engine
-    // and force close on it
     void SetRootTrackerScriptContext(Js::ScriptContext * scriptContext);
     void ClearRootTrackerScriptContext(Js::ScriptContext * scriptContext);
 

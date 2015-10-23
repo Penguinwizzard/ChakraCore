@@ -118,8 +118,6 @@ X64WriteBarrierCardTableManager::OnSegmentAlloc(_In_ char* segmentAddress, size_
 
     // Section Start is the card table's starting entry aligned *down* to the page boundary
     // Section End is the card table's ending entry aligned *up* to the page boundary
-    //
-    // REVIEW: MSDN says that VirtualAlloc does some of this same math- worth just passing in unaligned memory?
     BYTE* sectionStart = (BYTE*) (((uintptr_t) &_cardTable[startIndex]) & ~(pageSize - 1));
     BYTE* sectionEnd   = (BYTE*) Math::Align<uintptr_t>((uintptr_t)&_cardTable[endIndex], pageSize);
     size_t commitSize  = (sectionEnd - sectionStart);
@@ -151,7 +149,6 @@ X64WriteBarrierCardTableManager::OnSegmentAlloc(_In_ char* segmentAddress, size_
     try
     {
 #ifdef EXCEPTION_CHECK
-        // REVIEW: Do we need a stack probe here? We don't care about OOM's since we deal with that below
         AUTO_NESTED_HANDLED_EXCEPTION_TYPE(ExceptionType_DisableCheck);
 #endif
 
@@ -188,10 +185,6 @@ bool
 X64WriteBarrierCardTableManager::OnSegmentFree(_In_ char* segmentAddress, size_t numPages)
 {
     Assert(_cardTable);
-
-    // TODO: Need to figure out how to decommit the cardtable space if all the pages represented
-    // by the card table section is decommited.
-    // For now, not decommitting since the cost is pretty small (4GB of JS memory would cost us 1MB)
     return true;
 }
 
@@ -334,9 +327,6 @@ RecyclerWriteBarrierManager::GetCardTableIndex(void *address)
 void
 RecyclerWriteBarrierManager::ResetWriteBarrier(void * address, size_t pageCount)
 {
-    // WriteBarrier-TODO: This method works only when the card table granularity is equal to the page size or in the bitarray case, each bit represents 128 bytes
-    // Need to make this more generic for arbitrary card table granularity
-
     uintptr_t cardIndex = GetCardTableIndex(address);
     if (pageCount == 1)
     {

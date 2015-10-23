@@ -38,7 +38,7 @@ var tests = [
       assert.throws(function () { eval("x = 3 => x"); },                                    SyntaxError, "Lambda formals without parentheses cannot have default expressions", "Expected \'(\'");
       assert.throws(function () { eval("var a = 0, b = 0; (x = ++a,++b) => x"); },          SyntaxError, "Default expressions cannot have comma separated expressions",        "Expected identifier");
 
-      // OS 263626: Checking strict formal parameters with defaults should not throw
+      // Bug 263626: Checking strict formal parameters with defaults should not throw
       function foostrict1(a = 1, b) { "use strict"; }
       function foostrict2(a, b = 1) { "use strict"; }
     }

@@ -91,7 +91,6 @@ void ThreadBoundThreadContextManager::DestroyAllContexts()
             }
             catch (Js::OutOfMemoryException)
             {
-                // OK, there's not much we can do, then...
                 return;
             }
         }

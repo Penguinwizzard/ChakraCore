@@ -477,7 +477,6 @@ bool WScriptJsrt::PrintException(LPCWSTR fileName, JsErrorCode jsErrorCode)
                 IfJsrtErrorFail(ChakraRTInterface::JsStringToPointer(stackProperty, &errorStack, &errorStackLength), false);
 
                 fwprintf(stderr, L"%ls\n", errorStack);
-                // TODO : we need to extract the stack and print it.
             }
         }
         else

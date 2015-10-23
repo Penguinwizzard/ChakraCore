@@ -988,9 +988,9 @@ var tests = [
 
 testRunner.runTests(tests);
 
-// BLUE 516429 at global scope
+// Bug 516429 at global scope
 class a {};
 a = null; // No error
 
-// OS 257621 at global scope
+// Bug 257621 at global scope
 assert.doesNotThrow(function () { eval('new (class {})();'); }, "Parenthesized class expressions can be new'd");

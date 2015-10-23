@@ -170,8 +170,6 @@ SmallFinalizableHeapBucketBaseT<TBlockType>::TransferDisposedObjects()
     {
         this->pendingDisposeList = nullptr;
 
-        /* GC-TODO: we don't allocate on pending disposed blocks during concurrent sweep or disable dispose
-                 is there a reason why not? */
         HeapBlockList::ForEach(currentPendingDisposeList, [=](TBlockType * heapBlock)
         {
             heapBlock->TransferDisposedObjects();

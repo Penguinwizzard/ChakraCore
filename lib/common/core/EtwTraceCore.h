@@ -39,7 +39,7 @@ public:
 CompileAssert(false)
 #endif
 
-// Declaring this macro enables the registration of the callback on DLL attach. See InetCore\inc\IERESP_mshtml.h for more details.
+// Declaring this macro enables the registration of the callback on DLL attach
 #define MCGEN_PRIVATE_ENABLE_CALLBACK_V2(SourceId, ControlCode, Level, MatchAnyKeyword, MatchAllKeyword, FilterData, CallbackContext) \
        EtwCallback(ControlCode, CallbackContext)
 

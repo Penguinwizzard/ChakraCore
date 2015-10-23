@@ -190,7 +190,6 @@ void Scanner<EncodingPolicy>::SetText(EncodedCharPtr pszSrc, size_t offset, size
         {
         case 0xFFEE:    // "Opposite" endian BOM
             // We do not support big-endian encodings
-            // TODO: Previous behavior is to absorb the BOM and ignore its meaning. Consider throwing an exception.
             // fall-through
 
         case 0xFEFF:    // "Correct" BOM
@@ -715,8 +714,7 @@ LDefaultFScanNumber :
             Assert(pchT > p);
 
 #if !SOURCERELEASE
-            // The ECMA committee in its wisdom has decided that if an octal literal
-            // is malformed then it is in fact a decimal literal.
+            // If an octal literal is malformed then it is in fact a decimal literal.
 #endif // !SOURCERELEASE
             if(*pdbl != 0 || pchT > p + 1)
                 m_OctOrLeadingZeroOnLastTKNumber = true; //report as an octal or hex for JSON when leading 0. Just '0' is ok
@@ -816,8 +814,7 @@ LDefaultoFScanNumber :
 
 
 #if !SOURCERELEASE
-            // The ECMA committee in its wisdom has decided that if an octal literal
-            // is malformed then it is in fact a decimal literal.
+            // If an octal literal is malformed then it is in fact a decimal literal.
 #endif // !SOURCERELEASE
             if(*pdbl != 0 || pchT > m_currentCharacter + 1)
                 m_OctOrLeadingZeroOnLastTKNumber = true; //report as an octal or hex for JSON when leading 0. Just '0' is ok
@@ -2149,7 +2146,7 @@ LIdentifier:
                             if (nextNextCharType == _C_NWL
                                 // Corner case: If we have reached the end of the source, either we are at the end of the file or the end of
                                 // a deferred function. We treat this case as NWL.
-                                // TODO(tcare): Update to ES6 spec. Tracked in DEVDIV2: 1164686
+                                // TODO(tcare): Update to ES6 spec. Tracked in Bug 1164686
                                 || (last == m_pchLast && nextNextCharType == _C_NUL))
                             {
                                 //Treat the -----------------------------> }NWL as if it were }NWL
@@ -2328,7 +2325,7 @@ LMultiLineComment:
             case '!':
                 if (m_fHtmlComments && PeekFirst(p + 1, last) == '-' && PeekFirst(p + 2, last) == '-')
                 {
-                    // This is a hacky "<!--" comment - treat as //
+                    // This is a "<!--" comment - treat as //
                     if (p >= last)
                     {
                         // Effective source length may have excluded HTMLCommentSuffix "<!-- ... -->". If we are scanning
@@ -2547,7 +2544,6 @@ HRESULT Scanner<EncodingPolicy>::SysAllocErrorLine(long ichMinLine, __out BSTR* 
     EncodedCharPtr pEnd = AdjustedLast();
 
     // Determine the length by scanning for the next newline
-    // TODO: this will cut off any characters beyond the first \0 character:
     charcount_t cch = LineLength(pStart, pEnd);
     Assert(cch <= LONG_MAX);
 

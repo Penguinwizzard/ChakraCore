@@ -62,9 +62,6 @@ public:
 
     __inline T* Get() const
     {
-        // Don't resolve weak references if the recycler is exiting
-        // Disabling the assert for now, because we can't get the ThreadContext on the JIT thread.
-        //Assert(!ThreadContext::GetContextForCurrentThread()->GetRecycler()->IsExiting());
         char * ref = this->strongRef;
         return (T*)ref;
     }
@@ -349,7 +346,6 @@ private:
         entry->strongRefHeapBlock = recycler->FindHeapBlock(strongReference);
         Assert(entry->strongRefHeapBlock != nullptr);
 
-        // CONSIDER: getting the heap block during the allocation?
         HeapBlock * weakRefHeapBlock = recycler->FindHeapBlock(entry);
         Assert(!weakRefHeapBlock->IsLargeHeapBlock());
         entry->weakRefHeapBlock = (SmallHeapBlock *)weakRefHeapBlock;

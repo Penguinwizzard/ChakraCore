@@ -318,7 +318,6 @@ namespace Js
         ///----------------------------------------------------------------------------
         ///----------------------------------------------------------------------------
 
-        // TODO: Get rid of this struct as soon as bit vector is available.
         struct UnitPhase
         {
 
@@ -440,7 +439,6 @@ namespace Js
 
         #include "ConfigFlagsList.h"
 
-        // TODO: replace with bitvector
                 bool            flagPresent[FlagCount];
 
     private:
