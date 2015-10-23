@@ -5,6 +5,9 @@ passed
 ******* Float32x4 check *******
 passed
 
+******* Float32x4 operators *******
+passed
+
 ******* Float32x4 replaceLane *******
 passed
 
@@ -83,7 +86,43 @@ passed
 ******* Float32x4 abs *******
 passed
 
+******* Float32x4 minNum *******
+passed
+
+******* Float32x4 maxNum *******
+passed
+
 ******* Float32x4 sqrt *******
+passed
+
+******* Float32x4 reciprocalApproximation *******
+passed
+
+******* Float32x4 reciprocalSqrtApproximation *******
+passed
+
+******* Float32x4 fromInt32x4 *******
+passed
+
+******* Float32x4 fromUint32x4 *******
+passed
+
+******* Float32x4 fromInt32x4Bits *******
+passed
+
+******* Float32x4 fromInt16x8Bits *******
+passed
+
+******* Float32x4 fromInt8x16Bits *******
+passed
+
+******* Float32x4 fromUint32x4Bits *******
+passed
+
+******* Float32x4 fromUint16x8Bits *******
+passed
+
+******* Float32x4 fromUint8x16Bits *******
 passed
 
 ******* Float32x4 Int32x4 bit conversion *******

@@ -47,8 +47,8 @@ function asmModule(stdlib, imports) {
     var f4clamp = f4.clamp;
     var f4min = f4.min;
     var f4max = f4.max;
-    var f4reciprocal = f4.reciprocal;
-    var f4reciprocalSqrt = f4.reciprocalSqrt;
+
+
     var f4sqrt = f4.sqrt;
     var f4swizzle = f4.swizzle;
     var f4shuffle = f4.shuffle;

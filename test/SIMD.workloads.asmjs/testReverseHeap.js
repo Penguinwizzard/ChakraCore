@@ -6,8 +6,8 @@
 function asmModule(stdlib, imports, buffer) {
     "use asm";
     
-	var i4 = stdlib.SIMD.Int32x4;
-	var i4check = i4.check;
+    var i4 = stdlib.SIMD.Int32x4;
+    var i4check = i4.check;
     var i4splat = i4.splat;
     var i4fromFloat64x2 = i4.fromFloat64x2;
     var i4fromFloat64x2Bits = i4.fromFloat64x2Bits;
@@ -57,8 +57,7 @@ function asmModule(stdlib, imports, buffer) {
     var f4clamp = f4.clamp;
     var f4min = f4.min;
     var f4max = f4.max;
-    var f4reciprocal = f4.reciprocal;
-    var f4reciprocalSqrt = f4.reciprocalSqrt;
+    
     var f4sqrt = f4.sqrt;
     var f4swizzle = f4.swizzle;
     var f4shuffle = f4.shuffle;
@@ -102,8 +101,7 @@ function asmModule(stdlib, imports, buffer) {
     var d2clamp = d2.clamp;
     var d2min = d2.min;
     var d2max = d2.max;
-    var d2reciprocal = d2.reciprocal;
-    var d2reciprocalSqrt = d2.reciprocalSqrt;
+    
     var d2sqrt = d2.sqrt;
     var d2swizzle = d2.swizzle;
     var d2shuffle = d2.shuffle;
@@ -133,8 +131,8 @@ function asmModule(stdlib, imports, buffer) {
     var gval = 1234;
     var gval2 = 1234.0;
 
-	var OFFSET_1 = 10;
-	var OFFSET_2 = 15;
+    var OFFSET_1 = 10;
+    var OFFSET_2 = 15;
     
     var loopCOUNT = 10;
     
@@ -145,133 +143,133 @@ function asmModule(stdlib, imports, buffer) {
     var Uint16Heap = new stdlib.Uint16Array(buffer);
     var Int32Heap = new stdlib.Int32Array(buffer);
     var Uint32Heap = new stdlib.Uint32Array(buffer);
-    var Float32Heap = new stdlib.Float32Array(buffer);	
-	var Float64Heap = new stdlib.Float64Array(buffer);
-	
-	//Reverses heap values at start index and end index
-	function reverseI4(start, end)
-	{
-		start = start | 0;
-	    end = end | 0;
-		
-		var BLOCK_SIZE = 4;
-		var ret1 = i4(0, 0, 0, 0), ret2 = i4(0, 0, 0, 0);
-		var i = 0, temp = 0;
-		
-		while(((BLOCK_SIZE * 2)|0) <= (((end - start) - ((i * 2)|0))|0))
-		{
-			ret1 = i4swizzle(i4load(Int32Heap, (start + i) << 2 >> 2), 3, 2, 1, 0);
-			ret2 = i4swizzle(i4load(Int32Heap, (end - i - BLOCK_SIZE) << 2 >> 2), 3, 2, 1, 0);
-			
-			i4store(Int32Heap, (end - i - BLOCK_SIZE) << 2 >> 2, ret1);
-			i4store(Int32Heap, (start + i) << 2 >> 2, ret2);
-			
-			i = (i + BLOCK_SIZE)|0;
-		}
-		
-		while(1 < ((((end - start) + 0) - ((i * 2)|0))|0))
-		{
-			temp = Int32Heap[start + i << 2 >> 2] | 0;
-			Int32Heap[start + i << 2 >> 2] = Int32Heap[(end - i - 1) << 2 >> 2];
-			Int32Heap[(end - i - 1) << 2 >> 2] = temp;
-			i = (i + 1)|0;
-		}
-	}
-	//Reverses heap values at start index and end index
-	function reverseF4(start, end)
-	{
-		start = start | 0;
-	    end = end | 0;
-		
-		var BLOCK_SIZE = 4;
-		var ret1 = f4(0.0, 0.0, 0.0, 0.0), ret2 = f4(0.0, 0.0, 0.0, 0.0);
-		var i = 0, temp = 0;
-		
-		while(((BLOCK_SIZE * 2)|0) <= (((end - start) - ((i * 2)|0))|0))
-		{
-			ret1 = f4swizzle(f4load(Int32Heap, (start + i) << 2 >> 2), 3, 2, 1, 0);
-			ret2 = f4swizzle(f4load(Int32Heap, (end - i - BLOCK_SIZE) << 2 >> 2), 3, 2, 1, 0);
-			
-			f4store(Int32Heap, (end - i - BLOCK_SIZE) << 2 >> 2, ret1);
-			f4store(Int32Heap, (start + i) << 2 >> 2, ret2);
-			
-			i = (i + BLOCK_SIZE)|0;
-		}
-		
-		while(1 < ((((end - start) + 0) - ((i * 2)|0))|0))
-		{
-			temp = Int32Heap[start + i << 2 >> 2] | 0;
-			Int32Heap[start + i << 2 >> 2] = Int32Heap[(end - i - 1) << 2 >> 2];
-			Int32Heap[(end - i - 1) << 2 >> 2] = temp;
-			i = (i + 1)|0;
-		}
-	}
-	
-	//Reverses heap values at start index and end index
-	function reverseD2(start, end)
-	{
-		start = start | 0;
-	    end = end | 0;
-		
-		var BLOCK_SIZE = 4;
-		var ret1 = d2(0.0, 0.0), ret2 = d2(0.0, 0.0);
-		var start32 = 0, end32 = 0;
-		var i = 0, i64 = 0, temp = 0.0;
-		
-		start32 = (start * 2)|0;
-		end32 = (end * 2)|0;
-		while(((BLOCK_SIZE * 2)|0) <= (((end32 - start32) - ((i * 2)|0))|0))
-		{
-			ret1 = d2swizzle(d2load(Float32Heap, (start32 + i) << 2 >> 2), 1, 0);
-			ret2 = d2swizzle(d2load(Float32Heap, (end32 - i - BLOCK_SIZE) << 2 >> 2), 1, 0);
-			
-			d2store(Float32Heap, (end32 - i - BLOCK_SIZE) << 2 >> 2, ret1);
-			d2store(Float32Heap, (start32 + i) << 2 >> 2, ret2);
-			
-			i = (i + BLOCK_SIZE)|0;
-			i64 = (i64 + 2)|0;
-		}
-		
-		while(1 < ((((end - start) + 0) - ((i64 * 2)|0))|0))
-		{
-			temp = +Float64Heap[start + i64 << 3 >> 3];
-			Float64Heap[start + i64 << 3 >> 3] = Float64Heap[(end - i64 - 1) << 3 >> 3];
-			Float64Heap[(end - i64 - 1) << 3 >> 3] = temp;
-			i64 = (i64 + 1)|0;
-		}
-	}
-	
-	
-	return {reverseI4:reverseI4, reverseF4:reverseF4, reverseD2:reverseD2};
+    var Float32Heap = new stdlib.Float32Array(buffer);    
+    var Float64Heap = new stdlib.Float64Array(buffer);
+    
+    //Reverses heap values at start index and end index
+    function reverseI4(start, end)
+    {
+        start = start | 0;
+        end = end | 0;
+        
+        var BLOCK_SIZE = 4;
+        var ret1 = i4(0, 0, 0, 0), ret2 = i4(0, 0, 0, 0);
+        var i = 0, temp = 0;
+        
+        while(((BLOCK_SIZE * 2)|0) <= (((end - start) - ((i * 2)|0))|0))
+        {
+            ret1 = i4swizzle(i4load(Int32Heap, (start + i) << 2 >> 2), 3, 2, 1, 0);
+            ret2 = i4swizzle(i4load(Int32Heap, (end - i - BLOCK_SIZE) << 2 >> 2), 3, 2, 1, 0);
+            
+            i4store(Int32Heap, (end - i - BLOCK_SIZE) << 2 >> 2, ret1);
+            i4store(Int32Heap, (start + i) << 2 >> 2, ret2);
+            
+            i = (i + BLOCK_SIZE)|0;
+        }
+        
+        while(1 < ((((end - start) + 0) - ((i * 2)|0))|0))
+        {
+            temp = Int32Heap[start + i << 2 >> 2] | 0;
+            Int32Heap[start + i << 2 >> 2] = Int32Heap[(end - i - 1) << 2 >> 2];
+            Int32Heap[(end - i - 1) << 2 >> 2] = temp;
+            i = (i + 1)|0;
+        }
+    }
+    //Reverses heap values at start index and end index
+    function reverseF4(start, end)
+    {
+        start = start | 0;
+        end = end | 0;
+        
+        var BLOCK_SIZE = 4;
+        var ret1 = f4(0.0, 0.0, 0.0, 0.0), ret2 = f4(0.0, 0.0, 0.0, 0.0);
+        var i = 0, temp = 0;
+        
+        while(((BLOCK_SIZE * 2)|0) <= (((end - start) - ((i * 2)|0))|0))
+        {
+            ret1 = f4swizzle(f4load(Int32Heap, (start + i) << 2 >> 2), 3, 2, 1, 0);
+            ret2 = f4swizzle(f4load(Int32Heap, (end - i - BLOCK_SIZE) << 2 >> 2), 3, 2, 1, 0);
+            
+            f4store(Int32Heap, (end - i - BLOCK_SIZE) << 2 >> 2, ret1);
+            f4store(Int32Heap, (start + i) << 2 >> 2, ret2);
+            
+            i = (i + BLOCK_SIZE)|0;
+        }
+        
+        while(1 < ((((end - start) + 0) - ((i * 2)|0))|0))
+        {
+            temp = Int32Heap[start + i << 2 >> 2] | 0;
+            Int32Heap[start + i << 2 >> 2] = Int32Heap[(end - i - 1) << 2 >> 2];
+            Int32Heap[(end - i - 1) << 2 >> 2] = temp;
+            i = (i + 1)|0;
+        }
+    }
+    
+    //Reverses heap values at start index and end index
+    function reverseD2(start, end)
+    {
+        start = start | 0;
+        end = end | 0;
+        
+        var BLOCK_SIZE = 4;
+        var ret1 = d2(0.0, 0.0), ret2 = d2(0.0, 0.0);
+        var start32 = 0, end32 = 0;
+        var i = 0, i64 = 0, temp = 0.0;
+        
+        start32 = (start * 2)|0;
+        end32 = (end * 2)|0;
+        while(((BLOCK_SIZE * 2)|0) <= (((end32 - start32) - ((i * 2)|0))|0))
+        {
+            ret1 = d2swizzle(d2load(Float32Heap, (start32 + i) << 2 >> 2), 1, 0);
+            ret2 = d2swizzle(d2load(Float32Heap, (end32 - i - BLOCK_SIZE) << 2 >> 2), 1, 0);
+            
+            d2store(Float32Heap, (end32 - i - BLOCK_SIZE) << 2 >> 2, ret1);
+            d2store(Float32Heap, (start32 + i) << 2 >> 2, ret2);
+            
+            i = (i + BLOCK_SIZE)|0;
+            i64 = (i64 + 2)|0;
+        }
+        
+        while(1 < ((((end - start) + 0) - ((i64 * 2)|0))|0))
+        {
+            temp = +Float64Heap[start + i64 << 3 >> 3];
+            Float64Heap[start + i64 << 3 >> 3] = Float64Heap[(end - i64 - 1) << 3 >> 3];
+            Float64Heap[(end - i64 - 1) << 3 >> 3] = temp;
+            i64 = (i64 + 1)|0;
+        }
+    }
+    
+    
+    return {reverseI4:reverseI4, reverseF4:reverseF4, reverseD2:reverseD2};
 }
 
 var buffer = new ArrayBuffer(0x10000); //16mb min 2^12
 
 //Reset or flush the buffer
 function initI4(buffer) {
-	var values = new Int32Array( buffer );
-	for( var i=0; i < values.length ; ++i ) {
-		values[i] = i * 10;
-	}
-	return values.length;
+    var values = new Int32Array( buffer );
+    for( var i=0; i < values.length ; ++i ) {
+        values[i] = i * 10;
+    }
+    return values.length;
 }
 
 //Reset or flush the buffer
 function initF4(buffer) {
-	var values = new Float32Array( buffer );
-	for( var i=0; i < values.length ; ++i ) {
-		values[i] = i * 10;
-	}
-	return values.length;
+    var values = new Float32Array( buffer );
+    for( var i=0; i < values.length ; ++i ) {
+        values[i] = i * 10;
+    }
+    return values.length;
 }
 
 //Reset or flush the buffer
 function initD2(buffer) {
-	var values = new Float64Array( buffer );
-	for( var i=0; i < values.length ; ++i ) {
-		values[i] = i * 10;
-	}
-	return values.length;
+    var values = new Float64Array( buffer );
+    for( var i=0; i < values.length ; ++i ) {
+        values[i] = i * 10;
+    }
+    return values.length;
 }
 function printBufferD2(buffer, count)
 {
@@ -305,8 +303,8 @@ function printBufferF4(buffer, count)
 
 function printResults(res)
 {
-	WScript.Echo(typeof(res));
-	WScript.Echo(res.toString());
+    WScript.Echo(typeof(res));
+    WScript.Echo(res.toString());
 }
 
 //Module initialization

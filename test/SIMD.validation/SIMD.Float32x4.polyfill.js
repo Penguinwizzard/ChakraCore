@@ -26,19 +26,19 @@ var numFails = 0;
 function test(name, func) {
   
   if(name.indexOf(float32x4.name) !== 0) return;
-  if(name.indexOf('Float32x4 fromInt32x4') > -1) return; //range error bug
+  //if(name.indexOf('Float32x4 fromInt32x4') > -1) return; //range error bug
   if(name.indexOf('Float32x4 value semantics') > -1) return; //value semantics bug
-  if(name.indexOf('Float32x4 operators') > -1) return; //unsupported function: toLocalString
-  if(name.indexOf('Float32x4 fromUint8x16Bits') > -1) return; //unsupported function
-  if(name.indexOf('Float32x4 fromUint16x8Bits') > -1) return; //unsupported function
-  if(name.indexOf('Float32x4 fromUint32x4Bits') > -1) return; //unsupported function
-  if(name.indexOf('Float32x4 fromInt8x16Bit') > -1) return; //unsupported function
-  if(name.indexOf('Float32x4 fromInt16x8Bits') > -1) return; //unsupported function
-  if(name.indexOf('Float32x4 fromUint32x4') > -1) return; //unsupported function
-  if(name.indexOf('Float32x4 reciprocalSqrtApproximation') > -1) return; //unsupported function
-  if(name.indexOf('Float32x4 reciprocalApproximation') > -1) return; //unsupported function
-  if(name.indexOf('Float32x4 minNum') > -1) return; //unsupported function
-  if(name.indexOf('Float32x4 maxNum') > -1) return; //unsupported function
+  
+  //if(name.indexOf('Float32x4 fromUint32x4Bits') > -1) return; //unsupported function
+  //if(name.indexOf('Float32x4 fromInt8x16Bit') > -1) return; //unsupported function
+  //if(name.indexOf('Float32x4 fromInt16x8Bits') > -1) return; //unsupported function
+  //if(name.indexOf('Float32x4 fromUint32x4') > -1) return; //unsupported function
+  
+  //if(name.indexOf('Float32x4 reciprocalApproximation') > -1) return; //unsupported function
+  
+  // Enable the following when fabs() fix is pushed. They both fail because of current Math.abs implementation with fabs().
+  //if(name.indexOf('Float32x4 abs') > -1) return; 
+  //if(name.indexOf('Float32x4 reciprocalSqrtApproximation') > -1) return; //unsupported function
   
   
   if (skipValueTests && name.indexOf("value semantics") != -1) return;
@@ -48,13 +48,12 @@ function test(name, func) {
   try {
     func();
     WScript.Echo('passed')
-	
   } catch (e) {
-	if (e.stack)
+    if (e.stack)
       WScript.Echo(e.stack + '\n');
-	else
-	  WScript.Echo(e.toString() + '\n')
-	
+    else
+      WScript.Echo(e.toString() + '\n')
+    
     numFails++;
   }
 }

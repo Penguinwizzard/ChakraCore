@@ -1,7 +1,7 @@
 Successfully compiled asm.js code
 float32x4
-Float32x4(100.0,100.0,100.0,100.0)
+SIMD.Float32x4(100, 100, 100, 100)
 float32x4
-Float32x4(14851.0,14851.0,14851.0,14851.0)
+SIMD.Float32x4(14851, 14851, 14851, 14851)
 float32x4
-Float32x4(1234.0,1234.0,1234.0,1234.0)
+SIMD.Float32x4(1234, 1234, 1234, 1234)

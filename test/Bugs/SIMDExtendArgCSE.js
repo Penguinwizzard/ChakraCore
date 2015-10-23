@@ -43,8 +43,7 @@ function asmModule(stdlib, imports) {
     var f4clamp = f4.clamp;
     var f4min = f4.min;
     var f4max = f4.max;
-    var f4reciprocal = f4.reciprocal;
-    var f4reciprocalSqrt = f4.reciprocalSqrt;
+    
     var f4sqrt = f4.sqrt;
     
     var f4lessThan = f4.lessThan;
@@ -75,8 +74,7 @@ function asmModule(stdlib, imports) {
     var d2clamp = d2.clamp;
     var d2min = d2.min;
     var d2max = d2.max;
-    var d2reciprocal = d2.reciprocal;
-    var d2reciprocalSqrt = d2.reciprocalSqrt;
+    
     var d2sqrt = d2.sqrt;
     //var d2swizzle = d2.swizzle;
     //var d2shuffle = d2.shuffle;
@@ -96,71 +94,71 @@ function asmModule(stdlib, imports) {
     var g1 = f4(1.0,2.0,3.0, -0.0);          // global var initialized
     var g2 = f4(-5.3, -0.0,7.332,8.0);          // global var initialized
     var g3 = i4(1,2,3,4);          // global var initialized
-	var g4 = i4(5,6,7,8);          // global var initialized
-	var g5 = d2(1.0,2.0);          // global var initialized
-	var g6 = d2(3.0,4.0);          // global var initialized
+    var g4 = i4(5,6,7,8);          // global var initialized
+    var g5 = d2(1.0,2.0);          // global var initialized
+    var g6 = d2(3.0,4.0);          // global var initialized
     var gval = 1234;
     var gval2 = 1234.0;
 
     var f4splat = f4.splat;
-	
-	var sqrt = stdlib.Math.sqrt;
-	var pow = stdlib.Math.pow;
-	
+    
+    var sqrt = stdlib.Math.sqrt;
+    var pow = stdlib.Math.pow;
+    
     var loopCOUNT = 3;
 
-	function test1()
+    function test1()
     {
         var val1 = f4(1.0,2.0,3.0,4.0);
-		var val2 = f4(5.0,6.0,7.0,8.0);
-		var val3 = f4(0.0,0.0,0.0,0.0);
-		var val4 = f4(0.0,0.0,0.0,0.0);
-		var x=fround(1.0)
-		var y=fround(2.0);
-        var loopIndex = 0;		
-		
-		val3 = f4add(val1, val2);
-		val4 = f4mul(val1, val2);
+        var val2 = f4(5.0,6.0,7.0,8.0);
+        var val3 = f4(0.0,0.0,0.0,0.0);
+        var val4 = f4(0.0,0.0,0.0,0.0);
+        var x=fround(1.0)
+        var y=fround(2.0);
+        var loopIndex = 0;        
+        
+        val3 = f4add(val1, val2);
+        val4 = f4mul(val1, val2);
 
         while ( (loopIndex|0) < (loopCOUNT|0)) {
-			
+            
             val1 = f4(fround(x), fround(y), 3.0, 4.0 );
-			val2 = f4(fround(x), fround(y), 5.0, 6.0 );
-			
-			
+            val2 = f4(fround(x), fround(y), 5.0, 6.0 );
+            
+            
             loopIndex = (loopIndex + 1) | 0;
         }
-		
         
-		return f4check(val2);
+        
+        return f4check(val2);
     }
     
-	
-	function test2()
+    
+    function test2()
     {
         var val1 = f4(1.0,2.0,3.0,4.0);
-		var val2 = f4(5.0,6.0,7.0,8.0);
-		var val3 = f4(0.0,0.0,0.0,0.0);
-		var val4 = f4(0.0,0.0,0.0,0.0);
-		var x=fround(1.0)
-		var y=fround(2.0);
-		var z=fround(3.0);
-        var loopIndex = 0;		
-		
-		val3 = f4add(val1, val2);
-		val4 = f4mul(val1, val2);
+        var val2 = f4(5.0,6.0,7.0,8.0);
+        var val3 = f4(0.0,0.0,0.0,0.0);
+        var val4 = f4(0.0,0.0,0.0,0.0);
+        var x=fround(1.0)
+        var y=fround(2.0);
+        var z=fround(3.0);
+        var loopIndex = 0;        
+        
+        val3 = f4add(val1, val2);
+        val4 = f4mul(val1, val2);
 
         while ( (loopIndex|0) < (loopCOUNT|0)) {
-			
+            
             val1 = f4(fround(x), fround(y), z, 4.0 );
-			val2 = f4(fround(x), fround(y), z, 6.0 );
-			
-			
+            val2 = f4(fround(x), fround(y), z, 6.0 );
+            
+            
             loopIndex = (loopIndex + 1) | 0;
         }
-		
         
-		return f4check(val2);
+        
+        return f4check(val2);
     }
     
     return {func1:test1, func2:test2};

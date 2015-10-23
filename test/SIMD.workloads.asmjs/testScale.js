@@ -8,8 +8,8 @@ this.WScript.LoadScriptFile("..\\UnitTestFramework\\SimdJsHelpers.js");
 function asmModule(stdlib, imports, buffer) {
     "use asm";
     
-	var i4 = stdlib.SIMD.Int32x4;
-	var i4check = i4.check;
+    var i4 = stdlib.SIMD.Int32x4;
+    var i4check = i4.check;
     var i4splat = i4.splat;
     var i4fromFloat64x2 = i4.fromFloat64x2;
     var i4fromFloat64x2Bits = i4.fromFloat64x2Bits;
@@ -59,8 +59,7 @@ function asmModule(stdlib, imports, buffer) {
     var f4clamp = f4.clamp;
     var f4min = f4.min;
     var f4max = f4.max;
-    var f4reciprocal = f4.reciprocal;
-    var f4reciprocalSqrt = f4.reciprocalSqrt;
+    
     var f4sqrt = f4.sqrt;
     var f4swizzle = f4.swizzle;
     var f4shuffle = f4.shuffle;
@@ -104,8 +103,7 @@ function asmModule(stdlib, imports, buffer) {
     var d2clamp = d2.clamp;
     var d2min = d2.min;
     var d2max = d2.max;
-    var d2reciprocal = d2.reciprocal;
-    var d2reciprocalSqrt = d2.reciprocalSqrt;
+    
     var d2sqrt = d2.sqrt;
     var d2swizzle = d2.swizzle;
     var d2shuffle = d2.shuffle;
@@ -135,8 +133,8 @@ function asmModule(stdlib, imports, buffer) {
     var gval = 1234;
     var gval2 = 1234.0;
 
-	var OFFSET_1 = 10;
-	var OFFSET_2 = 15;
+    var OFFSET_1 = 10;
+    var OFFSET_2 = 15;
     
     var loopCOUNT = 10;
     
@@ -147,78 +145,78 @@ function asmModule(stdlib, imports, buffer) {
     var Uint16Heap = new stdlib.Uint16Array(buffer);
     var Int32Heap = new stdlib.Int32Array(buffer);
     var Uint32Heap = new stdlib.Uint32Array(buffer);
-    var Float32Heap = new stdlib.Float32Array(buffer);	
+    var Float32Heap = new stdlib.Float32Array(buffer);    
 
 
-	function nestedLoadStoreUint8(idx)
-	{
-		 idx = idx|0;
-		 idx = idx<<0;
-		 f4store(Uint8Heap, (idx + 5)|0, f4(9.0,8.0,10.1, -22.121));
-		 //return f4load(Uint8Heap, (idx + 5)|0);
-		 f4store(Uint8Heap, (idx + 0)|0, f4load(Uint8Heap, (idx + 5)|0));
-		 return f4load(Uint8Heap, (idx + 0)|0);
-	}
+    function nestedLoadStoreUint8(idx)
+    {
+         idx = idx|0;
+         idx = idx<<0;
+         f4store(Uint8Heap, (idx + 5)|0, f4(9.0,8.0,10.1, -22.121));
+         //return f4load(Uint8Heap, (idx + 5)|0);
+         f4store(Uint8Heap, (idx + 0)|0, f4load(Uint8Heap, (idx + 5)|0));
+         return f4load(Uint8Heap, (idx + 0)|0);
+    }
 
-	function scale(fromIdx, toIdx)
-	{
-	    fromIdx = fromIdx | 0;
-	    toIdx = toIdx | 0;
-	    var i = 0;
-	    var xx = f4(0.0, 0.0, 0.0, 0.0);
-
-        //No bound check to enable negative tests.  
-		 for (i = fromIdx; (i|0) < (toIdx|0); i = (i + 16) | 0)
-		 {
-		     xx = f4load(Int8Heap, i | 0);
-		     xx = f4mul(xx, f4(2.0, 2.0, 2.0, 2.0));
-		     
-		     f4store(Int8Heap, toIdx, xx);
-		     f4store(Int8Heap, (i + 0) | 0, f4load(Int8Heap, (toIdx + 0) | 0));
-		     //f4store(Int8Heap, (i) | 0, f4load(Int8Heap, (toIdx) | 0));
-		 }
-	}
-	function scale2(fromIdx, toIdx)
-	{
-	    fromIdx = fromIdx | 0;
-	    toIdx = toIdx | 0;
-	    var i = 0;
-	    var xx = i4(0, 0, 0, 0);
+    function scale(fromIdx, toIdx)
+    {
+        fromIdx = fromIdx | 0;
+        toIdx = toIdx | 0;
+        var i = 0;
+        var xx = f4(0.0, 0.0, 0.0, 0.0);
 
         //No bound check to enable negative tests.  
-		 for (i = fromIdx;(i|0) < (toIdx|0); i = (i + 16) | 0)
-		 {
-		     xx = i4load(Int8Heap, i | 0);
-		     xx = i4mul(xx, i4(2, 2, 2, 2));
-		     
-		     i4store(Int8Heap, toIdx, xx);
-		     i4store(Int8Heap, (i + 0) | 0, i4load(Int8Heap, (toIdx + 0) | 0));
-		     //f4store(Int8Heap, (i) | 0, f4load(Int8Heap, (toIdx) | 0));
-		 }
-	}
-	function scale3(fromIdx, toIdx)
-	{
-	    fromIdx = fromIdx | 0;
-	    toIdx = toIdx | 0;
-	    var i = 0;
-	    var xx = d2(0.0, 0.0);
+         for (i = fromIdx; (i|0) < (toIdx|0); i = (i + 16) | 0)
+         {
+             xx = f4load(Int8Heap, i | 0);
+             xx = f4mul(xx, f4(2.0, 2.0, 2.0, 2.0));
+             
+             f4store(Int8Heap, toIdx, xx);
+             f4store(Int8Heap, (i + 0) | 0, f4load(Int8Heap, (toIdx + 0) | 0));
+             //f4store(Int8Heap, (i) | 0, f4load(Int8Heap, (toIdx) | 0));
+         }
+    }
+    function scale2(fromIdx, toIdx)
+    {
+        fromIdx = fromIdx | 0;
+        toIdx = toIdx | 0;
+        var i = 0;
+        var xx = i4(0, 0, 0, 0);
 
         //No bound check to enable negative tests.  
-		 for (i = fromIdx; (i|0) < (toIdx|0); i = (i + 16) | 0)
-		 {
-		     xx = d2load(Int8Heap, i | 0);
-		     xx = d2mul(xx, d2(2.0, 2.0));
-		     
-		     d2store(Int8Heap, toIdx, xx);
-		     d2store(Int8Heap, (i + 0) | 0, d2load(Int8Heap, (toIdx + 0) | 0));
-		     //f4store(Int8Heap, (i) | 0, f4load(Int8Heap, (toIdx) | 0));
-		 }
-	}
-	
-	return {scale: scale
-			,scale2: scale2
-			,scale3, scale3
-		    ,nestedLoadStoreUint8:nestedLoadStoreUint8};
+         for (i = fromIdx;(i|0) < (toIdx|0); i = (i + 16) | 0)
+         {
+             xx = i4load(Int8Heap, i | 0);
+             xx = i4mul(xx, i4(2, 2, 2, 2));
+             
+             i4store(Int8Heap, toIdx, xx);
+             i4store(Int8Heap, (i + 0) | 0, i4load(Int8Heap, (toIdx + 0) | 0));
+             //f4store(Int8Heap, (i) | 0, f4load(Int8Heap, (toIdx) | 0));
+         }
+    }
+    function scale3(fromIdx, toIdx)
+    {
+        fromIdx = fromIdx | 0;
+        toIdx = toIdx | 0;
+        var i = 0;
+        var xx = d2(0.0, 0.0);
+
+        //No bound check to enable negative tests.  
+         for (i = fromIdx; (i|0) < (toIdx|0); i = (i + 16) | 0)
+         {
+             xx = d2load(Int8Heap, i | 0);
+             xx = d2mul(xx, d2(2.0, 2.0));
+             
+             d2store(Int8Heap, toIdx, xx);
+             d2store(Int8Heap, (i + 0) | 0, d2load(Int8Heap, (toIdx + 0) | 0));
+             //f4store(Int8Heap, (i) | 0, f4load(Int8Heap, (toIdx) | 0));
+         }
+    }
+    
+    return {scale: scale
+            ,scale2: scale2
+            ,scale3, scale3
+            ,nestedLoadStoreUint8:nestedLoadStoreUint8};
 }
 
 
@@ -226,18 +224,18 @@ var buffer = new ArrayBuffer(0x10000); //16mb min 2^12
 
 //Reset or flush the buffer
 function initF32(buffer) {
-	var values = new Float32Array( buffer );
-	for( var i=0; i < values.length ; ++i ) {
-		values[i] = i * 10;
-	}
-	return values.length;
+    var values = new Float32Array( buffer );
+    for( var i=0; i < values.length ; ++i ) {
+        values[i] = i * 10;
+    }
+    return values.length;
 }
 function initI32(buffer) {
-	var values = new Int32Array( buffer );
-	for( var i=0; i < values.length ; ++i ) {
-		values[i] = i * 10;
-	}
-	return values.length;
+    var values = new Int32Array( buffer );
+    for( var i=0; i < values.length ; ++i ) {
+        values[i] = i * 10;
+    }
+    return values.length;
 }
 function validateBuffer(buffer, count)
 {
@@ -295,8 +293,8 @@ function validateBuffer2(buffer, count)
 
 function printResults(res)
 {
-	WScript.Echo(typeof(res));
-	WScript.Echo(res.toString());
+    WScript.Echo(typeof(res));
+    WScript.Echo(res.toString());
 }
 
 inputLength = initF32(buffer);
@@ -322,13 +320,4 @@ initI32(buffer);
 m.scale2(0, 16 * 10); //Scale
 validateBuffer2(values, 4 * 10);
 
-/*
-// D2 not supported for now
-initF32(buffer);
-
-WScript.Echo("Heap");
-printBuffer3(values, 4 * 10);
-WScript.Echo("Scaling 5 d2 vectors by factor of 2.0");
-m.scale3(0, 16 * 10); //Scale
-printBuffer3(values, 4 * 10);
-*/
+WScript.Echo("PASS");

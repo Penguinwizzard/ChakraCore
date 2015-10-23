@@ -33,6 +33,7 @@ namespace Js
 
         return result;
     }
+
     // Unary Ops
     SIMDValue SIMDInt16x8Operation::OpNeg(const SIMDValue& value)
     {

@@ -72,7 +72,6 @@
   <test>
     <default>
       <files>testReciprocal.js</files>
-      <baseline>testReciprocal.baseline</baseline>
       <compile-flags>-Simdjs</compile-flags>
     </default>
   </test>

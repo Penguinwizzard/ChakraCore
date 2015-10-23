@@ -1,3 +1,7 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 this.WScript.LoadScriptFile("..\\UnitTestFramework\\SimdJsHelpers.js");
 
 var sf = SIMD.Float32x4(1.35, -2.0, 3.4, 0.0);

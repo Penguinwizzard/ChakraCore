@@ -6,10 +6,10 @@
 function asmModule(stdlib, imports, buffer) {
     "use asm";
     
-	var toF = stdlib.Math.fround;
-	
-	var i4 = stdlib.SIMD.Int32x4;
-	var i4check = i4.check;
+    var toF = stdlib.Math.fround;
+    
+    var i4 = stdlib.SIMD.Int32x4;
+    var i4check = i4.check;
     var i4splat = i4.splat;
     var i4fromFloat64x2 = i4.fromFloat64x2;
     var i4fromFloat64x2Bits = i4.fromFloat64x2Bits;
@@ -59,8 +59,7 @@ function asmModule(stdlib, imports, buffer) {
     var f4clamp = f4.clamp;
     var f4min = f4.min;
     var f4max = f4.max;
-    var f4reciprocal = f4.reciprocal;
-    var f4reciprocalSqrt = f4.reciprocalSqrt;
+    
     var f4sqrt = f4.sqrt;
     var f4swizzle = f4.swizzle;
     var f4shuffle = f4.shuffle;
@@ -104,8 +103,7 @@ function asmModule(stdlib, imports, buffer) {
     var d2clamp = d2.clamp;
     var d2min = d2.min;
     var d2max = d2.max;
-    var d2reciprocal = d2.reciprocal;
-    var d2reciprocalSqrt = d2.reciprocalSqrt;
+
     var d2sqrt = d2.sqrt;
     var d2swizzle = d2.swizzle;
     var d2shuffle = d2.shuffle;
@@ -135,8 +133,8 @@ function asmModule(stdlib, imports, buffer) {
     var gval = 1234;
     var gval2 = 1234.0;
 
-	var OFFSET_1 = 10;
-	var OFFSET_2 = 15;
+    var OFFSET_1 = 10;
+    var OFFSET_2 = 15;
     
     var loopCOUNT = 10;
     
@@ -147,52 +145,52 @@ function asmModule(stdlib, imports, buffer) {
     var Uint16Heap = new stdlib.Uint16Array(buffer);
     var Int32Heap = new stdlib.Int32Array(buffer);
     var Uint32Heap = new stdlib.Uint32Array(buffer);
-    var Float32Heap = new stdlib.Float32Array(buffer);	
-	
-	//Reverses heap values at start index and end index
-	function rotate(start, n, k) {
-		start = start | 0;
-	    n = n | 0;
-		k = k | 0;
-		
-		var SIMD_SIZE = 4;
-		var c = 0, tmp = f4(0.0, 0.0, 0.0, 0.0), v = 0, t = 0, tp = 0;
-		
-		for(v = 0; c < n; v = v + 1) {
-			t = v|0;
-			tp = (v + k)|0;
-			tmp = f4load(Float32Heap, start + v << 2 >> 2);
-			c = c + SIMD_SIZE;
-			while ( tp != v) {
-				f4store(Float32Heap, start + t << 2 >> 2, f4load(Float32Heap, start + tp << 2 >> 2));
-				t = tp|0;
-				tp = (tp + k)|0;
-				if(tp >= n) {
-					tp = (tp - n)|0;
-				}
-				c = c + SIMD_SIZE;
-			}
-			f4store(Float32Heap, start + t << 2 >> 2, tmp);
-		}
-	}
-	
-	return {rotate:rotate};
+    var Float32Heap = new stdlib.Float32Array(buffer);    
+    
+    //Reverses heap values at start index and end index
+    function rotate(start, n, k) {
+        start = start | 0;
+        n = n | 0;
+        k = k | 0;
+        
+        var SIMD_SIZE = 4;
+        var c = 0, tmp = f4(0.0, 0.0, 0.0, 0.0), v = 0, t = 0, tp = 0;
+        
+        for(v = 0; c < n; v = v + 1) {
+            t = v|0;
+            tp = (v + k)|0;
+            tmp = f4load(Float32Heap, start + v << 2 >> 2);
+            c = c + SIMD_SIZE;
+            while ( tp != v) {
+                f4store(Float32Heap, start + t << 2 >> 2, f4load(Float32Heap, start + tp << 2 >> 2));
+                t = tp|0;
+                tp = (tp + k)|0;
+                if(tp >= n) {
+                    tp = (tp - n)|0;
+                }
+                c = c + SIMD_SIZE;
+            }
+            f4store(Float32Heap, start + t << 2 >> 2, tmp);
+        }
+    }
+    
+    return {rotate:rotate};
 }
 
 var buffer = new ArrayBuffer(0x10000); //16mb min 2^12
 
 //Reset or flush the buffer
 function initF32(buffer) {
-	var values = new Float32Array( buffer );
-	for( var i=0; i < values.length ; ++i ) {
-		values[i] = i * 10;
-	}
-	return values.length;
+    var values = new Float32Array( buffer );
+    for( var i=0; i < values.length ; ++i ) {
+        values[i] = i * 10;
+    }
+    return values.length;
 }
 function printBuffer(Float32Heap, start, end) {
     for (var i = start; i < end; i += 4) {
-		var f4 = SIMD.Float32x4.load(Float32Heap, i);
-		WScript.Echo(f4.toString());
+        var f4 = SIMD.Float32x4.load(Float32Heap, i);
+        WScript.Echo(f4.toString());
     }
 }
 

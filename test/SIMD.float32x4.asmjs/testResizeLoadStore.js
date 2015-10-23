@@ -4,30 +4,30 @@
 //-------------------------------------------------------------------------------------------------------
 
 var m = function(stdlib,imports,buffer){
-	"use asm";
-	//var F32=stdlib.Int32Array; 
-	var F32=stdlib.Float32Array; 
-	var f32=new F32(buffer);
-	var len=stdlib.byteLength;
-	var f4 = stdlib.SIMD.Float32x4;
-	var f4load = f4.load;
-	var f4store = f4.store;
-	var f4check = f4.check; 
-	function ch(newBuffer) 
-	{ 
-		if(len(newBuffer) & 0xffffff || len(newBuffer) <= 0xffffff || len(newBuffer) > 0x80000000) 
-			return false; 
-		f32=new F32(newBuffer);
-		buffer=newBuffer; 
-		return true 
-	}
-	function store(value, loc) { value=f4check(value); loc = loc|0; loc = loc<<2; f4store(f32, loc>>2, value);  }
-	function load(loc) {loc = loc|0; loc = loc<<2; return f4load(f32, loc>>2);  }
-	
-	return { load:load
-			,store:store
-			,changeHeap:ch}
-	};
+    "use asm";
+    //var F32=stdlib.Int32Array; 
+    var F32=stdlib.Float32Array; 
+    var f32=new F32(buffer);
+    var len=stdlib.byteLength;
+    var f4 = stdlib.SIMD.Float32x4;
+    var f4load = f4.load;
+    var f4store = f4.store;
+    var f4check = f4.check; 
+    function ch(newBuffer) 
+    { 
+        if(len(newBuffer) & 0xffffff || len(newBuffer) <= 0xffffff || len(newBuffer) > 0x80000000) 
+            return false; 
+        f32=new F32(newBuffer);
+        buffer=newBuffer; 
+        return true 
+    }
+    function store(value, loc) { value=f4check(value); loc = loc|0; loc = loc<<2; f4store(f32, loc>>2, value);  }
+    function load(loc) {loc = loc|0; loc = loc<<2; return f4load(f32, loc>>2);  }
+    
+    return { load:load
+            ,store:store
+            ,changeHeap:ch}
+    };
 var buf1 = new ArrayBuffer(0x1000000);
 var f32 = new Float32Array(buf1);
 

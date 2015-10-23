@@ -48,8 +48,7 @@ function asmModule(stdlib, imports) {
     var f4clamp = f4.clamp;
     var f4min = f4.min;
     var f4max = f4.max;
-    var f4reciprocal = f4.reciprocal;
-    var f4reciprocalSqrt = f4.reciprocalSqrt;
+    
     var f4sqrt = f4.sqrt;
     //var f4swizzle = f4.swizzle;
     //var f4shuffle = f4.shuffle;
@@ -82,8 +81,7 @@ function asmModule(stdlib, imports) {
     var d2clamp = d2.clamp;
     var d2min = d2.min;
     var d2max = d2.max;
-    var d2reciprocal = d2.reciprocal;
-    var d2reciprocalSqrt = d2.reciprocalSqrt;
+
     var d2sqrt = d2.sqrt;
     //var d2swizzle = d2.swizzle;
     //var d2shuffle = d2.shuffle;
@@ -245,18 +243,6 @@ var ret4 = m.func4();
 var ret5 = m.func5();
 var ret6 = m.func6();
 
-/*
-var ret7 = m.func7();
-var ret8 = m.func8();
-var ret9 = m.func9();
-
-
-var ret10 = m.func10();
-var ret11 = m.func11();
-var ret12 = m.func12();
-
-*/
-
 WScript.Echo(typeof(ret1));
 WScript.Echo(ret1.toString());
 
@@ -275,22 +261,3 @@ WScript.Echo(ret5.toString());
 WScript.Echo(typeof(ret6));
 WScript.Echo(ret6.toString());
 
-/*
-WScript.Echo(typeof(ret7));
-WScript.Echo(ret7.toString());
-
-WScript.Echo(typeof(ret8));
-WScript.Echo(ret8.toString());
-
-WScript.Echo(typeof(ret9));
-WScript.Echo(ret9.toString());
-
-WScript.Echo(typeof(ret10));
-WScript.Echo(ret10.toString());
-
-WScript.Echo(typeof(ret11));
-WScript.Echo(ret11.toString());
-
-WScript.Echo(typeof(ret12));
-WScript.Echo(ret12.toString());
-*/

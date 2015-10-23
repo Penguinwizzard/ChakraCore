@@ -2667,7 +2667,13 @@ namespace Js
         library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::fromFloat64x2,     &SIMDFloat32x4Lib::EntryInfo::FromFloat64x2,     2, PropertyNone);
         library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::fromFloat64x2Bits, &SIMDFloat32x4Lib::EntryInfo::FromFloat64x2Bits, 2, PropertyNone);
         library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::fromInt32x4,       &SIMDFloat32x4Lib::EntryInfo::FromInt32x4,       2, PropertyNone);
-        library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::fromInt32x4Bits,   &SIMDFloat32x4Lib::EntryInfo::FromInt32x4Bits,   2, PropertyNone);
+        library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::fromUint32x4,      &SIMDFloat32x4Lib::EntryInfo::FromUint32x4,      2, PropertyNone);
+        library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::fromInt16x8Bits,   &SIMDFloat32x4Lib::EntryInfo::FromInt16x8Bits,   2, PropertyNone);
+        library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::fromInt8x16Bits,   &SIMDFloat32x4Lib::EntryInfo::FromInt8x16Bits,   2, PropertyNone);
+        library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::fromInt32x4Bits, &SIMDFloat32x4Lib::EntryInfo::FromInt32x4Bits, 2, PropertyNone);
+        library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::fromUint32x4Bits, &SIMDFloat32x4Lib::EntryInfo::FromUint32x4Bits, 2, PropertyNone);
+        library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::fromUint16x8Bits, &SIMDFloat32x4Lib::EntryInfo::FromUint16x8Bits, 2, PropertyNone);
+        library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::fromUint8x16Bits, &SIMDFloat32x4Lib::EntryInfo::FromUint8x16Bits, 2, PropertyNone);
         // binary ops
         builtinFuncs[BuiltinFunction::SIMD_Float32x4_Add] = library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::add, &SIMDFloat32x4Lib::EntryInfo::Add, 3, PropertyNone);
         library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::sub,    &SIMDFloat32x4Lib::EntryInfo::Sub,   3, PropertyNone);
@@ -2678,14 +2684,16 @@ namespace Js
         library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::xor,    &SIMDFloat32x4Lib::EntryInfo::Xor,   3, PropertyNone);
         library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::min,    &SIMDFloat32x4Lib::EntryInfo::Min,   3, PropertyNone);
         library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::max,    &SIMDFloat32x4Lib::EntryInfo::Max,   3, PropertyNone);
+        library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::minNum, &SIMDFloat32x4Lib::EntryInfo::MinNum, 3, PropertyNone);
+        library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::maxNum, &SIMDFloat32x4Lib::EntryInfo::MaxNum, 3, PropertyNone);
         library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::scale,  &SIMDFloat32x4Lib::EntryInfo::Scale, 3, PropertyNone);
         // unary ops
         library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::abs,            &SIMDFloat32x4Lib::EntryInfo::Abs,            2, PropertyNone);
         library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::neg,            &SIMDFloat32x4Lib::EntryInfo::Neg,            2, PropertyNone);
         library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::not,            &SIMDFloat32x4Lib::EntryInfo::Not,            2, PropertyNone);
         library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::sqrt,           &SIMDFloat32x4Lib::EntryInfo::Sqrt,           2, PropertyNone);
-        library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::reciprocal,     &SIMDFloat32x4Lib::EntryInfo::Reciprocal,     2, PropertyNone);
-        library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::reciprocalSqrt, &SIMDFloat32x4Lib::EntryInfo::ReciprocalSqrt, 2, PropertyNone);
+        library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::reciprocalApproximation,     &SIMDFloat32x4Lib::EntryInfo::Reciprocal,     2, PropertyNone);
+        library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::reciprocalSqrtApproximation, &SIMDFloat32x4Lib::EntryInfo::ReciprocalSqrt, 2, PropertyNone);
         // compare ops
         library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::lessThan,           &SIMDFloat32x4Lib::EntryInfo::LessThan,          3, PropertyNone);
         library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::lessThanOrEqual,    &SIMDFloat32x4Lib::EntryInfo::LessThanOrEqual,   3, PropertyNone);
@@ -2730,8 +2738,8 @@ namespace Js
         library->AddFunctionToLibraryObject(float64x2Function, PropertyIds::abs,            &SIMDFloat64x2Lib::EntryInfo::Abs,              2, PropertyNone);
         library->AddFunctionToLibraryObject(float64x2Function, PropertyIds::neg,            &SIMDFloat64x2Lib::EntryInfo::Neg,              2, PropertyNone);
         library->AddFunctionToLibraryObject(float64x2Function, PropertyIds::sqrt,           &SIMDFloat64x2Lib::EntryInfo::Sqrt,             2, PropertyNone);
-        library->AddFunctionToLibraryObject(float64x2Function, PropertyIds::reciprocal,     &SIMDFloat64x2Lib::EntryInfo::Reciprocal,       2, PropertyNone);
-        library->AddFunctionToLibraryObject(float64x2Function, PropertyIds::reciprocalSqrt, &SIMDFloat64x2Lib::EntryInfo::ReciprocalSqrt,   2, PropertyNone);
+        library->AddFunctionToLibraryObject(float64x2Function, PropertyIds::reciprocalApproximation,     &SIMDFloat64x2Lib::EntryInfo::Reciprocal,       2, PropertyNone);
+        library->AddFunctionToLibraryObject(float64x2Function, PropertyIds::reciprocalSqrtApproximation, &SIMDFloat64x2Lib::EntryInfo::ReciprocalSqrt,   2, PropertyNone);
         // compare ops
         library->AddFunctionToLibraryObject(float64x2Function, PropertyIds::lessThan,           &SIMDFloat64x2Lib::EntryInfo::LessThan,             3, PropertyNone);
         library->AddFunctionToLibraryObject(float64x2Function, PropertyIds::lessThanOrEqual,    &SIMDFloat64x2Lib::EntryInfo::LessThanOrEqual,      3, PropertyNone);
@@ -6959,7 +6967,13 @@ namespace Js
         REG_OBJECTS_LIB_FUNC(fromFloat64x2, SIMDFloat32x4Lib::EntryFromFloat64x2);
         REG_OBJECTS_LIB_FUNC(fromFloat64x2Bits, SIMDFloat32x4Lib::EntryFromFloat64x2Bits);
         REG_OBJECTS_LIB_FUNC(fromInt32x4, SIMDFloat32x4Lib::EntryFromInt32x4);
+        REG_OBJECTS_LIB_FUNC(fromUint32x4, SIMDFloat32x4Lib::EntryFromUint32x4);
         REG_OBJECTS_LIB_FUNC(fromInt32x4Bits, SIMDFloat32x4Lib::EntryFromInt32x4Bits);
+        REG_OBJECTS_LIB_FUNC(fromInt16x8Bits, SIMDFloat32x4Lib::EntryFromInt16x8Bits);
+        REG_OBJECTS_LIB_FUNC(fromInt8x16Bits, SIMDFloat32x4Lib::EntryFromInt8x16Bits);
+        REG_OBJECTS_LIB_FUNC(fromUint32x4Bits, SIMDFloat32x4Lib::EntryFromUint32x4Bits);
+        REG_OBJECTS_LIB_FUNC(fromUint16x8Bits, SIMDFloat32x4Lib::EntryFromUint16x8Bits);
+        REG_OBJECTS_LIB_FUNC(fromUint8x16Bits, SIMDFloat32x4Lib::EntryFromUint8x16Bits);
         REG_OBJECTS_LIB_FUNC(add, SIMDFloat32x4Lib::EntryAdd);
         REG_OBJECTS_LIB_FUNC(sub, SIMDFloat32x4Lib::EntrySub);
         REG_OBJECTS_LIB_FUNC(mul, SIMDFloat32x4Lib::EntryMul);
@@ -6969,13 +6983,15 @@ namespace Js
         REG_OBJECTS_LIB_FUNC(xor, SIMDFloat32x4Lib::EntryXor);
         REG_OBJECTS_LIB_FUNC(min, SIMDFloat32x4Lib::EntryMin);
         REG_OBJECTS_LIB_FUNC(max, SIMDFloat32x4Lib::EntryMax);
+        REG_OBJECTS_LIB_FUNC(minNum, SIMDFloat32x4Lib::EntryMinNum);
+        REG_OBJECTS_LIB_FUNC(maxNum, SIMDFloat32x4Lib::EntryMaxNum);
         REG_OBJECTS_LIB_FUNC(scale, SIMDFloat32x4Lib::EntryScale);
         REG_OBJECTS_LIB_FUNC(abs, SIMDFloat32x4Lib::EntryAbs);
         REG_OBJECTS_LIB_FUNC(neg, SIMDFloat32x4Lib::EntryNeg);
         REG_OBJECTS_LIB_FUNC(not, SIMDFloat32x4Lib::EntryNot);
         REG_OBJECTS_LIB_FUNC(sqrt, SIMDFloat32x4Lib::EntrySqrt);
-        REG_OBJECTS_LIB_FUNC(reciprocal, SIMDFloat32x4Lib::EntryReciprocal);
-        REG_OBJECTS_LIB_FUNC(reciprocalSqrt, SIMDFloat32x4Lib::EntryReciprocalSqrt);
+        REG_OBJECTS_LIB_FUNC(reciprocalApproximation, SIMDFloat32x4Lib::EntryReciprocal);
+        REG_OBJECTS_LIB_FUNC(reciprocalSqrtApproximation, SIMDFloat32x4Lib::EntryReciprocalSqrt);
         REG_OBJECTS_LIB_FUNC(lessThan, SIMDFloat32x4Lib::EntryLessThan);
         REG_OBJECTS_LIB_FUNC(lessThanOrEqual, SIMDFloat32x4Lib::EntryLessThanOrEqual);
         REG_OBJECTS_LIB_FUNC(equal, SIMDFloat32x4Lib::EntryEqual);
@@ -7005,8 +7021,8 @@ namespace Js
         REG_OBJECTS_LIB_FUNC(abs, SIMDFloat64x2Lib::EntryAbs);
         REG_OBJECTS_LIB_FUNC(neg, SIMDFloat64x2Lib::EntryNeg);
         REG_OBJECTS_LIB_FUNC(sqrt, SIMDFloat64x2Lib::EntrySqrt);
-        REG_OBJECTS_LIB_FUNC(reciprocal, SIMDFloat64x2Lib::EntryReciprocal);
-        REG_OBJECTS_LIB_FUNC(reciprocalSqrt, SIMDFloat64x2Lib::EntryReciprocalSqrt);
+        REG_OBJECTS_LIB_FUNC(reciprocalApproximation, SIMDFloat64x2Lib::EntryReciprocal);
+        REG_OBJECTS_LIB_FUNC(reciprocalSqrtApproximation, SIMDFloat64x2Lib::EntryReciprocalSqrt);
         REG_OBJECTS_LIB_FUNC(lessThan, SIMDFloat64x2Lib::EntryLessThan);
         REG_OBJECTS_LIB_FUNC(lessThanOrEqual, SIMDFloat64x2Lib::EntryLessThanOrEqual);
         REG_OBJECTS_LIB_FUNC(equal, SIMDFloat64x2Lib::EntryEqual);
