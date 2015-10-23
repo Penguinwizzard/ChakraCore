@@ -22,8 +22,8 @@ private:
     static Js::DynamicObject * CreateAddrOpnd(Js::ScriptContext *scriptContext, IR::Opnd *opnd, Func *func);
     static Js::DynamicObject * CreateIndirOpnd(Js::ScriptContext *scriptContext, IR::Opnd *opnd);
     static Js::DynamicObject * CreateLabelOpnd(Js::ScriptContext *scriptContext, IR::Opnd *opnd);
-    // TODO (t-doilij) memref
-    // TODO (t-doilij) regbv
+    // TODO (doilij) memref
+    // TODO (doilij) regbv
 
 public:
     /* create operands */

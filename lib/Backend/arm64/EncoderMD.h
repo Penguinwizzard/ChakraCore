@@ -3,9 +3,6 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 #include "ARMEncode.h"
-//#include "LegalizeMD.h"
-
-// ARM64_WORKITEM: This file is just a stub
 
 class Encoder;
 

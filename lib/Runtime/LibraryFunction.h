@@ -19,7 +19,7 @@ LIBRARY_FUNCTION(Math,          Asin,               1,    BIF_TypeSpecUnaryToFlo
 LIBRARY_FUNCTION(Math,          Atan,               1,    BIF_TypeSpecUnaryToFloat                          , Math::EntryInfo::Atan)
 LIBRARY_FUNCTION(Math,          Atan2,              2,    BIF_TypeSpecAllToFloat                            , Math::EntryInfo::Atan2)
 LIBRARY_FUNCTION(Math,          Ceil,               1,    BIF_TypeSpecDstToInt | BIF_TypeSpecSrc1ToFloat    , Math::EntryInfo::Ceil)
-LIBRARY_FUNCTION(String,        CodePointAt,        2,    /*BIF_TypeSpecDstToInt    | BIF_TypeSpecSrc1ToString |*/ BIF_TypeSpecSrc2ToInt | BIF_UseSrc0  , JavascriptString::EntryInfo::CodePointAt)
+LIBRARY_FUNCTION(String,        CodePointAt,        2,    BIF_TypeSpecSrc2ToInt | BIF_UseSrc0               , JavascriptString::EntryInfo::CodePointAt)
 LIBRARY_FUNCTION(String,        CharAt,             2,    BIF_UseSrc0                                       , JavascriptString::EntryInfo::CharAt  )
 LIBRARY_FUNCTION(String,        CharCodeAt,         2,    BIF_UseSrc0                                       , JavascriptString::EntryInfo::CharCodeAt )
 LIBRARY_FUNCTION(String,        Concat,             15,   BIF_UseSrc0 | BIF_VariableArgsNumber              , JavascriptString::EntryInfo::Concat )
@@ -61,7 +61,7 @@ LIBRARY_FUNCTION(Math,          Sqrt,               1,    BIF_TypeSpecUnaryToFlo
 LIBRARY_FUNCTION(Math,          Tan,                1,    BIF_TypeSpecUnaryToFloat                          , Math::EntryInfo::Tan)
 LIBRARY_FUNCTION(Array,         Concat,             15,   BIF_UseSrc0 | BIF_VariableArgsNumber              , JavascriptArray::EntryInfo::Concat)
 LIBRARY_FUNCTION(Array,         IndexOf,            2,    BIF_UseSrc0                                       , JavascriptArray::EntryInfo::IndexOf)
-LIBRARY_FUNCTION(Array,         IsArray,            1,    BIF_VariableArgsNumber                            , JavascriptArray::EntryInfo::IsArray) //TODO (radua): implement as a typeId check
+LIBRARY_FUNCTION(Array,         IsArray,            1,    BIF_VariableArgsNumber                            , JavascriptArray::EntryInfo::IsArray)
 LIBRARY_FUNCTION(Array,         Join,               2,    BIF_UseSrc0 | BIF_VariableArgsNumber              , JavascriptArray::EntryInfo::Join)
 LIBRARY_FUNCTION(Array,         LastIndexOf,        3,    BIF_UseSrc0 | BIF_VariableArgsNumber              , JavascriptArray::EntryInfo::LastIndexOf)
 LIBRARY_FUNCTION(Array,         Reverse,            1,    BIF_UseSrc0 | BIF_IgnoreDst                       , JavascriptArray::EntryInfo::Reverse)
@@ -74,26 +74,9 @@ LIBRARY_FUNCTION(Function,      Call,               15,   BIF_UseSrc0 | BIF_Igno
 LIBRARY_FUNCTION(GlobalObject,  ParseInt,           1,    BIF_IgnoreDst                                         , GlobalObject::EntryInfo::ParseInt)
 LIBRARY_FUNCTION(RegExp,        Exec,               2,    BIF_UseSrc0 | BIF_IgnoreDst                           , JavascriptRegExp::EntryInfo::Exec)
 LIBRARY_FUNCTION(Math,          Fround,             1,    BIF_TypeSpecUnaryToFloat                              , Math::EntryInfo::Fround)
-#if 0
-// TODO: Implement inlining of the following ES6 Math functions
-LIBRARY_FUNCTION(Math,          Log10,              1,    /* TODO: What flags should this function have? */)
-LIBRARY_FUNCTION(Math,          Log2,               1,    /* TODO: What flags should this function have? */)
-LIBRARY_FUNCTION(Math,          Log1p,              1,    /* TODO: What flags should this function have? */)
-LIBRARY_FUNCTION(Math,          Expm1,              1,    /* TODO: What flags should this function have? */)
-LIBRARY_FUNCTION(Math,          Cosh,               1,    /* TODO: What flags should this function have? */)
-LIBRARY_FUNCTION(Math,          Sinh,               1,    /* TODO: What flags should this function have? */)
-LIBRARY_FUNCTION(Math,          Tanh,               1,    /* TODO: What flags should this function have? */)
-LIBRARY_FUNCTION(Math,          Acosh,              1,    /* TODO: What flags should this function have? */)
-LIBRARY_FUNCTION(Math,          Asinh,              1,    /* TODO: What flags should this function have? */)
-LIBRARY_FUNCTION(Math,          Atanh,              1,    /* TODO: What flags should this function have? */)
-LIBRARY_FUNCTION(Math,          Hypot,              2,    /* TODO: What flags should this function have? */)
-LIBRARY_FUNCTION(Math,          Trunc,              1,    /* TODO: What flags should this function have? */)
-LIBRARY_FUNCTION(Math,          Sign,               1,    /* TODO: What flags should this function have? */)
-LIBRARY_FUNCTION(Math,          Cbrt,               1,    /* TODO: What flags should this function have? */)
-#endif
+
 // Note: 1st column is currently used only for debug tracing.
 
-// REVIEW: We are allowed to ignore DST for a SIMD opcode, if it is null. This will enable inlining, and later dead-store in the globOpt. Is it safe to do that ?
 // SIMD_JS
 LIBRARY_FUNCTION(SIMD_Float32x4,    Float32x4,         4, BIF_IgnoreDst                                                 , SIMDFloat32x4Lib::EntryInfo::Float32x4)
 LIBRARY_FUNCTION(SIMD_Float32x4,    Add,               2, BIF_IgnoreDst                                                 , SIMDFloat32x4Lib::EntryInfo::Add)

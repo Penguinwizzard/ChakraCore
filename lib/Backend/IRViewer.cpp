@@ -120,7 +120,7 @@ Js::DynamicObject * IRtoJSObjectBuilder::CreateAddrOpnd(Js::ScriptContext *scrip
     }
 
     IR::AddrOpnd *op = opnd->AsAddrOpnd();
-    Js::Var address = op->m_address;  // TODO (t-doilij) see opnd.cpp:1802 - not always m_address
+    Js::Var address = op->m_address;  // TODO (doilij) see opnd.cpp:1802 - not always m_address
     Js::Var addressVar = Js::JavascriptNumber::ToVar((uint64)address, scriptContext);
 
     Js::DynamicObject *opObject = scriptContext->GetLibrary()->CreateObject();
@@ -186,7 +186,7 @@ Js::DynamicObject * IRtoJSObjectBuilder::CreateLabelOpnd(Js::ScriptContext *scri
     }
 
     /*
-    TODO (t-doilij) unneeded method?
+    TODO (doilij) unneeded method?
 
     I don't think any code path would reach here.
 
@@ -196,7 +196,7 @@ Js::DynamicObject * IRtoJSObjectBuilder::CreateLabelOpnd(Js::ScriptContext *scri
     */
 
     Js::DynamicObject *opObject = scriptContext->GetLibrary()->CreateObject(); 
-    return opObject;  // FIXME (t-doilij)
+    return opObject;
 }
 
 
@@ -253,11 +253,11 @@ Js::DynamicObject * IRtoJSObjectBuilder::CreateOpnd(Js::ScriptContext *scriptCon
         break;
 
     case IR::OpndKind::OpndKindMemRef:
-        // TODO (t-doilij) implement
+        // TODO (doilij) implement
         break;
 
     case IR::OpndKind::OpndKindRegBV:
-        // TODO (t-doilij) implement
+        // TODO (doilij) implement
         break;
 
     default:
@@ -561,7 +561,7 @@ Js::DynamicObject * IRtoJSObjectBuilder::DumpIRtoJSObject(Func *func, Js::Phase 
     if (!CONFIG_FLAG(IRViewer) || !func)
     {
         // if we actually return null and this value is used, we end up with a failed assertion
-        return NULL;  // TODO (t-doilij) is this okay or does the return value need to be explicitly undefined?
+        return NULL;  // TODO (doilij) is this okay or does the return value need to be explicitly undefined?
     }
 
 #ifdef ENABLE_IR_VIEWER_DBG_DUMP
@@ -572,14 +572,14 @@ Js::DynamicObject * IRtoJSObjectBuilder::DumpIRtoJSObject(Func *func, Js::Phase 
     }
 #endif
 
-    // FIXME (t-doilij) why only printing the last function? because linking pointer to first IR stmt for a function
-    // TODO (t-doilij) make a linked list of functions instead which contain a linked list of IR statements
+    // FIXME (doilij) why only printing the last function? because linking pointer to first IR stmt for a function
+    // TODO (doilij) make a linked list of functions instead which contain a linked list of IR statements
     
     CodeGenWorkItem *workItem = func->m_workItem;
     Js::ScriptContext *scriptContext = workItem->irViewerRequestContext;
     if (!scriptContext)
     {
-        // TODO (t-doilij) should set the requestContext on parseIR code path
+        // TODO (doilij) should set the requestContext on parseIR code path
         scriptContext = func->GetScriptContext();
     }
 
@@ -667,11 +667,11 @@ Js::DynamicObject * IRtoJSObjectBuilder::DumpIRtoJSObject(Func *func, Js::Phase 
     return baseObject;
 }
 
-// TODO (t-doilij) update the name of this function
-// TODO (t-doilij) write documentation for this function
+// TODO (doilij) update the name of this function
+// TODO (doilij) write documentation for this function
 void IRtoJSObjectBuilder::DumpIRtoGlobalObject(Func *func, Js::Phase phase)
 {
-    // FIXME (t-doilij) this cast has got to be unnecessary
+    // FIXME (doilij) this cast has got to be unnecessary
     CodeGenWorkItem *workItem =func->m_workItem;
     bool rejit = workItem->isRejitIRViewerFunction;
     bool irDumpEnabled = func->GetJnFunction()->GetFunctionBody()->IsIRDumpEnabled();

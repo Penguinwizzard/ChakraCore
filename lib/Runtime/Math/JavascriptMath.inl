@@ -216,16 +216,6 @@ namespace Js
             Assert(aRight != nullptr);
             Assert(scriptContext != nullptr);
 
-    #ifdef DBG
-            if( TaggedInt::IsPair(aLeft,aRight) )
-            {
-                // The only reason to be here is if the calculation causes an
-                // overflow in TaggedInt. Otherwise, the operation should have been
-                // handled entirely in generated code (LowererMD::GenerateFastMul)
-    //            AssertMsg( TaggedInt::IsOverflow( TaggedInt::ToInt64(aLeft) * TaggedInt::ToInt64(aRight) ), "TaggedInt multiplication should have been done in generated code." );
-            }
-    #endif
-
             // The IEEE 754 floating point spec ensures that NaNs are preserved in all operations
             return JavascriptConversion::ToNumber(aLeft, scriptContext) * JavascriptConversion::ToNumber(aRight, scriptContext);
         }
@@ -265,8 +255,8 @@ namespace Js
 #if defined(_M_ARM32_OR_ARM64)
         __inline int32 JavascriptMath::ToInt32Core(double T1)
         {
-            //Try the int32 conversion first and only do the more expensive (& closer to spec)
-            //i64 conversion if it fails.
+            // Try the int32 conversion first and only do the more expensive (& closer to spec)
+            // i64 conversion if it fails.
             __int32 i32 = (__int32)T1;
             if ((i32 != 0x80000000) && (i32 != 0x7fffffff))
                 return i32;     //No overflow so just return i32
