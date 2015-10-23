@@ -574,6 +574,95 @@ BUILTIN(SIMDBool8x16Lib, And, EntryAnd, FunctionInfo::None)
 BUILTIN(SIMDBool8x16Lib, Or, EntryOr, FunctionInfo::None)
 BUILTIN(SIMDBool8x16Lib, Xor, EntryXor, FunctionInfo::None)
 
+// SIMDUint8x16Lib entry points
+BUILTIN(SIMDUint8x16Lib, Uint8x16, EntryUint8x16, FunctionInfo::None)
+BUILTIN(SIMDUint8x16Lib, Check, EntryCheck, FunctionInfo::None)
+BUILTIN(SIMDUint8x16Lib, Splat, EntrySplat, FunctionInfo::None)
+// Conversions
+BUILTIN(SIMDUint8x16Lib, FromInt32x4Bits, EntryFromInt32x4Bits, FunctionInfo::None)
+BUILTIN(SIMDUint8x16Lib, FromInt16x8Bits, EntryFromInt16x8Bits, FunctionInfo::None)
+BUILTIN(SIMDUint8x16Lib, FromInt8x16Bits, EntryFromInt8x16Bits, FunctionInfo::None)
+//BUILTIN(SIMDUint8x16Lib, FromUint32x4Bits, EntryFromUint32x4Bits, FunctionInfo::None)
+BUILTIN(SIMDUint8x16Lib, FromUint16x8Bits, EntryFromUint16x8Bits, FunctionInfo::None)
+BUILTIN(SIMDUint8x16Lib, FromFloat32x4Bits, EntryFromFloat32x4Bits, FunctionInfo::None)
+BUILTIN(SIMDUint8x16Lib, FromInt8x16, EntryFromInt8x16, FunctionInfo::None)
+// UnaryOps
+BUILTIN(SIMDUint8x16Lib, Not, EntryNot, FunctionInfo::None)
+// BinaryOps
+BUILTIN(SIMDUint8x16Lib, Add, EntryAdd, FunctionInfo::None)
+BUILTIN(SIMDUint8x16Lib, Sub, EntrySub, FunctionInfo::None)
+BUILTIN(SIMDUint8x16Lib, Mul, EntryMul, FunctionInfo::None)
+BUILTIN(SIMDUint8x16Lib, And, EntryAnd, FunctionInfo::None)
+BUILTIN(SIMDUint8x16Lib, Or, EntryOr, FunctionInfo::None)
+BUILTIN(SIMDUint8x16Lib, Xor, EntryXor, FunctionInfo::None)
+BUILTIN(SIMDUint8x16Lib, AddSaturate, EntryAddSaturate, FunctionInfo::None)
+BUILTIN(SIMDUint8x16Lib, SubSaturate, EntrySubSaturate, FunctionInfo::None)
+BUILTIN(SIMDUint8x16Lib, Min, EntryMin, FunctionInfo::None)
+BUILTIN(SIMDUint8x16Lib, Max, EntryMax, FunctionInfo::None)
+// CompareOps
+BUILTIN(SIMDUint8x16Lib, LessThan, EntryLessThan, FunctionInfo::None)
+BUILTIN(SIMDUint8x16Lib, LessThanOrEqual, EntryLessThanOrEqual, FunctionInfo::None)
+BUILTIN(SIMDUint8x16Lib, Equal, EntryEqual, FunctionInfo::None)
+BUILTIN(SIMDUint8x16Lib, NotEqual, EntryNotEqual, FunctionInfo::None)
+BUILTIN(SIMDUint8x16Lib, GreaterThan, EntryGreaterThan, FunctionInfo::None)
+BUILTIN(SIMDUint8x16Lib, GreaterThanOrEqual, EntryGreaterThanOrEqual, FunctionInfo::None)
+// Lane Access
+BUILTIN(SIMDUint8x16Lib, ExtractLane, EntryExtractLane, FunctionInfo::None)
+BUILTIN(SIMDUint8x16Lib, ReplaceLane, EntryReplaceLane, FunctionInfo::None)
+// ShiftOps
+BUILTIN(SIMDUint8x16Lib, ShiftLeftByScalar, EntryShiftLeftByScalar, FunctionInfo::None)
+BUILTIN(SIMDUint8x16Lib, ShiftRightByScalar, EntryShiftRightByScalar, FunctionInfo::None)
+// load/store
+BUILTIN(SIMDUint8x16Lib, Load, EntryLoad, FunctionInfo::None)
+BUILTIN(SIMDUint8x16Lib, Store, EntryStore, FunctionInfo::None)
+// Others
+BUILTIN(SIMDUint8x16Lib, Swizzle, EntrySwizzle, FunctionInfo::None)
+BUILTIN(SIMDUint8x16Lib, Shuffle, EntryShuffle, FunctionInfo::None)
+BUILTIN(SIMDUint8x16Lib, Select, EntrySelect, FunctionInfo::None)
+
+// SIMDUint16x8Lib entry points
+BUILTIN(SIMDUint16x8Lib, Uint16x8, EntryUint16x8, FunctionInfo::None)
+BUILTIN(SIMDUint16x8Lib, Check, EntryCheck, FunctionInfo::None)
+BUILTIN(SIMDUint16x8Lib, Splat, EntrySplat, FunctionInfo::None)
+// Conversions
+BUILTIN(SIMDUint16x8Lib, FromInt32x4Bits, EntryFromInt32x4Bits, FunctionInfo::None)
+BUILTIN(SIMDUint16x8Lib, FromInt8x16Bits, EntryFromInt8x16Bits, FunctionInfo::None)
+BUILTIN(SIMDUint16x8Lib, FromInt16x8Bits, EntryFromInt16x8Bits, FunctionInfo::None)
+BUILTIN(SIMDUint16x8Lib, FromFloat32x4Bits, EntryFromFloat32x4Bits, FunctionInfo::None)
+// UnaryOps
+BUILTIN(SIMDUint16x8Lib, Not, EntryNot, FunctionInfo::None)
+// BinaryOps
+BUILTIN(SIMDUint16x8Lib, Add, EntryAdd, FunctionInfo::None)
+BUILTIN(SIMDUint16x8Lib, Sub, EntrySub, FunctionInfo::None)
+BUILTIN(SIMDUint16x8Lib, Mul, EntryMul, FunctionInfo::None)
+BUILTIN(SIMDUint16x8Lib, And, EntryAnd, FunctionInfo::None)
+BUILTIN(SIMDUint16x8Lib, Or, EntryOr, FunctionInfo::None)
+BUILTIN(SIMDUint16x8Lib, Xor, EntryXor, FunctionInfo::None)
+BUILTIN(SIMDUint16x8Lib, AddSaturate, EntryAddSaturate, FunctionInfo::None)
+BUILTIN(SIMDUint16x8Lib, SubSaturate, EntrySubSaturate, FunctionInfo::None)
+BUILTIN(SIMDUint16x8Lib, Min, EntryMin, FunctionInfo::None)
+BUILTIN(SIMDUint16x8Lib, Max, EntryMax, FunctionInfo::None)
+// CompareOps
+BUILTIN(SIMDUint16x8Lib, LessThan, EntryLessThan, FunctionInfo::None)
+BUILTIN(SIMDUint16x8Lib, LessThanOrEqual, EntryLessThanOrEqual, FunctionInfo::None)
+BUILTIN(SIMDUint16x8Lib, Equal, EntryEqual, FunctionInfo::None)
+BUILTIN(SIMDUint16x8Lib, NotEqual, EntryNotEqual, FunctionInfo::None)
+BUILTIN(SIMDUint16x8Lib, GreaterThan, EntryGreaterThan, FunctionInfo::None)
+BUILTIN(SIMDUint16x8Lib, GreaterThanOrEqual, EntryGreaterThanOrEqual, FunctionInfo::None)
+// Lane Access
+BUILTIN(SIMDUint16x8Lib, ExtractLane, EntryExtractLane, FunctionInfo::None)
+BUILTIN(SIMDUint16x8Lib, ReplaceLane, EntryReplaceLane, FunctionInfo::None)
+// ShiftOps
+BUILTIN(SIMDUint16x8Lib, ShiftLeftByScalar, EntryShiftLeftByScalar, FunctionInfo::None)
+BUILTIN(SIMDUint16x8Lib, ShiftRightByScalar, EntryShiftRightByScalar, FunctionInfo::None)
+// load/store
+BUILTIN(SIMDUint16x8Lib, Load, EntryLoad, FunctionInfo::None)
+BUILTIN(SIMDUint16x8Lib, Store, EntryStore, FunctionInfo::None)
+// Others
+BUILTIN(SIMDUint16x8Lib, Swizzle, EntrySwizzle, FunctionInfo::None)
+BUILTIN(SIMDUint16x8Lib, Shuffle, EntryShuffle, FunctionInfo::None)
+BUILTIN(SIMDUint16x8Lib, Select, EntrySelect, FunctionInfo::None)
+
 // Uint32x4
 BUILTIN(SIMDUint32x4Lib, Uint32x4, EntryUint32x4, FunctionInfo::None)
 BUILTIN(SIMDUint32x4Lib, Check, EntryCheck, FunctionInfo::None)
@@ -642,6 +731,8 @@ BUILTIN(JavascriptSIMDBool32x4, ToString, EntryToString, FunctionInfo::None)
 BUILTIN(JavascriptSIMDBool16x8, ToString, EntryToString, FunctionInfo::None)
 BUILTIN(JavascriptSIMDBool8x16, ToString, EntryToString, FunctionInfo::None)
 BUILTIN(JavascriptSIMDUint32x4, ToString, EntryToString, FunctionInfo::None)
+BUILTIN(JavascriptSIMDUint16x8, ToString, EntryToString, FunctionInfo::None)
+BUILTIN(JavascriptSIMDUint8x16, ToString, EntryToString, FunctionInfo::None)
 
 BUILTIN(Math, Fround, Fround, FunctionInfo::ErrorOnNew)
 BUILTIN(TypedArrayBase, NewInstance, NewInstance, FunctionInfo::SkipDefaultNewObject)

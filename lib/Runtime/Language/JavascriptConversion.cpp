@@ -863,15 +863,15 @@ CommonNumber:
 
             case TypeIds_SIMDFloat32x4:
             case TypeIds_SIMDInt32x4:
-            case TypeIds_SIMDInt8x16:
             case TypeIds_SIMDInt16x8:
+            case TypeIds_SIMDInt8x16:
             case TypeIds_SIMDFloat64x2:
             case TypeIds_SIMDBool32x4:
             case TypeIds_SIMDBool16x8:
             case TypeIds_SIMDBool8x16:
             case TypeIds_SIMDUint32x4:
-            case TypeIds_SIMDUint8x16:
             case TypeIds_SIMDUint16x8:
+            case TypeIds_SIMDUint8x16:
                 JavascriptError::ThrowError(scriptContext, JSERR_NeedNumber);
 
             default:
@@ -931,8 +931,8 @@ CommonNumber:
                 return ToInteger(ToNumber_Full(aValue, scriptContext));
 
             case TypeIds_SIMDFloat32x4:
-            case TypeIds_SIMDInt32x4:
             case TypeIds_SIMDFloat64x2:
+            case TypeIds_SIMDInt32x4:
             case TypeIds_SIMDInt16x8:
             case TypeIds_SIMDInt8x16:
             case TypeIds_SIMDBool32x4:
@@ -1052,8 +1052,8 @@ CommonNumber:
             return ToInt32(ToNumber_Full(aValue, scriptContext));
 
         case TypeIds_SIMDFloat32x4:
-        case TypeIds_SIMDInt32x4:
         case TypeIds_SIMDFloat64x2:
+        case TypeIds_SIMDInt32x4:
         case TypeIds_SIMDInt16x8:
         case TypeIds_SIMDInt8x16:
         case TypeIds_SIMDBool32x4:
@@ -1170,8 +1170,8 @@ CommonNumber:
                 return ToInt32Finite(ToNumber_Full(aValue, scriptContext), result);
 
             case TypeIds_SIMDFloat32x4:
-            case TypeIds_SIMDInt32x4:
             case TypeIds_SIMDFloat64x2:
+            case TypeIds_SIMDInt32x4:
             case TypeIds_SIMDInt16x8:
             case TypeIds_SIMDInt8x16:
             case TypeIds_SIMDBool32x4:
@@ -1320,8 +1320,8 @@ CommonNumber:
                 return JavascriptMath::ToUInt32(ToNumber_Full(aValue, scriptContext));
 
             case TypeIds_SIMDFloat32x4:
-            case TypeIds_SIMDInt32x4:
             case TypeIds_SIMDFloat64x2:
+            case TypeIds_SIMDInt32x4:
             case TypeIds_SIMDInt16x8:
             case TypeIds_SIMDInt8x16:
             case TypeIds_SIMDBool32x4:
@@ -1408,8 +1408,8 @@ CommonNumber:
                 return ToUInt16(ToNumber_Full(aValue, scriptContext));
 
             case TypeIds_SIMDFloat32x4:
-            case TypeIds_SIMDInt32x4:
             case TypeIds_SIMDFloat64x2:
+            case TypeIds_SIMDInt32x4:
             case TypeIds_SIMDInt16x8:
             case TypeIds_SIMDInt8x16:
             case TypeIds_SIMDBool32x4:

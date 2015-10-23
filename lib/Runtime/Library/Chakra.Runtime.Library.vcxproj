@@ -90,6 +90,24 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)SIMDUInt32x4OperationX86X64.cpp">
       <ExcludedFromBuild Condition="'$(Platform)'!='Win32' AND '$(Platform)'!='x64'">true</ExcludedFromBuild>
     </ClCompile>
+	
+	<ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSIMDUint16x8.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)SIMDUint16x8Lib.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)SIMDUint16x8Operation.cpp">
+      <ExcludedFromBuild Condition="'$(Platform)'!='ARM' AND '$(Platform)'!='Arm64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)SIMDUint16x8OperationX86X64.cpp">
+      <ExcludedFromBuild Condition="'$(Platform)'!='Win32' AND '$(Platform)'!='x64'">true</ExcludedFromBuild>
+    </ClCompile>
+	
+	<ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSIMDUint8x16.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)SIMDUint8x16Lib.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)SIMDUint8x16Operation.cpp">
+      <ExcludedFromBuild Condition="'$(Platform)'!='ARM' AND '$(Platform)'!='Arm64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)SIMDUint8x16OperationX86X64.cpp">
+      <ExcludedFromBuild Condition="'$(Platform)'!='Win32' AND '$(Platform)'!='x64'">true</ExcludedFromBuild>
+    </ClCompile>
 
     
    <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSIMDBool32x4.cpp" />
@@ -248,6 +266,8 @@
     <ClInclude Include="JavascriptSIMDInt16x8.h" />
     <ClInclude Include="JavascriptSIMDInt8x16.h" />
     <ClInclude Include="JavascriptSIMDUInt32x4.h" />
+    <ClInclude Include="JavascriptSIMDUint16x8.h" />
+    <ClInclude Include="JavascriptSIMDUint8x16.h" />
     <ClInclude Include="JavascriptSIMDBool32x4.h" />
     <ClInclude Include="JavascriptSIMDBool16x8.h" />
     <ClInclude Include="JavascriptSIMDBool8x16.h" />
@@ -264,6 +284,10 @@
     <ClInclude Include="SIMDInt8x16Operation.h" />
     <ClInclude Include="SIMDUInt32x4Lib.h" />
     <ClInclude Include="SIMDUInt32x4Operation.h" />
+	<ClInclude Include="SIMDUint16x8Lib.h" />
+    <ClInclude Include="SIMDUint16x8Operation.h" />
+    <ClInclude Include="SIMDUint8x16Lib.h" />
+    <ClInclude Include="SIMDUint8x16Operation.h" />
     <ClInclude Include="SIMDBool32x4Lib.h" />
     <ClInclude Include="SIMDBool32x4Operation.h" />
     <ClInclude Include="SIMDBool16x8Lib.h" />

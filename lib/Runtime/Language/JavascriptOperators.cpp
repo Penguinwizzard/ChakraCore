@@ -311,6 +311,16 @@ namespace Js
             {
                 return scriptContext->GetLibrary()->GetSIMDUint32x4DisplayString();
             }
+        case TypeIds_SIMDUint16x8:
+            if (scriptContext->GetConfig()->IsSimdjsEnabled())
+            {
+                return scriptContext->GetLibrary()->GetSIMDUint16x8DisplayString();
+            }
+        case TypeIds_SIMDUint8x16:
+            if (scriptContext->GetConfig()->IsSimdjsEnabled())
+            {
+                return scriptContext->GetLibrary()->GetSIMDUint8x16DisplayString();
+            }
         case TypeIds_SIMDBool32x4:
             if (scriptContext->GetConfig()->IsSimdjsEnabled())
             {

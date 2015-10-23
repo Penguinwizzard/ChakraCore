@@ -19,6 +19,8 @@ struct _SIMDValue
         int16   i16[8];
         int8    i8[16];
         uint32  u32[4];
+        uint16  u16[8];
+        uint8   u8[16];
         float   f32[4];
         double  f64[2];
     };
@@ -115,6 +117,7 @@ const _x86_SIMDValue X86_LANE_W_ZEROS = { 0xffffffff, 0xffffffff, 0xffffffff, 0x
 
 const _x86_SIMDValue X86_TWO_31_F4 = { 0x4f000000, 0x4f000000, 0x4f000000, 0x4f000000 }; // f32(2^31), ....
 const _x86_SIMDValue X86_TWO_31_I4 = X86_NEG_MASK_F4;                                    // 2^31, ....
+const _x86_SIMDValue X86_WORD_SIGNBITS = { { 0x80008000, 0x80008000, 0x80008000, 0x80008000 } };
 
 typedef _x86_SIMDValue X86SIMDValue;
 CompileAssert(sizeof(X86SIMDValue) == 16);

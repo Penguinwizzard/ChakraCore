@@ -263,6 +263,8 @@ namespace Js
         StaticType * simdBool8x16TypeStatic;
 
         StaticType * simdUint32x4TypeStatic;
+        StaticType * simdUint16x8TypeStatic;
+        StaticType * simdUint8x16TypeStatic;
 
         DynamicType * numberTypeDynamic;
         DynamicType * objectTypes[PreInitializedObjectTypeCount];
@@ -317,6 +319,8 @@ namespace Js
         JavascriptString* simdBool16x8DisplayString;
         JavascriptString* simdBool8x16DisplayString;
         JavascriptString* simdUint32x4DisplayString;
+        JavascriptString* simdUint16x8DisplayString;
+        JavascriptString* simdUint8x16DisplayString;
 
 
 
@@ -364,6 +368,8 @@ namespace Js
         JavascriptFunction* simdBool16x8ToStringFunction;
         JavascriptFunction* simdBool8x16ToStringFunction;
         JavascriptFunction* simdUint32x4ToStringFunction;
+        JavascriptFunction* simdUint16x8ToStringFunction;
+        JavascriptFunction* simdUint8x16ToStringFunction;
 
 
 
@@ -549,6 +555,8 @@ namespace Js
         JavascriptString* GetSIMDBool8x16DisplayString()   const { return simdBool8x16DisplayString; }
 
         JavascriptString* GetSIMDUint32x4DisplayString()   const { return simdUint32x4DisplayString; }
+        JavascriptString* GetSIMDUint16x8DisplayString()   const { return simdUint16x8DisplayString; }
+        JavascriptString* GetSIMDUint8x16DisplayString()   const { return simdUint8x16DisplayString; }
 
         JavascriptString* GetSymbolTypeDisplayString() const { return symbolTypeDisplayString; }
         JavascriptString* GetDebuggerDeadZoneBlockVariableString() { Assert(debuggerDeadZoneBlockVariableString); return debuggerDeadZoneBlockVariableString; }
@@ -628,6 +636,8 @@ namespace Js
         StaticType* GetSIMDBool8x16TypeStatic() const { return simdBool8x16TypeStatic; }
 
         StaticType* GetSIMDUInt32x4TypeStatic()   const { return simdUint32x4TypeStatic; }
+        StaticType* GetSIMDUint16x8TypeStatic()   const { return simdUint16x8TypeStatic; }
+        StaticType* GetSIMDUint8x16TypeStatic()   const { return simdUint8x16TypeStatic; }
 
         DynamicType * GetObjectLiteralType(uint16 requestedInlineSlotCapacity);
         DynamicType * GetObjectHeaderInlinedLiteralType(uint16 requestedInlineSlotCapacity);
@@ -682,6 +692,8 @@ namespace Js
         JavascriptFunction* GetSIMDBool8x16ToStringFunction()   const { return simdBool8x16ToStringFunction; }
         
         JavascriptFunction* GetSIMDUint32x4ToStringFunction()   const { return simdUint32x4ToStringFunction; }
+        JavascriptFunction* GetSIMDUint16x8ToStringFunction()   const { return simdUint16x8ToStringFunction; }
+        JavascriptFunction* GetSIMDUint8x16ToStringFunction()   const { return simdUint8x16ToStringFunction; }
 
         JavascriptFunction* GetDebugObjectNonUserGetterFunction() const { return debugObjectNonUserGetterFunction; }
         JavascriptFunction* GetDebugObjectNonUserSetterFunction() const { return debugObjectNonUserSetterFunction; }
