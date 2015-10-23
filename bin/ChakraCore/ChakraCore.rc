@@ -11,3 +11,10 @@
 #define VER_FILETYPE                    VFT_DLL
 
 #include "..\CoreCommon.ver"
+
+#include "jserr.rc2"
+
+#ifdef ENABLE_JS_ETW
+#include "Microsoft-Scripting-chakraEvents.rc"
+#endif
+
