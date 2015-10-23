@@ -554,7 +554,7 @@ SECOND_PASS:
             if (!segmentMap)
             {
                 probeCost++;
-                if (probeCost > SegmentBTree::GetLazyCrossOverLimit() && this->head != EmptySegment && !this->GetScriptContext()->IsHeapEnumInProgress())
+                if (probeCost > SegmentBTree::GetLazyCrossOverLimit() && this->head != EmptySegment)
                 {
                     // Build a SegmentMap
                     segmentMap = BuildSegmentMap();

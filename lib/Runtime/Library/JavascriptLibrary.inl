@@ -45,6 +45,6 @@ namespace Js
     template <typename T>
     void JavascriptLibrary::CheckAndConvertCopyOnAccessNativeIntArray(const T instance)
     {
+        // dummy template function
     }
-
 }

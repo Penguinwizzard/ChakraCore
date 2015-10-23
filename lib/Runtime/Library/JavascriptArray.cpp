@@ -2101,7 +2101,7 @@ namespace Js
     }
 
     // Convert Var to index in the Array.
-    // Note: Spec calls out few rules for these parameters:
+    // Note: Spec calls out a few rules for these parameters:
     // 1. if (arg > length) { return length; }
     // clamp to length, not length-1
     // 2. if (arg < 0) { return max(0, length + arg); }
@@ -2532,7 +2532,7 @@ namespace Js
     }
 
     // If new length > length, we just reset the length
-    // If new length < length, we need to remove rest of the elements and segment
+    // If new length < length, we need to remove the rest of the elements and segment
     void JavascriptArray::SetLength(uint32 newLength)
     {
         if (newLength == length)
@@ -2889,6 +2889,7 @@ namespace Js
                 // Flatten if other array or remote array (marked with TypeIds_Array)
                 if (DynamicObject::IsAnyArray(aItem) || remoteTypeIds[idxArg] == TypeIds_Array || spreadable)
                 {
+                    //CONSIDER: enumerating remote array instead of walking all indices
                     BigIndex length;
                     if (firstPromotedItemIsSpreadable)
                     {
@@ -3713,6 +3714,7 @@ namespace Js
         Var element = nullptr;
         bool isSearchTaggedInt = TaggedInt::Is(search);
 
+        //Consider: enumerating instead of walking all indices
         for (P i = fromIndex; i < toIndex; i++)
         {
             if (!TemplatedGetItem(pArr, i, &element, scriptContext))
@@ -3931,8 +3933,8 @@ namespace Js
         bool isProxy = JavascriptProxy::Is(thisArg) && (scriptContext == JavascriptProxy::FromVar(thisArg)->GetScriptContext());
         Var target = NULL;
         bool isTargetObjectPushed = false;
-        // if we are visiting proxy object, track that we have visited target object as well so the next time we call
-        // join helper for target of this proxy, we will return above.
+        // if we are visiting the proxy object, track that we have visited the target object as well so the next time w
+        // call the join helper for the target of this proxy, we will return above.
         if (isProxy)
         {
             JavascriptProxy* proxy = JavascriptProxy::FromVar(thisArg);
@@ -4395,7 +4397,7 @@ Case0:
 
         double element = Js::JavascriptOperators::OP_GetNativeFloatElementI_UInt32(object, index, scriptContext);
 
-        // If it is a missing item, then don't update the length - Pre-op Bail out will happen.
+        // If it is a missing item then don't update the length - Pre-op Bail out will happen.
         if(!SparseArraySegment<double>::IsMissingItem(&element))
         {
             arr->SetLength(index);
@@ -4534,14 +4536,14 @@ Case0:
     */
     Var JavascriptNativeIntArray::Push(ScriptContext * scriptContext, Var array, int value)
     {
-        // Only handle, native int arrays here,and the array is not a crossSiteObject
+        // Handle non crossSite native int arrays here length within MaxArrayLength.
+        // JavascriptArray::Push will handle other cases.
         if (JavascriptNativeIntArray::IsNonCrossSite(array))
         {
             JavascriptNativeIntArray * nativeIntArray = JavascriptNativeIntArray::FromVar(array);
             Assert(!nativeIntArray->IsCrossSiteObject());
             uint32 n = nativeIntArray->length;
 
-            // Only handle, if the length is within MaxArrayLength
             if(n < JavascriptArray::MaxArrayLength)
             {
                 nativeIntArray->SetItem(n, value);
@@ -4563,14 +4565,14 @@ Case0:
     */
     Var JavascriptNativeFloatArray::Push(ScriptContext * scriptContext, Var * array, double value)
     {
-        // Only handle native float arrays here.
+        // Handle non crossSite native int arrays here length within MaxArrayLength.
+        // JavascriptArray::Push will handle other cases.
         if(JavascriptNativeFloatArray::IsNonCrossSite(array))
         {
             JavascriptNativeFloatArray * nativeFloatArray = JavascriptNativeFloatArray::FromVar(array);
             Assert(!nativeFloatArray->IsCrossSiteObject());
             uint32 n = nativeFloatArray->length;
 
-            // Only handle, if the length is within MaxArrayLength and the array is not a crossSiteObject
             if(n < JavascriptArray::MaxArrayLength)
             {
                 nativeFloatArray->SetItem(n, value);
@@ -5146,7 +5148,7 @@ Case0:
             {
                 uint32 offset = head->size - 1;
                 // There is room for one unshifted element in head segment.
-                // Hence its enough if we grow the head segment by next->length - 1
+                // Hence it's enough if we grow the head segment by next->length - 1
 
                 if (next->next)
                 {
@@ -6133,12 +6135,7 @@ Case0:
 
         Assert(!(callInfo.Flags & CallFlags_New));
 
-        Var res = scriptContext->GetLibrary()->GetUndefined();
-
-        if (args.Info.Count == 0)
-        {
-            return res;
-        }
+        AssertMsg(args.Info.Count >= 1, "Built-in APIs should have atleast 1 argument");
 
         RecyclableObject* compFn = NULL;
         if (args.Info.Count > 1)
@@ -6275,12 +6272,7 @@ Case0:
 
         Assert(!(callInfo.Flags & CallFlags_New));
 
-        Var res = scriptContext->GetLibrary()->GetUndefined();
-
-        if (args.Info.Count == 0)
-        {
-            return res;
-        }
+        AssertMsg(args.Info.Count >= 1, "Built-in APIs should have atleast 1 argument");
 
         bool isArr = false;
         JavascriptArray* pArr = 0;
@@ -9794,6 +9786,8 @@ Case0:
     {
         if (Configuration::Global.flags.ForceES5Array)
         {
+            // There's a bad interaction with the jitted code for native array creation here.
+            // forcees5array doesn’t interact well with native arrays
             if (PHASE_OFF1(NativeArrayPhase))
             {
                 GetTypeHandler()->ConvertToTypeWithItemAttributes(this);
@@ -10848,8 +10842,6 @@ Case0:
                     }
                     else
                     {
-                        // The only things that should be hitting this else statement are strings, arguments, typed arrays, & cross site arrays
-                        // Objects Need an @@iterator property now and thus hit the above iterator codepath.
                         uint32 len = GetSpreadArgLen(instance, scriptContext);
                         slowCopy(result, resultIndex, instance, 0, len);
                         resultIndex += len;

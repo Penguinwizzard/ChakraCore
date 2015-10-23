@@ -29,6 +29,7 @@ namespace Js
             {
             case TypeIds_Undefined:
             case TypeIds_Null:
+                // Break to return a new object
                 break;
 
             case TypeIds_StringObject:

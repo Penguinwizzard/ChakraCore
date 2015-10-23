@@ -72,7 +72,9 @@ namespace Js
 
         typesEnsuredToHaveOnlyWritableDataPropertiesInItAndPrototypeChain = RecyclerNew(recycler, JsUtil::List<Type *>, recycler);
 
-        // Note: Any objects created here using DeferredTypeHandler need to appear in EnsureLibraryReadyForHybridDebugging
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        // WARNING: Any objects created here using DeferredTypeHandler need to appear in EnsureLibraryReadyForHybridDebugging
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
         // Library is not zero-initialized. memset the memory occupied by builtinFunctions array to 0.
         memset(builtinFunctions, 0, sizeof(JavascriptFunction *) * BuiltinFunction::Count);
@@ -129,7 +131,9 @@ namespace Js
 
         ArrayBuffer* baseArrayBuffer;
 
-        // Note: Any objects here using DeferredTypeHandler need to appear in EnsureLibraryReadyForHybridDebugging
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        // WARNING: Any objects here using DeferredTypeHandler need to appear in EnsureLibraryReadyForHybridDebugging
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
         // The prototype property of the object prototype is null.
         objectPrototype = ObjectPrototypeObject::New(recycler,
@@ -1106,7 +1110,9 @@ namespace Js
 
     void JavascriptLibrary::InitializeGlobal(GlobalObject * globalObject)
     {
-        // Note: Any objects here using DeferredTypeHandler need to appear in EnsureLibraryReadyForHybridDebugging
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        // WARNING: Any objects here using DeferredTypeHandler need to appear in EnsureLibraryReadyForHybridDebugging
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
         RecyclableObject* globalObjectPrototype = GetObjectPrototype();
         globalObject->SetPrototype(globalObjectPrototype);
@@ -3126,12 +3132,26 @@ namespace Js
     }
 
 #ifdef ENABLE_NATIVE_CODEGEN
+    // Note: This function is only used in float preferencing scenarios. Should remove it once we do away with float preferencing.
+
+    // Cases like,
+    // case PropertyIds::concat:
+    // case PropertyIds::indexOf:
+    // case PropertyIds::lastIndexOf:
+    // case PropertyIds::slice:
+    // which have same names for Array and String cannot be resolved just by the property id
+
     BuiltinFunction JavascriptLibrary::GetBuiltinFunctionForPropId(PropertyId id)
     {
         switch (id)
         {
         case PropertyIds::abs:
             return BuiltinFunction::Math_Abs;
+
+        // For now, avoid mapping Math.atan2 to a direct CRT call, as the
+        // fast CRT helper doesn't handle denormals correctly.
+        // case PropertyIds::atan2:
+        //    return BuiltinFunction::Atan2;
 
         case PropertyIds::acos:
             return BuiltinFunction::Math_Acos;

@@ -799,9 +799,11 @@ namespace Js
         }
     }
 
+    static const int bufSize = 256;
+
     JavascriptString* JavascriptNumber::ToString(double value, ScriptContext* scriptContext)
     {
-        wchar_t szBuffer[256];
+        wchar_t szBuffer[bufSize];
         int cchWritten = swprintf_s(szBuffer, _countof(szBuffer), L"%g", value);
 
         return JavascriptString::NewCopyBuffer(szBuffer, cchWritten, scriptContext);
@@ -822,8 +824,6 @@ namespace Js
 
         return nullptr;
     }
-
-    static const int bufSize = 256;
 
     JavascriptString* JavascriptNumber::ToStringRadix10(double value, ScriptContext* scriptContext)
     {

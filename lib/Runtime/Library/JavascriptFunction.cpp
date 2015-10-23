@@ -23,10 +23,6 @@ extern "C" PVOID __guard_check_icall_fptr;
 extern "C" void __cdecl _alloca_probe_16();
 #endif
 
-#ifdef _M_X64_OR_ARM64
-#pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
-#endif
-
 namespace Js
 {
     DEFINE_RECYCLER_TRACKER_PERF_COUNTER(JavascriptFunction);
@@ -160,16 +156,16 @@ namespace Js
         JavascriptString* separator = library->GetCommaDisplayString();
 
         // Gather all the formals into a string like (fml1, fml2, fml3)
-        JavascriptString *fmls = library->CreateStringFromCppLiteral(L"(");
+        JavascriptString *formals = library->CreateStringFromCppLiteral(L"(");
         for (uint i = 1; i < args.Info.Count - 1; ++i)
         {
             if (i != 1)
             {
-                fmls = JavascriptString::Concat(fmls, separator);
+                formals = JavascriptString::Concat(formals, separator);
             }
-            fmls = JavascriptString::Concat(fmls, JavascriptConversion::ToString(args.Values[i], scriptContext));
+            formals = JavascriptString::Concat(formals, JavascriptConversion::ToString(args.Values[i], scriptContext));
         }
-        fmls = JavascriptString::Concat(fmls, library->CreateStringFromCppLiteral(L")"));
+        formals = JavascriptString::Concat(formals, library->CreateStringFromCppLiteral(L")"));
 
         // Function body, last argument to Function(...)
         JavascriptString *fnBody = NULL;
@@ -184,7 +180,7 @@ namespace Js
         JavascriptString *bs = isGenerator ?
             library->CreateStringFromCppLiteral(genFuncName) :
             library->CreateStringFromCppLiteral(funcName);
-        bs = JavascriptString::Concat(bs, fmls);
+        bs = JavascriptString::Concat(bs, formals);
         bs = JavascriptString::Concat(bs, library->CreateStringFromCppLiteral(bracket));
         if (fnBody != NULL)
         {
@@ -207,8 +203,8 @@ namespace Js
         {
             // ES3 and ES5 specs require validation of the formal list and the function body
 
-            // Validate fmls here
-            scriptContext->GetGlobalObject()->ValidateSyntax(scriptContext, fmls->GetSz(), fmls->GetLength(), isGenerator, &Parser::ValidateFormals);
+            // Validate formals here
+            scriptContext->GetGlobalObject()->ValidateSyntax(scriptContext, formals->GetSz(), formals->GetLength(), isGenerator, &Parser::ValidateFormals);
             if (fnBody != NULL)
             {
                 // Validate function body
@@ -667,6 +663,7 @@ namespace Js
                     CallAsConstructor(this, /* overridingNewTarget = */nullptr, args, scriptContext) :
                     CallFunction<true>(this, this->GetEntryPoint(), args);
 
+                // A recent compiler bug 150148 can incorrectly eliminate catch block, temprory workaround
                 if (threadContext == NULL)
                 {
                     throw (JavascriptExceptionObject*)NULL;
@@ -840,6 +837,7 @@ namespace Js
     {
         Assert(constructorReturnValue);
 
+        // CONSIDER: Using constructorCache->ctorHasNoExplicitReturnValue to speed up this interpreter code path.
         if (JavascriptOperators::IsObject(constructorReturnValue))
         {
             newObject = constructorReturnValue;
@@ -896,7 +894,7 @@ namespace Js
 
         for (unsigned i = 1, argsIndex = 1, spreadArgIndex = 0; i < callInfo.Count; ++i)
         {
-            size_t spreadIndex = spreadIndices->elements[spreadArgIndex]; // Next index to be spread.
+            uint32 spreadIndex = spreadIndices->elements[spreadArgIndex]; // Next index to be spread.
             if (i < spreadIndex)
             {
                 // Copy everything until the next spread index.
@@ -944,6 +942,8 @@ namespace Js
 
                     if (arr != nullptr && !arr->IsCrossSiteObject())
                     {
+                        // CONSIDER: Optimize by creating a JavascriptArray routine which allows
+                        // memcpy-like semantics in optimal situations (no gaps, etc.)
                         for (uint32 j = 0; j < arr->GetLength(); j++)
                         {
                             Var element;
@@ -958,6 +958,7 @@ namespace Js
                     }
                     else
                     {
+                        // Try to use the spread argument as an object with a length property.
                         RecyclableObject *propertyObject;
                         if (!JavascriptOperators::GetPropertyObject(instance, scriptContext, &propertyObject))
                         {
@@ -1566,12 +1567,6 @@ LABEL1:
         return this->GetLibrary()->GetFunctionDisplayString();
     }
 
-#if DBG_DUMP
-    void JavascriptFunction::Dump()
-    {
-    }
-
-#endif
     /*
     *****************************************************************************************************************
                                 Conditions checked by instruction decoder (In sequential order)
@@ -2390,6 +2385,13 @@ LABEL1:
         BOOL foundThis = FALSE;
         JavascriptFunction* funcCaller = FindCaller(&foundThis, nullValue, requestContext);
 
+        // WOOB #1142373. We are trying to get the caller in window.onerror = function(){alert(arguments.callee.caller);} case
+        // window.onerror is called outside of JavascriptFunction::CallFunction loop, so the caller information is not available
+        // in the stack to be found by the stack walker.
+        // As we had already walked the stack at throw time retrieve the caller information stored in the exception object
+        // The down side is that we can only find the top level caller at thrown time, and won't be able to find caller.caller etc.
+        // We'll try to fetch the caller only if we can find the function on the stack, but we can't find the caller if and we are in
+        // window.onerror scenario.
         *value = funcCaller;
         if (foundThis && funcCaller == nullValue && scriptContext->GetThreadContext()->HasUnhandledException())
         {
@@ -2397,6 +2399,8 @@ LABEL1:
             if (unhandledExceptionObject)
             {
                 JavascriptFunction* exceptionFunction = unhandledExceptionObject->GetFunction();
+                // This is for getcaller in window.onError.The behavior is different in
+                // different browser, and neither Firefox nor chrome can get the caller here.
                 if (exceptionFunction && scriptContext == exceptionFunction->GetScriptContext())
                 {
                     *value = exceptionFunction;
@@ -2663,11 +2667,7 @@ LABEL1:
 
         BOOL result = DynamicObject::DeleteProperty(propertyId, flags);
 
-        if (result && propertyId == PropertyIds::prototype)
-        {
-            InvalidateConstructorCacheOnPrototypeChange();
-            this->GetScriptContext()->GetThreadContext()->InvalidateIsInstInlineCachesForFunction(this);
-        }
+        AssertMsg(propertyId != PropertyIds::prototype || !result, "It shouldn't be possible to delete a prototype property of a function.");
 
         return result;
     }

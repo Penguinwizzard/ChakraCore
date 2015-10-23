@@ -156,10 +156,6 @@ namespace Js
 
         void ResetConstructorCacheToDefault();
 
-#if DBG_DUMP
-        void Dump();
-#endif
-
         virtual bool HasReadOnlyPropertiesInvisibleToTypeHandler() override { return true; }
 
         virtual BOOL HasProperty(PropertyId propertyId) override;
