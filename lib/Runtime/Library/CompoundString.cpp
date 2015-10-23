@@ -968,6 +968,18 @@ namespace Js
         AppendGeneric(s, appendCharLength, this, true);
     }
 
+    void CompoundString::AppendCharsSz(__in_z const wchar_t *const s)
+    {
+        size_t len = wcslen(s);
+        // We limit the length of the string to MaxCharCount, 
+        // so just OOM if we are appending a string that exceed this limit already
+        if (!IsValidCharCount(len))
+        {
+            JavascriptExceptionOperators::ThrowOutOfMemory(this->GetScriptContext());
+        }
+        AppendChars(s, (CharCount)len);
+    }
+
     void CompoundString::Grow()
     {
         Assert(!IsFinalized());

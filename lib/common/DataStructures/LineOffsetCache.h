@@ -145,7 +145,7 @@ namespace JsUtil
             return item.characterOffset;
         }
 
-        size_t GetLineCount() const
+        uint32 GetLineCount() const
         {
             AssertMsg(this->lineOffsetCacheList != nullptr, "The list was either not set from the ByteCode or not created.");
             return this->lineOffsetCacheList->Count();

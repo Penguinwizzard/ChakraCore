@@ -20,11 +20,6 @@
 #define CDECL ORIGINAL_CDECL
 #endif
 
-#ifdef _M_X64_OR_ARM64
-// TODO: Clean this warning up
-#pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
-#endif
-
 using namespace Js;
 
 //
@@ -322,12 +317,13 @@ void EtwTrace::LogMethodNativeLoadEvent(FunctionBody* body, FunctionEntryPointIn
         wcscat_s(methodNameBuffer, L"}");
 
         size_t methodLength = wcslen(methodNameBuffer);
+        Assert(methodLength < _MAX_PATH);
         size_t length = methodLength * 3 + 1;
         utf8char_t* utf8MethodName = HeapNewNoThrowArray(utf8char_t, length);
         if(utf8MethodName)
         {
             methodInfo.method_id = iJIT_GetNewMethodID();     
-            utf8::EncodeIntoAndNullTerminate(utf8MethodName, methodNameBuffer, methodLength);
+            utf8::EncodeIntoAndNullTerminate(utf8MethodName, methodNameBuffer, (charcount_t)methodLength);
             methodInfo.method_name = (char*)utf8MethodName;
             methodInfo.method_load_address = (void*)entryPoint->GetNativeAddress();  
             methodInfo.method_size = (uint)entryPoint->GetCodeSize();        // Size in memory - Must be exact
@@ -352,7 +348,7 @@ void EtwTrace::LogMethodNativeLoadEvent(FunctionBody* body, FunctionEntryPointIn
                 methodInfo.line_number_table = pLineInfo;
             }
 
-            uint urlLength  = 0;
+            size_t urlLength  = 0;
             utf8char_t* utf8Url = GetUrl(body, &urlLength);
             methodInfo.source_file_name = (char*)utf8Url; 
             methodInfo.env = iJDE_JittingAPI;
@@ -382,20 +378,21 @@ void EtwTrace::LogLoopBodyLoadEvent(FunctionBody* body, LoopHeader* loopHeader, 
         iJIT_Method_Load methodInfo;
         memset(&methodInfo, 0, sizeof(iJIT_Method_Load));
         const wchar_t* methodName = body->GetExternalDisplayName();
-        size_t methodLength = wcslen(methodName);
+        size_t methodLength = wcslen(methodName);        
+        methodLength = min(methodLength, (size_t)UINT_MAX); // Just truncate if it is too big
         size_t length = methodLength * 3 + /* spaces */ 2 + _countof(LoopStr) + /*size of loop number*/ 10 + /*NULL*/ 1;
         utf8char_t* utf8MethodName = HeapNewNoThrowArray(utf8char_t, length);
         if(utf8MethodName)
         {
             methodInfo.method_id = iJIT_GetNewMethodID();     
-            size_t len = utf8::EncodeInto(utf8MethodName, methodName, methodLength);
+            size_t len = utf8::EncodeInto(utf8MethodName, methodName, (charcount_t)methodLength);
             uint loopNumber = body->GetLoopNumber(loopHeader) + 1;
             sprintf_s((char*)(utf8MethodName + len), length - len," %s %d", LoopStr, loopNumber);
             methodInfo.method_name = (char*)utf8MethodName;
             methodInfo.method_load_address = (void*)entryPoint->GetNativeAddress();  
             methodInfo.method_size = (uint)entryPoint->GetCodeSize();        // Size in memory - Must be exact
             
-            uint urlLength  = 0;
+            size_t urlLength  = 0;
             utf8char_t* utf8Url = GetUrl(body, &urlLength);
             methodInfo.source_file_name = (char*)utf8Url;
             methodInfo.env = iJDE_JittingAPI;
@@ -493,7 +490,7 @@ size_t EtwTrace::GetSimpleJitFunctionName(
 }
 
 #ifdef VTUNE_PROFILING
-utf8char_t* EtwTrace::GetUrl( FunctionBody* body, uint* urlLength )
+utf8char_t* EtwTrace::GetUrl( FunctionBody* body, size_t* urlBufferLength )
 {
     utf8char_t* utf8Url = NULL;
     if(!body->GetSourceContextInfo()->IsDynamic())
@@ -502,14 +499,13 @@ utf8char_t* EtwTrace::GetUrl( FunctionBody* body, uint* urlLength )
         if(url)
         {
             size_t urlCharLength = wcslen(url);
-            if (urlCharLength <= UINT_MAX)
+            urlCharLength = min(urlCharLength, (size_t)UINT_MAX);       // Just truncate if it is too big
+
+            *urlBufferLength = urlCharLength * 3 + 1;
+            utf8Url = HeapNewNoThrowArray(utf8char_t, *urlBufferLength);
+            if (utf8Url)
             {
-                *urlLength = urlCharLength * 3 + 1;
-                utf8Url = HeapNewNoThrowArray(utf8char_t, *urlLength);
-                if (utf8Url)
-                {
-                    utf8::EncodeIntoAndNullTerminate(utf8Url, url, urlCharLength);
-                }
+                utf8::EncodeIntoAndNullTerminate(utf8Url, url, (charcount_t)urlCharLength);
             }
         }
     }

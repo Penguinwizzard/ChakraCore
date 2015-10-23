@@ -89,12 +89,12 @@ namespace Js
             return cbIndex < GetCbLength(L"CharacterIndexToByteIndex") ? static_cast< charcount_t>(GetCbLength(L"CharacterIndexToByteIndex") == m_cchLength ? cbIndex : utf8::ByteIndexIntoCharacterIndex(this->GetSource(L"CharacterIndexToByteIndex"), cbIndex, utf8::doAllowThreeByteSurrogates)) : static_cast< charcount_t >(GetCbLength(L"CharacterIndexToByteIndex"));
         }
 
-        size_t GetCchLength() const
+        charcount_t GetCchLength() const
         {
             return m_cchLength;
         }
 
-        void SetCchLength(size_t cchLength)
+        void SetCchLength(charcount_t cchLength)
         {
             m_cchLength = cchLength;
         }
@@ -291,7 +291,7 @@ namespace Js
             this->m_lineOffsetCache = nullptr;
         }
 
-        void CreateLineOffsetCache(const JsUtil::LineOffsetCache<Recycler>::LineOffsetCacheItem *items, size_t numberOfItems);
+        void CreateLineOffsetCache(const JsUtil::LineOffsetCache<Recycler>::LineOffsetCacheItem *items, charcount_t numberOfItems);
 
         size_t GetLineCount()
         {
@@ -349,7 +349,7 @@ namespace Js
         bool GetDebugDocumentName(BSTR * sourceName);
     private:
 
-        size_t m_cchLength;               // The number of characters encoded in m_utf8Source.
+        charcount_t m_cchLength;               // The number of characters encoded in m_utf8Source.
         ISourceHolder* sourceHolder;
         union
         {

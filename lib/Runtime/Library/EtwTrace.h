@@ -253,7 +253,7 @@ public:
 
 private:
 #ifdef VTUNE_PROFILING
-    static utf8char_t* GetUrl(Js::FunctionBody* body, uint* urlLength);
+    static utf8char_t* GetUrl(Js::FunctionBody* body, size_t* urlLength);
 #endif
 };
 

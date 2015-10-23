@@ -12,11 +12,6 @@ extern "C" PVOID __guard_check_icall_fptr;
 #endif
 #endif
 
-#ifdef _M_X64_OR_ARM64
-// TODO: Clean this warning up
-#pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
-#endif
-
 namespace Js
 {
     void JavascriptExceptionOperators::AutoCatchHandlerExists::FetchNonUserCodeStatus(ScriptContext * scriptContext)
@@ -1236,7 +1231,7 @@ namespace Js
         {
             bs->AppendChars(L"\n   at ");
         }
-        bs->AppendChars(functionName, wcslen(functionName));
+        bs->AppendCharsSz(functionName);
         bs->AppendChars(L" (");
 
         if (CONFIG_FLAG(ExtendedErrorStackForTestHost) && *fileName != L'\0')
@@ -1246,17 +1241,17 @@ namespace Js
             errno_t err = _wsplitpath_s(fileName, NULL, 0, NULL, 0, shortfilename, _MAX_FNAME, ext, _MAX_EXT);
             if (err != 0)
             {
-                bs->AppendChars(fileName, wcslen(fileName));
+                bs->AppendCharsSz(fileName);
             }
             else
             {
-                bs->AppendChars(shortfilename, wcslen(shortfilename));
-                bs->AppendChars(ext, wcslen(ext));
+                bs->AppendCharsSz(shortfilename);
+                bs->AppendCharsSz(ext);
             }
         }
         else
         {
-            bs->AppendChars(fileName, wcslen(fileName));
+            bs->AppendCharsSz(fileName);
         }
         bs->AppendChars(L':');
         bs->AppendChars(lineNumber, maxULongStringLength, ConvertULongToString);
@@ -1269,7 +1264,7 @@ namespace Js
     {
         // format is equivalent to printf("\n   at %s (native code)", functionName);
         bs->AppendChars(L"\n   at ");
-        bs->AppendChars(functionName, wcslen(functionName));
+        bs->AppendCharsSz(functionName);
         bs->AppendChars(L" (native code)");
     }
 

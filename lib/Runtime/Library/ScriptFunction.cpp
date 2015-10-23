@@ -4,11 +4,6 @@
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
 
-#ifdef _M_X64_OR_ARM64
-// TODO: Clean this warning up
-#pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
-#endif
-
 namespace Js
 {
     const wchar_t ScriptFunction::diagDefaultCtor[]         = JS_DEFAULT_CTOR_DISPLAY_STRING;
@@ -358,7 +353,7 @@ namespace Js
         JavascriptString* prefixString = nullptr;
         uint prefixStringLength = 0;
         const wchar_t* name = L"";
-        size_t nameLength = 0;
+        charcount_t nameLength = 0;
         Var returnStr = nullptr;
 
         if (!isClassMethod)
@@ -414,7 +409,11 @@ namespace Js
         //Length is a uint32 so max length of functionBody can't be more than that even if we are using 64bit pointers
         uint functionBodyLength = inputString->GetLength() - ((uint)(paramStr - inputStr));
 
-        uint totalLength = prefixStringLength + functionBodyLength + nameLength;
+        size_t totalLength = prefixStringLength + functionBodyLength + nameLength;        
+        if (!IsValidCharCount(totalLength))
+        {
+            JavascriptExceptionOperators::ThrowOutOfMemory(this->GetScriptContext());
+        }
         wchar_t * funcBodyStr = RecyclerNewArrayLeaf(this->GetScriptContext()->GetRecycler(), wchar_t, totalLength);
         wchar_t * funcBodyStrStart = funcBodyStr;
         if (prefixString != nullptr)
@@ -427,7 +426,7 @@ namespace Js
         funcBodyStrStart = funcBodyStrStart + nameLength;
         js_wmemcpy_s(funcBodyStrStart, functionBodyLength, paramStr, functionBodyLength);
 
-        returnStr = LiteralString::NewCopyBuffer(funcBodyStr, totalLength, scriptContext);
+        returnStr = LiteralString::NewCopyBuffer(funcBodyStr, (charcount_t)totalLength, scriptContext);
 
         LEAVE_PINNED_SCOPE();
 
@@ -450,7 +449,7 @@ namespace Js
         if (isDefaultConstructor)
         {
             PCWSTR fakeCode = hasSuperReference ? diagDefaultExtendsCtor : diagDefaultCtor;
-            size_t fakeStrLen = hasSuperReference ? _countof(diagDefaultExtendsCtor) : _countof(diagDefaultCtor);
+            charcount_t fakeStrLen = hasSuperReference ? _countof(diagDefaultExtendsCtor) : _countof(diagDefaultCtor);
             Var fakeString = JavascriptString::NewCopyBuffer(fakeCode, fakeStrLen - 1, scriptContext);
 
             pFuncBody->SetCachedSourceString(fakeString);
@@ -462,7 +461,7 @@ namespace Js
         if (source != nullptr && source->GetIsLibraryCode())
         {
             //Don't display if it is anonymous function
-            size_t displayNameLength = 0;
+            charcount_t displayNameLength = 0;
             PCWSTR displayName = pFuncBody->GetShortDisplayName(&displayNameLength);
             cachedSourceString = JavascriptFunction::GetLibraryCodeDisplayString(scriptContext, displayName);
         }
@@ -731,7 +730,7 @@ namespace Js
         Assert(this->GetFunctionProxy() != nullptr); // The caller should guarantee a proxy exists
         ParseableFunctionInfo * func = this->GetFunctionProxy()->EnsureDeserialized();
         const wchar_t* name = nullptr;
-        size_t length = 0;
+        charcount_t length = 0;
         JavascriptString* returnStr = nullptr;
         ENTER_PINNED_SCOPE(JavascriptString, computedName);
 

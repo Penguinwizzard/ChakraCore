@@ -19,11 +19,6 @@
 
 #include "Language\InterpreterStackFrame.h"
 
-#ifdef _M_X64_OR_ARM64
-// TODO: Clean this warning up
-#pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
-#endif
-
 namespace Js
 {
     ScriptContext * ScriptContext::New(ThreadContext * threadContext)
@@ -1621,7 +1616,7 @@ namespace Js
 
             // Convert to UTF8 and then load that
             size_t length = wcslen(script);
-            if (length > UINT_MAX)
+            if (!IsValidCharCount(length))
             {
                 Js::Throw::OutOfMemory();
             }
@@ -1635,7 +1630,6 @@ namespace Js
 
             LPUTF8 utf8Script = RecyclerNewArrayLeafTrace(this->GetRecycler(), utf8char_t, cbUtf8Buffer);
 
-            Assert(length < MAXLONG);
             size_t cbNeeded = utf8::EncodeIntoAndNullTerminate(utf8Script, script, static_cast<charcount_t>(length));
 
 #if DBG_DUMP
@@ -1650,7 +1644,7 @@ namespace Js
 
             // Free unused bytes
             Assert(cbNeeded + 1 <= cbUtf8Buffer);
-            *ppSourceInfo = Utf8SourceInfo::New(this, utf8Script, length, cbNeeded, pSrcInfo);
+            *ppSourceInfo = Utf8SourceInfo::New(this, utf8Script, (int)length, cbNeeded, pSrcInfo);
 
             //
             // Parse and execute the JavaScript file.
@@ -3881,7 +3875,7 @@ namespace Js
         {
             // Create name as "object.function"
             swprintf_s(szTempName, 70, L"%s.%s", pwszObjectName, pwszFunctionName);
-            functionPropertyId = GetOrAddPropertyIdTracked(szTempName, wcslen(szTempName));
+            functionPropertyId = GetOrAddPropertyIdTracked(szTempName, (uint)wcslen(szTempName));
         }
 
         Js::PropertyId cachedFunctionId;

@@ -1164,7 +1164,7 @@ namespace Js
         // Used only in the library function stringify (toString, DiagGetValueString).
         // If we need more often to give the short name, we should create a member variable which points to the short name
         // this is also now being used for function.name.
-        const wchar_t* GetShortDisplayName(size_t* shortNameLength);
+        const wchar_t* GetShortDisplayName(charcount_t * shortNameLength);
 
         bool IsJitLoopBodyPhaseEnabled() const
         {
@@ -1354,8 +1354,8 @@ namespace Js
 
         bool IsDynamicScript() const;
 
-        size_t LengthInBytes() const { return m_cbLength; }
-        size_t StartOffset() const;
+        uint LengthInBytes() const { return m_cbLength; }
+        uint StartOffset() const;
         ULONG GetLineNumber() const;
         ULONG GetColumnNumber() const;
         template <class T>
@@ -1482,7 +1482,7 @@ namespace Js
         NoWriteBarrierField<bool> m_utf8SourceHasBeenSet;          // start of UTF8-encoded source
         NoWriteBarrierField<uint> m_sourceIndex;             // index into the scriptContext's list of saved sources
         void* m_dynamicInterpreterThunk;  // Unique 'thunk' for every interpreted function - used for ETW symbol decoding.
-        NoWriteBarrierField<size_t> m_cbStartOffset;         // pUtf8Source is this many bytes from the start of the scriptContext's source buffer.
+        NoWriteBarrierField<uint> m_cbStartOffset;         // pUtf8Source is this many bytes from the start of the scriptContext's source buffer.
 
         // This is generally the same as m_cchStartOffset unless the buffer has a BOM
         // TODO: See if we can optimize to where we can get rid of m_cchStartOffset
@@ -2169,9 +2169,9 @@ namespace Js
         bool GetStatementIndexAndLengthAt(int byteCodeOffset, UINT32* statementIndex, UINT32* statementLength);
 
         // skip any utf-8/utf-16 byte-order-mark. Returns the number of chars skipped.
-        static size_t SkipByteOrderMark(__in_bcount_z(4) LPCUTF8& documentStart)
+        static charcount_t SkipByteOrderMark(__in_bcount_z(4) LPCUTF8& documentStart)
         {
-            size_t retValue = 0;
+            charcount_t retValue = 0;
 
             Assert(documentStart != nullptr);
 
@@ -2207,7 +2207,7 @@ namespace Js
         CrossFrameEntryExitRecordList* GetCrossFrameEntryExitRecords();
 
 #ifdef VTUNE_PROFILING
-        size_t GetStartOffset(uint statementIndex) const;
+        uint GetStartOffset(uint statementIndex) const;
         ULONG GetSourceLineNumber(uint statementIndex);
 #endif
 
@@ -2690,7 +2690,7 @@ namespace Js
         void DumpScopes();
 #endif
 
-        size_t GetStatementStartOffset(const uint statementIndex);
+        uint GetStatementStartOffset(const uint statementIndex);
 #ifdef IR_VIEWER
         void GetSourceLineFromStartOffset(const uint startOffset, LPCUTF8 *sourceBegin, LPCUTF8 *sourceEnd,
             ULONG * line, LONG * col);

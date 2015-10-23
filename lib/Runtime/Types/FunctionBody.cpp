@@ -29,11 +29,6 @@
 #include "Language\InterpreterStackFrame.h"
 #include "Library\ModuleRoot.h"
 
-#ifdef _M_X64_OR_ARM64
-// TODO: Clean this warning up
-#pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
-#endif
-
 namespace Js
 {
 
@@ -131,9 +126,8 @@ namespace Js
     {
         return this->m_cchStartOffset;
     }
-
-    // TODO: Add ParseableFunctionInfo::StartOffset
-    size_t
+    
+    uint
     ParseableFunctionInfo::StartOffset() const
     {
         return this->m_cbStartOffset;
@@ -1542,7 +1536,13 @@ namespace Js
 
     void DeferDeserializeFunctionInfo::SetDisplayName(const wchar_t* displayName)
     {
-        SetDisplayName(displayName, wcslen(displayName));
+        size_t len = wcslen(displayName);
+        if (len > UINT_MAX)
+        {
+            // Can't support display name that big
+            Js::Throw::OutOfMemory();
+        }
+        SetDisplayName(displayName, (uint)len);
     }
 
     void DeferDeserializeFunctionInfo::SetDisplayName(const wchar_t* pszDisplayName, uint displayNameLength, SetDisplayNameFlags flags /* default to None */)
@@ -2037,10 +2037,10 @@ namespace Js
 
     }
 
-    const wchar_t* FunctionProxy::GetShortDisplayName(size_t* shortNameLength)
+    const wchar_t* FunctionProxy::GetShortDisplayName(charcount_t * shortNameLength)
     {
         const wchar_t* name = this->GetDisplayName();
-        size_t nameLength = this->GetDisplayNameLength();
+        uint nameLength = this->GetDisplayNameLength();
 
         if (name == nullptr)
         {
@@ -2076,7 +2076,7 @@ namespace Js
         {
             if (shortName)
             {
-                *shortNameLength = nameLength - (shortName - name);
+                *shortNameLength = nameLength - (charcount_t)(shortName - name);
                 return shortName;
             }
             *shortNameLength = nameLength;
@@ -2104,7 +2104,7 @@ namespace Js
             return Constants::Empty;
         }
 
-        size_t deltaNameLength = nameLength - (shorterName - name);
+        uint deltaNameLength = nameLength - (charcount_t)(shorterName - name);
         *shortNameLength = deltaNameLength - 1;
         if (shorterName[deltaNameLength - 1] == ']')
         {
@@ -2179,7 +2179,13 @@ namespace Js
     }
     void ParseableFunctionInfo::SetDisplayName(const wchar_t* pszDisplayName)
     {
-        SetDisplayName(pszDisplayName, wcslen(pszDisplayName));
+        size_t len = wcslen(pszDisplayName);
+        if (len > UINT_MAX)
+        {
+            // Can't support display name that big
+            Js::Throw::OutOfMemory();
+        }
+        SetDisplayName(pszDisplayName, (uint)len);
     }
     void ParseableFunctionInfo::SetDisplayName(const wchar_t* pszDisplayName, uint displayNameLength, SetDisplayNameFlags flags /* default to None */)
     {
@@ -2271,8 +2277,16 @@ namespace Js
             this->m_columnNumber = node->sxFnc.columnNumber;
             this->m_isEval = isEval;
             this->m_isDynamicFunction = isDynamicFunction;
-            this->m_cbStartOffset =  node->sxFnc.cbMin;
-            this->m_cbLength = node->sxFnc.LengthInBytes();
+
+            // It would have been better if we detect and reject large source buffer eariler before parsing
+            size_t cbMin = node->sxFnc.cbMin;
+            size_t lengthInBytes = node->sxFnc.LengthInBytes();
+            if (cbMin > UINT_MAX || lengthInBytes > UINT_MAX)
+            {
+                Js::Throw::OutOfMemory();
+            }
+            this->m_cbStartOffset = (uint)cbMin;
+            this->m_cbLength = (uint)lengthInBytes;
 
             Assert(this->m_utf8SourceInfo != nullptr);
             this->m_utf8SourceHasBeenSet = true;
@@ -4113,7 +4127,7 @@ namespace Js
 
     void FunctionBody::PrintStatementSourceLine(uint statementIndex)
     {
-        const size_t startOffset = GetStatementStartOffset(statementIndex);
+        const uint startOffset = GetStatementStartOffset(statementIndex);
 
         // startOffset should only be 0 if statementIndex is 0, otherwise it is EOF and we should skip printing anything
         if (startOffset != 0 || statementIndex == 0)
@@ -4174,9 +4188,9 @@ namespace Js
     /**
      * Get the source code offset for the given <statementIndex>.
      */
-    size_t FunctionBody::GetStatementStartOffset(const uint statementIndex)
+    uint FunctionBody::GetStatementStartOffset(const uint statementIndex)
     {
-        size_t startOffset = 0;
+        uint startOffset = 0;
 
         if (statementIndex != Js::Constants::NoStatementIndex)
         {
@@ -4370,7 +4384,7 @@ namespace Js
         ULONG line = 0;
         if (statementIndex != Js::Constants::NoStatementIndex)
         {
-            size_t startOffset = GetStartOffset(statementIndex);
+            uint startOffset = GetStartOffset(statementIndex);
 
             if (startOffset != 0 || statementIndex == 0)
             {
@@ -4382,9 +4396,9 @@ namespace Js
         return line;
     }
 
-    size_t FunctionBody::GetStartOffset(uint statementIndex) const
+    uint FunctionBody::GetStartOffset(uint statementIndex) const
     {
-        size_t startOffset = 0;
+        uint startOffset = 0;
 
         const Js::FunctionBody::SourceInfo * sourceInfo = &this->m_sourceInfo;
         if (sourceInfo->pSpanSequence != nullptr)

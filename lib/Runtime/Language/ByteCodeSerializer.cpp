@@ -18,11 +18,6 @@
 #include <rtlfilever.c> // For RtlGetVersionResourceFromSelf in FRE builds
 #endif
 
-#ifdef _M_X64_OR_ARM64
-// TODO: Clean this warning up
-#pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
-#endif
-
 namespace Js
 {
     const int magicConstant = *(int*)"ChBc";
@@ -221,13 +216,12 @@ enum ConstantType : byte
 // Try to convert from size_t to uint32. May overflow (and return false) on 64-bit.
 bool TryConvertToUInt32(size_t size, uint32 * out)
 {
-    if (sizeof(size)==sizeof(uint32))
+    *out = (uint32)size;
+    if (sizeof(size) == sizeof(uint32))
     {
-        *out = size;
         return true;
     }
-    Assert(sizeof(size_t)==sizeof(uint64));
-    *out=(uint32)size;
+    Assert(sizeof(size_t) == sizeof(uint64));
     if((uint64)(*out) == size)
     {
         return true;
@@ -686,7 +680,7 @@ public:
         return sizeof(double);
     }
 
-    uint32 PrependString16(__in BufferBuilderList & builder, __in_nz LPCWSTR clue, __in_bcount_opt(byteLength) LPCWSTR sz, __in size_t byteLength)
+    uint32 PrependString16(__in BufferBuilderList & builder, __in_nz LPCWSTR clue, __in_bcount_opt(byteLength) LPCWSTR sz, __in uint32 byteLength)
     {
         if (sz != nullptr)
         {
@@ -708,14 +702,19 @@ public:
     int GetIdOfPropertyRecord(const PropertyRecord * propertyRecord)
     {
         AssertMsg(!propertyRecord->IsSymbol(), "bytecode serializer does not currently handle non-built-in symbol PropertyRecords");
-        auto byteCount = (propertyRecord->GetLength() + 1) * sizeof(wchar_t);
+        size_t byteCount = ((size_t)propertyRecord->GetLength() + 1) * sizeof(wchar_t);
+        if (byteCount > UINT_MAX)
+        {
+            // We should never see property record that big
+            Js::Throw::InternalError();
+        }
         auto buffer = propertyRecord->GetBuffer();
 #if DBG
         const PropertyRecord * propertyRecordCheck;
         scriptContext->FindPropertyRecord(buffer, propertyRecord->GetLength(), &propertyRecordCheck);
         Assert(propertyRecordCheck == propertyRecord);
 #endif
-        auto bb = Anew(alloc, ByteBuffer, byteCount, (void*)buffer);
+        auto bb = Anew(alloc, ByteBuffer, (uint32)byteCount, (void*)buffer);
         return GetString16Id(bb, /*isPropertyRecord=*/ true);
     }
 
@@ -1646,7 +1645,6 @@ public:
 #define PrependRegSlot PrependInt32
 #define PrependCharCount PrependInt32
 #define PrependULong PrependInt32 // TODO: Is this portable?
-#define PrependSizeT PrependInt32
 #define PrependUInt16 PrependInt16
 #define PrependUInt32 PrependInt32
 
@@ -1962,14 +1960,6 @@ public:
         return ReadInt32(buffer, remainingBytes, (int*)value);
     }
 
-    const byte * ReadSizeT(const byte * buffer, size_t * value)
-    {
-        ulong val;
-        const byte * buff = ReadULong(buffer, &val);
-        *value = (size_t)val;
-        return buff;
-    }
-
     const byte * ReadRegSlot(const byte * buffer, RegSlot * value)
     {
         auto remainingBytes = (raw + totalSize) - buffer;
@@ -2107,7 +2097,7 @@ public:
         return (LPCWSTR)addressOfString;
     }
 
-    size_t GetString16LengthById(int id)
+    uint32 GetString16LengthById(int id)
     {
         if(!(id >= this->expectedBuildInPropertyCount && id<=string16Count + this->expectedBuildInPropertyCount))
         {
@@ -2116,7 +2106,8 @@ public:
         LPCWSTR s1 = GetString16ById(id);
         LPCWSTR s2 = GetString16ById(id + 1);
         auto result = s2 - s1 - 1;
-        return result;
+        Assert(result <= UINT_MAX);
+        return (uint32)result;
     }
 
     HRESULT ReadHeader()

@@ -2792,7 +2792,7 @@ LABEL1:
                 Utf8SourceInfo* sourceInfo = func->GetUtf8SourceInfo();
                 if (sourceInfo->GetIsLibraryCode())
                 {
-                    size_t displayNameLength = 0;
+                    charcount_t displayNameLength = 0;
                     pString = JavascriptFunction::GetLibraryCodeDisplayString(this->GetScriptContext(), func->GetShortDisplayName(&displayNameLength));
                 }
                 else
@@ -2838,7 +2838,7 @@ LABEL1:
     {
         Assert(this->GetFunctionProxy() != nullptr); // The caller should guarantee a proxy exists
         ParseableFunctionInfo * func = this->GetFunctionProxy()->EnsureDeserialized();
-        size_t length = 0;
+        charcount_t length = 0;
         const wchar_t* name = func->GetShortDisplayName(&length);
 
         return DisplayNameHelper(name, length);

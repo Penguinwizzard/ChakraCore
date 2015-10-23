@@ -203,10 +203,10 @@ namespace Js
         bool IsCurrentLoopNativeAddr(void * codeAddr) const;
         void * GetReturnAddress() { return returnAddress; }
 
-        static size_t GetOffsetOfLocals() { return offsetof(InterpreterStackFrame, m_localSlots); }
-        static size_t GetOffsetOfArguments() { return offsetof(InterpreterStackFrame, m_arguments); }
-        static size_t GetOffsetOfInParams() { return offsetof(InterpreterStackFrame, m_inParams); }
-        static size_t GetOffsetOfInSlotsCount() { return offsetof(InterpreterStackFrame, m_inSlotsCount); }
+        static uint32 GetOffsetOfLocals() { return offsetof(InterpreterStackFrame, m_localSlots); }
+        static uint32 GetOffsetOfArguments() { return offsetof(InterpreterStackFrame, m_arguments); }
+        static uint32 GetOffsetOfInParams() { return offsetof(InterpreterStackFrame, m_inParams); }
+        static uint32 GetOffsetOfInSlotsCount() { return offsetof(InterpreterStackFrame, m_inSlotsCount); }
         void PrintStack(const int* const intSrc, const float* const fltSrc, const double* const dblSrc, int intConstCount, int floatConstCount, int doubleConstCount, const wchar_t* state);
 
         static uint32 GetStartLocationOffset() { return offsetof(InterpreterStackFrame, m_reader) + ByteCodeReader::GetStartLocationOffset(); }
