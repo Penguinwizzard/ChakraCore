@@ -754,7 +754,7 @@ namespace Js
 
         // newCount is ushort. If args count is greater than or equal to 65535, an integer 
         // overflow will occur when newCount is incremented.
-        if (args.Info.Count >= 65535)
+        if (args.Info.Count >= USHORT_MAX)
         {
             JavascriptError::ThrowRangeError(scriptContext, JSERR_ArgListTooLarge);
         }
