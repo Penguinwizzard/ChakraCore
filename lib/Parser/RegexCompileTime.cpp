@@ -17,20 +17,22 @@ namespace UnifiedRegex
 
         if (instLen - instNext < size)
         {
-            size_t newLen = max(instLen, initInstBufSize);
-            while (newLen < instLen + size)
-            {
-                newLen *= 2;
-            }
+            CharCount newLen = max(instLen, initInstBufSize);
+            CharCount instLenPlus = (CharCount)(instLen + size - 1);
 
             // check for overflow
-            if (newLen > UINT32_MAX)
+            if (instLenPlus < instLen || instLenPlus * 2 < instLenPlus)
             {
                 Js::Throw::OutOfMemory();
             }
 
+            while (newLen <= instLenPlus)
+            {
+                newLen *= 2;
+            }
+
             instBuf = (uint8*)ctAllocator->Realloc(instBuf, instLen, newLen);
-            instLen = (CharCount)newLen;
+            instLen = newLen;
         }
         uint8* inst = instBuf + instNext;
         instNext += (CharCount)size;
