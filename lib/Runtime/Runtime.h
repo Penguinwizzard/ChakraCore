@@ -153,7 +153,7 @@ namespace Js
     class SIMDInt32x4Lib;
     class JavascriptSIMDInt32x4;
     class SIMDInt8x16Lib;
-    class JavascriptSIMDInt8x16;    
+    class JavascriptSIMDInt8x16;
 
     class RecyclableObject;
     class JavascriptRegExp;

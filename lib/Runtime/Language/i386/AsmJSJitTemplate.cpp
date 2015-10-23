@@ -598,7 +598,7 @@ namespace Js
         };
 
         {
-            const int argCount = asmInfo->GetArgCount();
+            const ArgSlot argCount = asmInfo->GetArgCount();
             m_localSlots[AsmJsFunctionMemory::ModuleEnvRegister] = moduleEnv;
             m_localSlots[AsmJsFunctionMemory::ArrayBufferRegister] = (Var)arrayPtr;
             m_localSlots[AsmJsFunctionMemory::ArraySizeRegister] = (Var)arraySize;
@@ -627,7 +627,7 @@ namespace Js
             floatArg = m_localFloatSlots + floatConstCount;
             simdArg = m_localSimdSlots + simdConstCount;
 
-            for( int i = 0; i < argCount; i++ )
+            for(ArgSlot i = 0; i < argCount; i++ )
             {
                 if(asmInfo->GetArgType(i).isInt())
                 {

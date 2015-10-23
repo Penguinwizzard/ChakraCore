@@ -660,7 +660,7 @@ namespace Js
     bool AsmJsModuleCompiler::SetupFunctionArguments(AsmJsFunc * func, ParseNodePtr pnode)
     {
         /// Check arguments
-        unsigned int numArguments = 0;
+        ArgSlot numArguments = 0;
         ParseNode * fncNode = func->GetFncNode();
         ParseNode* argNode = ParserWrapper::FunctionArgsList(fncNode, numArguments);
 
@@ -669,7 +669,7 @@ namespace Js
             return Fail(argNode, L"Cannot have variable number of arguments");
         }
 
-        int index = 0;
+        ArgSlot index = 0;
         while (argNode)
         {
             if (pnode->nop != knopList)
