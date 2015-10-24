@@ -671,7 +671,7 @@ namespace Js
 
             result = SIMDInt32x4Operation::OpLessThan(aValue, bValue);
 
-            return JavascriptSIMDInt32x4::New(&result, scriptContext);
+            return JavascriptSIMDBool32x4::New(&result, scriptContext);
         }
 
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt32x4TypeMismatch, L"lessThan");
@@ -702,7 +702,7 @@ namespace Js
 
             result = SIMDInt32x4Operation::OpEqual(aValue, bValue);
 
-            return JavascriptSIMDInt32x4::New(&result, scriptContext);
+            return JavascriptSIMDBool32x4::New(&result, scriptContext);
         }
 
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt32x4TypeMismatch, L"equal");
@@ -733,7 +733,7 @@ namespace Js
 
             result = SIMDInt32x4Operation::OpGreaterThan(aValue, bValue);
 
-            return JavascriptSIMDInt32x4::New(&result, scriptContext);
+            return JavascriptSIMDBool32x4::New(&result, scriptContext);
         }
 
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt32x4TypeMismatch, L"greaterThan");
@@ -870,12 +870,12 @@ namespace Js
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         Assert(!(callInfo.Flags & CallFlags_New));
 
-        if (args.Info.Count >= 4 && JavascriptSIMDInt32x4::Is(args[1]) && 
+        if (args.Info.Count >= 4 && JavascriptSIMDBool32x4::Is(args[1]) &&
             JavascriptSIMDInt32x4::Is(args[2]) && JavascriptSIMDInt32x4::Is(args[3]))
         {
-            JavascriptSIMDInt32x4 *m = JavascriptSIMDInt32x4::FromVar(args[1]);
-            JavascriptSIMDInt32x4 *t = JavascriptSIMDInt32x4::FromVar(args[2]);
-            JavascriptSIMDInt32x4 *f = JavascriptSIMDInt32x4::FromVar(args[3]);
+            JavascriptSIMDBool32x4 *m = JavascriptSIMDBool32x4::FromVar(args[1]);
+            JavascriptSIMDInt32x4 *t  = JavascriptSIMDInt32x4::FromVar(args[2]);
+            JavascriptSIMDInt32x4 *f  = JavascriptSIMDInt32x4::FromVar(args[3]);
             Assert(m && t && f);
 
             SIMDValue result, maskValue, trueValue, falseValue;

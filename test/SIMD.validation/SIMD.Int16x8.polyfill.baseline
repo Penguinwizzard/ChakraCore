@@ -5,6 +5,9 @@ passed
 ******* Int16x8 check *******
 passed
 
+******* Int16x8 operators *******
+passed
+
 ******* Int16x8 replaceLane *******
 passed
 
@@ -39,6 +42,9 @@ passed
 passed
 
 ******* Int16x8 max *******
+passed
+
+******* Int16x8 select *******
 passed
 
 ******* Int16x8 swizzle *******
@@ -84,4 +90,16 @@ passed
 passed
 
 ******* Int16x8 fromInt32x4Bits *******
+passed
+
+******* Int16x8 fromInt8x16Bits *******
+passed
+
+******* Int16x8 fromUint32x4Bits *******
+passed
+
+******* Int16x8 fromUint16x8Bits *******
+passed
+
+******* Int16x8 fromUint8x16Bits *******
 passed

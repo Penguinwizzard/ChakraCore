@@ -137,8 +137,6 @@
     </default>
   </test>
   
-  
-  
   <test>
     <default>
       <files>SIMD.Int32x4.polyfill.js</files>
@@ -182,8 +180,6 @@
       <compile-flags>-bgjit- -simdjs -simd128typespec -off:simplejit -mic:1</compile-flags>
     </default>
   </test>
-  
-  <!-- Unimplemented
   <test>
     <default>
       <files>SIMD.Uint8x16.polyfill.js</files>
@@ -205,7 +201,6 @@
       <compile-flags>-bgjit- -simdjs -simd128typespec -off:simplejit -mic:1</compile-flags>
     </default>
   </test>
-  
   <test>
     <default>
       <files>SIMD.Uint16x8.polyfill.js</files>
@@ -228,5 +223,4 @@
     </default>
   </test>
   
-    -->
 </regress-exe>

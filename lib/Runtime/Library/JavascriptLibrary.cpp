@@ -2791,8 +2791,12 @@ namespace Js
         library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::splat, &SIMDInt16x8Lib::EntryInfo::Splat, 2, PropertyNone);
         library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::check, &SIMDInt16x8Lib::EntryInfo::Check, 2, PropertyNone);
         // type conversions
-        library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::fromInt32x4Bits, &SIMDInt16x8Lib::EntryInfo::FromInt32x4Bits, 2, PropertyNone);
         library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::fromFloat32x4Bits, &SIMDInt16x8Lib::EntryInfo::FromFloat32x4Bits, 2, PropertyNone);
+        library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::fromInt32x4Bits, &SIMDInt16x8Lib::EntryInfo::FromInt32x4Bits, 2, PropertyNone);
+        library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::fromInt8x16Bits, &SIMDInt16x8Lib::EntryInfo::FromInt8x16Bits, 2, PropertyNone);
+        library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::fromUint32x4Bits, &SIMDInt16x8Lib::EntryInfo::FromUint32x4Bits, 2, PropertyNone);
+        library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::fromUint16x8Bits, &SIMDInt16x8Lib::EntryInfo::FromUint16x8Bits, 2, PropertyNone);
+        library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::fromUint8x16Bits, &SIMDInt16x8Lib::EntryInfo::FromUint8x16Bits, 2, PropertyNone);
         // UnaryOps
         library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::neg, &SIMDInt16x8Lib::EntryInfo::Neg, 2, PropertyNone);
         library->AddFunctionToLibraryObject(int16x8Function, PropertyIds::not, &SIMDInt16x8Lib::EntryInfo::Not, 2, PropertyNone);
@@ -2837,6 +2841,9 @@ namespace Js
         library->AddFunctionToLibraryObject(int8x16Function, PropertyIds::fromFloat32x4Bits, &SIMDInt8x16Lib::EntryInfo::FromFloat32x4Bits, 2, PropertyNone);
         library->AddFunctionToLibraryObject(int8x16Function, PropertyIds::fromInt32x4Bits, &SIMDInt8x16Lib::EntryInfo::FromInt32x4Bits, 2, PropertyNone);
         library->AddFunctionToLibraryObject(int8x16Function, PropertyIds::fromInt16x8Bits, &SIMDInt8x16Lib::EntryInfo::FromInt16x8Bits, 2, PropertyNone);
+        library->AddFunctionToLibraryObject(int8x16Function, PropertyIds::fromUint32x4Bits, &SIMDInt8x16Lib::EntryInfo::FromUint32x4Bits, 2, PropertyNone);
+        library->AddFunctionToLibraryObject(int8x16Function, PropertyIds::fromUint16x8Bits, &SIMDInt8x16Lib::EntryInfo::FromUint16x8Bits, 2, PropertyNone);
+        library->AddFunctionToLibraryObject(int8x16Function, PropertyIds::fromUint8x16Bits, &SIMDInt8x16Lib::EntryInfo::FromUint8x16Bits, 2, PropertyNone);
         // binary ops
         library->AddFunctionToLibraryObject(int8x16Function, PropertyIds::add, &SIMDInt8x16Lib::EntryInfo::Add, 3, PropertyNone);
         library->AddFunctionToLibraryObject(int8x16Function, PropertyIds::sub, &SIMDInt8x16Lib::EntryInfo::Sub, 3, PropertyNone);
@@ -2884,7 +2891,7 @@ namespace Js
         library->AddFunctionToLibraryObject(bool32x4Function, PropertyIds::anyTrue, &SIMDBool32x4Lib::EntryInfo::AnyTrue, 2, PropertyNone);
         // BinaryOps
         library->AddFunctionToLibraryObject(bool32x4Function, PropertyIds::and, &SIMDBool32x4Lib::EntryInfo::And, 2, PropertyNone);
-        library->AddFunctionToLibraryObject(bool32x4Function, PropertyIds:: or , &SIMDBool32x4Lib::EntryInfo::Or, 2, PropertyNone);
+        library->AddFunctionToLibraryObject(bool32x4Function, PropertyIds::or , &SIMDBool32x4Lib::EntryInfo::Or, 2, PropertyNone);
         library->AddFunctionToLibraryObject(bool32x4Function, PropertyIds::xor, &SIMDBool32x4Lib::EntryInfo::Xor, 2, PropertyNone);
         // Lane Access
         library->AddFunctionToLibraryObject(bool32x4Function, PropertyIds::extractLane, &SIMDBool32x4Lib::EntryInfo::ExtractLane, 3, PropertyNone);
@@ -2918,7 +2925,7 @@ namespace Js
         library->AddFunctionToLibraryObject(bool8x16Function, PropertyIds::anyTrue, &SIMDBool8x16Lib::EntryInfo::AnyTrue, 2, PropertyNone);
         // BinaryOps
         library->AddFunctionToLibraryObject(bool8x16Function, PropertyIds::and, &SIMDBool8x16Lib::EntryInfo::And, 2, PropertyNone);
-        library->AddFunctionToLibraryObject(bool8x16Function, PropertyIds:: or , &SIMDBool8x16Lib::EntryInfo::Or, 2, PropertyNone);
+        library->AddFunctionToLibraryObject(bool8x16Function, PropertyIds::or , &SIMDBool8x16Lib::EntryInfo::Or, 2, PropertyNone);
         library->AddFunctionToLibraryObject(bool8x16Function, PropertyIds::xor, &SIMDBool8x16Lib::EntryInfo::Xor, 2, PropertyNone);
         // Lane Access
         library->AddFunctionToLibraryObject(bool8x16Function, PropertyIds::extractLane, &SIMDBool8x16Lib::EntryInfo::ExtractLane, 3, PropertyNone);
@@ -2981,10 +2988,13 @@ namespace Js
         library->AddFunctionToLibraryObject(Uint16x8Function, PropertyIds::splat, &SIMDUint16x8Lib::EntryInfo::Splat, 2, PropertyNone);
         library->AddFunctionToLibraryObject(Uint16x8Function, PropertyIds::check, &SIMDUint16x8Lib::EntryInfo::Check, 2, PropertyNone);
         //// type conversions
-        library->AddFunctionToLibraryObject(Uint16x8Function, PropertyIds::fromInt32x4Bits, &SIMDUint16x8Lib::EntryInfo::FromInt32x4Bits, 2, PropertyNone);
-        library->AddFunctionToLibraryObject(Uint16x8Function, PropertyIds::fromInt8x16Bits, &SIMDUint16x8Lib::EntryInfo::FromInt8x16Bits, 2, PropertyNone);
-        library->AddFunctionToLibraryObject(Uint16x8Function, PropertyIds::fromInt16x8Bits, &SIMDUint16x8Lib::EntryInfo::FromInt16x8Bits, 2, PropertyNone);
         library->AddFunctionToLibraryObject(Uint16x8Function, PropertyIds::fromFloat32x4Bits, &SIMDUint16x8Lib::EntryInfo::FromFloat32x4Bits, 2, PropertyNone);
+        library->AddFunctionToLibraryObject(Uint16x8Function, PropertyIds::fromInt32x4Bits, &SIMDUint16x8Lib::EntryInfo::FromInt32x4Bits, 2, PropertyNone);
+        library->AddFunctionToLibraryObject(Uint16x8Function, PropertyIds::fromInt16x8Bits, &SIMDUint16x8Lib::EntryInfo::FromInt16x8Bits, 2, PropertyNone);
+        library->AddFunctionToLibraryObject(Uint16x8Function, PropertyIds::fromInt8x16Bits, &SIMDUint16x8Lib::EntryInfo::FromInt8x16Bits, 2, PropertyNone);
+        library->AddFunctionToLibraryObject(Uint16x8Function, PropertyIds::fromUint32x4Bits, &SIMDUint16x8Lib::EntryInfo::FromUint32x4Bits, 2, PropertyNone);
+        library->AddFunctionToLibraryObject(Uint16x8Function, PropertyIds::fromUint8x16Bits, &SIMDUint16x8Lib::EntryInfo::FromUint8x16Bits, 2, PropertyNone);
+        
         //// UnaryOps
         library->AddFunctionToLibraryObject(Uint16x8Function, PropertyIds::not, &SIMDUint16x8Lib::EntryInfo::Not, 2, PropertyNone);
         //// binary ops
@@ -3016,7 +3026,7 @@ namespace Js
         library->AddFunctionToLibraryObject(Uint16x8Function, PropertyIds::store, &SIMDUint16x8Lib::EntryInfo::Store, 3, PropertyNone);
         //// others
         library->AddFunctionToLibraryObject(Uint16x8Function, PropertyIds::swizzle, &SIMDUint16x8Lib::EntryInfo::Swizzle, 10, PropertyNone);
-        library->AddFunctionToLibraryObject(Uint16x8Function, PropertyIds::shuffle, &SIMDUint16x8Lib::EntryInfo::Shuffle, 3, PropertyNone);
+        library->AddFunctionToLibraryObject(Uint16x8Function, PropertyIds::shuffle, &SIMDUint16x8Lib::EntryInfo::Shuffle, 11, PropertyNone);
         library->AddFunctionToLibraryObject(Uint16x8Function, PropertyIds::select, &SIMDUint16x8Lib::EntryInfo::Select, 4, PropertyNone);
         /** end Uint16x8 **/
 
@@ -3028,11 +3038,10 @@ namespace Js
         library->AddFunctionToLibraryObject(Uint8x16Function, PropertyIds::fromInt32x4Bits, &SIMDUint8x16Lib::EntryInfo::FromInt32x4Bits, 2, PropertyNone);
         library->AddFunctionToLibraryObject(Uint8x16Function, PropertyIds::fromInt16x8Bits, &SIMDUint8x16Lib::EntryInfo::FromInt16x8Bits, 2, PropertyNone);
         library->AddFunctionToLibraryObject(Uint8x16Function, PropertyIds::fromInt8x16Bits, &SIMDUint8x16Lib::EntryInfo::FromInt8x16Bits, 2, PropertyNone);
-        //library->AddFunctionToLibraryObject(Uint8x16Function, PropertyIds::fromUint32x4Bits, &SIMDUint8x16Lib::EntryInfo::FromUint32x4Bits, 2, PropertyNone);
+        library->AddFunctionToLibraryObject(Uint8x16Function, PropertyIds::fromUint32x4Bits, &SIMDUint8x16Lib::EntryInfo::FromUint32x4Bits, 2, PropertyNone);
         library->AddFunctionToLibraryObject(Uint8x16Function, PropertyIds::fromUint16x8Bits, &SIMDUint8x16Lib::EntryInfo::FromUint16x8Bits, 2, PropertyNone);
         library->AddFunctionToLibraryObject(Uint8x16Function, PropertyIds::fromFloat32x4Bits, &SIMDUint8x16Lib::EntryInfo::FromFloat32x4Bits, 2, PropertyNone);
 
-        library->AddFunctionToLibraryObject(Uint8x16Function, PropertyIds::fromInt8x16, &SIMDUint8x16Lib::EntryInfo::FromInt8x16, 2, PropertyNone);
         //// UnaryOps
         library->AddFunctionToLibraryObject(Uint8x16Function, PropertyIds::not, &SIMDUint8x16Lib::EntryInfo::Not, 2, PropertyNone);
         //// binary ops
@@ -3063,8 +3072,8 @@ namespace Js
         library->AddFunctionToLibraryObject(Uint8x16Function, PropertyIds::load, &SIMDUint8x16Lib::EntryInfo::Load, 3, PropertyNone);
         library->AddFunctionToLibraryObject(Uint8x16Function, PropertyIds::store, &SIMDUint8x16Lib::EntryInfo::Store, 3, PropertyNone);
         //// others
-        library->AddFunctionToLibraryObject(Uint8x16Function, PropertyIds::swizzle, &SIMDUint8x16Lib::EntryInfo::Swizzle, 10, PropertyNone);
-        library->AddFunctionToLibraryObject(Uint8x16Function, PropertyIds::shuffle, &SIMDUint8x16Lib::EntryInfo::Shuffle, 3, PropertyNone);
+        library->AddFunctionToLibraryObject(Uint8x16Function, PropertyIds::swizzle, &SIMDUint8x16Lib::EntryInfo::Swizzle, 18, PropertyNone);
+        library->AddFunctionToLibraryObject(Uint8x16Function, PropertyIds::shuffle, &SIMDUint8x16Lib::EntryInfo::Shuffle, 19, PropertyNone);
         library->AddFunctionToLibraryObject(Uint8x16Function, PropertyIds::select, &SIMDUint8x16Lib::EntryInfo::Select, 4, PropertyNone);
         /** end Uint8x16 **/
     }
@@ -7111,8 +7120,12 @@ namespace Js
         REG_OBJECTS_LIB_FUNC(Int16x8, SIMDInt16x8Lib::EntryInt16x8);
         REG_OBJECTS_LIB_FUNC(splat, SIMDInt16x8Lib::EntryCheck);
         REG_OBJECTS_LIB_FUNC(splat, SIMDInt16x8Lib::EntrySplat);
-        REG_OBJECTS_LIB_FUNC(fromInt32x4Bits, SIMDInt16x8Lib::EntryFromInt32x4Bits);
         REG_OBJECTS_LIB_FUNC(fromFloat32x4Bits, SIMDInt16x8Lib::EntryFromFloat32x4Bits);
+        REG_OBJECTS_LIB_FUNC(fromInt32x4Bits, SIMDInt16x8Lib::EntryFromInt32x4Bits);
+        REG_OBJECTS_LIB_FUNC(fromInt8x16Bits, SIMDInt16x8Lib::EntryFromInt8x16Bits);
+        REG_OBJECTS_LIB_FUNC(fromUint32x4Bits, SIMDInt16x8Lib::EntryFromUint32x4Bits);
+        REG_OBJECTS_LIB_FUNC(fromUint16x8Bits, SIMDInt16x8Lib::EntryFromUint16x8Bits);
+        REG_OBJECTS_LIB_FUNC(fromUint8x16Bits, SIMDInt16x8Lib::EntryFromUint8x16Bits);
         REG_OBJECTS_LIB_FUNC(neg, SIMDInt16x8Lib::EntryNeg);
         REG_OBJECTS_LIB_FUNC(not, SIMDInt16x8Lib::EntryNot);
         REG_OBJECTS_LIB_FUNC(add, SIMDInt16x8Lib::EntryAdd);
@@ -7148,6 +7161,9 @@ namespace Js
         REG_OBJECTS_LIB_FUNC(fromFloat32x4Bits, SIMDInt8x16Lib::EntryFromFloat32x4Bits);
         REG_OBJECTS_LIB_FUNC(fromInt32x4Bits, SIMDInt8x16Lib::EntryFromInt32x4Bits);
         REG_OBJECTS_LIB_FUNC(fromInt16x8Bits, SIMDInt8x16Lib::EntryFromInt16x8Bits);
+        REG_OBJECTS_LIB_FUNC(fromUint32x4Bits, SIMDInt8x16Lib::EntryFromUint32x4Bits);
+        REG_OBJECTS_LIB_FUNC(fromUint16x8Bits, SIMDInt8x16Lib::EntryFromUint16x8Bits);
+        REG_OBJECTS_LIB_FUNC(fromUint8x16Bits, SIMDInt8x16Lib::EntryFromUint8x16Bits);
         REG_OBJECTS_LIB_FUNC(neg, SIMDInt8x16Lib::EntryNeg);
         REG_OBJECTS_LIB_FUNC(not, SIMDInt8x16Lib::EntryNot);
         REG_OBJECTS_LIB_FUNC(add, SIMDInt8x16Lib::EntryAdd);
@@ -7258,10 +7274,12 @@ namespace Js
         REG_OBJECTS_LIB_FUNC(Uint16x8, SIMDUint16x8Lib::EntryUint16x8);
         REG_OBJECTS_LIB_FUNC(splat, SIMDUint16x8Lib::EntryCheck);
         REG_OBJECTS_LIB_FUNC(splat, SIMDUint16x8Lib::EntrySplat);
+        REG_OBJECTS_LIB_FUNC(fromFloat32x4Bits, SIMDUint16x8Lib::EntryFromFloat32x4Bits);
         REG_OBJECTS_LIB_FUNC(fromInt32x4Bits, SIMDUint16x8Lib::EntryFromInt32x4Bits);
         REG_OBJECTS_LIB_FUNC(fromInt8x16Bits, SIMDUint16x8Lib::EntryFromInt8x16Bits);
         REG_OBJECTS_LIB_FUNC(fromInt16x8Bits, SIMDUint16x8Lib::EntryFromInt16x8Bits);
-        REG_OBJECTS_LIB_FUNC(fromFloat32x4Bits, SIMDUint16x8Lib::EntryFromFloat32x4Bits);
+        REG_OBJECTS_LIB_FUNC(fromUint32x4Bits, SIMDUint16x8Lib::EntryFromUint32x4Bits);
+        REG_OBJECTS_LIB_FUNC(fromUint8x16Bits, SIMDUint16x8Lib::EntryFromUint8x16Bits);
         REG_OBJECTS_LIB_FUNC(not, SIMDUint16x8Lib::EntryNot);
         REG_OBJECTS_LIB_FUNC(add, SIMDUint16x8Lib::EntryAdd);
         REG_OBJECTS_LIB_FUNC(sub, SIMDUint16x8Lib::EntrySub);
@@ -7293,13 +7311,12 @@ namespace Js
         REG_OBJECTS_LIB_FUNC(Uint8x16, SIMDUint8x16Lib::EntryUint8x16);
         REG_OBJECTS_LIB_FUNC(splat, SIMDUint8x16Lib::EntryCheck);
         REG_OBJECTS_LIB_FUNC(splat, SIMDUint8x16Lib::EntrySplat);
+        REG_OBJECTS_LIB_FUNC(fromFloat32x4Bits, SIMDUint8x16Lib::EntryFromFloat32x4Bits);
         REG_OBJECTS_LIB_FUNC(fromInt32x4Bits, SIMDUint8x16Lib::EntryFromInt32x4Bits);
         REG_OBJECTS_LIB_FUNC(fromInt16x8Bits, SIMDUint8x16Lib::EntryFromInt16x8Bits);
         REG_OBJECTS_LIB_FUNC(fromInt8x16Bits, SIMDUint8x16Lib::EntryFromInt8x16Bits);
-        //REG_OBJECTS_LIB_FUNC(fromUint32x4Bits, SIMDUint8x16Lib::EntryFromUint32x4Bits);
+        REG_OBJECTS_LIB_FUNC(fromUint32x4Bits, SIMDUint8x16Lib::EntryFromUint32x4Bits);
         REG_OBJECTS_LIB_FUNC(fromUint16x8Bits, SIMDUint8x16Lib::EntryFromUint16x8Bits);
-        REG_OBJECTS_LIB_FUNC(fromFloat32x4Bits, SIMDUint8x16Lib::EntryFromFloat32x4Bits);
-        REG_OBJECTS_LIB_FUNC(fromInt8x16, SIMDUint8x16Lib::EntryFromInt8x16);
         REG_OBJECTS_LIB_FUNC(not, SIMDUint8x16Lib::EntryNot);
         REG_OBJECTS_LIB_FUNC(add, SIMDUint8x16Lib::EntryAdd);
         REG_OBJECTS_LIB_FUNC(sub, SIMDUint8x16Lib::EntrySub);

@@ -108,6 +108,7 @@ ENTRY(fromFloat64x2Bits)
 ENTRY(fromInt16x8Bits)
 ENTRY(fromInt8x16)
 ENTRY(fromInt8x16Bits)
+ENTRY(fromUint32x4Bits)
 ENTRY(fromUint16x8Bits)
 ENTRY(fromUint8x16Bits)
 

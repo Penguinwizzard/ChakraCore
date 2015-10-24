@@ -681,7 +681,7 @@ namespace Js
 
             result = SIMDFloat32x4Operation::OpLessThan(aValue, bValue);
 
-            return JavascriptSIMDInt32x4::New(&result, scriptContext);
+            return JavascriptSIMDBool32x4::New(&result, scriptContext);
         }
 
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdFloat32x4TypeMismatch, L"lessThan");
@@ -712,7 +712,7 @@ namespace Js
 
             result = SIMDFloat32x4Operation::OpLessThanOrEqual(aValue, bValue);
 
-            return JavascriptSIMDInt32x4::New(&result, scriptContext);
+            return JavascriptSIMDBool32x4::New(&result, scriptContext);
         }
 
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdFloat32x4TypeMismatch, L"lessThanOrEqual");
@@ -743,7 +743,7 @@ namespace Js
 
             result = SIMDFloat32x4Operation::OpEqual(aValue, bValue);
 
-            return JavascriptSIMDInt32x4::New(&result, scriptContext);
+            return JavascriptSIMDBool32x4::New(&result, scriptContext);
         }
 
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdFloat32x4TypeMismatch, L"equal");
@@ -774,7 +774,7 @@ namespace Js
 
             result = SIMDFloat32x4Operation::OpNotEqual(aValue, bValue);
 
-            return JavascriptSIMDInt32x4::New(&result, scriptContext);
+            return JavascriptSIMDBool32x4::New(&result, scriptContext);
         }
 
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdFloat32x4TypeMismatch, L"NotEqual");
@@ -805,7 +805,7 @@ namespace Js
 
             result = SIMDFloat32x4Operation::OpGreaterThan(aValue, bValue);
 
-            return JavascriptSIMDInt32x4::New(&result, scriptContext);
+            return JavascriptSIMDBool32x4::New(&result, scriptContext);
         }
 
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdFloat32x4TypeMismatch, L"greaterThan");
@@ -836,7 +836,7 @@ namespace Js
 
             result = SIMDFloat32x4Operation::OpGreaterThanOrEqual(aValue, bValue);
 
-            return JavascriptSIMDInt32x4::New(&result, scriptContext);
+            return JavascriptSIMDBool32x4::New(&result, scriptContext);
         }
 
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdFloat32x4TypeMismatch, L"greaterThanOrEqual");
@@ -952,15 +952,15 @@ namespace Js
 
         // we expect at least 3 explicit args (Int32x4, Float32x4, Float32x4)
         if (args.Info.Count >= 4 &&
-            JavascriptSIMDInt32x4::Is(args[1]) && 
+            JavascriptSIMDBool32x4::Is(args[1]) &&
             JavascriptSIMDFloat32x4::Is(args[2]) &&
             JavascriptSIMDFloat32x4::Is(args[3]))
         {
             // TODO: Reuse Int32x4 select ? 
 
-            JavascriptSIMDInt32x4 *mask = JavascriptSIMDInt32x4::FromVar(args[1]);
-            Assert(mask);
-            JavascriptSIMDFloat32x4 *fmask = (JavascriptSIMDFloat32x4*)SIMDConvertTypeFromBits<JavascriptSIMDInt32x4, JavascriptSIMDFloat32x4>(mask, scriptContext);
+            JavascriptSIMDBool32x4 *fmask = JavascriptSIMDBool32x4::FromVar(args[1]);
+            Assert(fmask);
+            //JavascriptSIMDFloat32x4 *fmask = (JavascriptSIMDFloat32x4*)SIMDConvertTypeFromBits<JavascriptSIMDBool32x4, JavascriptSIMDFloat32x4>(mask, scriptContext);
             JavascriptSIMDFloat32x4 *tvalue = JavascriptSIMDFloat32x4::FromVar(args[2]);
             JavascriptSIMDFloat32x4 *fvalue = JavascriptSIMDFloat32x4::FromVar(args[3]);
             Assert(fmask && tvalue && fvalue);

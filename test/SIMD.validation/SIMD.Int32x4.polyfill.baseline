@@ -47,15 +47,6 @@ passed
 ******* Int32x4 store *******
 passed
 
-******* Int32x4 and *******
-passed
-
-******* Int32x4 or *******
-passed
-
-******* Int32x4 xor *******
-passed
-
 ******* Int32x4 load1 *******
 passed
 
@@ -68,10 +59,19 @@ passed
 ******* Int32x4 store1 *******
 passed
 
-******* Int32x4 store1 *******
+******* Int32x4 store2 *******
 passed
 
 ******* Int32x4 store3 *******
+passed
+
+******* Int32x4 and *******
+passed
+
+******* Int32x4 or *******
+passed
+
+******* Int32x4 xor *******
 passed
 
 ******* Int32x4 neg *******

@@ -58,24 +58,18 @@ if (numFails > 0) {
 }
 
 function test(name, func) {
-    
-  if(name.indexOf(bool32x4.name) !== 0) return;
-  if(name.indexOf('Bool32x4 value semantics') > -1) return; //unsupported function
+  if(name.indexOf(uint8x16.name) !== 0) return;
+  if(name.indexOf('Uint8x16 value semantics') > -1) return; //unsupported function
+  //if(name.indexOf('Uint8x16 load') > -1) return; //negative index fatal error bug
+  //if(name.indexOf('Uint8x16 store') > -1) return; //negative index fatal error bug
+  //if(name.indexOf('Uint8x16 fromUint8x16Bits') > -1) return; //unsupported function
+  // if(name.indexOf('Uint8x16 fromUint16x8Bits') > -1) return; //unsupported function
+  //if(name.indexOf('Uint8x16 fromUint32x4Bits') > -1) return; //unsupported function
+  //if(name.indexOf('Uint8x16 fromInt8x16Bits') > -1) return; //unsupported function
+  //if(name.indexOf('Uint8x16 fromInt16x8') > -1) return; //unsupported function
+  //if(name.indexOf('Uint8x16 fromInt8x16') > -1) return; //unsupported function
+  //if(name.indexOf('Uint16x8 operators') > -1) return; //unsupported function
   
-  
-  /*
-  if(name.indexOf('Bool32x4 operators') > -1) return; //unsupported function
-  if(name.indexOf('Bool32x4 allTrue') > -1) return; //unsupported function
-  if(name.indexOf('Bool32x4 anyTrue') > -1) return; //unsupported function
-  if(name.indexOf('Bool32x4 not') > -1) return; //unsupported function
-  if(name.indexOf('Bool32x4 xor') > -1) return; //unsupported function
-  if(name.indexOf('Bool32x4 or') > -1) return; //unsupported function
-  if(name.indexOf('Bool32x4 and') > -1) return; //unsupported function
-  if(name.indexOf('Bool32x4 replaceLane') > -1) return; //unsupported function
-  if(name.indexOf('Bool32x4 check') > -1) return; //unsupported function
-  if(name.indexOf('Bool32x4 constructor') > -1) return; //unsupported function
-  */
-    
   if (skipValueTests && name.indexOf("value semantics") != -1) return;
 
   currentName = name;
@@ -92,3 +86,4 @@ function test(name, func) {
     numFails++;
   }
 }
+

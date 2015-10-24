@@ -94,3 +94,12 @@ passed
 
 ******* Int8x16 fromInt16x8Bits *******
 passed
+
+******* Int8x16 fromUint32x4Bits *******
+passed
+
+******* Int8x16 fromUint16x8Bits *******
+passed
+
+******* Int8x16 fromUint8x16Bits *******
+passed

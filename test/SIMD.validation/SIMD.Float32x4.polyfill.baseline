@@ -68,7 +68,7 @@ passed
 ******* Float32x4 store1 *******
 passed
 
-******* Float32x4 store1 *******
+******* Float32x4 store2 *******
 passed
 
 ******* Float32x4 store3 *******
@@ -87,4 +87,7 @@ passed
 passed
 
 ******* Float32x4 Int32x4 bit conversion *******
+passed
+
+******* Float32x4 Int32x4 round trip *******
 passed

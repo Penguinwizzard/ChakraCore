@@ -19,6 +19,10 @@ namespace Js {
             static FunctionInfo FromFloat32x4Bits;
             static FunctionInfo FromInt32x4Bits;
             static FunctionInfo FromInt16x8Bits;
+            static FunctionInfo FromUint32x4Bits;
+            static FunctionInfo FromUint16x8Bits;
+            static FunctionInfo FromUint8x16Bits;
+
             // UnaryOps
             static FunctionInfo Neg;
             static FunctionInfo Not;
@@ -65,6 +69,9 @@ namespace Js {
         static Var EntryFromFloat32x4Bits(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryFromInt32x4Bits(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryFromInt16x8Bits(RecyclableObject* function, CallInfo callInfo, ...);
+        static Var EntryFromUint32x4Bits(RecyclableObject* function, CallInfo callInfo, ...);
+        static Var EntryFromUint16x8Bits(RecyclableObject* function, CallInfo callInfo, ...);
+        static Var EntryFromUint8x16Bits(RecyclableObject* function, CallInfo callInfo, ...);
 
         // UnaryOps
         static Var EntryNeg(RecyclableObject* function, CallInfo callInfo, ...);

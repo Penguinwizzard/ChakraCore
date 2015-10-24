@@ -90,7 +90,7 @@ namespace Js
             Assert(instance);
             return  SIMDConvertTypeFromBits<JavascriptSIMDFloat32x4, JavascriptSIMDUint8x16>(instance, scriptContext);
         }
-        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdFloat32x4TypeMismatch, L"fromFloat32x4Bits");
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdUint8x16TypeMismatch, L"fromFloat32x4Bits");
     }
 
     Var SIMDUint8x16Lib::EntryFromInt32x4Bits(RecyclableObject* function, CallInfo callInfo, ...)
@@ -108,7 +108,7 @@ namespace Js
             Assert(instance);
             return  SIMDConvertTypeFromBits<JavascriptSIMDInt32x4, JavascriptSIMDUint8x16>(instance, scriptContext);
         }
-        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt32x4TypeMismatch, L"fromInt32x4Bits");
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdUint8x16TypeMismatch, L"fromInt32x4Bits");
     }
 
     Var SIMDUint8x16Lib::EntryFromInt16x8Bits(RecyclableObject* function, CallInfo callInfo, ...)
@@ -126,7 +126,7 @@ namespace Js
             Assert(instance);
             return  SIMDConvertTypeFromBits<JavascriptSIMDInt16x8, JavascriptSIMDUint8x16>(instance, scriptContext);
         }
-        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt16x8TypeMismatch, L"fromInt16x8Bits");
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdUint8x16TypeMismatch, L"fromInt16x8Bits");
     }
 
     Var SIMDUint8x16Lib::EntryFromInt8x16Bits(RecyclableObject* function, CallInfo callInfo, ...)
@@ -144,7 +144,25 @@ namespace Js
             Assert(instance);
             return  SIMDConvertTypeFromBits<JavascriptSIMDInt8x16, JavascriptSIMDUint8x16>(instance, scriptContext);
         }
-        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt8x16TypeMismatch, L"fromInt8x16Bits");
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdUint8x16TypeMismatch, L"fromInt8x16Bits");
+    }
+
+    Var SIMDUint8x16Lib::EntryFromUint32x4Bits(RecyclableObject* function, CallInfo callInfo, ...)
+    {
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+        ARGUMENTS(args, callInfo);
+        ScriptContext* scriptContext = function->GetScriptContext();
+
+        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
+        Assert(!(callInfo.Flags & CallFlags_New));
+
+        if (args.Info.Count >= 2 && JavascriptSIMDUint32x4::Is(args[1]))
+        {
+            JavascriptSIMDUint32x4 *instance = JavascriptSIMDUint32x4::FromVar(args[1]);
+            Assert(instance);
+            return  SIMDConvertTypeFromBits<JavascriptSIMDUint32x4, JavascriptSIMDUint8x16>(instance, scriptContext);
+        }
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdUint8x16TypeMismatch, L"fromUint32x4Bits");
     }
 
     Var SIMDUint8x16Lib::EntryFromUint16x8Bits(RecyclableObject* function, CallInfo callInfo, ...)
@@ -162,25 +180,7 @@ namespace Js
             Assert(instance);
             return  SIMDConvertTypeFromBits<JavascriptSIMDUint16x8, JavascriptSIMDUint8x16>(instance, scriptContext);
         }
-        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdUint16x8TypeMismatch, L"fromUint16x8Bits");
-    }
-
-    Var SIMDUint8x16Lib::EntryFromInt8x16(RecyclableObject* function, CallInfo callInfo, ...)
-    {
-        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
-        ARGUMENTS(args, callInfo);
-        ScriptContext* scriptContext = function->GetScriptContext();
-
-        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
-        Assert(!(callInfo.Flags & CallFlags_New));
-
-        if (args.Info.Count >= 2 && JavascriptSIMDInt8x16::Is(args[1]))
-        {
-            JavascriptSIMDInt8x16 *instance = JavascriptSIMDInt8x16::FromVar(args[1]);
-            Assert(instance);
-            return  SIMDConvertTypeFromBits<JavascriptSIMDInt8x16, JavascriptSIMDUint8x16>(instance, scriptContext);
-        }
-        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt8x16TypeMismatch, L"fromInt8x16Bits");
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdUint8x16TypeMismatch, L"fromUint16x8Bits");
     }
 
     Var SIMDUint8x16Lib::EntryMin(RecyclableObject* function, CallInfo callInfo, ...)
@@ -250,7 +250,7 @@ namespace Js
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         Assert(!(callInfo.Flags & CallFlags_New));
 
-        return SIMD128TypedArrayLoad<JavascriptSIMDUint8x16>(args[1], args[2], 8 * TySize[TyUint8], scriptContext);
+        return SIMD128TypedArrayLoad<JavascriptSIMDUint8x16>(args[1], args[2], 16 * TySize[TyUint8], scriptContext);
     }
 
     Var SIMDUint8x16Lib::EntryStore(RecyclableObject* function, CallInfo callInfo, ...)
@@ -265,7 +265,7 @@ namespace Js
 
         if (args.Info.Count >= 4 && JavascriptSIMDUint8x16::Is(args[3]))
         {
-            SIMD128TypedArrayStore<JavascriptSIMDUint8x16>(args[1], args[2], args[3], 8 * TySize[TyUint8], scriptContext);
+            SIMD128TypedArrayStore<JavascriptSIMDUint8x16>(args[1], args[2], args[3], 16 * TySize[TyUint8], scriptContext);
             return NULL;
         }
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInvalidArgType, L"SIMD.Uint8x16.store");

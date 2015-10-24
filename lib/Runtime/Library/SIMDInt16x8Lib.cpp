@@ -1,6 +1,7 @@
-//----------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//---------------------------------------------------------------------------- 
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 
 #include "RuntimeLibraryPch.h"
 #include "SIMDInt16x8Operation.h"
@@ -74,25 +75,6 @@ namespace Js
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt16x8TypeMismatch, L"Int16x8");
     }
 
-    Var SIMDInt16x8Lib::EntryFromInt32x4Bits(RecyclableObject* function, CallInfo callInfo, ...)
-    {
-        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
-        ARGUMENTS(args, callInfo);
-        ScriptContext* scriptContext = function->GetScriptContext();
-
-        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
-        Assert(!(callInfo.Flags & CallFlags_New));
-
-        if (args.Info.Count >= 2 && JavascriptSIMDInt32x4::Is(args[1]))
-        {
-            JavascriptSIMDInt32x4 *instance = JavascriptSIMDInt32x4::FromVar(args[1]);
-            Assert(instance);
-
-            return SIMDConvertTypeFromBits<JavascriptSIMDInt32x4, JavascriptSIMDInt16x8>(instance, scriptContext);
-        }
-        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdFloat32x4TypeMismatch, L"fromInt32x4Bits");
-    }
-
     Var SIMDInt16x8Lib::EntryFromFloat32x4Bits(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
@@ -109,7 +91,101 @@ namespace Js
 
             return SIMDConvertTypeFromBits<JavascriptSIMDFloat32x4, JavascriptSIMDInt16x8>(instance, scriptContext);
         }
-        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdFloat32x4TypeMismatch, L"fromFloat32x4Bits");
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt16x8TypeMismatch, L"fromFloat32x4Bits");
+    }
+
+    Var SIMDInt16x8Lib::EntryFromInt32x4Bits(RecyclableObject* function, CallInfo callInfo, ...)
+    {
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+        ARGUMENTS(args, callInfo);
+        ScriptContext* scriptContext = function->GetScriptContext();
+
+        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
+        Assert(!(callInfo.Flags & CallFlags_New));
+
+        if (args.Info.Count >= 2 && JavascriptSIMDInt32x4::Is(args[1]))
+        {
+            JavascriptSIMDInt32x4 *instance = JavascriptSIMDInt32x4::FromVar(args[1]);
+            Assert(instance);
+
+            return SIMDConvertTypeFromBits<JavascriptSIMDInt32x4, JavascriptSIMDInt16x8>(instance, scriptContext);
+        }
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt16x8TypeMismatch, L"fromInt32x4Bits");
+    }
+
+    Var SIMDInt16x8Lib::EntryFromInt8x16Bits(RecyclableObject* function, CallInfo callInfo, ...)
+    {
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+        ARGUMENTS(args, callInfo);
+        ScriptContext* scriptContext = function->GetScriptContext();
+
+        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
+        Assert(!(callInfo.Flags & CallFlags_New));
+
+        if (args.Info.Count >= 2 && JavascriptSIMDInt8x16::Is(args[1]))
+        {
+            JavascriptSIMDInt8x16 *instance = JavascriptSIMDInt8x16::FromVar(args[1]);
+            Assert(instance);
+
+            return SIMDConvertTypeFromBits<JavascriptSIMDInt8x16, JavascriptSIMDInt16x8>(instance, scriptContext);
+        }
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt16x8TypeMismatch, L"fromInt8x16Bits");
+    }
+    Var SIMDInt16x8Lib::EntryFromUint32x4Bits(RecyclableObject* function, CallInfo callInfo, ...)
+    {
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+        ARGUMENTS(args, callInfo);
+        ScriptContext* scriptContext = function->GetScriptContext();
+
+        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
+        Assert(!(callInfo.Flags & CallFlags_New));
+
+        if (args.Info.Count >= 2 && JavascriptSIMDUint32x4::Is(args[1]))
+        {
+            JavascriptSIMDUint32x4 *instance = JavascriptSIMDUint32x4::FromVar(args[1]);
+            Assert(instance);
+
+            return SIMDConvertTypeFromBits<JavascriptSIMDUint32x4, JavascriptSIMDInt16x8>(instance, scriptContext);
+        }
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt16x8TypeMismatch, L"fromUint32x4Bits");
+    }
+
+    Var SIMDInt16x8Lib::EntryFromUint16x8Bits(RecyclableObject* function, CallInfo callInfo, ...)
+    {
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+        ARGUMENTS(args, callInfo);
+        ScriptContext* scriptContext = function->GetScriptContext();
+
+        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
+        Assert(!(callInfo.Flags & CallFlags_New));
+
+        if (args.Info.Count >= 2 && JavascriptSIMDUint16x8::Is(args[1]))
+        {
+            JavascriptSIMDUint16x8 *instance = JavascriptSIMDUint16x8::FromVar(args[1]);
+            Assert(instance);
+
+            return SIMDConvertTypeFromBits<JavascriptSIMDUint16x8, JavascriptSIMDInt16x8>(instance, scriptContext);
+        }
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt16x8TypeMismatch, L"fromUint16x8Bits");
+    }
+
+    Var SIMDInt16x8Lib::EntryFromUint8x16Bits(RecyclableObject* function, CallInfo callInfo, ...)
+    {
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+        ARGUMENTS(args, callInfo);
+        ScriptContext* scriptContext = function->GetScriptContext();
+
+        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
+        Assert(!(callInfo.Flags & CallFlags_New));
+
+        if (args.Info.Count >= 2 && JavascriptSIMDUint8x16::Is(args[1]))
+        {
+            JavascriptSIMDUint8x16 *instance = JavascriptSIMDUint8x16::FromVar(args[1]);
+            Assert(instance);
+
+            return SIMDConvertTypeFromBits<JavascriptSIMDUint8x16, JavascriptSIMDInt16x8>(instance, scriptContext);
+        }
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt16x8TypeMismatch, L"fromUint8x16Bits");
     }
 
     Var SIMDInt16x8Lib::EntryNeg(RecyclableObject* function, CallInfo callInfo, ...)
@@ -363,7 +439,7 @@ namespace Js
 
             result = SIMDInt16x8Operation::OpLessThan(aValue, bValue);
 
-            return JavascriptSIMDInt16x8::New(&result, scriptContext);
+            return JavascriptSIMDBool16x8::New(&result, scriptContext);
         }
 
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt16x8TypeMismatch, L"lessThan");
@@ -394,7 +470,7 @@ namespace Js
 
             result = SIMDInt16x8Operation::OpLessThanOrEqual(aValue, bValue);
 
-            return JavascriptSIMDInt16x8::New(&result, scriptContext);
+            return JavascriptSIMDBool16x8::New(&result, scriptContext);
         }
 
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt16x8TypeMismatch, L"lessThanOrEqual");
@@ -425,7 +501,7 @@ namespace Js
 
             result = SIMDInt16x8Operation::OpEqual(aValue, bValue);
 
-            return JavascriptSIMDInt16x8::New(&result, scriptContext);
+            return JavascriptSIMDBool16x8::New(&result, scriptContext);
         }
 
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt16x8TypeMismatch, L"equal");
@@ -456,7 +532,7 @@ namespace Js
 
             result = SIMDInt16x8Operation::OpNotEqual(aValue, bValue);
 
-            return JavascriptSIMDInt16x8::New(&result, scriptContext);
+            return JavascriptSIMDBool16x8::New(&result, scriptContext);
         }
 
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt16x8TypeMismatch, L"notEqual");
@@ -487,7 +563,7 @@ namespace Js
 
             result = SIMDInt16x8Operation::OpGreaterThan(aValue, bValue);
 
-            return JavascriptSIMDInt16x8::New(&result, scriptContext);
+            return JavascriptSIMDBool16x8::New(&result, scriptContext);
         }
 
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt16x8TypeMismatch, L"greaterThan");
@@ -518,7 +594,7 @@ namespace Js
 
             result = SIMDInt16x8Operation::OpGreaterThanOrEqual(aValue, bValue);
 
-            return JavascriptSIMDInt16x8::New(&result, scriptContext);
+            return JavascriptSIMDBool16x8::New(&result, scriptContext);
         }
 
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt16x8TypeMismatch, L"greaterThanOrEqual");
@@ -846,20 +922,19 @@ namespace Js
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         Assert(!(callInfo.Flags & CallFlags_New));
         
-        if (args.Info.Count >= 4 && JavascriptSIMDInt16x8::Is(args[1]) &&
+        if (args.Info.Count >= 4 && JavascriptSIMDBool16x8::Is(args[1]) &&
             JavascriptSIMDInt16x8::Is(args[2]) && JavascriptSIMDInt16x8::Is(args[3]))
         {
-            JavascriptSIMDInt16x8 *m = JavascriptSIMDInt16x8::FromVar(args[1]);
-            JavascriptSIMDInt16x8 *t = JavascriptSIMDInt16x8::FromVar(args[2]);
-            JavascriptSIMDInt16x8 *f = JavascriptSIMDInt16x8::FromVar(args[3]);
+            JavascriptSIMDBool16x8 *m = JavascriptSIMDBool16x8::FromVar(args[1]);
+            JavascriptSIMDInt16x8 *t  = JavascriptSIMDInt16x8::FromVar(args[2]);
+            JavascriptSIMDInt16x8 *f  = JavascriptSIMDInt16x8::FromVar(args[3]);
             Assert(m && t && f);
 
             SIMDValue result, maskValue, trueValue, falseValue;
             maskValue = m->GetValue();
             trueValue = t->GetValue();
             falseValue = f->GetValue();
-            //To Do once the boolean types are available
-            //result = SIMDInt16x8Operation::OpSelect(maskValue, trueValue, falseValue); 
+            result = SIMDInt32x4Operation::OpSelect(maskValue, trueValue, falseValue); 
 
             return JavascriptSIMDInt16x8::New(&result, scriptContext);
         }

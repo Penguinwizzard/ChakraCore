@@ -390,7 +390,9 @@ BUILTIN(SIMDInt8x16Lib, Splat       , EntrySplat        , FunctionInfo::None)
 BUILTIN(SIMDInt8x16Lib, FromFloat32x4Bits   , EntryFromFloat32x4Bits    , FunctionInfo::None)
 BUILTIN(SIMDInt8x16Lib, FromInt32x4Bits     , EntryFromInt32x4Bits      , FunctionInfo::None)
 BUILTIN(SIMDInt8x16Lib, FromInt16x8Bits     , EntryFromInt16x8Bits      , FunctionInfo::None)
-
+BUILTIN(SIMDInt8x16Lib, FromUint32x4Bits    , EntryFromUint32x4Bits     , FunctionInfo::None)
+BUILTIN(SIMDInt8x16Lib, FromUint16x8Bits    , EntryFromUint16x8Bits     , FunctionInfo::None)
+BUILTIN(SIMDInt8x16Lib, FromUint8x16Bits    , EntryFromUint8x16Bits     , FunctionInfo::None)
 // UnaryOps
 BUILTIN(SIMDInt8x16Lib, Neg         , EntryNeg          , FunctionInfo::None)
 BUILTIN(SIMDInt8x16Lib, Not         , EntryNot          , FunctionInfo::None)
@@ -477,8 +479,14 @@ BUILTIN(SIMDFloat64x2Lib, Select,   EntrySelect, FunctionInfo::None)
 BUILTIN(SIMDInt16x8Lib, Int16x8, EntryInt16x8, FunctionInfo::None)
 BUILTIN(SIMDInt16x8Lib, Check, EntryCheck, FunctionInfo::None)
 BUILTIN(SIMDInt16x8Lib, Splat, EntrySplat, FunctionInfo::None)
-BUILTIN(SIMDInt16x8Lib, FromInt32x4Bits, EntryFromInt32x4Bits, FunctionInfo::None)
+
 BUILTIN(SIMDInt16x8Lib, FromFloat32x4Bits, EntryFromFloat32x4Bits, FunctionInfo::None)
+BUILTIN(SIMDInt16x8Lib, FromInt32x4Bits, EntryFromInt32x4Bits, FunctionInfo::None)
+BUILTIN(SIMDInt16x8Lib, FromInt8x16Bits, EntryFromInt8x16Bits, FunctionInfo::None)
+BUILTIN(SIMDInt16x8Lib, FromUint32x4Bits, EntryFromUint32x4Bits, FunctionInfo::None)
+BUILTIN(SIMDInt16x8Lib, FromUint16x8Bits, EntryFromUint16x8Bits, FunctionInfo::None)
+BUILTIN(SIMDInt16x8Lib, FromUint8x16Bits, EntryFromUint8x16Bits, FunctionInfo::None)
+
 // UnaryOps
 BUILTIN(SIMDInt16x8Lib, Neg, EntryNeg, FunctionInfo::None)
 BUILTIN(SIMDInt16x8Lib, Not, EntryNot, FunctionInfo::None)
@@ -579,13 +587,12 @@ BUILTIN(SIMDUint8x16Lib, Uint8x16, EntryUint8x16, FunctionInfo::None)
 BUILTIN(SIMDUint8x16Lib, Check, EntryCheck, FunctionInfo::None)
 BUILTIN(SIMDUint8x16Lib, Splat, EntrySplat, FunctionInfo::None)
 // Conversions
+BUILTIN(SIMDUint8x16Lib, FromFloat32x4Bits, EntryFromFloat32x4Bits, FunctionInfo::None)
 BUILTIN(SIMDUint8x16Lib, FromInt32x4Bits, EntryFromInt32x4Bits, FunctionInfo::None)
 BUILTIN(SIMDUint8x16Lib, FromInt16x8Bits, EntryFromInt16x8Bits, FunctionInfo::None)
 BUILTIN(SIMDUint8x16Lib, FromInt8x16Bits, EntryFromInt8x16Bits, FunctionInfo::None)
-//BUILTIN(SIMDUint8x16Lib, FromUint32x4Bits, EntryFromUint32x4Bits, FunctionInfo::None)
+BUILTIN(SIMDUint8x16Lib, FromUint32x4Bits, EntryFromUint32x4Bits, FunctionInfo::None)
 BUILTIN(SIMDUint8x16Lib, FromUint16x8Bits, EntryFromUint16x8Bits, FunctionInfo::None)
-BUILTIN(SIMDUint8x16Lib, FromFloat32x4Bits, EntryFromFloat32x4Bits, FunctionInfo::None)
-BUILTIN(SIMDUint8x16Lib, FromInt8x16, EntryFromInt8x16, FunctionInfo::None)
 // UnaryOps
 BUILTIN(SIMDUint8x16Lib, Not, EntryNot, FunctionInfo::None)
 // BinaryOps
@@ -625,10 +632,13 @@ BUILTIN(SIMDUint16x8Lib, Uint16x8, EntryUint16x8, FunctionInfo::None)
 BUILTIN(SIMDUint16x8Lib, Check, EntryCheck, FunctionInfo::None)
 BUILTIN(SIMDUint16x8Lib, Splat, EntrySplat, FunctionInfo::None)
 // Conversions
-BUILTIN(SIMDUint16x8Lib, FromInt32x4Bits, EntryFromInt32x4Bits, FunctionInfo::None)
-BUILTIN(SIMDUint16x8Lib, FromInt8x16Bits, EntryFromInt8x16Bits, FunctionInfo::None)
-BUILTIN(SIMDUint16x8Lib, FromInt16x8Bits, EntryFromInt16x8Bits, FunctionInfo::None)
 BUILTIN(SIMDUint16x8Lib, FromFloat32x4Bits, EntryFromFloat32x4Bits, FunctionInfo::None)
+BUILTIN(SIMDUint16x8Lib, FromInt32x4Bits, EntryFromInt32x4Bits, FunctionInfo::None)
+BUILTIN(SIMDUint16x8Lib, FromInt16x8Bits, EntryFromInt16x8Bits, FunctionInfo::None)
+BUILTIN(SIMDUint16x8Lib, FromInt8x16Bits, EntryFromInt8x16Bits, FunctionInfo::None)
+BUILTIN(SIMDUint16x8Lib, FromUint32x4Bits, EntryFromUint32x4Bits, FunctionInfo::None)
+BUILTIN(SIMDUint16x8Lib, FromUint8x16Bits, EntryFromUint8x16Bits, FunctionInfo::None)
+
 // UnaryOps
 BUILTIN(SIMDUint16x8Lib, Not, EntryNot, FunctionInfo::None)
 // BinaryOps
