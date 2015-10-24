@@ -8,6 +8,12 @@
 #include "Warnings.h"
 
 //----------------------------------------------------------------------------------------------------
+// Chakra Core version
+//----------------------------------------------------------------------------------------------------
+#define CHAKRA_CORE_MAJOR_VERSION 1
+#define CHAKRA_CORE_MINOR_VERSION 0
+
+//----------------------------------------------------------------------------------------------------
 // Default debug/fretest/release flags values
 //  - Set the default values of debug/fretest/release flags if it is not set by the command line
 //----------------------------------------------------------------------------------------------------

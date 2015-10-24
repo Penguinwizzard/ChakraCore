@@ -1,4 +1,5 @@
 @echo off
+setlocal
 set _HASERROR=0
 
 :: This script will expect ch.exe to be built for x86_debug and x64_debug

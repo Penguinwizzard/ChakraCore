@@ -93,7 +93,12 @@ namespace Js
 // the same for releases where there is no change to jscript9. The reason for this is that we don't want to invalidate compatible byte code that has already been cached.
 enum FileVersionScheme
 {
+    // Even Chakra and ChakraCore may have the same version, their byte code may not be compatible. Give them different value.
+#ifdef NTBUILD
     EngineeringVersioningScheme = 10,
+#else
+    EngineeringVersioningScheme = 11,
+#endif
     ReleaseVersioningScheme = 20
 };
 
@@ -416,13 +421,19 @@ public:
         }
 #endif
         fileVersionKind.value = actualFileVersionScheme;
-        if (actualFileVersionScheme == EngineeringVersioningScheme)
+        if (actualFileVersionScheme != ReleaseVersioningScheme)
         {
-            DWORD jscriptMajor, jscriptMinor;
-            Js::VerifyOkCatastrophic(AutoSystemInfo::GetJscriptFileVersion(&jscriptMajor, &jscriptMinor));
-            V1.value = jscriptMajor;
-            if (!GenerateLibraryByteCode())
+            if (GenerateLibraryByteCode())
             {
+                // Library code always follows the ChakraCore version
+                V1.value = CHAKRA_CORE_MAJOR_VERSION << 16 | CHAKRA_CORE_MINOR_VERSION;
+            }
+            else
+            {
+                Assert(actualFileVersionScheme == EngineeringVersioningScheme);
+                DWORD jscriptMajor, jscriptMinor;
+                Js::VerifyOkCatastrophic(AutoSystemInfo::GetJscriptFileVersion(&jscriptMajor, &jscriptMinor));
+                V1.value = jscriptMajor;
                 V2.value = jscriptMinor;
 #ifdef USE_DATE_TIME_MACRO
                 V3.value = buildDateHash;
@@ -446,8 +457,7 @@ public:
             }
         }
         else
-        {
-            Assert(actualFileVersionScheme == ReleaseVersioningScheme);
+        {            
             auto guidDWORDs = (DWORD*)(&byteCodeCacheReleaseFileVersion);
             V1.value = guidDWORDs[0];
             V2.value = guidDWORDs[1];
@@ -2136,14 +2146,15 @@ public:
         DWORD expectedV4 = 0;
 
         if (expectedFileVersionScheme == EngineeringVersioningScheme)
-        {
-            Js::VerifyOkCatastrophic(AutoSystemInfo::GetJscriptFileVersion(&expectedV1, &expectedV2));
+        {            
             if (isLibraryCode)
             {
-                expectedV2 = 0;
+                // Library code always use the ChakraCore version
+                expectedV1 = CHAKRA_CORE_MAJOR_VERSION << 16 | CHAKRA_CORE_MINOR_VERSION;
             }
             else
             {
+                Js::VerifyOkCatastrophic(AutoSystemInfo::GetJscriptFileVersion(&expectedV1, &expectedV2));
 #ifdef USE_DATE_TIME_MACRO
                 expectedV3 = buildDateHash;
                 expectedV4 = buildTimeHash;

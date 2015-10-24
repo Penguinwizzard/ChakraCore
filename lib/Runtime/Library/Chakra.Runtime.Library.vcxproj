@@ -227,8 +227,6 @@
     <ClInclude Include="HostObjectBase.h" />
     <ClInclude Include="InJavascript\intl.js.bc.32b.h" />
     <ClInclude Include="InJavascript\intl.js.bc.64b.h" />
-    <ClInclude Include="InJavascript\Promise.js.bc.32b.h" />
-    <ClInclude Include="InJavascript\Promise.js.bc.64b.h" />
     <ClInclude Include="IteratorObjectEnumerator.h" />
     <ClInclude Include="JavascriptArrayEnumeratorBase.h" />
     <ClInclude Include="JavascriptArrayIndexEnumerator.h" />
@@ -356,7 +354,6 @@
     <None Include="InJavascript\BuildGenByteCodeBin.cmd" />
     <None Include="InJavascript\GenByteCode.cmd" />
     <None Include="InJavascript\Intl.js" />
-    <None Include="InJavascript\Promise.js" />
     <None Include="InJavascript\WarnGenByteCode.cmd" />
     <None Include="ConcatString.inl" />
     <None Include="SparseArraySegment.inl" />
