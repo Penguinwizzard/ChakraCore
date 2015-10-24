@@ -56,6 +56,12 @@
       <tags>Slow</tags>
     </default>
   </test>
+  <test>
+    <default>
+        <files>toLocaleString2.js</files>
+        <compile-flags>-args summary -endargs</compile-flags>
+    </default>
+  </test>
   <!-- Disabled until we can resolve failures on Windows Server 2012 R2
 <test>
     <default>

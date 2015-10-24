@@ -269,6 +269,7 @@ namespace Js
         return scriptContext->GetLibrary()->GetFalse();
     }
 
+    // 19.1.3.5 - Object.prototype.toLocaleString as of ES6 (6.0)
     Var JavascriptObject::EntryToLocaleString(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
@@ -276,17 +277,24 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
         Assert(!(callInfo.Flags & CallFlags_New));
-
         AssertMsg(args.Info.Count, "Should always have implicit 'this'");
 
-        /* Per ES5 spec we need to convert to object and then perform ToString operation */
+        Var thisValue = args[0];
         RecyclableObject* dynamicObject = nullptr;
-        if (FALSE == JavascriptConversion::ToObject(args[0], scriptContext, &dynamicObject))
+
+        if (FALSE == JavascriptConversion::ToObject(thisValue, scriptContext, &dynamicObject))
         {
             JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NullOrUndefined, L"Object.prototype.toLocaleString");
         }
 
-        return JavascriptConversion::ToString(dynamicObject, scriptContext);
+        Var toStringVar = nullptr;
+        if (!JavascriptOperators::GetProperty(thisValue, dynamicObject, Js::PropertyIds::toString, &toStringVar, scriptContext) || !JavascriptConversion::IsCallable(toStringVar))
+        {
+            JavascriptError::ThrowTypeError(scriptContext, JSERR_FunctionArgument_NeedFunction, L"Object.prototype.toLocaleString");
+        }
+
+        RecyclableObject* toStringFunc = RecyclableObject::FromVar(toStringVar);
+        return toStringFunc->GetEntryPoint()(toStringFunc, CallInfo(CallFlags_Value, 1), thisValue);
     }
 
     Var JavascriptObject::EntryToString(RecyclableObject* function, CallInfo callInfo, ...)
