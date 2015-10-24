@@ -3,10 +3,7 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 #include "Backend.h"
-#ifdef ENABLE_DOM_FAST_PATH
-#include "Library\JavascriptTypedObjectSlotAccessorFunction.h"
-#include "Types\DOMFastPath.h"
-#endif
+#include "ExternalHelperMethod.h"
 // Parser includes
 #include "RegexCommon.h"
 

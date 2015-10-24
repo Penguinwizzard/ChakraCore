@@ -86,8 +86,7 @@ public:
     virtual HRESULT GetHostContextUrl(__in DWORD_PTR hostSourceContext, __out BSTR& pUrl) = 0;
     virtual BOOL HasCaller() = 0;
     virtual void CleanDynamicCodeCache() = 0;
-    virtual HRESULT VerifyDOMSecurity(Js::ScriptContext* targetContext, Js::Var obj) = 0;
-    virtual Js::JavascriptMethod GetSimpleSlotAccessCrossSiteThunk() = 0;
+    virtual HRESULT VerifyDOMSecurity(Js::ScriptContext* targetContext, Js::Var obj) = 0;    
 
     virtual HRESULT CheckEvalRestriction() = 0;
     virtual HRESULT HostExceptionFromHRESULT(HRESULT hr, Js::Var* outError) = 0;
@@ -101,8 +100,12 @@ public:
 
     Js::ScriptContext* GetScriptContext() { return scriptContext; }
 
+    virtual bool SetCrossSiteForFunctionType(Js::JavascriptFunction * function) = 0;
 #if DBG_DUMP || defined(PROFILE_EXEC) || defined(PROFILE_MEM)
     virtual void EnsureParentInfo(Js::ScriptContext* scriptContext = NULL) = 0;
+#endif
+#if DBG
+    virtual bool IsHostCrossSiteThunk(Js::JavascriptMethod address) = 0;
 #endif
 private:
     Js::ScriptContext* scriptContext;

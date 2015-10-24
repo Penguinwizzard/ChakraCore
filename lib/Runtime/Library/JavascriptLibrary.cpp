@@ -14,11 +14,6 @@
 #include "Types\SimpleDictionaryPropertyDescriptor.h"
 #include "Types\SimpleDictionaryTypeHandler.h"
 
-#ifdef ENABLE_DOM_FAST_PATH
-#include "Library\JavascriptTypedObjectSlotAccessorFunction.h"
-#include "Library\DOMFastPathInfo.h"
-#endif
-
 #include "Types\DynamicObjectEnumerator.h"
 #include "Types\DynamicObjectSnapshotEnumerator.h"
 #include "Types\DynamicObjectSnapshotEnumeratorWPCache.h"
@@ -2939,7 +2934,6 @@ namespace Js
         constructorCacheDefaultInstance = &Js::ConstructorCache::DefaultInstance;
         absDoubleCst = Js::JavascriptNumber::AbsDoubleCst;
         uintConvertConst = Js::JavascriptNumber::UIntConvertConst;
-        jnHelperMethods = IR::GetHelperMethods();
 
         defaultPropertyDescriptor.SetValue(undefinedValue);
         defaultPropertyDescriptor.SetWritable(false);
@@ -4476,25 +4470,11 @@ namespace Js
                            this->GetRegexType());
     }
 
-    void JavascriptLibrary::SetCrossSiteForSharedFunctionType(JavascriptFunction * function, bool useSlotAccessCrossSiteThunk)
+    void JavascriptLibrary::SetCrossSiteForSharedFunctionType(JavascriptFunction * function)
     {
         Assert(function->GetDynamicType()->GetIsShared());
 
-#ifdef ENABLE_DOM_FAST_PATH
-        if (useSlotAccessCrossSiteThunk)
-        {
-            Assert(!ScriptFunction::Is(function));
-            Assert(VirtualTableInfo<JavascriptTypedObjectSlotAccessorFunction>::HasVirtualTable(function));
-            Assert((function->GetFunctionInfo()->GetAttributes() & Js::FunctionInfo::Attributes::NeedCrossSiteSecurityCheck) != 0);
-            Assert(function->GetDynamicType()->GetTypeHandler() == functionTypeHandler);
-            function->ChangeType();
-            function->SetEntryPoint(scriptContext->GetHostScriptContext()->GetSimpleSlotAccessCrossSiteThunk());
-        }
-        else
-#else
-        Assert(!useSlotAccessCrossSiteThunk);
-#endif
-            if (ScriptFunction::Is(function))
+        if (ScriptFunction::Is(function))
         {
 #if DEBUG
             if (!function->GetFunctionProxy()->GetIsAnonymousFunction())
@@ -5390,30 +5370,6 @@ namespace Js
         return EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, GeneratorVirtualScriptFunction, proxy, deferredPrototypeType));
     }
 
-#ifdef ENABLE_DOM_FAST_PATH
-    JavascriptTypedObjectSlotAccessorFunction* JavascriptLibrary::CreateTypedObjectSlotGetterFunction(unsigned int slotIndex, FunctionInfo* functionInfo, int typeId, PropertyId nameId)
-    {
-        // GC should zero out the whole library; we shouldn't need to explicitly zero out
-        if (typedObjectSlotGetterFunctionTypes[slotIndex] == nullptr)
-        {
-            typedObjectSlotGetterFunctionTypes[slotIndex] = CreateFunctionWithLengthType(functionInfo);
-            scriptContext->EnsureDOMFastPathIRHelperMap()->Add(functionInfo, ::DOMFastPathInfo::GetGetterIRHelper(slotIndex));
-        }
-        return EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptTypedObjectSlotAccessorFunction, typedObjectSlotGetterFunctionTypes[slotIndex], functionInfo, typeId, nameId));
-    }
-
-    JavascriptTypedObjectSlotAccessorFunction* JavascriptLibrary::CreateTypedObjectSlotSetterFunction(unsigned int slotIndex, FunctionInfo* functionInfo, int typeId, PropertyId nameId)
-    {
-        // GC should zero out the whole library; we shouldn't need to explicitly zero out
-        if (typedObjectSlotSetterFunctionTypes[slotIndex] == nullptr)
-        {
-            typedObjectSlotSetterFunctionTypes[slotIndex] = CreateFunctionWithLengthType(functionInfo);
-
-        }
-        return EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptTypedObjectSlotAccessorFunction, typedObjectSlotSetterFunctionTypes[slotIndex], functionInfo, typeId, nameId));
-    }
-
-#endif
     DynamicType * JavascriptLibrary::CreateGeneratorType(RecyclableObject* prototype)
     {
         return DynamicType::New(scriptContext, TypeIds_Generator, prototype, nullptr, NullTypeHandler<false>::GetDefaultInstance());

@@ -32,6 +32,7 @@
       <!-- /MD -->
       <RuntimeLibrary Condition="'$(RuntimeLib)'!='static_library'">MultiThreadedDLL</RuntimeLibrary>
       <RuntimeLibrary Condition="'$(RuntimeLib)'=='static_library'">MultiThreaded</RuntimeLibrary>
+
       <!-- We don't use any metadata -->
       <AdditionalUsingDirectories />
 

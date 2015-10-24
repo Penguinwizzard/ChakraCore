@@ -16,6 +16,7 @@ class ScriptSite;
 class ActiveScriptExternalLibrary;
 class ProjectionExternalLibrary;
 class EditAndContinue;
+class ChakraHostScriptContext;
 
 #ifdef ENABLE_PROJECTION
 namespace Projection
@@ -27,7 +28,7 @@ namespace Projection
 
 namespace Js
 {
-    class MissingPropertyTypeHandler;
+    class MissingPropertyTypeHandler;    
     typedef RecyclerFastAllocator<JavascriptNumber, LeafBit> RecyclerJavascriptNumberAllocator;
 
     class UndeclaredBlockVariable : public RecyclableObject
@@ -116,6 +117,7 @@ namespace Js
         friend class ExternalLibraryBase;
         friend class ActiveScriptExternalLibrary;
         friend class IntlEngineInterfaceExtensionObject;
+        friend class ChakraHostScriptContext;
 #ifdef ENABLE_PROJECTION
         friend class ProjectionExternalLibrary;
         friend class Projection::WinRTPromiseEngineInterfaceExtensionObject;
@@ -150,12 +152,10 @@ namespace Js
         static DWORD GetAbsDoubleCstOffset() { return offsetof(JavascriptLibrary, absDoubleCst); }
         static DWORD GetUintConvertConstOffset() { return offsetof(JavascriptLibrary, uintConvertConst); }
         static DWORD GetBuiltinFunctionsOffset() { return offsetof(JavascriptLibrary, builtinFunctions); }
-        static DWORD GetJnHelperMethodsOffset() { return offsetof(JavascriptLibrary, jnHelperMethods); }
         static DWORD GetCharStringCacheOffset() { return offsetof(JavascriptLibrary, charStringCache); }
         static DWORD GetCharStringCacheAOffset() { return GetCharStringCacheOffset() + CharStringCache::GetCharStringCacheAOffset(); }
         const  JavascriptLibraryBase* GetLibraryBase() const { return static_cast<const JavascriptLibraryBase*>(this); }
         void SetGlobalObject(GlobalObject* globalObject) {globalObject = globalObject; }
-        static const unsigned int DOM_BUILTIN_MAX_SLOT_COUNT  = 100;
 
         typedef bool (CALLBACK *PromiseContinuationCallback)(Var task, void *callbackState);
 
@@ -217,7 +217,6 @@ namespace Js
         ConstructorCache *constructorCacheDefaultInstance;
         __declspec(align(16)) const BYTE *absDoubleCst;
         double const *uintConvertConst;
-        const void *const*jnHelperMethods;
 
         // Function Types
         DynamicTypeHandler * anonymousFunctionTypeHandler;
@@ -230,8 +229,6 @@ namespace Js
         DynamicType * idMappedFunctionWithPrototypeType;
         DynamicType * externalConstructorFunctionWithDeferredPrototypeType;
         DynamicType * boundFunctionType;
-        DynamicType * typedObjectSlotGetterFunctionTypes[DOM_BUILTIN_MAX_SLOT_COUNT];
-        DynamicType * typedObjectSlotSetterFunctionTypes[DOM_BUILTIN_MAX_SLOT_COUNT];
         DynamicType * regexConstructorType;
         DynamicType * crossSiteDeferredPrototypeFunctionType;
         DynamicType * crossSiteIdMappedFunctionWithPrototypeType;
@@ -767,10 +764,6 @@ namespace Js
         AsmJsScriptFunction * CreateAsmJsScriptFunction(FunctionProxy* proxy);
         ScriptFunctionWithInlineCache * CreateScriptFunctionWithInlineCache(FunctionProxy* proxy);
         GeneratorVirtualScriptFunction * CreateGeneratorVirtualScriptFunction(FunctionProxy* proxy);
-#ifdef ENABLE_DOM_FAST_PATH
-        JavascriptTypedObjectSlotAccessorFunction* CreateTypedObjectSlotGetterFunction(unsigned int slotIndex, FunctionInfo* functionInfo, int typeId, PropertyId nameId);
-        JavascriptTypedObjectSlotAccessorFunction* CreateTypedObjectSlotSetterFunction(unsigned int slotIndex, FunctionInfo* functionInfo, int typeId, PropertyId nameId);
-#endif
         DynamicType * CreateGeneratorType(RecyclableObject* prototype);
 
         JavascriptEnumerator * GetNullEnumerator() const;
@@ -835,7 +828,7 @@ namespace Js
 
         JavascriptFunction* EnsurePromiseResolveFunction();
 
-        void SetCrossSiteForSharedFunctionType(JavascriptFunction * function, bool useSlotAccessCrossSiteThunk);
+        void SetCrossSiteForSharedFunctionType(JavascriptFunction * function);
 
         uint64 GetRandSeed(){return randSeed;}
         void SetRandSeed(uint64 rs){randSeed = rs;}

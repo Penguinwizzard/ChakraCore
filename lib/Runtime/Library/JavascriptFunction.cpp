@@ -7,10 +7,6 @@
 #include "Library\StackScriptFunction.h"
 #include "Types\SpreadArgument.h"
 
-#ifdef ENABLE_DOM_FAST_PATH
-#include "Library\DOMFastPathInfo.h"
-#endif
-
 #ifdef _M_X64
 #include "ByteCode\PropertyIdArray.h"
 #include "Language\AsmJsTypes.h"
@@ -2111,12 +2107,10 @@ LABEL1:
         else
         {
             JavascriptMethod originalEntryPoint = this->GetFunctionInfo()->GetOriginalEntryPoint();
-#ifdef ENABLE_DOM_FAST_PATH
             Assert(callEntryPoint == originalEntryPoint || callEntryPoint == ProfileEntryThunk
-                || callEntryPoint == DOMFastPathInfo::CrossSiteSimpleSlotAccessorThunk);
-#else
-            Assert(callEntryPoint == originalEntryPoint || callEntryPoint == ProfileEntryThunk);
-#endif
+                || (this->GetScriptContext()->GetHostScriptContext() 
+                    && this->GetScriptContext()->GetHostScriptContext()->IsHostCrossSiteThunk(callEntryPoint))
+                );
         }
     }
 #endif

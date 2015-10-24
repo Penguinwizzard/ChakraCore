@@ -41,6 +41,7 @@ class Lowerer
     friend class LowererMDArch;
     friend class Encoder;
     friend class Func;
+    friend class ExternalLowerer;
 
 public:
     Lowerer(Func * func) : m_func(func), m_lowererMD(func), nextStackFunctionOpnd(nullptr), outerMostLoopLabel(nullptr),
@@ -137,9 +138,6 @@ private:
     void            GeneratePrototypeCacheInvalidateCheck(IR::PropertySymOpnd *propertySymOpnd, IR::Instr *instrStFld);
     void            PinTypeRef(Js::Type* type, void* typeRef, IR::Instr* instr, Js::PropertyId propertyId);
     IR::RegOpnd *   GenerateIsBuiltinRecyclableObject(IR::RegOpnd *regOpnd, IR::Instr *insertInstr, IR::LabelInstr *labelHelper, bool checkObjectAndDynamicObject = true, IR::LabelInstr *labelFastExternal = nullptr);
-#ifdef NTBUILD
-    void            GenerateFastExternalEqTest(CustomExternalObjectOperations *pData, IR::RegOpnd *typeRegOpnd, IR::BranchInstr *instrBranch, IR::LabelInstr *labelHelper, IR::LabelInstr *labelSuccess, bool isStrictBr, bool fallThroughOnSuccess);
-#endif
 
     void            EnsureStackFunctionListStackSym();
     void            EnsureZeroLastStackFunctionNext();

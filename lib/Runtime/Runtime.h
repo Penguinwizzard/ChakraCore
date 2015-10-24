@@ -168,9 +168,6 @@ namespace Js
     class JavascriptFunction;    
     class ScriptFunction;
     class ScriptFunctionWithInlineCache;
-#ifdef ENABLE_DOM_FAST_PATH
-    class JavascriptTypedObjectSlotAccessorFunction;
-#endif
     class StackScriptFunction;
     class GeneratorVirtualScriptFunction;
     class JavascriptGeneratorFunction;
@@ -342,9 +339,6 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Types\SimplePropertyDescriptor.h"
 
 #include "Types\DynamicType.h"
-#ifdef NTBUILD
-#include "Types\ExternalObject.h"
-#endif
 
 #include "Language\StackTraceArguments.h"
 #include "Types\PropertyDescriptor.h"

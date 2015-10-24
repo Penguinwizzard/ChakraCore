@@ -35,25 +35,19 @@ namespace Js
         {
             AssertMsg(object != object->GetScriptContext()->GetLibrary()->GetDefaultAccessorFunction(), "default accessor marshalled");
             JavascriptFunction * function = JavascriptFunction::FromVar(object);
-            FunctionInfo* functionInfo = Js::JavascriptFunction::FromVar(object)->GetFunctionInfo();
-            const bool useSlotAccessCrossSiteThunk =
-                    ((functionInfo->GetAttributes() & Js::FunctionInfo::Attributes::NeedCrossSiteSecurityCheck) != 0);
-            if (function->GetDynamicType()->GetIsShared())
+
+            // See if this function is one that the host needs to handle
+            HostScriptContext * hostScriptContext = scriptContext->GetHostScriptContext();
+            if (!hostScriptContext || !hostScriptContext->SetCrossSiteForFunctionType(function))
             {
-                function->GetLibrary()->SetCrossSiteForSharedFunctionType(function, useSlotAccessCrossSiteThunk);
-            }
-            else
-            {
-                JavascriptMethod crossSiteThunk = useSlotAccessCrossSiteThunk ?
-                    function->GetScriptContext()->GetHostScriptContext()->GetSimpleSlotAccessCrossSiteThunk() :
-                    function->GetScriptContext()->CurrentCrossSiteThunk;    // The Cross-site thunk of the function will be different due to Profiler and debugger
-                // we have a table of functonType for all functions of the same slot table. We should
-                // avoid changing the original type in the table.
-                if (useSlotAccessCrossSiteThunk)
+                if (function->GetDynamicType()->GetIsShared())
                 {
-                    function->ChangeType();
+                    function->GetLibrary()->SetCrossSiteForSharedFunctionType(function);
                 }
-                function->SetEntryPoint(crossSiteThunk);
+                else
+                {
+                    function->SetEntryPoint(function->GetScriptContext()->CurrentCrossSiteThunk);
+                }
             }
         }
     }

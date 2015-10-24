@@ -11,6 +11,13 @@
 #include "RegexCommon.h"
 #include "RegexPattern.h"
 
+#ifdef _M_X64_OR_ARM64
+// TODO: Clean this warning up
+#pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
+#endif
+
+#include "ExternalLowerer.h"
+
 ///----------------------------------------------------------------------------
 ///
 /// Lowerer::Lower
@@ -18945,34 +18952,8 @@ bool Lowerer::GenerateFastBrEqLikely(IR::BranchInstr * instrBranch, bool *pNeedH
         }
         else
         {
-#ifdef NTBUILD
-            CustomExternalObjectOperations data;
-            HRESULT hr = S_FALSE;
-            HostScriptContext *hsc = this->GetScriptContext()->GetHostScriptContext();
-            if (hsc)
-            {
-                hr = hsc->GetExternalJitData(ExternalJitData_CustomExternalObjectOperations, &data);
-            }
-            if (hr == S_OK)
-            {
-                if (!isStrictBr)
-                {
-                    IR::LabelInstr *labelContinue = IR::LabelInstr::New(Js::OpCode::Label, this->m_func);
-                    IR::RegOpnd *typeRegOpnd = GenerateIsBuiltinRecyclableObject(src1->AsRegOpnd(), instrBranch, labelHelper, false /*checkObjectAndDynamicObject*/, labelContinue);
-                    GenerateFastExternalEqTest(&data, typeRegOpnd, instrBranch, labelHelper, labelBooleanCmp, false, false);
-
-                    instrBranch->InsertBefore(labelContinue);
-                    GenerateIsBuiltinRecyclableObject(src2->AsRegOpnd(), instrBranch, labelHelper, false /*checkObjectAndDynamicObject*/);
-                }
-                else
-                {
-                    IR::RegOpnd *typeRegOpnd = GenerateIsBuiltinRecyclableObject(src2->AsRegOpnd(), instrBranch, labelHelper, false /*checkObjectAndDynamicObject*/, labelBooleanCmp);
-                    GenerateFastExternalEqTest(&data, typeRegOpnd, instrBranch, labelHelper, labelBooleanCmp, true, true);
-                }
-            }
-            else
-#endif
-            {
+            if (!ExternalLowerer::TryGenerateFastExternalEqTest(src1, src2, instrBranch, labelHelper, labelBooleanCmp, this, isStrictBr))
+            {           
                 if (!isStrictBr)
                 {
                     GenerateIsBuiltinRecyclableObject(src1->AsRegOpnd(), instrBranch, labelHelper, false /*checkObjectAndDynamicObject*/);
@@ -18999,65 +18980,6 @@ bool Lowerer::GenerateFastBrEqLikely(IR::BranchInstr * instrBranch, bool *pNeedH
 
     return true;
 }
-
-#ifdef NTBUILD
-void
-Lowerer::GenerateFastExternalEqTest(
-    CustomExternalObjectOperations *pData,
-    IR::RegOpnd *typeRegOpnd,
-    IR::BranchInstr *instrBranch,
-    IR::LabelInstr *labelHelper,
-    IR::LabelInstr *labelSuccess,
-    bool isStrictBr,
-    bool fallThroughOnSuccess)
-{
-    // Given a type, generate check for CustomExternalType and look at the operation usage flags to see
-    // if we can do a fast inline compare or need to call into the DOM for special handling.
-
-    // Check external type flag.
-    IR::Opnd *opnd = IR::IndirOpnd::New(typeRegOpnd, Js::Type::GetOffsetOfFlags(), TyUint8, this->m_func);
-    InsertTestBranch(
-        opnd,
-        IR::IntConstOpnd::New(TypeFlagMask_External, TyUint8, this->m_func),
-        Js::OpCode::BrEq_A,
-        labelHelper,
-        instrBranch);
-
-    // Check for CustomExternalType -- see if operations field is non-null.
-    opnd = 
-        IR::IndirOpnd::New(typeRegOpnd, (int32)Js::ExternalType::GetOffsetOfOperations(), TyMachReg, this->m_func);
-    InsertCompareBranch(
-        opnd,
-        IR::AddrOpnd::New(nullptr, IR::AddrOpndKindConstantVar, this->m_func, true),
-        Js::OpCode::BrEq_A,
-        labelSuccess,
-        instrBranch);
-
-    // Check CustomExternalType's operations usage. We need data from the hosting layer for this.
-    IntConstType operationFlag = isStrictBr ? pData->operationFlagStrictEquals : pData->operationFlagEquals;
-    opnd = IR::IndirOpnd::New(typeRegOpnd, (int32)pData->offsetOfOperationsUsage, TyUint32, this->m_func);
-    if (fallThroughOnSuccess)
-    {
-        InsertTestBranch(
-            opnd,
-            IR::IntConstOpnd::New(operationFlag, TyUint32, this->m_func),
-            Js::OpCode::BrNeq_A,
-            labelHelper,
-            instrBranch);
-    }
-    else
-    {
-        InsertTestBranch(
-            opnd,
-            IR::IntConstOpnd::New(operationFlag, TyUint32, this->m_func),
-            Js::OpCode::BrEq_A,
-            labelSuccess,
-            instrBranch);
-
-        InsertBranch(Js::OpCode::Br, labelHelper, instrBranch);
-    }
-}
-#endif
 
 bool Lowerer::GenerateFastBrBool(IR::BranchInstr *const instr)
 {

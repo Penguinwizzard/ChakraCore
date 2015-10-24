@@ -76,11 +76,6 @@ CheckCodeGenFunction GetCheckCodeGenFunction(Js::JavascriptMethod codeAddress);
 uint GetBailOutRegisterSaveSlotCount();
 uint GetBailOutReserveSlotCount();
 
-namespace IR
-{
-const void *const*GetHelperMethods();
-}
-
 #if DBG
 void CheckIsExecutable(Js::RecyclableObject * function, Js::JavascriptMethod entryPoint);
 #endif
