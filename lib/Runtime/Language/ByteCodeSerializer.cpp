@@ -91,7 +91,7 @@ namespace Js
 //
 // Release mode is used when chakra.dll is close to public release where there are actual changes to chakra. The GUID is a fixed number from build-to-build. This number will stay
 // the same for releases where there is no change to jscript9. The reason for this is that we don't want to invalidate compatible byte code that has already been cached.
-enum FileVersionScheme
+enum FileVersionScheme : byte
 {
     // Even Chakra and ChakraCore may have the same version, their byte code may not be compatible. Give them different value.
 #ifdef NTBUILD
@@ -99,10 +99,12 @@ enum FileVersionScheme
 #else
     EngineeringVersioningScheme = 11,
 #endif
+    LibraryEngineeringVersioningScheme = 12,
     ReleaseVersioningScheme = 20
 };
 
 const FileVersionScheme currentFileVersionScheme = EngineeringVersioningScheme;
+const FileVersionScheme currentFileVersionSchemeLibrary = LibraryEngineeringVersioningScheme;
 
 #ifdef USE_DATE_TIME_MACRO
 const DWORD buildDateHash = JsUtil::CharacterBuffer<char>::StaticGetHashCode(__DATE__, _countof(__DATE__));
@@ -413,7 +415,7 @@ public:
             expectedOpCodeCount.value = 0;
         }
 
-        byte actualFileVersionScheme = currentFileVersionScheme;
+        byte actualFileVersionScheme = GenerateLibraryByteCode()? currentFileVersionSchemeLibrary : currentFileVersionScheme;
 #if ENABLE_DEBUG_CONFIG_OPTIONS
         if (Js::Configuration::Global.flags.ForceSerializedBytecodeVersionSchema)
         {
@@ -425,6 +427,7 @@ public:
         {
             if (GenerateLibraryByteCode())
             {
+                Assert(actualFileVersionScheme == LibraryEngineeringVersioningScheme);
                 // Library code always follows the ChakraCore version
                 V1.value = CHAKRA_CORE_MAJOR_VERSION << 16 | CHAKRA_CORE_MINOR_VERSION;
             }
@@ -2127,14 +2130,14 @@ public:
         current = ReadConstantSizedInt32NoSize(current, &totalSize);
         current = ReadByte(current, &fileVersionScheme);
 
-        byte expectedFileVersionScheme = currentFileVersionScheme;
+        byte expectedFileVersionScheme = isLibraryCode? currentFileVersionSchemeLibrary : currentFileVersionScheme;
 #if ENABLE_DEBUG_CONFIG_OPTIONS
         if (Js::Configuration::Global.flags.ForceSerializedBytecodeVersionSchema)
         {
             expectedFileVersionScheme = (byte)Js::Configuration::Global.flags.ForceSerializedBytecodeVersionSchema;
         }
 #endif
-        if (fileVersionScheme!=expectedFileVersionScheme)
+        if (fileVersionScheme != expectedFileVersionScheme)
         {
             // File version scheme is incompatible.
             return ByteCodeSerializer::InvalidByteCode;
@@ -2145,15 +2148,17 @@ public:
         DWORD expectedV3 = 0;
         DWORD expectedV4 = 0;
 
-        if (expectedFileVersionScheme == EngineeringVersioningScheme)
+        if (expectedFileVersionScheme != ReleaseVersioningScheme)
         {            
             if (isLibraryCode)
             {
+                Js::VerifyCatastrophic(expectedFileVersionScheme == LibraryEngineeringVersioningScheme);
                 // Library code always use the ChakraCore version
                 expectedV1 = CHAKRA_CORE_MAJOR_VERSION << 16 | CHAKRA_CORE_MINOR_VERSION;
             }
             else
             {
+                Js::VerifyCatastrophic(expectedFileVersionScheme == EngineeringVersioningScheme);
                 Js::VerifyOkCatastrophic(AutoSystemInfo::GetJscriptFileVersion(&expectedV1, &expectedV2));
 #ifdef USE_DATE_TIME_MACRO
                 expectedV3 = buildDateHash;
@@ -2177,8 +2182,7 @@ public:
             }
         }
         else
-        {
-            Js::VerifyCatastrophic(expectedFileVersionScheme == ReleaseVersioningScheme);
+        {            
             auto guidDWORDs = (DWORD*)(&byteCodeCacheReleaseFileVersion);
             expectedV1 = guidDWORDs[0];
             expectedV2 = guidDWORDs[1];
