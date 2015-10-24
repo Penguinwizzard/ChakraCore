@@ -58,6 +58,13 @@ set _HadFailures=0
     exit /b 2
   )
 
+  :: Cannot run tests for arm on build machine and release builds
+  :: do not work with ch.exe so no-op those configurations.
+  :: Include _RunAll in the check because if it is specified it
+  :: should trump this early out.
+  if "%_RunAll%%_BuildArch%" == "arm" goto :noTests
+  if "%_RunAll%%_BuildType%" == "release" goto :noTests
+
   pushd %_RootDir%\test
   set _TestDir=%CD%
 
@@ -89,15 +96,18 @@ set _HadFailures=0
 
   exit /b %_HadFailures%
 
+:noTests
+
+  echo -- runcitests.cmd ^>^> The tests are not supported on this build configuration.
+  echo -- runcitests.cmd ^>^> No tests were run.  This is expected.
+  echo -- runcitests.cmd ^>^> Configuration: %_BuildArch% %_BuildType%
+
+  exit /b 0
+
 :: ============================================================================
 :: Run one test suite against one build config and record if there were errors
 :: ============================================================================
 :runTests
-
-  :: Cannot run tests for arm on build machine and release builds
-  :: do not work with ch.exe so no-op those configurations.
-  if "%1" == "arm" goto :eof
-  if "%2" == "release" goto :eof
 
   call :do %_TestDir%\runtests.cmd -%1%2 -quiet -cleanupall -binDir %_StagingDir%\bin
 
