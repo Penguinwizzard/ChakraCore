@@ -318,6 +318,8 @@ bool InliningDecider::GetBuiltInInfo(
         return false;
     }
 
+    // TODO: consider adding another column to JavascriptBuiltInFunctionList.h/LibraryFunction.h
+    // and getting helper method from there instead of multiple switch labels. And for return value types too.
     switch (funcInfo->GetLocalFunctionId())
     {
     case Js::JavascriptBuiltInFunction::Math_Abs:

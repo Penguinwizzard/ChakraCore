@@ -34,7 +34,6 @@ function test0() {
             if(_array2i.indexOf("method") == 0)
                 continue;
 
-
             if(_array2tmp[_array2i] instanceof Array) {
                 _array2iterate(_array2tmp[_array2i]);
                 obj1 = arrObj0;
@@ -57,10 +56,8 @@ function test0() {
                 v502047 = intfloatary.sort();
                 v502047 = Array.isArray(floatary);
                 v502047 = floatary.splice(obj0.length, d, e, d, e, e, a);
-
             }
             else {
-
                 b += _array2tmp[_array2i];
             }
         }

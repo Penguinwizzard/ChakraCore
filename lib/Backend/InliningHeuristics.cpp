@@ -25,7 +25,7 @@ void InliningThreshold::SetAggressiveHeuristics()
     leafInlineThreshold = limit;
     loopInlineThreshold = limit;
     polymorphicInlineThreshold = limit;
-    maxNumberOfInlineesWithLoop = CONFIG_FLAG(MaxNumberOfInlineesWithLoop); // Inlining loops with
+    maxNumberOfInlineesWithLoop = CONFIG_FLAG(MaxNumberOfInlineesWithLoop);
 
     inlineCountMax = CONFIG_FLAG(AggressiveInlineCountMax);
 }

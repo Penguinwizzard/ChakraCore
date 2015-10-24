@@ -394,6 +394,7 @@ Inline::Optimize(Func *func, __in_ecount_opt(callerArgOutCount) IR::Instr *calle
                 break;
 
             case Js::OpCode::CheckThis:
+                // Is this possible? Can we be walking an inlinee here? Doesn't hurt to support this case...
                 Assert(instr->GetSrc1() && instr->GetSrc1()->IsRegOpnd());
                 Assert(symThis == nullptr);
 
@@ -1324,7 +1325,6 @@ Inline::TryOptimizeCallInstrWithFixedMethod(IR::Instr *callInstr, Js::FunctionIn
     }
 
     IR::Instr* ldMethodFldInstr = methodValueSym->GetInstrDef();
-    // We can only optimize calls whose targets come from ScopedLdMethodFld\LdRootMethodFld\LdMethodFld\LdRootFld\LdFld\LdFldForCallApplyTarget\LdMethodFromFlags.
     if (ldMethodFldInstr->m_opcode != Js::OpCode::ScopedLdMethodFld
         && ldMethodFldInstr->m_opcode != Js::OpCode::LdRootMethodFld
         && ldMethodFldInstr->m_opcode != Js::OpCode::LdMethodFld
@@ -2169,7 +2169,6 @@ Inline::InlineBuiltInFunction(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, 
 
         if(OpCodeAttr::BailOutRec(inlineCallOpCode))
         {
-            // callInstr->InsertBefore(byteCodeUsesInstr);
             inlineBuiltInEndInstr->InsertBefore(byteCodeUsesInstr);
         }
 
@@ -3960,7 +3959,6 @@ Inline::InsertFunctionBodyCheck(IR::Instr *callInstr, IR::Instr *insertBeforeIns
     bailoutInstr->SetSrc1(funcBody);
     bailoutInstr->SetSrc2(inlinedFuncBody);
 
-    // IR::BranchInstr::New(Js::OpCode::BrNeq_I4, noInlineLabel, indir, addrOpnd, this->topFunc);
     insertBeforeInstr->InsertBefore(bailoutInstr);
 }
 

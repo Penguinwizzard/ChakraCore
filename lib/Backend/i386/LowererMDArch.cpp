@@ -201,6 +201,7 @@ LowererMDArch::LoadStackArgPtr(IR::Instr * instrArgPtr)
         // Allocate space on the callee's frame for a copy of the formals, plus the callee object pointer
         // and the callinfo.
         // Be sure to double-align the allocation.
+        // REVIEW: Do we ever need to generate a chkstk call here?
         int formalsBytes = (formalsCount + 2) * sizeof(Js::Var);
         formalsBytes = Math::Align<size_t>(formalsBytes, MachStackAlignment);
         IR::RegOpnd * espOpnd = IR::RegOpnd::New(nullptr, this->GetRegStackPointer(), TyMachReg, this->m_func);
@@ -235,7 +236,7 @@ LowererMDArch::LoadHeapArguments(IR::Instr *instrArgs, bool force, IR::Opnd* opn
     IR::Instr * instrPrev = instrArgs->m_prev;
     if (!force && func->GetHasStackArgs() && this->m_func->GetHasStackArgs()) //both inlinee & inliner has stack args. We don't support other scenarios.
     {
-        // The initial args slot value is zero.
+        // The initial args slot value is zero. (TODO: it should be possible to dead-store the LdHeapArgs in this case.)
         instrArgs->m_opcode = Js::OpCode::MOV;
         instrArgs->ReplaceSrc1(IR::IntConstOpnd::New(0, TyMachReg, func));
         instrArgs->FreeSrc2();

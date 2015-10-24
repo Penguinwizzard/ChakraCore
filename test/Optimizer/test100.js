@@ -10,4 +10,3 @@
   var a = (1 / (0 - h));
   WScript.Echo("a = " + a);
 })();
-

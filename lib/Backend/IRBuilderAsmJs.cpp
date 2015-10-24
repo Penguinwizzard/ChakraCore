@@ -841,6 +841,7 @@ IRBuilderAsmJs::BuildImplicitArgIns()
         IR::Opnd * srcOpnd = nullptr;
         IR::RegOpnd * dstOpnd = nullptr;
         IR::Instr * instr = nullptr;
+        // TODO: double args are not aligned on stack
         Js::AsmJsVarType varType = m_func->GetJnFunction()->GetAsmJsFunctionInfo()->GetArgType(i - 1);
         switch (varType.which())
         {

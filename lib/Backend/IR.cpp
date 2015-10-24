@@ -248,7 +248,7 @@ Instr::InsertRangeBefore(Instr *startInstr, Instr *endInstr)
 
 ///----------------------------------------------------------------------------
 ///
-/// Instr::InsertMultipleBefore - Insert multiple instr
+/// Instr::InsertMultipleBefore - Inserts multiple instr
 ///
 ///----------------------------------------------------------------------------
 void
@@ -289,7 +289,7 @@ Instr::InsertRangeAfter(Instr *startInstr, Instr *endInstr)
 
 ///----------------------------------------------------------------------------
 ///
-/// Instr::InsertMultipleAfter - Insert multiple instr
+/// Instr::InsertMultipleAfter - Inserts multiple instr
 ///
 ///----------------------------------------------------------------------------
 void

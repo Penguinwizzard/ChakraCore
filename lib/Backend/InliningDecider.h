@@ -12,7 +12,7 @@ private:
     bool isLoopBody;     // We don't support inlining on jit loop bodies as of now.
     bool isInDebugMode;
 
-    // These variable capture the temporary state 
+    // These variables capture the temporary state 
     uint32 bytecodeInlinedCount;
     uint32 numberOfInlineesWithLoop; 
 

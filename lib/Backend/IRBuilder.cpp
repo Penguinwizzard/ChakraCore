@@ -1464,8 +1464,6 @@ IRBuilder::BuildReg2(Js::OpCode newOpcode, uint32 offset, Js::RegSlot R0, Js::Re
 
         if (m_func->DoSimpleJitDynamicProfile())
         {
-            // We want a different type of instr!
-
             IR::JitProfilingInstr* newInstr = IR::JitProfilingInstr::New(Js::OpCode::StrictLdThis, dstOpnd, src1Opnd, m_func);
             instr = newInstr;
         }
@@ -2245,6 +2243,7 @@ IRBuilder::BuildUnsigned1(Js::OpCode newOpcode, uint32 offset, uint32 loopNumber
 
         case Js::OpCode::ProfiledLoopEnd:
         {
+            // TODO: Decide whether we want the implicit loop call flags to be recorded in simplejitted loop bodies
             if (m_func->DoSimpleJitDynamicProfile() && m_func->GetJnFunction()->DoJITLoopBody())
             {
                 Assert(this->m_saveLoopImplicitCallFlags[loopNumber]);

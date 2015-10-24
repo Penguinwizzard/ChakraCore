@@ -14,20 +14,20 @@ function foo(last)
 
     for (var i = 0; i < 3; i++)
     {
-	w = x + x;  // Type spec this add? Make sure there is a bailout...
-	x = y;
-	y = z;
+        w = x + x;  // Type spec this add? Make sure there is a bailout...
+        x = y;
+        y = z;
     }
 
     if (w != "Louie Louie ")
     {
-	WScript.Echo("w = " + w);
-	WScript.Echo("FAILED");
-	Failed = true;
+        WScript.Echo("w = " + w);
+        WScript.Echo("FAILED");
+        Failed = true;
     }
     else if (last && !Failed)
     {
-	WScript.Echo("Passed");
+        WScript.Echo("Passed");
     }
 }
 
