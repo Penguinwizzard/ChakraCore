@@ -69,30 +69,6 @@ namespace Js
         return result;
     }
 
-    SIMDValue SIMDInt8x16Operation::OpNot(const SIMDValue& value)
-    {
-        SIMDValue result;
-
-        result.i8[0]  = ~(value.i8[0]);
-        result.i8[1]  = ~(value.i8[1]);
-        result.i8[2]  = ~(value.i8[2]);
-        result.i8[3]  = ~(value.i8[3]);
-        result.i8[4]  = ~(value.i8[4]);
-        result.i8[5]  = ~(value.i8[5]);
-        result.i8[6]  = ~(value.i8[6]);
-        result.i8[7]  = ~(value.i8[7]);
-        result.i8[8]  = ~(value.i8[8]);
-        result.i8[9]  = ~(value.i8[9]);
-        result.i8[10] = ~(value.i8[10]);
-        result.i8[11] = ~(value.i8[11]);
-        result.i8[12] = ~(value.i8[12]);
-        result.i8[13] = ~(value.i8[13]);
-        result.i8[14] = ~(value.i8[14]);
-        result.i8[15] = ~(value.i8[15]);
-
-        return result;
-    }
-
     SIMDValue SIMDInt8x16Operation::OpAdd(const SIMDValue& aValue, const SIMDValue& bValue)
     {
         SIMDValue result;
@@ -123,42 +99,6 @@ namespace Js
         for(uint idx = 0; idx < 16; ++idx)
         {
             result.i8[idx] = aValue.i8[idx] * bValue.i8[idx];
-        }
-
-        return result;
-    }
-
-    SIMDValue SIMDInt8x16Operation::OpAnd(const SIMDValue& aValue, const SIMDValue& bValue)
-    {
-        SIMDValue result;
-
-        for(uint idx = 0; idx < 16; ++idx)
-        {
-            result.i8[idx] = aValue.i8[idx] & bValue.i8[idx];
-        }
-
-        return result;
-    }
-
-    SIMDValue SIMDInt8x16Operation::OpOr(const SIMDValue& aValue, const SIMDValue& bValue)
-    {
-        SIMDValue result;
-
-        for(uint idx = 0; idx < 16; ++idx)
-        {
-            result.i8[idx] = aValue.i8[idx] | bValue.i8[idx];
-        }
-
-        return result;
-    }
-
-    SIMDValue SIMDInt8x16Operation::OpXor(const SIMDValue& aValue, const SIMDValue& bValue)
-    {
-        SIMDValue result;
-
-        for(uint idx = 0; idx < 16; ++idx)
-        {
-            result.i8[idx] = aValue.i8[idx] ^ bValue.i8[idx];
         }
 
         return result;

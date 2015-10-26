@@ -20,14 +20,10 @@ namespace Js {
 
         //// Unary Ops
         static SIMDValue OpNeg(const SIMDValue& v);
-        static SIMDValue OpNot(const SIMDValue& v);
-
+        
         static SIMDValue OpAdd(const SIMDValue& aValue, const SIMDValue& bValue);
         static SIMDValue OpSub(const SIMDValue& aValue, const SIMDValue& bValue);
         static SIMDValue OpMul(const SIMDValue& aValue, const SIMDValue& bValue);
-        static SIMDValue OpAnd(const SIMDValue& aValue, const SIMDValue& bValue);
-        static SIMDValue OpOr(const SIMDValue& aValue, const SIMDValue& bValue);
-        static SIMDValue OpXor(const SIMDValue& aValue, const SIMDValue& bValue);
         static SIMDValue OpMin(const SIMDValue& aValue, const SIMDValue& bValue);
         static SIMDValue OpMax(const SIMDValue& aValue, const SIMDValue& bValue);
         static SIMDValue OpAddSaturate(const SIMDValue& aValue, const SIMDValue& bValue);

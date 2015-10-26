@@ -59,15 +59,6 @@ passed
 ******* Uint32x4 store *******
 passed
 
-******* Uint32x4 and *******
-passed
-
-******* Uint32x4 or *******
-passed
-
-******* Uint32x4 xor *******
-passed
-
 ******* Uint32x4 load1 *******
 passed
 
@@ -80,16 +71,28 @@ passed
 ******* Uint32x4 store1 *******
 passed
 
-******* Uint32x4 store1 *******
+******* Uint32x4 store2 *******
 passed
 
 ******* Uint32x4 store3 *******
+passed
+
+******* Uint32x4 and *******
+passed
+
+******* Uint32x4 or *******
+passed
+
+******* Uint32x4 xor *******
 passed
 
 ******* Uint32x4 not *******
 passed
 
 ******* Uint32x4 shiftLeftByScalar *******
+passed
+
+******* Uint32x4 shiftRightByScalar *******
 passed
 
 ******* Uint32x4 fromFloat32x4 *******

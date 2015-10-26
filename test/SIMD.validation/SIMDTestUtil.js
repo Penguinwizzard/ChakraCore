@@ -495,8 +495,9 @@ function testFrom(toType, fromType, name) {
   for (var v of fromType.interestingValues) {
     var fromValue = createSplatValue(fromType, v);
     v = simdConvert(fromType, v);
+    //b-namost: Some corrections here to conform to updates to the spec
     if (toType.minVal !== undefined &&
-        (v < toType.minVal || v > toType.maxVal)) {
+        (isNaN(v) || v < toType.minVal || v > toType.maxVal)) {
       throws(function() { toType.fn[name](fromValue) });
     } else {
       v = simdConvert(toType, v);
@@ -1059,3 +1060,37 @@ test('Float32x4 Int32x4 round trip', function() {
   equal(SIMD.Int32x4.extractLane(m, 0), SIMD.Int32x4.extractLane(m2, 0));
   equal(SIMD.Int32x4.extractLane(m, 1), SIMD.Int32x4.extractLane(m2, 1));
 });
+
+function printIndented(str) {
+  WScript.Echo(str.split('\n').map(function (s) { return '  ' + s }).join('\n'));
+}
+function fail(str) {
+  var e = Error(str);
+  WScript.Echo(e.toString() + '\n');
+  numFails++;
+}
+function equal(a, b) {
+  if (a != b)
+    fail('equal(' + a + ', ' + b + ') failed in ' + currentName);
+}
+function notEqual(a, b) {
+  if (a == b)
+    fail('notEqual(' + a + ', ' + b + ') failed in ' + currentName);
+}
+function throws(func) {
+  var pass = false;
+  try {
+    func();
+  } catch (e) {
+    pass = true;
+  }
+  if (!pass)
+    fail('throws failed in ' + currentName);
+}
+function ok(x) {
+  if (!x)
+    fail('not ok in ' + currentName);
+}
+if (numFails > 0) {
+  print('\ntotal number of fails and exceptions: ' + numFails);
+}

@@ -3,7 +3,6 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
-#include "SIMDInt8x16Operation.h"
 
 namespace Js
 {
@@ -253,7 +252,7 @@ namespace Js
             SIMDValue value, result;
 
             value = a->GetValue();
-            result = SIMDInt8x16Operation::OpNot(value);
+            result = SIMDInt32x4Operation::OpNot(value);
 
             return JavascriptSIMDInt8x16::New(&result, scriptContext);
         }
@@ -369,7 +368,7 @@ namespace Js
 
             aValue = a->GetValue();
             bValue = b->GetValue();
-            result = SIMDInt8x16Operation::OpAnd(aValue, bValue);
+            result = SIMDInt32x4Operation::OpAnd(aValue, bValue);
 
             return JavascriptSIMDInt8x16::New(&result, scriptContext);
         }
@@ -398,7 +397,7 @@ namespace Js
             
             aValue = a->GetValue();
             bValue = b->GetValue();
-            result = SIMDInt8x16Operation::OpOr(aValue, bValue);
+            result = SIMDInt32x4Operation::OpOr(aValue, bValue);
 
             return JavascriptSIMDInt8x16::New(&result, scriptContext);
         }
@@ -427,7 +426,7 @@ namespace Js
 
             aValue = a->GetValue();
             bValue = b->GetValue();
-            result = SIMDInt8x16Operation::OpXor(aValue, bValue);
+            result = SIMDInt32x4Operation::OpXor(aValue, bValue);
 
             return JavascriptSIMDInt8x16::New(&result, scriptContext);
         }

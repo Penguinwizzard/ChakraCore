@@ -47,11 +47,6 @@ namespace Js
         return X86SIMDValue::ToSIMDValue(x86Result);
     }
 
-    SIMDValue SIMDInt8x16Operation::OpNot(const SIMDValue& value)
-    {
-        return SIMDInt32x4Operation::OpNot(value);
-    }
-
     SIMDValue SIMDInt8x16Operation::OpAdd(const SIMDValue& aValue, const SIMDValue& bValue)
     {
         X86SIMDValue x86Result;
@@ -98,21 +93,6 @@ namespace Js
         return X86SIMDValue::ToSIMDValue(x86Result);
     }
 
-    SIMDValue SIMDInt8x16Operation::OpAnd(const SIMDValue& aValue, const SIMDValue& bValue)
-    {
-        return SIMDInt32x4Operation::OpAnd(aValue, bValue);
-    }
-
-    SIMDValue SIMDInt8x16Operation::OpOr(const SIMDValue& aValue, const SIMDValue& bValue)
-    {
-        return SIMDInt32x4Operation::OpOr(aValue, bValue);
-    }
-
-    SIMDValue SIMDInt8x16Operation::OpXor(const SIMDValue& aValue, const SIMDValue& bValue)
-    {
-        return SIMDInt32x4Operation::OpXor(aValue, bValue);
-    }
-
     SIMDValue SIMDInt8x16Operation::OpAddSaturate(const SIMDValue& aValue, const SIMDValue& bValue)
     {
         X86SIMDValue x86Result;
@@ -138,26 +118,21 @@ namespace Js
 
     SIMDValue SIMDInt8x16Operation::OpMin(const SIMDValue& aValue, const SIMDValue& bValue)
     {
-        X86SIMDValue x86Result;
-        X86SIMDValue tmpaValue = X86SIMDValue::ToX86SIMDValue(aValue);
-        X86SIMDValue tmpbValue = X86SIMDValue::ToX86SIMDValue(bValue);
-
-        x86Result.m128i_value = _mm_min_epi8(tmpaValue.m128i_value, tmpbValue.m128i_value); // min a b
-
-        return X86SIMDValue::ToSIMDValue(x86Result);
+        //Only available in SSE 4
+        //x86Result.m128i_value = _mm_min_epi8(tmpaValue.m128i_value, tmpbValue.m128i_value); // min a b
+        //SSE 2
+        SIMDValue selector = SIMDInt8x16Operation::OpLessThan(aValue, bValue);
+        return SIMDInt8x16Operation::OpSelect(selector, aValue, bValue);
     }
 
     SIMDValue SIMDInt8x16Operation::OpMax(const SIMDValue& aValue, const SIMDValue& bValue)
     {
-        X86SIMDValue x86Result;
-        X86SIMDValue tmpaValue = X86SIMDValue::ToX86SIMDValue(aValue);
-        X86SIMDValue tmpbValue = X86SIMDValue::ToX86SIMDValue(bValue);
-
-        x86Result.m128i_value = _mm_max_epi8(tmpaValue.m128i_value, tmpbValue.m128i_value); // min a b
-
-        return X86SIMDValue::ToSIMDValue(x86Result);
+        //Only available in SSE 4
+        //x86Result.m128i_value = _mm_max_epi8(tmpaValue.m128i_value, tmpbValue.m128i_value); // min a b
+        //SSE 2
+        SIMDValue selector = SIMDInt8x16Operation::OpGreaterThan(aValue, bValue);
+        return SIMDInt8x16Operation::OpSelect(selector, aValue, bValue);
     }
-
 
     SIMDValue SIMDInt8x16Operation::OpLessThan(const SIMDValue& aValue, const SIMDValue& bValue)
     {

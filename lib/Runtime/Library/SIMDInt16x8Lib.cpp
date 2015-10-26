@@ -4,8 +4,6 @@
 //-------------------------------------------------------------------------------------------------------
 
 #include "RuntimeLibraryPch.h"
-#include "SIMDInt16x8Operation.h"
-
 
 namespace Js
 {

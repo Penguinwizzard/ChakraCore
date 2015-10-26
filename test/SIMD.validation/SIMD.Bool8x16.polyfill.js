@@ -23,40 +23,6 @@ var skipValueTests = false; //Fails if using pollyfill
 var currentName = '<global>';
 var numFails = 0;
 
-function printIndented(str) {
-  WScript.Echo(str.split('\n').map(function (s) { return '  ' + s }).join('\n'));
-}
-function fail(str) {
-  var e = Error(str);
-  WScript.Echo(e.toString() + '\n');
-  numFails++;
-}
-function equal(a, b) {
-  if (a != b)
-    fail('equal(' + a + ', ' + b + ') failed in ' + currentName);
-}
-function notEqual(a, b) {
-  if (a == b)
-    fail('notEqual(' + a + ', ' + b + ') failed in ' + currentName);
-}
-function throws(func) {
-  var pass = false;
-  try {
-    func();
-  } catch (e) {
-    pass = true;
-  }
-  if (!pass)
-    fail('throws failed in ' + currentName);
-}
-function ok(x) {
-  if (!x)
-    fail('not ok in ' + currentName);
-}
-if (numFails > 0) {
-  print('\ntotal number of fails and exceptions: ' + numFails);
-}
-
 function test(name, func) {
   if(name.indexOf(bool8x16.name) !== 0) return;
   if(name.indexOf('Bool8x16 value semantics') > -1) return; //unsupported function

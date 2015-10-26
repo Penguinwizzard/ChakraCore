@@ -4,8 +4,6 @@
 //-------------------------------------------------------------------------------------------------------
 
 #include "RuntimeLibraryPch.h"
-#include "SIMDInt16x8Operation.h"
-
 #if defined(_M_ARM32_OR_ARM64)
 
 namespace Js
@@ -26,13 +24,6 @@ namespace Js
         return result;
     }
 
-    SIMDValue SIMDInt16x8Operation::OpInt16x8(const SIMDValue& v)
-    {// overload function with input paramter as SIMDValue for completeness, may not need
-        SIMDValue result = v;
-
-        return result;
-    }
-
     SIMDValue SIMDInt16x8Operation::OpSplat(short x)
     {
         SIMDValue result;
@@ -42,17 +33,6 @@ namespace Js
 
         return result;
     }
-
-    SIMDValue SIMDInt16x8Operation::OpSplat(const SIMDValue& v)
-    {
-        SIMDValue result;
-
-        result.i16[0] = result.i16[1] = result.i16[2] = result.i16[3] = v.i16[0];
-        result.i16[4] = result.i16[5] = result.i16[6] = result.i16[7] = v.i16[0];
-
-        return result;
-    }
-
     // Unary Ops
     SIMDValue SIMDInt16x8Operation::OpNeg(const SIMDValue& value)
     {

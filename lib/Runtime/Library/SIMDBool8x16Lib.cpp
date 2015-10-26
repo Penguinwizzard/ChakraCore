@@ -173,7 +173,7 @@ namespace Js
             JavascriptSIMDBool8x16 *a = JavascriptSIMDBool8x16::FromVar(args[1]);
             Assert(a);
 
-            SIMDValue result = SIMDInt8x16Operation::OpNot(a->GetValue());
+            SIMDValue result = SIMDInt32x4Operation::OpNot(a->GetValue());
 
             return JavascriptSIMDBool8x16::New(&result, scriptContext);
         }
@@ -204,7 +204,7 @@ namespace Js
             aValue = a->GetValue();
             bValue = b->GetValue();
 
-            result = SIMDInt8x16Operation::OpAnd(aValue, bValue);
+            result = SIMDInt32x4Operation::OpAnd(aValue, bValue);
 
             return JavascriptSIMDBool8x16::New(&result, scriptContext);
         }
@@ -235,7 +235,7 @@ namespace Js
             aValue = a->GetValue();
             bValue = b->GetValue();
 
-            result = SIMDInt8x16Operation::OpOr(aValue, bValue);
+            result = SIMDInt32x4Operation::OpOr(aValue, bValue);
 
             return JavascriptSIMDBool8x16::New(&result, scriptContext);
         }
@@ -266,7 +266,7 @@ namespace Js
             aValue = a->GetValue();
             bValue = b->GetValue();
 
-            result = SIMDInt8x16Operation::OpXor(aValue, bValue);
+            result = SIMDInt32x4Operation::OpXor(aValue, bValue);
 
             return JavascriptSIMDBool8x16::New(&result, scriptContext);
         }
