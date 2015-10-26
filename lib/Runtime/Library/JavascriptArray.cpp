@@ -3933,7 +3933,7 @@ namespace Js
         bool isProxy = JavascriptProxy::Is(thisArg) && (scriptContext == JavascriptProxy::FromVar(thisArg)->GetScriptContext());
         Var target = NULL;
         bool isTargetObjectPushed = false;
-        // if we are visiting the proxy object, track that we have visited the target object as well so the next time w
+        // if we are visiting a proxy object, track that we have visited the target object as well so the next time w
         // call the join helper for the target of this proxy, we will return above.
         if (isProxy)
         {
@@ -6135,7 +6135,7 @@ Case0:
 
         Assert(!(callInfo.Flags & CallFlags_New));
 
-        AssertMsg(args.Info.Count >= 1, "Built-in APIs should have atleast 1 argument");
+        AssertMsg(args.Info.Count >= 1, "Should have at least one argument");
 
         RecyclableObject* compFn = NULL;
         if (args.Info.Count > 1)
@@ -6272,7 +6272,7 @@ Case0:
 
         Assert(!(callInfo.Flags & CallFlags_New));
 
-        AssertMsg(args.Info.Count >= 1, "Built-in APIs should have atleast 1 argument");
+        AssertMsg(args.Info.Count >= 1, "Should have at least one argument");
 
         bool isArr = false;
         JavascriptArray* pArr = 0;

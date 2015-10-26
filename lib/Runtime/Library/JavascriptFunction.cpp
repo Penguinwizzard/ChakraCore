@@ -663,7 +663,7 @@ namespace Js
                     CallAsConstructor(this, /* overridingNewTarget = */nullptr, args, scriptContext) :
                     CallFunction<true>(this, this->GetEntryPoint(), args);
 
-                // A recent compiler bug 150148 can incorrectly eliminate catch block, temprory workaround
+                // A recent compiler bug 150148 can incorrectly eliminate catch block, temporary workaround
                 if (threadContext == NULL)
                 {
                     throw (JavascriptExceptionObject*)NULL;
