@@ -4049,19 +4049,13 @@ void ByteCodeGenerator::EmitLoadInstance(Symbol *sym, IdentPtr pid, Js::RegSlot 
         Js::PropertyId propertyId = sym ? sym->EnsurePosition(this) : pid->GetPropertyId();
         this->m_writer.BrProperty(Js::OpCode::BrOnNoProperty, nextLabel, scopeLocation,
             funcInfo->FindOrAddReferencedPropertyId(propertyId));
+        Js::OpCode ldToUse = (scope->GetScopeType() == ScopeType_With && scriptContext->GetConfig()->IsES6UnscopablesEnabled()) ?
+            Js::OpCode::Ld_UnwrapWithObj : Js::OpCode::Ld_A;
 
-        this->m_writer.Reg2(Js::OpCode::Ld_A, instLocation, scopeLocation);
-
+        this->m_writer.Reg2(ldToUse, instLocation, scopeLocation);
         if (thisLocation != Js::Constants::NoRegister)
         {
-            if (scope->GetScopeType() == ScopeType_With && scriptContext->GetConfig()->IsES6UnscopablesEnabled())
-            {
-                this->m_writer.Reg2(Js::OpCode::Ld_UnwrapWithObj, thisLocation, scopeLocation);
-            }
-            else
-            {
-                this->m_writer.Reg2(Js::OpCode::Ld_A, thisLocation, scopeLocation);
-            }
+            this->m_writer.Reg2(ldToUse, thisLocation, scopeLocation);
         }
 
         this->m_writer.Br(doneLabel);
@@ -4274,9 +4268,22 @@ void ByteCodeGenerator::EmitPropStore(Js::RegSlot rhsLocation, Symbol *sym, Iden
         this->m_writer.BrProperty(Js::OpCode::BrOnNoProperty, nextLabel, scopeLocation,
             funcInfo->FindOrAddReferencedPropertyId(propertyId));
 
-        uint cacheId = funcInfo->FindOrAddInlineCacheId(scopeLocation, propertyId, false, true);
+        Js::RegSlot unwrappedScopeLocation = scopeLocation;
+        bool perfomrWithScopeSpecifcLd = scope->GetScopeType() == ScopeType_With && scriptContext->GetConfig()->IsES6UnscopablesEnabled();
+        if (perfomrWithScopeSpecifcLd)
+        {
+            unwrappedScopeLocation = funcInfo->AcquireTmpRegister();
+            this->m_writer.Reg2(Js::OpCode::Ld_UnwrapWithObj, unwrappedScopeLocation, scopeLocation);
+        }
+
+        uint cacheId = funcInfo->FindOrAddInlineCacheId(unwrappedScopeLocation, propertyId, false, true);
         // REVIEW: isLetDecl and isConstDecl can never be true here now that eval's do not leak them, correct?
-        this->m_writer.PatchableProperty(GetStFldOpCode(funcInfo, false, isLetDecl, isConstDecl, false), rhsLocation, scopeLocation, cacheId);
+        this->m_writer.PatchableProperty(GetStFldOpCode(funcInfo, false, isLetDecl, isConstDecl, false), rhsLocation, unwrappedScopeLocation, cacheId);
+
+        if (perfomrWithScopeSpecifcLd)
+        {
+            funcInfo->ReleaseTmpRegister(unwrappedScopeLocation);
+        }
 
         this->m_writer.Br(doneLabel);
         this->m_writer.MarkLabel(nextLabel);
@@ -4462,10 +4469,20 @@ void ByteCodeGenerator::EmitPropLoad(Js::RegSlot lhsLocation, Symbol *sym, Ident
         Js::PropertyId propertyId = sym ? sym->EnsurePosition(this) : pid->GetPropertyId();
         this->m_writer.BrProperty(Js::OpCode::BrOnNoProperty, nextLabel, scopeLocation,
             funcInfo->FindOrAddReferencedPropertyId(propertyId));
+        Js::RegSlot unwrappedScopeLocation = scopeLocation;
+        bool perfomrWithScopeSpecifcLd = scope->GetScopeType() == ScopeType_With && scriptContext->GetConfig()->IsES6UnscopablesEnabled();
+        if (perfomrWithScopeSpecifcLd)
+        {
+            unwrappedScopeLocation = funcInfo->AcquireTmpRegister();
+            this->m_writer.Reg2(Js::OpCode::Ld_UnwrapWithObj, unwrappedScopeLocation, scopeLocation);
+        }
+        uint cacheId = funcInfo->FindOrAddInlineCacheId(unwrappedScopeLocation, propertyId, false, false);
+        this->m_writer.PatchableProperty(Js::OpCode::LdFld, lhsLocation, unwrappedScopeLocation, cacheId);
 
-        uint cacheId = funcInfo->FindOrAddInlineCacheId(scopeLocation, propertyId, false, false);
-        this->m_writer.PatchableProperty(Js::OpCode::LdFld, lhsLocation, scopeLocation, cacheId);
-
+        if (perfomrWithScopeSpecifcLd)
+        {
+            funcInfo->ReleaseTmpRegister(unwrappedScopeLocation);
+        }
         this->m_writer.Br(doneLabel);
         this->m_writer.MarkLabel(nextLabel);
     }
@@ -4654,8 +4671,21 @@ void ByteCodeGenerator::EmitPropDelete(Js::RegSlot lhsLocation, Symbol *sym, Ide
         this->m_writer.BrProperty(Js::OpCode::BrOnNoProperty, nextLabel, scopeLocation,
             funcInfo->FindOrAddReferencedPropertyId(propertyId));
 
-        this->m_writer.Property(Js::OpCode::DeleteFld, lhsLocation, scopeLocation,
+        Js::RegSlot unwrappedScopeLocation = scopeLocation;
+        bool perfomrWithScopeSpecifcLd = scope->GetScopeType() == ScopeType_With && scriptContext->GetConfig()->IsES6UnscopablesEnabled();
+        if (perfomrWithScopeSpecifcLd)
+        {
+            unwrappedScopeLocation = funcInfo->AcquireTmpRegister();
+            this->m_writer.Reg2(Js::OpCode::Ld_UnwrapWithObj, unwrappedScopeLocation, scopeLocation);
+        }
+
+        this->m_writer.Property(Js::OpCode::DeleteFld, lhsLocation, unwrappedScopeLocation,
             funcInfo->FindOrAddReferencedPropertyId(propertyId));
+
+        if (perfomrWithScopeSpecifcLd)
+        {
+            funcInfo->ReleaseTmpRegister(unwrappedScopeLocation);
+        }
 
         this->m_writer.Br(doneLabel);
         this->m_writer.MarkLabel(nextLabel);
@@ -4766,7 +4796,20 @@ void ByteCodeGenerator::EmitPropTypeof(Js::RegSlot lhsLocation, Symbol *sym, Ide
         this->m_writer.BrProperty(Js::OpCode::BrOnNoProperty, nextLabel, scopeLocation,
             funcInfo->FindOrAddReferencedPropertyId(propertyId));
 
-        this->EmitTypeOfFld(funcInfo, propertyId, lhsLocation, scopeLocation, Js::OpCode::LdFldForTypeOf);
+        Js::RegSlot unwrappedScopeLocation = scopeLocation;
+        bool perfomrWithScopeSpecifcLd = scope->GetScopeType() == ScopeType_With && scriptContext->GetConfig()->IsES6UnscopablesEnabled();
+        if (perfomrWithScopeSpecifcLd)
+        {
+            unwrappedScopeLocation = funcInfo->AcquireTmpRegister();
+            this->m_writer.Reg2(Js::OpCode::Ld_UnwrapWithObj, unwrappedScopeLocation, scopeLocation);
+        }
+
+        this->EmitTypeOfFld(funcInfo, propertyId, lhsLocation, unwrappedScopeLocation, Js::OpCode::LdFldForTypeOf);
+
+        if (perfomrWithScopeSpecifcLd)
+        {
+            funcInfo->ReleaseTmpRegister(unwrappedScopeLocation);
+        }
 
         this->m_writer.Br(doneLabel);
         this->m_writer.MarkLabel(nextLabel);

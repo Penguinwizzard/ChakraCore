@@ -1280,38 +1280,37 @@ CommonNumber:
         return RecyclerNew(scriptContext->GetRecycler(), SpreadArgument, aRight, iterator, scriptContext->GetLibrary()->GetSpreadArgumentType());
     }
 
-    BOOL JavascriptOperators::IsPropertyUnscopable (Var instanceVar, JavascriptString *propertyString)
+    BOOL JavascriptOperators::IsPropertyUnscopable(Var instanceVar, JavascriptString *propertyString)
     {
         // This never gets called.
         Throw::InternalError();
-
     }
-    BOOL JavascriptOperators::IsPropertyUnscopable (Var instanceVar, PropertyId propertyId)
+    
+    BOOL JavascriptOperators::IsPropertyUnscopable(Var instanceVar, PropertyId propertyId)
     {
         RecyclableObject* instance = RecyclableObject::FromVar(instanceVar);
-
-        Var propertyValue = JavascriptOperators::GetProperty(instance, PropertyIds::_symbolUnscopables, instance->GetScriptContext());
-        if (DynamicObject::Is(propertyValue))
+        ScriptContext * scriptContext = instance->GetScriptContext();
+        
+        Var unscopables = JavascriptOperators::GetProperty(instance, PropertyIds::_symbolUnscopables, scriptContext);
+        if (JavascriptOperators::IsObject(unscopables))
         {
-            DynamicObject *blackList = DynamicObject::FromVar(propertyValue);
+            DynamicObject *blackList = DynamicObject::FromVar(unscopables);
             Var value;
             //8.1.1.2.1.9.c If blocked is not undefined
-            return blackList->GetProperty(propertyValue, propertyId, &value, nullptr, blackList->GetScriptContext());
+            if (JavascriptOperators::GetProperty(blackList, propertyId, &value, scriptContext))
+            {
+                return JavascriptConversion::ToBoolean(value, scriptContext);
+            }
         }
+        
         return false;
     }
 
-    template <bool unscopables>
-    BOOL JavascriptOperators::HasProperty_Impl(RecyclableObject* instance, PropertyId propertyId)
+    BOOL JavascriptOperators::HasProperty(RecyclableObject* instance, PropertyId propertyId)
     {
         while (JavascriptOperators::GetTypeId(instance) != TypeIds_Null)
         {
-
-            if(unscopables && IsPropertyUnscopable (instance, propertyId))
-            {
-                return false;
-            }
-            if(instance->HasProperty(propertyId))
+            if (instance->HasProperty(propertyId))
             {
                 return true;
             }
@@ -1322,12 +1321,8 @@ CommonNumber:
 
     BOOL JavascriptOperators::HasPropertyUnscopables(RecyclableObject* instance, PropertyId propertyId)
     {
-        return HasProperty_Impl<true>(instance, propertyId);
-    }
-
-    BOOL JavascriptOperators::HasProperty(RecyclableObject* instance, PropertyId propertyId)
-    {
-        return HasProperty_Impl<false>(instance, propertyId);
+        return JavascriptOperators::HasProperty(instance, propertyId)
+            && !IsPropertyUnscopable(instance, propertyId);
     }
 
     BOOL JavascriptOperators::HasRootProperty(RecyclableObject* instance, PropertyId propertyId)
