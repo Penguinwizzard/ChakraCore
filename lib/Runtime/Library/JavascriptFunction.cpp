@@ -2667,7 +2667,11 @@ LABEL1:
 
         BOOL result = DynamicObject::DeleteProperty(propertyId, flags);
 
-        AssertMsg(propertyId != PropertyIds::prototype || !result, "It shouldn't be possible to delete a prototype property of a function.");
+        if (result && propertyId == PropertyIds::prototype)
+        {
+            InvalidateConstructorCacheOnPrototypeChange();
+            this->GetScriptContext()->GetThreadContext()->InvalidateIsInstInlineCachesForFunction(this);
+        }
 
         return result;
     }
