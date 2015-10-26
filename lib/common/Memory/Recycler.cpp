@@ -5739,7 +5739,7 @@ bool
 Recycler::ShouldIdleCollectOnExit()
 {
     // Always reset partial heuristics even if we are not doing idle collecting
-    // So we don't carry the heuristics to the next script activaion
+    // So we don't carry the heuristics to the next script activation
     this->ResetPartialHeuristicCounters();
 
     if (this->CollectionInProgress())
