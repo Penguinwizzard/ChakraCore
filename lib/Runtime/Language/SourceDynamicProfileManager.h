@@ -17,9 +17,6 @@ namespace Js
     // For every source file, an instance of SourceDynamicProfileManager is used to save/load data. 
     // It uses the WININET cache to save/load profile data. 
     // For testing scenarios enabled using DYNAMIC_PROFILE_STORAGE macro, this can persist the profile info into a file as well.
-    // 
-    // For dynamic source buffers passed by Trident, an instance of SourceDynamicProfileManager is used to maintain an in-memory cache.
-    // 
     class SourceDynamicProfileManager
     {
     public:        
@@ -58,7 +55,7 @@ namespace Js
 
     //------ Private data members -------- /
     private:
-        bool isNonCachableScript;                    // Indicates if this script can be cached in WININET.
+        bool isNonCachableScript;                    // Indicates if this script can be cached in WININET
         IActiveScriptDataCache* profileDataCache;    // WININET based cache to store profile info
         BVFixed* startupFunctions;                   // Bit vector representing functions that are executed at startup
         BVFixed const * cachedStartupFunctions;      // Bit vector representing functions executed at startup that are loaded from a persistent or in-memory cache

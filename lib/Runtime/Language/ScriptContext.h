@@ -28,13 +28,12 @@ namespace Js
     struct HaltCallback;
 }
 
-// Created for every source buffer passed by trident this structure has
-// all the details.
+// Created for every source buffer passed by host.
+// This structure has all the details.
 class SRCINFO
 {
-    // TODO:
     // We currently don't free SRCINFO object so we don't want to add extra variables here.
-    // When we do make it freeable and will be able to allocate more than one per Module,
+    // In future, when we do make it freeable and will be able to allocate more than one per Module,
     // we can move variables m_isGlobalFunc and m_isEval from FunctionBody.cpp here.
 public:
     SourceContextInfo * sourceContextInfo;
@@ -170,7 +169,6 @@ namespace Js
         }
 
         // Version
-        // TODO: Revisit this and check what other flags are required
         bool SupportsES3()                      const { return true; }
         bool SupportsES3Extensions()            const {
 #ifdef ENABLE_PROJECTION
@@ -1187,8 +1185,8 @@ private:
         void SetIgnoreStackWalkException() {threadContext->GetScriptEntryExit()->ignoreStackWalkException = true; }
 #endif
 
-        // This is used in the debugging scenario where the execution will go to the PDM and the PDM makes call to the engine again.
-        // In that scenario we need to enforce the current EER to have 'hasCaller' property set, which will enable the stack walking across frames.
+        // For debugging scenarios where execution will go to debugging manager and come back to engine again, enforce the current EER to have 
+        // 'hasCaller' property set, which will enable the stack walking across frames.
         // Do not call this directly, look for ENFORCE_ENTRYEXITRECORD_HASCALLER macro.
         void EnforceEERHasCaller() { threadContext->GetScriptEntryExit()->hasCaller = true; }
 

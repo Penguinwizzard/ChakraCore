@@ -58,33 +58,33 @@ DelArgs(1);
 
 // Parent function doesn't use arguments. Modify function.arguments in child
 function Func1(a, b, c) {
-	a = "assignToFormal";
-	Func1.arguments[1] = "funcArgs[1]";
-	Func1_Helper();
-	write("Arguments : " + Func1.arguments[0] + " " + Func1.arguments[1] + " " + Func1.arguments[2]);
-	write("Formals   : " + a + " " + b + " " + c);
+    a = "assignToFormal";
+    Func1.arguments[1] = "funcArgs[1]";
+    Func1_Helper();
+    write("Arguments : " + Func1.arguments[0] + " " + Func1.arguments[1] + " " + Func1.arguments[2]);
+    write("Formals   : " + a + " " + b + " " + c);
 }
 
 function Func1_Helper() {
-	Func1.arguments[2] = "nested[2]";
-	write("In Helper : " + Func1.arguments[0] + " " + Func1.arguments[1] + " " + Func1.arguments[2]);
+    Func1.arguments[2] = "nested[2]";
+    write("In Helper : " + Func1.arguments[0] + " " + Func1.arguments[1] + " " + Func1.arguments[2]);
 }
 
 Func1("arg1", "arg2", "arg3");
 
 // Parent function uses arguments. Modify function.arguments in child
 function Func2(a, b, c) {
-	a = "assignToFormal";
-	Func2.arguments[1] = "funcArgs[1]";
-	arguments[2] = "arguments[2]";
-	Func2_Helper();
-	write("Arguments : " + Func2.arguments[0] + " " + Func2.arguments[1] + " " + Func2.arguments[2]);
-	write("Formals   : " + a + " " + b + " " + c);
+    a = "assignToFormal";
+    Func2.arguments[1] = "funcArgs[1]";
+    arguments[2] = "arguments[2]";
+    Func2_Helper();
+    write("Arguments : " + Func2.arguments[0] + " " + Func2.arguments[1] + " " + Func2.arguments[2]);
+    write("Formals   : " + a + " " + b + " " + c);
 }
 
 function Func2_Helper() {
-	Func2.arguments[2] = "nested[2]";
-	write("In Helper : " + Func2.arguments[0] + " " + Func2.arguments[1] + " " + Func2.arguments[2]);
+    Func2.arguments[2] = "nested[2]";
+    write("In Helper : " + Func2.arguments[0] + " " + Func2.arguments[1] + " " + Func2.arguments[2]);
 }
 
 Func2("arg1", "arg2", "arg3");

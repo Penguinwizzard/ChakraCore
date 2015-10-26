@@ -31,7 +31,7 @@ namespace Js
     private:
         PropertyId pid;
         //Made this mutable so that we can set it for Built-In js property records when we are adding it.
-        //If we try to set it when initializing; we get extra code added for each built in; and thus increasing the size of jscript9
+        //If we try to set it when initializing; we get extra code added for each built in; and thus increasing the size of chakracore
         mutable uint hash;
         bool isNumeric;
         bool isBound;
@@ -269,7 +269,7 @@ namespace Js
     };
 }
 
-// TEMP: Hash and lookup by PropertyId
+// Hash and lookup by PropertyId
 template <>
 struct DefaultComparer<const Js::PropertyRecord*>
 {

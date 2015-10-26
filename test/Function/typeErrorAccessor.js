@@ -6,14 +6,14 @@
 function write(v) { WScript.Echo(v + ""); }
 
 function printDesc(d) {
-	write(d);
-	write(d.set);
-	write(d.get);
+    write(d);
+    write(d.set);
+    write(d.get);
 
-	var s = "V:" + d.value + ", W:" + d.writable + ", E:" + d.enumerable + ", C:" + d.configurable;
-	s += ", get:" + d.hasOwnProperty('get') + ", set:" + d.hasOwnProperty('set');
+    var s = "V:" + d.value + ", W:" + d.writable + ", E:" + d.enumerable + ", C:" + d.configurable;
+    s += ", get:" + d.hasOwnProperty('get') + ", set:" + d.hasOwnProperty('set');
 
-	write(s);	
+    write(s);	
 }
 
 function f() { return true; };

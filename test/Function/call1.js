@@ -21,7 +21,7 @@ var x = "global.x";
 var o = { x : "object.x" }
 
 function foo(a) {
-	write("In foo: " + a + ". this.x: " + this.x);
+    write("In foo: " + a + ". this.x: " + this.x);
 }
 
 foo(1);

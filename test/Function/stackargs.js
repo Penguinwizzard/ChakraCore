@@ -3,7 +3,7 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-	function write()
+    function write()
 {
   WScript.Echo(arguments[0]);
 }
@@ -258,8 +258,8 @@ write("Test case #20");
   function test() {
     var requif = function () {};
     var XPCSafeJSObjectWrapper = function () { };
-	for (var e = (Math.atan(arguments) / new XPCSafeJSObjectWrapper(''))in requif.x) {
-	};
+    for (var e = (Math.atan(arguments) / new XPCSafeJSObjectWrapper(''))in requif.x) {
+    };
   };
   test();
   test();
@@ -393,6 +393,6 @@ write("Test case #28");
             var y, z = arguments, ksjxzy, w;
             throw -35184372088832;
         }
-	write(z);
+    write(z);
     }());
 })();

@@ -60,10 +60,11 @@ namespace Js
 
         virtual bool Equals(ISourceHolder* other) override
         {
+          const wchar_t* reason = L"Equal Comparison";
             return this == other || 
-                (this->GetByteLength(L"Equal Comparison") == other->GetByteLength(L"Equal Comparison") 
-                    && (this->GetSource(L"Equal Comparison") == other->GetSource(L"Equal Comparison") 
-                        || memcmp(this->GetSource(L"Equal Comparison"), other->GetSource(L"Equal Comparison"), this->GetByteLength(L"Equal Comparison")) == 0 ));
+                (this->GetByteLength(reason) == other->GetByteLength(reason) 
+                    && (this->GetSource(reason) == other->GetSource(reason) 
+                        || memcmp(this->GetSource(reason), other->GetSource(reason), this->GetByteLength(reason)) == 0 ));
         }
 
         virtual bool IsEmpty() override

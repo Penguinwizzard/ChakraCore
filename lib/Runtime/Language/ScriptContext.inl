@@ -84,8 +84,6 @@ namespace Js
     void ScriptContext::CleanDynamicFunctionCache(TCacheType* cacheType)
     {
         // Remove eval map functions that haven't been recently used
-        // TODO: Metric based on allocation size too? So don't clean if there hasn't been much allocated?
-
         cacheType->Clean([this](const TCacheType::KeyType& key, TCacheType::ValueType value) {
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
             if (CONFIG_FLAG(DumpEvalStringOnRemoval)) 

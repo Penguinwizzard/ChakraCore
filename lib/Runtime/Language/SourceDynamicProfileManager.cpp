@@ -39,7 +39,7 @@ namespace Js
                 Output::Flush();
             }
 #endif
-            // TODO: We have profile mismatch, should we invalidate all other profile here?
+            // NOTE: We have profile mismatch, we can invalidate all other profile here.
         }
         return nullptr;
     }

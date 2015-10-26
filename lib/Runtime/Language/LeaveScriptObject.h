@@ -117,8 +117,8 @@
 #define IGNORE_STACKWALK_EXCEPTION(scriptContext)
 #endif
 
-// This is used in the debugging scenario where the execution will go to the PDM and the PDM makes call to the engine again.
-// In that scenario we need to enforce the current EER to have 'hasCaller' property set, which will enable the stack walking across frames.
+// For debugging scenarios where execution will go to debugging manager and come back to engine again, enforce the current EER to have 
+// 'hasCaller' property set, which will enable the stack walking across frames.
 #define ENFORCE_ENTRYEXITRECORD_HASCALLER(scriptContext) \
         scriptContext->EnforceEERHasCaller();
 

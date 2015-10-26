@@ -46,8 +46,6 @@ namespace UnifiedRegex
 #define UNREFERENCED_PARAMETER(x) (x)
 #endif
 
-//#define BODLOG
-
 class SRCINFO;
 class Lowerer;
 class LowererMD;

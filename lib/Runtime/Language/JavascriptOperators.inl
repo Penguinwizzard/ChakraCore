@@ -6,7 +6,6 @@
 
 namespace Js
 {
-    // ToDo: only force inline for some special code path
     __forceinline TypeId JavascriptOperators::GetTypeId(const Var aValue)
     {
         AssertMsg(aValue != nullptr, "GetTypeId aValue is null");

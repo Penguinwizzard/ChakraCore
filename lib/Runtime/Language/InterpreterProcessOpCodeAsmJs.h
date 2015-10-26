@@ -497,7 +497,6 @@ if (switchProfileMode) \
 #define PROCESS_SIMD_D2_1toR1Mem(name, func, suffix) PROCESS_D2_1toR1Mem_COMMON(name, func, suffix)
 
 
-////
 #define PROCESS_SIMD_I1toI4_1_COMMON(name, func, suffix) \
     case OpCodeAsmJs::name: \
     { \
@@ -524,6 +523,7 @@ if (switchProfileMode) \
     break; \
     }
 #define PROCESS_SIMD_D1toD2_1(name, func, suffix) PROCESS_SIMD_D1toD2_1_COMMON(name, func, suffix)
+
 //// Value transfer
 #define PROCESS_SIMD_F4toF4_1_COMMON(name, func, suffix)\
     case OpCodeAsmJs::name: \
@@ -873,5 +873,3 @@ if (switchProfileMode) \
     break; \
     }
 #define PROCESS_SIMD_D2_2I4toD2_1(name, func, suffix) PROCESS_SIMD_D2_2I2toD2_1COMMON(name, func, suffix)
-
-//////////////////////////////////////////////////////////////////////////

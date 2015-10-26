@@ -30,7 +30,6 @@
 // of this function (call of a javascript function in interpreter mode) to take 7+KB stack space
 // (without optimizations the compiler accounts for ALL locals inside case labels when allocating space on stack
 // for locals - SP does not change inside the function). On other platforms this is still huge but better than ARM.
-// The issue was surfaced in SunSpider\controlflow-recursive.js -- AV/stack overflow in interpreter mode.
 // So, for DBG turn on optimizations to prevent this huge loss of stack.
 #pragma optimize("g", on)
 #endif
@@ -380,9 +379,7 @@ SWAP_BP_FOR_OPCODE:
                         ip = m_reader.GetIP();
                         continue;
                     }
-                    // Yes this is an ugly jump back to the start of the switch.
-                    // If you have a better idea on how to do this that doesn't impact perf,
-                    // or maintainability of the interpreter loop I'll by happy to change this.
+                    // Jump back to the start of the switch.
                     goto SWAP_BP_FOR_OPCODE;
                 }
                 else

@@ -1871,10 +1871,6 @@ namespace Js
         // in order to avoid re-adding existing entries.
         NoWriteBarrierField<int> debuggerScopeIndex;
 
-#ifdef BODLOG
-        NoWriteBarrierField<uint> callCount; // number of calls in the interpreter
-#endif
-
         FunctionBody(ScriptContext* scriptContext, const wchar_t* displayName, uint displayNameLength, uint nestedCount, Utf8SourceInfo* sourceInfo,
             uint uFunctionNumber, uint uScriptId, Js::LocalFunctionId functionId, Js::PropertyRecordList* propRecordList, Attributes attributes
 #ifdef PERF_COUNTERS
@@ -2427,10 +2423,6 @@ namespace Js
 
         uint GetNumberOfRecursiveCallSites();
         bool CanInlineRecursively(uint depth, bool tryAggressive = true);
-#ifdef BODLOG
-        void IncrCallCount() { callCount++; }
-        int GetCallCount() { return callCount; }
-#endif
     public:
         bool CanInlineAgain() const
         {

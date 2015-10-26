@@ -44,9 +44,9 @@ foo("foo2.a", "foo2.b");
 
 
 function lenChange() {
-	write(arguments.length);
-	arguments.length--;
-	write(arguments.length);
+    write(arguments.length);
+    arguments.length--;
+    write(arguments.length);
 }
 
 lenChange(10,20,30);

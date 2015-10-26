@@ -3,9 +3,6 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-//Adding this in unittests as it is highly unlikely to hit again in exprgen and we may lose the pattern in this bug
-//Switches: -maxinterpretcount:1 -maxsimplejitruncount:2
-
 var shouldBailout = false;
 var runningJITtedCode = false;
 var __counter = 0;
@@ -29,7 +26,7 @@ function test0() {
     CollectGarbage();
   };
   var func1 = function (argFunc0, argFunc1) {
-	//WScript.Echo("here");
+    //WScript.Echo("here");
     function v0() {
     }
     v0.prototype.method0 = function () {
@@ -73,7 +70,7 @@ function test0() {
     var v10 = new v9();
     function v11(v12) {
       // WScript.Echo(".");
-	  v12.method0();
+      v12.method0();
     }
     
     v11(v3);

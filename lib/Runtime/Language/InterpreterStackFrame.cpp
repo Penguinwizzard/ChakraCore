@@ -637,7 +637,6 @@
 
 #define PROCESS_A1U1toXX(name, func) PROCESS_A1U1toXX_COMMON(name, func,)
 
-// BUGBUG: wait for Paul's fix to have different bytecode for var and non-var variations.
 #define PROCESS_GET_ELEM_SLOTNonVar_COMMON(name, func, layout, suffix) \
     case OpCode::name: \
     { \
@@ -1413,11 +1412,6 @@ namespace Js
 
         AssertMsg(!executeFunction->IsDeferredParseFunction(),
             "Non-intrinsic functions must provide byte-code to execute");
-#ifdef BODLOG
-        // added for instrumentation
-        executeFunction->IncrCallCount();
-#endif
-
 
         bool fReleaseAlloc = false;
         InterpreterStackFrame* newInstance = nullptr;
@@ -2442,16 +2436,6 @@ namespace Js
             simdSrc = (AsmJsSIMDValue*)(doubleSrc + doubleConstCount);
             m_localSimdSlots = (AsmJsSIMDValue*)((char*)m_localSlots + simdByteOffset);
         }
-#if 0         // Alignment disabled for now
-        // Align to 16-byte boundary, only if we have any SIMD vars in the code
-        if (info->GetSimdAllCount())
-        {
-            // Enough room to align ?
-            AssertMsg((Var*)(m_localSimdSlots + info->GetSimdAllCount() + 1) <= (m_localSlots + functionBody->GetLocalsCount()), "Not enough space for SIMD data alignment");
-            m_localSimdSlots = (AsmJsSIMDValue*)::Math::Align<int>((int)m_localSimdSlots, 16);
-        }
-#endif
-
 
         // Load module environment
         FrameDisplay* frame = this->function->GetEnvironment();
@@ -4291,17 +4275,6 @@ namespace Js
     {
         ProfiledInitProperty(playout, this->GetRootObject());
     }
-
-    //template <>
-    //void InterpreterStackFrame::OP_InitProperty(unaligned OpLayoutElementC* playout)
-    //{
-    //    // Same fast path as in the backend.
-    //    Var instance = GetReg(playout->Instance);
-    //    PropertyId propertyId = playout->PropertyIndex;
-    //    Var value = GetReg(playout->Value);
-
-    //    JavascriptOperators::OP_InitProperty(instance, propertyId, value);
-    //}
 
     template <class T>
     void InterpreterStackFrame::OP_ProfiledGetElementI(const unaligned OpLayoutDynamicProfile<T>* playout)

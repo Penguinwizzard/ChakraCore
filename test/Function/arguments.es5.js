@@ -3,7 +3,6 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-// Note: run this using jshost.exe, jc.exe wouldn't find WScript.LoadScriptFile.
 if (typeof(WScript) != "undefined") {
   WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 }
@@ -494,7 +493,6 @@ var tests = {
     f(passedValue, passedValue + 1);
   },
 
-  // http://iecat/viewchange.aspx?id=27368, issue#5:
   // After Object.preventExtensions(arguments) we can't modify the attributes on formals.
   test23_1: {
     name: "arguments (non-ES5 version): call Object.preventExtensions, make sure we can still modify atttibutes on formals without changing the value",
@@ -503,7 +501,6 @@ var tests = {
     }
   },
 
-  // http://iecat/viewchange.aspx?id=27368, issue#5:
   // After Object.preventExtensions(arguments) we can't modify the attributes on formals.
   test23_2: {
     name: "arguments (ES5 version): call Object.preventExtensions, make sure we can still modify atttibutes on formals without changing the value",
@@ -535,7 +532,6 @@ var tests = {
     f(passedValue, passedValue + 1);
   },
 
-  // http://iecat/viewchange.aspx?id=27368, issue#4, part2:
   // Object.freeze(arguments -- not ES5 version) does not set configurable to false on formals.
   test24_1: {
     name: "arguments (non-ES5 version): call Object.seal, verify desciptor on formal",
@@ -575,7 +571,6 @@ var tests = {
     f(passedValue, passedValue + 1);
   },
 
-  // http://iecat/viewchange.aspx?id=27368, issue#4, part2:
   // Object.freeze(arguments -- not ES5 version) does not set configurable and writable to false on formals.
   test25_1: {
     name: "arguments (non-ES5 version): call Object.freeze, verify descriptor on formal",

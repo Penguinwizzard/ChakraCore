@@ -295,58 +295,8 @@ namespace Js
         intConstPropsOnGlobalObject = Anew(GeneralAllocator(), PropIdSetForConstProp, GeneralAllocator());
         intConstPropsOnGlobalUserObject = Anew(GeneralAllocator(), PropIdSetForConstProp, GeneralAllocator());
 
-        // TODO (SaAgarwa): DebugContext should only be needed during debugLaunch/Attach it should be created then
-        // Will do it in next checkin as I have moved ProbeContainer from ScriptContext to DebugContext which was a field on ScriptContext and not a pointer
-        // All places which access scriptContext.diagProbesContainer needs to have check of IsInDebugOrSourceRundownMode to guarantee DebugContext
         this->debugContext = HeapNew(DebugContext, this);
     }
-#ifdef BODLOG
-    void PrintBod(int key, FunctionBody* bod, FILE* fp, void* ignore2) {
-        fprintf(fp, "function %ls calls %d native 0x%x\n", bod->GetDisplayName(), bod->GetCallCount(), bod->NativeEntryPoint);
-        if (bod->GetCallCount()>0) {
-
-            const wchar_t* osrc = bod->GetSource();
-            int len = bod->Length();
-            wchar_t* src = (wchar_t*)calloc(2, len + 1);
-            js_memcpy_s(src, (len + 1) * sizeof(wchar_t), osrc, len * 2);
-            src[len] = L'\0';
-            fprintf(fp, "source:\n");
-            fprintf(fp, "%ls\n", src);
-            free(src);
-        }
-    }
-
-
-    void PrintBod2(FunctionBody* bod, FILE* fp, int total, int runningTotal, int remCount) {
-        if (total>0) {
-            fprintf(fp, "function %ls calls %d/%d(%4.2f) total calls so far %d/%d(%4.2f) remaining fn count %d native 0x%x\n",
-                bod->GetDisplayName(), bod->GetCallCount(), total, (double)bod->GetCallCount() / total,
-                runningTotal, total, (double)runningTotal / total, remCount, bod->NativeEntryPoint);
-        }
-        else {
-            fprintf(fp, "function %ls calls %d/%d native 0x%x\n", bod->GetDisplayName(), bod->GetCallCount(), total,
-                bod->NativeEntryPoint);
-        }
-        if (bod->GetCallCount()>0) {
-            const wchar_t* osrc = bod->GetSource();
-            int len = bod->Length();
-            wchar_t* src = (wchar_t*)calloc(2, len + 1);
-            js_memcpy_s(src, (len + 1) * sizeof(wchar_t), osrc, len * 2);
-            src[len] = L'\0';
-            fprintf(fp, "source:\n");
-            fprintf(fp, "%ls\n", src);
-            free(src);
-        }
-    }
-
-    int __cdecl compareFnBod(void* context, const void* a, const void* b) {
-        FunctionBody* abod = *(FunctionBody**)a;
-        FunctionBody* bbod = *(FunctionBody**)b;
-        return (abod->GetCallCount() - bbod->GetCallCount());
-    }
-
-    FILE* _bodlogfp = NULL;
-#endif
 
     void ScriptContext::EnsureClearDebugDocument()
     {
@@ -1301,7 +1251,7 @@ namespace Js
     }
 
     //
-    // Enables jscript9diag to get the HaltCallBack pointer that is implemented by
+    // Enables chakradiag to get the HaltCallBack pointer that is implemented by
     // the ScriptEngine.
     //
     void ScriptContext::SetScriptEngineHaltCallback(HaltCallback* scriptEngine)
@@ -1875,8 +1825,8 @@ namespace Js
         ThreadContext * threadContext = this->threadContext;
         if (!threadContext->IsScriptActive())
         {
-            // we should have enter always these days.
-            Assert(FALSE);
+            // we should have enter always.
+            AssertMsg(FALSE, "Leaving ScriptStart while script is not active.");
             return false;
         }
 
@@ -2221,7 +2171,7 @@ namespace Js
             return const_cast<SourceContextInfo*>(this->cache->noContextSourceContextInfo);
         }
 
-        // NB: This is capped so we can continue allocating in the arena
+        // This is capped so we can continue allocating in the arena
         SourceContextInfo * sourceContextInfo = RecyclerNewStructZ(this->GetRecycler(), SourceContextInfo);
         sourceContextInfo->sourceContextId = this->GetNextSourceContextId();
         sourceContextInfo->dwHostSourceContext = hostSourceContext;
@@ -2677,7 +2627,7 @@ namespace Js
 
         OUTPUT_TRACE(Js::ScriptProfilerPhase, L"ScriptContext::RegisterAllScripts started\n");
 
-        // TODO: Once Utf8SourceInfo can generate the debug document text without requiring a function body,
+        // Future Work: Once Utf8SourceInfo can generate the debug document text without requiring a function body,
         // this code can be considerably simplified to doing the following:
         // - scriptContext->MapScript() : Fire script compiled for each script
         // - scriptContext->MapFunction(): Fire function compiled for each function
@@ -2744,7 +2694,7 @@ namespace Js
         {
             // Today we do source rundown as a part of attach to support VS attaching without
             // first calling PerformSourceRundown.  PerformSourceRundown will be called once
-            // by F12 prior to attaching.
+            // by debugger host prior to attaching.
             this->GetDebugContext()->SetInSourceRundownMode();
 
             // Need to perform rundown only once.
@@ -3029,7 +2979,7 @@ namespace Js
         OUTPUT_TRACE(Js::ScriptProfilerPhase, L"ScriptContext::RegisterBuiltinFunctions\n");
 
         HRESULT hr = S_OK;
-        // TODO : create new profiler arena and allocate in it
+        // Consider creating ProfileArena allocator instead of General allocator
         if (m_pBuiltinFunctionIdMap == NULL)
         {
             // Anew throws if it OOMs, so the caller into this function needs to handle that exception
@@ -3170,18 +3120,10 @@ namespace Js
             pFunction->ResetConstructorCacheToDefault();
         }
 
-        /*if(ScriptFunctionWithInlineCache::Is(pFunction) && ScriptFunctionWithInlineCache::FromVar(pFunction)->HasInlineCachesFromFunctionBody())
-        {
-        ScriptFunctionWithInlineCache* pFunctionWithInlineCache = ScriptFunctionWithInlineCache::FromVar(pFunction);
-        pFunctionWithInlineCache->SetInlineCachesFromFunctionBody();
-        }*/
         if (ScriptFunctionWithInlineCache::Is(pFunction))
         {
             ScriptFunctionWithInlineCache::FromVar(pFunction)->ClearInlineCacheOnFunctionObject();
         }
-
-        /*Assert(entryPoint != DefaultDeferredParsingThunk && entryPoint != ProfileDeferredParsingThunk
-        && entryPoint != DefaultDeferredDeserializeThunk && entryPoint != ProfileDeferredDeserializeThunk);*/
 
         // We should have force parsed the function, and have a function body
         FunctionBody * pBody = proxy->GetFunctionBody();
@@ -3429,12 +3371,6 @@ namespace Js
 #elif defined(_M_X64) || defined(_M_ARM32_OR_ARM64)
     // Do nothing: the implementation of ScriptContext::ProfileModeDeferredDeserializeThunk is declared (appropriately decorated) in
     // Language\amd64\amd64_Thunks.asm and Language\arm\arm_Thunks.asm respectively.
-#else
-    Var ScriptContext::ProfileModeDeferredDeserializeThunk(RecyclableObject* function, CallInfo callInfo, ...)
-    {
-        Js::Throw::NotImplemented();
-        return nullptr;
-    }
 #endif
 
     Js::JavascriptMethod ScriptContext::ProfileModeDeferredDeserialize(ScriptFunction *function)
@@ -3528,7 +3464,7 @@ namespace Js
             {
                 // Note: for this we need final IsInDebugMode and NativeCodeGen initialized,
                 //       and inside EnsureScriptContext, which seems appropriate as well,
-                //       it's too early as pdm is not registered, thus IsDebuggerEnvironmentAvailable is false.
+                //       it's too early as debugger manager is not registered, thus IsDebuggerEnvironmentAvailable is false.
                 this->RegisterDebugThunk(false/*calledDuringAttach*/);
 
                 // TODO: for launch scenario for external and WinRT functions it might be too late to register debug thunk here,
@@ -4440,8 +4376,6 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
 
     void ScriptContext::OnStartupComplete()
     {
-        // Uncomment the assert below once bug 522912 is fixed.
-        //AssertMsg(!startupComplete, "Startup complete - invoked twice?");
         JS_ETW(EventWriteJSCRIPT_ON_STARTUP_COMPLETE(this));
 
         SaveStartupProfileAndRelease();

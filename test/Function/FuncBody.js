@@ -77,7 +77,6 @@ CheckNewFunction0(6, "return 23 ", true);
 CheckNewFunction2(7, "a, b", "c", " return a+b+c", true);
 CheckNewFunction1(8, "a,b", " return a+b", true);
 CheckNewFunction1(9, "", " return 44", true);
-//CheckNewFunction2(3, "a", "b", " {\/ ", false);
 // Check that we handle labels in the function body
 CheckNewFunction2(10, "a", "b", "var c=a+b; loopbackhere: for(i=0; i<a; i++) { c+=i; if (i>10) break loopbackhere; }", true);
 

@@ -125,8 +125,7 @@ namespace Js
                 {
                 __int64 leftValue = JavascriptInt64Number::FromVar(aLeft)->GetValue();
                 unsigned __int64 rightValue = JavascriptInt64Number::FromVar(aRight)->GetValue();
-                // TODO: yongqu to review whether we need to check for neg value
-                return (/* leftValue >= 0 && */(unsigned __int64)leftValue == rightValue);
+                return ((unsigned __int64)leftValue == rightValue);
                 }
             }
             break;
@@ -137,8 +136,7 @@ namespace Js
                 {
                 unsigned __int64 leftValue = JavascriptUInt64Number::FromVar(aLeft)->GetValue();
                 __int64 rightValue = TaggedInt::ToInt32(aRight);
-                // TODO: yongqu to review whether we need to check for neg value
-                return (/* rightValue >= 0 && */leftValue == (unsigned __int64)rightValue);
+                return (leftValue == (unsigned __int64)rightValue);
                 }
             case TypeIds_Number:
                 dblLeft     = (double)JavascriptUInt64Number::FromVar(aLeft)->GetValue();
@@ -148,8 +146,7 @@ namespace Js
                 {
                 unsigned __int64 leftValue = JavascriptUInt64Number::FromVar(aLeft)->GetValue();
                 __int64 rightValue = JavascriptInt64Number::FromVar(aRight)->GetValue();
-                // TODO: yongqu to review whether we need to check for neg value
-                return (/* rightValue >= 0 && */leftValue == (unsigned __int64)rightValue);
+                return (leftValue == (unsigned __int64)rightValue);
                 }
             case TypeIds_UInt64Number:
                 {
@@ -410,7 +407,7 @@ CommonNumber:
                         // if IsES6ToPrimitiveEnabled flag is off we also fall back to OrdinaryToPrimitive
                         return MethodCallToPrimitive(aValue, hint, requestContext);
                     }
-                    //TODO: Preferably pass requestContext to JavascriptDate::ToString, but that requires bigger code change.
+                    //NOTE: Consider passing requestContext to JavascriptDate::ToString
                     return CrossSite::MarshalVar(requestContext, JavascriptDate::ToString(dateObject));
                 }
             }
@@ -983,25 +980,7 @@ CommonNumber:
             return val;
         }
 
-        // TODO potential back compat issue here.
-        // by spec the return value is  sign(number) * floor(abs(number)).
-        // v5.8 engine hast it's own formula. If any issue shows up, switch to V5.8
-        //
         return ( ((val < 0) ? -1 : 1 ) * floor(fabs(val)));
-        // the v5.8 engine formula:
-        //if (NumberUtilities::LuHiDbl(val) & 0x80000000)
-        //{
-        //    NumberUtilities::LuHiDbl(val) &= 0x7FFFFFFF;
-        //    val = floor(val);
-        //    NumberUtilities::LuHiDbl(val) |= 0x80000000;
-        //}
-        //else
-        //{
-        //    val = floor(val);
-        //    // We have to do this because some implementations map 0.5 to -0.
-        //    NumberUtilities::LuHiDbl(val) &= 0x7FFFFFFF;
-        //}
-        //return val;
     }
 
     //----------------------------------------------------------------------------
@@ -1111,12 +1090,7 @@ CommonNumber:
             return ToInt32(ToNumber_Full(aValue, scriptContext));
 
         default:
-            // We assert here rather than __assume(false) because a bad activeX control could cause this to happen.
-            // However we believe it is overwhelmingly more likely that this assert would catch a real bug, than
-            // someone would be using a checked build with a bad ActiveX control.
-
             AssertMsg(FALSE, "wrong call in ToInteger32_Full, no dynamic objects should get here.");
-
             JavascriptError::ThrowError(scriptContext, VBSERR_OLENoPropOrMethod);
         }
     }

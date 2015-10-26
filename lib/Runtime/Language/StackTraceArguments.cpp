@@ -58,9 +58,10 @@ namespace Js {
                 return scriptContext->GetLibrary()->GetSymbolTypeDisplayString();
             case objectValue:
                 return scriptContext->GetLibrary()->GetObjectTypeDisplayString();
+            default:
+              AssertMsg(0, "Unknown type code");
+              return scriptContext->GetLibrary()->GetEmptyString();
         }
-        AssertMsg(0, "Unknown type code");
-        return scriptContext->GetLibrary()->GetEmptyString();
     }
 
     void StackTraceArguments::Init(const JavascriptStackWalker &walker)

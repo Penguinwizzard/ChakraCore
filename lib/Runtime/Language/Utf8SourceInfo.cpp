@@ -21,7 +21,7 @@ namespace Js
         m_secondaryHostSourceContext(secondaryHostSourceContext),
         m_debugDocument(nullptr),
         m_sourceInfoId(scriptContext->GetThreadContext()->NewSourceInfoNumber()),
-        m_hasTridentBuffer(false),
+        m_hasHostBuffer(false),
         m_isCesu8(false),
         m_isLibraryCode(false),
         m_isXDomain(false),
@@ -77,21 +77,21 @@ namespace Js
     {
         ClearDebugDocument();
         this->debugModeSource = nullptr;
-        if (this->m_hasTridentBuffer)
+        if (this->m_hasHostBuffer)
         {
             PERF_COUNTER_DEC(Basic, ScriptCodeBufferCount);
-            HeapFree(GetProcessHeap(), 0 , m_pTridentBuffer);
-            m_pTridentBuffer = nullptr;
+            HeapFree(GetProcessHeap(), 0 , m_pHostBuffer);
+            m_pHostBuffer = nullptr;
         }
     };
 
     void
-    Utf8SourceInfo::SetTridentBuffer(BYTE * pcszCode)
+    Utf8SourceInfo::SetHostBuffer(BYTE * pcszCode)
     {
-        Assert(!this->m_hasTridentBuffer);
-        Assert(this->m_pTridentBuffer == nullptr);
-        this->m_hasTridentBuffer = true;
-        this->m_pTridentBuffer = pcszCode;
+        Assert(!this->m_hasHostBuffer);
+        Assert(this->m_pHostBuffer == nullptr);
+        this->m_hasHostBuffer = true;
+        this->m_pHostBuffer = pcszCode;
     }
     enum
     {
@@ -221,9 +221,9 @@ namespace Js
         newSourceInfo->m_isXDomainString = sourceInfo->m_isXDomainString;
         newSourceInfo->m_isLibraryCode = sourceInfo->m_isLibraryCode;
         newSourceInfo->SetIsCesu8(sourceInfo->GetIsCesu8());
-        if (sourceInfo->m_hasTridentBuffer)
+        if (sourceInfo->m_hasHostBuffer)
         {
-            // Keep the trident buffer alive via the original source info
+            // Keep the host buffer alive via the original source info
             newSourceInfo->m_pOriginalSourceInfo = sourceInfo;
         }
         newSourceInfo->EnsureInitialized(sourceInfo->GetFunctionBodyCount());

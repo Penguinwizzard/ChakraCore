@@ -6,10 +6,6 @@
 #include "Language\JavascriptFunctionArgIndex.h"
 #include "Language\InterpreterStackFrame.h"
 
-#if !defined(_M_IX86_OR_ARM32) && !defined(_M_X64_OR_ARM64)
-#error Stack walker not defined for this arch
-#endif
-
 #define FAligned(VALUE, TYPE) ((((LONG_PTR)VALUE) & (sizeof(TYPE)-1)) == 0)
 
 #define AlignIt(VALUE, TYPE) (~(~((LONG_PTR)(VALUE) + (sizeof(TYPE)-1)) | (sizeof(TYPE)-1)))
@@ -738,7 +734,7 @@ namespace Js
             void ** argv = this->currentFrame.GetArgv(false /*isCurrentContextNative*/, false /*shouldCheckForNativeAddr*/);
             if (argv == nullptr)
             {
-                // TODO: When we switch to walking the stack ourselves and skip non engine frames, this should never happen.
+                // NOTE: When we switch to walking the stack ourselves and skip non engine frames, this should never happen.
                 return false;
             }
             if (argv[JavascriptFunctionArgIndex_Function] == amd64_ReturnFromCallWithFakeFrame)
@@ -786,7 +782,7 @@ namespace Js
             void ** argv = this->currentFrame.GetArgv(true /*isCurrentContextNative*/, false /*shouldCheckForNativeAddr*/);
             if (argv == nullptr)
             {
-                // TODO: When we switch to walking the stack ourselves and skip non engine frames, this should never happen.
+                // NOTE: When we switch to walking the stack ourselves and skip non engine frames, this should never happen.
                 return false;
             }
 
@@ -902,7 +898,7 @@ namespace Js
         Assert(this->IsJavascriptFrame());
         if (includeInlinedFrames && inlinedFramesBeingWalked)
         {
-            // TODO: We don't support inlining constructors yet. Should we handle the
+            // Since we don't support inlining constructors yet, its questionable if we should handle the
             // hidden frame display here?
             return (CallInfo const *)&inlinedFrameCallInfo;
         }
@@ -994,10 +990,11 @@ namespace Js
     }
 
     // Try to see whether there is a top-most javascript frame, and if there is return true if it's native.
-    // Returns true if top most frame is javascript frame, in this case
-    //   the isNative parameter receives true when top-most frame is native, false otherwise.
+    // Returns true if top most frame is javascript frame, in this case the isNative parameter receives true
+    // when top-most frame is native, false otherwise.
     // Returns false if top most frame is not a JavaScript frame.
-    // static
+
+    /* static */
     bool JavascriptStackWalker::TryIsTopJavaScriptFrameNative(ScriptContext* scriptContext, bool* isNative, bool ignoreLibraryCode /* = false */)
     {
         Assert(scriptContext);

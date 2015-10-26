@@ -481,10 +481,7 @@ namespace Js
         ,m_isIRDumpEnabled(false)
         ,m_irDumpBaseObject(nullptr)
 #endif /* IR_VIEWER */
-        ,m_isFromNativeCodeModule(false)
-#ifdef BODLOG
-        ,callCount(0)
-#endif
+        , m_isFromNativeCodeModule(false)
         , interpretedCount(0)
         , loopInterpreterLimit(CONFIG_FLAG(LoopInterpretCount))
         , hasHotLoop(false)

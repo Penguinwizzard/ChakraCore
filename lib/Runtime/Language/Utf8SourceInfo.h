@@ -197,7 +197,7 @@ namespace Js
             return matchedFunctionBody;
         }
 
-        void SetTridentBuffer(BYTE * pcszCode);
+        void SetHostBuffer(BYTE * pcszCode);
 
         bool HasDebugDocument() const
         {
@@ -353,7 +353,7 @@ namespace Js
         ISourceHolder* sourceHolder;
         union
         {
-            BYTE* m_pTridentBuffer;  // Pointer to a trident source buffer (null unless this is trident code that we need to free)
+            BYTE* m_pHostBuffer;  // Pointer to a host source buffer (null unless this is host code that we need to free)
             Utf8SourceInfo const* m_pOriginalSourceInfo; // Pointer to source info with original source text, created during cloning
         };
 
@@ -378,7 +378,7 @@ namespace Js
 
         bool m_deferredFunctionsInitialized : 1;
         bool m_isCesu8 : 1;
-        bool m_hasTridentBuffer : 1;
+        bool m_hasHostBuffer : 1;
         bool m_isLibraryCode : 1;           // true, the current source belongs to the internal library code. Used for debug purpose to not show in debugger
         bool m_isXDomain : 1;
         // we found that m_isXDomain could cause regression without CORS, so the new flag is just for callee.caller in window.onerror

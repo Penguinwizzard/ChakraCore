@@ -3,15 +3,6 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-//FileName: \\ezeqasrv1\users\runtimetoolsbugs\casanalyzed\exprgen\fbl_ie_script_dev\130420-2030\x86\nebularun_x86\201304220152\ddltd2_1c85c885-2ee3-43ce-8fb7-39780ac4e20a\bug2.js
-//Configuration: inline.xml
-//Testcase Number: 55168
-//Switches:  -maxinterpretcount:3  
-//Baseline Switches: -nonative 
-//Branch:  fbl_ie_script_dev
-//Build: 130420-2030
-//Arch: X86
-//MachineName: BPT02679
 function test0(){
   var obj0 = {};
   var arrObj0 = {};

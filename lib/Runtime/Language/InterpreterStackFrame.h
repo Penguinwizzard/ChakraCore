@@ -122,8 +122,6 @@ namespace Js
 
         EHBailoutData * ehBailoutData;
 
-        //////////////////////////////////////////////////////////////////////////
-
         // 16-byte aligned
         __declspec(align(16)) Var m_localSlots[0];           // Range of locals and temporaries
 

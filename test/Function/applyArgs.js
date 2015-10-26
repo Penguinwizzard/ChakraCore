@@ -7,16 +7,16 @@ function write(v) { WScript.Echo(v + ""); }
 
 function test1() 
 {
-	[].push.apply(this, arguments);
-	write("passed");
+    [].push.apply(this, arguments);
+    write("passed");
 }
 
 test1();
 
 function test2() 
 {
-	({}).toString.apply(this, arguments);
-	write("passed");
+    ({}).toString.apply(this, arguments);
+    write("passed");
 }
 
 test2();
@@ -24,17 +24,17 @@ test2();
 var count3 = 0;
 function test3() 
 {
-	var args = arguments;
-	function test3_inner() {
-		(count3 == 1 ? args : arguments).callee.apply(this, arguments);
-	}
-	
-	if (++count3 == 1)
-	{
-		return test3_inner();
-	}
-	
-	write("passed");
+    var args = arguments;
+    function test3_inner() {
+        (count3 == 1 ? args : arguments).callee.apply(this, arguments);
+    }
+    
+    if (++count3 == 1)
+    {
+        return test3_inner();
+    }
+    
+    write("passed");
 }
 
 test3();
