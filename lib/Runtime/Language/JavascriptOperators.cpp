@@ -1247,10 +1247,12 @@ CommonNumber:
     {
         RecyclableObject* function = GetIteratorFunction(aRight, scriptContext);
         JavascriptMethod method = function->GetEntryPoint();
-        if (((JavascriptArray::Is(aRight) || ArgumentsObject::Is(aRight)) && method == (&JavascriptArray::EntryInfo::Values)->GetOriginalEntryPoint()) ||
-            (TypedArrayBase::Is(aRight) && method == (&TypedArrayBase::EntryInfo::Values)->GetOriginalEntryPoint())
-            )
+        if ((JavascriptArray::Is(aRight) && method == JavascriptArray::EntryInfo::Values.GetOriginalEntryPoint()) ||
+            (TypedArrayBase::Is(aRight) && method == TypedArrayBase::EntryInfo::Values.GetOriginalEntryPoint()))
         {
+            // TODO: There is a compliance bug here in the case where the user has changed %ArrayIteratorPrototype%.next(); we won't call it.
+            // Checking if the property has been modified is currently not possible without doing a Get on it which might call user code.
+            // Fixing this bug will require a way to get the value stored in the property without doing the evaluation semantics of a Get.
             return aRight;
         }
 
