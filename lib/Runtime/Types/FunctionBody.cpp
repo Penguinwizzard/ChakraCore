@@ -4872,9 +4872,9 @@ namespace Js
     // Get Values of the beginning of the statement at particular index.
     BOOL SmallSpanSequence::GetRangeAt(int index, SmallSpanSequenceIter &iter, int * pCountOfMissed, StatementData & data)
     {
-        Assert(index < pStatementBuffer->Count());
+        Assert((uint32)index < pStatementBuffer->Count());
 
-        SmallSpan span(pStatementBuffer->ItemInBuffer(index));
+        SmallSpan span(pStatementBuffer->ItemInBuffer((uint32)index));
 
         int countOfMissed = 0;
 
@@ -4883,9 +4883,9 @@ namespace Js
             // Look in ActualOffset store
             Assert(this->pActualOffsetList);
             Assert(this->pActualOffsetList->Count() > 0);
-            Assert(this->pActualOffsetList->Count() > iter.indexOfActualOffset);
+            Assert(this->pActualOffsetList->Count() > (uint32)iter.indexOfActualOffset);
 
-            data.sourceBegin = this->pActualOffsetList->ItemInBuffer(iter.indexOfActualOffset);
+            data.sourceBegin = this->pActualOffsetList->ItemInBuffer((uint32)iter.indexOfActualOffset);
             countOfMissed++;
         }
         else
@@ -4898,9 +4898,9 @@ namespace Js
             // Look in ActualOffset store
             Assert(this->pActualOffsetList);
             Assert(this->pActualOffsetList->Count() > 0);
-            Assert(this->pActualOffsetList->Count() > iter.indexOfActualOffset + countOfMissed);
+            Assert(this->pActualOffsetList->Count() > (uint32)(iter.indexOfActualOffset + countOfMissed));
 
-            data.bytecodeBegin = this->pActualOffsetList->ItemInBuffer(iter.indexOfActualOffset + countOfMissed);
+            data.bytecodeBegin = this->pActualOffsetList->ItemInBuffer((uint32)iter.indexOfActualOffset + countOfMissed);
             countOfMissed++;
         }
         else
@@ -4930,13 +4930,13 @@ namespace Js
         {
             // Support only in forward direction
             if (bytecode < iter.accumulatedBytecodeBegin
-                || iter.accumulatedIndex <= 0 || iter.accumulatedIndex >= Count())
+                || iter.accumulatedIndex <= 0 || (uint32)iter.accumulatedIndex >= Count())
             {
                 // re-initialize the accumulators
                 Reset(iter);
             }
 
-            while (iter.accumulatedIndex < Count())
+            while ((uint32)iter.accumulatedIndex < Count())
             {
                 int countOfMissed = 0;
                 if (!GetRangeAt(iter.accumulatedIndex, iter, &countOfMissed, data))
@@ -4983,7 +4983,7 @@ namespace Js
 
     BOOL SmallSpanSequence::Item(int index, SmallSpanSequenceIter &iter, StatementData & data)
     {
-        if (!pStatementBuffer || index < 0 || index >= pStatementBuffer->Count())
+        if (!pStatementBuffer || (uint32)index >= pStatementBuffer->Count())
         {
             return FALSE;
         }
@@ -4995,7 +4995,7 @@ namespace Js
 
         while (iter.accumulatedIndex <= index)
         {
-            Assert(iter.accumulatedIndex < pStatementBuffer->Count());
+            Assert((uint32)iter.accumulatedIndex < pStatementBuffer->Count());
 
             int countOfMissed = 0;
             if (!GetRangeAt(iter.accumulatedIndex, iter, &countOfMissed, data))

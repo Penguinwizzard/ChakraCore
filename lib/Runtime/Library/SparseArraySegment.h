@@ -93,7 +93,7 @@ namespace Js
 
     private:
         template<bool isLeaf>
-        static inline SparseArraySegment<T>* Allocate(Recycler* recycler, uint32 left, uint32 length, uint32 size);
+        static inline SparseArraySegment<T>* Allocate(Recycler* recycler, uint32 left, uint32 length, uint32 size, uint32 fillStart = 0);
 
         template<bool isLeaf>
         inline SparseArraySegment<T> *GrowByImpl(Recycler *recycler, uint32 n);

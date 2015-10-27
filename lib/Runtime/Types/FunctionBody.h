@@ -3047,7 +3047,7 @@ namespace Js
         // Reset the accumulator's state and value.
         void Reset(SmallSpanSequenceIter &iter);
 
-        int Count() const { return pStatementBuffer ? pStatementBuffer->Count() : 0; }
+        uint32 Count() const { return pStatementBuffer ? pStatementBuffer->Count() : 0; }
 
         BOOL Item(int index, SmallSpanSequenceIter &iter, StatementData &data);
 

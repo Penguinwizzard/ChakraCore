@@ -94,7 +94,7 @@ namespace Js
         if (m_startOfStatement)
         {
             m_statementIndex++;
-            if (m_statementMap && m_statementIndex < m_statementMap->Count() && m_statementMap->Item(m_statementIndex, m_statementMapIter, data))
+            if (m_statementMap && (uint32)m_statementIndex < m_statementMap->Count() && m_statementMap->Item(m_statementIndex, m_statementMapIter, data))
             {
                 // The end boundary is the last byte of the last instruction in the previous range.
                 // We want to track the beginning of the next instruction for AtStatementBoundary.
@@ -126,7 +126,7 @@ namespace Js
         else
         {
             m_startOfStatement = true;
-            if (m_statementMap && m_statementIndex < m_statementMap->Count() && m_statementMap->Item(m_statementIndex, m_statementMapIter, data))
+            if (m_statementMap && (uint32)m_statementIndex < m_statementMap->Count() && m_statementMap->Item(m_statementIndex, m_statementMapIter, data))
             {
                 // Start a range of bytecode that maps to a user statement
                 m_nextStatementBoundary =  m_startLocation + data.bytecodeBegin;

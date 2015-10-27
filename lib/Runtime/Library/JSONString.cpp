@@ -31,21 +31,21 @@ namespace Js
     createEscapeMap(false);
     createEscapeMap(true);
     */
-    const WCHAR JSONString::escapeMap[] = { 
-        L'u', L'u', L'u', L'u', L'u', L'u', L'u', L'u', L'b', L't', L'n', L'u', L'f', 
-        L'r', L'u', L'u', L'u', L'u', L'u', L'u', L'u', L'u', L'u', L'u', L'u', L'u', 
-        L'u', L'u', L'u', L'u', L'u', L'u', L'\0', L'\0', L'"', L'\0', L'\0', L'\0', 
-        L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', 
-        L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', 
-        L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', 
-        L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', 
-        L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\\', 
-        L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', 
-        L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', 
-        L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', 
+    const WCHAR JSONString::escapeMap[] = {
+        L'u', L'u', L'u', L'u', L'u', L'u', L'u', L'u', L'b', L't', L'n', L'u', L'f',
+        L'r', L'u', L'u', L'u', L'u', L'u', L'u', L'u', L'u', L'u', L'u', L'u', L'u',
+        L'u', L'u', L'u', L'u', L'u', L'u', L'\0', L'\0', L'"', L'\0', L'\0', L'\0',
+        L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0',
+        L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0',
+        L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0',
+        L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0',
+        L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\\',
+        L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0',
+        L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0',
+        L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0', L'\0',
         L'\0', L'\0' };
 
-    const BYTE JSONString::escapeMapCount[] = 
+    const BYTE JSONString::escapeMapCount[] =
     { 5, 5, 5, 5, 5, 5, 5, 5, 1, 1, 1, 5, 1, 1, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0, 0, 1, 0, 0, 0, 0, 0
     , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
@@ -57,11 +57,16 @@ namespace Js
     JSONString* JSONString::New(JavascriptString* originalString, charcount_t start, charcount_t extraChars)
     {
         Assert(extraChars > 0);
-        JSONString* result = RecyclerNew(originalString->GetRecycler(), JSONString, originalString, start, originalString->GetLength() + extraChars + /*quotes*/ + 2);  
+        charcount_t length = UInt32Math::Add(originalString->GetLength(), UInt32Math::Add(extraChars, /*quotes*/ 2));
+        if (!IsValidCharCount(length))
+        {
+            Js::Throw::OutOfMemory();
+        }
+        JSONString* result = RecyclerNew(originalString->GetRecycler(), JSONString, originalString, start, length);
         return result;
     }
-    
-    JSONString::JSONString(Js::JavascriptString* originalString, charcount_t start, charcount_t length) : 
+
+    JSONString::JSONString(Js::JavascriptString* originalString, charcount_t start, charcount_t length) :
         JavascriptString(originalString->GetScriptContext()->GetLibrary()->GetStringTypeStatic(), length, nullptr),
         m_originalString(originalString),
         m_start(start)
@@ -93,7 +98,7 @@ namespace Js
     }
 
     void WritableStringBuffer::Append(wchar_t c)
-    {   
+    {
         *m_pszCurrentPtr = c;
         this->m_pszCurrentPtr++;
         Assert(this->GetCount() <= m_length);
@@ -103,6 +108,6 @@ namespace Js
         js_memcpy_s(m_pszCurrentPtr, sizeof(WCHAR) * countNeeded, str, sizeof(WCHAR) * countNeeded);
         this->m_pszCurrentPtr += countNeeded;
         Assert(this->GetCount() <= m_length);
-    } 
+    }
 #endif
 }

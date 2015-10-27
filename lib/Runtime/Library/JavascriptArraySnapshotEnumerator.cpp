@@ -20,17 +20,15 @@ namespace Js
 
         if (!doneArray)
         {
-            while (true)
+            uint32 lastIndex = index;
+            index = arrayObject->GetNextIndex(index);
+            if (index >= initialLength) // End of array
             {
-                uint32 lastIndex = index;
-                index = arrayObject->GetNextIndex(index);
-                if (index >= initialLength) // End of array
-                {
-                    index = lastIndex;
-                    doneArray = true;
-                    break;
-                }
-
+                index = lastIndex;
+                doneArray = true;
+            }
+            else
+            {
                 if (attributes != nullptr)
                 {
                     *attributes = PropertyEnumerable;
@@ -48,7 +46,7 @@ namespace Js
             }
             return currentIndex;
         }
-        return NULL;
+        return nullptr;
     }
 
     void JavascriptArraySnapshotEnumerator::Reset()
@@ -62,4 +60,4 @@ namespace Js
         objectEnumerator = (JavascriptEnumerator*)enumerator;
         initialLength = arrayObject->GetLength();
     }
-} 
+}

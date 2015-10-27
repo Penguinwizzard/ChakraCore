@@ -6,7 +6,10 @@
 
 namespace Js
 {
-    CharStringCache::CharStringCache() : charStringCache(nullptr) { memset(charStringCacheA, 0, sizeof charStringCacheA); }
+    CharStringCache::CharStringCache() : charStringCache(nullptr)
+    {
+        memset(charStringCacheA, 0, sizeof charStringCacheA);
+    }
 
     JavascriptString* CharStringCache::GetStringForCharA(char c)
     {
@@ -41,7 +44,7 @@ namespace Js
     }
 
     JavascriptString* CharStringCache::GetStringForCharW(wchar_t c)
-    {        
+    {
         Assert(!JavascriptString::IsASCII7BitChar(c));
         JavascriptString* str;
         ScriptContext * scriptContext = JavascriptLibrary::FromCharStringCache(this)->GetScriptContext();
@@ -68,10 +71,12 @@ namespace Js
     JavascriptString* CharStringCache::GetStringForCharSP(codepoint_t c)
     {
         Assert(c >= 0x10000);
+        CompileAssert(sizeof(wchar_t) * 2 == sizeof(codepoint_t));
         wchar_t buffer[2];
+
         Js::NumberUtilities::CodePointAsSurrogatePair(c, buffer, buffer + 1);
         JavascriptString* str = JavascriptString::NewCopyBuffer(buffer, 2, JavascriptLibrary::FromCharStringCache(this)->GetScriptContext());
         // TODO: perhaps do some sort of cache for supplementary characters
         return str;
-    }    
+    }
 };

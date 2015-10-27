@@ -12,36 +12,30 @@
 
 class Math
 {
-    static volatile UINT_PTR        RandSeed;
+    static volatile UINT_PTR RandSeed;
 
 public:
 
-    template <typename T>
-    static      T                   Align(T size, T alignment)
-    {
-        return ((size + (alignment-1)) & ~(alignment-1));
-    }
-
     // Explicit cast to integral (may truncate).  Avoids warning C4302 'type cast': truncation
     template <typename T>
-    static      T                   PointerCastToIntegralTruncate(void * pointer)
+    static T PointerCastToIntegralTruncate(void * pointer)
     {
         return (T)(uintptr)pointer;
     }
 
     // Explicit cast to integral. Assert that it doesn't truncate.  Avoids warning C4302 'type cast': truncation
     template <typename T>
-    static      T                   PointerCastToIntegral(void * pointer)
+    static T PointerCastToIntegral(void * pointer)
     {
         T value = PointerCastToIntegralTruncate<T>(pointer);
         Assert((uintptr)value == (uintptr)pointer);
         return value;
     }
 
-    static      bool                FitsInDWord(size_t value);
-    static      UINT_PTR            Rand();
-    static      bool                IsPow2(int32 val) { return (val > 0 && ((val-1) & val) == 0); }
-    static      uint32              NextPowerOf2(uint32 n);
+    static bool     FitsInDWord(size_t value);
+    static UINT_PTR Rand();
+    static bool     IsPow2(int32 val) { return (val > 0 && ((val-1) & val) == 0); }
+    static uint32   NextPowerOf2(uint32 n);
 
     // Use for compile-time evaluation of powers of 2
     template<uint32 val> struct Is
@@ -85,5 +79,29 @@ public:
             return fOverflow;
         }
     };
+
+    template <typename T>
+    static T Align(T size, T alignment)
+    {
+        return ((size + (alignment-1)) & ~(alignment-1));
+    }
+
+    template <typename T, class Func>
+    static T AlignOverflowCheck(T size, T alignment, __inout Func& overflowFn)
+    {
+        Assert(size >= 0);
+        T alignSize = Align(size, alignment);
+        if (alignSize < size)
+        {
+            overflowFn();
+        }
+        return alignSize;
+    }
+
+    template <typename T>
+    static T AlignOverflowCheck(T size, T alignment)
+    {
+        return AlignOverflowCheck(size, alignment, DefaultOverflowPolicy);
+    }
 
 };

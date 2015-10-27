@@ -5246,7 +5246,7 @@ Case0:
                 {
                     int32 nativeResult = ((SparseArraySegment<int32>*)pArr->head)->GetElement(0);
 
-                    if(nativeResult == SparseArraySegment<int32>::GetMissingItem())
+                    if(SparseArraySegment<int32>::IsMissingItem(&nativeResult))
                     {
                         res = scriptContext->GetLibrary()->GetUndefined();
                     }
@@ -5260,7 +5260,7 @@ Case0:
                 {
                     double nativeResult = ((SparseArraySegment<double>*)pArr->head)->GetElement(0);
 
-                    if(nativeResult == SparseArraySegment<double>::GetMissingItem())
+                    if(SparseArraySegment<double>::IsMissingItem(&nativeResult))
                     {
                         res = scriptContext->GetLibrary()->GetUndefined();
                     }
@@ -5274,7 +5274,7 @@ Case0:
                 {
                     res = ((SparseArraySegment<Var>*)pArr->head)->GetElement(0);
 
-                    if(res == SparseArraySegment<Var>::GetMissingItem())
+                    if(SparseArraySegment<Var>::IsMissingItem(&res))
                     {
                         res = scriptContext->GetLibrary()->GetUndefined();
                     }

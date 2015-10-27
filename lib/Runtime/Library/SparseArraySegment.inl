@@ -14,16 +14,17 @@ namespace Js
 
     template<typename T>
     template<bool isLeaf>
-    SparseArraySegment<T> * SparseArraySegment<T>::Allocate(Recycler* recycler, uint32 left, uint32 length, uint32 size)
+    SparseArraySegment<T> * SparseArraySegment<T>::Allocate(Recycler* recycler, uint32 left, uint32 length, uint32 size, uint32 fillStart /*= 0*/)
     {
         Assert(length <= size);
         Assert(size <= JavascriptArray::MaxArrayLength - left);
 
-        SparseArraySegment<T> *seg = 
-            isLeaf ? 
-            AllocatorNewPlusLeafZ(Recycler, recycler, size * sizeof(T), SparseArraySegment<T>, left, length, size) :
-            AllocatorNewPlusZ(Recycler, recycler, size * sizeof(T), SparseArraySegment<T>, left, length, size); 
-        seg->FillSegmentBuffer(0, size);
+        uint32 bufferSize = UInt32Math::Mul<sizeof(T)>(size);
+        SparseArraySegment<T> *seg =
+            isLeaf ?
+            RecyclerNewPlusLeafZ(recycler, bufferSize, SparseArraySegment<T>, left, length, size) :
+            RecyclerNewPlusZ(recycler, bufferSize, SparseArraySegment<T>, left, length, size);
+        seg->FillSegmentBuffer(fillStart, size);
 
         return seg;
     }
@@ -67,14 +68,8 @@ namespace Js
         const uint32 length)
     {
         Assert(length != 0);
-
         const uint32 size = GetAlignedSize(length);
-        SparseArraySegment<T> *const head =
-            isLeaf ?
-            RecyclerNewPlusLeafZ(recycler, size * sizeof(T), SparseArraySegment<T>, 0, length, size) :
-            RecyclerNewPlusZ(recycler, size * sizeof(T), SparseArraySegment<T>, 0, length, size);
-        head->FillSegmentBuffer(length, size);
-        return head;
+        return SparseArraySegment<T>::Allocate<isLeaf>(recycler, 0, length, size, length);
     }
 
     template<>
@@ -114,7 +109,7 @@ namespace Js
         {
             size = GetAlignedSize(CHUNK_SIZE);
         }
-        else 
+        else
         {
             size = GetAlignedSize(length);
         }
@@ -162,7 +157,7 @@ namespace Js
         {
             size = GetAlignedSize(CHUNK_SIZE);
         }
-        else 
+        else
         {
             size = GetAlignedSize(size);
         }
@@ -182,7 +177,7 @@ namespace Js
         }
         return AllocateSegmentImpl<false>(recycler, prev, index);
     }
-    
+
     template<>
     SparseArraySegment<double>* SparseArraySegment<double>::AllocateSegment(Recycler* recycler, SparseArraySegmentBase* prev, uint32 index)
     {
@@ -192,7 +187,7 @@ namespace Js
         }
         return AllocateSegmentImpl<false>(recycler, prev, index);
     }
-    
+
     template<typename T>
     SparseArraySegment<T>* SparseArraySegment<T>::AllocateSegment(Recycler* recycler, SparseArraySegmentBase* prev, uint32 index)
     {
@@ -229,7 +224,7 @@ namespace Js
     }
 
     template<typename T>
-    void SparseArraySegment<T>::FillSegmentBuffer(uint start, uint size)
+    void SparseArraySegment<T>::FillSegmentBuffer(uint32 start, uint32 size)
     {
         // Fill the segment buffer using gp-register-sized stores. Avoid using the FPU for the sake
         // of perf (especially x86).
@@ -238,7 +233,7 @@ namespace Js
         {
             // Pointer size is greater than the element (int32 buffer on x64).
             // Fill as much as we can and do one int32-sized store at the end if necessary.
-            uint i, step = sizeof(Var) / sizeof(T);
+            uint32 i, step = sizeof(Var) / sizeof(T);
             if (start & 1)
             {
                 Assert(sizeof(T) == sizeof(int32));
@@ -257,7 +252,9 @@ namespace Js
         else
         {
             // Pointer size <= element size. Fill with pointer-sized stores.
+            Assert(sizeof(T) % sizeof(Var) == 0);
             uint step = sizeof(T) / sizeof(Var);
+
             for (uint i = start; i < size * step; i++)
             {
                 ((Var*)(this->elements))[i] = fill;
@@ -284,8 +281,8 @@ namespace Js
     template<typename T>
     SparseArraySegment<T> *SparseArraySegment<T>::SetElementGrow(Recycler *recycler, SparseArraySegmentBase* prev, uint32 index, T value)
     {
-        AssertMsg((index + 1) == left || index == (left + size), "Invalid index!");
-        
+        AssertMsg((index + 1) == left || index == (left + size), "Index out of range");
+
         uint32 offset = index - left;
         SparseArraySegment<T> *current = this;
 
@@ -313,7 +310,7 @@ namespace Js
             current->elements[offset] = value;
             current->length =  offset + 1;
         }
-        else 
+        else
         {
             AssertMsg(false, "Invalid call to SetElementGrow");
         }
@@ -330,7 +327,7 @@ namespace Js
 
     // This is a very inefficient function, we have to move element
     template<typename T>
-    void SparseArraySegment<T>::RemoveElement(Recycler *recycler, uint32 index) 
+    void SparseArraySegment<T>::RemoveElement(Recycler *recycler, uint32 index)
     {
         AssertMsg(index >= left && index < left + length, "Index is out of the segment range");
         if (index + 1 < left + length)
@@ -339,24 +336,24 @@ namespace Js
         }
         Assert(length);
         length--;
-        elements[length] = SparseArraySegment<T>::GetMissingItem(); 
+        elements[length] = SparseArraySegment<T>::GetMissingItem();
     }
-    
+
 
     template<typename T>
-    SparseArraySegment<T>* SparseArraySegment<T>::CopySegment(Recycler *recycler, SparseArraySegment<T>* dst, uint32 dstIndex, SparseArraySegment<T>* src, uint32 srcIndex, uint32 inputLen) 
+    SparseArraySegment<T>* SparseArraySegment<T>::CopySegment(Recycler *recycler, SparseArraySegment<T>* dst, uint32 dstIndex, SparseArraySegment<T>* src, uint32 srcIndex, uint32 inputLen)
     {
         AssertMsg(src != nullptr && dst != nullptr, "Null input!");
- 
+
         uint32 newLen = dstIndex - dst->left + inputLen;
-        if (newLen > dst->size) 
+        if (newLen > dst->size)
         {
-            dst = dst->GrowBy(recycler, newLen - dst->size); 
+            dst = dst->GrowBy(recycler, newLen - dst->size);
         }
         dst->length = newLen;
         Assert(dst->length <= dst->size);
-        AssertMsg(srcIndex - src->left >= 0,"src->left > srcIndex resulting in negative indexing of src->elements"); 
-        js_memcpy_s(dst->elements + dstIndex - dst->left, sizeof(T) * inputLen, src->elements + srcIndex - src->left, sizeof(T) * inputLen);  
+        AssertMsg(srcIndex - src->left >= 0,"src->left > srcIndex resulting in negative indexing of src->elements");
+        js_memcpy_s(dst->elements + dstIndex - dst->left, sizeof(T) * inputLen, src->elements + srcIndex - src->left, sizeof(T) * inputLen);
         return dst;
     }
 
@@ -426,14 +423,16 @@ namespace Js
         Assert(length <= size);
         Assert(n != 0);
 
-        if (size + n <= size)
+        uint32 newSize = size + n;
+        if (newSize <= size)
         {
             Throw::OutOfMemory();
         }
 
-        SparseArraySegment<T> *newSeg = Allocate<isLeaf>(recycler, left, length, size + n);
+        SparseArraySegment<T> *newSeg = Allocate<isLeaf>(recycler, left, length, newSize);
         newSeg->next = this->next;
-        js_memcpy_s(newSeg->elements, sizeof(T) * length, this->elements, sizeof(T) * length);
+        // (sizeof(T) * newSize) will throw OOM in Allocate if it overflows.
+        js_memcpy_s(newSeg->elements, sizeof(T) * length, this->elements, sizeof(T) * newSize);
 
         return newSeg;
     }
@@ -501,7 +500,7 @@ namespace Js
     }
 
     template<typename T>
-    void SparseArraySegment<T>::Truncate(uint32 index) 
+    void SparseArraySegment<T>::Truncate(uint32 index)
     {
         AssertMsg(index >= left && (index - left) < size, "Index out of range");
 
@@ -511,7 +510,7 @@ namespace Js
             length = index - left;
         }
         Assert(length <= size);
-    }    
+    }
 
 
     template<typename T>

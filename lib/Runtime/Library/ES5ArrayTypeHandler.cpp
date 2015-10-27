@@ -237,7 +237,7 @@ namespace Js
             // here.
             instance->GetScriptContext()->optimizationOverrides.DisableArraySetElementFastPath();
         }
-        
+
         JavascriptLibrary::CheckAndConvertCopyOnAccessNativeIntArray<Var>(instance);
         JavascriptArray * arrayInstance = JavascriptArray::EnsureNonNativeArray(JavascriptArray::FromVar(instance));
 #if DBG
@@ -442,8 +442,8 @@ namespace Js
 
         // We don't track non-enumerable items in object array.  Objects with an object array
         // report having enumerable properties.  See DynamicObject::GetHasNoEnumerableProperties.
-        // Array objects (which don't have an object array, and could report their hasNoEnumerableProperties 
-        // directly) take an explicit type transition before switching to ES5ArrayTypeHandler, so their 
+        // Array objects (which don't have an object array, and could report their hasNoEnumerableProperties
+        // directly) take an explicit type transition before switching to ES5ArrayTypeHandler, so their
         // hasNoEnumerableProperties flag gets cleared.
         Assert(!arr->GetHasNoEnumerableProperties());
 
@@ -583,8 +583,9 @@ namespace Js
 
         if (arr->GetLength() <= index)
         {
-            Assert(index < JavascriptArray::MaxArrayLength); // Assert no overflow.
-            arr->SetLength(index + 1);
+            uint32 newLength = index;
+            UInt32Math::Inc(newLength);
+            arr->SetLength(newLength);
         }
 
         this->ClearHasOnlyWritableDataProperties();
@@ -883,7 +884,7 @@ namespace Js
         Assert(first < arr->GetLength()); // Only called when newLen < oldLen
 
         // If the number of elements to be deleted is small, iterate on it.
-        int count = arr->GetLength() - first;
+        uint32 count = arr->GetLength() - first;
         if (count < 5)
         {
             uint32 oldLen = arr->GetLength();
@@ -1317,7 +1318,7 @@ namespace Js
     }
 
     template <class T>
-    uint32 ES5ArrayTypeHandlerBase<T>::GetNextDescriptor(uint32 key, IndexPropertyDescriptor** descriptor, void ** descriptorValidationToken) 
+    uint32 ES5ArrayTypeHandlerBase<T>::GetNextDescriptor(uint32 key, IndexPropertyDescriptor** descriptor, void ** descriptorValidationToken)
     {
         return indexPropertyMap->GetNextDescriptor(key, descriptor, descriptorValidationToken);
     }

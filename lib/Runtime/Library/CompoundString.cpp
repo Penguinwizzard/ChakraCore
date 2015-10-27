@@ -352,11 +352,10 @@ namespace Js
     CharCount CompoundString::BlockInfo::AlignCharCapacityForAllocation(const CharCount charCapacity)
     {
         const CharCount alignedCharCapacity =
-            ::Math::Align(
+            ::Math::AlignOverflowCheck(
                 charCapacity == 0 ? static_cast<CharCount>(1) : charCapacity,
                 static_cast<CharCount>(HeapConstants::ObjectGranularity / sizeof(wchar_t)));
         Assert(alignedCharCapacity != 0);
-        Assert(alignedCharCapacity >= charCapacity);
         return alignedCharCapacity;
     }
 
@@ -365,7 +364,7 @@ namespace Js
         Assert(charCapacity != 0);
         Assert(AlignCharCapacityForAllocation(charCapacity) == charCapacity);
 
-        const CharCount newCharCapacity = charCapacity << 1;
+        const CharCount newCharCapacity = UInt32Math::Mul<2>(charCapacity);
         Assert(newCharCapacity > charCapacity);
         return newCharCapacity;
     }
@@ -406,7 +405,7 @@ namespace Js
         {
             AllocateBuffer(charCapacity, recycler);
             charLength = usedCharLength;
-            js_wmemcpy_s((wchar_t*)(this->buffer), usedCharLength, (wchar_t*)(buffer), usedCharLength);
+            js_wmemcpy_s((wchar_t*)(this->buffer), charCapacity, (wchar_t*)(buffer), usedCharLength);
             return nullptr;
         }
 
@@ -425,7 +424,7 @@ namespace Js
             void *const newBuffer = RecyclerNewArray(recycler, wchar_t, newCharCapacity);
             charCapacity = newCharCapacity;
             const CharCount charLength = CharLength();
-            js_wmemcpy_s((wchar_t*)newBuffer, charLength, (wchar_t*)buffer, charLength);
+            js_wmemcpy_s((wchar_t*)newBuffer, charCapacity, (wchar_t*)buffer, charLength);
             buffer = newBuffer;
             return nullptr;
         }

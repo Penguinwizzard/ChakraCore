@@ -4,7 +4,7 @@
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
 
-namespace Js 
+namespace Js
 {
     DEFINE_RECYCLER_TRACKER_PERF_COUNTER(SubString);
 
@@ -54,7 +54,7 @@ namespace Js
         return RecyclerNew(recycler, SubString, string, string + start, length, scriptContext);
     }
 
-    const wchar_t* SubString::GetSz()  
+    const wchar_t* SubString::GetSz()
     {
         if (originalFullStringReference)
         {
@@ -69,7 +69,7 @@ namespace Js
         return UnsafeGetBuffer();
     }
 
-    const void * SubString::GetOriginalStringReference() 
+    const void * SubString::GetOriginalStringReference()
     {
         if (originalFullStringReference != nullptr)
         {
@@ -89,7 +89,7 @@ namespace Js
 
     bool SubString::IsSubstring() const
     {
-        if (originalFullStringReference) 
+        if (originalFullStringReference)
         {
             return true;
         }

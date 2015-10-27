@@ -9,7 +9,7 @@ class SAChunk
 {
 public:
     SAChunk<T> *        next;
-    int                 startIndex;
+    uint32              startIndex;
     T *                 data[];
 };
 
@@ -19,30 +19,33 @@ class SparseArray
 {
 private:
     ArenaAllocator *    alloc;
-    int                 chunkSize;
+    uint32              chunkSize;
     SAChunk<T> *        firstChunk;
 
 public:
-    static SparseArray<T> * New(ArenaAllocator *allocator, int chunkSize)
+    static SparseArray<T> * New(ArenaAllocator *allocator, uint32 chunkSize)
     {
         SparseArray<T> * array;
 
-        array = Anew(allocator, SparseArray<T>);
-        array->alloc = allocator;
         if (!Math::IsPow2(chunkSize))
         {
             chunkSize = Math::NextPowerOf2(chunkSize);
         }
+
+        // Throw early if this overflows, since chunkSize never changes, subsequent operations will be safe
+        UInt32Math::MulAdd<sizeof(T*), sizeof(SAChunk<T>)>(chunkSize);
+        array = Anew(allocator, SparseArray<T>);
+        array->alloc = allocator;
         array->chunkSize = chunkSize;
         array->firstChunk = NULL;
 
         return array;
     }
 
-    void Set(int index, T *element) 
+    void Set(uint32 index, T *element)
     {
         SAChunk<T> * chunk, **pPrev = &(this->firstChunk);
-        int indexInChunk = (index % this->chunkSize);
+        uint32 indexInChunk = (index % this->chunkSize);
 
         for (chunk = this->firstChunk; chunk; chunk = chunk->next)
         {
@@ -63,16 +66,19 @@ public:
         {
             chunk = (SAChunk<T> *)this->alloc->AllocZero(sizeof(SAChunk<T>) + (chunkSize * sizeof(T *)));
             chunk->startIndex = index - indexInChunk;
+            // Since startIndex and chunkSize don't change, check now if this overflows.
+            // Cache the result or save memory ?
+            UInt32Math::Add(chunk->startIndex, chunkSize);
             chunk->next = *pPrev;
             *pPrev = chunk;
         }
         chunk->data[indexInChunk] = element;
     }
 
-    T * Get(int index)
+    T * Get(uint32 index)
     {
         SAChunk<T> * chunk;
-        int indexInChunk = (index % this->chunkSize);
+        uint32 indexInChunk = (index % this->chunkSize);
 
         for (chunk = this->firstChunk; chunk; chunk = chunk->next)
         {
