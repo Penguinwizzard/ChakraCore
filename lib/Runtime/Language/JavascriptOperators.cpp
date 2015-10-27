@@ -4360,6 +4360,11 @@ CommonNumber:
             return false;
         }
 
+        if (srcStart != dstStart)
+        {
+            return false;
+        }
+
         BOOL  returnValue = false;
         switch (instanceType)
         {

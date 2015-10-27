@@ -259,6 +259,8 @@ namespace Js
             TypeName* srcBuffer = (TypeName*)fromArray->buffer;
             Assert(srcBuffer && dstBuffer);
             Assert(length <= ArrayBuffer::MaxArrayBufferLength / sizeof(TypeName));
+            // caller checks that src and dst index are the same
+            Assert(iSrcStart == iDstStart);
 
             if (this->IsDetachedBuffer() || fromArray->IsDetachedBuffer())
             {
@@ -266,7 +268,7 @@ namespace Js
             }
 
             // Fixup destination start in case it's negative
-            uint32 dstStart = iDstStart;
+            uint32 start = iDstStart;
             if (iDstStart < 0)
             {
                 if ((int64)(length) + iDstStart < 0)
@@ -275,44 +277,19 @@ namespace Js
                     return true;
                 }
 
-                // negative index are no-op on TypedArrays
-                if (Int32Math::Sub(iSrcStart, iDstStart, &iSrcStart))
-                {
-                    ::Math::DefaultOverflowPolicy();
-                }
                 length += iDstStart;
-                dstStart = 0;
+                start = 0;
             }
 
-            uint32 dstLength = UInt32Math::Add(dstStart, length) < GetLength() ? length : GetLength() > dstStart ? GetLength() - dstStart : 0;
-
-            // Fixup source start in case it's negative
-            uint32 srcStart = iSrcStart;
-            // Place undefined when reading negative index from the source
-            if (iSrcStart < 0)
-            {
-                TypeName undefinedValue = convFunc(GetLibrary()->GetUndefined(), GetScriptContext());
-                for (int32 i = 0; i < -iSrcStart && dstLength > 0; ++i)
-                {
-                    dstBuffer[dstStart++] = undefinedValue;
-                    --dstLength;
-                }
-                if ((int64)(length) + iSrcStart < 0)
-                {
-                    // all read operation we're undefined, no need to continue
-                    return true;
-                }
-                length -= iSrcStart;
-                srcStart = 0;
-            }
-            uint32 srcLength = UInt32Math::Add(srcStart, length) < fromArray->GetLength() ? length : (fromArray->GetLength() > srcStart ? fromArray->GetLength() - srcStart : 0);
+            uint32 dstLength = UInt32Math::Add(start, length) < GetLength() ? length : GetLength() > start ? GetLength() - start : 0;
+            uint32 srcLength = start + length < fromArray->GetLength() ? length : (fromArray->GetLength() > start ? fromArray->GetLength() - start : 0);
 
             // length is the minimum of length, srcLength and dstLength
             length = length < srcLength ? (length < dstLength ? length : dstLength) : (srcLength < dstLength ? srcLength : dstLength);
 
             const size_t byteSize = sizeof(TypeName) * length;
             Assert(byteSize >= length); // check for overflow
-            js_memcpy_s(dstBuffer + dstStart, byteSize, srcBuffer + srcStart, byteSize);
+            js_memcpy_s(dstBuffer + start, dstLength * sizeof(TypeName), srcBuffer + start, byteSize);
 
             if (dstLength > length)
             {
