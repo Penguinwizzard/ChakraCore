@@ -432,7 +432,7 @@ namespace Js
         SparseArraySegment<T> *newSeg = Allocate<isLeaf>(recycler, left, length, newSize);
         newSeg->next = this->next;
         // (sizeof(T) * newSize) will throw OOM in Allocate if it overflows.
-        js_memcpy_s(newSeg->elements, sizeof(T) * length, this->elements, sizeof(T) * newSize);
+        js_memcpy_s(newSeg->elements, sizeof(T) * newSize, this->elements, sizeof(T) * length);
 
         return newSeg;
     }
