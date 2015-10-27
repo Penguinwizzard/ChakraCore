@@ -6817,6 +6817,7 @@ namespace Js
 #if DBG
     void JavascriptLibrary::DumpLibraryByteCode()
     {
+#ifdef ENABLE_INTL_OBJECT
         // We aren't going to be passing in a number to check range of -dump:LibInit, that will be done by Intl/Promise
         // This is just to force init Intl code if dump:LibInit has been passed
         if (CONFIG_ISENABLED(DumpFlag) && Js::Configuration::Global.flags.Dump.IsEnabled(Js::JsLibInitPhase))
@@ -6830,6 +6831,7 @@ namespace Js
                 }
             }
         }
+#endif
     }
 #endif
 #ifdef IR_VIEWER

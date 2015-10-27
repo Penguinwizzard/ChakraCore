@@ -6,7 +6,6 @@
 
 namespace Js
 {
-    /*static*/
     PropertyId ArrayBuffer::specialPropertyIds[] =
     {
         PropertyIds::byteLength
@@ -744,7 +743,6 @@ namespace Js
         stringBuilder->AppendCppLiteral(L"[object ArrayBuffer]");
         return TRUE;
     }
-
 
 
     JavascriptArrayBuffer::JavascriptArrayBuffer(uint32 length, DynamicType * type) :

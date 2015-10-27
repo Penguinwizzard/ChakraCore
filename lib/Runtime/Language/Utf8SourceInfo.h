@@ -45,7 +45,7 @@ namespace Js
             return this->debugModeSource != nullptr || this->debugModeSourceIsEmpty;
         }
 
-        // For Hybrid debugging purposes we need to have the source mapped in because jscript9 may be in a frozen state when the source would be needed.
+        // For Hybrid debugging purposes we need to have the source mapped in because chakra may be in a frozen state when the source would be needed.
         void SetInDebugMode(bool inDebugMode)
         {
             AssertMsg(this->sourceHolder != nullptr, "We have no source holder.");

@@ -146,7 +146,8 @@ namespace Js
         BYTE  *buffer;             // Points to a heap allocated RGBA buffer, can be null
         uint32 bufferLength;       // Number of bytes allocated
 
-        // When an ArrayBuffer is detached, the TypedArray and DataView objects pointing to it must be made aware, for this purpose the ArrayBuffer needs to hold WeakReferences to them
+        // When an ArrayBuffer is detached, the TypedArray and DataView objects pointing to it must be made aware, 
+        // for this purpose the ArrayBuffer needs to hold WeakReferences to them
         bool isDetached;
         bool mIsAsmJsBuffer;
         bool isBufferCleared;

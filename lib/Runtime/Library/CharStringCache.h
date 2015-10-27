@@ -13,7 +13,6 @@ namespace Js
         JavascriptString* GetStringForCharA(char c);    // ASCII 7-bit
         JavascriptString* GetStringForCharW(wchar_t c); // Unicode
         JavascriptString* GetStringForChar(wchar_t c);  // Either
-
         JavascriptString* GetStringForCharSP(codepoint_t c); // Supplementary char
 
         // For JIT

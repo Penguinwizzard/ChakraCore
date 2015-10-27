@@ -1486,14 +1486,14 @@ void ValueType::ToVerboseString(char (&str)[VALUE_TYPE_MAX_STRING_SIZE]) const
     if(OneOn(Bits::Object))
     {
         // Exclude the object type for enumerating bits, and exclude bits specific to a different object type
-        b = _objectBits /*& ~Bits::CanBeTaggedValue*/;
+        b = _objectBits;
         if(IsLikelyArrayOrObjectWithArray())
             b &= ~(Bits::NonInts | Bits::NonFloats); // these are handled separately for better readability
         else
             b &= ~BitPattern(VALUE_TYPE_ARRAY_BIT_COUNT, VALUE_TYPE_COMMON_BIT_COUNT);
     }
     else if(!CONFIG_FLAG(Verbose))
-        b &= ~(Bits::IntCanBeUntagged | Bits::IntIsLikelyUntagged /*| Bits::CanBeTaggedValue*/); // these will be simplified
+        b &= ~(Bits::IntCanBeUntagged | Bits::IntIsLikelyUntagged); // these will be simplified
     size_t length = 0;
     bool addUnderscore = false;
     size_t nameIndexOffset = 0;

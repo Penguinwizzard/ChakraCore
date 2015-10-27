@@ -26,7 +26,7 @@ namespace Js
 
         // Only used by the vtable ctor for ForInObjectEnumeratorWrapper
         friend class ForInObjectEnumeratorWrapper;
-        ForInObjectEnumerator() { /* do nothing */ }
+        ForInObjectEnumerator() { }
 
     public:
         ForInObjectEnumerator(RecyclableObject* object, ScriptContext * requestContext, bool enumSymbols = false);

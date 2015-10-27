@@ -1268,7 +1268,6 @@ Error:
             {
                 goto LError;
             }
-            //Assert(lwT >= 0);
 
             // skip to the next real character
             while (0 != (ch = *pch) && (ch <= ' ' || classifier->IsBiDirectionalChar(ch)))
@@ -1716,7 +1715,6 @@ LError:
         switch (dd)
         {
         case DateData::Year:
-            // Assert(count == 1);
             if (rgdbl[0] < 100 && rgdbl[0] >= 0)
                 rgdbl[0] += 1900;
             // fall-through
@@ -1769,7 +1767,6 @@ LError:
             // fall-through
         case DateData::Milliseconds:
             tv += rgdbl[ivar] - pymd->time % 1000;
-            // Assert(ivar + 1 == count);
             break;
         default:
             AssertMsg(false, "DataData type invalid");

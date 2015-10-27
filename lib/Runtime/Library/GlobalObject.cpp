@@ -257,7 +257,6 @@ namespace Js
             scriptContext = scriptContext->next)
         {
             if (scriptContext->IsClosed()) continue;
-            // if (scriptContext == originalScriptContext) continue;  // uncomment to ignore the originalScriptContext
 
             //
             // get count of functions in all files in script context

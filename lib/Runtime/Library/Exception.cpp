@@ -33,8 +33,6 @@ namespace Js
     // Recover/Release unused memory and give it back to OS.
     // The function doesn't throw if the attempt to recover memory fails, in which case it simply does nothing.
     // Useful when running out of memory e.g. for Arena but there is some recycler memory which has been committed but is unused.
-    //
-    // static
     void Exception::RecoverUnusedMemory()
     {
         ThreadContext* threadContext = ThreadContext::GetContextForCurrentThread();

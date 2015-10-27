@@ -46,8 +46,7 @@ namespace Js
         static const uint               UninitializedValue          = (uint)-1;
         static const ArgSlot            InvalidArgSlot              = (ArgSlot)-1;
         static const uint32             InvalidSymID = (uint32)-1;
-        // TODO: figure out a way for IE to reserve a contiguous, persistent range of type IDs
-        // first 1024 are for JS. next 1024 are for IE.
+
         static const int ReservedTypeIds = 2048;
 
         // 1 MEM_RESERVE page at the bottom of the stack
@@ -104,11 +103,7 @@ namespace Js
         static const unsigned ExtraStack = 2 * 0x0400 * WIN64_STACK_FACTOR;
 
 #if _M_IX86_OR_ARM32
-        // Win8 #989716: Allow the UI thread JIT code to grow quite a bit. 
-        // This value should be tuned once we are capable of collecting unused JIT code
         static const unsigned MaxThreadJITCodeHeapSize = 28 * 1024 * 1024;
-        // Size for 16 workers/threads of fairly big web app (Google Mail takes 3+MB) + 7MB for UI thread.
-        // For details, refer to Win8 bug 369709.
         static const unsigned MaxProcessJITCodeHeapSize = 55 * 1024 * 1024;
 #elif _M_X64_OR_ARM64
         // larger address space means we can keep this higher on 64 bit architectures
@@ -143,8 +138,6 @@ namespace Js
         static const uint InlineeMetaArgIndex_Argv            = 3;
         static const uint InlineeMetaArgCount                 = 3;
 
-        // TODO it looks like the VS14 CTP1 will support in-class initialization of static const non-integral types
-        // also looks like we will have constexpr keyword support so we should revisit these const string inits and fix it accordingly
         static const  wchar_t AnonymousFunction[];
         static const  wchar_t AnonymousCode[];
         static const  wchar_t Anonymous[];            // Used in the function created due to new Function

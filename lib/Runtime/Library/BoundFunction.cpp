@@ -100,7 +100,7 @@ namespace Js
         }
     }
 
-    /*static*/ BoundFunction* BoundFunction::New(ScriptContext* scriptContext, ArgumentReader args)
+    BoundFunction* BoundFunction::New(ScriptContext* scriptContext, ArgumentReader args)
     {
         Recycler* recycler = scriptContext->GetRecycler();
 
