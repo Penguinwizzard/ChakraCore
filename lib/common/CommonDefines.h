@@ -64,10 +64,12 @@
 
 #if defined(_M_IX86) || defined(_M_ARM)
 #define _M_IX86_OR_ARM32 1
+#define TARGET_32 1
 #endif
 
 #if defined(_M_X64) || defined(_M_ARM64)
 #define _M_X64_OR_ARM64 1
+#define TARGET_64 1
 #endif
 
 //----------------------------------------------------------------------------------------------------
@@ -110,7 +112,7 @@
 #endif
 
 #ifdef NTBUILD
-#define ENABLE_PROJECTION 
+#define ENABLE_PROJECTION
 #define ENABLE_FOUNDATION_OBJECT
 #define ENABLE_EXPERIMENTAL_FLAGS
 #define ENABLE_WININET_PROFILE_DATA_CACHE

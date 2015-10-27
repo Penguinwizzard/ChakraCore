@@ -30,11 +30,12 @@ Math::Rand()
     unsigned int rand;
     rand_s(&rand);
     UINT_PTR newRand = static_cast<UINT_PTR>(rand);
-    if (sizeof(UINT_PTR) == 8)
-    {
-        rand_s(&rand);
-        newRand |= static_cast<UINT_PTR>(rand) << 32;
-    }
+
+#if TARGET_64
+    rand_s(&rand);
+    newRand |= static_cast<UINT_PTR>(rand) << 32;
+#endif
+
     return newRand;
 }
 
