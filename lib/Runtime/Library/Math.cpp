@@ -88,15 +88,27 @@ namespace Js
 #endif
                 return JavascriptNumber::ToVar(result, scriptContext);
             }
-
+            
             double x = JavascriptConversion::ToNumber(args[1], scriptContext);
-            double result = ::fabs(x);
+
+            double result = Math::Abs(x);
             return JavascriptNumber::ToVarNoCheck(result, scriptContext);
         }
         else
         {
             return scriptContext->GetLibrary()->GetNaN();
         }
+    }
+
+    double Math::Abs(double x)
+    {
+        // ::fabs if linked from UCRT changes FPU ctrl word for NaN input
+        if (NumberUtilities::IsNan(x))
+        {
+            // canonicalize to 0xFFF8000..., so we can tag correctly on x64.
+            return NumberConstants::NaN;
+        }
+        return ::fabs(x);
     }
 
     ///----------------------------------------------------------------------------
@@ -931,7 +943,7 @@ LDone:
             // Result is 1 even if x is NaN.
             result = 1;
         }
-        else if( 1.0 == fabs( x ) && !NumberUtilities::IsFinite( y ) )
+        else if( 1.0 == Math::Abs( x ) && !NumberUtilities::IsFinite( y ) )
         {
             result = JavascriptNumber::NaN;
         }
@@ -1549,7 +1561,7 @@ LDone:
             {
                 return JavascriptNumber::ToVarNoCheck(ucrtC99MathApis->atanh(x), scriptContext);
             }
-            else if (::fabs(x) < 1.0)
+            else if (Math::Abs(x) < 1.0)
             {
                 double result = (JavascriptNumber::IsNegZero(x)) ? x : Math::Log((1.0 + x) / (1.0 - x)) / 2.0;
 
@@ -1609,13 +1621,9 @@ LDone:
             {
                 result = JavascriptNumber::POSITIVE_INFINITY;
             }
-            else if (JavascriptNumber::IsNan(x1))
-            {
-                result = JavascriptNumber::NaN;
-            }
             else
             {
-                result = ::fabs(x1);
+                result = Math::Abs(x1);
             }
         }
         else if (args.Info.Count == 3)
@@ -1673,7 +1681,7 @@ LDone:
                 }
                 else
                 {
-                    doubleVal = ::fabs(doubleVal);
+                    doubleVal = Math::Abs(doubleVal);
                     if (scale < doubleVal)
                     {
                         sum = sum * (scale / doubleVal) * (scale / doubleVal) + 1; /* scale/scale === 1*/

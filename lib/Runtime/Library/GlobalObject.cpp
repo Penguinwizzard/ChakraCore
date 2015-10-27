@@ -1170,7 +1170,7 @@ namespace Js
                 double value = JavascriptNumber::GetValue(args[1]);
 
                 // make sure we are in the ranges that don't have exponential notation.
-                double absValue = ::fabs(value);
+                double absValue = Math::Abs(value);
                 if (absValue < 1.0e21 && absValue >= 1e-5)
                 {
                     double result;

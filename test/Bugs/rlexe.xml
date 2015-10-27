@@ -220,6 +220,14 @@
       <compile-flags>-loopinterpretcount:0 -args summary -endargs</compile-flags>
     </default>
   </test>
+  <test>
+    <default>
+      <files>fabs1.js</files>
+      <tags>exclude_dynapogo</tags>
+      <compile-flags>-off:backend -asmjs -testtrace:asmjs</compile-flags>
+      <baseline>fabs1.baseline</baseline>
+    </default>
+  </test>
   <!-- Disable until we figure out how to handle the early error while preserving the coverage
   <test>
     <default>

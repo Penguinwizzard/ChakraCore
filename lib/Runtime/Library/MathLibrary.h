@@ -84,6 +84,7 @@ namespace Js {
         };
 
         static Var Abs(RecyclableObject* function, CallInfo callInfo, ...);
+        static double Abs(double x);
         static Var Acos(RecyclableObject* function, CallInfo callInfo, ...);
         static double Acos(double x);
         static Var Asin(RecyclableObject* function, CallInfo callInfo, ...);

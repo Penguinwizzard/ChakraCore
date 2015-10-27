@@ -186,7 +186,7 @@ EXDEF3    ( CUSTOM     , NopEx             , OP_Empty                , Empty    
   DEF3_WMS( CALLDOUBLE3, Pow_Db            , Math::Pow               , false         )
   DEF3_WMS( CALLDOUBLE2, Sqrt_Db           , ::sqrt                  , true          )
   DEF3_WMS( CALLFLOAT2,  Sqrt_Flt          , ::sqrtf                 , _CRT_HAS_CDECL)
-  DEF3_WMS( CALLDOUBLE2, Abs_Db            , ::fabs                  , true          )
+  DEF3_WMS( CALLDOUBLE2, Abs_Db            , Math::Abs               , false         )
   DEF3_WMS( CALLFLOAT2 , Abs_Flt           , ::fabsf                 , _CRT_HAS_CDECL)
   DEF3_WMS( CALLDOUBLE3, Atan2_Db          , Math::Atan2             , false         )
   DEF3_WMS( CALLDOUBLE3, Min_Db            , AsmJsMath::Min<double>  , false         )
