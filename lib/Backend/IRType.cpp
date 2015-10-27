@@ -5,7 +5,7 @@
 #include "BackEnd.h"
 
 int const TySize[] = {
-#define IRTYPE(ucname, baseType, size, align, bitSize, enRegOk, dname) size,
+#define IRTYPE(ucname, baseType, size, bitSize, enRegOk, dname) size,
 #include "IRTypeList.h"
 #undef IRTYPE
 };
@@ -22,13 +22,13 @@ enum IRBaseTypes : BYTE {
 };
 
 int const TyBaseType[] = {
-#define IRTYPE(ucname, baseType, size, align, bitSize, enRegOk, dname) IRBaseType_ ## baseType,
+#define IRTYPE(ucname, baseType, size, bitSize, enRegOk, dname) IRBaseType_ ## baseType,
 #include "IRTypeList.h"
 #undef IRTYPE
 };
 
 wchar_t * const TyDumpName[] = {
-#define IRTYPE(ucname, baseType, size, align, bitSize, enRegOk, dname) L# dname,
+#define IRTYPE(ucname, baseType, size, bitSize, enRegOk, dname) L# dname,
 #include "IRTypeList.h"
 #undef IRTYPE
 };

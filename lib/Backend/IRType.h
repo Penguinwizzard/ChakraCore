@@ -8,7 +8,7 @@ extern const int MachPtr;
 
 enum IRType : BYTE
 {
-#define IRTYPE(Name, BaseType, Bytes, Align, Bits, EnRegOk, DumpName)  Ty ## Name,
+#define IRTYPE(Name, BaseType, Bytes, Bits, EnRegOk, DumpName)  Ty ## Name,
 #include "IRTypeList.h"
 #undef IRTYPE
 

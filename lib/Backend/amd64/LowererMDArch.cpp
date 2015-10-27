@@ -2033,6 +2033,7 @@ br2_Common:
     }
     else
     {
+        // OpEq's
         LowererMD::MakeDstEquSrc1(instr);
     }
 }

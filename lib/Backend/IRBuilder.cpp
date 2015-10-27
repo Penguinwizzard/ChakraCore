@@ -1585,6 +1585,13 @@ IRBuilder::BuildProfiledReg2WithICIndex(Js::OpCode newOpcode, uint32 offset, Js:
     BuildProfiledReg2(newOpcode, offset, dstRegSlot, srcRegSlot, profileId, inlineCacheIndex);
 }
 
+///----------------------------------------------------------------------------
+///
+/// IRBuilder::BuildProfiledReg2
+///
+///     Build IR instr for a profiled Reg2 instruction.
+///
+///----------------------------------------------------------------------------
 template <typename SizePolicy>
 void
 IRBuilder::BuildProfiledReg2(Js::OpCode newOpcode, uint32 offset)
