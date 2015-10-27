@@ -111,7 +111,7 @@ EncoderMD::GetOpcodeByte2(IR::Instr *instr)
 
 ///----------------------------------------------------------------------------
 ///
-/// EncoderMD::GetForm
+/// EncoderMD::GetInstrForm
 ///
 ///     Get the form list of the given instruction.  The form list contains
 ///     the possible encoding forms of an instruction.
