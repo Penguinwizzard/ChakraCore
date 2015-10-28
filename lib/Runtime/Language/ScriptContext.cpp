@@ -3063,7 +3063,9 @@ namespace Js
 #ifdef ASMJS_PLAT
     void ScriptContext::TransitionEnvironmentForDebugger(ScriptFunction * scriptFunction)
     {
-        if (scriptFunction->GetScriptContext()->IsInDebugMode() && scriptFunction->GetFunctionBody()->GetAsmJsFunctionInfo() != nullptr)
+        if (scriptFunction->GetScriptContext()->IsInDebugMode() &&
+            scriptFunction->GetFunctionBody()->GetAsmJsFunctionInfo() != nullptr &&
+            scriptFunction->GetFunctionBody()->GetAsmJsFunctionInfo()->GetModuleFunctionBody() != nullptr)
         {
             void* env = scriptFunction->GetEnvironment()->GetItem(0);
             SList<AsmJsScriptFunction*> * funcList = nullptr;

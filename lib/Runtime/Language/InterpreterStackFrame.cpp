@@ -2150,8 +2150,8 @@ namespace Js
                     JavascriptFunction::DeferredDeserialize(scriptFuncObj);
                 }
                 scriptFuncObj->GetDynamicType()->SetEntryPoint(AsmJsExternalEntryPoint);
+                scriptFuncObj->GetFunctionBody()->GetAsmJsFunctionInfo()->SetModuleFunctionBody(asmJsModuleFunctionBody);
             }
-            scriptFuncObj->GetFunctionBody()->GetAsmJsFunctionInfo()->SetModuleFunctionBody(asmJsModuleFunctionBody);
             scriptFuncObj->SetModuleMemory(moduleMemoryPtr);
             if (!info->IsRuntimeProcessed())
             {
