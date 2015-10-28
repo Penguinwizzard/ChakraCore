@@ -841,7 +841,7 @@ IRBuilderAsmJs::BuildImplicitArgIns()
         IR::Opnd * srcOpnd = nullptr;
         IR::RegOpnd * dstOpnd = nullptr;
         IR::Instr * instr = nullptr;
-        // TODO: double args are not aligned on stack!
+        // TODO: double args are not aligned on stack
         Js::AsmJsVarType varType = m_func->GetJnFunction()->GetAsmJsFunctionInfo()->GetArgType(i - 1);
         switch (varType.which())
         {
@@ -2918,7 +2918,7 @@ IRBuilderAsmJs::BuildAsmJsLoopBodySlotOpnd(SymID symId, IRType opndType)
         const int intOffset = m_asmFuncInfo->GetIntByteOffset() / sizeof(int);
         Js::PropertyId localsStartSlot = (Js::PropertyId)(localsOffset / sizeof(int));
 
-        //Get the bytecodeRegSlot
+        // Get the bytecodeRegSlot
         Js::PropertyId intRegSlot = symId - m_firstIntVar + m_asmFuncInfo->GetIntConstCount();
 
         // Get the offset from m_localSlots
@@ -2930,7 +2930,7 @@ IRBuilderAsmJs::BuildAsmJsLoopBodySlotOpnd(SymID symId, IRType opndType)
         const int floatOffset = m_asmFuncInfo->GetFloatByteOffset() / sizeof(float);
         Js::PropertyId localsStartSlot = (Js::PropertyId)(localsOffset / sizeof(float));
 
-        //Get the bytecodeRegSlot
+        // Get the bytecodeRegSlot
         Js::PropertyId fltRegSlot = symId - m_firstFloatVar + m_asmFuncInfo->GetFloatConstCount();
 
         // Get the offset from m_localSlots
@@ -2942,10 +2942,10 @@ IRBuilderAsmJs::BuildAsmJsLoopBodySlotOpnd(SymID symId, IRType opndType)
         const int doubleOffset = m_asmFuncInfo->GetDoubleByteOffset() / sizeof(double);
         Js::PropertyId localsStartSlot = (Js::PropertyId)(localsOffset / sizeof(double));
 
-        //Get the bytecodeRegSlot
+        // Get the bytecodeRegSlot
         Js::PropertyId dbRegSlot = symId - m_firstDoubleVar + m_asmFuncInfo->GetDoubleConstCount();
 
-        //Get the offset from m_localSlots
+        // Get the offset from m_localSlots
         propOffSet = (Js::PropertyId)(dbRegSlot + doubleOffset + localsStartSlot);
 
         type = IRType::TyFloat64;
@@ -2956,9 +2956,9 @@ IRBuilderAsmJs::BuildAsmJsLoopBodySlotOpnd(SymID symId, IRType opndType)
         const int simdOffset = m_asmFuncInfo->GetSimdByteOffset();
         Js::PropertyId localsStartSlot = (Js::PropertyId)(localsOffset);
 
-        //Get the bytecodeRegSlot
+        // Get the bytecodeRegSlot
         Js::PropertyId dbRegSlot = symId - m_firstSimdVar + m_asmFuncInfo->GetSimdConstCount();
-        //Get the offset from m_localSlots
+        // Get the offset from m_localSlots
         propOffSet = (Js::PropertyId)(dbRegSlot * sizeof(AsmJsSIMDValue) + simdOffset + localsStartSlot);
         type = opndType;
         scale = false;
@@ -3066,7 +3066,7 @@ IRBuilderAsmJs::GenerateLoopBodyStSlots(SymID loopParamSymId, uint offset)
         {
             Js::PropertyId localsStartSlot = (Js::PropertyId)(localsOffset / sizeof(int));
 
-            //Get the bytecodeRegSlot
+            // Get the bytecodeRegSlot
             Js::PropertyId intRegSlot = regSlot - m_firstIntVar + m_asmFuncInfo->GetIntConstCount();
 
             // Get the offset from m_localSlots
@@ -3080,10 +3080,10 @@ IRBuilderAsmJs::GenerateLoopBodyStSlots(SymID loopParamSymId, uint offset)
         {
             Js::PropertyId localsStartSlot = (Js::PropertyId)(localsOffset / sizeof(float));
 
-            //Get the bytecodeRegSlot
+            // Get the bytecodeRegSlot
             Js::PropertyId fltRegSlot = regSlot - m_firstFloatVar + m_asmFuncInfo->GetFloatConstCount();
 
-            //Get the offset from m_localSlots
+            // Get the offset from m_localSlots
             propOffSet = (Js::PropertyId)(fltRegSlot + floatOffset + localsStartSlot);
 
             type = IRType::TyFloat32;
@@ -3094,10 +3094,10 @@ IRBuilderAsmJs::GenerateLoopBodyStSlots(SymID loopParamSymId, uint offset)
         {
             Js::PropertyId localsStartSlot = (Js::PropertyId)(localsOffset / sizeof(double));
 
-            //Get the bytecodeRegSlot
+            // Get the bytecodeRegSlot
             Js::PropertyId dbRegSlot = regSlot - m_firstDoubleVar + m_asmFuncInfo->GetDoubleConstCount();
 
-            //Get the bytecodeRegSlot and Get the offset from m_localSlots
+            // Get the bytecodeRegSlot and Get the offset from m_localSlots
             propOffSet = (Js::PropertyId)(dbRegSlot + doubleOffset + localsStartSlot);
 
             type = IRType::TyFloat64;
@@ -3111,10 +3111,10 @@ IRBuilderAsmJs::GenerateLoopBodyStSlots(SymID loopParamSymId, uint offset)
         {
             Js::PropertyId localsStartSlot = (Js::PropertyId)(localsOffset);
             int simdOffset = m_asmFuncInfo->GetSimdByteOffset();
-            //Get the bytecodeRegSlot
+            // Get the bytecodeRegSlot
             Js::PropertyId dbRegSlot = regSlot - m_firstSimdVar + m_asmFuncInfo->GetSimdConstCount();
 
-            //Get the bytecodeRegSlot and Get the offset from m_localSlots
+            // Get the bytecodeRegSlot and Get the offset from m_localSlots
             propOffSet = (Js::PropertyId)(dbRegSlot * sizeof(AsmJsSIMDValue) + simdOffset + localsStartSlot);
 
             // SIMD regs are non-typed. There is no way to know the incoming SIMD type to a StSlot after a loop body, so we pick any type.
@@ -3201,7 +3201,7 @@ IR::Instr* IRBuilderAsmJs::GenerateStSlotForReturn(IR::RegOpnd* srcOpnd, IRType 
         propOffSet = propOffSet * TySize[type];
     }
 
-    //Get the bytecodeRegSlot and Get the offset from m_localSlots
+    // Get the bytecodeRegSlot and Get the offset from m_localSlots
     PropertySym * fieldSym = PropertySym::FindOrCreate(loopParamSym->m_id, propOffSet, (uint32)-1, (uint)-1, PropertyKindLocalSlots, m_func);
     IR::SymOpnd * fieldSymOpnd = IR::SymOpnd::New(fieldSym, srcOpnd->GetType(), m_func);
     Js::OpCode opcode = Js::OpCode::StSlot;

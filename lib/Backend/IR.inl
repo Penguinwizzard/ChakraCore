@@ -392,18 +392,18 @@ Instr::ForEachCallDirectArgOutInstrBackward(Fn fn, uint argsOpndLength) const
 {
     Assert(this->m_opcode == Js::OpCode::CallDirect); // Right now we call this method only for partial inlining of split, match and exec. Can be modified for other uses also.
 
-    //CallDirect src2
+    // CallDirect src2
     IR::Opnd * linkOpnd = this->GetSrc2();
 
-    //ArgOut_A_InlineSpecialized
+    // ArgOut_A_InlineSpecialized
     IR::Instr * tmpInstr = linkOpnd->AsSymOpnd()->m_sym->AsStackSym()->m_instrDef;
     Assert(tmpInstr->m_opcode == Js::OpCode::ArgOut_A_InlineSpecialized);
 
-    //ArgOut_A_InlineSpecialized src2; link to actual argouts.
+    // ArgOut_A_InlineSpecialized src2; link to actual argouts.
     linkOpnd = tmpInstr->GetSrc2();
     IntConstType argCount = linkOpnd->AsSymOpnd()->m_sym->AsStackSym()->GetArgSlotNum();
 
-    if ((uint)argCount != argsOpndLength) //This can be more generic
+    if ((uint)argCount != argsOpndLength)
     {
         return false;
     }
@@ -428,7 +428,7 @@ Instr::ForEachCallDirectArgOutInstrBackward(Fn fn, uint argsOpndLength) const
 
 ///----------------------------------------------------------------------------
 ///
-/// BranchInstr::SetBranchTarget
+/// BranchInstr::SetTarget
 ///
 ///----------------------------------------------------------------------------
 
@@ -462,7 +462,7 @@ BranchInstr::ClearTarget()
 
 ///----------------------------------------------------------------------------
 ///
-/// BranchInstr::GetBranchTarget
+/// BranchInstr::GetTarget
 ///
 ///----------------------------------------------------------------------------
 
@@ -495,7 +495,7 @@ BranchInstr::IsMultiBranch() const
     else
     {
         Assert(m_isMultiBranch);
-        return true;    //it's a multi branch instr
+        return true;    // it's a multi branch instr
     }
 
 }
@@ -521,7 +521,7 @@ BranchInstr::IsUnconditional() const
 
 ///----------------------------------------------------------------------------
 ///
-/// MultiBranchInstr::Add
+/// MultiBranchInstr::AddtoDictionary
 ///     - Adds the string to the list with the targetoffset
 ///       In order for the dictionary to have the right value, MapBranchTargetAddress
 ///       needs to be called to populate the dictionary and then it'll be patched up

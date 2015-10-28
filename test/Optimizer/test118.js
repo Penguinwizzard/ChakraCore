@@ -3,18 +3,6 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-//FileName: \\bptweb02\users\runtimetoolsbugs\casanalyzed\exprgen\fbl_ie_script_dev\131026-2030\x86\nebularun_x86\201310272250\ddltd2_989b46d9-3aae-4e3c-9bde-dc3a2669265d\bug2.js
-//Configuration: full_with_eh.xml
-//Testcase Number: 23327
-//Bailout Testing: ON
-//Switches:   -maxinterpretcount:2 -maxsimplejitruncount:2 
-//Baseline Switches: -nonative 
-//Arch: X86
-//Flavor: 
-//Branch:  fbl_ie_script_dev
-//Build: 131026-2030
-//MachineName: BPT17936
-//InstructionSet: SSE3
 var shouldBailout = false;
 
 var GiantPrintArray = [];
@@ -94,7 +82,7 @@ function test0() {
         e <<= bar0.call(obj0);
         bar0.call(obj0);
     }
-    //Snippet:protosnippet1.ecs 
+
     var __protoObj2_proto = {};
     __protoObj2_proto.x = Math.pow(bar1(), 1);
     var __protoObj1__proto = Object.create(__protoObj2_proto);;

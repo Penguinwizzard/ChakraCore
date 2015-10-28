@@ -25,7 +25,7 @@ void InliningThreshold::SetAggressiveHeuristics()
     leafInlineThreshold = limit;
     loopInlineThreshold = limit;
     polymorphicInlineThreshold = limit;
-    maxNumberOfInlineesWithLoop = CONFIG_FLAG(MaxNumberOfInlineesWithLoop); //Inlining loops with
+    maxNumberOfInlineesWithLoop = CONFIG_FLAG(MaxNumberOfInlineesWithLoop);
 
     inlineCountMax = CONFIG_FLAG(AggressiveInlineCountMax);
 }
@@ -135,7 +135,7 @@ bool InliningHeuristics::DeciderInlineIntoInliner(Js::FunctionBody* inlinee, Js:
 
     uint inlineeByteCodeCount = inlinee->GetByteCodeWithoutLDACount();
 
-    //Heuristics are hit in the following order (Note *order* is important)
+    // Heuristics are hit in the following order (Note *order* is important)
     // 1. Leaf function:  If the inlinee is a leaf (but not a constructor or a polymorphic call) inline threshold is LeafInlineThreshold (60). Also it can have max 1 loop
     // 2. Constant Function Argument: If the inlinee candidate has a constant argument and that argument is used for branching, then the inline threshold is ConstantArgumentInlineThreshold (157)
     // 3. InlineThreshold: If an inlinee candidate exceeds InlineThreshold just don't inline no matter what.
@@ -157,7 +157,7 @@ bool InliningHeuristics::DeciderInlineIntoInliner(Js::FunctionBody* inlinee, Js:
 
     if (!isPolymorphicCall && !isConstructorCall && IsInlineeLeaf(inlinee) && (inlinee->GetLoopCount() <= 2))
     {
-        //Inlinee is a leaf function
+        // Inlinee is a leaf function
         if (inliningDecider->getNumberOfInlineesWithLoop() <= (uint)threshold.maxNumberOfInlineesWithLoop) // Don't inlinee too many inlinees with loops.
         {
             // Negative LeafInlineThreshold disable the threshold
@@ -197,10 +197,10 @@ bool InliningHeuristics::DeciderInlineIntoInliner(Js::FunctionBody* inlinee, Js:
 
     if (inlinee->GetHasLoops())
     {
-        //Small function with a single loop, go ahead and inline that.
+        // Small function with a single loop, go ahead and inline that.
         if (threshold.loopInlineThreshold < 0 ||                                     // Negative LoopInlineThreshold disable inlining with loop
             inlineeByteCodeCount >(uint)threshold.loopInlineThreshold ||
-            inliningDecider->getNumberOfInlineesWithLoop()  > (uint)threshold.maxNumberOfInlineesWithLoop || //See if we are inlining too many inlinees with loops.
+            inliningDecider->getNumberOfInlineesWithLoop()  > (uint)threshold.maxNumberOfInlineesWithLoop || // See if we are inlining too many inlinees with loops.
             (inlinee->GetLoopCount() > 2) ||                                         // Allow at most 2 loops.
             inlinee->GetHasNestedLoop() ||                                           // Nested loops are not a good inlinee candidate
             isConstructorCall ||                                                        // If the function is constructor or has polymorphic fields don't inline.
@@ -259,7 +259,7 @@ bool InliningHeuristics::DeciderInlineIntoInliner(Js::FunctionBody* inlinee, Js:
 
         if (inlinee->HasDynamicProfileInfo() && inlinee->GetAnyDynamicProfileInfo()->HasPolymorphicFldAccess())
         {
-            //As of now this is dependent on bytecodeInlinedThreshold.
+            // As of now this is dependent on bytecodeInlinedThreshold.
             return true;
         }
 
@@ -281,14 +281,14 @@ bool InliningHeuristics::DeciderInlineIntoInliner(Js::FunctionBody* inlinee, Js:
     return true;
 }
 
-//Called from background thread to commit inlining.
+// Called from background thread to commit inlining.
 bool InliningHeuristics::BackendInlineIntoInliner(Js::FunctionBody* inlinee,
                                 Js::FunctionBody *inliner,
                                 Func *topFunction,
                                 Js::ProfileId callSiteId,
                                 bool isConstructorCall,
-                                bool isFixedMethodCall,                     //Reserved
-                                bool isCallOutsideLoopInTopFunc,            //There is a loop for sure and this call is outside loop
+                                bool isFixedMethodCall,                     // Reserved
+                                bool isCallOutsideLoopInTopFunc,            // There is a loop for sure and this call is outside loop
                                 bool isCallInsideLoop,
                                 uint recursiveInlineDepth,
                                 uint16 constantArguments
@@ -372,7 +372,7 @@ bool InliningHeuristics::BackendInlineIntoInliner(Js::FunctionBody* inlinee,
         return true;
     }
 
-    if (isCallInsideLoop && inlinee->GetHasLoops() )                            //Don't inline function with loops inside another loop unless it is a leaf
+    if (isCallInsideLoop && inlinee->GetHasLoops() )                            // Don't inline function with loops inside another loop unless it is a leaf
     {
         INLINE_TESTTRACE(L"INLINING: Skip Inline (backend): Recursive loop inlining\tInlinee: %s (#%s)\tCaller: %s (#%s) \tRoot: %s (#%s)\n",
             inlinee->GetDisplayName(), inlinee->GetDebugNumberSet(debugStringBuffer),

@@ -245,7 +245,6 @@ Js::FunctionInfo *InliningDecider::Inline(Js::FunctionBody *const inliner, Js::F
             return nullptr;
         }
 
-        // REVIEW: can we inline these for /force:inline
         if (inlinee->GetDontInline())
         {
             INLINE_TESTTRACE(L"INLINING: Skip Inline: Do not inline\tInlinee: %s (%s)\tCaller: %s (%s)\n",
@@ -478,7 +477,7 @@ bool InliningDecider::GetBuiltInInfo(
         *inlineCandidateOpCode = Js::OpCode::InlineFunctionCall;
         break;
 
-        // The following are not currently inlined, but are tracked for their return type
+    // The following are not currently inlined, but are tracked for their return type
     // TODO: Add more built-ins that return objects. May consider tracking all built-ins.
 
     case Js::JavascriptBuiltInFunction::JavascriptArray_NewInstance:
@@ -574,15 +573,12 @@ bool InliningDecider::GetBuiltInInfo(
         break;
 
 #ifdef ENABLE_DOM_FAST_PATH
-        // TODO: inline setter as well.
-    // TODO: returnType should be consistent, but we don't know from the type
-    // How to get the return type from profileData?
     case Js::JavascriptBuiltInFunction::DOMFastPathGetter:
         *inlineCandidateOpCode = Js::OpCode::DOMFastPathGetter;
         break;
 #endif
 
-    //SIMD_JS
+    // SIMD_JS
     // we only inline, and hence type-spec on IA
 #if defined(_M_X64) || defined(_M_IX86)
     default:

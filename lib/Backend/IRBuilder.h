@@ -24,8 +24,6 @@ private:
     uint32            offset;
     bool              isNotBackEdge;
 
-    // TODO: should this be the same as the brnachInstr->GetByteCodeOffset()?
-    // CONSIDER: try to make sure that happens for MultiBr
     uint32            branchOffset;
 public:
     IR::BranchInstr * GetBranchInstr()

@@ -162,7 +162,7 @@ function test6(p)
 {
     var a = new Ctor();
 
-    // theoritically these can be mark temp, but the dependencies in the loop confuses the algorithem
+    // theoretically these can be mark temp, but the dependencies in the loop confuses the algorithm
     a.x = p + 1.1;          
     a.y = p + 1.2;
 

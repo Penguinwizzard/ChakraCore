@@ -107,6 +107,15 @@ EncoderMD::GetOpcodeByte2(IR::Instr *instr)
     return OpcodeByte2[instr->m_opcode - (Js::OpCode::MDStart+1)];
 }
 
+///----------------------------------------------------------------------------
+///
+/// EncoderMD::GetInstrForm
+///
+///     Get the form list of the given instruction.  The form list contains
+///     the possible encoding forms of an instruction.
+///
+///----------------------------------------------------------------------------
+
 Forms
 EncoderMD::GetInstrForm(IR::Instr *instr)
 {

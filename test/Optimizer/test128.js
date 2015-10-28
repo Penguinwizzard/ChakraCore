@@ -3,9 +3,6 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-//FuzzerName: VariableModifier
-//ToolName: Fuzzer
-//Switches:   -maxinterpretcount:1 -maxsimplejitruncount:2  -forcedeferparse -MinSwitchJumpTableSize:2 -force:fieldhoist -bgjit- -loopinterpretcount:1 -force:rejit -force:fixdataprops -force:atom -force:ScriptFunctionWithInlineCache -off:lossyinttypespec -ForceArrayBTree -off:aggressiveinttypespec
 var shouldBailout = false;
 function test0() {
     var litObj0 = { prop1: 3.14159265358979 };

@@ -9,15 +9,15 @@ class InliningDecider
 private:
     Js::FunctionBody *const topFunc;
     InliningHeuristics inliningHeuristics;
-    bool isLoopBody;     //We don't support inlining on jit loop bodies as of now.
+    bool isLoopBody;     // We don't support inlining on jit loop bodies as of now.
     bool isInDebugMode;
 
-    //These variable capture the temporary state 
+    // These variables capture the temporary state 
     uint32 bytecodeInlinedCount;
     uint32 numberOfInlineesWithLoop; 
 
 public:
-    const ExecutionMode jitMode;      //Disable certain parts for certain JIT modes
+    const ExecutionMode jitMode;      // Disable certain parts for certain JIT modes
 
 public:
     InliningDecider(Js::FunctionBody *const topFunc, bool isLoopBody, bool isInDebugMode, const ExecutionMode jitMode);
@@ -39,7 +39,7 @@ public:
     void ResetInlineHeuristics() { inliningHeuristics.threshold.Reset(); }
     void SetLimitOnInlineesWithLoop(uint countOfInlineesWithLoops)
     {
-        //If we have determined in TryAggressiveInlining phase there are too many inlinees with loop, just set the limit such that we don't inline them. 
+        // If we have determined in TryAggressiveInlining phase there are too many inlinees with loop, just set the limit such that we don't inline them. 
         if ((uint)inliningHeuristics.threshold.maxNumberOfInlineesWithLoop <= countOfInlineesWithLoops)
         {
             inliningHeuristics.threshold.maxNumberOfInlineesWithLoop = 0;

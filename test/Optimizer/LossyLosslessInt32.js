@@ -48,7 +48,7 @@ WScript.Echo("test2: " + test2());
 // - The FromVar with bailout should not be dead-store-removed due to the possibility of side effects
 // - When lossy int type specialization is disabled, the resulting value of '~a' should still be an int range value so that the
 //   '+' can still be int-specialized
-// - Errors during ToPrimitive are handled appropraitely by throwing after bailing out
+// - Errors during ToPrimitive are handled appropriately by throwing after bailing out
 function test3a(a) {
     a | 0;
     return ~a + 1;

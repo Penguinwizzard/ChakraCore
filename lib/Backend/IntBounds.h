@@ -10,7 +10,6 @@ class IntConstantBounds;
 typedef JsUtil::BaseHashSet<ValueRelativeOffset, JitArenaAllocator, PowerOf2SizePolicy, ValueNumber> RelativeIntBoundSet;
 
 #pragma region IntBounds
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class IntBounds sealed
 {
@@ -94,11 +93,9 @@ private:
     PREVENT_ASSIGN(IntBounds);
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma endregion
 
 #pragma region IntBoundCheckCompatibilityId and IntBoundCheck
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // A bounds check takes the form (a <= b + offset). For instance, (i >= 0) would be represented as (0 <= i + 0), and (i < n)
 // would be represented as (i <= n - 1). When a bounds check is required, from the two value numbers, it can be determined
@@ -160,5 +157,4 @@ IntBoundCheckCompatibilityId JsUtil::ValueToKey<IntBoundCheckCompatibilityId, In
 
 typedef JsUtil::BaseHashSet<IntBoundCheck, JitArenaAllocator, PowerOf2SizePolicy, IntBoundCheckCompatibilityId> IntBoundCheckSet;
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma endregion

@@ -564,8 +564,6 @@ IRBuilder::Build()
                         bailOutKind |= c_debuggerBailOutKindForCall;
                     }
 
-                    // TODO: Fast F12: consider to convert to bailout instr rather than adding separate bailout instr for other helper calls.
-                    //       Would need to take care of m_offsetToInstruction if it's set to m_lastInstr and asserts in backwardPass.
                     this->InsertBailOutForDebugger(offset, bailOutKind);
                 }
             }
@@ -1466,8 +1464,6 @@ IRBuilder::BuildReg2(Js::OpCode newOpcode, uint32 offset, Js::RegSlot R0, Js::Re
 
         if (m_func->DoSimpleJitDynamicProfile())
         {
-            //We want a different type of instr!
-
             IR::JitProfilingInstr* newInstr = IR::JitProfilingInstr::New(Js::OpCode::StrictLdThis, dstOpnd, src1Opnd, m_func);
             instr = newInstr;
         }
@@ -1566,14 +1562,6 @@ IRBuilder::BuildReg2(Js::OpCode newOpcode, uint32 offset, Js::RegSlot R0, Js::Re
     this->AddInstr(instr, offset);
 }
 
-///----------------------------------------------------------------------------
-///
-/// IRBuilder::BuildProfiledReg2
-///
-///     Build IR instr for a profiled Reg2 instruction.
-///
-///----------------------------------------------------------------------------
-
 template <typename SizePolicy>
 void
 IRBuilder::BuildReg2WithICIndex(Js::OpCode newOpcode, uint32 offset)
@@ -1597,6 +1585,13 @@ IRBuilder::BuildProfiledReg2WithICIndex(Js::OpCode newOpcode, uint32 offset, Js:
     BuildProfiledReg2(newOpcode, offset, dstRegSlot, srcRegSlot, profileId, inlineCacheIndex);
 }
 
+///----------------------------------------------------------------------------
+///
+/// IRBuilder::BuildProfiledReg2
+///
+///     Build IR instr for a profiled Reg2 instruction.
+///
+///----------------------------------------------------------------------------
 template <typename SizePolicy>
 void
 IRBuilder::BuildProfiledReg2(Js::OpCode newOpcode, uint32 offset)
@@ -1617,7 +1612,8 @@ IRBuilder::BuildProfiledReg2(Js::OpCode newOpcode, uint32 offset, Js::RegSlot ds
     IR::RegOpnd *   src1Opnd = this->BuildSrcOpnd(srcRegSlot);
     IR::RegOpnd *   dstOpnd;
     if(newOpcode == Js::OpCode::BeginSwitch && srcRegSlot == dstRegSlot)
-    {//if the operands are the same for BeginSwitch, don't build a new operand in IR.
+    {
+        //if the operands are the same for BeginSwitch, don't build a new operand in IR.
         dstOpnd = src1Opnd;
     }
     else
@@ -1631,7 +1627,7 @@ IRBuilder::BuildProfiledReg2(Js::OpCode newOpcode, uint32 offset, Js::RegSlot ds
     {
         m_switchBuilder.BeginSwitch();
         switchFound = true;
-        newOpcode = Js::OpCode::Ld_A;   //BeginSwitch is originally equivalent to Ld_A
+        newOpcode = Js::OpCode::Ld_A;   // BeginSwitch is originally equivalent to Ld_A
     }
     else
     {
@@ -2142,8 +2138,8 @@ IRBuilder::BuildW1(Js::OpCode newOpcode, uint32 offset)
     {
         if (DoBailOnNoProfile())
         {
-            //RuntimeReferenceError are extremely rare as they are guaranteed to throw. Insert BailonNoProfile to optimize this code path.
-            //If there are continues bailout bailonnoprofile will be disabled.
+            // RuntimeReferenceError are extremely rare as they are guaranteed to throw. Insert BailonNoProfile to optimize this code path.
+            // If there are continues bailout bailonnoprofile will be disabled.
             InsertBailOnNoProfile(instr);
         }
     }
@@ -2188,7 +2184,7 @@ IRBuilder::BuildUnsigned1(Js::OpCode newOpcode, uint32 offset, uint32 loopNumber
             instr->loopNumber = loopNumber;
             this->AddInstr(instr, offset);
 
-            //If fullJitExists isn't 0, bail out so that we can get the fulljitted version
+            // If fullJitExists isn't 0, bail out so that we can get the fulljitted version
             BailOutInfo * bailOutInfo = JitAnew(m_func->m_alloc, BailOutInfo, instr->GetByteCodeOffset(), m_func);
             IR::BailOutInstr * bailInstr = IR::BailOutInstr::New(Js::OpCode::BailOnNotEqual, IR::BailOnSimpleJitToFullJitLoopBody, bailOutInfo, bailOutInfo->bailOutFunc);
             bailInstr->SetSrc1(fullJitExists);
@@ -2259,7 +2255,7 @@ IRBuilder::BuildUnsigned1(Js::OpCode newOpcode, uint32 offset, uint32 loopNumber
             {
                 Assert(this->m_saveLoopImplicitCallFlags[loopNumber]);
 
-                //In profiling simplejit we need this opcode in order to restore the implicit call flags
+                // In profiling simplejit we need this opcode in order to restore the implicit call flags
                 auto instr = IR::JitProfilingInstr::New(Js::OpCode::ProfiledLoopEnd, nullptr, this->m_saveLoopImplicitCallFlags[loopNumber], m_func);
                 this->AddInstr(instr, offset);
                 instr->loopNumber = loopNumber;
@@ -2528,7 +2524,7 @@ IRBuilder::BuildReg2Int1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot dstReg
 ///
 /// IRBuilder::BuildElementC
 ///
-///     Build IR instr for a ElementC instruction.
+///     Build IR instr for an ElementC instruction.
 ///
 ///----------------------------------------------------------------------------
 
@@ -2607,7 +2603,7 @@ IRBuilder::BuildElementC(Js::OpCode newOpcode, uint32 offset, Js::RegSlot fieldR
 ///
 /// IRBuilder::BuildElementSlot
 ///
-///     Build IR instr for a ElementSlot instruction.
+///     Build IR instr for an ElementSlot instruction.
 ///
 ///----------------------------------------------------------------------------
 
@@ -2824,7 +2820,7 @@ IRBuilder::SetLoopBodyStSlot(SymID symID, bool isCatchObjectSym)
 {
     if (this->m_func->HasTry() && !PHASE_OFF(Js::JITLoopBodyInTryCatchPhase, this->m_func))
     {
-        // // No need to emit StSlot for a catch object. In fact, if we do, we might be storing an uninitialized value to the slot.
+        // No need to emit StSlot for a catch object. In fact, if we do, we might be storing an uninitialized value to the slot.
         if (isCatchObjectSym)
         {
             return;
@@ -3706,7 +3702,7 @@ IRBuilder::BuildReg2Aux(Js::OpCode newOpcode, uint32 offset)
 ///
 /// IRBuilder::BuildElementI
 ///
-///     Build IR instr for a ElementI instruction.
+///     Build IR instr for an ElementI instruction.
 ///
 ///----------------------------------------------------------------------------
 
@@ -3909,7 +3905,7 @@ IRBuilder::BuildElementI(Js::OpCode newOpcode, uint32 offset, Js::RegSlot baseRe
 ///
 /// IRBuilder::BuildElementUnsigned1
 ///
-///     Build IR instr for a ElementUnsigned1 instruction.
+///     Build IR instr for an ElementUnsigned1 instruction.
 ///
 ///----------------------------------------------------------------------------
 
@@ -3951,7 +3947,6 @@ IRBuilder::BuildElementUnsigned1(Js::OpCode newOpcode, uint32 offset, Js::RegSlo
 
             // In the case of simplejit, we won't know the exact type of array used until run time. Due to this,
             //    we must use the specialized version of StElemC in Lowering.
-            //    TODO: SimpleJit: Review: we might not need to change this opcode to StElemC and may be able to keep it as StElemI_A.
             opcode = simpleJit ? Js::OpCode::StElemC : Js::OpCode::StElemI_A;
             break;
         }
@@ -4104,7 +4099,7 @@ IRBuilder::BuildArgInRest()
 
 ///----------------------------------------------------------------------------
 ///
-/// IRBuilder::BuildArgOut
+/// IRBuilder::BuildArg
 ///
 ///     Build IR instr for an ArgOut instruction.
 ///
@@ -4598,7 +4593,7 @@ IRBuilder::BuildProfiled2CallI(Js::OpCode opcode, uint32 offset, Js::RegSlot ret
     }
     if (callInstr->IsJitProfilingInstr())
     {
-        //If we happened to decide in BuildCallI_Helper that this should be a jit profiling instr, then save the fact that it is
+        // If we happened to decide in BuildCallI_Helper that this should be a jit profiling instr, then save the fact that it is
         //    a "new Array(args, ...)" call and also save the array profile id (profileId2)
         callInstr->AsJitProfilingInstr()->isNewArray = true;
         callInstr->AsJitProfilingInstr()->arrayProfileId = profileId2;
@@ -4938,7 +4933,7 @@ IRBuilder::BuildBrReg2(Js::OpCode newOpcode, uint32 offset, uint targetOffset, J
 
         // some instructions can't be optimized past, such as LdFld for objects. In these cases we have
         // to inform the SwitchBuilder to flush any optimized cases that it has stored up to this point
-        //peeks the next opcode - to check if it is not a case statement (for example: the next instr can be a LdFld for objects)
+        // peeks the next opcode - to check if it is not a case statement (for example: the next instr can be a LdFld for objects)
         Js::OpCode peekOpcode = m_jnReader.PeekOp();
         if (peekOpcode != Js::OpCode::Case && peekOpcode != Js::OpCode::EndSwitch)
         {
@@ -5316,7 +5311,7 @@ IRBuilder::CreateRelocRecord(IR::BranchInstr * branchInstr, uint32 offset, uint3
 ///
 /// IRBuilder::BuildRegexFromPattern
 ///
-/// Build a new RegEx instruction. Simply construct an var to hold the regex
+/// Build a new RegEx instruction. Simply construct a var to hold the regex
 /// and load it as an immediate into a register.
 ///
 ///----------------------------------------------------------------------------

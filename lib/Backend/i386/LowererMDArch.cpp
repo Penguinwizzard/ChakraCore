@@ -82,14 +82,12 @@ LowererMDArch::GetRegIMulHighDestLower()
 RegNum
 LowererMDArch::GetRegArgI4(int32 argNum)
 {
-    // TODO: decide on registers to use for int
     return RegNOREG;
 }
 
 RegNum
 LowererMDArch::GetRegArgR8(int32 argNum)
 {
-    // TODO: decide on registers to use for double
     return RegNOREG;
 }
 
@@ -2022,7 +2020,6 @@ br2_Common:
     default:
         AssertMsg(UNREACHED, "Un-implemented int4 opcode");
     }
-    // OpEq's
 
     if(legalize)
     {
@@ -2030,6 +2027,7 @@ br2_Common:
     }
     else
     {
+        // OpEq's
         LowererMD::MakeDstEquSrc1(instr);
     }
 }
@@ -2801,7 +2799,6 @@ bool
 
     if (instrShift->HasBailOutInfo())
     {
-        // FIELDHOIST-TODO: Get this out of the fast path's way
         IR::Instr * bailOutInstr = this->lowererMD->m_lowerer->SplitBailOnImplicitCall(instrShift);
         this->lowererMD->m_lowerer->LowerBailOnEqualOrNotEqual(bailOutInstr);
     }
@@ -3665,7 +3662,7 @@ LowererMDArch::GenerateArgOutForStackArgs(IR::Instr* callInstr, IR::Instr* stack
 
     IR::RegOpnd* ldLenDstOpnd = IR::RegOpnd::New(TyUint32, func);
     IR::Instr* ldLen = IR::Instr::New(Js::OpCode::LdLen_A, ldLenDstOpnd, stackArgs, func);
-    ldLenDstOpnd->SetValueType(ValueType::GetTaggedInt()); //LdLen_A works only on stack arguments
+    ldLenDstOpnd->SetValueType(ValueType::GetTaggedInt()); // LdLen_A works only on stack arguments
     callInstr->InsertBefore(ldLen);
     this->lowererMD->m_lowerer->GenerateFastRealStackArgumentsLdLen(ldLen);
 
@@ -3708,7 +3705,7 @@ LowererMDArch::GenerateArgOutForStackArgs(IR::Instr* callInstr, IR::Instr* stack
 
     loop->regAlloc.liveOnBackEdgeSyms->Set(ldLenDstOpnd->m_sym->m_id);
 
-    //return the length which will be used for callInfo generations & stack allocation
+    // return the length which will be used for callInfo generations & stack allocation
     return saveLenInstr->GetDst()->AsRegOpnd();
 }
 
