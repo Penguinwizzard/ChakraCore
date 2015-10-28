@@ -45,9 +45,9 @@ DecimalDigits ::= DecimalDigit | DecimalDigits DecimalDigit
 DecimalDigit ::= one of { '0'..'9' }
 NonZeroDigit ::= one of { '1'..'9' }
 
------------------------------------------------
-Spec deviations for cross-browser compatibility
------------------------------------------------
+------------------
+Annex B Deviations
+------------------
 
 1. The assertions (?= ) and (?! ) are treated as though they have a surrounding non-capture group, and hence can be quantified.
    Other assertions are not quantifiable.
@@ -91,11 +91,9 @@ DecimalDigits ::= DecimalDigit+
 DecimalDigit ::= one of { '0'..'9' }
 NonZeroDigit ::= one of { '1'..'9' }
 
------------------------------------------------
-Spec deviations for cross-browser compatibility
------------------------------------------------
-
-See the spec deviations section below the original productions for descriptions.
+------------------
+Annex B Deviations
+------------------
 
 QuantifiableAssertion [added] ::= '(' '?' '=' Disjunction ')' | '(' '?' '!' Disjunction ')'
 Term ::= ... | '(' '?' '=' Disjunction ')' [removed] | '(' '?' '!' Disjunction ')' [removed] | QuantifiableAssertion Quantifier? [added]
@@ -1317,16 +1315,14 @@ namespace UnifiedRegex
                     Assert(ECLookahead() == ')');
                     ECConsume(); // )
                     node = Anew(ctAllocator, AssertionNode, false, node);
-                    // SPEC DEVIATION: Should not be quantifiable, but allow it anyway
-                    break; // fall-through for opt quantifier
+                    break; // As per Annex B, allow this to be quantifiable
                 case '!':
                     ECConsume(2); // ?!
                     node = DisjunctionPass1();
                     Assert(ECLookahead() == ')');
                     ECConsume(); // )
                     node = Anew(ctAllocator, AssertionNode, true, node);
-                    // SPEC DEVIATION: Should not be quantifiable, but allow it anyway
-                    break; // fall-through for opt quantifier
+                    break; // As per Annex B, allow this to be quantifiable
                 case ':':
                     ECConsume(2); // ?:
                     node = DisjunctionPass1();
@@ -1382,20 +1378,17 @@ namespace UnifiedRegex
             break;
 #endif
         case ']':
-        case '}':
-            // SPEC DEVIATION: These should be syntax errors, instead accept as themselves
+            // SPEC DEVIATION: This should be syntax error, instead accept as itself
             deferredCharNode->cs[0] = NextChar();
             node = deferredCharNode;
             break; // fall-through for opt quantifier
+#if DBG
         case '*':
         case '+':
         case '?':
-        case '{':
-            // SPEC DEVIATION: These should be syntax errors, instead accept as themselves unless looks like a quantifier
-            Assert(!AtQuantifier());
-            deferredCharNode->cs[0] = NextChar();
-            node = deferredCharNode;
-            break; // fall-through for opt quantifier
+            AssertMsg(false, "Allowed only in the escaped form. These should be caught by TermPass0.");
+            break;
+#endif
         case 0:
             if (IsEOF())
                 // Terminating 0
@@ -1567,8 +1560,8 @@ namespace UnifiedRegex
         Assert(!IsEOF()); // checked for terminating 0 in pass 0
         if (standardEncodedChars->IsDigit(ECLookahead()))
         {
-            // SPEC DEVIATION: Allow octal escapes as well as group references, disambiguate based on known
-            //                 number of groups
+            // As per Annex B, allow octal escapes as well as group references, disambiguate based on known
+            // number of groups.
             if (ECLookahead() == '0')
             {
                 // fall through for octal
@@ -1717,7 +1710,7 @@ namespace UnifiedRegex
                     ECConsume(2);
                     // fall-through for identity escape
                 }
-                // SPEC DEVIATION: Take to be identity escape if ill-formed
+                // Take to be identity escape if ill-formed as per Annex B
                 break;
             case 'u':
                 if (unicodeFlagPresent && TryParseExtendedUnicodeEscape(c, previousSurrogatePart) > 0)
@@ -1735,12 +1728,10 @@ namespace UnifiedRegex
                     ECConsume(4);
                     // fall-through for identity escape
                 }
-                // SPEC DEVIATION: Take to be identity escape if ill-formed
+                // Take to be identity escape if ill-formed as per Annex B
                 break;
             default:
-                // SPEC DEVIATION: Only characters *not* in IdentifierStart can be identity escapes, but we
-                //                 allow anything other than newlines and above
-                // embedded 0 is ok
+                // As per Annex B, allow anything other than newlines and above. Embedded 0 is ok
                 break;
             }
 
@@ -2475,8 +2466,8 @@ namespace UnifiedRegex
         Assert(!IsEOF());
         if (standardEncodedChars->IsOctal(ECLookahead()))
         {
-            // SPEC DEVIATION: Allow octal escapes instead of just \0 (and \8 and \9 are identity escapes)
-            // Must be between 1 and 3 octal digits
+            // As per Annex B, allow octal escapes instead of just \0 (and \8 and \9 are identity escapes).
+            // Must be between 1 and 3 octal digits.
             uint n = 0;
             CharCount digits = 0;
             do
@@ -2542,8 +2533,8 @@ namespace UnifiedRegex
                 }
                 else
                 {
-                    // SPEC DEVIATION: For non-letters, still take lower 5 bits, e.g. [\c1] == [\x11]
-                    //                 However, '-' and ']' or EOF make the \c just a 'c'. Makes sense?
+                    // SPEC DEVIATION: For non-letters, still take lower 5 bits, e.g. [\c1] == [\x11].
+                    //                 However, '-', ']', and EOF make the \c just a 'c'.
                     if (!IsEOF())
                     {
                         EncodedChar ec = ECLookahead();
@@ -2573,7 +2564,7 @@ namespace UnifiedRegex
                     ECConsume(2);
                     // fall-through for identity escape
                 }
-                // SPEC DEVIATION: Take to be identity escape if ill-formed
+                // Take to be identity escape if ill-formed as per Annex B
                 break;
             case 'u':
                 if (unicodeFlagPresent && TryParseExtendedUnicodeEscape(c, previousSurrogatePart) > 0)
@@ -2591,12 +2582,10 @@ namespace UnifiedRegex
                     ECConsume(4);
                     // fall-through for identity escape
                 }
-                // SPEC DEVIATION: Take to be identity escape if ill-formed
+                // Take to be identity escape if ill-formed as per Annex B.
                 break;
             default:
-                // SPEC DEVIATION: Only characters *not* in IdentifierStart can be identity escapes, but we
-                //                 allow anything other than newlines and above
-                // embedded 0 is ok
+                // As per Annex B, allow anything other than newlines and above. Embedded 0 is ok.
                 break;
             }
 
