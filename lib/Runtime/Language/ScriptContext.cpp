@@ -1550,7 +1550,7 @@ namespace Js
         Js::JavascriptError::MapAndThrowError(this, E_FAIL);
     }
 
-    JavascriptFunction* ScriptContext::LoadScript(const wchar_t* script, SRCINFO const * pSrcInfo, CompileScriptException * pse, bool isExpression, bool disableDeferredParse, bool isByteCodeBufferForLibrary, Utf8SourceInfo** ppSourceInfo, const wchar_t *rootDisplayName)
+    JavascriptFunction* ScriptContext::LoadScript(const wchar_t* script, SRCINFO const * pSrcInfo, CompileScriptException * pse, bool isExpression, bool disableDeferredParse, bool isByteCodeBufferForLibrary, Utf8SourceInfo** ppSourceInfo, const wchar_t *rootDisplayName, bool disableAsmJs)
     {
         if (pSrcInfo == nullptr)
         {
@@ -1613,6 +1613,11 @@ namespace Js
                 grfscr |= fscrDeferFncParse;
             }
 
+            if (disableAsmJs)
+            {
+                grfscr |= fscrNoAsmJs;
+            }
+
             if (PHASE_FORCE1(Js::EvalCompilePhase))
             {
                 // pretend it is eval
@@ -1627,6 +1632,7 @@ namespace Js
             ParseNodePtr parseTree;
             hr = parser.ParseCesu8Source(&parseTree, utf8Script, cbNeeded, grfscr, pse, &sourceContextInfo->nextLocalFunctionId,
                 sourceContextInfo);
+
             (*ppSourceInfo)->SetParseFlags(grfscr);
 
             if (FAILED(hr) || parseTree == nullptr)
@@ -1637,6 +1643,15 @@ namespace Js
             Assert(length < MAXLONG);
             uint sourceIndex = this->SaveSourceNoCopy(*ppSourceInfo, static_cast<charcount_t>(length), /*isCesu8*/ true);
             JavascriptFunction * pFunction = GenerateRootFunction(parseTree, sourceIndex, &parser, grfscr, pse, rootDisplayName);
+
+            if (pse->ei.scode == JSERR_AsmJsCompileError)
+            {
+                Assert(!disableAsmJs);
+
+                pse->Clear();
+                return LoadScript(script, pSrcInfo, pse, isExpression, disableDeferredParse, isByteCodeBufferForLibrary, ppSourceInfo, rootDisplayName, true);
+            }
+
             if (pFunction != nullptr && this->IsProfiling())
             {
                 RegisterScript(pFunction->GetFunctionProxy());
@@ -1655,7 +1670,7 @@ namespace Js
         }
     }
 
-    JavascriptFunction* ScriptContext::LoadScript(LPCUTF8 script, size_t cb, SRCINFO const * pSrcInfo, CompileScriptException * pse, bool isExpression, bool disableDeferredParse, bool isByteCodeBufferForLibrary, Utf8SourceInfo** ppSourceInfo, const wchar_t *rootDisplayName)
+    JavascriptFunction* ScriptContext::LoadScript(LPCUTF8 script, size_t cb, SRCINFO const * pSrcInfo, CompileScriptException * pse, bool isExpression, bool disableDeferredParse, bool isByteCodeBufferForLibrary, Utf8SourceInfo** ppSourceInfo, const wchar_t *rootDisplayName, bool disableAsmJs)
     {
         if (pSrcInfo == nullptr)
         {
@@ -1681,6 +1696,11 @@ namespace Js
             if (!disableDeferredParse && (cb > Parser::GetDeferralThreshold(sourceContextInfo->IsSourceProfileLoaded())))
             {
                 grfscr |= fscrDeferFncParse;
+            }
+
+            if (disableAsmJs)
+            {
+                grfscr |= fscrNoAsmJs;
             }
 
             if (PHASE_FORCE1(Js::EvalCompilePhase))
@@ -1719,6 +1739,15 @@ namespace Js
             uint sourceIndex = this->SaveSourceNoCopy(*ppSourceInfo, parser.GetSourceIchLim(), /* isCesu8*/ false);
 
             JavascriptFunction * pFunction = GenerateRootFunction(parseTree, sourceIndex, &parser, grfscr, pse, rootDisplayName);
+
+            if (pse->ei.scode == JSERR_AsmJsCompileError)
+            {
+                Assert(!disableAsmJs);
+
+                pse->Clear();
+                return LoadScript(script, cb, pSrcInfo, pse, isExpression, disableDeferredParse, isByteCodeBufferForLibrary, ppSourceInfo, rootDisplayName, true);
+            }
+
             if (pFunction != nullptr && this->IsProfiling())
             {
                 RegisterScript(pFunction->GetFunctionProxy());
@@ -1748,6 +1777,7 @@ namespace Js
         // Generate bytecode and native code
         ParseableFunctionInfo* body = NULL;
         hr = GenerateByteCode(parseTree, grfscr, this, &body, sourceIndex, false, parser, pse);
+
         this->GetSource(sourceIndex)->SetByteCodeGenerationFlags(grfscr);
         if (FAILED(hr))
         {

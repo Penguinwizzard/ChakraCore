@@ -170,7 +170,7 @@ namespace Js
         functionBody->SetIsAsmjsMode(true);
         functionBody->NewObjectLiteral(); // allocate one object literal for the export object
 
-        AsmJSByteCodeGenerator::EmitEmptyByteCode(funcInfo, GetByteCodeGenerator());
+        AsmJSByteCodeGenerator::EmitEmptyByteCode(funcInfo, GetByteCodeGenerator(), GetModuleFunctionNode());
 
         // Create export module proxy
         asmInfo->SetExportFunctionIndex(mExportFuncIndex);
@@ -201,20 +201,20 @@ namespace Js
                     AsmJsVar* var = sym->Cast<AsmJsVar>();
                     auto& modVar = asmInfo->GetVar(iVar++);
                     modVar.location = var->GetLocation();
-                    modVar.type = var->GetVarType();
-                    if (modVar.type.isInt())
+                    modVar.type = var->GetVarType().which();
+                    if (var->GetVarType().isInt())
                     {
                         modVar.initialiser.intInit = var->GetIntInitialiser();
                     }
-                    else if (modVar.type.isFloat())
+                    else if (var->GetVarType().isFloat())
                     {
                         modVar.initialiser.floatInit = var->GetFloatInitialiser();
                     }
-                    else if (modVar.type.isDouble())
+                    else if (var->GetVarType().isDouble())
                     {
                         modVar.initialiser.doubleInit = var->GetDoubleInitialiser();
                     }
-                    else if (IsSimdjsEnabled() && modVar.type.isSIMD())
+                    else if (IsSimdjsEnabled() && var->GetVarType().isSIMD())
                     {
                         modVar.initialiser.simdInit = var->GetSimdConstInitialiser();
                     }
@@ -226,7 +226,7 @@ namespace Js
                     modVar.isMutable = var->isMutable();
 
                     slot->location = modVar.location;
-                    slot->varType = modVar.type.which();
+                    slot->varType = var->GetVarType().which();
                     slot->isConstVar = !modVar.isMutable;
                     break;
                 }
@@ -235,10 +235,10 @@ namespace Js
                     auto& modVar = asmInfo->GetVarImport(iVarImp++);
                     modVar.location = var->GetLocation();
                     modVar.field = var->GetField()->GetPropertyId();
-                    modVar.type = var->GetVarType();
+                    modVar.type = var->GetVarType().which();
 
                     slot->location = modVar.location;
-                    slot->varType = modVar.type.which();
+                    slot->varType = modVar.type;
                     break;
                 }
                 case AsmJsSymbol::ImportFunction:{
@@ -270,9 +270,6 @@ namespace Js
                     auto& modVar = asmInfo->GetFunction(iFunc++);
                     modVar.location = func->GetFunctionIndex();
                     slot->location = modVar.location;
-
-                    // add reference from functions back to the module
-                    func->GetFuncBody()->GetAsmJsFunctionInfo()->SetModuleFunctionBody(functionBody);
                     break;
                 }
                 case AsmJsSymbol::ArrayView:
@@ -360,22 +357,31 @@ namespace Js
         {
             GetByteCodeGenerator()->AssignPropertyId(pnode->name());
             AsmJsSymbol * declSym = LookupIdentifier(pnode->name());
-            if (declSym && declSym->GetSymbolType() == AsmJsSymbol::Variable && !declSym->isMutable())
+            if (declSym)
             {
-                AsmJsVar * definition = declSym->Cast<AsmJsVar>();
-                switch (definition->GetVarType().which())
+                if (declSym->GetSymbolType() == AsmJsSymbol::MathConstant)
                 {
-                case AsmJsVarType::Double:
-                    func->AddConst<double>(definition->GetDoubleInitialiser());
-                    break;
-                case AsmJsVarType::Float:
-                    func->AddConst<float>(definition->GetFloatInitialiser());
-                    break;
-                case AsmJsVarType::Int:
-                    func->AddConst<int>(definition->GetIntInitialiser());
-                    break;
-                default:
-                    Assume(UNREACHED);
+                    AsmJsMathConst * definition = declSym->Cast<AsmJsMathConst>();
+                    Assert(definition->GetType().isDouble());
+                    func->AddConst<double>(*definition->GetVal());
+                }
+                else if (declSym->GetSymbolType() == AsmJsSymbol::Variable && !declSym->isMutable())
+                {
+                    AsmJsVar * definition = declSym->Cast<AsmJsVar>();
+                    switch (definition->GetVarType().which())
+                    {
+                    case AsmJsVarType::Double:
+                        func->AddConst<double>(definition->GetDoubleInitialiser());
+                        break;
+                    case AsmJsVarType::Float:
+                        func->AddConst<float>(definition->GetFloatInitialiser());
+                        break;
+                    case AsmJsVarType::Int:
+                        func->AddConst<int>(definition->GetIntInitialiser());
+                        break;
+                    default:
+                        Assume(UNREACHED);
+                    }
                 }
             }
             break;
@@ -927,7 +933,7 @@ namespace Js
                 {
                     if (pnodeInit->sxFlt.maybeInt)
                     {
-                        Fail(decl, L"Var declaration with integer literal outside range [-2^31, 2^32)");
+                        return Fail(decl, L"Var declaration with integer literal outside range [-2^31, 2^32)");
                     }
                     var->SetVarType(AsmJsVarType::Double);
                     var->SetLocation(func->AcquireRegister<double>());
@@ -1194,6 +1200,7 @@ namespace Js
         }
         // now we should flag this module as containing changeHeap method
         mUsesChangeHeap = true;
+        AsmJSByteCodeGenerator::EmitEmptyByteCode(func->GetFuncInfo(), GetByteCodeGenerator(), fncNode);
         return true;
     }
 
@@ -2513,7 +2520,7 @@ namespace Js
 
         if (!simdFunc->IsConstructor(argCount))
         {
-            Fail(pnode, L"Invalid SIMD constructor or wrong number of arguments.");
+            return Fail(pnode, L"Invalid SIMD constructor or wrong number of arguments.");
         }
 
         switch (simdBuiltin)

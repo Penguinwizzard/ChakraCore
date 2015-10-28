@@ -71,6 +71,7 @@ namespace Js
 #include "Exceptions\ScriptAbortException.h"
 #include "Exceptions\StackOverflowException.h"
 #include "Exceptions\NotImplementedException.h"
+#include "Exceptions\AsmJsParseException.h"
 
 #include "Memory\AutoPtr.h"
 #include "Memory\AutoAllocatorObjectPtr.h"

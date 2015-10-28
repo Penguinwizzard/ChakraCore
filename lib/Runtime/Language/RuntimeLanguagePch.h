@@ -71,6 +71,7 @@
 #include "Library\SIMDFloat64x2Lib.h"
 #include "Library\SIMDInt32x4Lib.h"
 #include "Library\SIMDInt8x16Lib.h"
+#include "Library\SIMDUtils.h"
 
 #include "Debug\DebuggingFlags.h"
 #include "Debug\DiagProbe.h"

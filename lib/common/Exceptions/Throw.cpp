@@ -12,6 +12,7 @@
 #pragma warning(pop)
 
 #include "StackOverflowException.h"
+#include "AsmJsParseException.h"
 #include "InternalErrorException.h"
 #include "OutOfMemoryException.h"
 #include "NotImplementedException.h"

@@ -1825,6 +1825,14 @@ namespace Js
                             funcBody->GetParseableFunctionInfoRef(), funcBody->GetSourceIndex(),
                             forceNoNative, &ps, &se, funcBody->GetScopeInfo(), functionRef);
 
+                        if (se.ei.scode == JSERR_AsmJsCompileError)
+                        {
+                            // if asm.js compilation failed, reparse without asm.js
+                            m_grfscr |= fscrNoAsmJs;
+                            se.Clear();
+                            return Parse(functionRef, isByteCodeDeserialization);
+                        }
+
                         if (SUCCEEDED(hrParseCodeGen))
                         {
                             fParsed = TRUE;
@@ -1852,7 +1860,7 @@ namespace Js
             {
                 throw Js::ScriptAbortException();
             }
-                else if(FAILED(hr))
+            else if(FAILED(hr))
             {
                 throw Js::InternalErrorException();
             }

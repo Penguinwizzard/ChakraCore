@@ -330,11 +330,12 @@ namespace Js {
 
     class AsmJsModuleInfo
     {
+    public:
         /// proxy of asmjs module
         struct ModuleVar
         {
             RegSlot location;
-            AsmJsVarType type;
+            AsmJsVarType::Which type;
             union
             {
                 int intInit;
@@ -347,7 +348,7 @@ namespace Js {
         struct ModuleVarImport
         {
             RegSlot location;
-            AsmJsVarType type;
+            AsmJsVarType::Which type;
             PropertyId field;
         };
         struct ModuleFunctionImport
@@ -372,6 +373,7 @@ namespace Js {
 
         typedef JsUtil::BaseDictionary<PropertyId, AsmJsSlot*, Memory::Recycler> AsmJsSlotMap;
 
+    private:
         Recycler* mRecycler;
         int mArgInCount; // for runtime validation of arguments in
         int mVarCount, mVarImportCount, mFunctionImportCount, mFunctionCount, mFunctionTableCount, mExportsCount, mSlotsCount;
@@ -422,25 +424,54 @@ namespace Js {
             Assert( i < mVarCount );
             return mVars[i];
         }
+
+        void SetVar(int i, ModuleVar var)
+        {
+            Assert(i < mVarCount);
+            mVars[i] = var;
+        }
+
         ModuleVarImport& GetVarImport( int i )
         {
             Assert( i < mVarImportCount );
             return mVarImports[i];
         }
+
+        void SetVarImport(int i, ModuleVarImport var)
+        {
+            Assert(i < mVarImportCount);
+            mVarImports[i] = var;
+        }
+
         ModuleFunctionImport& GetFunctionImport( int i )
         {
             Assert( i < mFunctionImportCount );
             return mFunctionImports[i];
+        }
+        void SetFunctionImport(int i, ModuleFunctionImport var)
+        {
+            Assert(i < mFunctionImportCount);
+            mFunctionImports[i] = var;
         }
         ModuleFunction& GetFunction( int i )
         {
             Assert( i < mFunctionCount );
             return mFunctions[i];
         }
+        void SetFunction(int i, ModuleFunction var)
+        {
+            Assert(i < mFunctionCount);
+            mFunctions[i] = var;
+        }
         ModuleFunctionTable& GetFunctionTable( int i )
         {
             Assert( i < mFunctionTableCount );
             return mFunctionTables[i];
+        }
+        void SetFunctionTable(int i, ModuleFunctionTable var)
+        {
+            Assert(i < mFunctionTableCount);
+            mFunctionTables[i] = var;
         }
         void SetFunctionTableSize( int index, uint size );
         ModuleExport GetExport( int i )
@@ -449,6 +480,10 @@ namespace Js {
             ex.id = &mExports->elements[i];
             ex.location = &mExportsFunctionLocation[i];
             return ex;
+        }
+        RegSlot* GetExportsFunctionLocation() const
+        {
+            return mExportsFunctionLocation;
         }
         PropertyIdArray* GetExportsIdArray() const
         {
@@ -516,7 +551,7 @@ namespace Js {
         {
             mIsProcessed = val;
         }
-        inline const AsmJsModuleMemory& GetModuleMemory() const
+        inline AsmJsModuleMemory& GetModuleMemory()
         {
             return mModuleMemory;
         }
@@ -528,7 +563,7 @@ namespace Js {
         {
             mAsmMathBuiltinUsed = val;
         }
-        inline BVStatic<ASMMATH_BUILTIN_SIZE> const GetAsmMathBuiltinUsed()const
+        inline BVStatic<ASMMATH_BUILTIN_SIZE> GetAsmMathBuiltinUsed()const
         {
             return mAsmMathBuiltinUsed;
         }
@@ -536,7 +571,7 @@ namespace Js {
         {
             mAsmArrayBuiltinUsed = val;
         }
-        inline BVStatic<ASMARRAY_BUILTIN_SIZE> const GetAsmArrayBuiltinUsed()const
+        inline BVStatic<ASMARRAY_BUILTIN_SIZE> GetAsmArrayBuiltinUsed()const
         {
             return mAsmArrayBuiltinUsed;
         }
@@ -563,7 +598,7 @@ namespace Js {
         {
             mAsmSimdBuiltinUsed = val;
         }
-        inline BVStatic<ASMSIMD_BUILTIN_SIZE> const GetAsmSimdBuiltinUsed()const
+        inline BVStatic<ASMSIMD_BUILTIN_SIZE> GetAsmSimdBuiltinUsed()const
         {
             return mAsmSimdBuiltinUsed;
         }

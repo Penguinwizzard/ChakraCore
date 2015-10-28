@@ -1111,8 +1111,6 @@ FuncInfo * ByteCodeGenerator::StartBindFunction(const wchar_t *name, int nameLen
 
         if (parsedFunctionBody->GetBoundPropertyRecords() == nullptr)
         {
-            Assert(!IsInNonDebugMode());
-
             // This happens when we try to re-use the function body which was created due to serialized bytecode.
             parsedFunctionBody->SetBoundPropertyRecords(EnsurePropertyRecordList());
         }

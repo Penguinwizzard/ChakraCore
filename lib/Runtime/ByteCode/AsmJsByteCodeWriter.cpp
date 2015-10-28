@@ -197,42 +197,6 @@ namespace Js {
     }
 
     template <typename SizePolicy>
-    bool AsmJsByteCodeWriter::TryWriteDouble1Addr1( OpCodeAsmJs op, RegSlot R0, const double* A1 )
-    {
-        OpLayoutT_Double1Addr1<SizePolicy> layout;
-        if( SizePolicy::Assign( layout.D0, R0 ) && SizePolicy::Assign( layout.A1, A1 ) )
-        {
-            m_byteCodeData.EncodeT<SizePolicy::LayoutEnum>( op, &layout, sizeof( layout ), this );
-            return true;
-        }
-        return false;
-    }
-
-    template <typename SizePolicy>
-    bool AsmJsByteCodeWriter::TryWriteInt1Const2( OpCodeAsmJs op, RegSlot R0, int C1, int C2 )
-    {
-        OpLayoutT_Int1Const2<SizePolicy> layout;
-        if( SizePolicy::Assign( layout.I0, R0 ) && SizePolicy::Assign( layout.C1, C1 ) && SizePolicy::Assign( layout.C2, C2 ) )
-        {
-            m_byteCodeData.EncodeT<SizePolicy::LayoutEnum>( op, &layout, sizeof( layout ), this );
-            return true;
-        }
-        return false;
-    }
-
-    template <typename SizePolicy>
-    bool AsmJsByteCodeWriter::TryWriteInt2Const1( OpCodeAsmJs op, RegSlot R0, RegSlot R1, int C2 )
-    {
-        OpLayoutT_Int2Const1<SizePolicy> layout;
-        if( SizePolicy::Assign( layout.I0, R0 ) && SizePolicy::Assign( layout.I1, R1 ) && SizePolicy::Assign( layout.C2, C2 ) )
-        {
-            m_byteCodeData.EncodeT<SizePolicy::LayoutEnum>( op, &layout, sizeof( layout ), this );
-            return true;
-        }
-        return false;
-    }
-
-    template <typename SizePolicy>
     bool AsmJsByteCodeWriter::TryWriteAsmBrReg1( OpCodeAsmJs op, ByteCodeLabel labelID, RegSlot R1 )
     {
         OpLayoutT_BrInt1<SizePolicy> layout;
@@ -327,11 +291,6 @@ namespace Js {
     void AsmJsByteCodeWriter::AsmInt1Const1( OpCodeAsmJs op, RegSlot R0, int C1 )
     {
         MULTISIZE_LAYOUT_WRITE( Int1Const1, op, R0, C1 );
-    }
-
-    void AsmJsByteCodeWriter::AsmDouble1Addr1( OpCodeAsmJs op, RegSlot R0, const double* A1 )
-    {
-        MULTISIZE_LAYOUT_WRITE( Double1Addr1, op, R0, A1 );
     }
 
     void AsmJsByteCodeWriter::AsmReg1( OpCodeAsmJs op, RegSlot R0 )

@@ -20,6 +20,9 @@
 #error Must define alignment capabilities for processor
 #endif
 
+struct _SIMDValue;
+typedef _SIMDValue SIMDValue;
+
 namespace Js
 {
     // The base buffer builder class
@@ -215,12 +218,16 @@ namespace Js
     typedef BufferBuilderOf<int16, true> BufferBuilderInt16;
     typedef BufferBuilderOf<int, true> BufferBuilderInt32;
     typedef ConstantSizedBufferBuilderOf<byte> BufferBuilderByte;
+    typedef ConstantSizedBufferBuilderOf<float> BufferBuilderFloat;
     typedef ConstantSizedBufferBuilderOf<double> BufferBuilderDouble;
+    typedef ConstantSizedBufferBuilderOf<SIMDValue> BufferBuilderSIMD;
 #else
     typedef ConstantSizedBufferBuilderOf<int16> BufferBuilderInt16;
     typedef ConstantSizedBufferBuilderOf<int> BufferBuilderInt32;
     typedef ConstantSizedBufferBuilderOf<byte> BufferBuilderByte;
+    typedef ConstantSizedBufferBuilderOf<float> BufferBuilderFloat;
     typedef ConstantSizedBufferBuilderOf<double> BufferBuilderDouble;
+    typedef ConstantSizedBufferBuilderOf<SIMDValue> BufferBuilderSIMD;
 #endif
 
     // A buffer builder which contains a list of buffer builders

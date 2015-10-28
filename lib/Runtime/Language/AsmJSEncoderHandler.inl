@@ -123,7 +123,6 @@ EXDEF3    ( CUSTOM     , NopEx             , OP_Empty                , Empty    
   DEF3_WMS( INT3       , Div_UInt          , Div_UInt                , Int3          )
   DEF3_WMS( INT3       , Rem_UInt          , Rem_UInt                , Int3          )
 
-  DEF3_WMS( CUSTOM     , Ld_DbAddr         , Op_LdAddr_Db            , Double1Addr1  )
   DEF3_WMS( DOUBLE2    , Ld_Db             , Ld_Db                   , Double2       )
   DEF3_WMS( FLOAT2     , Ld_Flt            , Ld_Flt                  , Float2        )
   DEF3_WMS( DOUBLE2    , Neg_Db            , Neg_Db                  , Double2       )

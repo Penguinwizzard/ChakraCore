@@ -3351,6 +3351,12 @@ void ByteCodeGenerator::EmitScopeList(ParseNode *pnode)
                 {
                     exit(JSERR_AsmJsCompileError);
                 }
+                else if (!(flags & fscrDeferFncParse))
+                {
+                    // if deferral is not allowed, throw and reparse everything
+                    // with asm.js disabled
+                    throw Js::AsmJsParseException();
+                }
             }
             //FALLTHROUGH
         case knopProg:

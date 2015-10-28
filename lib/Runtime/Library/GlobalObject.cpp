@@ -923,6 +923,14 @@ namespace Js
         }
         else
         {
+            if (se.ei.scode == JSERR_AsmJsCompileError)
+            {
+                // if asm.js compilation succeeded, retry with asm.js disabled
+                grfscr |= fscrNoAsmJs;
+                se.Clear();
+                return DefaultEvalHelper(scriptContext, source, sourceLength, moduleID, grfscr, pszTitle, registerDocument, isIndirect, strictMode);
+            }
+
             Assert(funcBody != nullptr);
             funcBody->SetDisplayName(pszTitle);
 
