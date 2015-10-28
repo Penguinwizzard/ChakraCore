@@ -39,4 +39,3 @@ for (var i in obj) {
     else
         write(obj[i]);
 }
-

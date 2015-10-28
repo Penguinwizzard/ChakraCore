@@ -3,8 +3,6 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-// Following two cases are supported only in ES5
-
 // Use do..while as a statement inside if..else
 var str="if (1) do WScript.Echo(1); while (false); else 1;";
 
@@ -27,8 +25,6 @@ catch (e)
 {
     WScript.Echo(e);
 }
-
-// All the following cases should succeed in pre-ES5 and ES5
 
 // do..while withuot a semicolon at the end, followed by another statement
 // do while surrounds a statement without a semicolon, but ended with a newline

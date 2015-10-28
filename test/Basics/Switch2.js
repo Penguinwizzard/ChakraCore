@@ -63,4 +63,3 @@ switch(x)
                 WScript.Echo("found y.z");
                 break;
 }
-

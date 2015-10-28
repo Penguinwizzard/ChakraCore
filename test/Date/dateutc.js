@@ -7,7 +7,6 @@ function write(v) { WScript.Echo(v + ""); }
 
 var d;
 
-//d = Date.UTC(); write(d);
 d = Date.UTC("1974"); write(d);
 d = Date.UTC(1974); write(d);
 d = Date.UTC(1974, 9); write(d);

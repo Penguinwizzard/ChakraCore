@@ -23,4 +23,3 @@ WScript.Echo(zebra)
 WScript.Echo(cat)
 WScript.Echo(rat)
 WScript.Echo(dragon);
-

@@ -8,10 +8,9 @@ function print(value)
     WScript.Echo(value);
 }
 
-
 //
 // Verify type promotion by creating two types, then adding similar named fields in a different
-// order.  This will verify that the slot indicies don't collide between promotions.
+// order.  This will verify that the slot indices don't collide between promotions.
 //
 
 var o1 = {},o2 = {};

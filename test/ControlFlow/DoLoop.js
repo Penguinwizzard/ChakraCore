@@ -25,7 +25,6 @@ WScript.Echo(cat)
 WScript.Echo(rat)
 WScript.Echo(dragon);
 
-
 do 
 {
    WScript.Echo("Should print once - 0");

@@ -48,4 +48,3 @@ TestWithProto({
 
 TestWithProto(null);
 TestWithProto(undefined);
-

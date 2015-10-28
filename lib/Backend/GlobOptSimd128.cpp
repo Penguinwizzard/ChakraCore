@@ -76,10 +76,6 @@ Value **pDstVal
             Assert(instr->GetDst()->GetType() == TyVar);
             ValueType valueType = instr->GetDst()->GetValueType();
 
-            // Type-specializing EA.
-            // Ensure that the Var sym is alive, in case we decide to roll back type-specialization of EAs.
-            //ToVarUses(instr, instr->GetSrc1(), false, *pSrc1Val);
-
             // Type-spec src1 only based on dst type. Dst type is set by the inliner based on func signature.
             ToTypeSpecUse(instr, instr->GetSrc1(), this->currentBlock, *pSrc1Val, nullptr, GetIRTypeFromValueType(valueType), GetBailOutKindFromValueType(valueType), true /*lossy*/);
             ToVarRegOpnd(instr->GetDst()->AsRegOpnd(), this->currentBlock);
@@ -259,8 +255,7 @@ GlobOpt::Simd128DoTypeSpec(IR::Instr *instr, const Value *src1Val, const Value *
 // Opnd type is (Likely) SIMD128 and matches expected type.
 // Opnd type is Object. e.g. possibly result of merging different SIMD types.
 // Simd128 values merged with Undefined/Null are still specialized.
-
-// /* Opnd type is LikelyUndefined: we don't have profile info for the operands. */
+// Opnd type is LikelyUndefined: we don't have profile info for the operands.
 
 bool GlobOpt::Simd128CanTypeSpecOpnd(const ValueType opndType, ValueType expectedType)
 {
@@ -273,8 +268,6 @@ bool GlobOpt::Simd128CanTypeSpecOpnd(const ValueType opndType, ValueType expecte
     if (
             (opndType.IsLikelyObject() && opndType.ToDefiniteObject() == expectedType) ||
             (opndType.IsLikelyObject() && opndType.GetObjectType() == ObjectType::Object)
-            // ||
-            //opndType.IsLikelyUndefined()
        )
     {
         return true;

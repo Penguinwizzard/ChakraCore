@@ -28,7 +28,6 @@ WScript.Echo(cat)
 WScript.Echo(rat)
 WScript.Echo(dragon);
 
-
 function MatchCollectionLocalColllection(collection, value)
 {
     for (var i = 0; i < collection.length; i++)
@@ -55,7 +54,6 @@ function MatchCollectionGlobalColllection(value)
 }
 WScript.Echo(MatchCollectionGlobalColllection("car"));
 WScript.Echo(MatchCollectionGlobalColllection("foo"));
-
 
 function MatchCollectionGlobalColllectionandValue()
 {

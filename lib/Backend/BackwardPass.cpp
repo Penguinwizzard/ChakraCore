@@ -10,7 +10,6 @@ BVSparse<JitArenaAllocator>::QueueInFreeList(BVSparseNode *curNode)
     AllocatorDeleteInline(JitArenaAllocator, this->alloc, curNode);
 }
 
-
 #include "BackEnd.h"
 
 #define INLINEEMETAARG_COUNT 3
@@ -87,8 +86,8 @@ BackwardPass::DoMarkTempObjects() const
 
     // Why MarkTempObject is disabled under debugger:
     //   We add 'identified so far dead non-temp locals' to byteCodeUpwardExposedUsed in ProcessBailOutInfo,
-    //   this may cause MarkTempObject convert some temps back to non-temp when it sees a 'transfered exposed use'
-    //   from a temp to non-temp. That's in general not supported conversion (while non-temp -> temp is fine).
+    //   this may cause MarkTempObject to convert some temps back to non-temp when it sees a 'transfered exposed use'
+    //   from a temp to non-temp. That's in general not a supported conversion (while non-temp -> temp is fine).
 }
 
 bool
@@ -134,7 +133,8 @@ BackwardPass::DoDeadStoreSlots() const
 
 // Whether dead store is enabled for given func and sym.
 // static
-bool BackwardPass::DoDeadStore(Func* func, StackSym* sym)
+bool 
+BackwardPass::DoDeadStore(Func* func, StackSym* sym)
 {
     // Dead store is disabled under debugger for non-temp local vars.
     return
@@ -184,7 +184,8 @@ BackwardPass::DoTrackIntOverflow() const
         func->DoGlobOptsForGeneratorFunc();
 }
 
-bool BackwardPass::DoTrackCompoundedIntOverflow() const
+bool 
+BackwardPass::DoTrackCompoundedIntOverflow() const
 {
     return
         !PHASE_OFF(Js::TrackCompoundedIntOverflowPhase, func) &&
@@ -192,7 +193,8 @@ bool BackwardPass::DoTrackCompoundedIntOverflow() const
         !func->GetProfileInfo()->IsTrackCompoundedIntOverflowDisabled();
 }
 
-bool BackwardPass::DoTrackNon32BitOverflow() const
+bool 
+BackwardPass::DoTrackNon32BitOverflow() const
 {
     // enabled only for IA
 #if defined(_M_IX86) || defined(_M_X64)
@@ -211,7 +213,7 @@ BackwardPass::CleanupBackwardPassInfoInFlowGraph()
         return;
     }
 
-    // The backward pass temp arena has already been delete, we can just reset the data
+    // The backward pass temp arena has already been deleted, we can just reset the data
 
     FOREACH_BLOCK_IN_FUNC_DEAD_OR_ALIVE(block, this->func)
     {
@@ -1204,7 +1206,8 @@ BackwardPass::DeleteBlockData(BasicBlock * block)
     }
 }
 
-void BackwardPass::ProcessLoopCollectionPass(BasicBlock *const lastBlock)
+void 
+BackwardPass::ProcessLoopCollectionPass(BasicBlock *const lastBlock)
 {
     // The collection pass is done before the prepass, to collect and propagate a minimal amount of information into nested
     // loops, for cases where the information is needed to make appropriate decisions on changing other state. For instance,
@@ -1426,6 +1429,7 @@ BackwardPass::ProcessLoop(BasicBlock * lastBlock)
     }
 #endif
 }
+
 void
 BackwardPass::OptBlock(BasicBlock * block)
 {
@@ -1490,7 +1494,7 @@ BackwardPass::ProcessBailOutConstants(BailOutInfo * bailOutInfo, BVSparse<JitAre
 {
     Assert(this->tag != Js::BackwardPhase);
 
-    // Remove constants that we already going to restore
+    // Remove constants that we are already going to restore
     SListBase<ConstantStackSymValue> * usedConstantValues = &bailOutInfo->usedCapturedValues.constantValues;
     FOREACH_SLISTBASE_ENTRY(ConstantStackSymValue, value, usedConstantValues)
     {
@@ -1509,7 +1513,7 @@ BackwardPass::ProcessBailOutConstants(BailOutInfo * bailOutInfo, BVSparse<JitAre
         }
         else if (!this->IsPrePass())
         {
-            // Constant don't need to be restore, delete.
+            // Constants don't need to be restored, delete
             iter.RemoveCurrent(this->func->m_alloc);
         }
     }
@@ -1522,7 +1526,7 @@ BackwardPass::ProcessBailOutCopyProps(BailOutInfo * bailOutInfo, BVSparse<JitAre
     Assert(this->tag != Js::BackwardPhase);
     Assert(!this->func->GetJnFunction()->GetIsAsmjsMode());
 
-    // Remove copy prop that we already going to restore
+    // Remove copy prop that we were already going to restore
     SListBase<CopyPropSyms> * usedCopyPropSyms = &bailOutInfo->usedCapturedValues.copyPropSyms;
     FOREACH_SLISTBASE_ENTRY(CopyPropSyms, copyPropSyms, usedCopyPropSyms)
     {
@@ -1534,15 +1538,16 @@ BackwardPass::ProcessBailOutCopyProps(BailOutInfo * bailOutInfo, BVSparse<JitAre
     JitArenaAllocator * allocator = this->func->m_alloc;
     BasicBlock * block = this->currentBlock;
     BVSparse<JitArenaAllocator> * upwardExposedUses = block->upwardExposedUses;
+
     // Find other copy prop that we need to restore
     FOREACH_SLISTBASE_ENTRY_EDITING(CopyPropSyms, copyPropSyms, &bailOutInfo->capturedValues.copyPropSyms, iter)
     {
-        // copy prop syms should be var
+        // Copy prop syms should be vars
         Assert(!copyPropSyms.Key()->IsTypeSpec());
         Assert(!copyPropSyms.Value()->IsTypeSpec());
         if (byteCodeUpwardExposedUsed->TestAndClear(copyPropSyms.Key()->m_id) || bailoutReferencedArgSymsBv->TestAndClear(copyPropSyms.Key()->m_id))
         {
-            // Copy prop need to be restore, add it to the restore list
+            // This copy-prop sym needs to be restored; add it to the restore list.
 
             /*
             - copyPropSyms.Key() - original sym that is byte-code upwards-exposed, its corresponding byte-code register needs
@@ -1605,7 +1610,7 @@ BackwardPass::ProcessBailOutCopyProps(BailOutInfo * bailOutInfo, BVSparse<JitAre
             else if (block->upwardExposedUses->Test(stackSym->m_id) && !block->upwardExposedUses->Test(copyPropSyms.Value()->m_id))
             {
                 // Don't use the copy prop sym if it is not used and the orig sym still has uses.
-                // No point in extended the lifetime of the copy prop sym unnecessary
+                // No point in extending the lifetime of the copy prop sym unnecessarily.
             }
             else
             {
@@ -1685,7 +1690,7 @@ BackwardPass::ProcessBailOutCopyProps(BailOutInfo * bailOutInfo, BVSparse<JitAre
         }
         else if (!this->IsPrePass())
         {
-            // Copy prop don't need to be restore, delete.
+            // Copy prop sym doesn't need to be restored, delete.
             iter.RemoveCurrent(allocator);
         }
     }
@@ -1768,7 +1773,7 @@ BackwardPass::ProcessBailOutInfo(IR::Instr * instr)
                 {
                     this->currentBlock->byteCodeUpwardExposedUsed->Clear(dstStackSym->m_id);
 #if DBG
-                    // TODO: We can only track first level function stack syms right now
+                    // We can only track first level function stack syms right now
                     if (dstStackSym->GetByteCodeFunc() == this->func)
                     {
                         this->currentBlock->byteCodeRestoreSyms[dstStackSym->GetByteCodeRegSlot()] = nullptr;
@@ -1787,7 +1792,7 @@ BackwardPass::ProcessBailOutInfo(IR::Instr * instr)
                 {
                     StackSym * stackSym = this->func->m_symTable->FindStackSym(symId);
                     Assert(!stackSym->IsTypeSpec());
-                    // TODO: We can only track first level function stack syms right now
+                    // We can only track first level function stack syms right now
                     if (stackSym->GetByteCodeFunc() == this->func)
                     {
                         Js::RegSlot byteCodeRegSlot = stackSym->GetByteCodeRegSlot();
@@ -1847,12 +1852,12 @@ BackwardPass::ProcessBailOutInfo(IR::Instr * instr)
             if(instr->GetByteCodeOffset() == Js::Constants::NoByteCodeOffset ||
                 bailOutInfo->bailOutOffset > instr->GetByteCodeOffset())
             {
-                // Currently only have post-op bailout with BailOutOnImplicitCalls
-                // or JIT inserted operation (which no byte code offsets)
-                // If there are other bailout that we want to bailout after the operation
+                // Currently, we only have post-op bailout with BailOutOnImplicitCalls
+                // or JIT inserted operation (which no byte code offsets).
+                // If there are other bailouts that we want to bailout after the operation,
                 // we have to make sure that it still doesn't do the implicit call
-                // if it is done on the stack object (otherwise, the stack object
-                // will be passed to the implicit call functions
+                // if it is done on the stack object. 
+                // Otherwise, the stack object will be passed to the implicit call functions.
                 Assert(instr->GetByteCodeOffset() == Js::Constants::NoByteCodeOffset
                     || (instr->GetBailOutKind() & ~IR::BailOutKindBits) == IR::BailOutOnImplicitCalls
                     || (instr->GetBailOutKind() & ~IR::BailOutKindBits) == IR::BailOutInvalid);
@@ -1953,10 +1958,8 @@ BackwardPass::DeadStoreTypeCheckBailOut(IR::Instr * instr)
         return;
     }
 
-    // TODO (ObjTypeSpec): Consider removing CheckFixedMethodFld without bailout much like we do with CheckObjType.
-
     // We don't need BailOutFailedTypeCheck but may need BailOutOnImplicitCall.
-    // Question: are we in the loop landing pad? If so, no bailout, since implicit calls will be checked at
+    // Consider: are we in the loop landing pad? If so, no bailout, since implicit calls will be checked at
     // the end of the block.
     if (this->currentBlock->IsLandingPad())
     {
@@ -2161,7 +2164,7 @@ BackwardPass::ProcessBailOutInfo(IR::Instr * instr, BailOutInfo * bailOutInfo)
         byteCodeUpwardExposedUsed = byteCodeUpwardExposedUsed->CopyNew(this->tempAlloc);
     }
 
-    // All the register based argument syms need to be tracked. They are either:
+    // All the register-based argument syms need to be tracked. They are either:
     //      1. Referenced as constants in bailOutInfo->usedcapturedValues.constantValues
     //      2. Referenced using copy prop syms in bailOutInfo->usedcapturedValues.copyPropSyms
     //      3. Marked as m_isBailOutReferenced = true & added to upwardExposedUsed bit vector to ensure we do not dead store their defs.
@@ -2550,7 +2553,6 @@ BackwardPass::ProcessBlock(BasicBlock * block)
             {
                 if (block->loop != nullptr &&  this->DoDeadStoreLdStForMemop(instr))
                 {
-                    //DeadStoreInstr(instr);
                     block->RemoveInstr(instr);
                     Assert(!preOpBailOutInstrToProcess || preOpBailOutInstrToProcess == instr);
                     preOpBailOutInstrToProcess = nullptr;
@@ -2713,7 +2715,8 @@ BackwardPass::ProcessBlock(BasicBlock * block)
 }
 
 #if DBG_DUMP
-void BackwardPass::DumpBlockData(BasicBlock * block)
+void 
+BackwardPass::DumpBlockData(BasicBlock * block)
 {
     block->DumpHeader();
     if (block->upwardExposedUses) // may be null for dead blocks
@@ -2756,7 +2759,8 @@ void BackwardPass::DumpBlockData(BasicBlock * block)
 }
 #endif
 
-bool BackwardPass::UpdateImplicitCallBailOutKind(IR::Instr *const instr, bool needsBailOutOnImplicitCall)
+bool 
+BackwardPass::UpdateImplicitCallBailOutKind(IR::Instr *const instr, bool needsBailOutOnImplicitCall)
 {
     Assert(instr);
     Assert(instr->HasBailOutInfo());
@@ -2804,7 +2808,8 @@ bool BackwardPass::UpdateImplicitCallBailOutKind(IR::Instr *const instr, bool ne
     return true;
 }
 
-bool BackwardPass::ProcessNoImplicitCallUses(IR::Instr *const instr)
+bool 
+BackwardPass::ProcessNoImplicitCallUses(IR::Instr *const instr)
 {
     Assert(instr);
 
@@ -2883,7 +2888,8 @@ bool BackwardPass::ProcessNoImplicitCallUses(IR::Instr *const instr)
     return true;
 }
 
-void BackwardPass::ProcessNoImplicitCallDef(IR::Instr *const instr)
+void 
+BackwardPass::ProcessNoImplicitCallDef(IR::Instr *const instr)
 {
     Assert(tag == Js::DeadStorePhase);
     Assert(instr);
@@ -2992,7 +2998,8 @@ void BackwardPass::ProcessNoImplicitCallDef(IR::Instr *const instr)
 }
 
 template<class F>
-IR::Opnd *BackwardPass::FindNoImplicitCallUse(
+IR::Opnd *
+BackwardPass::FindNoImplicitCallUse(
     IR::Instr *const instr,
     StackSym *const sym,
     const F IsCheckedUse,
@@ -3005,7 +3012,8 @@ IR::Opnd *BackwardPass::FindNoImplicitCallUse(
 }
 
 template<class F>
-IR::Opnd *BackwardPass::FindNoImplicitCallUse(
+IR::Opnd *
+BackwardPass::FindNoImplicitCallUse(
     IR::Instr *const instr,
     IR::Opnd *const opnd,
     const F IsCheckedUse,
@@ -3050,7 +3058,8 @@ IR::Opnd *BackwardPass::FindNoImplicitCallUse(
     return nullptr;
 }
 
-void BackwardPass::ProcessArrayRegOpndUse(IR::Instr *const instr, IR::ArrayRegOpnd *const arrayRegOpnd)
+void 
+BackwardPass::ProcessArrayRegOpndUse(IR::Instr *const instr, IR::ArrayRegOpnd *const arrayRegOpnd)
 {
     Assert(tag == Js::DeadStorePhase);
     Assert(!IsCollectionPass());
@@ -3281,7 +3290,8 @@ void BackwardPass::ProcessArrayRegOpndUse(IR::Instr *const instr, IR::ArrayRegOp
     }
 }
 
-void BackwardPass::ProcessNewScObject(IR::Instr* instr)
+void 
+BackwardPass::ProcessNewScObject(IR::Instr* instr)
 {
     if (this->tag != Js::DeadStorePhase || IsCollectionPass())
     {
@@ -3377,7 +3387,8 @@ void BackwardPass::ProcessNewScObject(IR::Instr* instr)
     }
 }
 
-void BackwardPass::UpdateArrayValueTypes(IR::Instr *const instr, IR::Opnd *opnd)
+void 
+BackwardPass::UpdateArrayValueTypes(IR::Instr *const instr, IR::Opnd *opnd)
 {
     Assert(tag == Js::DeadStorePhase);
     Assert(!IsPrePass());
@@ -3591,7 +3602,8 @@ void BackwardPass::UpdateArrayValueTypes(IR::Instr *const instr, IR::Opnd *opnd)
     }
 }
 
-void BackwardPass::UpdateArrayBailOutKind(IR::Instr *const instr)
+void 
+BackwardPass::UpdateArrayBailOutKind(IR::Instr *const instr)
 {
     Assert(!IsPrePass());
     Assert(instr);
@@ -3704,7 +3716,7 @@ BackwardPass::ProcessStackSymUse(StackSym * stackSym, BOOLEAN isNonByteCodeUse)
             }
             block->byteCodeUpwardExposedUsed->Set(byteCodeUseSym->m_id);
 #if DBG
-            // TODO: We can only track first level function stack syms right now
+            // We can only track first level function stack syms right now
             if (byteCodeUseSym->GetByteCodeFunc() == this->func)
             {
                 Js::RegSlot byteCodeRegSlot = byteCodeUseSym->GetByteCodeRegSlot();
@@ -3754,9 +3766,7 @@ BackwardPass::ProcessSymUse(Sym * sym, bool isRegOpndUse, BOOLEAN isNonByteCodeU
         }
 
         Assert((block->fieldHoistCandidates != nullptr) == this->DoFieldHoistCandidates());
-        // TODO (jedmiad): Add support for hoisting CheckFixedFld.  In this case we wouldn't
-        // be hoisting the actual load, but the type check that ensures the fixed function we expect
-        // is still okay to use.
+
         if (block->fieldHoistCandidates && GlobOpt::TransferSrcValue(this->currentInstr))
         {
             // If the instruction doesn't transfer the src value to dst, it will not be copyprop'd
@@ -3966,10 +3976,9 @@ BackwardPass::TrackObjTypeSpecProperties(IR::PropertySymOpnd *opnd, BasicBlock *
             // issue altogether, we would need to track the set of guarded properties along with the type value in the
             // forward pass, and when a conflict is detected either not optimize the offending instruction, or correct
             // its information based on the info from the property in the type value info.
-#if FALSE
-            Assert(!existingFldInfo->IsPoly() || !opnd->IsPoly() || GlobOpt::AreTypeSetsIdentical(existingFldInfo->GetEquivalentTypeSet(), opnd->GetEquivalentTypeSet()));
-            Assert(existingFldInfo->GetSlotIndex() == opnd->GetSlotIndex());
-#else
+            //Assert(!existingFldInfo->IsPoly() || !opnd->IsPoly() || GlobOpt::AreTypeSetsIdentical(existingFldInfo->GetEquivalentTypeSet(), opnd->GetEquivalentTypeSet()));
+            //Assert(existingFldInfo->GetSlotIndex() == opnd->GetSlotIndex());
+
             if (PHASE_TRACE(Js::EquivObjTypeSpecPhase, this->func))
             {
                 if (existingFldInfo->IsPoly() && opnd->IsPoly() &&
@@ -3986,7 +3995,6 @@ BackwardPass::TrackObjTypeSpecProperties(IR::PropertySymOpnd *opnd, BasicBlock *
                     Output::Flush();
                 }
             }
-#endif
         }
         NEXT_BITSET_IN_SPARSEBV
 #endif
@@ -3998,8 +4006,6 @@ BackwardPass::TrackObjTypeSpecProperties(IR::PropertySymOpnd *opnd, BasicBlock *
             bucket->SetNeedsMonoCheck(true);
         }
 
-        // Review (jedmiad): Make sure this drops the guarded operations on the right type check if we have
-        // a transitive assignment of the property owner (q = p, p = o) in the loop.
         if (opnd->NeedsPrimaryTypeCheck())
         {
             // Grab the guarded properties which match this type check with respect to polymorphism and drop them
@@ -4061,7 +4067,7 @@ BackwardPass::TrackObjTypeSpecWriteGuards(IR::PropertySymOpnd *opnd, BasicBlock 
         // until the type check upstream, it will get recorded there so that the type check can be registered
         // for invalidation on this property used in this operation.
 
-        // TODO (ObjTypeSpec): Support polymorphic write guards as well. We can't currently distinguish between mono and
+        // (ObjTypeSpec): Consider supporting polymorphic write guards as well. We can't currently distinguish between mono and
         // poly write guards, and a type check can only protect operations matching with respect to polymorphism (see
         // BackwardPass::TrackObjTypeSpecProperties for details), so for now we only target monomorphic operations.
         if (opnd->IsMono() && opnd->MayNeedWriteGuardProtection())
@@ -4168,15 +4174,6 @@ BackwardPass::TrackAddPropertyTypes(IR::PropertySymOpnd *opnd, BasicBlock *block
         "TypeHandlers are not compatible for transition?");
     Assert(typeWithoutPropertyTypeHandler->GetSlotCapacity() <= typeWithPropertyTypeHandler->GetSlotCapacity());
 #endif
-
-    // Review (jedmiad): Do we need profile info to not rely on AreThisAndPrototypesEnsuredToHaveOnlyWritableDataProperties?
-    //// If we can tolerate read-only properties outside of the list of properties we're adding, we can
-    //// proceed with this optimization.
-    //if (PHASE_OFF(Js::ObjTypeSpecStoreWithReadOnlyPropsPhase, this->func) &&
-    //    !typeWithoutProperty->GetPrototype()->GetType()->AreThisAndPrototypesEnsuredToHaveOnlyWritableDataProperties())
-    //{
-    //    return;
-    //}
 
     // If there's already a final type for this instance, record it on the operand.
     // If not, start tracking it.
@@ -4456,7 +4453,8 @@ BackwardPass::InsertTypeTransitionsAtPotentialKills()
 }
 
 template<class Fn>
-void BackwardPass::ForEachAddPropertyCacheBucket(Fn fn)
+void 
+BackwardPass::ForEachAddPropertyCacheBucket(Fn fn)
 {
     BasicBlock *block = this->currentBlock;
     if (block->stackSymToFinalType == nullptr)
@@ -4480,7 +4478,8 @@ void BackwardPass::ForEachAddPropertyCacheBucket(Fn fn)
     NEXT_HASHTABLE_ENTRY;
 }
 
-bool BackwardPass::TransitionUndoesObjectHeaderInlining(AddPropertyCacheBucket *data) const
+bool 
+BackwardPass::TransitionUndoesObjectHeaderInlining(AddPropertyCacheBucket *data) const
 {
     Js::Type *type = data->GetInitialType();
     if (type == nullptr || !Js::DynamicType::Is(type->GetTypeId()))
@@ -4539,7 +4538,6 @@ BackwardPass::InvalidateCloneStrCandidate(IR::Opnd * opnd)
     }
 }
 
-
 void
 BackwardPass::ProcessUse(IR::Opnd * opnd)
 {
@@ -4566,17 +4564,17 @@ BackwardPass::ProcessUse(IR::Opnd * opnd)
                 regOpnd->SetIsDead();
             }
 
-            if(IsCollectionPass())
+            if (IsCollectionPass())
             {
                 break;
             }
 
-            if(tag == Js::DeadStorePhase && regOpnd->IsArrayRegOpnd())
+            if (tag == Js::DeadStorePhase && regOpnd->IsArrayRegOpnd())
             {
                 ProcessArrayRegOpndUse(currentInstr, regOpnd->AsArrayRegOpnd());
             }
 
-            if(currentInstr->m_opcode == Js::OpCode::BailOnNotArray)
+            if (currentInstr->m_opcode == Js::OpCode::BailOnNotArray)
             {
                 Assert(tag == Js::DeadStorePhase);
 
@@ -4614,7 +4612,7 @@ BackwardPass::ProcessUse(IR::Opnd * opnd)
                 symOpnd->SetIsDead();
             }
 
-            if(IsCollectionPass())
+            if (IsCollectionPass())
             {
                 break;
             }
@@ -4822,7 +4820,8 @@ BackwardPass::SetSymIsNotUsedOnlyInBitOps(IR::Opnd *const opnd)
     }
 }
 
-void BackwardPass::TrackBitWiseOrNumberOp(IR::Instr *const instr)
+void 
+BackwardPass::TrackBitWiseOrNumberOp(IR::Instr *const instr)
 {
     Assert(instr);
     const bool trackBitWiseop = DoTrackBitOpsOrNumber();
@@ -4867,6 +4866,7 @@ void BackwardPass::TrackBitWiseOrNumberOp(IR::Instr *const instr)
         }
         return;
     }
+
     if (trackBitWiseop)
     {
         switch (opcode)
@@ -4896,6 +4896,7 @@ void BackwardPass::TrackBitWiseOrNumberOp(IR::Instr *const instr)
             break;
         }
     }
+
     if (trackNumberop)
     {
         switch (opcode)
@@ -5499,7 +5500,7 @@ BackwardPass::TrackIntUsage(IR::Instr *const instr)
         case Js::OpCode::Mul_A:
             if (trackNon32BitOverflow)
             {
-                // MULs will always be at the start of a range. Either included in the range if int32 ovf is ignored, or excluded if int32 ovf matters. Even if int32 can be ignored, MULs can still bailout on 53-bit.
+                // MULs will always be at the start of a range. Either included in the range if int32 overflow is ignored, or excluded if int32 overflow matters. Even if int32 can be ignored, MULs can still bailout on 53-bit.
                 // That's why it cannot be in the middle of a range.
                 if (instr->ignoreIntOverflowInRange)
                 {
@@ -5507,7 +5508,8 @@ BackwardPass::TrackIntUsage(IR::Instr *const instr)
                     Assert(dstSym->scratch.globOpt.numCompoundedAddSubUses >= 0);
                     Assert(dstSym->scratch.globOpt.numCompoundedAddSubUses <= MaxCompoundedUsesInAddSubForIgnoringIntOverflow);
                     instr->ignoreOverflowBitCount = (uint8) (53 - dstSym->scratch.globOpt.numCompoundedAddSubUses);
-                    // we have the max number of compounded adds/subs. 32-bit ovf cannot be ignored.
+
+                    // We have the max number of compounded adds/subs. 32-bit overflow cannot be ignored.
                     if (instr->ignoreOverflowBitCount == 32)
                     {
                         instr->ignoreIntOverflowInRange = false;
@@ -5595,7 +5597,7 @@ BackwardPass::TrackIntUsage(IR::Instr *const instr)
     }
 
     // If the last instruction included in the range is a MUL, we have to end the range.
-    // MULs with ignoreIntOverflow can still bailout on 53-bit ovf, so they cannot be in the middle of a range
+    // MULs with ignoreIntOverflow can still bailout on 53-bit overflow, so they cannot be in the middle of a range
     if (trackNon32BitOverflow && instr->m_opcode == Js::OpCode::Mul_A)
     {
         // range would have ended already if int32 overflow matters
@@ -5624,7 +5626,8 @@ BackwardPass::SetNegativeZeroMatters(IR::Opnd *const opnd)
     }
 }
 
-void BackwardPass::SetIntOverflowDoesNotMatterIfLastUse(IR::Opnd *const opnd)
+void 
+BackwardPass::SetIntOverflowDoesNotMatterIfLastUse(IR::Opnd *const opnd)
 {
     StackSym *const stackSym = IR::RegOpnd::TryGetStackSym(opnd);
     if(stackSym && !currentBlock->upwardExposedUses->Test(stackSym->m_id))
@@ -5633,7 +5636,8 @@ void BackwardPass::SetIntOverflowDoesNotMatterIfLastUse(IR::Opnd *const opnd)
     }
 }
 
-void BackwardPass::SetIntOverflowMatters(IR::Opnd *const opnd)
+void 
+BackwardPass::SetIntOverflowMatters(IR::Opnd *const opnd)
 {
     StackSym *const stackSym = IR::RegOpnd::TryGetStackSym(opnd);
     if(stackSym)
@@ -6280,7 +6284,8 @@ BackwardPass::ProcessFieldKills(IR::Instr * instr)
 }
 
 template<typename T>
-void BackwardPass::ClearBucketsOnFieldKill(IR::Instr *instr, HashTable<T> *table)
+void 
+BackwardPass::ClearBucketsOnFieldKill(IR::Instr *instr, HashTable<T> *table)
 {
     if (table)
     {
@@ -6317,7 +6322,8 @@ BackwardPass::ProcessFieldHoistKills(IR::Instr * instr)
     }
 }
 
-bool BackwardPass::TrackNoImplicitCallInlinees(IR::Instr *instr)
+bool 
+BackwardPass::TrackNoImplicitCallInlinees(IR::Instr *instr)
 {
     if (this->tag != Js::DeadStorePhase || this->IsPrePass())
     {
@@ -6353,7 +6359,8 @@ bool BackwardPass::TrackNoImplicitCallInlinees(IR::Instr *instr)
     return false;
 }
 
-bool BackwardPass::ProcessInlineeStart(IR::Instr* inlineeStart)
+bool 
+BackwardPass::ProcessInlineeStart(IR::Instr* inlineeStart)
 {
     inlineeStart->m_func->SetFirstArgOffset(inlineeStart);
 
@@ -6391,7 +6398,6 @@ bool BackwardPass::ProcessInlineeStart(IR::Instr* inlineeStart)
         removeInstr(inlineeStart);
         return true;
     }
-
 
     if (!inlineeStart->m_func->m_hasInlineArgsOpt)
     {
@@ -6446,10 +6452,10 @@ bool BackwardPass::ProcessInlineeStart(IR::Instr* inlineeStart)
     inlineeStart->FreeSrc2();
     inlineeStart->FreeDst();
     return true;
-
 }
 
-void BackwardPass::ProcessInlineeEnd(IR::Instr* instr)
+void 
+BackwardPass::ProcessInlineeEnd(IR::Instr* instr)
 {
     if (this->IsPrePass())
     {
@@ -6485,8 +6491,8 @@ void BackwardPass::ProcessInlineeEnd(IR::Instr* instr)
     }
 }
 
-
-bool BackwardPass::ProcessBailOnNoProfile(IR::Instr *instr, BasicBlock *block)
+bool 
+BackwardPass::ProcessBailOnNoProfile(IR::Instr *instr, BasicBlock *block)
 {
     Assert(this->tag == Js::BackwardPhase);
     Assert(instr->m_opcode == Js::OpCode::BailOnNoProfile);
@@ -6669,7 +6675,8 @@ bool BackwardPass::ProcessBailOnNoProfile(IR::Instr *instr, BasicBlock *block)
     }
 }
 
-bool BackwardPass::ReverseCopyProp(IR::Instr *instr)
+bool 
+BackwardPass::ReverseCopyProp(IR::Instr *instr)
 {
     // Look for :
     //
@@ -6829,8 +6836,6 @@ bool BackwardPass::ReverseCopyProp(IR::Instr *instr)
         }
     }
 
-    // Do it.
-
     if (byteCodeUseInstr)
     {
         if (this->currentBlock->byteCodeUpwardExposedUsed && instrPrev->GetDst()->AsRegOpnd()->GetIsJITOptimizedReg() && varSym->HasByteCodeRegSlot())
@@ -6874,7 +6879,8 @@ bool BackwardPass::ReverseCopyProp(IR::Instr *instr)
     return true;
 }
 
-bool BackwardPass::FoldCmBool(IR::Instr *instr)
+bool 
+BackwardPass::FoldCmBool(IR::Instr *instr)
 {
     Assert(instr->m_opcode == Js::OpCode::Conv_Bool);
 
@@ -6958,7 +6964,8 @@ bool BackwardPass::FoldCmBool(IR::Instr *instr)
     return true;
 }
 
-void BackwardPass::SetWriteThroughSymbolsSetForRegion(BasicBlock * catchBlock, Region * tryRegion)
+void 
+BackwardPass::SetWriteThroughSymbolsSetForRegion(BasicBlock * catchBlock, Region * tryRegion)
 {
     tryRegion->writeThroughSymbolsSet = JitAnew(this->func->m_alloc, BVSparse<JitArenaAllocator>, this->func->m_alloc);
 
@@ -7009,7 +7016,8 @@ void BackwardPass::SetWriteThroughSymbolsSetForRegion(BasicBlock * catchBlock, R
     }
 }
 
-bool BackwardPass::CheckWriteThroughSymInRegion(Region* region, StackSym* sym)
+bool 
+BackwardPass::CheckWriteThroughSymInRegion(Region* region, StackSym* sym)
 {
     if (region->GetType() == RegionTypeRoot || region->GetType() == RegionTypeFinally)
     {
@@ -7221,7 +7229,7 @@ BackwardPass::RemoveEmptyLoops()
             RestoreInductionVariableValuesAfterMemOp(loop);
             RemoveEmptyLoopAfterMemOp(loop);
         }
-        // Remove memop info as wee don't need them after this point.
+        // Remove memop info as we don't need them after this point.
         DeleteMemOpInfo(loop);
 
     } NEXT_LOOP_IN_FUNC_EDITING;
@@ -7268,12 +7276,11 @@ BackwardPass::RemoveEmptyLoopAfterMemOp(Loop *loop)
 }
 
 #if DBG_DUMP
-
-bool BackwardPass::IsTraceEnabled() const
+bool 
+BackwardPass::IsTraceEnabled() const
 {
     return
         Js::Configuration::Global.flags.Trace.IsEnabled(tag, this->func->GetSourceContextId(), this->func->GetLocalFunctionId()) &&
         (PHASE_TRACE(Js::SimpleJitPhase, func->GetJnFunction()) || !func->IsSimpleJit());
 }
-
 #endif

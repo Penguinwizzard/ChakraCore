@@ -18,7 +18,7 @@ namespace OpCodeAttr
     bool TempNumberProducing(Js::OpCode opcode);
     // True if the source number may assign directly to the dest number
     bool TempNumberTransfer(Js::OpCode opcode);
-    // True if the opcode allow temp object sources
+    // True if the opcode allows temp object sources
     bool TempObjectSources(Js::OpCode opcode);
     // True if the opcode can generate object on the stack
     bool TempObjectProducing(Js::OpCode opcode);

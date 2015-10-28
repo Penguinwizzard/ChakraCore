@@ -4,9 +4,6 @@
 //-------------------------------------------------------------------------------------------------------
 #include "Backend.h"
 
-#pragma region Macros
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 #if ENABLE_DEBUG_CONFIG_OPTIONS && DBG_DUMP
 
 #define TRACE_PHASE_VERBOSE(phase, indent, ...) \
@@ -25,12 +22,6 @@
 #define TRACE_PHASE_VERBOSE(phase, indent, ...)
 
 #endif
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma endregion
-
-#pragma region AddSubConstantInfo, ArrayLowerBoundCheckHoistInfo, ArrayUpperBoundCheckHoistInfo
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void GlobOpt::AddSubConstantInfo::Set(
     StackSym *const srcSym,
@@ -164,12 +155,6 @@ void GlobOpt::ArrayUpperBoundCheckHoistInfo::SetLoop(
     this->headSegmentLengthValue = headSegmentLengthValue;
     this->headSegmentLengthConstantBounds = headSegmentLengthConstantBounds;
 }
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma endregion
-
-#pragma region ValueInfo
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bool ValueInfo::HasIntConstantValue(const bool includeLikelyInt) const
 {
@@ -545,12 +530,6 @@ bool ValueInfo::IsLessThanOrEqualTo_NoConverse(
     }
     return IntBounds::IsLessThanOrEqualTo(max1, min2, src2Offset);
 }
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma endregion
-
-#pragma region GlobOpt
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void GlobOpt::UpdateIntBoundsForEqualBranch(
     Value *const src1Value,
@@ -1163,7 +1142,7 @@ void GlobOpt::TrackIntSpecializedAddSubConstant(
                     // In the prefix inc/dec pattern, the result of Ld currently gets a new value number, which will cause the
                     // induction variable info to become indeterminate. Indicate that the value number should be updated in the
                     // induction variable info.
-                    // TODO: Remove this once loop prepass value transfer scheme is fixed
+                    // Consider: Remove this once loop prepass value transfer scheme is fixed
                     updateInductionVariableValueNumber = true;
                 }
             }
@@ -1271,7 +1250,7 @@ void GlobOpt::TrackIntSpecializedAddSubConstant(
     }
 
     // See comment above where this is set to true
-    // TODO: Remove this once loop prepass value transfer scheme is fixed
+    // Consider: Remove this once loop prepass value transfer scheme is fixed
     updateInductionVariableValueNumber = false;
 
     Assert(IsLoopPrePass());
@@ -1288,9 +1267,6 @@ void GlobOpt::TrackIntSpecializedAddSubConstant(
     inductionVariable->SetSymValueNumber(dstValue->GetValueNumber());
 }
 
-#if !DBG
-__inline // only one hot call site
-#endif
 void GlobOpt::CloneBoundCheckHoistBlockData(
     BasicBlock *const toBlock,
     GlobOptBlockData *const toData,
@@ -1344,9 +1320,6 @@ void GlobOpt::CloneBoundCheckHoistBlockData(
     toData->inductionVariables = fromData->inductionVariables->Clone();
 }
 
-#if !DBG
-__inline // only one hot call site
-#endif
 void GlobOpt::MergeBoundCheckHoistBlockData(
     BasicBlock *const toBlock,
     GlobOptBlockData *const toData,
@@ -1360,8 +1333,8 @@ void GlobOpt::MergeBoundCheckHoistBlockData(
     Assert(fromBlock);
     Assert(fromData);
     Assert(fromData == &fromBlock->globOptData);
-
     Assert(toData->availableIntBoundChecks);
+
     for(auto it = toData->availableIntBoundChecks->GetIteratorWithRemovalSupport(); it.IsValid(); it.MoveNext())
     {
         const IntBoundCheck &toDataIntBoundCheck = it.CurrentValue();
@@ -1378,7 +1351,7 @@ void GlobOpt::MergeBoundCheckHoistBlockData(
     InductionVariableSet *mergeInductionVariablesInto;
     if(toBlock->isLoopHeader)
     {
-        Assert(fromBlock->loop == toBlock->loop); // the flow is such that you cannot have back-edges from an inner loop
+        Assert(fromBlock->loop == toBlock->loop); // The flow is such that you cannot have back-edges from an inner loop
 
         if(IsLoopPrePass())
         {
@@ -1389,6 +1362,7 @@ void GlobOpt::MergeBoundCheckHoistBlockData(
             Assert(prePassLoop != toBlock->loop);
             Assert(fromData->inductionVariables);
             Assert(toData->inductionVariables);
+
             InductionVariableSet *const mergedInductionVariables = toData->inductionVariables;
             for(auto it = fromData->inductionVariables->GetIterator(); it.IsValid(); it.MoveNext())
             {
@@ -1403,7 +1377,7 @@ void GlobOpt::MergeBoundCheckHoistBlockData(
                 }
 
                 // Ensure that the sym is live in the parent loop's landing pad, and that its value has not changed in an
-                // unknown way between the parent loop's landing pad and the current loop's landing pad
+                // unknown way between the parent loop's landing pad and the current loop's landing pad.
                 Value *const parentLandingPadValue =
                     FindValue(currentBlock->loop->parent->landingPad->globOptData.symToValueMap, sym);
                 if(!parentLandingPadValue)
@@ -1443,9 +1417,11 @@ void GlobOpt::MergeBoundCheckHoistBlockData(
     }
 
     const InductionVariableSet *const fromDataInductionVariables = fromData->inductionVariables;
-    Assert(fromDataInductionVariables);
     InductionVariableSet *const mergedInductionVariables = mergeInductionVariablesInto;
+
+    Assert(fromDataInductionVariables);
     Assert(mergedInductionVariables);
+
     for(auto it = mergedInductionVariables->GetIterator(); it.IsValid(); it.MoveNext())
     {
         InductionVariable &mergedInductionVariable = it.CurrentValueReference();
@@ -1463,7 +1439,7 @@ void GlobOpt::MergeBoundCheckHoistBlockData(
         }
 
         // Ensure that the sym is live in the landing pad, and that its value has not changed in an unknown way yet on the path
-        // where the sym is not already marked as an induction variable
+        // where the sym is not already marked as an induction variable.
         Value *const fromDataValue = FindValue(fromData->symToValueMap, sym);
         if(fromDataValue)
         {
@@ -1476,6 +1452,7 @@ void GlobOpt::MergeBoundCheckHoistBlockData(
         }
         mergedInductionVariable.SetChangeIsIndeterminate();
     }
+
     for(auto it = fromDataInductionVariables->GetIterator(); it.IsValid(); it.MoveNext())
     {
         const InductionVariable &fromDataInductionVariable = it.CurrentValue();
@@ -1486,7 +1463,7 @@ void GlobOpt::MergeBoundCheckHoistBlockData(
         }
 
         // Ensure that the sym is live in the landing pad, and that its value has not changed in an unknown way yet on the path
-        // where the sym is not already marked as an induction variable
+        // where the sym is not already marked as an induction variable.
         bool indeterminate = true;
         Value *const toDataValue = FindValue(toData->symToValueMap, sym);
         if(toDataValue)
@@ -1510,9 +1487,6 @@ void GlobOpt::MergeBoundCheckHoistBlockData(
     }
 }
 
-#if !DBG
-__inline // only one hot call site
-#endif
 void GlobOpt::DetectUnknownChangesToInductionVariables(GlobOptBlockData *const blockData)
 {
     Assert(DoBoundCheckHoist());
@@ -1530,6 +1504,7 @@ void GlobOpt::DetectUnknownChangesToInductionVariables(GlobOptBlockData *const b
         {
             continue;
         }
+
         Value *const value = FindValue(symToValueMap, inductionVariable.Sym());
         if(!value || value->GetValueNumber() != inductionVariable.SymValueNumber())
         {
@@ -1538,9 +1513,6 @@ void GlobOpt::DetectUnknownChangesToInductionVariables(GlobOptBlockData *const b
     }
 }
 
-#if !DBG
-__inline // only one hot call site
-#endif
 void GlobOpt::SetInductionVariableValueNumbers(GlobOptBlockData *const blockData)
 {
     Assert(DoBoundCheckHoist());
@@ -1548,7 +1520,7 @@ void GlobOpt::SetInductionVariableValueNumbers(GlobOptBlockData *const blockData
     Assert(blockData == &this->blockData);
     Assert(blockData->inductionVariables);
 
-    // Now that all values have been merged, update value numbers in the induction variable info
+    // Now that all values have been merged, update value numbers in the induction variable info.
     GlobHashTable *const symToValueMap = blockData->symToValueMap;
     for(auto it = blockData->inductionVariables->GetIterator(); it.IsValid(); it.MoveNext())
     {
@@ -1557,6 +1529,7 @@ void GlobOpt::SetInductionVariableValueNumbers(GlobOptBlockData *const blockData
         {
             continue;
         }
+
         Value *const value = FindValue(symToValueMap, inductionVariable.Sym());
         if(value)
         {
@@ -1569,9 +1542,6 @@ void GlobOpt::SetInductionVariableValueNumbers(GlobOptBlockData *const blockData
     }
 }
 
-#if !DBG
-__inline // only one hot call site
-#endif
 void GlobOpt::FinalizeInductionVariables(Loop *const loop, GlobOptBlockData *const headerData)
 {
     Assert(DoBoundCheckHoist());
@@ -1582,7 +1552,7 @@ void GlobOpt::FinalizeInductionVariables(Loop *const loop, GlobOptBlockData *con
     Assert(currentBlock->isLoopHeader);
     Assert(headerData == &this->blockData);
 
-    // Clean up induction variables and for each, install a relationship between its values inside and outside the loop
+    // Clean up induction variables and for each, install a relationship between its values inside and outside the loop.
     GlobHashTable *const symToValueMap = headerData->symToValueMap;
     GlobOptBlockData &landingPadBlockData = loop->landingPad->globOptData;
     GlobHashTable *const landingPadSymToValueMap = landingPadBlockData.symToValueMap;
@@ -1621,7 +1591,7 @@ void GlobOpt::FinalizeInductionVariables(Loop *const loop, GlobOptBlockData *con
         AssertVerify(landingPadValue->GetValueInfo()->TryGetIntConstantBounds(&landingPadConstantBounds, true));
 
         // For an induction variable i, update the value of i inside the loop to indicate that it is bounded by the value of i
-        // just before the loop
+        // just before the loop.
         if(inductionVariable.ChangeBounds().LowerBound() >= 0)
         {
             ValueInfo *const newValueInfo =
@@ -1641,9 +1611,6 @@ void GlobOpt::FinalizeInductionVariables(Loop *const loop, GlobOptBlockData *con
     }
 }
 
-#if !DBG
-__inline // only one hot call site, many args
-#endif
 bool GlobOpt::DetermineSymBoundOffsetOrValueRelativeToLandingPad(
     StackSym *const sym,
     const bool landingPadValueIsLowerBound,
@@ -1664,7 +1631,7 @@ bool GlobOpt::DetermineSymBoundOffsetOrValueRelativeToLandingPad(
     {
         // The sym's constant value is the constant bound value, so just return that. This is possible in loops such as
         // for(; i === 1; ++i){...}, where 'i' is an induction variable but has a constant value inside the loop, or in blocks
-        // inside the loop such as if(i === 1){...}.
+        // inside the loop such as if(i === 1){...}
         *boundOffsetOrValueRef = constantValue;
         return true; // 'true' indicates that *boundOffsetOrValueRef contains the constant bound value
     }
@@ -1721,9 +1688,6 @@ bool GlobOpt::DetermineSymBoundOffsetOrValueRelativeToLandingPad(
     return false;
 }
 
-#if !DBG
-__inline // only one hot call site
-#endif
 void GlobOpt::DetermineDominatingLoopCountableBlock(Loop *const loop, BasicBlock *const headerBlock)
 {
     Assert(DoLoopCountBasedBoundCheckHoist());
@@ -1755,9 +1719,6 @@ void GlobOpt::DetermineDominatingLoopCountableBlock(Loop *const loop, BasicBlock
     } NEXT_SUCCESSOR_BLOCK;
 }
 
-#if !DBG
-__inline // only one hot call site
-#endif
 void GlobOpt::DetermineLoopCount(Loop *const loop)
 {
     Assert(DoLoopCountBasedBoundCheckHoist());
@@ -1860,9 +1821,9 @@ void GlobOpt::DetermineLoopCount(Loop *const loop)
 
             if(!foundBound)
             {
-                // No useful relative bound, look for a constant bound. Exclude large constant bounds established implicitly by
+                // No useful relative bound found; look for a constant bound. Exclude large constant bounds established implicitly by
                 // <, <=, >, and >=. For example, for a loop condition (i < n), if 'n' is not invariant and hence can't be used,
-                // 'i' will still have a constant upper bound of (int32 max - 1) that should be excluded, as it's too large. Any
+                // 'i' will still have a constant upper bound of (int32 max - 1) that should be excluded as it's too large. Any
                 // other constant bounds must have been established explicitly by the loop condition, and are safe to use.
                 boundBaseVarSym = nullptr;
                 if(minMagnitudeChange >= 0)
@@ -2189,9 +2150,6 @@ void GlobOpt::GenerateSecondaryInductionVariableBound(
     }
 }
 
-#if !DBG
-__inline // only one hot call site, many args
-#endif
 void GlobOpt::DetermineArrayBoundCheckHoistability(
     bool needLowerBoundCheck,
     bool needUpperBoundCheck,
@@ -2312,7 +2270,7 @@ void GlobOpt::DetermineArrayBoundCheckHoistability(
         if(isJsArray)
         {
             // index >= headSegmentLength is currently not possible for JS arrays (except when index == int32 max, which is
-            // covered above)
+            // covered above).
             Assert(
                 !ValueInfo::IsGreaterThanOrEqualTo(
                     nullptr,
@@ -2692,7 +2650,7 @@ void GlobOpt::DetermineArrayBoundCheckHoistability(
                     0,
                     0))
             {
-                // index < 0 in the landing pad, can't use the index sym
+                // index < 0 in the landing pad; can't use the index sym
                 TRACE_PHASE_VERBOSE(Js::Phase::BoundCheckHoistPhase, 5, L"Index < 0\n");
                 searchingLower = false;
                 if(!searchingUpper)
@@ -2742,7 +2700,7 @@ void GlobOpt::DetermineArrayBoundCheckHoistability(
                 landingPadHeadSegmentLengthConstantBounds.LowerBound(),
                 landingPadHeadSegmentLengthConstantBounds.UpperBound()))
         {
-            // index >= headSegmentLength in the landing pad, can't use the index sym
+            // index >= headSegmentLength in the landing pad; can't use the index sym
             TRACE_PHASE_VERBOSE(Js::Phase::BoundCheckHoistPhase, 5, L"Index >= head segment length\n");
             searchingUpper = false;
             if(!searchingLower)
@@ -2864,8 +2822,8 @@ void GlobOpt::DetermineArrayBoundCheckHoistability(
                     {
                         // Don't use a bound that was not established explicitly, as it may be too aggressive. For instance, an
                         // index sym used in an array will obtain an upper bound of the array's head segment length - 1. That
-                        // bound is not established explicitly because the bound assertion is not enforced by the source code,
-                        // rather, it is assumed and enforced by the JIT using bailout check. Incrementing the index and using
+                        // bound is not established explicitly because the bound assertion is not enforced by the source code.
+                        // Rather, it is assumed and enforced by the JIT using bailout check. Incrementing the index and using
                         // it in a different array may otherwise cause it to use the first array's head segment length as the
                         // upper bound on which to do the bound check against the second array, and that bound check would
                         // always fail when the arrays are the same size.
@@ -2899,7 +2857,7 @@ void GlobOpt::DetermineArrayBoundCheckHoistability(
                                 -offset,
                                 -offset))
                         {
-                            // indexBoundBase + indexBoundOffset < 0, can't use this bound
+                            // indexBoundBase + indexBoundOffset < 0; can't use this bound
                             TRACE_PHASE_VERBOSE(Js::Phase::BoundCheckHoistPhase, 5, L"Bound < 0\n");
                             continue;
                         }
@@ -2922,7 +2880,7 @@ void GlobOpt::DetermineArrayBoundCheckHoistability(
                             landingPadIndexBoundBaseConstantBounds.UpperBound(),
                             offset))
                     {
-                        // indexBoundBase + indexBoundOffset >= headSegmentLength, can't use this bound
+                        // indexBoundBase + indexBoundOffset >= headSegmentLength; can't use this bound
                         TRACE_PHASE_VERBOSE(Js::Phase::BoundCheckHoistPhase, 5, L"Bound >= head segment length\n");
                         continue;
                     }
@@ -2959,7 +2917,7 @@ void GlobOpt::DetermineArrayBoundCheckHoistability(
 
         if(searchingUpper && upperHoistInfo.Loop() != loop)
         {
-            // No useful relative bound, look for a constant bound if the index is an induction variable. Exclude constant
+            // No useful relative bound found; look for a constant bound if the index is an induction variable. Exclude constant
             // bounds of non-induction variables because those bounds may have been established through means other than a loop
             // exit condition, such as math or bitwise operations. Exclude constant bounds established implicitly by <,
             // <=, >, and >=. For example, for a loop condition (i < n - 1), if 'n' is not invariant and hence can't be used,
@@ -3195,7 +3153,7 @@ void GlobOpt::DetermineArrayBoundCheckHoistability(
 
         offset = indexOffset;
 
-        // Check if there is already a loop count based bound sym for the index, if not, generate it
+        // Check if there is already a loop count based bound sym for the index. If not, generate it.
         do
         {
             const SymID indexSymId = indexSym->m_id;
@@ -3316,7 +3274,7 @@ void GlobOpt::DetermineArrayBoundCheckHoistability(
             return;
         }
 
-        // The loop count based bound is not constant, need to add the offset of the index sym in the landing pad. Instead
+        // The loop count based bound is not constant; we need to add the offset of the index sym in the landing pad. Instead
         // of adding though, we will treat the index sym as the loop count based bound base sym and adjust the offset that will
         // be used in the bound check itself.
         indexLoopCountBasedBoundBaseSym = indexSymToAdd;
@@ -3447,46 +3405,3 @@ void GlobOpt::DetermineArrayBoundCheckHoistability(
         upperHoistInfo.SetLoopCount(loopCount, maxMagnitudeChange);
     }
 }
-
-void GlobOpt::InstantiateForceInlinedMembers_GlobOptIntBounds()
-{
-    // Force-inlined functions defined in a translation unit need a reference from an extern non-force-inlined function in
-    // the same translation unit to force an instantiation of the force-inlined function. Otherwise, if the force-inlined
-    // function is not referenced in the same translation unit, it will not be generated and the linker is not able to find
-    // the definition to inline the function in other translation units.
-    Assert(false);
-
-    GlobOpt *const globOpt = nullptr;
-    ArrayLowerBoundCheckHoistInfo lowerHoistInfo;
-    ArrayUpperBoundCheckHoistInfo upperHoistInfo;
-    IntConstantBounds intConstantBounds;
-    bool boolean = false;
-
-    globOpt->CloneBoundCheckHoistBlockData(nullptr, nullptr, nullptr, nullptr);
-    globOpt->MergeBoundCheckHoistBlockData(nullptr, nullptr, nullptr, nullptr);
-    globOpt->DetectUnknownChangesToInductionVariables(nullptr);
-    globOpt->SetInductionVariableValueNumbers(nullptr);
-    globOpt->FinalizeInductionVariables(nullptr, nullptr);
-    globOpt->DetermineDominatingLoopCountableBlock(nullptr, nullptr);
-    globOpt->DetermineLoopCount(nullptr);
-    globOpt->GenerateLoopCount(nullptr, nullptr);
-    globOpt->GenerateSecondaryInductionVariableBound(nullptr, nullptr, nullptr, 0, nullptr);
-    globOpt->DetermineArrayBoundCheckHoistability(
-        false,
-        false,
-        lowerHoistInfo,
-        upperHoistInfo,
-        false,
-        nullptr,
-        nullptr,
-        intConstantBounds,
-        nullptr,
-        nullptr,
-        intConstantBounds,
-        nullptr,
-        boolean,
-        boolean);
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma endregion

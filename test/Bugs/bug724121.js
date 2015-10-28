@@ -3,18 +3,6 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-//Configuration: lessmath_variableMRU.xml
-//Testcase Number: 19319
-//Switches: -maxinterpretcount:1 -maxsimplejitruncount:1  -MinSwitchJumpTableSize:3 -forcedeferparse -force:fieldhoist -MaxLinearStringCaseCount:2 -MaxLinearIntCaseCount:2 -bgjit- -loopinterpretcount:1 -force:fieldcopyprop -force:polymorphicinlinecache -force:interpreterautoprofile -force:inline -force:atom -force:rejit -off:lossyinttypespec -off:BoundCheckElimination -off:ArrayCheckHoist -off:ArrayLengthHoist -off:aggressiveinttypespec -force:fixdataprops -force:ScriptFunctionWithInlineCache -off:trackintusage -off:fefixedmethods -ForceArrayBTree -off:BoundCheckHoist -off:checkthis
-//Baseline Switches: -nonative
-//Arch: AMD64
-//Flavor: chk
-//Branch: fbl_ie_stage_dev3
-//Build: 140814-2030
-//FullBuild: 9813.0.140814
-//MachineName: BPT04023
-//InstructionSet:
-//reduced switches: -loopinterpretcount:1 -bgjit- -maxsimplejitruncount:1 -maxinterpretcount:1 -forcedeferparse -force:inline
 function test0() {
   var GiantPrintArray = [];
   var v26 = {};

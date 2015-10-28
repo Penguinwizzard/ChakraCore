@@ -24,7 +24,6 @@ function find(arr, value) {
 var arr = [0, 1, 2, 3, 4, 5];
 echo("Find 3 at index: ", find(arr, 3));
 
-
 function propCacheTest()
 {
    var obj = new Object();

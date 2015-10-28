@@ -3,17 +3,6 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-//Configuration: TrackIntUsage.xml
-//Testcase Number: 27886
-//Switches:   -maxinterpretcount:1 -maxsimplejitruncount:2  -force:rejit -on:fieldpre  -force:atom -force:fixdataprops
-//Baseline Switches: -nonative 
-//Arch: X86
-//Flavor: chk
-//Branch:  fbl_ie_stage_dev3
-//Build: 140703-2030
-//FullBuild: 9782.0.140703
-//MachineName: VSP60271
-//InstructionSet: 
 var shouldBailout = false;
 var runningJITtedCode = false;
 var reuseObjects = false;
@@ -21,6 +10,7 @@ var randomGenerator = function(inputseed) {
     var seed = inputseed;
     return function() {
     // Robert Jenkins' 32 bit integer hash function.
+    // This hash is public domain. (http://burtleburtle.net/bob/hash/integer.html)
     seed = ((seed + 0x7ed55d16) + (seed << 12))  & 0xffffffff;
     seed = ((seed ^ 0xc761c23c) ^ (seed >>> 19)) & 0xffffffff;
     seed = ((seed + 0x165667b1) + (seed << 5))   & 0xffffffff;
@@ -393,54 +383,3 @@ test0();
 // run JITted code
 runningJITtedCode = true;
 test0();
-
-
-// Baseline total processor time: 00:00:00.2656250
-// Test total processor time: 00:00:00.6562500
-// 
-// Baseline output:
-// Skipping first 281 lines of output...
-// ary[10] = -2147483646
-// ary[11] = -1850992516
-// ary[12] = 1041782272
-// ary[13] = 194
-// ary[14] = 1047975887
-// ary[ary.length-1] = 0
-// ary.length = 7340
-// sumOfary = -2035075511
-// subset_of_ary = 180224827,-252,43,761200964,-149924584,357066928,-1029007725,65536,-104,-1584655723.90000000,3
-// sumOfIntArr0 = 1661555253
-// subset_of_IntArr0 = 603130421,,1003589260,-85,1,54835619,215
-// sumOfIntArr1 = -420875226
-// subset_of_IntArr1 = -1389274251,3,60,0,213,968398749
-// sumOfFloatArr0 = 875764975
-// subset_of_FloatArr0 = 31,-65142194,688927696,251979442
-// sumOfVarArr0 = 1216831082,-7339,true,,,-697344000,,false,0,,false,-697341081,0,-2094931212,[object Object],-28,580282652,74274812,615692735,498133449,-2,-170null-2059024088,-7339,true,,,-697344000,,false,0,,false,-697341081,0,-2094931212,[object Object],-28,580282652,74274812,615692735,498133449,-2,-170false0nullfalse-530959869-2094931212[object Object]-2124497377-2-170
-// subset_of_VarArr0 = 153045429,-7339,true,153045429,-7339,true,,,-697344000,,false,0,,false,-697341081,0,-2094931212,[object Object],-28,580282652,74274812,615692735,498133449,-2,-170,,-697344000,153045429,-7339,true,,,-697344000,,false,0,,false,-697341081,0,-2094931212,[object Object],-28,580282652,74274812,615692735,498133449,-2,-170,false,0,,false
-// sumOfaliasOfVarArr0 = 1216831082,-7339,true,,,-697344000,,false,0,,false,-697341081,0,-2094931212,[object Object],-28,580282652,74274812,615692735,498133449,-2,-170null-2059024088,-7339,true,,,-697344000,,false,0,,false,-697341081,0,-2094931212,[object Object],-28,580282652,74274812,615692735,498133449,-2,-170false0nullfalse-530959869-2094931212[object Object]-2124497377-2-170
-// subset_of_aliasOfVarArr0 = 153045429,-7339,true,153045429,-7339,true,,,-697344000,,false,0,,false,-697341081,0,-2094931212,[object Object],-28,580282652,74274812,615692735,498133449,-2,-170,,-697344000,153045429,-7339,true,,,-697344000,,false,0,,false,-697341081,0,-2094931212,[object Object],-28,580282652,74274812,615692735,498133449,-2,-170,false,0,,false
-// 
-// 
-// Test output:
-// Skipping first 281 lines of output...
-// ary[10] = -2147483646
-// ary[11] = -1850992516
-// ary[12] = 1041782272
-// ary[13] = 194
-// ary[14] = 1047975887
-// ary[ary.length-1] = 0
-// ary.length = 7340
-// sumOfary = -2035075511
-// subset_of_ary = 180224827,-252,43,761200964,-149924584,357066928,-1029007725,65536,-104,-1584655723.90000000,3
-// sumOfIntArr0 = 1661555253
-// subset_of_IntArr0 = 603130421,,1003589260,-85,1,54835619,215
-// sumOfIntArr1 = -420875226
-// subset_of_IntArr1 = -1389274251,3,60,0,213,968398749
-// sumOfFloatArr0 = 875764975
-// subset_of_FloatArr0 = 31,-65142194,688927696,251979442
-// sumOfVarArr0 = 1216831082,-7339,true,,,-697344000,,false,0,,false,-697341081,0,-193848069,[object Object],-28,580282652,74274812,615692735,498133449,-2,-170null-2059024088,-7339,true,,,-697344000,,false,0,,false,-697341081,0,-193848069,[object Object],-28,580282652,74274812,615692735,498133449,-2,-170false0nullfalse-530959869-193848069[object Object]-2124497377-2-170
-// subset_of_VarArr0 = 153045429,-7339,true,153045429,-7339,true,,,-697344000,,false,0,,false,-697341081,0,-193848069,[object Object],-28,580282652,74274812,615692735,498133449,-2,-170,,-697344000,153045429,-7339,true,,,-697344000,,false,0,,false,-697341081,0,-193848069,[object Object],-28,580282652,74274812,615692735,498133449,-2,-170,false,0,,false
-// sumOfaliasOfVarArr0 = 1216831082,-7339,true,,,-697344000,,false,0,,false,-697341081,0,-193848069,[object Object],-28,580282652,74274812,615692735,498133449,-2,-170null-2059024088,-7339,true,,,-697344000,,false,0,,false,-697341081,0,-193848069,[object Object],-28,580282652,74274812,615692735,498133449,-2,-170false0nullfalse-530959869-193848069[object Object]-2124497377-2-170
-// subset_of_aliasOfVarArr0 = 153045429,-7339,true,153045429,-7339,true,,,-697344000,,false,0,,false,-697341081,0,-193848069,[object Object],-28,580282652,74274812,615692735,498133449,-2,-170,,-697344000,153045429,-7339,true,,,-697344000,,false,0,,false,-697341081,0,-193848069,[object Object],-28,580282652,74274812,615692735,498133449,-2,-170,false,0,,false
-// 
-// Reduced Switches:-maxinterpretcount:1 -maxsimplejitruncount:2

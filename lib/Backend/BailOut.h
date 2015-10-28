@@ -264,8 +264,6 @@ protected:
     // Index of start of section of argOuts for current record/current func, used with argOutFloat64Syms and
     // argOutLosslessInt32Syms when restoring values, as BailOutInfo uses one argOuts array for all funcs.
     // Similar to outParamOffsets which points to current func section for the offsets.
-    // TODO: make this simpler.
-
     Js::RegSlot localOffsetsCount;
     uint32 const bailOutOffset;
 

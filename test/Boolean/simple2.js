@@ -3,7 +3,7 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-// Boolean values generated with ! outside a conditional.
+// Boolean values generated with ! outside of a conditional.
 
 var q = new Object();
 var tests = [-0.5, -1, 1, 2, 3, new Object(), q, [4,5,6], "blah", 'c', true];

@@ -86,4 +86,3 @@ for(var i in double)
 {
    write("FAILED: Entering enumeration of double");
 }
-

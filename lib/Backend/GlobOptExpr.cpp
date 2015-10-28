@@ -25,6 +25,7 @@ public:
                 hash++;
                 AssertMsg(hash != 0, "Too many CSE'able opcodes");
             }
+
         }
     }
 }CSEInit_Dummy;
@@ -805,7 +806,7 @@ GlobOpt::CanCSEArrayStore(IR::Instr *instr)
 
     ValueType baseValueType(baseOpnd->GetValueType());
 
-    // Only handle definit arrays for now.  Typed Arrays would require truncation of the CSE'd value.
+    // Only handle definite arrays for now.  Typed Arrays would require truncation of the CSE'd value.
     if (!baseValueType.IsArrayOrObjectWithArray())
     {
         return false;

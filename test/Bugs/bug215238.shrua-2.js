@@ -3,18 +3,6 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-//Configuration: TrackIntUsage.xml
-//Testcase Number: 1894
-//Switches:   -maxinterpretcount:1 -maxsimplejitruncount:1  -force:polymorphicinlinecache -MinSwitchJumpTableSize:2 -force:rejit -force:ScriptFunctionWithInlineCache -force:atom -off:ArrayCheckHoist -force:fixdataprops -ForceArrayBTree
-//Baseline Switches: -nonative
-//Arch: AMD64
-//Flavor: chk
-//Branch:  fbl_ie_stage_dev3
-//Build: 140521-0800
-//FullBuild: 9748.0.140521
-//MachineName: VSP06223
-//InstructionSet:
-
 function getRoundValue(n) {
  if(typeof n === 'number') {
     if(n % 1 == 0) // int number
@@ -42,7 +30,7 @@ function test0(){
   protoObj0 = Object.create(obj0);
   obj0.prop0 = 1073741823;
   m = func0.call(arrObj0 , 1, arrObj0.method0.call(arrObj0 , 1, 1, 1, 1), 1, 1);
-  //Snippets:newobjinlining4.ecs
+
   function v18()
   {
     this.v19 = 1;
@@ -87,49 +75,3 @@ test0();
 // run JITted code
 runningJITtedCode = true;
 test0();
-
-// Baseline output:
-// Skipping first 17 lines of output...
-// 1
-// 3
-// 65531
-// 1
-// 1
-// 4
-// 65530
-// 1
-// 1
-// 2
-// 65532
-// 1
-// 1
-// 3
-// 65531
-// 1
-// 1
-// 4
-// 65530
-//
-//
-// Test output:
-// Skipping first 17 lines of output...
-// 1
-// 3
-// 98
-// 1
-// 1
-// 4
-// 97
-// 1
-// 1
-// 2
-// 99
-// 1
-// 1
-// 3
-// 98
-// 1
-// 1
-// 4
-// 97
-//

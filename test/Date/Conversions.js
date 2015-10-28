@@ -76,7 +76,7 @@ writeLine("");
 
 // In 2007, the DST rules in the Pacific time zone changed. Instead of transitioning into DST in April, the transition
 // happens in March, and instead of transitioning into Standard Time in October, the transition happens in November.
-// So, we test using March 31, 2006/2007 and October 31, 2006/2007. These dates fall inbetween the transition times in 2006
+// So, we test using March 31, 2006/2007 and October 31, 2006/2007. These dates fall in between the transition times in 2006
 // and 2007. The expected behavior is that we always use the current year's DST rules when applying the DST adjustment. So
 // even for the dates in 2006, we should use the current rules for conversion.
 

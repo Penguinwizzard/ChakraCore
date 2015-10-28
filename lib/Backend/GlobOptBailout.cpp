@@ -237,7 +237,7 @@ GlobOpt::CaptureByteCodeSymUses(IR::Instr * instr)
 {
     if (this->byteCodeUses)
     {
-        // We already capture it before.
+        // We already captured it before.
         return;
     }
     Assert(this->propertySymUse == NULL);
@@ -312,7 +312,7 @@ GlobOpt::TrackCalls(IR::Instr * instr)
         }
         else
         {
-            // it is a reg opnd if it is a helper call
+            // It is a reg opnd if it is a helper call
             // It should be all ArgOut until the CallHelper instruction
             Assert(opnd->IsRegOpnd());
             this->isCallHelper = true;
@@ -412,9 +412,8 @@ GlobOpt::TrackCalls(IR::Instr * instr)
         {
             inlineBuiltInStartInstr = inlineBuiltInStartInstr->m_prev;
         }
-        IR::Instr *byteCodeUsesInstr = inlineBuiltInStartInstr->m_prev;
-        //AssertMsg(inlineBuiltInStartInstr->GetSrc2() == instr->GetSrc2(), "Found wrong inlineBuiltInStartInstr instr.");
 
+        IR::Instr *byteCodeUsesInstr = inlineBuiltInStartInstr->m_prev;
         IR::Instr * insertBeforeInstr = instr->m_prev;
         IR::Instr * tmpInstr = insertBeforeInstr;
         while(tmpInstr->m_opcode != Js::OpCode::InlineBuiltInStart )
@@ -460,7 +459,7 @@ GlobOpt::TrackCalls(IR::Instr * instr)
         // need to know about current bailout record, but since they are added after TrackCalls is called
         // for InlineeBuiltInStart, we can't clear current record when got InlineeBuiltInStart
 
-        //Do not track calls for InlineNonTrackingBuiltInEnd, as it is already tracked for InlineArrayPop
+        // Do not track calls for InlineNonTrackingBuiltInEnd, as it is already tracked for InlineArrayPop
         if(instr->m_opcode == Js::OpCode::InlineBuiltInEnd)
         {
             this->EndTrackCall(instr);
@@ -633,9 +632,9 @@ void GlobOpt::EndTrackingOfArgObjSymsForInlinee()
         tempBv->Minus(this->blockData.curFunc->argObjSyms, this->blockData.argObjSyms);
         if(!tempBv->IsEmpty())
         {
-            //This means there are arguments object symbols in the current function which are not in the current block.
-            //This could happen when one of the blocks have a throw and arguments object aliased in it and other blocks don't see it.
-            //Rare case, abort stack arguments optimization in this case.
+            // This means there are arguments object symbols in the current function which are not in the current block.
+            // This could happen when one of the blocks has a throw and arguments object aliased in it and other blocks don't see it.
+            // Rare case, abort stack arguments optimization in this case.
             CannotAllocateArgumentsObjectOnStack();
         }
         else
@@ -699,7 +698,7 @@ GlobOpt::FillBailOutInfo(BasicBlock *block, BailOutInfo * bailOutInfo)
     bailOutInfo->liveSimd128I4Syms = block->globOptData.liveSimd128I4Syms->CopyNew(this->func->m_alloc);
 
     // The live int32 syms in the bailout info are only the syms resulting from lossless conversion to int. If the int32 value
-    // was created from a lossy conversion to int, the original var value cannot be rematerialized from the int32 value. So, the
+    // was created from a lossy conversion to int, the original var value cannot be re-materialized from the int32 value. So, the
     // int32 version is considered to be not live for the purposes of bailout, which forces the var or float versions to be used
     // directly for restoring the value during bailout. Otherwise, bailout may try to re-materialize the var value by converting
     // the lossily-converted int value back into a var, restoring the wrong value.
@@ -731,8 +730,8 @@ GlobOpt::FillBailOutInfo(BasicBlock *block, BailOutInfo * bailOutInfo)
         }
     }
 
-    // Save the constant values that we know so we can restore them directly
-    // This allow us to dead store the constant value assign
+    // Save the constant values that we know so we can restore them directly.
+    // This allows us to dead store the constant value assign.
     this->CaptureValues(block, bailOutInfo);
 
     if (TrackArgumentsObject())
@@ -761,7 +760,6 @@ GlobOpt::FillBailOutInfo(BasicBlock *block, BailOutInfo * bailOutInfo)
         uint argRestoreAdjustCount = 0;
         FOREACH_SLISTBASE_ENTRY(IR::Opnd *, opnd, block->globOptData.callSequence)
         {
-
             if(opnd->GetStackSym()->HasArgSlotNum())
             {
                 StackSym * sym;
@@ -792,7 +790,6 @@ GlobOpt::FillBailOutInfo(BasicBlock *block, BailOutInfo * bailOutInfo)
                 // Note that there could be ArgOuts below current bailout instr that belong to current call (currentArgOutCount < argOutCount),
                 // in which case we will have nulls in argOutSyms[] in start of section for current call, because we fill from tail.
                 // Example: StartCall 3, ArgOut1,.. ArgOut2, Bailout,.. Argout3 -> [NULL, ArgOut1, ArgOut2].
-
             }
             else
             {
@@ -924,9 +921,6 @@ GlobOpt::MayNeedBailOnImplicitCall(IR::Opnd * opnd, Value *val, bool callsToPrim
     case IR::OpndKindFloatConst:
     case IR::OpndKindIntConst:
         return false;
-
-    // FIELDHOIST-TODO: once we have better propagation of type so we know whether
-    // an operand is a number or not we can filter out more instr from bail out check
     case IR::OpndKindReg:
         // Only need implicit call if the operation will call ToPrimitive and we haven't prove
         // that it is already a primitive

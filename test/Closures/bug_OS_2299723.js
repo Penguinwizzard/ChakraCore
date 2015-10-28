@@ -5,7 +5,7 @@
 
 // let and const variables should exhibit redeclaration and assignment to const errors
 // even when they are located in an ActivationObjectEx cached scope.
-// Test them independently due to OS bug ###
+// Test them independently
 //
 function f0() {
     let x = 0;

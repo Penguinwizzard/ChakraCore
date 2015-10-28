@@ -133,17 +133,3 @@ for (var i in d)
   write("Index:" + i + " Value:" + d[i]);
   counter++;
 }
-
-/*
-write("Scenario:5 - Additions to array in missing elements");
-var e = [1,,3];
-
-for (var i in e)
-{
-  if(i=="2")
-  {
-    e[1] = 10;
-  }
-  write("Index:" + i + " Value:" + e[i]);
-}
-*/

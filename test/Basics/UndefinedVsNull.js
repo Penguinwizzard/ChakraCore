@@ -12,7 +12,6 @@ if (undefined == null)
 else
     WScript.Echo("Objects are not equivalent");
 
-
 //
 // Test Strict Equals operator (ES3.0: S11.9.4)
 //
@@ -32,8 +31,6 @@ if (null === null)
 else
     WScript.Echo("Different instances");
 
-
-
 function dump(a, index)
 {
     var value = a[index];
@@ -50,7 +47,6 @@ function dump(a, index)
         WScript.Echo(value);
     }
 }
-
 
 //
 // Create an array and grow it, ensuring that all empty slots are properly set to 'undefined'

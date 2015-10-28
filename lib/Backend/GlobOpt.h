@@ -474,68 +474,6 @@ public:
     }
 };
 
-#if FALSE
-class JsTypeValueInfo : public ValueInfo
-{
-private:
-    Js::Type *const jsType;
-
-public:
-    JsTypeValueInfo(Js::Type *const jsType)
-        : ValueInfo(Uninitialized, ValueStructureKind::JsType), jsType(jsType)
-    {
-    }
-
-    static JsTypeValueInfo *New(JitArenaAllocator *const allocator, Js::Type *const jsType)
-    {
-        return JitAnew(allocator, JsTypeValueInfo, jsType);
-    }
-
-    JsTypeValueInfo *Copy(JitArenaAllocator *const allocator) const
-    {
-        return JitAnew(allocator, JsTypeValueInfo, *this);
-    }
-
-public:
-    Js::Type *JsType() const
-    {
-        return jsType;
-    }
-};
-
-class EquivalentTypeSetValueInfo : public ValueInfo
-{
-private:
-    // This type set is immutable. That's important because when we clone values in the value table down
-    // the flow graph, we only make shallow copies. Thus multiple values in different blocks may end up
-    // sharing the same value info. If we wanted to modify this type set in one block, we would to clone
-    // the value info on demand (see ChangeValueInfo).
-    Js::EquivalentTypeSet * typeSet;
-
-public:
-    EquivalentTypeSetValueInfo(Js::EquivalentTypeSet * typeSet)
-        : ValueInfo(Uninitialized, ValueStructureKind::EquivalentTypeSet), typeSet(typeSet)
-    {
-    }
-
-    static EquivalentTypeSetValueInfo *New(JitArenaAllocator *const allocator, Js::EquivalentTypeSet * typeSet)
-    {
-        return JitAnew(allocator, EquivalentTypeSetValueInfo, typeSet);
-    }
-
-    EquivalentTypeSetValueInfo *Copy(JitArenaAllocator *const allocator) const
-    {
-        return JitAnew(allocator, EquivalentTypeSetValueInfo, *this);
-    }
-
-public:
-    Js::EquivalentTypeSet * GetTypeSet() const
-    {
-        return this->typeSet;
-    }
-};
-#endif
-
 struct ObjectTypePropertyEntry
 {
     Js::ObjTypeSpecFldInfo* fldInfo;
@@ -1347,7 +1285,6 @@ private:
     void                    TailDupPass();
     bool                    TryTailDup(IR::BranchInstr *tailBranch);
     void                    CleanUpValueMaps();
-//    Value *                 AddPropertySymCompensationLoad(GlobOptBlockData *toData, BasicBlock *toBlock, BasicBlock *fromBlock, PropertySym *propertySym, ValueInfo *valueInfo);
     PRECandidatesList *     FindBackEdgePRECandidates(BasicBlock *block, JitArenaAllocator *alloc);
     PRECandidatesList *     RemoveUnavailableCandidates(BasicBlock *block, PRECandidatesList *candidates, JitArenaAllocator *alloc);
     PRECandidatesList *     FindPossiblePRECandidates(Loop *loop, JitArenaAllocator *alloc);

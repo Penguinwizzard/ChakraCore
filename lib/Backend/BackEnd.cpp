@@ -108,7 +108,7 @@ CheckCodeGenFunction GetCheckCodeGenFunction(Js::JavascriptMethod codeAddress)
 
 uint GetBailOutRegisterSaveSlotCount()
 {
-    // REVIEW: not all registers are used, we are allocation more space then necessary.
+    // REVIEW: not all registers are used, we are allocating more space then necessary.
     return LinearScanMD::GetRegisterSaveSlotCount();
 }
 

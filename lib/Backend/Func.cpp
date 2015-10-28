@@ -93,14 +93,12 @@ Func::Func(JitArenaAllocator *alloc, CodeGenWorkItem* workItem, const Js::Functi
 #endif
     stackNestedFunc(false),
     stackClosure(false)
-
 #if defined(_M_ARM32_OR_ARM64)
     , m_ArgumentsOffset(0)
     , m_epilogLabel(nullptr)
 #endif
     , m_funcStartLabel(nullptr)
     , m_funcEndLabel(nullptr)
-
 #ifdef _M_X64
     , m_prologEncoder(alloc)
 #endif
@@ -113,8 +111,6 @@ Func::Func(JitArenaAllocator *alloc, CodeGenWorkItem* workItem, const Js::Functi
     , isPostPeeps(false)
     , isPostLayout(false)
     , isPostFinalLower(false)
-#endif
-#if DBG
     , vtableMap(nullptr)
 #endif
     , m_yieldOffsetResumeLabelList(nullptr)
@@ -129,6 +125,7 @@ Func::Func(JitArenaAllocator *alloc, CodeGenWorkItem* workItem, const Js::Functi
     {
         m_inlineeId = ++(GetTopFunc()->m_inlineeId);
     }
+
     m_jnFunction = m_workItem->GetFunctionBody();
     bool doStackNestedFunc = m_jnFunction->DoStackNestedFunc();
     bool doStackClosure = m_jnFunction->DoStackClosure() && !PHASE_OFF(Js::FrameDisplayFastPathPhase, this);
@@ -368,7 +365,6 @@ Func::Codegen()
         IRtoJSObjectBuilder::DumpIRtoGlobalObject(this, Js::IRBuilderPhase);
 #endif /* IR_VIEWER */
 
-
         BEGIN_CODEGEN_PHASE(this, Js::InlinePhase);
 
         InliningHeuristics heuristics(this->GetJnFunction());
@@ -386,9 +382,8 @@ Func::Codegen()
         }
 
         // FlowGraph
-
-        { //scope for FG arena
-
+        {
+            // Scope for FlowGraph arena
             NoRecoverMemoryJitArenaAllocator fgAlloc(L"BE-FlowGraph", m_alloc->GetPageAllocator(), Js::Throw::OutOfMemory);
 
             BEGIN_CODEGEN_PHASE(this, Js::FGBuildPhase);
@@ -582,7 +577,6 @@ Func::Codegen()
     }
 
     {
-
         if(IS_JS_ETW(EventEnabledJSCRIPT_FUNCTION_JIT_STOP()))
         {
             WCHAR displayNameBuffer[256];
@@ -633,7 +627,6 @@ Func::Codegen()
     }
 #endif
 }
-
 
 ///----------------------------------------------------------------------------
 /// Func::StackAllocate
@@ -715,8 +708,6 @@ Func::EnsureLocalVarSlots()
             int32 size = localSlotCount * GetDiagLocalSlotSize();
             m_localVarSlotsOffset = StackAllocate(size);
             m_hasLocalVarChangedOffset = StackAllocate(max(1, MachStackAlignment)); // Can't alloc less than StackAlignment bytes.
-
-            // TODO : Add metadata to know what kind of value it contains.
 
             Assert(this->m_workItem->Type() == JsFunctionType);
 
@@ -842,7 +833,6 @@ Func::DoGlobOptsForGeneratorFunc()
     return !m_jnFunction->IsGenerator();
 }
 
-
 void
 Func::SetDoFastPaths()
 {
@@ -927,7 +917,6 @@ bool Func::CanAllocInPreReservedHeapPageSegment ()
 ///     Note: It counts all instrs for now, including labels, etc.
 ///
 ///----------------------------------------------------------------------------
-
 uint32
 Func::GetInstrCount()
 {
@@ -948,7 +937,6 @@ Func::GetInstrCount()
 ///     Number each instruction in order of appearance in the function.
 ///
 ///----------------------------------------------------------------------------
-
 void
 Func::NumberInstrs()
 {
@@ -973,15 +961,12 @@ Func::NumberInstrs()
 /// Determines whether the function is currently in the provided phase
 ///
 ///----------------------------------------------------------------------------
-
 #if DBG
-
 bool
 Func::IsInPhase(Js::Phase tag)
 {
     return currentPhases.Contains(tag);
 }
-
 #endif
 
 ///----------------------------------------------------------------------------
@@ -991,8 +976,6 @@ Func::IsInPhase(Js::Phase tag)
 /// Takes care of the profiler
 ///
 ///----------------------------------------------------------------------------
-
-
 void
 Func::BeginPhase(Js::Phase tag)
 {
@@ -1017,9 +1000,7 @@ Func::BeginPhase(Js::Phase tag)
 /// Takes care of the profiler and dumper
 ///
 ///----------------------------------------------------------------------------
-
 void
-
 Func::EndProfiler(Js::Phase tag)
 {
 #ifdef DBG
@@ -1037,6 +1018,7 @@ Func::EndProfiler(Js::Phase tag)
     }
 #endif
 }
+
 void
 Func::EndPhase(Js::Phase tag, bool dump)
 {
@@ -1058,7 +1040,6 @@ Func::EndPhase(Js::Phase tag, bool dump)
         this->Dump(Js::Configuration::Global.flags.AsmDiff? IRDumpFlags_AsmDumpMode : IRDumpFlags_None);
     }
 #endif
-
 
 #if DBG
     if (tag == Js::LowererPhase)
@@ -1095,7 +1076,6 @@ Func::EndPhase(Js::Phase tag, bool dump)
 #endif
     }
 #endif
-
 }
 
 Func const *
@@ -1108,6 +1088,7 @@ Func::GetTopFunc() const
     }
     return func;
 }
+
 Func *
 Func::GetTopFunc()
 {
@@ -1118,22 +1099,6 @@ Func::GetTopFunc()
     }
     return func;
 }
-
-#if 0
-FunctionBailOutRecord *
-Func::EnsureFunctionBailOutRecord()
-{
-    Js::FunctionBody * topFuncBody = this->GetTopFunc()->m_jnFunction;
-    if (topFuncBody->HasFunctionBailOutRecord())
-    {
-        return topFuncBody->GetFunctionBailOutRecord();
-    }
-    FunctionBailOutRecord * record = JitAnew(this->GetScriptContext()->GetNativeCodeGenerator()->GetAllocator(),
-        FunctionBailOutRecord);
-    topFuncBody->SetFunctionBailOutRecord(record);
-    return record;
-}
-#endif
 
 StackSym *
 Func::EnsureLoopParamSym()
@@ -1356,10 +1321,12 @@ Func::CreateEquivalentTypeGuard(Js::Type* type, uint32 objTypeSpecFldId)
     EnsureEquivalentTypeGuards();
 
     Js::JitEquivalentTypeGuard* guard = NativeCodeDataNew(GetNativeCodeDataAllocator(), Js::JitEquivalentTypeGuard, type, this->indexedPropertyGuardCount++, objTypeSpecFldId);
+
     // If we want to hard code the address of the cache, we will need to go back to allocating it from the native code data allocator.
     // We would then need to maintain consistency (double write) to both the recycler allocated cache and the one on the heap.
     Js::EquivalentTypeCache* cache = NativeCodeDataNewZ(GetTransferDataAllocator(), Js::EquivalentTypeCache);
     guard->SetCache(cache);
+
     // Give the cache a back-pointer to the guard so that the guard can be cleared at runtime if necessary.
     cache->SetGuard(guard);
     this->equivalentTypeGuards->Prepend(guard);
@@ -1602,7 +1569,6 @@ void Func::MarkConstantAddressSyms(BVSparse<JitArenaAllocator> * bv)
     });
 }
 
-
 IR::Instr *
 Func::GetFunctionEntryInsertionPoint()
 {
@@ -1615,8 +1581,6 @@ Func::GetFunctionEntryInsertionPoint()
 
     insertInsert = this->m_headInstr;
 
-    // TODO: SCCLiveness can assume we are in the root region from FunctionEntry without a label
-    // then we won't need this
     if (this->HasTry())
     {
         // Insert it inside the root region
@@ -1626,14 +1590,13 @@ Func::GetFunctionEntryInsertionPoint()
 
     return insertInsert->m_next;
 }
-#if DBG_DUMP
 
+#if DBG_DUMP
 ///----------------------------------------------------------------------------
 ///
 /// Func::DumpHeader
 ///
 ///----------------------------------------------------------------------------
-
 void
 Func::DumpHeader()
 {
@@ -1658,7 +1621,6 @@ Func::DumpHeader()
 /// Func::Dump
 ///
 ///----------------------------------------------------------------------------
-
 void
 Func::Dump(IRDumpFlags flags)
 {
@@ -1678,7 +1640,6 @@ Func::Dump()
 {
     this->Dump(IRDumpFlags_None);
 }
-
 #endif
 
 #if DBG_DUMP || defined(ENABLE_IR_VIEWER)
@@ -1704,7 +1665,6 @@ Func::GetVtableName(INT_PTR address)
 #endif
 }
 #endif
-
 
 #if DBG_DUMP | defined(VTUNE_PROFILING)
 bool Func::DoRecordNativeMap() const

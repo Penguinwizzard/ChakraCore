@@ -3,19 +3,6 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-//Configuration: stackwalking.xml
-//Testcase Number: 9082
-//Bailout Testing: ON
-//Switches: -version:2  -maxinterpretcount:1 -maxsimplejitruncount:1  -MinSwitchJumpTableSize:2 -off:polymorphicinlinecache -bgjit- -loopinterpretcount:1 -MaxLinearStringCaseCount:2 -MaxLinearIntCaseCount:2 -force:fieldcopyprop -forceserialized -force:fieldhoist -sse:0 -force:inline -force:atom -off:lossyinttypespec -off:aggressiveinttypespec -off:trackintusage -force:fixdataprops -force:rejit -off:ArrayCheckHoist
-//Baseline Switches: -nonative  -version:2
-//Arch: X86
-//Flavor: chk
-//Branch: fbl_ie_stage_dev3
-//Build: 140730-2030
-//FullBuild: 9802.0.140730
-//MachineName: VSP75819
-//InstructionSet:
-//reduced switches: -loopinterpretcount:1 -bgjit- -maxsimplejitruncount:1 -maxinterpretcount:1 -force:inline
 var __counter = 0;
 function test0() {
   __counter++;

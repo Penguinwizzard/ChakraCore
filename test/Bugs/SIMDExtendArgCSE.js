@@ -26,7 +26,6 @@ function asmModule(stdlib, imports) {
     var i4or = i4.or;
     var i4xor = i4.xor;
     var i4not = i4.not;
-
     var f4 = stdlib.SIMD.Float32x4;
     var f4check = f4.check;
     var f4fromFloat64x2 = f4.fromFloat64x2;
@@ -77,8 +76,6 @@ function asmModule(stdlib, imports) {
     var d2reciprocal = d2.reciprocal;
     var d2reciprocalSqrt = d2.reciprocalSqrt;
     var d2sqrt = d2.sqrt;
-    //var d2swizzle = d2.swizzle;
-    //var d2shuffle = d2.shuffle;
     var d2lessThan = d2.lessThan;
     var d2lessThanOrEqual = d2.lessThanOrEqual;
     var d2equal = d2.equal;
@@ -131,7 +128,6 @@ function asmModule(stdlib, imports) {
 
         return f4check(val2);
     }
-
     function test2()
     {
         var val1 = f4(1.0,2.0,3.0,4.0);
@@ -153,7 +149,6 @@ function asmModule(stdlib, imports) {
 
             loopIndex = (loopIndex + 1) | 0;
         }
-
         return f4check(val2);
     }
 
@@ -171,4 +166,3 @@ var ret2 = m.func2();
 
 WScript.Echo(typeof(ret2));
 WScript.Echo(ret2.toString());
-

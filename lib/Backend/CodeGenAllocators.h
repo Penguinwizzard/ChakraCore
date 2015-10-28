@@ -12,7 +12,7 @@
 
 struct CodeGenAllocators
 {
-    // emitBufferManager depends on allocator which intern depends on pageAllocator, make sure the sequence is right
+    // emitBufferManager depends on allocator which in turn depends on pageAllocator, make sure the sequence is right
     PageAllocator pageAllocator;
     NoRecoverMemoryArenaAllocator    allocator;
     EmitBufferManager<CriticalSection> emitBufferManager;

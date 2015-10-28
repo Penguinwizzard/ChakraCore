@@ -150,9 +150,9 @@ public:
     void         RunPeeps();
     BasicBlock * AddBlock(IR::Instr * firstInstr, IR::Instr * lastInstr, BasicBlock * nextBlock);
     FlowEdge *   AddEdge(BasicBlock * predBlock, BasicBlock * succBlock);
-    BasicBlock * InsertCompensationCodeForBlockMove(FlowEdge * edge, //edge where compensation code needs to be inserted
+    BasicBlock * InsertCompensationCodeForBlockMove(FlowEdge * edge, // Edge where compensation code needs to be inserted
                                                     bool insertCompensationBlockToLoopList = false, 
-                                                    bool sinkBlockLoop  = false //loop to which compensation block belongs to, 
+                                                    bool sinkBlockLoop  = false // Loop to which compensation block belongs 
                                                     );
     BasicBlock * InsertAirlockBlock(FlowEdge * edge);
     void         InsertCompBlockToLoopList(Loop *loop, BasicBlock* compBlock, BasicBlock* targetBlock, bool postTarget);
@@ -255,8 +255,7 @@ public:
 
     void SetLastInstr(IR::Instr * instr)
     {
-        // This does nothing now...
-        // Review: Cleanup?
+        // Intentionally empty
     }
 
     SListBaseCounted<FlowEdge *> * GetPredList(void)
@@ -368,7 +367,7 @@ public:
 #endif
     HashTable<AddPropertyCacheBucket> *     stackSymToFinalType;
     HashTable<ObjTypeGuardBucket> *         stackSymToGuardedProperties; // Dead store pass only
-    HashTable<ObjWriteGuardBucket> *        stackSymToWriteGuardsMap; // Backward pass only.
+    HashTable<ObjWriteGuardBucket> *        stackSymToWriteGuardsMap; // Backward pass only
     BVSparse<JitArenaAllocator> *           noImplicitCallUses;
     BVSparse<JitArenaAllocator> *           noImplicitCallNoMissingValuesUses;
     BVSparse<JitArenaAllocator> *           noImplicitCallNativeArrayUses;
@@ -669,9 +668,9 @@ public:
     struct RegAlloc
     {
         Lifetime **                 loopTopRegContent;      // Save off the state of the registers at the loop top
-        BVSparse<JitArenaAllocator> *  symRegUseBv;            // If a lifetime was live in a reg into the loop, did the reg get used before being spilled?
-        BVSparse<JitArenaAllocator> *  defdInLoopBv;           // Was a lifetime defined in the loop?
-        BVSparse<JitArenaAllocator> *  liveOnBackEdgeSyms;     // Is a lifetime live on the back-edge of the loop?
+        BVSparse<JitArenaAllocator> *  symRegUseBv;         // If a lifetime was live in a reg into the loop, did the reg get used before being spilled?
+        BVSparse<JitArenaAllocator> *  defdInLoopBv;        // Was a lifetime defined in the loop?
+        BVSparse<JitArenaAllocator> *  liveOnBackEdgeSyms;  // Is a lifetime live on the back-edge of the loop?
         BitVector                   regUseBv;               // Registers used in this loop so far
         uint32                      loopStart;              // loopTopLabel->GetNumber()
         uint32                      loopEnd;                // loopTailBranch->GetNumber()

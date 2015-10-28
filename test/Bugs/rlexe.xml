@@ -228,12 +228,4 @@
       <baseline>fabs1.baseline</baseline>
     </default>
   </test>
-  <!-- Disable until we figure out how to handle the early error while preserving the coverage
-  <test>
-    <default>
-      <files>OS_4341640.js</files>
-      <tags>BugFix</tags>
-    </default>
-  </test>
-  -->
 </regress-exe>

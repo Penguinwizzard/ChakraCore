@@ -216,25 +216,25 @@ static const unsigned __int64 c_debugFillPattern8 = 0xcececececececece;
     BOOL HasTry() const
     {
         Assert(this->IsTopFunc());
-        Assert(this->m_jnFunction);     // For now we always has a function body
+        Assert(this->m_jnFunction);     // For now we always have a function body
         return this->m_jnFunction->GetHasTry();
     }
     bool HasFinally() const
     {
         Assert(this->IsTopFunc());
-        Assert(this->m_jnFunction);     // For now we always has a function body
+        Assert(this->m_jnFunction);     // For now we always have a function body
         return this->m_jnFunction->GetHasFinally();
     }
     Js::ArgSlot GetInParamsCount() const
     {
         Assert(this->IsTopFunc());
-        Assert(this->m_jnFunction);     // For now we always has a function body
+        Assert(this->m_jnFunction);     // For now we always have a function body
         return this->m_jnFunction->GetInParamsCount();
     }
     bool IsGlobalFunc() const
     {
         Assert(this->IsTopFunc());
-        Assert(this->m_jnFunction);     // For now we always has a function body
+        Assert(this->m_jnFunction);     // For now we always have a function body
         return this->m_jnFunction->GetIsGlobalFunc();
     }
 
@@ -500,7 +500,7 @@ public:
     bool                hasBailoutInEHRegion : 1;
     bool                hasStackArgs: 1;
     bool                hasArgumentObject : 1;
-    bool                hasUnoptimizedArgumentsAcccess : 1; // True if there is any arguments access beyond the simple case of this.apply pattern
+    bool                hasUnoptimizedArgumentsAcccess : 1; // True if there are any arguments access beyond the simple case of this.apply pattern
     bool                m_canDoInlineArgsOpt : 1;
     bool                hasApplyTargetInlining:1;
     bool                isGetterSetter : 1;
@@ -721,7 +721,7 @@ public:
         int32 count = this->GetMaxInlineeArgOutCount();
         if (count)
         {
-            return ((count + 1) * MachPtr); //+1 for the dedicated zero out argc slot
+            return ((count + 1) * MachPtr); // +1 for the dedicated zero out argc slot
         }
         return 0;
     }
