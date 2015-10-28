@@ -5,7 +5,6 @@
 // parser error messages
 // NOTE: the error numbers should not change from version to version.
 // Error numbers MUST be sorted.
-// If you add an error here, you MUST update jscript\javaops.cpp.
 
 LSC_ERROR_MSG( 1001, ERRnoMemory      , "Out of memory")
 LSC_ERROR_MSG( 1002, ERRsyntax        , "Syntax error")

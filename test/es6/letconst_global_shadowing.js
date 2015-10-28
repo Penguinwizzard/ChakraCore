@@ -39,7 +39,7 @@ print('\n==== Let/const globals should not show up in for-in enumeration ====\n'
 
 // Let/const globals should not show up in list of global
 // properties in for-in enumeration.  They should also not
-// cause globel properties to no longer show up in
+// cause global properties to no longer show up in
 // enumeration (Blue bug 217657)
 print('\nBefore x, y, z, w declarations and globals\n');
 try { print(x); } catch (e) { print(e); }

@@ -16,7 +16,7 @@ namespace JsUtil
         TValue value;    // Value of entry
     };
 
-    // TODO (post-checkin): convert to BaseDictionary- easier now to have custom dictionary since this does compacting
+    // TODO: convert to BaseDictionary- easier now to have custom dictionary since this does compacting
     // and weak reference resolution
     template <class TKey, class TValue, class KeyComparer = DefaultComparer<const TKey*>, bool cleanOnInsert = true> class WeaklyReferencedKeyDictionary
     {
@@ -344,12 +344,12 @@ namespace JsUtil
         {
             int newSize = PrimePolicy::GetSize(count * 2);
 
-            // Ideally, this should be a real overflow check but this is causing a sunspider regression on two tests, so using
-            // an assert for now. Also, OACR thinks that PrimePolicy::GetSize can return a value less than the current size even when there
-            // is no overflow.
-            AssertMsg(newSize > count, "Failed to compute a larger size than the current size");
-            __analysis_assume(newSize > count);
-            
+            if (newSize <= count)
+            {
+                // throw OOM if we can't increase the dictionary size
+                Js::Throw::OutOfMemory();
+            }
+
             int* newBuckets = RecyclerNewArrayLeaf(recycler, int, newSize);
             for (int i = 0; i < newSize; i++) newBuckets[i] = -1;
             EntryType* newEntries = RecyclerNewArray(recycler, EntryType, newSize);

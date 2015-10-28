@@ -46,7 +46,7 @@ BOOL MayHaveSideEffectOnNode(ParseNode *pnode, ParseNode *pnodeSE)
     if (fnop & fnopAsg)
     {
         // pnodeSE is an assignment (=, ++, +=, etc.)
-        // I found that trying to examine the LHS of pnodeSE caused small SS regressions (??),
+        // Trying to examine the LHS of pnodeSE caused small perf regressions,
         // maybe because of code layout or some other subtle effect.
         return true;
     }
@@ -3962,9 +3962,8 @@ Js::RegSlot ByteCodeGenerator::PrependLocalScopes(Js::RegSlot evalEnv, Js::RegSl
         tempLoc = funcInfo->AcquireTmpRegister();
     }
 
-    // This is a bit of an ugly case. The with/catch objects must be prepended to the environment we pass
-    // to eval() or to a func declared inside with, but the list must first be reversed so that innermost
-    // scopes appear first in the list.
+    // The with/catch objects must be prepended to the environment we pass to eval() or to a func declared inside with,
+    // but the list must first be reversed so that innermost scopes appear first in the list.
     while (currScope != funcScope)
     {
         Scope *tmp;
@@ -4089,7 +4088,7 @@ void ByteCodeGenerator::EmitLoadInstance(Symbol *sym, IdentPtr pid, Js::RegSlot 
             // results at once. The reason for the uncertainty here is that we don't know whether the callee
             // belongs to a "with" object. If it does, we have to pass the "with" object as "this"; in all other
             // cases, we pass "undefined". I'm not investing time on it now because I don't see any significant
-            // benchmark losses.
+            // performance issues.
             Js::PropertyId propertyId = sym ? sym->EnsurePosition(this) : pid->GetPropertyId();
 
             if (thisLocation == Js::Constants::NoRegister)
@@ -4714,10 +4713,7 @@ void ByteCodeGenerator::EmitPropDelete(Js::RegSlot lhsLocation, Symbol *sym, Ide
     }
     else
     {
-        // A minor hack to make sure that this sym gets properly put in a closure.
         // The delete will look like a non-local reference, so make sure a slot is reserved.
-        // (A cleverer fix that avoids the closure altogether is possible but not worth it
-        // for such a degenerate case.)
         sym->EnsureScopeSlot(funcInfo);
         this->m_writer.Reg1(Js::OpCode::LdFalse, lhsLocation);
     }

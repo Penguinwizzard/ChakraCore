@@ -23,7 +23,7 @@ IdleDecommitPageAllocator::IdleDecommitPageAllocator(AllocationPolicyManager * p
     maxIdleDecommitFreePageCount(maxIdleFreePageCount),
     maxNonIdleDecommitFreePageCount(maxFreePageCount)
 {
-    // if maxIdle is the same as max free, disable idleDecoomit but setting the entry count to 1
+    // if maxIdle is the same as max free, disable idleDecommit but setting the entry count to 1
     this->idleDecommitEnterCount = (maxIdleFreePageCount == maxFreePageCount);
 #ifdef IDLE_DECOMMIT_ENABLED
 #if DBG_DUMP

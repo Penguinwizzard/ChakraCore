@@ -769,7 +769,7 @@ SmallHeapBlockT<TBlockAttributes>::FindHeapObjectImpl(void* objectAddress, Recyc
                 ((HeapBucketT<TBlockType> *)this->heapBucket)->UpdateAllocators();
             }
 
-            // REVIEW: this mess with the allocation heuristics.
+            // REVIEW allocation heuristics
             if (this->EnsureFreeBitVector()->Test(this->GetObjectBitDelta() * index))
             {
                 return false;

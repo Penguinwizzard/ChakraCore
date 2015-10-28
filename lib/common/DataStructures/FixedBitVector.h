@@ -65,7 +65,6 @@ protected:
     template<class Fn>
     __inline void for_each(const BVFixed *bv2, const Fn callback)
     {
-        //... this assert may not be valid. what should be the semantic
         AssertMsg(this->len == bv2->len, "Fatal: The 2 bitvectors should have had the same length.");
 
         BVUnit *        i;

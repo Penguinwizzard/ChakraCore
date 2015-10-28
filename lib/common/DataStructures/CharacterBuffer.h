@@ -53,14 +53,12 @@ namespace JsUtil
             return InternalGetHashCode<false>(s, length);
         }
 
-        // If this function gets modified; please update the getHash function in the following location:
-        // \inetcore\mshtml\types\fastDOMCompiler.pl
-        // The hash generated there must be identical to this function.
+        // This must be identical to Trident's getHash function in fastDOMCompiler.pl
         template <bool fastHash>
         static int InternalGetHashCode(__in_z T const * s, __in charcount_t length)
         {
-            // TODO: This hash performs poorly on small strings, particularly in SunSpider's string-unpack-code test.
-            // Consider finding a better hash function now that some type handlers hash by string instead of PropertyId.
+            // TODO: This hash performs poorly on small strings, consider finding a better hash function
+            // now that some type handlers hash by string instead of PropertyId.
             int hash = 0;
             charcount_t hashLength = length;
             if (fastHash)

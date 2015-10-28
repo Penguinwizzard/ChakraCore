@@ -2166,7 +2166,7 @@ void AddVarsToScope(ParseNode *vars, ByteCodeGenerator *byteCodeGenerator) {
             // LHS's of var decls are usually bound to symbols later, during the Visit/Bind pass,
             // so that things like catch scopes can be taken into account.
             // The exception is "arguments", which always binds to the local scope.
-            // We can also cheat and bind to the function scope symbol now if there's no init value
+            // We can also bind to the function scope symbol now if there's no init value
             // to assign.
             vars->sxVar.sym = sym;
             if (sym->GetIsArguments())
