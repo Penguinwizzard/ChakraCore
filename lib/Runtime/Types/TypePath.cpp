@@ -60,7 +60,6 @@ namespace Js {
             {
                 if (this->usedFixedFields.Test(i))
                 {
-                    // Review (jedmiad): This is actually too conservative.  See point 4 in PathTypeHandlerBase::ConvertToSimpleDictionaryType.
                     // We must conservatively copy all used as fixed bits if some prototype instance could also take
                     // this transition.  See comment in PathTypeHandlerBase::ConvertToSimpleDictionaryType.
                     // Yes, we could devise a more efficient way of copying bits 1 through pathLength, if performance of this
@@ -176,10 +175,6 @@ namespace Js {
             Throw::InternalError();
         }
 
-
-        // The previous dictionary did not replace on dupes.
-        // I believe a dupe here would be a bug, but to be conservative
-        // replicate the exact previous behavior.
 #if DBG
         PropertyIndex temp;
         if (map.TryGetValue(propId->GetPropertyId(), &temp, assignments))

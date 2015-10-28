@@ -6,7 +6,6 @@
 
 namespace Js
 {
-    // TODO (jedmiad): Consider adding full support for fixed fields on SimpleTypeHandler.
     template<size_t size>
     class SimpleTypeHandler sealed: public DynamicTypeHandler
     {
@@ -76,7 +75,7 @@ namespace Js
 #if DBG
         bool HasSingletonInstanceOnlyIfNeeded() const
         {
-            // Naturally, if we add support for fixed fields to this type handler we will have to update this implementation.
+            // If we add support for fixed fields to this type handler we will have to update this implementation.
             return true;
         }
 #endif

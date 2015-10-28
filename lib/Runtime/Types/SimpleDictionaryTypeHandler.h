@@ -292,7 +292,7 @@ namespace Js
         BOOL SealInternal(DynamicObject* instance);
         BOOL FreezeInternal(DynamicObject* instance, bool isConvertedType = false);
 
-        // This was added to walk around not being able to specify partial template specialization of member function.
+        // This was added to work around not being able to specify partial template specialization of member function.
         BOOL FindNextProperty_BigPropertyIndex(ScriptContext* scriptContext, TPropertyIndex& index, JavascriptString** propertyString,
             PropertyId* propertyId, PropertyAttributes* attributes, Type* type, DynamicType *typeToEnumerate, bool requireEnumerable, bool enumSymbols = false);
 

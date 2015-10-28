@@ -11,8 +11,6 @@ namespace Js
     // ----------------------------------------------------------------------
     // Helper methods to deal with differing TMapKey and TPropertyKey types.
     // Used by both SimpleDictionaryTypeHandler and DictionaryTypeHandler.
-    //
-    // TODO: Move these into a Traits class for clarity.
     // ----------------------------------------------------------------------
 
     PropertyId TMapKey_GetPropertyId(ScriptContext* scriptContext, const PropertyRecord* key)
@@ -50,7 +48,7 @@ namespace Js
     template<>
     JavascriptString* TMapKey_ConvertKey(ScriptContext* scriptContext, const PropertyRecord* key)
     {
-        // String keyed type handler can't handle InternalPropertyIds because they have no string representation
+        // String keyed type handlers can't handle InternalPropertyIds because they have no string representation
         // so assert that no code paths convert InternalPropertyIds to PropertyStrings.
         Assert(!IsInternalPropertyId(key->GetPropertyId()));
         // The same is true for symbols - we should not be converting a symbol property into a PropertyString.
@@ -238,7 +236,6 @@ namespace Js
         isUnordered(false),
         numDeletedProperties(0)
     {
-        // TODO (jedmiad): Remove this once we merged propertyTypes to flags.  Pass the right flags to the base constructor.
         SetIsInlineSlotCapacityLocked();
         propertyMap = RecyclerNew(recycler, SimplePropertyDescriptorMap, recycler, this->GetSlotCapacity());
     }
@@ -253,7 +250,6 @@ namespace Js
         hasNamelessPropertyId(false),
         numDeletedProperties(0)
     {
-        // TODO (jedmiad): Remove this once we merged propertyTypes to flags.  Pass the right flags to the base constructor.
         SetIsInlineSlotCapacityLocked();
         Assert(slotCapacity <= MaxPropertyIndexSize);
         propertyMap = RecyclerNew(scriptContext->GetRecycler(), SimplePropertyDescriptorMap, scriptContext->GetRecycler(), propertyCount);
@@ -274,7 +270,6 @@ namespace Js
         hasNamelessPropertyId(false),
         numDeletedProperties(0)
     {
-        // TODO (jedmiad): Remove this once we merged propertyTypes to flags.  Pass the right flags to the base constructor.
         SetIsInlineSlotCapacityLocked();
         Assert(slotCapacity <= MaxPropertyIndexSize);
         propertyMap = RecyclerNew(recycler, SimplePropertyDescriptorMap, recycler, this->GetSlotCapacity());
@@ -290,7 +285,6 @@ namespace Js
         hasNamelessPropertyId(false),
         numDeletedProperties(0)
     {
-        // TODO (jedmiad): Remove this once we merged propertyTypes to flags.  Pass the right flags to the base constructor.
         SetIsInlineSlotCapacityLocked();
         Assert(slotCapacity <= MaxPropertyIndexSize);
 
@@ -334,8 +328,8 @@ namespace Js
         {
             //
             // For a function with same named parameters,
-            // property id Constants::NoProperty will be passed for all the dups except the last one
-            // We need to allocate space for dups, but don't add those to map
+            // property id Constants::NoProperty will be passed for all the dupes except the last one
+            // We need to allocate space for dupes, but don't add those to map
             //
             PropertyId propertyId = propIds->elements[i];
             const PropertyRecord* propertyRecord = propertyId == Constants::NoProperty ? NULL : scriptContext->GetPropertyName(propertyId);
@@ -431,8 +425,8 @@ namespace Js
         bool isTypeLocked = instance->GetDynamicType()->GetIsLocked();
         bool isOrMayBecomeShared = GetIsOrMayBecomeShared();
         Assert(!isOrMayBecomeShared || !IsolatePrototypes() || ((this->GetFlags() & IsPrototypeFlag) == 0));
-        // For the global object we don't emit a type check before a hard-coded use of a fixed field.  Therefore a type transition isn't sufficient to
-        // invalidate any used fixed fields, and we must continue tracking them on the new type handler.  If the type isn't locked, we may not change the
+        // For the global object we don't emit a type check before a hard-coded use of a fixed field. Therefore a type transition isn't sufficient to
+        // invalidate any used fixed fields, and we must continue tracking them on the new type handler. If the type isn't locked, we may not change the
         // type of the instance, and we must also track the used fixed fields on the new handler.
         bool transferUsedAsFixed = isGlobalObject || !isTypeLocked || ((this->GetFlags() & IsPrototypeFlag) != 0 || (isOrMayBecomeShared && !IsolatePrototypes())) || PHASE_FORCE1(Js::FixDataPropsPhase);
 
@@ -701,7 +695,7 @@ namespace Js
     // Note on template specializations:
     // C++ doesn't allow us to specify partially specialized template member function and requires all parameters,
     // like this: template<bool B> PropertyIndex SimpleDictionaryTypeHandlerBase<PropertyIndex, B>::GetPropertyIndex().
-    // so as we don't care about the boolean in this template method, just delegate the other function.
+    // Since we don't care about the boolean in this template method, just delegate to the other function.
 
 
 #define DefineUnusedSpecialization_FindNextProperty_BigPropertyIndex(T, S) \
@@ -757,22 +751,6 @@ namespace Js
                     *propertyId = TMapKey_GetPropertyId(scriptContext, key);
                     *propertyStringName = type->GetScriptContext()->GetPropertyString(*propertyId);
 
-//                    if (descriptor.Attributes & PropertyWritable)
-//                    {
-//                        uint16 inlineOrAuxSlotIndex;
-//                        bool isInlineSlot;
-//                        PropertyIndexToInlineOrAuxSlotIndex(descriptor.propertyIndex, &inlineOrAuxSlotIndex, &isInlineSlot);
-//
-//                        (*propertyString)->UpdateCache(type, inlineOrAuxSlotIndex, isInlineSlot);
-//                    }
-//                    else
-//                    {
-//#ifdef DEBUG
-//                        PropertyCache const* cache = (*propertyString)->GetPropertyCache();
-//                        Assert(!cache || cache->type != type);
-//#endif
-//                    }
-
                     return TRUE;
                 }
             }
@@ -797,8 +775,6 @@ namespace Js
                 enumSymbols);
             ++index)
         {
-            // TODO: Do we still need to check for requireEnumerable and enumSymbols below? Nested call should honor our flag as well?
-
             SimpleDictionaryPropertyDescriptor<TPropertyIndex> descriptor;
             bool hasValue = false;
             if (*propertyId != Constants::NoProperty)
@@ -990,7 +966,6 @@ namespace Js
 
     // The following template specialization is required in order to provide an implementation of
     // Add for the linker to find that TypePathHandler uses. The following definition should have sufficed.
-    // C++ compiler bug or very subtle code error?
     template<>
     template<>
     void SimpleDictionaryTypeHandlerBase<PropertyIndex, const PropertyRecord*, false>::Add(
@@ -1387,7 +1362,7 @@ namespace Js
             JavascriptError::ThrowCantAssignIfStrictMode(flags, scriptContext);
 
             // Since we separate LdFld and StFld caches there is no point in caching for StFld with non-writable properties, except perhaps
-            // to prepopulate the type property cache (which we do share between LdFld and StFld), for potential future field loads.  This
+            // to prepopulate the type property cache (which we do share between LdFld and StFld), for potential future field loads. This
             // would require additional handling in CacheOperators::CachePropertyWrite, such that for !info-IsWritable() we don't populate
             // the local cache (that would be illegal), but still populate the type's property cache.
             PropertyValueInfo::SetNoCache(info, instance);
@@ -1644,13 +1619,13 @@ namespace Js
                 }
                 descriptor->Attributes = PropertyDeletedDefaults;
 
-                //Change the type so as we can invalidate the cache in fast path jit
+                // Change the type so as we can invalidate the cache in fast path jit
                 instance->ChangeType();
                 SetPropertyUpdateSideEffect(instance, propertyId, nullptr, SideEffects_Any);
                 return true;
             }
 
-            // Check numeric propertyRecord only if objectArray available
+            // Check for a numeric propertyRecord only if objectArray available
             if (instance->HasObjectArray() && propertyRecord->IsNumeric())
             {
                 return SimpleDictionaryTypeHandlerBase<TPropertyIndex, TMapKey, IsNotExtensibleSupported>::DeleteItem(instance, propertyRecord->IsNumeric(), propertyOperationFlags);
@@ -1939,7 +1914,6 @@ namespace Js
             }
         }
 
-        // TODO: alternatively we could convert to a non-shared simple dictionary.
         return ConvertToDictionaryType(instance)->PreventExtensions(instance);
     }
 
@@ -2044,7 +2018,6 @@ namespace Js
         SimpleDictionaryPropertyDescriptor<TPropertyIndex> *descriptor = nullptr;
         for (TPropertyIndex index = 0; index < propertyMap->Count(); index++)
         {
-            // REVIEW: Does freezing the global object cause let/const variables to become read only?
             descriptor = propertyMap->GetReferenceAt(index);
             if (!(descriptor->Attributes & PropertyLetConstGlobal))
             {
@@ -2054,7 +2027,7 @@ namespace Js
 
         if (!isConvertedType)
         {
-            //Change of [[Writable]] property requires cache invalidation, hence ChangeType
+            // Change of [[Writable]] property requires cache invalidation, hence ChangeType
             instance->ChangeType();
         }
 
@@ -2149,8 +2122,8 @@ namespace Js
             descriptor = propertyMap->GetReferenceAt(index);
             if ((!(descriptor->Attributes & PropertyDeleted) && !(descriptor->Attributes & PropertyLetConstGlobal)))
             {
-                //[[Configurable]] and [[Configurable]] must be false for all (existing) properties.
-                //IE9 compatibility: keep IE9 behavior (also check deleted properties) -- see bug Win8 509299.
+                // [[Configurable]] and [[Configurable]] must be false for all (existing) properties.
+                // IE9 compatibility: keep IE9 behavior (also check deleted properties)
                 if (descriptor->Attributes & PropertyConfigurable)
                 {
                     return false;
@@ -2382,14 +2355,13 @@ namespace Js
             }
         }
 
-        // Note that
         return instance->SetObjectArrayItem(index, value, flags);   // I.e. __super::SetItem(...).
     }
 
     template <typename TPropertyIndex, typename TMapKey, bool IsNotExtensibleSupported>
     void SimpleDictionaryTypeHandlerBase<TPropertyIndex, TMapKey, IsNotExtensibleSupported>::EnsureSlotCapacity(DynamicObject * instance)
     {
-        Assert(this->GetSlotCapacity() < MaxPropertyIndexSize); // Otherwise we can't grow this handler's capacity. We should've evolved to Bigger handler or OOM.
+        Assert(this->GetSlotCapacity() < MaxPropertyIndexSize); // Otherwise we can't grow this handler's capacity. We should've evolved to bigger handler or OOM.
 
         // This check should be done by caller of this function.
         //if (slotCapacity <= nextPropertyIndex)
@@ -2426,15 +2398,11 @@ namespace Js
                     Assert(!(descriptor->Attributes & PropertyLetConstGlobal));
                     // Need to implement type transition to DictionaryTypeHandler in the case of
                     // shadowing a var or global property with a let in a new script body.
-                    // REVIEW: Is this expected to happen?
                     Throw::NotImplemented();
                 }
                 if (descriptor->Attributes & PropertyLetConstGlobal)
                 {
                     Assert(!(attributes & PropertyLetConstGlobal));
-                    // REVIEW: re-initializing a let or const?  Do we have to error here or should this already be caught earlier?
-                    // If attributes do not include PropertyLetConstGlobal what are we doing setting attributes? Can attributes be set on let/const variables? No.
-                    // This should be an error all around I think
                     Assert(false);
                 }
 
@@ -2556,9 +2524,6 @@ namespace Js
             {
                 BigSimpleDictionaryTypeHandler* newTypeHandler = ConvertToBigSimpleDictionaryTypeHandler(instance);
 
-#ifdef PROFILE_TYPES
-                //instance->GetScriptContext()->convertSimpleDictionaryToDictionaryCount++;
-#endif
                 return newTypeHandler->AddProperty(instance, propertyKey, value, attributes, info, flags, possibleSideEffects);
             }
 
@@ -2636,8 +2601,7 @@ namespace Js
         if (IsNotExtensibleSupported)
         {
             // The Var for window is reused across navigation. we shouldn't preserve the IsExtensibleFlag when we don't keep
-            // the expandoes. The right solution should have been not to set the flag on CBase Vars, but we don't want to
-            // change that before win8.1 ships. reset the IsExtensibleFlag in cleanup scenario should be good enough
+            // the expandoes. Reset the IsExtensibleFlag in cleanup scenario should be good enough
             // to cover all the preventExtension/Freeze/Seal scenarios.
             ChangeFlags(IsExtensibleFlag | IsSealedOnceFlag | IsFrozenOnceFlag, IsExtensibleFlag);
         }
@@ -2722,7 +2686,6 @@ namespace Js
             {
                 return;
             }
-            // REVIEW: Can the root object be used as a prototype and have this set?  What do we do about PropertyLetConstGlobal properties here?
             if (!(descriptor->Attributes & PropertyDeleted) && !(descriptor->Attributes & PropertyLetConstGlobal))
             {
                 // See PathTypeHandlerBase::ConvertToSimpleDictionaryType for rules governing fixed field bits during type

@@ -27,14 +27,14 @@ void WritePerfHint(PerfHints hint, Js::FunctionBody * functionBody, uint byteCod
         LONG columnNumber = functionBody->GetColumnNumber();
         if (byteCodeOffset != Js::Constants::NoByteCodeOffset)
         {
-            functionBody->GetLineCharOffset(byteCodeOffset, &lineNumber, &columnNumber, false/*canAllocateLineCache*/);
+            functionBody->GetLineCharOffset(byteCodeOffset, &lineNumber, &columnNumber, false /*canAllocateLineCache*/);
 
             // returned values are 0-based. Adjusting.
             lineNumber++;
             columnNumber++;
         }
 
-        // We will be going to print the short name.
+        // We will print the short name.
         TCHAR shortName[255];
         Js::FunctionBody::GetShortNameFromUrl(functionBody->GetSourceName(), shortName, 255);
 

@@ -290,8 +290,8 @@ class SourceContextInfo;
 
 #include "activdbg100.h"
 #ifndef NTDDI_WIN10
-// These are only defined SDK Win10+
-// TODO: Refactor to avoid needing these?
+// These are only defined for the Win10 SDK and above
+// Consider: Refactor to avoid needing these?
 typedef
 enum tagDEBUG_EVENT_INFO_TYPE
 {

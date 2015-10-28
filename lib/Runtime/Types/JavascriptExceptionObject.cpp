@@ -36,8 +36,6 @@ namespace Js
             // Let's hope that unwinding has released enough pointers that the
             // recycler will find some memory to allocate the real OutOfMemory object.
             // If not, it will rethrow outOfMemory
-            // WinOOB 1119077: Assert during AddRef on static object.
-
             Var thrownObject = scriptContext->GetLibrary()->CreateOutOfMemoryError();
             exceptionObject = RecyclerNew(scriptContext->GetRecycler(),
                 JavascriptExceptionObject,
@@ -139,7 +137,7 @@ namespace Js
 
     FunctionBody* JavascriptExceptionObject::GetFunctionBody() const
     {
-        //If it is a throwing function; it must be deserialized
+        // If it is a throwing function; it must be deserialized
         return exceptionContext.ThrowingFunction() ? exceptionContext.ThrowingFunction()->GetFunctionBody() : NULL;
     }
 
@@ -201,7 +199,6 @@ namespace Js
         // Unfortunately, window.onerror can ask for argument.callee.caller
         // and we will return the thrown function, but the stack already unwound.
         // We will need to just box the function
-        // TODO-STACK-NESTED-FUNC: Can this be improved?
 
         m_throwingFunction = StackScriptFunction::EnsureBoxed(BOX_PARAM(function, returnAddress, L"throw"));
         m_throwingFunctionByteCodeOffset = byteCodeOffset;

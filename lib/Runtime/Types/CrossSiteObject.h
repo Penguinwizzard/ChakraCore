@@ -43,12 +43,6 @@ namespace Js
         {
             AssertMsg(false, "CrossSite::MarshalVar should have handled this");
         }
-
-        /*
-        // TODO: JavascriptRegExp use this to unwrap a host dispatch for the RegExp,
-        // but it leaks the unwrapped version to the user
-        // So we have an unprotected object crossing script context. BAD!
-        */
     };
 
     template <typename T>

@@ -106,7 +106,6 @@ namespace Js
     template <typename T, bool enumNonEnumerable, bool enumSymbols, bool snapShotSementics>
     void DynamicObjectEnumerator<T, enumNonEnumerable, enumSymbols, snapShotSementics>::Initialize(DynamicObject* object)
     {
-        //TODO: assert index range
         this->object = object;
         ResetHelper();
     }

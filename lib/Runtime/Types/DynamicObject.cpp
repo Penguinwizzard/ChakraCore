@@ -40,7 +40,7 @@ namespace Js
 
     DynamicObject::DynamicObject(DynamicObject * instance) :
         RecyclableObject(instance->type),
-        auxSlots(instance->auxSlots),       // TODO: stack allocate aux Slots
+        auxSlots(instance->auxSlots),
         objectArray(instance->objectArray)  // copying the array should copy the array flags and array call site index as well
     {
         DynamicTypeHandler * typeHandler = this->GetTypeHandler();
@@ -57,12 +57,6 @@ namespace Js
 #endif
         for (int i = 0; i < inlineSlotCount; i++)
         {
-            // TODO: when we support assigning a mark temp object as property to another mark temp object
-            // we will need to box them too.
-            // TODO: Beware of bailout in the middle of initializing a object literal.  Some slots
-            // might not be initialized yet.
-            // dstSlots[i] = JavascriptOperators::BoxStackInstance(srcSlots[i], this->GetScriptContext());
-
 #if !FLOATVAR
             // Currently we only support temp numbers assigned to stack objects
             dstSlots[i] = JavascriptNumber::BoxStackNumber(srcSlots[i], scriptContext);
@@ -78,12 +72,6 @@ namespace Js
 
             for (uint i = 0; i < auxSlotCount; i++)
             {
-                // TODO: when we support assigning a mark temp object as property to another mark temp object
-                // we will need to box them too.
-                // TODO: Beware of bailout in the middle of initializing a object literal.  Some slots
-                // might not be initialized yet.
-                // auxSlots[i] = JavascriptOperators::BoxStackInstance(instance->auxSlots[i], scriptContext);
-
 #if !FLOATVAR
                 // Currently we only support temp numbers assigned to stack objects
                 auxSlots[i] = JavascriptNumber::BoxStackNumber(instance->auxSlots[i], scriptContext);
@@ -106,7 +94,6 @@ namespace Js
 
     DynamicObject* DynamicObject::FromVar(Var aValue)
     {
-        //        AssertMsg(Is(aValue), "Ensure var is actually a 'DynamicObject'");
         RecyclableObject* obj = RecyclableObject::FromVar(aValue);
         AssertMsg(obj->DbgIsDynamicObject(), "Ensure instance is actually a DynamicObject");
         Assert(DynamicType::Is(obj->GetTypeId()));
@@ -294,7 +281,7 @@ namespace Js
         Assert(!type->isLocked || type->GetTypeHandler()->GetIsLocked());
         Assert(!type->isShared || type->GetTypeHandler()->GetIsShared());
 
-        //For now, i have added only Aux Slot -> so new inlineSlotCapacity should be 2.
+        // For now, i have added only Aux Slot -> so new inlineSlotCapacity should be 2.
         AssertMsg(DynamicObject::IsTypeHandlerCompatibleForObjectHeaderInlining(this->GetTypeHandler(), type->GetTypeHandler()),
             "Object is ObjectHeaderInlined and should have compatible TypeHandlers for proper transition");
 
@@ -436,11 +423,6 @@ namespace Js
 
         Assert(propertyString);
         Assert(propertyId);
-        //PropertyCache* cache = propertyString->GetPropertyCache();
-        //if (cache && cache->type == this->GetType())
-        //{
-        //    return this->slots[cache->dataSlotIndex];
-        //}
 
         Var value = nullptr;
         BOOL result;
@@ -693,10 +675,10 @@ namespace Js
         DynamicType * oldType = this->GetDynamicType();
         DynamicTypeHandler* oldTypeHandler = oldType->GetTypeHandler();
 
-        // TODO: Because we've disabled fixed properties on DOM objects, we don't need to rely on a type change here to
-        // invalidate fixed properties.  Apparently, under some circumstances (with F12 tools enabled) an object which
-        // is already in the new context can be reset and newType == oldType.  This seems like a bug in Trident.  If we
-        // re-enable fixed properties on DOM object we'll have to investigate and address this issue.
+        // Consider: Because we've disabled fixed properties on DOM objects, we don't need to rely on a type change here to
+        // invalidate fixed properties.  Under some circumstances (with F12 tools enabled) an object which
+        // is already in the new context can be reset and newType == oldType. If we reeanable fixed properties on DOM objects
+        // we'll have to investigate and address this issue.
         // Assert(newType != oldType);
         // We only expect DOM objects to ever be reset and we explicitly disable fixed properties on DOM objects.
         Assert(!oldTypeHandler->HasAnyFixedProperties());
@@ -719,7 +701,7 @@ namespace Js
             this->GetTypeHandler()->SetAllPropertiesToUndefined(this, false);
         }
 
-        // Fix blue bug 445811: Targeted fix; Marshalling cannot handle non-Var values, so extract
+        // Marshalling cannot handle non-Var values, so extract
         // the two internal property values that could appear on a CEO, clear them to null which
         // marshalling does handle, and then restore them after marshalling.  Neither property's
         // data needs marshalling because:
@@ -750,9 +732,6 @@ namespace Js
         {
             this->GetTypeHandler()->MarshalAllPropertiesToScriptContext(this, this->GetScriptContext(), false);
 
-            // TODO: We need to marshal Var in object arrays, but we have no way to do that  yet, as the object array
-            // is accessed directly and not through the type handler.
-
             if (stackTraceValue)
             {
                 this->SetInternalProperty(InternalPropertyIds::StackTrace, stackTraceValue, PropertyOperation_None, nullptr);
@@ -782,8 +761,6 @@ namespace Js
         }
         if (HasObjectArray() || (JavascriptArray::Is(this) && JavascriptArray::FromVar(this)->GetLength() != 0))
         {
-            // TODO: Currently, all numeric properties are enumerable, and the type doesn't keep track of them
-            // Need to change this when numeric properties has attributes
             return false;
         }
         return true;

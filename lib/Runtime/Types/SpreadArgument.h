@@ -13,7 +13,7 @@ namespace Js
         RecyclableObject* iterator;
         typedef JsUtil::List<Var, Recycler> VarList;
         VarList* iteratorIndices;
-        //need to return something even though we are asserting
+        // need to return something even though we are asserting
         int Cauterizing() { AssertMsg(false, "This function should not be exposed"); return 0; }
     protected:
         DEFINE_VTABLE_CTOR(SpreadArgument, DynamicObject);

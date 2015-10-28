@@ -77,11 +77,6 @@ namespace Js
 
     BOOL ExternalObject::SetInternalProperty(PropertyId internalPropertyId, Var value, PropertyOperationFlags flags, PropertyValueInfo* info)
     {
-        // Before we added this override in ExternalObject we would go directly to DynamicObject::SetInternalProperty, which does not
-        // do the following two.  Let's leave them out to maintain consistency.
-        //if (!this->VerifyObjectAlive()) return FALSE;
-        //value = Js::CrossSite::MarshalVar(GetScriptContext(), value);
-
         // We don't want fixed properties on external objects, either external properties or expando properties.
         // See DynamicObject::ResetObject for more information.
         flags = static_cast<PropertyOperationFlags>(flags | PropertyOperation_NonFixedValue);
@@ -358,7 +353,7 @@ namespace Js
 
     void ExternalType::Initialize(ExternalMethod entryPoint)
     {
-        // If caller specifies an entry point, wrap it in the thunk so we can do additional check, calldir leavescriptstart/leavescriptend on the methods.
+        // If caller specifies an entry point, wrap it in the thunk so we can do additional checks, call leavescriptstart/leavescriptend on the methods.
         if (entryPoint != nullptr)
         {
             nativeMethod = entryPoint;
@@ -467,7 +462,6 @@ namespace Js
     {
         if (inheritedTypeIds && ExternalTypeWithInheritedTypeIds::Is(this))
         {
-            //TODO: check the strategy to get best perf, like binary search, reverse direction search?
             for (UINT i = 0; i < inheritedTypeIdsCount; i++)
             {
                 if (inheritedTypeIds[i] == typeId)

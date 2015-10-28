@@ -101,7 +101,7 @@ namespace Js
     }
 
     /*
-        Enumerators are always created in current script context, and if the underline object is a cross
+        Enumerators are always created in current script context, and if the underlying object is a cross
         site object, we'll marshal the enumerator by changing the vtbl of the base enumerator, such that
         we will marshal the return index before it's returned to caller.
         Notice that enumerator marshalling is somewhat different from the object marshalling. We have only
@@ -359,8 +359,8 @@ namespace Js
         // is OK, and we need to let host know who the caller is when a call is from another script site.
         // CrossSiteObject is the natural place but it is in the target site. We build up the site
         // chain through PushDispatchExCaller/PopDispatchExCaller, and we call SetCaller in the target site
-        // to indicate who the caller is. We first need to get the site from previously pushed site
-        // and set that as the caller for current call, and Push a new DispatchExCaller for future calls
+        // to indicate who the caller is. We first need to get the site from the previously pushed site
+        // and set that as the caller for current call, and push a new DispatchExCaller for future calls
         // off this site. GetDispatchExCaller and ReleaseDispatchExCaller is used to get the current caller.
         // currentDispatchExCaller is cached to avoid multiple allocations.
         IUnknown* sourceCaller = nullptr, *previousSourceCaller = nullptr;
@@ -423,7 +423,7 @@ namespace Js
     // For prototype chain to install cross-site thunk.
     // When we change prototype using __proto__, those prototypes might not have cross-site thunks
     // installed even though the CEO is accessed from a different context. During ChangePrototype time
-    // we don't really know where is the requestContext.
+    // we don't really know where the requestContext is.
     // Force installing cross-site thunk for all prototype changes. It's a relatively less frequently used
     // scenario.
     void CrossSite::ForceCrossSiteThunkOnPrototypeChain(RecyclableObject* object)

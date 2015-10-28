@@ -88,7 +88,7 @@ namespace Js
     }
 
     #define PropertyTypesNone                      0x00
-    #define PropertyTypesReserved                  0x01  // This bit is always to prevent the DWORD in DynamticTypeHandler looking like a pointer.
+    #define PropertyTypesReserved                  0x01  // This bit is always to prevent the DWORD in DynamicTypeHandler looking like a pointer.
     #define PropertyTypesWritableDataOnly          0x10  // Indicates that a type handler has only writable data properties
                                                          // (no accessors or non-writable properties)
     #define PropertyTypesWritableDataOnlyDetection 0x20  // Set on each call to DynamicTypeHandler::SetHasOnlyWritableDataProperties.

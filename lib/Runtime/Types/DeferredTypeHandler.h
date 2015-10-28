@@ -15,10 +15,9 @@ namespace Js
         DeferredTypeHandlerBase(bool isPrototype, uint16 inlineSlotCapacity, uint16 offsetOfInlineSlots) : 
             DynamicTypeHandler(0, inlineSlotCapacity, offsetOfInlineSlots, DefaultFlags | IsLockedFlag | MayBecomeSharedFlag | IsSharedFlag | (isPrototype ? IsPrototypeFlag : 0))
         {
-            // TODO (jedmiad): Remove this once we merged propertyTypes to flags.  Pass the right flags to the base constructor.
             SetIsInlineSlotCapacityLocked();
             this->ClearHasOnlyWritableDataProperties(); // Until the type handler is initialized, we cannot
-                                                           // be certain that the type has only writable data properties.
+                                                        // be certain that the type has only writable data properties.
         }
 
     public:                
@@ -589,8 +588,6 @@ namespace Js
             // caches, so there will be no fast property add path that could skip prototype cache invalidation.
             DeferredTypeHandlerBase* protoTypeHandler = DeferredTypeHandler<initializer, DeferredTypeFilter, true, _inlineSlotCapacity, _offsetOfInlineSlots>::GetDefaultInstance();
             AssertMsg(protoTypeHandler->GetFlags() == (GetFlags() | IsPrototypeFlag), "Why did we change the flags of a DeferredTypeHandler?");
-            // TODO (jedmiad): Let's get rid of the PropertyTypesWritableDataOnlyDetection bit altogether and assert here that both non-proto and proto
-            // type handlers have PropertyTypesWritableDataOnly off.  This way we won't need to pass anything along.
             Assert(this->GetIsInlineSlotCapacityLocked() == protoTypeHandler->GetIsInlineSlotCapacityLocked());
             protoTypeHandler->SetPropertyTypes(PropertyTypesWritableDataOnly | PropertyTypesWritableDataOnlyDetection, GetPropertyTypes());
             SetInstanceTypeHandler(instance, protoTypeHandler);

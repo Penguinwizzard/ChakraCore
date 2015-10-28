@@ -364,7 +364,6 @@ namespace Js
 
         PropertyTypes GetPropertyTypes() { Assert((propertyTypes & PropertyTypesReserved) != 0); return propertyTypes; }
         bool GetHasOnlyWritableDataProperties() { return (GetPropertyTypes() & PropertyTypesWritableDataOnly) == PropertyTypesWritableDataOnly; }
-        // TODO (jedmiad): Remove this method entirely once we don't need the workaround and access from JavascriptLibrary.
         // Do not use this method.  It's here only for the __proto__ performance workaround.
         void SetHasOnlyWritableDataProperties() { SetHasOnlyWritableDataProperties(true); }
         void ClearHasOnlyWritableDataProperties() { SetHasOnlyWritableDataProperties(false); };
@@ -377,8 +376,6 @@ namespace Js
                 propertyTypes ^= PropertyTypesWritableDataOnly;
             }
 
-            // TODO (jedmiad): Get rid of the detection bit entirely.  We always change the instance type when a property
-            // becomes read-only.
             // Turn on the detection bit.
             propertyTypes |= PropertyTypesWritableDataOnlyDetection;
             Assert((propertyTypes & PropertyTypesReserved) != 0);
@@ -399,13 +396,11 @@ namespace Js
         virtual BOOL AllPropertiesAreEnumerable() { return false; }
         virtual BOOL IsLockable() const = 0;
         virtual BOOL IsSharable() const = 0;
-        // Review (jedmiad): Why is this public?  Let's make it protected at least.
         virtual void DoShareTypeHandler(ScriptContext* scriptContext) {};
 
         virtual int GetPropertyCount() = 0;
         virtual PropertyId GetPropertyId(ScriptContext* scriptContext, PropertyIndex index) = 0;
         virtual PropertyId GetPropertyId(ScriptContext* scriptContext, BigPropertyIndex index) = 0;
-        // TODO: Type handlers store PropertyRecord* instead of PropertyId now, so FindNextProperty should return PropertyRecord* instead of PropertyId
         virtual BOOL FindNextProperty(ScriptContext* scriptContext, PropertyIndex& index, JavascriptString** propertyString,
             PropertyId* propertyId, PropertyAttributes* attributes, Type* type, DynamicType *typeToEnumerate, bool requireEnumerable, bool enumSymbols = false) = 0;
         virtual BOOL FindNextProperty(ScriptContext* scriptContext, BigPropertyIndex& index, JavascriptString** propertyString,
@@ -508,7 +503,7 @@ namespace Js
         void InvalidateProtoCachesForAllProperties(ScriptContext* requestContext);
         void InvalidateStoreFieldCachesForAllProperties(ScriptContext* requestContext);
 
-        // For change __proto__
+        // For changing __proto__
         void RemoveFromPrototype(DynamicObject* instance, ScriptContext * requestContext);
         void AddToPrototype(DynamicObject* instance, ScriptContext * requestContext);
         virtual void SetPrototype(DynamicObject* instance, RecyclableObject* newPrototype);

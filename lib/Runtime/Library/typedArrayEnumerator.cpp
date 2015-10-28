@@ -44,10 +44,9 @@ namespace Js
 
     Var TypedArrayEnumerator::GetCurrentAndMoveNext(PropertyId& propertyId, PropertyAttributes* attributes)
     {
-        // TypedArrayEnumerator follow the same logic in JavascriptArrayEnumerator, 
-        // but implementation is slightly 
-        // different as we don't have sparse array in typed array, and typed array 
-        // is DynamicObject instead of JavascriptArray.
+        // TypedArrayEnumerator follows the same logic in JavascriptArrayEnumerator, 
+        // but the implementation is slightly different as we don't have sparse array 
+        // in typed array, and typed array is a DynamicObject instead of JavascriptArray.
         propertyId = Constants::NoProperty;
         ScriptContext *scriptContext = this->GetScriptContext();
 

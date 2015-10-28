@@ -48,7 +48,6 @@ namespace Js
         PropertyAttributes Attributes;
     private:
         TPropertyIndex Data;
-        // TODO: These two field may still form a false reference,
         // CONSIDER: sharing the Data slot with one of these and use the attributes to tell it apart.
         TPropertyIndex Getter;
         TPropertyIndex Setter;
@@ -154,7 +153,6 @@ namespace Js
         this->IsShadowed = true;
         if (this->IsAccessor)
         {
-            // REVIEW: overflow index
             Assert(this->Data == NoSlots);
         }
         else if (addingLetConstGlobal)
@@ -219,13 +217,11 @@ namespace Js
         bool addedPropertyIndex = false;
         if (this->Getter == NoSlots)
         {
-            // REVIEW: overflow to BigPropertyIndex?
             this->Getter = nextPropertyIndex++;
             addedPropertyIndex = true;
         }
         if (this->Setter == NoSlots)
         {
-            // REVIEW: overflow to BigPropertyIndex?
             this->Setter = nextPropertyIndex++;
             addedPropertyIndex = true;
         }

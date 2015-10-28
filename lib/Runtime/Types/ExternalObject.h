@@ -58,7 +58,7 @@ namespace Js
     {
         friend class ScriptSite; // just for CONTAINING_RECORD
 #if DBG_EXTRAFIELD
-        friend class DOMFastPathInfo; // additionalByteCount for chk build only
+        friend class DOMFastPathInfo; // additionalByteCount for Debug builds only
 #endif
     protected:
         DEFINE_VTABLE_CTOR(ExternalObject, DynamicObject);

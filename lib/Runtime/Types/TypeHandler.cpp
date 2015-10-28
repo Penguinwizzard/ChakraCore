@@ -70,8 +70,6 @@ namespace Js
         Assert(offsetOfInlineSlots != 0 || inlineSlotCapacity == 0);
         Assert(!IsObjectHeaderInlined(offsetOfInlineSlots) || inlineSlotCapacity != 0);
 
-        // TODO: Since the inline slot capacity does not change when transitioning types, have the caller align it
-
         // Align the slot capacities and set the total slot capacity
         this->inlineSlotCapacity = inlineSlotCapacity =
             IsObjectHeaderInlined(offsetOfInlineSlots)
@@ -112,7 +110,7 @@ namespace Js
 
     Var DynamicTypeHandler::GetAuxSlot(DynamicObject * instance, int index)
     {
-        // We should only assign stack value only to an stack object (current mark temp number in mark temp object)
+        // We should only assign a stack value only to an stack object (current mark temp number in mark temp object)
 
         Assert(index < GetSlotCapacity() - GetInlineSlotCapacity());
         Var value = instance->auxSlots[index];
@@ -133,7 +131,7 @@ namespace Js
 
     void DynamicTypeHandler::SetSlotUnchecked(DynamicObject * instance, int index, Var value)
     {
-        // We should only assign stack value only to an stack object (current mark temp number in mark temp object)
+        // We should only assign a stack value only to an stack object (current mark temp number in mark temp object)
         Assert(ThreadContext::IsOnStack(instance) || !ThreadContext::IsOnStack(value) || TaggedNumber::Is(value));
         uint16 inlineSlotCapacity = instance->GetTypeHandler()->GetInlineSlotCapacity();
         uint16 offsetOfInlineSlots = instance->GetTypeHandler()->GetOffsetOfInlineSlots();
@@ -157,7 +155,7 @@ namespace Js
     void DynamicTypeHandler::SetInlineSlot(DynamicObject* instance, int index, Var value)
 #endif
     {
-        // We should only assign stack value only to an stack object (current mark temp number in mark temp object)
+        // We should only assign a stack value only to an stack object (current mark temp number in mark temp object)
         Assert(ThreadContext::IsOnStack(instance) || !ThreadContext::IsOnStack(value) || TaggedNumber::Is(value));
         AssertMsg(index >= (int)(offsetOfInlineSlots / sizeof(Var)), "index should be relative to the address of the object");
         Assert(index - (int)(offsetOfInlineSlots / sizeof(Var)) < this->GetInlineSlotCapacity());
@@ -172,7 +170,7 @@ namespace Js
     void DynamicTypeHandler::SetAuxSlot(DynamicObject* instance, int index, Var value)
 #endif
     {
-        // We should only assign stack value only to an stack object (current mark temp number in mark temp object)
+        // We should only assign a stack value only to an stack object (current mark temp number in mark temp object)
         Assert(ThreadContext::IsOnStack(instance) || !ThreadContext::IsOnStack(value) || TaggedNumber::Is(value));
         Assert(index < GetSlotCapacity() - GetInlineSlotCapacity());
         Assert(propertyId == Constants::NoProperty || CanStorePropertyValueDirectly(instance, propertyId, allowLetConst));

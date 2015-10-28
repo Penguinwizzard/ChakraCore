@@ -63,7 +63,7 @@ namespace Js
             Var firstArgument = args[1];
             if (TypedArrayBase::Is(firstArgument))
             {
-                //Constructor(TypedArray array)
+                // Constructor(TypedArray array)
                 typedArraySource = static_cast<TypedArrayBase*>(firstArgument);
                 if (typedArraySource->IsDetachedBuffer())
                 {
@@ -78,7 +78,7 @@ namespace Js
             }
             else if (ArrayBuffer::Is(firstArgument))
             {
-                //  Constructor(ArrayBuffer buffer,
+                // Constructor(ArrayBuffer buffer,
                 //  optional unsigned long byteOffset, optional unsigned long length)
                 arrayBuffer = ArrayBuffer::FromVar(firstArgument);
                 if (arrayBuffer->IsDetached())
@@ -277,7 +277,7 @@ namespace Js
 
     inline BOOL TypedArrayBase::IsBuiltinProperty(PropertyId propertyId)
     {
-        // We only return the builtins on pre-ES6
+        // We only return the builtins in pre-ES6 mode
         if (!GetScriptContext()->GetConfig()->IsES6TypedArrayExtensionsEnabled() &&
             (propertyId == PropertyIds::length ||
             propertyId == PropertyIds::buffer ||
@@ -396,7 +396,7 @@ namespace Js
     BOOL TypedArrayBase::GetPropertyBuiltIns(PropertyId propertyId, Var* value)
     {
         //
-        // Only return built-ins for pre-ES6
+        // Only return built-ins for pre-ES6 mode
         //
         if (!GetScriptContext()->GetConfig()->IsES6TypedArrayExtensionsEnabled())
         {
@@ -490,7 +490,6 @@ namespace Js
         return true;
     }
 
-    // REVIEW: I don't see we need to use the flag here.
     BOOL TypedArrayBase::SetItem(uint32 index, Var value, PropertyOperationFlags flags)
     {
         // Skip set item if index >= GetLength()
@@ -785,7 +784,7 @@ namespace Js
         }
     }
 
-    //Getting length from the source object can detach the typedarray, and thus set it's length as 0,
+    // Getting length from the source object can detach the typedarray, and thus set it's length as 0,
     // this is observable because RangeError will be thrown instead of a TypeError further down the line
     void TypedArrayBase::SetObject(RecyclableObject* source, uint32 targetLength, uint32 offset)
     {
@@ -1142,14 +1141,14 @@ namespace Js
         {
             offset = JavascriptConversion::ToInt32(args[2], scriptContext);
         }
-        if (offset < 0) //22.2.3.23:8 8.If targetOffset < 0, then throw a RangeError exception.
+        if (offset < 0) // If targetOffset < 0, then throw a RangeError exception.
         {
             JavascriptError::ThrowTypeError(scriptContext, JSERR_InvalidTypedArrayLength);
         }
         if (TypedArrayBase::Is(args[1]))
         {
             TypedArrayBase* typedArraySource = TypedArrayBase::FromVar(args[1]);
-            if (typedArraySource->IsDetachedBuffer() || typedArrayBase->IsDetachedBuffer()) //22.2.3.23:11/15 If IsDetachedBuffer(targetBuffer) is true, then throw a TypeError exception.
+            if (typedArraySource->IsDetachedBuffer() || typedArrayBase->IsDetachedBuffer()) // If IsDetachedBuffer(targetBuffer) is true, then throw a TypeError exception.
             {
                 JavascriptError::ThrowTypeError(scriptContext, JSERR_DetachedTypedArray, L"[TypedArray].prototype.set");
             }
@@ -1229,7 +1228,7 @@ namespace Js
             begin = JavascriptConversion::ToInt32(args[1], scriptContext);
         }
 
-        // This is weird rule:
+        // The rule is:
         // The range specified by the begin and end values is clamped to the valid index range for the current array.
         // If the computed length of the new TypedArray would be negative, it is clamped to zero.
         if (begin < 0)
@@ -1374,7 +1373,7 @@ namespace Js
                 // We have to collect the items into this temporary list because we need to call the
                 // new object constructor with a length of items and we don't know what length will be
                 // until we iterate across all the items.
-                // TODO: Could be possible to fast-path this in order to avoid creating the temporary list
+                // Consider: Could be possible to fast-path this in order to avoid creating the temporary list
                 //       for types we know such as TypedArray. We know the length of a TypedArray but we still
                 //       have to be careful in case there is a proxy which could return anything from [[Get]]
                 //       or the built-in @@iterator has been replaced.
@@ -1417,7 +1416,7 @@ namespace Js
                         kValue = mapFn->CallFunction(Js::Arguments(mapFnCallInfo, mapFnArgs));
                     }
 
-                    // We're pretty likely to have constructed a new TypedArray, but the constructor could return any object
+                    // We're likely to have constructed a new TypedArray, but the constructor could return any object
                     if (newTypedArrayBase)
                     {
                         newTypedArrayBase->DirectSetItem(k, kValue, false);
@@ -2304,7 +2303,6 @@ namespace Js
 
         if (args.Info.Count > 1)
         {
-            // TODO: REVIEW - Should we throw TypeError here? IE11 does, Chrome does not
             if (!JavascriptConversion::IsCallable(args[1]))
             {
                 JavascriptError::ThrowTypeError(scriptContext, JSERR_FunctionArgument_NeedFunction, L"[TypedArray].prototype.sort");
@@ -2573,7 +2571,7 @@ namespace Js
 
     Var TypedArrayBase::FindMinOrMax(Js::ScriptContext * scriptContext, TypeId typeId, bool findMax)
     {
-        if (this->IsDetachedBuffer()) //9.4.5.8 IntegerIndexedElementGet
+        if (this->IsDetachedBuffer()) // 9.4.5.8 IntegerIndexedElementGet
         {
             JavascriptError::ThrowTypeError(GetScriptContext(), JSERR_DetachedTypedArray);
         }
@@ -3208,7 +3206,7 @@ namespace Js
     __inline BOOL CharArray::DirectSetItem(__in uint32 index, __in Js::Var value, __in bool skipSetElement)
     {
         ScriptContext* scriptContext = GetScriptContext();
-        //A typed array is Integer Indexed Exotic object, so doing a get translates to 9.4.5.9 IntegerIndexedElementSet
+        // A typed array is Integer Indexed Exotic object, so doing a get translates to 9.4.5.9 IntegerIndexedElementSet
         LPCWSTR asString = (Js::JavascriptConversion::ToString(value, scriptContext))->GetSz();
 
         if (this->IsDetachedBuffer())
@@ -3239,7 +3237,7 @@ namespace Js
 
     __inline Var CharArray::DirectGetItem(__in uint32 index)
     {
-        //A typed array is Integer Indexed Exotic object, so doing a get translates to 9.4.5.8 IntegerIndexedElementGet
+        // A typed array is Integer Indexed Exotic object, so doing a get translates to 9.4.5.8 IntegerIndexedElementGet
         if (this->IsDetachedBuffer())
         {
             JavascriptError::ThrowTypeError(GetScriptContext(), JSERR_DetachedTypedArray);

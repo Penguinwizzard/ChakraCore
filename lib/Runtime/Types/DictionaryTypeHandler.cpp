@@ -18,19 +18,17 @@ namespace Js
         nextPropertyIndex(0),
         singletonInstance(nullptr)
     {
-        // TODO (jedmiad): Remove this once we merged propertyTypes to flags.  Pass the right flags to the base constructor.
         SetIsInlineSlotCapacityLocked();
         propertyMap = RecyclerNew(recycler, PropertyDescriptorMap, recycler, this->GetSlotCapacity());
     }
 
     template <typename T>
     DictionaryTypeHandlerBase<T>::DictionaryTypeHandlerBase(Recycler* recycler, int slotCapacity, uint16 inlineSlotCapacity, uint16 offsetOfInlineSlots) :
-    // Do not RoundUp passed in slotCapacity. This may be called by ConvertTypeHandler for an existing DynamicObject and should use the real existing slotCapacity.
+        // Do not RoundUp passed in slotCapacity. This may be called by ConvertTypeHandler for an existing DynamicObject and should use the real existing slotCapacity.
         DynamicTypeHandler(slotCapacity, inlineSlotCapacity, offsetOfInlineSlots),
         nextPropertyIndex(0),
         singletonInstance(nullptr)
     {
-        // TODO (jedmiad): Remove this once we merged propertyTypes to flags.  Pass the right flags to the base constructor.
         SetIsInlineSlotCapacityLocked();
         Assert(GetSlotCapacity() <= MaxPropertyIndexSize);
         propertyMap = RecyclerNew(recycler, PropertyDescriptorMap, recycler, slotCapacity);
@@ -45,7 +43,6 @@ namespace Js
         propertyMap(typeHandler->propertyMap), nextPropertyIndex(typeHandler->nextPropertyIndex),
         singletonInstance(typeHandler->singletonInstance)
     {
-        // TODO (jedmiad): Remove this once we merged propertyTypes to flags.  Pass the right flags to the base constructor.
         Assert(typeHandler->GetIsInlineSlotCapacityLocked());
         CopyPropertyTypes(PropertyTypesWritableDataOnly | PropertyTypesWritableDataOnlyDetection | PropertyTypesInlineSlotCapacityLocked, typeHandler->GetPropertyTypes());
     }
@@ -190,17 +187,6 @@ namespace Js
 
                 *propertyId = propertyRecord->GetPropertyId();
                 *propertyStringName = type->GetScriptContext()->GetPropertyString(*propertyId);
-//                if (descriptor.Data != NoSlots && (attribs & PropertyWritable))
-//                {
-//                    (*propertyString)->UpdateCache(type, descriptor.Data);
-//                }
-//                else
-//                {
-//#ifdef DEBUG
-//                    PropertyCache* cache = (*propertyString)->GetPropertyCache();
-//                    Assert(!cache || cache->type != type);
-//#endif
-//                }
 
                 return TRUE;
             }
@@ -760,11 +746,10 @@ namespace Js
         else if (descriptor->GetSetterPropertyIndex() != NoSlots)
         {
             RecyclableObject* func = RecyclableObject::FromVar(instance->GetSlot(descriptor->GetSetterPropertyIndex()));
-            // TODO: request context
             JavascriptOperators::CallSetter(func, instance, value, NULL);
 
             // Wait for the setter to return before setting up the inline cache info, as the setter may change
-            // the attributes (see Win8 279888).
+            // the attributes
             T dataSlot = descriptor->GetDataPropertyIndex<false>();
             if (dataSlot != NoSlots)
             {
@@ -937,7 +922,7 @@ namespace Js
                 }
                 InvalidateFixedField(instance, propertyId, descriptor);
 
-                //Change the type so as we can invalidate the cache in fast path jit
+                // Change the type so as we can invalidate the cache in fast path jit
                 instance->ChangeType();
                 SetPropertyUpdateSideEffect(instance, propertyId, nullptr, SideEffects_Any);
                 return true;
@@ -1255,7 +1240,7 @@ namespace Js
     {
         this->ClearFlags(IsExtensibleFlag);
 
-        //Set [[Configurable]] flag of each property to false
+        // Set [[Configurable]] flag of each property to false
         DictionaryPropertyDescriptor<T> *descriptor = nullptr;
         for (T index = 0; index < propertyMap->Count(); index++)
         {
@@ -1280,8 +1265,8 @@ namespace Js
     {
         this->ClearFlags(IsExtensibleFlag);
 
-        //Set [[Writable]] flag of each property to false except for setter\getters
-        //Set [[Configurable]] flag of each property to false
+        // Set [[Writable]] flag of each property to false except for setter\getters
+        // Set [[Configurable]] flag of each property to false
         DictionaryPropertyDescriptor<T> *descriptor = nullptr;
         for (T index = 0; index < propertyMap->Count(); index++)
         {
@@ -1290,7 +1275,7 @@ namespace Js
             {
                 if (descriptor->GetDataPropertyIndex<false>() != NoSlots)
                 {
-                    //Only data descriptor has Writable property
+                    // Only data descriptor has Writable property
                     descriptor->Attributes &= ~(PropertyWritable | PropertyConfigurable);
                 }
                 else
@@ -1307,7 +1292,7 @@ namespace Js
         }
         if (!isConvertedType)
         {
-            //Change of [[Writable]] property requires cache invalidation, hence ChangeType
+            // Change of [[Writable]] property requires cache invalidation, hence ChangeType
             instance->ChangeType();
         }
 
@@ -1343,8 +1328,8 @@ namespace Js
             {
                 if (descriptor->Attributes & PropertyConfigurable)
                 {
-                    //[[Configurable]] must be false for all (existing) properties.
-                    //IE9 compatibility: keep IE9 behavior (also check deleted properties) -- see bug Win8 509299.
+                    // [[Configurable]] must be false for all (existing) properties.
+                    // IE9 compatibility: keep IE9 behavior (also check deleted properties)
                     return false;
                 }
             }
@@ -1380,7 +1365,7 @@ namespace Js
 
                 if (descriptor->GetDataPropertyIndex<false>() != NoSlots && (descriptor->Attributes & PropertyWritable))
                 {
-                    //Only data descriptor has [[Writable]] property
+                    // Only data descriptor has [[Writable]] property
                     return false;
                 }
             }
@@ -1531,7 +1516,7 @@ namespace Js
             }
             else if (descriptor->IsOnlyOneAccessorInitialized)
             {
-                //Only one of getter/setter was initialized, allow the isFixed to stay if we are defining the other one.
+                // Only one of getter/setter was initialized, allow the isFixed to stay if we are defining the other one.
                 Var oldGetter = GetSlot(instance, descriptor->GetGetterPropertyIndex());
                 Var oldSetter = GetSlot(instance, descriptor->GetSetterPropertyIndex());
 
@@ -2009,9 +1994,6 @@ namespace Js
             {
                 BigDictionaryTypeHandler* newTypeHandler = ConvertToBigDictionaryTypeHandler(instance);
 
-#ifdef PROFILE_TYPES
-                //instance->GetScriptContext()->convertSimpleDictionaryToDictionaryCount++;
-#endif
                 return newTypeHandler->AddProperty(instance, propertyRecord, value, attributes, info, flags, false, possibleSideEffects);
             }
             this->EnsureSlotCapacity(instance);
@@ -2104,8 +2086,7 @@ namespace Js
     void DictionaryTypeHandlerBase<T>::SetAllPropertiesToUndefined(DynamicObject* instance, bool invalidateFixedFields)
     {
         // The Var for window is reused across navigation. we shouldn't preserve the IsExtensibleFlag when we don't keep
-        // the expandoes. The right solution should have been not to set the flag on CBase Vars, but we don't want to
-        // change that before win8.1 ships. reset the IsExtensibleFlag in cleanup scenario should be good enough
+        // the expandoes. Reset the IsExtensibleFlag in cleanup scenario should be good enough
         // to cover all the preventExtension/Freeze/Seal scenarios.
         // Note that we don't change the flag for keepProperties scenario: the flags should be preserved and that's consistent
         // with other browsers.

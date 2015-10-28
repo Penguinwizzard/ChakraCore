@@ -15,7 +15,6 @@ namespace Js
             typeHandler->GetInlineSlotCapacity(), typeHandler->GetOffsetOfInlineSlots()), propertyCount(typeHandler->propertyCount)
     {
         Assert(typeHandler->GetIsInlineSlotCapacityLocked());
-        // TODO (jedmiad): Remove this once we merged propertyTypes to flags.  Pass the right flags to the base constructor.
         SetIsInlineSlotCapacityLocked();
         for (int i = 0; i < propertyCount; i++)
         {
@@ -28,7 +27,6 @@ namespace Js
          DynamicTypeHandler(sizeof(descriptors) / sizeof(SimplePropertyDescriptor)),
          propertyCount(0)
     {
-        // TODO (jedmiad): Remove this once we merged propertyTypes to flags.  Pass the right flags to the base constructor.
         SetIsInlineSlotCapacityLocked();
     }
 
@@ -43,7 +41,6 @@ namespace Js
 
         Assert((propertyTypes & (PropertyTypesAll & ~PropertyTypesWritableDataOnly)) == 0);
         SetPropertyTypes(PropertyTypesWritableDataOnly, propertyTypes);
-        // TODO (jedmiad): Remove this once we merged propertyTypes to flags.  Pass the right flags to the base constructor.
         SetIsInlineSlotCapacityLocked();
     }
 
@@ -61,7 +58,6 @@ namespace Js
         }
         Assert((propertyTypes & (PropertyTypesAll & ~PropertyTypesWritableDataOnly)) == 0);
         SetPropertyTypes(PropertyTypesWritableDataOnly, propertyTypes);
-        // TODO (jedmiad): Remove this once we merged propertyTypes to flags.  Pass the right flags to the base constructor.
         SetIsInlineSlotCapacityLocked();
     }
 
@@ -76,7 +72,7 @@ namespace Js
 
         SimpleTypeHandler * newTypeHandler = RecyclerNew(recycler, SimpleTypeHandler, this);
 
-        // TODO (jedmiad): Consider adding support for fixed fields to SimpleTypeHandler when
+        // Consider: Add support for fixed fields to SimpleTypeHandler when
         // non-shared.  Here we could set the instance as the singleton instance on the newly
         // created handler.
 
@@ -571,7 +567,6 @@ namespace Js
             CompileAssert(_countof(descriptors) == size);
             SetSlotUnchecked(instance, index, nullptr);
 
-            // TODO (jedmiad): Create two different flavors of NullTypeHandler: with and without read-only properties.
             NullTypeHandlerBase* nullTypeHandler = ((this->GetFlags() & IsPrototypeFlag) != 0) ?
                 (NullTypeHandlerBase*)NullTypeHandler<true>::GetDefaultInstance() : (NullTypeHandlerBase*)NullTypeHandler<false>::GetDefaultInstance();
             if (instance->HasReadOnlyPropertiesInvisibleToTypeHandler())
@@ -1011,7 +1006,7 @@ namespace Js
         // the invalidateFixedFields == false is only correct if a) the object is known not to have any, or b) the type of the
         // object has changed and/or property guards have already been invalidated through some other means.
 
-        // We can ignore invalidateFixeFields, because SimpleTypeHandler doesn't support fixed fields at this point.
+        // We can ignore invalidateFixedFields, because SimpleTypeHandler doesn't support fixed fields at this point.
         Js::RecyclableObject* undefined = instance->GetLibrary()->GetUndefined();
         for (int propertyIndex = 0; propertyIndex < this->propertyCount; propertyIndex++)
         {
@@ -1027,7 +1022,7 @@ namespace Js
         // the invalidateFixedFields == false is only correct if a) the object is known not to have any, or b) the type of the
         // object has changed and/or property guards have already been invalidated through some other means.
 
-        // We can ignore invalidateFixeFields, because SimpleTypeHandler doesn't support fixed fields at this point.
+        // We can ignore invalidateFixedFields, because SimpleTypeHandler doesn't support fixed fields at this point.
         for (int propertyIndex = 0; propertyIndex < this->propertyCount; propertyIndex++)
         {
             SetSlotUnchecked(instance, propertyIndex, CrossSite::MarshalVar(targetScriptContext, GetSlot(instance, propertyIndex)));

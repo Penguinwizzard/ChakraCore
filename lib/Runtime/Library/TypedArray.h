@@ -132,7 +132,7 @@ namespace Js
         static BOOL Is(Var aValue);
         static BOOL Is(TypeId typeId);
         static TypedArrayBase* FromVar(Var aValue);
-        //Returns false if this is not a TypedArray or it's not detached
+        // Returns false if this is not a TypedArray or it's not detached
         static BOOL IsDetachedTypedArray(Var aValue);
         static HRESULT GetBuffer(Var aValue, ArrayBuffer** outBuffer, uint32* outOffset, uint32* outLength);
 
@@ -223,7 +223,7 @@ namespace Js
 
         __inline Var BaseTypedDirectGetItem(__in uint32 index)
         {
-            if (this->IsDetachedBuffer()) //9.4.5.8 IntegerIndexedElementGet 
+            if (this->IsDetachedBuffer()) // 9.4.5.8 IntegerIndexedElementGet 
             {
                 JavascriptError::ThrowTypeError(GetScriptContext(), JSERR_DetachedTypedArray);
             }
@@ -239,7 +239,7 @@ namespace Js
 
         __inline Var TypedDirectGetItemWithCheck(__in uint32 index)
         {
-            if (this->IsDetachedBuffer()) //9.4.5.8 IntegerIndexedElementGet 
+            if (this->IsDetachedBuffer()) // 9.4.5.8 IntegerIndexedElementGet 
             {
                 JavascriptError::ThrowTypeError(GetScriptContext(), JSERR_DetachedTypedArray);
             }
@@ -311,7 +311,7 @@ namespace Js
             }
             TypeName typedValue = convFunc(value, GetScriptContext());
 
-            if (this->IsDetachedBuffer()) //9.4.5.9 IntegerIndexedElementSet 
+            if (this->IsDetachedBuffer()) // 9.4.5.9 IntegerIndexedElementSet 
             {
                 JavascriptError::ThrowTypeError(GetScriptContext(), JSERR_DetachedTypedArray);
             }
@@ -358,7 +358,7 @@ namespace Js
             // Therefore it was brought out and above the IsDetached check
             TypeName typedValue = convFunc(value, GetScriptContext());
             
-            if (this->IsDetachedBuffer()) //9.4.5.9 IntegerIndexedElementSet 
+            if (this->IsDetachedBuffer()) // 9.4.5.9 IntegerIndexedElementSet 
             {
                 JavascriptError::ThrowTypeError(GetScriptContext(), JSERR_DetachedTypedArray);
             }
@@ -395,8 +395,8 @@ namespace Js
         }
     };
 
-    // in windows build environment, wchar_t is still not a intrinsic type, and we cannot do the type
-    // specialized
+    // in windows build environment, wchar_t is not a intrinsic type, and we cannot do the type
+    // specialization
     class CharArray : public TypedArrayBase
     {
     protected:

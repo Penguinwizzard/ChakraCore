@@ -150,7 +150,7 @@ namespace Js {
        SideEffects_Any      = SideEffects_MathFunc | SideEffects_ValueOf | SideEffects_ToString | SideEffects_Accessor
     };
 
-    // int32 used in JIT code to pass the flag
+    // int32 is used in JIT code to pass the flag
     // Used to tweak type system methods behavior.
     // Normally, use: PropertyOperation_None.
     enum PropertyOperationFlags : int32
@@ -286,12 +286,12 @@ namespace Js {
         virtual BOOL IsConfigurable(PropertyId propertyId) { return false; }
         virtual BOOL IsEnumerable(PropertyId propertyId) { return false; }
         virtual BOOL IsExtensible() { return false; }
-        virtual BOOL PreventExtensions() { return false; };     //Sets [[Extensible]] flag of instance to false
+        virtual BOOL PreventExtensions() { return false; };     // Sets [[Extensible]] flag of instance to false
         virtual void ThrowIfCannotDefineProperty(PropertyId propId, PropertyDescriptor descriptor);
         virtual void ThrowIfCannotGetOwnPropertyDescriptor(PropertyId propId) {}
         virtual BOOL GetDefaultPropertyDescriptor(PropertyDescriptor& descriptor);
-        virtual BOOL Seal() { return false; }                   //Seals the instance, no additional property can be added or deleted
-        virtual BOOL Freeze() { return false; }                 //Freezes the instance, no additional property can be added or deleted or written
+        virtual BOOL Seal() { return false; }                   // Seals the instance, no additional property can be added or deleted
+        virtual BOOL Freeze() { return false; }                 // Freezes the instance, no additional property can be added or deleted or written
         virtual BOOL IsSealed() { return false; }
         virtual BOOL IsFrozen() { return false; }
         virtual BOOL SetWritable(PropertyId propertyId, BOOL value) { return false; }
@@ -324,7 +324,6 @@ namespace Js {
         virtual void AddToPrototype(ScriptContext * requestContext) { AssertMsg(false, "Shouldn't call this implementation."); }
         virtual void SetPrototype(RecyclableObject* newPrototype) { AssertMsg(false, "Shouldn't call this implementation."); }
 
-        // TODO: This is to consolidate all the ToString functionality in one location
         virtual BOOL ToString(Js::Var* value, Js::ScriptContext* scriptContext) { AssertMsg(FALSE, "Do not use this function."); return false; }
 
         // don't need cross-site: in HostDispatch it's IDispatchEx based; in CustomExternalObject we have marshalling code explicitly.
