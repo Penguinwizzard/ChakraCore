@@ -9,11 +9,11 @@ var all = [ undefined, null,
             true, false, new Boolean(true), new Boolean(false),
             NaN, +0, -0, 0, 1, 10.0, 10.1, -1, -5, 5,
             124, 248, 654, 987, -1026, +98768.2546, -88754.15478,
-            1<<32, -(1<<32), (1<<32)-1, 1<<31, -(1<<31), 1<<25, -1<<25, 
+            1<<32, -(1<<32), (1<<32)-1, 1<<31, -(1<<31), 1<<25, -1<<25,
             Number.MAX_VALUE, Number.MIN_VALUE, Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY,
             new Number(NaN), new Number(+0), new Number( -0), new Number(0), new Number(1),
-            new Number(10.0), new Number(10.1), 
-            new Number(Number.MAX_VALUE), new Number(Number.MIN_VALUE), new Number(Number.NaN), 
+            new Number(10.0), new Number(10.1),
+            new Number(Number.MAX_VALUE), new Number(Number.MIN_VALUE), new Number(Number.NaN),
             new Number(Number.POSITIVE_INFINITY), new Number(Number.NEGATIVE_INFINITY),
             "", "hello", "hel" + "lo", "+0", "-0", "0", "1", "10.0", "10.1",
             new String(""), new String("hello"), new String("he" + "llo"),
@@ -32,7 +32,7 @@ function AsmModule(stdlib,foreign,buffer) {
     var fd2 = +foreign.d2;
     var fun1 = foreign.fun1;
     var fun2 = foreign.fun2;
-    
+
     // stdlib immutable variable type double
     var sInf = stdlib.Infinity, sNaN = stdlib.NaN;
     // stdlib math (double) -> double
@@ -63,7 +63,7 @@ function AsmModule(stdlib,foreign,buffer) {
     var m20 = stdlib.Math.PI;
     var m21 = stdlib.Math.SQRT1_2;
     var m22 = stdlib.Math.SQRT2;
-    
+
     //views
     var HEAP8  =new stdlib.Int8Array(buffer);
     var HEAP16 =new stdlib.Int16Array(buffer);
@@ -73,39 +73,39 @@ function AsmModule(stdlib,foreign,buffer) {
     var HEAPU32=new stdlib.Uint32Array(buffer);
     var HEAPF32=new stdlib.Float32Array(buffer);
     var HEAP64 =new stdlib.Float64Array(buffer);
-    
+
     function f1(x,y){
         x = x|0;
         y = y|0;
         var i1 = 0, i2 = 0, i3 = 0;
         var d1 = 0.0, d2 = 0.0, d3 = 0.0, d4 = 0.0, d5 = 0.0;
-        
+
         HEAP8  [x]=y;
         i1 = HEAP8  [x]|0;
-        
+
         HEAP16 [x>>1]=y;
         i2 = HEAP16 [x>>1]|0;
-        
+
         HEAP32 [x>>2]=y;
         i3 = HEAP32 [x>>2]|0;
-        
+
         HEAPU8 [x>>0]=y;
         d1 = +(HEAPU8 [x]>>>0);
-        
+
         HEAPU16[x>>1]=y;
         d2 = +(HEAPU16[x>>1]>>>0);
-        
+
         HEAPU32[x>>2]=y;
         d3 = +(HEAPU32[x>>2]>>>0);
-        
+
         HEAPF32[x>>2]=+(y|0);
         d4 = +HEAPF32[x>>2];
-        
+
         HEAP64 [x>>3]=+(y|0);
         d5 = +HEAP64 [x>>3];
         fun1(i1|0,i2|0,i3|0,d1,d2,d3,d4,d5);
-    }   
-    
+    }
+
     return f1;
 }
 

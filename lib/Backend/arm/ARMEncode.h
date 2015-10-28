@@ -284,7 +284,7 @@ typedef enum tagIFORM
     FORM_Trpcc____  = FTHUMB | FDST(REG) | FSRC(PC,1) | FSRC(CONST,2),
     FORM_Trspc____  = FTHUMB | FDST(REG) | FSRC(SP,1) | FSRC(CONST,2),
     FORM_2rspc____  = FTHUMB2 | FDST(REG) | FSRC(SP,1) | FSRC(CONST,2),
-    FORM_2sprc____  = FTHUMB2 | FDST(SP) | FSRC(REG,1) | FSRC(CONST,2),  // special Check this.
+    FORM_2sprc____  = FTHUMB2 | FDST(SP) | FSRC(REG,1) | FSRC(CONST,2),
     FORM_Tsphr____  = FTHUMB | FDST(SP) | FSET(REG, 28) | FSRC(REG,1),
     FORM_Trpc_____  = FTHUMB | FDST(REG) | FSRC(PC,1),
     //ADD, MOVH
@@ -536,10 +536,8 @@ static const FormTable Forms_B [] =
 //    FT (TlC______, 0xd000, Steps_T_Branch),
     FT (NOMORE,   0x0,   0),
 };
-// B<C> explicit ///////////////////////////////////
-// TODO(abchatra): See if you can combine all the following branch variants
-// into one form and encode condition as a step.
 
+// B<C> explicit ///////////////////////////////////
 static const FormTable Forms_BEQ [] =
 {
     //FT (2l_______, 0x9000F000, Steps_T2_Branch),
@@ -643,7 +641,7 @@ static const FormTable Forms_BLX [] =
 {
     FT (2e_______, 0xE800F000, Steps_T2_BLX),
 
-    FT (Te_______, 0xf400e400, Steps_T_BLX), //check this
+    FT (Te_______, 0xf400e400, Steps_T_BLX),
     FT (T_r______, 0x4780, Steps_T_BX),
     FT (Tr_______, 0x4780, Steps_T_BX), //same src, dst
     FT (Thr______, 0x4780, Steps_T_BX),
@@ -746,7 +744,7 @@ static const FormTable Forms_LDIMM [] =
 
 static const FormTable Forms_LEA [] =
 {
-// Treat this as a Thumb2 add: r = ADDW sp,offset
+    // Treat this as a Thumb2 add: r = ADDW sp,offset
     FT (2risp____, 0x0000F200, Steps_T2_LEA_rrd),
 
 //    FT (Trl______, 0xa800, Steps_T_LEA_rrd),

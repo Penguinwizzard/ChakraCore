@@ -12,7 +12,7 @@
 //          /          /                      byte2
 //         /          /                      /         form
 //        /          /                      /         /          opbyte
-//       /          /                      /         /          /              
+//       /          /                      /         /          /
 //      /          /                      /         /          /              dope                      leadin
 //     /          /                      /         /          /              /                         /
 MACRO(ADD,      Reg2,   OpSideEffect,  R000,   f(BINOP),   o(ADD),     DOPEQ|DSETCC|DCOMMOP,        OLB_NONE)

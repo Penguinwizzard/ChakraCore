@@ -12,7 +12,7 @@ function InitObject(obj) {
         obj[i] = i * i + 1;
     }
     obj.length = n;
-    
+
     return obj;
 }
 

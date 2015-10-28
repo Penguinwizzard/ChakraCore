@@ -22,20 +22,20 @@ align 16
         mov qword ptr [rsp + 10h], rdx
         mov qword ptr [rsp + 18h], r8
         mov qword ptr [rsp + 20h], r9
-        
+
         push rbp
         .pushreg rbp
         lea  rbp, [rsp]
         .setframe rbp, 0
         .endprolog
 
-        
+
 ifdef _CONTROL_FLOW_GUARD
         sub rsp, 30h                            ;allocate stack space for the callee params(min 4 slots is mandate + 1 for saving call target + 1 for alignment)
         call ?CheckCodeGen@NativeCodeGenerator@@SAP6APEAXPEAVRecyclableObject@Js@@UCallInfo@3@ZZPEAVScriptFunction@3@@Z
 
         mov [rsp + 28h], rax                    ;save rax (call target) [6th slot will have call target and 5th slot is left untouched]
-        mov rcx, rax                            ; __guard_check_icall_fptr requires the call target in rcx. 
+        mov rcx, rax                            ; __guard_check_icall_fptr requires the call target in rcx.
         call [__guard_check_icall_fptr]         ; verify that the call target is valid
 
         add rsp, 28h                            ;de-allocate stack space for the callee params(min 4 slots is mandate + 1 for alignment )
@@ -56,7 +56,7 @@ endif
         mov rdx, qword ptr [rsp + 10h]
         mov r8,  qword ptr [rsp + 18h]
         mov r9,  qword ptr [rsp + 20h]
-        
+
         rex_jmp_reg rax
 ?CheckCodeGenThunk@NativeCodeGenerator@@SAPEAXPEAVRecyclableObject@Js@@UCallInfo@3@ZZ ENDP
 
@@ -72,7 +72,7 @@ align 16
         mov qword ptr [rsp + 10h], rdx
         mov qword ptr [rsp + 18h], r8
         mov qword ptr [rsp + 20h], r9
-        
+
         push rbp
         .pushreg rbp
         lea  rbp, [rsp]
@@ -85,11 +85,11 @@ align 16
         movups xmmword ptr [rsp + 30h], xmm1
         movups xmmword ptr [rsp + 40h], xmm2
         movups xmmword ptr [rsp + 50h], xmm3
-        
+
 ifdef _CONTROL_FLOW_GUARD
         call ?CheckAsmJsCodeGen@NativeCodeGenerator@@SAPEAXPEAVScriptFunction@Js@@@Z
 
-        mov rcx, rax                            ; __guard_check_icall_fptr requires the call target in rcx. 
+        mov rcx, rax                            ; __guard_check_icall_fptr requires the call target in rcx.
         call [__guard_check_icall_fptr]         ; verify that the call target is valid
         mov rax, rcx ; CFG is guaranteed not to mess up rcx
 else
@@ -109,7 +109,7 @@ endif
         mov rdx, qword ptr [rsp + 10h]
         mov r8,  qword ptr [rsp + 18h]
         mov r9,  qword ptr [rsp + 20h]
-        
+
         rex_jmp_reg rax
 ?CheckAsmJsCodeGenThunk@NativeCodeGenerator@@SAPEAXPEAVRecyclableObject@Js@@UCallInfo@3@ZZ ENDP
 

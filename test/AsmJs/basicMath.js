@@ -12,8 +12,8 @@ var all = [ undefined, null,
             1<<32, -(1<<32), (1<<32)-1, 1<<31, -(1<<31), 1<<25, -1<<25, 65536, 46341,
             Number.MAX_VALUE, Number.MIN_VALUE, Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY,
             new Number(NaN), new Number(+0), new Number( -0), new Number(0), new Number(1),
-            new Number(10.0), new Number(10.1), 
-            new Number(Number.MAX_VALUE), new Number(Number.MIN_VALUE), new Number(Number.NaN), 
+            new Number(10.0), new Number(10.1),
+            new Number(Number.MAX_VALUE), new Number(Number.MIN_VALUE), new Number(Number.NaN),
             new Number(Number.POSITIVE_INFINITY), new Number(Number.NEGATIVE_INFINITY),
             "", "hello", "hel" + "lo", "+0", "-0", "0", "1", "10.0", "10.1",
             new String(""), new String("hello"), new String("he" + "llo"),
@@ -33,19 +33,19 @@ function AsmModuleInt() {
         y = y|0;
         return (x-y)|0;
     }
-     
+
     function div(x,y) {
         x = x|0;
         y = y|0;
         return ((x|0)/(y|0))|0;
     }
-    
+
     function rem(x,y) {
         x = x|0;
         y = y|0;
         return ((x|0)%(y|0))|0;
     }
-    
+
     function addfix(x) {
         x = x|0;
         return (x+1048575)|0;
@@ -58,25 +58,25 @@ function AsmModuleInt() {
         x = x|0;
         return (x*1048575)|0;
     }
-  
+
     function divfix(x) {
         x = x|0;
         return ((x|0)/1048575)|0;
     }
-    
+
     function remfix(x) {
         x = x|0;
         return ((x|0)%1048575)|0;
     }
-    
-    return { 
-        add : add, 
-        sub : sub, 
+
+    return {
+        add : add,
+        sub : sub,
         div : div,
         rem : rem,
-        addfix : addfix, 
-        subfix : subfix, 
-        mulfix : mulfix, 
+        addfix : addfix,
+        subfix : subfix,
+        mulfix : mulfix,
         divfix : divfix,
         remfix : remfix,
     };
@@ -95,20 +95,20 @@ function AsmModuleUInt() {
         y = y|0;
         return ((x>>>0)-(y>>>0))|0;
     }
-  
+
     function div(x,y) {
         x = x|0;
         y = y|0;
         return ((x>>>0)/(y>>>0))|0;
     }
-    
+
     function rem(x,y) {
         x = x|0;
         y = y|0;
         return ((x>>>0)%(y>>>0))|0;
     }
-    
-    
+
+
     function addfix(x) {
         x = x|0;
         return (x+4294967295)|0;
@@ -117,30 +117,30 @@ function AsmModuleUInt() {
         x = x|0;
         return (x-4294967295)|0;
     }
-    
+
     function mulfix(x) {
         x = x|0;
         return ((x>>>0)*1048575)|0;
     }
-    
+
     function divfix(x) {
         x = x|0;
         return ((x>>>0)/4294967295)|0;
     }
-    
+
     function remfix(x) {
         x = x|0;
         return ((x>>>0)%4294967295)|0;
     }
-    
-    return { 
-        add : add, 
-        sub : sub, 
-        div : div, 
+
+    return {
+        add : add,
+        sub : sub,
+        div : div,
         rem : rem,
-        addfix : addfix, 
-        subfix : subfix, 
-        mulfix : mulfix, 
+        addfix : addfix,
+        subfix : subfix,
+        mulfix : mulfix,
         divfix : divfix,
         remfix : remfix,
     };
@@ -172,18 +172,18 @@ function AsmModuleDouble() {
         y = +y;
         return +(x/y);
     }
-    
+
     function rem(x,y) {
         x = +x;
         y = +y;
         return +(x%y);
     }
-    
-    return { 
-        add : add, 
-        sub : sub, 
-        mul : mul, 
-        div : div, 
+
+    return {
+        add : add,
+        sub : sub,
+        mul : mul,
+        div : div,
         rem : rem,
     };
 }

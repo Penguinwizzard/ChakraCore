@@ -38,8 +38,8 @@ var a;
 function setup(size) {
    var i;
    a=new Array();
-   for (i=0;i<size;i++) 
-     a[a.length]=(size/2)-i;    
+   for (i=0;i<size;i++)
+     a[a.length]=(size/2)-i;
 }
 
 function numeric(a,b) {return a - b}
@@ -56,7 +56,7 @@ setup(1000);
 test();
 
 
-function compare(a,b) 
+function compare(a,b)
 {
   this.xyz = 10;
   return a - b;

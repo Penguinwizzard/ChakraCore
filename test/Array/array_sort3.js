@@ -18,7 +18,7 @@ try
 {
  s.foo();
 }
-catch (e) 
+catch (e)
 {
  if (! e instanceof TypeError)
   throw e;
@@ -89,17 +89,17 @@ var arr=new Array(3)
 write(arr.sort());
 write(arr);
 
-Array.prototype[0]=0;  
-Array.prototype[1]=0; 
+Array.prototype[0]=0;
+Array.prototype[1]=0;
 Array.prototype[2]=0;
 
 write(arr.length);
 
 
 write("Scenario 6 - prototype lookup");
-Array.prototype[5]=10;  
-Array.prototype[6]=1; 
- Array.prototype[7]=15; 
+Array.prototype[5]=10;
+Array.prototype[6]=1;
+ Array.prototype[7]=15;
 
 var arr=new Array(8)
 arr[0]=1;
@@ -110,7 +110,7 @@ write(arr.sort());
 
 write("Scenario 7 - output in cscript is different");
 
-Array.prototype[5]=10;  
+Array.prototype[5]=10;
 var arr=new Array(8)
 arr[1]=1;
 arr[5]=undefined;
@@ -119,7 +119,7 @@ write(arr)
 
 write("Scenario 8");
 
-Array.prototype[12]=10;  
+Array.prototype[12]=10;
 var arr=new Array(8)
 arr[1]=1;
 write(arr.sort());

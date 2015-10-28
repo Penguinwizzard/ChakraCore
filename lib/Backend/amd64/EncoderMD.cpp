@@ -288,8 +288,6 @@ EncoderMD::GetMod(size_t offset, bool regIsRbpOrR13, int * pDispSize)
 ///
 ///----------------------------------------------------------------------------
 
-
-// review: ugly function. multiple returns. clean it up
 BYTE
 EncoderMD::EmitModRM(IR::Instr * instr, IR::Opnd *opnd, BYTE reg1)
 {
@@ -767,7 +765,7 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
                 }
             }
 
-            // TODO: NYI
+        // NYI
         case AX_IM:
             continue;
 
@@ -834,7 +832,7 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
             opr1 = opr2;
             opr2 = nullptr;
 
-            // FALLTHROUGH
+        // FALLTHROUGH
         case MODRM:
         modrm:
             if (opr2 == nullptr)
@@ -905,7 +903,7 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
             }
             break;
 
-            // TODO: NYI
+        // NYI
         case LABREL1:
             continue;
 
@@ -1259,7 +1257,7 @@ EncoderMD::EmitRexByte(BYTE * prexByte, BYTE rexByte, bool skipRexByte, bool res
         rexByte = rexByte & 0xF7;
     }
 
-    // If we didn't reserved the rex byte, we need to move everything by 1 and make
+    // If we didn't reserve the rex byte, we need to move everything by 1 and make
     // room for it.
     if (!reservedRexByte)
     {

@@ -854,7 +854,6 @@ LowererMDArch::LowerCall(IR::Instr * callInstr, uint32 argCount)
     {
         IR::RegOpnd *targetOpnd = IR::RegOpnd::New(StackSym::New(TyMachPtr,m_func), RegRAX, TyMachPtr, this->m_func);
         IR::Instr   *movInstr   = IR::Instr::New(Js::OpCode::MOV, targetOpnd, callInstr->GetSrc1(),  this->m_func);
-        // TODO_JIT64: Rename m_isCallArg.
         targetOpnd->m_isCallArg = true;
 
         callInstr->UnlinkSrc1();

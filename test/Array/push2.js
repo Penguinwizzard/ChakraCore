@@ -40,7 +40,7 @@ function Create(isArray)
   arr[2]="Value2";
   arr[4294967293] = "Value4294967293";
 
-  return arr;  
+  return arr;
 }
 
 function PushArgs(arr, num, prefix) {
@@ -100,16 +100,16 @@ function foo()
 	var x;
 	Object.defineProperty(obj, "length", {get: function() {x = true; return 5;}});
 	x = false;
-    
-    try 
+
+    try
     {
         var len = obj.push(1);
     }
-    catch (e) 
+    catch (e)
     {
         WScript.Echo('caught exception calling push');
     }
-    
+
 	WScript.Echo(x);
 	return len;
 }
@@ -130,7 +130,7 @@ function test0(arr)
     {
       arr.length --;
       arr.push(3);
-    } 
+    }
 	return arr.length;
 }
 

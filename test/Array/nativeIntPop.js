@@ -19,8 +19,7 @@ var len = a.length;
 
 for(i=0; i <= len; i++)
 {
-	WScript.Echo(test1());	
+	WScript.Echo(test1());
 }
 
 
- 

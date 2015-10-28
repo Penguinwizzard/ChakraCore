@@ -10,7 +10,7 @@ var reuseObjects = false;
 var PolymorphicFuncObjArr = [];
 var PolyFuncArr = [];
 function GetPolymorphicFunction()
-{ 
+{
 	if(PolyFuncArr.length > 1 )
 	{
 		var myFunc = PolyFuncArr.shift();
@@ -34,15 +34,15 @@ function GetObjectwithPolymorphicFunction(){
 		else
 		{
 			return PolymorphicFuncObjArr[0];
-		}		
-	}	
+		}
+	}
 	else
 	{
 		var obj = {};
 		obj.polyfunc = GetPolymorphicFunction();
 		PolymorphicFuncObjArr.push(obj)
 		return obj
-	}	
+	}
 };
 function InitPolymorphicFunctionArray(args)
 {
@@ -50,7 +50,7 @@ function InitPolymorphicFunctionArray(args)
     for(var i=0;i<args.length;i++)
     {
         PolyFuncArr.push(args[i])
-    }   
+    }
 }
 ;
 function test0(){
@@ -61,8 +61,8 @@ function test0(){
   }
   var func1 = function(argObj0,argMath1,argStr2){
   }
-  obj0.method0 = func0; 
-  obj1.method0 = func0; 
+  obj0.method0 = func0;
+  obj1.method0 = func0;
   var ui16 = new Uint16Array(256);
   var f64 = new Float64Array(256);
   var uic8 = new Uint8ClampedArray(256);
@@ -77,8 +77,8 @@ function test0(){
   var g = 1;
   var strvar4 = 1;
   var strvar6 = 1;
-  FloatArr0[10] = 1; 
-  FloatArr0[6] = 1; 
+  FloatArr0[10] = 1;
+  FloatArr0[6] = 1;
   function bar0 (argObj5,argObj6){
   }
   InitPolymorphicFunctionArray(new Array(bar0));;
@@ -92,12 +92,12 @@ function test0(){
 };
 
 // generate profile
-test0(); 
+test0();
 // Run Simple JIT
-test0(); 
-test0(); 
+test0();
+test0();
 
 // run JITted code
 runningJITtedCode = true;
-test0(); 
+test0();
 WScript.Echo("Pass");

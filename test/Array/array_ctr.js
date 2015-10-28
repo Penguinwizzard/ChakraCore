@@ -13,11 +13,11 @@ write(a.length);
 a = new Array(10);
 write(a.length);
 
-a = new Array(new Number(10.2)); 
+a = new Array(new Number(10.2));
 write(a.length);
 write(a[0]);
 
-a = new Array(new Array()); 
+a = new Array(new Array());
 write(a.length);
 
 var wo = new Object();

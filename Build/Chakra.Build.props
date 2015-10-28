@@ -9,7 +9,6 @@
   <PropertyGroup>
     <NoThrowNewLib>nothrownew.obj</NoThrowNewLib>
   </PropertyGroup>
-  <!-- Allow prefast only for x86 debug for now, unless RunCodeAnalysis is defined explicitly -->
   <PropertyGroup Condition="'$(RunCodeAnalysis)'=='' AND '$(Platform)'=='Win32' AND '$(Configuration)'=='Debug'">
     <RunCodeAnalysis>$(BuildWithCodeAnalysis)</RunCodeAnalysis>
   </PropertyGroup>

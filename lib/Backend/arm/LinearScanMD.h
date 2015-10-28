@@ -10,15 +10,15 @@ class BranchBailOutRecord;
 
 class LinearScanMD : public LinearScanMDShared
 {
-private: 
+private:
     StackSym ** helperSpillSlots;
     Func      * func;
     uint32      maxOpHelperSpilledLiveranges;
     StackSym   *vfpSymTable[VFP_REGCOUNT];
 
 public:
-    LinearScanMD(Func *func);   
-    
+    LinearScanMD(Func *func);
+
     void        Init(LinearScan *linearScan);
 
     BitVector   FilterRegIntSizeConstraints(BitVector regsBv, BitVector sizeUsageBv) const;
@@ -27,8 +27,8 @@ public:
     void        InsertOpHelperSpillAndRestores(SList<OpHelperBlock> *opHelperBlockList);
     void        EndOfHelperBlock(uint32 helperSpilledLiveranges);
 
-    uint        UnAllocatableRegCount(Func *func) const 
-                { 
+    uint        UnAllocatableRegCount(Func *func) const
+                {
                     return func->GetLocalsPointer() != RegSP ? 5 : 4; //r11(Frame Pointer),r12,sp,pc
                 }
 
@@ -47,9 +47,9 @@ public:
     static void SaveAllRegistersAndBranchBailOut(BranchBailOutRecord *const bailOutRecord, const BOOL condition);
 
     bool        IsAllocatable(RegNum reg, Func *func) const;
-    static uint GetRegisterSaveSlotCount() { 
+    static uint GetRegisterSaveSlotCount() {
         return RegisterSaveSlotCount ;
-    } 
+    }
     static uint GetRegisterSaveIndex(RegNum reg);
     static RegNum GetRegisterFromSaveIndex(uint offset);
 

@@ -411,14 +411,14 @@ LowererMD::GenerateFunctionObjectTest(IR::Instr * callInstr, IR::RegOpnd  *funct
         // Need check and error if we are calling a tagged int.
         if (!functionObjOpnd->IsTaggedInt())
         {
-            //      TST functionObjOpnd, 1
+            // TST functionObjOpnd, 1
             IR::Instr * instr = IR::Instr::New(Js::OpCode::TST, this->m_func);
             instr->SetSrc1(functionObjOpnd);
             instr->SetSrc2(IR::IntConstOpnd::New(Js::AtomTag, TyMachReg, this->m_func));
             callInstr->InsertBefore(instr);
 
-            //      BNE $helper
-            //      B $callLabel
+            // BNE $helper
+            // B $callLabel
 
             IR::LabelInstr * helperLabel = IR::LabelInstr::New(Js::OpCode::Label, this->m_func, true);
             instr = IR::BranchInstr::New(Js::OpCode::BNE, helperLabel, this->m_func);
@@ -635,9 +635,9 @@ LowererMD::LowerCallI(IR::Instr * callInstr, ushort callFlags, bool isHelper, IR
     // This way the register containing the target addr interferes with the param regs
     // only, not the regs we use to store params to the stack.
 
-    // (TODO: We're sinking the stores of stack params so that the call sequence is contiguous.
+    // We're sinking the stores of stack params so that the call sequence is contiguous.
     // This is required by nested calls, since each call will re-use the same stack slots.
-    // But if there is no nesting, stack params can be stored as soon as they're computed.)
+    // But if there is no nesting, stack params can be stored as soon as they're computed.
 
     IR::Opnd * functionObjOpnd = callInstr->UnlinkSrc1();
 
@@ -813,7 +813,6 @@ LowererMD::LoadHelperArgument(IR::Instr * instr, IR::Opnd * opndArgValue)
     // do the work.
     Assert(this->helperCallArgsCount < LowererMD::MaxArgumentsToHelper);
 
-    //HelperCallArgs is declared in LowerMD.h as IR::Opnd *          helperCallArgs[MaxArgumentsToHelper];
     __analysis_assume(this->helperCallArgsCount < MaxArgumentsToHelper);
 
     helperCallArgs[helperCallArgsCount++] = opndArgValue;
@@ -1819,8 +1818,8 @@ IR::Instr *
 LowererMD::LoadNewScObjFirstArg(IR::Instr * instr, IR::Opnd * argSrc, ushort extraArgs)
 {
     // Spread moves down the argument slot by one.
-        // LowerCallArgs will handle the extraArgs. We only need to specify the argument number
-        // i.e 1 and not + extraArgs as done in AMD64
+    // LowerCallArgs will handle the extraArgs. We only need to specify the argument number
+    // i.e 1 and not + extraArgs as done in AMD64
     IR::SymOpnd *argOpnd = IR::SymOpnd::New(this->m_func->m_symTable->GetArgSlotSym(1), TyVar, this->m_func);
     IR::Instr *argInstr = IR::Instr::New(Js::OpCode::ArgOut_A, argOpnd, argSrc, this->m_func);
     instr->InsertBefore(argInstr);
@@ -2576,8 +2575,7 @@ LowererMD::LowerMultiBranch(IR::Instr * instr)
 ///
 /// LowererMD::MDBranchOpcode
 ///
-///     Map HIR branch opcode to machine-dependent equivalent. TODO: Consider
-/// replacing the switch with a table-driven solution.
+///     Map HIR branch opcode to machine-dependent equivalent.
 ///
 ///----------------------------------------------------------------------------
 
@@ -5083,9 +5081,8 @@ LowererMD::GenerateFastLdMethodFromFlags(IR::Instr * instrLdFld)
 
     Assert(!instrLdFld->DoStackArgsOpt(this->m_func));
 
-    // TODO (jedmiad): LdMethodFromFlags doesn't participate in object type specialization.  We should be using a temporary
+    // TODO: LdMethodFromFlags doesn't participate in object type specialization.  We should be using a temporary
     // register without a type sym here.
-    // Assert(!propertySymOpnd->IsTypeCheckSeqCandidate)?
     if (propertySymOpnd->IsTypeCheckSeqCandidate())
     {
         AssertMsg(propertySymOpnd->HasObjectTypeSym(), "Type optimized property sym operand without a type sym?");
@@ -5198,8 +5195,6 @@ LowererMD::GenerateFastScopedFld(IR::Instr * instrScopedFld, bool isLoad)
         "Expected property sym operand of ScopedLdFld or ScopedStFld");
 
     IR::PropertySymOpnd * propertySymOpnd = propertyBase->AsPropertySymOpnd();
-
-    // TODO (jedmiad): Assert(!propertySymOpnd->IsTypeCheckSeqCandidate())?
 
     opndBase = propertySymOpnd->CreatePropertyOwnerOpnd(m_func);
     AssertMsg(opndBase->m_sym->m_isSingleDef, "We assume this isn't redefined");
@@ -5543,8 +5538,8 @@ void LowererMD::GenerateSmIntTest(IR::Opnd *opndSrc, IR::Instr *insertInstr, IR:
 void LowererMD::GenerateInt32ToVarConversion(IR::Opnd * opndSrc, IR::Instr * insertInstr )
 {
     AssertMsg(opndSrc->IsRegOpnd(), "NYI for other types");
-    //Shift left & tag.
-    //TODO: Check for overflow. For now this is used only for actual arguments count can only be 24 bits long and non need to check for overflow
+    // Shift left & tag.
+    // For now this is used only for actual arguments count can only be 24 bits long and non need to check for overflow
     IR:: Instr* instr = IR::Instr::New(Js::OpCode::LSL, opndSrc, opndSrc, IR::IntConstOpnd::New(Js::VarTag_Shift, TyInt8, this->m_func), this->m_func);
     insertInstr->InsertBefore(instr);
 
@@ -6042,8 +6037,7 @@ bool LowererMD::TryGenerateFastMulAdd(IR::Instr * instrAdd, IR::Instr ** pInstrP
     // Generate code to call the Mul-Add helper.
     // Although for the case when one of the source is marked notInt we could just return false from here,
     // it seems that since we did all the checks to see that this is mul+add, it makes sense to use mul-add helper
-    // rather than 2 separate helpers - one for mul and one for add (by returning false). SunSpider results seem
-    // to be consistent with this observation, although the diff is not much ~10ms.
+    // rather than 2 separate helpers - one for mul and one for add (by returning false).
     if (instrAdd->dstIsTempNumber)
     {
         m_lowerer->LoadHelperTemp(instrAdd, instrAdd);
@@ -9149,7 +9143,7 @@ LowererMD::Legalize(IR::Instr *const instr, bool fPostRegAlloc)
 
     if (verify)
     {
-        // TODO: NYI for the rest of legalization
+        // NYI for the rest of legalization
         return;
     }
     LegalizeMD::LegalizeInstr(instr, fPostRegAlloc);

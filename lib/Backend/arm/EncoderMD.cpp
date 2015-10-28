@@ -1839,7 +1839,7 @@ bool
 EncoderMD::IsBuggyHardware()
 {
     return true;
-    //TODO(abchatra) Enable this before Windows 8 release for restricting to Qualcomm Krait cores affected: KR28M2A10, KR28M2A11, KR28M2A12
+    // TODO: Enable this for restricting to Qualcomm Krait cores affected: KR28M2A10, KR28M2A11, KR28M2A12
     /*
     AssertMsg(AutoSystemInfo::Data.wProcessorArchitecture == 5, "This has to be ARM architecture");
     if (((AutoSystemInfo::Data.wProcessorLevel & 0xFC0) == 0x40)  && ((AutoSystemInfo::Data.wProcessorRevision & 0xF0) == 0))
@@ -2015,7 +2015,7 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
         return 0;
     }
 
-    // TODO (abchatra): Check if VFP/Neon instructions in Thumb-2 mode we need to swap the instruction halfwords
+    // TODO: Check if VFP/Neon instructions in Thumb-2 mode we need to swap the instruction halfwords
     if (size == sizeof(ENCODE_16))
     {
 #ifdef INSERT_NOPS

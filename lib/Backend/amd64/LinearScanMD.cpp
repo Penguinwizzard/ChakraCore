@@ -13,7 +13,7 @@ LinearScanMD::LinearScanMD(Func *func)
       func(func)
 {
     this->byteableRegsBv.ClearAll();
-    
+
     FOREACH_REG(reg)
     {
         if (LinearScan::GetRegAttribs(reg) & RA_BYTEABLE)
@@ -90,14 +90,14 @@ LinearScanMD::EnsureSpillSymForXmmReg(RegNum reg, Func *func, IRType type)
 
 void
 LinearScanMD::LegalizeConstantUse(IR::Instr * instr, IR::Opnd * opnd)
-{    
+{
     Assert(opnd->IsAddrOpnd() || opnd->IsIntConstOpnd());
     intptr value = opnd->IsAddrOpnd() ? (intptr)opnd->AsAddrOpnd()->m_address : opnd->AsIntConstOpnd()->m_value;
-    if (value == 0 
-        && instr->m_opcode == Js::OpCode::MOV 
+    if (value == 0
+        && instr->m_opcode == Js::OpCode::MOV
         && !instr->GetDst()->IsRegOpnd()
         && TySize[opnd->GetType()] >= 4)
-    {        
+    {
         Assert(this->linearScan->instrUseRegs.IsEmpty());
 
         // MOV doesn't have a imm8 encoding for 32-bit/64-bit assignment, so if we have a register available,
@@ -109,16 +109,16 @@ LinearScanMD::LegalizeConstantUse(IR::Instr * instr, IR::Opnd * opnd)
         regsBv.Minus(this->linearScan->tempRegs);       // Avoid tempRegs
         BVIndex regIndex = regsBv.GetNextBit();
         if (regIndex != BVInvalidIndex)
-        {            
+        {
             instr->HoistSrc1(Js::OpCode::MOV, (RegNum)regIndex);
             this->linearScan->instrUseRegs.Set(regIndex);
             this->func->m_regsUsed.Set(regIndex);
 
             // If we are in a loop, we need to mark the register being used by the loop so that
-            // reload to that register will not be hoisted out of the loop         
+            // reload to that register will not be hoisted out of the loop
             this->linearScan->RecordLoopUse(nullptr, (RegNum)regIndex);
         }
-    }   
+    }
 }
 
 void
@@ -156,12 +156,12 @@ LinearScanMD::InsertOpHelperSpillsAndRestores(const OpHelperBlock& opHelperBlock
         {
             IRType type = opHelperSpilledLifetime.lifetime->sym->GetType();
             IR::RegOpnd *regOpnd = IR::RegOpnd::New(nullptr, opHelperSpilledLifetime.reg, type, this->func);
-            
+
             if (!sym)
             {
                 sym = EnsureSpillSymForXmmReg(regOpnd->GetReg(), this->func, type);
             }
-            
+
             IR::Instr   *pushInstr = IR::Instr::New(LowererMDArch::GetAssignOp(type), IR::SymOpnd::New(sym, type, this->func), regOpnd, this->func);
             opHelperBlock.opHelperLabel->InsertAfter(pushInstr);
             pushInstr->CopyNumber(opHelperBlock.opHelperLabel);
@@ -211,7 +211,7 @@ LinearScanMD::EndOfHelperBlock(uint32 helperSpilledLiveranges)
     }
 }
 
-void 
+void
 LinearScanMD::GenerateBailOut(IR::Instr * instr, __in_ecount(registerSaveSymsCount) StackSym ** registerSaveSyms, uint registerSaveSymsCount)
 {
     Func *const func = instr->m_func;
@@ -254,7 +254,7 @@ LinearScanMD::GenerateBailOut(IR::Instr * instr, __in_ecount(registerSaveSymsCou
     // Pass in the bailout record
     //     mov  rcx, bailOutRecord
     Lowerer::InsertMove(
-        IR::RegOpnd::New(nullptr, RegRCX, TyMachPtr, func),        
+        IR::RegOpnd::New(nullptr, RegRCX, TyMachPtr, func),
         IR::AddrOpnd::New(bailOutInfo->bailOutRecord, IR::AddrOpndKindDynamicBailOutRecord, func, true),
         instr);
 

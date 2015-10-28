@@ -677,8 +677,8 @@ static const AssemblyStep Steps_DBL_Unary_dm [] =
 
 static const AssemblyStep Steps_DBL_ALU_dnm [] =
 {
-   STEP_DREG, 28, 6, STEP_NEXTOPN, 
-   STEP_DREG, 0, 23, STEP_NEXTOPN, 
+   STEP_DREG, 28, 6, STEP_NEXTOPN,
+   STEP_DREG, 0, 23, STEP_NEXTOPN,
    STEP_DREG, 16, 21,
    STEP_OPCODE, STEP_DONE
 };

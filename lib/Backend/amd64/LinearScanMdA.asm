@@ -24,7 +24,7 @@ align 16
     ;; [rsp + 9 * 8] == saved rdx
     ;; rcx == bailOutRecord
     ;; rdx == condition
-    
+
     mov rax, [rcx] ;; bailOutRecord->globalBailOutRecordDataTable
     mov rax, [rax] ;; bailOutRecord->globalBailOutRecordDataTable->registerSaveSpace
 
@@ -82,7 +82,7 @@ align 16
 
 align 16
 NESTED_ENTRY ?SaveAllRegistersAndBailOut@LinearScanMD@@SAXQEAVBailOutRecord@@@Z, _TEXT
-    
+
     ;; We follow Custom calling convention
     ;; [rsp + 1 * 8] == saved rax
     ;; [rsp + 2 * 8] == saved rcx
@@ -91,14 +91,14 @@ NESTED_ENTRY ?SaveAllRegistersAndBailOut@LinearScanMD@@SAXQEAVBailOutRecord@@@Z,
     ;; Relative to this function, SaveAllRegisters expects:
     ;;     [rsp + 3 * 8] == saved rdx
     ;; Since rdx is not a parameter to this function, it won't be saved on the stack by jitted code, so copy it there now
-    
-    mov [rsp + 3 * 8], rdx  
+
+    mov [rsp + 3 * 8], rdx
     sub rsp, 28h      ;; standard minimum stack allocation space which accounts for 4 home params and to align the return address.
-    
+
     END_PROLOGUE
 
     call ?SaveAllRegisters@LinearScanMD@@CAXQEAVBailOutRecord@@@Z
-    
+
     add rsp, 28h           ;; deallocate stack space
 
     jmp ?BailOut@BailOutRecord@@SAPEAXPEBV1@@Z
@@ -123,7 +123,7 @@ NESTED_ENTRY ?SaveAllRegistersAndBranchBailOut@LinearScanMD@@SAXQEAVBranchBailOu
     END_PROLOGUE
 
     call ?SaveAllRegisters@LinearScanMD@@CAXQEAVBailOutRecord@@@Z
-    
+
     add rsp, 28h           ;; deallocate stack space
 
     jmp ?BailOut@BranchBailOutRecord@@SAPEAXPEBV1@H@Z

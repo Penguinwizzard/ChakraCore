@@ -26,10 +26,10 @@ var tests = [
             var a = getArray();
             var pop = { valueOf: function() { a.pop(); return 0; } };
             var s = a.splice(0, pop);
-            
-            // pop decreases the length of the array but we've already calculated the length by that 
-            // time. When we are done with splice, we'll set the length back to the original value 
-            // which means we should now have n undefined values at the end of the array where n is 
+
+            // pop decreases the length of the array but we've already calculated the length by that
+            // time. When we are done with splice, we'll set the length back to the original value
+            // which means we should now have n undefined values at the end of the array where n is
             // equal to the number of calls to pop.
 
             assert.areEqual([], s, "Result of splice is empty array");
@@ -46,7 +46,7 @@ var tests = [
             var a = getArray();
             var pop = { valueOf: function() { a.pop(); return 0; } };
             var s = a.splice(3, pop);
-            
+
             assert.areEqual([], s, "Result of splice is empty array");
             assert.areEqual(10, a.length, "Array has unchanged length");
             for(var i = 0; i < 9; i++) {
@@ -61,7 +61,7 @@ var tests = [
             var a = getArray();
             var pop = { valueOf: function() { a.pop(); return 2; } };
             var s = a.splice(3, pop);
-            
+
             assert.areEqual([3,4], s, "Result of splice contains removed elements");
             assert.areEqual(8, a.length, "Array has length reduced by length of removed");
             for(var i = 0; i < 3; i++) {
@@ -81,7 +81,7 @@ var tests = [
             var push = { valueOf: function() { a.push(10); return 0; } };
             var s = a.splice(0, push);
 
-            // push increases the length of the array but we've already calculated the length by that 
+            // push increases the length of the array but we've already calculated the length by that
             // time and when we are done with splice, we'll set the length back to the original value.
 
             assert.areEqual(0, s.length, "Result of splice has length of zero");
@@ -109,7 +109,7 @@ var tests = [
             var a = getArray();
             var kill = { valueOf: function() { while(a.length > 0) { a.pop(); } return 0; } };
             var s = a.splice(0, kill);
-            
+
             assert.areEqual(0, s.length, "Result of splice has length of zero");
             assert.areEqual([], s, "Result of splice is empty");
             assert.areEqual(10, a.length, "Array length is unchanged");
@@ -124,7 +124,7 @@ var tests = [
             var a = getArray();
             var kill = { valueOf: function() { while(a.length > 0) { a.pop(); } return 2; } };
             var s = a.splice(5, kill);
-            
+
             assert.areEqual(2, s.length, "Result of splice is array of undefined values");
             for(var i = 0; i < 2; i++) {
                 assert.areEqual(undefined, s[i], "Splice result elements are all undefined");
@@ -141,11 +141,11 @@ var tests = [
             var a = getArray();
             var kill = { valueOf: function() { while(a.length > 6) { a.pop(); } return 2; } };
             var s = a.splice(5, kill);
-            
+
             assert.areEqual(2, s.length, "Result of splice contains an element from array and undefined (since array size was shrunk)");
             assert.areEqual(5, s[0], "Splice result first element is from array");
             assert.areEqual(undefined, s[1], "Splice result remaining elements are undefined");
-            
+
             assert.areEqual(8, a.length, "Array length is reduced by number of removed elements");
             for(var i = 0; i < 5; i++) {
                 assert.areEqual(i, a[i], "Array elements are unchanged except where popped");

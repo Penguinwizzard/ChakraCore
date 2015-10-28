@@ -20,8 +20,8 @@ private:
     StackSym   *xmmSymTable32[XMM_REGCOUNT];
 
 public:
-    LinearScanMD(Func *func);   
-    
+    LinearScanMD(Func *func);
+
     StackSym   *EnsureSpillSymForXmmReg(RegNum reg, Func *func, IRType type);
     BitVector   FilterRegIntSizeConstraints(BitVector regsBv, BitVector sizeUsageBv) const;
     bool        FitRegIntSizeConstraints(RegNum reg, BitVector sizeUsageBv) const;
@@ -34,7 +34,7 @@ public:
     void        InsertOpHelperSpillAndRestores(SList<OpHelperBlock> *opHelperBlockList);
     void        EndOfHelperBlock(uint32 helperSpilledLiveranges);
     void        GenerateBailOut(IR::Instr * instr,
-                                __in_ecount(registerSaveSymsCount) StackSym ** registerSaveSyms, 
+                                __in_ecount(registerSaveSymsCount) StackSym ** registerSaveSyms,
                                 uint registerSaveSymsCount);
     IR::Instr  *GenerateBailInForGeneratorYield(IR::Instr * resumeLabelInstr, BailOutInfo * bailOutInfo);
 
@@ -44,11 +44,11 @@ public:
     static void SaveAllRegistersAndBailOut(BailOutRecord *const bailOutRecord);
     static void SaveAllRegistersAndBranchBailOut(BranchBailOutRecord *const bailOutRecord, const BOOL condition);
 
-    static uint GetRegisterSaveSlotCount() { 
-        return RegisterSaveSlotCount;  
-    } 
+    static uint GetRegisterSaveSlotCount() {
+        return RegisterSaveSlotCount;
+    }
 
-    static uint GetRegisterSaveIndex(RegNum reg) { 
+    static uint GetRegisterSaveIndex(RegNum reg) {
         return reg;
     }
     static RegNum GetRegisterFromSaveIndex(uint offset)

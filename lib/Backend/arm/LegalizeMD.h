@@ -47,7 +47,7 @@ struct LegalInstrForms
 #define LEGAL_SHIFT    { L_Reg,     { L_Reg,     (LegalForms)(L_Reg | L_ImmU5) } }
 #define LEGAL_BLAB     LEGAL_NONE
 #define LEGAL_BREG     { L_None,    { L_Reg,     L_None } }
-#define LEGAL_CALL     { L_Reg,     { L_Lab20 ,  L_None } } // Not currently generated, offset check is TODO
+#define LEGAL_CALL     { L_Reg,     { L_Lab20 ,  L_None } } // Not currently generated, offset check is missing
 #define LEGAL_CALLREG  { L_Reg,     { L_Reg,     L_None } }
 #define LEGAL_CMP      { L_None,    { L_Reg,     (LegalForms)(L_Reg | L_ImmModC12) } }
 #define LEGAL_CMP_SH   { L_None,    { L_Reg,     L_Reg } }

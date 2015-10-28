@@ -31,18 +31,17 @@ function test() {
 var a = Array(10);
 a.fill();
 test();
-//a.length = 9;
 test();
 a[0];
 
 print("PASSED");
 
 // === Output ===
-// command: D:\ReducerArena\bptserver1\dailybuild\th2_edge_stage_dev3\latest\x86chk\20150914060416\jshost.exe -mic:1 -off:simplejit -off:memop step187.js
+// command: ch.exe -mic:1 -off:simplejit -off:memop bug4587739.js
 // exitcode: C0000420
 // stdout:
 //
 // stderr:
-// ASSERTION 14340: (d:\th\inetcore\jscript\core\lib\runtime\language\profilinghelpers.cpp, line 136) head->left == 0
+// ASSERTION 14340: (lib\runtime\language\profilinghelpers.cpp, line 136) head->left == 0
 //  Failure: (head->left == 0)
-// FATAL ERROR: jshost.exe failed due to exception code c0000420
+// FATAL ERROR: ch.exe failed due to exception code c0000420
