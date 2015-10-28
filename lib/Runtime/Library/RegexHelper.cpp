@@ -412,13 +412,6 @@ namespace Js
                     }
                 } // otherwise, there are no results and null will be returned
 
-#ifndef PARTIAL_GC_DEFAULT_ON_REGEX_NOSLEEP
-                // This is for Dromaeo.  This regexp is running too fast, and Dromaeo's RegExp-dna test accumulates the memory on each iteration
-                trigramInfo->cacheUsedCount++;
-                if (trigramInfo->cacheUsedCount > 3000)
-                    Sleep(75);
-#endif
-
                 if (updateHistory)
                 {
                     PropagateLastMatch(scriptContext, /* isGlobal */ true, pattern->IsSticky(), regularExpression, input, lastSuccessfullMatch, lastActualMatch, true, true);

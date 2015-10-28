@@ -30,10 +30,6 @@ namespace UnifiedRegex
         int offsets[MaxResults];
         Js::JavascriptString * cachedResult[MaxResults];
 
-#ifndef PARTIAL_GC_DEFAULT_ON_REGEX_NOSLEEP
-        int cacheUsedCount;
-#endif
-
         TrigramInfo(__in_ecount(PatternLength) char* pat1,__in_ecount(PatternLength) char* pat2, Recycler* recycler);
     };
 
