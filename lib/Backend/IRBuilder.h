@@ -262,7 +262,7 @@ private:
     IR::SymOpnd *       BuildLoopBodySlotOpnd(SymID symId);
     void                EnsureLoopBodyLoadSlot(SymID symId, bool isCatchObjectSym = false);
     void                SetLoopBodyStSlot(SymID symID, bool isCatchObjectSym);
-    bool                IsLoopBodyOutterOffset(uint offset) const;
+    bool                IsLoopBodyOuterOffset(uint offset) const;
     bool                IsLoopBodyReturnIPInstr(IR::Instr * instr) const;
     IR::Opnd *          InsertLoopBodyReturnIPInstr(uint targetOffset, uint offset);
     IR::Instr *         CreateLoopBodyReturnIPInstr(uint targetOffset, uint offset);

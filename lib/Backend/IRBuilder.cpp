@@ -257,7 +257,7 @@ IRBuilder::IsLoopBodyReturnIPInstr(IR::Instr * instr) const
 
 
 bool
-IRBuilder::IsLoopBodyOutterOffset(uint offset) const
+IRBuilder::IsLoopBodyOuterOffset(uint offset) const
 {
     if (!IsLoopBody())
     {
@@ -5120,7 +5120,7 @@ IRBuilder::ResolveVirtualLongBranch(IR::BranchInstr * branchInstr, uint offset)
     }
 
     //  If this is a jump out of the loop body we need to load the return IP and jump to the loop exit instead
-    if (!IsLoopBodyOutterOffset(targetOffset))
+    if (!IsLoopBodyOuterOffset(targetOffset))
     {
         return targetOffset;
     }
@@ -5282,7 +5282,7 @@ IRBuilder::AddBranchInstr(IR::BranchInstr * branchInstr, uint32 offset, uint32 t
     // Loop jitting would be done only till the LoopEnd
     // Any branches beyond that offset are for the return stmt
     //
-    if (IsLoopBodyOutterOffset(targetOffset))
+    if (IsLoopBodyOuterOffset(targetOffset))
     {
         // if we have loaded the loop IP sym from the ProfiledLoopEnd then don't add it here
         if (!IsLoopBodyReturnIPInstr(m_lastInstr))
