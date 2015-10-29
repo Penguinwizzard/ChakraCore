@@ -3404,11 +3404,9 @@ void CheckInvertableExpr(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerator,
                     if (sym && sym->SingleDef())
                     {
                         ParseNode* decl = sym->GetDecl();
-                        if ((decl != nullptr) && (decl->nop == knopVarDecl) &&
-                            IsLibraryFunction(decl->sxVar.pnodeInit, byteCodeGenerator->GetScriptContext()))
-                        {
-                        }
-                        else
+                        if (decl == nullptr ||
+                            decl->nop != knopVarDecl ||
+                            !IsLibraryFunction(decl->sxVar.pnodeInit, byteCodeGenerator->GetScriptContext()))
                         {
                             symCheck->result = false;
                         }
@@ -3420,10 +3418,7 @@ void CheckInvertableExpr(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerator,
                 }
                 else if (callTarget->nop == knopDot)
                 {
-                    if (IsLibraryFunction(callTarget, byteCodeGenerator->GetScriptContext()))
-                    {
-                    }
-                    else
+                    if (!IsLibraryFunction(callTarget, byteCodeGenerator->GetScriptContext()))
                     {
                         symCheck->result = false;
                     }
