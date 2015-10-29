@@ -4,11 +4,6 @@
 //-------------------------------------------------------------------------------------------------------
 #include "CommonMemoryPch.h"
 
-#ifdef _M_X64_OR_ARM64
-// TODO: Clean this warning up
-#pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
-#endif
-
 #define UpdateMinimum(dst, src) if (dst > src) { dst = src; }
 
 //=============================================================================================================
@@ -167,8 +162,9 @@ SegmentBase(allocator, allocator->maxAllocPageCount), decommitPageCount(0)
     }
     else
     {
+        
         this->freePageCount = this->GetAvailablePageCount();
-        size_t maxPageCount = GetMaxPageCount();
+        uint maxPageCount = GetMaxPageCount();
 
         this->SetRangeInFreePagesBitVector(0, this->freePageCount);
         if (this->freePageCount != maxPageCount)
@@ -561,7 +557,7 @@ PageAllocatorBase<T>::PageAllocatorBase(AllocationPolicyManager * policyManager,
     Js::ConfigFlagsTable& flagTable,
 #endif
     PageAllocatorType type,
-    size_t maxFreePageCount, bool zeroPages,  BackgroundPageQueue * backgroundPageQueue, size_t maxAllocPageCount, size_t secondaryAllocPageCount,
+    uint maxFreePageCount, bool zeroPages,  BackgroundPageQueue * backgroundPageQueue, uint maxAllocPageCount, uint secondaryAllocPageCount,
     bool stopAllocationOnOutOfMemory, bool excludeGuardPages) :
     policyManager(policyManager),
 #ifndef JD_PRIVATE
@@ -1096,18 +1092,16 @@ void PageAllocatorBase<T>::ClearMinFreePageCount()
 
 template<>
 char *
-PageAllocatorBase<VirtualAllocWrapper>::AllocPages(size_t pageCount, PageSegmentBase<VirtualAllocWrapper> ** pageSegment)
+PageAllocatorBase<VirtualAllocWrapper>::AllocPages(uint pageCount, PageSegmentBase<VirtualAllocWrapper> ** pageSegment)
 {
-    Assert(pageCount <= MAXUINT32);
     Assert(virtualAllocator == nullptr);
     return AllocPagesInternal<true /* noPageAligned */>(pageCount, pageSegment);
 }
 
 template<>
 char *
-PageAllocatorBase<PreReservedVirtualAllocWrapper>::AllocPages(size_t pageCount, PageSegmentBase<PreReservedVirtualAllocWrapper> ** pageSegment)
+PageAllocatorBase<PreReservedVirtualAllocWrapper>::AllocPages(uint pageCount, PageSegmentBase<PreReservedVirtualAllocWrapper> ** pageSegment)
 {
-    Assert(pageCount <= MAXUINT32);
     Assert(virtualAllocator);
     if (virtualAllocator->IsPreReservedRegionPresent())
     {
@@ -1121,9 +1115,8 @@ PageAllocatorBase<PreReservedVirtualAllocWrapper>::AllocPages(size_t pageCount, 
 
 template<typename T>
 char *
-PageAllocatorBase<T>::AllocPagesPageAligned(size_t pageCount, PageSegmentBase<T> ** pageSegment, PageHeapMode pageHeapFlags)
+PageAllocatorBase<T>::AllocPagesPageAligned(uint pageCount, PageSegmentBase<T> ** pageSegment, PageHeapMode pageHeapFlags)
 {
-    Assert(pageCount <= MAXUINT32);
     return AllocPagesInternal<false /* noPageAligned */>(pageCount, pageSegment, pageHeapFlags);
 }
 
@@ -1299,7 +1292,7 @@ PageAllocatorBase<T>::Release(void * address, size_t pageCount, void * segmentPa
     else
     {
         Assert(pageCount <= UINT_MAX);
-        this->ReleasePages(address, (uint) pageCount, (PageSegmentBase<T> *)segment);
+        this->ReleasePages(address, static_cast<uint>(pageCount), (PageSegmentBase<T> *)segment);
     }
 }
 
@@ -1325,17 +1318,17 @@ PageAllocatorBase<T>::ReleaseSegment(SegmentBase<T> * segment)
 
 template<typename T>
 void
-PageAllocatorBase<T>::AddFreePageCount(uint count)
+PageAllocatorBase<T>::AddFreePageCount(uint pageCount)
 {
     // minFreePageCount is only updated on release of a page or before decommit
     // so that we don't have to update it on every page allocation.
     UpdateMinFreePageCount();
-    this->freePageCount += count;
+    this->freePageCount += pageCount;
 }
 
 template<typename T>
 void
-PageAllocatorBase<T>::ReleasePages(__in void * address, size_t pageCount, __in void * segmentParam)
+PageAllocatorBase<T>::ReleasePages(__in void * address, uint pageCount, __in void * segmentParam)
 {
     Assert(pageCount <= this->maxAllocPageCount);
     PageSegmentBase<T> * segment = (PageSegmentBase<T>*) segmentParam;
@@ -1925,7 +1918,7 @@ void
 PageAllocatorBase<T>::IntegrateSegments(DListBase<PageSegmentBase<T>>& segmentList, uint segmentCount, size_t pageCount)
 {
 #if DBG
-    uint debugPageCount = 0;
+    size_t debugPageCount = 0;
     uint debugSegmentCount = 0;
     DListBase<PageSegmentBase<T>>::Iterator i(&segmentList);
     while (i.Next())
@@ -2007,7 +2000,7 @@ PageAllocatorBase<T>::LogFreeDecommittedSegment(SegmentBase<T> * segment)
 
 template<typename T>
 void
-PageAllocatorBase<T>::LogFreePages(uint pageCount)
+PageAllocatorBase<T>::LogFreePages(size_t pageCount)
 {
     SubUsedBytes(pageCount * AutoSystemInfo::PageSize);
 #ifdef PROFILE_MEM
@@ -2034,7 +2027,7 @@ PageAllocatorBase<T>::LogFreePartiallyDecommitedPageSegment(PageSegmentBase<T> *
 
 template<typename T>
 void
-PageAllocatorBase<T>::LogAllocPages(uint pageCount)
+PageAllocatorBase<T>::LogAllocPages(size_t pageCount)
 {
     AddUsedBytes(pageCount * AutoSystemInfo::PageSize);
 #ifdef PROFILE_MEM
@@ -2047,7 +2040,7 @@ PageAllocatorBase<T>::LogAllocPages(uint pageCount)
 
 template<typename T>
 void
-PageAllocatorBase<T>::LogRecommitPages(uint pageCount)
+PageAllocatorBase<T>::LogRecommitPages(size_t pageCount)
 {
 #ifdef PROFILE_MEM
     if (this->memoryData)
@@ -2060,7 +2053,7 @@ PageAllocatorBase<T>::LogRecommitPages(uint pageCount)
 
 template<typename T>
 void
-PageAllocatorBase<T>::LogCommitPages(uint pageCount)
+PageAllocatorBase<T>::LogCommitPages(size_t pageCount)
 {
     AddCommittedBytes(pageCount * AutoSystemInfo::PageSize);
 #ifdef PROFILE_MEM
@@ -2074,7 +2067,7 @@ PageAllocatorBase<T>::LogCommitPages(uint pageCount)
 
 template<typename T>
 void
-PageAllocatorBase<T>::LogDecommitPages(uint pageCount)
+PageAllocatorBase<T>::LogDecommitPages(size_t pageCount)
 {
     SubCommittedBytes(pageCount * AutoSystemInfo::PageSize);
 #ifdef PROFILE_MEM
@@ -2211,7 +2204,8 @@ HeapPageAllocator<T>::ProtectPages(__in char* address, size_t pageCount, __in vo
     if (IsPageSegment(segment))
     {
         PageSegmentBase<T> * pageSegment = static_cast<PageSegmentBase<T>*>(segment);
-        Assert(!pageSegment->IsFreeOrDecommitted(address, pageCount));
+        AssertMsg(pageCount <= MAXUINT32, "PageSegment should always be smaller than 4G pages");
+        Assert(!pageSegment->IsFreeOrDecommitted(address, static_cast<uint>(pageCount)));
     }
 #endif
 
@@ -2538,7 +2532,7 @@ char * PageSegmentBase<T>::DoAllocDecommitPages(uint pageCount, PageHeapMode pag
 }
 
 template<typename T>
-size_t PageSegmentBase<T>::GetMaxPageCount()
+uint PageSegmentBase<T>::GetMaxPageCount()
 {
     return MaxPageCount;
 }

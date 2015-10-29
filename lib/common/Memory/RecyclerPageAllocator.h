@@ -13,8 +13,8 @@ public:
 #ifndef JD_PRIVATE
         Js::ConfigFlagsTable& flagTable, 
 #endif
-        uint maxFreePageCount, size_t maxAllocPageCount = PageAllocator::DefaultMaxAllocPageCount);
-    void EnableWriteWatch();    
+        uint maxFreePageCount, uint maxAllocPageCount = PageAllocator::DefaultMaxAllocPageCount);
+    void EnableWriteWatch();
     bool ResetWriteWatch();
 
     static uint const DefaultPrimePageCount = 0x1000; // 16MB

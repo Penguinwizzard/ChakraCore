@@ -473,7 +473,7 @@ public:
     char* GetAddress() const { return address; }
     char * GetEndAddress() const { return address + (this->GetPageCount() * AutoSystemInfo::PageSize);  }
     uint GetObjectWordCount() const { return this->objectSize / sizeof(void *); }
-    size_t GetPageCount() const;
+    uint GetPageCount() const;
 
     template<bool checkPageHeap=true>
     bool HasFreeObject() const 
@@ -606,7 +606,7 @@ public:
     BOOL ReassignPages(Recycler * recycler);
 
     template<bool pageheap>
-    __inline const size_t GetPageHeapModePageCount() const;
+    __inline const uint GetPageHeapModePageCount() const;
 
 #ifdef RECYCLER_PAGE_HEAP
     void ClearPageHeapState();

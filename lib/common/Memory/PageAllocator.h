@@ -154,9 +154,9 @@ public:
 
 protected:
 #if _M_IX86_OR_ARM32
-    static const uint VirtualAllocThreshold =  524288; //512kb As per spec
+    static const uint VirtualAllocThreshold =  524288; // 512kb As per spec
 #else // _M_X64_OR_ARM64
-    static const uint VirtualAllocThreshold = 1048576; //1MB As per spec : when we cross this threshold of bytes, we should add guard pages
+    static const uint VirtualAllocThreshold = 1048576; // 1MB As per spec : when we cross this threshold of bytes, we should add guard pages
 #endif
     static const uint maxGuardPages = 15;
     static const uint minGuardPages =  1;
@@ -190,11 +190,18 @@ class PageSegmentBase : public SegmentBase<TVirtualAlloc>
 public:
     PageSegmentBase(PageAllocatorBase<TVirtualAlloc> * allocator, bool external);
     // Maximum possible size of a PageSegment; may be smaller.
-    static const size_t MaxDataPageCount = 256;     // 1 MB
-    static const size_t MaxGuardPageCount = 16;
-    static const size_t MaxPageCount = MaxDataPageCount + MaxGuardPageCount;  // 272 Pages
+    static const uint MaxDataPageCount = 256;     // 1 MB
+    static const uint MaxGuardPageCount = 16;
+    static const uint MaxPageCount = MaxDataPageCount + MaxGuardPageCount;  // 272 Pages
 
     typedef BVStatic<MaxPageCount> PageBitVector;
+    
+    uint GetAvailablePageCount() const 
+    { 
+        size_t availablePageCount = SegmentBase::GetAvailablePageCount();
+        Assert(availablePageCount < MAXUINT32); 
+        return static_cast<uint>(availablePageCount);
+    }
 
     void Prime();
 #ifdef PAGEALLOCATOR_PROTECT_FREEPAGE
@@ -233,7 +240,7 @@ public:
 
     template <bool notPageAligned>
     char * DoAllocDecommitPages(uint pageCount, PageHeapMode pageHeapFlags);
-    size_t GetMaxPageCount();
+    uint GetMaxPageCount();
 
     size_t DecommitFreePages(size_t pageToDecommit);
 
@@ -411,11 +418,11 @@ public:
         Js::ConfigFlagsTable& flags = Js::Configuration::Global.flags,
 #endif
         PageAllocatorType type = PageAllocatorType_Max,
-        size_t maxFreePageCount = DefaultMaxFreePageCount,
+        uint maxFreePageCount = DefaultMaxFreePageCount,
         bool zeroPages = false,
         BackgroundPageQueue * backgroundPageQueue = nullptr,
-        size_t maxAllocPageCount = DefaultMaxAllocPageCount,
-        size_t secondaryAllocPageCount = DefaultSecondaryAllocPageCount,
+        uint maxAllocPageCount = DefaultMaxAllocPageCount,
+        uint secondaryAllocPageCount = DefaultSecondaryAllocPageCount,
         bool stopAllocationOnOutOfMemory = false,
         bool excludeGuardPages = false);
 
@@ -449,10 +456,10 @@ public:
 
     void Release(void * address, size_t pageCount, void * segment);
 
-    char * AllocPages(size_t pageCount, PageSegmentBase<TVirtualAlloc> ** pageSegment);
-    char * AllocPagesPageAligned(size_t pageCount, PageSegmentBase<TVirtualAlloc> ** pageSegment, PageHeapMode pageHeapFlags);
+    char * AllocPages(uint pageCount, PageSegmentBase<TVirtualAlloc> ** pageSegment);
+    char * AllocPagesPageAligned(uint pageCount, PageSegmentBase<TVirtualAlloc> ** pageSegment, PageHeapMode pageHeapFlags);
 
-    void ReleasePages(__in void * address, size_t pageCount, __in void * pageSegment);
+    void ReleasePages(__in void * address, uint pageCount, __in void * pageSegment);
     void BackgroundReleasePages(void * address, uint pageCount, PageSegmentBase<TVirtualAlloc> * pageSegment);
 
     // Decommit
@@ -566,7 +573,7 @@ protected:
 
     uint maxAllocPageCount;
     DWORD allocFlags;
-    size_t maxFreePageCount;
+    uint maxFreePageCount;
     size_t freePageCount;
     uint secondaryAllocPageCount;
     bool isClosed;
@@ -594,7 +601,7 @@ protected:
     void UpdateMinFreePageCount();
     void ResetMinFreePageCount();
     void ClearMinFreePageCount();
-    void AddFreePageCount(uint count);
+    void AddFreePageCount(uint pageCount);
 
     static uint GetFreePageLimit() { return 0; }
 
@@ -715,11 +722,11 @@ protected:
     void LogFreeDecommittedSegment(SegmentBase<TVirtualAlloc> * segment);
     void LogFreePartiallyDecommitedPageSegment(PageSegmentBase<TVirtualAlloc> * pageSegment);
 
-    void LogAllocPages(uint pageCount);
-    void LogFreePages(uint pageCount);
-    void LogCommitPages(uint pageCount);
-    void LogRecommitPages(uint pageCount);
-    void LogDecommitPages(uint pageCount);
+    void LogAllocPages(size_t pageCount);
+    void LogFreePages(size_t pageCount);
+    void LogCommitPages(size_t pageCount);
+    void LogRecommitPages(size_t pageCount);
+    void LogDecommitPages(size_t pageCount);
 
     void ReportFailure(size_t byteCount)
     {
