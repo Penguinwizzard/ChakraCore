@@ -986,7 +986,14 @@ void ByteCodeGenerator::DefineCachedFunctions(FuncInfo *funcInfoParent)
         return;
     }
 
-    int extraBytes = slotCount * sizeof(Js::FuncInfoEntry);
+    size_t extraBytesActual = AllocSizeMath::Mul(slotCount, sizeof(Js::FuncInfoEntry));
+    // Reg2Aux takes int for byteCount so we need to convert to int. OOM if we can't because it would truncate data.
+    if (extraBytesActual > INT_MAX)
+    {
+        Js::Throw::OutOfMemory();
+    }
+    int extraBytes = (int)extraBytesActual;
+
     Js::FuncInfoArray *info = AnewPlus(alloc, extraBytes, Js::FuncInfoArray, slotCount);
 
     slotCount = 0;
