@@ -25,7 +25,7 @@ LargeHeapBucket::Initialize(HeapInfo * heapInfo, uint sizeCat, bool supportFreeL
 {
     this->heapInfo = heapInfo;
     this->sizeCat = sizeCat;
-#ifdef RECYCLER_PAGE_HEAP 
+#ifdef RECYCLER_PAGE_HEAP
     this->isPageHeapEnabled = heapInfo->IsPageHeapEnabledForBlock<LargeAllocationBlockAttributes>(sizeCat);
 #endif
     this->supportFreeList = supportFreeList;
@@ -39,7 +39,7 @@ LargeHeapBucket::TryAllocFromNewHeapBlock(Recycler * recycler, size_t sizeCat, O
 {
     Assert((attributes & InternalObjectInfoBitMask) == attributes);
 
-#ifdef RECYCLER_PAGE_HEAP    
+#ifdef RECYCLER_PAGE_HEAP
     if (IsPageHeapEnabled())
     {
         return this->PageHeapAlloc(recycler, sizeCat, attributes, this->heapInfo->pageHeapMode, true);
@@ -74,7 +74,7 @@ LargeHeapBucket::SnailAlloc(Recycler * recycler, size_t sizeCat, ObjectInfoBits 
             return memBlock;
         }
         // Can't even allocate a new block, we need force a collection and
-        //allocate some free memory, add a new heap block again, or throw out of memory
+        // allocate some free memory, add a new heap block again, or throw out of memory
         AllocationVerboseTrace(recycler->GetRecyclerFlagsTable(), L"LargeHeapBucket::AddLargeHeapBlock failed, forcing in-thread collection\n");
         recycler->CollectNow<CollectNowForceInThread>();
     }
@@ -114,7 +114,7 @@ LargeHeapBucket::PageHeapAlloc(Recycler * recycler, size_t size, ObjectInfoBits 
         if (nothrow == false)
         {
             // overflow
-            // Since nothrow is false here, it's ok to throw
+            // Since nothrow is false here, it's okay to throw
             recycler->OutOfMemory();
         }
 
@@ -138,7 +138,7 @@ LargeHeapBucket::PageHeapAlloc(Recycler * recycler, size_t size, ObjectInfoBits 
         address = baseAddress + AutoSystemInfo::PageSize;
         guardPageAddress = baseAddress;
     }
-    else if (heapInfo->pageHeapMode == PageHeapMode::PageHeapModeBlockEnd) 
+    else if (heapInfo->pageHeapMode == PageHeapMode::PageHeapModeBlockEnd)
     {
         address = baseAddress;
         guardPageAddress = baseAddress + pageCount* AutoSystemInfo::PageSize;
@@ -171,11 +171,11 @@ LargeHeapBucket::PageHeapAlloc(Recycler * recycler, size_t size, ObjectInfoBits 
     heapBlock->guardPageOldProtectFlags = guardPageOldProtectFlags;
     heapBlock->pageHeapMode = heapInfo->pageHeapMode;
 
-    if (heapBlock->pageHeapMode == PageHeapMode::PageHeapModeBlockEnd) 
+    if (heapBlock->pageHeapMode == PageHeapMode::PageHeapModeBlockEnd)
     {
         // TODO: pad the address to close-most to the guard page to increase the chance to hit guard page when overflow
         // some Mark code need to be updated to support this
-        // heapBlock->SetEndAllocAddress(address 
+        // heapBlock->SetEndAllocAddress(address
         //    + AutoSystemInfo::PageSize - (((AllocSizeMath::Add(sizeCat, sizeof(LargeObjectHeader)) - 1) % AutoSystemInfo::PageSize) / HeapInfo::ObjectGranularity + 1) * HeapInfo::ObjectGranularity);
     }
 
@@ -247,7 +247,7 @@ LargeHeapBucket::AddLargeHeapBlock(size_t size, bool nothrow)
         if (nothrow == false)
         {
             // overflow
-            // Since nothrow is false here, it's ok to throw
+            // Since nothrow is false here, it's okay to throw
             recycler->OutOfMemory();
         }
 
@@ -293,7 +293,7 @@ LargeHeapBucket::AddLargeHeapBlock(size_t size, bool nothrow)
     RECYCLER_SLOW_CHECK(this->heapInfo->heapBlockCount[HeapBlock::HeapBlockType::LargeBlockType]++);
 
     heapBlock->heapInfo = this->heapInfo;
-    
+
     heapBlock->lastCollectAllocCount = 0;
 
     Assert(recycler->collectionState != CollectionStateMark);
@@ -375,7 +375,7 @@ LargeHeapBucket::TryAllocFromExplicitFreeList(Recycler * recycler, size_t sizeCa
             this->explicitFreeList = currFreeObject->GetNext();
         }
 
-#ifdef RECYCLER_MEMORY_VERIFY           
+#ifdef RECYCLER_MEMORY_VERIFY
         HeapBlock* heapBlock = recycler->FindHeapBlock(memBlock);
         Assert(heapBlock != nullptr);
         Assert(heapBlock->IsLargeHeapBlock());
@@ -697,7 +697,7 @@ LargeHeapBucket::ConstructFreelist(LargeHeapBlock * heapBlock)
     Assert(!heapBlock->IsInPendingDisposeList());
 
     // The free list is the only way we reuse heap block entries
-    // so if the heap block is allocated from directly, it'll not 
+    // so if the heap block is allocated from directly, it'll not
     // invalidate the free list
     LargeHeapBlockFreeList* freeList = heapBlock->GetFreeList();
     Assert(freeList);
@@ -733,7 +733,7 @@ LargeHeapBucket::Rescan(RescanFlags flags)
 {
 #ifdef CONCURRENT_GC_ENABLED
     Assert(pendingSweepLargeBlockList == nullptr);
-#endif    
+#endif
 
     size_t scannedPageCount = 0;
     Recycler* recycler = this->heapInfo->recycler;
@@ -797,7 +797,7 @@ LargeHeapBucket::ConcurrentPartialTransferSweptObjects(RecyclerSweep& recyclerSw
     this->pendingSweepLargeBlockList = nullptr;
     HeapBlockList::ForEachEditing(list, [this](LargeHeapBlock * heapBlock)
     {
-        // GC-TODO: We don't reuse the large objects
+        // GC-REVIEW: We could maybe reuse the large objects
         heapBlock->PartialTransferSweptObjects();
         heapBlock->SetNextBlock(this->partialSweptLargeBlockList);
         this->partialSweptLargeBlockList = heapBlock;

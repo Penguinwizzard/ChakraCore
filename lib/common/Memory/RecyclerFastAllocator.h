@@ -137,7 +137,7 @@ public:
             return HeapInfo::GetAlignedSize(AllocSizeMath::Add(sizeof(T) + sizeof(size_t), recycler->verifyPad));
         }
 #endif
-        // We should have structures large enought that would cause this to overflow
+        // We should have structures large enough that would cause this to overflow
         CompileAssert(((sizeof(T) + (HeapConstants::ObjectGranularity-1)) & ~(HeapConstants::ObjectGranularity-1)) != 0);
         return HeapInfo::GetAlignedSizeNoCheck(sizeof(T));
     }

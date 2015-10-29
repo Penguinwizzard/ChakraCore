@@ -86,7 +86,7 @@ namespace Js
         }
 
         //Find the right code gen runtime data
-        FunctionCodeGenRuntimeData *next = inlineeData;  
+        FunctionCodeGenRuntimeData *next = inlineeData;
         while(next && next->functionBody != inlinee)
         {
             next = next->next;
@@ -99,7 +99,7 @@ namespace Js
 
         FunctionCodeGenRuntimeData *runtimeData = RecyclerNew(recycler, FunctionCodeGenRuntimeData, inlinee);
         runtimeData->next = inlineeData;
-        return inlinees[profiledCallSiteId] = runtimeData;;
+        return inlinees[profiledCallSiteId] = runtimeData;
     }
 
     const FunctionCodeGenRuntimeData *FunctionCodeGenRuntimeData::GetLdFldInlinee(const InlineCacheIndex inlineCacheIndex) const

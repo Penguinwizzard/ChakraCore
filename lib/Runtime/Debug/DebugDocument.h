@@ -30,7 +30,7 @@ namespace Js
         BOOL GetStatementSpan(long ibos, StatementSpan* pBos);
         BOOL GetStatementLocation(long ibos, StatementLocation* plocation);
 
-        // ToDo (SAagarwa) : Fix for JsRT Debugging, for PDM this is IScriptDebugDocuemntText*
+        // TODO (SAagarwa) : Fix for JsRT Debugging, for PDM this is IScriptDebugDocumentText*
         virtual bool HasDocumentText() const
         {
             Assert(false);

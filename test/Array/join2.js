@@ -21,10 +21,10 @@ write(o.join(undefined));
 
 write(o.join("hello"));
 
-write(a.join(a)); 
+write(a.join(a));
 write(o.join(a));
 
-write(a.join(o)); 
+write(a.join(o));
 write(o.join(o));
 
 write(Array.prototype.join.call(a, a));

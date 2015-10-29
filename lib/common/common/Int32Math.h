@@ -8,6 +8,7 @@ public:
     static bool Add(int32 left, int32 right, int32 *pResult);
     static bool Sub(int32 left, int32 right, int32 *pResult);
     static bool Mul(int32 left, int32 right, int32 *pResult);
+    static bool Mul(int32 left, int32 right, int32 *pResult, int32* pOverflowValue);
     static bool Div(int32 left, int32 right, int32 *pResult);
     static bool Mod(int32 left, int32 right, int32 *pResult);
     static bool Shl(int32 left, int32 right, int32 *pResult);

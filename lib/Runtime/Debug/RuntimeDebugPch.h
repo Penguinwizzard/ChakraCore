@@ -6,7 +6,7 @@
 
 #include "Runtime.h"
 #ifdef ENABLE_MUTATION_BREAKPOINT
-// REVIEW: ChakraCore Dependency
+// Not enabled in ChakraCore
 #include "activdbg_private.h"
 #endif
 

@@ -27,17 +27,3 @@ for (i =0; i < 2; i++) {
   var test = { prop4: func4() };
 }
 WScript.Echo("PASS");
-
-// === Output ===
-// command: D:\CAS-Exprgen-X86-3\JsReducer\JSHost.exe -maxsimplejitruncount:6 -maxinterpretcount:3 step632.js
-// exitcode: C0000420
-// stdout:
-// [object Object]
-// 
-// stderr:
-// ASSERTION 6748: (inetcore\jscript\lib\runtime\language\javascriptoperators.cpp, line 5571) type->GetPrototype() == JavascriptOperators::GetPrototypeObjectForConstructorCache(constructor, requestContext, cachedProtoCanBeCached)
-//  Failure: (type->GetPrototype() == JavascriptOperators::GetPrototypeObjectForConstructorCache(constructor, requestContext, cachedProtoCanBeCached))
-// FATAL ERROR: jshost.exe failed due to exception code c0000420
-// 
-// 
-// 

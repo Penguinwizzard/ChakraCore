@@ -73,9 +73,7 @@
         $(ChakraCoreRootDirectory)lib\common;
         $(ChakraParserIntDir);        
         %(AdditionalIncludeDirectories)
-      </AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(BuildMachine)'!=''">%(PreprocessorDefinitions);__BUILDMACHINE__=$(BuildMachine)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(BuildDate)'!=''">%(PreprocessorDefinitions);__BUILDDATE__=$(BuildDate)</PreprocessorDefinitions>
+      </AdditionalIncludeDirectories>      
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>

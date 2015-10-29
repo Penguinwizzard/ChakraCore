@@ -6,9 +6,24 @@
 
 #include "Library\JSON.h"
 #include "Types\MissingPropertyTypeHandler.h"
-#ifdef ENABLE_DOM_FAST_PATH
-#include "Library\DOMFastPathInfo.h"
-#endif
+#include "Types\NullTypeHandler.h"
+#include "Types\SimpleTypeHandler.h"
+#include "Types\DeferredTypeHandler.h"
+#include "Types\PathTypeHandler.h"
+#include "Types\PropertyIndexRanges.h"
+#include "Types\SimpleDictionaryPropertyDescriptor.h"
+#include "Types\SimpleDictionaryTypeHandler.h"
+
+#include "Types\DynamicObjectEnumerator.h"
+#include "Types\DynamicObjectSnapshotEnumerator.h"
+#include "Types\DynamicObjectSnapshotEnumeratorWPCache.h"
+#include "Library\ForInObjectEnumerator.h"
+#include "Library\NullEnumerator.h"
+#include "Library\EngineInterfaceObject.h"
+#include "Library\IntlEngineInterfaceExtensionObject.h"
+#include "Library\ThrowErrorObject.h"
+#include "Library\StackScriptFunction.h"
+
 namespace Js
 {
     SimplePropertyDescriptor JavascriptLibrary::SharedFunctionPropertyDescriptors[2] =
@@ -61,10 +76,9 @@ namespace Js
         // WARNING: Any objects created here using DeferredTypeHandler need to appear in EnsureLibraryReadyForHybridDebugging
         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-        // Library is not zero-initialized. memset the memory occcupied by builtinFunctions array to 0.
+        // Library is not zero-initialized. memset the memory occupied by builtinFunctions array to 0.
         memset(builtinFunctions, 0, sizeof(JavascriptFunction *) * BuiltinFunction::Count);
-        
-        
+
         funcInfoToBuiltinIdMap = Anew(scriptContext->GeneralAllocator(), FuncInfoToBuiltinIdMap, scriptContext->GeneralAllocator());
 #define LIBRARY_FUNCTION(target, name, argc, flags, entry) \
     funcInfoToBuiltinIdMap->AddNew(&entry, BuiltinFunction::##target##_##name);
@@ -82,7 +96,7 @@ namespace Js
 
 #include "ByteCode\OpCodesSimd.h"
         }
-        
+
         // Note: InitializePrototypes and InitializeTypes must be called first.
         InitializePrototypes();
         InitializeTypes();
@@ -335,7 +349,7 @@ namespace Js
 
             datePrototype = RecyclerNewZ(recycler, JavascriptDate, initDateValue,
                 DynamicType::New(scriptContext, TypeIds_Date, objectPrototype, nullptr,
-                DeferredTypeHandler<InitializeDatePrototype>::GetDefaultInstance()));   
+                DeferredTypeHandler<InitializeDatePrototype>::GetDefaultInstance()));
         }
 
         if (scriptContext->GetConfig()->IsES6PrototypeChain())
@@ -757,11 +771,11 @@ namespace Js
         regexResultType = DynamicType::New(scriptContext, TypeIds_Array, arrayPrototype, nullptr,
             SimplePathTypeHandler::New(scriptContext, regexResultPath, regexResultPath->GetPathLength(), JavascriptRegularExpressionResult::InlineSlotCount, sizeof(JavascriptArray), true, true), true, true);
 
-        // Intiialize string types
+        // Initialize string types
         stringTypeStatic = StaticType::New(scriptContext, TypeIds_String, stringPrototype, nullptr);
         stringTypeDynamic = DynamicType::New(scriptContext, TypeIds_StringObject, stringPrototype, nullptr, NullTypeHandler<false>::GetDefaultInstance(), true, true);
 
-        // Intiailzed Throw error object type
+        // Initialize Throw error object type
         throwErrorObjectType = StaticType::New(scriptContext, TypeIds_Undefined, nullValue, ThrowErrorObject::DefaultEntryPoint);
 
         mapType = nullptr;
@@ -819,7 +833,6 @@ namespace Js
         if (config->IsES6GeneratorsEnabled())
         {
             generatorConstructorPrototypeObjectType = DynamicType::New(scriptContext, TypeIds_Object, generatorPrototype, nullptr,
-                // TODO[ianhall][generators]: NullTypeHandler<true>?
                 NullTypeHandler<false>::GetDefaultInstance(), true, true);
 
             generatorConstructorPrototypeObjectType->SetHasNoEnumerableProperties(true);
@@ -837,7 +850,7 @@ namespace Js
     void JavascriptLibrary::InitializeGeneratorFunction(DynamicObject *function, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         bool isAnonymousFunction = JavascriptGeneratorFunction::FromVar(function)->IsAnonymousFunction();
-        
+
         JavascriptLibrary* javascriptLibrary = function->GetType()->GetLibrary();
         typeHandler->Convert(function, isAnonymousFunction ? javascriptLibrary->anonymousFunctionWithPrototypeTypeHandler : javascriptLibrary->functionWithPrototypeTypeHandler);
         function->SetPropertyWithAttributes(PropertyIds::prototype, javascriptLibrary->CreateGeneratorConstructorPrototypeObject(), PropertyWritable, nullptr);
@@ -1007,10 +1020,10 @@ namespace Js
 
     DynamicType * JavascriptLibrary::CreateDeferredPrototypeFunctionTypeNoProfileThunk(JavascriptMethod entrypoint, bool isShared)
     {
-        // Note: the lack of typehandler switching here based on the isAnonymousFunction flag is intentional.
+        // Note: the lack of TypeHandler switching here based on the isAnonymousFunction flag is intentional.
         // We can't switch shared typeHandlers and RuntimeFunctions do not produce script code for us to know if a function is Anonymous.
         // As a result we may have an issue where hasProperty would say you have a name property but getProperty returns undefined
-        return DynamicType::New(scriptContext, TypeIds_Function, functionPrototype, entrypoint, 
+        return DynamicType::New(scriptContext, TypeIds_Function, functionPrototype, entrypoint,
             GetDeferredPrototypeFunctionTypeHandler(scriptContext), isShared, isShared);
     }
     DynamicType * JavascriptLibrary::CreateFunctionType(JavascriptMethod entrypoint, RecyclableObject* prototype)
@@ -1092,6 +1105,11 @@ namespace Js
             HeapDelete(scriptContext);
             scriptContext = nullptr;
         }
+    }
+
+    JavascriptEnumerator * JavascriptLibrary::GetNullEnumerator() const
+    {
+        return nullEnumerator;
     }
 
 #define  ADD_TYPEDARRAY_CONSTRUCTOR(typedarrayConstructor, TypedArray) \
@@ -1460,8 +1478,6 @@ namespace Js
         AddMember(globalObject, PropertyIds::JSON, JSONObject);
 
 #ifdef ENABLE_INTL_OBJECT
-        //If we are or win8 or later; then the default value for the flag; or enabled value for the flag (-Intl and -Intl-) dictates if Intl is available.
-        //If we are on win7; then the flag has to be specified force it on (or off); the default value is ignored
         if (scriptContext->GetConfig()->IsIntlEnabled())
         {
             IntlObject = DynamicObject::New(recycler,
@@ -1704,17 +1720,17 @@ namespace Js
 
         if (scriptContext->GetConfig()->IsES6StringExtensionsEnabled()) // This is not a typo, Array.prototype.find and .findIndex are part of the ES6 Improved String APIs feature
         {
-            /* No inlining                Array_Find           */ library->AddFunctionToLibraryObject(arrayPrototype, PropertyIds::find,            &JavascriptArray::EntryInfo::Find,              1);
-            /* No inlining                Array_FindIndex      */ library->AddFunctionToLibraryObject(arrayPrototype, PropertyIds::findIndex,       &JavascriptArray::EntryInfo::FindIndex,         1);
+            /* No inlining            Array_Find           */ library->AddFunctionToLibraryObject(arrayPrototype, PropertyIds::find,            &JavascriptArray::EntryInfo::Find,              1);
+            /* No inlining            Array_FindIndex      */ library->AddFunctionToLibraryObject(arrayPrototype, PropertyIds::findIndex,       &JavascriptArray::EntryInfo::FindIndex,         1);
         }
 
         if (scriptContext->GetConfig()->IsES6IteratorsEnabled())
         {
-            /* No inlining								Array_Entries        */ library->AddFunctionToLibraryObject(arrayPrototype, PropertyIds::entries, &JavascriptArray::EntryInfo::Entries, 0);
-            /* No inlining								Array_Keys           */ library->AddFunctionToLibraryObject(arrayPrototype, PropertyIds::keys, &JavascriptArray::EntryInfo::Keys, 0);
+            /* No inlining            Array_Entries        */ library->AddFunctionToLibraryObject(arrayPrototype, PropertyIds::entries, &JavascriptArray::EntryInfo::Entries, 0);
+            /* No inlining            Array_Keys           */ library->AddFunctionToLibraryObject(arrayPrototype, PropertyIds::keys, &JavascriptArray::EntryInfo::Keys, 0);
 
             JavascriptFunction *values = library->arrayPrototypeValuesFunction ? library->arrayPrototypeValuesFunction : /* No inlining Array_Values     */ library->AddFunctionToLibraryObject(arrayPrototype, PropertyIds::values, &JavascriptArray::EntryInfo::Values, 0);
-            /* No inlining							Array_SymbolIterator */ library->AddMember(arrayPrototype, PropertyIds::_symbolIterator, values);
+            /* No inlining            Array_SymbolIterator */ library->AddMember(arrayPrototype, PropertyIds::_symbolIterator, values);
         }
 
         if (scriptContext->GetConfig()->IsES6UnscopablesEnabled())
@@ -1733,8 +1749,8 @@ namespace Js
 
         if (scriptContext->GetConfig()->IsES6TypedArrayExtensionsEnabled()) // This is not a typo, Array.prototype.fill and .copyWithin are part of the ES6 TypedArray feature
         {
-            /* No inlining                Array_Fill           */ library->AddFunctionToLibraryObject(arrayPrototype, PropertyIds::fill, &JavascriptArray::EntryInfo::Fill, 1);
-            /* No inlining                Array_CopyWithin     */ library->AddFunctionToLibraryObject(arrayPrototype, PropertyIds::copyWithin, &JavascriptArray::EntryInfo::CopyWithin, 2);
+            /* No inlining            Array_Fill           */ library->AddFunctionToLibraryObject(arrayPrototype, PropertyIds::fill, &JavascriptArray::EntryInfo::Fill, 1);
+            /* No inlining            Array_CopyWithin     */ library->AddFunctionToLibraryObject(arrayPrototype, PropertyIds::copyWithin, &JavascriptArray::EntryInfo::CopyWithin, 2);
         }
 
         DebugOnly(CheckRegisteredBuiltIns(builtinFuncs, scriptContext));
@@ -2487,7 +2503,7 @@ namespace Js
         // so that the update is in sync with profiler
         ScriptContext* scriptContext = functionConstructor->GetScriptContext();
         JavascriptLibrary* library = functionConstructor->GetLibrary();
-        library->AddMember(functionConstructor, PropertyIds::prototype, library->functionPrototype, PropertyNone);        
+        library->AddMember(functionConstructor, PropertyIds::prototype, library->functionPrototype, PropertyNone);
         library->AddMember(functionConstructor, PropertyIds::length, TaggedInt::ToVarUnchecked(1), PropertyConfigurable);
         if (scriptContext->GetConfig()->IsES6FunctionNameEnabled())
         {
@@ -2547,7 +2563,7 @@ namespace Js
         // In ES6, RegExp.prototype is not a RegExp object itself so we do not need to wait and create an empty RegExp.
         // Instead, we just create an ordinary object prototype for RegExp.prototype in InitializePrototypes.
         if (!scriptContext->GetConfig()->IsES6PrototypeChain() && regexPrototype == nullptr)
-        {            
+        {
             regexPrototype = RecyclerNew(recycler, JavascriptRegExp, emptyRegexPattern,
                 DynamicType::New(scriptContext, TypeIds_RegEx, objectPrototype, nullptr,
                 DeferredTypeHandler<InitializeRegexPrototype>::GetDefaultInstance()));
@@ -2602,7 +2618,6 @@ namespace Js
         {
             builtinFuncs[BuiltinFunction::Math_Imul] = library->AddFunctionToLibraryObject(mathObject, PropertyIds::imul, &Math::EntryInfo::Imul, 2);
             builtinFuncs[BuiltinFunction::Math_Fround] = library->AddFunctionToLibraryObject(mathObject, PropertyIds::fround, &Math::EntryInfo::Fround, 1);
-            // TODO: Implement inlining of the following ES6 Math functions
             /*builtinFuncs[BuiltinFunction::Math_Log10] =*/ library->AddFunctionToLibraryObject(mathObject, PropertyIds::log10, &Math::EntryInfo::Log10, 1);
             /*builtinFuncs[BuiltinFunction::Math_Log2]  =*/ library->AddFunctionToLibraryObject(mathObject, PropertyIds::log2,  &Math::EntryInfo::Log2,  1);
             /*builtinFuncs[BuiltinFunction::Math_Log1p] =*/ library->AddFunctionToLibraryObject(mathObject, PropertyIds::log1p, &Math::EntryInfo::Log1p, 1);
@@ -2636,7 +2651,7 @@ namespace Js
         // Any new function addition/deletion/modification should also be updated in JavascriptLibrary::ProfilerRegisterSIMD so that the update is in sync with profiler
         typeHandler->Convert(simdObject, mode, 2);
         JavascriptLibrary* library = simdObject->GetLibrary();
-        
+
         // only functions to be inlined to be added to builtinFuncs
         JavascriptFunction ** builtinFuncs = library->GetBuiltinFunctions();
 
@@ -2671,7 +2686,7 @@ namespace Js
         library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::sqrt,           &SIMDFloat32x4Lib::EntryInfo::Sqrt,           2, PropertyNone);
         library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::reciprocal,     &SIMDFloat32x4Lib::EntryInfo::Reciprocal,     2, PropertyNone);
         library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::reciprocalSqrt, &SIMDFloat32x4Lib::EntryInfo::ReciprocalSqrt, 2, PropertyNone);
-        // compare ops                                                                                                                       
+        // compare ops
         library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::lessThan,           &SIMDFloat32x4Lib::EntryInfo::LessThan,          3, PropertyNone);
         library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::lessThanOrEqual,    &SIMDFloat32x4Lib::EntryInfo::LessThanOrEqual,   3, PropertyNone);
         library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::equal,              &SIMDFloat32x4Lib::EntryInfo::Equal,             3, PropertyNone);
@@ -2711,13 +2726,13 @@ namespace Js
         library->AddFunctionToLibraryObject(float64x2Function, PropertyIds::min,    &SIMDFloat64x2Lib::EntryInfo::Min,      3, PropertyNone);
         library->AddFunctionToLibraryObject(float64x2Function, PropertyIds::max,    &SIMDFloat64x2Lib::EntryInfo::Max,      3, PropertyNone);
         library->AddFunctionToLibraryObject(float64x2Function, PropertyIds::scale,  &SIMDFloat64x2Lib::EntryInfo::Scale,    3, PropertyNone);
-        // unary ops                             
+        // unary ops
         library->AddFunctionToLibraryObject(float64x2Function, PropertyIds::abs,            &SIMDFloat64x2Lib::EntryInfo::Abs,              2, PropertyNone);
         library->AddFunctionToLibraryObject(float64x2Function, PropertyIds::neg,            &SIMDFloat64x2Lib::EntryInfo::Neg,              2, PropertyNone);
         library->AddFunctionToLibraryObject(float64x2Function, PropertyIds::sqrt,           &SIMDFloat64x2Lib::EntryInfo::Sqrt,             2, PropertyNone);
         library->AddFunctionToLibraryObject(float64x2Function, PropertyIds::reciprocal,     &SIMDFloat64x2Lib::EntryInfo::Reciprocal,       2, PropertyNone);
         library->AddFunctionToLibraryObject(float64x2Function, PropertyIds::reciprocalSqrt, &SIMDFloat64x2Lib::EntryInfo::ReciprocalSqrt,   2, PropertyNone);
-        // compare ops                           
+        // compare ops
         library->AddFunctionToLibraryObject(float64x2Function, PropertyIds::lessThan,           &SIMDFloat64x2Lib::EntryInfo::LessThan,             3, PropertyNone);
         library->AddFunctionToLibraryObject(float64x2Function, PropertyIds::lessThanOrEqual,    &SIMDFloat64x2Lib::EntryInfo::LessThanOrEqual,      3, PropertyNone);
         library->AddFunctionToLibraryObject(float64x2Function, PropertyIds::equal,              &SIMDFloat64x2Lib::EntryInfo::Equal,                3, PropertyNone);
@@ -2738,7 +2753,7 @@ namespace Js
         /*** Int32x4 ***/
         JavascriptFunction* int32x4Function = library->AddFunctionToLibraryObject(simdObject, PropertyIds::Int32x4, &SIMDInt32x4Lib::EntryInfo::Int32x4, 5, PropertyNone);
         library->AddFunctionToLibraryObject(int32x4Function, PropertyIds::check,        &SIMDInt32x4Lib::EntryInfo::Check,      2, PropertyNone);
-        library->AddFunctionToLibraryObject(int32x4Function, PropertyIds::splat,        &SIMDInt32x4Lib::EntryInfo::Splat,      2, PropertyNone); 
+        library->AddFunctionToLibraryObject(int32x4Function, PropertyIds::splat,        &SIMDInt32x4Lib::EntryInfo::Splat,      2, PropertyNone);
         library->AddFunctionToLibraryObject(int32x4Function, PropertyIds::bool_,        &SIMDInt32x4Lib::EntryInfo::Bool,       5, PropertyNone);
         library->AddFunctionToLibraryObject(int32x4Function, PropertyIds::withFlagX,    &SIMDInt32x4Lib::EntryInfo::WithFlagX,  3, PropertyNone);
         library->AddFunctionToLibraryObject(int32x4Function, PropertyIds::withFlagY,    &SIMDInt32x4Lib::EntryInfo::WithFlagY,  3, PropertyNone);
@@ -2764,7 +2779,7 @@ namespace Js
         library->AddFunctionToLibraryObject(int32x4Function, PropertyIds::max, &SIMDInt32x4Lib::EntryInfo::Max, 3, PropertyNone);
         library->AddFunctionToLibraryObject(int32x4Function, PropertyIds::neg, &SIMDInt32x4Lib::EntryInfo::Neg, 2, PropertyNone);
         library->AddFunctionToLibraryObject(int32x4Function, PropertyIds::not, &SIMDInt32x4Lib::EntryInfo::Not, 2, PropertyNone);
-        // compare ops                           
+        // compare ops
         library->AddFunctionToLibraryObject(int32x4Function, PropertyIds::lessThan,     &SIMDInt32x4Lib::EntryInfo::LessThan,    3, PropertyNone);
         library->AddFunctionToLibraryObject(int32x4Function, PropertyIds::equal,        &SIMDInt32x4Lib::EntryInfo::Equal,       3, PropertyNone);
         library->AddFunctionToLibraryObject(int32x4Function, PropertyIds::greaterThan,  &SIMDInt32x4Lib::EntryInfo::GreaterThan, 3, PropertyNone);
@@ -3082,17 +3097,17 @@ namespace Js
     {
         Assert(simdFuncInfoToOpcodeMap != nullptr);
         Assert(simdOpcodeToSignatureMap != nullptr);
-        
+
         va_list arguments;
         va_start(arguments, op);
-        
+
         int argumentsCount = va_arg(arguments, int);
         if (argumentsCount == 0)
         {
             // no info to add
             return;
         }
-        FunctionInfo *funcInfo = va_arg(arguments, FunctionInfo*); 
+        FunctionInfo *funcInfo = va_arg(arguments, FunctionInfo*);
         simdFuncInfoToOpcodeMap->AddNew(funcInfo, op);
 
         SimdFuncSignature simdFuncSignature;
@@ -3172,7 +3187,6 @@ namespace Js
         constructorCacheDefaultInstance = &Js::ConstructorCache::DefaultInstance;
         absDoubleCst = Js::JavascriptNumber::AbsDoubleCst;
         uintConvertConst = Js::JavascriptNumber::UIntConvertConst;
-        jnHelperMethods = IR::GetHelperMethods();
 
         defaultPropertyDescriptor.SetValue(undefinedValue);
         defaultPropertyDescriptor.SetWritable(false);
@@ -3224,10 +3238,8 @@ namespace Js
         vtableAddresses[VTableValue::VtableCompoundString] = VirtualTableInfo<Js::CompoundString>::Address;
 
         // SIMD_JS
-        // Needed for type-spec
         vtableAddresses[VTableValue::VtableSimd128F4] = VirtualTableInfo<Js::JavascriptSIMDFloat32x4>::Address;
         vtableAddresses[VTableValue::VtableSimd128I4] = VirtualTableInfo<Js::JavascriptSIMDInt32x4>::Address;
-        
     }
 
     //
@@ -3275,9 +3287,7 @@ namespace Js
     {
         Assert(IsHybridDebugging() && !isLibraryReadyForHybridDebugging);
 
-        //
-        // WARNING: List all library objects that use DeferredTypeHandler!
-        //
+        // Note: List all library objects that use DeferredTypeHandler
         DynamicObject* objects[] =
         {
             this->objectPrototype,
@@ -3345,7 +3355,7 @@ namespace Js
             this->Float64ArrayConstructor,
             this->JSONObject,
 #ifdef ENABLE_INTL_OBJECT
-            this->IntlObject,  //TODO: InitializeIntlObject executes script, needs from CallRootFunction
+            this->IntlObject,
 #endif
             this->mapConstructor,
             this->setConstructor,
@@ -3373,27 +3383,30 @@ namespace Js
             }
         }
 
-        isLibraryReadyForHybridDebugging = true; // Done!
+        isLibraryReadyForHybridDebugging = true;
     }
 
 #ifdef ENABLE_NATIVE_CODEGEN
-    // Seems that this is for all built-ins that can be inlined (not only Math.*).
-    // static
-    /*TODO: This function is only used in float preferencing scenarios. Should remove it once we do away with float preferencing.
-        Moreover, cases like,
-            case PropertyIds::concat:
-            case PropertyIds::indexOf:
-            case PropertyIds::lastIndexOf:
-            case PropertyIds::slice:
+    // Note: This function is only used in float preferencing scenarios. Should remove it once we do away with float preferencing.
 
-            which have same names for Array and String cannot be resolved just by the property id
-    */
+    // Cases like,
+    // case PropertyIds::concat:
+    // case PropertyIds::indexOf:
+    // case PropertyIds::lastIndexOf:
+    // case PropertyIds::slice:
+    // which have same names for Array and String cannot be resolved just by the property id
+
     BuiltinFunction JavascriptLibrary::GetBuiltinFunctionForPropId(PropertyId id)
     {
         switch (id)
         {
         case PropertyIds::abs:
             return BuiltinFunction::Math_Abs;
+
+        // For now, avoid mapping Math.atan2 to a direct CRT call, as the
+        // fast CRT helper doesn't handle denormals correctly.
+        // case PropertyIds::atan2:
+        //    return BuiltinFunction::Atan2;
 
         case PropertyIds::acos:
             return BuiltinFunction::Math_Acos;
@@ -3404,12 +3417,6 @@ namespace Js
         case PropertyIds::atan:
             return BuiltinFunction::Math_Atan;
 
-#if 0
-        // For now, avoid mapping Math.atan2 to a direct CRT call, as the
-        // fast CRT helper doesn't handle denormals correctly.
-        case PropertyIds::atan2:
-            return BuiltinFunction::Atan2;
-#endif
         case PropertyIds::cos:
             return BuiltinFunction::Math_Cos;
 
@@ -3494,9 +3501,6 @@ namespace Js
         case PropertyIds::apply:
             return BuiltinFunction::Function_Apply;
 
-        /*case PropertyIds::concat:
-            return BuiltinFunction::String_Concat;*/
-
         case PropertyIds::charAt:
             return BuiltinFunction::String_CharAt;
 
@@ -3508,12 +3512,6 @@ namespace Js
 
         case PropertyIds::fromCodePoint:
                 return BuiltinFunction::String_FromCodePoint;
-
-        /*case PropertyIds::indexOf:
-            return BuiltinFunction::String_IndexOf;
-
-        case PropertyIds::lastIndexOf:
-            return BuiltinFunction::String_LastIndexOf;*/
 
         case PropertyIds::link:
             return BuiltinFunction::String_Link;
@@ -3529,9 +3527,6 @@ namespace Js
 
         case PropertyIds::search:
             return BuiltinFunction::String_Search;
-
-        /*case PropertyIds::slice:
-            return BuiltinFunction::String_Slice;*/
 
         case PropertyIds::split:
             return BuiltinFunction::String_Split;
@@ -3633,7 +3628,6 @@ namespace Js
         return false;
     }
 
-    // (TODO: confirm) Returns true if the function's return type can be float.
     // For abs, min, max -- return can be int or float, but still return true from here.
     BOOL JavascriptLibrary::CanFloatPreferenceFunc(BuiltinFunction index)
     {
@@ -3649,11 +3643,6 @@ namespace Js
         case BuiltinFunction::Math_Acos:
         case BuiltinFunction::Math_Asin:
         case BuiltinFunction::Math_Atan:
-#if 0
-        // For now, avoid mapping Math.atan2 to a direct CRT call, as the
-        // fast CRT helper doesn't handle denormals correctly.
-        case BuiltinFunction::Atan2:
-#endif
         case BuiltinFunction::Math_Cos:
         case BuiltinFunction::Math_Exp:
         case BuiltinFunction::Math_Log:
@@ -3665,14 +3654,6 @@ namespace Js
         case BuiltinFunction::Math_Sqrt:
         case BuiltinFunction::Math_Tan:
         case BuiltinFunction::Math_Fround:
-#if 0
-        // The ones below will be enabled in IE11.
-        case PropertyIds::max:
-            return BuiltinFunction::Max;
-
-        case PropertyIds::min:
-            return BuiltinFunction::Min;
-#endif
             return TRUE;
         }
         return FALSE;
@@ -3817,7 +3798,7 @@ namespace Js
         {
             library->AddMember(objectConstructor, PropertyIds::name, scriptContext->GetPropertyString(PropertyIds::Object), PropertyConfigurable);
         }
-        //Supported in IE8 standards and above
+
         scriptContext->SetBuiltInLibraryFunction(JavascriptObject::EntryInfo::DefineProperty.GetOriginalEntryPoint(),
             library->AddFunctionToLibraryObject(objectConstructor, PropertyIds::defineProperty, &JavascriptObject::EntryInfo::DefineProperty, 3));
         scriptContext->SetBuiltInLibraryFunction(JavascriptObject::EntryInfo::GetOwnPropertyDescriptor.GetOriginalEntryPoint(),
@@ -4129,7 +4110,7 @@ namespace Js
         ScriptContext* scriptContext = setConstructor->GetScriptContext();
         library->AddMember(setConstructor, PropertyIds::length, TaggedInt::ToVarUnchecked(0), PropertyNone);
         library->AddMember(setConstructor, PropertyIds::prototype, library->setPrototype, PropertyNone);
-        
+
         if (scriptContext->GetConfig()->IsES6SpeciesEnabled())
         {
             library->AddAccessorsToLibraryObject(setConstructor, PropertyIds::_symbolSpecies, &JavascriptSet::EntryInfo::GetterSymbolSpecies, nullptr);
@@ -4578,7 +4559,7 @@ namespace Js
         this->nativeHostPromiseContinuationFunctionState = state;
     }
 
-    void JavascriptLibrary::PinJsrtContextObject(FinalizableObject* jsrtContext) 
+    void JavascriptLibrary::PinJsrtContextObject(FinalizableObject* jsrtContext)
     {
         // With JsrtContext supporting cross context, ensure that it doesn't get GCed
         // prematurely. So pin the instance to javascriptLibrary so it will stay alive
@@ -4594,10 +4575,6 @@ namespace Js
 
     void JavascriptLibrary::EnqueueTask(Var taskVar)
     {
-        // TODO: This function should take a parameter to declare the Task Queue in which to enqueue taskVar.
-        //       Currently, this is only called for PromiseTasks.
-        // Assert(JavascriptPromiseReactionTaskFunction::Is(taskVar) || JavascriptPromiseResolveThenableTaskFunction::Is(taskVar));
-        // UPDATE: Also used by builtin EngineInterfaceObject.Promise.enqueueTask to postError.
         Assert(JavascriptFunction::Is(taskVar));
 
         if (this->nativeHostPromiseContinuationFunction)
@@ -4620,9 +4597,6 @@ namespace Js
         {
             JavascriptFunction* hostPromiseContinuationFunction = this->GetHostPromiseContinuationFunction();
 
-            // TODO: This should EnqueueTask a new PromiseReactionTask in the ES6 PromiseTasks task queue.
-            //       Currently, the library is loading WScript.SetTimeout (or window.setTimeout) and we are calling that here.
-            //       We should change the layout of this call to match whatever trident ends up building.
             hostPromiseContinuationFunction->GetEntryPoint()(hostPromiseContinuationFunction, Js::CallInfo(Js::CallFlags::CallFlags_Value, 3),
                 this->GetUndefined(),
                 taskVar,
@@ -4651,7 +4625,7 @@ namespace Js
         }
         catch (JavascriptExceptionObject *e)
         {
-            // Propogate the OOM and SOE exceptions only
+            // Propagate the OOM and SOE exceptions only
             if(e == ThreadContext::GetContextForCurrentThread()->GetPendingOOMErrorObject() ||
                 e == ThreadContext::GetContextForCurrentThread()->GetPendingSOErrorObject())
             {
@@ -4711,25 +4685,11 @@ namespace Js
                            this->GetRegexType());
     }
 
-    void JavascriptLibrary::SetCrossSiteForSharedFunctionType(JavascriptFunction * function, bool useSlotAccessCrossSiteThunk)
+    void JavascriptLibrary::SetCrossSiteForSharedFunctionType(JavascriptFunction * function)
     {
         Assert(function->GetDynamicType()->GetIsShared());
 
-#ifdef ENABLE_DOM_FAST_PATH
-        if (useSlotAccessCrossSiteThunk)
-        {
-            Assert(!ScriptFunction::Is(function));
-            Assert(VirtualTableInfo<JavascriptTypedObjectSlotAccessorFunction>::HasVirtualTable(function));
-            Assert((function->GetFunctionInfo()->GetAttributes() & Js::FunctionInfo::Attributes::NeedCrossSiteSecurityCheck) != 0);
-            Assert(function->GetDynamicType()->GetTypeHandler() == functionTypeHandler);
-            function->ChangeType();
-            function->SetEntryPoint(scriptContext->GetHostScriptContext()->GetSimpleSlotAccessCrossSiteThunk());
-        }
-        else
-#else
-        Assert(!useSlotAccessCrossSiteThunk);
-#endif
-            if (ScriptFunction::Is(function))
+        if (ScriptFunction::Is(function))
         {
 #if DEBUG
             if (!function->GetFunctionProxy()->GetIsAnonymousFunction())
@@ -4745,8 +4705,6 @@ namespace Js
                     function->GetDynamicType()->GetTypeHandler() == JavascriptLibrary::GetDeferredAnonymousFunctionTypeHandler());
             }
 #endif
-            // TODO: Theoratically, we can share the cross site thunk here too, but the entry point
-            // is a mess :(,   just create a new unshared type and set the cross site thunk
             function->ChangeType();
             function->SetEntryPoint(scriptContext->CurrentCrossSiteThunk);
         }
@@ -5625,30 +5583,6 @@ namespace Js
         return EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, GeneratorVirtualScriptFunction, proxy, deferredPrototypeType));
     }
 
-#ifdef ENABLE_DOM_FAST_PATH
-    JavascriptTypedObjectSlotAccessorFunction* JavascriptLibrary::CreateTypedObjectSlotGetterFunction(unsigned int slotIndex, FunctionInfo* functionInfo, int typeId, PropertyId nameId)
-    {
-        // GC should zero out the whole library; we shouldn't need to explicitly zero out
-        if (typedObjectSlotGetterFunctionTypes[slotIndex] == nullptr)
-        {
-            typedObjectSlotGetterFunctionTypes[slotIndex] = CreateFunctionWithLengthType(functionInfo);
-            scriptContext->EnsureDOMFastPathIRHelperMap()->Add(functionInfo, ::DOMFastPathInfo::GetGetterIRHelper(slotIndex));
-        }
-        return EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptTypedObjectSlotAccessorFunction, typedObjectSlotGetterFunctionTypes[slotIndex], functionInfo, typeId, nameId));
-    }
-
-    JavascriptTypedObjectSlotAccessorFunction* JavascriptLibrary::CreateTypedObjectSlotSetterFunction(unsigned int slotIndex, FunctionInfo* functionInfo, int typeId, PropertyId nameId)
-    {
-        // GC should zero out the whole library; we shouldn't need to explicitly zero out
-        if (typedObjectSlotSetterFunctionTypes[slotIndex] == nullptr)
-        {
-            typedObjectSlotSetterFunctionTypes[slotIndex] = CreateFunctionWithLengthType(functionInfo);
-
-        }
-        return EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptTypedObjectSlotAccessorFunction, typedObjectSlotSetterFunctionTypes[slotIndex], functionInfo, typeId, nameId));
-    }
-
-#endif
     DynamicType * JavascriptLibrary::CreateGeneratorType(RecyclableObject* prototype)
     {
         return DynamicType::New(scriptContext, TypeIds_Generator, prototype, nullptr, NullTypeHandler<false>::GetDefaultInstance());
@@ -5819,7 +5753,7 @@ namespace Js
             prototype->GetInternalProperty(prototype, Js::InternalPropertyIds::TypeOfPrototypObject, (Js::Var*) &dynamicType, nullptr, this->scriptContext))
         {
             //If the prototype is externalObject, then ExternalObject::Reinitialize can set all the properties to undefined in navigation scenario.
-            //Check to make sure dynamicType which is stored as a Js::Var is not undefined. 
+            //Check to make sure dynamicType which is stored as a Js::Var is not undefined.
             //See Blue 419324
             if (dynamicType != nullptr && (Js::Var)dynamicType != this->GetUndefined())
             {
@@ -5859,7 +5793,7 @@ namespace Js
 
     DynamicType* JavascriptLibrary::CreateObjectType(RecyclableObject* prototype, uint16 requestedInlineSlotCapacity)
     {
-        // We can't reuse the type in objectType even if hte prototype is the object protoypte, because those has inline slot capacity fixed
+        // We can't reuse the type in objectType even if the prototype is the object prototype, because those has inline slot capacity fixed
         return CreateObjectType(prototype, TypeIds_Object, requestedInlineSlotCapacity);
     }
 
@@ -6057,7 +5991,7 @@ namespace Js
                 || (
                     !arrayInfo->isNotCopyOnAccessArray        // from profile
                     && !PHASE_OFF1(CopyOnAccessArrayPhase)
-                    && lib->cacheForCopyOnAccessArraySegments->IsNotFull()  // cache size soft limit thru -copyonaccessarraysegmentcachesize:<number>
+                    && lib->cacheForCopyOnAccessArraySegments->IsNotFull()  // cache size soft limit through -copyonaccessarraysegmentcachesize:<number>
                     && length <= (uint32)CONFIG_FLAG(MaxCopyOnAccessArrayLength)  // -maxcopyonaccessarraylength:<number>
                     && length >= (uint32)CONFIG_FLAG(MinCopyOnAccessArrayLength)  // -mincopyonaccessarraylength:<number>
                     )
@@ -6098,8 +6032,7 @@ namespace Js
         return this->vtableAddresses;
     }
 
-    // TODO: get rid of switch and use table-driven approach. See reverse function: InliningDecider::GetBuiltInInlineCandidateOpCode
-    //static 
+    //static
     BuiltinFunction JavascriptLibrary::GetBuiltInInlineCandidateId(OpCode opCode)
     {
         switch (opCode)
@@ -6137,8 +6070,6 @@ namespace Js
         case OpCode::InlineMathTan:
             return BuiltinFunction::Math_Tan;
 
-            // The ones below will be enabled in IE11.
-            // TODO: add string.prototype.concat.
         case OpCode::InlineMathAbs:
             return BuiltinFunction::Math_Abs;
 
@@ -6199,13 +6130,13 @@ namespace Js
     }
 
     // Parses given flags and arg kind (dst or src1, or src2) returns the type the arg must be type-specialized to.
-    // static 
+    // static
     BuiltInArgSpecizationType JavascriptLibrary::GetBuiltInArgType(BuiltInFlags flags, BuiltInArgShift argKind)
     {
         Assert(argKind == BuiltInArgShift::BIAS_Dst || BuiltInArgShift::BIAS_Src1 || BuiltInArgShift::BIAS_Src2);
 
         BuiltInArgSpecizationType type = static_cast<BuiltInArgSpecizationType>(
-            (flags >> argKind) &                            // Shift-out everyting to the right of start of interesting area.
+            (flags >> argKind) &              // Shift-out everything to the right of start of interesting area.
             ((1 << Js::BIAS_ArgSize) - 1));   // Mask-out everything to the left of interesting area.
 
         return type;
@@ -6254,7 +6185,7 @@ namespace Js
 
     HRESULT JavascriptLibrary::ProfilerRegisterBuiltIns()
     {
-        HRESULT hr = S_OK;        
+        HRESULT hr = S_OK;
 
         // Register functions directly in global scope
         REG_GLOBAL_LIB_FUNC(eval, GlobalObject::EntryEval);
@@ -6388,7 +6319,7 @@ namespace Js
         REG_OBJECTS_LIB_FUNC(getOwnPropertyNames, JavascriptObject::EntryGetOwnPropertyNames);
 
         REG_OBJECTS_LIB_FUNC(setPrototypeOf, JavascriptObject::EntrySetPrototypeOf);
-        
+
         ScriptConfiguration const& config = *(scriptContext->GetConfig());
         if (config.IsES6SymbolEnabled())
         {
@@ -6564,7 +6495,7 @@ namespace Js
         REG_OBJECTS_LIB_FUNC(bind, JavascriptFunction::EntryBind);
         REG_OBJECTS_LIB_FUNC(call, JavascriptFunction::EntryCall);
         REG_OBJECTS_LIB_FUNC(toString, JavascriptFunction::EntryToString);
-        
+
         return hr;
     }
 
@@ -6592,7 +6523,7 @@ namespace Js
         REG_OBJECTS_LIB_FUNC(sin, Math::Sin);
         REG_OBJECTS_LIB_FUNC(sqrt, Math::Sqrt);
         REG_OBJECTS_LIB_FUNC(tan, Math::Tan);
-        
+
         if (scriptContext->GetConfig()->IsES6MathExtensionsEnabled())
         {
             REG_OBJECTS_LIB_FUNC(log10, Math::Log10);
@@ -6690,9 +6621,6 @@ namespace Js
             REG_OBJECTS_LIB_FUNC(fontsize, JavascriptString::EntryFontSize);
             REG_OBJECTS_LIB_FUNC(italics, JavascriptString::EntryItalics);
             REG_OBJECTS_LIB_FUNC(link, JavascriptString::EntryLink);
-            // TODO: Small is defined using Entry2 and it has Small as the propertyId and small as name
-            // For some reason if i make it ENTRY(small) instead of ENTRY2(Small, L"small") it overflows with error
-            //REG_OBJECTS_LIB_FUNC(Small, JavascriptString::EntrySmall);
             REG_OBJECTS_DYNAMIC_LIB_FUNC(L"small", 5, JavascriptString::EntrySmall);
             REG_OBJECTS_LIB_FUNC(strike, JavascriptString::EntryStrike);
             REG_OBJECTS_LIB_FUNC(sub, JavascriptString::EntrySub);
@@ -6733,7 +6661,7 @@ namespace Js
         REG_OBJECTS_LIB_FUNC(exec, JavascriptRegExp::EntryExec);
         REG_OBJECTS_LIB_FUNC(test, JavascriptRegExp::EntryTest);
         REG_OBJECTS_LIB_FUNC(toString, JavascriptRegExp::EntryToString);
-        // This is deprecated. Should be guarded with appropriate version flag.
+        // Note: This is deprecated
         REG_OBJECTS_LIB_FUNC(compile, JavascriptRegExp::EntryCompile);
 
         return hr;
@@ -7347,6 +7275,26 @@ namespace Js
         return hr;
     }
 
+#if DBG
+    void JavascriptLibrary::DumpLibraryByteCode()
+    {
+#ifdef ENABLE_INTL_OBJECT
+        // We aren't going to be passing in a number to check range of -dump:LibInit, that will be done by Intl/Promise
+        // This is just to force init Intl code if dump:LibInit has been passed
+        if (CONFIG_ISENABLED(DumpFlag) && Js::Configuration::Global.flags.Dump.IsEnabled(Js::JsLibInitPhase))
+        {
+            for (uint i = 0; i <= MaxEngineInterfaceExtensionKind; i++)
+            {
+                EngineExtensionObjectBase* engineExtension = this->GetEngineInterfaceObject()->GetEngineExtension((Js::EngineInterfaceExtensionKind)i);
+                if (engineExtension != nullptr)
+                {
+                    engineExtension->DumpByteCode();
+                }
+            }
+        }
+#endif
+    }
+#endif
 #ifdef IR_VIEWER
     HRESULT JavascriptLibrary::ProfilerRegisterIRViewer()
     {

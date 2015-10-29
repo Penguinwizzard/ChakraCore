@@ -22,7 +22,7 @@ write(arr.length.toString());
 try {
 	arr.length="-1";
 }
-catch (e) 
+catch (e)
 {
 	write(e.message);
 }
@@ -30,7 +30,7 @@ catch (e)
 try {
 	arr.length=4294967296;
 }
-catch (e) 
+catch (e)
 {
 	write(e.message);
 }
@@ -40,7 +40,7 @@ try {
 	Array.length=10;
 	write(Array.length);
 }
-catch (e) 
+catch (e)
 {
 	write(e.message);
 }
@@ -91,7 +91,7 @@ WScript.Echo(b.length);
 
 var o = Object.freeze([]);
 var p = Object.create(o)
-p.length = 5 
+p.length = 5
 WScript.Echo(p.length);
 WScript.Echo(o.length);
 

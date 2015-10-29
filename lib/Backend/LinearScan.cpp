@@ -84,11 +84,11 @@ bool LoweredBasicBlock::Equals(LoweredBasicBlock* otherBlock)
 
 // LinearScan::RegAlloc
 // This register allocator is based on the 1999 linear scan register allocation paper
-// by Poletto and Sarkar.  This code however walks the IR while doing the lifetime 
+// by Poletto and Sarkar.  This code however walks the IR while doing the lifetime
 // allocations, and assigns the regs to all the RegOpnd as it goes.  It assumes
 // the IR is in R-DFO, and that the lifetime list is sorted in starting order.
 // Lifetimes are allocated as they become live, and retired as they go dead.  RegOpnd
-// are assigned their register.  If a lifetime becomes active and there are no free 
+// are assigned their register.  If a lifetime becomes active and there are no free
 // registers left, a lifetime is picked to be spilled.
 // When we spill, the whole lifetime is spilled.  All the loads and stores are done
 // through memory for that lifetime, even the ones allocated before the current instruction.
@@ -115,7 +115,7 @@ LinearScan::RegAlloc()
     liveness.Build();
     END_CODEGEN_PHASE(this->func, Js::LivenessPhase);
 
-    
+
     this->lifetimeList = &liveness.lifetimeList;
 
     this->opHelperBlockList = &liveness.opHelperBlockList;
@@ -192,8 +192,8 @@ LinearScan::RegAlloc()
             }
             this->ProcessSecondChanceBoundary(instr->AsBranchInstr());
         }
-        
-        this->CheckIfInLoop(instr);        
+
+        this->CheckIfInLoop(instr);
 
         if (this->RemoveDeadStores(instr))
         {
@@ -249,7 +249,6 @@ LinearScan::RegAlloc()
 
         if (insertBailInAfter == instr)
         {
-            // TODO[generators][ianhall]: Can this code generation be deferred until FinalLower now that we have a final lowering pass on all architectures?  Inserting new code during linear scan is a hack.
             instrNext = linearScanMD.GenerateBailInForGeneratorYield(instr, bailOutInfoForBailIn);
             insertBailInAfter = nullptr;
             bailOutInfoForBailIn = nullptr;
@@ -273,7 +272,7 @@ LinearScan::RegAlloc()
             }
         }
     }
-    // review: should we introduce a method LowererMD::GetUsedRegCountForRegAlloc ...
+
     AssertMsg((this->intRegUsedCount + this->floatRegUsedCount) == this->linearScanMD.UnAllocatableRegCount(this->func) , "RegUsedCount is wrong");
     AssertMsg(this->activeLiveranges->Empty(), "Active list not empty");
     AssertMsg(this->stackPackInUseLiveRanges->Empty(), "Spilled list not empty");
@@ -305,7 +304,7 @@ LinearScan::RegAlloc()
     DebugOnly(this->func->allowRemoveBailOutArgInstr = true);
 }
 
-JitArenaAllocator *    
+JitArenaAllocator *
 LinearScan::GetTempAlloc()
 {
     Assert(tempAlloc);
@@ -351,7 +350,7 @@ LinearScan::CheckInvariants() const
     Assert((this->intRegUsedCount + this->floatRegUsedCount) == this->activeRegs.Count());
 
     bv.ClearAll();
-    
+
     lastend = 0;
     FOREACH_SLIST_ENTRY(Lifetime *, lifetime, this->opHelperSpilledLiveranges)
     {
@@ -392,11 +391,11 @@ LinearScan::CheckInvariants() const
 #endif // DBG
 
 // LinearScan::Init
-// Initlialize bit vectors
+// Initialize bit vectors
 void
 LinearScan::Init()
 {
-    FOREACH_REG(reg)    
+    FOREACH_REG(reg)
     {
         // Registers that can't be used are set to active, and will remain this way
         if (!LinearScan::IsAllocatable(reg))
@@ -439,7 +438,7 @@ LinearScan::Init()
     this->linearScanMD.Init(this);
 
 #if DBG
-    this->nonAllocatableRegs = this->activeRegs;     
+    this->nonAllocatableRegs = this->activeRegs;
 #endif
 
 #if DBG_DUMP
@@ -495,9 +494,9 @@ LinearScan::CheckIfInLoop(IR::Instr *instr)
         //          }
         //      }
         // These look nested, but they are not...
-        // So update the flow based parent to be lexical or we won't be able to figure out when we get back 
+        // So update the flow based parent to be lexical or we won't be able to figure out when we get back
         // to the outer loop.
-        // REVIEW: Fix once break blocks are removed?
+        // REVIEW: This isn't necessary anymore now that break blocks are moved out of the loops.
 
         this->curLoop->parent = parentLoop;
         this->curLoop->regAlloc.defdInLoopBv = JitAnew(this->tempAlloc, BVSparse<JitArenaAllocator>, this->tempAlloc);
@@ -532,25 +531,25 @@ LinearScan::CheckOpHelper(IR::Instr *instr)
             {
                 AssertMsg(!instr->AsBranchInstr()->IsMultiBranch(), "Not supported for Multibranch");
                 targetInstr = instr->AsBranchInstr()->GetTarget();
-            }        
+            }
 
             /*
              * Keep track of the number of registers we've had to
              * store and restore around a helper block for LinearScanMD (on ARM
-             * and X64). We need this to be able to allocate space in the frame. 
-             * We can't emit a PUSH/POP sequence around the block like IA32 because 
+             * and X64). We need this to be able to allocate space in the frame.
+             * We can't emit a PUSH/POP sequence around the block like IA32 because
              * the stack pointer can't move outside the prolog.
              */
             uint32 helperSpilledLiverangeCount = 0;
 
-            // Exiting a helper block.  We are going to insert 
+            // Exiting a helper block.  We are going to insert
             // the restore here after linear scan.  So put all the restored
             // lifetime back to active
             while (!this->opHelperSpilledLiveranges->Empty())
             {
                 Lifetime * lifetime = this->opHelperSpilledLiveranges->Pop();
                 lifetime->isOpHelperSpilled = false;
-                
+
                 if (!lifetime->cantOpHelperSpill)
                 {
                     // Put the life time back to active
@@ -560,7 +559,7 @@ LinearScan::CheckOpHelper(IR::Instr *instr)
                     if (targetInstr && lifetime->end < targetInstr->GetNumber())
                     {
                         // However, if lifetime is spilled as arg - we still need to spill it because the helper assumes the value
-                        // to be avaialable in the stack
+                        // to be available in the stack
                         if (lifetime->isOpHelperSpillAsArg)
                         {
                             // we should not attempt to restore it as it is dead on return from the helper.
@@ -572,7 +571,7 @@ LinearScan::CheckOpHelper(IR::Instr *instr)
                             continue;
                         }
                     }
-                    
+
                     // Save all the lifetime that needs to be restored
                     OpHelperSpilledLifetime spilledLifetime;
                     spilledLifetime.lifetime = lifetime;
@@ -580,16 +579,16 @@ LinearScan::CheckOpHelper(IR::Instr *instr)
                     spilledLifetime.reload = reload;
                     /*
                      * Can't unfortunately move this into the else block above because we don't know if this
-                     * lifetime will actually get spilled until register allocation completes. 
-                     * Instead we allocate a slot to this StackSym in LinearScanMD iff 
+                     * lifetime will actually get spilled until register allocation completes.
+                     * Instead we allocate a slot to this StackSym in LinearScanMD iff
                      * !(lifetime.isSpilled && lifetime.noReloadsIfSpilled).
                      */
                     helperSpilledLiverangeCount++;
 
                     // save the reg in case it is spilled later.  We still need to save and restore
                     // for the non-loop case.
-                    spilledLifetime.reg = lifetime->reg;    
-                    this->currentOpHelperBlock->spilledLifetime.Prepend(spilledLifetime);                
+                    spilledLifetime.reg = lifetime->reg;
+                    this->currentOpHelperBlock->spilledLifetime.Prepend(spilledLifetime);
                 }
                 else
                 {
@@ -618,8 +617,8 @@ LinearScan::CheckOpHelper(IR::Instr *instr)
     if (this->opHelperBlockIter.IsValid())
     {
         AssertMsg(
-            !instr->IsLabelInstr() || 
-            !instr->AsLabelInstr()->isOpHelper || 
+            !instr->IsLabelInstr() ||
+            !instr->AsLabelInstr()->isOpHelper ||
             this->opHelperBlockIter.Data().opHelperLabel == instr,
             "Found a helper label that doesn't begin the next helper block in the list?");
 
@@ -638,10 +637,10 @@ LinearScan::HelperBlockStartInstrNumber() const
     return this->currentOpHelperBlock->opHelperLabel->GetNumber();
 }
 
-uint 
+uint
 LinearScan::HelperBlockEndInstrNumber() const
 {
-    Assert(IsInHelperBlock()); 
+    Assert(IsInHelperBlock());
     return this->currentOpHelperBlock->opHelperEndInstr->GetNumber();
 }
 // LinearScan::AddToActive
@@ -678,10 +677,10 @@ LinearScan::AddOpHelperSpilled(Lifetime * lifetime)
     this->regContent[reg] = nullptr;
     this->secondChanceRegs.Clear(reg);
 
-    // If a lifetime is being ophelper spilled and it's an inlinee arg sym
-    // we need to make sure its spilled to the sym offset spill space i.e. isOpHelperSpillAsArg
+    // If a lifetime is being OpHelper spilled and it's an inlinee arg sym
+    // we need to make sure its spilled to the sym offset spill space, i.e. isOpHelperSpillAsArg
     // is set. Otherwise, it's value will not be available on inline frame reconstruction.
-    if (this->currentBlock->inlineeFrameSyms.Count() > 0 && 
+    if (this->currentBlock->inlineeFrameSyms.Count() > 0 &&
         this->currentBlock->inlineeFrameSyms.ContainsKey(lifetime->sym->m_id) &&
         (lifetime->sym->m_isSingleDef || !lifetime->defList.Empty()))
     {
@@ -701,10 +700,10 @@ LinearScan::RemoveOpHelperSpilled(Lifetime * lifetime)
     Assert(this->IsInHelperBlock());
     Assert(lifetime->isOpHelperSpilled);
     Assert(lifetime->cantOpHelperSpill == false);
-    Assert(this->opHelperSpilledRegs.Test(lifetime->reg));    
+    Assert(this->opHelperSpilledRegs.Test(lifetime->reg));
 
     this->opHelperSpilledRegs.Clear(lifetime->reg);
-    lifetime->isOpHelperSpilled = false;  
+    lifetime->isOpHelperSpilled = false;
     lifetime->cantOpHelperSpill = false;
     lifetime->isOpHelperSpillAsArg = false;
     this->opHelperSpilledLiveranges->Remove(lifetime);
@@ -718,8 +717,8 @@ LinearScan::SetCantOpHelperSpill(Lifetime * lifetime)
     Assert(lifetime->cantOpHelperSpill == false);
 
     this->opHelperSpilledRegs.Clear(lifetime->reg);
-    lifetime->isOpHelperSpilled = false;   
-    lifetime->cantOpHelperSpill = true;   
+    lifetime->isOpHelperSpilled = false;
+    lifetime->cantOpHelperSpill = true;
 }
 
 void
@@ -730,8 +729,8 @@ LinearScan::AddLiveRange(SList<Lifetime *> * list, Lifetime * newLifetime)
         if (newLifetime->end < lifetime->end)
         {
             break;
-        }        
-    } 
+        }
+    }
     NEXT_SLIST_ENTRY_EDITING;
 
     iter.InsertBefore(newLifetime);
@@ -740,11 +739,11 @@ LinearScan::AddLiveRange(SList<Lifetime *> * list, Lifetime * newLifetime)
 Lifetime *
 LinearScan::RemoveRegLiveRange(SList<Lifetime *> * list, RegNum reg)
 {
-    // Find the register in the active set    
+    // Find the register in the active set
     FOREACH_SLIST_ENTRY_EDITING(Lifetime *, lifetime, list, iter)
     {
         if (lifetime->reg == reg)
-        {        
+        {
             Lifetime * lifetimeReturn = lifetime;
             iter.RemoveCurrent();
             return lifetimeReturn;
@@ -791,10 +790,10 @@ LinearScan::SetDstReg(IR::Instr *instr)
         RegNum callSetupReg = regOpnd->GetReg();
         callSetupRegs.Set(callSetupReg);
     }
-    
+
     StackSym * stackSym = regOpnd->m_sym;
 
-    // Arg slot sym can be in an RegOpnd for param passed via registers  
+    // Arg slot sym can be in an RegOpnd for param passed via registers
     // Just use the assigned register
     if (stackSym == nullptr || stackSym->IsArgSlotSym())
     {
@@ -809,7 +808,7 @@ LinearScan::SetDstReg(IR::Instr *instr)
         this->tempRegs.Clear(reg);
     }
     else
-    {        
+    {
         if (regOpnd->GetReg() != RegNOREG)
         {
             this->RecordLoopUse(nullptr, regOpnd->GetReg());
@@ -883,20 +882,18 @@ LinearScan::SetDstReg(IR::Instr *instr)
 
                     instr->ReplaceDst(IR::SymOpnd::New(stackSym, srcType, this->func));
                     this->linearScanMD.LegalizeDef(instr);
-                    return; 
+                    return;
                 }
 
 
                 if (reg == RegNOREG)
                 {
-                    // HACK on...
                     IR::Opnd *src = instr->GetSrc1();
                     if (src && src->IsRegOpnd() && src->AsRegOpnd()->m_sym == stackSym)
                     {
-                        // Hack for OpEq's on x86/x64
+                        // Handle OPEQ's for x86/x64
                         reg = src->AsRegOpnd()->GetReg();
                         AssertMsg(!this->activeRegs.Test(reg), "Shouldn't be active");
-                        // HACK off...
                     }
                     else
                     {
@@ -919,11 +916,11 @@ LinearScan::SetDstReg(IR::Instr *instr)
                 }
             }
         }
-        else 
+        else
         {
             if (lifetime->isOpHelperSpilled)
             {
-                // We must be in a helper block and the lifetime must 
+                // We must be in a helper block and the lifetime must
                 // start before the helper block
                 Assert(this->IsInHelperBlock());
                 Assert(lifetime->start < this->HelperBlockStartInstrNumber());
@@ -944,7 +941,7 @@ LinearScan::SetDstReg(IR::Instr *instr)
                 // however in case another helper call in this block tries to spill it.
                 this->SetCantOpHelperSpill(lifetime);
 
-                this->AddToActive(lifetime);       
+                this->AddToActive(lifetime);
 
                 this->tempRegs.Clear(reg);
                 this->activeRegs.Set(reg);
@@ -979,7 +976,7 @@ int32 LinearScan::GetStackOffset(Js::RegSlot regSlotId)
 
 
 //
-// This helper function is used for saving bytecode stack sym value to memory / local slots on stack so that we can read it for the locals inspection. 
+// This helper function is used for saving bytecode stack sym value to memory / local slots on stack so that we can read it for the locals inspection.
 void
 LinearScan::WriteThroughForLocal(IR::RegOpnd* regOpnd, Lifetime* lifetime, IR::Instr* instrInsertAfter)
 {
@@ -992,14 +989,12 @@ LinearScan::WriteThroughForLocal(IR::RegOpnd* regOpnd, Lifetime* lifetime, IR::I
 
     Js::RegSlot slotIndex = sym->GetByteCodeRegSlot();
 
-    // First we insert the write thru moves
+    // First we insert the write through moves
 
     sym->m_offset = GetStackOffset(slotIndex);
     sym->m_allocated = true;
     // Save the value on reg to local var slot.
     this->InsertStore(instrInsertAfter, sym, lifetime->reg);
-
-    // TODONext : Store metada information as what kind of data we have stored, ie. var, int or float
 }
 
 bool
@@ -1067,7 +1062,7 @@ LinearScan::SetSrcRegs(IR::Instr *instr)
     {
         this->SetUses(instr, dst);
     }
- 
+
     this->instrUseRegs.ClearAll();
 }
 
@@ -1088,7 +1083,7 @@ LinearScan::SetUses(IR::Instr *instr, IR::Opnd *opnd)
             {
                 StackSym* stackSym = sym->AsStackSym();
                 if (!stackSym->IsAllocated())
-                {                    
+                {
                     func->StackAllocate(stackSym, opnd->GetSize());
                     // StackSym's lifetime is allocated during SCCLiveness::ProcessDst
                     // we might not need to set the flag if the sym is not a dst.
@@ -1121,25 +1116,25 @@ LinearScan::SetUses(IR::Instr *instr, IR::Opnd *opnd)
 }
 
 struct FillBailOutState
-{      
-    SListCounted<Js::Var> constantList;    
+{
+    SListCounted<Js::Var> constantList;
     uint registerSaveCount;
     StackSym * registerSaveSyms[RegNumCount - 1];
-    
+
     FillBailOutState(JitArenaAllocator * allocator) : constantList(allocator) {}
 };
 
 
 void
 LinearScan::FillBailOutOffset(int * offset, StackSym * stackSym, FillBailOutState * state, IR::Instr * instr)
-{    
+{
     AssertMsg(*offset == 0, "Can't have two active lifetime for the same byte code register");
     if (stackSym->IsConst())
     {
         state->constantList.Prepend(reinterpret_cast<Js::Var>(stackSym->GetLiteralConstValue_PostGlobOpt()));
 
         // Constant offset are offset by the number of register save slots
-        *offset = state->constantList.Count() + GetBailOutRegisterSaveSlotCount() + GetBailOutReserveSlotCount();                
+        *offset = state->constantList.Count() + GetBailOutRegisterSaveSlotCount() + GetBailOutReserveSlotCount();
     }
     else if (stackSym->m_isEncodedConstant)
     {
@@ -1147,33 +1142,33 @@ LinearScan::FillBailOutOffset(int * offset, StackSym * stackSym, FillBailOutStat
         state->constantList.Prepend((Js::Var)stackSym->constantValue);
 
         // Constant offset are offset by the number of register save slots
-        *offset = state->constantList.Count() + GetBailOutRegisterSaveSlotCount() + GetBailOutReserveSlotCount(); 
+        *offset = state->constantList.Count() + GetBailOutRegisterSaveSlotCount() + GetBailOutReserveSlotCount();
     }
     else
     {
-        Lifetime * lifetime = stackSym->scratch.linearScan.lifetime;      
+        Lifetime * lifetime = stackSym->scratch.linearScan.lifetime;
         Assert(lifetime && lifetime->start < instr->GetNumber() && instr->GetNumber() <= lifetime->end);
         if (instr->GetBailOutKind() == IR::BailOutOnException)
         {
-            // Apart from the exception object sym, lifetimes for all other syms that need to be restored at this bailout, 
+            // Apart from the exception object sym, lifetimes for all other syms that need to be restored at this bailout,
             // must have been spilled at least once (at the TryCatch, or at the Leave, or both)
             // Post spilling, a lifetime could have been second chance allocated. But, it should still have stack allocated for its sym
             Assert(stackSym->IsAllocated() || (stackSym == this->currentRegion->GetExceptionObjectSym()));
         }
 
         this->PrepareForUse(lifetime);
-        if (lifetime->isSpilled || 
+        if (lifetime->isSpilled ||
             ((instr->GetBailOutKind() == IR::BailOutOnException) && (stackSym != this->currentRegion->GetExceptionObjectSym()))) // BailOutOnException must restore from memory
         {
             Assert(stackSym->IsAllocated());
-#ifdef MD_GROW_LOCALS_AREA_UP        
+#ifdef MD_GROW_LOCALS_AREA_UP
             *offset = -((int)stackSym->m_offset + BailOutInfo::StackSymBias);
 #else
             // Stack offset are negative, includes the PUSH EBP and return address
             *offset = stackSym->m_offset - (2 * MachPtr);
 #endif
         }
-        else 
+        else
         {
             Assert(lifetime->reg != RegNOREG);
             Assert(state->registerSaveSyms[lifetime->reg - 1] == nullptr ||
@@ -1182,7 +1177,7 @@ LinearScan::FillBailOutOffset(int * offset, StackSym * stackSym, FillBailOutStat
                 !(stackSym->IsFloat64() || stackSym->IsSimd128()) && RegTypes[lifetime->reg] != TyFloat64,
                       "Trying to save float64 sym into non-float64 reg or non-float64 sym into float64 reg");
 
-            // Save the register value to the register save space using the reg enum value as index  
+            // Save the register value to the register save space using the reg enum value as index
             state->registerSaveSyms[lifetime->reg - 1] = stackSym;
             *offset = LinearScanMD::GetRegisterSaveIndex(lifetime->reg);
 
@@ -1198,7 +1193,7 @@ struct FuncBailOutData
     int * localOffsets;
     BVFixed * losslessInt32Syms;
     BVFixed * float64Syms;
-    
+
     // SIMD_JS
     BVFixed * simd128F4Syms;
     BVFixed * simd128I4Syms;
@@ -1221,14 +1216,14 @@ FuncBailOutData::Initialize(Func * func, JitArenaAllocator * tempAllocator)
     this->simd128I4Syms = BVFixed::New(localsCount, tempAllocator);
 }
 
-void 
+void
 FuncBailOutData::FinalizeLocalOffsets(JitArenaAllocator *allocator, GlobalBailOutRecordDataTable *globalBailOutRecordDataTable, uint **lastUpdatedRowIndices)
 {
     Js::RegSlot localsCount = func->GetJnFunction()->GetLocalsCount();
-    
+
     Assert(globalBailOutRecordDataTable != nullptr);
     Assert(lastUpdatedRowIndices != nullptr);
-    
+
     if (*lastUpdatedRowIndices == nullptr)
     {
         *lastUpdatedRowIndices = JitAnewArrayZ(allocator, uint, localsCount);
@@ -1243,7 +1238,7 @@ FuncBailOutData::FinalizeLocalOffsets(JitArenaAllocator *allocator, GlobalBailOu
         {
             bool isFloat = float64Syms->Test(i) != 0;
             bool isInt = losslessInt32Syms->Test(i) != 0;
-            
+
             // SIMD_JS
             bool isSimd128F4 = simd128F4Syms->Test(i) != 0;
             bool isSimd128I4 = simd128I4Syms->Test(i) != 0;
@@ -1319,7 +1314,7 @@ LinearScan::FillBailOutRecord(IR::Instr * instr)
     Func * bailOutFunc = bailOutInfo->bailOutFunc;
     uint funcCount = bailOutFunc->inlineDepth + 1;
     FuncBailOutData * funcBailOutData = AnewArray(this->tempAlloc, FuncBailOutData, funcCount);
-    uint index = funcCount - 1;    
+    uint index = funcCount - 1;
     funcBailOutData[index].Initialize(bailOutFunc, this->tempAlloc);
     funcBailOutData[index].bailOutRecord = bailOutInfo->bailOutRecord;
     bailOutInfo->bailOutRecord->m_bailOutRecordId = m_bailOutRecordCount++;
@@ -1333,12 +1328,12 @@ LinearScan::FillBailOutRecord(IR::Instr * instr)
         Output::Print(L"-------------------Bailout dump -------------------------\n");
         instr->Dump();
     }
-#endif  
+#endif
 
 
     // Generate chained bailout record for inlined functions
     Func * currentFunc = bailOutFunc->GetParentFunc();
-    uint bailOutOffset = bailOutFunc->postCallByteCodeOffset;    
+    uint bailOutOffset = bailOutFunc->postCallByteCodeOffset;
     while (currentFunc != nullptr)
     {
         Assert(index > 0);
@@ -1359,14 +1354,14 @@ LinearScan::FillBailOutRecord(IR::Instr * instr)
         currentFunc = currentFunc->GetParentFunc();
     }
 
-    Assert(index == 0);  
-    Assert(bailOutOffset == Js::Constants::NoByteCodeOffset);        
- 
-    FillBailOutState state(this->tempAlloc);  
+    Assert(index == 0);
+    Assert(bailOutOffset == Js::Constants::NoByteCodeOffset);
+
+    FillBailOutState state(this->tempAlloc);
     state.registerSaveCount = 0;
     memset(state.registerSaveSyms, 0, sizeof(state.registerSaveSyms));
 
-    // Fill in the constants    
+    // Fill in the constants
     FOREACH_SLISTBASE_ENTRY_EDITING(ConstantStackSymValue, value, &bailOutInfo->usedCapturedValues.constantValues, iterator)
     {
         AssertMsg(bailOutInfo->bailOutRecord->bailOutKind != IR::BailOutForGeneratorYield, "constant prop syms unexpected for bail-in for generator yield");
@@ -1379,23 +1374,23 @@ LinearScan::FillBailOutRecord(IR::Instr * instr)
         Js::RegSlot i = stackSym->GetByteCodeRegSlot();
         Func * stackSymFunc = stackSym->GetByteCodeFunc();
         uint index = stackSymFunc->inlineDepth;
-            
+
         Assert(i != Js::Constants::NoRegister);
         Assert(i < stackSymFunc->GetJnFunction()->GetLocalsCount());
-       
+
         Assert(index < funcCount);
         __analysis_assume(index < funcCount);
         Assert(funcBailOutData[index].func == stackSymFunc);
-                
-        Assert(!byteCodeUpwardExposedUsed->Test(stackSym->m_id));       
+
+        Assert(!byteCodeUpwardExposedUsed->Test(stackSym->m_id));
 
         BailoutConstantValue constValue = value.Value();
         Js::Var varValue = constValue.ToVar(this->func, stackSymFunc->GetScriptContext());
-       
+
         state.constantList.Prepend(varValue);
         AssertMsg(funcBailOutData[index].localOffsets[i] == 0, "Can't have two active lifetime for the same byte code register");
         // Constant offset are offset by the number of register save slots
-        funcBailOutData[index].localOffsets[i] = state.constantList.Count() + GetBailOutRegisterSaveSlotCount() + GetBailOutReserveSlotCount(); 
+        funcBailOutData[index].localOffsets[i] = state.constantList.Count() + GetBailOutRegisterSaveSlotCount() + GetBailOutReserveSlotCount();
 
 #if DBG_DUMP
         if(PHASE_DUMP(Js::BailOutPhase, this->func))
@@ -1411,7 +1406,7 @@ LinearScan::FillBailOutRecord(IR::Instr * instr)
 
     // Fill in the copy prop syms
     FOREACH_SLISTBASE_ENTRY_EDITING(CopyPropSyms, copyPropSyms, &bailOutInfo->usedCapturedValues.copyPropSyms, iter)
-    {       
+    {
         AssertMsg(bailOutInfo->bailOutRecord->bailOutKind != IR::BailOutForGeneratorYield, "copy prop syms unexpected for bail-in for generator yield");
         StackSym * stackSym = copyPropSyms.Key();
         if(stackSym->HasArgSlotNum())
@@ -1421,18 +1416,18 @@ LinearScan::FillBailOutRecord(IR::Instr * instr)
         Js::RegSlot i = stackSym->GetByteCodeRegSlot();
         Func * stackSymFunc = stackSym->GetByteCodeFunc();
         uint index = stackSymFunc->inlineDepth;
-        
+
         Assert(i != Js::Constants::NoRegister);
         Assert(i < stackSymFunc->GetJnFunction()->GetLocalsCount());
-       
+
         Assert(index < funcCount);
         __analysis_assume(index < funcCount);
         Assert(funcBailOutData[index].func == stackSymFunc);
 
         AssertMsg(funcBailOutData[index].localOffsets[i] == 0, "Can't have two active lifetime for the same byte code register");
         Assert(!byteCodeUpwardExposedUsed->Test(stackSym->m_id));
-        
-        StackSym * copyStackSym = copyPropSyms.Value();        
+
+        StackSym * copyStackSym = copyPropSyms.Value();
         this->FillBailOutOffset(&funcBailOutData[index].localOffsets[i], copyStackSym, &state, instr);
         if (copyStackSym->IsInt32())
         {
@@ -1466,14 +1461,14 @@ LinearScan::FillBailOutRecord(IR::Instr * instr)
 
         Assert(i != Js::Constants::NoRegister);
         Assert(i < stackSymFunc->GetJnFunction()->GetLocalsCount());
-       
+
         Assert(index < funcCount);
          __analysis_assume(index < funcCount);
         Assert(funcBailOutData[index].func == stackSymFunc);
 
         AssertMsg(funcBailOutData[index].localOffsets[i] == 0, "Can't have two active lifetime for the same byte code register");
-        
-        this->FillBailOutOffset(&funcBailOutData[index].localOffsets[i], stackSym, &state, instr);   
+
+        this->FillBailOutOffset(&funcBailOutData[index].localOffsets[i], stackSym, &state, instr);
         if (stackSym->IsInt32())
         {
             funcBailOutData[index].losslessInt32Syms->Set(i);
@@ -1492,7 +1487,7 @@ LinearScan::FillBailOutRecord(IR::Instr * instr)
             funcBailOutData[index].simd128I4Syms->Set(i);
         }
     }
-    NEXT_BITSET_IN_SPARSEBV;          
+    NEXT_BITSET_IN_SPARSEBV;
 
     if (bailOutInfo->usedCapturedValues.argObjSyms)
     {
@@ -1513,13 +1508,12 @@ LinearScan::FillBailOutRecord(IR::Instr * instr)
             Assert(funcBailOutData[index].func == stackSymFunc);
             AssertMsg(funcBailOutData[index].localOffsets[i] == 0, "Can't have two active lifetime for the same byte code register");
 
-            funcBailOutData[index].localOffsets[i] =  BailOutRecord::GetArgumentsObjectOffset(); 
+            funcBailOutData[index].localOffsets[i] =  BailOutRecord::GetArgumentsObjectOffset();
         }
         NEXT_BITSET_IN_SPARSEBV;
     }
 
     // In the debug mode, fill in the rest of non temp locals as well in the records so that the restore stub will just get it automatically.
-    // TODONext : If any value of the locals slot got changed due to debugger UI, then we need to always fill bailout record from the stack slots first, instead of the bytecodeUpwardExposedUsed, since they will be outdated.
 
     if (this->func->IsJitInDebugMode())
     {
@@ -1593,14 +1587,14 @@ LinearScan::FillBailOutRecord(IR::Instr * instr)
 
         int* outParamOffsets = bailOutInfo->outParamOffsets = NativeCodeDataNewArrayZ(allocator, int, bailOutInfo->totalOutParamCount);
 #ifdef _M_IX86
-        int currentStackOffset = 0;        
+        int currentStackOffset = 0;
         bailOutInfo->outParamFrameAdjustArgSlot = JitAnew(this->func->m_alloc, BVSparse<JitArenaAllocator>, this->func->m_alloc);
-#endif      
+#endif
         if (this->func->HasInlinee())
         {
             bailOutInfo->outParamInlinedArgSlot = JitAnew(this->func->m_alloc, BVSparse<JitArenaAllocator>, this->func->m_alloc);
         }
-        
+
 #if DBG
         uint lastFuncIndex = 0;
 #endif
@@ -1680,18 +1674,18 @@ LinearScan::FillBailOutRecord(IR::Instr * instr)
 #endif
             for (uint j = 0; j < outParamCount; j++, argOutSlot++)
             {
-                StackSym * sym = bailOutInfo->argOutSyms[argOutSlot];                
+                StackSym * sym = bailOutInfo->argOutSyms[argOutSlot];
                 if (sym == nullptr)
                 {
                     // This can happen when instr with bailout occurs before all ArgOuts for current call instr are processed.
                     continue;
                 }
-                
+
                 Assert(sym->GetArgSlotNum() > 0 && sym->GetArgSlotNum() <= outParamCount);
                 uint argSlot = sym->GetArgSlotNum() - 1;
                 uint outParamOffsetIndex = outParamStart + argSlot;
                 if (!sym->m_isBailOutReferenced && !sym->IsArgSlotSym())
-                {   
+                {
                     FOREACH_SLISTBASE_ENTRY_EDITING(ConstantStackSymValue, constantValue, &bailOutInfo->usedCapturedValues.constantValues, iterator)
                     {
                         if (constantValue.Key()->m_id == sym->m_id)
@@ -1723,7 +1717,7 @@ LinearScan::FillBailOutRecord(IR::Instr * instr)
                         if (copyPropSym.Key()->m_id == sym->m_id)
                         {
                             StackSym * copyStackSym = copyPropSym.Value();
-                            
+
                             BVSparse<JitArenaAllocator>* argObjSyms = bailOutInfo->usedCapturedValues.argObjSyms;
                             if (argObjSyms && argObjSyms->Test(copyStackSym->m_id))
                             {
@@ -1785,7 +1779,7 @@ LinearScan::FillBailOutRecord(IR::Instr * instr)
                                 if (sym->m_isInlinedArgSlot)
                                 {
                                     Assert(this->func->HasInlinee());
-#ifdef MD_GROW_LOCALS_AREA_UP        
+#ifdef MD_GROW_LOCALS_AREA_UP
                                     outParamOffsets[outParamOffsetIndex] = -((int)sym->m_offset + BailOutInfo::StackSymBias);
 #else
                                     outParamOffsets[outParamOffsetIndex] = sym->m_offset;
@@ -1794,7 +1788,7 @@ LinearScan::FillBailOutRecord(IR::Instr * instr)
                                 }
                                 else if (sym->m_isOrphanedArg)
                                 {
-#ifdef MD_GROW_LOCALS_AREA_UP        
+#ifdef MD_GROW_LOCALS_AREA_UP
                                     outParamOffsets[outParamOffsetIndex] = -((int)sym->m_offset + BailOutInfo::StackSymBias);
 #else
                                     // Stack offset are negative, includes the PUSH EBP and return address
@@ -1846,7 +1840,7 @@ LinearScan::FillBailOutRecord(IR::Instr * instr)
 
                                 if (bailOutInfo->usedCapturedValues.argObjSyms && bailOutInfo->usedCapturedValues.argObjSyms->Test(sym->m_id))
                                 {
-                                    //foo.apply(this,arguments) case and we bailout when the apply is overriden. We need to restore the arguments object.
+                                    //foo.apply(this,arguments) case and we bailout when the apply is overridden. We need to restore the arguments object.
                                     outParamOffsets[outParamOffsetIndex] = BailOutRecord::GetArgumentsObjectOffset();
                                 }
                                 else
@@ -1893,7 +1887,7 @@ LinearScan::FillBailOutRecord(IR::Instr * instr)
     else
     {
         Assert(bailOutInfo->argOutSyms == nullptr);
-        Assert(bailOutInfo->startCallCount == 0);        
+        Assert(bailOutInfo->startCallCount == 0);
     }
 
     if (this->currentBlock->inlineeStack.Count() > 0)
@@ -1910,22 +1904,22 @@ LinearScan::FillBailOutRecord(IR::Instr * instr)
 
     linearScanMD.GenerateBailOut(instr, state.registerSaveSyms, _countof(state.registerSaveSyms));
 
-    // generate the constant table    
+    // generate the constant table
     Js::Var * constants = NativeCodeDataNewArray(allocator, Js::Var, state.constantList.Count());
     uint constantCount = state.constantList.Count();
     while (!state.constantList.Empty())
     {
         Js::Var value = state.constantList.Head();
         state.constantList.RemoveHead();
-        constants[state.constantList.Count()] = value;        
-    }   
-    
+        constants[state.constantList.Count()] = value;
+    }
+
     // Generate the stack literal bail out info
     FillStackLiteralBailOutRecord(instr, bailOutInfo, funcBailOutData, funcCount);
 
     for (uint i = 0; i < funcCount; i++)
     {
-        
+
         funcBailOutData[i].bailOutRecord->constants = constants;
 #if DBG
         funcBailOutData[i].bailOutRecord->inlineDepth = funcBailOutData[i].func->inlineDepth;
@@ -1970,9 +1964,9 @@ LinearScan::ForEachStackLiteralBailOutInfo(IR::Instr * instr, BailOutInfo * bail
 
         Assert(regSlot != Js::Constants::NoRegister);
         Assert(regSlot < stackSymFunc->GetJnFunction()->GetLocalsCount());
-        Assert(index < funcCount);        
+        Assert(index < funcCount);
         Assert(funcBailOutData[index].func == stackSymFunc);
-        Assert(funcBailOutData[index].localOffsets[regSlot] != 0);      
+        Assert(funcBailOutData[index].localOffsets[regSlot] != 0);
         fn(index, stackLiteralBailOutInfo, regSlot);
     }
 }
@@ -1983,11 +1977,11 @@ LinearScan::FillStackLiteralBailOutRecord(IR::Instr * instr, BailOutInfo * bailO
     if (bailOutInfo->stackLiteralBailOutInfoCount)
     {
         // Count the data
-        ForEachStackLiteralBailOutInfo(instr, bailOutInfo, funcBailOutData, funcCount, 
+        ForEachStackLiteralBailOutInfo(instr, bailOutInfo, funcBailOutData, funcCount,
             [=](uint funcIndex, BailOutInfo::StackLiteralBailOutInfo& stackLiteralBailOutInfo, Js::RegSlot regSlot)
         {
             funcBailOutData[funcIndex].bailOutRecord->stackLiteralBailOutRecordCount++;
-        });       
+        });
 
         // Allocate the data
         NativeCodeData::Allocator * allocator = this->func->GetNativeCodeDataAllocator();
@@ -2004,7 +1998,7 @@ LinearScan::FillStackLiteralBailOutRecord(IR::Instr * instr, BailOutInfo * bailO
         }
 
         // Fill out the data
-        ForEachStackLiteralBailOutInfo(instr, bailOutInfo, funcBailOutData, funcCount, 
+        ForEachStackLiteralBailOutInfo(instr, bailOutInfo, funcBailOutData, funcCount,
             [=](uint funcIndex, BailOutInfo::StackLiteralBailOutInfo& stackLiteralBailOutInfo, Js::RegSlot regSlot)
         {
             uint& recordIndex = funcBailOutData[funcIndex].bailOutRecord->stackLiteralBailOutRecordCount;
@@ -2012,7 +2006,7 @@ LinearScan::FillStackLiteralBailOutRecord(IR::Instr * instr, BailOutInfo * bailO
                 funcBailOutData[funcIndex].bailOutRecord->stackLiteralBailOutRecord[recordIndex++];
             stackLiteralBailOutRecord.regSlot = regSlot;
             stackLiteralBailOutRecord.initFldCount = stackLiteralBailOutInfo.initFldCount;
-        });       
+        });
     }
 }
 
@@ -2024,7 +2018,7 @@ LinearScan::PrepareForUse(Lifetime * lifetime)
         // using a value in a helper that has been spilled in the helper block.
         // Just spill it for real
 
-        // We must be in a helper block and the lifetime must 
+        // We must be in a helper block and the lifetime must
         // start before the helper block
 
         Assert(this->IsInHelperBlock());
@@ -2032,8 +2026,8 @@ LinearScan::PrepareForUse(Lifetime * lifetime)
 
         IR::Instr *insertionInstr = this->currentOpHelperBlock->opHelperLabel;
 
-        this->RemoveOpHelperSpilled(lifetime);                  
-        this->SpillLiveRange(lifetime, insertionInstr);        
+        this->RemoveOpHelperSpilled(lifetime);
+        this->SpillLiveRange(lifetime, insertionInstr);
     }
 }
 
@@ -2042,13 +2036,13 @@ LinearScan::RecordUse(Lifetime * lifetime, IR::Instr * instr, IR::RegOpnd * regO
 {
     uint32 useCountCost = LinearScan::GetUseSpillCost(this->loopNest, (this->currentOpHelperBlock != nullptr || isFromBailout));
 
-    // We only spill at the use for constants (ie reload) or for function with try blocks. We don't
+    // We only spill at the use for constants (i.e. reload) or for function with try blocks. We don't
     // have real accurate flow info for the later.
-    if ((regOpnd && regOpnd->m_sym->IsConst()) 
+    if ((regOpnd && regOpnd->m_sym->IsConst())
           || (
                  (this->func->HasTry() && !this->func->DoOptimizeTryCatch()) &&
-                 this->IsInLoop() && 
-                 lifetime->lastUseLabel != this->lastLabel && 
+                 this->IsInLoop() &&
+                 lifetime->lastUseLabel != this->lastLabel &&
                  this->liveOnBackEdgeSyms->Test(lifetime->sym->m_id) &&
                  !(lifetime->previousDefBlockNumber == currentBlockNumber && !lifetime->defList.Empty())
              ))
@@ -2096,7 +2090,7 @@ void LinearScan::RecordLoopUse(Lifetime *lifetime, RegNum reg)
     // the reg ends up being spilled before it is actually used.
     Loop *curLoop = this->curLoop;
     SymID symId = (SymID)-1;
-    
+
     if (lifetime)
     {
         symId = lifetime->sym->m_id;
@@ -2105,7 +2099,7 @@ void LinearScan::RecordLoopUse(Lifetime *lifetime, RegNum reg)
     while (curLoop)
     {
         // Note that if the lifetime is spilled and reallocated to the same register,
-        // will mark it as used when we shouldn't.  However, it is hard at this point to handle 
+        // will mark it as used when we shouldn't.  However, it is hard at this point to handle
         // the case were a flow edge from the previous allocation merges in with the new allocation.
         // No compensation is inserted to let us know with previous lifetime needs reloading at the bottom of the loop...
         if (lifetime && curLoop->regAlloc.loopTopRegContent[reg] == lifetime)
@@ -2150,12 +2144,12 @@ LinearScan::RecordDef(Lifetime *const lifetime, IR::Instr *const instr, const ui
     {
         if (this->IsSymNonTempLocalVar(sym))
         {
-            // In the debug mode, we will write thru on the stack location.
+            // In the debug mode, we will write through on the stack location.
             WriteThroughForLocal(regOpnd, lifetime, instr);
         }
         else
         {
-            // If this is a write-through sym, it should be live on the entry to 'try' and should have already 
+            // If this is a write-through sym, it should be live on the entry to 'try' and should have already
             // been allocated when we spilled all active lifetimes there.
             // If it was not part of the active lifetimes on entry to the 'try' then it must have been spilled
             // earlier and should have stack allocated for it.
@@ -2210,7 +2204,7 @@ LinearScan::SetUse(IR::Instr *instr, IR::RegOpnd *regOpnd)
 
     if (lifetime->isSpilled)
     {
-        // See if it has been loaded in this basic block 
+        // See if it has been loaded in this basic block
         RegNum reg = this->GetAssignedTempReg(lifetime, regOpnd->GetType());
         if (reg == RegNOREG)
         {
@@ -2246,7 +2240,7 @@ LinearScan::SetUse(IR::Instr *instr, IR::RegOpnd *regOpnd)
 
                 this->InsertLoad(instr, sym, reg);
             }
-        }        
+        }
     }
     if (!lifetime->isSpilled && instr->GetNumber() < lifetime->end)
     {
@@ -2274,7 +2268,7 @@ LinearScan::SetReg(IR::RegOpnd *regOpnd)
     }
 }
 
-bool 
+bool
 LinearScan::SkipNumberedInstr(IR::Instr *instr)
 {
     if (instr->IsLabelInstr())
@@ -2294,7 +2288,7 @@ LinearScan::SkipNumberedInstr(IR::Instr *instr)
 
 // LinearScan::EndDeadLifetimes
 // Look for lifetimes that are ending here, and retire them.
-void 
+void
 LinearScan::EndDeadLifetimes(IR::Instr *instr)
 {
     Lifetime * deadLifetime;
@@ -2411,7 +2405,7 @@ LinearScan::AllocateNewLifetimes(IR::Instr *instr)
         Lifetime * newLifetime = this->lifetimeList->Head();
         newLifetime->lastAllocationStart = instr->GetNumber();
 
-        this->lifetimeList->RemoveHead(); 
+        this->lifetimeList->RemoveHead();
 
         if (newLifetime->dontAllocate)
         {
@@ -2420,7 +2414,7 @@ LinearScan::AllocateNewLifetimes(IR::Instr *instr)
             this->SpillLiveRange(newLifetime);
             continue;
         }
-            
+
         RegNum reg;
         if (newLifetime->reg == RegNOREG)
         {
@@ -2430,7 +2424,7 @@ LinearScan::AllocateNewLifetimes(IR::Instr *instr)
                 newLifetime->isSpilled = true;
                 continue;
             }
-            reg = this->FindReg(newLifetime, nullptr);     
+            reg = this->FindReg(newLifetime, nullptr);
         }
         else
         {
@@ -2449,7 +2443,7 @@ LinearScan::AllocateNewLifetimes(IR::Instr *instr)
         // If we did get a register for this lifetime, add it to the active set.
         if (newLifetime->isSpilled == false)
         {
-            this->AssignActiveReg(newLifetime, reg);          
+            this->AssignActiveReg(newLifetime, reg);
         }
     }
 }
@@ -2531,9 +2525,9 @@ LinearScan::FindReg(Lifetime *newLifetime, IR::RegOpnd *regOpnd, bool force)
             if (newLifetime->isLiveAcrossCalls)
             {
                 // Try to find a callee saved regs
-                BitVector regsBvTemp = regsBv;                
+                BitVector regsBvTemp = regsBv;
                 regsBvTemp.And(this->calleeSavedRegs);
-                
+
                 regIndex = GetPreferrencedRegIndex(newLifetime, regsBvTemp);
 
                 if (regIndex == BVInvalidIndex)
@@ -2542,10 +2536,10 @@ LinearScan::FindReg(Lifetime *newLifetime, IR::RegOpnd *regOpnd, bool force)
                     {
                         // No callee saved regs is found and the lifetime only across helper
                         // calls, we can also use a caller saved regs to make use of the
-                        // save and restore aruond helper blocks
+                        // save and restore around helper blocks
                         regIndex = GetPreferrencedRegIndex(newLifetime, regsBv);
                     }
-                    else 
+                    else
                     {
                         // If we can't find a callee-saved reg, we can try using a caller-saved reg instead.
                         // We'll hopefully get a few loads enregistered that way before we get to the call.
@@ -2553,7 +2547,7 @@ LinearScan::FindReg(Lifetime *newLifetime, IR::RegOpnd *regOpnd, bool force)
                         callerSavedAvailableBv = regsBv;
                     }
                 }
-            }   
+            }
             else
             {
                 regIndex = GetPreferrencedRegIndex(newLifetime, regsBv);
@@ -2623,7 +2617,7 @@ LinearScan::FindReg(Lifetime *newLifetime, IR::RegOpnd *regOpnd, bool force)
             // Second chance allocation
             dontSpillCurrent = true;
         }
-        
+
         // Can't find reg, spill some lifetime.
         reg = this->Spill(newLifetime, regOpnd, dontSpillCurrent, force);
 
@@ -2639,7 +2633,7 @@ LinearScan::FindReg(Lifetime *newLifetime, IR::RegOpnd *regOpnd, bool force)
     }
 
     // We always have to return a reg if we are allocate temp reg.
-    // If we are allocating ofr a new lifetime, we return RegNOREG, if we
+    // If we are allocating for a new lifetime, we return RegNOREG, if we
     // spill the new lifetime
     Assert(newLifetime != nullptr || (reg != RegNOREG && reg < RegNumCount));
     return reg;
@@ -2659,13 +2653,13 @@ LinearScan::GetPreferrencedRegIndex(Lifetime *lifetime, BitVector freeRegs)
     }
     else
     {
-        return freeRegs.GetNextBit();               
+        return freeRegs.GetNextBit();
     }
 }
 
 
 // LinearScan::Spill
-// We need to spill something to free up a reg. If the newLifetime 
+// We need to spill something to free up a reg. If the newLifetime
 // past in isn't NULL, we can spill this one instead of an active one.
 RegNum
 LinearScan::Spill(Lifetime *newLifetime, IR::RegOpnd *regOpnd, bool dontSpillCurrent, bool force)
@@ -2674,7 +2668,6 @@ LinearScan::Spill(Lifetime *newLifetime, IR::RegOpnd *regOpnd, bool dontSpillCur
 
     Assert(!newLifetime || !regOpnd || newLifetime->isFloat == (regOpnd->GetType() == TyMachDouble) || newLifetime->isSimd128() == (regOpnd->IsSimd128()));
     bool isFloatReg;
-    //bool isSimd128Reg;
     BitVector intUsageBV;
     bool needCalleeSaved;
 
@@ -2682,7 +2675,7 @@ LinearScan::Spill(Lifetime *newLifetime, IR::RegOpnd *regOpnd, bool dontSpillCur
     if (newLifetime)
     {
         isFloatReg = newLifetime->isFloat || newLifetime->isSimd128();
-        
+
         if (!force)
         {
             minSpillCost = this->GetSpillCost(newLifetime);
@@ -2710,7 +2703,7 @@ LinearScan::Spill(Lifetime *newLifetime, IR::RegOpnd *regOpnd, bool dontSpillCur
     FOREACH_SLIST_ENTRY_EDITING(Lifetime *, lifetime, this->activeLiveranges, iter)
     {
         uint spillCost = this->GetSpillCost(lifetime);
-        if (spillCost < minSpillCost                        && 
+        if (spillCost < minSpillCost                        &&
             this->instrUseRegs.Test(lifetime->reg) == false &&
             (lifetime->isFloat || lifetime->isSimd128()) == isFloatReg  &&
             !lifetime->cantSpill                            &&
@@ -2718,8 +2711,8 @@ LinearScan::Spill(Lifetime *newLifetime, IR::RegOpnd *regOpnd, bool dontSpillCur
             this->linearScanMD.FitRegIntSizeConstraints(lifetime->reg, intUsageBV))
         {
             minSpillCost = spillCost;
-            candidate = iter;            
-        }        
+            candidate = iter;
+        }
     } NEXT_SLIST_ENTRY_EDITING;
     AssertMsg(newLifetime || candidate.IsValid(), "Didn't find anything to spill?!?");
 
@@ -2728,15 +2721,15 @@ LinearScan::Spill(Lifetime *newLifetime, IR::RegOpnd *regOpnd, bool dontSpillCur
     {
         spilledRange = candidate.Data();
         candidate.RemoveCurrent();
-        
+
         this->activeRegs.Clear(spilledRange->reg);
         if (spilledRange->isFloat || spilledRange->isSimd128())
         {
-            this->floatRegUsedCount--;   
+            this->floatRegUsedCount--;
         }
         else
         {
-            this->intRegUsedCount--;   
+            this->intRegUsedCount--;
         }
     }
     else if (dontSpillCurrent)
@@ -2747,7 +2740,7 @@ LinearScan::Spill(Lifetime *newLifetime, IR::RegOpnd *regOpnd, bool dontSpillCur
     {
         spilledRange = newLifetime;
     }
-    
+
     return this->SpillLiveRange(spilledRange);
 }
 
@@ -2763,7 +2756,7 @@ LinearScan::SpillLiveRange(Lifetime * spilledRange, IR::Instr *insertionInstr)
     spilledRange->isSpilled = true;
     spilledRange->isCheapSpill = false;
     spilledRange->reg = RegNOREG;
-    
+
     // Don't allocate stack space for const, we always reload them. (For debugm mode, allocate on the stack)
     if (!sym->IsAllocated() && (!sym->IsConst() || IsSymNonTempLocalVar(sym)))
     {
@@ -2773,7 +2766,7 @@ LinearScan::SpillLiveRange(Lifetime * spilledRange, IR::Instr *insertionInstr)
     // No need to insert loads or stores if there are no uses.
     if (!spilledRange->isDeadStore)
     {
-        // In the debug mode, don't do insertstore for this stacksym, as we want to retain the IsConst for the sym, 
+        // In the debug mode, don't do insertstore for this stacksym, as we want to retain the IsConst for the sym,
         // and later we are going to find the reg for it.
         if (!IsSymNonTempLocalVar(sym))
         {
@@ -2795,7 +2788,7 @@ LinearScan::SpillLiveRange(Lifetime * spilledRange, IR::Instr *insertionInstr)
     Assert(reg == RegNOREG || spilledRange->reg == RegNOREG || this->regContent[reg] == spilledRange);
     if (spilledRange->isSecondChanceAllocated)
     {
-        Assert(reg == RegNOREG || spilledRange->reg == RegNOREG 
+        Assert(reg == RegNOREG || spilledRange->reg == RegNOREG
             || (this->regContent[reg] == spilledRange && this->secondChanceRegs.Test(reg)));
         this->secondChanceRegs.Clear(reg);
         spilledRange->isSecondChanceAllocated = false;
@@ -2812,7 +2805,7 @@ LinearScan::SpillLiveRange(Lifetime * spilledRange, IR::Instr *insertionInstr)
         Output::Print(L"**** Spill: ");
         sym->Dump();
         Output::Print(L"(%S)", RegNames[reg]);
-        Output::Print(L"  SpillCount:%d  Length:%d   Cost:%d\n", 
+        Output::Print(L"  SpillCount:%d  Length:%d   Cost:%d\n",
             spilledRange->useCount, spilledRange->end - spilledRange->start, this->GetSpillCost(spilledRange));
     }
 #endif
@@ -2864,10 +2857,10 @@ LinearScan::SpillReg(RegNum reg, bool forceSpill /* = false */)
         // if the lifetime starts before the helper block, we can do save and restore
         // around the helper block instead.
 
-        this->AddOpHelperSpilled(spilledRange);        
+        this->AddOpHelperSpilled(spilledRange);
     }
     else
-    {        
+    {
         if (spilledRange->cantOpHelperSpill)
         {
             // We're really spilling this liverange, so take it out of the helper-spilled liveranges
@@ -2919,11 +2912,11 @@ LinearScan::ProcessEHRegionBoundary(IR::Instr * instr)
         }
         this->SpillLiveRange(lifetime, insertionInstr);
         iter.RemoveCurrent();
-    } 
+    }
     NEXT_SLIST_ENTRY_EDITING;
 }
 
-void 
+void
 LinearScan::AllocateStackSpace(Lifetime *spilledRange)
 {
     if (spilledRange->sym->IsAllocated())
@@ -2998,7 +2991,7 @@ LinearScan::AllocateStackSpace(Lifetime *spilledRange)
             spilledSym->Dump();
             Output::Print(L" at offset %3d  (%4d - %4d)\n", spilledSym->m_offset, spilledRange->start, spilledRange->end);
         }
-#endif  
+#endif
         if (newStackSlot != nullptr)
         {
             newStackSlot->offset = spilledSym->m_offset;
@@ -3007,7 +3000,7 @@ LinearScan::AllocateStackSpace(Lifetime *spilledRange)
 }
 
 // LinearScan::InsertLoads
-void 
+void
 LinearScan::InsertLoads(StackSym *sym, RegNum reg)
 {
     Lifetime *lifetime = sym->scratch.linearScan.lifetime;
@@ -3021,7 +3014,7 @@ LinearScan::InsertLoads(StackSym *sym, RegNum reg)
 }
 
 // LinearScan::InsertStores
-void 
+void
 LinearScan::InsertStores(Lifetime *lifetime, RegNum reg, IR::Instr *insertionInstr)
 {
     StackSym *sym = lifetime->sym;
@@ -3050,8 +3043,7 @@ LinearScan::InsertStores(Lifetime *lifetime, RegNum reg, IR::Instr *insertionIns
 
     uint localStoreCost = LinearScan::GetUseSpillCost(this->loopNest, (this->currentOpHelperBlock != nullptr));
 
-    // Is it cheaper to to spill all the defs we've seen so far or just insert a store at the current point?
-    // REVIEW: If in a loop and symRegUseBv isn't set, could we put the store at the top of the loop?
+    // Is it cheaper to spill all the defs we've seen so far or just insert a store at the current point?
     if ((this->func->HasTry() && !this->func->DoOptimizeTryCatch()) || localStoreCost >= lifetime->allDefsCost)
     {
         // Insert a store for each def point we've seen so far
@@ -3064,7 +3056,7 @@ LinearScan::InsertStores(Lifetime *lifetime, RegNum reg, IR::Instr *insertionIns
                 // Note that reg may not be equal to regOpnd->GetReg() if the lifetime has been re-allocated since we've seen this def
                 this->InsertStore(instr, regOpnd->m_sym, regOpnd->GetReg());
             }
-       
+
         } NEXT_SLIST_ENTRY;
 
         lifetime->defList.Clear();
@@ -3090,21 +3082,21 @@ LinearScan::InsertStores(Lifetime *lifetime, RegNum reg, IR::Instr *insertionIns
 }
 
 // LinearScan::InsertStore
-void 
+void
 LinearScan::InsertStore(IR::Instr *instr, StackSym *sym, RegNum reg)
 {
     // Win8 Bug 391484: We cannot use regOpnd->GetType() here because it
     // can lead to truncation as downstream usage of the register might be of a size
-    // greater than the current use. Using RegTypes[reg] works only if the stack slot size 
+    // greater than the current use. Using RegTypes[reg] works only if the stack slot size
     // is always at least of size MachPtr
 
-    // In the debug mode, if the current sym belongs to the byte code locals, then do not unlink this instruction, as we need to have this instruction to be there 
-    // to produce the write-thru instruction.
+    // In the debug mode, if the current sym belongs to the byte code locals, then do not unlink this instruction, as we need to have this instruction to be there
+    // to produce the write-through instruction.
     if (sym->IsConst() && !IsSymNonTempLocalVar(sym))
     {
         // Let's just delete the def.  We'll reload the constant.           
-        // HACK: We can't just delete the instruction however since the
-        // uses will look at the def to get the value....
+        // We can't just delete the instruction however since the
+        // uses will look at the def to get the value.
 
         // Make sure it wasn't already deleted.
         if (sym->m_instrDef->m_next)
@@ -3114,7 +3106,7 @@ LinearScan::InsertStore(IR::Instr *instr, StackSym *sym, RegNum reg)
         }
         return;
     }
-   
+
     Assert(reg != RegNOREG);
 
     IRType type = sym->GetType();
@@ -3125,7 +3117,7 @@ LinearScan::InsertStore(IR::Instr *instr, StackSym *sym, RegNum reg)
     }
 
     IR::Instr *store = IR::Instr::New(LowererMD::GetStoreOp(type),
-        IR::SymOpnd::New(sym, type, this->func), 
+        IR::SymOpnd::New(sym, type, this->func),
         IR::RegOpnd::New(sym, reg, type, this->func), this->func);
     instr->InsertAfter(store);
     store->CopyNumber(instr);
@@ -3142,7 +3134,7 @@ LinearScan::InsertStore(IR::Instr *instr, StackSym *sym, RegNum reg)
 }
 
 // LinearScan::InsertLoad
-void 
+void
 LinearScan::InsertLoad(IR::Instr *instr, StackSym *sym, RegNum reg)
 {
     IR::Opnd *src;
@@ -3220,7 +3212,6 @@ LinearScan::InsertLoad(IR::Instr *instr, StackSym *sym, RegNum reg)
 #endif
 }
 
-// LinearScan::GetRegAttribs
 uint8
 LinearScan::GetRegAttribs(RegNum reg)
 {
@@ -3233,40 +3224,35 @@ LinearScan::GetRegType(RegNum reg)
     return RegTypes[reg];
 }
 
-// LinearScan::IsCalleeSaved
 bool
 LinearScan::IsCalleeSaved(RegNum reg)
 {
     return (RegAttribs[reg] & RA_CALLEESAVE) != 0;
 }
 
-// LinearScan::IsCallerSaved
 bool
 LinearScan::IsCallerSaved(RegNum reg) const
 {
     return !LinearScan::IsCalleeSaved(reg) && LinearScan::IsAllocatable(reg);
 }
 
-// LinearScan::IsAllocatable
 bool
 LinearScan::IsAllocatable(RegNum reg) const
 {
     return !(RegAttribs[reg] & RA_DONTALLOCATE) && this->linearScanMD.IsAllocatable(reg, this->func);
 }
 
-// LinearScan::KillImplicitRegs
 void
 LinearScan::KillImplicitRegs(IR::Instr *instr)
 {
     if (instr->IsLabelInstr() || instr->IsBranchInstr())
     {
-        // Note: need to clear these for branch as well because this info isn't recorded for second chance 
+        // Note: need to clear these for branch as well because this info isn't recorded for second chance
         //       allocation on branch boundaries
         this->tempRegs.ClearAll();
     }
 
 #if defined(_M_IX86) || defined(_M_X64)
-    // TODO: put into linearscanMD
     if (instr->m_opcode == Js::OpCode::IMUL)
     {
         this->SpillReg(LowererMDArch::GetRegIMulHighDestLower());
@@ -3296,68 +3282,6 @@ LinearScan::KillImplicitRegs(IR::Instr *instr)
         instr->m_func = this->func;
     }
 
-#if 0
-    // TODO: This code is to make up for the lack of callee-saved float regs on x86
-    // We can simulate this by marking some float registers as callee-saved,
-    // and saving/restoring around calls.  
-    // This needs more tuning to make it worthwhile.
-    // We would need to know how many calls are live during a given lifetime, to 
-    // avoid enregistering lifetime live across too many calls.
-
-    // Try spilling/restoring some float regs across calls
-    BitVector floatCalleeSavedRegs;
-
-    floatCalleeSavedRegs.Copy(this->activeRegs);
-    floatCalleeSavedRegs.And(this->calleeSavedRegs);
-    floatCalleeSavedRegs.And(this->floatRegs);
-
-    uint singleUseSpill;
-    
-    if (this->IsInHelperBlock())
-    {
-        singleUseSpill = 0;
-    }
-    else
-    {
-        singleUseSpill = this->GetUseSpillCost(this->loopNest);
-    }
-
-    FOREACH_BITSET_IN_UNITBV(reg, floatCalleeSavedRegs, BitVector)
-    {
-        Lifetime *lifetime = nullptr;
-        FOREACH_SLIST_ENTRY_EDITING(Lifetime *, lifetimeIter, this->activeLiveranges, iter)
-        {
-            if (lifetimeIter->reg == reg)
-            {        
-                lifetime = lifetimeIter;
-                break;
-            }
-        } NEXT_SLIST_ENTRY_EDITING;
-
-        if (lifetime->isOpHelperSpilled || this->GetSpillCost(lifetime) < (singleUseSpill * 6))
-        {
-            continue;
-        }
-        StackSym *sym = lifetime->sym;
-        IRType type = sym->m_type;
-      
-        if (!sym->IsAllocated())
-        {
-            this->func->StackAllocate(sym, MachRegDouble);
-        }
-        IR::Instr *store = IR::Instr::New(LowererMD::GetStoreOp(type),
-            IR::SymOpnd::New(sym, type, this->func), 
-            IR::RegOpnd::New(sym, (RegNum)reg, type, this->func), this->func);
-        instr->InsertBefore(store);
-
-        IR::Instr *load = IR::Instr::New(LowererMD::GetLoadOp(type),
-            IR::RegOpnd::New(sym, (RegNum)reg, type, this->func),
-            IR::SymOpnd::New(sym, type, this->func), this->func);
-        instr->InsertAfter(load);
-    } 
-    NEXT_BITSET_IN_UNITBV;
-#endif
-
     //
     // Spill caller-saved registers that are active.
     //
@@ -3367,7 +3291,7 @@ LinearScan::KillImplicitRegs(IR::Instr *instr)
     FOREACH_BITSET_IN_UNITBV(reg, deadRegs, BitVector)
     {
         this->SpillReg((RegNum)reg);
-    } 
+    }
     NEXT_BITSET_IN_UNITBV;
     this->tempRegs.And(this->calleeSavedRegs);
 
@@ -3389,7 +3313,7 @@ LinearScan::KillImplicitRegs(IR::Instr *instr)
 void LinearScan::SpillInlineeArgs(IR::Instr* instr)
 {
     Assert(this->currentBlock->inlineeStack.Count() > 0);
- 
+
     // Ensure the call instruction is tied to the current inlinee
     // This is used in the encoder to encode mapping or return offset and InlineeFrameRecord
     instr->m_func = this->currentBlock->inlineeStack.Last();
@@ -3421,7 +3345,7 @@ void LinearScan::SpillInlineeArgs(IR::Instr* instr)
                 if (sym->m_isSingleDef)
                 {
                     // For a single def - we do not track the deflist - the def below will remove the single def on the sym
-                    // hence, we need to track the oringal def.
+                    // hence, we need to track the original def.
                     Assert(lifetime->defList.Empty());
                     lifetime->defList.Prepend(sym->m_instrDef);
                 }
@@ -3441,7 +3365,7 @@ void LinearScan::TrackInlineeArgLifetimes(IR::Instr* instr)
             instr->m_func->frameInfo->IterateSyms([=](StackSym* sym){
                 Lifetime* lifetime = sym->scratch.linearScan.lifetime;
                 this->currentBlock->inlineeFrameLifetimes.Add(lifetime);
-                
+
                 // We need to maintain as count because the same sym can be used for multiple arguments
                 uint* value;
                 if (this->currentBlock->inlineeFrameSyms.TryGetReference(sym->m_id, &value))
@@ -3527,7 +3451,7 @@ LinearScan::GetSpillCost(Lifetime *lifetime)
         if (this->curLoop && !lifetime->sym->IsConst()
             && this->curLoop->regAlloc.liveOnBackEdgeSyms->Test(lifetime->sym->m_id))
         {
-            // If we spill here, we'll need to insert a load at the bottom of the loop 
+            // If we spill here, we'll need to insert a load at the bottom of the loop
             // (it would be nice to be able to check is was in a reg at the top of the loop)...
             useCount += localUseCost;
         }
@@ -3648,7 +3572,7 @@ LinearScan::AssignTempReg(Lifetime * lifetime, RegNum reg)
     Assert(lifetime->isSpilled);
     this->func->m_regsUsed.Set(reg);
     lifetime->reg = reg;
-    this->tempRegs.Set(reg);   
+    this->tempRegs.Set(reg);
     __analysis_assume(reg > 0 && reg < RegNumCount);
     this->tempRegLifetimes[reg] = lifetime;
 
@@ -3657,7 +3581,7 @@ LinearScan::AssignTempReg(Lifetime * lifetime, RegNum reg)
 
 RegNum
 LinearScan::GetAssignedTempReg(Lifetime * lifetime, IRType type)
-{    
+{
     if (this->tempRegs.Test(lifetime->reg) && this->tempRegLifetimes[lifetime->reg] == lifetime)
     {
         if (this->linearScanMD.FitRegIntSizeConstraints(lifetime->reg, type))
@@ -3718,7 +3642,7 @@ LinearScan::ProcessSecondChanceBoundary(IR::BranchInstr *branchInstr)
         } NEXT_SLIST_ENTRY;
     }
 
-    if(branchInstr->IsMultiBranch())    
+    if(branchInstr->IsMultiBranch())
     {
         IR::MultiBranchInstr * multiBranchInstr = branchInstr->AsMultiBrInstr();
 
@@ -3763,7 +3687,7 @@ LinearScan::ProcessSecondChanceBoundaryHelper(IR::BranchInstr *branchInstr, IR::
             }
             else
             {
-                // If the unconditional branch leads to the end of the function for the scenario of a bailout - we do not want to 
+                // If the unconditional branch leads to the end of the function for the scenario of a bailout - we do not want to
                 // copy the lowered inlinee info.
                 IR::Instr* nextInstr = branchLabel->GetNextRealInstr();
                 if (nextInstr->m_opcode != Js::OpCode::FunctionExit &&
@@ -3778,10 +3702,7 @@ LinearScan::ProcessSecondChanceBoundaryHelper(IR::BranchInstr *branchInstr, IR::
         }
         else
         {
-            // The lowerer sometimes generates unreachable blocks that would have empty data. It's a bit verbose to verify
-            // that the block is actually unreachable, as we would have to prove that all paths coming to this block are
-            // unreachable. Ideally, we should fix GlobOpt/Lowerer to not generate unreachable code.
-            // TODO: Remove (!currentBlock->HasData() ||) after GlobOpt/Lowerer are fixed to not generate unreachable code (see unittest\Optimizer\test132.js for an example)
+            // The lowerer sometimes generates unreachable blocks that would have empty data.
             Assert(!currentBlock->HasData() || branchLabel->m_loweredBasicBlock->Equals(this->currentBlock));
         }
     }
@@ -3825,7 +3746,7 @@ LinearScan::ProcessSecondChanceBoundary(IR::LabelInstr *labelInstr)
     } NEXT_SLISTCOUNTED_ENTRY_EDITING;
 }
 
-IR::Instr * LinearScan::EnsureAirlock(bool needsAirlock, bool *pHasAirlock, IR::Instr *insertionInstr, 
+IR::Instr * LinearScan::EnsureAirlock(bool needsAirlock, bool *pHasAirlock, IR::Instr *insertionInstr,
                                       IR::Instr **pInsertionStartInstr, IR::BranchInstr *branchInstr, IR::LabelInstr *labelInstr)
 {
     if (needsAirlock && !(*pHasAirlock))
@@ -3868,7 +3789,7 @@ bool LinearScan::NeedsLoopBackEdgeCompensation(Lifetime *lifetime, IR::LabelInst
 }
 
 void
-LinearScan::InsertSecondChanceCompensation(Lifetime ** branchRegContent, Lifetime **labelRegContent, 
+LinearScan::InsertSecondChanceCompensation(Lifetime ** branchRegContent, Lifetime **labelRegContent,
                                            IR::BranchInstr *branchInstr, IR::LabelInstr *labelInstr)
 {
     IR::Instr *prevInstr = branchInstr->GetPrevRealInstrOrLabel();
@@ -3895,7 +3816,7 @@ LinearScan::InsertSecondChanceCompensation(Lifetime ** branchRegContent, Lifetim
 #if defined(_M_IX86) || defined(_M_X64)
         // Insert XCHG to avoid some conflicts for int regs
         // Note: no XCHG on ARM or SSE2.  We could however use 3 XOR on ARM...
-        this->AvoidCompensationConflicts(labelInstr, branchInstr, labelRegContent, branchRegContent, 
+        this->AvoidCompensationConflicts(labelInstr, branchInstr, labelRegContent, branchRegContent,
                                          &insertionInstr, &insertionStartInstr, needsAirlock, &hasAirlock);
 #endif
 
@@ -3907,22 +3828,19 @@ LinearScan::InsertSecondChanceCompensation(Lifetime ** branchRegContent, Lifetim
 
             // 1.  Insert Stores
             //          Lifetime starts before the loop
-            //          Lifetime was re-allocated within the loop (ie: a load was most likely inserted)
+            //          Lifetime was re-allocated within the loop (i.e.: a load was most likely inserted)
             //          Lifetime is live on back-edge and has unsaved defs.
-            // REVIEW: Could we do better if:
-            //          It was re-def'd, so no memory loads
-            //     OR   The lifetime does not extend beyond the loop (no reloads on exit path)
 
-            if (lifetime && lifetime->start < labelInstr->GetNumber() && lifetime->lastAllocationStart > labelInstr->GetNumber() 
+            if (lifetime && lifetime->start < labelInstr->GetNumber() && lifetime->lastAllocationStart > labelInstr->GetNumber()
                 && (labelInstr->GetLoop()->regAlloc.liveOnBackEdgeSyms->Test(lifetime->sym->m_id))
                 && !lifetime->defList.Empty())
             {
                 insertionInstr = this->EnsureAirlock(needsAirlock, &hasAirlock, insertionInstr, &insertionStartInstr, branchInstr, labelInstr);
-                // If the lifetime was second chance allocated inside the loop, there might 
+                // If the lifetime was second chance allocated inside the loop, there might
                 // be spilled loads of this symbol in the loop.  Insert the stores.
                 // We don't need to do this if the lifetime was re-allocated before the loop.
                 //
-                // Note that reg may not be equal to lifetime->reg because of inserted XCHG... 
+                // Note that reg may not be equal to lifetime->reg because of inserted XCHG...
                 this->InsertStores(lifetime, lifetime->reg, insertionStartInstr);
             }
 
@@ -3942,7 +3860,7 @@ LinearScan::InsertSecondChanceCompensation(Lifetime ** branchRegContent, Lifetim
                 // MOV EDI, ECX
                 // MOV ECX, ESI
                 // MOV EAX, EDI <<<
-                this->ReconcileRegContent(branchRegContent, labelRegContent, branchInstr, labelInstr, 
+                this->ReconcileRegContent(branchRegContent, labelRegContent, branchInstr, labelInstr,
                                           lifetime, (RegNum)reg, &thrashedRegs, insertionInstr, insertionStartInstr);
             }
 
@@ -3950,7 +3868,7 @@ LinearScan::InsertSecondChanceCompensation(Lifetime ** branchRegContent, Lifetim
             //          Lifetime was in a reg at the top of the loop but is spilled right now.
             if (labelLifetime && labelLifetime->isSpilled && !labelLifetime->sym->IsConst() && labelLifetime->end >= branchInstr->GetNumber())
             {
-                if (!loop->regAlloc.liveOnBackEdgeSyms->Test(labelLifetime->sym->m_id)) 
+                if (!loop->regAlloc.liveOnBackEdgeSyms->Test(labelLifetime->sym->m_id))
                 {
                     continue;
                 }
@@ -3960,19 +3878,19 @@ LinearScan::InsertSecondChanceCompensation(Lifetime ** branchRegContent, Lifetim
                 }
                 insertionInstr = this->EnsureAirlock(needsAirlock, &hasAirlock, insertionInstr, &insertionStartInstr, branchInstr, labelInstr);
 
-                this->ReconcileRegContent(branchRegContent, labelRegContent, branchInstr, labelInstr, 
+                this->ReconcileRegContent(branchRegContent, labelRegContent, branchInstr, labelInstr,
                                           labelLifetime, (RegNum)reg, &thrashedRegs, insertionInstr, insertionStartInstr);
             }
         } NEXT_BITSET_IN_UNITBV;
 
         // 3.   MOV labelReg, MEM
         //          Finish up reloading lifetimes needed at the top.  #2 only handled secondChanceRegs.
-        //  Review: Do we need #2??
+
         FOREACH_REG(reg)
         {
             // Handle lifetimes in a register at the top of the loop, but not currently.
             Lifetime *labelLifetime = labelRegContent[reg];
-            if (labelLifetime && !labelLifetime->sym->IsConst() && labelLifetime != branchRegContent[reg] && !thrashedRegs.Test(reg) 
+            if (labelLifetime && !labelLifetime->sym->IsConst() && labelLifetime != branchRegContent[reg] && !thrashedRegs.Test(reg)
                 && (loop->regAlloc.liveOnBackEdgeSyms->Test(labelLifetime->sym->m_id)))
             {
                 if (this->ClearLoopExitIfRegUnused(labelLifetime, (RegNum)reg, branchInstr, loop))
@@ -3982,7 +3900,7 @@ LinearScan::InsertSecondChanceCompensation(Lifetime ** branchRegContent, Lifetim
                 // Mismatch, we need to insert compensation code
                 insertionInstr = this->EnsureAirlock(needsAirlock, &hasAirlock, insertionInstr, &insertionStartInstr, branchInstr, labelInstr);
 
-                this->ReconcileRegContent(branchRegContent, labelRegContent, branchInstr, labelInstr, 
+                this->ReconcileRegContent(branchRegContent, labelRegContent, branchInstr, labelInstr,
                                             labelLifetime, (RegNum)reg, &thrashedRegs, insertionInstr, insertionStartInstr);
             }
         } NEXT_REG;
@@ -4013,14 +3931,14 @@ LinearScan::InsertSecondChanceCompensation(Lifetime ** branchRegContent, Lifetim
                 //
                 //  MOV  MEM, branch_REG
                 insertionInstr = this->EnsureAirlock(needsAirlock, &hasAirlock, insertionInstr, &insertionStartInstr, branchInstr, labelInstr);
-                this->ReconcileRegContent(branchRegContent, labelRegContent, branchInstr, labelInstr, 
+                this->ReconcileRegContent(branchRegContent, labelRegContent, branchInstr, labelInstr,
                                           branchLifetime, (RegNum)reg, &thrashedRegs, insertionInstr, insertionStartInstr);
             }
             if (lifetime && !lifetime->sym->IsConst() && lifetime->start <= branchInstr->GetNumber())
             {
                 // MOV  label_REG, branch_REG / MEM
                 insertionInstr = this->EnsureAirlock(needsAirlock, &hasAirlock, insertionInstr, &insertionStartInstr, branchInstr, labelInstr);
-                this->ReconcileRegContent(branchRegContent, labelRegContent, branchInstr, labelInstr, 
+                this->ReconcileRegContent(branchRegContent, labelRegContent, branchInstr, labelInstr,
                                           lifetime, (RegNum)reg, &thrashedRegs, insertionInstr, insertionStartInstr);
             }
         } NEXT_REG;
@@ -4040,8 +3958,8 @@ LinearScan::InsertSecondChanceCompensation(Lifetime ** branchRegContent, Lifetim
 }
 
 void
-LinearScan::ReconcileRegContent(Lifetime ** branchRegContent, Lifetime **labelRegContent, 
-                                IR::BranchInstr *branchInstr, IR::LabelInstr *labelInstr, 
+LinearScan::ReconcileRegContent(Lifetime ** branchRegContent, Lifetime **labelRegContent,
+                                IR::BranchInstr *branchInstr, IR::LabelInstr *labelInstr,
                                 Lifetime *lifetime, RegNum reg, BitVector *thrashedRegs, IR::Instr *insertionInstr, IR::Instr *insertionStartInstr)
 {
     RegNum originalReg = RegNOREG;
@@ -4094,7 +4012,7 @@ LinearScan::ReconcileRegContent(Lifetime ** branchRegContent, Lifetime **labelRe
         branchReg = originalReg;
         labelReg = reg;
     }
-           
+
     if (branchReg != RegNOREG && !thrashedRegs->Test(branchReg) && !lifetime->sym->IsConst())
     {
         Assert(branchRegContent[branchReg] == lifetime);
@@ -4103,7 +4021,7 @@ LinearScan::ReconcileRegContent(Lifetime ** branchRegContent, Lifetime **labelRe
             // MOV labelReg, branchReg
             Assert(labelRegContent[labelReg] == lifetime);
             IR::Instr *load = IR::Instr::New(LowererMD::GetLoadOp(type),
-                IR::RegOpnd::New(lifetime->sym, labelReg, type, this->func), 
+                IR::RegOpnd::New(lifetime->sym, labelReg, type, this->func),
                 IR::RegOpnd::New(lifetime->sym, branchReg, type, this->func), this->func);
 
             insertionInstr->InsertBefore(load);
@@ -4122,7 +4040,7 @@ LinearScan::ReconcileRegContent(Lifetime ** branchRegContent, Lifetime **labelRe
             Assert(!lifetime->sym->IsConst());
             Assert(matchBranchReg);
             Assert(branchRegContent[branchReg] == lifetime);
-            
+
             // MOV mem, branchReg
             this->InsertStores(lifetime, branchReg, insertionInstr->m_prev);
 
@@ -4171,7 +4089,7 @@ LinearScan::ReconcileRegContent(Lifetime ** branchRegContent, Lifetime **labelRe
                 // MOV labelReg, branchReg
                 Assert(labelRegContent[labelReg] == lifetime);
                 IR::Instr *load = IR::Instr::New(LowererMD::GetLoadOp(type),
-                    IR::RegOpnd::New(lifetime->sym, labelReg, type, this->func), 
+                    IR::RegOpnd::New(lifetime->sym, labelReg, type, this->func),
                     IR::RegOpnd::New(lifetime->sym, branchReg, type, this->func), this->func);
 
                 newInsertionInstr->InsertBefore(load);
@@ -4186,7 +4104,7 @@ LinearScan::ReconcileRegContent(Lifetime ** branchRegContent, Lifetime **labelRe
                 thrashedRegs->Set(labelReg);
                 return;
             }
-    
+
             Assert(thrashedRegs->Test(branchReg));
             this->InsertStores(lifetime, branchReg, insertionStartInstr);
             // symRegUseBv needs to be set properly.  Unfortunately, we need to go conservative as we don't know
@@ -4253,8 +4171,8 @@ bool LinearScan::ClearLoopExitIfRegUnused(Lifetime *lifetime, RegNum reg, IR::Br
 }
 #if defined(_M_IX86) || defined(_M_X64)
 
-void LinearScan::AvoidCompensationConflicts(IR::LabelInstr *labelInstr, IR::BranchInstr *branchInstr, 
-                                            Lifetime *labelRegContent[], Lifetime *branchRegContent[], 
+void LinearScan::AvoidCompensationConflicts(IR::LabelInstr *labelInstr, IR::BranchInstr *branchInstr,
+                                            Lifetime *labelRegContent[], Lifetime *branchRegContent[],
                                             IR::Instr **pInsertionInstr, IR::Instr **pInsertionStartInstr, bool needsAirlock, bool *pHasAirlock)
 {
     bool changed = true;
@@ -4266,7 +4184,7 @@ void LinearScan::AvoidCompensationConflicts(IR::LabelInstr *labelInstr, IR::Bran
     //      XCHG    ESI, EAX
     //      MOV     ECX, EAX
     //
-    // Note that we need to interate while(changed) to catch all conflicts
+    // Note that we need to iterate while(changed) to catch all conflicts
     while(changed) {
         RegNum conflictRegs[RegNumCount] = {RegNOREG};
         changed = false;
@@ -4298,7 +4216,7 @@ void LinearScan::AvoidCompensationConflicts(IR::LabelInstr *labelInstr, IR::Bran
 
                     Lifetime *tmpLifetime = branchRegContent[reg];
                     branchRegContent[reg] = branchRegContent[conflictRegs[reg]];
-                    branchRegContent[conflictRegs[reg]] = tmpLifetime; 
+                    branchRegContent[conflictRegs[reg]] = tmpLifetime;
                     reg = conflictRegs[reg];
 
                     changed = true;
@@ -4320,9 +4238,9 @@ void LinearScan::AvoidCompensationConflicts(IR::LabelInstr *labelInstr, IR::Bran
             }
         } NEXT_BITSET_IN_UNITBV;
     }
-}   
+}
 #endif
-RegNum 
+RegNum
 LinearScan::SecondChanceAllocation(Lifetime *lifetime, bool force)
 {
     if (PHASE_OFF(Js::SecondChancePhase, this->func) || this->func->HasTry())
@@ -4335,7 +4253,7 @@ LinearScan::SecondChanceAllocation(Lifetime *lifetime, bool force)
     {
         return RegNOREG;
     }
-    
+
     Assert(lifetime->isSpilled);
     Assert(lifetime->sym->IsConst() || lifetime->sym->IsAllocated());
 
@@ -4344,13 +4262,13 @@ LinearScan::SecondChanceAllocation(Lifetime *lifetime, bool force)
 
     if (lifetime->start == this->currentInstr->GetNumber() || lifetime->end == this->currentInstr->GetNumber())
     {
-        // No point doing second chance if the lifetime ends here, or starts here (normal allocation would 
+        // No point doing second chance if the lifetime ends here, or starts here (normal allocation would
         // have found a register if one is available).
         return RegNOREG;
     }
     if (lifetime->sym->IsConst())
     {
-        // REVIEW: Can't second-chance allocate because we might have deleted the initial def instr, after 
+        // Can't second-chance allocate because we might have deleted the initial def instr, after 
         //         having set the reg content on a forward branch...
         return RegNOREG;
     }
@@ -4389,7 +4307,7 @@ void LinearScan::SecondChanceAllocateToReg(Lifetime *lifetime, RegNum reg)
     lifetime->reg = RegNOREG;
     this->AssignActiveReg(lifetime, reg);
     this->secondChanceRegs.Set(reg);
- 
+
     lifetime->sym->scratch.linearScan.lifetime->useList.Clear();
 
 #if DBG_DUMP
@@ -4398,14 +4316,14 @@ void LinearScan::SecondChanceAllocateToReg(Lifetime *lifetime, RegNum reg)
         Output::Print(L"**** Second chance: ");
         lifetime->sym->Dump();
         Output::Print(L"\t Reg: %S  ", RegNames[reg]);
-        Output::Print(L"  SpillCount:%d  Length:%d   Cost:%d  %S\n", 
+        Output::Print(L"  SpillCount:%d  Length:%d   Cost:%d  %S\n",
             lifetime->useCount, lifetime->end - lifetime->start, this->GetSpillCost(lifetime),
             lifetime->isLiveAcrossCalls ? "LiveAcrossCalls" : "");
     }
 #endif
 }
 
-IR::Instr * 
+IR::Instr *
 LinearScan::InsertAirlock(IR::BranchInstr *branchInstr, IR::LabelInstr *labelInstr)
 {
     // Insert a new block on a flow arc:
@@ -4415,7 +4333,7 @@ LinearScan::InsertAirlock(IR::BranchInstr *branchInstr, IR::LabelInstr *labelIns
     // L1:                 L2:
     //                       <new block>
     //                     L1:
-    // An airlock is needed when we need to add code on a flow arc, and the code can't 
+    // An airlock is needed when we need to add code on a flow arc, and the code can't
     // be added directly at the source or sink of that flow arc without impacting other
     // code paths.
 
@@ -4470,7 +4388,7 @@ LinearScan::InsertAirlock(IR::BranchInstr *branchInstr, IR::LabelInstr *labelIns
     return labelInstr;
 }
 
-void 
+void
 LinearScan::SaveRegContent(IR::Instr *instr)
 {
     bool isLabelLoopTop = false;
@@ -4570,8 +4488,8 @@ IR::Instr * LinearScan::TryHoistLoad(IR::Instr *instr, Lifetime *lifetime)
         return insertInstr;
     }
 
-    // Register usused, and lifetime unused yet.
-    if (this->IsInLoop() && !this->curLoop->regAlloc.regUseBv.Test(reg) 
+    // Register unused, and lifetime unused yet.
+    if (this->IsInLoop() && !this->curLoop->regAlloc.regUseBv.Test(reg)
         && !this->curLoop->regAlloc.defdInLoopBv->Test(lifetime->sym->m_id)
         && !this->curLoop->regAlloc.symRegUseBv->Test(lifetime->sym->m_id)
         && !this->curLoop->regAlloc.hasAirLock)
@@ -4721,10 +4639,10 @@ void LinearScan::PrintStats() const
 
     Assert(loopNest == 0);
 
-    this->func->GetJnFunction()->DumpFullFunctionName();;
+    this->func->GetJnFunction()->DumpFullFunctionName();
     Output::SkipToColumn(45);
 
-    Output::Print(L"Instrs:%5d, Lds:%4d, Strs:%4d, WLds: %4d, WStrs: %4d, WRefs: %4d\n", 
+    Output::Print(L"Instrs:%5d, Lds:%4d, Strs:%4d, WLds: %4d, WStrs: %4d, WRefs: %4d\n",
         instrCount, loadCount, storeCount, wLoadCount, wStoreCount, wLoadCount+wStoreCount);
 }
 

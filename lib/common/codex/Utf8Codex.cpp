@@ -6,17 +6,17 @@
 
 extern void CodexAssert(bool condition);
 
-namespace utf8  
+namespace utf8
 {
     const unsigned int mAlignmentMask = 0x3;
 
-    inline bool IsAligned(LPCUTF8 pch) 
-    { 
+    inline bool IsAligned(LPCUTF8 pch)
+    {
         return (reinterpret_cast<size_t>(pch) & mAlignmentMask) == 0;
     }
 
-    inline bool IsAligned(LPCOLESTR pch) 
-    { 
+    inline bool IsAligned(LPCOLESTR pch)
+    {
         return (reinterpret_cast<size_t>(pch) & mAlignmentMask) == 0;
     }
 
@@ -27,17 +27,17 @@ namespace utf8
 
     inline size_t EncodedBytes(wchar_t prefix)
     {
-         CodexAssert(0 == (prefix & 0xFF00)); // prefix must really be a byte. We use wchar_t for as a convience for the API.
+         CodexAssert(0 == (prefix & 0xFF00)); // prefix must really be a byte. We use wchar_t for as a convenience for the API.
 
         // The number of bytes in an UTF8 encoding is determined by the 4 high-order bits of the first byte.
         // 0xxx -> 1
         // 10xx -> 1 (invalid)
-        // 110x -> 2 
+        // 110x -> 2
         // 1110 -> 3
         // 1111 -> 4
 
-        // If this value is XOR with 0xF0 and shift 3 bits to the right it can be used as an 
-        // index into a 16 element 2 bit array encoded as a uint32 of n - 1 where n is the number 
+        // If this value is XOR with 0xF0 and shift 3 bits to the right it can be used as an
+        // index into a 16 element 2 bit array encoded as a uint32 of n - 1 where n is the number
         // of bits in the encoding.
 
         // The XOR prefix bits mapped to n - 1.
@@ -111,7 +111,7 @@ namespace utf8
 
         case 2:
             // Look for an overlong utf-8 sequence.
-            if (ptr >= end) 
+            if (ptr >= end)
             {
                 if ((options & doChunkedEncoding) != 0)
                     // The is a sequence that spans a chunk, push ptr back to the beginning of the sequence.
@@ -174,7 +174,7 @@ namespace utf8
                     (InRange(c1, 0xEE, 0xEF)
                     && InRange(c2, 0x80, 0xBF)
                     && InRange(c3, 0x80, 0xBF))
-                    || 
+                    ||
                     (((options & doAllowThreeByteSurrogates) != 0)
                     &&
                     c1 == 0xED
@@ -221,7 +221,7 @@ LFourByte:
             // U+10000..U+3FFFF   |    F0             90..BF   80..BF   80..BF
             // U+40000..U+FFFFF   |    F1..F3         80..BF   80..BF   80..BF
             // U+100000..U+10FFFF |    F4             80..8F   80..BF   80..BF
-            if (! // NOT Unicode wellformed byte sequences
+            if (! // NOT Unicode well-formed byte sequences
                     (
                     // any following be true
                         (c1 == 0xF0
@@ -258,12 +258,12 @@ LFourByte:
                 ch |= WCHAR(c3 & 0x30) >> 4;     // ch == 0000 00ww wwzz zzyy
                 // Encode first word of utf-16 surrogate pair
                 ch += 0xD800;
-                // Remember next call must return secord word
+                // Remember next call must return second word
                 options = (DecodeOptions)(options | doSecondSurrogatePair);
                 // Leave ptr on byte 1, this way:
                 //  - callers who test that ptr has been advanced by utf8::Decode will see progress for
                 //    both words of the surrogate pair.
-                //  - callers who calculate the number of multi-unit chars by substracting after from before ptr
+                //  - callers who calculate the number of multi-unit chars by subtracting after from before ptr
                 //    will accumulate 0 for first word and 2 for second, thus utf8 chars equals 2 utf16 chars + 2
                 //    multi-unit chars, as it should be.
             }
@@ -276,7 +276,7 @@ LFourByte:
                 ch += 0xDC00;
                 // We're done with this char
                 options = (DecodeOptions)(options & ~doSecondSurrogatePair);
-                ptr += 3; // remember, got here by substracting one from ptr in case 1, so effective increment is 2
+                ptr += 3; // remember, got here by subtracting one from ptr in case 1, so effective increment is 2
             }
             break;
         }
@@ -304,7 +304,7 @@ LFourByte:
             *ptr++ = static_cast<utf8char_t>((ch >> 6) & 0x3F) | 0x80;
             *ptr++ = static_cast<utf8char_t>(ch & 0x3F) | 0x80;
         }
-    
+
         return ptr;
     }
 
@@ -326,7 +326,7 @@ LFourByte:
             // It is not a valid encoding, just go back one character.
             return ptr - 1;
         }
-        else 
+        else
             return ptr;
     }
 
@@ -335,7 +335,7 @@ LFourByte:
         DecodeOptions localOptions = options;
 
         if (!ShouldFastPath(ptr, buffer)) goto LSlowPath;
-        
+
 LFastPath:
         while (cch >= 4)
         {
@@ -381,7 +381,7 @@ LFastPath:
             p += 4;
             dest += 4;
         }
-        
+
 LSlowPath:
         while (p < pbEnd)
         {
@@ -431,7 +431,7 @@ LSlowPath:
         LPUTF8 dest = buffer;
 
         if (!ShouldFastPath(dest, source)) goto LSlowPath;
-        
+
 LFastPath:
         while (cch >= 4)
         {
@@ -463,7 +463,7 @@ LSlowPath:
         return result;
     }
 
-    
+
 
     // Convert the character index into a byte index.
     size_t CharacterIndexToByteIndex(__in_ecount(cbLength) LPCUTF8 pch, size_t cbLength, charcount_t cchIndex, DecodeOptions options)
@@ -479,7 +479,7 @@ LSlowPath:
         LPCUTF8 pchEndMinus4 = pch + (cbLength - 4);
         charcount_t i = cchIndex - cchStartIndex;
 
-        // Avoid using a reinterpret_cast to start a misalligned read.
+        // Avoid using a reinterpret_cast to start a misaligned read.
         if (!IsAligned(pchCurrent)) goto LSlowPath;
 LFastPath:
         // Skip 4 bytes at a time.
@@ -497,7 +497,7 @@ LFastPath:
 LSlowPath:
         while (pchCurrent < pchEnd && i > 0)
         {
-            Decode(pchCurrent, pchEnd, localOptions); 
+            Decode(pchCurrent, pchEnd, localOptions);
             i--;
 
             // Try to return to the fast path avoiding misaligned reads.
@@ -515,7 +515,7 @@ LSlowPath:
         LPCUTF8 pchEndMinus4 = pch + (cbIndex - 4);
         charcount_t i = 0;
 
-        // Avoid using a reinterpret_cast to start a misalligned read.
+        // Avoid using a reinterpret_cast to start a misaligned read.
         if (!IsAligned(pchCurrent)) goto LSlowPath;
 
 LFastPath:
@@ -535,7 +535,7 @@ LSlowPath:
         while (pchCurrent < pchEnd)
         {
             LPCUTF8 s = pchCurrent;
-            Decode(pchCurrent, pchEnd, localOptions); 
+            Decode(pchCurrent, pchEnd, localOptions);
             if (s == pchCurrent) break;
             i++;
 

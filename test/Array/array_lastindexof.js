@@ -10,8 +10,8 @@ for(i=-3; i < 15;i++)
    WScript.Echo(x.lastIndexOf(i));
    for(j=-3; j< 15;j++)
    {
-	WScript.Echo(x.lastIndexOf(x[i],j)); 
-	WScript.Echo(x.lastIndexOf(i,j)); 
+	WScript.Echo(x.lastIndexOf(x[i],j));
+	WScript.Echo(x.lastIndexOf(i,j));
    }
 }
 

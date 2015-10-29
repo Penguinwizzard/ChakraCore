@@ -4,7 +4,7 @@
 //-------------------------------------------------------------------------------------------------------
 #include "CommonMemoryPch.h"
 
-#ifdef PARTIAL_GC_ENABLED   
+#ifdef PARTIAL_GC_ENABLED
 #define KILOBYTES * 1024
 #define MEGABYTES * 1024 KILOBYTES
 #define MEGABYTES_OF_PAGES * 1024 * 1024 / AutoSystemInfo::PageSize;
@@ -47,8 +47,8 @@ RecyclerSweep::BeginSweep(Recycler * recycler, size_t rescanRootBytes, bool adju
     recycler->recyclerSweep = this;
 
     // We might still have block that has disposed but not put back into the allocable
-    // heap block list yet, which happens if we finsih disposing object during concurrent 
-    // reset mark and can't 
+    // heap block list yet, which happens if we finish disposing object during concurrent
+    // reset mark and can't
     // modify the heap block lists
 
     // CONCURRENT-TODO: Consider doing it during FinishDisposeObjects to get these block
@@ -57,7 +57,7 @@ RecyclerSweep::BeginSweep(Recycler * recycler, size_t rescanRootBytes, bool adju
     this->FlushPendingTransferDisposedObjects();
 
 #ifdef CONCURRENT_GC_ENABLED
-    // Take the small heap block new heap block list and store in in RecyclerSweep temporary
+    // Take the small heap block new heap block list and store in RecyclerSweep temporary
     // We get merge later before we start sweeping the bucket.
 
     leafData.pendingMergeNewHeapBlockList = recycler->autoHeap.newLeafHeapBlockList;
@@ -116,7 +116,7 @@ RecyclerSweep::BeginSweep(Recycler * recycler, size_t rescanRootBytes, bool adju
         DebugOnly(this->partial = true);
 
         // REVIEW: is adjustPartialHeuristicsMode  the same as in PartialCollectMode?
-        this->adjustPartialHeuristics = adjustPartialHeuristics;        
+        this->adjustPartialHeuristics = adjustPartialHeuristics;
         this->StartPartialCollectMode();
     }
     else
@@ -161,7 +161,7 @@ RecyclerSweep::FinishSweep()
         if (this->AdjustPartialHeuristics())
         {
             GCETW(GC_SWEEP_PARTIAL_REUSE_PAGE_START, (recycler));
-            
+
             // If we are doing a full concurrent GC, all allocated bytes are consider "collected".
             // We only start accumulating uncollected allocate bytes during partial GC.
             // FinishPartialCollect will reset it to 0 if we are not doing a partial GC
@@ -174,8 +174,8 @@ RecyclerSweep::FinishSweep()
                 Output::Print(L"  partialUncollectedAllocBytes = %d\n", recycler->partialUncollectedAllocBytes);
                 Output::Print(L"  nextPartialUncollectedAllocBytes = %d\n", this->nextPartialUncollectedAllocBytes);
             }
-#endif            
-            
+#endif
+
             recycler->autoHeap.SweepPartialReusePages(*this);
 
             GCETW(GC_SWEEP_PARTIAL_REUSE_PAGE_STOP, (recycler));
@@ -194,7 +194,7 @@ RecyclerSweep::FinishSweep()
                 RECYCLER_PROFILE_EXEC_END(recycler, Js::ResetWriteWatchPhase);
             }
         }
-        else 
+        else
         {
 #ifdef RECYCLER_TRACE
             if (recycler->GetRecyclerFlagsTable().Trace.IsEnabled(Js::PartialCollectPhase))
@@ -243,12 +243,12 @@ RecyclerSweep::EndSweep()
             Output::Print(L"  nextPartialUncollectedAllocBytes = %d\n", this->nextPartialUncollectedAllocBytes);
         }
 #endif
-    }   
+    }
 #endif
 
     recycler->recyclerSweep = nullptr;
 
-    // Clean up the HeapBlockMap.  
+    // Clean up the HeapBlockMap.
     // This will release any internal structures that are no longer needed after Sweep.
     recycler->heapBlockMap.Cleanup(!recycler->IsMemProtectMode());
 }
@@ -257,7 +257,7 @@ void
 RecyclerSweep::BackgroundSweep()
 {
     this->BeginBackground(forceForeground);
- 
+
     if (GetRecycler()->IsPageHeapEnabled())
     {
         // Finish the concurrent part of the first pass
@@ -319,7 +319,7 @@ RecyclerSweep::ShutdownCleanup()
     for (uint i = 0; i < HeapConstants::BucketCount; i++)
     {
         // For leaf, we can always reuse the page as we don't need to rescan them for partial GC
-        // It should have been swept immeditately during Sweep
+        // It should have been swept immediately during Sweep
         Assert(this->leafData.bucketData[i].pendingSweepList == nullptr);
         SmallNormalHeapBucket::DeleteHeapBlockList(this->normalData.bucketData[i].pendingSweepList, recycler);
         SmallFinalizableHeapBucket::DeleteHeapBlockList(this->finalizableData.bucketData[i].pendingSweepList, recycler);
@@ -346,7 +346,7 @@ RecyclerSweep::ShutdownCleanup()
     for (uint i = 0; i < HeapConstants::MediumBucketCount; i++)
     {
         // For leaf, we can always reuse the page as we don't need to rescan them for partial GC
-        // It should have been swept immeditately during Sweep
+        // It should have been swept immediately during Sweep
         Assert(this->mediumLeafData.bucketData[i].pendingSweepList == nullptr);
         MediumNormalHeapBucket::DeleteHeapBlockList(this->mediumNormalData.bucketData[i].pendingSweepList, recycler);
         MediumFinalizableHeapBucket::DeleteHeapBlockList(this->mediumFinalizableData.bucketData[i].pendingSweepList, recycler);
@@ -366,7 +366,7 @@ RecyclerSweep::ShutdownCleanup()
 
 #ifdef CONCURRENT_GC_ENABLED
 template <typename TBlockType>
-void 
+void
 RecyclerSweep::MergePendingNewHeapBlockList()
 {
     TBlockType *& blockList = this->GetData<TBlockType>().pendingMergeNewHeapBlockList;
@@ -416,7 +416,7 @@ RecyclerSweep::HasPendingEmptyBlocks() const
     return this->hasPendingEmptyBlocks;
 }
 
-bool 
+bool
 RecyclerSweep::HasPendingSweepSmallHeapBlocks() const
 {
     return this->hasPendingSweepSmallHeapBlocks;
@@ -440,11 +440,11 @@ void
 RecyclerSweep::EndBackground()
 {
     Assert(this->background || this->forceForeground);
-    this->background = false;    
+    this->background = false;
 }
 
 #if DBG
-bool 
+bool
 RecyclerSweep::HasPendingNewHeapBlocks() const
 {
     return leafData.pendingMergeNewHeapBlockList != nullptr
@@ -490,13 +490,13 @@ RecyclerSweep::SetPendingMergeNewHeapBlockCount()
 #endif
 
 #ifdef PARTIAL_GC_ENABLED
-bool 
+bool
 RecyclerSweep::InPartialCollectMode() const
 {
     return recycler->inPartialCollectMode;
 }
 
-bool 
+bool
 RecyclerSweep::InPartialCollect() const
 {
     return this->inPartialCollect;
@@ -508,11 +508,11 @@ RecyclerSweep::StartPartialCollectMode()
     // Save the in partial collect, the main thread reset it after returning to the script
     // and the background thread still needs it
     this->inPartialCollect = recycler->inPartialCollectMode;
-    recycler->inPartialCollectMode = true;   
+    recycler->inPartialCollectMode = true;
 
     // Tracks the unallocated alloc bytes for partial GC
 
-    // Keep a copy Last collection's uncollected alloction bytes, so we can use it to calculate 
+    // Keep a copy Last collection's uncollected allocation bytes, so we can use it to calculate
     // the new object that is allocated since the last GC
     Assert(recycler->partialUncollectedAllocBytes == 0 || this->inPartialCollect);
     this->lastPartialUncollectedAllocBytes = recycler->partialUncollectedAllocBytes;
@@ -524,11 +524,11 @@ RecyclerSweep::StartPartialCollectMode()
     {
         // If we did a full collect, then we need to include lastUncollectedAllocBytes
         // in the partialUncollectedAllocBytes calculation, because all objects allocated
-        // since the previous GC are considered new, but we cleared uncollectedAllocBytes 
+        // since the previous GC are considered new, but we cleared uncollectedAllocBytes
         // when we kicked off the GC.
         currentUncollectedAllocBytes += recycler->autoHeap.lastUncollectedAllocBytes;
     }
-    
+
     // Initially, the partial uncollected alloc bytes is the current uncollectedAllocBytes
     recycler->partialUncollectedAllocBytes = currentUncollectedAllocBytes;
     this->nextPartialUncollectedAllocBytes = currentUncollectedAllocBytes;
@@ -561,7 +561,7 @@ RecyclerSweep::AddUnaccountedNewObjectAllocBytes(SmallHeapBlockT<TBlockAttribute
         this->nextPartialUncollectedAllocBytes += unaccountedAllocBytes;
     }
     else
-#endif    
+#endif
     {
         // We don't care, clear the unaccounted to start tracking for new object for next GC
         heapBlock->ClearAllAllocBytes();
@@ -663,7 +663,7 @@ RecyclerSweep::AdjustPartialHeuristics()
     const size_t newRescanRootBytes = max(this->rescanRootBytes, estimatedPartialReuseBytes);
 
     RECYCLER_STATS_SET(recycler, estimatedPartialReuseBytes, estimatedPartialReuseBytes);
-    
+
     // Recheck the rescanRootBytes
     if (newRescanRootBytes > MaxPartialCollectRescanRootBytes)
     {
@@ -674,7 +674,7 @@ RecyclerSweep::AdjustPartialHeuristics()
 
     RECYCLER_STATS_SET(recycler, collectCost, collectCost);
 
-    // Include the efficacy in equal portion, which is related to the cost of marking thru new objects.
+    // Include the efficacy in equal portion, which is related to the cost of marking through new objects.
     // r = c * e + 1 - e;
     const double reuseRatio = 1.0 - collectEfficacy;
     double ratio = collectCost * collectEfficacy + reuseRatio;
@@ -687,7 +687,7 @@ RecyclerSweep::AdjustPartialHeuristics()
             return false;
         }
 
-        // Only add full collect pressure if we are are doing partial collect,
+        // Only add full collect pressure if we are doing partial collect,
         // account for the amount of uncollected bytes and unused bytes to increase
         // pressure to do a full GC by rising the partial GC new page heuristic
 
@@ -707,7 +707,7 @@ RecyclerSweep::AdjustPartialHeuristics()
     Assert(recycler->uncollectedNewPageCountPartialCollect >= MinPartialUncollectedNewPageCount &&
         recycler->uncollectedNewPageCountPartialCollect <= RecyclerHeuristic::Instance.MaxPartialUncollectedNewPageCount);
 
-    // If the the number of new page to reach the partial heuristics plus the existing uncollectedAllocBytes
+    // If the number of new page to reach the partial heuristics plus the existing uncollectedAllocBytes
     // and the memory we are going to reuse (assume we use it all) is greater then the full GC max size heuristic
     // (with 1M fudge factor), we trigger a full GC anyways, so let's not get into partial GC
     const size_t estimatedPartialReusedFreeByteCount = (size_t)((double)this->reuseByteCount * reuseRatio);
@@ -717,7 +717,7 @@ RecyclerSweep::AdjustPartialHeuristics()
          return false;
     }
 
-    recycler->partialConcurrentNextCollection = RecyclerHeuristic::PartialConcurrentNextCollection(ratio, recycler->GetRecyclerFlagsTable());        
+    recycler->partialConcurrentNextCollection = RecyclerHeuristic::PartialConcurrentNextCollection(ratio, recycler->GetRecyclerFlagsTable());
     return true;
 }
 

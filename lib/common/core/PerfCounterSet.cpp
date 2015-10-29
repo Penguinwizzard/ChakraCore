@@ -25,17 +25,17 @@ namespace PerfCounter
 //===================================================================================
 // PageAllocatorCounterSet
 //===================================================================================
-Counter& 
+Counter&
 PageAllocatorCounterSet::GetTotalReservedSizeCounter()
 {
     return instance.GetCounter(PageAllocatorCounterSetDefinition::GetReservedCounterId(PageAllocatorType_Max));
 }
-Counter& 
+Counter&
 PageAllocatorCounterSet::GetTotalCommittedSizeCounter()
 {
     return instance.GetCounter(PageAllocatorCounterSetDefinition::GetCommittedCounterId(PageAllocatorType_Max));
 }
-Counter& 
+Counter&
 PageAllocatorCounterSet::GetTotalUsedSizeCounter()
 {
     return instance.GetCounter(PageAllocatorCounterSetDefinition::GetUsedCounterId(PageAllocatorType_Max));
@@ -59,9 +59,9 @@ type_info const * RecyclerTrackerCounterSet::ArraySizeIndexTypeInfoMap[RecyclerT
 type_info const * RecyclerTrackerCounterSet::WeakRefIndexTypeInfoMap[RecyclerTrackerCounterSetDefinition::MaxCounter - RecyclerTrackerCounterSet::NumUnknownCounters];
 
 RecyclerTrackerCounterSet::Map::Map(type_info const * type, bool isArray,uint counterIndex, uint sizeCounterIndex)
-{ 
-    Assert(counterIndex >= NumUnknownCounters && counterIndex < RecyclerTrackerCounterSetDefinition::MaxCounter); 
-    Assert(sizeCounterIndex >= NumUnknownCounters && sizeCounterIndex < RecyclerTrackerCounterSetDefinition::MaxCounter); 
+{
+    Assert(counterIndex >= NumUnknownCounters && counterIndex < RecyclerTrackerCounterSetDefinition::MaxCounter);
+    Assert(sizeCounterIndex >= NumUnknownCounters && sizeCounterIndex < RecyclerTrackerCounterSetDefinition::MaxCounter);
 
     __analysis_assume(counterIndex >= NumUnknownCounters && counterIndex < RecyclerTrackerCounterSetDefinition::MaxCounter);
     __analysis_assume(sizeCounterIndex >= NumUnknownCounters && sizeCounterIndex < RecyclerTrackerCounterSetDefinition::MaxCounter);
@@ -82,14 +82,14 @@ RecyclerTrackerCounterSet::Map::Map(type_info const * type, bool isArray,uint co
 }
 
 RecyclerTrackerCounterSet::Map::Map(type_info const * type, uint weakRefCounterIndex)
-{ 
+{
     __analysis_assume(weakRefCounterIndex >= NumUnknownCounters && weakRefCounterIndex < RecyclerTrackerCounterSetDefinition::MaxCounter);
-    Assert(weakRefCounterIndex >= NumUnknownCounters && weakRefCounterIndex < RecyclerTrackerCounterSetDefinition::MaxCounter); 
+    Assert(weakRefCounterIndex >= NumUnknownCounters && weakRefCounterIndex < RecyclerTrackerCounterSetDefinition::MaxCounter);
     Assert(WeakRefIndexTypeInfoMap[weakRefCounterIndex - NumUnknownCounters] == nullptr);
     WeakRefIndexTypeInfoMap[weakRefCounterIndex - NumUnknownCounters] = type;
 }
 
-Counter& 
+Counter&
 RecyclerTrackerCounterSet::GetPerfCounter(type_info const * typeinfo, bool isArray)
 {
     Counter& unknownCounter = isArray? GetUnknownArrayCounter() : GetUnknownCounter();
@@ -105,7 +105,7 @@ RecyclerTrackerCounterSet::GetPerfCounter(type_info const * typeinfo, bool isArr
     return unknownCounter;
 }
 
-Counter& 
+Counter&
 RecyclerTrackerCounterSet::GetPerfSizeCounter(type_info const * typeinfo, bool isArray)
 {
     Counter& unknownCounter = isArray? GetUnknownArraySizeCounter() : GetUnknownSizeCounter();
@@ -121,7 +121,7 @@ RecyclerTrackerCounterSet::GetPerfSizeCounter(type_info const * typeinfo, bool i
     return unknownCounter;
 }
 
-Counter& 
+Counter&
 RecyclerTrackerCounterSet::GetWeakRefPerfCounter(type_info const * typeinfo)
 {
     Counter& unknownCounter = GetUnknownWeakRefCounter();

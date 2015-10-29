@@ -68,11 +68,9 @@ namespace Js
         ByteCodeReader m_reader;        // Reader for current function
         int m_inSlotsCount;             // Count of actual incoming parameters to this function
         Js::CallFlags m_callFlags;      // CallFlags passed to the current function
-        Var* m_inParams;                // Range of 'in' parameters        
-        Var* m_outParams;               // Range of 'out' parameters (offset in m_localSlots)
-        Var* m_outIntParams;            // Range of 'out' parameters (offset in m_localSlots)
-        Var* m_outSp;                   // Stack pointer for next outparam
-        Var* m_outIntSp;                // Stack pointer for next outparam
+        Var* m_inParams;                // Range of 'in' parameters
+        Var* m_outParams;               // Range of 'out' parameters (offset in m_localSlots)        
+        Var* m_outSp;                   // Stack pointer for next outparam        
         Var  m_arguments;               // Dedicated location for this frame's arguments object
         StackScriptFunction * stackNestedFunctions;
         FrameDisplay * localFrameDisplay;
@@ -95,7 +93,7 @@ namespace Js
 
         uint inlineCacheCount;
         uint currentLoopNum;
-        uint currentLoopCounter;       // This keeps tracks of loopiteration, how many times the current loop is executed. Its hit only in cases where jitloopbodies are not hit
+        uint currentLoopCounter;       // This keeps tracks of how many times the current loop is executed. It's hit only in cases where jitloopbodies are not hit
                                        // such as loops inside try\catch.
 
         UINT16 m_flags;                // based on InterpreterStackFrameFlags
@@ -121,10 +119,8 @@ namespace Js
         float* m_localFloatSlots;
 
          _SIMDValue* m_localSimdSlots;
-        
-        EHBailoutData * ehBailoutData;
 
-        //////////////////////////////////////////////////////////////////////////
+        EHBailoutData * ehBailoutData;
 
         // 16-byte aligned
         __declspec(align(16)) Var m_localSlots[0];           // Range of locals and temporaries
@@ -205,10 +201,10 @@ namespace Js
         bool IsCurrentLoopNativeAddr(void * codeAddr) const;
         void * GetReturnAddress() { return returnAddress; }
 
-        static size_t GetOffsetOfLocals() { return offsetof(InterpreterStackFrame, m_localSlots); }
-        static size_t GetOffsetOfArguments() { return offsetof(InterpreterStackFrame, m_arguments); }
-        static size_t GetOffsetOfInParams() { return offsetof(InterpreterStackFrame, m_inParams); }
-        static size_t GetOffsetOfInSlotsCount() { return offsetof(InterpreterStackFrame, m_inSlotsCount); }
+        static uint32 GetOffsetOfLocals() { return offsetof(InterpreterStackFrame, m_localSlots); }
+        static uint32 GetOffsetOfArguments() { return offsetof(InterpreterStackFrame, m_arguments); }
+        static uint32 GetOffsetOfInParams() { return offsetof(InterpreterStackFrame, m_inParams); }
+        static uint32 GetOffsetOfInSlotsCount() { return offsetof(InterpreterStackFrame, m_inSlotsCount); }
         void PrintStack(const int* const intSrc, const float* const fltSrc, const double* const dblSrc, int intConstCount, int floatConstCount, int doubleConstCount, const wchar_t* state);
 
         static uint32 GetStartLocationOffset() { return offsetof(InterpreterStackFrame, m_reader) + ByteCodeReader::GetStartLocationOffset(); }
@@ -224,8 +220,8 @@ namespace Js
         }
 
         DWORD_PTR GetStackAddress() const;
-        void* GetAddressOfReturnAddress() const;   
-        
+        void* GetAddressOfReturnAddress() const;
+
 #if _M_IX86
         static int GetRetType(JavascriptFunction* func);
         static int GetAsmJsArgSize(AsmJsCallStackLayout * stack);
@@ -251,10 +247,10 @@ namespace Js
 
 #if DYNAMIC_INTERPRETER_THUNK
         static Var DelayDynamicInterpreterThunk(RecyclableObject* function, CallInfo callInfo, ...);
-        __declspec(noinline) static Var InterpreterThunk(JavascriptCallStackLayout* layout);  
+        __declspec(noinline) static Var InterpreterThunk(JavascriptCallStackLayout* layout);
         static Var InterpreterHelper(ScriptFunction* function, ArgumentReader args, void* returnAddress, void* addressOfReturnAddress, const bool isAsmJs = false);
 #else
-        __declspec(noinline) static Var InterpreterThunk(RecyclableObject* function, CallInfo callInfo, ...);     
+        __declspec(noinline) static Var InterpreterThunk(RecyclableObject* function, CallInfo callInfo, ...);
         static Var InterpreterHelper(RecyclableObject* function, ArgumentReader args, CallFlags callFlags, void* returnAddress, void* addressOfReturnAddress, const bool isAsmJs = false);
 #endif
     private:
@@ -265,7 +261,7 @@ namespace Js
         T ReadByteOp( const byte *& ip
 #if DBG_DUMP
                            , bool isExtended = false
-#endif 
+#endif
                            );
 
         void* __cdecl operator new(size_t byteSize, void* previousAllocation) throw();
@@ -309,7 +305,7 @@ namespace Js
         RecyclableObject * OP_CallGetFunc(Var target);
 
         template <class T> const byte * OP_Br(const unaligned T * playout);
-        void OP_AsmStartCall(const unaligned OpLayoutStartCall * playout);        
+        void OP_AsmStartCall(const unaligned OpLayoutStartCall * playout);
         void OP_StartCall( const unaligned OpLayoutStartCall * playout );
         void OP_StartCall(uint outParamCount);
         template <class T> void OP_CallCommon(const unaligned T *playout, RecyclableObject * aFunc, unsigned flags, const Js::AuxArray<uint32> *spreadIndices = nullptr);
@@ -374,7 +370,7 @@ namespace Js
 
         template <class T> void UpdateFldInfoFlagsForCallApplyInlineCandidate(unaligned T* playout, FldInfoFlags& fldInfoFlags, CacheType cacheType,
                                                 DynamicProfileInfo * dynamicProfileInfo, uint inlineCacheIndex, RecyclableObject * obj);
-        
+
         template <class T> void OP_SetProperty(unaligned T* playout);
         template <class T> void OP_SetSuperProperty(unaligned T* playout);
         template <class T> void OP_ProfiledSetProperty(unaligned T* playout);

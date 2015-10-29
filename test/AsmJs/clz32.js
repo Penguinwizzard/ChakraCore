@@ -6,13 +6,13 @@
 function AsmModule(glob, imp, b) {
     "use asm"
     var clz = glob.Math.clz32;
-    
+
     function f1(a)
     {
         a = a|0;
         return clz(a|0)|0;
     }
-    
+
     function f2()
     {
         return clz(0)|0;

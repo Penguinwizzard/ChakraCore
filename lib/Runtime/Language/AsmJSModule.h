@@ -23,7 +23,7 @@ namespace Js {
     // and call js::Invoke. However, we'd like to be able to specialize FFI calls
     // to be more efficient in several cases:
     //
-    //  - for calls to JS functions which have been jitted, we'd like to call
+    //  - for calls to JS functions which have been JITed, we'd like to call
     //    directly into JIT code without going through C++.
     //
     //  - for calls to certain builtins, we'd like to be call directly into the C++
@@ -58,7 +58,7 @@ namespace Js {
     // (which holds the exit pairing) and the value is an index into the
     // Vector<Exit> stored in the AsmJSModule.
     //
-    // Rooting note: ModuleCompiler is a stack class that contains unrooted
+    // Rooting note: ModuleCompiler is a stack class that contains un-rooted
     // PropertyName (JSAtom) pointers.  This is safe because it cannot be
     // constructed without a TokenStream reference.  TokenStream is itself a stack
     // class that cannot be constructed without an AutoKeepAtoms being live on the
@@ -104,7 +104,7 @@ namespace Js {
         static const RegSlot ArrayBufferRegister = 2;
         static const RegSlot ArraySizeRegister = 3;
         static const RegSlot ScriptContextBufferRegister = 4;
-        //Var Return register and Module Environnement and Array Buffer
+        //Var Return register and Module Environment and Array Buffer
         static const int32 RequiredVarConstants = 5;
     };
     namespace AsmJsCompilation
@@ -145,7 +145,7 @@ namespace Js {
         inline bool LookupStdLibSIMDNameInMap   (PropertyName name, AsmJsSIMDFunction **simdFunc, SIMDNameMap* map) const;
         bool AddStandardLibrarySIMDNameInMap    (PropertyId id, AsmJsSIMDFunction* simdFunc, SIMDNameMap* map);
 
-        // Keep allocator first to free Dictionnary before deleting the allocator
+        // Keep allocator first to free Dictionary before deleting the allocator
         ArenaAllocator                  mAllocator;
         ExclusiveContext *              mCx;
         AsmJSParser &                   mCurrentParserNode;
@@ -162,11 +162,11 @@ namespace Js {
         ModuleImportFunctions           mImportFunctions;
 
         // Maps functions names to func symbols. Three maps since names are not unique across SIMD types (e.g. SIMD.{float32x4|int32x4}.add)
-        // Also used to find if an operation is supported on a SIMD type. 
+        // Also used to find if an operation is supported on a SIMD type.
         SIMDNameMap                         mStdLibSIMDInt32x4Map;
         SIMDNameMap                         mStdLibSIMDFloat32x4Map;
         SIMDNameMap                         mStdLibSIMDFloat64x2Map;
-        // global simd values space. 
+        // global SIMD values space.
         ModuleSIMDVars                  mSimdVarSpace;
         BVStatic<ASMSIMD_BUILTIN_SIZE>  mAsmSimdBuiltinUsedBV;
 
@@ -208,7 +208,7 @@ namespace Js {
         AsmJsSIMDFunction *LookupSimdOperation(PropertyName name);
 
         void AddSimdBuiltinUse(int index){ mAsmSimdBuiltinUsedBV.Set(index); }
-        // adds simd constant var to module 
+        // adds SIMD constant var to module
         bool AddSimdValueVar(PropertyName name, ParseNode* pnode, AsmJsSIMDFunction* simdFunc);
 
         AsmJsCompileTime GetTick();
@@ -310,7 +310,6 @@ namespace Js {
         bool IsSimdjsEnabled() { return GetScriptContext()->GetConfig()->IsSimdjsEnabled(); }
     };
 
-
     struct AsmJsSlot
     {
         RegSlot location;
@@ -331,11 +330,12 @@ namespace Js {
 
     class AsmJsModuleInfo
     {
+    public:
         /// proxy of asmjs module
         struct ModuleVar
         {
             RegSlot location;
-            AsmJsVarType type;
+            AsmJsVarType::Which type;
             union
             {
                 int intInit;
@@ -348,7 +348,7 @@ namespace Js {
         struct ModuleVarImport
         {
             RegSlot location;
-            AsmJsVarType type;
+            AsmJsVarType::Which type;
             PropertyId field;
         };
         struct ModuleFunctionImport
@@ -373,6 +373,7 @@ namespace Js {
 
         typedef JsUtil::BaseDictionary<PropertyId, AsmJsSlot*, Memory::Recycler> AsmJsSlotMap;
 
+    private:
         Recycler* mRecycler;
         int mArgInCount; // for runtime validation of arguments in
         int mVarCount, mVarImportCount, mFunctionImportCount, mFunctionCount, mFunctionTableCount, mExportsCount, mSlotsCount;
@@ -423,25 +424,54 @@ namespace Js {
             Assert( i < mVarCount );
             return mVars[i];
         }
+
+        void SetVar(int i, ModuleVar var)
+        {
+            Assert(i < mVarCount);
+            mVars[i] = var;
+        }
+
         ModuleVarImport& GetVarImport( int i )
         {
             Assert( i < mVarImportCount );
             return mVarImports[i];
         }
+
+        void SetVarImport(int i, ModuleVarImport var)
+        {
+            Assert(i < mVarImportCount);
+            mVarImports[i] = var;
+        }
+
         ModuleFunctionImport& GetFunctionImport( int i )
         {
             Assert( i < mFunctionImportCount );
             return mFunctionImports[i];
+        }
+        void SetFunctionImport(int i, ModuleFunctionImport var)
+        {
+            Assert(i < mFunctionImportCount);
+            mFunctionImports[i] = var;
         }
         ModuleFunction& GetFunction( int i )
         {
             Assert( i < mFunctionCount );
             return mFunctions[i];
         }
+        void SetFunction(int i, ModuleFunction var)
+        {
+            Assert(i < mFunctionCount);
+            mFunctions[i] = var;
+        }
         ModuleFunctionTable& GetFunctionTable( int i )
         {
             Assert( i < mFunctionTableCount );
             return mFunctionTables[i];
+        }
+        void SetFunctionTable(int i, ModuleFunctionTable var)
+        {
+            Assert(i < mFunctionTableCount);
+            mFunctionTables[i] = var;
         }
         void SetFunctionTableSize( int index, uint size );
         ModuleExport GetExport( int i )
@@ -450,6 +480,10 @@ namespace Js {
             ex.id = &mExports->elements[i];
             ex.location = &mExportsFunctionLocation[i];
             return ex;
+        }
+        RegSlot* GetExportsFunctionLocation() const
+        {
+            return mExportsFunctionLocation;
         }
         PropertyIdArray* GetExportsIdArray() const
         {
@@ -517,7 +551,7 @@ namespace Js {
         {
             mIsProcessed = val;
         }
-        inline const AsmJsModuleMemory& GetModuleMemory() const
+        inline AsmJsModuleMemory& GetModuleMemory()
         {
             return mModuleMemory;
         }
@@ -529,7 +563,7 @@ namespace Js {
         {
             mAsmMathBuiltinUsed = val;
         }
-        inline BVStatic<ASMMATH_BUILTIN_SIZE> const GetAsmMathBuiltinUsed()const
+        inline BVStatic<ASMMATH_BUILTIN_SIZE> GetAsmMathBuiltinUsed()const
         {
             return mAsmMathBuiltinUsed;
         }
@@ -537,7 +571,7 @@ namespace Js {
         {
             mAsmArrayBuiltinUsed = val;
         }
-        inline BVStatic<ASMARRAY_BUILTIN_SIZE> const GetAsmArrayBuiltinUsed()const
+        inline BVStatic<ASMARRAY_BUILTIN_SIZE> GetAsmArrayBuiltinUsed()const
         {
             return mAsmArrayBuiltinUsed;
         }
@@ -564,7 +598,7 @@ namespace Js {
         {
             mAsmSimdBuiltinUsed = val;
         }
-        inline BVStatic<ASMSIMD_BUILTIN_SIZE> const GetAsmSimdBuiltinUsed()const
+        inline BVStatic<ASMSIMD_BUILTIN_SIZE> GetAsmSimdBuiltinUsed()const
         {
             return mAsmSimdBuiltinUsed;
         }
@@ -572,6 +606,4 @@ namespace Js {
         static void EnsureHeapAttached(ScriptFunction * func);
         static void * ConvertFrameForJavascript(void* asmJsMemory, ScriptFunction * func);
     };
-
-
 };

@@ -22,7 +22,7 @@ namespace Js
     template<> int AsmJsEncoder::GetOffset<float>() const{ return mFloatOffset; }
     template<> int AsmJsEncoder::GetOffset<AsmJsSIMDValue>() const{ return mSimdOffset; }
 
-    template<> 
+    template<>
     void AsmJsEncoder::ReadOpTemplate<Js::SmallLayout>( OpCodeAsmJs op )
     {
         switch( op )
@@ -50,7 +50,7 @@ namespace Js
         };
     }
 
-    template<> 
+    template<>
     void AsmJsEncoder::ReadOpTemplate<Js::MediumLayout>( OpCodeAsmJs op )
     {
         switch( op )
@@ -74,7 +74,7 @@ namespace Js
         };
     }
 
-    template<> 
+    template<>
     void AsmJsEncoder::ReadOpTemplate<Js::LargeLayout>( OpCodeAsmJs op )
     {
         switch( op )
@@ -107,18 +107,18 @@ namespace Js
         OpCodeAsmJs op = (OpCodeAsmJs)mReader.ReadOp(layoutSize);
         ip = mReader.GetIP();
 #if DBG_DUMP
-        if (PHASE_TRACE(Js::AsmjsEncoderPhase, mFunctionBody)) 
-        { 
-            Output::Print(L"%d.%d:Encoding ", 
-                           this->mFunctionBody->GetSourceContextId(), 
-                           this->mFunctionBody->GetLocalFunctionId()); 
+        if (PHASE_TRACE(Js::AsmjsEncoderPhase, mFunctionBody))
+        {
+            Output::Print(L"%d.%d:Encoding ",
+                           this->mFunctionBody->GetSourceContextId(),
+                           this->mFunctionBody->GetLocalFunctionId());
             AsmJsByteCodeDumper::DumpOp( op, layoutSize, mReader, mFunctionBody );
             if( ip != mReader.GetIP() )
             {
                 mReader.SetIP( ip );
             }
-            Output::Print(L"  at offset 0x%X (buffer size = 0x%X)\n", 
-                           bytecodeoffset, (int)(mPc-mEncodeBuffer)); 
+            Output::Print(L"  at offset 0x%X (buffer size = 0x%X)\n",
+                           bytecodeoffset, (int)(mPc-mEncodeBuffer));
             Output::Flush();
         }
 #endif
@@ -146,7 +146,7 @@ namespace Js
     }
     uint32 AsmJsEncoder::GetEncodeBufferSize(FunctionBody* functionBody)
     {
-        // Todo:: Make a good heuristic, this is completly arbitrary. As we emit each bytecode we can calculate the max instruction size.
+        // TODO: Make a good heuristic; this is completely arbitrary. As we emit each bytecode we can calculate the max instruction size.
         return UInt32Math::Add(
             UInt32Math::Mul(functionBody->GetByteCodeCount(), 30),
             49 /*prolog*/   + 11 /*epilog*/
@@ -171,7 +171,7 @@ namespace Js
         NoRecoverMemoryArenaAllocator localAlloc(L"BE-AsmJsEncoder", GetPageAllocator(), Js::Throw::OutOfMemory);
         mLocalAlloc = &localAlloc;
 
-        mRelocLabelMap = Anew( mLocalAlloc, RelocLabelMap, mLocalAlloc );        
+        mRelocLabelMap = Anew( mLocalAlloc, RelocLabelMap, mLocalAlloc );
         mTemplateData = AsmJsJitTemplate::InitTemplateData();
         mEncodeBufferSize = GetEncodeBufferSize(functionBody);
         mEncodeBuffer = AnewArray((&localAlloc), BYTE, mEncodeBufferSize);
@@ -187,7 +187,7 @@ namespace Js
             Output::Print( L"\n StackSize = %d , Offsets: Var = %d, Int = %d, Double = %d\n", mFunctionBody->GetAsmJsFunctionInfo()->GetTotalSizeinBytes(), GetOffset<Var>(), GetOffset<int>(), GetOffset<double>() );
         }
 #endif
-        //sansun- do the setup here    
+        //sansun- do the setup here
         AsmJsRetType retType = asmInfo->GetReturnType();
         AsmJsJitTemplate::FunctionEntry::ApplyTemplate( this, mPc );
         while( ReadOp() ){}
@@ -220,12 +220,14 @@ namespace Js
             functionBody->GetScriptContext()->GetThreadContext()->SetValidCallTargetForCFG(buffer);
 
             // TODO: improve this once EntryPoint cleanup work is complete!
-            const wchar_t *const suffix = L"TJ";            
-            wchar_t functionNameArray[256];
+#if 0
             const wchar_t *const functionName = functionBody->GetDisplayName();
+            const wchar_t *const suffix = L"TJ";
+            wchar_t functionNameArray[256];
             const size_t functionNameCharLength = functionBody->GetDisplayNameLength();
             wcscpy_s(functionNameArray, 256, functionName);
             wcscpy_s(&functionNameArray[functionNameCharLength], 256 - functionNameCharLength, suffix);
+#endif
             JS_ETW(EventWriteMethodLoad(functionBody->GetScriptContext(),
                 (void *)buffer,
                 codeSize,
@@ -235,8 +237,8 @@ namespace Js
                 EtwTrace::GetSourceId(functionBody),
                 functionBody->GetLineNumber(),
                 functionBody->GetColumnNumber(),
-                functionNameArray));            
-            entryPointInfo->SetTJCodeGenDone(); // set the codegen to done state for TJ 
+                functionBody->GetDisplayName()));
+            entryPointInfo->SetTJCodeGenDone(); // set the codegen to done state for TJ
             entryPointInfo->SetCodeSize(codeSize);
             return buffer;
         }
@@ -244,7 +246,7 @@ namespace Js
     }
 
 
-    
+
     void Js::AsmJsEncoder::AddReloc( const int labelOffset, BYTE* patchAddr )
     {
         EncoderRelocLabel* label = nullptr;

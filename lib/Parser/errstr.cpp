@@ -5,7 +5,7 @@
 #include "ParserPch.h"
 #include "errstr.h"
 
-// scafolding - get a g_hInstance from scrbgase.cpp
+// scaffolding - get a g_hInstance from scrbgase.cpp
 HANDLE g_hInstance;
 
 // Used as a prefix to generate the resource dll name.
@@ -25,7 +25,6 @@ static BOOL FGetStringFromLibrary(HMODULE hlib, int istring, __out_ecount(cchMax
     int cch;
     int cstring;
     DWORD cbRes;
-    // take SCODE_CODE(hr == istring), DIV 16, + 1
     int itable = ((WORD)istring >> 4) + 1;
     istring &= 0x0F;
     BOOL fRet = FALSE;
@@ -59,7 +58,6 @@ static BOOL FGetStringFromLibrary(HMODULE hlib, int istring, __out_ecount(cchMax
             goto LError;
 
         cch = (*(WORD *) pchCur) + 1;
-        // Note: Casting is required to avoid endian issues on Unix platforms.
 
         if (cch <= 0)
             goto LError;

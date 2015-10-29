@@ -3,17 +3,8 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-//Configuration: full_variableMRU.xml
-//Testcase Number: 35046
-//Bailout Testing: ON
 //Switches:   -maxinterpretcount:1  -sse:3 -force:atom -forceserialized
-//Baseline Switches: -nonative 
 //Arch: AMD64
-//Flavor: 
-//Branch:  fbl_ie_script_dev
-//Build: 131002-2030
-//MachineName: BPT53873
-//InstructionSet: 
 var shouldBailout = false;
 var repeatCount = 0;
 function test0(){
@@ -95,30 +86,3 @@ test0();
 WScript.Echo(e);
 }
 
-// Baseline output:
-// Skipping first 537 lines of output...
-// this.prop1 getter
-// this.prop1 getter
-// this.prop1 getter
-// this.prop1 getter
-// this.prop1 getter
-// this.prop1 getter
-// this.prop1 getter
-// this.prop1 getter
-// this.prop1 getter
-// this.prop1 getter
-// this.prop1 getter
-// this.prop1 getter
-// this.prop1 getter
-// this.prop1 getter
-// this.prop1 getter
-// this.prop1 getter
-// this.prop1 getter
-// this.prop1 getter
-// JavaScript runtime error: Out of stack space
-// 
-// 
-// Test output:
-// this.prop1 getter
-// FATAL ERROR: jshost.exe failed due to exception code c0000005
-// 

@@ -5,7 +5,7 @@
 
     OPT 2 ; disable listing
 #include "ksarm.h"
-    OPT 1 ; reenable listing
+    OPT 1 ; re-enable listing
 
     TTL Lib\Backend\arm\LinearScanMdA.asm
 

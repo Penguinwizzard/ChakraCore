@@ -268,7 +268,7 @@ function generateAndRunTests(testCase, doDelete)
                 if (!testValue && doDelete)
                     continue; // no need to delete an uninitialized property
                 if (testValue === testValue_undefined && !doDelete)
-                    writeLine("INCORRECT in compat modes:"); // BUG: these cases produce incorrect results in compat modes. Update baselines if/when fixed. See WinOOB bug 1121613.
+                    writeLine("INCORRECT in compat modes:"); 
                 f += "var a=[";
                 if (testValue)
                     f += testValue;

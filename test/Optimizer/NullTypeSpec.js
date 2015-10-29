@@ -8,9 +8,9 @@ var Failed = 0;
 function foo(num)
 {
     if (num == null) 
-	Failed++;
+    Failed++;
     if (num*1.1 == null) 
-	Failed++;
+    Failed++;
 }
 
 a = 0.1;

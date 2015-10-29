@@ -352,11 +352,10 @@ namespace Js
     CharCount CompoundString::BlockInfo::AlignCharCapacityForAllocation(const CharCount charCapacity)
     {
         const CharCount alignedCharCapacity =
-            ::Math::Align(
+            ::Math::AlignOverflowCheck(
                 charCapacity == 0 ? static_cast<CharCount>(1) : charCapacity,
                 static_cast<CharCount>(HeapConstants::ObjectGranularity / sizeof(wchar_t)));
         Assert(alignedCharCapacity != 0);
-        Assert(alignedCharCapacity >= charCapacity);
         return alignedCharCapacity;
     }
 
@@ -365,7 +364,7 @@ namespace Js
         Assert(charCapacity != 0);
         Assert(AlignCharCapacityForAllocation(charCapacity) == charCapacity);
 
-        const CharCount newCharCapacity = charCapacity << 1;
+        const CharCount newCharCapacity = UInt32Math::Mul<2>(charCapacity);
         Assert(newCharCapacity > charCapacity);
         return newCharCapacity;
     }
@@ -406,7 +405,7 @@ namespace Js
         {
             AllocateBuffer(charCapacity, recycler);
             charLength = usedCharLength;
-            js_wmemcpy_s((wchar_t*)(this->buffer), usedCharLength, (wchar_t*)(buffer), usedCharLength);
+            js_wmemcpy_s((wchar_t*)(this->buffer), charCapacity, (wchar_t*)(buffer), usedCharLength);
             return nullptr;
         }
 
@@ -425,7 +424,7 @@ namespace Js
             void *const newBuffer = RecyclerNewArray(recycler, wchar_t, newCharCapacity);
             charCapacity = newCharCapacity;
             const CharCount charLength = CharLength();
-            js_wmemcpy_s((wchar_t*)newBuffer, charLength, (wchar_t*)buffer, charLength);
+            js_wmemcpy_s((wchar_t*)newBuffer, charCapacity, (wchar_t*)buffer, charLength);
             buffer = newBuffer;
             return nullptr;
         }
@@ -761,7 +760,7 @@ namespace Js
     #else
         CompileAssert(sizeof(void *) == sizeof(int32));
 
-        // On 32-bit architectures, it will be attempted to fit both pieces of into into one pointer by using 16 bits for the
+        // On 32-bit architectures, it will be attempted to fit both pieces of into one pointer by using 16 bits for the
         // start index, 15 for the length, and 1 for the tag. If it does not fit, an additional pointer will be used.
         if(startIndex <= static_cast<CharCount>(0xffff) && length <= static_cast<CharCount>(0x7fff))
         {
@@ -817,7 +816,7 @@ namespace Js
     #else
         CompileAssert(sizeof(void *) == sizeof(int32));
 
-        // On 32-bit architectures, it will be attempted to fit both pieces of into into one pointer by using 16 bits for the
+        // On 32-bit architectures, it will be attempted to fit both pieces of into one pointer by using 16 bits for the
         // start index, 15 for the length, and 1 for the tag. If it does not fit, an additional pointer will be used.
         if(!pointer2)
         {
@@ -966,6 +965,18 @@ namespace Js
         const CharCount appendCharLength)
     {
         AppendGeneric(s, appendCharLength, this, true);
+    }
+
+    void CompoundString::AppendCharsSz(__in_z const wchar_t *const s)
+    {
+        size_t len = wcslen(s);
+        // We limit the length of the string to MaxCharCount, 
+        // so just OOM if we are appending a string that exceed this limit already
+        if (!IsValidCharCount(len))
+        {
+            JavascriptExceptionOperators::ThrowOutOfMemory(this->GetScriptContext());
+        }
+        AppendChars(s, (CharCount)len);
     }
 
     void CompoundString::Grow()
@@ -1162,7 +1173,7 @@ namespace Js
                 else
                 {
                     Assert(recursionDepth <= MaxCopyRecursionDepth);
-                    s->Copy(&buffer[remainingCharLengthToCopy], nestedStringTreeCopyInfos, recursionDepth + 1);                    
+                    s->Copy(&buffer[remainingCharLengthToCopy], nestedStringTreeCopyInfos, recursionDepth + 1);
                 }
             }
         }

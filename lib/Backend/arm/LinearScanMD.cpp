@@ -141,13 +141,13 @@ LinearScanMD::InsertOpHelperSpillsAndRestores(const OpHelperBlock& opHelperBlock
                 Assert(sym);
                 func->StackAllocate(sym, MachRegInt);
             }
-    
+
             IR::RegOpnd * regOpnd = IR::RegOpnd::New(sym, opHelperSpilledLifetime.reg, sym->GetType(), func);
             IR::Instr * saveInstr = IR::Instr::New(Js::OpCode::STR, IR::SymOpnd::New(sym, sym->GetType(), func), regOpnd, func);
             opHelperBlock.opHelperLabel->InsertAfter(saveInstr);
             saveInstr->CopyNumber(opHelperBlock.opHelperLabel);
             this->LegalizeDef(saveInstr);
-    
+
             if (opHelperSpilledLifetime.reload)
             {
                 IR::Instr * restoreInstr = IR::Instr::New(Js::OpCode::LDR, regOpnd, IR::SymOpnd::New(sym, sym->GetType(), func), func);
@@ -208,7 +208,7 @@ LinearScanMD::LegalizeUse(IR::Instr * instr, IR::Opnd * opnd)
     }
 }
 
-void 
+void
 LinearScanMD::GenerateBailOut(
     IR::Instr * instr,
     __in_ecount(registerSaveSymsCount) StackSym ** registerSaveSyms,
@@ -222,7 +222,7 @@ LinearScanMD::GenerateBailOut(
     const auto LoadRegSaveSpaceIntoScratch = [&](const RegNum reg)
     {
         // Load the register save space address for the specified register into the scratch register:
-        //     ldimm SCRATCH_REG, regSaveSpace        
+        //     ldimm SCRATCH_REG, regSaveSpace
         LinearScan::InsertMove(
             IR::RegOpnd::New(nullptr, SCRATCH_REG, TyMachPtr, func),
             IR::AddrOpnd::New(&registerSaveSpace[reg - 1], IR::AddrOpndKindDynamicMisc, func),
@@ -295,7 +295,7 @@ LinearScanMD::GenerateBailOut(
     // Pass in the bailout record
     //     ldimm r0, bailOutRecord
     LinearScan::InsertMove(
-        IR::RegOpnd::New(nullptr, RegR0, TyMachPtr, func),        
+        IR::RegOpnd::New(nullptr, RegR0, TyMachPtr, func),
         IR::AddrOpnd::New(bailOutInfo->bailOutRecord, IR::AddrOpndKindDynamicBailOutRecord, func, true),
         instr);
 
@@ -327,7 +327,7 @@ LinearScanMD::GenerateBailInForGeneratorYield(IR::Instr * resumeLabelInstr, Bail
     Js::Throw::NotImplemented();
 }
 
-uint LinearScanMD::GetRegisterSaveIndex(RegNum reg) 
+uint LinearScanMD::GetRegisterSaveIndex(RegNum reg)
 {
     if (RegTypes[reg] == TyFloat64)
     {

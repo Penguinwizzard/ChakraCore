@@ -163,7 +163,7 @@ private:
         // On 64 bit systems, where each object is at least 32 bytes, we can have 32K objects
         // Therefore, that on 32 bit systems, the mark bits take up 8KB, and on 64 bit systems, they take up 4KB
         // This is more general purpose than if the mark bits are on the heap block, and is more runtime efficient
-        // However, it's less memory efficient (eg. a large object which is 1 MB + 1 byte, rounded up to 1028 KB,
+        // However, it's less memory efficient (e.g. a large object which is 1 MB + 1 byte, rounded up to 1028 KB,
         // would before take up 1 byte for it's mark bits- now it'll have a cost of 16KB, one for each of the L2 segments it spans)
         L2ChunkMarkBitVector markBits;
 

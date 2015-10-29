@@ -26,7 +26,7 @@ namespace Js
 
         // Only used by the vtable ctor for ForInObjectEnumeratorWrapper
         friend class ForInObjectEnumeratorWrapper;
-        ForInObjectEnumerator() { /* do nothing */ }
+        ForInObjectEnumerator() { }
 
     public:
         ForInObjectEnumerator(RecyclableObject* object, ScriptContext * requestContext, bool enumSymbols = false);
@@ -79,25 +79,5 @@ namespace Js
         }
     private:
         ForInObjectEnumerator forInObjectEnumerator;
-    };
-
-    // Enumerator for undefined/number/double values.
-    class NullEnumerator : public JavascriptEnumerator
-    {
-    private:
-        virtual Var GetCurrentIndex() override;
-        virtual Var GetCurrentValue() override;
-        virtual BOOL MoveNext(PropertyAttributes* attributes = nullptr) override;
-        virtual void Reset() override;
-        virtual Var GetCurrentAndMoveNext(PropertyId& propertyId, PropertyAttributes* attributes = nullptr) override;
-        virtual BOOL GetCurrentPropertyId(PropertyId *propertyId) override;
-
-    protected:
-        DEFINE_VTABLE_CTOR(NullEnumerator, JavascriptEnumerator);
-
-        // nothing to marshal
-        virtual void MarshalToScriptContext(Js::ScriptContext * scriptContext) override {}
-    public:
-        NullEnumerator(ScriptContext* scriptContext) : JavascriptEnumerator(scriptContext) {}
-    };
+    };    
 }

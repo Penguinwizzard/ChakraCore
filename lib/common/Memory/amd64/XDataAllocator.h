@@ -13,7 +13,7 @@ namespace Memory
 
 struct XDataAllocation : public SecondaryAllocation
 {
-    XDataAllocation() : 
+    XDataAllocation() :
         pdataIndex(0)
     {}
 
@@ -31,7 +31,7 @@ struct XDataAllocation : public SecondaryAllocation
 
 //
 // Allocates xdata and pdata entries for x64 architecture.
-// 
+//
 // xdata
 // ------
 // x64 architecture requires the xdata to be within 32-bit address range of the jitted code itself
@@ -62,7 +62,7 @@ private:
 // --------- Public functions ---------/
 public:
     XDataAllocator(BYTE* address, uint size);
-    
+
     virtual ~XDataAllocator();
 
     bool Initialize(_In_ void* segmentStart, _In_ void* segmentEnd);
@@ -75,17 +75,17 @@ public:
 // -------- Private helpers ---------/
 private:
     BYTE* End() { return start + size; }
-    ushort GetTotalPdataCount() 
-    { 
+    ushort GetTotalPdataCount()
+    {
         return (ushort)(this->size / XDATA_SIZE);
     }
 
-    RUNTIME_FUNCTION* GetNextPdataEntry(ushort* pdataIndex) 
-    { 
+    RUNTIME_FUNCTION* GetNextPdataEntry(ushort* pdataIndex)
+    {
         Assert(this->pdataEntries);
         *pdataIndex = GetCurrentPdataCount();
-        Assert(*pdataIndex < GetTotalPdataCount());  
-        RUNTIME_FUNCTION* pdata = &(this->pdataEntries[*pdataIndex]); 
+        Assert(*pdataIndex < GetTotalPdataCount());
+        RUNTIME_FUNCTION* pdata = &(this->pdataEntries[*pdataIndex]);
         return pdata;
     }
 
@@ -96,14 +96,14 @@ private:
 
     RUNTIME_FUNCTION* GetPdataEntry(ushort pdataIndex)
     {
-        Assert(pdataIndex < GetTotalPdataCount());  
+        Assert(pdataIndex < GetTotalPdataCount());
         Assert(this->pdataEntries);
         return &(pdataEntries[pdataIndex]);
     }
 
     FunctionTableHandle GetFunctionTableHandle(ushort pdataIndex)
     {
-        Assert(pdataIndex < GetTotalPdataCount());  
+        Assert(pdataIndex < GetTotalPdataCount());
         Assert(functionTableHandles);
         return functionTableHandles[pdataIndex];
     }

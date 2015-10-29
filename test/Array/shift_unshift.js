@@ -20,8 +20,8 @@ x.unshift("a", "b", "c"); // ["a", "b", "c", 0, 1, 2, 3]
 WScript.Echo(x);
 
 //Array subclassing
-var SubArray = function() 
-{  
+var SubArray = function()
+{
 };
 SubArray.prototype = new Array;
 var newlist = new SubArray;
@@ -40,8 +40,8 @@ WScript.Echo(newlist[0]);	//undefined
 WScript.Echo(newlist.length);	//0
 
 WScript.Echo(newlist.unshift(2,3,4)); //3
-WScript.Echo(newlist[0]);	      //[2,3,4]	      		
-WScript.Echo(newlist.pop());	      //4	
+WScript.Echo(newlist[0]);	      //[2,3,4]
+WScript.Echo(newlist.pop());	      //4
 WScript.Echo(newlist.unshift(5,6,7)); //[5,6,7,2,3]
 WScript.Echo(newlist.length);	      //5
 
@@ -135,7 +135,7 @@ function test1(arr)
     {
       arr.length --;
       arr.shift();
-    } 
+    }
 	return arr.length;
 }
 
@@ -166,4 +166,4 @@ Array.prototype.unshift = function(){WScript.Echo ("Overriden unshift")};
 foo();
 WScript.Echo (a);
 
-	
+

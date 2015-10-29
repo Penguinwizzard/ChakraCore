@@ -48,7 +48,6 @@ namespace Js
         PropertyAttributes Attributes;
     private:
         TPropertyIndex Data;
-        // TODO: These two field may still form a false reference, 
         // CONSIDER: sharing the Data slot with one of these and use the attributes to tell it apart.
         TPropertyIndex Getter;
         TPropertyIndex Setter;
@@ -85,7 +84,7 @@ namespace Js
     TPropertyIndex DictionaryPropertyDescriptor<TPropertyIndex>::GetDataPropertyIndex() const
     {
         // If it is let const global, the data slot is the let const property, and if we allow let const global,
-        // we already return that the Getter/Seeter slot may be doubled as the Data Slot
+        // we already return that the Getter/Setter slot may be doubled as the Data Slot
         // so only return it if we allow let const
         bool const isLetConstGlobal = (this->Attributes & PropertyLetConstGlobal) != 0;
         if (isLetConstGlobal)
@@ -97,7 +96,7 @@ namespace Js
             }
             else if (this->IsShadowed && !this->IsAccessor)
             {
-                // if it is a let const global, if the setter slot is is empty, then the Getter slot must be 
+                // if it is a let const global, if the setter slot is empty, then the Getter slot must be
                 // the shadowed data slot, return that.
                 return this->Getter;
             }
@@ -130,7 +129,7 @@ namespace Js
     void DictionaryPropertyDescriptor<TPropertyIndex>::ConvertToData()
     {
         if (this->IsAccessor)
-        {            
+        {
             Assert(this->Getter != NoSlots && this->Setter != NoSlots);
             this->IsAccessor = false;
             if (this->IsShadowed)
@@ -153,8 +152,7 @@ namespace Js
         Assert(!this->IsShadowed);
         this->IsShadowed = true;
         if (this->IsAccessor)
-        {            
-            // REVIEW: overflow index
+        {
             Assert(this->Data == NoSlots);
         }
         else if (addingLetConstGlobal)
@@ -219,13 +217,11 @@ namespace Js
         bool addedPropertyIndex = false;
         if (this->Getter == NoSlots)
         {
-            // REVIEW: overflow to BigPropertyIndex?
             this->Getter = nextPropertyIndex++;
             addedPropertyIndex = true;
         }
         if (this->Setter == NoSlots)
         {
-            // REVIEW: overflow to BigPropertyIndex?
             this->Setter = nextPropertyIndex++;
             addedPropertyIndex = true;
         }

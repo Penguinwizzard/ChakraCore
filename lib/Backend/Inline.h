@@ -17,14 +17,14 @@ private:
     uint inlineesProcessed;
     uint currentInlineeFrameSlot;
     
-    //Indicates if you are in loop, counter can increment beyond 1 for nested inlined functions
-    //But for a single function won't increment beyond 1 for nested loops.
+    // Indicates if you are in loop, counter can increment beyond 1 for nested inlined functions
+    // But for a single function won't increment beyond 1 for nested loops.
     uint isInLoop;  
 
-    //Following flag indicates that inlinee is a target function of apply.
-    //For example: We are trying to inline init in this.init.apply(this, arguments); 
-    //We don't support recursively inlining another target function inside init body (such as this.bar.apply(this, arguments))
-    //Reason being we will have to patch up the top function actuals recursively in two nested functions and that is not supported. 
+    // Following flag indicates that inlinee is a target function of apply.
+    // For example: We are trying to inline init in this.init.apply(this, arguments); 
+    // We don't support recursively inlining another target function inside init body (such as this.bar.apply(this, arguments))
+    // Reason being we will have to patch up the top function actuals recursively in two nested functions and that is not supported. 
     bool isApplyTargetInliningInProgress; 
     bool isInInlinedApplyCall;
 
@@ -117,7 +117,7 @@ private:
         uint16 cachedFixedInlineeCount
         );
 
-    //Builds IR for inlinee
+    // Builds IR for inlinee
     Func * BuildInlinee(Js::FunctionBody* funcBody, const InlineeData& inlineesData, Js::RegSlot returnRegSlot, IR::Instr *callInstr, uint recursiveInlineDepth);
     void BuildIRForInlinee(Func *inlinee, Js::FunctionBody *funcBody, IR::Instr *callInstr, bool isApplyTarget = false, uint recursiveInlineDepth = 0);
     void InsertStatementBoundary(IR::Instr * instrNext);

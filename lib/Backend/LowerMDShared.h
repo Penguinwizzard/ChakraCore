@@ -71,7 +71,6 @@ public:
                                                IR::Opnd *opndInstance = nullptr, IR::PropertySymOpnd * propSymOpnd = nullptr, bool isHelperContinuation = false);
             void            FinalLower();
 #ifdef _M_X64
-            // TODO: Fix this in IRBuilder.
             void            FlipHelperCallArgsOrder()
             {
                 lowererMDArch.FlipHelperCallArgsOrder();

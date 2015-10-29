@@ -25,12 +25,12 @@
   <ItemDefinitionGroup>
     <ClCompile>
       <AdditionalIncludeDirectories>
-          $(MSBuildThisFileDirectory)..;
-          $(MSBuildThisFileDirectory)..\..\Common;
-          $(MSBuildThisFileDirectory)..\..\Parser;
-          $(MSBuildThisFileDirectory)..\..\Backend;
-          $(MSBuildThisFileDirectory)..\..\Language;
-          %(AdditionalIncludeDirectories)
+        $(MSBuildThisFileDirectory)..;
+        $(MSBuildThisFileDirectory)..\..\Common;
+        $(MSBuildThisFileDirectory)..\..\Parser;
+        $(MSBuildThisFileDirectory)..\..\Backend;
+        $(MSBuildThisFileDirectory)..\..\Language;        
+        %(AdditionalIncludeDirectories)
       </AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>RuntimeDebugPch.h</PrecompiledHeaderFile>

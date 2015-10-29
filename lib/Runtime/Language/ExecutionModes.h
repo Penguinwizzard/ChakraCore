@@ -22,7 +22,7 @@ EXECUTION_MODE(ProfilingInterpreter)
 //     - On: Behave as new simple JIT (does not profile, includes fast paths)
 EXECUTION_MODE(SimpleJit)
 
-// Full JIT (no profiling, self-expanatory)
+// Full JIT (no profiling, self-explanatory)
 EXECUTION_MODE(FullJit)
 
 EXECUTION_MODE(Count)

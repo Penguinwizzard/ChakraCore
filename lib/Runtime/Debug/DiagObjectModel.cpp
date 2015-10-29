@@ -21,6 +21,12 @@
 #include "Library\JavascriptSet.h"
 #include "Library\JavascriptWeakMap.h"
 #include "Library\JavascriptWeakSet.h"
+#include "Library\ArgumentsObject.h"
+
+#include "Types\DynamicObjectEnumerator.h"
+#include "Types\DynamicObjectSnapshotEnumerator.h"
+#include "Types\DynamicObjectSnapshotEnumeratorWPCache.h"
+#include "Library\ForInObjectEnumerator.h"
 
 // Other includes
 #include <shlwapi.h>
@@ -305,7 +311,7 @@ namespace Js
 
         if (mutationBreakpoint != nullptr)
         {
-            if (index == 0) 
+            if (index == 0)
             {
                 pResolvedObject->name = L"[Pending Mutation]";
                 pResolvedObject->typeId = TypeIds_Object;
@@ -453,7 +459,7 @@ namespace Js
         Assert(isConst);
         *isPropertyInDebuggerScope = false;
 
-        // Default to writeable (for the case of vars and internal properties).
+        // Default to writable (for the case of vars and internal properties).
         *isConst = false;
 
 
@@ -530,7 +536,7 @@ namespace Js
         Assert(pFrame);
         Assert(value);
         Assert(isInDeadZone || !pFrame->GetScriptContext()->IsUndeclBlockVar(value));
-        
+
         DWORD flags = DebuggerPropertyDisplayInfoFlags_None;
         flags |= isConst ? DebuggerPropertyDisplayInfoFlags_Const : 0;
         flags |= isInDeadZone ? DebuggerPropertyDisplayInfoFlags_InDeadZone : 0;
@@ -783,7 +789,7 @@ namespace Js
                 }
 
                 AssertMsg(!RootObjectBase::Is(object) || !isConst, "root object shouldn't produce const properties through IsPropertyValid");
-                
+
                 DebuggerPropertyDisplayInfo *info = AllocateNewPropertyDisplayInfo(
                     propertyId,
                     itemObj,
@@ -1692,7 +1698,7 @@ namespace Js
             StringBuilder<ArenaAllocator>* builder = scriptContext->GetThreadContext()->GetDebugManager()->pCurrentInterpreterLocation->stringBuilder;
             builder->Reset();
 
-            // For the recyclableobject try to find out the constructor, which will be shown as type for the object.
+            // For the RecyclableObject try to find out the constructor, which will be shown as type for the object.
             // This case is to handle the user defined function, built in objects have dedicated classes to handle.
 
             Var value = nullptr;
@@ -2019,7 +2025,7 @@ namespace Js
         if (index < nonArrayElementCount)
         {
             Assert(Js::RecyclableObject::Is(instance));
-            
+
             pResolvedObject->propId = pMembersList->Item(index)->propId;
 
             if (pResolvedObject->propId == Js::Constants::NoProperty || Js::IsInternalPropertyId(pResolvedObject->propId))
@@ -2275,10 +2281,10 @@ namespace Js
                             }
                             if (Js::JavascriptFunction::Is(object))
                             {
-                                // We need to special-case RegExp constructor here because it has some special properties (above) and some 
+                                // We need to special-case RegExp constructor here because it has some special properties (above) and some
                                 // special enumerable properties which should all show up in the debugger.
                                 JavascriptRegExpConstructor* regExp = scriptContext->GetLibrary()->GetRegExpConstructor();
-                                
+
                                 if (regExp == object)
                                 {
                                     bool isUnScoped = false;
@@ -2295,7 +2301,7 @@ namespace Js
                                 }
                                 else if (Js::JavascriptFunction::FromVar(object)->IsScriptFunction() || Js::JavascriptFunction::FromVar(object)->IsBoundFunction())
                                 {
-                                    // Adding special property length for the scriptfunction, like it is done in JavascriptFunction::GetSpecialNonEnumerablePropertyName
+                                    // Adding special property length for the ScriptFunction, like it is done in JavascriptFunction::GetSpecialNonEnumerablePropertyName
                                     InsertItem(originalObject, object, PropertyIds::length, true/*not editable*/, false /*isUnScoped*/, &pMethodsGroupWalker);
                                 }
                             }
@@ -2395,7 +2401,7 @@ namespace Js
             pMembersList->Sort(ElementsComparer, scriptContext);
         }
 
-        ulong childrenCount = 
+        ulong childrenCount =
             pMembersList->Count()
           + (innerArrayObjectWalker ? innerArrayObjectWalker->GetChildrenCount() : 0)
           + (fakeGroupObjectWalkerList ? fakeGroupObjectWalkerList->Count() : 0);
@@ -2472,7 +2478,7 @@ namespace Js
             DWORD flags = DebuggerPropertyDisplayInfoFlags_None;
             flags |= isConst ? DebuggerPropertyDisplayInfoFlags_Const : 0;
             //TODO we should eventually use this flag to denote if a property is unscoped in the debugger
-            flags |= isUnscoped ? DebuggerPropertyDisplayInfoFlags_Unscope : 0; 
+            flags |= isUnscoped ? DebuggerPropertyDisplayInfoFlags_Unscope : 0;
 
             DebuggerPropertyDisplayInfo *info = Anew(arena, DebuggerPropertyDisplayInfo, propertyId, itemObj, flags);
 
@@ -2673,10 +2679,10 @@ namespace Js
     BOOL RecyclableArrayWalker::Get(int i, ResolvedObject* pResolvedObject)
     {
         AssertMsg(pResolvedObject, "Bad usage of RecyclableArrayWalker::Get");
-        
+
         if (Js::JavascriptArray::Is(instance) || Js::ES5Array::Is(instance))
         {
-            Js::JavascriptArray* arrayObj = GetArrayObject();                        
+            Js::JavascriptArray* arrayObj = GetArrayObject();
 
             int nonArrayElementCount = (!fOnlyOwnProperties ? RecyclableObjectWalker::GetChildrenCount() : 0);
 
@@ -2759,7 +2765,7 @@ namespace Js
 
     BOOL RecyclableArgumentsObjectDisplay::HasChildren()
     {
-        // It must have children otherwise oject itself was not created in first place.
+        // It must have children otherwise object itself was not created in first place.
         return TRUE;
     }
 
@@ -2993,7 +2999,7 @@ namespace Js
 
         return indexedItemCount;
     }
-    
+
     BOOL RecyclableTypedArrayWalker::Get(int i, ResolvedObject* pResolvedObject)
     {
         AssertMsg(pResolvedObject, "Bad usage of RecyclableTypedArrayWalker::Get");
@@ -3614,7 +3620,7 @@ namespace Js
             Js::RecyclableObject *object = Js::RecyclableObject::FromVar(instance);
             try
             {
-                // Trying to find out the javascriptfunction from the scope.
+                // Trying to find out the JavascriptFunction from the scope.
                 Var value = nullptr;
                 if (object->GetTypeId() == TypeIds_ActivationObject && GetPropertyWithScriptEnter(object, object, PropertyIds::arguments, &value, scriptContext))
                 {
@@ -3739,7 +3745,7 @@ namespace Js
     WeakArenaReference<IDiagObjectModelWalkerBase>* PendingMutationBreakpointDisplay::CreateWalker()
     {
         ReferencedArenaAdapter* pRefArena = scriptContext->GetThreadContext()->GetDebugManager()->GetDiagnosticArena();
-        if (pRefArena) 
+        if (pRefArena)
         {
             IDiagObjectModelWalkerBase* pOMWalker = Anew(pRefArena->Arena(), PendingMutationBreakpointWalker, scriptContext, instance, this->mutationType);
             return HeapNew(WeakArenaReference<IDiagObjectModelWalkerBase>, pRefArena, pOMWalker);
@@ -3749,14 +3755,14 @@ namespace Js
 
     ulong PendingMutationBreakpointWalker::GetChildrenCount()
     {
-        switch (this->mutationType) 
+        switch (this->mutationType)
         {
         case MutationTypeUpdate:
             return 3;
         case MutationTypeDelete:
         case MutationTypeAdd:
             return 2;
-        default: 
+        default:
             AssertMsg(false, "Invalid mutationType");
             return 0;
         }
@@ -3772,7 +3778,7 @@ namespace Js
     {
         Js::MutationBreakpoint *mutationBreakpoint = scriptContext->GetDebugContext()->GetProbeContainer()->GetDebugManager()->GetActiveMutationBreakpoint();
         Assert(mutationBreakpoint);
-        if (mutationBreakpoint != nullptr) 
+        if (mutationBreakpoint != nullptr)
         {
             if (i == 0)
             {
@@ -3789,7 +3795,7 @@ namespace Js
                     pResolvedObject->propId = breakPId;
                     pResolvedObject->obj = JavascriptOperators::OP_GetProperty(mutationBreakpoint->GetMutationObjectVar(), breakPId, scriptContext);
                 }
-                else 
+                else
                 {
                     // New Value
                     pResolvedObject->obj = mutationBreakpoint->GetBreakNewValueVar();
@@ -3820,7 +3826,7 @@ namespace Js
             pResolvedObject->typeId = JavascriptOperators::GetTypeId(pResolvedObject->obj);
             pResolvedObject->objectDisplay = pResolvedObject->CreateDisplay();
             pResolvedObject->objectDisplay->SetDefaultTypeAttribute(DBGPROP_ATTRIB_VALUE_READONLY | DBGPROP_ATTRIB_VALUE_IS_FAKE);
-            pResolvedObject->address = nullptr; //ToDo: (SaAgarwa) Currently Pending mutation values are not editable, will do as part of another WI
+            pResolvedObject->address = nullptr; // TODO: (SaAgarwa) Currently Pending mutation values are not editable, will do as part of another WI
 
             return TRUE;
         }
@@ -3828,4 +3834,3 @@ namespace Js
     }
 #endif
 }
-

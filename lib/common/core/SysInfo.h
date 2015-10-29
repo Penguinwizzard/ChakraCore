@@ -10,7 +10,7 @@ class AutoSystemInfo : public SYSTEM_INFO
 {
     friend void ChakraInitPerImageSystemPolicy(AutoSystemInfo *);  // The hosting DLL provides the implementation of this function.
 public:
-    static AutoSystemInfo Data;       
+    static AutoSystemInfo Data;
     uint GetAllocationGranularityPageCount() const;
     uint GetAllocationGranularityPageSize() const;
 
@@ -100,14 +100,14 @@ private:
 
     static const DWORD INVALID_VERSION = (DWORD)-1;
 
-    ULONG64 availableCommit;    
+    ULONG64 availableCommit;
     bool shouldQCMoreFrequently;
     bool supportsOnlyMultiThreadedCOM;
     bool isLowMemoryDevice;
 
 public:
     static bool ShouldQCMoreFrequently()
-    { 
+    {
         return Data.shouldQCMoreFrequently;
     }
 

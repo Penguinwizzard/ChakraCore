@@ -63,12 +63,13 @@ namespace Js
         return node->sxVar.pnodeNext;
     }
 
-    ParseNode* ParserWrapper::FunctionArgsList( ParseNode *node, unsigned &numformals )
+    ParseNode* ParserWrapper::FunctionArgsList( ParseNode *node, ArgSlot &numformals )
     {
         Assert( node->nop == knopFncDecl );
         PnFnc func = node->sxFnc;
         ParseNode* first = func.pnodeArgs;
-        for( ParseNode* pnode = first; pnode; pnode = pnode->sxVar.pnodeNext, numformals++ );
+        // throws OOM on uint16 overflow
+        for( ParseNode* pnode = first; pnode; pnode = pnode->sxVar.pnodeNext, UInt16Math::Inc(numformals));
         return first;
     }
 
@@ -160,7 +161,7 @@ namespace Js
             JavascriptError::ThrowTypeError(scriptContext, JSERR_NeedArrayBufferObject);
         }
 
-        
+
         ArrayBuffer* newArrayBuffer = ArrayBuffer::FromVar(args[1]);
         if (newArrayBuffer->IsDetached() || newArrayBuffer->GetByteLength() & 0xffffff || newArrayBuffer->GetByteLength() <= 0xffffff || newArrayBuffer->GetByteLength() > 0x80000000)
         {
@@ -185,7 +186,7 @@ namespace Js
     {
         AsmJsFunctionInfo* info = func->GetFunctionBody()->GetAsmJsFunctionInfo();
         int argSize = MachPtr;
-        for (uint i = 0; i < info->GetArgCount(); i++)
+        for (ArgSlot i = 0; i < info->GetArgCount(); i++)
         {
             if (info->GetArgType(i).isSIMD())
             {
@@ -217,9 +218,9 @@ namespace Js
 
         uint actualArgCount = callInfo.Count - 1; // -1 for ScriptFunction
         argDst = argDst + MachPtr; // add one first so as to skip the ScriptFunction argument
-        for (uint i = 0; i < info->GetArgCount(); i++)
+        for (ArgSlot i = 0; i < info->GetArgCount(); i++)
         {
-            
+
             if (info->GetArgType(i).isInt())
             {
                 int32 intVal;
@@ -231,10 +232,10 @@ namespace Js
                 {
                     intVal = 0;
                 }
-                
+
                 *(int64*)(argDst) = 0;
                 *(int32*)argDst = intVal;
-                
+
                 argDst = argDst + MachPtr;
             }
             else if (info->GetArgType(i).isFloat())
@@ -250,7 +251,7 @@ namespace Js
                 }
                 *(int64*)(argDst) = 0;
                 *(float*)argDst = floatVal;
-                argDst = argDst + MachPtr;;
+                argDst = argDst + MachPtr;
             }
             else if (info->GetArgType(i).isDouble())
             {
@@ -300,7 +301,7 @@ namespace Js
                     Assert(UNREACHED);
                 }
                 *(AsmJsSIMDValue*)argDst = simdVal;
-                argDst = argDst + sizeof(AsmJsSIMDValue); 
+                argDst = argDst + sizeof(AsmJsSIMDValue);
             }
             ++origArgs;
         }
@@ -387,7 +388,7 @@ namespace Js
         // Unbox Var to primitive type
         {
             int32 intVal; double doubleVal; float floatVal;
-            for (uint i = 0; i < info->GetArgCount(); i++)
+            for (ArgSlot i = 0; i < info->GetArgCount(); i++)
             {
                 if (info->GetArgType(i).isInt())
                 {
@@ -561,7 +562,7 @@ namespace Js
             }
                 returnValue = JavascriptSIMDFloat32x4::New(&simdVal, func->GetScriptContext());
                 break;
-            
+
         case AsmJsRetType::Float64x2:
             simdVal.Zero();
             __asm

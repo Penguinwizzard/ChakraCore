@@ -12,9 +12,9 @@
 template <typename TData, typename TCount = DefaultCount> class DListBase;
 template <typename TData> class DListNode;
 template <typename TData>
-class DListNodeBase 
+class DListNodeBase
 {
-public: 
+public:
     DListNodeBase<TData> * Next() const { return next.base; }
     DListNodeBase<TData> *& Next() { return next.base; }
     DListNodeBase<TData> * Prev() const { return prev.base; }
@@ -26,21 +26,21 @@ private:
     {
         DListNodeBase<TData> * base;
         DListNode<TData> * node;
-        DListBase<TData>  * list;    
+        DListBase<TData>  * list;
     } next;
 
     union
-    {        
+    {
         DListNodeBase<TData> * base;
         DListNode<TData> * node;
-        DListBase<TData>  * list;    
+        DListBase<TData>  * list;
     } prev;
 };
-        
+
 template <typename TData>
 class DListNode : public DListNodeBase<TData>
 {
-public:    
+public:
     DListNode() : data() {}
 
     // Constructing with parameter
@@ -67,7 +67,7 @@ public:
 
 template<typename TData, typename TCount>
 class DListBase : protected DListNodeBase<TData>, public TCount
-{    
+{
 private:
     typedef DListNodeBase<TData> NodeBase;
     typedef DListNode<TData> Node;
@@ -78,7 +78,7 @@ private:
 public:
     class Iterator
     {
-    public:        
+    public:
         Iterator() : list(nullptr), current(nullptr) {}
         Iterator(DListBase const * list) : list(list), current(list) {};
 
@@ -90,8 +90,8 @@ public:
         {
             current = list;
         }
-        
-        //Todo: only need inline for DListBase<Segment, FakeCount>::Iterator::Next
+
+        // TODO: only need inline for DListBase<Segment, FakeCount>::Iterator::Next
         __forceinline
         bool Next()
         {
@@ -109,7 +109,7 @@ public:
             Assert(this->IsValid());
             return ((Node *)current)->data;
         }
-        TData& Data() 
+        TData& Data()
         {
             Assert(this->IsValid());
             return ((Node *)current)->data;
@@ -121,32 +121,32 @@ public:
 
     class EditingIterator : public Iterator
     {
-    public:        
+    public:
         EditingIterator() : Iterator() {};
         EditingIterator(DListBase  * list) : Iterator(list) {};
-       
+
         template <typename TAllocator>
         void RemoveCurrent(TAllocator * allocator)
         {
             Assert(current != nullptr);
-            Assert(!list->IsHead(current));            
-            
+            Assert(!list->IsHead(current));
+
             NodeBase * last = current->Prev();
             NodeBase * node = const_cast<NodeBase *>(current);
-            DListBase::RemoveNode(node);            
+            DListBase::RemoveNode(node);
             AllocatorDelete(TAllocator, allocator, (Node *)node);
-            current = last;         
+            current = last;
             const_cast<DListBase *>(list)->DecrementCount();
         }
 
         template <typename TAllocator>
         TData * InsertNodeBefore(TAllocator * allocator)
-        {           
+        {
             Node * newNode = AllocatorNew(TAllocator, allocator, Node);
             if (newNode)
             {
                 NodeBase * node = const_cast<NodeBase *>(current);
-                DListBase::InsertNodeBefore(node, newNode);            
+                DListBase::InsertNodeBefore(node, newNode);
                 const_cast<DListBase *>(list)->IncrementCount();
                 return newNode->data;
             }
@@ -154,13 +154,13 @@ public:
 
         template <typename TAllocator>
         bool InsertBefore(TAllocator * allocator, TData const& data)
-        {        
+        {
             Node * newNode = AllocatorNew(TAllocator, allocator, Node, data);
             if (newNode)
             {
                 NodeBase * node = const_cast<NodeBase *>(current);
-                DListBase::InsertNodeBefore(node, newNode);            
-                const_cast<DListBase *>(list)->IncrementCount();         
+                DListBase::InsertNodeBefore(node, newNode);
+                const_cast<DListBase *>(list)->IncrementCount();
                 return true;
             }
             return false;
@@ -179,13 +179,13 @@ public:
     };
 
     explicit DListBase()
-    {        
+    {
         Reset();
     }
 
     ~DListBase()
-    {        
-        AssertMsg(this->Empty(), "DListBase need to be cleared explicity with an allocator");
+    {
+        AssertMsg(this->Empty(), "DListBase need to be cleared explicitly with an allocator");
     }
 
     void Reset()
@@ -220,10 +220,10 @@ public:
     template <typename TAllocator>
     bool Append(TAllocator * allocator, TData const& data)
     {
-        Node * newNode = AllocatorNew(TAllocator, allocator, Node, data);     
+        Node * newNode = AllocatorNew(TAllocator, allocator, Node, data);
         if (newNode)
         {
-            DListBase::InsertNodeAfter(this->Prev(), newNode);        
+            DListBase::InsertNodeAfter(this->Prev(), newNode);
             this->IncrementCount();
             return true;
         }
@@ -233,10 +233,10 @@ public:
     template <typename TAllocator>
     bool Prepend(TAllocator * allocator, TData const& data)
     {
-        Node * newNode = AllocatorNew(TAllocator, allocator, Node, data);     
+        Node * newNode = AllocatorNew(TAllocator, allocator, Node, data);
         if (newNode)
         {
-            DListBase::InsertNodeBefore(this->Next(), newNode);        
+            DListBase::InsertNodeBefore(this->Next(), newNode);
             this->IncrementCount();
             return true;
         }
@@ -246,10 +246,10 @@ public:
     template <typename TAllocator>
     TData * PrependNode(TAllocator * allocator)
     {
-        Node * newNode = AllocatorNew(TAllocator, allocator, Node);   
+        Node * newNode = AllocatorNew(TAllocator, allocator, Node);
         if (newNode)
         {
-            DListBase::InsertNodeBefore(this->Next(), newNode);                
+            DListBase::InsertNodeBefore(this->Next(), newNode);
             this->IncrementCount();
             return &newNode->data;
         }
@@ -259,10 +259,10 @@ public:
     template <typename TAllocator, typename TParam1>
     TData * PrependNode(TAllocator * allocator, TParam1 param1)
     {
-        Node * newNode = AllocatorNew(TAllocator, allocator, Node, param1);    
+        Node * newNode = AllocatorNew(TAllocator, allocator, Node, param1);
         if (newNode)
         {
-            DListBase::InsertNodeBefore(this->Next(), newNode);        
+            DListBase::InsertNodeBefore(this->Next(), newNode);
             this->IncrementCount();
             return &newNode->data;
         }
@@ -272,10 +272,10 @@ public:
     template <typename TAllocator, typename TParam1, typename TParam2>
     TData * PrependNode(TAllocator * allocator, TParam1 param1, TParam2 param2)
     {
-        Node * newNode = AllocatorNew(TAllocator, allocator, Node, param1, param2);    
+        Node * newNode = AllocatorNew(TAllocator, allocator, Node, param1, param2);
         if (newNode)
         {
-            DListBase::InsertNodeBefore(this->Next(), newNode);        
+            DListBase::InsertNodeBefore(this->Next(), newNode);
             this->IncrementCount();
             return &newNode->data;
         }
@@ -285,10 +285,10 @@ public:
     template <typename TAllocator, typename TParam1, typename TParam2, typename TParam3>
     TData * PrependNode(TAllocator * allocator, TParam1 param1, TParam2 param2, TParam3 param3)
     {
-        Node * newNode = AllocatorNew(TAllocator, allocator, Node, param1, param2, param3);    
+        Node * newNode = AllocatorNew(TAllocator, allocator, Node, param1, param2, param3);
         if (newNode)
         {
-            DListBase::InsertNodeBefore(this->Next(), newNode);        
+            DListBase::InsertNodeBefore(this->Next(), newNode);
             this->IncrementCount();
             return &newNode->data;
         }
@@ -298,10 +298,10 @@ public:
     template <typename TAllocator, typename TParam1, typename TParam2, typename TParam3, typename TParam4>
     TData * PrependNode(TAllocator * allocator, TParam1 param1, TParam2 param2, TParam3 param3, TParam4 param4)
     {
-        Node * newNode = AllocatorNew(TAllocator, allocator, Node, param1, param2, param3, param4);    
+        Node * newNode = AllocatorNew(TAllocator, allocator, Node, param1, param2, param3, param4);
         if (newNode)
         {
-            DListBase::InsertNodeBefore(this->Next(), newNode);        
+            DListBase::InsertNodeBefore(this->Next(), newNode);
             this->IncrementCount();
             return &newNode->data;
         }
@@ -312,12 +312,12 @@ public:
     void RemoveHead(TAllocator * allocator)
     {
         Assert(!this->Empty());
-        
+
         NodeBase * node = this->Next();
         DListBase::RemoveNode(node);
         AllocatorDelete(TAllocator, allocator, (Node *)node);
 
-        this->DecrementCount();       
+        this->DecrementCount();
     }
 
     template <typename TAllocator>
@@ -325,10 +325,10 @@ public:
     {
         EditingIterator iter(this);
         while (iter.Next())
-        {            
-            if (iter.Data() == data) 
+        {
+            if (iter.Data() == data)
             {
-                iter.RemoveCurrent(allocator);                
+                iter.RemoveCurrent(allocator);
                 return true;
             }
         }
@@ -374,14 +374,14 @@ public:
         this->Prev() = this;
         this->Next() = this;
 
-        list->AddCount(*this);        
+        list->AddCount(*this);
         this->SetCount(0);
     }
 
     void MoveHeadTo(DListBase * list)
     {
         Assert(!this->Empty());
-        NodeBase * node = this->Next();        
+        NodeBase * node = this->Next();
         DListBase::RemoveNode(node);
         DListBase::InsertNodeBefore(list->Next(), node);
         this->DecrementCount();
@@ -426,7 +426,7 @@ private:
 #endif
 
     // disable copy constructor
-    DListBase(DListBase const& list); 
+    DListBase(DListBase const& list);
 
     static void InsertNodeAfter(NodeBase * node, NodeBase * newNode)
     {
@@ -443,7 +443,7 @@ private:
         node->Prev()->Next() = newNode;
         node->Prev() = newNode;
     }
-        
+
     static void RemoveNode(NodeBase * node)
     {
         node->Prev()->Next() = node->Next();
@@ -469,7 +469,7 @@ private:
         T& data = iter.Data();
 
 #define NEXT_DLISTBASE_ENTRY_EDITING \
-    } 
+    }
 
 template <typename TData, typename TAllocator, typename TCount = DefaultCount>
 class DList : public DListBase<TData, TCount>
@@ -492,9 +492,9 @@ public:
         {
             __super::InsertBefore(Allocator(), data);
         }
-        
+
     private:
-        TAllocator * Allocator() const 
+        TAllocator * Allocator() const
         {
             return ((DList const *)list)->allocator;
         }
@@ -584,4 +584,4 @@ public:
         T& data = iter.Data();
 
 #define NEXT_DLIST_ENTRY_EDITING \
-    } 
+    }

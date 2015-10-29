@@ -1223,9 +1223,9 @@ HeapInfo::TransferPendingHeapBlocks(RecyclerSweep& recyclerSweep)
         RECYCLER_SLOW_CHECK(VerifySmallHeapBlockCount());
     }
 
-    // We might still have block that has disposed but not put back into the allocable
+    // We might still have block that has been disposed but not made allocable
     // which happens if we finish disposing object during concurrent sweep
-    // And can't modify the block lists.    
+    // and can't modify the block lists
     recyclerSweep.FlushPendingTransferDisposedObjects();
 }
 
@@ -1300,7 +1300,7 @@ HeapInfo::DisposeObjects()
     if (!recycler->IsConcurrentExecutingState())
     {
         // Can't transfer disposed object when the background thread is walking the heap block list
-        // That includes reset mark, background rescan and concurrent sweep.Delay the transfer later.
+        // That includes reset mark, background rescan and concurrent sweep. Delay the transfer later.
         // NOTE1: During concurrent sweep,  we can't do this only if the bucket has "stopped" allocation
         // After it resume allocation, we don't walk the list in the background thread any more 
         // (except for checking heap block count). But this is easier to detect via the collection state 

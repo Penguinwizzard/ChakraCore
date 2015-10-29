@@ -41,14 +41,14 @@
 #define DF3     0x8000   /* the 0xF3 0x0F style KNI opcodes */
 #define DF2     0x200000 /* 0xF2 0x0F style WNI form (usually 64-bit DP FP) */
 
-// 2nd 3 bits is options 
+// 2nd 3 bits is options
 #define SBIT 0x20
 #define DBIT 0x40
-#define WBIT 0x80       // applies to MODRM, IMM, NO, SHFT, AX_IM 
-#define FAC  0x20       // applies to FMODRM 
-#define FINT 0x40       // applies to FMODRM, FUMODRM 
+#define WBIT 0x80       // applies to MODRM, IMM, NO, SHFT, AX_IM
+#define FAC  0x20       // applies to FMODRM
+#define FINT 0x40       // applies to FMODRM, FUMODRM
 
-// values for the "form" field 
+// values for the "form" field
 // first 5 bits is basic form
 #define FORM_MASK 0x1F
 #define INVALID   0
@@ -122,7 +122,7 @@ enum Forms : BYTE
 };
 
 // OpBytes
-#define OPBYTE_ADD      {0x4, 0x80, 0x0}         // binop, byte2=0x0 
+#define OPBYTE_ADD      {0x4, 0x80, 0x0}         // binop, byte2=0x0
 
 #define OPBYTE_ADDPD    {0x58}                  // modrm
 #define OPBYTE_ADDPS    {0x58}                  // modrm
@@ -142,7 +142,7 @@ enum Forms : BYTE
 #define OPBYTE_BT       {0xba, 0xa3}             // special, modrm
 #define OPBYTE_BTR      {0xba, 0xb3}             // special, modrm
 #define OPBYTE_BTS      {0xba, 0xab}             // special, modrm
-#define OPBYTE_CALL     {0xe8, 0xff}             // call, byte2=2 
+#define OPBYTE_CALL     {0xe8, 0xff}             // call, byte2=2
 #define OPBYTE_CDQ      {0x99}                   // no
 #define OPBYTE_CQO      {0x99}                   // no
 #define OPBYTE_CMOVA    {0x47}                   // modrm
@@ -192,11 +192,11 @@ enum Forms : BYTE
 
 #define OPBYTE_DIVSD    {0x5E}                   // modrm
 #define OPBYTE_DIVSS    {0x5E}                   // modrm
-#define OPBYTE_IDIV     {0xf6}                   // imul, byte2=7 
-#define OPBYTE_IMUL     {0xf6}                   // imul, byte2=5 
-#define OPBYTE_IMUL2    {0x69, 0xaf}             // special, modrm 
+#define OPBYTE_IDIV     {0xf6}                   // imul, byte2=7
+#define OPBYTE_IMUL     {0xf6}                   // imul, byte2=5
+#define OPBYTE_IMUL2    {0x69, 0xaf}             // special, modrm
 #define OPBYTE_INC      {0xfe}                   // incdec, byte2=0
-#define OPBYTE_INT      {0xcc}                   // special 
+#define OPBYTE_INT      {0xcc}                   // special
 #define OPBYTE_JO       {0x80}                   // jo  (rel32 only)
 #define OPBYTE_JNO      {0x81}                   // jno (rel32 only)
 #define OPBYTE_JB       {0x82}                   // jb  (rel32 only)
@@ -214,17 +214,17 @@ enum Forms : BYTE
 #define OPBYTE_JLE      {0x8e}                   // jle (rel32 only)
 #define OPBYTE_JGT      {0x8f}                   // jgt (rel32 only)
 #define OPBYTE_JMP      {0xeb, 0xe9, 0xff}       // jmp, byte2=4
-#define OPBYTE_LEA      {0x8d}                   // modrm 
+#define OPBYTE_LEA      {0x8d}                   // modrm
 
-#define OPBYTE_MAXPD    {0x5f}                  // modrm 
-#define OPBYTE_MAXPS    {0x5f}                  // modrm 
-#define OPBYTE_MINPD    {0x5d}                  // modrm 
-#define OPBYTE_MINPS    {0x5d}                  // modrm 
+#define OPBYTE_MAXPD    {0x5f}                  // modrm
+#define OPBYTE_MAXPS    {0x5f}                  // modrm
+#define OPBYTE_MINPD    {0x5d}                  // modrm
+#define OPBYTE_MINPS    {0x5d}                  // modrm
 
 #define OPBYTE_LZCNT    {0xbd}                   // modrm
 
 #define OPBYTE_OR       {0x0c, 0x80, 0x08}       // binop, byte2=0x1
-#define OPBYTE_MOV      {0xa0, 0xb0, 0xc6, 0x88} // mov, byte2=0 
+#define OPBYTE_MOV      {0xa0, 0xb0, 0xc6, 0x88} // mov, byte2=0
 #define OPBYTE_MOVD     {0x6e}                   // special
 
 #define OPBYTE_MOVHLPS  {0x12}                  // modrm
@@ -240,20 +240,20 @@ enum Forms : BYTE
 #define OPBYTE_MOVSX    {0xbe}                   // modrm
 #define OPBYTE_MOVSXW   {0xbf}                   // modrm
 
-#define OPBYTE_MOVUPS   {0x10}                  // special       
+#define OPBYTE_MOVUPS   {0x10}                  // special
 
-#define OPBYTE_MOVZX    {0xb6}                   // modrm 
-#define OPBYTE_MOVZXW   {0xb7}                   // modrm 
-#define OPBYTE_MOVSXD   {0x63}                   // MODRM 
+#define OPBYTE_MOVZX    {0xb6}                   // modrm
+#define OPBYTE_MOVZXW   {0xb7}                   // modrm
+#define OPBYTE_MOVSXD   {0x63}                   // MODRM
 
 #define OPBYTE_MULPD    {0x59}                  // modrm
 #define OPBYTE_MULPS    {0x59}                  // modrm
 
 #define OPBYTE_MULSD    {0x59}                   // modrm
 #define OPBYTE_MULSS    {0x59}                   // modrm
-#define OPBYTE_NEG      {0xf6}                   // modrm, byte2=3 
+#define OPBYTE_NEG      {0xf6}                   // modrm, byte2=3
 #define OPBYTE_NOP      {0x90}                   // special
-#define OPBYTE_NOT      {0xf6}                   // modrm, byte2=2 
+#define OPBYTE_NOT      {0xf6}                   // modrm, byte2=2
 
 #define OPBYTE_ORPS     {0x56}                  // modrm
 #define OPBYTE_PADDD    {0xfe}                  // modrm
@@ -262,24 +262,24 @@ enum Forms : BYTE
 #define OPBYTE_PCMPGTD  {0x66}                  // modrm
 #define OPBYTE_PMULUDQ  {0xf4}                  // modrm
 
-#define OPBYTE_POP      {0x58, 0, 0x8f}          // pshpop, byte2=0 immed not legal 
+#define OPBYTE_POP      {0x58, 0, 0x8f}          // pshpop, byte2=0 immed not legal
 
 #define OPBYTE_POR      {0xeb}                  // modrm
-#define OPBYTE_PSHUFD   {0x70}                  // special 
+#define OPBYTE_PSHUFD   {0x70}                  // special
 #define OPBYTE_PSLLDQ   {0x73}                  // mmxshift
 #define OPBYTE_PSRLDQ   {0x73}                  // mmxshift
 #define OPBYTE_PSUBD    {0xfa}                  // modrm
 #define OPBYTE_PUNPCKLDQ {0x62}                 // modrm
 
-#define OPBYTE_PUSH     {0x50, 0x68, 0xff}       // pshpop, byte2=6 
+#define OPBYTE_PUSH     {0x50, 0x68, 0xff}       // pshpop, byte2=6
 
 #define OPBYTE_PXOR     {0xef}                  // modrm
 
-#define OPBYTE_RET      {0xc2}                   // special 
+#define OPBYTE_RET      {0xc2}                   // special
 #define OPBYTE_ROUNDSD  {0x0B}                   // modrm
 #define OPBYTE_ROUNDSS  {0x0A}                   // modrm
 #define OPBYTE_SAR      {0xc0, 0xd2}             // shift, byte2=7
-#define OPBYTE_SBB      {0x1c, 0x80, 0x18}       // binop, byte2=3 
+#define OPBYTE_SBB      {0x1c, 0x80, 0x18}       // binop, byte2=3
 #define OPBYTE_SETO     {0x90}                   // modrm
 #define OPBYTE_SETNO    {0x91}                   // modrm
 #define OPBYTE_SETB     {0x92}                   // modrm
@@ -299,8 +299,8 @@ enum Forms : BYTE
 #define OPBYTE_SHL      {0xc0, 0xd2}             // shift, byte2=4
 #define OPBYTE_SHR      {0xc0, 0xd2}             // shift, byte2=5
 
-#define OPBYTE_SHUFPD   {0xc6}                  // special 
-#define OPBYTE_SHUFPS   {0xc6}                  // special 
+#define OPBYTE_SHUFPD   {0xc6}                  // special
+#define OPBYTE_SHUFPS   {0xc6}                  // special
 
 #define OPBYTE_SQRTSD   {0x51}                   // modrm
 
@@ -309,7 +309,7 @@ enum Forms : BYTE
 
 #define OPBYTE_SQRTSS   {0x51}                   // modrm
 #define OPBYTE_SHLD     {0xa4}                   // special
-#define OPBYTE_SUB      {0x2c, 0x80, 0x28}       // binop, byte2=5 
+#define OPBYTE_SUB      {0x2c, 0x80, 0x28}       // binop, byte2=5
 
 #define OPBYTE_SUBPD    {0x5C}                  // modrm
 #define OPBYTE_SUBPS    {0x5C}                  // modrm

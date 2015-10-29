@@ -11,10 +11,10 @@ namespace Js
         // TODO: Change this to LeafValueDictionary
         typedef JsUtil::SynchronizedDictionary<Js::LocalFunctionId, Js::FunctionBody*, Recycler> FunctionBodyDictionary;
         typedef JsUtil::SynchronizedDictionary<Js::LocalFunctionId, Js::ParseableFunctionInfo*, Recycler> DeferredFunctionsDictionary;
-        
+
         friend class RemoteUtf8SourceInfo;
         friend class ScriptContext;
-    public:       
+    public:
         bool HasSource() const { return !this->sourceHolder->IsEmpty(); }
 
         LPCUTF8 GetSource(const wchar_t * reason = nullptr) const;
@@ -45,7 +45,7 @@ namespace Js
             return this->debugModeSource != nullptr || this->debugModeSourceIsEmpty;
         }
 
-        // For Hybrid debugging purposes we need to have the source mapped in because jscript9 may be in a frozen state when the source would be needed.
+        // For Hybrid debugging purposes we need to have the source mapped in because chakra may be in a frozen state when the source would be needed.
         void SetInDebugMode(bool inDebugMode)
         {
             AssertMsg(this->sourceHolder != nullptr, "We have no source holder.");
@@ -89,12 +89,12 @@ namespace Js
             return cbIndex < GetCbLength(L"CharacterIndexToByteIndex") ? static_cast< charcount_t>(GetCbLength(L"CharacterIndexToByteIndex") == m_cchLength ? cbIndex : utf8::ByteIndexIntoCharacterIndex(this->GetSource(L"CharacterIndexToByteIndex"), cbIndex, utf8::doAllowThreeByteSurrogates)) : static_cast< charcount_t >(GetCbLength(L"CharacterIndexToByteIndex"));
         }
 
-        size_t GetCchLength() const
+        charcount_t GetCchLength() const
         {
             return m_cchLength;
         }
 
-        void SetCchLength(size_t cchLength)
+        void SetCchLength(charcount_t cchLength)
         {
             m_cchLength = cchLength;
         }
@@ -106,13 +106,13 @@ namespace Js
 
         void EnsureInitialized(int initialFunctionCount);
 
-        // The following 3 functions are on individual functions that exist within this 
+        // The following 3 functions are on individual functions that exist within this
         // source info- for them to be called, byte code generation should have created
-        // the function body in question, in which case, functionBodyDictionary needs to have 
-        // been initialized       
+        // the function body in question, in which case, functionBodyDictionary needs to have
+        // been initialized
         void SetFunctionBody(FunctionBody * functionBody);
         void RemoveFunctionBody(FunctionBody* functionBodyBeingRemoved);
-        
+
         // The following functions could get called even if EnsureInitialized hadn't gotten called
         // (Namely in the OOM scenario), so we simply guard against that condition rather than
         // asserting
@@ -175,14 +175,14 @@ namespace Js
         {
             Js::FunctionBody* matchedFunctionBody = nullptr;
 
-            // Function body collection could be null if we OOMed 
+            // Function body collection could be null if we OOMed
             // during byte code generation but the source info didn't get
-            // collected because of of a false positive reference- we should
+            // collected because of a false positive reference- we should
             // skip over these Utf8SourceInfos.
             if (this->functionBodyDictionary)
             {
                 this->functionBodyDictionary->Map(
-                    [&matchedFunctionBody, predicate] (Js::LocalFunctionId, Js::FunctionBody* functionBody) 
+                    [&matchedFunctionBody, predicate] (Js::LocalFunctionId, Js::FunctionBody* functionBody)
                 {
                     Assert(functionBody);
                     if (predicate(functionBody)) {
@@ -197,7 +197,7 @@ namespace Js
             return matchedFunctionBody;
         }
 
-        void SetTridentBuffer(BYTE * pcszCode);
+        void SetHostBuffer(BYTE * pcszCode);
 
         bool HasDebugDocument() const
         {
@@ -271,7 +271,7 @@ namespace Js
 
         virtual void Finalize(bool isShutdown) override { /* nothing */ }
         virtual void Dispose(bool isShutdown) override;
-        virtual void Mark(Recycler *recycler) override { AssertMsg(false, "Mark called on object that isnt TrackableObject"); }
+        virtual void Mark(Recycler *recycler) override { AssertMsg(false, "Mark called on object that isn't TrackableObject"); }
 
         static Utf8SourceInfo* NewWithHolder(ScriptContext* scriptContext, ISourceHolder* sourceHolder, int32 length, SRCINFO const* srcInfo);
         static Utf8SourceInfo* New(ScriptContext* scriptContext, LPCUTF8 utf8String, int32 length, size_t numBytes, SRCINFO const* srcInfo);
@@ -291,21 +291,21 @@ namespace Js
             this->m_lineOffsetCache = nullptr;
         }
 
-        void CreateLineOffsetCache(const JsUtil::LineOffsetCache<Recycler>::LineOffsetCacheItem *items, size_t numberOfItems);
+        void CreateLineOffsetCache(const JsUtil::LineOffsetCache<Recycler>::LineOffsetCacheItem *items, charcount_t numberOfItems);
 
         size_t GetLineCount()
         {
             return this->GetLineOffsetCache()->GetLineCount();
         }
 
-        JsUtil::LineOffsetCache<Recycler> *GetLineOffsetCache() 
+        JsUtil::LineOffsetCache<Recycler> *GetLineOffsetCache()
         {
             AssertMsg(this->m_lineOffsetCache != nullptr, "LineOffsetCache wasn't created, EnsureLineOffsetCache should have been called.");
             return m_lineOffsetCache;
         }
 
         void GetLineInfoForCharPosition(charcount_t charPosition, charcount_t *outLineNumber, charcount_t *outColumn, charcount_t *outLineByteOffset, bool allowSlowLookup = false);
-        
+
         void GetCharPositionForLineInfo(charcount_t lineNumber, charcount_t *outCharPosition, charcount_t *outByteOffset)
         {
             Assert(outCharPosition != nullptr && outByteOffset != nullptr);
@@ -315,17 +315,17 @@ namespace Js
         void TrackDeferredFunction(Js::LocalFunctionId functionID, Js::ParseableFunctionInfo *function);
         void StopTrackingDeferredFunction(Js::LocalFunctionId functionID);
 
-        template <class Fn> 
+        template <class Fn>
         void UndeferGlobalFunctions(Fn fn)
         {
             if (this->m_scriptContext->DoUndeferGlobalFunctions())
             {
                 Assert(m_deferredFunctionsInitialized);
-                if (m_deferredFunctionsDictionary == nullptr) 
+                if (m_deferredFunctionsDictionary == nullptr)
                 {
                     return;
                 }
-            
+
                 DeferredFunctionsDictionary *tmp = this->m_deferredFunctionsDictionary;
                 this->m_deferredFunctionsDictionary = nullptr;
 
@@ -349,14 +349,14 @@ namespace Js
         bool GetDebugDocumentName(BSTR * sourceName);
     private:
 
-        size_t m_cchLength;               // The number of characters encoded in m_utf8Source.
+        charcount_t m_cchLength;               // The number of characters encoded in m_utf8Source.
         ISourceHolder* sourceHolder;
         union
         {
-            BYTE* m_pTridentBuffer;  // Pointer to a trident source buffer (null unless this is trident code that we need to free)
+            BYTE* m_pHostBuffer;  // Pointer to a host source buffer (null unless this is host code that we need to free)
             Utf8SourceInfo const* m_pOriginalSourceInfo; // Pointer to source info with original source text, created during cloning
         };
-        
+
         FunctionBodyDictionary* functionBodyDictionary;
         DeferredFunctionsDictionary* m_deferredFunctionsDictionary;
 
@@ -368,7 +368,7 @@ namespace Js
         LPCUTF8 debugModeSource;
         size_t debugModeSourceLength;
 
-        ScriptContext* const m_scriptContext;   // Pointer to ScriptContext under which this source info was created 
+        ScriptContext* const m_scriptContext;   // Pointer to ScriptContext under which this source info was created
 
         // Line offset cache used for quickly finding line/column offsets.
         JsUtil::LineOffsetCache<Recycler>* m_lineOffsetCache;
@@ -378,7 +378,7 @@ namespace Js
 
         bool m_deferredFunctionsInitialized : 1;
         bool m_isCesu8 : 1;
-        bool m_hasTridentBuffer : 1;
+        bool m_hasHostBuffer : 1;
         bool m_isLibraryCode : 1;           // true, the current source belongs to the internal library code. Used for debug purpose to not show in debugger
         bool m_isXDomain : 1;
         // we found that m_isXDomain could cause regression without CORS, so the new flag is just for callee.caller in window.onerror

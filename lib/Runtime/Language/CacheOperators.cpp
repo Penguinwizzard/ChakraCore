@@ -4,6 +4,9 @@
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeLanguagePch.h"
 
+#if DBG
+#include "Types\PathTypeHandler.h"
+#endif
 #if DBG_DUMP
 #include "Language\JavascriptStackWalker.h"
 #endif

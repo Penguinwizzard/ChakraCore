@@ -31,13 +31,13 @@ public:
         }
     }
 
-    // Convenience function which uses DefaultOverflowPolicy (throws OOM when overflow)
+    // Convenience function which uses DefaultOverflowPolicy (throws OOM upon overflow)
     static uint16 Add(uint16 lhs, uint16 rhs)
     {
         return Add(lhs, rhs, ::Math::DefaultOverflowPolicy);
     }
 
-    // Convenience functions which return a bool indicating overflow
+    // Convenience function which returns a bool indicating overflow
     static bool Add(uint16 lhs, uint16 rhs, __out uint16* result)
     {
         ::Math::RecordOverflowPolicy overflowGuard;
@@ -45,7 +45,7 @@ public:
         return overflowGuard.HasOverflowed();
     }
 
-    // Convenience function which uses DefaultOverflowPolicy (throws OOM when overflow)
+    // Convenience function which uses DefaultOverflowPolicy (throws OOM upon overflow)
     static void Inc(uint16& lhs)
     {
         Inc(lhs, ::Math::DefaultOverflowPolicy);

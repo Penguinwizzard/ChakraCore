@@ -19,7 +19,7 @@ function foo(arr, i, expected)
     var z = 0;
     for(var j = 0;j<10;j++){
         arr = arr[i];
-        z += arr + 10;  
+        z += arr + 10;
         arr = A;
     }
     if (z != expected)

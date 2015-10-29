@@ -55,7 +55,7 @@
 
     // If we now add more properties to reach the same type handler as o1 and o2, we shoudln't
     // hit any surprises with locked or unlocked inline slot capacity.
-    // Windows Blue Bug 170326: EnsureInlineSlotCapacityLocked called when JIT-ing construct1
+    // Bug 170326: EnsureInlineSlotCapacityLocked called when JIT-ing construct1
     // would lock inline slot capacity from the given type handler down the successor tree - 
     // without starting at the root.
     o3.g = 1;

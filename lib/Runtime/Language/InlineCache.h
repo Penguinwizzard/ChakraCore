@@ -62,15 +62,15 @@ namespace Js
         {
             // Invariants:
             // - Type* fields do not overlap.
-            // - "next" field is non-null iff the cache is linked in a list of proto-caches 
+            // - "next" field is non-null iff the cache is linked in a list of proto-caches
             //   (see ScriptContext::RegisterProtoInlineCache and ScriptContext::InvalidateProtoCaches).
 
             struct s_local
             {
                 Type* type;
 
-                // PatchPutValue caches here the type the object has before a new property is added. 
-                // If this type is hit again we can immediately change the object's type to "type" 
+                // PatchPutValue caches here the type the object has before a new property is added.
+                // If this type is hit again we can immediately change the object's type to "type"
                 // and store the value into the slot "slotIndex".
                 Type* typeWithoutProperty;
 
@@ -79,7 +79,7 @@ namespace Js
                     struct
                     {
                         uint16 isLocal : 1;
-                        uint16 requiredAuxSlotCapacity : 15;     // Maximum auxiliary slot capactiy (for a path type) must be < 2^16
+                        uint16 requiredAuxSlotCapacity : 15;     // Maximum auxiliary slot capacity (for a path type) must be < 2^16
                     };
                     struct
                     {
@@ -87,10 +87,10 @@ namespace Js
                     };
                 };
                 uint16 slotIndex;
-            } local;                                         
-                                                             
+            } local;
+
             struct s_proto
-            {                                                
+            {
                 uint16 isProto : 1;
                 uint16 isMissing : 1;
                 uint16 unused : 14;
@@ -306,19 +306,19 @@ namespace Js
 
         static uint GetGetterFlagMask()
         {
-            // First bit is marked for isAccessor in the accessor cache layout. 
+            // First bit is marked for isAccessor in the accessor cache layout.
             return  InlineCacheGetterFlag << 1;
         }
 
         static uint GetSetterFlagMask()
         {
-            // First bit is marked for isAccessor in the accessor cache layout. 
+            // First bit is marked for isAccessor in the accessor cache layout.
             return  InlineCacheSetterFlag << 1;
         }
 
         static uint GetGetterSetterFlagMask()
         {
-            // First bit is marked for isAccessor in the accessor cache layout. 
+            // First bit is marked for isAccessor in the accessor cache layout.
             return  (InlineCacheGetterFlag | InlineCacheSetterFlag) << 1;
         }
 
@@ -365,7 +365,7 @@ namespace Js
         int32 inlineCachesFillInfo;
 
         // DList chaining all polymorphic inline caches of a FunctionBody together.
-        // Since PolymorphicInlineCache is a leaf object, these references do not keep 
+        // Since PolymorphicInlineCache is a leaf object, these references do not keep
         // the polymorphic inline caches alive. When a PolymorphicInlineCache is finalized,
         // it removes itself from the list and deletes its inline cache array.
         PolymorphicInlineCache * next;
@@ -399,7 +399,7 @@ namespace Js
         template<bool isAccessor>
         bool HasDifferentType(const bool isProto, const Type * type, const Type * typeWithoutProperty) const;
         bool HasType_Flags(const Type * type) const;
-        
+
         InlineCache * GetInlineCaches() const { return inlineCaches; }
         uint16 GetSize() const { return size; }
         PolymorphicInlineCache * GetNext() { return next; }
@@ -413,7 +413,7 @@ namespace Js
 
         virtual void Finalize(bool isShutdown) override;
         virtual void Dispose(bool isShutdown) override { };
-        virtual void Mark(Recycler *recycler) override { AssertMsg(false, "Mark called on object that isnt TrackableObject"); }
+        virtual void Mark(Recycler *recycler) override { AssertMsg(false, "Mark called on object that isn't TrackableObject"); }
 
         void CacheLocal(
             Type *const type,
@@ -506,7 +506,7 @@ namespace Js
         template <typename TDelegate>
         bool CheckClonedInlineCache(uint inlineCacheIndex, TDelegate mapper);
 #endif
-#if INTRUSIVE_TESTTRACE_PolymorphicInlineCache 
+#if INTRUSIVE_TESTTRACE_PolymorphicInlineCache
         uint GetEntryCount()
         {
             uint count = 0;
@@ -522,7 +522,7 @@ namespace Js
 #endif
     };
 
-    class EquivalentTypeSet 
+    class EquivalentTypeSet
     {
     private:
         Type** types;
@@ -585,7 +585,7 @@ namespace Js
             DynamicType* type;
             ScriptContext* scriptContext;
             // In a pinch we could eliminate this and store type pending sharing in the type field as long
-            // as the guard value flags fit below the object alignment boundary.  However, this wouldn't 
+            // as the guard value flags fit below the object alignment boundary.  However, this wouldn't
             // keep the type alive, so it would only work if we zeroed constructor caches before GC.
             DynamicType* pendingType;
 
@@ -600,7 +600,7 @@ namespace Js
             bool typeUpdatePending : 1;
             bool ctorHasNoExplicitReturnValue : 1;
             bool skipDefaultNewObject : 1;
-            // This field indicates that the type stored in this cache is the final type after constructor. 
+            // This field indicates that the type stored in this cache is the final type after constructor.
             bool typeIsFinal : 1;
             // This field indicates that the constructor cache has been invalidated due to a constructor's prototype property change.
             // We use this flag to determine if we should mark the cache as polymorphic and not attempt subsequent optimizations.
@@ -616,8 +616,8 @@ namespace Js
 
             int16 inlineSlotCount;
         };
-        
-        union 
+
+        union
         {
             GuardStruct guard;
             ContentStruct content;
@@ -630,7 +630,7 @@ namespace Js
         static ConstructorCache DefaultInstance;
 
     public:
-        ConstructorCache() 
+        ConstructorCache()
         {
             this->content.type = nullptr;
             this->content.scriptContext = nullptr;
@@ -747,7 +747,7 @@ namespace Js
             this->content.inlineSlotCount = typeHandler->GetInlineSlotCapacity();
             Assert(IsConsistent());
         }
-         
+
         void EnableAfterTypeUpdate()
         {
             Assert(IsConsistent());
@@ -930,7 +930,7 @@ namespace Js
 #if DBG
         bool IsConsistent() const
         {
-            return this->guard.value == CtorCacheGuardValues::Invalid || 
+            return this->guard.value == CtorCacheGuardValues::Invalid ||
                 (this->content.isPopulated && (
                 (this->guard.value == CtorCacheGuardValues::Special && !this->content.updateAfterCtor && this->content.skipDefaultNewObject && !this->content.typeUpdatePending && this->content.slotCount == 0 && this->content.inlineSlotCount == 0 && this->content.pendingType == nullptr) ||
                 (this->guard.value == CtorCacheGuardValues::Special && !this->content.updateAfterCtor && this->content.typeUpdatePending && !this->content.skipDefaultNewObject && this->content.pendingType != nullptr) ||

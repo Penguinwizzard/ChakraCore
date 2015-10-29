@@ -97,7 +97,7 @@ NativeCodeData::Allocator::Finalize()
 //////////////////////////////////////////////////////////////////////////
 //NativeCodeData::Allocator::Free
 //This function should not be called at all because the life time is active during the run time
-//This function is added as a hack to enable Dictionary(has calls to Free() Method - which will never be called as it will be 
+//This function is added to enable Dictionary(has calls to Free() Method - which will never be called as it will be 
 //allocated as a NativeAllocator to be allocated with NativeAllocator)
 //////////////////////////////////////////////////////////////////////////
 void 

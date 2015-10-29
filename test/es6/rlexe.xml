@@ -860,6 +860,12 @@
   </test>
   <test>
     <default>
+      <files>regex-annex-b.js</files>
+      <compile-flags>-args summary -endargs</compile-flags>
+    </default>
+  </test>
+  <test>
+    <default>
       <files>regex-case-folding.js</files>
       <compile-flags>-version:6 -ES6RegExSticky -args summary -endargs</compile-flags>
     </default>
@@ -869,6 +875,12 @@
       <files>regex-octoquad.js</files>
       <compile-flags>-RegexOptimize -args summary -endargs</compile-flags>
       <tags>exclude_fre</tags>
+    </default>
+  </test>
+  <test>
+    <default>
+      <files>regex-quantifiers.js</files>
+      <compile-flags>-args summary -endargs</compile-flags>
     </default>
   </test>
   <test>

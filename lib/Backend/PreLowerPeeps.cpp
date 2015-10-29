@@ -117,8 +117,6 @@ IR::Instr *Lowerer::PeepBrBool(IR::Instr *instrBr)
     //    BrCC c, d,  $L_true
     //$L_false:
 
-    // TODO:  Add floats?
-
     src1 = instrBr->GetSrc1();
     if (!src1->IsRegOpnd())
     {

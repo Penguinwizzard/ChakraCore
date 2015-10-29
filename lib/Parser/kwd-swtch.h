@@ -2,9 +2,9 @@
 // Copyright (C) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
-// GENERATED FILE, DO NOT HAND MODIFIY
+// GENERATED FILE, DO NOT HAND-MODIFY!
 // Generated with the following command line: wscript jsscan.js kwd-lsc.h kwd-swtch.h
-// This should be regenerated whenever the keywords change
+// This should be regenerated whenever the keywords change.
 
     case 'a':
         if (identifyKwds)
@@ -23,7 +23,7 @@
             case 'r':
                 if (p[1] == 'g' && p[2] == 'u' && p[3] == 'm' && p[4] == 'e' && p[5] == 'n' && p[6] == 't' && p[7] == 's' && !IsIdContinueNext(p+8, last)) {
                     p += 8;
-                    goto LArguments ;
+                    goto LArguments;
                 }
                 break;
             }
@@ -169,7 +169,7 @@
             case 'v':
                 if (p[1] == 'a' && p[2] == 'l' && !IsIdContinueNext(p+3, last)) {
                     p += 3;
-                    goto LEval ;
+                    goto LEval;
                 }
                 break;
             }
@@ -385,7 +385,7 @@
             case 'a':
                 if (p[1] == 'r' && p[2] == 'g' && p[3] == 'e' && p[4] == 't' && !IsIdContinueNext(p+5, last)) {
                     p += 5;
-                    goto LTarget ;
+                    goto LTarget;
                 }
                 break;
             }

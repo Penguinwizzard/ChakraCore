@@ -8,7 +8,7 @@
 ///
 /// Encoder::Encode
 ///
-///     Main entrypoint of encoder.  Encode each IR instruction into the 
+///     Main entrypoint of encoder.  Encode each IR instruction into the
 ///     appropriate machine encoding.
 ///
 ///----------------------------------------------------------------------------
@@ -20,7 +20,7 @@ Encoder::Encode()
 
     uint32 instrCount = m_func->GetInstrCount();
     size_t totalJmpTableSizeInBytes = 0;
-    
+
     JmpTableList * jumpTableListForSwitchStatement = nullptr;
 
     m_encoderMD.Init(this);
@@ -35,7 +35,7 @@ Encoder::Encode()
     m_pragmaInstrToRecordMap    = Anew(m_tempAlloc, PragmaInstrList, m_tempAlloc);
     if (DoTrackAllStatementBoundary())
     {
-        // Create a new list, if we are tracking all statement boundary, 
+        // Create a new list, if we are tracking all statement boundary,
         m_pragmaInstrToRecordOffset = Anew(m_tempAlloc, PragmaInstrList, m_tempAlloc);
     }
     else
@@ -70,9 +70,9 @@ Encoder::Encode()
     bool inProlog = false;
 #endif
     bool isCallInstr = false;
-    
+
     FOREACH_INSTR_IN_FUNC(instr, m_func)
-    {        
+    {
         Assert(Lowerer::ValidOpcodeAfterLower(instr, m_func));
 
         if (GetCurrentOffset() + MachMaxInstrSize < m_encodeBufferSize)
@@ -81,7 +81,7 @@ Encoder::Encode()
 
 #if DBG_DUMP
             AssertMsg(m_instrNumber < instrCount, "Bad instr count?");
-            __analysis_assume(m_instrNumber < instrCount);            
+            __analysis_assume(m_instrNumber < instrCount);
             m_offsetBuffer[m_instrNumber++] = GetCurrentOffset();
 #endif
             if (instr->IsPragmaInstr())
@@ -105,7 +105,7 @@ Encoder::Encode()
                     // will record after BR shortening with adjusted offsets
                     if (DoTrackAllStatementBoundary())
                     {
-                        m_pragmaInstrToRecordOffset->Add(pragmaInstr);                        
+                        m_pragmaInstrToRecordOffset->Add(pragmaInstr);
                     }
 
                     break;
@@ -125,7 +125,7 @@ Encoder::Encode()
                     BranchJumpTableWrapper * branchJumpTableWrapper = multiBranchInstr->GetBranchJumpTable();
                     if (jumpTableListForSwitchStatement == nullptr)
                     {
-                        jumpTableListForSwitchStatement = Anew(m_tempAlloc, JmpTableList, m_tempAlloc);;
+                        jumpTableListForSwitchStatement = Anew(m_tempAlloc, JmpTableList, m_tempAlloc);
                     }
                     jumpTableListForSwitchStatement->Add(branchJumpTableWrapper);
 
@@ -137,7 +137,7 @@ Encoder::Encode()
                     EncoderMD * encoderMD = &(this->m_encoderMD);
                     multiBranchInstr->MapMultiBrTargetByAddress([=](void ** offset) -> void
                     {
-#if defined(_M_ARM32_OR_ARM64) 
+#if defined(_M_ARM32_OR_ARM64)
                         encoderMD->AddLabelReloc((byte*) offset);
 #else
                         encoderMD->AppendRelocEntry(RelocTypeLabelUse, (void*) (offset));
@@ -152,9 +152,8 @@ Encoder::Encode()
                 {
                     // will record throw map after BR shortening with adjusted offsets
                     m_pragmaInstrToRecordMap->Add(pragmaInstr);
-                    pragmaInstr = nullptr; // Only once per pragma isntr - do we need to make this record
+                    pragmaInstr = nullptr; // Only once per pragma instr -- do we need to make this record?
                 }
-
 
                 if (instr->HasBailOutInfo())
                 {
@@ -194,7 +193,7 @@ Encoder::Encode()
                 Output::SkipToColumn(80);
                 for (BYTE * current = m_pc; current < m_pc + count; current++)
                 {
-                    Output::Print(L"%02X ", *current);                    
+                    Output::Print(L"%02X ", *current);
                 }
                 Output::Print(L"\n");
                 Output::Flush();
@@ -225,7 +224,7 @@ Encoder::Encode()
         {
             Fatal();
         }
-    } NEXT_INSTR_IN_FUNC;   
+    } NEXT_INSTR_IN_FUNC;
 
     ptrdiff_t codeSize = m_pc - m_encodeBuffer + totalJmpTableSizeInBytes;
 
@@ -235,7 +234,7 @@ Encoder::Encode()
     if (!PHASE_OFF(Js::BrShortenPhase, m_func))
     {
         isSuccessBrShortAndLoopAlign = ShortenBranchesAndLabelAlign(&m_encodeBuffer, &codeSize);
-    }   
+    }
 #endif
 #if DBG_DUMP | defined(VTUNE_PROFILING)
     if (this->m_func->DoRecordNativeMap())
@@ -247,7 +246,7 @@ Encoder::Encode()
             inst->Record(inst->m_offsetInBuffer);
         }
     }
-#endif 
+#endif
     for (int32 i = 0; i < m_pragmaInstrToRecordMap->Count(); i ++)
     {
         IR::PragmaInstr *inst = m_pragmaInstrToRecordMap->Item(i);
@@ -267,7 +266,7 @@ Encoder::Encode()
     xdataSize = (ushort)m_func->m_prologEncoder.SizeOfUnwindInfo();
 #elif _M_ARM
     pdataCount = (ushort)m_func->m_unwindInfo.GetPDataCount(codeSize);
-    xdataSize = (UnwindInfoManager::MaxXdataBytes + 3) * pdataCount;    
+    xdataSize = (UnwindInfoManager::MaxXdataBytes + 3) * pdataCount;
 #else
     xdataSize = 0;
     pdataCount = 0;
@@ -275,7 +274,7 @@ Encoder::Encode()
     OUTPUT_VERBOSE_TRACE(Js::EmitterPhase, L"PDATA count:%u\n", pdataCount);
     OUTPUT_VERBOSE_TRACE(Js::EmitterPhase, L"Size of XDATA:%u\n", xdataSize);
     OUTPUT_VERBOSE_TRACE(Js::EmitterPhase, L"Size of code:%u\n", codeSize);
-    
+
     TryCopyAndAddRelocRecordsForSwitchJumpTableEntries(m_encodeBuffer, codeSize, jumpTableListForSwitchStatement, totalJmpTableSizeInBytes);
 
     workItem->RecordNativeCodeSize(m_func, (DWORD)codeSize, pdataCount, xdataSize);
@@ -283,15 +282,14 @@ Encoder::Encode()
     this->m_bailoutRecordMap->MapAddress([=](int index, LazyBailOutRecord* record)
     {
         this->m_encoderMD.AddLabelReloc((BYTE*)&record->instructionPointer);
-    }); 
+    });
 
     // Relocs
     m_encoderMD.ApplyRelocs((size_t) workItem->GetCodeAddress());
 
     workItem->RecordNativeCode(m_func, m_encodeBuffer);
-    
+
     m_func->GetScriptContext()->GetThreadContext()->SetValidCallTargetForCFG((PVOID) workItem->GetCodeAddress());
-    
 
 #ifdef _M_X64
     m_func->m_prologEncoder.FinalizeUnwindInfo();
@@ -307,7 +305,7 @@ Encoder::Encode()
         isSimpleJit ||
         entryPointInfo->GetJitTransferData() != nullptr && !entryPointInfo->GetJitTransferData()->GetIsReady());
 
-    if (this->m_inlineeFrameMap->Count() > 0 && 
+    if (this->m_inlineeFrameMap->Count() > 0 &&
         !(this->m_inlineeFrameMap->Count() == 1 && this->m_inlineeFrameMap->Item(0).record == nullptr))
     {
         AssertMsg(!this->m_func->IsLoopBody(), "Loop body does not support inlining.");
@@ -337,7 +335,7 @@ Encoder::Encode()
         if (PHASE_TRACE(Js::TracePinnedTypesPhase, this->m_func))
         {
             wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
-            Output::Print(L"PinnedTypes: function %s(%s) pinned %d types.\n", 
+            Output::Print(L"PinnedTypes: function %s(%s) pinned %d types.\n",
                 this->m_func->GetJnFunction()->GetDisplayName(), this->m_func->GetJnFunction()->GetDebugNumberSet(debugStringBuffer), pinnedTypeRefCount);
             Output::Flush();
         }
@@ -392,7 +390,7 @@ Encoder::Encode()
 #endif
 
         int guardSlotCount = 0;
-        this->m_func->propertyGuardsByPropertyId->Map([&guardSlotCount](Js::PropertyId propertyId, Func::IndexedPropertyGuardSet* set) -> void 
+        this->m_func->propertyGuardsByPropertyId->Map([&guardSlotCount](Js::PropertyId propertyId, Func::IndexedPropertyGuardSet* set) -> void
         {
             guardSlotCount += set->Count();
         });
@@ -403,19 +401,19 @@ Encoder::Encode()
             guardSlotCount * sizeof(Js::JitIndexedPropertyGuard*);  //   a pointer for each guard we counted above.
 
         // The extra room for sizeof(Js::TypePropertyGuardEntry) allocated by HeapNewPlus will be used for the terminating invalid propertyId.
-        // Review (jedmiad): Skip zeroing?  This is heap allocated so there shoudn't be any false recycler references.
+        // Review (jedmiad): Skip zeroing?  This is heap allocated so there shouldn't be any false recycler references.
         Js::TypeGuardTransferEntry* typeGuardTransferRecord = HeapNewPlusZ(typeGuardTransferSize, Js::TypeGuardTransferEntry);
 
         Func* func = this->m_func;
 
         Js::TypeGuardTransferEntry* dstEntry = typeGuardTransferRecord;
-        this->m_func->propertyGuardsByPropertyId->Map([func, &dstEntry](Js::PropertyId propertyId, Func::IndexedPropertyGuardSet* srcSet) -> void 
+        this->m_func->propertyGuardsByPropertyId->Map([func, &dstEntry](Js::PropertyId propertyId, Func::IndexedPropertyGuardSet* srcSet) -> void
         {
             dstEntry->propertyId = propertyId;
 
             int guardIndex = 0;
 
-            srcSet->Map([dstEntry, &guardIndex](Js::JitIndexedPropertyGuard* guard) -> void 
+            srcSet->Map([dstEntry, &guardIndex](Js::JitIndexedPropertyGuard* guard) -> void
             {
                 dstEntry->guards[guardIndex++] = guard;
             });
@@ -449,7 +447,7 @@ Encoder::Encode()
 #endif
 
         int cacheSlotCount = 0;
-        this->m_func->ctorCachesByPropertyId->Map([&cacheSlotCount](Js::PropertyId propertyId, Func::CtorCacheSet* cacheSet) -> void 
+        this->m_func->ctorCachesByPropertyId->Map([&cacheSlotCount](Js::PropertyId propertyId, Func::CtorCacheSet* cacheSet) -> void
         {
             cacheSlotCount += cacheSet->Count();
         });
@@ -460,19 +458,19 @@ Encoder::Encode()
             cacheSlotCount * sizeof(Js::JitIndexedPropertyGuard*);     //   a pointer for each cache we counted above.
 
         // The extra room for sizeof(Js::CtorCacheGuardTransferEntry) allocated by HeapNewPlus will be used for the terminating invalid propertyId.
-        // Review (jedmiad): Skip zeroing?  This is heap allocated so there shoudn't be any false recycler references.
+        // Review (jedmiad): Skip zeroing?  This is heap allocated so there shouldn't be any false recycler references.
         Js::CtorCacheGuardTransferEntry* ctorCachesTransferRecord = HeapNewPlusZ(ctorCachesTransferSize, Js::CtorCacheGuardTransferEntry);
 
         Func* func = this->m_func;
 
         Js::CtorCacheGuardTransferEntry* dstEntry = ctorCachesTransferRecord;
-        this->m_func->ctorCachesByPropertyId->Map([func, &dstEntry](Js::PropertyId propertyId, Func::CtorCacheSet* srcCacheSet) -> void 
+        this->m_func->ctorCachesByPropertyId->Map([func, &dstEntry](Js::PropertyId propertyId, Func::CtorCacheSet* srcCacheSet) -> void
         {
             dstEntry->propertyId = propertyId;
 
             int cacheIndex = 0;
 
-            srcCacheSet->Map([dstEntry, &cacheIndex](Js::ConstructorCache* cache) -> void 
+            srcCacheSet->Map([dstEntry, &cacheIndex](Js::ConstructorCache* cache) -> void
             {
                 dstEntry->caches[cacheIndex++] = cache;
             });
@@ -521,7 +519,7 @@ Encoder::Encode()
         } NEXT_INSTR_IN_FUNC;
         Output::Flush();
 
-        Js::Configuration::Global.flags.DumpIRAddresses = dumpIRAddressesValue;;
+        Js::Configuration::Global.flags.DumpIRAddresses = dumpIRAddressesValue;
     }
 
     if (PHASE_DUMP(Js::EncoderPhase, m_func) && Js::Configuration::Global.flags.Verbose)
@@ -549,7 +547,7 @@ void Encoder::TryCopyAndAddRelocRecordsForSwitchJumpTableEntries(BYTE *codeStart
     {
         return;
     }
-    
+
     BYTE * jmpTableStartAddress = codeStart + codeSize - totalJmpTableSizeInBytes;
     JitArenaAllocator * allocator = this->m_func->m_alloc;
     EncoderMD * encoderMD = &m_encoderMD;
@@ -563,7 +561,7 @@ void Encoder::TryCopyAndAddRelocRecordsForSwitchJumpTableEntries(BYTE *codeStart
 
         AssertMsg(branchJumpTableWrapper->labelInstr != nullptr, "Label not yet created?");
         Assert(branchJumpTableWrapper->labelInstr->GetPC() == nullptr);
-        
+
         branchJumpTableWrapper->labelInstr->SetPC(jmpTableStartAddress);
         memcpy(jmpTableStartAddress, srcJmpTable, jmpTableSizeInBytes);
 
@@ -579,7 +577,7 @@ void Encoder::TryCopyAndAddRelocRecordsForSwitchJumpTableEntries(BYTE *codeStart
         }
 
         jmpTableStartAddress += (jmpTableSizeInBytes);
-        
+
         BranchJumpTableWrapper::Delete(allocator, branchJumpTableWrapper);
     });
 
@@ -608,7 +606,7 @@ void Encoder::RecordInlineeFrame(Func* inlinee, uint32 currentOffset)
         {
             // update existing record if the entry is the same.
             NativeOffsetInlineeFramePair& lastPair = m_inlineeFrameMap->Item(m_inlineeFrameMap->Count() - 1);
-            
+
             if (lastPair.record == record)
             {
                 lastPair.offset = currentOffset;
@@ -624,7 +622,7 @@ void Encoder::RecordInlineeFrame(Func* inlinee, uint32 currentOffset)
 ///----------------------------------------------------------------------------
 ///
 /// EncoderMD::ShortenBranchesAndLabelAlign
-/// We try to shorten branches if the label instr is within 8-bits target range (-128 to 127) 
+/// We try to shorten branches if the label instr is within 8-bits target range (-128 to 127)
 /// and fix the relocList accordingly.
 /// Also align LoopTop Label and TryCatchLabel
 ///----------------------------------------------------------------------------
@@ -642,7 +640,7 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize)
     BYTE* buffStart = *codeStart;
     BYTE* buffEnd = buffStart + *codeSize;
     ptrdiff_t newCodeSize = *codeSize;
-    
+
 
 #if DBG
     // Sanity check
@@ -650,8 +648,8 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize)
 #endif
 
     // Copy of original maps. Used to revert from BR shortening.
-    OffsetList  *m_origInlineeFrameRecords = nullptr, 
-        *m_origInlineeFrameMap = nullptr, 
+    OffsetList  *m_origInlineeFrameRecords = nullptr,
+        *m_origInlineeFrameMap = nullptr,
         *m_origPragmaInstrToRecordOffset = nullptr;
 
     OffsetList  *m_origOffsetBuffer = nullptr;
@@ -676,9 +674,9 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize)
         uint32 bytesSaved = 0;
         BYTE* labelPc, *opcodeByte;
         BYTE* shortBrPtr, *fixedBrPtr /*without shortening*/;
-            
+
         EncodeRelocAndLabels &reloc = relocList->Item(j);
-        
+
         // If not a long branch, just fix the reloc entry and skip.
         if (!reloc.isLongBr())
         {
@@ -708,26 +706,30 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize)
         shortBrPtr = fixedBrPtr = (BYTE*)reloc.m_ptr - totalBytesSaved;
 
         if (*opcodeByte == 0xe9 /* JMP rel32 */)
+        {
             bytesSaved = 3;
+        }
         else if (*opcodeByte >= 0x80 && *opcodeByte < 0x90 /* Jcc rel32 */)
         {
             Assert(*(opcodeByte - 1) == 0x0f);
             bytesSaved = 4;
-            // Jcc rel8 is one byte shorter in opcode, fix Br ptr to point to start of rel8 
+            // Jcc rel8 is one byte shorter in opcode, fix Br ptr to point to start of rel8
             shortBrPtr--;
         }
         else
+        {
             Assert(UNREACHED);
+        }
 
         // compute current distance to label
         if (labelPc >= (BYTE*) reloc.m_ptr)
         {
-            // forward Br. We compare using the unfixed m_ptr, because the label is ahead and its Pc is not fixed it. 
+            // forward Br. We compare using the unfixed m_ptr, because the label is ahead and its Pc is not fixed it.
             relOffset = (int32)(labelPc - ((BYTE*)reloc.m_ptr + 4));
         }
         else
         {
-            // backward Br. We compute relOffset after fixing the Br, since the label is already fixed. 
+            // backward Br. We compute relOffset after fixing the Br, since the label is already fixed.
             // We also include the 3-4 bytes saved after shortening the Br since the Br itself is included in the relative offset.
             relOffset =  (int32)(labelPc - (shortBrPtr + 1));
         }
@@ -740,7 +742,7 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize)
         {
             uint32 brOffset;
 
-            brShortenedCount++; 
+            brShortenedCount++;
             // update with shortened br offset
             reloc.m_ptr = shortBrPtr;
 
@@ -757,7 +759,7 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize)
             reloc.setAsShortBr();
 #endif
         }
-        
+
     }
 
     // Fix the rest of the maps, if needed.
@@ -767,25 +769,25 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize)
         codeChange = true;
         newCodeSize -= totalBytesSaved;
     }
-    
+
     // no BR shortening or Label alignment happened, no need to copy code
     if (!codeChange)
-        return codeChange; 
-    
+        return codeChange;
+
 #ifdef  ENABLE_DEBUG_CONFIG_OPTIONS
     globalTotalBytesWithoutShortening += (uint32)(*codeSize);
     globalTotalBytesSaved += (uint32)(*codeSize - newCodeSize);
 
     if (PHASE_TRACE(Js::BrShortenPhase, this->m_func))
     {
-        OUTPUT_VERBOSE_TRACE(Js::BrShortenPhase, L"func: %s, bytes saved: %d, bytes saved %%:%.2f, total bytes saved: %d, total bytes saved%%: %.2f, BR shortened: %d\n", 
-            this->m_func->GetJnFunction()->GetDisplayName(), (*codeSize - newCodeSize), ((float)*codeSize - newCodeSize) / *codeSize * 100, 
+        OUTPUT_VERBOSE_TRACE(Js::BrShortenPhase, L"func: %s, bytes saved: %d, bytes saved %%:%.2f, total bytes saved: %d, total bytes saved%%: %.2f, BR shortened: %d\n",
+            this->m_func->GetJnFunction()->GetDisplayName(), (*codeSize - newCodeSize), ((float)*codeSize - newCodeSize) / *codeSize * 100,
             globalTotalBytesSaved, ((float)globalTotalBytesSaved) / globalTotalBytesWithoutShortening * 100 , brShortenedCount);
         Output::Flush();
     }
 #endif
 
-    // At this point BRs are marked to be shortened, and relocList offsets are adjusted to new instruction length. 
+    // At this point BRs are marked to be shortened, and relocList offsets are adjusted to new instruction length.
     // Next, we re-write the code to shorten the BRs and adjust relocList offsets to point to new buffer.
     // We also write NOPs for aligned loops.
     BYTE* tmpBuffer = AnewArray(m_tempAlloc, BYTE, newCodeSize);
@@ -803,8 +805,8 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize)
         if (reloc.isShortBr())
         {
             // validate that short BR offset is within 1 byte offset range.
-            // This handles the rare case with loop alignment breaks br shortening. 
-            // Consider: 
+            // This handles the rare case with loop alignment breaks br shortening.
+            // Consider:
             //      BR $L1 // shortened
             //      ...
             //      L2:    // aligned, and makes the BR $L1 non-shortable anymore
@@ -825,10 +827,10 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize)
 
                 return false;
             }
-            
+
             // m_origPtr points to imm32 field in the original buffer
             BYTE *opcodeByte = (BYTE*)reloc.m_origPtr - 1;
-            
+
             if (*opcodeByte == 0xe9 /* JMP rel32 */)
                 to = opcodeByte - 1;
             else if (*opcodeByte >= 0x80 && *opcodeByte < 0x90 /* Jcc rel32 */)
@@ -836,9 +838,9 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize)
                 Assert(*(opcodeByte - 1) == 0x0f);
                 to = opcodeByte - 2;
             }
-            else 
+            else
                 Assert(UNREACHED);
-            
+
             src_size = to - from + 1;
             Assert(dst_size >= src_size);
 
@@ -858,23 +860,23 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize)
         {
             IR::LabelInstr *label = reloc.getLabel();
             BYTE nop_count = reloc.getLabelNopCount();
-            
+
             AssertMsg((BYTE*)label < buffStart || (BYTE*)label >= buffEnd, "Invalid label pointer.");
             AssertMsg((((uint32)(label->GetPC() - buffStart)) & 0xf) == 0, "Misaligned Label");
 
             to = reloc.getLabelOrigPC() - 1;
             CopyPartialBuffer(&dst_p, dst_size, from, to);
-            
+
 #ifdef  ENABLE_DEBUG_CONFIG_OPTIONS
             if (PHASE_TRACE(Js::LoopAlignPhase, this->m_func))
             {
                 globalTotalBytesInserted += nop_count;
-        
-                OUTPUT_VERBOSE_TRACE(Js::LoopAlignPhase, L"func: %s, bytes inserted: %d, bytes inserted %%:%.4f, total bytes inserted:%d, total bytes inserted %%:%.4f\n", 
+
+                OUTPUT_VERBOSE_TRACE(Js::LoopAlignPhase, L"func: %s, bytes inserted: %d, bytes inserted %%:%.4f, total bytes inserted:%d, total bytes inserted %%:%.4f\n",
                     this->m_func->GetJnFunction()->GetDisplayName(), nop_count, (float)nop_count / newCodeSize * 100, globalTotalBytesInserted, (float)globalTotalBytesInserted / (globalTotalBytesWithoutShortening - globalTotalBytesSaved) * 100);
                 Output::Flush();
             }
-#endif    
+#endif
             InsertNopsForLabelAlignment(nop_count, &dst_p);
 
             dst_size -= nop_count;
@@ -883,7 +885,7 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize)
     }
     // copy last chunk
     CopyPartialBuffer(&dst_p, dst_size, from, buffStart + *codeSize - 1);
-    
+
     m_encoderMD.UpdateRelocListWithNewBuffer(relocList, tmpBuffer, buffStart, buffEnd);
 
     // switch buffers
@@ -910,7 +912,7 @@ void Encoder::CopyPartialBuffer(BYTE ** ptrDstBuffer, size_t &dstSize, BYTE * sr
 }
 
 void Encoder::InsertNopsForLabelAlignment(int nopCount, BYTE ** ptrDstBuffer)
-{    
+{
     // write NOPs
     for (int32 i = 0; i < nopCount; i++, (*ptrDstBuffer)++)
     {
@@ -953,7 +955,7 @@ void Encoder::CopyMaps(OffsetList **m_origInlineeFrameRecords
         Assert((*m_origOffsetBuffer) == nullptr);
         *m_origOffsetBuffer = Anew(m_tempAlloc, OffsetList, m_tempAlloc);
 #endif
-    } 
+    }
     else
     {
         Assert((*m_origInlineeFrameRecords) && (*m_origInlineeFrameMap) && (*m_origPragmaInstrToRecordOffset));
@@ -961,7 +963,7 @@ void Encoder::CopyMaps(OffsetList **m_origInlineeFrameRecords
         origMapList = *m_origInlineeFrameMap;
         origPInstrList = *m_origPragmaInstrToRecordOffset;
         Assert(origRecList->Count() == recList->Count());
-        Assert(origMapList->Count() == mapList->Count());        
+        Assert(origMapList->Count() == mapList->Count());
         Assert(origPInstrList->Count() == pInstrList->Count());
 
 #if DBG_DUMP
@@ -969,7 +971,7 @@ void Encoder::CopyMaps(OffsetList **m_origInlineeFrameRecords
         Assert((uint32)(*m_origOffsetBuffer)->Count() == m_instrNumber);
 #endif
     }
-    
+
     for (int i = 0; i < recList->Count(); i++)
     {
         if (!restore)
@@ -981,7 +983,7 @@ void Encoder::CopyMaps(OffsetList **m_origInlineeFrameRecords
             recList->Item(i)->inlineeStartOffset = origRecList->Item(i);
         }
     }
-    
+
     for (int i = 0; i < mapList->Count(); i++)
     {
         if (!restore)
@@ -1028,7 +1030,7 @@ void Encoder::CopyMaps(OffsetList **m_origInlineeFrameRecords
             m_offsetBuffer[i] = (*m_origOffsetBuffer)->Item(i);
         }
     }
-    
+
     if (restore)
     {
         (*m_origOffsetBuffer)->Delete();

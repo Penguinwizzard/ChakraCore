@@ -48,7 +48,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)CustomHeap.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)EtwMemoryTracking.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ForcedMemoryConstraints.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)GCTelemetry.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)HeapAllocator.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)HeapAllocatorOperators.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)HeapBlock.cpp" />
@@ -94,11 +93,11 @@
     </ClInclude>
     <ClInclude Include="AutoAllocatorObjectPtr.h" />
     <ClInclude Include="AutoPtr.h" />
+    <ClInclude Include="collectionstate.h" />
     <ClInclude Include="CommonMemoryPch.h" />
     <ClInclude Include="CustomHeap.h" />
     <ClInclude Include="ForcedMemoryConstraints.h" />
     <ClInclude Include="FreeObject.h" />
-    <ClInclude Include="GCTelemetry.h" />
     <ClInclude Include="HeapAllocator.h" />
     <ClInclude Include="HeapBlock.h" />
     <ClInclude Include="HeapBlockMap.h" />
@@ -106,8 +105,6 @@
     <ClInclude Include="HeapConstants.h" />
     <ClInclude Include="heapinfo.h" />
     <ClInclude Include="IdleDecommitPageAllocator.h" />
-    <ClInclude Include="LangTelFields.h" />
-    <ClInclude Include="LanguageTelemetry.h" />
     <ClInclude Include="LargeHeapBlock.h" />
     <ClInclude Include="leakreport.h" />
     <ClInclude Include="LargeHeapBucket.h" />

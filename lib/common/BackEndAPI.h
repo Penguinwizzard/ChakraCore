@@ -76,11 +76,6 @@ CheckCodeGenFunction GetCheckCodeGenFunction(Js::JavascriptMethod codeAddress);
 uint GetBailOutRegisterSaveSlotCount();
 uint GetBailOutReserveSlotCount();
 
-namespace IR
-{
-const void *const*GetHelperMethods();
-}
-
 #if DBG
 void CheckIsExecutable(Js::RecyclableObject * function, Js::JavascriptMethod entryPoint);
 #endif
@@ -110,10 +105,9 @@ struct InlinedFrameLayout
     Js::InlineeCallInfo     callInfo;
     Js::JavascriptFunction *function;
     Js::Var                 arguments;  // The arguments object.
-    //Js::Var               argv[0];    // Here it would be embedded arguments array (callInfo.count elements) 
-                                        // but can't have 0-zise arr in base class, so we define it in derived class.
-                                        // It's not really needed actually, just for convenience.
-    
+    //Js::Var               argv[0];    // Here it would be embedded arguments array (callInfo.count elements)
+                                        // but can't have 0-size arr in base class, so we define it in derived class.
+
     Js::Var* GetArguments()
     {
         return (Js::Var*)(this + 1);
@@ -140,7 +134,7 @@ class BailOutRecord;
 
 struct LazyBailOutRecord
 {
-    uint32 offset; 
+    uint32 offset;
     BYTE* instructionPointer; // Instruction pointer of the bailout code
     BailOutRecord* bailoutRecord;
 
@@ -150,7 +144,7 @@ struct LazyBailOutRecord
         offset(offset), instructionPointer(address),
         bailoutRecord(record)
     {}
-    
+
     void SetBailOutKind();
 #if DBG
     void Dump(Js::FunctionBody* functionBody);
@@ -173,7 +167,6 @@ struct StackFrameConstants
     static const size_t StackCheckCodeHeightNotThreadBound = StackFrameConstants::StackCheckCodeHeight;
     static const size_t StackCheckCodeHeightWithInterruptProbe = StackFrameConstants::StackCheckCodeHeight;
 #elif defined(_M_ARM64)
-// ARM64_WORKITEM: ???
     static const size_t StackCheckCodeHeight = 58*2;
     static const size_t StackCheckCodeHeightThreadBound = StackFrameConstants::StackCheckCodeHeight;
     static const size_t StackCheckCodeHeightNotThreadBound = StackFrameConstants::StackCheckCodeHeight;
@@ -312,9 +305,3 @@ enum NumberAllocatorValue {
     NumberAllocatorEndAddress,
     NumberAllocatorFreeObjectList
 };
-
-// This is just a magic number
-#define PE_MAJOR_VERSION 0x43
-// This is the version of the PE format, bumping this will make old PEs
-// not be recognized
-#define PE_MINOR_VERSION 0x01

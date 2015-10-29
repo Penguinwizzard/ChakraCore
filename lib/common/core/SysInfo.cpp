@@ -30,7 +30,7 @@ DWORD AutoSystemInfo::majorVersion = 0;
 DWORD AutoSystemInfo::minorVersion = 0;
 
 
-void 
+void
 AutoSystemInfo::Initialize()
 {
     Assert(!initialized);
@@ -47,7 +47,7 @@ AutoSystemInfo::Initialize()
     armDivAvailable = IsProcessorFeaturePresent(PF_ARM_DIVIDE_INSTRUCTION_AVAILABLE) ? true : false;
 #endif
     allocationGranularityPageCount = dwAllocationGranularity / dwPageSize;
-   
+
     isWindows8OrGreater = IsWindows8OrGreater();
 
     binaryName[0] = L'\0';
@@ -92,8 +92,8 @@ AutoSystemInfo::InitPhysicalProcessorCount()
 
     Assert(!this->initialized);
 
-    //Initialize physcial processor to number of logical processors.
-    //If anything below fails, we still need an approximate value
+    // Initialize physical processor to number of logical processors.
+    // If anything below fails, we still need an approximate value
 
     this->dwNumberOfPhyscialProcessors = this->dwNumberOfProcessors;
 
@@ -103,7 +103,7 @@ AutoSystemInfo::InitPhysicalProcessorCount()
     {
         return false;
     }
-    
+
     DWORD count = (size) / sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION);
 
     if (size != count * sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION))
@@ -119,7 +119,7 @@ AutoSystemInfo::InitPhysicalProcessorCount()
     }
 
     bResult = GetLogicalProcessorInformation(pBufferCurrent, &size);
-    if (!bResult) 
+    if (!bResult)
     {
         return false;
     }
@@ -146,11 +146,11 @@ AutoSystemInfo::IsJscriptModulePointer(void * ptr)
 }
 
 
-uint 
-AutoSystemInfo::GetAllocationGranularityPageCount() const 
+uint
+AutoSystemInfo::GetAllocationGranularityPageCount() const
 {
-    Assert(initialized); 
-    return allocationGranularityPageCount; 
+    Assert(initialized);
+    return allocationGranularityPageCount;
 }
 
 uint
@@ -172,7 +172,7 @@ AutoSystemInfo::VirtualSseAvailable(const int sseLevel) const
 }
 #endif
 
-BOOL 
+BOOL
 AutoSystemInfo::SSE2Available() const
 {
     Assert(initialized);
@@ -187,17 +187,17 @@ AutoSystemInfo::SSE2Available() const
 }
 
 #if defined(_M_IX86) || defined(_M_X64)
-BOOL 
+BOOL
 AutoSystemInfo::SSE3Available() const
 {
-    Assert(initialized); 
+    Assert(initialized);
     return VirtualSseAvailable(3) && (CPUInfo[2] & 0x1);
 }
 
-BOOL 
+BOOL
 AutoSystemInfo::SSE4_1Available() const
 {
-    Assert(initialized); 
+    Assert(initialized);
     return VirtualSseAvailable(4) && (CPUInfo[2] & (0x1 << 19));
 }
 
@@ -228,8 +228,8 @@ bool
 AutoSystemInfo::CheckForAtom() const
 {
     int CPUInfo[4];
-    const int GENUINE_INTEL_0 = 0x756e6547, 
-              GENUINE_INTEL_1 = 0x49656e69, 
+    const int GENUINE_INTEL_0 = 0x756e6547,
+              GENUINE_INTEL_1 = 0x49656e69,
               GENUINE_INTEL_2 = 0x6c65746e;
     const int PLATFORM_MASK = 0x0fff3ff0;
     const int ATOM_PLATFORM_A = 0x0106c0, /* bonnell - extended model 1c, type 0, family code 6 */
@@ -241,7 +241,7 @@ AutoSystemInfo::CheckForAtom() const
     int platformSignature;
 
     __cpuid(CPUInfo, 0);
-    
+
     // See if CPU is ATOM HW. First check if CPU is genuine Intel.
     if( CPUInfo[1]==GENUINE_INTEL_0 &&
         CPUInfo[3]==GENUINE_INTEL_1 &&
@@ -257,9 +257,9 @@ AutoSystemInfo::CheckForAtom() const
             ((PLATFORM_MASK & platformSignature) == ATOM_PLATFORM_E) ||
             ((PLATFORM_MASK & platformSignature) == ATOM_PLATFORM_F))
         {
-            return true;;
+            return true;
         }
-        
+
     }
     return false;
 }
@@ -279,7 +279,7 @@ AutoSystemInfo::IsCFGEnabled()
 #endif //_CONTROL_FLOW_GUARD
 }
 
-bool 
+bool
 AutoSystemInfo::IsWin8OrLater()
 {
     return isWindows8OrGreater;
@@ -335,7 +335,7 @@ void AutoSystemInfo::SetAvailableCommit(ULONG64 commit)
 //
 HRESULT AutoSystemInfo::GetJscriptFileVersion(DWORD* majorVersion, DWORD* minorVersion)
 {
-    HRESULT hr = E_FAIL;;
+    HRESULT hr = E_FAIL;
     if(AutoSystemInfo::majorVersion == 0 && AutoSystemInfo::minorVersion == 0)
     {
         // uninitialized state  - call the system API to get the version info.

@@ -18,14 +18,14 @@ a[0xFFFFFFFE] = 1;
 DumpObject(a);
 
 
-function Blah()
+function Foo()
 {
 }
 
 
-Blah.prototype[3] = 101;
+Foo.prototype[3] = 101;
 
-var o = new Blah();
+var o = new Foo();
 o[3] = 3;
 o[4] = 4;
 

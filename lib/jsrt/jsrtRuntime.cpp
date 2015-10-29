@@ -6,10 +6,6 @@
 #include "JsrtRuntime.h"
 #include "Library\ThreadContextTLSEntry.h"
 #include "Library\ThreadBoundThreadContextManager.h"
-#ifdef ENABLE_BASIC_TELEMETRY
-// REVIEW: ChakraCore Dependency
-#include "..\..\..\private\lib\Telemetry\Telemetry.h"
-#endif
 JsrtRuntime::JsrtRuntime(ThreadContext * threadContext, bool useIdle, bool dispatchExceptions)
 {       
     Assert(threadContext != NULL);
@@ -26,10 +22,6 @@ JsrtRuntime::JsrtRuntime(ThreadContext * threadContext, bool useIdle, bool dispa
         this->threadService.Initialize(threadContext);
     }
     threadContext->SetJSRTRuntime(this);
-
-#ifdef ENABLE_BASIC_TELEMETRY
-    atexit(firePackageTelemetryAtExit); // for node chakra purposes.
-#endif
 
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
     serializeByteCodeForLibrary = false;

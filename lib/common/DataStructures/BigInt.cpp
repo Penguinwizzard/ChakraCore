@@ -63,14 +63,12 @@ namespace Js
 
         clu += clu;
         if (m_prglu == m_rgluInit)
-            {
-            //BUG 1121369 Windows OS Bugs
-            //PREFAST: 'clu*sizeof(ulong)' may be smaller than its operands. This can be caused by integer overflows or underflows.
-            if ((INT_MAX/sizeof(ulong) < clu) || (NULL == (prglu = (ulong *)malloc(clu * sizeof(ulong)))))
-                    return false;
+        {
+            if ((INT_MAX / sizeof(ulong) < clu) || (NULL == (prglu = (ulong *)malloc(clu * sizeof(ulong)))))
+                return false;
             if (0 < m_clu)
                 js_memcpy_s(prglu, clu * sizeof(ulong), m_prglu, m_clu * sizeof(ulong));
-            }
+        }
         else if (NULL == (prglu = (ulong *)realloc(m_prglu, clu * sizeof(ulong))))
             return false;
 
@@ -126,22 +124,22 @@ namespace Js
         luAdd = 0;
         luMul = 1;
         for (*pcchDig = cch; prgch < pchLim; prgch++)
-            {
+        {
             if (*prgch == '.')
-                {
+            {
                 (*pcchDig)--;
                 continue;
-                }
+            }
             Assert(NumberUtilities::IsDigit(*prgch));
             if (luMul == 1000000000)
-                {
+            {
                 AssertVerify(FMulAdd(luMul, luAdd));
                 luMul = 1;
                 luAdd = 0;
-                }
+            }
             luMul *= 10;
             luAdd = luAdd * 10 + *prgch - '0';
-            }
+        }
         Assert(1 < luMul);
         AssertVerify(FMulAdd(luMul, luAdd));
 
@@ -158,20 +156,20 @@ namespace Js
         ulong *plu = m_prglu;
         ulong *pluLim = plu + m_clu;
 
-        for ( ; plu < pluLim; plu++)
-            {
+        for (; plu < pluLim; plu++)
+        {
             *plu = NumberUtilities::MulLu(*plu, luMul, &luT);
             if (luAdd)
                 luT += NumberUtilities::AddLu(plu, luAdd);
             luAdd = luT;
-            }
+        }
         if (0 == luAdd)
             goto LDone;
         if (m_clu >= m_cluMax && !FResize(m_clu + 1))
             return false;
         m_prglu[m_clu++] = luAdd;
 
-    LDone:
+LDone:
         AssertBi(this);
         return true;
     }
@@ -191,15 +189,15 @@ namespace Js
         if (m_clu + clu > m_cluMax && !FResize(m_clu + clu))
             return false;
 
-        for ( ; c5 >= 13; c5 -= 13)
+        for (; c5 >= 13; c5 -= 13)
             AssertVerify(FMulAdd(k5to13, 0));
 
         if (c5 > 0)
-            {
+        {
             for (luT = 5; --c5 > 0; )
                 luT *= 5;
             AssertVerify(FMulAdd(luT, 0));
-            }
+        }
 
         AssertBi(this);
         return true;
@@ -221,40 +219,40 @@ namespace Js
         cbit &= 0x001F;
 
         if (cbit > 0)
-            {
+        {
             ilu = m_clu - 1;
             luExtra = m_prglu[ilu] >> (32 - cbit);
 
-            for ( ; ; ilu--)
-                {
+            for (; ; ilu--)
+            {
                 m_prglu[ilu] <<= cbit;
                 if (0 == ilu)
                     break;
                 m_prglu[ilu] |= m_prglu[ilu - 1] >> (32 - cbit);
-                }
             }
+        }
         else
             luExtra = 0;
 
         if (clu > 0 || 0 != luExtra)
-            {
+        {
             // Make sure there's enough room.
             ilu = m_clu + (0 != luExtra) + clu;
             if (ilu > m_cluMax && !FResize(ilu))
                 return false;
 
             if (clu > 0)
-                {
+            {
                 // Shift the ulongs.
                 memmove(m_prglu + clu, m_prglu, m_clu * sizeof(ulong));
                 memset(m_prglu, 0, clu * sizeof(ulong));
                 m_clu += clu;
-                }
-    
+            }
+
             // Throw on the extra one.
             if (0 != luExtra)
                 m_prglu[m_clu++] = luExtra;
-            }
+        }
 
         AssertBi(this);
         return true;
@@ -266,16 +264,16 @@ namespace Js
         Assert(clu >= 0);
 
         if (clu >= m_clu)
-            {
+        {
             m_clu = 0;
             AssertBi(this);
             return;
-            }
+        }
         if (clu > 0)
-            {
+        {
             memmove(m_prglu, m_prglu + clu, (m_clu - clu) * sizeof(ulong));
             m_clu -= clu;
-            }
+        }
 
         AssertBi(this);
     }
@@ -293,23 +291,23 @@ namespace Js
             ShiftLusRight(clu);
 
         if (cbit == 0 || m_clu == 0)
-            {
+        {
             AssertBi(this);
             return;
-            }
+        }
 
         for (ilu = 0; ; )
-            {
+        {
             m_prglu[ilu] >>= cbit;
             if (++ilu >= m_clu)
-                {
-                // Last one.
+            {
+            // Last one.
                 if (0 == m_prglu[ilu - 1])
                     m_clu--;
                 break;
-                }
-            m_prglu[ilu - 1] |= m_prglu[ilu] << (32 - cbit);
             }
+            m_prglu[ilu - 1] |= m_prglu[ilu] << (32 - cbit);
+        }
 
         AssertBi(this);
     }
@@ -328,12 +326,12 @@ namespace Js
         if (0 == m_clu)
             return 0;
 
-        #pragma prefast(suppress:__WARNING_LOOP_ONLY_EXECUTED_ONCE,"noise")
+#pragma prefast(suppress:__WARNING_LOOP_ONLY_EXECUTED_ONCE,"noise")
         for (ilu = m_clu - 1; m_prglu[ilu] == pbi->m_prglu[ilu]; ilu--)
-            {
+        {
             if (0 == ilu)
                 return 0;
-            }
+        }
         Assert(ilu >= 0 && ilu < m_clu);
         Assert(m_prglu[ilu] != pbi->m_prglu[ilu]);
 
@@ -351,43 +349,43 @@ namespace Js
         int wCarry;
 
         if ((cluMax = m_clu) < (cluMin = pbi->m_clu))
-            {
+        {
             cluMax = pbi->m_clu;
             cluMin = m_clu;
             if (cluMax > m_cluMax && !FResize(cluMax + 1))
                 return false;
-            }
+        }
 
         wCarry = 0;
         for (ilu = 0; ilu < cluMin; ilu++)
-            {
+        {
             if (0 != wCarry)
                 wCarry = NumberUtilities::AddLu(&m_prglu[ilu], wCarry);
             wCarry += NumberUtilities::AddLu(&m_prglu[ilu], pbi->m_prglu[ilu]);
-            }
+        }
 
         if (m_clu < pbi->m_clu)
+        {
+            for (; ilu < cluMax; ilu++)
             {
-            for ( ; ilu < cluMax; ilu++)
-                {
                 m_prglu[ilu] = pbi->m_prglu[ilu];
                 if (0 != wCarry)
                     wCarry = NumberUtilities::AddLu(&m_prglu[ilu], wCarry);
-                }
+            }
             m_clu = cluMax;
-            }
+        }
         else
-            {
-            for ( ; 0 != wCarry && ilu < cluMax; ilu++)
+        {
+            for (; 0 != wCarry && ilu < cluMax; ilu++)
                 wCarry = NumberUtilities::AddLu(&m_prglu[ilu], wCarry);
-            }
+        }
 
         if (0 != wCarry)
-            {
+        {
             if (m_clu >= m_cluMax && !FResize(m_clu + 1))
                 return false;
             m_prglu[m_clu++] = wCarry;
-            }
+        }
 
         AssertBi(this);
         return true;
@@ -407,8 +405,8 @@ namespace Js
             goto LNegative;
 
         wCarry = 1;
-        for (ilu = 0; (ilu < pbi->m_clu) && (ilu < pbi->m_cluMax) ; ilu++)
-            {
+        for (ilu = 0; (ilu < pbi->m_clu) && (ilu < pbi->m_cluMax); ilu++)
+        {
             Assert(wCarry == 0 || wCarry == 1);
             luT = pbi->m_prglu[ilu];
 
@@ -423,24 +421,24 @@ namespace Js
 
             if (0 != luT || 0 == wCarry)
                 wCarry = NumberUtilities::AddLu(&m_prglu[ilu], ~luT + wCarry);
-            }
+        }
         while ((0 == wCarry) && (ilu < m_clu) && (ilu < m_cluMax))
             wCarry = NumberUtilities::AddLu(&m_prglu[ilu], 0xFFFFFFFF);
 
         if (0 == wCarry)
-            {
-    LNegative:
+        {
+LNegative:
             // pbi was bigger than this.
             AssertMsg(false, "Who's subtracting to negative?");
             m_clu = 0;
-            }
+        }
         else if (ilu == m_clu)
-            {
+        {
             // Trim off zeros.
             while (--ilu >= 0 && 0 == m_prglu[ilu])
                 ;
             m_clu = ilu + 1;
-            }
+        }
 
         AssertBi(this);
     }
@@ -468,7 +466,7 @@ namespace Js
 
         // Handle 0 and 1 as special cases.
         switch (wQuo)
-            {
+        {
         case 0:
             break;
         case 1:
@@ -478,7 +476,7 @@ namespace Js
             luHi = 0;
             wCarry = 1;
             for (ilu = 0; ilu < clu; ilu++)
-                {
+            {
                 Assert(wCarry == 0 || wCarry == 1);
 
                 // Compute the product.
@@ -488,7 +486,7 @@ namespace Js
                 // Subtract the product. See note in BigInt::Subtract.
                 if (0 != luLo || 0 == wCarry)
                     wCarry = NumberUtilities::AddLu(&m_prglu[ilu], ~luLo + wCarry);
-                }
+            }
             Assert(1 == wCarry);
             Assert(ilu == clu);
 
@@ -496,17 +494,17 @@ namespace Js
             while (--ilu >= 0 && 0 == m_prglu[ilu])
                 ;
             m_clu = ilu + 1;
-            }
+        }
 
         if (wQuo < 9 && (wT = Compare(pbi)) >= 0)
-            {
+        {
             // Quotient was off too small (by one).
             wQuo++;
             if (wT == 0)
                 m_clu = 0;
             else
                 Subtract(pbi);
-            }
+        }
         Assert(Compare(pbi) < 0);
 
         return wQuo;
@@ -521,7 +519,7 @@ namespace Js
         int cbit;
 
         switch (m_clu)
-            {
+        {
         case 0:
             return 0;
         case 1:
@@ -530,16 +528,16 @@ namespace Js
             dbl = m_prglu[1];
             NumberUtilities::LuHiDbl(dbl) += 0x02000000;
             return dbl + m_prglu[0];
-            }
+        }
 
         Assert(3 <= m_clu);
         if (m_clu > 32)
-            {
+        {
             // Result is infinite.
             NumberUtilities::LuHiDbl(dbl) = 0x7FF00000;
             NumberUtilities::LuLoDbl(dbl) = 0;
             return dbl;
-            }
+        }
 
         lu1 = m_prglu[m_clu - 1];
         lu2 = m_prglu[m_clu - 2];
@@ -548,17 +546,17 @@ namespace Js
         cbit = 31 - NumberUtilities::CbitZeroLeft(lu1);
 
         if (cbit == 0)
-            {
+        {
             luHi = lu2;
             luLo = lu3;
-            }
+        }
         else
-            {
+        {
             luHi = (lu1 << (32 - cbit)) | (lu2 >> cbit);
             // Or 1 if there are any remaining nonzero bits in lu3, so we take
             // them into account when rounding.
             luLo = (lu2 << (32 - cbit)) | (lu3 >> cbit) | (0 != (lu3 << (32 - cbit)));
-            }
+        }
 
         // Set the mantissa bits.
         NumberUtilities::LuHiDbl(dbl) = luHi >> 12;
@@ -569,27 +567,26 @@ namespace Js
 
         // Do IEEE rounding.
         if (luLo & 0x0800)
-            {
+        {
             if ((luLo & 0x07FF) || (NumberUtilities::LuLoDbl(dbl) & 1))
-                {
+            {
                 if (0 == ++NumberUtilities::LuLoDbl(dbl))
                     ++NumberUtilities::LuHiDbl(dbl);
-                }
+            }
             else
-                {
-                // If there are any non-zero bits in m_prglu from 0 to m_clu - 4,
-                // round up.
+            {
+                // If there are any non-zero bits in m_prglu from 0 to m_clu - 4, round up.
                 for (ilu = m_clu - 4; ilu >= 0; ilu--)
-                    {
+                {
                     if (0 != m_prglu[ilu])
-                        {
+                    {
                         if (0 == ++NumberUtilities::LuLoDbl(dbl))
                             ++NumberUtilities::LuHiDbl(dbl);
                         break;
-                        }
                     }
                 }
             }
+        }
 
         return dbl;
     }

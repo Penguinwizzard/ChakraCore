@@ -192,8 +192,8 @@ protected:
 private:
     /***********************************************************************
     Core members.
-    ***********************************************************************/    
-    ParseNodeAllocator m_nodeAllocator;    
+    ***********************************************************************/
+    ParseNodeAllocator m_nodeAllocator;
     long        m_cactIdentToNodeLookup;
     ulong       m_grfscr;
     size_t      m_length;             // source length in characters excluding comments and literals
@@ -388,7 +388,7 @@ private:
     struct WellKnownPropertyPids
     {
         IdentPtr arguments; // m_pidArguments; // 'arguments' identifier
-        IdentPtr async; // m_pidAsync; 
+        IdentPtr async; // m_pidAsync;
         IdentPtr eval; // m_pidEval;
         IdentPtr setter; // m_pidSetter;
         IdentPtr getter; // m_pidGetter;
@@ -413,7 +413,7 @@ private:
     charcount_t m_funcInArray;
     uint m_scopeCountNoAst;
 
-    
+
     /*
      * Parsing states for super restriction
      */
@@ -619,7 +619,7 @@ private:
 
     void CheckArguments(ParseNodePtr pnode);
     void CheckArgumentsUse(IdentPtr pid, ParseNodePtr pnodeFnc);
-    
+
     void CheckStrictModeEvalArgumentsUsage(IdentPtr pid, ParseNodePtr pnode = NULL);
     void CheckStrictModeFncDeclNotSourceElement(const bool isSourceElement, const BOOL isDeclaration);
 
@@ -636,7 +636,7 @@ private:
 
     template<bool buildAST> ParseNodePtr ParseStatement(bool isSourceElement = false);
     template<bool buildAST> ParseNodePtr ParseVariableDeclaration(
-        tokens declarationType, 
+        tokens declarationType,
         charcount_t ichMin,
         BOOL fAllowIn = TRUE,
         BOOL* pfForInOk = nullptr,
@@ -767,7 +767,7 @@ private:
         ulong *pHintLength = nullptr,
         _Inout_opt_ IdentToken* pToken = nullptr,
         bool fUnaryOrParen = false,
-        _Inout_opt_ BOOL* pfCanAssign = nullptr,
+        _Out_opt_ BOOL* pfCanAssign = nullptr,
         _Inout_opt_ BOOL* pfLikelyPattern = nullptr);
     template<bool buildAST> ParseNodePtr ParsePostfixOperators(ParseNodePtr pnode,
         BOOL fAllowCall, BOOL fInNew, BOOL *pfCanAssign, _Inout_ IdentToken* pToken);
@@ -780,7 +780,7 @@ private:
         _Out_opt_ BOOL* pfCanAssign = nullptr);
 
     BOOL NodeIsIdent(ParseNodePtr pnode, IdentPtr pid);
-    BOOL NodeIsEvalName(ParseNodePtr pnode);        
+    BOOL NodeIsEvalName(ParseNodePtr pnode);
     BOOL IsJSONValid(ParseNodePtr pnodeExpr)
     {
         OpCode jnop = (knopNeg == pnodeExpr->nop) ? pnodeExpr->sxUni.pnode1->nop : pnodeExpr->nop;
@@ -813,7 +813,7 @@ private:
     bool IsES6DestructuringEnabled() const;
     bool IsPossiblePatternStart() const { return m_token.tk == tkLCurly || m_token.tk == tkLBrack; }
     bool IsPostFixOperators() const
-    { 
+    {
         return m_token.tk == tkLParen ||
             m_token.tk == tkLBrack ||
             m_token.tk == tkDot ||
@@ -869,8 +869,8 @@ public:
 private:
     void DeferOrEmitPotentialSpreadError(ParseNodePtr pnodeT);
     template<bool buildAST> void TrackAssignment(ParseNodePtr pnodeT, IdentToken* pToken, charcount_t ichMin, charcount_t ichLim);
-    PidRefStack* PushPidRef(IdentPtr pid);    
-    PidRefStack* FindOrAddPidRef(IdentPtr pid, int blockId, int maxScopeId = -1);    
+    PidRefStack* PushPidRef(IdentPtr pid);
+    PidRefStack* FindOrAddPidRef(IdentPtr pid, int blockId, int maxScopeId = -1);
     void RemovePrevPidRef(IdentPtr pid, PidRefStack *lastRef);
     void SetPidRefsInScopeDynamic(IdentPtr pid, int blockId);
 

@@ -19,9 +19,9 @@ namespace JsUtil
     {
     public:
         typedef typename AllocatorInfo<TAllocator, TValue>::AllocatorType AllocatorType;
-        static GrowingArray* Create(int _length);
+        static GrowingArray* Create(uint32 _length);
 
-        GrowingArray(AllocatorType* allocator, int _length)
+        GrowingArray(AllocatorType* allocator, uint32 _length)
             : buffer(nullptr),
             alloc(allocator),
             count(0),
@@ -34,13 +34,13 @@ namespace JsUtil
         {
             if (buffer != nullptr)
             {
-                AllocatorFree(alloc, (TypeAllocatorFunc<AllocatorType, int>::GetFreeFunc()), buffer, length * sizeof(TValue));
+                AllocatorFree(alloc, (TypeAllocatorFunc<AllocatorType, int>::GetFreeFunc()), buffer, UInt32Math::Mul(length, sizeof(TValue)));
             }
         }
 
-        TValue ItemInBuffer(int index)
+        TValue ItemInBuffer(uint32 index)
         {
-            if (index < 0 || index >= count)
+            if (index >= count)
             {
                 return 0;
             }
@@ -48,7 +48,7 @@ namespace JsUtil
             return buffer[index];
         }
 
-        void ItemInBuffer(int index, TValue item)
+        void ItemInBuffer(uint32 index, TValue item)
         {
             EnsureArray();
             Assert(index < count);
@@ -62,9 +62,9 @@ namespace JsUtil
             count++;
         }
 
-        int Count() const { return count; }
-        void SetCount(int _count) { count = _count; }
-        int GetLength() const { return length; }
+        uint32 Count() const { return count; }
+        void SetCount(uint32 _count) { count = _count; }
+        uint32 GetLength() const { return length; }
         TValue* GetBuffer() const { return buffer; }
 
         GrowingArray * Clone()
@@ -77,7 +77,8 @@ namespace JsUtil
                     TRACK_ALLOC_INFO(alloc, TValue, AllocatorType, 0, length),
                     TypeAllocatorFunc<AllocatorType, TValue>::GetAllocFunc(),
                     length);
-                js_memcpy_s(pNewArray->buffer, sizeof(TValue) * length, buffer, (size_t)(sizeof(TValue)*length));
+                const size_t byteSize = UInt32Math::Mul(length, sizeof(TValue));
+                js_memcpy_s(pNewArray->buffer, byteSize, buffer, byteSize);
             }
 
             return pNewArray;
@@ -85,8 +86,8 @@ namespace JsUtil
     private:
 
         TValue* buffer;
-        int count;
-        int length;
+        uint32 count;
+        uint32 length;
         AllocatorType* alloc;
 
         void EnsureArray()
@@ -101,19 +102,20 @@ namespace JsUtil
             }
             else if (count == length)
             {
-                //int newLength = length + increment;
-                int newLength = (length + 1) << 1;
+                uint32 newLength = UInt32Math::AddMul<1, 2>(length);
                 TValue * newbuffer = AllocateArray<AllocatorType, TValue, false>(
                     TRACK_ALLOC_INFO(alloc, TValue, AllocatorType, 0, newLength),
                     TypeAllocatorFunc<AllocatorType, TValue>::GetAllocFunc(),
                     newLength);
-                js_memcpy_s(newbuffer, newLength * sizeof(TValue), buffer, sizeof(TValue)*length);
+                const size_t lengthByteSize = UInt32Math::Mul(length, sizeof(TValue));
+                const size_t newLengthByteSize = UInt32Math::Mul(newLength, sizeof(TValue));
+                js_memcpy_s(newbuffer, newLengthByteSize, buffer, lengthByteSize);
 #ifdef DIAG_MEM
                 listFreeAmount += length;
 #endif
                 if (length != 0)
                 {
-                    AllocatorFree(alloc, (TypeAllocatorFunc<AllocatorType, int>::GetFreeFunc()), buffer, length * sizeof(TValue));
+                    AllocatorFree(alloc, (TypeAllocatorFunc<AllocatorType, int>::GetFreeFunc()), buffer, lengthByteSize);
                 }
                 length = newLength;
                 buffer = newbuffer;

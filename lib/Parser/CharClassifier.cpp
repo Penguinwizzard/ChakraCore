@@ -18,11 +18,11 @@ static const CharTypeFlags charFlags[128] =
     UnknownChar,                 /* 0x06   */
     UnknownChar,                 /* 0x07   */
     UnknownChar,                 /* 0x08   */
-    SpaceChar,            /* 0x09   */
-    LineCharGroup,        /* 0x0A   */
-    SpaceChar,            /* 0x0B   */
-    SpaceChar,            /* 0x0C   */
-    LineCharGroup,        /* 0x0D   */
+    SpaceChar,                   /* 0x09   */
+    LineCharGroup,               /* 0x0A   */
+    SpaceChar,                   /* 0x0B   */
+    SpaceChar,                   /* 0x0C   */
+    LineCharGroup,               /* 0x0D   */
     UnknownChar,                 /* 0x0E   */
     UnknownChar,                 /* 0x0F   */
     UnknownChar,                 /* 0x10   */
@@ -41,11 +41,11 @@ static const CharTypeFlags charFlags[128] =
     UnknownChar,                 /* 0x1D   */
     UnknownChar,                 /* 0x1E   */
     UnknownChar,                 /* 0x1F   */
-    SpaceChar,            /* 0x20   */
+    SpaceChar,                   /* 0x20   */
     UnknownChar,                 /* 0x21 ! */
     UnknownChar,                 /* 0x22   */
     UnknownChar,                 /* 0x23 # */
-    LetterCharGroup,      /* 0x24 $ */
+    LetterCharGroup,             /* 0x24 $ */
     UnknownChar,                 /* 0x25 % */
     UnknownChar,                 /* 0x26 & */
     UnknownChar,                 /* 0x27   */
@@ -57,16 +57,16 @@ static const CharTypeFlags charFlags[128] =
     UnknownChar,                 /* 0x2D   */
     UnknownChar,                 /* 0x2E   */
     UnknownChar,                 /* 0x2F   */
-    DecimalCharGroup,     /* 0x30 0 */
-    DecimalCharGroup,     /* 0x31 1 */
-    DecimalCharGroup,     /* 0x32 2 */
-    DecimalCharGroup,     /* 0x33 3 */
-    DecimalCharGroup,     /* 0x34 4 */
-    DecimalCharGroup,     /* 0x35 5 */
-    DecimalCharGroup,     /* 0x36 6 */
-    DecimalCharGroup,     /* 0x37 7 */
-    DecimalCharGroup,     /* 0x38 8 */
-    DecimalCharGroup,     /* 0x39 9 */
+    DecimalCharGroup,            /* 0x30 0 */
+    DecimalCharGroup,            /* 0x31 1 */
+    DecimalCharGroup,            /* 0x32 2 */
+    DecimalCharGroup,            /* 0x33 3 */
+    DecimalCharGroup,            /* 0x34 4 */
+    DecimalCharGroup,            /* 0x35 5 */
+    DecimalCharGroup,            /* 0x36 6 */
+    DecimalCharGroup,            /* 0x37 7 */
+    DecimalCharGroup,            /* 0x38 8 */
+    DecimalCharGroup,            /* 0x39 9 */
     UnknownChar,                 /* 0x3A   */
     UnknownChar,                 /* 0x3B   */
     UnknownChar,                 /* 0x3C < */
@@ -74,64 +74,64 @@ static const CharTypeFlags charFlags[128] =
     UnknownChar,                 /* 0x3E > */
     UnknownChar,                 /* 0x3F   */
     UnknownChar,                 /* 0x40 @ */
-    HexCharGroup,         /* 0x41 A */
-    HexCharGroup,         /* 0x42 B */
-    HexCharGroup,         /* 0x43 C */
-    HexCharGroup,         /* 0x44 D */
-    HexCharGroup,         /* 0x45 E */
-    HexCharGroup,         /* 0x46 F */
-    LetterCharGroup,      /* 0x47 G */
-    LetterCharGroup,      /* 0x48 H */
-    LetterCharGroup,      /* 0x49 I */
-    LetterCharGroup,      /* 0x4A J */
-    LetterCharGroup,      /* 0x4B K */
-    LetterCharGroup,      /* 0x4C L */
-    LetterCharGroup,      /* 0x4D M */
-    LetterCharGroup,      /* 0x4E N */
-    LetterCharGroup,      /* 0x4F O */
-    LetterCharGroup,      /* 0x50 P */
-    LetterCharGroup,      /* 0x51 Q */
-    LetterCharGroup,      /* 0x52 R */
-    LetterCharGroup,      /* 0x53 S */
-    LetterCharGroup,      /* 0x54 T */
-    LetterCharGroup,      /* 0x55 U */
-    LetterCharGroup,      /* 0x56 V */
-    LetterCharGroup,      /* 0x57 W */
-    LetterCharGroup,      /* 0x58 X */
-    LetterCharGroup,      /* 0x59 Y */
-    LetterCharGroup,      /* 0x5A Z */
+    HexCharGroup,                /* 0x41 A */
+    HexCharGroup,                /* 0x42 B */
+    HexCharGroup,                /* 0x43 C */
+    HexCharGroup,                /* 0x44 D */
+    HexCharGroup,                /* 0x45 E */
+    HexCharGroup,                /* 0x46 F */
+    LetterCharGroup,             /* 0x47 G */
+    LetterCharGroup,             /* 0x48 H */
+    LetterCharGroup,             /* 0x49 I */
+    LetterCharGroup,             /* 0x4A J */
+    LetterCharGroup,             /* 0x4B K */
+    LetterCharGroup,             /* 0x4C L */
+    LetterCharGroup,             /* 0x4D M */
+    LetterCharGroup,             /* 0x4E N */
+    LetterCharGroup,             /* 0x4F O */
+    LetterCharGroup,             /* 0x50 P */
+    LetterCharGroup,             /* 0x51 Q */
+    LetterCharGroup,             /* 0x52 R */
+    LetterCharGroup,             /* 0x53 S */
+    LetterCharGroup,             /* 0x54 T */
+    LetterCharGroup,             /* 0x55 U */
+    LetterCharGroup,             /* 0x56 V */
+    LetterCharGroup,             /* 0x57 W */
+    LetterCharGroup,             /* 0x58 X */
+    LetterCharGroup,             /* 0x59 Y */
+    LetterCharGroup,             /* 0x5A Z */
     UnknownChar,                 /* 0x5B   */
     UnknownChar,                 /* 0x5C   */
     UnknownChar,                 /* 0x5D   */
     UnknownChar,                 /* 0x5E   */
-    LetterCharGroup,      /* 0x5F _ */
+    LetterCharGroup,             /* 0x5F _ */
     UnknownChar,                 /* 0x60   */
-    HexCharGroup,         /* 0x61 a */
-    HexCharGroup,         /* 0x62 b */
-    HexCharGroup,         /* 0x63 c */
-    HexCharGroup,         /* 0x64 d */
-    HexCharGroup,         /* 0x65 e */
-    HexCharGroup,         /* 0x66 f */
-    LetterCharGroup,      /* 0x67 g */
-    LetterCharGroup,      /* 0x68 h */
-    LetterCharGroup,      /* 0x69 i */
-    LetterCharGroup,      /* 0x6A j */
-    LetterCharGroup,      /* 0x6B k */
-    LetterCharGroup,      /* 0x6C l */
-    LetterCharGroup,      /* 0x6D m */
-    LetterCharGroup,      /* 0x6E n */
-    LetterCharGroup,      /* 0x6F o */
-    LetterCharGroup,      /* 0x70 p */
-    LetterCharGroup,      /* 0x71 q */
-    LetterCharGroup,      /* 0x72 r */
-    LetterCharGroup,      /* 0x73 s */
-    LetterCharGroup,      /* 0x74 t */
-    LetterCharGroup,      /* 0x75 u */
-    LetterCharGroup,      /* 0x76 v */
-    LetterCharGroup,      /* 0x77 w */
-    LetterCharGroup,      /* 0x78 x */
-    LetterCharGroup,      /* 0x79 y */
-    LetterCharGroup,      /* 0x7A z */
+    HexCharGroup,                /* 0x61 a */
+    HexCharGroup,                /* 0x62 b */
+    HexCharGroup,                /* 0x63 c */
+    HexCharGroup,                /* 0x64 d */
+    HexCharGroup,                /* 0x65 e */
+    HexCharGroup,                /* 0x66 f */
+    LetterCharGroup,             /* 0x67 g */
+    LetterCharGroup,             /* 0x68 h */
+    LetterCharGroup,             /* 0x69 i */
+    LetterCharGroup,             /* 0x6A j */
+    LetterCharGroup,             /* 0x6B k */
+    LetterCharGroup,             /* 0x6C l */
+    LetterCharGroup,             /* 0x6D m */
+    LetterCharGroup,             /* 0x6E n */
+    LetterCharGroup,             /* 0x6F o */
+    LetterCharGroup,             /* 0x70 p */
+    LetterCharGroup,             /* 0x71 q */
+    LetterCharGroup,             /* 0x72 r */
+    LetterCharGroup,             /* 0x73 s */
+    LetterCharGroup,             /* 0x74 t */
+    LetterCharGroup,             /* 0x75 u */
+    LetterCharGroup,             /* 0x76 v */
+    LetterCharGroup,             /* 0x77 w */
+    LetterCharGroup,             /* 0x78 x */
+    LetterCharGroup,             /* 0x79 y */
+    LetterCharGroup,             /* 0x7A z */
     UnknownChar,                 /* 0x7B   */
     UnknownChar,                 /* 0x7C   */
     UnknownChar,                 /* 0x7D   */
@@ -147,29 +147,29 @@ static const CharTypeFlags charFlags[128] =
 
 static const CharTypes charTypes[128] =
 {
-    _C_NUL, _C_ERR, _C_ERR, _C_ERR, _C_ERR, _C_ERR, _C_ERR, _C_ERR, 	/* 00-07 */
-    _C_ERR, _C_WSP, _C_NWL, _C_WSP, _C_WSP, _C_NWL, _C_ERR, _C_ERR, 	/* 08-0F */
+    _C_NUL, _C_ERR, _C_ERR, _C_ERR, _C_ERR, _C_ERR, _C_ERR, _C_ERR,     /* 00-07 */
+    _C_ERR, _C_WSP, _C_NWL, _C_WSP, _C_WSP, _C_NWL, _C_ERR, _C_ERR,     /* 08-0F */
 
-    _C_ERR, _C_ERR, _C_ERR, _C_ERR, _C_ERR, _C_ERR, _C_ERR, _C_ERR, 	/* 10-17 */
-    _C_ERR, _C_ERR, _C_ERR, _C_ERR, _C_ERR, _C_ERR, _C_ERR, _C_ERR, 	/* 18-1F */
+    _C_ERR, _C_ERR, _C_ERR, _C_ERR, _C_ERR, _C_ERR, _C_ERR, _C_ERR,     /* 10-17 */
+    _C_ERR, _C_ERR, _C_ERR, _C_ERR, _C_ERR, _C_ERR, _C_ERR, _C_ERR,     /* 18-1F */
 
-    _C_WSP, _C_BNG, _C_QUO, _C_SHP, _C_DOL, _C_PCT, _C_AMP, _C_APO, 	/* 20-27 */
-    _C_LPR, _C_RPR, _C_MUL, _C_PLS, _C_CMA, _C_MIN, _C_DOT, _C_SLH, 	/* 28-2F */
+    _C_WSP, _C_BNG, _C_QUO, _C_SHP, _C_DOL, _C_PCT, _C_AMP, _C_APO,     /* 20-27 */
+    _C_LPR, _C_RPR, _C_MUL, _C_PLS, _C_CMA, _C_MIN, _C_DOT, _C_SLH,     /* 28-2F */
 
-    _C_DIG, _C_DIG, _C_DIG, _C_DIG, _C_DIG, _C_DIG, _C_DIG, _C_DIG, 	/* 30-37 */
-    _C_DIG, _C_DIG, _C_COL, _C_SMC, _C_LT , _C_EQ , _C_GT , _C_QUE, 	/* 38-3F */
+    _C_DIG, _C_DIG, _C_DIG, _C_DIG, _C_DIG, _C_DIG, _C_DIG, _C_DIG,     /* 30-37 */
+    _C_DIG, _C_DIG, _C_COL, _C_SMC, _C_LT , _C_EQ , _C_GT , _C_QUE,     /* 38-3F */
 
-    _C_AT , _C_LET, _C_LET, _C_LET, _C_LET, _C_LET, _C_LET, _C_LET, 	/* 40-47 */
-    _C_LET, _C_LET, _C_LET, _C_LET, _C_LET, _C_LET, _C_LET, _C_LET, 	/* 48-4F */
+    _C_AT , _C_LET, _C_LET, _C_LET, _C_LET, _C_LET, _C_LET, _C_LET,     /* 40-47 */
+    _C_LET, _C_LET, _C_LET, _C_LET, _C_LET, _C_LET, _C_LET, _C_LET,     /* 48-4F */
 
-    _C_LET, _C_LET, _C_LET, _C_LET, _C_LET, _C_LET, _C_LET, _C_LET, 	/* 50-57 */
-    _C_LET, _C_LET, _C_LET, _C_LBR, _C_BSL, _C_RBR, _C_XOR, _C_USC, 	/* 58-5F */
+    _C_LET, _C_LET, _C_LET, _C_LET, _C_LET, _C_LET, _C_LET, _C_LET,     /* 50-57 */
+    _C_LET, _C_LET, _C_LET, _C_LBR, _C_BSL, _C_RBR, _C_XOR, _C_USC,     /* 58-5F */
 
-    _C_BKQ, _C_LET, _C_LET, _C_LET, _C_LET, _C_LET, _C_LET, _C_LET, 	/* 60-67 */
-    _C_LET, _C_LET, _C_LET, _C_LET, _C_LET, _C_LET, _C_LET, _C_LET, 	/* 68-6F */
+    _C_BKQ, _C_LET, _C_LET, _C_LET, _C_LET, _C_LET, _C_LET, _C_LET,     /* 60-67 */
+    _C_LET, _C_LET, _C_LET, _C_LET, _C_LET, _C_LET, _C_LET, _C_LET,     /* 68-6F */
 
-    _C_LET, _C_LET, _C_LET, _C_LET, _C_LET, _C_LET, _C_LET, _C_LET, 	/* 70-77 */
-    _C_LET, _C_LET, _C_LET, _C_LC , _C_BAR, _C_RC , _C_TIL, _C_ERR, 	/* 78-7F */
+    _C_LET, _C_LET, _C_LET, _C_LET, _C_LET, _C_LET, _C_LET, _C_LET,     /* 70-77 */
+    _C_LET, _C_LET, _C_LET, _C_LC , _C_BAR, _C_RC , _C_TIL, _C_ERR,     /* 78-7F */
 };
 
 typedef struct
@@ -266,7 +266,6 @@ BOOL oGetCharType( DWORD dwInfoType, OLECHAR ch, LPWORD lpwCharType )
 {
     BOOL res = GetStringTypeW( dwInfoType, &ch, 1, lpwCharType );
     // BOM ( 0xfeff) is recognized as GetStringTypeW as WS.
-    // TODO ES5:  check the old types
     if ((0x03FF & *lpwCharType) == 0x0200)
     {
         // Some of the char types changed for Whistler (Unicode 3.0).
@@ -372,7 +371,7 @@ UnicodeGeneralCategory Js::CharClassifier::GetUnicodeCategoryFor(codepoint_t ch)
 
     if(FAILED(this->winGlobCharApi->GetGeneralCategory(ch, &category)))
     {
-        AssertMsg(false, "Should not fail here!"); 
+        AssertMsg(false, "Should not fail here!");
         return UnicodeGeneralCategory::UnicodeGeneralCategory_NotAssigned;
     }
 
@@ -437,12 +436,12 @@ CharTypes Js::CharClassifier::GetBigCharTypeES6(codepoint_t ch, const Js::CharCl
 From Unicode 6.3 http://www.unicode.org/reports/tr31/tr31-19.html
 
 ID_Start:::
-    Characters having the Unicode General_Category of uppercase letters (Lu), lowercase letters (Ll), titlecase letters (Lt), modifier letters (Lm), other letters (Lo), letter numbers (Nl), minus Pattern_Syntax and Pattern_White_Space code points, plus stability extensions. Note that "other letters" includes ideographs. 
+    Characters having the Unicode General_Category of uppercase letters (Lu), lowercase letters (Ll), titlecase letters (Lt), modifier letters (Lm), other letters (Lo), letter numbers (Nl), minus Pattern_Syntax and Pattern_White_Space code points, plus stability extensions. Note that "other letters" includes ideographs.
     In set notation, this is [[:L:][:Nl:]--[:Pattern_Syntax:]--[:Pattern_White_Space:]] plus stability extensions.
- 
+
 ID_Continue:::
-    All of the above, plus characters having the Unicode General_Category of nonspacing marks (Mn), spacing combining marks (Mc), decimal number (Nd), connector punctuations (Pc), plus stability extensions, minus Pattern_Syntax and Pattern_White_Space code points. 
-    In set notation, this is [[:L:][:Nl:][:Mn:][:Mc:][:Nd:][:Pc:]--[:Pattern_Syntax:]--[:Pattern_White_Space:]] plus stability extensions. 
+    All of the above, plus characters having the Unicode General_Category of nonspacing marks (Mn), spacing combining marks (Mc), decimal number (Nd), connector punctuations (Pc), plus stability extensions, minus Pattern_Syntax and Pattern_White_Space code points.
+    In set notation, this is [[:L:][:Nl:][:Mn:][:Mc:][:Nd:][:Pc:]--[:Pattern_Syntax:]--[:Pattern_White_Space:]] plus stability extensions.
 
 These are also known simply as Identifier Characters, because they are a superset of the ID_Start characters.
 */
@@ -452,7 +451,7 @@ CharTypeFlags Js::CharClassifier::GetBigCharFlagsES6(codepoint_t ch, const Js::C
     Assert(ch > 0x7F);
 
     UnicodeGeneralCategory category = instance->GetUnicodeCategoryFor(ch);
-    
+
     switch(category)
     {
     case UnicodeGeneralCategory::UnicodeGeneralCategory_LowercaseLetter:
@@ -496,7 +495,7 @@ CharTypeFlags Js::CharClassifier::GetBigCharFlagsES6(codepoint_t ch, const Js::C
     case UnicodeGeneralCategory::UnicodeGeneralCategory_NotAssigned:
         return CharTypeFlags::UnknownChar;
     }
-    
+
     return CharTypeFlags::UnknownChar;
 }
 
@@ -536,10 +535,10 @@ BOOL Js::CharClassifier::BigCharIsIdStartES6(codepoint_t codePoint, const CharCl
 }
 
 BOOL Js::CharClassifier::BigCharIsIdContinueES6(codepoint_t codePoint, const CharClassifier *instance)
-{ 
+{
     Assert(codePoint > 0x7F);
-    
-    if (codePoint == '$' || codePoint == '_' || codePoint == 0x200C /* Zero-width non-joiner */ || codePoint == 0x200D /* Zero-width joiner */) 
+
+    if (codePoint == '$' || codePoint == '_' || codePoint == 0x200C /* Zero-width non-joiner */ || codePoint == 0x200D /* Zero-width joiner */)
     {
         return true;
     }
@@ -567,18 +566,18 @@ BOOL Js::CharClassifier::IsBiDirectionalChar(codepoint_t ch) const
     //From http://www.unicode.org/reports/tr9/#Directional_Formatting_Codes
     switch (ch)
     {
-    case 0x202A: //LEFT-TO-RIGHT EMBEDDING Treat the following text as embedded left-to-right 
-    case 0x202B: //RIGHT-TO-LEFT EMBEDDING Treat the following text as embedded right-to-left. 
-    case 0x202D: //LEFT-TO-RIGHT OVERRIDE Force following characters to be treated as strong left-to-right characters. 
-    case 0x202E: //RIGHT-TO-LEFT OVERRIDE Force following characters to be treated as strong right-to-left characters. 
-    case 0x202C: //POP DIRECTIONAL FORMATTING End the scope of the last LRE, RLE, RLO, or LRO. 
-    case 0x2066: //LEFT-TO-RIGHT ISOLATE Treat the following text as isolated and left-to-right. 
-    case 0x2067: //RIGHT-TO-LEFT ISOLATE Treat the following text as isolated and right-to-left. 
-    case 0x2068: //FIRST STRONG ISOLATE Treat the following text as isolated and in the direction of its first strong directional character that is not inside a nested isolate. 
-    case 0x2069: //POP DIRECTIONAL ISOLATE End the scope of the last LRI, RLI, or FSI. 
-    case 0x200E: //LEFT-TO-RIGHT MARK Left-to-right zero-width character 
-    case 0x200F: //RIGHT-TO-LEFT MARK Right-to-left zero-width non-Arabic character 
-    case 0x061C: //ARABIC LETTER MARK Right-to-left zero-width Arabic character 
+    case 0x202A: //LEFT-TO-RIGHT EMBEDDING Treat the following text as embedded left-to-right
+    case 0x202B: //RIGHT-TO-LEFT EMBEDDING Treat the following text as embedded right-to-left.
+    case 0x202D: //LEFT-TO-RIGHT OVERRIDE Force following characters to be treated as strong left-to-right characters.
+    case 0x202E: //RIGHT-TO-LEFT OVERRIDE Force following characters to be treated as strong right-to-left characters.
+    case 0x202C: //POP DIRECTIONAL FORMATTING End the scope of the last LRE, RLE, RLO, or LRO.
+    case 0x2066: //LEFT-TO-RIGHT ISOLATE Treat the following text as isolated and left-to-right.
+    case 0x2067: //RIGHT-TO-LEFT ISOLATE Treat the following text as isolated and right-to-left.
+    case 0x2068: //FIRST STRONG ISOLATE Treat the following text as isolated and in the direction of its first strong directional character that is not inside a nested isolate.
+    case 0x2069: //POP DIRECTIONAL ISOLATE End the scope of the last LRI, RLI, or FSI.
+    case 0x200E: //LEFT-TO-RIGHT MARK Left-to-right zero-width character
+    case 0x200F: //RIGHT-TO-LEFT MARK Right-to-left zero-width non-Arabic character
+    case 0x061C: //ARABIC LETTER MARK Right-to-left zero-width Arabic character
         return TRUE;
     default:
         return FALSE;
@@ -598,12 +597,12 @@ BOOL Js::CharClassifier::IsIdContinueFast(codepoint_t ch) const
     return isBigChar ? this->bigCharIsIdContinueFunc(ch, this) : (charFlags[ch] & CharTypeFlags::IdChar);
 }
 
-Js::CharClassifier::CharClassifier(ScriptContext * scriptContext) 
-{   
+Js::CharClassifier::CharClassifier(ScriptContext * scriptContext)
+{
     CharClassifierModes overallMode = (CONFIG_FLAG(ES6Unicode)) ? CharClassifierModes::ES6 : CharClassifierModes::ES5;
     bool codePointSupport = overallMode == CharClassifierModes::ES6;
     bool isES6UnicodeVerboseEnabled = scriptContext->GetConfig()->IsES6UnicodeVerboseEnabled();
-    
+
     initClassifier(scriptContext, overallMode, overallMode, overallMode, codePointSupport, isES6UnicodeVerboseEnabled, CharClassifierModes::ES6); // no fallback for chk
 }
 
@@ -706,7 +705,7 @@ const OLECHAR* Js::CharClassifier::SkipIdentifierNonSurrogate(LPCOLESTR psz, con
     {
         return psz;
     }
-    
+
     for (psz++; instance->IsIdContinue(*psz); psz++)
     {
     }
@@ -738,7 +737,7 @@ const LPCUTF8 Js::CharClassifier::SkipIdentifierNonSurrogateStartEnd(LPCUTF8 psz
 const OLECHAR* Js::CharClassifier::SkipWhiteSpaceSurrogate(LPCOLESTR psz, const CharClassifier *instance)
 {
     wchar_t currentChar = 0x0;
-    
+
     // Slow path is to check for a surrogate each iteration.
     // There is no new surrogate whitespaces as of yet, however, might be in the future, so surrogates still need to be checked
     // So, based on that, best way is to hit the slow path if the current character is not a whitespace in [0, FFFF];
@@ -754,7 +753,7 @@ const OLECHAR* Js::CharClassifier::SkipWhiteSpaceSurrogate(LPCOLESTR psz, const 
                     continue;
                 }
             }
-            
+
             // Above case failed, so we have reached the last whitespace
             return psz;
         }
@@ -768,7 +767,7 @@ const OLECHAR* Js::CharClassifier::SkipWhiteSpaceSurrogate(LPCOLESTR psz, const 
 const OLECHAR* Js::CharClassifier::SkipWhiteSpaceSurrogateStartEnd(_In_reads_(pStrEnd - pStr) LPCOLESTR pStr, _In_ LPCOLESTR pStrEnd, const CharClassifier *instance)
 {
     wchar_t currentChar = 0x0;
-    
+
     // Same reasoning as above
     while(pStr < pStrEnd && (currentChar = *pStr) != '\0')
     {
@@ -782,7 +781,7 @@ const OLECHAR* Js::CharClassifier::SkipWhiteSpaceSurrogateStartEnd(_In_reads_(pS
                     continue;
                 }
             }
-            
+
             // Above case failed, so we have reached the last whitespace
             return pStr;
         }
@@ -795,7 +794,7 @@ const OLECHAR* Js::CharClassifier::SkipWhiteSpaceSurrogateStartEnd(_In_reads_(pS
 
 const OLECHAR* Js::CharClassifier::SkipIdentifierSurrogate(LPCOLESTR psz, const CharClassifier *instance)
 {
-    //Similar reasoning to above, however we do have surrogate identifiers, but less likely to occure in code.
+    // Similar reasoning to above, however we do have surrogate identifiers, but less likely to occur in code.
     wchar_t currentChar = *psz;
 
     if (!instance->IsIdStart(currentChar))
@@ -811,7 +810,7 @@ const OLECHAR* Js::CharClassifier::SkipIdentifierSurrogate(LPCOLESTR psz, const 
             return psz;
         }
     }
-    
+
     psz++;
 
     while((currentChar = *psz) != '\0')
@@ -826,7 +825,7 @@ const OLECHAR* Js::CharClassifier::SkipIdentifierSurrogate(LPCOLESTR psz, const 
                     continue;
                 }
             }
-            
+
             // Above case failed, so we have reached the last IDContinue
             return psz;
         }
@@ -839,11 +838,11 @@ const OLECHAR* Js::CharClassifier::SkipIdentifierSurrogate(LPCOLESTR psz, const 
 
 const LPCUTF8 Js::CharClassifier::SkipIdentifierSurrogateStartEnd(LPCUTF8 psz, LPCUTF8 end, const CharClassifier *instance)
 {
-    
+
     LPCUTF8 currentPosition = psz;
     utf8::DecodeOptions options = utf8::doAllowThreeByteSurrogates;
 
-    //Similar reasoning to above, however we do have surrogate identifiers, but less likely to occure in code.
+    // Similar reasoning to above, however we do have surrogate identifiers, but less likely to occur in code.
     codepoint_t currentChar = utf8::Decode(currentPosition, end, options);
 
     if (options & utf8::doSecondSurrogatePair)
@@ -855,9 +854,9 @@ const LPCUTF8 Js::CharClassifier::SkipIdentifierSurrogateStartEnd(LPCUTF8 psz, L
     {
         return psz;
     }
-    
+
     psz = currentPosition;
-   
+
     // Slow path is to check for a surrogate each iteration.
     // There is no new surrogate whitespaces as of yet, however, might be in the future, so surrogates still need to be checked
     // So, based on that, best way is to hit the slow path if the current character is not a whitespace in [0, FFFF];

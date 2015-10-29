@@ -19,7 +19,7 @@ namespace Js
         singleCharStrings(0),
         stringConcatMetrics(&allocator, 43)
     {
-    }   
+    }
 
     bool StringProfiler::IsOnWrongThread() const
     {
@@ -53,13 +53,13 @@ namespace Js
         }
 
         if(sz)
-        {   
+        {
             uint embeddedNULs = CountEmbeddedNULs(sz, length);
             if( embeddedNULs != 0 )
             {
 
                 this->embeddedNULChars += embeddedNULs;
-                this->embeddedNULStrings++;   
+                this->embeddedNULStrings++;
             }
         }
     }
@@ -226,8 +226,8 @@ namespace Js
         }
         Output::Print(L"\n");
         Output::Print(L"Max string length is %u chars\n", maxLength);
-        Output::Print(L"%u empty strings (Literals or BufferString) were requested\n", emptyStrings); 
-        Output::Print(L"%u single char strings (Literals or BufferString) were requested\n", singleCharStrings); 
+        Output::Print(L"%u empty strings (Literals or BufferString) were requested\n", emptyStrings);
+        Output::Print(L"%u single char strings (Literals or BufferString) were requested\n", singleCharStrings);
         if( this->embeddedNULStrings == 0 )
         {
             Output::Print(L"No embedded NULs were detected\n");
@@ -240,7 +240,7 @@ namespace Js
 
         if(stringConcatMetrics.Count() == 0)
         {
-            Output::Print(L"No string contatenations were performed\n");
+            Output::Print(L"No string concatenations were performed\n");
         }
         else
         {
@@ -248,7 +248,7 @@ namespace Js
             Output::Print(L"   LHS +  RHS  SB    Concat   Buf  Other  Total\n");
             Output::Print(L"------ ------ ------ ------ ------ ------ ------\n");
 
-            uint totalConcatenations = 0; 
+            uint totalConcatenations = 0;
             uint totalConcatTree = 0;
             uint totalBufString = 0;
             uint totalCompoundString = 0;

@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
-// Internal  Listing  Machine        
+// Internal  Listing  Machine
 // Name      Name     Encode    Type        BitVec
 //------------------------------------------------------------------------
 
@@ -51,26 +51,6 @@ REGDAT(D12,     d12,      12,   TyFloat64,  RA_CALLEESAVE)
 REGDAT(D13,     d13,      13,   TyFloat64,  RA_CALLEESAVE)
 REGDAT(D14,     d14,      14,   TyFloat64,  RA_CALLEESAVE)
 REGDAT(D15,     d15,      15,   TyFloat64,  RA_CALLEESAVE)
-/* -- Following registers only in VFPv3-D32 and current hardware supports only VFPv3-D16
-** -- enable these before shipping as final windows 8 harware support D32 registers
-** -- Also fix VPUSH which can only push 16 registers in one VPUSH.
-REGDAT(D16,     d16,      16,   TyFloat64,  0)
-REGDAT(D17,     d17,      17,   TyFloat64,  0)
-REGDAT(D18,     d18,      18,   TyFloat64,  0)
-REGDAT(D19,     d19,      19,   TyFloat64,  0)
-REGDAT(D20,     d20,      20,   TyFloat64,  0)
-REGDAT(D21,     d21,      21,   TyFloat64,  0)
-REGDAT(D22,     d22,      22,   TyFloat64,  0)
-REGDAT(D23,     d23,      23,   TyFloat64,  0)
-REGDAT(D24,     d24,      24,   TyFloat64,  0)
-REGDAT(D25,     d25,      25,   TyFloat64,  0)
-REGDAT(D26,     d26,      26,   TyFloat64,  0)
-REGDAT(D27,     d27,      27,   TyFloat64,  0)
-REGDAT(D28,     d28,      28,   TyFloat64,  0)
-REGDAT(D29,     d29,      29,   TyFloat64,  0)
-REGDAT(D30,     d30,      30,   TyFloat64,  0)
-REGDAT(D31,     d31,      31,   TyFloat64,  0)
-*/
 
 #define FIRST_DOUBLE_ARG_REG RegD0
 #define LAST_DOUBLE_REG RegD15

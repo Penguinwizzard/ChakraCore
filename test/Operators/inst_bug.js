@@ -3,7 +3,6 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-//jc -maxinterpretcount:1
 var Failed = false;
 
 function FAIL() { Failed = true; }

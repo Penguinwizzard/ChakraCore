@@ -242,9 +242,6 @@ struct PnFnc
     RestorePoint *pRestorePoint;
     DeferredFunctionStub *deferredStub;
 
-    // This number is based on the JSLinux benchmark, in which doing stack closures in the main execution loop
-    // pushes the byte code size over the JIT threshold. Reconsider this value if other use cases arise,
-    // and/or look for a more sophisticated limit.
     static const long MaxStackClosureAST = 800000;
 
 private:

@@ -27,7 +27,7 @@ enum ErrorTypeEnum
     kjstURIError,
     kjstCustomError,
 #ifdef ENABLE_PROJECTION
-    kjstWinRTError,    
+    kjstWinRTError,
 #endif
 };
 
@@ -35,7 +35,7 @@ struct ParseNode;
 typedef ParseNode *ParseNodePtr;
 
 //
-// Below was moved from scrutil.h to share with jscript9diag.
+// Below was moved from scrutil.h to share with chakradiag.
 //
 #define HR(sc) ((HRESULT)(sc))
 #define MAKE_HR(vbserr) (MAKE_HRESULT(SEVERITY_ERROR, FACILITY_CONTROL, vbserr))

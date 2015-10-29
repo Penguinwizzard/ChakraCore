@@ -9,6 +9,51 @@ if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in ch
     this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 }
 
+function VerfiyToPropertyKey(key) {
+    var obj = {};
+    
+    assert.isFalse(obj.hasOwnProperty(key), "Object#hasOwnProperty uses ToPropertyKey. Initially we don't have the property.");
+    assert.doesNotThrow(function() { Object.defineProperty(obj, key, { value: 'something', enumerable: true }); }, "Object.defineProperty uses ToPropertyKey. Property is added to the object");
+
+    assert.isTrue(obj.hasOwnProperty(key), "Object#hasOwnProperty uses ToPropertyKey on argument. We should have the property now.");
+    assert.isTrue(obj.propertyIsEnumerable(key), "Object#propertyIsEnumerable uses ToPropertyKey.");
+    assert.areNotEqual(undefined, Object.getOwnPropertyDescriptor(obj, key), "Object.getOwnPropertyDescriptor uses ToPropertyKey");
+    
+    obj = {};
+    obj.__defineGetter__(key, () => { return 2;} );
+    assert.isTrue(obj.hasOwnProperty(key), "Object#__defineGetter__ uses ToPropertyKey. Property is added to the object");
+    
+    obj = {};
+    obj.__defineSetter__(key, () => { return 2;} );
+    assert.isTrue(obj.hasOwnProperty(key), "Object#__defineSetter__ uses ToPropertyKey. Property is added to the object");
+    
+    var count = 0;
+    obj = Object.defineProperty({}, key, { set(v) { assert.areEqual('abc', v, "Setter called with correct arg"); count++; } });
+    var set = obj.__lookupSetter__(key);
+    assert.areEqual('function', typeof set, "Object#__lookupSetter__ uses ToPropertyKey. Make sure we added a setter.");
+    set('abc');
+    assert.areEqual(1, count, "Correct setter was called.");
+    
+    obj = Object.defineProperty({}, key, { get() { return 'abc'; } });
+    var get = obj.__lookupGetter__(key);
+    assert.areEqual('function', typeof get, "Object#__lookupGetter__ uses ToPropertyKey. Make sure we added a getter.");
+    assert.areEqual('abc', get(), "Correct getter was called.");
+    
+    obj = {};
+    assert.doesNotThrow(function() { Reflect.set(obj, key, 'abc'); }, "Reflect.set uses ToPropertyKey on argument. We should have set property");
+    assert.areEqual('abc', Reflect.get(obj, key), "Reflect.get also uses ToPropertyKey. We should return the same property");
+    assert.isTrue(Reflect.deleteProperty(obj, key), "Reflect.deleteProperty uses ToPropertyKey. We should successfully remove the property here");
+    assert.isFalse(Reflect.has(obj, key), "Reflect.has uses ToPropertyKey. We deleted this property, so we should not have it now.");
+    assert.doesNotThrow(function() { Reflect.defineProperty(obj, key, { value: 'def', enumerable: true }); }, "Reflect.defineProperty uses ToPropertyKey. It should have created a new property");
+    assert.areEqual('def', Reflect.get(obj, key), "Reflect.get also uses ToPropertyKey. We should return the same property");
+    assert.areNotEqual(undefined, Reflect.getOwnPropertyDescriptor(obj, key), "Reflect.getOwnPropertyDescriptor uses ToPropertyKey. It should return a real descriptor object");
+    
+    obj = {};
+    assert.doesNotThrow(function() { obj[key] = 123; }, "Ordinary [[Set]] eventually uses ToPropertyKey. Property is added to the object");
+    assert.areEqual(123, obj[key], "Ordinary [[Get]] also eventually goes down to ToPropertyKey which should return us the same value");
+    assert.isTrue(obj.hasOwnProperty(key), "Verify we added the property under key and not some stringified version of key");
+}
+
 var tests = [
     {
         name: "Symbol is a constructor object and has correct shape",
@@ -829,6 +874,46 @@ var tests = [
 
             assert.areEqual([], Object.getOwnPropertyNames(obj2), "Object has no string-keyed properties");
             assert.areEqual([sym], Object.getOwnPropertySymbols(obj2), "Object only has one symbol-keyed property - sym");
+        }
+    },
+    {
+        name: 'ToPropertyKey performs ToPrimitive on argument which unwraps Symbol objects',
+        body: function() {
+            var sym = Symbol('sym');
+            var symbol_object = Object(sym);
+            
+            VerfiyToPropertyKey(symbol_object);
+        }
+    },
+    {
+        name: 'ToPropertyKey performs ToPrimitive on argument which returns symbol primitive via toString',
+        body: function() {
+            var sym = Symbol('sym');
+            var tostring_object = { 
+                toString() { 
+                    return sym; 
+                },  
+                valueOf() {
+                    assert.isTrue(false, "We should never call the valueOf method of this object");
+                } 
+            };
+            
+            VerfiyToPropertyKey(tostring_object);
+        }
+    },
+    {
+        name: 'ToPropertyKey performs ToPrimitive on argument which returns symbol primitive via valueOf',
+        body: function() {
+            var sym = Symbol('sym');
+            var obj = { [sym] : 'value' };
+            var valueof_object = { 
+                toString : null,
+                valueOf() {
+                    return sym;
+                } 
+            };
+            
+            VerfiyToPropertyKey(valueof_object);
         }
     },
     {

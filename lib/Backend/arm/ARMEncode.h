@@ -9,9 +9,9 @@
 //
 #include "AssemblyStep.h"
 
-//THUMB2 specific decl
+// THUMB2 specific decl
 typedef unsigned int ENCODE_32;
-//THUMB1 specific decl.
+// THUMB1 specific decl.
 typedef unsigned short ENCODE_16;
 typedef unsigned char ENCODE_8;
 
@@ -55,7 +55,7 @@ typedef unsigned char ENCODE_8;
 #define DSSUB              0x0200
 #define DSPOST             0x0400
 #define DSBIT              0x0800
-#define DQBR               0x1000 //Qualcomm buggy branch instructions see macro SOFTWARE_FIXFOR_HARDWARE_BUGWIN8_502326
+#define DQBR               0x1000 // Qualcomm buggy branch instructions see macro SOFTWARE_FIXFOR_HARDWARE_BUGWIN8_502326
 
 #define D____              (0)
 #define D___C              (DCONDEXE)
@@ -86,9 +86,9 @@ typedef unsigned char ENCODE_8;
 #define SETS_SBIT(o)       ((EncoderMD::GetOpdope(o) & DSBIT) != 0)
 #define ISQBUGGYBR(o)      ((EncoderMD::GetOpdope(o) & DQBR) != 0)
 
-static const uint32 Opdope[] = 
+static const uint32 Opdope[] =
 {
-#define MACRO(name, jnLayout, attrib, byte2, form, opbyte, dope, ...) dope, 
+#define MACRO(name, jnLayout, attrib, byte2, form, opbyte, dope, ...) dope,
 #include "MdOpcodes.h"
 #undef MACRO
 };
@@ -109,7 +109,7 @@ static const BYTE RegEncode[] =
 
 #define CO_UIMMED8(intConst)        ((intConst) & 0xff) // 8 bit unsigned immediate
 
-//Used by GenerateInstrs
+// Used by GenerateInstrs
 #define CASE_OPCODES_ALWAYS_THUMB2      \
     case Js::OpCode::ADDW:              \
     case Js::OpCode::LDRRET:            \
@@ -183,7 +183,7 @@ typedef struct _FormTable
 #define THUMB2_THUMB1_FORM(FTP,IFORM) \
         ( (FTP) == (((IFORM) & 0x0FFFFFFF) | FTHUMB))
 
-// NOTE if we end up with a form with more than six operands the iform
+// NOTE if we end up with a form with more than six operands the IFORM
 // encoding needs to be reworked.  (runs out of bits)
 typedef enum tagIFORM
 {
@@ -191,7 +191,7 @@ typedef enum tagIFORM
 
     // CONSIDER: we seem to have some collisions here
     //  (is there a way to cleanup this? we'd need more than 16 values)
-    
+
     FORM_REG      = 1,
     FORM_SREG     = 2,  // VFP single precision register
     FORM_DREG     = 3,  // VFP double precision register
@@ -284,7 +284,7 @@ typedef enum tagIFORM
     FORM_Trpcc____  = FTHUMB | FDST(REG) | FSRC(PC,1) | FSRC(CONST,2),
     FORM_Trspc____  = FTHUMB | FDST(REG) | FSRC(SP,1) | FSRC(CONST,2),
     FORM_2rspc____  = FTHUMB2 | FDST(REG) | FSRC(SP,1) | FSRC(CONST,2),
-    FORM_2sprc____  = FTHUMB2 | FDST(SP) | FSRC(REG,1) | FSRC(CONST,2),  //speical Check this.
+    FORM_2sprc____  = FTHUMB2 | FDST(SP) | FSRC(REG,1) | FSRC(CONST,2),
     FORM_Tsphr____  = FTHUMB | FDST(SP) | FSET(REG, 28) | FSRC(REG,1),
     FORM_Trpc_____  = FTHUMB | FDST(REG) | FSRC(PC,1),
     //ADD, MOVH
@@ -349,7 +349,7 @@ typedef enum tagIFORM
     FORM_Tri______ = FTHUMB | FDST(REG) | FSRC(INDIR,1),
     FORM_Trisp____ = FTHUMB | FDST(REG) | FSRC(INDIR,1) | FSRC(SP,2),
     FORM_Tripc____ = FTHUMB | FDST(REG) | FSRC(INDIR,1) | FSRC(PC,2),
-    
+
     //STR
     FORM_2ircr____ = FTHUMB2 | FDST(INDIR) | FSRC(REG,1) | FSRC(CONST,2) | FSRC(REG,3),
     FORM_2ispcr___ = FTHUMB2 | FDST(INDIR) | FSRC(SP,1) | FSRC(CONST,2) | FSRC(REG,3),
@@ -536,10 +536,8 @@ static const FormTable Forms_B [] =
 //    FT (TlC______, 0xd000, Steps_T_Branch),
     FT (NOMORE,   0x0,   0),
 };
-// B<C> explicit ///////////////////////////////////
-//TODO(abchatra): See if you can combine all the following branch variants
-//into one form and encode condition as a step.
 
+// B<C> explicit ///////////////////////////////////
 static const FormTable Forms_BEQ [] =
 {
     //FT (2l_______, 0x9000F000, Steps_T2_Branch),
@@ -643,7 +641,7 @@ static const FormTable Forms_BLX [] =
 {
     FT (2e_______, 0xE800F000, Steps_T2_BLX),
 
-    FT (Te_______, 0xf400e400, Steps_T_BLX), //check this
+    FT (Te_______, 0xf400e400, Steps_T_BLX),
     FT (T_r______, 0x4780, Steps_T_BX),
     FT (Tr_______, 0x4780, Steps_T_BX), //same src, dst
     FT (Thr______, 0x4780, Steps_T_BX),
@@ -746,7 +744,7 @@ static const FormTable Forms_LDIMM [] =
 
 static const FormTable Forms_LEA [] =
 {
-// Treat this as a Thumb2 add: r = ADDW sp,offset
+    // Treat this as a Thumb2 add: r = ADDW sp,offset
     FT (2risp____, 0x0000F200, Steps_T2_LEA_rrd),
 
 //    FT (Trl______, 0xa800, Steps_T_LEA_rrd),
@@ -756,7 +754,7 @@ static const FormTable Forms_LEA [] =
     FT (NOMORE,   0x0,   0),
 };
 
-static const FormTable Forms_STM [] = 
+static const FormTable Forms_STM [] =
 {
     FT (2ispc____, 0x0000E800, Steps_T2_STM_rrx),
     FT (2irc_____, 0x0000E800, Steps_T2_STM_rrx),
@@ -882,16 +880,16 @@ static const FormTable Forms_SUB [] =
     //FT (2rrrcc___, 0x0000EBA0, Steps_T2_ALU_dnm_Shift_c),
     //FT (2rrrccC__, 0x0000EB60, Steps_T2_ALU_dnm_Shift_c),
     FT (2rrr_____, 0x0000EBA0, Steps_T2_ALU_dnm),
-    FT (2rrrC____, 0x0000EB60, Steps_T2_ALU_dnm),   // SBC
+    FT (2rrrC____, 0x0000EB60, Steps_T2_ALU_dnm),       // SBC
     FT (2rrcC____, 0x0000F160, Steps_T2_ALU_dn_modc12), // SBC
 
-    FT (Trrc_____, 0x1e00, Steps_T_Add_Sub_dnc),   //SUB rd, rn #<3_bit_immd>
-    FT (Trc______, 0x3800, Steps_T_Add_Sub_ddc),  //SUB rd, #<8_bit_immd>
-    FT (Tr_______, 0x1a00, Steps_T_Add_Sub_dnm),   //ADD rd, rd, rm
-    FT (Trr______, 0x1a00, Steps_T_Add_Sub_dnm),   //SUB rd, rd, rm
-    FT (Trrr_____, 0x1a00, Steps_T_Add_Sub_dnm),   //SUB rd, rn, rm
-    FT (Tspspc___, 0xb080, Steps_T_Add_Sub_SP),   //SUB SP, SP, #<7_bit_immd>
-    FT (TrrC_____, 0x4180, Steps_T_ALU_dm),  //SBC
+    FT (Trrc_____, 0x1e00, Steps_T_Add_Sub_dnc),        // SUB rd, rn #<3_bit_immd>
+    FT (Trc______, 0x3800, Steps_T_Add_Sub_ddc),        // SUB rd, #<8_bit_immd>
+    FT (Tr_______, 0x1a00, Steps_T_Add_Sub_dnm),        // ADD rd, rd, rm
+    FT (Trr______, 0x1a00, Steps_T_Add_Sub_dnm),        // SUB rd, rd, rm
+    FT (Trrr_____, 0x1a00, Steps_T_Add_Sub_dnm),        // SUB rd, rn, rm
+    FT (Tspspc___, 0xb080, Steps_T_Add_Sub_SP),         // SUB SP, SP, #<7_bit_immd>
+    FT (TrrC_____, 0x4180, Steps_T_ALU_dm),             // SBC
 
     FT (NOMORE,   0x0,   0),
 };
@@ -904,13 +902,13 @@ static const FormTable Forms_SBCMPLNT [] =
 
 static const FormTable Forms_STRN[] =
 {
-    FT (Tircr____, 0x0000, Steps_T_STRN_rcr),                   //STR rd, [rn, #off]
-    FT (Tirrr____, 0x0000, Steps_T_STRN_rrr),                   //STR rd, [rn, rm]
-    FT (Tir______, 0x6038, Steps_T_STRN_ri),                    //STR rd, [rn, #8_bit_off]
-    FT (Tispr____, 0x9000, Steps_T_STRN_spcr),                  //STR rd, [SP, #8_bit_off]
-    FT (Tispcr___, 0x9000, Steps_T_STRN_spcr),                  //STR rd, [SP, #8_bit_off]
-    FT (Tipcr____, 0x6000, Steps_T_STRN_spcr),                  //STR rd, [PC, #8_bit_off]
-    FT (Tirsp____, 0x9000, Steps_T_STRN_spcr),                  //STR rd, [SP, #8_bit_off]
+    FT (Tircr____, 0x0000, Steps_T_STRN_rcr),           // STR rd, [rn, #off]
+    FT (Tirrr____, 0x0000, Steps_T_STRN_rrr),           // STR rd, [rn, rm]
+    FT (Tir______, 0x6038, Steps_T_STRN_ri),            // STR rd, [rn, #8_bit_off]
+    FT (Tispr____, 0x9000, Steps_T_STRN_spcr),          // STR rd, [SP, #8_bit_off]
+    FT (Tispcr___, 0x9000, Steps_T_STRN_spcr),          // STR rd, [SP, #8_bit_off]
+    FT (Tipcr____, 0x6000, Steps_T_STRN_spcr),          // STR rd, [PC, #8_bit_off]
+    FT (Tirsp____, 0x9000, Steps_T_STRN_spcr),          // STR rd, [SP, #8_bit_off]
 
     FT (NOMORE, 0x0, 0),
 };
@@ -982,7 +980,7 @@ static const FormTable Forms_MUL [] =
 
 static const FormTable Forms_SMLAL [] =
 {
-    // SMLAL RdLo, RdHi, Rn, Rm. We always use r12 as RdHi, as we don't currently support instrs with 4 operands.
+    // SMLAL RdLo, RdHi, Rn, Rm. We always use r12 as RdHi, as we don't currently support instructions with 4 operands.
     // RdLo RdHi 0000 Rm__ | 1111 1011 1100 Rn__
     FT (2rrr_____, 0x0000FBC0, Steps_T2_ALU_mull_no_sbit),
     FT (NOMORE,    0x0,   0),
@@ -990,7 +988,7 @@ static const FormTable Forms_SMLAL [] =
 
 static const FormTable Forms_SMULL [] =
 {
-    // SMULL<c> RdLo, RdHi, Rn, Rm. We always use r12 as RdHi, as we don't currently support instrs with 4 operands.
+    // SMULL<c> RdLo, RdHi, Rn, Rm. We always use r12 as RdHi, as we don't currently support instructions with 4 operands.
     // RdLo RdHi 0000 Rm__ | 1111 1011 1000 Rn__
     FT (2rrr_____, 0x0000FB80, Steps_T2_ALU_mull_no_sbit),
     FT (NOMORE,    0x0,   0),
@@ -1098,7 +1096,7 @@ static const FormTable Forms_VSQRT [] =
     //   M = register selector for src  = sz ? M:Vm : Vm:M
     // T1/A1 Vd__ 101s 11M0 Vm__ | 1110 1110 1D11 0001 (flipped low and hi 2 bytes from as it's in the manual)
     //    -> 0000 1011 1100 0000 | 1110 1110 1011 0001
-    // Note: using 2dd form as for Thumb2, although the manual says there is only T1/A1 form -- 
+    // Note: using 2dd form as for Thumb2, although the manual says there is only T1/A1 form --
     //       the instr is essentially same as in Thumb2 (4 bytes).
     FT (2dd______, 0x0bc0eeb1, Steps_DBL_Unary_dm),
     FT (NOMORE,   0x0,   0),
@@ -1134,7 +1132,7 @@ static const FormTable Forms_VCMPF64 [] =
     FT (NOMORE,   0x0,   0),
 };
 
-//This always moves FPSCR to ARM Status register.
+// This always moves FPSCR to ARM Status register.
 // APSR_nzcv is encoded as Rt = ’1111’, and the instruction transfers the FPSCR N, Z, C, and
 // V flags to the APSR N, Z, C, and V flags.
 static const FormTable Forms_VMRS [] =
@@ -1197,7 +1195,7 @@ static const FormTable Forms_VMOV[] =
     FT (NOMORE,   0x0,   0),
 };
 
-//This moves data between ARM core registers & VFP registers.
+// This moves data between ARM core registers & VFP registers.
 static const FormTable Forms_VMOVARMVFP[] =
 {
     FT (2dr______, 0x0a10ee00, Steps_FLT_FMSR_sr),
@@ -1253,7 +1251,7 @@ static const FormTable Forms_VPOP[] =
 {
     FT (2irc_____, 0x0b00ec10, Steps_A_DBL_LDM),                //FLDMD rn, {dreg list}
     FT (2ispc____, 0x0b00ec10, Steps_A_DBL_LDM),                //FLDMD SP, {dreg list}
-    FT (2rirc____, 0x0b00ec10, Steps_A_DBL_LDM),                //FLDMD rn, {single register} 
+    FT (2rirc____, 0x0b00ec10, Steps_A_DBL_LDM),                //FLDMD rn, {single register}
     FT (2rispc___, 0x0b00ec10, Steps_A_DBL_LDM),                //FLDMD SP, {single register}
 
     FT (NOMORE, 0x0, 0),
@@ -1265,7 +1263,7 @@ static const FormTable Forms_VPUSH[] =
     FT (2irc_____, 0x0b00ec00, Steps_A_DBL_STM),                //FSTMD rn, {dreg list}
     FT (2ispc____, 0x0b00ec00, Steps_A_DBL_STM),                //FSTMD SP, {dreg list}
     FT (2ircr____, 0x0b00ec00, Steps_A_DBL_STM),                //FSTMD rn, {single register}
-    FT (2ispcr___, 0x0b00ec00, Steps_A_DBL_STM),                //FSTMD SP, {single register} 
+    FT (2ispcr___, 0x0b00ec00, Steps_A_DBL_STM),                //FSTMD SP, {single register}
 
     FT (NOMORE, 0x0, 0),
 };

@@ -86,8 +86,6 @@ namespace Js
             PropertyId tempPropertyId;
             /* JavascriptString * tempPropertyString = */ this->GetCurrentAndMoveNextFromObject(objectIndex, tempPropertyId, attributes);
 
-            // TODO: Can't assert this because of the small property string cache
-            // Assert(propertyString == tempPropertyString);
             Assert(tempPropertyId == propertyId);
             Assert(objectIndex == cachedData->indexes[enumeratedCount]);
 #endif

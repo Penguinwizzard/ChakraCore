@@ -12,18 +12,18 @@ namespace PerfCounter
     class DefaultCounterSetInstance : public InstanceBase
     {
     public:
-        DefaultCounterSetInstance() : InstanceBase(TCounter::GetProvider(), TCounter::GetGuid()) 
+        DefaultCounterSetInstance() : InstanceBase(TCounter::GetProvider(), TCounter::GetGuid())
         {
             if (Initialize())
             {
                 data = defaultData;
             }
-            else 
+            else
             {
-                // if for any reason perf counter failed to initialize, try to create 
-                // shared memory instead. This will happen for sure if running under 
-                // Win8 AppContainer because they don't support v2 perf counters. 
-                // See comments in WWAHostJSCounterProvider  for details.
+                // if for any reason perf counter failed to initialize, try to create
+                // shared memory instead. This will happen for sure if running under
+                // Win8 AppContainer because they don't support v2 perf counters.
+                // See comments in WWAHostJSCounterProvider for details.
                 data = __super::InitializeSharedMemory(TCounter::MaxCounter, handle);
                 if (data == nullptr)
                 {
@@ -61,7 +61,7 @@ namespace PerfCounter
                 }
                 wchar_t wszFilename[_MAX_FNAME];
                 _wsplitpath_s(wszModuleName, NULL, 0, NULL, 0, wszFilename, _MAX_FNAME, NULL, 0);
-                
+
                 return __super::Initialize(wszFilename, GetCurrentProcessId());
             }
             return false;
@@ -76,13 +76,13 @@ namespace PerfCounter
     class PageAllocatorCounterSet
     {
     public:
-        static Counter& GetReservedSizeCounter(PageAllocatorType type) 
+        static Counter& GetReservedSizeCounter(PageAllocatorType type)
             { return instance.GetCounter(PageAllocatorCounterSetDefinition::GetReservedCounterId(type)); }
         static Counter& GetTotalReservedSizeCounter();
-        static Counter& GetCommittedSizeCounter(PageAllocatorType type) 
+        static Counter& GetCommittedSizeCounter(PageAllocatorType type)
             { return instance.GetCounter(PageAllocatorCounterSetDefinition::GetCommittedCounterId(type)); }
         static Counter& GetTotalCommittedSizeCounter();
-        static Counter& GetUsedSizeCounter(PageAllocatorType type) 
+        static Counter& GetUsedSizeCounter(PageAllocatorType type)
             { return instance.GetCounter(PageAllocatorCounterSetDefinition::GetUsedCounterId(type)); }
         static Counter& GetTotalUsedSizeCounter();
     private:
@@ -99,7 +99,7 @@ namespace PerfCounter
     private:
         static DefaultCounterSetInstance<BasicCounterSetDefinition> instance;
     };
-    
+
 
     class CodeCounterSet
     {

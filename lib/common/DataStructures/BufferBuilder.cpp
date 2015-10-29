@@ -5,7 +5,7 @@
 #include "CommonDataStructuresPch.h"
 
 #include "Option.h"
-#include "ImmutableList.h" 
+#include "ImmutableList.h"
 #include "BufferBuilder.h"
 
 namespace Js
@@ -22,7 +22,7 @@ BufferBuilder::TraceOutput(byte * buffer, uint32 size) const
         {
             Output::Print(L" %02x", buffer[this->offset + i]);
         }
-        Output::Print(L"\n");        
+        Output::Print(L"\n");
     }
 }
 #endif

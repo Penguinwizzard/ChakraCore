@@ -17,24 +17,24 @@ function test0(){
   protoObj0 = Object.create(obj0);
   protoObj1 = Object.create(obj1);
   // loopbreakblock5.ecs
-  
+
   function v464() {
-  	var v465 = 0;
-  	var __loopvar1000 = 0;
+    var v465 = 0;
+    var __loopvar1000 = 0;
   while(1) {
     if (__loopvar1000 > 3) break;
     __loopvar1000++;
-  
-  		if(v465++ > 2) {
-  			var uniqobj0 = [protoObj1, protoObj0];
+
+        if(v465++ > 2) {
+            var uniqobj0 = [protoObj1, protoObj0];
      uniqobj0[__counter%uniqobj0.length].method1();
-  			throw "loopbreakblock5.ecs";
-  		}
-  	}
+            throw "loopbreakblock5.ecs";
+        }
+    }
   }
-  
+
   try {
-  	v464();
+    v464();
   } catch(e) {};
 };
 

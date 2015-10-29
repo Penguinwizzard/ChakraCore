@@ -47,7 +47,7 @@ LargeObjectHeader::DecodeAttributesAndChecksum(uint cookie) { return EncodeAttri
 
 #else
 // If heap block encoding is disabled then have an API to expose
-// pointer to attributes so that can be passed to RecyclerHeapObjectInfo() 
+// pointer to attributes so that can be passed to RecyclerHeapObjectInfo()
 // which updates the attributes field.
 unsigned char *
 LargeObjectHeader::GetAttributesPtr()
@@ -88,7 +88,7 @@ LargeObjectHeader::GetNext(uint cookie)
     {
         LargeHeapBlock_Metadata_Corrupted((ULONG_PTR)this, calculatedCheckSumField);
     }
-    // If checksum matches return the up-to-date next (in case other thread changed it from last time 
+    // If checksum matches return the up-to-date next (in case other thread changed it from last time
     // we read it in this method.
     return this->DecodeNext(cookie, this->next);
 
@@ -129,7 +129,7 @@ LargeObjectHeader::GetAttributes(uint cookie)
         LargeHeapBlock_Metadata_Corrupted((ULONG_PTR)this, calculatedCheckSumField);
     }
 
-    // If checksum matches return the up-to-date attributes (in case other thread changed it from last time 
+    // If checksum matches return the up-to-date attributes (in case other thread changed it from last time
     // we read it in this method.
     return this->DecodeAttributesAndChecksum(cookie) >> 8;
 #else
@@ -143,7 +143,7 @@ LargeHeapBlock::GetAllocPlusSize(uint objectCount)
     // Large Heap Block Layout:
     //      LargeHeapBlock
     //      LargeObjectHeader * [objectCount]
-    //      TrackerData *       [objectCount] (Optional)    
+    //      TrackerData *       [objectCount] (Optional)
     size_t allocPlusSize = objectCount * (sizeof(LargeObjectHeader *));
 #ifdef PROFILE_RECYCLER_ALLOC
     if (Recycler::DoProfileAllocTracker())
@@ -200,7 +200,7 @@ LargeHeapBlock::~LargeHeapBlock()
     }
 
     // REVIEW: This means that the old free stack is lost when we get free the heap block
-    // Is this ok? Should we delay freeing heap blocks till process/thread shutdown time?
+    // Is this okay? Should we delay freeing heap blocks till process/thread shutdown time?
     if (this->pageHeapFreeStack != nullptr)
     {
         this->pageHeapFreeStack->Delete(&NoCheckHeapAllocator::Instance);
@@ -317,7 +317,7 @@ LargeHeapBlock::ReleasePages(Recycler * recycler)
                 }
                 AssertMsg(noAccess == PAGE_NOACCESS, "Guard page should be PAGE_NOACCESS");
 
-                if (this->pageHeapMode == PageHeapMode::PageHeapModeBlockStart) 
+                if (this->pageHeapMode == PageHeapMode::PageHeapModeBlockStart)
                 {
                     pageAddress = guardPageAddress;
                 }
@@ -559,7 +559,7 @@ LargeHeapBlock::Mark(void* objectAddress, MarkContext * markContext)
     if (!UpdateAttributesOfMarkedObjects(markContext, objectAddress, header->objectSize, header->GetAttributes(this->heapInfo->recycler->Cookie),
         [&](unsigned char attributes) { header->SetAttributes(this->heapInfo->recycler->Cookie, attributes); }))
     {
-        // Couldn't mark children- bail out and come back later        
+        // Couldn't mark children- bail out and come back later
         this->SetNeedOOMRescan(markContext->GetRecycler());
 
         // Single page large heap block rescan all marked object on oom rescan
@@ -668,7 +668,7 @@ LargeHeapBlock::ResetMarks(ResetMarkFlags flags, Recycler* recycler)
     this->lastCollectAllocCount = this->allocCount;
 
     Assert(this->GetMarkCount() == 0);
-    
+
     Assert(!this->isPendingConcurrentSweep);
 
     if (flags & ResetMarkFlags_ScanImplicitRoot)
@@ -683,7 +683,7 @@ LargeHeapBlock::ResetMarks(ResetMarkFlags flags, Recycler* recycler)
                 continue;
             }
 
-            // check the object is a leaf and don't need to be scanned
+            // check whether the object is a leaf and doesn't need to be scanned
             if ((header->GetAttributes(this->heapInfo->recycler->Cookie) & ImplicitRootBit) != 0)
             {
                 recycler->heapBlockMap.SetMark(header->GetAddress());
@@ -825,7 +825,7 @@ LargeHeapBlock::ScanInitialImplicitRoots(Recycler * recycler)
             continue;
         }
 
-        // check the object is a leaf and don't need to be scanned
+        // check whether the object is a leaf and doesn't need to be scanned
         if ((header->GetAttributes(this->heapInfo->recycler->Cookie) & LeafBit) != 0)
         {
             continue;
@@ -865,7 +865,7 @@ LargeHeapBlock::ScanNewImplicitRoots(Recycler * recycler)
             continue;
         }
 
-        // check the object is an implicit root
+        // check whether the object is an implicit root
         if ((header->GetAttributes(this->heapInfo->recycler->Cookie) & ImplicitRootBit) == 0)
         {
             continue;
@@ -878,7 +878,7 @@ LargeHeapBlock::ScanNewImplicitRoots(Recycler * recycler)
         {
             DUMP_IMPLICIT_ROOT(recycler, objectAddress);
 
-            // check the object is a leaf and don't need to be scanned
+            // check whether the object is a leaf and doesn't need to be scanned
             if ((header->GetAttributes(this->heapInfo->recycler->Cookie) & LeafBit) != 0)
             {
                 continue;
@@ -905,7 +905,7 @@ LargeHeapBlock::RescanOnePage(Recycler * recycler, DWORD const writeWatchFlags)
     {
         if (recycler->inEndMarkOnLowMemory)
         {
-            // we only do oom rescan if we are on low memory mark            
+            // we only do oom rescan if we are on low memory mark
             return false;
         }
 
@@ -946,14 +946,14 @@ LargeHeapBlock::RescanOnePage(Recycler * recycler, DWORD const writeWatchFlags)
         if (((attributes & FinalizeBit) != 0) && ((attributes & NewFinalizeBit) != 0))
         {
             // The concurrent thread saw a false reference to this object and marked it before the attribute was set.
-            // As such, our finalizeCount is not correct.  Update it now.
+            // As such, our finalizeCount is not correct. Update it now.
 
             RECYCLER_STATS_INC(recycler, finalizeCount);
             header->SetAttributes(this->heapInfo->recycler->Cookie, (attributes & ~NewFinalizeBit));
         }
 #endif
 
-        // check the object is a leaf and don't need to be scanned
+        // check whether the object is a leaf and doesn't need to be scanned
         if ((attributes & LeafBit) != 0)
         {
             continue;
@@ -984,10 +984,10 @@ LargeHeapBlock::Rescan(Recycler * recycler, bool isPartialSwept, RescanFlags fla
         return RescanOnePage(recycler, writeWatchFlags);
     }
 
-    // Need to rescan for finish mark even if it is done on the background thread   
+    // Need to rescan for finish mark even if it is done on the background thread
     if (recycler->collectionState != CollectionStateConcurrentFinishMark && recycler->IsConcurrentMarkState())
     {
-        // CONCURRENT-TODO: Don't do background rescan for pages with multiple pages  because
+        // CONCURRENT-TODO: Don't do background rescan for pages with multiple pages because
         // we don't track which page we have queued up
         return 0;
     }
@@ -1045,7 +1045,7 @@ LargeHeapBlock::RescanMultiPage(Recycler * recycler, DWORD const writeWatchFlags
         }
 #endif
 
-        // check the object is a leaf and don't need to be scanned
+        // check whether the object is a leaf and doesn't need to be scanned
         if ((attributes & LeafBit) != 0)
         {
             continue;
@@ -1063,15 +1063,15 @@ LargeHeapBlock::RescanMultiPage(Recycler * recycler, DWORD const writeWatchFlags
                 this->SetNeedOOMRescan(recycler);
                 header->markOnOOMRescan = true;
 
-                // We need to bailout of rescan early only if the recycler is 
-                // trying to finish marking because of low memory. If this is 
-                // a regular rescan, we want to try and rescan all the objects 
+                // We need to bail out of rescan early only if the recycler is
+                // trying to finish marking because of low memory. If this is
+                // a regular rescan, we want to try and rescan all the objects
                 // on the page. It's possible that the rescan OOMs but if the
-                // object rescan does OOM, we'll set the right bit on the 
-                // object header. When we later rescan it in a low memory 
-                // situation, when the bit is set, we don't need to check for 
+                // object rescan does OOM, we'll set the right bit on the
+                // object header. When we later rescan it in a low memory
+                // situation, when the bit is set, we don't need to check for
                 // write-watch etc. since we'd have already done that before
-                // setting the bit in the non-lowmem rescan case.
+                // setting the bit in the non-low-memory rescan case.
                 if (!recycler->inEndMarkOnLowMemory)
                 {
                     continue;
@@ -1103,7 +1103,7 @@ LargeHeapBlock::RescanMultiPage(Recycler * recycler, DWORD const writeWatchFlags
                 *  - If we are rescanning this object because of OOM (i.e !rescanBecauseOfOOM = false), rescan the whole object
                 *
                 * We cache the result of the write watch and the page that it was checked on so that we don't call GetWriteWatch on the same
-                * page twice and inadvertantly reset the write watch on a page where we've already scanned an object
+                * page twice and inadvertently reset the write watch on a page where we've already scanned an object
                 */
                 if (lastPageCheckedForWriteWatch != pageStart)
                 {
@@ -1127,7 +1127,7 @@ LargeHeapBlock::RescanMultiPage(Recycler * recycler, DWORD const writeWatchFlags
                     continue;
                 }
 
-                // We're interested in only rescanning the parts of the object that has changed, not the whole
+                // We're interested in only rescanning the parts of the object that have changed, not the whole
                 // object. So just queue that up for marking
                 char * checkEnd = min(pageStart + AutoSystemInfo::PageSize, objectAddressEnd);
                 if (!recycler->AddMark(objectAddress, (checkEnd - objectAddress)))
@@ -1212,13 +1212,13 @@ LargeHeapBlock::Sweep(RecyclerSweep& recyclerSweep, bool queuePendingSweep)
     {
         Assert(this->expectedSweepCount != 0);
 
-        // We need to sweep in thread if there are any finalizable object.
-        // So that the PrepareFinalize() can be called before concurrent sweep
-        // and other finalizer.  This gives the object an oppurtunity before any
-        // other script can be ran to clean up their references/states that are not
-        // valid since we determine the object is not live any more.
+        // We need to sweep in thread if there are any finalizable objects so
+        // that the PrepareFinalize() can be called before concurrent sweep
+        // and other finalizers. This gives the object an opportunity before any
+        // other script can be ran to clean up its references/states that are not
+        // valid since we've determined that the object is not live any more.
         //
-        // An example is the ITrackable's tracking alias.  The reference to the alias
+        // An example is the ITrackable's tracking alias. The reference to the alias
         // object needs to be clear so that the reference will not be given out again
         // in other script during concurrent sweep or finalizer called before.
 
@@ -1262,16 +1262,16 @@ LargeHeapBlock::TrimObject(Recycler* recycler, LargeObjectHeader* header, size_t
     IdleDecommitPageAllocator* pageAllocator = recycler->GetRecyclerLargeBlockPageAllocator();
     uint pageSize = AutoSystemInfo::PageSize ;
 
-    // If we have to trim an object, either we need to have more than one object in the 
+    // If we have to trim an object, either we need to have more than one object in the
     // heap block or we're being called as a part of force-sweep or dispose
     Assert(this->allocCount > 1 || this->isForceSweeping || inDispose);
 
-    // If we have more than 1 page of bytes to free 
+    // If we have more than 1 page of bytes to free
     // make sure that the number of bytes doesn't exceed the cap for a PageSegment
-    // since this optimization can only be applied to heap blocks using page segments
+    // since this optimization can only be applied to heap blocks using page segments.
     // We also skip this optimization if the allocCount is 1 since that means
-    // the heap block is empty and we've been called only because we're force sweeping
-    // so skip the opt since we're going to be marking the heap block as empty soon
+    // the heap block is empty and we've been called only because we're force sweeping.
+    // So, skip the opt since we're going to be marking the heap block as empty soon
     if (sizeOfObject > pageSize &&
         this->segment->GetPageCount() <= pageAllocator->GetMaxAllocPageCount() &&
         this->allocCount > 1)
@@ -1297,10 +1297,10 @@ LargeHeapBlock::TrimObject(Recycler* recycler, LargeObjectHeader* header, size_t
         size_t bytesToFree = (objectFreeEndAddress - objectFreeAddress);
 
         // Verify assumptions
-        // Make sure that the object being freed is the first object since 
+        // Make sure that the object being freed is the first object since
         // the expectation in a large heap block is that the first object is the largest
-        // object. 
-        // The amount of bytes to free is always less than the size of the object being freed including its header 
+        // object.
+        // The amount of bytes to free is always less than the size of the object being freed including its header
         // The exception is if the original object's size + header size is a multiple of the page size
         Assert(objectAddress == this->address);
         Assert(header->objectIndex == 0);
@@ -1318,9 +1318,9 @@ LargeHeapBlock::TrimObject(Recycler* recycler, LargeObjectHeader* header, size_t
         Assert(freePageCount > 0);
         Assert(freePageCount < this->pageCount);
 
-        // If this call to trim needs idle decommit to be suspended (eg. dispose case)
+        // If this call to trim needs idle decommit to be suspended (e.g. dispose case)
         // check if IdleDecommit has been suspended already. If it hasn't, suspend it
-        // This is to prevent reentrant idle decommits (eg. sometimes dispose is called with 
+        // This is to prevent reentrant idle decommits (e.g. sometimes dispose is called with
         if (inDispose)
         {
             pageAllocator->SuspendIdleDecommit();
@@ -1387,7 +1387,7 @@ LargeHeapBlock::SweepObject<SweepMode_InThread>(Recycler * recycler, LargeObject
 void
 LargeHeapBlock::FinalizeObject(Recycler* recycler, LargeObjectHeader* header)
 {
-    // The header count also be null if this object has already been finalized
+    // The header count can also be null if this object has already been finalized
     // but this method should never be called if the header list header is null
     Assert(this->HeaderList()[header->objectIndex] == header);
     Assert(header->GetAttributes(this->heapInfo->recycler->Cookie) & FinalizeBit);
@@ -1409,7 +1409,7 @@ LargeHeapBlock::FinalizeObject(Recycler* recycler, LargeObjectHeader* header)
 #endif
 }
 
-// Explicit instantiate all the sweep mode
+// Explicitly instantiate all the sweep modes
 template void LargeHeapBlock::SweepObjects<false, SweepMode_InThread>(Recycler * recycler);
 template void LargeHeapBlock::SweepObjects<true, SweepMode_InThread>(Recycler * recycler);
 #ifdef CONCURRENT_GC_ENABLED
@@ -1423,7 +1423,7 @@ LargeHeapBlock::SweepObject<SweepMode_Concurrent>(Recycler * recycler, LargeObje
     FillFreeMemory(recycler, header, sizeof(LargeObjectHeader) + header->objectSize);
 }
 
-// Explicit instantiate all the sweep mode
+// Explicitly instantiate all the sweep modes
 template void LargeHeapBlock::SweepObjects<false, SweepMode_Concurrent>(Recycler * recycler);
 #ifdef PARTIAL_GC_ENABLED
 template <>
@@ -1436,7 +1436,7 @@ LargeHeapBlock::SweepObject<SweepMode_ConcurrentPartial>(Recycler * recycler, La
     DebugOnly(this->hasPartialFreeObjects = true);
 }
 
-// Explicit instantiate all the sweep mode
+// Explicitly instantiate all the sweep modes
 template void LargeHeapBlock::SweepObjects<false, SweepMode_ConcurrentPartial>(Recycler * recycler);
 #endif
 #endif
@@ -1593,7 +1593,7 @@ LargeHeapBlock::DisposeObjects(Recycler * recycler)
         }
 
         // GCTODO: Consider free listing items after Dispose too
-        // GCTODO: Consider compacting heap blocks- if the last n items are free, move the address pointer 
+        // GCTODO: Consider compacting heap blocks- if the last n items are free, move the address pointer
         // back to before the nth item so we can bump allocate from this heap block
         if (!objectTrimmed)
         {

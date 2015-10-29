@@ -27,8 +27,8 @@ HeapBucketT<TBlockType>::RealAlloc(Recycler * recycler, size_t sizeCat)
 #endif
     }
 
-    // If this API is called and throwing is not allowed, 
-    // check if we actually allocated a block before verifying 
+    // If this API is called and throwing is not allowed,
+    // check if we actually allocated a block before verifying
     // its zero fill state. If it is nullptr, return that here.
     if (nothrow)
     {
@@ -71,8 +71,8 @@ HeapBucketT<TBlockType>::ExplicitFree(void* object, size_t sizeCat)
         this->explicitFreeList = explicitFreeObject;
     }
 
-    // Dont' fill memory fill pattern here since we're still pretending like the object
-    // is allocated to other parts of the GC
+    // Don't fill memory fill pattern here since we're still pretending like the object
+    // is allocated to other parts of the GC.
 }
 
 #if DBG || defined(RECYCLER_SLOW_CHECK_ENABLED)

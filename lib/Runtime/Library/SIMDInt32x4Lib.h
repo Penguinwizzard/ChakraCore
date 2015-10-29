@@ -118,12 +118,12 @@ namespace Js {
         static Var EntrySelect(RecyclableObject* function, CallInfo callInfo, ...);
 
         static Var EntryLoad(RecyclableObject* function, CallInfo callInfo, ...);
-        static Var EntryLoad1(RecyclableObject* function, CallInfo callInfo, ...); // load X 
+        static Var EntryLoad1(RecyclableObject* function, CallInfo callInfo, ...); // load X
         static Var EntryLoad2(RecyclableObject* function, CallInfo callInfo, ...); // load XY
         static Var EntryLoad3(RecyclableObject* function, CallInfo callInfo, ...); // load XYZ
 
         static Var EntryStore(RecyclableObject* function, CallInfo callInfo, ...);
-        static Var EntryStore1(RecyclableObject* function, CallInfo callInfo, ...); // store X 
+        static Var EntryStore1(RecyclableObject* function, CallInfo callInfo, ...); // store X
         static Var EntryStore2(RecyclableObject* function, CallInfo callInfo, ...); // store XY
         static Var EntryStore3(RecyclableObject* function, CallInfo callInfo, ...); // store XYZ
         // End entry points

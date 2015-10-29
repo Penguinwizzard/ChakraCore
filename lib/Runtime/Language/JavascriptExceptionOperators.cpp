@@ -4,16 +4,12 @@
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeLanguagePch.h"
 #include "shlwapi.h"
+#include "Language\InterpreterStackFrame.h"
 
 #ifdef _M_IX86
 #ifdef _CONTROL_FLOW_GUARD
 extern "C" PVOID __guard_check_icall_fptr;
 #endif
-#endif
-
-#ifdef _M_X64_OR_ARM64
-// TODO: Clean this warning up
-#pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
 #endif
 
 namespace Js
@@ -105,7 +101,7 @@ namespace Js
             bool hasBailedOut = *(bool*)((char*)frame + hasBailedOutOffset); // stack offsets are negative
             if (hasBailedOut)
             {
-                // If we have bailed out, this exception is coming from the interpreter. It should not have been caught; 
+                // If we have bailed out, this exception is coming from the interpreter. It should not have been caught;
                 // it so happens that this catch was on the stack and caught the exception.
                 // Re-throw!
                 throw exception;
@@ -195,7 +191,7 @@ namespace Js
             bool hasBailedOut = *(bool*)((char*)localsPtr + hasBailedOutOffset); // stack offsets are sp relative
             if (hasBailedOut)
             {
-                // If we have bailed out, this exception is coming from the interpreter. It should not have been caught; 
+                // If we have bailed out, this exception is coming from the interpreter. It should not have been caught;
                 // it so happens that this catch was on the stack and caught the exception.
                 // Re-throw!
                 throw exception;
@@ -346,7 +342,7 @@ namespace Js
             bool hasBailedOut = *(bool*)((char*)framePtr + hasBailedOutOffset); // stack offsets are negative
             if (hasBailedOut)
             {
-                // If we have bailed out, this exception is coming from the interpreter. It should not have been caught; 
+                // If we have bailed out, this exception is coming from the interpreter. It should not have been caught;
                 // it so happens that this catch was on the stack and caught the exception.
                 // Re-throw!
                 throw pExceptionObject;
@@ -369,7 +365,7 @@ namespace Js
                 mov savedEsp, ecx
                 and esp, -8
 
-                // Set up the call target 
+                // Set up the call target
                 mov ecx, handlerAddr
 
 #if 0 && defined(_CONTROL_FLOW_GUARD)
@@ -631,11 +627,11 @@ namespace Js
         bool resetStack = false;
         if (javascriptError)
         {
-            if (!javascriptError->IsStackPropertyRedefined()) 
+            if (!javascriptError->IsStackPropertyRedefined())
             {
                 /*
                     Throwing an error object. Original stack property will be pointing to the stack created at time of Error constructor.
-                    Reset the stack property to match IE11 behaviour
+                    Reset the stack property to match IE11 behavior
                 */
                 resetStack = true;
             }
@@ -672,19 +668,19 @@ namespace Js
             return nullptr;
         }
 
-        //Skip to first non-Library code 
-        //Similiar behaviour to GetCaller returning false
+        // Skip to first non-Library code
+        // Similar behavior to GetCaller returning false
         if(jsFunc->IsLibraryCode() && !walker.GetNonLibraryCodeCaller(&jsFunc))
         {
             return nullptr;
         }
-        
+
         JavascriptFunction * caller = jsFunc;
         callerByteCodeOffset = walker.GetByteCodeOffset();
 
         Assert(!caller->IsLibraryCode());
         // NOTE Don't set the throwing exception here, because we might need to box it and will cause a nested stack walker
-        // instead, return it to be set in WalkStackForExceptionContext 
+        // instead, return it to be set in WalkStackForExceptionContext
 
         if (stackCrawlLimit == 0)
         {
@@ -699,7 +695,7 @@ namespace Js
         BEGIN_TRANSLATE_EXCEPTION_AND_ERROROBJECT_TO_HRESULT_NESTED
         {
             // In WER scenario, we should combine the original stack with latest throw stack as the final throw might be coming form
-            // a different stack. 
+            // a different stack.
             uint64 i = 1;
             if (crawlStackForWER && thrownObject && Js::JavascriptError::Is(thrownObject))
             {
@@ -823,7 +819,7 @@ namespace Js
         Var thrownObject = scriptContext->GetLibrary()->CreateStackOverflowError();
         so->SetThrownObject(thrownObject);
 
-        // NOTE: Do not ClearDisableImplicitFlags() here. We still need to allocate StackTrace, etc. Keep implict call disabled till actual
+        // NOTE: Do not ClearDisableImplicitFlags() here. We still need to allocate StackTrace, etc. Keep implicit call disabled till actual
         // throw (ThrowExceptionObjectInternal will ClearDisableImplicitFlags before throw). If anything wrong happens in between which throws
         // a new exception, the new throw will ClearDisableImplicitFlags.
 
@@ -853,8 +849,8 @@ namespace Js
                    // If we disabled implicit calls and we did record an implicit call, do not throw.
                    // Check your helper to see if a call recorded an implicit call that might cause an invalid value
                    !(
-                       scriptContext->GetThreadContext()->IsDisableImplicitCall() && 
-                       scriptContext->GetThreadContext()->GetImplicitCallFlags() & (~ImplicitCall_None) 
+                       scriptContext->GetThreadContext()->IsDisableImplicitCall() &&
+                       scriptContext->GetThreadContext()->GetImplicitCallFlags() & (~ImplicitCall_None)
                     ) ||
                    // Make sure we didn't disable exceptions
                    !scriptContext->GetThreadContext()->IsDisableImplicitException()
@@ -866,7 +862,7 @@ namespace Js
         {
             ThreadContext * threadContext = scriptContext? scriptContext->GetThreadContext() : ThreadContext::GetContextForCurrentThread();
             threadContext->SetHasThrownPendingException();
-                
+
         }
         throw exceptionObject;
     }
@@ -900,8 +896,8 @@ namespace Js
     // exception context and shouldn't step on it on the throw.
     //
     // RethrowExceptionObject is called only for cross-host calls. When throwing across host calls, we stash our internal JavascriptExceptionObject
-    // in the TLS. When we are throwing on the same thread (eg. a throw from one frame to another), we can retreive that stashed JavascriptExceptionObject
-    // from the TLS and rethrow it with its exception context intact, so we don't want to step on it. In other cases, eg when we throw across threads,
+    // in the TLS. When we are throwing on the same thread (e.g. a throw from one frame to another), we can retrieve that stashed JavascriptExceptionObject
+    // from the TLS and rethrow it with its exception context intact, so we don't want to step on it. In other cases, e.g. when we throw across threads,
     // we cannot retrieve the internal JavascriptExceptionObject from the TLS and have to create a new one. In this case, we need to fill the exception context.
     //
     void JavascriptExceptionOperators::RethrowExceptionObject(Js::JavascriptExceptionObject * exceptionObject, ScriptContext* scriptContext, bool considerPassingToDebugger)
@@ -1056,7 +1052,7 @@ namespace Js
         JavascriptError::ThrowTypeError(function->GetScriptContext(), JSERR_AccessArgumentsRestricted);
     }
 
-    Var JavascriptExceptionOperators::StackTraceAccessor(RecyclableObject* function, CallInfo callInfo, ...) 
+    Var JavascriptExceptionOperators::StackTraceAccessor(RecyclableObject* function, CallInfo callInfo, ...)
     {
         ARGUMENTS(args, callInfo);
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
@@ -1066,20 +1062,20 @@ namespace Js
         Assert(scriptContext);
 
         // If the first argument to the accessor is not a recyclable object, return undefined
-        // This behaviour is compatible with Chromes. 
+        // This behavior is compatible with Chromes.
         if (!RecyclableObject::Is(args[0]))
         {
             return scriptContext->GetLibrary()->GetUndefined();
         }
-        
+
         RecyclableObject *obj = RecyclableObject::FromVar(args[0]);
 
         // If an argument was passed to the accessor, it is being called as a setter.
         // Set the internal StackTraceCache property accordingly.
-        if (args.Info.Count > 1) 
+        if (args.Info.Count > 1)
         {
             obj->SetInternalProperty(InternalPropertyIds::StackTraceCache, args[1], PropertyOperationFlags::PropertyOperation_None, NULL);
-            if (JavascriptError::Is(obj)) 
+            if (JavascriptError::Is(obj))
             {
                 ((JavascriptError *)obj)->SetStackPropertyRedefined(true);
             }
@@ -1089,18 +1085,18 @@ namespace Js
         // Otherwise, the accessor is being called as a getter.
         // Return existing cached value, or obtain the string representation of the StackTrace to return.
         Var cache = NULL;
-        if (obj->GetInternalProperty(obj,InternalPropertyIds::StackTraceCache, (Var*)&cache, NULL, scriptContext) && cache) 
+        if (obj->GetInternalProperty(obj,InternalPropertyIds::StackTraceCache, (Var*)&cache, NULL, scriptContext) && cache)
         {
             return cache;
         }
-        
+
         JavascriptString* stringMessage = scriptContext->GetLibrary()->GetEmptyString();
         HRESULT hr;
         BEGIN_TRANSLATE_EXCEPTION_AND_ERROROBJECT_TO_HRESULT_NESTED
         {
             Js::JavascriptExceptionContext::StackTrace *stackTrace = NULL;
             if (!obj->GetInternalProperty(obj,InternalPropertyIds::StackTrace, (Js::Var*) &stackTrace, NULL, scriptContext) ||
-                stackTrace == nullptr) 
+                stackTrace == nullptr)
             {
                 obj->SetInternalProperty(InternalPropertyIds::StackTraceCache, stringMessage, PropertyOperationFlags::PropertyOperation_None, NULL);
                 return stringMessage;
@@ -1163,7 +1159,7 @@ namespace Js
                 }
             }
 
-            // Try to create the string object even if we did OOM, but if can't, just return what we've got. We catch and ignore OOM so it doesn’t propogate up.
+            // Try to create the string object even if we did OOM, but if can't, just return what we've got. We catch and ignore OOM so it doesn’t propagate up.
             // With all the stack trace functionality, we do best effort to produce the stack trace in the case of OOM, but don’t want it to trigger an OOM. Idea is if do take
             // an OOM, have some chance of producing a stack trace to see where it happened.
             stringMessage = stringBuilder;
@@ -1186,7 +1182,7 @@ namespace Js
 
             // If we are throwing StackOverflow and Error.stackTraceLimit is a custom getter, we can't make the getter
             // call as we don't have stack space. Just bail out without stack trace in such case. Only proceed to get
-            // Error.stackTraceLimit property if we are not throwing StackOverflow, or there is no implicitcall (in getter case).
+            // Error.stackTraceLimit property if we are not throwing StackOverflow, or there is no implicitCall (in getter case).
             DisableImplicitFlags disableImplicitFlags = scriptContext->GetThreadContext()->GetDisableImplicitFlags();
             if (hr == VBSERR_OutOfStack)
             {
@@ -1235,7 +1231,7 @@ namespace Js
         {
             bs->AppendChars(L"\n   at ");
         }
-        bs->AppendChars(functionName, wcslen(functionName));
+        bs->AppendCharsSz(functionName);
         bs->AppendChars(L" (");
 
         if (CONFIG_FLAG(ExtendedErrorStackForTestHost) && *fileName != L'\0')
@@ -1245,17 +1241,17 @@ namespace Js
             errno_t err = _wsplitpath_s(fileName, NULL, 0, NULL, 0, shortfilename, _MAX_FNAME, ext, _MAX_EXT);
             if (err != 0)
             {
-                bs->AppendChars(fileName, wcslen(fileName));
+                bs->AppendCharsSz(fileName);
             }
             else
             {
-                bs->AppendChars(shortfilename, wcslen(shortfilename));
-                bs->AppendChars(ext, wcslen(ext));
+                bs->AppendCharsSz(shortfilename);
+                bs->AppendCharsSz(ext);
             }
         }
         else
         {
-            bs->AppendChars(fileName, wcslen(fileName));
+            bs->AppendCharsSz(fileName);
         }
         bs->AppendChars(L':');
         bs->AppendChars(lineNumber, maxULongStringLength, ConvertULongToString);
@@ -1263,13 +1259,13 @@ namespace Js
         bs->AppendChars(characterPosition, maxULongStringLength, ConvertULongToString);
         bs->AppendChars(L')');
     }
-        
+
     void JavascriptExceptionOperators::AppendLibraryFrameToStackTrace(CompoundString* bs, LPCWSTR functionName)
     {
         // format is equivalent to printf("\n   at %s (native code)", functionName);
         bs->AppendChars(L"\n   at ");
-        bs->AppendChars(functionName, wcslen(functionName));
+        bs->AppendCharsSz(functionName);
         bs->AppendChars(L" (native code)");
     }
-    
+
 } // namespace Js

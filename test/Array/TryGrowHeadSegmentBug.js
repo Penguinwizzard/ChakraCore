@@ -4,7 +4,7 @@
 //-------------------------------------------------------------------------------------------------------
 
 //Bug number 101772
-//flags: -forcejitloopbody -ForceArrayBTree -off:ArrayCheckHoist 
+//flags: -forcejitloopbody -ForceArrayBTree -off:ArrayCheckHoist
 var debugOn = false //if this test fails turn this flag on and see if the array is correct
 function test0() {
     var ary = new Array(10);
@@ -13,12 +13,12 @@ function test0() {
         WScript.Echo("Contents of ary: ",ary.valueOf());
         WScript.Echo("Size of ary: ",ary.length);
     }
-    for(var i = 0; i < 2;i++) //no looks like just starting a loop is the problem
+    for(var i = 0; i < 2;i++) // looks like just starting a loop is the problem
     {
         ary.indexOf();
-        ary[11] = 1; 
-        ary[12] = 2; 
-        
+        ary[11] = 1;
+        ary[12] = 2;
+
          if(debugOn)
         {
             WScript.Echo("assign index 11 to 1. is it actually set:",ary[11]);

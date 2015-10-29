@@ -219,7 +219,6 @@ SymTable::NewID()
 {
     SymID newId = m_currentID++;
 
-    // TODO:  Need error here...
     AssertMsg(m_currentID > newId, "Too many symbols: m_currentID overflow!");
 
     return newId - m_IDAdjustment;

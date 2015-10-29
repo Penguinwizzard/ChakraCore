@@ -16,6 +16,6 @@ namespace Js
         {
         }
 
-        uint32 GetDataSize(uint32 extraSlots) const { return sizeof(PropertyIdArray) + sizeof(PropertyId) * (count + extraSlots); }
+        size_t GetDataSize(uint32 extraSlots) const { return sizeof(PropertyIdArray) + sizeof(PropertyId) * (count + extraSlots); }
     };
 };

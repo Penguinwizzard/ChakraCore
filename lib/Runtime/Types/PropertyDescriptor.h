@@ -10,7 +10,7 @@ namespace Js
     {
     public:
         PropertyDescriptor();
-        
+
     private:
         Var Value;
         Var Getter;
@@ -44,7 +44,7 @@ namespace Js
         Var GetGetter() const { Assert(getterSpecified || Getter == nullptr);  return Getter; }
         void SetSetter(Var setter);
         Var GetSetter() const { Assert(setterSpecified || Setter == nullptr); return Setter; }
-        
+
         PropertyAttributes GetAttributes() const;
 
         bool IsFromProxy() const { return fromProxy; }
@@ -65,8 +65,8 @@ namespace Js
         bool IsConfigurable() const { Assert(configurableSpecified);  return Configurable; }
 
         // Set configurable/enumerable/writable.
-        // attrbiutes: attrbute values.
-        // mask: speficies which attributes to set. If an attrbiute in not in the mask.
+        // attributes: attribute values.
+        // mask: specified which attributes to set. If an attribute is not in the mask.
         void SetAttributes(PropertyAttributes attributes, PropertyAttributes mask = ~PropertyNone);
 
         // Merge from descriptor parameter into this but only fields specified by descriptor parameter.

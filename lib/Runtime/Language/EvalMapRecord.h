@@ -12,7 +12,7 @@ namespace Js
     template <class T>
     struct FastEvalMapStringComparer
     {
-        static bool Equals(T left, T right) 
+        static bool Equals(T left, T right)
         {
             return (left.hash == right.hash) &&
                 (left.moduleID == right.moduleID) &&
@@ -25,19 +25,19 @@ namespace Js
         }
     };
 
-    // The value in top level of two level dictionary. It might contain only the single vlaue
-    // (TValue), or a second level dictionary. 
+    // The value in top level of two level dictionary. It might contain only the single value
+    // (TValue), or a second level dictionary.
     template <class TKey, class TValue, class SecondaryDictionary, class NestedKey>
     class TwoLevelHashRecord
     {
     public:
-        TwoLevelHashRecord(TValue newValue): 
+        TwoLevelHashRecord(TValue newValue):
             singleValue(true), value(newValue) {}
 
         TwoLevelHashRecord() :
             singleValue(true), value(nullptr) {}
 
-        SecondaryDictionary* GetDictionary() 
+        SecondaryDictionary* GetDictionary()
         {
             Assert(!singleValue);
             return nestedMap;
@@ -101,10 +101,10 @@ namespace Js
 
 
 
-    // The two level dictionary. top level needs to be either simple hash value, or 
-    // key needs to be equals for all nested values. 
+    // The two level dictionary. top level needs to be either simple hash value, or
+    // key needs to be equals for all nested values.
     template <class Key, class Value, class EntryRecord, class TopLevelDictionary, class NestedKey>
-    class TwoLevelHashDictionary 
+    class TwoLevelHashDictionary
     {
         template <class T, class Value>
         class AutoRestoreSetInAdd
@@ -169,7 +169,7 @@ namespace Js
         {
             dictionary->NotifyAdd(key);
         }
-        
+
         void Add(const Key& key, Value value)
         {
             EntryRecord** entryRecord;

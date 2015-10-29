@@ -4,11 +4,6 @@
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
 
-#ifdef _M_X64_OR_ARM64
-// TODO: Clean this warning up
-#pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
-#endif
-
 namespace Js
 {
     const wchar_t ScriptFunction::diagDefaultCtor[]         = JS_DEFAULT_CTOR_DISPLAY_STRING;
@@ -106,7 +101,7 @@ namespace Js
             if (PHASE_TRACE1(Js::ScriptFunctionWithInlineCachePhase))
             {
                 wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
-                
+
                 Output::Print(L"Function object with inline cache: function number: (%s)\tfunction name: %s\n",
                     functionBody->GetDebugNumberSet(debugStringBuffer), functionBody->GetDisplayName());
                 Output::Flush();
@@ -143,7 +138,7 @@ namespace Js
     void ScriptFunction::SetEnvironment(FrameDisplay * environment)
     {
         //Assert(ThreadContext::IsOnStack(this) || !ThreadContext::IsOnStack(environment));
-        this->environment = environment; 
+        this->environment = environment;
     }
 
     void ScriptFunction::InvalidateCachedScopeChain()
@@ -210,7 +205,7 @@ namespace Js
 
     bool ScriptFunction::HasFunctionBody()
     {
-        //for asmjs we want to first check if the functionobject has a function body. Check that the function is not deferred
+        // for asmjs we want to first check if the FunctionObject has a function body. Check that the function is not deferred
         return  !this->GetFunctionInfo()->IsDeferredParseFunction() && !this->GetFunctionInfo()->IsDeferredDeserializeFunction() && GetParseableFunctionInfo()->IsFunctionParsed();
     }
 
@@ -225,12 +220,14 @@ namespace Js
         {
             return;
         }
+
         bool isAsmJS = false;
         if (HasFunctionBody())
         {
             isAsmJS = this->GetFunctionBody()->GetIsAsmjsMode();
         }
-        //ASMJS:- for asmjs we dont need to update the entry point here as it updates the types entry point
+
+        // ASMJS:- for asmjs we don't need to update the entry point here as it updates the types entry point
         if (!isAsmJS)
         {
             // We can't go from cross-site to non-cross-site. Update only in the non-cross site case
@@ -239,11 +236,12 @@ namespace Js
                 this->SetEntryPoint(entryPoint);
             }
         }
-        //instead update the address in the function entrypoint info
+        // instead update the address in the function entrypoint info
         else
         {
             entryPointInfo->address = entryPoint;
         }
+
         if (!isAsmJS)
         {
             ProxyEntryPointInfo* oldEntryPointInfo = this->GetScriptFunctionType()->GetEntryPointInfo();
@@ -252,7 +250,7 @@ namespace Js
                 && oldEntryPointInfo->SupportsExpiration())
             {
                 // The old entry point could be executing so we need root it to make sure
-                // it isn't prematurely collected. The rooting is done by queueing it up on the threadContext
+                // it isn't prematurely collected. The rooting is done by queuing it up on the threadContext
                 ThreadContext* threadContext = ThreadContext::GetContextForCurrentThread();
 
                 threadContext->QueueFreeOldEntryPointInfoIfInScript((FunctionEntryPointInfo*)oldEntryPointInfo);
@@ -315,7 +313,7 @@ namespace Js
             return entryPoint;
         }
 
-        // We already pass thru the cross site thunk, which would have called the profile thunk already if necessary
+        // We already pass through the cross site thunk, which would have called the profile thunk already if necessary
         // So just call the original entry point if our direct entry is the profile entry thunk
         // Otherwise, call the directEntryPoint which may have additional processing to do (e.g. ensure dynamic profile)
         Assert(this->IsCrossSiteObject());
@@ -355,9 +353,9 @@ namespace Js
         JavascriptString* prefixString = nullptr;
         uint prefixStringLength = 0;
         const wchar_t* name = L"";
-        size_t nameLength = 0;
+        charcount_t nameLength = 0;
         Var returnStr = nullptr;
-        
+
         if (!isClassMethod)
         {
             prefixString = javascriptLibrary->GetFunctionPrefixString();
@@ -366,11 +364,11 @@ namespace Js
                 prefixString = javascriptLibrary->GetGeneratorFunctionPrefixString();
             }
             prefixStringLength = prefixString->GetLength();
-            
+
             if (pFuncBody->GetIsAccessor())
             {
                 name = pFuncBody->GetShortDisplayName(&nameLength);
-                
+
             }
             else if (pFuncBody->GetIsDeclaration() || pFuncBody->GetIsNamedFunctionExpression())
             {
@@ -381,12 +379,12 @@ namespace Js
                     name = Js::Constants::Anonymous;
                     nameLength = Js::Constants::AnonymousLength;
                 }
-               
+
             }
         }
         else
         {
-            
+
             if (IsClassConstructor())
             {
                 name = L"constructor";
@@ -397,7 +395,7 @@ namespace Js
                 name = pFuncBody->GetShortDisplayName(&nameLength); //strip off prototype.
             }
         }
-        
+
         ENTER_PINNED_SCOPE(JavascriptString, computedName);
         computedName = this->GetComputedName();
         if (computedName != nullptr)
@@ -409,9 +407,13 @@ namespace Js
         }
 
         //Length is a uint32 so max length of functionBody can't be more than that even if we are using 64bit pointers
-        uint functionBodyLength = inputString->GetLength() - ((uint)(paramStr - inputStr)); 
-        
-        uint totalLength = prefixStringLength + functionBodyLength + nameLength;
+        uint functionBodyLength = inputString->GetLength() - ((uint)(paramStr - inputStr));
+
+        size_t totalLength = prefixStringLength + functionBodyLength + nameLength;        
+        if (!IsValidCharCount(totalLength))
+        {
+            JavascriptExceptionOperators::ThrowOutOfMemory(this->GetScriptContext());
+        }
         wchar_t * funcBodyStr = RecyclerNewArrayLeaf(this->GetScriptContext()->GetRecycler(), wchar_t, totalLength);
         wchar_t * funcBodyStrStart = funcBodyStr;
         if (prefixString != nullptr)
@@ -419,12 +421,12 @@ namespace Js
             js_wmemcpy_s(funcBodyStr, prefixStringLength, prefixString->GetString(), prefixStringLength);
             funcBodyStrStart += prefixStringLength;
         }
-        
+
         js_wmemcpy_s(funcBodyStrStart, nameLength, name, nameLength);
         funcBodyStrStart = funcBodyStrStart + nameLength;
         js_wmemcpy_s(funcBodyStrStart, functionBodyLength, paramStr, functionBodyLength);
-        
-        returnStr = LiteralString::NewCopyBuffer(funcBodyStr, totalLength, scriptContext);
+
+        returnStr = LiteralString::NewCopyBuffer(funcBodyStr, (charcount_t)totalLength, scriptContext);
 
         LEAVE_PINNED_SCOPE();
 
@@ -447,7 +449,7 @@ namespace Js
         if (isDefaultConstructor)
         {
             PCWSTR fakeCode = hasSuperReference ? diagDefaultExtendsCtor : diagDefaultCtor;
-            size_t fakeStrLen = hasSuperReference ? _countof(diagDefaultExtendsCtor) : _countof(diagDefaultCtor);
+            charcount_t fakeStrLen = hasSuperReference ? _countof(diagDefaultExtendsCtor) : _countof(diagDefaultCtor);
             Var fakeString = JavascriptString::NewCopyBuffer(fakeCode, fakeStrLen - 1, scriptContext);
 
             pFuncBody->SetCachedSourceString(fakeString);
@@ -458,13 +460,13 @@ namespace Js
         Utf8SourceInfo* source = pFuncBody->GetUtf8SourceInfo();
         if (source != nullptr && source->GetIsLibraryCode())
         {
-            //Don't display if it is annonymous function
-            size_t displayNameLength = 0;
+            //Don't display if it is anonymous function
+            charcount_t displayNameLength = 0;
             PCWSTR displayName = pFuncBody->GetShortDisplayName(&displayNameLength);
             cachedSourceString = JavascriptFunction::GetLibraryCodeDisplayString(scriptContext, displayName);
         }
         else if (!pFuncBody->GetUtf8SourceInfo()->GetIsXDomain()
-            // To avoid backward compat issue, we will not give out sourceString for function if it is called from 
+            // To avoid backward compat issue, we will not give out sourceString for function if it is called from
             // window.onerror trying to retrieve arguments.callee.caller.
             && !(pFuncBody->GetUtf8SourceInfo()->GetIsXDomainString() && scriptContext->GetThreadContext()->HasUnhandledException())
             )
@@ -728,7 +730,7 @@ namespace Js
         Assert(this->GetFunctionProxy() != nullptr); // The caller should guarantee a proxy exists
         ParseableFunctionInfo * func = this->GetFunctionProxy()->EnsureDeserialized();
         const wchar_t* name = nullptr;
-        size_t length = 0;
+        charcount_t length = 0;
         JavascriptString* returnStr = nullptr;
         ENTER_PINNED_SCOPE(JavascriptString, computedName);
 
@@ -760,7 +762,7 @@ namespace Js
             }
         }
         else
-        { 
+        {
             name = Constants::Empty;
             if (func->GetIsNamedFunctionExpression()) // GetIsNamedFunctionExpression -> ex. var a = function foo() {} where name is foo
             {
@@ -773,7 +775,7 @@ namespace Js
                     name = func->GetShortDisplayName(&length);
                 }
                 else if (func->GetIsDeclaration() || // GetIsDeclaration -> ex. function foo () {}
-                         func->GetIsAccessor()    || // GetIsAccessor    -> ex. var a = { get f() {}} new enough sytax that we do not have to disable by default
+                         func->GetIsAccessor()    || // GetIsAccessor    -> ex. var a = { get f() {}} new enough syntax that we do not have to disable by default
                          func->IsLambda()         || // IsLambda         -> ex. var y = { o : () => {}}
                          GetHomeObj())               // GetHomeObj       -> ex. var o = class {}, confirms this is a constructor or method on a class
                 {

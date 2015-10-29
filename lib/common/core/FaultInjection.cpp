@@ -186,6 +186,7 @@ namespace Js
 #pragma optimize( "g", off )
 #pragma warning( push )
 #pragma warning( disable : 4748 )
+#pragma warning( disable : 4995 )
     WORD StackTrace86(
         _In_ DWORD FramesToSkip,
         _In_ DWORD FramesToCapture,
@@ -530,8 +531,8 @@ namespace Js
     bool FaultInjection::IsFaultEnabled(FaultType faultType)
     {
         if (!faultInjectionTypes)
-        {            
-            faultInjectionTypes = NoCheckHeapNew(FaultInjectionTypes);         
+        {
+            faultInjectionTypes = NoCheckHeapNew(FaultInjectionTypes);
             if ((const wchar_t*)globalFlags.FaultInjectionType == nullptr)
             {
                 // no -FaultInjectionType specified, inject all
@@ -661,7 +662,7 @@ namespace Js
 
             // read baseline stack file
             FILE *fp = nullptr;
-            const wchar_t *stackFile = globalFlags.FaultInjectionStackFile;//default: L"stack.txt";            
+            const wchar_t *stackFile = globalFlags.FaultInjectionStackFile;//default: L"stack.txt";
             auto err = _wfopen_s(&fp, stackFile, L"r");
             if (err != 0 || fp == nullptr)
             {
@@ -748,8 +749,8 @@ namespace Js
                 pfnSymEnumSymbolsW(GetCurrentProcess(), 0, baselineStack[i],
                     [](_In_ PSYMBOL_INFOW pSymInfo, _In_ ULONG SymbolSize, _In_opt_  PVOID UserContext)->BOOL
                 {
-                    Assert(UserContext != nullptr); // did passed in the user context 
-                    if (pSymInfo->Size > 0) 
+                    Assert(UserContext != nullptr); // did passed in the user context
+                    if (pSymInfo->Size > 0)
                     {
                         PFUNCTION_SIGNATURES* sigs = (PFUNCTION_SIGNATURES*)UserContext;
                         int count = (*sigs) == nullptr ? 0 : (*sigs)->count;
@@ -1133,7 +1134,7 @@ namespace Js
         ipType savedOffset = 0;
         auto& mainModule = modulePath;
         GetModuleFileName(NULL, mainModule, MAX_PATH);
-        // mutiple session of Fault Injection run shares the single crash offset recording file
+        // multiple session of Fault Injection run shares the single crash offset recording file
         _snwprintf_s(filename, _TRUNCATE, L"%s.FICrashes.txt", mainModule);
 
         auto fp = _wfsopen(filename, L"a+t", _SH_DENYNO);
@@ -1149,7 +1150,7 @@ namespace Js
                 fclose(fp);
             }
             else
-            { // file lockedh
+            { // file locked
                 wchar_t content[32] = { 0 };
                 while (fgetws(content, 31, fp))
                 {
@@ -1172,7 +1173,7 @@ namespace Js
                 }
                 fflush(fp);
 
-                // save the hitcount to a file, for bug prioritizing
+                // save the hit count to a file, for bug prioritizing
                 _snwprintf_s(filename, _TRUNCATE, L"%s.HitCount_%llx.txt", mainModule, (long long)offset);
                 auto hcfp = _wfsopen(filename, L"r+", _SH_DENYNO);
                 if (!hcfp)
@@ -1271,8 +1272,8 @@ namespace Js
                     jscript9Name--;
                 }
 
-                // This buffer will be written to a dump stream when creating the minidump file. 
-                // It contains windbg debugging instructios on how to figure out the injected faults,
+                // This buffer will be written to a dump stream when creating the minidump file.
+                // It contains windbg debugging instructions on how to figure out the injected faults,
                 // And the message will be showing in windbg while loading the minidump.
                 // If you need to add more instructions please increase the buffer capacity accordingly
                 __declspec(thread) static wchar_t dbgTip[1024];
@@ -1316,7 +1317,7 @@ namespace Js
             }
         }
 
-        // always show stack for crash and fault injection points in console, 
+        // always show stack for crash and fault injection points in console,
         // this can be used for additional stack matching repro
 
         auto printFrame = [&](LPVOID addr)

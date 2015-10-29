@@ -4,6 +4,9 @@
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeTypePch.h"
 
+#include "Types\NullTypeHandler.h"
+#include "Types\SimpleTypeHandler.h"
+
 namespace Js
 {
     int NullTypeHandlerBase::GetPropertyCount()
@@ -68,7 +71,7 @@ namespace Js
 
     BOOL NullTypeHandlerBase::HasProperty(DynamicObject* instance, PropertyId propertyId, __out_opt bool *noRedecl)
     {
-        // Check numeric propertyId only if objectArray available
+        // Check numeric propertyId only if objectArray is available
         uint32 indexVal;
         ScriptContext* scriptContext = instance->GetScriptContext();
 
@@ -96,7 +99,7 @@ namespace Js
     
     BOOL NullTypeHandlerBase::GetProperty(DynamicObject* instance, Var originalInstance, PropertyId propertyId, Var* value, PropertyValueInfo* info, ScriptContext* requestContext)
     {
-        // Check numeric propertyId only if objectArray available
+        // Check numeric propertyId only if objectArray is available
         uint32 indexVal;
         ScriptContext* scriptContext = instance->GetScriptContext();
         if (instance->HasObjectArray() && scriptContext->IsNumericPropertyId(propertyId, &indexVal))
@@ -142,7 +145,7 @@ namespace Js
     
     BOOL NullTypeHandlerBase::DeleteProperty(DynamicObject* instance, PropertyId propertyId, PropertyOperationFlags flags)
     {
-        // Check numeric propertyId only if objectArray available
+        // Check numeric propertyId only if objectArray is available
         ScriptContext* scriptContext = instance->GetScriptContext();
         uint32 indexVal;
         if (instance->HasObjectArray() && scriptContext->IsNumericPropertyId(propertyId, &indexVal))
@@ -319,14 +322,6 @@ namespace Js
             // caches, so there will be no fast property add path that could skip prototype cache invalidation.
             NullTypeHandler<true>* protoTypeHandler = NullTypeHandler<true>::GetDefaultInstance();
             AssertMsg(protoTypeHandler->GetFlags() == (GetFlags() | IsPrototypeFlag), "Why did we change the flags of a NullTypeHandler?");
-            // Review (jedmiad): This is really busted.  We share a single instance of NullTypeHandler between many types and objects.
-            // Some of these objects have read-only properties, while others don't.  If we create an instance that does, it will turn the
-            // PropertyTypesWritableDataOnly off for all other instances.  This may adversely affect performance, but doesn't affect
-            // functionality.  Worse, some instance could call SetHasOnlyWritableDataProperties() and set the bit for all other instances.
-            // This would affect performance.  Luckily, we currently don't do it.  The only way to really clean this up would be to make 
-            // GetHasOnlyWritableDataPropreties virtual on DynamicObject, but this may have performance impact (we inline the function now).
-            // TODO (jedmiad): Create separate templates for NullTypeHandler with and without invisible read-only properties.  Assert that we
-            // don't try to change PropertyTypes on either after construction.
             Assert(this->GetIsInlineSlotCapacityLocked() == protoTypeHandler->GetIsInlineSlotCapacityLocked());
             protoTypeHandler->SetPropertyTypes(PropertyTypesWritableDataOnly | PropertyTypesWritableDataOnlyDetection, GetPropertyTypes());
             SetInstanceTypeHandler(instance, protoTypeHandler);

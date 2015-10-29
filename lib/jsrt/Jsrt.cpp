@@ -129,7 +129,8 @@ STDAPI_(JsErrorCode) JsCreateRuntime(_In_ JsRuntimeAttributes attributes, _In_op
         }
 
         AllocationPolicyManager * policyManager = HeapNew(AllocationPolicyManager, (attributes & JsRuntimeAttributeDisableBackgroundWork) == 0);
-        ThreadContext * threadContext = HeapNew(ThreadContext, policyManager, threadService);
+        bool enableExperimentalFeatures = (attributes & JsRuntimeAttributeEnableExperimentalFeatures) != 0;
+        ThreadContext * threadContext = HeapNew(ThreadContext, policyManager, threadService, enableExperimentalFeatures);
 
         if (((attributes & JsRuntimeAttributeDisableBackgroundWork) == 0)
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
@@ -168,11 +169,6 @@ STDAPI_(JsErrorCode) JsCreateRuntime(_In_ JsRuntimeAttributes attributes, _In_op
         if (attributes & JsRuntimeAttributeDisableNativeCodeGeneration)
         {
             threadContext->SetThreadContextFlag(ThreadContextFlagNoJIT);
-        }
-
-        if (attributes & JsRuntimeAttributeEnableExperimentalFeatures)
-        {
-            threadContext->SetThreadContextFlag(ThreadContextFlagExperimentalFeaturesEnabled);
         }
 
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
@@ -577,30 +573,30 @@ void HandleScriptCompileError(Js::ScriptContext * scriptContext, CompileScriptEx
     Js::JavascriptError * error = Js::JavascriptError::MapParseError(scriptContext, hr);
     const Js::PropertyRecord *record;
 
-    Js::Var value = Js::JavascriptString::NewCopySz(se->ei.bstrDescription, scriptContext);    
+    Js::Var value = Js::JavascriptString::NewCopySz(se->ei.bstrDescription, scriptContext);
     Js::JavascriptOperators::OP_SetProperty(error, Js::PropertyIds::message, value, scriptContext);
 
-    
+
     if (se->hasLineNumberInfo)
     {
         value = Js::JavascriptNumber::New(se->line, scriptContext);
         scriptContext->GetOrAddPropertyRecord(L"line", &record);
         Js::JavascriptOperators::OP_SetProperty(error, record->GetPropertyId(), value, scriptContext);
     }
-    
+
     if (se->hasLineNumberInfo)
     {
         value = Js::JavascriptNumber::New(se->ichMin - se->ichMinLine, scriptContext);
         scriptContext->GetOrAddPropertyRecord(L"column", &record);
         Js::JavascriptOperators::OP_SetProperty(error, record->GetPropertyId(), value, scriptContext);
     }
-    
+
     if (se->hasLineNumberInfo)
     {
         value = Js::JavascriptNumber::New(se->ichLim - se->ichMin, scriptContext);
         Js::JavascriptOperators::OP_SetProperty(error, Js::PropertyIds::length, value, scriptContext);
     }
-    
+
     if (se->bstrLine != nullptr)
     {
         value = Js::JavascriptString::NewCopySz(se->bstrLine, scriptContext);
@@ -883,7 +879,12 @@ STDAPI_(JsErrorCode) JsPointerToString(_In_reads_(stringLength) const wchar_t *s
         PARAM_NOT_NULL(stringValue);
         PARAM_NOT_NULL(string);
 
-        *string = Js::JavascriptString::NewCopyBuffer(stringValue, stringLength, scriptContext);
+        if (!Js::IsValidCharCount(stringLength))
+        {
+            Js::JavascriptError::ThrowOutOfMemoryError(scriptContext);
+        }
+
+        *string = Js::JavascriptString::NewCopyBuffer(stringValue, static_cast<charcount_t>(stringLength), scriptContext);
         return JsNoError;
     });
 }
@@ -1188,7 +1189,7 @@ STDAPI_(JsErrorCode) JsCreateArrayBuffer(_In_ unsigned int byteLength, _Out_ JsV
     });
 }
 
-STDAPI_(JsErrorCode) JsCreateExternalArrayBuffer(_Pre_maybenull_ _Pre_writable_byte_size_(byteLength) void *data, _In_ unsigned int byteLength, 
+STDAPI_(JsErrorCode) JsCreateExternalArrayBuffer(_Pre_maybenull_ _Pre_writable_byte_size_(byteLength) void *data, _In_ unsigned int byteLength,
     _In_opt_ JsFinalizeCallback finalizeCallback, _In_opt_ void *callbackState, _Out_ JsValueRef *result)
 {
     return ContextAPIWrapper<true>([&](Js::ScriptContext *scriptContext) -> JsErrorCode {
@@ -1212,7 +1213,7 @@ STDAPI_(JsErrorCode) JsCreateExternalArrayBuffer(_Pre_maybenull_ _Pre_writable_b
     });
 }
 
-STDAPI_(JsErrorCode) JsCreateTypedArray(_In_ JsTypedArrayType arrayType, _In_ JsValueRef baseArray, _In_ unsigned int byteOffset, 
+STDAPI_(JsErrorCode) JsCreateTypedArray(_In_ JsTypedArrayType arrayType, _In_ JsValueRef baseArray, _In_ unsigned int byteOffset,
     _In_ unsigned int elementLength, _Out_ JsValueRef *result)
 {
     return ContextAPIWrapper<true>([&](Js::ScriptContext *scriptContext) -> JsErrorCode {
@@ -1357,7 +1358,7 @@ STDAPI_(JsErrorCode) JsGetTypedArrayInfo(_In_ JsValueRef typedArray, _Out_opt_ J
     END_JSRT_NO_EXCEPTION
 }
 
-STDAPI_(JsErrorCode) JsGetArrayBufferStorage(_In_ JsValueRef instance, _Outptr_result_bytebuffer_(*bufferLength) BYTE **buffer, 
+STDAPI_(JsErrorCode) JsGetArrayBufferStorage(_In_ JsValueRef instance, _Outptr_result_bytebuffer_(*bufferLength) BYTE **buffer,
     _Out_ unsigned int *bufferLength)
 {
     VALIDATE_JSREF(instance);
@@ -1378,7 +1379,7 @@ STDAPI_(JsErrorCode) JsGetArrayBufferStorage(_In_ JsValueRef instance, _Outptr_r
     END_JSRT_NO_EXCEPTION
 }
 
-STDAPI_(JsErrorCode) JsGetTypedArrayStorage(_In_ JsValueRef instance, _Outptr_result_bytebuffer_(*bufferLength) BYTE **buffer, 
+STDAPI_(JsErrorCode) JsGetTypedArrayStorage(_In_ JsValueRef instance, _Outptr_result_bytebuffer_(*bufferLength) BYTE **buffer,
     _Out_ unsigned int *bufferLength, _Out_opt_ JsTypedArrayType *typedArrayType, _Out_opt_ int *elementSize)
 {
     VALIDATE_JSREF(instance);
@@ -1901,7 +1902,7 @@ STDAPI_(JsErrorCode) JsCreateNamedFunction(_In_ JsValueRef name, _In_ JsNativeFu
 }
 
 void SetErrorMessage(Js::ScriptContext *scriptContext, JsValueRef newError, JsValueRef message)
-{        
+{
     Js::JavascriptOperators::OP_SetProperty(newError, Js::PropertyIds::message, message, scriptContext);
 }
 
@@ -2075,7 +2076,7 @@ STDAPI_(JsErrorCode) JsGetAndClearException(_Out_ JsValueRef *exception)
       recordedException = scriptContext->GetAndClearRecordedException();
     END_TRANSLATE_OOM_TO_HRESULT(hr)
 
-    if (hr == E_OUTOFMEMORY) 
+    if (hr == E_OUTOFMEMORY)
     {
       recordedException = scriptContext->GetThreadContext()->GetRecordedException();
     }
@@ -2303,7 +2304,7 @@ STDAPI_(JsErrorCode) JsGetSymbolFromPropertyId(_In_ JsPropertyIdRef propertyId, 
     });
 }
 
-#pragma prefast(suppress:6101, "Prefast doesn't see thru the lambda")
+#pragma prefast(suppress:6101, "Prefast doesn't see through the lambda")
 STDAPI_(JsErrorCode) JsGetPropertyNameFromId(_In_ JsPropertyIdRef propertyId, _Outptr_result_z_ const wchar_t **name)
 {
     return GlobalAPIWrapper([&]() -> JsErrorCode {
@@ -2549,7 +2550,7 @@ JsErrorCode JsSerializeScriptCore(const wchar_t *script, BYTE *functionTable, in
             return JsErrorScriptCompile;
         }
         // Could we have a deserialized function in this case?
-        // If we are going to seralize it, a check isn't to expensive
+        // If we are going to serialize it, a check isn't to expensive
         if (CONFIG_FLAG(ForceSerialized) && function->GetFunctionProxy() != nullptr) {
             function->GetFunctionProxy()->EnsureDeserialized();
         }
@@ -2585,14 +2586,14 @@ JsErrorCode JsSerializeScriptCore(const wchar_t *script, BYTE *functionTable, in
 
 }
 
-STDAPI_(JsErrorCode) JsSerializeScript(_In_z_ const wchar_t *script, _Out_writes_to_opt_(*bufferSize, *bufferSize) unsigned char *buffer, 
+STDAPI_(JsErrorCode) JsSerializeScript(_In_z_ const wchar_t *script, _Out_writes_to_opt_(*bufferSize, *bufferSize) unsigned char *buffer,
     _Inout_ unsigned long *bufferSize)
 {
     return JsSerializeScriptCore(script, nullptr, 0, buffer, bufferSize);
 }
 
-JsErrorCode RunSerializedScriptCore(const wchar_t *script, JsSerializedScriptLoadSourceCallback scriptLoadCallback, 
-    JsSerializedScriptUnloadCallback scriptUnloadCallback, unsigned char *buffer, JsSourceContext sourceContext, 
+JsErrorCode RunSerializedScriptCore(const wchar_t *script, JsSerializedScriptLoadSourceCallback scriptLoadCallback,
+    JsSerializedScriptUnloadCallback scriptUnloadCallback, unsigned char *buffer, JsSourceContext sourceContext,
     const wchar_t *sourceUrl, bool parseOnly, JsValueRef *result)
 {
     Js::JavascriptFunction *function;
@@ -2614,13 +2615,13 @@ JsErrorCode RunSerializedScriptCore(const wchar_t *script, JsSerializedScriptLoa
         {
             Assert(scriptLoadCallback == nullptr);
             Assert(scriptUnloadCallback == nullptr);
-            Js::JsrtSourceHolder::ScriptToUtf8(scriptContext, script, &utf8Source, &utf8Length, &length);          
+            Js::JsrtSourceHolder::ScriptToUtf8(scriptContext, script, &utf8Source, &utf8Length, &length);
         }
         else
         {
             PARAM_NOT_NULL(scriptLoadCallback);
-            PARAM_NOT_NULL(scriptUnloadCallback);            
-            sourceHolder = RecyclerNewFinalized(scriptContext->GetRecycler(), Js::JsrtSourceHolder, scriptLoadCallback, scriptUnloadCallback, sourceContext);            
+            PARAM_NOT_NULL(scriptUnloadCallback);
+            sourceHolder = RecyclerNewFinalized(scriptContext->GetRecycler(), Js::JsrtSourceHolder, scriptLoadCallback, scriptUnloadCallback, sourceContext);
         }
 
         SourceContextInfo *sourceContextInfo;
@@ -2635,7 +2636,7 @@ JsErrorCode RunSerializedScriptCore(const wchar_t *script, JsSerializedScriptLoa
         {
             sourceContextInfo = scriptContext->CreateSourceContextInfo(sourceContext, sourceUrl, wcslen(sourceUrl), nullptr);
         }
-         
+
         SRCINFO si = {
             /* sourceContextInfo   */ sourceContextInfo,
             /* dlnHost             */ 0,
@@ -2702,13 +2703,13 @@ JsErrorCode RunSerializedScriptCore(const wchar_t *script, JsSerializedScriptLoa
     });
 }
 
-STDAPI_(JsErrorCode) JsParseSerializedScript(_In_z_ const wchar_t * script, _In_ unsigned char *buffer, _In_ JsSourceContext sourceContext, 
+STDAPI_(JsErrorCode) JsParseSerializedScript(_In_z_ const wchar_t * script, _In_ unsigned char *buffer, _In_ JsSourceContext sourceContext,
     _In_z_ const wchar_t *sourceUrl, _Out_ JsValueRef * result)
 {
     return RunSerializedScriptCore(script, nullptr, nullptr, buffer, sourceContext, sourceUrl, true, result);
 }
 
-STDAPI_(JsErrorCode) JsRunSerializedScript(_In_z_ const wchar_t * script, _In_ unsigned char *buffer, _In_ JsSourceContext sourceContext, 
+STDAPI_(JsErrorCode) JsRunSerializedScript(_In_z_ const wchar_t * script, _In_ unsigned char *buffer, _In_ JsSourceContext sourceContext,
     _In_z_ const wchar_t *sourceUrl, _Out_ JsValueRef * result)
 {
     return RunSerializedScriptCore(script, nullptr, nullptr, buffer, sourceContext, sourceUrl, false, result);

@@ -3,6 +3,11 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
+if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in ch
+    this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
+    this.WScript.LoadScriptFile("util.js");
+}
+
 function test1() {
     var intArray = Array(0x100); //[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
     var arrayBuffer = (new Uint32Array(intArray)).buffer;
@@ -84,7 +89,15 @@ function test4() {
     }
 }
 
+function test5() {
+    assert.throws(
+        function () { var dv = new DataView(new ArrayBuffer(0x100000), 1, 0xffffffff); },
+        RangeError,
+        "DataView constructor argument byteLength is invalid");
+}
+
 test1();
 test2();
 test3();
 test4();
+test5();

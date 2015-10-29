@@ -17,10 +17,7 @@
 #include "DictionaryStats.h"
 #endif
 
-#ifdef _M_X64_OR_ARM64
-// TODO: Clean this warning up
-#pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
-#endif
+#include "Language\InterpreterStackFrame.h"
 
 namespace Js
 {
@@ -64,7 +61,7 @@ namespace Js
         guestArena(nullptr),
         raiseMessageToDebuggerFunctionType(nullptr),
         transitionToDebugModeIfFirstSourceFn(nullptr),
-        lastTimeZoneUpdateTickCount(0),        
+        lastTimeZoneUpdateTickCount(0),
         sourceSize(0),
         deferredBody(false),
         isScriptContextActuallyClosed(false),
@@ -130,7 +127,7 @@ namespace Js
 #endif
 #ifdef FIELD_ACCESS_STATS
         , fieldAccessStatsByFunctionNumber(nullptr)
-#endif        
+#endif
         , webWorkerId(Js::Constants::NonWebWorkerContextId)
         , url(L"")
         , startupComplete(false)
@@ -271,7 +268,7 @@ namespace Js
     }
 
     void ScriptContext::InitializeAllocations()
-    {        
+    {
         this->charClassifier = Anew(GeneralAllocator(), CharClassifier, this);
 
         this->valueOfInlineCache = AllocatorNewZ(InlineCacheAllocator, GetInlineCacheAllocator(), InlineCache);
@@ -298,58 +295,8 @@ namespace Js
         intConstPropsOnGlobalObject = Anew(GeneralAllocator(), PropIdSetForConstProp, GeneralAllocator());
         intConstPropsOnGlobalUserObject = Anew(GeneralAllocator(), PropIdSetForConstProp, GeneralAllocator());
 
-        // ToDo (SaAgarwa): DebugContext should only be needed during debugLaunch/Attach it should be created then
-        // Will do it in next checkin as I have moved ProbeContainer from ScriptContext to DebugContext which was a field on ScriptContext and not a pointer
-        // All places which access scriptContext.diagProbesContainer needs to have check of IsInDebugOrSourceRundownMode to gurantee DebugContext
         this->debugContext = HeapNew(DebugContext, this);
     }
-#ifdef BODLOG
-    void PrintBod(int key, FunctionBody* bod, FILE* fp, void* ignore2) {
-        fprintf(fp, "function %ls calls %d native 0x%x\n", bod->GetDisplayName(), bod->GetCallCount(), bod->NativeEntryPoint);
-        if (bod->GetCallCount()>0) {
-
-            const wchar_t* osrc = bod->GetSource();
-            int len = bod->Length();
-            wchar_t* src = (wchar_t*)calloc(2, len + 1);
-            js_memcpy_s(src, (len + 1) * sizeof(wchar_t), osrc, len * 2);
-            src[len] = L'\0';
-            fprintf(fp, "source:\n");
-            fprintf(fp, "%ls\n", src);
-            free(src);
-        }
-    }
-
-
-    void PrintBod2(FunctionBody* bod, FILE* fp, int total, int runningTotal, int remCount) {
-        if (total>0) {
-            fprintf(fp, "function %ls calls %d/%d(%4.2f) total calls so far %d/%d(%4.2f) remaining fn count %d native 0x%x\n",
-                bod->GetDisplayName(), bod->GetCallCount(), total, (double)bod->GetCallCount() / total,
-                runningTotal, total, (double)runningTotal / total, remCount, bod->NativeEntryPoint);
-        }
-        else {
-            fprintf(fp, "function %ls calls %d/%d native 0x%x\n", bod->GetDisplayName(), bod->GetCallCount(), total,
-                bod->NativeEntryPoint);
-        }
-        if (bod->GetCallCount()>0) {
-            const wchar_t* osrc = bod->GetSource();
-            int len = bod->Length();
-            wchar_t* src = (wchar_t*)calloc(2, len + 1);
-            js_memcpy_s(src, (len + 1) * sizeof(wchar_t), osrc, len * 2);
-            src[len] = L'\0';
-            fprintf(fp, "source:\n");
-            fprintf(fp, "%ls\n", src);
-            free(src);
-        }
-    }
-
-    int __cdecl compareFnBod(void* context, const void* a, const void* b) {
-        FunctionBody* abod = *(FunctionBody**)a;
-        FunctionBody* bbod = *(FunctionBody**)b;
-        return (abod->GetCallCount() - bbod->GetCallCount());
-    }
-
-    FILE* _bodlogfp = NULL;
-#endif
 
     void ScriptContext::EnsureClearDebugDocument()
     {
@@ -664,7 +611,7 @@ namespace Js
             this->debugContext = nullptr;
         }
 
-        // Need to print this out beform the native code gen is deleted
+        // Need to print this out before the native code gen is deleted
         // which will delete the codegenProfiler
 
 #ifdef PROFILE_EXEC
@@ -766,7 +713,7 @@ namespace Js
         return true;
     }
 
-    PropertyString* ScriptContext::GetPropertyString2(wchar_t ch1, wchar_t ch2) 
+    PropertyString* ScriptContext::GetPropertyString2(wchar_t ch1, wchar_t ch2)
     {
         if (ch1 < '0' || ch1 > 'z' || ch2 < '0' || ch2 > 'z')
         {
@@ -852,7 +799,7 @@ namespace Js
             BOOL isIndex = JavascriptArray::GetIndex(name->GetBuffer(), &index);
             if (isNumericPropertyId != isIndex)
             {
-                // WOOB 1137798: JavascriptArray::GetIndex does not handle embeded NULLs. So if we have a property
+                // WOOB 1137798: JavascriptArray::GetIndex does not handle embedded NULLs. So if we have a property
                 // name "1234\0", JavascriptArray::GetIndex would incorrectly accepts it as an array index property
                 // name.
                 Assert((size_t)(name->GetLength()) != wcslen(name->GetBuffer()));
@@ -1220,19 +1167,7 @@ namespace Js
 #endif
 
 #if DBG
-        // We aren't going to be passing in a number to check range of -dump:LibInit, that will be done by Intl/Promise
-        // This is just to force init Intl code if dump:LibInit has been passed
-        if (CONFIG_ISENABLED(DumpFlag) && Js::Configuration::Global.flags.Dump.IsEnabled(Js::JsLibInitPhase))
-        {
-            for (uint i = 0; i <= MaxEngineInterfaceExtensionKind; i++)
-            {
-                EngineExtensionObjectBase* engineExtension = this->javascriptLibrary->GetEngineInterfaceObject()->GetEngineExtension((Js::EngineInterfaceExtensionKind)i);
-                if (engineExtension != nullptr)
-                {
-                    engineExtension->DumpByteCode();
-                }
-            }
-        }
+        this->javascriptLibrary->DumpLibraryByteCode();
 
         isInitialized = TRUE;
 #endif
@@ -1316,7 +1251,7 @@ namespace Js
     }
 
     //
-    // Enables jscript9diag to get the HaltCallBack pointer that is implemented by
+    // Enables chakradiag to get the HaltCallBack pointer that is implemented by
     // the ScriptEngine.
     //
     void ScriptContext::SetScriptEngineHaltCallback(HaltCallback* scriptEngine)
@@ -1615,7 +1550,7 @@ namespace Js
         Js::JavascriptError::MapAndThrowError(this, E_FAIL);
     }
 
-    JavascriptFunction* ScriptContext::LoadScript(const wchar_t* script, SRCINFO const * pSrcInfo, CompileScriptException * pse, bool isExpression, bool disableDeferredParse, bool isByteCodeBufferForLibrary, Utf8SourceInfo** ppSourceInfo, const wchar_t *rootDisplayName)
+    JavascriptFunction* ScriptContext::LoadScript(const wchar_t* script, SRCINFO const * pSrcInfo, CompileScriptException * pse, bool isExpression, bool disableDeferredParse, bool isByteCodeBufferForLibrary, Utf8SourceInfo** ppSourceInfo, const wchar_t *rootDisplayName, bool disableAsmJs)
     {
         if (pSrcInfo == nullptr)
         {
@@ -1631,7 +1566,7 @@ namespace Js
 
             // Convert to UTF8 and then load that
             size_t length = wcslen(script);
-            if (length > UINT_MAX)
+            if (!IsValidCharCount(length))
             {
                 Js::Throw::OutOfMemory();
             }
@@ -1645,7 +1580,6 @@ namespace Js
 
             LPUTF8 utf8Script = RecyclerNewArrayLeafTrace(this->GetRecycler(), utf8char_t, cbUtf8Buffer);
 
-            Assert(length < MAXLONG);
             size_t cbNeeded = utf8::EncodeIntoAndNullTerminate(utf8Script, script, static_cast<charcount_t>(length));
 
 #if DBG_DUMP
@@ -1660,7 +1594,7 @@ namespace Js
 
             // Free unused bytes
             Assert(cbNeeded + 1 <= cbUtf8Buffer);
-            *ppSourceInfo = Utf8SourceInfo::New(this, utf8Script, length, cbNeeded, pSrcInfo);
+            *ppSourceInfo = Utf8SourceInfo::New(this, utf8Script, (int)length, cbNeeded, pSrcInfo);
 
             //
             // Parse and execute the JavaScript file.
@@ -1679,6 +1613,11 @@ namespace Js
                 grfscr |= fscrDeferFncParse;
             }
 
+            if (disableAsmJs)
+            {
+                grfscr |= fscrNoAsmJs;
+            }
+
             if (PHASE_FORCE1(Js::EvalCompilePhase))
             {
                 // pretend it is eval
@@ -1693,6 +1632,7 @@ namespace Js
             ParseNodePtr parseTree;
             hr = parser.ParseCesu8Source(&parseTree, utf8Script, cbNeeded, grfscr, pse, &sourceContextInfo->nextLocalFunctionId,
                 sourceContextInfo);
+
             (*ppSourceInfo)->SetParseFlags(grfscr);
 
             if (FAILED(hr) || parseTree == nullptr)
@@ -1703,6 +1643,15 @@ namespace Js
             Assert(length < MAXLONG);
             uint sourceIndex = this->SaveSourceNoCopy(*ppSourceInfo, static_cast<charcount_t>(length), /*isCesu8*/ true);
             JavascriptFunction * pFunction = GenerateRootFunction(parseTree, sourceIndex, &parser, grfscr, pse, rootDisplayName);
+
+            if (pse->ei.scode == JSERR_AsmJsCompileError)
+            {
+                Assert(!disableAsmJs);
+
+                pse->Clear();
+                return LoadScript(script, pSrcInfo, pse, isExpression, disableDeferredParse, isByteCodeBufferForLibrary, ppSourceInfo, rootDisplayName, true);
+            }
+
             if (pFunction != nullptr && this->IsProfiling())
             {
                 RegisterScript(pFunction->GetFunctionProxy());
@@ -1721,7 +1670,7 @@ namespace Js
         }
     }
 
-    JavascriptFunction* ScriptContext::LoadScript(LPCUTF8 script, size_t cb, SRCINFO const * pSrcInfo, CompileScriptException * pse, bool isExpression, bool disableDeferredParse, bool isByteCodeBufferForLibrary, Utf8SourceInfo** ppSourceInfo, const wchar_t *rootDisplayName)
+    JavascriptFunction* ScriptContext::LoadScript(LPCUTF8 script, size_t cb, SRCINFO const * pSrcInfo, CompileScriptException * pse, bool isExpression, bool disableDeferredParse, bool isByteCodeBufferForLibrary, Utf8SourceInfo** ppSourceInfo, const wchar_t *rootDisplayName, bool disableAsmJs)
     {
         if (pSrcInfo == nullptr)
         {
@@ -1747,6 +1696,11 @@ namespace Js
             if (!disableDeferredParse && (cb > Parser::GetDeferralThreshold(sourceContextInfo->IsSourceProfileLoaded())))
             {
                 grfscr |= fscrDeferFncParse;
+            }
+
+            if (disableAsmJs)
+            {
+                grfscr |= fscrNoAsmJs;
             }
 
             if (PHASE_FORCE1(Js::EvalCompilePhase))
@@ -1785,6 +1739,15 @@ namespace Js
             uint sourceIndex = this->SaveSourceNoCopy(*ppSourceInfo, parser.GetSourceIchLim(), /* isCesu8*/ false);
 
             JavascriptFunction * pFunction = GenerateRootFunction(parseTree, sourceIndex, &parser, grfscr, pse, rootDisplayName);
+
+            if (pse->ei.scode == JSERR_AsmJsCompileError)
+            {
+                Assert(!disableAsmJs);
+
+                pse->Clear();
+                return LoadScript(script, cb, pSrcInfo, pse, isExpression, disableDeferredParse, isByteCodeBufferForLibrary, ppSourceInfo, rootDisplayName, true);
+            }
+
             if (pFunction != nullptr && this->IsProfiling())
             {
                 RegisterScript(pFunction->GetFunctionProxy());
@@ -1814,6 +1777,7 @@ namespace Js
         // Generate bytecode and native code
         ParseableFunctionInfo* body = NULL;
         hr = GenerateByteCode(parseTree, grfscr, this, &body, sourceIndex, false, parser, pse);
+
         this->GetSource(sourceIndex)->SetByteCodeGenerationFlags(grfscr);
         if (FAILED(hr))
         {
@@ -1891,8 +1855,8 @@ namespace Js
         ThreadContext * threadContext = this->threadContext;
         if (!threadContext->IsScriptActive())
         {
-            // we should have enter always these days.
-            Assert(FALSE);
+            // we should have enter always.
+            AssertMsg(FALSE, "Leaving ScriptStart while script is not active.");
             return false;
         }
 
@@ -2090,16 +2054,16 @@ namespace Js
             charcount_t len = key.str.GetLength();
             if (dict->TryGetValue(key, ppFuncScript))
             {
-                Output::Print(L"EvalMap cache hit:\t souce size = %d\n", len);
+                Output::Print(L"EvalMap cache hit:\t source size = %d\n", len);
             }
             else
             {
-                Output::Print(L"EvalMap cache miss:\t souce size = %d\n", len);
+                Output::Print(L"EvalMap cache miss:\t source size = %d\n", len);
             }
         }
 #endif
 
-        // If eval map cleanup is false, to preserve existing behavior, add it to the eval map mru list
+        // If eval map cleanup is false, to preserve existing behavior, add it to the eval map MRU list
         bool success = dict->TryGetValue(key, ppFuncScript);
 
         if (success)
@@ -2172,7 +2136,7 @@ namespace Js
             return false;
         }
 
-        // If eval map cleanup is false, to preserve existing behavior, add it to the eval map mru list
+        // If eval map cleanup is false, to preserve existing behavior, add it to the eval map MRU list
         bool success = this->cache->newFunctionCache->TryGetValue(key, ppFuncBody);
         if (success)
         {
@@ -2237,7 +2201,7 @@ namespace Js
             return const_cast<SourceContextInfo*>(this->cache->noContextSourceContextInfo);
         }
 
-        // NB: This is capped so we can continue allocating in the arena
+        // This is capped so we can continue allocating in the arena
         SourceContextInfo * sourceContextInfo = RecyclerNewStructZ(this->GetRecycler(), SourceContextInfo);
         sourceContextInfo->sourceContextId = this->GetNextSourceContextId();
         sourceContextInfo->dwHostSourceContext = hostSourceContext;
@@ -2542,7 +2506,7 @@ namespace Js
                 {
                     pProfilerCallback3->SetWebWorkerId(webWorkerId);
                     pProfilerCallback3->Release();
-                    // Omitting the HRESULT since it is up to the callback to make use of the webworker information.
+                    // Omitting the HRESULT since it is up to the callback to make use of the webWorker information.
                 }
             }
 
@@ -2597,7 +2561,7 @@ namespace Js
 
         OUTPUT_TRACE(Js::ScriptProfilerPhase, L"ScriptContext::DeRegisterProfileProbe\n");
 
-        // Aquire the code gen working queue - we are going to change the thunks
+        // Acquire the code gen working queue - we are going to change the thunks
         NativeCodeGenerator *pNativeCodeGen = this->GetNativeCodeGenerator();
         Assert(pNativeCodeGen);
         {
@@ -2689,11 +2653,11 @@ namespace Js
 
     HRESULT ScriptContext::RegisterAllScripts()
     {
-        AssertMsg(m_pProfileCallback != nullptr, "Called register scripts when we dont have profile callback");
+        AssertMsg(m_pProfileCallback != nullptr, "Called register scripts when we don't have profile callback");
 
         OUTPUT_TRACE(Js::ScriptProfilerPhase, L"ScriptContext::RegisterAllScripts started\n");
 
-        // TODO: Once Utf8SourceInfo can generate the debug document text without requiring a function body,
+        // Future Work: Once Utf8SourceInfo can generate the debug document text without requiring a function body,
         // this code can be considerably simplified to doing the following:
         // - scriptContext->MapScript() : Fire script compiled for each script
         // - scriptContext->MapFunction(): Fire function compiled for each function
@@ -2760,25 +2724,25 @@ namespace Js
         {
             // Today we do source rundown as a part of attach to support VS attaching without
             // first calling PerformSourceRundown.  PerformSourceRundown will be called once
-            // by F12 prior to attaching.
+            // by debugger host prior to attaching.
             this->GetDebugContext()->SetInSourceRundownMode();
 
             // Need to perform rundown only once.
             shouldPerformSourceRundown = true;
         }
 
-        // Rundown on all exisiting functions and change their thunks so that they will go to debug mode once they are called.
+        // Rundown on all existing functions and change their thunks so that they will go to debug mode once they are called.
 
         HRESULT hr = OnDebuggerAttachedDetached(/*attach*/ true);
         if (SUCCEEDED(hr))
         {
-            // Disable QC while functions are re-parsed as this can be time consuming 
+            // Disable QC while functions are re-parsed as this can be time consuming
             AutoDisableInterrupt autoDisableInterrupt(this->threadContext->GetInterruptPoller(), true);
 
             if ((hr = this->GetDebugContext()->RundownSourcesAndReparse(shouldPerformSourceRundown, /*shouldReparseFunctions*/ true)) == S_OK)
             {
                 HRESULT hr2 = this->GetLibrary()->EnsureReadyIfHybridDebugging(); // Prepare library if hybrid debugging attach
-                Assert(hr2 != E_FAIL);   // Ommiting hresult
+                Assert(hr2 != E_FAIL);   // Omitting HRESULT
             }
 
             if (!this->IsClosed())
@@ -2788,7 +2752,7 @@ namespace Js
 #ifdef ASMJS_PLAT
                     TempArenaAllocatorObject* tmpAlloc = GetTemporaryAllocator(L"DebuggerTransition");
                     debugTransitionAlloc = tmpAlloc->GetAllocator();
-                    
+
                     asmJsEnvironmentMap = Anew(debugTransitionAlloc, AsmFunctionMap, debugTransitionAlloc);
 #endif
 
@@ -2859,7 +2823,7 @@ namespace Js
             // Move the debugger into source rundown mode.
             this->GetDebugContext()->SetInSourceRundownMode();
 
-            // Disable QC while functions are re-parsed as this can be time consuming 
+            // Disable QC while functions are re-parsed as this can be time consuming
             AutoDisableInterrupt autoDisableInterrupt(this->threadContext->GetInterruptPoller(), true);
 
             // Force a reparse so that indirect function caches are updated.
@@ -3045,7 +3009,7 @@ namespace Js
         OUTPUT_TRACE(Js::ScriptProfilerPhase, L"ScriptContext::RegisterBuiltinFunctions\n");
 
         HRESULT hr = S_OK;
-        // TODO : create new profiler arena and allocate in it
+        // Consider creating ProfileArena allocator instead of General allocator
         if (m_pBuiltinFunctionIdMap == NULL)
         {
             // Anew throws if it OOMs, so the caller into this function needs to handle that exception
@@ -3063,7 +3027,7 @@ namespace Js
         if (FAILED(hr = this->javascriptLibrary->ProfilerRegisterBuiltIns()))
         {
             return hr;
-        }        
+        }
 
         // External Library
         if (RegisterExternalLibrary != NULL)
@@ -3099,7 +3063,9 @@ namespace Js
 #ifdef ASMJS_PLAT
     void ScriptContext::TransitionEnvironmentForDebugger(ScriptFunction * scriptFunction)
     {
-        if (scriptFunction->GetScriptContext()->IsInDebugMode() && scriptFunction->GetFunctionBody()->GetAsmJsFunctionInfo() != nullptr)
+        if (scriptFunction->GetScriptContext()->IsInDebugMode() &&
+            scriptFunction->GetFunctionBody()->GetAsmJsFunctionInfo() != nullptr &&
+            scriptFunction->GetFunctionBody()->GetAsmJsFunctionInfo()->GetModuleFunctionBody() != nullptr)
         {
             void* env = scriptFunction->GetEnvironment()->GetItem(0);
             SList<AsmJsScriptFunction*> * funcList = nullptr;
@@ -3178,7 +3144,7 @@ namespace Js
         }
         Assert(pFunction->IsScriptFunction());
 
-        // Excluding the internal library code, which is not debugg-able already
+        // Excluding the internal library code, which is not debuggable already
         if (!proxy->GetUtf8SourceInfo()->GetIsLibraryCode())
         {
             // Reset the constructor cache to default, so that it will not pick up the cached type, created before debugging.
@@ -3186,18 +3152,10 @@ namespace Js
             pFunction->ResetConstructorCacheToDefault();
         }
 
-        /*if(ScriptFunctionWithInlineCache::Is(pFunction) && ScriptFunctionWithInlineCache::FromVar(pFunction)->HasInlineCachesFromFunctionBody())
-        {
-        ScriptFunctionWithInlineCache* pFunctionWithInlineCache = ScriptFunctionWithInlineCache::FromVar(pFunction);
-        pFunctionWithInlineCache->SetInlineCachesFromFunctionBody();
-        }*/
         if (ScriptFunctionWithInlineCache::Is(pFunction))
         {
             ScriptFunctionWithInlineCache::FromVar(pFunction)->ClearInlineCacheOnFunctionObject();
         }
-
-        /*Assert(entryPoint != DefaultDeferredParsingThunk && entryPoint != ProfileDeferredParsingThunk
-        && entryPoint != DefaultDeferredDeserializeThunk && entryPoint != ProfileDeferredDeserializeThunk);*/
 
         // We should have force parsed the function, and have a function body
         FunctionBody * pBody = proxy->GetFunctionBody();
@@ -3207,7 +3165,7 @@ namespace Js
         {
             if (!(proxy->GetUtf8SourceInfo()->GetIsLibraryCode() || pBody->IsByteCodeDebugMode()))
             {
-                // Identifing if any function escaped for not being in debug mode. (This can be removed as a part of TFS : 935011)
+                // Identifying if any function escaped for not being in debug mode. (This can be removed as a part of TFS : 935011)
                 Throw::FatalInternalError();
             }
         }
@@ -3336,7 +3294,7 @@ namespace Js
         {
             function->SetEntryPoint(function->GetFunctionInfo()->GetOriginalEntryPoint());
         }
-    }     
+    }
 
     JavascriptMethod ScriptContext::GetProfileModeThunk(JavascriptMethod entryPoint)
     {
@@ -3445,12 +3403,6 @@ namespace Js
 #elif defined(_M_X64) || defined(_M_ARM32_OR_ARM64)
     // Do nothing: the implementation of ScriptContext::ProfileModeDeferredDeserializeThunk is declared (appropriately decorated) in
     // Language\amd64\amd64_Thunks.asm and Language\arm\arm_Thunks.asm respectively.
-#else
-    Var ScriptContext::ProfileModeDeferredDeserializeThunk(RecyclableObject* function, CallInfo callInfo, ...)
-    {
-        Js::Throw::NotImplemented();
-        return nullptr;
-    }
 #endif
 
     Js::JavascriptMethod ScriptContext::ProfileModeDeferredDeserialize(ScriptFunction *function)
@@ -3463,7 +3415,7 @@ namespace Js
 
         JavascriptMethod entryPoint = Js::JavascriptFunction::DeferredDeserialize(function);
 
-        //To get the scriptContext; we only need the functionproxy
+        //To get the scriptContext; we only need the FunctionProxy
         FunctionProxy *pRootBody = function->GetFunctionProxy();
         ScriptContext *pScriptContext = pRootBody->GetScriptContext();
         if (pScriptContext->IsProfiling() && !pRootBody->GetFunctionBody()->HasFunctionCompiledSent())
@@ -3544,7 +3496,7 @@ namespace Js
             {
                 // Note: for this we need final IsInDebugMode and NativeCodeGen initialized,
                 //       and inside EnsureScriptContext, which seems appropriate as well,
-                //       it's too early as pdm is not registered, thus IsDebuggerEnvironmentAvailable is false.
+                //       it's too early as debugger manager is not registered, thus IsDebuggerEnvironmentAvailable is false.
                 this->RegisterDebugThunk(false/*calledDuringAttach*/);
 
                 // TODO: for launch scenario for external and WinRT functions it might be too late to register debug thunk here,
@@ -3575,7 +3527,7 @@ namespace Js
         HRESULT hrOfEnterEvent = S_OK;
 
         // We can come here when profiling is not on
-        // eg. User starts profiling, we update all thinks and then stop profiling - we dont update thunk
+        // e.g. User starts profiling, we update all thinks and then stop profiling - we don't update thunk
         // So we still get this call
         const bool fProfile = (isUserCode || isProfilingUserCode) // Only report user code or entry library code
             && scriptContext->GetProfileInfo(function, scriptId, functionId);
@@ -3599,7 +3551,7 @@ namespace Js
                     OUTPUT_TRACE_DEBUGONLY(Js::ScriptProfilerPhase, L"ScriptContext::ProfileProbeThunk, ProfileSession does not match (%d != %d), functionNumber : %s, functionName : %s\n",
                         pBody->GetProfileSession(), pBody->GetScriptContext()->GetProfileSession(), pBody->GetDebugNumberSet(debugStringBuffer), pBody->GetDisplayName());
                 }
-                AssertMsg(pBody == NULL || pBody->GetProfileSession() == pBody->GetScriptContext()->GetProfileSession(), "Function info wasnt reported for this profile session");
+                AssertMsg(pBody == NULL || pBody->GetProfileSession() == pBody->GetScriptContext()->GetProfileSession(), "Function info wasn't reported for this profile session");
             }
 #endif
 
@@ -3678,7 +3630,7 @@ namespace Js
             if (useDebugWrapper)
             {
                 // For native use wrapper and bail out on to ignore exception.
-                // Extract try-catch out of hot path in normal profile mode (presense of try-catch in a function is bad for perf).
+                // Extract try-catch out of hot path in normal profile mode (presence of try-catch in a function is bad for perf).
                 aReturn = ProfileModeThunk_DebugModeWrapper(function, scriptContext, origEntryPoint, args);
             }
             else
@@ -3885,13 +3837,13 @@ namespace Js
 
         // Create the propertyId as object.functionName if it is not global function
         // the global functions would be recognized by just functionName
-        // eg. with functionName, toString, depending on objectName, it could be Object.toString, or Date.toString
+        // e.g. with functionName, toString, depending on objectName, it could be Object.toString, or Date.toString
         wchar_t szTempName[70];
         if (pwszObjectName != NULL)
         {
             // Create name as "object.function"
             swprintf_s(szTempName, 70, L"%s.%s", pwszObjectName, pwszFunctionName);
-            functionPropertyId = GetOrAddPropertyIdTracked(szTempName, wcslen(szTempName));
+            functionPropertyId = GetOrAddPropertyIdTracked(szTempName, (uint)wcslen(szTempName));
         }
 
         Js::PropertyId cachedFunctionId;
@@ -3903,7 +3855,7 @@ namespace Js
             if (cachedFunctionId != functionPropertyId)
             {
                 // This is the scenario where we could be using same function for multiple builtin functions
-                // eg. Error.toString, WinRTError.toString etc.
+                // e.g. Error.toString, WinRTError.toString etc.
                 // We would ignore these extra entrypoints because while profiling, identifying which object's toString is too costly for its worth
                 return S_OK;
             }
@@ -3944,9 +3896,9 @@ namespace Js
         Assert(!this->isClosed);
         Assert(this->guestArena);
         Assert(recycler->IsValidObject(addr));
-#if DBG        
+#if DBG
         Assert(!bindRef.ContainsKey(addr));     // Make sure we don't bind the same pointer twice
-        bindRef.AddNew(addr);       
+        bindRef.AddNew(addr);
 #endif
         if (bindRefChunkCurrent == bindRefChunkEnd)
         {
@@ -4142,7 +4094,7 @@ namespace Js
         if (EnableEvalMapCleanup())
         {
             // The eval map is not re-entrant, so make sure it's not in the middle of adding an entry
-            // Also, dont clean the eval map if the debugger is attached
+            // Also, don't clean the eval map if the debugger is attached
             if (!this->IsInDebugMode())
             {
                 if (this->cache->evalCacheDictionary != nullptr)
@@ -4169,7 +4121,7 @@ namespace Js
         {
             GetDynamicRegexMap()->RemoveRecentlyUnusedItems();
         }
-       
+
         CleanSourceListInternal(true);
     }
 
@@ -4456,8 +4408,6 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
 
     void ScriptContext::OnStartupComplete()
     {
-        // Uncomment the assert below once bug 522912 is fixed.
-        //AssertMsg(!startupComplete, "Startup complete - invoked twice?");
         JS_ETW(EventWriteJSCRIPT_ON_STARTUP_COMPLETE(this));
 
         SaveStartupProfileAndRelease();

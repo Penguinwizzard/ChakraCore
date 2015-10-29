@@ -130,12 +130,12 @@ CompileAssert(sizeof(SIMDValue) == 16);
 namespace Js {
     int32 SIMDCheckTypedArrayIndex(ScriptContext* scriptContext, Var index);
     int32 SIMDCheckLaneIndex(ScriptContext* scriptContext, Var lane, const int32 range = 4);
-    
+
     template <int laneCount = 4>
     SIMDValue SIMD128InnerShuffle(SIMDValue src1, SIMDValue src2, int32 lane0, int32 lane1, int32 lane2, int32 lane3); 
     SIMDValue SIMD128InnerShuffle(SIMDValue src1, SIMDValue src2, const int32* lanes = nullptr);
 
-    template <class SIMDType, int laneCount = 4> 
+    template <class SIMDType, int laneCount = 4>
     Var SIMD128SlowShuffle(Var src1, Var src2, Var lane0, Var lane1, Var lane2, Var lane3, int range, ScriptContext* scriptContext);
     template <class SIMDType, int laneCount = 8>
     Var SIMD128SlowShuffle(Var src1, Var src2, Var *lanes, const uint range, ScriptContext* scriptContext);
@@ -149,7 +149,7 @@ namespace Js {
     inline T SIMD128ExtractLane(Var src, Var lane, ScriptContext* scriptContext);
     template<class SIMDType, int laneCount, typename T>
     inline SIMDValue SIMD128ReplaceLane(Var src, Var lane, T value, ScriptContext* scriptContext);
-    
+
     SIMDValue SIMD128InnerReplaceLaneF4(const SIMDValue& src1, const int32 lane, const float value);
     float SIMD128InnerExtractLaneF4(const SIMDValue& src1, const int32 lane);
 

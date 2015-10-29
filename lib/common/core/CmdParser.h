@@ -11,7 +11,7 @@
 ///
 /// class CmdLineArgsParser
 ///
-/// Parses the following grammer
+/// Parses the following grammar
 ///
 ///      range      = integer | integer - integer | range,range
 ///      parameter  = integer | string  | phase[:range]
@@ -35,7 +35,7 @@ private:
 // Methods
 public:
     int                Parse(int argc, __in_ecount(argc) LPWSTR argv[]);
-    int Parse(__in LPWSTR token) throw();    
+    int Parse(__in LPWSTR token) throw();
     CmdLineArgsParser(ICustomConfigFlags * pCustomConfigFlags = nullptr, Js::ConfigFlagsTable& flagTable = Js::Configuration::Global.flags);
     ~CmdLineArgsParser();
 
@@ -51,7 +51,7 @@ private:
     class Exception {
         LPCWSTR        pszMsg;
     public:
-        Exception(LPCWSTR message): 
+        Exception(LPCWSTR message):
             pszMsg(message)
         {}
 
@@ -86,7 +86,7 @@ private:
             }
 
             bool IsDigit()
-            {                
+            {
                 return (CurChar() >='0' && CurChar() <= '9');
             }
 
@@ -97,7 +97,7 @@ private:
                     (CurChar() >= 'a' && CurChar() <= 'f');
             }
 
-            // Implements ICmdLineArgsParser   
+            // Implements ICmdLineArgsParser
             virtual BSTR GetCurrentString() override;
             virtual bool GetCurrentBoolean() override
             {

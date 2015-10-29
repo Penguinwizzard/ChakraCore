@@ -4,6 +4,7 @@
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeTypePch.h"
 
+#include "Types\DeferredTypeHandler.h"
 
 namespace Js
 {
@@ -48,16 +49,16 @@ namespace Js
         BOOL isSimple = !hasAccessor;
 
         switch (mode)
-        {        
-            case DeferredInitializeMode_Set:            
-                initSlotCapacity++;
-                break;            
-            case DeferredInitializeMode_SetAccessors:
-                initSlotCapacity += 2;
-                // fall thru
-            case DeferredInitializeMode_Extensions:
-                isSimple = FALSE;
-                break;
+        {
+        case DeferredInitializeMode_Set:
+            initSlotCapacity++;
+            break;
+        case DeferredInitializeMode_SetAccessors:
+            initSlotCapacity += 2;
+            // fall-through
+        case DeferredInitializeMode_Extensions:
+            isSimple = FALSE;
+            break;
         }
 
         DynamicTypeHandler* newTypeHandler;
@@ -78,7 +79,6 @@ namespace Js
             newTypeHandler->SetIsPrototype(instance);
             AssertMsg(instance->GetDynamicType()->GetTypeHandler() == newTypeHandler, "Why did SetIsPrototype force a type handler change on a non-shared type handler?");
         }
-
     }
 
     template <typename T>
@@ -110,7 +110,7 @@ namespace Js
         Assert(initSlotCapacity <= SimpleDictionaryTypeHandler::MaxPropertyIndexSize);
 
         SimpleDictionaryTypeHandler* newTypeHandler = ConvertToTypeHandler<SimpleDictionaryTypeHandler>(instance, initSlotCapacity);
-        
+
     #ifdef PROFILE_TYPES
         instance->GetScriptContext()->convertDeferredToSimpleDictionaryCount++;
     #endif

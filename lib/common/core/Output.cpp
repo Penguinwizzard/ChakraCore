@@ -165,7 +165,7 @@ Output::VTrace(const wchar_t* shortPrefixFormat, const wchar_t* prefix, const wc
         {
             // Trace just addresses of functions, avoid symbol info as it takes too much memory.
             // One line for whole stack trace for easier parsing on the jd side.
-            const size_t c_msgCharCount = _countof(callStackPrefix) + (1 + sizeof(void*) * 2) * c_frameCount; // 2 hexadec digits per byte + 1 for space.
+            const size_t c_msgCharCount = _countof(callStackPrefix) + (1 + sizeof(void*) * 2) * c_frameCount; // 2 hexadecimal digits per byte + 1 for space.
             wchar_t callStackMsg[c_msgCharCount];
             void* frames[c_frameCount];
             size_t start = 0;
@@ -250,7 +250,6 @@ Output::VPrint(const wchar_t *form, va_list argptr)
     {
         size = 2048;
     }
-    //AssertMsg(size != -1, "Print error: output exceeds buffer space");
     return Output::PrintBuffer(buf, size);
 }
 
@@ -416,7 +415,7 @@ Output::SkipToColumn(size_t column)
 
     size_t dist = column - Output::s_Column;
 
-    // Print at least one space...
+    // Print at least one space
     while (dist > 0)
     {
         Output::Print(L" ");
@@ -459,9 +458,9 @@ Output::GetOutputFile()
 }
 
 #ifdef ENABLE_TRACE
-void 
+void
 Output::SetInMemoryLogger(Js::ILogger* logger)
-{ 
+{
     AssertMsg(s_inMemoryLogger == nullptr, "This cannot be called more than once.");
     s_inMemoryLogger = logger;
 }

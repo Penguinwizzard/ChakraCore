@@ -33,7 +33,7 @@ GetFirstBitSet(DWORD *Index, UnitWord64 Mask)
 #if defined(_M_X64_OR_ARM64)
     return _BitScanForward64(Index, Mask);
 #else
-    //_BitScanForward64 intrinsic is not avilable in x86 & ARM
+    //_BitScanForward64 intrinsic is not available in x86 & ARM
     if (_BitScanForward(Index, (UnitWord32)Mask))
     {
         return true;
@@ -59,7 +59,7 @@ GetLastBitSet(DWORD *Index, UnitWord64 Mask)
 #if defined(_M_X64_OR_ARM64)
     return _BitScanReverse64(Index, Mask);
 #else
-    //_BitScanReverse64 intrinsic is not avilable in x86 & ARM
+    //_BitScanReverse64 intrinsic is not available in x86 & ARM
     if (_BitScanReverse(Index, (UnitWord32)(Mask >> 32)))
     {
         *Index = *Index + 32;
@@ -345,8 +345,8 @@ public:
     {
        unsigned int leadingZeroes;
 
-       BVIndex i = 0; 
-       
+       BVIndex i = 0;
+
        if (this->word == 0)
        {
            return BVInvalidIndex;

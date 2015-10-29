@@ -35,13 +35,13 @@ public:
     for (uint _iterHash = 0; _iterHash < (hashTable)->tableSize; _iterHash++)  \
     {   \
         FOREACH_SLISTBASE_ENTRY(GlobHashBucket, bucket, &(hashTable)->table[_iterHash]) \
-        {   
+        {
 
 
 #define NEXT_GLOBHASHTABLE_ENTRY \
         } \
         NEXT_SLISTBASE_ENTRY; \
-    } 
+    }
 
 
 
@@ -59,7 +59,7 @@ public:
 public:
     static ValueHashTable * New(JitArenaAllocator *allocator, uint tableSize)
     {
-        return AllocatorNewPlus(JitArenaAllocator, allocator, (tableSize*sizeof(SListBase<HashBucket>)), ValueHashTable, allocator, tableSize);        
+        return AllocatorNewPlus(JitArenaAllocator, allocator, (tableSize*sizeof(SListBase<HashBucket>)), ValueHashTable, allocator, tableSize);
     }
 
     void Delete()
@@ -100,11 +100,11 @@ public:
                     return &(bucket.element);
                 }
                 break;
-            }            
+            }
 #if PROFILE_DICTIONARY
             ++depth;
 #endif
-        } NEXT_SLISTBASE_ENTRY_EDITING;   
+        } NEXT_SLISTBASE_ENTRY_EDITING;
 
         HashBucket * newBucket = iter.InsertNodeBefore(this->alloc);
         newBucket->value = value;
@@ -133,11 +133,11 @@ public:
                     return &(bucket.element);
                 }
                 break;
-            }            
+            }
 #if PROFILE_DICTIONARY
             ++depth;
 #endif
-        } NEXT_SLISTBASE_ENTRY_EDITING;   
+        } NEXT_SLISTBASE_ENTRY_EDITING;
 
         HashBucket * newBucket = iter.InsertNodeBeforeNoThrow(this->alloc);
         if (newBucket == nullptr)
@@ -170,11 +170,11 @@ public:
                     return &(bucket.element);
                 }
                 break;
-            }            
+            }
 #if PROFILE_DICTIONARY
             ++depth;
 #endif
-        } NEXT_SLISTBASE_ENTRY_EDITING;   
+        } NEXT_SLISTBASE_ENTRY_EDITING;
 
         HashBucket * newBucket = iter.InsertNodeBefore(this->alloc);
         Assert(newBucket != nullptr);
@@ -249,7 +249,7 @@ public:
     {
         uint hash = this->Hash(key);
         SListBase<HashBucket> * list = &this->table[hash];
-        
+
         // Assumes sorted lists
 #if PROFILE_DICTIONARY
         bool first = true;
@@ -260,7 +260,7 @@ public:
             {
                 if (Key::Get(bucket.value) == key)
                 {
-                    iter.RemoveCurrent(this->alloc);                    
+                    iter.RemoveCurrent(this->alloc);
 #if PROFILE_DICTIONARY
                     if (stats)
                         stats->Remove(first && !(iter.Next()));
@@ -278,12 +278,12 @@ public:
     {
         for (uint i = 0; i < this->tableSize; i++)
         {
-            SListBase<HashBucket>::Iterator iter2(&this2->table[i]); 
+            SListBase<HashBucket>::Iterator iter2(&this2->table[i]);
             iter2.Next();
             FOREACH_SLISTBASE_ENTRY_EDITING(HashBucket, bucket, &this->table[i], iter)
             {
                 while (iter2.IsValid() && bucket.value < iter2.Data().value)
-                {                  
+                {
                     iter2.Next();
                 }
 
@@ -310,12 +310,12 @@ public:
     {
         for (uint i = 0; i < this->tableSize; i++)
         {
-            SListBase<HashBucket>::Iterator iter2(&this2->table[i]); 
+            SListBase<HashBucket>::Iterator iter2(&this2->table[i]);
             iter2.Next();
             FOREACH_SLISTBASE_ENTRY_EDITING((HashBucket), bucket, &this->table[i], iter)
             {
                 while (iter2.IsValid() && bucket.value < iter2.Data().value)
-                {                 
+                {
                     HashBucket * newBucket = iter.InsertNodeBefore(this->alloc);
                     newBucket->value = iter2.Data().value;
                     newBucket->element = fn(null, iter2.Data().element);
@@ -330,7 +330,7 @@ public:
                 {
                     bucket.element = fn(bucket.element, iter2.Data().element);
                     iter2.Next();
-                }                           
+                }
             } NEXT_SLISTBASE_ENTRY_EDITING;
 
             while (iter2.IsValid())
@@ -349,7 +349,7 @@ public:
 
         for (uint i = 0; i < this->tableSize; i++)
         {
-            this->table[i].CopyTo<HashBucket::Copy>(this->alloc, newTable->table[i]);            
+            this->table[i].CopyTo<HashBucket::Copy>(this->alloc, newTable->table[i]);
         }
 #if PROFILE_DICTIONARY
         if (stats)
@@ -363,7 +363,7 @@ public:
         for (uint i = 0; i < this->tableSize; i++)
         {
             this->table[i].Clear(this->alloc);
-        }        
+        }
 #if PROFILE_DICTIONARY
         // To not loose previously collected data, we will treat cleared dictionary as a separate instance for stats tracking purpose
         stats = DictionaryStats::Create(typeid(this).name(), tableSize);
@@ -381,7 +381,7 @@ public:
             Output::Print(L"\n");
             Output::Print(L"\n");
         }
-        NEXT_GLOBHASHTABLE_ENTRY;   
+        NEXT_GLOBHASHTABLE_ENTRY;
     }
 
     void Dump(void (*valueDump)(TData))
@@ -394,13 +394,13 @@ public:
             bucket.element->Dump();
             Output::Print(L"\n");
         }
-        NEXT_GLOBHASHTABLE_ENTRY;        
+        NEXT_GLOBHASHTABLE_ENTRY;
     }
 #endif
 
 protected:
-    ValueHashTable(JitArenaAllocator * allocator, uint tableSize) : alloc(allocator), tableSize(tableSize) 
-    {        
+    ValueHashTable(JitArenaAllocator * allocator, uint tableSize) : alloc(allocator), tableSize(tableSize)
+    {
         Init();
 #if PROFILE_DICTIONARY
         stats = DictionaryStats::Create(typeid(this).name(), tableSize);
@@ -411,7 +411,7 @@ protected:
         table = (SListBase<HashBucket> *)(((char *)this) + sizeof(ValueHashTable));
         for (uint i = 0; i < tableSize; i++)
         {
-            // placment new
+            // placement new
             ::new (&table[i]) SListBase<HashBucket>();
         }
     }

@@ -146,7 +146,7 @@ inline T* PostAllocationCallback(const type_info& objType, T *obj)
 #define AllocatorDeleteArray(AllocatorType, alloc, count, obj) DeleteArray<AllocatorType>(alloc, count, obj)
 #define AllocatorDeleteArrayLeaf(TAllocator, alloc, count, obj) DeleteArray<ForceLeafAllocator<TAllocator>::AllocatorType>(alloc, count, obj)
 
-// Free routine where we don't care about following C++ semantics (eg. calling the destructor)
+// Free routine where we don't care about following C++ semantics (e.g. calling the destructor)
 #define AllocatorFree(alloc, freeFunc, obj, size) (alloc->*freeFunc)(obj, size)
 
 // default type allocator implementation

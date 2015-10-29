@@ -92,7 +92,7 @@ namespace Js
     {
         SIMDValue result;
 
-        result.f64[SIMD_X] = 1.0/(value.f64[SIMD_X]); 
+        result.f64[SIMD_X] = 1.0/(value.f64[SIMD_X]);
         result.f64[SIMD_Y] = 1.0/(value.f64[SIMD_Y]);
 
         return result;
@@ -290,7 +290,7 @@ namespace Js
     }
 
     SIMDValue SIMDFloat64x2Operation::OpClamp(const SIMDValue& value, const SIMDValue& lower, const SIMDValue& upper)
-    { 
+    {
         SIMDValue result;
 
         // lower clamp

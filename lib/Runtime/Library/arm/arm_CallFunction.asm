@@ -4,7 +4,7 @@
 ;-------------------------------------------------------------------------------------------------------
 
 ;Var arm_CallFunction(JavascriptFunction* function, CallInfo info, Var* values, JavascriptMethod entryPoint)
-;  
+;
 ;   This method should be called as follows
 ;       varResult = arm_CallFunction((JavascriptFunction*)function, args.Info, args.Values, entryPoint);
 ;
@@ -25,7 +25,7 @@
 ;
 ;   Since the 1st two parameters are the same for this method and the entry point, we don't need to touch them.
 ;
-    OPT	2	; disable listing
+    OPT 2   ; disable listing
 
 #include "ksarm.h"
 
@@ -33,10 +33,10 @@
         IMPORT __guard_check_icall_fptr
 #endif
 
-    OPT	1	; reenable listing
+    OPT 1   ; re-enable listing
 
-    TTL	Lib\Runtime\Library\arm\arm_CallFunction.asm
-    
+    TTL Lib\Runtime\Library\arm\arm_CallFunction.asm
+
     EXPORT  arm_CallFunction
     IMPORT  __chkstk            ;See \\cpvsbuild\drops\dev11\Main\raw\current\sources\vctools\crt\crtw32\startup\arm\chkstk.asm.
 
@@ -51,22 +51,22 @@
 #endif
     PROLOG_STACK_SAVE r7       ; mov r7,sp -- save stack frame for restoring at the epilog.
 
-      
+
     ;All but two values go onto the stack ... calculate the number of values on the stack.
     mov     r4,r1               ;r4 = callInfo.
     bfc     r4,#24,#8           ;clear high order 8 bits of r6 -- clean callInfo.Flags which shares same word as callInfo.Count.
     sub     r4,r4,#2            ;subtract 2 == number of values that we can pass via registers.
     mov     r5,r4,lsl #2        ;r5 = space needed on the stack for values.
-    
+
     ; Adjust sp to meet ABI requirement: stack must be 8-bytes aligned at any function boundary.
     ; Each reg is 4 bytes, so as we push 4 (even) regs above, r1 == odd number of regs breaks 8-byte alignment, even is OK.
     asrs    r12,r4,#1           ; r-shift r1 into carry - set carry flag if r4 is odd. Note: the value in r12 is not used.
     addcs   r4,r4,#1            ; if carry is set, add space for one more argument on stack to guarantee 8-byte alignment.
-    ; // TODO: Evanesco: it seems that keeping old values on stack can cause false-positive jcroot's. We should see if that's the case. 
+    ; // TODO: Evanesco: it seems that keeping old values on stack can cause false-positive jcroot's. We should see if that's the case.
 
     ;Probe stack. This is required when we need more than 1 page of stack space.
     ;__chkstk will mark required number of pages as committed / throw stack overflow exception if can't.
-    ;  - input:  r4 = the number of WORDS (word = 4 bytes) to allocate, 
+    ;  - input:  r4 = the number of WORDS (word = 4 bytes) to allocate,
     ;  - output: r4 = total number of BYTES probed/allocated.
     blx     __chkstk            ;now r4 = the space to allocate, r5 = actual space needed for values on stack, r4 >= r5.
 
@@ -74,16 +74,16 @@
     sub     sp,sp,r4
 
     mov     r4,r3                               ;copy entryPoint to r4 so we can use r3 as a scratch variable
-    
+
     add     r2,r2,#8                            ;add 8 to r2 (so it is the address of the first value to be placed on the stack).
     mov     r12,#0                              ;offset for getting values/storing on stack.
 
 |argN|
     cmp     r5,r12
     beq     arg2                                ;if r5 == r12, no more values need to go onto the stack.
-        
+
         ldr     r3,[r2,r12]                     ;r3 = *(r2 + r12)
-        str     r3,[sp,r12]                     ;*(sp + r12) = r3		
+        str     r3,[sp,r12]                     ;*(sp + r12) = r3
 
         add     r12,r12,#4                      ;offset increases by 4.
     b   argN                                    ;goto argN
@@ -107,11 +107,11 @@
 
     ;Push values[1] into r3
     ldr     r3,[r2,#-4]                         ;r3 = *(r2-4) = values[1]
-    
-    ;Push values[0] into r2  
+
+    ;Push values[0] into r2
     ldr     r2,[r2,#-8]                         ;r2 = *(r2-8) = values[0]
 
-    blx     r4                                  ;call r4 (== entry point)    
+    blx     r4                                  ;call r4 (== entry point)
 
     EPILOG_STACK_RESTORE r7
 #if defined(_CONTROL_FLOW_GUARD)

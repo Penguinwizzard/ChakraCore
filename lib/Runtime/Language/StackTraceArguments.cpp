@@ -5,9 +5,6 @@
 #include "RuntimeLanguagePch.h"
 #include "shlwapi.h"
 
-// TODO: Clean this warning up
-#pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
-
 namespace Js {
     
     uint64 StackTraceArguments::ObjectToTypeCode(Js::Var object)
@@ -61,9 +58,10 @@ namespace Js {
                 return scriptContext->GetLibrary()->GetSymbolTypeDisplayString();
             case objectValue:
                 return scriptContext->GetLibrary()->GetObjectTypeDisplayString();
+            default:
+              AssertMsg(0, "Unknown type code");
+              return scriptContext->GetLibrary()->GetEmptyString();
         }
-        AssertMsg(0, "Unknown type code");
-        return scriptContext->GetLibrary()->GetEmptyString();
     }
 
     void StackTraceArguments::Init(const JavascriptStackWalker &walker)
@@ -101,7 +99,7 @@ namespace Js {
         BEGIN_TRANSLATE_EXCEPTION_AND_ERROROBJECT_TO_HRESULT_NESTED
         {
             CompoundString *const stringBuilder = CompoundString::NewWithCharCapacity(40, scriptContext->GetLibrary());
-            stringBuilder->AppendChars(functionName, wcslen(functionName));
+            stringBuilder->AppendCharsSz(functionName);
             bool calleIsGlobalFunction = (argumentsTypes & fCallerIsGlobal) != 0; 
             bool toManyArgs = (argumentsTypes & fTooManyArgs) != 0;
             argumentsTypes &= ~fCallerIsGlobal; // erase flags to prevent them from being treated as values

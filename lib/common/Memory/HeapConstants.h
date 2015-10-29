@@ -55,7 +55,6 @@ public:
     static const uint   MaxSmallObjectCount = MaxObjectCount;
     static const uint   ObjectCountPerPage = AutoSystemInfo::PageSize / HeapConstants::ObjectGranularity;
 
-    // TODO: Get rid of this
     // This is there for RecyclerSweep to distinguish which bucket index to use
     static const bool IsSmallBlock = true;
     static const bool IsMediumBlock = false;
@@ -78,7 +77,6 @@ public:
     static const uint   MaxSmallObjectCount = PageCount * AutoSystemInfo::PageSize / HeapConstants::ObjectGranularity;
     static const uint   ObjectCountPerPage = AutoSystemInfo::PageSize / MinObjectSize;
 
-    // TODO: Get rid of this
     // This is there for RecyclerSweep to distinguish which bucket index to use
     static const bool IsSmallBlock = false;
     static const bool IsMediumBlock = true;
@@ -90,7 +88,6 @@ public:
 class LargeAllocationBlockAttributes
 {
 public:
-    // TODO: Get rid of this
     // This is there for RecyclerSweep to distinguish which bucket index to use
     static const bool IsSmallBlock = false;
     static const bool IsMediumBlock = false;

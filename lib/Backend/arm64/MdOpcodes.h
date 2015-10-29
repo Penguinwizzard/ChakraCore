@@ -11,9 +11,9 @@
 //          /          /         attrib             byte2
 //         /          /         /                   /         form
 //        /          /         /                   /         /          opbyte
-//       /          /         /                   /         /          /              
+//       /          /         /                   /         /          /
 //      /          /         /                   /         /          /                  dope
-//     /          /         /                   /         /          /                  /   
+//     /          /         /                   /         /          /                  /
 
 MACRO(ADD,     Reg3,       0,              0,  LEGAL_ADDSUB,   INSTR_TYPE(Forms_ADD), D___C)
 MACRO(ADDS,    Reg3,       OpSideEffect,   0,  LEGAL_ALU3,     INSTR_TYPE(Forms_ADD),  D__SC)
@@ -94,7 +94,7 @@ MACRO(SMULL,     Reg3,       0,            0,  LEGAL_REG3,     INSTR_TYPE(Forms_
 // SMLAL dst, r12, src1, src2.  The add source comes from r12:s1. Dst is 64 bit and is in r12:s1.
 MACRO(SMLAL,     Reg3,       0,            0,  LEGAL_REG3,     INSTR_TYPE(Forms_SMLAL),D___C)
 
-// MLS dst, src1, src2: Multiply and Substract. We use 3 registers: dst = src1 - src2 * dst
+// MLS dst, src1, src2: Multiply and Subtract. We use 3 registers: dst = src1 - src2 * dst
 MACRO(MLS,     Reg3,       0,              0,  LEGAL_REG3,     INSTR_TYPE(Forms_MLS),  D___C)
 
 // MVN: Move NOT (register); Format 4
@@ -111,7 +111,7 @@ MACRO(PLD,     Reg2,       0,              0,  LEGAL_LOAD,     INSTR_TYPE(Forms_
 // RET: pseudo-op for function return
 MACRO(RET,     Reg2,       OpSideEffect,   0,  LEGAL_REG2,     INSTR_TYPE(Forms_RET),  D___C)
 
-// REM: pseudo-op 
+// REM: pseudo-op
 MACRO(REM,     Reg3,       OpSideEffect,   0,  LEGAL_REG3,     INSTR_TYPE(Forms_REM),  D___C)
 
 // RSB: reserve subtract (i.e., NEG)
@@ -170,5 +170,3 @@ MACRO(VSUBF64,  Reg3,      0,              0,  LEGAL_REG3,      INSTR_TYPE(Forms
 MACRO(VSQRT,    Reg2,      0,              0,  LEGAL_REG2,      INSTR_TYPE(Forms_VSQRT),   D___C)
 MACRO(VSTR,     Reg2,      0,              0,  LEGAL_VSTORE,    INSTR_TYPE(Forms_VSTR),   DS__C)
 MACRO(VSTR32,   Reg2,      0,              0,  LEGAL_VSTORE,    INSTR_TYPE(Forms_VSTR32), DS__C) //single precision float store
-
-

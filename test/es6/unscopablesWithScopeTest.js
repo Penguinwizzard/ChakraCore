@@ -171,9 +171,7 @@ var tests = [
                 assert.areEqual(testValue,a,"This test checks testValue and a are equivalent");
                 assert.areEqual(-1,x,"x is not brought into scope by the with statement");
                 assert.areEqual(o.x,b.x,"x is not brought into scope by the with statement");
-                assert.areEqual(o.x,a.x,"x is not brought into scope by the with statement");
-                
-                
+                assert.areEqual(o.x,a.x,"x is not brought into scope by the with statement");   
             }
         }
     },
@@ -339,41 +337,39 @@ var tests = [
         name: "Per object unscopables check",
         body: function () 
         {
-            
+            var globalScope = -1;
             var proto  = { a: 1, b: 2, c: 3, [Symbol.unscopables]: {'a' : true} };
             var child  = {__proto__: proto,  [Symbol.unscopables]: {'b' : true} };
             var child2 = {__proto__: proto, b: 21, c: 31, [Symbol.unscopables]: {'b' : true} };
-            var a = -1;
-            var b = -1;
+            var a = globalScope;
+            var b = globalScope;
             with(child) 
             {
-                
-                assert.areEqual(-1,a,"a is blacklisted in proto, default to root scope");
-                assert.areEqual( -1,b,"b is blacklisted in child and we don't property walk to find b on proto");
-                assert.areEqual( 3,c,"c is only on the proto");
+                assert.areEqual(1, a, "Get @@unscopables finds {'b' : true} on child fist so a is not unscoped");
+                assert.areEqual(globalScope, b, "b is blacklisted in child and we don't property walk to find b on proto");
+                assert.areEqual(3, c, "c is only on the proto");
                 a = 3;
                 b = 4;
                 assert.areEqual(2,proto.b,"proto.b is never set b\c child b is unnscopable");
             }
             assert.areEqual(4,b,"root.b is set to 4 b\c child b is unscopable");
-            b = -1;
-            assert.areEqual(3,a,"root.a should be set to 3");
-            var a = -1;
+            b = globalScope;
+            assert.areEqual(3,child.a,"child.a should be set to 3");
+            assert.areEqual(1,proto.a,"proto.a should be set to 1");
+            var a = globalScope;
             proto[Symbol.unscopables]["c"] = true;
             with(child2) 
             {
-                
-                assert.areEqual(-1, a, "a is blacklisted in proto, default to root scope");
-                assert.areEqual(-1, b, "b is blacklisted in child2 and we don't property walk to find b on proto");
+                assert.areEqual(1, a, "Get @@unscopables finds {'b' : true} on child fist so a is not unscoped");
+                assert.areEqual(globalScope, b, "b is blacklisted in child2 and we don't property walk to find b on proto");
                 assert.areEqual(31, c, "c is blacklisted in proto but not child2");
                 delete c;
                 assert.areEqual(3,proto.c,"No delete should have happened");
                 assert.areEqual(3,child2.c,"delete should have happened to 31 should now be 3");
                 delete c;
-                assert.areEqual(3,proto.c, "delete can't happened on proto.c, b\c c on the prototype is unscopable");
+                assert.areEqual(3,proto.c, "No delete should have happened");
                 assert.areEqual(3,child2.c,"child2 is still 3");
             }
-
         }
     },
     {
@@ -535,17 +531,67 @@ var tests = [
         }
     },
     {
-        name: "confirm setting property to false on unscopable does not matter",
+        name: "Confirm a call to @@unscopables happens if the environment record property is called",
         body: function () 
         {
-            var o = { a: 0, b : 1 }
-            o[Symbol.unscopables] = {'a' : false }
-            var a = -1;
-            with(o)
-            {
-                assert.areEqual(-1,a,"just setting a in unscopables hides the value");
-                assert.areEqual(1,b,"b is not unscopable");
+            var env = {x : 1};
+            var callCount = 0;
+            Object.defineProperty(env, Symbol.unscopables, {
+                get: function() {
+                    callCount += 1;
+                }
+            });
+            
+            with (env) {
+                void x;
             }
+            assert.areEqual(1, callCount, "The environment record has the requested property confirm a call happens");
+        }
+    },
+    {
+        name: "Spec Bug Fix for OS 4892049",
+        body: function () 
+        {
+            var x = 0;
+            var env = {};
+            var callCount = 0;
+            Object.defineProperty(env, Symbol.unscopables, {
+                get: function() {
+                    callCount += 1;
+                }
+            });
+            
+            with (env) {
+                void x;
+            }
+            assert.areEqual(0, callCount, "If the environment record does not have requested property don't look up unscopables blacklist");
+            
+            var x = 0;
+            var env = { x: 1 };
+            env[Symbol.unscopables] = {};
+            env[Symbol.unscopables].x = false;
+            with (env) {
+                assert.areEqual(1, x, "8.1.1.2.1 step 9a return  ToBoolean on the getProperty, if false property is not blacklisted");
+            }
+
+        }
+    },
+    {
+        name: "Let unscopables be Get(bindings, @@unscopables) should do prototype chain lookups on the blacklist",
+        body: function () 
+        {
+            var blackList =  { x : true };
+            Object.setPrototypeOf(blackList, { y: true });
+            var env = { x : 1, y : 2, [Symbol.unscopables] : blackList};
+            var x = -1;
+            var y = -2;
+            
+            with(env)
+            {
+                assert.areEqual(-1, x, "x is blacklist on the @@unscopables object");
+                assert.areEqual(-2, y, "y is blacklist on the @@unscopables prototype");
+            }
+            
         }
     },
     {

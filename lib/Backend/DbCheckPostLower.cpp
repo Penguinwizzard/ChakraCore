@@ -6,7 +6,7 @@
 
 #if DBG
 
-void 
+void
 DbCheckPostLower::Check()
 {
     bool doOpHelperCheck = (Js::Configuration::Global.flags.CheckOpHelpers && !this->func->isPostLayout);
@@ -125,7 +125,7 @@ DbCheckPostLower::Check()
                             break;
                         }
 
-                        Assert((instrPrev->IsBranchInstr() && instrPrev->AsBranchInstr()->IsConditional() 
+                        Assert((instrPrev->IsBranchInstr() && instrPrev->AsBranchInstr()->IsConditional()
                             && (!instrPrev->AsBranchInstr()->GetTarget()->isOpHelper || instrPrev->AsBranchInstr()->GetTarget()->m_noHelperAssert)));
                     }
                     else
@@ -167,7 +167,7 @@ DbCheckPostLower::Check()
                 if (instr->GetSrc2())
                 {
                     // CMOV inserted before regAlloc need a fake use of the dst register to make up for the
-                    // fact that the CMOV may not set the dst.  Regalloc needs to assign the same physreg for dst and src1.
+                    // fact that the CMOV may not set the dst. Regalloc needs to assign the same physical register for dst and src1.
                     Assert(instr->GetDst()->IsEqual(instr->GetSrc1()));
                 }
                 else

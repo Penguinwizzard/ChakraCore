@@ -13,7 +13,7 @@ namespace Js
     public:
         static const unsigned int MAX_FRAME_COUNT = 64;
 
-        // Fault types        
+        // Fault types
 #define FAULT_TYPE(x) x, \
 
         enum FaultType
@@ -23,7 +23,7 @@ namespace Js
             FaultTypeCount,
             InvalidFaultType
         };
-#undef FAULT_TYPE       
+#undef FAULT_TYPE
 
         // use bit array to save the enabled type
         class FaultInjectionTypes
@@ -51,8 +51,8 @@ namespace Js
             bool IsEnabled(const wchar_t* name);
         };
 
-        static wchar_t *FaultTypeNames[]; 
-        void ParseFaultTypes(const wchar_t* szFaultTypes);       
+        static wchar_t *FaultTypeNames[];
+        void ParseFaultTypes(const wchar_t* szFaultTypes);
 
     public:
         enum FaultMode
@@ -67,7 +67,7 @@ namespace Js
         };
 
         uint countOfInjectionPoints;
-        int FaultInjectionCookie; 
+        int FaultInjectionCookie;
         enum StackMatchInitializationState
         {
             Uninitialized = 0,
@@ -107,14 +107,14 @@ namespace Js
                 }
                 dumpCurrentStackData();
             }
-            return shouldInjectionFault;            
-        }        
+            return shouldInjectionFault;
+        }
 
-    private:        
+    private:
         bool ShouldInjectFaultHelper(FaultType fType, LPCWSTR name = nullptr, size_t size = 0);
 
     private:
-        // for reconstruction stack of the fault injection points in post mortem debugging
+        // for reconstruction stack of the fault injection points in postmortem debugging
         struct InjectionRecord{
             void* StackFrames[MAX_FRAME_COUNT];
             UINT_PTR hash;
@@ -125,7 +125,7 @@ namespace Js
             WCHAR name[32];
             size_t allocSize;
             InjectionRecord* next;
-        };     
+        };
     public:
         InjectionRecord* InjectionFirstRecord;
         InjectionRecord** InjectionLastRecordRef;

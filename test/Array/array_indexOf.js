@@ -10,8 +10,8 @@ for(i=-3; i < 15;i++)
    WScript.Echo(x.indexOf(i));
    for(j=-3; j< 15;j++)
    {
-        WScript.Echo(x.indexOf(x[i],j)); 
-        WScript.Echo(x.indexOf(i,j)); 
+        WScript.Echo(x.indexOf(x[i],j));
+        WScript.Echo(x.indexOf(i,j));
    }
 }
 
@@ -82,21 +82,21 @@ WScript.Echo(floatarr.indexOf(5.7));
 // Run with -forcearraybtree to really stress these.
 var gap = [0, 1];
 WScript.Echo(gap.indexOf(4));
-Array.prototype[2] = 'swine';
-WScript.Echo(gap.indexOf('swine'));
+Array.prototype[2] = 'foo';
+WScript.Echo(gap.indexOf('foo'));
 gap[5] = 4;
-WScript.Echo(gap.indexOf('swine'));
+WScript.Echo(gap.indexOf('foo'));
 WScript.Echo(gap.indexOf(4));
 
 gap = [0, 1.1];
 WScript.Echo(gap.indexOf(4));
-Array.prototype[2] = 'hogs';
-WScript.Echo(gap.indexOf('hogs'));
+Array.prototype[2] = 'bar';
+WScript.Echo(gap.indexOf('bar'));
 gap[5] = 4;
 WScript.Echo(gap.indexOf(4));
-WScript.Echo(gap.indexOf('hogs'));
+WScript.Echo(gap.indexOf('bar'));
 
-gap = [0, 'gooey'];
+gap = [0, 'test'];
 WScript.Echo(gap.indexOf(4));
 Array.prototype[2] = 4;
 WScript.Echo(gap.indexOf(4));

@@ -97,8 +97,6 @@ namespace Js
             return static_cast<JavascriptString*>(ToStringHelper(thisArg, scriptContext));
         }
 
-        template<bool includeSymbols>
-        static void GetPropertyRecordFromVar(Var propertyKey, ScriptContext* scriptContext, const PropertyRecord** propertyRecord);
         static BOOL DefineOwnPropertyHelper(RecyclableObject* obj, PropertyId propId, const PropertyDescriptor& descriptor, ScriptContext* scriptContext, bool throwOnError = true);
         static Var ToStringHelper(Var thisArg, ScriptContext* scriptContext);
         static Var LegacyToStringHelper(ScriptContext* scriptContext, TypeId type);

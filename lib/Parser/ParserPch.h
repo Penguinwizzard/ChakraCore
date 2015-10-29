@@ -14,7 +14,6 @@
 #include "RegexCommon.h"
 #include "DebugWriter.h"
 #include "RegexStats.h"
-#include "BitCounts.h"
 #include "StandardChars.h"
 #include "OctoquadIdentifier.h"
 #include "RegexCompileTime.h"

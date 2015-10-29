@@ -35,15 +35,15 @@
           ItemType="ARMASM"
           SourceType="Item" />
       </StringProperty.DataSource>
-    </StringProperty>    
+    </StringProperty>
     <BoolProperty
-      Name="GenerateDebugInformation"      
+      Name="GenerateDebugInformation"
       DisplayName="Generate Debug Information"
       Description="Generates Debug Information.     (-g)"
       Switch="-g" />
     <StringProperty
       Name="ObjectFileName"
-      Category="Object File"      
+      Category="Object File"
       DisplayName="Object File Name"
       Description="Specifies the name of the output object file.     (/Fo:[file])"
       Switch="-o &quot;[value]&quot;" />
@@ -52,7 +52,7 @@
       HelpUrl="http://msdn.microsoft.com/library/default.asp?url=/library/en-us/vcmasm/html/vclrfml.asp"
       DisplayName="Include Paths"
       Description="Sets path for include file. A maximum of 10 /I options is allowed.     (/I [path])"
-      Switch="-I &quot;[value]&quot;" />  
+      Switch="-I &quot;[value]&quot;" />
     <EnumProperty
       Name="ErrorReporting"
       Category="Advanced"

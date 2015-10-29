@@ -3,12 +3,6 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-// Configuration: ..\basic.xml
-// Testcase Number: 87814
-// Bailout Testing: ON
-// -maxinterpretcount:1  
-// Branch:  fbl_ie_dev1
-// Build: 120920-1700
 var shouldBailout = false;
 var G = 0;
 
@@ -38,7 +32,7 @@ function test0(){
   //Snippet 1: basic inlining test
   obj0.prop0 = (function(x,y,z) {
     obj1.prop0 = func1();
-//    WScript.Echo("Snippet 1: ",x,y,z);
+
     return obj0.method0();
   })((c *= (shouldBailout ? (a = { valueOf: function() { G += 10; return 3; } }, ui8[((obj1.length, 2, 2.7970894295654E+18)) & 255]) : ui8[((obj1.length, 2, 2.7970894295654E+18)) & 255])),(d >>>= i16[((shouldBailout ? (a = { valueOf: function() { G += 100; return 3; } }, (! 2)) : (! 2))) & 255]),((~ 0) ^ a));
   

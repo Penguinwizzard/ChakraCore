@@ -4,6 +4,7 @@
 //-------------------------------------------------------------------------------------------------------
 #include "BackEnd.h"
 #include "LowererMDArch.h"
+#include "Library\JavascriptGeneratorFunction.h"
 
 const Js::OpCode LowererMD::MDExtend32Opcode = Js::OpCode::MOV;
 
@@ -81,14 +82,12 @@ LowererMDArch::GetRegIMulHighDestLower()
 RegNum
 LowererMDArch::GetRegArgI4(int32 argNum)
 {
-    // TODO: decide on registers to use for int
     return RegNOREG;
 }
 
 RegNum
 LowererMDArch::GetRegArgR8(int32 argNum)
 {
-    // TODO: decide on registers to use for double
     return RegNOREG;
 }
 
@@ -494,7 +493,7 @@ LowererMDArch::LoadFuncExpression(IR::Instr *instrFuncExpr)
 }
 
 //
-// Load the parameter in the the first argument slot
+// Load the parameter in the first argument slot
 //
 
 IR::Instr *
@@ -709,7 +708,7 @@ LowererMDArch::LowerCallI(IR::Instr *callInstr, ushort callFlags, bool isHelper,
 
     IR::Opnd * functionObjOpnd = callInstr->UnlinkSrc1();
 
-    // If this is a call for new, we already pass the function operand thru NewScObject,
+    // If this is a call for new, we already pass the function operand through NewScObject,
     // which checks if the function operand is a real function or not, don't need to add a check again
     // If this is a call to a fixed function, we've already verified that the target is, indeed, a function.
     if (callInstr->m_opcode != Js::OpCode::CallIFixed && !(callFlags & Js::CallFlags_New))
@@ -875,7 +874,7 @@ LowererMDArch::LowerAsmJsCallI(IR::Instr * callInstr)
 
     return retInstr;
 }
-IR::Instr* 
+IR::Instr*
 LowererMDArch::LowerAsmJsLdElemHelper(IR::Instr * instr, bool isSimdLoad /*= false*/, bool checkEndOffset /*= false*/)
 {
     IR::Opnd * src1 = instr->UnlinkSrc1();
@@ -897,7 +896,7 @@ LowererMDArch::LowerAsmJsLdElemHelper(IR::Instr * instr, bool isSimdLoad /*= fal
     {
         cmpOpnd = IR::IntConstOpnd::New(src1->AsIndirOpnd()->GetOffset(), TyUint32, m_func);
     }
-    
+
     // if dataWidth != byte per element, we need to check end offset
     if (isSimdLoad && checkEndOffset)
     {
@@ -914,7 +913,7 @@ LowererMDArch::LowerAsmJsLdElemHelper(IR::Instr * instr, bool isSimdLoad /*= fal
     {
         lowererMD->m_lowerer->InsertCompareBranch(cmpOpnd, instr->UnlinkSrc2(), Js::OpCode::BrGe_A, true, helperLabel, helperLabel);
     }
-    
+
     Lowerer::InsertBranch(Js::OpCode::Br, loadLabel, helperLabel);
 
     if (m_func->GetJnFunction()->GetAsmJsFunctionInfo()->IsHeapBufferConst())
@@ -929,7 +928,7 @@ LowererMDArch::LowerAsmJsLdElemHelper(IR::Instr * instr, bool isSimdLoad /*= fal
     if (isSimdLoad)
     {
         lowererMD->m_lowerer->GenerateRuntimeError(loadLabel, JSERR_ArgumentOutOfRange, IR::HelperOp_RuntimeRangeError);
-     
+
     }
     else
     {
@@ -959,7 +958,7 @@ LowererMDArch::LowerAsmJsStElemHelper(IR::Instr * instr, bool isSimdStore /*= fa
     const uint8 dataWidth = instr->dataWidth;
 
     Assert(isSimdStore == false || dataWidth == 4 || dataWidth == 8 || dataWidth == 12 || dataWidth == 16);
-    
+
     if (indexOpnd)
     {
         cmpOpnd = indexOpnd;
@@ -983,14 +982,14 @@ LowererMDArch::LowerAsmJsStElemHelper(IR::Instr * instr, bool isSimdStore /*= fa
     {
         lowererMD->m_lowerer->InsertCompareBranch(cmpOpnd, instr->UnlinkSrc2(), Js::OpCode::BrGe_A, true, helperLabel, helperLabel);
     }
-    
+
     if (isSimdStore)
     {
         lowererMD->m_lowerer->GenerateRuntimeError(storeLabel, JSERR_ArgumentOutOfRange, IR::HelperOp_RuntimeRangeError);
     }
 
     Lowerer::InsertBranch(Js::OpCode::Br, storeLabel, helperLabel);
-    
+
     Lowerer::InsertBranch(Js::OpCode::Br, doneLabel, storeLabel);
 
     if (m_func->GetJnFunction()->GetAsmJsFunctionInfo()->IsHeapBufferConst())
@@ -1095,7 +1094,7 @@ LowererMDArch::LowerCallArgs(IR::Instr *callInstr, ushort callFlags, Js::ArgSlot
     {
         stackAlignment = LowerStartCall(startCallInstr, insertInstr);
     }
-    
+
     startCallInstr->SetIsCloned(callInstr->IsCloned());
 
     // Push argCount
@@ -1149,19 +1148,19 @@ LowererMDArch::LowerCall(IR::Instr * callInstr, uint32 argCount, RegNum regNum)
 
             //After:
             // CALL xxx
-            // newDstOpnd = FSTP 
+            // newDstOpnd = FSTP
             // oldDst = MOVSD [newDstOpnd]
 
             IR::Instr * floatPopInstr = IR::Instr::New(Js::OpCode::FSTP, m_func);
             IR::Opnd * oldDst = callInstr->UnlinkDst();
-                        
+
             StackSym * newDstStackSym = StackSym::New(dstType, this->m_func);
-            
+
             Assert(dstType == TyMachDouble);
             this->m_func->StackAllocate(newDstStackSym, MachDouble);
 
             IR::SymOpnd * newDstOpnd = IR::SymOpnd::New(newDstStackSym, dstType, this->m_func);
-                
+
             floatPopInstr->SetDst(newDstOpnd);
             callInstr->InsertAfter(floatPopInstr);
 
@@ -1205,7 +1204,7 @@ int32
 LowererMDArch::LowerStartCall(IR::Instr * startCallInstr, IR::Instr* insertInstr)
 {
     AssertMsg(startCallInstr->GetSrc1()->IsIntConstOpnd(), "Bad src on StartCall");
-    
+
     IR::IntConstOpnd *sizeOpnd = startCallInstr->GetSrc1()->AsIntConstOpnd();
     IntConstType sizeValue = sizeOpnd->m_value;
 
@@ -1230,7 +1229,7 @@ LowererMDArch::LowerStartCall(IR::Instr * startCallInstr, IR::Instr* insertInstr
         this->lowererMD->CreateAssign(eaxOpnd, IR::IntConstOpnd::New(sizeValue, TyInt32, this->m_func, /*dontEncode*/true), insertInstr);
 
         newStartCall = IR::Instr::New(Js::OpCode::Call, this->m_func);
-        
+
         newStartCall->SetSrc1(IR::HelperCallOpnd::New(IR::HelperCRT_chkstk, this->m_func));
         insertInstr->InsertBefore(newStartCall);
         this->LowerCall(newStartCall, 0);
@@ -1357,7 +1356,7 @@ LowererMDArch::LoadDoubleHelperArgument(IR::Instr * instrInsert, IR::Opnd * opnd
     instrInsert->InsertBefore(instrPrev);
 
     opnd = IR::IndirOpnd::New(espOpnd, (int32)0, TyFloat64, this->m_func);
-    
+
     if (opndArg->GetType() == TyFloat32)
     {
         float64Opnd = IR::RegOpnd::New(TyFloat64, m_func);
@@ -1397,7 +1396,7 @@ LowererMDArch::LowerEntryInstr(IR::EntryInstr * entryInstr)
 #endif
 
     int32 bytesOnStack = MachRegInt+MachRegInt;  // Account for return address+push EBP...
-    
+
     // PUSH used callee-saved registers
 
     for (RegNum reg = (RegNum)(RegNOREG + 1); reg < RegNumCount; reg = (RegNum)(reg+1))
@@ -1520,7 +1519,7 @@ LowererMDArch::LowerEntryInstrAsmJs(IR::EntryInstr * entryInstr)
     // MOV EBP, ESP
     // StackProbe
     // MOV EAX, LocalStackHeight / LEA ESP, [ESP - stackSize]
-    // CALL chkstk               / 
+    // CALL chkstk               /
     // PUSH used nonvolatiles
 
     // Calculate stack size
@@ -1688,7 +1687,7 @@ LowererMDArch::GeneratePrologueStackProbe(IR::Instr *entryInstr, size_t frameSiz
     else
     {
         // The incremented stack limit is a compile-time constant.
-        size_t scriptStackLimit = (size_t)threadContext->GetScriptStackLimit();        
+        size_t scriptStackLimit = (size_t)threadContext->GetScriptStackLimit();
         stackLimitOpnd = IR::AddrOpnd::New((void *)(frameSize + scriptStackLimit), IR::AddrOpndKindDynamicMisc, this->m_func);
     }
 
@@ -1813,7 +1812,7 @@ LowererMDArch::LowerExitInstrCommon(IR::ExitInstr * exitInstr)
 {
     IR::RegOpnd * ebpOpnd = IR::RegOpnd::New(nullptr, GetRegBlockPointer(), TyMachReg, m_func);
     IR::RegOpnd * espOpnd = IR::RegOpnd::New(nullptr, GetRegStackPointer(), TyMachReg, m_func);
-    
+
     // POP used callee-saved registers
 
     for (RegNum reg = (RegNum)(RegNOREG + 1); reg < RegNumCount; reg = (RegNum)(reg + 1))
@@ -1921,7 +1920,7 @@ idiv_common:
         {
             // we need to ensure that register allocator doesn't muck about with edx
             instr->HoistSrc2(Js::OpCode::MOV, RegECX);
-            
+
             newInstr = IR::Instr::New(Js::OpCode::Ld_I4, regEDX, IR::IntConstOpnd::New(0, TyInt32, instr->m_func), instr->m_func);
             instr->InsertBefore(newInstr);
             LowererMD::ChangeToAssign(newInstr);
@@ -2021,7 +2020,6 @@ br2_Common:
     default:
         AssertMsg(UNREACHED, "Un-implemented int4 opcode");
     }
-    // OpEq's
 
     if(legalize)
     {
@@ -2029,6 +2027,7 @@ br2_Common:
     }
     else
     {
+        // OpEq's
         LowererMD::MakeDstEquSrc1(instr);
     }
 }
@@ -2165,9 +2164,9 @@ LowererMDArch::EmitUIntToFloat(IR::Opnd *dst, IR::Opnd *src, IR::Instr *instrIns
 
     // TODO: Encode indir with base as address opnd instead
     IR::RegOpnd * baseOpnd = IR::RegOpnd::New(TyMachPtr, this->m_func);
-    
+
     instr = IR::Instr::New(Js::OpCode::MOV, baseOpnd, IR::AddrOpnd::New((Js::Var)&Js::JavascriptNumber::UIntConvertConst,
-        IR::AddrOpndKindDynamicMisc, this->m_func), this->m_func);    
+        IR::AddrOpndKindDynamicMisc, this->m_func), this->m_func);
 
     instrInsert->InsertBefore(instr);
 
@@ -2800,7 +2799,6 @@ bool
 
     if (instrShift->HasBailOutInfo())
     {
-        // FIELDHOIST-TODO: Get this out of the fast path's way
         IR::Instr * bailOutInstr = this->lowererMD->m_lowerer->SplitBailOnImplicitCall(instrShift);
         this->lowererMD->m_lowerer->LowerBailOnEqualOrNotEqual(bailOutInstr);
     }
@@ -3664,7 +3662,7 @@ LowererMDArch::GenerateArgOutForStackArgs(IR::Instr* callInstr, IR::Instr* stack
 
     IR::RegOpnd* ldLenDstOpnd = IR::RegOpnd::New(TyUint32, func);
     IR::Instr* ldLen = IR::Instr::New(Js::OpCode::LdLen_A, ldLenDstOpnd, stackArgs, func);
-    ldLenDstOpnd->SetValueType(ValueType::GetTaggedInt()); //LdLen_A works only on stack arguments
+    ldLenDstOpnd->SetValueType(ValueType::GetTaggedInt()); // LdLen_A works only on stack arguments
     callInstr->InsertBefore(ldLen);
     this->lowererMD->m_lowerer->GenerateFastRealStackArgumentsLdLen(ldLen);
 
@@ -3707,7 +3705,7 @@ LowererMDArch::GenerateArgOutForStackArgs(IR::Instr* callInstr, IR::Instr* stack
 
     loop->regAlloc.liveOnBackEdgeSyms->Set(ldLenDstOpnd->m_sym->m_id);
 
-    //return the length which will be used for callInfo generations & stack allocation
+    // return the length which will be used for callInfo generations & stack allocation
     return saveLenInstr->GetDst()->AsRegOpnd();
 }
 

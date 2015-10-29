@@ -30,7 +30,7 @@ namespace Js
         return Encode(strURI->GetSz(), strURI->GetLength(), flags, scriptContext);
     }
 
-    unsigned char UriHelper::s_uriProps[128] = 
+    unsigned char UriHelper::s_uriProps[128] =
     {
         //0x00  0x01  0x02  0x03  0x04  0x05  0x06  0x07  0x08  0x09  0x0a  0x0b  0x0c  0x0d  0x0e  0x0f
         0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
@@ -117,7 +117,7 @@ namespace Js
             return ((bUTF8[0] & 0x0F) << 12) | ((bUTF8[1] & 0x3F) << 6) | (bUTF8[2] & 0x3F);
         }
         else
-        {   
+        {
             Assert( uLen == 4 );
             return ((bUTF8[0] & 0x07) << 18) | ((bUTF8[1] & 0x3F) << 12) | ((bUTF8[2] & 0x3F) << 6 ) | (bUTF8[3] & 0x3F) ;
         }
@@ -131,7 +131,7 @@ namespace Js
         BYTE bUTF8[MaxUTF8Len];
 
         // pass 1 calculate output length and error check
-        ulong outputLen = 0; 
+        ulong outputLen = 0;
         for( ulong k = 0; k < len; k++ )
         {
             wchar_t c = pSz[k];
@@ -175,7 +175,7 @@ namespace Js
 
         uint32 allocSize = UInt32Math::Add(outputLen, 1);
         wchar_t* outURI = RecyclerNewArrayLeaf(scriptContext->GetRecycler(), wchar_t, allocSize);
-        wchar_t* outCurrent = outURI; 
+        wchar_t* outCurrent = outURI;
 
         for( ulong k = 0; k < len; k++ )
         {
@@ -233,7 +233,7 @@ namespace Js
         __analysis_assume(outputLen + 1 == allocSize);
         outURI[outputLen] = L'\0';
 
-        return JavascriptString::NewCopyBuffer(outURI, outputLen, scriptContext); 
+        return JavascriptString::NewCopyBuffer(outURI, outputLen, scriptContext);
     }
 
     Var UriHelper::DecodeCoreURI(ScriptContext* scriptContext, Arguments& args, unsigned char reservedFlags )
@@ -283,7 +283,7 @@ namespace Js
 
                 // %-encoded components in a URI may only contain hexadecimal digits from the ASCII character set. 'swscanf_s'
                 // only supports those characters when decoding hexadecimal integers. 'iswxdigit' on the other hand, uses the
-                // current locale to see if the specified charater maps to a hexadecimal digit, which causes it to consider some
+                // current locale to see if the specified character maps to a hexadecimal digit, which causes it to consider some
                 // characters outside the ASCII character set to be hexadecimal digits, so we can't use that. 'swscanf_s' seems
                 // to be overkill for this, so using a simple function that parses two hex digits and produces their value.
                 BYTE b;
@@ -378,7 +378,7 @@ namespace Js
         //pass 2 generate the decoded URI
         uint32 allocSize = UInt32Math::Add(outputLen, 1);
         wchar_t* outURI = RecyclerNewArrayLeaf(scriptContext->GetRecycler(), wchar_t, allocSize);
-        wchar_t* outCurrent = outURI; 
+        wchar_t* outCurrent = outURI;
 
 
         for( ulong k = 0; k < len; k++ )
@@ -500,7 +500,7 @@ namespace Js
                     {
                         ulong l = (( uVal - 0x10000) & 0x3ff) + 0xdc00;
                         ulong h = ((( uVal - 0x10000) >> 10) & 0x3ff) + 0xd800;
-                        
+
                         __analysis_assume(outCurrent + 2 <= outURI + allocSize);
                         *outCurrent++ = (wchar_t)h;
                         *outCurrent++ = (wchar_t)l;

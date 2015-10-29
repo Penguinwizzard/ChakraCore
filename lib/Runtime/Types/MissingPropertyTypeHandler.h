@@ -18,7 +18,6 @@ namespace Js
     protected:
         DEFINE_VTABLE_CTOR_NO_REGISTER(MissingPropertyTypeHandler, DynamicTypeHandler);
 
-        // ToDo (MissingPropertyCaching): The only thing this type handler really needs to handle is GetInlineSlot and GetAuxSlot, all the other methods can be stubbed out, or just blindly inherited.
         virtual BOOL IsLockable() const override { return true; }
         virtual BOOL IsSharable() const override { return true; }
         virtual int GetPropertyCount() override { return 0; }

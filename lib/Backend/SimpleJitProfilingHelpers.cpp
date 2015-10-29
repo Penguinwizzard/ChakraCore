@@ -91,7 +91,7 @@ namespace Js
 
         LdElemInfo ldElemInfo;
         ldElemInfo.arrayType = ValueType::Uninitialized.Merge(instance);
-        
+
         Var length = JavascriptOperators::OP_GetProperty(instance, PropertyIds::length, body->GetScriptContext());
 
         ldElemInfo.elemType = ldElemInfo.elemType.Merge(length);
@@ -102,7 +102,7 @@ namespace Js
 
     Var SimpleJitHelpers::ProfiledStrictLdThis(Var thisVar, FunctionBody* functionBody)
     {
-        //Adapted from InterpreterStackFrame::OP_ProfiledStrictLdThis 
+        //Adapted from InterpreterStackFrame::OP_ProfiledStrictLdThis
         DynamicProfileInfo * dynamicProfileInfo = functionBody->GetDynamicProfileInfo();
         TypeId typeId = JavascriptOperators::GetTypeId(thisVar);
 
@@ -117,10 +117,10 @@ namespace Js
         return thisVar;
     }
 
-    
+
     Var SimpleJitHelpers::ProfiledLdThis(Var thisVar, int moduleID, FunctionBody* functionBody)
     {
-        //Adapted from InterpreterStackFrame::OP_ProfiledLdThis   
+        //Adapted from InterpreterStackFrame::OP_ProfiledLdThis
         DynamicProfileInfo * dynamicProfileInfo = functionBody->GetDynamicProfileInfo();
         TypeId typeId = JavascriptOperators::GetTypeId(thisVar);
 
@@ -141,7 +141,7 @@ namespace Js
     }
 
     Var SimpleJitHelpers::ProfiledSwitch(FunctionBody* functionBody, ProfileId profileId, Var exp)
-    {   
+    {
         functionBody->GetDynamicProfileInfo()->RecordSwitchType(functionBody, profileId, exp);
         return exp;
     }
@@ -159,7 +159,7 @@ namespace Js
         {
             int nLeft    = TaggedInt::ToInt32(aLeft);
             int nRight   = TaggedInt::ToInt32(aRight);
-                
+
             // nLeft is positive and nRight is +2^i
             // Fast path for Power of 2 divisor
             if (nLeft > 0 && ::Math::IsPow2(nRight))
@@ -199,7 +199,7 @@ namespace Js
 
         Assert(segment->left == 0);
         Assert(index < segment->length);
-        
+
         segment->elements[index] = value;
     }
 
@@ -208,7 +208,7 @@ namespace Js
         auto layout = JavascriptCallStackLayout::FromFramePointer(framePtr);
         FunctionBody* functionBody = layout->functionObject->GetFunctionBody();
 
-        //Todo: Simplejit: Optimization: Don't emit this call if this is true during JIT time
+        //REVIEW: Simplejit: Optimization: Don't emit this call if this is true during JIT time
 
         auto loopHeader = functionBody->GetLoopHeader(loopnum);
         LoopEntryPointInfo * entryPointInfo = loopHeader->GetCurrentEntryPointInfo();
@@ -243,10 +243,10 @@ namespace Js
     {
         auto layout = JavascriptCallStackLayout::FromFramePointer(framePtr);
         FunctionBody* functionBody = layout->functionObject->GetFunctionBody();
-        DynamicProfileInfo * dynamicProfileInfo = functionBody->GetDynamicProfileInfo();    
+        DynamicProfileInfo * dynamicProfileInfo = functionBody->GetDynamicProfileInfo();
         ThreadContext * threadContext = functionBody->GetScriptContext()->GetThreadContext();
         auto flags = threadContext->GetAddressOfImplicitCallFlags();
-        
+
         const auto fls = *flags;
         dynamicProfileInfo->RecordLoopImplicitCallFlags(functionBody, loopNum, fls);
 

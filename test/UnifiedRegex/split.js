@@ -218,7 +218,7 @@ function bogus(r, o) {
 }
 // END PRELUDE
 
-// split(/a*/, ""); // v8.exe bug
+// split(/a*/, "");
 split(/a*/, "a");
 split(/a*/, "aba");
 split(/a*/, "bab");
@@ -233,7 +233,7 @@ split(/b/, "a");
 split(/b/, "aba");
 split(/b/, "bab");
 
-// split(/(?:)/, ""); // v8.exe bug
+// split(/(?:)/, "");
 split(/(?:)/, "a");
 split(/(?:)/, "aba");
 split(/(?:)/, "bab");

@@ -265,7 +265,7 @@ GlobOpt::TrackCalls(IR::Instr * instr)
             this->currentBlock->globOptData.callSequence = this->blockData.callSequence;
         }
         this->blockData.callSequence->Prepend(this->alloc, instr->GetDst());
-        
+
         this->currentBlock->globOptData.totalOutParamCount += instr->GetArgOutCount(/*getInterpreterArgOutCount*/ true);
         this->currentBlock->globOptData.startCallCount++;
 
@@ -291,7 +291,7 @@ GlobOpt::TrackCalls(IR::Instr * instr)
             Assert(!this->blockData.callSequence->Empty());
             StackSym* stackSym = opnd->AsSymOpnd()->m_sym->AsStackSym();
 
-            // These scenarios are already tracked using BytecodeArgOutCapture, 
+            // These scenarios are already tracked using BytecodeArgOutCapture,
             // and we don't want to be tracking ArgOut_A_FixupForStackArgs as these are only visible to the JIT and we should not be restoring them upon bailout.
             if (!stackSym->m_isArgCaptured && instr->m_opcode != Js::OpCode::ArgOut_A_FixupForStackArgs)
             {
@@ -330,9 +330,9 @@ GlobOpt::TrackCalls(IR::Instr * instr)
         Assert(instr->m_func->GetParentFunc());
         this->blockData.curFunc = instr->m_func;
         this->currentBlock->globOptData.curFunc = instr->m_func;
-        
+
         this->EndTrackCall(instr);
-        
+
         if (DoInlineArgsOpt(instr->m_func))
         {
             instr->m_func->m_hasInlineArgsOpt = true;
@@ -340,7 +340,7 @@ GlobOpt::TrackCalls(IR::Instr * instr)
             instr->m_func->frameInfo = frameInfo;
             frameInfo->floatSyms = currentBlock->globOptData.liveFloat64Syms->CopyNew(this->alloc);
             frameInfo->intSyms = currentBlock->globOptData.liveInt32Syms->MinusNew(currentBlock->globOptData.liveLossyInt32Syms, this->alloc);
-            
+
             // SIMD_JS
             frameInfo->simd128F4Syms = currentBlock->globOptData.liveSimd128F4Syms->CopyNew(this->alloc);
             frameInfo->simd128I4Syms = currentBlock->globOptData.liveSimd128I4Syms->CopyNew(this->alloc);
@@ -484,7 +484,7 @@ GlobOpt::TrackCalls(IR::Instr * instr)
 
     default:
         if (OpCodeAttr::CallInstr(instr->m_opcode))
-        {    
+        {
             this->EndTrackCall(instr);
             if (this->inInlinedBuiltIn && instr->m_opcode == Js::OpCode::CallDirect)
             {
@@ -498,11 +498,11 @@ GlobOpt::TrackCalls(IR::Instr * instr)
                 //      ArgOut_A_InlineSpecialized
                 //      ArgOut_A
                 //      ArgOut_A
-                //      CallDirect    
+                //      CallDirect
                 // InlineNonTrackingBuiltInEnd
                 //
-                // We need to call EndTrackCall twice for CallDirect in this case. The CallDirect may get a BailOutOnImplicitCalls later, 
-                // but it should not be tracking the call sequence for the apply call as it is a post op bailout and the call would have 
+                // We need to call EndTrackCall twice for CallDirect in this case. The CallDirect may get a BailOutOnImplicitCalls later,
+                // but it should not be tracking the call sequence for the apply call as it is a post op bailout and the call would have
                 // happened when we bail out.
                 // Can't wait till InlineBuiltinEnd like we do for other InlineMathXXX because by then we would have filled bailout info for the BailOutOnImplicitCalls for CallDirect.
                 this->EndTrackCall(instr);
@@ -566,7 +566,7 @@ void GlobOpt::RecordInlineeFrameInfo(IR::Instr* inlineeEnd)
                         argSym = copyPropSym;
                     }
                 }
-              
+
                 GlobOptBlockData& globOptData = this->currentBlock->globOptData;
 
                 if (frameInfo->intSyms->TestEmpty() && frameInfo->intSyms->Test(argSym->m_id))
@@ -701,12 +701,12 @@ GlobOpt::FillBailOutInfo(BasicBlock *block, BailOutInfo * bailOutInfo)
     // The live int32 syms in the bailout info are only the syms resulting from lossless conversion to int. If the int32 value
     // was created from a lossy conversion to int, the original var value cannot be rematerialized from the int32 value. So, the
     // int32 version is considered to be not live for the purposes of bailout, which forces the var or float versions to be used
-    // directly for restoring the value during bailout. Otherwise, bailout may try to rematerialize the var value by converting
+    // directly for restoring the value during bailout. Otherwise, bailout may try to re-materialize the var value by converting
     // the lossily-converted int value back into a var, restoring the wrong value.
     bailOutInfo->liveLosslessInt32Syms =
         block->globOptData.liveInt32Syms->MinusNew(block->globOptData.liveLossyInt32Syms, this->func->m_alloc);
 
-    // Save the stack literal init fld count so we can null out the uninitialized fields
+    // Save the stack literal init field count so we can null out the uninitialized fields
     StackLiteralInitFldDataMap * stackLiteralInitFldDataMap = block->globOptData.stackLiteralInitFldDataMap;
     if (stackLiteralInitFldDataMap != nullptr)
     {
@@ -757,21 +757,21 @@ GlobOpt::FillBailOutInfo(BasicBlock *block, BailOutInfo * bailOutInfo)
         uint totalOutParamCount = block->globOptData.totalOutParamCount;
         bailOutInfo->totalOutParamCount = totalOutParamCount;
         bailOutInfo->argOutSyms = JitAnewArrayZ(this->func->m_alloc, StackSym *, totalOutParamCount);
-        
+
         uint argRestoreAdjustCount = 0;
         FOREACH_SLISTBASE_ENTRY(IR::Opnd *, opnd, block->globOptData.callSequence)
-        {                        
-            
+        {
+
             if(opnd->GetStackSym()->HasArgSlotNum())
-            {              
+            {
                 StackSym * sym;
                 if(opnd->IsSymOpnd())
                 {
                     sym = opnd->AsSymOpnd()->m_sym->AsStackSym();
                     Assert(sym->IsArgSlotSym());
                     Assert(sym->m_isSingleDef);
-                    Assert(sym->m_instrDef->m_opcode == Js::OpCode::ArgOut_A 
-                        || sym->m_instrDef->m_opcode == Js::OpCode::ArgOut_A_Inline 
+                    Assert(sym->m_instrDef->m_opcode == Js::OpCode::ArgOut_A
+                        || sym->m_instrDef->m_opcode == Js::OpCode::ArgOut_A_Inline
                         || sym->m_instrDef->m_opcode == Js::OpCode::ArgOut_A_InlineBuiltIn
                         || sym->m_instrDef->m_opcode == Js::OpCode::ArgOut_A_SpreadArg
                         || sym->m_instrDef->m_opcode == Js::OpCode::ArgOut_A_Dynamic);
@@ -783,7 +783,7 @@ GlobOpt::FillBailOutInfo(BasicBlock *block, BailOutInfo * bailOutInfo)
                     Assert(val);
                     CaptureValue(block, sym, val, bailOutInfo);
                 }
-                
+
                 Assert(totalOutParamCount != 0);
                 Assert(totalOutParamCount > currentArgOutCount);
                 currentArgOutCount++;
@@ -792,7 +792,7 @@ GlobOpt::FillBailOutInfo(BasicBlock *block, BailOutInfo * bailOutInfo)
                 // Note that there could be ArgOuts below current bailout instr that belong to current call (currentArgOutCount < argOutCount),
                 // in which case we will have nulls in argOutSyms[] in start of section for current call, because we fill from tail.
                 // Example: StartCall 3, ArgOut1,.. ArgOut2, Bailout,.. Argout3 -> [NULL, ArgOut1, ArgOut2].
-                
+
             }
             else
             {
@@ -809,7 +809,7 @@ GlobOpt::FillBailOutInfo(BasicBlock *block, BailOutInfo * bailOutInfo)
 #ifdef _M_IX86
                 if (this->currentRegion && this->currentRegion->GetType() == RegionTypeTry)
                 {
-                    // For a bailout in argument evaluation from an EH region, the esp is offset by the TryCatch helper’s frame. So, the argouts are not actually pushed at the 
+                    // For a bailout in argument evaluation from an EH region, the esp is offset by the TryCatch helper’s frame. So, the argouts are not actually pushed at the
                     // offsets stored in the bailout record, which are relative to ebp. Need to restore the argouts from the actual value of esp before calling the Bailout helper.
                     // For nested calls, argouts for the outer call need to be restored from an offset of stack-adjustment-done-by-the-inner-call from esp.
                     if (startCallNumber + 1 == bailOutInfo->startCallCount)
@@ -834,15 +834,15 @@ GlobOpt::FillBailOutInfo(BasicBlock *block, BailOutInfo * bailOutInfo)
                 uint argOutCount = sym->m_instrDef->GetArgOutCount(/*getInterpreterArgOutCount*/ true);
                 Assert(totalOutParamCount >= argOutCount);
                 Assert(argOutCount >= currentArgOutCount);
-                                
+
                 bailOutInfo->RecordStartCallInfo(startCallNumber, argRestoreAdjustCount, sym->m_instrDef);
                 totalOutParamCount -= argOutCount;
                 currentArgOutCount = 0;
-                
+
             }
         }
         NEXT_SLISTBASE_ENTRY;
-        
+
         Assert(totalOutParamCount == 0);
         Assert(startCallNumber == 0);
         Assert(currentArgOutCount == 0);
@@ -928,7 +928,7 @@ GlobOpt::MayNeedBailOnImplicitCall(IR::Opnd * opnd, Value *val, bool callsToPrim
     // FIELDHOIST-TODO: once we have better propagation of type so we know whether
     // an operand is a number or not we can filter out more instr from bail out check
     case IR::OpndKindReg:
-        // Only need implicit call if the operation will call ToPrimitive and we havn't prove
+        // Only need implicit call if the operation will call ToPrimitive and we haven't prove
         // that it is already a primitive
         return callsToPrimitive &&
             !(val && val->GetValueInfo()->IsPrimitive()) &&
@@ -957,7 +957,7 @@ GlobOpt::IsImplicitCallBailOutCurrentlyNeeded(IR::Instr * instr, Value *src1Val,
 {
     Assert(!this->IsLoopPrePass());
 
-    return this->IsImplicitCallBailOutCurrentlyNeeded(instr, src1Val, src2Val, this->currentBlock, 
+    return this->IsImplicitCallBailOutCurrentlyNeeded(instr, src1Val, src2Val, this->currentBlock,
         (!this->blockData.liveFields->IsEmpty()), !this->currentBlock->IsLandingPad(), true);
 }
 
@@ -996,7 +996,7 @@ GlobOpt::IsTypeCheckProtected(const IR::Instr * instr)
     IR::Opnd* dst = instr->GetDst();
     IR::Opnd* src1 = instr->GetSrc1();
     IR::Opnd* src2 = instr->GetSrc2();
-    AssertMsg(!dst || !dst->IsSymOpnd() || !dst->AsSymOpnd()->IsPropertySymOpnd() || 
+    AssertMsg(!dst || !dst->IsSymOpnd() || !dst->AsSymOpnd()->IsPropertySymOpnd() ||
         !src1 || !src1->IsSymOpnd() || !src1->AsSymOpnd()->IsPropertySymOpnd(), "No instruction should have a src1 and dst be a PropertySymOpnd.");
     AssertMsg(!src2 || !src2->IsSymOpnd() || !src2->AsSymOpnd()->IsPropertySymOpnd(), "No instruction should have a src2 be a PropertySymOpnd.");
 #endif
@@ -1081,7 +1081,7 @@ GlobOpt::MayNeedBailOnImplicitCall(const IR::Instr * instr, Value *src1Val, Valu
     case Js::OpCode::LdMethodElem:
     case Js::OpCode::InlineArrayPop:
         isLdElem = true;
-        // fall through
+        // fall-through
 
     case Js::OpCode::StElemI_A:
     case Js::OpCode::StElemI_A_Strict:

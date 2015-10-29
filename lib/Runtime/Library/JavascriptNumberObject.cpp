@@ -25,7 +25,7 @@ namespace Js
         return JavascriptOperators::GetTypeId(aValue) == TypeIds_NumberObject;
     }
 
-    JavascriptNumberObject* JavascriptNumberObject::FromVar(Var aValue)                            // Any var: Int, Object,
+    JavascriptNumberObject* JavascriptNumberObject::FromVar(Var aValue)
     {
         AssertMsg(Is(aValue), "Ensure var is actually a 'JavascriptNumber'");
 

@@ -132,7 +132,7 @@ namespace Js
         static BOOL Is(Var aValue);
         static BOOL Is(TypeId typeId);
         static TypedArrayBase* FromVar(Var aValue);
-        //Returns false if this is not a TypedArray or it's not detached
+        // Returns false if this is not a TypedArray or it's not detached
         static BOOL IsDetachedTypedArray(Var aValue);
         static HRESULT GetBuffer(Var aValue, ArrayBuffer** outBuffer, uint32* outOffset, uint32* outLength);
 
@@ -223,7 +223,7 @@ namespace Js
 
         __inline Var BaseTypedDirectGetItem(__in uint32 index)
         {
-            if (this->IsDetachedBuffer()) //9.4.5.8 IntegerIndexedElementGet 
+            if (this->IsDetachedBuffer()) // 9.4.5.8 IntegerIndexedElementGet 
             {
                 JavascriptError::ThrowTypeError(GetScriptContext(), JSERR_DetachedTypedArray);
             }
@@ -239,7 +239,7 @@ namespace Js
 
         __inline Var TypedDirectGetItemWithCheck(__in uint32 index)
         {
-            if (this->IsDetachedBuffer()) //9.4.5.8 IntegerIndexedElementGet 
+            if (this->IsDetachedBuffer()) // 9.4.5.8 IntegerIndexedElementGet 
             {
                 JavascriptError::ThrowTypeError(GetScriptContext(), JSERR_DetachedTypedArray);
             }
@@ -258,50 +258,38 @@ namespace Js
             TypeName* dstBuffer = (TypeName*)buffer;
             TypeName* srcBuffer = (TypeName*)fromArray->buffer;
             Assert(srcBuffer && dstBuffer);
+            Assert(length <= ArrayBuffer::MaxArrayBufferLength / sizeof(TypeName));
+            // caller checks that src and dst index are the same
+            Assert(iSrcStart == iDstStart);
+
+            if (this->IsDetachedBuffer() || fromArray->IsDetachedBuffer())
+            {
+                JavascriptError::ThrowTypeError(GetScriptContext(), JSERR_DetachedTypedArray);
+            }
 
             // Fixup destination start in case it's negative
-            uint32 dstStart = iDstStart;
+            uint32 start = iDstStart;
             if (iDstStart < 0)
             {
-                if ((uint32)-iDstStart >= length)
+                if ((int64)(length) + iDstStart < 0)
                 {
                     // nothing to do, all index are no-op
                     return true;
                 }
-                // negative index are no-op on TypedArrays
-                iSrcStart -= iDstStart;
-                length += iDstStart;
-                dstStart = 0;
-            }
-            uint32 dstLength = (dstStart + length) < GetLength() ? length : GetLength() > dstStart ? GetLength() - dstStart : 0;
 
-            // Fixup source start in case it's negative
-            uint32 srcStart = iSrcStart;
-            // Place undefined when reading negative index from the source
-            if (iSrcStart < 0)
-            {
-                TypeName undefinedValue = convFunc(GetLibrary()->GetUndefined(), GetScriptContext());
-                for (int32 i = 0; i < -iSrcStart && dstLength > 0; ++i)
-                {
-                    dstBuffer[dstStart++] = undefinedValue;
-                    --dstLength;
-                }
-                if ((uint32)-iSrcStart >= length)
-                {
-                    // all read operation we're undefined, no need to continue
-                    return true;
-                }
-                length -= iSrcStart;
-                srcStart = 0;
+                length += iDstStart;
+                start = 0;
             }
-            uint32 srcLength = (srcStart + length) < fromArray->GetLength() ? length : (fromArray->GetLength() > srcStart ? fromArray->GetLength() - srcStart : 0);
+
+            uint32 dstLength = UInt32Math::Add(start, length) < GetLength() ? length : GetLength() > start ? GetLength() - start : 0;
+            uint32 srcLength = start + length < fromArray->GetLength() ? length : (fromArray->GetLength() > start ? fromArray->GetLength() - start : 0);
 
             // length is the minimum of length, srcLength and dstLength
             length = length < srcLength ? (length < dstLength ? length : dstLength) : (srcLength < dstLength ? srcLength : dstLength);
 
             const size_t byteSize = sizeof(TypeName) * length;
             Assert(byteSize >= length); // check for overflow
-            js_memcpy_s(dstBuffer + dstStart, byteSize, srcBuffer + srcStart, byteSize);
+            js_memcpy_s(dstBuffer + start, dstLength * sizeof(TypeName), srcBuffer + start, byteSize);
 
             if (dstLength > length)
             {
@@ -323,7 +311,7 @@ namespace Js
             }
             TypeName typedValue = convFunc(value, GetScriptContext());
 
-            if (this->IsDetachedBuffer()) //9.4.5.9 IntegerIndexedElementSet 
+            if (this->IsDetachedBuffer()) // 9.4.5.9 IntegerIndexedElementSet 
             {
                 JavascriptError::ThrowTypeError(GetScriptContext(), JSERR_DetachedTypedArray);
             }
@@ -331,11 +319,16 @@ namespace Js
 
             if (start < 0)
             {
+                if ((int64)(length) + start < 0)
+                {
+                    // nothing to do, all index are no-op
+                    return true;
+                }
                 newStart = 0;
                 // fixup the length with the change
                 newLength += start;
             }
-            if (newStart + newLength > GetLength())
+            if (UInt32Math::Add(newStart, newLength) > GetLength())
             {
                 newLength = GetLength() - newStart;
             }
@@ -365,7 +358,7 @@ namespace Js
             // Therefore it was brought out and above the IsDetached check
             TypeName typedValue = convFunc(value, GetScriptContext());
             
-            if (this->IsDetachedBuffer()) //9.4.5.9 IntegerIndexedElementSet 
+            if (this->IsDetachedBuffer()) // 9.4.5.9 IntegerIndexedElementSet 
             {
                 JavascriptError::ThrowTypeError(GetScriptContext(), JSERR_DetachedTypedArray);
             }
@@ -402,8 +395,8 @@ namespace Js
         }
     };
 
-    // in windows build environment, wchar_t is still not a intrinsic type, and we cannot do the type
-    // specialized
+    // in windows build environment, wchar_t is not a intrinsic type, and we cannot do the type
+    // specialization
     class CharArray : public TypedArrayBase
     {
     protected:

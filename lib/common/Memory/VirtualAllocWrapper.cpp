@@ -4,9 +4,6 @@
 //-------------------------------------------------------------------------------------------------------
 #include "CommonMemoryPch.h"
 
-
-
-
 /*
 * class VirtualAllocWrapper
 */
@@ -14,7 +11,7 @@
 LPVOID VirtualAllocWrapper::Alloc(LPVOID lpAddress, size_t dwSize, DWORD allocationType, DWORD protectFlags, bool isCustomHeapAllocation)
 {
     Assert(this == nullptr);
-    LPVOID address = nullptr;    
+    LPVOID address = nullptr;
 
 #if defined(_CONTROL_FLOW_GUARD)
     DWORD oldProtectFlags;
@@ -78,7 +75,7 @@ cs(4000)
     freeSegments.SetAll();
 }
 
-BOOL 
+BOOL
 PreReservedVirtualAllocWrapper::Shutdown()
 {
     Assert(this);
@@ -86,7 +83,7 @@ PreReservedVirtualAllocWrapper::Shutdown()
     if (IsPreReservedRegionPresent())
     {
         success = VirtualFree(preReservedStartAddress, 0, MEM_RELEASE);
-        PreReservedHeapTrace(L"MEM_RELEASE the PreReservedSegment. Start Address: 0x%p, Size: 0x%x * 0x%x bytes", preReservedStartAddress, PreReservedAllocationSegmentCount, 
+        PreReservedHeapTrace(L"MEM_RELEASE the PreReservedSegment. Start Address: 0x%p, Size: 0x%x * 0x%x bytes", preReservedStartAddress, PreReservedAllocationSegmentCount,
             AutoSystemInfo::Data.GetAllocationGranularityPageSize());
         if (!success)
         {
@@ -96,7 +93,7 @@ PreReservedVirtualAllocWrapper::Shutdown()
     return success;
 }
 
-bool 
+bool
 PreReservedVirtualAllocWrapper::IsPreReservedRegionPresent()
 {
     Assert(this);
@@ -116,14 +113,14 @@ PreReservedVirtualAllocWrapper::IsInRange(void * address)
     size_t bytes = VirtualQuery(address, &memBasicInfo, sizeof(memBasicInfo));
     if (bytes == 0 || memBasicInfo.State != MEM_COMMIT)
     {
-        AssertMsg(false, "Memory not commited? Checking for uncommitted address region?");
+        AssertMsg(false, "Memory not committed? Checking for uncommitted address region?");
     }
 #endif
 
     return IsPreReservedRegionPresent() && address >= GetPreReservedStartAddress() && address < GetPreReservedEndAddress();
 }
 
-LPVOID 
+LPVOID
 PreReservedVirtualAllocWrapper::GetPreReservedStartAddress()
 {
     Assert(this);
@@ -164,11 +161,11 @@ LPVOID PreReservedVirtualAllocWrapper::Alloc(LPVOID lpAddress, size_t dwSize, DW
                 preReservedStartAddress = VirtualAlloc(NULL, bytes, MEM_RESERVE, PAGE_READWRITE);
                 PreReservedHeapTrace(L"Reserving PreReservedSegment For the first time(CFG Enabled). Address: 0x%p\n", preReservedStartAddress);
             }
-            else 
+            else
 #endif
             if (PHASE_FORCE1(Js::PreReservedHeapAllocPhase))
             {
-                //This code is used for debugging purposes on a non-threshold machine (where CFG is not available, but still PreReserve optimization for CFG can be tested)
+                //This code is used where CFG is not available, but still PreReserve optimization for CFG can be tested
                 preReservedStartAddress = VirtualAlloc(NULL, bytes, MEM_RESERVE, protectFlags);
                 PreReservedHeapTrace(L"Reserving PreReservedSegment For the first time(CFG Non-Enabled). Address: 0x%p\n", preReservedStartAddress);
             }
@@ -191,12 +188,12 @@ LPVOID PreReservedVirtualAllocWrapper::Alloc(LPVOID lpAddress, size_t dwSize, DW
         {
             Assert(requestedNumOfSegments != 0);
             AssertMsg(dwSize % AutoSystemInfo::Data.GetAllocationGranularityPageSize() == 0, "dwSize should be aligned with Allocation Granularity");
-            
+
             do
             {
                 freeSegmentsBVIndex = freeSegments.GetNextBit(freeSegmentsBVIndex + 1);
                 //Return nullptr, if we don't have free/decommit pages to allocate
-                if ((freeSegments.Length() - freeSegmentsBVIndex < requestedNumOfSegments) || 
+                if ((freeSegments.Length() - freeSegmentsBVIndex < requestedNumOfSegments) ||
                     freeSegmentsBVIndex == BVInvalidIndex)
                 {
                     PreReservedHeapTrace(L"No more space to commit in PreReserved Memory region.\n");
@@ -223,7 +220,7 @@ LPVOID PreReservedVirtualAllocWrapper::Alloc(LPVOID lpAddress, size_t dwSize, DW
         {
             //Check If the lpAddress is within the range of the preReserved Memory Region
             Assert(((char*) lpAddress) >= (char*) preReservedStartAddress || ((char*) lpAddress + dwSize) < GetPreReservedEndAddress());
-            
+
             addressToCommit = (char*) lpAddress;
             freeSegmentsBVIndex = (uint) ((addressToCommit - (char*) preReservedStartAddress) / AutoSystemInfo::Data.GetAllocationGranularityPageSize());
 #if DBG
@@ -280,7 +277,7 @@ PreReservedVirtualAllocWrapper::Free(LPVOID lpAddress, size_t dwSize, DWORD dwFr
     Assert(this);
     {
         AutoCriticalSection autocs(&this->cs);
-        
+
         if (dwSize == 0)
         {
             Assert(false);

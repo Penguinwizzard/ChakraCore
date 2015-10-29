@@ -9,8 +9,8 @@ __inline void __stdcall js_memcpy_s(__bcount(sizeInBytes) void *dst, size_t size
     Assert((count) <= (sizeInBytes));
     if ((count) <= (sizeInBytes))
         memcpy((dst), (src), (count));
-    else                              
-        Js::Throw::FatalInternalError();   
+    else
+        Js::Throw::FatalInternalError();
 }
 
 __inline void __stdcall js_wmemcpy_s(__ecount(sizeInWords) wchar_t *dst, size_t sizeInWords, __in_ecount(count) const wchar_t *src, size_t count)

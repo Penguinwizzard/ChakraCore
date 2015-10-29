@@ -79,9 +79,8 @@ namespace Js {
     *
     * struct TickDelta
     *
-    * TickDelta represents the a measured period between two Ticks.  TickDelta
-    * may be combined with each other, and then added to Ticks to create new
-    * Ticks.
+    * TickDelta represents the measured period between two Ticks. TickDelta values
+    * may be combined with each other, and then added to Ticks to create new Ticks.
     *
     *****************************************************************************
     \***************************************************************************/

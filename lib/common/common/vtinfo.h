@@ -10,7 +10,7 @@
 // 2. Heap enumeration: for any instance that we want to report, basically
 //    everything that inherits from RecyclableObject, we register the class'
 //    vtable with the enumeration code. This allows us to compare a GC heap
-//    address against the vtable list to determine if its a type we care about
+//    address against the vtable list to determine whether it's a type we care about
 //    (we don't distinguish between RecyclableObjects and other types
 //    of storage in the GC heap).
 //----------------------------------------------------------------------------
@@ -35,7 +35,7 @@ enum VirtualTableInfoCtorEnum
 #define POST_ALLOCATION_VALIDATION 1
 
 // PostAllocationCallback allows us to validate that an object derived from a known
-// base class has include DEFINE_VTABLE_CTOR. Although this could be statically determined,
+// base class has included DEFINE_VTABLE_CTOR. Although this could be statically determined,
 // the language doesn't support a way to enforce that, so we do it at runtime on object allocation.
 //
 // Any class that includes DEFINE_VTABLE_CTOR will also override ValidateVtableRegistered() function

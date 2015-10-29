@@ -3,6 +3,7 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 #include "Runtime.h"
+#include "core\AtomLockGuids.h"
 #include "core\ConfigParser.h"
 #include "Library\ThreadContextTLSEntry.h"
 #include "Library\ThreadBoundThreadContextManager.h"
@@ -13,7 +14,7 @@
 #include "TestHooks.h"
 
 extern HANDLE g_hInstance;
-
+static ATOM  lockedDll = 0;
 static BOOL AttachProcess(HANDLE hmod)
 {
     if (!ThreadContextTLSEntry::InitializeProcess() || !JsrtContext::Initialize())
@@ -26,7 +27,7 @@ static BOOL AttachProcess(HANDLE hmod)
 
 #if defined(_M_IX86)
     // Enable SSE2 math functions in CRT if SSE2 is available
-#pragma prefast(suppress:6031, "We don't care if this succeeded or not")
+#pragma prefast(suppress:6031, "We don't require SSE2, but will use it if available")
     _set_SSE2_enable(TRUE);
 #endif
 
@@ -49,6 +50,20 @@ static BOOL AttachProcess(HANDLE hmod)
     ValueType::Initialize();
     ThreadContext::GlobalInitialize();
 
+    wchar_t *engine = szChakraCoreLock;
+    if (::FindAtom(szJScript9Lock) != 0)
+    {
+        AssertMsg(FALSE, "Expecting to load chakracore.dll but process already loaded jscript9.dll");
+        Binary_Inconsistency_fatal_error();
+    }
+    if (::FindAtom(szChakraLock) != 0)
+    {
+        AssertMsg(FALSE, "Expecting to load chakracore.dll but process already loaded chakra.dll");
+        Binary_Inconsistency_fatal_error();
+    }
+    lockedDll = ::AddAtom(engine);
+    AssertMsg(lockedDll, "Failed to lock chakracore.dll");
+
 #ifdef ENABLE_BASIC_TELEMETRY
     g_TraceLoggingClient = NoCheckHeapNewStruct(TraceLoggingClient);
 #endif
@@ -57,7 +72,7 @@ static BOOL AttachProcess(HANDLE hmod)
     return DynamicProfileStorage::Initialize();
 #else
     return TRUE;
-#endif    
+#endif
 }
 
 static void DetachProcess()
@@ -66,13 +81,13 @@ static void DetachProcess()
 
     // In JScript, we never unload except for when the app shuts down
     // because DllCanUnloadNow always returns S_FALSE. As a result
-    // its okay that we never try to cleanup. Attempting to cleanup on
+    // it's okay that we never try to cleanup. Attempting to cleanup on
     // shutdown is bad because we shouldn't free objects built into
     // other dlls.
     JsrtRuntime::Uninitialize();
     JsrtContext::Uninitialize();
 
-    // threadbound entrypoint should be able to get cleanup correctly, however tlsentry
+    // thread-bound entrypoint should be able to get cleanup correctly, however tlsentry
     // for current thread might be left behind if this thread was initialized.
     ThreadContextTLSEntry::CleanupThread();
 
@@ -104,15 +119,19 @@ EXTERN_C BOOL WINAPI DllMain(HINSTANCE hmod, DWORD dwReason, PVOID pvReserved)
         return TRUE;
 
     case DLL_THREAD_DETACH:
-        // If we are not doing DllCanUnloadNow, so we should clean up. Otherwise, DllCanUnloadNow is already running, 
-        // so the ThreadContext global lock is already taken.  If we try to clean up, we will block on the ThreadContext 
-        // global lock while holding the loader lock, which DllCanUnloadNow may block on waiting for thread temination
-        // which requires the loader lock. DllCanUnloadNow will clean up for us anyway, so we can just skip the whole thing.        
+        // If we are not doing DllCanUnloadNow, so we should clean up. Otherwise, DllCanUnloadNow is already running,
+        // so the ThreadContext global lock is already taken.  If we try to clean up, we will block on the ThreadContext
+        // global lock while holding the loader lock, which DllCanUnloadNow may block on waiting for thread termination
+        // which requires the loader lock. DllCanUnloadNow will clean up for us anyway, so we can just skip the whole thing.
         ThreadBoundThreadContextManager::DestroyContextAndEntryForCurrentThread();
         return TRUE;
 
     case DLL_PROCESS_DETACH:
-#ifdef DYNAMIC_PROFILE_STORAGE    
+
+        lockedDll = ::DeleteAtom(lockedDll);
+        AssertMsg(lockedDll == 0, "Failed to release the lock for chakracore.dll");
+
+#ifdef DYNAMIC_PROFILE_STORAGE
         DynamicProfileStorage::Uninitialize();
 #endif
 #ifdef ENABLE_JS_ETW

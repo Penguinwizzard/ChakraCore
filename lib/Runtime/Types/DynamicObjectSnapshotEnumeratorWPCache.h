@@ -5,13 +5,13 @@
 #pragma once
 
 namespace Js
-{    
+{
     /**************************************************************************************
      * DynamicObjectSnapshotEnumeratorWPCache
-     *      This variant fo teh snapshot enumerator is only used by shared types.
+     *      This variant of the snapshot enumerator is only used by shared types.
      *      Shared type's enumerator order doesn't change, so we can cache the enumeration
      *      order in a map on the thread context and reuse the same order the next time
-     *      the same type is enumerated, thus speeding up enumeration by eliminating 
+     *      the same type is enumerated, thus speeding up enumeration by eliminating
      *      virtual calls, internal property checks, and property string lookup
      **************************************************************************************/
     template <typename T, bool enumNonEnumerable, bool enumSymbols>
@@ -29,7 +29,7 @@ namespace Js
 
         JavascriptString * GetCurrentAndMoveNextFromObjectWPCache(T& index, PropertyId& propertyId, PropertyAttributes* attributes);
 
-        struct CachedData 
+        struct CachedData
         {
             PropertyString ** strings;
             T * indexes;

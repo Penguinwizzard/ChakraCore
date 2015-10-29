@@ -5,8 +5,14 @@
 #pragma once
 
 #include "CommonExceptionsPch.h"
+// === C Runtime Header Files ===
+#pragma warning(push)
+#pragma warning(disable: 4995) /* 'function': name was marked as #pragma deprecated */
 #include <strsafe.h>
+#pragma warning(pop)
+
 #include "StackOverflowException.h"
+#include "AsmJsParseException.h"
 #include "InternalErrorException.h"
 #include "OutOfMemoryException.h"
 #include "NotImplementedException.h"
@@ -53,7 +59,7 @@ extern "C"{
 namespace Js {
 #ifdef GENERATE_DUMP
     StackBackTrace * Throw::stackBackTrace = nullptr;
-#endif 
+#endif
     void Throw::FatalInternalError()
     {
         int scenario = 2;
@@ -91,7 +97,7 @@ namespace Js {
         if (!status)
         {
             OutOfMemory();
-        }    
+        }
     }
     void Throw::StackOverflow(ScriptContext *scriptContext, PVOID returnAddress)
     {
@@ -129,7 +135,7 @@ namespace Js {
 
     void Throw::GenerateDumpAndTerminateProcess(PEXCEPTION_POINTERS exceptInfo)
     {
-        if (!Throw::IsTEProcess() 
+        if (!Throw::IsTEProcess()
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
             && !Js::Configuration::Global.flags.IsEnabled(Js::DumpOnCrashFlag)
 #endif
@@ -161,7 +167,7 @@ namespace Js {
                 RaiseException(0, 0, 0, NULL);
             }
         }
-        __except(Throw::GenerateDump(GetExceptionInformation(), filePath, 
+        __except(Throw::GenerateDump(GetExceptionInformation(), filePath,
             terminate? EXCEPTION_CONTINUE_SEARCH : EXCEPTION_EXECUTE_HANDLER), needLock)
         {
             // we don't do anything interesting in this handler
@@ -186,7 +192,7 @@ namespace Js {
         WCHAR tempFileName[MAX_PATH];
         HANDLE hTempFile;
         DWORD retVal;
-        
+
         if (filePath == NULL)
         {
             retVal = GetTempPath(MAX_PATH, tempFilePath);
@@ -202,7 +208,7 @@ namespace Js {
         Output::Print(L"dump filename %s \n", tempFileName);
         Output::Flush();
 
-        hTempFile = CreateFile(tempFileName, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 
+        hTempFile = CreateFile(tempFileName, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
             FILE_ATTRIBUTE_NORMAL, NULL);
         if (hTempFile == INVALID_HANDLE_VALUE)
         {
@@ -226,7 +232,7 @@ namespace Js {
             BOOL dumpGenerated = false;
             if (needLock)
             {
-                // the criticalsection might have been destructed at process shutdown time. At that time we don't need 
+                // the critical section might have been destructed at process shutdown time. At that time we don't need
                 // to lock.
                 AutoCriticalSection autocs(&csGenereateDump);
 
@@ -262,11 +268,11 @@ namespace Js {
 
 #if DBG
     // After assert the program should terminate. Sometime we saw the program continue somehow
-    // log the existance of assert for debugging.
+    // log the existence of assert for debugging.
     void Throw::LogAssert()
     {
         IsInAssert = true;
-        // We don't really need to worry about leak: this should be the last thing happen in the process.
+        // This should be the last thing to happen in the process. Therefore, leaks are not an issue.
         stackBackTrace = StackBackTrace::Capture(&NoCheckHeapAllocator::Instance, Throw::StackToSkip, Throw::StackTraceDepth);
     }
 
@@ -303,8 +309,7 @@ namespace Js {
 #endif
         }
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
-        // Actually following code is dead in jshost. AssertsToConsole is always true in jshost, it can be false in JC.exe
-        // Then if DumpOncrashFlag is not specified it directly returns, 
+        // Then if DumpOncrashFlag is not specified it directly returns,
         // otherwise if will raise a non-continuable exception, generate the dump and terminate the process.
         // the popup message box might be useful when testing in IE
         if (Js::Configuration::Global.flags.AssertPopUp && IsMessageBoxWPresent())
@@ -313,7 +318,7 @@ namespace Js {
 
             swprintf_s(buff, _countof(buff), L"%S (%u)\n%S\n%S", fileName, lineNumber, message, error);
             buff[_countof(buff)-1] = 0;
-            
+
             int ret = MessageBox(nullptr, buff, caption, MB_ABORTRETRYIGNORE);
 
             switch (ret)

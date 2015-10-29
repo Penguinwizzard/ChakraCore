@@ -235,7 +235,7 @@ bool ValueType::IsIntAndLikelyUntagged() const
 
 bool ValueType::IsLikelyUntaggedInt() const
 {
-    return AllOnOthersOff(Bits::Int | Bits::IntCanBeUntagged | Bits::IntIsLikelyUntagged, 
+    return AllOnOthersOff(Bits::Int | Bits::IntCanBeUntagged | Bits::IntIsLikelyUntagged,
                           Bits::Likely | Bits::Number | Bits::CanBeTaggedValue);
 }
 
@@ -272,7 +272,7 @@ bool ValueType::IsInt() const
 bool ValueType::IsLikelyInt() const
 {
     return OneOnOthersOff(
-        Bits::Int, 
+        Bits::Int,
         Bits::Likely | Bits::IntCanBeUntagged | Bits::IntIsLikelyUntagged | Bits::Number | Bits::CanBeTaggedValue);
 }
 
@@ -298,13 +298,13 @@ bool ValueType::IsFloat() const
 {
     // TODO: Require that the int bits are off. We can then use (!IsFloat() && IsNumber()) to determine that a tagged int check
     // needs to be done but not a JavascriptNumber/TaggedFloat check.
-    return 
+    return
         OneOnOthersOff(
-            Bits::Float, 
+            Bits::Float,
             (
-                Bits::Int | 
-                Bits::IntCanBeUntagged | 
-                Bits::IntIsLikelyUntagged | 
+                Bits::Int |
+                Bits::IntCanBeUntagged |
+                Bits::IntIsLikelyUntagged |
                 Bits::CanBeTaggedValue |
                 Bits::Number
             ));
@@ -333,7 +333,7 @@ bool ValueType::HasBeenNumber() const
 
 bool ValueType::IsNumber() const
 {
-    return AnyOnOthersOff(Bits::Int | Bits::Float | Bits::Number, 
+    return AnyOnOthersOff(Bits::Int | Bits::Float | Bits::Number,
                           Bits::IntCanBeUntagged | Bits::IntIsLikelyUntagged | Bits::CanBeTaggedValue);
 }
 
@@ -424,7 +424,7 @@ bool ValueType::IsLikelyString() const
 
 bool ValueType::IsNotString() const
 {
-    return AnyOnExcept(Bits::Likely | Bits::Object | Bits::String | Bits::CanBeTaggedValue) 
+    return AnyOnExcept(Bits::Likely | Bits::Object | Bits::String | Bits::CanBeTaggedValue)
         || OneOnOneOff(Bits::Object, Bits::Likely);
 }
 
@@ -449,7 +449,7 @@ bool ValueType::HasBeenPrimitive() const
 
 bool ValueType::IsPrimitive() const
 {
-    bool result = 
+    bool result =
         AnyOnOthersOff(
             Bits::Undefined | Bits::Null | Bits::Int | Bits::Float | Bits::Number | Bits::Boolean | Bits::String,
             Bits::IntCanBeUntagged | Bits::IntIsLikelyUntagged | Bits::CanBeTaggedValue);
@@ -461,7 +461,7 @@ bool ValueType::IsPrimitive() const
 
 bool ValueType::IsLikelyPrimitive() const
 {
-    bool result = 
+    bool result =
         AnyOnOthersOff(
             Bits::Undefined | Bits::Null | Bits::Int | Bits::Float | Bits::Number | Bits::Boolean | Bits::String,
             Bits::Likely | Bits::IntCanBeUntagged | Bits::IntIsLikelyUntagged | Bits::CanBeTaggedValue);
@@ -896,7 +896,7 @@ bool ValueType::IsSubsetOf(
 
         // When type specialization is enabled, a value type that is likely int or float is considered to be more specific than
         // a value type that is definitely number but unknown as to whether it was int or float, because the former can
-        // participate in type specialization while the latter cannot. When type specialization is diabled, the definite value
+        // participate in type specialization while the latter cannot. When type specialization is disabled, the definite value
         // type is considered to be a subset of the indefinite value type because neither will participate in type
         // specialization.
         if(other.IsUnknownNumber() &&
@@ -904,7 +904,7 @@ bool ValueType::IsSubsetOf(
         {
             return true;
         }
-        
+
         // The following number types are listed in order of most specific type to least specific type. Types are considered to
         // be subsets of the less specific types below it, with the exception that int types are not considered to be subsets of
         // float types.
@@ -1009,13 +1009,13 @@ ValueType ValueType::ToDefiniteAnyNumber() const
     if(OneOn(Bits::Object))
         return Verify(Bits::Number | Bits::CanBeTaggedValue);
     Bits numberBits =
-        bits & 
+        bits &
         (
-            Bits::Int | 
-            Bits::IntCanBeUntagged | 
-            Bits::IntIsLikelyUntagged | 
-            Bits::CanBeTaggedValue | 
-            Bits::Float | 
+            Bits::Int |
+            Bits::IntCanBeUntagged |
+            Bits::IntIsLikelyUntagged |
+            Bits::CanBeTaggedValue |
+            Bits::Float |
             Bits::Number
         );
     if(!(numberBits & (Bits::Float | Bits::Number)))
@@ -1026,7 +1026,7 @@ ValueType ValueType::ToDefiniteAnyNumber() const
 ValueType ValueType::ToDefinitePrimitiveSubset() const
 {
     // This function does not do a safe conversion of an arbitrary type to a definitely-primitive type. It only obtains the
-    // primtive subset of bits from the type.
+    // primitive subset of bits from the type.
 
     // When Undefined (or Null) merge with Object, the resulting value type is still likely Object (IsLikelyObject() returns
     // true). ToDefinite() on the merged type would return a type that is definitely Undefined or Object. Usually, that type is
@@ -1036,7 +1036,7 @@ ValueType ValueType::ToDefinitePrimitiveSubset() const
     Assert(HasBeenPrimitive());
     Assert(HasBeenObject());
 
-    // If we have an object format of a type (object bit = 1) that represents a primitive (e.g. SIMD128), 
+    // If we have an object format of a type (object bit = 1) that represents a primitive (e.g. SIMD128),
     // we want to keep the object bit and type along with other merged primitives (Undefined and/or Null).
     if (IsLikelyObject() && IsLikelyPrimitive())
         return Verify(bits & (Bits::Undefined | Bits::Null) | ToDefiniteObject().bits);
@@ -1167,7 +1167,7 @@ __inline ValueType ValueType::Merge(const Js::Var var) const
                 (IsUninitialized() || IsLikelyInt()) && JavascriptNumber::IsInt32_NoChecks(var)
                     ? GetInt(false)
                     : ValueType::Float);
-    }   
+    }
     return Merge(FromObject(RecyclableObject::FromVar(var)));
 }
 
@@ -1204,7 +1204,7 @@ void ValueType::InitializeTypeIdToBitsMap()
         for (ObjectType objTypeInner = static_cast<ObjectType>(0); objTypeInner < ObjectType::Count; objTypeInner = static_cast<ObjectType>((uint16)(objTypeInner)+1))
             TypedArrayMergeMap[(uint16)objType][(uint16)objTypeInner] = ObjectType::UninitializedObject;
     }
-    
+
     TypeIdToBits[TypeIds_Undefined         ] = ValueType::Undefined.bits;
     TypeIdToBits[TypeIds_Null              ] = ValueType::Null.bits;
     TypeIdToBits[TypeIds_Boolean           ] = ValueType::Boolean.bits;
@@ -1231,7 +1231,7 @@ void ValueType::InitializeTypeIdToBitsMap()
     TypeIdToBits[TypeIds_SIMDUint16x8      ] = GetObject(ObjectType::Simd128Uint16x8).bits;
     TypeIdToBits[TypeIds_SIMDUint8x16      ] = GetObject(ObjectType::Simd128Int8x16).bits;
     TypeIdToBits[TypeIds_SIMDFloat64x2     ] = GetObject(ObjectType::Simd128Float64x2).bits;
-    
+
 
     VirtualTypeIdToBits[TypeIds_Int8Array] = GetObject(ObjectType::Int8VirtualArray).bits;
     VirtualTypeIdToBits[TypeIds_Uint8Array] = GetObject(ObjectType::Uint8VirtualArray).bits;
@@ -1241,7 +1241,7 @@ void ValueType::InitializeTypeIdToBitsMap()
     VirtualTypeIdToBits[TypeIds_Int32Array] = GetObject(ObjectType::Int32VirtualArray).bits;
     VirtualTypeIdToBits[TypeIds_Uint32Array] = GetObject(ObjectType::Uint32VirtualArray).bits;
     VirtualTypeIdToBits[TypeIds_Float32Array] = GetObject(ObjectType::Float32VirtualArray).bits;
-    VirtualTypeIdToBits[TypeIds_Float64Array] = GetObject(ObjectType::Float64VirtualArray).bits; 
+    VirtualTypeIdToBits[TypeIds_Float64Array] = GetObject(ObjectType::Float64VirtualArray).bits;
 
 
     TypeIdToVtable[TypeIds_Int8Array] = VirtualTableInfo<Int8VirtualArray>::Address;
@@ -1302,7 +1302,7 @@ void ValueType::InitializeTypeIdToBitsMap()
     MixedTypedToVirtualTypedArray[(int)ObjectType::Uint32MixedArray] = ObjectType::Uint32VirtualArray;
     MixedTypedToVirtualTypedArray[(int)ObjectType::Float32MixedArray] = ObjectType::Float32VirtualArray;
     MixedTypedToVirtualTypedArray[(int)ObjectType::Float64MixedArray] = ObjectType::Float64VirtualArray;
-    
+
     TypedArrayMergeMap[(int)ObjectType::Int8Array][(int)ObjectType::Int8VirtualArray] = ObjectType::Int8MixedArray;
     TypedArrayMergeMap[(int)ObjectType::Int8VirtualArray][(int)ObjectType::Int8Array] = ObjectType::Int8MixedArray;
     TypedArrayMergeMap[(int)ObjectType::Int8MixedArray][(int)ObjectType::Int8Array] = ObjectType::Int8MixedArray;
@@ -1519,14 +1519,14 @@ void ValueType::ToVerboseString(char (&str)[VALUE_TYPE_MAX_STRING_SIZE]) const
     if(OneOn(Bits::Object))
     {
         // Exclude the object type for enumerating bits, and exclude bits specific to a different object type
-        b = _objectBits /*& ~Bits::CanBeTaggedValue*/;
+        b = _objectBits;
         if(IsLikelyArrayOrObjectWithArray())
             b &= ~(Bits::NonInts | Bits::NonFloats); // these are handled separately for better readability
         else
             b &= ~BitPattern(VALUE_TYPE_ARRAY_BIT_COUNT, VALUE_TYPE_COMMON_BIT_COUNT);
     }
     else if(!CONFIG_FLAG(Verbose))
-        b &= ~(Bits::IntCanBeUntagged | Bits::IntIsLikelyUntagged /*| Bits::CanBeTaggedValue*/); // these will be simplified
+        b &= ~(Bits::IntCanBeUntagged | Bits::IntIsLikelyUntagged); // these will be simplified
     size_t length = 0;
     bool addUnderscore = false;
     size_t nameIndexOffset = 0;
@@ -2017,7 +2017,7 @@ void ValueType::RunUnitTests()
                     (t0.GetObjectType() > ObjectType::Object || t1.GetObjectType() > ObjectType::Object)    // one has a specific object type
                 ))                                                                                          // then the resulting object type is not guaranteed
             {
-                Assert(m.IsNotInt() == (t0.IsNotInt() && t1.IsNotInt())); 
+                Assert(m.IsNotInt() == (t0.IsNotInt() && t1.IsNotInt()));
             }
 
             Assert(m.IsFloat() == (t0.IsNumber() && t1.IsNumber() && (t0.IsFloat() || t1.IsFloat())));

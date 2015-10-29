@@ -21,7 +21,7 @@ namespace Js
     void MemoryLogger::Write(const wchar_t* msg)
     {
 #ifdef EXCEPTION_CHECK
-        // In most cases this will be called at runtime when we have exception chack enabled.
+        // In most cases this will be called at runtime when we have exception check enabled.
         AutoNestedHandledExceptionType autoNestedHandledExceptionType(ExceptionType_DisableCheck);
 #endif
         AutoCriticalSection autocs(&m_criticalSection); // TODO: with circular buffer now we can use much granular lock.
@@ -30,7 +30,7 @@ namespace Js
         size_t len = wcslen(msg);
         wchar_t* buf = AnewArray(m_alloc, wchar_t, len + 1);
         js_wmemcpy_s(buf, len + 1, msg, len + 1);   // Copy with the NULL-terminator.
-        
+
         // m_current is the next position to write to.
         if (m_log[m_current])
         {
@@ -93,7 +93,6 @@ namespace Js
             s_stackBackTrace = StackBackTrace::Create(m_alloc, frameCount);
         }
 
-        // TODO: framesToCapture is only used for 1st call, so that on next calls it can be different.
         Assert(s_stackBackTrace->GetRequestedFrameCount() >= frameCount);
 
         return s_stackBackTrace;

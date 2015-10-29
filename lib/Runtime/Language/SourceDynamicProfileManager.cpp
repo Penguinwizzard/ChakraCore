@@ -39,7 +39,7 @@ namespace Js
                 Output::Flush();
             }
 #endif
-            // TODO: We have profile mismatch, should we invalidate all other profile here?
+            // NOTE: We have profile mismatch, we can invalidate all other profile here.
         }
         return nullptr;
     }
@@ -79,7 +79,7 @@ namespace Js
     }
 
     //
-    // Enables re-use of profile managers across script contexts - on every re-use the 
+    // Enables re-use of profile managers across script contexts - on every re-use the
     // previous script contexts list of startup functions are transferred over as input to this new script context.
     //
     void SourceDynamicProfileManager::Reuse()
@@ -97,13 +97,13 @@ namespace Js
         AssertMsg(CONFIG_FLAG(WininetProfileCache), "Profile caching should be enabled for us to get here");
         Assert(profileDataCache);
         AssertMsg(!IsProfileLoadedFromWinInet(), "Duplicate profile cache loading?");
-    
+
         // Keep a copy of this and addref it
         profileDataCache->AddRef();
         this->profileDataCache = profileDataCache;
-    
+
         IStream* readStream;
-        HRESULT hr = profileDataCache->GetReadDataStream(&readStream);    
+        HRESULT hr = profileDataCache->GetReadDataStream(&readStream);
         if(SUCCEEDED(hr))
         {
             Assert(readStream != nullptr);
@@ -115,7 +115,7 @@ namespace Js
             {
                 return false;
             }
-        
+
             DWORD majorVersion;
             if(!streamReader.Read(&majorVersion) || majorVersion != jscriptMajorVersion)
             {
@@ -176,7 +176,7 @@ namespace Js
                 OUTPUT_TRACE(Js::DynamicProfilePhase, L"Saving profile. Number of functions: %d Url: %s...\n", startupFunctions->Length(), info->url);
 
                 bytesWritten = SaveToProfileCache();
-            
+
                 if(bytesWritten == 0)
                 {
                     OUTPUT_TRACE(Js::DynamicProfilePhase, L"Profile saving FAILED\n");
@@ -192,7 +192,7 @@ namespace Js
 
     //
     // Saves the profile to the WININET cache
-    // 
+    //
     uint SourceDynamicProfileManager::SaveToProfileCache()
     {
         AssertMsg(CONFIG_FLAG(WininetProfileCache), "Profile caching should be enabled for us to get here");
@@ -220,12 +220,12 @@ namespace Js
 
         if(!streamWriter.Write(jscriptMajorVersion))
         {
-            return 0;   
+            return 0;
         }
 
         if(!streamWriter.Write(jscriptMinorVersion))
         {
-            return 0;   
+            return 0;
         }
 
         if(!streamWriter.Write(startupFunctions->Length()))
@@ -261,15 +261,15 @@ namespace Js
 
     //
     // Do not save the profile:
-    //      - If it is a non-cachable WININET resource
-    //      - If there are no or small number of functions executed 
+    //      - If it is a non-cacheable WININET resource
+    //      - If there are no or small number of functions executed
     //      - If there is not substantial difference in number of functions executed.
     //
     bool SourceDynamicProfileManager::ShouldSaveToProfileCache(SourceContextInfo* info) const
     {
         if(isNonCachableScript)
         {
-            OUTPUT_VERBOSE_TRACE(Js::DynamicProfilePhase, L"Skipping save of profile. Non-cachable resource. %s\n", info->url);
+            OUTPUT_VERBOSE_TRACE(Js::DynamicProfilePhase, L"Skipping save of profile. Non-cacheable resource. %s\n", info->url);
             return false;
         }
 
@@ -297,7 +297,7 @@ namespace Js
         return true;
     }
 
-    SourceDynamicProfileManager * 
+    SourceDynamicProfileManager *
     SourceDynamicProfileManager::LoadFromDynamicProfileStorage(SourceContextInfo* info, ScriptContext* scriptContext, IActiveScriptDataCache* profileDataCache)
     {
         SourceDynamicProfileManager* manager = nullptr;
@@ -309,7 +309,7 @@ namespace Js
             manager = DynamicProfileStorage::Load(info->url, [recycler](char const * buffer, uint length) -> SourceDynamicProfileManager *
             {
                 BufferReader reader(buffer, length);
-                return SourceDynamicProfileManager::Deserialize(&reader, recycler);       
+                return SourceDynamicProfileManager::Deserialize(&reader, recycler);
             });
         }
 #endif
@@ -332,7 +332,7 @@ namespace Js
 
     void
     SourceDynamicProfileManager::SaveDynamicProfileInfo(LocalFunctionId functionId, DynamicProfileInfo * dynamicProfileInfo)
-    {    
+    {
         Assert(dynamicProfileInfo->GetFunctionBody()->HasExecutionDynamicProfileInfo());
         dynamicProfileInfoMap.Item(functionId, dynamicProfileInfo);
     }
@@ -345,7 +345,7 @@ namespace Js
         if (!reader->Peek(&functionCount))
         {
             return nullptr;
-        }        
+        }
 
         BVFixed * startupFunctions = BVFixed::New(functionCount, recycler);
         if (!reader->ReadArray(((char *)startupFunctions),
@@ -359,7 +359,7 @@ namespace Js
         if (!reader->Read(&profileCount))
         {
             return nullptr;
-        }    
+        }
 
         ThreadContext* threadContext = ThreadContext::GetContextForCurrentThread();
 
@@ -377,14 +377,14 @@ namespace Js
 
         for (uint i = 0; i < profileCount; i++)
         {
-            Js::LocalFunctionId functionId;   
+            Js::LocalFunctionId functionId;
             DynamicProfileInfo * dynamicProfileInfo = DynamicProfileInfo::Deserialize(reader, recycler, &functionId);
             if (dynamicProfileInfo == nullptr || functionId >= functionCount)
-            {            
+            {
                 return nullptr;
             }
             sourceDynamicProfileManager->dynamicProfileInfoMap.Add(functionId, dynamicProfileInfo);
-        }    
+        }
         return sourceDynamicProfileManager;
     }
 
@@ -428,7 +428,7 @@ namespace Js
             {
                 continue;
             }
-        
+
             if (!dynamicProfileInfo->Serialize(writer))
             {
                 return false;
@@ -440,7 +440,7 @@ namespace Js
     void
     SourceDynamicProfileManager::SaveToDynamicProfileStorage(wchar_t const * url)
     {
-        Assert(DynamicProfileStorage::IsEnabled());    
+        Assert(DynamicProfileStorage::IsEnabled());
         BufferSizeCounter counter;
         if (!this->Serialize(&counter))
         {

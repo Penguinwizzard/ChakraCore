@@ -3,17 +3,9 @@
   <Import Project="Common.Build.Default.props"/>
   <PropertyGroup>
     <WindowsTargetPlatformVersion Condition="'$(Platform)'=='ARM'">10.0.10240.0</WindowsTargetPlatformVersion>
-    
+
     <!-- Always use Platform SDK for core builds -->
     <EventManifestXmlPath>$(WindowsSDK80Path)Include\um</EventManifestXmlPath>
-    
-  </PropertyGroup>
 
-  <PropertyGroup>
-    <!-- Real branch name? -->
-    <BranchName>chakracore</BranchName>
-    <BuildMachine>$(BranchName)</BuildMachine>
-    <BuildMachine Condition="'$(OfficialBuild)'!='true'">$(BuildMachine)($(UserName))</BuildMachine>
-    <BuildDate>$([System.DateTime]::Now.ToString("yyMMdd-hhmm"))</BuildDate>
   </PropertyGroup>
-</Project> 
+</Project>

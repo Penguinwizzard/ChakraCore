@@ -16,6 +16,6 @@ namespace Js
         }
 
         void SetCount(uint count);
-        uint32 GetDataSize() const;
+        size_t GetDataSize() const;
     };
 };

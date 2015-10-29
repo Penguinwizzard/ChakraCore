@@ -71,6 +71,7 @@ namespace Js
 #include "Exceptions\ScriptAbortException.h"
 #include "Exceptions\StackOverflowException.h"
 #include "Exceptions\NotImplementedException.h"
+#include "Exceptions\AsmJsParseException.h"
 
 #include "Memory\AutoPtr.h"
 #include "Memory\AutoAllocatorObjectPtr.h"
@@ -81,7 +82,6 @@ namespace Js
 #include "DataStructures\SimpleHashTable.h"
 #include "Memory\XDataAllocator.h"
 #include "Memory\CustomHeap.h"
-#include "Memory\LanguageTelemetry.h"
 
 #include "Core\FinalizableObject.h"
 #include "Memory\RecyclerRootPtr.h"

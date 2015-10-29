@@ -4,10 +4,10 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
-// This class saves the FPU control word, and sets it to the default value
-// The default value will prevent all floating point exceptions other than denormal operand
-// from being generated
-// When the instance goes out of scope, the control word will be restored to the original value
+// This class saves the FPU control word, and sets it to the default value.
+// The default value will prevent all floating point exceptions other than
+// those because of denormal operand from being generated.
+// When the instance goes out of scope, the control word will be restored to the original value.
 template <bool enabled>
 class SmartFPUControlT
 {

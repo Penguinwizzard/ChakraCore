@@ -15,9 +15,9 @@ namespace Js {
         {
             size = MaxPathTypeHandlerLength;
         }
-        
+
         Assert(size <= MaxPathTypeHandlerLength);
-        
+
         TypePath * newTypePath = RecyclerNewPlusZ(recycler, sizeof(PropertyRecord *) * size, TypePath);
         newTypePath->pathSize = (uint16)size;
 
@@ -43,15 +43,15 @@ namespace Js {
         return Constants::NoSlot;
     }
 
-    TypePath * TypePath::Branch(Recycler * recycler, int pathLength, bool couldSeeProto) 
+    TypePath * TypePath::Branch(Recycler * recycler, int pathLength, bool couldSeeProto)
     {
         AssertMsg(pathLength < this->pathLength, "Why are we branching at the tip of the type path?");
-        
+
         // Ensure there is at least one free entry in the new path, so we can extend it.
         // TypePath::New will take care of aligning this appropriately.
         TypePath * branchedPath = TypePath::New(recycler, pathLength + 1);
 
-        for (PropertyIndex i = 0; i < pathLength; i++) 
+        for (PropertyIndex i = 0; i < pathLength; i++)
         {
             branchedPath->AddInternal(assignments[i]);
 
@@ -60,7 +60,6 @@ namespace Js {
             {
                 if (this->usedFixedFields.Test(i))
                 {
-                    // Review (jedmiad): This is actually too consevative.  See point 4 in PathTypeHandlerBase::ConvertToSimpleDictionaryType.
                     // We must conservatively copy all used as fixed bits if some prototype instance could also take
                     // this transition.  See comment in PathTypeHandlerBase::ConvertToSimpleDictionaryType.
                     // Yes, we could devise a more efficient way of copying bits 1 through pathLength, if performance of this
@@ -69,7 +68,7 @@ namespace Js {
                 }
                 else if (this->fixedFields.Test(i))
                 {
-                    // We must clear any fixed fields that are not also used as fixed if some prototype instance could also take 
+                    // We must clear any fixed fields that are not also used as fixed if some prototype instance could also take
                     // this transition.  See comment in PathTypeHandlerBase::ConvertToSimpleDictionaryType.
                     this->fixedFields.Clear(i);
                 }
@@ -82,9 +81,9 @@ namespace Js {
         // When branching, we must ensure that fixed field values on the prefix shared by the two branches are always
         // consistent.  Hence, we can't leave any of them uninitialized, because they could later get initialized to
         // different values, by two different instances (one on the old branch and one on the new branch).  If that happened
-        // and the instance from the old branch later switched to the new branch, it would magically gain a different set 
-        // of fixed properties!  
-        if (this->maxInitializedLength < pathLength) 
+        // and the instance from the old branch later switched to the new branch, it would magically gain a different set
+        // of fixed properties!
+        if (this->maxInitializedLength < pathLength)
         {
             this->maxInitializedLength = pathLength;
         }
@@ -111,8 +110,8 @@ namespace Js {
 
         return branchedPath;
     }
-    
-    TypePath * TypePath::Grow(Recycler * recycler) 
+
+    TypePath * TypePath::Grow(Recycler * recycler)
     {
         AssertMsg(this->pathSize == this->pathLength, "Why are we growing the type path?");
 
@@ -120,7 +119,7 @@ namespace Js {
         // TypePath::New will take care of aligning this appropriately.
         TypePath * clonedPath = TypePath::New(recycler, this->pathLength + 1);
 
-        for (PropertyIndex i = 0; i < pathLength; i++) 
+        for (PropertyIndex i = 0; i < pathLength; i++)
         {
             clonedPath->AddInternal(assignments[i]);
         }
@@ -176,17 +175,13 @@ namespace Js {
             Throw::InternalError();
         }
 
-
-        // The previous dictionary did not replace on dupes.
-        // I believe a dupe here would be a bug, but to be conservative
-        // replicate the exact previous behavior.
 #if DBG
         PropertyIndex temp;
         if (map.TryGetValue(propId->GetPropertyId(), &temp, assignments))
         {
             AssertMsg(false, "Adding a duplicate to the type path");
         }
-#endif 
+#endif
         map.Add((unsigned int)propId->GetPropertyId(), (byte)pathLength);
 
 #ifdef SUPPORT_FIXED_FIELDS_ON_PATH_TYPES

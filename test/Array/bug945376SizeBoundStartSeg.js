@@ -12,7 +12,7 @@ function test0() {
     ary.pop();
     return 4;
   };
-  
+
   function func3() {
     --c
     ary.reverse();

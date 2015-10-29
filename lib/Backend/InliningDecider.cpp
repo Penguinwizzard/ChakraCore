@@ -125,7 +125,7 @@ Js::FunctionInfo *InliningDecider::InlineCallSite(Js::FunctionBody *const inline
     return nullptr;
 }
 
-uint InliningDecider::InlinePolymorhicCallSite(Js::FunctionBody *const inliner, const Js::ProfileId profiledCallSiteId, 
+uint InliningDecider::InlinePolymorhicCallSite(Js::FunctionBody *const inliner, const Js::ProfileId profiledCallSiteId,
     Js::FunctionBody** functionBodyArray, uint functionBodyArrayLength, bool* canInlineArray, uint recursiveInlineDepth)
 {
     Assert(inliner);
@@ -143,12 +143,12 @@ uint InliningDecider::InlinePolymorhicCallSite(Js::FunctionBody *const inliner, 
 
     uint inlineeCount = 0;
     uint actualInlineeCount  = 0;
-    
+
     for (inlineeCount = 0; inlineeCount < functionBodyArrayLength; inlineeCount++)
     {
         if (!functionBodyArray[inlineeCount])
         {
-            AssertMsg(inlineeCount >= 2, "There are atleast two polymorphic call site");
+            AssertMsg(inlineeCount >= 2, "There are at least two polymorphic call site");
             break;
         }
         if (Inline(inliner, functionBodyArray[inlineeCount], isConstructorCall, true /*isPolymorphicCall*/, 0, profiledCallSiteId, recursiveInlineDepth, false))
@@ -168,7 +168,7 @@ uint InliningDecider::InlinePolymorhicCallSite(Js::FunctionBody *const inliner, 
             wchar_t debugStringBuffer2[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
 #endif
             INLINE_TESTTRACE(L"Partial inlining of polymorphic call: %s (%s)\tCaller: %s (%s)\n",
-                functionBodyArray[inlineeCount - 1]->GetDisplayName(), functionBodyArray[inlineeCount - 1]->GetDebugNumberSet(debugStringBuffer), 
+                functionBodyArray[inlineeCount - 1]->GetDisplayName(), functionBodyArray[inlineeCount - 1]->GetDebugNumberSet(debugStringBuffer),
                 inliner->GetDisplayName(),
                 inliner->GetDebugNumberSet(debugStringBuffer2));
         }
@@ -180,7 +180,7 @@ uint InliningDecider::InlinePolymorhicCallSite(Js::FunctionBody *const inliner, 
     return inlineeCount;
 }
 
-Js::FunctionInfo *InliningDecider::Inline(Js::FunctionBody *const inliner, Js::FunctionInfo* functionInfo, 
+Js::FunctionInfo *InliningDecider::Inline(Js::FunctionBody *const inliner, Js::FunctionInfo* functionInfo,
     bool isConstructorCall, bool isPolymorphicCall, uint16 constantArgInfo, Js::ProfileId callSiteId, uint recursiveInlineDepth, bool allowRecursiveInlining)
 {
 #if defined(DBG_DUMP) || defined(ENABLE_DEBUG_CONFIG_OPTIONS)
@@ -197,7 +197,7 @@ Js::FunctionInfo *InliningDecider::Inline(Js::FunctionBody *const inliner, Js::F
             return nullptr;
         }
 
-        // Note: disable inline for debugger, as we can't bailout at return from function. 
+        // Note: disable inline for debugger, as we can't bailout at return from function.
         // Alternative can be generate this bailout as part of inline, which can be done later as perf improvement.
         const auto inlinee = proxy->GetFunctionBody();
         Assert(this->jitMode == ExecutionMode::FullJit);
@@ -245,7 +245,6 @@ Js::FunctionInfo *InliningDecider::Inline(Js::FunctionBody *const inliner, Js::F
             return nullptr;
         }
 
-        // REVIEW: can we inline these for /force:inline
         if (inlinee->GetDontInline())
         {
             INLINE_TESTTRACE(L"INLINING: Skip Inline: Do not inline\tInlinee: %s (%s)\tCaller: %s (%s)\n",
@@ -303,7 +302,7 @@ Js::FunctionInfo *InliningDecider::Inline(Js::FunctionBody *const inliner, Js::F
 bool InliningDecider::GetBuiltInInfo(
     Js::FunctionInfo *const funcInfo,
     Js::OpCode *const inlineCandidateOpCode,
-    ValueType *const returnType, 
+    ValueType *const returnType,
     Js::ScriptContext *const scriptContext /* = nullptr*/
     )
 {
@@ -415,7 +414,7 @@ bool InliningDecider::GetBuiltInInfo(
     case Js::JavascriptBuiltInFunction::JavascriptArray_Pop:
         *inlineCandidateOpCode = Js::OpCode::InlineArrayPop;
         break;
-    
+
     case Js::JavascriptBuiltInFunction::JavascriptArray_Concat:
     case Js::JavascriptBuiltInFunction::JavascriptArray_Reverse:
     case Js::JavascriptBuiltInFunction::JavascriptArray_Shift:
@@ -478,7 +477,7 @@ bool InliningDecider::GetBuiltInInfo(
         *inlineCandidateOpCode = Js::OpCode::InlineFunctionCall;
         break;
 
-        // The following are not currenlty inlined, but are tracked for their return type
+    // The following are not currently inlined, but are tracked for their return type
     // TODO: Add more built-ins that return objects. May consider tracking all built-ins.
 
     case Js::JavascriptBuiltInFunction::JavascriptArray_NewInstance:
@@ -574,20 +573,17 @@ bool InliningDecider::GetBuiltInInfo(
         break;
 
 #ifdef ENABLE_DOM_FAST_PATH
-        // TODO: inline setter as well. 
-    // TODO: returnType should be consistent, but we don't know from the type
-    // How to get the return type from profileData?
     case Js::JavascriptBuiltInFunction::DOMFastPathGetter:
         *inlineCandidateOpCode = Js::OpCode::DOMFastPathGetter;
         break;
 #endif
 
-    //SIMD_JS
+    // SIMD_JS
     // we only inline, and hence type-spec on IA
 #if defined(_M_X64) || defined(_M_IX86)
     default:
     {
-        // inline only if simdjs and simd128 type-spec is enabled. 
+        // inline only if simdjs and simd128 type-spec is enabled.
         if (scriptContext->GetConfig()->IsSimdjsEnabled() && SIMD128_TYPE_SPEC_FLAG)
         {
             Assert(scriptContext);

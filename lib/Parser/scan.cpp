@@ -25,7 +25,7 @@ int CountNewlines(LPCOLESTR psz, int cch)
                 if (0 == cch--)
                     break;
             }
-            // fall thru
+            // fall-through
         case OLESTR('\xA'):
             cln++;
             break;
@@ -117,10 +117,10 @@ IdentPtr Token::CreateIdentifier(HashTbl * hashTbl)
     }
 
     Assert(IsReservedWord());
-    
+
     IdentPtr pid = hashTbl->PidFromTk(tk);
     this->u.pid = pid;
-    return pid;    
+    return pid;
 }
 
 template <typename EncodingPolicy>
@@ -142,7 +142,7 @@ Scanner<EncodingPolicy>::Scanner(Parser* parser, HashTbl *phtbl, Token *ptoken, 
     m_fStringTemplateDepth = 0;
 
     m_scanState = ScanStateNormal;
-    m_scriptContext = scriptContext;    
+    m_scriptContext = scriptContext;
 
     m_line = 0;
     m_startLine = 0;
@@ -150,7 +150,7 @@ Scanner<EncodingPolicy>::Scanner(Parser* parser, HashTbl *phtbl, Token *ptoken, 
 
     m_ichMinError = 0;
     m_ichLimError = 0;
-    
+
     m_tempChBuf.m_pscanner = this;
     m_tempChBufSecondary.m_pscanner = this;
 
@@ -162,7 +162,6 @@ Scanner<EncodingPolicy>::Scanner(Parser* parser, HashTbl *phtbl, Token *ptoken, 
 
     m_fYieldIsKeyword = false;
     m_fAwaitIsKeyword = false;
-    
 }
 
 template <typename EncodingPolicy>
@@ -191,8 +190,7 @@ void Scanner<EncodingPolicy>::SetText(EncodedCharPtr pszSrc, size_t offset, size
         {
         case 0xFFEE:    // "Opposite" endian BOM
             // We do not support big-endian encodings
-            // TODO: Previous behavior is to absorb the BOM and ignore its meaning. Consider throwing an exception.
-            __fallthrough;
+            // fall-through
 
         case 0xFEFF:    // "Correct" BOM
             ReadFull<true>(m_currentCharacter, m_pchLast);
@@ -213,7 +211,7 @@ void Scanner<EncodingPolicy>::SetText(EncodedCharPtr pszSrc, size_t offset, size
 template <typename EncodingPolicy>
 void Scanner<EncodingPolicy>::PrepareForBackgroundParse(Js::ScriptContext *scriptContext)
 {
-    scriptContext->GetThreadContext()->GetStandardChars((EncodedChar*)0);    
+    scriptContext->GetThreadContext()->GetStandardChars((EncodedChar*)0);
     scriptContext->GetThreadContext()->GetStandardChars((wchar_t*)0);
 }
 
@@ -263,7 +261,7 @@ charcount_t Scanner<EncodingPolicy>::UpdateLine(long &line, EncodedCharPtr start
                 ich++;
                 ReadFull<false>(p, last);
             }
-            // intentionall fall-through
+            // fall-through
 
         case kchNWL:
         case kchLS:
@@ -412,7 +410,7 @@ __inline bool Scanner<EncodingPolicy>::TryReadCodePoint(EncodedCharPtr &starting
     {
         *hasEscape = true;
     }
-        
+
     *outChar = ch;
     return true;
 }
@@ -421,7 +419,7 @@ template <typename EncodingPolicy>
 tokens Scanner<EncodingPolicy>::ScanIdentifier(bool identifyKwds, EncodedCharPtr *pp)
 {
     EncodedCharPtr p = *pp;
-    EncodedCharPtr pchMin = p;    
+    EncodedCharPtr pchMin = p;
 
     // JS6 allows unicode characters in the form of \uxxxx escape sequences
     // to be part of the identifier.
@@ -446,7 +444,7 @@ tokens Scanner<EncodingPolicy>::ScanIdentifier(bool identifyKwds, EncodedCharPtr
 
         // If no chars. could be scanned as part of the identifier, return error.
         return tkScanError;
-    }    
+    }
 
     return ScanIdentifierContinue(identifyKwds, fHasEscape, fHasMultiChar, pchMin, p, pp);
 }
@@ -470,9 +468,9 @@ BOOL Scanner<EncodingPolicy>::FastIdentifierContinue(EncodedCharPtr&p, EncodedCh
                 // only reach the end of the identifier if it is not the start of an escape sequence
                 return currentChar != '\\';
             }
-            p++;          
+            p++;
         }
-        // We have reach the end of the identifer.
+        // We have reach the end of the identifier.
         return TRUE;
     }
 
@@ -507,7 +505,7 @@ tokens Scanner<EncodingPolicy>::ScanIdentifierContinue(bool identifyKwds, bool f
             }
         }
 
-        // Put back the last character 
+        // Put back the last character
         p = pchBeforeLast;
         RestoreMultiUnits(multiUnitsBeforeLast);
         break;
@@ -522,7 +520,7 @@ tokens Scanner<EncodingPolicy>::ScanIdentifierContinue(bool identifyKwds, bool f
         return tkID;
     }
 
-    // During syntax coloring, scanner doesnt need to convert the escape sequence to get actual characters, it just needs the classification information
+    // During syntax coloring, scanner doesn't need to convert the escape sequence to get actual characters, it just needs the classification information
     // So call up hashtables custom method to check if the string scanned is identifier or keyword.
     // Do the same for deferred parsing, but use a custom method that only tokenizes JS keywords.
     if ((m_DeferredParseFlags & ScanFlagSuppressIdPid) != 0)
@@ -565,10 +563,10 @@ tokens Scanner<EncodingPolicy>::ScanIdentifierContinue(bool identifyKwds, bool f
         m_ptoken->SetIdentifier(reinterpret_cast<const char *>(pchMin), (long)(p - pchMin));
         return tkID;
     }
-   
+
     IdentPtr pid = PidOfIdentiferAt(pchMin, p, fHasEscape, fHasMultiChar);
     m_ptoken->SetIdentifier(pid);
-        
+
     if (!fHasEscape)
     {
         // If it doesn't have escape, then Scan() should have taken care of keywords (except
@@ -667,11 +665,11 @@ typename Scanner<EncodingPolicy>::EncodedCharPtr Scanner<EncodingPolicy>::FScanN
 
         case 'x':
         case 'X':
-            // Hex  
+            // Hex
             *pdbl = Js::NumberUtilities::DblFromHex(p + 2, &pchT);
             if (pchT == p + 2)
             {
-                // "Octal zero token "0" followed by an identifier token beginning with character 'x'/'X' 
+                // "Octal zero token "0" followed by an identifier token beginning with character 'x'/'X'
                 *pdbl = 0;
                 return p + 1;
             }
@@ -687,7 +685,7 @@ typename Scanner<EncodingPolicy>::EncodedCharPtr Scanner<EncodingPolicy>::FScanN
             *pdbl = Js::NumberUtilities::DblFromOctal(p + 2, &pchT);
             if (pchT == p + 2)
             {
-                // "Octal zero token "0" followed by an identifier token beginning with character 'o'/'O' 
+                // "Octal zero token "0" followed by an identifier token beginning with character 'o'/'O'
                 *pdbl = 0;
                 return p + 1;
             }
@@ -703,11 +701,11 @@ typename Scanner<EncodingPolicy>::EncodedCharPtr Scanner<EncodingPolicy>::FScanN
             *pdbl = Js::NumberUtilities::DblFromBinary(p + 2, &pchT);
             if (pchT == p + 2)
             {
-                // "Octal zero token "0" followed by an identifier token beginning with character 'b'/'B' 
+                // "Octal zero token "0" followed by an identifier token beginning with character 'b'/'B'
                 *pdbl = 0;
                 return p + 1;
             }
-            return  pchT; 
+            return  pchT;
 
         default:
 LDefaultFScanNumber :
@@ -716,8 +714,7 @@ LDefaultFScanNumber :
             Assert(pchT > p);
 
 #if !SOURCERELEASE
-            // The ECMA committee in its wisdom has decided that if an octal literal
-            // is malformed then it is in fact a decimal literal.
+            // If an octal literal is malformed then it is in fact a decimal literal.
 #endif // !SOURCERELEASE
             if(*pdbl != 0 || pchT > p + 1)
                 m_OctOrLeadingZeroOnLastTKNumber = true; //report as an octal or hex for JSON when leading 0. Just '0' is ok
@@ -767,7 +764,7 @@ BOOL Scanner<EncodingPolicy>::oFScanNumber(double *pdbl, bool& likelyInt)
             *pdbl = Js::NumberUtilities::DblFromHex<EncodedChar>(m_currentCharacter + 2, &pchT);
             if (pchT == m_currentCharacter + 2)
             {
-                // "Octal zero token "0" followed by an identifier token beginning with character 'x'/'X' 
+                // "Octal zero token "0" followed by an identifier token beginning with character 'x'/'X'
                 *pdbl = 0;
                 m_currentCharacter++;
             }
@@ -783,7 +780,7 @@ BOOL Scanner<EncodingPolicy>::oFScanNumber(double *pdbl, bool& likelyInt)
             *pdbl = Js::NumberUtilities::DblFromOctal(m_currentCharacter + 2, &pchT);
             if (pchT == m_currentCharacter + 2)
             {
-                // "Octal zero token "0" followed by an identifier token beginning with character 'o'/'O' 
+                // "Octal zero token "0" followed by an identifier token beginning with character 'o'/'O'
                 *pdbl = 0;
                 m_currentCharacter++;
             }
@@ -797,11 +794,11 @@ BOOL Scanner<EncodingPolicy>::oFScanNumber(double *pdbl, bool& likelyInt)
             {
                 goto LDefaultoFScanNumber;
             }
-            
+
             *pdbl = Js::NumberUtilities::DblFromBinary(m_currentCharacter + 2, &pchT);
             if (pchT == m_currentCharacter + 2)
             {
-                // "Octal zero token "0" followed by an identifier token beginning with character 'b'/'B' 
+                // "Octal zero token "0" followed by an identifier token beginning with character 'b'/'B'
                 *pdbl = 0;
                 m_currentCharacter++;
             }
@@ -817,8 +814,7 @@ LDefaultoFScanNumber :
 
 
 #if !SOURCERELEASE
-            // The ECMA committee in its wisdom has decided that if an octal literal
-            // is malformed then it is in fact a decimal literal.
+            // If an octal literal is malformed then it is in fact a decimal literal.
 #endif // !SOURCERELEASE
             if(*pdbl != 0 || pchT > m_currentCharacter + 1)
                 m_OctOrLeadingZeroOnLastTKNumber = true; //report as an octal or hex for JSON when leading 0. Just '0' is ok
@@ -982,8 +978,8 @@ tokens Scanner<EncodingPolicy>::ScanRegExpConstant(ArenaAllocator* alloc)
         PROBE_STACK(m_scriptContext, Js::Constants::MinStackRegex);
     }
 
-    // SEE ALSO: RegexHelper::PrimCompileDynamic()    
-   
+    // SEE ALSO: RegexHelper::PrimCompileDynamic()
+
 #ifdef PROFILE_EXEC
     m_scriptContext->ProfileBegin(Js::RegexCompilePhase);
 #endif
@@ -1023,7 +1019,7 @@ tokens Scanner<EncodingPolicy>::ScanRegExpConstant(ArenaAllocator* alloc)
             return ScanError(m_currentCharacter + e.encodedPos, tkRegExp);
 
         m_currentCharacter += e.encodedPos;
-        Error(e.error);        
+        Error(e.error);
     }
 
     UnifiedRegex::RegexPattern* pattern;
@@ -1039,7 +1035,7 @@ tokens Scanner<EncodingPolicy>::ScanRegExpConstant(ArenaAllocator* alloc)
     }
     RestoreMultiUnits(m_cMultiUnits + parser.GetMultiUnits()); // m_currentCharacter changed, sync MultiUnits
 
-    return m_ptoken->SetRegex(pattern, m_parser);   
+    return m_ptoken->SetRegex(pattern, m_parser);
 }
 
 template<typename EncodingPolicy>
@@ -1087,7 +1083,7 @@ tokens Scanner<EncodingPolicy>::ScanRegExpConstantNoAST(ArenaAllocator* alloc)
     RestoreMultiUnits(m_cMultiUnits + parser.GetMultiUnits()); // m_currentCharacter changed, sync MultiUnits
 
     return (m_ptoken->tk = tkRegExp);
-        
+
 }
 
 template<typename EncodingPolicy>
@@ -1191,7 +1187,7 @@ tokens Scanner<EncodingPolicy>::ScanStringConstant(OLECHAR delim, EncodedCharPtr
 
     m_tempChBuf.Init();
 
-    // Use template parameter to gate raw string creation. 
+    // Use template parameter to gate raw string creation.
     // If createRawString is false, all these operations should be no-ops
     if (createRawString)
     {
@@ -1209,7 +1205,7 @@ tokens Scanner<EncodingPolicy>::ScanStringConstant(OLECHAR delim, EncodedCharPtr
                 {
                     // Eat the <LF> char, ignore return
                     ReadFirst(p, last);
-                } 
+                }
 
                 // Both <CR> and <CR><LF> are normalized to <LF> in template cooked and raw values
                 ch = rawch = kchNWL;
@@ -1240,7 +1236,7 @@ LEcmaLineBreak:
             break;
 
         case '`':
-            // In string template scan mode, don't consume the '`' - we need to differentiate 
+            // In string template scan mode, don't consume the '`' - we need to differentiate
             // between a closed string template and the expression open sequence - ${
             if (stringTemplateMode)
             {
@@ -1252,7 +1248,7 @@ LEcmaLineBreak:
             goto LMainDefault;
 
         case '$':
-            // If we are parsing a string literal part of a string template, ${ indicates we need to switch 
+            // If we are parsing a string literal part of a string template, ${ indicates we need to switch
             // to parsing an expression.
             if (stringTemplateMode && PeekFirst(p, last) == '{')
             {
@@ -1274,7 +1270,7 @@ LEcmaLineBreak:
                     return ScanError(p - 1, tkStrCon);
                 }
                 Error(ERRnoStrEnd);
-            } 
+            }
             break;
 
         default:
@@ -1315,7 +1311,7 @@ LMainDefault:
                 ch = 0x09;
                 break;
             case 'v':
-                ch = 0x0B; //Only in ES5 mode                
+                ch = 0x0B; //Only in ES5 mode
                 break; //same as default
             case 'n':
                 ch = 0x0A;
@@ -1346,7 +1342,7 @@ LMainDefault:
                 Assert(c == '{');
                 // c should definitely be a '{' which should be appended to the raw string.
                 m_tempChBufSecondary.AppendCh<createRawString>(c);
-                
+
                 //At least one digit is expected
                 if (!Js::NumberUtilities::FHexDigit(c = ReadFirst(p, last), &wT))
                 {
@@ -1375,7 +1371,7 @@ LMainDefault:
                     errorType = (uint)ERRMissingCurlyBrace;
                     goto ReturnScanError;
                 }
-                
+
                 Assert(codePoint <= 0x10FFFF);
 
                 if (codePoint >= 0x10000)
@@ -1408,7 +1404,7 @@ LFourHex:
 
                 codePoint += static_cast<codepoint_t>(wT * 0x0100);
 
-LTwoHex:            
+LTwoHex:
                 // This code path doesn't expect curly.
                 if (!Js::NumberUtilities::FHexDigit(c = ReadFirst(p, last), &wT))
                     goto ReturnScanError;
@@ -1422,7 +1418,7 @@ LTwoHex:
                     goto ReturnScanError;
 
                 codePoint += static_cast<codepoint_t>(wT);
-                    
+
                 // In raw mode we want the last hex character or the closing curly. c should hold one or the other.
                 if (createRawString)
                     rawch = c;
@@ -1650,7 +1646,7 @@ LEcmaLineBreak:
         case kchRET:
         case kchNWL:
 LLineBreak:
-            m_fHadEol = TRUE;            
+            m_fHadEol = TRUE;
             m_currentCharacter = p;
             ScanNewLine(ch);
             p = m_currentCharacter;
@@ -1784,7 +1780,7 @@ tokens Scanner<EncodingPolicy>::ScanCore(bool identifyKwds)
     m_fHadEol = FALSE;
     CharTypes chType;
     charcount_t commentStartLine;
-    
+
     if (m_scanState && *p != 0)
     {
         if (m_fSyntaxColor)
@@ -1793,7 +1789,7 @@ tokens Scanner<EncodingPolicy>::ScanCore(bool identifyKwds)
             secondChar = 0;
             m_pchMinTok = p;
             m_cMinTokMultiUnits = m_cMultiUnits;
-            switch (m_scanState) 
+            switch (m_scanState)
             {
             case ScanStateMultiLineComment:
                 goto LMultiLineComment;
@@ -1809,13 +1805,13 @@ tokens Scanner<EncodingPolicy>::ScanCore(bool identifyKwds)
         }
         if (m_scanState == ScanStateStringTemplateMiddleOrEnd)
         {
-            AssertMsg(m_fStringTemplateDepth > 0, 
+            AssertMsg(m_fStringTemplateDepth > 0,
                 "Shouldn't be trying to parse a string template end or middle token if we aren't scanning a string template");
-            AssertMsg(m_scriptContext->GetConfig()->IsES6StringTemplateEnabled(), 
+            AssertMsg(m_scriptContext->GetConfig()->IsES6StringTemplateEnabled(),
                 "Shouldn't be in string template parse mode if string templates are not enabled.");
 
             m_scanState = ScanStateNormal;
-            
+
             pchT = p;
             token = ScanStringTemplateMiddleOrEnd(&pchT);
             p = pchT;
@@ -1842,10 +1838,10 @@ LLoopDefault:
             {
                 goto LNewLine;
             }
-            { 
+            {
                 BOOL isMultiUnit = IsMultiUnitChar((OLECHAR)ch);
                 if (isMultiUnit)
-                {                    
+                {
                     ch = ReadRest<true>((OLECHAR)ch, p, last);
                 }
 
@@ -1863,7 +1859,7 @@ LLoopDefault:
                 if (this->charClassifier->IsIdStart(ch))
                 {
                     // We treat IDContinue as an error.
-                    token = ScanIdentifierContinue(identifyKwds, false, !!isMultiUnit, m_pchMinTok, p, &p);                    
+                    token = ScanIdentifierContinue(identifyKwds, false, !!isMultiUnit, m_pchMinTok, p, &p);
                     break;
                 }
             }
@@ -1925,10 +1921,9 @@ LEof:
                 }
                 break;
             }
-            // May be a double, fall thru
+            // May be a double, fall through
         case '0': case '1': case '2': case '3': case '4':
         case '5': case '6': case '7': case '8': case '9':
-
             {
                 double dbl;
                 Assert(chType == _C_DIG || chType == _C_DOT);
@@ -1990,6 +1985,7 @@ LReserved:
                 m_ptoken->SetIdentifier(NULL);
                 goto LDone;
             }
+
 LEval:
             {
                 token = tkID;
@@ -2024,29 +2020,29 @@ LTarget:
         // Lower-case letters handled in kwd-swtch.h above during reserved word recognition.
         case '$': case '_':
 LIdentifier:
-            Assert(this->charClassifier->IsIdStart(ch));     
+            Assert(this->charClassifier->IsIdStart(ch));
             Assert(ch < 0x10000 && !IsMultiUnitChar((OLECHAR)ch));
-            token = ScanIdentifierContinue(identifyKwds, false, false, m_pchMinTok, p, &p);            
+            token = ScanIdentifierContinue(identifyKwds, false, false, m_pchMinTok, p, &p);
             break;
 
-        case '`': 
+        case '`':
             Assert(chType == _C_BKQ);
-            
+
             if (m_scriptContext->GetConfig()->IsES6StringTemplateEnabled())
             {
                 pchT = p;
                 token = ScanStringTemplateBegin(&pchT);
                 p = pchT;
             }
-            else 
+            else
             {
                 goto LLoopDefault;
             }
             break;
 
-        case '}': 
-            Assert(chType == _C_RC); 
-            token = tkRCurly; 
+        case '}':
+            Assert(chType == _C_RC);
+            token = tkRCurly;
             break;
 
         case '\\':
@@ -2150,7 +2146,7 @@ LIdentifier:
                             if (nextNextCharType == _C_NWL
                                 // Corner case: If we have reached the end of the source, either we are at the end of the file or the end of
                                 // a deferred function. We treat this case as NWL.
-                                // TODO(tcare): Update to ES6 spec. Tracked in DEVDIV2: 1164686
+                                // TODO(tcare): Update to ES6 spec. Tracked in Bug 1164686
                                 || (last == m_pchLast && nextNextCharType == _C_NUL))
                             {
                                 //Treat the -----------------------------> }NWL as if it were }NWL
@@ -2203,7 +2199,7 @@ LIdentifier:
                     p = last;
                     goto LEof;
                 }
-                ch = *++p;                
+                ch = *++p;
                 firstChar = (OLECHAR)ch;
 LSkipLineComment:
                 pchT = NULL;
@@ -2213,7 +2209,7 @@ LSkipLineComment:
                     {
                     case kchLS:         // 0x2028, classifies as new line
                     case kchPS:         // 0x2029, classifies as new line
-LEcmaCommentLineBreak:                        
+LEcmaCommentLineBreak:
                         // kchPS and kchLS are more than one unit in UTF-8.
                         if (pchT)
                         {
@@ -2266,11 +2262,11 @@ LCommentLineBreak:
 
                     break;
                 }
-                
+
                 continue;
 
             case '*':
-                ch = *++p;                
+                ch = *++p;
                 firstChar = (OLECHAR)ch;
                 if ((p + 1) < last)
                 {
@@ -2280,7 +2276,7 @@ LCommentLineBreak:
                 {
                     secondChar = '\0';
                 }
-                
+
 
 LMultiLineComment:
                 pchT = p;
@@ -2329,7 +2325,7 @@ LMultiLineComment:
             case '!':
                 if (m_fHtmlComments && PeekFirst(p + 1, last) == '-' && PeekFirst(p + 2, last) == '-')
                 {
-                    // This is a hacky "<!--" comment - treat as //
+                    // This is a "<!--" comment - treat as //
                     if (p >= last)
                     {
                         // Effective source length may have excluded HTMLCommentSuffix "<!-- ... -->". If we are scanning
@@ -2420,7 +2416,7 @@ LScanStringConstant:
             pchT = p;
             token = ScanStringConstant((OLECHAR)ch, &pchT);
             p = pchT;
-            break;   
+            break;
         }
 
         break;
@@ -2548,7 +2544,6 @@ HRESULT Scanner<EncodingPolicy>::SysAllocErrorLine(long ichMinLine, __out BSTR* 
     EncodedCharPtr pEnd = AdjustedLast();
 
     // Determine the length by scanning for the next newline
-    // TODO: this will cut off any characters beyond the first \0 character:
     charcount_t cch = LineLength(pStart, pEnd);
     Assert(cch <= LONG_MAX);
 

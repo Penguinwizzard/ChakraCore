@@ -5,6 +5,10 @@
 
 #include "BackEnd.h"
 #include "Language\JavascriptFunctionArgIndex.h"
+#include "Types\DynamicObjectEnumerator.h"
+#include "Types\DynamicObjectSnapshotEnumerator.h"
+#include "Types\DynamicObjectSnapshotEnumeratorWPCache.h"
+#include "Library\ForInObjectEnumerator.h"
 
 const Js::OpCode LowererMD::MDUncondBranchOpcode = Js::OpCode::B;
 const Js::OpCode LowererMD::MDTestOpcode = Js::OpCode::TST;
@@ -167,7 +171,7 @@ LowererMD::MDConvertFloat64ToInt32Opcode(const RoundMode roundMode)
 IR::Opnd *
 LowererMD::GenerateMemRef(void *addr, IRType type, IR::Instr *instr, bool dontEncode)
 {
-    IR::RegOpnd *baseOpnd = IR::RegOpnd::New(TyMachReg, this->m_func);    
+    IR::RegOpnd *baseOpnd = IR::RegOpnd::New(TyMachReg, this->m_func);
     IR::AddrOpnd *addrOpnd = IR::AddrOpnd::New(addr, IR::AddrOpndKindDynamicMisc, this->m_func, dontEncode);
     LowererMD::CreateAssign(baseOpnd, addrOpnd, instr);
 
@@ -407,14 +411,14 @@ LowererMD::GenerateFunctionObjectTest(IR::Instr * callInstr, IR::RegOpnd  *funct
         // Need check and error if we are calling a tagged int.
         if (!functionObjOpnd->IsTaggedInt())
         {
-            //      TST functionObjOpnd, 1
+            // TST functionObjOpnd, 1
             IR::Instr * instr = IR::Instr::New(Js::OpCode::TST, this->m_func);
             instr->SetSrc1(functionObjOpnd);
             instr->SetSrc2(IR::IntConstOpnd::New(Js::AtomTag, TyMachReg, this->m_func));
             callInstr->InsertBefore(instr);
 
-            //      BNE $helper
-            //      B $callLabel
+            // BNE $helper
+            // B $callLabel
 
             IR::LabelInstr * helperLabel = IR::LabelInstr::New(Js::OpCode::Label, this->m_func, true);
             instr = IR::BranchInstr::New(Js::OpCode::BNE, helperLabel, this->m_func);
@@ -631,13 +635,13 @@ LowererMD::LowerCallI(IR::Instr * callInstr, ushort callFlags, bool isHelper, IR
     // This way the register containing the target addr interferes with the param regs
     // only, not the regs we use to store params to the stack.
 
-    // (TODO: We're sinking the stores of stack params so that the call sequence is contiguous.
+    // We're sinking the stores of stack params so that the call sequence is contiguous.
     // This is required by nested calls, since each call will re-use the same stack slots.
-    // But if there is no nesting, stack params can be stored as soon as they're computed.)
+    // But if there is no nesting, stack params can be stored as soon as they're computed.
 
     IR::Opnd * functionObjOpnd = callInstr->UnlinkSrc1();
 
-    // If this is a call for new, we already pass the function operand thru NewScObject,
+    // If this is a call for new, we already pass the function operand through NewScObject,
     // which checks if the function operand is a real function or not, don't need to add a check again.
     // If this is a call to a fixed function, we've already verified that the target is, indeed, a function.
     if (callInstr->m_opcode != Js::OpCode::CallIFixed && !(callFlags & Js::CallFlags_New))
@@ -699,7 +703,7 @@ LowererMD::LowerCallI(IR::Instr * callInstr, ushort callFlags, bool isHelper, IR
 int32
 LowererMD::LowerCallArgs(IR::Instr *callInstr, IR::Instr *stackParamInsert, ushort callFlags, Js::ArgSlot extraParams, IR::IntConstOpnd **callInfoOpndRef)
 {
-    AssertMsg(this->helperCallArgsCount == 0, "We don't support nested helpercalls yet");
+    AssertMsg(this->helperCallArgsCount == 0, "We don't support nested helper calls yet");
 
     uint32 argCount = 0;
 
@@ -730,7 +734,7 @@ LowererMD::LowerCallArgs(IR::Instr *callInstr, IR::Instr *stackParamInsert, usho
             Js::Throw::OutOfMemory();
         }
         opndParam = this->GetOpndForArgSlot(argSlotNum + extraParams);
-        
+
         src2Opnd = argInstr->UnlinkSrc2();
         argInstr->ReplaceDst(opndParam);
         argInstr->Unlink();
@@ -808,10 +812,9 @@ LowererMD::LoadHelperArgument(IR::Instr * instr, IR::Opnd * opndArgValue)
     // We update the current param state so we can do this work without making the caller
     // do the work.
     Assert(this->helperCallArgsCount < LowererMD::MaxArgumentsToHelper);
-    
-    //HelperCallArgs is declared in LowerMD.h as IR::Opnd *          helperCallArgs[MaxArgumentsToHelper];
+
     __analysis_assume(this->helperCallArgsCount < MaxArgumentsToHelper);
-    
+
     helperCallArgs[helperCallArgsCount++] = opndArgValue;
 
     if (opndArgValue->GetType() == TyMachDouble)
@@ -936,7 +939,7 @@ LowererMD::GenerateStackProbe(IR::Instr *insertInstr, bool afterProlog)
     {
         // Load the current stack limit and add the current frame allocation.
         {
-            void *pLimit = threadContext->GetAddressOfStackLimitForCurrentThread();            
+            void *pLimit = threadContext->GetAddressOfStackLimitForCurrentThread();
             this->CreateAssign(scratchOpnd, IR::AddrOpnd::New(pLimit, IR::AddrOpndKindDynamicMisc, this->m_func), insertInstr);
             this->CreateAssign(scratchOpnd, IR::IndirOpnd::New(scratchOpnd, 0, TyMachReg, this->m_func), insertInstr);
         }
@@ -1211,14 +1214,14 @@ LowererMD::LowerEntryInstr(IR::EntryInstr * entryInstr)
 
     bool hasStackNestedFuncList = false;
 
-    // We need to have the same register saves inthe prolog as the arm_CallEhFrame, so that we can use the same
+    // We need to have the same register saves in the prolog as the arm_CallEhFrame, so that we can use the same
     // epilog.  So always allocate a slot for the stack nested func here whether we actually do have any stack
     // nested func or not
     // TODO-STACK-NESTED-FUNC:  May be use a different arm_CallEhFrame for when we have stack nested func?
     if (this->m_func->HasAnyStackNestedFunc() || hasTry)
     {
         // Just force it to have calls if we have stack nested func so we have a stable
-        // location for the stack nested funciton list
+        // location for the stack nested function list
         hasStackNestedFuncList = true;
         unwindInfo->SetHasCalls(true);
     }
@@ -1303,13 +1306,13 @@ LowererMD::LowerEntryInstr(IR::EntryInstr * entryInstr)
             BYTE firstDoubleReg = UnwindInfoManager::GetFirstSavedReg(usedDoubleRegs.GetWord());
 
             // We do want to push all the double registers in a single VPUSH instructions
-            // This might cause us to vpush some registers which are not used
+            // This might cause us to VPUSH some registers which are not used
             // But this makes unwind & prolog simple. But if we do see this case a lot
-            // then consider adding multiple vpush
+            // then consider adding multiple VPUSH
             short count = lastDoubleReg - firstDoubleReg + 1;
 
             //Register allocator can allocate a temp reg from the other end of the bit vector so that it can keep it live for longer.
-            //Hence count may not be equal to doubleRegCount in all scenarios. These are rare and hence its ok to use single VPUSH instruction.
+            //Hence count may not be equal to doubleRegCount in all scenarios. These are rare and hence its okay to use single VPUSH instruction.
 
             //handle these scenarios for free builds
             usedDoubleRegs.SetRange(firstDoubleReg, count);
@@ -1318,7 +1321,7 @@ LowererMD::LowerEntryInstr(IR::EntryInstr * entryInstr)
     }
     else
     {
-        //Set for all the calle saved double registers
+        // Set for all the callee saved double registers
         usedDoubleRegs.SetRange(RegD8-RegD0, CALLEE_SAVED_DOUBLE_REG_COUNT);
         doubleRegCount = CALLEE_SAVED_DOUBLE_REG_COUNT;
     }
@@ -1369,7 +1372,7 @@ LowererMD::LowerEntryInstr(IR::EntryInstr * entryInstr)
     ThreadContext *threadContext = this->m_func->GetScriptContext()->GetThreadContext();
     DWORD stackProbeStackHeight = this->m_func->m_localStackHeight;
 
-    // Ugggggg. If we've already got calls and we don't have a try, we need to take adjustments
+    // If we've already got calls and we don't have a try, we need to take adjustments
     // below into account to determine whether our not our final stack height is going to be
     // encodable. We're not going to take into account the adjustment for saving R4, because we're
     // trying to figure out if we will be able to encode if we DON'T save it. If we save it anyway,
@@ -1397,7 +1400,7 @@ LowererMD::LowerEntryInstr(IR::EntryInstr * entryInstr)
     if (hasCalls)
     {
         //If we need a dedicated arguments slot we mark R12 as the save register.
-        //This is to immitate PUSH 0 to arguments slot.
+        //This is to imitate PUSH 0 to arguments slot.
         regEncode = RegEncode[SCRATCH_REG];
         usedRegs.Set(regEncode);
         unwindInfo->SetSavedReg(regEncode);
@@ -1408,7 +1411,7 @@ LowererMD::LowerEntryInstr(IR::EntryInstr * entryInstr)
         regSaveArea += 3 * MachRegInt;
         this->m_func->m_ArgumentsOffset += 3 * MachRegInt;
 
-        //Note: Seperate push instruction is gnerated for r11 & lr push and hence usedRegs mask is not updated with
+        //Note: Separate push instruction is generated for r11 & lr push and hence usedRegs mask is not updated with
         //bit mask for these registers.
 
         if (!IsSmallStack(stackAdjust) || useDynamicStackProbe)
@@ -1416,12 +1419,12 @@ LowererMD::LowerEntryInstr(IR::EntryInstr * entryInstr)
             unwindInfo->SetSavedScratchReg(true);
             if (!usedRegs.Test(RegEncode[SP_ALLOC_SCRATCH_REG])) //If its a large stack and RegR4 is not already saved.
             {
-                //If it is not a small stack we have to call __chkstk.
-                //__chkstk has special calling convention and trashes R4
-                // And if we're probing the stack dynamically, we need an extra reg to do the frame size calc.
+                // If it is not a small stack we have to call __chkstk.
+                // __chkstk has special calling convention and trashes R4
+                // And if we're probing the stack dynamically, we need an extra reg to do the frame size calculation.
                 //
                 // Note that it's possible that we now no longer need a dynamic stack probe because
-                // m_localStackHeight may be encodable in Mod12. However, this is a chicken-and-egg
+                // m_localStackHeight may be encodeable in Mod12. However, this is a chicken-and-egg
                 // problem, so we're going to stick with saving R4 even though it's possible it
                 // won't get modified.
                 usedRegs.Set(RegEncode[SP_ALLOC_SCRATCH_REG]);
@@ -1458,7 +1461,7 @@ LowererMD::LowerEntryInstr(IR::EntryInstr * entryInstr)
     {
         JsFunctionCodeGen * functionCodeGen = reinterpret_cast<JsFunctionCodeGen *>(this->m_func->m_workItem);
 
-        // 2 substraction for frame pointer & return address
+        // 2 subtraction for frame pointer & return address
         functionCodeGen->GetFunctionBody()->SetFrameHeight(static_cast<Js::FunctionEntryPointInfo*>(functionCodeGen->GetEntryPoint()),
             this->m_func->m_localStackHeight + this->m_func->m_ArgumentsOffset - 2 * MachRegInt);
 
@@ -1584,8 +1587,8 @@ LowererMD::LowerEntryInstr(IR::EntryInstr * entryInstr)
         insertInstr->InsertBefore(instrPush);
     }
 
-    //If the stack size is less than a page allocate the stack first & then do the stack probe
-    //stacklimit has a buffer of StackOverflowHandlingBufferPages pages and we are ok here
+    // If the stack size is less than a page allocate the stack first & then do the stack probe
+    // stack limit has a buffer of StackOverflowHandlingBufferPages pages and we are okay here
     if (stackAdjust != 0)
     {
         GenerateStackAllocation(insertInstr, stackAdjust, probeSize);
@@ -1616,8 +1619,8 @@ LowererMD::LowerEntryInstr(IR::EntryInstr * entryInstr)
                                                         this->m_func));
     }
 
-    // Now do the probestack for small stacks
-    // hasCalls catches the recurssion case
+    // Now do the stack probe for small stacks
+    // hasCalls catches the recursion case
     if ((stackAdjust != 0 || hasCalls) && fStackProbeAfterProlog)
     {
         GenerateStackProbe(insertInstr, true); //stack is already aligned in this case
@@ -1678,8 +1681,8 @@ LowererMD::LowerExitInstr(IR::ExitInstr * exitInstr)
         }
     }
 
-    // We need to have the same register saves inthe prolog as the arm_CallEhFrame, so that we can use the same
-    // epilog.  So always allocate a slot fo the stack nested func here whether we actually do have any stack
+    // We need to have the same register saves in the prolog as the arm_CallEhFrame, so that we can use the same
+    // epilog.  So always allocate a slot for the stack nested func here whether we actually do have any stack
     // nested func or not
     // TODO-STACK-NESTED-FUNC:  May be use a different arm_CallEhFrame for when we have stack nested func?
     if (this->m_func->HasAnyStackNestedFunc() || hasTry)
@@ -1690,7 +1693,7 @@ LowererMD::LowerExitInstr(IR::ExitInstr * exitInstr)
     bool hasCalls = this->m_func->m_unwindInfo.GetHasCalls();
     if (hasCalls)
     {
-        //__chkstk has special calling convention and uses R4, and dynamic stack proble on large frames use it too
+        // __chkstk has special calling convention and uses R4, and dynamic stack probe on large frames use it too
         if (this->m_func->m_unwindInfo.GetSavedScratchReg())
         {
             usedRegs.Set(RegEncode[SP_ALLOC_SCRATCH_REG]);
@@ -1815,8 +1818,8 @@ IR::Instr *
 LowererMD::LoadNewScObjFirstArg(IR::Instr * instr, IR::Opnd * argSrc, ushort extraArgs)
 {
     // Spread moves down the argument slot by one.
-        // LowerCallArgs will handle the extraArgs. We only need to specify the the argument number 
-        // i.e 1 and not + extraArgs as done in AMD64
+    // LowerCallArgs will handle the extraArgs. We only need to specify the argument number
+    // i.e 1 and not + extraArgs as done in AMD64
     IR::SymOpnd *argOpnd = IR::SymOpnd::New(this->m_func->m_symTable->GetArgSlotSym(1), TyVar, this->m_func);
     IR::Instr *argInstr = IR::Instr::New(Js::OpCode::ArgOut_A, argOpnd, argSrc, this->m_func);
     instr->InsertBefore(argInstr);
@@ -2016,11 +2019,11 @@ LowererMD::LoadInputParamCount(IR::Instr * instrInsert, int adjust, bool needFla
     IR::SymOpnd * srcOpnd;
 
     //  LDR Rz, CallInfo
-    //  LSR Rx, Rz, #28  //Get CallEval bit as bottom bit.
-    //  AND Rx, Rx, #1   //Mask higher 3 bits, Rx has 1 if Frameidsplay is present, zero otherwise
-    //  LSL Rz, Rz, #8   //Mask higher 8 bits to get the number of arguments
+    //  LSR Rx, Rz, #28  // Get CallEval bit as bottom bit.
+    //  AND Rx, Rx, #1   // Mask higher 3 bits, Rx has 1 if FrameDisplay is present, zero otherwise
+    //  LSL Rz, Rz, #8   // Mask higher 8 bits to get the number of arguments
     //  LSR Rz, Rz, #8
-    //  SUB Rz, Rz, Rx   //Now Rz has the right number of parameters
+    //  SUB Rz, Rz, Rx   // Now Rz has the right number of parameters
 
     srcOpnd = Lowerer::LoadCallInfo(instrInsert);
 
@@ -2052,7 +2055,7 @@ LowererMD::LoadInputParamCount(IR::Instr * instrInsert, int adjust, bool needFla
         Lowerer::InsertAdd(false, evalBitOpnd, evalBitOpnd, IR::IntConstOpnd::New(-adjust, TyUint32, this->m_func), instrInsert);
     }
 
-    return Lowerer::InsertSub(needFlags, dstOpnd, dstOpnd, evalBitOpnd, instrInsert);    
+    return Lowerer::InsertSub(needFlags, dstOpnd, dstOpnd, evalBitOpnd, instrInsert);
 }
 
 IR::Instr *
@@ -2188,7 +2191,7 @@ LowererMD::LoadHeapArguments(IR::Instr * instrArgs, bool force /* = false */, IR
     {
         // s7 = formals are let decls
         this->LoadHelperArgument(instrArgs, IR::IntConstOpnd::New(instrArgs->m_opcode == Js::OpCode::LdLetHeapArguments ? TRUE : FALSE, TyUint8, func));
-        
+
         // s6 = memory context
         this->m_lowerer->LoadScriptContext(instrArgs);
 
@@ -2396,7 +2399,7 @@ LowererMD::ChangeToHelperCall(IR::Instr * callInstr, IR::JnHelperMethod helperMe
     IR::HelperCallOpnd *helperCallOpnd = Lowerer::CreateHelperCallOpnd(helperMethod, this->GetHelperArgsCount(), m_func);
     if (helperCallOpnd->IsDiagHelperCallOpnd())
     {
-        // Load arguments for the wrapper.        
+        // Load arguments for the wrapper.
         this->LoadHelperArgument(callInstr, IR::AddrOpnd::New((Js::Var)IR::GetMethodOriginalAddress(helperMethod), IR::AddrOpndKindDynamicMisc, m_func));
         this->m_lowerer->LoadScriptContext(callInstr);
     }
@@ -2572,8 +2575,7 @@ LowererMD::LowerMultiBranch(IR::Instr * instr)
 ///
 /// LowererMD::MDBranchOpcode
 ///
-///     Map HIR branch opcode to machine-dependent equivalent. TODO: Consider
-/// replacing the switch with a table-driven solution.
+///     Map HIR branch opcode to machine-dependent equivalent.
 ///
 ///----------------------------------------------------------------------------
 
@@ -2612,17 +2614,17 @@ LowererMD::MDBranchOpcode(Js::OpCode opcode)
     case Js::OpCode::BrNotLt_A:
         return Js::OpCode::BGE;
 
-    case Js::OpCode::BrUnGt_A:    
-        return Js::OpCode::BHI; 
+    case Js::OpCode::BrUnGt_A:
+        return Js::OpCode::BHI;
 
     case Js::OpCode::BrUnGe_A:
-        return Js::OpCode::BCS; 
+        return Js::OpCode::BCS;
 
     case Js::OpCode::BrUnLt_A:
-        return Js::OpCode::BCC; 
+        return Js::OpCode::BCC;
 
     case Js::OpCode::BrUnLe_A:
-        return Js::OpCode::BLS; 
+        return Js::OpCode::BLS;
 
     default:
         AssertMsg(0, "NYI");
@@ -2838,7 +2840,7 @@ LowererMD::LowerCondBranch(IR::Instr * instr)
                 AssertMsg(opndSrc1->IsRegOpnd(),"NYI for other operands");
                 Assert(opndSrc2->IsFloat64());
                 Assert(opndSrc2->IsRegOpnd() && opndSrc1->IsRegOpnd());
-                //This comparision updates the FPSCR - floating point status control register
+                //This comparison updates the FPSCR - floating point status control register
                 instrPrev = IR::Instr::New(Js::OpCode::VCMPF64, this->m_func);
                 instrPrev->SetSrc1(opndSrc1);
                 instrPrev->SetSrc2(opndSrc2);
@@ -2948,7 +2950,7 @@ LowererMD::GenerateFastDivByPow2(IR::Instr *instrDiv)
     //// dst = EOR   s1, 1                 -- restore tagged int bit
     ////       B  $done
     //// $doesntDivideEqually:
-    ////       (now check if it divides with the remainder of 1, for which we can do integer divide and accomodate with +0.5
+    ////       (now check if it divides with the remainder of 1, for which we can do integer divide and accommodate with +0.5
     ////       note that we need only the part that is to the left of p's power 2 bit)
     //// s1 =  AND  s1, 0x80000001 | (src2Value - 1)
     ////       CMP  s1, 1
@@ -3164,9 +3166,9 @@ LowererMD::GenerateFastBrString(IR::BranchInstr* instrBr)
     }
 
     // Check operands for TypeIds_String typeids
-    
+
     this->m_lowerer->GenerateStringTest(regSrc1, instrBr, labelHelper);
-    this->m_lowerer->GenerateStringTest(regSrc2, instrBr, labelHelper);  
+    this->m_lowerer->GenerateStringTest(regSrc2, instrBr, labelHelper);
 
     // Compare the lengths of the two strings and branch to $fail if not equal
     // len1    = LDR [regSrc1 + offset(m_charLength)]
@@ -3324,7 +3326,7 @@ bool LowererMD::GenerateFastCmXxTaggedInt(IR::Instr *instr)
     IR::LabelInstr * fallthru = IR::LabelInstr::New(Js::OpCode::Label, m_func);
 
     Assert(src1 && src2 && dst);
-    
+
     // Not tagged ints?
     if (src1->IsRegOpnd() && src1->AsRegOpnd()->m_sym->m_isNotInt)
     {
@@ -3339,55 +3341,55 @@ bool LowererMD::GenerateFastCmXxTaggedInt(IR::Instr *instr)
     switch ( instr->m_opcode)
     {
         case Js::OpCode::CmEq_A:
-        case Js::OpCode::CmSrEq_A:  
+        case Js::OpCode::CmSrEq_A:
         case Js::OpCode::CmEq_I4:
-            opcode = Js::OpCode::BEQ; 
+            opcode = Js::OpCode::BEQ;
             break;
 
         case Js::OpCode::CmNeq_A:
-        case Js::OpCode::CmSrNeq_A: 
+        case Js::OpCode::CmSrNeq_A:
         case Js::OpCode::CmNeq_I4:
-            opcode = Js::OpCode::BNE; 
+            opcode = Js::OpCode::BNE;
             break;
 
-        case Js::OpCode::CmGt_A:    
-        case Js::OpCode::CmGt_I4:    
-            opcode = Js::OpCode::BGT; 
+        case Js::OpCode::CmGt_A:
+        case Js::OpCode::CmGt_I4:
+            opcode = Js::OpCode::BGT;
             break;
 
         case Js::OpCode::CmGe_A:
         case Js::OpCode::CmGe_I4:
-            opcode = Js::OpCode::BGE; 
+            opcode = Js::OpCode::BGE;
             break;
 
         case Js::OpCode::CmLt_A:
         case Js::OpCode::CmLt_I4:
-            opcode = Js::OpCode::BLT; 
+            opcode = Js::OpCode::BLT;
             break;
 
         case Js::OpCode::CmLe_A:
         case Js::OpCode::CmLe_I4:
-            opcode = Js::OpCode::BLE; 
+            opcode = Js::OpCode::BLE;
             break;
 
-        case Js::OpCode::CmUnGt_A:    
-        case Js::OpCode::CmUnGt_I4:    
-            opcode = Js::OpCode::BHI; 
+        case Js::OpCode::CmUnGt_A:
+        case Js::OpCode::CmUnGt_I4:
+            opcode = Js::OpCode::BHI;
             break;
 
         case Js::OpCode::CmUnGe_A:
         case Js::OpCode::CmUnGe_I4:
-            opcode = Js::OpCode::BCS; 
+            opcode = Js::OpCode::BCS;
             break;
 
         case Js::OpCode::CmUnLt_A:
         case Js::OpCode::CmUnLt_I4:
-            opcode = Js::OpCode::BCC; 
+            opcode = Js::OpCode::BCC;
             break;
 
         case Js::OpCode::CmUnLe_A:
         case Js::OpCode::CmUnLe_I4:
-            opcode = Js::OpCode::BLS; 
+            opcode = Js::OpCode::BLS;
             break;
 
         default: Assert(false);
@@ -4224,7 +4226,7 @@ LowererMD::GenerateFastNeg(IR::Instr * instrNeg)
     //
     //       if not int, jump $helper
     //       if src == 0     -- test for zero (must be handled by the runtime to preserve
-    //       BEQ $helper     -- Difference btw +0 and -0)
+    //       BEQ $helper     -- Difference between +0 and -0)
     // dst = RSB src, 0      -- do an inline NEG
     // dst = ADD dst, 2      -- restore the var tag on the result
     //       BVS $helper
@@ -5079,9 +5081,8 @@ LowererMD::GenerateFastLdMethodFromFlags(IR::Instr * instrLdFld)
 
     Assert(!instrLdFld->DoStackArgsOpt(this->m_func));
 
-    // TODO (jedmiad): LdMethodFromFlags doesn't participate in object type specialization.  We should be using a temporary
+    // TODO: LdMethodFromFlags doesn't participate in object type specialization.  We should be using a temporary
     // register without a type sym here.
-    // Assert(!propertySymOpnd->IsTypeCheckSeqCandidate)?
     if (propertySymOpnd->IsTypeCheckSeqCandidate())
     {
         AssertMsg(propertySymOpnd->HasObjectTypeSym(), "Type optimized property sym operand without a type sym?");
@@ -5111,7 +5112,7 @@ LowererMD::GenerateFastLdMethodFromFlags(IR::Instr * instrLdFld)
     this->m_lowerer->GenerateObjectTestAndTypeLoad(instrLdFld, opndBase, opndType, bailOutLabel);
     //Blindly do the check for getter flag first and then do the type check
     //We avoid repeated check for getter flag when the function object may be in either
-    //inline slots or auxilary slots
+    //inline slots or auxiliary slots
     GenerateFlagInlineCacheCheckForGetterSetter(instrLdFld, opndInlineCache, bailOutLabel);
     GenerateFlagInlineCacheCheck(instrLdFld, opndType, opndInlineCache, labelFlagAux);
     GenerateLdFldFromFlagInlineCache(instrLdFld, opndBase, opndInlineCache, opndDst, labelFallThru, true);
@@ -5194,8 +5195,6 @@ LowererMD::GenerateFastScopedFld(IR::Instr * instrScopedFld, bool isLoad)
         "Expected property sym operand of ScopedLdFld or ScopedStFld");
 
     IR::PropertySymOpnd * propertySymOpnd = propertyBase->AsPropertySymOpnd();
-
-    // TODO (jedmiad): Assert(!propertySymOpnd->IsTypeCheckSeqCandidate())?
 
     opndBase = propertySymOpnd->CreatePropertyOwnerOpnd(m_func);
     AssertMsg(opndBase->m_sym->m_isSingleDef, "We assume this isn't redefined");
@@ -5539,8 +5538,8 @@ void LowererMD::GenerateSmIntTest(IR::Opnd *opndSrc, IR::Instr *insertInstr, IR:
 void LowererMD::GenerateInt32ToVarConversion(IR::Opnd * opndSrc, IR::Instr * insertInstr )
 {
     AssertMsg(opndSrc->IsRegOpnd(), "NYI for other types");
-    //Shift left & tag.
-    //TODO: Check for overflow. For now this is used only for actual arguments count can only be 24 bits long and non need to check for overflow
+    // Shift left & tag.
+    // For now this is used only for actual arguments count can only be 24 bits long and non need to check for overflow
     IR:: Instr* instr = IR::Instr::New(Js::OpCode::LSL, opndSrc, opndSrc, IR::IntConstOpnd::New(Js::VarTag_Shift, TyInt8, this->m_func), this->m_func);
     insertInstr->InsertBefore(instr);
 
@@ -6038,8 +6037,7 @@ bool LowererMD::TryGenerateFastMulAdd(IR::Instr * instrAdd, IR::Instr ** pInstrP
     // Generate code to call the Mul-Add helper.
     // Although for the case when one of the source is marked notInt we could just return false from here,
     // it seems that since we did all the checks to see that this is mul+add, it makes sense to use mul-add helper
-    // rather than 2 separate helpers - one for mul and one for add (by returning false). SunSpider results seem
-    // to be consistent with this observation, although the diff is not much ~10ms.
+    // rather than 2 separate helpers - one for mul and one for add (by returning false).
     if (instrAdd->dstIsTempNumber)
     {
         m_lowerer->LoadHelperTemp(instrAdd, instrAdd);
@@ -6102,7 +6100,7 @@ LowererMD::LoadCheckedFloat(
     // flt = VLDR [t0 + offset(value)]
 
     IR::Instr * instr = nullptr;
-    IR::Opnd * opnd = IR::RegOpnd::New(TyMachReg, this->m_func);;
+    IR::Opnd * opnd = IR::RegOpnd::New(TyMachReg, this->m_func);
 
     IR::Instr * instrFirst = IR::Instr::New(Js::OpCode::ASRS, opnd, opndOrig,
                                             IR::IntConstOpnd::New(Js::AtomTag, TyMachReg, this->m_func),
@@ -6491,7 +6489,7 @@ LowererMD::GenerateFastRecyclerAlloc(size_t allocSize, IR::RegOpnd* newObjDst, I
 
     IR::RegOpnd * allocatorAddressRegOpnd = IR::RegOpnd::New(TyMachPtr, this->m_func);
 
-    // LDIMM allocatorAddressRegOpnd, allocator    
+    // LDIMM allocatorAddressRegOpnd, allocator
     IR::AddrOpnd* allocatorAddressOpnd = IR::AddrOpnd::New(allocatorAddress, IR::AddrOpndKindDynamicMisc, this->m_func);
     IR::Instr * loadAllocatorAddressInstr = IR::Instr::New(Js::OpCode::LDIMM, allocatorAddressRegOpnd, allocatorAddressOpnd, this->m_func);
     insertionPointInstr->InsertBefore(loadAllocatorAddressInstr);
@@ -6564,7 +6562,7 @@ LowererMD::SaveDoubleToVar(IR::RegOpnd * dstOpnd, IR::RegOpnd *opndFloat, IR::In
         symVTableDst = IR::SymOpnd::New(tempNumberSym, TyMachPtr, this->m_func);
         symDblDst = IR::SymOpnd::New(tempNumberSym, (uint32)Js::JavascriptNumber::GetValueOffset(), TyFloat64, this->m_func);
         symTypeDst = IR::SymOpnd::New(tempNumberSym, (uint32)Js::JavascriptNumber::GetOffsetOfType(), TyMachPtr, this->m_func);
-        
+
         if (this->m_lowerer->outerMostLoopLabel == nullptr)
         {
             // If we are not in loop, just insert in place
@@ -6572,7 +6570,7 @@ LowererMD::SaveDoubleToVar(IR::RegOpnd * dstOpnd, IR::RegOpnd *opndFloat, IR::In
         }
         else
         {
-            // Otherwise, initialize in the outter most loop top if we haven't initailize it yet.
+            // Otherwise, initialize in the outer most loop top if we haven't initialize it yet.
             numberInitInsertInstr = this->m_lowerer->initializedTempSym->TestAndSet(tempNumberSym->m_id) ?
                 nullptr : this->m_lowerer->outerMostLoopLabel;
         }
@@ -6607,7 +6605,7 @@ LowererMD::SaveDoubleToVar(IR::RegOpnd * dstOpnd, IR::RegOpnd *opndFloat, IR::In
     instrInsert->InsertBefore(newInstr);
     LegalizeMD::LegalizeInstr(newInstr, false);
 
-   
+
 }
 
 
@@ -6801,7 +6799,7 @@ bool LowererMD::GenerateFastCharAt(Js::BuiltinFunction index, IR::Opnd *dst, IR:
     // char         =   LSL char, VarShift
     // dst          =   ADD char, AtomTag
 
-    bool isInt = false;    
+    bool isInt = false;
     IR::Instr *instr;
     IR::IndirOpnd *indirOpnd;
     IR::RegOpnd *regSrcStr;
@@ -6811,7 +6809,7 @@ bool LowererMD::GenerateFastCharAt(Js::BuiltinFunction index, IR::Opnd *dst, IR:
         if (srcStr->AsRegOpnd()->IsTaggedInt())
         {
             isInt = true;
-        }       
+        }
     }
 
     if (isInt)
@@ -6843,9 +6841,9 @@ bool LowererMD::GenerateFastCharAt(Js::BuiltinFunction index, IR::Opnd *dst, IR:
     {
         regSrcStr = IR::RegOpnd::New(TyMachReg, this->m_func);
         LowererMD::CreateAssign(regSrcStr, srcStr, insertInstr);
-    }   
+    }
 
-    this->m_lowerer->GenerateStringTest(regSrcStr, insertInstr, labelHelper);    
+    this->m_lowerer->GenerateStringTest(regSrcStr, insertInstr, labelHelper);
 
     // psz = LDR [regSrc + offset(m_pszValue)]
     IR::RegOpnd *psz = IR::RegOpnd::New(TyMachPtr, this->m_func);
@@ -7071,20 +7069,20 @@ br1_Common:
         instr->m_opcode = Js::OpCode::BLT;
         goto br2_Common;
 
-    case Js::OpCode::BrUnGt_I4:    
-        instr->m_opcode = Js::OpCode::BHI; 
+    case Js::OpCode::BrUnGt_I4:
+        instr->m_opcode = Js::OpCode::BHI;
         goto br2_Common;
 
     case Js::OpCode::BrUnGe_I4:
-        instr->m_opcode = Js::OpCode::BCS; 
+        instr->m_opcode = Js::OpCode::BCS;
         goto br2_Common;
 
     case Js::OpCode::BrUnLt_I4:
-        instr->m_opcode = Js::OpCode::BCC; 
+        instr->m_opcode = Js::OpCode::BCC;
         goto br2_Common;
 
     case Js::OpCode::BrUnLe_I4:
-        instr->m_opcode = Js::OpCode::BLS; 
+        instr->m_opcode = Js::OpCode::BLS;
         goto br2_Common;
 
 br2_Common:
@@ -7987,7 +7985,7 @@ LowererMD::GenerateLdThisCheck(IR::Instr * instr)
 // TST objectReg, Js::AtomTag
 // BNE done
 //
-// return false if object is a primitve
+// return false if object is a primitive
 // LDR typeReg, objectSrc + offsetof(RecyclableObject::type)
 // LDR typeID, [typeReg + offsetof(Type::typeid)]
 // CMP typeID, TypeIds_LastJavascriptPrimitiveType
@@ -8313,7 +8311,7 @@ void LowererMD::GenerateFastInlineBuiltInCall(IR::Instr* instr, IR::JnHelperMeth
         instr->InsertBefore(floatCall);
 
         // lr = MOV helperAddr
-        //      BLX lr        
+        //      BLX lr
         IR::AddrOpnd* targetAddr = IR::AddrOpnd::New((Js::Var)IR::GetMethodOriginalAddress(helperMethod), IR::AddrOpndKind::AddrOpndKindDynamicMisc, this->m_func);
         IR::RegOpnd *targetOpnd = IR::RegOpnd::New(nullptr, RegLR, TyMachPtr, this->m_func);
         IR::Instr   *movInstr   = IR::Instr::New(Js::OpCode::LDIMM, targetOpnd, targetAddr, this->m_func);
@@ -8347,7 +8345,7 @@ LowererMD::GenerateFastInlineBuiltInMathAbs(IR::Instr *inlineInstr)
         // Then: abs(x) = sign-extend(x) XOR x - sign-extend(x)
 
         // Expected input (otherwise bailout):
-        // - src1 is (untagged) int, not equal to int_min (abs(int_min) would produce overflow, as there's no corresponsing positive int).
+        // - src1 is (untagged) int, not equal to int_min (abs(int_min) would produce overflow, as there's no corresponding positive int).
 
         Assert(src->IsRegOpnd());
         // tmpDst = EOR src, src ASR #31
@@ -8412,9 +8410,9 @@ LowererMD::GenerateFastInlineBuiltInMathFloor(IR::Instr* instr)
     // BVS  $bailoutLabel
     instr->InsertBefore(IR::Instr::New(Js::OpCode::VMRS, this->m_func));
     instr->InsertBefore(IR::BranchInstr::New(Js::OpCode::BVS, bailoutLabel, this->m_func));
-    
+
     IR::Opnd * zeroReg = IR::RegOpnd::New(TyFloat64, this->m_func);
-    this->LoadFloatZero(zeroReg, instr);    
+    this->LoadFloatZero(zeroReg, instr);
 
     // VMRS  Rorig, FPSCR
     // VMRS  Rt, FPSCR
@@ -8515,7 +8513,7 @@ LowererMD::GenerateFastInlineBuiltInMathCeil(IR::Instr* instr)
     // BVS  $bailoutLabel
     instr->InsertBefore(IR::Instr::New(Js::OpCode::VMRS, this->m_func));
     instr->InsertBefore(IR::BranchInstr::New(Js::OpCode::BVS, bailoutLabel, this->m_func));
-    
+
     IR::Opnd * zeroReg = IR::RegOpnd::New(TyFloat64, this->m_func);
     this->LoadFloatZero(zeroReg, instr);
 
@@ -9145,7 +9143,7 @@ LowererMD::Legalize(IR::Instr *const instr, bool fPostRegAlloc)
 
     if (verify)
     {
-        // TODO: NYI for the rest of legalization
+        // NYI for the rest of legalization
         return;
     }
     LegalizeMD::LegalizeInstr(instr, fPostRegAlloc);
@@ -9156,7 +9154,7 @@ template void LowererMD::Legalize<false>(IR::Instr *const instr, bool fPostRegal
 template void LowererMD::Legalize<true>(IR::Instr *const instr, bool fPostRegalloc);
 #endif
 
-void 
+void
 LowererMD::FinalLower()
 {
     NoRecoverMemoryArenaAllocator tempAlloc(L"BE-ARMFinalLower", m_func->m_alloc->GetPageAllocator(), Js::Throw::OutOfMemory);
@@ -9301,7 +9299,7 @@ LowererMD::FinalLowerAssign(IR::Instr * instr)
         Assert(src1->IsRegOpnd() && src1->AsRegOpnd()->GetReg() != RegR12);
         Assert(src2->IsRegOpnd() && src2->AsRegOpnd()->GetReg() != RegR12);
 
-        //r12 = SDIV src1, src2 
+        //r12 = SDIV src1, src2
         IR::RegOpnd *regR12 = IR::RegOpnd::New(nullptr, RegR12, TyMachReg, instr->m_func);
         IR::Instr *insertInstr = IR::Instr::New(Js::OpCode::SDIV, regR12, src1, src2, instr->m_func);
         instr->InsertBefore(insertInstr);

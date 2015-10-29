@@ -150,8 +150,6 @@ function makeArray(size) {
 
 let arrayGenerators = [
   makeArray,
-  // causes bailouts right now
-  // function() {return []; }
 ];
 
 function makeSource(size) {
@@ -162,7 +160,6 @@ function makeSource(size) {
   return s;
 }
 
-//testCases = [testCases[4]] // to run only one test case
 for(let testCase of testCases) {
   let results = [];
   let testInfo = testCase();

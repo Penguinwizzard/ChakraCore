@@ -22,7 +22,7 @@ namespace Js
     ///
     /// struct TimeEntry
     ///
-    /// Simple pair of (tag, timestamp). 
+    /// Simple pair of (tag, timestamp).
     ///
     ///----------------------------------------------------------------------------
     ///----------------------------------------------------------------------------
@@ -32,11 +32,11 @@ namespace Js
     {
         Phase          tag;
         TimeStamp           time;
-        
+
         explicit TimeEntry(Phase profileTag = InvalidPhase, TimeStamp curTime = 0) :
             tag(profileTag),
             time(curTime)
-        {}       
+        {}
     };
 
 
@@ -69,7 +69,7 @@ namespace Js
     public:
                 void                Add(TimeStamp, TimeStamp);
     };
-    
+
     ///----------------------------------------------------------------------------
     ///----------------------------------------------------------------------------
     ///
@@ -83,14 +83,14 @@ namespace Js
 
         friend class ScriptContextProfiler;
     // Local types
-    private:        
+    private:
 
         typedef TreeNode<UnitData, PhaseCount> TypeNode;
 
 
     // Data
     private:
-       
+
         //
         // Maximum depth of the stack. This should be some safe limit
         //
@@ -108,11 +108,11 @@ namespace Js
         static const int        TabWidth        = 1;
 
         static const int        PhaseNameWidth = 27;
-        
+
                 FixedStack<TimeEntry, MaxStackDepth>
                                 timeStack;
                 TimeStamp       inclSumAtLevel[PhaseCount];
-                                
+
                 TypeNode        rootNode;
                 TypeNode        *curNode;
 
@@ -128,18 +128,18 @@ namespace Js
 
         static  TimeStamp       GetTime();
         static  TimeStamp       GetFrequency();
-        
+
                 template<class FVisit>
         static  void            ForEachNode(Phase tag, TypeNode *curNode, FVisit visit, Phase parentTag = InvalidPhase);
 
                 void            Push(TimeEntry entry);
-                void            Pop(TimeEntry entry);              
+                void            Pop(TimeEntry entry);
                 void            PrintTree(TypeNode *curNode, TypeNode *baseNode, int, TimeStamp freq);
                 void            MergeTree(TypeNode *toNode, TypeNode *fromNode);
 
     // Methods
     public:
-              
+
                 class SuspendRecord
                 {
                 private:
@@ -167,6 +167,6 @@ namespace Js
 #define ASYNC_HOST_OPERATION_START(threadContext) { bool wasInAsync = threadContext->AsyncHostOperationStart(null)
 #define ASYNC_HOST_OPERATION_END(threadContext) threadContext->AsyncHostOperationEnd(wasInAsync, null)
 #else
-#define ASYNC_HOST_OPERATION_START(threadContext) 
-#define ASYNC_HOST_OPERATION_END(threadContext) 
+#define ASYNC_HOST_OPERATION_START(threadContext)
+#define ASYNC_HOST_OPERATION_END(threadContext)
 #endif

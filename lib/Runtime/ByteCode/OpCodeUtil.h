@@ -7,8 +7,8 @@
 namespace Js
 {
 class OpCodeUtil
-{   
-public:    
+{
+public:
     static wchar_t const * GetOpCodeName(OpCode op);
 
     static bool IsCallOp(OpCode op);
@@ -16,8 +16,8 @@ public:
     static bool IsProfiledCallOpWithICIndex(OpCode op);
     static bool IsProfiledReturnTypeCallOp(OpCode op);
 
-    // OpCode convertion functions
-    static void ConvertOpToNonProfiled(OpCode& op);  
+    // OpCode conversion functions
+    static void ConvertOpToNonProfiled(OpCode& op);
     static void ConvertNonCallOpToProfiled(OpCode& op);
     static void ConvertNonCallOpToProfiledWithICIndex(OpCode& op);
     static void ConvertNonCallOpToNonProfiled(OpCode& op);
@@ -35,7 +35,7 @@ public:
     static uint EncodedSize(OpCode op, LayoutSize layoutSize);
 
     static OpLayoutType GetOpCodeLayout(OpCode op);
-private:    
+private:
 #if DBG_DUMP || ENABLE_DEBUG_CONFIG_OPTIONS
     static wchar_t const * const OpCodeNames[(int)Js::OpCode::MaxByteSizedOpcodes + 1];
     static wchar_t const * const ExtendedOpCodeNames[];

@@ -42,7 +42,7 @@ private:
     INT_PTR intArraySetElementFastPathVtable;
     INT_PTR floatArraySetElementFastPathVtable;
 
-        // Cross site tracking
+    // Cross site tracking
     ScriptContextOptimizationOverrideInfo * crossSiteRoot;
     ScriptContextOptimizationOverrideInfo * crossSitePrev;
     ScriptContextOptimizationOverrideInfo * crossSiteNext;

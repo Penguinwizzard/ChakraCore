@@ -41,21 +41,21 @@ bool Js::Amd64StackFrame::InitializeByReturnAddress(void *returnAddress, ScriptC
     this->currentContext = pair;
     this->callerContext = pair + 1;
 
-    this->stackCheckCodeHeight = 
+    this->stackCheckCodeHeight =
         scriptContext->GetThreadContext()->DoInterruptProbe() ? stackCheckCodeHeightWithInterruptProbe
-        : scriptContext->GetThreadContext()->GetIsThreadBound() ? stackCheckCodeHeightThreadBound 
+        : scriptContext->GetThreadContext()->GetIsThreadBound() ? stackCheckCodeHeightThreadBound
         : stackCheckCodeHeightNotThreadBound;
 
     // this is the context for the current function
     RtlCaptureContext(currentContext);
     OnCurrentContextUpdated();
 
-    // Unwind stack to the frame wher RIP is the returnAddress
+    // Unwind stack to the frame where RIP is the returnAddress
     bool found = SkipToFrame(returnAddress);
 
     if (!found)
     {
-        AssertMsg(FALSE, "Amd64StackFrame: can't intialize: can't unwind the stack to specified unwindToAddress.");
+        AssertMsg(FALSE, "Amd64StackFrame: can't initialize: can't unwind the stack to specified unwindToAddress.");
         RtlCaptureContext(currentContext); // Restore trashed context, the best we can do.
     }
 
@@ -70,7 +70,7 @@ bool Js::Amd64StackFrame::Next()
         OnCurrentContextUpdated();
         return true;
     }
-    
+
     if (JavascriptFunction::IsNativeAddress(this->scriptContext, (void*)this->currentContext->Rip))
     {
         this->addressOfCodeAddr = this->GetAddressOfReturnAddress(true /*isCurrentContextNative*/, false /*shouldCheckForNativeAddr*/);
@@ -166,7 +166,7 @@ bool Js::Amd64StackFrame::Next(CONTEXT *context, ULONG64 imageBase, RUNTIME_FUNC
     return true;
 }
 
-bool 
+bool
 Js::Amd64StackFrame::NextFromNativeAddress(CONTEXT * context)
 {
     if (!context->Rip)
@@ -183,7 +183,7 @@ Js::Amd64StackFrame::NextFromNativeAddress(CONTEXT * context)
     // Rsp - To easily get to the arguments passed in
     //
     // Rbp - to walk to the next frame
-    
+
     context->Rip = *((DWORD64*)context->Rbp + 1);
     context->Rsp = (DWORD64)((DWORD64*)context->Rbp + 2);
     context->Rbp = *((DWORD64*)context->Rbp);
@@ -211,7 +211,7 @@ Js::Amd64StackFrame::SkipToFrame(void * returnAddress)
     return found;
 }
 
-bool 
+bool
 Js::Amd64StackFrame::IsInStackCheckCode(void *entry)
 {
     void *const codeAddr = GetInstructionPointer();

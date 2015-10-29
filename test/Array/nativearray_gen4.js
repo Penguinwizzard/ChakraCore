@@ -15,7 +15,6 @@ function test0() {
     function bar4(argMath8) {
         arrObj0.prop0 >>= obj1.prop1;
     }
-    //Code Snippet: fieldHoist1.ecs (Chained Objects)
     obj0._x = { a: 1, b: { n: 1 } }
     for (var v406513 = 0; v406513 < 3; v406513++) {
         // CSE when expressions present on LHS.

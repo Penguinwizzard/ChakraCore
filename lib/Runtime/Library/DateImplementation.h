@@ -6,7 +6,6 @@
 struct _SYSTEMTIME;
 
 namespace Js {
-    //Forward declarations
     struct SZS;
     
     class DateImplementation:
@@ -207,8 +206,6 @@ namespace Js {
         ///------------------------------------------------------------------------------
         __inline void EnsureYmdUtc(void)
         {
-    //      Assert(Js::NumberUtilities::IsFinite(m_tvUtc));
-
             if (m_grfval & DateValueType::YearMonthDayUTC)
             {
                 return;
@@ -428,14 +425,6 @@ namespace Js {
     StringBuilder* DateImplementation::GetDateDefaultString(Js::YMD *pymd, TZD *ptzd, DateTimeFlag noDateTime, ScriptContext* scriptContext, NewStringBuilderFunc newStringBuilder)
     {
         int hour, min;        
-
-        // pre-IE11:    Thu Feb 2 01:02:03 PST 2012
-        //           or Tue Feb 2 01:02:03 PST 2013 B.C.
-        //              string is 30 chars long as usual case
-        //    IE11+:    Tue Feb 02 2012 01:02:03 GMT-0800 (Pacific Standard Time)
-        //           or Thu Feb 02 -2012 01:02:03 GMT-0800 (Pacific Standard Time)
-        //           the Timezone (english) string is 34-chars long max (see http://www.timeanddate.com/library/abbreviations/timezones/)
-        //           thus overall string is 38+34 => 72 for usual cases
 
         StringBuilder* const bs = newStringBuilder(72);
 

@@ -8,7 +8,7 @@
 
 #define MACRO(name, jnLayout, attrib, byte2, legalforms, opbyte, ...) legalforms,
 
-static const LegalInstrForms _InstrForms[] = 
+static const LegalInstrForms _InstrForms[] =
 {
 #include "MdOpcodes.h"
 };
@@ -78,8 +78,8 @@ void LegalizeMD::LegalizeDst(IR::Instr * instr, bool fPostRegAlloc)
         if (fPostRegAlloc)
         {
             newReg->SetReg(SCRATCH_REG);
-        }        
-        IR::Instr *newInstr = IR::Instr::New(Js::OpCode::LDIMM, newReg, 
+        }
+        IR::Instr *newInstr = IR::Instr::New(Js::OpCode::LDIMM, newReg,
             IR::AddrOpnd::New(memLoc, opnd->AsMemRefOpnd()->GetAddrKind(), instr->m_func, true), instr->m_func);
         instr->InsertBefore(newInstr);
         LegalizeMD::LegalizeInstr(newInstr, fPostRegAlloc);
@@ -185,7 +185,7 @@ void LegalizeMD::LegalizeSrc(IR::Instr * instr, IR::Opnd * opnd, uint opndNum, b
         if (fPostRegAlloc)
         {
             newReg->SetReg(SCRATCH_REG);
-        }        
+        }
         IR::Instr *newInstr = IR::Instr::New(Js::OpCode::LDIMM, newReg, IR::AddrOpnd::New(memLoc, IR::AddrOpndKindDynamicMisc, instr->m_func), instr->m_func);
         instr->InsertBefore(newInstr);
         LegalizeMD::LegalizeInstr(newInstr, fPostRegAlloc);
@@ -259,7 +259,7 @@ void LegalizeMD::LegalizeIndirOffset(IR::Instr * instr, IR::IndirOpnd * indirOpn
 {
     if (forms & (L_VIndirI11))
     {
-        //Vfp doesn't support register register indirect operation
+        // Vfp doesn't support register indirect operation
         LegalizeMD::LegalizeIndirOpndForVFP(instr, indirOpnd, fPostRegAlloc);
         return;
     }
@@ -295,9 +295,9 @@ void LegalizeMD::LegalizeIndirOffset(IR::Instr * instr, IR::IndirOpnd * indirOpn
 }
 
 void LegalizeMD::LegalizeSymOffset(
-    IR::Instr * instr, 
-    IR::SymOpnd * symOpnd, 
-    LegalForms forms, 
+    IR::Instr * instr,
+    IR::SymOpnd * symOpnd,
+    LegalForms forms,
     bool fPostRegAlloc)
 {
     AssertMsg(fPostRegAlloc, "LegalizeMD::LegalizeSymOffset can (and will) be called as part of register allocation. Can't call it as part of lowerer, as final argument area is not available yet.");
@@ -359,11 +359,11 @@ void LegalizeMD::LegalizeSymOffset(
 }
 
 void LegalizeMD::LegalizeImmed(
-    IR::Instr * instr, 
-    IR::Opnd * opnd, 
-    uint opndNum, 
-    IntConstType immed, 
-    LegalForms forms, 
+    IR::Instr * instr,
+    IR::Opnd * opnd,
+    uint opndNum,
+    IntConstType immed,
+    LegalForms forms,
     bool fPostRegAlloc)
 {
     if (!(((forms & L_ImmModC12) && EncoderMD::CanEncodeModConst12(immed)) ||
@@ -444,7 +444,7 @@ void LegalizeMD::LegalizeLDIMM(IR::Instr * instr, IntConstType immed)
         {
             LegalizeMD::ObfuscateLDIMM(instrMov, instr);
         }
-    } 
+    }
     else
     {
         Assert(Security::DontEncode(instr->GetSrc1()));
@@ -470,7 +470,7 @@ void LegalizeMD::ObfuscateLDIMM(IR::Instr * instrMov, IR::Instr * instrMovt)
 {
     // Are security measures disabled?
 
-    if (CONFIG_ISENABLED(Js::DebugFlag) || 
+    if (CONFIG_ISENABLED(Js::DebugFlag) ||
         CONFIG_ISENABLED(Js::BenchmarkFlag) ||
         PHASE_OFF(Js::EncodeConstantsPhase, instrMov->m_func->GetTopFunc())
         )
@@ -517,9 +517,9 @@ void LegalizeMD::EmitRandomNopBefore(IR::Instr *insertInstr, UINT_PTR rand, RegN
     {
         // ORR pc,pc,0 has unpredicted behavior.
         // AND sp,sp,sp has unpredicted behavior.
-        // We avoid target reg to avoid pipeline stalls. 
+        // We avoid target reg to avoid pipeline stalls.
         // Less likely target reg will be RegR12 as we insert nops only for user defined constants and
-        // RegR12 is mostly used for temporary data such as legalizer post regalloc. 
+        // RegR12 is mostly used for temporary data such as legalizer post regalloc.
         opnd1->SetReg(RegR12);
     }
 
@@ -569,7 +569,7 @@ bool LegalizeMD::LegalizeDirectBranch(IR::BranchInstr *branchInstr, uint32 branc
     Assert(labelOffset); //Label offset must be set.
 
     int32 offset = labelOffset - branchOffset;
-    //We should never run out of 24 bits which corresponds to +-16MB of codesize.
+    //We should never run out of 24 bits which corresponds to +-16MB of code size.
     AssertMsg(IS_CONST_INT24(offset >> 1), "Cannot encode more that 16 MB offset");
 
     if (LowererMD::IsUnconditionalBranch(branchInstr))
@@ -586,7 +586,7 @@ bool LegalizeMD::LegalizeDirectBranch(IR::BranchInstr *branchInstr, uint32 branc
     // Convert beq Label (where Label is long jump) to something like this
     //          bne Fallback
     //          b Label
-    // Fallback: 
+    // Fallback:
 
     IR::LabelInstr *doneLabelInstr = IR::LabelInstr::New(Js::OpCode::Label, branchInstr->m_func, false);
     IR::BranchInstr *newBranchInstr = IR::BranchInstr::New(branchInstr->m_opcode, doneLabelInstr, branchInstr->m_func);
@@ -596,7 +596,7 @@ bool LegalizeMD::LegalizeDirectBranch(IR::BranchInstr *branchInstr, uint32 branc
     branchInstr->InsertAfter(doneLabelInstr);
     branchInstr->m_opcode = Js::OpCode::B;
     return true;
-} 
+}
 
 void LegalizeMD::LegalizeIndirOpndForVFP(IR::Instr* insertInstr, IR::IndirOpnd *indirOpnd, bool fPostRegAlloc)
 {
@@ -606,7 +606,7 @@ void LegalizeMD::LegalizeIndirOpndForVFP(IR::Instr* insertInstr, IR::IndirOpnd *
     IR::RegOpnd *indexOpnd = indirOpnd->UnlinkIndexOpnd(); //Clears index operand
     byte scale = indirOpnd->GetScale();
     IR::Instr *instr = NULL;
-    
+
     if (indexOpnd)
     {
         if (scale > 0)
@@ -616,7 +616,7 @@ void LegalizeMD::LegalizeIndirOpndForVFP(IR::Instr* insertInstr, IR::IndirOpnd *
             // If we encounter more such scenarios, its better to solve the root cause.
             // Also VSTR & VLDR don't take index operand as parameter
             IR::RegOpnd* newIndexOpnd = IR::RegOpnd::New(indexOpnd->GetType(), insertInstr->m_func);
-            instr = IR::Instr::New(Js::OpCode::LSL, newIndexOpnd, indexOpnd, 
+            instr = IR::Instr::New(Js::OpCode::LSL, newIndexOpnd, indexOpnd,
                                    IR::IntConstOpnd::New(scale, TyMachReg, insertInstr->m_func), insertInstr->m_func);
             insertInstr->InsertBefore(instr);
             indirOpnd->SetScale(0); //Clears scale

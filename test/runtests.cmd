@@ -38,18 +38,20 @@ goto :main
   echo.
   echo Required switches:
   echo.
-  echo   Specify architecture of jshost (required):
+  echo   Specify architecture of ChakraCore:
   echo.
   echo   -x86           Build arch of binaries is x86
   echo   -x64           Build arch of binaries is x64
   echo   -arm           Build arch of binaries is ARM
   echo.
-  echo   Specify type of jshost (required):
+  echo   Specify type of ChakraCore:
   echo.
   echo   -debug         Build type of binaries is debug
   echo   -test          Build type of binaries is test
   echo.
   echo   Shorthand combinations can be used, e.g. -x64debug
+  echo.
+  echo   Note: release build type currently unsupported by ch.exe
   echo.
   echo Options:
   echo.

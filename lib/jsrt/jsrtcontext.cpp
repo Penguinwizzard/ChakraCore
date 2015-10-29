@@ -140,5 +140,5 @@ void JsrtContext::Finalize(bool isShutdown)
 
 void JsrtContext::Mark(Recycler * recycler)
 {
-    AssertMsg(false, "Mark called on object that isnt TrackableObject");
+    AssertMsg(false, "Mark called on object that isn't TrackableObject");
 }

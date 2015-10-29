@@ -66,7 +66,7 @@ namespace UnifiedRegex
         {
             Assert(k < Size);
             __assume(k < Size);
-            if (k < Size) // keep prefast happy
+            if (k < Size)
                 vec[k / wordSize] |= 1U << (k % wordSize);
         }
 
@@ -76,7 +76,7 @@ namespace UnifiedRegex
             Assert(h < Size);
             __assume(l < Size);
             __assume(h < Size);
-            if  (l < Size && h < Size) // keep prefast happy
+            if  (l < Size && h < Size)
             {
                 if (l == h)
                     vec[l / wordSize] |= 1U << (l % wordSize);
@@ -85,15 +85,15 @@ namespace UnifiedRegex
                     int lw = l / wordSize;
                     int hw = h / wordSize;
                     int lo = l % wordSize;
-                    int ho = h % wordSize;
+                    int hio = h % wordSize;
                     if (lw == hw)
-                        setrng(vec[lw], lo, ho);
+                        setrng(vec[lw], lo, hio);
                     else
                     {
                         setrng(vec[lw], lo, wordSize-1);
                         for (int w = lw + 1; w < hw; w++)
                             vec[w] = ones;
-                        setrng(vec[hw], 0, ho);
+                        setrng(vec[hw], 0, hio);
                     }
                 }
             }
@@ -105,7 +105,7 @@ namespace UnifiedRegex
             Assert(h < Size);
             __assume(l < Size);
             __assume(h < Size);
-            if  (l < Size && h < Size) // keep prefast happy
+            if  (l < Size && h < Size)
             {
                 if (l == h)
                 {
@@ -116,17 +116,17 @@ namespace UnifiedRegex
                     int lw = l / wordSize;
                     int hw = h / wordSize;
                     int lo = l % wordSize;
-                    int ho = h % wordSize;
+                    int hio = h % wordSize;
                     if (lw == hw)
                     {
-                        clearrng(vec[lw], lo, ho);
+                        clearrng(vec[lw], lo, hio);
                     }
                     else
                     {
                         clearrng(vec[lw], lo, wordSize-1);
                         for (int w = lw + 1; w < hw; w++)
                             vec[w] = 0;
-                        clearrng(vec[hw], 0, ho);
+                        clearrng(vec[hw], 0, hio);
                     }
                 }
             }
@@ -165,7 +165,7 @@ namespace UnifiedRegex
         inline bool Get(uint k) const
         {
             Assert(k < Size);
-            __assume(k < Size); // keep prefast happy
+            __assume(k < Size);
             return ((vec[k / wordSize] >> (k % wordSize)) & 1) != 0;
         }
 
@@ -385,7 +385,6 @@ namespace UnifiedRegex
             CharSetNode* root;
             // Entries for first 256 characters
             CharBitvec direct;
-            // uint32 vec[Chars<char>::NumChars / (sizeof(uint32) * 8)];
         };
 
         union Rep
@@ -576,8 +575,8 @@ namespace UnifiedRegex
         static const int NumberOfPlanes = 17;
     private:
         // Character planes are composed of 65536 characters each.
-        // First plan is the Basic Multilingual Plane (characters 0 - 65535)
-        // Every subsequent plane also stores characters in the form [0 - 65535], to get the actual value, add 'index * 0x10000' to it
+        // First plane is the Basic Multilingual Plane (characters 0 - 65535)
+        // Every subsequent plane also stores characters in the form [0 - 65535]; to get the actual value, add 'index * 0x10000' to it
         CharSet<wchar_t> characterPlanes [NumberOfPlanes];
 
         // Takes a character, and returns the index of the CharSet<wchar_t> that holds it.

@@ -9,10 +9,10 @@
 template __forceinline BVSparseNode * BVSparse<JitArenaAllocator>::NodeFromIndex(BVIndex i, BVSparseNode *** prevNextFieldOut, bool create);
 
 ArenaData::ArenaData(PageAllocator * pageAllocator) :
-    pageAllocator(pageAllocator), 
-    bigBlocks(nullptr),    
-    mallocBlocks(nullptr), 
-    fullBlocks(nullptr), 
+    pageAllocator(pageAllocator),
+    bigBlocks(nullptr),
+    mallocBlocks(nullptr),
+    fullBlocks(nullptr),
     cacheBlockCurrent(nullptr),
     lockBlockList(false)
 {
@@ -34,13 +34,13 @@ void ArenaData::UpdateCacheBlock() const
 template <class TFreeListPolicy, size_t ObjectAlignmentBitShiftArg, bool RequireObjectAlignment, size_t MaxObjectSize>
 ArenaAllocatorBase<TFreeListPolicy, ObjectAlignmentBitShiftArg, RequireObjectAlignment, MaxObjectSize>::
 ArenaAllocatorBase(__in LPCWSTR name, PageAllocator * pageAllocator, void(*outOfMemoryFunc)(), void(*recoverMemoryFunc)()) :
-    Allocator(outOfMemoryFunc, recoverMemoryFunc), 
+    Allocator(outOfMemoryFunc, recoverMemoryFunc),
     ArenaData(pageAllocator),
 #ifdef ARENA_ALLOCATOR_FREE_LIST_SIZE
     freeListSize(0),
 #endif
     freeList(nullptr),
-    largestHole(0),     
+    largestHole(0),
     cacheBlockEnd(nullptr),
     blockState(0)
 {
@@ -61,7 +61,7 @@ ArenaAllocatorBase<TFreeListPolicy, ObjectAlignmentBitShiftArg, RequireObjectAli
 
     if (!pageAllocator->IsClosed())
     {
-        ReleasePageMemory();    
+        ReleasePageMemory();
     }
     ReleaseHeapMemory();
     TFreeListPolicy::Release(this->freeList);
@@ -170,7 +170,7 @@ RealAllocInlined(size_t nbytes)
     Assert(cacheBlockEnd >= cacheBlockCurrent);
     char * p = cacheBlockCurrent;
     if ((size_t)(cacheBlockEnd - p) >= nbytes)
-    {        
+    {
         Assert(cacheBlockEnd == bigBlocks->GetBytes() + bigBlocks->nbytes);
         Assert(bigBlocks->GetBytes() <= cacheBlockCurrent && cacheBlockCurrent <= cacheBlockEnd);
         cacheBlockCurrent = p + nbytes;
@@ -179,7 +179,7 @@ RealAllocInlined(size_t nbytes)
 
         return(p);
     }
-        
+
     return SnailAlloc(nbytes);
 
 }
@@ -204,7 +204,7 @@ SetCacheBlock(BigBlock * newCacheBlock)
             fullBlocks = cacheBlock;
         }
         else
-        {            
+        {
             largestHole = max(largestHole, static_cast<size_t>(cacheBlockRemainBytes));
         }
     }
@@ -242,13 +242,13 @@ SnailAlloc(size_t nbytes)
                 if (remainingBytes == largestHole || currentLargestHole > largestHole)
                 {
                     largestHole = currentLargestHole;
-                }                
-                remainingBytes -= nbytes;                
+                }
+                remainingBytes -= nbytes;
                 if (remainingBytes > cacheBlock->nbytes - cacheBlock->currentByte)
-                {                    
+                {
                     *pPrev = blockp->nextBigBlock;
                     SetCacheBlock(blockp);
-                }                
+                }
                 else if (remainingBytes < ObjectAlignment && !lockBlockList)
                 {
                     *pPrev = blockp->nextBigBlock;
@@ -258,11 +258,11 @@ SnailAlloc(size_t nbytes)
 
                 ArenaMemoryTracking::ReportAllocation(this, p, nbytes);
 
-                return(p);                
+                return(p);
             }
             currentLargestHole = max(currentLargestHole, remainingBytes);
             if (--giveUpAfter == 0)
-            {               
+            {
                 break;
             }
             pPrev = &(blockp->nextBigBlock);
@@ -271,12 +271,12 @@ SnailAlloc(size_t nbytes)
         while (blockp != nullptr);
     }
 
-    blockp = AddBigBlock(nbytes);   
+    blockp = AddBigBlock(nbytes);
     if (blockp == nullptr)
-    {            
+    {
         return AllocFromHeap<false>(nbytes);    // Passing DoRecoverMemory=false as we already tried recovering memory in AddBigBlock, and it is costly.
-    }        
-        
+    }
+
     this->blockState++;
     SetCacheBlock(blockp);
     char *p = cacheBlockCurrent;
@@ -295,11 +295,11 @@ ArenaAllocatorBase<TFreeListPolicy, ObjectAlignmentBitShiftArg, RequireObjectAli
 AllocFromHeap(size_t requestBytes)
 {
     size_t allocBytes = AllocSizeMath::Add(requestBytes, sizeof(ArenaMemoryBlock));
-    
+
     ARENA_FAULTINJECT_MEMORY(this->name, requestBytes);
 
     char * buffer = HeapNewNoThrowArray(char, allocBytes);
-    
+
     if (buffer == nullptr)
     {
         if (DoRecoverMemory && recoverMemoryFunc)
@@ -318,7 +318,7 @@ AllocFromHeap(size_t requestBytes)
             return nullptr;
         }
     }
-    
+
     ArenaMemoryBlock * memoryBlock = (ArenaMemoryBlock *)buffer;
     memoryBlock->nbytes = requestBytes;
     memoryBlock->next = this->mallocBlocks;
@@ -335,10 +335,10 @@ BigBlock *
 ArenaAllocatorBase<TFreeListPolicy, ObjectAlignmentBitShiftArg, RequireObjectAlignment, MaxObjectSize>::
 AddBigBlock(size_t requestBytes)
 {
-    
+
     FAULTINJECT_MEMORY_NOTHROW(this->name, requestBytes);
 
-    size_t allocBytes = AllocSizeMath::Add(requestBytes, sizeof(BigBlock));  
+    size_t allocBytes = AllocSizeMath::Add(requestBytes, sizeof(BigBlock));
 
     PageAllocation * allocation = this->GetPageAllocator()->AllocPagesForBytes(allocBytes);
 
@@ -358,10 +358,10 @@ AddBigBlock(size_t requestBytes)
     BigBlock * blockp = (BigBlock *)allocation->GetAddress();
     blockp->allocation = allocation;
     blockp->nbytes = allocation->GetSize() - sizeof(BigBlock);
-    blockp->currentByte = 0;  
+    blockp->currentByte = 0;
 
 #ifdef PROFILE_MEM
-    LogRealAlloc(allocation->GetSize() + sizeof(PageAllocation));         
+    LogRealAlloc(allocation->GetSize() + sizeof(PageAllocation));
 #endif
     return(blockp);
 }
@@ -374,7 +374,7 @@ FullReset()
     BigBlock * initBlock = this->bigBlocks;
     if (initBlock != nullptr)
     {
-        this->bigBlocks = initBlock->nextBigBlock;            
+        this->bigBlocks = initBlock->nextBigBlock;
     }
     Clear();
     if (initBlock != nullptr)
@@ -407,21 +407,21 @@ ReleasePageMemory()
         reenableDisablePageReuse = !pageAllocator->DisablePageReuse();
     }
 #endif
-    BigBlock *blockp = bigBlocks;    
-    while (blockp != NULL) 
+    BigBlock *blockp = bigBlocks;
+    while (blockp != NULL)
     {
         PageAllocation * allocation = blockp->allocation;
         blockp = blockp->nextBigBlock;
         GetPageAllocator()->ReleaseAllocationNoSuspend(allocation);
     }
-  
-    blockp = fullBlocks;    
-    while (blockp != NULL) 
+
+    blockp = fullBlocks;
+    while (blockp != NULL)
     {
         PageAllocation * allocation = blockp->allocation;
         blockp = blockp->nextBigBlock;
         GetPageAllocator()->ReleaseAllocationNoSuspend(allocation);
-    }    
+    }
 
 #ifdef ARENA_MEMORY_VERIFY
     if (reenableDisablePageReuse)
@@ -444,7 +444,7 @@ ReleaseHeapMemory()
         ArenaMemoryBlock * next = memoryBlock->next;
         HeapDeleteArray(memoryBlock->nbytes + sizeof(ArenaMemoryBlock), (char *)memoryBlock);
         memoryBlock = next;
-    }    
+    }
 }
 
 template __forceinline char *ArenaAllocatorBase<InPlaceFreeListPolicy, 0, 0, 0>::AllocInternal(size_t requestedBytes);
@@ -471,8 +471,8 @@ AllocInternal(size_t requestedBytes)
     // routine, so we can throw from here. Otherwise, we shouldn't throw.
     ARENA_FAULTINJECT_MEMORY(this->name, requestedBytes);
 
-    ASSERT_THREAD();    
-            
+    ASSERT_THREAD();
+
     size_t nbytes;
     if (freeList != nullptr && requestedBytes > 0 && requestedBytes <= ArenaAllocatorBase::MaxSmallObjectSize)
     {
@@ -481,7 +481,7 @@ AllocInternal(size_t requestedBytes)
         Assert(nbytes <= ArenaAllocator::MaxSmallObjectSize);
 #ifdef PROFILE_MEM
         LogAlloc(requestedBytes, nbytes);
-#endif        
+#endif
         void * freeObject = TFreeListPolicy::Allocate(this->freeList, nbytes);
 
         if (freeObject != nullptr)
@@ -499,7 +499,7 @@ AllocInternal(size_t requestedBytes)
 #endif
             ArenaMemoryTracking::ReportAllocation(this, freeObject, nbytes);
             return (char *)freeObject;
-        }    
+        }
     }
     else
     {
@@ -508,7 +508,7 @@ AllocInternal(size_t requestedBytes)
         LogAlloc(requestedBytes, nbytes);
 #endif
     }
-    // TODO: Support large object free listing   
+    // TODO: Support large object free listing
     return ArenaAllocatorBase::RealAllocInlined(nbytes);
 }
 
@@ -533,7 +533,7 @@ Free(void * buffer, size_t byteSize)
     // Since we successfully allocated, we shouldn't have integer overflow here
     size_t size = Math::Align(byteSize, ArenaAllocator::ObjectAlignment);
     Assert(size >= byteSize);
-    
+
     ArenaMemoryTracking::ReportFree(this, buffer, byteSize);
 
 #ifdef ARENA_MEMORY_VERIFY
@@ -556,7 +556,7 @@ Free(void * buffer, size_t byteSize)
     }
     else if (size <= ArenaAllocator::MaxSmallObjectSize)
     {
-        // If we plan to free-list this object, we must prepare (typically, debug pattern fill) its memory here, in case we fail to allocate the free list because we're out of memory (see below), 
+        // If we plan to free-list this object, we must prepare (typically, debug pattern fill) its memory here, in case we fail to allocate the free list because we're out of memory (see below),
         // and we never get to call TFreeListPolicy::Free.
         TFreeListPolicy::PrepareFreeObject(buffer, size);
 
@@ -564,14 +564,14 @@ Free(void * buffer, size_t byteSize)
         {
             // Caution: TFreeListPolicy::New may fail silently if we're out of memory.
             freeList = TFreeListPolicy::New(this);
-            
+
             if (freeList == nullptr)
             {
                 return;
             }
         }
 
-        this->freeList = TFreeListPolicy::Free(this->freeList, buffer, size);        
+        this->freeList = TFreeListPolicy::Free(this->freeList, buffer, size);
 
 #ifdef ARENA_ALLOCATOR_FREE_LIST_SIZE
         this->freeListSize += size;
@@ -591,7 +591,7 @@ char *
 ArenaAllocatorBase<TFreeListPolicy, ObjectAlignmentBitShiftArg, RequireObjectAlignment, MaxObjectSize>::
 Realloc(void* buffer, size_t existingBytes, size_t requestedBytes)
 {
-    ASSERT_THREAD();        
+    ASSERT_THREAD();
 
     if (existingBytes == 0)
     {
@@ -611,7 +611,7 @@ Realloc(void* buffer, size_t existingBytes, size_t requestedBytes)
 
     size_t nbytes = AllocSizeMath::Align(requestedBytes, ArenaAllocator::ObjectAlignment);
 
-    // Since we successfully allocated, we shouldn't have integer overflow here 
+    // Since we successfully allocated, we shouldn't have integer overflow here
     size_t nbytesExisting = Math::Align(existingBytes, ArenaAllocator::ObjectAlignment);
     Assert(nbytesExisting >= existingBytes);
 
@@ -627,7 +627,7 @@ Realloc(void* buffer, size_t existingBytes, size_t requestedBytes)
         Free(((char *)buffer) + nbytes, nbytesExisting - nbytes);
         return (char *)buffer;
     }
-    
+
     char* replacementBuf = nullptr;
     if (requestedBytes > 0)
     {
@@ -652,7 +652,7 @@ void
 ArenaAllocatorBase<TFreeListPolicy, ObjectAlignmentBitShiftArg, RequireObjectAlignment, MaxObjectSize>::
 LogBegin()
 {
-    memoryData = MemoryProfiler::Begin(this->name);    
+    memoryData = MemoryProfiler::Begin(this->name);
 }
 
 template <class TFreeListPolicy, size_t ObjectAlignmentBitShiftArg, bool RequireObjectAlignment, size_t MaxObjectSize>
@@ -697,7 +697,7 @@ LogRealAlloc(size_t size)
 {
     if (memoryData)
     {
-        memoryData->allocatedBytes += size;            
+        memoryData->allocatedBytes += size;
     }
 }
 
@@ -734,7 +734,7 @@ void * InPlaceFreeListPolicy::New(ArenaAllocatorBase<InPlaceFreeListPolicy> * al
 void * InPlaceFreeListPolicy::Allocate(void * policy, size_t size)
 {
     Assert(policy);
-    
+
     FreeObject ** freeObjectLists = reinterpret_cast<FreeObject **>(policy);
     size_t index = (size >> ArenaAllocator::ObjectAlignmentBitShift) - 1;
     FreeObject * freeObject = freeObjectLists[index];
@@ -743,7 +743,7 @@ void * InPlaceFreeListPolicy::Allocate(void * policy, size_t size)
     {
         freeObjectLists[index] = freeObject->next;
 
-#ifdef ARENA_MEMORY_VERIFY 
+#ifdef ARENA_MEMORY_VERIFY
         // Make sure the next pointer bytes are also DbgFreeMemFill-ed.
         memset(freeObject, DbgFreeMemFill, sizeof(freeObject->next));
 #endif
@@ -758,7 +758,7 @@ void * InPlaceFreeListPolicy::Free(void * policy, void * object, size_t size)
     FreeObject ** freeObjectLists = reinterpret_cast<FreeObject **>(policy);
     FreeObject * freeObject = reinterpret_cast<FreeObject *>(object);
     size_t index = (size >> ArenaAllocator::ObjectAlignmentBitShift) - 1;
-    
+
     freeObject->next = freeObjectLists[index];
     freeObjectLists[index] = freeObject;
     return policy;
@@ -783,8 +783,8 @@ void InPlaceFreeListPolicy::VerifyFreeObjectIsFreeMemFilled(void * object, size_
 template class ArenaAllocatorBase<InPlaceFreeListPolicy>;
 
 void * StandAloneFreeListPolicy::New(ArenaAllocatorBase<StandAloneFreeListPolicy> * /*allocator*/)
-{    
-    return NewInternal(InitialEntries);        
+{
+    return NewInternal(InitialEntries);
 }
 
 void * StandAloneFreeListPolicy::Allocate(void * policy, size_t size)
@@ -800,13 +800,13 @@ void * StandAloneFreeListPolicy::Allocate(void * policy, size_t size)
     {
         FreeObjectListEntry * entry = &_this->entries[*freeObjectList - 1];
         uint oldFreeList = _this->freeList;
-        
+
         _this->freeList = *freeObjectList;
         *freeObjectList = entry->next;
-        object = entry->object;    
+        object = entry->object;
         Assert(object != NULL);
         entry->next = oldFreeList;
-        entry->object = NULL;        
+        entry->object = NULL;
     }
 
     return object;
@@ -817,14 +817,14 @@ void * StandAloneFreeListPolicy::Free(void * policy, void * object, size_t size)
     Assert(policy);
 
     StandAloneFreeListPolicy * _this = reinterpret_cast<StandAloneFreeListPolicy *>(policy);
-    size_t index = (size >> ArenaAllocator::ObjectAlignmentBitShift) - 1;    
+    size_t index = (size >> ArenaAllocator::ObjectAlignmentBitShift) - 1;
 
     if (TryEnsureFreeListEntry(_this))
     {
         Assert(_this->freeList != 0);
 
         uint * freeObjectList = &_this->freeObjectLists[index];
-        FreeObjectListEntry * entry = &_this->entries[_this->freeList - 1];        
+        FreeObjectListEntry * entry = &_this->entries[_this->freeList - 1];
         uint oldFreeObjectList = *freeObjectList;
 
         *freeObjectList = _this->freeList;
@@ -866,13 +866,13 @@ void StandAloneFreeListPolicy::Release(void * policy)
 }
 
 StandAloneFreeListPolicy * StandAloneFreeListPolicy::NewInternal(uint entries)
-{       
+{
     size_t plusSize = buckets * sizeof(uint) + entries * sizeof(FreeObjectListEntry);
     StandAloneFreeListPolicy * _this = HeapNewNoThrowPlusZ(plusSize, StandAloneFreeListPolicy);
-    
+
     if (NULL != _this)
-    {        
-        _this->allocated = entries;     
+    {
+        _this->allocated = entries;
         _this->freeObjectLists = (uint *)(_this + 1);
         _this->entries = (FreeObjectListEntry *)(_this->freeObjectLists + buckets);
     }
@@ -885,7 +885,7 @@ bool StandAloneFreeListPolicy::TryEnsureFreeListEntry(StandAloneFreeListPolicy *
     if (0 == _this->freeList)
     {
         if (_this->used < _this->allocated)
-        {            
+        {
             _this->used++;
             _this->freeList = _this->used;
         }
@@ -893,14 +893,14 @@ bool StandAloneFreeListPolicy::TryEnsureFreeListEntry(StandAloneFreeListPolicy *
         {
             Assert(_this->used == _this->allocated);
 
-            StandAloneFreeListPolicy * oldThis = _this; 
-            uint entries = oldThis->allocated + min(oldThis->allocated, MaxEntriesGrowth);                   
+            StandAloneFreeListPolicy * oldThis = _this;
+            uint entries = oldThis->allocated + min(oldThis->allocated, MaxEntriesGrowth);
             StandAloneFreeListPolicy * newThis = NewInternal(entries);
             if (NULL != newThis)
-            {                  
+            {
                 uint sizeInBytes = buckets * sizeof(uint);
-                js_memcpy_s(newThis->freeObjectLists, sizeInBytes, oldThis->freeObjectLists, sizeInBytes);                
-                js_memcpy_s(newThis->entries, newThis->allocated * sizeof(FreeObjectListEntry), oldThis->entries, oldThis->used * sizeof(FreeObjectListEntry));                
+                js_memcpy_s(newThis->freeObjectLists, sizeInBytes, oldThis->freeObjectLists, sizeInBytes);
+                js_memcpy_s(newThis->entries, newThis->allocated * sizeof(FreeObjectListEntry), oldThis->entries, oldThis->used * sizeof(FreeObjectListEntry));
                 newThis->used = oldThis->used + 1;
                 newThis->freeList = newThis->used;
                 _this = newThis;
@@ -926,7 +926,7 @@ void * InlineCacheFreeListPolicy::New(ArenaAllocatorBase<InlineCacheAllocatorTra
 }
 
 InlineCacheFreeListPolicy * InlineCacheFreeListPolicy::NewInternal()
-{       
+{
     InlineCacheFreeListPolicy * _this = HeapNewNoThrowZ(InlineCacheFreeListPolicy);
     return _this;
 }
@@ -957,7 +957,7 @@ void * InlineCacheFreeListPolicy::Allocate(void * policy, size_t size)
     {
         freeObjectLists[index] = reinterpret_cast<FreeObject *>(reinterpret_cast<intptr>(freeObject->next) & ~InlineCacheFreeListTag);
 
-#ifdef ARENA_MEMORY_VERIFY 
+#ifdef ARENA_MEMORY_VERIFY
         // Make sure the next pointer bytes are also DbgFreeMemFill-ed, before we give them out.
         memset(&freeObject->next, DbgFreeMemFill, sizeof(freeObject->next));
 #endif
@@ -973,7 +973,7 @@ void * InlineCacheFreeListPolicy::Free(void * policy, void * object, size_t size
     FreeObject ** freeObjectLists = reinterpret_cast<FreeObject **>(policy);
     FreeObject * freeObject = reinterpret_cast<FreeObject *>(object);
     size_t index = (size >> InlineCacheAllocatorInfo::ObjectAlignmentBitShift) - 1;
-    
+
     freeObject->next = reinterpret_cast<FreeObject *>(reinterpret_cast<intptr>(freeObjectLists[index]) | InlineCacheFreeListTag);
     freeObjectLists[index] = freeObject;
     return policy;
@@ -997,7 +997,7 @@ void InlineCacheFreeListPolicy::VerifyFreeObjectIsFreeMemFilled(void * object, s
     {
         // We must allow for zero-filled free listed objects (at least their weakRefs/blankSlots bytes), because during garbage collection, we may zero out
         // some of the weakRefs (those that have become unreachable), and this is NOT a sign of "use after free" problem.  It would be nice if during collection
-        // we could reliably distinguish free-listed objects from live caches, but that's not possible because caches can be allocated and freed in batches 
+        // we could reliably distinguish free-listed objects from live caches, but that's not possible because caches can be allocated and freed in batches
         // (see more on that in comments inside InlineCacheFreeListPolicy::PrepareFreeObject).
         Assert(bytes[i] == NULL || bytes[i] == InlineCacheFreeListPolicy::DbgFreeMemFill);
     }
@@ -1031,8 +1031,8 @@ bool InlineCacheAllocator::IsAllZero()
             unsigned char* weakRefBytes = (unsigned char *)cache->weakRefs;
             for (size_t i = 0; i < sizeof(cache->weakRefs); i++)
             {
-                // If we're verifying arena memory (in debug builds) caches on the free list 
-                // will be debug pattern filled (specifically, at least their weak reference slots).  
+                // If we're verifying arena memory (in debug builds) caches on the free list
+                // will be debug pattern filled (specifically, at least their weak reference slots).
                 // All other caches must be zeroed out (again, at least their weak reference slots).
 #ifdef ARENA_MEMORY_VERIFY
                 if (weakRefBytes[i] != NULL && weakRefBytes[i] != InlineCacheFreeListPolicy::DbgFreeMemFill)
@@ -1062,8 +1062,8 @@ bool InlineCacheAllocator::IsAllZero()
             char* weakRefBytes = (char *)cache->weakRefs;
             for (size_t i = 0; i < sizeof(cache->weakRefs); i++)
             {
-                // If we're verifying arena memory (in debug builds) caches on the free list 
-                // will be debug pattern filled (specifically, their weak reference slots).  
+                // If we're verifying arena memory (in debug builds) caches on the free list
+                // will be debug pattern filled (specifically, their weak reference slots).
                 // All other caches must be zeroed out (again, their weak reference slots).
 #ifdef ARENA_MEMORY_VERIFY
                 if (weakRefBytes[i] != NULL && weakRefBytes[i] != InlineCacheFreeListPolicy::DbgFreeMemFill)
@@ -1123,7 +1123,7 @@ void InlineCacheAllocator::ZeroAll()
     // We zero the weakRefs part of each cache in the arena unconditionally.  The strongRef slot is zeroed only
     // if it isn't tagged with InlineCacheFreeListTag.  That's so we don't lose our free list, which is
     // formed by caches linked via their strongRef slot tagged with InlineCacheFreeListTag.  On the other hand,
-    // inline caches that require invalidation use the same slot as a pointer (untagged) to the cache's address 
+    // inline caches that require invalidation use the same slot as a pointer (untagged) to the cache's address
     // in the invalidation list.  Hence, we must zero the strongRef slot when untagged to ensure the cache
     // doesn't appear registered for invalidation when it's actually blank (which would trigger asserts in InlineCache::VerifyRegistrationForInvalidation).
 
@@ -1209,7 +1209,7 @@ bool InlineCacheAllocator::CacheHasDeadWeakRefs(Recycler* recycler, CacheLayout*
             continue;
         }
 
-        
+
         if (!recycler->IsObjectMarked((void*)curWeakRef))
         {
             return true;
@@ -1310,7 +1310,7 @@ void InlineCacheAllocator::ClearCachesWithDeadWeakRefs(Recycler* recycler)
         CacheLayout* endPtr = (CacheLayout*)(bigBlock->GetBytes() + bigBlock->currentByte);
         for (CacheLayout* cache = (CacheLayout*)bigBlock->GetBytes(); cache < endPtr; cache++)
         {
-            ClearCacheIfHasDeadWeakRefs(recycler, cache); 
+            ClearCacheIfHasDeadWeakRefs(recycler, cache);
         }
         bigBlock = bigBlock->nextBigBlock;
     }

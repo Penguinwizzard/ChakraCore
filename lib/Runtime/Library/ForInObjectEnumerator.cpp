@@ -4,6 +4,12 @@
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
 
+#include "Types\DynamicObjectEnumerator.h"
+#include "Types\DynamicObjectSnapshotEnumerator.h"
+#include "Types\DynamicObjectSnapshotEnumeratorWPCache.h"
+#include "Library\ForInObjectEnumerator.h"
+#include "Library\NullEnumerator.h"
+
 namespace Js
 {
 
@@ -21,7 +27,7 @@ namespace Js
     {
         // Only clear stuff that are not useful for the next enumerator
         propertyIds = nullptr;
-        newPropertyStrings.Reset();        
+        newPropertyStrings.Reset();
     }
 
     void ForInObjectEnumerator::Initialize(RecyclableObject* currentObject, ScriptContext * scriptContext)
@@ -44,10 +50,10 @@ namespace Js
 
         Assert(JavascriptOperators::GetTypeId(currentObject) != TypeIds_Null
             && JavascriptOperators::GetTypeId(currentObject) != TypeIds_Undefined);
-        
-        if (this->currentEnumerator != NULL && 
+
+        if (this->currentEnumerator != NULL &&
             !VirtualTableInfo<Js::NullEnumerator>::HasVirtualTable(this->currentEnumerator) &&
-            this->object == currentObject && 
+            this->object == currentObject &&
             this->baseObjectType == currentObject->GetType())
         {
             // We can re-use the enumerator, only if the 'object' and type from the previous enumeration
@@ -173,8 +179,8 @@ namespace Js
             {
                 if (firstPrototype == nullptr)
                 {
-                    // We are calculating correct shadowing for non-enumerable properties of the child object, we will receive 
-                    // both enumerable and non-enumerable properties from GetCurrentAndMoveNext so we need to check before we simply 
+                    // We are calculating correct shadowing for non-enumerable properties of the child object, we will receive
+                    // both enumerable and non-enumerable properties from GetCurrentAndMoveNext so we need to check before we simply
                     // return here. If this property is non-enumerable we're going to skip it.
                     if (!(attributes & PropertyEnumerable))
                     {
@@ -279,7 +285,7 @@ namespace Js
             {
                 if (firstPrototype == nullptr)
                 {
-                    // There are no prototype that has enumerable properties, 
+                    // There are no prototype that has enumerable properties,
                     // don't need to keep track of the propertyIds we visited.
                     return currentIndex;
                 }
@@ -308,7 +314,7 @@ namespace Js
 
                         // We keep the track of what is enumerated using a bit vector of propertyID.
                         // so the propertyId can't be collected until the end of the for in enumerator
-                        // Keep a list of the property string. 
+                        // Keep a list of the property string.
                         newPropertyStrings.Prepend(GetScriptContext()->GetRecycler(), propRecord);
                     }
                 }
@@ -365,38 +371,5 @@ namespace Js
     BOOL ForInObjectEnumerator::CanBeReused()
     {
         return object == nullptr || (object->GetScriptContext() == GetScriptContext() && !JavascriptProxy::Is(object));
-    }
-
-    Var NullEnumerator::GetCurrentIndex()
-    {
-        // This function may be called without calling MoveNext to verify element availbility 
-        // by JavascriptDispatch::GetNextDispIDWithScriptEnter which call 
-        // GetEnumeratorCurrentPropertyId to resume an enumeration
-        return this->GetLibrary()->GetUndefined();
-    }
-
-    Var NullEnumerator::GetCurrentValue()
-    {
-        Assert(false);
-        return this->GetLibrary()->GetUndefined();
-    }
-
-    BOOL NullEnumerator::MoveNext(PropertyAttributes* attributes)
-    {
-        return FALSE;
-    }
-
-    void NullEnumerator::Reset()
-    {
-    }
-
-    Var NullEnumerator::GetCurrentAndMoveNext(PropertyId& propertyId, PropertyAttributes* attributes)
-    {
-        return NULL;
-    }
-
-    BOOL NullEnumerator::GetCurrentPropertyId(PropertyId *propertyId)
-    {
-        return FALSE;
     }
 }

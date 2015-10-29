@@ -21,7 +21,7 @@ function test0() {
         var v42500 = ary[true] + ary[true];
     }
     var ary = new Array(10);
-    // CSE when expressions contain element access of an array using "." and [] modifier. 
+    // CSE when expressions contain element access of an array using "." and [] modifier.
     var v42501 = ary[(func2.call(arrObj0, 1, 1, 1, 1) * 1)] + obj2.prop1;
     ary.len = obj0.prop6
     obj2.length = ary[(func2.call(arrObj0, 1, 1, 1, 1) * 1)] + obj2.prop1;
@@ -61,25 +61,25 @@ function test0(){
   var func2 = function(argStr3,argMath4,argFunc5,argFunc6){
     (func0(1, 1, ary) ? func0.call(obj0 , 1, func1.call(obj0 ), 1) : 1);
   }
-  obj1.method0 = func2; 
+  obj1.method0 = func2;
   var ary = new Array(10);
-  ary[5] = 1; 
+  ary[5] = 1;
   obj1.method0.call(obj1 , 1, 1, 1, 1);
 };
 
 // generate profile
-test0(); 
-test0(); 
-test0(); 
-test0(); 
-test0(); 
+test0();
+test0();
+test0();
+test0();
+test0();
 
 // run JITted code
 runningJITtedCode = true;
-test0(); 
-test0(); 
-test0(); 
-test0(); 
-test0(); 
+test0();
+test0();
+test0();
+test0();
+test0();
 
 WScript.Echo('PASS');

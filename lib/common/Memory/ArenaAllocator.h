@@ -425,7 +425,7 @@ public:
         char * buffer = NoThrowAlloc(requestedBytes);
         recoverMemoryFunc = tempRecoverMemoryFunc;
         return buffer;
-    }    
+    }
 
     char * NoThrowNoRecoveryAllocZero(size_t requestedBytes)
     {
@@ -440,8 +440,8 @@ public:
 
 class JitArenaAllocator : public ArenaAllocator
 {
-    // Only deferrence between ArenaAllocator and the JitArenaAllocator is it has fast path of anything of size BVSparseNode (16 bytes)
-    // Throughput improvement in the backend is substantialy with this freelist.
+    // The only difference between ArenaAllocator and the JitArenaAllocator is it has fast path of anything of size BVSparseNode (16 bytes)
+    // Throughput improvement in the backend is substantial with this freeList.
 
 private:
     BVSparseNode *bvFreeList;
@@ -455,23 +455,24 @@ public:
 
     char * Alloc(size_t requestedBytes)
     {
-        //Fastpath
+        // Fast path
         if (sizeof(BVSparseNode) == requestedBytes)
         {
             AssertMsg(Math::Align(requestedBytes, ArenaAllocatorBase::ObjectAlignment) == requestedBytes, "Assert for Perf, T should always be aligned");
-            //Fast path for BVSparseNode allocation
+            // Fast path for BVSparseNode allocation
             if (bvFreeList)
             {
                 BVSparseNode *node = bvFreeList;
                 bvFreeList = bvFreeList->next;
                 return (char*)node;
             }
-            //If the free list is empty, then do the allocation right away for the BVSparseNode size.
-            //You could call ArenaAllocator::Alloc here, but direct RealAlloc avoids unnecessary checks.
+
+            // If the free list is empty, then do the allocation right away for the BVSparseNode size.
+            // You could call ArenaAllocator::Alloc here, but direct RealAlloc avoids unnecessary checks.
             return ArenaAllocatorBase::RealAllocInlined(requestedBytes);
         }
         return ArenaAllocator::Alloc(requestedBytes);
-    
+
     }
 
     void Free(void * buffer, size_t byteSize)
@@ -549,7 +550,7 @@ public:
 #define MinPolymorphicInlineCacheSize 4
 #define MaxPolymorphicInlineCacheSize 32
 
-#ifdef PERSISTENT_INLINE_CACHES 
+#ifdef PERSISTENT_INLINE_CACHES
 
 class InlineCacheAllocatorInfo
 {
@@ -600,8 +601,8 @@ public:
     {
 #ifdef ARENA_MEMORY_VERIFY
         // In debug builds if we're verifying arena memory to avoid "use after free" problems, we want to fill the whole object with the debug pattern here.
-        // There is a very subtle point here.  Inline caches can be allocated and freed in batches. This happens commonly when a PolymorphicInlineCache grows, 
-        // frees up its old array of inline caches, and allocates a bigger one.  ArenaAllocatorBase::AllocInternal when allocating an object from the free list 
+        // There is a very subtle point here.  Inline caches can be allocated and freed in batches. This happens commonly when a PolymorphicInlineCache grows,
+        // frees up its old array of inline caches, and allocates a bigger one.  ArenaAllocatorBase::AllocInternal when allocating an object from the free list
         // will verify that the entire object - not just its first sizeof(InlineCache) worth of bytes - is filled with the debug pattern.
         memset(object, StandAloneFreeListPolicy::DbgFreeMemFill, size);
 #else
@@ -911,7 +912,7 @@ public:
 
         if (deleteFlag)
         {
-            // Arena exists and is marked deleted, we must fail to aquire a new reference
+            // Arena exists and is marked deleted, we must fail to acquire a new reference
             if (arena && 0 == strongRefCount)
             {
                 // All strong references are gone, delete the arena
@@ -923,7 +924,7 @@ public:
         }
         else
         {
-            // Succeed at aquiring a Strong Reference into the Arena
+            // Succeed at acquiring a Strong Reference into the Arena
             strongRefCount++;
             LeaveCriticalSection(&adapterLock);
             return true;

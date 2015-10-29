@@ -52,7 +52,7 @@ extern TARGETINFO TargetInfo[];
 
 // Any changes made here should have corresponding name added
 // to TargetInfo in rl.cpp. NOTE: The TARGET_MACHINES enum is in exactly
-// the same order as the TargetInfo array is initialized!
+// the same order as the TargetInfo array is initialized
 
 typedef enum {
     TM_UNKNOWN,
@@ -83,7 +83,7 @@ extern TARGET_MACHINES RLMachine;
 
 // Any changes made here should have corresponding name added
 // to TargetOSNames in rl.cpp. NOTE: The TARGET_OS enum is in exactly
-// the same order as the TargetOSNames array is initialized!
+// the same order as the TargetOSNames array is initialized
 typedef enum {
     TO_UNKNOWN,
     TO_WIN7,

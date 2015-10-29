@@ -4,6 +4,7 @@
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
 #include "Debug\DiagHelperMethodWrapper.h"
+#include "Library\ThrowErrorObject.h"
 
 namespace Js
 {

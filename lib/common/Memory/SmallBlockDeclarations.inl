@@ -1,3 +1,8 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
 #ifndef TBlockTypeAttributes
 #error Need to define block type attributes before including this file
 #endif
@@ -72,7 +77,7 @@ SmallHeapBlockT<TBlockTypeAttributes>::SweepObject<SweepMode_ConcurrentPartial>(
     // This is a partial swept block; i.e. we're not reusing it.
     // Just leave the object as-is; we will collect it in a future Sweep.
 
-    // However, we do clear out the ObjectInfo --
+    // However, we do clear out the ObjectInfo
     // this keeps us from getting confused in certain situations, e.g. function enumeration for the debugger.
     ObjectInfo(i) = 0;
 }

@@ -79,9 +79,9 @@ void
 SmallNormalHeapBlockT<TBlockAttributes>::ScanInitialImplicitRoots(Recycler * recycler)
 {
     Assert(IsAnyNormalBlock());
-    
+
     uint const localObjectCount = this->objectCount;
-    uint const localObjectSize = this->GetObjectSize();    
+    uint const localObjectSize = this->GetObjectSize();
 
     // We can use the markCount to optimize the scan because we update it in ResetMark
     if (this->markCount == localObjectCount
@@ -118,14 +118,14 @@ SmallNormalHeapBlockT<TBlockAttributes>::ScanNewImplicitRoots(Recycler * recycle
     {
         // TODO: only interior?
         recycler->ScanObjectInlineInterior((void **)objectAddress, objectSize);
-    });   
+    });
 }
 
 // static
 template <class TBlockAttributes>
 bool
-SmallNormalHeapBlockT<TBlockAttributes>::RescanObject(SmallNormalHeapBlockT<TBlockAttributes>* block, 
-    __in_ecount(localObjectSize) char * objectAddress, uint localObjectSize, 
+SmallNormalHeapBlockT<TBlockAttributes>::RescanObject(SmallNormalHeapBlockT<TBlockAttributes>* block,
+    __in_ecount(localObjectSize) char * objectAddress, uint localObjectSize,
     uint objectIndex, Recycler * recycler)
 {
     // REVIEW: This would be a good assert to have but we don't have the heap block here
@@ -151,7 +151,6 @@ SmallNormalHeapBlockT<TBlockAttributes>::CanRescanFullBlock()
     return true;
 }
 
-// static
 template <class TBlockAttributes>
 uint
 SmallNormalHeapBlockT<TBlockAttributes>::CalculateMarkCountForPage(SmallHeapBlockBitVector * markBits, uint bucketIndex, uint pageStartBitIndex)
@@ -165,7 +164,7 @@ SmallNormalHeapBlockT<TBlockAttributes>::CalculateMarkCountForPage(SmallHeapBloc
 
     Assert(pageStartBitIndex % HeapBlockMap32::PageMarkBitCount == 0);
     uint rescanMarkCount = temp.GetRange<HeapBlockMap32::PageMarkBitCount>(pageStartBitIndex)->Count();
-    
+
     // If the first object on the page is not at the start of the page, then the object containing
     // the first few bytes of the page is not included in this mark count
     // The caller will have to account for this

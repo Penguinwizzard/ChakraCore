@@ -4,19 +4,19 @@
 //-------------------------------------------------------------------------------------------------------
 /*
  * IMPORTANT:
- *	This file does not compile stand alone. I needed to create this so that
+ *	This file does not compile stand alone. It was required so that
  *	the same code could be built into a utility program comphash.exe as well
  *	as the scripting dll's. This file is included in core\comphash.cpp
  *	to be used by comphash.exe. It is included in core\scrutil.cpp where to
  *	be used by jscript.dll and vbscript.dll.
  *
- *	comphash.exe is a utility used in the build to generate a source code file
- *	containing a table of hash values associated with strings needed by
- *	jscript and vbscript. It is highly desirable to have a single definition
- *	of the hash function so things don't go out of sync.
+ *  comphash.exe is a utility used in the build to generate a source code file
+ *  containing a table of hash values associated with strings needed by
+ *  jscript and vbscript. It is highly desirable to have a single definition
+ *  of the hash function so things don't go out of sync.
  */
 
-// scafolding - define ULONG
+// scaffolding - define ULONG
 typedef unsigned long ULONG;
 
 ULONG CaseSensitiveComputeHashCch(LPCOLESTR prgch, long cch)

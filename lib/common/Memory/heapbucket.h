@@ -151,7 +151,6 @@ public:
     TBlockAllocatorType * GetAllocator() { return &allocatorHead;}
 
 protected:
-    // TODO: Not the best checks, but it works
     static bool const IsLeafBucket = TBlockType::RequiredAttributes == LeafBit;
     static bool const IsFinalizableBucket = TBlockType::RequiredAttributes == FinalizeBit;
     static bool const IsNormalBucket = TBlockType::RequiredAttributes == NoBit;

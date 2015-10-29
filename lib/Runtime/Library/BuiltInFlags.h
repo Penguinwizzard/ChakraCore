@@ -19,8 +19,6 @@ namespace Js
         BIAST_None = 0,
         BIAST_Float = 1,
         BIAST_Int = 2,
-        //BIAST_String = 4,
-        //BIAST_Array = 8,
         BIAST_All = (1 << BIAS_ArgSize) - 1,
     };
 
@@ -40,18 +38,12 @@ namespace Js
 
         BIF_TypeSpecDstToFloat  = BIAST_Float << BIAS_Dst,      // Dst area
         BIF_TypeSpecDstToInt    = BIAST_Int << BIAS_Dst,
-        //BIF_TypeSpecDstToString = BIAST_String << BIAS_Dst,
-        //BIF_TypeSpecDstToArray =  BIAST_Array << BIAS_Dst,
 
         BIF_TypeSpecSrc1ToFloat = BIAST_Float << BIAS_Src1,    // Src1 area
         BIF_TypeSpecSrc1ToInt   = BIAST_Int << BIAS_Src1,
-        //BIF_TypeSpecSrc1ToString = BIAST_String << BIAS_Src1,
-        //BIF_TypeSpecSrc1ToArray =  BIAST_Array << BIAS_Src1,
 
         BIF_TypeSpecSrc2ToFloat = BIAST_Float << BIAS_Src2,    // Src2 area
         BIF_TypeSpecSrc2ToInt   = BIAST_Int << BIAS_Src2,
-        //BIF_TypeSpecSrc2ToString = BIAST_String << BIAS_Src2,
-        //BIF_TypeSpecSrc2ToArray =  BIAST_Array << BIAS_Src2,
 
         BIF_UseSrc0 =             0x1 << BIAS_Other, // Whether to use src0 (target) in the actual instr, such as InlineMathSin x. Normally for Math.* function src0 is not used.
         BIF_VariableArgsNumber =  0x2 << BIAS_Other, // Whether function can take variable number of arguments, such as Array.unshift()

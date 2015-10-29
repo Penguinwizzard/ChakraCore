@@ -4,9 +4,6 @@
 //-------------------------------------------------------------------------------------------------------
 #include "ParserPch.h"
 
-//IMPORTANT: keep in sync with duplicate: scriptengines\src\scrobj\core\alloc.cpp
-//TODO: make utility lib with these core classes
-
 #if DEBUG
 #define DEBUG_TRASHMEM(pv, cb) memset(pv, 0xbc, cb)
 #else
@@ -19,7 +16,7 @@ struct __ALIGN_FOO__ {
     double dbl;
 };
 #define ALIGN_FULL (offsetof(__ALIGN_FOO__, dbl))
-#else 
+#else
 // Force check for 4 byte alignment to support Win98/ME
 #define ALIGN_FULL 4
 #endif // _WIN64
@@ -45,11 +42,10 @@ NoReleaseAllocator::NoReleaseAllocator(long cbFirst, long cbMax)
     Assert((0 < cbMax  ) && (cbMax   < SHRT_MAX));
 }
 
-
 void * NoReleaseAllocator::Alloc(long cb)
 {
     Assert(cb > 0);
-    if (cb <= 0) 
+    if (cb <= 0)
         return NULL;
 
     const long kcbHead = AlignFull(sizeof(NoReleaseAllocator::NraBlock));
@@ -83,7 +79,7 @@ void * NoReleaseAllocator::Alloc(long cb)
 #endif //DEBUG
             if (m_ibCur < m_ibMax)
             {
-                // There is still room in current block, so put the new block 
+                // There is still room in current block, so put the new block
                 // after the current block.
                 pblk->pblkNext = m_pblkList->pblkNext;
                 m_pblkList->pblkNext = pblk;
@@ -91,9 +87,9 @@ void * NoReleaseAllocator::Alloc(long cb)
             else
             {
                 // Link into front of the list.
-                // Don't need to adjust m_ibCur and m_ibMax, because they 
+                // Don't need to adjust m_ibCur and m_ibMax, because they
                 // already have the correct relationship for this full block
-                // (m_ibCur >= m_ibMax) and the actual values will not be 
+                // (m_ibCur >= m_ibMax) and the actual values will not be
                 // used.
                 pblk->pblkNext = m_pblkList;
                 m_pblkList = pblk;
@@ -153,7 +149,6 @@ void * NoReleaseAllocator::Alloc(long cb)
     return pv;
 }
 
-
 void NoReleaseAllocator::FreeAll(void)
 {
     // Free all of the allocated blocks
@@ -175,5 +170,3 @@ void NoReleaseAllocator::FreeAll(void)
     m_cpvSmall = 0;
 #endif
 }
-
-

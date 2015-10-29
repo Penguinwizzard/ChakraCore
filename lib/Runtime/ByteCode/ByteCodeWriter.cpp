@@ -4,7 +4,6 @@
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeByteCodePch.h"
 
-
 namespace Js {
 
     void ByteCodeWriter::Create()
@@ -67,7 +66,7 @@ namespace Js {
         Assert(!isInUse);
         AssertMsg(m_functionWrite == nullptr, "Cannot nest Begin() calls");
         AssertMsg(functionWrite != nullptr, "Must have valid function to write");
-        AssertMsg(functionWrite->GetByteCode() == nullptr, "Function should not alread have a byte-code body");
+        AssertMsg(functionWrite->GetByteCode() == nullptr, "Function should not already have a byte-code body");
         AssertMsg(functionWrite->GetLocalsCount() > 0, "Must always have R0 for return-value");
 
         DebugOnly(isInUse = true);
@@ -197,15 +196,15 @@ namespace Js {
         m_functionWrite->AllocateObjectLiteralTypeArray();
 
         if(!PHASE_OFF(Js::ScriptFunctionWithInlineCachePhase, m_functionWrite) && !PHASE_OFF(Js::InlineApplyTargetPhase, m_functionWrite))
-        {            
+        {
             if (m_functionWrite->CanFunctionObjectHaveInlineCaches())
             {
                 m_functionWrite->SetInlineCachesOnFunctionObject(true);
             }
         }
 
-        if (this->DoJitLoopBodies() && 
-            !this->m_functionWrite->GetFunctionBody()->GetHasFinally() && 
+        if (this->DoJitLoopBodies() &&
+            !this->m_functionWrite->GetFunctionBody()->GetHasFinally() &&
             !(this->m_functionWrite->GetFunctionBody()->GetHasTry() && PHASE_OFF(Js::JITLoopBodyInTryCatchPhase, this->m_functionWrite)))
         {
             AllocateLoopHeaders();
@@ -220,11 +219,11 @@ namespace Js {
         JS_ETW(EventWriteJSCRIPT_BYTECODEGEN_METHOD(m_functionWrite->GetHostSourceContext(), m_functionWrite->GetScriptContext(), m_functionWrite->GetLocalFunctionId(), m_functionWrite->GetByteCodeCount(), this->GetTotalSize(), m_functionWrite->GetExternalDisplayName()));
 
 #ifdef LOG_BYTECODE_AST_RATIO
-        // log the bytecode ast ratio
+        // log the bytecode AST ratio
         if (currentAstSize == maxAstSize)
         {
             float astBytecodeRatio = (float)currentAstSize / (float)byteCount;
-            Output::Print(L"\tAst Bytecode ratio: %f\n", astBytecodeRatio);
+            Output::Print(L"\tAST Bytecode ratio: %f\n", astBytecodeRatio);
         }
 #endif
 
@@ -352,8 +351,7 @@ namespace Js {
 
     void ByteCodeWriter::Reg1NoComsumeReg(OpCode op, RegSlot R0)
     {
-        //
-        // R0 will be the count of tmp registers.
+        // R0 will be the count of temp registers.
 
         CheckOpen();
         CheckOp(op, OpLayoutType::Reg1);
@@ -441,7 +439,7 @@ namespace Js {
             OpCodeUtil::ConvertNonCallOpToProfiled(op);
             isProfiled = true;
         }
-        
+
         Assert(DoProfileNewScObjArrayOp(op)  == false);
 
         Assert(DoProfileNewScObjectOp(op) == false);
@@ -723,10 +721,10 @@ namespace Js {
             MULTISIZE_LAYOUT_WRITE(Arg, op, arg, reg);
             return;
         }
-        
 
-        if (DoDynamicProfileOpcode(InlinePhase) 
-            && arg > 0 && arg < Js::Constants::MaximumArgumentCountForConstantArgumentInlining 
+
+        if (DoDynamicProfileOpcode(InlinePhase)
+            && arg > 0 && arg < Js::Constants::MaximumArgumentCountForConstantArgumentInlining
             && (reg > FunctionBody::FirstRegSlot && reg < m_functionWrite->GetConstantCount())
             && callSiteId != Js::Constants::NoProfileId
             && !m_isInDebugMode                                                         // We don't inline in debug mode, so no need to emit ProfiledArgOut_A
@@ -1041,7 +1039,7 @@ namespace Js {
             //    isProfiled = true;
             //}
         }
-        
+
 
         uint spreadArgsOffset = 0;
         if (options & CallIExtended_SpreadArgs)
@@ -1164,7 +1162,7 @@ namespace Js {
     void ByteCodeWriter::CallI(OpCode op, RegSlot returnValueRegister, RegSlot functionRegister, ArgSlot givenArgCount, ProfileId callSiteId, CallFlags callFlags)
     {
         CheckOpen();
-        
+
         bool hasCallFlags = !(callFlags == CallFlags_None);
         if (hasCallFlags == true)
         {
@@ -1308,7 +1306,7 @@ namespace Js {
 
         bool isProfiledLayout = false;
         Js::ProfileId profileId = Js::Constants::NoProfileId;
-        AssertMsg(instanceAtReturnRegOK || Instance != 0, "-n't have array access on the return value");
+        Assert(instanceAtReturnRegOK || Instance != 0);
         if (DoDynamicProfileOpcode(AggressiveIntTypeSpecPhase) ||
             DoDynamicProfileOpcode(FloatTypeSpecPhase) ||
             DoDynamicProfileOpcode(TypedArrayTypeSpecPhase) ||
@@ -1432,7 +1430,7 @@ StoreCommon:
             }
             else if (op == OpCode::DeleteRootFld)
             {
-                // We will reach here when in the languauge service mode, since in that mode we have skipped that error.
+                // We will reach here when in the language service mode, since in that mode we have skipped that error.
                 op = OpCode::DeleteRootFldStrict;
             }
             else if (op == OpCode::ScopedDeleteFld)
@@ -1582,7 +1580,7 @@ StoreCommon:
                 + offsetof(OpLayoutT_ElementRootCP<SizePolicy>, inlineCacheIndex);
 
             // root object inline cache index are given out from 0, but it will be at index after
-            // all the plain inlien cache. Store the offset of the inline cache index to patch it up later
+            // all the plain inline cache. Store the offset of the inline cache index to patch it up later
             SListBase<size_t> * rootObjectInlineCacheOffsets = isStore ?
                 &rootObjectStoreInlineCacheOffsets : isLoadMethod ? &rootObjectLoadMethodInlineCacheOffsets : &rootObjectLoadInlineCacheOffsets;
             rootObjectInlineCacheOffsets->Prepend(this->m_labelOffsets->GetAllocator(), inlineCacheOffset);
@@ -1693,7 +1691,7 @@ StoreCommon:
                 Assert(!callRegToLdFldCacheIndexMap->TryGetValue(value, &unit));
                 callRegToLdFldCacheIndexMap->Add(value, unit);
             }
-            //fallthrough
+            // fall-through
         case OpCode::StFld:
         case OpCode::StFldStrict:
         case OpCode::InitFld:
@@ -1848,7 +1846,7 @@ StoreCommon:
 
         destinationRegister = ConsumeReg(destinationRegister);
         environmentRegister = ConsumeReg(environmentRegister);
-        OpCode opcode = isGenerator ? 
+        OpCode opcode = isGenerator ?
                 OpCode::NewScGenFunc :
                 this->m_functionWrite->DoStackNestedFunc() ?
                     OpCode::NewStackScFunc : OpCode::NewScFunc;
@@ -1895,9 +1893,9 @@ StoreCommon:
     {
         CheckOpen();
         CheckOp(op, OpLayoutType::W1);
-        Assert(!OpCodeAttr::HasMultiSizeLayout(op));        
+        Assert(!OpCodeAttr::HasMultiSizeLayout(op));
 
-        OpLayoutW1 data;        
+        OpLayoutW1 data;
         data.C1 = C1;
         m_byteCodeData.Encode(op, &data, sizeof(data), this);
     }
@@ -2218,7 +2216,7 @@ StoreCommon:
 #ifdef BYTECODE_TESTING
         if (Js::Configuration::Global.flags.IsEnabled(Js::ByteCodeBranchLimitFlag))
         {
-            // minium 64
+            // minimum 64
             return min(max(Js::Configuration::Global.flags.ByteCodeBranchLimit, 64), SHRT_MAX + 1);
         }
 #endif
@@ -2266,7 +2264,7 @@ StoreCommon:
 
         // We will need to emit the next branch from the first branch + branch limit
         // But leave room for the jump around and one extra byte code instruction
-        // Also acount for all the long branch we may have to emit as well
+        // Also account for all the long branch we may have to emit as well
         this->nextBranchIslandOffset = firstUnknownJumpOffset + GetBranchLimit()
                 - JumpAroundSize - MaxLayoutSize - MaxOpCodeSize - LongBranchSize * (m_jumpOffsets->Count() - firstUnknownJumpInfo);
     }
@@ -2276,7 +2274,7 @@ StoreCommon:
         Assert(useBranchIsland);
         int currentOffset = this->m_byteCodeData.GetCurrentOffset();
 
-        // See if we need to emit branhc island yet, and avoid recursion
+        // See if we need to emit branch island yet, and avoid recursion
         if (currentOffset < this->nextBranchIslandOffset || this->inEnsureLongBranch)
         {
             lastOpcode = op;
@@ -2287,9 +2285,9 @@ StoreCommon:
         bool needBranchAround = OpCodeAttr::HasFallThrough(lastOpcode) || lastOpcode == Js::OpCode::Leave;
         lastOpcode = op;
 
-        // If we are about to emit a no fall thru op and the last was has fall thru
-        // then just emit the no fall thru op, and then we can skip the branch around
-        // Except at label or statementboundary, we always want emit before them
+        // If we are about to emit a no fall through op and the last was has fall through
+        // then just emit the no fall through op, and then we can skip the branch around.
+        // Except at label or StatementBoundary, we always want to emit before them.
         if ((needBranchAround && !OpCodeAttr::HasFallThrough(op))
             && op != Js::OpCode::StatementBoundary && op != Js::OpCode::Label)
         {
@@ -2333,7 +2331,7 @@ StoreCommon:
 
             if (labelID == branchAroundLabel)
             {
-                // Let'st not flush the branchAroundLabel
+                // Let's not flush the branchAroundLabel
                 // Should happen very rarely and mostly when the branch limit is very small
 
                 // This should be the last short jump I have just emitted (below)
@@ -2348,11 +2346,11 @@ StoreCommon:
             this->inEnsureLongBranch = true;
 
             // Create the branch label and update the jumpInfo
-            // Need to update the jumpInfo before we add the branch isaln as that might resize the m_jumpOffsets list
+            // Need to update the jumpInfo before we add the branch island as that might resize the m_jumpOffsets list
             ByteCodeLabel longBranchLabel = this->DefineLabel();
             jumpInfo.labelId = longBranchLabel;
 
-            // Emit the branch around if it hasn't bee emitted alread
+            // Emit the branch around if it hasn't been emitted already
             if (branchAroundLabel == (Js::ByteCodeLabel)-1 && needBranchAround)
             {
                 branchAroundLabel = this->DefineLabel();
@@ -2361,8 +2359,8 @@ StoreCommon:
                 Assert(this->m_byteCodeData.GetCurrentOffset() - currentOffset == JumpAroundSize);
                 currentOffset += JumpAroundSize;
 
-                // contineu to count he jumpAroundSize, because we may have to emit
-                // yet another branch island right after if the jumpAroundSize is included
+                // Continue to count he jumpAroundSize, because we may have to emit
+                // yet another branch island right after if the jumpAroundSize is included.
             }
 
             // Emit the long branch
@@ -2555,7 +2553,7 @@ StoreCommon:
         debuggerScope->AddProperty(location, propertyId, flags);
 
         // Only need to update properties in debug mode (even for slot array, which is tracked in non-debug mode,
-        // since the offset is only used for debuggging).
+        // since the offset is only used for debugging).
         if (this->m_isInDebugMode && isFunctionDeclaration)
         {
             AssertMsg(this->m_currentDebuggerScope, "Function declarations can only be added in a block scope.");
@@ -2668,7 +2666,7 @@ StoreCommon:
 
         uint loopId = m_functionWrite->IncrLoopCount();
         Assert((uint)m_loopHeaders->Count() == loopId);
-                
+
         m_loopHeaders->Add(LoopHeaderData(m_byteCodeData.GetCurrentOffset(), 0, m_loopNest > 0));
         m_loopNest++;
         m_functionWrite->SetHasNestedLoop(m_loopNest > 1);
@@ -2832,7 +2830,7 @@ StoreCommon:
 
         uint offset = Write(&exop, sizeof(byte));
         Write(&op, sizeof(byte));
-        
+
         if (op != Js::OpCode::Ld_A)
         {
             writer->m_byteCodeWithoutLDACount++;

@@ -10,7 +10,7 @@
     if (Js::Configuration::Global.flags.Verbose && Js::Configuration::Global.flags.Trace.IsEnabled(Js::BailOutPhase,functionBody->GetSourceContextId(),functionBody->GetLocalFunctionId())) \
     { \
         Output::Print(__VA_ARGS__); \
-    } 
+    }
 
 #define BAILOUT_FLUSH(functionBody) \
     if (Js::Configuration::Global.flags.TestTrace.IsEnabled(Js::BailOutPhase, functionBody->GetSourceContextId(),functionBody->GetLocalFunctionId()) || \
@@ -24,8 +24,8 @@
 #endif
 
 void BailoutConstantValue::InitVarConstValue(Js::Var value)
-{ 
-    this->type = TyVar; 
+{
+    this->type = TyVar;
     this->u.varConst.value = value;
 }
 
@@ -49,7 +49,7 @@ Js::Var BailoutConstantValue::ToVar(Func* func, Js::ScriptContext* scriptContext
     {
         varValue = Js::JavascriptNumber::NewCodeGenInstance(func->GetNumberAllocator(), (double)this->u.intConst.value, scriptContext);
     }
-    return varValue; 
+    return varValue;
 
 }
 
@@ -58,7 +58,7 @@ void InlineeFrameInfo::AllocateRecord(Func* func, Js::FunctionBody* functionBody
 {
     uint constantCount = 0;
 
-    // If there are no helper calls there is a chance that frame record is not required afer all;
+    // If there are no helper calls there is a chance that frame record is not required after all;
     arguments->Map([&](uint index, InlineFrameInfoValue& value){
         if (value.IsConst())
         {
@@ -87,7 +87,7 @@ void InlineeFrameInfo::AllocateRecord(Func* func, Js::FunctionBody* functionBody
         if (value.type == InlineeFrameInfoValueType_Sym)
         {
             int offset;
-#ifdef MD_GROW_LOCALS_AREA_UP        
+#ifdef MD_GROW_LOCALS_AREA_UP
             offset = -((int)value.sym->m_offset + BailOutInfo::StackSymBias);
 #else
             // Stack offset are negative, includes the PUSH EBP and return address
@@ -119,7 +119,7 @@ void InlineeFrameInfo::AllocateRecord(Func* func, Js::FunctionBody* functionBody
     {
         int offset;
 
-#ifdef MD_GROW_LOCALS_AREA_UP        
+#ifdef MD_GROW_LOCALS_AREA_UP
         offset = -((int)function.sym->m_offset + BailOutInfo::StackSymBias);
 #else
         // Stack offset are negative, includes the PUSH EBP and return address
@@ -185,7 +185,7 @@ void InlineeFrameRecord::Restore(Js::FunctionBody* functionBody, InlinedFrameLay
     Js::Var varFunction =  this->Restore(this->functionOffset, /*isFloat64*/ false, /*isInt32*/ false, layout, functionBody);
     Assert(Js::ScriptFunction::Is(varFunction));
 
-    Js::ScriptFunction* function = Js::ScriptFunction::FromVar(varFunction);  
+    Js::ScriptFunction* function = Js::ScriptFunction::FromVar(varFunction);
     BAILOUT_VERBOSE_TRACE(functionBody, L"Inlinee: %s [%d.%d] \n", function->GetFunctionBody()->GetDisplayName(), function->GetFunctionBody()->GetSourceContextId(), function->GetFunctionBody()->GetLocalFunctionId());
 
     inlinedFrame->function = function;
@@ -232,7 +232,7 @@ void InlineeFrameRecord::RestoreFrames(Js::FunctionBody* functionBody, InlinedFr
     InlinedFrameLayout* currentFrame = outerMostFrame;
 
     int inlineDepth = 1;
-    
+
     // Find an inlined frame that needs to be restored.
     while (currentFrame->callInfo.Count != 0)
     {
@@ -271,7 +271,7 @@ Js::Var InlineeFrameRecord::Restore(int offset, bool isFloat64, bool isInt32, Js
     else
     {
         BAILOUT_VERBOSE_TRACE(functionBody, L"Stack offset %10d", offset);
-        if (isFloat64)  
+        if (isFloat64)
         {
             dblValue = layout->GetDoubleAtOffset(offset);
             value = Js::JavascriptNumber::New(dblValue, functionBody->GetScriptContext());
@@ -349,7 +349,7 @@ void InlineeFrameRecord::Dump() const
 
     Output::Print(L"func: ");
     DumpOffset(functionOffset);
-    
+
     if (this->parent)
     {
         parent->Dump();

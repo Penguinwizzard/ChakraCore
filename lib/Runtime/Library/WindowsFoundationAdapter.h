@@ -21,19 +21,19 @@ namespace Js
         IAsyncCausalityTracerStatics* GetAsyncCausalityTracerStatics(_In_ ScriptContext* scriptContext);
         DelayLoadWinRtString* GetWinRtStringLibrary(_In_ ScriptContext* scriptContext);
         DelayLoadWinRtFoundation* GetWinRtFoundationLibrary(_In_ ScriptContext* scriptContext);
-        
+
     public:
         HRESULT TraceOperationCreation(
-            _In_ ScriptContext* scriptContext, 
-            _In_ INT traceLevel, 
-            _In_ INT source, 
-            _In_ GUID platformId, 
-            _In_ UINT64 operationId, 
-            _In_z_ PCWSTR operationName, 
+            _In_ ScriptContext* scriptContext,
+            _In_ INT traceLevel,
+            _In_ INT source,
+            _In_ GUID platformId,
+            _In_ UINT64 operationId,
+            _In_z_ PCWSTR operationName,
             _In_ UINT64 relatedContext);
 
         HRESULT TraceOperationCompletion(
-            _In_ ScriptContext* scriptContext, 
+            _In_ ScriptContext* scriptContext,
             _In_ INT traceLevel,
             _In_ INT source,
             _In_ GUID platformId,
@@ -41,25 +41,25 @@ namespace Js
             _In_ INT status);
 
         HRESULT TraceOperationRelation(
-            _In_ ScriptContext* scriptContext, 
+            _In_ ScriptContext* scriptContext,
             _In_ INT traceLevel,
             _In_ INT source,
-            _In_ GUID platformId, 
-            _In_ UINT64 operationId, 
+            _In_ GUID platformId,
+            _In_ UINT64 operationId,
             _In_ INT relation);
 
         HRESULT TraceSynchronousWorkStart(
-            _In_ ScriptContext* scriptContext, 
-            _In_ INT traceLevel, 
-            _In_ INT source, 
-            _In_ GUID platformId, 
-            _In_ UINT64 operationId, 
+            _In_ ScriptContext* scriptContext,
+            _In_ INT traceLevel,
+            _In_ INT source,
+            _In_ GUID platformId,
+            _In_ UINT64 operationId,
             _In_ INT work);
 
         HRESULT TraceSynchronousWorkCompletion(
-            _In_ ScriptContext* scriptContext, 
-            _In_ INT traceLevel, 
-            _In_ INT source, 
+            _In_ ScriptContext* scriptContext,
+            _In_ INT traceLevel,
+            _In_ INT source,
             _In_ INT work);
     };
 }

@@ -23,8 +23,8 @@ typedef JsUtil::KeyValuePair<StackSym *, StackSym*> CopyPropSyms;
 
 struct CapturedValues
 {
-    SListBase<ConstantStackSymValue> constantValues;        // Captured constant values during glob opt
-    SListBase<CopyPropSyms> copyPropSyms;                   // Captured copy prop values during glob opt
+    SListBase<ConstantStackSymValue> constantValues;           // Captured constant values during glob opt
+    SListBase<CopyPropSyms> copyPropSyms;                      // Captured copy prop values during glob opt
     BVSparse<JitArenaAllocator> * argObjSyms;                  // Captured arg object symbols during glob opt
 };
 
@@ -493,7 +493,7 @@ protected:
     
 
 
-    void Init(Js::OpCode opcode, IRKind kind, Func * func);       
+    void Init(Js::OpCode opcode, IRKind kind, Func * func);
     IR::Instr *     CloneInstr() const;
 };
 
@@ -630,8 +630,8 @@ public:
 private:
     union labelLocation
     {
-        BYTE *                  pc;     //Used by encoder and is the real pc offset
-        uint32                  offset; //Used by preEncoder and is an estimation pc offset, not accurate
+        BYTE *                  pc;     // Used by encoder and is the real pc offset
+        uint32                  offset; // Used by preEncoder and is an estimation pc offset, not accurate
     } m_pc;
 
     BasicBlock *            m_block;
@@ -756,7 +756,6 @@ private:
     In Encoder:
         After the fixup, actual machine address corresponding to the LabelInstr is stored as the 'value'.
     */
-    /*TODO: Has to be generalized to handle jump tables for integer optimization cases*/
 
 private:
     typedef Js::JavascriptString* TBranchKey;
@@ -764,7 +763,7 @@ private:
     typedef BranchDictionaryWrapper::BranchDictionary BranchDictionary;
     typedef BranchJumpTableWrapper BranchJumpTable;
 
-    void * m_branchTargets;                     //can point to a dictionary or a jump table
+    void * m_branchTargets;                     // can point to a dictionary or a jump table
 
 public:
     static MultiBranchInstr * New(Js::OpCode opcode, IR::Opnd * srcOpnd, Func *func);

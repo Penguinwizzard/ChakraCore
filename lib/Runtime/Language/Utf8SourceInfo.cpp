@@ -7,11 +7,6 @@
 #include "Debug\BreakpointProbe.h"
 #include "Debug\DebugDocument.h"
 
-#ifdef _M_X64_OR_ARM64
-// TODO: Clean this warning up
-#pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
-#endif
-
 namespace Js
 {
 
@@ -26,7 +21,7 @@ namespace Js
         m_secondaryHostSourceContext(secondaryHostSourceContext),
         m_debugDocument(nullptr),
         m_sourceInfoId(scriptContext->GetThreadContext()->NewSourceInfoNumber()),
-        m_hasTridentBuffer(false),
+        m_hasHostBuffer(false),
         m_isCesu8(false),
         m_isLibraryCode(false),
         m_isXDomain(false),
@@ -82,21 +77,21 @@ namespace Js
     {
         ClearDebugDocument();
         this->debugModeSource = nullptr;
-        if (this->m_hasTridentBuffer)
+        if (this->m_hasHostBuffer)
         {
             PERF_COUNTER_DEC(Basic, ScriptCodeBufferCount);
-            HeapFree(GetProcessHeap(), 0 , m_pTridentBuffer);
-            m_pTridentBuffer = nullptr;
+            HeapFree(GetProcessHeap(), 0 , m_pHostBuffer);
+            m_pHostBuffer = nullptr;
         }
     };
 
     void
-    Utf8SourceInfo::SetTridentBuffer(BYTE * pcszCode)
+    Utf8SourceInfo::SetHostBuffer(BYTE * pcszCode)
     {
-        Assert(!this->m_hasTridentBuffer);
-        Assert(this->m_pTridentBuffer == nullptr);
-        this->m_hasTridentBuffer = true;
-        this->m_pTridentBuffer = pcszCode;
+        Assert(!this->m_hasHostBuffer);
+        Assert(this->m_pHostBuffer == nullptr);
+        this->m_hasHostBuffer = true;
+        this->m_pHostBuffer = pcszCode;
     }
     enum
     {
@@ -226,9 +221,9 @@ namespace Js
         newSourceInfo->m_isXDomainString = sourceInfo->m_isXDomainString;
         newSourceInfo->m_isLibraryCode = sourceInfo->m_isLibraryCode;
         newSourceInfo->SetIsCesu8(sourceInfo->GetIsCesu8());
-        if (sourceInfo->m_hasTridentBuffer)
+        if (sourceInfo->m_hasHostBuffer)
         {
-            // Keep the trident buffer alive via the original source info
+            // Keep the host buffer alive via the original source info
             newSourceInfo->m_pOriginalSourceInfo = sourceInfo;
         }
         newSourceInfo->EnsureInitialized(sourceInfo->GetFunctionBodyCount());
@@ -259,7 +254,7 @@ namespace Js
             LPCUTF8 sourceEnd = sourceStart + this->GetCbLength(L"Utf8SourceInfo::AllocateLineOffsetCache");
 
             LPCUTF8 sourceAfterBOM = sourceStart;
-            int startChar = FunctionBody::SkipByteOrderMark(sourceAfterBOM /* byref */);
+            charcount_t startChar = FunctionBody::SkipByteOrderMark(sourceAfterBOM /* byref */);
             int64 byteStartOffset = (sourceAfterBOM - sourceStart);
 
             Recycler* recycler = this->m_scriptContext->GetRecycler();
@@ -317,7 +312,7 @@ namespace Js
         *outColumn = charPosition - lineCharOffset;
     }
 
-    void Utf8SourceInfo::CreateLineOffsetCache(const JsUtil::LineOffsetCache<Recycler>::LineOffsetCacheItem *items, size_t numberOfItems)
+    void Utf8SourceInfo::CreateLineOffsetCache(const JsUtil::LineOffsetCache<Recycler>::LineOffsetCacheItem *items, charcount_t numberOfItems)
     {
         AssertMsg(this->m_lineOffsetCache == nullptr, "LineOffsetCache is already initialized!");
         Recycler* recycler = this->m_scriptContext->GetRecycler();

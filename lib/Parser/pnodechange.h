@@ -37,7 +37,7 @@ public:
     };
 
     // Warning: This contains an unsafe cast if TContext != Mutator::Context. 
-    // If you use a non-default type paraemter for TContext you must override this method with the safe version.
+    // If you use a non-default type parameter for TContext you must override this method with the safe version.
     // This cast is in place because if TContext != Muator::Context this will not compile even thought it will
     // not be used if it is overridden.
     virtual MutatorContext GetMutatorContext(Context context) { return (MutatorContext)context; }

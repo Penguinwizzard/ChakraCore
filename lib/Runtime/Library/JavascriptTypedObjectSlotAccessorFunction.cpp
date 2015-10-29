@@ -5,6 +5,7 @@
 #include "RuntimeLibraryPch.h"
 
 #ifdef ENABLE_DOM_FAST_PATH
+#include "Library\JavascriptTypedObjectSlotAccessorFunction.h"
 namespace Js
 {
     JavascriptTypedObjectSlotAccessorFunction::JavascriptTypedObjectSlotAccessorFunction(DynamicType* type, FunctionInfo* functionInfo, int allowedTypeId, PropertyId nameId) : 

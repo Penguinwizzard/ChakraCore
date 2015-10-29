@@ -15,24 +15,24 @@
 //                     F has BP           FunctionBody::SourceInfo::m_probeCount    BailOutBreakPointInFunction
 //
 // Return From F       Step any/out of F  stepController::frameAddrWhenSet > ebp    BailOutStackFrameBase
-//                     F has BP           FunctionBody::m_hasBreakPoint             BailOutBreakPointInFunction  When we return to jitted F that has BP, 
+//                     F has BP           FunctionBody::m_hasBreakPoint             BailOutBreakPointInFunction  When we return to jitted F that has BP,
 //                                                                                                               we need to bail out.
 //                     Local val changed  Inplace stack addr check                  BailOutLocalValueChanged     Check 1 byte on stack specified by
 //                                                                                                               Func::GetHasLocalVarChangedOffset().
 // Return from helper  Continue after ex  DebuggingFlags::ContinueAfterException    BailOutIgnoreException       We wrap the call in jitted code with try-catch wrapper.
-//        or lib Func  Continue after ex  DebuggingFlags::ContinueAfterException    BailOutIgnoreException       We wrap the call in jitted code with try-catch wrapper.                      
+//        or lib Func  Continue after ex  DebuggingFlags::ContinueAfterException    BailOutIgnoreException       We wrap the call in jitted code with try-catch wrapper.
 //                     Async Break        DebuggingFlags::m_forceInterpreter                                     Async Break is important to Hybrid Debugging.
 //
 // Loop back edge      Async Break        DebuggingFlags::m_forceInterpreter        BailOutForceByFlag          'Async Break' is when the user hits Pause button.
 //                     F gets new BP      FunctionBody::SourceInfo::m_probeCount    BailOutBreakPointInFunction  For scenario when BP is defined inside loop while loop is running.
 //
-// 'debugger' stmt     'debugger' stmt    None (inplace explcit bailout)            BailOutExplicit              Insert explicit unconditional b/o.
-// 
+// 'debugger' stmt     'debugger' stmt    None (inplace explicit bailout)           BailOutExplicit              Insert explicit unconditional b/o.
+//
 // How it all works:
 // - F12 Debugger controls the flags (set/clear)
-// - JIT: 
+// - JIT:
 //   - When inserting a bailout, we use appropriate set of BailoutKind's (see BailoutKind.h).
-//   - Then when lowering we do multiple condition checks (how many BailoutKind's are in the b/o instr) 
+//   - Then when lowering we do multiple condition checks (how many BailoutKind's are in the b/o instr)
 //     and one bailout if any of conditions triggers.
 // - Runtime: bailout happens, we break into debug interpreter thunk and F12 Debugger catches up,
 //   now we can debug the frame that was originally jitted.

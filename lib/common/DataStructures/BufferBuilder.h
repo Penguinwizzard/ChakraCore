@@ -5,7 +5,7 @@
 // Buffer builder is used to layout out binary content which contains offsets
 // from one part of the content to another.
 // It works in two-pass fashion:
-// - Pass one fixes the real offset of each element (BufferBuilder) of the 
+// - Pass one fixes the real offset of each element (BufferBuilder) of the
 //   content.
 // - Pass two writes the actual content including any relative offset values.
 //----------------------------------------------------------------------------
@@ -20,6 +20,9 @@
 #error Must define alignment capabilities for processor
 #endif
 
+struct _SIMDValue;
+typedef _SIMDValue SIMDValue;
+
 namespace Js
 {
     // The base buffer builder class
@@ -27,9 +30,9 @@ namespace Js
     {
     protected:
         LPCWSTR clue;
-        BufferBuilder(LPCWSTR clue) 
+        BufferBuilder(LPCWSTR clue)
             : clue(clue), offset(0xffffffff) { }
-    public: 
+    public:
         uint32 offset;
         virtual uint32 FixOffset(uint32 offset) = 0;
         virtual void Write(__in_bcount(bufferSize) byte * buffer, __in uint32 bufferSize) const = 0;
@@ -53,29 +56,6 @@ namespace Js
 #define FOUR_BYTE_SENTINEL  ONE_BYTE_MAX + 2
 
 #define MIN_SENTINEL TWO_BYTE_SENTINEL
-
-    template <typename T>
-    static T GetVariableIntMask()
-    {
-        byte byteCount = sizeof(T) / sizeof(byte);
-
-        return ~((((T) 1) << (byteCount * 8)) - 1);
-    }
-
-    template <typename T>
-    static T GetTagBitsFor()
-    {
-        static uint tag_table[] = { 0, 1, 0, 1 };
-
-        const byte byteCount = sizeof(T) / sizeof(byte);
-
-        CompileAssert(byteCount == 2 || byteCount == 4);
-        return ((T) tag_table[byteCount - 1]) << ((byteCount * 8) - VARIABLE_INT_TAGBIT_COUNT);
-    }
-
-
-    template <typename T>
-    static const byte * ReadVariableInt(const byte * buffer, size_t remainingBytes, T * value);
 #endif
 
 #if INSTRUMENT_BUFFER_INTS
@@ -144,7 +124,7 @@ namespace Js
             {
                 Counts[2]++;
             }
-            else 
+            else
             {
                 Counts[3]++;
             }
@@ -238,12 +218,16 @@ namespace Js
     typedef BufferBuilderOf<int16, true> BufferBuilderInt16;
     typedef BufferBuilderOf<int, true> BufferBuilderInt32;
     typedef ConstantSizedBufferBuilderOf<byte> BufferBuilderByte;
+    typedef ConstantSizedBufferBuilderOf<float> BufferBuilderFloat;
     typedef ConstantSizedBufferBuilderOf<double> BufferBuilderDouble;
+    typedef ConstantSizedBufferBuilderOf<SIMDValue> BufferBuilderSIMD;
 #else
     typedef ConstantSizedBufferBuilderOf<int16> BufferBuilderInt16;
     typedef ConstantSizedBufferBuilderOf<int> BufferBuilderInt32;
     typedef ConstantSizedBufferBuilderOf<byte> BufferBuilderByte;
+    typedef ConstantSizedBufferBuilderOf<float> BufferBuilderFloat;
     typedef ConstantSizedBufferBuilderOf<double> BufferBuilderDouble;
+    typedef ConstantSizedBufferBuilderOf<SIMDValue> BufferBuilderSIMD;
 #endif
 
     // A buffer builder which contains a list of buffer builders
@@ -253,7 +237,7 @@ namespace Js
         BufferBuilderList(LPCWSTR clue)
             : BufferBuilder(clue), list(nullptr)
         { }
-        
+
         uint32 FixOffset(uint32 offset) override
         {
             this->offset = offset;
@@ -271,7 +255,7 @@ namespace Js
 
     };
 
-    // A buffer builder which points to another buffer builder. 
+    // A buffer builder which points to another buffer builder.
     // At write time, it will write the offset from the start of the raw buffer to
     // the pointed-to location.
     struct BufferBuilderRelativeOffset : BufferBuilder
@@ -337,7 +321,7 @@ namespace Js
         BufferBuilder * content;
         uint32 alignment;
         uint32 padding;
-        
+
         BufferBuilderAligned(LPCWSTR clue, BufferBuilder * content, uint32 alignment)
             : BufferBuilder(clue), content(content), alignment(alignment), padding(0)
         { }
@@ -351,7 +335,7 @@ namespace Js
             this->padding = offset - this->offset;
             Assert(this->padding < this->alignment);
 
-            return content->FixOffset(offset); 
+            return content->FixOffset(offset);
         }
 
         void Write(__in_bcount(bufferSize) byte * buffer, __in uint32 bufferSize) const

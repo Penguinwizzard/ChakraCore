@@ -46,6 +46,20 @@ public:
         return static_cast<uint32>(result);
     }
 
+    template<uint32 mul, class Func >
+    static uint32 Mul(uint32 left, __inout Func& overflowFn)
+    {
+        CompileAssert(mul != 0);
+
+        if (left > (UINT_MAX / mul))
+        {
+            overflowFn();
+        }
+
+        // If mul is a power of 2, the compiler will convert this to a shift left.
+        return left * mul;
+    }
+
     // Using 0 for mul will result in compile-time divide by zero error (which is desired behavior)
     template< uint32 add, uint32 mul, class Func >
     static uint32 AddMul(uint32 left, __inout Func& overflowFn)
@@ -56,7 +70,7 @@ public:
         //
         // If mul and add are compile-time constants then LTCG will collapse
         // this to a simple constant comparison.
-        // 
+        //
         CompileAssert(UINT_MAX/mul >= add);
 
         if( left > ((UINT_MAX / mul) - add) )
@@ -79,7 +93,7 @@ public:
         //
         // If add and mul are compile-time constants then LTCG will collapse
         // this to a simple constant comparison.
-        // 
+        //
         if( left > ((UINT_MAX - add) / mul) )
         {
             overflowFn();
@@ -90,7 +104,7 @@ public:
         return (left * mul) + add;
     }
 
-    // Convenience functions which use the default overflow policy (throw OutOfMemoryException)
+    // Convenience functions which use the DefaultOverflowPolicy (throw OOM upon overflow)
     template< uint32 add, uint32 mul >
     static uint32 AddMul(uint32 left)
     {
@@ -105,6 +119,12 @@ public:
     static uint32 Mul(uint32 lhs, uint32 rhs)
     {
         return Mul(lhs, rhs, ::Math::DefaultOverflowPolicy );
+    }
+
+    template<uint32 mul>
+    static uint32 Mul(uint32 lhs)
+    {
+        return Mul<mul>(lhs, ::Math::DefaultOverflowPolicy);
     }
 
     template< uint32 mul, uint32 add >
@@ -127,7 +147,8 @@ public:
         *result = Mul(lhs, rhs, overflowGuard);
         return overflowGuard.HasOverflowed();
     }
-        // Convenience function which uses DefaultOverflowPolicy (throws OOM when overflow)
+
+    // Convenience function which uses DefaultOverflowPolicy (throws OOM upon overflow)
     static void Inc(uint32& lhs)
     {
         Inc(lhs, ::Math::DefaultOverflowPolicy);

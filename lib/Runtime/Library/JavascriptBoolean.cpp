@@ -5,7 +5,7 @@
 #include "RuntimeLibraryPch.h"
 
 namespace Js
-{    
+{
     Var JavascriptBoolean::OP_LdTrue(ScriptContext*scriptContext)
     {
         return scriptContext->GetLibrary()->GetTrue();
@@ -31,10 +31,10 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");    
+        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
 
-        // SkipDefaultNewObject function flag should have revent the default object
-        // being created, except when call true a host dispatch
+        // SkipDefaultNewObject function flag should have prevented the default object from
+        // being created, except when call true a host dispatch.
         Var newTarget = callInfo.Flags & CallFlags_NewTarget ? args.Values[args.Info.Count] : args[0];
         bool isCtorSuperCall = (callInfo.Flags & CallFlags_New) && newTarget != nullptr && RecyclableObject::Is(newTarget);
         Assert(isCtorSuperCall || !(callInfo.Flags & CallFlags_New) || args[0] == nullptr
@@ -70,7 +70,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if(JavascriptBoolean::Is(args[0]))
         {
@@ -96,7 +96,7 @@ namespace Js
         AssertMsg(args.Info.Count, "Should always have implicit 'this'.");
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         BOOL bval;
         Var aValue = args[0];
@@ -113,7 +113,7 @@ namespace Js
         {
             return TryInvokeRemotelyOrThrow(EntryToString, scriptContext, args, JSERR_This_NeedBoolean, L"Boolean.prototype.toString");
         }
-        
+
         return bval ? scriptContext->GetLibrary()->GetTrueDisplayString() : scriptContext->GetLibrary()->GetFalseDisplayString();
     }
 
@@ -178,9 +178,9 @@ namespace Js
             *value = FALSE;
             break;
         case TypeIds_VariantDate:
-            // == on a variant always returns false.  Putting this in a 
+            // == on a variant always returns false. Putting this in a 
             // switch in each .Equals to prevent a perf hit by adding an
-            // if/branch to JavascriptOperators::Equal_Full
+            // if branch to JavascriptOperators::Equal_Full
             *value = FALSE;
             break;
         case TypeIds_Undefined:

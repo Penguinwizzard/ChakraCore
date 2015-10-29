@@ -34,7 +34,7 @@ class HelperCallOpnd;
 // Verify the table is read-only.
 void CheckJnHelperTable(const void * const *table);
 
-// Return address of the hepler which can be intercepted by debugger wrapper.
+// Return address of the helper which can be intercepted by debugger wrapper.
 void const* GetMethodAddress(HelperCallOpnd* opnd);
 
 void * const GetNonTableMethodAddress(JnHelperMethod helperMethod);

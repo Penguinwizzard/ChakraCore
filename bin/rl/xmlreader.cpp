@@ -3,30 +3,24 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 #include "rl.h"
-#include "HostSysInfo.h"
 
 #include <msxml6.h>
 
 #define CHECKHR(x) {hr = x; if (FAILED(hr)) goto CleanUp;}
 #define SAFERELEASE(p) {if (p) {(p)->Release(); p = NULL;}}
 
-
 namespace Xml
 {
 
-
 IXMLDOMDocument *pDoc = NULL;
 
-
 Node * Node::TopNode;
-
 
 //-----------------------------------------------------------------------------
 //
 // Description:
 //
 //    Constructor for Attribute class.
-//
 //
 //-----------------------------------------------------------------------------
 
@@ -273,8 +267,7 @@ ConvertDoc
    }
    else if (childList == childLast)
    {
-      // This is a bit ugly but will do.  If we have a single child with data
-      // called "#text", then pull the data up to this node.
+      // If we have a single child with data called "#text", then pull the data up to this node.
 
       if ((childList->Data != NULL)
        && (_stricmp(childList->Name, "#text") == 0))
@@ -292,17 +285,12 @@ Init()
 {
    HRESULT hr;
 
-   CoInitializeEx(NULL, HostSystemInfo::SupportsOnlyMultiThreadedCOM() ? COINIT_MULTITHREADED : COINIT_APARTMENTTHREADED);
-   hr = CoCreateInstance(HostSystemInfo::SupportsOnlyMultiThreadedCOM() ? 
-#if defined (_M_AMD64) || defined(_M_ARM64)
-       __uuidof(DOMDocument)
-#else
-       __uuidof(DOMDocument60)
-#endif       
-       : __uuidof(DOMDocument), NULL, CLSCTX_INPROC_SERVER,
+   CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+   hr = CoCreateInstance(
+       __uuidof(DOMDocument), NULL, CLSCTX_INPROC_SERVER,
        __uuidof(IXMLDOMDocument), (void**)&pDoc);
 
-   return hr == 0 ? true : false;
+   return hr == 0;
 }
 
 Node *
@@ -381,6 +369,5 @@ ReadFile
 
    return topNode;
 }
-
 
 }  // namespace Xml

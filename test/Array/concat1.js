@@ -28,10 +28,10 @@ write(o.concat(null));
 write(a.concat("hello"));
 write(o.concat("hello"));
 
-write(a.concat(a)); 
+write(a.concat(a));
 write(o.concat(a));
 
-write(a.concat(o)); 
+write(a.concat(o));
 write(o.concat(o));
 
 var b = Array.prototype.concat.call(10);

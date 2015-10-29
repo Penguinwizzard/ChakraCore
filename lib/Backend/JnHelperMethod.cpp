@@ -3,11 +3,8 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 #include "Backend.h"
-#ifdef ENABLE_DOM_FAST_PATH
-#include "Types\DOMFastPath.h"
-#endif
+#include "ExternalHelperMethod.h"
 // Parser includes
-// TODO: clean up the need of these regex related header here just for GroupInfo needed in RegexHelper
 #include "RegexCommon.h"
 
 #include "Library\RegexHelper.h"
@@ -16,10 +13,11 @@
 #include "Math\JavascriptSSE2MathOperators.h"
 #include "Math\JavascriptSSE2MathOperators.inl"
 #include "Math\CrtSSE2Math.h"
+#include "Library\JavascriptGeneratorFunction.h"
 
 namespace IR
 {
-    
+
 const void * const JnHelperMethodAddresses[] =
 {
 #define HELPERCALL(Name, Address, Attributes) static_cast<void *>(Address),
@@ -31,7 +29,7 @@ const void * const JnHelperMethodAddresses[] =
     NULL
 };
 
-#if defined(_M_IX86) 
+#if defined(_M_IX86)
 const void * const JnHelperMethodAddresses_SSE2[] =
 {
 #define SSE2MATH
@@ -68,8 +66,8 @@ class HelperTableCheck
 {
 public:
     HelperTableCheck() {
-        CheckJnHelperTable(JnHelperMethodAddresses); 
-#if defined(_M_IX86) 
+        CheckJnHelperTable(JnHelperMethodAddresses);
+#if defined(_M_IX86)
         CheckJnHelperTable(JnHelperMethodAddresses_SSE2);
 #endif
     }
@@ -122,12 +120,12 @@ static void const* helperMethodWrappers[] = {
 ///----------------------------------------------------------------------------
 ///
 /// GetMethodAddress
-///     
-///     returns the memory address of the helperMethod, 
+///
+///     returns the memory address of the helperMethod,
 ///     which can the address of debugger wrapper that intercept the original helper.
 ///
 ///----------------------------------------------------------------------------
-void const* 
+void const*
 GetMethodAddress(IR::HelperCallOpnd* opnd)
 {
     Assert(opnd);
@@ -159,13 +157,13 @@ GetMethodAddress(IR::HelperCallOpnd* opnd)
 }
 
 // TODO:  Remove this define once makes it into WINNT.h
-#ifndef DECLSPEC_GUARDIGNORE  
-#if (_MSC_FULL_VER >= 170065501)  
-#define DECLSPEC_GUARDIGNORE  __declspec(guard(ignore))  
-#else  
-#define DECLSPEC_GUARDIGNORE  
-#endif  
-#endif 
+#ifndef DECLSPEC_GUARDIGNORE
+#if (_MSC_FULL_VER >= 170065501)
+#define DECLSPEC_GUARDIGNORE  __declspec(guard(ignore))
+#else
+#define DECLSPEC_GUARDIGNORE
+#endif
+#endif
 
 // We need the helper table to be in read-only memory for obvious security reasons.
 // Import function ptr require dynamic initialization, and cause the table to be in read-write memory.
@@ -193,7 +191,7 @@ DECLSPEC_GUARDIGNORE __declspec(noinline) void * const GetNonTableMethodAddress(
 
 #elif defined(_M_IX86)
 
-    case HelperDirectMath_Acos: 
+    case HelperDirectMath_Acos:
         return (double(*)(double))__libm_sse2_acos;
 
     case HelperDirectMath_Asin:
@@ -326,8 +324,8 @@ DECLSPEC_GUARDIGNORE __declspec(noinline) void * const GetNonTableMethodAddress(
 ///----------------------------------------------------------------------------
 ///
 /// GetMethodOriginalAddress
-///     
-///     returns the memory address of the the helperMethod, 
+///
+///     returns the memory address of the helperMethod,
 ///     this one is never the intercepted by debugger helper.
 ///
 ///----------------------------------------------------------------------------
@@ -357,7 +355,7 @@ wchar_t const * const JnHelperMethodNames[] =
 ///----------------------------------------------------------------------------
 ///
 /// GetMethodName
-///     
+///
 ///     returns the string representing the name of the helperMethod.
 ///
 ///----------------------------------------------------------------------------

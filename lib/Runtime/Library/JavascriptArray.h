@@ -2,6 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
+
 #pragma once
 
 #define ARRAY_CROSSOVER_FOR_VALIDATE 0
@@ -11,22 +12,22 @@ namespace Js
 
     class SegmentBTree
     {
-        // This is an auxillary datastructure to speed finding the correct arraysegment for sparse arrays.
+        // This is an auxiliary data structure to speed finding the correct array segment for sparse arrays.
 
         // Rather than implement remove we only implement SwapSegment which requires the segment to be
         // swapped is in the same relative order as the segment it replaces.
 
-        // The B-tree algorithm used is adapted from the psuedo-code in
+        // The B-tree algorithm used is adapted from the pseudo-code in
         // Introduction to Algorithms by Corman, Leiserson, and Rivest.
 
     protected:
         uint32*              keys;           // keys[i] == segments[i]->left
-        SparseArraySegmentBase** segments;       // Length of segmentCount.
+        SparseArraySegmentBase** segments;   // Length of segmentCount.
         SegmentBTree*        children;       // Length of segmentCount+1.
         uint32               segmentCount;   // number of sparseArray segments in the Node
 
     public:
-        static const uint MinDegree = 20; // Degree is the minimuim branching factor. (If non-root, and non-leaf.)
+        static const uint MinDegree = 20; // Degree is the minimum branching factor. (If non-root, and non-leaf.)
                                           // non-root nodes are between MinDegree and MinDegree*2-1 in size.
                                           // e.g. For MinDegree == 32 ->  this is 31 to 62 keys
                                           // and 32 to 63 children (every key is surrounded by before and after children).
@@ -34,7 +35,7 @@ namespace Js
                                           // Allocations are simply the max possible sizes of nodes
                                           // We may do something more clever in the future.
 
-        static const uint32 MinKeys   = MinDegree - 1;  // Minimuim number of keys in any non-root node.
+        static const uint32 MinKeys   = MinDegree - 1;  // Minimum number of keys in any non-root node.
         static const uint32 MaxKeys   = MinDegree*2 - 1;// Max number of keys in any node
         static const uint32 MaxDegree = MinDegree*2;    // Max number of children
 
@@ -44,7 +45,7 @@ namespace Js
                                                     // The implementation is tightly coupled with it's use in arrays.
 
                                                     // The segment BTree adds memory overhead, we only want to incur it if
-                                                    // it is needed to prevent O(n) effects from using large sparse arrays        
+                                                    // it is needed to prevent O(n) effects from using large sparse arrays
         // the BtreeNode is implicit:
         // btreenode := (children[0], segments[0], children[1], segments[1], ... segments[segmentCount-1], children[segmentCount])
         // Children pointers to the left contain segments strictly less than the segment to the right
@@ -57,14 +58,14 @@ namespace Js
 
     public:
         SegmentBTree();
-        
-        
+
+
         void SwapSegment(uint32 originalKey, SparseArraySegmentBase* oldSeg, SparseArraySegmentBase* newSeg);
 
         template<typename Func>
         void Walk(Func& func) const;
 
-    protected:        
+    protected:
 
         BOOL IsLeaf() const;
         BOOL IsFullNode() const;
@@ -101,7 +102,7 @@ namespace Js
         bool isInitialized;
     protected:
         SparseArraySegmentBase* head;
-        union 
+        union
         {
             SparseArraySegmentBase* lastUsedSegment;
             SegmentBTreeRoot* segmentBTreeRoot;
@@ -114,7 +115,7 @@ namespace Js
         static uint32 const InvalidIndex = 0xFFFFFFFF;
         static uint32 const MaxArrayLength = InvalidIndex;
         static uint32 const MaxInitialDenseLength=1<<18;
-        static ushort const MergeSegmentsLengthHeuristics = 128; //If the length is less than MergeSegmentsLengthHeuristics then try to merge the segments
+        static ushort const MergeSegmentsLengthHeuristics = 128; // If the length is less than MergeSegmentsLengthHeuristics then try to merge the segments
 
         static const Var MissingItem;
         template<typename T> static T GetMissingItem();
@@ -126,10 +127,10 @@ namespace Js
         JavascriptArray(uint32 length, uint32 size, DynamicType * type);
         JavascriptArray(DynamicType * type, uint32 size);
 
-        static Var OP_NewScArray(int32 argLength, ScriptContext* scriptContext);
+        static Var OP_NewScArray(uint32 argLength, ScriptContext* scriptContext);
         static Var OP_NewScArrayWithElements(uint32 argLength, Var *elements, ScriptContext* scriptContext);
-        static Var ProfiledNewScArray(int32 argLength, ScriptContext *scriptContext, ArrayCallSiteInfo *arrayInfo, RecyclerWeakReference<FunctionBody> *weakFuncRef);
-        static Var OP_NewScArrayWithMissingValues(int32 argLength, ScriptContext* scriptContext);
+        static Var ProfiledNewScArray(uint32 argLength, ScriptContext *scriptContext, ArrayCallSiteInfo *arrayInfo, RecyclerWeakReference<FunctionBody> *weakFuncRef);
+        static Var OP_NewScArrayWithMissingValues(uint32 argLength, ScriptContext* scriptContext);
         static Var OP_NewScIntArray(AuxArray<int32> *ints, ScriptContext* scriptContext);
         static Var ProfiledNewScIntArray(AuxArray<int32> *ints, ScriptContext* scriptContext, ArrayCallSiteInfo *arrayInfo, RecyclerWeakReference<FunctionBody> *weakFuncRef);
         static Var OP_NewScFltArray(AuxArray<double> *doubles, ScriptContext* scriptContext);
@@ -157,7 +158,7 @@ namespace Js
         virtual BOOL DirectGetItemAtFull(uint index, Var* outVal);
         virtual Var DirectGetItem(uint32 index);
 
-        Var DirectGetItem(JavascriptString *propName, ScriptContext* scriptContext);        
+        Var DirectGetItem(JavascriptString *propName, ScriptContext* scriptContext);
 
         template<typename T> inline void DirectSetItemAt(uint32 itemIndex, T newValue);
         template<typename T> inline void DirectSetItemInLastUsedSegmentAt(const uint32 offset, const T newValue);
@@ -275,13 +276,12 @@ namespace Js
         static Var EntryPushJavascriptArrayNoFastPath(ScriptContext * scriptContext, Var * args, uint argCount);
 
         static Var Pop(ScriptContext * scriptContext, Var object);
-        
+
 
         static Var EntryPopJavascriptArray(ScriptContext * scriptContext, Var object);
         static Var EntryPopNonJavascriptArray(ScriptContext * scriptContext, Var object);
-        
+
 #if DEBUG
-        // deprecated, for verification only
         static BOOL GetIndex(const wchar_t* propName, ulong *pIndex);
 #endif
 
@@ -326,7 +326,7 @@ namespace Js
 
         virtual BOOL GetEnumerator(BOOL enumNonEnumerable, Var* enumerator, ScriptContext * requestContext, bool preferSnapshotSemantics = true, bool enumSymbols = false) override;
         virtual BOOL GetDiagValueString(StringBuilder<ArenaAllocator>* stringBuilder, ScriptContext* requestContext) override;
-        virtual BOOL GetDiagTypeString(StringBuilder<ArenaAllocator>* stringBuilder, ScriptContext* requestContext) override;;
+        virtual BOOL GetDiagTypeString(StringBuilder<ArenaAllocator>* stringBuilder, ScriptContext* requestContext) override;
         virtual BOOL GetSpecialPropertyName(uint32 index, Var *propertyName, ScriptContext * requestContext) override;
         virtual uint GetSpecialPropertyCount() const override;
         virtual PropertyId* GetSpecialPropertyIds() const override;
@@ -385,12 +385,12 @@ namespace Js
 
         template<typename T> inline void LinkSegments(SparseArraySegment<T>* prev, SparseArraySegment<T>* current);
         template<typename T> inline SparseArraySegment<T>* ReallocNonLeafSegment(SparseArraySegment<T>* seg, SparseArraySegmentBase* nextSeg);
-        void TryAddToSegmentMap(Recycler* recycler, SparseArraySegmentBase* seg);        
+        void TryAddToSegmentMap(Recycler* recycler, SparseArraySegmentBase* seg);
 
     private:
         DynamicObjectFlags GetFlags() const;
         DynamicObjectFlags GetFlags_Unchecked() const; // do not use except in extreme circumstances
-        void SetFlags(const DynamicObjectFlags flags);        
+        void SetFlags(const DynamicObjectFlags flags);
         void LinkSegmentsCommon(SparseArraySegmentBase* prev, SparseArraySegmentBase* current);
 
     public:
@@ -462,9 +462,9 @@ namespace Js
         template<class T> bool IsMissingHeadSegmentItemImpl(const uint32 index) const;
         SegmentBTreeRoot * GetSegmentMap() const;
         void SetHeadAndLastUsedSegment(SparseArraySegmentBase * segment);
-        void SetLastUsedSegment(SparseArraySegmentBase * segment);    
+        void SetLastUsedSegment(SparseArraySegmentBase * segment);
         bool HasSegmentMap() const;
-        
+
     private:
         void SetSegmentMap(SegmentBTreeRoot * segmentMap);
         void ClearSegmentMap();
@@ -477,7 +477,7 @@ namespace Js
         template<typename T> bool ScanForMissingValues(const uint startIndex, const uint endIndex);
         template<typename T, uint InlinePropertySlots> static SparseArraySegment<typename T::TElement> *InitArrayAndHeadSegment(T *const array, const uint32 length, const uint32 size, const bool wasZeroAllocated);
         template<typename T> static void SliceHelper(JavascriptArray*pArr, JavascriptArray* pNewArr, uint32 start, uint32 newLen);
-        
+
         template<typename T>
         static void ShiftHelper(JavascriptArray* pArr, ScriptContext * scriptContext);
 
@@ -518,8 +518,8 @@ namespace Js
 
         SparseArraySegmentBase * GetBeginLookupSegment(uint32 index, const bool useSegmentMap = true) const;
         SegmentBTreeRoot *  BuildSegmentMap();
-        void InvalidateLastUsedSegment();        
-        inline BOOL IsFullArray() const; //no missing elements till array length
+        void InvalidateLastUsedSegment();
+        inline BOOL IsFullArray() const; // no missing elements till array length
         inline BOOL IsSingleSegmentArray() const;
 
         template<typename T> void AllocateHead();
@@ -575,7 +575,7 @@ namespace Js
                 if (TemplatedGetItem(arr, i, &element, scriptContext))
                 {
                     fn(i, element);
-                    
+
                     if (hasSideEffect && MayChangeType<T>() && !T::Is(arr))
                     {
                         // The function has changed, go to another ForEachItemInRange
@@ -732,7 +732,7 @@ namespace Js
         static bool CopyNativeFloatArrayElements(JavascriptNativeFloatArray* dstArray, uint32 dstIndex, JavascriptNativeFloatArray *srcArray, uint32 start = 0, uint32 end = MaxArrayLength);
         static void CopyNativeFloatArrayElementsToVar(JavascriptArray* dstArray, uint32 dstIndex, JavascriptNativeFloatArray *srcArray, uint32 start = 0, uint32 end = MaxArrayLength);
         static void CopyNativeFloatArrayElementsToVar(JavascriptArray* dstArray, const BigIndex& dstIndex, JavascriptNativeFloatArray *srcArray, uint32 start = 0, uint32 end = MaxArrayLength);
-        
+
         static bool BoxConcatItem(Var aItem, uint idxArg, ScriptContext *scriptContext);
 
         template<typename T>
@@ -792,8 +792,8 @@ namespace Js
         template<class T, uint ConstInlinePropertySlots, bool UseDynamicInlinePropertySlots> static SparseArraySegment<typename T::TElement> *DetermineInlineHeadSegmentPointer(T *const array);
     };
 
-    // Ideally we would propogate the throw flag setting of true from the array operations down to the [[Delete]]/[[Put]]/... methods. But that is a big change
-    // so we are checking for failure on DeleteProperty/DeleteItem/... etc instead and will fix properly for IE10. This helper makes that checking a little less intrusive.
+    // Ideally we would propagate the throw flag setting of true from the array operations down to the [[Delete]]/[[Put]]/... methods. But that is a big change
+    // so we are checking for failure on DeleteProperty/DeleteItem/... etc instead. This helper makes that checking a little less intrusive.
     class ThrowTypeErrorOnFailureHelper
     {
         ScriptContext *m_scriptContext;
@@ -855,10 +855,10 @@ namespace Js
         void CopyArrayProfileInfo(Js::JavascriptNativeArray* baseArray);
 
         Var FindMinOrMax(Js::ScriptContext * scriptContext, bool findMax);
-        template<typename T, bool checkNaNAndNegZero> Var FindMinOrMax(Js::ScriptContext * scriptContext, bool findMax); //NativeInt arrays can't have NaNs or -0
-        
+        template<typename T, bool checkNaNAndNegZero> Var FindMinOrMax(Js::ScriptContext * scriptContext, bool findMax); // NativeInt arrays can't have NaNs or -0
+
         static void PopWithNoDst(Var nativeArray);
-	};
+    };
 
     class JavascriptNativeFloatArray;
     class JavascriptNativeIntArray : public JavascriptNativeArray
@@ -921,11 +921,11 @@ namespace Js
         static int32 Pop(ScriptContext * scriptContext, Var nativeIntArray);
 
         virtual JavascriptArray *FillFromArgs(uint length, uint start, Var *args, ArrayCallSiteInfo *info = nullptr, bool dontCreateNewArray = false) override;
-        virtual void ClearElements(SparseArraySegmentBase *seg, uint32 newSegmentLength) override;        
+        virtual void ClearElements(SparseArraySegmentBase *seg, uint32 newSegmentLength) override;
         virtual void SetIsPrototype() override;
-		
+
         TypeId TrySetNativeIntArrayItem(Var value, int32 *iValue, double *dValue);
-		
+
         virtual bool IsMissingHeadSegmentItem(const uint32 index) const override;
 
         static VTableValue VtableHelper()
@@ -1033,11 +1033,11 @@ namespace Js
         static JavascriptArray * ConvertToVarArray(JavascriptNativeFloatArray *fArray);
 
         virtual JavascriptArray *FillFromArgs(uint length, uint start, Var *args, ArrayCallSiteInfo *info = nullptr, bool dontCreateNewArray = false) override;
-        virtual void ClearElements(SparseArraySegmentBase *seg, uint32 newSegmentLength) override;        
+        virtual void ClearElements(SparseArraySegmentBase *seg, uint32 newSegmentLength) override;
         virtual void SetIsPrototype() override;
-		
+
         TypeId TrySetNativeFloatArrayItem(Var value, double *dValue);
-		
+
         virtual bool IsMissingHeadSegmentItem(const uint32 index) const override;
 
         static VTableValue VtableHelper()

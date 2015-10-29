@@ -18,16 +18,16 @@ enum
     fscrSyntaxColor = 1 << 6,   // used by the scanner for syntax coloring
     fscrNoImplicitHandlers = 1 << 7,   // same as Opt NoConnect at start of block
 
-                                       // hack to prevent a copy needed to strip off trailing html comments
+                                       // prevents the need to make a copy to strip off trailing html comments
                                        // - modifies the behavior of fscrHtmlComments
     fscrDoNotHandleTrailingHtmlComments = 1 << 8,
 
 #if DEBUG
-    fscrEnforceJSON = 1 << 9,  // used together with fscrReturnExpression 
+    fscrEnforceJSON = 1 << 9,  // used together with fscrReturnExpression
                                // enforces JSON semantics in the parsing.
 #endif
 
-    fscrEval = 1 << 10,  // this expression has eval semantics (i.e., run in caller's context 
+    fscrEval = 1 << 10,  // this expression has eval semantics (i.e., run in caller's context
     fscrEvalCode = 1 << 11,  // this is an eval expression
     fscrGlobalCode = 1 << 12,  // this is a global script
     fscrDeferFncParse = 1 << 13,  // parser: defer creation of AST's for non-global code

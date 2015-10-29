@@ -58,24 +58,15 @@ namespace Js
         }
         else
         {
-            // TODO: Implement this case to handle sublcassing feature
-
-            // ES6 Spec changed since Map was implemented regarding subclassing; passed in objects to a Map call
-            // must have [[MapData]] on them already, via @@create method.  We do not currently support @@create,
-            // so we no longer support subclassing of Map for IE11 release.  Since a user cannot call @@create,
-            // they cannot obtain an object with the [[MapData]] internal property, and thus they cannot provide
-            // an object for the this argument here that would not cause the Map constructor to throw.  Therefore
-            // we always throw for now.
-
             JavascriptError::ThrowTypeErrorVar(scriptContext, JSERR_NeedObjectOfType, L"Map", L"Map");
         }
         Assert(mapObject != nullptr);
-        
+
         Var iterable = (args.Info.Count > 1) ? args[1] : library->GetUndefined();
 
         RecyclableObject* iter = nullptr;
         RecyclableObject* adder = nullptr;
-        
+
         if (JavascriptConversion::CheckObjectCoercible(iterable, scriptContext))
         {
             iter = JavascriptOperators::GetIterator(iterable, scriptContext);
@@ -350,8 +341,6 @@ namespace Js
 
     void JavascriptMap::Clear()
     {
-        // TODO: (Consider) Should we clear the map here and leave it as large as it has grown, or
-        // toss it away and create a new empty map, letting it grow as needed?
         list.Clear();
         map->Clear();
     }

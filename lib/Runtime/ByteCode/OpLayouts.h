@@ -96,10 +96,11 @@ namespace Js {
     ///   able to compress the size. Also remove paddings for non ARM build
     ///
     /// - 08/22/2011: Removed paddings for ARM & x64 as well as both support unaligned access
-    ///   There is still paddings to make sure every opcode starts at 2 byte boundary to avoid pathalogical cases.
-    ///   Note RegSlot is changed to 4 byte instead of 1 byte in this change
+    ///   There is still paddings to make sure every opcode starts at 2 byte boundary to avoid
+    ///   pathological cases.
+    ///   Note: RegSlot is changed to 4 byte instead of 1 byte in this change.
+    ///
     ///----------------------------------------------------------------------------
-
 
 #pragma pack(push, 1)
 
@@ -368,9 +369,9 @@ namespace Js {
         typename SizePolicy::RegSlotType     Instance;
     };
 
-    struct OpLayoutW1      
+    struct OpLayoutW1
     {
-        unsigned short C1;        
+        unsigned short C1;
     };
 
     struct OpLayoutReg1Int2               // R0 <- Var(C1, C2)

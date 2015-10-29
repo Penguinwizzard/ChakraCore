@@ -21,14 +21,14 @@ enum RelocType {
 ///
 ///---------------------------------------------------------------------------
 
-class EncodeRelocAndLabels 
+class EncodeRelocAndLabels
 {
 public:
     RelocType           m_type;
     void *              m_ptr;          // points to encoded buffer byte or LabelInstr if RelocTypeLabel
     void *              m_origPtr;      // copy of m_ptr to be used to get offset in the source buffer during BR shortening
 
-private:    
+private:
     union
     {
         IR::LabelInstr* m_labelInstr;        // ptr to Br Label
@@ -76,13 +76,13 @@ public:
             m_nopCount = 0;
             return;
         }
-        
+
         // re-write original inlinee offset to code buffer
         if (m_type == RelocTypeInlineeEntryOffset)
         {
             *(uint64*) m_origPtr = m_origInlineeOffset;
         }
-        
+
         if (m_type == RelocTypeBranch)
         {
             m_isShortBr = false;
@@ -90,32 +90,32 @@ public:
 
         m_ptr = m_origPtr;
     }
-    
+
     bool                isLabel()           const { return isAlignedLabel() || m_type == RelocTypeLabel; }
     bool                isAlignedLabel()    const { return m_type == RelocTypeAlignedLabel; }
     bool                isLongBr()          const { return m_type == RelocTypeBranch && !m_isShortBr; }
     bool                isShortBr()         const { return m_type == RelocTypeBranch && m_isShortBr; }
     BYTE*               getBrOpCodeByte()   const { return (BYTE*)m_origPtr - 1;}
-    
-    IR::LabelInstr *    getBrTargetLabel()  const 
-    { 
+
+    IR::LabelInstr *    getBrTargetLabel()  const
+    {
         Assert(m_type == RelocTypeBranch && m_labelInstr);
-        return m_labelInstr; 
+        return m_labelInstr;
     }
-    IR::LabelInstr *    getLabel()  const 
+    IR::LabelInstr *    getLabel()  const
     {
         Assert(isLabel());
         return (IR::LabelInstr*) m_ptr;
     }
     // get label original PC without shortening/alignment
-    BYTE *  getLabelOrigPC()  const 
+    BYTE *  getLabelOrigPC()  const
     {
         Assert(isLabel());
         return ((BYTE*) m_origPtr);
     }
 
-        // get label PC after shortening/alignment
-    BYTE *  getLabelCurrPC()  const 
+    // get label PC after shortening/alignment
+    BYTE *  getLabelCurrPC()  const
     {
         Assert(isLabel());
         return getLabel()->GetPC();
@@ -127,7 +127,7 @@ public:
         return m_nopCount;
     }
 
-    void    setLabelCurrPC(BYTE* pc) 
+    void    setLabelCurrPC(BYTE* pc)
     {
         Assert(isLabel());
         getLabel()->SetPC(pc);
@@ -140,17 +140,17 @@ public:
         m_nopCount = nopCount;
     }
 
-    void                setAsShortBr()     
-    { 
+    void                setAsShortBr()
+    {
         Assert(m_type == RelocTypeBranch);
-        m_isShortBr = true; 
+        m_isShortBr = true;
     }
 
     // Validates if the branch is short and its target PC fits in one byte
     bool                validateShortBrTarget() const
     {
         return isShortBr() &&
-            getBrTargetLabel()->GetPC() - ((BYTE*)m_ptr + 1) >= -128 && 
+            getBrTargetLabel()->GetPC() - ((BYTE*)m_ptr + 1) >= -128 &&
             getBrTargetLabel()->GetPC() - ((BYTE*)m_ptr + 1) <= 127;
     }
 };
@@ -168,7 +168,7 @@ typedef JsUtil::List<EncodeRelocAndLabels, ArenaAllocator> RelocList;
 typedef JsUtil::List<InlineeFrameRecord*, ArenaAllocator> InlineeFrameRecords;
 
 class EncoderMD
-{    
+{
 public:
     EncoderMD(Func * func) : m_func(func) {}
     ptrdiff_t       Encode(IR::Instr * instr, BYTE *pc, BYTE* beginCodeAddress = nullptr);
@@ -201,7 +201,7 @@ private:
     const uint32    GetLeadIn(IR::Instr * instr);
     BYTE            EmitModRM(IR::Instr * instr, IR::Opnd *opnd, BYTE reg1);
     void            EmitConst(size_t val, int size, bool allowImm64 = false);
-    BYTE            EmitImmed(IR::Opnd * opnd, int opSize, int sbit, bool allowImm64 = false);        
+    BYTE            EmitImmed(IR::Opnd * opnd, int opSize, int sbit, bool allowImm64 = false);
     static bool     FitsInByte(size_t value);
     bool            IsExtendedRegister(RegNum reg);
     BYTE            GetMod(IR::IndirOpnd * opr, int* pDispSize);
@@ -210,7 +210,7 @@ private:
     BYTE            GetRexByte(BYTE rexCode, IR::Opnd * opnd);
     BYTE            GetRexByte(BYTE rexCode, RegNum reg);
     int             GetOpndSize(IR::Opnd * opnd);
-    
+
     void            EmitRexByte(BYTE * prexByte, BYTE rexByte, bool skipRexByte, bool reservedRexByte);
 
     enum
@@ -219,18 +219,18 @@ private:
         REXW = 8,
         REXR = 4,
         REXX = 2,
-        REXB = 1,        
+        REXB = 1,
     };
 
-    static const BYTE       Mod00           = 0x00 << 6;
-    static const BYTE       Mod01           = 0x01 << 6;
-    static const BYTE       Mod10           = 0x02 << 6;
-    static const BYTE       Mod11           = 0x03 << 6;
+    static const BYTE Mod00 = 0x00 << 6;
+    static const BYTE Mod01 = 0x01 << 6;
+    static const BYTE Mod10 = 0x02 << 6;
+    static const BYTE Mod11 = 0x03 << 6;
 
-private:   
+private:
     Func *          m_func;
     Encoder *       m_encoder;
     BYTE *          m_pc;
     RelocList *     m_relocList;
-    int             m_lastLoopLabelPosition;    
+    int             m_lastLoopLabelPosition;
 };

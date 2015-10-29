@@ -47,7 +47,7 @@
 
 #include "ksarm64.h"
 
-    OPT 1       ; reenable listing
+    OPT 1       ; re-enable listing
 
     TTL Lib\Common\arm\arm64_CallEhFrame.asm
 

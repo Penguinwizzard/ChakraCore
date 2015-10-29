@@ -27,8 +27,6 @@ for (var i = 1; i < 4; i++) {
             f();
         } finally {
             print("In finally");
-
-            //        f();   // This crashes Eze....
         }
     }
     catch (e) {

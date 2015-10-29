@@ -1,4 +1,4 @@
-//-------------------------------------------------------------------------------------------------------
+ //-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
@@ -7,6 +7,8 @@
 #if defined(ENABLE_INTL_OBJECT) || defined(ENABLE_PROJECTION)
 
 #include "errstr.h"
+#include "Library\EngineInterfaceObject.h"
+#include "Types\DeferredTypeHandler.h"
 
 #define IfFailThrowHr(op) \
     if (FAILED(hr=(op))) \
@@ -71,7 +73,7 @@
     HasPropertyOn(obj, scriptContext->GetOrAddPropertyIdTracked(propertyName, wcslen(propertyName)))
 
 namespace Js
-{    
+{
     EngineExtensionObjectBase* EngineInterfaceObject::GetEngineExtension(EngineInterfaceExtensionKind extensionKind) const
     {
         Assert(extensionKind <= MaxEngineInterfaceExtensionKind);
@@ -148,7 +150,7 @@ namespace Js
         ScriptContext* scriptContext = this->GetScriptContext();
         JavascriptLibrary* library = scriptContext->GetLibrary();
 
-        // CommonNativeInterfaces is used as a prototype for the other native interface objects 
+        // CommonNativeInterfaces is used as a prototype for the other native interface objects
         // to share the common APIs without requiring everyone to access EngineInterfaceObject.Common.
         this->commonNativeInterfaces = DynamicObject::New(recycler,
             DynamicType::New(scriptContext, TypeIds_Object, library->GetObjectPrototype(), nullptr,
@@ -163,7 +165,7 @@ namespace Js
             }
         }
     }
-    void EngineInterfaceObject::InitializeCommonNativeInterfaces(DynamicObject* commonNativeInterfaces, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode) 
+    void EngineInterfaceObject::InitializeCommonNativeInterfaces(DynamicObject* commonNativeInterfaces, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(commonNativeInterfaces, mode, 38);
 
@@ -208,7 +210,7 @@ namespace Js
     Var EngineInterfaceObject::Entry_GetErrorMessage(RecyclableObject *function, CallInfo callInfo, ...)
     {
         EngineInterfaceObject_CommonFunctionProlog(function, callInfo);
-        
+
         if (callInfo.Count < 2)
         {
             return scriptContext->GetLibrary()->GetUndefined();
@@ -260,7 +262,7 @@ namespace Js
         Output::Print(message->GetString());
         Output::Flush();
 #endif
-        
+
         return scriptContext->GetLibrary()->GetUndefined();
     }
 
@@ -281,13 +283,13 @@ namespace Js
 
             return func;
         }
-        
+
         return scriptContext->GetLibrary()->GetUndefined();
     }
 
 #ifndef GlobalBuiltIn
-#define GlobalBuiltIn(global, method) 
-#define GlobalBuiltInConstructor(global) 
+#define GlobalBuiltIn(global, method)
+#define GlobalBuiltInConstructor(global)
 
 #define BuiltInRaiseException(exceptionType, exceptionID) \
     Var EngineInterfaceObject::EntryIntl_BuiltIn_raise##exceptionID(RecyclableObject *function, CallInfo callInfo, ...) \
@@ -295,7 +297,7 @@ namespace Js
         EngineInterfaceObject_CommonFunctionProlog(function, callInfo); \
         \
         JavascriptError::Throw##exceptionType(scriptContext, JSERR_##exceptionID); \
-    } 
+    }
 
 #define BuiltInRaiseException1(exceptionType, exceptionID) \
     Var EngineInterfaceObject::EntryIntl_BuiltIn_raise##exceptionID(RecyclableObject *function, CallInfo callInfo, ...) \
@@ -308,7 +310,7 @@ namespace Js
             JavascriptError::Throw##exceptionType(scriptContext, JSERR_##exceptionID); \
         } \
         JavascriptError::Throw##exceptionType##Var(scriptContext, JSERR_##exceptionID, JavascriptString::FromVar(args.Values[1])->GetSz()); \
-    } 
+    }
 
 #define BuiltInRaiseException2(exceptionType, exceptionID) \
     Var EngineInterfaceObject::EntryIntl_BuiltIn_raise##exceptionID(RecyclableObject *function, CallInfo callInfo, ...) \
@@ -321,7 +323,7 @@ namespace Js
             JavascriptError::Throw##exceptionType(scriptContext, JSERR_##exceptionID); \
         } \
         JavascriptError::Throw##exceptionType##Var(scriptContext, JSERR_##exceptionID, JavascriptString::FromVar(args.Values[1])->GetSz(), JavascriptString::FromVar(args.Values[2])->GetSz()); \
-    } 
+    }
 
 #define BuiltInRaiseException3(exceptionType, exceptionID) \
     Var EngineInterfaceObject::EntryIntl_BuiltIn_raise##exceptionID##_3(RecyclableObject *function, CallInfo callInfo, ...) \
@@ -334,7 +336,7 @@ namespace Js
             JavascriptError::Throw##exceptionType(scriptContext, JSERR_##exceptionID); \
         } \
         JavascriptError::Throw##exceptionType##Var(scriptContext, JSERR_##exceptionID, JavascriptString::FromVar(args.Values[1])->GetSz(), JavascriptString::FromVar(args.Values[2])->GetSz(), JavascriptString::FromVar(args.Values[3])->GetSz()); \
-    } 
+    }
 
 #include "EngineInterfaceObjectBuiltIns.h"
 

@@ -42,7 +42,7 @@ PROTECTED_FIELDS
     DECLARE_SERIALIZABLE_FIELD(ArgSlot, m_reportedInParamCount, ArgSlot); // Count of 'in' parameters to method excluding default and rest
     DECLARE_SERIALIZABLE_FIELD(charcount_t, m_cchStartOffset, CharCount);   // offset in characters from the start of the document.
     DECLARE_SERIALIZABLE_FIELD(charcount_t, m_cchLength, CharCount);        // length of the function in code points (not bytes)
-    DECLARE_SERIALIZABLE_FIELD(size_t, m_cbLength, SizeT);              // length of the function in bytes
+    DECLARE_SERIALIZABLE_FIELD(uint, m_cbLength, UInt32);              // length of the function in bytes
 
 PUBLIC_FIELDS
     DECLARE_SERIALIZABLE_FIELD(UINT, scopeSlotArraySize, UInt32);

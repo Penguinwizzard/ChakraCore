@@ -47,7 +47,7 @@ enum AddrOpndKind : BYTE {
     // NOTE: None of the following address kinds should be generated directly
     // or you WILL break relocatable JIT code. Each kind has a helper that
     // will generate correct code for relocatable code & non-relocatable code.
-    // The only exception is places where it is KNOWN that we will never 
+    // The only exception is places where it is KNOWN that we will never
     // generate the code in relocatable JIT.
 
     // use LoadScriptContextOpnd
@@ -60,7 +60,7 @@ enum AddrOpndKind : BYTE {
     AddrOpndKindDynamicMisc,
     // no profiling in dynamic JIT
     AddrOpndKindDynamicFunctionBody,
-    // use LoadRuntimeInlineCacheOpnd for runtime caches, 
+    // use LoadRuntimeInlineCacheOpnd for runtime caches,
     // in relocatable JIT polymorphic inline caches aren't generated and can
     // be referenced directly (for now)
     AddrOpndKindDynamicInlineCache,
@@ -86,7 +86,7 @@ enum AddrOpndKind : BYTE {
     AddrOpndKindDynamicIsInstInlineCacheTypeRef,
     AddrOpndKindDynamicIsInstInlineCacheResultRef,
     AddrOpndKindSz,
-    AddrOpndKindDynamicFloatRef,    
+    AddrOpndKindDynamicFloatRef,
     AddrOpndKindDynamicDoubleRef,
 };
 
@@ -111,9 +111,9 @@ class Opnd
 {
 protected:
     Opnd() :
-        m_inUse(false),        
+        m_inUse(false),
         m_isDead(false),
-        m_isValueTypeFixed(false),        
+        m_isValueTypeFixed(false),
         canStoreTemp(false),
         isDiagHelperCallOpnd(false),
         isPropertySymOpnd(false)
@@ -121,11 +121,11 @@ protected:
 #if DBG
         isFakeDst = false;
 #endif
-        m_kind = (OpndKind)0; 
+        m_kind = (OpndKind)0;
     }
 
     Opnd(const Opnd& oldOpnd) :
-        m_type(oldOpnd.m_type),        
+        m_type(oldOpnd.m_type),
         m_isDead(false),
         m_inUse(false),
         m_isValueTypeFixed(false),
@@ -171,7 +171,7 @@ public:
     Opnd *              CloneUse(Func *func);
     StackSym *          GetStackSym() const;
     Opnd *              UseWithNewType(IRType type, Func * func);
-    
+
     bool                IsEqual(Opnd *opnd);
     void                Free(Func * func);
     bool                IsInUse() const { return m_inUse; }
@@ -219,10 +219,10 @@ public:
     void                SetValueTypeFixed() { m_isValueTypeFixed = true; }
     IR::RegOpnd *       FindRegUse(IR::RegOpnd *regOpnd);
     bool                IsArgumentsObject();
-    
+
     static IntConstOpnd *CreateUint32Opnd(const uint i, Func *const func);
     static IntConstOpnd *CreateProfileIdOpnd(const Js::ProfileId profileId, Func *const func);
-    static IntConstOpnd *CreateInlineCacheIndexOpnd(const Js::InlineCacheIndex inlineCacheIndex, Func *const func);    
+    static IntConstOpnd *CreateInlineCacheIndexOpnd(const Js::InlineCacheIndex inlineCacheIndex, Func *const func);
     static RegOpnd *CreateFramePointerOpnd(Func *const func);
 public:
 #if DBG_DUMP || defined(ENABLE_IR_VIEWER)
@@ -249,17 +249,17 @@ protected:
     // and the store-element instructions that follow it.
     bool                m_isValueTypeFixed:1;
 
-    bool                m_inUse:1;    
+    bool                m_inUse:1;
     bool                m_isDead:1;
     // This def/use of a byte code sym is not in the original byte code, don't count them in the bailout
-    bool                m_isJITOptimizedReg:1;    
+    bool                m_isJITOptimizedReg:1;
 
     // For SymOpnd, this bit applies to the object pointer stack sym
     // For IndirOpnd, this bit applies to the base operand
 
     // If this opnd is a dst, that means that the object pointer is a stack object,
     // and we can store temp object/number on it
-    // If the opnd is a src, that measn that the object pointer may be a stack object
+    // If the opnd is a src, that means that the object pointer may be a stack object
     // so the load may be a temp object/number and we need to track its use
     bool                canStoreTemp : 1;
 
@@ -295,7 +295,7 @@ public:
 public:
     IntConstType            m_value;
     bool                    m_dontEncode;       // Setting this to true turns off XOR encoding for this constant.  Only set this on
-                                                // constants not controlable by the user.
+                                                // constants not controllable by the user.
 #if DBG_DUMP || defined(ENABLE_IR_VIEWER)
     IntConstType            decodedValue;  // FIXME (t-doilij) set ENABLE_IR_VIEWER blocks where this is set
     wchar_t const *         name;  // FIXME (t-doilij) set ENABLE_IR_VIEWER blocks where this is set
@@ -330,12 +330,12 @@ private:
 
 class Simd128ConstOpnd sealed : public Opnd
 {
-   
+
 public:
     static Simd128ConstOpnd * New(AsmJsSIMDValue value, IRType type, Func *func);
 
 public:
-    
+
     Simd128ConstOpnd *      CopyInternal(Func *func);
     bool                    IsEqualInternal(Opnd *opnd);
     void                    FreeInternal(Func * func);
@@ -363,10 +363,10 @@ public:
     HelperCallOpnd         *CopyInternal(Func *func);
     bool                    IsEqualInternal(Opnd *opnd);
     void                    FreeInternal(Func * func);
-    bool                    IsDiagHelperCallOpnd() const 
-    { 
+    bool                    IsDiagHelperCallOpnd() const
+    {
         Assert(this->DbgIsDiagHelperCallOpnd() == isDiagHelperCallOpnd);
-        return isDiagHelperCallOpnd; 
+        return isDiagHelperCallOpnd;
     }
 public:
     JnHelperMethod m_fnHelper;
@@ -390,7 +390,7 @@ public:
     static DiagHelperCallOpnd * New(JnHelperMethod fnHelper, Func *func, int argCount);
 public:
     DiagHelperCallOpnd     *CopyInternalSub(Func *func);
-    bool                    IsEqualInternalSub(Opnd *opnd);    
+    bool                    IsEqualInternalSub(Opnd *opnd);
 public:
     int                     m_argCount;
 
@@ -420,7 +420,7 @@ public:
     SymOpnd *               CloneUseInternal(Func *func);
     StackSym *              GetStackSymInternal() const;
     bool                    IsEqualInternal(Opnd *opnd);
-    void                    FreeInternal(Func * func);    
+    void                    FreeInternal(Func * func);
     bool                    IsPropertySymOpnd() const
     {
         Assert(this->DbgIsPropertySymOpnd() == this->isPropertySymOpnd);
@@ -467,7 +467,7 @@ public:
     PropertySymOpnd * CopyForTypeCheckOnly(Func *func);
     PropertySymOpnd * CopyInternalSub(Func *func);
     PropertySymOpnd * CloneDefInternalSub(Func *func);
-    PropertySymOpnd * CloneUseInternalSub(Func *func);    
+    PropertySymOpnd * CloneUseInternalSub(Func *func);
     void              Init(uint inlineCacheIndex, Func *func);
 
 private:
@@ -498,12 +498,8 @@ public:
     {
         struct
         {
-            // TODO (ObjTypeSpec): These two bits (isTypeCheckOnly and usesFixedValue) really shouldn't be here as they are a function
-            // of the instruction's opcode.  Create a set of ObjTypeSpecUtils that will answer questions like NeedsTypeCheck based on
-            // instruction's opcode and the operand.  Make sure all object type spec methods in GlobOpt and Lower have access to both 
-            // the operand and the instruction.
             bool isTypeCheckOnly: 1;
-            // Note that even usesFixedValue cannot live on ObjTypeSpecFldInfo, because we may share a cache between 
+            // Note that even usesFixedValue cannot live on ObjTypeSpecFldInfo, because we may share a cache between
             // e.g. Object.prototype and new Object(), and only the latter actually uses the fixed value, even though both have it.
             bool usesFixedValue: 1;
 
@@ -540,8 +536,8 @@ public:
         }
     }
 
-    bool HasObjTypeSpecFldInfo() const 
-    { 
+    bool HasObjTypeSpecFldInfo() const
+    {
         return this->objTypeSpecFldInfo != nullptr;
     }
 
@@ -571,7 +567,7 @@ public:
 
     bool ShouldResetObjTypeSpecFldInfo()
     {
-        // If an objTypeSpecFldInfo was created just for the purpose of polymorphic inlining but didn't get used for the same (for some reason or the other), and the polymorphic cache it was created from, wasn't equivalent, 
+        // If an objTypeSpecFldInfo was created just for the purpose of polymorphic inlining but didn't get used for the same (for some reason or the other), and the polymorphic cache it was created from, wasn't equivalent,
         // we should null out this info on the propertySymOpnd so that assumptions downstream around equivalent object type spec still hold.
         if (HasObjTypeSpecFldInfo() && IsPoly() && (DoesntHaveEquivalence() || !IsLoadedFromProto()))
         {
@@ -580,8 +576,8 @@ public:
         return false;
     }
 
-    Js::ObjTypeSpecFldInfo* GetObjTypeSpecInfo() const 
-    { 
+    Js::ObjTypeSpecFldInfo* GetObjTypeSpecInfo() const
+    {
         return this->objTypeSpecFldInfo;
     }
 
@@ -591,12 +587,12 @@ public:
         return this->objTypeSpecFldInfo->GetObjTypeSpecFldId();
     }
 
-    bool IsMono() const 
+    bool IsMono() const
     {
         return HasObjTypeSpecFldInfo() && this->objTypeSpecFldInfo->IsMono();
     }
 
-    bool IsPoly() const 
+    bool IsPoly() const
     {
         return HasObjTypeSpecFldInfo() && this->objTypeSpecFldInfo->IsPoly();
     }
@@ -606,12 +602,12 @@ public:
         return HasObjTypeSpecFldInfo() && this->objTypeSpecFldInfo->HasEquivalentTypeSet();
     }
 
-    bool DoesntHaveEquivalence() const 
+    bool DoesntHaveEquivalence() const
     {
         return HasObjTypeSpecFldInfo() && this->objTypeSpecFldInfo->DoesntHaveEquivalence();
     }
 
-    bool UsesAuxSlot() const 
+    bool UsesAuxSlot() const
     {
         return usesAuxSlot && HasObjTypeSpecFldInfo();
     }
@@ -622,12 +618,12 @@ public:
         usesAuxSlot = value;
     }
 
-    bool IsLoadedFromProto() const 
+    bool IsLoadedFromProto() const
     {
         return HasObjTypeSpecFldInfo() && this->objTypeSpecFldInfo->IsLoadedFromProto();
     }
 
-    bool UsesAccessor() const 
+    bool UsesAccessor() const
     {
         return HasObjTypeSpecFldInfo() && this->objTypeSpecFldInfo->UsesAccessor();
     }
@@ -649,7 +645,7 @@ public:
 
     bool MustDoMonoCheck() const
     {
-        // Question: does this property access need to do a monorphic check because of some other access
+        // Question: does this property access need to do a monomorphic check because of some other access
         // that this check protects?
         return this->mustDoMonoCheck;
     }
@@ -665,27 +661,27 @@ public:
         return this->IsBeingAdded() || (this->HasFixedValue() && !this->IsLoadedFromProto());
     }
 
-    bool IsBeingStored() const 
+    bool IsBeingStored() const
     {
         return HasObjTypeSpecFldInfo() && this->objTypeSpecFldInfo->IsBeingStored();
-    }    
+    }
 
     void SetIsBeingStored(bool value)
     {
         Assert(HasObjTypeSpecFldInfo());
         this->objTypeSpecFldInfo->SetIsBeingStored(value);
-    }    
+    }
 
-    bool IsBeingAdded() const 
+    bool IsBeingAdded() const
     {
         return HasObjTypeSpecFldInfo() && this->objTypeSpecFldInfo->IsBeingAdded();
-    }    
+    }
 
     void SetIsBeingAdded(bool value)
     {
         Assert(HasObjTypeSpecFldInfo());
         this->objTypeSpecFldInfo->SetIsBeingAdded(value);
-    }    
+    }
 
     bool IsRootObjectNonConfigurableField() const
     {
@@ -727,7 +723,7 @@ public:
         return this->objTypeSpecFldInfo->GetPropertyId();
     }
 
-    Js::DynamicObject* GetProtoObject() const 
+    Js::DynamicObject* GetProtoObject() const
     {
         Assert(HasObjTypeSpecFldInfo());
         return this->objTypeSpecFldInfo->GetProtoObject();
@@ -775,7 +771,7 @@ public:
         return this->objTypeSpecFldInfo->GetCtorCache();
     }
 
-    Js::PropertyGuard* GetPropertyGuard() const 
+    Js::PropertyGuard* GetPropertyGuard() const
     {
         Assert(HasObjTypeSpecFldInfo());
         return this->objTypeSpecFldInfo->GetPropertyGuard();
@@ -936,7 +932,7 @@ public:
         Assert(TypeCheckSeqBitsSetOnlyIfCandidate());
         // Indicate whether this operation needs a type check for its own sake, since the type is dead and no downstream
         // operations require the type to be checked.
-        return !PHASE_OFF1(Js::ObjTypeSpecIsolatedFldOpsPhase) && 
+        return !PHASE_OFF1(Js::ObjTypeSpecIsolatedFldOpsPhase) &&
             IsTypeCheckSeqCandidate() && IsTypeDead() && !IsTypeCheckOnly() && !IsTypeChecked() && !HasTypeMismatch();
     }
 
@@ -974,7 +970,7 @@ public:
 
     bool NeedsTypeCheck() const
     {
-        return NeedsPrimaryTypeCheck() || NeedsLocalTypeCheck() || 
+        return NeedsPrimaryTypeCheck() || NeedsLocalTypeCheck() ||
             NeedsLoadFromProtoTypeCheck() || NeedsAddPropertyTypeCheck() || NeedsCheckFixedFieldTypeCheck();
     }
 
@@ -983,8 +979,8 @@ public:
         return NeedsPrimaryTypeCheck() || (PHASE_ON1(Js::ObjTypeSpecIsolatedFldOpsWithBailOutPhase) && NeedsLocalTypeCheck()) || NeedsCheckFixedFieldTypeCheck();
     }
 
-    // Is the instruction involving this operand optimized with a direct slot load or store? In other words, is it guarded 
-    // by a type check, either as part of the type check sequence, or explicitly on this instruction. 
+    // Is the instruction involving this operand optimized with a direct slot load or store? In other words, is it guarded
+    // by a type check, either as part of the type check sequence, or explicitly on this instruction.
     bool IsObjTypeSpecOptimized() const
     {
         return MayNeedTypeCheckProtection() && (NeedsTypeCheckAndBailOut() || IsTypeCheckProtected());
@@ -996,9 +992,6 @@ public:
     // fall back on live cache.  Similarly, for fixed method checks.
     bool MayHaveImplicitCall() const
     {
-        // Review (ObjTypeSpec): This is a bit conservative now that we don't revert from obj type specialized operations to live cache
-        // access even if the operation is isolated.  Once we decide a given instruction is an object type spec candidate, we know it
-        // will never need an implicit call bailout.  We could basically return IsObjTypeSpecOptimized.
         return !IsRootObjectNonConfigurableFieldLoad() && !UsesFixedValue() && (!IsTypeCheckSeqCandidate() || !IsTypeCheckProtected());
     }
 
@@ -1022,7 +1015,7 @@ public:
     }
 
     void SetFinalType(Js::Type* type)
-    {        
+    {
         Assert(type != nullptr);
         this->finalType = type;
     }
@@ -1176,7 +1169,7 @@ public:
     static RegOpnd *        New(StackSym *sym, RegNum reg, IRType type, Func *func);
 
 public:
-    bool                    IsArrayRegOpnd() const 
+    bool                    IsArrayRegOpnd() const
     {
         Assert(m_isArrayRegOpnd == DbgIsArrayRegOpnd());
         Assert(!m_isArrayRegOpnd || m_valueType.IsAnyOptimizedArray());
@@ -1408,10 +1401,10 @@ public:
     const wchar_t *         GetDescription();
     IR::AddrOpndKind        GetAddrKind() const;
     bool                    HasAddrKind() const;
-    void *                  GetOriginalAddress() const;    
+    void *                  GetOriginalAddress() const;
 #endif
     bool                    m_dontEncode;
-    
+
 #if DBG_DUMP
     void                    SetAddrKind(IR::AddrOpndKind kind, void * originalAddress);
 #endif
@@ -1424,9 +1417,9 @@ private:
 
 #if DBG_DUMP || defined(ENABLE_IR_VIEWER)
     const wchar_t *         m_desc;
-#endif    
+#endif
 #if DBG_DUMP
-    IR::AddrOpndKind        m_addrKind;  // if m_addrKind != -1, than this used to be MemRefOpnd which has the addres hoisted;
+    IR::AddrOpndKind        m_addrKind;  // if m_addrKind != -1, than this used to be MemRefOpnd which has the address hoisted;
     void *                  m_originalAddress;
 #endif
 

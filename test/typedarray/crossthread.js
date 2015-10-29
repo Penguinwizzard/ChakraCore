@@ -3,11 +3,6 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-// TODO: in order for objects from another thread to have correct typeof, we need to make sure that 
-//       proxies are registered, in other words, WScript.RegisterCrossThreadInterfacePS() is called 
-//       for each thread (Win8 - done during OS setup, Win7 - need to do that explicitly). 
-//       Nothing fails right now because of this, but would be good to do that, best would be in jshost.exe.
-
 var fileNames= ["dataview.js", "int8array.js", "uint8array.js", "int16array.js", "uint16array.js",
     "int32array.js", "uint32array.js", "float32array.js", "float64array.js"];
 

@@ -3,8 +3,11 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
+#include "EngineInterfaceObject.h"
 #include "IntlEngineInterfaceExtensionObject.h"
-//#ifdef ENABLE_INTL_OBJECT
+#include "Types\DeferredTypeHandler.h"
+
+#ifdef ENABLE_INTL_OBJECT
 #include "Language\ByteCodeSerializer.h"
 #include "errstr.h"
 #include "ByteCode\ByteCodeDumper.h"
@@ -634,7 +637,8 @@ namespace Js
             //API call retrieves a currency formatter, have to query its interface for numberFormatter
             IfFailThrowHr(GetWindowsGlobalizationAdapter(scriptContext)->CreateCurrencyFormatter(scriptContext, &locale, 1, JavascriptString::FromVar(propertyValue)->GetSz(), &currencyFormatter));
 
-            if (GetTypedPropertyBuiltInFrom(options, __currencyDisplayToUse, TaggedInt)) // 0 is for symbol, 1 is for code, 2 is for name. Currently name isn't supported; so it will default to code in that case.
+            if (GetTypedPropertyBuiltInFrom(options, __currencyDisplayToUse, TaggedInt)) // 0 is for symbol, 1 is for code, 2 is for name. 
+                                                                                         //Currently name isn't supported; so it will default to code in that case.
             {
                 AutoCOMPtr<NumberFormatting::ICurrencyFormatter2> currencyFormatter2(nullptr);
                 IfFailThrowHr(currencyFormatter->QueryInterface(__uuidof(NumberFormatting::ICurrencyFormatter2), reinterpret_cast<void**>(&currencyFormatter2)));
@@ -1326,4 +1330,4 @@ namespace Js
     }
 #endif
 }
-//#endif
+#endif

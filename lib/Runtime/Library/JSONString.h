@@ -26,11 +26,11 @@ namespace Js
         wchar_t* m_pszCurrentPtr;
         charcount_t m_length;
 #if DBG
-        charcount_t GetCount() 
-        { 
+        charcount_t GetCount()
+        {
             Assert(m_pszCurrentPtr >= m_pszString);
             Assert(m_pszCurrentPtr - m_pszString <= MaxCharCount);
-            return static_cast<charcount_t>(m_pszCurrentPtr - m_pszString); 
+            return static_cast<charcount_t>(m_pszCurrentPtr - m_pszString);
         }
 #endif
     };
@@ -56,7 +56,7 @@ namespace Js
         static Js::JavascriptString* Escape(Js::JavascriptString* value, uint start = 0, WritableStringBuffer* outputString = nullptr)
         {
             uint len = value->GetLength();
-            
+
             if (0 == len)
             {
                 Js::ScriptContext* scriptContext = value->GetScriptContext();
@@ -72,7 +72,7 @@ namespace Js
         template <EscapingOperation op, class TJSONString, class TConcatStringWrapping, class TJavascriptString>
         static TJavascriptString EscapeNonEmptyString(Js::JavascriptString* value, const wchar_t* szValue, uint start, charcount_t len, WritableStringBuffer* outputString)
         {
-            int extra = 0;
+            charcount_t extra = 0;
             TJavascriptString result;
 
             // Optimize for the case when we don't need to change anything, just wrap with quotes.
@@ -96,7 +96,7 @@ namespace Js
                 {
                     if (wch < _countof(escapeMap))
                     {
-                        extra += escapeMapCount[(char)wch];
+                        extra = UInt32Math::Add(extra, escapeMapCount[(char)wch]);
                     }
                 }
                 else

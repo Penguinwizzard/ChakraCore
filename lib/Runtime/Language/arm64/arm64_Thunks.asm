@@ -4,13 +4,13 @@
 ;-------------------------------------------------------------------------------------------------------
     OPT 2   ; disable listing
 #include "ksarm64.h"
-    OPT 1   ; reenable listing
+    OPT 1   ; re-enable listing
 
 
     TTL Lib\Runtime\Language\arm64\arm64_DelayDynamicInterpreterThunk.asm
-    
+
     ;Var InterpreterStackFrame::DelayDynamicInterpreterThunk(RecyclableObject* function, CallInfo callInfo, ...)
-    EXPORT  |?DelayDynamicInterpreterThunk@InterpreterStackFrame@Js@@SAPEAXPEAVRecyclableObject@2@UCallInfo@2@ZZ|   
+    EXPORT  |?DelayDynamicInterpreterThunk@InterpreterStackFrame@Js@@SAPEAXPEAVRecyclableObject@2@UCallInfo@2@ZZ|
     ;Var DynamicProfileInfo::EnsureDynamicProfileInfoThunk(RecyclableObject* function, CallInfo callInfo, ...)
     EXPORT  |?EnsureDynamicProfileInfoThunk@DynamicProfileInfo@Js@@SAPEAXPEAVRecyclableObject@2@UCallInfo@2@ZZ|
     ; Var ScriptContext::ProfileModeDeferredParsingThunk(RecyclableObject* function, CallInfo callInfo, ...)

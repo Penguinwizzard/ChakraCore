@@ -37,9 +37,9 @@ RestoreHasFuncAssignment: escape
 HasMaybeEscapedUse: blah
 HasMaybeEscapedNestedFunc (MaybeEscapedUseFuncDecl): test (function  (#1.1), #2)
 DeferParse: box and disable stack function: test (function  (#1.1), #2)
-Boxing StackScriptFunction Object: nested1 (functiond Id:  (#1.2), #4)
-Boxing StackScriptFunction Object: blah (functiond Id:  (#1.4), #5)
-Boxing StackScriptFunction Object: escape (functiond Id:  (#1.5), #6)
+Boxing StackScriptFunction Object: nested1 (function Id:  (#1.2), #4)
+Boxing StackScriptFunction Object: blah (function Id:  (#1.4), #5)
+Boxing StackScriptFunction Object: escape (function Id:  (#1.5), #6)
 Boxing Frame [Native]: test  (#1.1), #2
 HasFuncDecl: nested1
 RestoreHasFuncAssignment: nested1

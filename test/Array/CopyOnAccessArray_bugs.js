@@ -12,7 +12,7 @@ if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in ch
 var tests = [
     {
         name: "Calling Array.prototype.slice()",
-        body: function () 
+        body: function ()
         {
             var a=[1,2,3,4,5];
             var b=Array.prototype.slice.call(a,1,3);
@@ -21,7 +21,7 @@ var tests = [
     },
     {
         name: "Calling Array.prototype.push()",
-        body: function () 
+        body: function ()
         {
             var a=[1,2];
             Array.prototype.push.call(a,1);
@@ -30,7 +30,7 @@ var tests = [
     },
     {
         name: "Calling Array.isArray()",
-        body: function () 
+        body: function ()
         {
             var a=[1,2,3,4,5,6,7];
             assert.areEqual(true, Array.isArray(a), "Incorrect result from Array.isArray()");
@@ -38,7 +38,7 @@ var tests = [
     },
     {
         name: "Calling Array.prototype.unshift()",
-        body: function () 
+        body: function ()
         {
             var a=[2,1,3,4];
             Array.prototype.unshift.call(a,0);
@@ -47,7 +47,7 @@ var tests = [
     },
     {
         name: "Calling Array.prototype.shift()",
-        body: function () 
+        body: function ()
         {
             var a=[1,2,3,4];
             var c=Array.prototype.shift.call(a);
@@ -57,7 +57,7 @@ var tests = [
     },
     {
         name: "Calling Array.prototype.entries()",
-        body: function () 
+        body: function ()
         {
             var a=[1,2,3,4];
             var c=Array.prototype.entries.call(a);
@@ -69,7 +69,7 @@ var tests = [
     },
     {
         name: "Calling Array.prototype.keys()",
-        body: function () 
+        body: function ()
         {
             var a=[1,2,3,4];
             var c=Array.prototype.keys.call(a);
@@ -81,7 +81,7 @@ var tests = [
     },
     {
         name: "Calling Array.prototype.reverse()",
-        body: function () 
+        body: function ()
         {
             var a=[1,2,3,4];
             Array.prototype.reverse.call(a);

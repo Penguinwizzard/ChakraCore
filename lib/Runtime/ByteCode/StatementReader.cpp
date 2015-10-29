@@ -14,12 +14,12 @@ namespace Js
 
     void StatementReader::Create(FunctionBody* functionRead, uint startOffset, bool useOriginalByteCode)
     {
-        AssertMsg(functionRead != nullptr, "Must provide valid functiopn to execute");
+        AssertMsg(functionRead != nullptr, "Must provide valid function to execute");
 
-        ByteBlock * pblkByteCode = useOriginalByteCode ? 
-            functionRead->GetOriginalByteCode() : 
+        ByteBlock * pblkByteCode = useOriginalByteCode ?
+            functionRead->GetOriginalByteCode() :
             functionRead->GetByteCode();
-            
+
         AssertMsg(pblkByteCode != nullptr, "Must have valid byte-code to read");
 
         m_startLocation      = pblkByteCode->GetBuffer();
@@ -92,18 +92,18 @@ namespace Js
         uint32 retStatement = Js::Constants::NoStatementIndex;
 
         if (m_startOfStatement)
-        {            
-            m_statementIndex++;            
-            if (m_statementMap && m_statementIndex < m_statementMap->Count() && m_statementMap->Item(m_statementIndex, m_statementMapIter, data))
+        {
+            m_statementIndex++;
+            if (m_statementMap && (uint32)m_statementIndex < m_statementMap->Count() && m_statementMap->Item(m_statementIndex, m_statementMapIter, data))
             {
                 // The end boundary is the last byte of the last instruction in the previous range.
-                // We want to track the begining of the next instruction for AtStatementBoundary.
-                m_nextStatementBoundary =  m_startLocation + data.bytecodeBegin;
+                // We want to track the beginning of the next instruction for AtStatementBoundary.
+                m_nextStatementBoundary = m_startLocation + data.bytecodeBegin;
 
                 // The next user statement is adjacent in the bytecode
-                retStatement = m_statementIndex;                
+                retStatement = m_statementIndex;
             }
-            else if (m_fullstatementMap && m_statementIndex < m_fullstatementMap->Count()) 
+            else if (m_fullstatementMap && m_statementIndex < m_fullstatementMap->Count())
             {
                 int nextInstrStart = m_fullstatementMap->Item(m_statementIndex - 1)->byteCodeSpan.end + 1;
                 m_nextStatementBoundary = m_startLocation + nextInstrStart;
@@ -126,7 +126,7 @@ namespace Js
         else
         {
             m_startOfStatement = true;
-            if (m_statementMap && m_statementIndex < m_statementMap->Count() && m_statementMap->Item(m_statementIndex, m_statementMapIter, data))
+            if (m_statementMap && (uint32)m_statementIndex < m_statementMap->Count() && m_statementMap->Item(m_statementIndex, m_statementMapIter, data))
             {
                 // Start a range of bytecode that maps to a user statement
                 m_nextStatementBoundary =  m_startLocation + data.bytecodeBegin;

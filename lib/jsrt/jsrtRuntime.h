@@ -4,22 +4,20 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
-// REVIEW: ChakraCore Dependency
-#define _JSRT_
-#include "chakrart.h"
+#include "chakracommon.h"
 
 #include "JsrtThreadService.h"
 
 class JsrtRuntime
 {
     friend class JsrtContext;
-    
+
 public:
     JsrtRuntime(ThreadContext * threadContext, bool useIdle, bool dispatchExceptions);
     ~JsrtRuntime();
-    
+
     ThreadContext * GetThreadContext() { return this->threadContext; }
-    
+
     JsRuntimeHandle ToHandle() { return static_cast<JsRuntimeHandle>(this); }
     static JsrtRuntime * FromHandle(JsRuntimeHandle runtimeHandle)
     {

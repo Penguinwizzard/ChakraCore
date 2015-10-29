@@ -8,16 +8,16 @@
 
 namespace Js
 {
-    InternalString::InternalString(__in const wchar_t* content, int length, unsigned char offset):
+    InternalString::InternalString(__in const wchar_t* content, charcount_t length, unsigned char offset):
         m_content(content),
         m_charLength(length),
         m_offset(offset)
     {
-        AssertMsg(length != -1, "Length should be provided");
+        AssertMsg(length < INT_MAX, "Length should be a valid string length");
     }
 
     // This will make a copy of the entire buffer
-    InternalString *InternalString::New(ArenaAllocator* alloc, const wchar_t* content, int length)
+    InternalString *InternalString::New(ArenaAllocator* alloc, const wchar_t* content, charcount_t length)
     {
         size_t bytelength = sizeof(wchar_t) * length;
         DWORD* allocbuffer = (DWORD*)alloc->Alloc(sizeof(DWORD) + bytelength + sizeof(wchar_t));
@@ -32,7 +32,7 @@ namespace Js
 
     // This will make a copy of the entire buffer
     // Allocated using recycler memory
-    InternalString *InternalString::New(Recycler* recycler, const wchar_t* content, int length)
+    InternalString *InternalString::New(Recycler* recycler, const wchar_t* content, charcount_t length)
     {
         size_t bytelength = sizeof(wchar_t) * length;
 
@@ -53,7 +53,7 @@ namespace Js
 
 
     // This will only store the pointer and length, not making a copy of the buffer
-    InternalString *InternalString::NewNoCopy(ArenaAllocator* alloc, const wchar_t* content, int length)
+    InternalString *InternalString::NewNoCopy(ArenaAllocator* alloc, const wchar_t* content, charcount_t length)
     {
         InternalString* newInstance = Anew(alloc, InternalString, const_cast<wchar_t*> (content), length);
         return newInstance;

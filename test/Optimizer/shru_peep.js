@@ -13,9 +13,9 @@ function FAILED()
 function test(a, b)
 {
     if (((a|0)>>>0) > ((b|0)>>>0))
-	return true;
+    return true;
     else
-	return false;
+    return false;
 }
 
 function foo()
@@ -31,17 +31,17 @@ function bar()
 function test2(a, f)
 {
     if (((a|0)>>>0) > ((f()|0)>>>0))
-	return true;
+    return true;
     else
-	return false;
+    return false;
 }
 
 for (var i = 0; i < 50; i++)
 {
     if (!test(-1, 1))
-	FAILED();
+    FAILED();
     if (!test2(-1, foo))
-	FAILED();
+    FAILED();
 }
 
 if (test(1,-1))

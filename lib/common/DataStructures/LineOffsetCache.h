@@ -79,7 +79,7 @@ namespace JsUtil
         {
             Assert(this->lineOffsetCacheList->Count() > 0);
             
-                        // The list is sorted, so binary search to find the line info.
+            // The list is sorted, so binary search to find the line info.
             int closestIndex = -1;
             int minRange = INT_MAX;
 
@@ -145,7 +145,7 @@ namespace JsUtil
             return item.characterOffset;
         }
 
-        size_t GetLineCount() const
+        uint32 GetLineCount() const
         {
             AssertMsg(this->lineOffsetCacheList != nullptr, "The list was either not set from the ByteCode or not created.");
             return this->lineOffsetCacheList->Count();

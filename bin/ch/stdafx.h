@@ -67,7 +67,7 @@ if (!(exp)) \
 
 #define Assert(exp)             AssertMsg(exp, #exp)
 #define _JSRT_
-#include "chakrart.h"
+#include "chakracommon.h"
 #include "TestHooksRt.h"
 
 typedef void * Var;
@@ -78,4 +78,3 @@ typedef void * Var;
 #include "HostConfigFlags.h"
 #include "MessageQueue.h"
 #include "WScriptJsrt.h"
-

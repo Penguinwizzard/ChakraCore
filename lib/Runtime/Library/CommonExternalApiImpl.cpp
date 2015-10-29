@@ -16,7 +16,6 @@ bool JsUtil::ExternalApi::RaiseOnIntOverflow()
     ::Math::DefaultOverflowPolicy();
 }
 
-
 bool JsUtil::ExternalApi::RaiseOutOfMemoryIfScriptActive()
 {
     return Js::Exception::RaiseIfScriptActive(nullptr, Js::Exception::ExceptionKind_OutOfMemory);

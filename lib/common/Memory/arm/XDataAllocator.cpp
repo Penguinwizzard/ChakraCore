@@ -62,14 +62,14 @@ void XDataAllocator::Register(XDataAllocation& allocation, DWORD functionStart, 
         }
     }
     Assert(allocation.functionTable == nullptr);
-    
+
     // Since we do not expect many thunk functions to be created, we are using 1 table/function
     // for now. This can be optimized further if needed.
-    DWORD status = NtdllLibrary::Instance->AddGrowableFunctionTable(&allocation.functionTable, 
-        pdataArray, 
-        /*MaxEntryCount*/ allocation.pdataCount, 
-        /*Valid entry count*/ allocation.pdataCount, 
-        /*RangeBase*/ functionStart, 
+    DWORD status = NtdllLibrary::Instance->AddGrowableFunctionTable(&allocation.functionTable,
+        pdataArray,
+        /*MaxEntryCount*/ allocation.pdataCount,
+        /*Valid entry count*/ allocation.pdataCount,
+        /*RangeBase*/ functionStart,
         /*RangeEnd*/ functionStart + functionSize);
 
     Js::Throw::CheckAndThrowOutOfMemory(NT_SUCCESS(status));

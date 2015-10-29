@@ -123,7 +123,6 @@ EXDEF3    ( CUSTOM     , NopEx             , OP_Empty                , Empty    
   DEF3_WMS( INT3       , Div_UInt          , Div_UInt                , Int3          )
   DEF3_WMS( INT3       , Rem_UInt          , Rem_UInt                , Int3          )
 
-  DEF3_WMS( CUSTOM     , Ld_DbAddr         , Op_LdAddr_Db            , Double1Addr1  )
   DEF3_WMS( DOUBLE2    , Ld_Db             , Ld_Db                   , Double2       )
   DEF3_WMS( FLOAT2     , Ld_Flt            , Ld_Flt                  , Float2        )
   DEF3_WMS( DOUBLE2    , Neg_Db            , Neg_Db                  , Double2       )
@@ -187,7 +186,7 @@ EXDEF3    ( CUSTOM     , NopEx             , OP_Empty                , Empty    
   DEF3_WMS( CALLDOUBLE3, Pow_Db            , Math::Pow               , false         )
   DEF3_WMS( CALLDOUBLE2, Sqrt_Db           , ::sqrt                  , true          )
   DEF3_WMS( CALLFLOAT2,  Sqrt_Flt          , ::sqrtf                 , _CRT_HAS_CDECL)
-  DEF3_WMS( CALLDOUBLE2, Abs_Db            , ::fabs                  , true          )
+  DEF3_WMS( CALLDOUBLE2, Abs_Db            , Math::Abs               , false         )
   DEF3_WMS( CALLFLOAT2 , Abs_Flt           , ::fabsf                 , _CRT_HAS_CDECL)
   DEF3_WMS( CALLDOUBLE3, Atan2_Db          , Math::Atan2             , false         )
   DEF3_WMS( CALLDOUBLE3, Min_Db            , AsmJsMath::Min<double>  , false         )

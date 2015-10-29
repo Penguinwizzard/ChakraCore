@@ -34,12 +34,11 @@ else
     WScript.Echo("Passed\n");
 }
 
-//Windows Blue Bug 416975
+// Windows Blue Bug 416975
 function test1(){
   function bar4 (){
     if(bar4())
     {
-		
      }
     return (1 > 1);
   }

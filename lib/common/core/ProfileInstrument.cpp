@@ -200,13 +200,13 @@ namespace Js
     ///
     /// Basically if a function is at level 'x' then we need to deduct from its
     /// exclusive times, the inclusive times of all the functions at level 'x + 1'
-    /// We dont care about deeper levels. Hence 'inclSumAtLevel' array which accumulates
+    /// We don't care about deeper levels. Hence 'inclSumAtLevel' array which accumulates
     /// the sum of variables at different levels.
     ///
     /// Reseting the next level is also required. In the above example, f3 and f5 are
-    /// at the same level. if we dont reset level 3 when popping f2, then we will
+    /// at the same level. if we don't reset level 3 when popping f2, then we will
     /// have wrong sums for f4. So once a tag has been popped, all sums at its higher
-    /// levels is set to zero. (Offcourse we just need to reset the next level and
+    /// levels is set to zero. (Of course we just need to reset the next level and
     /// all above levels will invariably remain zero)
     ///
     ///----------------------------------------------------------------------------
@@ -309,7 +309,7 @@ namespace Js
             {
                 UnitData *data = node->GetChildAt(i)->GetValue();
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
-                if( int(data->incl * 100 / base->incl) >= Configuration::Global.flags.ProfileThreshold)             // threshhold
+                if( int(data->incl * 100 / base->incl) >= Configuration::Global.flags.ProfileThreshold) // threshold
 #endif
                 {
 
@@ -419,7 +419,7 @@ namespace Js
     ///
     /// Profiler::FindNode
     ///
-    /// Does a tree traversal(DFS) and finds the first occurance of the 'tag'
+    /// Does a tree traversal(DFS) and finds the first occurrence of the 'tag'
     ///
     ///----------------------------------------------------------------------------
 
@@ -465,7 +465,7 @@ namespace Js
         }
         else
         {
-            AssertMsg(0, "Could not get time. Dont know what to do");
+            AssertMsg(0, "Could not get time. Don't know what to do");
             return 0;
         }
 #endif
@@ -502,7 +502,7 @@ namespace Js
         }
         else
         {
-            AssertMsg(0, "Could not get time. Dont know what to do");
+            AssertMsg(0, "Could not get time. Don't know what to do");
             return 0;
         }
 #endif

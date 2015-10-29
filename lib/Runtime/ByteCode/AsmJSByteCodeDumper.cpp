@@ -18,8 +18,8 @@ namespace Js
         statementReader.Create( body );
         body->DumpFullFunctionName();
         Output::Print( L" Asm.js (" );
-        const int argCount = func->GetArgCount();
-        for (int i = 0; i < argCount ; i++)
+        const ArgSlot argCount = func->GetArgCount();
+        for (ArgSlot i = 0; i < argCount ; i++)
         {
             AsmJsType var = func->GetArgType( i );
             if( i > 0 )
@@ -95,7 +95,7 @@ namespace Js
         Output::Print( L"    Implicit Arg Ins:\n    ======== =====\n    " );
         int iArg = intRegisters.GetConstCount(), dArg = doubleRegisters.GetConstCount(), fArg = floatRegisters.GetConstCount();
         int simdArg = simdRegisters.GetConstCount();
-        for( int i = 0; i < argCount; i++ )
+        for(ArgSlot i = 0; i < argCount; i++)
         {
             const AsmJsType& var = func->GetArgType( i );
             if( var.isDouble() )
@@ -632,13 +632,6 @@ namespace Js
         DumpIntReg( data->I0 );
         DumpIntReg( data->I1 );
         DumpIntReg( data->I2 );
-    }
-
-    template <class T>
-    void AsmJsByteCodeDumper::DumpDouble1Addr1( OpCodeAsmJs op, const unaligned T * data, FunctionBody * dumpFunction, ByteCodeReader& reader )
-    {
-        DumpDoubleReg( data->D0 );
-        DumpAddr( (void*)data->A1 );
     }
 
     template <class T>

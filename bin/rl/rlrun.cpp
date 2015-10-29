@@ -9,7 +9,7 @@
 
 #include "rl.h"
 
-#define TMP_PREFIX "ex"   // 2 characters!
+#define TMP_PREFIX "ex"   // 2 characters
 
 
 #define POGO_PGD "rlpogo.pgd"
@@ -27,13 +27,13 @@
 static char *PogoForceErrors = "-we4951 -we4952 -we4953 -we4961 -we4962 -we4963";
 
 //
-// Global variables set before worker threads start, and only accesssed
+// Global variables set before worker threads start, and only accessed
 // (not set) by the worker threads.
 //
 // sets of options to iterate over
 char *OptFlags[MAXOPTIONS + 1], *PogoOptFlags[MAXOPTIONS + 1];
 
-// use a big global array as scratchpad for passing the child process env vars
+// use a big global array as scratch pad for passing the child process env vars
 #define MAX_ENV_LEN 10000
 __declspec(thread) char EnvFlags[MAX_ENV_LEN];
 
@@ -246,7 +246,7 @@ void
 
 BOOL
     CheckForPass(char * filename, char * optReportBuf, char * cmdbuf, BOOL fDumpOutputFile = TRUE)
-{    
+{
     FILE * fp;
     char buf[BUFFER_SIZE];
 
@@ -309,8 +309,6 @@ void CopyRebaseFile(PCSTR testout, PCSTR baseline)
 //   build: build the test (OPT=compile options)
 //   run: run the test
 //   copy: copy the generated files to a subdirectory (COPYDIR=subdir)
-//
-// JScript tests TODO:ARJUNB
 //
 int
     DoOneExternalTest(
@@ -491,7 +489,7 @@ int
             }
         }
 
-        char* cmd = JCBinary; 
+        char* cmd = JCBinary;
         if (kind != TK_JSCRIPT && kind != TK_HTML)
         {
             cmd = pTestVariant->testInfo.data[TIK_COMMAND];
@@ -752,7 +750,7 @@ BOOL
     BOOL fLinkOnly,    // relink only
     BOOL fSuppressNoGPF
     )
-{    
+{
     int rc;
     char *p = NULL;
     char cmdbuf[BUFFER_SIZE*2];
@@ -898,41 +896,6 @@ BOOL
     Message("    %s", cmdbuf);
 
     rc = ExecuteCommand(pDir->GetDirectoryPath(), cmdbuf);
-
-    // Some machines require assembly of the compiler output.
-
-#if 0 // nobody needs this currently...
-    if (rc == 0) {
-        switch (TargetMachine) {
-
-        case TM_...:
-            if (REGR_ASM) {
-                for (pFile = pTest; pFile && (rc == 0);
-                    pFile = pFile->link) {
-
-                        // Build up the assembler command string.
-
-                        strcpy_s(cmdbuf, REGR_ASM);
-                        strcat_s(cmdbuf, " ");
-                        strcat_s(cmdbuf, pTest->name);
-                        p = strrchr(cmdbuf, '.');
-                        strcpy_s(p + 1, "asm");
-
-                        // Do the assembly.
-
-                        Message("Assembling:");
-                        Message("    %s", cmdbuf);
-                        rc = ExecuteCommand(pDir->GetDirectoryPath(), cmdbuf);
-                }
-            }
-            break;
-
-        default:
-            // Assembly not required
-            break;
-        }
-    }
-#endif // 0
 
     // Some machines require separate linking of the
     // compiler and/or assembler output.

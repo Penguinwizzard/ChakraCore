@@ -11,7 +11,7 @@ CRITICAL_SECTION DictionaryStats::dictionaryTypesCriticalSection;
 
 DictionaryStats* DictionaryStats::Create(const char* name, uint bucketCount)
 {
-    if (!Js::Configuration::Global.flags.IsEnabled(Js::ProfileDictionaryFlag) || 
+    if (!Js::Configuration::Global.flags.IsEnabled(Js::ProfileDictionaryFlag) ||
         Js::Configuration::Global.flags.ProfileDictionary < 0)
         return NULL;
 
@@ -66,7 +66,7 @@ DictionaryStats::DictionaryStats(const char* name, uint bucketCount)
         }
         current = current->pNext;
     }
-    
+
     if (!type)
     {
         // We haven't seen this type before so add a new entry for it
@@ -78,7 +78,7 @@ DictionaryStats::DictionaryStats(const char* name, uint bucketCount)
         type->name[sizeof(type->name)-1]='\0';
     }
     LeaveCriticalSection(&dictionaryTypesCriticalSection);
-    // keep a pointer to the name in case we are asked to clone ourselve
+    // keep a pointer to the name in case we are asked to clone ourselves
     pName = type->name;
 
     // Add ourself in the list
@@ -127,10 +127,10 @@ void DictionaryStats::OutputStats()
 {
     if (!dictionaryTypes)
         return;
-    
+
     EnterCriticalSection(&DictionaryStats::dictionaryTypesCriticalSection);
     DictionaryType* current = dictionaryTypes;
-    Output::Print(L"PROFILE DICTIONARY\n");    
+    Output::Print(L"PROFILE DICTIONARY\n");
     Output::Print(L"%8s  %13s  %13s  %13s  %13s  %13s  %13s  %13s  %14s  %14s  %13s  %13s  %13s    %s\n", L"Metric",L"StartSize", L"EndSize", L"Resizes", L"Items", L"MaxDepth", L"EmptyBuckets", L"Lookups", L"Collisions", L"AvgLookupDepth", L"AvgCollDepth", L"MaxLookupDepth", L"Instances", L"Type");
     while(current)
     {
@@ -183,9 +183,9 @@ void DictionaryStats::OutputStats()
                     avgld = (double)instance->lookupDepthTotal / (double)instance->lookupCount;
                     avgcd = (double)instance->lookupDepthTotal / (double)instance->collisionCount;
                 }
-                Output::Print(L"%8s  %13d  %13d  %13d  %13d  %13d  %13d  %13d  %14d  %14.2f  %13.2f  %13d \n", 
+                Output::Print(L"%8s  %13d  %13d  %13d  %13d  %13d  %13d  %13d  %14d  %14.2f  %13.2f  %13d \n",
                     L"INS:",
-                    instance->initialSize, instance->finalSize, instance->countOfResize, 
+                    instance->initialSize, instance->finalSize, instance->countOfResize,
                     instance->itemCount, instance->maxDepth, instance->countOfEmptyBuckets,
                     instance->lookupCount, instance->collisionCount, avgld, avgcd,
                     instance->maxLookupDepth);
@@ -196,13 +196,13 @@ void DictionaryStats::OutputStats()
         if (max_depth >= Js::Configuration::Global.flags.ProfileDictionary)
         {
             Output::Print(L"%8s  %13.0f  %13.0f  %13.2f  %13.0f  %13.2f  %13.0f  %13.0f  %14.0f  %14.2f  %13.2f  %13.2f  %13d    %S\n", L"AVG:",
-                size/type->instancesCount, endSize/type->instancesCount, resizes/type->instancesCount, items/type->instancesCount, 
+                size/type->instancesCount, endSize/type->instancesCount, resizes/type->instancesCount, items/type->instancesCount,
                 depth/type->instancesCount, empty/type->instancesCount, lookups/type->instancesCount, collisions/type->instancesCount,
                 avglookupdepth/type->instancesCount, avgcollisiondepth/type->instancesCount, maxlookupdepth/type->instancesCount, type->instancesCount, type->name);
             Output::Print(L"%8s  %13.0f  %13.0f  %13.2f  %13.0f  %13.2f  %13.0f  %13.0f  %14.0f  %14.2f  %13.2f  %13.2f  %13d    %S\n\n", L"MAX:",
                 max_size, max_endSize, max_resizes, max_items, max_depth, max_empty, max_lookups, max_collisions, max_avglookupdepth,
                 max_avgcollisiondepth, max_maxlookupdepth, type->instancesCount, type->name);
-            
+
         }
         current = current->pNext;
     }

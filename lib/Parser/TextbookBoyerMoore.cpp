@@ -5,7 +5,7 @@
 #include "ParserPch.h"
 
 namespace UnifiedRegex
-{   
+{
     template <typename C>
     void TextbookBoyerMooreSetup<C>::Init()
     {
@@ -14,7 +14,7 @@ namespace UnifiedRegex
         {
             lastOcc[i] = -1;
         }
-        
+
         numLinearChars = 1;
 
         // Always put the last character in the first index
@@ -30,10 +30,10 @@ namespace UnifiedRegex
                     {
                         lastOcc[j] = i;
                         break;
-                    }                    
+                    }
                 }
                 if (j == numLinearChars)
-                {                    
+                {
                     if (numLinearChars < MaxCharMapLinearChars)
                     {
                         linearChar[numLinearChars] = pat[i];
@@ -62,13 +62,13 @@ namespace UnifiedRegex
     void TextbookBoyerMoore<C>::Setup(ArenaAllocator* allocator, TextbookBoyerMooreSetup<C> const& info)
     {
         Assert(info.GetScheme() == TextbookBoyerMooreSetup<C>::DefaultScheme);
-        this->Setup(allocator, info.pat, info.patLen, 1);        
+        this->Setup(allocator, info.pat, info.patLen, 1);
     }
 
-    template <typename C>        
+    template <typename C>
     void TextbookBoyerMoore<C>::Setup(ArenaAllocator * allocator, const Char * pat, CharCount patLen, int skip)
     {
-        // character c |-> index of last occurance of c in pat, otherwise -1
+        // character c |-> index of last occurrence of c in pat, otherwise -1
         for (CharCount i = 0; i < patLen; i++)
         {
             for (int j = 0; j < skip; j++)
@@ -77,7 +77,7 @@ namespace UnifiedRegex
         goodSuffix = TextbookBoyerMooreSetup<C>::GetGoodSuffix(allocator, pat, patLen, skip);
     }
 
-    template <typename C>    
+    template <typename C>
     int32 * TextbookBoyerMooreSetup<C>::GetGoodSuffix(ArenaAllocator* allocator, const Char * pat, CharCount patLen, int skip)
     {
         // pat offset q |-> longest prefix of pat which is a proper suffix of pat[0..q]
@@ -183,13 +183,13 @@ namespace UnifiedRegex
     {
 
         Assert(input != 0);
-        Assert(inputOffset <= inputLength);        
-        
+        Assert(inputOffset <= inputLength);
+
         if (inputLength < patLen)
             return false;
 
         CharCount offset = inputOffset;
-        
+
         const CharCount endOffset = inputLength - (patLen - 1);
         const int32* const localGoodSuffix = goodSuffix;
         const LastOccMap* const localLastOccurrence = &lastOccurrence;
@@ -207,7 +207,7 @@ namespace UnifiedRegex
                     // Found a match. Break out of this loop and go to the match pattern loop
                     break;
                 }
-                // Negative case is more common, 
+                // Negative case is more common,
                 // Write the checks so that we have a super tight loop
                 int lastOcc;
                 if (inputChar < localLastOccurrence->GetDirectMapSize())
@@ -216,7 +216,7 @@ namespace UnifiedRegex
                     {
                         offset += patLen;
                         if (offset >= endOffset)
-                        {                        
+                        {
                             return false;
                         }
                         continue;
@@ -227,13 +227,13 @@ namespace UnifiedRegex
                 {
                     offset += patLen;
                     if (offset >= endOffset)
-                    {                        
+                    {
                         return false;
                     }
                     continue;
                 }
                 Assert((int)lastPatCharIndex - lastOcc >= localGoodSuffix[lastPatCharIndex]);
-                offset += lastPatCharIndex - lastOcc;                
+                offset += lastPatCharIndex - lastOcc;
                 if (offset >= endOffset)
                 {
                     return false;
@@ -254,7 +254,7 @@ namespace UnifiedRegex
 #if ENABLE_REGEX_CONFIG_OPTIONS
                 if (stats != 0)
                     stats->numCompares++;
-#endif                
+#endif
                 uint inputChar = Chars<Char>::CTU(input[offset + j]);
                 if (!MatchPatternAt<equivClassSize, equivClassSize>(inputChar, pat, j))
                 {
@@ -290,10 +290,10 @@ namespace UnifiedRegex
 #if DBG
             goodSuffix = 0;
 #endif
-        }        
+        }
     }
 
-    template <typename C>     
+    template <typename C>
     template <uint equivClassSize>
     bool TextbookBoyerMooreWithLinearMap<C>::Match
         ( const Char *const input
@@ -308,20 +308,20 @@ namespace UnifiedRegex
     {
         CompileAssert(equivClassSize == 1);
         Assert(input != 0);
-        Assert(inputOffset <= inputLength);        
-        
+        Assert(inputOffset <= inputLength);
+
         if (inputLength < patLen)
             return false;
-        
+
         const int32* const localGoodSuffix = goodSuffix;
         const LastOccMap* const localLastOccurrence = &lastOccurrence;
 
         CharCount offset = inputOffset;
-        
-        const CharCount lastPatCharIndex = (patLen - 1);
-        const CharCount endOffset = inputLength - lastPatCharIndex;    
 
-        // Using int size instead of Char value is faster 
+        const CharCount lastPatCharIndex = (patLen - 1);
+        const CharCount endOffset = inputLength - lastPatCharIndex;
+
+        // Using int size instead of Char value is faster
         const uint lastPatChar = pat[lastPatCharIndex];
         Assert(lastPatChar == localLastOccurrence->GetChar(0));
 
@@ -336,11 +336,11 @@ namespace UnifiedRegex
 #endif
                 uint inputChar = Chars<Char>::CTU(input[offset + lastPatCharIndex]);
                 if (inputChar == lastPatChar)
-                {   
+                {
                     // Found a match. Break out of this loop and go to the match pattern loop
                     break;
                 }
-                // Negative case is more common, 
+                // Negative case is more common,
                 // Write the checks so that we have a super tight loop
                 Assert(inputChar != localLastOccurrence->GetChar(0));
                 int32 lastOcc;
@@ -350,11 +350,11 @@ namespace UnifiedRegex
                     {
                         if (localLastOccurrence->GetChar(3) != inputChar)
                         {
-                            offset += patLen;     
+                            offset += patLen;
                             if (offset >= endOffset)
                             {
                                 return false;
-                            }    
+                            }
                             continue;
                         }
                         lastOcc = localLastOccurrence->GetLastOcc(3);
@@ -362,21 +362,21 @@ namespace UnifiedRegex
                     else
                     {
                         lastOcc = localLastOccurrence->GetLastOcc(2);
-                    }                
+                    }
                 }
                 else
                 {
                     lastOcc = localLastOccurrence->GetLastOcc(1);
                 }
                 Assert((int)lastPatCharIndex - lastOcc >= localGoodSuffix[lastPatCharIndex]);
-                offset += lastPatCharIndex - lastOcc;  
+                offset += lastPatCharIndex - lastOcc;
                 if (offset >= endOffset)
                 {
                     return false;
-                }         
+                }
             }
 
-            // CONSIDER: we can remove this check if we stop using 
+            // CONSIDER: we can remove this check if we stop using
             // TextbookBoyerMoore for one char pattern
             if (lastPatCharIndex == 0)
             {
@@ -385,7 +385,7 @@ namespace UnifiedRegex
             }
 
             // Match the rest of the pattern
-            int32 j = lastPatCharIndex - 1;                
+            int32 j = lastPatCharIndex - 1;
             while (true)
             {
 #if ENABLE_REGEX_CONFIG_OPTIONS
@@ -402,9 +402,9 @@ namespace UnifiedRegex
                         offset += patLen;
                     }
                     else
-                    {                
+                    {
                         const int32 e = j - localLastOccurrence->Get(inputChar);
-                        offset += e > goodSuffix ? e : goodSuffix;                           
+                        offset += e > goodSuffix ? e : goodSuffix;
                     }
                     break;
                 }
@@ -421,7 +421,7 @@ namespace UnifiedRegex
     // explicit instantiation
     template struct TextbookBoyerMooreSetup<wchar_t>;
     template class TextbookBoyerMoore<wchar_t>;
-    template class TextbookBoyerMooreWithLinearMap<wchar_t>;  
+    template class TextbookBoyerMooreWithLinearMap<wchar_t>;
 
     template
     bool TextbookBoyerMoore<wchar_t>::Match<1>
@@ -434,7 +434,7 @@ namespace UnifiedRegex
         , RegexStats* stats
 #endif
         ) const;
-  
+
     template
     bool TextbookBoyerMoore<wchar_t>::Match<CaseInsensitive::EquivClassSize>
         ( const Char *const input

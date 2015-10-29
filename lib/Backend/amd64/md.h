@@ -10,7 +10,7 @@
 
 const int MachInt = 4;
 const int MachRegInt = 8;
-const int MachPtr = 8;
+__declspec(selectany) const int MachPtr = 8;
 const int MachDouble = 8;
 const int MachRegDouble = 8;
 const int MachStackAlignment = MachPtr;

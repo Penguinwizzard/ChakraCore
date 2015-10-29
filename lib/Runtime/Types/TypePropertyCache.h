@@ -7,8 +7,6 @@
 // Must be a power of 2
 #define TypePropertyCache_NumElements 16
 
-// TODO: Hash by PropertyRecord string hash instead of PropertyId
-
 namespace Js
 {
     struct PropertyCacheOperationInfo;

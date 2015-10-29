@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
-//  Implements typed array. 
+//  Implements typed array.
 //----------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
 
@@ -22,7 +22,7 @@ namespace Js
         bool isCtorSuperCall = (callInfo.Flags & CallFlags_New) && newTarget != nullptr && RecyclableObject::Is(newTarget);
         Assert(isCtorSuperCall || !(callInfo.Flags & CallFlags_New) || args[0] == nullptr);
         uint32 byteLength = 0;
-        int32 mappedLength;
+        uint32 mappedLength;
         int32 offset = 0;
         double numberOffset = 0;
         ArrayBuffer* arrayBuffer = nullptr;
@@ -82,7 +82,7 @@ namespace Js
             numberOffset = JavascriptConversion::ToNumber(secondArgument, scriptContext);
             offset = JavascriptConversion::ToInt32(numberOffset);
 
-            if (offset < 0 || 
+            if (offset < 0 ||
                 numberOffset != offset)
             {
                 JavascriptError::ThrowRangeError(
@@ -98,7 +98,7 @@ namespace Js
 
         //9.    Let bufferByteLength be the value of buffer's[[ArrayBufferByteLength]] internal slot.
         //10.   If offset > bufferByteLength, throw a RangeError exception.
-       
+
         byteLength = arrayBuffer->GetByteLength();
         if ((uint32)offset > byteLength)
         {
@@ -115,12 +115,10 @@ namespace Js
         if (args.Info.Count > 3 && !JavascriptOperators::IsUndefinedObject(args[3]))
             {
                 Var thirdArgument = args[3];
-                // TODO: Change length of ArrayObject from uint32 to uint64?
-                mappedLength = (int32)JavascriptConversion::ToLength(thirdArgument, scriptContext);
-                AssertMsg(mappedLength >= 0, "Mapped Length of dataview should never be less than 0.");
+                mappedLength = (uint32)JavascriptConversion::ToLength(thirdArgument, scriptContext);
+                uint32 viewRange = mappedLength + offset;
 
-                // mappedLength and offset will always be >= 0, so no need to typecast to uint64
-                if ((uint32)(mappedLength + offset) > byteLength)
+                if (viewRange > byteLength || viewRange < mappedLength) // overflow indicates out-of-range
                 {
                     JavascriptError::ThrowRangeError(
                         scriptContext, JSERR_DataView_InvalidArugment, L"byteLength");
@@ -163,7 +161,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !DataView::Is(args[0]))
         {
@@ -186,7 +184,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !DataView::Is(args[0]))
         {
@@ -210,7 +208,7 @@ namespace Js
         ScriptContext* scriptContext = function->GetScriptContext();
         BOOL isLittleEndian = FALSE;
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !DataView::Is(args[0]))
         {
@@ -238,7 +236,7 @@ namespace Js
         ScriptContext* scriptContext = function->GetScriptContext();
         BOOL isLittleEndian = FALSE;
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !DataView::Is(args[0]))
         {
@@ -266,7 +264,7 @@ namespace Js
         ScriptContext* scriptContext = function->GetScriptContext();
         BOOL isLittleEndian = FALSE;
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !DataView::Is(args[0]))
         {
@@ -294,7 +292,7 @@ namespace Js
         ScriptContext* scriptContext = function->GetScriptContext();
         BOOL isLittleEndian = FALSE;
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !DataView::Is(args[0]))
         {
@@ -322,7 +320,7 @@ namespace Js
         ScriptContext* scriptContext = function->GetScriptContext();
         BOOL isLittleEndian = FALSE;
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !DataView::Is(args[0]))
         {
@@ -350,7 +348,7 @@ namespace Js
         ScriptContext* scriptContext = function->GetScriptContext();
         BOOL isLittleEndian = FALSE;
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !DataView::Is(args[0]))
         {
@@ -377,7 +375,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !DataView::Is(args[0]))
         {
@@ -401,7 +399,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !DataView::Is(args[0]))
         {
@@ -426,7 +424,7 @@ namespace Js
         ScriptContext* scriptContext = function->GetScriptContext();
         BOOL isLittleEndian = FALSE;
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !DataView::Is(args[0]))
         {
@@ -455,7 +453,7 @@ namespace Js
         ScriptContext* scriptContext = function->GetScriptContext();
         BOOL isLittleEndian = FALSE;
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !DataView::Is(args[0]))
         {
@@ -484,7 +482,7 @@ namespace Js
         ScriptContext* scriptContext = function->GetScriptContext();
         BOOL isLittleEndian = FALSE;
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !DataView::Is(args[0]))
         {
@@ -513,7 +511,7 @@ namespace Js
         ScriptContext* scriptContext = function->GetScriptContext();
         BOOL isLittleEndian = FALSE;
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !DataView::Is(args[0]))
         {
@@ -542,7 +540,7 @@ namespace Js
         ScriptContext* scriptContext = function->GetScriptContext();
         BOOL isLittleEndian = FALSE;
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !DataView::Is(args[0]))
         {
@@ -571,7 +569,7 @@ namespace Js
         ScriptContext* scriptContext = function->GetScriptContext();
         BOOL isLittleEndian = FALSE;
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !DataView::Is(args[0]))
         {
@@ -599,7 +597,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !DataView::Is(args[0]))
         {
@@ -624,7 +622,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !DataView::Is(args[0]))
         {
@@ -653,7 +651,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count == 0 || !DataView::Is(args[0]))
         {
@@ -666,7 +664,7 @@ namespace Js
         if (arrayBuffer == nullptr)
         {
             JavascriptError::ThrowTypeError(scriptContext, JSERR_NeedArrayBufferObject);
-        } 
+        }
         else if (arrayBuffer->IsDetached())
         {
             return TaggedInt::ToVarUnchecked(0);
@@ -682,7 +680,7 @@ namespace Js
     }
 
 #ifdef _M_ARM
-        // Provide template specilization (only) for memory access at unaligned float/double address which causes data alignment exception otherwise.
+        // Provide template specialization (only) for memory access at unaligned float/double address which causes data alignment exception otherwise.
         template<>
         Var DataView::GetValueWithCheck<float>(uint32 byteOffset, wchar_t *funcName, BOOL isLittleEndian = FALSE)
         {

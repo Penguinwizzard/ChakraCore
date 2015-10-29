@@ -2,15 +2,16 @@
 // Copyright (C) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
-// Internal  Listing  Machine        
+// Internal  Listing  Machine
 // Name      Name     Encode    Type        BitVec
 //------------------------------------------------------------------------
+
 // Illegal registers - must be first and have a value of 0
 
 //            Internal Name
 //           /      Listing Name
 //          /      /        Machine Encode
-//         /      /        /    
+//         /      /        /
 //        /      /        /          Type
 //       /      /        /          /           BitVec
 //      /      /        /          /           /

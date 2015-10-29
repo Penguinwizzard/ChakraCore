@@ -83,7 +83,7 @@ public:
     WriteBarrierPtr() {}
     WriteBarrierPtr(T * ptr)
     {
-        // WriteBarrier-TODO: constructor optimization
+        // WriteBarrier
         NoWriteBarrierSet(ptr);
     }
 

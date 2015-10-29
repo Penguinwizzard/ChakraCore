@@ -7,7 +7,7 @@
 namespace OpCodeAttrAsmJs
 {
     // OpSideEffect:
-    //      Opcode has side effect not just to the dst/src on the instruction. 
+    //      Opcode has side effect not just to the dst/src on the instruction.
     //      The opcode cannot be deadstored. (e.g. StFld, LdFld from DOM, call valueOf/toString/getter/setter)
     //      Doesn't include all "exit" script (e.g. LdThis doesn't have side effect for HostDispatch for exiting script to getting the name space parent)
     // OpHasImplicitCall:
@@ -17,21 +17,21 @@ namespace OpCodeAttrAsmJs
     enum OpCodeAttrEnum
     {
         None = 0,
-        OpNoFallThrough = 1 << 0, // Opcode doens't fallthrough in flow  and its always jump to the return from this opcode. 
+        OpNoFallThrough = 1 << 0, // Opcode doesn't fallthrough in flow  and its always jump to the return from this opcode.
         OpHasMultiSizeLayout = 1 << 1,
 
     };
 
     static const int OpcodeAttributesAsmJs[] =
     {
-#define DEF_OP(name, jnLayout, attrib, ...) attrib, 
+#define DEF_OP(name, jnLayout, attrib, ...) attrib,
 #include "ByteCode\OpCodeListAsmJs.h"
 #undef DEF_OP
     };
 
     static const int ExtendedOpcodeAttributesAsmJs[] =
     {
-#define DEF_OP(name, jnLayout, attrib, ...) attrib, 
+#define DEF_OP(name, jnLayout, attrib, ...) attrib,
 #include "ByteCode\ExtendedOpCodeListAsmJs.h"
 #undef DEF_OP
     };
@@ -54,7 +54,7 @@ namespace OpCodeAttrAsmJs
 #define CheckNoHasFlag(flag) (!(GetOpCodeAttributes(opcode) & flag))
 
 
-    bool HasFallThrough( Js::OpCodeAsmJs opcode ) 
+    bool HasFallThrough( Js::OpCodeAsmJs opcode )
     {
         return CheckNoHasFlag( OpNoFallThrough );
     }

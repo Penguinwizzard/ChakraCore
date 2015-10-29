@@ -22,7 +22,7 @@ function test0() {
             WScript.Echo(count);
         }
     });
-	
+    
     func1();
     func1();
 }

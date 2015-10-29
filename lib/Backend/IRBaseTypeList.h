@@ -11,7 +11,7 @@ IRBASETYPE(Illegal,   Illegal, Illegal, Illegal, Illegal, Illegal, Illegal)
 IRBASETYPE(Int,       Int8,    Int16,   Int32,   Int64,   Illegal, Illegal)
 IRBASETYPE(Uint,      Uint8,   Uint16,  Uint32,  Uint64,  Illegal, Illegal)
 IRBASETYPE(Float,     Illegal, Illegal, Float32, Float64, Illegal, Illegal)
-IRBASETYPE(Simd,      Illegal, Illegal, Illegal, Illegal, Illegal, Illegal) // Is this correct ?
+IRBASETYPE(Simd,      Illegal, Illegal, Illegal, Illegal, Illegal, Illegal)
 IRBASETYPE(Var,       Illegal, Illegal, Illegal, Illegal, Illegal, Illegal)
 IRBASETYPE(Condcode,  Illegal, Illegal, Illegal, Illegal, Illegal, Illegal)
 IRBASETYPE(Misc,      Illegal, Illegal, Illegal, Illegal, Illegal, Illegal)

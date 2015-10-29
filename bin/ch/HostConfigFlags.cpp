@@ -1,6 +1,7 @@
-//---------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
-//----------------------------------------------------------------------------
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 #include "StdAfx.h"
 
 HostConfigFlags HostConfigFlags::flags;
@@ -23,7 +24,7 @@ void HostConfigFlags::Parse<int>(ICmdLineArgsParser * parser, int* value)
     }
     catch (...)
     {
-        // Not doing anything, the *value will remain the default one.
+        // Don't do anything, *value will remain its default value.
     }
 }
 
@@ -125,4 +126,3 @@ void HostConfigFlags::HandleArgsFlag(int& argc, _Inout_updates_to_(argc, argc) L
     Assert(argIndex == argc - argsCount - 1 - (argsEnd < argc));
     argc = argIndex;
 }
-

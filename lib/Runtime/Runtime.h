@@ -4,7 +4,6 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
-#include "Banned.h"
 #include "Common.h"
 
 //========================
@@ -47,14 +46,13 @@ namespace UnifiedRegex
 #define UNREFERENCED_PARAMETER(x) (x)
 #endif
 
-//#define BODLOG
-
 class SRCINFO;
 class Lowerer;
 class LowererMD;
 class LowererMDArch;
 class ByteCodeGenerator;
 interface IActiveScriptDataCache;
+class ActiveScriptProfilerHeapEnum;
 
 namespace Js
 {
@@ -81,7 +79,8 @@ namespace Js
     class DateImplementation;
     class BufferString;
     class BufferStringBuilder;
-    class ConcatString;    
+    class ConcatString;   
+    class CompoundString;
     class JavascriptBoolean;
     class JavascriptBooleanObject;
     class JavascriptSymbol;
@@ -130,7 +129,7 @@ namespace Js
     class StringCopyInfo;
     class StringCopyInfoStack;
     class ObjectPrototypeObject;
-    class PropertyString;
+    class PropertyString;    
     class ArgumentsObject;
     class HeapArgumentsObject;
     class ActivationObject;
@@ -140,6 +139,9 @@ namespace Js
     class ES5ArgumentsObjectEnumerator;
     class ScriptContextProfiler;
 
+    struct RestrictedErrorStrings;
+    class JavascriptError;
+    class NullEnumerator;
 //SIMD_JS
     // SIMD
     class SIMDFloat32x4Lib;
@@ -167,10 +169,13 @@ namespace Js
     class JavascriptCopyOnAccessNativeIntArray;
     class JavascriptNativeFloatArray;
     class ES5Array;
-    class JavascriptFunction;
+    class JavascriptFunction;    
     class ScriptFunction;
+    class ScriptFunctionWithInlineCache;
     class StackScriptFunction;
     class GeneratorVirtualScriptFunction;
+    class JavascriptGeneratorFunction;
+    class AsmJsScriptFunction;
     class JavascriptRegExpConstructor;
     class JavascriptRegExpEnumerator;
     class BoundFunction;
@@ -291,8 +296,8 @@ class SourceContextInfo;
 
 #include "activdbg100.h"
 #ifndef NTDDI_WIN10
-// These are only defined SDK Win10+
-// TODO: Refactor to avoid needing these?
+// These are only defined for the Win10 SDK and above
+// Consider: Refactor to avoid needing these?
 typedef
 enum tagDEBUG_EVENT_INFO_TYPE
 {
@@ -332,33 +337,19 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Types\JavascriptEnumerator.h"
 #include "Types\DynamicObject.h"
 #include "Types\ArrayObject.h"
-#include "Types\DynamicObjectEnumerator.h"
-#include "Types\DynamicObjectSnapshotEnumerator.h"
-#include "Types\DynamicObjectSnapshotEnumeratorWPCache.h"
-#include "Types\TypePath.h"
-#include "Types\SimplePropertyDescriptor.h"
-#include "Types\SimpleDictionaryPropertyDescriptor.h"
-#include "Types\DictionaryPropertyDescriptor.h"
-#include "Types\TypeHandler.h"
-#include "Types\NullTypeHandler.h"
-#include "Types\DeferredTypeHandler.h"
-#include "Types\SimpleTypeHandler.h"
-#include "Types\PathTypeHandler.h"
-#include "Types\SimpleDictionaryTypeHandler.h"
-#include "Types\DictionaryTypeHandler.h"
-#include "Types\DynamicType.h"
-#ifdef NTBUILD
-#include "Types\ExternalObject.h"
-#endif
 
-#include "Types\SpreadArgument.h"
+#include "Types\TypePath.h"
+#include "Types\TypeHandler.h"
+#include "Types\SimplePropertyDescriptor.h"
+
+#include "Types\DynamicType.h"
+
 #include "Language\StackTraceArguments.h"
 #include "Types\PropertyDescriptor.h"
 #include "Types\ActivationObjectType.h"
 #include "Types\TempArenaAllocatorObject.h"
 #include "Language\ValueType.h"
 #include "Language\DynamicProfileInfo.h"
-#include "Language\ReadOnlyDynamicProfileInfo.h"
 #include "Debug\SourceContextInfo.h"
 #include "Language\InlineCache.h"
 #include "Language\InlineCachePointerArray.h"
@@ -374,36 +365,10 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Library\JavascriptString.h"
 #include "Library\StringCopyInfo.h"
 
-#include "Library\ForInObjectEnumerator.h"
-#include "Library\RootObjectBase.h"
-#include "Library\ModuleRoot.h"
-#include "Library\ArgumentsObject.h"
-#include "Library\LiteralString.h"
-#include "Library\BufferStringBuilder.h"
-#include "Library\ConcatString.h"
-#include "Library\CompoundString.h"
-#include "Library\PropertyString.h"
 
 #include "Library\JavascriptNumber.h"
-
-#include "Library\JavascriptTypedNumber.h"
-#include "Library\SparseArraySegment.h"
-#include "Library\JavascriptError.h"
-#include "Library\JavascriptArray.h"
-
-#include "Library\ES5ArrayTypeHandler.h"
-#include "Library\ES5Array.h"
-#include "Library\ArrayBuffer.h"
-#include "Library\TypedArray.h"
-#include "Library\JavascriptBoolean.h"
-
 #include "Library\JavascriptFunction.h"
-#include "Library\ScriptFunctionType.h"
-#include "Library\ScriptFunction.h"
-#include "Library\StackScriptFunction.h"
 #include "Library\RuntimeFunction.h"
-#include "Library\JavascriptGeneratorFunction.h"
-#include "Library\JavascriptTypedObjectSlotAccessorFunction.h"
 #include "Library\JavascriptExternalFunction.h"
 
 #include "Library\JavascriptObject.h"
@@ -413,19 +378,14 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Library\JavascriptLibraryBase.h"
 #include "Library\JavascriptLibrary.h"
 
-#include "Library\GlobalObject.h"
 #include "Language\JavascriptExceptionOperators.h"
 #include "Language\JavascriptOperators.h"
-#include "Library\TaggedInt.h"
+
 #include "Library\HiResTimer.h"
 #include "Library\MathLibrary.h"
 
-
-#include "Library\ThrowErrorObject.h"
 #include "Library\WindowsGlobalizationAdapter.h"
 #include "Library\WindowsFoundationAdapter.h"
-#include "Library\EngineInterfaceObject.h"
-#include "Library\IntlEngineInterfaceExtensionObject.h"
 #include "Library\Debug.h"
 
 #ifdef _M_X64
@@ -433,10 +393,12 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #endif
 
 #include "Library\Entropy.h"
-#include "Language\PropertyRecord.h"
 #ifdef ENABLE_BASIC_TELEMETRY
-// REVIEW: ChakraCore Dependency
-#include "..\..\..\private\lib\Telemetry\DirectCall.h"
+#include "DirectCall.h"
+#include "LanguageTelemetry.h"
+#else
+#define CHAKRATEL_LANGSTATS_INC_BUILTINCOUNT(builtin)
+#define CHAKRATEL_LANGSTATS_INC_LANGFEATURECOUNT(feature, m_scriptContext)
 #endif
 #include "Library\ThreadContext.h"
 
@@ -451,16 +413,39 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Language\ScriptContext.h"
 
 #include "ByteCode\ByteCodeReader.h"
-#include "Language\InterpreterStackFrame.h"
 #include "Language\LeaveScriptObject.h"
+
+#include "Language\PropertyRecord.h"
+#include "Library\TaggedInt.h"
+
+#include "Library\RootObjectBase.h"
+#include "Library\GlobalObject.h"
+
+#include "Library\LiteralString.h"
+#include "Library\ConcatString.h"
+#include "Library\CompoundString.h"
+#include "Library\PropertyString.h"
+
+#include "Library\JavascriptTypedNumber.h"
+#include "Library\SparseArraySegment.h"
+#include "Library\JavascriptError.h"
+#include "Library\JavascriptArray.h"
+
+#include "Library\ES5Array.h"
+#include "Library\ArrayBuffer.h"
+#include "Library\TypedArray.h"
+#include "Library\JavascriptBoolean.h"
+
+#include "Library\ScriptFunctionType.h"
+#include "Library\ScriptFunction.h"
+
 
 //
 // .inl files
 //
 
 #include "commoninl.h"
-#include "Library\JavascriptString.inl"
-#include "Library\ConcatString.inl"
+
 #include "Language\JavascriptConversion.inl"
 #include "Types\RecyclableObject.inl"
 #include "Types\DynamicObject.inl"

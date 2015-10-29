@@ -14,11 +14,11 @@
 //        /          /         /                   /         /          opbyte
 //       /          /         /                   /         /          /              
 //      /          /         /                   /         /          /              dope                   leadin
-//     /          /         /                   /         /          /              /                       /  
+//     /          /         /                   /         /          /              /                       /
 MACRO(ADD,      Reg2,       None,           R000,   f(BINOP),   o(ADD),     DOPEQ|DSETCC|DCOMMOP,       OLB_NONE)
 
 MACRO(ADDPD,    Reg2,       None,           RNON,   f(MODRM),   o(ADDPD),   DNO16|DOPEQ|D66|DCOMMOP,    OLB_NONE)
-MACRO(ADDPS,    Reg2,       None,           RNON,   f(MODRM),   o(ADDPS),   DNO16|DOPEQ|DZEROF|DCOMMOP,    OLB_NONE)
+MACRO(ADDPS,    Reg2,       None,           RNON,   f(MODRM),   o(ADDPS),   DNO16|DOPEQ|DZEROF|DCOMMOP, OLB_NONE)
 
 MACRO(ADDSD,    Reg2,       None,           RNON,   f(MODRM),   o(ADDSD),   DNO16|DOPEQ|DCOMMOP|DF2,    OLB_NONE)
 MACRO(ADDSS,    Reg2,       None,           RNON,   f(MODRM),   o(ADDSS),   DNO16|DOPEQ|DF3|DCOMMOP,    OLB_NONE)
@@ -50,15 +50,15 @@ MACRO(CMOVP,    Reg2,       None,           RNON,   f(MODRM),   o(CMOVP),   DZER
 MACRO(CMOVS,    Reg2,       None,           RNON,   f(MODRM),   o(CMOVS),   DZEROF|DDST|DUSECC,         OLB_NONE)
 MACRO(CMP,      Empty,      OpSideEffect,   R111,   f(BINOP),   o(CMP),     DSETCC,                     OLB_NONE)
 
-MACRO(CMPLTPS,    Empty,    None,          RNON,   f(MODRM),   o(CMPPS),   DZEROF|DSSE,           OLB_NONE)
-MACRO(CMPLEPS,    Empty,    None,          RNON,   f(MODRM),   o(CMPPS),   DZEROF|DSSE,           OLB_NONE)
-MACRO(CMPEQPS,    Empty,    None,          RNON,   f(MODRM),   o(CMPPS),   DZEROF|DSSE,           OLB_NONE)
-MACRO(CMPNEQPS,   Empty,    None,          RNON,   f(MODRM),   o(CMPPS),   DZEROF|DSSE,           OLB_NONE)
+MACRO(CMPLTPS,  Empty,      None,           RNON,   f(MODRM),   o(CMPPS),   DZEROF|DSSE,                OLB_NONE)
+MACRO(CMPLEPS,  Empty,      None,           RNON,   f(MODRM),   o(CMPPS),   DZEROF|DSSE,                OLB_NONE)
+MACRO(CMPEQPS,  Empty,      None,           RNON,   f(MODRM),   o(CMPPS),   DZEROF|DSSE,                OLB_NONE)
+MACRO(CMPNEQPS, Empty,      None,           RNON,   f(MODRM),   o(CMPPS),   DZEROF|DSSE,                OLB_NONE)
 
-MACRO(CMPLTPD,    Empty,      None,           RNON,   f(MODRM),   o(CMPPD),   D66|DSSE,       OLB_NONE)
-MACRO(CMPLEPD,    Empty,      None,           RNON,   f(MODRM),   o(CMPPD),   D66|DSSE,       OLB_NONE)
-MACRO(CMPEQPD,    Empty,      None,           RNON,   f(MODRM),   o(CMPPD),   D66|DSSE,       OLB_NONE)
-MACRO(CMPNEQPD,   Empty,      None,           RNON,   f(MODRM),   o(CMPPD),   D66|DSSE,       OLB_NONE)
+MACRO(CMPLTPD,  Empty,      None,           RNON,   f(MODRM),   o(CMPPD),   D66|DSSE,                   OLB_NONE)
+MACRO(CMPLEPD,  Empty,      None,           RNON,   f(MODRM),   o(CMPPD),   D66|DSSE,                   OLB_NONE)
+MACRO(CMPEQPD,  Empty,      None,           RNON,   f(MODRM),   o(CMPPD),   D66|DSSE,                   OLB_NONE)
+MACRO(CMPNEQPD, Empty,      None,           RNON,   f(MODRM),   o(CMPPD),   D66|DSSE,                   OLB_NONE)
 
 
 MACRO(COMISD,   Empty,      OpSideEffect,   RNON,   f(MODRM),   o(COMISD),  DNO16|D66|DSETCC,           OLB_NONE)
@@ -122,11 +122,11 @@ MACRO(LZCNT,    Reg2,       None,           RNON,   f(MODRM),   o(LZCNT),   DF3|
 
 MACRO(MOV,      Reg2,       None,           R000,   f(MOV),     o(MOV),     DDST,                       OLB_NONE)
 MACRO(MOVAPS,   Reg2,       None,           RNON,   f(SPECIAL), o(MOVAPS),  DDST|DNO16|DZEROF,          OLB_NONE)
-MACRO(MOVD,     Reg2,       None,           RNON,   f(SPECIAL), o(MOVD),    DDST|DNO16|D66,               OLB_NONE)
+MACRO(MOVD,     Reg2,       None,           RNON,   f(SPECIAL), o(MOVD),    DDST|DNO16|D66,             OLB_NONE)
 
-MACRO(MOVHLPS,  Reg2,       None,           RNON,   f(SPECIAL), o(MOVHLPS), DDST|DNO16|DZEROF, OLB_NONE)
-MACRO(MOVHPD,   Reg2,       None,           RNON,   f(SPECIAL), o(MOVHPD),  DDST|DNO16|D66,    OLB_NONE)
-MACRO(MOVLHPS,  Reg2,       None,           RNON,   f(SPECIAL), o(MOVLHPS), DDST|DNO16|DZEROF, OLB_NONE)
+MACRO(MOVHLPS,  Reg2,       None,           RNON,   f(SPECIAL), o(MOVHLPS), DDST|DNO16|DZEROF,          OLB_NONE)
+MACRO(MOVHPD,   Reg2,       None,           RNON,   f(SPECIAL), o(MOVHPD),  DDST|DNO16|D66,             OLB_NONE)
+MACRO(MOVLHPS,  Reg2,       None,           RNON,   f(SPECIAL), o(MOVLHPS), DDST|DNO16|DZEROF,          OLB_NONE)
 MACRO(MOVMSKPD, Reg2,       None,           RNON,   f(SPECIAL), o(MOVMSKPD), DDST|DNO16|D66,            OLB_NONE)
 MACRO(MOVMSKPS, Reg2,       None,           RNON,   f(SPECIAL), o(MOVMSKPS), DDST|DNO16|DZEROF,         OLB_NONE)
 
@@ -135,7 +135,7 @@ MACRO(MOVSD_ZERO,Reg2,      None,           RNON,   f(MODRM),   o(MOVSD),   0,  
 MACRO(MOVSS,    Reg2,       None,           RNON,   f(SPECIAL), o(MOVSS),   DDST|DNO16|DF3,             OLB_NONE)
 MACRO(MOVSX,    Reg2,       None,           RNON,   f(MODRM),   o(MOVSX),   DZEROF|DDST,                OLB_NONE)
 MACRO(MOVSXW,   Reg2,       None,           RNON,   f(MODRM),   o(MOVSXW),  DZEROF|DDST,                OLB_NONE)
-MACRO(MOVUPS,   Reg2,       None,           RNON,   f(SPECIAL), o(MOVUPS),  DDST|DNO16|DZEROF,     OLB_NONE)
+MACRO(MOVUPS,   Reg2,       None,           RNON,   f(SPECIAL), o(MOVUPS),  DDST|DNO16|DZEROF,          OLB_NONE)
 
 MACRO(MOVZX,    Reg2,       None,           RNON,   f(MODRM),   o(MOVZX),   DZEROF|DDST,                OLB_NONE)
 MACRO(MOVZXW,   Reg2,       None,           RNON,   f(MODRM),   o(MOVZXW),  DZEROF|DDST,                OLB_NONE)
@@ -152,23 +152,23 @@ MACRO(OR ,      Reg2,       None,           R001,   f(BINOP),   o(OR),      DOPE
 
 MACRO(ORPS,     Reg2,       None,           R001,   f(MODRM),   o(ORPS),    DOPEQ|DOPEQ|DZEROF|DCOMMOP, OLB_NONE)
 MACRO(PADDD,    Reg2,       None,           RNON,   f(MODRM),   o(PADDD),   DNO16|DOPEQ|D66|DCOMMOP,    OLB_NONE)
-MACRO(PAND,     Reg2,       None,           RNON,   f(MODRM),   o(PAND),    DNO16|DOPEQ|D66,           OLB_NONE)
-MACRO(PCMPEQD,  Reg2,       None,           RNON,   f(MODRM),   o(PCMPEQD), DNO16|DOPEQ|D66,       OLB_NONE)
-MACRO(PCMPGTD,  Reg2,       None,           RNON,   f(MODRM),   o(PCMPGTD), DNO16|DOPEQ|D66,       OLB_NONE)
-MACRO(PMULUDQ,  Reg2,       None,           RNON,   f(MODRM),   o(PMULUDQ), DNO16|DOPEQ|D66|DCOMMOP, OLB_NONE)
+MACRO(PAND,     Reg2,       None,           RNON,   f(MODRM),   o(PAND),    DNO16|DOPEQ|D66,            OLB_NONE)
+MACRO(PCMPEQD,  Reg2,       None,           RNON,   f(MODRM),   o(PCMPEQD), DNO16|DOPEQ|D66,            OLB_NONE)
+MACRO(PCMPGTD,  Reg2,       None,           RNON,   f(MODRM),   o(PCMPGTD), DNO16|DOPEQ|D66,            OLB_NONE)
+MACRO(PMULUDQ,  Reg2,       None,           RNON,   f(MODRM),   o(PMULUDQ), DNO16|DOPEQ|D66|DCOMMOP,    OLB_NONE)
 
 MACRO(POP,      Reg1,       OpSideEffect,   R000,   f(PSHPOP),  o(POP),     DDST,                       OLB_NONE)
 
-MACRO(POR,      Reg2,       None,           RNON,   f(MODRM),   o(POR),     DNO16|DOPEQ|D66|DCOMMOP, OLB_NONE)
-MACRO(PSHUFD,   Reg3,       None,           RNON,   f(MODRM), o(PSHUFD),  DDST|DNO16|D66|DSSE,                  OLB_NONE)
-MACRO(PSLLDQ,   Reg2,       None,           R111,   f(SPECIAL), o(PSLLDQ),  DDST|DNO16|DOPEQ|D66|DSSE,       OLB_NONE)
-MACRO(PSRLDQ,   Reg2,       None,           R011,   f(SPECIAL), o(PSRLDQ),  DDST|DNO16|DOPEQ|D66|DSSE,       OLB_NONE)
-MACRO(PSUBD,    Reg3,       None,           RNON,   f(MODRM),   o(PSUBD),   DNO16|DOPEQ|D66, OLB_NONE)
-MACRO(PUNPCKLDQ, Reg3,      None,           RNON,   f(MODRM),   o(PUNPCKLDQ), DNO16|DOPEQ|D66, OLB_NONE)
+MACRO(POR,      Reg2,       None,           RNON,   f(MODRM),   o(POR),     DNO16|DOPEQ|D66|DCOMMOP,    OLB_NONE)
+MACRO(PSHUFD,   Reg3,       None,           RNON,   f(MODRM),   o(PSHUFD),  DDST|DNO16|D66|DSSE,        OLB_NONE)
+MACRO(PSLLDQ,   Reg2,       None,           R111,   f(SPECIAL), o(PSLLDQ),  DDST|DNO16|DOPEQ|D66|DSSE,  OLB_NONE)
+MACRO(PSRLDQ,   Reg2,       None,           R011,   f(SPECIAL), o(PSRLDQ),  DDST|DNO16|DOPEQ|D66|DSSE,  OLB_NONE)
+MACRO(PSUBD,    Reg3,       None,           RNON,   f(MODRM),   o(PSUBD),   DNO16|DOPEQ|D66,            OLB_NONE)
+MACRO(PUNPCKLDQ, Reg3,      None,           RNON,   f(MODRM),   o(PUNPCKLDQ),DNO16|DOPEQ|D66,           OLB_NONE)
 
 MACRO(PUSH,     Reg1,       OpSideEffect,   R110,   f(PSHPOP),  o(PUSH),    0,                          OLB_NONE)
 
-MACRO(PXOR,     Reg2,       None,           RNON,   f(MODRM),   o(PXOR),    DNO16|DOPEQ|D66|DCOMMOP, OLB_NONE)
+MACRO(PXOR,     Reg2,       None,           RNON,   f(MODRM),   o(PXOR),    DNO16|DOPEQ|D66|DCOMMOP,    OLB_NONE)
 
 MACRO(RET,      Empty,      OpSideEffect,   RNON,   f(SPECIAL), o(RET),     DSETCC,                     OLB_NONE)
 MACRO(ROUNDSD,  Reg3,       None,           RNON,   f(MODRM),   o(ROUNDSD), DDST|DNO16|DSSE|D66,        OLB_0F3A)
@@ -189,8 +189,8 @@ MACRO(SETBE,    Reg1,       None,           RNON,   f(MODRM),   o(SETBE),   DOPE
 MACRO(SHL,      Reg2,       None,           R100,   f(SHIFT),   o(SHL),     DOPEQ|DSETCC,               OLB_NONE)
 MACRO(SHR,      Reg2,       None,           R101,   f(SHIFT),   o(SHR),     DOPEQ|DSETCC,               OLB_NONE)
 
-MACRO(SHUFPD,   Reg2,       None,           RNON,   f(MODRM),   o(SHUFPD),  DDST|DNO16|D66|DSSE,         OLB_NONE)
-MACRO(SHUFPS,   Reg2,       None,           RNON,   f(MODRM),   o(SHUFPS),  DDST|DNO16|DZEROF|DSSE,            OLB_NONE)
+MACRO(SHUFPD,   Reg2,       None,           RNON,   f(MODRM),   o(SHUFPD),  DDST|DNO16|D66|DSSE,        OLB_NONE)
+MACRO(SHUFPS,   Reg2,       None,           RNON,   f(MODRM),   o(SHUFPS),  DDST|DNO16|DZEROF|DSSE,     OLB_NONE)
 MACRO(SQRTPD,   Reg2,       None,           RNON,   f(MODRM),   o(SQRTPD),  DDST|DNO16|D66,             OLB_NONE)
 MACRO(SQRTPS,   Reg2,       None,           RNON,   f(MODRM),   o(SQRTPS),  DDST|DNO16|DZEROF,          OLB_NONE)
 

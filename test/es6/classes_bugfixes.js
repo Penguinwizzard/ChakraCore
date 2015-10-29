@@ -280,9 +280,9 @@ var tests = [
 
 testRunner.runTests(tests, { verbose: WScript.Arguments[0] != "summary" });
 
-// BLUE 516429 at global scope
+// Bug 516429 at global scope
 class a {};
 a = null; // No error
 
-// OS 257621 at global scope
+// Bug 257621 at global scope
 assert.doesNotThrow(function () { eval('new (class {})();'); }, "Parenthesized class expressions can be new'd");

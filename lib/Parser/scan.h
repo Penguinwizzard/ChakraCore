@@ -170,21 +170,6 @@ protected:
         js_memcpy_s(pch, cch * sizeof(OLECHAR), pu, cch * sizeof(OLECHAR));
     }
 
-    /*
-    REVIEW(ianhall): GetCharacterCount is never used.  See comment below in UTF8EncodingPolicyBase.
-
-    static charcount_t GetCharacterCount(EncodedCharPtr pch)
-    {
-        return static_cast<charcount_t>(ostrlen(pch));
-    }
-
-    static charcount_t GetCharacterCount(EncodedCharPtr pch, EncodedCharPtr end, bool isRangeScanned)
-    {
-        return static_cast<charcount_t>(end - pch);
-    }
-
-    */
-
 public:
     void FromExternalSource() { }
     bool IsFromExternalSource() { return false; }
@@ -295,31 +280,6 @@ protected:
         utf8::DecodeInto(pch, pu, cch, m_decodeOptions);
     }
 
-    /*
-    REVIEW(ianhall): GetCharacterCount is never used.  If used the other policies need to
-    have their APIs updated to accept an EncodedCharPtr pointing at the end of the buffer.
-
-    charcount_t GetCharacterCount(EncodedCharPtr pch, EncodedCharPtr last)
-    {
-        charcount_t cch = 0;
-        m_decodeOptions = (utf8::DecodeOptions)(m_decodeOptions & ~utf8::doSecondSurrogatePair);
-        while (utf8::Decode(pch, last, m_decodeOptions))
-            cch++;
-        return cch;
-    }
-
-    charcount_t GetCharacterCount(EncodedCharPtr pch, EncodedCharPtr end, bool isRangeScanned)
-    {
-        // Fast path: If range [pch, end) is scanned and we know scanned range has no multi-unit characters, do fast path with ASCII characters.
-        if (isRangeScanned && m_cMultiUnits == 0)
-        {
-            return static_cast<charcount_t>(end - pch);
-        }
-
-        return utf8::ByteIndexIntoCharacterIndex(pch, end - pch, (utf8::DecodeOptions)(m_decodeOptions & ~utf8::doSecondSurrogatePair));
-    }
-
-    */
 
 public:
     // If we get UTF8 source buffer, turn off doAllowThreeByteSurrogates but allow invalid WCHARs without replacing them with replacement 'g_chUnknown'.

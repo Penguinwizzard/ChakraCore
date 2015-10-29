@@ -134,11 +134,11 @@ SmallHeapBlockAllocator<TBlockType>::PageHeapAlloc(Recycler * recycler, size_t s
         if (mode == PageHeapMode::PageHeapModeBlockEnd)
         {
             // Allocate at the last valid object
-            // This could cause some extra padding at the end 
-            // eg. For a Heap block with the range 0x1000 to 0x2000, and sizeCat 48
-            // This can fit 85 objects in it, the last object at 0x1FC0, causing the 
+            // This could cause some extra padding at the end
+            // e.g. For a Heap block with the range 0x1000 to 0x2000, and sizeCat 48
+            // This can fit 85 objects in it, the last object at 0x1FC0, causing the
             // last 16 bytes to be wasted. So if there is a buffer overflow of <= 16 bytes,
-            // PageHeap as implemented today will not catch it. 
+            // PageHeap as implemented today will not catch it.
             char* objectAddress = smallBlock->GetAddress() + ((smallBlock->GetObjectCount() - 1) * sizeCat);
             Assert(objectAddress <= this->endAddress - sizeCat);
             freeObjectList = (FreeObject*)objectAddress;
@@ -161,7 +161,6 @@ SmallHeapBlockAllocator<TBlockType>::PageHeapAlloc(Recycler * recycler, size_t s
         this->freeObjectList = (FreeObject*) this->endAddress;
 
 #ifdef RECYCLER_TRACK_NATIVE_ALLOCATED_OBJECTS
-        // HACK- figure out a better way here?
         this->lastNonNativeBumpAllocatedBlock = (char*) this->freeObjectList - sizeCat;
 #endif
 
@@ -182,7 +181,7 @@ __inline char*
 SmallHeapBlockAllocator<TBlockType>::InlinedAllocImpl(Recycler * recycler, size_t sizeCat, ObjectInfoBits attributes)
 {
     Assert((attributes & InternalObjectInfoBitMask) == attributes);
-    
+
     AUTO_NO_EXCEPTION_REGION;
     if (canFaultInject)
     {
@@ -240,7 +239,7 @@ SmallHeapBlockAllocator<TBlockType>::InlinedAllocImpl(Recycler * recycler, size_
             TBlockType* smallBlock = (TBlockType*)heapBlock;
             smallBlock->ClearExplicitFreeBitForObject(memBlock);
         }
-#endif                    
+#endif
 
 #if DBG || defined(RECYCLER_STATS)
         if (!IsExplicitFreeObjectListAllocMode())

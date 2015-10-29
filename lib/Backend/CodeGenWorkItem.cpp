@@ -15,7 +15,7 @@ CodeGenWorkItem::CodeGenWorkItem(
     , codeAddress(NULL)
     , functionBody(functionBody)
     , type(type)
-    , jitMode(ExecutionMode::Interpreter)    
+    , jitMode(ExecutionMode::Interpreter)
     , entryPointInfo(entryPointInfo)
     , recyclableData(nullptr)
     , isInJitQueue(false)
@@ -44,7 +44,7 @@ CodeGenWorkItem::~CodeGenWorkItem()
 // This function is only used once and is used in a time-critical area, so
 // be careful with it (moving it around actually caused around a 5% perf
 // regression on a test).
-// 
+//
 bool CodeGenWorkItem::ShouldSpeculativelyJit(uint byteCodeSizeGenerated) const
 {
     if(!functionBody->DoFullJit())
@@ -65,7 +65,7 @@ bool CodeGenWorkItem::ShouldSpeculativelyJit(uint byteCodeSizeGenerated) const
                 this->ShouldSpeculativelyJitBasedOnProfile()
             );
     }
-    else 
+    else
     {
         return byteCodeSizeGenerated < (uint)CONFIG_FLAG(SpeculationCap);
     }
@@ -96,15 +96,15 @@ bool CodeGenWorkItem::ShouldSpeculativelyJitBasedOnProfile() const
             {
                 return true;
             }
-        } 
+        }
     }
     return false;
 }
 
 /*
     A comment about how to cause certain phases to only be on:
-    
-    INT = Interpretted, SJ = SimpleJit, FJ = FullJit
+
+    INT = Interpreted, SJ = SimpleJit, FJ = FullJit
 
     To get only the following levels on, use the flags:
 
@@ -149,7 +149,7 @@ void CodeGenWorkItem::OnAddToJitQueue()
 
 void CodeGenWorkItem::OnRemoveFromJitQueue(NativeCodeGenerator* generator)
 {
-    // This is callled from within the lock
+    // This is called from within the lock
 
     this->isInJitQueue = false;
     this->entryPointInfo->SetCodeGenPending();

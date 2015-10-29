@@ -28,8 +28,6 @@ public:
 
    Attribute(Char * name, Char * value);
 
-   void Append(Attribute *);
-
    Char * GetValue(const Char * name);
 
    void Dump();
@@ -48,10 +46,6 @@ public:
 
    Node() {}
    Node(Char * name, Attribute * attributeList);
-
-   void CheckTag(Char * name);
-
-   void Append(Node *);
 
    Node * GetChild(const Char * name);
    Char * GetAttributeValue(const Char * name);

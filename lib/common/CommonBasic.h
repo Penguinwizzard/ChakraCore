@@ -4,6 +4,7 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
+#include "Banned.h"
 #include "CommonDefines.h"
 #define _CRT_RAND_S         // Enable rand_s in the CRT
 
@@ -13,7 +14,6 @@
 // === Windows Header Files ===
 #define INC_OLE2                 /* for windows.h */
 #define CONST_VTABLE             /* for objbase.h */
-//#define WIN32_LEAN_AND_MEAN      /* for windows.h */
 #include <windows.h>
 
 /* Don't want GetObject and GetClassName to be defined to GetObjectW and GetClassNameW */

@@ -12,11 +12,15 @@ namespace Js
 {
     class DefaultListLockPolicy;
 }
+
+#ifdef ENABLE_BASIC_TELEMETRY
+#include "GCTelemetry.h"
+#endif
+
 #include "Memory\IdleDecommitPageAllocator.h"
 #include "Memory\RecyclerPageAllocator.h"
 #include "Memory\FreeObject.h"
 #include "Memory\PagePool.h"
-#include "Memory\GCTelemetry.h"
 
 #include "DataStructures\SimpleHashTable.h"
 #include "DataStructures\PageStack.h"

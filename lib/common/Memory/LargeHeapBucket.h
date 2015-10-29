@@ -9,7 +9,7 @@ namespace Memory
 class HeapInfo;
 class RecyclerSweep;
 
-// CONSIDER: Templatizing this so that we can have seperate leaf large allocations
+// CONSIDER: Templatizing this so that we can have separate leaf large allocations
 // and finalizable allocations
 // CONSIDER: Templatizing this so that we don't have free list support if we don't need it
 class LargeHeapBucket: public HeapBucket

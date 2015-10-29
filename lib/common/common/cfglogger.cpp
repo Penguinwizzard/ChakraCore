@@ -66,7 +66,7 @@ CFGLogger::~CFGLogger()
 #ifdef _CONTROL_FLOW_GUARD
 __declspec(guard(ignore))
 #endif
-void __fastcall 
+void __fastcall
 CFGLogger::GuardCheck(_In_ uintptr_t Target)
 {
     if (Target >= AutoSystemInfo::Data.dllLoadAddress && Target < AutoSystemInfo::Data.dllHighAddress)

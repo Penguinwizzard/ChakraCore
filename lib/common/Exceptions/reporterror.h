@@ -27,7 +27,7 @@ extern "C" void ReportFatalException(
     __in ULONG scenario);
 
 // We can have other error handle code path with
-// unqiue call stack so we can collect data in Dr. Watson.
+// unique call stack so we can collect data in Dr. Watson.
 void JavascriptDispatch_OOM_fatal_error(
     __in ULONG_PTR context);
 
@@ -65,7 +65,7 @@ __inline LONG FatalExceptionFilter(
 
     // re == EXCEPTION_EXECUTE_HANDLER means there is no debugger attached, let's terminate
     // the process. Otherwise give control to the debugger.
-    // Note: in case when post-mortem debugger is registered but no actual debugger attached,
+    // Note: in case when postmortem debugger is registered but no actual debugger attached,
     //       rc will be 0 (and EXCEPTION_EXECUTE_HANDLER is 1), so it acts as if there is debugger attached.
     if (rc == EXCEPTION_EXECUTE_HANDLER)
     {
@@ -84,7 +84,7 @@ __inline LONG FatalExceptionFilter(
 template<class Fn>
 static STDMETHODIMP DebugApiWrapper(Fn fn)
 {
-    // If an asseriton or AV is hit, it triggers a SEH exception. SEH exceptions escaped here will be eaten by PDM. To prevent assertions
+    // If an assertion or AV is hit, it triggers a SEH exception. SEH exceptions escaped here will be eaten by PDM. To prevent assertions
     // from getting unnoticed, we install a SEH exception filter and crash the process.
 #if ENABLE_DEBUG_API_WRAPPER
     __try

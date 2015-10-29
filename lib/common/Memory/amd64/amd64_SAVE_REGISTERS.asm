@@ -9,7 +9,7 @@ include ksamd64.inc
         _TEXT SEGMENT
 
 ;void amd64_SAVE_REGISTERS(registers)
-;  
+;
 ;   This method pushes the 16 general purpose registers into the passed in array.
 ;   By convention, the stack pointer will always be stored at registers[0]
 ;
@@ -36,7 +36,7 @@ amd64_SAVE_REGISTERS PROC
         ret
 
 amd64_SAVE_REGISTERS ENDP
-        
+
         _TEXT ENDS
         end
 

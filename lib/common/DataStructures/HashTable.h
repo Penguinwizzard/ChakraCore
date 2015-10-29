@@ -35,7 +35,7 @@ public:
 public:
     static HashTable<T, TAllocator> * New(TAllocator *allocator, uint tableSize)
     {
-        return AllocatorNewPlus(TAllocator, allocator, (tableSize*sizeof(SListBase<Bucket<T>>)), HashTable, allocator, tableSize);        
+        return AllocatorNewPlus(TAllocator, allocator, (tableSize*sizeof(SListBase<Bucket<T>>)), HashTable, allocator, tableSize);
     }
 
     void Delete()
@@ -75,11 +75,11 @@ public:
                     return &(bucket.element);
                 }
                 break;
-            }            
+            }
 #if PROFILE_DICTIONARY
             ++depth;
 #endif
-        } NEXT_SLISTBASE_ENTRY_EDITING;   
+        } NEXT_SLISTBASE_ENTRY_EDITING;
 
         Bucket<T> * newBucket = iter.InsertNodeBefore(this->alloc);
         newBucket->value = value;
@@ -107,11 +107,11 @@ public:
                     return &(bucket.element);
                 }
                 break;
-            }            
+            }
 #if PROFILE_DICTIONARY
             ++depth;
 #endif
-        } NEXT_SLISTBASE_ENTRY_EDITING;   
+        } NEXT_SLISTBASE_ENTRY_EDITING;
 
         Bucket<T> * newBucket = iter.InsertNodeBeforeNoThrow(this->alloc);
         if (newBucket == nullptr)
@@ -143,11 +143,11 @@ public:
                     return &(bucket.element);
                 }
                 break;
-            }            
+            }
 #if PROFILE_DICTIONARY
             ++depth;
 #endif
-        } NEXT_SLISTBASE_ENTRY_EDITING;   
+        } NEXT_SLISTBASE_ENTRY_EDITING;
 
         Bucket<T> * newBucket = iter.InsertNodeBefore(this->alloc);
         Assert(newBucket != nullptr);
@@ -212,7 +212,7 @@ public:
     void Clear(int value)
     {
         SListBase<Bucket<T>> * list = &this->table[this->Hash(value)];
-        
+
         // Assumes sorted lists
 #if PROFILE_DICTIONARY
         bool first = true;
@@ -223,7 +223,7 @@ public:
             {
                 if (bucket.value == value)
                 {
-                    iter.RemoveCurrent(this->alloc);                    
+                    iter.RemoveCurrent(this->alloc);
 #if PROFILE_DICTIONARY
                     if (stats)
                         stats->Remove(first && !(iter.Next()));
@@ -241,12 +241,12 @@ public:
     {
         for (uint i = 0; i < this->tableSize; i++)
         {
-            SListBase<Bucket<T>>::Iterator iter2(&this2->table[i]); 
+            SListBase<Bucket<T>>::Iterator iter2(&this2->table[i]);
             iter2.Next();
             FOREACH_SLISTBASE_ENTRY_EDITING(Bucket<T>, bucket, &this->table[i], iter)
             {
                 while (iter2.IsValid() && bucket.value < iter2.Data().value)
-                {                  
+                {
                     iter2.Next();
                 }
 
@@ -274,7 +274,7 @@ public:
     {
         for (uint i = 0; i < this->tableSize; i++)
         {
-            SListBase<Bucket<T>>::Iterator iter2(&this2->table[i]); 
+            SListBase<Bucket<T>>::Iterator iter2(&this2->table[i]);
             iter2.Next();
             FOREACH_SLISTBASE_ENTRY_EDITING(Bucket<T>, bucket, &this->table[i], iter)
             {
@@ -316,12 +316,12 @@ public:
     {
         for (uint i = 0; i < this->tableSize; i++)
         {
-            SListBase<Bucket<T>>::Iterator iter2(&this2->table[i]); 
+            SListBase<Bucket<T>>::Iterator iter2(&this2->table[i]);
             iter2.Next();
             FOREACH_SLISTBASE_ENTRY_EDITING(Bucket<T>, bucket, &this->table[i], iter)
             {
                 while (iter2.IsValid() && bucket.value < iter2.Data().value)
-                {                 
+                {
                     Bucket<T> * newBucket = iter.InsertNodeBefore(this->alloc);
                     newBucket->value = iter2.Data().value;
                     newBucket->element = fn(nullptr, iter2.Data().element);
@@ -336,7 +336,7 @@ public:
                 {
                     bucket.element = fn(bucket.element, iter2.Data().element);
                     iter2.Next();
-                }                           
+                }
             } NEXT_SLISTBASE_ENTRY_EDITING;
 
             while (iter2.IsValid())
@@ -355,7 +355,7 @@ public:
 
         for (uint i = 0; i < this->tableSize; i++)
         {
-            this->table[i].CopyTo<Bucket<T>::Copy>(this->alloc, newTable->table[i]);            
+            this->table[i].CopyTo<Bucket<T>::Copy>(this->alloc, newTable->table[i]);
         }
 #if PROFILE_DICTIONARY
         if (stats)
@@ -369,9 +369,9 @@ public:
         for (uint i = 0; i < this->tableSize; i++)
         {
             this->table[i].Clear(this->alloc);
-        }        
+        }
 #if PROFILE_DICTIONARY
-        // To not loose previously collected data, we will treat cleared dictionary as a separate instance for stats tracking purpose
+        // To not lose previously collected data, we will treat cleared dictionary as a separate instance for stats tracking purpose
         stats = DictionaryStats::Create(typeid(this).name(), tableSize);
 #endif
     }
@@ -382,8 +382,8 @@ public:
 #endif
 
 protected:
-    HashTable(TAllocator * allocator, uint tableSize) : alloc(allocator), tableSize(tableSize) 
-    {        
+    HashTable(TAllocator * allocator, uint tableSize) : alloc(allocator), tableSize(tableSize)
+    {
         Init();
 #if PROFILE_DICTIONARY
         stats = DictionaryStats::Create(typeid(this).name(), tableSize);
@@ -394,7 +394,7 @@ protected:
         table = (SListBase<Bucket<T>> *)(((char *)this) + sizeof(HashTable<T>));
         for (uint i = 0; i < tableSize; i++)
         {
-            // placment new
+            // placement new
             ::new (&table[i]) SListBase<Bucket<T>>();
         }
     }
@@ -411,7 +411,7 @@ class HashTableS : public HashTable<T, TAllocator>
 {
 public:
     HashTableS(TAllocator * allocator) : HashTable(allocator, size) {}
-    void Reset() 
+    void Reset()
     {
         __super::Init();
     }
@@ -423,16 +423,16 @@ private:
     for (uint _iterHash = 0; _iterHash < (hashTable)->tableSize; _iterHash++)  \
     {   \
         FOREACH_SLISTBASE_ENTRY(Bucket<T>, bucket, &(hashTable)->table[_iterHash]) \
-        {   
+        {
 
 #define NEXT_HASHTABLE_ENTRY \
         } \
         NEXT_SLISTBASE_ENTRY; \
-    } 
+    }
 
-#if DBG_DUMP     
+#if DBG_DUMP
 template <typename T, typename TAllocator>
-inline void 
+inline void
 HashTable<T, TAllocator>::Dump(uint newLinePerEntry)
 {
     FOREACH_HASHTABLE_ENTRY(T, bucket, this)
@@ -442,14 +442,14 @@ HashTable<T, TAllocator>::Dump(uint newLinePerEntry)
         ::Dump<T>(bucket.element);
         for (uint i = 0; i < newLinePerEntry; i++)
         {
-            Output::Print(L"\n");            
+            Output::Print(L"\n");
         }
     }
-    NEXT_HASHTABLE_ENTRY;   
+    NEXT_HASHTABLE_ENTRY;
 }
 
 template <typename T, typename TAllocator>
-inline void 
+inline void
 HashTable<T, TAllocator>::Dump(void (*valueDump)(int))
 {
     FOREACH_HASHTABLE_ENTRY(T, bucket, this)
@@ -459,7 +459,7 @@ HashTable<T, TAllocator>::Dump(void (*valueDump)(int))
         ::Dump<T>(bucket.element);
         Output::Print(L"\n");
     }
-    NEXT_HASHTABLE_ENTRY;        
+    NEXT_HASHTABLE_ENTRY;
 }
 
 template <typename T>

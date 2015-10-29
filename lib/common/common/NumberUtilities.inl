@@ -1,6 +1,7 @@
-//---------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 
 #ifndef NUMBER_UTIL_INLINE
 #define NUMBER_UTIL_INLINE
@@ -39,7 +40,7 @@ namespace Js
     {
         INT64 T4_64;
 #if defined(_M_IX86)
-        // If SSE3 is available use FISTPP.  VC (dev10) generates a FISTP, but needs to 
+        // If SSE3 is available use FISTPP.  VC (dev10) generates a FISTP, but needs to
         // first change the FPU rounding, which is very slow...
         if (AutoSystemInfo::Data.SSE3Available())
         {
@@ -64,8 +65,8 @@ namespace Js
         else if (T1 < -9223372036854775808.0) // -9223372036854775808 is double value corresponsing to Neg_InvalidInt64.
         {
             // TODO: Remove this temp workaround.
-            // This is to walk around CRT issue (Win8 404170): there is a band of values near/less than negative overflow 
-            // for which cast to int64 results in positive number (bug), then going further down in negative direction it turns 
+            // This is to walk around CRT issue (Win8 404170): there is a band of values near/less than negative overflow
+            // for which cast to int64 results in positive number (bug), then going further down in negative direction it turns
             // back to negative overflow value (as it should).
             return Pos_InvalidInt64;
         }
@@ -127,4 +128,4 @@ namespace Js
     {
         return  *(reinterpret_cast<uint64 *>(&value));
     }
-};
+}

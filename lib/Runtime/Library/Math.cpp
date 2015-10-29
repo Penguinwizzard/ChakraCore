@@ -72,8 +72,8 @@ namespace Js
 
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
-        
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count >= 2)
         {
@@ -88,15 +88,27 @@ namespace Js
 #endif
                 return JavascriptNumber::ToVar(result, scriptContext);
             }
-
+            
             double x = JavascriptConversion::ToNumber(args[1], scriptContext);
-            double result = ::fabs(x);
+
+            double result = Math::Abs(x);
             return JavascriptNumber::ToVarNoCheck(result, scriptContext);
         }
         else
         {
             return scriptContext->GetLibrary()->GetNaN();
         }
+    }
+
+    double Math::Abs(double x)
+    {
+        // ::fabs if linked from UCRT changes FPU ctrl word for NaN input
+        if (NumberUtilities::IsNan(x))
+        {
+            // canonicalize to 0xFFF8000..., so we can tag correctly on x64.
+            return NumberConstants::NaN;
+        }
+        return ::fabs(x);
     }
 
     ///----------------------------------------------------------------------------
@@ -113,7 +125,7 @@ namespace Js
 
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count >= 2)
         {
@@ -163,8 +175,8 @@ namespace Js
         ARGUMENTS(args, callInfo);
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         ScriptContext* scriptContext = function->GetScriptContext();
-        
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count >= 2)
         {
@@ -214,8 +226,8 @@ namespace Js
         ARGUMENTS(args, callInfo);
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         ScriptContext* scriptContext = function->GetScriptContext();
-        
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count >= 2)
         {
@@ -264,8 +276,8 @@ namespace Js
         ARGUMENTS(args, callInfo);
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         ScriptContext* scriptContext = function->GetScriptContext();
-        
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count >= 3)
         {
@@ -341,7 +353,7 @@ namespace Js
         {
         default:
 #if 0
-            // This Atan2 gives slightly different results.  Disable as it doesn't appear to 
+            // This Atan2 gives slightly different results.  Disable as it doesn't appear to
             // be an important perf scenario.
             if( AutoSystemInfo::Data.SSE2Available() )
             {
@@ -443,8 +455,8 @@ LDone:
         ARGUMENTS(args, callInfo);
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         ScriptContext* scriptContext = function->GetScriptContext();
-        
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count >= 2)
         {
@@ -468,7 +480,7 @@ LDone:
             {
                 __m128d input, output;
                 input = _mm_load_sd(&x);
-#pragma prefast(suppress:6001, "Signature of _mm_ceil_sd intrinsic confuses prefast, output in the parameter list is not used, it is the dst of the intrinsic")               
+#pragma prefast(suppress:6001, "Signature of _mm_ceil_sd intrinsic confuses prefast, output in the parameter list is not used, it is the dst of the intrinsic")
                 output = _mm_ceil_sd(output, input);
                 int intResult = _mm_cvtsd_si32(output);
 
@@ -497,7 +509,7 @@ LDone:
                 double result = ::ceil(x);
 
                 intptr_t intResult = (intptr_t)result;
-            
+
                 if (TaggedInt::IsOverflow(intResult) || JavascriptNumber::IsNegZero(result))
                 {
                     return JavascriptNumber::ToVarNoCheck(result, scriptContext);
@@ -506,7 +518,7 @@ LDone:
                 {
                     return JavascriptNumber::ToVar(intResult, scriptContext);
                 }
-            }            
+            }
         }
         else
         {
@@ -528,7 +540,7 @@ LDone:
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count >= 2)
         {
@@ -578,7 +590,7 @@ LDone:
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count >= 2)
         {
@@ -630,7 +642,7 @@ LDone:
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count >= 2)
         {
@@ -669,7 +681,7 @@ LDone:
 
             input = _mm_load_sd(&d);
             if (d >= 0.0)
-            {  
+            {
                 output = input;
             }
             else
@@ -725,7 +737,7 @@ LDone:
     }
 #pragma warning(pop)
     ///----------------------------------------------------------------------------
-    /// Log() returns the natural logrithm of x, as described in
+    /// Log() returns the natural logarithm of x, as described in
     /// (ES5.0: S15.8.2.10).
     ///----------------------------------------------------------------------------
 
@@ -737,7 +749,7 @@ LDone:
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count >= 2)
         {
@@ -790,7 +802,7 @@ LDone:
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count <= 1)
         {
@@ -799,7 +811,7 @@ LDone:
         else if (args.Info.Count == 2)
         {
             double result = JavascriptConversion::ToNumber(args[1], scriptContext);
-            return JavascriptNumber::ToVarNoCheck(result, scriptContext);            
+            return JavascriptNumber::ToVarNoCheck(result, scriptContext);
         }
         else if (args.Info.Count == 3)
         {
@@ -814,7 +826,7 @@ LDone:
         {
             return scriptContext->GetLibrary()->GetNaN();
         }
-        
+
         for (uint idxArg = 2; idxArg < args.Info.Count; idxArg++)
         {
             double compare = JavascriptConversion::ToNumber(args[idxArg], scriptContext);
@@ -848,7 +860,7 @@ LDone:
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count <= 1)
         {
@@ -903,7 +915,7 @@ LDone:
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count >= 3)
         {
@@ -931,7 +943,7 @@ LDone:
             // Result is 1 even if x is NaN.
             result = 1;
         }
-        else if( 1.0 == fabs( x ) && !NumberUtilities::IsFinite( y ) )
+        else if( 1.0 == Math::Abs( x ) && !NumberUtilities::IsFinite( y ) )
         {
             result = JavascriptNumber::NaN;
         }
@@ -971,13 +983,13 @@ LDone:
         AssertMsg(callInfo.Count > 0, "Should always have implicit 'this'");
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         double res = JavascriptMath::Random(scriptContext);
 
         return JavascriptNumber::ToVarNoCheck(res, scriptContext);
-    }  
-     
+    }
+
 
     ///----------------------------------------------------------------------------
     /// Round() returns the number value that is closest to x and is equal to an
@@ -992,12 +1004,12 @@ LDone:
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count >= 2)
         {
             Var input = args[1];
-            
+
             if (TaggedInt::Is(input))
             {
                 return input;
@@ -1017,7 +1029,7 @@ LDone:
 #if 0
             if(x > 0 && x < 0.5)
             {
-                return JavascriptNumber::ToVarNoCheck(0, scriptContext); 
+                return JavascriptNumber::ToVarNoCheck(0, scriptContext);
             }
 #endif
 
@@ -1032,7 +1044,7 @@ LDone:
         {
             return scriptContext->GetLibrary()->GetNaN();
         }
-    }  
+    }
 
     ///----------------------------------------------------------------------------
     /// Sin() returns the sine of the given angle in radians, as described in
@@ -1047,7 +1059,7 @@ LDone:
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count >= 2)
         {
@@ -1098,7 +1110,7 @@ LDone:
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count >= 2)
         {
@@ -1133,7 +1145,7 @@ LDone:
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         ScriptContext* scriptContext = function->GetScriptContext();
 
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count >= 2)
         {
@@ -1549,7 +1561,7 @@ LDone:
             {
                 return JavascriptNumber::ToVarNoCheck(ucrtC99MathApis->atanh(x), scriptContext);
             }
-            else if (::fabs(x) < 1.0)
+            else if (Math::Abs(x) < 1.0)
             {
                 double result = (JavascriptNumber::IsNegZero(x)) ? x : Math::Log((1.0 + x) / (1.0 - x)) / 2.0;
 
@@ -1591,36 +1603,32 @@ LDone:
         Assert(!(callInfo.Flags & CallFlags_New));
         CHAKRATEL_LANGSTATS_INC_BUILTINCOUNT(HypotCount);
 
-        //ES6 20.2.2.18 Math.hypot(value1, value2, …values)
-        //If no arguments are passed, the result is + 0.
-        //If any argument is + ∞, the result is + ∞.
-        //If any argument is −∞, the result is + ∞.
-        //If no argument is + ∞ or −∞, and any argument is NaN, the result is NaN.
-        //If all arguments are either + 0 or −0, the result is + 0.
+        // ES6 20.2.2.18 Math.hypot(value1, value2, ...values)
+        // If no arguments are passed, the result is +0.
+        // If any argument is +∞, the result is +∞.
+        // If any argument is -∞, the result is +∞.
+        // If no argument is +∞ or -∞, and any argument is NaN, the result is NaN.
+        // If all arguments are either +0 or -0, the result is +0.
 
-        double result = JavascriptNumber::k_Zero; //If there are no arguments return value is positive zero.
+        double result = JavascriptNumber::k_Zero; // If there are no arguments return value is positive zero.
 
         if (args.Info.Count == 2)
         {
-            //Special case for one arugument;
+            // Special case for one argument
             double x1 = JavascriptConversion::ToNumber(args[1], scriptContext);
 
             if (JavascriptNumber::IsPosInf(x1) || JavascriptNumber::IsNegInf(x1))
             {
                 result = JavascriptNumber::POSITIVE_INFINITY;
             }
-            else if (JavascriptNumber::IsNan(x1))
-            {
-                result = JavascriptNumber::NaN;
-            }
             else
             {
-                result = ::fabs(x1);
-            } 
+                result = Math::Abs(x1);
+            }
         }
         else if (args.Info.Count == 3)
         {
-            //CRT hypot call
+            // CRT hypot call
             double x1 = JavascriptConversion::ToNumber(args[1], scriptContext);
             double x2 = JavascriptConversion::ToNumber(args[2], scriptContext);
 
@@ -1640,7 +1648,7 @@ LDone:
         }
         else if (args.Info.Count > 3)
         {
-            //Uncommon case of more than 2 arguments for hypot
+            // Uncommon case of more than 2 arguments for hypot
             result = Math::HypotHelper(args, scriptContext);
         }
 
@@ -1654,7 +1662,7 @@ LDone:
         double scale = 0;
         double sum = 0;
 
-        //Ignore first arugment which is this pointer
+        //Ignore first argument which is this pointer
         for (uint counter = 1; counter < args.Info.Count; counter++)
         {
             double doubleVal = JavascriptConversion::ToNumber(args[counter], scriptContext);
@@ -1668,12 +1676,12 @@ LDone:
             {
                 if (JavascriptNumber::IsNan(doubleVal))
                 {
-                    //Even though we found NaN, we still need to validate none of the other arugments are +∞ or -∞
+                    //Even though we found NaN, we still need to validate none of the other arguments are +∞ or -∞
                     foundNaN = true;
                 }
                 else
                 {
-                    doubleVal = ::fabs(doubleVal);
+                    doubleVal = Math::Abs(doubleVal);
                     if (scale < doubleVal)
                     {
                         sum = sum * (scale / doubleVal) * (scale / doubleVal) + 1; /* scale/scale === 1*/

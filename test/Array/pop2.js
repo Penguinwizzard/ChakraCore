@@ -12,7 +12,7 @@ function InitObject(obj) {
         obj[i] = i * i + 1;
     }
     obj.length = n;
-    
+
     return obj;
 }
 
@@ -40,7 +40,7 @@ function popTest2()
   var ary = new Array(10);
   ary[1] = 1;
   ary.length = 2;
-  ary.pop();  
+  ary.pop();
   func0(ary);
   WScript.Echo("ary[1] = " + (ary[1]));
 };

@@ -4,12 +4,6 @@
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeDebugPch.h"
 
-#ifdef _M_X64_OR_ARM64
-// TODO: Clean this warning up
-#pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
-#endif
-
-
 namespace Js
 {
     DebugDocument::DebugDocument(Utf8SourceInfo* utf8SourceInfo, Js::FunctionBody* functionBody) :
@@ -86,7 +80,7 @@ namespace Js
         {
         default:
             AssertMsg(FALSE, "Bad breakpoint state");
-            // Fall thru
+            // fall-through
         case BREAKPOINT_DISABLED:
         case BREAKPOINT_DELETED:
         {
@@ -207,9 +201,9 @@ namespace Js
 
         ulong ubos = static_cast<ulong>(ibos);
 
-        // Getting the appropiate statement on the asked position works on the heuristic which requires two
+        // Getting the appropriate statement on the asked position works on the heuristic which requires two
         // probable candidates.
-        // These candidates will be closest to the ibos. where the first.range.start < ibos and 
+        // These candidates will be closest to the ibos. where the first.range.start < ibos and
         // the second.range.start >= ibos.
         // These candidates will be fetched out by going into each FunctionBody.
 
@@ -250,7 +244,7 @@ namespace Js
             return TRUE;
         }
 
-        // If one of the func is inner to another one, and ibos is in the inner one, disregard the outer one/let the inner one win. 
+        // If one of the func is inner to another one, and ibos is in the inner one, disregard the outer one/let the inner one win.
         // See WinBlue 575634. Scenario is like this: var foo = function () {this;} -- and BP is set to 'this;' 'function'.
         if (candidateMatch1.function != candidateMatch2.function)
         {
@@ -293,7 +287,7 @@ namespace Js
         {
             *plocation = candidateMatch2;
         }
-        // If ibos is out of the range of first candidate, choose second candidate if  ibos is on the same line as second candidate 
+        // If ibos is out of the range of first candidate, choose second candidate if  ibos is on the same line as second candidate
         // or ibos is not on the same line of the end of the first candidate.
         else if (candidateMatch1.statement.end < ibos && (!fNextHasLineBreak || this->HasLineBreak(candidateMatch1.statement.end, ibos)))
         {

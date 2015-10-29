@@ -16,8 +16,7 @@ namespace Js
 {
     DWORD JavascriptError::GetAdjustedResourceStringHr(DWORD hr, bool isFormatString)
     {
-        AssertMsg(FACILITY_CONTROL == HRESULT_FACILITY(hr) || FACILITY_JSCRIPT == HRESULT_FACILITY(hr), "JScript9 hr are either FACILITY_CONTROL (for private HRs) or FACILITY_JSCRIPT (for public HRs)");
-        // based on jserr.gen, string formats are SCODE_CODE(hr)+scodeIncr, with scodeIncr = RTERROR_STRINGFORMAT_OFFSET for FACILITY_CONTROL, = RTERROR_PUBLIC_RESOURCEOFFSET for FACILITY_JSCRIPT
+        AssertMsg(FACILITY_CONTROL == HRESULT_FACILITY(hr) || FACILITY_JSCRIPT == HRESULT_FACILITY(hr), "Chakra hr are either FACILITY_CONTROL (for private HRs) or FACILITY_JSCRIPT (for public HRs)");
         WORD scodeIncr = isFormatString ? RTERROR_STRINGFORMAT_OFFSET : 0; // default for FACILITY_CONTROL == HRESULT_FACILITY(hr)
         if (FACILITY_JSCRIPT == HRESULT_FACILITY(hr))
         {
@@ -37,14 +36,9 @@ namespace Js
 
     bool JavascriptError::IsRemoteError(Var aValue)
     {
-        // IJscriptInfo is currently not remotable (we don't register the proxy),
-        // so we can't query for actual remote object. we might add support for remoting
-        // later, and we can do more query in the future.
+        // IJscriptInfo is not remotable (we don't register the proxy),
+        // so we can't query for actual remote object
         return JavascriptOperators::GetTypeId(aValue) == TypeIds_HostDispatch;
-        // TypeId remoteTypeId;
-        //return JavascriptOperators::GetTypeId(aValue) == TypeIds_HostDispatch &&
-        //     JavascriptOperators::GetRemoteTypeId(aValue, &remoteTypeId) &&
-        //     remoteTypeId == TypeIds_Error;
     }
 
     bool JavascriptError::HasDebugInfo()
@@ -55,7 +49,7 @@ namespace Js
     void JavascriptError::SetNotEnumerable(PropertyId propertyId)
     {
         // Not all the properties of Error objects (like description, stack, number etc.) are in the spec.
-        // Other browsers have all the properties as not-enumerable. With this change we are matching them.
+        // Other browsers have all the properties as not-enumerable.
         SetEnumerable(propertyId, false);
     }
 
@@ -68,7 +62,7 @@ namespace Js
         Var newTarget = callInfo.Flags & CallFlags_NewTarget ? args.Values[args.Info.Count] : args[0];
         bool isCtorSuperCall = (callInfo.Flags & CallFlags_New) && (callInfo.Flags & (CallFlags_Value|CallFlags_NewTarget)) && newTarget != nullptr && RecyclableObject::Is(newTarget);
         JavascriptString* messageString = nullptr;
-        
+
         if (args.Info.Count >= 2 && !JavascriptOperators::GetTypeId(args[1]) == TypeIds_Undefined)
         {
             messageString = JavascriptConversion::ToString(args[1], scriptContext);
@@ -79,7 +73,7 @@ namespace Js
             JavascriptOperators::SetProperty(pError, pError, PropertyIds::message, messageString, scriptContext);
             pError->SetNotEnumerable(PropertyIds::message);
         }
-        
+
         JavascriptExceptionContext exceptionContext;
         JavascriptExceptionOperators::WalkStackForExceptionContext(*scriptContext, exceptionContext, pError,
             JavascriptExceptionOperators::StackCrawlLimitOnThrow(pError, *scriptContext), /*returnAddress=*/ nullptr, /*isThrownException=*/ false, /*resetSatck=*/ false);
@@ -98,7 +92,7 @@ namespace Js
         ScriptContext* scriptContext = function->GetScriptContext();
         JavascriptError* pError = scriptContext->GetLibrary()->CreateError();
 
-        // Proceass the arguments for IE specific behaviors for numbers and description
+        // Process the arguments for IE specific behaviors for numbers and description
 
         JavascriptString* descriptionString = nullptr;
         bool hasNumber = false;
@@ -123,8 +117,8 @@ namespace Js
         }
         else
         {
-            hasNumber = true;            
-            descriptionString = scriptContext->GetLibrary()->GetEmptyString();                
+            hasNumber = true;
+            descriptionString = scriptContext->GetLibrary()->GetEmptyString();
         }
 
         Assert(descriptionString != nullptr);
@@ -227,11 +221,10 @@ namespace Js
 
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
 
-        Assert(!(callInfo.Flags & CallFlags_New));        
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args[0] == 0 || !JavascriptOperators::IsObject(args[0]))
-        {          
-            // NOTE: IE8 prints something like "'foo' is null or not an object"...
+        {
             JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NeedObject, L"Error.prototype.toString");
         }
 
@@ -274,7 +267,7 @@ namespace Js
         else if (msgLen > 0)
         {
             outputStr = message;
-        }      
+        }
 
         return outputStr;
     }
@@ -373,6 +366,7 @@ namespace Js
     THROW_ERROR_IMPL(ThrowTypeError, CreateTypeError, GetTypeErrorType, kjstTypeError)
     THROW_ERROR_IMPL(ThrowURIError, CreateURIError, GetURIErrorType, kjstURIError)
 #undef THROW_ERROR_IMPL
+
     JavascriptError* JavascriptError::MapError(ScriptContext* scriptContext, ErrorTypeEnum errorType, IErrorInfo * perrinfo /*= nullptr*/, RestrictedErrorStrings * proerrstr /*= nullptr*/)
     {
         switch (errorType)
@@ -402,7 +396,7 @@ namespace Js
           break;
 #endif
         default:
-            AssertMsg(FALSE, "Invaild error type");
+            AssertMsg(FALSE, "Invalid error type");
             __assume(false);
         };
     }
@@ -445,9 +439,7 @@ namespace Js
     {
         Assert(FAILED(hr));
         wchar_t * allocatedString = nullptr;
-        
-        // FACILITY_CONTROL is used for internal (activscp.idl) and legacy errors
-        // FACILITY_JSCRIPT is used for newer public errors
+
         if (FACILITY_CONTROL == HRESULT_FACILITY(hr) || FACILITY_JSCRIPT == HRESULT_FACILITY(hr))
         {
             if (argList != nullptr)
@@ -498,8 +490,6 @@ namespace Js
         Assert(FAILED(hr));
         wchar_t * allocatedString = nullptr;
 
-        // FACILITY_CONTROL is used for internal (activscp.idl) and legacy errors
-        // FACILITY_JSCRIPT is used for newer public errors
         if (FACILITY_CONTROL == HRESULT_FACILITY(hr) || FACILITY_JSCRIPT == HRESULT_FACILITY(hr))
         {
             if (varName != nullptr)
@@ -643,7 +633,7 @@ namespace Js
         ScriptContext* scriptContext = errorObject->GetScriptContext();
         Assert(!scriptContext->GetThreadContext()->IsScriptActive());
 
-        // Use _NOT_SCRIPT. We enter runtime to get error info, likely inside a catch. Avoid risky/lengthy work.
+        // Use _NOT_SCRIPT. We enter runtime to get error info, likely inside a catch.
         BEGIN_JS_RUNTIME_CALL_NOT_SCRIPT(scriptContext)
         {
             return GetRuntimeError(errorObject, pMessage);
@@ -660,7 +650,7 @@ namespace Js
     {
         JavascriptExceptionOperators::ThrowStackOverflow(scriptContext, returnAddress);
     }
-    
+
     void __declspec(noreturn) JavascriptError::ThrowParserError(ScriptContext* scriptContext, HRESULT hrParser, CompileScriptException* se)
     {
         Assert(FAILED(hrParser));
@@ -852,12 +842,6 @@ namespace Js
         return jsNewError;
     }
 
-    /// <summary>
-    /// Create a new error from same type as this and copy error message and number to new error
-    /// </summary>
-    /// <param name="targetJavascriptLibrary">
-    /// targetJavascriptLibrary to create the new error in
-    /// </param>
     JavascriptError* JavascriptError::CloneErrorMsgAndNumber(JavascriptLibrary* targetJavascriptLibrary)
     {
         JavascriptError* jsNewError = this->CreateNewErrorOfSameType(targetJavascriptLibrary);
@@ -872,7 +856,7 @@ namespace Js
 
     void JavascriptError::TryThrowTypeError(ScriptContext * checkScriptContext, ScriptContext * scriptContext, long hCode, PCWSTR varName)
     {
-        // Don't throw if implicit excpetions are disabled
+        // Don't throw if implicit exceptions are disabled
         if (checkScriptContext->GetThreadContext()->RecordImplicitException())
         {
             ThrowTypeError(scriptContext, hCode, varName);

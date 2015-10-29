@@ -10,15 +10,15 @@
 #include "rl.h"
 
 
-#define TMP_PREFIX "di"   // 2 characters!
+#define TMP_PREFIX "di"   // 2 characters
 
-// Currently not overrideable...
+// Currently not overrideable
 #define REGR_PERL "perl"
 
 #define DIR_START_CMD "startdir.cmd"
 #define DIR_END_CMD "enddir.cmd"
 
-// <rl> ... </rl> direcives:
+// <rl> ... </rl> directives:
 //
 // PassFo
 //      Doesn't add -FoNUL. to the command line; allows passing of -Fo
@@ -31,7 +31,7 @@
 #define NO_ASM_CMD "NoAsm"
 
 //
-// Global variables set before worker threads start, and only accesssed
+// Global variables set before worker threads start, and only accessed
 // (not set) by the worker threads.
 //
 

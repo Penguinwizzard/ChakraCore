@@ -28,7 +28,7 @@ namespace Js
         static const uint64 DefaultStackTraceLimit = 10;
         static const uint64 MaxStackTraceLimit = _UI64_MAX;
 
-        // AutoCatchHandlerExists tracks where an exception will be caught and not propogated out.
+        // AutoCatchHandlerExists tracks where an exception will be caught and not propagated out.
         // It should be included wherever an exception is caught and swallowed.
         class AutoCatchHandlerExists
         {
@@ -61,7 +61,7 @@ namespace Js
 #if defined(DBG) && defined(_M_IX86)
         static void DbgCheckEHChain();
 #endif
-        static JavascriptExceptionObject* GetOutOfMemoryExceptionObject(ScriptContext* scriptContext);       
+        static JavascriptExceptionObject* GetOutOfMemoryExceptionObject(ScriptContext* scriptContext);
 
         static Var OP_RuntimeTypeError(MessageId messageId, ScriptContext* scriptContext);
         static Var OP_RuntimeRangeError(MessageId messageId, ScriptContext* scriptContext);
@@ -92,7 +92,7 @@ namespace Js
         };
 
       private:
-        static JavascriptFunction * WalkStackForExceptionContextInternal(ScriptContext& scriptContext, JavascriptExceptionContext& exceptionContext, Var thrownObject, uint32& callerByteCodeOffset, 
+        static JavascriptFunction * WalkStackForExceptionContextInternal(ScriptContext& scriptContext, JavascriptExceptionContext& exceptionContext, Var thrownObject, uint32& callerByteCodeOffset,
             uint64 stackCrawlLimit, PVOID returnAddress, bool isThrownException, bool resetStack = false);
 
         static void ThrowExceptionObjectInternal(Js::JavascriptExceptionObject * exceptionObject, ScriptContext* scriptContext, bool fillExceptionContext, bool considerPassingToDebugger, PVOID returnAddress, bool resetStack);

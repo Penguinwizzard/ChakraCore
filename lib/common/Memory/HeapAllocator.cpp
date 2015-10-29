@@ -5,8 +5,8 @@
 #include "CommonMemoryPch.h"
 
 #ifdef INTERNAL_MEM_PROTECT_HEAP_ALLOC
-// REVIEW: ChakraCore Dependency
-#include "..\..\..\private\lib\MemProtectHeap\MemProtectHeap.h"
+// Not enabled in ChakraCore
+#include "MemProtectHeap.h"
 #endif
 
 // Initialization order
@@ -177,7 +177,7 @@ void HeapAllocator::ClearTrackAllocInfo(TrackAllocData* data/* = NULL*/)
 #endif
 
 #ifdef HEAP_TRACK_ALLOC
-//static 
+//static
 bool HeapAllocator::CheckLeaks()
 {
     return Instance.data.CheckLeaks();
@@ -200,17 +200,17 @@ void NoThrowHeapAllocator::Free(void * buffer, size_t byteSize)
 }
 
 #ifdef TRACK_ALLOC
-NoThrowHeapAllocator * NoThrowHeapAllocator::TrackAllocInfo(TrackAllocData const& data) 
-{ 
-    HeapAllocator::Instance.TrackAllocInfo(data); 
-    return this; 
+NoThrowHeapAllocator * NoThrowHeapAllocator::TrackAllocInfo(TrackAllocData const& data)
+{
+    HeapAllocator::Instance.TrackAllocInfo(data);
+    return this;
 }
 #endif TRACK_ALLOC
 
 #ifdef TRACK_ALLOC
-void NoThrowHeapAllocator::ClearTrackAllocInfo(TrackAllocData* data /*= NULL*/) 
-{ 
-    HeapAllocator::Instance.ClearTrackAllocInfo(data); 
+void NoThrowHeapAllocator::ClearTrackAllocInfo(TrackAllocData* data /*= NULL*/)
+{
+    HeapAllocator::Instance.ClearTrackAllocInfo(data);
 }
 #endif TRACK_ALLOC
 
@@ -241,7 +241,7 @@ bool HeapAllocator::DoUseMemProtectHeap()
 
     if (memProtectHeapHandle != nullptr)
     {
-        return true;    
+        return true;
     }
 
     DebugOnly(bool wasUsed = isUsed);
@@ -254,7 +254,7 @@ bool HeapAllocator::DoUseMemProtectHeap()
         if (FAILED(MemProtectHeapCreate(&memProtectHeapHandle, MemProtectHeapCreateFlags_ProtectCurrentStack)))
         {
             Assert(false);
-        }        
+        }
         return true;
     }
 
@@ -309,9 +309,9 @@ HeapAllocator::~HeapAllocator()
 {
 #ifdef HEAP_TRACK_ALLOC
     bool hasFakeHeapLeak = false;
-    auto fakeHeapLeak = [&]() 
+    auto fakeHeapLeak = [&]()
     {
-        // REVIEW: Ok to use global flags?
+        // REVIEW: Okay to use global flags?
         if (Js::Configuration::Global.flags.ForceMemoryLeak && !hasFakeHeapLeak)
         {
             AUTO_HANDLED_EXCEPTION_TYPE(ExceptionType_DisableCheck);
@@ -322,7 +322,7 @@ HeapAllocator::~HeapAllocator()
     };
 
 #ifdef LEAK_REPORT
-    // REVIEW: Ok to use global flags?
+    // REVIEW: Okay to use global flags?
     if (Js::Configuration::Global.flags.IsEnabled(Js::LeakReportFlag))
     {
         fakeHeapLeak();
@@ -342,7 +342,7 @@ HeapAllocator::~HeapAllocator()
 #endif // LEAK_REPORT
 
 #ifdef CHECK_MEMORY_LEAK
-    // REVIEW: Ok to use global flags?
+    // REVIEW: Okay to use global flags?
     if (Js::Configuration::Global.flags.CheckMemoryLeak)
     {
         fakeHeapLeak();
@@ -395,7 +395,7 @@ HeapAllocatorData::LogAlloc(HeapAllocRecord * record, size_t requestedBytes, Tra
     allocCount++;
 
 #if defined(CHECK_MEMORY_LEAK) || defined(LEAK_REPORT)
-    // REVIEW: Ok to use global flags?
+    // REVIEW: Okay to use global flags?
     if (Js::Configuration::Global.flags.LeakStackTrace)
     {
         // Allocation done before the flags is parse doesn't get a stack trace
@@ -467,7 +467,7 @@ HeapAllocatorData::CheckLeaks()
                 ((char*)current) + ::Math::Align<size_t>(sizeof(HeapAllocRecord), MEMORY_ALLOCATION_ALIGNMENT),
                 current->size);
 #if defined(CHECK_MEMORY_LEAK) || defined(LEAK_REPORT)
-            // REVIEW: Ok to use global flags?
+            // REVIEW: Okay to use global flags?
             if (Js::Configuration::Global.flags.LeakStackTrace && current->stacktrace)
             {
                 // Allocation done before the flags is parse doesn't get a stack trace
@@ -487,7 +487,7 @@ HeapAllocatorData::CheckLeaks()
     Output::Flush();
 
 #if defined(ENABLE_DEBUG_CONFIG_OPTIONS) && !DBG
-    // REVIEW: Ok to use global flags?
+    // REVIEW: Okay to use global flags?
     if (needPause && Js::Configuration::Global.flags.Console)
     {
         //This is not defined for WinCE

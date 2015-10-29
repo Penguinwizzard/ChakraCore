@@ -14,21 +14,21 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
         Var undefinedVar = scriptContext->GetLibrary()->GetUndefined();
 
-        // Convert all args to float32 
+        // Convert all args to float32
         float fSIMDX = JavascriptConversion::ToFloat(args.Info.Count >= 2 ? args[1] : undefinedVar, scriptContext);
         float fSIMDY = JavascriptConversion::ToFloat(args.Info.Count >= 3 ? args[2] : undefinedVar, scriptContext);
         float fSIMDZ = JavascriptConversion::ToFloat(args.Info.Count >= 4 ? args[3] : undefinedVar, scriptContext);
         float fSIMDW = JavascriptConversion::ToFloat(args.Info.Count >= 5 ? args[4] : undefinedVar, scriptContext);
 
         SIMDValue lanes = SIMDFloat32x4Operation::OpFloat32x4(fSIMDX, fSIMDY, fSIMDZ, fSIMDW);
-        
+
         return JavascriptSIMDFloat32x4::New(&lanes, scriptContext);
-        
+
     }
-    
+
     Var SIMDFloat32x4Lib::EntryCheck(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
@@ -36,7 +36,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
-        Assert(!(callInfo.Flags & CallFlags_New)); 
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         if (args.Info.Count >= 2 && JavascriptSIMDFloat32x4::Is(args[1]))
         {
@@ -67,7 +67,7 @@ namespace Js
         ScriptContext* scriptContext = function->GetScriptContext();
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         Assert(!(callInfo.Flags & CallFlags_New));
-        
+
         Var undefinedVar = scriptContext->GetLibrary()->GetUndefined();
         float value = JavascriptConversion::ToFloat(args.Info.Count >= 2 ? args[1] : undefinedVar, scriptContext);
 
@@ -155,55 +155,55 @@ namespace Js
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdFloat32x4TypeMismatch, L"fromInt32x4Bits");
     }
 
-	//Lane Access
-	Var SIMDFloat32x4Lib::EntryExtractLane(RecyclableObject* function, CallInfo callInfo, ...)
-	{
-		PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+    //Lane Access
+    Var SIMDFloat32x4Lib::EntryExtractLane(RecyclableObject* function, CallInfo callInfo, ...)
+    {
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
 
-		ARGUMENTS(args, callInfo);
-		ScriptContext* scriptContext = function->GetScriptContext();
+        ARGUMENTS(args, callInfo);
+        ScriptContext* scriptContext = function->GetScriptContext();
 
-		AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
-		Assert(!(callInfo.Flags & CallFlags_New));
+        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
+        Assert(!(callInfo.Flags & CallFlags_New));
 
-		// first arg has to be of type float32x4, so cannot be missing. 
-		if (args.Info.Count >= 3 && JavascriptSIMDFloat32x4::Is(args[1]))
-		{
-			// if value arg is missing, then it is undefined.
-			Var laneVar = args.Info.Count >= 3 ? args[2] : scriptContext->GetLibrary()->GetUndefined();
-			float result = SIMD128ExtractLane<JavascriptSIMDFloat32x4, 4, float>(args[1], laneVar, scriptContext);
+        // first arg has to be of type float32x4, so cannot be missing.
+        if (args.Info.Count >= 3 && JavascriptSIMDFloat32x4::Is(args[1]))
+        {
+            // if value arg is missing, then it is undefined.
+            Var laneVar = args.Info.Count >= 3 ? args[2] : scriptContext->GetLibrary()->GetUndefined();
+            float result = SIMD128ExtractLane<JavascriptSIMDFloat32x4, 4, float>(args[1], laneVar, scriptContext);
 
-			return JavascriptNumber::ToVarWithCheck(result, scriptContext);
-		}
+            return JavascriptNumber::ToVarWithCheck(result, scriptContext);
+        }
 
-		JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdFloat32x4TypeMismatch, L"ExtractLane");
-	}
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdFloat32x4TypeMismatch, L"ExtractLane");
+    }
 
-	Var SIMDFloat32x4Lib::EntryReplaceLane(RecyclableObject* function, CallInfo callInfo, ...)
-	{
-		PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+    Var SIMDFloat32x4Lib::EntryReplaceLane(RecyclableObject* function, CallInfo callInfo, ...)
+    {
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
 
-		ARGUMENTS(args, callInfo);
-		ScriptContext* scriptContext = function->GetScriptContext();
+        ARGUMENTS(args, callInfo);
+        ScriptContext* scriptContext = function->GetScriptContext();
 
-		AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
-		Assert(!(callInfo.Flags & CallFlags_New));
+        AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
+        Assert(!(callInfo.Flags & CallFlags_New));
 
-		// first arg has to be of type float32x4, so cannot be missing. 
-		if (args.Info.Count >= 4 && JavascriptSIMDFloat32x4::Is(args[1]))
-		{
-			// if value arg is missing, then it is undefined.
-			Var laneVar = args.Info.Count >= 4 ? args[2] : scriptContext->GetLibrary()->GetUndefined();
-			Var argVal = args.Info.Count >= 4 ? args[3] : scriptContext->GetLibrary()->GetUndefined();
-			float value = JavascriptConversion::ToFloat(argVal, scriptContext);
+        // first arg has to be of type float32x4, so cannot be missing.
+        if (args.Info.Count >= 4 && JavascriptSIMDFloat32x4::Is(args[1]))
+        {
+            // if value arg is missing, then it is undefined.
+            Var laneVar = args.Info.Count >= 4 ? args[2] : scriptContext->GetLibrary()->GetUndefined();
+            Var argVal = args.Info.Count >= 4 ? args[3] : scriptContext->GetLibrary()->GetUndefined();
+            float value = JavascriptConversion::ToFloat(argVal, scriptContext);
 
-			SIMDValue result = SIMD128ReplaceLane<JavascriptSIMDFloat32x4, 4, float>(args[1], laneVar, value, scriptContext);
+            SIMDValue result = SIMD128ReplaceLane<JavascriptSIMDFloat32x4, 4, float>(args[1], laneVar, value, scriptContext);
 
-			return JavascriptSIMDFloat32x4::New(&result, scriptContext);
-		}
+            return JavascriptSIMDFloat32x4::New(&result, scriptContext);
+        }
 
-		JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdFloat32x4TypeMismatch, L"ReplaceLane");
-	}
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdFloat32x4TypeMismatch, L"ReplaceLane");
+    }
 
     // UnaryOps
     Var SIMDFloat32x4Lib::EntryAbs(RecyclableObject* function, CallInfo callInfo, ...)
@@ -343,7 +343,7 @@ namespace Js
         else
             JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdFloat32x4TypeMismatch, L"sqrt");
     }
-    
+
     Var SIMDFloat32x4Lib::EntryAdd(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
@@ -866,7 +866,7 @@ namespace Js
             Var lane1 = args[3];
             Var lane2 = args[4];
             Var lane3 = args[5];
-            
+
             return SIMD128SlowShuffle<JavascriptSIMDFloat32x4>(args[1], args[1], lane0, lane1, lane2, lane3, 4, scriptContext);
         }
 
@@ -898,7 +898,7 @@ namespace Js
             Var lane1 = args[4];
             Var lane2 = args[5];
             Var lane3 = args[6];
-            
+
             return SIMD128SlowShuffle<JavascriptSIMDFloat32x4>(args[1], args[2], lane0, lane1, lane2, lane3, 8, scriptContext);
         }
 
@@ -916,9 +916,9 @@ namespace Js
         Assert(!(callInfo.Flags & CallFlags_New));
 
         // we expect at least 3 explicit args with Float32x4 type
-        if (args.Info.Count >= 4 && 
-            JavascriptSIMDFloat32x4::Is(args[1]) && 
-            JavascriptSIMDFloat32x4::Is(args[2]) && 
+        if (args.Info.Count >= 4 &&
+            JavascriptSIMDFloat32x4::Is(args[1]) &&
+            JavascriptSIMDFloat32x4::Is(args[2]) &&
             JavascriptSIMDFloat32x4::Is(args[3]))
         {
             JavascriptSIMDFloat32x4 *t = JavascriptSIMDFloat32x4::FromVar(args[1]);
@@ -930,16 +930,16 @@ namespace Js
             tValue     = t->GetValue();
             lowerValue = lower->GetValue();
             upperValue = upper->GetValue();
-            
+
             resultValue = SIMDFloat32x4Operation::OpClamp(tValue, lowerValue, upperValue);
 
             return JavascriptSIMDFloat32x4::New(&resultValue, scriptContext);
-            
+
         }
 
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdFloat32x4TypeMismatch, L"clamp");
     }
-    
+
     Var SIMDFloat32x4Lib::EntrySelect(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
@@ -988,7 +988,7 @@ namespace Js
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         Assert(!(callInfo.Flags & CallFlags_New));
 
-        
+
         return SIMD128TypedArrayLoad<JavascriptSIMDFloat32x4>(args[1], args[2], 4 * TySize[TyFloat32], scriptContext);
     }
 

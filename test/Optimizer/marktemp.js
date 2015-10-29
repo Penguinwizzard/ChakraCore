@@ -41,14 +41,14 @@ function foo3()
     i = x1;
     for (var j = 0; j < 2; j++)
     {
-    	i = 3 + i;
-    	if (j == 0)
-    	{
-	   a = i;
-	}
+        i = 3 + i;
+        if (j == 0)
+        {
+           a = i;
+    }
     }
     if (a != 5.2 || i != 8.2) {
-	return false;
+        return false;
     }
     return true;
 }

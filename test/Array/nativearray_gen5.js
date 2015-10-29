@@ -3,15 +3,9 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-//Configuration: inline.xml
-//Testcase Number: 6664
-//Bailout Testing: ON
-//Switches:  -maxinterpretcount:6  
-//Baseline Switches: -nonative 
-//Branch:  fbl_ie_script_dev
-//Build: 130427-2030
+//Switches:  -maxinterpretcount:6
+//Baseline Switches: -nonative
 //Arch: X86
-//MachineName: BPTCloverTrail1
 var shouldBailout = true;
 function test0(){
   var obj1 = {};
@@ -36,24 +30,24 @@ function test0(){
 };
 
 // generate profile
-test0(); 
-test0(); 
-test0(); 
-test0(); 
-test0(); 
-test0(); 
+test0();
+test0();
+test0();
+test0();
+test0();
+test0();
 
 // run JITted code
 runningJITtedCode = true;
-test0(); 
-test0(); 
-test0(); 
-test0(); 
-test0(); 
-test0(); 
+test0();
+test0();
+test0();
+test0();
+test0();
+test0();
 
 // run code with bailouts enabled
 shouldBailout = true;
-test0(); 
+test0();
 
 WScript.Echo('pass');

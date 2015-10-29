@@ -8,7 +8,7 @@
 uint8 OpCodeToHash[Js::OpCode::Count];
 static Js::OpCode HashToOpCode[Js::OpCode::Count];
 
-class CSEInit 
+class CSEInit
 {
 public:
     // Initializer for OpCodeToHash and HashToOpCode maps.
@@ -241,7 +241,7 @@ GlobOpt::CSEAddInstr(
         }
         isArray = true;
 
-        // for typed array do not add instructions whose dst are guranteed to to be int or number 
+        // for typed array do not add instructions whose dst are guaranteed to be int or number
         // as we will try to eliminate bound check for these typed arrays
         if (src1Val->GetValueInfo()->IsLikelyOptimizedVirtualTypedArray())
         {
@@ -249,13 +249,17 @@ GlobOpt::CSEAddInstr(
         }
         break;
     }
-    
+
     case Js::OpCode::Mul_I4:
         // If int32 overflow is ignored, we only add MULs with 53-bit overflow check to expr map
         if (instr->HasBailOutInfo() && (instr->GetBailOutKind() & IR::BailOutOnMulOverflow) &&
             !instr->ShouldCheckFor32BitOverflow() && instr->ignoreOverflowBitCount != 53)
+        {
             return;
-        // fall through
+        }
+
+        // fall-through
+
     case Js::OpCode::Neg_I4:
     case Js::OpCode::Add_I4:
     case Js::OpCode::Sub_I4:
@@ -329,7 +333,7 @@ GlobOpt::CSEAddInstr(
     {
         this->currentBlock->globOptData.hasCSECandidates = true;
 
-        // Use LiveFields to track is object.valueOf/toString could get overriden.
+        // Use LiveFields to track is object.valueOf/toString could get overridden.
         IR::Opnd *src1 = instr->GetSrc1();
         if (src1)
         {
@@ -409,7 +413,7 @@ GlobOpt::CSEOptimize(BasicBlock *block, IR::Instr * *const instrRef, Value **pSr
             {
                 return false;
             }
-            // for typed array do not add instructions whose dst are guranteed to to be int or number 
+            // for typed array do not add instructions whose dst are guaranteed to be int or number
             // as we will try to eliminate bound check for these typed arrays
             if (src1Val->GetValueInfo()->IsLikelyOptimizedVirtualTypedArray())
             {
@@ -518,7 +522,7 @@ GlobOpt::CSEOptimize(BasicBlock *block, IR::Instr * *const instrRef, Value **pSr
     }
 
     // Make sure srcs still have same values
-    
+
     if (instr->GetSrc1())
     {
         if (!src1Val)
@@ -568,7 +572,7 @@ GlobOpt::CSEOptimize(BasicBlock *block, IR::Instr * *const instrRef, Value **pSr
 
         IR::Opnd *src1 = instr->GetSrc1();
 
-        if (instr->m_opcode != Js::OpCode::StElemI_A && instr->m_opcode != Js::OpCode::StElemI_A_Strict 
+        if (instr->m_opcode != Js::OpCode::StElemI_A && instr->m_opcode != Js::OpCode::StElemI_A_Strict
             && src1 && src1->IsRegOpnd())
         {
             StackSym *sym = src1->AsRegOpnd()->m_sym;
@@ -621,7 +625,7 @@ GlobOpt::CSEOptimize(BasicBlock *block, IR::Instr * *const instrRef, Value **pSr
             }
         }
     }
-    // in asmjs we can have a symstore with a different type 
+    // in asmjs we can have a symstore with a different type
     //  x = HEAPF32[i >> 2]
     //  y  = HEAPI32[i >> 2]
     if (instr->GetDst() && (instr->GetDst()->GetType() != symStore->AsStackSym()->GetType()))
@@ -633,19 +637,18 @@ GlobOpt::CSEOptimize(BasicBlock *block, IR::Instr * *const instrRef, Value **pSr
     // SIMD_JS
     if (instr->m_opcode == Js::OpCode::ExtendArg_A)
     {
-        // we don't want to CSE ExtendArgs, only the operation using them. To do that, we mimic CSE by transfering the symStore valueInfo to the dst.
+        // we don't want to CSE ExtendArgs, only the operation using them. To do that, we mimic CSE by transferring the symStore valueInfo to the dst.
         IR::Opnd *dst = instr->GetDst();
         Value *dstVal = this->FindValue(symStore);
         this->SetValue(&this->blockData, dstVal, dst);
         dst->AsRegOpnd()->m_sym->CopySymAttrs(symStore->AsStackSym());
         return false;
     }
-    
 
     //
     // Success, do the CSE rewrite.
     //
-    
+
 #if DBG_DUMP
     if (Js::Configuration::Global.flags.Trace.IsEnabled(Js::CSEPhase, this->func->GetSourceContextId(), this->func->GetLocalFunctionId()))
     {
@@ -736,26 +739,26 @@ GlobOpt::ProcessArrayValueKills(IR::Instr *instr)
     // These array helpers may change A.length (and A[i] could be A.length)...
     case Js::OpCode::InlineArrayPush:
     case Js::OpCode::InlineArrayPop:
-        this->blockData.liveArrayValues->ClearAll(); 
+        this->blockData.liveArrayValues->ClearAll();
         break;
 
     case Js::OpCode::CallDirect:
         Assert(instr->GetSrc1());
         switch(instr->GetSrc1()->AsHelperCallOpnd()->m_fnHelper)
-        {        
+        {
             // These array helpers may change A[i]
             case IR::HelperArray_Reverse:
             case IR::HelperArray_Shift:
             case IR::HelperArray_Unshift:
             case IR::HelperArray_Splice:
-                this->blockData.liveArrayValues->ClearAll(); 
+                this->blockData.liveArrayValues->ClearAll();
                 break;
         }
         break;
     default:
         if (instr->UsesAllFields())
         {
-            this->blockData.liveArrayValues->ClearAll(); 
+            this->blockData.liveArrayValues->ClearAll();
         }
         break;
     }
@@ -783,7 +786,7 @@ GlobOpt::DoCSE()
     {
         // Force always turn it on
         return true;
-    }   
+    }
 
     if (!this->DoFieldOpts(this->currentBlock->loop) && !GetIsAsmJSFunc())
     {
@@ -793,7 +796,7 @@ GlobOpt::DoCSE()
     return true;
 }
 
-bool                    
+bool
 GlobOpt::CanCSEArrayStore(IR::Instr *instr)
 {
     IR::Opnd *arrayOpnd = instr->GetDst();

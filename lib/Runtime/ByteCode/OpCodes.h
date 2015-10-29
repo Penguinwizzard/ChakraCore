@@ -61,7 +61,7 @@ MACRO(                  LargeLayoutPrefix,  Empty,          OpByteCodeOnly)
 MACRO(                  ExtendedLargeLayoutPrefix,Empty,    OpByteCodeOnly)
 
 MACRO(                  Nop,                        Empty,          None)      // No operation (Default value = 0)
-MACRO(                  StartCall,          StartCall,      OpSideEffect)      // 
+MACRO(                  StartCall,          StartCall,      OpSideEffect)      //
 MACRO_BACKEND_ONLY(     LoweredStartCall,   StartCall,      OpSideEffect)      // StartCall instruction after it's been lowered
 MACRO_BACKEND_ONLY(     StartCallAsmJsI,    StartCall,      OpSideEffect)      // StartCall instruction for asm.js internal calls
 MACRO_BACKEND_ONLY(     StartCallAsmJsE,    StartCall,      OpSideEffect)      // StartCall instruction for calls from asm.js to javascript
@@ -200,7 +200,7 @@ MACRO_WMS_PROFILED(     Div_A,              Reg3,           OpTempNumberProducin
 MACRO_WMS(              Mul_A,              Reg3,           OpTempNumberProducing|OpCallsValueOf|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpPostOpDbgBailOut|OpProducesNumber)  // Arithmetic '*'
 MACRO_WMS_PROFILED(     Rem_A,              Reg3,           OpTempNumberProducing|OpCallsValueOf|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpPostOpDbgBailOut|OpProducesNumber)  // Arithmetic '%'
 MACRO_WMS(              Sub_A,              Reg3,           OpTempNumberProducing|OpCallsValueOf|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpPostOpDbgBailOut|OpProducesNumber)  // Arithmetic '-' (subtract)
-MACRO_WMS(              Expo_A,             Reg3,           OpTempNumberProducing|OpCallsValueOf|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpPostOpDbgBailOut|OpProducesNumber)  // Arithmetic '**' (exponentiaton)
+MACRO_WMS(              Expo_A,             Reg3,           OpTempNumberProducing|OpCallsValueOf|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpPostOpDbgBailOut|OpProducesNumber)  // Arithmetic '**' (exponentiation)
 
 MACRO_WMS(              And_A,              Reg3,           OpTempNumberProducing|OpCallsValueOf|OpIsInt32|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpPostOpDbgBailOut|OpProducesNumber) // Bitwise '&'
 MACRO_WMS(              Or_A,               Reg3,           OpTempNumberProducing|OpCallsValueOf|OpIsInt32|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpPostOpDbgBailOut|OpProducesNumber) // Bitwise '|'
@@ -262,7 +262,7 @@ MACRO_WMS(              Conv_Obj,           Reg2,           OpSideEffect|OpPostO
 MACRO_EXTEND_WMS(       NewWithObject,      Reg2,           OpSideEffect | OpPostOpDbgBailOut)  // Wrap in a with Object
 MACRO_BACKEND_ONLY(     ToVar,              Reg2,           OpTempNumberProducing|OpTempNumberSources|OpCanCSE)  // Load from int32/float64 to Var(reg)
 // Load from Var(reg) to int32/float64, NOTE: always bail if it is not primitive. so no implicit call, but still mark with CallsValueOf so it won't get automatically dead stored
-// TODO: Consider changeing the code so we don't have mark this as CallsValueOf
+// TODO: Consider changing the code so we don't have mark this as CallsValueOf
 MACRO_BACKEND_ONLY(     FromVar,            Reg2,           OpTempNumberSources|OpTempObjectSources|OpCanCSE)
 MACRO_BACKEND_ONLY(     Conv_Prim,          Reg2,           OpTempNumberProducing|OpTempNumberSources|OpCanCSE|OpPostOpDbgBailOut)  // Convert between primitives (int32/float64)
 MACRO_BACKEND_ONLY(     Conv_Bool,          Reg2,           OpTempNumberSources|OpCanCSE)                           // Convert from i4 to bool
@@ -334,7 +334,7 @@ MACRO_WMS_PROFILED_OP(  LdFldForCallApplyTarget,  ElementCP,      OpSideEffect|O
 MACRO_WMS_PROFILED_OP(LdRootFld,              ElementRootCP,  OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut|OpCanLoadFixedFields)   // Load from ScriptObject instance's direct field (access to let/const on root object)
 MACRO_WMS_PROFILED_OP(LdMethodFld,            ElementCP,      OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut|OpCanLoadFixedFields)   // Load call target from ScriptObject instance's direct field
 MACRO_BACKEND_ONLY(     LdMethodFldPolyInlineMiss, ElementCP, OpSideEffect|OpHasImplicitCall|OpDoNotTransfer|OpPostOpDbgBailOut)                  // Load call target from ScriptObject instance's direct field, when the call target is neither of the ones we inlined using fixed methods, at a polymorphic call site,
-                                                                                                                                  // but dont allow it to participate in any obj type spec optimizations, as it will always result in a helper call.
+                                                                                                                                  // but don't allow it to participate in any obj type spec optimizations, as it will always result in a helper call.
 MACRO_WMS_PROFILED_OP(  LdRootMethodFld,      ElementRootCP,  OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut)   // Load call target from ScriptObject instance's direct field (access to let/const on root object)
 MACRO_WMS_PROFILED_OP(  StFld,                ElementCP,      OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut)   // Store into ScriptObject instance's direct field
 MACRO_EXTEND_WMS_AND_PROFILED_OP(StSuperFld,  ElementC2,      OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut)   // Store into ScriptObject super instance's direct field

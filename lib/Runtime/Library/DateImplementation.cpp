@@ -125,7 +125,7 @@ namespace Js {
     /// class DateImplementation
     ///
     ///----------------------------------------------------------------------------
-    ///----------------------------------------------------------------------------    
+    ///----------------------------------------------------------------------------
 
     DateImplementation::DateImplementation(double value, ScriptContext* scriptContext)
     {
@@ -149,7 +149,7 @@ namespace Js {
         return m_tvUtc;
     }
 
-    double 
+    double
     DateImplementation::NowFromHiResTimer(ScriptContext* scriptContext)
     {
         // Use current time.
@@ -162,12 +162,12 @@ namespace Js {
         return DoubleToTvUtc(DateImplementation::NowFromHiResTimer(scriptContext));
     }
 
-    JavascriptString* 
+    JavascriptString*
     DateImplementation::GetString(DateStringFormat dsf, DateTimeFlag noDateTime)
     {
         if (JavascriptNumber::IsNan(m_tvUtc))
         {
-            return m_scriptContext->GetLibrary()->GetInvalidDateString();            
+            return m_scriptContext->GetLibrary()->GetInvalidDateString();
         }
 
         switch (dsf)
@@ -197,7 +197,7 @@ namespace Js {
                 else
                 {
                     return GetDateDefaultString(&m_ymdLcl, &m_tzd, noDateTime, m_scriptContext);
-                } 
+                }
 
             case DateStringFormat::GMT:
                 EnsureYmdUtc();
@@ -205,7 +205,7 @@ namespace Js {
         }
     }
 
-    JavascriptString* 
+    JavascriptString*
     DateImplementation::GetISOString()
     {
         // ES5 15.9.5.43: throw RangeError if time value is not a finite number
@@ -218,26 +218,26 @@ namespace Js {
 
         GetDateComponent(bs, DateData::FullYear, 0);
         bs->AppendChars(L'-');
-        //month
+        // month
         GetDateComponent(bs, DateData::Month, 1/*adjustment*/);
         bs->AppendChars(L'-');
-        //date
+        // date
         GetDateComponent(bs, DateData::Date, 0);
         bs->AppendChars(L'T');
-        //hours
+        // hours
         GetDateComponent(bs, DateData::Hours, 0);
         bs->AppendChars(L':');
-        //minutes
+        // minutes
         GetDateComponent(bs, DateData::Minutes, 0);
         bs->AppendChars(L':');
-        //seconds
+        // seconds
         GetDateComponent(bs, DateData::Seconds, 0);
 
-        // ES5 fill in miliseconds but v5.8 does not
+        // ES5 fill in milliseconds but v5.8 does not
         bs->AppendChars(L'.');
-        //miliseconds
+        // milliseconds
         GetDateComponent(bs, DateData::Milliseconds, 0);
-        
+
         bs->AppendChars(L'Z');
 
         return bs;
@@ -281,7 +281,7 @@ namespace Js {
                     else
                     {
                         break;
-                    }                    
+                    }
                     // fall through
 
                 case DateData::Milliseconds:
@@ -325,10 +325,10 @@ namespace Js {
     DateImplementation::SetTvUtc(double tv)
     {
         m_grfval = 0;
-        m_tvUtc = DoubleToTvUtc(tv);        
+        m_tvUtc = DoubleToTvUtc(tv);
     }
 
-    double 
+    double
     DateImplementation::DoubleToTvUtc(double tv)
     {
         if (JavascriptNumber::IsNan(tv) || tv < ktvMin || tv > ktvMax)
@@ -351,7 +351,7 @@ namespace Js {
         m_tvUtc  = GetTvUtc(tv, m_scriptContext);
     }
 
-    JavascriptString* 
+    JavascriptString*
     DateImplementation::ConvertVariantDateToString(double dbl, ScriptContext* scriptContext)
     {
         Js::DateImplementation::TZD tzd;
@@ -383,7 +383,7 @@ namespace Js {
     DateImplementation::GetDateGmtString(Js::YMD *pymd,ScriptContext* scriptContext)
     {
         // toUTCString() or toGMTString() will return for example:
-        //  "Thu, 02 Feb 2012 09:02:03 GMT" for versions IE11 or above     
+        //  "Thu, 02 Feb 2012 09:02:03 GMT" for versions IE11 or above
 
         CompoundString *const bs = CompoundString::NewWithCharCapacity(30, scriptContext->GetLibrary());
 
@@ -429,7 +429,7 @@ namespace Js {
         bs->AppendChars(static_cast<WORD>((pymd->time / 1000) % 60), 2, ConvertUInt16ToString_ZeroPad_2);
         bs->AppendChars(L' ');
 
-        bs->AppendChars(L"GMT");        
+        bs->AppendChars(L"GMT");
 
         return bs;
     }
@@ -474,7 +474,7 @@ namespace Js {
                 if (PRIMARYLANGID(LANGIDFROMLCID(lcid)) == LANG_HEBREW)
                 {
                     // Can't support some Hebrew dates - current limit is 1 Jan AD 2240
-                    Js::JavascriptError::ThrowRangeError(scriptContext, VBSERR_CantDisplayDate); 
+                    Js::JavascriptError::ThrowRangeError(scriptContext, VBSERR_CantDisplayDate);
                 }
 
                 AssertMsg(false, "GetDateFormat failed");
@@ -494,7 +494,7 @@ namespace Js {
             cch += c;
         }
         cch++; // For the space between the date and the time.
-    
+
         if( cch > kcchMax )
         {
             pwszBuf = pToBeFreed = (WCHAR *)malloc( cch * sizeof(WCHAR) );
@@ -528,7 +528,7 @@ namespace Js {
                 if (PRIMARYLANGID(LANGIDFROMLCID(lcid)) == LANG_HEBREW)
                 {
                     // Can't support some Hebrew dates - current limit is 1 Jan AD 2240
-                    Js::JavascriptError::ThrowRangeError(scriptContext, VBSERR_CantDisplayDate); 
+                    Js::JavascriptError::ThrowRangeError(scriptContext, VBSERR_CantDisplayDate);
                 }
 
                 AssertMsg(false, "GetDateFormat failed");
@@ -592,10 +592,10 @@ Error:
         {
         case DateData::Year:
             Assert(scriptContext);
-            
-            // WOOB bug 1099381: ES5 spec B.2.4: getYear() must return YearFromTime() - 1900. 
+
+            // WOOB bug 1099381: ES5 spec B.2.4: getYear() must return YearFromTime() - 1900.
             // Note that negative value is OK for the spec.
-            value = pymd->year - 1900;            
+            value = pymd->year - 1900;
             break;
         case DateData::FullYear:
             value = pymd->year;
@@ -632,7 +632,7 @@ Error:
 
         return value;
     }
-    
+
     inline bool
     DateImplementation::FBig(wchar_t ch)
     {
@@ -1021,7 +1021,7 @@ Error:
         if (nullptr == psz)
         {
             retVal = JavascriptNumber::NaN;
-            return true;            
+            return true;
         }
 
         // Try to parse the string as the ISO format first
@@ -1030,7 +1030,7 @@ Error:
             return true;
         }
 
-        enum 
+        enum
         {
             ssNil,
             ssMinutes,
@@ -1045,7 +1045,7 @@ Error:
         wchar_t *pchBase;
         wchar_t *pch;
         wchar_t ch;
-        wchar_t *pszSrc = nullptr; 
+        wchar_t *pszSrc = nullptr;
 
         const long lwNil = 0x80000000;
         long cch;
@@ -1066,11 +1066,11 @@ Error:
         int tAmPm = 0;
         int tBcAd = 0;
 
-        double tv = JavascriptNumber::NaN; // Inited for error handling.
+        double tv = JavascriptNumber::NaN; // Initialized for error handling.
 
         //Create a copy to analyze
         BEGIN_TEMP_ALLOCATOR(tempAllocator, scriptContext, L"UtcTimeFromStr");
-        
+
         pszSrc = AnewArray(tempAllocator, wchar_t, ulength + 1);
 
         size_t size = sizeof(wchar_t) * (ulength + 1);
@@ -1139,7 +1139,7 @@ Error:
             {
                 for ( ; !FBig(*pch) && (isalpha(*pch) || '.' == *pch); pch++)
                     ;
-                
+
                 cch = (long)(pch - pchBase);
 
                 if ('.' == pchBase[cch - 1])
@@ -1268,7 +1268,6 @@ Error:
             {
                 goto LError;
             }
-            //Assert(lwT >= 0);
 
             // skip to the next real character
             while (0 != (ch = *pch) && (ch <= ' ' || classifier->IsBiDirectionalChar(ch)))
@@ -1372,7 +1371,7 @@ Error:
                 {
                     // assumptions for getting a YEAR:
                     //    - an absolute value greater or equal than 70 (thus not hour!)
-                    //    - wasn't preceeded by negative sign for -version:5 year format
+                    //    - wasn't preceded by negative sign for -version:5 year format
                     if (lwT >= 70 || isNextFieldDateNegativeVersion5)
                     {
                         // assume it's a year - this is used particularly as version:5 year parsing
@@ -1597,7 +1596,7 @@ LError:
             // is treated as 1.
             if (ivar >= (args.Info.Count - 1))
             {
-                rgdbl[ivar] = (ivar == 2); 
+                rgdbl[ivar] = (ivar == 2);
                 continue;
             }
 #pragma prefast(suppress:6001, "rgdbl index ivar < args.Info.Count - 1 are initialized")
@@ -1640,10 +1639,10 @@ LError:
     };
 
     double DateImplementation::SetDateData(Arguments args, DateData dd, bool fUtc, ScriptContext* scriptContext)
-    {        
-        // This must accomodate the largest cvar in mpddcvar.
+    {
+        // This must accommodate the largest cvar in mpddcvar.
         double rgdbl[5];
-        
+
         double tv = 0;
         Js::YMD *pymd = NULL;
         Js::YMD emptyYMD = {0};
@@ -1678,14 +1677,14 @@ LError:
         }
 
         if ((count = ivar) < 1)
-        {          
+        {
             goto LSetNan;
         }
 
         if (JavascriptNumber::IsNan(m_tvUtc))
         {
-            
-            
+
+
             // If the current time is not finite, the only way we can end up
             // with non-NaN is for setFullYear/setYear.
             // See ES5 15.9.5.40, ES5 B.2.5.
@@ -1694,7 +1693,7 @@ LError:
                 goto LSetNan;
             }
             pymd = &emptyYMD;           // We need mon, mday, time to be 0.
-            // Fall through to DateData::Year and DataData::FullYear cases below.            
+            // Fall through to DateData::Year and DataData::FullYear cases below.
         }
         else
         {
@@ -1716,10 +1715,9 @@ LError:
         switch (dd)
         {
         case DateData::Year:
-            //Assert(count == 1);
             if (rgdbl[0] < 100 && rgdbl[0] >= 0)
                 rgdbl[0] += 1900;
-            // fall thru
+            // fall-through
         case DateData::FullYear:
     LFullYear:
             if (count < 3)
@@ -1745,36 +1743,35 @@ LError:
             {
                 break;
             }
-            // fall through
+            // fall-through
         case DateData::Hours:
             tv += (rgdbl[ivar] - (pymd->time / 3600000)) * 3600000;
             if (++ivar >= count)
             {
                 break;
             }
-            // fall through
+            // fall-through
         case DateData::Minutes:
             tv += (rgdbl[ivar] - (pymd->time / 60000) % 60) * 60000;
             if (++ivar >= count)
             {
                 break;
             }
-            // fall through
+            // fall-through
         case DateData::Seconds:
             tv += (rgdbl[ivar] - (pymd->time / 1000) % 60) * 1000;
             if (++ivar >= count)
             {
                 break;
             }
-            // fall through
+            // fall-through
         case DateData::Milliseconds:
             tv += rgdbl[ivar] - pymd->time % 1000;
-            //Assert(ivar + 1 == count);
             break;
         default:
             AssertMsg(false, "DataData type invalid");
         }
-   
+
         if (fUtc)
         {
             SetTvUtc(tv);
@@ -1788,7 +1785,6 @@ LError:
         return m_tvUtc;
 
     LSetNan:
-        
         m_grfval = 0;
         m_tvUtc = JavascriptNumber::NaN;
         m_modified = true;
@@ -1796,5 +1792,4 @@ LError:
         return m_tvUtc;
     }
 
-    
 } // namespace Js

@@ -84,7 +84,7 @@ struct InlineeFrameRecord
     InlineeFrameInfo* frameInfo;
 #endif
 
-    // Fields are zero initialzed any way
+    // Fields are zero initialized any way
     InlineeFrameRecord(uint argCount, Js::FunctionBody* functionBody, InlineeFrameInfo* frameInfo) : argCount(argCount)
 #if DBG_DUMP
         , functionBody(functionBody)

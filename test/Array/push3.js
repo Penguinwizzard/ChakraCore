@@ -42,16 +42,16 @@ var GiantPrintArray = [];
   var obj1 = {};
   var func1 = function(){
     try {
-      GiantPrintArray.push(obj1.a);   
+      GiantPrintArray.push(obj1.a);
     }
     catch(ex) {
         WScript.Echo(ex.message);
     }
   }
-  func1(); 
-  
+  func1();
+
   function v31079()
-  {        
+  {
     Object.defineProperty(Array.prototype, "4", {configurable : true, get: function(){return 15;}});
     try {
       GiantPrintArray.push(1);
@@ -62,12 +62,12 @@ var GiantPrintArray = [];
     }
 
   }
-  
+
   v31079();
   v31079();
-  
-  for(var i =0;i<GiantPrintArray.length;i++){ 
- WScript.Echo(GiantPrintArray[i]); 
+
+  for(var i =0;i<GiantPrintArray.length;i++){
+ WScript.Echo(GiantPrintArray[i]);
  };
 }
 test2();

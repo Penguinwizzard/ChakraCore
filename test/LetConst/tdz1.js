@@ -167,14 +167,14 @@ write(eval('typeof t'));
     }
 
     try {
-        // this works in a try/catch because Use Before Declaration is always a runtime error by the spec -- kinda odd, eh?
+        // this works in a try/catch because Use Before Declaration is always a runtime error by the spec
         let a = a;
     } catch (e) {
         write(e);
     }
 
     try {
-        // this works in a try/catch because Use Before Declaration is always a runtime error by the spec -- kinda odd, eh?
+        // this works in a try/catch because Use Before Declaration is always a runtime error by the spec
         const a = a;
     } catch (e) {
         write(e);

@@ -21,7 +21,7 @@ LPWSTR JsUtil::ExternalApi::GetFeatureKeyName()
 
 extern "C"
 {
-    // TODO: For now, ChakraCore runs only platform that has MessageBoxW API
+    // For now, ChakraCore runs only platform that has MessageBoxW API
     bool IsMessageBoxWPresent()
     {
         return true;

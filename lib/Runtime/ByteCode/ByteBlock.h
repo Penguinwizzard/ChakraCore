@@ -6,7 +6,7 @@
 
 namespace Js
 {
-    class ByteBlock 
+    class ByteBlock
     {
         DECLARE_OBJECT(ByteBlock)
 
@@ -23,7 +23,7 @@ namespace Js
         { }
         ByteBlock(uint size, Recycler *alloc) : m_contentSize(size)
         {
-            // The New function below will copy over a buffer into this so 
+            // The New function below will copy over a buffer into this so
             // we don't need to zero it out
             m_content = RecyclerNewArrayLeaf(alloc, byte, size);
         }
@@ -32,13 +32,13 @@ namespace Js
         {
             m_content = AnewArray(alloc, byte, size);
         }
-        
+
         static DWORD GetBufferOffset() { return offsetof(ByteBlock, m_content); }
 
         static ByteBlock* New(Recycler* alloc,const byte * initialContent,int initialContentSize);
 
         // This is needed just for the debugger since it allocates
-        // the byte block on a seperate thread, which the recycler doesn't like
+        // the byte block on a separate thread, which the recycler doesn't like
         // To remove when the recycler supports multi-threaded allocation
         static ByteBlock* NewFromArena(ArenaAllocator* alloc,const byte * initialContent,int initialContentSize);
 

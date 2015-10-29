@@ -36,8 +36,6 @@ bool MarkContext::AddTrackedObject(FinalizableObject * obj)
 #endif
 
     FAULTINJECT_MEMORY_MARK_NOTHROW(L"AddTrackedObject", 0);
-
-    // CONSIDER: Stats?
     
     return trackStack.Push(obj);
 }

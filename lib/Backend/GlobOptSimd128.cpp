@@ -40,7 +40,7 @@ Value **pDstVal
             }
         }
         return false;
-        
+
     case Js::OpCode::Ld_A:
         if (instr->GetSrc1()->IsRegOpnd())
         {
@@ -65,7 +65,7 @@ Value **pDstVal
             TypeSpecializeSimd128Dst(type, instr, *pSrc1Val, *pSrc1Val, pDstVal);
             return true;
         }
-        
+
         return false;
 
     case Js::OpCode::ExtendArg_A:
@@ -76,7 +76,7 @@ Value **pDstVal
             Assert(instr->GetDst()->GetType() == TyVar);
             ValueType valueType = instr->GetDst()->GetValueType();
 
-            // Type-specializeing EA. 
+            // Type-specializing EA.
             // Ensure that the Var sym is alive, in case we decide to roll back type-specialization of EAs.
             //ToVarUses(instr, instr->GetSrc1(), false, *pSrc1Val);
 
@@ -99,8 +99,8 @@ Value **pDstVal
         Js::JavascriptLibrary::SimdFuncSignature simdFuncSignature;
         instr->m_func->GetScriptContext()->GetLibrary()->GetSimdFuncSignatureFromOpcode(instr->m_opcode, simdFuncSignature);
         // type-spec logic
-        
-        // For op with ExtendArg. All sources are already type-specialized, just type-specialize dst    
+
+        // For op with ExtendArg. All sources are already type-specialized, just type-specialize dst
         if (simdFuncSignature.argCount <= 2)
         {
             Assert(instr->GetSrc1());
@@ -150,7 +150,7 @@ Value **pDstVal
                 this->byteCodeUses = nullptr;
             }
             RemoveCodeAfterNoFallthroughInstr(bailoutInstr);
-            return true; 
+            return true;
         }
     }
     return false;
@@ -161,7 +161,7 @@ GlobOpt::Simd128DoTypeSpec(IR::Instr *instr, const Value *src1Val, const Value *
 {
     bool doTypeSpec = true;
 
-    // ToDo: Some operations require additional opnd constraints (e.g. shuffle/swizzle).
+    // TODO: Some operations require additional opnd constraints (e.g. shuffle/swizzle).
     if (Js::IsSimd128Opcode(instr->m_opcode))
     {
         Js::JavascriptLibrary::SimdFuncSignature simdFuncSignature;
@@ -177,7 +177,7 @@ GlobOpt::Simd128DoTypeSpec(IR::Instr *instr, const Value *src1Val, const Value *
         case 2:
             Assert(src2Val);
             doTypeSpec = doTypeSpec && Simd128CanTypeSpecOpnd(src2Val->GetValueInfo()->Type(), simdFuncSignature.args[1]);
-            // fall through
+            // fall-through
         case 1:
             Assert(src1Val);
             doTypeSpec = doTypeSpec && Simd128CanTypeSpecOpnd(src1Val->GetValueInfo()->Type(), simdFuncSignature.args[0]);
@@ -186,8 +186,8 @@ GlobOpt::Simd128DoTypeSpec(IR::Instr *instr, const Value *src1Val, const Value *
         {
             // extended args
             Assert(argCount > 2);
-            // Check if all args have been type specialized. 
-            
+            // Check if all args have been type specialized.
+
             int arg = argCount - 1;
             IR::Instr * eaInstr = GetExtendedArg(instr);
 
@@ -195,12 +195,12 @@ GlobOpt::Simd128DoTypeSpec(IR::Instr *instr, const Value *src1Val, const Value *
             {
                 Assert(eaInstr);
                 Assert(eaInstr->m_opcode == Js::OpCode::ExtendArg_A);
-                
+
                 ValueType expectedType = simdFuncSignature.args[arg];
                 IR::Opnd * opnd = eaInstr->GetSrc1();
                 StackSym * sym = opnd->GetStackSym();
-                
-                // In Forward Prepass: Check liveness through liveness bits, not IR type, since in prepass no actual type-spec happens. 
+
+                // In Forward Prepass: Check liveness through liveness bits, not IR type, since in prepass no actual type-spec happens.
                 // In the Forward Pass: Check IRType since Sym can be null, because of const prop.
                 if (expectedType.IsSimd128Float32x4())
                 {
@@ -239,7 +239,7 @@ GlobOpt::Simd128DoTypeSpec(IR::Instr *instr, const Value *src1Val, const Value *
                 eaInstr = GetExtendedArg(instr);
                 arg--;
             }
-            // all args are type-spec'ed
+            // all args are type-spec'd
             doTypeSpec = true;
         }
         }
@@ -260,7 +260,7 @@ GlobOpt::Simd128DoTypeSpec(IR::Instr *instr, const Value *src1Val, const Value *
 // Opnd type is Object. e.g. possibly result of merging different SIMD types.
 // Simd128 values merged with Undefined/Null are still specialized.
 
-// /* Opnd type is LikelyUndefined: we don't have profile info for the opearnds. */
+// /* Opnd type is LikelyUndefined: we don't have profile info for the operands. */
 
 bool GlobOpt::Simd128CanTypeSpecOpnd(const ValueType opndType, ValueType expectedType)
 {
@@ -269,10 +269,10 @@ bool GlobOpt::Simd128CanTypeSpecOpnd(const ValueType opndType, ValueType expecte
         // Non-Simd types can be coerced or we bailout by a FromVar.
         return true;
     }
-    
+
     if (
-            (opndType.IsLikelyObject() && opndType.ToDefiniteObject() == expectedType) || 
-            (opndType.IsLikelyObject() && opndType.GetObjectType() == ObjectType::Object) 
+            (opndType.IsLikelyObject() && opndType.ToDefiniteObject() == expectedType) ||
+            (opndType.IsLikelyObject() && opndType.GetObjectType() == ObjectType::Object)
             // ||
             //opndType.IsLikelyUndefined()
        )
@@ -300,7 +300,7 @@ IR::Instr * GlobOpt::GetExtendedArg(IR::Instr *instr)
         else
         {
             // end of chain
-            return nullptr; 
+            return nullptr;
         }
     }
     else
@@ -348,7 +348,7 @@ ValueType GlobOpt::GetValueTypeFromIRType(const IRType &type)
         return ValueType::GetSimd128(ObjectType::Simd128Int32x4);
     default:
         Assert(UNREACHED);
-        
+
     }
     return ValueType::UninitializedObject;
 

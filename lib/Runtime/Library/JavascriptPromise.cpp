@@ -29,7 +29,7 @@ namespace Js
 
         CHAKRATEL_LANGSTATS_INC_BUILTINCOUNT(PromiseCount);
 
-        // SkipDefaultNewObject function flag should have revent the default object
+        // SkipDefaultNewObject function flag should have prevented the default object from
         // being created, except when call true a host dispatch
         Var newTarget = callInfo.Flags & CallFlags_NewTarget ? args.Values[args.Info.Count] : args[0];
         bool isCtorSuperCall = (callInfo.Flags & CallFlags_New) && newTarget != nullptr && RecyclableObject::Is(newTarget);
@@ -157,7 +157,7 @@ namespace Js
         ScriptContext* scriptContext = function->GetScriptContext();
 
         AUTO_TAG_NATIVE_LIBRARY_ENTRY(function, callInfo, L"Promise.all");
-                
+
         // 1. Let C be the this value.
         Var constructor = args[0];
 
@@ -189,15 +189,15 @@ namespace Js
         JavascriptPromiseCapability* promiseCapability = NewPromiseCapability(constructor, scriptContext);
 
         // We know that constructor is an object at this point - further, we even know that it is a constructor - because NewPromiseCapability
-        // would throw otherwise. That means we can safely cast constructor into a RecyclableObject* now and avoid having to perform ToObject 
+        // would throw otherwise. That means we can safely cast constructor into a RecyclableObject* now and avoid having to perform ToObject
         // as part of the Invoke operation performed inside the loop below.
         RecyclableObject* constructorObject = RecyclableObject::FromVar(constructor);
 
         uint32 index = 0;
         JavascriptArray* values;
 
-        // We can't use a simple counter for the remaining element count since each Promise.all Resolve Element Function needs to know how many 
-        // elements are remaining when it runs and needs to update that counter for all other functions created by this call to Promise.all. 
+        // We can't use a simple counter for the remaining element count since each Promise.all Resolve Element Function needs to know how many
+        // elements are remaining when it runs and needs to update that counter for all other functions created by this call to Promise.all.
         // We can't just use a static variable, either, since this element count is only used for the Promise.all Resolve Element Functions created
         // by this call to Promise.all.
         JavascriptPromiseAllResolveElementFunctionRemainingElementsWrapper* remainingElementsWrapper = RecyclerNewStructZ(scriptContext->GetRecycler(), JavascriptPromiseAllResolveElementFunctionRemainingElementsWrapper);
@@ -349,7 +349,7 @@ namespace Js
         // 4. ReturnIfAbrupt(S).
         // 5. If S is neither undefined nor null, let C be S.
         constructor = JavascriptOperators::GetSpecies(RecyclableObject::FromVar(constructor), scriptContext);
-        
+
         Var undefinedVar = scriptContext->GetLibrary()->GetUndefined();
         Var iterable;
 
@@ -367,7 +367,7 @@ namespace Js
         JavascriptPromiseCapability* promiseCapability = NewPromiseCapability(constructor, scriptContext);
 
         // We know that constructor is an object at this point - further, we even know that it is a constructor - because NewPromiseCapability
-        // would throw otherwise. That means we can safely cast constructor into a RecyclableObject* now and avoid having to perform ToObject 
+        // would throw otherwise. That means we can safely cast constructor into a RecyclableObject* now and avoid having to perform ToObject
         // as part of the Invoke operation performed inside the loop below.
         RecyclableObject* constructorObject = RecyclableObject::FromVar(constructor);
 
@@ -376,7 +376,7 @@ namespace Js
             // 8. Let iterator be GetIterator(iterable).
             RecyclableObject* iterator = JavascriptOperators::GetIterator(iterable, scriptContext);
             Var next;
-            
+
             while (JavascriptOperators::IteratorStepAndValue(iterator, scriptContext, &next))
             {
                 Var resolveVar = JavascriptOperators::GetProperty(constructorObject, Js::PropertyIds::resolve, scriptContext);
@@ -461,8 +461,8 @@ namespace Js
         // 3. Let promiseCapability be NewPromiseCapability(C).
         // 4. ReturnIfAbrupt(promiseCapability).
         JavascriptPromiseCapability* promiseCapability = NewPromiseCapability(constructor, scriptContext);
-        
-        // 5. Let rejectResult be Call(promiseCapability.[[Reject]], undefined, «r»).
+
+        // 5. Let rejectResult be Call(promiseCapability.[[Reject]], undefined, "r").
         // 6. ReturnIfAbrupt(rejectResult).
         RecyclableObject* reject = promiseCapability->GetReject();
         reject->GetEntryPoint()(reject, CallInfo(CallFlags_Value, 2),
@@ -505,7 +505,7 @@ namespace Js
             x = undefinedVar;
         }
 
-        // 3. If IsPromise(x) is true, 
+        // 3. If IsPromise(x) is true,
         if (JavascriptPromise::Is(x))
         {
             // a. Let xConstructor be Get(x, "constructor").
@@ -523,7 +523,7 @@ namespace Js
         // 5. ReturnIfAbrupt(promiseCapability).
         JavascriptPromiseCapability* promiseCapability = NewPromiseCapability(constructor, scriptContext);
 
-        // 6. Let resolveResult be Call(promiseCapability.[[Resolve]], undefined, «x»).
+        // 6. Let resolveResult be Call(promiseCapability.[[Resolve]], undefined, "x").
         // 7. ReturnIfAbrupt(resolveResult).
         RecyclableObject* resolve = promiseCapability->GetResolve();
         resolve->GetEntryPoint()(resolve, CallInfo(CallFlags_Value, 2),
@@ -1176,7 +1176,7 @@ namespace Js
         Assert(JavascriptPromiseResolveOrRejectFunction::Is(var));
 
         return static_cast<JavascriptPromiseResolveOrRejectFunction*>(var);
-    }    
+    }
 
     JavascriptPromise* JavascriptPromiseResolveOrRejectFunction::GetPromise()
     {

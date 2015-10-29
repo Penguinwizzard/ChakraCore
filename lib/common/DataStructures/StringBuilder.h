@@ -33,14 +33,14 @@ namespace Js
 
         const static charcount_t MaxRealloc = 64;
         TAllocator* alloc;
-        // First chunk is just a buffer, and which can be detached without copiing.
+        // First chunk is just a buffer, and which can be detached without copying.
         Data *firstChunk;
-        // Second chunk is a chained list of chunks.  UnChain() needs to be called to copy the first chunk 
+        // Second chunk is a chained list of chunks.  UnChain() needs to be called to copy the first chunk
         // and the list of chained chunks to a single buffer on calls to GetBuffer().
         Data *secondChunk;
         Data *lastChunk;
         wchar_t * appendPtr;
-        charcount_t length; // Total capacity (allocated number of elements - 1), in all chunks. Note that we keep one allocated element which is not accounted in length for terminating '\0'. 
+        charcount_t length; // Total capacity (allocated number of elements - 1), in all chunks. Note that we keep one allocated element which is not accounted in length for terminating '\0'.
         charcount_t count;  // Total number of elements, in all chunks.
         charcount_t firstChunkLength;
         charcount_t initialSize;
@@ -58,17 +58,17 @@ namespace Js
             charcount_t bufLength = (charcount_t)size_t_length;
             Assert(bufLength == size_t_length);
 
-            Data *newChunk = AllocatorNewStructPlus(TAllocator, this->alloc, allocation, Data); 
+            Data *newChunk = AllocatorNewStructPlus(TAllocator, this->alloc, allocation, Data);
 
             newChunk->u.chained.length = bufLength;
             newChunk->u.chained.next = NULL;
 
-            // Recycler gives zero'd memory, so rely on that instead of memset'ing the tail
+            // Recycler gives zeroed memory, so rely on that instead of memsetting the tail
 #if 0
             // Align memset to machine register size for perf
-            bufLengthRequested &= ~(sizeof(size_t) - 1); 
+            bufLengthRequested &= ~(sizeof(size_t) - 1);
             memset(newChunk->u.chained.buffer + bufLengthRequested, 0, (bufLength - bufLengthRequested) * sizeof(wchar_t));
-#endif           
+#endif
             return newChunk;
         }
 
@@ -96,7 +96,7 @@ namespace Js
             }
             Assert(newLength <= MaxLength);
 
-            Data* newChunk = AllocatorNewStructPlus(TAllocator, this->alloc, allocation, Data); 
+            Data* newChunk = AllocatorNewStructPlus(TAllocator, this->alloc, allocation, Data);
             newChunk->u.single.buffer[newLength] = L'\0';
 
             *pBufLengthRequested = newLength;
@@ -203,12 +203,12 @@ namespace Js
             return AllocatorNew(TAllocator, alloc, StringBuilder<TAllocator>, alloc, initialSize);
         }
 
-        StringBuilder(TAllocator* alloc) 
+        StringBuilder(TAllocator* alloc)
         {
             new (this) StringBuilder(alloc, 0);
         }
 
-        StringBuilder(TAllocator* alloc, charcount_t initialSize) : alloc(alloc), length(0), count(0), firstChunk(NULL), 
+        StringBuilder(TAllocator* alloc, charcount_t initialSize) : alloc(alloc), length(0), count(0), firstChunk(NULL),
             secondChunk(NULL), appendPtr(NULL), initialSize(initialSize)
         {
             if (initialSize > MaxLength)
@@ -284,18 +284,18 @@ namespace Js
             }
         }
 
-        inline wchar_t* Buffer() 
-        { 
+        inline wchar_t* Buffer()
+        {
             if (this->IsChained())
             {
                 this->UnChain();
-            } 
+            }
 
             if (this->firstChunk)
             {
                 this->firstChunk->u.single.buffer[this->count] = L'\0';
 
-                return this->firstChunk->u.single.buffer; 
+                return this->firstChunk->u.single.buffer;
             }
             else
             {
@@ -387,7 +387,7 @@ namespace Js
 
         void IncreaseCount(charcount_t countInc)
         {
-            if(countInc == 0) return; 
+            if(countInc == 0) return;
 
             this->count += countInc;
             this->appendPtr += countInc;

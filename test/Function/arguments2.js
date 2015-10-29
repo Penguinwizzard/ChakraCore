@@ -348,8 +348,8 @@ function Test13() {
     function inner13() {
         arguments.capture = function() { _t13 = this }
 
-	    with(arguments)
-		    capture();
+        with(arguments)
+            capture();
     }
 
     inner13("sentinel");
@@ -373,9 +373,6 @@ function TestBuiltInProperty(propName) {
 
 TestBuiltInProperty("callee");
 TestBuiltInProperty("length");
-
-// TODO: Currently, caller does not get deleted - we should fix this!
-//TestBuiltInProperty("caller");
 
 function Test15() {
     var count = 0;

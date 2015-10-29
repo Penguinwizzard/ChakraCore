@@ -1,9 +1,9 @@
-//----------------------------------------------------------------------------
-// Copyright (C) Microsoft. All rights reserved. 
-//----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
 
 #pragma once
-
 
 template <bool interlocked>
 __inline
@@ -45,9 +45,9 @@ HeapBlockMap32::MarkInternal(L2MapChunk * chunk, void * candidate)
     return false;
 }
 
-// 
+//
 // Mark a particular object
-// If the object is already marked, or if it's invalid, return true 
+// If the object is already marked, or if it's invalid, return true
 // (indicating there's no further processing to be done for this object)
 // If the object is newly marked, then the out param heapBlock is written to, and false is returned
 //
@@ -82,19 +82,19 @@ HeapBlockMap32::Mark(void * candidate, MarkContext * markContext)
     case HeapBlock::HeapBlockType::FreeBlockType:
         // False reference.  Do nothing.
         break;
-        
+
     case HeapBlock::HeapBlockType::SmallLeafBlockType:
     case HeapBlock::HeapBlockType::MediumLeafBlockType:
         // Leaf blocks don't need to be scanned.  Do nothing.
         break;
-        
+
     case HeapBlock::HeapBlockType::SmallNormalBlockType:
 #ifdef RECYCLER_WRITE_BARRIER
     case HeapBlock::HeapBlockType::SmallNormalBlockWithBarrierType:
 #endif
         {
             byte bucketIndex = chunk->blockInfo[id2].bucketIndex;
-            
+
             // See if it's an invalid offset using the invalid bit vector and if so, do nothing.
             if (!HeapInfo::GetInvalidBitVectorForBucket<SmallAllocationBlockAttributes>(bucketIndex)->Test(SmallHeapBlock::GetAddressBitIndex(candidate)))
             {
@@ -141,7 +141,7 @@ HeapBlockMap32::Mark(void * candidate, MarkContext * markContext)
     case HeapBlock::HeapBlockType::LargeBlockType:
         ((LargeHeapBlock*)chunk->map[id2])->Mark(candidate, markContext);
         break;
-        
+
 #if DBG
     default:
         AssertMsg(false, "what's the new heap block type?");
@@ -174,8 +174,8 @@ HeapBlockMap32::MarkInteriorInternal(MarkContext * markContext, L2MapChunk *& ch
             // We crossed a node boundary (very rare) so we should just re-start from the real candidate.
             // In this case we are no longer marking an interior reference.
             markContext->GetRecycler()->heapBlockMap.Mark<interlocked>(realCandidate, markContext);
-            
-            // This mark code therefore has nothing to do (it has already happened). 
+
+            // This mark code therefore has nothing to do (it has already happened).
             return true;
         }
 #endif
@@ -208,7 +208,7 @@ HeapBlockMap32::MarkInterior(void * candidate, MarkContext * markContext)
         // Already marked (mark internal-then-actual first)
         return;
     }
-    
+
     uint id2 = GetLevel2Id(candidate);
     HeapBlock::HeapBlockType blockType = chunk->blockInfo[id2].blockType;
 
@@ -218,12 +218,12 @@ HeapBlockMap32::MarkInterior(void * candidate, MarkContext * markContext)
     case HeapBlock::HeapBlockType::FreeBlockType:
         // False reference.  Do nothing.
         break;
-        
+
     case HeapBlock::HeapBlockType::SmallLeafBlockType:
     case HeapBlock::HeapBlockType::MediumLeafBlockType:
         // Leaf blocks don't need to be scanned.  Do nothing.
         break;
-        
+
     case HeapBlock::HeapBlockType::SmallNormalBlockType:
 #ifdef RECYCLER_WRITE_BARRIER
     case HeapBlock::HeapBlockType::SmallNormalBlockWithBarrierType:
@@ -256,7 +256,7 @@ HeapBlockMap32::MarkInterior(void * candidate, MarkContext * markContext)
             {
                 break;
             }
-            
+
             if (!markContext->AddMarkedObject(realCandidate, objectSize))
             {
                 // Failed to mark due to OOM.
@@ -304,7 +304,7 @@ HeapBlockMap32::MarkInterior(void * candidate, MarkContext * markContext)
             ((LargeHeapBlock*)chunk->map[GetLevel2Id(realCandidate)])->Mark(realCandidate, markContext);
         }
         break;
-        
+
 #if DBG
     default:
         AssertMsg(false, "what's the new heap block type?");
@@ -325,7 +325,7 @@ void
 HeapBlockMap64::Mark(void * candidate, MarkContext * markContext)
 {
     uint index = GetNodeIndex(candidate);
-    
+
     Node * node = list;
     while (node != nullptr)
     {

@@ -166,9 +166,7 @@ namespace Js
         return result;
     }
 
-
-
-    SIMDValue SIMDInt8x16Operation::OpLessThan(const SIMDValue& aValue, const SIMDValue& bValue) //arun::ToDo return bool types
+    SIMDValue SIMDInt8x16Operation::OpLessThan(const SIMDValue& aValue, const SIMDValue& bValue) // TODO arun: return bool types
     {
         SIMDValue result;
 
@@ -190,7 +188,7 @@ namespace Js
         return result;
     }
 
-    SIMDValue SIMDInt8x16Operation::OpEqual(const SIMDValue& aValue, const SIMDValue& bValue) //arun::ToDo return bool types
+    SIMDValue SIMDInt8x16Operation::OpEqual(const SIMDValue& aValue, const SIMDValue& bValue) // TODO arun: return bool types
     {
         SIMDValue result;
 
@@ -222,7 +220,7 @@ namespace Js
 
         for(uint idx = 0; idx < 16; ++idx)
         {
-            result.i8[idx] = (aValue.i8[idx] > bValue.i8[idx]) ? 0xff : 0x0; //Return should be bool vector accordig to spec
+            result.i8[idx] = (aValue.i8[idx] > bValue.i8[idx]) ? 0xff : 0x0; //Return should be bool vector according to spec
         }
 
         return result;
@@ -240,12 +238,14 @@ namespace Js
         return result;
     }
 
- 
     SIMDValue SIMDInt8x16Operation::OpShiftLeftByScalar(const SIMDValue& value, int8 count)
     {
         SIMDValue result;
-        if (count < 0 || count > 8)   //Similar to polifyll, maximum shift will happen if the shift amounts and invalid
-            count = 8; 
+        if (count < 0 || count > 8) // Similar to polyfill, maximum shift will happen if the shift amounts and invalid
+        {
+            count = 8;
+        }
+
         for(uint idx = 0; idx < 16; ++idx)
         {
             result.i8[idx] = value.i8[idx] << count;

@@ -6,7 +6,7 @@
 
 namespace Js
 {
-    struct JitTimeConstructorCache 
+    struct JitTimeConstructorCache
     {
         // TODO (FixedNewObj): Consider making these private and provide getters to ensure the values are not changed.
         const JavascriptFunction* constructor;
@@ -167,7 +167,7 @@ namespace Js
         };
 
         uint16 slotIndex;
-       
+
         uint16 fixedFieldCount; // currently used only for fields that are functions
 
     public:
@@ -218,10 +218,10 @@ namespace Js
             this->fixedFieldCount = fixedFieldCount;
         }
 
-        static ObjTypeSpecFldInfo* CreateFrom(uint id, InlineCache* cache, uint cacheId, 
+        static ObjTypeSpecFldInfo* CreateFrom(uint id, InlineCache* cache, uint cacheId,
             EntryPointInfo *entryPoint, FunctionBody* const topFunctionBody, FunctionBody *const functionBody, FieldAccessStatsPtr inlineCacheStats);
 
-        static ObjTypeSpecFldInfo* CreateFrom(uint id, PolymorphicInlineCache* cache, uint cacheId, 
+        static ObjTypeSpecFldInfo* CreateFrom(uint id, PolymorphicInlineCache* cache, uint cacheId,
             EntryPointInfo *entryPoint, FunctionBody* const topFunctionBody, FunctionBody *const functionBody, FieldAccessStatsPtr inlineCacheStats);
 
         uint GetObjTypeSpecFldId() const
@@ -229,17 +229,17 @@ namespace Js
             return this->id;
         }
 
-        bool IsMono() const 
+        bool IsMono() const
         {
             return !this->isPolymorphic;
         }
 
-        bool IsPoly() const 
+        bool IsPoly() const
         {
             return this->isPolymorphic;
         }
 
-        bool UsesAuxSlot() const 
+        bool UsesAuxSlot() const
         {
             return this->usesAuxSlot;
         }
@@ -259,7 +259,7 @@ namespace Js
             return this->isLocal;
         }
 
-        bool UsesAccessor() const 
+        bool UsesAccessor() const
         {
             return this->usesAccessor;
         }
@@ -340,7 +340,7 @@ namespace Js
             return this->propertyId;
         }
 
-        Js::DynamicObject* GetProtoObject() const 
+        Js::DynamicObject* GetProtoObject() const
         {
             Assert(IsLoadedFromProto());
             return this->protoObject;
@@ -372,7 +372,7 @@ namespace Js
         Js::JavascriptFunction* GetFieldValueAsFunction() const;
 
         Js::JavascriptFunction* GetFieldValueAsFunctionIfAvailable() const;
-        
+
         Js::JavascriptFunction* GetFieldValueAsFixedFunctionIfAvailable() const;
         Js::JavascriptFunction* GetFieldValueAsFixedFunctionIfAvailable(uint i) const;
 
@@ -386,7 +386,7 @@ namespace Js
             return this->ctorCache;
         }
 
-        Js::PropertyGuard* GetPropertyGuard() const 
+        Js::PropertyGuard* GetPropertyGuard() const
         {
             return this->propertyGuard;
         }
@@ -493,7 +493,7 @@ namespace Js
 
         void SetInfo(Recycler *const recycler, FunctionBody *const functionBody,
             const uint index, ObjTypeSpecFldInfo* info);
-        
+
         void Reset();
 
         template <class Fn>
@@ -528,7 +528,7 @@ namespace Js
         FunctionInfo *const functionInfo;
 
         // Point's to an entry point if the work item needs the entry point alive- null for cases where the entry point isn't used
-        EntryPointInfo *const entryPointInfo; 
+        EntryPointInfo *const entryPointInfo;
 
         // These cloned inline caches are guaranteed to have stable data while jitting, but will be collectible after jitting
         ObjTypeSpecFldInfoArray objTypeSpecFldInfoArray;
@@ -542,18 +542,18 @@ namespace Js
         FunctionCodeGenJitTimeData **ldFldInlinees;
         RecyclerWeakReference<FunctionBody> *weakFuncRef;
 
-        // Number of functions that are to be inlined (this is not the length of the 'inlinees' array above, inludes getter setter inlinee count)
+        // Number of functions that are to be inlined (this is not the length of the 'inlinees' array above, includes getter setter inlinee count)
         uint inlineeCount;
-        // Number of counts of getter setter to be inlined. This is not an exact count as inline caches are shared and we have no way of knowing 
+        // Number of counts of getter setter to be inlined. This is not an exact count as inline caches are shared and we have no way of knowing
         // accurate count.
         uint ldFldInlineeCount;
 
         //For polymorphic call site we will have linked list of FunctionCodeGenJitTimeData
-        //Each is differeniated by id starting from 0, 1
+        //Each is differentiated by id starting from 0, 1
         FunctionCodeGenJitTimeData *next;
         bool isInlined;
 
-        //This indicates the function is aggresively Inlined(see NativeCodeGenerator::TryAggressiveInlining) .
+        //This indicates the function is aggressively Inlined(see NativeCodeGenerator::TryAggressiveInlining) .
         bool isAggressiveInliningEnabled;
 
         // The profiled iterations need to be determined at the time of gathering code gen data on the main thread
@@ -610,15 +610,15 @@ namespace Js
        const FunctionCodeGenJitTimeData *GetJitTimeDataFromFunctionInfo(FunctionInfo *polyFunctionInfo) const;
 
        ObjTypeSpecFldInfo* GetGlobalObjTypeSpecFldInfo(uint propertyInfoId) const
-       { 
+       {
            Assert(this->globalObjTypeSpecFldInfoArray != nullptr && propertyInfoId < this->globalObjTypeSpecFldInfoCount);
-           return this->globalObjTypeSpecFldInfoArray[propertyInfoId]; 
+           return this->globalObjTypeSpecFldInfoArray[propertyInfoId];
        }
 
        void SetGlobalObjTypeSpecFldInfo(uint propertyInfoId, ObjTypeSpecFldInfo* info) const
-       { 
+       {
            Assert(this->globalObjTypeSpecFldInfoArray != nullptr && propertyInfoId < this->globalObjTypeSpecFldInfoCount);
-           this->globalObjTypeSpecFldInfoArray[propertyInfoId] = info; 
+           this->globalObjTypeSpecFldInfoArray[propertyInfoId] = info;
        }
 
        void SetGlobalObjTypeSpecFldInfoArray(ObjTypeSpecFldInfo** array, uint count)

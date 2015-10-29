@@ -205,7 +205,7 @@ HRESULT MapHr(HRESULT hr, ErrorTypeEnum * errorTypeOut)
 
 #if DEBUG
     // In debug, check that all the entries in the error map table are
-    // sorted based on the hresult in ascending order. We will then binary
+    // sorted based on the HRESULT in ascending order. We will then binary
     // search the sorted array. We need do this only once per invocation.
     static BOOL fCheckSort = TRUE;
 
@@ -242,7 +242,7 @@ HRESULT MapHr(HRESULT hr, ErrorTypeEnum * errorTypeOut)
         {
             *errorTypeOut = g_rgmhr[imhrMin].errorType;
         }
-        
+
         return g_rgmhr[imhrMin].hrOut;
     }
 
@@ -298,7 +298,7 @@ void ScriptException::GetError(HRESULT *phr, EXCEPINFO *pei)
 // === CompileScriptException ===
 CompileScriptException::~CompileScriptException()
 {
-    SysFreeString(bstrLine);   
+    SysFreeString(bstrLine);
 }
 
 void CompileScriptException::Clear()
@@ -318,12 +318,12 @@ void CompileScriptException::Free()
 }
 
 HRESULT  CompileScriptException::ProcessError(IScanner * pScan, HRESULT hr, ParseNode * pnodeBase)
-{    
+{
     if (nullptr == this)
         return hr;
 
     // fill in the ScriptException structure
-    Clear();    
+    Clear();
     ei.scode = GetScode(MapHr(hr));
 
     // get the error string
@@ -360,7 +360,7 @@ HRESULT  CompileScriptException::ProcessError(IScanner * pScan, HRESULT hr, Pars
         // Remove E_FAIL once we have this feature.
         // error during code gen - no line number info available
         // E_ABORT may result if compilation does stack probe while thread is in disabled state.
-        Assert(hr == ERRnoMemory || hr == VBSERR_OutOfStack || hr == E_OUTOFMEMORY || hr == E_FAIL || hr == E_ABORT);
+        Assert(hr == JSERR_AsmJsCompileError || hr == ERRnoMemory || hr == VBSERR_OutOfStack || hr == E_OUTOFMEMORY || hr == E_FAIL || hr == E_ABORT);
     }
     return SCRIPT_E_RECORDED;
 }

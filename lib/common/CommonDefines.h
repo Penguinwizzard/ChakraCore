@@ -8,7 +8,13 @@
 #include "Warnings.h"
 
 //----------------------------------------------------------------------------------------------------
-// Default debug/fretest/release flags values 
+// Chakra Core version
+//----------------------------------------------------------------------------------------------------
+#define CHAKRA_CORE_MAJOR_VERSION 1
+#define CHAKRA_CORE_MINOR_VERSION 0
+
+//----------------------------------------------------------------------------------------------------
+// Default debug/fretest/release flags values
 //  - Set the default values of debug/fretest/release flags if it is not set by the command line
 //----------------------------------------------------------------------------------------------------
 #ifndef DBG_DUMP
@@ -22,7 +28,7 @@
 #define DEBUG 1
 #endif
 
-// if test hook is enabled, enable debug config options are enabled too
+// if test hook is enabled, debug config options are enabled too
 #ifdef ENABLE_TEST_HOOKS
 #ifndef ENABLE_DEBUG_CONFIG_OPTIONS
 #define ENABLE_DEBUG_CONFIG_OPTIONS 1
@@ -45,7 +51,7 @@
 #endif
 
 // TODO: consider removing before RTM: keep for CHK/FRETEST but remove from FRE.
-// This will cause terminate process on AV/Assert rather that letting PDM (F12/debugger scenarios) eat exceptions. 
+// This will cause terminate process on AV/Assert rather that letting PDM (F12/debugger scenarios) eat exceptions.
 // At least for now, enable this even in FRE builds. See ReportError.h.
 #define ENABLE_DEBUG_API_WRAPPER 1
 
@@ -58,10 +64,12 @@
 
 #if defined(_M_IX86) || defined(_M_ARM)
 #define _M_IX86_OR_ARM32 1
+#define TARGET_32 1
 #endif
 
 #if defined(_M_X64) || defined(_M_ARM64)
 #define _M_X64_OR_ARM64 1
+#define TARGET_64 1
 #endif
 
 //----------------------------------------------------------------------------------------------------
@@ -72,12 +80,12 @@
 // Even if it builds, it may not work properly. Disable at your own risk
 
 // ByteCode
-#define VARIABLE_INT_ENCODING 1                     // Byte code serialization variable size int field encoding 
+#define VARIABLE_INT_ENCODING 1                     // Byte code serialization variable size int field encoding
 #define BYTECODE_BRANCH_ISLAND                      // Byte code short branch and branch island
 
 // Language features
 #define ENABLE_INTL_OBJECT                          // Intl support
-#define ENABLE_ES6_CHAR_CLASSIFIER                  // ES6 unicode charactor classifer support
+#define ENABLE_ES6_CHAR_CLASSIFIER                  // ES6 Unicode character classifier support
 
 // Type system features
 #define PERSISTENT_INLINE_CACHES                    // *** TODO: Won't build if disabled currently
@@ -97,17 +105,14 @@
 #define ENABLE_NATIVE_CODEGEN 1                     // *** TODO: Won't build if disabled currently
 
 // Other features
-//saravind: Uncomment the following to build ChakraCore with CFG APIs to Delay Load.
 // #define CHAKRA_CORE_DOWN_COMPAT 1
 
 #if defined(ENABLE_DEBUG_CONFIG_OPTIONS) || defined(CHAKRA_CORE_DOWN_COMPAT)
 #define DELAYLOAD_SET_CFG_TARGET 1
 #endif
 
-// The feature below are disabled for ChakraCore
 #ifdef NTBUILD
-// These are only enable in full Chakra but not ChakraCore
-#define ENABLE_PROJECTION 
+#define ENABLE_PROJECTION
 #define ENABLE_FOUNDATION_OBJECT
 #define ENABLE_EXPERIMENTAL_FLAGS
 #define ENABLE_WININET_PROFILE_DATA_CACHE
@@ -125,14 +130,14 @@
 // Telemetry features (non-DEBUG related)
 #ifdef ENABLE_BASIC_TELEMETRY
 
-    // These defines can be "overridden" in other headers (e.g. ESBuiltInsTelemetryProvider.h) in case a specific telementry provider wants to change an option for performance.
+    // These defines can be "overridden" in other headers (e.g. ESBuiltInsTelemetryProvider.h) in case a specific telemetry provider wants to change an option for performance.
     #define TELEMETRY_OPCODE_OFFSET_ENABLED true              // If the BytecodeOffset and FunctionId are logged.
     #define TELEMETRY_PROPERTY_OPCODE_FILTER(propertyId) true // Any filter to apply on a per propertyId basis in the opcode handler for GetProperty/TypeofProperty/GetMethodProperty/etc.
     #define TELEMETRY_OPCODE_GET_PROPERTY_VALUES true         // If no telemetry providers need the values of properties then this option skips getting the value in the TypeofProperty opcode handler.
 
 //    #define TELEMETRY_PROFILED    // If telemetry should capture "Profiled*" operations
 //    #define TELEMETRY_CACHEHIT    // If telemetry should capture data that was gotten with a Cache Hit
-//    #define TELEMETRY_JSO         // If telemetry should capture JavascriptOperators (expensive, as it happens during JITed code too, not just intepreted mode)
+//    #define TELEMETRY_JSO         // If telemetry should capture JavascriptOperators (expensive, as it happens during JITed code too, not just interpreted mode)
     #define TELEMETRY_AddToCache    // If telemetry should capture property-gets only when the propertyId is added to the cache (generally this means only the first usage of any feature is logged)
 //    #define TELEMETRY_INTERPRETER // If telemetry should capture more interpreter events compared to just TELEMETRY_AddToCache
 
@@ -159,7 +164,7 @@
     #endif
 
 #else
-    
+
     #define TELEMETRY_OPCODE_OFFSET_ENABLED false
     #define TELEMETRY_OPCODE_FILTER(propertyId) false
 
@@ -241,7 +246,7 @@
 #define GENERATE_DUMP
 #endif
 
-#if DBG_DUMP 
+#if DBG_DUMP
 #undef DBG_EXTRAFIELD   // make sure we don't extra fields in free build.
 
 #define TRACK_DISPATCH
@@ -281,7 +286,7 @@
 
 #define PAGEALLOCATOR_PROTECT_FREEPAGE
 #define ARENA_MEMORY_VERIFY
-#define SEPARATE_ARENA 
+#define SEPARATE_ARENA
 #define HEAP_TRACK_ALLOC
 #define CHECK_MEMORY_LEAK
 #define LEAK_REPORT
@@ -453,7 +458,7 @@
 
 #if defined(HEAP_TRACK_ALLOC) || defined(PROFILE_RECYCLER_ALLOC)
 #define TRACK_ALLOC
-#define TRACE_OBJECT_LIFETIME           // track a particular objects lifetime
+#define TRACE_OBJECT_LIFETIME           // track a particular object's lifetime
 #endif
 
 #if defined(USED_IN_STATIC_LIB)
@@ -491,7 +496,7 @@
 #endif
 
 //----------------------------------------------------------------------------------------------------
-// Default flags values 
+// Default flags values
 //  - Set the default values of flags if it is not set by the command line or above
 //----------------------------------------------------------------------------------------------------
 #ifndef JS_PROFILE_DATA_INTERFACE

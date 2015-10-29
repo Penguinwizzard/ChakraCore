@@ -435,6 +435,7 @@ namespace Js
         template<CharCount AppendCharLengthPlusOne> void AppendChars(const wchar_t (&s)[AppendCharLengthPlusOne], const bool isCppLiteral = true);
         void Append(__in_xcount(appendCharLength) const wchar_t *const s, const CharCount appendCharLength);
         void AppendChars(__in_xcount(appendCharLength) const wchar_t *const s, const CharCount appendCharLength);
+        void AppendCharsSz(__in_z const wchar_t *const s);
         template<class TValue, class FConvertToString> void Append(const TValue &value, const CharCount maximumAppendCharLength, const FConvertToString ConvertToString);
         template<class TValue, class FConvertToString> void AppendChars(const TValue &value, const CharCount maximumAppendCharLength, const FConvertToString ConvertToString);
 

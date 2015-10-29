@@ -23,7 +23,7 @@ function test0() {
     var a = 1;
     var c = 1;
     var d = 1;
-    //Code Snippet: fieldHoist2.ecs (Arrays)
+
     arrObj0.xyz = [c, a, 1, 1]
     var v255197 = 0;
     for (var v255198 = 0; v255198 < 4; v255198++) {
@@ -32,7 +32,6 @@ function test0() {
     }
     WScript.Echo("v255197 = " + v255197);
 
-    //Code Snippet: fieldHoist2.ecs (Arrays)
     arrObj0.xyz = [obj0.prop0, d, 1, 1]
     var v255199 = 0;
     for (var v255200 = 0; v255200 < 4; v255200++) {
@@ -52,18 +51,18 @@ test0();
 runningJITtedCode = true;
 test0();
 test0();
-test0(); 
+test0();
 
 function test5(){
   var ary = new Array(10);
-  ary[(0)] = (~ undefined);  
+  ary[(0)] = (~ undefined);
   WScript.Echo("ary[0] = " + (ary[0]));
 };
 
 // generate profile
-test5(); 
+test5();
 Object.defineProperty(Array.prototype, "0", {configurable : true, get: function(){return 30;}});
-test5(); 
+test5();
 
 var z;
 function test6() {
@@ -74,16 +73,16 @@ test6();
 test6();
 WScript.Echo(this.z.undefined);
 
-function test7(){  
+function test7(){
   var func0 = function(){
-    var id41 = ary;;    
+    var id41 = ary;;
     id41 = ary[1];
   }
   var ary = new Array(10);
-  ary[2] = "a";   
+  ary[2] = "a";
   func0( );
 };
 
 // generate profile
-test7(); 
-test7(); 
+test7();
+test7();

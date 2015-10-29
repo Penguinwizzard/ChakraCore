@@ -249,7 +249,7 @@ public:
     ValueInfo *SpecializeToSimd128(IRType type, JitArenaAllocator *const allocator);
     ValueInfo *SpecializeToSimd128F4(JitArenaAllocator *const allocator);
     ValueInfo *SpecializeToSimd128I4(JitArenaAllocator *const allocator);
-    
+
 
 
 public:
@@ -303,7 +303,7 @@ public:
     ValueNumber GetValueNumber() const { return this->valueNumber; }
     ValueInfo * GetValueInfo() const { return this->valueInfo; }
     ValueInfo * ShareValueInfo() const { this->valueInfo->SetIsShared(); return this->valueInfo; }
-    
+
     void        SetValueInfo(ValueInfo * newValueInfo) { Assert(newValueInfo); this->valueInfo = newValueInfo; }
 
     Value *     Copy(JitArenaAllocator * allocator, ValueNumber newValueNumber) { return Value::New(allocator, newValueNumber, this->ShareValueInfo()); }
@@ -447,7 +447,7 @@ private:
 
 public:
     VarConstantValueInfo(Js::Var varValue, ValueType valueType, bool isFunction = false)
-        : ValueInfo(valueType, ValueStructureKind::VarConstant), 
+        : ValueInfo(valueType, ValueStructureKind::VarConstant),
         varValue(varValue), isFunction(isFunction)
     {
     }
@@ -553,13 +553,13 @@ private:
 
 public:
     JsTypeValueInfo(Js::Type * type)
-        : ValueInfo(Uninitialized, ValueStructureKind::JsType), 
+        : ValueInfo(Uninitialized, ValueStructureKind::JsType),
         jsType(type), jsTypeSet(nullptr), isShared(false)
     {
     }
 
     JsTypeValueInfo(Js::EquivalentTypeSet * typeSet)
-        : ValueInfo(Uninitialized, ValueStructureKind::JsType), 
+        : ValueInfo(Uninitialized, ValueStructureKind::JsType),
         jsType(nullptr), jsTypeSet(typeSet), isShared(false)
     {
     }
@@ -581,7 +581,7 @@ public:
     }
 
     JsTypeValueInfo(const Js::Type* type, Js::EquivalentTypeSet * typeSet)
-        : ValueInfo(Uninitialized, ValueStructureKind::JsType), 
+        : ValueInfo(Uninitialized, ValueStructureKind::JsType),
         jsType(type), jsTypeSet(typeSet), isShared(false)
     {
     }
@@ -840,7 +840,7 @@ public:
     ValueNumber GetSrc2ValueNumber()    { return this->src2Val; }
     ExprAttributes GetExprAttributes()  { return this->attributes; }
     bool        IsValid()               { return this->opcode != 0; }
-    
+
     operator    uint()                  { return *(uint*)this; }
 
 private:
@@ -983,7 +983,7 @@ namespace JsUtil
         {
 #if DBG
             this->value.propIds = nullptr;
-            this->value.currentInitFldCount = (uint)-1;            
+            this->value.currentInitFldCount = (uint)-1;
 #endif
         }
     };
@@ -1027,13 +1027,13 @@ public:
     }
 
     // Data
-    GlobHashTable *                         symToValueMap;    
-    ExprHashTable *                         exprToValueMap;    
+    GlobHashTable *                         symToValueMap;
+    ExprHashTable *                         exprToValueMap;
     BVSparse<JitArenaAllocator> *           liveFields;
     BVSparse<JitArenaAllocator> *           liveArrayValues;
     BVSparse<JitArenaAllocator> *           maybeWrittenTypeSyms;
     BVSparse<JitArenaAllocator> *           isTempSrc;
-    BVSparse<JitArenaAllocator> *           liveVarSyms; 
+    BVSparse<JitArenaAllocator> *           liveVarSyms;
     BVSparse<JitArenaAllocator> *           liveInt32Syms;
     // 'liveLossyInt32Syms' includes only syms that contain an int value that may not fully represent the value of the
     // equivalent var sym. The set (liveInt32Syms - liveLossyInt32Syms) includes only syms that contain an int value that fully
@@ -1048,7 +1048,7 @@ public:
     // SIMD_JS
     BVSparse<JitArenaAllocator> *           liveSimd128F4Syms;
     BVSparse<JitArenaAllocator> *           liveSimd128I4Syms;
-    
+
     BVSparse<JitArenaAllocator> *           hoistableFields;
     BVSparse<JitArenaAllocator> *           argObjSyms;
     BVSparse<JitArenaAllocator> *           maybeTempObjectSyms;
@@ -1093,7 +1093,7 @@ public:
 
     void OnDataUnreferenced()
     {
-        // Other blocks may still be using the data, we should only unreference the previous data
+        // Other blocks may still be using the data, we should only un-reference the previous data
         hasDataRef = nullptr;
     }
 
@@ -1241,7 +1241,7 @@ private:
 
     friend BackwardPass;
 #if DBG
-    friend class ObjectTempVerify;    
+    friend class ObjectTempVerify;
 #endif
 
 private:
@@ -1252,7 +1252,7 @@ private:
     // Global bitvectors
     IntConstantToStackSymMap *  intConstantToStackSymMap;
     IntConstantToValueMap*      intConstantToValueMap;
-    AddrConstantToValueMap *    addrConstantToValueMap;    
+    AddrConstantToValueMap *    addrConstantToValueMap;
     StringConstantToValueMap *  stringConstantToValueMap;
 #if DBG
     // We can still track the finished stack literal InitFld lexically.
@@ -1280,11 +1280,11 @@ private:
     Region *                currentRegion;
     IntOverflowDoesNotMatterRange *intOverflowDoesNotMatterRange;
     Loop *                  prePassLoop;
-    Loop *                  rootLoopPrePass;   
+    Loop *                  rootLoopPrePass;
     uint                    instrCountSinceLastCleanUp;
     SymIdToInstrMap *       prePassInstrMap;
     SymID                   maxInitialSymID;
-    bool                    isCallHelper: 1;    
+    bool                    isCallHelper: 1;
     bool                    intOverflowCurrentlyMattersInRange : 1;
     bool                    ignoredIntOverflowForCurrentInstr : 1;
     bool                    ignoredNegativeZeroForCurrentInstr : 1;
@@ -1301,7 +1301,7 @@ private:
     bool                    doFloatTypeSpec : 1;
     bool                    doArrayCheckHoist : 1;
     bool                    doArrayMissingValueCheckHoist : 1;
-   
+
     bool                    doArraySegmentHoist : 1;
     bool                    doJsArraySegmentHoist : 1;
     bool                    doArrayLengthHoist : 1;
@@ -1310,7 +1310,7 @@ private:
     bool                    doBoundCheckElimination : 1;
     bool                    doBoundCheckHoist : 1;
     bool                    doLoopCountBasedBoundCheckHoist : 1;
-    
+
     bool                    isAsmJSFunc : 1;
     OpndList *              noImplicitCallUsesToInsert;
 
@@ -1395,7 +1395,7 @@ private:
     Value *                 FindValue(Sym *sym);
     Value *                 FindValue(GlobHashTable *valueNumberMap, Sym *sym);
     ValueNumber             FindValueNumber(GlobHashTable *valueNumberMap, Sym *sym);
-    Value *                 FindValueFromHashTable(GlobHashTable *valueNumberMap, SymID symId);    
+    Value *                 FindValueFromHashTable(GlobHashTable *valueNumberMap, SymID symId);
     ValueNumber             FindPropertyValueNumber(GlobHashTable *valueNumberMap, SymID symId);
     Value *                 FindPropertyValue(GlobHashTable *valueNumberMap, SymID symId);
     Value *                 FindObjectTypeValue(StackSym* typeSym);
@@ -1427,7 +1427,7 @@ private:
     ValueInfo *             NewIntRangeValueInfo(const ValueInfo *const originalValueInfo, const IntConstType min, const IntConstType max) const;
     Value *                 NewIntRangeValue(const IntConstType min, const IntConstType max, const bool wasNegativeZeroPreventedByBailout, IR::Opnd *const opnd = nullptr);
     IntBoundedValueInfo *   NewIntBoundedValueInfo(const ValueInfo *const originalValueInfo, const IntBounds *const bounds) const;
-    Value *                 NewIntBoundedValue(const ValueType valueType, const IntBounds *const bounds, const bool wasNegativeZeroPreventedByBailout, IR::Opnd *const opnd = nullptr);    
+    Value *                 NewIntBoundedValue(const ValueType valueType, const IntBounds *const bounds, const bool wasNegativeZeroPreventedByBailout, IR::Opnd *const opnd = nullptr);
     Value *                 NewFloatConstantValue(const FloatConstType floatValue, IR::Opnd *const opnd = nullptr);
     Value *                 GetVarConstantValue(IR::AddrOpnd *addrOpnd);
     Value *                 NewVarConstantValue(IR::AddrOpnd *addrOpnd, bool isString);
@@ -1443,7 +1443,7 @@ private:
     void                    SetValue(GlobOptBlockData * blockData, Value *val, Sym * sym);
     void                    SetValueToHashTable(GlobHashTable * valueNumberMap, Value *val, Sym *sym);
     IR::Instr *             TypeSpecialization(IR::Instr *instr, Value **pSrc1Val, Value **pSrc2Val, Value **pDstVal, bool *redoTypeSpecRef, bool *const forceInvariantHoistingRef);
-    
+
     // SIMD_JS
     bool                    TypeSpecializeSimd128(IR::Instr *instr, Value **pSrc1Val, Value **pSrc2Val, Value **pDstVal);
     bool                    Simd128DoTypeSpec(IR::Instr *instr, const Value *src1Val, const Value *src2Val, const Value *dstVal);
@@ -1565,7 +1565,7 @@ private:
     void                    VerifyIntSpecForIgnoringIntOverflow(IR::Instr *const instr);
 
     void                    PreLowerCanonicalize(IR::Instr *instr, Value **pSrc1Val, Value **pSrc2Val);
-    void                    ProcessKills(IR::Instr *instr);    
+    void                    ProcessKills(IR::Instr *instr);
     void                    MergeValueMaps(GlobOptBlockData *toData, BasicBlock *toBlock, BasicBlock *fromBlock, BVSparse<JitArenaAllocator> *const symsRequiringCompensation, BVSparse<JitArenaAllocator> *const symsCreatedForMerge);
     Value *                 MergeValues(Value *toDataValueMap, Value *fromDataValueMap, Sym *fromDataSym, GlobOptBlockData *toData, GlobOptBlockData *fromData, bool isLoopBackEdge, BVSparse<JitArenaAllocator> *const symsRequiringCompensation, BVSparse<JitArenaAllocator> *const symsCreatedForMerge);
     ValueInfo *             MergeValueInfo(Value *toDataVal, Value *fromDataVal, Sym *fromDataSym, GlobOptBlockData *fromData, bool isLoopBackEdge, bool sameValueNumber, BVSparse<JitArenaAllocator> *const symsRequiringCompensation, BVSparse<JitArenaAllocator> *const symsCreatedForMerge);
@@ -1582,11 +1582,11 @@ private:
     void                    ToTypeSpec(BVSparse<JitArenaAllocator> *bv, BasicBlock *block, IRType toType, IR::BailOutKind bailOutKind = IR::BailOutInvalid, bool lossy = false, IR::Instr *insertBeforeInstr = nullptr);
     IR::Instr *             ToInt32(IR::Instr *instr, IR::Opnd *opnd, BasicBlock *block, Value *val, IR::IndirOpnd *indir, bool lossy);
     IR::Instr *             ToFloat64(IR::Instr *instr, IR::Opnd *opnd, BasicBlock *block, Value *val, IR::IndirOpnd *indir, IR::BailOutKind bailOutKind);
-    IR::Instr *             ToTypeSpecUse(IR::Instr *instr, IR::Opnd *opnd, BasicBlock *block, Value *val, IR::IndirOpnd *indir, 
+    IR::Instr *             ToTypeSpecUse(IR::Instr *instr, IR::Opnd *opnd, BasicBlock *block, Value *val, IR::IndirOpnd *indir,
         IRType toType, IR::BailOutKind bailOutKind, bool lossy = false, IR::Instr *insertBeforeInstr = nullptr);
     void                    ToVarRegOpnd(IR::RegOpnd *dst, BasicBlock *block);
     void                    ToVarStackSym(StackSym *varSym, BasicBlock *block);
-    void                    ToInt32Dst(IR::Instr *instr, IR::RegOpnd *dst, BasicBlock *block);    
+    void                    ToInt32Dst(IR::Instr *instr, IR::RegOpnd *dst, BasicBlock *block);
     void                    ToUInt32Dst(IR::Instr *instr, IR::RegOpnd *dst, BasicBlock *block);
     void                    ToFloat64Dst(IR::Instr *instr, IR::RegOpnd *dst, BasicBlock *block);
     // SIMD_JS
@@ -1678,7 +1678,7 @@ private:
     bool                    MayNeedBailOut(Loop * loop) const;
     static void             TrackByteCodeSymUsed(IR::Opnd * opnd, BVSparse<JitArenaAllocator> * instrByteCodeStackSymUsed, PropertySym **pPropertySymUse);
     static void             TrackByteCodeSymUsed(IR::RegOpnd * opnd, BVSparse<JitArenaAllocator> * instrByteCodeStackSymUsed);
-    static void             TrackByteCodeSymUsed(StackSym * sym, BVSparse<JitArenaAllocator> * instrByteCodeStackSymUsed);    
+    static void             TrackByteCodeSymUsed(StackSym * sym, BVSparse<JitArenaAllocator> * instrByteCodeStackSymUsed);
     void                    CaptureValues(BasicBlock *block, BailOutInfo * bailOutInfo);
     void                    CaptureValue(BasicBlock *block, StackSym * stackSym, Value * value, BailOutInfo * bailOutInfo);
     void                    CaptureArguments(BasicBlock *block, BailOutInfo * bailOutInfo, JitArenaAllocator *allocator);
@@ -1687,12 +1687,12 @@ private:
     void                    TrackCalls(IR::Instr * instr);
     void                    RecordInlineeFrameInfo(IR::Instr* instr);
     void                    EndTrackCall(IR::Instr * instr);
-    void                    EndTrackingOfArgObjSymsForInlinee();  
-    void                    FillBailOutInfo(BasicBlock *block, BailOutInfo *bailOutInfo);    
+    void                    EndTrackingOfArgObjSymsForInlinee();
+    void                    FillBailOutInfo(BasicBlock *block, BailOutInfo *bailOutInfo);
 
     static void             MarkNonByteCodeUsed(IR::Instr * instr);
     static void             MarkNonByteCodeUsed(IR::Opnd * opnd);
-        
+
     bool                    IsImplicitCallBailOutCurrentlyNeeded(IR::Instr * instr, Value *src1Val, Value *src2Val);
     bool                    IsImplicitCallBailOutCurrentlyNeeded(IR::Instr * instr, Value *src1Val, Value *src2Val, BasicBlock * block, bool hasLiveFields, bool mayNeedImplicitCallBailOut, bool isForwardPass);
     static bool             IsTypeCheckProtected(const IR::Instr * instr);
@@ -1715,11 +1715,11 @@ private:
     void                    KillAllFields(BVSparse<JitArenaAllocator> * bv);
     void                    SetAnyPropertyMayBeWrittenTo();
     void                    AddToPropertiesWrittenTo(Js::PropertyId propertyId);
-    
+
     bool                    DoFieldCopyProp() const;
     bool                    DoFieldCopyProp(Loop * loop) const;
     bool                    DoFunctionFieldCopyProp() const;
-       
+
     bool                    DoFieldHoisting() const;
     bool                    DoObjTypeSpec() const;
     bool                    DoObjTypeSpec(Loop * loop) const;
@@ -1735,7 +1735,7 @@ private:
 
     bool                    TrackHoistableFields() const;
     void                    PreparePrepassFieldHoisting(Loop * loop);
-    void                    PrepareFieldHoisting(Loop * loop);    
+    void                    PrepareFieldHoisting(Loop * loop);
     void                    CheckFieldHoistCandidate(IR::Instr * instr, PropertySym * sym);
     Loop *                  FindFieldHoistStackSym(Loop * startLoop, SymID propertySymId, StackSym ** copySym, IR::Instr * instrToHoist = nullptr) const;
     bool                    CopyPropHoistedFields(PropertySym * sym, IR::Opnd ** ppOpnd, IR::Instr * instr);
@@ -1745,11 +1745,11 @@ private:
     void                    HoistFieldLoadValue(Loop * loop, Value * newValue, SymID symId, Js::OpCode opcode, IR::Opnd * srcOpnd);
     void                    ReloadFieldHoistStackSym(IR::Instr * instr, PropertySym * propertySym);
     void                    CopyStoreFieldHoistStackSym(IR::Instr * storeFldInstr, PropertySym * sym, Value * src1Val);
-    Value *                 CreateFieldSrcValue(PropertySym * sym, PropertySym * originalSym, IR::Opnd **ppOpnd, IR::Instr * instr);    
-    
+    Value *                 CreateFieldSrcValue(PropertySym * sym, PropertySym * originalSym, IR::Opnd **ppOpnd, IR::Instr * instr);
+
     static bool             HasHoistableFields(BasicBlock * block);
     static bool             HasHoistableFields(GlobOptBlockData const * globOptData);
-    bool                    IsHoistablePropertySym(SymID symId) const;    
+    bool                    IsHoistablePropertySym(SymID symId) const;
     bool                    NeedBailOnImplicitCallWithFieldOpts(Loop *loop, bool hasLiveFields) const;
     IR::Instr *             EnsureDisableImplicitCallRegion(Loop * loop);
     void                    UpdateObjPtrValueType(IR::Opnd * opnd, IR::Instr * instr);
@@ -1760,7 +1760,7 @@ private:
 #if DBG
     bool                    IsPropertySymId(SymID symId) const;
     bool                    IsHoistedPropertySym(PropertySym * sym) const;
-    bool                    IsHoistedPropertySym(SymID symId, Loop * loop) const;    
+    bool                    IsHoistedPropertySym(SymID symId, Loop * loop) const;
 
     static void             AssertCanCopyPropOrCSEFieldLoad(IR::Instr * instr);
 #endif

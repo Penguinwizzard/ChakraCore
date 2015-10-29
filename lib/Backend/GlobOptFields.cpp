@@ -6,49 +6,49 @@
 /*
 Field Hoisting
 --------------
-The backward pass calculate fields load value that is reachable from the loop top.  
-It optimistically assumes that a[] doesn't kill any fields in the hopes that glob opt 
+The backward pass calculate fields load value that is reachable from the loop top.
+It optimistically assumes that a[] doesn't kill any fields in the hopes that glob opt
 will have more information to not kill the field
 
 During the forward pass the root prepass will assume that the field hoist candidate
-is live (set the livefields bv) (GlobOpt::PreparePrepassFieldHoisting). The "hoistable field" bv 
-is used to keep track whether the current instruction may have the initial field value 
-at the loop top, thus they are hoistable. Even the value only is visible from the loop 
+is live (set the livefields bv) (GlobOpt::PreparePrepassFieldHoisting). The "hoistable field" bv
+is used to keep track whether the current instruction may have the initial field value
+at the loop top, thus they are hoistable. Even the value only is visible from the loop
 top from one path, there is benefit in hoisting the field.
 
 e.g 1. We can hoist field in this case and get benefit:
     while {
         if  {
             o.x =       <== kills field value.
-        } 
+        }
         = o.x           <== only have the loop top field value on the "!if" path
     }
 After hoisting the field:
     s1 = o.x        <== hoisted field load
     while {
         if {
-            o.x = 
+            o.x =
             s1 =        <== maintain the hoisted field value
-        } 
+        }
         = s1        <== avoided a field load
     }
 
 Then we identify a field load as hoistable, we will add the instruction to a list on the loop.
 
-After the prepass, we will determine the field that we are going to hoist from the 
+After the prepass, we will determine the field that we are going to hoist from the
 field candidates. (GlobOpt::PrepareFieldHoisting).
 
-If it is not live, even if we detect a hoistable load, it is not beneficial to hoist 
+If it is not live, even if we detect a hoistable load, it is not beneficial to hoist
 the load, as we will have to insert a field load to compensate for the loop back edges.
 We will just rely on field copy prop to optimize in that case.
 
-e.g 2. Hoisting this require us to add a field load back at the end of th eloop, no benefits here.
+e.g 2. Hoisting this require us to add a field load back at the end of the loop, no benefits here.
     while {
         = o.x       <== hoistable field, but isn't live on back edge.
         b.x =       <== kills o.x as o and b may be aliased.
     }
 
-If it is live on back edge, then it is possible to hoist field load 
+If it is live on back edge, then it is possible to hoist field load
 
 e.g 3. Although the field is killed, if the value is live on back edge, we can still hoist
     while {
@@ -60,45 +60,43 @@ e.g 3. Although the field is killed, if the value is live on back edge, we can s
 After hoisting the field, s1 is live for the whole loop
     s1 = o.x
     while {
-        = s1        <== elimiated one field load
+        = s1        <== eliminated one field load
         = s1        <== copy prop
         b.x =
         s1 = o.x
     }
 
-However, since our register allocator doesn't long lifetimes, copy prop may do a better job, 
-as we would only replace one field load (instead of two), s1 live time is much shorter, which 
+However, since our register allocator doesn't long lifetimes, copy prop may do a better job,
+as we would only replace one field load (instead of two), s1 live time is much shorter, which
 work better with our current register allocator.  (Currently we hoist in this case)
-e.g. 
+e.g.
     while {
-        s1 = o.x        
+        s1 = o.x
         = s1        <== copy prop
         b.x =
         s1 = o.x
     }
 
-TODO: May want to add heuristics to determine whether to hoist by looking at the number field 
-load we can replace. See unittest\fieldopts\fieldhoist5.js for timing with various -off/-force 
-of fieldhoist/fieldcopyprop. Currently, field hoist is better or the same as field copy prop 
-except for kill_singleuse in the test where we can only elimiate one field load compare to copy prop  
+TODO: May want to add heuristics to determine whether to hoist by looking at the number field
+load we can replace. See unittest\fieldopts\fieldhoist5.js for timing with various -off/-force
+of fieldhoist/fieldcopyprop. Currently, field hoist is better or the same as field copy prop
+except for kill_singleuse in the test where we can only eliminate one field load compare to copy prop
 If we ever improve the register allocator to do better, we might lift this restriction.
 
-In GlobOpt::PrepareFieldHoisting, we go thru all the hoistable field loads that are live on the back edge.
-We create a preassign symbol for the hoisted field and add it to the fieldHoistSymMap of the loop. 
-If the value is live coming into the loop (via field copy prop, we will create the instruction to 
+In GlobOpt::PrepareFieldHoisting, we go through all the hoistable field loads that are live on the back edge.
+We create a preassign symbol for the hoisted field and add it to the fieldHoistSymMap of the loop.
+If the value is live coming into the loop (via field copy prop, we will create the instruction to
 assign the value to the preassign sym. (GlobOpt::HoistFieldLoadValue)
 If we don't know the value yet, we will create the load field instead (GlobOpt::HoistFieldLoad).
 
-As we are process intruction in the non-prepass, when we see a field load, if it is live already then we have 
-a value in the pre-assign sym and we can just replace the load (GlobOpt::CopyPropHoistedFields). 
-If it is not live, then we don't have the value of the field, so keep the field load, but also 
+As we are processing instructions in the non-prepass, when we see a field load, if it is live already then we have
+a value in the pre-assign sym and we can just replace the load (GlobOpt::CopyPropHoistedFields).
+If it is not live, then we don't have the value of the field, so keep the field load, but also
 assign the loaded value to the pre-assigned sym (GlobOpt::ReloadFieldHoistStackSym)
 
 If the instruction is a store of a hoisted field, then create an assignment of the value to the preassign
 symbol to maintain a live field value. (GlobOpt::CopyStoreFieldHoistStackSym)
 */
-
-
 
 bool
 GlobOpt::DoFieldCopyProp() const
@@ -116,7 +114,7 @@ GlobOpt::DoFieldCopyProp() const
         Assert(loop);
     }
 
-    return DoFieldCopyProp(loop);    
+    return DoFieldCopyProp(loop);
 }
 
 bool
@@ -138,7 +136,7 @@ GlobOpt::DoFieldCopyProp(Loop * loop) const
     {
         // Force always turn it on
         return true;
-    }   
+    }
 
     if (this->DoFieldHoisting(loop))
     {
@@ -147,7 +145,7 @@ GlobOpt::DoFieldCopyProp(Loop * loop) const
     }
 
     if (PHASE_OFF(Js::FieldCopyPropPhase, this->func))
-    {        
+    {
         return false;
     }
 
@@ -170,10 +168,10 @@ GlobOpt::DoFieldHoisting(Loop *loop)
     }
 
     if (PHASE_OFF(Js::FieldHoistPhase, func))
-    {        
+    {
         return false;
     }
-   
+
     if (!PHASE_OFF(Js::FieldPREPhase, func))
     {
         return false;
@@ -220,10 +218,10 @@ GlobOpt::DoObjTypeSpec(Loop *loop) const
         return false;
     }
     if (this->ImplicitCallFlagsAllowOpts(this->func))
-    {        
+    {
         Assert(loop == nullptr || loop->CanDoFieldCopyProp());
         return true;
-    }    
+    }
     return loop != nullptr && loop->CanDoFieldCopyProp();
 }
 
@@ -231,10 +229,10 @@ bool
 GlobOpt::DoFieldOpts(Loop * loop) const
 {
     if (this->ImplicitCallFlagsAllowOpts(this->func))
-    {        
+    {
         Assert(loop == nullptr || loop->CanDoFieldCopyProp());
         return true;
-    }    
+    }
     return loop != nullptr && loop->CanDoFieldCopyProp();
 }
 
@@ -352,7 +350,7 @@ GlobOpt::KillLiveElems(IR::IndirOpnd * indirOpnd, BVSparse<JitArenaAllocator> * 
     // obj["x"] = ...;   // This needs to kill obj.x...  We need to kill all fields...
     //
     // Also, 'arguments[i] =' needs to kill all slots even if 'i' is an int.
-    // 
+    //
     // NOTE: we only need to kill slots here, not all fields.  It may be good to separate these one day.
     //
     // Regarding the check for type specialization:
@@ -387,8 +385,8 @@ GlobOpt::KillAllFields(BVSparse<JitArenaAllocator> * bv)
 
 void
 GlobOpt::SetAnyPropertyMayBeWrittenTo()
-{ 
-    this->func->anyPropertyMayBeWrittenTo = true; 
+{
+    this->func->anyPropertyMayBeWrittenTo = true;
 }
 
 void
@@ -400,7 +398,7 @@ GlobOpt::AddToPropertiesWrittenTo(Js::PropertyId propertyId)
 
 void
 GlobOpt::ProcessFieldKills(IR::Instr *instr, BVSparse<JitArenaAllocator> *bv, bool inGlobOpt)
-{   
+{
     if (bv->IsEmpty() && (!this->IsLoopPrePass() || this->rootLoopPrePass->allFieldsKilled))
     {
         // shortcut
@@ -457,14 +455,14 @@ GlobOpt::ProcessFieldKills(IR::Instr *instr, BVSparse<JitArenaAllocator> *bv, bo
 
     IR::JnHelperMethod fnHelper;
     switch(instr->m_opcode)
-    {   
+    {
     case Js::OpCode::StElemI_A:
     case Js::OpCode::StElemI_A_Strict:
         Assert(dstOpnd != nullptr);
         KillLiveFields(this->lengthEquivBv, bv);
         KillLiveElems(dstOpnd->AsIndirOpnd(), bv, inGlobOpt, instr->m_func);
         break;
-        
+
     case Js::OpCode::DeleteElemI_A:
     case Js::OpCode::DeleteElemIStrict_A:
         Assert(dstOpnd != nullptr);
@@ -503,7 +501,7 @@ GlobOpt::ProcessFieldKills(IR::Instr *instr, BVSparse<JitArenaAllocator> *bv, bo
     case Js::OpCode::StRootFldStrict:
     case Js::OpCode::StSlot:
     case Js::OpCode::StSlotChkUndecl:
-        Assert(dstOpnd != nullptr);        
+        Assert(dstOpnd != nullptr);
         sym = dstOpnd->AsSymOpnd()->m_sym;
         if (inGlobOpt)
         {
@@ -538,9 +536,9 @@ GlobOpt::ProcessFieldKills(IR::Instr *instr, BVSparse<JitArenaAllocator> *bv, bo
 
     case Js::OpCode::CallDirect:
         fnHelper = instr->GetSrc1()->AsHelperCallOpnd()->m_fnHelper;
-        
+
         //Kill length field for built-ins that can update it.
-        if(nullptr != this->lengthEquivBv && (fnHelper == IR::JnHelperMethod::HelperArray_Shift || fnHelper == IR::JnHelperMethod::HelperArray_Splice 
+        if(nullptr != this->lengthEquivBv && (fnHelper == IR::JnHelperMethod::HelperArray_Shift || fnHelper == IR::JnHelperMethod::HelperArray_Splice
             || fnHelper == IR::JnHelperMethod::HelperArray_Unshift))
         {
             KillLiveFields(this->lengthEquivBv, bv);
@@ -573,7 +571,7 @@ GlobOpt::ProcessFieldKills(IR::Instr * instr)
         Assert(this->blockData.liveFields->IsEmpty());
         return;
     }
-    
+
     ProcessFieldKills(instr, this->blockData.liveFields, true);
     if (this->blockData.hoistableFields)
     {
@@ -585,7 +583,7 @@ GlobOpt::ProcessFieldKills(IR::Instr * instr)
 
 void
 GlobOpt::PreparePrepassFieldHoisting(Loop * loop)
-{    
+{
     BVSparse<JitArenaAllocator> * fieldHoistCandidates = loop->fieldHoistCandidates;
 #if DBG_DUMP
     if (Js::Configuration::Global.flags.Trace.IsEnabled(Js::FieldHoistPhase, this->func->GetSourceContextId(), this->func->GetLocalFunctionId()))
@@ -607,7 +605,7 @@ GlobOpt::PreparePrepassFieldHoisting(Loop * loop)
     loop->fieldHoistCandidateTypes = JitAnew(this->alloc, BVSparse<JitArenaAllocator>, this->alloc);
 
     if (fieldHoistCandidates->IsEmpty())
-    {        
+    {
         return;
     }
 
@@ -616,14 +614,14 @@ GlobOpt::PreparePrepassFieldHoisting(Loop * loop)
     // If it is live, don't need to be hoisted
     Assert(loop->liveInFieldHoistCandidates == nullptr);
     BVSparse<JitArenaAllocator> * liveInFieldHoistCandidates = fieldHoistCandidates->AndNew(landingPad->globOptData.liveFields);
-    loop->liveInFieldHoistCandidates = liveInFieldHoistCandidates;    
+    loop->liveInFieldHoistCandidates = liveInFieldHoistCandidates;
 
     if (!liveInFieldHoistCandidates->IsEmpty())
     {
         // Assume the live fields don't need to hoist for now
         fieldHoistCandidates->Minus(liveInFieldHoistCandidates);
 
-        // If it was hoisted in an outter loop, and the value is live coming in, we don't need to hoist it again
+        // If it was hoisted in an outer loop, and the value is live coming in, we don't need to hoist it again
         Loop * currentLoop = loop->parent;
         while (currentLoop != nullptr && this->DoFieldHoisting(currentLoop))
         {
@@ -638,12 +636,12 @@ GlobOpt::PreparePrepassFieldHoisting(Loop * loop)
         {
             if (this->FindValueFromHashTable(landingPad->globOptData.symToValueMap, index) == nullptr)
             {
-                // Create inital values if we don't have one already for live fields
+                // Create initial values if we don't have one already for live fields
                 Value * newValue = this->NewGenericValue(ValueType::Uninitialized);
                 Value * oldValue = CopyValue(newValue, newValue->GetValueNumber());
                 Sym *sym = this->func->m_symTable->Find(index);
                 this->SetValue(&landingPad->globOptData, oldValue, sym);
-                this->SetValue(&this->blockData, newValue, sym);  
+                this->SetValue(&this->blockData, newValue, sym);
             }
         }
         NEXT_BITSET_IN_SPARSEBV;
@@ -711,14 +709,14 @@ GlobOpt::PreparePrepassFieldHoisting(Loop * loop)
     // to determine whether it should be hoisted.
     if (this->blockData.hoistableFields)
     {
-        this->blockData.hoistableFields->Copy(fieldHoistCandidates);        
+        this->blockData.hoistableFields->Copy(fieldHoistCandidates);
     }
     else
     {
         this->blockData.hoistableFields = fieldHoistCandidates->CopyNew(this->alloc);
         this->currentBlock->globOptData.hoistableFields = this->blockData.hoistableFields;
     }
-    this->blockData.hoistableFields->Or(liveInFieldHoistCandidates); 
+    this->blockData.hoistableFields->Or(liveInFieldHoistCandidates);
 
 #if DBG_DUMP
     if (Js::Configuration::Global.flags.Trace.IsEnabled(Js::FieldHoistPhase, this->func->GetSourceContextId(), this->func->GetLocalFunctionId()))
@@ -728,12 +726,12 @@ GlobOpt::PreparePrepassFieldHoisting(Loop * loop)
         Output::Print(L"FieldHoist: Prepass candidates (live)    : ");
         liveInFieldHoistCandidates->Dump();
     }
-#endif  
+#endif
 }
 
 void
 GlobOpt::PrepareFieldHoisting(Loop * loop)
-{    
+{
     Assert(!this->IsLoopPrePass());
 
     if (loop->parent != nullptr)
@@ -744,7 +742,7 @@ GlobOpt::PrepareFieldHoisting(Loop * loop)
     BVSparse<JitArenaAllocator> * fieldHoistCandidates = loop->fieldHoistCandidates;
     BVSparse<JitArenaAllocator> * liveInFieldHoistCandidates = loop->liveInFieldHoistCandidates;
     if (fieldHoistCandidates->IsEmpty() && (!liveInFieldHoistCandidates || liveInFieldHoistCandidates->IsEmpty()))
-    {        
+    {
         if (loop->hasHoistedFields)
         {
             loop->hoistedFieldCopySyms = JitAnew(this->alloc, BVSparse<JitArenaAllocator>, this->alloc);
@@ -756,17 +754,17 @@ GlobOpt::PrepareFieldHoisting(Loop * loop)
 
         return;
     }
- 
-    BasicBlock * landingPad = loop->landingPad;  
+
+    BasicBlock * landingPad = loop->landingPad;
     Assert(landingPad->globOptData.hoistableFields == nullptr);
     Assert(this->blockData.hoistableFields == nullptr);
 
     BVSparse<JitArenaAllocator>* fieldHoistCandidateTypes = loop->fieldHoistCandidateTypes;
-          
+
     // Remove the live fields that are added during prepass
     landingPad->globOptData.liveFields->Minus(fieldHoistCandidates);
     landingPad->globOptData.liveFields->Minus(fieldHoistCandidateTypes);
-    
+
     // After prepass, if the field is not loaded on the back edge, then we shouldn't hoist
     fieldHoistCandidates->And(this->blockData.liveFields);
     liveInFieldHoistCandidates->And(this->blockData.liveFields);
@@ -792,34 +790,34 @@ GlobOpt::PrepareFieldHoisting(Loop * loop)
 
     // Hoist the field load
     FOREACH_SLISTBASE_ENTRY(IR::Instr *, instr, &loop->prepassFieldHoistInstrCandidates)
-    {   
-        // We should have removed all live in that is hoisted in outter loops already.
+    {
+        // We should have removed all live in that is hoisted in outer loops already.
 #if DBG
         AssertCanCopyPropOrCSEFieldLoad(instr);
 #endif
         PropertySym * propertySym = instr->GetSrc1()->AsSymOpnd()->m_sym->AsPropertySym();
-        SymID symId = propertySym->m_id;         
-        
+        SymID symId = propertySym->m_id;
+
         if (loop->fieldHoistSymMap.ContainsKey(symId))
         {
             // the field is already hoisted
 #if DBG
             StackSym * hoistedCopySym;
             Assert(loop == FindFieldHoistStackSym(loop, symId, &hoistedCopySym, instr));
-#endif     
+#endif
             continue;
-        }          
-        
+        }
+
         Assert(GlobOpt::IsLive(propertySym->m_stackSym, landingPad));
 
         if (fieldHoistCandidates->Test(symId))
-        {            
-            // Hoist non live in field                
+        {
+            // Hoist non live in field
             Value * oldValue = this->FindValueFromHashTable(landingPad->globOptData.symToValueMap, symId);
             Value * newValue = this->FindValueFromHashTable(this->blockData.symToValueMap, symId);
             HoistFieldLoad(propertySym, loop, instr, oldValue, newValue);
             continue;
-        }         
+        }
 
         if (!liveInFieldHoistCandidates->Test(symId))
         {
@@ -832,25 +830,25 @@ GlobOpt::PrepareFieldHoisting(Loop * loop)
         Assert(this->blockData.liveFields->Test(symId));
 
         // If the value is live in, we shouldn't have a hoisted symbol already
-        Assert(!this->IsHoistedPropertySym(symId, loop->parent));       
+        Assert(!this->IsHoistedPropertySym(symId, loop->parent));
         Value * oldValue = this->FindPropertyValue(landingPad->globOptData.symToValueMap, symId);
-        AssertMsg(oldValue != nullptr, "We should have created an initial value for the field");   
+        AssertMsg(oldValue != nullptr, "We should have created an initial value for the field");
         ValueInfo *oldValueInfo = oldValue->GetValueInfo();
 
-        Value * newValue = this->FindPropertyValue(this->blockData.symToValueMap, symId);       
-      
-        // The value of the loop isn't invariant, we need to create a value to hold the field thru the loop
+        Value * newValue = this->FindPropertyValue(this->blockData.symToValueMap, symId);
+
+        // The value of the loop isn't invariant, we need to create a value to hold the field through the loop
 
         IntConstType oldIntConstantValue;
         if (oldValueInfo->TryGetIntConstantValue(&oldIntConstantValue))
-        {                                                  
+        {
             // Generate the constant load
             IR::IntConstOpnd * intConstOpnd = IR::IntConstOpnd::New(oldIntConstantValue, TyInt32, loopTopFunc);
 #if 0
             // REVIEW: not sure this is a good idea
             int32Opnd = intConstOpnd
 #endif
-            this->HoistFieldLoadValue(loop, newValue, symId, Js::OpCode::LdC_A_I4, intConstOpnd);                
+            this->HoistFieldLoadValue(loop, newValue, symId, Js::OpCode::LdC_A_I4, intConstOpnd);
         }
         else if (oldValueInfo->IsFloatConstant())
         {
@@ -864,35 +862,35 @@ GlobOpt::PrepareFieldHoisting(Loop * loop)
             Sym * copySym = this->GetCopyPropSym(landingPad, nullptr, oldValue);
 
             if (copySym != nullptr)
-            {   
+            {
                 if (newValue && oldValue->GetValueNumber() == newValue->GetValueNumber())
                 {
-                    // The value of the field is invariant thru the loop
+                    // The value of the field is invariant through the loop
                     // copy prop can deal with this, don't need to do anything
                     continue;
-                }        
+                }
 
-                StackSym * copyStackSym = copySym->AsStackSym();            
+                StackSym * copyStackSym = copySym->AsStackSym();
                 // Transfer from an old copy prop value
                 IR::RegOpnd * srcOpnd = IR::RegOpnd::New(copyStackSym, TyVar, loopTopFunc);
                 srcOpnd->SetIsJITOptimizedReg(true);
-                this->HoistFieldLoadValue(loop, newValue, symId, Js::OpCode::Ld_A, srcOpnd);                                
+                this->HoistFieldLoadValue(loop, newValue, symId, Js::OpCode::Ld_A, srcOpnd);
             }
             else
             {
                 // We don't have a copy sym, even though the field value is live, we can't copy prop.
                 // Generate the field load instead
-#if DBG            
-                landingPad->globOptData.liveFields->Clear(symId);   
+#if DBG
+                landingPad->globOptData.liveFields->Clear(symId);
                 this->blockData.liveFields->Clear(symId);
                 liveInFieldHoistCandidates->Clear(symId);
                 fieldHoistCandidates->Set(symId);
 #endif
                 HoistNewFieldLoad(propertySym, loop, instr, oldValue,  newValue);
             }
-        }      
+        }
     }
-    NEXT_SLISTBASE_ENTRY;   
+    NEXT_SLISTBASE_ENTRY;
 
     this->FinishOptHoistedPropOps(loop);
 
@@ -907,10 +905,10 @@ GlobOpt::PrepareFieldHoisting(Loop * loop)
     {
         Assert(loop->fieldHoistSymMap.Count() == 0);
         liveInFieldHoistCandidates->ClearAll();
-    }    
+    }
     else
     {
-        // Update liveInFieldHoistCandidates for assert in FindFieldHoistStackSym        
+        // Update liveInFieldHoistCandidates for assert in FindFieldHoistStackSym
         liveInFieldHoistCandidates->And(loop->hoistedFields);
 
         if (Js::Configuration::Global.flags.Trace.IsEnabled(Js::FieldHoistPhase, this->func->GetSourceContextId(), this->func->GetLocalFunctionId()))
@@ -919,30 +917,30 @@ GlobOpt::PrepareFieldHoisting(Loop * loop)
             loop->hoistedFields->Dump();
             Output::Print(L"FieldHoist: Live in candidates: ");
             liveInFieldHoistCandidates->Dump();
-        }   
+        }
     }
 #else
     JitAdelete(this->alloc, liveInFieldHoistCandidates);
     loop->liveInFieldHoistCandidates = nullptr;
-#endif 
+#endif
 
     JitAdelete(this->alloc, fieldHoistCandidates);
-    loop->fieldHoistCandidates = nullptr;    
+    loop->fieldHoistCandidates = nullptr;
 }
 
 
 void
 GlobOpt::CheckFieldHoistCandidate(IR::Instr * instr, PropertySym * sym)
 {
-    // See if this field load is hoistable 
-    // This load probably may have a store or kill before it.  
+    // See if this field load is hoistable
+    // This load probably may have a store or kill before it.
     // We will hoist it in another path. Just copy prop the value from the field store.
     // For example
     // loop
     // {
     //      if ()
     //      {
-    //          o.i = 
+    //          o.i =
     //              = o.i   <= not hoistable (but can copy prop)
     //      }
     //      else
@@ -956,17 +954,17 @@ GlobOpt::CheckFieldHoistCandidate(IR::Instr * instr, PropertySym * sym)
         // We're adding this instruction as a candidate for hoisting.  If it gets hoisted, its jit-time inline
         // cache will be used to generate the type check and bailout at the top of the loop.  After we bail out,
         // however, we may not go down the code path on which this instruction resides, and so the inline cache
-        // will not turn polymorphic.  If we then re-jit, we would hoist the same instruction again, and get 
+        // will not turn polymorphic.  If we then re-jit, we would hoist the same instruction again, and get
         // stuck in infinite bailout cycle.  That's why we use BailOutRecord::polymorphicCacheIndex for hoisted
         // field loads to force the profile info for the right inline cache into polymorphic state.
         this->rootLoopPrePass->prepassFieldHoistInstrCandidates.Prepend(this->alloc, instr);
 #if DBG_DUMP
         if (Js::Configuration::Global.flags.Trace.IsEnabled(Js::FieldHoistPhase, this->func->GetSourceContextId(), this->func->GetLocalFunctionId()))
         {
-            Output::Print(L"FieldHoist: Prepass marked hoist load");                    
+            Output::Print(L"FieldHoist: Prepass marked hoist load");
             Output::SkipToColumn(30);
             Output::Print(L" : ");
-            instr->Dump();                    
+            instr->Dump();
         }
 #endif
     }
@@ -980,7 +978,7 @@ GlobOpt::FinishOptHoistedPropOps(Loop * loop)
 
     // This extra check for parent loop was added as a fix for Windows 8 Bug 480217.  The issue there might have affected
     // the original redundant type elimination, but does not cause problems for object type spec.  With this check some
-    // operations which were candidates for object type spec in the backward pass (where we only checked the current loop), 
+    // operations which were candidates for object type spec in the backward pass (where we only checked the current loop),
     // could unexpectedly not be candidates, anymore.  This led to problems in the lowerer.
     // (Do this only if we're doing the optimization in the loop's parent, which is where we're inserting
     // the hoisted instruction.)
@@ -1031,7 +1029,7 @@ GlobOpt::FinishOptHoistedPropOps(Loop * loop)
 
     // Build the set of fields that are live on all back edges.
     // Use this to limit the type symbols we make live into the loop. We made the types of the hoisted fields
-    // live-in in the prepass, so if they're not live on a back edge, that means some path through the loop
+    // live in the prepass, so if they're not live on a back edge, that means some path through the loop
     // kills them.
     BVSparse<JitArenaAllocator> *bvBackEdge = nullptr;
     FOREACH_PREDECESSOR_BLOCK(predBlock, loop->GetHeadBlock())
@@ -1065,7 +1063,7 @@ GlobOpt::FinishOptHoistedPropOps(Loop * loop)
                 {
                     StackSym* typeSym = opnd->AsPropertySymOpnd()->GetObjectTypeSym();
 
-                    // We've cleared the live bits for types that are purely hoisted (not live into the loop), 
+                    // We've cleared the live bits for types that are purely hoisted (not live into the loop),
                     // so we can't use FindObjectTypeValue here.
                     Value* landingPadValue = FindValueFromHashTable(loop->landingPad->globOptData.symToValueMap, typeSym->m_id);
                     Value* headerValue = FindValueFromHashTable(loop->GetHeadBlock()->globOptData.symToValueMap, typeSym->m_id);
@@ -1083,12 +1081,12 @@ GlobOpt::FinishOptHoistedPropOps(Loop * loop)
                 instr = SetTypeCheckBailOut(opnd, instr, loop->bailOutInfo);
 
                 // If we changed the type's value in the landing pad we want to reflect this change in the header block as well,
-                // but only if the type is invariant throughout the loop.  Note that if the the type was live into the loop and
+                // but only if the type is invariant throughout the loop.  Note that if the type was live into the loop and
                 // live on all back edges, but not invariant, it will already be live in the header, but its value will be blank,
                 // because we merge type values conservatively on loop back edges (see MergeJsTypeValueInfo).
 
-                // TODO (ObjTypeSpec): There are corner cases where we copy prop an object pointer into the newly hoisted instruction, 
-                // and that object doesn't have a type yet.  We then create a type on the fly (see GenerateHoistFieldLoad and 
+                // TODO (ObjTypeSpec): There are corner cases where we copy prop an object pointer into the newly hoisted instruction,
+                // and that object doesn't have a type yet.  We then create a type on the fly (see GenerateHoistFieldLoad and
                 // CopyPropPropertySymObj), and don't have a value for it in the landing pad.  Thus we can't prove that the type is invariant
                 // throughout the loop, and so we won't produce a value for it into the loop.  This could be addressed by creating
                 // a mapping of type syms from before to after object pointer copy prop.
@@ -1155,13 +1153,13 @@ GlobOpt::HoistFieldLoadValue(Loop * loop, Value * newValue, SymID symId, Js::OpC
     Assert(!this->IsLoopPrePass());
     Assert(IsPropertySymId(symId));
     Assert(!loop->fieldHoistCandidates->Test(symId));
-    Assert(loop->landingPad->globOptData.liveFields->Test(symId));    
+    Assert(loop->landingPad->globOptData.liveFields->Test(symId));
     Assert(this->blockData.liveFields->Test(symId));
 
     Func * loopTopFunc = loop->GetFunc();
 
-    // Just transfer the copy prop sym to a new stack sym for the property 
-    // REVIEW: What happend if the outter loop already have a field hoist stack sym for this propertysym?
+    // Just transfer the copy prop sym to a new stack sym for the property
+    // REVIEW: What happens if the outer loop already have a field hoist stack sym for this propertysym?
     StackSym * newStackSym = StackSym::New(TyVar, loopTopFunc);
 
     // This new stack sym may or may not be single def, just make it not a single def.
@@ -1170,7 +1168,7 @@ GlobOpt::HoistFieldLoadValue(Loop * loop, Value * newValue, SymID symId, Js::OpC
     IR::RegOpnd * newOpnd = IR::RegOpnd::New(newStackSym, TyVar, loopTopFunc);
     IR::Instr * newInstr = IR::Instr::New(opcode, newOpnd, srcOpnd, loopTopFunc);
 
-    insertInstr->InsertBefore(newInstr);    
+    insertInstr->InsertBefore(newInstr);
     loop->landingPad->globOptData.liveVarSyms->Set(newStackSym->m_id);
     loop->varSymsOnEntry->Set(newStackSym->m_id);
 
@@ -1189,11 +1187,11 @@ GlobOpt::HoistFieldLoadValue(Loop * loop, Value * newValue, SymID symId, Js::OpC
     }
     else
     {
-        this->SetValue(&this->blockData, newValue, newStackSym);        
+        this->SetValue(&this->blockData, newValue, newStackSym);
         newValue->GetValueInfo()->SetSymStore(newStackSym);
     }
 
-   
+
     this->blockData.liveVarSyms->Set(newStackSym->m_id);
     loop->fieldHoistSymMap.Add(symId, newStackSym);
     loop->hoistedFieldCopySyms->Set(newStackSym->m_id);
@@ -1218,12 +1216,12 @@ GlobOpt::HoistFieldLoadValue(Loop * loop, Value * newValue, SymID symId, Js::OpC
         this->func->m_symTable->Find(symId)->Dump();
         Output::SkipToColumn(30);
         Output::Print(L" : ");
-        newInstr->Dump();                    
+        newInstr->Dump();
     }
-#endif      
+#endif
 }
 
-bool 
+bool
 GlobOpt::IsHoistablePropertySym(SymID symId) const
 {
     return this->blockData.hoistableFields && this->blockData.hoistableFields->Test(symId);
@@ -1252,9 +1250,9 @@ GlobOpt::FindFieldHoistStackSym(Loop * startLoop, SymID propertySymId, StackSym 
     }
 
     Loop * loop = startLoop;
-            
+
     while (loop && this->DoFieldHoisting(loop))
-    {              
+    {
         if (loop->fieldHoistSymMap.TryGetValue(propertySymId, copySym))
         {
             Assert(loop->hasHoistedFields);
@@ -1271,7 +1269,7 @@ GlobOpt::FindFieldHoistStackSym(Loop * startLoop, SymID propertySymId, StackSym 
             liveInSym = loop->liveInFieldHoistCandidates->Test(propertySymId);
 
             Assert(landingPad->globOptData.liveFields->Test(propertySymId));
-            Assert(landingPad->globOptData.liveVarSyms->Test((*copySym)->m_id));  
+            Assert(landingPad->globOptData.liveVarSyms->Test((*copySym)->m_id));
 #endif
 
             // This has been hoisted already
@@ -1337,7 +1335,7 @@ GlobOpt::FindFieldHoistStackSym(Loop * startLoop, SymID propertySymId, StackSym 
                 }
             }
             NEXT_INSTR_BACKWARD_IN_BLOCK;
-            Assert(found);          
+            Assert(found);
 
             return loop;
         }
@@ -1354,10 +1352,10 @@ GlobOpt::HoistFieldLoad(PropertySym * sym, Loop * loop, IR::Instr * instr, Value
     if (parentLoop != nullptr)
     {
         StackSym * copySym;
-        Loop * hoistedLoop = FindFieldHoistStackSym(parentLoop, sym->m_id, &copySym, instr);    
+        Loop * hoistedLoop = FindFieldHoistStackSym(parentLoop, sym->m_id, &copySym, instr);
         if (hoistedLoop != nullptr)
         {
-            // Use an outter loop pre-assigned stack sym if it is already hoisted there
+            // Use an outer loop pre-assigned stack sym if it is already hoisted there
             Assert(hoistedLoop != loop);
             GenerateHoistFieldLoad(sym, loop, instr, copySym, oldValue, newValue);
             return;
@@ -1377,7 +1375,7 @@ GlobOpt::HoistNewFieldLoad(PropertySym * sym, Loop * loop, IR::Instr * instr, Va
     // This new stack sym may or may not be single def, just make it not a single def.
     // So that we don't lose the value when it become non-single def
     newStackSym->m_isSingleDef = false;
-    
+
     GenerateHoistFieldLoad(sym, loop, instr, newStackSym, oldValue, newValue);
 }
 
@@ -1391,16 +1389,16 @@ GlobOpt::GenerateHoistFieldLoad(PropertySym * sym, Loop * loop, IR::Instr * inst
 
 #if DBG
     Assert(!this->IsLoopPrePass());
-    AssertCanCopyPropOrCSEFieldLoad(instr);     
-    Assert(instr->GetSrc1()->AsSymOpnd()->m_sym == sym);        
-    
-    Assert(loop->fieldHoistCandidates->Test(symId));  
+    AssertCanCopyPropOrCSEFieldLoad(instr);
+    Assert(instr->GetSrc1()->AsSymOpnd()->m_sym == sym);
+
+    Assert(loop->fieldHoistCandidates->Test(symId));
     Assert(!landingPad->globOptData.liveFields->Test(sym->m_id));
     Assert(!this->blockData.liveFields->Test(sym->m_id));
     Assert(!loop->fieldHoistSymMap.ContainsKey(symId));
-#endif    
+#endif
 
-    loop->fieldHoistSymMap.Add(symId, newStackSym);  
+    loop->fieldHoistSymMap.Add(symId, newStackSym);
     loop->hoistedFieldCopySyms->Set(newStackSym->m_id);
 
     Func * loopTopFunc = loop->GetFunc();
@@ -1412,7 +1410,7 @@ GlobOpt::GenerateHoistFieldLoad(PropertySym * sym, Loop * loop, IR::Instr * inst
     if (instr->GetSrc1() && instr->GetSrc1()->IsSymOpnd() && instr->GetSrc1()->AsSymOpnd()->IsPropertySymOpnd())
     {
         IR::PropertySymOpnd * srcPropertySymOpnd = instr->GetSrc1()->AsPropertySymOpnd();
-        AssertMsg(!srcPropertySymOpnd->IsTypeAvailable() && !srcPropertySymOpnd->IsTypeChecked() && !srcPropertySymOpnd->IsWriteGuardChecked(), 
+        AssertMsg(!srcPropertySymOpnd->IsTypeAvailable() && !srcPropertySymOpnd->IsTypeChecked() && !srcPropertySymOpnd->IsWriteGuardChecked(),
             "Why are the object type spec bits set before we specialized this instruction?");
 
         // We only set guarded properties in the dead store pass, so they shouldn't be set here yet. If they were
@@ -1438,12 +1436,12 @@ GlobOpt::GenerateHoistFieldLoad(PropertySym * sym, Loop * loop, IR::Instr * inst
 
     IR::Instr * newInstr = nullptr;
     ValueType profiledFieldType;
-    
+
     if (instr->IsProfiledInstr())
     {
         profiledFieldType = instr->AsProfiledInstr()->u.FldInfo().valueType;
     }
-    
+
     newInstr = IR::Instr::New(instr->m_opcode, newDst, newSrc, loopTopFunc);
     //Win8 910551: Kill the live field for this hoisted field load
     KillLiveFields(newStackSym, this->blockData.liveFields);
@@ -1454,7 +1452,7 @@ GlobOpt::GenerateHoistFieldLoad(PropertySym * sym, Loop * loop, IR::Instr * inst
     // Track use/def of arguments object.
     this->OptArguments(newInstr);
 
-    landingPad->globOptData.liveFields->Set(symId);    
+    landingPad->globOptData.liveFields->Set(symId);
     this->blockData.liveFields->Set(symId);
 
     // If we are reusing an already hoisted stack sym, while the var version is made live, need to make sure that specialized
@@ -1513,7 +1511,7 @@ GlobOpt::GenerateHoistFieldLoad(PropertySym * sym, Loop * loop, IR::Instr * inst
 #ifdef DBG
     PropertySym *propertySymUseBefore = nullptr;
     Assert(this->byteCodeUses == nullptr);
-    this->byteCodeUsesBeforeOpt->ClearAll();    
+    this->byteCodeUsesBeforeOpt->ClearAll();
     GlobOpt::TrackByteCodeSymUsed(instr, this->byteCodeUsesBeforeOpt, &propertySymUseBefore);
 #endif
     this->CaptureByteCodeSymUses(newInstr);
@@ -1532,11 +1530,11 @@ GlobOpt::GenerateHoistFieldLoad(PropertySym * sym, Loop * loop, IR::Instr * inst
 
     StackSym * propertyBase = sym->m_stackSym;
     if (!landingPad->globOptData.liveVarSyms->Test(propertyBase->m_id))
-    {        
+    {
         IR::RegOpnd *newOpnd = IR::RegOpnd::New(propertyBase, TyVar, instr->m_func);
         this->ToVar(newInstr, newOpnd, landingPad, this->FindValue(propertyBase), false);
     }
-   
+
     if (landingPad->globOptData.canStoreTempObjectSyms && landingPad->globOptData.canStoreTempObjectSyms->Test(propertyBase->m_id))
     {
         newSrc->SetCanStoreTemp();
@@ -1545,13 +1543,13 @@ GlobOpt::GenerateHoistFieldLoad(PropertySym * sym, Loop * loop, IR::Instr * inst
 #if DBG_DUMP
     if (Js::Configuration::Global.flags.Trace.IsEnabled(Js::FieldHoistPhase, this->func->GetSourceContextId(), this->func->GetLocalFunctionId()))
     {
-        Output::Print(L"FieldHoist: Hoisted Load ");        
+        Output::Print(L"FieldHoist: Hoisted Load ");
         Output::SkipToColumn(30);
         Output::Print(L" : ");
-        newInstr->Dump();                    
+        newInstr->Dump();
     }
 #endif
-#if ENABLE_DEBUG_CONFIG_OPTIONS 
+#if ENABLE_DEBUG_CONFIG_OPTIONS
     if (Js::Configuration::Global.flags.TestTrace.IsEnabled(Js::FieldHoistPhase, this->func->GetSourceContextId(), this->func->GetLocalFunctionId()))
     {
         wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
@@ -1569,26 +1567,26 @@ GlobOpt::CreateFieldSrcValue(PropertySym * sym, PropertySym * originalSym, IR::O
     Assert(!instr->UsesAllFields());
 
     AssertCanCopyPropOrCSEFieldLoad(instr);
-    
+
     Assert(instr->GetSrc1() == *ppOpnd);
 #endif
 
-    // Only give value to fields if we are doing field copy prop   
+    // Only give value to fields if we are doing field copy prop
     // CONSIDER: we should always copy prop local slots, but the only use right now is LdSlot from jit loop body.
     // which should have one onus load, and thus no need for copy prop of field itself.  We may want to support
     // copy prop LdSlot if there are other uses of local slots
     if (!this->DoFieldCopyProp())
-    {      
+    {
         return nullptr;
-    }                   
+    }
 
-    BOOL wasLive = this->blockData.liveFields->TestAndSet(sym->m_id);    
+    BOOL wasLive = this->blockData.liveFields->TestAndSet(sym->m_id);
 
     if (this->DoFieldHoisting())
     {
         // We don't track copy prop sym for fields on loop prepass, no point in creating an empty unknown value
-        // If we can copy prop thru the back edge, we would have hoisted the field load, 
-        // in which case we will just pick the live in copy prop sym for the field or create 
+        // If we can copy prop through the back edge, we would have hoisted the field load,
+        // in which case we will just pick the live in copy prop sym for the field or create
         // a new sym for the stack sym of the hoist field.
         if (this->IsLoopPrePass())
         {
@@ -1596,7 +1594,7 @@ GlobOpt::CreateFieldSrcValue(PropertySym * sym, PropertySym * originalSym, IR::O
             this->blockData.symToValueMap->Clear(sym->m_id);
             return nullptr;
         }
-    }    
+    }
     else if (sym != originalSym)
     {
         this->blockData.liveFields->TestAndSet(originalSym->m_id);
@@ -1610,14 +1608,14 @@ GlobOpt::CreateFieldSrcValue(PropertySym * sym, PropertySym * originalSym, IR::O
 
     Assert((*ppOpnd)->AsSymOpnd()->m_sym == sym || this->IsLoopPrePass());
     if (wasLive)
-    {   
+    {
         // We should have dealt with field hoist already
         Assert(!IsHoistedPropertySym(sym) || instr->m_opcode == Js::OpCode::CheckFixedFld);
-                
-        // We don't use the sym store to do copy prop on hoisted fields, but create a value 
-        // in case it can be copy prop out of the loop        
+
+        // We don't use the sym store to do copy prop on hoisted fields, but create a value
+        // in case it can be copy prop out of the loop
     }
-    else 
+    else
     {
         // If it wasn't live, it should not be hoistable
         Assert(!this->IsHoistablePropertySym(sym->m_id));
@@ -1651,7 +1649,7 @@ GlobOpt::FieldHoistOptSrc(IR::Opnd *opnd, IR::Instr *instr, PropertySym * proper
         //
         // If this is a hoistable field, and if the field is ultimately chosen to be hoisted outside this loop, the field will
         // be reloaded in this loop's landing pad. However, since the field may be already have been hoisted outside a parent
-        // loop with a specialized stack sym still live and a value still svailable (since these are killed lazily), neither of
+        // loop with a specialized stack sym still live and a value still available (since these are killed lazily), neither of
         // which are valid anymore due to the reload, we still need to kill the specialized stack syms and the field value. On
         // the other hand, if this was not a hoistable field, we need to treat it as a field load anyway. So, since this is the
         // first use of the field in this loop, fall through to reload the field.
@@ -1659,12 +1657,12 @@ GlobOpt::FieldHoistOptSrc(IR::Opnd *opnd, IR::Instr *instr, PropertySym * proper
     else if (!this->IsLoopPrePass())
     {
         if (CopyPropHoistedFields(propertySym, &opnd, instr))
-        {        
+        {
             return true;
-        }    
+        }
     }
-   
-    this->ReloadFieldHoistStackSym(instr, propertySym);    
+
+    this->ReloadFieldHoistStackSym(instr, propertySym);
     return false;
 }
 
@@ -1680,8 +1678,8 @@ GlobOpt::FieldHoistOptDst(IR::Instr * instr, PropertySym * propertySym, Value * 
         case Js::OpCode::StFld:
         case Js::OpCode::StRootFld:
         case Js::OpCode::StFldStrict:
-        case Js::OpCode::StRootFldStrict:        
-            CopyStoreFieldHoistStackSym(instr, propertySym, src1Val);      
+        case Js::OpCode::StRootFldStrict:
+            CopyStoreFieldHoistStackSym(instr, propertySym, src1Val);
             break;
         }
     }
@@ -1702,7 +1700,7 @@ GlobOpt::CopyPropHoistedFields(PropertySym * sym, IR::Opnd ** ppOpnd, IR::Instr 
     Assert(loop != nullptr || !this->IsHoistablePropertySym(sym->m_id));
 
     if (loop)
-    {                
+    {
         // the field was live before, so we have the hoisted stack sym has the live value, just copy prop it
         *ppOpnd = CopyPropReplaceOpnd(instr, *ppOpnd, hoistedCopySym);
 
@@ -1713,7 +1711,7 @@ GlobOpt::CopyPropHoistedFields(PropertySym * sym, IR::Opnd ** ppOpnd, IR::Instr 
             sym->Dump();
             Output::SkipToColumn(30);
             Output::Print(L" : ");
-            instr->Dump();                    
+            instr->Dump();
         }
 #endif
         return true;
@@ -1723,7 +1721,7 @@ GlobOpt::CopyPropHoistedFields(PropertySym * sym, IR::Opnd ** ppOpnd, IR::Instr 
 
 void
 GlobOpt::ReloadFieldHoistStackSym(IR::Instr * instr, PropertySym * propertySym)
-{    
+{
     Assert(GlobOpt::TransferSrcValue(instr));
     StackSym * fieldHoistSym;
     Loop * loop = this->FindFieldHoistStackSym(this->currentBlock->loop, propertySym->m_id, &fieldHoistSym, instr);
@@ -1768,13 +1766,13 @@ GlobOpt::ReloadFieldHoistStackSym(IR::Instr * instr, PropertySym * propertySym)
 
     if (this->IsLoopPrePass())
     {
-        // In the prepass, we are conservative and always assume that the field are going to be reloaded 
-        // because we don't loop until value is unchange and unable to detect dependencies
+        // In the prepass, we are conservative and always assume that the field are going to be reloaded
+        // because we don't loop until value is unchanged and unable to detect dependencies
 
         // Clear the value of the field to kill the value of the field even if it still live now
         this->blockData.liveFields->Clear(propertySym->m_id);
 
-        // If we have to reload, we don't know what the value, kill the old value for the fieldHoistSym        
+        // If we have to reload, we don't know what the value, kill the old value for the fieldHoistSym
         this->blockData.symToValueMap->Clear(fieldHoistSym->m_id);
 
         // No IR transformations in the prepass.
@@ -1784,22 +1782,22 @@ GlobOpt::ReloadFieldHoistStackSym(IR::Instr * instr, PropertySym * propertySym)
     // If we are reloading the field should be dead, CreateFieldSrc will create a value for the field
     Assert(!this->blockData.liveFields->Test(propertySym->m_id));
 
-    // Copy the dst to the field hoist sym.  
+    // Copy the dst to the field hoist sym.
     IR::Instr * copyInstr = IR::Instr::New(Js::OpCode::Ld_A, IR::RegOpnd::New(fieldHoistSym, TyVar, instr->m_func), instr->GetDst(), instr->m_func);
     instr->InsertAfter(copyInstr);
-    
+
 #if DBG_DUMP
     if (Js::Configuration::Global.flags.Trace.IsEnabled(Js::FieldHoistPhase, this->func->GetSourceContextId(), this->func->GetLocalFunctionId()))
     {
-        Output::Print(L"FieldHoist: Reload field sym ");        
+        Output::Print(L"FieldHoist: Reload field sym ");
         Output::SkipToColumn(30);
         Output::Print(L" : ");
-        instr->Dump();                    
+        instr->Dump();
     }
 #endif
 }
 
-void 
+void
 GlobOpt::CopyStoreFieldHoistStackSym(IR::Instr * storeFldInstr, PropertySym * sym, Value * src1Val)
 {
     // In the real (non-pre-) pass, do the actual IR rewrites.
@@ -1816,7 +1814,7 @@ GlobOpt::CopyStoreFieldHoistStackSym(IR::Instr * storeFldInstr, PropertySym * sy
     // We may use StSlot for all sort of things other then assigning TyVars
     Assert(storeFldInstr->GetSrc1()->GetType() == TyVar || storeFldInstr->m_opcode == Js::OpCode::StSlot || storeFldInstr->m_opcode == Js::OpCode::StSlotChkUndecl);
     Assert(storeFldInstr->GetSrc2() == nullptr);
-    
+
     StackSym * copySym;
     Loop * loop = this->FindFieldHoistStackSym(this->currentBlock->loop, sym->m_id, &copySym);
     if (loop == nullptr)
@@ -1835,7 +1833,7 @@ GlobOpt::CopyStoreFieldHoistStackSym(IR::Instr * storeFldInstr, PropertySym * sy
         storeFldInstr->UnlinkSrc1();
         newInstr = IR::Instr::New(Js::OpCode::Ld_A, dstOpnd, srcOpnd, storeFldFunc);
         storeFldInstr->SetSrc1(dstOpnd);
-        storeFldInstr->InsertBefore(newInstr);   
+        storeFldInstr->InsertBefore(newInstr);
     }
     this->ToVarStackSym(copySym, this->currentBlock); // the field-hoisted stack sym is now unspecialized
 
@@ -1861,7 +1859,7 @@ GlobOpt::CopyStoreFieldHoistStackSym(IR::Instr * storeFldInstr, PropertySym * sy
                 StackSym * int32CopySym = copySym->GetInt32EquivSym(storeFldFunc);
                 IR::RegOpnd * int32CopyOpnd = IR::RegOpnd::New(int32CopySym, TyInt32, storeFldFunc);
                 IR::RegOpnd * int32SrcOpnd = IR::RegOpnd::New(srcSym->GetInt32EquivSym(nullptr),
-                    TyInt32, storeFldFunc);            
+                    TyInt32, storeFldFunc);
                 newInstr = IR::Instr::New(Js::OpCode::Ld_I4, int32CopyOpnd, int32SrcOpnd, storeFldFunc);
                 int32SrcOpnd->SetIsJITOptimizedReg(true);
                 storeFldInstr->InsertBefore(newInstr);
@@ -1876,7 +1874,7 @@ GlobOpt::CopyStoreFieldHoistStackSym(IR::Instr * storeFldInstr, PropertySym * sy
                 StackSym * float64CopySym = copySym->GetFloat64EquivSym(storeFldFunc);
                 IR::RegOpnd * float64CopyOpnd = IR::RegOpnd::New(float64CopySym, TyFloat64, storeFldFunc);
                 IR::RegOpnd * float64SrcOpnd = IR::RegOpnd::New(srcSym->GetFloat64EquivSym(nullptr),
-                    TyFloat64, storeFldFunc);            
+                    TyFloat64, storeFldFunc);
                 newInstr = IR::Instr::New(Js::OpCode::Ld_A, float64CopyOpnd, float64SrcOpnd, storeFldFunc);
                 float64SrcOpnd->SetIsJITOptimizedReg(true);
                 storeFldInstr->InsertBefore(newInstr);
@@ -1917,10 +1915,10 @@ GlobOpt::CopyStoreFieldHoistStackSym(IR::Instr * storeFldInstr, PropertySym * sy
     {
         if (Js::Configuration::Global.flags.Trace.IsEnabled(Js::FieldHoistPhase, this->func->GetSourceContextId(), this->func->GetLocalFunctionId()))
         {
-            Output::Print(L"FieldHoist: Copy field store ");        
+            Output::Print(L"FieldHoist: Copy field store ");
             Output::SkipToColumn(30);
             Output::Print(L" : ");
-            storeFldInstr->Dump();                        
+            storeFldInstr->Dump();
         }
     }
 #endif
@@ -1930,7 +1928,7 @@ bool
 GlobOpt::NeedBailOnImplicitCallWithFieldOpts(Loop *loop, bool hasLiveFields) const
 {
     if (!((this->DoFieldHoisting(loop) && loop->hasHoistedFields) ||
-          ((this->DoFieldRefOpts(loop) || 
+          ((this->DoFieldRefOpts(loop) ||
             this->DoFieldCopyProp(loop)) &&
            hasLiveFields)))
     {
@@ -1959,10 +1957,10 @@ GlobOpt::EnsureDisableImplicitCallRegion(Loop * loop)
     IR::IntConstOpnd * disableImplicitCallAndExceptionValue = IR::IntConstOpnd::New(DisableImplicitCallAndExceptionFlag, TyInt8, bailOutFunc, true);
     IR::IntConstOpnd * enableImplicitCallAndExceptionValue = IR::IntConstOpnd::New(DisableImplicitNoFlag, TyInt8, bailOutFunc, true);
 
-    IR::Opnd * implicitCallFlags = Lowerer::GetImplicitCallFlagsOpnd(bailOutFunc);    
+    IR::Opnd * implicitCallFlags = Lowerer::GetImplicitCallFlagsOpnd(bailOutFunc);
     IR::IntConstOpnd * noImplicitCall = IR::IntConstOpnd::New(Js::ImplicitCall_None, TyInt8, bailOutFunc, true);
 
-    // TODO: if we are already doing implicit call in the outter loop, we don't need to clear the implicit call bit again
+    // TODO: if we are already doing implicit call in the outer loop, we don't need to clear the implicit call bit again
     IR::Instr * clearImplicitCall = IR::Instr::New(Js::OpCode::Ld_A, implicitCallFlags, noImplicitCall, bailOutFunc);
     bailOutTarget->InsertBefore(clearImplicitCall);
 
@@ -1971,7 +1969,7 @@ GlobOpt::EnsureDisableImplicitCallRegion(Loop * loop)
 
     endDisableImplicitCall = IR::Instr::New(Js::OpCode::Ld_A, disableImplicitCallAddress, enableImplicitCallAndExceptionValue, bailOutFunc);
     bailOutTarget->InsertBefore(endDisableImplicitCall);
-    
+
     IR::BailOutInstr * bailOutInstr = IR::BailOutInstr::New(Js::OpCode::BailOnNotEqual, IR::BailOutOnImplicitCalls, loop->bailOutInfo, loop->bailOutInfo->bailOutFunc);
     bailOutInstr->SetSrc1(implicitCallFlags);
     bailOutInstr->SetSrc2(noImplicitCall);
@@ -1984,13 +1982,13 @@ GlobOpt::EnsureDisableImplicitCallRegion(Loop * loop)
 #if DBG
 bool
 GlobOpt::IsHoistedPropertySym(PropertySym * sym) const
-{    
+{
     return IsHoistedPropertySym(sym->m_id, this->currentBlock->loop);
 }
 
 bool
 GlobOpt::IsHoistedPropertySym(SymID symId, Loop * loop) const
-{    
+{
     StackSym * copySym;
     return this->FindFieldHoistStackSym(loop, symId, &copySym) != nullptr;
 }
@@ -2001,13 +1999,13 @@ GlobOpt::IsPropertySymId(SymID symId) const
     return this->func->m_symTable->Find(symId)->IsPropertySym();
 }
 
-void 
-GlobOpt::AssertCanCopyPropOrCSEFieldLoad(IR::Instr * instr) 
+void
+GlobOpt::AssertCanCopyPropOrCSEFieldLoad(IR::Instr * instr)
 {
     // REVIEW: hoisting LdRootFld may have complication with exception if the field doesn't exist
     // We need to have another opcode for the hoisted version to avoid the exception and bailout
 
-    // TODO: Theoretially, we can copy prop/field hoist ScopedLdFld/ScopedStFld, 
+    // TODO: Theoretically, we can copy prop/field hoist ScopedLdFld/ScopedStFld,
     // but GlobOtp::TransferSrcValue blocks that now, and copy prop into that instruction is not supported yet.
     Assert(instr->m_opcode == Js::OpCode::LdSlot || instr->m_opcode == Js::OpCode::LdSlotArr
         || instr->m_opcode == Js::OpCode::LdSlotChkUndecl
@@ -2024,7 +2022,7 @@ GlobOpt::AssertCanCopyPropOrCSEFieldLoad(IR::Instr * instr)
     Assert(instr->m_opcode == Js::OpCode::CheckFixedFld || instr->GetDst()->GetType() == TyVar);
     Assert(instr->GetSrc1()->GetType() == TyVar);
     Assert(instr->GetSrc1()->AsSymOpnd()->m_sym->IsPropertySym());
-    Assert(instr->GetSrc2() == nullptr); 
+    Assert(instr->GetSrc2() == nullptr);
 }
 
 #endif
@@ -2287,8 +2285,8 @@ template<bool makeChanges>
 bool
 GlobOpt::ProcessPropOpInTypeCheckSeq(IR::Instr* instr, IR::PropertySymOpnd *opnd, BasicBlock* block, bool updateExistingValue, bool* emitsTypeCheckOut, bool* changesTypeValueOut, bool *isTypeCheckedOut)
 {
-    // We no longer mark types as dead in the backward pass, so we should never see an instr with a dead type here 
-    // during the forward pass.  For the time being we've retained the logic below to deal with dead types in case 
+    // We no longer mark types as dead in the backward pass, so we should never see an instr with a dead type here
+    // during the forward pass.  For the time being we've retained the logic below to deal with dead types in case
     // we ever wanted to revert back to more aggressive type killing that we had before.
     Assert(!opnd->IsTypeDead());
 
@@ -2376,7 +2374,7 @@ GlobOpt::ProcessPropOpInTypeCheckSeq(IR::Instr* instr, IR::PropertySymOpnd *opnd
             {
                 // Checked type matches the initial type at this store.
 
-                bool objectMayHaveAcquiredAdditionalProperties = 
+                bool objectMayHaveAcquiredAdditionalProperties =
                     block->globOptData.maybeWrittenTypeSyms &&
                     block->globOptData.maybeWrittenTypeSyms->Test(typeSym->m_id);
                 if (consumeType)
@@ -2395,7 +2393,7 @@ GlobOpt::ProcessPropOpInTypeCheckSeq(IR::Instr* instr, IR::PropertySymOpnd *opnd
                 {
                     *isTypeCheckedOut = !objectMayHaveAcquiredAdditionalProperties;
                 }
-            }       
+            }
             else
             {
                 // This must be a type mismatch situation, because the value is available, but doesn't match either
@@ -2437,7 +2435,7 @@ GlobOpt::ProcessPropOpInTypeCheckSeq(IR::Instr* instr, IR::PropertySymOpnd *opnd
                 emitsTypeCheck = isSpecialized;
                 addsProperty = isSpecialized;
                 if (produceType)
-                {       
+                {
                     SetSingleTypeOnObjectTypeValue(value, opndType);
                 }
             }
@@ -2479,8 +2477,8 @@ GlobOpt::ProcessPropOpInTypeCheckSeq(IR::Instr* instr, IR::PropertySymOpnd *opnd
             isSpecialized = !isTypeDead;
             emitsTypeCheck = isSpecialized;
         }
-        else if (valueInfo->GetJsType() ? 
-                 opndTypeSet->Contains(valueInfo->GetJsType(), &checkedTypeSetIndex) : 
+        else if (valueInfo->GetJsType() ?
+                 opndTypeSet->Contains(valueInfo->GetJsType(), &checkedTypeSetIndex) :
                  IsSubsetOf(valueInfo->GetJsTypeSet(), opndTypeSet))
         {
             // All the types in the value info are contained in the set required by this access,
@@ -2581,12 +2579,12 @@ GlobOpt::ProcessPropOpInTypeCheckSeq(IR::Instr* instr, IR::PropertySymOpnd *opnd
     // on the back edge (much like we're doing for types above).
 
     // TODO (ObjTypeSpec): Support polymorphic write guards as well. We can't currently distinguish between mono and
-    // poly write guards, and a type check can only protect operations matching with respect to polymorphism (see 
+    // poly write guards, and a type check can only protect operations matching with respect to polymorphism (see
     // BackwardPass::TrackObjTypeSpecProperties for details), so for now we only target monomorphic operations.
     if (produceType && emitsTypeCheck && opnd->IsMono())
     {
         // If the type check we'll emit here protects some property operations that require a write guard (i.e.
-        // they must do an extra type check and property guard check, if they have been written to in this 
+        // they must do an extra type check and property guard check, if they have been written to in this
         // function), let's mark the write guards as live here, so we can accurately track if their properties
         // have been written to. Make sure we only set those that we'll actually guard, i.e. those that match
         // with respect to polymorphism.
@@ -2660,7 +2658,7 @@ GlobOpt::OptNewScObject(IR::Instr** instrPtr, Value* srcVal)
 
     Assert(ctorCache == nullptr || srcVal->GetValueInfo()->IsVarConstant() && Js::JavascriptFunction::Is(srcVal->GetValueInfo()->AsVarConstant()->VarValue()));
     Assert(ctorCache == nullptr || !ctorCache->typeIsFinal || ctorCache->ctorHasNoExplicitReturnValue);
-    
+
     if (ctorCache != nullptr && !ctorCache->skipNewScObject && (isCtorInlined || ctorCache->typeIsFinal))
     {
         GenerateBailAtOperation(instrPtr, IR::BailOutFailedCtorGuardCheck);
@@ -2685,7 +2683,7 @@ GlobOpt::ValueNumberObjectType(IR::Opnd *dstOpnd, IR::Instr *instr)
     if (instr->IsNewScObjectInstr())
     {
         // If we have a NewScObj* for which we have a valid constructor cache we know what type the created object will have.
-        // Let's produce the type value accordingly so we don't insert a type check and bailout in the constructor and 
+        // Let's produce the type value accordingly so we don't insert a type check and bailout in the constructor and
         // potentially further downstream.
         Assert(!PHASE_OFF(Js::ObjTypeSpecNewObjPhase, this->func) || !instr->HasBailOutInfo());
 
@@ -2716,7 +2714,7 @@ GlobOpt::ValueNumberObjectType(IR::Opnd *dstOpnd, IR::Instr *instr)
 
         IR::Opnd * srcOpnd = instr->GetSrc1();
 
-        if (instr->m_opcode == Js::OpCode::Ld_A && srcOpnd->IsRegOpnd() && 
+        if (instr->m_opcode == Js::OpCode::Ld_A && srcOpnd->IsRegOpnd() &&
             !srcOpnd->AsRegOpnd()->m_sym->IsTypeSpec() && srcOpnd->AsRegOpnd()->m_sym->HasObjectTypeSym())
         {
             StackSym *srcTypeSym = srcOpnd->AsRegOpnd()->m_sym->GetObjectTypeSym();
@@ -2775,8 +2773,8 @@ GlobOpt::SetTypeCheckBailOut(IR::Opnd *opnd, IR::Instr *instr, BailOutInfo *bail
             }
             else
             {
-                GenerateBailAtOperation(&instr, bailOutKind);               
-                BailOutInfo *bailOutInfo = instr->GetBailOutInfo();                
+                GenerateBailAtOperation(&instr, bailOutKind);
+                BailOutInfo *bailOutInfo = instr->GetBailOutInfo();
                 // TODO (ObjTypeSpec): If we're checking a fixed field here the bailout could be due to polymorphism or
                 // due to a fixed field turning non-fixed. Consider distinguishing between the two.
                 bailOutInfo->polymorphicCacheIndex = propertySymOpnd->m_inlineCacheIndex;
@@ -2805,7 +2803,7 @@ GlobOpt::SetTypeCheckBailOut(IR::Opnd *opnd, IR::Instr *instr, BailOutInfo *bail
     {
         if (instr->m_opcode == Js::OpCode::LdMethodFromFlags)
         {
-            // If LdMethodFromFlags is hoisted to the top of the loop, we should share the same bailout Info. 
+            // If LdMethodFromFlags is hoisted to the top of the loop, we should share the same bailout Info.
             // We don't need to do anything for LdMethodFromFlags that cannot be field hoisted.
             HandleBailout(IR::BailOutFailedInlineTypeCheck);
         }
@@ -2813,13 +2811,13 @@ GlobOpt::SetTypeCheckBailOut(IR::Opnd *opnd, IR::Instr *instr, BailOutInfo *bail
         {
             // If we already have a bailout info, but don't actually need it, let's remove it.  This can happen if
             // a CheckFixedFld added by the inliner (with bailout info) determined that the object's type has
-            // been checked upstream and no bailout is necessary here.  
+            // been checked upstream and no bailout is necessary here.
             if (instr->m_opcode == Js::OpCode::CheckFixedFld)
             {
                 AssertMsg(!PHASE_OFF(Js::FixedMethodsPhase, instr->m_func->GetJnFunction()) ||
                     !PHASE_OFF(Js::UseFixedDataPropsPhase, instr->m_func->GetJnFunction()), "CheckFixedFld with fixed method/data phase disabled?");
                 Assert(isTypeCheckProtected);
-                AssertMsg(instr->GetBailOutKind() == IR::BailOutFailedFixedFieldTypeCheck || instr->GetBailOutKind() == IR::BailOutFailedEquivalentFixedFieldTypeCheck, 
+                AssertMsg(instr->GetBailOutKind() == IR::BailOutFailedFixedFieldTypeCheck || instr->GetBailOutKind() == IR::BailOutFailedEquivalentFixedFieldTypeCheck,
                     "Only BailOutFailed[Equivalent]FixedFieldTypeCheck can be safely removed.  Why does CheckFixedFld carry a different bailout kind?.");
                 instr->ClearBailOutInfo();
             }
@@ -2943,7 +2941,7 @@ GlobOpt::KillObjectType(StackSym* objectSym, BVSparse<JitArenaAllocator>* liveFi
 
     Assert(objectSym);
 
-    // We may be conservatively attempting to kill type syms from object syms that don't actually 
+    // We may be conservatively attempting to kill type syms from object syms that don't actually
     // participate in object type specialization and hence don't actually have type syms (yet).
     if (!objectSym->HasObjectTypeSym())
     {
@@ -2980,9 +2978,9 @@ GlobOpt::EndFieldLifetime(IR::SymOpnd *symOpnd)
 
 PropertySym *
 GlobOpt::CopyPropPropertySymObj(IR::SymOpnd *symOpnd, IR::Instr *instr)
-{    
+{
     Assert(symOpnd->m_sym->IsPropertySym());
-    
+
     PropertySym *propertySym = symOpnd->m_sym->AsPropertySym();
 
     StackSym *objSym = propertySym->m_stackSym;
@@ -3001,19 +2999,19 @@ GlobOpt::CopyPropPropertySymObj(IR::SymOpnd *symOpnd, IR::Instr *instr)
             {
 #if DBG_DUMP
                 if (Js::Configuration::Global.flags.Trace.IsEnabled(Js::GlobOptPhase, this->func->GetSourceContextId(), this->func->GetLocalFunctionId()))
-                { 
-                    Output::Print(L"TRACE: "); 
-                    symOpnd->Dump(); 
-                    Output::Print(L" : "); 
-                    Output::Print(L"Copy prop obj ptr s%d, new property: ", copySym->m_id); 
+                {
+                    Output::Print(L"TRACE: ");
+                    symOpnd->Dump();
+                    Output::Print(L" : ");
+                    Output::Print(L"Copy prop obj ptr s%d, new property: ", copySym->m_id);
                     newProp->Dump();
-                    Output::Print(L"\n"); 
+                    Output::Print(L"\n");
                 }
 #endif
 
                 // Copy prop.
                 this->CaptureByteCodeSymUses(instr);
-                // If the old sym was part of an object type spec type check sequence, 
+                // If the old sym was part of an object type spec type check sequence,
                 // let's make sure the new one is prepped for it as well.
                 if (IsPropertySymPreparedForTypeCheckSeq(propertySym))
                 {
@@ -3068,8 +3066,8 @@ GlobOpt::UpdateObjPtrValueType(IR::Opnd * opnd, IR::Instr * instr)
 
     if (instr->m_opcode != Js::OpCode::CheckFixedFld)
     {
-        // TODO: DeadStore pass may remove type check bailout, except CheckFixedFld that alwasy need
-        // type check bailout. So we can only change the type for CheckFixedFld.  
+        // TODO: DeadStore pass may remove type check bailout, except CheckFixedFld that always need
+        // type check bailout. So we can only change the type for CheckFixedFld.
         // See if we can expand that in the future
         return;
     }
@@ -3129,7 +3127,7 @@ GlobOpt::UpdateObjPtrValueType(IR::Opnd * opnd, IR::Instr * instr)
 
     Assert(type);
     Js::TypeId typeId = type->GetTypeId();
-    // passing false for useVirtual as we would never have a virtual typed array hitting this codepath
+    // passing false for useVirtual as we would never have a virtual typed array hitting this code path
     ValueType newValueType = ValueType::FromTypeId(typeId, false);
 
     if (newValueType == ValueType::Uninitialized)
@@ -3155,7 +3153,7 @@ GlobOpt::UpdateObjPtrValueType(IR::Opnd * opnd, IR::Instr * instr)
         case Js::TypeIds_Array:
         case Js::TypeIds_NativeFloatArray:
         case Js::TypeIds_NativeIntArray:
-            // Because array change change type id, we can only make it definite if we are doing array check hoist
+            // Because array change type id, we can only make it definite if we are doing array check hoist
             // so that implicit call will be installed between the array checks
             if (!DoArrayCheckHoist() ||
                 (currentBlock->loop
@@ -3166,7 +3164,7 @@ GlobOpt::UpdateObjPtrValueType(IR::Opnd * opnd, IR::Instr * instr)
             }
             if (objValueType.IsLikelyArrayOrObjectWithArray())
             {
-                // If we have likely no missing values before, keep the likely, because, we havn't prove that 
+                // If we have likely no missing values before, keep the likely, because, we haven't prove that
                 // the array really has no missing values
                 if (!objValueType.HasNoMissingValues())
                 {

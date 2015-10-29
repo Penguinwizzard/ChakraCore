@@ -47,7 +47,7 @@ template <ObjectInfoBits attributes, bool nothrow>
 __inline char *
 Recycler::AllocWithAttributesInlined(size_t size)
 {
-    // All tracked object are client tracked objects
+    // All tracked objects are client tracked objects
     CompileAssert((attributes & TrackBit) == 0 || (attributes & ClientTrackedBit) != 0);
     Assert(this->enableScanImplicitRoots || (attributes & ImplicitRootBit) == 0);
     AssertMsg(this->disableThreadAccessCheck || this->mainThreadId == GetCurrentThreadContextId(),
@@ -58,7 +58,7 @@ Recycler::AllocWithAttributesInlined(size_t size)
     // We shouldn't be allocating memory when we are running GC in thread, including finalizers
     Assert(this->IsConcurrentState() || !this->CollectionInProgress() || this->collectionState == CollectionStatePostCollectionCallback);
 
-    // There are some cases where we alloc allocation during heap enum that doesn't affect the enumeration
+    // There are some cases where we allow allocation during heap enum that doesn't affect the enumeration
     // Those should be really rare and not rely upon.
     Assert(!isHeapEnumInProgress || allowAllocationDuringHeapEnum);
 #ifdef PROFILE_RECYCLER_ALLOC
@@ -147,7 +147,7 @@ Recycler::AllocWithAttributesInlined(size_t size)
 #pragma prefast(suppress:6313, "attributes is a template parameter and can be 0")
     if (attributes & (FinalizeBit | TrackBit))
     {
-        // Make sure a valid vtable is installed in case of OOM before the real vtable set
+        // Make sure a valid vtable is installed in case of OOM before the real vtable is set
         memBlock = (char *)new (memBlock) DummyVTableObject();
     }
 
@@ -172,7 +172,7 @@ Recycler::AllocWithAttributesInlined(size_t size)
         if (this->inPartialCollectMode)
         {
             // with partial GC, we don't traverse ITrackable
-            // So we have to mark all object that could be in the ITrackable graph
+            // So we have to mark all objects that could be in the ITrackable graph
             // This includes JavascriptDispatch and HostVariant
             this->clientTrackedObjectList.Prepend(&this->clientTrackedObjectAllocator, memBlock);
         }
@@ -297,7 +297,7 @@ Recycler::RealAlloc(HeapInfo* heap, size_t size)
 
     if (nothrow)
     {
-        FAULTINJECT_MEMORY_NOTHROW(L"Recycler", size); // Consider use sizeCat to filter, might make repro easier
+        FAULTINJECT_MEMORY_NOTHROW(L"Recycler", size);
     }
     else
     {

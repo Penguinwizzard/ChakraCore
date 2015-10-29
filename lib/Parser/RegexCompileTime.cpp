@@ -17,20 +17,22 @@ namespace UnifiedRegex
 
         if (instLen - instNext < size)
         {
-            size_t newLen = max(instLen, initInstBufSize);
-            while (newLen < instLen + size)
-            {
-                newLen *= 2;
-            }
+            CharCount newLen = max(instLen, initInstBufSize);
+            CharCount instLenPlus = (CharCount)(instLen + size - 1);
 
             // check for overflow
-            if (newLen > UINT32_MAX)
+            if (instLenPlus < instLen || instLenPlus * 2 < instLenPlus)
             {
                 Js::Throw::OutOfMemory();
             }
 
+            while (newLen <= instLenPlus)
+            {
+                newLen *= 2;
+            }
+
             instBuf = (uint8*)ctAllocator->Realloc(instBuf, instLen, newLen);
-            instLen = (CharCount)newLen;
+            instLen = newLen;
         }
         uint8* inst = instBuf + instNext;
         instNext += (CharCount)size;
@@ -64,7 +66,7 @@ namespace UnifiedRegex
         Assert(prevConsumes.IsExact(0));
 
         if (thisConsumes.CouldMatchEmpty())
-            // Can't be sure will consume something in FIRST
+            // Can't be sure of consuming something in FIRST
             return 0;
 
         if (firstSet->Count() > maxSyncToSetSize)
@@ -100,7 +102,7 @@ namespace UnifiedRegex
         }
     }
 
-    bool Node::IsBetterSyncronizingNode(Compiler& compiler, Node* curr, Node* proposed) 
+    bool Node::IsBetterSyncronizingNode(Compiler& compiler, Node* curr, Node* proposed)
     {
         int proposedNumLiterals = 0;
         CharCount proposedLength = proposed->MinSyncronizingLiteralLength(compiler, proposedNumLiterals);
@@ -160,7 +162,7 @@ namespace UnifiedRegex
         const MatchCharNode* node = (const MatchCharNode*)this;
         if (node->isEquivClass)
             return false;
-        
+
         outChar = node->cs[0];
         return true;
     }
@@ -219,11 +221,10 @@ namespace UnifiedRegex
 
     bool Node::IsLeadingTrailingSpaces(Compiler& compiler, CharCount& leftMinMatch, CharCount& rightMinMatch) const
     {
-        
+
         if (tag != Node::Alt)
             return false;
 
-        // We don't have support for this optimization for multiline regex yet.
         if (compiler.program->flags & MultilineRegexFlag)
             return false;
 
@@ -255,14 +256,14 @@ namespace UnifiedRegex
         if (!leftLoop->isGreedy ||
             leftLoop->repeats.upper != CharCountFlag ||
             leftLoop->body->tag != Node::MatchSet ||
-            !rightLoop->isGreedy ||            
+            !rightLoop->isGreedy ||
             rightLoop->repeats.upper != CharCountFlag ||
             rightLoop->body->tag != Node::MatchSet)
             return false;
 
         const MatchSetNode* leftSet = (const MatchSetNode*)leftLoop->body;
         const MatchSetNode* rightSet = (const MatchSetNode*)rightLoop->body;
-        
+
         if (leftSet->isNegation ||
             rightSet->isNegation)
             return false;
@@ -270,7 +271,7 @@ namespace UnifiedRegex
         leftMinMatch = leftLoop->repeats.lower;
         rightMinMatch = rightLoop->repeats.lower;
 
-        return 
+        return
             leftSet->set.IsEqualTo(*compiler.standardChars->GetWhitespaceSet()) &&
             rightSet->set.IsEqualTo(*compiler.standardChars->GetWhitespaceSet());
     }
@@ -282,7 +283,7 @@ namespace UnifiedRegex
         {
             w->PrintEOL(L"<");
             w->Indent();
-            
+
             w->Print(L"features: {");
             bool first = true;
             for (uint i = Empty; i <= Assertion; i++)
@@ -312,29 +313,29 @@ namespace UnifiedRegex
                 }
             }
             w->PrintEOL(L"}");
-            
+
             w->Print(L"firstSet: ");
             firstSet->Print(w);
             if (isFirstExact)
                 w->Print(L" (exact)");
             w->EOL();
-            
+
             w->Print(L"followSet: ");
             followSet->Print(w);
             w->EOL();
-            
+
             w->Print(L"prevConsumes: ");
             prevConsumes.Print(w);
             w->EOL();
-            
+
             w->Print(L"thisConsumes: ");
             thisConsumes.Print(w);
             w->EOL();
-            
+
             w->Print(L"followConsumes: ");
             followConsumes.Print(w);
             w->EOL();
-            
+
             w->PrintEOL(L"isThisIrrefutable: %s", isThisIrrefutable ? L"true" : L"false");
             w->PrintEOL(L"isFollowIrrefutable: %s", isFollowIrrefutable ? L"true" : L"false");
             w->PrintEOL(L"isWord: %s", isWord ? L"true" : L"false");
@@ -347,7 +348,7 @@ namespace UnifiedRegex
             w->PrintEOL(L"isNotNegated: %s", isNotNegated ? L"true" : L"false");
             w->PrintEOL(L"isAtLeastOnce: %s", isAtLeastOnce ? L"true" : L"false");
             w->PrintEOL(L"hasInitialHardFailBOI: %s", hasInitialHardFailBOI ? L"true" : L"false");
-            
+
             w->Unindent();
             w->PrintEOL(L">");
         }
@@ -436,9 +437,9 @@ namespace UnifiedRegex
         isFollowIrrefutable = accumFollowIrrefutable;
         isFollowEOL = accumFollowEOL;
 
-        hasInitialHardFailBOI = ((tag == BOL) && 
-            prevConsumes.IsExact(0) && 
-            (compiler.program->flags & MultilineRegexFlag) == 0 && 
+        hasInitialHardFailBOI = ((tag == BOL) &&
+            prevConsumes.IsExact(0) &&
+            (compiler.program->flags & MultilineRegexFlag) == 0 &&
             isAtLeastOnce &&
             isNotNegated &&
             isPrevWillNotRegress);
@@ -501,7 +502,7 @@ namespace UnifiedRegex
                 {
                     if (compiler.CurrentLabel() == 0)
                     {
-                        // The first instruciton is BOI, change the tag and only execute it once
+                        // The first instruction is BOI, change the tag and only execute it once
                         // without looping every start position
                         compiler.SetBOIInstructionsProgramTag();
                     }
@@ -512,7 +513,7 @@ namespace UnifiedRegex
                         //
                         //   BOITest
                         //
-                        // Obviously starting later in the string wont't help, so can hard fail if:
+                        // Obviously starting later in the string won't help, so can hard fail if:
                         //  - this pattern must always be matched
                         //  - not in an negative assertion
                         //  - backtracking could never rewind the input pointer
@@ -567,7 +568,7 @@ namespace UnifiedRegex
         return tag == Empty;
     }
 
-    bool SimpleNode::BuildCharTrie(Compiler& compiler, CharTrie* trie, Node* cont, bool isAcceptFirst) const 
+    bool SimpleNode::BuildCharTrie(Compiler& compiler, CharTrie* trie, Node* cont, bool isAcceptFirst) const
     {
         PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
 
@@ -624,7 +625,7 @@ namespace UnifiedRegex
 
     void WordBoundaryNode::TransferPass1(Compiler& compiler, const Char* litbuf)
     {
-        // WordChars and NonWordChars sets are already case invarint
+        // WordChars and NonWordChars sets are already case invariant
     }
 
     bool WordBoundaryNode::IsRefiningAssertion(Compiler& compiler)
@@ -784,7 +785,7 @@ namespace UnifiedRegex
         if ((compiler.program->flags & IgnoreCaseRegexFlag) != 0
             && !compiler.standardChars->IsTrivialString(compiler.program->GetCaseMappingSource(), litbuf + offset, length))
         {
-            // We'll need to expand each charactor of literal into its equivalence class
+            // We'll need to expand each character of literal into its equivalence class
             isEquivClass = true;
             return length * CaseInsensitive::EquivClassSize;
         }
@@ -893,10 +894,10 @@ namespace UnifiedRegex
     {
         ScannerMixin* scanner =
             scanners.Add(compiler.GetScriptContext()->GetRecycler(), compiler.GetProgram(), offset, length, isEquivClass);
-        scanner->scanner.Setup(compiler.rtAllocator, compiler.program->rep.insts.litbuf + offset, length, isEquivClass ? CaseInsensitive::EquivClassSize : 1);        
+        scanner->scanner.Setup(compiler.rtAllocator, compiler.program->rep.insts.litbuf + offset, length, isEquivClass ? CaseInsensitive::EquivClassSize : 1);
     }
 
-    void MatchLiteralNode::BestSyncronizingNode(Compiler& compiler, Node*& bestNode) 
+    void MatchLiteralNode::BestSyncronizingNode(Compiler& compiler, Node*& bestNode)
     {
         if (IsBetterSyncronizingNode(compiler, bestNode, this))
             bestNode = this;
@@ -928,13 +929,13 @@ namespace UnifiedRegex
         if (effectiveLength == 1)
         {
             Char* cs = compiler.program->rep.insts.litbuf + effectiveOffset;
-            MatchCharNode::Emit(compiler, cs, isEquivClass);            
+            MatchCharNode::Emit(compiler, cs, isEquivClass);
         }
         else
         {
             if (isEquivClass)
                 EMIT(compiler, MatchLiteralEquivInst, effectiveOffset, effectiveLength);
-            else            
+            else
                 EMIT(compiler, MatchLiteralInst, effectiveOffset, effectiveLength);
         }
     }
@@ -974,9 +975,9 @@ namespace UnifiedRegex
                 EMIT(compiler, SyncToChar2LiteralAndConsumeInst, litptr[0], litptr[1]);
             else
             {
-                TextbookBoyerMooreSetup<wchar_t> setup(litptr, length);                
+                TextbookBoyerMooreSetup<wchar_t> setup(litptr, length);
                 switch (setup.GetScheme())
-                {                
+                {
                 case TextbookBoyerMooreSetup<wchar_t>::LinearScheme:
                     EMIT(compiler, SyncToLinearLiteralAndConsumeInst, offset, length)->scanner.Setup(compiler.rtAllocator, setup);
                     break;
@@ -1013,9 +1014,9 @@ namespace UnifiedRegex
                     EMIT(compiler, SyncToChar2LiteralAndContinueInst, litptr[0], litptr[1]);
                 else
                 {
-                    TextbookBoyerMooreSetup<wchar_t> setup(litptr, length);                
+                    TextbookBoyerMooreSetup<wchar_t> setup(litptr, length);
                     switch (setup.GetScheme())
-                    {                    
+                    {
                     case TextbookBoyerMooreSetup<wchar_t>::LinearScheme:
                         EMIT(compiler, SyncToLinearLiteralAndContinueInst, offset, length)->scanner.Setup(compiler.rtAllocator, setup);
                         break;
@@ -1047,9 +1048,9 @@ namespace UnifiedRegex
                     EMIT(compiler, SyncToChar2LiteralAndBackupInst, litptr[0], litptr[1], prevConsumes);
                 else
                 {
-                    TextbookBoyerMooreSetup<wchar_t> setup(litptr, length);                
+                    TextbookBoyerMooreSetup<wchar_t> setup(litptr, length);
                     switch (setup.GetScheme())
-                    {                    
+                    {
                     case TextbookBoyerMooreSetup<wchar_t>::LinearScheme:
                         EMIT(compiler, SyncToLinearLiteralAndBackupInst, offset, length, prevConsumes)->scanner.Setup(compiler.rtAllocator, setup);
                         break;
@@ -1335,7 +1336,7 @@ namespace UnifiedRegex
 
         skipped -= min(skipped, static_cast<CharCount>(1));
 
-        Emit(compiler, cs, isEquivClass);        
+        Emit(compiler, cs, isEquivClass);
     }
 
     CharCount MatchCharNode::EmitScan(Compiler& compiler, bool isHeadSyncronizingNode)
@@ -1581,7 +1582,7 @@ namespace UnifiedRegex
             skipped--;
             return;
         }
-        
+
         //
         // Compilation scheme:
         //
@@ -1649,7 +1650,7 @@ namespace UnifiedRegex
         Char entries[CharSet<Char>::MaxCompact];
         int count = set.GetCompactEntries(TrigramAlphabet::AlphaCount, entries);
         if (count < 0)
-            // Too many unique characetrs
+            // Too many unique characters
             return false;
         for (int i = 0; i < count; i++)
         {
@@ -1852,7 +1853,7 @@ namespace UnifiedRegex
         }
     }
 
-    void ConcatNode::AnnotatePass2(Compiler& compiler, CountDomain accumConsumes, bool accumPrevWillNotProgress, bool accumPrevWillNotRegress) 
+    void ConcatNode::AnnotatePass2(Compiler& compiler, CountDomain accumConsumes, bool accumPrevWillNotProgress, bool accumPrevWillNotRegress)
     {
         PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
 
@@ -1870,7 +1871,7 @@ namespace UnifiedRegex
         }
     }
 
-    void ConcatNode::AnnotatePass3(Compiler& compiler, CountDomain accumConsumes, CharSet<Char>* accumFollow, bool accumFollowIrrefutable, bool accumFollowEOL) 
+    void ConcatNode::AnnotatePass3(Compiler& compiler, CountDomain accumConsumes, CharSet<Char>* accumFollow, bool accumFollowIrrefutable, bool accumFollowEOL)
     {
         PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
 
@@ -1890,7 +1891,7 @@ namespace UnifiedRegex
         for (ConcatNode* curr = this; curr != 0; curr = curr->tail, item++)
             nodes[item] = curr->head;
 
-        // Pass 3: Work backwards propogating follow set, irrefutability and FollowEndLineOrPattern, and adding consumes
+        // Pass 3: Work backwards propagating follow set, irrefutability and FollowEndLineOrPattern, and adding consumes
         CharSet<Char>* innerFollow = accumFollow;
         for (item = n - 1; item >= 0; item--)
         {
@@ -1965,7 +1966,7 @@ namespace UnifiedRegex
     {
         return 0;
     }
-    
+
     void ConcatNode::CollectSyncronizingLiterals(Compiler& compiler, ScannersMixin& scanners) const
     {
         Assert(false);
@@ -1989,7 +1990,7 @@ namespace UnifiedRegex
         //   <item 1>
         //   ...
         //   <item n>
-        // 
+        //
         // :-)
 
         for (ConcatNode *curr = this; curr != 0; curr = curr->tail)
@@ -2031,7 +2032,7 @@ namespace UnifiedRegex
         PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         if (cont != 0)
-            // We don't want to managed a stack of continuations
+            // We don't want to manage a stack of continuations
             return false;
         // NOTE: This is the only place we use an internal node of a concat sequence as a sub-concat sequence
         return head->BuildCharTrie(compiler, trie, tail, isAcceptFirst);
@@ -2040,7 +2041,7 @@ namespace UnifiedRegex
 #if ENABLE_REGEX_CONFIG_OPTIONS
     void ConcatNode::Print(DebugWriter* w, const Char* litbuf) const
     {
-        w->PrintEOL(L"Concat()"); 
+        w->PrintEOL(L"Concat()");
         PrintAnnotations(w);
         w->PrintEOL(L"{");
         w->Indent();
@@ -2198,7 +2199,7 @@ namespace UnifiedRegex
         //
         // If the follow is irrefutable then we can ignore all items after an irrefutable item, since
         // we'll never be able to backtrack into them.
-        // Eg: (a*|b*)c* === a*c*
+        // E.g.: (a*|b*)c* === a*c*
         //
 
         bool simplified = false;
@@ -2241,10 +2242,10 @@ namespace UnifiedRegex
         //
         // Compilation scheme: Switch/Chain/Set, not isOptional
         //
-        // If no item can match empty and all items FIRST sets are pairwise disjoint then we can
+        // If no item can match empty and all items' FIRST sets are pairwise disjoint then we can
         // commit to an item using a 1 char lookahead. We can fall-through to the last
         // item without guarding it since it will fail if the next character cannot match.
-        // Eg: (abc|def)
+        // E.g.: (abc|def)
         //
 
         {
@@ -2279,7 +2280,7 @@ namespace UnifiedRegex
                 {
                     // **COMMIT**
                     if (allSimpleOneChar)
-                        // This will probably never fire since the parser has already coverted alts-of-chars/sets
+                        // This will probably never fire since the parser has already converted alts-of-chars/sets
                         // to sets. We include it for symmetry with below.
                         scheme = Set;
                     else if (allCompact && totalChars <= Switch20Inst::MaxCases)
@@ -2306,16 +2307,16 @@ namespace UnifiedRegex
         // all items' FIRST sets are pairwise disjoint and disjoint from the FOLLOW set, then we can commit to
         // either a non-empty item or to the empty item using a 1 char lookahead. In this case we just emit each
         // non-empty item with a guard, and fall-through to follow if no guard fires.
-        // Eg: (abc||def)h
+        // E.g.: (abc||def)h
         //
         // Condition (2):
         // If some items are empty-only, the rest (if any) cannot match empty, follow is irrefutable, and all
         // items' FIRST sets are pairwise disjoint, then we can commit to either a non-empty item or to the empty
-        // item using a 1 char lookahead, provided each non-empty item obeys the condition: 
+        // item using a 1 char lookahead, provided each non-empty item obeys the condition:
         //   ** the item can't fail if given an arbitrary input starting with a character in its FIRST set **
         // Currently, we can prove that only for IsSimpleOneChar items, though more analysis could widen the class.
         // Again, we emit each non-empty item with a guard, and fall-through to follow if no guard fires.
-        // Eg: ([abc]|)a*
+        // E.g.: ([abc]|)a*
         //
         // Condition (3):
         // If all items are empty-only, we can commit to a single empty-only item
@@ -2395,14 +2396,14 @@ namespace UnifiedRegex
         // (we expand items with embedded character classes such as a[bc]d to (abd|acd)) and either:
         //  - follow is irrefutable and no later literal is a proper prefix of an earlier literal
         //    (and we may ignore later literals which have an earlier literal as proper prefix)
-        //    Eg: (ab|ac|abd)a* === (ab|ac)a*
+        //    E.g.: (ab|ac|abd)a* === (ab|ac)a*
         // or:
         //  - follow is not irrefutable and no literal is a proper prefix of any other literal
         //    and the branching factor of the resulting trie is smallish
-        //    Eg: (abc|abd|abe)f
+        //    E.g.: (abc|abd|abe)f
         // then we can use a character trie to match the appropriate item.
         //
-        
+
         {
             // Pass 1: Items must be structurally appropriate and not result in too many alternatives after expansion
             bool fires = true;
@@ -2420,7 +2421,7 @@ namespace UnifiedRegex
                     break;
                 }
             }
-            
+
             if (fires)
             {
                 // Pass 2: Attempt to construct the trie, checking for prefixes.
@@ -2433,7 +2434,7 @@ namespace UnifiedRegex
                         break;
                     }
                 }
-                
+
                 if (fires)
                 {
                     // **COMMIT**
@@ -2481,7 +2482,7 @@ namespace UnifiedRegex
     {
         return 0;
     }
-    
+
     CharCount AltNode::MinSyncronizingLiteralLength(Compiler& compiler, int& numLiterals) const
     {
         PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
@@ -3086,7 +3087,7 @@ namespace UnifiedRegex
         body->CollectSyncronizingLiterals(compiler, scanners);
     }
 
-    void DefineGroupNode::BestSyncronizingNode(Compiler& compiler, Node*& bestNode) 
+    void DefineGroupNode::BestSyncronizingNode(Compiler& compiler, Node*& bestNode)
     {
         PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
 
@@ -3155,7 +3156,7 @@ namespace UnifiedRegex
 
             case BeginEnd:
             {
-                // Compliation scheme:
+                // Compilation scheme:
                 //
                 //   BeginDefineGroup
                 //   <body>
@@ -3207,7 +3208,7 @@ namespace UnifiedRegex
     // ----------------------------------------------------------------------
     // MatchGroupNode
     // ----------------------------------------------------------------------
-    
+
     CharCount MatchGroupNode::LiteralLength() const
     {
         return 0;
@@ -3294,7 +3295,7 @@ namespace UnifiedRegex
         Assert(false);
     }
 
-    void MatchGroupNode::BestSyncronizingNode(Compiler& compiler, Node*& bestNode) 
+    void MatchGroupNode::BestSyncronizingNode(Compiler& compiler, Node*& bestNode)
     {
     }
 
@@ -3403,7 +3404,7 @@ namespace UnifiedRegex
         firstSet = body->firstSet;
         isFirstExact = repeats.lower > 0 && body->isFirstExact;
         isThisIrrefutable = repeats.CouldMatchEmpty() || body->isThisIrrefutable;
-        // Watch out! Even if a greedy loop has a 'isThisWillNotProgress' body, if the body has choicepoints then
+        // Caution: Even if a greedy loop has a 'isThisWillNotProgress' body, if the body has choicepoints then
         // a backtrack could resume execution at an earlier loop iteration, which may then continue to repeat
         // the loop beyond the input offset which triggered the backtrack. Ideally we'd use the body's isDeterministic
         // flag to tell us when that can't happen, but it's not available till pass 4, so we must make do with
@@ -3488,11 +3489,11 @@ namespace UnifiedRegex
 
         body->AnnotatePass4(compiler);
         isDeterministic = body->isDeterministic;
-        
+
         //
         // Loops can be defined by unfolding:
         //   r* === (rr*|)
-        //   r*? === (|rr*?) 
+        //   r*? === (|rr*?)
         // Thus many of the optimizations for alternatives carry over to loops.
         //
 
@@ -3500,7 +3501,7 @@ namespace UnifiedRegex
         // Compilation scheme: None
         //
         // If overall loop is empty-only then emit nothing.
-        // (Parser has alredy elliminated loops with upper == 0, so this can only happen if the body is empty-only)
+        // (Parser has already eliminated loops with upper == 0, so this can only happen if the body is empty-only)
         //
         // If loop is non-greedy with lower 0 and follow is irrefutable, then loop body will never be executed
         // no emit nothing.
@@ -3540,7 +3541,7 @@ namespace UnifiedRegex
         {
             // **COMMIT**
             // Note that the FIRST of the loop is already the union of the body FIRST and the loop FOLLOW
-            if (!body->thisConsumes.CouldMatchEmpty() && 
+            if (!body->thisConsumes.CouldMatchEmpty() &&
                 ((!followConsumes.CouldMatchEmpty() && firstSet->Count() == body->firstSet->Count() + followSet->Count()) ||
                 (isFollowIrrefutable && body->IsSimpleOneChar())))
             {
@@ -3611,7 +3612,7 @@ namespace UnifiedRegex
         // If body cannot match empty, follow cannot match empty, and FIRST of body and FOLLOW are
         // disjoint then can use 1 char lookahead to decide whether to commit to another loop body.
         // (If the loop body fails then we know the follow will fail even with one more/fewer iterations of the
-        // loop body, so we can let that failure propogate without needing to push choicepoints.)
+        // loop body, so we can let that failure propagate without needing to push choicepoints.)
         //
 
         if (!body->thisConsumes.CouldMatchEmpty() && !followConsumes.CouldMatchEmpty())
@@ -3636,7 +3637,7 @@ namespace UnifiedRegex
         // If loop is greedy, body is deterministic, non-zero fixed width, and either does not define any groups
         // or has one outermost group, then we can keep track of the backtracking information in constant space.
         //
-        // If body does have an outer group, we can avoid saving the existing group contents if the follow 
+        // If body does have an outer group, we can avoid saving the existing group contents if the follow
         // is irrefutable, we're not in an outer loop, and we're not in an assertion.
         //
 
@@ -3688,7 +3689,7 @@ namespace UnifiedRegex
 
         //
         // Compilation scheme: BeginEnd
-        // 
+        //
         scheme = BeginEnd;
         isDeterministic = false; // NON-DETERMINISTIC
     }
@@ -3713,7 +3714,7 @@ namespace UnifiedRegex
         Assert(false);
     }
 
-    void LoopNode::BestSyncronizingNode(Compiler& compiler, Node*& bestNode) 
+    void LoopNode::BestSyncronizingNode(Compiler& compiler, Node*& bestNode)
     {
         PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
 
@@ -4179,7 +4180,7 @@ namespace UnifiedRegex
         //
         // Compilation scheme: Fail
         //
-        // If body is irrefutable, assertion will always fail (and wil leave groups empty).
+        // If body is irrefutable, assertion will always fail (and will leave groups empty).
         //
         if (isNegation && body->isThisIrrefutable)
         {
@@ -4192,7 +4193,7 @@ namespace UnifiedRegex
         // Compilation scheme: Succ
         //
         // If body is irrefutable, assertion will always succeed. If it does not define groups
-        // we can elliminate it altogether.
+        // we can eliminate it altogether.
         //
         if (!isNegation && body->isThisIrrefutable && !body->ContainsDefineGroup())
         {
@@ -4227,7 +4228,7 @@ namespace UnifiedRegex
         Assert(false);
     }
 
-    void AssertionNode::BestSyncronizingNode(Compiler& compiler, Node*& bestNode) 
+    void AssertionNode::BestSyncronizingNode(Compiler& compiler, Node*& bestNode)
     {
     }
 
@@ -4451,7 +4452,7 @@ namespace UnifiedRegex
         if (REGEX_CONFIG_FLAG(RegexOptimize))
         {
             // SPECIAL CASE: Octoquad/trigrams
-            // (must handle before converting to case-insensitive form since the later interferes with octoquad pattern recogniser)
+            // (must handle before converting to case-insensitive form since the later interferes with octoquad pattern recognizer)
             if (OctoquadIdentifier::Qualifies(program))
             {
                 int numCodes;
@@ -4474,7 +4475,7 @@ namespace UnifiedRegex
                 }
 
                 OctoquadIdentifier oi(numCodes, *codeToChar, *charToCode);
-                // We havn't captured literals yet: temporarily set the program's litbuf to be the parser's litbuf
+                // We haven't captured literals yet: temporarily set the program's litbuf to be the parser's litbuf
                 Assert(program->rep.insts.litbuf == 0);
                 program->rep.insts.litbuf = (Char*)litbuf;
                 if (root->IsOctoquad(compiler, &oi) && oi.IsOctoquad())
@@ -4506,7 +4507,7 @@ namespace UnifiedRegex
                     // SPECIAL CASE: \b\w+\b
                     program->tag = Program::BoundedWordTag;
                 }
-                else if (root->IsLeadingTrailingSpaces(compiler, 
+                else if (root->IsLeadingTrailingSpaces(compiler,
                     program->rep.leadingTrailingSpaces.beginMinMatch,
                     program->rep.leadingTrailingSpaces.endMinMatch))
                 {
@@ -4533,7 +4534,7 @@ namespace UnifiedRegex
                     CharSet<Char>* follow = standardChars->GetFullSet();
                     root->AnnotatePass3(compiler, consumes, follow, true, false);
                     root->AnnotatePass4(compiler);
-                    
+
 #if ENABLE_REGEX_CONFIG_OPTIONS
                     if (w != 0)
                     {
@@ -4548,12 +4549,12 @@ namespace UnifiedRegex
 
                     CharCount skipped = 0;
 
-                    // If the root Node has a hard fail BOI, we should not emit any synchronize Nodes 
-                    // since we can easily just search from the begining.
+                    // If the root Node has a hard fail BOI, we should not emit any synchronize Nodes
+                    // since we can easily just search from the beginning.
                     if (root->hasInitialHardFailBOI == false)
                     {
                         // If the root Node doesn't have hard fail BOI but sticky flag is present don't synchronize Nodes
-                        // since we can easily just search from the beginning. Instead set to special InstructionTag 
+                        // since we can easily just search from the beginning. Instead set to special InstructionTag
                         if ((program->flags & StickyRegexFlag) != 0)
                         {
                             compiler.SetBOIInstructionsProgramForStickyFlagTag();
@@ -4567,7 +4568,7 @@ namespace UnifiedRegex
                             if ((bestSyncronizingNode == 0 && headSyncronizingNode != 0) ||
                                 (bestSyncronizingNode != 0 && headSyncronizingNode == bestSyncronizingNode))
                             {
-                                // Scan and consume the head, continue with rest assuming head has been consmued
+                                // Scan and consume the head, continue with rest assuming head has been consumed
                                 skipped = headSyncronizingNode->EmitScan(compiler, true);
                             }
                             else if (bestSyncronizingNode != 0)
@@ -4591,7 +4592,7 @@ namespace UnifiedRegex
                     }
 
                     root->Emit(compiler, skipped);
-                    
+
                     compiler.Emit<SuccInst>();
                     compiler.CaptureInsts();
                 }

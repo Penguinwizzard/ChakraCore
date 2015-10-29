@@ -134,7 +134,7 @@ private:
 //      Call at every debuggerMode change point:        s_debugModeTrace.Capture(scriptContext, debuggerMode);
 //
 //      x86:
-//      Debug a dump in windbg:     ?? jscript9!Js::s_debuggerMode
+//      Debug a dump in windbg:     ?? chakra!Js::s_debuggerMode
 //      Inspect trace 0:            dds [buf]
 //      Inspect trace N:            dds [buf]+0n32*4*N
 //      Inspect last trace:         dds [buf]+0n32*4*[cur-1]

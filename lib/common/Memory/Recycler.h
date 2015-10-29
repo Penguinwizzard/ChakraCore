@@ -281,11 +281,11 @@ enum CollectionFlags
     FinishConcurrentOnIdleAtRoot    = CollectMode_Concurrent | CollectOverride_DisableIdleFinish | CollectOverride_SkipStack,
     FinishConcurrentOnExitScript    = CollectMode_Concurrent | CollectOverride_DisableIdleFinish | CollectOverride_BackgroundFinishMark,
     FinishConcurrentOnEnterScript   = CollectMode_Concurrent | CollectOverride_DisableIdleFinish | CollectOverride_BackgroundFinishMark,
-    FinishConcurrentOnAllocation    = CollectMode_Concurrent | CollectOverride_DisableIdleFinish | CollectOverride_BackgroundFinishMark,    
+    FinishConcurrentOnAllocation    = CollectMode_Concurrent | CollectOverride_DisableIdleFinish | CollectOverride_BackgroundFinishMark,
     FinishDispose                   = CollectOverride_AllowDispose,
     FinishDisposeTimed              = CollectOverride_AllowDispose | CollectHeuristic_TimeIfScriptActive,
     ForceFinishCollection           = CollectOverride_ForceFinish | CollectOverride_ForceInThread,
-    
+
 #ifdef RECYCLER_STRESS
     CollectStress                   = CollectNowForceInThread,
 #ifdef PARTIAL_GC_ENABLED
@@ -404,7 +404,7 @@ struct RecyclerCollectionStats
     size_t stackCount;
     size_t remarkCount;
 
-    size_t scanCount;           // non-leaf object marked.
+    size_t scanCount;           // non-leaf objects marked.
     size_t trackCount;
     size_t finalizeCount;
     size_t markThruNewObjCount;
@@ -422,7 +422,7 @@ struct RecyclerCollectionStats
         size_t rescanLargeByteCount;
 #endif
         size_t markCount;           // total number of object marked
-        size_t markBytes;           // size of all object marked.
+        size_t markBytes;           // size of all objects marked.
     } markData;
 
 #ifdef CONCURRENT_GC_ENABLED
@@ -435,17 +435,17 @@ struct RecyclerCollectionStats
 #endif
 
     // Sweep stats
-    size_t heapBlockCount[HeapBlock::BlockTypeCount];                       // number of heap block (processed during swept)
-    size_t heapBlockFreeCount[HeapBlock::BlockTypeCount];                   // number of heap block deleted
+    size_t heapBlockCount[HeapBlock::BlockTypeCount];                       // number of heap blocks (processed during swept)
+    size_t heapBlockFreeCount[HeapBlock::BlockTypeCount];                   // number of heap blocks deleted
     size_t heapBlockConcurrentSweptCount[HeapBlock::SmallBlockTypeCount];
-    size_t heapBlockSweptCount[HeapBlock::SmallBlockTypeCount];             // number of heap block swept
+    size_t heapBlockSweptCount[HeapBlock::SmallBlockTypeCount];             // number of heap blocks swept
 
-    size_t objectSweptCount;                // object freed (free list + whole page freed)
+    size_t objectSweptCount;                // objects freed (free list + whole page freed)
     size_t objectSweptBytes;
-    size_t objectSweptFreeListCount;        // object freed (free list)
+    size_t objectSweptFreeListCount;        // objects freed (free list)
     size_t objectSweptFreeListBytes;
-    size_t objectSweepScanCount;            // number of object walked for sweeping (exclude whole page freed)
-    size_t finalizeSweepCount;              // number of object finalizer/dispose called
+    size_t objectSweepScanCount;            // number of objects walked for sweeping (exclude whole page freed)
+    size_t finalizeSweepCount;              // number of objects finalizer/dispose called
 
 #ifdef PARTIAL_GC_ENABLED
     size_t smallNonLeafHeapBlockPartialReuseCount[HeapBlock::SmallBlockTypeCount];
@@ -475,10 +475,10 @@ struct RecyclerCollectionStats
 #else
 #define RECYCLER_STATS_INC_IF(cond, r, f)
 #define RECYCLER_STATS_INC(r, f)
-#define RECYCLER_STATS_INTERLOCKED_INC(r, f) 
+#define RECYCLER_STATS_INTERLOCKED_INC(r, f)
 #define RECYCLER_STATS_DEC(r, f)
 #define RECYCLER_STATS_ADD(r, f, v)
-#define RECYCLER_STATS_INTERLOCKED_ADD(r, f, v) 
+#define RECYCLER_STATS_INTERLOCKED_ADD(r, f, v)
 #define RECYCLER_STATS_SUB(r, f, v)
 #define RECYCLER_STATS_SET(r, f, v)
 #endif
@@ -576,10 +576,10 @@ private:
 private:
     WorkFunc workFunc;
     Recycler * recycler;
-    HANDLE concurrentWorkReadyEvent;// main thread use this event to tell concurrent thread the work is ready
-    HANDLE concurrentWorkDoneEvent;// concurrent thread use this event to tell main thread the work allocated is done
+    HANDLE concurrentWorkReadyEvent;// main thread uses this event to tell concurrent threads that the work is ready
+    HANDLE concurrentWorkDoneEvent;// concurrent threads use this event to tell main thread that the work allocated is done
     HANDLE concurrentThread;
-    bool synchronizeOnStartup; // Do we synchronize on startup
+    bool synchronizeOnStartup;
 };
 
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
@@ -756,7 +756,7 @@ private:
 #endif
 
     // Number of pages to reserve for the primary mark stack
-    // This is the minimum number of pages to guarantee that a single heap block 
+    // This is the minimum number of pages to guarantee that a single heap block
     // can be rescanned in the worst possible case where every object in a heap block
     // in the smallest bucket needs to be rescanned
     // These many pages being reserved guarantees that in OOM Rescan, we can make progress
@@ -769,7 +769,7 @@ private:
 
     MarkContext markContext;
 
-    // Contexts for parallel marking.  
+    // Contexts for parallel marking.
     // We support up to 4 way parallelism, main context + 3 additional parallel contexts.
     MarkContext parallelMarkContext1;
     MarkContext parallelMarkContext2;
@@ -780,7 +780,7 @@ private:
     PagePool parallelMarkPagePool1;
     PagePool parallelMarkPagePool2;
     PagePool parallelMarkPagePool3;
-    
+
     bool IsMarkStackEmpty();
     bool HasPendingMarkObjects() const { return markContext.HasPendingMarkObjects() || parallelMarkContext1.HasPendingMarkObjects() || parallelMarkContext2.HasPendingMarkObjects() || parallelMarkContext3.HasPendingMarkObjects(); }
     bool HasPendingTrackObjects() const { return markContext.HasPendingTrackObjects() || parallelMarkContext1.HasPendingTrackObjects() || parallelMarkContext2.HasPendingTrackObjects() || parallelMarkContext3.HasPendingTrackObjects(); }
@@ -856,13 +856,13 @@ private:
     bool enableParallelMark;
     bool enableConcurrentSweep;
 
-    uint maxParallelism;        // Max # of total threads to run in parallel 
+    uint maxParallelism;        // Max # of total threads to run in parallel
 
     byte backgroundRescanCount;             // for ETW events and stats
     byte backgroundFinishMarkCount;
     size_t backgroundRescanRootBytes;
-    HANDLE concurrentWorkReadyEvent; // main thread use this event to tell concurrent thread the work is ready
-    HANDLE concurrentWorkDoneEvent; // concurrent thread use this event to tell main thread the work allocated is done
+    HANDLE concurrentWorkReadyEvent; // main thread uses this event to tell concurrent threads that the work is ready
+    HANDLE concurrentWorkDoneEvent; // concurrent threads use this event to tell main thread that the work allocated is done
     HANDLE concurrentThread;
     HANDLE mainThreadHandle;
 
@@ -884,9 +884,9 @@ private:
             memset(registers, 0, sizeof(void*) * NumRegistersToSave);
         }
 
-        void** GetRegisters() 
+        void** GetRegisters()
         {
-            return registers; 
+            return registers;
         }
 
         void*  GetStackTop()
@@ -928,12 +928,11 @@ private:
     bool isProcessingRescan;
 #endif
 
-    uint tickCountStartConcurrent; 
+    uint tickCountStartConcurrent;
 
     bool isAborting;
 #endif
 
-    // Consider allocating this in an arena allocator temporary
     RecyclerSweep recyclerSweepInstance;
     RecyclerSweep * recyclerSweep;
 
@@ -974,7 +973,9 @@ private:
     RecyclerMemoryData * memoryData;
 #endif
     ThreadContextId mainThreadId;
+#ifdef ENABLE_BASIC_TELEMETRY
     Js::GCTelemetry gcTel;
+#endif
 
 #if DBG
     uint heapBlockCount;
@@ -1010,7 +1011,7 @@ private:
     RecyclerObjectGraphDumper * objectGraphDumper;
 public:
     bool dumpObjectOnceOnCollect;
-#endif    
+#endif
 public:
 
     Recycler(AllocationPolicyManager * policyManager, IdleDecommitPageAllocator * pageAllocator, void(*outOfMemoryFunc)(), Js::ConfigFlagsTable& flags);
@@ -1242,7 +1243,7 @@ public:
         return AllocWithAttributesFunc<(ObjectInfoBits)(attributes | TraceBit), /* nothrow = */ false>(size); \
     }
 #else
-#define DEFINE_RECYCLER_ALLOC_TRACE(AllocFunc, AllocWithAttributeFunc, attributes) 
+#define DEFINE_RECYCLER_ALLOC_TRACE(AllocFunc, AllocWithAttributeFunc, attributes)
 #endif
 #define DEFINE_RECYCLER_ALLOC_BASE(AllocFunc, AllocWithAttributesFunc, attributes) \
     __inline char * AllocFunc(size_t size) \
@@ -1320,14 +1321,14 @@ public:
     bool TryGetWeakReferenceHandle(T* pStrongReference, RecyclerWeakReference<T> **weakReference);
 
     template <ObjectInfoBits attributes>
-    char* GetAddressOfAllocator(size_t sizeCat) 
-    { 
+    char* GetAddressOfAllocator(size_t sizeCat)
+    {
         Assert(HeapInfo::IsAlignedSmallObjectSize(sizeCat));
-        return (char*)this->autoHeap.GetBucket<attributes>(sizeCat).GetAllocator(); 
+        return (char*)this->autoHeap.GetBucket<attributes>(sizeCat).GetAllocator();
     }
 
     template <ObjectInfoBits attributes>
-    uint32 GetEndAddressOffset(size_t sizeCat) 
+    uint32 GetEndAddressOffset(size_t sizeCat)
     {
         Assert(HeapInfo::IsAlignedSmallObjectSize(sizeCat));
         return this->autoHeap.GetBucket<attributes>(sizeCat).GetAllocator()->GetEndAddressOffset();
@@ -1346,11 +1347,9 @@ public:
 
     void Free(void* buffer, size_t size)
     {
-        // Consider switching caller to call one of either FreeLeaf or FreeNonLeaf
         Assert(false);
     }
 
-    //void ExplicitFreeNoOp(void* buffer, size_t size) { }
     bool ExplicitFreeLeaf(void* buffer, size_t size);
     bool ExplicitFreeNonLeaf(void* buffer, size_t size);
 
@@ -1444,6 +1443,7 @@ public:
     }
     void CaptureCollectionParam(CollectionFlags flags, bool repeat = false);
 #endif
+#ifdef ENABLE_BASIC_TELEMETRY
     Js::GCPauseStats GetGCPauseStats()
     {
         return gcTel.GetGCPauseStats(); // returns the maxGCpause time in ms
@@ -1458,10 +1458,10 @@ public:
     {
         gcTel.SetIsScriptSiteCloseGC(val);
     }
-
+#endif
 private:
     // RecyclerRootPtr has implicit conversion to pointers, prevent it to be 
-    // pass to RootAddRef/RootRelease directly
+    // passed to RootAddRef/RootRelease directly
     template <typename T>
     void RootAddRef(RecyclerRootPtr<T>& ptr, uint *count = nullptr);
     template <typename T>
@@ -1560,12 +1560,12 @@ private:
     void DoBackgroundParallelMark();
 
     size_t RootMark(CollectionState markState);
-    
+
     void ProcessMark(bool background);
     void ProcessParallelMark(bool background, MarkContext * markContext);
     template <bool parallel, bool interior>
     void ProcessMarkContext(MarkContext * markContext);
-    
+
 public:
     bool IsObjectMarked(void* candidate) { return this->heapBlockMap.IsMarked(candidate); }
 #ifdef RECYCLER_STRESS
@@ -1587,7 +1587,7 @@ private:
     } blockCache;
 
     __inline void ScanObjectInline(void ** obj, size_t byteCount);
-    __inline void ScanObjectInlineInterior(void ** obj, size_t byteCount);    
+    __inline void ScanObjectInlineInterior(void ** obj, size_t byteCount);
     __inline void ScanMemoryInline(void ** obj, size_t byteCount);
     void ScanMemory(void ** obj, size_t byteCount) { if (byteCount != 0) { ScanMemoryInline(obj, byteCount); } }
     bool AddMark(void * candidate, size_t byteCount);
@@ -1739,7 +1739,7 @@ private:
 #ifdef RECYCLER_TRACE
     void PrintCollectTrace(Js::Phase phase, bool finish = false, bool noConcurrentWork = false);
 #endif
-#ifdef RECYCLER_VERIFY_MARK    
+#ifdef RECYCLER_VERIFY_MARK
     void VerifyMark();
     void VerifyMarkRoots();
     void VerifyMarkStack();
@@ -1751,7 +1751,6 @@ private:
 #if DBG_DUMP
     bool forceTraceMark;
 #endif
-    // TODO: This really should have been a CollectionState
     bool isHeapEnumInProgress;
 #if DBG
     bool allowAllocationDuringHeapEnum;
@@ -1760,9 +1759,9 @@ private:
     bool isInRefCountTrackingForProjection;
 #endif
 #endif
-    // There are two scenarios we allow limited allocation but disallow GC during thost allocation:
-    // in heapenum when we allocate propertyrecord, and 
-    // in projection externalmark allowing allocating VarToDispEx. This is the common flag 
+    // There are two scenarios we allow limited allocation but disallow GC during those allocations:
+    // in heapenum when we allocate PropertyRecord, and
+    // in projection ExternalMark allowing allocating VarToDispEx. This is the common flag
     // while we have debug only flag for each of the two scenarios.
     bool isCollectionDisabled;
 
@@ -1871,9 +1870,9 @@ public:
     bool IsHeapEnumInProgress() const { Assert(isHeapEnumInProgress ? isCollectionDisabled : true); return isHeapEnumInProgress; }
 
 #if DBG
-    // There are limited cases that we have to allow allocation during heap enumation. GC is explicitly
-    // disabled during heap enumation for these limited cases. (See DefaultRecyclerCollectionWrapper)
-    // The only case of allocation right now is allocating property record for string based type handler 
+    // There are limited cases that we have to allow allocation during heap enumeration. GC is explicitly
+    // disabled during heap enumeration for these limited cases. (See DefaultRecyclerCollectionWrapper)
+    // The only case of allocation right now is allocating property record for string based type handler
     // so we can use the propertyId as the relation Id.
     // Allocation during enumeration is still frown upon and should still be avoid if possible.
     bool AllowAllocationDuringHeapEnum() const { return allowAllocationDuringHeapEnum; }
@@ -1998,7 +1997,7 @@ public:
         {
             return (m_largeHeapBlockHeader->GetAttributes(m_recycler->Cookie) & LeafBit) != 0;
         }
-#endif 
+#endif
         return ((*m_attributes & LeafBit) != 0 || this->m_heapBlock->IsLeafBlock());
     }
 
@@ -2051,7 +2050,7 @@ public:
     bool ClearImplicitRootBit()
     {
         // This can only be called on the main thread for non-finalizable block
-        // As finalizable block requires that the bit not be change during concurrent mark 
+        // As finalizable block requires that the bit not be change during concurrent mark
         // since the background thread change the NewTrackBit
         Assert(!m_heapBlock->IsAnyFinalizableBlock());
 
@@ -2227,13 +2226,13 @@ public:
     }
 };
 
-// This is used by the compiler when T when it is NOT a pointer i.e. a value type - it causes leaf allocation
+// This is used by the compiler; when T is NOT a pointer i.e. a value type - it causes leaf allocation
 template <typename T>
 class TypeAllocatorFunc<Recycler, T> : public _RecyclerAllocatorFunc<_RecyclerLeafPolicy>
 {
 };
 
-// Partial template specialization applies to T when it is a pointer
+// Partial template specialization; applies to T when it is a pointer
 template <typename T>
 class TypeAllocatorFunc<Recycler, T *> : public _RecyclerAllocatorFunc<_RecyclerNonLeafPolicy>
 {
@@ -2336,40 +2335,15 @@ struct ForceLeafAllocator<RecyclerNonLeafAllocator>
 #else
 #define RECYCLER_PROFILE_EXEC_BEGIN(recycler, phase)
 #define RECYCLER_PROFILE_EXEC_END(recycler, phase)
-#define RECYCLER_PROFILE_EXEC_BEGIN2(recycler, phase1, phase2) 
-#define RECYCLER_PROFILE_EXEC_END2(recycler, phase1, phase2) 
-#define RECYCLER_PROFILE_EXEC_CHANGE(recydler, phase1, phase2) 
+#define RECYCLER_PROFILE_EXEC_BEGIN2(recycler, phase1, phase2)
+#define RECYCLER_PROFILE_EXEC_END2(recycler, phase1, phase2)
+#define RECYCLER_PROFILE_EXEC_CHANGE(recydler, phase1, phase2)
 #define RECYCLER_PROFILE_EXEC_BACKGROUND_BEGIN(recycler, phase)
-#define RECYCLER_PROFILE_EXEC_BACKGROUND_END(recycler, phase) 
-#define RECYCLER_PROFILE_EXEC_THREAD_BEGIN(background, recycler, phase) 
-#define RECYCLER_PROFILE_EXEC_THREAD_END(background, recycler, phase) 
+#define RECYCLER_PROFILE_EXEC_BACKGROUND_END(recycler, phase)
+#define RECYCLER_PROFILE_EXEC_THREAD_BEGIN(background, recycler, phase)
+#define RECYCLER_PROFILE_EXEC_THREAD_END(background, recycler, phase)
 #endif
 }
-
-//we don't need these for the Recycler
-
-#if 0
-inline void __cdecl
-operator delete(void * obj, Recycler * alloc, char * (Recycler::*AllocFunc)(size_t))
-{
-}
-
-inline void __cdecl
-operator delete(void * obj, Recycler * alloc, char * (Recycler::*AllocFunc)(size_t), size_t plusSize)
-{
-}
-
-inline void __cdecl
-operator delete(void * obj, Recycler * recycler, ObjectInfoBits enumClassBits)
-{
-}
-
-template <typename T>
-inline void __cdecl
-operator delete(void * obj, RecyclerFastAllocator<T> * alloc, char * (RecyclerFastAllocator<T>::*AllocFunc)(size_t))
-{
-}
-#endif
 
 _Ret_notnull_ inline void * __cdecl
 operator new(size_t byteSize, Recycler * alloc, HeapInfo * heapInfo)

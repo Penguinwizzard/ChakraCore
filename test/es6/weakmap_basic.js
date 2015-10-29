@@ -18,8 +18,7 @@ var tests = [
             var wm1 = new WeakMap();
             // WeakMap is no longer allowed to be called as a function unless the object it is given
             // for its this argument already has the [[WeakMapData]] property on it.
-            // TODO: When we implement @@create support, update this test to reflect it.
-            //var wm2 = WeakMap();
+            // var wm2 = WeakMap();
 
             assert.isTrue(wm1 instanceof WeakMap, "'new WeakMap()' should create a WeakMap object");
             //assert.isTrue(wm2 instanceof WeakMap, "'WeakMap()' should also create a WeakMap object");
@@ -50,8 +49,7 @@ var tests = [
             var wm1 = new WeakMap();
             // WeakMap is no longer allowed to be called as a function unless the object it is given
             // for its this argument already has the [[WeakMapData]] property on it.
-            // TODO: When we implement @@create support, update this test to reflect it.
-            //var wm2 = WeakMap();
+            // var wm2 = WeakMap();
 
             assert.isTrue(Object.getPrototypeOf(wm1) === WeakMap.prototype, "'new WeakMap()' should set the prototype of the returned object to WeakMap.prototype");
             //assert.isTrue(Object.getPrototypeOf(wm2) === WeakMap.prototype, "'WeakMap()' should set the prototype of the returned object to WeakMap.prototype");
@@ -98,7 +96,6 @@ var tests = [
         body: function () {
             // WeakMap is no longer allowed to be called as a function unless the object it is given
             // for its this argument already has the [[WeakMapData]] property on it.
-            // TODO: When we implement @@create support, update this test to reflect it.
             //
             // For IE11 we simply throw if WeakMap() is called as a function instead of in a new expression
             assert.throws(function () { WeakMap.call(); }, TypeError, "WeakMap.call() throws TypeError");
@@ -113,25 +110,6 @@ var tests = [
             MyWeakMap.prototype.constructor = MyWeakMap;
 
             assert.throws(function () { var mymap = new MyWeakMap(); }, TypeError, "WeakMap.call(this) throws TypeError when used in the old subclassing pattern");
-            /*
-            function MyWeakMap() {
-                WeakMap.call(this);
-            }
-            MyWeakMap.prototype = new WeakMap();
-            MyWeakMap.prototype.constructor = MyWeakMap();
-
-            var myweakmap = new MyWeakMap();
-
-            assert.isTrue(myweakmap instanceof MyWeakMap, "Should be a MyWeakMap object");
-            assert.isTrue(myweakmap instanceof WeakMap, "Should also be a WeakMap object");
-            assert.isTrue(Object.getPrototypeOf(myweakmap) === MyWeakMap.prototype, "Should have MyWeakMap prototype");
-            assert.isTrue(Object.getPrototypeOf(myweakmap) !== WeakMap.prototype, "Should be distinct from WeakMap prototype");
-
-            assert.isTrue(myweakmap.delete instanceof Function, "Should have a delete method");
-            assert.isTrue(myweakmap.get instanceof Function, "Should have a get method");
-            assert.isTrue(myweakmap.has instanceof Function, "Should have a has method");
-            assert.isTrue(myweakmap.set instanceof Function, "Should have a set method");
-            */
         }
     },
 ];

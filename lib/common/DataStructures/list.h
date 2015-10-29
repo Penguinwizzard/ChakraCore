@@ -33,7 +33,7 @@ namespace JsUtil
         TAllocator* alloc;
 
         ReadOnlyList(TAllocator* alloc)
-            : buffer(nullptr), 
+            : buffer(nullptr),
             count(0),
             alloc(alloc)
         {
@@ -41,8 +41,8 @@ namespace JsUtil
 
     public:
         virtual bool IsReadOnly() const
-        { 
-            return true; 
+        {
+            return true;
         }
 
         virtual void Delete()
@@ -80,14 +80,14 @@ namespace JsUtil
         {
         }
 
-        int Count() const 
-        { 
-            return count; 
+        int Count() const
+        {
+            return count;
         }
 
-        bool Empty() const 
-        { 
-            return Count() == 0; 
+        bool Empty() const
+        {
+            return Count() == 0;
         }
 
         // Gets the count of items using the specified criteria for considering an item.
@@ -124,7 +124,7 @@ namespace JsUtil
             return false;
         }
 
-        // Checks if any of the elements satisfy the passed in condition.
+        // Checks if any of the elements satisfy the condition in the passed in function.
         template <typename TConditionalFunction>
         bool Any(TConditionalFunction function)
         {
@@ -139,7 +139,7 @@ namespace JsUtil
             return false;
         }
 
-        // Checks if all of the elements satisfy the passed in condition.
+        // Checks if all of the elements satisfy the condition in the passed in function.
         template <typename TConditionalFunction>
         bool All(TConditionalFunction function)
         {
@@ -191,9 +191,9 @@ namespace JsUtil
     };
 
     template <
-        class T, 
-        class TAllocator = Recycler, 
-        bool isLeaf = false,         
+        class T,
+        class TAllocator = Recycler,
+        bool isLeaf = false,
         template <class TListType, bool clearOldEntries> class TRemovePolicy = Js::CopyRemovePolicy,
         template <typename Value> class TComparer = DefaultComparer>
     class List : public ReadOnlyList<T, TAllocator, TComparer>
@@ -297,16 +297,16 @@ namespace JsUtil
             buffer = nullptr;
             count = 0;
             length = 0;
-        }      
-        
+        }
+
         virtual ~List() override
         {
             this->Reset();
-        }        
+        }
 
-        TAllocator * GetAllocator() const 
-        { 
-            return this->alloc; 
+        TAllocator * GetAllocator() const
+        {
+            return this->alloc;
         }
 
         const T& Item(int index) const
@@ -326,7 +326,7 @@ namespace JsUtil
             return this->Item(count - 1);
         }
 
-        // Finds the last element that satisfies the passed in condition.
+        // Finds the last element that satisfies the condition in the passed in function.
         // Returns true if the element was found; false otherwise.
         template <typename TConditionalFunction>
         bool Last(TConditionalFunction function, T& outElement)
@@ -408,7 +408,7 @@ namespace JsUtil
             {
                 JsUtil::ExternalApi::RaiseOnIntOverflow();
             }
-            
+
             js_memcpy_s(buffer + this->count, availableByteSpace, items, givenBufferSize);
             this->count = requiredSize;
 
@@ -416,14 +416,14 @@ namespace JsUtil
         }
 
 
-        void AddRange(TListType const& list) 
-        {       
+        void AddRange(TListType const& list)
+        {
             list.Map([this](int index, T const& item)
             {
                 this->Add(item);
-            });               
+            });
         }
-       
+
         // Trims the end of the list
         template <bool weaklyRefItems>
         T CompactEnd()
@@ -479,7 +479,7 @@ namespace JsUtil
         void Sort()
         {
             // We can call QSort only if the remove policy for this list is CopyRemovePolicy
-            CompileAssert((IsSame<TRemovePolicyType, Js::CopyRemovePolicy<TListType, false> >::IsTrue) || 
+            CompileAssert((IsSame<TRemovePolicyType, Js::CopyRemovePolicy<TListType, false> >::IsTrue) ||
                 (IsSame<TRemovePolicyType, Js::CopyRemovePolicy<TListType, true> >::IsTrue));
             if(count)
             {
@@ -569,7 +569,7 @@ namespace JsUtil
         }
 
         void Reset()
-        {           
+        {
             if (this->buffer != nullptr)
             {
                 auto freeFunc = AllocatorInfo::GetFreeFunc();
@@ -608,7 +608,7 @@ namespace Js
 
     //
     // A simple wrapper on List to synchronize access.
-    // Note that this wrapper class only exposes a few methods of List (through "private" inheritence).
+    // Note that this wrapper class only exposes a few methods of List (through "private" inheritance).
     // It applies proper lock policy to exposed methods.
     //
     template <
@@ -719,7 +719,7 @@ namespace Js
     public:
         CopyRemovePolicy(TListType * list) {};
         void Remove(TListType* list, const TElementType& item)
-        {           
+        {
             TElementType* buffer = list->buffer;
             int& count = list->count;
 
@@ -802,7 +802,7 @@ namespace Js
         }
 
         void Remove(TListType* list, const TElementType& item)
-        {            
+        {
             TElementType* buffer = list->buffer;
             int& count = list->count;
 
@@ -875,7 +875,7 @@ namespace Js
                     list->RemoveAt(i);
                 }
             });
-            
+
             this->lastWeakReferenceCleanupId = list->alloc->GetWeakReferenceCleanupId();
         }
     public:

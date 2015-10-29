@@ -6,7 +6,7 @@
 
 // -----------------------------------------------------------------------------------------------------------------------------
 // Template parameter constraints
-// See http://www2.research.att.com/~bs/bs_faq2.html
+// See http://www.stroustrup.com/bs_faq2.html#constraints
 // -----------------------------------------------------------------------------------------------------------------------------
 
 namespace TemplateParameter

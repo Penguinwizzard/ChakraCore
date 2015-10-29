@@ -107,7 +107,6 @@ namespace Js
 #ifdef ENABLE_NATIVE_CODEGEN
         static BOOL IsNativeAddress(ScriptContext * scriptContext, void * codeAddr);
 #endif
-        // TODO: Move these to ScriptFunction
         static Var DeferredParsingThunk(RecyclableObject* function, CallInfo callInfo, ...);
         static JavascriptMethod DeferredParse(ScriptFunction** function);
         static JavascriptMethod DeferredParseCore(ScriptFunction** function, BOOL &fParsed);
@@ -157,10 +156,6 @@ namespace Js
 
         void ResetConstructorCacheToDefault();
 
-#if DBG_DUMP
-        void Dump();
-#endif
-
         virtual bool HasReadOnlyPropertiesInvisibleToTypeHandler() override { return true; }
 
         virtual BOOL HasProperty(PropertyId propertyId) override;
@@ -187,7 +182,7 @@ namespace Js
         virtual BOOL HasInstance(Var instance, ScriptContext* scriptContext, IsInstInlineCache* inlineCache = NULL);
         static BOOL HasInstance(Var funcPrototype, Var instance, ScriptContext* scriptContext, IsInstInlineCache* inlineCache, JavascriptFunction* function);
 
-        // This will be overriden for the BoundFunction
+        // This will be overridden for the BoundFunction
         virtual bool IsBoundFunction() const { return false; }
         virtual bool IsGeneratorFunction() const { return false; }
 

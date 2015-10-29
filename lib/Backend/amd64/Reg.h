@@ -26,14 +26,14 @@ enum RegNum {
 #define XMM_REGCOUNT 16
 
 #define FOREACH_REG(reg) \
-        for (RegNum reg = (RegNum)(RegNOREG+1); reg != RegNumCount; reg = (RegNum)(reg+1)) 
+        for (RegNum reg = (RegNum)(RegNOREG+1); reg != RegNumCount; reg = (RegNum)(reg+1))
 #define NEXT_REG
 
 #define FOREACH_INT_REG(reg) \
-        for (RegNum reg = (RegNum)(RegNOREG+1); reg != FIRST_FLOAT_REG; reg = (RegNum)(reg+1)) 
+        for (RegNum reg = (RegNum)(RegNOREG+1); reg != FIRST_FLOAT_REG; reg = (RegNum)(reg+1))
 #define NEXT_INT_REG
 
 #define FOREACH_FLOAT_REG(reg) \
-        for (RegNum reg = FIRST_FLOAT_REG; reg != RegNumCount; reg = (RegNum)(reg+1)) 
+        for (RegNum reg = FIRST_FLOAT_REG; reg != RegNumCount; reg = (RegNum)(reg+1))
 #define NEXT_FLOAT_REG
 

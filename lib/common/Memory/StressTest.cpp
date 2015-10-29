@@ -44,7 +44,7 @@ TestObject *TestObject::Get(int index)
     TestObject *addr = GetDataPointer()[index];
 
     Assert((reinterpret_cast<size_t>(addr) & (OBJALIGN - 1)) == 0);
-    
+
     return addr;
 }
 
@@ -133,7 +133,7 @@ template<class Fn> void TestObject::Visit(Recycler *recycler, TestObject *root, 
     objectTracker->Map([&](TestObject * val, bool) {
         fn(val);
     });
-    
+
 }
 
 TestObject* TestObject::Create(Recycler *recycler, int pointerCount, size_t extraBytes, CreateOptions options)

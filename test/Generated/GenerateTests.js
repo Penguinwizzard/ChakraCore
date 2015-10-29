@@ -47,10 +47,25 @@ var MaxTestsPerFile = 1000;
 var fp;
 var fileArray = [];
 
+function AddCustomTests(arr)
+{
+    arr.push("imul");
+    arr.push("divbypow2");
+    arr.push("B9AA6BBF.0");
+    arr.push("6E55FA7A.0");
+    arr.push("attackoftheclones");
+}
+
 function OpenFileAndWriteHeader(name) {
     if (fp)
         fp.close();
     fp = fileSystemObject.CreateTextFile(name + ".js", true);
+    fp.WriteLine("//-------------------------------------------------------------------------------------------------------");
+    fp.WriteLine("// Copyright (C) Microsoft. All rights reserved.");
+    fp.WriteLine("// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.");
+    fp.WriteLine("//-------------------------------------------------------------------------------------------------------");
+    fp.WriteLine("");
+
     fp.WriteLine('function write(v) { WScript.Echo(v + ""); }');
     fp.WriteLine("");
     fp.WriteLine("function foo() {}");
@@ -64,54 +79,53 @@ function OpenFileAndWriteHeader(name) {
 function GenerateTests() {
     for (var op = 0; op < biops.length; op++) {
         var fileNo = 0;
-		OpenFileAndWriteHeader(biops[op][1]);
-		var testCounter = 0;
-		for (var i=0; i<all.length; ++i) {
-			for (var j=0; j<all.length; ++j) {
+        OpenFileAndWriteHeader(biops[op][1]);
+        var testCounter = 0;
+        for (var i=0; i<all.length; ++i) {
+            for (var j=0; j<all.length; ++j) {
                 if(++testCounter > MaxTestsPerFile)
                 {
                     OpenFileAndWriteHeader("" + biops[op][1] + (fileNo++));
                     testCounter = 0;
                 }
-				fp.WriteLine("write(" + all[i] + " " + biops[op][0] + " " + all[j] + ");");            
-			}
-		}
-	}
+                fp.WriteLine("write(" + all[i] + " " + biops[op][0] + " " + all[j] + ");");
+            }
+        }
+    }
     if(fp)
         fp.close();
 }
     
 // Generate baseline files
 function Generate_CreateBaseLine() {
-	fp = fileSystemObject.CreateTextFile("createBaseLine.bat", true);
-	for (var file in fileArray) {
-	    fp.WriteLine("cscript.exe //nologo " + fileArray[file] + ".js > " + fileArray[file] + ".baseline");		
-	}
-	fp.close();
+    fp = fileSystemObject.CreateTextFile("createBaseLine.bat", true);
+    for (var file in fileArray) {
+        fp.WriteLine("cscript.exe //nologo " + fileArray[file] + ".js > " + fileArray[file] + ".baseline");
+    }
+    fp.close();
 }
 
 // Generate rlexe.xml files
 function Generate_RLexe() {
-	fp = fileSystemObject.CreateTextFile("rlexe.xml", true);
+    fp = fileSystemObject.CreateTextFile("rlexe.xml", true);
 
-	fp.WriteLine('<?xml version="1.0"?>');
-	fp.WriteLine('<regress-exe>');
-	fp.WriteLine('');
+    fp.WriteLine('<?xml version="1.0"?>');
+    fp.WriteLine('<regress-exe>');
 
-	for (var file in fileArray) {
-		fp.WriteLine('<test>');
-		fp.WriteLine('    <default>');
-		fp.WriteLine('        <files>' + fileArray[file] + '.js</files>');
-		fp.WriteLine('        <baseline>' + fileArray[file] + '.baseline</baseline>');
-		fp.WriteLine('    </default>');
-		fp.WriteLine('</test>');
-		fp.WriteLine('');		
-	}
-	
-	fp.WriteLine('</regress-exe>');
-	fp.close();
+    for (var file in fileArray) {
+        fp.WriteLine('  <test>');
+        fp.WriteLine('    <default>');
+        fp.WriteLine('      <files>' + fileArray[file] + '.js</files>');
+        fp.WriteLine('      <baseline>' + fileArray[file] + '.baseline</baseline>');
+        fp.WriteLine('    </default>');
+        fp.WriteLine('  </test>');
+    }
+
+    fp.WriteLine('</regress-exe>');
+    fp.close();
 }
 
 GenerateTests();
 Generate_CreateBaseLine();
+AddCustomTests(fileArray);
 Generate_RLexe();

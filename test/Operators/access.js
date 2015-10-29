@@ -39,7 +39,7 @@ write("arr.o1        : " + arr.o1);
 write("arr.a1        : " + arr.a1);
 write("arr[100]      : " + arr[100]);
 write("arr[200]      : " + arr[200]);
-//write("arr[-10]      : " + arr[-10]);
+
 write("arr[0]        : " + arr[0]);
 write("arr[0.5]      : " + arr[0.5]);
 write("arr[\"0.5\"]  : " + arr["0.5"]);
@@ -97,7 +97,7 @@ write("Function.............. ");
 Function.prototype.f1   = count++;
 Function.prototype[400] = count++;
 
-//var fun = new Function("return 10;");
+
 function fun() {
     return 1;
 }

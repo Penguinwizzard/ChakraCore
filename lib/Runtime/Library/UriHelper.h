@@ -10,7 +10,7 @@ namespace Js
     {
     public:
         // Flags used to mark properties of various characters for URI handling.
-        enum 
+        enum
         {
             URINone      = 0x0,
             URIReserved  = 0x1,
@@ -21,8 +21,8 @@ namespace Js
         static Var Decode(__in_ecount(len) const wchar_t* psz, ulong len, unsigned char reservedFlags, ScriptContext* scriptContext);
         static Var DecodeCoreURI(ScriptContext* scriptContext, Arguments& args, unsigned char reservedFlags);
 
-        static unsigned char s_uriProps[128]; 
- 
+        static unsigned char s_uriProps[128];
+
 #if DBG
         // Validate the array of character properties for URI handling. Each entry is a
         // bitwise OR of the flags defined above.

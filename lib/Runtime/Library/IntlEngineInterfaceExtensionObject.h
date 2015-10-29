@@ -103,5 +103,5 @@ namespace Js
         void cleanUpIntl(ScriptContext* scriptContext, DynamicObject* intlObject);
 
     };
-#endif
 }
+#endif

@@ -146,7 +146,7 @@ try
  if (!e instanceof TypeError) throw(e);
  WScript.Echo(y);
  WScript.Echo(x);
-} 
+}
 
 WScript.Echo("Test: splice when the item to replace is not writable."); // WOOB: 1139812
 var a = {};
@@ -154,7 +154,7 @@ Object.defineProperty(a, "0", { value: 0 });
 Object.defineProperty(a, "1", { value: 1 });
 a.length = 2;
 try {
-  Array.prototype.splice.apply(a, [0, 1, 'z']); 
+  Array.prototype.splice.apply(a, [0, 1, 'z']);
 } catch (ex) {
   WScript.Echo("e instanceOf TypeError = " + (ex instanceof TypeError));
 }
@@ -170,7 +170,7 @@ function test0()
     {
       arr.length --;
       arr.splice(3,1,31.23,32.32,33.23);
-    } 
+    }
     return arr.length;
 }
 WScript.Echo("arr.length = " + test0());

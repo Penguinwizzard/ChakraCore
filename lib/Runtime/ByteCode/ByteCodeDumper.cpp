@@ -169,7 +169,7 @@ namespace Js
                     break;
                 case Js::TypeIds_Boolean:
                     Output::Print(L"%-10s", OpCodeUtil::GetOpCodeName(
-                        JavascriptBoolean::FromVar(varConst)->GetValue() ? OpCode::LdTrue : OpCode::LdFalse));                    
+                        JavascriptBoolean::FromVar(varConst)->GetValue() ? OpCode::LdTrue : OpCode::LdFalse));
                     break;
                 case Js::TypeIds_Number:
                     Output::Print(L"%-10s", OpCodeUtil::GetOpCodeName(OpCode::LdC_A_R8));
@@ -459,7 +459,7 @@ namespace Js
             }
             default:
             {
-                AssertMsg(false, "Unkown OpCode for OpLayoutElementI");
+                AssertMsg(false, "Unknown OpCode for OpLayoutElementI");
                 break;
             }
         }
@@ -521,7 +521,7 @@ namespace Js
             }
             default:
             {
-                AssertMsg(false, "Unkown OpCode for ElementU");
+                AssertMsg(false, "Unknown OpCode for ElementU");
                 break;
             }
         }
@@ -544,7 +544,7 @@ namespace Js
             }
             default:
             {
-                AssertMsg(false, "Unkown OpCode for ElementRootU");
+                AssertMsg(false, "Unknown OpCode for ElementRootU");
                 break;
             }
         }

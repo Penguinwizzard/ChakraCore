@@ -43,7 +43,7 @@ namespace Js
 
     Var ArgumentsObject::GetCaller(ScriptContext * scriptContext, JavascriptStackWalker *walker, bool skipGlobal)
     {
-        // The arguments.caller property is equivalent to callee.caller.arguments - that is, it's the 
+        // The arguments.caller property is equivalent to callee.caller.arguments - that is, it's the
         // caller's arguments object (if any). Just fetch the caller and compute its arguments.
         JavascriptFunction* funcCaller = nullptr;
 
@@ -58,7 +58,7 @@ namespace Js
                     continue;
                 }
                 funcCaller = nullptr;
-            }          
+            }
             break;
         }
 
@@ -78,7 +78,7 @@ namespace Js
             // The caller is the "global function" or eval, so we return "null".
             return scriptContext->GetLibrary()->GetNull();
         }
-        
+
         if (!walker->GetCurrentFunction()->IsScriptFunction())
         {
             // builtin function do not have an argument object - return null.
@@ -89,11 +89,11 @@ namespace Js
         if (args == NULL)
         {
             args = JavascriptOperators::LoadHeapArguments(
-                funcCaller, 
-                paramCount - 1, 
+                funcCaller,
+                paramCount - 1,
                 walker->GetJavascriptArgs(),
-                scriptContext->GetLibrary()->GetNull(), 
-                scriptContext->GetLibrary()->GetNull(), 
+                scriptContext->GetLibrary()->GetNull(),
+                scriptContext->GetLibrary()->GetNull(),
                 scriptContext,
                 /* formalsAreLetDecls */ false);
 
@@ -108,7 +108,7 @@ namespace Js
         return JavascriptOperators::GetTypeId(aValue) == TypeIds_Arguments;
     }
 
-    HeapArgumentsObject::HeapArgumentsObject(DynamicType * type) : ArgumentsObject(type), frameObject(nullptr), formalCount(0), 
+    HeapArgumentsObject::HeapArgumentsObject(DynamicType * type) : ArgumentsObject(type), frameObject(nullptr), formalCount(0),
         numOfArguments(0), callerDeleted(false), deletedArgs(nullptr)
     {
     }
@@ -136,9 +136,9 @@ namespace Js
         }
         return NULL;
     }
-    
+
     BOOL HeapArgumentsObject::AdvanceWalkerToArgsFrame(JavascriptStackWalker *walker)
-    { 
+    {
         // Walk until we find this arguments object on the frame.
         // Note that each frame may have a HeapArgumentsObject
         // associated with it. Look for the HeapArgumentsObject.
@@ -260,8 +260,8 @@ namespace Js
 
     BOOL HeapArgumentsObject::IsFormalArgument(PropertyId propertyId, uint32* pIndex)
     {
-        return 
-            this->GetScriptContext()->IsNumericPropertyId(propertyId, pIndex) && 
+        return
+            this->GetScriptContext()->IsNumericPropertyId(propertyId, pIndex) &&
             IsFormalArgument(*pIndex);
     }
 
@@ -516,7 +516,7 @@ namespace Js
     // This is equivalent to .preventExtensions semantics with addition of setting configurable to false for all properties.
     BOOL HeapArgumentsObject::Seal()
     {
-        // Same idea as with PreventExtensions: we have to make sure that items in objectArray for formals 
+        // Same idea as with PreventExtensions: we have to make sure that items in objectArray for formals
         // are there before seal, otherwise we will not be able to add them later.
         return this->ConvertToES5HeapArgumentsObject()->Seal();
     }
@@ -524,12 +524,12 @@ namespace Js
     // This is equivalent to .seal semantics with addition of setting writable to false for all properties.
     BOOL HeapArgumentsObject::Freeze()
     {
-        // Same idea as with PreventExtensions: we have to make sure that items in objectArray for formals 
+        // Same idea as with PreventExtensions: we have to make sure that items in objectArray for formals
         // are there before seal, otherwise we will not be able to add them later.
         return this->ConvertToES5HeapArgumentsObject()->Freeze();
     }
-    
-    //---------------------- ES5HeapArgumentsObject -------------------------------   
+
+    //---------------------- ES5HeapArgumentsObject -------------------------------
 
     BOOL ES5HeapArgumentsObject::SetConfigurable(PropertyId propertyId, BOOL value)
     {
@@ -656,13 +656,13 @@ namespace Js
         // - connected,     if in objectArray -- if (enumerable) enum it, advance objectEnumerator.
         // - disconnected =>in objectArray -- if (enumerable) enum it, advance objectEnumerator.
 
-        // We use GetFormalCount and IsEnumerableByIndex which don't change the object 
+        // We use GetFormalCount and IsEnumerableByIndex which don't change the object
         // but are not declared as const, so do a const cast.
         ES5HeapArgumentsObject* mutableThis = const_cast<ES5HeapArgumentsObject*>(this);
         uint32 formalCount = this->GetFormalCount();
         while (++index < formalCount)
         {
-            bool isDeleted = mutableThis->IsFormalDisconnectedFromNamedArgument(index) && 
+            bool isDeleted = mutableThis->IsFormalDisconnectedFromNamedArgument(index) &&
                 !mutableThis->HasObjectArrayItem(index);
 
             if (!isDeleted)
@@ -686,9 +686,9 @@ namespace Js
 
     // Disconnects indexed argument from named argument for frame object property.
     // Remove association from them map. From now on (or still) for this argument,
-    // named argument's value is no longer associated with agruments[] item.
+    // named argument's value is no longer associated with arguments[] item.
     void ES5HeapArgumentsObject::DisconnectFormalFromNamedArgument(uint32 index)
-    { 
+    {
         AssertMsg(this->IsFormalArgument(index), "SetAccessorsForFormal: called for non-formal");
 
         if (!IsFormalDisconnectedFromNamedArgument(index))
@@ -697,7 +697,7 @@ namespace Js
         }
     }
 
-    BOOL ES5HeapArgumentsObject::IsFormalDisconnectedFromNamedArgument(uint32 index) 
+    BOOL ES5HeapArgumentsObject::IsFormalDisconnectedFromNamedArgument(uint32 index)
     {
         return this->IsArgumentDeleted(index);
     }
@@ -752,7 +752,7 @@ namespace Js
         if (!isDisconnected && !value)
         {
             // Settings writable to false causes disconnect.
-            // It will be too late to copy the value after setting writable = false, as we would not be able to. 
+            // It will be too late to copy the value after setting writable = false, as we would not be able to.
             // Since we are connected, it does not matter the value is, so it's safe (no matter if SetWritable fails) to copy it here.
             this->SetObjectArrayItem(index, this->frameObject->GetSlot(index), PropertyOperation_None);
         }
@@ -809,7 +809,7 @@ namespace Js
         return result;
     }
 
-    //---------------------- ES5HeapArgumentsObject::AutoObjectArrayItemExistsValidator -------------------------------   
+    //---------------------- ES5HeapArgumentsObject::AutoObjectArrayItemExistsValidator -------------------------------
     ES5HeapArgumentsObject::AutoObjectArrayItemExistsValidator::AutoObjectArrayItemExistsValidator(ES5HeapArgumentsObject* args, uint32 index)
         : m_args(args), m_index(index), m_isReleaseItemNeeded(false)
     {
@@ -821,12 +821,12 @@ namespace Js
             m_isReleaseItemNeeded = args->SetObjectArrayItem(index, args->frameObject->GetSlot(index), PropertyOperation_None) != FALSE;
         }
     }
-        
+
     ES5HeapArgumentsObject::AutoObjectArrayItemExistsValidator::~AutoObjectArrayItemExistsValidator()
     {
         if (m_isReleaseItemNeeded)
         {
-           m_args->DeleteObjectArrayItem(m_index, PropertyOperation_None);        
+           m_args->DeleteObjectArrayItem(m_index, PropertyOperation_None);
         }
-    }    
+    }
 }

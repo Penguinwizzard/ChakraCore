@@ -6,7 +6,7 @@
 // OSG bug 2037772
 function AsmModule(glob, imp, b) {
     "use asm";
-    
+
     function f1(a)
     {
         a = a|0;
@@ -33,8 +33,8 @@ function AsmModule(glob, imp, b) {
         f = f|0;
         return a|0;
     }
-    
-    function __ZN9FIOSystem3GetEv() {
+
+    function f5() {
      var i3 = 0, i4 = 0;
      i3 = f1(7) | 0;
      f2(i3, f3(6) | 0);
@@ -42,8 +42,8 @@ function AsmModule(glob, imp, b) {
      i3 = (i3+i4) |0
      return i3|0;
     }
-    
-    return __ZN9FIOSystem3GetEv;
+
+    return f5;
 }
 
 var global = {Math:Math,Int8Array:Int8Array,Int16Array:Int16Array,Int32Array:Int32Array,Uint8Array:Uint8Array,Uint16Array:Uint16Array,Uint32Array:Uint32Array,Float32Array:Float32Array,Float64Array:Float64Array,Infinity:Infinity, NaN:NaN}

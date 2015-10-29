@@ -27,10 +27,10 @@ VirtualTableRegistry::CreateVtableHashMap(ArenaAllocator * alloc)
     VtableHashMap * vtableHashMap = Anew(alloc, VtableHashMap, alloc, MAX_KNOWN_VTABLES);
 
     // All classes that derive from RecyclableObject must include DEFINE_VTABLE_CTOR which invokes VirtualTableRegistry::Add
-    // at class initialization time. Here we add them to our hash table for easy lookup. Note that on a free build
-    // the vtables are merged and thus not all of our types will be registered. So can only use this method
-    // in a non-fre build. If wanted use in a fre build, then must explicitly add the vtables to the hash and
-    // validate that have got them all by comparing in chk build against VirtualTableRegistry.
+    // at class initialization time. Here we add them to our hash table for easy lookup. Note that on a release build
+    // the vtables are merged and thus not all of our types will be registered. So, we can only use this method
+    // in a debug build. If we wanted use in a release build, we'll have to explicitly add the vtables to the hash and
+    // then validate that we have got all the vtables by comparing in chk build against VirtualTableRegistry.
     for (UINT i=0; i < VirtualTableRegistry::m_knownVtableCount; i++)
     {
         INT_PTR vtable = VirtualTableRegistry::m_knownVtables[i].vtable;

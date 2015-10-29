@@ -4,6 +4,11 @@
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
 
+#include "Types\DynamicObjectEnumerator.h"
+#include "Types\DynamicObjectSnapshotEnumerator.h"
+#include "Types\DynamicObjectSnapshotEnumeratorWPCache.h"
+#include "Library\ForInObjectEnumerator.h"
+
 namespace Js
 {
     Var JavascriptReflect::EntryDefineProperty(RecyclableObject* function, CallInfo callInfo, ...)
@@ -30,7 +35,7 @@ namespace Js
 
         propertyKey = args.Info.Count > 2 ? args[2] : undefinedValue;
         PropertyRecord const * propertyRecord;
-        JavascriptObject::GetPropertyRecordFromVar<true>(propertyKey, scriptContext, &propertyRecord);
+        JavascriptConversion::ToPropertyKey(propertyKey, scriptContext, &propertyRecord);
 
         attributes = args.Info.Count > 3 ? args[3] : undefinedValue;
         PropertyDescriptor propertyDescriptor;

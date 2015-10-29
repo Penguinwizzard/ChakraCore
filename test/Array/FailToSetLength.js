@@ -3,8 +3,8 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-// Some of the Array.prototype built-in functions set the length property of the array object and 
-// should throw a TypeError if setting the length property fails. Tests in this file verify that 
+// Some of the Array.prototype built-in functions set the length property of the array object and
+// should throw a TypeError if setting the length property fails. Tests in this file verify that
 // we throw TypeError when we're supposed to.
 // See BLUE: 559834 for more details
 
@@ -57,7 +57,7 @@ var tests = [
             var obj = {0:1, 1:1, 2:1, 3:-109, length:4};
             obj.__proto__ = proto;
             Object.defineProperty(proto, "4", {configurable: true, get: function() { return 31; }});
-            
+
             assert.throws(function() { Array.prototype.unshift.call(obj, 200, 201, 202); }, TypeError, "Array.prototype.unshift throws when obj prototype-chain has a property named one of the indices we need to set which is an accessor with no setter", "Cannot define property: object is not extensible");
             assert.throws(function() { Array.prototype.push.call(obj, 200); }, TypeError, "Array.prototype.push throws when obj prototype-chain has a property named one of the indices we need to set which is an accessor with no setter", "Cannot define property: object is not extensible");
         }

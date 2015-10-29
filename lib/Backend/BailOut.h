@@ -28,7 +28,7 @@ public:
         totalOutParamCount(0), argOutSyms(nullptr), bailOutRecord(nullptr), wasCloned(false), isInvertedBranch(false), sharedBailOutKind(true), outParamInlinedArgSlot(nullptr),
         liveVarSyms(nullptr), liveLosslessInt32Syms(nullptr), liveFloat64Syms(nullptr), liveSimd128F4Syms(nullptr), liveSimd128I4Syms(nullptr), liveSimd128D2Syms(nullptr), branchConditionOpnd(nullptr),
         stackLiteralBailOutInfoCount(0), stackLiteralBailOutInfo(nullptr)
-    {      
+    {
         Assert(bailOutOffset != Js::Constants::NoByteCodeOffset);
 #ifdef _M_IX86
         outParamFrameAdjustArgSlot = nullptr;
@@ -42,7 +42,7 @@ public:
     void Clear(JitArenaAllocator * allocator);
 
     void FinalizeBailOutRecord(Func * func);
-#ifdef MD_GROW_LOCALS_AREA_UP  
+#ifdef MD_GROW_LOCALS_AREA_UP
     void FinalizeOffsets(__in_ecount(count) int * offsets, uint count, Func *func, BVSparse<JitArenaAllocator> *bvInlinedArgSlot);
 #endif
 
@@ -63,7 +63,7 @@ public:
 #if DBG
     static bool IsBailOutHelper(IR::JnHelperMethod helper);
 #endif
-    bool wasCloned;     
+    bool wasCloned;
     bool isInvertedBranch;
     bool sharedBailOutKind;
 
@@ -73,26 +73,26 @@ public:
     uint32 bailOutOffset;
     BailOutRecord * bailOutRecord;
     CapturedValues capturedValues;                                      // Values we know about after forward pass
-    CapturedValues usedCapturedValues;                                  // Values that need to be restored in the bail out    
-    BVSparse<JitArenaAllocator> * byteCodeUpwardExposedUsed;               // Non-constant stack syms that needs tob e restored in the bail out    
+    CapturedValues usedCapturedValues;                                  // Values that need to be restored in the bail out
+    BVSparse<JitArenaAllocator> * byteCodeUpwardExposedUsed;            // Non-constant stack syms that needs to be restored in the bail out
     uint polymorphicCacheIndex;
     uint startCallCount;
-    uint totalOutParamCount;   
+    uint totalOutParamCount;
     Func ** startCallFunc;
-    
+
     StartCallInfo * startCallInfo;
     StackSym ** argOutSyms;
 
     struct StackLiteralBailOutInfo
     {
         StackSym * stackSym;
-        uint initFldCount;  
+        uint initFldCount;
     };
     uint stackLiteralBailOutInfoCount;
     StackLiteralBailOutInfo * stackLiteralBailOutInfo;
 
     BVSparse<JitArenaAllocator> * liveVarSyms;
-    BVSparse<JitArenaAllocator> * liveLosslessInt32Syms;                   // These are only the live int32 syms that fully represent the var-equivalent sym's value (see GlobOpt::FillBailOutInfo)
+    BVSparse<JitArenaAllocator> * liveLosslessInt32Syms;                // These are only the live int32 syms that fully represent the var-equivalent sym's value (see GlobOpt::FillBailOutInfo)
     BVSparse<JitArenaAllocator> * liveFloat64Syms;
 
     // SIMD_JS
@@ -104,7 +104,7 @@ public:
 
     BVSparse<JitArenaAllocator> * outParamInlinedArgSlot;
 #ifdef _M_IX86
-    BVSparse<JitArenaAllocator> * outParamFrameAdjustArgSlot;     
+    BVSparse<JitArenaAllocator> * outParamFrameAdjustArgSlot;
     BVFixed * inlinedStartCall;
 #endif
 
@@ -116,8 +116,8 @@ public:
     // The actual bailout instr, this is normally the instr that has the bailout info.
     // 1) If we haven't generated bailout (which happens in lowerer) for this bailout info, this is either of:
     // - the instr that has bailout info.
-    // - in case of shared bailout this will be the BailTarget instr (corresponds to the call to SaveReesgtersAndBailOut, 
-    //   while other instrs sharing bailout info will just have checks and JMP to BailTarget). 
+    // - in case of shared bailout this will be the BailTarget instr (corresponds to the call to SaveReesgtersAndBailOut,
+    //   while other instrs sharing bailout info will just have checks and JMP to BailTarget).
     // 2) After we generated bailout, this becomes label instr. In case of shared bailout other instrs JMP to this label.
     IR::Instr * bailOutInstr;
 
@@ -184,7 +184,7 @@ public:
     template <typename Fn>
     void MapArgOutOffsets(Fn fn);
 
-protected:     
+protected:
     struct BailOutReturnValue
     {
         Js::Var returnValue;
@@ -261,11 +261,11 @@ protected:
     uint * startCallArgRestoreAdjustCounts;
 #endif
 
-    // Index of start of section of argOuts for current record/current func, used with argOutFloat64Syms and 
-    // argOutLosslessInt32Syms when restoring values, as BailOutInfo uses one argOuts array for all funcs. 
+    // Index of start of section of argOuts for current record/current func, used with argOutFloat64Syms and
+    // argOutLosslessInt32Syms when restoring values, as BailOutInfo uses one argOuts array for all funcs.
     // Similar to outParamOffsets which points to current func section for the offsets.
     // TODO: make this simpler.
-    
+
     Js::RegSlot localOffsetsCount;
     uint32 const bailOutOffset;
 
@@ -306,7 +306,7 @@ public:
 
     static Js::Var BailOut(BranchBailOutRecord const * bailOutRecord, BOOL cond);
     static Js::Var BailOutFromFunction(Js::JavascriptCallStackLayout * layout, BranchBailOutRecord const * bailOutRecord, BOOL cond, void * returnAddress, void * argoutRestoreAddress);
-    static uint32 BailOutFromLoopBody(Js::JavascriptCallStackLayout * layout, BranchBailOutRecord const * bailOutRecord, BOOL cond);  
+    static uint32 BailOutFromLoopBody(Js::JavascriptCallStackLayout * layout, BranchBailOutRecord const * bailOutRecord, BOOL cond);
 
     static Js::Var BailOutInlined(Js::JavascriptCallStackLayout * layout, BranchBailOutRecord const * bailOutRecord, BOOL cond, void * returnAddress);
     static uint32 BailOutFromLoopBodyInlined(Js::JavascriptCallStackLayout * layout, BranchBailOutRecord const * bailOutRecord, BOOL cond, void * returnAddress);
@@ -320,7 +320,7 @@ public:
     FunctionBailOutRecord() : constantCount(0), constants(nullptr) {}
 
     uint constantCount;
-    Js::Var * constants;  
+    Js::Var * constants;
 };
 
 template <typename Fn>
@@ -340,7 +340,7 @@ inline void BailOutRecord::MapArgOutOffsets(Fn fn)
 {
     uint outParamSlot = 0;
     uint argOutSlotOffset = 0;
-    
+
     if (this->argOutOffsetInfo)
     {
         for (uint i = 0; i < this->argOutOffsetInfo->startCallCount; i++)
@@ -393,18 +393,18 @@ struct GlobalBailOutRecordDataTable
         // Visit all the rows that have this bailout ID in their range.
         for (uint i = 0; i < this->length; i++)
         {
-            if (bailOutRecordId > globalBailOutRecordDataRows[i].end) 
+            if (bailOutRecordId > globalBailOutRecordDataRows[i].end)
             {
                 // Not in range.
                 continue;
             }
-            
+
             if (globalBailOutRecordDataRows[i].start > bailOutRecordId)
             {
                 // Not in range, and we know there are no more in range (since the table is sorted by "start").
                 return;
             }
-            
+
             // In range: take action.
             callback(&globalBailOutRecordDataRows[i]);
         }
@@ -426,7 +426,7 @@ struct GlobalBailOutRecordDataTable
             {
                 // We know there are no more in range (since the table is sorted by "start").
                 return;
-            }            
+            }
         }
     }
 };

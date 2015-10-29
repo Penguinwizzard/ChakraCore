@@ -41,6 +41,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ResourceCompile Include="$(MsBuildThisFileDirectory)ch.rc">
+      <AdditionalIncludeDirectories>
+        $(ChakraCoreRootDirectory)lib\common;        
+        %(AdditionalIncludeDirectories)
+      </AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
     <ClInclude Include="chakrartinterface.h" />
     <ClInclude Include="Helpers.h" />
     <ClInclude Include="HostConfigFlags.h" />

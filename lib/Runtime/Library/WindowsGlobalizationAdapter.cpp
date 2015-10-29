@@ -298,7 +298,7 @@ namespace Js
         initializedGlobObjects = true;
 
         return hr;
-        
+
     }
 
     HRESULT WindowsGlobalizationAdapter::EnsureDataTextObjectsInitialized(DelayLoadWindowsGlobalization *library)
@@ -350,7 +350,7 @@ namespace Js
         IfFailThrowHr(this->languageStatics->IsWellFormed(hString, &retVal));
         return retVal;
     }
-   
+
         // OK for timeZoneId to get truncated as it would pass incomplete timeZoneId below which
         // will be rejected by globalization dll
     HRESULT WindowsGlobalizationAdapter::NormalizeLanguageTag(_In_ ScriptContext* scriptContext, _In_z_ PCWSTR languageTag, HSTRING *result)

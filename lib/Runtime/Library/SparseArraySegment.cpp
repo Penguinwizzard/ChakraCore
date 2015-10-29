@@ -36,7 +36,7 @@ namespace Js
     // Test if an element value is null/undefined.
     inline static bool IsMissingOrUndefined(Var value, RecyclableObject *undefined, uint32& countUndefined)
     {
-        if (value == SparseArraySegment<Var>::GetMissingItem())
+        if (SparseArraySegment<Var>::IsMissingItem(&value))
         {
             return true;
         }
@@ -54,11 +54,11 @@ namespace Js
         {
             return false;
         }
-        
+
         RecyclerHeapObjectInfo heapObject;
         if (recycler->FindHeapObject(
-                seg, 
-                (Memory::FindHeapObjectFlags)(FindHeapObjectFlags_VerifyFreeBitForAttribute | FindHeapObjectFlags_AllowInterior), 
+                seg,
+                (Memory::FindHeapObjectFlags)(FindHeapObjectFlags_VerifyFreeBitForAttribute | FindHeapObjectFlags_AllowInterior),
                 heapObject))
         {
             return heapObject.IsLeaf();

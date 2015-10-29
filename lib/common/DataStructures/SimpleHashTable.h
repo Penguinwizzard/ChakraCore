@@ -23,7 +23,7 @@ class SimpleHashTable
 {
     typedef SimpleHashEntry<TKey, TData> EntryType;
 
-    // TODO: Consider 5 or 7 as multiply of these might be faster.
+    // REVIEW: Consider 5 or 7 as multiplication of these might be faster.
     static const int MaxAverageChainLength = 6;
 
     TAllocator *allocator;
@@ -169,7 +169,7 @@ public:
     }
 
     // If density is a compile-time constant, then we can optimize (avoids division)
-    // Sometimes the compiler can also make this optimization, but this way is guaranteed.
+    // Sometimes the compiler can also make this optimization, but this way it is guaranteed.
     template< uint density > bool IsDenserThan() const
     {
         return count > (size * density);

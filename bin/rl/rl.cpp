@@ -44,7 +44,7 @@
 //    <files>...</files>   // list of comma-delimited files
 //
 // For asm regressions, files may be grouped in a single test node for
-// convienence.  For exe regressions, all the files comprising a single test
+// convenience.  For exe regressions, all the files comprising a single test
 // should be group.
 //
 //    <tags>...</tags>     // list of comma-delimited (case-insensitive) tags
@@ -60,7 +60,7 @@
 //    <tags>SEH</tags>
 //
 // This marks a test with the SEH tag.  If -tags:SEH is specified on the command
-// line, only tests marked as such would be included.  Simiarly, -nottags:SEH
+// line, only tests marked as such would be included.  Similarly, -nottags:SEH
 // would exclude tests so tagged.
 //
 // Test info (valid for asm and exe test configuration files):
@@ -82,7 +82,7 @@
 // take if the condition applies) which can be either "include" or "exclude".
 //
 // asm and exe test conditions may contain <override> nodes that allow default
-// info to be overriden.  E.g.
+// info to be overridden.  E.g.
 //
 //     <condition order="1" type="include">
 //
@@ -102,8 +102,7 @@
 //
 // Currently, condition nodes may have only a single condition (target or
 // compile-flags) and non-target conditions must appear after target
-// conditions.  This is purely an implementation choice (I don't have any time
-// to do even what I have already done.)
+// conditions.
 
 
 // Tags processing
@@ -139,11 +138,9 @@
 // 3. rl.full.log contains all the output from all the tests,
 //    delimited by +++ <test variation> +++
 // Notes:
-// 1. to upload the results to http://vctr page, the rl.results.log and
-//    rl.full.log can be used if -nothreadid is used.
-// 2. The test output in these files is not synchronized on MP,
+// 1. The test output in these files is not synchronized on MP,
 //    without the -sync option.
-// 3. rl.results.log can be used as a baseline database to track regressions,
+// 2. rl.results.log can be used as a baseline database to track regressions,
 //    if -time is not used.
 
 // -genlst mode and lst file format
@@ -183,7 +180,7 @@
 // 6. Global variables used by worker threads must be thread-local or
 //    properly synchronized. Exceptions are: (a) variables only read, not
 //    written, by the worker threads, (b) bThreadStop, which is only written
-//    to TRUE by worker threads, so synchonization is not necessary.
+//    to TRUE by worker threads, so synchronization is not necessary.
 //
 // 7. All printf/fprintf output from the worker threads must go through
 //    the COutputBuffer class, to be properly synchronized. This class buffers
@@ -198,7 +195,6 @@
 
 #include "rl.h"
 #include "strsafe.h"
-#include "HostSysInfo.h"
 
 #pragma warning(disable: 4474) // 'fprintf' : too many arguments passed for format string
 
@@ -233,7 +229,7 @@ TARGETINFO TargetInfo[] = {
    "sh5c",       FALSE, FALSE, FALSE, "sh5sim",       "libcsim.lib", "x86asm",
    "sh5m",       FALSE, FALSE, FALSE, "sh5sim",       "libcsim.lib", "x86asm",
    "ia64",       FALSE, TRUE,  TRUE,  NULL,           NULL, "x86asm",
-   "amd64",      FALSE, TRUE,  TRUE,  NULL, 		  NULL, "x86asm",
+   "amd64",      FALSE, TRUE,  TRUE,  NULL,           NULL, "x86asm",
    "amd64sys",   FALSE, FALSE, TRUE,  "issuerun",     NULL, "x86asm",
    "wvm64",      FALSE, FALSE, FALSE, NULL,           NULL, "x86asm",
    "am33",       FALSE, FALSE, FALSE, NULL,           NULL, "x86asm",
@@ -245,7 +241,7 @@ TARGETINFO TargetInfo[] = {
 // Target OS information
 // Any changes made here should have corresponding name added
 // to TARGET_OS in rl.h. NOTE: The TARGET_OS enum is in exactly
-// the same order as the TargetOSNames array is initialized!
+// the same order as the TargetOSNames array is initialized
 const char* const TargetOSNames[] = {
     "unknown",
     "win7",
@@ -290,7 +286,7 @@ const char * const DirectiveNames[] =
 
 
 //
-// Global variables set before worker threads start, and only accesssed
+// Global variables set before worker threads start, and only accessed
 // (not set) by the worker threads.
 //
 
@@ -441,7 +437,7 @@ char * getenv_unsafe(const char * varName)
 
 FILE * fopen_unsafe(const char * filename, const char * mode)
 {
-   // Using fopen_s leads to EACCES error being returned occassionally, even when contentious
+   // Using fopen_s leads to EACCES error being returned occasionally, even when contentious
    // fopen/fclose pairs are wrapped in a critical section.  Unclear why this is happening.
    // Use deprecated fopen instead.
    _set_errno(0);
@@ -496,7 +492,7 @@ NT_handling_function(unsigned long /* dummy -- unused */)
 
    ExitProcess(1);
 #if _MSC_VER<1300
-   return 1; // avoid C4716 warning caused by noreturn on ExitProcess
+   return 1; // avoid C4716 warning caused by no return on ExitProcess
 #endif
 }
 
@@ -629,7 +625,7 @@ __cdecl LogError(const char *fmt, ...)
    va_start(arg_ptr, fmt);
    vsprintf_s(tempBuf, fmt, arg_ptr);
    ASSERT(strlen(tempBuf) < BUFFER_SIZE);
-   ThreadOut->Add("%sError: %s\n", buf, tempBuf);  // TODO: use stderr not stdout?
+   ThreadOut->Add("%sError: %s\n", buf, tempBuf);
    ThreadLog->Add("%sError: %s\n", buf, tempBuf);
    ThreadFull->Add("%sError: %s\n", buf, tempBuf);
 }
@@ -650,13 +646,12 @@ __inline void FlushOutput(
 // Various DeleteFile() wrappers. We have had lots of problems where
 // DeleteFile() fails with error 5 -- access denied. It's not clear why this
 // is: it seems like an OS bug where the handle to a process is not released
-// when the process handle becomes signalled. Perhaps there is a process that
+// when the process handle becomes signaled. Perhaps there is a process that
 // sits around grabbing handles. It seems to be worse with CLR testing and
 // issuerun/readrun cross-compiler testing. To deal with this, loop and sleep
 // between delete tries for some calls. Keep track of how many failures there
-// were, just so we know. Since we can't figure out why this happens, don't
-// clog the log files with "error 5" unless the sleep doesn't fix the problem,
-// or the user specifies verbose.
+// were. Don't clog the log files with "error 5" unless the
+// sleep doesn't fix the problem, or the user specifies verbose.
 
 BOOL
 DeleteFileIfFoundInternal(
@@ -747,7 +742,7 @@ DeleteFileRetryMsg(
       }
 
       if (++tries > MAX_DELETE_FILE_TRIES) {
-         LogError("Giving up trying to delete file %s. Further related errors are likely!", filename);
+         LogError("Giving up trying to delete file %s. Further related errors are likely", filename);
          CntDeleteFileFatals++;
          break;
       }
@@ -821,35 +816,13 @@ mytmpnam(
    char threadPrefix[MAX_PATH];    // make the prefix thread-specific
 
    // Note that GetTempFileName only uses the first 3 characters of the
-   // prefix. This should be ok, because it will still create a unique
+   // prefix. This should be okay, because it will still create a unique
    // filename.
 
    sprintf_s(threadPrefix, "%s%X", prefix, ThreadId);
 
    // NOTE: GetTempFileName actually creates a file when it succeeds.
-   if (HostSystemInfo::SupportsOnlyMultiThreadedCOM())
-   {
-       const size_t newsize = 100;
-       size_t convertedChars = 0;
-       size_t origsize = 0;
-
-       origsize = strlen(directory) + 1;
-       wchar_t _wdirectory[newsize];
-       mbstowcs_s(&convertedChars, _wdirectory, origsize, directory, _TRUNCATE);
-
-       origsize = strlen(threadPrefix) + 1;
-       wchar_t _wthreadPrefix[newsize];
-       mbstowcs_s(&convertedChars, _wthreadPrefix, origsize, threadPrefix, _TRUNCATE);
-
-       wchar_t _wfilename[MAX_PATH + 1];
-       r = GetTempFileNameW(_wdirectory, _wthreadPrefix, 0, _wfilename);
-       origsize = wcslen(_wfilename) + 1;
-       wcstombs_s(&convertedChars, filename, origsize, _wfilename, _TRUNCATE);
-   }
-   else
-   {
-       r = GetTempFileNameA(directory, threadPrefix, 0, filename);
-   }
+   r = GetTempFileNameA(directory, threadPrefix, 0, filename);
 
    if (r == 0) {
       return NULL;
@@ -903,7 +876,7 @@ DoCompare(
    char *file2
 )
 {
-   CHandle h1, h2;     // automagically closes open handles
+   CHandle h1, h2;     // automatically closes open handles
    DWORD count1, count2;
    BOOL b1, b2;
    DWORD size1, size2;
@@ -929,7 +902,7 @@ DoCompare(
 
    // Short circuit by first checking for different file lengths.
 
-   size1 = GetFileSize(h1, NULL);  // assume <4GB files!
+   size1 = GetFileSize(h1, NULL);  // assume < 4GB files
    if (size1 == 0xFFFFFFFF) {
       LogError("Unable to get file size for %s - error %d", file1, GetLastError());
       return -1;
@@ -1282,7 +1255,7 @@ ParseOS(
 }
 
 // Does the config file specified target match with our regression target?
-// TRUE if they are equal or regrTarget is a superset of filetarget.
+// TRUE if they are equal or regrTarget is a superset of fileTarget.
 BOOL
 MatchMachine(
    TARGET_MACHINES fileTarget,
@@ -1487,7 +1460,7 @@ AddToStringList
 {
    StringList * p = new StringList;
 
-   p->string = string; // NOTE: we store the pointer; we don't copy the string!
+   p->string = string; // NOTE: we store the pointer; we don't copy the string
    p->next = NULL;
 
    if (list == NULL)
@@ -1547,7 +1520,7 @@ ParseStringList(char* p, char* delim)
       return list;
    }
 
-   p = _strdup(p); // don't trash passed-in memory!
+   p = _strdup(p); // don't trash passed-in memory
 
    p = mystrtok(p, delim, delim);
 
@@ -1729,7 +1702,7 @@ GetLINKFLAGS()
          if (b2 == NULL) {
             Warning("/B2: in LINKFLAGS (%s) but not in EXTRA_CC_FLAGS (%s)", readLINKFLAGS, EXTRA_CC_FLAGS);
          } else {
-            // Make sure they are the same!
+            // Make sure they are the same
             if (0 != _stricmp(s + 4, b2)) {
                Warning("/B2 flags in EXTRA_CC_FLAGS (%s) conflict with -B2: in LINKFLAGS(%s)", EXTRA_CC_FLAGS, readLINKFLAGS);
             }
@@ -1756,7 +1729,7 @@ GetLINKFLAGS()
 }
 
 // WARNING: we are liberally using _putenv. As a result, it is dangerous to
-// hold onto a pointer returned from getenv(), so always make a copy!
+// hold onto a pointer returned from getenv(), so always make a copy
 
 void
 GetEnvironment(
@@ -1786,7 +1759,6 @@ GetEnvironment(
       }
    }
    else {
-
       // Set environment var in case regr scripts reference.
 
       sprintf_s(tempBuf, "TARGET_MACHINE=%s", TargetInfo[TargetMachine].name);
@@ -1805,7 +1777,6 @@ GetEnvironment(
       }
    }
    else {
-
       // Set environment var in case regr scripts reference.
 
       sprintf_s(tempBuf, "RL_MACHINE=%s", TargetInfo[RLMachine].name);
@@ -1977,7 +1948,7 @@ GetEnvironment(
 
             PROCESSOR_ARCHITECTURE = getenv_unsafe("PROCESSOR_ARCHITECTURE");
             if (PROCESSOR_ARCHITECTURE == NULL) {
-               Fatal("PROCESSOR_ARCHITECTURE enviroment variable not set (this should be set by the OS!)");
+               Fatal("PROCESSOR_ARCHITECTURE environment variable not set (this should be set by the OS!)");
             }
 
             if (0 != _stricmp(TargetInfo[TargetMachine].name, PROCESSOR_ARCHITECTURE)) {
@@ -2289,13 +2260,13 @@ DumpTestList
       printf("Default testinfo\n");
       PrintTestInfo(&pTest->defaultTestInfo);
       int i=0;
-      for(TestVariant * variants=pTest->variants; variants!=NULL; variants=variants->next) {
+      for(TestVariant * variants=pTest->variants; variants!=nullptr; variants=variants->next) {
             printf("variant %d\n", i++);
             PrintTestInfo(&variants->testInfo);
             printf("opt flag %s\n", variants->optFlags);
       }
 
-      printf("\n\n");;
+      printf("\n\n");
    }
 }
 
@@ -2403,7 +2374,7 @@ WriteEnvLst
             if (variants->testInfo.data[i] && TestInfoEnvLstFmt[i]) {
                LstFilesOut->Add(TestInfoEnvLstFmt[i], variants->testInfo.data[i]);
             } else if (pTest->defaultTestInfo.data[TIK_RL_DIRECTIVES]) {
-               // we only handle nogpf directive, passFo and NoAsm not used
+               // we only handle NoGPF directive, passFo and NoAsm not used
                if (SuppressNoGPF(pTest)) {
                LstFilesOut->Add(" NOGPF=1");
                }
@@ -2516,7 +2487,7 @@ VerifyOrCreateDir(
    return TRUE;
 }
 
-// Create MASTER_DIR and DIFF_DIR if non-existant.
+// Create MASTER_DIR and DIFF_DIR if non-existent.
 BOOL
 CreateAsmDirs(
    char* root,
@@ -3038,11 +3009,6 @@ ParseCommandLine(
 
    ProgramName = argv[0];
 
-   //if (argc == 1) {
-   //   Usage(FALSE);
-   //   exit(0);
-   //}
-
    ParseEnvVar(RL_PRE_ENV_VAR);
 
    for (i = 1; i < argc; i++) {
@@ -3056,7 +3022,7 @@ ParseCommandLine(
    if (REGRESS == NULL)
       REGRESS = getenv_unsafe("REGRESS");
    if (REGRESS == NULL)
-      Fatal("REGRESS enviroment variable not set");
+      Fatal("REGRESS environment variable not set");
 
    // Use "rl.log" as the default log file, and rl.full.log as the default
    // full log file. We make sure the log file is a full path. If the user
@@ -3301,7 +3267,7 @@ ParseCommandLine(
       SetPriorityClass(GetCurrentProcess(), IDLE_PRIORITY_CLASS);
    }
 
-   // Initialize parallel stuff
+   // Initialize parallel data
 
    if (NumberOfThreads == 0) {
       SYSTEM_INFO SystemInfo;
@@ -3424,7 +3390,7 @@ GetTestInfoFromNode
          if (i == TIK_ENV)
          {
             ASSERT(childNode->ChildList != NULL);
-            testInfo->data[i] = (char*)childNode; // c-style cast
+            testInfo->data[i] = (char*)childNode;
          }
          else
          {
@@ -3460,7 +3426,7 @@ AddAsmVariants
    ConditionNodeList * cnl
 )
 {
-   // Asm configs are simple; we simply apply the all conditions to
+   // Asm configurations are simple; we simply apply all the conditions to
    // the variant info.
 
    // Create a variant and inherit the default info.
@@ -3500,7 +3466,7 @@ AddExeVariants
    ConditionNodeList * cnl
 )
 {
-   // Exe configs required more walk since we have a list of optimization
+   // Exe configurations require more work since we have a list of optimization
    // flags to deal with.
 
    TestVariant ** ppLastVariant = &pTest->variants;
@@ -3513,23 +3479,19 @@ AddExeVariants
    char ** optFlagsArray;
 
    // Decide which list to use depending on the tag.
-
    optFlagsArray = IsPogoTest(pTest)
       ? PogoOptFlags
       : OptFlags
       ;
 
    // For each optimization flag set, see if the conditional applies.
-
    for (int i = 0; optFlagsArray[i] != NULL; i++)
    {
       // Create a variant and inherit the default info.
-
       TestInfo variantInfo;
       memcpy(&variantInfo, defaultInfo, sizeof(TestInfo));
 
       // Check the conditions.
-
       ConditionNodeList * cn = cnl;
       while (cn != NULL)
       {
@@ -3711,8 +3673,6 @@ ParseFiles
    return TRUE;
 }
 
-
-
 // mystrcmp is a frontend to strcmp that doesn't have a problem with NULL
 // parameters.
 int
@@ -3733,7 +3693,7 @@ mystrcmp(
    return strcmp(a,b);
 }
 
-// mystrtok is similar to strtok_s, but takes two delimeter parameters: one for
+// mystrtok is similar to strtok_s, but takes two delimiter parameters: one for
 // skipping entirely and one for skipping and terminating.
 char *
 mystrtok(
@@ -3751,16 +3711,14 @@ mystrtok(
    if (str == NULL)
       return NULL;
 
-   // Skip leading delim (and term for first call).
-
+   // Skip leading delimiter (and term for first call).
    while (*str &&
       (strchr(delim, *str) ||
          (s && strchr(term, *str)))) {
       ++str;
    }
 
-   // Parse non-delim/non-term.
-
+   // Parse non-delimiter/non-term.
    ret = lastNonDelim = str;
    while (*str && !strchr(term, *str)) {
       if (!strchr(delim, *str))
@@ -3769,27 +3727,21 @@ mystrtok(
    }
 
    // EOS?
-
    if (!*str) {
 
       // If we reached EOS because there are no more tokens, return NULL now.
-
       if (ret == str)
-         return NULL;
+         return nullptr;
 
       // Otherwise, set up for NULL return on next call.
-
-      str = NULL;
+      str = nullptr;
    }
-
    // Skip terminator.
-
    else {
       str++;
    }
 
    // Trim trailing space.
-
    if (!strchr(term, *lastNonDelim))
       ++lastNonDelim;
    *lastNonDelim = '\0';
@@ -3902,7 +3854,7 @@ ProcessConfig
    static int unnamedCount = 0;
    const char * szOrder;
 
-   ASSERT(!IsRelativePath(CfgFile)); // must be full path!
+   ASSERT(!IsRelativePath(CfgFile)); // must be full path
 
    Xml::Node * topNode = Xml::ReadFile(CfgFile);
 
@@ -3942,8 +3894,8 @@ ProcessConfig
 
       char * testName = testNode->GetAttributeValue("name");
 
-      // Technically, we should have a name because that's how we resume or exclude tests.  However,
-      // the user may opt not to provide a name, to make it easier to add tests.  In that case we 
+      // Technically, we should have a name because that's how we resume or exclude tests. However,
+      // the user may opt not to provide a name, to make it easier to add tests. In that case we
       // just give the test a number.
       if (testName == NULL)
       {
@@ -3989,8 +3941,7 @@ ProcessConfig
             }
          }
 
-         // If the directory has been explicity excluded, then skip it
-
+         // If the directory has been explicitly excluded, then skip it
          if ((cfg == RM_DIR) && FExcludeDirs) {
             if (DirectoryExcluded(testName)) {
                if (FVerbose)
@@ -4001,7 +3952,7 @@ ProcessConfig
       }
 
       // We should sort the children in condition order since we can't trust
-      // that Xml nodes are read in the proper order.  Since I know that
+      // that Xml nodes are read in the proper order. Since I know that
       // xmlreader.cpp does the right thing, I'm going to enforce the
       // ordering here rather than correct it.
 
@@ -4133,7 +4084,7 @@ ProcessConfig
       {
          goto Label_Error;
       }
-      
+
       // Process the tags before checking for condition nodes.
 
       // Check for any directory tags only if we are in directory mode
@@ -4150,7 +4101,7 @@ ProcessConfig
           goto Label_Skip;
       }
 
-      // Walk the conditon nodes looking for applicability.
+      // Walk the condition nodes looking for applicability.
 
       ConditionNodeList * conditionNodeList = NULL;
       ConditionNodeList * conditionNodeLast = NULL;
@@ -4284,7 +4235,6 @@ ProcessConfig
           goto Label_Error;
       }
 
-
 Label_Skip:;
    }
 
@@ -4362,7 +4312,7 @@ BuildDirList(
       Fatal("-match prefix '%s' did not match any directory", MatchDir);
 
    // Get the full path for each. Grab the directory of the DCFG file and
-   // append to that each subdir.
+   // append to that each subdirectory.
 
    _splitpath_s(DCFGfile, drive, ARRAYLEN(drive), dir, ARRAYLEN(dir), NULL, 0, NULL, 0);
 
@@ -4400,8 +4350,7 @@ UpdateTitleStatus()
    strcpy_s(TitleStatus, s);
    s = strchr(TitleStatus, '\0');
 
-   // start at 1: skip primary thread 0 (unless we decide to let it do real
-   // work)
+   // start at 1: skip primary thread 0 (unless we decide to let it do real work)
    for (i = 1; i <= NumberOfThreads; i++) {
       ThreadInfo[i].GetCurrentTest(tempBuf);
       s += sprintf_s(s, REMAININGARRAYLEN(TitleStatus, s), "; %s", tempBuf);
@@ -4501,7 +4450,7 @@ PerformSingleRegression(
 
         if (FStatus)
             UpdateTitleStatus();
-        
+
         if (strcmp(pTest->files->string, "dotest.cmd") == 0) {
             sprintf_s(tempBuf, "(%s (", pTest->name);
         } else
@@ -4514,10 +4463,10 @@ PerformSingleRegression(
         if(ccFlags != NULL) {
             if(pTestVariant->optFlags != NULL)
                 strcat_s(tempBuf, " ");
-            
+
             strcat_s(tempBuf, ccFlags);
         }
-        
+
         if(!pTestVariant->optFlags && !ccFlags)
             tempBuf[0] = '\0';
         else
@@ -4527,12 +4476,12 @@ PerformSingleRegression(
         strcat_s(tempBuf, (Mode == RM_ASM) ? (pDir->IsBaseline() ? " base)" : " diffs)") : ")");
         sprintf_s(testNameBuf, "%s %s", pDir->GetDirectoryName(), tempBuf);
         WriteRunpl("+++ %s +++", testNameBuf);
-        
+
         start_test = time(NULL);
-        
+
         // Are we doing regressions internally?
         rlfeStatus = RLFES_PASSED;
-        
+
         int result;
 
         // Assembly regressions?
@@ -4618,7 +4567,7 @@ RegressDirectory(
    pTestList = pDir->GetTestList();
 
    // If we are doing baselines and diffs simultaneously and we are now
-   // performing the diffs, reinit the directory stats.
+   // performing the diffs, reinitialize the directory stats.
 
    if (FBaseDiff && !pDir->IsBaseline())
       pDir->InitStats(0);
@@ -4736,7 +4685,7 @@ ThreadWorker( void *arg )
 
       // Poll for new stuff. If the thread is set to stop, then go away.
 
-      if (FSingleThreadPerDir) 
+      if (FSingleThreadPerDir)
       {
           // Use DirectoryQueue and schedule each directory on a single thread.
           pDir = DirectoryQueue.GetNextItem();
@@ -4760,7 +4709,7 @@ ThreadWorker( void *arg )
           delete pDir;
           pDir = NULL;
       }
-      else 
+      else
       {
           // Use DirectoryAndTestCaseQueue and schedule each test on it's own thread.
           pDirAndTest = DirectoryAndTestCaseQueue.GetNextItem();
@@ -4826,7 +4775,7 @@ main(int argc, char *argv[])
    // Set up output for primary thread.
    ThreadOut = new COutputBuffer(stdout, true);
 
-   // WARNING: while parsing flags, these are aliased to ThreadOut!
+   // WARNING: while parsing flags, these are aliased to ThreadOut
    ThreadLog = ThreadOut;  // no LogName yet
    ThreadFull = ThreadOut;
    ThreadRes = ThreadOut;
@@ -4852,7 +4801,7 @@ main(int argc, char *argv[])
 
    if (FSyncEnumDirs) {
       // The event is manual reset, so once triggered all threads
-      // will wake up. It is unsignalled by default; we signal it
+      // will wake up. It is unsignaled by default; we signal it
       // after all dirs/files have been enumerated.
       heventDirsEnumerated = CreateEvent(NULL, TRUE, FALSE, NULL);
    }
@@ -4920,7 +4869,6 @@ main(int argc, char *argv[])
          ThreadWorker, (LPVOID *)i, 0, &dwThreadId );
       if (newThread == INVALID_HANDLE_VALUE)
          Fatal("Couldn't create thread %d", i);
-      // set priority?
    }
 
    /*
@@ -4930,9 +4878,8 @@ main(int argc, char *argv[])
       newThread = CreateThread( (LPSECURITY_ATTRIBUTES)NULL, 0,
          StatusWorker,(LPVOID *)0,0,&dwThreadId );
       if (newThread == INVALID_HANDLE_VALUE)
-         Fatal("Couldn't create status thread thread");
+         Fatal("Couldn't create status thread");
       CloseHandle(newThread);
-      // set priority?
    }
 
    // flush all output for the primary thread
@@ -4992,11 +4939,11 @@ main(int argc, char *argv[])
             if (!FBaseline)
                pDirectory->SetDiffFlag();
 
-            // Always put the directory into the DirectoryQueue. 
+            // Always put the directory into the DirectoryQueue.
             // We will use this queue to clean up the CDirectory objects if FSingleThreadPerDir is
             // turned off.
             DirectoryQueue.Append(pDirectory);
-            
+
             if (FRLFE) {
                if (Mode == RM_EXE) {
                   RLFEAddTest(RLS_EXE, pDirectory);
@@ -5011,7 +4958,7 @@ main(int argc, char *argv[])
 
             if (!FSingleThreadPerDir)
             {
-                // Keep track of tests as a flat list so we can split tests 
+                // Keep track of tests as a flat list so we can split tests
                 // in the same directory across multiple threads.
 
                 for (pTest = TestList.first; pTest; pTest = pTest->next)
@@ -5103,4 +5050,3 @@ main(int argc, char *argv[])
 
    return ((long)NumFailuresTotal[RLS_TOTAL] == 0L) ? 0 : 1;
 }
-

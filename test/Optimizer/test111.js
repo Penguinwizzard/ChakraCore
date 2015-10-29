@@ -12,10 +12,10 @@ var func0 = function(argArr1) {
         } while(argArr1[(shouldBailout ? argArr1[0] : 0) ? 0 : 0] && __loopvar3 < 1);
     }
     return { xyz: function() { } };
-
 };
 var ary = new Array();
 var intary = [4];
+
 func0(ary);
 func0(ary);
 func0(intary);

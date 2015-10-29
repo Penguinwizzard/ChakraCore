@@ -111,23 +111,23 @@ EncoderMD::GetOpcodeByte2(IR::Instr *instr)
 
 ///----------------------------------------------------------------------------
 ///
-/// EncoderMD::GetForm
+/// EncoderMD::GetInstrForm
 ///
 ///     Get the form list of the given instruction.  The form list contains
 ///     the possible encoding forms of an instruction.
 ///
 ///----------------------------------------------------------------------------
 
-const BYTE *
-EncoderMD::GetFormTemplate(IR::Instr *instr)
-{
-    return OpcodeFormTemplate[instr->m_opcode - (Js::OpCode::MDStart+1)].form;
-}
-
 Forms
 EncoderMD::GetInstrForm(IR::Instr *instr)
 {
     return OpcodeForms[instr->m_opcode - (Js::OpCode::MDStart+1)];
+}
+
+const BYTE *
+EncoderMD::GetFormTemplate(IR::Instr *instr)
+{
+    return OpcodeFormTemplate[instr->m_opcode - (Js::OpCode::MDStart + 1)].form;
 }
 
 ///----------------------------------------------------------------------------
@@ -302,7 +302,7 @@ EncoderMD::EmitModRM(IR::Instr * instr, IR::Opnd *opnd, BYTE reg1)
         // Special handling for TEST_AH
         if (instr->m_opcode == Js::OpCode::TEST_AH)
         {
-            // HACK - We can't represent AH in the IR.  We should have AL now, add 4 to represent AH.
+            // We can't represent AH in the IR.  We should have AL now, add 4 to represent AH.
             Assert(regOpnd->GetReg() == RegEAX && regOpnd->GetType() == TyInt8);
             reg += 4;
         }
@@ -671,7 +671,7 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
             Assert(UNREACHED);
         }
 
-        *instrRestart++ = 0xf;  // Review:  These should probably be OLD_0F?
+        *instrRestart++ = 0xf;
 
         switch(leadIn)
         {
@@ -731,7 +731,7 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
             {
                 // If the SBIT is set on this form, then it means
                 // that there is a short immediate form of this instruction
-                //  available, and the short immediate encoding is a bit
+                // available, and the short immediate encoding is a bit
                 // smaller for DWORD sized instrs 
                 if (instrSize == 4)
                 {
@@ -752,20 +752,6 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
 
         case AX_MEM:
             continue;
-#if 0
-            // implement
-            if (!opr1->IsSymOpnd() || opr1->AsSymOpnd()->m_reg != RegEAX)
-            {
-                continue;
-            }
-            if (!opr2->IsIntConstOpnd())
-            {
-                continue;
-            }
-
-            *opcodeByte |= this->EmitImmed(opr2, instrSize, 0);
-#endif
-            break;
 
         // general case immediate.  Special cases have already been checked 
         case IMM:
@@ -1283,7 +1269,7 @@ EncoderMD::FixRelocListEntry(uint32 index, int32 totalBytesSaved, BYTE *buffStar
                 // new label pc
                 newPC += nopCount;
                 relocRecord.setLabelNopCount(nopCount);
-                // adjust bytes saved            
+                // adjust bytes saved
                 result -= nopCount;
             }
         }

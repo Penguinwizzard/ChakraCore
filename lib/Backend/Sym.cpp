@@ -14,11 +14,11 @@ const Js::ArgSlot StackSym::InvalidSlot = (Js::ArgSlot)-1;
 ///
 ///----------------------------------------------------------------------------
 
-StackSym * 
+StackSym *
 StackSym::New(SymID id, IRType type, Js::RegSlot byteCodeRegSlot, Func *func)
 {
     StackSym * stackSym;
-    
+
     if (byteCodeRegSlot != Js::Constants::NoRegister)
     {
         stackSym = AnewZ(func->m_alloc, ByteCodeStackSym, byteCodeRegSlot, func);
@@ -28,9 +28,9 @@ StackSym::New(SymID id, IRType type, Js::RegSlot byteCodeRegSlot, Func *func)
     {
         stackSym = AnewZ(func->m_alloc, StackSym);
     }
-  
+
     stackSym->m_id = id;
-    stackSym->m_kind = SymKindStack;   
+    stackSym->m_kind = SymKindStack;
 
     // Assume SingleDef until proven false.
 
@@ -39,12 +39,12 @@ StackSym::New(SymID id, IRType type, Js::RegSlot byteCodeRegSlot, Func *func)
     stackSym->m_isTaggableIntConst = false;
     stackSym->m_isSingleDef = true;
     stackSym->m_isEncodedConstant = false;
-    stackSym->m_isFltConst = false;                
+    stackSym->m_isFltConst = false;
     stackSym->m_isStrConst = false;
-    stackSym->m_isStrEmpty = false;    
+    stackSym->m_isStrEmpty = false;
     stackSym->m_allocated = false;
     stackSym->m_isTypeSpec = false;
-    stackSym->m_isArgSlotSym = false; 
+    stackSym->m_isArgSlotSym = false;
     stackSym->m_isBailOutReferenced = false;
     stackSym->m_isArgCaptured = false;
     stackSym->m_requiresBailOnNotNumber = false;
@@ -62,14 +62,14 @@ StackSym::New(SymID id, IRType type, Js::RegSlot byteCodeRegSlot, Func *func)
     return stackSym;
 }
 
-ObjectSymInfo * 
+ObjectSymInfo *
 ObjectSymInfo::New(Func * func)
 {
     ObjectSymInfo * objSymInfo = JitAnewZ(func->m_alloc, ObjectSymInfo);
     return objSymInfo;
 }
 
-ObjectSymInfo * 
+ObjectSymInfo *
 ObjectSymInfo::New(StackSym * typeSym, Func * func)
 {
     ObjectSymInfo * objSymInfo = ObjectSymInfo::New(func);
@@ -96,13 +96,13 @@ StackSym::EnsureObjectInfo(Func * func)
 ///
 ///----------------------------------------------------------------------------
 
-StackSym * 
+StackSym *
 StackSym::New(Func *func)
 {
     return StackSym::New(func->m_symTable->NewID(), TyVar, Js::Constants::NoRegister, func);
 }
 
-StackSym * 
+StackSym *
 StackSym::New(IRType type, Func *func)
 {
     return StackSym::New(func->m_symTable->NewID(), type, Js::Constants::NoRegister, func);
@@ -157,7 +157,7 @@ StackSym::NewArgSlotSym(Js::ArgSlot argSlotNum, Func * func, IRType type /* = Ty
 bool
 StackSym::IsTempReg(Func *const func) const
 {
-    return !HasByteCodeRegSlot() || GetByteCodeRegSlot() >= func->GetJnFunction()->GetFirstTmpReg(); 
+    return !HasByteCodeRegSlot() || GetByteCodeRegSlot() >= func->GetJnFunction()->GetFirstTmpReg();
 }
 
 #if DBG
@@ -175,13 +175,13 @@ StackSym::VerifyConstFlags() const
         else
         {
             Assert(!m_isTaggableIntConst);
-        }            
+        }
     }
     else
     {
         Assert(!m_isIntConst);
-        Assert(!m_isTaggableIntConst);        
-        Assert(!m_isFltConst);        
+        Assert(!m_isTaggableIntConst);
+        Assert(!m_isFltConst);
     }
 }
 #endif
@@ -209,7 +209,7 @@ StackSym::IsTaggableIntConst() const
 {
 #if DBG
     VerifyConstFlags();
-#endif   
+#endif
     return m_isTaggableIntConst;
 }
 
@@ -222,7 +222,7 @@ StackSym::IsFloatConst() const
     return m_isFltConst;
 }
 
-bool 
+bool
 StackSym::IsSimd128Const() const
 {
 #if DBG
@@ -242,12 +242,12 @@ StackSym::SetIsConst()
     Assert(src->IsImmediateOpnd() || src->IsFloatConstOpnd() || src->IsSimd128ConstOpnd());
 
     if (src->IsIntConstOpnd())
-    {               
+    {
         Assert(this->m_instrDef->m_opcode == Js::OpCode::Ld_I4 ||  this->m_instrDef->m_opcode == Js::OpCode::LdC_A_I4 || LowererMD::IsAssign(this->m_instrDef));
         this->SetIsIntConst(src->AsIntConstOpnd()->m_value);
     }
     else if (src->IsFloatConstOpnd())
-    {        
+    {
         Assert(this->m_instrDef->m_opcode == Js::OpCode::LdC_A_R8);
         this->SetIsFloatConst();
     }
@@ -256,7 +256,7 @@ StackSym::SetIsConst()
         this->SetIsSimd128Const();
     }
     else
-    {        
+    {
         Assert(this->m_instrDef->m_opcode == Js::OpCode::Ld_A || LowererMD::IsAssign(this->m_instrDef));
         Assert(src->IsAddrOpnd());
         IR::AddrOpnd * addrOpnd = src->AsAddrOpnd();
@@ -273,19 +273,19 @@ StackSym::SetIsConst()
             {
                 this->m_isIntConst = true;
             }
-        }              
-    }   
+        }
+    }
 }
 
 void
 StackSym::SetIsIntConst(IntConstType value)
 {
     Assert(this->m_isSingleDef);
-    Assert(this->m_instrDef);    
+    Assert(this->m_instrDef);
     this->m_isConst = true;
     this->m_isIntConst = true;
     this->m_isTaggableIntConst = !Js::TaggedInt::IsOverflow(value);
-    this->m_isFltConst = false;    
+    this->m_isFltConst = false;
 }
 
 void
@@ -296,7 +296,7 @@ StackSym::SetIsFloatConst()
     this->m_isConst = true;
     this->m_isIntConst = false;
     this->m_isTaggableIntConst = false;
-    this->m_isFltConst = true;    
+    this->m_isFltConst = true;
 }
 
 void
@@ -311,30 +311,30 @@ StackSym::SetIsSimd128Const()
     this->m_isSimd128Const = true;
 }
 
-Js::RegSlot     
-StackSym::GetByteCodeRegSlot() const 
-{ 
-    Assert(HasByteCodeRegSlot()); 
-    return ((ByteCodeStackSym *)this)->byteCodeRegSlot; 
+Js::RegSlot
+StackSym::GetByteCodeRegSlot() const
+{
+    Assert(HasByteCodeRegSlot());
+    return ((ByteCodeStackSym *)this)->byteCodeRegSlot;
 }
 
 
 
 Func *
-StackSym::GetByteCodeFunc() const 
-{ 
-    Assert(HasByteCodeRegSlot()); 
-    return ((ByteCodeStackSym *)this)->byteCodeFunc; 
+StackSym::GetByteCodeFunc() const
+{
+    Assert(HasByteCodeRegSlot());
+    return ((ByteCodeStackSym *)this)->byteCodeFunc;
 }
 
-void 
+void
 StackSym::IncrementArgSlotNum()
 {
     Assert(IsArgSlotSym());
     m_argSlotNum++;
 }
 
-void 
+void
 StackSym::DecrementArgSlotNum()
 {
     Assert(IsArgSlotSym());
@@ -397,14 +397,14 @@ StackSym::CloneDef(Func *func)
     {
         return this;
     }
-    
+
     switch (this->m_instrDef->m_opcode)
     {
         // Note: we were cloning single-def load constant instr's, but couldn't guarantee
         // that we were cloning all the uses.
-    case Js::OpCode::ArgOut_A:    
-    case Js::OpCode::ArgOut_A_Dynamic:    
-    case Js::OpCode::ArgOut_A_InlineBuiltIn:     
+    case Js::OpCode::ArgOut_A:
+    case Js::OpCode::ArgOut_A_Dynamic:
+    case Js::OpCode::ArgOut_A_InlineBuiltIn:
     case Js::OpCode::ArgOut_A_SpreadArg:
     case Js::OpCode::StartCall:
     case Js::OpCode::InlineeMetaArg:
@@ -432,7 +432,7 @@ StackSym::CloneDef(Func *func)
     {
         // NOTE: We don't care about the bytecode register information for cloned symbol
         // As those are the float sym that we will convert back to Var before jumping back
-        // to the slow path's bailout.  The bailout can just track the original symbol.        
+        // to the slow path's bailout.  The bailout can just track the original symbol.
         newSym = StackSym::New(func);
         newSym->m_isConst = m_isConst;
         newSym->m_isIntConst = m_isIntConst;
@@ -458,9 +458,6 @@ StackSym::CloneDef(Func *func)
 
         // NOTE: It is not clear what the right thing to do is here...
         newSym->m_equivNext = newSym;
-
-        // REVIEW: should m_tempNumberSym be copied here?
-
         cloner->symMap->FindOrInsert(newSym, m_id);
     }
 
@@ -496,7 +493,7 @@ StackSym::CopySymAttrs(StackSym *symSrc)
     m_isNotInt = symSrc->m_isNotInt;
     m_isSafeThis = symSrc->m_isSafeThis;
     m_builtInIndex = symSrc->m_builtInIndex;
-}        
+}
 
 // StackSym::GetIntConstValue
 IntConstType
@@ -807,7 +804,7 @@ StackSym::GetTypeEquivSym(IRType type, Func *func)
         i++;
     }
 
-    // Don't allocatate if func wasn't passed in.
+    // Don't allocate if func wasn't passed in.
     if (func == nullptr)
     {
         return nullptr;
@@ -857,7 +854,7 @@ StackSym *StackSym::GetVarEquivStackSym_NoCreate(Sym *const sym)
 ///
 ///----------------------------------------------------------------------------
 
-PropertySym * 
+PropertySym *
 PropertySym::New(SymID stackSymID, int32 propertyId, uint32 propertyIdIndex, uint inlineCacheIndex, PropertyKind fieldKind, Func *func)
 {
     StackSym *  stackSym;
@@ -872,7 +869,7 @@ PropertySym *
 PropertySym::New(StackSym *stackSym, int32 propertyId, uint32 propertyIdIndex, uint inlineCacheIndex, PropertyKind fieldKind, Func *func)
 {
     PropertySym *  propertySym;
-    
+
     propertySym = JitAnewZ(func->m_alloc, PropertySym);
 
     propertySym->m_func = func;
@@ -925,12 +922,12 @@ PropertySym::Find(SymID stackSymID, int32 propertyId, Func *func)
 ///
 /// PropertySym::FindOrCreate
 ///
-///     Look for a PropertySym with the given ID/propertyId.  If not found, 
+///     Look for a PropertySym with the given ID/propertyId.  If not found,
 ///     create it.
 ///
 ///----------------------------------------------------------------------------
 
-PropertySym * 
+PropertySym *
 PropertySym::FindOrCreate(SymID stackSymID, int32 propertyId, uint32 propertyIdIndex, uint inlineCacheIndex, PropertyKind fieldKind, Func *func)
 {
     PropertySym *  propertySym;
@@ -1087,13 +1084,13 @@ Sym::Dump(IRDumpFlags flags, const ValueType valueType)
         if (!SimpleForm)
         {
             Output::Print(L")");
-        }     
+        }
     }
 }
 
-void 
+void
 Sym::Dump(const ValueType valueType)
-{ 
+{
     this->Dump(IRDumpFlags_None, valueType);
 }
 

@@ -16,6 +16,7 @@ class ScriptSite;
 class ActiveScriptExternalLibrary;
 class ProjectionExternalLibrary;
 class EditAndContinue;
+class ChakraHostScriptContext;
 
 #ifdef ENABLE_PROJECTION
 namespace Projection
@@ -27,7 +28,7 @@ namespace Projection
 
 namespace Js
 {
-    class MissingPropertyTypeHandler;
+    class MissingPropertyTypeHandler;    
     typedef RecyclerFastAllocator<JavascriptNumber, LeafBit> RecyclerJavascriptNumberAllocator;
 
     class UndeclaredBlockVariable : public RecyclableObject
@@ -116,6 +117,7 @@ namespace Js
         friend class ExternalLibraryBase;
         friend class ActiveScriptExternalLibrary;
         friend class IntlEngineInterfaceExtensionObject;
+        friend class ChakraHostScriptContext;
 #ifdef ENABLE_PROJECTION
         friend class ProjectionExternalLibrary;
         friend class Projection::WinRTPromiseEngineInterfaceExtensionObject;
@@ -150,12 +152,10 @@ namespace Js
         static DWORD GetAbsDoubleCstOffset() { return offsetof(JavascriptLibrary, absDoubleCst); }
         static DWORD GetUintConvertConstOffset() { return offsetof(JavascriptLibrary, uintConvertConst); }
         static DWORD GetBuiltinFunctionsOffset() { return offsetof(JavascriptLibrary, builtinFunctions); }
-        static DWORD GetJnHelperMethodsOffset() { return offsetof(JavascriptLibrary, jnHelperMethods); }
         static DWORD GetCharStringCacheOffset() { return offsetof(JavascriptLibrary, charStringCache); }
         static DWORD GetCharStringCacheAOffset() { return GetCharStringCacheOffset() + CharStringCache::GetCharStringCacheAOffset(); }
         const  JavascriptLibraryBase* GetLibraryBase() const { return static_cast<const JavascriptLibraryBase*>(this); }
         void SetGlobalObject(GlobalObject* globalObject) {globalObject = globalObject; }
-        static const unsigned int DOM_BUILTIN_MAX_SLOT_COUNT  = 100;
 
         typedef bool (CALLBACK *PromiseContinuationCallback)(Var task, void *callbackState);
 
@@ -218,7 +218,6 @@ namespace Js
         ConstructorCache *constructorCacheDefaultInstance;
         __declspec(align(16)) const BYTE *absDoubleCst;
         double const *uintConvertConst;
-        const void *const*jnHelperMethods;
 
         // Function Types
         DynamicTypeHandler * anonymousFunctionTypeHandler;
@@ -231,8 +230,6 @@ namespace Js
         DynamicType * idMappedFunctionWithPrototypeType;
         DynamicType * externalConstructorFunctionWithDeferredPrototypeType;
         DynamicType * boundFunctionType;
-        DynamicType * typedObjectSlotGetterFunctionTypes[DOM_BUILTIN_MAX_SLOT_COUNT];
-        DynamicType * typedObjectSlotSetterFunctionTypes[DOM_BUILTIN_MAX_SLOT_COUNT];
         DynamicType * regexConstructorType;
         DynamicType * crossSiteDeferredPrototypeFunctionType;
         DynamicType * crossSiteIdMappedFunctionWithPrototypeType;
@@ -395,7 +392,7 @@ namespace Js
         // list is cleared. The list is also cleared before garbage collection so that it does not keep growing, and so, it can
         // hold strong references to the types.
         //
-        // The cache is used by the type-without-property local inline cache. When setting a property on a type that doens't
+        // The cache is used by the type-without-property local inline cache. When setting a property on a type that doesn't
         // have the property, to determine whether to promote the object like an object of that type was last promoted, we need
         // to ensure that objects in the prototype chain have not acquired a readonly property or setter (ideally, only for that
         // property ID, but we just check for any such property). This cache is used to avoid doing this many times, especially
@@ -495,7 +492,7 @@ namespace Js
         void Initialize(ScriptContext* scriptContext, GlobalObject * globalObject);
         void Uninitialize();
         GlobalObject* GetGlobalObject() const { return globalObject; }
-        ScriptContext* GetScriptContext() const { return scriptContext; }        
+        ScriptContext* GetScriptContext() const { return scriptContext; }
 
         Recycler * GetRecycler() const { return recycler; }
         Var GetPI() { return pi; }
@@ -798,7 +795,7 @@ namespace Js
         JavascriptExternalFunction* CreateExternalConstructor(Js::ExternalMethod entryPoint, PropertyId nameId, InitializeMethod method, unsigned short deferredTypeSlots, bool hasAccessors);
         static DynamicTypeHandler * GetDeferredPrototypeGeneratorFunctionTypeHandler(ScriptContext* scriptContext);
         DynamicType * CreateDeferredPrototypeGeneratorFunctionType(JavascriptMethod entrypoint, bool isAnonymousFunction, bool isShared = false);
-        
+
         static DynamicTypeHandler * GetDeferredPrototypeFunctionTypeHandler(ScriptContext* scriptContext);
         static DynamicTypeHandler * GetDeferredAnonymousPrototypeFunctionTypeHandler();
         static DynamicTypeHandler * GetDeferredAnonymousPrototypeGeneratorFunctionTypeHandler();
@@ -810,7 +807,7 @@ namespace Js
         static DynamicTypeHandler * GetDeferredFunctionTypeHandlerBase();
         template<bool isNameAvailable, bool isPrototypeAvailable = true>
         static DynamicTypeHandler * GetDeferredGeneratorFunctionTypeHandlerBase();
-        
+
         DynamicType * CreateDeferredPrototypeFunctionType(JavascriptMethod entrypoint);
         DynamicType * CreateDeferredPrototypeFunctionTypeNoProfileThunk(JavascriptMethod entrypoint, bool isShared = false);
         DynamicType * CreateFunctionType(JavascriptMethod entrypoint, RecyclableObject* prototype = nullptr);
@@ -822,13 +819,9 @@ namespace Js
         AsmJsScriptFunction * CreateAsmJsScriptFunction(FunctionProxy* proxy);
         ScriptFunctionWithInlineCache * CreateScriptFunctionWithInlineCache(FunctionProxy* proxy);
         GeneratorVirtualScriptFunction * CreateGeneratorVirtualScriptFunction(FunctionProxy* proxy);
-#ifdef ENABLE_DOM_FAST_PATH
-        JavascriptTypedObjectSlotAccessorFunction* CreateTypedObjectSlotGetterFunction(unsigned int slotIndex, FunctionInfo* functionInfo, int typeId, PropertyId nameId);
-        JavascriptTypedObjectSlotAccessorFunction* CreateTypedObjectSlotSetterFunction(unsigned int slotIndex, FunctionInfo* functionInfo, int typeId, PropertyId nameId);
-#endif
         DynamicType * CreateGeneratorType(RecyclableObject* prototype);
 
-        NullEnumerator * GetNullEnumerator() { return nullEnumerator; }
+        JavascriptEnumerator * GetNullEnumerator() const;
 #if 0
         JavascriptNumber* CreateNumber(double value);
 #endif
@@ -837,7 +830,7 @@ namespace Js
         JavascriptExternalFunction* CreateExternalFunction(ExternalMethod entryPointer, PropertyId nameId, Var signature, JavascriptTypeId prototypeTypeId, UINT64 flags);
         JavascriptExternalFunction* CreateExternalFunction(ExternalMethod entryPointer, Var nameId, Var signature, JavascriptTypeId prototypeTypeId, UINT64 flags);
         JavascriptExternalFunction* CreateStdCallExternalFunction(StdCallJavascriptMethod entryPointer, PropertyId nameId, void *callbackState);
-        JavascriptExternalFunction* CreateStdCallExternalFunction(StdCallJavascriptMethod entryPointer, Var nameId, void *callbackState);        
+        JavascriptExternalFunction* CreateStdCallExternalFunction(StdCallJavascriptMethod entryPointer, Var nameId, void *callbackState);
         JavascriptPromiseAsyncSpawnExecutorFunction* CreatePromiseAsyncSpawnExecutorFunction(JavascriptMethod entryPoint, JavascriptGenerator* generatorFunction, Var target);
         JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction* CreatePromiseAsyncSpawnStepArgumentExecutorFunction(JavascriptMethod entryPoint, JavascriptGenerator* generator, Var argument, JavascriptFunction* resolve = NULL, JavascriptFunction* reject = NULL, bool isReject = false);
         JavascriptPromiseCapabilitiesExecutorFunction* CreatePromiseCapabilitiesExecutorFunction(JavascriptMethod entryPoint, JavascriptPromiseCapability* capability);
@@ -890,7 +883,7 @@ namespace Js
 
         JavascriptFunction* EnsurePromiseResolveFunction();
 
-        void SetCrossSiteForSharedFunctionType(JavascriptFunction * function, bool useSlotAccessCrossSiteThunk);
+        void SetCrossSiteForSharedFunctionType(JavascriptFunction * function);
 
         uint64 GetRandSeed(){return randSeed;}
         void SetRandSeed(uint64 rs){randSeed = rs;}
@@ -926,7 +919,7 @@ namespace Js
             {
                 Assert(!builtInFuncs[index] || (index == GetBuiltInForFuncInfo(builtInFuncs[index]->GetFunctionInfo(), scriptContext)));
             }
-           
+
         }
 #endif
         static BOOL CanFloatPreferenceFunc(BuiltinFunction index);
@@ -1127,7 +1120,10 @@ namespace Js
                 RECYCLER_PERF_COUNTER_SUB(PropertyRecordBindReference, this->referencedPropertyRecords->Count());
             }
         }
-        
+
+#if DBG
+        void DumpLibraryByteCode();
+#endif
     private:
         typedef JsUtil::BaseHashSet<Js::PropertyRecord const *, Recycler, PowerOf2SizePolicy> ReferencedPropertyRecordHashSet;
         ReferencedPropertyRecordHashSet* referencedPropertyRecords;

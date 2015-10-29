@@ -39,7 +39,7 @@
         }
 
 #define VALIDATE_INCOMING_PROPERTYID(p) \
-	      { \
+          { \
             if (p == JS_INVALID_REFERENCE || \
                     Js::IsInternalPropertyId(((Js::PropertyRecord *)p)->GetPropertyId())) \
             { \

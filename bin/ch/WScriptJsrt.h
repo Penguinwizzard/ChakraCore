@@ -12,7 +12,7 @@ public:
     class CallbackMessage : public MessageBase
     {
         JsValueRef m_function;
-        
+
         CallbackMessage(CallbackMessage const&);
 
     public:
@@ -63,4 +63,3 @@ private:
     static MessageQueue *messageQueue;
     static DWORD_PTR sourceContext;
 };
-

@@ -20,7 +20,7 @@ enum InstructionType {
     None    = 0,
     Thumb   = 2,
     Vfp     = 3,
-    Thumb2  = 4, 
+    Thumb2  = 4,
 };
 
 ///---------------------------------------------------------------------------
@@ -29,7 +29,7 @@ enum InstructionType {
 ///
 ///---------------------------------------------------------------------------
 
-class EncodeReloc 
+class EncodeReloc
 {
 public:
     static void     New(EncodeReloc **pHead, RelocType relocType, BYTE *offset, IR::Instr *relocInstr, ArenaAllocator *alloc);
@@ -127,7 +127,7 @@ private:
     bool            IsWideMemInstr(IR::Opnd * memOpnd, IR::RegOpnd * regOpnd);
     bool            IsWideAddSub(IR::Instr * instr);
 
-    static ENCODE_32 EncodeT2Immediate12(ENCODE_32 encode, long constant);    
+    static ENCODE_32 EncodeT2Immediate12(ENCODE_32 encode, long constant);
     static bool     EncodeModConst12(DWORD constant, DWORD * result);
     static ENCODE_32 EncodeT2Offset(ENCODE_32 encode, IR::Instr *instr, int offset, int bitOffset);
 

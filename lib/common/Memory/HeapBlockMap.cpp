@@ -258,7 +258,7 @@ HeapBlockMap32::TestAndSetMark(void * address)
     L2MapChunk * chunk = map[id1];
     if (chunk == nullptr)
     {
-        // False refernce
+        // False reference
         return false;
     }
 
@@ -401,6 +401,11 @@ HeapBlockMap32::L2MapChunk::Set(uint id2, uint pageCount, HeapBlock * heapBlock,
         // If it's not FreeBlock, then we expect bucketIndex and heapBlock to be valid.
         map[i] = heapBlock;
         blockInfo[i].bucketIndex = bucketIndex;
+
+        // We need memory barrier here for ARM to ensure that the blockType is set last.
+#if defined(_M_ARM32_OR_ARM64)
+        MemoryBarrier();
+#endif
         blockInfo[i].blockType = blockType;
     }
 }
@@ -447,7 +452,7 @@ HeapBlockMap32::L2MapChunk::GetPageMarkBitVector(void * address)
     uint id2 = GetLevel2Id(address);
     Assert(id2 < L2Count);
     __analysis_assume(id2 < L2Count);
-    return GetPageMarkBitVector(id2);;
+    return GetPageMarkBitVector(id2);
 }
 
 HeapBlockMap32::PageMarkBitVector *
@@ -463,7 +468,7 @@ HeapBlockMap32::L2MapChunk::GetMarkBitVectorForPages(void * address)
     uint id2 = GetLevel2Id(address);
     Assert(id2 < L2Count);
     __analysis_assume(id2 < L2Count);
-    return GetMarkBitVectorForPages<BitCount>(id2);;
+    return GetMarkBitVectorForPages<BitCount>(id2);
 }
 
 template <size_t BitCount>
@@ -683,7 +688,7 @@ HeapBlockMap32::RescanHeapBlock(void * dirtyPage, HeapBlock::HeapBlockType block
     {
         Assert(chunk->map[id2]->GetHeapBlockType() == blockType);
 
-        // Small finalizable heap blocks require the HeapBlock * (to look up object attribtues).
+        // Small finalizable heap blocks require the HeapBlock * (to look up object attributes).
         // For others, this is null
         TBlockType* block = GetHeapBlockForRescan<TBlockType>(chunk, id2);
         uint bucketIndex = chunk->blockInfo[id2].bucketIndex;
@@ -787,7 +792,7 @@ HeapBlockMap32::GetWriteWatchHelper(Recycler * recycler, DWORD writeWatchFlags, 
 }
 
 // OOM codepath- Retrieve write-watch one page at a time
-// It's slow, but we are ok with that during OOM
+// It's slow, but we are okay with that during OOM
 // Factored into its own function to help the compiler inline the parent
 UINT
 HeapBlockMap32::GetWriteWatchHelperOnOOM(DWORD writeWatchFlags, _In_ void* baseAddress, size_t regionSize,
@@ -928,7 +933,7 @@ HeapBlockMap32::OOMRescan(Recycler * recycler)
 
         // Process Small non-leaf segments (including write barrier blocks).
         // Large blocks have their own separate write watch handling.
-        if (segmentPageAllocator == recycler->GetRecyclerPageAllocator() 
+        if (segmentPageAllocator == recycler->GetRecyclerPageAllocator()
 #ifdef RECYCLER_WRITE_BARRIER
             || segmentPageAllocator == recycler->GetRecyclerWithBarrierPageAllocator()
 #endif
@@ -1306,7 +1311,7 @@ HeapBlockMap64::FindOrInsertNode(void * address)
             node->nodeIndex = GetNodeIndex(address);
             node->next = list;
 #ifdef _M_ARM64
-            // For ARM we need to make sure that the list remains traversible during this insert.
+            // For ARM we need to make sure that the list remains traversable during this insert.
             MemoryBarrier();
 #endif
             list = node;

@@ -105,10 +105,17 @@ public:
         return E_NOTIMPL;
     }
 
-    Js::JavascriptMethod GetSimpleSlotAccessCrossSiteThunk() override
+#if DBG
+    bool IsHostCrossSiteThunk(Js::JavascriptMethod address) override
     {
         Assert(false);
         return nullptr;
+    }
+#endif
+
+    bool SetCrossSiteForFunctionType(Js::JavascriptFunction * function) override
+    {
+        return false;
     }
 
     HRESULT CheckEvalRestriction() override

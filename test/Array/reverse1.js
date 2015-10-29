@@ -21,10 +21,10 @@ function InitObject(obj, len, mult, putUndefined) {
             }
         }
     }
-    
+
     obj[len-1] = "last";
     obj.length = len;
-    
+
     return obj;
 }
 
@@ -32,20 +32,20 @@ function ToString(obj) {
     var str = "";
     for (var i=0; i<obj.length; i++)
         str += obj[i] + ",";
-        
+
     return str + ":: Length: " + obj.length;
 }
 
-function TestReverse(obj) {   
+function TestReverse(obj) {
     write(">>> Start reverse test for object: " + obj);
-    
+
     write("Before Orig: " + ToString(obj));
-    
+
     var res = Array.prototype.reverse.call(obj);
-    
-    write("After  Orig: " + ToString(obj));    
+
+    write("After  Orig: " + ToString(obj));
     write("Result     : " + ToString(res));
-    
+
     write("<<< Stop reverse test for object: " + obj);
 }
 
@@ -59,7 +59,7 @@ function Main(putUndefined) {
     for (var i=0;i<testList.length;i++) {
         TestReverse(InitObject(testList[i], n + i, i+1, putUndefined));
     }
-    
+
     testList = new Array(new Number(10), new Number(10), new Number(10), new Number(10), new Number(10));
     for (var i=0;i<testList.length;i++) {
         TestReverse(InitObject(testList[i], n + i, i, putUndefined));

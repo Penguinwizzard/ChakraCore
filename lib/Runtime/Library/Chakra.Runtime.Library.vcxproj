@@ -29,7 +29,8 @@
         $(MSBuildThisFileDirectory)..\..\Common;
         $(MSBuildThisFileDirectory)..\..\Parser;
         $(MSBuildThisFileDirectory)..\..\Backend;
-        %(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+        %(AdditionalIncludeDirectories)
+      </AdditionalIncludeDirectories>
       <!-- For mscorlib.tlb used in JavascriptErrorDebug.cpp -->
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SdkLibPath)\clr45</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -171,8 +172,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSetIterator.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptStringIterator.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSymbol.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSymbolObject.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptTypedObjectSlotAccessorFunction.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSymbolObject.cpp" />    
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptWeakMap.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptWeakSet.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)javascripttypednumber.cpp" />
@@ -235,6 +235,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)LiteralStringObjectType.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Math.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)moduleroot.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)NullEnumerator.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ObjectPrototypeObject.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)PropertyString.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)RegexHelper.cpp" />
@@ -303,8 +304,7 @@
     <ClInclude Include="dataview.h" />
     <ClInclude Include="DateImplementationData.h" />
     <ClInclude Include="Debug.h" />
-    <ClInclude Include="DelayLoadLibrary.h" />
-    <ClInclude Include="DOMFastPathInfo.h" />
+    <ClInclude Include="DelayLoadLibrary.h" />    
     <ClInclude Include="EngineInterfaceObject.h" />
     <ClInclude Include="Entropy.h" />
     <ClInclude Include="ES5ArrayIndexEnumerator.h" />
@@ -315,8 +315,6 @@
     <ClInclude Include="HostObjectBase.h" />
     <ClInclude Include="InJavascript\intl.js.bc.32b.h" />
     <ClInclude Include="InJavascript\intl.js.bc.64b.h" />
-    <ClInclude Include="InJavascript\Promise.js.bc.32b.h" />
-    <ClInclude Include="InJavascript\Promise.js.bc.64b.h" />
     <ClInclude Include="IteratorObjectEnumerator.h" />
     <ClInclude Include="JavascriptArrayEnumeratorBase.h" />
     <ClInclude Include="JavascriptArrayIndexEnumerator.h" />
@@ -342,8 +340,7 @@
     <ClInclude Include="JavascriptStringTagEntries.h" />
     <ClInclude Include="JavascriptSymbol.h" />
     <ClInclude Include="JavascriptSymbolObject.h" />
-    <ClInclude Include="javascripttypednumber.h" />
-    <ClInclude Include="JavascriptTypedObjectSlotAccessorFunction.h" />
+    <ClInclude Include="javascripttypednumber.h" />    
     <ClInclude Include="JavascriptWeakMap.h" />
     <ClInclude Include="JavascriptWeakSet.h" />
     <ClInclude Include="JSONParser.h" />
@@ -410,6 +407,7 @@
     <ClInclude Include="LiteralStringObject.h" />
     <ClInclude Include="MathLibrary.h" />
     <ClInclude Include="moduleroot.h" />
+    <ClInclude Include="NullEnumerator.h" />
     <ClInclude Include="ObjectPrototypeObject.h" />
     <ClInclude Include="PropertyString.h" />
     <ClInclude Include="RegexHelper.h" />
@@ -443,7 +441,6 @@
     <None Include="InJavascript\BuildGenByteCodeBin.cmd" />
     <None Include="InJavascript\GenByteCode.cmd" />
     <None Include="InJavascript\Intl.js" />
-    <None Include="InJavascript\Promise.js" />
     <None Include="InJavascript\WarnGenByteCode.cmd" />
     <None Include="ConcatString.inl" />
     <None Include="SparseArraySegment.inl" />

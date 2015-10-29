@@ -18,7 +18,7 @@ struct EmitBufferAllocation
     BYTE * GetUnused() const            { return (BYTE*) allocation->address + bytesUsed; }
     BYTE * GetUncommitted() const       { return (BYTE*) allocation->address + bytesCommitted; }
 
-    // Truncation to DWORD ok here
+    // Truncation to DWORD okay here
     DWORD BytesFree() const    { return static_cast<DWORD>(this->bytesCommitted - this->bytesUsed); }
 };
 typedef void* NativeMethod;
@@ -65,14 +65,14 @@ public:
         bool canPreReserveSegmentForCustomHeap = scriptContext && scriptContext->GetThreadContext()->CanPreReserveSegmentForCustomHeap();
 #endif
         AssertMsg(preReservedVirtualAllocator, "Virtual Allocator for pre reserved Segment should not be null when EnsurePreReservedPageAllocation is called");
-        
+
         if (this->GetPreReservedHeapPageAllocator()->GetVirtualAllocator() == nullptr)
         {
             this->GetPreReservedHeapPageAllocator()->SetVirtualAllocator(preReservedVirtualAllocator);
         }
 
         if (preReservedVirtualAllocator->IsPreReservedRegionPresent())
-        {            
+        {
             return (char*) preReservedVirtualAllocator->GetPreReservedStartAddress();
         }
 
@@ -112,7 +112,7 @@ private:
 
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
     bool CheckCommitFaultInjection();
-    
+
     int commitCount;
 #endif
     ArenaAllocator * allocator;
