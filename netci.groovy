@@ -19,7 +19,7 @@ def project = 'Microsoft/ChakraCorePrivate'
             // Define build string
             def buildString = "call jenkins.buildone.cmd ${buildArch} ${buildType}"
 
-            def testString = "call jenkins.testone.cmd ${buildArch} ${buildType}"
+            def testString = "call jenkins.testone.cmd ${buildArch} ${buildType} -includeSlow"
             def testableConfig = buildType in ['debug', 'test']
 
             // Create a new job with the specified name.  The brace opens a new closure

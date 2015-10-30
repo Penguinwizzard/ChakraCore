@@ -61,6 +61,8 @@
     <default>
       <files>InternalToString.js</files>
       <baseline>InternalToString.baseline</baseline>
+      <!-- test is timezone-sensitive; remove exclude_jenkins after fix -->
+      <tags>exclude_jenkins</tags>
     </default>
   </test>
   <test>

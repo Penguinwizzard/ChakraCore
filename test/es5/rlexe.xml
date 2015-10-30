@@ -67,7 +67,8 @@
     <default>
       <files>jx2.js</files>
       <baseline>jx3.baseline</baseline>
-      <tags>fail_mutators</tags>
+      <!-- test is timezone-sensitive; remove exclude_jenkins after fix -->
+      <tags>fail_mutators,exclude_jenkins</tags>
     </default>
   </test>
   <test>

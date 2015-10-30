@@ -25,7 +25,7 @@ if "%2"=="" (
 
     set JENKINS_BUILD=True
     call test\jenkins.testone.cmd %*
-    
+
     goto :end
 
 :: ============================================================================

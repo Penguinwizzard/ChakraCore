@@ -17,28 +17,42 @@ if not "%1"=="" (
     :: _TestArch
     if "%1"=="x86" (
         set _TestArch=x86
+        shift
+        goto :ContinueArgParse
     ) else if "%1"=="x64" (
         set _TestArch=x64
+        shift
+        goto :ContinueArgParse
     )
     REM arm tests not supported at present
 
     :: _TestArch (deprecated name)
     if "%1"=="amd64" (
         set _TestArch=x64
+        shift
+        goto :ContinueArgParse
     )
 
     :: _TestType (new names)
     if "%1"=="debug" (
         set _TestType=debug
+        shift
+        goto :ContinueArgParse
     ) else if "%1"=="test" (
         set _TestType=test
+        shift
+        goto :ContinueArgParse
     )
 
     :: _TestType (old names)
     if "%1"=="chk" (
         set _TestType=debug
+        shift
+        goto :ContinueArgParse
     )
 
+    :: default
+    set _ExtraTestArgs=%_ExtraTestArgs% %1
     shift
     goto :ContinueArgParse
 )

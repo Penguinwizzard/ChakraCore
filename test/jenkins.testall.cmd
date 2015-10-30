@@ -45,6 +45,8 @@ set _HadFailures=0
   pushd %_RootDir%\test
   set _TestDir=%CD%
 
+  call jenkins.parsetestargs.cmd %*
+
   call :doSilent rd /s/q %_TestDir%\logs
 
   call :runTests x86debug
@@ -72,7 +74,7 @@ set _HadFailures=0
 :: ============================================================================
 :runTests
 
-  call :do %_TestDir%\runtests.cmd -%1 -quiet -cleanupall -binDir %_BinDir%
+  call :do %_TestDir%\runtests.cmd -%1 -quiet -cleanupall -nottags exclude_jenkins %_ExtraTestArgs% -binDir %_BinDir%
 
   if ERRORLEVEL 1 set _HadFailures=1
 

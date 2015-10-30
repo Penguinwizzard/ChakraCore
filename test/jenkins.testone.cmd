@@ -50,6 +50,7 @@ set _HadFailures=0
   set _TestArgs=%_TestArch%%_TestType%
 
   call :doSilent rd /s/q %_LogDir%
+
   call :runTests %_TestArgs%
 
   call :summarizeLogs
@@ -72,7 +73,7 @@ set _HadFailures=0
 :: ============================================================================
 :runTests
 
-  call :do %_TestDir%\runtests.cmd -%1 -quiet -cleanupall -binDir %_BinDir%
+  call :do %_TestDir%\runtests.cmd -%1 -quiet -cleanupall -nottags exclude_jenkins %_ExtraTestArgs% -binDir %_BinDir%
 
   if ERRORLEVEL 1 set _HadFailures=1
 
