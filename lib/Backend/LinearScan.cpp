@@ -29,7 +29,7 @@ static const uint8 RegAttribs[RegNumCount] =
 #undef REGDAT
 };
 
-extern "C" const IRType RegTypes[RegNumCount] =
+extern const IRType RegTypes[RegNumCount] =
 {
 #define REGDAT(Name, ListName, Encode, Type, Attribs) Type,
 #include "RegList.h"

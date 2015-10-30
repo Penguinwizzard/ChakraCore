@@ -50,6 +50,9 @@ public:
         }
         else
         {
+            Assert(ThreadContext::GetContextForCurrentThread() == threadContext);
+            isValid = true;
+            wasInUse = true;
             doCleanup = false;
         }
     }

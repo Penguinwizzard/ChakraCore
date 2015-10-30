@@ -293,22 +293,6 @@ public:
         }
     }
 
-    SecondaryAllocator* GetSecondaryAllocator(void* segment) 
-    { 
-        Assert(segment);
-        if (IsPreReservedSegment(segment))
-        {
-            if (this->IsPreReservedSegment(segment))
-            {
-                return ((SegmentBase<PreReservedVirtualAllocWrapper>*)segment)->GetSecondaryAllocator();
-            }
-            else
-            {
-                return ((SegmentBase<VirtualAllocWrapper>*)segment)->GetSecondaryAllocator();
-            }
-        }
-    }
-
     char * EnsurePreReservedPageAllocation(PreReservedVirtualAllocWrapper * preReservedVirtualAllocator);
     // A page should be in full list if:
     // 1. It does not have any space

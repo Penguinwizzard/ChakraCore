@@ -26,6 +26,5 @@ struct CodeGenAllocators
 
     CodeGenAllocators(AllocationPolicyManager * policyManager, Js::ScriptContext * scriptContext);
     PageAllocator *GetPageAllocator() { return &pageAllocator; };
-    HeapPageAllocator<VirtualAllocWrapper> *GetHeapPageAllocator() { emitBufferManager.GetHeapPageAllocator(); };
     ~CodeGenAllocators();
 };

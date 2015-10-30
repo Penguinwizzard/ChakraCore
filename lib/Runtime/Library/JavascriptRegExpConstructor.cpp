@@ -94,7 +94,7 @@ namespace Js
     }
 
     /*static*/
-    PropertyId JavascriptRegExpConstructor::specialPropertyIds[] =
+    PropertyId const JavascriptRegExpConstructor::specialPropertyIds[] =
     {
         PropertyIds::$_,
         PropertyIds::$Ampersand,
@@ -104,7 +104,7 @@ namespace Js
         PropertyIds::index,
     };
 
-    PropertyId JavascriptRegExpConstructor::specialEnumPropertyIds[] =
+    PropertyId const JavascriptRegExpConstructor::specialEnumPropertyIds[] =
     {
         PropertyIds::$1,
         PropertyIds::$2,
@@ -122,7 +122,7 @@ namespace Js
         PropertyIds::lastMatch,
     };
 
-    PropertyId JavascriptRegExpConstructor::specialnonEnumPropertyIds[] =
+    PropertyId const JavascriptRegExpConstructor::specialnonEnumPropertyIds[] =
     {
         PropertyIds::$_,
         PropertyIds::$Ampersand,
@@ -476,7 +476,7 @@ namespace Js
     }
 
     // Returns the list of special properties for the type.
-    PropertyId* JavascriptRegExpConstructor::GetSpecialNonEnumerablePropertyIds() const
+    PropertyId const * JavascriptRegExpConstructor::GetSpecialNonEnumerablePropertyIds() const
     {
         return specialnonEnumPropertyIds;
     }
@@ -493,7 +493,7 @@ namespace Js
         return false;
     }
 
-    PropertyId* JavascriptRegExpConstructor::GetSpecialEnumerablePropertyIds() const
+    PropertyId const * JavascriptRegExpConstructor::GetSpecialEnumerablePropertyIds() const
     {
         return specialEnumPropertyIds;
     }
@@ -505,7 +505,7 @@ namespace Js
     }
 
     // Returns the list of special properties for the type.
-    PropertyId* JavascriptRegExpConstructor::GetSpecialPropertyIds() const
+    PropertyId const * JavascriptRegExpConstructor::GetSpecialPropertyIds() const
     {
         return specialPropertyIds;
     }

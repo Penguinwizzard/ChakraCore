@@ -14,7 +14,8 @@ namespace Js
     // Concrete type for manipulating JS Vars
     struct ResolvedObject
     {
-        ResolvedObject() : propId(Js::Constants::NoProperty), scriptContext(nullptr), address(nullptr), objectDisplay(nullptr), obj(nullptr), originalObj(nullptr), isConst(false)
+        ResolvedObject() : propId(Js::Constants::NoProperty), scriptContext(nullptr), address(nullptr), 
+            objectDisplay(nullptr), obj(nullptr), originalObj(nullptr), isConst(false), name(nullptr)
         {}
 
         PropertyId              propId;

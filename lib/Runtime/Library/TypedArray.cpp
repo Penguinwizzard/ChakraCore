@@ -16,7 +16,7 @@
 namespace Js
 {
     /*static*/
-    PropertyId TypedArrayBase::specialPropertyIds[] =
+    PropertyId const TypedArrayBase::specialPropertyIds[] =
     {
         PropertyIds::length,
         PropertyIds::buffer,
@@ -346,7 +346,7 @@ namespace Js
     }
 
     // Returns the list of special non-enumerable properties for the type.
-    PropertyId* TypedArrayBase::GetSpecialPropertyIds() const
+    PropertyId const * TypedArrayBase::GetSpecialPropertyIds() const
     {
         return specialPropertyIds;
     }

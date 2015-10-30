@@ -2245,7 +2245,7 @@ namespace Js
                         if (CONFIG_FLAG(EnumerateSpecialPropertiesInDebugger))
                         {
                             count = object->GetSpecialPropertyCount();
-                            PropertyId* specialPropertyIds = object->GetSpecialPropertyIds();
+                            PropertyId const * specialPropertyIds = object->GetSpecialPropertyIds();
                             for (int i = 0; i < count; i++)
                             {
                                 Js::PropertyId propertyId = specialPropertyIds[i];
@@ -2290,7 +2290,7 @@ namespace Js
                                     bool isUnscoped = false;
                                     bool isConst = true;
                                     count = regExp->GetSpecialEnumerablePropertyCount();
-                                    PropertyId* specialPropertyIds = regExp->GetSpecialEnumerablePropertyIds();
+                                    PropertyId const * specialPropertyIds = regExp->GetSpecialEnumerablePropertyIds();
 
                                     for (int i = 0; i < count; i++)
                                     {

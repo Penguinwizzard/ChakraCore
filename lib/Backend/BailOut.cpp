@@ -8,7 +8,7 @@
 #include "Debug\DebugManager.h"
 #include "Language\JavascriptFunctionArgIndex.h"
 
-extern "C" const IRType RegTypes[RegNumCount];
+extern const IRType RegTypes[RegNumCount];
 
 void
 BailOutInfo::Clear(JitArenaAllocator * allocator)

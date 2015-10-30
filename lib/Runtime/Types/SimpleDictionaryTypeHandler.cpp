@@ -221,7 +221,7 @@ namespace Js
     }
 
     template <typename TPropertyIndex, typename TMapKey, bool IsNotExtensibleSupported>
-    SimpleDictionaryTypeHandlerBase<TPropertyIndex, TMapKey, IsNotExtensibleSupported> * SimpleDictionaryTypeHandlerBase<TPropertyIndex, TMapKey, IsNotExtensibleSupported>::New(ScriptContext * scriptContext, SimplePropertyDescriptor* propertyDescriptors, int propertyCount, uint16 inlineSlotCapacity, uint16 offsetOfInlineSlots, bool isLocked, bool isShared)
+    SimpleDictionaryTypeHandlerBase<TPropertyIndex, TMapKey, IsNotExtensibleSupported> * SimpleDictionaryTypeHandlerBase<TPropertyIndex, TMapKey, IsNotExtensibleSupported>::New(ScriptContext * scriptContext, SimplePropertyDescriptor const* propertyDescriptors, int propertyCount, uint16 inlineSlotCapacity, uint16 offsetOfInlineSlots, bool isLocked, bool isShared)
     {
         PropertyIndexRangesType::VerifySlotCapacity(propertyCount);
         return RecyclerNew(scriptContext->GetRecycler(), SimpleDictionaryTypeHandlerBase, scriptContext, propertyDescriptors, propertyCount, propertyCount, inlineSlotCapacity, offsetOfInlineSlots, isLocked, isShared);
@@ -241,7 +241,7 @@ namespace Js
     }
 
     template <typename TPropertyIndex, typename TMapKey, bool IsNotExtensibleSupported>
-    SimpleDictionaryTypeHandlerBase<TPropertyIndex, TMapKey, IsNotExtensibleSupported>::SimpleDictionaryTypeHandlerBase(ScriptContext * scriptContext, SimplePropertyDescriptor* propertyDescriptors, int propertyCount, int slotCapacity, uint16 inlineSlotCapacity, uint16 offsetOfInlineSlots, bool isLocked, bool isShared) :
+    SimpleDictionaryTypeHandlerBase<TPropertyIndex, TMapKey, IsNotExtensibleSupported>::SimpleDictionaryTypeHandlerBase(ScriptContext * scriptContext, SimplePropertyDescriptor const* propertyDescriptors, int propertyCount, int slotCapacity, uint16 inlineSlotCapacity, uint16 offsetOfInlineSlots, bool isLocked, bool isShared) :
         // Do not RoundUp passed in slotCapacity. This may be called by ConvertTypeHandler for an existing DynamicObject and should use the real existing slotCapacity.
         DynamicTypeHandler(slotCapacity, inlineSlotCapacity, offsetOfInlineSlots, DefaultFlags | (isLocked ? IsLockedFlag : 0) | (isShared ? (MayBecomeSharedFlag | IsSharedFlag) : 0)),
         nextPropertyIndex(0),

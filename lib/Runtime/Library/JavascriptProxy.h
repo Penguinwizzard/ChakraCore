@@ -117,7 +117,7 @@ namespace Js
         virtual BOOL SetAttributes(PropertyId propertyId, PropertyAttributes attributes) override;
         virtual BOOL GetSpecialPropertyName(uint32 index, Var *propertyName, ScriptContext * requestContext) { return false; }
         virtual uint GetSpecialPropertyCount() const { return 0; }
-        virtual PropertyId* GetSpecialPropertyIds() const { return nullptr; }
+        virtual PropertyId const * GetSpecialPropertyIds() const { return nullptr; }
         virtual BOOL HasInstance(Var instance, ScriptContext* scriptContext, IsInstInlineCache* inlineCache = NULL) override;
         // This is used for external object only; should not be called for proxy
         virtual RecyclableObject* GetConfigurablePrototype(ScriptContext * requestContext) override;

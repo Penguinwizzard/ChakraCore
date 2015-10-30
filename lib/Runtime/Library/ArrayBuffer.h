@@ -12,7 +12,7 @@ namespace Js
     class ArrayBuffer : public DynamicObject
     {
     private:
-        static PropertyId specialPropertyIds[];
+        static PropertyId const specialPropertyIds[];
 
     public:
         // we need to install cross-site thunk on the nested array buffer when marshaling
@@ -102,7 +102,7 @@ namespace Js
 
         virtual BOOL GetSpecialPropertyName(uint32 index, Var *propertyName, ScriptContext * requestContext) override;
         virtual uint GetSpecialPropertyCount() const override;
-        virtual PropertyId* GetSpecialPropertyIds() const override;
+        virtual PropertyId const * GetSpecialPropertyIds() const override;
         virtual BOOL InitProperty(Js::PropertyId propertyId, Js::Var value, PropertyOperationFlags flags = PropertyOperation_None, Js::PropertyValueInfo* info = NULL) override;
         virtual BOOL SetPropertyWithAttributes(PropertyId propertyId, Var value, PropertyAttributes attributes, PropertyValueInfo* info, PropertyOperationFlags flags = PropertyOperation_None , SideEffects possibleSideEffects = SideEffects_Any) override;
 
@@ -222,6 +222,7 @@ namespace Js
             LPVOID arrayAddress = VirtualAlloc(address, length, MEM_COMMIT, PAGE_READWRITE);
             if (!arrayAddress)
             {
+                VirtualFree(address, 0, MEM_RELEASE);
                 Js::Throw::OutOfMemory();
             }
             return arrayAddress;

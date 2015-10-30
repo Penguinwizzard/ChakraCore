@@ -12,8 +12,8 @@ namespace Js
         friend class RegexHelper;
 
     private:
-        static PropertyId specialPropertyIdsAll[];
-        static PropertyId specialPropertyIdsWithoutUnicode[];
+        static PropertyId const specialPropertyIdsAll[];
+        static PropertyId const specialPropertyIdsWithoutUnicode[];
         static const uint defaultSpecialPropertyIdsCount = 6;
 
         UnifiedRegex::RegexPattern* pattern;
@@ -44,7 +44,7 @@ namespace Js
         bool GetPropertyBuiltIns(PropertyId propertyId, Var* value, BOOL* result);
         bool SetPropertyBuiltIns(PropertyId propertyId, Var value, PropertyOperationFlags flags, BOOL* result);
         bool GetSetterBuiltIns(PropertyId propertyId, PropertyValueInfo* info, DescriptorFlags* result);
-        inline PropertyId* GetSpecialPropertyIdsInlined() const;
+        inline PropertyId const * GetSpecialPropertyIdsInlined() const;
 
         inline void SetPattern(UnifiedRegex::RegexPattern* pattern);
         inline void SetSplitPattern(UnifiedRegex::RegexPattern* splitPattern);
@@ -134,7 +134,7 @@ namespace Js
         virtual BOOL IsWritable(PropertyId propertyId) override;
         virtual BOOL GetSpecialPropertyName(uint32 index, Var *propertyName, ScriptContext * requestContext) override;
         virtual uint GetSpecialPropertyCount() const override;
-        virtual PropertyId* GetSpecialPropertyIds() const override;        
+        virtual PropertyId const * GetSpecialPropertyIds() const override;        
 
         static Js::JavascriptRegExp * BoxStackInstance(Js::JavascriptRegExp * instance);
     };

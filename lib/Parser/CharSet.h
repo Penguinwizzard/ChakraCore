@@ -285,7 +285,7 @@ namespace UnifiedRegex
         void ToEquivClass(ArenaAllocator* allocator, uint level, uint base, uint& tblidx, CharSet<C>& result, codepoint_t baseOffset = 0x0) const;
     public:
         static CharSetFull Instance;
-        static CharSetFull* TheFullNode;
+        static CharSetFull* const TheFullNode;
         
         CharSetFull();
 

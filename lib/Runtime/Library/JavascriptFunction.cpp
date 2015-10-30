@@ -2080,7 +2080,7 @@ LABEL1:
 #endif
 
     /*static*/
-    PropertyId JavascriptFunction::specialPropertyIds[] =
+    PropertyId const JavascriptFunction::specialPropertyIds[] =
     {
         PropertyIds::caller,
         PropertyIds::arguments
@@ -2318,7 +2318,7 @@ LABEL1:
     }
 
     // Returns the list of special non-enumerable properties for the type.
-    PropertyId* JavascriptFunction::GetSpecialPropertyIds() const
+    PropertyId const * JavascriptFunction::GetSpecialPropertyIds() const
     {
         return specialPropertyIds;
     }

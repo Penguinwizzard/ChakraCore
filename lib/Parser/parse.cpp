@@ -10,7 +10,7 @@
 void PrintPnodeWIndent(ParseNode *pnode,int indentAmt);
 #endif
 
-const char* nopNames[knopLim]= {
+const char* const nopNames[knopLim]= {
 #define PTNODE(nop,sn,pc,nk,grfnop,json) sn,
 #include "ptlist.h"
 };

@@ -2,7 +2,6 @@
 // Copyright (C) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
-extern const wchar_t *SymbolTypeNames[];
 
 enum SymbolType : byte
 {
@@ -340,10 +339,9 @@ public:
         this->hasFuncAssignment = (symbolType == STFunction);
     }
 
-    const wchar_t *GetSymbolTypeName()
-    {
-        return SymbolTypeNames[symbolType];
-    }
+#if DBG_DUMP
+    const wchar_t *GetSymbolTypeName();
+#endif
 
     const JsUtil::CharacterBuffer<WCHAR>& GetName() const
     {

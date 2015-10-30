@@ -2218,7 +2218,7 @@ const char *const BailOutKindNames[] =
 #include "BailOutKind.h"
 };
 
-IR::BailOutKind BailOutKindValidBits[] =
+IR::BailOutKind const BailOutKindValidBits[] =
 {
 #define BAIL_OUT_KIND(n, bits)               (IR::BailOutKind)bits,
 #define BAIL_OUT_KIND_VALUE_LAST(n, v)

@@ -5,7 +5,7 @@
 #include "BackEnd.h"
 #include "SCCLiveness.h"
 
-extern "C" IRType RegTypes[RegNumCount];
+extern const IRType RegTypes[RegNumCount];
 
 LinearScanMD::LinearScanMD(Func *func)
     : helperSpillSlots(nullptr),

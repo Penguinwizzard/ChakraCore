@@ -11,9 +11,9 @@ namespace Js
     {
         friend class RegexHelper;
     private:
-        static PropertyId specialPropertyIds[];
-        static PropertyId specialnonEnumPropertyIds[];
-        static PropertyId specialEnumPropertyIds[];
+        static PropertyId const specialPropertyIds[];
+        static PropertyId const specialnonEnumPropertyIds[];
+        static PropertyId const specialEnumPropertyIds[];
         static const int NumCtorCaptures = 10;
 
         DEFINE_MARSHAL_OBJECT_TO_SCRIPT_CONTEXT(JavascriptRegExpConstructor); 
@@ -39,13 +39,13 @@ namespace Js
         virtual BOOL GetEnumerator(BOOL enumNonEnumerable, Var* enumerator, ScriptContext * requestContext, bool preferSnapshotSemantics = true, bool enumSymbols = false) override;
         BOOL GetSpecialNonEnumerablePropertyName(uint32 index, Var *propertyName, ScriptContext * requestContext);
         uint GetSpecialNonEnumerablePropertyCount() const;
-        PropertyId* GetSpecialNonEnumerablePropertyIds() const;
+        PropertyId const * GetSpecialNonEnumerablePropertyIds() const;
         BOOL GetSpecialEnumerablePropertyName(uint32 index, Var *propertyName, ScriptContext * requestContext);
         uint GetSpecialEnumerablePropertyCount() const;
-        PropertyId* GetSpecialEnumerablePropertyIds() const;
+        PropertyId const * GetSpecialEnumerablePropertyIds() const;
         virtual BOOL GetSpecialPropertyName(uint32 index, Var *propertyName, ScriptContext * requestContext) override;
         virtual uint GetSpecialPropertyCount() const override;
-        virtual PropertyId* GetSpecialPropertyIds() const override;        
+        virtual PropertyId const * GetSpecialPropertyIds() const override;        
 
         UnifiedRegex::RegexPattern* GetLastPattern() const { return lastPattern; }
 

@@ -89,34 +89,6 @@ namespace Js
             Assert(this->guardedPropOps != nullptr);
             this->guardedPropOps->Or(propOps);
         }
-
-        bool TryGetObjSizeForAllocFromNativeCode(bool allowAuxSlots, size_t& headerAllocSize, size_t& auxSlotsAllocSize) const
-        {
-            if (slotCount > inlineSlotCount && !allowAuxSlots)
-            {
-                return false;
-            }
-
-            headerAllocSize = sizeof(Js::DynamicObject) + inlineSlotCount * sizeof(Js::Var);
-            if (headerAllocSize > MAXINT32 || !HeapInfo::IsAlignedSize(headerAllocSize) || !HeapInfo::IsSmallObject(headerAllocSize))
-            {
-                AssertMsg(false, "Object header too large or not recycler heap block aligned.");
-                return false;
-            }
-
-            auxSlotsAllocSize = slotCount > inlineSlotCount ? (slotCount - inlineSlotCount) * sizeof(Js::Var) : 0;
-            if (auxSlotsAllocSize > 0 && (auxSlotsAllocSize > MAXINT32 || !HeapInfo::IsAlignedSize(auxSlotsAllocSize)))
-            {
-                AssertMsg(false, "Object header too large or not recycler heap block aligned.");
-                return false;
-            }
-
-            // Don't assert here because we allow objects with enough slots as to exceed the small block allocation size.
-            if (!HeapInfo::IsSmallObject(auxSlotsAllocSize))
-            {
-                return false;
-            }
-        }
     };
 
 #define InitialObjTypeSpecFldInfoFlagValue 0x01

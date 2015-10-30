@@ -141,7 +141,7 @@ InstanceBase::InitializeSharedMemory(DWORD numCounter, HANDLE& handle)
     DWORD size = numCounter * sizeof(DWORD);
     wchar_t wszObjectName[OBJECT_NAME_LEN];
     GetSharedMemoryObjectName(wszObjectName, GetCurrentProcessId(), guid);
-    handle = ::CreateFileMapping(NULL, NULL, PAGE_READWRITE, 0, size, wszObjectName);
+    handle = ::CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, size, wszObjectName);
     if (handle == NULL)
     {
         return NULL;

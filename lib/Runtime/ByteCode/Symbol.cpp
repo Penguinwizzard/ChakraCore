@@ -4,7 +4,9 @@
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeByteCodePch.h"
 
-const wchar_t *SymbolTypeNames[] = { L"Function", L"Variable", L"MemberName", L"Formal", L"Unknown" };
+#if DBG_DUMP
+static const wchar_t * const SymbolTypeNames[] = { L"Function", L"Variable", L"MemberName", L"Formal", L"Unknown" };
+#endif
 
 bool Symbol::GetIsArguments() const
 {
@@ -250,3 +252,10 @@ Symbol * Symbol::GetFuncScopeVarSym() const
     }
     return fncScopeSym;
 }
+
+#if DBG_DUMP
+const wchar_t * Symbol::GetSymbolTypeName() 
+{
+    return SymbolTypeNames[symbolType];
+}
+#endif

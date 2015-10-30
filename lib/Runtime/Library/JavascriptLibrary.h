@@ -410,10 +410,10 @@ namespace Js
         static SimpleTypeHandler<1> SharedIdMappedFunctionWithPrototypeTypeHandler;
         static MissingPropertyTypeHandler MissingPropertyHolderTypeHandler;
 
-        static SimplePropertyDescriptor SharedFunctionPropertyDescriptors[2];
-        static SimplePropertyDescriptor HeapArgumentsPropertyDescriptorsV11[2];
-        static SimplePropertyDescriptor HeapArgumentsPropertyDescriptors[3];
-        static SimplePropertyDescriptor FunctionWithLengthAndPrototypeTypeDescriptors[2];
+        static SimplePropertyDescriptor const SharedFunctionPropertyDescriptors[2];
+        static SimplePropertyDescriptor const HeapArgumentsPropertyDescriptorsV11[2];
+        static SimplePropertyDescriptor const HeapArgumentsPropertyDescriptors[3];
+        static SimplePropertyDescriptor const FunctionWithLengthAndPrototypeTypeDescriptors[2];
 
     public:
         // used by inliner. Maps Simd FuncInfo (library func) to equivalent opcode.
@@ -888,7 +888,7 @@ namespace Js
             return GetBuiltInArgType(flags, BuiltInArgShift::BIAS_Src1) || GetBuiltInArgType(flags, BuiltInArgShift::BIAS_Src2) || GetBuiltInArgType(flags, BuiltInArgShift::BIAS_Dst);
         }
 #if ENABLE_DEBUG_CONFIG_OPTIONS
-        static wchar_t* GetNameForBuiltIn(BuiltinFunction index)
+        static wchar_t const * GetNameForBuiltIn(BuiltinFunction index)
         {
             Assert(index < _countof(JavascriptLibrary::LibraryFunctionName));
             return JavascriptLibrary::LibraryFunctionName[index];
@@ -1049,10 +1049,10 @@ namespace Js
         static void __cdecl InitializeFunction(DynamicObject* function, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
 
 #ifdef ENABLE_NATIVE_CODEGEN
-        static size_t LibraryFunctionArgC[BuiltinFunction::Count + 1];
-        static int LibraryFunctionFlags[BuiltinFunction::Count + 1];   // returns enum BuiltInFlags.
+        static size_t const LibraryFunctionArgC[BuiltinFunction::Count + 1];
+        static int const LibraryFunctionFlags[BuiltinFunction::Count + 1];   // returns enum BuiltInFlags.
 #if ENABLE_DEBUG_CONFIG_OPTIONS
-        static wchar_t* LibraryFunctionName[BuiltinFunction::Count + 1];
+        static wchar_t const * const LibraryFunctionName[BuiltinFunction::Count + 1];
 #endif
 #endif
 

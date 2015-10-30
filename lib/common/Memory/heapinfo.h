@@ -305,7 +305,7 @@ private:
 
 #if USE_STATIC_VPM
         static const BVUnit invalidBitsData[TBlockAttributes::BucketCount][SmallHeapBlockT<TBlockAttributes>::SmallHeapBlockBitVector::wordCount];
-        static const InvalidBitsTable * invalidBitsBuffers;
+        static const InvalidBitsTable * const invalidBitsBuffers;
 #endif
 
     public:

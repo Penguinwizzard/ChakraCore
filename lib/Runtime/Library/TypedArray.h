@@ -16,7 +16,7 @@ namespace Js
     {
         friend ArrayBuffer;
     private:
-        static PropertyId specialPropertyIds[];
+        static PropertyId const specialPropertyIds[];
 
     protected:
         DEFINE_VTABLE_CTOR_ABSTRACT(TypedArrayBase, ArrayBufferParent);
@@ -126,7 +126,7 @@ namespace Js
 
         virtual BOOL GetSpecialPropertyName(uint32 index, Var *propertyName, ScriptContext * requestContext) override;
         virtual uint GetSpecialPropertyCount() const override;
-        virtual PropertyId* GetSpecialPropertyIds() const override;
+        virtual PropertyId const * GetSpecialPropertyIds() const override;
         virtual BOOL InitProperty(Js::PropertyId propertyId, Js::Var value, PropertyOperationFlags flags = PropertyOperation_None, Js::PropertyValueInfo* info = NULL) override;
         virtual BOOL SetPropertyWithAttributes(PropertyId propertyId, Var value, PropertyAttributes attributes, PropertyValueInfo* info, PropertyOperationFlags flags = PropertyOperation_None, SideEffects possibleSideEffects = SideEffects_Any) override;
         static BOOL Is(Var aValue);

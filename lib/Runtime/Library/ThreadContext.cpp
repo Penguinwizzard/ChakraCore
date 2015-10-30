@@ -65,7 +65,7 @@ uint ThreadContext::activeScriptSiteCount = 0;
 uint ThreadContext::numOfThreadContextsWithPreReserveSegment = 0;
 #endif
 
-const Js::PropertyRecord * ThreadContext::builtInPropertyRecords[] =
+const Js::PropertyRecord * const ThreadContext::builtInPropertyRecords[] =
 {
     Js::BuiltInPropertyRecords::EMPTY,
 #define ENTRY_INTERNAL_SYMBOL(n) Js::BuiltInPropertyRecords::n,

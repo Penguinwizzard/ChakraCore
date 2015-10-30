@@ -7,7 +7,7 @@
 namespace Js
 {
     /*static*/
-    PropertyId JavascriptStringObject::specialPropertyIds[] =
+    PropertyId const JavascriptStringObject::specialPropertyIds[] =
     {
         PropertyIds::length
     };
@@ -174,7 +174,7 @@ namespace Js
     }
 
     // Returns the list of special non-enumerable properties for the type.
-    PropertyId* JavascriptStringObject::GetSpecialPropertyIds() const
+    PropertyId const * JavascriptStringObject::GetSpecialPropertyIds() const
     {
         return specialPropertyIds;
     }

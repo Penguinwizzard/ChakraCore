@@ -12,7 +12,7 @@ namespace Js
 #undef BUILTIN
 
 
-    FunctionInfo * JavascriptBuiltInFunction::builtInFunctionInfo[MaxBuiltInEnum] =
+    FunctionInfo * const JavascriptBuiltInFunction::builtInFunctionInfo[MaxBuiltInEnum] =
     {
     #define BUILTIN(c, n, e, i) &c::EntryInfo::n,
     #include "JavascriptBuiltInFunctionList.h"
@@ -20,7 +20,7 @@ namespace Js
     };
 
     FunctionInfo *
-        JavascriptBuiltInFunction::GetFunctionInfo(Js::LocalFunctionId builtinId)
+    JavascriptBuiltInFunction::GetFunctionInfo(Js::LocalFunctionId builtinId)
     {
         if (IsValidId(builtinId))
         {
@@ -30,13 +30,13 @@ namespace Js
     }
 
     bool
-        JavascriptBuiltInFunction::CanChangeEntryPoint(Js::LocalFunctionId builtInId)
+    JavascriptBuiltInFunction::CanChangeEntryPoint(Js::LocalFunctionId builtInId)
     {
         return IsValidId(builtInId);
     }
 
     bool
-        JavascriptBuiltInFunction::IsValidId(Js::LocalFunctionId builtInId)
+    JavascriptBuiltInFunction::IsValidId(Js::LocalFunctionId builtInId)
     {
         return builtInId < MaxBuiltInEnum;
     }

@@ -46,7 +46,7 @@ namespace Js
 
     template<size_t size>
 
-    SimpleTypeHandler<size>::SimpleTypeHandler(SimplePropertyDescriptor(&SharedFunctionPropertyDescriptors)[size], PropertyTypes propertyTypes, uint16 inlineSlotCapacity, uint16 offsetOfInlineSlots) :
+    SimpleTypeHandler<size>::SimpleTypeHandler(SimplePropertyDescriptor const (&SharedFunctionPropertyDescriptors)[size], PropertyTypes propertyTypes, uint16 inlineSlotCapacity, uint16 offsetOfInlineSlots) :
          DynamicTypeHandler(sizeof(descriptors) / sizeof(SimplePropertyDescriptor),
          inlineSlotCapacity, offsetOfInlineSlots, DefaultFlags | IsLockedFlag | MayBecomeSharedFlag | IsSharedFlag), propertyCount(size)
     {

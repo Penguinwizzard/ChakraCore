@@ -222,7 +222,7 @@ namespace UnifiedRegex
 
     CharSetFull CharSetFull::Instance;
 
-    CharSetFull* CharSetFull::TheFullNode = &CharSetFull::Instance;
+    CharSetFull* const CharSetFull::TheFullNode = &CharSetFull::Instance;
 
     CharSetFull::CharSetFull() {}
 

@@ -26,7 +26,7 @@
 
 namespace Js
 {
-    SimplePropertyDescriptor JavascriptLibrary::SharedFunctionPropertyDescriptors[2] =
+    SimplePropertyDescriptor const JavascriptLibrary::SharedFunctionPropertyDescriptors[2] =
     {
         SimplePropertyDescriptor(BuiltInPropertyRecords::prototype, PropertyWritable),
         SimplePropertyDescriptor(BuiltInPropertyRecords::name, PropertyConfigurable | PropertyWritable)
@@ -41,20 +41,20 @@ namespace Js
     MissingPropertyTypeHandler JavascriptLibrary::MissingPropertyHolderTypeHandler;
 
 
-    SimplePropertyDescriptor JavascriptLibrary::HeapArgumentsPropertyDescriptorsV11[2] =
+    SimplePropertyDescriptor const JavascriptLibrary::HeapArgumentsPropertyDescriptorsV11[2] =
     {
         SimplePropertyDescriptor(BuiltInPropertyRecords::length, PropertyConfigurable | PropertyWritable),
         SimplePropertyDescriptor(BuiltInPropertyRecords::callee, PropertyConfigurable | PropertyWritable)
     };
 
-    SimplePropertyDescriptor JavascriptLibrary::HeapArgumentsPropertyDescriptors[3] =
+    SimplePropertyDescriptor const JavascriptLibrary::HeapArgumentsPropertyDescriptors[3] =
     {
         SimplePropertyDescriptor(BuiltInPropertyRecords::length, PropertyConfigurable | PropertyWritable),
         SimplePropertyDescriptor(BuiltInPropertyRecords::callee, PropertyConfigurable | PropertyWritable),
         SimplePropertyDescriptor(BuiltInPropertyRecords::_symbolIterator, PropertyConfigurable | PropertyWritable)
     };
 
-    SimplePropertyDescriptor JavascriptLibrary::FunctionWithLengthAndPrototypeTypeDescriptors[2] =
+    SimplePropertyDescriptor const JavascriptLibrary::FunctionWithLengthAndPrototypeTypeDescriptors[2] =
     {
         SimplePropertyDescriptor(BuiltInPropertyRecords::prototype, PropertyNone),
         SimplePropertyDescriptor(BuiltInPropertyRecords::length, PropertyConfigurable)
@@ -539,7 +539,7 @@ namespace Js
 
         // Initialize Array/Argument types
         uint heapArgumentPropertyDescriptorsCount = 0;
-        SimplePropertyDescriptor* heapArgumentPropertyDescriptors = nullptr;
+        SimplePropertyDescriptor const * heapArgumentPropertyDescriptors = nullptr;
         if (config->IsES6IteratorsEnabled())
         {
             heapArgumentPropertyDescriptors = HeapArgumentsPropertyDescriptors;
@@ -3336,7 +3336,7 @@ namespace Js
         return isFloatFunc;
     }
 
-    size_t JavascriptLibrary::LibraryFunctionArgC[] = {
+    size_t const JavascriptLibrary::LibraryFunctionArgC[] = {
 #define LIBRARY_FUNCTION(obj, name, argc, flags, entry) argc,
 #include "LibraryFunction.h"
 #undef LIBRARY_FUNCTION
@@ -3344,7 +3344,7 @@ namespace Js
     };
 
 #if ENABLE_DEBUG_CONFIG_OPTIONS
-    wchar_t* JavascriptLibrary::LibraryFunctionName[] = {
+    wchar_t const * const JavascriptLibrary::LibraryFunctionName[] = {
 #define LIBRARY_FUNCTION(obj, name, argc, flags, entry) L#obj L"." L#name,
 #include "LibraryFunction.h"
 #undef LIBRARY_FUNCTION
@@ -3352,7 +3352,7 @@ namespace Js
     };
 #endif
 
-    int JavascriptLibrary::LibraryFunctionFlags[] = {
+    int const JavascriptLibrary::LibraryFunctionFlags[] = {
 #define LIBRARY_FUNCTION(obj, name, argc, flags, entry) flags,
 #include "LibraryFunction.h"
 #undef LIBRARY_FUNCTION

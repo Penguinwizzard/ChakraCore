@@ -588,7 +588,7 @@ private:
         }
     };
 
-    static const Js::PropertyRecord * builtInPropertyRecords[];
+    static const Js::PropertyRecord * const builtInPropertyRecords[];
 
     PropertyMap * propertyMap;
     PropertyNoCaseSetType * caseInvariantPropertySet;

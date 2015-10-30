@@ -64,7 +64,7 @@ static const BYTE  Nop1[] = { 0x90 };                   /* nop                  
 static const BYTE  Nop2[] = { 0x66, 0x90 };             /* xchg ax, ax             */
 static const BYTE  Nop3[] = { 0x0F, 0x1F, 0x00 };       /* nop dword ptr [rax]     */
 static const BYTE  Nop4[] = { 0x0F, 0x1F, 0x40, 0x00 }; /* nop dword ptr [rax + 0] */
-static const BYTE *Nop[4] = { Nop1, Nop2, Nop3, Nop4 };
+static const BYTE * const Nop[4] = { Nop1, Nop2, Nop3, Nop4 };
 
 enum CMP_IMM8
 {

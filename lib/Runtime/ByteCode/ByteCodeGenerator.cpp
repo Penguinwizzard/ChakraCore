@@ -1534,6 +1534,7 @@ Symbol * ByteCodeGenerator::FindSymbol(Symbol **symRef, IdentPtr pid, bool forRe
     Scope *symScope = sym->GetScope();
     Assert(symScope);
 
+#if DBG_DUMP
     if (this->Trace())
     {
         if (sym != nullptr)
@@ -1545,6 +1546,7 @@ Symbol * ByteCodeGenerator::FindSymbol(Symbol **symRef, IdentPtr pid, bool forRe
             Output::Print(L"did not resolve %s\n", key);
         }
     }
+#endif
 
     if (!(sym->GetIsGlobal()))
     {
@@ -1633,10 +1635,12 @@ Symbol * ByteCodeGenerator::AddSymbolToScope(Scope *scope, const wchar_t *key, i
             sym = Anew(alloc, Symbol, symName, varDecl, symbolType);
 
             scope->AddNewSymbol(sym);
+#if DBG_DUMP
             if (this->Trace())
             {
                 Output::Print(L"added symbol %s of type %s to scope %x\n", key, sym->GetSymbolTypeName(), scope);
             }
+#endif
         }
     }
     else
@@ -2113,10 +2117,12 @@ void AddArgsToScope(ParseNodePtr pnode, ByteCodeGenerator *byteCodeGenerator, bo
                 arg->sxVar.pid->Cch(),
                 arg,
                 STFormal);
+#if DBG_DUMP
             if (byteCodeGenerator->Trace())
             {
                 Output::Print(L"current context has declared arg %s of type %s at position %d\n", arg->sxVar.pid->Psz(), formal->GetSymbolTypeName(), pos);
             }
+#endif
 
             if (!isSimpleParameterList)
             {
@@ -2185,11 +2191,13 @@ void AddVarsToScope(ParseNode *vars, ByteCodeGenerator *byteCodeGenerator)
             sym = byteCodeGenerator->AddSymbolToFunctionScope(reinterpret_cast<const wchar_t*>(vars->sxVar.pid->Psz()), vars->sxVar.pid->Cch(), vars, STVariable);
         }
 
-        if (sym->GetSymbolType() == STVariable && byteCodeGenerator->Trace())
+#if DBG_DUMP
+        if (sym->GetSymbolType() == STVariable && byteCodeGenerator->Trace()) 
         {
             Output::Print(L"current context has declared var %s of type %s\n",
                 vars->sxVar.pid->Psz(), sym->GetSymbolTypeName());
         }
+#endif
 
         if (sym->GetIsArguments() || vars->sxVar.pnodeInit == nullptr)
         {
@@ -3180,11 +3188,13 @@ void PreVisitBlock(ParseNode *pnodeBlock, ByteCodeGenerator *byteCodeGenerator)
     auto addSymbolToScope = [scope, byteCodeGenerator, isGlobalScope](ParseNode *pnode)
     {
         Symbol *sym = byteCodeGenerator->AddSymbolToScope(scope, reinterpret_cast<const wchar_t*>(pnode->sxVar.pid->Psz()), pnode->sxVar.pid->Cch(), pnode, STVariable);
+#if DBG_DUMP
         if (sym->GetSymbolType() == STVariable && byteCodeGenerator->Trace())
         {
             Output::Print(L"current context has declared const %s of type %s\n",
                 pnode->sxVar.pid->Psz(), sym->GetSymbolTypeName());
         }
+#endif
         sym->SetIsGlobal(isGlobalScope);
         sym->SetIsBlockVar(true);
         sym->SetNeedDeclaration(true);
@@ -3234,12 +3244,13 @@ void PreVisitCatch(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
                 sym = byteCodeGenerator->AddSymbolToScope(pnode->sxCatch.scope, reinterpret_cast<const wchar_t*>(item->sxVar.pid->Psz()), item->sxVar.pid->Cch(), item, STVariable);
                 item->sxVar.sym = sym;
             }
-
+#if DBG_DUMP
             if (byteCodeGenerator->Trace())
             {
                 Output::Print(L"current context has declared catch var %s of type %s\n",
                     item->sxVar.pid->Psz(), sym->GetSymbolTypeName());
             }
+#endif
         });
     }
     else
@@ -3254,11 +3265,13 @@ void PreVisitCatch(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
             sym = *pnode->sxCatch.pnodeParam->sxPid.symRef;
         }
         Assert(sym->GetScope() == pnode->sxCatch.scope);
+#if DBG_DUMP
         if (byteCodeGenerator->Trace())
         {
             Output::Print(L"current context has declared catch var %s of type %s\n",
                 pnode->sxCatch.pnodeParam->sxPid.pid->Psz(), sym->GetSymbolTypeName());
         }
+#endif
         sym->SetIsCatch(true);
         pnode->sxCatch.pnodeParam->sxPid.sym = sym;
     }
