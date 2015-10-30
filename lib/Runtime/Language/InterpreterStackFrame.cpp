@@ -6360,8 +6360,17 @@ namespace Js
         return JavascriptOperators::OP_LdSuper(function, scriptContext);
     }
 
+    Var InterpreterStackFrame::OP_LdSuperCtor(ScriptContext * scriptContext)
+    {
+        return JavascriptOperators::OP_LdSuperCtor(function, scriptContext);
+    }
+
     Var InterpreterStackFrame::OP_ScopedLdSuper(ScriptContext * scriptContext) {
         return JavascriptOperators::OP_ScopedLdSuper(function, scriptContext);
+    }
+
+    Var InterpreterStackFrame::OP_ScopedLdSuperCtor(ScriptContext * scriptContext) {
+        return JavascriptOperators::OP_ScopedLdSuperCtor(function, scriptContext);
     }
 
     void InterpreterStackFrame::ValidateRegValue(Var value, bool allowStackVar, bool allowStackVarOnDisabledStackNestedFunc) const

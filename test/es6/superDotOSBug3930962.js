@@ -302,26 +302,6 @@ var tests = [
             var bar = new B();
        }
    },
-   /*{
-       name: "eval super calls",
-       body: function () 
-       {
-            count = 0;
-            class B extends A {
-                constructor() {
-                    eval(" \
-                        super(); \
-                        assert.areEqual(1,super.getCount()); \
-                        super.increment(); \
-                        assert.areEqual(2, super.getCount()); \
-                        super.decrement(); \
-                        assert.areEqual(1, super.getCount()); \
-                    ");
-                }
-            }
-            var bar = new B();
-       }
-   },OS BUG 4352944*/
    {
        name: "regular super dot calls",
        body: function () 

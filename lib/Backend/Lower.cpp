@@ -2824,8 +2824,16 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             instrPrev = m_lowererMD.LowerLdSuper(instr, IR::HelperLdSuper);
             break;
 
+        case Js::OpCode::LdSuperCtor:
+            instrPrev = m_lowererMD.LowerLdSuper(instr, IR::HelperLdSuperCtor);
+            break;
+
         case Js::OpCode::ScopedLdSuper:
             instrPrev = m_lowererMD.LowerLdSuper(instr, IR::HelperScopedLdSuper);
+            break;
+
+        case Js::OpCode::ScopedLdSuperCtor:
+            instrPrev = m_lowererMD.LowerLdSuper(instr, IR::HelperScopedLdSuperCtor);
             break;
 
         case Js::OpCode::SetHomeObj:

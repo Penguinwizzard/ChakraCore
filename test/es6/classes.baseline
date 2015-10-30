@@ -63,7 +63,7 @@ PASSED
 PASSED
 *** Running test #14 (13): Super adapts to __proto__ changes
 PASSED
-*** Running test #15 (14): No restrictions on SuperProperty
+*** Running test #15 (14): super reference in base class constructor
 PASSED
 *** Running test #16 (15): Default constructors
 PASSED

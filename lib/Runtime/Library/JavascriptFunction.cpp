@@ -756,7 +756,7 @@ namespace Js
 
         if (overridingNewTarget != nullptr)
         {
-            if (ScriptFunction::Is(functionObj) && ScriptFunction::FromVar(functionObj)->IsClassConstructor())
+            if (ScriptFunction::Is(functionObj) && ScriptFunction::FromVar(functionObj)->GetFunctionInfo()->IsClassConstructor())
             {
                 thisAlreadySpecified = true;
                 args.Values[0] = overridingNewTarget;

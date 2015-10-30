@@ -201,6 +201,7 @@ enum FncFlags
     kFunctionAsmjsMode                          = 1 << 26,
     kFunctionHasNewTargetReference              = 1 << 27, // function has a reference to new.target
     kFunctionIsAsync                            = 1 << 28, // function is async
+    kFunctionHasDirectSuper                     = 1 << 29, // super()
 };
 
 struct RestorePoint;
@@ -279,6 +280,7 @@ public:
     void SetHasNonThisStmt(bool set = true) { SetFlags(kFunctionHasNonThisStmt, set); }
     void SetHasReferenceableBuiltInArguments(bool set = true) { SetFlags(kFunctionHasReferencableBuiltInArguments, set); }
     void SetHasSuperReference(bool set = true) { SetFlags(kFunctionHasSuperReference, set); }
+    void SetHasDirectSuper(bool set = true) { SetFlags(kFunctionHasDirectSuper, set); }
     void SetHasNewTargetReferene(bool set = true) { SetFlags(kFunctionHasNewTargetReference, set); }
     void SetHasThisStmt(bool set = true) { SetFlags(kFunctionHasThisStmt, set); }
     void SetHasWithStmt(bool set = true) { SetFlags(kFunctionHasWithStmt, set); }
@@ -310,6 +312,7 @@ public:
     bool HasOnlyThisStmts() const { return !HasFlags(kFunctionHasNonThisStmt); }
     bool HasReferenceableBuiltInArguments() const { return HasFlags(kFunctionHasReferencableBuiltInArguments); }
     bool HasSuperReference() const { return HasFlags(kFunctionHasSuperReference); }
+    bool HasDirectSuper() const { return HasFlags(kFunctionHasDirectSuper); }
     bool HasNewTargetReference() const { return HasFlags(kFunctionHasNewTargetReference); }
     bool HasThisStmt() const { return HasFlags(kFunctionHasThisStmt); }
     bool HasWithStmt() const { return HasFlags(kFunctionHasWithStmt); }

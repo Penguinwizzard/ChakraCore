@@ -475,9 +475,11 @@ HELPERCALL(EnsureFunctionProxyDeferredPrototypeType, &Js::FunctionProxy::EnsureF
 HELPERCALL(SpreadArrayLiteral, Js::JavascriptArray::SpreadArrayArgs, 0)
 HELPERCALL(SpreadCall, Js::JavascriptFunction::EntrySpreadCall, 0)
 
-HELPERCALL(LdSuper,       Js::JavascriptOperators::OP_LdSuper,       0)
-HELPERCALL(ScopedLdSuper, Js::JavascriptOperators::OP_ScopedLdSuper, 0)
-HELPERCALL(SetHomeObj,    Js::JavascriptOperators::OP_SetHomeObj,    0)
+HELPERCALL(LdSuper,             Js::JavascriptOperators::OP_LdSuper,            0)
+HELPERCALL(LdSuperCtor,         Js::JavascriptOperators::OP_LdSuperCtor,        0)
+HELPERCALL(ScopedLdSuper,       Js::JavascriptOperators::OP_ScopedLdSuper,      0)
+HELPERCALL(ScopedLdSuperCtor,   Js::JavascriptOperators::OP_ScopedLdSuperCtor,  0)
+HELPERCALL(SetHomeObj,          Js::JavascriptOperators::OP_SetHomeObj,         0)
 
 HELPERCALL(ResumeYield,   Js::JavascriptOperators::OP_ResumeYield,   AttrCanThrow)
 HELPERCALL(AsyncSpawn,    Js::JavascriptOperators::OP_AsyncSpawn,    AttrCanThrow)

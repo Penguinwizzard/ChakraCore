@@ -1221,6 +1221,7 @@ IRBuilder::BuildReg1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot R0)
     case Js::OpCode::NewBlockScope:
     case Js::OpCode::NewPseudoScope:
     case Js::OpCode::LdSuper:
+    case Js::OpCode::LdSuperCtor:
         isNotInt = TRUE;
         break;
 

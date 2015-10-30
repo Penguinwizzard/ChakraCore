@@ -276,6 +276,32 @@ var tests = [
         };
     }
   },
+  {
+    name: "OS4352944: ES6 class super.<method> calls in an eval inside constructor",
+    body: function () {
+        var count = 0;
+        class A {
+            constructor() { count++; }
+            increment()   { count++; }
+            decrement()   { count--; }
+            getCount()    { return count; }
+        }
+
+        class B extends A {
+            constructor() {
+                eval(" \
+                    super(); \
+                    assert.areEqual(1,super.getCount()); \
+                    super.increment(); \
+                    assert.areEqual(2, super.getCount()); \
+                    super.decrement(); \
+                    assert.areEqual(1, super.getCount()); \
+                ");
+            }
+        }
+        var bar = new B();
+    }
+  },
 ];
 
 testRunner.runTests(tests, { verbose: WScript.Arguments[0] != "summary" });

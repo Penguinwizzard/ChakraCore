@@ -348,7 +348,7 @@ namespace Js
 
         ScriptContext * scriptContext = this->GetScriptContext();
         JavascriptLibrary *javascriptLibrary = scriptContext->GetLibrary();
-        bool isClassMethod = this->GetFunctionInfo()->IsClassMethod() || IsClassConstructor();
+        bool isClassMethod = this->GetFunctionInfo()->IsClassMethod() || this->GetFunctionInfo()->IsClassConstructor();
 
         JavascriptString* prefixString = nullptr;
         uint prefixStringLength = 0;
@@ -385,7 +385,7 @@ namespace Js
         else
         {
 
-            if (IsClassConstructor())
+            if (this->GetFunctionInfo()->IsClassConstructor())
             {
                 name = L"constructor";
                 nameLength = _countof(L"constructor") -1; //subtract off \0

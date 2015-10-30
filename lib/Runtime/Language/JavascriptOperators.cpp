@@ -9062,17 +9062,34 @@ CommonNumber:
 
         Assert(thisObjPrototype != nullptr);
 
-        RecyclableObject *superClass = thisObjPrototype->GetPrototype();
+        RecyclableObject *superBase = thisObjPrototype->GetPrototype();
 
-        if (superClass == nullptr || !RecyclableObject::Is(superClass))
+        if (superBase == nullptr || !RecyclableObject::Is(superBase))
         {
             return scriptContext->GetLibrary()->GetUndefined();
         }
 
-        return superClass;
+        return superBase;
     }
 
-    Var JavascriptOperators::OP_ScopedLdSuper(Var scriptFunction, ScriptContext * scriptContext)
+    Var JavascriptOperators::OP_LdSuperCtor(Var scriptFunction, ScriptContext * scriptContext)
+    {
+        // use self as value of [[FunctionObject]] - this is true only for constructors
+
+        Assert(RecyclableObject::Is(scriptFunction));
+        Assert(JavascriptOperators::IsClassConstructor(scriptFunction));  // non-constructors cannot have direct super
+
+        RecyclableObject *superCtor = RecyclableObject::FromVar(scriptFunction)->GetPrototype();
+
+        if (superCtor == nullptr || !IsConstructor(superCtor))
+        {
+            JavascriptError::ThrowTypeError(scriptContext, JSERR_NotAConstructor, L"super");
+        }
+
+        return superCtor;
+    }
+
+    Var JavascriptOperators::ScopedLdSuperHelper(Var scriptFunction, Js::PropertyId propertyId, ScriptContext * scriptContext)
     {
         ScriptFunction *instance = ScriptFunction::FromVar(scriptFunction);
         Var superRef = nullptr;
@@ -9098,7 +9115,7 @@ CommonNumber:
                 }
 
                 RecyclableObject *recyclableObject = RecyclableObject::FromVar(currScope);
-                if (GetProperty(recyclableObject, Js::PropertyIds::_superReferenceSymbol, &superRef, scriptContext))
+                if (GetProperty(recyclableObject, propertyId, &superRef, scriptContext))
                 {
                     return superRef;
                 }
@@ -9118,6 +9135,16 @@ CommonNumber:
         }
 
         return superRef;
+    }
+
+    Var JavascriptOperators::OP_ScopedLdSuper(Var scriptFunction, ScriptContext * scriptContext)
+    {
+        return JavascriptOperators::ScopedLdSuperHelper(scriptFunction, Js::PropertyIds::_superReferenceSymbol, scriptContext);
+    }
+
+    Var JavascriptOperators::OP_ScopedLdSuperCtor(Var scriptFunction, ScriptContext * scriptContext)
+    {
+        return JavascriptOperators::ScopedLdSuperHelper(scriptFunction, Js::PropertyIds::_superCtorReferenceSymbol, scriptContext);
     }
 
     Var JavascriptOperators::OP_ResumeYield(ResumeYieldData* yieldData, RecyclableObject* iterator)
@@ -9538,7 +9565,7 @@ CommonNumber:
             return constructor;
         }
         //10.Throw a TypeError exception.
-        JavascriptError::ThrowTypeError(scriptContext, JSERR_NotAConstructor, L"[@@species]");
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_NotAConstructor, L"constructor[Symbol.species]");
     }
 
     BOOL JavascriptOperators::GreaterEqual(Var aLeft, Var aRight, ScriptContext* scriptContext)

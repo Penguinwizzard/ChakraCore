@@ -11258,7 +11258,7 @@ Case0:
 
         if (!JavascriptOperators::IsConstructor(constructor))
         {
-            JavascriptError::ThrowTypeError(scriptContext, JSERR_NotAConstructor, L"[@@species]");
+            JavascriptError::ThrowTypeError(scriptContext, JSERR_NotAConstructor, L"constructor[Symbol.species]");
         }
 
         Js::Var constructorArgs[] = { constructor, JavascriptNumber::ToVar(length, scriptContext) };

@@ -2763,6 +2763,11 @@ FuncInfo* PostVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerat
         top->AssignSuperRegister();
     }
 
+    if (top->HasDirectSuper())
+    {
+        top->AssignSuperCtorRegister();
+    }
+
     if (top->IsClassConstructor())
     {
         if (top->IsBaseClassConstructor())
@@ -2785,6 +2790,7 @@ FuncInfo* PostVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerat
                 top->SetIsThisLexicallyCaptured();
                 top->SetIsNewTargetLexicallyCaptured();
                 top->SetIsSuperLexicallyCaptured();
+                top->SetIsSuperCtorLexicallyCaptured();
                 top->SetHasLocalInClosure(true);
                 top->SetHasClosureReference(true);
                 top->SetHasCapturedThis();
@@ -4203,12 +4209,18 @@ void CheckFuncAssignment(Symbol * sym, ParseNode * pnode2, ByteCodeGenerator * b
     };
 }
 
-inline bool ContainsSuperCallReference(ParseNodePtr pnode)
+
+inline bool ContainsSuperReference(ParseNodePtr pnode)
 {
-    return pnode->sxCall.pnodeTarget->nop == knopSuper // super()
-           || (pnode->sxCall.pnodeTarget->nop == knopDot && pnode->sxCall.pnodeTarget->sxBin.pnode1->nop == knopSuper) // super.prop()
-           || (pnode->sxCall.pnodeTarget->nop == knopIndex && pnode->sxCall.pnodeTarget->sxBin.pnode1->nop == knopSuper); // super[prop]()
+    return (pnode->sxCall.pnodeTarget->nop == knopDot && pnode->sxCall.pnodeTarget->sxBin.pnode1->nop == knopSuper) // super.prop()
+        || (pnode->sxCall.pnodeTarget->nop == knopIndex && pnode->sxCall.pnodeTarget->sxBin.pnode1->nop == knopSuper); // super[prop]()
 }
+
+inline bool ContainsDirectSuper(ParseNodePtr pnode)
+{
+    return pnode->sxCall.pnodeTarget->nop == knopSuper; // super()
+}
+
 
 // Assign permanent (non-temp) registers for the function.
 // These include constants (null, 3.7, this) and locals that use registers as their home locations.
@@ -4484,7 +4496,7 @@ void AssignRegisters(ParseNode *pnode,ByteCodeGenerator *byteCodeGenerator)
             nonLambdaFunc->AssignSuperRegister();
             nonLambdaFunc->AssignThisRegister();
             nonLambdaFunc->SetIsSuperLexicallyCaptured();
-
+ 
             if (nonLambdaFunc->IsClassConstructor())
             {
                 func->AssignNewTargetRegister();
@@ -4528,8 +4540,18 @@ void AssignRegisters(ParseNode *pnode,ByteCodeGenerator *byteCodeGenerator)
         {
             byteCodeGenerator->AssignUndefinedConstRegister();
         }
+
+        bool containsDirectSuper = ContainsDirectSuper(pnode);
+        bool containsSuperReference = ContainsSuperReference(pnode);
+
+        if (containsDirectSuper)
+        {
+            pnode->sxCall.pnodeTarget->location = byteCodeGenerator->TopFuncInfo()->AssignSuperCtorRegister();
+        }
+
         FuncInfo *funcInfo = byteCodeGenerator->TopFuncInfo();
-        if (ContainsSuperCallReference(pnode))
+
+        if (containsDirectSuper || containsSuperReference)
         {
             // A super call requires 'this' to be available.
             byteCodeGenerator->SetNeedEnvRegister();
@@ -4543,9 +4565,18 @@ void AssignRegisters(ParseNode *pnode,ByteCodeGenerator *byteCodeGenerator)
                 if (parent->root->sxFnc.IsClassMember())
                 {
                     // Set up super reference
-                    parent->root->sxFnc.SetHasSuperReference();
-                    parent->AssignSuperRegister();
-                    parent->SetIsSuperLexicallyCaptured();
+                    if (containsSuperReference)
+                    {
+                        parent->root->sxFnc.SetHasSuperReference();
+                        parent->AssignSuperRegister();
+                        parent->SetIsSuperLexicallyCaptured();
+                    }
+                    else if (containsDirectSuper)
+                    {
+                        parent->root->sxFnc.SetHasDirectSuper();
+                        parent->AssignSuperCtorRegister();
+                        parent->SetIsSuperCtorLexicallyCaptured();
+                    }
 
                     parent->GetBodyScope()->SetHasLocalInClosure(true);
                     funcInfo->SetHasClosureReference(true);
@@ -4561,6 +4592,7 @@ void AssignRegisters(ParseNode *pnode,ByteCodeGenerator *byteCodeGenerator)
                 byteCodeGenerator->AssignNewTargetRegister();
             }
         }
+
         if (pnode->sxCall.isEvalCall)
         {
             if(!funcInfo->GetParsedFunctionBody()->IsReparsed())
@@ -4589,6 +4621,10 @@ void AssignRegisters(ParseNode *pnode,ByteCodeGenerator *byteCodeGenerator)
             if (funcInfo->root->sxFnc.IsClassMember())
             {
                 funcInfo->AssignSuperRegister();
+                if (funcInfo->root->sxFnc.IsClassConstructor() && !funcInfo->root->sxFnc.IsBaseClassConstructor())
+                {
+                    funcInfo->AssignSuperCtorRegister();
+                }
             }
             else if (funcInfo->IsLambda())
             {
@@ -4598,6 +4634,10 @@ void AssignRegisters(ParseNode *pnode,ByteCodeGenerator *byteCodeGenerator)
                 {
                     parent->root->sxFnc.SetHasSuperReference();
                     parent->AssignSuperRegister();
+                    if (parent->IsClassConstructor() && !parent->IsBaseClassConstructor())
+                    {
+                        parent->AssignSuperCtorRegister();
+                    }
                 }
             }
         }

@@ -29,6 +29,7 @@ FuncInfo::FuncInfo(
     falseConstantRegister(Js::Constants::NoRegister),
     thisPointerRegister(Js::Constants::NoRegister),
     superRegister(Js::Constants::NoRegister),
+    superCtorRegister(Js::Constants::NoRegister),
     newTargetRegister(Js::Constants::NoRegister),
     envRegister(Js::Constants::NoRegister),
     frameObjRegister(Js::Constants::NoRegister),
@@ -70,9 +71,11 @@ FuncInfo::FuncInfo(
     sameNameArgsPlaceHolderSlotCount(0),
     thisScopeSlot(Js::Constants::NoProperty),
     superScopeSlot(Js::Constants::NoProperty),
+    superCtorScopeSlot(Js::Constants::NoProperty),
     newTargetScopeSlot(Js::Constants::NoProperty),
     isThisLexicallyCaptured(false),
     isSuperLexicallyCaptured(false),
+    isSuperCtorLexicallyCaptured(false),
     isNewTargetLexicallyCaptured(false),
     inlineCacheCount(0),
     rootObjectLoadInlineCacheCount(0),
@@ -111,6 +114,11 @@ BOOL FuncInfo::HasSuperReference() const
     return root->sxFnc.HasSuperReference();
 }
 
+BOOL FuncInfo::HasDirectSuper() const
+{
+    return root->sxFnc.HasDirectSuper();
+}
+
 BOOL FuncInfo::IsClassMember() const
 {
     return root->sxFnc.IsClassMember();
@@ -143,6 +151,14 @@ void FuncInfo::EnsureSuperScopeSlot()
     if (this->superScopeSlot == Js::Constants::NoRegister)
     {
         this->superScopeSlot = this->bodyScope->AddScopeSlot();
+    }
+}
+
+void FuncInfo::EnsureSuperCtorScopeSlot()
+{
+    if (this->superCtorScopeSlot == Js::Constants::NoRegister)
+    {
+        this->superCtorScopeSlot = this->bodyScope->AddScopeSlot();
     }
 }
 

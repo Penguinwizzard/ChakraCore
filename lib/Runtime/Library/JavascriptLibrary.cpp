@@ -881,7 +881,7 @@ namespace Js
 
         if (scriptFunction)
         {
-            if (scriptFunction->IsClassConstructor())
+            if (scriptFunction->GetFunctionInfo()->IsClassConstructor())
             {
                 scriptFunction->SetWritable(Js::PropertyIds::prototype, FALSE);
             }

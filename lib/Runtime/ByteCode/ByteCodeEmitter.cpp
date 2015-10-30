@@ -1608,6 +1608,10 @@ void ByteCodeGenerator::EmitScopeObjectInit(FuncInfo *funcInfo)
     {
         propIds->elements[funcInfo->superScopeSlot] = Js::PropertyIds::_superReferenceSymbol;
     }
+    if (funcInfo->superCtorScopeSlot != Js::Constants::NoRegister)
+    {
+        propIds->elements[funcInfo->superCtorScopeSlot] = Js::PropertyIds::_superCtorReferenceSymbol;
+    }
 
     // If this is an outer function, then we'll also need to emit the first func slot and first var slot
     // in the auxiliary data.
@@ -1713,6 +1717,11 @@ void ByteCodeGenerator::InitScopeSlotArray(FuncInfo * funcInfo)
     if (funcInfo->superScopeSlot != Js::Constants::NoRegister)
     {
         propertyIdsForScopeSlotArray[funcInfo->superScopeSlot] = Js::PropertyIds::_superReferenceSymbol;
+    }
+
+    if (funcInfo->superCtorScopeSlot != Js::Constants::NoRegister)
+    {
+        propertyIdsForScopeSlotArray[funcInfo->superCtorScopeSlot] = Js::PropertyIds::_superCtorReferenceSymbol;
     }
 
 #if DEBUG
@@ -2209,7 +2218,7 @@ void ByteCodeGenerator::EmitSuperCall(FuncInfo* funcInfo, ParseNode* pnode, BOOL
     // this is an eval and we will load super dynamically from the scope using ScopedLdSuper.
     // That means we'll have to rely on the location of the call target to be sure.
     // We have to make sure to allocate the location for the node now, before we try to branch on it.
-    Emit(pnode->sxCall.pnodeTarget, this, funcInfo, false);
+    Emit(pnode->sxCall.pnodeTarget, this, funcInfo, false, /*isConstructorCall*/ true); // reuse isConstructorCall ("new super()" is illegal)
 
     //
     // if (super is class constructor) {
@@ -3012,8 +3021,11 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
                 if (!parent->IsGlobalFunction())
                 {
                     // lambda in non-global scope (eval and non-eval)
-                    Js::PropertyId slot = parent->superScopeSlot;
-                    EmitInternalScopedSlotLoad(funcInfo, scope, envIndex, slot, funcInfo->superRegister);
+                    EmitInternalScopedSlotLoad(funcInfo, scope, envIndex, parent->superScopeSlot, funcInfo->superRegister);
+                    if (funcInfo->superCtorRegister != Js::Constants::NoRegister)
+                    {
+                        EmitInternalScopedSlotLoad(funcInfo, scope, envIndex, parent->superCtorScopeSlot, funcInfo->superCtorRegister);
+                    }
                 }
                 else if (!(GetFlags() & fscrEval))
                 {
@@ -3025,6 +3037,12 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
             else
             {
                 m_writer.Reg1(Js::OpCode::LdSuper, funcInfo->superRegister);
+
+                if (funcInfo->superCtorRegister != Js::Constants::NoRegister) // super() is allowed only in derived class constructors
+                {
+                    m_writer.Reg1(Js::OpCode::LdSuperCtor, funcInfo->superCtorRegister);
+                }
+
                 if (!funcInfo->IsGlobalFunction())
                 {
                     if (funcInfo->bodyScope->GetIsObject() && funcInfo->bodyScope->GetLocation() != Js::Constants::NoRegister)
@@ -3032,12 +3050,21 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
                         // Stash the super reference in case something inside the eval or lambda references it.
                         uint cacheId = funcInfo->FindOrAddInlineCacheId(funcInfo->bodyScope->GetLocation(), Js::PropertyIds::_superReferenceSymbol, false, true);
                         m_writer.PatchableProperty(Js::OpCode::InitFld, funcInfo->superRegister, funcInfo->bodyScope->GetLocation(), cacheId);
+                        if (funcInfo->superCtorRegister != Js::Constants::NoRegister)
+                        {
+                            cacheId = funcInfo->FindOrAddInlineCacheId(funcInfo->bodyScope->GetLocation(), Js::PropertyIds::_superCtorReferenceSymbol, false, true);
+                            m_writer.PatchableProperty(Js::OpCode::InitFld, funcInfo->superCtorRegister, funcInfo->bodyScope->GetLocation(), cacheId);
+                        }
                     }
-                    else if (funcInfo->superScopeSlot == Js::Constants::NoProperty)
+                    else if (funcInfo->superScopeSlot == Js::Constants::NoProperty || funcInfo->superCtorScopeSlot == Js::Constants::NoProperty)
                     {
                         // While the diag locals walker will pick up super from scoped slots or an activation object,
                         // it will not pick it up when it is only in a register.
                         byteCodeFunction->InsertSymbolToRegSlotList(funcInfo->superRegister, Js::PropertyIds::_superReferenceSymbol, funcInfo->varRegsCount);
+                        if (funcInfo->superCtorRegister != Js::Constants::NoRegister)
+                        {
+                            byteCodeFunction->InsertSymbolToRegSlotList(funcInfo->superCtorRegister, Js::PropertyIds::_superCtorReferenceSymbol, funcInfo->varRegsCount);
+                        }
                     }
                 }
             }
@@ -3049,9 +3076,17 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
         }
 
         // We don't want to load super if we are already in an eval. ScopedLdSuper will take care of loading super in that case.
-        if (funcInfo->superScopeSlot != Js::Constants::NoRegister && !(GetFlags() & fscrEval) && !funcInfo->bodyScope->GetIsObject())
+        if (!(GetFlags() & fscrEval) && !funcInfo->bodyScope->GetIsObject())
         {
-            this->m_writer.Slot(Js::OpCode::StSlot, funcInfo->superRegister, funcInfo->GetBodyScope()->GetLocation(), funcInfo->superScopeSlot + Js::ScopeSlots::FirstSlotIndex);
+            if (funcInfo->superScopeSlot != Js::Constants::NoRegister)
+            {
+                this->m_writer.Slot(Js::OpCode::StSlot, funcInfo->superRegister, funcInfo->GetBodyScope()->GetLocation(), funcInfo->superScopeSlot + Js::ScopeSlots::FirstSlotIndex);
+            }
+
+            if (funcInfo->superCtorScopeSlot != Js::Constants::NoRegister)
+            {
+                this->m_writer.Slot(Js::OpCode::StSlot, funcInfo->superCtorRegister, funcInfo->GetBodyScope()->GetLocation(), funcInfo->superCtorScopeSlot + Js::ScopeSlots::FirstSlotIndex);
+            }
         }
 
         if (byteCodeFunction->DoStackNestedFunc())
@@ -3596,11 +3631,19 @@ void ByteCodeGenerator::StartEmitFunction(ParseNode *pnodeFnc)
             {
                 funcInfo->EnsureThisScopeSlot();
             }
+
             if (((!funcInfo->IsLambda() && funcInfo->GetCallsEval())
-                || funcInfo->isSuperLexicallyCaptured)
-                && funcInfo->superRegister != Js::Constants::NoRegister)
+                || funcInfo->isSuperLexicallyCaptured))
             {
-                funcInfo->EnsureSuperScopeSlot();
+                if (funcInfo->superRegister != Js::Constants::NoRegister)
+                {
+                    funcInfo->EnsureSuperScopeSlot();
+                }
+
+                if (funcInfo->superCtorRegister != Js::Constants::NoRegister)
+                {
+                    funcInfo->EnsureSuperCtorScopeSlot();
+                }
             }
 
             if (funcInfo->isNewTargetLexicallyCaptured)
@@ -3671,10 +3714,17 @@ void ByteCodeGenerator::StartEmitFunction(ParseNode *pnodeFnc)
             {
                 funcInfo->EnsureThisScopeSlot();
             }
+
             if (funcInfo->isSuperLexicallyCaptured)
             {
                 funcInfo->EnsureSuperScopeSlot();
             }
+
+            if (funcInfo->isSuperCtorLexicallyCaptured)
+            {
+                funcInfo->EnsureSuperCtorScopeSlot();
+            }
+
             if (funcInfo->isNewTargetLexicallyCaptured)
             {
                 funcInfo->EnsureNewTargetScopeSlot();
@@ -6425,10 +6475,7 @@ void EmitCallTargetCompat(
 void EmitSuperMethodBegin(
     ParseNode *pnodeTarget,
     ByteCodeGenerator *byteCodeGenerator,
-    Js::RegSlot* protoLocation,
-    Js::RegSlot callObjLocation,
-    FuncInfo *funcInfo,
-    bool* protoRegisterAquired)
+    FuncInfo *funcInfo)
 {
     FuncInfo *parentFuncInfo = funcInfo;
     if (parentFuncInfo->IsLambda())
@@ -6436,38 +6483,9 @@ void EmitSuperMethodBegin(
         parentFuncInfo = byteCodeGenerator->FindEnclosingNonLambda();
     }
 
-    if (pnodeTarget->sxBin.pnode1->nop == knopSuper && parentFuncInfo->IsClassConstructor())
+    if (pnodeTarget->sxBin.pnode1->nop == knopSuper && parentFuncInfo->IsClassConstructor() && !parentFuncInfo->IsBaseClassConstructor())
     {
-        *protoRegisterAquired = true;
-        *protoLocation = funcInfo->AcquireTmpRegister();
-
-        if (!parentFuncInfo->IsBaseClassConstructor())
-        {
-            // For derived class ctor F, F.prototype.__proto__ === F.__proto__.prototype
-            int cacheId = funcInfo->FindOrAddInlineCacheId(callObjLocation, Js::PropertyIds::prototype, false, false);
-            byteCodeGenerator->Writer()->PatchableProperty(Js::OpCode::LdFld, *protoLocation, callObjLocation, cacheId);
-            byteCodeGenerator->EmitScopeSlotLoadThis(funcInfo, funcInfo->thisPointerRegister, /*chkUndecl*/ true);
-        }
-        else
-        {
-            // For base class ctor F, F.__proto__.prototype != F.prototype.__proto__, therefore explicitly load Object.prototype
-            // (ECMA262-2015 14.5.14-5) F.__proto__ === Function.prototype, F.prototype.__proto__ === Object.prototype
-            int cacheId = funcInfo->FindOrAddRootObjectInlineCacheId(Js::PropertyIds::Object, false, false);
-            byteCodeGenerator->Writer()->PatchableRootProperty(Js::OpCode::LdRootFld, *protoLocation, cacheId, false, false);
-            cacheId = funcInfo->FindOrAddInlineCacheId(*protoLocation, Js::PropertyIds::prototype, false, false);
-            byteCodeGenerator->Writer()->PatchableProperty(Js::OpCode::LdFld, *protoLocation, *protoLocation, cacheId);
-        }
-    }
-}
-
-void EmitSuperMethodEnd(
-    FuncInfo *funcInfo,
-    Js::RegSlot protoLocation,
-    bool protoRegisterAquired)
-{
-    if (protoRegisterAquired)
-    {
-        funcInfo->ReleaseTmpRegister(protoLocation);
+        byteCodeGenerator->EmitScopeSlotLoadThis(funcInfo, funcInfo->thisPointerRegister, /*chkUndecl*/ true);
     }
 }
 
@@ -6506,10 +6524,8 @@ void EmitCallTargetES5(
             Js::PropertyId propertyId = pnodeTarget->sxBin.pnode2->sxPid.PropertyIdFromNameNode();
             Js::RegSlot callObjLocation = pnodeTarget->sxBin.pnode1->location;
             Js::RegSlot protoLocation = callObjLocation;
-            bool  protoRegisterAquired = false;
-            EmitSuperMethodBegin(pnodeTarget, byteCodeGenerator, &protoLocation, callObjLocation, funcInfo, &protoRegisterAquired);
+            EmitSuperMethodBegin(pnodeTarget, byteCodeGenerator, funcInfo);
             EmitMethodFld(pnodeTarget, protoLocation, propertyId, byteCodeGenerator, funcInfo);
-            EmitSuperMethodEnd(funcInfo, protoLocation, protoRegisterAquired);
 
             // Function calls on the 'super' object should maintain current 'this' pointer
             *thisLocation = (pnodeTarget->sxBin.pnode1->nop == knopSuper) ? funcInfo->thisPointerRegister : pnodeTarget->sxBin.pnode1->location;
@@ -6533,10 +6549,8 @@ void EmitCallTargetES5(
             Js::RegSlot indexLocation = pnodeTarget->sxBin.pnode2->location;
             Js::RegSlot callObjLocation = pnodeTarget->sxBin.pnode1->location;
             Js::RegSlot protoLocation = callObjLocation;
-            bool  protoRegisterAquired = false;
-            EmitSuperMethodBegin(pnodeTarget, byteCodeGenerator, &protoLocation, callObjLocation, funcInfo, &protoRegisterAquired);
+            EmitSuperMethodBegin(pnodeTarget, byteCodeGenerator, funcInfo);
             EmitMethodElem(pnodeTarget, protoLocation, indexLocation, byteCodeGenerator);
-            EmitSuperMethodEnd(funcInfo, protoLocation, protoRegisterAquired);
 
             funcInfo->ReleaseLoc(pnodeTarget->sxBin.pnode2); // don't release indexLocation until after we use it.
 
@@ -6555,7 +6569,7 @@ void EmitCallTargetES5(
 
     case knopSuper:
     {
-        Emit(pnodeTarget, byteCodeGenerator, funcInfo, false);
+        Emit(pnodeTarget, byteCodeGenerator, funcInfo, false, /*isConstructorCall*/ true);  // reuse isConstructorCall ("new super()" is illegal)
 
         // Super calls should always use the new.target register unless we don't have one.
         // That could happen if we have an eval('super()') outside of a class constructor.
@@ -8705,7 +8719,7 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
             {
                 if ((byteCodeGenerator->GetFlags() & fscrEval))
                 {
-                    byteCodeGenerator->Writer()->Reg1(Js::OpCode::ScopedLdSuper, funcInfo->AcquireLoc(pnode));
+                    byteCodeGenerator->Writer()->Reg1(isConstructorCall ? Js::OpCode::ScopedLdSuperCtor : Js::OpCode::ScopedLdSuper, funcInfo->AcquireLoc(pnode));
                 }
                 else
                 {
@@ -9202,11 +9216,9 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
 
         Js::RegSlot callObjLocation = pnode->sxBin.pnode1->location;
         Js::RegSlot protoLocation = callObjLocation;
-        bool  protoRegisterAquired = false;
-        EmitSuperMethodBegin(pnode, byteCodeGenerator, &protoLocation, callObjLocation, funcInfo, &protoRegisterAquired);
+        EmitSuperMethodBegin(pnode, byteCodeGenerator, funcInfo);
         byteCodeGenerator->Writer()->Element(
             Js::OpCode::LdElemI_A, pnode->location, protoLocation, pnode->sxBin.pnode2->location);
-        EmitSuperMethodEnd(funcInfo, protoLocation, protoRegisterAquired);
         byteCodeGenerator->EndStatement(pnode);
         break;
     }
@@ -9220,8 +9232,7 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
 
             Js::RegSlot callObjLocation = pnode->sxBin.pnode1->location;
             Js::RegSlot protoLocation = callObjLocation;
-            bool  protoRegisterAquired = false;
-            EmitSuperMethodBegin(pnode, byteCodeGenerator, &protoLocation, callObjLocation, funcInfo, &protoRegisterAquired);
+            EmitSuperMethodBegin(pnode, byteCodeGenerator, funcInfo);
 
             if (propertyId == Js::PropertyIds::length)
             {
@@ -9247,7 +9258,6 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
                 }
             }
 
-            EmitSuperMethodEnd(funcInfo, protoLocation, protoRegisterAquired);
             break;
         }
 
@@ -9600,11 +9610,15 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
                 byteCodeGenerator->Writer()->InitClass(pnode->location);
             }
 
+            Js::RegSlot protoLoc = funcInfo->AcquireTmpRegister(); //register set if we have Instance Methods
+            int cacheId = funcInfo->FindOrAddInlineCacheId(pnode->location, Js::PropertyIds::prototype, false, false);
+            byteCodeGenerator->Writer()->PatchableProperty(Js::OpCode::LdFld, protoLoc, pnode->location, cacheId);
+            byteCodeGenerator->Writer()->Reg2(Js::OpCode::SetHomeObj, pnode->location, protoLoc);
+
             // Static Methods
             EmitClassInitializers(pnode->sxClass.pnodeStaticMembers, pnode->location, byteCodeGenerator, funcInfo, pnode, /*isObjectEmpty*/ false);
 
             // Instance Methods
-            Js::RegSlot protoLoc = funcInfo->AcquireTmpRegister(); //register set if we have Instance Methods
             EmitClassInitializers(pnode->sxClass.pnodeMembers, protoLoc, byteCodeGenerator, funcInfo, pnode, /*isObjectEmpty*/ true);
             funcInfo->ReleaseTmpRegister(protoLoc);
 

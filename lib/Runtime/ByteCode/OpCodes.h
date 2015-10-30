@@ -678,7 +678,9 @@ MACRO_EXTEND_WMS(       ClearAttributes,    ElementU,       None)
 MACRO_EXTEND_WMS(       ObjectFreeze,       Reg1,           None)
 
 MACRO_EXTEND_WMS(       LdSuper,            Reg1,           OpSideEffect)
+MACRO_EXTEND_WMS(       LdSuperCtor,        Reg1,           OpSideEffect)
 MACRO_EXTEND_WMS(       ScopedLdSuper,      Reg1,           OpSideEffect)
+MACRO_EXTEND_WMS(       ScopedLdSuperCtor,  Reg1,           OpSideEffect)
 MACRO_EXTEND_WMS(       SetHomeObj,         Reg2,           OpSideEffect)
 
 MACRO_BACKEND_ONLY(     BrFncCachedScopeEq, Reg2,           None)

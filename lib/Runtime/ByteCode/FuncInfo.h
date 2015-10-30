@@ -100,6 +100,7 @@ public:
     Js::RegSlot falseConstantRegister; // location, if any, of enregistered false constant
     Js::RegSlot thisPointerRegister;  // location, if any, of this pointer
     Js::RegSlot superRegister; // location, if any, of the super reference
+    Js::RegSlot superCtorRegister; // location, if any, of the superCtor reference
     Js::RegSlot newTargetRegister; // location, if any, of the new.target reference
 private:
     Js::RegSlot envRegister; // location, if any, of the closure environment
@@ -170,9 +171,11 @@ public:
     SlotProfileIdMap slotProfileIdMap;
     Js::PropertyId thisScopeSlot;
     Js::PropertyId superScopeSlot;
+    Js::PropertyId superCtorScopeSlot;
     Js::PropertyId newTargetScopeSlot;
     bool isThisLexicallyCaptured;
     bool isSuperLexicallyCaptured;
+    bool isSuperCtorLexicallyCaptured;
     bool isNewTargetLexicallyCaptured;
     Symbol *argumentsSymbol;
     JsUtil::List<Js::RegSlot, ArenaAllocator> nonUserNonTempRegistersToInitialize;
@@ -421,6 +424,7 @@ public:
     }
 
     BOOL HasSuperReference() const;
+    BOOL HasDirectSuper() const;
     BOOL IsClassMember() const;
     BOOL IsLambda() const;
     BOOL IsClassConstructor() const;
@@ -480,6 +484,15 @@ public:
             this->superRegister = NextVarRegister();
         }
         return this->superRegister;
+    }
+
+    Js::RegSlot AssignSuperCtorRegister()
+    {
+        if (this->superCtorRegister == Js::Constants::NoRegister)
+        {
+            this->superCtorRegister = NextVarRegister();
+        }
+        return this->superCtorRegister;
     }
 
     Js::RegSlot AssignNewTargetRegister()
@@ -732,6 +745,7 @@ public:
 
     void EnsureThisScopeSlot();
     void EnsureSuperScopeSlot();
+    void EnsureSuperCtorScopeSlot();
     void EnsureNewTargetScopeSlot();
 
     void SetIsThisLexicallyCaptured()
@@ -742,6 +756,11 @@ public:
     void SetIsSuperLexicallyCaptured()
     {
         this->isSuperLexicallyCaptured = true;
+    }
+
+    void SetIsSuperCtorLexicallyCaptured()
+    {
+        this->isSuperCtorLexicallyCaptured = true;
     }
 
     void SetIsNewTargetLexicallyCaptured()

@@ -116,7 +116,7 @@ namespace Js
             pOMDisplay = Anew(pRefArena->Arena(), RecyclableObjectDisplay, this);
         }
 
-        if (this->isConst || this->propId == Js::PropertyIds::_superReferenceSymbol)
+        if (this->isConst || this->propId == Js::PropertyIds::_superReferenceSymbol || this->propId == Js::PropertyIds::_superReferenceSymbol)
         {
             pOMDisplay->SetDefaultTypeAttribute(DBGPROP_ATTRIB_VALUE_READONLY);
         }
@@ -354,7 +354,7 @@ namespace Js
             Assert(pResolvedObject->propId != Js::Constants::NoProperty);
             Assert(!Js::IsInternalPropertyId(pResolvedObject->propId));
 
-            if (pResolvedObject->propId == Js::PropertyIds::_superReferenceSymbol)
+            if (pResolvedObject->propId == Js::PropertyIds::_superReferenceSymbol || pResolvedObject->propId == Js::PropertyIds::_superCtorReferenceSymbol)
             {
                 pResolvedObject->name         = L"super";
             }
@@ -468,7 +468,7 @@ namespace Js
             return false;
         }
 
-        if (!allowSuperReference && propertyId == Js::PropertyIds::_superReferenceSymbol)
+        if (!allowSuperReference && (propertyId == Js::PropertyIds::_superReferenceSymbol || propertyId == Js::PropertyIds::_superCtorReferenceSymbol))
         {
             return false;
         }

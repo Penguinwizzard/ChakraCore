@@ -552,7 +552,9 @@ namespace Js
         template <typename T> void OP_IsInst(const unaligned T * playout);
         template <class T> void OP_InitClass(const unaligned OpLayoutT_Class<T> * playout);
         inline Var OP_LdSuper(ScriptContext * scriptContext);
+        inline Var OP_LdSuperCtor(ScriptContext * scriptContext);
         inline Var OP_ScopedLdSuper(ScriptContext * scriptContext);
+        inline Var OP_ScopedLdSuperCtor(ScriptContext * scriptContext);
         template <typename T> void OP_LdElementUndefined(const unaligned OpLayoutT_ElementU<T>* playout);
         template <typename T> void OP_LdElementUndefinedScoped(const unaligned OpLayoutT_ElementU<T>* playout);
         void OP_SpreadArrayLiteral(const unaligned OpLayoutReg2Aux * playout);

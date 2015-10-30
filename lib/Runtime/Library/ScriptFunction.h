@@ -107,9 +107,6 @@ namespace Js
         virtual bool IsAnonymousFunction() const override;
         virtual BOOL GetDiagValueString(StringBuilder<ArenaAllocator>* stringBuilder, ScriptContext* requestContext) override;
         
-        // In Bytecode we make a circular reference on the constructor to associate it with the class. 
-        // It also acts as a check to know if function is a constructor
-        bool IsClassConstructor() { return homeObj && this == homeObj;}
         virtual JavascriptFunction* GetRealFunctionObject() { return this; }
 
     };
