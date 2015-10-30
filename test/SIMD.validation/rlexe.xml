@@ -69,7 +69,6 @@
     </default>
   </test>
 
-<!-- temprorily disable Float32x4 tests until Chakra bug is fixed for now
   <test>
     <default>
       <files>SIMD.Float32x4.polyfill.js</files>
@@ -91,7 +90,7 @@
       <compile-flags>-bgjit- -simdjs -simd128typespec -off:simplejit -mic:1</compile-flags>
     </default>
   </test>
--->
+
     
   <test>
     <default>
