@@ -5,7 +5,6 @@
 #pragma once
 
 namespace Js {
-
     //
     // ScopeInfo is used to persist Scope info of outer functions. When reparsing deferred nested
     // functions, use persisted ScopeInfo to restore outer closures.
@@ -31,16 +30,16 @@ namespace Js {
         };
 
     private:
-        FunctionBody * const parent;           // link to parent function body
+        FunctionBody * const parent;    // link to parent function body
         ScopeInfo* funcExprScopeInfo;   // optional func expr scope info
-        ScopeInfo* paramScopeInfo;   // optional param scope info
+        ScopeInfo* paramScopeInfo;      // optional param scope info
 
-        BYTE isDynamic:1;               // isDynamic bit affects how deferredChild access global ref
-        BYTE isObject:1;                // isObject bit affects how deferredChild access closure symbols
-        BYTE mustInstantiate:1;         // The scope must be instantiated as an object/array
-        BYTE isCached:1;                // indicates that local vars and functions are cached across invocations
-        BYTE isGlobalEval:1;
-        BYTE areNamesCached:1;
+        BYTE isDynamic : 1;             // isDynamic bit affects how deferredChild access global ref
+        BYTE isObject : 1;              // isObject bit affects how deferredChild access closure symbols
+        BYTE mustInstantiate : 1;       // the scope must be instantiated as an object/array
+        BYTE isCached : 1;              // indicates that local vars and functions are cached across invocations
+        BYTE isGlobalEval : 1;
+        BYTE areNamesCached : 1;
 
         Scope *scope;
         int scopeId;
@@ -136,6 +135,7 @@ namespace Js {
         static ScopeInfo* FromScope(ByteCodeGenerator* byteCodeGenerator, FunctionBody* parent, Scope* scope, ScriptContext *scriptContext);
         static void SaveParentScopeInfo(FuncInfo* parentFunc, FuncInfo* func);
         static void SaveScopeInfo(ByteCodeGenerator* byteCodeGenerator, FuncInfo* parentFunc, FuncInfo* func);
+
     public:
         FunctionBody * GetParent() const
         {
@@ -213,5 +213,4 @@ namespace Js {
             }
         };
     };
-
-};
+}

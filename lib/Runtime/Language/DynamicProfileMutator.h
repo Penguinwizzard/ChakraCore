@@ -9,7 +9,7 @@
 #define CREATE_MUTATOR_PROC_NAME CreateDynamicProfileMutator
 class DynamicProfileMutator
 {
-public:    
+public:
     virtual void Mutate(Js::DynamicProfileInfo * info) = 0;
     virtual void Delete() = 0;
     virtual void Initialize(const wchar_t * options) = 0;
@@ -19,4 +19,5 @@ public:
     static char const * const CreateMutatorProcName;
     typedef DynamicProfileMutator * (*CreateMutatorFunc)();
 };
+
 #endif

@@ -5,7 +5,7 @@
 
 // These tests are to make sure the following:
 // o[i] = ...
-// ... = o.x -- make sure that we don't hoist the load of o.x, 
+// ... = o.x -- make sure that we don't hoist the load of o.x,
 //              if previous call to o[i] has a chance to kill some o.x.
 
 // Access via o.x (use NaN)

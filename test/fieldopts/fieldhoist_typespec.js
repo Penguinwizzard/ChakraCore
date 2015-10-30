@@ -3,13 +3,13 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-// -force:fieldhoist -prejit 
+// -force:fieldhoist -prejit
 (function(){
-  var obj6 = 1;
-  LABEL0: 
-  LABEL1: 
-  for(var __loopvar0 = 0; obj6.a < (1) && __loopvar0 < 3; obj6.a++ + __loopvar0++) {
-  }
+    var obj6 = 1;
+    LABEL0:
+    LABEL1:
+    for (var __loopvar0 = 0; obj6.a < (1) && __loopvar0 < 3; obj6.a++ + __loopvar0++) {
+    }
 })();
 
 // - 'o1.a = 1' kills the hoisted o2.a as being live
@@ -21,8 +21,8 @@
 (function() {
     var o1 = { a: 0 };
     var o2 = o1;
-    for(var i = 0; i < 1; ++i)
-        for(; o2.a < 1; ++o2.a)
+    for (var i = 0; i < 1; ++i)
+        for (; o2.a < 1; ++o2.a)
             o1.a = 1;
 })();
 
@@ -42,9 +42,9 @@ function test0() {
     //   this case, cause an unnecessary (and permanent) bail-out even when aggressive int type spec is off (hence the assert).
     function test0b(o) {
         var sum = 0;
-        for(var i = 0; i < 10; ++i) {
+        for (var i = 0; i < 10; ++i) {
             sum += o.p &= 1;
-            for(var j = 0; j < 10; ++j) {
+            for (var j = 0; j < 10; ++j) {
                 sum += o.p | 0;
                 o.q = test0a(o);
             }
@@ -67,9 +67,9 @@ function test1() {
     var c = 1;
     function test1a() {
         var a;
-        for(var i = 0; i < 1; ++i) {
+        for (var i = 0; i < 1; ++i) {
             var b = a = c ? 1 : 2;
-            for(var j = 0; j < 1; ++j)
+            for (var j = 0; j < 1; ++j)
                 a = a;
         }
         function test1aa() { a; }
@@ -88,10 +88,10 @@ WScript.Echo("test1: " + test1());
 //   at 'c = a').
 function test2() {
     var a, b, c;
-    for(var i = 0; i < 1; ++i) {
+    for (var i = 0; i < 1; ++i) {
         a |= 0;
         b = 0;
-        for(var j = 0; j < 1; ++j) {
+        for (var j = 0; j < 1; ++j) {
             0 ? b : 0;
             null ? b = test2a() : a;
             c = a;
@@ -115,12 +115,12 @@ WScript.Echo("test2: " + test2());
 function test3() {
     var a = 0;
     var b = 0;
-    for(var i = 0; b !== 1 && i < 1; ++i) {
+    for (var i = 0; b !== 1 && i < 1; ++i) {
         b = -158506649.9 >> 1;
-        for(var j = 0; j < 8; ++j) {
+        for (var j = 0; j < 8; ++j) {
             test3a();
             ++a;
-            for(var k = 0; (b >>= b) && k < 1; ++k)
+            for (var k = 0; (b >>= b) && k < 1; ++k)
                 a >>>= 1;
         }
     }
@@ -145,9 +145,9 @@ WScript.Echo("test3: " + test3());
 //   not be necessary
 function test4() {
     var a = 0;
-    for(var i = 0; i < 1; ++i) {
+    for (var i = 0; i < 1; ++i) {
         a &= 1;
-        for(var j = 0; j < 1; ++j)
+        for (var j = 0; j < 1; ++j)
             a = 1;
     }
     return a;
@@ -159,9 +159,9 @@ WScript.Echo("test4: " + test4());
 // Same as above but with a field instead of a slot variable
 function test5() {
     var o = { a: 0 };
-    for(var i = 0; i < 1; ++i) {
+    for (var i = 0; i < 1; ++i) {
         o.a &= 1;
-        for(var j = 0; j < 1; ++j)
+        for (var j = 0; j < 1; ++j)
             o.a = 1;
     }
     return o.a;

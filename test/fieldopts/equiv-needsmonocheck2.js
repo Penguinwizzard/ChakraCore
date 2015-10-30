@@ -1,16 +1,16 @@
-//-------------------------------------------------------------------------------------------------------
+﻿//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-﻿function test0() {
+function test0() {
     litObj0.prop0 = {
         prop0: -6498345155050780000,
         prop1: 2147483650,
         prop2: this,
         prop3: uniqobj3
     };
-    for (; ;) {
+    for (;;) {
         function _array2iterate() {
             _array2iterate();
         }
@@ -44,7 +44,7 @@ litObj0.prop0 = {
     prop2: this,
     prop3: uniqobj3
 };
-for (; ;) {
+for (;;) {
     litObj0.prop0.v2 = uniqobj3;
     litObj0.prop0.v3 = litObj0;
     litObj0.prop0.v4 = litObj0;

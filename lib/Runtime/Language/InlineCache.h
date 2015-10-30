@@ -83,7 +83,7 @@ namespace Js
                     };
                     struct
                     {
-                        uint16 rawUInt16;                       // Required for access from JIT-ed code
+                        uint16 rawUInt16;                        // Required for access from JIT-ed code
                     };
                 };
                 uint16 slotIndex;
@@ -96,7 +96,7 @@ namespace Js
                 uint16 unused : 14;
                 uint16 slotIndex;
 
-                // It's ok for the type in proto layout to overlap with typeWithoutProperty in the local layout, because
+                // It's OK for the type in proto layout to overlap with typeWithoutProperty in the local layout, because
                 // we only use typeWithoutProperty on field stores, which can never have a proto layout.
                 Type* type;
 
@@ -407,7 +407,7 @@ namespace Js
         void SetIgnoreForEquivalentObjTypeSpec(bool value) { this->ignoreForEquivalentObjTypeSpec = value; }
         bool GetCloneForJitTimeUse() const { return this->cloneForJitTimeUse; }
         void SetCloneForJitTimeUse(bool value) { this->cloneForJitTimeUse = value; }
-        uint32 GetInlineCachesFillInfo(){ return this->inlineCachesFillInfo; }
+        uint32 GetInlineCachesFillInfo() { return this->inlineCachesFillInfo; }
         void UpdateInlineCachesFillInfo(uint32 index, bool set);
         bool IsFull();
 
@@ -477,7 +477,6 @@ namespace Js
         bool PretendTryGetProperty(Type *const type, PropertyCacheOperationInfo * operationInfo);
         bool PretendTrySetProperty(Type *const type, Type *const oldType, PropertyCacheOperationInfo * operationInfo);
 
-        //inline void CopyTo(ScriptContext* scriptContext, PolymorphicInlineCache *const clone);
         void CopyTo(PropertyId propertyId, ScriptContext* scriptContext, PolymorphicInlineCache *const clone);
 
 #if DBG_DUMP
@@ -500,7 +499,7 @@ namespace Js
         }
 
         template<bool CheckLocal, bool CheckProto, bool CheckAccessor>
-        void CloneInlineCacheToEmptySlotInCollision(Type *const type, uint index) ;
+        void CloneInlineCacheToEmptySlotInCollision(Type *const type, uint index);
 
 #ifdef CLONE_INLINECACHE_TO_EMPTYSLOT
         template <typename TDelegate>
@@ -562,10 +561,10 @@ namespace Js
 
     enum class CtorCacheGuardValues : intptr_t
     {
-        TagFlag                 = 0x01,
+        TagFlag = 0x01,
 
-        Invalid                 = 0x00,
-        Special                 = TagFlag
+        Invalid = 0x00,
+        Special = TagFlag
     };
     ENUM_CLASS_HELPERS(CtorCacheGuardValues, intptr_t);
 
@@ -932,9 +931,9 @@ namespace Js
         {
             return this->guard.value == CtorCacheGuardValues::Invalid ||
                 (this->content.isPopulated && (
-                (this->guard.value == CtorCacheGuardValues::Special && !this->content.updateAfterCtor && this->content.skipDefaultNewObject && !this->content.typeUpdatePending && this->content.slotCount == 0 && this->content.inlineSlotCount == 0 && this->content.pendingType == nullptr) ||
-                (this->guard.value == CtorCacheGuardValues::Special && !this->content.updateAfterCtor && this->content.typeUpdatePending && !this->content.skipDefaultNewObject && this->content.pendingType != nullptr) ||
-                ((this->guard.value & CtorCacheGuardValues::TagFlag) == CtorCacheGuardValues::Invalid && !this->content.skipDefaultNewObject && !this->content.typeUpdatePending && this->content.pendingType == nullptr)));
+                    (this->guard.value == CtorCacheGuardValues::Special && !this->content.updateAfterCtor && this->content.skipDefaultNewObject && !this->content.typeUpdatePending && this->content.slotCount == 0 && this->content.inlineSlotCount == 0 && this->content.pendingType == nullptr) ||
+                    (this->guard.value == CtorCacheGuardValues::Special && !this->content.updateAfterCtor && this->content.typeUpdatePending && !this->content.skipDefaultNewObject && this->content.pendingType != nullptr) ||
+                    ((this->guard.value & CtorCacheGuardValues::TagFlag) == CtorCacheGuardValues::Invalid && !this->content.skipDefaultNewObject && !this->content.typeUpdatePending && this->content.pendingType == nullptr)));
         }
 #endif
 
@@ -949,10 +948,10 @@ namespace Js
     // Caches the result of an instanceof operator over a type and a function
     struct IsInstInlineCache
     {
-        Type * type;                                    // The type of object operand an inline cache caches a result for
-        JavascriptFunction * function;                  // The function operand an inline cache caches a result for
-        JavascriptBoolean * result;                     // The result of doing (object instanceof function) where object->type == this->type
-        IsInstInlineCache * next;                       // Used to link together caches that have the same function operand
+        Type * type;                    // The type of object operand an inline cache caches a result for
+        JavascriptFunction * function;  // The function operand an inline cache caches a result for
+        JavascriptBoolean * result;     // The result of doing (object instanceof function) where object->type == this->type
+        IsInstInlineCache * next;       // Used to link together caches that have the same function operand
 
     public:
         bool IsEmpty() const { return type == nullptr; }
@@ -972,5 +971,4 @@ namespace Js
 #endif
 
     CompileAssert(sizeof(IsInstInlineCache) == sizeof(IsInstInlineCacheAllocator::CacheLayout));
-
 }

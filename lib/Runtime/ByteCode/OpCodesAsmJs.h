@@ -32,7 +32,6 @@ MACRO       ( ExtendedMediumLayoutPrefix, Empty        , None            )
 MACRO       ( LargeLayoutPrefix         , Empty        , None            )
 MACRO       ( ExtendedLargeLayoutPrefix , Empty        , None            )
 
-
 MACRO       ( Nop                       , Empty        , None            ) // No operation (Default value = 0)
 MACRO_EXTEND( NopEx                     , Empty        , None            ) // No operation (Default value = 0)
 MACRO       ( Label                     , Empty        , None            ) // No operation (Default value = 0)
@@ -54,17 +53,17 @@ MACRO_WMS   ( Conv_VTD                  , Double1Reg1  , None            ) // co
 MACRO_WMS   ( Conv_VTI                  , Int1Reg1     , None            ) // convert var to int
 MACRO_WMS   ( Conv_VTF                  , Float1Reg1   , None            ) // convert var to float
 // Internal calls
-MACRO       ( I_StartCall               , StartCall    , None         ) // Initialize memory for a call
-MACRO_WMS   ( I_Call                    , AsmCall      , None         ) // Execute call and place return value in register
-MACRO_WMS   ( I_ArgOut_Db               , Reg1Double1  , None         ) // convert double to var and place it for function call
-MACRO_WMS   ( I_ArgOut_Int              , Reg1Int1     , None         ) // convert int to var and place it for function call
-MACRO_WMS   ( I_ArgOut_Flt              , Reg1Float1   , None         ) // convert float to var and place it for function call
-MACRO_WMS   ( I_Conv_VTD                , Double2      , None         ) // convert var to double
-MACRO_WMS   ( I_Conv_VTI                , Int2         , None         ) // convert var to int
-MACRO_WMS   ( I_Conv_VTF                , Float2       , None         ) // convert var to float
+MACRO       ( I_StartCall               , StartCall    , None         )    // Initialize memory for a call
+MACRO_WMS   ( I_Call                    , AsmCall      , None         )    // Execute call and place return value in register
+MACRO_WMS   ( I_ArgOut_Db               , Reg1Double1  , None         )    // convert double to var and place it for function call
+MACRO_WMS   ( I_ArgOut_Int              , Reg1Int1     , None         )    // convert int to var and place it for function call
+MACRO_WMS   ( I_ArgOut_Flt              , Reg1Float1   , None         )    // convert float to var and place it for function call
+MACRO_WMS   ( I_Conv_VTD                , Double2      , None         )    // convert var to double
+MACRO_WMS   ( I_Conv_VTI                , Int2         , None         )    // convert var to int
+MACRO_WMS   ( I_Conv_VTF                , Float2       , None         )    // convert var to float
 
-//loop
-MACRO_WMS   ( AsmJsLoopBodyStart        , AsmUnsigned1    , None      )     // Marks the start of a loop body
+// loop
+MACRO_WMS   ( AsmJsLoopBodyStart        , AsmUnsigned1    , None      )    // Marks the start of a loop body
 // Branching
 MACRO       ( AsmBr                     , AsmBr        , OpNoFallThrough ) // Unconditional branch
 MACRO_WMS   ( BrTrue_Int                , BrInt1       , None            ) // Jumps to offset if int value is not 0
@@ -136,7 +135,7 @@ MACRO_WMS   ( Mul_Db                    , Double3       , None           ) // Do
 MACRO_WMS   ( Div_Db                    , Double3       , None           ) // Double Arithmetic '/'
 MACRO_WMS   ( Rem_Db                    , Double3       , None           ) // Double Arithmetic '%'
 
-//float math
+// float math
 MACRO_WMS   ( Ld_Flt                    , Float2        , None           ) // Sets a float from another float register
 MACRO_WMS   ( Neg_Flt                   , Float2        , None           ) // Float  Unary '-'
 MACRO_WMS   ( Add_Flt                   , Float3        , None           ) // Float Arithmetic '+'
@@ -165,7 +164,6 @@ MACRO_WMS   ( CmGe_Db                   , Int1Double2   , None           ) // do
 MACRO_WMS   ( CmEq_Db                   , Int1Double2   , None           ) // double Comparison ==
 MACRO_WMS   ( CmNe_Db                   , Int1Double2   , None           ) // double Comparison !=
 
-
 // Float comparisons
 MACRO_WMS   ( CmLt_Flt                  , Int1Float2    , None           ) // float Comparison <
 MACRO_WMS   ( CmLe_Flt                  , Int1Float2    , None           ) // float Comparison <=
@@ -174,14 +172,14 @@ MACRO_WMS   ( CmGe_Flt                  , Int1Float2    , None           ) // fl
 MACRO_WMS   ( CmEq_Flt                  , Int1Float2    , None           ) // float Comparison ==
 MACRO_WMS   ( CmNe_Flt                  , Int1Float2    , None           ) // float Comparison !=
 
-/// Math builtin functions for ints
+// Math builtin functions for ints
 MACRO_WMS   ( Abs_Int                   , Int2         , None            )
 MACRO_WMS   ( Min_Int                   , Int3         , None            )
 MACRO_WMS   ( Max_Int                   , Int3         , None            )
 MACRO_WMS   ( Imul_Int                  , Int3         , None            )
 MACRO_WMS   ( Clz32_Int                 , Int2         , None            )
 
-/// Math builtin functions for doubles & floats
+// Math builtin functions for doubles & floats
 MACRO_WMS   ( Sin_Db                    , Double2       , None           )
 MACRO_WMS   ( Cos_Db                    , Double2       , None           )
 MACRO_WMS   ( Tan_Db                    , Double2       , None           )
@@ -203,11 +201,10 @@ MACRO_WMS   ( Atan2_Db                  , Double3       , None           )
 MACRO_WMS   ( Min_Db                    , Double3       , None           )
 MACRO_WMS   ( Max_Db                    , Double3       , None           )
 
-/// Fround
+// Fround
 MACRO_WMS   ( Fround_Flt                , Float2        , None           )
 MACRO_WMS   ( Fround_Db                 , Float1Double1 , None           )
 MACRO_WMS   ( Fround_Int                , Float1Int1    , None           )
-
 
 #define MACRO_SIMD(opcode, asmjsLayout, opCodeAttrAsmJs, OpCodeAttr, ...) MACRO(opcode, asmjsLayout, opCodeAttrAsmJs)
 #define MACRO_SIMD_WMS(opcode, asmjsLayout, opCodeAttrAsmJs, OpCodeAttr, ...) MACRO_WMS(opcode, asmjsLayout, opCodeAttrAsmJs)

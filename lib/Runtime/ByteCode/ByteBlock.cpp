@@ -35,17 +35,17 @@ namespace Js
         return m_content[itemIndex];
     }
 
-    ByteBlock *ByteBlock::New(Recycler *alloc,const byte * initialContent,int initialContentSize)
+    ByteBlock *ByteBlock::New(Recycler *alloc, const byte * initialContent, int initialContentSize)
     {
         // initialContent may be 'null' if no data to copy
         AssertMsg(initialContentSize > 0, "Must have valid data size");
 
-        ByteBlock *newBlock = RecyclerNew(alloc,ByteBlock,initialContentSize,alloc);
+        ByteBlock *newBlock = RecyclerNew(alloc, ByteBlock, initialContentSize, alloc);
+
         //
         // Copy any optional data into the block:
-        // - If this was not provided, the block's contents will be uninitialized.
+        // - If initialContent was not provided, the block's contents will be uninitialized.
         //
-
         if (initialContent != nullptr)
         {
             js_memcpy_s(newBlock->m_content, newBlock->GetLength(), initialContent, initialContentSize);
@@ -54,17 +54,17 @@ namespace Js
         return newBlock;
     }
 
-    ByteBlock *ByteBlock::NewFromArena(ArenaAllocator *alloc,const byte * initialContent,int initialContentSize)
+    ByteBlock *ByteBlock::NewFromArena(ArenaAllocator *alloc, const byte * initialContent, int initialContentSize)
     {
         // initialContent may be 'null' if no data to copy
         AssertMsg(initialContentSize > 0, "Must have valid data size");
 
-        ByteBlock *newBlock = Anew(alloc,ByteBlock,initialContentSize,alloc);
+        ByteBlock *newBlock = Anew(alloc, ByteBlock, initialContentSize, alloc);
+
         //
         // Copy any optional data into the block:
-        // - If this was not provided, the block's contents will be uninitialized.
+        // - If initialContent was not provided, the block's contents will be uninitialized.
         //
-
         if (initialContent != nullptr)
         {
             js_memcpy_s(newBlock->m_content, newBlock->GetLength(), initialContent, initialContentSize);
@@ -78,18 +78,17 @@ namespace Js
         return ByteBlock::New(alloc, this->m_content, this->m_contentSize);
     }
 
-    ByteBlock *ByteBlock::New(Recycler *alloc,const byte * initialContent,int initialContentSize, ScriptContext * requestContext)
+    ByteBlock *ByteBlock::New(Recycler *alloc, const byte * initialContent, int initialContentSize, ScriptContext * requestContext)
     {
         // initialContent may be 'null' if no data to copy
         AssertMsg(initialContentSize > 0, "Must have valid data size");
 
-        ByteBlock *newBlock = RecyclerNew(alloc,ByteBlock,initialContentSize,alloc);
+        ByteBlock *newBlock = RecyclerNew(alloc, ByteBlock, initialContentSize, alloc);
 
         //
         // Copy any optional data into the block:
-        // - If this was not provided, the block's contents will be uninitialized.
+        // - If initialContent was not provided, the block's contents will be uninitialized.
         //
-
         if (initialContent != nullptr)
         {
             //
@@ -101,7 +100,7 @@ namespace Js
             Var *dst = (Var*)newBlock->m_content;
             size_t count = initialContentSize / sizeof(Var);
 
-            for (size_t i=0; i<count;i++)
+            for (size_t i = 0; i < count; i++)
             {
                 if (TaggedInt::Is(src[i]))
                 {
@@ -109,7 +108,7 @@ namespace Js
                 }
                 else
                 {
-                     //
+                    //
                     // Currently only numbers are put into AuxiliaryContext data
                     //
                     Assert(JavascriptNumber::Is(src[i]));
@@ -124,7 +123,7 @@ namespace Js
 
     //
     // Create a copy of buffer
-    //  Each Var is cloned on the requestContext
+    // Each Var is cloned on the requestContext
     //
     ByteBlock * ByteBlock::Clone(Recycler* alloc, ScriptContext * requestContext)
     {

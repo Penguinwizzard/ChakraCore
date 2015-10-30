@@ -124,18 +124,20 @@ BOOL FuncInfo::IsClassMember() const
     return root->sxFnc.IsClassMember();
 }
 
-BOOL FuncInfo::IsLambda() const {
+BOOL FuncInfo::IsLambda() const
+{
     return root->sxFnc.IsLambda();
 }
 
-BOOL FuncInfo::IsClassConstructor() const {
+BOOL FuncInfo::IsClassConstructor() const
+{
     return root->sxFnc.IsClassConstructor();
 }
 
-BOOL FuncInfo::IsBaseClassConstructor() const {
+BOOL FuncInfo::IsBaseClassConstructor() const
+{
     return root->sxFnc.IsBaseClassConstructor();
 }
-
 
 void FuncInfo::EnsureThisScopeSlot()
 {
@@ -179,8 +181,7 @@ FuncInfo::GetGlobalBlockScope() const
     return scope;
 }
 
-Scope *
-FuncInfo::GetGlobalEvalBlockScope() const
+Scope * FuncInfo::GetGlobalEvalBlockScope() const
 {
     Scope * globalEvalBlockScope = this->GetGlobalBlockScope();
     Assert(globalEvalBlockScope->GetEnclosingScope() == this->GetBodyScope());
@@ -188,8 +189,7 @@ FuncInfo::GetGlobalEvalBlockScope() const
     return globalEvalBlockScope;
 }
 
-uint
-FuncInfo::FindOrAddReferencedPropertyId(Js::PropertyId propertyId)
+uint FuncInfo::FindOrAddReferencedPropertyId(Js::PropertyId propertyId)
 {
     Assert(propertyId != Js::Constants::NoProperty);
     Assert(referencedPropertyIdToMapIndex != nullptr);
@@ -206,8 +206,7 @@ FuncInfo::FindOrAddReferencedPropertyId(Js::PropertyId propertyId)
     return index + TotalNumberOfBuiltInProperties;
 }
 
-uint
-FuncInfo::FindOrAddRootObjectInlineCacheId(Js::PropertyId propertyId, bool isLoadMethod, bool isStore)
+uint FuncInfo::FindOrAddRootObjectInlineCacheId(Js::PropertyId propertyId, bool isLoadMethod, bool isStore)
 {
     Assert(propertyId != Js::Constants::NoProperty);
     Assert(!isLoadMethod || !isStore);
@@ -215,7 +214,7 @@ FuncInfo::FindOrAddRootObjectInlineCacheId(Js::PropertyId propertyId, bool isLoa
     RootObjectInlineCacheIdMap * idMap = isStore ? rootObjectStoreInlineCacheMap : isLoadMethod ? rootObjectLoadMethodInlineCacheMap : rootObjectLoadInlineCacheMap;
     if (!idMap->TryGetValue(propertyId, &cacheId))
     {
-        cacheId = isStore? this->NewRootObjectStoreInlineCache() : isLoadMethod ? this->NewRootObjectLoadMethodInlineCache() : this->NewRootObjectLoadInlineCache();
+        cacheId = isStore ? this->NewRootObjectStoreInlineCache() : isLoadMethod ? this->NewRootObjectLoadMethodInlineCache() : this->NewRootObjectLoadInlineCache();
         idMap->Add(propertyId, cacheId);
     }
     return cacheId;
@@ -223,13 +222,13 @@ FuncInfo::FindOrAddRootObjectInlineCacheId(Js::PropertyId propertyId, bool isLoa
 
 #if DBG_DUMP
 void FuncInfo::Dump()
-    {
-        Output::Print(L"FuncInfo: CallsEval:%s ChildCallsEval:%s HasArguments:%s HasHeapArguments:%s\n",
-            IsTrueOrFalse(this->GetCallsEval()),
-            IsTrueOrFalse(this->GetChildCallsEval()),
-            IsTrueOrFalse(this->GetHasArguments()),
-            IsTrueOrFalse(this->GetHasHeapArguments()));
-    }
+{
+    Output::Print(L"FuncInfo: CallsEval:%s ChildCallsEval:%s HasArguments:%s HasHeapArguments:%s\n",
+        IsTrueOrFalse(this->GetCallsEval()),
+        IsTrueOrFalse(this->GetChildCallsEval()),
+        IsTrueOrFalse(this->GetHasArguments()),
+        IsTrueOrFalse(this->GetHasHeapArguments()));
+}
 #endif
 
 Js::RegSlot FuncInfo::AcquireLoc(ParseNode *pnode)
@@ -333,7 +332,7 @@ void FuncInfo::ReleaseReference(ParseNode *pnode)
                     firstArg = lastArg;
                 }
             }
-            if(lastArg != Js::Constants::NoRegister)
+            if (lastArg != Js::Constants::NoRegister)
             {
                 Assert(firstArg != Js::Constants::NoRegister);
                 Assert(lastArg >= firstArg);
@@ -341,7 +340,7 @@ void FuncInfo::ReleaseReference(ParseNode *pnode)
                 {
                     // Walk down from last to first.
                     this->ReleaseTmpRegister(lastArg);
-                } while(lastArg-- > firstArg); // these are unsigned, so (--lastArg >= firstArg) will cause an infinite loop if firstArg is 0 (although that shouldn't happen)
+                } while (lastArg-- > firstArg); // these are unsigned, so (--lastArg >= firstArg) will cause an infinite loop if firstArg is 0 (although that shouldn't happen)
             }
         }
         // Now release the call target.

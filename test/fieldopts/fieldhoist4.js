@@ -16,7 +16,6 @@ function fieldhoist1()
     }
 }
 
-
 function fieldhoist2()
 {
     var object = {};
@@ -28,14 +27,13 @@ function fieldhoist2()
         Object.defineProperty(object, "x", { get: function() { WScript.Echo("x"); }, configurable: true });  // kill all fields
         sum += object.sum;      // reload, no bailout
     }
-
 }
 
 function fieldhoist3(name)
 {
     var object = { sum: 1};
 
-    Object.defineProperty(object, name, { set: function(val) { WScript.Echo(val); }, configurable: true }); 
+    Object.defineProperty(object, name, { set: function(val) { WScript.Echo(val); }, configurable: true });
     var sum = 0;
     for (var i = 0; i < 3; i++)
     {
@@ -43,7 +41,6 @@ function fieldhoist3(name)
         object[name] = object.sum;       // kill all fields
         sum += object.sum;      // reload, no bailout
     }
-
 }
 
 function main()

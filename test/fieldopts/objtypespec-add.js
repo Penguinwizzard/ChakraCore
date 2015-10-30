@@ -6,8 +6,8 @@
 // Make sure that objtypespec add-property optimization
 // is correct when different properties are added on different paths.
 
-// Each test runs in two flavors: 
-//   a) without field pre-initialization, such that fields added in test code may be marked as fixed and 
+// Each test runs in two flavors:
+//   a) without field pre-initialization, such that fields added in test code may be marked as fixed and
 //      caches remain unpopulated until JIT time.
 //   a) with field pre-initialization, such that fields added in test code have populated caches.
 function TestObjectForFoo1() {
@@ -18,11 +18,11 @@ function makeObjectForFoo1a() {
 }
 
 function foo1(o, JIT) {
-    o.x = 100; //t1->t2
+    o.x = 100; // t1->t2
     if (!JIT) {
-        o.y = 200; //t2->t3
+        o.y = 200; // t2->t3
     }
-    o.z = 300; //t3->t4
+    o.z = 300; // t3->t4
     var sum = 0;
     for (var s in o) {
         WScript.Echo(s + ": " + o[s]);
@@ -42,11 +42,11 @@ function makeObjectForFoo1b() {
 }
 
 function foo1(o, JIT) {
-    o.x = 100; //t1->t2
+    o.x = 100; // t1->t2
     if (!JIT) {
-        o.y = 200; //t2->t3
+        o.y = 200; // t2->t3
     }
-    o.z = 300; //t3->t4
+    o.z = 300; // t3->t4
     var sum = 0;
     for (var s in o) {
         WScript.Echo(s + ": " + o[s]);
@@ -66,11 +66,11 @@ function makeObjectForFoo2a() {
 }
 
 function foo2a(o, JIT) {
-    o.x = 100; //t1->t2
+    o.x = 100; // t1->t2
     if (!JIT) {
-        o.y = 200; //t2->t3
+        o.y = 200; // t2->t3
     }
-    o.z = 300; //t3->t4
+    o.z = 300; // t3->t4
     o.y = 500;
     var sum = 0;
     for (var s in o) {
@@ -92,11 +92,11 @@ function makeObjectForFoo2b() {
 }
 
 function foo2b(o, JIT) {
-    o.x = 100; //t1->t2
+    o.x = 100; // t1->t2
     if (!JIT) {
-        o.y = 200; //t2->t3
+        o.y = 200; // t2->t3
     }
-    o.z = 300; //t3->t4
+    o.z = 300; // t3->t4
     o.y = 500;
     var sum = 0;
     for (var s in o) {
@@ -118,14 +118,14 @@ function makeObjectForFoo3a() {
 
 function foo3(o, Int)
 {
-    o.p1 = 1;         
+    o.p1 = 1;
     o.p2 = (!Int ? (o.p5 = 100):100);
-    if(Int)
+    if (Int)
     {
-        o.p3 = 2;                            
+        o.p3 = 2;
     }
     o.p4 = 3;
-    for(var i in o)
+    for (var i in o)
     {
         WScript.Echo(i + ":" + o[i]);
     }
@@ -146,14 +146,14 @@ function makeObjectForFoo3b() {
 
 function foo3(o, Int)
 {
-    o.p1 = 1;         
+    o.p1 = 1;
     o.p2 = (!Int ? (o.p5 = 100):100);
-    if(Int)
+    if (Int)
     {
-        o.p3 = 2;                            
+        o.p3 = 2;
     }
     o.p4 = 3;
-    for(var i in o)
+    for (var i in o)
     {
         WScript.Echo(i + ":" + o[i]);
     }

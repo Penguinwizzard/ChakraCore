@@ -53,33 +53,33 @@
     MACRO_EXTEND_WMS(opcode, layout, OpHasProfiled|attr) \
     MACRO_EXTEND_WMS(Profiled##opcode, Profiled##layout, OpByteCodeOnly|OpProfiled|attr) \
 
-MACRO(                  EndOfBlock,         Empty,          OpByteCodeOnly)      // End-of-buffer
+MACRO(                  EndOfBlock,         Empty,          OpByteCodeOnly)     // End-of-buffer
 MACRO(                  ExtendedOpcodePrefix,Empty,         OpByteCodeOnly)
 MACRO(                  MediumLayoutPrefix,  Empty,         OpByteCodeOnly)
 MACRO(                  ExtendedMediumLayoutPrefix,Empty,   OpByteCodeOnly)
 MACRO(                  LargeLayoutPrefix,  Empty,          OpByteCodeOnly)
 MACRO(                  ExtendedLargeLayoutPrefix,Empty,    OpByteCodeOnly)
 
-MACRO(                  Nop,                        Empty,          None)      // No operation (Default value = 0)
-MACRO(                  StartCall,          StartCall,      OpSideEffect)      //
-MACRO_BACKEND_ONLY(     LoweredStartCall,   StartCall,      OpSideEffect)      // StartCall instruction after it's been lowered
-MACRO_BACKEND_ONLY(     StartCallAsmJsI,    StartCall,      OpSideEffect)      // StartCall instruction for asm.js internal calls
-MACRO_BACKEND_ONLY(     StartCallAsmJsE,    StartCall,      OpSideEffect)      // StartCall instruction for calls from asm.js to javascript
-MACRO(                  Break,              Empty,          OpSideEffect)      // Break into debugger
-MACRO_BACKEND_ONLY(     InvalidOpCode,      Empty,          None)              // Inserted in a dead call sequence, should not be present after GlobOpt
+MACRO(                  Nop,                        Empty,          None)       // No operation (Default value = 0)
+MACRO(                  StartCall,          StartCall,      OpSideEffect)
+MACRO_BACKEND_ONLY(     LoweredStartCall,   StartCall,      OpSideEffect)       // StartCall instruction after it's been lowered
+MACRO_BACKEND_ONLY(     StartCallAsmJsI,    StartCall,      OpSideEffect)       // StartCall instruction for asm.js internal calls
+MACRO_BACKEND_ONLY(     StartCallAsmJsE,    StartCall,      OpSideEffect)       // StartCall instruction for calls from asm.js to javascript
+MACRO(                  Break,              Empty,          OpSideEffect)       // Break into debugger
+MACRO_BACKEND_ONLY(     InvalidOpCode,      Empty,          None)               // Inserted in a dead call sequence, should not be present after GlobOpt
 
 // Control flow
 #ifdef BYTECODE_BRANCH_ISLAND
 MACRO_EXTEND(           BrLong,             BrLong,         OpByteCodeOnly|OpSideEffect|OpNoFallThrough)
 #endif
-MACRO(                  Br ,                Br,             OpSideEffect|OpNoFallThrough)         // Unconditional branch
-MACRO_BACKEND_ONLY(     MultiBr,            Empty,          OpSideEffect|OpNoFallThrough)         // Unconditional multi-target branch
+MACRO(                  Br ,                Br,             OpSideEffect|OpNoFallThrough)           // Unconditional branch
+MACRO_BACKEND_ONLY(     MultiBr,            Empty,          OpSideEffect|OpNoFallThrough)           // Unconditional multi-target branch
 
 MACRO_BACKEND_ONLY(     BrHasSideEffects,   BrS,            OpSideEffect|OpTempNumberSources)       // Branch if there are any of the side effects in val
 MACRO(                  BrNotHasSideEffects,BrS,            OpSideEffect|OpTempNumberSources)       // Branch if there are none of the side effects in val
 
-MACRO_BACKEND_ONLY(     BrFncEqApply ,      BrReg1,         OpSideEffect|OpTempNumberSources) // Branch if R1 is func whose native code ptr == Apply
-MACRO_WMS(              BrFncNeqApply ,     BrReg1,         OpSideEffect|OpTempNumberSources) // Branch if R1 is func whose native code ptr != Apply
+MACRO_BACKEND_ONLY(     BrFncEqApply ,      BrReg1,         OpSideEffect|OpTempNumberSources)       // Branch if R1 is func whose native code ptr == Apply
+MACRO_WMS(              BrFncNeqApply ,     BrReg1,         OpSideEffect|OpTempNumberSources)       // Branch if R1 is func whose native code ptr != Apply
 
 MACRO_WMS(              BrEq_A,             BrReg2,         OpSideEffect|OpCallsValueOf|OpHasImplicitCall|OpTempNumberSources|OpTempObjectSources)        // Branch if '=='  (general equals)
 MACRO_WMS(              BrNeq_A,            BrReg2,         OpSideEffect|OpCallsValueOf|OpHasImplicitCall|OpTempNumberSources|OpTempObjectSources)        // Branch if '!='  (not general equals)
@@ -97,7 +97,7 @@ MACRO_WMS(              BrSrEq_A,           BrReg2,         OpSideEffect|OpHasIm
 MACRO_WMS(              BrSrNeq_A,          BrReg2,         OpSideEffect|OpHasImplicitCall|OpTempNumberSources|OpTempObjectSources)        // Branch if '!=='  (not strict equals)   (NOTE: May have DOM implicit calls)
 MACRO(                  BrOnHasProperty,    BrProperty,     OpSideEffect|OpHasImplicitCall|OpTempNumberSources|OpTempObjectSources)        // Branch if object has the given property (NOTE: May have DOM implicit calls)
 MACRO(                  BrOnNoProperty,     BrProperty,     OpSideEffect|OpHasImplicitCall|OpTempNumberSources|OpTempObjectSources)        // Branch if object does not have the given property (NOTE: May have DOM implicit calls)
-MACRO_WMS(              BrOnObject_A,       BrReg1,         OpSideEffect|OpTempNumberSources|OpTempObjectSources)                                       // Branch if typeId is not primitive type (i.e. > TypeIds_LastJavascriptPrimitiveType)
+MACRO_WMS(              BrOnObject_A,       BrReg1,         OpSideEffect|OpTempNumberSources|OpTempObjectSources)                          // Branch if typeId is not primitive type (i.e. > TypeIds_LastJavascriptPrimitiveType)
 MACRO_WMS(              BrNotNull_A,        BrReg1,         OpSideEffect|OpTempNumberSources|OpTempObjectSources)                          // Branch if not NULL
 MACRO_EXTEND_WMS(       BrNotUndecl_A,      BrReg1,         OpSideEffect|OpTempNumberSources|OpTempObjectSources)                          // Branch if source reg is NEQ to Undecl
 MACRO_BACKEND_ONLY(     BrNotEq_A,          Empty,          OpSideEffect|OpCallsValueOf|OpHasImplicitCall|OpTempNumberSources|OpTempObjectSources) // Branch if !'>='
@@ -132,11 +132,11 @@ MACRO_BACKEND_ONLY(     BrLe_I4,            Empty,          OpSideEffect|OpTempN
 MACRO_BACKEND_ONLY(     BrUnLe_I4,          Empty,          OpSideEffect|OpTempNumberSources)        // uint32 Branch if '<='
 MACRO_BACKEND_ONLY(     BrNeq_I4,           Empty,          OpSideEffect|OpTempNumberSources)        // int32 Branch if '!='  (not general equals)
 
-//For Switch Case optimization
-MACRO(                  EndSwitch,          Br,             OpSideEffect)                   // Unconditional branch - This is equivalent to Br OpCode
-MACRO_WMS(              Case,               BrReg2,         OpSideEffect|OpCallsValueOf|OpHasImplicitCall|OpTempNumberSources|OpTempObjectSources) //Equivalent to Branch if '==='  (strict equals)       (NOTE: May have DOM implicit calls)
+// For Switch Case optimization
+MACRO(                  EndSwitch,          Br,             OpSideEffect)                       // Unconditional branch - This is equivalent to Br OpCode
+MACRO_WMS(              Case,               BrReg2,         OpSideEffect|OpCallsValueOf|OpHasImplicitCall|OpTempNumberSources|OpTempObjectSources) // Equivalent to Branch if '===' (strict equals) (NOTE: May have DOM implicit calls)
 MACRO_WMS_PROFILED(     BeginSwitch,        Reg2,           OpTempNumberTransfer|OpTempObjectTransfer|OpNonIntTransfer)          // Switch statement - identifies the start of a switch statement
-                                                                                               //performs the function of Ld_A and does profiling
+                                                                                                                                 // performs the function of Ld_A and does profiling
 
 // All the Call* function need to be together so that ProfileCall* can be calculated
 MACRO_BACKEND_ONLY(     Call,               Reg1,           OpSideEffect|OpUseAllFields|OpCallInstr)        // R0 <- Call (direct) registered function
@@ -149,7 +149,7 @@ MACRO_WMS(              CallIFlags,         CallIFlags,     OpSideEffect|OpUseAl
 MACRO_WMS(              CallIExtended,      CallIExtended,  OpSideEffect|OpUseAllFields|OpCallInstr)
 MACRO_WMS(              CallIExtendedFlags, CallIExtendedFlags, OpSideEffect|OpUseAllFields|OpCallInstr)
 
-MACRO_BACKEND_ONLY(     CallIPut,           CallIFlags,     OpSideEffect|OpUseAllFields|OpCallInstr)          // Call (indirect) Function(ArgCount) to put value
+MACRO_BACKEND_ONLY(     CallIPut,           CallIFlags,     OpSideEffect|OpUseAllFields|OpCallInstr)        // Call (indirect) Function(ArgCount) to put value
 MACRO_BACKEND_ONLY(     CallINew,           CallIFlags,     OpSideEffect|OpUseAllFields|OpCallInstr)
 MACRO_BACKEND_ONLY(     CallINewTargetNew,  CallIFlags,     OpSideEffect|OpUseAllFields|OpCallInstr)
 MACRO_BACKEND_ONLY(     CallIExtendedNew,   CallIExtendedFlags, OpSideEffect|OpUseAllFields|OpCallInstr)
@@ -157,7 +157,7 @@ MACRO_BACKEND_ONLY(     CallIEval,          CallIExtendedFlags, OpSideEffect|OpU
 MACRO_BACKEND_ONLY(     CallIExtendedNewTargetNew, CallIExtendedFlags, OpSideEffect|OpUseAllFields|OpCallInstr)
 MACRO_BACKEND_ONLY(     CallIDynamic,       CallI,          OpSideEffect|OpUseAllFields|OpCallInstr)
 MACRO_BACKEND_ONLY(     CallIDynamicSpread, CallI,          OpSideEffect|OpUseAllFields|OpCallInstr)
-MACRO_BACKEND_ONLY(     CallDirect,         Empty,          OpTempNumberSources|OpCallInstr|OpSideEffect|OpHasImplicitCall|OpTempObjectProducing)     //For direct calls to helper (used in inlining built-ins)
+MACRO_BACKEND_ONLY(     CallDirect,         Empty,          OpTempNumberSources|OpCallInstr|OpSideEffect|OpHasImplicitCall|OpTempObjectProducing)     // For direct calls to helper (used in inlining built-ins)
 
 MACRO_BACKEND_ONLY(     InlineThrow,        Reg1,           OpSideEffect|OpPostOpDbgBailOut|OpDeadFallThrough)  // Throw exception
 MACRO_BACKEND_ONLY(     EHThrow,            Reg1,           OpSideEffect|OpPostOpDbgBailOut|OpDeadFallThrough)  // Throw exception
@@ -175,8 +175,8 @@ MACRO_WMS(              Neg_A,              Reg2,           OpTempNumberProducin
 MACRO_WMS(              Not_A,              Reg2,           OpTempNumberProducing|OpCallsValueOf|OpDoNotTransfer|OpIsInt32|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpPostOpDbgBailOut|OpProducesNumber) // Boolean '!' (not)
 
 // Integer Unary operations
-MACRO_BACKEND_ONLY(     Neg_I4,             Empty,          OpDoNotTransfer|OpTempNumberSources|OpCanCSE)                               // int32 Arithmetic '-' (negate)
-MACRO_BACKEND_ONLY(     Not_I4,             Empty,          OpDoNotTransfer|OpTempNumberSources|OpCanCSE)                                   // int32 '!' (not)
+MACRO_BACKEND_ONLY(     Neg_I4,             Empty,          OpDoNotTransfer|OpTempNumberSources|OpCanCSE)       // int32 Arithmetic '-' (negate)
+MACRO_BACKEND_ONLY(     Not_I4,             Empty,          OpDoNotTransfer|OpTempNumberSources|OpCanCSE)       // int32 '!' (not)
 
 // NOTE:
 // Typeof
@@ -226,17 +226,17 @@ MACRO_BACKEND_ONLY(     Add_Ptr,            Empty,          OpTempNumberSources|
 
 // Comparison
 MACRO_WMS(              CmEq_A,             Reg3,           OpCallsValueOf|OpTempNumberSources|OpTempObjectSources|OpCanCSE)                          // Compare if '=='  (general equals)
-MACRO_WMS(              CmGe_A,             Reg3,           OpCallsValueOf|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpPostOpDbgBailOut)                          // Compare if '>='
-MACRO_BACKEND_ONLY(     CmUnGe_A,           Reg3,           OpCallsValueOf|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpPostOpDbgBailOut)                          // Compare if '>='
-MACRO_WMS(              CmGt_A,             Reg3,           OpCallsValueOf|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpPostOpDbgBailOut)                          // Compare if '>'
-MACRO_BACKEND_ONLY(     CmUnGt_A,           Reg3,           OpCallsValueOf|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpPostOpDbgBailOut)                          // Compare if '>'
-MACRO_WMS(              CmLt_A,             Reg3,           OpCallsValueOf|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpPostOpDbgBailOut)                          // Compare if '<'
-MACRO_BACKEND_ONLY(     CmUnLt_A,           Reg3,           OpCallsValueOf|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpPostOpDbgBailOut)                          // Compare if '<'
-MACRO_WMS(              CmLe_A,             Reg3,           OpCallsValueOf|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpPostOpDbgBailOut)                          // Compare if '<='
-MACRO_BACKEND_ONLY(     CmUnLe_A,           Reg3,           OpCallsValueOf|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpPostOpDbgBailOut)                          // Compare if '<='
+MACRO_WMS(              CmGe_A,             Reg3,           OpCallsValueOf|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpPostOpDbgBailOut)       // Compare if '>='
+MACRO_BACKEND_ONLY(     CmUnGe_A,           Reg3,           OpCallsValueOf|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpPostOpDbgBailOut)       // Compare if '>='
+MACRO_WMS(              CmGt_A,             Reg3,           OpCallsValueOf|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpPostOpDbgBailOut)       // Compare if '>'
+MACRO_BACKEND_ONLY(     CmUnGt_A,           Reg3,           OpCallsValueOf|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpPostOpDbgBailOut)       // Compare if '>'
+MACRO_WMS(              CmLt_A,             Reg3,           OpCallsValueOf|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpPostOpDbgBailOut)       // Compare if '<'
+MACRO_BACKEND_ONLY(     CmUnLt_A,           Reg3,           OpCallsValueOf|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpPostOpDbgBailOut)       // Compare if '<'
+MACRO_WMS(              CmLe_A,             Reg3,           OpCallsValueOf|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpPostOpDbgBailOut)       // Compare if '<='
+MACRO_BACKEND_ONLY(     CmUnLe_A,           Reg3,           OpCallsValueOf|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpPostOpDbgBailOut)       // Compare if '<='
 MACRO_WMS(              CmNeq_A,            Reg3,           OpCallsValueOf|OpTempNumberSources|OpTempObjectSources|OpCanCSE)                          // Compare if '!='  (not general equals)
-MACRO_WMS(              CmSrEq_A,           Reg3,           OpCallsValueOf|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpTempObjectSources)                          // Compare if '==='  (strict equals)     (NOTE: May have DOM implicit calls)
-MACRO_WMS(              CmSrNeq_A,          Reg3,           OpCallsValueOf|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpTempObjectSources)                          // Compare if '!=='  (not strict equals) (NOTE: May have DOM implicit calls)
+MACRO_WMS(              CmSrEq_A,           Reg3,           OpCallsValueOf|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpTempObjectSources)      // Compare if '==='  (strict equals)     (NOTE: May have DOM implicit calls)
+MACRO_WMS(              CmSrNeq_A,          Reg3,           OpCallsValueOf|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpTempObjectSources)      // Compare if '!=='  (not strict equals) (NOTE: May have DOM implicit calls)
 
 MACRO_BACKEND_ONLY(     CmEq_I4,            Reg3,           OpTempNumberSources|OpCanCSE)                                   // Unsigned I4 Compare if '=='
 MACRO_BACKEND_ONLY(     CmNeq_I4,           Reg3,           OpTempNumberSources|OpCanCSE)                                   // Unsigned I4 Compare if '!='
@@ -258,9 +258,9 @@ MACRO_EXTEND_WMS(       Conv_Str,           Reg2,           OpCallsValueOf|OpHas
 // Conv_Obj:
 //      OpSideEffect - May throw exception on null/undefined.
 //      Do not call valueOf/toString no implicit call
-MACRO_WMS(              Conv_Obj,           Reg2,           OpSideEffect|OpPostOpDbgBailOut|OpTempObjectTransfer)  // Convert to Object
+MACRO_WMS(              Conv_Obj,           Reg2,           OpSideEffect|OpPostOpDbgBailOut|OpTempObjectTransfer)   // Convert to Object
 MACRO_EXTEND_WMS(       NewWithObject,      Reg2,           OpSideEffect | OpPostOpDbgBailOut)  // Wrap in a with Object
-MACRO_BACKEND_ONLY(     ToVar,              Reg2,           OpTempNumberProducing|OpTempNumberSources|OpCanCSE)  // Load from int32/float64 to Var(reg)
+MACRO_BACKEND_ONLY(     ToVar,              Reg2,           OpTempNumberProducing|OpTempNumberSources|OpCanCSE)     // Load from int32/float64 to Var(reg)
 // Load from Var(reg) to int32/float64, NOTE: always bail if it is not primitive. so no implicit call, but still mark with CallsValueOf so it won't get automatically dead stored
 // TODO: Consider changing the code so we don't have mark this as CallsValueOf
 MACRO_BACKEND_ONLY(     FromVar,            Reg2,           OpTempNumberSources|OpTempObjectSources|OpCanCSE)
@@ -272,8 +272,8 @@ MACRO_BACKEND_ONLY(     Conv_Bool,          Reg2,           OpTempNumberSources|
 MACRO_EXTEND_WMS(       Ld_UnwrapWithObj,   Reg2,           OpSideEffect) // Copy Var register with unwrapped object
 MACRO_EXTEND_WMS(       SetComputedNameVar, Reg2,           OpSideEffect)
 MACRO_WMS(              Ld_A,               Reg2,           OpTempNumberTransfer|OpTempObjectTransfer|OpNonIntTransfer|OpCanCSE) // Copy Var register
-MACRO_WMS(              LdC_A_Null,         Reg1,           OpByteCodeOnly|OpCanCSE)                 // Load from 'null' as Var
-MACRO_BACKEND_ONLY(     Ld_I4,              Empty,          OpCanCSE)                 // Copy I4 register
+MACRO_WMS(              LdC_A_Null,         Reg1,           OpByteCodeOnly|OpCanCSE)   // Load from 'null' as Var
+MACRO_BACKEND_ONLY(     Ld_I4,              Empty,          OpCanCSE)                  // Copy I4 register
 MACRO_BACKEND_ONLY(     LdC_A_I4,           Empty,          OpCanCSE)                  // Load from 'int32' as Var(C)
 MACRO_BACKEND_ONLY(     LdC_A_R8,           Empty,          OpCanCSE)                  // Load from 'double' constant
 MACRO_BACKEND_ONLY(     LdC_F8_R8,          Empty,          OpCanCSE)                  // Load 'double' constant
@@ -294,7 +294,7 @@ MACRO_WMS(              InitUndeclConstFld,         ElementCP,      OpByteCodeOn
 MACRO_WMS(              InitUndeclRootConstFld,     ElementRootU,   OpSideEffect|OpHasImplicitCall)
 MACRO_EXTEND_WMS(       InitUndeclConsoleLetFld,    ElementU,       OpSideEffect|OpHasImplicitCall)
 MACRO_EXTEND_WMS(       InitUndeclConsoleConstFld,  ElementU,       OpSideEffect|OpHasImplicitCall)
-MACRO_WMS(              InitConst,                  Reg2,           OpTempNumberTransfer|OpTempObjectTransfer|OpNonIntTransfer|OpCanCSE)   // Create and initialize 'const' as property of global object
+MACRO_WMS(              InitConst,                  Reg2,           OpTempNumberTransfer|OpTempObjectTransfer|OpNonIntTransfer|OpCanCSE)    // Create and initialize 'const' as property of global object
 MACRO_WMS(              InitConstSlot,              ElementSlot,    None)
 MACRO_WMS(              InitLetFld,                 ElementCP,      OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut)   // Declare a property with an initial value
 MACRO_WMS(              InitRootLetFld,             ElementRootCP,  OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut)   // Declare a property with an initial value
@@ -306,18 +306,18 @@ MACRO_EXTEND_WMS(       InitClassMemberSet,         ElementC,       OpSideEffect
 MACRO_EXTEND_WMS(       InitClassMemberGet,         ElementC,       OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                  // Class member in get syntax
 MACRO_EXTEND_WMS(       InitClassMemberSetComputedName,ElementI,    OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                  // Class member in set syntax with computed property name
 MACRO_EXTEND_WMS(       InitClassMemberGetComputedName,ElementI,    OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                  // Class member in get syntax with computed property name
-MACRO_EXTEND_WMS(       BrOnClassConstructor,       BrReg1,         None)   // Branch if argument is a class constructor
+MACRO_EXTEND_WMS(       BrOnClassConstructor,       BrReg1,         None)               // Branch if argument is a class constructor
 
-MACRO_BACKEND_ONLY(     ArgIn_A,                    Empty,          OpSideEffect)        // Copy from "in slot" to "local slot", unchecked
-MACRO_WMS(              ArgIn0,                     Reg1,           OpByteCodeOnly)       // Copy from "in slot" to "local slot", unchecked
+MACRO_BACKEND_ONLY(     ArgIn_A,                    Empty,          OpSideEffect)       // Copy from "in slot" to "local slot", unchecked
+MACRO_WMS(              ArgIn0,                     Reg1,           OpByteCodeOnly)     // Copy from "in slot" to "local slot", unchecked
 MACRO_BACKEND_ONLY(     ArgIn_Rest,                 Empty,          OpSideEffect)
-MACRO_WMS_PROFILED(     ArgOut_A,                   Arg,            OpSideEffect) // Copy from "local slot" to "out slot"
-MACRO_BACKEND_ONLY(     ArgOut_A_Inline,            Empty,          OpSideEffect|OpTempNumberSources|OpTempObjectSources) // Copy from "local slot" to "out slot"
+MACRO_WMS_PROFILED(     ArgOut_A,                   Arg,            OpSideEffect)       // Copy from "local slot" to "out slot"
+MACRO_BACKEND_ONLY(     ArgOut_A_Inline,            Empty,          OpSideEffect|OpTempNumberSources|OpTempObjectSources)   // Copy from "local slot" to "out slot"
 MACRO_BACKEND_ONLY(     ArgOut_A_InlineBuiltIn,     Empty,          OpSideEffect|OpTempNumberTransfer|OpTempObjectTransfer) // Used as virtual ArgOut for inline built-ins (Math.sin, etc). Removed in lowerer.
-MACRO_BACKEND_ONLY(     ArgOut_A_InlineSpecialized, Empty,          OpSideEffect) // Used as virtual ArgOut to keep function object around for inlining built-ins by direct call to helpers.
+MACRO_BACKEND_ONLY(     ArgOut_A_InlineSpecialized, Empty,          OpSideEffect)       // Used as virtual ArgOut to keep function object around for inlining built-ins by direct call to helpers.
 MACRO_WMS(              ArgOut_ANonVar,             Arg,            OpByteCodeOnly|OpSideEffect) // Copy from "local slot" to "out slot"
-MACRO_BACKEND_ONLY(     ArgOut_A_Dynamic,           Empty,          OpSideEffect) // Copy from "local slot" to "out slot"
-MACRO_BACKEND_ONLY(     ArgOut_A_FromStackArgs,     Empty,          OpSideEffect) // Copy from "local slot" to "out slot"
+MACRO_BACKEND_ONLY(     ArgOut_A_Dynamic,           Empty,          OpSideEffect)       // Copy from "local slot" to "out slot"
+MACRO_BACKEND_ONLY(     ArgOut_A_FromStackArgs,     Empty,          OpSideEffect)       // Copy from "local slot" to "out slot"
 MACRO_BACKEND_ONLY(     ArgOut_A_FixupForStackArgs, Empty,          OpSideEffect)
 MACRO_BACKEND_ONLY(     ArgOut_A_SpreadArg,         Empty,          OpSideEffect)
 MACRO_BACKEND_ONLY(     ArgOutAsmJsI_A,             Empty,          OpSideEffect)
@@ -325,16 +325,18 @@ MACRO_BACKEND_ONLY(     ArgOutAsmJsE_A,             Empty,          OpSideEffect
 MACRO_WMS(              Delete_A,                   Reg2,           OpSideEffect|OpPostOpDbgBailOut)        // Delete Var
 
 // Object operations
-MACRO_WMS_PROFILED_OP(  LdFld,                ElementCP,      OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut|OpCanLoadFixedFields)   // Load from ScriptObject instance's direct field
-MACRO_EXTEND_WMS_AND_PROFILED_OP(LdSuperFld,  ElementC2,      OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut|OpCanLoadFixedFields)   // Load from ScriptObject super instance's direct field
+MACRO_WMS_PROFILED_OP(  LdFld,                ElementCP,      OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut|OpCanLoadFixedFields)    // Load from ScriptObject instance's direct field
+MACRO_EXTEND_WMS_AND_PROFILED_OP(LdSuperFld,  ElementC2,      OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut|OpCanLoadFixedFields)    // Load from ScriptObject super instance's direct field
 MACRO_WMS_PROFILED_OP(  LdFldForTypeOf,       ElementCP,      OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut|OpCanLoadFixedFields)
 MACRO_EXTEND_WMS_AND_PROFILED_OP(LdRootFldForTypeOf, ElementRootCP, OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut|OpCanLoadFixedFields)
 
 MACRO_WMS_PROFILED_OP(  LdFldForCallApplyTarget,  ElementCP,      OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut)
-MACRO_WMS_PROFILED_OP(LdRootFld,              ElementRootCP,  OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut|OpCanLoadFixedFields)   // Load from ScriptObject instance's direct field (access to let/const on root object)
-MACRO_WMS_PROFILED_OP(LdMethodFld,            ElementCP,      OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut|OpCanLoadFixedFields)   // Load call target from ScriptObject instance's direct field
-MACRO_BACKEND_ONLY(     LdMethodFldPolyInlineMiss, ElementCP, OpSideEffect|OpHasImplicitCall|OpDoNotTransfer|OpPostOpDbgBailOut)                  // Load call target from ScriptObject instance's direct field, when the call target is neither of the ones we inlined using fixed methods, at a polymorphic call site,
-                                                                                                                                  // but don't allow it to participate in any obj type spec optimizations, as it will always result in a helper call.
+MACRO_WMS_PROFILED_OP(LdRootFld,              ElementRootCP,  OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut|OpCanLoadFixedFields)    // Load from ScriptObject instance's direct field (access to let/const on root object)
+MACRO_WMS_PROFILED_OP(LdMethodFld,            ElementCP,      OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut|OpCanLoadFixedFields)    // Load call target from ScriptObject instance's direct field
+MACRO_BACKEND_ONLY(     LdMethodFldPolyInlineMiss, ElementCP, OpSideEffect|OpHasImplicitCall|OpDoNotTransfer|OpPostOpDbgBailOut)                        // Load call target from ScriptObject instance's direct field, when the call target is neither of
+                                                                                                                                                        // the ones we inlined using fixed methods, at a polymorphic call site,
+                                                                                                                                                        // but don't allow it to participate in any obj type spec optimizations,
+                                                                                                                                                        // as it will always result in a helper call.
 MACRO_WMS_PROFILED_OP(  LdRootMethodFld,      ElementRootCP,  OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut)   // Load call target from ScriptObject instance's direct field (access to let/const on root object)
 MACRO_WMS_PROFILED_OP(  StFld,                ElementCP,      OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut)   // Store into ScriptObject instance's direct field
 MACRO_EXTEND_WMS_AND_PROFILED_OP(StSuperFld,  ElementC2,      OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut)   // Store into ScriptObject super instance's direct field
@@ -373,26 +375,26 @@ MACRO_BACKEND_ONLY(     StAsmJsSlot,                ElementSlot,    None)
 #ifndef FLOAT_VAR
 MACRO_BACKEND_ONLY(     StSlotBoxTemp,              Empty,          OpSideEffect|OpTempNumberSources)
 #endif
-MACRO_WMS_PROFILED(     LdElemI_A,              ElementI,       OpHasImplicitCall|OpCanCSE|OpPostOpDbgBailOut)                   // Load from instance's indirect element / field, checked
-MACRO_WMS(              LdMethodElem,           ElementI,       OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                   // Load call target from instance's indirect element / field, checked
-MACRO_WMS_PROFILED(     StElemI_A,              ElementI,       OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)  // Store into instance's indirect element / field, checked
-MACRO_WMS_PROFILED(     StElemI_A_Strict,       ElementI,       OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)   // Store into instance's indirect element / field, checked
-MACRO_BACKEND_ONLY(     StInt8ArrViewElem,      ElementI,       OpSideEffect        )   // Store Int8 into typed array view
-MACRO_BACKEND_ONLY(     StUInt8ArrViewElem,     ElementI,       OpSideEffect        )      // Store UInt8 into typed array view
-MACRO_BACKEND_ONLY(     StInt16ArrViewElem,     ElementI,       OpSideEffect        )      // Store Int16 into typed array view
-MACRO_BACKEND_ONLY(     StUInt16ArrViewElem,    ElementI,       OpSideEffect        )      // Store UInt16 into typed array view
-MACRO_BACKEND_ONLY(     StInt32ArrViewElem,     ElementI,       OpSideEffect        )      // Store Int32 into typed array view
-MACRO_BACKEND_ONLY(     StUInt32ArrViewElem,    ElementI,       OpSideEffect        )      // Store UInt32 into typed array view
-MACRO_BACKEND_ONLY(     StFloat32ArrViewElem,   ElementI,       OpSideEffect        )      // Store Float32 into typed array view
-MACRO_BACKEND_ONLY(     StFloat64ArrViewElem,   ElementI,       OpSideEffect        )     // Store Float64 into typed array view
-MACRO_BACKEND_ONLY(     LdFloat32ArrViewElem,   ElementI,       OpCanCSE            )        // load Float32 typed array view
-MACRO_BACKEND_ONLY(     LdFloat64ArrViewElem,   ElementI,       OpCanCSE            )        // load Float64 typed array view
-MACRO_BACKEND_ONLY(     LdInt8ArrViewElem,      ElementI,       OpCanCSE            )           // load Int8 from typed array view
-MACRO_BACKEND_ONLY(     LdInt16ArrViewElem,     ElementI,       OpCanCSE            )          // load Int16 from typed array view
-MACRO_BACKEND_ONLY(     LdUInt8ArrViewElem,     ElementI,       OpCanCSE            )          // load UInt8 from typed array view
-MACRO_BACKEND_ONLY(     LdUInt16ArrViewElem,    ElementI,       OpCanCSE            )         // load UInt16 from typed array view
-MACRO_BACKEND_ONLY(     LdInt32ArrViewElem,     ElementI,       OpCanCSE            )          // load Int32 from typed array view
-MACRO_BACKEND_ONLY(     LdUInt32ArrViewElem,    ElementI,       OpCanCSE            )         // load UInt32 from typed array view
+MACRO_WMS_PROFILED(     LdElemI_A,              ElementI,       OpHasImplicitCall|OpCanCSE|OpPostOpDbgBailOut)          // Load from instance's indirect element / field, checked
+MACRO_WMS(              LdMethodElem,           ElementI,       OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)      // Load call target from instance's indirect element / field, checked
+MACRO_WMS_PROFILED(     StElemI_A,              ElementI,       OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)      // Store into instance's indirect element / field, checked
+MACRO_WMS_PROFILED(     StElemI_A_Strict,       ElementI,       OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)      // Store into instance's indirect element / field, checked
+MACRO_BACKEND_ONLY(     StInt8ArrViewElem,      ElementI,       OpSideEffect        )       // Store Int8 into typed array view
+MACRO_BACKEND_ONLY(     StUInt8ArrViewElem,     ElementI,       OpSideEffect        )       // Store UInt8 into typed array view
+MACRO_BACKEND_ONLY(     StInt16ArrViewElem,     ElementI,       OpSideEffect        )       // Store Int16 into typed array view
+MACRO_BACKEND_ONLY(     StUInt16ArrViewElem,    ElementI,       OpSideEffect        )       // Store UInt16 into typed array view
+MACRO_BACKEND_ONLY(     StInt32ArrViewElem,     ElementI,       OpSideEffect        )       // Store Int32 into typed array view
+MACRO_BACKEND_ONLY(     StUInt32ArrViewElem,    ElementI,       OpSideEffect        )       // Store UInt32 into typed array view
+MACRO_BACKEND_ONLY(     StFloat32ArrViewElem,   ElementI,       OpSideEffect        )       // Store Float32 into typed array view
+MACRO_BACKEND_ONLY(     StFloat64ArrViewElem,   ElementI,       OpSideEffect        )       // Store Float64 into typed array view
+MACRO_BACKEND_ONLY(     LdFloat32ArrViewElem,   ElementI,       OpCanCSE            )       // load Float32 typed array view
+MACRO_BACKEND_ONLY(     LdFloat64ArrViewElem,   ElementI,       OpCanCSE            )       // load Float64 typed array view
+MACRO_BACKEND_ONLY(     LdInt8ArrViewElem,      ElementI,       OpCanCSE            )       // load Int8 from typed array view
+MACRO_BACKEND_ONLY(     LdInt16ArrViewElem,     ElementI,       OpCanCSE            )       // load Int16 from typed array view
+MACRO_BACKEND_ONLY(     LdUInt8ArrViewElem,     ElementI,       OpCanCSE            )       // load UInt8 from typed array view
+MACRO_BACKEND_ONLY(     LdUInt16ArrViewElem,    ElementI,       OpCanCSE            )       // load UInt16 from typed array view
+MACRO_BACKEND_ONLY(     LdInt32ArrViewElem,     ElementI,       OpCanCSE            )       // load Int32 from typed array view
+MACRO_BACKEND_ONLY(     LdUInt32ArrViewElem,    ElementI,       OpCanCSE            )       // load UInt32 from typed array view
 MACRO_BACKEND_ONLY(     Memset,                 ElementI,       OpSideEffect)
 MACRO_BACKEND_ONLY(     Memcopy,                ElementI,       OpSideEffect)
 MACRO_BACKEND_ONLY(     ArrayDetachedCheck,     Reg1,           None)   // ensures that an ArrayBuffer has not been detached
@@ -404,8 +406,8 @@ MACRO_BACKEND_ONLY(     UnsignedBoundCheck,     Empty,          OpTempNumberSour
 MACRO_WMS(              StArrInlineItem_CI4,    ElementUnsigned1,      OpSideEffect)
 MACRO_WMS(              StArrSegItem_CI4,       ElementUnsigned1,      OpSideEffect)
 MACRO(                  StArrSegItem_A,         Auxiliary,      OpSideEffect)
-MACRO_WMS(              DeleteElemI_A,          ElementI,       OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                   // Remove from instance's indirect element / field, checked
-MACRO_WMS(              DeleteElemIStrict_A,    ElementI,       OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                   // Remove from instance's indirect element / field, checked
+MACRO_WMS(              DeleteElemI_A,          ElementI,       OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                  // Remove from instance's indirect element / field, checked
+MACRO_WMS(              DeleteElemIStrict_A,    ElementI,       OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                  // Remove from instance's indirect element / field, checked
 MACRO_EXTEND_WMS(       InitSetFld,             ElementC,       OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut)   // Set in Object Literal Syntax {set prop(args){}};
 MACRO_EXTEND_WMS(       InitGetFld,             ElementC,       OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut)   // Get in Object Literal Syntax {get prop(){}};
 MACRO_EXTEND_WMS(       InitSetElemI,           ElementI,       OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                  // Set in Object Literal Syntax {set [expr](args){}};
@@ -423,85 +425,85 @@ MACRO_WMS(              LdFalse,            Reg1,           OpByteCodeOnly|OpCan
 MACRO_WMS(              LdEnv,              Reg1,           OpCanCSE)       // Load the optional FixedSizeArray environment for closures
 MACRO_BACKEND_ONLY(     LdAsmJsEnv,         Reg1,           OpCanCSE)       // Load the asm.js memory
 
-MACRO_WMS(              LdArgCnt,           Reg1,           None)       // Load the argument count from the current function
+MACRO_WMS(              LdArgCnt,           Reg1,           None)           // Load the argument count from the current function
 
-MACRO_BACKEND_ONLY(     InitLoopBodyCount,  Reg1,           None)      //fake instruction for loop body counter init
-MACRO_BACKEND_ONLY(     IncrLoopBodyCount,  Reg2,           None)      //fake instruction for loop body counter increment
-MACRO_BACKEND_ONLY(     StLoopBodyCount,    Reg1,           OpSideEffect) //fake instruction for loop body counter store to loopheader profiledLoopCounter
+MACRO_BACKEND_ONLY(     InitLoopBodyCount,  Reg1,           None)           // fake instruction for loop body counter init
+MACRO_BACKEND_ONLY(     IncrLoopBodyCount,  Reg2,           None)           // fake instruction for loop body counter increment
+MACRO_BACKEND_ONLY(     StLoopBodyCount,    Reg1,           OpSideEffect)   // fake instruction for loop body counter store to loopheader profiledLoopCounter
 
-MACRO_WMS(              LdHeapArguments,    Reg3,           OpSideEffect)       // Load the heap-based "arguments" object
-MACRO_WMS(              LdLetHeapArguments, Reg3,           OpSideEffect)       // Load the heap-based "arguments" object (formals are let-like instead of var-like)
-MACRO_BACKEND_ONLY(     LdArgumentsFromStack,Reg1,          None)      // Load the heap-based "arguments" object even if it is null (Loads from meta arguments location for inlinee as well).
-MACRO_WMS(              LdHeapArgsCached,   Reg2,           OpSideEffect)    // Load the heap-based "arguments" object in a cached scope
-MACRO_EXTEND_WMS(       LdLetHeapArgsCached,Reg2,           OpSideEffect)    // Load the heap-based "arguments" object in a cached scope (formals are let-like instead of var-like)
-MACRO_EXTEND_WMS(       LdStackArgPtr,      Reg1,           OpSideEffect)       // Load the address of the base of the input parameter area
+MACRO_WMS(              LdHeapArguments,    Reg3,           OpSideEffect)   // Load the heap-based "arguments" object
+MACRO_WMS(              LdLetHeapArguments, Reg3,           OpSideEffect)   // Load the heap-based "arguments" object (formals are let-like instead of var-like)
+MACRO_BACKEND_ONLY(     LdArgumentsFromStack,Reg1,          None)           // Load the heap-based "arguments" object even if it is null (Loads from meta arguments location for inlinee as well).
+MACRO_WMS(              LdHeapArgsCached,   Reg2,           OpSideEffect)   // Load the heap-based "arguments" object in a cached scope
+MACRO_EXTEND_WMS(       LdLetHeapArgsCached,Reg2,           OpSideEffect)   // Load the heap-based "arguments" object in a cached scope (formals are let-like instead of var-like)
+MACRO_EXTEND_WMS(       LdStackArgPtr,      Reg1,           OpSideEffect)   // Load the address of the base of the input parameter area
 MACRO_WMS_PROFILED_OP(  LdThis,       Reg2Int1,       OpHasImplicitCall|OpTempNumberTransfer)        // Load this object     (NOTE: TryLoadRoot exit scripts on host dispatch, but otherwise, no side effect)
 MACRO_WMS_PROFILED_OP(  StrictLdThis, Reg2,           OpHasImplicitCall|OpTempNumberTransfer)        // Load this object in strict mode
 MACRO_BACKEND_ONLY(     CheckThis,          Reg1,           OpCanCSE|OpBailOutRec)
 MACRO_BACKEND_ONLY(     StrictCheckThis,    Reg1,           OpCanCSE|OpBailOutRec)
 MACRO_WMS(              LdHandlerScope,     Reg2,           OpHasImplicitCall)     // Load a scope stack for an event handler (both "this" and parent scopes)
-MACRO_WMS(              LdFrameDisplay,     Reg3,           None)        // Set up a frame display for this function and its parent frames
-MACRO_WMS(              LdFrameDisplayNoParent,Reg2,        None)        // Set up a frame display for this function and its parent frames
-MACRO_WMS(              NewStackFrameDisplay,Reg3,          None)        // Set up a frame display allocated on the stack
-MACRO_WMS(              NewStackFrameDisplayNoParent,Reg2,  None)        // Set up a frame display allocated on the stack
-MACRO_WMS(              NewStrictStackFrameDisplay,Reg3,    None)        // Set up a frame display allocated on the stack in strict mode
-MACRO_WMS(              NewStrictStackFrameDisplayNoParent,Reg2,None)        // Set up a frame display allocated on the stack in strict mode
-MACRO_WMS(              LdLocalFrameDisplay, Reg1,          None)        // Set up a frame display allocated on the stack
-MACRO_WMS(              LdStrictFrameDisplay,Reg3,          None)        // Set up a frame display for this function and its parent frames
-MACRO_WMS(              LdStrictFrameDisplayNoParent,Reg2,  None)        // Set up a frame display for this function and its parent frames
+MACRO_WMS(              LdFrameDisplay,     Reg3,           None)           // Set up a frame display for this function and its parent frames
+MACRO_WMS(              LdFrameDisplayNoParent,Reg2,        None)           // Set up a frame display for this function and its parent frames
+MACRO_WMS(              NewStackFrameDisplay,Reg3,          None)           // Set up a frame display allocated on the stack
+MACRO_WMS(              NewStackFrameDisplayNoParent,Reg2,  None)           // Set up a frame display allocated on the stack
+MACRO_WMS(              NewStrictStackFrameDisplay,Reg3,    None)           // Set up a frame display allocated on the stack in strict mode
+MACRO_WMS(              NewStrictStackFrameDisplayNoParent,Reg2,None)       // Set up a frame display allocated on the stack in strict mode
+MACRO_WMS(              LdLocalFrameDisplay, Reg1,          None)           // Set up a frame display allocated on the stack
+MACRO_WMS(              LdStrictFrameDisplay,Reg3,          None)           // Set up a frame display for this function and its parent frames
+MACRO_WMS(              LdStrictFrameDisplayNoParent,Reg2,  None)           // Set up a frame display for this function and its parent frames
 MACRO_WMS(              IsIn,               Reg3,           OpSideEffect|OpCallsValueOf|OpHasImplicitCall|OpPostOpDbgBailOut)        // "x in y"  (NOTE: calls valueOf for the index
 MACRO_WMS(              LdArgumentsFromFrame,Reg1,          None)           // Load the argument object from frame
 MACRO_WMS(              LdElemUndef,        ElementU,       OpSideEffect)   // Load 'undefined' to instance.property if not already present
 MACRO_WMS(              LdElemUndefScoped,  ElementU,       OpSideEffect)   // Load 'undefined' to instance.property if not already present in the scope
-MACRO_WMS(              LdFuncExpr,         Reg1,           None)   // Load the function expression to it's location
+MACRO_WMS(              LdFuncExpr,         Reg1,           None)           // Load the function expression to it's location
 MACRO(                  LdPropIds,          Auxiliary,      None)           // Load the property id array
 MACRO_WMS(              StFuncExpr,         ElementC,       OpSideEffect)   // Store the function expression to it's activation object with attributes
-MACRO_EXTEND_WMS(       LdNewTarget,        Reg1,           None)       // Load new.target in an ordinary function call or construct call
-MACRO_EXTEND(           ChkNewCallFlag,     Empty,          OpSideEffect)       // Check to see if the current call has the CallFlags_New flag set and throw if it does not
+MACRO_EXTEND_WMS(       LdNewTarget,        Reg1,           None)           // Load new.target in an ordinary function call or construct call
+MACRO_EXTEND(           ChkNewCallFlag,     Empty,          OpSideEffect)   // Check to see if the current call has the CallFlags_New flag set and throw if it does not
 
 // Instancing operations
-MACRO_EXTEND_WMS(LdCustomSpreadIteratorList, Reg2,          OpHasImplicitCall|OpSideEffect) // Runs the iterator on a function spread Argument
-MACRO_WMS_PROFILED_INDEX( NewScObject,       CallI,         OpSideEffect|OpUseAllFields|OpCallInstr)   // Create new ScriptObject instance
-MACRO_EXTEND_WMS_AND_PROFILED(NewScObjectSpread,   CallIExtended, OpSideEffect|OpUseAllFields|OpCallInstr)   // Create new ScriptObject instance
-MACRO_WMS_PROFILED2(    NewScObjArray,      CallI,          OpSideEffect|OpUseAllFields|OpCallInstr)   // Create new ScriptObject instance
-MACRO_WMS_PROFILED2(    NewScObjArraySpread, CallIExtended, OpSideEffect|OpUseAllFields|OpCallInstr)   // Create new ScriptObject instance
-MACRO(                  NewScObject_A,      Auxiliary,      OpSideEffect|OpUseAllFields)  // Create new ScriptObject instance passing only constants
-MACRO_WMS(              NewScObjectNoCtorFull, Reg2,        OpHasImplicitCall | OpTempObjectCanStoreTemp)  // Create new object that will be used for the 'this' binding in a base class constructor
-MACRO_BACKEND_ONLY(     NewScObjectNoCtor,  Empty,          OpHasImplicitCall | OpTempObjectCanStoreTemp)  // Create new object that will be passed into a constructor
-MACRO_BACKEND_ONLY(     GetNewScObject,     Empty,          OpTempObjectTransfer)      // Determine which object to finally use as the result of NewScObject (object passed into constructor as 'this', or object returned by constructor)
-MACRO_BACKEND_ONLY(     UpdateNewScObjectCache, Empty,      None)      // Update the cache used for NewScObject
+MACRO_EXTEND_WMS(LdCustomSpreadIteratorList, Reg2,          OpHasImplicitCall|OpSideEffect)                 // Runs the iterator on a function spread Argument
+MACRO_WMS_PROFILED_INDEX( NewScObject,       CallI,         OpSideEffect|OpUseAllFields|OpCallInstr)        // Create new ScriptObject instance
+MACRO_EXTEND_WMS_AND_PROFILED(NewScObjectSpread,   CallIExtended, OpSideEffect|OpUseAllFields|OpCallInstr)  // Create new ScriptObject instance
+MACRO_WMS_PROFILED2(    NewScObjArray,      CallI,          OpSideEffect|OpUseAllFields|OpCallInstr)        // Create new ScriptObject instance
+MACRO_WMS_PROFILED2(    NewScObjArraySpread, CallIExtended, OpSideEffect|OpUseAllFields|OpCallInstr)        // Create new ScriptObject instance
+MACRO(                  NewScObject_A,      Auxiliary,      OpSideEffect|OpUseAllFields)                    // Create new ScriptObject instance passing only constants
+MACRO_WMS(              NewScObjectNoCtorFull, Reg2,        OpHasImplicitCall | OpTempObjectCanStoreTemp)   // Create new object that will be used for the 'this' binding in a base class constructor
+MACRO_BACKEND_ONLY(     NewScObjectNoCtor,  Empty,          OpHasImplicitCall | OpTempObjectCanStoreTemp)   // Create new object that will be passed into a constructor
+MACRO_BACKEND_ONLY(     GetNewScObject,     Empty,          OpTempObjectTransfer)                           // Determine which object to finally use as the result of NewScObject (object passed into constructor as 'this', or object returned by constructor)
+MACRO_BACKEND_ONLY(     UpdateNewScObjectCache, Empty,      None)                                           // Update the cache used for NewScObject
 MACRO_WMS(              NewScObjectSimple,  Reg1,           OpTempObjectCanStoreTemp)
-MACRO(                  NewScObjectLiteral, Auxiliary,      OpSideEffect|OpTempObjectCanStoreTemp) // Create new ScriptObject instance with no constructor or arguments
-MACRO_WMS_PROFILED(     NewScArray,         Reg1Unsigned1,  OpSideEffect|OpTempObjectProducing)   // Create new ScriptArray instance
-MACRO_WMS(              NewScArrayWithMissingValues, Reg1Unsigned1,    OpSideEffect|OpTempObjectProducing)   // Create new ScriptArray instance
-MACRO_PROFILED(         NewScIntArray,      Auxiliary,      OpSideEffect|OpTempObjectProducing)   // Create new ScriptArray instance
-MACRO_PROFILED(         NewScFltArray,      Auxiliary,      OpSideEffect|OpTempObjectProducing)   // Create new ScriptArray instance
+MACRO(                  NewScObjectLiteral, Auxiliary,      OpSideEffect|OpTempObjectCanStoreTemp)          // Create new ScriptObject instance with no constructor or arguments
+MACRO_WMS_PROFILED(     NewScArray,         Reg1Unsigned1,  OpSideEffect|OpTempObjectProducing)             // Create new ScriptArray instance
+MACRO_WMS(              NewScArrayWithMissingValues, Reg1Unsigned1,    OpSideEffect|OpTempObjectProducing)  // Create new ScriptArray instance
+MACRO_PROFILED(         NewScIntArray,      Auxiliary,      OpSideEffect|OpTempObjectProducing)             // Create new ScriptArray instance
+MACRO_PROFILED(         NewScFltArray,      Auxiliary,      OpSideEffect|OpTempObjectProducing)             // Create new ScriptArray instance
 MACRO_EXTEND_WMS(       InitClass,          Class,          OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)
 
-MACRO_WMS(              NewScFunc,          ElementSlot,    OpSideEffect)  // Create new ScriptFunction instance
-MACRO_WMS(              NewScGenFunc,       ElementSlot,    OpSideEffect)  // Create new JavascriptGeneratorFunction instance
-MACRO_WMS(              NewStackScFunc,     ElementSlot,    OpSideEffect|OpByteCodeOnly)  // Create new ScriptFunction instance
-MACRO_WMS(              NewScopeObject,     Reg1,           OpSideEffect)   // Create new NewScopeObject
-MACRO(                  InitCachedScope,    Reg2Aux,        OpSideEffect)  // Retrieve cached scope; create if not cached
-MACRO_EXTEND(           InitLetCachedScope, Reg2Aux,        OpSideEffect)  // Retrieve cached scope; create if not cached (formals are let-like instead of var-like)
+MACRO_WMS(              NewScFunc,          ElementSlot,    OpSideEffect)                   // Create new ScriptFunction instance
+MACRO_WMS(              NewScGenFunc,       ElementSlot,    OpSideEffect)                   // Create new JavascriptGeneratorFunction instance
+MACRO_WMS(              NewStackScFunc,     ElementSlot,    OpSideEffect|OpByteCodeOnly)    // Create new ScriptFunction instance
+MACRO_WMS(              NewScopeObject,     Reg1,           OpSideEffect)                   // Create new NewScopeObject
+MACRO(                  InitCachedScope,    Reg2Aux,        OpSideEffect)                   // Retrieve cached scope; create if not cached
+MACRO_EXTEND(           InitLetCachedScope, Reg2Aux,        OpSideEffect)                   // Retrieve cached scope; create if not cached (formals are let-like instead of var-like)
 MACRO(                  InitCachedFuncs,    Reg2Aux,        OpSideEffect)
 MACRO_WMS(              GetCachedFunc,      Reg2Int1,       None)
-MACRO(                  CommitScope,        Auxiliary,      OpSideEffect) // Mark the cached scope object as committed on exit from the function
+MACRO(                  CommitScope,        Auxiliary,      OpSideEffect)   // Mark the cached scope object as committed on exit from the function
 MACRO_WMS(              InvalCachedScope,   Reg1Unsigned1,  OpSideEffect)
 MACRO_WMS(              NewPseudoScope,     Reg1,           OpSideEffect)   // Create new scope that can't take normal var inits
 MACRO_WMS(              NewBlockScope,      Reg1,           OpSideEffect)   // Create new scope that takes only block-scoped inits
-MACRO_WMS(              NewScopeSlots,      Reg1Unsigned1,  OpSideEffect)   //
-MACRO_WMS(              NewStackScopeSlots, Reg1,           OpSideEffect)   //
-MACRO_WMS(              LdLocalScopeSlots,  Reg1,           None)   //
+MACRO_WMS(              NewScopeSlots,      Reg1Unsigned1,  OpSideEffect)
+MACRO_WMS(              NewStackScopeSlots, Reg1,           OpSideEffect)
+MACRO_WMS(              LdLocalScopeSlots,  Reg1,           None)
 MACRO_BACKEND_ONLY(     InitStackClosure,   Reg1,           None)
-MACRO(                  NewScopeSlotsWithoutPropIds, Reg1Int2, OpSideEffect)   //
-MACRO_WMS(              NewRegEx,           Reg1Unsigned1,  OpTempObjectCanStoreTemp|OpSideEffect)   // Create a new RegEx expression
-MACRO_WMS(              IsInst,             Reg3C,          OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)   // instanceof() - SideEffect: can throw...
+MACRO(                  NewScopeSlotsWithoutPropIds, Reg1Int2, OpSideEffect)
+MACRO_WMS(              NewRegEx,           Reg1Unsigned1,  OpTempObjectCanStoreTemp|OpSideEffect)              // Create a new RegEx expression
+MACRO_WMS(              IsInst,             Reg3C,          OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)  // instanceof() - SideEffect: can throw...
 
 // Collection operations
-MACRO_WMS(              GetForInEnumerator, Reg2,           OpSideEffect|OpHasImplicitCall)       // Get enumerator from collection
-MACRO_WMS(              BrOnEmpty,          BrReg2,         OpSideEffect|OpHasImplicitCall)            // Move to next item; return value if not NULL, otherwise branch
-MACRO_BACKEND_ONLY (    BrOnNotEmpty,       BrReg2,         OpSideEffect|OpHasImplicitCall)           // Move to next item; return true if done
+MACRO_WMS(              GetForInEnumerator, Reg2,           OpSideEffect|OpHasImplicitCall)         // Get enumerator from collection
+MACRO_WMS(              BrOnEmpty,          BrReg2,         OpSideEffect|OpHasImplicitCall)         // Move to next item; return value if not NULL, otherwise branch
+MACRO_BACKEND_ONLY (    BrOnNotEmpty,       BrReg2,         OpSideEffect|OpHasImplicitCall)         // Move to next item; return true if done
 MACRO_WMS(              ReleaseForInEnumerator,  Reg1,      OpSideEffect|OpHasImplicitCall)         // Release enumerator
 
 MACRO(                  TryCatch,           Br,             OpSideEffect)
@@ -513,32 +515,32 @@ MACRO_EXTEND_WMS(       ResumeFinally,      BrReg2,         OpSideEffect)
 MACRO(                  LeaveNull,          Empty,          OpSideEffect|OpNoFallThrough)
 MACRO(                  Leave,              Empty,          OpSideEffect|OpNoFallThrough)
 
-MACRO_BACKEND_ONLY(     InlineRuntimeTypeError,        W1,             OpSideEffect|OpPostOpDbgBailOut)        // Throws TypeError at runtime.
-MACRO_EXTEND(           RuntimeTypeError,              W1,             OpSideEffect|OpPostOpDbgBailOut)      // Throws TypeError at runtime.
-MACRO_BACKEND_ONLY(     InlineRuntimeReferenceError,   W1,             OpSideEffect|OpPostOpDbgBailOut)        // Throws ReferenceError at runtime.
-MACRO_EXTEND(           RuntimeReferenceError,         W1,             OpSideEffect|OpPostOpDbgBailOut)      // Throws ReferenceError at runtime.
+MACRO_BACKEND_ONLY(     InlineRuntimeTypeError,        W1,             OpSideEffect|OpPostOpDbgBailOut)     // Throws TypeError at runtime.
+MACRO_EXTEND(           RuntimeTypeError,              W1,             OpSideEffect|OpPostOpDbgBailOut)     // Throws TypeError at runtime.
+MACRO_BACKEND_ONLY(     InlineRuntimeReferenceError,   W1,             OpSideEffect|OpPostOpDbgBailOut)     // Throws ReferenceError at runtime.
+MACRO_EXTEND(           RuntimeReferenceError,         W1,             OpSideEffect|OpPostOpDbgBailOut)     // Throws ReferenceError at runtime.
 
 
 // Dynamic profile opcodes
-MACRO_WMS(              LoopBodyStart,          Unsigned1,             OpByteCodeOnly)     // Marks the start of a loop body
-MACRO_WMS(              ProfiledLoopStart,      Unsigned1,             OpSideEffect)     // Marks the start of a profiled loop
-MACRO_WMS(              ProfiledLoopBodyStart,  Unsigned1,             OpSideEffect)     // Marks the start of a profiled loop body
-MACRO_WMS(              ProfiledLoopEnd,        Unsigned1,             OpSideEffect)     // Marks the end of a profiled loop
+MACRO_WMS(              LoopBodyStart,          Unsigned1,             OpByteCodeOnly)  // Marks the start of a loop body
+MACRO_WMS(              ProfiledLoopStart,      Unsigned1,             OpSideEffect)    // Marks the start of a profiled loop
+MACRO_WMS(              ProfiledLoopBodyStart,  Unsigned1,             OpSideEffect)    // Marks the start of a profiled loop body
+MACRO_WMS(              ProfiledLoopEnd,        Unsigned1,             OpSideEffect)    // Marks the end of a profiled loop
 
 // The order of this need to be the same as the Call* order
-MACRO_WMS(              ProfiledCallI,          ProfiledCallI,         OpByteCodeOnly|OpSideEffect|OpUseAllFields|OpCallInstr|OpInlineCallInstr)          // Return <- Call (indirect) Function(ArgCount)
-MACRO_WMS(              ProfiledCallIFlags,     ProfiledCallIFlags,    OpByteCodeOnly|OpSideEffect|OpUseAllFields|OpCallInstr|OpInlineCallInstr)          // Return <- Call (indirect) Function(ArgCount)
+MACRO_WMS(              ProfiledCallI,          ProfiledCallI,         OpByteCodeOnly|OpSideEffect|OpUseAllFields|OpCallInstr|OpInlineCallInstr)    // Return <- Call (indirect) Function(ArgCount)
+MACRO_WMS(              ProfiledCallIFlags,     ProfiledCallIFlags,    OpByteCodeOnly|OpSideEffect|OpUseAllFields|OpCallInstr|OpInlineCallInstr)    // Return <- Call (indirect) Function(ArgCount)
 MACRO_WMS(              ProfiledCallIExtended,  ProfiledCallIExtended, OpByteCodeOnly|OpSideEffect|OpUseAllFields|OpCallInstr)
 MACRO_WMS(              ProfiledCallIExtendedFlags, ProfiledCallIExtendedFlags, OpByteCodeOnly|OpSideEffect|OpUseAllFields| OpCallInstr)
 
 MACRO_WMS(              ProfiledCallIWithICIndex,          ProfiledCallIWithICIndex,          OpByteCodeOnly|OpSideEffect|OpUseAllFields|OpCallInstr|OpInlineCallInstr)          // Return <- Call (indirect) Function(ArgCount)
 MACRO_WMS(              ProfiledCallIFlagsWithICIndex,     ProfiledCallIFlagsWithICIndex,     OpByteCodeOnly|OpSideEffect|OpUseAllFields|OpCallInstr|OpInlineCallInstr)          // Return <- Call (indirect) Function(ArgCount)
-MACRO_WMS(              ProfiledCallIExtendedWithICIndex,  ProfiledCallIExtendedWithICIndex,          OpByteCodeOnly|OpSideEffect|OpUseAllFields|OpCallInstr|OpInlineCallInstr)          // Return <- Call (indirect) Function(ArgCount)
+MACRO_WMS(              ProfiledCallIExtendedWithICIndex,  ProfiledCallIExtendedWithICIndex,          OpByteCodeOnly|OpSideEffect|OpUseAllFields|OpCallInstr|OpInlineCallInstr)  // Return <- Call (indirect) Function(ArgCount)
 MACRO_WMS(              ProfiledCallIExtendedFlagsWithICIndex, ProfiledCallIExtendedFlagsWithICIndex,          OpByteCodeOnly|OpSideEffect|OpUseAllFields|OpCallInstr)
 
 // The order of this needs to be the same as the Call* order
-MACRO_WMS(              ProfiledReturnTypeCallI,          ProfiledCallI,          OpByteCodeOnly|OpSideEffect|OpUseAllFields|OpCallInstr|OpInlineCallInstr)          // Return <- Call (indirect) Function(ArgCount)
-MACRO_WMS(              ProfiledReturnTypeCallIFlags,     ProfiledCallIFlags,     OpByteCodeOnly|OpSideEffect|OpUseAllFields|OpCallInstr|OpInlineCallInstr)          // Return <- Call (indirect) Function(ArgCount)
+MACRO_WMS(              ProfiledReturnTypeCallI,          ProfiledCallI,          OpByteCodeOnly|OpSideEffect|OpUseAllFields|OpCallInstr|OpInlineCallInstr)     // Return <- Call (indirect) Function(ArgCount)
+MACRO_WMS(              ProfiledReturnTypeCallIFlags,     ProfiledCallIFlags,     OpByteCodeOnly|OpSideEffect|OpUseAllFields|OpCallInstr|OpInlineCallInstr)     // Return <- Call (indirect) Function(ArgCount)
 MACRO_WMS(              ProfiledReturnTypeCallIExtended,  ProfiledCallIExtended,  OpByteCodeOnly|OpSideEffect|OpUseAllFields|OpCallInstr)
 MACRO_WMS(              ProfiledReturnTypeCallIExtendedFlags, ProfiledCallIExtendedFlags, OpByteCodeOnly|OpSideEffect|OpUseAllFields|OpCallInstr)
 
@@ -548,13 +550,13 @@ MACRO_WMS(              Unused,             Reg1,           None)
 
 // String operations
 MACRO_WMS(              Concat3,            Reg4,           OpByteCodeOnly|OpCallsValueOf|OpHasImplicitCall|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpPostOpDbgBailOut)
-MACRO_WMS(              NewConcatStrMulti,  Reg3B1,         None) // Although the byte code version include the concat, and has value of/to string, the BE version doesn't
-MACRO_BACKEND_ONLY(     NewConcatStrMultiBE, Reg3B1,        OpCanCSE) // Although the byte code version include the concat, and has value of/to string, the BE version doesn't
-MACRO_WMS(              SetConcatStrMultiItem,   Reg2B1,    None) // Although the byte code version include the concat, and has value of/to string, the BE version doesn't
-MACRO_BACKEND_ONLY(     SetConcatStrMultiItemBE, Reg2B1,    OpCanCSE) // Although the byte code version include the concat, and has value of/to string, the BE version doesn't
-MACRO_WMS(              SetConcatStrMultiItem2,  Reg3B1,         None) // Although the byte code version include the concat, and has value of/to string, the BE version doesn't
-MACRO_BACKEND_ONLY(     LdStr,              Empty,          OpTempNumberProducing|OpCanCSE)   // Load string literal
-MACRO_BACKEND_ONLY(     CloneStr,           Empty,          OpTempNumberSources | OpTempNumberProducing)   // Load string literal
+MACRO_WMS(              NewConcatStrMulti,  Reg3B1,         None)       // Although the byte code version include the concat, and has value of/to string, the BE version doesn't
+MACRO_BACKEND_ONLY(     NewConcatStrMultiBE, Reg3B1,        OpCanCSE)   // Although the byte code version include the concat, and has value of/to string, the BE version doesn't
+MACRO_WMS(              SetConcatStrMultiItem,   Reg2B1,    None)       // Although the byte code version include the concat, and has value of/to string, the BE version doesn't
+MACRO_BACKEND_ONLY(     SetConcatStrMultiItemBE, Reg2B1,    OpCanCSE)   // Although the byte code version include the concat, and has value of/to string, the BE version doesn't
+MACRO_WMS(              SetConcatStrMultiItem2,  Reg3B1,         None)  // Although the byte code version include the concat, and has value of/to string, the BE version doesn't
+MACRO_BACKEND_ONLY(     LdStr,              Empty,          OpTempNumberProducing|OpCanCSE)                 // Load string literal
+MACRO_BACKEND_ONLY(     CloneStr,           Empty,          OpTempNumberSources | OpTempNumberProducing)    // Load string literal
 
 
 // Operation ToString(str) if str != null or str != undefined
@@ -570,14 +572,14 @@ MACRO_BACKEND_ONLY(     Coerse_StrOrRegex, Empty, OpCallsValueOf|OpHasImplicitCa
 MACRO_BACKEND_ONLY(     Conv_PrimStr,       Empty,          OpCallsValueOf|OpHasImplicitCall|OpTempNumberSources|OpTempObjectSources|OpCanCSE|OpPostOpDbgBailOut)
 
 // The following are for lowering; currently the specified layout is not used
-MACRO_BACKEND_ONLY(     StElemC,            ElementC,       OpSideEffect)   // Store into Array instance's direct element, unchecked
-MACRO_BACKEND_ONLY(     StArrSegElemC,      ElementC,       OpSideEffect)   // Store into Array segment's direct element, unchecked
-MACRO_BACKEND_ONLY(     Label,              Empty,          OpSideEffect)     // Label (branch target)
-MACRO_BACKEND_ONLY(     CallHelper,         Empty,          OpSideEffect|OpUseAllFields)      // Call a helper function
+MACRO_BACKEND_ONLY(     StElemC,            ElementC,       OpSideEffect)                   // Store into Array instance's direct element, unchecked
+MACRO_BACKEND_ONLY(     StArrSegElemC,      ElementC,       OpSideEffect)                   // Store into Array segment's direct element, unchecked
+MACRO_BACKEND_ONLY(     Label,              Empty,          OpSideEffect)                   // Label (branch target)
+MACRO_BACKEND_ONLY(     CallHelper,         Empty,          OpSideEffect|OpUseAllFields)    // Call a helper function
 
-MACRO_BACKEND_ONLY(     FunctionEntry,      Empty,          OpSideEffect)     // Marks the start of a function
-MACRO_BACKEND_ONLY(     FunctionExit,       Empty,          OpSideEffect|OpNoFallThrough)     // Marks the end of a function
-MACRO_BACKEND_ONLY(     StatementBoundary,  Empty,          None)      // Marks the start or end of a statement
+MACRO_BACKEND_ONLY(     FunctionEntry,      Empty,          OpSideEffect)                   // Marks the start of a function
+MACRO_BACKEND_ONLY(     FunctionExit,       Empty,          OpSideEffect|OpNoFallThrough)   // Marks the end of a function
+MACRO_BACKEND_ONLY(     StatementBoundary,  Empty,          None)                           // Marks the start or end of a statement
 
 MACRO_BACKEND_ONLY(     BailOut,                     Empty,          OpSideEffect|OpBailOutRec)
 MACRO_BACKEND_ONLY(     BailOnEqual,                 Empty,          OpBailOutRec|OpTempNumberSources|OpTempObjectSources|OpCanCSE)
@@ -650,7 +652,7 @@ MACRO_BACKEND_ONLY(     CheckPropertyGuardAndLoadType,  Empty,          OpFastFl
 MACRO_BACKEND_ONLY(     CheckObjType,        Empty,          OpFastFldInstr|OpTempObjectSources)
 MACRO_BACKEND_ONLY(     AdjustObjType,       Empty,          OpSideEffect)
 
-// IE12 inline built-ins
+// Edge inline built-ins
 #ifdef ENABLE_DOM_FAST_PATH
 MACRO_BACKEND_ONLY(     DOMFastPathGetter,   Empty,          OpCanCSE)  // unlike other builtins, we don't know the return type
 MACRO_BACKEND_ONLY(     DOMFastPathSetter,   Empty,          OpSideEffect)
@@ -666,9 +668,9 @@ MACRO_BACKEND_ONLY(     LdSpillSize,        Empty,          None)
 
 #if DBG_DUMP
 MACRO_BACKEND_ONLY(     LdRoot,             Empty,          None)       // Load root object
-MACRO_BACKEND_ONLY(     LdModuleRoot,       Empty,          None)       // load module root with given moduleID
-MACRO_BACKEND_ONLY(     LdNullDisplay,      Empty,          None)               // Load the null frame display
-MACRO_BACKEND_ONLY(     LdStrictNullDisplay,Empty,          None)               // Load the strict null frame display
+MACRO_BACKEND_ONLY(     LdModuleRoot,       Empty,          None)       // Load module root with given moduleID
+MACRO_BACKEND_ONLY(     LdNullDisplay,      Empty,          None)       // Load the null frame display
+MACRO_BACKEND_ONLY(     LdStrictNullDisplay,Empty,          None)       // Load the strict null frame display
 #endif
 
 MACRO(                  SpreadArrayLiteral, Reg2Aux,        OpSideEffect|OpHasImplicitCall)

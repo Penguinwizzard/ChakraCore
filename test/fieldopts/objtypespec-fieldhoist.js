@@ -3,12 +3,10 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-//Configuration: ..\inline.xml
-//Testcase Number: 126423
-//Switches:-maxinterpretcount:1  -bgjit- -loopinterpretcount:1 -force:fieldhoist -off:floattypespec 
-//Branch:  fbl_ie_script
-//Build: 121204-1800
-// Arch: X86
+// Configuration: ..\inline.xml
+// Testcase Number: 126423
+// Switches: -maxinterpretcount:1  -bgjit- -loopinterpretcount:1 -force:fieldhoist -off:floattypespec
+// Arch: x86
 function test0() {
     var obj0 = {};
     var litObj1 = { prop0: 0, prop1: 1 };
@@ -29,7 +27,7 @@ function test0() {
     while ((1) && __loopvar2 < 3) {
         __loopvar2++;
         obj1 = obj0;
-        //Code Snippet: switch3.ecs (Blue5522)
+        // Code Snippet: switch3.ecs (Blue5522)
         switch (obj1.prop0) {
             case obj1.prop0 /= obj1:
             case undefined:
@@ -96,5 +94,3 @@ test0();
 
 // run JITted code
 test0();
-
-

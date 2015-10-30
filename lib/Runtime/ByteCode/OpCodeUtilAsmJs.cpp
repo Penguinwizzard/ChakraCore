@@ -66,13 +66,11 @@ namespace Js
             __analysis_assume(op < _countof(OpCodeAsmJsLayouts));
             return OpCodeAsmJsLayouts[(uint)op];
         }
-        //else if (op < Js::OpCodeAsmJs::ByteCodeLast)
-        {
-            uint opIndex = op - (Js::OpCodeAsmJs::MaxByteSizedOpcodes + 1);
-            Assert(opIndex < _countof(ExtendedOpCodeAsmJsLayouts));
-            __analysis_assume(opIndex < _countof(ExtendedOpCodeAsmJsLayouts));
-            return ExtendedOpCodeAsmJsLayouts[opIndex];
-        }
+
+        uint opIndex = op - (Js::OpCodeAsmJs::MaxByteSizedOpcodes + 1);
+        Assert(opIndex < _countof(ExtendedOpCodeAsmJsLayouts));
+        __analysis_assume(opIndex < _countof(ExtendedOpCodeAsmJsLayouts));
+        return ExtendedOpCodeAsmJsLayouts[opIndex];
     }
 
     bool OpCodeUtilAsmJs::IsValidByteCodeOpcode(OpCodeAsmJs op)
@@ -87,6 +85,4 @@ namespace Js
         return IsValidByteCodeOpcode(op)
             || (op > Js::OpCodeAsmJs::ByteCodeLast && op < Js::OpCodeAsmJs::Count);
     }
-
-
 };

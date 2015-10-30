@@ -3,13 +3,13 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-// -force:fieldhoist -prejit 
+// -force:fieldhoist -prejit
 (function(){
   var __loopvar0 = 0;
-  LABEL0: 
+  LABEL0:
   do {
     __loopvar0++;
-    if(d) {
+    if (d) {
     }
-  } while(((++ obj9.d)) && __loopvar0 < 3)
+  } while (((++ obj9.d)) && __loopvar0 < 3)
 })();

@@ -22,7 +22,7 @@ namespace Js
 
         AssertMsg(pblkByteCode != nullptr, "Must have valid byte-code to read");
 
-        m_startLocation      = pblkByteCode->GetBuffer();
+        m_startLocation = pblkByteCode->GetBuffer();
 
         const byte * currentLocation = m_startLocation + startOffset;
         const bool isInDebugMode = functionRead->IsByteCodeDebugMode();
@@ -50,7 +50,7 @@ namespace Js
                 Assert(FALSE);
             }
 
-            m_nextStatementBoundary =  m_startLocation + data.bytecodeBegin;
+            m_nextStatementBoundary = m_startLocation + data.bytecodeBegin;
 
             // If we starting in the middle of the function (e.g., loop body), find out where the next statement is.
             while (m_nextStatementBoundary < currentLocation)
@@ -82,7 +82,7 @@ namespace Js
         else
         {
             // set to a location that will never match
-            m_nextStatementBoundary = currentLocation -1;
+            m_nextStatementBoundary = currentLocation - 1;
         }
     }
 
@@ -129,7 +129,7 @@ namespace Js
             if (m_statementMap && (uint32)m_statementIndex < m_statementMap->Count() && m_statementMap->Item(m_statementIndex, m_statementMapIter, data))
             {
                 // Start a range of bytecode that maps to a user statement
-                m_nextStatementBoundary =  m_startLocation + data.bytecodeBegin;
+                m_nextStatementBoundary = m_startLocation + data.bytecodeBegin;
                 retStatement = m_statementIndex;
             }
             else if (m_fullstatementMap && m_statementIndex < m_fullstatementMap->Count())
@@ -156,5 +156,4 @@ namespace Js
 
         return retStatement;
     }
-
 } // namespace Js

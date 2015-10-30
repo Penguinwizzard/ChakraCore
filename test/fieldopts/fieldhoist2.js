@@ -3,7 +3,6 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-
 function f()
 {
     var o = new Object();
@@ -27,7 +26,7 @@ function f()
     return ret;
 }
 var x = f();
-if (x == 52) 
+if (x == 52)
 {
     WScript.Echo("PASS");
 }

@@ -4,7 +4,8 @@
 //-------------------------------------------------------------------------------------------------------
 extern const wchar_t *SymbolTypeNames[];
 
-enum SymbolType : byte {
+enum SymbolType : byte
+{
     STFunction,
     STVariable,
     STMemberName,
@@ -19,28 +20,29 @@ private:
     const SymbolName name;
     IdentPtr pid;
     ParseNode *decl;
-    Scope *scope;           // scope defining this symbol
-    Js::PropertyId position;  // argument position in function declaration
-    Js::RegSlot location;  // register in which the symbol resides
+    Scope *scope;                   // scope defining this symbol
+    Js::PropertyId position;        // argument position in function declaration
+    Js::RegSlot location;           // register in which the symbol resides
     Js::PropertyId scopeSlot;
     Symbol *next;
 
     SymbolType symbolType;
     BYTE defCount;
-    BYTE needDeclaration:1;
-    BYTE isBlockVar:1;
-    BYTE isGlobal:1;
-    BYTE isEval:1;
-    BYTE hasNonLocalReference:1;  // if true, then this symbol needs to be heap-allocated
-    BYTE funcExpr:1;              // if true, then this symbol is allocated on it's on activation object
-    BYTE isCatch:1;               // if true then this a catch identifier
-    BYTE hasInit:1;
-    BYTE isUsed:1;
-    BYTE isGlobalCatch:1;
-    BYTE isCommittedToSlot:1;
-    BYTE hasNonCommittedReference:1;
-    BYTE hasVisitedCapturingFunc:1;
-    BYTE isTrackedForDebugger:1;    // Whether the sym is tracked for debugger scope. This is fine because a sym can only be added to (not more than) one scope.
+    BYTE needDeclaration : 1;
+    BYTE isBlockVar : 1;
+    BYTE isGlobal : 1;
+    BYTE isEval : 1;
+    BYTE hasNonLocalReference : 1;  // if true, then this symbol needs to be heap-allocated
+    BYTE funcExpr : 1;              // if true, then this symbol is allocated on it's on activation object
+    BYTE isCatch : 1;               // if true then this a catch identifier
+    BYTE hasInit : 1;
+    BYTE isUsed : 1;
+    BYTE isGlobalCatch : 1;
+    BYTE isCommittedToSlot : 1;
+    BYTE hasNonCommittedReference : 1;
+    BYTE hasVisitedCapturingFunc : 1;
+    BYTE isTrackedForDebugger : 1; // Whether the sym is tracked for debugger scope. This is fine because a sym can only be added to (not more than) one scope.
+
     // These are get and set a lot, don't put it in bit fields, we are exceeding the number of bits anyway
     bool hasFuncAssignment;
     bool hasMaybeEscapedUse;
@@ -49,7 +51,7 @@ private:
     AssignmentState assignmentState;
 
 public:
-    Symbol(SymbolName const& name, ParseNode *decl,SymbolType symbolType) :
+    Symbol(SymbolName const& name, ParseNode *decl, SymbolType symbolType) :
         name(name),
         decl(decl),
         next(nullptr),
@@ -85,12 +87,14 @@ public:
         }
     }
 
-    bool MatchName(const wchar_t *key, int length) {
+    bool MatchName(const wchar_t *key, int length)
+    {
         return name == SymbolName(key, length);
     }
 
-    void SetScope(Scope *scope) {
-        this->scope=scope;
+    void SetScope(Scope *scope)
+    {
+        this->scope = scope;
     }
     Scope * GetScope() const { return scope; }
 
@@ -112,33 +116,40 @@ public:
         next = sym;
     }
 
-    void SetIsGlobal(bool b) {
-        isGlobal=b;
+    void SetIsGlobal(bool b)
+    {
+        isGlobal = b;
     }
 
     void SetHasNonLocalReference(bool b, ByteCodeGenerator *byteCodeGenerator);
 
-    bool GetHasNonLocalReference() const {
+    bool GetHasNonLocalReference() const
+    {
         return hasNonLocalReference;
     }
 
-    void SetFuncExpr(bool b) {
-        funcExpr=b;
+    void SetFuncExpr(bool b)
+    {
+        funcExpr = b;
     }
 
-    void SetIsBlockVar(bool is) {
+    void SetIsBlockVar(bool is)
+    {
         isBlockVar = is;
     }
 
-    bool GetIsBlockVar() const {
+    bool GetIsBlockVar() const
+    {
         return isBlockVar;
     }
 
-    void SetIsGlobalCatch(bool is) {
+    void SetIsGlobalCatch(bool is)
+    {
         isGlobalCatch = is;
     }
 
-    bool GetIsGlobalCatch() const {
+    bool GetIsGlobalCatch() const
+    {
         return isGlobalCatch;
     }
 
@@ -169,47 +180,58 @@ public:
         return hasNonCommittedReference;
     }
 
-    void SetIsTrackedForDebugger(bool is) {
+    void SetIsTrackedForDebugger(bool is)
+    {
         isTrackedForDebugger = is;
     }
 
-    bool GetIsTrackedForDebugger() const {
+    bool GetIsTrackedForDebugger() const
+    {
         return isTrackedForDebugger;
     }
 
-    void SetNeedDeclaration(bool need) {
+    void SetNeedDeclaration(bool need)
+    {
         needDeclaration = need;
     }
 
-    bool GetNeedDeclaration() const {
+    bool GetNeedDeclaration() const
+    {
         return needDeclaration;
     }
 
-    bool GetFuncExpr() const {
+    bool GetFuncExpr() const
+    {
         return funcExpr;
     }
 
-    bool GetIsGlobal() const {
+    bool GetIsGlobal() const
+    {
         return isGlobal;
     }
 
-    bool GetIsMember() const {
+    bool GetIsMember() const
+    {
         return symbolType == STMemberName;
     }
 
-    bool GetIsFormal() const {
+    bool GetIsFormal() const
+    {
         return symbolType == STFormal;
     }
 
-    bool GetIsEval() const {
+    bool GetIsEval() const
+    {
         return isEval;
     }
 
-    bool GetIsCatch() const {
+    bool GetIsCatch() const
+    {
         return isCatch;
     }
 
-    void SetIsCatch(bool b){
+    void SetIsCatch(bool b)
+    {
         isCatch = b;
     }
 
@@ -218,12 +240,14 @@ public:
         return hasInit;
     }
 
-    void RecordDef() {
-      defCount++;
+    void RecordDef()
+    {
+        defCount++;
     }
 
-    bool SingleDef() const {
-      return defCount==1;
+    bool SingleDef() const
+    {
+        return defCount == 1;
     }
 
     void SetHasInit(bool has)
@@ -277,11 +301,13 @@ public:
 
     bool GetIsArguments() const;
 
-    void SetPosition(Js::PropertyId pos) {
-        position=pos;
+    void SetPosition(Js::PropertyId pos)
+    {
+        position = pos;
     }
 
-    Js::PropertyId GetPosition() {
+    Js::PropertyId GetPosition()
+    {
         return position;
     }
 
@@ -289,18 +315,21 @@ public:
     Js::PropertyId EnsurePosition(FuncInfo *funcInfo);
     Js::PropertyId EnsurePositionNoCheck(FuncInfo *funcInfo);
 
-    void SetLocation(Js::RegSlot location) {
-        this->location=location;
+    void SetLocation(Js::RegSlot location)
+    {
+        this->location = location;
     }
 
-    Js::RegSlot GetLocation() {
+    Js::RegSlot GetLocation()
+    {
         return location;
     }
 
     Js::PropertyId GetScopeSlot() const { return scopeSlot; }
     bool HasScopeSlot() const { return scopeSlot != Js::Constants::NoProperty; }
 
-    SymbolType GetSymbolType() {
+    SymbolType GetSymbolType()
+    {
         return symbolType;
     }
 
@@ -311,11 +340,13 @@ public:
         this->hasFuncAssignment = (symbolType == STFunction);
     }
 
-    const wchar_t *GetSymbolTypeName() {
+    const wchar_t *GetSymbolTypeName()
+    {
         return SymbolTypeNames[symbolType];
     }
 
-    const JsUtil::CharacterBuffer<WCHAR>& GetName() const {
+    const JsUtil::CharacterBuffer<WCHAR>& GetName() const
+    {
         return this->name;
     }
 
@@ -343,8 +374,7 @@ private:
 
 // specialize toKey to use the name in the symbol as the key
 template <>
-SymbolName
-JsUtil::ValueToKey<SymbolName, Symbol *>::ToKey(Symbol * const& sym)
+SymbolName JsUtil::ValueToKey<SymbolName, Symbol *>::ToKey(Symbol * const& sym)
 {
     return sym->GetName();
 }

@@ -6,8 +6,7 @@
 
 namespace Js
 {
-
-    ObjTypeSpecFldInfo* ObjTypeSpecFldInfo::CreateFrom(uint id, InlineCache* cache, uint cacheId, EntryPointInfo *entryPoint, 
+    ObjTypeSpecFldInfo* ObjTypeSpecFldInfo::CreateFrom(uint id, InlineCache* cache, uint cacheId, EntryPointInfo *entryPoint,
         FunctionBody* const topFunctionBody, FunctionBody *const functionBody, FieldAccessStatsPtr inlineCacheStats)
     {
         if (cache->IsEmpty())
@@ -45,7 +44,7 @@ namespace Js
             {
                 return nullptr;
             }
-            
+
             type = TypeWithoutAuxSlotTag(localCache.u.accessor.type);
             propertyOwnerType = localCache.u.accessor.object->GetType();
         }
@@ -54,7 +53,7 @@ namespace Js
         Recycler *const recycler = scriptContext->GetRecycler();
 
         Js::PropertyId propertyId = functionBody->GetPropertyIdFromCacheId(cacheId);
-        uint16 slotIndex = Constants::NoSlot;  
+        uint16 slotIndex = Constants::NoSlot;
         bool usesAuxSlot = false;
         DynamicObject* prototypeObject = nullptr;
         PropertyGuard* propertyGuard = nullptr;
@@ -81,7 +80,7 @@ namespace Js
                 entryPoint->GetJitTransferData()->AddJitTimeTypeRef(typeWithoutProperty, recycler);
 
                 // These shared property guards are registered on the main thread and checked during entry point installation
-                // (see NativeCodeGenerator::CheckCodeGenDone) to ensure that no property became read-only while we were 
+                // (see NativeCodeGenerator::CheckCodeGenDone) to ensure that no property became read-only while we were
                 // JIT-ing on the background thread.
                 propertyGuard = entryPoint->RegisterSharedPropertyGuard(propertyId, scriptContext);
             }
@@ -116,7 +115,7 @@ namespace Js
             }
         }
 
-        // Keep the type alive until the entry point is installed. Note that this is longer than just during JIT, for which references 
+        // Keep the type alive until the entry point is installed. Note that this is longer than just during JIT, for which references
         // from the JitTimeData would have been enough.
         Assert(entryPoint->GetJitTransferData() != nullptr);
         entryPoint->GetJitTransferData()->AddJitTimeTypeRef(type, recycler);
@@ -160,7 +159,6 @@ namespace Js
 
                 if (fixedProperty != nullptr && Js::JavascriptFunction::Is(fixedProperty))
                 {
-                    
                     functionObject = (Js::JavascriptFunction *)fixedProperty;
                     if (PHASE_VERBOSE_TRACE(Js::FixedMethodsPhase, functionBody))
                     {
@@ -168,30 +166,32 @@ namespace Js
                         wchar_t debugStringBuffer2[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
 
                         Js::DynamicObject* protoObject = isProto ? prototypeObject : nullptr;
-                        Output::Print(L"FixedFields: function %s (%s) cloning cache with fixed method: %s (%s), function: 0x%p, body: 0x%p (cache id: %d, layout: %s, type: 0x%p, proto: 0x%p, proto type: 0x%p)\n", 
+                        Output::Print(L"FixedFields: function %s (%s) cloning cache with fixed method: %s (%s), function: 0x%p, body: 0x%p (cache id: %d, layout: %s, type: 0x%p, proto: 0x%p, proto type: 0x%p)\n",
                             functionBody->GetDisplayName(), functionBody->GetDebugNumberSet(debugStringBuffer),
                             fixedPropertyRecord->GetBuffer(), functionObject->GetFunctionInfo()->GetFunctionProxy() ?
                             functionObject->GetFunctionInfo()->GetFunctionProxy()->GetDebugNumberSet(debugStringBuffer2) : L"(null)", functionObject, functionObject->GetFunctionInfo(),
                             cacheId, isProto ? L"proto" : L"local", type, protoObject, protoObject != nullptr ? protoObject->GetType() : nullptr);
                         Output::Flush();
                     }
+
                     if (PHASE_VERBOSE_TESTTRACE(Js::FixedMethodsPhase, functionBody))
                     {
                         wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
                         wchar_t debugStringBuffer2[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
 
-                        Output::Print(L"FixedFields: function %s (%s) cloning cache with fixed method: %s (%s) (cache id: %d, layout: %s)\n", 
+                        Output::Print(L"FixedFields: function %s (%s) cloning cache with fixed method: %s (%s) (cache id: %d, layout: %s)\n",
                             functionBody->GetDisplayName(), functionBody->GetDebugNumberSet(debugStringBuffer), fixedPropertyRecord->GetBuffer(), functionObject->GetFunctionInfo()->GetFunctionProxy() ?
                             functionObject->GetFunctionInfo()->GetFunctionProxy()->GetDebugNumberSet(debugStringBuffer2) : L"(null)", functionObject, functionObject->GetFunctionInfo(),
                             cacheId, isProto ? L"proto" : L"local");
                         Output::Flush();
                     }
 
-                    // This assert is not needed.  We checked that the singleton still existed when we obtained the fixed field value inside TryUseFixedProperty.  
-                    // Since we don't need the singleton instance later in this function, we don't care if the instance got collected.  We get the type handler 
-                    // from the propertyOwnerType, which we got from the cache.  At runtime, if the object is collected, it is by definition unreachable and thus
-                    // the code in the function we're about to emit cannot reach the object to try to access any of this object's properties.
-                    //Assert(propertyOwnerTypeHandler->GetSingletonInstance() != null && propertyOwnerTypeHandler->GetSingletonInstance()->Get() != nullptr);/
+                    // We don't need to check for a singleton here. We checked that the singleton still existed
+                    // when we obtained the fixed field value inside TryUseFixedProperty. Since we don't need the
+                    // singleton instance later in this function, we don't care if the instance got collected.
+                    // We get the type handler from the propertyOwnerType, which we got from the cache. At runtime,
+                    // if the object is collected, it is by definition unreachable and thus the code in the function
+                    // we're about to emit cannot reach the object to try to access any of this object's properties.
 
                     ConstructorCache* runtimeConstructorCache = functionObject->GetConstructorCache();
                     if (runtimeConstructorCache->IsSetUpForJit() && runtimeConstructorCache->GetScriptContext() == scriptContext)
@@ -206,7 +206,7 @@ namespace Js
                         {
                             Assert(runtimeConstructorCache->GetType()->GetIsShared());
                             // If we populated the cache with initial type before calling the constructor, but then didn't end up updating the cache
-                            // after the constructor and shrinking (and locking) the inline slot capacity, we must lock it now.  In that case it is 
+                            // after the constructor and shrinking (and locking) the inline slot capacity, we must lock it now.  In that case it is
                             // also possible that the inline slot capacity was shrunk since we originally cached it, so we must update it also.
 #if DBG_DUMP
                             if (!runtimeConstructorCache->GetType()->GetTypeHandler()->GetIsInlineSlotCapacityLocked())
@@ -216,10 +216,10 @@ namespace Js
                                     wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
                                     wchar_t debugStringBuffer2[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
 
-                                    Output::Print(L"FixedNewObj: function %s (%s) ctor cache for %s (%s) about to be cloned has unlocked inline slot count: guard value = 0x%p, type = 0x%p, slots = %d, inline slots = %d\n", 
+                                    Output::Print(L"FixedNewObj: function %s (%s) ctor cache for %s (%s) about to be cloned has unlocked inline slot count: guard value = 0x%p, type = 0x%p, slots = %d, inline slots = %d\n",
                                         functionBody->GetDisplayName(), functionBody->GetDebugNumberSet(debugStringBuffer), fixedPropertyRecord->GetBuffer(), functionObject->GetFunctionInfo()->GetFunctionBody() ?
                                         functionObject->GetFunctionInfo()->GetFunctionBody()->GetDebugNumberSet(debugStringBuffer2) : L"(null)",
-                                        runtimeConstructorCache->GetRawGuardValue(), runtimeConstructorCache->GetType(), 
+                                        runtimeConstructorCache->GetRawGuardValue(), runtimeConstructorCache->GetType(),
                                         runtimeConstructorCache->GetSlotCount(), runtimeConstructorCache->GetInlineSlotCount());
                                     Output::Flush();
                                 }
@@ -238,7 +238,7 @@ namespace Js
                             wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
                             wchar_t debugStringBuffer2[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
 
-                            Output::Print(L"FixedNewObj: function %s (%s) cloning ctor cache for %s (%s): guard value = 0x%p, type = 0x%p, slots = %d, inline slots = %d\n", 
+                            Output::Print(L"FixedNewObj: function %s (%s) cloning ctor cache for %s (%s): guard value = 0x%p, type = 0x%p, slots = %d, inline slots = %d\n",
                                 functionBody->GetDisplayName(), functionBody->GetDebugNumberSet(debugStringBuffer), fixedPropertyRecord->GetBuffer(), functionObject->GetFunctionInfo()->GetFunctionBody() ?
                                 functionObject->GetFunctionInfo()->GetFunctionBody()->GetDebugNumberSet(debugStringBuffer2) : L"(null)", functionObject, functionObject->GetFunctionInfo(),
                                 runtimeConstructorCache->GetRawGuardValue(), runtimeConstructorCache->IsNormal() ? runtimeConstructorCache->GetType() : nullptr,
@@ -255,16 +255,16 @@ namespace Js
                                 wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
                                 wchar_t debugStringBuffer2[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
 
-                                Output::Print(L"FixedNewObj: function %s (%s) skipping ctor cache for %s (%s), because %s (guard value = 0x%p, script context = %p).\n", 
+                                Output::Print(L"FixedNewObj: function %s (%s) skipping ctor cache for %s (%s), because %s (guard value = 0x%p, script context = %p).\n",
                                     functionBody->GetDisplayName(), functionBody->GetDebugNumberSet(debugStringBuffer), fixedPropertyRecord->GetBuffer(), functionObject->GetFunctionInfo()->GetFunctionBody() ?
                                     functionObject->GetFunctionInfo()->GetFunctionBody()->GetDebugNumberSet(debugStringBuffer2) : L"(null)", functionObject, functionObject->GetFunctionInfo(),
-                                    runtimeConstructorCache->IsEmpty() ? L"cache is empty (or has been cleared)" : 
-                                    runtimeConstructorCache->IsInvalidated() ? L"cache is invalidated" : 
+                                    runtimeConstructorCache->IsEmpty() ? L"cache is empty (or has been cleared)" :
+                                    runtimeConstructorCache->IsInvalidated() ? L"cache is invalidated" :
                                     runtimeConstructorCache->SkipDefaultNewObject() ? L"default new object isn't needed" :
                                     runtimeConstructorCache->NeedsTypeUpdate() ? L"cache needs to be updated" :
                                     runtimeConstructorCache->NeedsUpdateAfterCtor() ? L"cache needs update after ctor" :
-                                    runtimeConstructorCache->IsPolymorphic() ? L"cache is polymorphic" : 
-                                    runtimeConstructorCache->GetScriptContext() != functionBody->GetScriptContext() ? L"script context mismatch" : L"of an unexpected situation", 
+                                    runtimeConstructorCache->IsPolymorphic() ? L"cache is polymorphic" :
+                                    runtimeConstructorCache->GetScriptContext() != functionBody->GetScriptContext() ? L"script context mismatch" : L"of an unexpected situation",
                                     runtimeConstructorCache->GetRawGuardValue(), runtimeConstructorCache->GetScriptContext());
                                 Output::Flush();
                             }
@@ -285,18 +285,17 @@ namespace Js
         }
 
         FixedFieldInfo* fixedFieldInfoArray = RecyclerNewArrayZ(recycler, FixedFieldInfo, 1);
-        
+
         fixedFieldInfoArray[0].fieldValue = fieldValue;
         fixedFieldInfoArray[0].type = type;
         fixedFieldInfoArray[0].nextHasSameFixedField = false;
 
         ObjTypeSpecFldInfo* info;
 
-
         // If we stress equivalent object type spec, let's pretend that every inline cache was polymorphic and equivalent.
         bool forcePoly = false;
-        if ((!PHASE_OFF(Js::EquivObjTypeSpecByDefaultPhase, topFunctionBody) || 
-             PHASE_STRESS(Js::EquivObjTypeSpecPhase, topFunctionBody))
+        if ((!PHASE_OFF(Js::EquivObjTypeSpecByDefaultPhase, topFunctionBody) ||
+            PHASE_STRESS(Js::EquivObjTypeSpecPhase, topFunctionBody))
             && !PHASE_OFF(Js::EquivObjTypeSpecPhase, topFunctionBody))
         {
             Assert(topFunctionBody->HasDynamicProfileInfo());
@@ -334,7 +333,7 @@ namespace Js
             if (PHASE_TRACE(Js::ObjTypeSpecPhase, topFunctionBody) || PHASE_TRACE(Js::EquivObjTypeSpecPhase, topFunctionBody))
             {
                 const PropertyRecord* propertyRecord = scriptContext->GetPropertyName(propertyId);
-                Output::Print(L"Created ObjTypeSpecFldInfo: id %u, property %s(#%u), slot %u, type set: 0x%p\n", 
+                Output::Print(L"Created ObjTypeSpecFldInfo: id %u, property %s(#%u), slot %u, type set: 0x%p\n",
                     id, propertyRecord->GetBuffer(), propertyId, slotIndex, type);
                 Output::Flush();
             }
@@ -348,27 +347,25 @@ namespace Js
             if (PHASE_TRACE(Js::ObjTypeSpecPhase, topFunctionBody) || PHASE_TRACE(Js::EquivObjTypeSpecPhase, topFunctionBody))
             {
                 const PropertyRecord* propertyRecord = scriptContext->GetPropertyName(propertyId);
-                Output::Print(L"Created ObjTypeSpecFldInfo: id %u, property %s(#%u), slot %u, type: 0x%p\n", 
+                Output::Print(L"Created ObjTypeSpecFldInfo: id %u, property %s(#%u), slot %u, type: 0x%p\n",
                     id, propertyRecord->GetBuffer(), propertyId, slotIndex, type);
                 Output::Flush();
             }
         }
 
-
         return info;
     }
 
-    ObjTypeSpecFldInfo* ObjTypeSpecFldInfo::CreateFrom(uint id, PolymorphicInlineCache* cache, uint cacheId, EntryPointInfo *entryPoint, 
+    ObjTypeSpecFldInfo* ObjTypeSpecFldInfo::CreateFrom(uint id, PolymorphicInlineCache* cache, uint cacheId, EntryPointInfo *entryPoint,
         FunctionBody* const topFunctionBody, FunctionBody *const functionBody, FieldAccessStatsPtr inlineCacheStats)
     {
 
 #ifdef FIELD_ACCESS_STATS
-#define IncInlineCacheCount(counter) if(inlineCacheStats) { inlineCacheStats->counter++; }
+#define IncInlineCacheCount(counter) if (inlineCacheStats) { inlineCacheStats->counter++; }
 #else
 #define IncInlineCacheCount(counter)
 #endif
 
-        
         Assert(topFunctionBody->HasDynamicProfileInfo());
         auto profileData = topFunctionBody->GetAnyDynamicProfileInfo();
 
@@ -396,17 +393,17 @@ namespace Js
         bool isAccessor = false;
         bool isGetterAccessor = false;
         bool isAccessorOnProto = false;
-        
+
         bool stress = PHASE_STRESS(Js::EquivObjTypeSpecPhase, topFunctionBody);
         bool areStressEquivalent = stress;
 
         uint16 typeCount = 0;
-        for (uint16 i = 0; (areEquivalent || stress || gatherDataForInlining) && i < polyCacheSize; i++) 
+        for (uint16 i = 0; (areEquivalent || stress || gatherDataForInlining) && i < polyCacheSize; i++)
         {
             InlineCache& inlineCache = inlineCaches[i];
             if (inlineCache.IsEmpty()) continue;
 
-            if (firstNonEmptyCacheIndex == MAXUINT16) 
+            if (firstNonEmptyCacheIndex == MAXUINT16)
             {
                 if (inlineCache.IsLocal())
                 {
@@ -419,7 +416,7 @@ namespace Js
                 }
                 // Missing properties cannot be treated as equivalent, because for objects with SDTH or DTH, we don't change the object's type
                 // when we add a property.  We also don't invalidate proto inline caches (and guards) unless the property being added exists on the proto chain.
-                // Missing properties by definition do not exist on the proto chain, so in the end we could have an EquivalentObjTypeSpec cache hit on a 
+                // Missing properties by definition do not exist on the proto chain, so in the end we could have an EquivalentObjTypeSpec cache hit on a
                 // property that once was missing, but has since been added. (See OS Bugs 280582).
                 else if (inlineCache.IsProto() && !inlineCache.u.proto.isMissing)
                 {
@@ -431,7 +428,7 @@ namespace Js
                 }
                 else
                 {
-                    if(!PHASE_OFF(Js::FixAccessorPropsPhase, functionBody))
+                    if (!PHASE_OFF(Js::FixAccessorPropsPhase, functionBody))
                     {
                         isAccessor = true;
                         isGetterAccessor = inlineCache.IsGetterAccessor();
@@ -468,7 +465,7 @@ namespace Js
                 }
                 else if (inlineCache.IsProto())
                 {
-                    if (!isProto || isAccessor || prototypeObject != inlineCache.u.proto.prototypeObject || slotIndex != inlineCache.u.proto.slotIndex || 
+                    if (!isProto || isAccessor || prototypeObject != inlineCache.u.proto.prototypeObject || slotIndex != inlineCache.u.proto.slotIndex ||
                         typeId != TypeWithoutAuxSlotTag(inlineCache.u.proto.type)->GetTypeId() || usesAuxSlot != TypeHasAuxSlotTag(inlineCache.u.proto.type))
                     {
                         areEquivalent = false;
@@ -481,7 +478,7 @@ namespace Js
                     // 2. the types are equivalent.
                     //
                     // This is done to keep the equivalence check helper as-is
-                    if (!isAccessor || isGetterAccessor != inlineCache.IsGetterAccessor() || !isAccessorOnProto  || !inlineCache.u.accessor.isOnProto || accessorOwnerObject != inlineCache.u.accessor.object  ||
+                    if (!isAccessor || isGetterAccessor != inlineCache.IsGetterAccessor() || !isAccessorOnProto || !inlineCache.u.accessor.isOnProto || accessorOwnerObject != inlineCache.u.accessor.object ||
                         slotIndex != inlineCache.u.accessor.slotIndex || typeId != TypeWithoutAuxSlotTag(inlineCache.u.accessor.type)->GetTypeId() || usesAuxSlot != TypeHasAuxSlotTag(inlineCache.u.accessor.type))
                     {
                         areEquivalent = false;
@@ -528,8 +525,10 @@ namespace Js
         Recycler* recycler = scriptContext->GetRecycler();
 
         uint16 fixedFunctionCount = 0;
-        FixedFieldInfo localFixedFieldInfoArray[Js::DynamicProfileInfo::maxPolymorphicInliningSize] = {0}; // Need to create a local array here and not allocate one from the recycler, 
-                                                                                                           // as the allocation may trigger a GC which can clear the inline caches.
+
+        // Need to create a local array here and not allocate one from the recycler,
+        // as the allocation may trigger a GC which can clear the inline caches.
+        FixedFieldInfo localFixedFieldInfoArray[Js::DynamicProfileInfo::maxPolymorphicInliningSize] = { 0 };
 
         // For polymorphic field loads we only support fixed functions on prototypes. This helps keep the equivalence check helper simple.
         // Since all types in the polymorphic cache share the same prototype, it's enough to grab the fixed function from the prototype object.
@@ -549,7 +548,7 @@ namespace Js
             localFixedFieldInfoArray[0].fieldValue = fixedProperty;
             localFixedFieldInfoArray[0].type = nullptr;
             localFixedFieldInfoArray[0].nextHasSameFixedField = false;
-                
+
             // TODO (ObjTypeSpec): Enable constructor caches on equivalent polymorphic field loads with fixed functions.
         }
 
@@ -557,15 +556,15 @@ namespace Js
         Js::Type* localTypes[MaxPolymorphicInlineCacheSize];
         uint16 typeNumber = 0;
         Js::JavascriptFunction* fixedFunctionObject = nullptr;
-        for (uint16 i = firstNonEmptyCacheIndex; i < polyCacheSize; i++) 
+        for (uint16 i = firstNonEmptyCacheIndex; i < polyCacheSize; i++)
         {
             InlineCache& inlineCache = inlineCaches[i];
             if (inlineCache.IsEmpty()) continue;
 
             localTypes[typeNumber] = inlineCache.IsLocal() ? TypeWithoutAuxSlotTag(inlineCache.u.local.type) :
-                                     inlineCache.IsProto() ? TypeWithoutAuxSlotTag(inlineCache.u.proto.type) :
-                                     TypeWithoutAuxSlotTag(inlineCache.u.accessor.type);
-            
+                inlineCache.IsProto() ? TypeWithoutAuxSlotTag(inlineCache.u.proto.type) :
+                TypeWithoutAuxSlotTag(inlineCache.u.accessor.type);
+
             if (gatherDataForInlining)
             {
                 inlineCache.TryGetFixedMethodFromCache(functionBody, cacheId, &fixedFunctionObject);
@@ -573,7 +572,7 @@ namespace Js
                 {
                     if (!(areEquivalent || areStressEquivalent))
                     {
-                        // if we are reaching here only because we are gathering data for inlining, and one of the Inline Caches doesn't have a fixedfunction object, return
+                        // If we reach here only because we are gathering data for inlining, and one of the Inline Caches doesn't have a fixedfunction object, return.
                         return nullptr;
                     }
                     else
@@ -584,21 +583,21 @@ namespace Js
                         continue;
                     }
                 }
-                
-                // We got a fixed function object from the cache
-                
+
+                // We got a fixed function object from the cache.
+
                 localFixedFieldInfoArray[typeNumber].type = localTypes[typeNumber];
                 localFixedFieldInfoArray[typeNumber].fieldValue = fixedFunctionObject;
                 localFixedFieldInfoArray[typeNumber].nextHasSameFixedField = false;
                 fixedFunctionCount++;
             }
-            
+
             typeNumber++;
         }
 
         if (isAccessor && gatherDataForInlining)
         {
-            Assert(fixedFunctionCount <= 1 );
+            Assert(fixedFunctionCount <= 1);
         }
 
         if (stress && (areEquivalent != areStressEquivalent))
@@ -626,8 +625,8 @@ namespace Js
 
         // For polymorphic, non-equivalent objTypeSpecFldInfo's, hasFixedValue is true only if each of the inline caches has a fixed function for the given cacheId, or
         // in the case of an accessor cache, only if the there is only one version of the accessor.
-        bool hasFixedValue = gatherDataForInlining || 
-            ((isProto || isAccessorOnProto) && (areEquivalent || areStressEquivalent) && localFixedFieldInfoArray[0].fieldValue); 
+        bool hasFixedValue = gatherDataForInlining ||
+            ((isProto || isAccessorOnProto) && (areEquivalent || areStressEquivalent) && localFixedFieldInfoArray[0].fieldValue);
 
         bool doesntHaveEquivalence = !(areEquivalent || areStressEquivalent);
 
@@ -654,14 +653,14 @@ namespace Js
                     }
                 }
             }
-        
+
             Js::Type** types = RecyclerNewArray(recycler, Js::Type*, typeCount);
             memcpy(types, localTypes, typeCount * sizeof(Js::Type*));
             typeSet = RecyclerNew(recycler, EquivalentTypeSet, types, typeCount);
         }
 
         ObjTypeSpecFldInfo* info = RecyclerNew(recycler, ObjTypeSpecFldInfo,
-            id, typeId, nullptr, typeSet, usesAuxSlot, isProto, isAccessor, hasFixedValue, hasFixedValue, doesntHaveEquivalence,true, slotIndex, propertyId, 
+            id, typeId, nullptr, typeSet, usesAuxSlot, isProto, isAccessor, hasFixedValue, hasFixedValue, doesntHaveEquivalence, true, slotIndex, propertyId,
             prototypeObject, propertyGuard, nullptr, fixedFieldInfoArray, fixedFunctionCount/*, nullptr, nullptr, nullptr*/);
 
         if (PHASE_TRACE(Js::ObjTypeSpecPhase, topFunctionBody) || PHASE_TRACE(Js::EquivObjTypeSpecPhase, topFunctionBody))
@@ -693,17 +692,16 @@ namespace Js
         Assert(HasFixedValue());
         Assert(IsMono() || (IsPoly() && !DoesntHaveEquivalence()));
         Assert(this->fixedFieldInfoArray[0].fieldValue != nullptr && Js::JavascriptFunction::Is(this->fixedFieldInfoArray[0].fieldValue));
-        
+
         return Js::JavascriptFunction::FromVar(this->fixedFieldInfoArray[0].fieldValue);
     }
 
-    
     Js::JavascriptFunction* ObjTypeSpecFldInfo::GetFieldValueAsFixedFunction(uint i) const
     {
         Assert(HasFixedValue());
         Assert(IsPoly());
         Assert(this->fixedFieldInfoArray[i].fieldValue != nullptr && Js::JavascriptFunction::Is(this->fixedFieldInfoArray[i].fieldValue));
-        
+
         return Js::JavascriptFunction::FromVar(this->fixedFieldInfoArray[i].fieldValue);
     }
 
@@ -711,7 +709,7 @@ namespace Js
     {
         Assert(IsMono() || (IsPoly() && !DoesntHaveEquivalence()));
         Assert(this->fixedFieldInfoArray[0].fieldValue != nullptr && JavascriptFunction::Is(this->fixedFieldInfoArray[0].fieldValue));
-        
+
         return JavascriptFunction::FromVar(this->fixedFieldInfoArray[0].fieldValue);
     }
 
@@ -750,7 +748,6 @@ namespace Js
     }
 #endif
 
-
     ObjTypeSpecFldInfoArray::ObjTypeSpecFldInfoArray()
         : infoArray(nullptr)
 #if DBG
@@ -771,7 +768,7 @@ namespace Js
             return;
         }
 
-        this->infoArray = RecyclerNewArrayZ(recycler, ObjTypeSpecFldInfo* , functionBody->GetInlineCacheCount());
+        this->infoArray = RecyclerNewArrayZ(recycler, ObjTypeSpecFldInfo*, functionBody->GetInlineCacheCount());
 #if DBG
         this->infoCount = functionBody->GetInlineCacheCount();
 #endif
@@ -806,13 +803,11 @@ namespace Js
 #endif
     }
 
-
-
     FunctionCodeGenJitTimeData::FunctionCodeGenJitTimeData(FunctionInfo *const functionInfo, EntryPointInfo *const entryPoint, bool isInlined) :
-        functionInfo(functionInfo), entryPointInfo(entryPoint), globalObjTypeSpecFldInfoCount(0), globalObjTypeSpecFldInfoArray(nullptr), 
+        functionInfo(functionInfo), entryPointInfo(entryPoint), globalObjTypeSpecFldInfoCount(0), globalObjTypeSpecFldInfoArray(nullptr),
         weakFuncRef(nullptr), inlinees(nullptr), inlineeCount(0), ldFldInlineeCount(0), isInlined(isInlined), isAggressiveInliningEnabled(false),
 #ifdef FIELD_ACCESS_STATS
-        inlineCacheStats(nullptr), 
+        inlineCacheStats(nullptr),
 #endif
         profiledIterations(GetFunctionBody() ? GetFunctionBody()->GetProfiledIterations() : 0),
         next(0)
@@ -834,7 +829,7 @@ namespace Js
         Assert(GetFunctionBody());
         Assert(profiledCallSiteId < GetFunctionBody()->GetProfiledCallSiteCount());
 
-         return inlinees ? inlinees[profiledCallSiteId]->next != nullptr : false;
+        return inlinees ? inlinees[profiledCallSiteId]->next != nullptr : false;
     }
 
     const FunctionCodeGenJitTimeData *FunctionCodeGenJitTimeData::GetInlinee(const ProfileId profiledCallSiteId) const
@@ -848,7 +843,7 @@ namespace Js
     const FunctionCodeGenJitTimeData *FunctionCodeGenJitTimeData::GetJitTimeDataFromFunctionInfo(FunctionInfo *polyFunctionInfo) const
     {
         const FunctionCodeGenJitTimeData *next = this;
-        while(next && next->functionInfo != polyFunctionInfo)
+        while (next && next->functionInfo != polyFunctionInfo)
         {
             next = next->next;
         }
@@ -866,7 +861,7 @@ namespace Js
     FunctionCodeGenJitTimeData *FunctionCodeGenJitTimeData::AddInlinee(
         Recycler *const recycler,
         const ProfileId profiledCallSiteId,
-        FunctionInfo *const inlinee, 
+        FunctionInfo *const inlinee,
         bool isInlined)
     {
         Assert(recycler);
@@ -875,7 +870,7 @@ namespace Js
         Assert(profiledCallSiteId < functionBody->GetProfiledCallSiteCount());
         Assert(inlinee);
 
-        if(!inlinees)
+        if (!inlinees)
         {
             inlinees = RecyclerNewArrayZ(recycler, FunctionCodeGenJitTimeData *, functionBody->GetProfiledCallSiteCount());
         }
@@ -885,7 +880,7 @@ namespace Js
         {
             inlineeData = RecyclerNew(recycler, FunctionCodeGenJitTimeData, inlinee, nullptr /* entryPoint */, isInlined);
             inlinees[profiledCallSiteId] = inlineeData;
-            if(++inlineeCount == 0)
+            if (++inlineeCount == 0)
             {
                 Js::Throw::OutOfMemory();
             }
@@ -893,7 +888,7 @@ namespace Js
         else
         {
             inlineeData = RecyclerNew(recycler, FunctionCodeGenJitTimeData, inlinee, nullptr /* entryPoint */, isInlined);
-            //This is polymorphic, chain the data.
+            // This is polymorphic, chain the data.
             inlineeData->next = inlinees[profiledCallSiteId];
             inlinees[profiledCallSiteId] = inlineeData;
         }
@@ -911,7 +906,7 @@ namespace Js
         Assert(inlineCacheIndex < GetFunctionBody()->GetInlineCacheCount());
         Assert(inlinee);
 
-        if(!ldFldInlinees)
+        if (!ldFldInlinees)
         {
             ldFldInlinees = RecyclerNewArrayZ(recycler, FunctionCodeGenJitTimeData *, GetFunctionBody()->GetInlineCacheCount());
         }
@@ -919,7 +914,7 @@ namespace Js
         const auto inlineeData = RecyclerNew(recycler, FunctionCodeGenJitTimeData, inlinee, nullptr);
         Assert(!ldFldInlinees[inlineCacheIndex]);
         ldFldInlinees[inlineCacheIndex] = inlineeData;
-        if(++ldFldInlineeCount == 0)
+        if (++ldFldInlineeCount == 0)
         {
             Js::Throw::OutOfMemory();
         }

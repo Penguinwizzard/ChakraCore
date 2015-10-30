@@ -15,10 +15,10 @@ DynamicProfileMutator::Mutate(Js::FunctionBody * functionBody)
     Js::ScriptContext * scriptContext = functionBody->GetScriptContext();
     DynamicProfileMutator * dynamicProfileMutator = scriptContext->GetThreadContext()->dynamicProfileMutator;
     if (dynamicProfileMutator != nullptr)
-    {            
+    {
         if (functionBody->dynamicProfileInfo == nullptr)
         {
-            functionBody->dynamicProfileInfo = Js::DynamicProfileInfo::New(scriptContext->GetRecycler(), functionBody);           
+            functionBody->dynamicProfileInfo = Js::DynamicProfileInfo::New(scriptContext->GetRecycler(), functionBody);
         }
 
         dynamicProfileMutator->Mutate(functionBody->dynamicProfileInfo);
@@ -58,6 +58,7 @@ DynamicProfileMutator::GetMutator()
         Js::Throw::FatalInternalError();
     }
     mutator->Initialize(Js::Configuration::Global.flags.DynamicProfileMutator);
-    return mutator;    
+    return mutator;
 }
+
 #endif

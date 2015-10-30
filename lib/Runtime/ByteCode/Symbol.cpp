@@ -6,8 +6,7 @@
 
 const wchar_t *SymbolTypeNames[] = { L"Function", L"Variable", L"MemberName", L"Formal", L"Unknown" };
 
-bool
-Symbol::GetIsArguments() const
+bool Symbol::GetIsArguments() const
 {
     return decl != nullptr && (decl->grfpn & PNodeFlags::fpnArguments);
 }
@@ -65,7 +64,7 @@ bool Symbol::NeedsSlotAlloc(FuncInfo *funcInfo)
 
 bool Symbol::IsInSlot(FuncInfo *funcInfo, bool ensureSlotAlloc)
 {
-    if(this->GetIsGlobal())
+    if (this->GetIsGlobal())
     {
         return false;
     }
@@ -108,8 +107,8 @@ void Symbol::SetHasNonLocalReference(bool b, ByteCodeGenerator *byteCodeGenerato
 
     // The symbol's home function will tell us which child function we're currently processing.
     // This is the one that captures the symbol, from the declaring function's perspective.
-    // So based on that information note either that, a. the symbol is committed to the heap from its
-    // inception, b. the symbol must be committed when the capturing function is instantiated.
+    // So based on that information, note either that, (a.) the symbol is committed to the heap from its
+    // inception, (b.) the symbol must be committed when the capturing function is instantiated.
 
     FuncInfo *funcHome = this->scope->GetFunc();
     FuncInfo *funcChild = funcHome->GetCurrentChildFunction();
@@ -178,7 +177,7 @@ void Symbol::SetHasMaybeEscapedUseInternal(ByteCodeGenerator * byteCodeGenerator
     if (this->GetHasFuncAssignment())
     {
         this->GetScope()->GetFunc()->SetHasMaybeEscapedNestedFunc(
-            DebugOnly(this->symbolType == STFunction? L"MaybeEscapedUseFuncDecl" : L"MaybeEscapedUse"));
+            DebugOnly(this->symbolType == STFunction ? L"MaybeEscapedUseFuncDecl" : L"MaybeEscapedUse"));
     }
 }
 
@@ -205,8 +204,8 @@ void Symbol::SetHasFuncAssignmentInternal(ByteCodeGenerator * byteCodeGenerator)
     if (this->GetHasMaybeEscapedUse() || this->GetScope()->GetIsObject())
     {
         byteCodeGenerator->TopFuncInfo()->SetHasMaybeEscapedNestedFunc(DebugOnly(
-            this->GetIsFormal()? L"FormalAssignment" :
-            this->GetScope()->GetIsObject()? L"ObjectScopeAssignment" :
+            this->GetIsFormal() ? L"FormalAssignment" :
+            this->GetScope()->GetIsObject() ? L"ObjectScopeAssignment" :
             L"MaybeEscapedUse"));
     }
 }
@@ -250,5 +249,4 @@ Symbol * Symbol::GetFuncScopeVarSym() const
         return nullptr;
     }
     return fncScopeSym;
-
 }

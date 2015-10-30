@@ -5,7 +5,7 @@
 
 function test0() {
     var GiantPrintArray = [];
-    //AddFastPath2: Monomorphic Inline Set or Add
+    // AddFastPath2: Monomorphic Inline Set or Add
     function v2() {
         var v3 = 10;
         var v4 = new Array(v3);

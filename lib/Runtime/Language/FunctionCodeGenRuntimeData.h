@@ -31,11 +31,11 @@ namespace Js
 
     public:
         FunctionCodeGenRuntimeData(FunctionBody *const functionBody);
-        void SetupRuntimeDataChain(FunctionCodeGenRuntimeData *nextRuntimeData){this->next = nextRuntimeData;}
+        void SetupRuntimeDataChain(FunctionCodeGenRuntimeData *nextRuntimeData) { this->next = nextRuntimeData; }
 
     public:
         FunctionBody *GetFunctionBody() const;
-        FunctionCodeGenRuntimeData *GetNext() const { return next;};
+        FunctionCodeGenRuntimeData *GetNext() const { return next; };
         const InlineCachePointerArray<InlineCache> *ClonedInlineCaches() const;
         InlineCachePointerArray<InlineCache> *ClonedInlineCaches();
 
@@ -58,9 +58,9 @@ namespace Js
             const InlineCacheIndex inlineCacheIndex,
             FunctionBody *const inlinee);
 
-       //This function walks all the chained jittimedata and returns the one which match the functionInfo.
-       //This can return null, if the functionInfo doesn't match.
-       const FunctionCodeGenRuntimeData *GetRuntimeDataFromFunctionInfo(FunctionInfo *polyFunctionInfo) const;
+        // This function walks all the chained jittimedata and returns the one which match the functionInfo.
+        // This can return null, if the functionInfo doesn't match.
+        const FunctionCodeGenRuntimeData *GetRuntimeDataFromFunctionInfo(FunctionInfo *polyFunctionInfo) const;
 
         template<class Fn>
         void MapInlineCaches(Fn fn) const
@@ -70,13 +70,13 @@ namespace Js
             for (ProfileId iInlinee = 0; iInlinee < this->functionBody->GetProfiledCallSiteCount(); iInlinee++)
             {
                 const FunctionCodeGenRuntimeData* runtimeData = this->GetInlinee(iInlinee);
-                while(runtimeData)
+                while (runtimeData)
                 {
                     if (functionBody == runtimeData->GetFunctionBody())
                     {
                         break;
                     }
-                    //Map for chained ones as well. 
+                    // Map for chained ones as well.
                     runtimeData->MapInlineCaches(fn);
                     runtimeData = runtimeData->next;
                 }

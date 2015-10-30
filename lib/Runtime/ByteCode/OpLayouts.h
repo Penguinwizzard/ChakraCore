@@ -14,7 +14,8 @@ namespace Js {
     ///
     ///----------------------------------------------------------------------------
 
-    enum class OpCode : ushort {
+    enum class OpCode : ushort
+    {
 #define DEF_OP(x, y, ...) x,
 #include "OpCodeList.h"
         MaxByteSizedOpcodes = 255,
@@ -27,7 +28,7 @@ namespace Js {
 
     inline OpCode operator+(OpCode o1, OpCode o2) { return (OpCode)((uint)o1 + (uint)o2); }
     inline uint operator+(OpCode o1, uint i) { return ((uint)o1 + i); }
-    inline uint operator+(uint i, OpCode &o2) { return (i +  (uint)o2); }
+    inline uint operator+(uint i, OpCode &o2) { return (i + (uint)o2); }
     inline OpCode operator++(OpCode &o) { return o = (OpCode)(o + 1U); }
     inline OpCode operator++(OpCode &o, int) { OpCode prev_o = o;  o = (OpCode)(o + 1U); return prev_o; }
     inline OpCode operator-(OpCode o1, OpCode o2) { return (OpCode)((uint)o1 - (uint)o2); }
@@ -47,7 +48,7 @@ namespace Js {
     inline bool operator>(OpCode &o, uint i) { return ((uint)(o) > i); }
     inline bool operator>(uint i, OpCode &o) { return (i > (uint)(o)); }
 
-    inline bool IsSimd128Opcode(OpCode o) { return ( o > Js::OpCode::Simd128_Start && o < Js::OpCode::Simd128_End ) || (o > Js::OpCode::Simd128_Start_Extend && o < Js::OpCode::Simd128_End_Extend);  }
+    inline bool IsSimd128Opcode(OpCode o) { return (o > Js::OpCode::Simd128_Start && o < Js::OpCode::Simd128_End) || (o > Js::OpCode::Simd128_Start_Extend && o < Js::OpCode::Simd128_End_Extend); }
     inline uint Simd128OpcodeCount() { return (uint)(Js::OpCode::Simd128_End - Js::OpCode::Simd128_Start) + 1 + (uint)(Js::OpCode::Simd128_End_Extend - Js::OpCode::Simd128_Start_Extend) + 1; }
 
     ///----------------------------------------------------------------------------
@@ -69,9 +70,9 @@ namespace Js {
 
     ///----------------------------------------------------------------------------
     ///
-    /// struct OpLayoutXXX
+    /// struct OpLayoutXYZ
     ///
-    /// OpLayoutXXX structs define the standard patterns used to layout each
+    /// OpLayoutXYZ structs define the standard patterns used to layout each
     /// OpCode's arguments.
     ///
     /// Set up packing:
@@ -152,7 +153,7 @@ namespace Js {
     {
         typename SizePolicy::RegSlotType     R0;
         typename SizePolicy::RegSlotType     R1;
-        byte       B2;
+        byte                                 B2;
     };
 
     template <typename SizePolicy>
@@ -161,7 +162,7 @@ namespace Js {
         typename SizePolicy::RegSlotType     R0;
         typename SizePolicy::RegSlotType     R1;
         typename SizePolicy::RegSlotType     R2;
-        byte       B3;
+        byte                                 B3;
     };
 
     template <typename SizePolicy>
@@ -184,39 +185,39 @@ namespace Js {
     };
 
     template <typename SizePolicy>
-    struct OpLayoutT_Arg              // OutArg <- Reg   -- or --   Reg <- InArg
+    struct OpLayoutT_Arg          // OutArg <- Reg   -- or --   Reg <- InArg
     {
         typename SizePolicy::ArgSlotType     Arg;
         typename SizePolicy::RegSlotType     Reg;
     };
 
-    struct OpLayoutBr           // goto Offset
+    struct OpLayoutBr             // goto Offset
     {
         JumpOffset  RelativeJumpOffset;
     };
 
-    struct OpLayoutBrS          // if (op val) goto Offset
+    struct OpLayoutBrS            // if (op val) goto Offset
     {
         JumpOffset  RelativeJumpOffset;
         byte        val;
     };
 
     template <typename SizePolicy>
-    struct OpLayoutT_BrReg1          // if (op R1) goto Offset
+    struct OpLayoutT_BrReg1       // if (op R1) goto Offset
     {
         JumpOffset  RelativeJumpOffset;
         typename SizePolicy::RegSlotType     R1;
     };
 
     template <typename SizePolicy>
-    struct OpLayoutT_BrReg2          // if (R1 op R2) goto Offset
+    struct OpLayoutT_BrReg2       // if (R1 op R2) goto Offset
     {
         JumpOffset  RelativeJumpOffset;
         typename SizePolicy::RegSlotType     R1;
         typename SizePolicy::RegSlotType     R2;
     };
 
-    struct OpLayoutBrProperty   // if (R1.R2) goto Offset
+    struct OpLayoutBrProperty     // if (R1.R2) goto Offset
     {
         JumpOffset  RelativeJumpOffset;
         RegSlot     Instance;
@@ -237,7 +238,7 @@ namespace Js {
 
     enum CallIExtendedOptions : byte
     {
-        CallIExtended_None       = 0,
+        CallIExtended_None = 0,
         CallIExtended_SpreadArgs = 1 << 0 // This call has arguments that need to be spread
     };
 
@@ -293,7 +294,7 @@ namespace Js {
     };
 
     template <typename SizePolicy>
-    struct OpLayoutT_Class     // class _ extends Extends { Constructor(...) { ... } }
+    struct OpLayoutT_Class        // class _ extends Extends { Constructor(...) { ... } }
     {
         typename SizePolicy::RegSlotType     Constructor;
         typename SizePolicy::RegSlotSType    Extends;
@@ -302,14 +303,14 @@ namespace Js {
     template <typename SizePolicy>
     struct OpLayoutT_ElementU     // Instance.PropertyIndex = <some constant value>. e.g. undefined
     {
-        typename SizePolicy::RegSlotType            Instance;
-        typename SizePolicy::PropertyIdIndexType    PropertyIdIndex;
+        typename SizePolicy::RegSlotType             Instance;
+        typename SizePolicy::PropertyIdIndexType     PropertyIdIndex;
     };
 
     template <typename SizePolicy>
     struct OpLayoutT_ElementRootU // Root.PropertyIndex = <some constant value>. e.g. undefined
     {
-        typename SizePolicy::PropertyIdIndexType    PropertyIdIndex;
+        typename SizePolicy::PropertyIdIndexType     PropertyIdIndex;
     };
 
     template <typename SizePolicy>
@@ -322,15 +323,15 @@ namespace Js {
 
 
     template <typename SizePolicy>
-    struct OpLayoutT_ElementSlot     // Value = Instance[SlotIndex] or Instance[SlotIndex] = Value
+    struct OpLayoutT_ElementSlot    // Value = Instance[SlotIndex] or Instance[SlotIndex] = Value
     {
-        int32       SlotIndex;          // TODO: Make this one byte?
+        int32                                SlotIndex; // TODO: Make this one byte?
         typename SizePolicy::RegSlotType     Value;
         typename SizePolicy::RegSlotType     Instance;
     };
 
     template <typename SizePolicy>
-    struct OpLayoutT_ElementCP     // As OpLayoutElementC, with space for a FastPath LoadPatch
+    struct OpLayoutT_ElementCP      // As OpLayoutElementC, with space for a FastPath LoadPatch
     {
         typename SizePolicy::RegSlotType     Value;
         typename SizePolicy::RegSlotType     Instance;
@@ -338,14 +339,14 @@ namespace Js {
     };
 
     template <typename SizePolicy>
-    struct OpLayoutT_ElementRootCP     // Same as ElementCP, but for root object
+    struct OpLayoutT_ElementRootCP   // Same as ElementCP, but for root object
     {
         RootCacheId inlineCacheIndex;
         typename SizePolicy::RegSlotType     Value;
     };
 
     template <typename SizePolicy>
-    struct OpLayoutT_ElementC2     // Instance.PropertyIndex = Value, Instance2
+    struct OpLayoutT_ElementC2       // Instance.PropertyIndex = Value, Instance2
     {
         typename SizePolicy::RegSlotType     Value;
         typename SizePolicy::RegSlotType     Instance;
@@ -354,7 +355,7 @@ namespace Js {
     };
 
     template <typename SizePolicy>
-    struct OpLayoutT_ElementI     // Value = Instance[Element] or Instance[Element] = Value
+    struct OpLayoutT_ElementI        // Value = Instance[Element] or Instance[Element] = Value
     {
         typename SizePolicy::RegSlotType     Value;
         typename SizePolicy::RegSlotType     Instance;
@@ -374,7 +375,7 @@ namespace Js {
         unsigned short C1;
     };
 
-    struct OpLayoutReg1Int2               // R0 <- Var(C1, C2)
+    struct OpLayoutReg1Int2          // R0 <- Var(C1, C2)
     {
         RegSlot     R0;
         int32       C1;
@@ -382,14 +383,14 @@ namespace Js {
     };
 
     template <typename SizePolicy>
-    struct OpLayoutT_Reg2Int1           // R0 <- func(R1, C1)
+    struct OpLayoutT_Reg2Int1        // R0 <- func(R1, C1)
     {
-        int32       C1;
+        int32                                C1;
         typename SizePolicy::RegSlotType     R0;
         typename SizePolicy::RegSlotType     R1;
     };
 
-    struct OpLayoutAuxiliary     // R0 <- Load(Offset, C1)
+    struct OpLayoutAuxiliary         // R0 <- Load(Offset, C1)
     {
         uint32      Offset;
         int32       C1;
@@ -404,7 +405,7 @@ namespace Js {
     template <typename SizePolicy>
     struct OpLayoutT_Unsigned1
     {
-        typename SizePolicy::UnsignedType C1;
+        typename SizePolicy::UnsignedType    C1;
     };
 
     // Dynamic profile layout wrapper
@@ -420,8 +421,6 @@ namespace Js {
         ProfileId profileId;
         ProfileId profileId2;
     };
-
-
 
     // Generate the multi size layout type defs
 #define LAYOUT_TYPE_WMS(layout) \
@@ -446,11 +445,10 @@ namespace Js {
     LAYOUT_TYPE_PROFILED2(layout##_Small)
 #include "LayoutTypes.h"
 
-
 #pragma pack(pop)
 
-// Generate structure to automatically map layout to its info
-template <OpLayoutType::_E layout> struct OpLayoutInfo;
+    // Generate structure to automatically map layout to its info
+    template <OpLayoutType::_E layout> struct OpLayoutInfo;
 
 #define LAYOUT_TYPE(layout) \
     CompileAssert(sizeof(OpLayout##layout) <= MaxLayoutSize); \
@@ -467,9 +465,9 @@ template <OpLayoutType::_E layout> struct OpLayoutInfo;
     };
 #include "LayoutTypes.h"
 
-// Generate structure to automatically map opcode to its info
-// Also generate assert to make sure the layout and opcode use the same macro with and without multiple size layout
-template <OpCode opcode> struct OpCodeInfo;
+    // Generate structure to automatically map opcode to its info
+    // Also generate assert to make sure the layout and opcode use the same macro with and without multiple size layout
+    template <OpCode opcode> struct OpCodeInfo;
 
 #define DEFINE_OPCODEINFO(op, layout, extended) \
     CompileAssert(!OpLayoutInfo<OpLayoutType::layout>::HasMultiSizeLayout); \

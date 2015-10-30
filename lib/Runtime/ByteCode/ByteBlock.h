@@ -11,11 +11,12 @@ namespace Js
         DECLARE_OBJECT(ByteBlock)
 
     private:
-        uint m_contentSize;      // Length of block, in bytes
-        __declspec(align(4))  //Align the buffer to sizeof(uint32) to improve GetHashCode() perf.
-        byte* m_content;      // Block's content
+        uint m_contentSize;     // Length of block, in bytes
 
-        static ByteBlock* New(Recycler* alloc,const byte * initialContent,int initialContentSize, ScriptContext * requestContext);
+        __declspec(align(4))    // Align the buffer to sizeof(uint32) to improve GetHashCode() perf.
+            byte* m_content;    // The block's content
+
+        static ByteBlock* New(Recycler* alloc, const byte * initialContent, int initialContentSize, ScriptContext * requestContext);
 
     public:
         ByteBlock(uint size, byte * content)
@@ -35,12 +36,12 @@ namespace Js
 
         static DWORD GetBufferOffset() { return offsetof(ByteBlock, m_content); }
 
-        static ByteBlock* New(Recycler* alloc,const byte * initialContent,int initialContentSize);
+        static ByteBlock* New(Recycler* alloc, const byte * initialContent, int initialContentSize);
 
         // This is needed just for the debugger since it allocates
-        // the byte block on a separate thread, which the recycler doesn't like
-        // To remove when the recycler supports multi-threaded allocation
-        static ByteBlock* NewFromArena(ArenaAllocator* alloc,const byte * initialContent,int initialContentSize);
+        // the byte block on a separate thread, which the recycler doesn't like.
+        // To remove when the recycler supports multi-threaded allocation.
+        static ByteBlock* NewFromArena(ArenaAllocator* alloc, const byte * initialContent, int initialContentSize);
 
         uint GetLength() const;
         byte* GetBuffer();
@@ -52,7 +53,7 @@ namespace Js
 
         //
         // Create a copy of buffer
-        //  Each Var is cloned on the requestContext
+        // Each Var is cloned on the requestContext
         //
         ByteBlock * Clone(Recycler* alloc, ScriptContext * requestContext);
     };

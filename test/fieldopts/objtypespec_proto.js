@@ -80,11 +80,11 @@ function test4(){
     var litObj5 = {prop0: (-- obj1.prop0), prop1: 1, prop2: 1, prop3: 1, prop4: 1, prop5: 1, prop6: 1, prop7: 1};
   }
   Object.prototype.prop5 = 1;
-  for(var __loopvar0 = 0; __loopvar0 < 3; ++__loopvar0) {
+  for (var __loopvar0 = 0; __loopvar0 < 3; ++__loopvar0) {
     obj2 = func0(1, 1, 1);
     function func4 (){
-      if(((obj1.prop0 >>= 1) >>> ((this.prop5)))) {
-        for(var strvar0 in obj1 ) {
+      if (((obj1.prop0 >>= 1) >>> ((this.prop5)))) {
+        for (var strvar0 in obj1 ) {
           this.prop5 >>>=1;
           obj0.prop3 = ((obj0.prop6 ^= this.prop5));
           break ;
@@ -92,7 +92,7 @@ function test4(){
       }
       WScript.Echo("obj0.prop6 = " + (obj0.prop6|0));
     }
-    if(func4()) {
+    if (func4()) {
     }
   }
 };
@@ -102,4 +102,3 @@ test4();
 
 // run JITted code
 test4();
-

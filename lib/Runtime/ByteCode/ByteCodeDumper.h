@@ -7,16 +7,16 @@
 #if DBG_DUMP
 namespace Js
 {
-    struct ByteCodeDumper  /* All static */
+    struct ByteCodeDumper /* All static */
     {
     public:
         static void DumpRecursively(FunctionBody* dumpFunction);
-        static void Dump(FunctionBody * dumpFunction);        
+        static void Dump(FunctionBody * dumpFunction);
         static void DumpConstantTable(FunctionBody *dumpFunction);
         static void DumpOp(OpCode op, LayoutSize layoutSize, ByteCodeReader& reader, FunctionBody * dumpFunction);
 
     protected:
-        static void DumpImplicitArgIns(FunctionBody * dumpFunction);        
+        static void DumpImplicitArgIns(FunctionBody * dumpFunction);
         static void DumpI4(int value);
         static void DumpU4(uint32 value);
         static void DumpU2(uint16 value);
@@ -26,7 +26,7 @@ namespace Js
         static void DumpReg(RegSlot registerID);
         static void DumpReg(RegSlot_TwoByte registerID);
         static void DumpReg(RegSlot_OneByte registerID);
-        static void DumpProfileId(uint id); 
+        static void DumpProfileId(uint id);
 
 #define LAYOUT_TYPE(layout) \
     static void Dump##layout(OpCode op, const unaligned OpLayout##layout* data, FunctionBody * dumpFunction, ByteCodeReader& reader);

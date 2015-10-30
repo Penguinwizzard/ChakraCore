@@ -3,7 +3,6 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-
 var test = new Object();
 test.nokill_singleuse = function(o, b)
 {
@@ -57,7 +56,6 @@ test.kill_twouse_before = function(o, b)
     return x + y;
 }
 
-
 test.nokill_multiuse_before = function(o, b)
 {
     var x = 0;
@@ -83,7 +81,6 @@ test.kill_multiuse_before = function(o, b)
     }
     return x + y;
 }
-
 
 test.nokill_multiuse_after = function(o, b)
 {
@@ -164,7 +161,6 @@ function runtest(name, func)
     }
     WScript.Echo(output + ": " + (((total_time / iter) * 1000) | 0) + " (per 1000 iteration, executed " + iter + " iterations)");
 }
-
 
 for (var x in test)
 {

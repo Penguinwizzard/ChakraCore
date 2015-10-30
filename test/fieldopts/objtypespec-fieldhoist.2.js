@@ -24,10 +24,10 @@ function test() {
     return x;
 };
 
-//Interpreter call
+// Interpreter call
 test();
 
-//JIT call
+// JIT call
 test();
 test();
 test();

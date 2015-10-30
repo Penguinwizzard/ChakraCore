@@ -2,6 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
+
 enum ScopeType
 {
     ScopeType_Unknown,
@@ -28,15 +29,15 @@ private:
     ArenaAllocator *alloc;
     uint scopeSlotCount; // count of slots in the local scope
     ScopeType const scopeType;
-    BYTE isDynamic:1;
-    BYTE isObject:1;
-    BYTE canMerge:1;
-    BYTE capturesAll:1;
-    BYTE mustInstantiate:1;
-    BYTE hasCrossScopeFuncAssignment:1;
+    BYTE isDynamic : 1;
+    BYTE isObject : 1;
+    BYTE canMerge : 1;
+    BYTE capturesAll : 1;
+    BYTE mustInstantiate : 1;
+    BYTE hasCrossScopeFuncAssignment : 1;
 public:
 #if DBG
-    BYTE isRestored:1;
+    BYTE isRestored : 1;
 #endif
     Scope(ArenaAllocator *alloc, ScopeType scopeType, bool useSymbolTable = false, int capacity = 0) :
         alloc(alloc),
@@ -129,8 +130,8 @@ public:
         }
     }
 
-    // for JScript, this should not return NULL because
-    // there is always an enclosing global scope
+    // For JScript, this should not return NULL because
+    // there is always an enclosing global scope.
     Symbol *FindSymbol(SymbolName const& name, SymbolType symbolType, bool fCreate = true)
     {
         Symbol *sym = FindLocalSymbol(name);
