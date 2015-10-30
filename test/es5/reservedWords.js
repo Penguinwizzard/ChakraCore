@@ -25,13 +25,13 @@ function bar()
 var k = bar.apply(foo);
 
 var tokenCodes  = {
-	null: 0,
-	true: 1,
-	false: 2,
-	break:3,
-	case:4,
-	catch: function() { write("Inside tokenCodes.catch");}
-	};
+    null: 0,
+    true: 1,
+    false: 2,
+    break:3,
+    case:4,
+    catch: function() { write("Inside tokenCodes.catch");}
+    };
 
 tokenCodes.catch();
 

@@ -22,7 +22,7 @@ function arguments_test1_fixed() {
 }
 
 function arguments_test2() {
-	var k = 10;
+    var k = 10;
     arguments[arguments.length] = 'end';
     target.apply(that, arguments);
 }
@@ -47,7 +47,6 @@ function arguments_test2_fixed() {
     arr.push('end');
     target.apply(that, arr);
 }
-
 
 var arg = "arg";
 var iter = 100;

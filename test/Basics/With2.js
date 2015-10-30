@@ -5,15 +5,15 @@
 
 function X()
 {
-	this.x = 1;
+    this.x = 1;
 }
 function Y(s)
 {
-	this[s] = 2;
+    this[s] = 2;
 }
 function Z()
 {
-	this.z = 3;
+    this.z = 3;
 }
 
 Y.prototype = new Z();
@@ -25,85 +25,82 @@ var z = new Z();
 
 with(x)
 {
-	WScript.Echo("x.x = " + x);
-	WScript.Echo("x.y = " + y);
-	WScript.Echo("x.z = " + z);
+    WScript.Echo("x.x = " + x);
+    WScript.Echo("x.y = " + y);
+    WScript.Echo("x.z = " + z);
 
-	++z;
+    ++z;
 
-	WScript.Echo("x.z = " + z);
+    WScript.Echo("x.z = " + z);
 
-	// refers to x.y
-	with(y)
-	{
-		WScript.Echo("x.x = " + x);
-		WScript.Echo("x.y = " + y);
-		WScript.Echo("x.z = " + z);
-	}
+    // refers to x.y
+    with(y)
+    {
+        WScript.Echo("x.x = " + x);
+        WScript.Echo("x.y = " + y);
+        WScript.Echo("x.z = " + z);
+    }
 
-	y = new Object();
+    y = new Object();
 
-	y.m = 7;
+    y.m = 7;
 
-	// refers to x.y
-	with(y)
-	{
-		WScript.Echo("x.y.m = " + m);
-	}
+    // refers to x.y
+    with(y)
+    {
+        WScript.Echo("x.y.m = " + m);
+    }
 
-	y = undefined;
+    y = undefined;
 
-	if(y == undefined)
-	{
-		WScript.Echo("OK: y in with scope is undefined");
-	}
+    if(y == undefined)
+    {
+        WScript.Echo("OK: y in with scope is undefined");
+    }
 
-	
-	Z.prototype.zz = 1;
+    Z.prototype.zz = 1;
 
-	WScript.Echo("x.zz = " + zz);
+    WScript.Echo("x.zz = " + zz);
 
+    // get rid of x.x
+    x = undefined;
 
-	// get rid of x.x
-	x = undefined;
-
-	if(x == undefined)
-	{
-		WScript.Echo("OK: x in with scope is undefined");
-	}
+    if(x == undefined)
+    {
+        WScript.Echo("OK: x in with scope is undefined");
+    }
 }
 
 with(Z.prototype)
 {
-	zz *= 10;
-	with(Z)
-	{
-		prototype.zz++;
-		
-		with(prototype)
-		{
-			zz *= 100;
-		}
-	}
+    zz *= 10;
+    with(Z)
+    {
+        prototype.zz++;
+
+        with(prototype)
+        {
+            zz *= 100;
+        }
+    }
 }
 
 var q = new Y("a");
 
 with(x)
 {
-	WScript.Echo("x.x = " + x);
-	WScript.Echo("x.y = " + y);
-	WScript.Echo("x.z = " + z);
-	WScript.Echo("x.zz = " + zz);
+    WScript.Echo("x.x = " + x);
+    WScript.Echo("x.y = " + y);
+    WScript.Echo("x.z = " + z);
+    WScript.Echo("x.zz = " + zz);
 }
 
 with(q) { with(q) { with(q) {
 
-	WScript.Echo("q.a = " + a);
-	WScript.Echo("q.zz = " + zz);
+    WScript.Echo("q.a = " + a);
+    WScript.Echo("q.zz = " + zz);
 
 }}}
-
 
 (function () {
     function a()
@@ -112,14 +109,14 @@ with(q) { with(q) { with(q) {
     }
 
     (function(){
-        try { 
+        try {
             throw a;
-        } 
-        catch(x) { 
+        }
+        catch(x) {
             with({}){
                 x();
             }
-        } 
+        }
     })();
 })();
 

@@ -24,7 +24,7 @@ for( var i in a)
   {
     a[5] = 55;
     a[6] = 66;
-  } 
+  }
   write("Index:" + i + " Value:" + a[i]);
 }
 
@@ -36,12 +36,12 @@ for( var i in a)
   {
       a[7] = 77;
       a[9] = 99;
-  } 
+  }
   if(i == "7")
   {
      a.xx = "a.xx";
      a.yy = "a.yy";
-  } 
+  }
   write("Index:" + i + " Value:" + a[i]);
 }
 
@@ -58,26 +58,25 @@ for( var i in b)
   {
     b[5] = 55;
     b[7] = 77;
-  } 
+  }
   if(i == "7")
   {
      b.xx = "b.xx";
      b.yy = "b.yy";
-  } 
+  }
 
   if(i == "xx")
   {
     b[9] = 99;
     b[10] = 1010;
-  } 
+  }
 
   if(i == "9")
   {
      b.zz = "b.zz";
-  } 
+  }
   write("Index:" + i + " Value:" + b[i]);
 }
-
 
 write("Scenario:3 - Adding new array expandos while enumerating Object for second time")
 
@@ -92,23 +91,23 @@ for( var i in b)
   {
     b[5] = 55;
     b[7] = 77;
-  } 
+  }
   if(i == "7")
   {
      b.xx = "b.xx";
      b.yy = "b.yy";
-  } 
+  }
 
   if(i == "xx")
   {
     b[9] = 99;
     b[10] = 1010;
-  } 
+  }
 
   if(i == "9")
   {
      b.zz = "b.zz";
-  } 
+  }
   write("Index:" + i + " Value:" + b[i]);
 }
 
@@ -120,16 +119,16 @@ var counter = 0;
 for (var i in d)
 {
   if(counter == 25)
-  { 
+  {
     break;
   }
   if(counter%2 == 1)
   {
- 	d[counter*counter] = counter*counter;  
-  }  
+    d[counter*counter] = counter*counter;
+  }
   else
   {
- 	d["x"+counter] = "d.x"+counter;
+    d["x"+counter] = "d.x"+counter;
   }
   write("Index:" + i + " Value:" + d[i]);
   counter++;

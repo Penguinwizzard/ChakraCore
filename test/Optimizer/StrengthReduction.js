@@ -135,7 +135,7 @@ function TestMulLarge(){
         X[14] = i * -16384;
 
         for (j = 2; j < X.length; j++)
-            WScript.Echo("TestMul(NOF): " + i + "*-" + Math.pow(2, j) + " = " + X[j]);		
+            WScript.Echo("TestMul(NOF): " + i + "*-" + Math.pow(2, j) + " = " + X[j]);
     }
 
     // 2 ^ i
@@ -155,9 +155,8 @@ function TestMulLarge(){
         X[14] = i * 16384;
 
         for (j = 2; j < X.length; j++)
-            WScript.Echo("TestMul(NOF): " + i + "*" + Math.pow(2, j) + " = " + X[j]);		
+            WScript.Echo("TestMul(NOF): " + i + "*" + Math.pow(2, j) + " = " + X[j]);
     }
-
 
     // 2 ^ i + 1
     for (i = 1; i < 10; i++){
@@ -176,9 +175,8 @@ function TestMulLarge(){
         X[14] = i * 16385;
 
         for (j = 2; j < X.length; j++)
-            WScript.Echo("TestMul(NOF): " + i + "*" + (Math.pow(2, j) + 1) + " = " + X[j]);		
+            WScript.Echo("TestMul(NOF): " + i + "*" + (Math.pow(2, j) + 1) + " = " + X[j]);
     }
-
 
     // 2 ^ i - 1
     for (i = 1; i < 10; i++){
@@ -197,7 +195,7 @@ function TestMulLarge(){
         X[14] = i * 16383;
 
         for (j = 2; j < X.length; j++)
-            WScript.Echo("TestMul(NOF): " + i + "*" + (Math.pow(2, j) - 1)+ " = " + X[j]);	
+            WScript.Echo("TestMul(NOF): " + i + "*" + (Math.pow(2, j) - 1)+ " = " + X[j]);
     }
 }
 
@@ -222,7 +220,7 @@ function TestRem(){
         X[14] = A[i] % 16384
 
         for (j = 2; j < X.length; j++)
-            WScript.Echo("TestRem: " + A[i] + "%" + Math.pow(2, j) +" = " + X[j]);		
+            WScript.Echo("TestRem: " + A[i] + "%" + Math.pow(2, j) +" = " + X[j]);
     }
 }
 
@@ -268,7 +266,6 @@ function test0(){
   e *=-17;
   WScript.Echo("e = " + (e|0));
 };
-
 
 TestMulSmall();
 TestMulSmall();

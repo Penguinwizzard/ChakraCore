@@ -8,7 +8,7 @@ if (typeof(WScript) != "undefined") {
 }
 
 var tests = {
-  // Note: each test has name (string) and body (function) properties. 
+  // Note: each test has name (string) and body (function) properties.
   //       Success is when the body does not throw, failure -- when it throws.
 
   test01: {
@@ -37,7 +37,7 @@ var tests = {
       function f(a) {
         var val = 2;
         Object.defineProperty(arguments, 0, { configurable: false, enumerable: false, value: val });
-        // Note that we expect writable: true because this was omitted in defineProperty above 
+        // Note that we expect writable: true because this was omitted in defineProperty above
         // which is acually re-define property with all attributes == true.
         var expected = { configurable: false, enumerable: false, writable: true, value: val };
         assert.areEqual(expected, Object.getOwnPropertyDescriptor(arguments, 0), "wrong value of getOwnPropertyDescriptor");
@@ -76,7 +76,7 @@ var tests = {
     name: "formal arg: defineProperty, set writable to false AND set value, verify that value changed in both named and indexed arg and that the item was disconnected",
     body: function () {
       var passedValue = 1;
-      function f(a) {                                           	
+      function f(a) {
         var val1 = 2;
         var val2 = 3;
         Object.defineProperty(arguments, 0, { writable: false, value: val1 });
@@ -136,9 +136,9 @@ var tests = {
         var isGetterFired = false;
         var isSetterFired = false;
 
-        Object.defineProperty(arguments, 0, { 
+        Object.defineProperty(arguments, 0, {
           get: function() { isGetterFired = true; return this.value; },
-          set: function(arg) { isSetterFired = true; this.value = arg; } 
+          set: function(arg) { isSetterFired = true; this.value = arg; }
         });
 
         assert.areEqual(undefined, arguments[0], "unexpected arg[0] value right after conversion to accessor property");
@@ -162,9 +162,9 @@ var tests = {
       var val1 = 2;
       var val2 = 3;
       function f(a) {
-        Object.defineProperty(arguments, 0, { 
+        Object.defineProperty(arguments, 0, {
           get: function() { return this.value; },
-          set: function(arg) { this.value = arg; } 
+          set: function(arg) { this.value = arg; }
         });
         Object.defineProperty(arguments, 0, { value: val1 });
         a = val2;
@@ -198,14 +198,14 @@ var tests = {
       var passedValue1 = 2;
       var passedValue2 = 4;
       function f(a, b, c, d) {
-        Object.defineProperty(arguments, 0, { enumerable: false });	// arguments[0].enumerable = false.
-        Object.defineProperty(arguments, 1, { writable: false });	// arguments[1].writable = false -> disconnected.
+        Object.defineProperty(arguments, 0, { enumerable: false }); // arguments[0].enumerable = false.
+        Object.defineProperty(arguments, 1, { writable: false });   // arguments[1].writable = false -> disconnected.
         delete arguments[2];                                            // arguments[2] is deleted.
         var i, accumulator = "";
         for (i in arguments) {
           accumulator += i.toString() + ": " + arguments[i] + ";";
         }
-        // Note that we expect [1].enumerable = true because this was omitted in defineProperty above 
+        // Note that we expect [1].enumerable = true because this was omitted in defineProperty above
         // which is acually re-define property that previously already had enumerable = true.
         assert.areEqual("1: " + passedValue1 + ";" + "3: " + passedValue2 + ";", accumulator, "accumulator");
       }
@@ -249,8 +249,8 @@ var tests = {
       var initial = "initial";
       var passedValue = "passed";
       var data = initial;
-      Object.defineProperty(Object.prototype, 0, { 
-        configurable: true, 
+      Object.defineProperty(Object.prototype, 0, {
+        configurable: true,
         get: function() { return data; },
         set: function(arg) { data = arg; }
       });
@@ -271,8 +271,8 @@ var tests = {
       var initial = "initial";
       var passedValue = "passed";
       var data = initial;
-      Object.defineProperty(Object.prototype, 0, { 
-        configurable: true, 
+      Object.defineProperty(Object.prototype, 0, {
+        configurable: true,
         get: function() { return data; },
         set: function(arg) { data = arg; }
       });
@@ -401,8 +401,8 @@ var tests = {
           accumulator += i.toString() + ": " + arguments[i] + ";";
         }
         assert.areEqual(
-          "0: " + newValue + ";" + "1: " + passedValue2 + ";" + "2: " + passedValue3 + ";" + "3: " + passedValue4 + ";", 
-          accumulator, 
+          "0: " + newValue + ";" + "1: " + passedValue2 + ";" + "2: " + passedValue3 + ";" + "3: " + passedValue4 + ";",
+          accumulator,
           "accumulator");
       }
       f(passedValue1, passedValue2, passedValue3, passedValue4);
@@ -415,7 +415,7 @@ var tests = {
       function f(a) {
         Object.defineProperty(arguments, 0, { enumerable: false });
         // Note: Object.getOwnPropertyNames returns all properties, even non-enumerable.
-        var actual = Object.getOwnPropertyNames(arguments); 
+        var actual = Object.getOwnPropertyNames(arguments);
         var expected = { 0: "0", 1: "1", 2: "length", 3: "callee" };
         assert.areEqual(expected, actual, "wrong property names");
       }
@@ -634,7 +634,7 @@ var tests = {
       }
       var value = 5;
       f(value);
-      var expected = helpers.isVersion10OrLater ? 
+      var expected = helpers.isVersion10OrLater ?
         value.toString() :
         value.toString() + ",undefined"; // IE9 compat mode -- Win8 558490.
       assert.areEqual(expected, accumulator, "Wrong accumulated value");

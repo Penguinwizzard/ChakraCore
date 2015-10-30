@@ -3,11 +3,10 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-
 // Configuration: ..\fuzz.xml
 // Testcase Number: 1664
 // Bailout Testing: ON
-// -maxinterpretcount:1  -off:floattypespec 
+// -maxinterpretcount:1  -off:floattypespec
 // Branch:  fbl_ie_dev1(saagarwa.
 // Build: 20529-1700)
 
@@ -22,8 +21,8 @@ function FAILED()
 function test0(){
   var obj0 = {};
   var func1 = function(){
-	(obj0.prop0 /=NaN);
-	return Object.create(obj0);
+    (obj0.prop0 /=NaN);
+    return Object.create(obj0);
   }
 
   obj0.prop0 = 1;
@@ -40,7 +39,6 @@ test0();
 test0();
 
 test0();
-
 
 if (!Failed)
 {

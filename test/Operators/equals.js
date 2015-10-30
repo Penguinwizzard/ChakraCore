@@ -32,11 +32,11 @@ var all = [ undefined, null,
             -10, -10.0, -10.1,
             Number.MAX_VALUE, Number.MIN_VALUE, Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY,
             Number(10), Number(1), Number(0.0),
-            new Number(NaN), new Number(+0), new Number(-0), new Number(0), 
-            new Number(0.0), new Number(-0.0), new Number(+0.0), 
-            new Number(1), new Number(10), new Number(10.0), new Number(10.1), new Number(-1), 
+            new Number(NaN), new Number(+0), new Number(-0), new Number(0),
+            new Number(0.0), new Number(-0.0), new Number(+0.0),
+            new Number(1), new Number(10), new Number(10.0), new Number(10.1), new Number(-1),
             new Number(-10), new Number(-10.0), new Number(-10.1),
-            new Number(Number.MAX_VALUE), new Number(Number.MIN_VALUE), new Number(Number.NaN), 
+            new Number(Number.MAX_VALUE), new Number(Number.MIN_VALUE), new Number(Number.NaN),
             new Number(Number.POSITIVE_INFINITY), new Number(Number.NEGATIVE_INFINITY),
             "", "hello", "hel" + "lo",
             String(""), String("hello"), String("h" + "ello"),
@@ -53,9 +53,9 @@ var all = [ undefined, null,
           ];
 
 for (var i=0; i<all.length; ++i) {
-	for (var j=0; j<all.length; ++j) {
-		write("a["+i+"]("+all[i]+") == a["+j+"]("+all[j]+") : " + (all[i] == all[j]));
-		write("a["+i+"]("+all[i]+") != a["+j+"]("+all[j]+") : " + (all[i] != all[j]));
-	}
+    for (var j=0; j<all.length; ++j) {
+        write("a["+i+"]("+all[i]+") == a["+j+"]("+all[j]+") : " + (all[i] == all[j]));
+        write("a["+i+"]("+all[i]+") != a["+j+"]("+all[j]+") : " + (all[i] != all[j]));
+    }
 }
 

@@ -8,8 +8,8 @@ Array.prototype[4] = 10;
 
 function Test()
 {
-	a.sort(function(){return -1});
-	WScript.Echo(a);
+    a.sort(function(){return -1});
+    WScript.Echo(a);
 }
 
 Test();

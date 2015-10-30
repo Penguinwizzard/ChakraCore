@@ -6,7 +6,7 @@
  (function() {
               spc    = /^\s$/,
               range  = 0xFFFF;
- 
+
           var fillZero = (function() {
               var tmp = [];
               return function(num, n) {
@@ -25,9 +25,9 @@
                   return num;
               };
           })();
- 
- 	  WScript.Echo("start");
- 
+
+      WScript.Echo("start");
+
           for (r = 0x00; r < range; r++) {
               if (spc.test(String.fromCharCode(r))) {
                   WScript.Echo('\\u'+fillZero(r.toString(16), 4));

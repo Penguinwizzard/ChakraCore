@@ -10,22 +10,22 @@ var str="if (1) do WScript.Echo(1); while (false); else 1;";
 
 try
 {
-	eval(str);
+    eval(str);
 }
 catch (e)
 {
-	WScript.Echo(e);
+    WScript.Echo(e);
 }
 
 // Use do..while as a statement inside another do..while
 str="do do WScript.Echo(2); while (false); while(false);"
 try
 {
-	eval(str);
+    eval(str);
 }
 catch (e)
 {
-	WScript.Echo(e);
+    WScript.Echo(e);
 }
 
 // All the following cases should succeed in pre-ES5 and ES5

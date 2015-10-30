@@ -14,7 +14,7 @@ function func0(){
         } catch(ex) {
           WScript.Echo(ex.message);
         }
-        
+
         var __loopvar6 = loopInvariant - 3;
         do {
           __loopvar6++;
@@ -55,7 +55,7 @@ function test1(){
     var strvar10 = 1;
     strvar10 = strvar10.substring();
     obj1 = {};
-	WScript.Echo(obj1);
+    WScript.Echo(obj1);
   } catch(ex) {
     WScript.Echo(ex.message);
     var __loopvar3 = 16;
@@ -90,18 +90,18 @@ test2();
 WScript.Echo("Passed");
 
 var obj00 = {i: 0,
-			next: function(){
-				if(this.i != 75)
-				    return this.i++;
-				throw this.i;
-			}
-			};
-			
+            next: function(){
+                if(this.i != 75)
+                    return this.i++;
+                throw this.i;
+            }
+            };
+
 var obj11 = {prop0: {x:1}};
 function test3(obj)
 {
     var a;
-	var b = obj11.prop0;
+    var b = obj11.prop0;
     try {
         while (true) {
             a = obj.next();
@@ -109,7 +109,7 @@ function test3(obj)
     } catch (e) {
         b.x;
     }
-    
+
 }
 test3(obj00);
 obj00.i = 0;

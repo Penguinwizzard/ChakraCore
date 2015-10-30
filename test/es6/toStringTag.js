@@ -115,7 +115,7 @@ var tests = [
             assert.areEqual("[object Set Iterator]", Object.prototype.toString.call((new Set())[Symbol.iterator]()), "toString should have tag Set Iterator");
        }
     },
-	/* Subclassing disabled in Windows10 enable once we have full support for classes. 
+    /* Subclassing disabled in Windows10 enable once we have full support for classes.
     {
        name: "sub class Array.toString",
        body: function () {
@@ -281,7 +281,7 @@ var tests = [
             assert.areEqual("[object MyClass]", Object.prototype.toString.call(m), "toString should have tag MyClass b\c prototype tag changed");
        }
     },
-	*/
+    */
     {
        name: "throws test case",
        body: function () {

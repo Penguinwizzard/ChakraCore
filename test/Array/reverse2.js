@@ -7,32 +7,32 @@ function write(v) { WScript.Echo(v + ""); }
 
 for (var i=0;i<100; i += 2)
 {
-	Array.prototype[i] = (i*i) + 1000;
+    Array.prototype[i] = (i*i) + 1000;
 }
 
 function Test()
 {
 
-	var args = arguments;
-	var a = new Array();
+    var args = arguments;
+    var a = new Array();
 
-	while (args.length > 1)
-	{
+    while (args.length > 1)
+    {
 
-		var s = Array.prototype.shift.call(args);
-		var e = Array.prototype.shift.call(args);
+        var s = Array.prototype.shift.call(args);
+        var e = Array.prototype.shift.call(args);
 
-		for (var i=s;i<e;i++)
-		{
-			a[i] = i;
-		}
+        for (var i=s;i<e;i++)
+        {
+            a[i] = i;
+        }
 
-	}
-	a.length = Array.prototype.shift.call(args);
+    }
+    a.length = Array.prototype.shift.call(args);
 
-	write(a);
-	write(a.reverse());
-	write(a.reverse());
+    write(a);
+    write(a.reverse());
+    write(a.reverse());
 }
 
 Test(0,10,10);

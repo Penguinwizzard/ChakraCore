@@ -9,30 +9,29 @@
 
 function print(x,str)
 {
-	WScript.Echo("=== " + str + " ===");
-	WScript.Echo("x.q:    " + x.q);
-	WScript.Echo("x[3]:   " + x[3]);
-	WScript.Echo("x[4]:   " + x[4]);
-	WScript.Echo("x[50]:  " + x[50]);
-	WScript.Echo("x.p1:   " + x.p1);
-	WScript.Echo("x.p2:   " + x.p2);
-	WScript.Echo("x[\"m\"]: " + x["m"]);
-	WScript.Echo("");
+    WScript.Echo("=== " + str + " ===");
+    WScript.Echo("x.q:    " + x.q);
+    WScript.Echo("x[3]:   " + x[3]);
+    WScript.Echo("x[4]:   " + x[4]);
+    WScript.Echo("x[50]:  " + x[50]);
+    WScript.Echo("x.p1:   " + x.p1);
+    WScript.Echo("x.p2:   " + x.p2);
+    WScript.Echo("x[\"m\"]: " + x["m"]);
+    WScript.Echo("");
 }
-
 
 var z = new Array(10);
 
 for(var i = 0; i < 10; ++i)
 {
-	z[i] = i;
+    z[i] = i;
 }
 z.p1 = "test";
 z.p2 = 3;
 
 function F(x)
 {
-	this[x] = 1;
+    this[x] = 1;
 }
 F.prototype = z;
 

@@ -5,14 +5,14 @@
 
 function verify(x,y)
 {
-	if(x != y)
-	{
-		WScript.Echo("ERROR: " + x + " != " + y );
-	}
-	else
-	{
-		WScript.Echo(x + " == " + y);
-	}
+    if(x != y)
+    {
+        WScript.Echo("ERROR: " + x + " != " + y );
+    }
+    else
+    {
+        WScript.Echo(x + " == " + y);
+    }
 }
 
 WScript.Echo(parseFloat());
@@ -20,7 +20,6 @@ WScript.Echo(parseFloat("a"));
 WScript.Echo(parseFloat("o12345"));
 WScript.Echo(parseFloat("e10"));
 WScript.Echo(parseFloat("+b"));
-
 
 verify(0, parseFloat("0"));
 verify(0, parseFloat("-0"));

@@ -10,7 +10,7 @@ function foo0(o,i)
     }
     else
     {
-	    WScript.Echo("FAILED");	
+        WScript.Echo("FAILED");
     }
 }
 foo0(9, 0);
@@ -33,12 +33,12 @@ function foo1() {
 foo1();
 foo1();
 
-function foo2(){  
+function foo2(){
   var ary = new Array(10);
   var c = -1;
   var e = 1;
   var g = 1;
-  ary[ary.length-1] = 1; 
+  ary[ary.length-1] = 1;
   ary.length = 100;
   g =((e < c)||(g < c));
   if(g)
@@ -47,8 +47,8 @@ function foo2(){
   ary[ary.length-1];
 };
 
-foo2(); 
-foo2(); 
-foo2(); 
+foo2();
+foo2();
+foo2();
 
 WScript.Echo("Passed");

@@ -7,14 +7,14 @@ var a = 0;
 
 function isless(x,y)
 {
-	return (x < y);
+    return (x < y);
 }
 
 var i = 0;
-do 
+do
 {
-	a += i;
-	++i;
+    a += i;
+    ++i;
 
 } while(isless(i, 100) && isless(a, 5000));
 

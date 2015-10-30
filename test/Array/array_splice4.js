@@ -12,22 +12,22 @@ function func2()
 // from bug BLUE 5602
 function func()
 {
-	e="div".match(func2());
+    e="div".match(func2());
 echo("e = " + e + " ; e.length = " + e.length);
-	e.length=58;
+    e.length=58;
 echo("e = " + e + " ; e.length = " + e.length);
-	e.splice(1);//es.splice(1,17); is OK too
+    e.splice(1);//es.splice(1,17); is OK too
 echo("e = " + e + " ; e.length = " + e.length);
 }
 
 // from bug BLUE 5602
 function func_test2()
 {
-	e="div".match(func2());
+    e="div".match(func2());
 echo("e = " + e + " ; e.length = " + e.length);
-	e.length=58;
+    e.length=58;
 echo("e = " + e + " ; e.length = " + e.length);
-	e.splice(1,17);
+    e.splice(1,17);
 echo("e = " + e + " ; e.length = " + e.length);
 }
 

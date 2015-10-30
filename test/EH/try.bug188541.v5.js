@@ -5,7 +5,7 @@
 
 function foo() {
     try {
-		throw "foo error";
+        throw "foo error";
     } catch (e) {
         WScript.Echo("Caught e=" + e);
         {
@@ -13,7 +13,7 @@ function foo() {
             WScript.Echo("Caught e=" + e);
         }
 
-		WScript.Echo("Caught e=" + e);
+        WScript.Echo("Caught e=" + e);
     }
 }
 
@@ -44,7 +44,7 @@ function foo3() {
             let e = 20;
             WScript.Echo("Caught e=" + e);
         }
-        
+
         WScript.Echo("Caught e=" + e);
     }
 }
@@ -58,7 +58,7 @@ function foo4() {
             let e = 20;
             WScript.Echo("Caught e=" + e);
         }
-        
+
         WScript.Echo("Caught e=" + e);
     }
 }
@@ -79,7 +79,7 @@ function foo5() {
             let e = 20;
             WScript.Echo("Caught e=" + e);
         }
-        
+
         WScript.Echo("Caught e=" + e);
     }
 }

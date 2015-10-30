@@ -5,14 +5,14 @@
 
 function verify(x,y)
 {
-	if(x != y)
-	{
-		WScript.Echo("ERROR: " + x + " != " + y );
-	}
-	else
-	{
-		WScript.Echo(x + " == " + y);
-	}
+    if(x != y)
+    {
+        WScript.Echo("ERROR: " + x + " != " + y );
+    }
+    else
+    {
+        WScript.Echo(x + " == " + y);
+    }
 }
 
 WScript.Echo(parseInt());

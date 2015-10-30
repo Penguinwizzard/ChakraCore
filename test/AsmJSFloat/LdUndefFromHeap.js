@@ -3,20 +3,20 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-//2nd test case 
+//2nd test case
 function AsmModule(stdlib,foreign,buffer) {
     "use asm";
     var m1 = stdlib.Math.fround;
     var func1 = foreign.fun1;
     //views
     var HEAP8  =new stdlib.Float32Array(buffer);
-    
+
     function f1(){
         var x = m1(1.5);
-		x = m1(HEAP8[1]);		
+        x = m1(HEAP8[1]);
         return m1(x)
-        
-    }       
+
+    }
     return f1;
 }
 

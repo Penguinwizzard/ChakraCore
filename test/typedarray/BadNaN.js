@@ -20,23 +20,22 @@ function FAIL()
 
 function foo1(i)
 {
-	return float32Array[i];
+    return float32Array[i];
 }
 function foo2(i)
 {
-	return float64Array[i];
+    return float64Array[i];
 }
-  
 
 var x;
 
 for (var i = 0; i < 1000; i++)
 {
-	x = foo1(0);
-	if (x === x) FAIL();
+    x = foo1(0);
+    if (x === x) FAIL();
 
-	x = foo2(0);
-	if (x === x) FAIL();
+    x = foo2(0);
+    if (x === x) FAIL();
 }
 
 WScript.Echo("Passed\n");

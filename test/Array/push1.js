@@ -50,8 +50,8 @@ TestPush({}); // behavior varies by version
 
 function bar()
 {
-	var n = Number();
-	Number.prototype.push = Array.prototype.push;
-	n.push(1);
+    var n = Number();
+    Number.prototype.push = Array.prototype.push;
+    n.push(1);
 }
 bar();

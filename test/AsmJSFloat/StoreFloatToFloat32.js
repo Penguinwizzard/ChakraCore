@@ -10,15 +10,15 @@ function AsmModule(stdlib,foreign,buffer) {
     var func1 = foreign.fun1;
     //views
     var HEAP32 =new stdlib.Float32Array(buffer);
-    
+
     function f1(){
         var x = m1(1.5);
-	    x = m1(x)
-		HEAP32[1] = x;		
+        x = m1(x)
+        HEAP32[1] = x;
         return m1(HEAP32[1])
-        
-    }   
-    
+
+    }
+
     return f1;
 }
 

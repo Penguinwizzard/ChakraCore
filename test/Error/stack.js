@@ -58,7 +58,7 @@ try
 {
 function stackOverFlowFinally() {
     try {
-        stackOverFlowFinally();    
+        stackOverFlowFinally();
         while (true) {
         }
     }
@@ -69,7 +69,7 @@ function stackOverFlowFinally() {
    stackOverFlowFinally();
 }
 catch(e) {
-	printError(e);
+    printError(e);
 }
 
 function DoSomething()
@@ -85,12 +85,12 @@ try
 
    for (var i = 0; i < count; i++)
    {
-	a.x = {};
-	a = a.x;	
+    a.x = {};
+    a = a.x;
    }
    eval("JSON.stringify(b)");
 }
 catch(e) {
-	printError(e);
+    printError(e);
 }
 

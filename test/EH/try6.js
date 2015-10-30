@@ -51,26 +51,26 @@ foobaz(1);
 foobaz(2);
 
 function testThrowInlining() {
-	var y = function () {};
-	Object.prototype["qfxhma"] = function qfxhma() {
-		throw false;
-	};
-	function shapeyConstructor(waquaz) {
-		qfxhma('');
-		Object.defineProperty(this, "x", ({
-				set : 
-				(function () {
-					var jqanki = y;
-				})()					
-		}));
-	}
-	for (var a in[]) {
-		try {
-			shapeyConstructor(a);
-		} catch (e) {
-		}
-	}
-	qfxhma = y;
+    var y = function () {};
+    Object.prototype["qfxhma"] = function qfxhma() {
+        throw false;
+    };
+    function shapeyConstructor(waquaz) {
+        qfxhma('');
+        Object.defineProperty(this, "x", ({
+                set :
+                (function () {
+                    var jqanki = y;
+                })()
+        }));
+    }
+    for (var a in[]) {
+        try {
+            shapeyConstructor(a);
+        } catch (e) {
+        }
+    }
+    qfxhma = y;
 };
 testThrowInlining();
 testThrowInlining();
@@ -78,35 +78,35 @@ testThrowInlining();
 //Blue Bug 216103
 function bar216103(a)
 {
-	var b=this.foo216103(a);
-	return b;
+    var b=this.foo216103(a);
+    return b;
 }
 
 function foo216103(a)
 {
-	switch(a)
-	{
-		case "en":
-			return "english (passed)";
-			break;
-	
-		case "de":
-			return "german (passed)";
-			break;
-			
-		default:
-			throw "blah (passed)";
-			break;
-	}
+    switch(a)
+    {
+        case "en":
+            return "english (passed)";
+            break;
+
+        case "de":
+            return "german (passed)";
+            break;
+
+        default:
+            throw "blah (passed)";
+            break;
+    }
 }
 
 try
 {
-	WScript.Echo(bar216103("en"));
+    WScript.Echo(bar216103("en"));
 }
 catch(err)
 {
-	WScript.Echo(err);
+    WScript.Echo(err);
 }
 
 function test() {
@@ -118,7 +118,7 @@ function test() {
         }
         var iewhao = a_indexing(fsznpi, kfoevo + 1);
         return 4;
-    }([1], 0));       
+    }([1], 0));
 }
 try{
   test();

@@ -10,38 +10,38 @@ var PolymorphicFuncObjArr = [];
 var PolyFuncArr = [];
 function GetPolymorphicFunction()
 {
-	if(PolyFuncArr.length > 1 )
-	{
-		var myFunc = PolyFuncArr.shift();
-		PolyFuncArr.push(myFunc);
-		return myFunc;
-	}
-	else
-	{
-		return PolyFuncArr[0];
-	}
+    if(PolyFuncArr.length > 1 )
+    {
+        var myFunc = PolyFuncArr.shift();
+        PolyFuncArr.push(myFunc);
+        return myFunc;
+    }
+    else
+    {
+        return PolyFuncArr[0];
+    }
 }
 function GetObjectwithPolymorphicFunction(){
-	if (reuseObjects)
-	{
-		if(PolymorphicFuncObjArr.length > 1 )
-		{
-			var myFunc = PolymorphicFuncObjArr.shift();
-			PolymorphicFuncObjArr.push(myFunc);
-			return myFunc
-		}
-		else
-		{
-			return PolymorphicFuncObjArr[0];
-		}
-	}
-	else
-	{
-		var obj = {};
-		obj.polyfunc = GetPolymorphicFunction();
-		PolymorphicFuncObjArr.push(obj)
-		return obj
-	}
+    if (reuseObjects)
+    {
+        if(PolymorphicFuncObjArr.length > 1 )
+        {
+            var myFunc = PolymorphicFuncObjArr.shift();
+            PolymorphicFuncObjArr.push(myFunc);
+            return myFunc
+        }
+        else
+        {
+            return PolymorphicFuncObjArr[0];
+        }
+    }
+    else
+    {
+        var obj = {};
+        obj.polyfunc = GetPolymorphicFunction();
+        PolymorphicFuncObjArr.push(obj)
+        return obj
+    }
 };
 function InitPolymorphicFunctionArray()
 {
@@ -93,8 +93,8 @@ function test0(){
   function bar2 (){
     return 1.1;
   }
-  InitPolymorphicFunctionArray(bar0,bar1,bar2);;
-  var __polyobj = GetObjectwithPolymorphicFunction();;
+  InitPolymorphicFunctionArray(bar0,bar1,bar2);
+  var __polyobj = GetObjectwithPolymorphicFunction();
   obj1.prop0 = (__polyobj.polyfunc.call(arrObj0 ) ? Math.pow(1, obj0.method0.call(obj1 , ary, 1, 1, 1)) : 1);
   func2(1, 1, 1, 1);
 };
@@ -113,7 +113,6 @@ test0();
 // run code with bailouts enabled
 shouldBailout = true;
 test0();
-
 
 // Test output:
 // undefined

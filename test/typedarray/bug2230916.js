@@ -20,17 +20,17 @@ function test1() {
 
 function test2() {
   ejdmhf_0 = new Uint8Array();
-  try 
+  try
   {
-	ejdmhf_0[50341] = Symbol();
-  } 
+    ejdmhf_0[50341] = Symbol();
+  }
   catch(ex)
   {
-	  if(ex instanceof TypeError) {
-		  if(ex.message === 'Number expected') {
-			  isPassed2 = true;
-		  }
-	  }
+      if(ex instanceof TypeError) {
+          if(ex.message === 'Number expected') {
+              isPassed2 = true;
+          }
+      }
   }
 }
 

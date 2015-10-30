@@ -48,7 +48,6 @@ for(var i =0;i<10;i++)
   delete Array.prototype[i];
 }
 
-
 write("");
 write("Test case 3");
 
@@ -70,12 +69,11 @@ for(var i =0;i<10;i++)
   delete Array.prototype[i];
 }
 
-
 write("");
 write("Test case 4");
 for(var k=0;k<10;k++)
 {
-	Array.prototype[k]= 324 * i;
+    Array.prototype[k]= 324 * i;
 }
 var arr=new Array(10);
 var newarr=arr.splice(3,5)
@@ -85,16 +83,14 @@ write(newarr);
 write(newarr.length);
 for(var k=0;k<10;k++)
 {
-	delete Array.prototype[k];
+    delete Array.prototype[k];
 }
-
-
 
 write("");
 write("Test case 5");
 for(var k=0;k<10;k++)
 {
-	Array.prototype[k]="P"+k;
+    Array.prototype[k]="P"+k;
 }
 var arr=new Array(10);
 var newarr=arr.splice(3,5,"d1","d2","d3")
@@ -105,15 +101,14 @@ write(newarr.length);
 
 for(var k=0;k<10;k++)
 {
-	delete Array.prototype[k];
+    delete Array.prototype[k];
 }
-
 
 write("");
 write("Test case 6");
 for(var k=0;k<10;k++)
 {
-	Array.prototype[k]=k + 23.4;
+    Array.prototype[k]=k + 23.4;
 }
 var arr= [23.4, 34 ];
 var newarr=arr.splice(6,4)
@@ -125,9 +120,8 @@ write(newarr.length);
 
 for(var k=0;k<10;k++)
 {
-	delete Array.prototype[k];
+    delete Array.prototype[k];
 }
-
 
 write("");
 write("Test case 7");
@@ -142,8 +136,7 @@ obj[9]="lastelement";
 var res=obj.shift()
 
 for(var i in obj)
-	write("expando:" + i +"=" +obj[i]);
-
+    write("expando:" + i +"=" +obj[i]);
 
 delete Object.prototype.shift;
 
@@ -172,7 +165,6 @@ var newarr=arr1.slice(2147483640,2147483648);
 write(newarr);
 write(newarr.length);
 write(arr1.length);
-
 
 write("");
 write("Test case 10");
@@ -213,7 +205,6 @@ write(arr);
 write(arr.length);
 write(newarr);
 write(newarr.length);
-
 
 write("");
 write("Test case 11");

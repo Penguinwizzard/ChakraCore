@@ -49,7 +49,6 @@ function asmModule(stdlib, imports, buffer) {
         intersectionNum = Int32Heap[bIndex << 2 >> 2] | 0;
         matrixSize = imul(dim1, dim2);
 
-
         Int32Heap[cIndex << 2 >> 2] = dim1;
         Int32Heap[cIndex + 1 << 2 >> 2] = dim2;
 
@@ -58,9 +57,9 @@ function asmModule(stdlib, imports, buffer) {
             j = 0;
             while ((j|0) < (intersectionNum|0)) {
                 newPiece = f4(toF(getIntersectionPiece(aIndex, bIndex, dim2, i, 0, j)),
-							toF(getIntersectionPiece(aIndex, bIndex, dim2, i, 1, j)),
-							toF(getIntersectionPiece(aIndex, bIndex, dim2, i, 2, j)),
-							toF(getIntersectionPiece(aIndex, bIndex, dim2, i, 3, j)));
+                            toF(getIntersectionPiece(aIndex, bIndex, dim2, i, 1, j)),
+                            toF(getIntersectionPiece(aIndex, bIndex, dim2, i, 2, j)),
+                            toF(getIntersectionPiece(aIndex, bIndex, dim2, i, 3, j)));
                 cPiece = f4add(cPiece, newPiece);
                 j = (j + 1)|0;
             }

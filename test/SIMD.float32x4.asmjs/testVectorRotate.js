@@ -5,11 +5,11 @@
 
 function asmModule(stdlib, imports, buffer) {
     "use asm";
-    
-	var toF = stdlib.Math.fround;
-	
-	var i4 = stdlib.SIMD.Int32x4;
-	var i4check = i4.check;
+
+    var toF = stdlib.Math.fround;
+
+    var i4 = stdlib.SIMD.Int32x4;
+    var i4check = i4.check;
     var i4splat = i4.splat;
     var i4fromFloat64x2 = i4.fromFloat64x2;
     var i4fromFloat64x2Bits = i4.fromFloat64x2Bits;
@@ -34,17 +34,17 @@ function asmModule(stdlib, imports, buffer) {
     var i4load1 = i4.load1;
     var i4load2 = i4.load2;
     var i4load3 = i4.load3;
-    
+
     var i4store  = i4.store
     var i4store1 = i4.store1;
     var i4store2 = i4.store2;
     var i4store3 = i4.store3;
-    
+
     //var i4shiftLeftByScalar = i4.shiftLeftByScalar;
     //var i4shiftRightByScalar = i4.shiftRightByScalar;
     //var i4shiftRightArithmeticByScalar = i4.shiftRightArithmeticByScalar;
-    var f4 = stdlib.SIMD.Float32x4; 
-    var f4check = f4.check;    
+    var f4 = stdlib.SIMD.Float32x4;
+    var f4check = f4.check;
     var f4splat = f4.splat;
     var f4fromFloat64x2 = f4.fromFloat64x2;
     var f4fromFloat64x2Bits = f4.fromFloat64x2Bits;
@@ -76,19 +76,18 @@ function asmModule(stdlib, imports, buffer) {
     var f4or = f4.or;
     var f4xor = f4.xor;
     var f4not = f4.not;
-    
+
     var f4load = f4.load;
     var f4load1 = f4.load1;
     var f4load2 = f4.load2;
     var f4load3 = f4.load3;
-    
+
     var f4store  = f4.store;
     var f4store1 = f4.store1;
     var f4store2 = f4.store2;
     var f4store3 = f4.store3;
-    
-    
-    var d2 = stdlib.SIMD.Float64x2;  
+
+    var d2 = stdlib.SIMD.Float64x2;
     var d2check = d2.check;
     var d2splat = d2.splat;
     var d2fromFloat32x4 = d2.fromFloat32x4;
@@ -116,14 +115,13 @@ function asmModule(stdlib, imports, buffer) {
     var d2greaterThan = d2.greaterThan;
     var d2greaterThanOrEqual = d2.greaterThanOrEqual;
     var d2select = d2.select;
-    
+
     var d2load  = d2.load;
     var d2load1 = d2.load1;
-    
+
     var d2store  = d2.store
     var d2store1 = d2.store1;
-    
-    
+
     var fround = stdlib.Math.fround;
 
     var globImportF4 = f4check(imports.g1);       // global var import
@@ -135,64 +133,64 @@ function asmModule(stdlib, imports, buffer) {
     var gval = 1234;
     var gval2 = 1234.0;
 
-	var OFFSET_1 = 10;
-	var OFFSET_2 = 15;
-    
+    var OFFSET_1 = 10;
+    var OFFSET_2 = 15;
+
     var loopCOUNT = 10;
-    
-    var Int8Heap = new stdlib.Int8Array (buffer);    
-    var Uint8Heap = new stdlib.Uint8Array (buffer);    
-    
+
+    var Int8Heap = new stdlib.Int8Array (buffer);
+    var Uint8Heap = new stdlib.Uint8Array (buffer);
+
     var Int16Heap = new stdlib.Int16Array(buffer);
     var Uint16Heap = new stdlib.Uint16Array(buffer);
     var Int32Heap = new stdlib.Int32Array(buffer);
     var Uint32Heap = new stdlib.Uint32Array(buffer);
-    var Float32Heap = new stdlib.Float32Array(buffer);	
-	
-	//Reverses heap values at start index and end index
-	function rotate(start, n, k) {
-		start = start | 0;
-	    n = n | 0;
-		k = k | 0;
-		
-		var SIMD_SIZE = 4;
-		var c = 0, tmp = f4(0.0, 0.0, 0.0, 0.0), v = 0, t = 0, tp = 0;
-		
-		for(v = 0; c < n; v = v + 1) {
-			t = v|0;
-			tp = (v + k)|0;
-			tmp = f4load(Float32Heap, start + v << 2 >> 2);
-			c = c + SIMD_SIZE;
-			while ( tp != v) {
-				f4store(Float32Heap, start + t << 2 >> 2, f4load(Float32Heap, start + tp << 2 >> 2));
-				t = tp|0;
-				tp = (tp + k)|0;
-				if(tp >= n) {
-					tp = (tp - n)|0;
-				}
-				c = c + SIMD_SIZE;
-			}
-			f4store(Float32Heap, start + t << 2 >> 2, tmp);
-		}
-	}
-	
-	return {rotate:rotate};
+    var Float32Heap = new stdlib.Float32Array(buffer);
+
+    //Reverses heap values at start index and end index
+    function rotate(start, n, k) {
+        start = start | 0;
+        n = n | 0;
+        k = k | 0;
+
+        var SIMD_SIZE = 4;
+        var c = 0, tmp = f4(0.0, 0.0, 0.0, 0.0), v = 0, t = 0, tp = 0;
+
+        for(v = 0; c < n; v = v + 1) {
+            t = v|0;
+            tp = (v + k)|0;
+            tmp = f4load(Float32Heap, start + v << 2 >> 2);
+            c = c + SIMD_SIZE;
+            while ( tp != v) {
+                f4store(Float32Heap, start + t << 2 >> 2, f4load(Float32Heap, start + tp << 2 >> 2));
+                t = tp|0;
+                tp = (tp + k)|0;
+                if(tp >= n) {
+                    tp = (tp - n)|0;
+                }
+                c = c + SIMD_SIZE;
+            }
+            f4store(Float32Heap, start + t << 2 >> 2, tmp);
+        }
+    }
+
+    return {rotate:rotate};
 }
 
 var buffer = new ArrayBuffer(0x10000); //16mb min 2^12
 
 //Reset or flush the buffer
 function initF32(buffer) {
-	var values = new Float32Array( buffer );
-	for( var i=0; i < values.length ; ++i ) {
-		values[i] = i * 10;
-	}
-	return values.length;
+    var values = new Float32Array( buffer );
+    for( var i=0; i < values.length ; ++i ) {
+        values[i] = i * 10;
+    }
+    return values.length;
 }
 function printBuffer(Float32Heap, start, end) {
     for (var i = start; i < end; i += 4) {
-		var f4 = SIMD.Float32x4.load(Float32Heap, i);
-		WScript.Echo(f4.toString());
+        var f4 = SIMD.Float32x4.load(Float32Heap, i);
+        WScript.Echo(f4.toString());
     }
 }
 

@@ -20,20 +20,18 @@ var x = "global";
     write(x);
 })();
 
-
 (function Test3() {
-	var str = "'Test3.para'";
-    eval("var x = eval; write(x(str));");    
+    var str = "'Test3.para'";
+    eval("var x = eval; write(x(str));");
 })();
 
-
 (function Test4() {
-	var str = "'Test4'";
+    var str = "'Test4'";
     eval("function Test4_Inner() { write('inside Test4_inner');} ");
     try {
-		Test4_Inner();
+        Test4_Inner();
     } catch (e) {
-		write("Exception : " + e);
+        write("Exception : " + e);
     }
 })();
 

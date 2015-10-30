@@ -7,7 +7,7 @@ function DumpObject(o)
 {
     for (var i in o)
     {
-    	WScript.Echo(i + " = " + o[i]);
+        WScript.Echo(i + " = " + o[i]);
     }
 }
 
@@ -17,11 +17,9 @@ a[0xFFFFFFFE] = 1;
 
 DumpObject(a);
 
-
 function Foo()
 {
 }
-
 
 Foo.prototype[3] = 101;
 

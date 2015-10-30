@@ -13,51 +13,50 @@
 */
 function f(x)
 {
-	switch(x)
-	{
-		case f:
-		   WScript.Echo(1);
-		   break;
-		case f:
-			WScript.Echo(2);
-		   break;
-		case f:
-			WScript.Echo(3);
-			break;
-		case f:
-			WScript.Echo(4);
-			break;
-		case f:
-			WScript.Echo(5);
-			break;
-		case f:
-			WScript.Echo(6);
-			break;
-		case f:
-			WScript.Echo(7);
-			break;
-		case f:
-			WScript.Echo(8);
-			break;
-		case f:
-			WScript.Echo(9);
-			break;
-		case f:
-			WScript.Echo(10);
-			break;
-		default:
-			WScript.Echo('first switch default');
-			break;
-		
-	}
+    switch(x)
+    {
+        case f:
+           WScript.Echo(1);
+           break;
+        case f:
+            WScript.Echo(2);
+           break;
+        case f:
+            WScript.Echo(3);
+            break;
+        case f:
+            WScript.Echo(4);
+            break;
+        case f:
+            WScript.Echo(5);
+            break;
+        case f:
+            WScript.Echo(6);
+            break;
+        case f:
+            WScript.Echo(7);
+            break;
+        case f:
+            WScript.Echo(8);
+            break;
+        case f:
+            WScript.Echo(9);
+            break;
+        case f:
+            WScript.Echo(10);
+            break;
+        default:
+            WScript.Echo('first switch default');
+            break;
+
+    }
 
 }
 
 for(i=0;i<5;i++)
 {
-	f(11);
+    f(11);
 }
-
 
 /*
 ************************************************ TEST 2**********************************************
@@ -65,45 +64,45 @@ for(i=0;i<5;i++)
 */
 function g(x)
 {
-	switch(x)
-	{
-		case f:
-		   WScript.Echo(1);
-		   break;
-		case 2:
-			WScript.Echo(2);
-		   break;
-		case f:
-			WScript.Echo(3);
-			break;
-		case 4:
-			WScript.Echo(4);
-			break;
-		case 'hello':
-			WScript.Echo('hello');
-			break;
-		case 5:
-			WScript.Echo(5);
-			break;
-		case f:
-			WScript.Echo('f');
-			break;
-		case 6:
-			WScript.Echo(6);
-			break;
-		case 7:
-			WScript.Echo(7);
-			break;
-		case 7+5:
-			WScript.Echo(13);
-			break;
-		case 8:
-			WScript.Echo(8);
-			break;
-		default:
-			WScript.Echo('second switch default');
-			break;
-	}
+    switch(x)
+    {
+        case f:
+           WScript.Echo(1);
+           break;
+        case 2:
+            WScript.Echo(2);
+           break;
+        case f:
+            WScript.Echo(3);
+            break;
+        case 4:
+            WScript.Echo(4);
+            break;
+        case 'hello':
+            WScript.Echo('hello');
+            break;
+        case 5:
+            WScript.Echo(5);
+            break;
+        case f:
+            WScript.Echo('f');
+            break;
+        case 6:
+            WScript.Echo(6);
+            break;
+        case 7:
+            WScript.Echo(7);
+            break;
+        case 7+5:
+            WScript.Echo(13);
+            break;
+        case 8:
+            WScript.Echo(8);
+            break;
+        default:
+            WScript.Echo('second switch default');
+            break;
+    }
 
 }
 
@@ -115,4 +114,3 @@ g(5);
 g(13);
 g(new Object)
 
- 

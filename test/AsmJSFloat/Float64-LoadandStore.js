@@ -8,13 +8,13 @@ function AsmModule(stdlib,foreign,buffer) {
     var m1 = stdlib.Math.fround;
     //views
     var HEAP64  =new stdlib.Float64Array(buffer);
-    
+
     function f1(){
-		var y = 0.5
-        var x = m1(1.5);	    
-		HEAP64[1] = x;		
-        return +(HEAP64[1])        
-    }       
+        var y = 0.5
+        var x = m1(1.5);
+        HEAP64[1] = x;
+        return +(HEAP64[1])
+    }
     return f1;
 }
 

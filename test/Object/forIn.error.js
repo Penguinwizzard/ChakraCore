@@ -7,7 +7,7 @@
 
 function foo()
 {
-    for (var p in c) 	// Error: c is undefined.
+    for (var p in c)    // Error: c is undefined.
     {
         addPropertyName(p);
     }

@@ -21,7 +21,7 @@ function test() {
             uiktzz++;
         }
     };
-	return x;
+    return x;
 };
 
 //Interpreter call

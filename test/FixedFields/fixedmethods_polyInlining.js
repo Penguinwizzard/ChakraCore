@@ -52,7 +52,7 @@ function test0() {
     v2.prototype = v4;
     var v5 = new v2();
     obj0;
-    function v6() { 		
+    function v6() {
       this.method0 = function () {
         obj0.prop3 = argFunc0.call(obj0) + test0.caller;
       };
@@ -64,7 +64,7 @@ function test0() {
     var v8 = new v7();
     function v9() {
     }
-    v9.prototype.method1 = function () {       
+    v9.prototype.method1 = function () {
     };
     v9.prototype = new v6();
     var v10 = new v9();
@@ -72,15 +72,15 @@ function test0() {
       // WScript.Echo(".");
       v12.method0();
     }
-    
+
     v11(v3);
-    v11(v5); 
-    v11(v3); 
+    v11(v5);
+    v11(v3);
     v11(v10);
-    v11(v1); 
-    v11(v8); 
-    v11(v10); 
-    
+    v11(v1);
+    v11(v8);
+    v11(v10);
+
   };
   var func2 = function (argMath3, argFunc4, argMath5) {
     protoObj0.prop1 = ary.splice(6, 3, -937079010.9 * (-1491185136.9 + obj0.length) ^ ary.shift(), -2147483649 - (argMath3 >= obj0.length), protoObj0.length * (-937079010.9 * (-1491185136.9 + obj0.length) ^ ary.shift()) - (typeof 1766379515.1 == null), a === a || a != obj0.length, argMath5 - argMath5 | argMath5 === obj0.length, ~test0.caller, argFunc4.call(obj0), argFunc4.call(obj0) & 1034225882, -argFunc4.call(protoObj0), ary.push(-29553868 ^ 2012447008, -1114318962 + -1985634397, argMath5 - -926420530, -981986144, argMath5 - -926420530, h += argMath5, argMath5 - -926420530) >> ary.reverse()) >> argMath3;

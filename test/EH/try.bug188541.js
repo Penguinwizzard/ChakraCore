@@ -5,11 +5,11 @@
 
 function foo() {
     try {
-		throw "foo error";
+        throw "foo error";
     } catch (e) {
-		var e = 10;
-	
-		WScript.Echo("Caught e=" + e);
+        var e = 10;
+
+        WScript.Echo("Caught e=" + e);
     }
 }
 

@@ -24,9 +24,8 @@ check(0, Math.round(4.9406564584124654000e-324), "round smallest value > 0");
 check(0, Math.round(9.8813129168249309000e-324), "round 2nd smallest value > 0");
 for(var i = 0.001; i < 0.5; i += 0.001)
 {
-	check(0, Math.round(i), "round " + i);
+    check(0, Math.round(i), "round " + i);
 }
-
 
 // check various values between -0.5 and 0
 checkisnegativezero(Math.round(-4.9406564584124654000e-324), "round most positive value < 0");
@@ -37,9 +36,8 @@ checkisnegativezero(Math.round(-0), "round -0 should be -0");
 
 for(var i = -0.001; i > -0.5; i -= 0.001)
 {
-	checkisnegativezero(Math.round(i), "round " + i);
+    checkisnegativezero(Math.round(i), "round " + i);
 }
-
 
 // check various integers
 check(1, Math.round(1), "round 1");
@@ -51,15 +49,15 @@ check(4294967296, Math.round(4294967296), "round 4294967296");
 check(-4294967296, Math.round(-4294967296), "round -4294967296");
 for(var i = 1000; i < 398519; i += 179)
 {
-	check(i, Math.round(i), "round " + i);
+    check(i, Math.round(i), "round " + i);
 }
 for(var i = 0.001; i <= 0.5; i += 0.001)
 {
-	check(1, Math.round(0.5 + i), "round " + (0.5+i));
+    check(1, Math.round(0.5 + i), "round " + (0.5+i));
 }
 for(var i = -0.001; i >= -0.5; i -= 0.001)
 {
-	check(-1, Math.round(-0.5 + i), "round " + (-0.5+i));
+    check(-1, Math.round(-0.5 + i), "round " + (-0.5+i));
 }
 
 // check I + 0.5
@@ -69,9 +67,8 @@ check(3, Math.round(2.5), "round 2.5");
 check(4294967296, Math.round(4294967295 + 0.5), "round 4294967295.5");
 for(var i = -100000; i <= 100000; i += 100)
 {
-	check(i+1, Math.round(i + 0.5), "round " + (i+0.5));
+    check(i+1, Math.round(i + 0.5), "round " + (i+0.5));
 }
-
 
 // miscellaneous other real numbers
 check(30593859183, Math.round(30593859183.3915898), "round a double with high precision");
@@ -85,23 +82,23 @@ check(-1.7976931348623155000e+308, Math.round(-1.7976931348623155000e+308), "rou
 // values around INT_MIN and INT_MAX for amd64 (Bug 179932)
 function foo(b)
 {
-	var round = Math.round(b); 
-	
-	if(round <= 2147483647) 
-	{
-		FAILED = true;
-	}
+    var round = Math.round(b);
+
+    if(round <= 2147483647)
+    {
+        FAILED = true;
+    }
 }
 foo(2147483648);
 
 function bar(b)
 {
-	var round = Math.round(b);
-		
-	if(round >= -2147483648) 
-	{
-		FAILED = true;
-	}
+    var round = Math.round(b);
+
+    if(round >= -2147483648)
+    {
+        FAILED = true;
+    }
 }
 bar(-2147483649);
 
@@ -112,26 +109,26 @@ if (!FAILED)
 
 function check(x, y, str)
 {
-	if(x != y)
-	{
-		FAILED = true;
-		WScript.Echo("fail: " + str);
-	}
+    if(x != y)
+    {
+        FAILED = true;
+        WScript.Echo("fail: " + str);
+    }
 }
 function checkisnegativezero(x, str)
 {
-	// this is a quick way to check if a number is -0
-	if(x != 0 || 1/x >= 0)
-	{
-		FAILED = true;
-		WScript.Echo("fail: " + str);
-	}
+    // this is a quick way to check if a number is -0
+    if(x != 0 || 1/x >= 0)
+    {
+        FAILED = true;
+        WScript.Echo("fail: " + str);
+    }
 }
 function checknan(x, str)
 {
-	if(!isNaN(x))
-	{
-		FAILED = true;
-		WScript.Echo("fail: " + str);
-	}
+    if(!isNaN(x))
+    {
+        FAILED = true;
+        WScript.Echo("fail: " + str);
+    }
 }

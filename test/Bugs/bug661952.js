@@ -14,7 +14,7 @@
 //Build: 140730-2030
 //FullBuild: 9802.0.140730
 //MachineName: VSP75819
-//InstructionSet: 
+//InstructionSet:
 //reduced switches: -loopinterpretcount:1 -bgjit- -maxsimplejitruncount:1 -maxinterpretcount:1 -force:inline
 var __counter = 0;
 function test0() {
@@ -51,11 +51,11 @@ function test0() {
 }
 try
 {
-	test0();
-	test0();
-	test0();
+    test0();
+    test0();
+    test0();
 }
 catch(e)
 {
-	WScript.Echo("PASS");
+    WScript.Echo("PASS");
 }

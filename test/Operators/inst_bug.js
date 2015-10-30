@@ -11,7 +11,7 @@ function test() {
     var x = x instanceof x;
     function x() { };
     if (x !== false)
-	FAIL();
+    FAIL();
 };
 
 test();

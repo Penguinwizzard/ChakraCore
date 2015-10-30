@@ -5,13 +5,13 @@
 
 function foo(arr,y,a)
 {
-	var x = arr[y] |0;
-	var z = arr[y];
-	var b = arr[y];
-	WScript.Echo(""+z);
-	WScript.Echo(""+b);
-	var m = z + b + x;
-	return m;
+    var x = arr[y] |0;
+    var z = arr[y];
+    var b = arr[y];
+    WScript.Echo(""+z);
+    WScript.Echo(""+b);
+    var m = z + b + x;
+    return m;
 
 }
 var buffer = new ArrayBuffer(1<<16);

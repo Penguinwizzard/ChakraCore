@@ -20,7 +20,6 @@ for (var b = 0; b <= 1; b++) {
     }
 }
 
-
 function Create(isArray)
 {
   var arr;
@@ -95,11 +94,11 @@ function OutputIndex(arr, index)
 //implicit calls
 function foo()
 {
-	var obj = {};
-	Object.prototype.push = Array.prototype.push;
-	var x;
-	Object.defineProperty(obj, "length", {get: function() {x = true; return 5;}});
-	x = false;
+    var obj = {};
+    Object.prototype.push = Array.prototype.push;
+    var x;
+    Object.defineProperty(obj, "length", {get: function() {x = true; return 5;}});
+    x = false;
 
     try
     {
@@ -110,17 +109,17 @@ function foo()
         WScript.Echo('caught exception calling push');
     }
 
-	WScript.Echo(x);
-	return len;
+    WScript.Echo(x);
+    return len;
 }
 
 WScript.Echo (foo());
 
 function bar()
 {
-	var a = Number();
-	Number.prototype.push = Array.prototype.push;
-	a.push(1);
+    var a = Number();
+    Number.prototype.push = Array.prototype.push;
+    a.push(1);
 }
 bar();
 
@@ -131,12 +130,12 @@ function test0(arr)
       arr.length --;
       arr.push(3);
     }
-	return arr.length;
+    return arr.length;
 }
 
 WScript.Echo("ary.length = " + test0(new Array(10)));
 
 function popTest() {
-	[ , ].pop();
+    [ , ].pop();
 };
 WScript.Echo(popTest());

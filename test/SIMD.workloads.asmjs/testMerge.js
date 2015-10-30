@@ -5,12 +5,11 @@
 
 this.WScript.LoadScriptFile("..\\UnitTestFramework\\SimdJsHelpers.js");
 
-
 function asmModule(stdlib, imports, buffer) {
     "use asm";
-    
-	var i4 = stdlib.SIMD.Int32x4;
-	var i4check = i4.check;
+
+    var i4 = stdlib.SIMD.Int32x4;
+    var i4check = i4.check;
     var i4splat = i4.splat;
     var i4fromFloat64x2 = i4.fromFloat64x2;
     var i4fromFloat64x2Bits = i4.fromFloat64x2Bits;
@@ -35,17 +34,17 @@ function asmModule(stdlib, imports, buffer) {
     var i4load1 = i4.load1;
     var i4load2 = i4.load2;
     var i4load3 = i4.load3;
-    
+
     var i4store  = i4.store
     var i4store1 = i4.store1;
     var i4store2 = i4.store2;
     var i4store3 = i4.store3;
-    
+
     //var i4shiftLeftByScalar = i4.shiftLeftByScalar;
     //var i4shiftRightByScalar = i4.shiftRightByScalar;
     //var i4shiftRightArithmeticByScalar = i4.shiftRightArithmeticByScalar;
-    var f4 = stdlib.SIMD.Float32x4; 
-    var f4check = f4.check;    
+    var f4 = stdlib.SIMD.Float32x4;
+    var f4check = f4.check;
     var f4splat = f4.splat;
     var f4fromFloat64x2 = f4.fromFloat64x2;
     var f4fromFloat64x2Bits = f4.fromFloat64x2Bits;
@@ -77,19 +76,18 @@ function asmModule(stdlib, imports, buffer) {
     var f4or = f4.or;
     var f4xor = f4.xor;
     var f4not = f4.not;
-    
+
     var f4load = f4.load;
     var f4load1 = f4.load1;
     var f4load2 = f4.load2;
     var f4load3 = f4.load3;
-    
+
     var f4store  = f4.store;
     var f4store1 = f4.store1;
     var f4store2 = f4.store2;
     var f4store3 = f4.store3;
-    
-    
-    var d2 = stdlib.SIMD.Float64x2;  
+
+    var d2 = stdlib.SIMD.Float64x2;
     var d2check = d2.check;
     var d2splat = d2.splat;
     var d2fromFloat32x4 = d2.fromFloat32x4;
@@ -117,14 +115,13 @@ function asmModule(stdlib, imports, buffer) {
     var d2greaterThan = d2.greaterThan;
     var d2greaterThanOrEqual = d2.greaterThanOrEqual;
     var d2select = d2.select;
-    
+
     var d2load  = d2.load;
     var d2load1 = d2.load1;
-    
+
     var d2store  = d2.store
     var d2store1 = d2.store1;
-    
-    
+
     var fround = stdlib.Math.fround;
 
     var globImportF4 = f4check(imports.g1);       // global var import
@@ -136,131 +133,129 @@ function asmModule(stdlib, imports, buffer) {
     var gval = 1234;
     var gval2 = 1234.0;
 
-	var OFFSET_1 = 10;
-	var OFFSET_2 = 15;
-    
+    var OFFSET_1 = 10;
+    var OFFSET_2 = 15;
+
     var loopCOUNT = 10;
-    
-    var Int8Heap = new stdlib.Int8Array (buffer);    
-    var Uint8Heap = new stdlib.Uint8Array (buffer);    
-    
+
+    var Int8Heap = new stdlib.Int8Array (buffer);
+    var Uint8Heap = new stdlib.Uint8Array (buffer);
+
     var Int16Heap = new stdlib.Int16Array(buffer);
     var Uint16Heap = new stdlib.Uint16Array(buffer);
     var Int32Heap = new stdlib.Int32Array(buffer);
     var Uint32Heap = new stdlib.Uint32Array(buffer);
-    var Float32Heap = new stdlib.Float32Array(buffer);	
-
+    var Float32Heap = new stdlib.Float32Array(buffer);
 
     // Merges count number of SIMD vectors from srcIdx1 and srcIdx2 to dstIdx
-	function merge(srcIdx1, srcIdx2, dstIdx, count)
-	{
-	    srcIdx1 = srcIdx1 | 0;
-	    srcIdx2 = srcIdx2 | 0;
-	    dstIdx = dstIdx | 0;
-	    count = count | 0;
-	    
-	    var i = 0;
-	       
-	    for (; (i|0) < ((2 * count)|0); i = (i + 1) |0)
-	    { 
-	        if ((((i | 0) % 2)|0) == 0)
-	        {
-	            f4store(Int8Heap, dstIdx, f4load(Int8Heap, srcIdx1));
-	            //f4store(Int8Heap, (dstIdx + 0), f4load(Int8Heap, (srcIdx1 + 0)));
-	            srcIdx1 = (srcIdx1 + 16) | 0;
-	            
-	        }
-	        else
-	        {
-	            f4store(Int8Heap, dstIdx, f4load(Int8Heap, srcIdx2));
-	            //f4store(Int8Heap, (dstIdx + 0), f4load(Int8Heap, (srcIdx1 + 0)));
-	            srcIdx2 = (srcIdx2 + 16) | 0;
-	        }
-	        dstIdx = (dstIdx + 16) | 0;
-	    }
-	    return -1;
-	}
-	
-	function merge1(srcIdx1, srcIdx2, dstIdx, count)
-	{
-	    srcIdx1 = srcIdx1 | 0;
-	    srcIdx2 = srcIdx2 | 0;
-	    dstIdx = dstIdx | 0;
-	    count = count | 0;
-	    
-	    var i = 0;
-	       
-	    for (; (i|0) < ((2 * count)|0); i = (i + 1) |0)
-	    { 
-	        if ((((i | 0) % 2)|0) == 0)
-	        {
-	            i4store(Int8Heap, dstIdx, i4load(Int8Heap, srcIdx1));
-	            //f4store(Int8Heap, (dstIdx + 0), f4load(Int8Heap, (srcIdx1 + 0)));
-	            srcIdx1 = (srcIdx1 + 16) | 0;
-	            
-	        }
-	        else
-	        {
-	            i4store(Int8Heap, dstIdx, i4load(Int8Heap, srcIdx2));
-	            //f4store(Int8Heap, (dstIdx + 0), f4load(Int8Heap, (srcIdx1 + 0)));
-	            srcIdx2 = (srcIdx2 + 16) | 0;
-	        }
-	        dstIdx = (dstIdx + 16) | 0;
-	    }
-		
-	    return -1;
-	}
-	function merge2(srcIdx1, srcIdx2, dstIdx, count)
-	{
-	    srcIdx1 = srcIdx1 | 0;
-	    srcIdx2 = srcIdx2 | 0;
-	    dstIdx = dstIdx | 0;
-	    count = count | 0;
-	    
-	    var i = 0;
-	       
-	    for (; (i|0) < ((2 * count)|0); i = (i + 1) |0)
-	    { 
-	        if ((((i | 0) % 2)|0) == 0)
-	        {
-	            d2store(Int8Heap, dstIdx, d2load(Int8Heap, srcIdx1));
-	            //f4store(Int8Heap, (dstIdx + 0), f4load(Int8Heap, (srcIdx1 + 0)));
-	            srcIdx1 = (srcIdx1 + 16) | 0;
-	            
-	        }
-	        else
-	        {
-	            d2store(Int8Heap, dstIdx, d2load(Int8Heap, srcIdx2));
-	            //f4store(Int8Heap, (dstIdx + 0), f4load(Int8Heap, (srcIdx1 + 0)));
-	            srcIdx2 = (srcIdx2 + 16) | 0;
-	        }
-	        dstIdx = (dstIdx + 16) | 0;
-	    }
-		
-	    return -1;
-	}
-	return {merge:merge
-			, merge1:merge1
-			, merge2:merge2};
-}
+    function merge(srcIdx1, srcIdx2, dstIdx, count)
+    {
+        srcIdx1 = srcIdx1 | 0;
+        srcIdx2 = srcIdx2 | 0;
+        dstIdx = dstIdx | 0;
+        count = count | 0;
 
+        var i = 0;
+
+        for (; (i|0) < ((2 * count)|0); i = (i + 1) |0)
+        {
+            if ((((i | 0) % 2)|0) == 0)
+            {
+                f4store(Int8Heap, dstIdx, f4load(Int8Heap, srcIdx1));
+                //f4store(Int8Heap, (dstIdx + 0), f4load(Int8Heap, (srcIdx1 + 0)));
+                srcIdx1 = (srcIdx1 + 16) | 0;
+
+            }
+            else
+            {
+                f4store(Int8Heap, dstIdx, f4load(Int8Heap, srcIdx2));
+                //f4store(Int8Heap, (dstIdx + 0), f4load(Int8Heap, (srcIdx1 + 0)));
+                srcIdx2 = (srcIdx2 + 16) | 0;
+            }
+            dstIdx = (dstIdx + 16) | 0;
+        }
+        return -1;
+    }
+
+    function merge1(srcIdx1, srcIdx2, dstIdx, count)
+    {
+        srcIdx1 = srcIdx1 | 0;
+        srcIdx2 = srcIdx2 | 0;
+        dstIdx = dstIdx | 0;
+        count = count | 0;
+
+        var i = 0;
+
+        for (; (i|0) < ((2 * count)|0); i = (i + 1) |0)
+        {
+            if ((((i | 0) % 2)|0) == 0)
+            {
+                i4store(Int8Heap, dstIdx, i4load(Int8Heap, srcIdx1));
+                //f4store(Int8Heap, (dstIdx + 0), f4load(Int8Heap, (srcIdx1 + 0)));
+                srcIdx1 = (srcIdx1 + 16) | 0;
+
+            }
+            else
+            {
+                i4store(Int8Heap, dstIdx, i4load(Int8Heap, srcIdx2));
+                //f4store(Int8Heap, (dstIdx + 0), f4load(Int8Heap, (srcIdx1 + 0)));
+                srcIdx2 = (srcIdx2 + 16) | 0;
+            }
+            dstIdx = (dstIdx + 16) | 0;
+        }
+
+        return -1;
+    }
+    function merge2(srcIdx1, srcIdx2, dstIdx, count)
+    {
+        srcIdx1 = srcIdx1 | 0;
+        srcIdx2 = srcIdx2 | 0;
+        dstIdx = dstIdx | 0;
+        count = count | 0;
+
+        var i = 0;
+
+        for (; (i|0) < ((2 * count)|0); i = (i + 1) |0)
+        {
+            if ((((i | 0) % 2)|0) == 0)
+            {
+                d2store(Int8Heap, dstIdx, d2load(Int8Heap, srcIdx1));
+                //f4store(Int8Heap, (dstIdx + 0), f4load(Int8Heap, (srcIdx1 + 0)));
+                srcIdx1 = (srcIdx1 + 16) | 0;
+
+            }
+            else
+            {
+                d2store(Int8Heap, dstIdx, d2load(Int8Heap, srcIdx2));
+                //f4store(Int8Heap, (dstIdx + 0), f4load(Int8Heap, (srcIdx1 + 0)));
+                srcIdx2 = (srcIdx2 + 16) | 0;
+            }
+            dstIdx = (dstIdx + 16) | 0;
+        }
+
+        return -1;
+    }
+    return {merge:merge
+            , merge1:merge1
+            , merge2:merge2};
+}
 
 var buffer = new ArrayBuffer(0x10000); //16mb min 2^12
 
 //Reset or flush the buffer
 function initF32(buffer) {
-	var values = new Float32Array( buffer );
-	for( var i=0; i < values.length ; ++i ) {
-		values[i] = i * 10;
-	}
-	return values.length;
+    var values = new Float32Array( buffer );
+    for( var i=0; i < values.length ; ++i ) {
+        values[i] = i * 10;
+    }
+    return values.length;
 }
 function initI32(buffer) {
-	var values = new Int32Array( buffer );
-	for( var i=0; i < values.length ; ++i ) {
-		values[i] = i * 10;
-	}
-	return values.length;
+    var values = new Int32Array( buffer );
+    for( var i=0; i < values.length ; ++i ) {
+        values[i] = i * 10;
+    }
+    return values.length;
 }
 function validateBuffer(buffer, count)
 {
@@ -337,29 +332,23 @@ function validateBuffer1(buffer, count)
     }
 }
 
-
-
 function printResults(res)
 {
-	WScript.Echo(typeof(res));
-	WScript.Echo(res.toString());
+    WScript.Echo(typeof(res));
+    WScript.Echo(res.toString());
 }
 
 inputLength = initF32(buffer);
-
 
 //Module initialization
 var m = asmModule(this, {g0:initF32(buffer),g1:SIMD.Float32x4(9,9,9,9), g2:SIMD.Int32x4(1, 2, 3, 4), g3:SIMD.Float64x2(10, 10, 10, 10)}, buffer);
 var values = new Float32Array(buffer);
 
-
 //Resetting the buffer.
 initF32(buffer);
 
-
 var ret = m.merge(0, 5 * 16, 10 * 16, 5);
 validateBuffer(values, 4 * 25);
-
 
 initI32(buffer);
 var ret = m.merge1(0, 5 * 16, 10 * 16, 5);

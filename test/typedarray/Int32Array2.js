@@ -18,15 +18,15 @@ function foo()
     var y = 0;
     for (var i = 0; i < 100; i+=4) {
         A[i] = i;
-	A[i+1] = i + 0x7ffffffa;
+    A[i+1] = i + 0x7ffffffa;
         A[i+2] = i+0.34;
-	A[i+3] = str;
+    A[i+3] = str;
     }
 
     for (var i = 0; i < 100; i++)
     {
-    	y += A[i];
-	A[i] = 0;
+        y += A[i];
+    A[i] = 0;
     }
     return y;
 }
@@ -41,7 +41,5 @@ for (var i = 0; i < 1000; i++)
     if (r !== expected)
         FAIL(r, expected);
 }
-
-
 
 WScript.Echo("Passed\n");

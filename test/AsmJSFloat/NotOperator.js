@@ -4,15 +4,15 @@
 //-------------------------------------------------------------------------------------------------------
 
 function AsmModule(stdlib) {
-    "use asm";    
+    "use asm";
     var m1 = stdlib.Math.fround;
-    //Not operator testing 
+    //Not operator testing
     function f1(){
-        var x = m1(1.5);	
-        var y = 1;	
-		y = ~~~x
-        return y|0        
-    }       
+        var x = m1(1.5);
+        var y = 1;
+        y = ~~~x
+        return y|0
+    }
     return f1;
 }
 var global = {Math:Math};

@@ -18,7 +18,7 @@ function test1(){
   var negate = function(p0){
     for(var i=0; i < 2; i++ ) {
       p0 =(- p0);
-	  WScript.Echo(p0);
+      WScript.Echo(p0);
     }
   }
   negate(-2147483648);

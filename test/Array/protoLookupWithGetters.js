@@ -48,7 +48,6 @@ for(var i =0;i<10;i++)
   delete Array.prototype[i];
 }
 
-
 write("");
 write("Test case 3");
 
@@ -70,7 +69,6 @@ for(var i =0;i<10;i++)
   delete Array.prototype[i];
 }
 
-
 write("");
 write("Test case 4");
 for(var k=0;k<10;k++)
@@ -85,10 +83,8 @@ write(newarr);
 write(newarr.length);
 for(var k=0;k<10;k++)
 {
-	delete Array.prototype[k];
+    delete Array.prototype[k];
 }
-
-
 
 write("");
 write("Test case 5");
@@ -105,9 +101,8 @@ write(newarr.length);
 
 for(var k=0;k<10;k++)
 {
-	delete Array.prototype[k];
+    delete Array.prototype[k];
 }
-
 
 write("");
 write("Test case 6");
@@ -125,9 +120,8 @@ write(newarr.length);
 
 for(var k=0;k<10;k++)
 {
-	delete Array.prototype[k];
+    delete Array.prototype[k];
 }
-
 
 write("");
 write("Test case 7");
@@ -142,8 +136,7 @@ obj[9]="lastelement";
 var res=obj.shift()
 
 for(var i in obj)
-	write("expando:" + i +"=" +obj[i]);
-
+    write("expando:" + i +"=" +obj[i]);
 
 delete Object.prototype.shift;
 
@@ -195,7 +188,6 @@ for(var i = 1; i< 20; i = i+3)
   Object.defineProperty(Array.prototype, i, { get: function (i) { return function () { return "a"+i; } }(i), configurable: true, enumerable: true });
 }
 
-
 arr.shift();
 write(arr);
 write(arr.length);
@@ -217,7 +209,6 @@ write(arr);
 write(arr.length);
 write(newarr);
 write(newarr.length);
-
 
 write("");
 write("Test case 11");

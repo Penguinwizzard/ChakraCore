@@ -7,9 +7,9 @@ WScript.Echo("Scenario: Closure with multiple variables");
 
 function f(a)
 {
-	var x = 12;
-	var y = "test";
-	var z = 1.1;
+    var x = 12;
+    var y = "test";
+    var z = 1.1;
 
         var ret = function()
         {
@@ -19,12 +19,12 @@ function f(a)
                 WScript.Echo(z);
         }
 
-	return ret;
+    return ret;
 }
 
 function g(func)
 {
-	func();
+    func();
 }
 
 var clo = f("ArgIn");

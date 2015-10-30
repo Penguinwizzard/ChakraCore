@@ -13,7 +13,7 @@ function printDesc(d) {
     var s = "V:" + d.value + ", W:" + d.writable + ", E:" + d.enumerable + ", C:" + d.configurable;
     s += ", get:" + d.hasOwnProperty('get') + ", set:" + d.hasOwnProperty('set');
 
-    write(s);	
+    write(s);
 }
 
 function f() { return true; };
@@ -36,7 +36,7 @@ printDesc(Object.getOwnPropertyDescriptor(g.__proto__, 'arguments'));
 write("***************** try to set/get the caller/arguments *****************");
 try {
     g.caller = {};
-    write("fail1");    
+    write("fail1");
 } catch (e) {
     write("Set caller passed");
 }

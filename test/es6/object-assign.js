@@ -68,7 +68,7 @@ var tests = [
     {
         name: "Object.assign(o1, o2) throw exception if GetOwnProperty for any enumerable property in o2 if enumeration fails",
         body: function () {
-            try 
+            try
             {
                 Object.assign({}, { get x() { throw "xyz"; } });
                 assert.fail("Exception is not thrown when GetOwnProperty fails");
@@ -127,20 +127,20 @@ var tests = [
     {
         name: "Object.assign(o1, o2) exception if SetProperty fails due to preventExtentions on o1",
         body: function () {
-            	assert.throws((function() { 'use strict'; var o = Object.preventExtensions([,0]);Object.assign(o,'xo');}), TypeError, "Invalid operand to 'Object.assign': Object expected");
+                assert.throws((function() { 'use strict'; var o = Object.preventExtensions([,0]);Object.assign(o,'xo');}), TypeError, "Invalid operand to 'Object.assign': Object expected");
         }
     },
     {
         name: "OS Bug 3080673: Object.assign(o1, o2) exception if SetProperty fails due to non-writable on o1 when o1's value is a String",
         body: function () {
-            assert.throws((function() { 
+            assert.throws((function() {
                     var o1 = "aaa";
                     var o2 = "babbb";
                     Object.assign(o1, o2);
             }), TypeError, "Exception is not thrown when SetProperty fails", "Cannot modify non-writable property '0'");
         }
     },
-	
+
 ];
 
 testRunner.runTests(tests, { verbose: WScript.Arguments[0] != "summary" });

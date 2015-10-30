@@ -88,7 +88,7 @@ var tests = {
       var x = helpers.getDummyObject(propName);
       x[propName] = values[0];
       Object.freeze(x);
-      x[propName] = values[1];	// this should not work
+      x[propName] = values[1];  // this should not work
       var y = helpers.getDummyObject(propName);
       Object.seal(y);
       y[propName] = values[2];   // this should work

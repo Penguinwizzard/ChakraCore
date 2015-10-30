@@ -50,7 +50,6 @@ var assertFunctionExactlyEqual7 = function (expected, fn, x, y, z, w, a, b, c, m
     assert.areEqual(expected, fn(x, y, z, w, a, b, c), message);
 };
 
-
 var assertFunctionAlmostEqual = function (expected, fn, x, message) {
     assert.areAlmostEqual(expected, fn(x), message);
 };
@@ -367,7 +366,6 @@ var tests = [
 
             assertFunctionAlmostEqual2(         5, Math.hypot,         3,         4, "hypot(3,4) = 5");
 
-
             assertFunctionExactlyEqual3(+Infinity, Math.hypot, +Infinity,         0,         0, "if any argument is +Infinity, then the result of hypot(x,y,z) is +Infinity");
             assertFunctionExactlyEqual3(+Infinity, Math.hypot,         0, +Infinity,         0, "if any argument is +Infinity, then the result of hypot(x,y,z) is +Infinity");
             assertFunctionExactlyEqual3(+Infinity, Math.hypot,         0,         0, +Infinity, "if any argument is +Infinity, then the result of hypot(x,y,z) is +Infinity");
@@ -410,14 +408,14 @@ var tests = [
             assertFunctionExactlyEqual4(                     NaN, Math.hypot,      0,    NaN, 1e-308,       0, "hypot(0, NaN, 0, 1e-308) = NaN");
             assertFunctionExactlyEqual4(                Infinity, Math.hypot, 1e+308,    NaN, 1e-308,Infinity, "hypot(1e+308, NaN, 1e-308, Infinity) = Infinity, If any argument is infinity result is infinity");
             assertFunctionExactlyEqual4( 1.0000014999988748e-305, Math.hypot, 1e-308, 1e-308, 1e-308,  1e-305, "hypot(1e-308, 1e-308, 1e-308, 1e-305) = 1e-305, and shouldn't cause NaN from premature overflow ");
-            assertFunctionExactlyEqual4( 1.4142135623730951e+308, Math.hypot, 1e-308, 1e+308, 1e-308, 1e+308, "hypot(1e+308, 1e+308, 1e-308, 1e+308) = 1.414e+308	, and shouldn't cause NaN from premature overflow");
+            assertFunctionExactlyEqual4( 1.4142135623730951e+308, Math.hypot, 1e-308, 1e+308, 1e-308, 1e+308, "hypot(1e+308, 1e+308, 1e-308, 1e+308) = 1.414e+308   , and shouldn't cause NaN from premature overflow");
 
             assertFunctionExactlyEqual4(      13.950268814614288, Math.hypot,    3.2,   -4.8,    9.7,     8.2, "hypot(3.2, -4.8, 9.7,  8.2) = 13.9502");
             assertFunctionExactlyEqual4(                      25, Math.hypot,      2,      3,      6,      24, "hypot(2, 3, 6, 24) = 25");
             assertFunctionExactlyEqual4(                      25, Math.hypot,     24,      2,      3,       6, "hypot(24, 2, 3, 6) = 25");
             assertFunctionExactlyEqual4(                      25, Math.hypot,      2,     24,      3,       6, "hypot(2, 24, 3, 6) = 25");
             assertFunctionExactlyEqual4(                      25, Math.hypot,      6,      3,     24,       2, "hypot(6, 3, 24, 2) = 25");
-            
+
             assertFunctionExactlyEqual7( 2.6457513110645905e+307, Math.hypot, 1e+307, 1e+307, 1e+307,  1e+307,  1e+307,  1e+307,  1e+307, "hypot(1e+307, ...) = 2.545e+307 and shouldn't cause NaN from premature overflow");
             assertFunctionExactlyEqual7( 2.6457513110645904e-308, Math.hypot, 1e-308, 1e-308, 1e-308,  1e-308,  1e-308,  1e-308,  1e-308, "hypot(1e-308, ...) = 2.645e-308, and shouldn't cause NaN from premature undeflow");
         }
@@ -578,7 +576,7 @@ var tests = [
             assertFunctionExactlyEqual(     -100, Math.fround,      -100, "if x is -100, then the result of fround(x) is -100");
             assertFunctionExactlyEqual(     +0.5, Math.fround,      +0.5, "if x is +0.5, then the result of fround(x) is +0.5");
             assertFunctionExactlyEqual(     -0.5, Math.fround,      -0.5, "if x is -0.5, then the result of fround(x) is -0.5");
-            
+
             let testcase = [
                 // numbers between zero and one
                 [0.5995356650091708     , 0.5995356440544128    ],
@@ -619,7 +617,7 @@ var tests = [
             for (let i=0; i < testcase.length; i++) {
                     assertFunctionExactlyEqual( testcase[i][1], Math.fround,  testcase[i][0], "if x is "+testcase[i][0]+", then the result of fround(x) is "+testcase[i][1]);
             }
-            
+
             // Test against type specialization bugs
             //  -bgjit- -maxinterpretcount:1 -maxsimplejitruncount:2
             function fround_testsub() {
@@ -628,11 +626,11 @@ var tests = [
             }
             let obj2={};
             let protoObj2 = Object.create(obj2);
-            
+
             fround_testsub();
             fround_testsub();
             fround_testsub(); // ok till this point
-            assert.areEqual(  1, fround_testsub(), "Math.fround() expects both input and output type specialized to float64") ;   
+            assert.areEqual(  1, fround_testsub(), "Math.fround() expects both input and output type specialized to float64") ;
         }
     },
 ];

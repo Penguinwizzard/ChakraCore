@@ -9,13 +9,12 @@ var id=0;
 function verify(get_actual,get_expected,testid,testdesc)
 
 {
-	
-	if(get_actual!=get_expected)
-		WScript.Echo(testid+":"+testdesc+"\t"+"failed"+"\n"+"got"+get_actual+"\t for\t"+get_expected)
+
+    if(get_actual!=get_expected)
+        WScript.Echo(testid+":"+testdesc+"\t"+"failed"+"\n"+"got"+get_actual+"\t for\t"+get_expected)
 }
 
-
-//Test for Unsigned Shift Right Operation 
+//Test for Unsigned Shift Right Operation
 
 verify(0xffffffff>>>-1, 1, id++,"\"Testing the unsigned right shift with negative count\"")
 verify(0xffffffff>>>31, 1, id++,"\"Testing the unsigned right shift by maximum possible digits\"")
@@ -32,7 +31,6 @@ verify(0x7fffffff >>32, 2147483647,id++, "\"Testing Signed Right Shift greater t
 verify(0x7fffffff >>31, 0,id++, "\"Testing Signed Right Shift by 31 for positive number\"");
 verify(-1 >>31, -1, id++,"\"Testing Signed Right Shift by 31 for negative number \"");
 
-
 //Test for Signed Left SHift
 
 verify(0xffffffff<<-1,-2147483648, id++, "\"Testing Signed Left Shift with negative count\"");
@@ -46,6 +44,5 @@ verify(-1 <<31, -2147483648, id++, "\"Testing Signed Left Shift by 31 for negati
 //Testing for Right Shift with combination of other operations
 verify((0x7fffffff>>32)|1, 2147483647, id++, "\" Testing whether the shift operation does not change the tagged integer to a normal integer for Or \"");
 verify((0x7fffffff>>32)^0x2, 2147483645, id++, "\"Testing whether the shift operation does not change the tagged integer to a normal integer for xor\"");
-
 
 WScript.Echo("Done");

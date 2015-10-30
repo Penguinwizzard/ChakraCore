@@ -8,8 +8,8 @@ Array.prototype[4] = 10;
 
 function Test()
 {
-	a.reverse();
-	WScript.Echo(a);
+    a.reverse();
+    WScript.Echo(a);
 }
 
 Test();

@@ -23,13 +23,12 @@ catch ( e )
     write(e.number + " " + e.message);
 }
 
-
 try {
-	var astr = new AString();		
+    var astr = new AString();
 }
 catch(e) {
-	write(e.number + " " + e.message);
-}	
+    write(e.number + " " + e.message);
+}
 
 try
 {
@@ -71,18 +70,18 @@ catch ( e )
 try
 {
     var data = "AABBCCDD";
-    var exp = new RegExp("(?{ $a = 3+$b })");  
-	res = data.match(exp);
+    var exp = new RegExp("(?{ $a = 3+$b })");
+    res = data.match(exp);
 }
 catch (e)
 {
     write(e.number + " " + e.message);
 }
-			
+
 try
 {
     var data = "foo";
-    var exp = new RegExp("(in","i");  
+    var exp = new RegExp("(in","i");
     res = data.match(exp);
 }
 catch (e)

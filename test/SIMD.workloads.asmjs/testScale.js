@@ -7,9 +7,9 @@ this.WScript.LoadScriptFile("..\\UnitTestFramework\\SimdJsHelpers.js");
 
 function asmModule(stdlib, imports, buffer) {
     "use asm";
-    
-	var i4 = stdlib.SIMD.Int32x4;
-	var i4check = i4.check;
+
+    var i4 = stdlib.SIMD.Int32x4;
+    var i4check = i4.check;
     var i4splat = i4.splat;
     var i4fromFloat64x2 = i4.fromFloat64x2;
     var i4fromFloat64x2Bits = i4.fromFloat64x2Bits;
@@ -34,17 +34,17 @@ function asmModule(stdlib, imports, buffer) {
     var i4load1 = i4.load1;
     var i4load2 = i4.load2;
     var i4load3 = i4.load3;
-    
+
     var i4store  = i4.store
     var i4store1 = i4.store1;
     var i4store2 = i4.store2;
     var i4store3 = i4.store3;
-    
+
     //var i4shiftLeftByScalar = i4.shiftLeftByScalar;
     //var i4shiftRightByScalar = i4.shiftRightByScalar;
     //var i4shiftRightArithmeticByScalar = i4.shiftRightArithmeticByScalar;
-    var f4 = stdlib.SIMD.Float32x4; 
-    var f4check = f4.check;    
+    var f4 = stdlib.SIMD.Float32x4;
+    var f4check = f4.check;
     var f4splat = f4.splat;
     var f4fromFloat64x2 = f4.fromFloat64x2;
     var f4fromFloat64x2Bits = f4.fromFloat64x2Bits;
@@ -76,19 +76,18 @@ function asmModule(stdlib, imports, buffer) {
     var f4or = f4.or;
     var f4xor = f4.xor;
     var f4not = f4.not;
-    
+
     var f4load = f4.load;
     var f4load1 = f4.load1;
     var f4load2 = f4.load2;
     var f4load3 = f4.load3;
-    
+
     var f4store  = f4.store;
     var f4store1 = f4.store1;
     var f4store2 = f4.store2;
     var f4store3 = f4.store3;
-    
-    
-    var d2 = stdlib.SIMD.Float64x2;  
+
+    var d2 = stdlib.SIMD.Float64x2;
     var d2check = d2.check;
     var d2splat = d2.splat;
     var d2fromFloat32x4 = d2.fromFloat32x4;
@@ -116,14 +115,13 @@ function asmModule(stdlib, imports, buffer) {
     var d2greaterThan = d2.greaterThan;
     var d2greaterThanOrEqual = d2.greaterThanOrEqual;
     var d2select = d2.select;
-    
+
     var d2load  = d2.load;
     var d2load1 = d2.load1;
-    
+
     var d2store  = d2.store
     var d2store1 = d2.store1;
-    
-    
+
     var fround = stdlib.Math.fround;
 
     var globImportF4 = f4check(imports.g1);       // global var import
@@ -135,109 +133,107 @@ function asmModule(stdlib, imports, buffer) {
     var gval = 1234;
     var gval2 = 1234.0;
 
-	var OFFSET_1 = 10;
-	var OFFSET_2 = 15;
-    
+    var OFFSET_1 = 10;
+    var OFFSET_2 = 15;
+
     var loopCOUNT = 10;
-    
-    var Int8Heap = new stdlib.Int8Array (buffer);    
-    var Uint8Heap = new stdlib.Uint8Array (buffer);    
-    
+
+    var Int8Heap = new stdlib.Int8Array (buffer);
+    var Uint8Heap = new stdlib.Uint8Array (buffer);
+
     var Int16Heap = new stdlib.Int16Array(buffer);
     var Uint16Heap = new stdlib.Uint16Array(buffer);
     var Int32Heap = new stdlib.Int32Array(buffer);
     var Uint32Heap = new stdlib.Uint32Array(buffer);
-    var Float32Heap = new stdlib.Float32Array(buffer);	
+    var Float32Heap = new stdlib.Float32Array(buffer);
 
+    function nestedLoadStoreUint8(idx)
+    {
+         idx = idx|0;
+         idx = idx<<0;
+         f4store(Uint8Heap, (idx + 5)|0, f4(9.0,8.0,10.1, -22.121));
+         //return f4load(Uint8Heap, (idx + 5)|0);
+         f4store(Uint8Heap, (idx + 0)|0, f4load(Uint8Heap, (idx + 5)|0));
+         return f4load(Uint8Heap, (idx + 0)|0);
+    }
 
-	function nestedLoadStoreUint8(idx)
-	{
-		 idx = idx|0;
-		 idx = idx<<0;
-		 f4store(Uint8Heap, (idx + 5)|0, f4(9.0,8.0,10.1, -22.121));
-		 //return f4load(Uint8Heap, (idx + 5)|0);
-		 f4store(Uint8Heap, (idx + 0)|0, f4load(Uint8Heap, (idx + 5)|0));
-		 return f4load(Uint8Heap, (idx + 0)|0);
-	}
+    function scale(fromIdx, toIdx)
+    {
+        fromIdx = fromIdx | 0;
+        toIdx = toIdx | 0;
+        var i = 0;
+        var xx = f4(0.0, 0.0, 0.0, 0.0);
 
-	function scale(fromIdx, toIdx)
-	{
-	    fromIdx = fromIdx | 0;
-	    toIdx = toIdx | 0;
-	    var i = 0;
-	    var xx = f4(0.0, 0.0, 0.0, 0.0);
+        //No bound check to enable negative tests.
+         for (i = fromIdx; (i|0) < (toIdx|0); i = (i + 16) | 0)
+         {
+             xx = f4load(Int8Heap, i | 0);
+             xx = f4mul(xx, f4(2.0, 2.0, 2.0, 2.0));
 
-        //No bound check to enable negative tests.  
-		 for (i = fromIdx; (i|0) < (toIdx|0); i = (i + 16) | 0)
-		 {
-		     xx = f4load(Int8Heap, i | 0);
-		     xx = f4mul(xx, f4(2.0, 2.0, 2.0, 2.0));
-		     
-		     f4store(Int8Heap, toIdx, xx);
-		     f4store(Int8Heap, (i + 0) | 0, f4load(Int8Heap, (toIdx + 0) | 0));
-		     //f4store(Int8Heap, (i) | 0, f4load(Int8Heap, (toIdx) | 0));
-		 }
-	}
-	function scale2(fromIdx, toIdx)
-	{
-	    fromIdx = fromIdx | 0;
-	    toIdx = toIdx | 0;
-	    var i = 0;
-	    var xx = i4(0, 0, 0, 0);
+             f4store(Int8Heap, toIdx, xx);
+             f4store(Int8Heap, (i + 0) | 0, f4load(Int8Heap, (toIdx + 0) | 0));
+             //f4store(Int8Heap, (i) | 0, f4load(Int8Heap, (toIdx) | 0));
+         }
+    }
+    function scale2(fromIdx, toIdx)
+    {
+        fromIdx = fromIdx | 0;
+        toIdx = toIdx | 0;
+        var i = 0;
+        var xx = i4(0, 0, 0, 0);
 
-        //No bound check to enable negative tests.  
-		 for (i = fromIdx;(i|0) < (toIdx|0); i = (i + 16) | 0)
-		 {
-		     xx = i4load(Int8Heap, i | 0);
-		     xx = i4mul(xx, i4(2, 2, 2, 2));
-		     
-		     i4store(Int8Heap, toIdx, xx);
-		     i4store(Int8Heap, (i + 0) | 0, i4load(Int8Heap, (toIdx + 0) | 0));
-		     //f4store(Int8Heap, (i) | 0, f4load(Int8Heap, (toIdx) | 0));
-		 }
-	}
-	function scale3(fromIdx, toIdx)
-	{
-	    fromIdx = fromIdx | 0;
-	    toIdx = toIdx | 0;
-	    var i = 0;
-	    var xx = d2(0.0, 0.0);
+        //No bound check to enable negative tests.
+         for (i = fromIdx;(i|0) < (toIdx|0); i = (i + 16) | 0)
+         {
+             xx = i4load(Int8Heap, i | 0);
+             xx = i4mul(xx, i4(2, 2, 2, 2));
 
-        //No bound check to enable negative tests.  
-		 for (i = fromIdx; (i|0) < (toIdx|0); i = (i + 16) | 0)
-		 {
-		     xx = d2load(Int8Heap, i | 0);
-		     xx = d2mul(xx, d2(2.0, 2.0));
-		     
-		     d2store(Int8Heap, toIdx, xx);
-		     d2store(Int8Heap, (i + 0) | 0, d2load(Int8Heap, (toIdx + 0) | 0));
-		     //f4store(Int8Heap, (i) | 0, f4load(Int8Heap, (toIdx) | 0));
-		 }
-	}
-	
-	return {scale: scale
-			,scale2: scale2
-			,scale3, scale3
-		    ,nestedLoadStoreUint8:nestedLoadStoreUint8};
+             i4store(Int8Heap, toIdx, xx);
+             i4store(Int8Heap, (i + 0) | 0, i4load(Int8Heap, (toIdx + 0) | 0));
+             //f4store(Int8Heap, (i) | 0, f4load(Int8Heap, (toIdx) | 0));
+         }
+    }
+    function scale3(fromIdx, toIdx)
+    {
+        fromIdx = fromIdx | 0;
+        toIdx = toIdx | 0;
+        var i = 0;
+        var xx = d2(0.0, 0.0);
+
+        //No bound check to enable negative tests.
+         for (i = fromIdx; (i|0) < (toIdx|0); i = (i + 16) | 0)
+         {
+             xx = d2load(Int8Heap, i | 0);
+             xx = d2mul(xx, d2(2.0, 2.0));
+
+             d2store(Int8Heap, toIdx, xx);
+             d2store(Int8Heap, (i + 0) | 0, d2load(Int8Heap, (toIdx + 0) | 0));
+             //f4store(Int8Heap, (i) | 0, f4load(Int8Heap, (toIdx) | 0));
+         }
+    }
+
+    return {scale: scale
+            ,scale2: scale2
+            ,scale3, scale3
+            ,nestedLoadStoreUint8:nestedLoadStoreUint8};
 }
-
 
 var buffer = new ArrayBuffer(0x10000); //16mb min 2^12
 
 //Reset or flush the buffer
 function initF32(buffer) {
-	var values = new Float32Array( buffer );
-	for( var i=0; i < values.length ; ++i ) {
-		values[i] = i * 10;
-	}
-	return values.length;
+    var values = new Float32Array( buffer );
+    for( var i=0; i < values.length ; ++i ) {
+        values[i] = i * 10;
+    }
+    return values.length;
 }
 function initI32(buffer) {
-	var values = new Int32Array( buffer );
-	for( var i=0; i < values.length ; ++i ) {
-		values[i] = i * 10;
-	}
-	return values.length;
+    var values = new Int32Array( buffer );
+    for( var i=0; i < values.length ; ++i ) {
+        values[i] = i * 10;
+    }
+    return values.length;
 }
 function validateBuffer(buffer, count)
 {
@@ -257,12 +253,12 @@ function validateBuffer(buffer, count)
     for (var i = 0; i < count/* * 16*/; i += 4)
     {
         f4 = SIMD.Float32x4.load(buffer, i);
-        
+
         //values = data[i/4];
         //printF4(f4);
         //printF4(values);
         equalSimd(data[i/4], f4, SIMD.Float32x4, "validateBuffer");
-        
+
     }
 }
 function validateBuffer2(buffer, count)
@@ -280,7 +276,7 @@ function validateBuffer2(buffer, count)
         SIMD.Int32x4(640,660,680,700),
         SIMD.Int32x4(720,740,760,780)
     ];
-    
+
     for (var i = 0; i < count; i += 4)
     {
         i4 = SIMD.Int32x4.load(buffer, i);
@@ -291,33 +287,26 @@ function validateBuffer2(buffer, count)
     }
 }
 
-
-
 function printResults(res)
 {
-	WScript.Echo(typeof(res));
-	WScript.Echo(res.toString());
+    WScript.Echo(typeof(res));
+    WScript.Echo(res.toString());
 }
 
 inputLength = initF32(buffer);
-
 
 //Module initialization
 var m = asmModule(this, {g0:initF32(buffer),g1:SIMD.Float32x4(9,9,9,9), g2:SIMD.Int32x4(1, 2, 3, 4), g3:SIMD.Float64x2(10, 10, 10, 10)}, buffer);
 var values = new Float32Array(buffer);
 
-
-
 //WScript.Echo("Test20 - nested");
 //var ret = m.nestedLoadStoreUint8(10); //Int8Heap load
-//printResults(ret); 
-
+//printResults(ret);
 
 m.scale(0, 16 * 10); //Scale
 validateBuffer(values, 4 * 10);
 
 initI32(buffer);
-
 
 m.scale2(0, 16 * 10); //Scale
 validateBuffer2(values, 4 * 10);

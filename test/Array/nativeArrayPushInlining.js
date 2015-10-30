@@ -21,7 +21,7 @@ for(var i =0;i<GiantPrintArray.length;i++){
 
 function test1()
 {
-	var ary;
+    var ary;
     GiantPrintArray.push(2);
     GiantPrintArray.push(ary);
 }
@@ -36,7 +36,7 @@ for(var i =0;i<GiantPrintArray.length;i++){
 
 function test2(a)
 {
-	GiantPrintArray.push(a);
+    GiantPrintArray.push(a);
 }
 
 var GiantPrintArray = [1.1];
@@ -49,11 +49,10 @@ for(var i =0;i<GiantPrintArray.length;i++){
  WScript.Echo(GiantPrintArray[i]);
  };
 
-
 function test3()
 {
-		GiantPrintArray = [{}];
-    	GiantPrintArray.push(7);
+        GiantPrintArray = [{}];
+        GiantPrintArray.push(7);
 
 }
 

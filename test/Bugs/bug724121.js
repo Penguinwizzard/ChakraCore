@@ -13,7 +13,7 @@
 //Build: 140814-2030
 //FullBuild: 9813.0.140814
 //MachineName: BPT04023
-//InstructionSet: 
+//InstructionSet:
 //reduced switches: -loopinterpretcount:1 -bgjit- -maxsimplejitruncount:1 -maxinterpretcount:1 -forcedeferparse -force:inline
 function test0() {
   var GiantPrintArray = [];
@@ -40,7 +40,7 @@ function test0() {
   GiantPrintArray.push(v26.__getterprop4);
   for (;;) {
     break;
-	
+
     for (var _strvar0 in IntArr0) {
     }
     GiantPrintArray.push(v30.__getterprop4);

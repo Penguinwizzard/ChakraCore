@@ -3,20 +3,17 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-
-
 function isnegativezero(x, str)
 {
     // this is a quick way to check if a number is -0
     return !(x != 0 || 1/x >= 0)
 }
 
-
 function test(value, expected)
 {
-	var result = value | 0;		// ToInt32
-	WScript.Echo((result === expected && isnegativezero(result) === isnegativezero(expected)? "PASS:" : "FAIL: ") + 
-		(isnegativezero(value)? "-0.0" : value) + " " + (isnegativezero(result)? "-0.0" : result));
+    var result = value | 0;     // ToInt32
+    WScript.Echo((result === expected && isnegativezero(result) === isnegativezero(expected)? "PASS:" : "FAIL: ") +
+        (isnegativezero(value)? "-0.0" : value) + " " + (isnegativezero(result)? "-0.0" : result));
 }
 var negZero = -0.0;
 
@@ -38,10 +35,8 @@ test(Number.NEGATIVE_INFINITY, 0);
 test(Number.POSITIVE_INFINITY, 0);
 test(Number.NaN, 0);
 
-
 // We start losing precision here
 test(2147483647 * 2147483647 + 1024, 1024);
-
 
 // MAX 64-bit integer - 1024
 test(9223372036854775000, -1024);
