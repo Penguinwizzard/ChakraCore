@@ -25,7 +25,7 @@ function test(param)
 
     outter();
 }
-    
+
 
 test("test1");
 WScript.Echo(escape());

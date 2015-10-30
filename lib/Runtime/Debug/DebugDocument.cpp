@@ -202,10 +202,8 @@ namespace Js
         ulong ubos = static_cast<ulong>(ibos);
 
         // Getting the appropriate statement on the asked position works on the heuristic which requires two
-        // probable candidates.
-        // These candidates will be closest to the ibos. where the first.range.start < ibos and
-        // the second.range.start >= ibos.
-        // These candidates will be fetched out by going into each FunctionBody.
+        // probable candidates. These candidates will be closest to the ibos where first.range.start < ibos and
+        // second.range.start >= ibos. They will be fetched out by going into each FunctionBody.
 
         StatementLocation candidateMatch1 = {};
         StatementLocation candidateMatch2 = {};
@@ -215,7 +213,8 @@ namespace Js
             ulong functionStart = pFuncBody->StartInDocument();
             ulong functionEnd = functionStart + pFuncBody->LengthInBytes();
 
-            // For the first candidate, we should allow the current function to participate if its range (instead of just start offset) is closer to the ubos compared to already found candidate1.
+            // For the first candidate, we should allow the current function to participate if its range
+            // (instead of just start offset) is closer to the ubos compared to already found candidate1.
 
             if (candidateMatch1.function == nullptr ||
                 ((candidateMatch1.statement.begin <= static_cast<int>(functionStart) ||
@@ -276,9 +275,9 @@ namespace Js
         // Default selection
         *plocation = candidateMatch1;
 
-        // if the second candidate start at ibos or
-        // If the first candidate has line break between ibos, and the second candidate is on the same line as ibos.
-        // consider the second one.
+        // If the second candidate start at ibos or
+        // if the first candidate has line break between ibos and the second candidate is on the same line as ibos
+        // then consider the second one.
 
         BOOL fNextHasLineBreak = this->HasLineBreak(ibos, candidateMatch2.statement.begin);
 

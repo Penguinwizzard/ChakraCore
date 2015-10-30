@@ -32,6 +32,6 @@ function test(yes, param)
 test(true, "test1");
 test(true, "test2");
 test(false, "test3");
-        
+
 
 

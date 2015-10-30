@@ -34,13 +34,12 @@ namespace Js
     // To inspect strings in hybrid debugging, we use vtable lookup to find out concrete string type
     // then inspect string content accordingly.
     //
-    // To ensure all known string vtables are listed and exported from jscript9 and handler class
-    // exists in jscript9diag, declare an abstract method in base JavascriptString class. Any concrete
+    // To ensure all known string vtables are listed and exported from chakra.dll and handler class
+    // exists in chakradiag.dll, declare an abstract method in base JavascriptString class. Any concrete
     // subclass that has runtime string instance must DECLARE_CONCRETE_STRING_CLASS, otherwise
-    // we'll get a compile time error. The string class must also be listed in DiagVTableList.h, or
-    // we'll get a link error.
+    // we'll get a compile time error.
     //
-#if DBG
+#if DBG && defined(NTBUILD)
 #define DECLARE_CONCRETE_STRING_CLASS_BASE  virtual void _declareConcreteStringClass() = 0
 #define DECLARE_CONCRETE_STRING_CLASS       virtual void _declareConcreteStringClass() override
 #else

@@ -6,7 +6,7 @@
 function test()
 {
     var i = 0;
-    function f1() 
+    function f1()
     {
         if (i == 0)
         {

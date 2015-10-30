@@ -66,15 +66,15 @@ var obj = {};
 var x = function(){return this};
 var print = function(){return this};
 try{var shouldBailout = (WScript.Arguments[0] == 'bailout');}catch(amvool){};
-
-(function(){/*sStart*/;print(x);
-    print(x);
-
-    for(var window = getOwnPropertyDescriptorgczeal("Object.defineProperty(x, \"x\", ({}))") in amvool) {print("u6E24"); }
+
+(function(){/*sStart*/;print(x);
+    print(x);
+
+    for(var window = getOwnPropertyDescriptorgczeal("Object.defineProperty(x, \"x\", ({}))") in amvool) {print("u6E24"); }
     ;;/*sEnd*/})();
 (function(){/*sStart*/;/*tLoop*/for (var w in [(void 0),  '\0' , x]) { print(w); };;/*sEnd*/})();
 (function(){/*sStart*/;try{try{let(window) ((function(){try{for(let z in [this.__defineSetter__("window", x), Infinity, Infinity, this.__defineSetter__("window", x), true, true, this.__defineSetter__("window", x), this.__defineSetter__("window", x),  /x/ , this.__defineSetter__("window", x),  /x/ , Infinity, true, this.__defineSetter__("window", x), true,  /x/ , Infinity, true, true,  /x/ , true, Infinity, true,  /x/ , this.__defineSetter__("window", x), Infinity]) try{let(z) ((function(){try{throw sjhsnb;}catch(amvool){}})());}catch(amvool){}}catch(amvool){}})());}catch(amvool){}try{throw x;}catch(amvool){}}catch(amvool){};;/*sEnd*/})();
-(function(){;"use strict"; for (var gc in x) { addPropertyName(gc); };;})();
+(function(){;"use strict"; for (var gc in x) { addPropertyName(gc); };;})();
 (function(){fadexb(((function a_indexing(tayehk, eaezxr) { ; if (tayehk.length == eaezxr) { try{try{let(z) ((function(){-274877906945;})());}catch(amvool){}}catch(amvool){}; return "uA29E"; } var uofaeg = tayehk[eaezxr]; var wjnsef = a_indexing(tayehk, eaezxr + 1); return 4+ '' .__defineGetter__("uofaeg", ScriptEngine); })([new Boolean(false), {}, {}, new Boolean(false), x, {}, new Boolean(false), {}, new Boolean(false), new Boolean(false), new Boolean(false), x, new Boolean(false), {}, {}, x, x, new Boolean(false), {}, x, new Boolean(false), new Boolean(false), x, x], 0)), x);/*hhh*/function fadexb(x, x){print(x);};;})();
-//(function(){/*sStart*/;/*vLoop*/for (sjhsnb = 0; sjhsnb < 5; ++sjhsnb) { var z = sjhsnb; (4277); } ;;/*sEnd*/})();
+//(function(){/*sStart*/;/*vLoop*/for (sjhsnb = 0; sjhsnb < 5; ++sjhsnb) { var z = sjhsnb; (4277); } ;;/*sEnd*/})();
 WScript.Echo('pass');

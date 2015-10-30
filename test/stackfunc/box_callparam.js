@@ -7,7 +7,7 @@
 
 function blah()
 {
-    
+
     function nested2()
     {
         return nested2;

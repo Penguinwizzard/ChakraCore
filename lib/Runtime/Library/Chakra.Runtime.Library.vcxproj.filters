@@ -129,8 +129,6 @@
     <ClCompile Include="JavascriptErrorDebug.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\DiagGlobalList.h" />
-    <ClInclude Include="..\DiagVTableList.h" />
     <ClInclude Include="..\InternalPropertyList.h" />
     <ClInclude Include="..\RuntimeCommon.h" />
     <ClInclude Include="..\SerializableFunctionFields.h" />

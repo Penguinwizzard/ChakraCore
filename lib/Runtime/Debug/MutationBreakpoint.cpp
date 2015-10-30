@@ -148,7 +148,7 @@ bool Js::MutationBreakpoint::IsFeatureEnabled(ScriptContext *scriptContext)
     return scriptContext->IsInDebugMode() && !PHASE_OFF1(Js::ObjectMutationBreakpointPhase);
 }
 
-bool Js::MutationBreakpoint::CanSet (Var object)
+bool Js::MutationBreakpoint::CanSet(Var object)
 {
     if (!object)
     {
@@ -156,7 +156,6 @@ bool Js::MutationBreakpoint::CanSet (Var object)
     }
 
     TypeId id = JavascriptOperators::GetTypeId(object);
-    // TODO(t-shchan): Verify this
     return JavascriptOperators::IsObjectType(id) && !JavascriptOperators::IsSpecialObjectType(id);
 }
 
@@ -364,7 +363,7 @@ const wchar_t * Js::MutationBreakpoint::GetBreakMutationTypeName(MutationType mu
     case MutationTypeUpdate: return L"Changing";
     case MutationTypeDelete: return L"Deleting";
     case MutationTypeAdd: return L"Adding";
-    default: AssertMsg(false, "Unhandled break reason mutation type. did we added a new mutation type?"); return L"";
+    default: AssertMsg(false, "Unhandled break reason mutation type. Did we add a new mutation type?"); return L"";
     }
 }
 
@@ -392,7 +391,7 @@ Js::MutationBreakpointDelegate * Js::MutationBreakpoint::Set(ScriptContext *scri
     {
         return nullptr;
     }
-    DynamicObject *dynObj = static_cast<DynamicObject*>(obj); // TODO (t-shchan): verify the safety of the cast
+    DynamicObject *dynObj = static_cast<DynamicObject*>(obj);
     
     const PropertyRecord *pr = nullptr;
 

@@ -17,20 +17,20 @@ function test0(){
       }
       function v375957()
       {
-      	v375952.prototype = {};
+        v375952.prototype = {};
       }
-    if (doit) { 
+    if (doit) {
       v375957();
       v375957();
     }
-    //Snippet From Var   
+    //Snippet From Var
   })();
 };
 
 var doit = 0;
 // generate profile
-test0(); 
+test0();
 
 doit = true;
 // run JITted code
-test0(); 
+test0();

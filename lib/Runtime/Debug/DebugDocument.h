@@ -10,9 +10,8 @@ struct StatementSpan
     long cch;
 };
 
-// A Document in Engine means a file, eval code or new function code. For each of these there is a Utf8SourceInfo
-// This class represents a DebugDocument corresponding to a Utf8SourceInfo
-// Debug operations like adding/removing breakpoints related to a document are handled by this class.
+// A Document in Engine means a file, eval code or new function code. For each of these there is a Utf8SourceInfo.
+// DebugDocument relates debug operations such as adding/remove breakpoints to a specific Utf8SourceInfo.
 
 namespace Js
 {
@@ -30,7 +29,6 @@ namespace Js
         BOOL GetStatementSpan(long ibos, StatementSpan* pBos);
         BOOL GetStatementLocation(long ibos, StatementLocation* plocation);
 
-        // TODO (SAagarwa) : Fix for JsRT Debugging, for PDM this is IScriptDebugDocumentText*
         virtual bool HasDocumentText() const
         {
             Assert(false);

@@ -8,7 +8,7 @@ var GiantPrintArray = [];
 function test0() {
     var obj1 = {};
     var IntArr0 = [787917310, 4294967296, 926685325, 104, -1308153184, -1073741824, 1868785301, 1064239984, 693100003, 2147483647, 2147483647, -575755389, -615389387];
-    //Snippet:trycatchstackwind.ecs 
+    //Snippet:trycatchstackwind.ecs
     function v2201() {
         function v2202() {
             try {

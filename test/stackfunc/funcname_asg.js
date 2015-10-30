@@ -9,7 +9,7 @@ function test()
     var i = 0;
     // This only create one function assignment.  The name f1 is only available inside the function
     // via LdFuncExpr
-    var f = function f1() 
+    var f = function f1()
     {
         if (i == 0)
         {

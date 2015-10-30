@@ -103,13 +103,13 @@ namespace Js
     // In order to support the custom objects, above classes should be used (or derived) to get started.
     //
 
-    typedef enum
+    enum DebuggerPropertyDisplayInfoFlags
     {
         DebuggerPropertyDisplayInfoFlags_None           = 0x0,
         DebuggerPropertyDisplayInfoFlags_Const          = 0x1,
         DebuggerPropertyDisplayInfoFlags_InDeadZone     = 0x2,
         DebuggerPropertyDisplayInfoFlags_Unscope        = 0x4,
-    } DebuggerPropertyDisplayInfoFlags;
+    };
 
     struct DebuggerPropertyDisplayInfo
     {
@@ -124,30 +124,30 @@ namespace Js
         bool IsInDeadZone() const { return (flags & DebuggerPropertyDisplayInfoFlags_InDeadZone) != 0; }
     };
 
-    typedef enum
+    enum UIGroupType
     {
         UIGroupType_None,
         UIGroupType_InnerScope,           // variables under the innerscope (such as Block/Catch)
         UIGroupType_Scope,
         UIGroupType_Globals
-    } UIGroupType;
+    };
 
-    typedef enum
+    enum FramesLocalType
     {
         LocalType_None     = 0x0,
         LocalType_Reg      = 0x1,
         LocalType_InSlot   = 0x2,
         LocalType_InObject = 0x4,
-    } FramesLocalType;
+    };
 
-    typedef enum
+    enum FrameWalkerFlags
     {
         FW_None                 = 0x0,
         FW_MakeGroups           = 0x1,  // Make groups such as [Scope], [Globals] etc.
         FW_EnumWithScopeAlso    = 0x2,  // While walking include the with scope as well.
         FW_AllowLexicalThis     = 0x4,  // Do not filter out Js::PropertyIds::_lexicalThisSlotSymbol
         FW_AllowSuperReference  = 0x8,  // Allow walking of Js::PropertyIds::_superReferenceSymbol
-    } FrameWalkerFlags;
+    };
 
     class VariableWalkerBase : public IDiagObjectModelWalkerBase
     {

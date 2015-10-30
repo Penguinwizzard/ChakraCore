@@ -8,7 +8,6 @@
 
 namespace Js
 {
-    // Protected constructor.
     DiagStackFrame::DiagStackFrame(int frameIndex) :
         frameIndex(frameIndex)
     {
@@ -182,7 +181,7 @@ namespace Js
         }
         else
         {
-            AssertMsg(FALSE, "Failed to get entry point for native address! Most likely the frame is old/gone.");
+            AssertMsg(FALSE, "Failed to get entry point for native address. Most likely the frame is old/gone.");
         }
         OUTPUT_TRACE(Js::DebuggerPhase, L"DiagNativeStackFrame::DiagNativeStackFrame: e.p(addr %p)=%p varOff=%d changedOff=%d\n", codeAddr, entryPointInfo, m_localVarSlotsOffset, m_localVarChangedOffset);
     }

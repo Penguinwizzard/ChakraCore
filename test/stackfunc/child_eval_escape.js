@@ -8,7 +8,7 @@ var escape;
 function test(param)
 {
     var nested = function() { return param; }
-    function child()  
+    function child()
     {
         eval("escape = nested");
     }

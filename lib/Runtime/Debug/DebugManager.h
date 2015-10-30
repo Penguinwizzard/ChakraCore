@@ -69,20 +69,20 @@ namespace Js
         void SetDebuggerAttaching(bool attaching) { this->isDebuggerAttaching = attaching; }
         bool IsDebuggerAttaching() const { return this->isDebuggerAttaching; }
 
-        typedef enum
+        enum DynamicFunctionType
         {
-            EvalCode,
-            AnonymousCode,
-            JScriptBlock
-        } DynamicFunctionType;
+            DFT_EvalCode,
+            DFT_AnonymousCode,
+            DFT_JScriptBlock
+        };
 
         int GetNextId(DynamicFunctionType eFunc)
         {
             switch (eFunc)
             {
-            case EvalCode: return ++evalCodeRegistrationCount;
-            case AnonymousCode: return ++anonymousCodeRegistrationCount;
-            case JScriptBlock: return ++jscriptBlockRegistrationCount;
+            case DFT_EvalCode: return ++evalCodeRegistrationCount;
+            case DFT_AnonymousCode: return ++anonymousCodeRegistrationCount;
+            case DFT_JScriptBlock: return ++jscriptBlockRegistrationCount;
             }
 
             return -1;

@@ -14,7 +14,7 @@ namespace Js
         FunctionBody* functionBody;
 
     public:
-        BreakpointProbe(DebugDocument* debugDocument, StatementLocation &statement);
+        BreakpointProbe(DebugDocument* debugDocument, StatementLocation& statement);
 
         virtual bool Install(ScriptContext* pScriptContext);
         virtual bool Uninstall(ScriptContext* pScriptContext);
