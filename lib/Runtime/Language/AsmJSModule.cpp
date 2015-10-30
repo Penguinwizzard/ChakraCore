@@ -665,7 +665,7 @@ namespace Js
 
     bool AsmJsModuleCompiler::SetupFunctionArguments(AsmJsFunc * func, ParseNodePtr pnode)
     {
-        /// Check arguments
+        // Check arguments
         ArgSlot numArguments = 0;
         ParseNode * fncNode = func->GetFncNode();
         ParseNode* argNode = ParserWrapper::FunctionArgsList(fncNode, numArguments);

@@ -13,7 +13,6 @@ var tests = {
         function() {
           var arr = ["x", "y"];
           var enu = new Enumerator(arr);
-          // for (enu.moveFirst(); !enu.atEnd(); enu.moveNext()) helpers.writeln(enu.item());
         }, ReferenceError);
     }
   },

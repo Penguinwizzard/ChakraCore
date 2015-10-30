@@ -7,7 +7,6 @@ function write(v) { WScript.Echo(v + ""); }
 
 function doEval(str)
 {
-    //write(str);
     write(str + " : " + eval(str));
 }
 

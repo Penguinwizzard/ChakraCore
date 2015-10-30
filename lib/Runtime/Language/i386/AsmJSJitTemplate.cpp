@@ -3119,7 +3119,6 @@ namespace Js
             size += MOV::EncodeInstruction<int>( buffer, InstrParamsRegImm<int32>( RegEAX, (int32)(Var(*)(int,ScriptContext*))JavascriptNumber::ToVar) );
             size += CALL::EncodeInstruction<int>( buffer, InstrParamsReg( RegEAX ) );
 
-            //size += ADD::EncodeInstruction<int>( buffer, InstrParamsRegImm<int8>( RegESP, 8 ) );
             size += MOV::EncodeInstruction<int>( buffer, InstrParamsAddrReg( RegESP, argIndex << 2, RegEAX ) );
 
             templateData->InvalidateAllVolatileReg();
@@ -3146,7 +3145,6 @@ namespace Js
             size += MOV::EncodeInstruction<int>( buffer, InstrParamsRegImm<int32>( RegEAX, (int32)(Var(*)(double,ScriptContext*))JavascriptNumber::New) );
             size += CALL::EncodeInstruction<int>( buffer, InstrParamsReg( RegEAX ) );
 
-            //size += ADD::EncodeInstruction<int>( buffer, InstrParamsRegImm<int8>( RegESP, 12 ) );
             size += MOV::EncodeInstruction<int>( buffer, InstrParamsAddrReg( RegESP, argIndex << 2, RegEAX ) );
 
             templateData->InvalidateAllVolatileReg();
@@ -3364,7 +3362,6 @@ namespace Js
         }
         int AsmJsLoopBody::ApplyTemplate(TemplateContext context, BYTE*& buffer, int loopNumber)
         {
-            //return 0;
             int size = 0;
             X86TemplateData* templateData = GetTemplateData(context);
             AsmJsFunctionInfo* funcInfo = context->GetFunctionBody()->GetAsmJsFunctionInfo();

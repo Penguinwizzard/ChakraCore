@@ -3,50 +3,6 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-/* function AsmModule(stdlib,foreign) {
-    "use asm";
-
-    var fun2 = foreign.fun2;
-
-    
-   
-
-    function mul(x,y) {
-        x = +x;
-        y = +y;
-        return +(x*y);
-    }
-
-    
-    function f2(x,y){
-        x = +x;
-        y = +y;
-        var i = 0.0, j = 0.0;
-        j = +mul(+mul(x,1.),+mul(x,1.));
-        return +j;
-    }
-    
-    function f3(x,y){
-        x = x|0;
-        y = +y;
-        var i = 0.0
-        i = +f2(y,1.);
-        fun2(i);        
-        i = +f2(y,1.);
-        fun2(i);
-        return +i;
-    }
-    
-    return f3;
-}
-
-var global = {}
-var env = {fun2:function(x){print(x);}}
-
-var asmModule = AsmModule(global,env)
-asmModule  ( 0,1)
-
- */
  function AsmModule(stdlib,foreign) {
     "use asm";
 

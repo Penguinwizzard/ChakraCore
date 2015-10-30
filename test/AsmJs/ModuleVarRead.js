@@ -110,16 +110,7 @@ function AsmModule(stdlib,foreign,buffer) {
         f16 : f16 ,
     };
 }
-/*
-function print(x,y){
-    if( y !== undefined ) {
-        console.log(x+" "+y);
-    }
-    else
-    {
-        console.log(x);
-    }
-}*/
+
 var global = {Math:Math,Int8Array:Int8Array,Int16Array:Int16Array,Int32Array:Int32Array,Uint8Array:Uint8Array,Uint16Array:Uint16Array,Uint32Array:Uint32Array,Float32Array:Float32Array,Float64Array:Float64Array,Infinity:Infinity, NaN:NaN}
 var env = {fun1:function(x){/*print(x);*/}, fun2:function(x,y){/*print(x,y);*/},i1:155,i2:658,d1:68.25,d2:3.14156,f1:48.1523,f2:14896.2514}
 var buffer = new ArrayBuffer(1<<20);
