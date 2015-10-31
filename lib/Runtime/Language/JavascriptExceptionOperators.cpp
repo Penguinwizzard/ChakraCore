@@ -1062,7 +1062,7 @@ namespace Js
         Assert(scriptContext);
 
         // If the first argument to the accessor is not a recyclable object, return undefined
-        // This behavior is compatible with Chromes.
+        // for compat with other browsers
         if (!RecyclableObject::Is(args[0]))
         {
             return scriptContext->GetLibrary()->GetUndefined();

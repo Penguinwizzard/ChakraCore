@@ -4337,7 +4337,8 @@ void AssignRegisters(ParseNode *pnode,ByteCodeGenerator *byteCodeGenerator)
             ParseNodePtr pnodeName = pnode->sxFnc.pnodeName;
             if (pnodeName != nullptr)
             {
-                // There is a weird case in compat v8 mode where we may not have a sym assigned to a fnc decl's
+                // REVIEW: does this apply now that compat mode is gone?
+                // There is a weird case in compat mode where we may not have a sym assigned to a fnc decl's
                 // name node if it is a named function declare inside 'with' that also assigned to something else
                 // as well. Instead, We generate two knopFncDecl node one for parent function and one for the assignment
                 // Only the top one get a sym, not the inner one.  The assignment in the 'with' will be using the inner

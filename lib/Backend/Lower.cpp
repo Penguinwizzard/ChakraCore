@@ -9963,7 +9963,7 @@ Lowerer::InlineBuiltInLibraryCall(IR::Instr *callInstr)
 
     // Warning!
     // Don't add new built-in to following switch. Built-ins needs to be inlined in call direct way.
-    // Following is only for prejit scenarios such as Sunspider where we don't get inlining always and generate fast path in lowerer.
+    // Following is only for prejit scenarios where we don't get inlining always and generate fast path in lowerer.
     // Generating fastpath here misses fixed functions and globopt optimizations.
     switch(index)
     {

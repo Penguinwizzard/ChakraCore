@@ -2496,7 +2496,7 @@ namespace Js
                 throw AsmJsCompilationException( L"Cannot assign value ArrayBuffer" );
             }
 
-            // REVIEW: this seems hacky, but to keep tmp registers in order, I need to release rhsEmit.local before indexInfo.location
+            // to keep tmp registers in order, I need to release rhsEmit.local before indexInfo.location
             mWriter.AsmTypedArr(op, rhsEmit.location, indexSlot, viewType);
             RegSlot rhsReg = rhsEmit.location;
             mFunction->ReleaseLocationGeneric(&rhsEmit);

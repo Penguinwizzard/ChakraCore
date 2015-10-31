@@ -393,7 +393,7 @@ ThreadContext::~ThreadContext()
         }
 
 #ifdef LEAK_REPORT
-        // HACK HACK: heuristically figure out which one is the root tracker script engine
+        // heuristically figure out which one is the root tracker script engine
         // and force close on it
         if (this->rootTrackerScriptContext != nullptr)
         {

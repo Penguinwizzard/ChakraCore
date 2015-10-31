@@ -2408,8 +2408,7 @@ LABEL1:
             if (unhandledExceptionObject)
             {
                 JavascriptFunction* exceptionFunction = unhandledExceptionObject->GetFunction();
-                // This is for getcaller in window.onError.The behavior is different in
-                // different browser, and neither Firefox nor chrome can get the caller here.
+                // This is for getcaller in window.onError. The behavior is different in different browsers
                 if (exceptionFunction && scriptContext == exceptionFunction->GetScriptContext())
                 {
                     *value = exceptionFunction;

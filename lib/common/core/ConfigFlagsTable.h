@@ -443,7 +443,7 @@ namespace Js
 
     private:
         //
-        // This variable is defined for the constructor hack. see the constructor
+        // This variable is defined for the constructor
         //
                 int             nDummy;
 

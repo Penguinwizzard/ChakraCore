@@ -1831,7 +1831,7 @@ case_2:
 
         if (idxStart == 0 && idxEnd == len)
         {
-            //return the string if we need to substring entire span (typescript has this pattern).
+            //return the string if we need to substring entire span
             return pThis;
         }
 
@@ -1887,7 +1887,7 @@ case_2:
 
         if (idxStart == 0 && idxEnd == len)
         {
-            //return the string if we need to substr entire span (typescript has this pattern).
+            //return the string if we need to substr entire span
             return pThis;
         }
 

@@ -3238,7 +3238,7 @@ CommonNumber:
                 break;
             }
 
-            case TypeIds_String: // fast path for string [string-base64 FTW]
+            case TypeIds_String: // fast path for string
             {
                 charcount_t indexInt = TaggedInt::ToUInt32(index);
                 JavascriptString* string = JavascriptString::FromVar(instance);
@@ -7714,9 +7714,9 @@ CommonNumber:
 
         Type *typeWithoutProperty = object->GetType();
 
-        // This is a hack.  Ideally the lowerer would emit a call to the right flavor of PatchInitValue, so that we can ensure that we only
-        // ever initialize to NULL in the right cases.  But the backend uses the StFld opcode for initialization, and threading the different
-        // helper calls all the way down would be a pain.
+        // Ideally the lowerer would emit a call to the right flavor of PatchInitValue, so that we can ensure that we only
+        // ever initialize to NULL in the right cases.  But the backend uses the StFld opcode for initialization, and it
+        // would be cumbersome to thread the different helper calls all the way down
         if (object->InitProperty(propertyId, newValue, flags, &info))
         {
             CacheOperators::CachePropertyWrite(object, false, typeWithoutProperty, propertyId, &info, scriptContext);

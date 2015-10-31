@@ -3945,7 +3945,7 @@ GlobOpt::OptArguments(IR::Instr *instr)
         if (IsArgumentsOpnd(src1) &&
             src1->AsRegOpnd()->m_sym->GetInstrDef()->m_opcode == Js::OpCode::BytecodeArgOutCapture)
         {
-            // Apply inlining results in such usage - this is really hack to ignore this sym that is def'd by ByteCodeArgOutCapture
+            // Apply inlining results in such usage - this is to ignore this sym that is def'd by ByteCodeArgOutCapture
             // It's needed because we do not have block level merging of arguments object and this def due to inlining can turn off stack args opt.
             IR::Instr* builtinStart = instr->GetNextRealInstr();
             if (builtinStart->m_opcode == Js::OpCode::InlineBuiltInStart)
@@ -6236,7 +6236,7 @@ GlobOpt::CopyProp(IR::Opnd *opnd, IR::Instr *instr, Value *val, IR::IndirOpnd *p
         if (valueInfo->GetSymStore() && instr->m_opcode == Js::OpCode::Ld_A && instr->GetDst()->IsRegOpnd()
             && valueInfo->GetSymStore() == instr->GetDst()->AsRegOpnd()->m_sym)
         {
-            // Hack to avoid resetting symStore after fieldHoisting:
+            // Avoid resetting symStore after fieldHoisting:
             //  t1 = LdFld field            <- set symStore to fieldHoistSym
             //   fieldHoistSym = Ld_A t1    <- we're looking at t1 now, but want to copy-prop fieldHoistSym forward
             return opnd;
@@ -7613,7 +7613,7 @@ GlobOpt::ValueNumberLdElemDst(IR::Instr **pInstr, Value *srcVal)
             baseValueType.IsLikelyNativeArray() && instr->IsProfiledInstr() // specialized native array lowering for LdElem requires that it is profiled
         ) ||
         (!this->DoTypedArrayTypeSpec() && baseValueType.IsLikelyOptimizedTypedArray()) ||
-        // (Don't do type spec on native array with a history of accessing gaps, as this is a bailout; see Octane\pdfjs)
+        // Don't do type spec on native array with a history of accessing gaps, as this is a bailout
         (!this->DoNativeArrayTypeSpec() && baseValueType.IsLikelyNativeArray()) ||
         !ShouldExpectConventionalArrayIndexValue(src))
     {

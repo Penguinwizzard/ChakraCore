@@ -1491,7 +1491,7 @@ namespace Js
             //   the rational is: use same context of RegExp.prototype, on which the function was called.
             //   So, if you call the function with remoteContext.regexInstance.exec.call(localRegexInstance, "match string"),
             //   we will update stats in the context related to the exec function, i.e. remoteContext.
-            //   This is consistent with chrome.
+            //   This is consistent with other browsers
             UnifiedRegex::RegexPattern* pattern = useSplitPattern
                 ? regularExpression->GetSplitPattern()
                 : regularExpression->GetPattern();

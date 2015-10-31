@@ -1737,8 +1737,8 @@ GlobOpt::ReloadFieldHoistStackSym(IR::Instr * instr, PropertySym * propertySym)
     // hoisted stack syms, which requires more computation (since many fields can be killed at once).
     //
     // Alternatively we can kill the specialized stack syms for a field when the field is reloaded, which is what's happening
-    // here. Since this happens per field and lazily, it requires less work although it's a bit of a hack. It works because
-    // killing the specialized stack syms only matters when the field is reloaded.
+    // here. Since this happens per field and lazily, it requires less work. It works because killing the specialized stack
+    // syms only matters when the field is reloaded.
     //
     // Furthermore, to handle the case where a field is not live on entry into the loop (field is killed in the loop and not
     // reloaded in the same loop afterwards), the specialized stack syms for that field must also be killed on entry into the
