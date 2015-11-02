@@ -149,7 +149,7 @@ protected:
         extractedUpperBoundCheckWithoutHoisting(false),
         ignoreOverflowBitCount(32),
         isCtorCall(false),
-        isNonProfiledCallInstr(false)
+		isCallInstrProtectedByNoProfileBailout(false)
     {
     }
 public:
@@ -479,14 +479,14 @@ public:
     bool            isCtorCall : 1;
     bool            dstIsAlwaysConvertedToInt32 : 1;
     bool            dstIsAlwaysConvertedToNumber : 1;
+	bool			isCallInstrProtectedByNoProfileBailout : 1;
 protected:
     bool            isCloned:1;    
     bool            hasBailOutInfo:1;
-
+	
     // Used for aux bail out. We are using same bailOutInfo, just different boolean to hide regular bail out.
     // Refer to ConvertToBailOutInstr implementation for details.
     bool            hasAuxBailOut:1;    
-    bool            isNonProfiledCallInstr : 1;
     IRKind          m_kind;   
 
     uint32          m_number;

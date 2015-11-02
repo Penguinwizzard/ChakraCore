@@ -4451,6 +4451,7 @@ IRBuilder::BuildProfiledCallI(Js::OpCode opcode, uint32 offset, Js::RegSlot retu
 {
     Js::OpCode newOpcode;
     ValueType returnType;
+	bool isProtectedByNoProfileBailout = false;
 
     if (opcode == Js::OpCode::ProfiledNewScObject || opcode == Js::OpCode::ProfiledNewScObjectWithICIndex
         || opcode == Js::OpCode::ProfiledNewScObjectSpread)
@@ -4484,6 +4485,7 @@ IRBuilder::BuildProfiledCallI(Js::OpCode opcode, uint32 offset, Js::RegSlot retu
                         ))
                     {
                         this->InsertBailOnNoProfile(offset);
+						isProtectedByNoProfileBailout = true;
                     }
                     else
                     {
@@ -4502,6 +4504,7 @@ IRBuilder::BuildProfiledCallI(Js::OpCode opcode, uint32 offset, Js::RegSlot retu
         }
     }
     IR::Instr * callInstr = BuildCallI_Helper(newOpcode, offset, returnValue, function, argCount, profileId, inlineCacheIndex);
+	callInstr->isCallInstrProtectedByNoProfileBailout = isProtectedByNoProfileBailout;
 
     if (callInstr->GetDst() && callInstr->GetDst()->GetValueType().IsUninitialized())
     {
