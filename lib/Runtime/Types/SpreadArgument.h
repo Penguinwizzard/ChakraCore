@@ -28,8 +28,8 @@ namespace Js
         uint GetArgumentSpreadCount()  const { return iteratorIndices ? iteratorIndices->Count() : 0; }
 
         // A SpreadArgument should never call the Functions defined below this comment
-        virtual BOOL HasProperty(PropertyId propertyId) override { AssertAndFailFast(); };
-        virtual BOOL HasOwnProperty(PropertyId propertyId) override { AssertAndFailFast(); };
+        virtual BOOL HasProperty(PropertyId propertyId) override { AssertAndFailFast();  return FALSE; };
+        virtual BOOL HasOwnProperty(PropertyId propertyId) override { AssertAndFailFast(); return FALSE; };
         virtual BOOL SetProperty(PropertyId propertyId, Var value, PropertyOperationFlags flags, PropertyValueInfo* info) override { AssertAndFailFast(); return FALSE; };
         virtual BOOL GetProperty(Var originalInstance, PropertyId propertyId, Var* value, PropertyValueInfo* info, ScriptContext* requestContext) override { AssertAndFailFast(); return FALSE; };
         virtual BOOL DeleteProperty(PropertyId propertyId, PropertyOperationFlags flags) override{ AssertAndFailFast(); return FALSE;};
