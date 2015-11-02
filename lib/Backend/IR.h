@@ -148,7 +148,8 @@ protected:
         loadedArrayHeadSegmentLength(false),
         extractedUpperBoundCheckWithoutHoisting(false),
         ignoreOverflowBitCount(32),
-        isCtorCall(false)
+        isCtorCall(false),
+        isNonProfiledCallInstr(false)
     {
     }
 public:
@@ -470,6 +471,7 @@ public:
     bool            ignoreNegativeZero: 1;
     bool            ignoreIntOverflow: 1;
     bool            ignoreIntOverflowInRange: 1;
+    
     bool            forcePreOpBailOutIfNeeded: 1;
     bool            loadedArrayHeadSegment : 1;
     bool            loadedArrayHeadSegmentLength : 1;
@@ -484,6 +486,7 @@ protected:
     // Used for aux bail out. We are using same bailOutInfo, just different boolean to hide regular bail out.
     // Refer to ConvertToBailOutInstr implementation for details.
     bool            hasAuxBailOut:1;    
+    bool            isNonProfiledCallInstr : 1;
     IRKind          m_kind;   
 
     uint32          m_number;
