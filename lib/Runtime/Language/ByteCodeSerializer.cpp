@@ -3479,6 +3479,7 @@ public:
             GetString16ById(displayNameId);
 
         uint displayNameLength = deferDeserializeFunctionInfo ? deferDeserializeFunctionInfo->GetDisplayNameLength() : GetString16LengthById(displayNameId);
+        uint displayShortNameOffset = deferDeserializeFunctionInfo ? deferDeserializeFunctionInfo->GetShortDisplayNameOffset() : 0;
         int functionId;
         current = ReadInt32(current, &functionId);
         int serializationIndex;
@@ -3499,7 +3500,7 @@ public:
         {
             Assert(sourceInfo->GetSrcInfo()->moduleID == kmodGlobal);
             Assert(!deserializeNested);
-            *functionProxy = DeferDeserializeFunctionInfo::New(this->scriptContext, nestedCount, functionId, cache, functionBytes, sourceInfo, displayName, displayNameLength, nativeModule, (FunctionInfo::Attributes)attributes);
+            *functionProxy = DeferDeserializeFunctionInfo::New(this->scriptContext, nestedCount, functionId, cache, functionBytes, sourceInfo, displayName, displayNameLength, displayShortNameOffset, nativeModule, (FunctionInfo::Attributes)attributes);
 
             return S_OK;
         }
@@ -3520,7 +3521,7 @@ public:
         {
             FunctionBody **functionBody = (FunctionBody **) function;
 
-            *functionBody = FunctionBody::NewFromRecycler(this->scriptContext, nullptr /*DisplayName*/, 0 /*DisplayNameLength*/, nestedCount,
+            *functionBody = FunctionBody::NewFromRecycler(this->scriptContext, nullptr /*displayName*/, 0 /*displayNameLength*/, 0 /*displayShortNameOffset*/, nestedCount,
                 sourceInfo,
                 functionNumber,
                 sourceInfo->GetSrcInfo()->sourceContextInfo->sourceContextId,
@@ -3530,7 +3531,7 @@ public:
 #endif
                 );
 
-            (*functionBody)->SetDisplayName(displayName, displayNameLength, FunctionProxy::SetDisplayNameFlags::SetDisplayNameFlagsDontCopy);
+            (*functionBody)->SetDisplayName(displayName, displayNameLength, displayShortNameOffset, FunctionProxy::SetDisplayNameFlags::SetDisplayNameFlagsDontCopy);
             (*functionBody)->serializationIndex = serializationIndex;
             (*functionBody)->byteCodeCache = cache;
             (*functionBody)->m_utf8SourceInfo = utf8SourceInfo; // Set source info
@@ -3538,7 +3539,7 @@ public:
         }
         else
         {
-            *function = ParseableFunctionInfo::New(this->scriptContext, nestedCount, firstFunctionId + functionId, utf8SourceInfo, displayName, displayNameLength, nullptr, (FunctionInfo::Attributes)attributes);
+            *function = ParseableFunctionInfo::New(this->scriptContext, nestedCount, firstFunctionId + functionId, utf8SourceInfo, displayName, displayNameLength, displayShortNameOffset, nullptr, (FunctionInfo::Attributes)attributes);
         }
 
         // These fields are manually deserialized previously

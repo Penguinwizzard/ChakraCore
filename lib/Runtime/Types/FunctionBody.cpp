@@ -339,14 +339,14 @@ namespace Js
         this->m_sourceInfo.m_probeBackingBlock = probeBackingBlock;
     }
 
-    FunctionBody * FunctionBody::NewFromRecycler(ScriptContext * scriptContext, const wchar_t * displayName, uint displayNameLength, uint nestedCount,
+    FunctionBody * FunctionBody::NewFromRecycler(ScriptContext * scriptContext, const wchar_t * displayName, uint displayNameLength, uint displayShortNameOffset, uint nestedCount,
         Utf8SourceInfo* sourceInfo, uint uScriptId, Js::LocalFunctionId functionId, Js::PropertyRecordList* boundPropertyRecords, Attributes attributes
 #ifdef PERF_COUNTERS
             , bool isDeserializedFunction
 #endif
             )
     {
-            return FunctionBody::NewFromRecycler(scriptContext, displayName, displayNameLength, nestedCount, sourceInfo,
+            return FunctionBody::NewFromRecycler(scriptContext, displayName, displayNameLength, displayShortNameOffset, nestedCount, sourceInfo,
             scriptContext->GetThreadContext()->NewFunctionNumber(), uScriptId, functionId, boundPropertyRecords, attributes
 #ifdef PERF_COUNTERS
             , isDeserializedFunction
@@ -354,7 +354,7 @@ namespace Js
             );
     }
 
-    FunctionBody * FunctionBody::NewFromRecycler(ScriptContext * scriptContext, const wchar_t * displayName, uint displayNameLength, uint nestedCount,
+    FunctionBody * FunctionBody::NewFromRecycler(ScriptContext * scriptContext, const wchar_t * displayName, uint displayNameLength, uint displayShortNameOffset, uint nestedCount,
         Utf8SourceInfo* sourceInfo, uint uFunctionNumber, uint uScriptId, Js::LocalFunctionId  functionId, Js::PropertyRecordList* boundPropertyRecords, Attributes attributes
 #ifdef PERF_COUNTERS
             , bool isDeserializedFunction
@@ -362,21 +362,21 @@ namespace Js
             )
     {
 #ifdef PERF_COUNTERS
-            return RecyclerNewWithBarrierFinalizedPlus(scriptContext->GetRecycler(), nestedCount * sizeof(FunctionBody*), FunctionBody, scriptContext, displayName, displayNameLength, nestedCount, sourceInfo, uFunctionNumber, uScriptId, functionId, boundPropertyRecords, attributes, isDeserializedFunction);
+            return RecyclerNewWithBarrierFinalizedPlus(scriptContext->GetRecycler(), nestedCount * sizeof(FunctionBody*), FunctionBody, scriptContext, displayName, displayNameLength, displayShortNameOffset, nestedCount, sourceInfo, uFunctionNumber, uScriptId, functionId, boundPropertyRecords, attributes, isDeserializedFunction);
 #else
-            return RecyclerNewWithBarrierFinalizedPlus(scriptContext->GetRecycler(), nestedCount * sizeof(FunctionBody*), FunctionBody, scriptContext, displayName, displayNameLength, nestedCount, sourceInfo, uFunctionNumber, uScriptId, functionId, boundPropertyRecords, attributes);
+            return RecyclerNewWithBarrierFinalizedPlus(scriptContext->GetRecycler(), nestedCount * sizeof(FunctionBody*), FunctionBody, scriptContext, displayName, displayNameLength, displayShortNameOffset, nestedCount, sourceInfo, uFunctionNumber, uScriptId, functionId, boundPropertyRecords, attributes);
 #endif
     }
 
 
-    FunctionBody::FunctionBody(ScriptContext* scriptContext, const wchar_t* displayName, uint displayNameLength, uint nestedCount,
+    FunctionBody::FunctionBody(ScriptContext* scriptContext, const wchar_t* displayName, uint displayNameLength, uint displayShortNameOffset, uint nestedCount,
         Utf8SourceInfo* utf8SourceInfo, uint uFunctionNumber, uint uScriptId,
         Js::LocalFunctionId  functionId, Js::PropertyRecordList* boundPropertyRecords, Attributes attributes
     #ifdef PERF_COUNTERS
         , bool isDeserializedFunction
     #endif
         ) :
-        ParseableFunctionInfo(scriptContext->CurrentThunk, nestedCount, sizeof(FunctionBody), functionId, utf8SourceInfo, scriptContext, uFunctionNumber, displayName, displayNameLength, attributes, boundPropertyRecords),
+        ParseableFunctionInfo(scriptContext->CurrentThunk, nestedCount, sizeof(FunctionBody), functionId, utf8SourceInfo, scriptContext, uFunctionNumber, displayName, displayNameLength, displayShortNameOffset, attributes, boundPropertyRecords),
         m_uScriptId(uScriptId),
         m_varCount(0),
         m_outParamMaxDepth(0),
@@ -1048,7 +1048,7 @@ namespace Js
 
     // DeferDeserializeFunctionInfo methods
 
-    DeferDeserializeFunctionInfo::DeferDeserializeFunctionInfo(int nestedCount, LocalFunctionId functionId, ByteCodeCache* byteCodeCache, const byte* serializedFunction, Utf8SourceInfo* sourceInfo, ScriptContext* scriptContext, uint functionNumber, const wchar_t* displayName, uint displayNameLength, NativeModule *nativeModule, Attributes attributes) :
+    DeferDeserializeFunctionInfo::DeferDeserializeFunctionInfo(int nestedCount, LocalFunctionId functionId, ByteCodeCache* byteCodeCache, const byte* serializedFunction, Utf8SourceInfo* sourceInfo, ScriptContext* scriptContext, uint functionNumber, const wchar_t* displayName, uint displayNameLength, uint displayShortNameOffset, NativeModule *nativeModule, Attributes attributes) :
         FunctionProxy(DefaultDeferredDeserializeThunk, (Attributes)(attributes | DeferredDeserialize), nestedCount, sizeof(DeferDeserializeFunctionInfo), functionId, scriptContext, sourceInfo, functionNumber),
         m_cache(byteCodeCache),
         m_functionBytes(serializedFunction),
@@ -1059,10 +1059,10 @@ namespace Js
         this->m_defaultEntryPointInfo = RecyclerNew(scriptContext->GetRecycler(), ProxyEntryPointInfo, DefaultDeferredDeserializeThunk);
         PERF_COUNTER_INC(Code, DeferDeserializeFunctionProxy);
 
-        SetDisplayName(displayName, displayNameLength, FunctionProxy::SetDisplayNameFlagsDontCopy);
+        SetDisplayName(displayName, displayNameLength, displayShortNameOffset, FunctionProxy::SetDisplayNameFlagsDontCopy);
     }
 
-    DeferDeserializeFunctionInfo* DeferDeserializeFunctionInfo::New(ScriptContext* scriptContext, int nestedCount, LocalFunctionId functionId, ByteCodeCache* byteCodeCache, const byte* serializedFunction, Utf8SourceInfo* sourceInfo, const wchar_t* displayName, uint displayNameLength, NativeModule *nativeModule, Attributes attributes)
+    DeferDeserializeFunctionInfo* DeferDeserializeFunctionInfo::New(ScriptContext* scriptContext, int nestedCount, LocalFunctionId functionId, ByteCodeCache* byteCodeCache, const byte* serializedFunction, Utf8SourceInfo* sourceInfo, const wchar_t* displayName, uint displayNameLength, uint displayShortNameOffset, NativeModule *nativeModule, Attributes attributes)
     {
         return RecyclerNewFinalized(scriptContext->GetRecycler(),
             DeferDeserializeFunctionInfo,
@@ -1075,6 +1075,7 @@ namespace Js
             scriptContext->GetThreadContext()->NewFunctionNumber(),
             displayName,
             displayNameLength,
+            displayShortNameOffset,
             nativeModule,
             attributes);
     }
@@ -1088,7 +1089,7 @@ namespace Js
     // ParseableFunctionInfo methods
     ParseableFunctionInfo::ParseableFunctionInfo(JavascriptMethod entryPoint, int nestedCount, int derivedSize,
         LocalFunctionId functionId, Utf8SourceInfo* sourceInfo, ScriptContext* scriptContext, uint functionNumber,
-        const wchar_t* displayName, uint displayNameLength, Attributes attributes, Js::PropertyRecordList* propertyRecords) :
+        const wchar_t* displayName, uint displayNameLength, uint displayShortNameOffset, Attributes attributes, Js::PropertyRecordList* propertyRecords) :
       FunctionProxy(entryPoint, attributes, nestedCount, derivedSize, functionId, scriptContext, sourceInfo, functionNumber),
       m_dynamicInterpreterThunk(nullptr),
       m_hasBeenParsed(false),
@@ -1118,6 +1119,7 @@ namespace Js
       m_scopeInfo(nullptr),
       m_displayName(nullptr),
       m_displayNameLength(0),
+      m_displayShortNameOffset(0),
       deferredStubs(nullptr),
       scopeSlotArraySize(0),
       cachedSourceString(nullptr),
@@ -1140,12 +1142,12 @@ namespace Js
             this->m_defaultEntryPointInfo = RecyclerNew(scriptContext->GetRecycler(), ProxyEntryPointInfo, entryPoint);
         }
 
-        SetDisplayName(displayName, displayNameLength);
+        SetDisplayName(displayName, displayNameLength, displayShortNameOffset);
         this->originalEntryPoint = DefaultEntryThunk;
     }
 
     ParseableFunctionInfo* ParseableFunctionInfo::New(ScriptContext* scriptContext, int nestedCount,
-        LocalFunctionId functionId, Utf8SourceInfo* sourceInfo, const wchar_t* displayName, uint displayNameLength, Js::PropertyRecordList* propertyRecords, Attributes attributes)
+        LocalFunctionId functionId, Utf8SourceInfo* sourceInfo, const wchar_t* displayName, uint displayNameLength, uint displayShortNameOffset, Js::PropertyRecordList* propertyRecords, Attributes attributes)
     {
         Assert(scriptContext->DeferredParsingThunk == ProfileDeferredParsingThunk
             || scriptContext->DeferredParsingThunk == DefaultDeferredParsingThunk);
@@ -1175,6 +1177,7 @@ namespace Js
             newFunctionNumber,
             displayName,
             displayNameLength,
+            displayShortNameOffset,
             (Attributes)(attributes | DeferredParse),
             propertyRecords);
     }
@@ -1533,12 +1536,13 @@ namespace Js
             // Can't support display name that big
             Js::Throw::OutOfMemory();
         }
-        SetDisplayName(displayName, (uint)len);
+        SetDisplayName(displayName, (uint)len, 0);
     }
 
-    void DeferDeserializeFunctionInfo::SetDisplayName(const wchar_t* pszDisplayName, uint displayNameLength, SetDisplayNameFlags flags /* default to None */)
+    void DeferDeserializeFunctionInfo::SetDisplayName(const wchar_t* pszDisplayName, uint displayNameLength, uint displayShortNameOffset, SetDisplayNameFlags flags /* default to None */)
     {
         this->m_displayNameLength = displayNameLength;
+        this->m_displayShortNameOffset = displayShortNameOffset;
         FunctionProxy::SetDisplayName(pszDisplayName, &this->m_displayName, displayNameLength, m_scriptContext, flags);
     }
 
@@ -1649,6 +1653,7 @@ namespace Js
                 this->m_scriptContext,
                 this->m_displayName,
                 this->m_displayNameLength,
+                this->m_displayShortNameOffset,
                 this->m_nestedCount,
                 this->m_utf8SourceInfo,
                 this->m_functionNumber,
@@ -1910,6 +1915,7 @@ namespace Js
             this->m_scriptContext,
             this->m_displayName,
             this->m_displayNameLength,
+            this->m_displayShortNameOffset,
             this->m_nestedCount,
             this->m_utf8SourceInfo,
             this->m_functionNumber,
@@ -2050,69 +2056,22 @@ namespace Js
             *shortNameLength = nameLength;
             return name;
         }
+        uint shortNameOffset = this->GetShortDisplayNameOffset();
+        const wchar_t * shortName = name + shortNameOffset;
+        bool isBracketCase = shortNameOffset != 0 && name[shortNameOffset-1] == '[';
+        *shortNameLength = nameLength - shortNameOffset;
 
-        // TODO (update) shortening for string literal names will not work for "*[" cases
-        // need a place to store short names and return them here before we do the shortening
-        // (update 2) forgive the ugliness of this function the next change will store the short name offsets
-        // giving us the start and end of the buffer simplifying this function significantly.
-
-        const wchar_t * shortName = wcsrchr(name, L'.'); // use of wcsrchr bites us when we have nulls in object names like so var o = { "\0a" : { foo : function() {} }}
-        const wchar_t * shorterName = wcsrchr(name, L'[');
-
-
-        if (shortName != nullptr)
+        if (!isBracketCase)
         {
-            // skip after '.'
-            shortName++;
+            return shortName;
         }
-
-        //if the period is after the "]" or shorterName is a nullptr
-        const wchar_t *endingBracket = nullptr;
-        if (shorterName == nullptr || (shortName > (endingBracket = wcsrchr(name, L']'))
-            && endingBracket != nullptr))
-        {
-            if (shortName)
-            {
-                *shortNameLength = nameLength - (charcount_t)(shortName - name);
-                return shortName;
-            }
-            *shortNameLength = nameLength;
-            return name;
-        }
-
-        if (name == shorterName && endingBracket == nullptr)
-        {
-            *shortNameLength = nameLength;
-            return name;
-        }
-
-        // this will fix any [[*] excluding '[' case. Still need a fix for [*[]
-        while (name != shorterName && *(shorterName-1) == L'[')
-        {
-
-            shorterName--;
-        }
-
-        // skip after '['
-        shorterName++;
-        if (*shorterName == ']' && shorterName == name + nameLength)
-        {
-            *shortNameLength = 0;
-            return Constants::Empty;
-        }
-
-        uint deltaNameLength = nameLength - (charcount_t)(shorterName - name);
-        *shortNameLength = deltaNameLength - 1;
-        if (shorterName[deltaNameLength - 1] == ']')
-        {
-            wchar_t * finalshorterName = RecyclerNewArrayLeaf(this->GetScriptContext()->GetRecycler(), wchar_t, deltaNameLength); // size of number in brackets + ] which will be used by the null terminator
-            js_wmemcpy_s(finalshorterName, deltaNameLength, shorterName, deltaNameLength - 1); // we don't want the last character in shorterName
-            finalshorterName[deltaNameLength - 1] = L'\0';
-
-            return finalshorterName;
-        }
-
-        return shorterName;
+        
+        Assert(name[nameLength - 1] == ']');
+        wchar_t * finalshorterName = RecyclerNewArrayLeaf(this->GetScriptContext()->GetRecycler(), wchar_t, *shortNameLength);
+        js_wmemcpy_s(finalshorterName, *shortNameLength, shortName, *shortNameLength - 1); // we don't want the last character in shorterName
+        finalshorterName[*shortNameLength - 1] = L'\0';
+        *shortNameLength = *shortNameLength - 1;
+        return finalshorterName;
     }
 
     /*static*/
@@ -2182,11 +2141,12 @@ namespace Js
             // Can't support display name that big
             Js::Throw::OutOfMemory();
         }
-        SetDisplayName(pszDisplayName, (uint)len);
+        SetDisplayName(pszDisplayName, (uint)len, 0);
     }
-    void ParseableFunctionInfo::SetDisplayName(const wchar_t* pszDisplayName, uint displayNameLength, SetDisplayNameFlags flags /* default to None */)
+    void ParseableFunctionInfo::SetDisplayName(const wchar_t* pszDisplayName, uint displayNameLength, uint displayShortNameOffset, SetDisplayNameFlags flags /* default to None */)
     {
         this->m_displayNameLength = displayNameLength;
+        this->m_displayShortNameOffset = displayShortNameOffset;
         FunctionProxy::SetDisplayName(pszDisplayName, &this->m_displayName, displayNameLength, m_scriptContext, flags);
     }
 
@@ -3557,7 +3517,7 @@ namespace Js
         }
 
         FunctionBody * newFunctionBody = FunctionBody::NewFromRecycler(scriptContext, this->GetDisplayName(), this->GetDisplayNameLength(),
-                this->m_nestedCount, sourceInfo, this->m_functionNumber, this->m_uScriptId,
+                this->GetShortDisplayNameOffset(), this->m_nestedCount, sourceInfo, this->m_functionNumber, this->m_uScriptId,
                 this->GetLocalFunctionId(), this->m_boundPropertyRecords,
                 this->GetAttributes()
 #ifdef PERF_COUNTERS
@@ -3702,7 +3662,8 @@ namespace Js
             sourceInfo = scriptContext->GetSource(sourceIndex);
         }
 
-        ParseableFunctionInfo* newFunctionInfo = ParseableFunctionInfo::New(scriptContext, this->m_nestedCount, this->GetLocalFunctionId(), sourceInfo, this->GetDisplayName(), this->GetDisplayNameLength(), this->m_boundPropertyRecords, this->GetAttributes());
+        ParseableFunctionInfo* newFunctionInfo = ParseableFunctionInfo::New(scriptContext, this->m_nestedCount, this->GetLocalFunctionId(), sourceInfo, this->GetDisplayName(), this->GetDisplayNameLength(),
+            this->GetShortDisplayNameOffset(), this->m_boundPropertyRecords, this->GetAttributes());
 
         if (this->m_scopeInfo != nullptr)
         {

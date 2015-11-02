@@ -214,6 +214,7 @@ struct PnFnc
     IdentPtr pid;
     LPCOLESTR hint;
     ulong hintLength;
+    ulong hintOffset;
     bool  isNameIdentifierRef;
     ParseNodePtr pnodeScopes;
     ParseNodePtr pnodeBodyScope;

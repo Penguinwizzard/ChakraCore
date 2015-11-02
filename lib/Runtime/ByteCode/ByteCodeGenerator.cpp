@@ -535,8 +535,8 @@ bool MustProduceValue(ParseNode *pnode, const Js::ScriptContext *const scriptCon
             // Check the common "while (1)" case.
             if (pnode->sxWhile.pnodeBody == nullptr ||
                 (pnode->sxWhile.pnodeCond &&
-                    (pnode->sxWhile.pnodeCond->nop != knopInt ||
-                        pnode->sxWhile.pnodeCond->sxInt.lw == 0)))
+                (pnode->sxWhile.pnodeCond->nop != knopInt ||
+                pnode->sxWhile.pnodeCond->sxInt.lw == 0)))
             {
                 return false;
             }
@@ -565,39 +565,39 @@ bool MustProduceValue(ParseNode *pnode, const Js::ScriptContext *const scriptCon
             break;
 
         case knopSwitch:
-        {
-            // This is potentially the most inefficient case. We could consider adding a flag to the PnSwitch
-            // struct and computing it when we visit the switch, but:
-            // a. switch statements at global scope shouldn't be that common;
-            // b. switch statements with many arms shouldn't be that common;
-            // c. switches without default cases can be trivially skipped.
-            if (pnode->sxSwitch.pnodeDefault == nullptr)
             {
-                // Can't guarantee that any code is executed.
+                // This is potentially the most inefficient case. We could consider adding a flag to the PnSwitch
+                // struct and computing it when we visit the switch, but:
+                // a. switch statements at global scope shouldn't be that common;
+                // b. switch statements with many arms shouldn't be that common;
+                // c. switches without default cases can be trivially skipped.
+                if (pnode->sxSwitch.pnodeDefault == nullptr)
+                {
+                    // Can't guarantee that any code is executed.
                 return false;
-            }
-            ParseNode *pnodeCase;
-            for (pnodeCase = pnode->sxSwitch.pnodeCases; pnodeCase; pnodeCase = pnodeCase->sxCase.pnodeNext)
-            {
-                if (pnodeCase->sxCase.pnodeBody == nullptr)
-                {
-                    if (pnodeCase->sxCase.pnodeNext == nullptr)
-                    {
-                        // Last case has no code to execute.
-                        return false;
-                    }
-                    // Fall through to the next case.
                 }
-                else
+                ParseNode *pnodeCase;
+                for (pnodeCase = pnode->sxSwitch.pnodeCases; pnodeCase; pnodeCase = pnodeCase->sxCase.pnodeNext)
                 {
-                    if (!MustProduceValue(pnodeCase->sxCase.pnodeBody, scriptContext))
+                    if (pnodeCase->sxCase.pnodeBody == nullptr)
                     {
+                        if (pnodeCase->sxCase.pnodeNext == nullptr)
+                        {
+                            // Last case has no code to execute.
                         return false;
+                        }
+                        // Fall through to the next case.
+                    }
+                    else
+                    {
+                        if (!MustProduceValue(pnodeCase->sxCase.pnodeBody, scriptContext))
+                        {
+                        return false;
+                        }
                     }
                 }
-            }
             return true;
-        }
+            }
 
         case knopTryCatch:
             // True only if both try and catch produce a value.
@@ -745,7 +745,7 @@ void ByteCodeGenerator::SetHasFinally(bool has)
 
 // TODO: per-function register assignment for env and global symbols
 void ByteCodeGenerator::AssignRegister(Symbol *sym)
-{
+    {
     AssertMsg(sym->GetDecl() == nullptr || sym->GetDecl()->nop != knopConstDecl || sym->GetDecl()->nop != knopLetDecl,
         "const and let should get only temporary register, assigned during emit stage");
     if (sym->GetLocation() == Js::Constants::NoRegister)
@@ -1108,7 +1108,7 @@ ParseNode* VisitBlock(ParseNode *pnode, ByteCodeGenerator* byteCodeGenerator, Pr
     return pnodeLastVal;
 }
 
-FuncInfo * ByteCodeGenerator::StartBindFunction(const wchar_t *name, int nameLength, bool* pfuncExprWithName, ParseNode *pnode)
+FuncInfo * ByteCodeGenerator::StartBindFunction(const wchar_t *name, uint nameLength, uint shortNameOffset, bool* pfuncExprWithName, ParseNode *pnode)
 {
     bool funcExprWithName;
     union
@@ -1219,13 +1219,13 @@ FuncInfo * ByteCodeGenerator::StartBindFunction(const wchar_t *name, int nameLen
         {
             ENTER_PINNED_SCOPE(Js::PropertyRecordList, propertyRecordList);
             propertyRecordList = EnsurePropertyRecordList();
-            parsedFunctionBody = Js::FunctionBody::NewFromRecycler(scriptContext, name, nameLength, pnode->sxFnc.nestedCount, m_utf8SourceInfo,
+            parsedFunctionBody = Js::FunctionBody::NewFromRecycler(scriptContext, name, nameLength, shortNameOffset, pnode->sxFnc.nestedCount, m_utf8SourceInfo,
                 m_utf8SourceInfo->GetSrcInfo()->sourceContextInfo->sourceContextId, functionId, propertyRecordList
                 , attributes
 #ifdef PERF_COUNTERS
                 , false /* is function from deferred deserialized proxy */
 #endif
-                );
+            );
             LEAVE_PINNED_SCOPE();
         }
         else
@@ -1238,7 +1238,7 @@ FuncInfo * ByteCodeGenerator::StartBindFunction(const wchar_t *name, int nameLen
                 propertyRecordList = EnsurePropertyRecordList();
             }
 
-            parseableFunctionInfo = Js::ParseableFunctionInfo::New(scriptContext, pnode->sxFnc.nestedCount, functionId, m_utf8SourceInfo, name, nameLength, propertyRecordList, attributes);
+            parseableFunctionInfo = Js::ParseableFunctionInfo::New(scriptContext, pnode->sxFnc.nestedCount, functionId, m_utf8SourceInfo, name, nameLength, shortNameOffset, propertyRecordList, attributes);
             LEAVE_PINNED_SCOPE();
         }
 
@@ -1544,7 +1544,7 @@ Symbol * ByteCodeGenerator::FindSymbol(Symbol **symRef, IdentPtr pid, bool forRe
         else
         {
             Output::Print(L"did not resolve %s\n", key);
-        }
+    }
     }
 #endif
 
@@ -2012,7 +2012,7 @@ void ByteCodeGenerator::Begin(
 
 HRESULT GenerateByteCode(__in ParseNode *pnode, __in ulong grfscr, __in Js::ScriptContext* scriptContext, __inout Js::ParseableFunctionInfo ** ppRootFunc,
                          __in uint sourceIndex, __in bool forceNoNative, __in Parser* parser, __in CompileScriptException *pse, Js::ScopeInfo* parentScopeInfo,
-                         Js::ScriptFunction ** functionRef)
+                        Js::ScriptFunction ** functionRef)
 {
     HRESULT hr = S_OK;
     ByteCodeGenerator byteCodeGenerator(scriptContext, parentScopeInfo);
@@ -2266,13 +2266,15 @@ FuncInfo* PreVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerato
         parentFunc->root->sxFnc.GetTopLevelScope() == pnode);
 
     const wchar_t *funcName = Js::Constants::AnonymousFunction;
-    int funcNameLength = Js::Constants::AnonymousFunctionLength;
+    uint funcNameLength = Js::Constants::AnonymousFunctionLength;
+    uint functionNameOffset = 0;
     bool funcExprWithName = false;
 
     if (pnode->sxFnc.hint != nullptr)
     {
         funcName = reinterpret_cast<const wchar_t*>(pnode->sxFnc.hint);
         funcNameLength = pnode->sxFnc.hintLength;
+        functionNameOffset = pnode->sxFnc.hintOffset;
         Assert(funcNameLength != 0 || funcNameLength == (int)wcslen(funcName));
     }
     if (pnode->sxFnc.IsDeclaration() || pnode->sxFnc.IsMethod())
@@ -2282,6 +2284,7 @@ FuncInfo* PreVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerato
         {
             funcName = reinterpret_cast<const wchar_t*>(pnode->sxFnc.pid->Psz());
             funcNameLength = pnode->sxFnc.pid->Cch();
+            functionNameOffset = 0;
         }
     }
     else if ((pnode->sxFnc.pnodeName != nullptr) &&
@@ -2289,6 +2292,10 @@ FuncInfo* PreVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerato
     {
         funcName = reinterpret_cast<const wchar_t*>(pnode->sxFnc.pnodeName->sxVar.pid->Psz());
         funcNameLength = pnode->sxFnc.pnodeName->sxVar.pid->Cch();
+
+        //
+        // create the new scope for Function expression only in ES5 mode
+        //
         funcExprWithName = true;
     }
 
@@ -2298,7 +2305,7 @@ FuncInfo* PreVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerato
     }
 
     Assert(pnode->sxFnc.funcInfo == nullptr);
-    FuncInfo* funcInfo = pnode->sxFnc.funcInfo = byteCodeGenerator->StartBindFunction(funcName, funcNameLength, &funcExprWithName, pnode);
+    FuncInfo* funcInfo = pnode->sxFnc.funcInfo = byteCodeGenerator->StartBindFunction(funcName, funcNameLength, functionNameOffset, &funcExprWithName, pnode);
     funcInfo->byteCodeFunction->SetIsNamedFunctionExpression(funcExprWithName);
     funcInfo->byteCodeFunction->SetIsNameIdentifierRef(pnode->sxFnc.isNameIdentifierRef);
     if (fIsRoot)
@@ -2539,8 +2546,8 @@ FuncInfo* PostVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerat
             top->GetCallsEval() ||
             top->GetHasClosureReference() ||
             ((top->GetHasGlobalRef() &&
-                (byteCodeGenerator->InDynamicScope() ||
-                    (byteCodeGenerator->GetFlags() & (fscrImplicitThis | fscrImplicitParents | fscrEval))))))
+            (byteCodeGenerator->InDynamicScope() ||
+            (byteCodeGenerator->GetFlags() & (fscrImplicitThis | fscrImplicitParents | fscrEval))))))
         {
             byteCodeGenerator->SetNeedEnvRegister();
             if (top->GetIsEventHandler())
@@ -3186,20 +3193,20 @@ void PreVisitBlock(ParseNode *pnodeBlock, ByteCodeGenerator *byteCodeGenerator)
     }
 
     auto addSymbolToScope = [scope, byteCodeGenerator, isGlobalScope](ParseNode *pnode)
-    {
-        Symbol *sym = byteCodeGenerator->AddSymbolToScope(scope, reinterpret_cast<const wchar_t*>(pnode->sxVar.pid->Psz()), pnode->sxVar.pid->Cch(), pnode, STVariable);
+        {
+            Symbol *sym = byteCodeGenerator->AddSymbolToScope(scope, reinterpret_cast<const wchar_t*>(pnode->sxVar.pid->Psz()), pnode->sxVar.pid->Cch(), pnode, STVariable);
 #if DBG_DUMP
         if (sym->GetSymbolType() == STVariable && byteCodeGenerator->Trace())
         {
-            Output::Print(L"current context has declared const %s of type %s\n",
-                pnode->sxVar.pid->Psz(), sym->GetSymbolTypeName());
-        }
+                Output::Print(L"current context has declared const %s of type %s\n",
+                    pnode->sxVar.pid->Psz(), sym->GetSymbolTypeName());
+            }
 #endif
-        sym->SetIsGlobal(isGlobalScope);
-        sym->SetIsBlockVar(true);
-        sym->SetNeedDeclaration(true);
-        pnode->sxVar.sym = sym;
-    };
+            sym->SetIsGlobal(isGlobalScope);
+            sym->SetIsBlockVar(true);
+            sym->SetNeedDeclaration(true);
+            pnode->sxVar.sym = sym;
+        };
 
     byteCodeGenerator->IterateBlockScopedVariables(pnodeBlock, addSymbolToScope);
 }
@@ -3423,26 +3430,26 @@ void CheckInvertableExpr(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerator,
                         {
                             symCheck->result = false;
                         }
-                    }
+                        }
                     else
                     {
                         symCheck->result = false;
                     }
-                }
+                    }
                 else if (callTarget->nop == knopDot)
                 {
                     if (!IsLibraryFunction(callTarget, byteCodeGenerator->GetScriptContext()))
                     {
                         symCheck->result = false;
-                    }
                 }
-            }
+                    }
+                    }
             else
             {
                 symCheck->result = false;
-            }
+                }
             break;
-        }
+                       }
         case knopDot:
             if (!IsLibraryFunction(pnode, byteCodeGenerator->GetScriptContext()))
             {
@@ -3514,10 +3521,10 @@ ParseNode* ConstructInvertedStatement(ParseNode* stmt, ByteCodeGenerator* byteCo
 {
     if (stmt == nullptr)
     {
-        return nullptr;
-    }
+            return nullptr;
+        }
 
-    ParseNode* cStmt;
+        ParseNode* cStmt;
     if ((stmt->nop == knopAsg) || (stmt->nop == knopVarDecl))
     {
         ParseNode* rhs = nullptr;
@@ -3527,55 +3534,55 @@ ParseNode* ConstructInvertedStatement(ParseNode* stmt, ByteCodeGenerator* byteCo
         {
             rhs = stmt->sxBin.pnode2;
             lhs = stmt->sxBin.pnode1;
-        }
+            }
         else if (stmt->nop == knopVarDecl)
         {
             rhs = stmt->sxVar.pnodeInit;
-        }
+            }
         ArenaAllocator* alloc = byteCodeGenerator->GetAllocator();
         ParseNode* loopInvar = byteCodeGenerator->GetParser()->CreateTempNode(rhs);
         loopInvar->location = funcInfo->NextVarRegister();
 
-        // Can't use a temp register here because the inversion happens at the parse tree level without generating
+            // Can't use a temp register here because the inversion happens at the parse tree level without generating
         // any bytecode yet. All local non-temp registers need to be initialized for jitted loop bodies, and since this is
-        // not a user variable, track this register separately to have it be initialized at the top of the function.
-        funcInfo->nonUserNonTempRegistersToInitialize.Add(loopInvar->location);
+            // not a user variable, track this register separately to have it be initialized at the top of the function.
+            funcInfo->nonUserNonTempRegistersToInitialize.Add(loopInvar->location);
 
-        // add temp node to list of initializers for new outer loop
+            // add temp node to list of initializers for new outer loop
         if ((*outerStmtRef)->sxBin.pnode1 == nullptr)
         {
             (*outerStmtRef)->sxBin.pnode1 = loopInvar;
-        }
+            }
         else
         {
             ParseNode* listNode = Parser::StaticCreateBinNode(knopList, nullptr, nullptr, alloc);
             (*outerStmtRef)->sxBin.pnode2 = listNode;
             listNode->sxBin.pnode1 = loopInvar;
             *outerStmtRef = listNode;
-        }
+            }
 
         ParseNode* tempName = byteCodeGenerator->GetParser()->CreateTempRef(loopInvar);
 
         if (lhs != nullptr)
         {
             cStmt = Parser::StaticCreateBinNode(knopAsg, lhs, tempName, alloc);
-        }
+            }
         else
         {
-            // Use AddVarDeclNode to add the var to the function.
-            // Do not use CreateVarDeclNode which is meant to be used while parsing. It assumes that
-            // parser's internal data structures (m_ppnodeVar in particular) is at the "current" location.
+                // Use AddVarDeclNode to add the var to the function.
+                // Do not use CreateVarDeclNode which is meant to be used while parsing. It assumes that
+                // parser's internal data structures (m_ppnodeVar in particular) is at the "current" location.
             cStmt = byteCodeGenerator->GetParser()->AddVarDeclNode(stmt->sxVar.pid, funcInfo->root);
             cStmt->sxVar.pnodeInit = tempName;
             cStmt->sxVar.sym = stmt->sxVar.sym;
+            }
         }
-    }
     else
     {
         cStmt = byteCodeGenerator->GetParser()->CopyPnode(stmt);
-    }
+        }
 
-    return cStmt;
+        return cStmt;
 }
 
 ParseNode* ConstructInvertedLoop(ParseNode* innerLoop, ParseNode* outerLoop, ByteCodeGenerator* byteCodeGenerator, FuncInfo* funcInfo)
@@ -3764,20 +3771,20 @@ bool InvertableBlock(ParseNode* block, Symbol* outerVar, ParseNode* innerLoop, P
 {
     if (block == nullptr)
     {
-        return false;
-    }
+            return false;
+        }
 
     if (!symCheck->AddSymbol(outerVar))
     {
-        return false;
-    }
+            return false;
+        }
 
-    if (innerLoop->sxFor.pnodeBody->nop == knopBlock && innerLoop->sxFor.pnodeBody->sxBlock.HasBlockScopedContent()
-        || outerLoop->sxFor.pnodeBody->nop == knopBlock && outerLoop->sxFor.pnodeBody->sxBlock.HasBlockScopedContent())
-    {
-        // we can not invert loops if there are block scoped declarations inside
-        return false;
-    }
+        if (innerLoop->sxFor.pnodeBody->nop == knopBlock && innerLoop->sxFor.pnodeBody->sxBlock.HasBlockScopedContent()
+            || outerLoop->sxFor.pnodeBody->nop == knopBlock && outerLoop->sxFor.pnodeBody->sxBlock.HasBlockScopedContent())
+        {
+            // we can not invert loops if there are block scoped declarations inside
+            return false;
+        }
 
     if ((block != nullptr) && (block->nop == knopBlock))
     {
@@ -3786,38 +3793,38 @@ bool InvertableBlock(ParseNode* block, Symbol* outerVar, ParseNode* innerLoop, P
         {
             if (!GatherInversionSyms(stmt->sxBin.pnode1, outerVar, innerLoop, byteCodeGenerator, symCheck))
             {
-                return false;
-            }
+                    return false;
+                }
             stmt = stmt->sxBin.pnode2;
-        }
+            }
 
         if (!GatherInversionSyms(stmt, outerVar, innerLoop, byteCodeGenerator, symCheck))
         {
-            return false;
-        }
+                return false;
+            }
 
         stmt = block->sxBlock.pnodeStmt;
         while ((stmt != nullptr) && (stmt->nop == knopList))
         {
             if (!InvertableStmt(stmt->sxBin.pnode1, outerVar, innerLoop, outerLoop, byteCodeGenerator, symCheck))
             {
-                return false;
-            }
+                    return false;
+                }
             stmt = stmt->sxBin.pnode2;
-        }
+            }
 
         if (!InvertableStmt(stmt, outerVar, innerLoop, outerLoop, byteCodeGenerator, symCheck))
         {
-            return false;
-        }
+                return false;
+            }
 
         return (InvertableExprPlus(symCheck, innerLoop->sxFor.pnodeCond, byteCodeGenerator, nullptr) &&
             InvertableExprPlus(symCheck, outerLoop->sxFor.pnodeCond, byteCodeGenerator, outerVar));
-    }
+        }
     else
     {
-        return false;
-    }
+            return false;
+        }
 }
 
 // Start of invert loop optimization.
@@ -3875,8 +3882,8 @@ ParseNode* InvertLoop(ParseNode* outerLoop, ByteCodeGenerator* byteCodeGenerator
                     if (InvertableBlock(block, outerVar, innerLoop, outerLoop, byteCodeGenerator, &symCheck))
                     {
                         return ConstructInvertedLoop(innerLoop, outerLoop, byteCodeGenerator, funcInfo);
+                        }
                     }
-                }
             }
         }
     }
@@ -3925,7 +3932,7 @@ void SetAdditionalBindInfoForVariables(ParseNode *pnode, ByteCodeGenerator *byte
 void Bind(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
 {
     if (pnode == nullptr)
-    {
+{
         return;
     }
 
@@ -3936,30 +3943,30 @@ void Bind(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
         byteCodeGenerator->AddTargetStmt(pnode->sxJump.pnodeTarget);
         break;
     case knopProg:
-    {
-        FuncInfo* globFuncInfo = byteCodeGenerator->StartBindGlobalStatements(pnode);
-        pnode->sxFnc.funcInfo = globFuncInfo;
-        AddFunctionsToScope(pnode->sxFnc.GetTopLevelScope(), byteCodeGenerator);
+        {
+            FuncInfo* globFuncInfo = byteCodeGenerator->StartBindGlobalStatements(pnode);
+            pnode->sxFnc.funcInfo = globFuncInfo;
+            AddFunctionsToScope(pnode->sxFnc.GetTopLevelScope(), byteCodeGenerator);
         AddVarsToScope(pnode->sxFnc.pnodeVars, byteCodeGenerator);
-        // There are no args to add, but "eval" gets a this pointer.
-        byteCodeGenerator->SetNumberOfInArgs(!!(byteCodeGenerator->GetFlags() & fscrEvalCode));
-        if (!globFuncInfo->IsFakeGlobalFunction(byteCodeGenerator->GetFlags()))
-        {
-            // Global code: the root function is the global function.
-            byteCodeGenerator->SetRootFuncInfo(globFuncInfo);
-        }
-        else if (globFuncInfo->byteCodeFunction)
-        {
+            // There are no args to add, but "eval" gets a this pointer.
+            byteCodeGenerator->SetNumberOfInArgs(!!(byteCodeGenerator->GetFlags() & fscrEvalCode));
+            if (!globFuncInfo->IsFakeGlobalFunction(byteCodeGenerator->GetFlags()))
+            {
+                // Global code: the root function is the global function.
+                byteCodeGenerator->SetRootFuncInfo(globFuncInfo);
+            }
+            else if (globFuncInfo->byteCodeFunction)
+            {
             // If the current global code wasn't marked to be treated as global code (e.g. from deferred parsing),
             // we don't need to send a register script event for it.
-            globFuncInfo->byteCodeFunction->SetIsTopLevel(false);
+                globFuncInfo->byteCodeFunction->SetIsTopLevel(false);
+            }
+            if (pnode->sxFnc.CallsEval())
+            {
+                globFuncInfo->SetCallsEval(true);
+            }
+            break;
         }
-        if (pnode->sxFnc.CallsEval())
-        {
-            globFuncInfo->SetCallsEval(true);
-        }
-        break;
-    }
     case knopFncDecl:
         // VisitFunctionsInScope has already done binding within the declared function. Here, just record the fact
         // that the parent function has a local/global declaration in it.
@@ -4043,14 +4050,14 @@ void Bind(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
             }
         }
 
-        FuncInfo *top = byteCodeGenerator->TopFuncInfo();
-        if (pnode->sxPid.sym == nullptr || pnode->sxPid.sym->GetIsGlobal())
-        {
-            top->SetHasGlobalRef(true);
-        }
+            FuncInfo *top = byteCodeGenerator->TopFuncInfo();
+            if (pnode->sxPid.sym == nullptr || pnode->sxPid.sym->GetIsGlobal())
+            {
+                top->SetHasGlobalRef(true);
+            }
 
-        if (pnode->sxPid.sym)
-        {
+            if (pnode->sxPid.sym)
+            {
             pnode->sxPid.sym->SetIsUsed(true);
         }
 
@@ -4067,19 +4074,19 @@ void Bind(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
         // fall through
     case knopGetMember:
     case knopSetMember:
-    {
-        // lhs is knopStr, rhs is expr
-        ParseNode *id = pnode->sxBin.pnode1;
-        if (id->nop == knopStr || id->nop == knopName)
         {
-            byteCodeGenerator->AssignPropertyId(id->sxPid.pid);
-            id->sxPid.sym = nullptr;
-            id->sxPid.symRef = nullptr;
-            id->grfpn |= fpnMemberReference;
+            // lhs is knopStr, rhs is expr
+        ParseNode *id = pnode->sxBin.pnode1;
+            if (id->nop == knopStr || id->nop == knopName)
+            {
+                byteCodeGenerator->AssignPropertyId(id->sxPid.pid);
+                id->sxPid.sym = nullptr;
+                id->sxPid.symRef = nullptr;
+                id->grfpn |= fpnMemberReference;
+            }
+            break;
         }
-        break;
-    }
-    // TODO: convert index over string to Get/Put Value
+        // TODO: convert index over string to Get/Put Value
     case knopIndex:
         BindReference(pnode, byteCodeGenerator);
         break;
@@ -4298,60 +4305,60 @@ void CheckFuncAssignment(Symbol * sym, ParseNode * pnode2, ByteCodeGenerator * b
         CheckMaybeEscapedUse(pnode2, byteCodeGenerator);
         break;
     case knopFncDecl:
-    {
-        FuncInfo * topFunc = byteCodeGenerator->TopFuncInfo();
-        if (topFunc->IsGlobalFunction())
         {
-            return;
-        }
-        // Use not as an assignment or assignment to an outer function's sym, or assigned to a formal
+            FuncInfo * topFunc = byteCodeGenerator->TopFuncInfo();
+            if (topFunc->IsGlobalFunction())
+            {
+                return;
+            }
+            // Use not as an assignment or assignment to an outer function's sym, or assigned to a formal
         // or assigned to multiple names.
 
-        if (sym == nullptr
-            || sym->GetScope()->GetFunc() != topFunc)
-        {
-            topFunc->SetHasMaybeEscapedNestedFunc(DebugOnly(
+            if (sym == nullptr
+                || sym->GetScope()->GetFunc() != topFunc)
+            {
+                topFunc->SetHasMaybeEscapedNestedFunc(DebugOnly(
                 sym == nullptr ? L"UnknownAssignment" :
                 (sym->GetScope()->GetFunc() != topFunc) ? L"CrossFuncAssignment" :
-                L"SomethingIsWrong!")
-                );
-        }
-        else
-        {
-            // TODO-STACK-NESTED-FUNC: Since we only support single def functions, we can still put the
+                    L"SomethingIsWrong!")
+                    );
+            }
+            else
+            {
+                // TODO-STACK-NESTED-FUNC: Since we only support single def functions, we can still put the
             // nested function on the stack and reuse even if the function goes out of the block scope.
-            // However, we cannot allocate frame display or slots on the stack if the function is
+                // However, we cannot allocate frame display or slots on the stack if the function is
             // declared in a loop, because there might be multiple functions referencing different
             // iterations of the scope.
-            // For now, just disable everything.
+                // For now, just disable everything.
 
-            Scope * funcParentScope = pnode2->sxFnc.funcInfo->GetBodyScope()->GetEnclosingScope();
-            while (sym->GetScope() != funcParentScope)
-            {
-                if (funcParentScope->GetMustInstantiate())
+                Scope * funcParentScope = pnode2->sxFnc.funcInfo->GetBodyScope()->GetEnclosingScope();
+                while (sym->GetScope() != funcParentScope)
                 {
-                    topFunc->SetHasMaybeEscapedNestedFunc(DebugOnly(L"CrossScopeAssignment"));
-                    break;
+                    if (funcParentScope->GetMustInstantiate())
+                    {
+                        topFunc->SetHasMaybeEscapedNestedFunc(DebugOnly(L"CrossScopeAssignment"));
+                        break;
+                    }
+                    funcParentScope->SetHasCrossScopeFuncAssignment();
+                    funcParentScope = funcParentScope->GetEnclosingScope();
                 }
-                funcParentScope->SetHasCrossScopeFuncAssignment();
-                funcParentScope = funcParentScope->GetEnclosingScope();
-            }
 
             // Need to always detect interleaving dynamic scope ('with') for assignments
             // as those may end up escaping into the 'with' scope.
-            // TODO: the with scope is marked as MustInstaniate late during byte code emit
-            // We could detect this using the loop above as well, by marking the with
+                // TODO: the with scope is marked as MustInstaniate late during byte code emit
+                // We could detect this using the loop above as well, by marking the with
             // scope as must instantiate early, this is just less risky of a fix for RTM.
 
-            if (byteCodeGenerator->HasInterleavingDynamicScope(sym))
-            {
-                byteCodeGenerator->TopFuncInfo()->SetHasMaybeEscapedNestedFunc(DebugOnly(L"InterleavingDynamicScope"));
-            }
+                if (byteCodeGenerator->HasInterleavingDynamicScope(sym))
+                {
+                     byteCodeGenerator->TopFuncInfo()->SetHasMaybeEscapedNestedFunc(DebugOnly(L"InterleavingDynamicScope"));
+                }
 
-            sym->SetHasFuncAssignment(byteCodeGenerator);
+                sym->SetHasFuncAssignment(byteCodeGenerator);
+            }
         }
-    }
-    break;
+        break;
     };
 }
 
@@ -4359,7 +4366,7 @@ void CheckFuncAssignment(Symbol * sym, ParseNode * pnode2, ByteCodeGenerator * b
 inline bool ContainsSuperReference(ParseNodePtr pnode)
 {
     return (pnode->sxCall.pnodeTarget->nop == knopDot && pnode->sxCall.pnodeTarget->sxBin.pnode1->nop == knopSuper) // super.prop()
-        || (pnode->sxCall.pnodeTarget->nop == knopIndex && pnode->sxCall.pnodeTarget->sxBin.pnode1->nop == knopSuper); // super[prop]()
+           || (pnode->sxCall.pnodeTarget->nop == knopIndex && pnode->sxCall.pnodeTarget->sxBin.pnode1->nop == knopSuper); // super[prop]()
 }
 
 inline bool ContainsDirectSuper(ParseNodePtr pnode)
@@ -4375,7 +4382,7 @@ inline bool ContainsDirectSuper(ParseNodePtr pnode)
 void AssignRegisters(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
 {
     if (pnode == nullptr)
-    {
+{
         return;
     }
 
@@ -4384,17 +4391,17 @@ void AssignRegisters(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
     switch (nop)
     {
     default:
-    {
-        uint flags = ParseNode::Grfnop(nop);
-        if (flags & fnopUni)
         {
-            CheckMaybeEscapedUse(pnode->sxUni.pnode1, byteCodeGenerator);
-        }
-        else if (flags & fnopBin)
-        {
-            CheckMaybeEscapedUse(pnode->sxBin.pnode1, byteCodeGenerator);
-            CheckMaybeEscapedUse(pnode->sxBin.pnode2, byteCodeGenerator);
-        }
+            uint flags = ParseNode::Grfnop(nop);
+            if (flags & fnopUni)
+            {
+                CheckMaybeEscapedUse(pnode->sxUni.pnode1, byteCodeGenerator);
+            }
+            else if (flags & fnopBin)
+            {
+                CheckMaybeEscapedUse(pnode->sxBin.pnode1, byteCodeGenerator);
+                CheckMaybeEscapedUse(pnode->sxBin.pnode2, byteCodeGenerator);
+            }
         break;
     }
 
@@ -4419,24 +4426,24 @@ void AssignRegisters(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
         break;
 
     case knopAsg:
-    {
+        {
         Symbol * sym = pnode->sxBin.pnode1->nop == knopName ? pnode->sxBin.pnode1->sxPid.sym : nullptr;
-        CheckFuncAssignment(sym, pnode->sxBin.pnode2, byteCodeGenerator);
+            CheckFuncAssignment(sym, pnode->sxBin.pnode2, byteCodeGenerator);
 
-        if (pnode->IsInList())
-        {
-            // Assignment in array literal
-            CheckMaybeEscapedUse(pnode->sxBin.pnode1, byteCodeGenerator);
-        }
+            if (pnode->IsInList())
+            {
+                // Assignment in array literal
+                CheckMaybeEscapedUse(pnode->sxBin.pnode1, byteCodeGenerator);
+            }
 
-        if (byteCodeGenerator->IsES6DestructuringEnabled() && (pnode->sxBin.pnode1->nop == knopArrayPattern || pnode->sxBin.pnode1->nop == knopObjectPattern))
-        {
-            // Destructured arrays may have default values and need undefined.
-            byteCodeGenerator->AssignUndefinedConstRegister();
+            if (byteCodeGenerator->IsES6DestructuringEnabled() && (pnode->sxBin.pnode1->nop == knopArrayPattern || pnode->sxBin.pnode1->nop == knopObjectPattern))
+            {
+                // Destructured arrays may have default values and need undefined.
+                byteCodeGenerator->AssignUndefinedConstRegister();
 
-            // Any rest parameter in a destructured array will need a 0 constant.
-            byteCodeGenerator->EnregisterConstant(0);
-        }
+                // Any rest parameter in a destructured array will need a 0 constant.
+                byteCodeGenerator->EnregisterConstant(0);
+            }
 
         break;
     }
@@ -4522,7 +4529,7 @@ void AssignRegisters(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
                         pnodeName->nop == knopDot ? L"PropFuncName" :
                         pnodeName->nop == knopVarDecl && pnodeName->sxVar.sym == nullptr ? L"WithScopeFuncName" :
                         L"WeirdFuncName"
-                        ));
+                    ));
                 }
             }
         }
@@ -4576,42 +4583,42 @@ void AssignRegisters(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
         byteCodeGenerator->AssignNullConstRegister();
         break;
     case knopClassDecl:
-    {
-        FuncInfo * topFunc = byteCodeGenerator->TopFuncInfo();
-        topFunc->SetHasMaybeEscapedNestedFunc(DebugOnly(L"Class"));
+        {
+            FuncInfo * topFunc = byteCodeGenerator->TopFuncInfo();
+            topFunc->SetHasMaybeEscapedNestedFunc(DebugOnly(L"Class"));
 
-        // We may need undefined for the 'this', e.g. calling a class expression
-        byteCodeGenerator->AssignUndefinedConstRegister();
+            // We may need undefined for the 'this', e.g. calling a class expression
+            byteCodeGenerator->AssignUndefinedConstRegister();
 
         break;
-    }
+        }
     case knopNull:
         pnode->location = byteCodeGenerator->AssignNullConstRegister();
         break;
     case knopThis:
-    {
-        FuncInfo* func = byteCodeGenerator->TopFuncInfo();
-        pnode->location = func->AssignThisRegister();
-        if (func->IsLambda())
         {
-            func = byteCodeGenerator->FindEnclosingNonLambda();
-            func->AssignThisRegister();
+            FuncInfo* func = byteCodeGenerator->TopFuncInfo();
+            pnode->location = func->AssignThisRegister();
+            if (func->IsLambda())
+            {
+                func = byteCodeGenerator->FindEnclosingNonLambda();
+                func->AssignThisRegister();
 
+                if (func->IsGlobalFunction() && !(byteCodeGenerator->GetFlags() & fscrEval))
+                {
+                    byteCodeGenerator->AssignNullConstRegister();
+                }
+            }
+            // "this" should be loaded for both global and non global functions
             if (func->IsGlobalFunction() && !(byteCodeGenerator->GetFlags() & fscrEval))
             {
-                byteCodeGenerator->AssignNullConstRegister();
+                // We'll pass "null" to LdThis, to simulate "null" passed as "this" to the
+                // global function.
+                func->AssignNullConstRegister();
             }
-        }
-        // "this" should be loaded for both global and non global functions
-        if (func->IsGlobalFunction() && !(byteCodeGenerator->GetFlags() & fscrEval))
-        {
-            // We'll pass "null" to LdThis, to simulate "null" passed as "this" to the
-            // global function.
-            func->AssignNullConstRegister();
-        }
 
-        break;
-    }
+            break;
+        }
     case knopNewTarget:
     {
         FuncInfo* func = byteCodeGenerator->TopFuncInfo();
@@ -4652,7 +4659,7 @@ void AssignRegisters(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
             nonLambdaFunc->AssignSuperRegister();
             nonLambdaFunc->AssignThisRegister();
             nonLambdaFunc->SetIsSuperLexicallyCaptured();
- 
+
             if (nonLambdaFunc->IsClassConstructor())
             {
                 func->AssignNewTargetRegister();
@@ -4723,9 +4730,9 @@ void AssignRegisters(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
                     // Set up super reference
                     if (containsSuperReference)
                     {
-                        parent->root->sxFnc.SetHasSuperReference();
-                        parent->AssignSuperRegister();
-                        parent->SetIsSuperLexicallyCaptured();
+                    parent->root->sxFnc.SetHasSuperReference();
+                    parent->AssignSuperRegister();
+                    parent->SetIsSuperLexicallyCaptured();
                     }
                     else if (containsDirectSuper)
                     {
@@ -4820,66 +4827,66 @@ void AssignRegisters(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
     case knopVarDecl:
     case knopConstDecl:
     case knopLetDecl:
-    {
-        sym = pnode->sxVar.sym;
-        Assert(sym != nullptr);
-        Assert(sym->GetScope()->GetEnclosingFunc() == byteCodeGenerator->TopFuncInfo());
-
-        if (pnode->sxVar.isBlockScopeFncDeclVar && sym->GetIsBlockVar())
         {
-            break;
-        }
+            sym = pnode->sxVar.sym;
+            Assert(sym != nullptr);
+            Assert(sym->GetScope()->GetEnclosingFunc() == byteCodeGenerator->TopFuncInfo());
 
-        if (!sym->GetIsGlobal())
-        {
-            FuncInfo *funcInfo = byteCodeGenerator->TopFuncInfo();
-
-            // Check the function assignment for the sym that we have, even if we remap it to function level sym below
-            // as we are going assign to the original sym
-            CheckFuncAssignment(sym, pnode->sxVar.pnodeInit, byteCodeGenerator);
-
-            if (sym->GetIsCatch() || (pnode->nop == knopVarDecl && sym->GetIsBlockVar() && !pnode->sxVar.isBlockScopeFncDeclVar))
+            if (pnode->sxVar.isBlockScopeFncDeclVar && sym->GetIsBlockVar())
             {
-                // The LHS of the var decl really binds to the local symbol, not the catch or let symbol.
-                // But the assignment will go to the catch or let symbol. Just assign a register to the local
-                // so that it can get initialized to undefined.
-#if DBG
-                if (!sym->GetIsCatch())
+                break;
+            }
+
+            if (!sym->GetIsGlobal())
+            {
+                FuncInfo *funcInfo = byteCodeGenerator->TopFuncInfo();
+
+                // Check the function assignment for the sym that we have, even if we remap it to function level sym below
+                // as we are going assign to the original sym
+                CheckFuncAssignment(sym, pnode->sxVar.pnodeInit, byteCodeGenerator);
+
+                if (sym->GetIsCatch() || (pnode->nop == knopVarDecl && sym->GetIsBlockVar() && !pnode->sxVar.isBlockScopeFncDeclVar))
                 {
+                // The LHS of the var decl really binds to the local symbol, not the catch or let symbol.
+                    // But the assignment will go to the catch or let symbol. Just assign a register to the local
+                    // so that it can get initialized to undefined.
+#if DBG
+                    if (!sym->GetIsCatch())
+                    {
                     // Catch cannot be at function scope and let and var at function scope is redeclaration error.
                     Assert(funcInfo->bodyScope != sym->GetScope() || !byteCodeGenerator->GetScriptContext()->GetConfig()->IsBlockScopeEnabled());
-                }
-#endif
-                auto symName = sym->GetName();
-                sym = funcInfo->bodyScope->FindLocalSymbol(symName);
-                if (sym == nullptr)
-                {
-                    sym = funcInfo->paramScope->FindLocalSymbol(symName);
-                }
-                Assert((sym && !sym->GetIsCatch() && !sym->GetIsBlockVar()));
-            }
-            // Don't give the declared var a register if it's in a closure, because the closure slot
-            // is its true "home". (Need to check IsGlobal again as the sym may have changed above.)
-            if (!sym->GetIsGlobal() && !sym->IsInSlot(funcInfo))
-            {
-                if (PHASE_TRACE(Js::DelayCapturePhase, funcInfo->byteCodeFunction))
-                {
-                    if (sym->NeedsSlotAlloc(byteCodeGenerator->TopFuncInfo()))
-                    {
-                        Output::Print(L"--- DelayCapture: Delayed capturing symbol '%s' during initialization.\n", sym->GetName());
-                        Output::Flush();
                     }
+#endif
+                    auto symName = sym->GetName();
+                    sym = funcInfo->bodyScope->FindLocalSymbol(symName);
+                    if (sym == nullptr)
+                    {
+                        sym = funcInfo->paramScope->FindLocalSymbol(symName);
+                    }
+                    Assert((sym && !sym->GetIsCatch() && !sym->GetIsBlockVar()));
                 }
-                byteCodeGenerator->AssignRegister(sym);
+                // Don't give the declared var a register if it's in a closure, because the closure slot
+            // is its true "home". (Need to check IsGlobal again as the sym may have changed above.)
+                if (!sym->GetIsGlobal() && !sym->IsInSlot(funcInfo))
+                {
+                if (PHASE_TRACE(Js::DelayCapturePhase, funcInfo->byteCodeFunction))
+                    {
+                    if (sym->NeedsSlotAlloc(byteCodeGenerator->TopFuncInfo()))
+                        {
+                            Output::Print(L"--- DelayCapture: Delayed capturing symbol '%s' during initialization.\n", sym->GetName());
+                            Output::Flush();
+                        }
+                    }
+                    byteCodeGenerator->AssignRegister(sym);
+                }
             }
-        }
-        else
-        {
-            Assert(byteCodeGenerator->TopFuncInfo()->IsGlobalFunction());
-        }
+            else
+            {
+                Assert(byteCodeGenerator->TopFuncInfo()->IsGlobalFunction());
+            }
 
-        break;
-    }
+            break;
+        }
 
     case knopFor:
         if ((pnode->sxFor.pnodeBody != nullptr) && (pnode->sxFor.pnodeBody->nop == knopBlock) &&
@@ -4887,7 +4894,7 @@ void AssignRegisters(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
             (pnode->sxFor.pnodeBody->sxBlock.pnodeStmt->nop == knopFor) &&
             (!byteCodeGenerator->IsInDebugMode()))
         {
-            FuncInfo *funcInfo = byteCodeGenerator->TopFuncInfo();
+                FuncInfo *funcInfo = byteCodeGenerator->TopFuncInfo();
             pnode->sxFor.pnodeInverted = InvertLoop(pnode, byteCodeGenerator, funcInfo);
         }
         else
@@ -4954,43 +4961,43 @@ void AssignRegisters(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
         }
         break;
     case knopReturn:
-    {
-        ParseNode *pnodeExpr = pnode->sxReturn.pnodeExpr;
-        CheckMaybeEscapedUse(pnodeExpr, byteCodeGenerator);
-        break;
-    }
-    case knopBlock:
-    {
-        if (pnode->sxBlock.scope && pnode->sxBlock.scope->GetMustInstantiate() && byteCodeGenerator->IsInDebugMode())
         {
-            pnode->sxBlock.scope->SetLocation(byteCodeGenerator->NextVarRegister());
+            ParseNode *pnodeExpr = pnode->sxReturn.pnodeExpr;
+            CheckMaybeEscapedUse(pnodeExpr, byteCodeGenerator);
+            break;
         }
-        break;
-    }
-    case knopStrTemplate:
-    {
-        ParseNode* pnodeExprs = pnode->sxStrTemplate.pnodeSubstitutionExpressions;
-        if (pnodeExprs != nullptr)
+    case knopBlock:
         {
-            while (pnodeExprs->nop == knopList)
+            if (pnode->sxBlock.scope && pnode->sxBlock.scope->GetMustInstantiate() && byteCodeGenerator->IsInDebugMode())
             {
-                Assert(pnodeExprs->sxBin.pnode1 != nullptr);
-                Assert(pnodeExprs->sxBin.pnode2 != nullptr);
+                pnode->sxBlock.scope->SetLocation(byteCodeGenerator->NextVarRegister());
+            }
+            break;
+        }
+    case knopStrTemplate:
+        {
+            ParseNode* pnodeExprs = pnode->sxStrTemplate.pnodeSubstitutionExpressions;
+            if (pnodeExprs != nullptr)
+            {
+                while (pnodeExprs->nop == knopList)
+                {
+                    Assert(pnodeExprs->sxBin.pnode1 != nullptr);
+                    Assert(pnodeExprs->sxBin.pnode2 != nullptr);
 
-                CheckMaybeEscapedUse(pnodeExprs->sxBin.pnode1, byteCodeGenerator);
-                pnodeExprs = pnodeExprs->sxBin.pnode2;
+                    CheckMaybeEscapedUse(pnodeExprs->sxBin.pnode1, byteCodeGenerator);
+                    pnodeExprs = pnodeExprs->sxBin.pnode2;
+                }
+
+                // Also check the final element in the list
+                CheckMaybeEscapedUse(pnodeExprs, byteCodeGenerator);
             }
 
-            // Also check the final element in the list
-            CheckMaybeEscapedUse(pnodeExprs, byteCodeGenerator);
+            if (pnode->sxStrTemplate.isTaggedTemplate)
+            {
+                pnode->location = byteCodeGenerator->EnregisterStringTemplateCallsiteConstant(pnode);
+            }
+            break;
         }
-
-        if (pnode->sxStrTemplate.isTaggedTemplate)
-        {
-            pnode->location = byteCodeGenerator->EnregisterStringTemplateCallsiteConstant(pnode);
-        }
-        break;
-    }
     case knopYieldLeaf:
         byteCodeGenerator->AssignUndefinedConstRegister();
         break;
@@ -5051,6 +5058,7 @@ Js::FunctionBody * ByteCodeGenerator::MakeGlobalFunctionBody(ParseNode *pnode)
             scriptContext,
             Js::Constants::GlobalFunction,
             Js::Constants::GlobalFunctionLength,
+            0,
             pnode->sxFnc.nestedCount,
             m_utf8SourceInfo,
             m_utf8SourceInfo->GetSrcInfo()->sourceContextInfo->sourceContextId,

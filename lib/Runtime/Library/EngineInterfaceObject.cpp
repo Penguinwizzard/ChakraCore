@@ -278,7 +278,16 @@ namespace Js
             if (callInfo.Count >= 3 && JavascriptString::Is(args.Values[2]))
             {
                 JavascriptString* customFunctionName = JavascriptString::FromVar(args.Values[2]);
-                func->GetFunctionProxy()->EnsureDeserialized()->SetDisplayName(customFunctionName->GetString());
+                // tagPublicFunction("Intl.Collator", Collator); in Intl.js calls TagPublicLibraryCode the expected name is Collator so we need to calculate the offset
+                const wchar_t * shortName = wcsrchr(customFunctionName->GetString(), L'.');
+                uint shortNameOffset = 0;
+                if (shortName != nullptr)
+                {
+                    // JavascriptString length is bounded by uint max
+                    shortName++;
+                    shortNameOffset = static_cast<uint>(shortName - customFunctionName->GetString());
+                }
+                func->GetFunctionProxy()->EnsureDeserialized()->SetDisplayName(customFunctionName->GetString(), customFunctionName->GetLength(), shortNameOffset);
             }
 
             return func;
