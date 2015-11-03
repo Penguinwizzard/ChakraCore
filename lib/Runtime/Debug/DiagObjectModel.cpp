@@ -22,12 +22,13 @@
 #include "Library\JavascriptWeakMap.h"
 #include "Library\JavascriptWeakSet.h"
 #include "Library\ArgumentsObject.h"
-
 #include "Types\DynamicObjectEnumerator.h"
 #include "Types\DynamicObjectSnapshotEnumerator.h"
 #include "Types\DynamicObjectSnapshotEnumeratorWPCache.h"
 #include "Library\ForInObjectEnumerator.h"
-
+#include "Library\JavascriptSIMDInt32x4.h"
+#include "Library\JavascriptSIMDFloat32x4.h"
+#include "Library\JavascriptSIMDInt8x16.h"
 // Other includes
 #include <shlwapi.h>
 #include <strsafe.h>
@@ -36,6 +37,8 @@ namespace Js
 {
 #define RETURN_VALUE_MAX_NAME   255
 #define PENDING_MUTATION_VALUE_MAX_NAME   255
+#define SIMD_INDEX_VALUE_MAX_NAME   20
+#define SIMD_STRING_BUFFER_MAX_NAME   1024
 
     //
     // Some helper routines
@@ -110,6 +113,18 @@ namespace Js
             // Make sure any NativeIntArrays are converted
             Js::JavascriptLibrary::CheckAndConvertCopyOnAccessNativeIntArray<Var>(obj);
             pOMDisplay = Anew(pRefArena->Arena(), RecyclableArrayDisplay, this);
+        }
+        else if (Js::JavascriptSIMDInt32x4::Is(obj))
+        {
+            pOMDisplay = Anew(pRefArena->Arena(), RecyclableSimdInt32x4ObjectDisplay, this);
+        }
+        else if (Js::JavascriptSIMDFloat32x4::Is(obj))
+        {
+            pOMDisplay = Anew(pRefArena->Arena(), RecyclableSimdFloat32x4ObjectDisplay, this);
+        }
+        else if (Js::JavascriptSIMDInt8x16::Is(obj))
+        {
+            pOMDisplay = Anew(pRefArena->Arena(), RecyclableSimdInt8x16ObjectDisplay, this);
         }
         else
         {
@@ -3832,4 +3847,125 @@ namespace Js
         return FALSE;
     }
 #endif
+
+    //--------------------------
+    // RecyclableSimdObjectWalker
+
+    template <typename simdType, uint elementCount>
+    BOOL RecyclableSimdObjectWalker<simdType, elementCount>::Get(int i, ResolvedObject* pResolvedObject)
+    {
+        Assert(elementCount == 4 || elementCount == 8 || elementCount == 16); // SIMD types such as int32x4, int8x16, int16x8
+        Assert(i >= 0 && i <= elementCount);
+
+        simdType* simd = simdType::FromVar(instance);
+        SIMDValue value = simd->GetValue();
+
+        WCHAR * indexName = AnewArray(GetArenaFromContext(scriptContext), WCHAR, SIMD_INDEX_VALUE_MAX_NAME);
+        swprintf_s(indexName, SIMD_INDEX_VALUE_MAX_NAME, L"[%d]", i);
+        pResolvedObject->name = indexName;
+
+        TypeId simdTypeId = JavascriptOperators::GetTypeId(instance);
+
+        switch (simdTypeId)
+        {
+        case TypeIds_SIMDInt32x4:
+            pResolvedObject->obj = JavascriptNumber::ToVarWithCheck(value.i32[i], scriptContext);
+            break;
+        case TypeIds_SIMDFloat32x4:
+            pResolvedObject->obj = JavascriptNumber::ToVarWithCheck(value.f32[i], scriptContext);
+            break;
+        case TypeIds_SIMDInt8x16:
+            pResolvedObject->obj = JavascriptNumber::ToVarWithCheck(value.i8[i], scriptContext);
+            break;
+        default:
+            AssertMsg(false, "Unexpected SIMD typeId");
+            return FALSE;
+        }
+
+        pResolvedObject->propId = Constants::NoProperty;
+        pResolvedObject->scriptContext = scriptContext;
+        pResolvedObject->typeId = simdTypeId;
+        pResolvedObject->objectDisplay = pResolvedObject->CreateDisplay();
+        pResolvedObject->objectDisplay->SetDefaultTypeAttribute(DBGPROP_ATTRIB_VALUE_READONLY | DBGPROP_ATTRIB_VALUE_IS_FAKE);
+        pResolvedObject->address = nullptr;
+
+        return TRUE;
+    }
+
+    //--------------------------
+    // RecyclableSimdObjectDisplay
+
+    template <typename simdType, typename simdWalker>
+    LPCWSTR RecyclableSimdObjectDisplay<simdType, simdWalker>::Type()
+    {
+        TypeId simdTypeId = JavascriptOperators::GetTypeId(instance);
+
+        switch (simdTypeId)
+        {
+        case TypeIds_SIMDInt32x4:
+            return  L"SIMD.Int32x4";
+        case TypeIds_SIMDFloat32x4:
+            return  L"SIMD.Float32x4"; 
+        case TypeIds_SIMDInt8x16:
+            return  L"SIMD.Int8x16";
+        default:
+            AssertMsg(false, "Unexpected SIMD typeId");
+            return nullptr;
+        }
+    }
+
+    template <typename simdType, typename simdWalker>
+    LPCWSTR RecyclableSimdObjectDisplay<simdType, simdWalker>::Value(int radix)
+    {
+        StringBuilder<ArenaAllocator>* builder = GetStringBuilder();
+        builder->Reset();
+
+        simdType* simd = simdType::FromVar(instance);
+        SIMDValue value = simd->GetValue();
+
+        TypeId simdTypeId = JavascriptOperators::GetTypeId(instance);
+        wchar_t stringBuffer[SIMD_STRING_BUFFER_MAX_NAME];
+
+        switch (simdTypeId)
+        {
+        case TypeIds_SIMDInt32x4:
+            swprintf_s(stringBuffer, SIMD_STRING_BUFFER_MAX_NAME, L"SIMD.Int32x4(%d, %d, %d, %d)", 
+                value.i32[0], value.i32[1], value.i32[2], value.i32[3]);
+            break;
+        case TypeIds_SIMDFloat32x4:
+            JavascriptString *s0, *s1, *s2, *s3;
+            s0 = JavascriptNumber::ToStringRadix10((double)value.f32[0], scriptContext);
+            s1 = JavascriptNumber::ToStringRadix10((double)value.f32[1], scriptContext);
+            s2 = JavascriptNumber::ToStringRadix10((double)value.f32[2], scriptContext);
+            s3 = JavascriptNumber::ToStringRadix10((double)value.f32[3], scriptContext);
+            swprintf_s(stringBuffer, SIMD_STRING_BUFFER_MAX_NAME, L"SIMD.Float32x4(%s, %s, %s, %s)", 
+                s0->GetSz(), s1->GetSz(), s2->GetSz(), s3->GetSz());
+            break;
+        case TypeIds_SIMDInt8x16:
+            swprintf_s(stringBuffer, SIMD_STRING_BUFFER_MAX_NAME, L"SIMD.Int8x16(%d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d)",
+                value.i8[0], value.i8[1], value.i8[2], value.i8[3], value.i8[4], value.i8[5], value.i8[6], value.i8[7],
+                value.i8[8], value.i8[9], value.i8[10], value.i8[11], value.i8[12], value.i8[13], value.i8[14], value.i8[15]);
+            break;
+        default:
+            AssertMsg(false, "Unexpected SIMD typeId");
+            return nullptr;
+        }
+
+        builder->AppendSz(stringBuffer);
+
+        return builder->Detach();
+    }
+
+    template <typename simdType, typename simdWalker>
+    WeakArenaReference<IDiagObjectModelWalkerBase>* RecyclableSimdObjectDisplay<simdType, simdWalker>::CreateWalker()
+    {
+        ReferencedArenaAdapter* pRefArena = scriptContext->GetThreadContext()->GetDebugManager()->GetDiagnosticArena();
+        if (pRefArena)
+        {
+            IDiagObjectModelWalkerBase* pOMWalker = Anew(pRefArena->Arena(), simdWalker, scriptContext, instance);
+            return HeapNew(WeakArenaReference<IDiagObjectModelWalkerBase>, pRefArena, pOMWalker);
+        }
+        return nullptr;
+    }
+
 }
