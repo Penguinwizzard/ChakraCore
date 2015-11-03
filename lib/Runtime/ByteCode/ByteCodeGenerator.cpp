@@ -2292,7 +2292,7 @@ FuncInfo* PreVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerato
     {
         funcName = reinterpret_cast<const wchar_t*>(pnode->sxFnc.pnodeName->sxVar.pid->Psz());
         funcNameLength = pnode->sxFnc.pnodeName->sxVar.pid->Cch();
-
+        functionNameOffset = 0;
         //
         // create the new scope for Function expression only in ES5 mode
         //
