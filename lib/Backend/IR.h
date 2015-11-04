@@ -149,7 +149,7 @@ protected:
         extractedUpperBoundCheckWithoutHoisting(false),
         ignoreOverflowBitCount(32),
         isCtorCall(false),
-		isCallInstrProtectedByNoProfileBailout(false)
+        isCallInstrProtectedByNoProfileBailout(false)
     {
     }
 public:
