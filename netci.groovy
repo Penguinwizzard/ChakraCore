@@ -36,8 +36,6 @@ def project = 'Microsoft/ChakraCorePrivate'
                 }
             }
 
-            InternalUtilities.addPrivatePermissions(newJob)
-
             // This call performs remaining common job setup on the newly created job.
             // This is used most commonly for simple inner loop testing.
             // It does the following:
@@ -50,7 +48,25 @@ def project = 'Microsoft/ChakraCorePrivate'
             //   5. Adds standard parameters for PR and push jobs.
             //      These allow PR jobs to be used for simple private testing, for instance.
             // See the documentation for this function to see additional optional parameters.
+
+            // Note: InternalUtilities variant also sets private permission
             InternalUtilities.simpleInnerLoopJobSetup(newJob, project, isPR, "Windows ${config}")
         }
     }
+}
+
+// Create a job to check that no mixed line endings have been introduced.
+[true, false].each { isPR -> // Defines a closure over true and false, value assigned to isPR
+    def jobName = InternalUtilities.getFullJobName(project, 'ubuntu_check_eol', isPR)
+
+    def taskString = './jenkins.check_eol.sh'
+    def newJob = job(jobName) {
+        label('ubuntu')
+        steps {
+            shell(taskString)
+        }
+    }
+
+    // Note: InternalUtilities variant also sets private permission
+    InternalUtilities.simpleInnerLoopJobSetup(newJob, project, isPR, "EOL Check")
 }
