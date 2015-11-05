@@ -58,7 +58,6 @@ namespace Js {
 
             static FunctionInfo Store;
             static FunctionInfo Store1;
-            
         };
 
         // Entry points to library
@@ -114,6 +113,5 @@ namespace Js {
     private:
         static Var InnerLoad(RecyclableObject* function, CallInfo callInfo, int laneCount);
         static void InnerStore(RecyclableObject* function, CallInfo callInfo, int laneCount);
-        
     };
 } // namespace Js

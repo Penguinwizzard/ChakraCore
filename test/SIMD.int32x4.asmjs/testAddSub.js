@@ -244,20 +244,20 @@ function asmModule(stdlib, imports) {
 var m = asmModule(this, {g1:SIMD.Float32x4(90934.2,123.9,419.39,449.0), g2:SIMD.Int32x4(-1065353216, -1073741824,-1077936128, -1082130432), g3:SIMD.Float64x2(110.20, 58967.0, 14511.670, 191766.23431)});
 
 
-WScript.Echo("Func1");
-WScript.Echo(m.func1().toString());
+print("Func1");
+print(m.func1().toString());
 
-WScript.Echo("Func2");
-WScript.Echo(m.func2().toString());
+print("Func2");
+print(m.func2().toString());
 
-WScript.Echo("Func3");
-WScript.Echo(m.func3().toString());
+print("Func3");
+print(m.func3().toString());
 
-WScript.Echo("Func4");
-WScript.Echo(m.func4().toString());
+print("Func4");
+print(m.func4().toString());
 
-WScript.Echo("Func5");
-WScript.Echo(m.func5().toString());
+print("Func5");
+print(m.func5().toString());
 
-WScript.Echo("Func6");
-WScript.Echo(m.func6().toString());
+print("Func6");
+print(m.func6().toString());

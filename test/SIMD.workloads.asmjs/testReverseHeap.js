@@ -276,7 +276,7 @@ function printBufferD2(buffer, count)
     for (var i = 0; i < count/* * 16*/; i += 4)
     {
         d2 = SIMD.Float64x2.load(buffer, i);
-        WScript.Echo(d2.toString());
+        print(d2.toString());
     }
 }
 
@@ -286,7 +286,7 @@ function printBufferI4(buffer, count)
     for (var i = 0; i < count/* * 16*/; i += 4)
     {
         i4 = SIMD.Int32x4.load(buffer, i);
-        WScript.Echo(i4.toString());
+        print(i4.toString());
     }
 }
 
@@ -296,14 +296,14 @@ function printBufferF4(buffer, count)
     for (var i = 0; i < count/* * 16*/; i += 4)
     {
         f4 = SIMD.Float32x4.load(buffer, i);
-        WScript.Echo(f4.toString());
+        print(f4.toString());
     }
 }
 
 function printResults(res)
 {
-    WScript.Echo(typeof(res));
-    WScript.Echo(res.toString());
+    print(typeof(res));
+    print(res.toString());
 }
 
 //Module initialization
@@ -313,26 +313,26 @@ var values = new Float32Array(buffer);
 //Resetting the buffer.
 initI4(buffer);
 
-WScript.Echo("Reversing - Start");
+print("Reversing - Start");
 printBufferI4(values, 8 * 4);
 m.reverseI4(3, 31);
-WScript.Echo("Reversing - Start");
+print("Reversing - Start");
 printBufferI4(values, 8 * 4);
 
 //Resetting the buffer.
 initF4(buffer);
 
-WScript.Echo("Reversing - Start");
+print("Reversing - Start");
 printBufferF4(values, 8 * 4);
 m.reverseF4(3, 31);
-WScript.Echo("Reversing - Start");
+print("Reversing - Start");
 printBufferF4(values, 8 * 4);
 
 //Resetting the buffer.
 initD2(buffer);
 
-WScript.Echo("Reversing - Start");
+print("Reversing - Start");
 printBufferD2(values, 10 * 2);
 m.reverseD2(3, 8);
-WScript.Echo("Reversing - Start");
+print("Reversing - Start");
 printBufferD2(values, 10 * 2);

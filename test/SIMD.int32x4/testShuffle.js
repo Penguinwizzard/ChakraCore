@@ -5,13 +5,17 @@
 
 function equal(a, b) {
     if (a == b)
-        WScript.Echo("Correct");
+    {
+        print("Correct");
+    }
     else
-        WScript.Echo(">> Fail!");
+    {
+        print(">> Fail!");
+    }
 }
 
 function testSwizzle() {
-    WScript.Echo("Int32x4 Shuffle");
+    print("Int32x4 Shuffle");
     var a = SIMD.Int32x4(1, 2, 3, 4);
     var xyxy = SIMD.Int32x4.swizzle(a, 0, 1, 0, 1);
     var zwzw = SIMD.Int32x4.swizzle(a, 2, 3, 2, 3);
@@ -31,7 +35,7 @@ function testSwizzle() {
 }
 
 function testShuffle() {
-    WScript.Echo("Int32x4 ShuffleMix");
+    print("Int32x4 ShuffleMix");
     var a = SIMD.Int32x4(1, 2, 3, 4);
     var b = SIMD.Int32x4(5, 6, 7, 8);
     var xyxy = SIMD.Int32x4.shuffle(a, b, 0, 1, 4, 5);
@@ -68,4 +72,3 @@ testShuffle();
 testShuffle();
 testShuffle();
 testShuffle();
-

@@ -5,13 +5,17 @@
 
 function equal(a, b) {
     if (a == b)
-        WScript.Echo("Correct");
+    {
+        print("Correct");
+    }
     else
-        WScript.Echo(">> Fail!");
+    {
+        print(">> Fail!");
+    }
 }
 
 function testAbs() {
-    WScript.Echo("Float32x4 abs");
+    print("Float32x4 abs");
     var a = SIMD.Float32x4(-4.0, -3.0, -2.0, -1.0);
     var c = SIMD.Float32x4.abs(a);
     equal(4.0, SIMD.Float32x4.extractLane(c, 0));
@@ -26,7 +30,7 @@ function testAbs() {
 }
 
 function testNeg() {
-    WScript.Echo("Float32x4 neg");
+    print("Float32x4 neg");
     var a = SIMD.Float32x4(-4.0, -3.0, -2.0, -1.0);
     var c = SIMD.Float32x4.neg(a);
     equal(4.0, SIMD.Float32x4.extractLane(c, 0));
@@ -57,5 +61,3 @@ testNeg();
 testNeg();
 testNeg();
 testNeg();
-
-

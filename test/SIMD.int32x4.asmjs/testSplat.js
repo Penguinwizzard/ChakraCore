@@ -5,7 +5,7 @@
 
 function asmModule(stdlib, imports) {
     "use asm";
-    
+
     var i4 = stdlib.SIMD.Int32x4;
     var i4check = i4.check;
     var i4splat = i4.splat;
@@ -181,15 +181,11 @@ var ret2 = m.func2(SIMD.Int32x4(1,2,3,4), SIMD.Float32x4(1,2,3,4), SIMD.Float64x
 var ret3 = m.func3(SIMD.Int32x4(1,2,3,4), SIMD.Float32x4(1,2,3,4), SIMD.Float64x2(1,2,3,4));
 
 
-WScript.Echo(typeof(ret1));
-WScript.Echo(ret1.toString());
+print(typeof(ret1));
+print(ret1.toString());
 
-WScript.Echo(typeof(ret2));
-WScript.Echo(ret2.toString());
+print(typeof(ret2));
+print(ret2.toString());
 
-WScript.Echo(typeof(ret3));
-WScript.Echo(ret3.toString());
-
-
-
-
+print(typeof(ret3));
+print(ret3.toString());

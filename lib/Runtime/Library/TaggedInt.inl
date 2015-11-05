@@ -25,6 +25,7 @@ namespace Js
     {
         return nValue > k_nMaxValue;
     }
+
 #if INT32VAR
     __inline bool TaggedInt::Is(Var aValue)
     {
@@ -43,7 +44,7 @@ namespace Js
         AssertMsg(result == (TaggedInt::Is(aLeft) && TaggedInt::Is(aRight)), "TaggedInt::IsPair() logic is incorrect");
         return result;
     }
-          
+
     __inline int32 TaggedInt::ToInt32(Var aValue)
     {
         AssertMsg(Is(aValue), "Ensure var is actually an 'TaggedInt'");
@@ -80,7 +81,7 @@ namespace Js
     {
         return (double)::Math::PointerCastToIntegralTruncate<int32>(aValue);
     }
-    
+
     __inline Var TaggedInt::ToVarUnchecked(int nValue)
     {
         //
@@ -92,6 +93,7 @@ namespace Js
 
         return reinterpret_cast<Var>(((uintptr)(uint32)nValue) | AtomTag_IntPtr);
     }
+
 #else
     __inline bool TaggedInt::Is(const Var aValue)
     {

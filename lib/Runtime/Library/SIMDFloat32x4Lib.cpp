@@ -3,7 +3,6 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
-#include "SIMDFloat32x4Operation.h"
 
 namespace Js
 {
@@ -159,7 +158,6 @@ namespace Js
     Var SIMDFloat32x4Lib::EntryExtractLane(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
-
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
 
@@ -167,6 +165,7 @@ namespace Js
         Assert(!(callInfo.Flags & CallFlags_New));
 
         // first arg has to be of type float32x4, so cannot be missing.
+
         if (args.Info.Count >= 3 && JavascriptSIMDFloat32x4::Is(args[1]))
         {
             // if value arg is missing, then it is undefined.

@@ -4,14 +4,15 @@
 //-------------------------------------------------------------------------------------------------------
 
 function equal(a, b) {
-    if (a == b)
-        WScript.Echo("Correct");
-    else
-        WScript.Echo(">> Fail!");
+    if (a == b) {
+        print("Correct");
+    } else {
+        print(">> Fail!");
+    }
 }
 
 function testAdd() {
-    WScript.Echo("Int32x4 add");
+    print("Int32x4 add");
     var a = SIMD.Int32x4(0xFFFFFFFF, 0xFFFFFFFF, 0x7fffffff, 0x0);
     var b = SIMD.Int32x4(0x1, 0xFFFFFFFF, 0x1, 0xFFFFFFFF);
     var c = SIMD.Int32x4.add(a, b);
@@ -30,7 +31,7 @@ function testAdd() {
 }
 
 function testSub() {
-    WScript.Echo("Int32x4 sub");
+    print("Int32x4 sub");
     var a = SIMD.Int32x4(0xFFFFFFFF, 0xFFFFFFFF, 0x80000000, 0x0);
     var b = SIMD.Int32x4(0x1, 0xFFFFFFFF, 0x1, 0xFFFFFFFF);
     var c = SIMD.Int32x4.sub(a, b);

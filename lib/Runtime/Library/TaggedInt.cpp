@@ -393,7 +393,7 @@ LblDone:
     {
         //
         // Shifting an integer left will always remain an integer, but it may overflow the Int31
-        // range.  Therefore, we must call JavascriptNumber::ToVar() to check.
+        // range. Therefore, we must call JavascriptNumber::ToVar() to check.
         //
 
         int nValue      = ToInt32(aLeft);
@@ -406,8 +406,8 @@ LblDone:
     {
         //
         // If aLeft was a Int31 coming in, then the result must always be a Int31 going out because
-        // shifting right only makes value smaller.  Therefore, we may call ToVarUnchecked()
-        // directly. 
+        // shifting right only makes value smaller. Therefore, we may call ToVarUnchecked()
+        // directly.
         //
 
         int nValue      = ToInt32(aLeft);
@@ -420,8 +420,8 @@ LblDone:
     {
         //
         // If aLeft was a Int31 coming in, then the result must always be a Int31 going out because
-        // shifting right only makes value smaller.  Therefore, we may call ToVarUnchecked()
-        // directly. 
+        // shifting right only makes value smaller. Therefore, we may call ToVarUnchecked()
+        // directly.
         //
 
         uint32 uValue   = ToUInt32(aLeft);
@@ -578,4 +578,4 @@ LblDone:
         return result;
 #endif
     }
-} 
+}

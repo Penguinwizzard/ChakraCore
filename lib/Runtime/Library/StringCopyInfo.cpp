@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
-// JScriptDiag does not link with Runtime.lib and does not include .cpp files, so this file will be included as a header
+// ChakraDiag does not link with Runtime.lib and does not include .cpp files, so this file will be included as a header
 #pragma once
 #include "RuntimeLibraryPch.h"
 #include "DataStructures\LargeStack.h"
@@ -44,7 +44,6 @@ namespace Js
     inline wchar_t *StringCopyInfo::DestinationBuffer() const
     {
         Assert(isInitialized);
-
         return destinationBuffer;
     }
 
@@ -85,8 +84,10 @@ namespace Js
 
     StringCopyInfoStack::~StringCopyInfoStack()
     {
-        if(allocator)
+        if (allocator)
+        {
             scriptContext->ReleaseTemporaryAllocator(allocator);
+        }
     }
 
     bool StringCopyInfoStack::IsEmpty()

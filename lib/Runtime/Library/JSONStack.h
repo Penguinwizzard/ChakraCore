@@ -15,7 +15,7 @@ namespace JSON
     class JSONStack
     {
     private:
-        SList<Js::Var> jsObjectStack; //TODO: Consider key only dictionary here
+        SList<Js::Var> jsObjectStack; // Consider: key-only dictionary here
         typedef JsUtil::List<Js::Var, ArenaAllocator, false, Js::CopyRemovePolicy, 
             SpecializedComparer<Js::Var, JSON::StrictEqualsObjectComparer>::TComparerType> DOMObjectStack;
         DOMObjectStack *domObjectStack;
@@ -34,4 +34,4 @@ namespace JSON
     private:
         void EnsuresDomObjectStack(void);
     };
-} //namespace JSON
+} // namespace JSON

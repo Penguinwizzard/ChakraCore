@@ -5,13 +5,17 @@
 
 function equal(a, b) {
     if (a == b)
-        WScript.Echo("Correct");
+    {
+        print("Correct");
+    }
     else
-        WScript.Echo(">> Fail!");
+    {
+        print(">> Fail!");
+    }
 }
 
 function testInt32x4BitConversion() {
-    WScript.Echo("Float32x4 Int32x4 bit conversion");
+    print("Float32x4 Int32x4 bit conversion");
     var m = SIMD.Int32x4(0x3F800000, 0x40000000, 0x40400000, 0x40800000);
     var n = SIMD.Float32x4.fromInt32x4Bits(m);
     equal(1.0, SIMD.Float32x4.extractLane(n, 0));

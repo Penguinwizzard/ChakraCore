@@ -3,11 +3,9 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
-#include "SIMDInt32x4Operation.h"
 
 namespace Js
 {
-
     // Q: Are we allowed to call this as a constructor ?
     Var SIMDInt32x4Lib::EntryInt32x4(RecyclableObject* function, CallInfo callInfo, ...)
     {
@@ -26,7 +24,6 @@ namespace Js
         int intSIMDW = JavascriptConversion::ToInt32(args.Info.Count >= 5 ? args[4] : undefinedVar, scriptContext);
 
         SIMDValue lanes = SIMDInt32x4Operation::OpInt32x4(intSIMDX, intSIMDY, intSIMDZ, intSIMDW);
-
         return JavascriptSIMDInt32x4::New(&lanes, scriptContext);
     }
 
@@ -1039,5 +1036,4 @@ namespace Js
         }
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInvalidArgType, L"SIMD.Int32x4.store");
     }
-
 }

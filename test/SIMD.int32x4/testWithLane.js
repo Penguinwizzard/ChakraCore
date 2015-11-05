@@ -5,12 +5,16 @@
 
 function equal(a, b) {
     if (a == b)
-        WScript.Echo("Correct");
+    {
+        print("Correct");
+    }
     else
-        WScript.Echo(">> Fail!");
+    {
+        print(">> Fail!");
+    }
 }
 function testReplaceLane1() {
-    WScript.Echo("Int32x4 Lane1");
+    print("Int32x4 Lane1");
     var a = SIMD.Int32x4(16, 9, 4, 1);
     var c = SIMD.Int32x4.replaceLane(a, 0, 20);
     equal(20, SIMD.Int32x4.extractLane(c, 0));
@@ -21,7 +25,7 @@ function testReplaceLane1() {
 }
 
 function testReplaceLane2() {
-    WScript.Echo("Int32x4 Lane2");
+    print("Int32x4 Lane2");
     var a = SIMD.Int32x4(16, 9, 4, 1);
     var c = SIMD.Int32x4.replaceLane(a, 1, 20);
 
@@ -33,7 +37,7 @@ function testReplaceLane2() {
 }
 
 function testReplaceLane3() {
-    WScript.Echo("Int32x4 Lane3");
+    print("Int32x4 Lane3");
     var a = SIMD.Int32x4(16, 9, 4, 1);
     var c = SIMD.Int32x4.replaceLane(a, 2, 20);
 
@@ -45,7 +49,7 @@ function testReplaceLane3() {
 }
 
 function testReplaceLane4() {
-    WScript.Echo("Int32x4 Lane4");
+    print("Int32x4 Lane4");
     var a = SIMD.Int32x4(16, 9, 4, 1);
     var c = SIMD.Int32x4.replaceLane(a, 3, 20);
 

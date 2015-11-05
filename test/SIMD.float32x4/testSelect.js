@@ -5,13 +5,17 @@
 
 function equal(a, b) {
     if (a == b)
-        WScript.Echo("Correct");
+    {
+        print("Correct");
+    }
     else
-        WScript.Echo(">> Fail!");
+    {
+        print(">> Fail!");
+    }
 }
 
 function testSelect() {
-    WScript.Echo("Float32x4 Select");
+    print("Float32x4 Select");
     var m = SIMD.Int32x4.bool(true, true, false, false);
     var t = SIMD.Float32x4(1.0, 2.0, 3.0, 4.0);
     var f = SIMD.Float32x4(5.0, 6.0, 7.0, 8.0);

@@ -17,7 +17,7 @@ namespace Js
         this->rejectReactions = nullptr;
     }
 
-    // Promise() and new Promise() as defined by ES6.0 (draft 22) Sections 25.4.3.1 and 25.4.3.2
+    // Promise() and new Promise() as defined by ES 2015 Sections 25.4.3.1 and 25.4.3.2
     Var JavascriptPromise::NewInstance(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
@@ -147,7 +147,7 @@ namespace Js
         return this->rejectReactions;
     }
 
-    // Promise.all as described in ES6.0 Section 25.4.4.1
+    // Promise.all as described in ES 2015 Section 25.4.4.1
     Var JavascriptPromise::EntryAll(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
@@ -280,7 +280,7 @@ namespace Js
         return promiseCapability->GetPromise();
     }
 
-    // Promise.prototype.catch as defined in ES6.0 Section 25.4.5.1
+    // Promise.prototype.catch as defined in ES 2015 Section 25.4.5.1
     Var JavascriptPromise::EntryCatch(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
@@ -325,7 +325,7 @@ namespace Js
             onRejected);
     }
 
-    // Promise.race as described in ES6.0 Section 25.4.4.3
+    // Promise.race as described in ES 2015 Section 25.4.4.3
     Var JavascriptPromise::EntryRace(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
@@ -426,7 +426,7 @@ namespace Js
         return promiseCapability->GetPromise();
     }
 
-    // Promise.reject as described in ES6.0 Section 25.4.4.4
+    // Promise.reject as described in ES 2015 Section 25.4.4.4
     Var JavascriptPromise::EntryReject(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
@@ -473,7 +473,7 @@ namespace Js
         return promiseCapability->GetPromise();
     }
 
-    // Promise.resolve as described in ES6.0 Section 25.4.4.5
+    // Promise.resolve as described in ES 2015 Section 25.4.4.5
     Var JavascriptPromise::EntryResolve(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
@@ -534,7 +534,7 @@ namespace Js
         return promiseCapability->GetPromise();
     }
 
-    // Promise.prototype.then as described in ES6.0 Section 25.4.5.3
+    // Promise.prototype.then as described in ES 2015 Section 25.4.5.3
     Var JavascriptPromise::EntryThen(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
@@ -601,7 +601,7 @@ namespace Js
         return promiseCapability->GetPromise();
     }
 
-    // Promise Reject and Resolve Functions as described in ES6.0 (draft 29) Section 25.4.1.4.1 and 25.4.1.4.2
+    // Promise Reject and Resolve Functions as described in ES 2015 Section 25.4.1.4.1 and 25.4.1.4.2
     Var JavascriptPromise::EntryResolveOrRejectFunction(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
@@ -693,7 +693,7 @@ namespace Js
         return TriggerPromiseReactions(reactions, resolution, scriptContext);
     }
 
-    // Promise Capabilities Executor Function as described in ES6.0 (draft 29) Section 25.4.1.6.2
+    // Promise Capabilities Executor Function as described in ES 2015 Section 25.4.1.6.2
     Var JavascriptPromise::EntryCapabilitiesExecutorFunction(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
@@ -729,7 +729,7 @@ namespace Js
         return undefinedVar;
     }
 
-    // Promise Reaction Task Function as described in ES6.0 (draft 22) Section 25.4.2.1
+    // Promise Reaction Task Function as described in ES 2015 Section 25.4.2.1
     Var JavascriptPromise::EntryReactionTaskFunction(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
@@ -772,7 +772,7 @@ namespace Js
             handlerResult);
     }
 
-    // Promise Resolve Thenable Job as described in ES6.0 (draft 29) Section 25.4.2.2
+    // Promise Resolve Thenable Job as described in ES 2015 Section 25.4.2.2
     Var JavascriptPromise::EntryResolveThenableTaskFunction(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
@@ -808,7 +808,7 @@ namespace Js
         }
     }
 
-    // Promise Identity Function as described in ES6.0 (draft 22) Section 25.4.5.3.1
+    // Promise Identity Function as described in ES 2015Section 25.4.5.3.1
     Var JavascriptPromise::EntryIdentityFunction(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
@@ -820,7 +820,7 @@ namespace Js
         return args[1];
     }
 
-    // Promise Thrower Function as described in ES6.0 (draft 22) Section 25.4.5.3.3
+    // Promise Thrower Function as described in ES 2015Section 25.4.5.3.3
     Var JavascriptPromise::EntryThrowerFunction(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
@@ -1070,7 +1070,7 @@ namespace Js
         return promiseCapability;
     }
 
-    // UpdatePromiseFromPotentialThenable as defined in ES6.0 (draft 22) Section 25.4.1.8
+    // UpdatePromiseFromPotentialThenable as defined in ES 2015Section 25.4.1.8
     bool JavascriptPromise::UpdatePromiseFromPotentialThenable(Var resolution, JavascriptPromiseCapability* promiseCapability, ScriptContext* scriptContext)
     {
         if (!JavascriptOperators::IsObjectType(JavascriptOperators::GetTypeId(resolution)))
@@ -1124,7 +1124,7 @@ namespace Js
         return true;
     }
 
-    // TriggerPromiseReactions as defined in ES6.0 (draft 22) Section 25.4.1.7
+    // TriggerPromiseReactions as defined in ES 2015 Section 25.4.1.7
     Var JavascriptPromise::TriggerPromiseReactions(JavascriptPromiseReactionList* reactions, Var resolution, ScriptContext* scriptContext)
     {
         JavascriptLibrary* library = scriptContext->GetLibrary();

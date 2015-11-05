@@ -4,14 +4,15 @@
 //-------------------------------------------------------------------------------------------------------
 
 function equal(a, b) {
-    if (a == b)
-        WScript.Echo("Correct");
-    else
-        WScript.Echo(">> Fail!");
+    if (a == b) {
+        print("Correct");
+    } else {
+        print(">> Fail!");
+    }
 }
 
 function testShiftleft() {
-    WScript.Echo("Int8x16 shiftLeft");
+    print("Int8x16 shiftLeft");
     // var a = SIMD.Int8x16(0x80000000, 0x7000000, 0xFFFFFFFF, 0x0);
     var a = SIMD.Int8x16(1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF, 0x10);
     var b = SIMD.Int8x16.shiftLeftByScalar(a, 1)
@@ -54,7 +55,7 @@ function testShiftleft() {
 }
 
 function testShiftRightLogical() {
-    WScript.Echo("Int8x16 shiftRightLogical");
+    print("Int8x16 shiftRightLogical");
     //var a = SIMD.Int8x16(0x80000000, 0x7000000, 0xFFFFFFFF, 0x0);
     var a = SIMD.Int8x16(0x80, 0x70, 0xFF, 0x0, 0x80, 0x70, 0xFF, 0x0, 0x80, 0x70, 0xFF, 0x0, 0x80, 0x70, 0xFF, 0x0);
     var b = SIMD.Int8x16.shiftRightLogicalByScalar(a, 1)
@@ -95,7 +96,7 @@ function testShiftRightLogical() {
 }
 
 function testShiftRightArithmetic() {
-    WScript.Echo("Int8x16 shiftRightArithmetic");
+    print("Int8x16 shiftRightArithmetic");
     var a = SIMD.Int8x16(0x80, 0x70, 0xFF, 0x0, 0x80, 0x70, 0xFF, 0x0, 0x80, 0x70, 0xFF, 0x0, 0x80, 0x70, 0xFF, 0x0);
     var b = SIMD.Int8x16.shiftRightArithmeticByScalar(a, 1);
 

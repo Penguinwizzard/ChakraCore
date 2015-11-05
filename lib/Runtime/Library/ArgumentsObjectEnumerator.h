@@ -26,7 +26,7 @@ namespace Js
         virtual Var GetCurrentValue() override;
         virtual BOOL MoveNext(PropertyAttributes* attributes = nullptr) override;
         virtual void Reset() override;
-        virtual BOOL GetCurrentPropertyId(PropertyId *propertyId) override;
+        virtual bool GetCurrentPropertyId(PropertyId *propertyId) override;
     };
 
     class ES5ArgumentsObjectEnumerator : public ArgumentsObjectEnumerator

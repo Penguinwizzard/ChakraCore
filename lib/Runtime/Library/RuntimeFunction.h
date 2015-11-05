@@ -25,5 +25,5 @@ namespace Js
         Var functionNameId;
         virtual Var GetSourceString() const { return functionNameId; }
         virtual Var EnsureSourceString();
-    };  
+    };
 };

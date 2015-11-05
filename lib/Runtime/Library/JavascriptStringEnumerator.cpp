@@ -10,7 +10,7 @@ namespace Js
         JavascriptEnumerator(requestContext),
         stringObject(stringObject),
         index(-1)
-    {        
+    {
     }
 
     Var JavascriptStringEnumerator::GetCurrentIndex()
@@ -151,19 +151,19 @@ namespace Js
         return false;
     }
 
-    BOOL JavascriptStringObjectEnumerator::GetCurrentPropertyId(PropertyId* propertyId)
+    bool JavascriptStringObjectEnumerator::GetCurrentPropertyId(PropertyId* propertyId)
     {
         if (stringEnumerator != nullptr)
         {
             *propertyId = Constants::NoProperty;
-            return FALSE;
+            return false;
         }
         if (objectEnumerator != nullptr)
         {
             return objectEnumerator->GetCurrentPropertyId(propertyId);
         }
         *propertyId = Constants::NoProperty;
-        return FALSE;
+        return false;
     }
 
     Var JavascriptStringObjectEnumerator::GetCurrentAndMoveNext(PropertyId& propertyId, PropertyAttributes* attributes)
@@ -200,4 +200,4 @@ namespace Js
         stringObject->DynamicObject::GetEnumerator(enumNonEnumerable, &enumerator, scriptContext, true, enumSymbols);
         objectEnumerator = (JavascriptEnumerator*)enumerator;
     }
-} 
+}

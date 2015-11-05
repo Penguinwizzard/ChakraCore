@@ -106,8 +106,6 @@ function asmModule(stdlib, imports) {
     var gval = 1234;
     var gval2 = 1234.0;
 
-
-    
     var loopCOUNT = 3;
 
     function conv1()
@@ -125,7 +123,7 @@ function asmModule(stdlib, imports) {
 
         return i4check(x);
     }
-    
+
     function conv2()
     {
         var x = i4(0,0,0,0);
@@ -155,7 +153,7 @@ function asmModule(stdlib, imports) {
 
         return i4check(x);
     }
-    
+
     function conv4()
     {
         var x = i4(0,0,0,0);
@@ -171,7 +169,7 @@ function asmModule(stdlib, imports) {
 
         return i4check(x);
     }
-    
+
     function conv5()
     {
         var x = i4(0,0,0,0);
@@ -201,9 +199,7 @@ function asmModule(stdlib, imports) {
 
         return i4check(x);
     }
-    
-    ////
-    
+
     function conv7()
     {
         var x = i4(0,0,0,0);
@@ -249,7 +245,7 @@ function asmModule(stdlib, imports) {
 
         return i4check(x);
     }
-    
+
     function conv10()
     {
         var x = i4(0,0,0,0);
@@ -265,7 +261,7 @@ function asmModule(stdlib, imports) {
 
         return i4check(x);
     }
-    
+
     function conv11()
     {
         var x = i4(0,0,0,0);
@@ -296,7 +292,7 @@ function asmModule(stdlib, imports) {
         return i4check(x);
     }
 
-    
+
     // TODO: Test conversion of returned value
     function value()
     {
@@ -315,7 +311,6 @@ function asmModule(stdlib, imports) {
         return +ret;
     }
 
-    
     return {func1:conv1, func2:conv2, func3:conv3, func4:conv4, func5:conv5, func6:conv6, func7:conv7, func8:conv8, func9:conv9, func10:conv10, func11:conv11, func12:conv12};
 }
 
@@ -340,41 +335,38 @@ var ret10 = m.func10();
 var ret11 = m.func11();
 var ret12 = m.func12();
 
+print(typeof(ret1));
+print(ret1.toString());
 
+print(typeof(ret2));
+print(ret2.toString());
 
+print(typeof(ret3));
+print(ret3.toString());
 
-WScript.Echo(typeof(ret1));
-WScript.Echo(ret1.toString());
+print(typeof(ret4));
+print(ret4.toString());
 
-WScript.Echo(typeof(ret2));
-WScript.Echo(ret2.toString());
+print(typeof(ret5));
+print(ret5.toString());
 
-WScript.Echo(typeof(ret3));
-WScript.Echo(ret3.toString());
+print(typeof(ret6));
+print(ret6.toString());
 
-WScript.Echo(typeof(ret4));
-WScript.Echo(ret4.toString());
+print(typeof(ret7));
+print(ret7.toString());
 
-WScript.Echo(typeof(ret5));
-WScript.Echo(ret5.toString());
+print(typeof(ret8));
+print(ret8.toString());
 
-WScript.Echo(typeof(ret6));
-WScript.Echo(ret6.toString());
+print(typeof(ret9));
+print(ret9.toString());
 
-WScript.Echo(typeof(ret7));
-WScript.Echo(ret7.toString());
+print(typeof(ret10));
+print(ret10.toString());
 
-WScript.Echo(typeof(ret8));
-WScript.Echo(ret8.toString());
+print(typeof(ret11));
+print(ret11.toString());
 
-WScript.Echo(typeof(ret9));
-WScript.Echo(ret9.toString());
-
-WScript.Echo(typeof(ret10));
-WScript.Echo(ret10.toString());
-
-WScript.Echo(typeof(ret11));
-WScript.Echo(ret11.toString());
-
-WScript.Echo(typeof(ret12));
-WScript.Echo(ret12.toString());
+print(typeof(ret12));
+print(ret12.toString());

@@ -94,11 +94,11 @@ function print2DMatrix(buffer, start) {
     var f4;
     var dim1 = IntHeap32[start];
     var dim2 = IntHeap32[start + 1];
-    WScript.Echo(dim1 + " by " + dim2 + " matrix");
+    print(dim1 + " by " + dim2 + " matrix");
 
     for (var i = 0; i < Math.imul(dim1, dim2) ; i += 4) {
         i4 = SIMD.Int32x4.load(IntHeap32, i + start + 2);
-        WScript.Echo(i4.toString());
+        print(i4.toString());
     }
 }
 
@@ -107,7 +107,7 @@ function print2DMatrix(buffer, start) {
 var buffer = new ArrayBuffer(16 * 1024 * 1024);
 var m = asmModule(this, null, buffer);
 
-WScript.Echo("2D Matrix Subtraction");
+print("2D Matrix Subtraction");
 m.new2DMatrix(0, 13, 17);
 m.new2DMatrix(500, 13, 17);
 m.matrixSubtraction(0, 500, 1000);

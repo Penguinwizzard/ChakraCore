@@ -5,13 +5,17 @@
 
 function equal(a, b) {
     if (a == b)
-        WScript.Echo("Correct");
+    {
+        print("Correct");
+    }
     else
-        WScript.Echo(">> Fail!");
+    {
+        print(">> Fail!");
+    }
 }
 
 function testNot() {
-    WScript.Echo("Int32x4 not");
+    print("Int32x4 not");
     var a = SIMD.Int32x4(-4, -3, -2, -1);
     var c = SIMD.Int32x4.not(a);
     equal(3, SIMD.Int32x4.extractLane(c, 0));
@@ -33,5 +37,3 @@ testNot();
 testNot();
 testNot();
 testNot();
-
-

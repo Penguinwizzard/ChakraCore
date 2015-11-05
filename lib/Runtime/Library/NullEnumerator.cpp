@@ -36,8 +36,8 @@ namespace Js
         return NULL;
     }
 
-    BOOL NullEnumerator::GetCurrentPropertyId(PropertyId *propertyId)
+    bool NullEnumerator::GetCurrentPropertyId(PropertyId *propertyId)
     {
-        return FALSE;
+        return false;
     }
 };

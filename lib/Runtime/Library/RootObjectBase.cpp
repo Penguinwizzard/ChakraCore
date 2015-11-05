@@ -37,12 +37,14 @@ namespace Js
         Assert(RootObjectBase::Is(var));
         return static_cast<Js::RootObjectBase *>(var);
     }
+
     HostObjectBase * RootObjectBase::GetHostObject() const
     {
         Assert(hostObject == nullptr || Js::JavascriptOperators::GetTypeId(hostObject) == TypeIds_HostObject);
-        return this->hostObject;
 
+        return this->hostObject;
     }
+
     void RootObjectBase::SetHostObject(HostObjectBase * hostObject)
     {
         Assert(hostObject == nullptr || Js::JavascriptOperators::GetTypeId(hostObject) == TypeIds_HostObject);

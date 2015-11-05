@@ -16,13 +16,11 @@ namespace Js
 
         DEFINE_VTABLE_CTOR(JavascriptSIMDFloat32x4, RecyclableObject);
 
-
     public:
         class EntryInfo
         {
         public:
             static FunctionInfo ToString;
-            
         };
 
         JavascriptSIMDFloat32x4(StaticType *type);
@@ -59,6 +57,5 @@ namespace Js
     private:
         bool GetPropertyBuiltIns(PropertyId propertyId, Var* value, ScriptContext* requestContext);
         Var  GetSignMask();
-        
     };
 }

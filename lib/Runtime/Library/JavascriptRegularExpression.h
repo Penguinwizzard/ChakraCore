@@ -71,9 +71,13 @@ namespace Js
         UnifiedRegex::RegexFlags GetFlags() const;
 
         void CacheLastIndex();
-        inline CharCountOrFlag GetLastIndex() {
+        
+        inline CharCountOrFlag GetLastIndex() 
+        {
             if (lastIndexOrFlag == NotCachedValue)
+            {
                 CacheLastIndex();
+            }
             return lastIndexOrFlag;
         }
 

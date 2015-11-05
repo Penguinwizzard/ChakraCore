@@ -5,7 +5,6 @@
 
 function asmModule(stdlib, imports) {
     "use asm";
-    
     var i4 = stdlib.SIMD.Int32x4;
     var i4check = i4.check;
     var i4splat = i4.splat;
@@ -107,8 +106,6 @@ function asmModule(stdlib, imports) {
     var gval = 1234;
     var gval2 = 1234.0;
 
-
-    
     var loopCOUNT = 3;
 
     function func1()
@@ -206,31 +203,31 @@ var ret12 = m.func12();
 */
 
 
-WScript.Echo(typeof(ret1));
-WScript.Echo(ret1.toString());
+print(typeof(ret1));
+print(ret1.toString());
 
-WScript.Echo(typeof(ret2));
-WScript.Echo(ret2.toString());
+print(typeof(ret2));
+print(ret2.toString());
 
-WScript.Echo(typeof(ret3));
-WScript.Echo(ret3.toString());
+print(typeof(ret3));
+print(ret3.toString());
 
 /*
-WScript.Echo(typeof(ret7));
-WScript.Echo(ret7.toString());
+print(typeof(ret7));
+print(ret7.toString());
 
-WScript.Echo(typeof(ret8));
-WScript.Echo(ret8.toString());
+print(typeof(ret8));
+print(ret8.toString());
 
-WScript.Echo(typeof(ret9));
-WScript.Echo(ret9.toString());
+print(typeof(ret9));
+print(ret9.toString());
 
-WScript.Echo(typeof(ret10));
-WScript.Echo(ret10.toString());
+print(typeof(ret10));
+print(ret10.toString());
 
-WScript.Echo(typeof(ret11));
-WScript.Echo(ret11.toString());
+print(typeof(ret11));
+print(ret11.toString());
 
-WScript.Echo(typeof(ret12));
-WScript.Echo(ret12.toString());
+print(typeof(ret12));
+print(ret12.toString());
 */

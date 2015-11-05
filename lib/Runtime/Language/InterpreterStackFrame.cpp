@@ -1339,8 +1339,6 @@ namespace Js
             }
         }
 #endif
-        Assert(function->GetIsDelayFunctionInfo() == false);
-
         ScriptContext* functionScriptContext = function->GetScriptContext();
         ThreadContext * threadContext = functionScriptContext->GetThreadContext();
         Assert(!threadContext->IsDisableImplicitException());

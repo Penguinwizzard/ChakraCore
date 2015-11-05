@@ -16,7 +16,7 @@ namespace Js
         static PropertyId const specialEnumPropertyIds[];
         static const int NumCtorCaptures = 10;
 
-        DEFINE_MARSHAL_OBJECT_TO_SCRIPT_CONTEXT(JavascriptRegExpConstructor); 
+        DEFINE_MARSHAL_OBJECT_TO_SCRIPT_CONTEXT(JavascriptRegExpConstructor);
     protected:
         //To prevent lastMatch from being cleared from cross-site marshalling
         DEFINE_VTABLE_CTOR_MEMBER_INIT(JavascriptRegExpConstructor, RuntimeFunction, lastMatch);
@@ -46,7 +46,6 @@ namespace Js
         virtual BOOL GetSpecialPropertyName(uint32 index, Var *propertyName, ScriptContext * requestContext) override;
         virtual uint GetSpecialPropertyCount() const override;
         virtual PropertyId const * GetSpecialPropertyIds() const override;        
-
         UnifiedRegex::RegexPattern* GetLastPattern() const { return lastPattern; }
 
     private:
@@ -105,6 +104,5 @@ namespace Js
             return false;
         }
     };
-
 
 } // namespace Js

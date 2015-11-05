@@ -5,13 +5,13 @@
 
 function equal(a, b) {
     if (a == b)
-        WScript.Echo("Correct")
+        print("Correct")
     else
-        WScript.Echo(">> Fail!")
+        print(">> Fail!")
 }
 var si = SIMD.Int32x4(10, -20, 30, 0);
 function testScalarGetters() {
-    WScript.Echo('Int32x4 scalar getters');
+    print('Int32x4 scalar getters');
     var a = SIMD.Int32x4(1, 2, 3, 4);
     equal(1, SIMD.Int32x4.extractLane(a, 0));
     equal(2, SIMD.Int32x4.extractLane(a, 1));
@@ -20,50 +20,50 @@ function testScalarGetters() {
 }
 
 function testExtractLane1() {
-    WScript.Echo("I4 ExtractLane");
+    print("I4 ExtractLane");
 
-    WScript.Echo(typeof si);
-    WScript.Echo(si.toString());
+    print(typeof si);
+    print(si.toString());
 
-    WScript.Echo(typeof SIMD.Int32x4.extractLane(si, 0));
-    WScript.Echo(SIMD.Int32x4.extractLane(si, 0).toString());
+    print(typeof SIMD.Int32x4.extractLane(si, 0));
+    print(SIMD.Int32x4.extractLane(si, 0).toString());
 
-    WScript.Echo(typeof SIMD.Int32x4.extractLane(si, 1))
-    WScript.Echo(SIMD.Int32x4.extractLane(si, 1).toString());
+    print(typeof SIMD.Int32x4.extractLane(si, 1))
+    print(SIMD.Int32x4.extractLane(si, 1).toString());
 
-    WScript.Echo(typeof SIMD.Int32x4.extractLane(si, 2));
-    WScript.Echo(SIMD.Int32x4.extractLane(si, 2).toString());
+    print(typeof SIMD.Int32x4.extractLane(si, 2));
+    print(SIMD.Int32x4.extractLane(si, 2).toString());
 
-    WScript.Echo(typeof SIMD.Int32x4.extractLane(si, 3));
-    WScript.Echo(SIMD.Int32x4.extractLane(si, 3).toString());
+    print(typeof SIMD.Int32x4.extractLane(si, 3));
+    print(SIMD.Int32x4.extractLane(si, 3).toString());
 }
 
 function testReplaceLane1() {
-    WScript.Echo("I4 ReplaceLane");
+    print("I4 ReplaceLane");
 
-    WScript.Echo(typeof si);
-    WScript.Echo(si.toString());
+    print(typeof si);
+    print(si.toString());
 
     var v = SIMD.Int32x4.replaceLane(si, 0, 10)
-    WScript.Echo(typeof v);
-    WScript.Echo(v.toString());
+    print(typeof v);
+    print(v.toString());
 
     v = SIMD.Int32x4.replaceLane(si, 1, 12)
-    WScript.Echo(typeof v);
-    WScript.Echo(v.toString());
+    print(typeof v);
+    print(v.toString());
 
     v = SIMD.Int32x4.replaceLane(si, 2, -30)
-    WScript.Echo(typeof v);
-    WScript.Echo(v.toString());
+    print(typeof v);
+    print(v.toString());
 
     v = SIMD.Int32x4.replaceLane(si, 3, 0)
-    WScript.Echo(typeof v);
-    WScript.Echo(v.toString());
+    print(typeof v);
+    print(v.toString());
 
 }
 
 function testSignMask() {
-    WScript.Echo('Int32x4 signMask');
+    print('Int32x4 signMask');
     var a = SIMD.Int32x4(-1, -2, -3, -4);
     equal(0xf, a.signMask);
     var b = SIMD.Int32x4(1, 2, 3, 4);
@@ -77,7 +77,7 @@ function testSignMask() {
 }
 
 function testVectorGetters() {
-    WScript.Echo('Int32x4 vector getters');
+    print('Int32x4 vector getters');
     var a = SIMD.Int32x4(4, 3, 2, 1);
     var xxxx = SIMD.Int32x4.swizzle(a, 0, 0, 0, 0);
     var yyyy = SIMD.Int32x4.swizzle(a, 1, 1, 1, 1);
@@ -117,9 +117,9 @@ testScalarGetters();
 
 
 testExtractLane1();
-WScript.Echo();
+print();
 testReplaceLane1();
-WScript.Echo();
+print();
 //testSignMask();
 //testSignMask();
 //testSignMask();

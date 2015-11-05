@@ -81,4 +81,4 @@ namespace Js
 
         return library->CreateIteratorResultObjectValueFalse(result);
     }
-} //namespace Js
+} // namespace Js

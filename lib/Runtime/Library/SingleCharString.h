@@ -22,7 +22,7 @@ namespace Js
 
     private:
         SingleCharString(wchar_t ch, StaticType * type);
-        wchar_t m_buff[2]; // the 2nd is always NUL so that GetSz works
+        wchar_t m_buff[2]; // the 2nd is always NULL so that GetSz works
     };
 
 } // namespace Js

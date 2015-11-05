@@ -48,12 +48,12 @@ namespace Js
         SparseArraySegment(uint32 left, uint32 length, uint32 size) :
             SparseArraySegmentBase(left, length, size) {}
 
-        T     elements[]; //actual elements will follow this determined by size
+        T elements[]; // actual elements will follow this determined by size
 
         inline void FillSegmentBuffer(uint start, uint size);
         inline T GetElement(uint32 index);
-        inline void SetElement(Recycler *recycler, uint32 index, T value); //sets elements within the segment
-        inline void RemoveElement(Recycler *recycler, uint32 index); //inefficient moves the buffer instead use SetElement(index, null)
+        inline void SetElement(Recycler *recycler, uint32 index, T value); // sets elements within the segment
+        inline void RemoveElement(Recycler *recycler, uint32 index); // NOTE: RemoveElement calls memmove, for perf reasons use SetElement(index, null)
 
         inline SparseArraySegment<T> *GrowBy(Recycler *recycler, uint32 n);
 
@@ -69,13 +69,13 @@ namespace Js
 
         static SparseArraySegment<T> *AllocateLiteralHeadSegment(Recycler *const recycler, const uint32 length);
         static inline SparseArraySegment<T> * AllocateSegment(Recycler* recycler, uint32 left, uint32 length, SparseArraySegmentBase *nextSeg);
-        static inline SparseArraySegment<T> * AllocateSegment(Recycler* recycler, uint32 left, uint32 length, uint32 size, SparseArraySegmentBase *nextSeg); 
+        static inline SparseArraySegment<T> * AllocateSegment(Recycler* recycler, uint32 left, uint32 length, uint32 size, SparseArraySegmentBase *nextSeg);
         static inline SparseArraySegment<T> * AllocateSegment(Recycler* recycler, SparseArraySegmentBase* prev, uint32 index);
         template<bool isLeaf>
         static inline SparseArraySegment<T> * AllocateSegmentImpl(Recycler* recycler, uint32 left, uint32 length, SparseArraySegmentBase *nextSeg);
 
         template<bool isLeaf>
-        static inline SparseArraySegment<T> * AllocateSegmentImpl(Recycler* recycler, uint32 left, uint32 length, uint32 size, SparseArraySegmentBase *nextSeg); 
+        static inline SparseArraySegment<T> * AllocateSegmentImpl(Recycler* recycler, uint32 left, uint32 length, uint32 size, SparseArraySegmentBase *nextSeg);
 
         template<bool isLeaf>
         static inline SparseArraySegment<T> * AllocateSegmentImpl(Recycler* recycler, SparseArraySegmentBase* prev, uint32 index);

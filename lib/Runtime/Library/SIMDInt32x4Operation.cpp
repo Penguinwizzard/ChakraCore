@@ -3,7 +3,6 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
-#include "SIMDInt32x4Operation.h"
 
 #if defined(_M_ARM32_OR_ARM64)
 
@@ -22,7 +21,8 @@ namespace Js
     }
 
     SIMDValue SIMDInt32x4Operation::OpInt32x4(const SIMDValue& v)
-    {// overload function with input parameter as SIMDValue for completeness, may not need
+    {
+    // overload function with input parameter as SIMDValue for completeness, may not need
         SIMDValue result;
 
         result = v;

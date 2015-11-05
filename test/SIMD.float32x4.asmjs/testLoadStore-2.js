@@ -5,7 +5,6 @@
 
 function asmModule(stdlib, imports, buffer) {
     "use asm";
-
     var i4 = stdlib.SIMD.Int32x4;
     var i4check = i4.check;
     var i4splat = i4.splat;
@@ -140,22 +139,24 @@ function asmModule(stdlib, imports, buffer) {
     var Uint16Heap = new stdlib.Uint16Array(buffer);
     var Int32Heap = new stdlib.Int32Array(buffer);
     var Uint32Heap = new stdlib.Uint32Array(buffer);
-    var Float32Heap = new stdlib.Float32Array(buffer);
 
+    var Float32Heap = new stdlib.Float32Array(buffer);
     function storeF32(value, idx)
+
     {
         value= f4check(value);
         idx = idx|0;
         idx = idx<<2;
         f4store(Float32Heap, (idx>>2), value);
     }
+
     function loadF32(idx)
     {
         idx = idx|0;
         idx = idx<<2;
         return f4load(Float32Heap, (idx>>2));
     }
-
+    
     function storeUI32(value, idx)
     { value= f4check(value); idx = idx|0; idx = idx<<2;
     f4store(Uint32Heap, (idx>>2), value);}
@@ -239,6 +240,7 @@ function asmModule(stdlib, imports, buffer) {
         functionPicker = functionPicker|0;
         var v0 = f4(0.0,0.0,0.0,0.0);
         var loopIndex = 0, idx = 0, end = 256;
+
         for (loopIndex = 0; (loopIndex | 0) < (loopCOUNT | 0) ; loopIndex = (loopIndex + 1) | 0)
         {
             idx = 0;
@@ -267,12 +269,13 @@ function asmModule(stdlib, imports, buffer) {
         }
         return f4load(Float32Heap, 8);
     }
+    
     function store_3(functionPicker)
     {
         functionPicker = functionPicker|0;
         var v0 = f4(0.0,0.0,0.0,0.0);
-        var loopIndex = 0, idx = 0, end = 256;
 
+        var loopIndex = 0, idx = 0, end = 256;
         loopIndex = loopCOUNT | 0;
         do {
             idx = 0;
@@ -303,6 +306,7 @@ function asmModule(stdlib, imports, buffer) {
         while ( (loopIndex | 0) > 0);
         return f4load(Float32Heap, 8);
     }
+
     function store_1_Int8(length)
     {
         length = length|0;
@@ -323,6 +327,7 @@ function asmModule(stdlib, imports, buffer) {
         //Expects the heap to be: 0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3...15,15,15,15,0,0,0,0...
         return f4load(Float32Heap, 2);
     }
+
     function store_1_Uint8(length)
     {
         length = length|0;
@@ -343,6 +348,7 @@ function asmModule(stdlib, imports, buffer) {
         //Expects the heap to be: 0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3...15,15,15,15,0,0,0,0...
         return f4load(Float32Heap, 2);
     }
+    
     function store_1_Int16(length)
     {
         length = length|0;
@@ -383,6 +389,7 @@ function asmModule(stdlib, imports, buffer) {
         //Expects the heap to be: 0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3...15,15,15,15,0,0,0,0...
         return f4load(Float32Heap, 2);
     }
+    
     function store_1_Int32(length)
     {
         length = length|0;
@@ -435,7 +442,6 @@ function asmModule(stdlib, imports, buffer) {
         var v = f4(0.0,0.0,0.0,0.0);
 
         while ( (loopIndex|0) < (loopCOUNT|0)) {
-
             idx=0;
 
             for(idx = idx<<2; (idx|0) <= (end<<2); idx = (idx + 1)|0)
@@ -537,6 +543,7 @@ function asmModule(stdlib, imports, buffer) {
         while ( (loopIndex | 0) > 0);
         return v;
     }
+
     function load_1_Int8(length)
     {
         length = length|0;
@@ -571,6 +578,7 @@ function asmModule(stdlib, imports, buffer) {
         }
         return v;
     }
+
     function load_1_Int16(length)
     {
         length = length|0;
@@ -588,6 +596,7 @@ function asmModule(stdlib, imports, buffer) {
         }
         return v;
     }
+
     function load_1_Uint16(length)
     {
         length = length|0;
@@ -605,6 +614,7 @@ function asmModule(stdlib, imports, buffer) {
         }
         return v;
     }
+
     function load_1_Int32(length)
     {
         length = length|0;
@@ -691,19 +701,19 @@ function printBuffer(buffer, count)
     for (var i = 0; i < count/* * 16*/; i += 16)
     {
         f4 = SIMD.Float32x4.load(buffer, i);
-        WScript.Echo(f4.toString());
+        print(f4.toString());
     }
 }
 
 function printResults(res)
 {
-    WScript.Echo(typeof(res));
-    WScript.Echo(res.toString());
+    print(typeof(res));
+    print(res.toString());
 }
 
 inputLength = initF32(buffer);
-WScript.Echo(inputLength);
-//Enumerating SIMD loads to test.
+print(inputLength);
+//Enumerating SIMD loads to test. 
 SIMDLoad = 1;
 SIMDLoad1 = 2;
 SIMDLoad2 = 3;
@@ -718,195 +728,197 @@ SIMDStore3 = 8;
 var m = asmModule(this, {g0:initF32(buffer),g1:SIMD.Float32x4(9,9,9,9), g2:SIMD.Int32x4(1, 2, 3, 4), g3:SIMD.Float64x2(10, 10, 10, 10)}, buffer);
 var values = new Float32Array(buffer);
 
-WScript.Echo("Stores:");
+print("Stores:");
 
-WScript.Echo("Test1");
+print("Test1");
 var ret = m.store1(SIMDStore1);//Lane1 store
 printBuffer(values, 10);
 
-WScript.Echo("Test2");
-inputLength = initF32(buffer);
+print("Test2");;
+inputLength = initF32(buffer); 
 var ret = m.store1(SIMDStore2);//Lane 1,2 store
 printBuffer(values, 10);
 
-WScript.Echo("Test3");
-inputLength = initF32(buffer);
+print("Test3");
+inputLength = initF32(buffer); 
 var ret = m.store1(SIMDStore3);//Lane 1,2,3 store
 printBuffer(values, 10);
 
-WScript.Echo("Test4");
-inputLength = initF32(buffer);
+print("Test4");
+inputLength = initF32(buffer); 
+
 //Should change the buffer to  0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3...15,15,15,15,0,0,0,0...
 var ret = m.store1(SIMDStore);//Generic Store
 printBuffer(values, 10);
 
-WScript.Echo("Test5");
-inputLength = initF32(buffer);
-var ret = m.store2(SIMDStore);//Generic store
+print("Test5");
+inputLength = initF32(buffer);  
+var ret = m.store2(SIMDStore);//Generic store 
 printBuffer(values, 10);
 
-WScript.Echo("Test6");
-inputLength = initF32(buffer);
+print("Test6");
+inputLength = initF32(buffer); 
 var ret = m.store3(SIMDStore);//Generic store
 printBuffer(values, 10);
 
-WScript.Echo("Test7");
-inputLength = initF32(buffer);
+print("Test7");
+inputLength = initF32(buffer); 
 var ret = m.store1Int8(inputLength);//Int8Heap store
 printBuffer(values, 10);
 
-WScript.Echo("Test8");
-inputLength = initF32(buffer);
+print("Test8");
+inputLength = initF32(buffer); 
 var ret = m.store1Uint8(inputLength);//Uint8Heap store
 printBuffer(values, 10);
 
-WScript.Echo("Test9");
-inputLength = initF32(buffer);
+print("Test9");
+inputLength = initF32(buffer); 
 var ret = m.store1Int16(inputLength);//Int16Heap store
 printBuffer(values, 10);
 
-WScript.Echo("Test10");
-inputLength = initF32(buffer);
+print("Test10");
+inputLength = initF32(buffer); 
 var ret = m.store1Uint16(inputLength);//Uint16Heap store
 printBuffer(values, 10);
 
-WScript.Echo("Test12");
-inputLength = initF32(buffer);
+print("Test12");
+inputLength = initF32(buffer); 
 var ret = m.store1Int32(inputLength);//Int32Heap store
 printBuffer(values, 10);
 
-WScript.Echo("Test13");
-inputLength = initF32(buffer);
+print("Test13");
+inputLength = initF32(buffer); 
 var ret = m.store1Uint32(inputLength);//Uint32Heap store
 printBuffer(values, 10);
 
-WScript.Echo("Test14");
-inputLength = initF32(buffer);
+print("Test14");
+inputLength = initF32(buffer); 
 var ret = m.loadStoreIndex1();//Uint32Heap store
 printBuffer(values, 10);
 
-WScript.Echo("Loads");
-WScript.Echo("Test1");
+print("Loads");
+print("Test1");
+
 var ret = m.load1(SIMDLoad1);
 printResults(ret);
 
-WScript.Echo("Test2");
+print("Test2");
 var ret = m.load1(SIMDLoad2);
 printResults(ret);
 
-WScript.Echo("Test3");
+print("Test3");
 var ret = m.load1(SIMDLoad3);
 printResults(ret);
 
-WScript.Echo("Test4");
+print("Test4");
 var ret = m.load1(SIMDLoad);
 printResults(ret);
 
-WScript.Echo("Test5");
+print("Test5");
 var ret = m.load2(SIMDLoad);
 printResults(ret);
 
-WScript.Echo("Test6");
+print("Test6");
 var ret = m.load3(SIMDLoad);
 printResults(ret);
 
-WScript.Echo("Test7");
+print("Test7");
 var ret = m.load1Int8(inputLength); //Int8Heap load
 printResults(ret);
 
-WScript.Echo("Test8");
+print("Test8");
 var ret = m.load1Uint8(inputLength); //Int8Heap load
 printResults(ret);
 
-WScript.Echo("Test9");
+print("Test9");
 var ret = m.load1Int16(inputLength); //Int16Heap load
 printResults(ret);
 
-WScript.Echo("Test10");
+print("Test10");
 var ret = m.load1Uint16(inputLength); //Int16Heap load
 printResults(ret);
 
-WScript.Echo("Test11");
+print("Test11");
 var ret = m.load1Int32(inputLength); //Int32Heap load
 printResults(ret);
 
-WScript.Echo("Test12");
+print("Test12");
 var ret = m.load1Uint32(inputLength); //Int32Heap load
 printResults(ret);
 
 print("BoundCheck");
 var value = SIMD.Float32x4(9.9,1.2,3.4,5.6);
 
-WScript.Echo("Test1");
-try {m.storeF32(value, inputLength); WScript.Echo("Wrong");} catch(err) {WScript.Echo("Correct");}
+print("Test1");
+try {m.storeF32(value, inputLength); print("Wrong");} catch(err) {print("Correct");}
 
-WScript.Echo("Test2");
-try {m.loadF32(inputLength); WScript.Echo("Wrong");} catch(err) {WScript.Echo("Correct");}
+print("Test2");
+try {m.loadF32(inputLength); print("Wrong");} catch(err) {print("Correct");}
 
-WScript.Echo("Test3");
-try {m.storeF32(value, inputLength-1); WScript.Echo("Wrong");} catch(err) {WScript.Echo("Correct");}
+print("Test3");
+try {m.storeF32(value, inputLength-1); print("Wrong");} catch(err) {print("Correct");}
 
-WScript.Echo("Test4");
-try {m.loadF32(inputLength-1); WScript.Echo("Wrong");} catch(err) {WScript.Echo("Correct");}
+print("Test4");
+try {m.loadF32(inputLength-1); print("Wrong");} catch(err) {print("Correct");}
 
-WScript.Echo("Test5");
-try {m.storeF32(value, inputLength-4);WScript.Echo("Correct");} catch(err) {WScript.Echo("Wrong");}
+print("Test5");
+try {m.storeF32(value, inputLength-4);print("Correct");} catch(err) {print("Wrong");}
 
-WScript.Echo("Test6");
-try {var v = m.loadF32(inputLength-4);WScript.Echo("Correct");} catch(err) {WScript.Echo("Wrong");}
+print("Test6");
+try {var v = m.loadF32(inputLength-4);print("Correct");} catch(err) {print("Wrong");}
 
-WScript.Echo("Test7");
-try {m.storeUI32(value, inputLength+1);WScript.Echo("Wrong");} catch(err) {WScript.Echo("Correct");}
+print("Test7");
+try {m.storeUI32(value, inputLength+1);print("Wrong");} catch(err) {print("Correct");}
 
-WScript.Echo("Test8");
-try { m.loadUI32(inputLength+1); WScript.Echo("Wrong"); } catch(err) { WScript.Echo("Correct"); }
+print("Test8");
+try { m.loadUI32(inputLength+1); print("Wrong"); } catch(err) { print("Correct"); }
 
-WScript.Echo("Test9");
-try {m.storeI32(value, inputLength+1); WScript.Echo("Wrong");} catch(err) {WScript.Echo("Correct");}
+print("Test9");
+try {m.storeI32(value, inputLength+1); print("Wrong");} catch(err) {print("Correct");}
 
-WScript.Echo("Test10");
-try {m.loadI32(inputLength+1);WScript.Echo("Wrong");} catch(err) {WScript.Echo("Correct");}
+print("Test10");
+try {m.loadI32(inputLength+1);print("Wrong");} catch(err) {print("Correct");}
 
-WScript.Echo("Test11");
+print("Test11");
 try{
     m.storeI16(value, inputLength*2-8);
-    WScript.Echo("Correct");
+    print("Correct");
     m.storeUI16(value, inputLength*2-8);
-    WScript.Echo("Correct");
+    print("Correct");
     m.storeI8(value, inputLength*4-16);
-    WScript.Echo("Correct");
+    print("Correct");
     m.storeUI8(value, inputLength*4-16);
-    WScript.Echo("Correct");
+    print("Correct");
     m.loadI16(inputLength*2-8);
-    WScript.Echo("Correct");
+    print("Correct");
     m.loadUI16(inputLength*2-8);
-    WScript.Echo("Correct");
+    print("Correct");
     m.loadI8(inputLength*4-16);
-    WScript.Echo("Correct");
+    print("Correct");
     m.loadUI8(inputLength*4-16);
-    WScript.Echo("Correct");
+    print("Correct");
 } catch(err){ print("Wrong"); }
 
-WScript.Echo("Test12");
-try {m.storeUI16(value, inputLength*2);WScript.Echo("Wrong");} catch(err) {WScript.Echo("Correct");}
+print("Test12");
+try {m.storeUI16(value, inputLength*2);print("Wrong");} catch(err) {print("Correct");}
 
-WScript.Echo("Test13");
-try {m.loadUI16(inputLength*2-7); WScript.Echo("Wrong");} catch(err) {WScript.Echo("Correct");}
+print("Test13");
+try {m.loadUI16(inputLength*2-7); print("Wrong");} catch(err) {print("Correct");}
 
-WScript.Echo("Test14");
-try {m.storeI16(value, inputLength*2-7); WScript.Echo("Wrong");} catch(err) {WScript.Echo("Correct");}
+print("Test14");
+try {m.storeI16(value, inputLength*2-7); print("Wrong");} catch(err) {print("Correct");}
 
-WScript.Echo("Test15");
-try {m.loadI16(inputLength*2-7); WScript.Echo("Wrong");} catch(err) {WScript.Echo("Correct");}
+print("Test15");
+try {m.loadI16(inputLength*2-7); print("Wrong");} catch(err) {print("Correct");}
 
-WScript.Echo("Test16");
-try {m.storeUI8(value, inputLength*4-15); WScript.Echo("Wrong");} catch(err) {WScript.Echo("Correct");}
+print("Test16");
+try {m.storeUI8(value, inputLength*4-15); print("Wrong");} catch(err) {print("Correct");}
 
-WScript.Echo("Test17");
-try {m.loadUI8(inputLength*4-15); WScript.Echo("Wrong");} catch(err) {WScript.Echo("Correct");}
+print("Test17");
+try {m.loadUI8(inputLength*4-15); print("Wrong");} catch(err) {print("Correct");}
 
-WScript.Echo("Test18");
-try {m.storeI8(value, inputLength*4-15); WScript.Echo("Wrong");} catch(err) {WScript.Echo("Correct");}
+print("Test18");
+try {m.storeI8(value, inputLength*4-15); print("Wrong");} catch(err) {print("Correct");}
 
-WScript.Echo("Test19");
-try {m.loadI8(inputLength*4+15); WScript.Echo("Wrong");} catch(err) {WScript.Echo("Correct");}
+print("Test19");
+try {m.loadI8(inputLength*4+15); print("Wrong");} catch(err) {print("Correct");}

@@ -62,8 +62,8 @@ namespace Js
             wchar_t * newInstance = AllocateLeafAndCopySz(recycler, UnsafeGetBuffer(), GetLength());
             this->SetBuffer(newInstance);
 
-            // We don't need the string reference anymore, set it to NULL and use this to know our string is NULL terminated
-            originalFullStringReference = NULL;
+            // We don't need the string reference anymore, set it to nullptr and use this to know our string is nullptr terminated
+            originalFullStringReference = nullptr;
         }
 
         return UnsafeGetBuffer();

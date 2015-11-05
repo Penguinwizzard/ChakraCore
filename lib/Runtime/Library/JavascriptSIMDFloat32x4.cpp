@@ -57,6 +57,7 @@ namespace Js
         SIMDValue result = SIMDFloat32x4Operation::OpFromInt32x4(instance->GetValue());
         return JavascriptSIMDFloat32x4::New(&result, requestContext);
     }
+
     JavascriptSIMDFloat32x4* JavascriptSIMDFloat32x4::FromInt32x4Bits(JavascriptSIMDInt32x4 *instance, ScriptContext* requestContext)
     {
         return JavascriptSIMDFloat32x4::New(&instance->GetValue(), requestContext);
@@ -65,7 +66,6 @@ namespace Js
     BOOL JavascriptSIMDFloat32x4::GetProperty(Var originalInstance, PropertyId propertyId, Var* value, PropertyValueInfo* info, ScriptContext* requestContext)
     {
         return GetPropertyBuiltIns(propertyId, value, requestContext);
-        
     }
 
     BOOL JavascriptSIMDFloat32x4::GetProperty(Var originalInstance, JavascriptString* propertyNameString, Var* value, PropertyValueInfo* info, ScriptContext* requestContext)
@@ -96,7 +96,7 @@ namespace Js
             *value = GetSignMask();
             return true;
         }
-        
+
         return false;
     }
 

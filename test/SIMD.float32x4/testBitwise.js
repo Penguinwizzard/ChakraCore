@@ -5,19 +5,27 @@
 
 function equal(a, b) {
     if (a == b)
-        WScript.Echo("Correct");
+    {
+        print("Correct");
+    }
     else
-        WScript.Echo(">> Fail!");
+    {
+        print(">> Fail!");
+    }
 }
 
 function equalNaN(a) {
     if (isNaN(a))
-        WScript.Echo("Correct");
+    {
+        print("Correct");
+    }
     else
-        WScript.Echo(">> Fail!");
+    {
+        print(">> Fail!");
+    }
 }
 function testOr() {
-    WScript.Echo("Float32x4 Or");
+    print("Float32x4 Or");
     var a = SIMD.Float32x4(4.0, 3.0, 2.0, 1.0);
     var b = SIMD.Float32x4(10.0, 20.0, 30.0, 40.0);
     var c = SIMD.Float32x4.or(a, b);
@@ -28,7 +36,7 @@ function testOr() {
 }
 
 function testNot() {
-    WScript.Echo("Float32x4 Not");
+    print("Float32x4 Not");
     var a = SIMD.Float32x4(4.0, 3.0, 2.0, 1.0);
     var b = SIMD.Float32x4(10.0, 20.0, 30.0, 40.0);
     var c = SIMD.Float32x4.not(a, b);
@@ -39,7 +47,7 @@ function testNot() {
 }
 
 function testAnd() {
-    WScript.Echo("Float32x4 And");
+    print("Float32x4 And");
     var a = SIMD.Float32x4(4.0, 3.0, 2.0, 1.0);
     var b = SIMD.Float32x4(10.0, 20.0, 30.0, 40.0);
     var c = SIMD.Float32x4.and(a, b);
@@ -51,7 +59,7 @@ function testAnd() {
 }
 
 function testXor() {
-    WScript.Echo("Float32x4 Xor");
+    print("Float32x4 Xor");
     var a = SIMD.Float32x4(4.0, 3.0, 2.0, 1.0);
     var b = SIMD.Float32x4(10.0, 20.0, 30.0, 40.0);
     var c = SIMD.Float32x4.xor(a, b);

@@ -3,8 +3,6 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
-#include "SIMDFloat32x4Operation.h"
-#include "SIMDInt32x4Operation.h"
 
 #if defined(_M_ARM32_OR_ARM64)
 namespace Js
@@ -22,7 +20,8 @@ namespace Js
     }
 
     SIMDValue SIMDFloat32x4Operation::OpFloat32x4(const SIMDValue& v)
-    { // overload function with input parameter as SIMDValue for completeness
+    {
+        // overload function with input paramter as SIMDValue for completeness
         SIMDValue result;
 
         result = v;
@@ -331,7 +330,6 @@ namespace Js
 
         return result;
     }
-
 
     SIMDValue SIMDFloat32x4Operation::OpGreaterThan(const SIMDValue& aValue, const SIMDValue& bValue)
     {

@@ -77,14 +77,10 @@ namespace Js
         JavascriptMethod UpdateThunkEntryPoint(FunctionEntryPointInfo* entryPointInfo, JavascriptMethod entryPoint);
         JavascriptMethod UpdateUndeferredBody(FunctionBody* newFunctionInfo);
 
-        virtual ScriptFunctionType * DuplicateType() override;            
+        virtual ScriptFunctionType * DuplicateType() override;
 
         virtual Var GetSourceString() const;
         virtual Var EnsureSourceString();
-
-        // Used in the LanguageService mode only
-        virtual bool GetIsDelayFunctionInfo() const { return false; }
-        virtual void SetIsDelayFunctionInfo(bool set) {  /*nothing*/ }        
 
         bool GetHasInlineCaches() { return hasInlineCaches; }
         void SetHasInlineCaches(bool has) { hasInlineCaches = has; }
@@ -94,7 +90,7 @@ namespace Js
 
         bool IsDefaultConstructor() { return isDefaultConstructor; }
         void SetIsDefaultConstructor(bool has) { isDefaultConstructor = has; }
-        
+
         void SetIsActiveScript(bool is) { isActiveScript = is; }
 
         virtual Var GetHomeObj() const override { return homeObj; }
@@ -108,7 +104,6 @@ namespace Js
         virtual BOOL GetDiagValueString(StringBuilder<ArenaAllocator>* stringBuilder, ScriptContext* requestContext) override;
         
         virtual JavascriptFunction* GetRealFunctionObject() { return this; }
-
     };
 
     class AsmJsScriptFunction : public ScriptFunction

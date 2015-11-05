@@ -3,7 +3,6 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
-#include "SIMDInt8x16Operation.h"
 
 #if _M_IX86 || _M_AMD64
 
@@ -139,7 +138,6 @@ namespace Js
         X86SIMDValue x86tmp2;
         X86SIMDValue x86tmp3;
         const _x86_SIMDValue X86_LOWBYTE_MASK  = { 0x00ff00ff, 0x00ff00ff, 0x00ff00ff, 0x00ff00ff };
-        //const _x86_SIMDValue X86_HIGHBYTE_MASK = { 0xff00ff00, 0xff00ff00, 0xff00ff00, 0xff00ff00 };
         X86SIMDValue tmpaValue = X86SIMDValue::ToX86SIMDValue(aValue);
         X86SIMDValue tmpbValue = X86SIMDValue::ToX86SIMDValue(bValue);
 
@@ -221,7 +219,6 @@ namespace Js
 
         return X86SIMDValue::ToSIMDValue(x86Result);
     }
-
 
     SIMDValue SIMDInt8x16Operation::OpGreaterThan(const SIMDValue& aValue, const SIMDValue& bValue)
     {
@@ -321,16 +318,16 @@ namespace Js
         const _x86_SIMDValue X86_HIGHBYTE_MASK = { 0xff00ff00, 0xff00ff00, 0xff00ff00, 0xff00ff00 };
 
         if (count < 0 || count > 8)
+        {
             count = 8;
+        }
 
         if (AutoSystemInfo::Data.SSE2Available())
         {
-
             x86tmp1.m128i_value = _mm_slli_epi16(tmpaValue.m128i_value, 8);
             x86tmp1.m128i_value = _mm_srai_epi16(x86tmp1.m128i_value, count + 8);
 
             x86tmp1.m128i_value = _mm_and_si128(x86tmp1.m128i_value, X86_LOWBYTE_MASK.m128i_value);
-            //x86tmp1.m128i_value = _mm_srai_epi16(x86tmp1.m128i_value, count);
 
             tmpaValue.m128i_value = _mm_srai_epi16(tmpaValue.m128i_value, count);
             tmpaValue.m128i_value = _mm_and_si128(tmpaValue.m128i_value, X86_HIGHBYTE_MASK.m128i_value);
@@ -351,5 +348,4 @@ namespace Js
         }
     }
 }
-
 #endif

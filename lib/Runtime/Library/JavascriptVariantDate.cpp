@@ -34,7 +34,7 @@ namespace Js
         
         ENTER_PINNED_SCOPE(JavascriptString, resultString);
         resultString = DateImplementation::ConvertVariantDateToString(this->value, GetScriptContext());
-        if (resultString != NULL)
+        if (resultString != nullptr)
         {
             stringBuilder->Append(resultString->GetString(), resultString->GetLength()); 
             ret = TRUE;
@@ -142,7 +142,7 @@ namespace Js
         if (hint == JavascriptHint::HintString)
         {
             JavascriptString* resultString = this->GetValueString(requestContext);
-            if (resultString != NULL)
+            if (resultString != nullptr)
             {
                 (*result) = resultString;
                 return TRUE;
@@ -167,7 +167,6 @@ namespace Js
     {
         // Calling .Equals on a VT_DATE variant at least gives the "[property name] is null or not An object error"
         *value = FALSE;
-        return true;
+        return TRUE;
     }
 }
-

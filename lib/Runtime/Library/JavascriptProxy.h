@@ -8,7 +8,7 @@
 
 namespace Js
 {
-    // ie, should keep the same object in cross-site scenario.
+    // Host should keep the same object in cross-site scenario.
     class JavascriptProxy : public DynamicObject
     {
         friend class JavascriptOperators;

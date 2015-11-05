@@ -22,6 +22,7 @@ namespace Js
         bool GetPropertyBuiltIns(PropertyId propertyId, Var* value, ScriptContext* requestContext, BOOL* result);
         bool SetPropertyBuiltIns(PropertyId propertyId, PropertyOperationFlags flags, bool* result);
         bool GetSetterBuiltIns(PropertyId propertyId, PropertyValueInfo* info, DescriptorFlags* descriptorFlags);
+        bool IsValidIndex(PropertyId propertyId, bool conditionMetBehavior);
 
     public:
         JavascriptStringObject(DynamicType * type);

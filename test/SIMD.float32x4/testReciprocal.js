@@ -4,21 +4,23 @@
 //-------------------------------------------------------------------------------------------------------
 
 function equal(a, b) {
-    if (a == b)
-        WScript.Echo("Correct");
-    else
-        WScript.Echo(">> Fail!");
+    if (a == b) {
+        print("Correct");
+    } else {
+        print(">> Fail!");
+    }
 }
 
 function almostEqual(a, b) {
-    if (Math.abs(a - b) < 0.00001)
-        WScript.Echo("Correct");
-    else
-        WScript.Echo(">> Fail!");
+    if (Math.abs(a - b) < 0.00001) {
+        print("Correct");
+    } else {
+        print(">> Fail!");
+    }
 }
 
 function testReciprocal() {
-    WScript.Echo("Float32x4 Reciprocal");
+    print("Float32x4 Reciprocal");
     var a = SIMD.Float32x4(8.0, 4.0, 2.0, -2.0);
     var c = SIMD.Float32x4.reciprocal(a);
 
@@ -29,7 +31,7 @@ function testReciprocal() {
 }
 
 function testReciprocalSqrt() {
-    WScript.Echo("Float32x4 ReciprocalSqrt");
+    print("Float32x4 ReciprocalSqrt");
     var a = SIMD.Float32x4(1.0, 0.25, 0.111111, 0.0625);
     var c = SIMD.Float32x4.reciprocalSqrt(a);
     almostEqual(1.0, SIMD.Float32x4.extractLane(c, 0));

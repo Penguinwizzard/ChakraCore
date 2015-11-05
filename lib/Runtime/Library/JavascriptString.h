@@ -16,7 +16,7 @@ namespace Js
     // This table gets memset to 0. The x86 CRT is optimized for doing copies 128 bytes
     // at a time, for 16 byte aligned memory. If this table isn't 16 byte aligned, we pay
     // an additional cost to pre-align it, dealing with trailing bytes, and the copy
-    // ends up being twice as slow...
+    // ends up being twice as slow.
     typedef Boyer_Moore_Jump __declspec(align(16)) JmpTable[0x80];
 #else
     typedef Boyer_Moore_Jump JmpTable[0x80];
@@ -393,5 +393,3 @@ struct DefaultComparer<Js::JavascriptString*>
         return JsUtil::CharacterBuffer<wchar_t>::StaticGetHashCode(pStr->GetString(), pStr->GetLength());
     }
 };
-
-

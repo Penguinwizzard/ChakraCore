@@ -1025,13 +1025,6 @@ LDone:
                 // 0.0 catches the -0 case...
                 return JavascriptNumber::ToVarNoCheck(x, scriptContext);
             }
-            // TODO : the commented lines below are to match V5.8. Uncomment or version for ES5
-#if 0
-            if(x > 0 && x < 0.5)
-            {
-                return JavascriptNumber::ToVarNoCheck(0, scriptContext);
-            }
-#endif
 
             if(x < 0 && x >= -0.5)
             {

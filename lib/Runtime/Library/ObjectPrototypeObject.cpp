@@ -35,7 +35,7 @@ namespace Js
         // get Object.prototype.__proto__ 
         // The value of the [[Get]] attribute is a built-in function that requires no arguments. It performs the following steps:
         // 1.   Let O be the this value.
-        // 2.   If Type(O) is not Object, then throw a TypeError exception.                
+        // 2.   If Type(O) is not Object, then throw a TypeError exception.
         RecyclableObject* object;
         if (args.Info.Count < 1 || !JavascriptConversion::ToObject(arg0, scriptContext, &object)) // NOTE: ToObject for compat, in es-discuss
         {

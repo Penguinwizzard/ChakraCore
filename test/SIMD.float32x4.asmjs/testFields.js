@@ -241,20 +241,20 @@ equalSimd([109628176.000000,18.593628,3401.000000,1194581.375000], ret, SIMD.Flo
 ret = m.func3();
 equalSimd([90940.203125,7929.600098,0.00001581354445079342,669.599976], ret, SIMD.Float32x4, "func3");
 
-WScript.Echo("Func4");
+print("Func4");
 ret = m.func4();
-WScript.Echo(typeof (ret));
-WScript.Echo(ret.toString());
+print(typeof (ret));
+print(ret.toString());
 
-WScript.Echo("Func5");
+print("Func5");
 ret = m.func5();
-WScript.Echo(typeof (ret));
-WScript.Echo(ret.toString());
+print(typeof (ret));
+print(ret.toString());
 
-WScript.Echo("Func6");
+print("Func6");
 ret = m.func6();
-WScript.Echo(typeof (ret));
-WScript.Echo(ret.toString());
+print(typeof (ret));
+print(ret.toString());
 
 ret = m.func7();
 equalSimd([2089.901855,1.140000,-1.000000,2089.901855], ret, SIMD.Float32x4, "func7");

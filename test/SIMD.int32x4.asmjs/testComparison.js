@@ -215,19 +215,18 @@ var m = asmModule(this, {g1:SIMD.Float32x4(90934.2,123.9,419.39,449.0), g2:SIMD.
 for (var i = 0; i < 3; i++)
 {
     var ret;
-    WScript.Echo("Func1");
+    print("Func1");
     ret = m.func1(i);
-    WScript.Echo(typeof(ret));
-    WScript.Echo(ret.toString());
+    print(typeof(ret));
+    print(ret.toString());
     
-    WScript.Echo("Func2");
+    print("Func2");
     ret = m.func2(i);
-    WScript.Echo(typeof(ret));
-    WScript.Echo(ret.toString());
+    print(typeof(ret));
+    print(ret.toString());
     
-    WScript.Echo("Func3");
+    print("Func3");
     ret = m.func3(i);
-    WScript.Echo(typeof(ret));
-    WScript.Echo(ret.toString());
+    print(typeof(ret));
+    print(ret.toString());
 }
-

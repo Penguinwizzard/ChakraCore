@@ -4,33 +4,34 @@
 //-------------------------------------------------------------------------------------------------------
 
 function equal(a, b) {
-    if (a == b)
-        WScript.Echo("Correct");
-    else
-        WScript.Echo(">> Fail!");
+    if (a == b) {
+        print("Correct");
+    } else {
+        print(">> Fail!");
+    }
 }
 
 function testConstructor() {
-    WScript.Echo("Constructor");
+    print("Constructor");
     equal(SIMD.Int8x16, undefined);
     equal(SIMD.Int8x16(1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4), undefined);
     var a = SIMD.Int8x16("2014/10/10", -0, 127, 126, "2014/10/10", -0, 127, 126, "2014/10/10", -0, 127, 126, "2014/10/10", -0, 127, 126);
-    WScript.Echo("a.1: " + SIMD.Int8x16.extractLane(a, 0));
-    WScript.Echo("a.2: " + SIMD.Int8x16.extractLane(a, 1));
-    WScript.Echo("a.3: " + SIMD.Int8x16.extractLane(a, 2));
-    WScript.Echo("a.4: " + SIMD.Int8x16.extractLane(a, 3));
-    WScript.Echo("a.5: " + SIMD.Int8x16.extractLane(a, 4));
-    WScript.Echo("a.6: " + SIMD.Int8x16.extractLane(a, 5));
-    WScript.Echo("a.7: " + SIMD.Int8x16.extractLane(a, 6));
-    WScript.Echo("a.8: " + SIMD.Int8x16.extractLane(a, 7));
-    WScript.Echo("a.9: " + SIMD.Int8x16.extractLane(a, 8));
-    WScript.Echo("a.10: " + SIMD.Int8x16.extractLane(a, 9));
-    WScript.Echo("a.11: " + SIMD.Int8x16.extractLane(a, 10));
-    WScript.Echo("a.12: " + SIMD.Int8x16.extractLane(a, 11));
-    WScript.Echo("a.13: " + SIMD.Int8x16.extractLane(a, 12));
-    WScript.Echo("a.14: " + SIMD.Int8x16.extractLane(a, 13));
-    WScript.Echo("a.15: " + SIMD.Int8x16.extractLane(a, 14));
-    WScript.Echo("a.16: " + SIMD.Int8x16.extractLane(a, 15));
+    print("a.1: " + SIMD.Int8x16.extractLane(a, 0));
+    print("a.2: " + SIMD.Int8x16.extractLane(a, 1));
+    print("a.3: " + SIMD.Int8x16.extractLane(a, 2));
+    print("a.4: " + SIMD.Int8x16.extractLane(a, 3));
+    print("a.5: " + SIMD.Int8x16.extractLane(a, 4));
+    print("a.6: " + SIMD.Int8x16.extractLane(a, 5));
+    print("a.7: " + SIMD.Int8x16.extractLane(a, 6));
+    print("a.8: " + SIMD.Int8x16.extractLane(a, 7));
+    print("a.9: " + SIMD.Int8x16.extractLane(a, 8));
+    print("a.10: " + SIMD.Int8x16.extractLane(a, 9));
+    print("a.11: " + SIMD.Int8x16.extractLane(a, 10));
+    print("a.12: " + SIMD.Int8x16.extractLane(a, 11));
+    print("a.13: " + SIMD.Int8x16.extractLane(a, 12));
+    print("a.14: " + SIMD.Int8x16.extractLane(a, 13));
+    print("a.15: " + SIMD.Int8x16.extractLane(a, 14));
+    print("a.16: " + SIMD.Int8x16.extractLane(a, 15));
 
     var b = SIMD.Int8x16(4, 3, 2, 1, 4, 3, 2, 1, 4, 3, 2, 1, 4, 3, 2, 1);
     var c = SIMD.Int8x16.check(b);
@@ -56,13 +57,13 @@ function testConstructor() {
         var m = SIMD.Int8x16.check(1)
     }
     catch (e) {
-        WScript.Echo("Type Error");
+        print("Type Error");
     }
 }
 function testFromFloat32x4Bits() {
     var m = SIMD.float32x4.fromInt8x16Bits(SIMD.Int8x16(0x3F800000, 0x40000000, 0x40400000, 0x40800000));
     var n = SIMD.Int8x16.fromFloat32x4Bits(m);
-    WScript.Echo("FromFloat32x4Bits");
+    print("FromFloat32x4Bits");
     equal(1, n.x);
     equal(2, n.y);
     equal(3, n.z);

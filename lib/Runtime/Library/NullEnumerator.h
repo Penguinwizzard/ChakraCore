@@ -16,7 +16,7 @@ namespace Js
         virtual BOOL MoveNext(PropertyAttributes* attributes = nullptr) override;
         virtual void Reset() override;
         virtual Var GetCurrentAndMoveNext(PropertyId& propertyId, PropertyAttributes* attributes = nullptr) override;
-        virtual BOOL GetCurrentPropertyId(PropertyId *propertyId) override;
+        virtual bool GetCurrentPropertyId(PropertyId *propertyId) override;
 
     protected:
         DEFINE_VTABLE_CTOR(NullEnumerator, JavascriptEnumerator);

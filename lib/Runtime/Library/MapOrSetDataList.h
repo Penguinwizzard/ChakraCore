@@ -5,18 +5,18 @@
 #pragma once
 
 // This is a special use doubly linked list whose iterators are always valid
-// no matter what modifications are made to the list during iteration.  The
+// no matter what modifications are made to the list during iteration. The
 // iterators rely on deleted nodes still having valid next and prev references
-// to the nodes they used to be next to before being removed.  They also rely
+// to the nodes they used to be next to before being removed. They also rely
 // on nodes being recycler allocated so that active iterators do not need to
-// be tracked by the list and updated when deletes occur.  Finally, well 
+// be tracked by the list and updated when deletes occur. Finally, well
 // defined iteration order is maintained by only allowing new items to be
-// appended to the end of the list.  This allows an iterator to validate
+// appended to the end of the list. This allows an iterator to validate
 // itself by seeking backwards until it finds a node whose previous's next
 // still points to it.
 //
 // The intended use of this list is to track insertion order for items added
-// to ES6 Map and Set objects.  If a more general use if found for this data
+// to ES6 Map and Set objects. If a more general use if found for this data
 // structure please generalize it and consider moving it to Common\DataStructures.
 
 namespace Js
@@ -31,7 +31,7 @@ namespace Js
         MapOrSetDataNode<TData>* next;
         MapOrSetDataNode<TData>* prev;
 
-        MapOrSetDataNode(TData& data):data(data), next(nullptr), prev(nullptr) { }
+        MapOrSetDataNode(TData& data) : data(data), next(nullptr), prev(nullptr) { }
 
     public:
         TData data;
@@ -46,22 +46,22 @@ namespace Js
 
     public:
         MapOrSetDataList(VirtualTableInfoCtorEnum) {};
-        MapOrSetDataList():first(nullptr), last(nullptr) { }
+        MapOrSetDataList() : first(nullptr), last(nullptr) { }
 
         class Iterator
         {
             MapOrSetDataList<TData>* list;
             MapOrSetDataNode<TData>* current;
         public:
-            Iterator():list(nullptr), current(nullptr) { }
-            Iterator(MapOrSetDataList<TData>* list):list(list), current(nullptr) { }
+            Iterator() : list(nullptr), current(nullptr) { }
+            Iterator(MapOrSetDataList<TData>* list) : list(list), current(nullptr) { }
 
             bool Next()
             {
                 // Nodes can be deleted while iterating so validate current
                 // and if it is not valid find last valid node by following
                 // previous toward first.
-                // Note also clear will simply null out first and last, but
+                // Note: clear will simply null out first and last, but
                 // not invalidated nodes, so we must also check to see that
                 // first is not null
 
@@ -158,7 +158,7 @@ namespace Js
         void Remove(MapOrSetDataNode<TData>* node)
         {
             // Cannot delete the node itself, nor change its next and prev pointers!
-            // Otherwise active iterators may break.  Iterators depend on nodes existing
+            // Otherwise active iterators may break. Iterators depend on nodes existing
             // until garbage collector picks them up.
             auto next = node->next;
             auto prev = node->prev;

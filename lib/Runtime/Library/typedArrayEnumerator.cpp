@@ -93,18 +93,18 @@ namespace Js
         objectEnumerator = (JavascriptEnumerator*)enumerator;
     }
 
-    BOOL TypedArrayEnumerator::GetCurrentPropertyId(PropertyId* propertyId)
+    bool TypedArrayEnumerator::GetCurrentPropertyId(PropertyId* propertyId)
     {
         if (!doneArray)
         {
             *propertyId = Constants::NoProperty;
-            return FALSE;
+            return false;
         }
         if (!doneObject)
         {
             return objectEnumerator->GetCurrentPropertyId(propertyId);
         }
         *propertyId = Constants::NoProperty;
-        return FALSE;
+        return false;
     }
 }

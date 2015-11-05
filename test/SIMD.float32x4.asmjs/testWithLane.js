@@ -241,39 +241,39 @@ var ret12 = m.func12();
 */
 
 
-WScript.Echo(typeof(ret1));
-WScript.Echo(ret1.toString());
+print(typeof(ret1));
+print(ret1.toString());
 
-WScript.Echo(typeof(ret2));
-WScript.Echo(ret2.toString());
+print(typeof(ret2));
+print(ret2.toString());
 
-WScript.Echo(typeof(ret3));
-WScript.Echo(ret3.toString());
+print(typeof(ret3));
+print(ret3.toString());
 
-WScript.Echo(typeof(ret4));
-WScript.Echo(ret4.toString());
+print(typeof(ret4));
+print(ret4.toString());
 
-WScript.Echo(typeof(ret5));
-WScript.Echo(ret5.toString());
+print(typeof(ret5));
+print(ret5.toString());
 
-WScript.Echo(typeof(ret6));
-WScript.Echo(ret6.toString());
+print(typeof(ret6));
+print(ret6.toString());
 /*
-WScript.Echo(typeof(ret7));
-WScript.Echo(ret7.toString());
+print(typeof(ret7));
+print(ret7.toString());
 
-WScript.Echo(typeof(ret8));
-WScript.Echo(ret8.toString());
+print(typeof(ret8));
+print(ret8.toString());
 
-WScript.Echo(typeof(ret9));
-WScript.Echo(ret9.toString());
+print(typeof(ret9));
+print(ret9.toString());
 
-WScript.Echo(typeof(ret10));
-WScript.Echo(ret10.toString());
+print(typeof(ret10));
+print(ret10.toString());
 
-WScript.Echo(typeof(ret11));
-WScript.Echo(ret11.toString());
+print(typeof(ret11));
+print(ret11.toString());
 
-WScript.Echo(typeof(ret12));
-WScript.Echo(ret12.toString());
+print(typeof(ret12));
+print(ret12.toString());
 */

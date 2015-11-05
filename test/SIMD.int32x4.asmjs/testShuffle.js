@@ -177,15 +177,11 @@ var ret1 = m.func1();
 var ret2 = m.func2();
 var ret3 = m.func3();
 
-WScript.Echo(typeof (ret1));
-WScript.Echo(ret1.toString());
+print(typeof (ret1));
+print(ret1.toString());
 
-WScript.Echo(typeof (ret2));
-WScript.Echo(ret2.toString());
+print(typeof (ret2));
+print(ret2.toString());
 
-WScript.Echo(typeof (ret3));
-WScript.Echo(ret3.toString());
-
-
-
-
+print(typeof (ret3));
+print(ret3.toString());

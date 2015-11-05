@@ -5,13 +5,17 @@
 
 function equal(a, b) {
     if (a == b)
-        WScript.Echo("Correct");
+    {
+        print("Correct");
+    }
     else
-        WScript.Echo(">> Fail!");
+    {
+        print(">> Fail!");
+    }
 }
 
 function testSignMask() {
-    WScript.Echo("Int32x4 signmask");
+    print("Int32x4 signmask");
     var a = SIMD.Int32x4(0x80000000, 0x7000000, 0xFFFFFFFF, 0x0);
     equal(0x5, a.signMask);
     var b = SIMD.Int32x4(0x0, 0x0, 0x0, 0x0);
@@ -28,5 +32,3 @@ testSignMask();
 testSignMask();
 testSignMask();
 testSignMask();
-
-

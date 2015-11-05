@@ -52,7 +52,7 @@ namespace Js
         Assert(TaggedInt::Is(nameId) || Js::JavascriptString::Is(nameId));
 
         // We are only reference the propertyId, it needs to be tracked to stay alive
-        Assert(!TaggedInt::Is(nameId) || this->GetScriptContext()->IsTrackedPropertyId(TaggedInt::ToInt32(nameId)));        
+        Assert(!TaggedInt::Is(nameId) || this->GetScriptContext()->IsTrackedPropertyId(TaggedInt::ToInt32(nameId)));
         this->functionNameId = nameId;
     }
 };

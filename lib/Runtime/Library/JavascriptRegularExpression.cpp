@@ -163,7 +163,7 @@ namespace Js
 
             if (callInfo.Count > 2 )
             {
-                // As per ES6 21.2.3.1: If 1st argument is RegExp and 2nd argument is flag then return regexp with same pattern as 1st
+                // As per ES 2015 21.2.3.1: If 1st argument is RegExp and 2nd argument is flag then return regexp with same pattern as 1st
                 // argument and flags supplied by the 2nd argument.
                 if (!JavascriptOperators::IsUndefinedObject(args[2], scriptContext))
                 {

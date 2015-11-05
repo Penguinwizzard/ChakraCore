@@ -1073,7 +1073,7 @@ namespace Js
         return target->GetDefaultPropertyDescriptor(descriptor);
     }
 
-    // 7.3.15 in ES6. While this should have been no observable behavior change. Till there is obvious change warrant this 
+    // 7.3.12 in ES 2015. While this should have been no observable behavior change. Till there is obvious change warrant this 
     // to be moved to JavascriptOperators, let's keep it in proxy only first.
     BOOL JavascriptProxy::TestIntegrityLevel(IntegrityLevel integrityLevel, RecyclableObject* obj, ScriptContext* scriptContext)
     {

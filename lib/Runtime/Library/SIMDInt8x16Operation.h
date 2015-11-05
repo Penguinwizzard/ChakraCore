@@ -38,7 +38,6 @@ namespace Js {
 
         static SIMDValue OpShiftLeftByScalar(const SIMDValue& value, int8 count);
         static SIMDValue OpShiftRightLogicalByScalar(const SIMDValue& value, int8 count);
-        static SIMDValue OpShiftRightArithmeticByScalar(const SIMDValue& value, int8 count);        
+        static SIMDValue OpShiftRightArithmeticByScalar(const SIMDValue& value, int8 count);
     };
-
 } // namespace Js

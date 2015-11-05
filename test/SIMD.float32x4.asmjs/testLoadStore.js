@@ -665,36 +665,36 @@ var m = asmModule(this, {g1:SIMD.Float32x4(90934.2,123.9,419.39,449.0), g2:SIMD.
 var ret;
 
 ret = m.func1();
-WScript.Echo("func1");
-WScript.Echo(typeof(ret));
-WScript.Echo(ret.toString());
+print("func1");
+print(typeof(ret));
+print(ret.toString());
 
 ret = m.func2();
-WScript.Echo("func3");
-WScript.Echo(typeof(ret));
-WScript.Echo(ret.toString());
+print("func3");
+print(typeof(ret));
+print(ret.toString());
 
 ret = m.func3();
-WScript.Echo("func3");
-WScript.Echo(typeof(ret));
-WScript.Echo(ret.toString());
+print("func3");
+print(typeof(ret));
+print(ret.toString());
 
 
 ret = m.func4();
-WScript.Echo("func4");
-WScript.Echo(typeof(ret));
-WScript.Echo(ret.toString());
+print("func4");
+print(typeof(ret));
+print(ret.toString());
 
 
 ret = m.func5();
-WScript.Echo("func5");
-WScript.Echo(typeof(ret));
-WScript.Echo(ret.toString());
+print("func5");
+print(typeof(ret));
+print(ret.toString());
 
 ret = m.func6();
-WScript.Echo("func6");
-WScript.Echo(typeof(ret));
-WScript.Echo(ret.toString());
+print("func6");
+print(typeof(ret));
+print(ret.toString());
 
 //
 
@@ -706,12 +706,12 @@ for (var i = 0; i < funcOOB1.length; i ++)
     {
         
         ret = funcOOB1[i]();
-        WScript.Echo("func" + (i+1) + "OOB_1");
-        WScript.Echo(typeof(ret));
-        WScript.Echo(ret.toString());
+        print("func" + (i+1) + "OOB_1");
+        print(typeof(ret));
+        print(ret.toString());
     } catch(e)
     {
-        WScript.Echo("Wrong");
+        print("Wrong");
     }
 }
 
@@ -721,19 +721,18 @@ var funcOOB2 = [m.func1OOB_2, m.func2OOB_2 ,m.func3OOB_2, m.func4OOB_2, m.func5O
 
 for (var i = 0; i < funcOOB2.length; i ++)
 {
-    WScript.Echo("func" + (i+1) + "OOB_2");
+    print("func" + (i+1) + "OOB_2");
     try
     {
         ret = funcOOB2[i]();
-        WScript.Echo("Wrong");
+        print("Wrong");
         
     } catch(e)
     {
         if (e instanceof RangeError)
-            WScript.Echo("Correct");
+            print("Correct");
         else
-            WScript.Echo("Wrong");
+            print("Wrong");
         
     }
 }
-

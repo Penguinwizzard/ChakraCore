@@ -4,21 +4,22 @@
 //-------------------------------------------------------------------------------------------------------
 
 function equal(a, b) {
-    if (a == b)
-        WScript.Echo("Correct");
-    else
-        WScript.Echo(">> Fail!");
+    if (a == b) {
+        print("Correct");
+    } else {
+        print(">> Fail!");
+    }
 }
 
 function testConstructor() {
-    WScript.Echo("Constructor");
+    print("Constructor");
     equal(SIMD.Int32x4, undefined);
     equal(SIMD.Int32x4(1, 2, 3, 4), undefined);
     var a = SIMD.Int32x4("2014/10/10", -0, 2147483648, 2147483647);
-    WScript.Echo("a.x: " + SIMD.Int32x4.extractLane(a, 0));
-    WScript.Echo("a.y: " + SIMD.Int32x4.extractLane(a, 1));
-    WScript.Echo("a.z: " + SIMD.Int32x4.extractLane(a, 2));
-    WScript.Echo("a.w: " + SIMD.Int32x4.extractLane(a, 3));
+    print("a.x: " + SIMD.Int32x4.extractLane(a, 0));
+    print("a.y: " + SIMD.Int32x4.extractLane(a, 1));
+    print("a.z: " + SIMD.Int32x4.extractLane(a, 2));
+    print("a.w: " + SIMD.Int32x4.extractLane(a, 3));
     var b = SIMD.Int32x4(4, 3, 2, 1);
     var c = SIMD.Int32x4.check(b);
     equal(c, b);
@@ -31,14 +32,14 @@ function testConstructor() {
         var m = SIMD.Int32x4.check(1)
     }
     catch (e) {
-        WScript.Echo("Type Error");
+        print("Type Error");
     }
 }
 
 function testFromFloat32x4() {
     var m = SIMD.Float32x4(1.0, 2.2, 3.6, 4.8);
     var n = SIMD.Int32x4.fromFloat32x4(m);
-    WScript.Echo("FromFloat32x4");
+    print("FromFloat32x4");
     equal(1, SIMD.Int32x4.extractLane(n, 0));
     equal(2, SIMD.Int32x4.extractLane(n, 1));
     equal(3, SIMD.Int32x4.extractLane(n, 2));
@@ -48,7 +49,7 @@ function testFromFloat32x4() {
 function testFromFloat32x4Bits() {
     var m = SIMD.Float32x4.fromInt32x4Bits(SIMD.Int32x4(0x3F800000, 0x40000000, 0x40400000, 0x40800000));
     var n = SIMD.Int32x4.fromFloat32x4Bits(m);
-    WScript.Echo("FromFloat32x4Bits");
+    print("FromFloat32x4Bits");
     equal(1, SIMD.Int32x4.extractLane(n, 0));
     equal(2, SIMD.Int32x4.extractLane(n, 1));
     equal(3, SIMD.Int32x4.extractLane(n, 2));

@@ -153,7 +153,7 @@ namespace JSON
 
         }
 
-        return (pToken->tk = tkEOF);        
+        return (pToken->tk = tkEOF);
     }
 
     bool JSONScanner::IsJSONNumber()

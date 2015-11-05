@@ -5,9 +5,8 @@
 #pragma once
 
 class JavascriptSIMDFloat32x4;
-//class JavascriptSIMDFloat64x2;
-class JavascriptSIMDInt32x4;
 
+class JavascriptSIMDInt32x4;
 
 namespace Js
 {
@@ -17,7 +16,6 @@ namespace Js
         SIMDValue value;
 
         DEFINE_VTABLE_CTOR(JavascriptSIMDInt8x16, RecyclableObject);
-
 
     public:
         class EntryInfo
@@ -54,4 +52,3 @@ namespace Js
         bool GetPropertyBuiltIns(PropertyId propertyId, Var* value, ScriptContext* requestContext);
     };
 }
-

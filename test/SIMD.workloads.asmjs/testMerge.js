@@ -334,8 +334,8 @@ function validateBuffer1(buffer, count)
 
 function printResults(res)
 {
-    WScript.Echo(typeof(res));
-    WScript.Echo(res.toString());
+    print(typeof(res));
+    print(res.toString());
 }
 
 inputLength = initF32(buffer);
@@ -356,8 +356,8 @@ validateBuffer1(values, 4 * 25);
 
 /*
 initF32(buffer);
-WScript.Echo("Heap");
+print("Heap");
 printBuffer2(values, 4 * 25);
-WScript.Echo("Merging 5 vectors from 0 and 5 indices and writing the results to the index 10.");
+print("Merging 5 vectors from 0 and 5 indices and writing the results to the index 10.");
 var ret = m.merge2(0, 5 * 16, 10 * 16, 5);
 printBuffer2(values, 4 * 25);*/

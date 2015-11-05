@@ -5,13 +5,17 @@
 
 function equal(a, b) {
     if (a == b)
-        WScript.Echo("Correct");
+    {
+        print("Correct");
+    }
     else
-        WScript.Echo(">> Fail!");
+    {
+        print(">> Fail!");
+    }
 }
 
 function testWithFlagX() {
-    WScript.Echo("Int32x4 withFlagX");
+    print("Int32x4 withFlagX");
     var a = SIMD.Int32x4.bool(true, false, true, false);
     var c = SIMD.Int32x4.withFlagX(a, true);
     equal(true, c.flagX);
@@ -30,7 +34,7 @@ function testWithFlagX() {
 }
 
 function testWithFlagY() {
-    WScript.Echo("Int32x4 withFlagY");
+    print("Int32x4 withFlagY");
     var a = SIMD.Int32x4.bool(true, false, true, false);
     var c = SIMD.Int32x4.withFlagY(a, true);
     equal(true, c.flagX);
@@ -49,7 +53,7 @@ function testWithFlagY() {
 }
 
 function testWithFlagZ() {
-    WScript.Echo("Int32x4 withFlagZ");
+    print("Int32x4 withFlagZ");
     var a = SIMD.Int32x4.bool(true, false, true, false);
     var c = SIMD.Int32x4.withFlagZ(a, true);
     equal(-1, SIMD.Int32x4.extractLane(c, 0));
@@ -69,7 +73,7 @@ function testWithFlagZ() {
 }
 
 function testWithFlagW() {
-    WScript.Echo("Int32x4 withFlagW");
+    print("Int32x4 withFlagW");
     var a = SIMD.Int32x4.bool(true, false, true, false);
     var c = SIMD.Int32x4.withFlagW(a, true);
     equal(true, c.flagX);

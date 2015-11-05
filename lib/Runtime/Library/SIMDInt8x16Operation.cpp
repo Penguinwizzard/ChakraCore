@@ -79,6 +79,7 @@ namespace Js
 
         return result;
     }
+
     SIMDValue SIMDInt8x16Operation::OpFromInt32x4Bits(const SIMDValue& v)
     {
         return OpFromFloat32x4Bits(v);

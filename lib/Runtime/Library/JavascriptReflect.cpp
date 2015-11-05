@@ -135,7 +135,6 @@ namespace Js
         Var receiver = args.Info.Count > 3 ? args[3] : target;
 
         return JavascriptOperators::GetElementIHelper(RecyclableObject::FromVar(target), propertyKey, receiver, scriptContext);
-
     }
 
     Var JavascriptReflect::EntryGetOwnPropertyDescriptor(RecyclableObject* function, CallInfo callInfo, ...)

@@ -16,7 +16,6 @@ namespace Js
 
         DEFINE_VTABLE_CTOR(JavascriptSIMDInt32x4, RecyclableObject);
 
-
     public:
         class EntryInfo
         {
@@ -33,7 +32,6 @@ namespace Js
         static bool Is(Var instance);
         static JavascriptSIMDInt32x4* FromVar(Var aValue);
 
-        //static JavascriptSIMDInt32x4* FromBool(int x, int y, int z, int w, ScriptContext* requestContext);
         static JavascriptSIMDInt32x4* FromBool(SIMDValue *val, ScriptContext* requestContext);
         static JavascriptSIMDInt32x4* FromFloat64x2(JavascriptSIMDFloat64x2 *instance, ScriptContext* requestContext);
         static JavascriptSIMDInt32x4* FromFloat64x2Bits(JavascriptSIMDFloat64x2 *instance, ScriptContext* requestContext);

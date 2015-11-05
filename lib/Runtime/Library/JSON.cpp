@@ -711,7 +711,7 @@ namespace JSON
                             }
 
                             // In retail the stack packing causes enumerator to be overwritten here and the enumerator
-                            // object becomes eligible for collection.  If the enumerator is the creator of the strings
+                            // object becomes eligible for collection. If the enumerator is the creator of the strings
                             // it and our nameTable here will be the only objects holding references to those strings.
                             // Thus we the nameTable needs to be in a GC guest arena so the GC can track those references.
                             // Set enumerator to null in CHK build so that unit tests can verify that the strings are not

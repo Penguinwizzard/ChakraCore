@@ -5,13 +5,17 @@
 
 function equal(a, b) {
     if (a == b)
-        WScript.Echo("Correct");
+    {
+        print("Correct");
+    }
     else
-        WScript.Echo(">> Fail!");
+    {
+        print(">> Fail!");
+    }
 }
 
 function testShiftleft() {
-    WScript.Echo("Int32x4 shiftLeft");
+    print("Int32x4 shiftLeft");
     var a = SIMD.Int32x4(0x80000000, 0x7000000, 0xFFFFFFFF, 0x0);
     var b = SIMD.Int32x4.shiftLeft(a, 1)
     equal(0x0, SIMD.Int32x4.extractLane(b, 0));
@@ -27,7 +31,7 @@ function testShiftleft() {
 }
 
 function testShiftRightLogical() {
-    WScript.Echo("Int32x4 shiftRightLogical");
+    print("Int32x4 shiftRightLogical");
     var a = SIMD.Int32x4(0x80000000, 0x7000000, 0xFFFFFFFF, 0x0);
     var b = SIMD.Int32x4.shiftRightLogical(a, 1)
     equal(0x40000000, SIMD.Int32x4.extractLane(b, 0));
@@ -43,7 +47,7 @@ function testShiftRightLogical() {
 }
 
 function testShiftRightArithmetic() {
-    WScript.Echo("Int32x4 shiftRightArithmetic");
+    print("Int32x4 shiftRightArithmetic");
     var a = SIMD.Int32x4(0x80000000, 0x7000000, 0xFFFFFFFF, 0x0);
     var b = SIMD.Int32x4.shiftRightArithmetic(a, 1)
     equal(-1073741824, SIMD.Int32x4.extractLane(b, 0));

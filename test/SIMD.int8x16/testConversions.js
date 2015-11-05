@@ -4,14 +4,15 @@
 //-------------------------------------------------------------------------------------------------------
 
 function equal(a, b) {
-    if (a == b)
-        WScript.Echo("Correct");
-    else
-        WScript.Echo(">> Fail!");
+    if (a == b) {
+        print("Correct");
+    } else {
+        print(">> Fail!");
+    }
 }
 
 function testInt32x4BitConversion() {
-    WScript.Echo("Int8x16 Int32x4 bit conversion");
+    print("Int8x16 Int32x4 bit conversion");
     var m = SIMD.Int32x4(0x3F800000, 0x40000000, 0x40400000, 0x40800000);
     var n = SIMD.Int8x16.fromInt32x4Bits(m);
     equal(0, SIMD.Int8x16.extractLane(n, 0));
@@ -73,7 +74,7 @@ function testInt32x4BitConversion() {
 }
 
 function testFloat32x4BitsConversion() {
-    WScript.Echo("Int8x16 Float32x4 bits conversion");
+    print("Int8x16 Float32x4 bits conversion");
     var m = SIMD.Float32x4(1.0, 2.0, 3.0, 4.0);
     var n = SIMD.Int8x16.fromFloat32x4Bits(m);
     equal(0, SIMD.Int8x16.extractLane(n, 0));
