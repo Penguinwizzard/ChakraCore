@@ -5350,7 +5350,13 @@ void EmitDestructuredElement(ParseNode *elem, Js::RegSlot sourceLocation, ByteCo
     case knopName:
         if (elem->sxPid.sym != nullptr && elem->sxPid.sym->GetNeedDeclaration())
         {
+            bool needToRelease = elem->location == Js::Constants::NoRegister;
             EmitUseBeforeDeclaration(elem, byteCodeGenerator, funcInfo);
+            if (needToRelease && elem->location != Js::Constants::NoRegister)
+            {
+                // We have acquired register as a part of EmitUseBeforeDeclaration. We need to release that.
+                funcInfo->ReleaseTmpRegister(elem->location);
+            }
         }
         break;
 

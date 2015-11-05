@@ -2,8 +2,8 @@ for loop
 global
 for-in loop
 global
-SyntaxError: Syntax error
-SyntaxError: Syntax error
-SyntaxError: Syntax error
-SyntaxError: Syntax error
+SyntaxError: for-in loop head declarations cannot have an initializer
+SyntaxError: for-in loop head declarations cannot have an initializer
+SyntaxError: for-in loop head declarations cannot have an initializer
+SyntaxError: for-in loop head declarations cannot have an initializer
 ReferenceError: Use before declaration

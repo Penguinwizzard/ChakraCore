@@ -35,6 +35,13 @@ enum ParseType
     ParseType_Reparse
 };
 
+enum DestructuringInitializerContext
+{
+    DIC_None,
+    DIC_ShouldNotParseInitializer, // e.g. We don't want to parse the initializer even though we found assignment
+    DIC_ForceErrorOnInitializer, // e.g. Catch param where we explicitly want to raise an error when the initializer found
+};
+
 enum ScopeType;
 enum SymbolType : byte;
 
@@ -135,12 +142,6 @@ public:
     bool IsBackgroundParser() const { return m_isInBackground; }
     bool IsDoingFastScan() const { return m_doingFastScan; }
 
-    bool ShouldParseInitializer() const { return m_shouldParseInitializer; }
-    void SetShouldParseInitializer(bool set) { m_shouldParseInitializer = set; }
-
-    bool ShouldErrorOnInitializer() const { return m_shouldErrorOnInitializer; }
-    void SetShouldErrorOnInitializer(bool set) { m_shouldErrorOnInitializer = set; }
-
     static IdentPtr PidFromNode(ParseNodePtr pnode);
     
     ParseNode* CopyPnode(ParseNode* pnode);
@@ -206,8 +207,6 @@ private:
     BOOL                m_uncertainStructure;
     bool                m_hasParallelJob;
     bool                m_doingFastScan;
-    bool                m_shouldParseInitializer;
-    bool                m_shouldErrorOnInitializer;
     Span                m_asgToConst;
     int                 m_nextBlockId;
 
@@ -834,17 +833,31 @@ private:
     ParseNodePtr ParseDestructuredObjectLiteral(tokens declarationType, bool isDecl, bool topLevel = true);
 
     template <bool buildAST>
-    ParseNodePtr ParseDestructuredLiteral(tokens declarationType, bool isDecl, bool topLevel = true);
+    ParseNodePtr ParseDestructuredLiteral(tokens declarationType,
+        bool isDecl,
+        bool topLevel = true,
+        DestructuringInitializerContext initializerContext = DIC_None,
+        bool allowIn = true,
+        BOOL *forInOfOkay = nullptr);
 
     template <bool buildAST>
     ParseNodePtr ParseDestructuredVarDecl(tokens declarationType, bool isDecl, bool *hasSeenRest, bool topLevel = true);
 
     template <bool buildAST>
-    ParseNodePtr ParseDestructuredInitializer(ParseNodePtr lhsNode, bool isDecl, bool topLevel);
+    ParseNodePtr ParseDestructuredInitializer(ParseNodePtr lhsNode,
+        bool isDecl,
+        bool topLevel,
+        DestructuringInitializerContext initializerContext,
+        bool allowIn,
+        BOOL *forInOfOkay);
 
     template<bool CheckForNegativeInfinity> static bool IsNaNOrInfinityLiteral(LPCOLESTR str);
 
-    void ParseDestructuredLiteralWithScopeSave(tokens declarationType, bool isDecl, bool topLevel);
+    void ParseDestructuredLiteralWithScopeSave(tokens declarationType,
+        bool isDecl,
+        bool topLevel,
+        DestructuringInitializerContext initializerContext = DIC_None,
+        bool allowIn = true);
 
 public:
     void ValidateSourceElementList();

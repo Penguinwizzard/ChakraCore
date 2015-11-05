@@ -83,5 +83,7 @@ LSC_ERROR_MSG( 1074, ERRConstructorCannotBeGenerator, "Class constructor may not
 LSC_ERROR_MSG( 1075, ERRInvalidAssignmentTarget, "Invalid destructuring assignment target")
 LSC_ERROR_MSG( 1076, ERRFormalSame, "Duplicate formal parameter names not allowed in this context")
 LSC_ERROR_MSG( 1077, ERRDestructNotInit, "Destructuring declarations cannot have an initializer")
-LSC_ERROR_MSG( 1078, ERRDestructExprNotInit, "Destructuring expression cannot have an initializer")
+// 1078 -- removed
 LSC_ERROR_MSG(1079, ERRInvalidNewTarget, "Invalid use of the 'new.target' keyword")
+LSC_ERROR_MSG(1080, ERRForInNoInitAllowed, "for-in loop head declarations cannot have an initializer")
+LSC_ERROR_MSG(1081, ERRForOfNoInitAllowed, "for-of loop head declarations cannot have an initializer")

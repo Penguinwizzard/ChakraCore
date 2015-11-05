@@ -34,30 +34,6 @@ bool Parser::IsES6DestructuringEnabled() const
     return m_scriptContext->GetConfig()->IsES6DestructuringEnabled();
 }
 
-class AutoInitializeStateDueToPattern
-{
-public:
-    AutoInitializeStateDueToPattern(Parser *parser, bool shouldParseInitializer, bool errorOnInitializer)
-        : m_parser(parser)
-    {
-        m_shouldNotParseInitializer = m_parser->ShouldParseInitializer();
-        m_parser->SetShouldParseInitializer(shouldParseInitializer);
-        m_errorOnInitializer = m_parser->ShouldErrorOnInitializer();
-        m_parser->SetShouldErrorOnInitializer(errorOnInitializer);
-    }
-
-    ~AutoInitializeStateDueToPattern()
-    {
-        m_parser->SetShouldParseInitializer(m_shouldNotParseInitializer);
-        m_parser->SetShouldErrorOnInitializer(m_errorOnInitializer);
-    }
-
-private:
-    Parser *m_parser;
-    bool m_shouldNotParseInitializer;
-    bool m_errorOnInitializer;
-};
-
 struct DeferredFunctionStub
 {
     RestorePoint restorePoint;
@@ -115,8 +91,6 @@ Parser::Parser(Js::ScriptContext* scriptContext, BOOL strictMode, PageAllocator 
     m_stoppedDeferredParse = FALSE;
     m_hasParallelJob = false;
     m_doingFastScan = false;
-    m_shouldParseInitializer = true;
-    m_shouldErrorOnInitializer = false;
     m_scriptContext = scriptContext;
     m_pCurrentAstSize = nullptr;
     m_parsingDuplicate = 0;
@@ -7317,8 +7291,7 @@ ParseNodePtr Parser::ParseExpr(int oplMin,
         {
             m_pscan->SeekTo(termStart);
 
-            AutoInitializeStateDueToPattern autoInitializeStateDueToPattern(this, false/*shouldParseInitializer*/, m_shouldErrorOnInitializer);
-            ParseDestructuredLiteralWithScopeSave(tkLCurly, false/*isDecl*/, false /*topLevel*/);
+            ParseDestructuredLiteralWithScopeSave(tkLCurly, false/*isDecl*/, false /*topLevel*/, DIC_ShouldNotParseInitializer);
 
             if (buildAST)
             {
@@ -7781,7 +7754,7 @@ ParseNodePtr Parser::ParseVariableDeclaration(
     {
         if (IsES6DestructuringEnabled() && IsPossiblePatternStart())
         {
-            pnodeThis = ParseDestructuredLiteral<buildAST>(declarationType, true, !!isTopVarParse);
+            pnodeThis = ParseDestructuredLiteral<buildAST>(declarationType, true, !!isTopVarParse, DIC_None, !!fAllowIn, pfForInOk);
             if (pnodeThis != nullptr)
             {
                 pnodeThis->ichMin = ichMin;
@@ -8096,8 +8069,7 @@ ParseNodePtr Parser::ParseCatch()
 
         if (isPattern)
         {
-            AutoInitializeStateDueToPattern autoInitializeStateDueToPattern(this, false/*shouldParseInitializer*/, true/*errorOnInitializer*/);
-            ParseNodePtr pnodePattern = ParseDestructuredLiteral<buildAST>(tkLET, true /*isDecl*/, true /*topLevel*/);
+            ParseNodePtr pnodePattern = ParseDestructuredLiteral<buildAST>(tkLET, true /*isDecl*/, true /*topLevel*/, DIC_ForceErrorOnInitializer);
             if (buildAST)
             {
                 pnode->sxCatch.pnodeParam = CreateParamPatternNode(pnodePattern);
@@ -8533,7 +8505,7 @@ LDefaultTokenFor:
                 if (fLikelyPattern)
                 {
                     m_pscan->SeekTo(exprStart);
-                    ParseDestructuredLiteralWithScopeSave(tkNone, false/*isDecl*/, false /*topLevel*/);
+                    ParseDestructuredLiteralWithScopeSave(tkNone, false/*isDecl*/, false /*topLevel*/, DIC_None, false /*allowIn*/);
 
                     if (buildAST)
                     {
@@ -8551,20 +8523,19 @@ LDefaultTokenFor:
 
         if (m_token.tk == tkIN || (m_scriptContext->GetConfig()->IsES6IteratorsEnabled() && m_token.tk == tkID && m_token.GetIdentifier(m_phtbl) == wellKnownPropertyPids.of))
         {
-            if (IsES6DestructuringEnabled() && pnodeT != nullptr && pnodeT->nop == knopAsg && pnodeT->sxBin.pnode1->IsPattern())
-            {
-                // This is an error condition - we will rewind to the restore point and find out where the error happened
-                m_pscan->SeekTo(startExprOrIdentifier);
-                AutoInitializeStateDueToPattern autoInitializeStateDueToPattern(this, m_shouldParseInitializer, true/*errorOnInitializer*/);
-                ParseDestructuredLiteral<false>(tkNone, false/*isDecl*/, true/*topLevel*/);
-            }
-
             bool isForOf = (m_token.tk != tkIN);
             Assert(!isForOf || (m_token.tk == tkID && m_token.GetIdentifier(m_phtbl) == wellKnownPropertyPids.of));
 
             if ((buildAST && nullptr == pnodeT) || !fForInOrOfOkay)
             {
-                Error(ERRsyntax);
+                if (isForOf)
+                {
+                    Error(ERRForOfNoInitAllowed);
+                }
+                else
+                {
+                    Error(ERRForInNoInitAllowed);
+                }
             }
             if (!fCanAssign && PHASE_ON1(Js::EarlyReferenceErrorsPhase))
             {
@@ -11052,7 +11023,11 @@ ParseNodePtr Parser::ConvertToPattern(ParseNodePtr pnode)
 }
 
 // This essentially be called for verifying the structure of the current tree with satisfying the destructuring grammar.
-void Parser::ParseDestructuredLiteralWithScopeSave(tokens declarationType, bool isDecl, bool topLevel)
+void Parser::ParseDestructuredLiteralWithScopeSave(tokens declarationType,
+    bool isDecl,
+    bool topLevel,
+    DestructuringInitializerContext initializerContext/* = DIC_None*/,
+    bool allowIn /*= true*/)
 {
     // Store the current scope and point the current scope to the some temp scope
     // so that ParseDestrucuturedLiteral will not make the current scope dirty
@@ -11061,15 +11036,19 @@ void Parser::ParseDestructuredLiteralWithScopeSave(tokens declarationType, bool 
     m_ppnodeScope = &newTempScope;
     // REVIEW: anything else we need to save?
 
-    ParseDestructuredLiteral<false>(declarationType, isDecl, topLevel);
+    ParseDestructuredLiteral<false>(declarationType, isDecl, topLevel, initializerContext, allowIn);
 
     // Restore this back
     m_ppnodeScope = ppScopeSave;
-
 }
 
 template <bool buildAST>
-ParseNodePtr Parser::ParseDestructuredLiteral(tokens declarationType, bool isDecl, bool topLevel/* = true*/)
+ParseNodePtr Parser::ParseDestructuredLiteral(tokens declarationType,
+    bool isDecl,
+    bool topLevel/* = true*/,
+    DestructuringInitializerContext initializerContext/* = DIC_None*/,
+    bool allowIn/* = true*/,
+    BOOL *forInOfOkay/* = nullptr*/)
 {
     ParseNodePtr pnode = nullptr;
     Assert(IsPossiblePatternStart());
@@ -11082,43 +11061,45 @@ ParseNodePtr Parser::ParseDestructuredLiteral(tokens declarationType, bool isDec
         pnode = ParseDestructuredArrayLiteral<buildAST>(declarationType, isDecl, topLevel);
     }
 
-    return pnode;
+    return ParseDestructuredInitializer<buildAST>(pnode, isDecl, topLevel, initializerContext, allowIn, forInOfOkay);
 }
 
 template <bool buildAST>
-ParseNodePtr Parser::ParseDestructuredInitializer(ParseNodePtr lhsNode, bool isDecl, bool topLevel)
+ParseNodePtr Parser::ParseDestructuredInitializer(ParseNodePtr lhsNode,
+    bool isDecl,
+    bool topLevel,
+    DestructuringInitializerContext initializerContext,
+    bool allowIn,
+    BOOL *forInOfOkay)
 {
     m_pscan->Scan();
     if (topLevel)
     {
-        if (!m_shouldErrorOnInitializer && m_token.tk != tkAsg)
+        if (initializerContext != DIC_ForceErrorOnInitializer && m_token.tk != tkAsg)
         {
             // e.g. var {x};
             Error(ERRDestructInit);
         }
-        else if (m_shouldErrorOnInitializer && m_token.tk == tkAsg)
+        else if (initializerContext == DIC_ForceErrorOnInitializer && m_token.tk == tkAsg)
         {
-            if (isDecl)
-            {
-                // e.g. catch([x] = [0])
-                Error(ERRDestructNotInit);
-            }
-            else
-            {
-                // e.g. for ([x] = [0] of object)
-                Error(ERRDestructExprNotInit);
-            }
+            // e.g. catch([x] = [0])
+            Error(ERRDestructNotInit);
         }
     }
 
-    if (m_token.tk != tkAsg || !m_shouldParseInitializer)
+    if (m_token.tk != tkAsg || initializerContext == DIC_ShouldNotParseInitializer)
     {
         return lhsNode;
     }
 
+    if (forInOfOkay)
+    {
+        *forInOfOkay = FALSE;
+    }
+
     m_pscan->Scan();
 
-    ParseNodePtr pnodeDefault = ParseExpr<buildAST>(koplCma);
+    ParseNodePtr pnodeDefault = ParseExpr<buildAST>(koplCma, nullptr, allowIn);
     ParseNodePtr pnodeDestructAsg = nullptr;
     if (buildAST)
     {
@@ -11153,7 +11134,7 @@ ParseNodePtr Parser::ParseDestructuredObjectLiteral(tokens declarationType, bool
         charcount_t ichLim = m_pscan->IchLimTok();
         objectPatternNode = CreateUniNode(knopObjectPattern, pnodeMemberList, ichMin, ichLim);
     }
-    return ParseDestructuredInitializer<buildAST>(objectPatternNode, isDecl, topLevel);
+    return objectPatternNode;
 }
 
 template <bool buildAST>
@@ -11370,7 +11351,7 @@ ParseNodePtr Parser::ParseDestructuredArrayLiteral(tokens declarationType, bool 
         }
     }
 
-    return ParseDestructuredInitializer<buildAST>(pnodeDestructArr, isDecl, topLevel);
+    return pnodeDestructArr;
 }
 
 void Parser::CaptureContext(ParseContext *parseContext) const
