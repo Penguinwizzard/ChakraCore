@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
-
+this.WScript.LoadScriptFile("..\\UnitTestFramework\\SimdJsHelpers.js");
 function asmModule(stdlib, imports, buffer) {
     "use asm";
     
@@ -666,39 +666,45 @@ var ret;
 
 ret = m.func1();
 WScript.Echo("func1");
-WScript.Echo(typeof(ret));
-WScript.Echo(ret.toString());
+equalSimd([10, 20, 30, 40], ret, SIMD.Int32x4, "Test Load Store");
+
 
 ret = m.func2();
 WScript.Echo("func3");
 WScript.Echo(typeof(ret));
-WScript.Echo(ret.toString());
+equalSimd([10, 20, 30, 0], ret, SIMD.Int32x4, "Test Load Store");
+
 
 ret = m.func3();
 WScript.Echo("func3");
-WScript.Echo(typeof(ret));
-WScript.Echo(ret.toString());
+equalSimd([10, 20, 0, 0], ret, SIMD.Int32x4, "Test Load Store");
 
 
 ret = m.func4();
 WScript.Echo("func4");
-WScript.Echo(typeof(ret));
-WScript.Echo(ret.toString());
+equalSimd([10, 0, 0, 0], ret, SIMD.Int32x4, "Test Load Store");
 
 
 ret = m.func5();
 WScript.Echo("func5");
-WScript.Echo(typeof(ret));
-WScript.Echo(ret.toString());
+equalSimd([10, 20, 0, 0], ret, SIMD.Int32x4, "Test Load Store");
+
 
 ret = m.func6();
 WScript.Echo("func6");
-WScript.Echo(typeof(ret));
-WScript.Echo(ret.toString());
+equalSimd([10, 0, 0, 0], ret, SIMD.Int32x4, "Test Load Store");
+
 
 //
 
 var funcOOB1 = [m.func1OOB_1, m.func2OOB_1 ,m.func3OOB_1, m.func4OOB_1, m.func5OOB_1, m.func6OOB_1];
+var RESULTS = [SIMD.Int32x4(10, 20, 30, 40),
+SIMD.Int32x4(20, 30, 40, 0),
+SIMD.Int32x4(30, 40, 0, 0),
+SIMD.Int32x4(40, 0, 0, 0),
+SIMD.Int32x4(30, 40, 0, 0),
+SIMD.Int32x4(40, 0, 0, 0)
+];
 
 for (var i = 0; i < funcOOB1.length; i ++)
 {
@@ -706,8 +712,8 @@ for (var i = 0; i < funcOOB1.length; i ++)
     {
         ret = funcOOB1[i]();
         WScript.Echo("func" + (i+1) + "OOB_1");
-        WScript.Echo(typeof(ret));
-        WScript.Echo(ret.toString());
+        equalSimd(RESULTS[i], ret, SIMD.Int32x4, "Test Load Store");
+
     } catch(e)
     {
         WScript.Echo("Wrong");
@@ -734,4 +740,5 @@ for (var i = 0; i < funcOOB2.length; i ++)
         
     }
 }
+WScript.Echo("PASS");
 

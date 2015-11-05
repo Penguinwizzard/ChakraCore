@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
-
+this.WScript.LoadScriptFile("..\\UnitTestFramework\\SimdJsHelpers.js");
 function asmModule(stdlib, imports) {
     "use asm";
     var i4 = stdlib.SIMD.Int32x4;
@@ -212,22 +212,28 @@ function asmModule(stdlib, imports) {
 var m = asmModule(this, {g1:SIMD.Float32x4(90934.2,123.9,419.39,449.0), g2:SIMD.Int32x4(-1065353216, -1073741824,-1077936128, -1082130432), g3:SIMD.Float64x2(110.20, 58967.0, 14511.670, 191766.23431)});
 
 
-for (var i = 0; i < 3; i++)
-{
-    var ret;
-    WScript.Echo("Func1");
-    ret = m.func1(i);
-    WScript.Echo(typeof(ret));
-    WScript.Echo(ret.toString());
-    
-    WScript.Echo("Func2");
-    ret = m.func2(i);
-    WScript.Echo(typeof(ret));
-    WScript.Echo(ret.toString());
-    
-    WScript.Echo("Func3");
-    ret = m.func3(i);
-    WScript.Echo(typeof(ret));
-    WScript.Echo(ret.toString());
-}
+
+WScript.Echo("Func1");
+equalSimd([0, -1, 0, -1], m.func1(0), SIMD.Int32x4, "TestComparison");
+WScript.Echo("Func2");
+equalSimd([0, -1, -1, 0], m.func2(0), SIMD.Int32x4, "TestComparison");
+WScript.Echo("Func3");
+equalSimd([-1, 0, 0, -1], m.func3(0), SIMD.Int32x4, "TestComparison");
+
+WScript.Echo("Func1");
+equalSimd([0, 0, 0, 0], m.func1(1), SIMD.Int32x4, "TestComparison");
+WScript.Echo("Func2");
+equalSimd([0, 0, 0, 0], m.func2(1), SIMD.Int32x4, "TestComparison");
+WScript.Echo("Func3");
+equalSimd([0, 0, 0, 0], m.func3(1), SIMD.Int32x4, "TestComparison");
+
+WScript.Echo("Func1");
+equalSimd([-1, 0, -1, 0], m.func1(2), SIMD.Int32x4, "TestComparison");
+WScript.Echo("Func2");
+equalSimd([-1, 0, 0, -1], m.func2(2), SIMD.Int32x4, "TestComparison");
+WScript.Echo("Func3");
+equalSimd([0, -1, -1, 0], m.func3(2), SIMD.Int32x4, "TestComparison");
+WScript.Echo("PASS");
+
+
 

@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
-
+this.WScript.LoadScriptFile("..\\UnitTestFramework\\SimdJsHelpers.js");
 function asmModule(stdlib, imports) {
     "use asm";
     
@@ -343,38 +343,20 @@ var ret12 = m.func12();
 
 
 
-WScript.Echo(typeof(ret1));
-WScript.Echo(ret1.toString());
+equalSimd([21, 2, 0, 0], ret1, SIMD.Int32x4, "Test Conversion");
+equalSimd([110, 58967, 0, 0], ret2, SIMD.Int32x4, "Test Conversion");
+equalSimd([0, 1, 0, 0], ret3, SIMD.Int32x4, "Test Conversion");
 
-WScript.Echo(typeof(ret2));
-WScript.Echo(ret2.toString());
+equalSimd([1889785610, 1077250621, 824633721, 1073916936], ret4, SIMD.Int32x4, "Test Conversion");
+equalSimd([-858993459, 1079741644, 0, 1089260256], ret5, SIMD.Int32x4, "Test Conversion");
+equalSimd([-1962628256, 1069521347, 1257566424, 1073383001], ret6, SIMD.Int32x4, "Test Conversion");
 
-WScript.Echo(typeof(ret3));
-WScript.Echo(ret3.toString());
+equalSimd([1034, 22342, 1233, 40443], ret7, SIMD.Int32x4, "Test Conversion");
+equalSimd([90934, 123, 419, 449], ret8, SIMD.Int32x4, "Test Conversion");
+equalSimd([5033, 3401, 665, 32234], ret9, SIMD.Int32x4, "Test Conversion");
 
-WScript.Echo(typeof(ret4));
-WScript.Echo(ret4.toString());
+equalSimd([1316880384, 1317011456, 1317044224, 1317076992], ret10, SIMD.Int32x4, "Test Conversion");
+equalSimd([1202821914, 1123536077, 1137816044, 1138786304], ret11, SIMD.Int32x4, "Test Conversion");
+equalSimd([1167935898, 1163169792, 1143363011, 1190908979], ret12, SIMD.Int32x4, "Test Conversion");
 
-WScript.Echo(typeof(ret5));
-WScript.Echo(ret5.toString());
-
-WScript.Echo(typeof(ret6));
-WScript.Echo(ret6.toString());
-
-WScript.Echo(typeof(ret7));
-WScript.Echo(ret7.toString());
-
-WScript.Echo(typeof(ret8));
-WScript.Echo(ret8.toString());
-
-WScript.Echo(typeof(ret9));
-WScript.Echo(ret9.toString());
-
-WScript.Echo(typeof(ret10));
-WScript.Echo(ret10.toString());
-
-WScript.Echo(typeof(ret11));
-WScript.Echo(ret11.toString());
-
-WScript.Echo(typeof(ret12));
-WScript.Echo(ret12.toString());
+WScript.Echo("PASS");

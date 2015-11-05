@@ -2,6 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
+this.WScript.LoadScriptFile("..\\UnitTestFramework\\SimdJsHelpers.js");
 
 function asmModule(stdlib, imports, buffer) {
     "use asm";
@@ -664,39 +665,47 @@ var ret;
 
 ret = m.func1();
 WScript.Echo("func1");
-WScript.Echo(typeof(ret));
-WScript.Echo(ret.toString());
+// WScript.Echo(typeof(ret));
+equalSimd([10, 20, 30, 40], ret, SIMD.Float32x4, "LoadStore")
+
 
 ret = m.func2();
 WScript.Echo("func3");
-WScript.Echo(typeof(ret));
-WScript.Echo(ret.toString());
+// WScript.Echo(typeof(ret));
+equalSimd([10, 20, 30, 0], ret, SIMD.Float32x4, "LoadStore")
 
 ret = m.func3();
 WScript.Echo("func3");
-WScript.Echo(typeof(ret));
-WScript.Echo(ret.toString());
+// WScript.Echo(typeof(ret));
+equalSimd([10, 20, 0, 0], ret, SIMD.Float32x4, "LoadStore")
 
 
 ret = m.func4();
 WScript.Echo("func4");
-WScript.Echo(typeof(ret));
-WScript.Echo(ret.toString());
+// WScript.Echo(typeof(ret));
+equalSimd([10, 0, 0, 0], ret, SIMD.Float32x4, "LoadStore")
 
 
 ret = m.func5();
 WScript.Echo("func5");
-WScript.Echo(typeof(ret));
-WScript.Echo(ret.toString());
+// WScript.Echo(typeof(ret));
+equalSimd([10, 20, 0, 0], ret, SIMD.Float32x4, "LoadStore")
 
 ret = m.func6();
 WScript.Echo("func6");
-WScript.Echo(typeof(ret));
-WScript.Echo(ret.toString());
+// WScript.Echo(typeof(ret));
+equalSimd([10, 0, 0, 0], ret, SIMD.Float32x4, "LoadStore")
 
 //
 
 var funcOOB1 = [m.func1OOB_1, m.func2OOB_1 ,m.func3OOB_1, m.func4OOB_1, m.func5OOB_1, m.func6OOB_1];
+var RESULT = 
+[SIMD.Float32x4(10, 20, 30, 40),	
+SIMD.Float32x4(20, 30, 40, 0),
+SIMD.Float32x4(30, 40, 0, 0),
+SIMD.Float32x4(40, 0, 0, 0),
+SIMD.Float32x4(30, 40, 0, 0),
+SIMD.Float32x4(40, 0, 0, 0)];
 
 for (var i = 0; i < funcOOB1.length; i ++)
 {
@@ -705,13 +714,14 @@ for (var i = 0; i < funcOOB1.length; i ++)
         
         ret = funcOOB1[i]();
         WScript.Echo("func" + (i+1) + "OOB_1");
-        WScript.Echo(typeof(ret));
-        WScript.Echo(ret.toString());
+        // WScript.Echo(typeof(ret));
+        equalSimd(RESULT[i], ret, SIMD.Float32x4, "Load Store Out of bounds test");
     } catch(e)
     {
         WScript.Echo("Wrong");
     }
 }
+
 
 //
 

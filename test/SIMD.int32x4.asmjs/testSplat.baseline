@@ -1,7 +1,2 @@
 Successfully compiled asm.js code
-int32x4
-SIMD.Int32x4(100, 100, 100, 100)
-int32x4
-SIMD.Int32x4(14851, 14851, 14851, 14851)
-int32x4
-SIMD.Int32x4(1234, 1234, 1234, 1234)
+PASS

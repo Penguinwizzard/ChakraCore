@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
-
+WScript.LoadScriptFile("..\\UnitTestFramework\\SimdJsHelpers.js");
 function asmModule(stdlib, imports) {
     "use asm";
     
@@ -260,23 +260,14 @@ var ret12 = m.func12();
 */
 
 
-WScript.Echo(typeof(ret1));
-WScript.Echo(ret1.toString());
 
-WScript.Echo(typeof(ret2));
-WScript.Echo(ret2.toString());
-
-WScript.Echo(typeof(ret3));
-WScript.Echo(ret3.toString());
-
-WScript.Echo(typeof(ret4));
-WScript.Echo(ret4.toString());
-
-WScript.Echo(typeof(ret5));
-WScript.Echo(ret5.toString());
-
-WScript.Echo(typeof(ret6));
-WScript.Echo(ret6.toString());
+equalSimd([0.20000000298023224, -0.3333333432674408, 0.15772870182991028, -0.5], ret1, SIMD.Float32x4, "TestRcpSqrt");
+equalSimd([0.000010996962373610586, 0.008071024902164936, 0.0023844153620302677, 0.0022271715570241213], ret2, SIMD.Float32x4, "TestRcpSqrt");
+equalSimd([0.000010996962373610586, 0.008071024902164936, 0.0023844153620302677, 0.0022271715570241213], ret3, SIMD.Float32x4, "TestRcpSqrt");
+equalSimd([0.4472135901451111, 0.5773502588272095, 0.3971507251262665, 0.7071067690849304], ret4, SIMD.Float32x4, "TestRcpSqrt")
+equalSimd([0.0033161668106913566, 0.08983888477087021, 0.04883047565817833, 0.04719291999936104], ret5, SIMD.Float32x4, "TestRcpSqrt");
+equalSimd([0.01409541629254818, 0.017147336155176162, 0.038768425583839416, 0.005569833796471357], ret6, SIMD.Float32x4, "TestRcpSqrt");
+WScript.Echo("PASS");
 /*
 WScript.Echo(typeof(ret7));
 WScript.Echo(ret7.toString());

@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
-
+this.WScript.LoadScriptFile("..\\UnitTestFramework\\SimdJsHelpers.js");
 function asmModule(stdlib, imports, buffer) {
     "use asm";
     
@@ -731,118 +731,143 @@ WScript.Echo("Stores:");
 
 WScript.Echo("Test1");
 var ret = m.store1(SIMDStore1);//Lane1 store
-printBuffer(values, 10);
+equalSimd([5, 1092616192, 1101004800, 1106247680], ret, SIMD.Int32x4, "");
+
 
 WScript.Echo("Test2");;
 inputLength = initF32(buffer); 
 var ret = m.store1(SIMDStore2);//Lane 1,2 store
-printBuffer(values, 10);
+equalSimd([5, -12, 1101004800, 1106247680], ret, SIMD.Int32x4, "");
+
+
 
 WScript.Echo("Test3");
 inputLength = initF32(buffer); 
 var ret = m.store1(SIMDStore3);//Lane 1,2,3 store
-printBuffer(values, 10);
+equalSimd([5, -12, 3, 1106247680], ret, SIMD.Int32x4, "");
+
+
 
 WScript.Echo("Test4");
 inputLength = initF32(buffer); 
 //Should change the buffer to  0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3...15,15,15,15,0,0,0,0...
 var ret = m.store1(SIMDStore);//Generic Store
-printBuffer(values, 10);
+equalSimd([5, -12, 3, 0], ret, SIMD.Int32x4, "");
+
+
 
 WScript.Echo("Test5");
 inputLength = initF32(buffer);  
 var ret = m.store2(SIMDStore);//Generic store 
-printBuffer(values, 10);
+equalSimd([2, 2, 2, 2], ret, SIMD.Int32x4, "");
+
+
 
 WScript.Echo("Test6");
 inputLength = initF32(buffer); 
 var ret = m.store3(SIMDStore);//Generic store
-printBuffer(values, 10);
+equalSimd([2, 2, 2, 2], ret, SIMD.Int32x4, "");
+
+
 
 WScript.Echo("Test7");
 inputLength = initF32(buffer); 
 var ret = m.store1Int8(inputLength);//Int8Heap store
-printBuffer(values, 10);
+equalSimd([0, 0, 1, 1], ret, SIMD.Int32x4, "");
+
+
 
 WScript.Echo("Test8");
 inputLength = initF32(buffer); 
 var ret = m.store1Uint8(inputLength);//Uint8Heap store
-printBuffer(values, 10);
+equalSimd([0, 0, 1, 1], ret, SIMD.Int32x4, "");
+
+
 
 WScript.Echo("Test9");
 inputLength = initF32(buffer); 
 var ret = m.store1Int16(inputLength);//Int16Heap store
-printBuffer(values, 10);
+equalSimd([0, 0, 1, 1], ret, SIMD.Int32x4, "");
+
+
 
 WScript.Echo("Test10");
 inputLength = initF32(buffer); 
 var ret = m.store1Uint16(inputLength);//Uint16Heap store
-printBuffer(values, 10);
+equalSimd([0, 0, 1, 1], ret, SIMD.Int32x4, "");
+
+
 
 WScript.Echo("Test12");
 inputLength = initF32(buffer); 
 var ret = m.store1Int32(inputLength);//Int32Heap store
-printBuffer(values, 10);
+equalSimd([0, 0, 1, 1], ret, SIMD.Int32x4, "");
+
+
 
 WScript.Echo("Test13");
 inputLength = initF32(buffer); 
 var ret = m.store1Uint32(inputLength);//Uint32Heap store
-printBuffer(values, 10);
+equalSimd([0, 0, 1, 1], ret, SIMD.Int32x4, "");
+
+
 
 WScript.Echo("Test14");
 inputLength = initF32(buffer); 
 var ret = m.loadStoreIndex1();//Uint32Heap store
-printBuffer(values, 10);
+equalSimd([-1, -2, 3, -4], ret, SIMD.Int32x4, "");
+
+
 
 
 WScript.Echo("Loads");
 WScript.Echo("Test1");
 var ret = m.load1(SIMDLoad1);
-printResults(ret);
+equalSimd([1126170624, 0, 0, 0], ret, SIMD.Int32x4, "");
 
 WScript.Echo("Test2");
 var ret = m.load1(SIMDLoad2);
-printResults(ret);
+equalSimd([1126170624, 1126825984, 0, 0], ret, SIMD.Int32x4, "");
 
 WScript.Echo("Test3");
 var ret = m.load1(SIMDLoad3);
-printResults(ret);
+equalSimd([1126170624, 1126825984, 1127481344, 0], ret, SIMD.Int32x4, "");
 
 WScript.Echo("Test4");
 var ret = m.load1(SIMDLoad);
-printResults(ret);
+equalSimd([1126170624, 1126825984, 1127481344, 1128136704], ret, SIMD.Int32x4, "");
 
 WScript.Echo("Test5");
 var ret = m.load2(SIMDLoad);
-printResults(ret);
+equalSimd([1126170624, 1126825984, 1127481344, 1128136704], ret, SIMD.Int32x4, "");
 
 WScript.Echo("Test6");
 var ret = m.load3(SIMDLoad);
-printResults(ret);
+equalSimd([1126170624, 1126825984, 1127481344, 1128136704], ret, SIMD.Int32x4, "");
 
 WScript.Echo("Test7");
 var ret = m.load1Int8(inputLength); //Int8Heap load
-printResults(ret);
+equalSimd([1210054144, 1210054784, 1210055424, 1210056064], ret, SIMD.Int32x4, "");
 
 WScript.Echo("Test8");
 var ret = m.load1Uint8(inputLength); //Int8Heap load
-printResults(ret);
+equalSimd([1210054144, 1210054784, 1210055424, 1210056064], ret, SIMD.Int32x4, "");
 
 WScript.Echo("Test9");
 var ret = m.load1Int16(inputLength); //Int16Heap load
-printResults(ret);
+equalSimd([1210054144, 1210054784, 1210055424, 1210056064], ret, SIMD.Int32x4, "");
 
 WScript.Echo("Test10");
 var ret = m.load1Uint16(inputLength); //Int16Heap load
-printResults(ret);
+equalSimd([1210054144, 1210054784, 1210055424, 1210056064], ret, SIMD.Int32x4, "");
 
 WScript.Echo("Test11");
 var ret = m.load1Int32(inputLength); //Int32Heap load
-printResults(ret);
+equalSimd([1210054144, 1210054784, 1210055424, 1210056064], ret, SIMD.Int32x4, "");
 
 WScript.Echo("Test12");
 var ret = m.load1Uint32(inputLength); //Int32Heap load
-printResults(ret);
+equalSimd([1210054144, 1210054784, 1210055424, 1210056064], ret, SIMD.Int32x4, "");
 
 
 print("BoundCheck");
@@ -921,3 +946,5 @@ try {m.storeI8(value, inputLength*4-15); WScript.Echo("Wrong");} catch(err) {WSc
 
 WScript.Echo("Test19");
 try {m.loadI8(inputLength*4+15); WScript.Echo("Wrong");} catch(err) {WScript.Echo("Correct");}
+
+WScript.Echo("PASS");

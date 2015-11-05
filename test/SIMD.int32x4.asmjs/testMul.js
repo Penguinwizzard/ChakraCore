@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
-
+this.WScript.LoadScriptFile("..\\UnitTestFramework\\SimdJsHelpers.js");
 function asmModule(stdlib, imports) {
     "use asm";
     var i4 = stdlib.SIMD.Int32x4;
@@ -185,10 +185,11 @@ var m = asmModule(this, {g1:SIMD.Float32x4(90934.2,123.9,419.39,449.0), g2:SIMD.
 
 
 WScript.Echo("Func1");
-WScript.Echo(m.func1().toString());
+equalSimd([-1115827495, -164134912, -1773145837, 5242848], m.func1(), SIMD.Int32x4, "Test Mul");
 
 WScript.Echo("Func2");
-WScript.Echo(m.func2().toString());
+equalSimd([1306834368, 1908105728, -1740529272, -296213152], m.func2(), SIMD.Int32x4, "Test Mul");
 
 WScript.Echo("Func3");
-WScript.Echo(m.func3().toString());
+equalSimd([-1571028992, 1735366152, -150797824, -1726173856], m.func3(), SIMD.Int32x4, "Test Mul");
+WScript.Echo("PASS");

@@ -3,21 +3,18 @@
   <test>
     <default>
       <files>testAddSub.js</files>
-      <baseline>testAddSub.baseline</baseline>
       <compile-flags>-Simdjs</compile-flags>
     </default>
   </test>
   <test>
     <default>
       <files>testAndOrXor.js</files>
-      <baseline>testAndOrXor.baseline</baseline>
       <compile-flags>-Simdjs</compile-flags>
     </default>
   </test>
   <test>
     <default>
       <files>testComparisons.js</files>
-      <baseline>testComparisons.baseline</baseline>
       <compile-flags>-Simdjs</compile-flags>
     </default>
   </test>

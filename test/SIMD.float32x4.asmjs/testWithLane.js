@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
-
+this.WScript.LoadScriptFile("..\\UnitTestFramework\\SimdJsHelpers.js");
 function asmModule(stdlib, imports) {
     "use asm";
     
@@ -227,52 +227,11 @@ var ret4 = m.func4();
 var ret5 = m.func5();
 var ret6 = m.func6();
 
-/*
-var ret7 = m.func7();
-var ret8 = m.func8();
-var ret9 = m.func9();
+equalSimd([100, 3401, 200, 32234.099609375], ret1, SIMD.Float32x4, "TestWithLane");
+equalSimd([100, -123.9000015258789, 200, -449], ret2, SIMD.Float32x4, "TestWithLane");
+equalSimd([100, -123.9000015258789, 200, -449], ret3, SIMD.Float32x4, "TestWithLane");
 
-
-var ret10 = m.func10();
-var ret11 = m.func11();
-var ret12 = m.func12();
-
-*/
-
-
-WScript.Echo(typeof(ret1));
-WScript.Echo(ret1.toString());
-
-WScript.Echo(typeof(ret2));
-WScript.Echo(ret2.toString());
-
-WScript.Echo(typeof(ret3));
-WScript.Echo(ret3.toString());
-
-WScript.Echo(typeof(ret4));
-WScript.Echo(ret4.toString());
-
-WScript.Echo(typeof(ret5));
-WScript.Echo(ret5.toString());
-
-WScript.Echo(typeof(ret6));
-WScript.Echo(ret6.toString());
-/*
-WScript.Echo(typeof(ret7));
-WScript.Echo(ret7.toString());
-
-WScript.Echo(typeof(ret8));
-WScript.Echo(ret8.toString());
-
-WScript.Echo(typeof(ret9));
-WScript.Echo(ret9.toString());
-
-WScript.Echo(typeof(ret10));
-WScript.Echo(ret10.toString());
-
-WScript.Echo(typeof(ret11));
-WScript.Echo(ret11.toString());
-
-WScript.Echo(typeof(ret12));
-WScript.Echo(ret12.toString());
-*/
+equalSimd([5033.2001953125, 100, 665.3400268554687, 200], ret4, SIMD.Float32x4, "TestWithLane");
+equalSimd([90934.203125, 100, 419.3900146484375, 200], ret5, SIMD.Float32x4, "TestWithLane");
+equalSimd([5033.2001953125, 100, 665.3400268554687, 200], ret6, SIMD.Float32x4, "TestWithLane");
+WScript.Echo("PASS");

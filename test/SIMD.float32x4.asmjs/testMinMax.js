@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
-
+this.WScript.LoadScriptFile("..\\UnitTestFramework\\SimdJsHelpers.js");
 function asmModule(stdlib, imports) {
     "use asm";
 var i4 = stdlib.SIMD.Int32x4;
@@ -233,19 +233,19 @@ var m = asmModule(this, {g1:SIMD.Float32x4(90934.2,123.9,419.39,449.0), g2:SIMD.
 
 
 WScript.Echo("Func1");
-WScript.Echo(m.func1().toString());
+equalSimd([-34183.8984375, -3401, -569437, -32234.099609375], m.func1(), SIMD.Float32x4, "MinMax");
 
 WScript.Echo("Func2");
-WScript.Echo(m.func2().toString());
+equalSimd([-5033.2001953125, -11201.5, 665.3400268554687, 334.79998779296875], m.func2(), SIMD.Float32x4, "MinMax");
 
 WScript.Echo("Func3");
-WScript.Echo(m.func3().toString());
+equalSimd([-5033.2001953125, -3401, 665.3400268554687, -32234.099609375], m.func3(), SIMD.Float32x4, "MinMax");
 
 WScript.Echo("Func4");
-WScript.Echo(m.func4().toString());
+equalSimd([5033.2001953125, 0, 665.3400268554687, 0], m.func4(), SIMD.Float32x4, "MinMax");
 
 WScript.Echo("Func5");
-WScript.Echo(m.func5().toString());
+equalSimd([-5033.2001953125, -3401, 665.3400268554687, 334.79998779296875], m.func5(), SIMD.Float32x4, "MinMax");
 
 WScript.Echo("Func6");
-WScript.Echo(m.func6().toString());
+equalSimd([1194580.375, 212344.125, 63236.9296875, 65534.98828125], m.func6(), SIMD.Float32x4, "MinMax");

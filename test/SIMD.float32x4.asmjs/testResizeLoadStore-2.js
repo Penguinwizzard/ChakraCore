@@ -2,12 +2,12 @@
 // Copyright (C) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
-
+this.WScript.LoadScriptFile("..\\UnitTestFramework\\SimdJsHelpers.js");
 function asmModule(stdlib, imports, buffer) {
     "use asm";
     
-	var i4 = stdlib.SIMD.Int32x4;
-	var i4check = i4.check;
+    var i4 = stdlib.SIMD.Int32x4;
+    var i4check = i4.check;
     var i4splat = i4.splat;
     var i4fromFloat64x2 = i4.fromFloat64x2;
     var i4fromFloat64x2Bits = i4.fromFloat64x2Bits;
@@ -155,9 +155,9 @@ function asmModule(stdlib, imports, buffer) {
     var len=stdlib.byteLength;
     
     function ch(newBuffer) 
-	{ 
-		if(len(newBuffer) & 0xffffff || len(newBuffer) <= 0xffffff || len(newBuffer) > 0x80000000) 
-			return false; 
+    { 
+        if(len(newBuffer) & 0xffffff || len(newBuffer) <= 0xffffff || len(newBuffer) > 0x80000000) 
+            return false; 
         
         Int8Heap = new Int8Array(newBuffer);
         Uint8Heap = new Uint8Array(newBuffer);
@@ -165,552 +165,552 @@ function asmModule(stdlib, imports, buffer) {
         Uint16Heap = new Uint16Array(newBuffer);
         Int32Heap = new Int32Array(newBuffer);
         Uint32Heap = new Uint32Array(newBuffer);
-		Float32Heap = new Float32Array(newBuffer);
+        Float32Heap = new Float32Array(newBuffer);
         
-		buffer=newBuffer; 
-		return true;
-	}
+        buffer=newBuffer; 
+        return true;
+    }
     
- 	function storeF32(value, idx) 
-	{
-		value= f4check(value);
-		idx = idx|0;
-		idx = idx<<2;
-		f4store(Float32Heap, (idx>>2), value);
-	}
-	function loadF32(idx) 
-	{
-		idx = idx|0;
-		idx = idx<<2;
-		return f4load(Float32Heap, (idx>>2));
-	}
-	
-	function storeUI32(value, idx) 
-	{ value= f4check(value); idx = idx|0; idx = idx<<2; 
-	f4store(Uint32Heap, (idx>>2), value);}
-	function loadUI32(idx) 
-	{ idx = idx|0; idx = idx<<2; return f4load(Uint32Heap, (idx>>2)); }
-	
-	function storeI32(value, idx) 
-	{ value= f4check(value); idx = idx|0; idx = idx<<2; 
-	f4store(Int32Heap, (idx>>2), value);}
-	function loadI32(idx) 
-	{ idx = idx|0; idx = idx<<2; return f4load(Int32Heap, (idx>>2)); }
-	
-	function storeI16(value, idx) 
-	{ value= f4check(value); idx = idx|0; idx = idx<<1; 
-	f4store(Int16Heap, (idx>>1), value);}
-	function loadI16(idx) 
-	{ idx = idx|0; idx = idx<<1; return f4load(Int16Heap, (idx>>1)); }
-
-	function storeUI16(value, idx) 
-	{ value= f4check(value); idx = idx|0; idx = idx<<1; 
-	f4store(Uint16Heap, (idx>>1), value);}
-	function loadUI16(idx) 
-	{ idx = idx|0; idx = idx<<1; return f4load(Uint16Heap, (idx>>1)); }
-
-	function storeI8(value, idx) 
-	{ value= f4check(value); idx = idx|0; idx = idx<<0; 
-	f4store(Int8Heap, (idx>>0), value);}
-	function loadI8(idx) 
-	{ idx = idx|0; idx = idx<<0; return f4load(Int8Heap, (idx>>0)); }
-
-	function storeUI8(value, idx) 
-	{ value= f4check(value); idx = idx|0; idx = idx<<0; 
-	f4store(Uint8Heap, (idx>>0), value);}
-	function loadUI8(idx) 
-	{ idx = idx|0; idx = idx<<0; return f4load(Uint8Heap, (idx>>0)); }
-	
-	
-	function loadStoreIndex1()
-	{
-		f4store(Float32Heap, 0, f4(-1.0,-2.0,3.1,-4.0)); 
-		return f4load(Float32Heap, 0);
-	}
-	
-	
-	function store_1(functionPicker) //Function picker to pick store1/store2/store3/store
-	{
-		functionPicker = functionPicker|0;
-		var v0 = f4(0.0,0.0,0.0,0.0);
-		var loopIndex = 0, idx = 0, end = 256;		
-		while((loopIndex|0) < (loopCOUNT|0)) 
-		{
-			idx = 0;
-			v0 = f4(5.1,-12.3,-0.0,0.0);
-			for(idx = idx << 2; (idx|0) < (end|0 << 2); idx = (idx + 16)|0)
-			{
-				switch(functionPicker|0)
-				{
-					case 5:
-						f4store(Float32Heap, idx>>2, v0); 
-						break;
-					case 6:
-						f4store1(Float32Heap, idx>>2, v0);
-						break;
-					case 7:
-						f4store2(Float32Heap, idx>>2, v0);
-						break;
-					case 8:
-						f4store3(Float32Heap, idx>>2, v0);
-						break;
-					default:
-						break;
-				}
-				v0 = f4add(v0, f4(1.0,1.0,1.0,1.0));
-			}
-			loopIndex = (loopIndex + 1)|0;
-		}
-		//Expects the heap to be: 0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3...15,15,15,15,0,0,0,0...
-		return f4load(Float32Heap, 0);
-		//Alternate validation
-		// for(idx = 0; idx << 2 < end << 2; idx = (idx + 4 << 2)|0)
-		// {
-			// verify buffer view is as expected. 
-			// 0,0,0,0,1,1,1,1,2,2,2,2... 
-		// }
-	}		
- 	function store_2(functionPicker)
+    function storeF32(value, idx) 
     {
-		functionPicker = functionPicker|0;
-		var v0 = f4(0.0,0.0,0.0,0.0);
-		var loopIndex = 0, idx = 0, end = 256;		
+        value= f4check(value);
+        idx = idx|0;
+        idx = idx<<2;
+        f4store(Float32Heap, (idx>>2), value);
+    }
+    function loadF32(idx) 
+    {
+        idx = idx|0;
+        idx = idx<<2;
+        return f4load(Float32Heap, (idx>>2));
+    }
+    
+    function storeUI32(value, idx) 
+    { value= f4check(value); idx = idx|0; idx = idx<<2; 
+    f4store(Uint32Heap, (idx>>2), value);}
+    function loadUI32(idx) 
+    { idx = idx|0; idx = idx<<2; return f4load(Uint32Heap, (idx>>2)); }
+    
+    function storeI32(value, idx) 
+    { value= f4check(value); idx = idx|0; idx = idx<<2; 
+    f4store(Int32Heap, (idx>>2), value);}
+    function loadI32(idx) 
+    { idx = idx|0; idx = idx<<2; return f4load(Int32Heap, (idx>>2)); }
+    
+    function storeI16(value, idx) 
+    { value= f4check(value); idx = idx|0; idx = idx<<1; 
+    f4store(Int16Heap, (idx>>1), value);}
+    function loadI16(idx) 
+    { idx = idx|0; idx = idx<<1; return f4load(Int16Heap, (idx>>1)); }
+
+    function storeUI16(value, idx) 
+    { value= f4check(value); idx = idx|0; idx = idx<<1; 
+    f4store(Uint16Heap, (idx>>1), value);}
+    function loadUI16(idx) 
+    { idx = idx|0; idx = idx<<1; return f4load(Uint16Heap, (idx>>1)); }
+
+    function storeI8(value, idx) 
+    { value= f4check(value); idx = idx|0; idx = idx<<0; 
+    f4store(Int8Heap, (idx>>0), value);}
+    function loadI8(idx) 
+    { idx = idx|0; idx = idx<<0; return f4load(Int8Heap, (idx>>0)); }
+
+    function storeUI8(value, idx) 
+    { value= f4check(value); idx = idx|0; idx = idx<<0; 
+    f4store(Uint8Heap, (idx>>0), value);}
+    function loadUI8(idx) 
+    { idx = idx|0; idx = idx<<0; return f4load(Uint8Heap, (idx>>0)); }
+    
+    
+    function loadStoreIndex1()
+    {
+        f4store(Float32Heap, 0, f4(-1.0,-2.0,3.1,-4.0)); 
+        return f4load(Float32Heap, 0);
+    }
+    
+    
+    function store_1(functionPicker) //Function picker to pick store1/store2/store3/store
+    {
+        functionPicker = functionPicker|0;
+        var v0 = f4(0.0,0.0,0.0,0.0);
+        var loopIndex = 0, idx = 0, end = 256;		
+        while((loopIndex|0) < (loopCOUNT|0)) 
+        {
+            idx = 0;
+            v0 = f4(5.1,-12.3,-0.0,0.0);
+            for(idx = idx << 2; (idx|0) < (end|0 << 2); idx = (idx + 16)|0)
+            {
+                switch(functionPicker|0)
+                {
+                    case 5:
+                        f4store(Float32Heap, idx>>2, v0); 
+                        break;
+                    case 6:
+                        f4store1(Float32Heap, idx>>2, v0);
+                        break;
+                    case 7:
+                        f4store2(Float32Heap, idx>>2, v0);
+                        break;
+                    case 8:
+                        f4store3(Float32Heap, idx>>2, v0);
+                        break;
+                    default:
+                        break;
+                }
+                v0 = f4add(v0, f4(1.0,1.0,1.0,1.0));
+            }
+            loopIndex = (loopIndex + 1)|0;
+        }
+        //Expects the heap to be: 0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3...15,15,15,15,0,0,0,0...
+        return f4load(Float32Heap, 0);
+        //Alternate validation
+        // for(idx = 0; idx << 2 < end << 2; idx = (idx + 4 << 2)|0)
+        // {
+            // verify buffer view is as expected. 
+            // 0,0,0,0,1,1,1,1,2,2,2,2... 
+        // }
+    }		
+    function store_2(functionPicker)
+    {
+        functionPicker = functionPicker|0;
+        var v0 = f4(0.0,0.0,0.0,0.0);
+        var loopIndex = 0, idx = 0, end = 256;		
         for (loopIndex = 0; (loopIndex | 0) < (loopCOUNT | 0) ; loopIndex = (loopIndex + 1) | 0)
         {
-			idx = 0;
-			v0 = f4(0.0,0.0,0.0,0.0);
-			for(idx = idx << 2; (idx|0) < (end|0 << 2); idx = (idx + 16)|0)
-			{
-				switch(functionPicker|0)
-				{
-					case 5:
-						f4store(Float32Heap, idx>>2, v0); 
-						break;
-					case 6:
-						f4store1(Float32Heap, idx>>2, v0);
-						break;
-					case 7:
-						f4store2(Float32Heap, idx>>2, v0);
-						break;
-					case 8:
-						f4store3(Float32Heap, idx>>2, v0);
-						break;
-					default:
-						break;
-				}
-				v0 = f4add(v0, f4(1.0,1.0,1.0,1.0));
-			}
+            idx = 0;
+            v0 = f4(0.0,0.0,0.0,0.0);
+            for(idx = idx << 2; (idx|0) < (end|0 << 2); idx = (idx + 16)|0)
+            {
+                switch(functionPicker|0)
+                {
+                    case 5:
+                        f4store(Float32Heap, idx>>2, v0); 
+                        break;
+                    case 6:
+                        f4store1(Float32Heap, idx>>2, v0);
+                        break;
+                    case 7:
+                        f4store2(Float32Heap, idx>>2, v0);
+                        break;
+                    case 8:
+                        f4store3(Float32Heap, idx>>2, v0);
+                        break;
+                    default:
+                        break;
+                }
+                v0 = f4add(v0, f4(1.0,1.0,1.0,1.0));
+            }
         }
-		return f4load(Float32Heap, 8);
+        return f4load(Float32Heap, 8);
     } 
     function store_3(functionPicker)
     {
-		functionPicker = functionPicker|0;
-		var v0 = f4(0.0,0.0,0.0,0.0);
-		var loopIndex = 0, idx = 0, end = 256;	
+        functionPicker = functionPicker|0;
+        var v0 = f4(0.0,0.0,0.0,0.0);
+        var loopIndex = 0, idx = 0, end = 256;	
 
         loopIndex = loopCOUNT | 0;
         do {
-			idx = 0;
-			v0 = f4(0.0,0.0,0.0,0.0);
-			for(idx = idx << 2; (idx|0) < (end|0 << 2); idx = (idx + 16)|0)
-			{
-				switch(functionPicker|0)
-				{
-					case 5:
-						f4store(Float32Heap, idx>>2, v0); 
-						break;
-					case 6:
-						f4store1(Float32Heap, idx>>2, v0);
-						break;
-					case 7:
-						f4store2(Float32Heap, idx>>2, v0);
-						break;
-					case 8:
-						f4store3(Float32Heap, idx>>2, v0);
-						break;
-					default:
-						break;
-				}
-				v0 = f4add(v0, f4(1.0,1.0,1.0,1.0));
-			}
+            idx = 0;
+            v0 = f4(0.0,0.0,0.0,0.0);
+            for(idx = idx << 2; (idx|0) < (end|0 << 2); idx = (idx + 16)|0)
+            {
+                switch(functionPicker|0)
+                {
+                    case 5:
+                        f4store(Float32Heap, idx>>2, v0); 
+                        break;
+                    case 6:
+                        f4store1(Float32Heap, idx>>2, v0);
+                        break;
+                    case 7:
+                        f4store2(Float32Heap, idx>>2, v0);
+                        break;
+                    case 8:
+                        f4store3(Float32Heap, idx>>2, v0);
+                        break;
+                    default:
+                        break;
+                }
+                v0 = f4add(v0, f4(1.0,1.0,1.0,1.0));
+            }
             loopIndex = (loopIndex - 1) | 0;
         }
         while ( (loopIndex | 0) > 0);
-		return f4load(Float32Heap, 8);
+        return f4load(Float32Heap, 8);
     } 
-	function store_1_Int8(length) 
-	{
-		length = length|0;
-		var v0 = f4(0.0,0.0,0.0,0.0);
-		var loopIndex = 0, idx = 0, end = 0;
-		end = (length * 4)|0; 
-		while((loopIndex|0) < (loopCOUNT|0)) 
-		{
-			idx = (end - 4096) | 0;
-			v0 = f4(0.0,0.0,0.0,0.0);
-			for(idx = idx << 0; (idx|0) < (end|0 << 0); idx = (idx + 16)|0)
-			{
-				f4store(Int8Heap, idx>>0, v0); 
-				v0 = f4add(v0, f4(1.0,1.0,1.0,1.0));
-			}
-			loopIndex = (loopIndex + 1)|0;
-		}
-		//Expects the heap to be: 0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3...15,15,15,15,0,0,0,0...
-		return f4load(Float32Heap, 2);
-	}
-	function store_1_Uint8(length) 
-	{
-		length = length|0;
-		var v0 = f4(0.0,0.0,0.0,0.0);
-		var loopIndex = 0, idx = 0, end = 0;
-		end = (length * 4)|0; 
-		while((loopIndex|0) < (loopCOUNT|0)) 
-		{
-			idx = (end - 4096) | 0;
-			v0 = f4(0.0,0.0,0.0,0.0);
-			for(idx = idx << 0; (idx|0) < (end|0 << 0); idx = (idx + 16)|0)
-			{
-				f4store(Uint8Heap, idx>>0, v0); 
-				v0 = f4add(v0, f4(1.0,1.0,1.0,1.0));
-			}
-			loopIndex = (loopIndex + 1)|0;
-		}
-		//Expects the heap to be: 0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3...15,15,15,15,0,0,0,0...
-		return f4load(Float32Heap, 2);
-	}
-	function store_1_Int16(length) 
-	{
-		length = length|0;
-		var v0 = f4(0.0,0.0,0.0,0.0);
-		var loopIndex = 0, idx = 0, end = 0;
-		end = (length * 4)|0; 
-		while((loopIndex|0) < (loopCOUNT|0)) 
-		{
-			idx = (end - 4096) | 0;
-			v0 = f4(0.0,0.0,0.0,0.0);
-			for(idx = idx << 1; (idx|0) < (end|0 << 1); idx = (idx + 16)|0)
-			{
-				f4store(Int16Heap, idx>>1, v0); 
-				v0 = f4add(v0, f4(1.0,1.0,1.0,1.0));
-			}
-			loopIndex = (loopIndex + 1)|0;
-		}
-		//Expects the heap to be: 0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3...15,15,15,15,0,0,0,0...
-		return f4load(Float32Heap, 2);
-	}	
-	function store_1_Uint16(length) 
-	{
-		length = length|0;
-		var v0 = f4(0.0,0.0,0.0,0.0);
-		var loopIndex = 0, idx = 0, end = 0;
-		end = (length * 4)|0; 
-		while((loopIndex|0) < (loopCOUNT|0)) 
-		{
-			idx = (end - 4096) | 0;
-			v0 = f4(0.0,0.0,0.0,0.0);
-			for(idx = idx << 1; (idx|0) < (end|0 << 1); idx = (idx + 16)|0)
-			{
-				f4store(Uint16Heap, idx>>1, v0); 
-				v0 = f4add(v0, f4(1.0,1.0,1.0,1.0));
-			}
-			loopIndex = (loopIndex + 1)|0;
-		}
-		//Expects the heap to be: 0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3...15,15,15,15,0,0,0,0...
-		return f4load(Float32Heap, 2);
-	}	
-	function store_1_Int32(length) 
-	{
-		length = length|0;
-		var v0 = f4(0.0,0.0,0.0,0.0);
-		var loopIndex = 0, idx = 0, end = 0;
-		end = (length * 4)|0; 
-		while((loopIndex|0) < (loopCOUNT|0)) 
-		{
-			idx = (end - 4096) | 0;
-			v0 = f4(0.0,0.0,0.0,0.0);
-			for(idx = idx << 2; (idx|0) < (end|0 << 2); idx = (idx + 16)|0)
-			{
-				f4store(Int32Heap, idx>>2, v0); 
-				v0 = f4add(v0, f4(1.0,1.0,1.0,1.0));
-			}
-			loopIndex = (loopIndex + 1)|0;
-		}
-		//Expects the heap to be: 0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3...15,15,15,15,0,0,0,0...
-		return f4load(Float32Heap, 2);
-	}	
-	function store_1_Uint32(length) 
-	{
-		length = length|0;
-		var v0 = f4(0.0,0.0,0.0,0.0);
-		var loopIndex = 0, idx = 0, end = 0;
-		end = (length * 4)|0; 
-		while((loopIndex|0) < (loopCOUNT|0)) 
-		{
-			idx = (end - 4096) | 0;
-			v0 = f4(0.0,0.0,0.0,0.0);
-			for(idx = idx << 2; (idx|0) < (end|0 << 2); idx = (idx + 16)|0)
-			{
-				f4store(Uint32Heap, idx>>2, v0); 
-				v0 = f4add(v0, f4(1.0,1.0,1.0,1.0));
-			}
-			loopIndex = (loopIndex + 1)|0;
-		}
-		//Expects the heap to be: 0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3...15,15,15,15,0,0,0,0...
-		return f4load(Float32Heap, 2);
-	}
-	
-	////////////////////////////Load////////////////////////////
-	function load_1(functionPicker)
+    function store_1_Int8(length) 
     {
-		//length = length|0;
-		functionPicker = functionPicker|0;
-		
-		var idx=0,end=16;//(length-4)|0;;
+        length = length|0;
+        var v0 = f4(0.0,0.0,0.0,0.0);
+        var loopIndex = 0, idx = 0, end = 0;
+        end = (length * 4)|0; 
+        while((loopIndex|0) < (loopCOUNT|0)) 
+        {
+            idx = (end - 4096) | 0;
+            v0 = f4(0.0,0.0,0.0,0.0);
+            for(idx = idx << 0; (idx|0) < (end|0 << 0); idx = (idx + 16)|0)
+            {
+                f4store(Int8Heap, idx>>0, v0); 
+                v0 = f4add(v0, f4(1.0,1.0,1.0,1.0));
+            }
+            loopIndex = (loopIndex + 1)|0;
+        }
+        //Expects the heap to be: 0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3...15,15,15,15,0,0,0,0...
+        return f4load(Float32Heap, 2);
+    }
+    function store_1_Uint8(length) 
+    {
+        length = length|0;
+        var v0 = f4(0.0,0.0,0.0,0.0);
+        var loopIndex = 0, idx = 0, end = 0;
+        end = (length * 4)|0; 
+        while((loopIndex|0) < (loopCOUNT|0)) 
+        {
+            idx = (end - 4096) | 0;
+            v0 = f4(0.0,0.0,0.0,0.0);
+            for(idx = idx << 0; (idx|0) < (end|0 << 0); idx = (idx + 16)|0)
+            {
+                f4store(Uint8Heap, idx>>0, v0); 
+                v0 = f4add(v0, f4(1.0,1.0,1.0,1.0));
+            }
+            loopIndex = (loopIndex + 1)|0;
+        }
+        //Expects the heap to be: 0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3...15,15,15,15,0,0,0,0...
+        return f4load(Float32Heap, 2);
+    }
+    function store_1_Int16(length) 
+    {
+        length = length|0;
+        var v0 = f4(0.0,0.0,0.0,0.0);
+        var loopIndex = 0, idx = 0, end = 0;
+        end = (length * 4)|0; 
+        while((loopIndex|0) < (loopCOUNT|0)) 
+        {
+            idx = (end - 4096) | 0;
+            v0 = f4(0.0,0.0,0.0,0.0);
+            for(idx = idx << 1; (idx|0) < (end|0 << 1); idx = (idx + 16)|0)
+            {
+                f4store(Int16Heap, idx>>1, v0); 
+                v0 = f4add(v0, f4(1.0,1.0,1.0,1.0));
+            }
+            loopIndex = (loopIndex + 1)|0;
+        }
+        //Expects the heap to be: 0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3...15,15,15,15,0,0,0,0...
+        return f4load(Float32Heap, 2);
+    }	
+    function store_1_Uint16(length) 
+    {
+        length = length|0;
+        var v0 = f4(0.0,0.0,0.0,0.0);
+        var loopIndex = 0, idx = 0, end = 0;
+        end = (length * 4)|0; 
+        while((loopIndex|0) < (loopCOUNT|0)) 
+        {
+            idx = (end - 4096) | 0;
+            v0 = f4(0.0,0.0,0.0,0.0);
+            for(idx = idx << 1; (idx|0) < (end|0 << 1); idx = (idx + 16)|0)
+            {
+                f4store(Uint16Heap, idx>>1, v0); 
+                v0 = f4add(v0, f4(1.0,1.0,1.0,1.0));
+            }
+            loopIndex = (loopIndex + 1)|0;
+        }
+        //Expects the heap to be: 0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3...15,15,15,15,0,0,0,0...
+        return f4load(Float32Heap, 2);
+    }	
+    function store_1_Int32(length) 
+    {
+        length = length|0;
+        var v0 = f4(0.0,0.0,0.0,0.0);
+        var loopIndex = 0, idx = 0, end = 0;
+        end = (length * 4)|0; 
+        while((loopIndex|0) < (loopCOUNT|0)) 
+        {
+            idx = (end - 4096) | 0;
+            v0 = f4(0.0,0.0,0.0,0.0);
+            for(idx = idx << 2; (idx|0) < (end|0 << 2); idx = (idx + 16)|0)
+            {
+                f4store(Int32Heap, idx>>2, v0); 
+                v0 = f4add(v0, f4(1.0,1.0,1.0,1.0));
+            }
+            loopIndex = (loopIndex + 1)|0;
+        }
+        //Expects the heap to be: 0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3...15,15,15,15,0,0,0,0...
+        return f4load(Float32Heap, 2);
+    }	
+    function store_1_Uint32(length) 
+    {
+        length = length|0;
+        var v0 = f4(0.0,0.0,0.0,0.0);
+        var loopIndex = 0, idx = 0, end = 0;
+        end = (length * 4)|0; 
+        while((loopIndex|0) < (loopCOUNT|0)) 
+        {
+            idx = (end - 4096) | 0;
+            v0 = f4(0.0,0.0,0.0,0.0);
+            for(idx = idx << 2; (idx|0) < (end|0 << 2); idx = (idx + 16)|0)
+            {
+                f4store(Uint32Heap, idx>>2, v0); 
+                v0 = f4add(v0, f4(1.0,1.0,1.0,1.0));
+            }
+            loopIndex = (loopIndex + 1)|0;
+        }
+        //Expects the heap to be: 0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3...15,15,15,15,0,0,0,0...
+        return f4load(Float32Heap, 2);
+    }
+    
+    ////////////////////////////Load////////////////////////////
+    function load_1(functionPicker)
+    {
+        //length = length|0;
+        functionPicker = functionPicker|0;
+        
+        var idx=0,end=16;//(length-4)|0;;
         var loopIndex = 0;
-		var v = f4(0.0,0.0,0.0,0.0);
+        var v = f4(0.0,0.0,0.0,0.0);
 
         while ( (loopIndex|0) < (loopCOUNT|0)) {
-			
+            
             idx=0;
-			
-			for(idx = idx<<2; (idx|0) <= (end<<2); idx = (idx + 1)|0)
-			{		
-				switch(functionPicker|0)
-				{
-					case 1:
-						v = f4load(Float32Heap, idx>>2); 
-						break;
-					 case 2:
-						v = f4load1(Float32Heap, idx>>2);
-						break;
-					case 3:
-						v = f4load2(Float32Heap, idx>>2);
-						break;
-					case 4:
-						v = f4load3(Float32Heap, idx>>2);
-						break;
-					default:
-						break;
-				}
-			}
+            
+            for(idx = idx<<2; (idx|0) <= (end<<2); idx = (idx + 1)|0)
+            {		
+                switch(functionPicker|0)
+                {
+                    case 1:
+                        v = f4load(Float32Heap, idx>>2); 
+                        break;
+                     case 2:
+                        v = f4load1(Float32Heap, idx>>2);
+                        break;
+                    case 3:
+                        v = f4load2(Float32Heap, idx>>2);
+                        break;
+                    case 4:
+                        v = f4load3(Float32Heap, idx>>2);
+                        break;
+                    default:
+                        break;
+                }
+            }
             loopIndex = (loopIndex + 1) | 0;
         }
-		return v;
+        return v;
     }
-	 
+     
     function load_2(functionPicker)
     {
-		//length = length|0;
-		functionPicker = functionPicker|0;
-		
-		var idx=0,end=16;//(length-4)|0;;
+        //length = length|0;
+        functionPicker = functionPicker|0;
+        
+        var idx=0,end=16;//(length-4)|0;;
         var loopIndex = 0;
-		var v = f4(0.0,0.0,0.0,0.0);
-		
+        var v = f4(0.0,0.0,0.0,0.0);
+        
         for (loopIndex = 0; (loopIndex | 0) < (loopCOUNT | 0) ; loopIndex = (loopIndex + 1) | 0)
         {
-			 idx=0;
-			
-			for(idx = idx<<2; (idx|0) <= (end<<2); idx = (idx + 1)|0)
-			{		
-				switch(functionPicker|0)
-				{
-					case 1:
-						v = f4load(Float32Heap, idx>>2); 
-						break;
-					 case 2:
-						v = f4load1(Float32Heap, idx>>2);
-						break;
-					case 3:
-						v = f4load2(Float32Heap, idx>>2);
-						break;
-					case 4:
-						v = f4load3(Float32Heap, idx>>2);
-						break;
-					default:
-						break;
-				}
-			}
+             idx=0;
+            
+            for(idx = idx<<2; (idx|0) <= (end<<2); idx = (idx + 1)|0)
+            {		
+                switch(functionPicker|0)
+                {
+                    case 1:
+                        v = f4load(Float32Heap, idx>>2); 
+                        break;
+                     case 2:
+                        v = f4load1(Float32Heap, idx>>2);
+                        break;
+                    case 3:
+                        v = f4load2(Float32Heap, idx>>2);
+                        break;
+                    case 4:
+                        v = f4load3(Float32Heap, idx>>2);
+                        break;
+                    default:
+                        break;
+                }
+            }
         }
-		return v;
+        return v;
     }
 
     function load_3(functionPicker)
     {
-		//length = length|0;
-		functionPicker = functionPicker|0;
-		
-		var idx=0,end=16;//(length-4)|0;;
+        //length = length|0;
+        functionPicker = functionPicker|0;
+        
+        var idx=0,end=16;//(length-4)|0;;
         var loopIndex = 0;
-		var v = f4(0.0,0.0,0.0,0.0);
+        var v = f4(0.0,0.0,0.0,0.0);
 
         loopIndex = loopCOUNT | 0;
         do {
-			idx = 0;
-			for(idx = idx<<2; (idx|0) <= (end<<2); idx = (idx + 1)|0)
-			{		
-				switch(functionPicker|0)
-				{
-					case 1:
-						v = f4load(Float32Heap, idx>>2); 
-						break;
-					 case 2:
-						v = f4load1(Float32Heap, idx>>2);
-						break;
-					case 3:
-						v = f4load2(Float32Heap, idx>>2);
-						break;
-					case 4:
-						v = f4load3(Float32Heap, idx>>2);
-						break;
-					default:
-						break;
-				}
-			}
+            idx = 0;
+            for(idx = idx<<2; (idx|0) <= (end<<2); idx = (idx + 1)|0)
+            {		
+                switch(functionPicker|0)
+                {
+                    case 1:
+                        v = f4load(Float32Heap, idx>>2); 
+                        break;
+                     case 2:
+                        v = f4load1(Float32Heap, idx>>2);
+                        break;
+                    case 3:
+                        v = f4load2(Float32Heap, idx>>2);
+                        break;
+                    case 4:
+                        v = f4load3(Float32Heap, idx>>2);
+                        break;
+                    default:
+                        break;
+                }
+            }
             loopIndex = (loopIndex - 1) | 0;
         }
         while ( (loopIndex | 0) > 0);
-		return v;
+        return v;
     } 
     function load_1_Int8(length)
     {
-		length = length|0;
-		var idx=0,end=0;
+        length = length|0;
+        var idx=0,end=0;
         var loopIndex = 0;
-		var v = f4(0.0,0.0,0.0,0.0);
-		end = (((length * 4)|0) - 16)|0; 
+        var v = f4(0.0,0.0,0.0,0.0);
+        end = (((length * 4)|0) - 16)|0; 
         while ( (loopIndex|0) < (loopCOUNT|0)) {
             idx= (end - 4096) | 0;
-			for(idx = idx<<0; (idx|0) <= (end<<0); idx = (idx + 1)|0)
-			{		
-				v = f4load(Int8Heap, idx>>0); 
-			}
+            for(idx = idx<<0; (idx|0) <= (end<<0); idx = (idx + 1)|0)
+            {		
+                v = f4load(Int8Heap, idx>>0); 
+            }
             loopIndex = (loopIndex + 1) | 0;
         }
-		return v;
+        return v;
     }
     function load_1_Uint8(length)
     {
-		length = length|0;
-		var idx=0,end=0;
+        length = length|0;
+        var idx=0,end=0;
         var loopIndex = 0;
-		var v = f4(0.0,0.0,0.0,0.0);
-		end = (((length * 4)|0) - 16)|0; 
+        var v = f4(0.0,0.0,0.0,0.0);
+        end = (((length * 4)|0) - 16)|0; 
         while ( (loopIndex|0) < (loopCOUNT|0)) {
             idx= (((length * 4)|0) - 4096) | 0;
-			for(idx = idx<<0; (idx|0) <= (end<<0); idx = (idx + 1)|0)
-			{		
-				v = f4load(Uint8Heap, idx>>0); 
-			}
+            for(idx = idx<<0; (idx|0) <= (end<<0); idx = (idx + 1)|0)
+            {		
+                v = f4load(Uint8Heap, idx>>0); 
+            }
             loopIndex = (loopIndex + 1) | 0;
         }
-		return v;
+        return v;
     }
     function load_1_Int16(length)
     {
-		length = length|0;
-		var idx=0,end=0;
+        length = length|0;
+        var idx=0,end=0;
         var loopIndex = 0;
-		var v = f4(0.0,0.0,0.0,0.0);
-		end = (((length * 2)|0) - 8)|0; 
+        var v = f4(0.0,0.0,0.0,0.0);
+        end = (((length * 2)|0) - 8)|0; 
         while ( (loopIndex|0) < (loopCOUNT|0)) {
             idx= (end - 4096) | 0;
-			for(idx = idx<<1; (idx|0) <= (end<<1); idx = (idx + 1)|0)
-			{		
-				v = f4load(Int16Heap, idx>>1); 
-			}
+            for(idx = idx<<1; (idx|0) <= (end<<1); idx = (idx + 1)|0)
+            {		
+                v = f4load(Int16Heap, idx>>1); 
+            }
             loopIndex = (loopIndex + 1) | 0;
         }
-		return v;
+        return v;
     }
     function load_1_Uint16(length)
     {
-		length = length|0;
-		var idx=0,end=120;
+        length = length|0;
+        var idx=0,end=120;
         var loopIndex = 0;
-		var v = f4(0.0,0.0,0.0,0.0);
-		end = (((length * 2)|0) - 8)|0; 
+        var v = f4(0.0,0.0,0.0,0.0);
+        end = (((length * 2)|0) - 8)|0; 
         while ( (loopIndex|0) < (loopCOUNT|0)) {
             idx= (end - 4096) | 0;
-			for(idx = idx<<1; (idx|0) <= (end<<1); idx = (idx + 1)|0)
-			{		
-				v = f4load(Uint16Heap, idx>>1); 
-			}
+            for(idx = idx<<1; (idx|0) <= (end<<1); idx = (idx + 1)|0)
+            {		
+                v = f4load(Uint16Heap, idx>>1); 
+            }
             loopIndex = (loopIndex + 1) | 0;
         }
-		return v;
+        return v;
     }
     function load_1_Int32(length)
     {
-		length = length|0;
-		var idx=0,end=60;
+        length = length|0;
+        var idx=0,end=60;
         var loopIndex = 0;
-		var v = f4(0.0,0.0,0.0,0.0);
-		end = (((length * 1)|0) - 4)|0; 
+        var v = f4(0.0,0.0,0.0,0.0);
+        end = (((length * 1)|0) - 4)|0; 
         while ( (loopIndex|0) < (loopCOUNT|0)) {
             idx= (end - 4096) | 0;
-			for(idx = idx<<2; (idx|0) <= (end<<2); idx = (idx + 1)|0)
-			{		
-				v = f4load(Int32Heap, idx>>2); 
-			}
+            for(idx = idx<<2; (idx|0) <= (end<<2); idx = (idx + 1)|0)
+            {		
+                v = f4load(Int32Heap, idx>>2); 
+            }
             loopIndex = (loopIndex + 1) | 0;
         }
-		return v;
+        return v;
     }
     function load_1_Uint32(length)
     {
-		length = length|0;
-		var idx=0,end=60;
+        length = length|0;
+        var idx=0,end=60;
         var loopIndex = 0;
-		var v = f4(0.0,0.0,0.0,0.0);
-		end = (((length * 1)|0) - 4)|0; 
+        var v = f4(0.0,0.0,0.0,0.0);
+        end = (((length * 1)|0) - 4)|0; 
         while ( (loopIndex|0) < (loopCOUNT|0)) {
             idx= (end - 4096) | 0;
-			for(idx = idx<<2; (idx|0) <= (end<<2); idx = (idx + 1)|0)
-			{		
-				v = f4load(Uint32Heap, idx>>2); 
-			}
+            for(idx = idx<<2; (idx|0) <= (end<<2); idx = (idx + 1)|0)
+            {		
+                v = f4load(Uint32Heap, idx>>2); 
+            }
             loopIndex = (loopIndex + 1) | 0;
         }
-		return v;
+        return v;
     }	
-	
-	return {
+    
+    return {
             changeHeap:ch
            ,store1:store_1
-		   ,store2:store_2
-		   ,store3:store_3
-		   ,store1Int8:store_1_Int8
-		   ,store1Uint8:store_1_Uint8
-		   ,store1Int16:store_1_Int16
-		   ,store1Uint16:store_1_Uint16
-		   ,store1Int32:store_1_Int32
-		   ,store1Uint32:store_1_Uint32
-		   ,load1:load_1
-		   ,load2:load_2
-		   ,load3:load_3
-		   ,load1Int8:load_1_Int8
-		   ,load1Uint8:load_1_Uint8
-		   ,load1Int16:load_1_Int16
-		   ,load1Uint16:load_1_Uint16
-		   ,load1Int32:load_1_Int32
-		   ,load1Uint32:load_1_Uint32
-		   ,loadF32:loadF32
-		   ,storeF32:storeF32
-		   ,storeUI32:storeUI32
-		   ,loadUI32:loadUI32
-		   ,storeI32:storeI32
-		   ,loadI32:loadI32		   
-		   ,storeI16:storeI16
-		   ,loadI16:loadI16
-		   ,storeUI16:storeUI16
-		   ,loadUI16:loadUI16
-		   ,storeI8:storeI8
-		   ,loadI8:loadI8	
-		   ,storeUI8:storeUI8
-		   ,loadUI8:loadUI8		   
-		   ,loadStoreIndex1:loadStoreIndex1};
+           ,store2:store_2
+           ,store3:store_3
+           ,store1Int8:store_1_Int8
+           ,store1Uint8:store_1_Uint8
+           ,store1Int16:store_1_Int16
+           ,store1Uint16:store_1_Uint16
+           ,store1Int32:store_1_Int32
+           ,store1Uint32:store_1_Uint32
+           ,load1:load_1
+           ,load2:load_2
+           ,load3:load_3
+           ,load1Int8:load_1_Int8
+           ,load1Uint8:load_1_Uint8
+           ,load1Int16:load_1_Int16
+           ,load1Uint16:load_1_Uint16
+           ,load1Int32:load_1_Int32
+           ,load1Uint32:load_1_Uint32
+           ,loadF32:loadF32
+           ,storeF32:storeF32
+           ,storeUI32:storeUI32
+           ,loadUI32:loadUI32
+           ,storeI32:storeI32
+           ,loadI32:loadI32		   
+           ,storeI16:storeI16
+           ,loadI16:loadI16
+           ,storeUI16:storeUI16
+           ,loadUI16:loadUI16
+           ,storeI8:storeI8
+           ,loadI8:loadI8	
+           ,storeUI8:storeUI8
+           ,loadUI8:loadUI8		   
+           ,loadStoreIndex1:loadStoreIndex1};
 }
 
 
@@ -718,11 +718,11 @@ var buffer = new ArrayBuffer(0x1000000); //16mb min 2^12
 
 //Reset or flush the buffer
 function initF32(buffer) {
-	var values = new Float32Array( buffer );
-	for( var i=0; i < values.length ; ++i ) {
-		values[i] = i * 10;
-	}
-	return values.length;
+    var values = new Float32Array( buffer );
+    for( var i=0; i < values.length ; ++i ) {
+        values[i] = i * 10;
+    }
+    return values.length;
 }
 function printBuffer(buffer, count)
 {
@@ -736,8 +736,8 @@ function printBuffer(buffer, count)
 
 function printResults(res)
 {
-	WScript.Echo(typeof(res));
-	WScript.Echo(res.toString());
+    WScript.Echo(typeof(res));
+    WScript.Echo(res.toString());
 }
 
 inputLength = initF32(buffer);
@@ -766,118 +766,135 @@ WScript.Echo("Stores:");
 WScript.Echo("Test1");
 inputLength = initF32(buffer); 
 var ret = m.store1(SIMDStore1);//Lane1 store
-printBuffer(values, 10);
+equalSimd([5.099999904632568, 10, 20, 30], ret, SIMD.Float32x4, "ResizeLoadStore");
 
 WScript.Echo("Test2");;
 inputLength = initF32(buffer); 
 var ret = m.store1(SIMDStore2);//Lane 1,2 store
-printBuffer(values, 10);
+equalSimd([5.099999904632568, -12.300000190734863, 20, 30], ret, SIMD.Float32x4, "ResizeLoadStore");
 
 WScript.Echo("Test3");
 inputLength = initF32(buffer); 
 var ret = m.store1(SIMDStore3);//Lane 1,2,3 store
-printBuffer(values, 10);
+equalSimd([5.099999904632568, -12.300000190734863, 0, 30], ret, SIMD.Float32x4, "ResizeLoadStore");
 
 WScript.Echo("Test4");
 inputLength = initF32(buffer); 
-
 var ret = m.store1(SIMDStore);//Generic Store
-printBuffer(values, 10);
+equalSimd([5.099999904632568, -12.300000190734863, 0, 0], ret, SIMD.Float32x4, "ResizeLoadStore");
 
 WScript.Echo("Test5");
 inputLength = initF32(buffer);  
 var ret = m.store2(SIMDStore);//Generic store 
-printBuffer(values, 10);
+equalSimd([2, 2, 2, 2], ret, SIMD.Float32x4, "ResizeLoadStore");
 
 WScript.Echo("Test6");
 inputLength = initF32(buffer); 
 var ret = m.store3(SIMDStore);//Generic store
-printBuffer(values, 10);
+equalSimd([2,2,2,2], ret, SIMD.Float32x4, "ResizeLoadStore");
+
 
 WScript.Echo("Test7");
 inputLength = initF32(buffer); 
 var ret = m.store1Int8(inputLength);//Int8Heap store
-printBuffer(values, 10);
+equalSimd([20, 30, 40, 50], ret, SIMD.Float32x4, "ResizeLoadStore");
+
 
 WScript.Echo("Test8");
 inputLength = initF32(buffer); 
 var ret = m.store1Uint8(inputLength);//Uint8Heap store
-printBuffer(values, 10);
+equalSimd([20, 30, 40, 50], ret, SIMD.Float32x4, "ResizeLoadStore");
+
 
 WScript.Echo("Test9");
 inputLength = initF32(buffer); 
 var ret = m.store1Int16(inputLength);//Int16Heap store
-printBuffer(values, 10);
+equalSimd([20, 30, 40, 50], ret, SIMD.Float32x4, "ResizeLoadStore");
+
 
 WScript.Echo("Test10");
 inputLength = initF32(buffer); 
 var ret = m.store1Uint16(inputLength);//Uint16Heap store
-printBuffer(values, 10);
+equalSimd([20, 30, 40, 50], ret, SIMD.Float32x4, "ResizeLoadStore");
+
 
 WScript.Echo("Test12");
 inputLength = initF32(buffer); 
 var ret = m.store1Int32(inputLength);//Int32Heap store
-printBuffer(values, 10);
+equalSimd([20, 30, 40, 50], ret, SIMD.Float32x4, "ResizeLoadStore");
+
 
 WScript.Echo("Test13");
 inputLength = initF32(buffer); 
 var ret = m.store1Uint32(inputLength);//Uint32Heap store
-printBuffer(values, 10);
+equalSimd([20, 30, 40, 50], ret, SIMD.Float32x4, "ResizeLoadStore");
+
 
 WScript.Echo("Test14");
 inputLength = initF32(buffer); 
 var ret = m.loadStoreIndex1();//Uint32Heap store
-printBuffer(values, 10);
+equalSimd([-1, -2, 3.0999999046325683, -4], ret, SIMD.Float32x4, "ResizeLoadStore");
+
 
 
 WScript.Echo("Loads");
 WScript.Echo("Test1");
 var ret = m.load1(SIMDLoad1);
-printResults(ret);
+equalSimd([160, 0, 0, 0], ret, SIMD.Float32x4, "Resize Loads");
 
 WScript.Echo("Test2");
 var ret = m.load1(SIMDLoad2);
-printResults(ret);
+equalSimd([160, 170, 0, 0], ret, SIMD.Float32x4, "Resize Loads");
 
 WScript.Echo("Test3");
 var ret = m.load1(SIMDLoad3);
-printResults(ret);
+equalSimd([160, 170, 180, 0], ret, SIMD.Float32x4, "Resize Loads");
+
 
 WScript.Echo("Test4");
 var ret = m.load1(SIMDLoad);
-printResults(ret);
+equalSimd([160, 170, 180, 190	], ret, SIMD.Float32x4, "Resize Loads");
+
 
 WScript.Echo("Test5");
 var ret = m.load2(SIMDLoad);
-printResults(ret);
+equalSimd([160, 170, 180, 190], ret, SIMD.Float32x4, "Resize Loads");
+
 
 WScript.Echo("Test6");
 var ret = m.load3(SIMDLoad);
-printResults(ret);
+equalSimd([160, 170, 180, 190], ret, SIMD.Float32x4, "Resize Loads");
+
 
 WScript.Echo("Test7");
 var ret = m.load1Int8(inputLength); //Int8Heap load
-printResults(ret);
+equalSimd([41943000, 41943008, 41943020, 41943032], ret, SIMD.Float32x4, "Resize Loads");
+
 
 WScript.Echo("Test8");
 var ret = m.load1Uint8(inputLength); //Int8Heap load
-printResults(ret);
+equalSimd([41943000, 41943008, 41943020, 41943032], ret, SIMD.Float32x4, "Resize Loads");
+
 
 WScript.Echo("Test9");
 var ret = m.load1Int16(inputLength); //Int16Heap load
-printResults(ret);
+equalSimd([41943000, 41943008, 41943020, 41943032], ret, SIMD.Float32x4, "Resize Loads");
+
 
 WScript.Echo("Test10");
 var ret = m.load1Uint16(inputLength); //Int16Heap load
-printResults(ret);
+equalSimd([41943000, 41943008, 41943020, 41943032], ret, SIMD.Float32x4, "Resize Loads");
+
 
 WScript.Echo("Test11");
 var ret = m.load1Int32(inputLength); //Int32Heap load
-printResults(ret);
+equalSimd([41943000, 41943008, 41943020, 41943032], ret, SIMD.Float32x4, "Resize Loads");
+
 
 WScript.Echo("Test12");
 var ret = m.load1Uint32(inputLength); //Int32Heap load
-printResults(ret);
+equalSimd([41943000, 41943008, 41943020, 41943032], ret, SIMD.Float32x4, "Resize Loads");
+
 
 
 print("BoundCheck");
@@ -915,21 +932,21 @@ try {m.loadI32(inputLength+1);WScript.Echo("Wrong");} catch(err) {WScript.Echo("
 
 WScript.Echo("Test11");
 try{
-	m.storeI16(value, inputLength*2-8);
+    m.storeI16(value, inputLength*2-8);
     WScript.Echo("Correct");
-	m.storeUI16(value, inputLength*2-8);
+    m.storeUI16(value, inputLength*2-8);
     WScript.Echo("Correct");
-	m.storeI8(value, inputLength*4-16);
+    m.storeI8(value, inputLength*4-16);
     WScript.Echo("Correct");
-	m.storeUI8(value, inputLength*4-16);
+    m.storeUI8(value, inputLength*4-16);
     WScript.Echo("Correct");
-	m.loadI16(inputLength*2-8);
+    m.loadI16(inputLength*2-8);
     WScript.Echo("Correct");
-	m.loadUI16(inputLength*2-8);
+    m.loadUI16(inputLength*2-8);
     WScript.Echo("Correct");
-	m.loadI8(inputLength*4-16);
+    m.loadI8(inputLength*4-16);
     WScript.Echo("Correct");
-	m.loadUI8(inputLength*4-16);
+    m.loadUI8(inputLength*4-16);
     WScript.Echo("Correct");
 } catch(err){ print("Wrong"); }
 
@@ -970,119 +987,131 @@ WScript.Echo("Stores:");
 WScript.Echo("Test1");
 inputLength = initF32(buffer); 
 var ret = m.store1(SIMDStore1);//Lane1 store
-printBuffer(values, 10);
+equalSimd([5.099999904632568, 10, 20, 30], ret, SIMD.Float32x4, "Resize Stores");
+
 
 WScript.Echo("Test2");;
 inputLength = initF32(buffer); 
 var ret = m.store1(SIMDStore2);//Lane 1,2 store
-printBuffer(values, 10);
+equalSimd([5.099999904632568, -12.300000190734863, 20, 30], ret, SIMD.Float32x4, "Resize Stores");
+
 
 WScript.Echo("Test3");
 inputLength = initF32(buffer); 
 var ret = m.store1(SIMDStore3);//Lane 1,2,3 store
-printBuffer(values, 10);
+equalSimd([5.099999904632568, -12.300000190734863, 0, 30], ret, SIMD.Float32x4, "Resize Stores");
+
 
 WScript.Echo("Test4");
 inputLength = initF32(buffer); 
 //Should change the buffer to  0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3...15,15,15,15,0,0,0,0...
 var ret = m.store1(SIMDStore);//Generic Store
-printBuffer(values, 10);
+equalSimd([5.099999904632568, -12.300000190734863, 0, 0], ret, SIMD.Float32x4, "Resize Stores");
+
 
 WScript.Echo("Test5");
 inputLength = initF32(buffer);  
 var ret = m.store2(SIMDStore);//Generic store 
-printBuffer(values, 10);
+equalSimd([2, 2, 2, 2], ret, SIMD.Float32x4, "Resize Stores");
+
 
 WScript.Echo("Test6");
 inputLength = initF32(buffer); 
 var ret = m.store3(SIMDStore);//Generic store
-printBuffer(values, 10);
+equalSimd([2, 2, 2, 2], ret, SIMD.Float32x4, "Resize Stores");
+
 
 WScript.Echo("Test7");
 inputLength = initF32(buffer); 
 var ret = m.store1Int8(inputLength);//Int8Heap store
-printBuffer(values, 10);
+equalSimd([20, 30, 40, 50], ret, SIMD.Float32x4, "Resize Stores");
+
 
 WScript.Echo("Test8");
 inputLength = initF32(buffer); 
 var ret = m.store1Uint8(inputLength);//Uint8Heap store
-printBuffer(values, 10);
+equalSimd([20, 30, 40, 50], ret, SIMD.Float32x4, "Resize Stores");
+
 
 WScript.Echo("Test9");
 inputLength = initF32(buffer); 
 var ret = m.store1Int16(inputLength);//Int16Heap store
-printBuffer(values, 10);
+equalSimd([20, 30, 40, 50], ret, SIMD.Float32x4, "Resize Stores");
+
 
 WScript.Echo("Test10");
 inputLength = initF32(buffer); 
 var ret = m.store1Uint16(inputLength);//Uint16Heap store
-printBuffer(values, 10);
+equalSimd([20, 30, 40, 50], ret, SIMD.Float32x4, "Resize Stores");
+
 
 WScript.Echo("Test12");
 inputLength = initF32(buffer); 
 var ret = m.store1Int32(inputLength);//Int32Heap store
-printBuffer(values, 10);
+equalSimd([20, 30, 40, 50], ret, SIMD.Float32x4, "Resize Stores");
+
 
 WScript.Echo("Test13");
 inputLength = initF32(buffer); 
 var ret = m.store1Uint32(inputLength);//Uint32Heap store
-printBuffer(values, 10);
+equalSimd([20, 30, 40, 50], ret, SIMD.Float32x4, "Resize Stores");
+
 
 WScript.Echo("Test14");
 inputLength = initF32(buffer); 
 var ret = m.loadStoreIndex1();//Uint32Heap store
-printBuffer(values, 10);
+equalSimd([-1, -2, 3.0999999046325683, -4], ret, SIMD.Float32x4, "Resize Stores");
+
 
 
 WScript.Echo("Loads");
 WScript.Echo("Test1");
 var ret = m.load1(SIMDLoad1);
-printResults(ret);
+equalSimd([160, 0, 0, 0], ret, SIMD.Float32x4, "Resize Loads");
 
 WScript.Echo("Test2");
 var ret = m.load1(SIMDLoad2);
-printResults(ret);
+equalSimd([160, 170, 0, 0], ret, SIMD.Float32x4, "Resize Loads");
 
 WScript.Echo("Test3");
 var ret = m.load1(SIMDLoad3);
-printResults(ret);
+equalSimd([160, 170, 180, 0], ret, SIMD.Float32x4, "Resize Loads");
 
 WScript.Echo("Test4");
 var ret = m.load1(SIMDLoad);
-printResults(ret);
+equalSimd([160, 170, 180, 190], ret, SIMD.Float32x4, "Resize Loads");
 
 WScript.Echo("Test5");
 var ret = m.load2(SIMDLoad);
-printResults(ret);
+equalSimd([160, 170, 180, 190], ret, SIMD.Float32x4, "Resize Loads");
 
 WScript.Echo("Test6");
 var ret = m.load3(SIMDLoad);
-printResults(ret);
+equalSimd([160, 170, 180, 190], ret, SIMD.Float32x4, "Resize Loads");
 
 WScript.Echo("Test7");
 var ret = m.load1Int8(inputLength); //Int8Heap load
-printResults(ret);
+equalSimd([83886040, 83886048, 83886064, 83886072], ret, SIMD.Float32x4, "Resize Loads");
 
 WScript.Echo("Test8");
 var ret = m.load1Uint8(inputLength); //Int8Heap load
-printResults(ret);
+equalSimd([83886040, 83886048, 83886064, 83886072], ret, SIMD.Float32x4, "Resize Loads");
 
 WScript.Echo("Test9");
 var ret = m.load1Int16(inputLength); //Int16Heap load
-printResults(ret);
+equalSimd([83886040, 83886048, 83886064, 83886072], ret, SIMD.Float32x4, "Resize Loads");
 
 WScript.Echo("Test10");
 var ret = m.load1Uint16(inputLength); //Int16Heap load
-printResults(ret);
+equalSimd([83886040, 83886048, 83886064, 83886072], ret, SIMD.Float32x4, "Resize Loads");
 
 WScript.Echo("Test11");
 var ret = m.load1Int32(inputLength); //Int32Heap load
-printResults(ret);
+equalSimd([83886040, 83886048, 83886064, 83886072], ret, SIMD.Float32x4, "Resize Loads");
 
 WScript.Echo("Test12");
 var ret = m.load1Uint32(inputLength); //Int32Heap load
-printResults(ret);
-
+equalSimd([83886040, 83886048, 83886064, 83886072], ret, SIMD.Float32x4, "Resize Loads");
 
 print("BoundCheck");
 var value = SIMD.Float32x4(9.9,1.2,3.4,5.6);
@@ -1119,21 +1148,21 @@ try {m.loadI32(inputLength+1);WScript.Echo("Wrong");} catch(err) {WScript.Echo("
 
 WScript.Echo("Test11");
 try{
-	m.storeI16(value, inputLength*2-8);
+    m.storeI16(value, inputLength*2-8);
     WScript.Echo("Correct");
-	m.storeUI16(value, inputLength*2-8);
+    m.storeUI16(value, inputLength*2-8);
     WScript.Echo("Correct");
-	m.storeI8(value, inputLength*4-16);
+    m.storeI8(value, inputLength*4-16);
     WScript.Echo("Correct");
-	m.storeUI8(value, inputLength*4-16);
+    m.storeUI8(value, inputLength*4-16);
     WScript.Echo("Correct");
-	m.loadI16(inputLength*2-8);
+    m.loadI16(inputLength*2-8);
     WScript.Echo("Correct");
-	m.loadUI16(inputLength*2-8);
+    m.loadUI16(inputLength*2-8);
     WScript.Echo("Correct");
-	m.loadI8(inputLength*4-16);
+    m.loadI8(inputLength*4-16);
     WScript.Echo("Correct");
-	m.loadUI8(inputLength*4-16);
+    m.loadUI8(inputLength*4-16);
     WScript.Echo("Correct");
 } catch(err){ print("Wrong"); }
 

@@ -2,6 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
+this.WScript.LoadScriptFile("..\\UnitTestFramework\\SimdJsHelpers.js");
 
 function asmModule(stdlib, imports) {
     "use asm";
@@ -228,22 +229,44 @@ function asmModule(stdlib, imports) {
 var m = asmModule(this, {g1:SIMD.Float32x4(90934.2,123.9,419.39,449.0), g2:SIMD.Int32x4(-1065353216, -1073741824,-1077936128, -1082130432), g3:SIMD.Float64x2(110.20, 58967.0, 14511.670, 191766.23431)});
 
 
-for (var i = 0; i < 6; i++)
-{
     var ret;
-    WScript.Echo("Func1");
-    ret = m.func1(i);
-    WScript.Echo(typeof(ret));
-    WScript.Echo(ret.toString());
+    ret = m.func1(0);
+    equalSimd([0, -1, 0, -1], ret, SIMD.Int32x4, "Test comparison");
+    ret = m.func1(1);
+    equalSimd([0, -1, -1, -1], ret, SIMD.Int32x4, "Test comparison");
+    ret = m.func1(2);
+    equalSimd([0, 0, -1, 0], ret, SIMD.Int32x4, "Test comparison");
+    ret = m.func1(3);
+    equalSimd([-1, -1, 0, -1], ret, SIMD.Int32x4, "Test comparison");
+    ret = m.func1(4);
+    equalSimd([-1, 0, -1, 0], ret, SIMD.Int32x4, "Test comparison");
+    ret = m.func1(5);
+    equalSimd([-1, 0, 0, 0], ret, SIMD.Int32x4, "Test comparison");
+
     
-    WScript.Echo("Func2");
-    ret = m.func2(i);
-    WScript.Echo(typeof(ret));
-    WScript.Echo(ret.toString());
+    ret = m.func2(0);
+    equalSimd([-1, 0, -1, 0], ret, SIMD.Int32x4, "Test comparison");
+    ret = m.func2(1);
+    equalSimd([-1, 0, -1, 0], ret, SIMD.Int32x4, "Test comparison");
+    ret = m.func2(2);
+    equalSimd([0, 0, 0, 0], ret, SIMD.Int32x4, "Test comparison");
+    ret = m.func2(3);
+    equalSimd([-1, -1, -1, -1], ret, SIMD.Int32x4, "Test comparison");
+    ret = m.func2(4);
+    equalSimd([0, -1, 0, -1], ret, SIMD.Int32x4, "Test comparison");
+    ret = m.func2(5);
+    equalSimd([0, -1, 0, -1], ret, SIMD.Int32x4, "Test comparison");
     
-    WScript.Echo("Func3");
-    ret = m.func3(i);
-    WScript.Echo(typeof(ret));
-    WScript.Echo(ret.toString());
-}
+    ret = m.func3(0);
+    equalSimd([-1, 0, -1, 0], ret, SIMD.Int32x4, "Test comparison");
+    ret = m.func3(1);
+    equalSimd([-1, 0, -1, 0], ret, SIMD.Int32x4, "Test comparison");
+    ret = m.func3(2);
+    equalSimd([0, 0, 0, 0], ret, SIMD.Int32x4, "Test comparison");
+    ret = m.func3(3);
+    equalSimd([-1, -1, -1, -1], ret, SIMD.Int32x4, "Test comparison");
+    ret = m.func3(4);
+    equalSimd([0, -1, 0, -1], ret, SIMD.Int32x4, "Test comparison");
+    ret = m.func3(5);
+    equalSimd([0, -1, 0, -1], ret, SIMD.Int32x4, "Test comparison");
 

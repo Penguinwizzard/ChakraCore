@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
-
+this.WScript.LoadScriptFile("..\\UnitTestFramework\\SimdJsHelpers.js");
 function asmModule(stdlib, imports) {
     "use asm";
     var i4 = stdlib.SIMD.Int32x4;
@@ -212,20 +212,11 @@ function asmModule(stdlib, imports) {
 var m = asmModule(this, { g1: SIMD.Float32x4(90934.2, 123.9, 419.39, 449.0), g2: SIMD.Int32x4(-1065353216, -1073741824, -1077936128, -1082130432) });
 
 
-WScript.Echo("Func1");
-WScript.Echo(m.func1().toString());
+equalSimd([100, 0, 200, 0], m.func1(), SIMD.Int32x4, "TestWithLane");
+equalSimd([100, 137701, 200, 133219], m.func2(), SIMD.Int32x4, "TestWithLane");
+equalSimd([100, -1278847, 200, -60147], m.func3(), SIMD.Int32x4, "TestWithLane");
 
-WScript.Echo("Func2");
-WScript.Echo(m.func2().toString());
-
-WScript.Echo("Func3");
-WScript.Echo(m.func3().toString());
-
-WScript.Echo("Func4");
-WScript.Echo(m.func4().toString());
-
-WScript.Echo("Func5");
-WScript.Echo(m.func5().toString());
-
-WScript.Echo("Func6");
-WScript.Echo(m.func6().toString());
+equalSimd([0, 100, 0, 200], m.func4(), SIMD.Int32x4, "TestWithLane");
+equalSimd([-319033, 100, 570565, 200], m.func5(), SIMD.Int32x4, "TestWithLane");
+equalSimd([-1035531, 100, 571491, 200], m.func6(), SIMD.Int32x4, "TestWithLane");
+WScript.Echo("PASS");

@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
-
+this.WScript.LoadScriptFile("..\\UnitTestFramework\\SimdJsHelpers.js");
 function asmModule(stdlib, imports) {
     "use asm";
     
@@ -254,23 +254,13 @@ var ret12 = m.func12();
 
 */
 
-WScript.Echo(typeof(ret1));
-WScript.Echo(ret1.toString());
-
-WScript.Echo(typeof(ret2));
-WScript.Echo(ret2.toString());
-
-WScript.Echo(typeof(ret3));
-WScript.Echo(ret3.toString());
-
-WScript.Echo(typeof(ret4));
-WScript.Echo(ret4.toString());
-
-WScript.Echo(typeof(ret5));
-WScript.Echo(ret5.toString());
-
-WScript.Echo(typeof(ret6));
-WScript.Echo(ret6.toString());
+equalSimd([-5033.2001953125, 3401, -665.3400268554687, 32234.099609375], ret1, SIMD.Float32x4, "Test SIMDLink1");
+equalSimd([-90934.203125, -123.9000015258789, -419.3900146484375, -449], ret2, SIMD.Float32x4, "Test SIMDLink1");
+equalSimd([5033.2001953125, 3401, -665.3400268554687, -32234.099609375], ret3, SIMD.Float32x4, "Test SIMDLink1");
+equalSimd([5033.2001953125, 3401, 665.3400268554687, 32234.099609375], ret4, SIMD.Float32x4, "Test SIMDLink1");
+equalSimd([90934.203125, 123.9000015258789, 419.3900146484375, 449], ret5, SIMD.Float32x4, "Test SIMDLink1");
+equalSimd([5033.2001953125, 3401, 665.3400268554687, 32234.099609375], ret6, SIMD.Float32x4, "Test SIMDLink1");
+WScript.Echo("PASS");
 
 /*
 WScript.Echo(typeof(ret7));

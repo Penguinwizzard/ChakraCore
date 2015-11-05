@@ -1,9 +1,2 @@
 Successfully compiled asm.js code
-int32x4
-SIMD.Int32x4(2, 4, 6, 8)
-int32x4
-SIMD.Int32x4(4, 8, 12, 16)
-int32x4
-SIMD.Int32x4(8, 16, 24, 32)
-int32x4
-SIMD.Int32x4(301, 301, 301, 301)
+PASS
