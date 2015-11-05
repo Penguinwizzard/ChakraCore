@@ -419,6 +419,8 @@ public:
     bool CanPreReserveSegmentForCustomHeap();
 
 private:
+    bool noScriptScope;
+
     Js::DebugManager * debugManager;
 
     static uint const MaxTemporaryArenaAllocators = 5;
@@ -1117,6 +1119,10 @@ public:
 
     void RegisterScriptContext(Js::ScriptContext *scriptContext);
     void UnregisterScriptContext(Js::ScriptContext *scriptContext);
+
+    // NoScriptScope
+    void SetNoScriptScope(bool noScriptScope) { this->noScriptScope = noScriptScope; }
+    bool IsNoScriptScope() { return this->noScriptScope; }
 
     Js::ScriptContext ** RegisterInlineCacheScriptContext(Js::ScriptContext * scriptContext);
     Js::ScriptContext ** RegisterIsInstInlineCacheScriptContext(Js::ScriptContext * scriptContext);

@@ -6,8 +6,15 @@
 
 #include "Library\threadservicewrapper.h"
 
+namespace JsStaticAPI
+{
+    class JavascriptLibrary;
+}
+
 class ThreadServiceWrapperBase : public ThreadServiceWrapper
 {
+    friend class JsStaticAPI::JavascriptLibrary;
+
 public:
     bool ScheduleNextCollectOnExit() override sealed;
     void ScheduleFinishConcurrent() override sealed;

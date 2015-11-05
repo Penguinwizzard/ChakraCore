@@ -18,6 +18,7 @@ enum ErrorReason
     Fatal_Version_Inconsistency = 10,
     MarkStack_OUTOFMEMORY = 11,
     Fatal_FailedToBox_OUTOFMEMORY = 12,
+    EnterScript_FromDOM_NoScriptScope = 13
 };
 
 extern "C" void ReportFatalException(
@@ -56,6 +57,8 @@ void LargeHeapBlock_Metadata_Corrupted(
     __in ULONG_PTR context, __in unsigned char calculatedCheckSum);
 #endif
 
+void FromDOM_NoScriptScope_fatal_error();
+
 // RtlReportException is available on Vista and up, but we cannot use it for OOB release.
 // Use UnhandleExceptionFilter to let the default handler handles it.
 __inline LONG FatalExceptionFilter(
@@ -79,7 +82,6 @@ __inline LONG FatalExceptionFilter(
 
     return EXCEPTION_CONTINUE_SEARCH;
 }
-
 
 template<class Fn>
 static STDMETHODIMP DebugApiWrapper(Fn fn)

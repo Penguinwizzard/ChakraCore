@@ -13,6 +13,13 @@ namespace Js
         scriptContext->ProfileBegin(Js::RunPhase);
 #endif
 
+        if (scriptContext &&
+            scriptContext->GetThreadContext() &&
+            scriptContext->GetThreadContext()->IsNoScriptScope())
+        {
+            FromDOM_NoScriptScope_fatal_error();
+        }
+
         // Keep a copy locally so the optimizer can just copy prop it to the dtor
         this->scriptContext = scriptContext;
         this->entryExitRecord = entryExitRecord;

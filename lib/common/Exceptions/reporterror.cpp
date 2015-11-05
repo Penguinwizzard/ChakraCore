@@ -98,6 +98,12 @@ __declspec(noinline) void LargeHeapBlock_Metadata_Corrupted(
     int scenario = calculatedChecksum; /* For debugging purpose if checksum mismatch happen*/
     ReportFatalException(context, E_UNEXPECTED, LargeHeapBlock_Metadata_Corrupt, scenario);
 };
-#endif 
+#endif
+
+__declspec(noinline) void FromDOM_NoScriptScope_fatal_error()
+{
+    int scenario = 5;
+    ReportFatalException(NULL, E_UNEXPECTED, EnterScript_FromDOM_NoScriptScope, scenario);
+}
 
 #pragma optimize("",on)
