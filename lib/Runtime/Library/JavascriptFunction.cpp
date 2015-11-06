@@ -782,6 +782,7 @@ namespace Js
                     newValues[i] = args.Values[i];
                 }
 
+#pragma prefast(suppress:6386, "The write index args.Info.Count is in the bound")
                 newValues[args.Info.Count] = overridingNewTarget;
             }
         }

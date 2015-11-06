@@ -3254,8 +3254,9 @@ public:
             argArray[i] = (uint32)size;
         }
 
-        for (uint i = 0; i < funcInfo->GetArgCount(); i++)
+        for (uint i = 0; i < argCount; i++)
         {
+            AnalysisAssert(typeArray != nullptr);
             current = ReadByte(current, (byte*)&typeArray[i]);
         }
 
