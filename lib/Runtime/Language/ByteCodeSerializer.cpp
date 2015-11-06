@@ -3219,15 +3219,10 @@ public:
         ArgSlot argCount;
         current = ReadUInt16(current, &argCount);
         funcInfo->SetArgCount(argCount);
-        AsmJsVarType::Which * typeArray = nullptr;
-        if (argCount > 0)
-        {
-            typeArray = RecyclerNewArrayLeaf(scriptContext->GetRecycler(), AsmJsVarType::Which, argCount);
-        }
-        funcInfo->SetArgTypeArray(typeArray);
 
-        current = ReadUInt16(current, &argCount);
-        funcInfo->SetArgByteSize(argCount);
+        ArgSlot argByteSize;
+        current = ReadUInt16(current, &argByteSize);
+        funcInfo->SetArgByteSize(argByteSize);
 
         current = ReadInt32(current, &count);
         funcInfo->SetIntVarCount(count);
@@ -3243,21 +3238,26 @@ public:
         current = ReadInt32(current, &count);
         funcInfo->SetFloatTmpCount(count);
 
-        current = ReadUInt16(current, &argCount);
-        funcInfo->SetArgSizeArrayLength(argCount);
-        uint* argArray = RecyclerNewArrayLeafZ(scriptContext->GetRecycler(), uint, argCount);
+        ArgSlot argSizeArrayLength;
+        current = ReadUInt16(current, &argSizeArrayLength);
+        funcInfo->SetArgSizeArrayLength(argSizeArrayLength);
+        uint* argArray = RecyclerNewArrayLeafZ(scriptContext->GetRecycler(), uint, argSizeArrayLength);
         funcInfo->SetArgsSizesArray(argArray);
-        for (int i = 0; i < argCount; i++)
+        for (int i = 0; i < argSizeArrayLength; i++)
         {
             int32 size;
             current = ReadConstantSizedInt32(current, &size);
             argArray[i] = (uint32)size;
         }
-
-        for (uint i = 0; i < argCount; i++)
+        
+        if (argCount > 0)
         {
-            AnalysisAssert(typeArray != nullptr);
-            current = ReadByte(current, (byte*)&typeArray[i]);
+            AsmJsVarType::Which * typeArray = RecyclerNewArrayLeaf(scriptContext->GetRecycler(), AsmJsVarType::Which, argCount);
+            funcInfo->SetArgTypeArray(typeArray);
+            for (uint i = 0; i < argCount; i++)
+            {
+                current = ReadByte(current, (byte*)&typeArray[i]);
+            }
         }
 
         current = ReadInt32(current, &count);
