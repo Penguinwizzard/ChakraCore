@@ -1219,13 +1219,13 @@ NativeCodeGenerator::CheckCodeGenDone(
     // Replace the entry point
     Js::JavascriptMethod address;
     if (!entryPointInfo->IsCodeGenDone())
-    {        
-        address = functionBody->GetScriptContext()->CurrentThunk == ProfileEntryThunk ? ProfileEntryThunk : functionBody->GetOriginalEntryPoint();
-        entryPointInfo->address = address;
+    {   
         if (entryPointInfo->IsPendingCleanup())
         {
             entryPointInfo->Cleanup(false /* isShutdown */, true /* capture cleanup stack */);
         }
+		address = functionBody->GetScriptContext()->CurrentThunk == ProfileEntryThunk ? ProfileEntryThunk : functionBody->GetOriginalEntryPoint();
+        entryPointInfo->address = address;
     }
     else
     {
