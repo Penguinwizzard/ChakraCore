@@ -3,7 +3,6 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-//Switches:  -maxinterpretcount:2 -maxsimplejitruncount:5  -off:inline
 function test0(){
   var d = 1;
   var __loopvar0 = 0;
@@ -48,12 +47,10 @@ function test0(){
         }    
       } while(((d = 1)) && __loopvar3 < 3)
       d ^=IntArr1[(1)];
-      //Code Snippet: NegativeArgumentBug.ecs (Blue15423)
+
       for (var _i in arguments[1]) { 
         d =2.62877767046713E+18;
       };
-      
-      
     }
   } while((1) && __loopvar0 < 3)
 };

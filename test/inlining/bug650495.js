@@ -15,7 +15,7 @@ var e = 2;
 Object.defineProperty(obj0, 'prop0', {
   set: function (v5) {
     arguments; // this disables the argout optimization
-	WScript.Echo(v5);
+    WScript.Echo(v5);
   }
 });
 for (var i =0;i<3;i++) {

@@ -435,7 +435,7 @@ EncoderMD::EmitImmed(IR::Opnd * opnd, int opSize, int sbit)
         goto intConst;
 
     case IR::OpndKindIntConst:
-        value = opnd->AsIntConstOpnd()->m_value;
+        value = opnd->AsIntConstOpnd()->GetValue();
 intConst:
         if (sbit && opSize > 1 && this->FitsInByte(value)) 
         {
@@ -717,7 +717,7 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
             switch (opr2->GetKind())
             {
             case IR::OpndKindIntConst:
-                value = opr2->AsIntConstOpnd()->m_value;
+                value = opr2->AsIntConstOpnd()->GetValue();
                 break;
             case IR::OpndKindAddr:
                 value = (size_t)opr2->AsAddrOpnd()->m_address;
@@ -893,7 +893,7 @@ modrm:
             {
                 uint32 value;
                 AssertMsg(opr2->IsIntConstOpnd(), "Expected register or constant as shift amount opnd");
-                value = opr2->AsIntConstOpnd()->m_value;
+                value = opr2->AsIntConstOpnd()->GetValue();
                 if (value == 1)
                 {
                     *opcodeByte |= 0x10;
@@ -926,8 +926,8 @@ modrm:
             else if (opr1->IsIntConstOpnd())
             {
                 AppendRelocEntry(RelocTypeCallPcrel, (void*)m_pc);
-                this->EmitConst(opr1->AsIntConstOpnd()->m_value, 4);
-                AssertMsg( ( ((BYTE*)opr1->AsIntConstOpnd()->m_value) < m_encoder->m_encodeBuffer || ((BYTE *)opr1->AsIntConstOpnd()->m_value) >= m_encoder->m_encodeBuffer + m_encoder->m_encodeBufferSize), "Call Target within buffer.");
+                this->EmitConst(opr1->AsIntConstOpnd()->GetValue(), 4);
+                AssertMsg( ( ((BYTE*)opr1->AsIntConstOpnd()->GetValue()) < m_encoder->m_encodeBuffer || ((BYTE *)opr1->AsIntConstOpnd()->GetValue()) >= m_encoder->m_encodeBuffer + m_encoder->m_encodeBufferSize), "Call Target within buffer.");
             }
             else if (opr1->IsHelperCallOpnd())
             {
@@ -951,7 +951,7 @@ modrm:
             {
             case Js::OpCode::RET: {
                 AssertMsg(opr1->IsIntConstOpnd(), "RET should have intConst as src");
-                uint32 value = opr1->AsIntConstOpnd()->m_value;
+                uint32 value = opr1->AsIntConstOpnd()->GetValue();
 
                 if (value==0) 
                 {
@@ -1005,10 +1005,10 @@ modrm:
                 break;
 
             case Js::OpCode::INT:
-                if (opr1->AsIntConstOpnd()->m_value != 3) 
+                if (opr1->AsIntConstOpnd()->GetValue() != 3) 
                 {
                     *opcodeByte |= 1;
-                    *(m_pc)++ = (char)opr1->AsIntConstOpnd()->m_value;
+                    *(m_pc)++ = (char)opr1->AsIntConstOpnd()->GetValue();
                 }
                 break;
 
@@ -1090,7 +1090,7 @@ modrm:
                 {
                     // Multibyte NOP. Encode fast NOPs on SSE2 supported x86 system
                     Assert(instr->GetSrc1()->IsIntConstOpnd() && instr->GetSrc1()->GetType() == TyInt8);
-                    unsigned nopSize = instr->GetSrc1()->AsIntConstOpnd()->m_value;
+                    unsigned nopSize = instr->GetSrc1()->AsIntConstOpnd()->GetValue();
                     Assert(nopSize >= 2 && nopSize <= 4);
                     nopSize = max(2u, min(4u, nopSize)); // satisfy oacr
                     const BYTE *nopEncoding = Nop[nopSize - 1];

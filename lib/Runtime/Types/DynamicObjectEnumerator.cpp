@@ -64,7 +64,7 @@ namespace Js
     }
 
     template <typename T, bool enumNonEnumerable, bool enumSymbols, bool snapShotSementics>
-    BOOL DynamicObjectEnumerator<T, enumNonEnumerable, enumSymbols, snapShotSementics>::GetCurrentPropertyId(PropertyId *pPropertyId)
+    bool DynamicObjectEnumerator<T, enumNonEnumerable, enumSymbols, snapShotSementics>::GetCurrentPropertyId(PropertyId *pPropertyId)
     {
         if (arrayEnumerator)
         {

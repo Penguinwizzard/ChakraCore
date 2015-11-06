@@ -951,8 +951,7 @@ namespace Js
         const wchar_t *const replaceStr = replace->GetString();
 
         // Unfortunately, due to the possibility of there being $ escapes, we can't just wmemcpy the replace string. Check if we
-        // have a small replace string that we can quickly scan for '$', to see if we can just wmemcpy. Legacy behavior was to
-        // ignore $ escapes.
+        // have a small replace string that we can quickly scan for '$', to see if we can just wmemcpy.
         bool definitelyNoEscapes = replace->GetLength() == 0;
         if(!definitelyNoEscapes && replace->GetLength() <= 8)
         {
@@ -1402,12 +1401,11 @@ namespace Js
     //  - The regular expression object has writable field:
     //     - 'lastIndex': one plus index of last character of last match in last input
     //     - 'lastInput
-    //  - (IE extension) The RegExp constructor object has fields:
+    //  - (Host extension) The RegExp constructor object has fields:
     //     - '$n': last match substrings, using "" for undefined in all modes
     //     - etc (see JavascriptRegExpConstructorType.cpp)
     //
     // There are also three influences on what gets propagated where and when:
-    //  - IE8 vs ES5 mode
     //  - Whether the regular expression is global
     //  - Whether the primitive operations runs the regular expression until failure (e.g. String.match) or
     //    just once (e.g. RegExp.exec), or use the underlying matching machinery implicitly (e.g. String.split).
@@ -1421,7 +1419,6 @@ namespace Js
     //       the final failing primitive match for String.match with a global regex forces 'lastIndex' to be reset.
     //       However, if a primitive match succeeds then the regular expression 'lastIndex' is updated only for
     //       a global regex.
-    //     - In IE8 mode, the regular expression's 'lastIndex' is always set to 0 for failure or the last index
     //       for success. However:
     //        - The last failing match in a String.match with a global regex does NOT reset 'lastIndex'.
     //        - If the regular expression matched empty, the last index is set assuming the pattern actually matched
@@ -1491,7 +1488,7 @@ namespace Js
             //   the rational is: use same context of RegExp.prototype, on which the function was called.
             //   So, if you call the function with remoteContext.regexInstance.exec.call(localRegexInstance, "match string"),
             //   we will update stats in the context related to the exec function, i.e. remoteContext.
-            //   This is consistent with chrome.
+            //   This is consistent with other browsers
             UnifiedRegex::RegexPattern* pattern = useSplitPattern
                 ? regularExpression->GetSplitPattern()
                 : regularExpression->GetPattern();

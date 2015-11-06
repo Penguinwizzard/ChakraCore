@@ -21,7 +21,6 @@ FlowGraph::New(Func * func, JitArenaAllocator * alloc)
 /// Construct flow graph and loop structures for the current state of the function.
 ///
 ///----------------------------------------------------------------------------
-
 void
 FlowGraph::Build(void)
 {
@@ -170,7 +169,7 @@ FlowGraph::Build(void)
     this->VerifyLoopGraph();
 #endif
 
-    //Renumber the blocks. Break block remove code has likely inserted new basic blocks.
+    // Renumber the blocks. Break block remove code has likely inserted new basic blocks.
     blockNum = 0;
 
     // Regions need to be assigned before Globopt because:
@@ -207,23 +206,22 @@ FlowGraph::Build(void)
 
     if (breakBlocksRelocated)
     {
-        //Sort loop lists only if there is break block removal.
+        // Sort loop lists only if there is break block removal.
         SortLoopLists();
     }
 #if DBG_DUMP
     this->Dump(false, nullptr);
 #endif
-
 }
 
 void
 FlowGraph::SortLoopLists()
 {
-    //Sort the blocks in loopList
+    // Sort the blocks in loopList
     for (Loop *loop = this->loopList; loop; loop = loop->next)
     {
         unsigned int lastBlockNumber = loop->GetHeadBlock()->GetBlockNum();
-        //Insertion sort as the blockList is almost sorted in the loop.
+        // Insertion sort as the blockList is almost sorted in the loop.
         FOREACH_BLOCK_IN_LOOP_EDITING(block, loop, iter)
         {
             if (lastBlockNumber <= block->GetBlockNum())
@@ -421,20 +419,6 @@ Loop::InsertLandingPad(FlowGraph *fg)
 
     // Always create a landing pad.  This allows globopt to easily hoist instructions
     // and re-optimize the block if needed.
-#if 0
-    SListBaseCounted<FlowEdge *> *predList = headBlock->GetPredList();
-
-    // See if current pred would make an appropriate landing pad
-    if (predList->HasTwo())
-    {
-        if (predList->Head()->GetPred()->GetLastInstr()->IsBranchInstr() == false)
-        {
-            this->landingPad = predList->Head()->GetPred();
-            return;
-        }
-    }
-#endif
-
     BasicBlock *landingPad = BasicBlock::New(fg);
     this->landingPad = landingPad;
     IR::Instr * headInstr = headBlock->GetFirstInstr();
@@ -525,9 +509,9 @@ Loop::RemoveBreakBlocks(FlowGraph *fg)
             BasicBlock *breakBlockStartPrev = breakBlockEnd->GetPrev();
 
             // Walk back the blocks until we find a block which belongs to that block.
-            // Not we don't really care if there break blocks corresponding to different loops. We move the blocks conservatively at the end of the loop.
+            // Note: We don't really care if there are break blocks corresponding to different loops. We move the blocks conservatively to the end of the loop.
 
-            // Algorithm works at one loop at a time.
+            // Algorithm works on one loop at a time.
             while((breakBlockStartPrev->loop == breakBlockEnd->loop) || !this->IsDescendentOrSelf(breakBlockStartPrev->loop))
             {
                 breakBlockStart = breakBlockStartPrev;
@@ -580,16 +564,16 @@ FlowGraph::MoveBlocksBefore(BasicBlock *blockStart, BasicBlock *blockEnd, BasicB
     IR::Instr *srcLastInstr = srcPredBlock->GetLastInstr();
     if (srcLastInstr->IsBranchInstr() && srcLastInstr->AsBranchInstr()->HasFallThrough())
     {
-        //There was a fallthrough in the break blocks original position.
+        // There was a fallthrough in the break blocks original position.
         IR::BranchInstr *srcBranch = srcLastInstr->AsBranchInstr();
         IR::Instr *srcBranchNextInstr = srcBranch->GetNextRealInstrOrLabel();
 
-        //Save the target and invert the branch.
+        // Save the target and invert the branch.
         IR::LabelInstr *srcBranchTarget = srcBranch->GetTarget();
         srcPredBlock->InvertBranch(srcBranch);
         IR::LabelInstr *srcLabel = blockStart->GetFirstInstr()->AsLabelInstr();
 
-        //Point the inverted branch to break block.
+        // Point the inverted branch to break block.
         srcBranch->SetTarget(srcLabel);
 
         if (srcBranchNextInstr != srcBranchTarget)
@@ -640,7 +624,6 @@ BasicBlock::InvertBranch(IR::BranchInstr *branch)
     this->GetSuccList()->Reverse();
 }
 
-
 bool
 FlowGraph::CanonicalizeLoops()
 {
@@ -677,12 +660,11 @@ FlowGraph::CanonicalizeLoops()
 #endif
 
     return breakBlockRelocated;
-
 }
 
 // Find the loops in this function, build the loop structure, and build a linked
-// list of the basic blocks in this loop (including blocks of inner loops).  The
-// list preserve the reverse post-order of the blocks in the flowgraph block list.
+// list of the basic blocks in this loop (including blocks of inner loops). The
+// list preserves the reverse post-order of the blocks in the flowgraph block list.
 void
 FlowGraph::FindLoops()
 {
@@ -742,6 +724,7 @@ FlowGraph::BuildLoop(BasicBlock *headBlock, BasicBlock *tailBlock, Loop *parentL
     loop->headBlock = headBlock;
     loop->int32SymsOnEntry = nullptr;
     loop->lossyInt32SymsOnEntry = nullptr;
+
     // If parentLoop is a parent of loop, it's headBlock better appear first.
     if (parentLoop && loop->headBlock->number > parentLoop->headBlock->number)
     {
@@ -795,7 +778,6 @@ bool Loop::EnsureMemOpVariablesInitialized()
         if (this->GetLoopFlags().isInterpreted && !this->GetLoopFlags().memopMinCountReached)
         {
 #if DBG_DUMP
-            // TODO:: find a way to use Macros currently defined in GlobOpt.cpp to trace memop
             Func* func = this->GetFunc();
             if (Js::Configuration::Global.flags.Verbose && PHASE_TRACE(Js::MemOpPhase, func))
             {
@@ -822,7 +804,7 @@ bool Loop::EnsureMemOpVariablesInitialized()
 }
 
 // Walk the basic blocks backwards until we find the loop header.
-// Mark basic blocks in the loop by looking of at the predecessors
+// Mark basic blocks in the loop by looking at the predecessors
 // of blocks known to be in the loop.
 // Recurse on inner loops.
 void
@@ -870,7 +852,7 @@ FlowGraph::WalkLoopBlocks(BasicBlock *block, Loop *loop, JitArenaAllocator *temp
                 // Fix up loop parent if it isn't set already.
                 // If pred->loop != loop, we're looking at an inner loop, which was already visited.
                 // If pred->loop->parent == nullptr, this is the first time we see this loop from an outer
-                // loop, so this must be a immediate child.
+                // loop, so this must be an immediate child.
                 if (pred->loop && pred->loop != loop && loop->headBlock->number < pred->loop->headBlock->number
                     && (pred->loop->parent == nullptr || pred->loop->parent->headBlock->number < loop->headBlock->number))
                 {
@@ -919,7 +901,6 @@ FlowGraph::AddBlockToLoop(BasicBlock *block, Loop *loop)
 /// Finish processing of a new block: hook up successor arcs, note loops, etc.
 ///
 ///----------------------------------------------------------------------------
-
 BasicBlock *
 FlowGraph::AddBlock(
     IR::Instr * firstInstr,
@@ -961,7 +942,6 @@ FlowGraph::AddBlock(
     }
 
     // Hook up the successor edges
-
     if (lastInstr->EndsBasicBlock())
     {
         BasicBlock * blockTarget = nullptr;
@@ -1012,8 +992,8 @@ FlowGraph::AddBlock(
     if (lastInstr->HasFallThrough())
     {
         // Add a branch to next instruction so that we don't have to update the flow graph
-        // when the glob opt try to insert instructions
-        // We don't run the globopt with try/catch, don't need to insert branch to next for fall through blocks
+        // when the glob opt tries to insert instructions.
+        // We don't run the globopt with try/catch, don't need to insert branch to next for fall through blocks.
         if (!this->func->HasTry() && !lastInstr->IsBranchInstr())
         {
             IR::BranchInstr * instr = IR::BranchInstr::New(Js::OpCode::Br,
@@ -1066,7 +1046,6 @@ FlowGraph::SetBlockTargetAndLoopFlag(IR::LabelInstr * labelInstr)
 /// Add an edge connecting the two given blocks.
 ///
 ///----------------------------------------------------------------------------
-
 FlowEdge *
 FlowGraph::AddEdge(BasicBlock * blockPred, BasicBlock * blockSucc)
 {
@@ -1087,7 +1066,6 @@ FlowGraph::AddEdge(BasicBlock * blockPred, BasicBlock * blockSucc)
 /// the FG.
 ///
 ///----------------------------------------------------------------------------
-
 void
 FlowGraph::Destroy(void)
 {
@@ -1111,7 +1089,7 @@ FlowGraph::Destroy(void)
                 IR::LabelInstr * labelInstr = firstInstr->AsLabelInstr();
                 labelInstr->UnlinkBasicBlock();
                 // Removing the label for non try blocks as we have a deleted block which has the label instruction
-                // still not removed; this prevents the assert for cases where the deleted blocks falls through to a helper block,
+                // still not removed; this prevents the assert for cases where the deleted blocks fall through to a helper block,
                 // i.e. helper introduced by polymorphic inlining bailout.
                 // Skipping Try blocks as we have dependency on blocks to get the last instr(see below in this function)
                 if (!fHasTry)
@@ -1543,7 +1521,7 @@ FlowGraph::InsertAirlockBlock(FlowEdge * edge)
     edge->SetPred(airlockBlock);
     airlockBlock->AddSucc(edge, this);
 
-    //Fixup data use count
+    // Fixup data use count
     airlockBlock->SetDataUseCount(1);
     sourceBlock->DecrementDataUseCount();
 
@@ -1563,7 +1541,6 @@ FlowGraph::InsertAirlockBlock(FlowEdge * edge)
     airlockLabel->SetBasicBlock(airlockBlock);
 
     // Add br to sinkBlock from airlock block
-
     IR::BranchInstr *airlockBr = IR::BranchInstr::New(Js::OpCode::Br, sinkLabel, sinkLabelFunc);
     airlockBr->SetByteCodeOffset(sinkLabel);
     airlockLabel->InsertAfter(airlockBr);
@@ -1588,11 +1565,11 @@ FlowGraph::InsertAirlockBlock(FlowEdge * edge)
         if (!sinkPrevBlock->isDeleted)
         {
             FlowEdge *dstEdge = this->FindEdge(sinkPrevBlock, sinkBlock);
-            if (dstEdge) //Possibility that sourceblock may be same as sinkPrevBlock
+            if (dstEdge) // Possibility that sourceblock may be same as sinkPrevBlock
             {
                 BasicBlock* compensationBlock = this->InsertCompensationCodeForBlockMove(dstEdge, true /*insert comp block to loop list*/, true);
                 compensationBlock->IncrementDataUseCount();
-                //We need to skip airlock compensation block in globopt as its inserted while globopt is iteration over the blocks.
+                // We need to skip airlock compensation block in globopt as its inserted while globopt is iteration over the blocks.
                 compensationBlock->isAirLockCompensationBlock = true;
             }
         }
@@ -1619,20 +1596,20 @@ FlowGraph::InsertCompensationCodeForBlockMove(FlowEdge * edge,  bool insertToLoo
 
     if (insertToLoopList)
     {
-        //For flow graph edits in
+        // For flow graph edits in
         if (sinkBlockLoop)
         {
             if (sinkBlock->loop && sinkBlock->loop->GetHeadBlock() == sinkBlock)
             {
-                //BLUE 531255: sinkblock may be the head block of new loop, we shouldn't insert compensation block to that loop
-                //Insert it to all the parent loop lists.
+                // BLUE 531255: sinkblock may be the head block of new loop, we shouldn't insert compensation block to that loop
+                // Insert it to all the parent loop lists.
                 compBlock->loop = sinkBlock->loop->parent;
                 InsertCompBlockToLoopList(compBlock->loop, compBlock, sinkBlock, false);
             }
             else
             {
                 compBlock->loop = sinkBlock->loop;
-                InsertCompBlockToLoopList(compBlock->loop, compBlock, sinkBlock, false); //sinkBlock or fallthroughBlock?
+                InsertCompBlockToLoopList(compBlock->loop, compBlock, sinkBlock, false); // sinkBlock or fallthroughBlock?
             }
 #ifdef DBG
             compBlock->isBreakCompensationBlockAtSink = true;
@@ -1651,6 +1628,7 @@ FlowGraph::InsertCompensationCodeForBlockMove(FlowEdge * edge,  bool insertToLoo
     //
     // Fixup block linkage
     //
+
     // compensation block is inserted right after sourceBlock
     compBlock->next = fallthroughBlock;
     fallthroughBlock->prev = compBlock;
@@ -1673,6 +1651,7 @@ FlowGraph::InsertCompensationCodeForBlockMove(FlowEdge * edge,  bool insertToLoo
     //
     // Fixup IR
     //
+
     // Maintain the instruction region for inlining
     IR::LabelInstr *sinkLabel = sinkBlock->GetFirstInstr()->AsLabelInstr();
     Func * sinkLabelFunc = sinkLabel->m_func;
@@ -1834,7 +1813,6 @@ FlowGraph::PeepTypedCm(IR::Instr *instr)
         return nullptr;
     }
 
-
     IR::Opnd * src1 = instr->UnlinkSrc1();
     IR::Opnd * src2 = instr->UnlinkSrc2();
 
@@ -1850,6 +1828,7 @@ FlowGraph::PeepTypedCm(IR::Instr *instr)
         instr->InsertBefore(instrNew);
         src1 = tmpOpnd;
     }
+
     if (instr->GetDst()->IsEqual(src2) || (instrLd && instrLd->GetDst()->IsEqual(src2)) || (instrLd2 && instrLd2->GetDst()->IsEqual(src2)))
     {
         Assert(src2->IsInt32());
@@ -1860,7 +1839,6 @@ FlowGraph::PeepTypedCm(IR::Instr *instr)
         instr->InsertBefore(instrNew);
         src2 = tmpOpnd;
     }
-
 
     instrBr->ReplaceSrc1(src1);
     instrBr->SetSrc2(src2);
@@ -2237,7 +2215,6 @@ FlowGraph::PeepCm(IR::Instr *instr)
     }
     instr->Remove();
 
-
     //
     // Try optimizing through a second branch.
     // Peep:
@@ -2415,11 +2392,10 @@ FlowGraph::InsertInlineeOnFLowEdge(IR::BranchInstr *instrBr, IR::Instr *inlineeE
     uint newBrFnNumber = newBr->m_func->m_workItem->GetFunctionNumber();
     Assert(newBrFnNumber == origBrFunc->m_workItem->GetFunctionNumber());
 
-    //The function numbers of the new branch and the inlineeEnd instruction should be different (ensuring that the new branch is not added in the inlinee but in the inliner).
-    //Only case when they can be same is recursive calls - inlinee and inliner are the same function
+    // The function numbers of the new branch and the inlineeEnd instruction should be different (ensuring that the new branch is not added in the inlinee but in the inliner).
+    // Only case when they can be same is recursive calls - inlinee and inliner are the same function
     Assert(newBrFnNumber != inlineeEndInstr->m_func->m_workItem->GetFunctionNumber() ||
         newBrFnNumber == inlineeEndInstr->m_func->GetParentFunc()->m_workItem->GetFunctionNumber());
-
 }
 
 BasicBlock *
@@ -2889,7 +2865,7 @@ Loop::GetLoopTopInstr() const
     }
     else
     {
-        // Flowgraph gets teared down after the globopt, so can't get the loopTop from the head block.
+        // Flowgraph gets torn down after the globopt, so can't get the loopTop from the head block.
         instr = this->loopTopLabel;
     }
     if (instr)

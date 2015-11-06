@@ -17,6 +17,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)unicode.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)SmartFPUControl.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)CommonCommonPch.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Int64Math.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DateUtilities.h" />
@@ -35,11 +36,14 @@
     <ClInclude Include="DaylightTimeHelper.h" />
     <ClInclude Include="unicode.h" />
     <ClInclude Include="vtregistry.h" />
+    <ClInclude Include="NumberUtilities.inc" />
     <ClInclude Include="ByteSwap.h" />
     <ClInclude Include="CommonCommonPch.h" />
     <ClInclude Include="GetCurrentFrameID.h" />
     <ClInclude Include="NumberUtilitiesBase.h" />
     <ClInclude Include="SmartFPUControl.h" />
+    <ClInclude Include="StdAfx.h" />
+    <ClInclude Include="Int64Math.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Jobs.inl" />

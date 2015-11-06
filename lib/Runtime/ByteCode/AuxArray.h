@@ -21,12 +21,10 @@ namespace Js
     };
     typedef AuxArray<Var> VarArray;
 
-
     struct FuncInfoEntry
     {
         uint nestedIndex;
         uint scopeSlot;
     };
     typedef AuxArray<FuncInfoEntry> FuncInfoArray;
-
-};
+}

@@ -17,8 +17,8 @@ template BOOL SmallHeapBlockT<TBlockTypeAttributes>::ReassignPages<true>(Recycle
 template BOOL SmallHeapBlockT<TBlockTypeAttributes>::ReassignPages<false>(Recycler * recycler);
 template BOOL SmallHeapBlockT<TBlockTypeAttributes>::SetPage<true>(__in_ecount_pagesize char * baseAddress, PageSegment * pageSegment, Recycler * recycler);
 template BOOL SmallHeapBlockT<TBlockTypeAttributes>::SetPage<false>(__in_ecount_pagesize char * baseAddress, PageSegment * pageSegment, Recycler * recycler);
-template const size_t SmallHeapBlockT<TBlockTypeAttributes>::GetPageHeapModePageCount<true>() const;
-template const size_t SmallHeapBlockT<TBlockTypeAttributes>::GetPageHeapModePageCount<false>() const;
+template const uint SmallHeapBlockT<TBlockTypeAttributes>::GetPageHeapModePageCount<true>() const;
+template const uint SmallHeapBlockT<TBlockTypeAttributes>::GetPageHeapModePageCount<false>() const;
 template SweepState SmallHeapBlockT<TBlockTypeAttributes>::Sweep<true>(RecyclerSweep& recyclerSweep, bool queuePendingSweep, bool allocable, ushort finalizeCount, bool hasPendingDispose);
 template SweepState SmallHeapBlockT<TBlockTypeAttributes>::Sweep<false>(RecyclerSweep& recyclerSweep, bool queuePendingSweep, bool allocable, ushort finalizeCount, bool hasPendingDispose);
 

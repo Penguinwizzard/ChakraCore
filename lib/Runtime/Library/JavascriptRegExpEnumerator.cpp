@@ -154,12 +154,12 @@ namespace Js
         return false;
     }
 
-    BOOL JavascriptRegExpObjectEnumerator::GetCurrentPropertyId(PropertyId *pPropertyId)
+    bool JavascriptRegExpObjectEnumerator::GetCurrentPropertyId(PropertyId *pPropertyId)
     {
         if (regExpEnumerator != nullptr)
         {
             *pPropertyId = Constants::NoProperty;
-            return FALSE;
+            return false;
         }
 
         if (objectEnumerator != nullptr)
@@ -168,7 +168,7 @@ namespace Js
         }
 
         *pPropertyId = Constants::NoProperty;
-        return FALSE;
+        return false;
     }
 
     Var JavascriptRegExpObjectEnumerator::GetCurrentAndMoveNext(PropertyId& propertyId, PropertyAttributes* attributes)

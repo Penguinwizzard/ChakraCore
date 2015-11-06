@@ -3,8 +3,8 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 //
-// NOTE: This file is intended to be "#include" multiple times.  The call site must define the macro
-// "MACRO" to be executed for each entry.
+// NOTE: This file is intended to be "#include" multiple times. The call site must define the macros
+// "LAYOUT_TYPE", etc., to be executed for each entry.
 //
 
 #ifndef LAYOUT_TYPE
@@ -40,7 +40,7 @@
 
 // These layout are already defined in LayoutTypes.h
 // We redeclare them here to keep the same layout and use them
-// in other context
+// in other contexts.
 LAYOUT_TYPE_WMS_DUP ( ElementSlot      )
 LAYOUT_TYPE_DUP     ( StartCall        )
 LAYOUT_TYPE_DUP     ( Empty            )

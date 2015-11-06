@@ -585,7 +585,6 @@ NumberTemp::ProcessInstr(IR::Instr * instr, BackwardPass * backwardPass)
         Assert(this->upwardExposedMarkTempObjectLiveFields.IsEmpty());
     }
 #endif
-    // TODO: CallDirect
 
     // We don't get to process all dst in MarkTemp. Do it here for the upwardExposedMarkTempObjectLiveFields
     if (!this->DoMarkTempNumbersOnTempObjects(backwardPass))
@@ -684,7 +683,7 @@ NumberTemp::IsTempPropertyTransferLoad(IR::Instr * instr, BackwardPass * backwar
 
         // All other opcode shouldn't have sym opnd that can store temp, See ObjectTemp::IsTempUseOpCodeSym.
         Assert(instr->GetSrc1() == nullptr
-            || instr->GetDst() == nullptr              // this isn't a value loading instruction
+            || instr->GetDst() == nullptr           // this isn't a value loading instruction
             || instr->GetSrc1()->IsIndirOpnd()      // this is detected in IsTempIndirTransferLoad
             || !instr->GetSrc1()->CanStoreTemp());
     }
@@ -708,7 +707,7 @@ NumberTemp::IsTempPropertyTransferStore(IR::Instr * instr, BackwardPass * backwa
                 {
                     return false;
                 }
-                // We don't mark temp store of numeric properties (e.g. object literal [ 86: <blah> ]);
+                // We don't mark temp store of numeric properties (e.g. object literal { 86: foo });
                 // This should only happen for InitFld, as StFld should have changed to StElem
                 PropertySym *propertySym = dst->AsSymOpnd()->m_sym->AsPropertySym();
                 SymID propertySymId = this->GetRepresentativePropertySymId(propertySym, backwardPass);
@@ -717,7 +716,7 @@ NumberTemp::IsTempPropertyTransferStore(IR::Instr * instr, BackwardPass * backwa
             }
         };
 
-        // All other opcode shouldn't have sym opnd that can store temp, See ObjectTemp::IsTempUseOpCodeSym.
+        // All other opcode shouldn't have sym opnd that can store temp, see ObjectTemp::IsTempUseOpCodeSym.
         // We also never mark the dst indir as can store temp for StElemI_A because we don't know what property
         // it is storing in (or it could be an array index).
         Assert(instr->GetDst() == nullptr || !instr->GetDst()->CanStoreTemp());
@@ -758,7 +757,7 @@ NumberTemp::PropagateTempPropertyTransferStoreDependencies(SymID usedSymID, Prop
     if (!this->IsInLoop())
     {
         // Don't need to track dependencies outside of loop, as we already marked the
-        // use as temp transfer already and we won't have a case where the "dst" is reused again (outside of loop
+        // use as temp transfer already and we won't have a case where the "dst" is reused again (outside of loop)
         return;
     }
 
@@ -818,7 +817,7 @@ NumberTemp::PropagateTempPropertyTransferStoreDependencies(SymID usedSymID, Prop
 SymID
 NumberTemp::GetRepresentativePropertySymId(PropertySym * propertySym, BackwardPass * backwardPass)
 {
-    // Since we don't track alias with objects, all property access are all group together.
+    // Since we don't track alias with objects, all property accesses are all grouped together.
     // Use a single property sym id to represent a propertyId to track dependencies.
     SymID symId;
     Js::PropertyId propertyId = propertySym->m_propertyId;
@@ -1075,9 +1074,9 @@ ObjectTemp::CanStoreTemp(IR::Instr * instr)
 {
     // In order to allow storing temp number on temp objects,
     // We have to make sure that if the instr is marked as dstIsTempObject
-    // we will always generate the code to allocate the object on the stack (so no helper call)
+    // we will always generate the code to allocate the object on the stack (so no helper call).
     // Currently, we only do this for NewRegEx, NewScObjectSimple, NewScObjectLiteral and
-    // NewScObjectNoCtor (where the ctor is inlined)
+    // NewScObjectNoCtor (where the ctor is inlined).
 
     // CONSIDER: review lowering of other TempObjectProducing opcode and see if we can always allocate on the stack
     // (for example, NewScArray should be able to, but plain NewScObject can't because the size depends on the
@@ -1099,8 +1098,8 @@ ObjectTemp::CanStoreTemp(IR::Instr * instr)
                 return false;
             }
 
-            // Only if we have BailOutFailedCtorGuardCheck would we generate that we generate a stack object
-            // Otherwise we will call the helper, which will not generate stack object
+            // Only if we have BailOutFailedCtorGuardCheck would we generate a stack object.
+            // Otherwise we will call the helper, which will not generate stack object.
             return instr->HasBailOutInfo();
         }
 
@@ -1145,8 +1144,8 @@ ObjectTemp::ProcessInstr(IR::Instr * instr)
         case IR::JnHelperMethod::HelperString_Match:
         case IR::JnHelperMethod::HelperString_Replace:
         {
-            // First (non-this) parameter is either an regexp or search string
-            // It doesn't escape
+            // First (non-this) parameter is either an regexp or search string.
+            // It doesn't escape.
             IR::Instr * instrArgDef;
             instr->FindCallArgumentOpnd(2, &instrArgDef);
             instrArgDef->dstIsTempObject = true;
@@ -1234,7 +1233,7 @@ ObjectTempVerify::IsTempUse(IR::Instr * instr, Sym * sym, BackwardPass * backwar
 {
     Js::OpCode opcode = instr->m_opcode;
 
-    // If the opcode has implicit call and the profile say we have implicit call, then it is not a temp use
+    // If the opcode has implicit call and the profile say we have implicit call, then it is not a temp use.
     // TODO: More precise implicit call tracking
     bool isLandingPad = backwardPass->currentBlock->IsLandingPad();
     if (OpCodeAttr::HasImplicitCall(opcode) && !isLandingPad
@@ -1284,7 +1283,6 @@ ObjectTempVerify::IsTempUse(IR::Instr * instr, Sym * sym, BackwardPass * backwar
 bool
 ObjectTempVerify::IsTempTransfer(IR::Instr * instr)
 {
-
     if (ObjectTemp::IsTempTransfer(instr)
         // Add the Ld_I4, and LdC_A_I4 as the forward pass might have changed Ld_A to these
         || instr->m_opcode == Js::OpCode::Ld_I4
@@ -1293,9 +1291,9 @@ ObjectTempVerify::IsTempTransfer(IR::Instr * instr)
         if (!instr->dstIsTempObject && instr->GetDst() && instr->GetDst()->IsRegOpnd()
           && instr->GetDst()->AsRegOpnd()->GetValueType().IsNotObject())
         {
-            // Globopt has proved that dst is not a object, so this is not really an object transfer
+            // Globopt has proved that dst is not a object, so this is not really an object transfer.
             // This prevents the case where glob opt turned a Conv_Num to Ld_A and expose additional
-            // transfer
+            // transfer.
             return false;
         }
         return true;
@@ -1433,7 +1431,7 @@ ObjectTempVerify::MergeDeadData(BasicBlock * block)
     MergeData(block->tempObjectVerifyTracker, false);
     if (!block->isDead)
     {
-        // We there was dead flow to a block that is not dead, it might expose
+        // If there was dead flow to a block that is not dead, it might expose
         // new mark temp object, so all its current used (upwardExposedUsed) and optimized
         // use (byteCodeupwardExposedUsed) might not be trace for "missed" mark temp object
         this->removedUpwardExposedUse.Or(block->upwardExposedUses);
@@ -1590,13 +1588,13 @@ ObjectTempVerify::DependencyCheck(IR::Instr * instr, BVSparse<JitArenaAllocator>
             {
                 if (dependentSyms->Test(markTempSymId))
                 {
-                    // One of the dependent sym from the original set get it's value from the current marked temp dst
-                    // The dst definitely cannot be temp because it's lifetime overlaps across iterations
+                    // One of the dependent sym from the original set get it's value from the current marked temp dst.
+                    // The dst definitely cannot be temp because it's lifetime overlaps across iterations.
                     return false;
                 }
 
                 // If we have already check the same dependent sym, no need to do it again.
-                // It will produce the same result anyway
+                // It will produce the same result anyway.
                 dependentSyms->Minus(initialDependentSyms);
                 if (dependentSyms->IsEmpty())
                 {
@@ -1608,7 +1606,7 @@ ObjectTempVerify::DependencyCheck(IR::Instr * instr, BVSparse<JitArenaAllocator>
 
             if (currentInstr->GetDst() && currentInstr->GetDst()->IsRegOpnd())
             {
-                // Clear the def and mark the src if it is transfered
+                // Clear the def and mark the src if it is transfered.
 
                 // If the dst sym is a type specialized sym, clear the var sym instead.
                 StackSym * dstSym = currentInstr->GetDst()->AsRegOpnd()->m_sym;
@@ -1619,7 +1617,7 @@ ObjectTempVerify::DependencyCheck(IR::Instr * instr, BVSparse<JitArenaAllocator>
                 if (dstSym && dependentSyms->TestAndClear(dstSym->m_id) &&
                     IsTempTransfer(currentInstr) && currentInstr->GetSrc1()->IsRegOpnd())
                 {
-                    // We only really care about var syms uses for object temp
+                    // We only really care about var syms uses for object temp.
                     StackSym * srcSym = currentInstr->GetSrc1()->AsRegOpnd()->m_sym;
                     if (srcSym->IsVar())
                     {
@@ -1629,7 +1627,7 @@ ObjectTempVerify::DependencyCheck(IR::Instr * instr, BVSparse<JitArenaAllocator>
 
                 if (dependentSyms->IsEmpty())
                 {
-                    // No more dependent sym, we found the def of all of them we can move on to the next block
+                    // No more dependent sym, we found the def of all of them we can move on to the next block.
                     break;
                 }
             }
@@ -1639,7 +1637,7 @@ ObjectTempVerify::DependencyCheck(IR::Instr * instr, BVSparse<JitArenaAllocator>
         if (currentBlock->isLoopHeader && !dependentSyms->IsEmpty())
         {
             Assert(currentInstr == currentBlock->GetFirstInstr());
-            // If we have try to propagate the symbol through the loop before, we don't need to propagate it again
+            // If we have try to propagate the symbol through the loop before, we don't need to propagate it again.
             BVSparse<JitArenaAllocator> * currentLoopProcessedSyms = processedSyms.Lookup(currentBlock, nullptr);
             if (currentLoopProcessedSyms == nullptr)
             {
@@ -1660,7 +1658,7 @@ ObjectTempVerify::DependencyCheck(IR::Instr * instr, BVSparse<JitArenaAllocator>
             {
                 if (predBlock->loop == nullptr)
                 {
-                    // No need to track outside of loops
+                    // No need to track outside of loops.
                     continue;
                 }
                 BlockRecord record;
@@ -1674,7 +1672,7 @@ ObjectTempVerify::DependencyCheck(IR::Instr * instr, BVSparse<JitArenaAllocator>
 
         if (blockStack.Empty())
         {
-            // No more blocks. we are done
+            // No more blocks. We are done.
             break;
         }
 
@@ -1684,7 +1682,7 @@ ObjectTempVerify::DependencyCheck(IR::Instr * instr, BVSparse<JitArenaAllocator>
         currentInstr = currentBlock->GetLastInstr();
     }
 
-    // All the dependent sym doesn't get their value from the marked temp def, so it can really be marked temp
+    // All the dependent sym doesn't get their value from the marked temp def, so it can really be marked temp.
 #if DBG
     if (DoTrace(backwardPass))
     {
@@ -1694,7 +1692,6 @@ ObjectTempVerify::DependencyCheck(IR::Instr * instr, BVSparse<JitArenaAllocator>
     }
 #endif
     return true;
-
 }
 #endif
 

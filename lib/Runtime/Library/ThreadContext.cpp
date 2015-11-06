@@ -65,7 +65,7 @@ uint ThreadContext::activeScriptSiteCount = 0;
 uint ThreadContext::numOfThreadContextsWithPreReserveSegment = 0;
 #endif
 
-const Js::PropertyRecord * ThreadContext::builtInPropertyRecords[] =
+const Js::PropertyRecord * const ThreadContext::builtInPropertyRecords[] =
 {
     Js::BuiltInPropertyRecords::EMPTY,
 #define ENTRY_INTERNAL_SYMBOL(n) Js::BuiltInPropertyRecords::n,
@@ -92,6 +92,7 @@ ThreadContext::ThreadContext(AllocationPolicyManager * allocationPolicyManager, 
     stackProber(nullptr),
     isThreadBound(false),
     hasThrownPendingException(false),
+    noScriptScope(false),
     heapEnum(nullptr),
     threadContextFlags(ThreadContextFlagNoFlag),
     JsUtil::DoublyLinkedListElement<ThreadContext>(),
@@ -393,7 +394,7 @@ ThreadContext::~ThreadContext()
         }
 
 #ifdef LEAK_REPORT
-        // HACK HACK: heuristically figure out which one is the root tracker script engine
+        // heuristically figure out which one is the root tracker script engine
         // and force close on it
         if (this->rootTrackerScriptContext != nullptr)
         {

@@ -72,9 +72,6 @@ for (var ts in toStrings)
 
         var obj = { toString: toStrings[ts], valueOf: valueOfs[vo] };
 
-        //WScript.Echo("toString:\n    " + obj.toString);
-        //WScript.Echo("valueOf:\n    " + obj.valueOf);
-
         WScript.Echo("=== Implicit toString ===");
         try
         {

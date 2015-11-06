@@ -7,7 +7,7 @@
 var glo;
 var box = false;
 function test(param)
-{    
+{
     var recurse = 0;
     function nested1(param2)
     {
@@ -16,8 +16,8 @@ function test(param)
             if (re)
             {
                 nested2();
-            }     
-            return param + param2; 
+            }
+            return param + param2;
         }
 
         recurse++;
@@ -36,8 +36,8 @@ function test(param)
 
     function blah() { return "blah"; }
 }
-function escape() 
-{ 
+function escape()
+{
     glo = escape.caller;
 }
 

@@ -181,7 +181,6 @@ namespace Js
             }
             // not a SIMD coercion, fall through
 
-
             *coercion = AsmJS_FRound;
             sym = m.LookupFunction(target->name());
             mathSym = (AsmJsMathFunction*)sym;
@@ -332,13 +331,6 @@ namespace Js
         }
         m.InitBufferArgName(arg3Name);
 
-        return true;
-    }
-
-    bool
-    AsmJSCompiler::CheckPrecedingStatements(AsmJsModuleCompiler &m, ParseNode *stmtList)
-    {
-        //TODO:
         return true;
     }
 
@@ -1123,11 +1115,6 @@ varDeclEnd:
         }
 
         if (!CheckModuleArguments(m, m.GetModuleFunctionNode()))
-        {
-            goto AsmJsCompilationError;
-        }
-
-        if (!CheckPrecedingStatements(m, stmtList))
         {
             goto AsmJsCompilationError;
         }

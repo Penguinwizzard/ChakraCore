@@ -1271,12 +1271,7 @@ namespace Js
 
         Assert(!(callInfo.Flags & CallFlags_New));
 
-        // Both Firefox (19.0.1) and Chrome (25.0.1364.152 m) allow the this argument to be undefined
-        // or null, and in this case they define the accessor property on the global object.
-        // Probably because they implement this in Javascript itself (which converts undefined/null this to global object).
-        // Do the same for compatibility.
-        //
-        // Simulate LdThis by calling OP implementation directly.
+        // For browser interop, simulate LdThis by calling OP implementation directly.
         // Do not have module id here so use the global id, 0.
         //
         JavascriptLibrary::CheckAndConvertCopyOnAccessNativeIntArray<Var>(args[0]);
@@ -1315,12 +1310,7 @@ namespace Js
 
         Assert(!(callInfo.Flags & CallFlags_New));
 
-        // Both Firefox (19.0.1) and Chrome (25.0.1364.152 m) allow the this argument to be undefined
-        // or null, and in this case they define the accessor property on the global object.
-        // Probably because they implement this in Javascript itself (which converts undefined/null this to global object).
-        // Do the same for compatibility.
-        //
-        // Simulate LdThis by calling OP implementation directly.
+        // For browser interop, simulate LdThis by calling OP implementation directly.
         // Do not have module id here so use the global id, 0.
         //
         Var thisArg = JavascriptOperators::OP_GetThisNoFastPath(args[0], 0, scriptContext);

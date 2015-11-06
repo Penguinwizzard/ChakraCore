@@ -21,8 +21,6 @@ DEF_OP(MDStart, Empty, None)
 
 #define MACRO DEF_OP
 
-// TODO (louisl): can we move the definition below into Runtime instead?
-// TODO (louisl): how do we deal with different backends?
 #ifdef _M_AMD64
     #include "..\..\BackEnd\amd64\MdOpcodes.h"
 #elif defined(_M_IX86)

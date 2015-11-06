@@ -14,11 +14,11 @@ namespace Js
     private:
         const byte * m_startLocation;
         const byte * m_currentLocation;
-        
+
 #if DBG
         const byte * m_endLocation;
 #endif
-        
+
     public:
         void Create(FunctionBody* functionRead, uint startOffset = 0);
         void Create(FunctionBody* functionRead, uint startOffset, bool useOriginalByteCode);
@@ -29,22 +29,22 @@ namespace Js
         template<typename LayoutType> inline const unaligned LayoutType * GetLayout();
         template<typename LayoutType> inline const unaligned LayoutType * GetLayout(const byte*& ip);
 
-        // Read*Op advance the IP, 
+        // Read*Op advance the IP,
         // Peek*Op doesn't move the IP
-        // *ByteOp only read one byte of the opcode, 
+        // *ByteOp only read one byte of the opcode,
         // *Op interprets and remove the large layout prefix
     private:
         OpCode ReadOp(const byte *&ip, LayoutSize& layoutSize) const;
-        OpCode ReadPrefixedOp(const byte *&ip, LayoutSize& layoutSize, OpCode prefix) const;               
+        OpCode ReadPrefixedOp(const byte *&ip, LayoutSize& layoutSize, OpCode prefix) const;
     public:
         OpCode ReadOp(LayoutSize& layoutSize);
-        OpCode ReadPrefixedOp(LayoutSize& layoutSize, OpCode prefix);        
+        OpCode ReadPrefixedOp(LayoutSize& layoutSize, OpCode prefix);
         OpCode PeekOp(LayoutSize& layoutSize) const;
         OpCode PeekOp() const { LayoutSize layoutSize; return PeekOp(layoutSize); }
         OpCode PeekOp(const byte * ip, LayoutSize& layoutSize);
-        
-        static OpCode ReadByteOp(const byte*& ip);        
-        static OpCode PeekByteOp(const byte * ip);        
+
+        static OpCode ReadByteOp(const byte*& ip);
+        static OpCode PeekByteOp(const byte * ip);
 
         // Declare reading functions
 #define LAYOUT_TYPE(layout) \
@@ -65,7 +65,7 @@ namespace Js
         const byte* GetIP();
         void SetIP(const byte *const ip);
 
-        template<class T> const unaligned T* AuxiliaryContext(const byte*& ip, const byte ** content);                
+        template<class T> const unaligned T* AuxiliaryContext(const byte*& ip, const byte ** content);
 
 #if DBG_DUMP
         byte GetRawByte(int i);

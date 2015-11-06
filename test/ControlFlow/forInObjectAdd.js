@@ -6,7 +6,7 @@
 function write(args)
 {
    if(typeof(WScript) == "undefined")
-      print(args);  
+      print(args);
    else
      WScript.Echo(args);
 }
@@ -16,13 +16,13 @@ var x = { a: 1, b: 2};
 
 for(var i in x)
 {
-	if(x[i] == 2)
-	{
-		x.c = 3;
-		x.d = 4;
-	}
+    if(x[i] == 2)
+    {
+        x.c = 3;
+        x.d = 4;
+    }
 
-	write(x[i]);
+    write(x[i]);
 }
 
 write("Scenario 2: Large number of properties in forin");
@@ -33,7 +33,7 @@ for(var k=0; k < 25; k++)
 }
 
 for(var i in largeObj)
-{	
+{
     write(largeObj[i]);
 }
 
@@ -49,14 +49,13 @@ for(var i in outerObj)
    }
 }
 
-
 write("Scenario 4: Properties and numerical indices in object");
 var objWithNumber= { a: 12, b: 13, c:23 };
 objWithNumber[13] = "Number13";
 objWithNumber[15] = "Number15";
 
 for(var i in objWithNumber)
-{	
+{
     write(objWithNumber[i]);
 }
 
@@ -87,6 +86,3 @@ for(var i in double)
 {
    write("FAILED: Entering enumeration of double");
 }
-
-
-

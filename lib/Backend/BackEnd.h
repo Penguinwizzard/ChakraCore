@@ -28,6 +28,11 @@
 #include "Language\InterpreterStackFrame.h"
 #include "Language\ReadOnlyDynamicProfileInfo.h"
 
+#include "Library\StackScriptFunction.h"
+
+#include "Language\InterpreterStackFrame.h"
+#include "Language\ReadOnlyDynamicProfileInfo.h"
+
 // SIMD types
 #include "Library\JavascriptSIMDFloat32x4.h"
 #include "Library\JavascriptSIMDFloat64x2.h"

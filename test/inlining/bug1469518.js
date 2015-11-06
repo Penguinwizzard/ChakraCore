@@ -20,11 +20,11 @@ function test1() {
   })();
 }
 try{
-	test1();
-	test1();
-	shouldBailout = true;
-	test1();
+    test1();
+    test1();
+    shouldBailout = true;
+    test1();
 }
 catch(ex){
-	WScript.Echo(ex.message);
+    WScript.Echo(ex.message);
 }

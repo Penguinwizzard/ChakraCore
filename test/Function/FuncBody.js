@@ -3,64 +3,62 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-
 // Check new Function with various inputs. Handles 2 parameters and a function body
 function CheckNewFunction2(id, arg1, arg2, fnbody, expectsSuccess)
 {
-	try {
-		var f = new Function(arg1, arg2, fnbody);
-		if (expectsSuccess)
-			WScript.Echo("PASS: " + id + ": new Function succeeded as expected");
-		else
-			WScript.Echo("FAIL: " + id + ": new Function should have failed, but did not");
-	}
-	catch (e)
-	{
-		if (expectsSuccess)
-			WScript.Echo("FAIL: " + id + ": new Function should have succeeded, but did not. " + e);
-		else
-			WScript.Echo("PASS: " + id + ": new Function failed as expected. " + e);
-	}
+    try {
+        var f = new Function(arg1, arg2, fnbody);
+        if (expectsSuccess)
+            WScript.Echo("PASS: " + id + ": new Function succeeded as expected");
+        else
+            WScript.Echo("FAIL: " + id + ": new Function should have failed, but did not");
+    }
+    catch (e)
+    {
+        if (expectsSuccess)
+            WScript.Echo("FAIL: " + id + ": new Function should have succeeded, but did not. " + e);
+        else
+            WScript.Echo("PASS: " + id + ": new Function failed as expected. " + e);
+    }
 }
 
 // Check new Function with various inputs. Handles 1 parameter and a function body
 function CheckNewFunction1(id, arg1, fnbody, expectsSuccess)
 {
-	try {
-		var f = new Function(arg1, fnbody);
-		if (expectsSuccess)
-			WScript.Echo("PASS: " + id + ": new Function succeeded as expected");
-		else
-			WScript.Echo("FAIL: " + id + ": new Function should have failed, but did not");
-	}
-	catch (e)
-	{
-		if (expectsSuccess)
-			WScript.Echo("FAIL: " + id + ": new Function should have succeeded, but did not. " + e );
-		else
-			WScript.Echo("PASS: " + id + ": new Function failed as expected. " + e);
-	}
+    try {
+        var f = new Function(arg1, fnbody);
+        if (expectsSuccess)
+            WScript.Echo("PASS: " + id + ": new Function succeeded as expected");
+        else
+            WScript.Echo("FAIL: " + id + ": new Function should have failed, but did not");
+    }
+    catch (e)
+    {
+        if (expectsSuccess)
+            WScript.Echo("FAIL: " + id + ": new Function should have succeeded, but did not. " + e );
+        else
+            WScript.Echo("PASS: " + id + ": new Function failed as expected. " + e);
+    }
 }
 
 // Check new Function with various inputs. Handles 0 parameters and a function body
 function CheckNewFunction0(id, fnbody, expectsSuccess)
 {
-	try {
-		var f = new Function(fnbody);
-		if (expectsSuccess)
-			WScript.Echo("PASS: " + id + ": new Function succeeded as expected");
-		else
-			WScript.Echo("FAIL: " + id + ": new Function should have failed, but did not");
-	}
-	catch (e)
-	{
-		if (expectsSuccess)
-			WScript.Echo("FAIL: " + id + ": new Function should have succeeded, but did not. " + e);
-		else
-			WScript.Echo("PASS: " + id + ": new Function failed as expected. " + e);
-	}
+    try {
+        var f = new Function(fnbody);
+        if (expectsSuccess)
+            WScript.Echo("PASS: " + id + ": new Function succeeded as expected");
+        else
+            WScript.Echo("FAIL: " + id + ": new Function should have failed, but did not");
+    }
+    catch (e)
+    {
+        if (expectsSuccess)
+            WScript.Echo("FAIL: " + id + ": new Function should have succeeded, but did not. " + e);
+        else
+            WScript.Echo("PASS: " + id + ": new Function failed as expected. " + e);
+    }
 }
-
 
 //
 // Must pass in all modes

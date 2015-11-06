@@ -3,14 +3,12 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-
-
 function Blah()
 {
-	this.hello = "yay";
+    this.hello = "yay";
 }
 
-Blah.prototype = "meow" 
+Blah.prototype = "meow"
 
 function Derived()
 {

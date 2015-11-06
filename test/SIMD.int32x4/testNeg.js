@@ -4,14 +4,15 @@
 //-------------------------------------------------------------------------------------------------------
 
 function equal(a, b) {
-    if (a == b)
-        WScript.Echo("Correct");
-    else
-        WScript.Echo(">> Fail!");
+    if (a == b) {
+        print("Correct");
+    } else {
+        print(">> Fail!");
+    }
 }
 
 function testNeg() {
-    WScript.Echo("Int32x4 neg");
+    print("Int32x4 neg");
     var a = SIMD.Int32x4(-4, -3, -2, -1);
     var c = SIMD.Int32x4.neg(a);
     equal(4, SIMD.Int32x4.extractLane(c, 0));

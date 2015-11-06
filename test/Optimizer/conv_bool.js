@@ -7,11 +7,11 @@ function t1(c)
 {
     if ((c != -1) != 1)
     {
-	return true;
+    return true;
     }
     else
     {
-	return false;
+    return false;
     }
 }
 
@@ -19,11 +19,11 @@ function t2(c)
 {
     if ((c <= -1) != 1)
     {
-	return true;
+    return true;
     }
     else
     {
-	return false;
+    return false;
     }
 }
 
@@ -31,11 +31,11 @@ function t3(c)
 {
     if ((c >= -1) != 1)
     {
-	return true;
+    return true;
     }
     else
     {
-	return false;
+    return false;
     }
 }
 

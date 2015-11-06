@@ -3,7 +3,6 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
-#include "SIMDInt32x4Operation.h"
 
 #if defined(_M_ARM32_OR_ARM64)
 

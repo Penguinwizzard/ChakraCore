@@ -19,13 +19,13 @@ s1 = undefined;
 //implicit calls
 function foo()
 {
-	var a = 1;
-	var b = 2;
-	var obj = {toString: function(){ a=3; return "Hello World";}};
-	a = b;
-	Object.prototype.substring = String.prototype.substring;
-	var f = obj.substring(2,7);
-	WScript.Echo (a);
+    var a = 1;
+    var b = 2;
+    var obj = {toString: function(){ a=3; return "Hello World";}};
+    a = b;
+    Object.prototype.substring = String.prototype.substring;
+    var f = obj.substring(2,7);
+    WScript.Echo (a);
 }
 foo();
 

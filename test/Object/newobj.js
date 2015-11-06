@@ -3,11 +3,10 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-
 OldObject = Object;
 Object = function()
 {
-	this.hello = "yay";
+    this.hello = "yay";
 }
 
 var o = new Object();

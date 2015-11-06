@@ -16,9 +16,9 @@ function test0(){
   }
   var func1 = function(argObj2,argMath3,argArrObj4,argMath5){
   }
-  obj0.method0 = func1; 
+  obj0.method0 = func1;
   var i8 = new Int8Array(3);
-  d = func1.call(obj1 , 1, func0.call(arrObj0 , (shouldBailout ? (Object.defineProperty(this, 'prop1', {get: function() {WScript.Echo(""); return 3; }, configurable: true}), 1) : 1), 1), 1, 1); 
+  d = func1.call(obj1 , 1, func0.call(arrObj0 , (shouldBailout ? (Object.defineProperty(this, 'prop1', {get: function() {WScript.Echo(""); return 3; }, configurable: true}), 1) : 1), 1), 1, 1);
   // regalloc.ecs Snippet WIN8:748330: crash due to bad register allocation
   obj1 = {};
   var f = 6.20856440617424E+18;
@@ -29,33 +29,32 @@ function test0(){
     //Snippets:newobjinlining1.ecs
     function v477410(arg1 , arg2 , arg3)
     {
-    	this.v477411 = arg1;
-    	this.v477412 = arg2;
-    	this.v477413 = arg3;
-    	this.v477414 = 2;
-    	this.v477413= 2;
+        this.v477411 = arg1;
+        this.v477412 = arg2;
+        this.v477413 = arg3;
+        this.v477414 = 2;
+        this.v477413= 2;
     }
     function v477415()
     {
-    	v477410.prototype = {};
-    	var __loopvar2 = 0;
+        v477410.prototype = {};
+        var __loopvar2 = 0;
      for(var strvar0 in i8 ) {
        if(strvar0.indexOf('method') != -1) continue;
        if(__loopvar2++ > 3) break;
        //Code Snippet: NegativeArgumentBug.ecs (Blue15423)
-       for (var _i in arguments[obj0.method0.call(obj0 , 1, ((this.prop1 != obj0.prop0)||(arrObj0.prop0 > this.prop1)), 1, 1)]) { 
-         
+       for (var _i in arguments[obj0.method0.call(obj0 , 1, ((this.prop1 != obj0.prop0)||(arrObj0.prop0 > this.prop1)), 1, 1)]) {
+
        };
-       
-       
+
        obj0.length -=arrObj0.method0(1, 1, 1, 1);
      }
-    	
-    	var v477416 = new v477410(1,1,1);
-    	GiantPrintArray.push(v477416.v477413);
-    	GiantPrintArray.push(v477416.v477411);
-    	GiantPrintArray.push(v477416.v477412);
-    	GiantPrintArray.push(v477416.v477414);
+
+        var v477416 = new v477410(1,1,1);
+        GiantPrintArray.push(v477416.v477413);
+        GiantPrintArray.push(v477416.v477411);
+        GiantPrintArray.push(v477416.v477412);
+        GiantPrintArray.push(v477416.v477414);
     }
     repeatCount++;
     if (repeatCount > 200) return 1;
@@ -68,20 +67,20 @@ function test0(){
   if(shouldBailout){
     obj0.method0 = obj1.method0;
   }
-  obj0.method0(1, 1, 1, 1); 
+  obj0.method0(1, 1, 1, 1);
 };
 
 try {
 // generate profile
-test0(); 
+test0();
 
 // run JITted code
 runningJITtedCode = true;
-test0(); 
+test0();
 
 // run code with bailouts enabled
 shouldBailout = true;
-test0(); 
+test0();
 } catch (e) {
 WScript.Echo(e);
 }

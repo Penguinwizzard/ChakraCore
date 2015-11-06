@@ -84,4 +84,3 @@ g(clo);
     var a = 1;
     WScript.Echo(a + (f() + a));
 })();
-

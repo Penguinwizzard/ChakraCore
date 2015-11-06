@@ -19,6 +19,7 @@ private:
     PFNMathFn m_pfncbrt;
 
     void Ensure();
+
 public:
     UCrtC99MathApis() : m_pfnlog2(nullptr), m_pfnlog1p(nullptr), m_pfnexpm1(nullptr), m_pfnacosh(nullptr), m_pfnasinh(nullptr), m_pfnatanh(nullptr), m_pfntrunc(nullptr), m_pfncbrt(nullptr) { }
     virtual ~UCrtC99MathApis() { }
@@ -41,7 +42,7 @@ namespace Js {
 
     class Math  /* TODO: Determine actual object */
     {
-    public:       
+    public:
         class EntryInfo
         {
         public:
@@ -147,7 +148,7 @@ namespace Js {
         static const double EPSILON;
         static const double MAX_SAFE_INTEGER;
         static const double MIN_SAFE_INTEGER;
-    
+
     private:
         static Var Math::FloorDouble(double d, ScriptContext *scriptContext);
     };

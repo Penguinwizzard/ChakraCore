@@ -94,26 +94,6 @@ namespace Js
     //       saving space, and as a result, performing a faster allocation
     //     - For many concatenations, the use of stack space reduces the number of allocations that would otherwise be necessary
     //       to grow the buffer
-    //
-    // -------------------------------------------------------------------------------------------------------------------------
-    // Force-inlining
-    // -------------------------------------------------------------------------------------------------------------------------
-    //
-    // Unfortunately, it was necessary to force-inline several functions for performance. The following pattern is used:
-    //     - Append, AppendChars, AppendGeneric, and TryAppendGeneric functions are force-inlined. The code in these functions
-    //       is organized such that only the code necessary to be inlined is in those functions. All other code goes into the
-    //       AppendSlow functions.
-    //     - AppendSlow functions are not force-inlined and are not expected to be inlined
-    //     - Trivial functions are not marked to be force-inlined, but are expected to be inlined
-    //     - Functions that are called from only one hot call site are force-inlined. If there is only one call site, not
-    //       inlining is guaranteed to be worse. If there is only one hot call site, then improving the speed of that hot call
-    //       site was more important than not bloating the other slow call sites.
-    //         - Most constructors fall into this category because they are only called from static New functions
-    //     - Some of the static New functions are also force-inlined, if not for one of the above reasons, because they contain
-    //       computation on parameters that could be optimized away if the parameter value is constant at the call site. This
-    //       includes CompoundString::NewWithCharCapacity and CompoundString::NewWithPointerCapacity. Those functions have been
-    //       organized to delegate to another static New function that is not force-inlined after the computation is done.
-    //     - Other functions are force-inlined as was deemed necessary through performance testing
 
     class CompoundString sealed : public LiteralString // vtable will be switched to LiteralString's vtable after flattening
     {
@@ -189,8 +169,6 @@ namespace Js
             Block *Chain(Recycler *const recycler);
 
         private:
-            static void InstantiateForceInlinedMembers();
-
             PREVENT_COPY(Block);
         };
 
@@ -239,9 +217,6 @@ namespace Js
             void CopyFrom(Block *const block);
             void CopyTo(Block *const block);
             void Unreference();
-
-        private:
-            static void InstantiateForceInlinedMembers();
         };
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -456,8 +431,6 @@ namespace Js
         DECLARE_CONCRETE_STRING_CLASS;
 
     private:
-        static void InstantiateForceInlinedMembers();
-
         PREVENT_COPY(CompoundString);
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

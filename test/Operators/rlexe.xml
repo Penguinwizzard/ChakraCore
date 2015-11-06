@@ -23,7 +23,8 @@
     <default>
       <files>biops.js</files>
       <baseline>biops.baseline</baseline>
-      <tags>fail_mutators,Slow</tags>
+      <!-- fails due to baseline diff apparently; remove exclude_jenkins when fixed -->
+      <tags>fail_mutators,Slow,exclude_jenkins</tags>
     </default>
   </test>
   <test>
@@ -62,7 +63,8 @@
     <default>
       <files>equals.js</files>
       <baseline>equals.baseline</baseline>
-      <tags>fail_mutators</tags>
+      <!-- test is timezone-sensitive; remove exclude_jenkins after fix -->
+      <tags>fail_mutators,exclude_jenkins</tags>
     </default>
   </test>
   <test>

@@ -5,18 +5,18 @@
 
 function Execute(str)
 {
-	try {
-		eval(str);
-	}
-	catch (e) {
-		WScript.Echo(e);
-	}
+    try {
+        eval(str);
+    }
+    catch (e) {
+        WScript.Echo(e);
+    }
 }
 
 // Keywords that are reserved cannot be used as identifiers. Examples: var, with, false
 // Other keywords are not reserved, and can be used as identifiers. Examples: double, byte
 
-// regular identifier, referenced later with unicode variant	
+// regular identifier, referenced later with unicode variant
 Execute("var hello=10; WScript.Echo(hello); WScript.Echo(h\\u0065llo);");
 // identifier with unicode variant. Used with and without unicode
 Execute("var h\u0065llo=20; WScript.Echo(hello); WScript.Echo(h\\u0065llo);");

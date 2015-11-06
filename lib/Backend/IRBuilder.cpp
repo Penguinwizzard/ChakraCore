@@ -257,7 +257,7 @@ IRBuilder::IsLoopBodyReturnIPInstr(IR::Instr * instr) const
 
 
 bool
-IRBuilder::IsLoopBodyOutterOffset(uint offset) const
+IRBuilder::IsLoopBodyOuterOffset(uint offset) const
 {
     if (!IsLoopBody())
     {
@@ -1221,6 +1221,7 @@ IRBuilder::BuildReg1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot R0)
     case Js::OpCode::NewBlockScope:
     case Js::OpCode::NewPseudoScope:
     case Js::OpCode::LdSuper:
+    case Js::OpCode::LdSuperCtor:
         isNotInt = TRUE;
         break;
 
@@ -1375,7 +1376,7 @@ IRBuilder::BuildReg1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot R0)
             }
             else if (srcOpnd->IsIntConstOpnd())
             {
-                dstSym->SetIsIntConst(srcOpnd->AsIntConstOpnd()->m_value);
+                dstSym->SetIsIntConst(srcOpnd->AsIntConstOpnd()->GetValue());
             }
             else if (srcOpnd->IsFloatConstOpnd())
             {
@@ -2338,7 +2339,7 @@ IRBuilder::BuildProfiledReg1Unsigned1(Js::OpCode newOpcode, uint32 offset, Js::R
     IR::RegOpnd *   dstOpnd = this->BuildDstOpnd(dstRegSlot);
 
     StackSym *      dstSym = dstOpnd->m_sym;
-    IntConstType    value = C1;
+    int32           value = C1;
     IR::IntConstOpnd * srcOpnd;
 
     srcOpnd = IR::IntConstOpnd::New(value, TyInt32, m_func);
@@ -4758,7 +4759,7 @@ IRBuilder::BuildCallCommon(IR::Instr * instr, StackSym * symDst, Js::ArgSlot arg
         AssertMsg(instr->m_prev->m_opcode == Js::OpCode::LdSpreadIndices
             // All non-spread calls need StartCall to have the same number of args
             || (argInstr->GetSrc1()->IsIntConstOpnd()
-                    && argInstr->GetSrc1()->AsIntConstOpnd()->m_value == count
+                    && argInstr->GetSrc1()->AsIntConstOpnd()->GetValue() == count
                     && count == argCount), "StartCall has wrong number of arguments...");
     }
     else
@@ -5119,7 +5120,7 @@ IRBuilder::ResolveVirtualLongBranch(IR::BranchInstr * branchInstr, uint offset)
     }
 
     //  If this is a jump out of the loop body we need to load the return IP and jump to the loop exit instead
-    if (!IsLoopBodyOutterOffset(targetOffset))
+    if (!IsLoopBodyOuterOffset(targetOffset))
     {
         return targetOffset;
     }
@@ -5281,7 +5282,7 @@ IRBuilder::AddBranchInstr(IR::BranchInstr * branchInstr, uint32 offset, uint32 t
     // Loop jitting would be done only till the LoopEnd
     // Any branches beyond that offset are for the return stmt
     //
-    if (IsLoopBodyOutterOffset(targetOffset))
+    if (IsLoopBodyOuterOffset(targetOffset))
     {
         // if we have loaded the loop IP sym from the ProfiledLoopEnd then don't add it here
         if (!IsLoopBodyReturnIPInstr(m_lastInstr))

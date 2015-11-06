@@ -13,36 +13,35 @@ function doEval(str) {
     } catch (e) {
         write("Exception: " + e);
     }
-    
-}
 
+}
 
 function f0()
 {
     write("f0");
-    
+
     return "f0";
 }
 
 function f1(x)
-{	
+{
     write("f1 x: " + x);
-    
+
     return "f1";
 }
 
 function f2(x,y)
 {
     write("f2 x: " + x + " y: " + y);
-    
+
     return "f2";
 }
 
 function f3(x,y,z)
 {
     write("f3 x: " + x + " y: " + y + " z: " + z);
-    write(z.substring(y, x.length));    
-    
+    write(z.substring(y, x.length));
+
     return "f3";
 }
 

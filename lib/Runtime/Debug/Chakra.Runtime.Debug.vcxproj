@@ -29,7 +29,7 @@
         $(MSBuildThisFileDirectory)..\..\Common;
         $(MSBuildThisFileDirectory)..\..\Parser;
         $(MSBuildThisFileDirectory)..\..\Backend;
-        $(MSBuildThisFileDirectory)..\..\Language;        
+        $(MSBuildThisFileDirectory)..\..\Language;
         %(AdditionalIncludeDirectories)
       </AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -56,13 +56,13 @@
   <ItemGroup>
     <ClInclude Include="DebugContext.h" />
     <ClInclude Include="BreakpointProbe.h" />
-    <ClInclude Include="DebugDocument.h" />    
+    <ClInclude Include="DebugDocument.h" />
     <ClInclude Include="DebuggingFlags.h" />
     <ClInclude Include="DebugManager.h" />
     <ClInclude Include="DiagHelperMethodWrapper.h" />
     <ClInclude Include="DiagObjectModel.h" />
     <ClInclude Include="DiagProbe.h" />
-    <ClInclude Include="DiagStackFrame.h" />    
+    <ClInclude Include="DiagStackFrame.h" />
     <ClInclude Include="MutationBreakpoint.h" />
     <ClInclude Include="ProbeContainer.h" />
     <ClInclude Include="RuntimeDebugPch.h" />

@@ -3,13 +3,12 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-
 function Test(i)
 {
-	WScript.Echo(parseInt(i).toString());
-	WScript.Echo(parseFloat(i).toString());
-	WScript.Echo(parseInt(-i).toString());
-	WScript.Echo(parseFloat(-i).toString());
+    WScript.Echo(parseInt(i).toString());
+    WScript.Echo(parseFloat(i).toString());
+    WScript.Echo(parseInt(-i).toString());
+    WScript.Echo(parseFloat(-i).toString());
 }
 Test(400012312542180394829e30);
 Test(4.00012312542180394829e21);

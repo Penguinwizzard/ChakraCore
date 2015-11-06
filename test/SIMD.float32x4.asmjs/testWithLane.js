@@ -234,4 +234,4 @@ equalSimd([100, -123.9000015258789, 200, -449], ret3, SIMD.Float32x4, "TestWithL
 equalSimd([5033.2001953125, 100, 665.3400268554687, 200], ret4, SIMD.Float32x4, "TestWithLane");
 equalSimd([90934.203125, 100, 419.3900146484375, 200], ret5, SIMD.Float32x4, "TestWithLane");
 equalSimd([5033.2001953125, 100, 665.3400268554687, 200], ret6, SIMD.Float32x4, "TestWithLane");
-WScript.Echo("PASS");
+print("PASS");

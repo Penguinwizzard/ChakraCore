@@ -89,36 +89,7 @@ namespace Js
             Assert(this->guardedPropOps != nullptr);
             this->guardedPropOps->Or(propOps);
         }
-
-        bool TryGetObjSizeForAllocFromNativeCode(bool allowAuxSlots, size_t& headerAllocSize, size_t& auxSlotsAllocSize) const
-        {
-            if (slotCount > inlineSlotCount && !allowAuxSlots)
-            {
-                return false;
-            }
-
-            headerAllocSize = sizeof(Js::DynamicObject) + inlineSlotCount * sizeof(Js::Var);
-            if (headerAllocSize > MAXINT32 || !HeapInfo::IsAlignedSize(headerAllocSize) || !HeapInfo::IsSmallObject(headerAllocSize))
-            {
-                AssertMsg(false, "Object header too large or not recycler heap block aligned.");
-                return false;
-            }
-
-            auxSlotsAllocSize = slotCount > inlineSlotCount ? (slotCount - inlineSlotCount) * sizeof(Js::Var) : 0;
-            if (auxSlotsAllocSize > 0 && (auxSlotsAllocSize > MAXINT32 || !HeapInfo::IsAlignedSize(auxSlotsAllocSize)))
-            {
-                AssertMsg(false, "Object header too large or not recycler heap block aligned.");
-                return false;
-            }
-
-            // Don't assert here because we allow objects with enough slots as to exceed the small block allocation size.
-            if (!HeapInfo::IsSmallObject(auxSlotsAllocSize))
-            {
-                return false;
-            }
-        }
     };
-
 
 #define InitialObjTypeSpecFldInfoFlagValue 0x01
 
@@ -144,24 +115,27 @@ namespace Js
         uint id;
 
         // Union with uint16 flags for fast default initialization
-        union {
-            struct {
+        union
+        {
+            struct
+            {
                 bool falseReferencePreventionBit : 1;
-                bool isPolymorphic: 1;
-                bool isRootObjectNonConfigurableField: 1;
-                bool isRootObjectNonConfigurableFieldLoad: 1;
-                bool usesAuxSlot: 1;
-                bool isLocal: 1;
-                bool isLoadedFromProto: 1;
-                bool usesAccessor: 1;
-                bool hasFixedValue: 1;
-                bool keepFieldValue: 1;
-                bool isBeingStored: 1;
-                bool isBeingAdded: 1;
-                bool doesntHaveEquivalence: 1;
+                bool isPolymorphic : 1;
+                bool isRootObjectNonConfigurableField : 1;
+                bool isRootObjectNonConfigurableFieldLoad : 1;
+                bool usesAuxSlot : 1;
+                bool isLocal : 1;
+                bool isLoadedFromProto : 1;
+                bool usesAccessor : 1;
+                bool hasFixedValue : 1;
+                bool keepFieldValue : 1;
+                bool isBeingStored : 1;
+                bool isBeingAdded : 1;
+                bool doesntHaveEquivalence : 1;
                 bool isBuiltIn : 1;
             };
-            struct {
+            struct
+            {
                 uint16 flags;
             };
         };
@@ -171,7 +145,7 @@ namespace Js
         uint16 fixedFieldCount; // currently used only for fields that are functions
 
     public:
-        ObjTypeSpecFldInfo():
+        ObjTypeSpecFldInfo() :
             id(0), typeId(TypeIds_Limit), typeSet(nullptr), initialType(nullptr), flags(InitialObjTypeSpecFldInfoFlagValue),
             slotIndex(Constants::NoSlot), propertyId(Constants::NoProperty), protoObject(nullptr), propertyGuard(nullptr),
             ctorCache(nullptr), fixedFieldInfoArray(nullptr) {}
@@ -192,7 +166,7 @@ namespace Js
             this->hasFixedValue = isFieldValueFixed;
             this->keepFieldValue = keepFieldValue;
             this->isBeingAdded = initialType != nullptr;
-            this->doesntHaveEquivalence = true; //doesn't mean anything for data from a monomorphic cache
+            this->doesntHaveEquivalence = true; // doesn't mean anything for data from a monomorphic cache
             this->isBuiltIn = isBuiltIn;
             this->fixedFieldCount = 1;
         }
@@ -348,7 +322,7 @@ namespace Js
 
         Var GetFieldValue() const
         {
-            Assert (IsMono() || (IsPoly() && !DoesntHaveEquivalence()));
+            Assert(IsMono() || (IsPoly() && !DoesntHaveEquivalence()));
             return this->fixedFieldInfoArray[0].fieldValue;
         }
 
@@ -360,7 +334,7 @@ namespace Js
 
         void SetFieldValue(Var value)
         {
-            Assert (IsMono() || (IsPoly() && !DoesntHaveEquivalence()));
+            Assert(IsMono() || (IsPoly() && !DoesntHaveEquivalence()));
             this->fixedFieldInfoArray[0].fieldValue = value;
         }
 
@@ -468,12 +442,11 @@ namespace Js
         {
             return this->fixedFieldCount;
         }
+
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
         const wchar_t *GetCacheLayoutString() const;
 #endif
-
     };
-
 
     class ObjTypeSpecFldInfoArray
     {
@@ -516,12 +489,9 @@ namespace Js
         PREVENT_COPY(ObjTypeSpecFldInfoArray)
     };
 
-
-
     // - Data generated for jitting purposes
     // - Recycler-allocated, lifetime is from when a code gen work item is added to the jit queue, to when jitting is complete
     //     - Also keeps the function body and inlinee function bodies alive while jitting.
-
     class FunctionCodeGenJitTimeData
     {
     private:
@@ -548,12 +518,12 @@ namespace Js
         // accurate count.
         uint ldFldInlineeCount;
 
-        //For polymorphic call site we will have linked list of FunctionCodeGenJitTimeData
-        //Each is differentiated by id starting from 0, 1
+        // For polymorphic call site we will have linked list of FunctionCodeGenJitTimeData
+        // Each is differentiated by id starting from 0, 1
         FunctionCodeGenJitTimeData *next;
         bool isInlined;
 
-        //This indicates the function is aggressively Inlined(see NativeCodeGenerator::TryAggressiveInlining) .
+        // This indicates the function is aggressively Inlined(see NativeCodeGenerator::TryAggressiveInlining) .
         bool isAggressiveInliningEnabled;
 
         // The profiled iterations need to be determined at the time of gathering code gen data on the main thread
@@ -575,7 +545,7 @@ namespace Js
 
         FunctionInfo *GetFunctionInfo() const;
         FunctionBody *GetFunctionBody() const;
-        FunctionCodeGenJitTimeData *GetNext() const { return next;};
+        FunctionCodeGenJitTimeData *GetNext() const { return next; };
 
         const ObjTypeSpecFldInfoArray* GetObjTypeSpecFldInfoArray() const { return &this->objTypeSpecFldInfoArray; }
         ObjTypeSpecFldInfoArray* GetObjTypeSpecFldInfoArray() { return &this->objTypeSpecFldInfoArray; }
@@ -590,7 +560,7 @@ namespace Js
             FunctionInfo *const inlinee,
             bool isInlined = true);
         uint InlineeCount() const;
-        bool IsLdFldInlineePresent() const { return ldFldInlineeCount != 0;}
+        bool IsLdFldInlineePresent() const { return ldFldInlineeCount != 0; }
 
         RecyclerWeakReference<FunctionBody> *GetWeakFuncRef() const { return this->weakFuncRef; }
         void SetWeakFuncRef(RecyclerWeakReference<FunctionBody> *weakFuncRef)
@@ -604,62 +574,58 @@ namespace Js
             const InlineCacheIndex inlineCacheIndex,
             FunctionInfo *const inlinee);
 
-       bool IsPolymorphicCallSite(const ProfileId profiledCallSiteId) const;
-       //This function walks all the chained jittimedata and returns the one which match the functionInfo.
-       //This can return null, if the functionInfo doesn't match.
-       const FunctionCodeGenJitTimeData *GetJitTimeDataFromFunctionInfo(FunctionInfo *polyFunctionInfo) const;
+        bool IsPolymorphicCallSite(const ProfileId profiledCallSiteId) const;
+        // This function walks all the chained jittimedata and returns the one which match the functionInfo.
+        // This can return null, if the functionInfo doesn't match.
+        const FunctionCodeGenJitTimeData *GetJitTimeDataFromFunctionInfo(FunctionInfo *polyFunctionInfo) const;
 
-       ObjTypeSpecFldInfo* GetGlobalObjTypeSpecFldInfo(uint propertyInfoId) const
-       {
-           Assert(this->globalObjTypeSpecFldInfoArray != nullptr && propertyInfoId < this->globalObjTypeSpecFldInfoCount);
-           return this->globalObjTypeSpecFldInfoArray[propertyInfoId];
-       }
+        ObjTypeSpecFldInfo* GetGlobalObjTypeSpecFldInfo(uint propertyInfoId) const
+        {
+            Assert(this->globalObjTypeSpecFldInfoArray != nullptr && propertyInfoId < this->globalObjTypeSpecFldInfoCount);
+            return this->globalObjTypeSpecFldInfoArray[propertyInfoId];
+        }
 
-       void SetGlobalObjTypeSpecFldInfo(uint propertyInfoId, ObjTypeSpecFldInfo* info) const
-       {
-           Assert(this->globalObjTypeSpecFldInfoArray != nullptr && propertyInfoId < this->globalObjTypeSpecFldInfoCount);
-           this->globalObjTypeSpecFldInfoArray[propertyInfoId] = info;
-       }
+        void SetGlobalObjTypeSpecFldInfo(uint propertyInfoId, ObjTypeSpecFldInfo* info) const
+        {
+            Assert(this->globalObjTypeSpecFldInfoArray != nullptr && propertyInfoId < this->globalObjTypeSpecFldInfoCount);
+            this->globalObjTypeSpecFldInfoArray[propertyInfoId] = info;
+        }
 
-       void SetGlobalObjTypeSpecFldInfoArray(ObjTypeSpecFldInfo** array, uint count)
-       {
-           Assert(array != nullptr);
-           this->globalObjTypeSpecFldInfoArray = array;
-           this->globalObjTypeSpecFldInfoCount = count;
-       }
+        void SetGlobalObjTypeSpecFldInfoArray(ObjTypeSpecFldInfo** array, uint count)
+        {
+            Assert(array != nullptr);
+            this->globalObjTypeSpecFldInfoArray = array;
+            this->globalObjTypeSpecFldInfoCount = count;
+        }
 
-       bool GetIsInlined() const
-       {
-           return isInlined;
-       }
-       bool GetIsAggressiveInliningEnabled() const
-       {
-           return isAggressiveInliningEnabled;
-       }
-       void SetIsAggressiveInliningEnabled()
-       {
-           isAggressiveInliningEnabled = true;
-       }
+        bool GetIsInlined() const
+        {
+            return isInlined;
+        }
+        bool GetIsAggressiveInliningEnabled() const
+        {
+            return isAggressiveInliningEnabled;
+        }
+        void SetIsAggressiveInliningEnabled()
+        {
+            isAggressiveInliningEnabled = true;
+        }
 
-       void SetupRecursiveInlineeChain(
-           Recycler *const recycler,
-           const ProfileId profiledCallSiteId)
-       {
+        void SetupRecursiveInlineeChain(
+            Recycler *const recycler,
+            const ProfileId profiledCallSiteId)
+        {
+            if (!inlinees)
+            {
+                inlinees = RecyclerNewArrayZ(recycler, FunctionCodeGenJitTimeData *, GetFunctionBody()->GetProfiledCallSiteCount());
+            }
+            inlinees[profiledCallSiteId] = this;
+            inlineeCount++;
+            this->isInlined = isInlined;
+        }
 
-           if (!inlinees)
-           {
-               inlinees = RecyclerNewArrayZ(recycler, FunctionCodeGenJitTimeData *, GetFunctionBody()->GetProfiledCallSiteCount());
-           }
-           inlinees[profiledCallSiteId] = this;
-           inlineeCount++;
-           this->isInlined = isInlined;
-       }
+        uint16 GetProfiledIterations() const;
 
-
-       uint16 GetProfiledIterations() const;
-
-       PREVENT_COPY(FunctionCodeGenJitTimeData)
+        PREVENT_COPY(FunctionCodeGenJitTimeData)
     };
-
 }
-

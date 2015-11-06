@@ -10,7 +10,7 @@ namespace Js
     {
     public:
         int32 nestingDepth;
-        int32 catchOffset; 
+        int32 catchOffset;
         EHBailoutData * parent;
         EHBailoutData * child;
 

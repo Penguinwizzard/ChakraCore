@@ -14,7 +14,7 @@ function foo(arr, i)
 {
     i = arr[i];
     if (i != 50)
-	WScript.Echo("FAILED");
+    WScript.Echo("FAILED");
     return i;
 }
 

@@ -70,7 +70,6 @@ namespace JSON
 
         Js::Var StringifyObject(Js::Var value);
 
-
         Js::Var StringifyArray(Js::Var value);
         Js::JavascriptString* GetArrayElementString(uint32 index, Js::Var arrayVar);
         Js::JavascriptString* GetPropertySeparator();
@@ -104,4 +103,3 @@ namespace JSON
         Js::Var StringifySession::StrHelper(Js::JavascriptString* key, Js::Var value, Js::Var holder);
     };
 } // namespace JSON
-

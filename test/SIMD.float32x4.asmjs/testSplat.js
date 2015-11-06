@@ -185,9 +185,4 @@ equalSimd([100, 100, 100, 100], ret1, SIMD.Float32x4, "Test Splat");
 equalSimd([14851, 14851, 14851, 14851], ret2, SIMD.Float32x4, "Test Splat");
 equalSimd([1234, 1234, 1234, 1234], ret3, SIMD.Float32x4, "Test Splat");
 
-WScript.Echo("PASS");
-
-
-
-
-
+print("PASS");

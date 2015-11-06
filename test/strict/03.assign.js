@@ -136,7 +136,7 @@ var glo = this;
         }
     });
     var obj = Object.create(proto);
-    
+
     try {
         obj.foo = 30;
     } catch(e) {
@@ -154,7 +154,7 @@ var glo = this;
         configurable:true,
         value:20
     });
-        
+
     try {
         123["foo"] = 23;
     } catch(e) {
@@ -176,7 +176,7 @@ var glo = this;
             value:20
         }
     });
-    
+
     try {
         obj[prop] = 24;
     } catch(e) {
@@ -195,7 +195,7 @@ var glo = this;
         writable:false,
         value:20
     });
-    
+
     try {
         obj[prop] = 24;
     } catch(e) {
@@ -215,7 +215,7 @@ var glo = this;
             value:20
         }
     });
-    
+
     try {
         eval("obj[prop] = 24");
     } catch(e) {
@@ -235,7 +235,7 @@ var glo = this;
             value:20
         }
     });
-    
+
     try {
         obj[prop] = 25;
     } catch(e) {
@@ -254,7 +254,7 @@ var glo = this;
         writable:false,
         value:20
     });
-    
+
     try {
         obj[prop] = 25;
     } catch(e) {
@@ -274,7 +274,7 @@ var glo = this;
             value:20
         }
     });
-    
+
     try {
         eval("obj[prop] = 25");
     } catch(e) {
@@ -413,7 +413,7 @@ var glo = this;
         }
     });
     var obj = Object.create(proto);
-    
+
     try {
         obj.foo = 30;
     } catch(e) {
@@ -430,7 +430,7 @@ var glo = this;
         get: function() { return "foo value"; }, // Only getter defined
         configurable:true
     });
-        
+
     try {
         123["foo"] = 32;
     } catch(e) {
@@ -451,7 +451,7 @@ var glo = this;
             get: function() { return "foo value"; } // Only getter specified
         }
     });
-    
+
     try {
         obj[prop] = 33;
     } catch(e) {
@@ -469,7 +469,7 @@ var glo = this;
     Object.defineProperty(obj, prop, {
         get: function() { return "foo value"; } // Only getter specified
     });
-    
+
     try {
         obj[prop] = 33;
     } catch(e) {
@@ -488,7 +488,7 @@ var glo = this;
             get: function() { return "foo value"; } // Only getter specified
         }
     });
-    
+
     try {
         obj[prop] = 34;
     } catch(e) {
@@ -506,7 +506,7 @@ var glo = this;
     Object.defineProperty(obj, prop, {
         get: function() { return "foo value"; } // Only getter specified
     });
-    
+
     try {
         obj[prop] = 34;
     } catch(e) {
@@ -539,7 +539,7 @@ var glo = this;
     var str = "Adding non-existent property to non-extensible object";
     var obj = new Object();
     Object.preventExtensions(obj);
-  
+
     try {
         obj.foo = 20;
     } catch(e) {
@@ -553,7 +553,7 @@ var glo = this;
     var str = "Test4_1: Adding non-existent index property to non-extensible object";
     var obj = new Object();
     Object.preventExtensions(obj);
-  
+
     try {
         obj[3] = 20;
     } catch(e) {
@@ -568,7 +568,7 @@ var glo = this;
     var obj = [];
     var prop = "7"; // Use a string
     Object.preventExtensions(obj);
-  
+
     try {
         obj[prop] = 4;
     } catch(e) {
@@ -583,7 +583,7 @@ var glo = this;
     var obj = [];
     var prop = 3; // Use an integer
     Object.preventExtensions(obj);
-  
+
     try {
         obj[prop] = 4;
     } catch(e) {
@@ -613,7 +613,7 @@ var glo = this;
     var str = "Postfix increment on non-extensible object's non-existent property";
     var obj = new Object();
     Object.preventExtensions(obj);
-  
+
     try {
         obj.foo++;
     } catch(e) {
@@ -625,7 +625,7 @@ var glo = this;
 
 (function Test7(){
     var str = "Assign NaN of globalObject via property";
-    var globalObject = Function("return this;")();	
+    var globalObject = Function("return this;")();
     try {
         globalObject.NaN = "blah";
     } catch(e) {
@@ -637,7 +637,7 @@ var glo = this;
 
 (function Test8(){
     var str = "Assign Infinity of globalObject via indexer/literal";
-    var globalObject = Function("return this;")();	
+    var globalObject = Function("return this;")();
     try {
         globalObject[Infinity] = "blah";
     } catch(e) {
@@ -649,7 +649,7 @@ var glo = this;
 
 (function Test9(){
     var str = "Assign Infinity of globalObject via indexer/string";
-    var globalObject = Function("return this;")();	
+    var globalObject = Function("return this;")();
     try {
         globalObject["Infinity"] = "blah";
     } catch(e) {

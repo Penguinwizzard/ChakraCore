@@ -29,18 +29,18 @@ WScript.Echo();
 var size = 64;
 var u8 = new Uint8Array(size);
 for(i = 0; i < size; i++) {
-	u8[i] = i;
+    u8[i] = i;
 }
 for(i = ((size*-1)*2); i <= (size*2); i++) {
-	var u9 = u8.subarray(i);
-	
-	var u9str = '';
-	for(j = 0; j < u9.length; j++) {
-		if(u9str != '') { 
-			u9str += ', ';
-		}
-		u9str += u9[j];
-	}
-	
-	WScript.Echo('u8.subarray(' + i + ') = (' + u9.length + ') [' + u9str + ']');
+    var u9 = u8.subarray(i);
+
+    var u9str = '';
+    for(j = 0; j < u9.length; j++) {
+        if(u9str != '') {
+            u9str += ', ';
+        }
+        u9str += u9[j];
+    }
+
+    WScript.Echo('u8.subarray(' + i + ') = (' + u9.length + ') [' + u9str + ']');
 }

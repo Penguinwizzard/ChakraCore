@@ -381,7 +381,7 @@ LowererMD::LowerCallIDynamic(IR::Instr *callInstr, IR::Instr*saveThisArgOutInstr
     //callInfo
     if (callInstr->m_func->IsInlinee())
     {
-        Assert(argsLength->AsIntConstOpnd()->m_value == callInstr->m_func->actualCount);
+        Assert(argsLength->AsIntConstOpnd()->GetValue() == callInstr->m_func->actualCount);
         this->SetMaxArgSlots((Js::ArgSlot)callInstr->m_func->actualCount);
     }
     else
@@ -2754,7 +2754,7 @@ void LowererMD::ChangeToShift(IR::Instr *const instr, const bool needFlags)
     if(instr->GetSrc2()->IsIntConstOpnd())
     {
         // In the constant case, do the mask manually.
-        IntConstType immed = instr->GetSrc2()->AsIntConstOpnd()->m_value & 0x1f;
+        IntConstType immed = instr->GetSrc2()->AsIntConstOpnd()->GetValue() & 0x1f;
         if (immed == 0)
         {
             // Shift by zero is just a move, and the shift-right instructions
@@ -2764,7 +2764,7 @@ void LowererMD::ChangeToShift(IR::Instr *const instr, const bool needFlags)
         }
         else
         {
-            instr->GetSrc2()->AsIntConstOpnd()->m_value = immed;
+            instr->GetSrc2()->AsIntConstOpnd()->SetValue(immed);
         }
     }
     else
@@ -7636,7 +7636,7 @@ LowererMD::LowerGetCachedFunc(IR::Instr *instr)
     IR::RegOpnd *src1Opnd = instr->UnlinkSrc1()->AsRegOpnd();
     IR::Instr *instrPrev = instr->m_prev;
 
-    instr->SetSrc1(IR::IndirOpnd::New(src1Opnd, (src2Opnd->m_value * sizeof(Js::FuncCacheEntry)) + Js::ActivationObjectEx::GetOffsetOfCache() + offsetof(Js::FuncCacheEntry, func), TyVar, this->m_func));
+    instr->SetSrc1(IR::IndirOpnd::New(src1Opnd, (src2Opnd->GetValue() * sizeof(Js::FuncCacheEntry)) + Js::ActivationObjectEx::GetOffsetOfCache() + offsetof(Js::FuncCacheEntry, func), TyVar, this->m_func));
 
     this->ChangeToAssign(instr);
 
@@ -7661,7 +7661,7 @@ LowererMD::LowerCommitScope(IR::Instr *instrCommit)
     LowererMD::ChangeToAssign(instrCommit);
 
     IR::IntConstOpnd *intConstOpnd = instrCommit->UnlinkSrc2()->AsIntConstOpnd();
-    const Js::PropertyIdArray *propIds = Js::ByteCodeReader::ReadPropertyIdArray(intConstOpnd->m_value, instrCommit->m_func->GetJnFunction());
+    const Js::PropertyIdArray *propIds = Js::ByteCodeReader::ReadPropertyIdArray(intConstOpnd->GetValue(), instrCommit->m_func->GetJnFunction());
     intConstOpnd->Free(this->m_func);
 
     uint firstVarSlot = (uint)Js::ActivationObjectEx::GetFirstVarSlot(propIds);
@@ -8016,7 +8016,7 @@ LowererMD::GenerateFastIsInst(IR::Instr * instr)
 
     // We are going to use the extra ArgOut_A instructions to lower the helper call later,
     // so we leave them alone here and clean them up then.
-    inlineCache = instr->m_func->GetJnFunction()->GetIsInstInlineCache(instr->GetSrc1()->AsIntConstOpnd()->m_value);
+    inlineCache = instr->m_func->GetJnFunction()->GetIsInstInlineCache(instr->GetSrc1()->AsIntConstOpnd()->GetValue());
     Assert(instr->GetSrc2()->AsRegOpnd()->m_sym->m_isSingleDef);
     instrArg = instr->GetSrc2()->AsRegOpnd()->m_sym->m_instrDef;
 

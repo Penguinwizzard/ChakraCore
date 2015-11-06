@@ -19,7 +19,7 @@ public:
     
 private:
     void            EncodeOpnd(IR::Instr *instr, IR::Opnd *opnd);
-    IntConstType    EncodeValue(IR::Instr *instr, IR::Opnd *opnd, IntConstType value, IR::RegOpnd ** pNewOpnd);
+    IntConstType    EncodeValue(IR::Instr *instr, IR::Opnd *opnd, IntConstType constValue, IR::RegOpnd ** pNewOpnd);
 #ifdef _M_X64
     size_t          EncodeAddress(IR::Instr *instr, IR::Opnd *opnd, size_t value, IR::RegOpnd **pNewOpnd);
 #endif

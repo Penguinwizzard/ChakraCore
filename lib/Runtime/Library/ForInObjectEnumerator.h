@@ -79,5 +79,5 @@ namespace Js
         }
     private:
         ForInObjectEnumerator forInObjectEnumerator;
-    };    
+    };
 }

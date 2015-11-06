@@ -211,7 +211,7 @@ SmallHeapBlockT<MediumAllocationBlockAttributes>::GetObjectBitDeltaForBucketInde
 // TODO: consider remove and merge with GetPageCount
 template <class TBlockAttributes>
 template<bool pageheap>
-const size_t
+const uint
 SmallHeapBlockT<TBlockAttributes>::GetPageHeapModePageCount() const
 {
 #ifdef RECYCLER_PAGE_HEAP
@@ -228,7 +228,7 @@ SmallHeapBlockT<TBlockAttributes>::GetPageHeapModePageCount() const
 }
 
 template <class TBlockAttributes>
-size_t
+uint
 SmallHeapBlockT<TBlockAttributes>::GetPageCount() const
 {
     return TBlockAttributes::PageCount;
@@ -412,7 +412,7 @@ SmallHeapBlockT<TBlockAttributes>::SetPage(__in_ecount_pagesize char * baseAddre
     {
         if (InPageHeapMode())
         {
-            size_t pageCount = this->GetPageHeapModePageCount<true>();
+            uint pageCount = this->GetPageHeapModePageCount<true>();
             Assert(pageCount == TBlockAttributes::PageCount + 1 || (!this->InPageHeapMode() && pageCount == TBlockAttributes::PageCount));
 
             if (this->pageHeapMode == PageHeapMode::PageHeapModeBlockStart)
@@ -537,12 +537,7 @@ template<bool pageheap>
 void
 SmallHeapBlockT<TBlockAttributes>::BackgroundReleasePagesSweep(Recycler* recycler)
 {
-    // Move the page to the zero queue and rip the page apart from the heap block
-#if defined(_M_X64_OR_ARM64)
-    Assert(this->GetPageCount() < UINT_MAX);
-#endif
     recycler->heapBlockMap.ClearHeapBlock(address, this->GetPageCount());
-
     char* address = this->address;
 #ifdef RECYCLER_PAGE_HEAP
     if (pageheap)
@@ -563,7 +558,7 @@ SmallHeapBlockT<TBlockAttributes>::BackgroundReleasePagesSweep(Recycler* recycle
     }
 #endif
 
-    this->GetPageAllocator(recycler)->BackgroundReleasePages(address, static_cast<uint>(this->GetPageHeapModePageCount<pageheap>()), this->GetPageSegment());
+    this->GetPageAllocator(recycler)->BackgroundReleasePages(address, this->GetPageHeapModePageCount<pageheap>(), this->GetPageSegment());
 
     this->address = nullptr;
     this->segment = nullptr;

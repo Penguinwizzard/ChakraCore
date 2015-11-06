@@ -4,14 +4,15 @@
 //-------------------------------------------------------------------------------------------------------
 
 function equal(a, b) {
-    if (a == b)
-        WScript.Echo("Correct");
-    else
-        WScript.Echo(">> Fail!");
+    if (a == b) {
+        print("Correct");
+    } else {
+        print(">> Fail!");
+    }
 }
 
 function testWithX() {
-    WScript.Echo("Int8x16 replaceLane 0");
+    print("Int8x16 replaceLane 0");
     var a = SIMD.Int8x16(16, 9, 4, 1, 16, 9, 4, 1, 16, 9, 4, 1, 16, 9, 4, 1);
     var c = SIMD.Int8x16.replaceLane(a, 0, 20);
     equal(20, SIMD.Int8x16.extractLane(c, 0));
@@ -51,7 +52,7 @@ function testWithX() {
 }
 
 function testWithY() {
-    WScript.Echo("Int8x16 replaceLane 1");
+    print("Int8x16 replaceLane 1");
     var a = SIMD.Int8x16(16, 9, 4, 1, 16, 9, 4, 1, 16, 9, 4, 1, 16, 9, 4, 1);
     var c = SIMD.Int8x16.replaceLane(a, 1, 20);
     equal(16, SIMD.Int8x16.extractLane(c, 0));
@@ -92,7 +93,7 @@ function testWithY() {
 
 
 function testWithZ() {
-    WScript.Echo("Int8x16 replaceLane 2");
+    print("Int8x16 replaceLane 2");
     var a = SIMD.Int8x16(16, 9, 4, 1, 16, 9, 4, 1, 16, 9, 4, 1, 16, 9, 4, 1);
     var c = SIMD.Int8x16.replaceLane(a, 2, 20);
     equal(16, SIMD.Int8x16.extractLane(c, 0));
@@ -132,7 +133,7 @@ function testWithZ() {
 }
 
 function testWithW() {
-    WScript.Echo("Int8x16 replaceLane 3");
+    print("Int8x16 replaceLane 3");
     var a = SIMD.Int8x16(16, 9, 4, 1, 16, 9, 4, 1, 16, 9, 4, 1, 16, 9, 4, 1);
     var c = SIMD.Int8x16.replaceLane(a, 3, 20);
     equal(16, SIMD.Int8x16.extractLane(c, 0));
@@ -172,7 +173,7 @@ function testWithW() {
 }
 
 function testReplaceLane() {
-    WScript.Echo("Int8x16 replaceLane 4-15");
+    print("Int8x16 replaceLane 4-15");
     var a = SIMD.Int8x16(16, 9, 4, 1, 16, 9, 4, 1, 16, 9, 4, 1, 16, 9, 4, 1);
     for (var i = 4; i < 16; ++i)
     {
@@ -187,8 +188,6 @@ function testReplaceLane() {
         }
     }
 }
-
-
 
 testWithX();
 testWithX();

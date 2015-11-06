@@ -127,14 +127,12 @@ namespace Js
 
     FrameDisplay *DebugManager::GetFrameDisplay(ScriptContext* scriptContext, DynamicObject* scopeAtZero, DynamicObject* scopeAtOne, bool addGlobalThisAtScopeTwo)
     {
-        /*
-        The scope chain for console eval looks like
-        dummy empty object - new vars, let, consts, functions get added here
-        Active scope object containing all globals visible at this break (if at break)
-        Global this object so that existing properties are updated here
-        Console-1 Scope - all new globals will go here (like x = 1;)
-        NullFrameDisplay
-        */
+        // The scope chain for console eval looks like:
+        //  - dummy empty object - new vars, let, consts, functions get added here
+        //  - Active scope object containing all globals visible at this break (if at break)
+        //  - Global this object so that existing properties are updated here
+        //  - Console-1 Scope - all new globals will go here (like x = 1;)
+        //  - NullFrameDisplay
 
         FrameDisplay* environment = JavascriptOperators::OP_LdFrameDisplay(this->GetConsoleScope(scriptContext), const_cast<FrameDisplay *>(&NullFrameDisplay), scriptContext);
 

@@ -375,7 +375,7 @@ IR::Instr* LowererMD::Simd128LowerLdLane(IR::Instr *instr)
     Assert(src1 && src1->IsRegOpnd() && src1->IsSimd128());
     Assert(src2 && src2->IsIntConstOpnd());
 
-    laneIndex = (uint)src2->AsIntConstOpnd()->m_value;
+    laneIndex = (uint)src2->AsIntConstOpnd()->AsUint32();
 
     switch (instr->m_opcode)
     {
@@ -681,7 +681,7 @@ IR::Instr* LowererMD::SIMD128LowerReplaceLane(IR::Instr* instr)
 
     Assert(dst->IsSimd128() && src1->IsSimd128());
     IRType type = dst->GetType();
-    lane = src2->AsIntConstOpnd()->m_value;
+    lane = src2->AsIntConstOpnd()->AsInt32();  
 
     IR::Opnd* laneValue = EnregisterIntConst(instr, src3);
 
@@ -780,8 +780,8 @@ IR::Instr* LowererMD::Simd128LowerShuffle(IR::Instr* instr)
 
         if (irOpcode == Js::OpCode::Simd128_Swizzle_D2)
         {
-            lane0 = srcs[1]->AsIntConstOpnd()->m_value;
-            lane1 = srcs[2]->AsIntConstOpnd()->m_value;
+            lane0 = srcs[1]->AsIntConstOpnd()->AsInt32();
+            lane1 = srcs[2]->AsIntConstOpnd()->AsInt32();
             Assert(lane0 >= 0 && lane0 < 2);
             Assert(lane1 >= 0 && lane1 < 2);
             shufMask = (int8)((lane1 << 1) | lane0);
@@ -789,10 +789,10 @@ IR::Instr* LowererMD::Simd128LowerShuffle(IR::Instr* instr)
         else
         {
             AnalysisAssert(srcs[3] != nullptr && srcs[4] != nullptr);
-            lane0 = srcs[1]->AsIntConstOpnd()->m_value;
-            lane1 = srcs[2]->AsIntConstOpnd()->m_value;
-            lane2 = srcs[3]->AsIntConstOpnd()->m_value;
-            lane3 = srcs[4]->AsIntConstOpnd()->m_value;
+            lane0 = srcs[1]->AsIntConstOpnd()->AsInt32();
+            lane1 = srcs[2]->AsIntConstOpnd()->AsInt32();
+            lane2 = srcs[3]->AsIntConstOpnd()->AsInt32();
+            lane3 = srcs[4]->AsIntConstOpnd()->AsInt32();
             Assert(lane1 >= 0 && lane1 < 4);
             Assert(lane2 >= 0 && lane2 < 4);
             Assert(lane2 >= 0 && lane2 < 4);
@@ -816,8 +816,8 @@ IR::Instr* LowererMD::Simd128LowerShuffle(IR::Instr* instr)
         {
             Assert(srcs[2]->IsIntConstOpnd() && srcs[3]->IsIntConstOpnd());
 
-            lane0 = srcs[2]->AsIntConstOpnd()->m_value;
-            lane1 = srcs[3]->AsIntConstOpnd()->m_value - 2;
+            lane0 = srcs[2]->AsIntConstOpnd()->AsInt32();
+            lane1 = srcs[3]->AsIntConstOpnd()->AsInt32() - 2;
             Assert(lane0 >= 0 && lane0 < 2);
             Assert(lane1 >= 0 && lane1 < 2);
             shufMask = (int8)((lane1 << 1) | lane0);
@@ -825,10 +825,10 @@ IR::Instr* LowererMD::Simd128LowerShuffle(IR::Instr* instr)
         else
         {
             AnalysisAssert(srcs[4] != nullptr && srcs[5] != nullptr);
-            lane0 = srcs[2]->AsIntConstOpnd()->m_value;
-            lane1 = srcs[3]->AsIntConstOpnd()->m_value;
-            lane2 = srcs[4]->AsIntConstOpnd()->m_value - 4;
-            lane3 = srcs[5]->AsIntConstOpnd()->m_value - 4;
+            lane0 = srcs[2]->AsIntConstOpnd()->AsInt32();
+            lane1 = srcs[3]->AsIntConstOpnd()->AsInt32();
+            lane2 = srcs[4]->AsIntConstOpnd()->AsInt32() - 4;
+            lane3 = srcs[5]->AsIntConstOpnd()->AsInt32() - 4;
             Assert(lane0 >= 0 && lane0 < 4);
             Assert(lane1 >= 0 && lane1 < 4);
             Assert(lane2 >= 0 && lane2 < 4);
@@ -939,7 +939,7 @@ IR::Instr* LowererMD::Simd128LowerLoadElem(IR::Instr *instr)
 
         // this can happen in cases where globopt props a constant access which was not known at bytecodegen time or when heap is non-constant
 
-        if (src2->IsIntConstOpnd() && ((uint32)src1->AsIndirOpnd()->GetOffset() + dataWidth > (uint32)src2->AsIntConstOpnd()->m_value))
+        if (src2->IsIntConstOpnd() && ((uint32)src1->AsIndirOpnd()->GetOffset() + dataWidth > src2->AsIntConstOpnd()->AsUint32()))
         {
             m_lowerer->GenerateRuntimeError(instr, JSERR_ArgumentOutOfRange, IR::HelperOp_RuntimeRangeError);
             instr->FreeSrc1();
@@ -1072,7 +1072,7 @@ IR::Instr* LowererMD::Simd128LowerStoreElem(IR::Instr *instr)
         instr->UnlinkSrc1();
 
         // we might have a constant index if globopt propped a constant store. we can ahead of time check if it is in-bounds
-        if (src2->IsIntConstOpnd() && ((uint32)dst->AsIndirOpnd()->GetOffset() + dataWidth > (uint32)src2->AsIntConstOpnd()->m_value))
+        if (src2->IsIntConstOpnd() && ((uint32)dst->AsIndirOpnd()->GetOffset() + dataWidth > src2->AsIntConstOpnd()->AsUint32()))
         {
             m_lowerer->GenerateRuntimeError(instr, JSERR_ArgumentOutOfRange, IR::HelperOp_RuntimeRangeError);
 

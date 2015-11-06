@@ -47,7 +47,6 @@ namespace Js
 
         void EnsureNoProperty(PropertyId propertyId);
 
-        //JavascriptEnumerator* GetLetConstGlobalEnumerator();
         template <typename Fn>
         void MapLetConstGlobals(Fn fn);
 

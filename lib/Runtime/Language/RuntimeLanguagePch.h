@@ -8,7 +8,6 @@
 
 #include "Runtime.h"
 
-
 #include "Language\ByteCodeSerializer.h"
 #include "Language\AsmJsTypes.h"
 #include "Language\AsmJsUtils.h"
@@ -21,7 +20,6 @@
 #include "Language\AsmJSCodeGenerator.h"
 #endif
 #include "Language\FunctionCodeGenJitTimeData.h"
-
 
 #include "Language\ProfilingHelpers.h"
 #include "Language\CacheOperators.h"
@@ -47,13 +45,11 @@
 #include "Library\StackScriptFunction.h"
 #include "Library\HostObjectBase.h"
 
-
 #ifdef ENABLE_MUTATION_BREAKPOINT
 // REVIEW: ChakraCore Dependency
 #include "activdbg_private.h"
 #include "Debug\MutationBreakpoint.h"
 #endif
-
 
 // SIMD_JS
 // SIMD types
@@ -94,4 +90,3 @@
 // .inl files
 #include "Language\CacheOperators.inl"
 #include "Language\JavascriptMathOperators.inl"
-

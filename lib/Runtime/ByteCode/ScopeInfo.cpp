@@ -4,9 +4,10 @@
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeByteCodePch.h"
 
-namespace Js {
+namespace Js
+{
     //
-    //  Persist one symbol info into ScopeInfo.
+    // Persist one symbol info into ScopeInfo.
     //
     void ScopeInfo::SaveSymbolInfo(Symbol* sym, MapSymbolData* mapSymbolData)
     {
@@ -70,7 +71,7 @@ namespace Js {
         TRACE_BYTECODE(L"\nSave ScopeInfo: %s parent: %s #symbols: %d %s\n",
             scope->GetFunc()->name, parent->GetDisplayName(), count, scopeInfo->isObject ? L"isObject" : L"");
 
-        MapSymbolData mapSymbolData = {byteCodeGenerator, scope->GetFunc()};
+        MapSymbolData mapSymbolData = { byteCodeGenerator, scope->GetFunc() };
         scope->ForEachSymbol([&mapSymbolData, scopeInfo, scope](Symbol * sym)
         {
             Assert(scope == sym->GetScope());
@@ -152,7 +153,7 @@ namespace Js {
         ParseableFunctionInfo* funcBody = func->byteCodeFunction;
 
         Assert((!func->IsGlobalFunction() || byteCodeGenerator->GetFlags() & fscrEvalCode) &&
-               (func->HasDeferredChild() || (funcBody->IsReparsed())));
+            (func->HasDeferredChild() || (funcBody->IsReparsed())));
 
         // If we are reparsing a deferred function, we already have correct "parent" info in
         // funcBody->scopeInfo. parentFunc is the knopProg shell and should not be used in this
@@ -190,7 +191,7 @@ namespace Js {
         // But if we save the global eval block scope for deferred child so that we can look up
         // let/const in that scope with slot index instead of doing a scope lookup.
         // We will have to implement encoding block scope info to enable, which will also
-        // enable defer parsing function that are in block scopes
+        // enable defer parsing function that are in block scopes.
 
         Assert(byteCodeGenerator->GetCurrentScope() == funcInfo->GetBodyScope());
         if (funcInfo->IsDeferred())
@@ -205,22 +206,22 @@ namespace Js {
                 {
                     Assert(byteCodeGenerator->GetCurrentScope()->GetEnclosingScope() == funcInfo->GetFuncExprScope() &&
                         byteCodeGenerator->GetCurrentScope()->GetEnclosingScope()->GetEnclosingScope() ==
-                           (parentFunc->IsGlobalFunction() ? parentFunc->GetGlobalEvalBlockScope() : parentFunc->GetBodyScope()));
+                        (parentFunc->IsGlobalFunction() ? parentFunc->GetGlobalEvalBlockScope() : parentFunc->GetBodyScope()));
                 }
                 else
                 {
                     Assert(byteCodeGenerator->GetCurrentScope()->GetEnclosingScope() ==
-                           (parentFunc->IsGlobalFunction() ? parentFunc->GetGlobalEvalBlockScope() : parentFunc->GetBodyScope()));
+                        (parentFunc->IsGlobalFunction() ? parentFunc->GetGlobalEvalBlockScope() : parentFunc->GetBodyScope()));
                 }
 #endif
                 Js::ScopeInfo::SaveParentScopeInfo(parentFunc, funcInfo);
             }
         }
         else if (funcInfo->HasDeferredChild() ||
-                    (!funcInfo->IsGlobalFunction() &&
-                    funcInfo->byteCodeFunction &&
-                    funcInfo->byteCodeFunction->IsReparsed() &&
-                    funcInfo->byteCodeFunction->GetFunctionBody()->HasAllNonLocalReferenced()))
+            (!funcInfo->IsGlobalFunction() &&
+                funcInfo->byteCodeFunction &&
+                funcInfo->byteCodeFunction->IsReparsed() &&
+                funcInfo->byteCodeFunction->GetFunctionBody()->HasAllNonLocalReferenced()))
         {
             // When we reparse due to attach, we would need to capture all of them, since they were captured before going to debug mode.
 
@@ -236,7 +237,7 @@ namespace Js {
         ScriptContext* scriptContext;
         ArenaAllocator* alloc;
 
-        // Load scope attributes and push onto scope stack
+        // Load scope attributes and push onto scope stack.
         scope->SetIsDynamic(this->isDynamic);
         if (this->isObject)
         {
@@ -251,7 +252,7 @@ namespace Js {
         else
         {
             TRACE_BYTECODE(L"\nRestore ScopeInfo: %s #symbols: %d %s\n",
-                           funcInfo->name, symbolCount, isObject ? L"isObject" : L"");
+                funcInfo->name, symbolCount, isObject ? L"isObject" : L"");
 
             Assert(!this->isCached || scope == funcInfo->GetBodyScope());
             funcInfo->SetHasCachedScope(this->isCached);

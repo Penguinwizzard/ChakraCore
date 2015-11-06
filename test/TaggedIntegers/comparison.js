@@ -4,19 +4,17 @@
 //-------------------------------------------------------------------------------------------------------
 
 // Tagged Integers Test Plan, testcase #1
-// 
+//
 // Tests integer comparisons, with special attention to values interesting to
 // tagged integers.
 
-
 function check(cond,str)
 {
-	if(!cond)
-	{
-		WScript.Echo("FAIL: " + str);
-	}
+    if(!cond)
+    {
+        WScript.Echo("FAIL: " + str);
+    }
 }
-
 
 // BEGIN INTEGER DEFINITIONS
 var n = 573;
@@ -103,195 +101,190 @@ t.intminplusone4 = -2147483074-n;
 // that ordering.
 //
 var testvals = [ "intmin",
-		 "intminplusone",
-		 "tagmin",
-		 "tagminplusone",
-		 "negtwo",
-		 "negone",
-		 "zero",
-		 "one",
-		 "two",
-		 "tagmaxminusone",
-		 "tagmax",
-		 "intmaxminusone",
-		 "intmax",
-		 "uintmaxminusone",
-		 "uintmax"
-		];
-
+         "intminplusone",
+         "tagmin",
+         "tagminplusone",
+         "negtwo",
+         "negone",
+         "zero",
+         "one",
+         "two",
+         "tagmaxminusone",
+         "tagmax",
+         "intmaxminusone",
+         "intmax",
+         "uintmaxminusone",
+         "uintmax"
+        ];
 
 // END DEFINITIONS
-
-
 
 // Test for equality
 function check_equality()
 {
-	for(var idx = 0; idx < testvals.length; ++idx)
-	{
-		for(var i = 1; i <= 4; ++i)
-		{
-			for(var j = 1; j <= 4; ++j)
-			{
-				var l1 = testvals[idx]+i;
-				var l2 = testvals[idx]+j;
-	
-				var result = false;
-	
-				if(t[l1] == t[l2])
-				{
-					result = true;
-				}
-				check(result, t[l1] + " == " + t[l2]);
-			}
-		}
-	}
-}
+    for(var idx = 0; idx < testvals.length; ++idx)
+    {
+        for(var i = 1; i <= 4; ++i)
+        {
+            for(var j = 1; j <= 4; ++j)
+            {
+                var l1 = testvals[idx]+i;
+                var l2 = testvals[idx]+j;
 
+                var result = false;
+
+                if(t[l1] == t[l2])
+                {
+                    result = true;
+                }
+                check(result, t[l1] + " == " + t[l2]);
+            }
+        }
+    }
+}
 
 // Test for inequality
 function check_inequality()
 {
-	for(var idx1 = 0; idx1 < testvals.length; ++idx1)
-	{
+    for(var idx1 = 0; idx1 < testvals.length; ++idx1)
+    {
 
-		for(var idx2 = 0; idx2 < testvals.length; ++idx2)
-		{
-			if(idx1 == idx2)
-				continue;
+        for(var idx2 = 0; idx2 < testvals.length; ++idx2)
+        {
+            if(idx1 == idx2)
+                continue;
 
-			for(var i = 1; i <= 4; ++i)
-			{
-				for(var j = 1; j <= 4; ++j)
-				{
-					var l1 = testvals[idx1]+i;
-					var l2 = testvals[idx2]+j;
+            for(var i = 1; i <= 4; ++i)
+            {
+                for(var j = 1; j <= 4; ++j)
+                {
+                    var l1 = testvals[idx1]+i;
+                    var l2 = testvals[idx2]+j;
 
-					var result = false;
-		
-					if(t[l1] != t[l2])
-					{
-						result = true;
-					}
-					check(result, t[l1] + " != " + t[l2]);					
-				}
-			}
-		}
-	}
+                    var result = false;
+
+                    if(t[l1] != t[l2])
+                    {
+                        result = true;
+                    }
+                    check(result, t[l1] + " != " + t[l2]);
+                }
+            }
+        }
+    }
 }
 
 // Test for greater/less than
 function check_greaterless()
 {
-	for(var idx1 = 0; idx1 < testvals.length; ++idx1)
-	{
+    for(var idx1 = 0; idx1 < testvals.length; ++idx1)
+    {
 
-		for(var idx2 = 0; idx2 < testvals.length; ++idx2)
-		{
-			if(idx1 == idx2)
-				continue;
+        for(var idx2 = 0; idx2 < testvals.length; ++idx2)
+        {
+            if(idx1 == idx2)
+                continue;
 
-			for(var i = 1; i <= 4; ++i)
-			{
-				for(var j = 1; j <= 4; ++j)
-				{
-					var l1 = testvals[idx1]+i;
-					var l2 = testvals[idx2]+j;
-					var result = false;
+            for(var i = 1; i <= 4; ++i)
+            {
+                for(var j = 1; j <= 4; ++j)
+                {
+                    var l1 = testvals[idx1]+i;
+                    var l2 = testvals[idx2]+j;
+                    var result = false;
 
-					var str = "ERROR";
-		
-					if(idx1 > idx2)
-					{
-						str = " > ";
+                    var str = "ERROR";
 
-						if(t[l1] > t[l2])
-						{
-							result = true;
-						}
-					}
-					else if(idx1 < idx2)
-					{
-						str = " < ";
+                    if(idx1 > idx2)
+                    {
+                        str = " > ";
 
-						if(t[l1] < t[l2])
-						{
-							result = true;
-						}
-					}
-					else
-					{
-						WScript.Echo("should never get here!");
-						result = false;
-					}
+                        if(t[l1] > t[l2])
+                        {
+                            result = true;
+                        }
+                    }
+                    else if(idx1 < idx2)
+                    {
+                        str = " < ";
 
-					check(result, t[l1] + str + t[l2]);					
-				}
-			}
-		}
-	}
+                        if(t[l1] < t[l2])
+                        {
+                            result = true;
+                        }
+                    }
+                    else
+                    {
+                        WScript.Echo("should never get here!");
+                        result = false;
+                    }
+
+                    check(result, t[l1] + str + t[l2]);
+                }
+            }
+        }
+    }
 }
-
 
 // Test for greaterequals/lessequals
 function check_greaterlessequals()
 {
-	for(var idx1 = 0; idx1 < testvals.length; ++idx1)
-	{
+    for(var idx1 = 0; idx1 < testvals.length; ++idx1)
+    {
 
-		for(var idx2 = 0; idx2 < testvals.length; ++idx2)
-		{
-			for(var i = 1; i <= 4; ++i)
-			{
-				for(var j = 1; j <= 4; ++j)
-				{
-					var l1 = testvals[idx1]+i;
-					var l2 = testvals[idx2]+j;
-					var result = false;
+        for(var idx2 = 0; idx2 < testvals.length; ++idx2)
+        {
+            for(var i = 1; i <= 4; ++i)
+            {
+                for(var j = 1; j <= 4; ++j)
+                {
+                    var l1 = testvals[idx1]+i;
+                    var l2 = testvals[idx2]+j;
+                    var result = false;
 
-					var str = "ERROR";
-		
-					if(idx1 > idx2)
-					{
-						str = " >= ";
+                    var str = "ERROR";
 
-						if(t[l1] >= t[l2])
-						{
-							result = true;
-						}
-					}
-					else if(idx1 < idx2)
-					{
-						str = " <= ";
+                    if(idx1 > idx2)
+                    {
+                        str = " >= ";
 
-						if(t[l1] <= t[l2])
-						{
-							result = true;
-						}
-					}
-					else if(idx1 == idx2)
-					{
-						if(i >= j)
-						{
-							if(t[l1] >= t[l2])
-							{
-								result = true;
-							}
-						}
-						else
-						{
-							if(t[l1] <= t[l2])
-							{
-								result = true;
-							}
-						}					
-					}
+                        if(t[l1] >= t[l2])
+                        {
+                            result = true;
+                        }
+                    }
+                    else if(idx1 < idx2)
+                    {
+                        str = " <= ";
 
-					check(result, t[l1] + str + t[l2]);					
-				}
-			}
-		}
-	}
+                        if(t[l1] <= t[l2])
+                        {
+                            result = true;
+                        }
+                    }
+                    else if(idx1 == idx2)
+                    {
+                        if(i >= j)
+                        {
+                            if(t[l1] >= t[l2])
+                            {
+                                result = true;
+                            }
+                        }
+                        else
+                        {
+                            if(t[l1] <= t[l2])
+                            {
+                                result = true;
+                            }
+                        }
+                    }
+
+                    check(result, t[l1] + str + t[l2]);
+                }
+            }
+        }
+    }
 }
 
 check_equality();

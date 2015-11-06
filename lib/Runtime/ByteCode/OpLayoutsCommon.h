@@ -20,7 +20,7 @@ namespace Js {
     typedef int32 JumpOffset;
 #endif
     // This is used to estimate when we need to emit long branches
-    uint const MaxLayoutSize = 28;      // Increase this when we see larger layout
+    uint const MaxLayoutSize = 28; // Increase this when we see larger layout
 
     uint const MaxOpCodeSize = 2;
 
@@ -105,9 +105,9 @@ namespace Js {
 
     typedef LayoutSizePolicy<MediumLayout> MediumLayoutSizePolicy;
 
-    struct OpLayoutEmpty        // ---
+    struct OpLayoutEmpty
     {
-        // Although empty struct are one bytes, the Empty layout are not written out.
+        // Although empty structs are one byte, the Empty layout are not written out.
     };
 
 } // namespace Js

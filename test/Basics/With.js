@@ -146,7 +146,7 @@ level1Func();
     })();
 })();
 
-// Guarantee that function-body-in-array script length heuristic is not horked
+// Guarantee that function-body-in-array script length heuristic is not broken
 // by compat mode named-function-expression-in-with.
 with ({}) {
     var arrwithfunc = [(function handlerFactory() { return; })];

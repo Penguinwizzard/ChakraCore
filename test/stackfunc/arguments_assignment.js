@@ -11,11 +11,11 @@ function test1() {
             x = go.foo;
         } else {
             arguments = 1;
-    
+
         }
-            
+
     };
-    
+
     WScript.Echo(arguments);
 };
 

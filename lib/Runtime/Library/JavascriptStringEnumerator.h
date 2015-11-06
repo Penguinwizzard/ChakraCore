@@ -43,7 +43,7 @@ namespace Js
         virtual Var GetCurrentValue() override;
         virtual BOOL MoveNext(PropertyAttributes* attributes = nullptr) override;
         virtual void Reset() override;
-        virtual BOOL GetCurrentPropertyId(PropertyId *propertyId) override;
+        virtual bool GetCurrentPropertyId(PropertyId *propertyId) override;
         virtual Var GetCurrentAndMoveNext(PropertyId& propertyId, PropertyAttributes* attributes = nullptr) override;
     };
 }

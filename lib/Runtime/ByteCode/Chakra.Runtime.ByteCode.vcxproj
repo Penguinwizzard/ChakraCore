@@ -24,7 +24,7 @@
         $(MSBuildThisFileDirectory)..;
         $(MSBuildThisFileDirectory)..\..\Common;
         $(MSBuildThisFileDirectory)..\..\Parser;
-        $(MSBuildThisFileDirectory)..\..\Backend;        
+        $(MSBuildThisFileDirectory)..\..\Backend;
         %(AdditionalIncludeDirectories)
       </AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -55,7 +55,12 @@
   <ItemGroup>
     <ClInclude Include="AsmJSByteCodeDumper.h" />
     <ClInclude Include="AsmJsByteCodeWriter.h" />
-    <ClInclude Include="AuxArray.h" />
+    <ClInclude Include="ByteBlock.h" />
+    <ClInclude Include="ByteCodeAPI.h" />
+    <ClInclude Include="ByteCodeDumper.h" />
+    <ClInclude Include="ByteCodeGenerator.h" />
+    <ClInclude Include="ByteCodeReader.h" />
+    <ClInclude Include="ByteCodeWriter.h" />
     <ClInclude Include="ExtendedOpCodeList.h" />
     <ClInclude Include="ExtendedOpCodeListAsmJs.h" />
     <ClInclude Include="FuncInfo.h" />
@@ -63,28 +68,20 @@
     <ClInclude Include="LayoutTypesAsmJs.h" />
     <ClInclude Include="OpCodeList.h" />
     <ClInclude Include="OpCodeListAsmJs.h" />
-    <ClInclude Include="OpCodesAsmJs.h" />
-    <ClInclude Include="OpCodesSimd.h" />
     <ClInclude Include="OpCodeUtil.h" />
     <ClInclude Include="OpCodeUtilAsmJs.h" />
+    <ClInclude Include="OpCodes.h" />
+    <ClInclude Include="OpCodesAsmJs.h" />
+    <ClInclude Include="OpCodesSimd.h" />
+    <ClInclude Include="OpLayouts.h" />
     <ClInclude Include="OpLayoutsAsmJs.h" />
     <ClInclude Include="OpLayoutsCommon.h" />
-    <ClInclude Include="PropertyIdArray.h" />
+    <ClInclude Include="RuntimeByteCodePch.h" />
     <ClInclude Include="Scope.h" />
     <ClInclude Include="ScopeInfo.h" />
     <ClInclude Include="StatementReader.h" />
-    <ClInclude Include="ByteBlock.h" />
-    <ClInclude Include="ByteCodeAPI.h" />
-    <ClInclude Include="ByteCodeDumper.h" />
-    <ClInclude Include="ByteCodeGenerator.h" />
-    <ClInclude Include="ByteCodeReader.h" />
-    <ClInclude Include="ByteCodeWriter.h" />
-    <ClInclude Include="OpCodes.h" />
-    <ClInclude Include="OpLayouts.h" />
     <ClInclude Include="Symbol.h" />
-    <ClInclude Include="RuntimeByteCodePch.h" />
-    <ClInclude Include="VarArrayVarCount.h" />
   </ItemGroup>
-  <Import Project="$(BuildConfigPropsPath)Chakra.Build.targets" Condition="exists('$(BuildConfigPropsPath)Chakra.Build.targets')" />
+  <Import Project="$(BuildConfigPropsPath)Chakra.Build.targets" Condition="exists('$(BuildConfigPropsPath)Chakra.Build.targets')"/>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

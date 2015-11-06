@@ -18,10 +18,10 @@ public:
 #ifndef JD_PRIVATE
         Js::ConfigFlagsTable& flagTable,
 #endif
-        size_t maxFreePageCount = 0,
-        size_t maxIdleFreePageCount = DefaultMaxFreePageCount,
+        uint maxFreePageCount = 0,
+        uint maxIdleFreePageCount = DefaultMaxFreePageCount,
         bool zeroPages = false, BackgroundPageQueue * backgroundPageQueue = nullptr,
-        size_t maxAllocPageCount = PageAllocator::DefaultMaxAllocPageCount);
+        uint maxAllocPageCount = PageAllocator::DefaultMaxAllocPageCount);
 
     void EnterIdleDecommit();
     IdleDecommitSignal LeaveIdleDecommit(bool allowTimer);
@@ -46,8 +46,8 @@ private:
     size_t idleDecommitCount;
 #endif
 #endif
-    size_t maxIdleDecommitFreePageCount;
-    size_t maxNonIdleDecommitFreePageCount;
+    uint maxIdleDecommitFreePageCount;
+    uint maxNonIdleDecommitFreePageCount;
 #ifdef IDLE_DECOMMIT_ENABLED
     bool hasDecommitTimer;
     bool hadDecommitTimer;

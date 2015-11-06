@@ -17,7 +17,7 @@ Js::DynamicObject * IRtoJSObjectBuilder::CreateIntConstOpnd(Js::ScriptContext *s
     }
 
     IR::IntConstOpnd *op = opnd->AsIntConstOpnd();
-    IntConstType value = op->m_value;
+    IntConstType value = op->GetValue();
 
     Js::Var valueVar = Js::JavascriptNumber::ToVar(value, scriptContext);
 

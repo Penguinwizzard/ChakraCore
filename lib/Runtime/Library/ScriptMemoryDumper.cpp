@@ -46,8 +46,6 @@ Js::Var ScriptMemoryDumper::Dump()
         MergeCurrentStats();
     }
 
-    // Review: does this seem reasonable?
-    // 
 #ifdef BUCKETIZE_MEDIUM_ALLOCATIONS
     for (uint32 i = 0 ; i < HeapConstants::MediumBucketCount; i++)
     {
@@ -177,7 +175,6 @@ void ScriptMemoryDumper::DumpLargeHeapBlock(LargeHeapBlock* heapBlock)
         }
     }
 }
-
 
 inline void ScriptMemoryDumper::ResetCurrentStats()
 {

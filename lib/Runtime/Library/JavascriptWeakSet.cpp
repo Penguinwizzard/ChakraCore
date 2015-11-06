@@ -98,7 +98,7 @@ namespace Js
 
         if (!JavascriptOperators::IsObject(key) || JavascriptOperators::GetTypeId(key) == TypeIds_HostDispatch)
         {
-            // HostDispatch is not expando so can't have internal property added to it.
+            // HostDispatch is not expanded so can't have internal property added to it.
             // TODO: Support HostDispatch as WeakSet key
             JavascriptError::ThrowTypeError(scriptContext, JSERR_WeakMapSetKeyNotAnObject, L"WeakSet.prototype.add");
         }

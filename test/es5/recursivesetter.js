@@ -3,20 +3,19 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-
-baseObj = { 
-			get val() { return this.value },
-			set val(arg) {
-				// Recursive call to the setter. Validates inline cache associated with this call site
-				if (this.parent) this.parent.val = 2*arg; 
-				this.value=arg; WScript.Echo("in the setter with " + arg);
-				}
-		  };
+baseObj = {
+            get val() { return this.value },
+            set val(arg) {
+                // Recursive call to the setter. Validates inline cache associated with this call site
+                if (this.parent) this.parent.val = 2*arg;
+                this.value=arg; WScript.Echo("in the setter with " + arg);
+                }
+          };
 
 function F(v, p)
 {
-	this.value = v;
-	this.parent = p;
+    this.value = v;
+    this.parent = p;
 }
 F.prototype = baseObj;
 

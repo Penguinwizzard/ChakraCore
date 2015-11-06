@@ -6,7 +6,7 @@
 
 /*
  * The following diagram depicts the layout of the user-mode stack. To the left is what the stack
- * looks like to the OS. To the right are the logical partitions Eze divides the usable stack into.
+ * looks like to the OS. To the right are the logical partitions Chakra divides the usable stack into.
  * The goal of SO checks in the runtime is to never touch a guard page. i.e. we always detect
  * that we might run out of stack space (at specific points in code) and raise a stack overflow
  * exception. We thus guarantee that our data structures are consistent even when a SO exception is raised.
@@ -66,5 +66,4 @@ StackProber::Initialize()
     // Calling this API with stackGuarantee == 0 *gets* current stack guarantee.
     SetThreadStackGuarantee(&stackGuarantee);
     stackLimit = stackBottom + guardPageSize + stackGuarantee + stackOverflowBuffer;
-
 }

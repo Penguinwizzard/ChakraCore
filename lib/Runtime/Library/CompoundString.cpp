@@ -6,10 +6,6 @@
 #pragma once
 #include "RuntimeLibraryPch.h"
 
-#ifdef _M_X64_OR_ARM64
-// TODO: Clean this warning up
-#pragma warning(disable:4267) // 'var' : conversion from 'size_t' to 'type', possible loss of data
-#endif
 
 namespace Js
 {
@@ -21,7 +17,7 @@ namespace Js
     const uint CompoundString::Block::ChainSizeThreshold = MaxChainedBlockSize / 2;
     // TODO: Once the above LargeAlloc issue is fixed, experiment with forcing resizing as long as the string has only direct chars
 
-    __inline CompoundString::Block::Block(const CharCount charCapacity, const Block *const previous)
+    CompoundString::Block::Block(const CharCount charCapacity, const Block *const previous)
         : bufferOwner(this), charLength(0), charCapacity(charCapacity), previous(previous)
     {
         Assert(HeapInfo::IsAlignedSize(ChainSizeThreshold));
@@ -33,7 +29,7 @@ namespace Js
         Assert(GrowSize(SizeFromCharCapacity(charCapacity)) != 0);
     }
 
-    __inline CompoundString::Block::Block(
+    CompoundString::Block::Block(
         const void *const buffer,
         const CharCount charLength,
         const CharCount charCapacity)
@@ -45,7 +41,7 @@ namespace Js
         js_wmemcpy_s(Chars(), charLength, Chars(buffer), charLength);
     }
 
-    __inline CompoundString::Block::Block(const Block &other, const CharCount usedCharLength)
+    CompoundString::Block::Block(const Block &other, const CharCount usedCharLength)
         : bufferOwner(other.bufferOwner),
         charLength(usedCharLength),
         charCapacity(other.charCapacity),
@@ -56,7 +52,7 @@ namespace Js
         Assert(usedCharLength <= other.charCapacity);
     }
 
-    __inline CompoundString::Block *CompoundString::Block::New(
+    CompoundString::Block *CompoundString::Block::New(
         const uint size,
         const Block *const previous,
         Recycler *const recycler)
@@ -67,7 +63,7 @@ namespace Js
         return RecyclerNewPlus(recycler, size - sizeof(Block), Block, CharCapacityFromSize(size), previous);
     }
 
-    __inline CompoundString::Block *CompoundString::Block::New(
+    CompoundString::Block *CompoundString::Block::New(
         const void *const buffer,
         const CharCount usedCharLength,
         const bool reserveMoreSpace,
@@ -82,7 +78,7 @@ namespace Js
         return RecyclerNewPlus(recycler, size - sizeof(Block), Block, buffer, usedCharLength, CharCapacityFromSize(size));
     }
 
-    __inline CompoundString::Block *CompoundString::Block::Clone(
+    CompoundString::Block *CompoundString::Block::Clone(
         const CharCount usedCharLength,
         Recycler *const recycler) const
     {
@@ -100,7 +96,8 @@ namespace Js
 
     uint CompoundString::Block::SizeFromCharCapacity(const CharCount charCapacity)
     {
-        return sizeof(Block) + charCapacity * sizeof(wchar_t);
+        Assert(IsValidCharCount(charCapacity));
+        return UInt32Math::Add(sizeof(Block), charCapacity * sizeof(wchar_t));
     }
 
     #endif
@@ -164,10 +161,13 @@ namespace Js
 
     uint CompoundString::Block::SizeFromUsedCharLength(const CharCount usedCharLength)
     {
-        const uint usedSize = SizeFromCharCapacity(usedCharLength);
-        const uint alignedUsedSize = HeapInfo::GetAlignedSizeNoCheck(usedSize);
-        Assert(alignedUsedSize >= usedSize);
-        return alignedUsedSize;
+        const size_t usedSize = SizeFromCharCapacity(usedCharLength);
+        const size_t alignedUsedSize = HeapInfo::GetAlignedSizeNoCheck(usedSize);
+        if (alignedUsedSize != (uint)alignedUsedSize)
+        {
+            Js::Throw::OutOfMemory();
+        }
+        return (uint)alignedUsedSize;
     }
 
     bool CompoundString::Block::ShouldAppendChars(
@@ -261,31 +261,9 @@ namespace Js
         return min(MaxChainedBlockSize, newSize);
     }
 
-    __inline CompoundString::Block *CompoundString::Block::Chain(Recycler *const recycler)
+    CompoundString::Block *CompoundString::Block::Chain(Recycler *const recycler)
     {
         return New(GrowSizeForChaining(SizeFromUsedCharLength(CharLength())), this, recycler);
-    }
-
-    void CompoundString::Block::InstantiateForceInlinedMembers()
-    {
-        // Force-inlined functions defined in a translation unit need a reference from an extern non-force-inlined function in
-        // the same translation unit to force an instantiation of the force-inlined function. Otherwise, if the force-inlined
-        // function is not referenced in the same translation unit, it will not be generated and the linker is not able to find
-        // the definition to inline the function in other translation units.
-        Assert(false);
-
-        Block *const block = nullptr;
-        void *const voidPointer = nullptr;
-        const CharCount charCount = 0;
-        Recycler *const recycler = nullptr;
-
-        (Block(charCount, block));
-        (Block(voidPointer, charCount, charCount));
-        (Block(*block, charCount));
-        New(charCount, block, recycler);
-        New(voidPointer, charCount, false, recycler);
-        block->Clone(charCount, recycler);
-        block->Chain(recycler);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -377,7 +355,7 @@ namespace Js
         return charCapacity < Block::ChainSizeThreshold / sizeof(wchar_t);
     }
 
-    __inline void CompoundString::BlockInfo::AllocateBuffer(const CharCount charCapacity, Recycler *const recycler)
+    void CompoundString::BlockInfo::AllocateBuffer(const CharCount charCapacity, Recycler *const recycler)
     {
         Assert(!buffer);
         Assert(CharLength() == 0);
@@ -389,7 +367,7 @@ namespace Js
         this->charCapacity = charCapacity;
     }
 
-    __inline CompoundString::Block *CompoundString::BlockInfo::CopyBuffer(
+    CompoundString::Block *CompoundString::BlockInfo::CopyBuffer(
         const void *const buffer,
         const CharCount usedCharLength,
         const bool reserveMoreSpace,
@@ -414,7 +392,7 @@ namespace Js
         return block;
     }
 
-    __inline CompoundString::Block *CompoundString::BlockInfo::Resize(Recycler *const recycler)
+    CompoundString::Block *CompoundString::BlockInfo::Resize(Recycler *const recycler)
     {
         Assert(recycler);
 
@@ -457,24 +435,6 @@ namespace Js
         charCapacity = 0;
     }
 
-    void CompoundString::BlockInfo::InstantiateForceInlinedMembers()
-    {
-        // Force-inlined functions defined in a translation unit need a reference from an extern non-force-inlined function in
-        // the same translation unit to force an instantiation of the force-inlined function. Otherwise, if the force-inlined
-        // function is not referenced in the same translation unit, it will not be generated and the linker is not able to find
-        // the definition to inline the function in other translation units.
-        Assert(false);
-
-        BlockInfo *const blockInfo = nullptr;
-        const CharCount charCount = 0;
-        void *const voidPointer = nullptr;
-        Recycler *const recycler = nullptr;
-
-        blockInfo->AllocateBuffer(charCount, recycler);
-        blockInfo->CopyBuffer(voidPointer, charCount, false, recycler);
-        blockInfo->Resize(recycler);
-    }
-
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     #endif
     #pragma endregion
@@ -483,7 +443,7 @@ namespace Js
     #ifndef IsJsDiag
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    __inline CompoundString::CompoundString(const CharCount initialCharCapacity, JavascriptLibrary *const library)
+    CompoundString::CompoundString(const CharCount initialCharCapacity, JavascriptLibrary *const library)
         : LiteralString(library->GetStringTypeStatic()),
         directCharLength(static_cast<CharCount>(-1)),
         ownsLastBlock(true),
@@ -494,7 +454,7 @@ namespace Js
         lastBlockInfo.AllocateBuffer(initialCharCapacity, library->GetRecycler());
     }
 
-    __inline CompoundString::CompoundString(
+    CompoundString::CompoundString(
         const CharCount initialBlockSize,
         const bool allocateBlock,
         JavascriptLibrary *const library)
@@ -510,7 +470,7 @@ namespace Js
         lastBlock = block;
     }
 
-    __inline CompoundString::CompoundString(
+    CompoundString::CompoundString(
         const CharCount stringLength,
         const CharCount directCharLength,
         const void *const buffer,
@@ -529,7 +489,7 @@ namespace Js
         lastBlock = lastBlockInfo.CopyBuffer(buffer, usedCharLength, reserveMoreSpace, library->GetRecycler());
     }
 
-    __inline CompoundString::CompoundString(CompoundString &other, const bool forAppending)
+    CompoundString::CompoundString(CompoundString &other, const bool forAppending)
         : LiteralString(other.GetLibrary()->GetStringTypeStatic()),
         lastBlockInfo(other.lastBlockInfo),
         directCharLength(other.directCharLength),
@@ -555,7 +515,7 @@ namespace Js
         ownsLastBlock = false;
     }
 
-    __inline CompoundString *CompoundString::NewWithCharCapacity(
+    CompoundString *CompoundString::NewWithCharCapacity(
         const CharCount initialCharCapacity,
         JavascriptLibrary *const library)
     {
@@ -565,7 +525,7 @@ namespace Js
         return NewWithBlockSize(Block::SizeFromUsedCharLength(initialCharCapacity), library);
     }
 
-    __inline CompoundString *CompoundString::NewWithPointerCapacity(
+    CompoundString *CompoundString::NewWithPointerCapacity(
         const CharCount initialPointerCapacity,
         JavascriptLibrary *const library)
     {
@@ -586,7 +546,7 @@ namespace Js
         return RecyclerNew(library->GetRecycler(), CompoundString, initialBlockSize, true, library);
     }
 
-    __inline CompoundString *CompoundString::New(
+    CompoundString *CompoundString::New(
         const CharCount stringLength,
         const CharCount directCharLength,
         const void *const buffer,
@@ -649,7 +609,7 @@ namespace Js
         return FromVar(RecyclableObject::FromVar(var));
     }
 
-    __inline JavascriptString *CompoundString::GetImmutableOrScriptUnreferencedString(JavascriptString *const s)
+    JavascriptString *CompoundString::GetImmutableOrScriptUnreferencedString(JavascriptString *const s)
     {
         Assert(s);
 
@@ -689,7 +649,7 @@ namespace Js
         return ownsLastBlock;
     }
 
-    __inline const wchar_t *CompoundString::GetAppendStringBuffer(JavascriptString *const s) const
+    const wchar_t *CompoundString::GetAppendStringBuffer(JavascriptString *const s) const
     {
         Assert(s);
 
@@ -738,7 +698,7 @@ namespace Js
         return lastBlockInfo.PointerCapacity();
     }
 
-    __inline void CompoundString::PackSubstringInfo(
+    void CompoundString::PackSubstringInfo(
         const CharCount startIndex,
         const CharCount length,
         void * *const packedSubstringInfoRef,
@@ -908,7 +868,7 @@ namespace Js
         Assert(appended);
     }
 
-    __inline void CompoundString::PrepareForAppend()
+    void CompoundString::PrepareForAppend()
     {
         Assert(!IsFinalized());
 
@@ -917,27 +877,27 @@ namespace Js
         TakeOwnershipOfLastBlock();
     }
 
-    __inline void CompoundString::Append(const wchar_t c)
+    void CompoundString::Append(const wchar_t c)
     {
         AppendGeneric(c, this, false);
     }
 
-    __inline void CompoundString::AppendChars(const wchar_t c)
+    void CompoundString::AppendChars(const wchar_t c)
     {
         AppendGeneric(c, this, true);
     }
 
-    __inline void CompoundString::Append(JavascriptString *const s)
+    void CompoundString::Append(JavascriptString *const s)
     {
         AppendGeneric(s, this, false);
     }
 
-    __inline void CompoundString::AppendChars(JavascriptString *const s)
+    void CompoundString::AppendChars(JavascriptString *const s)
     {
         AppendGeneric(s, this, true);
     }
 
-    __inline void CompoundString::Append(
+    void CompoundString::Append(
         JavascriptString *const s,
         const CharCount startIndex,
         const CharCount appendCharLength)
@@ -945,7 +905,7 @@ namespace Js
         AppendGeneric(s, startIndex, appendCharLength, this, false);
     }
 
-    __inline void CompoundString::AppendChars(
+    void CompoundString::AppendChars(
         JavascriptString *const s,
         const CharCount startIndex,
         const CharCount appendCharLength)
@@ -953,14 +913,14 @@ namespace Js
         AppendGeneric(s, startIndex, appendCharLength, this, true);
     }
 
-    __inline void CompoundString::Append(
+    void CompoundString::Append(
         __in_xcount(appendCharLength) const wchar_t *const s,
         const CharCount appendCharLength)
     {
         AppendGeneric(s, appendCharLength, this, false);
     }
 
-    __inline void CompoundString::AppendChars(
+    void CompoundString::AppendChars(
         __in_xcount(appendCharLength) const wchar_t *const s,
         const CharCount appendCharLength)
     {
@@ -1258,42 +1218,6 @@ namespace Js
         Assert(!IsFinalized());
 
         return !HasOnlyDirectChars();
-    }
-
-    void CompoundString::InstantiateForceInlinedMembers()
-    {
-        // Force-inlined functions defined in a translation unit need a reference from an extern non-force-inlined function in
-        // the same translation unit to force an instantiation of the force-inlined function. Otherwise, if the force-inlined
-        // function is not referenced in the same translation unit, it will not be generated and the linker is not able to find
-        // the definition to inline the function in other translation units.
-        Assert(false);
-
-        CompoundString *const cs = nullptr;
-        JavascriptLibrary *const library = nullptr;
-        const CharCount charCount = 0;
-        JavascriptString *const s = nullptr;
-        const wchar_t c = L'\0';
-        void *voidPointer = nullptr;
-        wchar_t *const charBuffer = nullptr;
-
-        (CompoundString(charCount, library));
-        (CompoundString(charCount, charCount, voidPointer, charCount, false, library));
-        (CompoundString(*cs, false));
-        NewWithCharCapacity(charCount, library);
-        NewWithPointerCapacity(charCount, library);
-        New(charCount, charCount, voidPointer, charCount, false, library);
-        GetImmutableOrScriptUnreferencedString(s);
-        cs->GetAppendStringBuffer(s);
-        PackSubstringInfo(charCount, charCount, &voidPointer, &voidPointer);
-        cs->PrepareForAppend();
-        cs->Append(c);
-        cs->AppendChars(c);
-        cs->Append(s);
-        cs->AppendChars(s);
-        cs->Append(s, charCount, charCount);
-        cs->AppendChars(s, charCount, charCount);
-        cs->Append(charBuffer, charCount);
-        cs->AppendChars(charBuffer, charCount);
     }
 
     DEFINE_RECYCLER_TRACKER_PERF_COUNTER(CompoundString);

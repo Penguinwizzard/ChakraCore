@@ -54,7 +54,7 @@ namespace Js
         return scriptContext->GetLibrary()->CreateSymbol(description);
     }
 
-    // Symbol.prototype.valueOf as described in ES6 spec (draft 22) 19.4.3.3
+    // Symbol.prototype.valueOf as described in ES 2015
     Var JavascriptSymbol::EntryValueOf(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
@@ -78,7 +78,7 @@ namespace Js
         }
     }
 
-    // Symbol.prototype.toString as described in ES6 spec (draft 22) 19.4.3.2
+    // Symbol.prototype.toString as described in ES 2015
     Var JavascriptSymbol::EntryToString(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
@@ -107,7 +107,7 @@ namespace Js
         return JavascriptSymbol::ToString(val, scriptContext);
     }
 
-    // Symbol.for as described in ES6 spec (draft 22) 19.4.2.2
+    // Symbol.for as described in ES 2015
     Var JavascriptSymbol::EntryFor(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
@@ -147,7 +147,7 @@ namespace Js
         return library->CreateSymbol(propertyRecord);
     }
 
-    // Symbol.keyFor as described in ES6 spec (draft 22) 19.4.2.7
+    // Symbol.keyFor as described in ES 2015
     Var JavascriptSymbol::EntryKeyFor(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
@@ -183,7 +183,7 @@ namespace Js
         return library->GetUndefined();
     }
 
-    // Symbol.prototype[@@toPrimitive] as described in ES6 spec (draft 26) July 18 2014 19.4.3.4
+    // Symbol.prototype[@@toPrimitive] as described in ES 2015
     Var JavascriptSymbol::EntrySymbolToPrimitive(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);

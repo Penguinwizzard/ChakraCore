@@ -45,7 +45,7 @@ private:
     // The address so we can patch it up if it is a stack function and we need to box it.
     Js::ScriptFunction ** functionRef;
 public:
-    // This points to the current function body which can be reused at the time parsing (called due to deffered parsing logic) a subtree.
+    // This points to the current function body which can be reused when parsing a subtree (called due to deferred parsing logic).
     Js::FunctionBody * pCurrentFunction;
 
     bool InDestructuredPattern() const { return inDestructuredPattern; }
@@ -60,14 +60,15 @@ public:
     // of the register range.
     static const Js::RegSlot ReturnRegister = REGSLOT_TO_CONSTREG(Js::FunctionBody::ReturnValueRegSlot);
     static const Js::RegSlot RootObjectRegister = REGSLOT_TO_CONSTREG(Js::FunctionBody::RootObjectRegSlot);
-    static const unsigned int DefaultArraySize=0;  // This __must__ be '0' so that "(new Array()).length == 0"
+    static const unsigned int DefaultArraySize = 0;  // This __must__ be '0' so that "(new Array()).length == 0"
     static const unsigned int MinArgumentsForCallOptimization = 16;
-    bool forceNoNative;    
+    bool forceNoNative;
 
     ByteCodeGenerator(Js::ScriptContext* scriptContext, Js::ScopeInfo* parentScopeInfo);
 
 #if DBG_DUMP
-    bool Trace() const {
+    bool Trace() const
+    {
         return Js::Configuration::Global.flags.Trace.IsEnabled(Js::ByteCodePhase);
     }
 #else
@@ -117,7 +118,7 @@ public:
 
     ArenaAllocator *GetAllocator() {
         return alloc;
-    }    
+    }
 
     Js::PropertyRecordList* EnsurePropertyRecordList()
     {
@@ -195,13 +196,13 @@ public:
     void RecordAllStrConstants(FuncInfo * funcInfo);
     void RecordAllStringTemplateCallsiteConstants(FuncInfo* funcInfo);
 
-    // for now, this just assigns field ids for the current script
-    // later, we will combine this information with the global field id map
-    // this temporary code will not work if a global member is accessed both with and without a lhs
+    // For now, this just assigns field ids for the current script.
+    // Later, we will combine this information with the global field ID map.
+    // This temporary code will not work if a global member is accessed both with and without a LHS.
     void AssignPropertyIds(Js::ParseableFunctionInfo* functionInfo);
     void MapCacheIdsToPropertyIds(FuncInfo *funcInfo);
     void MapReferencedPropertyIds(FuncInfo *funcInfo);
-    FuncInfo *StartBindFunction(const wchar_t *name, int nameLength, bool* pfuncExprWithName, ParseNode *pnode);
+    FuncInfo *StartBindFunction(const wchar_t *name, uint nameLength, uint shortNameOffset, bool* pfuncExprWithName, ParseNode *pnode);
     void EndBindFunction(bool funcExprWithName);
     void StartBindCatch(ParseNode *pnode);
 
@@ -236,7 +237,6 @@ public:
     Symbol *AddSymbolToScope(Scope *scope, const wchar_t *key, int keyLength, ParseNode *varDecl, SymbolType symbolType);
     Symbol *AddSymbolToFunctionScope(const wchar_t *key, int keyLength, ParseNode *varDecl, SymbolType symbolType);
     void FuncEscapes(Scope *scope);
-//    void PrintFuncInfo();
     void EmitTopLevelStatement(ParseNode *stmt, FuncInfo *funcInfo, BOOL fReturnValue);
     void EmitInvertedLoop(ParseNode* outerLoop,ParseNode* invertedLoop,FuncInfo* funcInfo);
     void DefineFunctions(FuncInfo *funcInfoParent);
@@ -287,8 +287,8 @@ public:
 
     void EmitLoadInstance(Symbol *sym, IdentPtr pid, Js::RegSlot *pThisLocation, Js::RegSlot *pTargetLocation, FuncInfo *funcInfo);
     void EmitGlobalBody(FuncInfo *funcInfo);
-    void EmitFunctionBody( FuncInfo *funcInfo );
-    void EmitAsmFunctionBody( FuncInfo *funcInfo );
+    void EmitFunctionBody(FuncInfo *funcInfo);
+    void EmitAsmFunctionBody(FuncInfo *funcInfo);
     void EmitScopeObjectInit(FuncInfo *funcInfo);
 
     void EmitPatchableRootProperty(Js::OpCode opcode, Js::RegSlot regSlot, Js::PropertyId propertyId, bool isLoadMethod, bool isStore, FuncInfo *funcInfo);
@@ -333,7 +333,7 @@ public:
         __in Js::ParseableFunctionInfo* pRootFunc);
 
     void SetCurrentSourceIndex(uint sourceIndex) { this->sourceIndex = sourceIndex; }
-    uint GetCurrentSourceIndex(){return sourceIndex;}   
+    uint GetCurrentSourceIndex() { return sourceIndex; }
 
     static bool IsFalse(ParseNode* node);
 

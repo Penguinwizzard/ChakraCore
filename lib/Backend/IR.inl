@@ -401,9 +401,9 @@ Instr::ForEachCallDirectArgOutInstrBackward(Fn fn, uint argsOpndLength) const
 
     // ArgOut_A_InlineSpecialized src2; link to actual argouts.
     linkOpnd = tmpInstr->GetSrc2();
-    IntConstType argCount = linkOpnd->AsSymOpnd()->m_sym->AsStackSym()->GetArgSlotNum();
+    uint32 argCount = linkOpnd->AsSymOpnd()->m_sym->AsStackSym()->GetArgSlotNum();
 
-    if ((uint)argCount != argsOpndLength)
+    if (argCount != argsOpndLength)
     {
         return false;
     }

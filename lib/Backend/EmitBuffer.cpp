@@ -130,7 +130,6 @@ private:
     CustomHeap::Heap* _allocationHeap;
 };
 
-
 //----------------------------------------------------------------------------
 // EmitBufferManager::NewAllocation
 //      Create a new allocation
@@ -281,8 +280,6 @@ EmitBufferAllocation* EmitBufferManager<SyncObject>::GetBuffer(EmitBufferAllocat
     *ppBuffer = allocation->GetUnused();
     return allocation;
 }
-
-
 
 //----------------------------------------------------------------------------
 // EmitBufferManager::Allocate
@@ -470,7 +467,6 @@ EmitBufferManager<SyncObject>::CompletePreviousAllocation(EmitBufferAllocation* 
     }
 }
 
-
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
 template <typename SyncObject>
 void
@@ -488,7 +484,6 @@ EmitBufferManager<SyncObject>::CheckBufferPermissions(EmitBufferAllocation *allo
 
     while(1)
     {
-        // TODO: Move this out of here?
         SIZE_T result = VirtualQuery(buffer, &memInfo, sizeof(memInfo));
         if(result == 0)
         {
@@ -526,7 +521,6 @@ EmitBufferManager<SyncObject>::CheckBufferPermissions(EmitBufferAllocation *allo
 }
 #endif
 
-
 #if DBG_DUMP
 template <typename SyncObject>
 void
@@ -554,4 +548,3 @@ EmitBufferManager<SyncObject>::DumpAndResetStats(wchar_t const * filename)
     this->totalBytesReserved = 0;
 }
 #endif
-

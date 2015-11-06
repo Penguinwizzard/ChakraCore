@@ -7,7 +7,7 @@
 namespace Js
 {
     // Use as the top level comparer for two level dictionary. Note that two
-    // values are equal as long as their fashHash is the same (and moduleID/isStrict is the same).
+    // values are equal as long as their fastHash is the same (and moduleID/isStrict is the same).
     // This comparer is used for the top level dictionary in two level evalmap dictionary.
     template <class T>
     struct FastEvalMapStringComparer
@@ -31,7 +31,7 @@ namespace Js
     class TwoLevelHashRecord
     {
     public:
-        TwoLevelHashRecord(TValue newValue):
+        TwoLevelHashRecord(TValue newValue) :
             singleValue(true), value(newValue) {}
 
         TwoLevelHashRecord() :
@@ -52,7 +52,6 @@ namespace Js
             }
             return GetDictionary()->TryGetValue(key, value);
         }
-
 
         void Add(const TKey& key, TValue& newValue)
         {
@@ -86,20 +85,18 @@ namespace Js
             Add(key, newValue);
         }
 
-
         bool IsValue() const { return singleValue; }
         TValue GetValue() const { Assert(singleValue); return value; }
         bool IsDictionaryEntry() const { return !singleValue; }
 
     private:
         bool singleValue;
-        union {
+        union
+        {
             TValue value;
             SecondaryDictionary* nestedMap;
         };
     };
-
-
 
     // The two level dictionary. top level needs to be either simple hash value, or
     // key needs to be equals for all nested values.
@@ -126,7 +123,7 @@ namespace Js
         };
 
     public:
-        TwoLevelHashDictionary(TopLevelDictionary* cache, Recycler* recycler):
+        TwoLevelHashDictionary(TopLevelDictionary* cache, Recycler* recycler) :
             dictionary(cache),
             recycler(recycler)
         {
@@ -163,7 +160,6 @@ namespace Js
             return success;
         }
 
-
         TopLevelDictionary* GetDictionary() const { return dictionary; }
         void NotifyAdd(const Key& key)
         {
@@ -190,18 +186,17 @@ namespace Js
                 EntryRecord* newRecord = RecyclerNew(recycler, EntryRecord, value);
                 dictionary->Add(key, newRecord);
 #ifdef PROFILE_EVALMAP
-            if (Configuration::Global.flags.ProfileEvalMap)
-            {
-                Output::Print(L"EvalMap fastcache set:\t key = %d \n", (hash_t)key);
-            }
+                if (Configuration::Global.flags.ProfileEvalMap)
+                {
+                    Output::Print(L"EvalMap fastcache set:\t key = %d \n", (hash_t)key);
+                }
 #endif
             }
         }
-
 
     private:
         TopLevelDictionary* dictionary;
         Recycler* recycler;
     };
-
 }
+

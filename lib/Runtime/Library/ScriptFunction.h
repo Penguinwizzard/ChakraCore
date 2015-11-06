@@ -77,14 +77,10 @@ namespace Js
         JavascriptMethod UpdateThunkEntryPoint(FunctionEntryPointInfo* entryPointInfo, JavascriptMethod entryPoint);
         JavascriptMethod UpdateUndeferredBody(FunctionBody* newFunctionInfo);
 
-        virtual ScriptFunctionType * DuplicateType() override;            
+        virtual ScriptFunctionType * DuplicateType() override;
 
         virtual Var GetSourceString() const;
         virtual Var EnsureSourceString();
-
-        // Used in the LanguageService mode only
-        virtual bool GetIsDelayFunctionInfo() const { return false; }
-        virtual void SetIsDelayFunctionInfo(bool set) {  /*nothing*/ }        
 
         bool GetHasInlineCaches() { return hasInlineCaches; }
         void SetHasInlineCaches(bool has) { hasInlineCaches = has; }
@@ -94,7 +90,7 @@ namespace Js
 
         bool IsDefaultConstructor() { return isDefaultConstructor; }
         void SetIsDefaultConstructor(bool has) { isDefaultConstructor = has; }
-        
+
         void SetIsActiveScript(bool is) { isActiveScript = is; }
 
         virtual Var GetHomeObj() const override { return homeObj; }
@@ -107,11 +103,7 @@ namespace Js
         virtual bool IsAnonymousFunction() const override;
         virtual BOOL GetDiagValueString(StringBuilder<ArenaAllocator>* stringBuilder, ScriptContext* requestContext) override;
         
-        // In Bytecode we make a circular reference on the constructor to associate it with the class. 
-        // It also acts as a check to know if function is a constructor
-        bool IsClassConstructor() { return homeObj && this == homeObj;}
         virtual JavascriptFunction* GetRealFunctionObject() { return this; }
-
     };
 
     class AsmJsScriptFunction : public ScriptFunction

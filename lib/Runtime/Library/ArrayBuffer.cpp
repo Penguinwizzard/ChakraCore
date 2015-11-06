@@ -6,7 +6,7 @@
 
 namespace Js
 {
-    PropertyId ArrayBuffer::specialPropertyIds[] =
+    PropertyId const ArrayBuffer::specialPropertyIds[] =
     {
         PropertyIds::byteLength
     };
@@ -525,7 +525,7 @@ namespace Js
     }
 
     // Returns the list of special non-enumerable properties for the type.
-    PropertyId* ArrayBuffer::GetSpecialPropertyIds() const
+    PropertyId const * ArrayBuffer::GetSpecialPropertyIds() const
     {
         return specialPropertyIds;
     }

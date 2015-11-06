@@ -24,27 +24,26 @@ test(a,b,c);
 function test(a,b,c)
 {
 
-	WScript.Echo(a.toString(16));
-	WScript.Echo(b.toString(16));
-	WScript.Echo(c.toString(16));
+    WScript.Echo(a.toString(16));
+    WScript.Echo(b.toString(16));
+    WScript.Echo(c.toString(16));
 
-	if(a < b) WScript.Echo("less");
-	else      WScript.Echo("greater");
-	
-	if(a > b) WScript.Echo("greater");
-	else      WScript.Echo("less");
-	
-	if(a < c) WScript.Echo("less");
-	else      WScript.Echo("greater");
-	
-	if(a > c) WScript.Echo("greater");
-	else      WScript.Echo("less");
-	
-	if(b < c) WScript.Echo("less");
-	else      WScript.Echo("greater");
-	
-	if(b > c) WScript.Echo("less");
-	else      WScript.Echo("greater");
+    if(a < b) WScript.Echo("less");
+    else      WScript.Echo("greater");
+
+    if(a > b) WScript.Echo("greater");
+    else      WScript.Echo("less");
+
+    if(a < c) WScript.Echo("less");
+    else      WScript.Echo("greater");
+
+    if(a > c) WScript.Echo("greater");
+    else      WScript.Echo("less");
+
+    if(b < c) WScript.Echo("less");
+    else      WScript.Echo("greater");
+
+    if(b > c) WScript.Echo("less");
+    else      WScript.Echo("greater");
 }
-
 

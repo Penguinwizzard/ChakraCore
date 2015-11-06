@@ -13,7 +13,7 @@ function test0() {
         __loopvar0++;
         obj0.prop0 = obj1.prop0 * obj1.prop0;
         obj1 = obj0;
-    } while(obj1.prop0 && __loopvar0 < 2)
+    } while (obj1.prop0 && __loopvar0 < 2)
     WScript.Echo("obj1.prop0 = " + (obj1.prop0 | 0));
 
     function test0a() { }
@@ -24,4 +24,3 @@ test0();
 
 // run JITted code
 test0();
-

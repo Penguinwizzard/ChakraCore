@@ -5,14 +5,14 @@
 
 function equal(a, b) {
     if (a == b)
-        WScript.Echo("Correct");
+        print("Correct");
     else
-        WScript.Echo(">> Fail!");
+        print(">> Fail!");
 }
 
 function testSplat() {
     var n = SIMD.Int32x4.splat(3);
-    WScript.Echo("splat");
+    print("splat");
     equal(3, SIMD.Int32x4.extractLane(n, 0));
     equal(3, SIMD.Int32x4.extractLane(n, 1));
     equal(3, SIMD.Int32x4.extractLane(n, 2));
@@ -21,7 +21,7 @@ function testSplat() {
 
 function testBool() {
     var n = SIMD.Int32x4.bool(true, false, true, false);
-    WScript.Echo("bool");
+    print("bool");
     equal(-1, SIMD.Int32x4.extractLane(n, 0));
     equal(0, SIMD.Int32x4.extractLane(n, 1));
     equal(-1, SIMD.Int32x4.extractLane(n, 2));

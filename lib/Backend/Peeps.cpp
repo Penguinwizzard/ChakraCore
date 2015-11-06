@@ -253,7 +253,7 @@ Peeps::PeepFunc()
 
 #if defined(_M_IX86) || defined(_M_X64)
                 if (instr->m_opcode == Js::OpCode::TEST && instr->GetSrc2()->IsIntConstOpnd()
-                    && ((instr->GetSrc2()->AsIntConstOpnd()->m_value & 0xFFFFFF00) == 0)
+                    && ((instr->GetSrc2()->AsIntConstOpnd()->GetValue() & 0xFFFFFF00) == 0)
                     && instr->GetSrc1()->IsRegOpnd() && (LinearScan::GetRegAttribs(instr->GetSrc1()->AsRegOpnd()->GetReg()) & RA_BYTEABLE))
                 {
                     // Only support if the branch is JEQ or JNE to ensure we don't look at the sign flag
@@ -981,7 +981,7 @@ Peeps::PeepRedundant(IR::Instr *instr)
     if (instr->m_opcode == Js::OpCode::ADD || instr->m_opcode == Js::OpCode::SUB || instr->m_opcode == Js::OpCode::OR)
     {
         Assert(instr->GetSrc1() && instr->GetSrc2());
-        if( (instr->GetSrc2()->IsIntConstOpnd() && instr->GetSrc2()->AsIntConstOpnd()->m_value == 0))
+        if( (instr->GetSrc2()->IsIntConstOpnd() && instr->GetSrc2()->AsIntConstOpnd()->GetValue() == 0))
         {
             // remove instruction
             retInstr = instr->m_next;

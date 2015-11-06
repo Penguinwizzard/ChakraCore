@@ -19,7 +19,7 @@ namespace IR
     enum BailOutKind : uint
     {
     #define BAIL_OUT_KIND_LAST(n)               n
-    #define BAIL_OUT_KIND(n, ...)                    BAIL_OUT_KIND_LAST(n),
+    #define BAIL_OUT_KIND(n, ...)               BAIL_OUT_KIND_LAST(n),
     #define BAIL_OUT_KIND_VALUE_LAST(n, v)      n = v
     #define BAIL_OUT_KIND_VALUE(n, v)           BAIL_OUT_KIND_VALUE_LAST(n, v),
     #include "BailOutKind.h"
@@ -286,8 +286,8 @@ namespace Js
     {
         union {
             struct {
-                byte isNotNativeInt:1;
-                byte isNotNativeFloat:1;
+                byte isNotNativeInt : 1;
+                byte isNotNativeFloat : 1;
                 byte isNotCopyOnAccessArray : 1;
                 byte copyOnAccessArrayCacheIndex : 5;
             };
@@ -297,7 +297,6 @@ namespace Js
         uint functionNumber;
         ProfileId callSiteNumber;
 #endif
-
 
         bool IsNativeIntArray() const { return !(bits & NotNativeIntBit) && !PHASE_OFF1(NativeArrayPhase); }
         bool IsNativeFloatArray() const { return !(bits & NotNativeFloatBit) && !PHASE_OFF1(NativeArrayPhase); }
@@ -407,8 +406,6 @@ namespace Js
                 || this->callSiteInfo[callSiteId].dontInline;
         }
 
-
-
         static bool IsProfiledCallOp(OpCode op);
         static bool IsProfiledReturnTypeOp(OpCode op);
 
@@ -454,11 +451,11 @@ namespace Js
                     Js::SourceId sourceId;
                     Js::LocalFunctionId functionId;
                 } functionData;
-                //As of now polymorphic info is allocated only if the source Id is current
+                // As of now polymorphic info is allocated only if the source Id is current
                 PolymorphicCallSiteInfo* polymorphicCallSiteInfo;
             } u;
-        } * callSiteInfo;
-        ValueType * returnTypeInfo;     // return type of calls for non inline call sites
+        } *callSiteInfo;
+        ValueType * returnTypeInfo; // return type of calls for non inline call sites
         ValueType * divideTypeInfo;
         ValueType * switchTypeInfo;
         LdElemInfo * ldElemInfo;
@@ -473,7 +470,7 @@ namespace Js
         ThisInfo thisInfo;
 
         // TODO (jedmiad): Consider storing a pair of property ID bit vectors indicating which properties are
-        // known to be non-fixed or non-equivalent.  We could turn these on if we bailed out of fixed field type
+        // known to be non-fixed or non-equivalent. We could turn these on if we bailed out of fixed field type
         // checks and equivalent type checks in a way that indicates one of these failures as opposed to type
         // mismatch.
 
@@ -499,24 +496,24 @@ namespace Js
             bool disableJsArraySegmentHoist_jitLoopBody : 1;
             bool disableArrayLengthHoist : 1;
             bool disableArrayLengthHoist_jitLoopBody : 1;
-            bool disableTypedArrayTypeSpec: 1;
-            bool disableTypedArrayTypeSpec_jitLoopBody: 1;
-            bool disableLdLenIntSpec: 1;
+            bool disableTypedArrayTypeSpec : 1;
+            bool disableTypedArrayTypeSpec_jitLoopBody : 1;
+            bool disableLdLenIntSpec : 1;
             bool disableBoundCheckHoist : 1;
             bool disableBoundCheckHoist_jitLoopBody : 1;
             bool disableLoopCountBasedBoundCheckHoist : 1;
             bool disableLoopCountBasedBoundCheckHoist_jitLoopBody : 1;
             bool hasPolymorphicFldAccess : 1;
-            bool hasLdFldCallSite: 1; // getters, setters, .apply (possibly .call too in future)
-            bool disableFloorInlining: 1;
-            bool disableNoProfileBailouts: 1;
+            bool hasLdFldCallSite : 1; // getters, setters, .apply (possibly .call too in future)
+            bool disableFloorInlining : 1;
+            bool disableNoProfileBailouts : 1;
             bool disableSwitchOpt : 1;
-            bool disableEquivalentObjTypeSpec: 1;
+            bool disableEquivalentObjTypeSpec : 1;
             bool disableObjTypeSpec_jitLoopBody : 1;
         } bits;
 
-        uint32 m_recursiveInlineInfo;             // bit is set for each callsites where the function is called recursively
-        BYTE currentInlinerVersion;            // Used to detect when inlining profile changes
+        uint32 m_recursiveInlineInfo; // Bit is set for each callsites where the function is called recursively
+        BYTE currentInlinerVersion; // Used to detect when inlining profile changes
         uint32 polymorphicCacheState;
         bool hasFunctionBody;
 
@@ -538,11 +535,11 @@ namespace Js
         static void DumpLoopInfo(FunctionBody *fbody);
 #endif
 
-        bool    IsPolymorphicCallSite(Js::LocalFunctionId curFunctionId, Js::SourceId curSourceId, Js::LocalFunctionId oldFunctionId, Js::SourceId oldSourceId);
-        void    CreatePolymorphicDynamicProfileCallSiteInfo(FunctionBody * funcBody, ProfileId callSiteId, Js::LocalFunctionId functionId, Js::LocalFunctionId oldFunctionId, Js::SourceId sourceId, Js::SourceId oldSourceId);
-        void    ResetPolymorphicCallSiteInfo(ProfileId callSiteId, Js::LocalFunctionId functionId);
-        void    SetFunctionIdSlotForNewPolymorphicCall(ProfileId callSiteId, Js::LocalFunctionId curFunctionId, Js::SourceId curSourceId, Js::FunctionBody *inliner);
-        void    RecordPolymorphicCallSiteInfo(FunctionBody* functionBody, ProfileId callSiteId, FunctionInfo * calleeFunctionInfo);
+        bool IsPolymorphicCallSite(Js::LocalFunctionId curFunctionId, Js::SourceId curSourceId, Js::LocalFunctionId oldFunctionId, Js::SourceId oldSourceId);
+        void CreatePolymorphicDynamicProfileCallSiteInfo(FunctionBody * funcBody, ProfileId callSiteId, Js::LocalFunctionId functionId, Js::LocalFunctionId oldFunctionId, Js::SourceId sourceId, Js::SourceId oldSourceId);
+        void ResetPolymorphicCallSiteInfo(ProfileId callSiteId, Js::LocalFunctionId functionId);
+        void SetFunctionIdSlotForNewPolymorphicCall(ProfileId callSiteId, Js::LocalFunctionId curFunctionId, Js::SourceId curSourceId, Js::FunctionBody *inliner);
+        void RecordPolymorphicCallSiteInfo(FunctionBody* functionBody, ProfileId callSiteId, FunctionInfo * calleeFunctionInfo);
 #ifdef RUNTIME_DATA_COLLECTION
         static CriticalSection s_csOutput;
         template <typename T>
@@ -550,14 +547,14 @@ namespace Js
         template <>
         static void WriteData<wchar_t const *>(wchar_t const * sz, FILE * file);
         template <>
-        static void WriteData<FunctionInfo *>(FunctionInfo * functionInfo, FILE * file);    // Not defined, to prevent accidentally writing function info
+        static void WriteData<FunctionInfo *>(FunctionInfo * functionInfo, FILE * file); // Not defined, to prevent accidentally writing function info
         template <>
         static void WriteData<FunctionBody *>(FunctionBody * functionInfo, FILE * file);
         template <typename T>
         static void WriteArray(uint count, T * arr, FILE * file);
 #endif
 #if DBG_DUMP || defined(DYNAMIC_PROFILE_STORAGE) || defined(RUNTIME_DATA_COLLECTION)
-        FunctionBody * functionBody;            // This will only be populated if NeedProfileInfoList is true
+        FunctionBody * functionBody; // This will only be populated if NeedProfileInfoList is true
 #endif
 #ifdef DYNAMIC_PROFILE_STORAGE
         // Used by de-serialize
@@ -576,10 +573,10 @@ namespace Js
         static Js::LocalFunctionId const CallSiteNoInfo = (Js::LocalFunctionId)-4;
         static Js::LocalFunctionId const StartInvalidFunction = (Js::LocalFunctionId)-4;
 
-        static Js::SourceId const   NoSourceId        = (SourceId)-1;
-        static Js::SourceId const   BuiltInSourceId   = (SourceId) -2;
-        static Js::SourceId const   CurrentSourceId = (SourceId)-3;  // caller and callee in the same file
-        static Js::SourceId const   InvalidSourceId   = (SourceId)-4;
+        static Js::SourceId const NoSourceId        = (SourceId)-1;
+        static Js::SourceId const BuiltInSourceId   = (SourceId)-2;
+        static Js::SourceId const CurrentSourceId   = (SourceId)-3; // caller and callee in the same file
+        static Js::SourceId const InvalidSourceId   = (SourceId)-4;
 
         bool MatchFunctionBody(FunctionBody * functionBody);
 
@@ -599,7 +596,7 @@ namespace Js
         void DisableAggressiveIntTypeSpec(const bool isJitLoopBody)
         {
             this->bits.disableAggressiveIntTypeSpec_jitLoopBody = true;
-            if(!isJitLoopBody)
+            if (!isJitLoopBody)
             {
                 this->bits.disableAggressiveIntTypeSpec = true;
             }
@@ -616,7 +613,7 @@ namespace Js
         void DisableAggressiveMulIntTypeSpec(const bool isJitLoopBody)
         {
             this->bits.disableAggressiveMulIntTypeSpec_jitLoopBody = true;
-            if(!isJitLoopBody)
+            if (!isJitLoopBody)
             {
                 this->bits.disableAggressiveMulIntTypeSpec = true;
             }
@@ -626,8 +623,8 @@ namespace Js
         {
             return
                 isJitLoopBody
-                ? this->bits.disableDivIntTypeSpec_jitLoopBody
-                : this->bits.disableDivIntTypeSpec;
+                    ? this->bits.disableDivIntTypeSpec_jitLoopBody
+                    : this->bits.disableDivIntTypeSpec;
         }
 
         void DisableDivIntTypeSpec(const bool isJitLoopBody)
@@ -668,7 +665,7 @@ namespace Js
         void DisableArrayCheckHoist(const bool isJitLoopBody)
         {
             this->bits.disableArrayCheckHoist_jitLoopBody = true;
-            if(!isJitLoopBody)
+            if (!isJitLoopBody)
             {
                 this->bits.disableArrayCheckHoist = true;
             }
@@ -685,7 +682,7 @@ namespace Js
         void DisableArrayMissingValueCheckHoist(const bool isJitLoopBody)
         {
             this->bits.disableArrayMissingValueCheckHoist_jitLoopBody = true;
-            if(!isJitLoopBody)
+            if (!isJitLoopBody)
             {
                 this->bits.disableArrayMissingValueCheckHoist = true;
             }
@@ -702,7 +699,7 @@ namespace Js
         void DisableJsArraySegmentHoist(const bool isJitLoopBody)
         {
             this->bits.disableJsArraySegmentHoist_jitLoopBody = true;
-            if(!isJitLoopBody)
+            if (!isJitLoopBody)
             {
                 this->bits.disableJsArraySegmentHoist = true;
             }
@@ -719,7 +716,7 @@ namespace Js
         void DisableArrayLengthHoist(const bool isJitLoopBody)
         {
             this->bits.disableArrayLengthHoist_jitLoopBody = true;
-            if(!isJitLoopBody)
+            if (!isJitLoopBody)
             {
                 this->bits.disableArrayLengthHoist = true;
             }
@@ -736,7 +733,7 @@ namespace Js
         void DisableTypedArrayTypeSpec(const bool isJitLoopBody)
         {
             this->bits.disableTypedArrayTypeSpec_jitLoopBody = true;
-            if(!isJitLoopBody)
+            if (!isJitLoopBody)
             {
                 this->bits.disableTypedArrayTypeSpec = true;
             }
@@ -756,7 +753,7 @@ namespace Js
         void DisableBoundCheckHoist(const bool isJitLoopBody)
         {
             this->bits.disableBoundCheckHoist_jitLoopBody = true;
-            if(!isJitLoopBody)
+            if (!isJitLoopBody)
             {
                 this->bits.disableBoundCheckHoist = true;
             }
@@ -773,15 +770,15 @@ namespace Js
         void DisableLoopCountBasedBoundCheckHoist(const bool isJitLoopBody)
         {
             this->bits.disableLoopCountBasedBoundCheckHoist_jitLoopBody = true;
-            if(!isJitLoopBody)
+            if (!isJitLoopBody)
             {
                 this->bits.disableLoopCountBasedBoundCheckHoist = true;
             }
         }
 
-        BYTE GetInlinerVersion()  { return this->currentInlinerVersion; }
+        BYTE GetInlinerVersion() { return this->currentInlinerVersion; }
         uint32 GetPolymorphicCacheState() const { return this->polymorphicCacheState; }
-        uint32 GetRecursiveInlineInfo() const { return this->m_recursiveInlineInfo;  }
+        uint32 GetRecursiveInlineInfo() const { return this->m_recursiveInlineInfo; }
         void SetHasNewPolyFieldAccess(FunctionBody *functionBody);
         bool IsFloorInliningDisabled() const { return this->bits.disableFloorInlining; }
         void DisableFloorInlining() { this->bits.disableFloorInlining = true; }
@@ -794,7 +791,7 @@ namespace Js
         bool IsObjTypeSpecDisabledInJitLoopBody() const { return this->bits.disableObjTypeSpec_jitLoopBody; }
         void DisableObjTypeSpecInJitLoopBody() { this->bits.disableObjTypeSpec_jitLoopBody = true; }
 
-        static bool IsCallSiteNoInfo(Js::LocalFunctionId functionId){ return functionId == CallSiteNoInfo;}
+        static bool IsCallSiteNoInfo(Js::LocalFunctionId functionId) { return functionId == CallSiteNoInfo; }
 #if DBG_DUMP
         void Dump(FunctionBody* functionBody, ArenaAllocator * dynamicProfileInfoAllocator = nullptr);
 #endif
@@ -804,22 +801,22 @@ namespace Js
 
     struct PolymorphicCallSiteInfo
     {
-            Js::LocalFunctionId functionIds[DynamicProfileInfo::maxPolymorphicInliningSize];
-            Js::SourceId sourceIds[DynamicProfileInfo::maxPolymorphicInliningSize];
-            PolymorphicCallSiteInfo *next;
-            bool GetFunction(uint index, Js::LocalFunctionId *functionId, Js::SourceId *sourceId)
+        Js::LocalFunctionId functionIds[DynamicProfileInfo::maxPolymorphicInliningSize];
+        Js::SourceId sourceIds[DynamicProfileInfo::maxPolymorphicInliningSize];
+        PolymorphicCallSiteInfo *next;
+        bool GetFunction(uint index, Js::LocalFunctionId *functionId, Js::SourceId *sourceId)
+        {
+            Assert(index < DynamicProfileInfo::maxPolymorphicInliningSize);
+            Assert(functionId);
+            Assert(sourceId);
+            if (DynamicProfileInfo::IsCallSiteNoInfo(functionIds[index]))
             {
-                Assert(index < DynamicProfileInfo::maxPolymorphicInliningSize);
-                Assert(functionId);
-                Assert(sourceId);
-                if (DynamicProfileInfo::IsCallSiteNoInfo(functionIds[index]))
-                {
-                    return false;
-                }
-                *functionId = functionIds[index];
-                *sourceId = sourceIds[index];
-                return true;
+                return false;
             }
+            *functionId = functionIds[index];
+            *sourceId = sourceIds[index];
+            return true;
+        }
     };
 
 #ifdef DYNAMIC_PROFILE_STORAGE

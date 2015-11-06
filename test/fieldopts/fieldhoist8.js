@@ -20,8 +20,8 @@
         i++;
         func1(obj0.e = ++d);
         var j = 0;
-        while(d++ && j < 3)
+        while (d++ && j < 3)
             j++
-    } while(1 && i < 3);
+    } while (1 && i < 3);
     WScript.Echo("obj0.e = " + (obj0.e | 0));
 })()

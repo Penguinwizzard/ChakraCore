@@ -40,5 +40,3 @@ c(true);
 d(false);
 e("blah");
 f(new Object());
-
-    

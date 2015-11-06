@@ -11,15 +11,15 @@ var x = new Array(n);
 var count = 1;
 for(var i = 0; i < n; ++i)
 {
-	var c = String.fromCharCode(97+i);
-	x[i] = "";
+    var c = String.fromCharCode(97+i);
+    x[i] = "";
 
-	for(var j = 0; j < count; ++j)
-	{
-		x[i] += c;
-	}
-	
-	count *= 3;
+    for(var j = 0; j < count; ++j)
+    {
+        x[i] += c;
+    }
+
+    count *= 3;
 }
 
 var str = x[0];

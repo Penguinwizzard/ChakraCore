@@ -5,7 +5,7 @@
 WScript.LoadScriptFile("..\\UnitTestFramework\\SimdJsHelpers.js");
 function asmModule(stdlib, imports) {
     "use asm";
-    
+
     var i4 = stdlib.SIMD.Int32x4;
     var i4check = i4.check;
     var i4splat = i4.splat;
@@ -269,21 +269,21 @@ equalSimd([0.0033161668106913566, 0.08983888477087021, 0.04883047565817833, 0.04
 equalSimd([0.01409541629254818, 0.017147336155176162, 0.038768425583839416, 0.005569833796471357], ret6, SIMD.Float32x4, "TestRcpSqrt");
 WScript.Echo("PASS");
 /*
-WScript.Echo(typeof(ret7));
-WScript.Echo(ret7.toString());
+print(typeof(ret7));
+print(ret7.toString());
 
-WScript.Echo(typeof(ret8));
-WScript.Echo(ret8.toString());
+print(typeof(ret8));
+print(ret8.toString());
 
-WScript.Echo(typeof(ret9));
-WScript.Echo(ret9.toString());
+print(typeof(ret9));
+print(ret9.toString());
 
-WScript.Echo(typeof(ret10));
-WScript.Echo(ret10.toString());
+print(typeof(ret10));
+print(ret10.toString());
 
-WScript.Echo(typeof(ret11));
-WScript.Echo(ret11.toString());
+print(typeof(ret11));
+print(ret11.toString());
 
-WScript.Echo(typeof(ret12));
-WScript.Echo(ret12.toString());
+print(typeof(ret12));
+print(ret12.toString());
 */

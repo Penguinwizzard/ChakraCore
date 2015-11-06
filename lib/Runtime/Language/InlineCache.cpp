@@ -84,7 +84,7 @@ namespace Js
         // the global object (referenced either as window or as this) always points to the host object.  Thus, when we retrieve
         // a property from Chakra's global object the prototypeObjectWithProperty != info->GetInstance() and we will never cache
         // such property loads (see CacheOperators::CachePropertyRead).  However, in jc.exe or jshost.exe the only global object
-        // is Chakra's global object, and so prototypeObjectWithProperty == info->GetInstance() and we can cache.  Hence, the 
+        // is Chakra's global object, and so prototypeObjectWithProperty == info->GetInstance() and we can cache.  Hence, the
         // assert below is only correct when running in the browser.
         // Assert(prototypeObjectWithProperty != prototypeObjectWithProperty->type->GetLibrary()->GetGlobalObject());
 
@@ -146,7 +146,7 @@ namespace Js
         Assert(requestContext);
         DebugOnly(VerifyRegistrationForInvalidation(this, requestContext, propertyId));
         // It is possible that prototype is from a different scriptContext than the original instance. We don't want to cache
-        // in this case. 
+        // in this case.
         Assert(type->GetScriptContext() == requestContext);
 
         requestContext->RegisterAsScriptContextWithInlineCaches();
@@ -238,7 +238,7 @@ namespace Js
         }
 
         return false;
-    }   
+    }
 
     bool InlineCache::PretendTrySetProperty(Type *const type, Type *const oldType, PropertyCacheOperationInfo * operationInfo)
     {
@@ -382,7 +382,7 @@ namespace Js
         Assert(scriptContext);
 
         InlineCacheAllocator* allocator = scriptContext->GetInlineCacheAllocator();
-        // Important to zero the allocated cache to be sure CopyTo doesn't see garbage 
+        // Important to zero the allocated cache to be sure CopyTo doesn't see garbage
         // when it uses the next pointer.
         InlineCache* clone = AllocatorNewZ(InlineCacheAllocator, allocator, InlineCache);
         CopyTo(propertyId, scriptContext, clone);
@@ -463,8 +463,8 @@ namespace Js
         clone->u = this->u;
 
         DebugOnly(VerifyRegistrationForInvalidation(clone, scriptContext, propertyId));
-    }   
-    
+    }
+
     template <bool isAccessor>
     bool InlineCache::HasDifferentType(const bool isProto, const Type * type, const Type * typeWithoutProperty) const
     {
@@ -492,7 +492,7 @@ namespace Js
     // explicit instantiation
     template bool InlineCache::HasDifferentType<true>(const bool isProto, const Type * type, const Type * typeWithoutProperty) const;
     template bool InlineCache::HasDifferentType<false>(const bool isProto, const Type * type, const Type * typeWithoutProperty) const;
-    
+
     bool InlineCache::NeedsToBeRegisteredForProtoInvalidation() const
     {
         return (IsProto() || IsGetterAccessorOnProto());
@@ -524,7 +524,7 @@ namespace Js
         int howManyRegistrations = (int)isProtoRegistered + (int)isStoreFieldRegistered;
 
         Assert(howManyInvalidationsNeeded <= 1);
-        Assert((howManyInvalidationsNeeded == 0) || hasListSlotPtr)
+        Assert((howManyInvalidationsNeeded == 0) || hasListSlotPtr);
         Assert(!needsProtoInvalidation || isProtoRegistered);
         Assert(!needsStoreFieldInvalidation || isStoreFieldRegistered);
         Assert(!hasListSlotPtr || howManyRegistrations > 0);
@@ -836,15 +836,13 @@ namespace Js
             L"TestTrace PIC: CacheAccessor, 0x%x, entryIndex = %d, collision = %s, entries = %d\n", this, inlineCacheIndex, collision ? L"true" : L"false", GetEntryCount());
     }
 
-
-    
     bool PolymorphicInlineCache::PretendTryGetProperty(
         Type *const type,
         PropertyCacheOperationInfo * operationInfo)
     {
         uint inlineCacheIndex = GetInlineCacheIndexForType(type);
         return inlineCaches[inlineCacheIndex].PretendTryGetProperty(type, operationInfo);
-    }    
+    }
 
     bool PolymorphicInlineCache::PretendTrySetProperty(
         Type *const type,
@@ -1001,7 +999,6 @@ namespace Js
         return true;
     }
 
-
     void EquivalentTypeSet::SortAndRemoveDuplicates()
     {
         uint16 oldCount = this->count;
@@ -1018,7 +1015,7 @@ namespace Js
                 this->types[j - 1] = tmp;
             }
         }
-        
+
         // removing duplicate types from the sorted set
         i = 0;
         for (uint16 j = 1; j < oldCount; j++)
@@ -1100,8 +1097,8 @@ namespace Js
 #if DBG_DUMP
     void ConstructorCache::Dump() const
     {
-        Output::Print(L"guard value or type = 0x%p, script context = 0x%p, pending type = 0x%p, slots = %d, inline slots = %d, populated = %d, polymorphic = %d, update cache = %d, update type = %d, skip default = %d, no return = %d", 
-            this->GetRawGuardValue(), this->GetScriptContext(), this->GetPendingType(), this->GetSlotCount(), this->GetInlineSlotCount(), 
+        Output::Print(L"guard value or type = 0x%p, script context = 0x%p, pending type = 0x%p, slots = %d, inline slots = %d, populated = %d, polymorphic = %d, update cache = %d, update type = %d, skip default = %d, no return = %d",
+            this->GetRawGuardValue(), this->GetScriptContext(), this->GetPendingType(), this->GetSlotCount(), this->GetInlineSlotCount(),
             this->IsPopulated(), this->IsPolymorphic(), this->GetUpdateCacheAfterCtor(), this->GetTypeUpdatePending(),
             this->GetSkipDefaultNewObject(), this->GetCtorHasNoExplicitReturnValue());
     }
@@ -1168,12 +1165,11 @@ namespace Js
             }
 
             scriptContext->RegisterAsScriptContextWithIsInstInlineCaches();
-            // If the cache's function is not null, the cache must have been registered already.  No need to register again.  
+            // If the cache's function is not null, the cache must have been registered already.  No need to register again.
             // In fact, ThreadContext::RegisterIsInstInlineCache, would assert if we tried to re-register the same cache (to enforce the invariant above).
             // Review (jedmiad): What happens if we run out of memory inside RegisterIsInstInlieCache?
             scriptContext->RegisterIsInstInlineCache(this, function);
             this->Set(instanceType, function, result);
         }
     }
-
 }

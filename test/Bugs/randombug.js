@@ -88,7 +88,6 @@ write((function(){
   return a;
 })());
 
-
 write("Test case 9");
 
 write((function (b){
@@ -106,7 +105,6 @@ write((function (b){
   a = (a < b);
   return a;
 })(1));
-
 
 write("Test case 11");
 
@@ -162,7 +160,6 @@ write((function (b){
   return a;
 })(1));
 
-
 write("Test case 17");
 
 write((function (a){
@@ -184,36 +181,30 @@ write((function (p2,p3){
   return (((p2 = p3* 3) + p2));
 })(10,20));
 
-
 write("Test case 20");
 write((function (p2,p3){
   return (((p2 = p3 * 3) + (p2 = p3 *4) ));
 })(46,2));
-
 
 write("Test case 21");
 write((function (p2,p3){
   return (((p2 = p3 * -8323432) + p3 ));
 })(44,23));
 
-
 write("Test case 22");
 write((function (p2,p3){
   return ((p3 + (p3 = p2 * p2) ));
 })(-46,-20));
-
 
 write("Test case 23");
 write((function (p2,p3){
   return (((p3 = p2 * p3) + p3 ));
 })(-23,20));
 
-
 write("Test case 24");
 write((function (p2,p3){
   return (((p3 = p2 * p3 * 4) + p3 ));
 })(10,20));
-
 
 write("Test case 25");
 write((function (p2,p3){
@@ -225,14 +216,13 @@ write((function (p2,p3,p4){
   return (((p3 = p2 * p2) + p3 + (p4=p3*p2) ));
 })(10, 20, 30));
 
-
 write("Test case 27");
 function test27(){
   var obj0 = {};
   var arrObj0 = {};
   var ui32 = new Uint32Array(256);
   var c = 1;
-  obj0.prop0 = 1; 
+  obj0.prop0 = 1;
   function bar1 (){
   }
   if(ui32[1] == 1 > 1) {
@@ -244,7 +234,7 @@ function test27(){
   }
 };
 // generate profile
-test27(); 
+test27();
 write("Passed");
 
 write("Test case 28");
@@ -268,12 +258,12 @@ function test29(){
   }
   var h = -2147483648;
   func0();
-  ++h; 
+  ++h;
   ++h; //creates a missing value
   func0();
 };
 // generate profile
-test29(); 
+test29();
 
 write("Test case 30");
 function test30(){
@@ -283,10 +273,10 @@ function test30(){
   else {
     // Array expression
     var _array1 = [(-1 * -1 - 2147483647)];
-  
+
   }
 };
-test30(); 
+test30();
 write("Passed");
 
 write("Test case 31");
@@ -299,20 +289,19 @@ write("Test case 31");
     function testlinenumber()
     {
         var arrObj0 = {};
-   	arrObj0.prop1 = 1; 
-	(1 ? 1 : 1) >= func2();
+    arrObj0.prop1 = 1;
+    (1 ? 1 : 1) >= func2();
     };
     try
     {
-	testlinenumber();
+    testlinenumber();
     }
     catch(ex)
     {
-        write(TrimStackTracePath(ex.stack));;
-    } 
+        write(TrimStackTracePath(ex.stack));
+    }
 })();
 write("Passed");
-
 
 write("Test case 32");
 (function test32()
@@ -328,19 +317,19 @@ write("Test case 32");
           if(__loopvar4++ > 3) break;
           arrObj0.length =1;
           continue ;
-          ary0 = arguments; 
+          ary0 = arguments;
        }
      }
-     Object.prototype.method0 = func1; 
+     Object.prototype.method0 = func1;
      var i32 = new Int32Array(1);
      var e = 1;
      e &=(shouldBailout ? (Object.defineProperty(arrObj0, 'length', {set: function(_x) { write('arrObj0.length setter'); }, configurable: true}), arrObj0.method0()) : arrObj0.method0());
     };
 
     // generate profile
-    test0(); 
+    test0();
     shouldBailout = true;
-    test0(); 
+    test0();
 })();
 write("Passed");
 
@@ -369,7 +358,7 @@ write("Test case 34");
 (function test34()
 {
     var a;
-    a = (typeof(a) == "boolean"); 
+    a = (typeof(a) == "boolean");
     write(a);
 })();
 write("Passed");
@@ -377,7 +366,7 @@ write("Passed");
 write("Test case 34");
 (function test34()
 {
-    for (var x = 1; x >= 0; x--) 
+    for (var x = 1; x >= 0; x--)
     {
         var f = [];
         var c = f[0] ;
@@ -392,7 +381,7 @@ function test35()
 {
    if(typeof EvalError == "test") //use random comparsion
    {
- 	 return true;
+     return true;
    }
    return false;
 }
@@ -417,7 +406,7 @@ try
  test36();
 }catch(e)
 {
-} 
+}
 write("Passed")
 
 write("Test case 37")
@@ -444,9 +433,9 @@ write(bar());
 write("passed");
 
 write("Test case 38")
-var test38 = function (d, j, a) 
+var test38 = function (d, j, a)
 {
-    do 
+    do
     {
         if (d >= j)
         {
@@ -461,7 +450,6 @@ var test38 = function (d, j, a)
 };
 write("passed")
 
-
 write("Test case 40");
 (function test31()
 {
@@ -471,12 +459,12 @@ write("Test case 40");
     };
     try
     {
-	testRuntimeError();
+    testRuntimeError();
     }
     catch(ex)
     {
-        write(TrimStackTracePath(ex.stack));;
-    } 
+        write(TrimStackTracePath(ex.stack));
+    }
 })();
 write("Passed");
 
@@ -509,10 +497,9 @@ write("Test case 42");
   var ary = new Array(10);
   arrObj0 = Object.prototype;
   arrObj0[5] = "temp";
-  ary[1] * ((ary.unshift()) - ary[1]); 
+  ary[1] * ((ary.unshift()) - ary[1]);
 })();
 write("Passed");
-
 
 write("Test case 43");
 (function test43()
@@ -531,7 +518,7 @@ write("Test case 43");
     CollectGarbage();
     obj0.method1 = v58.init();
     obj0.method1.prototype = {};
-	//Property guard should get invalidated
+    //Property guard should get invalidated
     arrObj0 = new obj0.method1();
 })();
 write("Passed");
@@ -542,7 +529,7 @@ write("Test case 44");
 
   function test0(){
       // Snippet : Native array profile information update
-      
+
       function v2496(v2497) {
         var v2498 = new Array(v2497);
         for(var v2500 = 0; v2500 < v2497; v2500++) {
@@ -550,7 +537,7 @@ write("Test case 44");
         }
         return v2498;
       }
-      
+
       function v2502(v2499) {
         var v2503 = 0;
         for(var v2501 in v2499) {
@@ -558,19 +545,18 @@ write("Test case 44");
         }
         return v2503;
       }
-      
-      
+
       var v2504 = v2496(5);
       v2502(v2504);
-      
+
       // create missing value and transform the array
       if((1 % 5) <= 3) {
-        v2504[v2504.length + 5] = 1; 
+        v2504[v2504.length + 5] = 1;
       }
-      
+
       var v2505 = v2496(10);
       v2502(v2505);
-      
+
  };
   // generate profile
   test0();
@@ -582,28 +568,28 @@ write("Passed");
 write("Test case 45");
 (function test45()
 {
-	write((Function("return"))());
-	write((Function("return;"))());
-	write((Function("return 25;"))());
-	
+    write((Function("return"))());
+    write((Function("return;"))());
+    write((Function("return 25;"))());
+
 })();
 write("Passed");
 
 write("Test case 46");
 (function test46()
 {
-	function compare(a, b){}
-	var boundFunction = compare.bind();
-	write(Object.getOwnPropertyNames(boundFunction));
+    function compare(a, b){}
+    var boundFunction = compare.bind();
+    write(Object.getOwnPropertyNames(boundFunction));
 })();
 write("Passed");
 
 write("Test case 47");
 (function test47()
 {
-	Function('label\n:foo')
-	localLabel
-	 : write("\\n in label accepted");
+    Function('label\n:foo')
+    localLabel
+     : write("\\n in label accepted");
 
 })();
 write("Passed");
@@ -611,6 +597,6 @@ write("Passed");
 write("Test case 48");
 (function test48()
 {
-	var a = Math.random(); 
+    var a = Math.random();
 })();
 write("Passed");

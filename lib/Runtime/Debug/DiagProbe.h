@@ -7,7 +7,7 @@ namespace Js
 {
     class MutationBreakpoint;
 
-    typedef enum eStopType
+    enum StopType
     {
         STOP_BREAKPOINT,
         STOP_INLINEBREAKPOINT,
@@ -15,7 +15,7 @@ namespace Js
         STOP_EXCEPTIONTHROW,
         STOP_ASYNCBREAK,
         STOP_MUTATIONBREAKPOINT
-    } StopType;
+    };
 
     struct ReturnedValue
     {
@@ -78,7 +78,7 @@ namespace Js
         virtual bool Uninstall(Js::ScriptContext* pScriptContext) = 0;
     };
 
-    typedef enum eStepType : BYTE
+    enum StepType : BYTE
     {
         STEP_NONE,
         STEP_IN         = 0x01,
@@ -90,7 +90,7 @@ namespace Js
         // or STEP_OVER (e.g. STEP_OVER at the end of this function, and it is called again by a
         // library caller).
         STEP_BAILOUT    = STEP_IN | STEP_OVER,
-    } StepType;
+    };
 
     class StepController
     {

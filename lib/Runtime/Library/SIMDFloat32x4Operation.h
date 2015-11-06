@@ -66,4 +66,3 @@ namespace Js {
     };
 
 } // namespace Js
-

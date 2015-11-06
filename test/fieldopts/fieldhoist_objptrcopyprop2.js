@@ -3,8 +3,6 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-
-
   var obj3 = {b:1};
   (function(){
     var obj7 = obj3;
@@ -19,4 +17,3 @@
     }
     WScript.Echo(sum);
   })();
-

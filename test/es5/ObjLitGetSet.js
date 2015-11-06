@@ -5,7 +5,7 @@
 
 function write(value)
 {
-	WScript.Echo(value);
+    WScript.Echo(value);
 }
 
 function RunTest(testCase, testCount)
@@ -15,25 +15,24 @@ function RunTest(testCase, testCount)
 
   testScenario = " (test " + testCount + "): " + testScenario;
 
-    
   write(testScenario);
   try
   {
     var result = testFunction();
     if (result == true)
     {
-	write("PASS");
+    write("PASS");
     }
-  
-  } 
-  catch (e) 
+
+  }
+  catch (e)
   {
     var resultString = "FAILED" + testScenario;
     write(resultString + " :: " + e.message);
-  }  
+  }
 }
 
-function RunAllTests(){  
+function RunAllTests(){
   for(var i = 0; i < testList.length; ++i){
     RunTest(testList[i], i + 1);
   }
@@ -51,7 +50,7 @@ var testList = [
 // Utility functions
 function Verify(expression, actualValue, expectedValue)
 {
-  if (expectedValue != actualValue) 
+  if (expectedValue != actualValue)
   {
     write("Failed: Expected " + expression + " = " + expectedValue + ", got " + actualValue);
     return false;
@@ -90,7 +89,6 @@ function Test2(args)
 
    return true;
 }
-
 
 function Test3(args)
 {

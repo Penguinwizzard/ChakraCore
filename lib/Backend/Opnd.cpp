@@ -345,7 +345,7 @@ Opnd::GetImmediateValue()
     switch (this->GetKind())
     {
     case OpndKindIntConst:
-        return this->AsIntConstOpnd()->m_value;
+        return this->AsIntConstOpnd()->GetValue();
 
     case OpndKindAddr:
         return (intptr_t)this->AsAddrOpnd()->m_address;
@@ -364,7 +364,7 @@ BailoutConstantValue Opnd::GetConstValue()
     BailoutConstantValue value;
     if (this->IsIntConstOpnd())
     {
-        value.InitIntConstValue(this->AsIntConstOpnd()->m_value);
+        value.InitIntConstValue(this->AsIntConstOpnd()->GetValue());
     }
     else if (this->IsFloatConstOpnd())
     {
@@ -1287,18 +1287,16 @@ IntConstOpnd *
 IntConstOpnd::New(IntConstType value, IRType type, Func *func, bool dontEncode)
 {
     IntConstOpnd * intConstOpnd;
-
+    
     Assert(TySize[type] <= sizeof(IntConstType));
 
     intConstOpnd = JitAnew(func->m_alloc, IR::IntConstOpnd);
 
-    intConstOpnd->m_value = value;
-
-    intConstOpnd->m_kind = OpndKindIntConst;
-
-
     intConstOpnd->m_type = type;
+    intConstOpnd->m_kind = OpndKindIntConst;
     intConstOpnd->m_dontEncode = dontEncode;
+    intConstOpnd->SetValue(value);
+
 #if DBG_DUMP || defined(ENABLE_IR_VIEWER)
     intConstOpnd->decodedValue = 0;
     intConstOpnd->name = nullptr;
@@ -1359,6 +1357,89 @@ IntConstOpnd::FreeInternal(Func *func)
 {
     Assert(m_kind == OpndKindIntConst);
     JitAdelete(func->m_alloc, this);
+}
+
+///----------------------------------------------------------------------------
+///
+/// IntConstOpnd::SetValue
+///
+///     Modifies the value of the IntConstOpnd
+///
+///----------------------------------------------------------------------------
+
+
+void
+IntConstOpnd::SetValue(IntConstType value)
+{
+    if (sizeof(IntConstType) > sizeof(int32))
+    {
+        Assert(m_type != TyInt32  || (value >= INT32_MIN && value <= INT32_MAX));
+        Assert(m_type != TyUint32 || (value >= 0 && value <= UINT32_MAX));
+    }
+
+    // TODO: These should be uncommented, unfortunately, Lowerer::UseWithNewType
+    // can change m_type (by calling SetType) in such a way that it violates these constraints.
+    // If CopyInternal is later called on the IntConstOpnd, these will fail.
+    // Assert(m_type != TyInt16  || (value >= INT16_MIN && value <= INT16_MAX));
+    // Assert(m_type != TyUint16 || (value >= 0 && value <= UINT16_MAX));
+    // Assert(m_type != TyInt8   || (value >= INT8_MIN && value <= INT8_MAX));
+    // Assert(m_type != TyUint8  || (value >= 0 && value <= UINT8_MAX));
+
+    m_value = value;
+}
+
+///----------------------------------------------------------------------------
+///
+/// IntConstOpnd::AsInt32
+///
+///     Retrieves the value of the int const opnd as a signed 32-bit integer.
+///
+///----------------------------------------------------------------------------
+
+int32
+IntConstOpnd::AsInt32()
+{
+    // TODO: Currently, there are cases where we construct IntConstOpnd with TyInt32
+    // and retrieve value out as uint32 (or vice versa). Because of these, we allow
+    // AsInt32/AsUint32 to cast between int32/uint32 in a lossy manner for now.
+    // In the future, we should tighten up usage of IntConstOpnd to avoid these casts
+
+    if (sizeof(IntConstType) == sizeof(int32))
+    {
+        return (int32)m_value;
+    }
+
+    if (m_type == TyUint32)
+    {
+        Assert(m_value >= 0 && m_value <= UINT32_MAX);
+        return (int32)(uint32)m_value;
+    }
+
+    Assert(Math::FitsInDWord(m_value));
+    return (int32)m_value;
+}
+
+///----------------------------------------------------------------------------
+///
+/// IntConstOpnd::AsUint32
+///
+///     Retrieves the value of the int const opnd as an unsigned 32-bit integer.
+///
+///----------------------------------------------------------------------------
+
+uint32
+IntConstOpnd::AsUint32()
+{
+    // TODO: See comment in AsInt32() regarding casts from int32 to uint32
+
+    if (sizeof(uint32) == sizeof(IntConstType))
+    {
+        return (uint32)m_value;
+    }
+
+    Assert(sizeof(uint32) < sizeof(IntConstType));
+    Assert(m_value >= 0 && m_value <= UINT32_MAX);
+    return (uint32)m_value;
 }
 
 ///----------------------------------------------------------------------------
@@ -2769,7 +2850,7 @@ Opnd::Dump(IRDumpFlags flags, Func *func)
             }
             else
             {
-                Output::Print(L"<%s> (value: 0x%X)", intConstOpnd->name, intConstOpnd->m_value);
+                Output::Print(L"<%s> (value: 0x%X)", intConstOpnd->name, intConstOpnd->GetValue());
             }
         }
         else
@@ -2785,12 +2866,12 @@ Opnd::Dump(IRDumpFlags flags, Func *func)
                 }
                 else
                 {
-                    Output::Print(L" [encoded: 0x%X]", intConstOpnd->m_value);
+                    Output::Print(L" [encoded: 0x%X]", intConstOpnd->GetValue());
                 }
             }
             else
             {
-                intValue = intConstOpnd->m_value;
+                intValue = intConstOpnd->GetValue();
                 Output::Print(L"%d (0x%X)", intValue, intValue);
             }
         }

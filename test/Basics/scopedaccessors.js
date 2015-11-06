@@ -21,7 +21,7 @@ WScript.Echo("test2: nested setter and setter");
 function top2() {
     var xx = new Object();
     Object.defineProperty(xx, "yy", { get: function() { return this; },
-	set: function(val) {WScript.Echo("in nested setter2"); this.val = 11;} });
+    set: function(val) {WScript.Echo("in nested setter2"); this.val = 11;} });
     var z = function() {
        xx.yy = 20;
        WScript.Echo(xx.yy);
@@ -36,7 +36,7 @@ foo2();
 WScript.Echo("test3: nested setter and setter from this");
 function top3() {
     Object.defineProperty(this, "yy", { get: function() { return this; },
-	set: function(val) {WScript.Echo("in nested setter3"); this.val = 12;} });
+    set: function(val) {WScript.Echo("in nested setter3"); this.val = 12;} });
     var z = function() {
        yy = 20;
        WScript.Echo(yy);
@@ -57,7 +57,7 @@ function top4(inVar) {
     with (inVar)
     {
     Object.defineProperty(this, "tt", { get: function() { return this; },
-	set: function(val) {WScript.Echo("in nested setter3"); this.val = 14;} });
+    set: function(val) {WScript.Echo("in nested setter3"); this.val = 14;} });
     var z = function() {
        tt = 20;
        WScript.Echo(tt);

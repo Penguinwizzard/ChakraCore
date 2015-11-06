@@ -13,13 +13,13 @@ x[i] = i;
 
 function foo()
 {
-	G++;
-	return x;
+    G++;
+    return x;
 }
 function bar()
 {
-	G++;
-	return obj;
+    G++;
+    return obj;
 }
 
 foo()[i++]++;
@@ -28,9 +28,9 @@ bar().y += G;
 
 if (x[0] != 1 || x.length != 1 || G != 2 || i != 1 || obj.y != 2)
 {
-	WScript.Echo("FAILED");
+    WScript.Echo("FAILED");
 }
 else
 {
-	WScript.Echo("Passed");
+    WScript.Echo("Passed");
 }

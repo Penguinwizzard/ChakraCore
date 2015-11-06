@@ -31,7 +31,6 @@ o = test1();
 WScript.Echo("o = { a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p: " + o.p + ", q: " + o.q + ", x: " + o.x + ", y: " + o.y + " }");
 WScript.Echo("");
 
-
 WScript.Echo("Test 2:");
 function SimpleObject2(a, b, c) {
     this.a = a;
@@ -58,7 +57,6 @@ WScript.Echo("o = { a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p: " + o.p +
 o = test2();
 WScript.Echo("o = { a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p: " + o.p + ", q: " + o.q + ", x: " + o.x + ", y: " + o.y + " }");
 WScript.Echo("");
-
 
 WScript.Echo("Test 3:");
 function SimpleObject3(a, b, c) {
@@ -87,7 +85,6 @@ o = test3(1, 2, 3);
 WScript.Echo("o = { a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p: " + o.p + ", q: " + o.q + ", x: " + o.x + ", y: " + o.y + " }");
 WScript.Echo("");
 
-
 WScript.Echo("Test 4:");
 function SimpleObject4(a, b, c) {
     this.a = a;
@@ -114,7 +111,6 @@ WScript.Echo("o = { a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p: " + o.p +
 o = test4();
 WScript.Echo("o = { a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p: " + o.p + ", q: " + o.q + ", x: " + o.x + ", y: " + o.y + " }");
 WScript.Echo("");
-
 
 WScript.Echo("Test 5:");
 function SimpleObject5(a, b, c) {
@@ -145,7 +141,6 @@ o = test5();
 WScript.Echo("o = { a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p: " + o.p + ", q: " + o.q + ", x: " + o.x + ", y: " + o.y + " }");
 WScript.Echo("");
 
-
 WScript.Echo("Test 6:");
 function SimpleObject6(a, b, c) {
     return a + b + c;
@@ -170,7 +165,6 @@ WScript.Echo("o = { a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p: " + o.p +
 o = test6();
 WScript.Echo("o = { a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p: " + o.p + ", q: " + o.q + ", x: " + o.x + ", y: " + o.y + " }");
 WScript.Echo("");
-
 
 WScript.Echo("Test 7:");
 function SimpleObject7(a, b, c, condition) {
@@ -198,7 +192,6 @@ WScript.Echo("o = { a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p: " + o.p +
 o = test7(1, 2, 3, true);
 WScript.Echo("o = { a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p: " + o.p + ", q: " + o.q + ", x: " + o.x + ", y: " + o.y + " }");
 WScript.Echo("");
-
 
 WScript.Echo("Test 8:");
 function SimpleObject8(a, b, c) {
@@ -241,4 +234,3 @@ try {
 }
 WScript.Echo("o = { a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p: " + o.p + ", q: " + o.q + ", x: " + o.x + ", y: " + o.y + " }");
 WScript.Echo("");
-

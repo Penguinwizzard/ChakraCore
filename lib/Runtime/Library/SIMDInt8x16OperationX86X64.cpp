@@ -233,7 +233,9 @@ namespace Js
         const _x86_SIMDValue X86_HIGHBYTE_MASK = { 0xff00ff00, 0xff00ff00, 0xff00ff00, 0xff00ff00 };
 
         if (count < 0 || count > 8)
+        {
             count = 8;
+        }
 
         x86tmp1.m128i_value = _mm_slli_epi16(tmpaValue.m128i_value, 8);
         x86tmp1.m128i_value = _mm_srai_epi16(x86tmp1.m128i_value, count + 8);
@@ -263,5 +265,4 @@ namespace Js
         return X86SIMDValue::ToSIMDValue(x86Result);
     }
 }
-
 #endif

@@ -3,7 +3,6 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
-#include "SIMDInt32x4Operation.h"
 
 #if _M_IX86 || _M_AMD64
 
@@ -345,5 +344,4 @@ namespace Js
         return _mm_movemask_ps(v.m128_value);
     }
 }
-
 #endif

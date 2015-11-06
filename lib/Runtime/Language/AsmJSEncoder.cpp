@@ -187,7 +187,7 @@ namespace Js
             Output::Print( L"\n StackSize = %d , Offsets: Var = %d, Int = %d, Double = %d\n", mFunctionBody->GetAsmJsFunctionInfo()->GetTotalSizeinBytes(), GetOffset<Var>(), GetOffset<int>(), GetOffset<double>() );
         }
 #endif
-        //sansun- do the setup here
+
         AsmJsRetType retType = asmInfo->GetReturnType();
         AsmJsJitTemplate::FunctionEntry::ApplyTemplate( this, mPc );
         while( ReadOp() ){}

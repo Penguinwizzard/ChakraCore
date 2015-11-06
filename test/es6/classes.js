@@ -500,7 +500,7 @@ var tests = [
     }
   },
   {
-    name: "No restrictions on SuperProperty",
+    name: "super reference in base class constructor",
     body: function () {
         class A {
             constructor() { super.toString(); }
@@ -508,8 +508,28 @@ var tests = [
         }
         class B {
             constructor() {
-                this.string = super.toString.call(this);
+                this.string = super.toString();
+                this.stringCall = super.toString.call(this);
+                this.stringLambda = (()=>super.toString())() ;
+                this.stringLambda2 = (()=>(()=>super.toString())())() ;
+                this.stringEval = eval("super.toString()");
+                this.stringEval2 = eval("eval(\"super.toString()\")");
+                this.stringEvalLambda = eval("(()=>super.toString())()");
+                this.stringEvalLambdaEval = eval("(()=>eval(\"super.toString()\"))()");
+                this.stringEval2Lambda = eval("eval(\"(()=>super.toString())()\")");
+                this.stringLambdaEval = (()=>eval("super.toString()"))() ;
+                this.stringLambda2Eval = (()=>(()=>eval("super.toString()"))())() ;
+                
                 this.func = super.toString;
+                this.funcLambda = (()=>super.toString)() ;
+                this.funcLambda2 = (()=>(()=>super.toString)())() ;
+                this.funcEval = eval("super.toString");
+                this.funcEval2 = eval("eval(\"super.toString\")");
+                this.funcEvalLambda = eval("(()=>super.toString)()");
+                this.funcEvalLambdaEval = eval("(()=>eval(\"super.toString\"))()");
+                this.funcEval2Lambda = eval("eval(\"(()=>super.toString)()\")");
+                this.funcLambdaEval = (()=>eval("super.toString"))() ;
+                this.funcLambda2Eval = (()=>(()=>eval("super.toString"))())() ;
             }
         }
 
@@ -520,8 +540,29 @@ var tests = [
 
         a.dontDoThis();
         assert.areEqual(1, a.makeBugs);
+        
         assert.areEqual("[object Object]", b.string);
+        assert.areEqual("[object Object]", b.stringCall);
+        assert.areEqual("[object Object]", b.stringLambda);
+        assert.areEqual("[object Object]", b.stringLambda2);
+        assert.areEqual("[object Object]", b.stringEval);
+        assert.areEqual("[object Object]", b.stringEval2);
+        assert.areEqual("[object Object]", b.stringEvalLambda);
+        assert.areEqual("[object Object]", b.stringEvalLambdaEval);
+        assert.areEqual("[object Object]", b.stringEval2Lambda);
+        assert.areEqual("[object Object]", b.stringLambdaEval);
+        assert.areEqual("[object Object]", b.stringLambda2Eval);
+        
         assert.areEqual(Object.prototype.toString, b.func);
+        assert.areEqual(Object.prototype.toString, b.funcLambda);
+        assert.areEqual(Object.prototype.toString, b.funcLambda2);
+        assert.areEqual(Object.prototype.toString, b.funcEval);
+        assert.areEqual(Object.prototype.toString, b.funcEval2);
+        assert.areEqual(Object.prototype.toString, b.funcEvalLambda);
+        assert.areEqual(Object.prototype.toString, b.funcEvalLambdaEval);
+        assert.areEqual(Object.prototype.toString, b.funcEval2Lambda);
+        assert.areEqual(Object.prototype.toString, b.funcLambdaEval);
+        assert.areEqual(Object.prototype.toString, b.funcLambda2Eval);
     }
   },
   {

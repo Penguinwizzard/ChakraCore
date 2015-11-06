@@ -97,7 +97,6 @@ namespace Js {
         static Var EntryFromUint16x8Bits(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryFromUint8x16Bits(RecyclableObject* function, CallInfo callInfo, ...);
 
-        
         // Lane Access
         static Var EntryExtractLane(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryReplaceLane(RecyclableObject* function, CallInfo callInfo, ...);
@@ -148,4 +147,3 @@ namespace Js {
         // End entry points
     };
 } // namespace Js
-

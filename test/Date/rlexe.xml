@@ -4,24 +4,32 @@
     <default>
       <files>DateCtr.js</files>
       <baseline>DateCtr.baseline</baseline>
+      <!-- test is timezone-sensitive; remove exclude_jenkins after fix -->
+      <tags>exclude_jenkins</tags>
     </default>
   </test>
   <test>
     <default>
       <files>DateGetSet.js</files>
       <baseline>DateGetSet.baseline</baseline>
+      <!-- test is timezone-sensitive; remove exclude_jenkins after fix -->
+      <tags>exclude_jenkins</tags>
     </default>
   </test>
   <test>
     <default>
       <files>DateParse.js</files>
       <baseline>DateParse_es5.baseline</baseline>
+      <!-- test is timezone-sensitive; remove exclude_jenkins after fix -->
+      <tags>exclude_jenkins</tags>
     </default>
   </test>
   <test>
     <default>
       <files>DateParse2.js</files>
       <baseline>DateParse2.v5.baseline</baseline>
+      <!-- test is timezone-sensitive; remove exclude_jenkins after fix -->
+      <tags>exclude_jenkins</tags>
     </default>
   </test>
   <test>
@@ -34,6 +42,8 @@
     <default>
       <files>parseISO.js</files>
       <baseline>parseISO.baseline</baseline>
+      <!-- test is timezone-sensitive; remove exclude_jenkins after fix -->
+      <tags>exclude_jenkins</tags>
     </default>
   </test>
   <test>
@@ -54,7 +64,8 @@
       <files>Conversions.js</files>
       <baseline>Conversions.win8.baseline</baseline>
       <compile-flags>-Intl-</compile-flags>
-      <tags>exclude_win7,exclude_winBlue,exclude_snap</tags>
+      <!-- test is timezone-sensitive; remove exclude_jenkins after fix -->
+      <tags>exclude_win7,exclude_winBlue,exclude_snap,exclude_jenkins</tags>
     </default>
   </test>
   <test>
@@ -62,7 +73,8 @@
       <files>Conversions.js</files>
       <baseline>Conversions.baseline</baseline>
       <compile-flags>-Intl-</compile-flags>
-      <tags>exclude_win7,exclude_win8,exclude_snap</tags>
+      <!-- test is timezone-sensitive; remove exclude_jenkins after fix -->
+      <tags>exclude_win7,exclude_win8,exclude_snap,exclude_jenkins</tags>
     </default>
   </test>
   <test>
@@ -76,6 +88,8 @@
       <files>formatting.js</files>
       <baseline>formatting.baseline</baseline>
       <compile-flags>-ForceOldDateAPI</compile-flags>
+      <!-- test is timezone-sensitive; remove exclude_jenkins after fix -->
+      <tags>exclude_jenkins</tags>
     </default>
     <condition order="1" type="include">
       <os>win8</os>

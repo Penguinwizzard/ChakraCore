@@ -47,7 +47,6 @@ o = test02();
 WScript.Echo("o = " + o + " ({ a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p: " + o.p + ", q: " + o.q + ", x: " + o.x + ", y: " + o.y + " })");
 WScript.Echo("");
 
-
 WScript.Echo("Test 03:");
 
 var proto03 = { p: 1001, q: 1002 };
@@ -71,7 +70,6 @@ WScript.Echo("o = " + o + " ({ a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p
 o = test03();
 WScript.Echo("o = " + o + " ({ a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p: " + o.p + ", q: " + o.q + ", x: " + o.x + ", y: " + o.y + " })");
 WScript.Echo("");
-
 
 WScript.Echo("Test 04:");
 
@@ -105,7 +103,6 @@ o = test04();
 WScript.Echo("o = " + o + " ({ a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p: " + o.p + ", q: " + o.q + ", x: " + o.x + ", y: " + o.y + " })");
 WScript.Echo("");
 
-
 WScript.Echo("Test 11:");
 
 function test11() {
@@ -125,7 +122,6 @@ WScript.Echo("o = " + o + " ({ a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p
 o = test11();
 WScript.Echo("o = " + o + " ({ a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p: " + o.p + ", q: " + o.q + ", x: " + o.x + ", y: " + o.y + " })");
 WScript.Echo("");
-
 
 WScript.Echo("Test 12:");
 
@@ -174,7 +170,6 @@ o = test13();
 WScript.Echo("o = " + o + " ({ a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p: " + o.p + ", q: " + o.q + ", x: " + o.x + ", y: " + o.y + " })");
 WScript.Echo("");
 
-
 WScript.Echo("Test 14:");
 
 function SimpleObject14() {
@@ -207,7 +202,6 @@ o = test14();
 WScript.Echo("o = " + o + " ({ a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p: " + o.p + ", q: " + o.q + ", x: " + o.x + ", y: " + o.y + " })");
 WScript.Echo("");
 
-
 WScript.Echo("Test 21:");
 
 function test21() {
@@ -227,7 +221,6 @@ WScript.Echo("o = " + o + " ({ a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p
 o = test21();
 WScript.Echo("o = " + o + " ({ a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p: " + o.p + ", q: " + o.q + ", x: " + o.x + ", y: " + o.y + " })");
 WScript.Echo("");
-
 
 WScript.Echo("Test 22:");
 
@@ -250,7 +243,6 @@ WScript.Echo("o = " + o + " ({ a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p
 o = test22();
 WScript.Echo("o = " + o + " ({ a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p: " + o.p + ", q: " + o.q + ", x: " + o.x + ", y: " + o.y + " })");
 WScript.Echo("");
-
 
 WScript.Echo("Test 23:");
 
@@ -275,7 +267,6 @@ WScript.Echo("o = " + o + " ({ a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p
 o = test23();
 WScript.Echo("o = " + o + " ({ a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p: " + o.p + ", q: " + o.q + ", x: " + o.x + ", y: " + o.y + " })");
 WScript.Echo("");
-
 
 WScript.Echo("Test 24:");
 
@@ -309,7 +300,6 @@ o = test24();
 WScript.Echo("o = " + o + " ({ a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p: " + o.p + ", q: " + o.q + ", x: " + o.x + ", y: " + o.y + " })");
 WScript.Echo("");
 
-
 WScript.Echo("Test 31:");
 
 function test31() {
@@ -329,7 +319,6 @@ WScript.Echo("o = " + o + " ({ a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p
 o = test31();
 WScript.Echo("o = " + o + " ({ a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p: " + o.p + ", q: " + o.q + ", x: " + o.x + ", y: " + o.y + " })");
 WScript.Echo("");
-
 
 WScript.Echo("Test 32:");
 
@@ -352,7 +341,6 @@ WScript.Echo("o = " + o + " ({ a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p
 o = test32();
 WScript.Echo("o = " + o + " ({ a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p: " + o.p + ", q: " + o.q + ", x: " + o.x + ", y: " + o.y + " })");
 WScript.Echo("");
-
 
 WScript.Echo("Test 33:");
 
@@ -377,7 +365,6 @@ WScript.Echo("o = " + o + " ({ a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p
 o = test33();
 WScript.Echo("o = " + o + " ({ a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p: " + o.p + ", q: " + o.q + ", x: " + o.x + ", y: " + o.y + " })");
 WScript.Echo("");
-
 
 WScript.Echo("Test 34:");
 
@@ -411,7 +398,6 @@ o = test34();
 WScript.Echo("o = " + o + " ({ a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p: " + o.p + ", q: " + o.q + ", x: " + o.x + ", y: " + o.y + " })");
 WScript.Echo("");
 
-
 WScript.Echo("Test 41:");
 
 function test41() {
@@ -431,7 +417,6 @@ WScript.Echo("o = " + o + " ({ a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p
 o = test41();
 WScript.Echo("o = " + o + " ({ a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p: " + o.p + ", q: " + o.q + ", x: " + o.x + ", y: " + o.y + " })");
 WScript.Echo("");
-
 
 WScript.Echo("Test 42:");
 
@@ -456,7 +441,6 @@ WScript.Echo("o = " + o + " ({ a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p
 o = test42();
 WScript.Echo("o = " + o + " ({ a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p: " + o.p + ", q: " + o.q + ", x: " + o.x + ", y: " + o.y + " })");
 WScript.Echo("");
-
 
 WScript.Echo("Test 43:");
 
@@ -489,7 +473,6 @@ o = test43();
 WScript.Echo("o = " + o + " ({ a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p: " + o.p + ", q: " + o.q + ", x: " + o.x + ", y: " + o.y + " })");
 WScript.Echo("");
 
-
 WScript.Echo("Test 51:");
 
 function test51() {
@@ -509,7 +492,6 @@ WScript.Echo("o = " + o + " ({ a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p
 o = test51();
 WScript.Echo("o = " + o + " ({ a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p: " + o.p + ", q: " + o.q + ", x: " + o.x + ", y: " + o.y + " })");
 WScript.Echo("");
-
 
 WScript.Echo("Test 52:");
 
@@ -532,7 +514,6 @@ WScript.Echo("o = " + o + " ({ a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p
 o = test52();
 WScript.Echo("o = " + o + " ({ a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p: " + o.p + ", q: " + o.q + ", x: " + o.x + ", y: " + o.y + " })");
 WScript.Echo("");
-
 
 WScript.Echo("Test 53:");
 
@@ -557,7 +538,6 @@ WScript.Echo("o = " + o + " ({ a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p
 o = test53();
 WScript.Echo("o = " + o + " ({ a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p: " + o.p + ", q: " + o.q + ", x: " + o.x + ", y: " + o.y + " })");
 WScript.Echo("");
-
 
 WScript.Echo("Test 54:");
 
@@ -591,7 +571,6 @@ o = test54();
 WScript.Echo("o = " + o + " ({ a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p: " + o.p + ", q: " + o.q + ", x: " + o.x + ", y: " + o.y + " })");
 WScript.Echo("");
 
-
 WScript.Echo("Test 55:");
 
 function SimpleObject55() {
@@ -624,5 +603,3 @@ WScript.Echo("o = " + o + " ({ a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p
 o = test55();
 WScript.Echo("o = " + o + " ({ a: " + o.a + ", b: " + o.b + ", c: " + o.c + ", p: " + o.p + ", q: " + o.q + ", x: " + o.x + ", y: " + o.y + " })");
 WScript.Echo("");
-
-

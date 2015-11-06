@@ -85,7 +85,6 @@ function asmModule(stdlib, imports, buffer) {
     var f4store2 = f4.store2;
     var f4store3 = f4.store3;
     
-    
     var d2 = stdlib.SIMD.Float64x2;  
     var d2check = d2.check;
     var d2splat = d2.splat;
@@ -121,7 +120,6 @@ function asmModule(stdlib, imports, buffer) {
     
     var d2store  = d2.store
     var d2store1 = d2.store1;
-    
     
     var fround = stdlib.Math.fround;
 
@@ -191,7 +189,7 @@ function initI32(buffer) {
 function printBuffer(Int32Heap, start, end) {
     for (var i = start; i < end; i += 4) {
         var i4 = SIMD.Int32x4.load(Int32Heap, i);
-        WScript.Echo(i4.toString());
+        print(i4.toString());
     }
 }
 
@@ -202,10 +200,10 @@ var Int32Heap = new Int32Array(buffer);
 //Resetting the buffer.
 initI32(buffer);
 
-WScript.Echo("Vector Rotate - Start");
+print("Vector Rotate - Start");
 printBuffer(Int32Heap, 0, 32);
 
 m.rotate(4, 20, 8);
-WScript.Echo();
+print();
 
 printBuffer(Int32Heap, 0, 32);

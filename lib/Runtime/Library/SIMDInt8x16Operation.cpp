@@ -258,8 +258,10 @@ namespace Js
     {
         SIMDValue result;
 
-        if (count < 0 || count > 8)   //Similar to polifyll, maximum shift will happen if the shift amounts and invalid
-            count = 8; 
+        if (count < 0 || count > 8) // Similar to polyfill, maximum shift will happen if the shift amounts and invalid
+        {
+            count = 8;
+        }
 
         for(uint idx = 0; idx < 16; ++idx)
         {

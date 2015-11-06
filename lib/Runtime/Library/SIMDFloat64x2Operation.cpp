@@ -3,8 +3,6 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeLibraryPch.h"
-#include "SIMDFloat64x2Operation.h"
-#include "SIMDInt32x4Operation.h"
 
 #if defined(_M_ARM32_OR_ARM64)
 namespace Js
@@ -304,7 +302,6 @@ namespace Js
         return result;
     }
 
-
     SIMDValue SIMDFloat64x2Operation::OpSelect(const SIMDValue& mV, const SIMDValue& tV, const SIMDValue& fV)
     {
         SIMDValue result;
@@ -331,5 +328,4 @@ namespace Js
         return result;
     }
 }
-
 #endif

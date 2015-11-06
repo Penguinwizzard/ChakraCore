@@ -30,11 +30,6 @@ WScript.Echo("getMilliseconds : " + d.getMilliseconds())
 WScript.Echo("getUTCMilliseconds : " + d.getUTCMilliseconds())
 WScript.Echo("getTimezoneOffset : " + d.getTimezoneOffset())
 
-// prints timezone
-//WScript.Echo("toString : " + d.toString())
-// prints timezone
-//WScript.Echo("toTimeString : " + d.toTimeString())
-
 // setTime(time)
 d.setTime(100);
 WScript.Echo("getTime : " + d.getTime());
@@ -185,7 +180,6 @@ d.setDate(12345678);
 WScript.Echo("toUTCString : " + d.toUTCString())
 WScript.Echo("valueOf : " + d.valueOf())
 
-// These should be unavailable for v5.7
 WScript.Echo("toISOString method : " + typeof d.toISOString);
 WScript.Echo("toJSON method : " + typeof d.toJSON);
 

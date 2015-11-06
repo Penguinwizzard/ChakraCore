@@ -21,11 +21,11 @@ namespace Js
 
         static JavascriptFunction * GetCurrentFunctionObject(JavascriptFunction * function);
 
-        StackScriptFunction(FunctionProxy * proxy, ScriptFunctionType* deferredPrototypeType) : 
+        StackScriptFunction(FunctionProxy * proxy, ScriptFunctionType* deferredPrototypeType) :
             ScriptFunction(proxy, deferredPrototypeType), boxedScriptFunction(nullptr) {};
 #if DBG
-        static bool IsBoxed(Var var) 
-        { 
+        static bool IsBoxed(Var var)
+        {
             return StackScriptFunction::FromVar(var)->boxedScriptFunction != nullptr;
         }
 
@@ -47,7 +47,7 @@ namespace Js
         public:
             BoxState(ArenaAllocator * alloc, FunctionBody * functionBody, ScriptContext * scriptContext, void * returnAddress = nullptr);
             void Box();
-            ScriptFunction * GetBoxedScriptFunction(ScriptFunction * stackScriptFunction);            
+            ScriptFunction * GetBoxedScriptFunction(ScriptFunction * stackScriptFunction);
         private:
             JsUtil::BaseHashSet<FunctionBody *, ArenaAllocator> frameToBox;
             JsUtil::BaseHashSet<FunctionProxy *, ArenaAllocator> functionObjectToBox;

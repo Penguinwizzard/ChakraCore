@@ -15,11 +15,11 @@ function foo()
 function bar()
 {
     for (var k = 0; k > -10; k--) {
-	WScript.Echo(arr[k]);
+    WScript.Echo(arr[k]);
     }
 }
 
-for (var i = 0; i < 1000; i++) 
+for (var i = 0; i < 1000; i++)
 {
     foo();
 }

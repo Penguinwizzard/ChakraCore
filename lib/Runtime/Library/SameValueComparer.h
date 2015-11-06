@@ -12,12 +12,9 @@ namespace Js
         static bool Equals(Key, Key) { static_assert(false, "Can only use SameValueComparer with Var as the key type"); }
         static hash_t GetHashCode(Key) { static_assert(false, "Can only use SameValueComparer with Var as the key type"); }
     };
-
-    // When MSVC++ gets the C++11 template aliasing feature we can do this instead of the struct inheritance hack:
-    //template <typename Key> using SameValueComparer = SameValueComparerCommon<Key, false>;
-    //template <typename Key> using SameValueZeroComparer = SameValueComparerCommon<Key, true>;
-    template <typename Key> struct SameValueComparer : public SameValueComparerCommon<Key, false> { }; 
-    template <typename Key> struct SameValueZeroComparer : public SameValueComparerCommon<Key, true> { };
+    
+    template <typename Key> using SameValueComparer = SameValueComparerCommon<Key, false>;
+    template <typename Key> using SameValueZeroComparer = SameValueComparerCommon<Key, true>;
 
     template <bool zero>
     struct SameValueComparerCommon<Var, zero>

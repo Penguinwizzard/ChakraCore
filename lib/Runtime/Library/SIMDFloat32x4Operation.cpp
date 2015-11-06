@@ -73,7 +73,6 @@ namespace Js
         return result;
     }
 
-    
     // Unary Ops
     SIMDValue SIMDFloat32x4Operation::OpAbs(const SIMDValue& value)
     {
@@ -397,7 +396,6 @@ namespace Js
 
         return result;
     }
-
 
     SIMDValue SIMDFloat32x4Operation::OpGreaterThan(const SIMDValue& aValue, const SIMDValue& bValue)
     {

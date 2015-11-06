@@ -30,13 +30,12 @@ namespace Js
         return this->GetLibrary()->GetGlobalObject()->GlobalObject::HasProperty(propertyId);
     }
 
-    BOOL
-        ModuleRoot::EnsureProperty(PropertyId propertyId)
+    BOOL ModuleRoot::EnsureProperty(PropertyId propertyId)
     {
         if (!RootObjectBase::HasOwnPropertyCheckNoRedecl(propertyId))
         {
             // Cannot pass the extra PropertyOperation_PreInit flag, because module root uses SetSlot directly from
-            // SetRootProperty.  If the property is not yet initialized SetSlot will (correctly) assert.
+            // SetRootProperty. If the property is not yet initialized SetSlot will (correctly) assert.
             this->InitProperty(propertyId, this->GetLibrary()->GetUndefined(), (PropertyOperationFlags)(PropertyOperation_SpecialValue | PropertyOperation_NonFixedValue));
         }
         return true;
@@ -457,5 +456,4 @@ namespace Js
         stringBuilder->AppendCppLiteral(L"Object, (Named Item)");
         return TRUE;
     }
-
 }

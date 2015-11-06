@@ -3,7 +3,7 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-// Switches: -bgJit- -maxInterpretCount:2 
+// Switches: -bgJit- -maxInterpretCount:2
 
 // Test 1: Invalidate constructor cache by changing the constructor's prototype property.
 WScript.Echo("Test 1:");
@@ -39,7 +39,7 @@ SimpleObject1.prototype = proto1b;
 
 oa1.push(test1());
 
-// Run a few more times (bailing out every time) to force a re-JIT.  After re-JIT the optimization 
+// Run a few more times (bailing out every time) to force a re-JIT.  After re-JIT the optimization
 // should be disabled because the constructor cache is now marked as polymorphic.
 
 oa1.push(test1());
@@ -54,8 +54,7 @@ for (var i = 0; i < oa1.length; i++) {
 }
 WScript.Echo("");
 
-
-// Test 2: Invalidate the constructor cache by making one of the properties added in the 
+// Test 2: Invalidate the constructor cache by making one of the properties added in the
 // constructor read-only
 WScript.Echo("Test 2:");
 
@@ -105,8 +104,7 @@ for (var i = 0; i < oa2.length; i++) {
 }
 WScript.Echo("");
 
-
-// Test 3: Invalidate the constructor cache by making one of the properties added after the 
+// Test 3: Invalidate the constructor cache by making one of the properties added after the
 // constructor read-only
 WScript.Echo("Test 3:");
 

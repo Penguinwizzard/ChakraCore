@@ -4,14 +4,15 @@
 //-------------------------------------------------------------------------------------------------------
 
 function equal(a, b) {
-    if (a == b)
-        WScript.Echo("Correct");
-    else
-        WScript.Echo(">> Fail!");
+    if (a == b) {
+        print("Correct");
+    } else {
+        print(">> Fail!");
+    }
 }
 
 function testComparisons() {
-    WScript.Echo("Int8x16 lessThan");
+    print("Int8x16 lessThan");
     var m = SIMD.Int8x16(50, 100, 10, 1, 50, 100, 10, 1, 50, 100, 10, 1, 50, 100, 10, 1);
     var n = SIMD.Int8x16(100, 100, 1, 10, 100, 100, 1, 10, 100, 100, 1, 10, 100, 100, 1, 10);
     var cmp;
@@ -34,7 +35,7 @@ function testComparisons() {
     equal(false, SIMD.Bool8x16.extractLane(cmp, 14));
     equal(true, SIMD.Bool8x16.extractLane(cmp, 15));
 
-    WScript.Echo("Int8x16 equal");
+    print("Int8x16 equal");
     cmp = SIMD.Int8x16.equal(m, n);
     equal(false, SIMD.Bool8x16.extractLane(cmp, 0));
     equal(true, SIMD.Bool8x16.extractLane(cmp, 1));
@@ -53,7 +54,7 @@ function testComparisons() {
     equal(false, SIMD.Bool8x16.extractLane(cmp, 14));
     equal(false, SIMD.Bool8x16.extractLane(cmp, 15));
 
-    WScript.Echo("Int8x16 greaterThan");
+    print("Int8x16 greaterThan");
     cmp = SIMD.Int8x16.greaterThan(m, n);
     equal(false, SIMD.Bool8x16.extractLane(cmp, 0));
     equal(false, SIMD.Bool8x16.extractLane(cmp, 1));

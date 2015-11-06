@@ -219,4 +219,4 @@ equalSimd([100, -1278847, 200, -60147], m.func3(), SIMD.Int32x4, "TestWithLane")
 equalSimd([0, 100, 0, 200], m.func4(), SIMD.Int32x4, "TestWithLane");
 equalSimd([-319033, 100, 570565, 200], m.func5(), SIMD.Int32x4, "TestWithLane");
 equalSimd([-1035531, 100, 571491, 200], m.func6(), SIMD.Int32x4, "TestWithLane");
-WScript.Echo("PASS");
+print("PASS");

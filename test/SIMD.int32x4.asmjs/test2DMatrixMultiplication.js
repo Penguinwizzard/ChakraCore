@@ -135,12 +135,12 @@ function GEN_BASELINE(buffer, start) {
     var dim1 = IntHeap32[start];
     var dim2 = IntHeap32[start + 1];
 
-    WScript.Echo("[");
+    print("[");
     for (var i = 0; i < Math.imul(dim1, dim2) ; i += 4) {
         i4 = SIMD.Int32x4.load(IntHeap32, i + start + 2);
-        WScript.Echo(i4.toString()+",");
+        print(i4.toString()+",");
     }
-    WScript.Echo("]");
+    print("]");
 }
 function verify2DMatrix(buffer, start, results) {
     var IntHeap32 = new Int32Array(buffer);
@@ -157,7 +157,7 @@ function verify2DMatrix(buffer, start, results) {
 var buffer = new ArrayBuffer(16 * 1024 * 1024);
 var m = asmModule(this, null, buffer);
 
-WScript.Echo("2D Matrix Multiplication");
+print("2D Matrix Multiplication");
 m.new2DMatrix(0, 4, 8);
 m.new2DMatrix(200, 8, 12);
 m.new2DMatrix(400, 4, 4);
@@ -189,4 +189,4 @@ SIMD.Int32x4(211, 230, 249, 268),
 SIMD.Int32x4(169, 182, 195, 208),
 ]
 verify2DMatrix(buffer, 1000, RESULTS);
-WScript.Echo("PASS");
+print("PASS");

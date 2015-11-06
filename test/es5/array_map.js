@@ -5,29 +5,27 @@
 
 function returnValueSquare(x,y,z)
 {
-	WScript.Echo("value:"+ x + " index:" + y + " Object:" + z); 
-	return x*x;
+    WScript.Echo("value:"+ x + " index:" + y + " Object:" + z);
+    return x*x;
 }
 
 function returnIndexSquare(x,y,z)
 {
-	WScript.Echo("value:"+ x + " index:" + y + " Object:" + z); 
-	return y*y;
+    WScript.Echo("value:"+ x + " index:" + y + " Object:" + z);
+    return y*y;
 }
 
 function returnRandom(x,y,z)
 {
-	WScript.Echo("value:"+ x + " index:" + y + " Object:" + z); 
-	return x*y;
+    WScript.Echo("value:"+ x + " index:" + y + " Object:" + z);
+    return x*y;
 }
 
 Array.prototype[6] = 20;
 
-
 var x = [1,2,3,4,5];
 var y = x.map(returnValueSquare,this);
 WScript.Echo(y);
-
 
 x = [10,20,30,40,50];
 y = x.map(returnIndexSquare, this);
@@ -36,7 +34,6 @@ WScript.Echo(y);
 x = [10,20,30,40,50];
 y = x.map(returnRandom, this);
 WScript.Echo(y);
-
 
 x = {0: "abc", 1: "def", 2: "xyz"}
 x.length = 3;

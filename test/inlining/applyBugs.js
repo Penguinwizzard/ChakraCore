@@ -12,15 +12,15 @@ var A = new test();
 
 function F()
 {
-	this.init.apply(this,arguments);
+    this.init.apply(this,arguments);
 }
 F.prototype.init = function()
 {
-	A.B.call(this, arguments);
+    A.B.call(this, arguments);
 }
 function bar()
 {
-	return new F(10,30,40,50);
+    return new F(10,30,40,50);
 }
 
 bar();
@@ -30,20 +30,20 @@ bar();
 // BLUE 537264
 function test0(){
   var arrObj0 = {};
-  Object.prototype.method0 = 1; 
+  Object.prototype.method0 = 1;
   arrObj0.method0.apply(this, arguments);
 };
 try
 {
-	test0();
+    test0();
 }
 catch(e){}
 
 // BLUE 525135
 try
 {
-	var FloatArr0 = new __og169.Array(1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1);
-	var FloatArr1 = __og169();
+    var FloatArr0 = new __og169.Array(1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1);
+    var FloatArr1 = __og169();
 }
 catch(e){}
 
@@ -53,16 +53,16 @@ WScript.Echo("PASSED\n");
 function baz() {
     this.initialize.apply(this.x, arguments);
 }
-	
+
 var object = baz;
 object.prototype = {
-	initialize : function() {
+    initialize : function() {
     }
 }
 
 function foo()
 {
-    new object();	
+    new object();
 }
 
 foo();
@@ -93,17 +93,17 @@ function test1(){
                    this.v16052 = new v16042.v16043();
                }
             };
-            
+
             var v16067 = new v16042.v16046(0,0);
         }
     }
-    
+
     try {
         v16037();
     } catch(e) {}
 };
 test1();
-test1(); 
+test1();
 WScript.Echo("PASSED\n");
 
 // OS 101439
@@ -138,7 +138,7 @@ function test2() {
     };
     var f = 1;
     protoObj1 = Object.create(obj1);
-	func1();
+    func1();
 }
 test2();
 test2();
@@ -152,7 +152,7 @@ var func0 = function () {
 };
 
 arrObj0.method0 = function (argArrObj2) {
-	func0(ary.unshift(func0(), Object()));
+    func0(ary.unshift(func0(), Object()));
 };
 
 var ary = Array();
@@ -193,7 +193,7 @@ function test0() {
   var func4 = function () {
     func1();
   };
-  
+
   obj1.method1 = func4;
   var ui16 = new Uint16Array();
   var func12 = function () {
@@ -208,11 +208,11 @@ function test0() {
         };
       }
     };
-	
+
   Object.prototype.method0 = func0;
-  
+
   protoObj2.v3 = v0.v1();
-  
+
   protoObj2.v5 = v0.v1();
   protoObj2.v5.prototype = {
     method0: function () {

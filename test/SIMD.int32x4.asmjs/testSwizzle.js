@@ -179,7 +179,7 @@ equalSimd([12, 28, 8, 12], ret1, SIMD.Int32x4, "");
 equalSimd([14148, -8852664, 160, 13660], ret2, SIMD.Int32x4, "");
 equalSimd([500, -147992, 968, 44], ret3, SIMD.Int32x4, "");
 
-WScript.Echo("PASS");
+print("PASS");
 
 
 

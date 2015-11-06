@@ -438,7 +438,7 @@
       <files>objtypespec-add-2.js</files>
       <baseline>objtypespec-add-2.baseline</baseline>
       <compile-flags>-maxinterpretcount:1 -loopInterpretCount:1</compile-flags>
-      <tags>exclude_ship, exclude_dynapogo</tags>
+      <tags>exclude_ship,exclude_dynapogo</tags>
     </default>
   </test>
   <test>
@@ -446,7 +446,7 @@
       <files>objtypespec-add-4.js</files>
       <baseline>objtypespec-add-4.baseline</baseline>
       <compile-flags>-maxinterpretcount:2</compile-flags>
-      <tags>exclude_ship, exclude_dynapogo</tags>
+      <tags>exclude_ship,exclude_dynapogo</tags>
     </default>
   </test>
   <test>
@@ -462,7 +462,7 @@
       <files>objtypespec-newobj.1.js</files>
       <baseline>objtypespec-newobj.1.baseline</baseline>
       <compile-flags>-maxinterpretcount:2 -off:globOpt</compile-flags>
-      <tags>exclude_ship, exclude_dynapogo</tags>
+      <tags>exclude_ship,exclude_dynapogo</tags>
     </default>
   </test>
   <test>
@@ -470,7 +470,7 @@
       <files>objtypespec-newobj.1.js</files>
       <baseline>objtypespec-newobj.1.baseline</baseline>
       <compile-flags>-maxinterpretcount:2 -off:inline</compile-flags>
-      <tags>exclude_ship, exclude_dynapogo</tags>
+      <tags>exclude_ship,exclude_dynapogo</tags>
     </default>
   </test>
   <test>
@@ -478,7 +478,7 @@
       <files>objtypespec-newobj.1.js</files>
       <baseline>objtypespec-newobj.1.baseline</baseline>
       <compile-flags>-maxinterpretcount:2 -off:objTypeSpec</compile-flags>
-      <tags>exclude_ship, exclude_dynapogo</tags>
+      <tags>exclude_ship,exclude_dynapogo</tags>
     </default>
   </test>
   <test>
@@ -486,7 +486,7 @@
       <files>objtypespec-newobj.1.js</files>
       <baseline>objtypespec-newobj.1.baseline</baseline>
       <compile-flags>-maxinterpretcount:2 -off:objTypeSpecNewObj</compile-flags>
-      <tags>exclude_ship, exclude_dynapogo</tags>
+      <tags>exclude_ship,exclude_dynapogo</tags>
     </default>
   </test>
   <test>
@@ -494,7 +494,7 @@
       <files>objtypespec-newobj.1.js</files>
       <baseline>objtypespec-newobj.1.baseline</baseline>
       <compile-flags>-maxinterpretcount:2 -off:objTypeSpecNewObj -off:fixedNewObj</compile-flags>
-      <tags>exclude_ship, exclude_dynapogo</tags>
+      <tags>exclude_ship,exclude_dynapogo</tags>
     </default>
   </test>
   <test>
@@ -502,7 +502,7 @@
       <files>objtypespec-newobj.1.js</files>
       <baseline>objtypespec-newobj.1.baseline</baseline>
       <compile-flags>-maxinterpretcount:2 -off:fixedMethods</compile-flags>
-      <tags>exclude_ship, exclude_dynapogo</tags>
+      <tags>exclude_ship,exclude_dynapogo</tags>
     </default>
   </test>
   <test>
@@ -510,7 +510,7 @@
       <files>objtypespec-newobj.1.js</files>
       <baseline>objtypespec-newobj.1.baseline</baseline>
       <compile-flags>-maxinterpretcount:2 -off:splitNewScObject</compile-flags>
-      <tags>exclude_ship, exclude_dynapogo</tags>
+      <tags>exclude_ship,exclude_dynapogo</tags>
     </default>
   </test>
   <test>
@@ -518,7 +518,7 @@
       <files>objtypespec-newobj.1.js</files>
       <baseline>objtypespec-newobj.1.baseline</baseline>
       <compile-flags>-maxinterpretcount:2 -off:objTypeSpecNewObj -off:splitNewScObject</compile-flags>
-      <tags>exclude_ship, exclude_dynapogo</tags>
+      <tags>exclude_ship,exclude_dynapogo</tags>
     </default>
   </test>
   <test>
@@ -526,7 +526,7 @@
       <files>objtypespec-newobj.1.js</files>
       <baseline>objtypespec-newobj.1.baseline</baseline>
       <compile-flags>-maxinterpretcount:2 -off:objTypeSpecNewObj -off:fixedNewObj -off:splitNewScObject</compile-flags>
-      <tags>exclude_ship, exclude_dynapogo</tags>
+      <tags>exclude_ship,exclude_dynapogo</tags>
     </default>
   </test>
   <test>
@@ -534,7 +534,8 @@
       <files>objtypespec-newobj.2.js</files>
       <baseline>objtypespec-newobj.2.baseline</baseline>
       <compile-flags>-maxinterpretcount:2</compile-flags>
-      <tags>exclude_dynapogo</tags>
+      <!-- test is timezone-sensitive; remove exclude_jenkins after fix -->
+      <tags>exclude_dynapogo,exclude_jenkins</tags>
     </default>
   </test>
   <test>
@@ -542,7 +543,8 @@
       <files>objtypespec-newobj.2.js</files>
       <baseline>objtypespec-newobj.2.baseline</baseline>
       <compile-flags>-maxinterpretcount:2 -off:globOpt</compile-flags>
-      <tags>exclude_ship, exclude_dynapogo</tags>
+      <!-- test is timezone-sensitive; remove exclude_jenkins after fix -->
+      <tags>exclude_ship,exclude_dynapogo,exclude_jenkins</tags>
     </default>
   </test>
   <test>
@@ -550,7 +552,8 @@
       <files>objtypespec-newobj.2.js</files>
       <baseline>objtypespec-newobj.2.baseline</baseline>
       <compile-flags>-maxinterpretcount:2 -off:inline</compile-flags>
-      <tags>exclude_ship, exclude_dynapogo</tags>
+      <!-- test is timezone-sensitive; remove exclude_jenkins after fix -->
+      <tags>exclude_ship,exclude_dynapogo,exclude_jenkins</tags>
     </default>
   </test>
   <test>
@@ -558,7 +561,8 @@
       <files>objtypespec-newobj.2.js</files>
       <baseline>objtypespec-newobj.2.baseline</baseline>
       <compile-flags>-maxinterpretcount:2 -off:objTypeSpec</compile-flags>
-      <tags>exclude_ship, exclude_dynapogo</tags>
+      <!-- test is timezone-sensitive; remove exclude_jenkins after fix -->
+      <tags>exclude_ship,exclude_dynapogo,exclude_jenkins</tags>
     </default>
   </test>
   <test>
@@ -566,7 +570,8 @@
       <files>objtypespec-newobj.2.js</files>
       <baseline>objtypespec-newobj.2.baseline</baseline>
       <compile-flags>-maxinterpretcount:2 -off:objTypeSpecNewObj</compile-flags>
-      <tags>exclude_ship, exclude_dynapogo</tags>
+      <!-- test is timezone-sensitive; remove exclude_jenkins after fix -->
+      <tags>exclude_ship,exclude_dynapogo,exclude_jenkins</tags>
     </default>
   </test>
   <test>
@@ -574,7 +579,8 @@
       <files>objtypespec-newobj.2.js</files>
       <baseline>objtypespec-newobj.2.baseline</baseline>
       <compile-flags>-maxinterpretcount:2 -off:objTypeSpecNewObj -off:fixedNewObj</compile-flags>
-      <tags>exclude_ship, exclude_dynapogo</tags>
+      <!-- test is timezone-sensitive; remove exclude_jenkins after fix -->
+      <tags>exclude_ship,exclude_dynapogo,exclude_jenkins</tags>
     </default>
   </test>
   <test>
@@ -582,7 +588,8 @@
       <files>objtypespec-newobj.2.js</files>
       <baseline>objtypespec-newobj.2.baseline</baseline>
       <compile-flags>-maxinterpretcount:2 -off:fixedMethods</compile-flags>
-      <tags>exclude_ship, exclude_dynapogo</tags>
+      <!-- test is timezone-sensitive; remove exclude_jenkins after fix -->
+      <tags>exclude_ship,exclude_dynapogo,exclude_jenkins</tags>
     </default>
   </test>
   <test>
@@ -590,7 +597,8 @@
       <files>objtypespec-newobj.2.js</files>
       <baseline>objtypespec-newobj.2.baseline</baseline>
       <compile-flags>-maxinterpretcount:2 -off:splitNewScObject</compile-flags>
-      <tags>exclude_ship, exclude_dynapogo</tags>
+      <!-- test is timezone-sensitive; remove exclude_jenkins after fix -->
+      <tags>exclude_ship,exclude_dynapogo,exclude_jenkins</tags>
     </default>
   </test>
   <test>
@@ -598,7 +606,8 @@
       <files>objtypespec-newobj.2.js</files>
       <baseline>objtypespec-newobj.2.baseline</baseline>
       <compile-flags>-maxinterpretcount:2 -off:objTypeSpecNewObj -off:splitNewScObject</compile-flags>
-      <tags>exclude_ship, exclude_dynapogo</tags>
+      <!-- test is timezone-sensitive; remove exclude_jenkins after fix -->
+      <tags>exclude_ship,exclude_dynapogo,exclude_jenkins</tags>
     </default>
   </test>
   <test>
@@ -606,7 +615,8 @@
       <files>objtypespec-newobj.2.js</files>
       <baseline>objtypespec-newobj.2.baseline</baseline>
       <compile-flags>-maxinterpretcount:2 -off:objTypeSpecNewObj -off:fixedNewObj -off:splitNewScObject</compile-flags>
-      <tags>exclude_ship, exclude_dynapogo</tags>
+      <!-- test is timezone-sensitive; remove exclude_jenkins after fix -->
+      <tags>exclude_ship,exclude_dynapogo,exclude_jenkins</tags>
     </default>
   </test>
   <test>
@@ -622,7 +632,7 @@
       <files>objtypespec-newobj-invalidation.1.js</files>
       <baseline>objtypespec-newobj-invalidation.1.baseline</baseline>
       <compile-flags>-maxinterpretcount:2 -off:globOpt</compile-flags>
-      <tags>exclude_ship, exclude_dynapogo</tags>
+      <tags>exclude_ship,exclude_dynapogo</tags>
     </default>
   </test>
   <test>
@@ -630,7 +640,7 @@
       <files>objtypespec-newobj-invalidation.1.js</files>
       <baseline>objtypespec-newobj-invalidation.1.baseline</baseline>
       <compile-flags>-maxinterpretcount:2 -off:inline</compile-flags>
-      <tags>exclude_ship, exclude_dynapogo</tags>
+      <tags>exclude_ship,exclude_dynapogo</tags>
     </default>
   </test>
   <test>
@@ -638,7 +648,7 @@
       <files>objtypespec-newobj-invalidation.1.js</files>
       <baseline>objtypespec-newobj-invalidation.1.baseline</baseline>
       <compile-flags>-maxinterpretcount:2 -off:objTypeSpec</compile-flags>
-      <tags>exclude_ship, exclude_dynapogo</tags>
+      <tags>exclude_ship,exclude_dynapogo</tags>
     </default>
   </test>
   <test>
@@ -646,7 +656,7 @@
       <files>objtypespec-newobj-invalidation.1.js</files>
       <baseline>objtypespec-newobj-invalidation.1.baseline</baseline>
       <compile-flags>-maxinterpretcount:2 -off:objTypeSpecNewObj</compile-flags>
-      <tags>exclude_ship, exclude_dynapogo</tags>
+      <tags>exclude_ship,exclude_dynapogo</tags>
     </default>
   </test>
   <test>
@@ -654,7 +664,7 @@
       <files>objtypespec-newobj-invalidation.1.js</files>
       <baseline>objtypespec-newobj-invalidation.1.baseline</baseline>
       <compile-flags>-maxinterpretcount:2 -off:objTypeSpecNewObj -off:fixedNewObj</compile-flags>
-      <tags>exclude_ship, exclude_dynapogo</tags>
+      <tags>exclude_ship,exclude_dynapogo</tags>
     </default>
   </test>
   <test>
@@ -662,7 +672,7 @@
       <files>objtypespec-newobj-invalidation.1.js</files>
       <baseline>objtypespec-newobj-invalidation.1.baseline</baseline>
       <compile-flags>-maxinterpretcount:2 -off:splitNewScObject</compile-flags>
-      <tags>exclude_ship, exclude_dynapogo</tags>
+      <tags>exclude_ship,exclude_dynapogo</tags>
     </default>
   </test>
   <test>
@@ -670,7 +680,7 @@
       <files>objtypespec-newobj-invalidation.1.js</files>
       <baseline>objtypespec-newobj-invalidation.1.baseline</baseline>
       <compile-flags>-maxinterpretcount:2 -off:objTypeSpecNewObj -off:splitNewScObject</compile-flags>
-      <tags>exclude_ship, exclude_dynapogo</tags>
+      <tags>exclude_ship,exclude_dynapogo</tags>
     </default>
   </test>
   <test>
@@ -678,7 +688,7 @@
       <files>objtypespec-newobj-invalidation.1.js</files>
       <baseline>objtypespec-newobj-invalidation.1.baseline</baseline>
       <compile-flags>-maxinterpretcount:2 -off:objTypeSpecNewObj -off:fixedNewObj-off:splitNewScObject</compile-flags>
-      <tags>exclude_ship, exclude_dynapogo</tags>
+      <tags>exclude_ship,exclude_dynapogo</tags>
     </default>
   </test>
   <test>
@@ -694,7 +704,7 @@
       <files>objtypespec-newobj-invalidation.2.js</files>
       <baseline>objtypespec-newobj-invalidation.2.baseline</baseline>
       <compile-flags>-maxinterpretcount:2 -off:globOpt</compile-flags>
-      <tags>exclude_ship, exclude_dynapogo</tags>
+      <tags>exclude_ship,exclude_dynapogo</tags>
     </default>
   </test>
   <test>
@@ -702,7 +712,7 @@
       <files>objtypespec-newobj-invalidation.2.js</files>
       <baseline>objtypespec-newobj-invalidation.2.baseline</baseline>
       <compile-flags>-maxinterpretcount:2 -off:inline</compile-flags>
-      <tags>exclude_ship, exclude_dynapogo</tags>
+      <tags>exclude_ship,exclude_dynapogo</tags>
     </default>
   </test>
   <test>
@@ -710,7 +720,7 @@
       <files>objtypespec-newobj-invalidation.2.js</files>
       <baseline>objtypespec-newobj-invalidation.2.baseline</baseline>
       <compile-flags>-maxinterpretcount:2 -off:objTypeSpec</compile-flags>
-      <tags>exclude_ship, exclude_dynapogo</tags>
+      <tags>exclude_ship,exclude_dynapogo</tags>
     </default>
   </test>
   <test>
@@ -718,7 +728,7 @@
       <files>objtypespec-newobj-invalidation.2.js</files>
       <baseline>objtypespec-newobj-invalidation.2.baseline</baseline>
       <compile-flags>-maxinterpretcount:2 -off:objTypeSpecNewObj</compile-flags>
-      <tags>exclude_ship, exclude_dynapogo</tags>
+      <tags>exclude_ship,exclude_dynapogo</tags>
     </default>
   </test>
   <test>
@@ -726,7 +736,7 @@
       <files>objtypespec-newobj-invalidation.2.js</files>
       <baseline>objtypespec-newobj-invalidation.2.baseline</baseline>
       <compile-flags>-maxinterpretcount:2 -off:objTypeSpecNewObj -off:fixedNewObj</compile-flags>
-      <tags>exclude_ship, exclude_dynapogo</tags>
+      <tags>exclude_ship,exclude_dynapogo</tags>
     </default>
   </test>
   <test>
@@ -734,7 +744,7 @@
       <files>objtypespec-newobj-invalidation.2.js</files>
       <baseline>objtypespec-newobj-invalidation.2.baseline</baseline>
       <compile-flags>-maxinterpretcount:2 -off:splitNewScObject</compile-flags>
-      <tags>exclude_ship, exclude_dynapogo</tags>
+      <tags>exclude_ship,exclude_dynapogo</tags>
     </default>
   </test>
   <test>
@@ -742,7 +752,7 @@
       <files>objtypespec-newobj-invalidation.2.js</files>
       <baseline>objtypespec-newobj-invalidation.2.baseline</baseline>
       <compile-flags>-maxinterpretcount:2 -off:objTypeSpecNewObj -off:splitNewScObject</compile-flags>
-      <tags>exclude_ship, exclude_dynapogo</tags>
+      <tags>exclude_ship,exclude_dynapogo</tags>
     </default>
   </test>
   <test>
@@ -750,7 +760,7 @@
       <files>objtypespec-newobj-invalidation.2.js</files>
       <baseline>objtypespec-newobj-invalidation.2.baseline</baseline>
       <compile-flags>-maxinterpretcount:2 -off:objTypeSpecNewObj -off:fixedNewObj-off:splitNewScObject</compile-flags>
-      <tags>exclude_ship, exclude_dynapogo</tags>
+      <tags>exclude_ship,exclude_dynapogo</tags>
     </default>
   </test>
   <test>

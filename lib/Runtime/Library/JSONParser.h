@@ -73,6 +73,7 @@ namespace JSON
                 Js::JavascriptError::ThrowSyntaxError(scriptContext, wErr);
             Scan();
         }
+
         bool IsCaching()
         {
             return arenaAllocator != nullptr;
@@ -88,7 +89,4 @@ namespace JSON
         JsonTypeCacheList* typeCacheList;
         static const int MIN_CACHE_LENGTH = 50; // Use Json type cache only if the JSON string is larger than this constant.
     };
-
-
 } // namespace JSON
-

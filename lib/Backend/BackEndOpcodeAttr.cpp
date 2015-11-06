@@ -42,7 +42,7 @@ enum OpCodeAttrEnum
     OpIsInt32                   = 0x00040000, // OpCode converts its srcs to int32 or a narrower int type, and produces an int32
     OpProducesNumber            = 0x00080000, // OpCode always produces a number
     OpCanLoadFixedFields        = 0x00100000, // OpCode can use fixed fields
-    OpCanCSE                    = 0x00200000, // Opcode has not side-effect and always produces the same value for a given input (InlineMathAbs is OK, InlineMathRandom is not)
+    OpCanCSE                    = 0x00200000, // Opcode has no side-effect and always produces the same value for a given input (InlineMathAbs is OK, InlineMathRandom is not)
     OpNoFallThrough             = 0x00400000, // Opcode doesn't fallthrough in flow and it always jumps to the return from this opcode
     OpPostOpDbgBailOut          = 0x00800000, // Generate bail out after this opcode. This must be a helper call and needs bailout on return from it. Used for Fast F12.
 

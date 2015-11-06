@@ -31,7 +31,6 @@ namespace Js
 #endif
     }
 
-
     template<typename LayoutType>
     const unaligned LayoutType * ByteCodeReader::GetLayout()
     {
@@ -113,7 +112,8 @@ namespace Js
         default:
             Assert(prefix == Js::OpCode::ExtendedLargeLayoutPrefix);
             layoutSize = LargeLayout;
-        };
+        }
+
         return (OpCode)(op + (Js::OpCode::ExtendedOpcodePrefix << 8));
     }
 
@@ -212,8 +212,7 @@ namespace Js
     }
 
     template <typename T>
-    AuxArray<T> const *
-    ByteCodeReader::ReadAuxArray(uint offset, FunctionBody * functionBody)
+    AuxArray<T> const * ByteCodeReader::ReadAuxArray(uint offset, FunctionBody * functionBody)
     {
         Js::AuxArray<T> const * auxArray = (Js::AuxArray<T> const *)(functionBody->GetAuxiliaryData()->GetBuffer() + offset);
         Assert(offset + auxArray->GetDataSize() <= functionBody->GetAuxiliaryData()->GetLength());
@@ -227,28 +226,24 @@ namespace Js
     template AuxArray<double> const * ByteCodeReader::ReadAuxArray<double>(uint offset, FunctionBody * functionBody);
     template AuxArray<FuncInfoEntry> const * ByteCodeReader::ReadAuxArray<FuncInfoEntry>(uint offset, FunctionBody * functionBody);
 
-    const Js::PropertyIdArray *
-    ByteCodeReader::ReadPropertyIdArray(uint offset, FunctionBody * functionBody, uint extraSlots)
+    const Js::PropertyIdArray * ByteCodeReader::ReadPropertyIdArray(uint offset, FunctionBody * functionBody, uint extraSlots)
     {
         Js::PropertyIdArray const * propIds = (Js::PropertyIdArray const *)(functionBody->GetAuxiliaryData()->GetBuffer() + offset);
         Assert(offset + propIds->GetDataSize(extraSlots) <= functionBody->GetAuxiliaryData()->GetLength());
         return propIds;
     }
 
-    size_t
-    VarArrayVarCount::GetDataSize() const
+    size_t VarArrayVarCount::GetDataSize() const
     {
         return sizeof(VarArrayVarCount) + sizeof(Var) * TaggedInt::ToInt32(count);
     }
 
-    void
-    VarArrayVarCount::SetCount(uint count)
+    void VarArrayVarCount::SetCount(uint count)
     {
         this->count = Js::TaggedInt::ToVarUnchecked(count);
     }
 
-    const Js::VarArrayVarCount *
-    ByteCodeReader::ReadVarArrayVarCount(uint offset, FunctionBody * functionBody)
+    const Js::VarArrayVarCount * ByteCodeReader::ReadVarArrayVarCount(uint offset, FunctionBody * functionBody)
     {
         Js::VarArrayVarCount const * varArray = (Js::VarArrayVarCount const *)(functionBody->GetAuxiliaryContextData()->GetBuffer() + offset);
         Assert(offset + varArray->GetDataSize() <= functionBody->GetAuxiliaryContextData()->GetLength());

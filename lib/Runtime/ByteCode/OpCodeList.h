@@ -4,11 +4,11 @@
 //-------------------------------------------------------------------------------------------------------
 //
 // NOTE: This file is intended to be "#include" multiple times.  The call site must define the macro
-// "MACRO" to be executed for each entry.
+// "DEF_OP" to be executed for each entry.
 //
 #if !defined(DEF_OP)
 #error DEF_OP must be defined before including this file
-#endif            
+#endif
 
 // Define the basic byte code opcode range
 

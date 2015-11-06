@@ -30,28 +30,28 @@ var newlist = new SubArray;
 newlist.push(1);
 newlist.push(2);
 newlist.push(3); //[1,2,3]
-WScript.Echo(newlist[0]);  	//1
-WScript.Echo(newlist.shift()); 	//1
-WScript.Echo(newlist.length);  	//2
-WScript.Echo(newlist.shift()); 	//2
+WScript.Echo(newlist[0]);   //1
+WScript.Echo(newlist.shift());  //1
+WScript.Echo(newlist.length);   //2
+WScript.Echo(newlist.shift());  //2
 WScript.Echo(newlist.length);   //1
 WScript.Echo(newlist.shift());  //3
-WScript.Echo(newlist[0]);	//undefined
-WScript.Echo(newlist.length);	//0
+WScript.Echo(newlist[0]);   //undefined
+WScript.Echo(newlist.length);   //0
 
 WScript.Echo(newlist.unshift(2,3,4)); //3
-WScript.Echo(newlist[0]);	      //[2,3,4]
-WScript.Echo(newlist.pop());	      //4
+WScript.Echo(newlist[0]);         //[2,3,4]
+WScript.Echo(newlist.pop());          //4
 WScript.Echo(newlist.unshift(5,6,7)); //[5,6,7,2,3]
-WScript.Echo(newlist.length);	      //5
+WScript.Echo(newlist.length);         //5
 
 for(i=0;i<7;i++)
-	WScript.Echo(newlist.shift());
+    WScript.Echo(newlist.shift());
 
-WScript.Echo(newlist.length);		//0
-WScript.Echo(newlist.unshift(5,6,7));	//[5,6,7]
-WScript.Echo(newlist.length);	   	//3
-WScript.Echo(newlist.unshift());	//3
+WScript.Echo(newlist.length);       //0
+WScript.Echo(newlist.unshift(5,6,7));   //[5,6,7]
+WScript.Echo(newlist.length);       //3
+WScript.Echo(newlist.unshift());    //3
 
 //
 // A few more tests of compat and overflow
@@ -110,7 +110,6 @@ echo("a.length = " + a.length); // This should be unmodified.
 // Note that at this point alhough unshift throws, the array instance is modified as side-effect.
 // This is according to the spec (spec bug).
 
-
 //Bug 61822: array length was getting hoisted
 function test0(){
   var obj1 = {};
@@ -136,7 +135,7 @@ function test1(arr)
       arr.length --;
       arr.shift();
     }
-	return arr.length;
+    return arr.length;
 }
 
 WScript.Echo("arr.length = " + test1(new Array(10)));
@@ -153,11 +152,11 @@ function foo()
 {
     var x=2;
     var b = ['c','f'];
-	a.unshift(b,x,x=1);
+    a.unshift(b,x,x=1);
     a.unshift(b,x,x=2, a.unshift());
     a.unshift(b,x,x=3, a);
     a.unshift(b,x,x=4, n++, d = m+n); //n++ and d = m + n should only be calculated once
-	WScript.Echo (n); //2
+    WScript.Echo (n); //2
     WScript.Echo (d); //4
     a.unshift(b,x,x=5, d=Math.sin(n) + 1);
     WScript.Echo (x); //5
@@ -165,5 +164,3 @@ function foo()
 Array.prototype.unshift = function(){WScript.Echo ("Overriden unshift")};
 foo();
 WScript.Echo (a);
-
-

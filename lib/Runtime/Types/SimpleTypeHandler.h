@@ -26,7 +26,7 @@ namespace Js
         SimpleTypeHandler(const PropertyRecord* id, PropertyAttributes attributes = PropertyNone, PropertyTypes propertyTypes = PropertyTypesNone, uint16 inlineSlotCapacity = 0, uint16 offsetOfInlineSlots = 0);
         // Constructor of a shared typed handler
 
-        SimpleTypeHandler(SimplePropertyDescriptor (&SharedFunctionPropertyDescriptors)[size], PropertyTypes propertyTypes = PropertyTypesNone, uint16 inlineSlotCapacity = 0, uint16 offsetOfInlineSlots = 0);
+        SimpleTypeHandler(SimplePropertyDescriptor const (&SharedFunctionPropertyDescriptors)[size], PropertyTypes propertyTypes = PropertyTypesNone, uint16 inlineSlotCapacity = 0, uint16 offsetOfInlineSlots = 0);
 
         virtual BOOL IsLockable() const override { return true; }
         virtual BOOL IsSharable() const override { return true; }

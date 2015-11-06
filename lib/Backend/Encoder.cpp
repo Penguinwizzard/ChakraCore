@@ -35,12 +35,12 @@ Encoder::Encode()
     m_pragmaInstrToRecordMap    = Anew(m_tempAlloc, PragmaInstrList, m_tempAlloc);
     if (DoTrackAllStatementBoundary())
     {
-        // Create a new list, if we are tracking all statement boundary,
+        // Create a new list, if we are tracking all statement boundaries.
         m_pragmaInstrToRecordOffset = Anew(m_tempAlloc, PragmaInstrList, m_tempAlloc);
     }
     else
     {
-        // Set the list to the same as the throw map list, so that the processing of the list
+        // Set the list to the same as the throw map list, so that processing of the list
         // of pragma are done on those only.
         m_pragmaInstrToRecordOffset = m_pragmaInstrToRecordMap;
     }
@@ -673,7 +673,7 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize)
         int32 relOffset;
         uint32 bytesSaved = 0;
         BYTE* labelPc, *opcodeByte;
-        BYTE* shortBrPtr, *fixedBrPtr /*without shortening*/;
+        BYTE* shortBrPtr, *fixedBrPtr; // without shortening
 
         EncodeRelocAndLabels &reloc = relocList->Item(j);
 
@@ -718,7 +718,9 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize)
         }
         else
         {
-            Assert(UNREACHED);
+        {
+            Assert(false);
+        }
         }
 
         // compute current distance to label
@@ -759,7 +761,6 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize)
             reloc.setAsShortBr();
 #endif
         }
-
     }
 
     // Fix the rest of the maps, if needed.
@@ -774,7 +775,7 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize)
     if (!codeChange)
         return codeChange;
 
-#ifdef  ENABLE_DEBUG_CONFIG_OPTIONS
+#ifdef ENABLE_DEBUG_CONFIG_OPTIONS
     globalTotalBytesWithoutShortening += (uint32)(*codeSize);
     globalTotalBytesSaved += (uint32)(*codeSize - newCodeSize);
 
@@ -832,14 +833,18 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize)
             BYTE *opcodeByte = (BYTE*)reloc.m_origPtr - 1;
 
             if (*opcodeByte == 0xe9 /* JMP rel32 */)
+            {
                 to = opcodeByte - 1;
+            }
             else if (*opcodeByte >= 0x80 && *opcodeByte < 0x90 /* Jcc rel32 */)
             {
                 Assert(*(opcodeByte - 1) == 0x0f);
                 to = opcodeByte - 2;
             }
             else
-                Assert(UNREACHED);
+            {
+                Assert(false);
+            }
 
             src_size = to - from + 1;
             Assert(dst_size >= src_size);
@@ -924,9 +929,9 @@ void Encoder::revertRelocList()
     RelocList* relocList = m_encoderMD.GetRelocList();
 
     for (int32 i = 0; i < relocList->Count(); i++)
-       relocList->Item(i).revert();
-
-
+    {
+        relocList->Item(i).revert();
+    }
 }
 
 template <bool restore>
@@ -1063,7 +1068,6 @@ void Encoder::RecordBailout(IR::Instr* instr, uint32 currentOffset)
 }
 
 #if DBG_DUMP
-
 void Encoder::DumpInlineeFrameMap(size_t baseAddress)
 {
     Output::Print(L"Inlinee frame info mapping\n");

@@ -7,10 +7,24 @@
 namespace Js
 {
     /*static*/
-    PropertyId JavascriptStringObject::specialPropertyIds[] =
+    PropertyId const JavascriptStringObject::specialPropertyIds[] =
     {
         PropertyIds::length
     };
+
+    bool JavascriptStringObject::IsValidIndex(PropertyId propertyId, bool conditionMetBehavior)
+    {
+        ScriptContext*scriptContext = GetScriptContext();
+        uint32 index;
+        if (scriptContext->IsNumericPropertyId(propertyId, &index))
+        {
+            if (index < (uint32)this->InternalUnwrap()->GetLength())
+            {
+                return conditionMetBehavior;
+            }
+        }
+        return !conditionMetBehavior;
+    }
 
     BOOL JavascriptStringObject::HasProperty(PropertyId propertyId)
     {
@@ -24,17 +38,7 @@ namespace Js
             return true;
         }
 
-        //Only for IE9 mode check for the index property
-        ScriptContext*scriptContext = GetScriptContext();
-        uint32 index;
-        if (scriptContext->IsNumericPropertyId(propertyId, &index))
-        {
-            if (index < (uint32)this->InternalUnwrap()->GetLength())
-            {
-                return true;
-            }
-        }
-        return false;
+        return JavascriptStringObject::IsValidIndex(propertyId, true);
     }
 
     DescriptorFlags JavascriptStringObject::GetSetter(PropertyId propertyId, Var* setterValue, PropertyValueInfo* info, ScriptContext* requestContext)
@@ -104,18 +108,7 @@ namespace Js
             return DynamicObject::IsConfigurable(propertyId);
         }
 
-        //Only for IE9 mode check for the index property
-        ScriptContext*scriptContext = GetScriptContext();
-        uint32 index;
-        if (scriptContext->IsNumericPropertyId(propertyId, &index))
-        {
-            if (index < (uint32)this->InternalUnwrap()->GetLength())
-            {
-                return false;
-            }
-        }
-
-        return true;
+        return JavascriptStringObject::IsValidIndex(propertyId, false);
     }
 
     BOOL JavascriptStringObject::IsEnumerable(PropertyId propertyId)
@@ -143,18 +136,7 @@ namespace Js
             return DynamicObject::IsWritable(propertyId);
         }
 
-        //Only for IE9 mode check for the index property
-        ScriptContext*scriptContext = GetScriptContext();
-        uint32 index;
-        if (scriptContext->IsNumericPropertyId(propertyId, &index))
-        {
-            if (index < (uint32)this->InternalUnwrap()->GetLength())
-            {
-                return false;
-            }
-        }
-
-        return true;
+        return JavascriptStringObject::IsValidIndex(propertyId, false);
     }
 
     BOOL JavascriptStringObject::GetSpecialPropertyName(uint32 index, Var *propertyName, ScriptContext * requestContext)
@@ -174,7 +156,7 @@ namespace Js
     }
 
     // Returns the list of special non-enumerable properties for the type.
-    PropertyId* JavascriptStringObject::GetSpecialPropertyIds() const
+    PropertyId const * JavascriptStringObject::GetSpecialPropertyIds() const
     {
         return specialPropertyIds;
     }
@@ -198,7 +180,7 @@ namespace Js
             return true;
         }
 
-        //Only for IE9 mode check for the index property
+        // For NumericPropertyIds check that index is less than JavascriptString length
         ScriptContext*scriptContext = GetScriptContext();
         uint32 index;
         if (scriptContext->IsNumericPropertyId(propertyId, &index))

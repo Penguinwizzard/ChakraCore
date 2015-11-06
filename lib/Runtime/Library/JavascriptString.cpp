@@ -71,11 +71,14 @@ namespace Js
         Recycler* recycler = scriptContext->GetRecycler();
         StaticType * stringTypeStatic = scriptContext->GetLibrary()->GetStringTypeStatic();
         wchar_t const * buffer = content;
+
+        charcount_t cchUseBoundLength = static_cast<charcount_t>(cchUseLength);
         if (copyBuffer)
         {
-             buffer = JavascriptString::AllocateLeafAndCopySz(recycler, content, cchUseLength);
+             buffer = JavascriptString::AllocateLeafAndCopySz(recycler, content, cchUseBoundLength);
         }
-        return T::New(stringTypeStatic, buffer, cchUseLength, recycler);
+
+        return T::New(stringTypeStatic, buffer, cchUseBoundLength, recycler);
     }
 
     JavascriptString* JavascriptString::NewWithSz(__in_z const wchar_t * content, ScriptContext * scriptContext)
@@ -143,7 +146,7 @@ namespace Js
         {
             if (JavascriptSymbol::Is(args[1]) && !(callInfo.Flags & CallFlags_New))
             {
-                // By ES6 RC3 21.1.1.1 step 2, calling the String constructor directly results in an explicit ToString, which does not throw.
+                // By ES2015 21.1.1.1 step 2, calling the String constructor directly results in an explicit ToString, which does not throw.
                 return JavascriptSymbol::ToString(JavascriptSymbol::FromVar(args[1])->GetValue(), scriptContext);
                 // Calling with new is an implicit ToString on the Symbol, resulting in a throw. For this case we can let JavascriptConversion handle the call.
             }
@@ -601,8 +604,8 @@ case_2:
             Output::Flush();
         }
 
-        // Even though this is not a left-dead concat, we can reuse available space in the left string. Since the left
-        // string may be accessible by script code, append to a clone.
+        // This is not a left-dead concat, but we can reuse available space in the left string
+        // because it may be accessible by script code, append to a clone.
         const bool needAppend = pstRight->GetLength() != 0;
         CompoundString *const leftCs = CompoundString::FromVar(pstLeft)->Clone(needAppend);
         if(needAppend)
@@ -707,7 +710,7 @@ case_2:
         //  3.  Let position be ToInteger(pos).
         //  4.  Let size be the number of characters in S.
         //  5.  If position < 0 or position = size, return the empty string.
-        //  6.  Return a string of length 1, containing one character from S, namely the character at position "position", where the first (leftmost) character in S is considered to be at position 0, the next one at position 1, and so on.
+        //  6.  Return a string of length 1, containing one character from S, where the first (leftmost) character in S is considered to be at position 0, the next one at position 1, and so on.
         //  NOTE
         //  The charAt function is intentionally generic; it does not require that its this value be a String object. Therefore, it can be transferred to other kinds of objects for use as a method.
         //
@@ -753,7 +756,7 @@ case_2:
         // 3.  Let position be ToInteger(pos).
         // 4.  Let size be the number of characters in S.
         // 5.  If position < 0 or position = size, return NaN.
-        // 6.  Return a value of Number type, whose value is the code unit value of the character at position "position" in the string S, where the first (leftmost) character in S is considered to be at position 0, the next one at position 1, and so on.
+        // 6.  Return a value of Number type, whose value is the code unit value of the character at that position in the string S, where the first (leftmost) character in S is considered to be at position 0, the next one at position 1, and so on.
         // NOTE
         // The charCodeAt function is intentionally generic; it does not require that its this value be a String object. Therefore it can be transferred to other kinds of objects for use as a method.
         //
@@ -851,9 +854,8 @@ case_2:
             JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NullOrUndefined, L"String.prototype.concat");
         }
 
-        JavascriptString* pstr;
-        // make compiler happy
-        JavascriptString* accum = NULL;
+        JavascriptString* pstr = nullptr;
+        JavascriptString* accum = nullptr;
         for (uint index = 0; index < args.Info.Count; index++)
         {
             if (JavascriptString::Is(args[index]))
@@ -1831,7 +1833,7 @@ case_2:
 
         if (idxStart == 0 && idxEnd == len)
         {
-            //return the string if we need to substring entire span (typescript has this pattern).
+            //return the string if we need to substring entire span
             return pThis;
         }
 
@@ -1887,7 +1889,7 @@ case_2:
 
         if (idxStart == 0 && idxEnd == len)
         {
-            //return the string if we need to substr entire span (typescript has this pattern).
+            //return the string if we need to substr entire span
             return pThis;
         }
 
@@ -3608,16 +3610,4 @@ case_2:
     {
         return requestContext->GetLibrary()->GetStringTypeDisplayString();
     }
-
 }
-
-#if DBG
-//
-// Verify all concrete string classes are listed in DiagVTableList.h. Any missing string class
-// won't have "_declareConcreteStringClass" implementation and results in a link error.
-//
-#define STRING_ENTRY(s)                     void Js::s##::_declareConcreteStringClass() {}
-#define STRING_ENTRY_TEMPLATE(s, c, ...)    template<> void Js::c##<__VA_ARGS__>::_declareConcreteStringClass() {}
-#include "DiagVTableList.h"
-#endif
-

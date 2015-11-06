@@ -108,7 +108,6 @@ function verify2DMatrix(buffer, start, results) {
     var f4;
     var dim1 = IntHeap32[start];
     var dim2 = IntHeap32[start + 1];
-    // WScript.Echo(dim1 + " by " + dim2 + " matrix");
 
     for (var i = 0, rslt_idx = 0; i < Math.imul(dim1, dim2) ; i += 4) {
         f4 = SIMD.Float32x4.load(FloatHeap32, i + start + 2);

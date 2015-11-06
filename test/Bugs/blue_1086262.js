@@ -3,9 +3,7 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-﻿// Switches: -off:insertnops -bgjit- -fja:2 -off:simplejit -force:fieldcopyprop -off:aggressiveinttypespec
-// Repros pretty consistently on x86chk, if not use -loop:50
-var __counter = 0;
+﻿var __counter = 0;
 
 function test0() {
     var loopInvariant = 0;

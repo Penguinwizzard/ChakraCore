@@ -903,7 +903,7 @@ LowererMD::LowerCondBranch(IR::Instr * instr)
         else
         {
             // This check assumes src1 is a variable.
-            if (opndSrc2->IsIntConstOpnd() && opndSrc2->AsIntConstOpnd()->m_value == 0)
+            if (opndSrc2->IsIntConstOpnd() && opndSrc2->AsIntConstOpnd()->GetValue() == 0)
             {
                 instrPrev = IR::Instr::New(Js::OpCode::TEST, this->m_func);
                 instrPrev->SetSrc1(opndSrc1);
@@ -1076,10 +1076,10 @@ void LowererMD::ChangeToAdd(IR::Instr *const instr, const bool needFlags)
     // Prefer INC for add by one
     if(instr->GetDst()->IsEqual(instr->GetSrc1()) &&
             instr->GetSrc2()->IsIntConstOpnd() &&
-            instr->GetSrc2()->AsIntConstOpnd()->m_value == 1 ||
+            instr->GetSrc2()->AsIntConstOpnd()->GetValue() == 1 ||
         instr->GetDst()->IsEqual(instr->GetSrc2()) &&
             instr->GetSrc1()->IsIntConstOpnd() &&
-            instr->GetSrc1()->AsIntConstOpnd()->m_value == 1)
+            instr->GetSrc1()->AsIntConstOpnd()->GetValue() == 1)
     {
         if(instr->GetSrc1()->IsIntConstOpnd())
         {
@@ -1111,7 +1111,7 @@ void LowererMD::ChangeToSub(IR::Instr *const instr, const bool needFlags)
     // Prefer DEC for sub by one
     if(instr->GetDst()->IsEqual(instr->GetSrc1()) &&
         instr->GetSrc2()->IsIntConstOpnd() &&
-        instr->GetSrc2()->AsIntConstOpnd()->m_value == 1)
+        instr->GetSrc2()->AsIntConstOpnd()->GetValue() == 1)
     {
         instr->FreeSrc2();
         instr->m_opcode = Js::OpCode::DEC;
@@ -1153,7 +1153,9 @@ void LowererMD::ChangeToShift(IR::Instr *const instr, const bool needFlags)
     if(instr->GetSrc2()->IsIntConstOpnd())
     {
         // Only values between 0-31 mean anything
-        instr->GetSrc2()->AsIntConstOpnd()->m_value &= 0x1f;
+        IntConstType value = instr->GetSrc2()->AsIntConstOpnd()->GetValue();
+        value &= 0x1f;
+        instr->GetSrc2()->AsIntConstOpnd()->SetValue(value);
     }
 }
 
@@ -1301,7 +1303,7 @@ LowererMD::Legalize(IR::Instr *const instr, bool fPostRegAlloc)
                 #endif
                     {
                         intConstantSrc->SetType(dstType);
-                        intConstantSrc->m_value = static_cast<IntConstType>(extendedValue);
+                        intConstantSrc->SetValue(static_cast<IntConstType>(extendedValue));
                     }
                 };
 
@@ -1310,7 +1312,7 @@ LowererMD::Legalize(IR::Instr *const instr, bool fPostRegAlloc)
                     case TyInt8:
                         if(intConstantSrc)
                         {
-                            UpdateIntConstantSrc(static_cast<int8>(intConstantSrc->m_value)); // sign-extend
+                            UpdateIntConstantSrc(static_cast<int8>(intConstantSrc->GetValue())); // sign-extend
                             break;
                         }
                         instr->m_opcode = Js::OpCode::MOVSX;
@@ -1319,7 +1321,7 @@ LowererMD::Legalize(IR::Instr *const instr, bool fPostRegAlloc)
                     case TyUint8:
                         if(intConstantSrc)
                         {
-                            UpdateIntConstantSrc(static_cast<uint8>(intConstantSrc->m_value)); // zero-extend
+                            UpdateIntConstantSrc(static_cast<uint8>(intConstantSrc->GetValue())); // zero-extend
                             break;
                         }
                         instr->m_opcode = Js::OpCode::MOVZX;
@@ -1328,7 +1330,7 @@ LowererMD::Legalize(IR::Instr *const instr, bool fPostRegAlloc)
                     case TyInt16:
                         if(intConstantSrc)
                         {
-                            UpdateIntConstantSrc(static_cast<int16>(intConstantSrc->m_value)); // sign-extend
+                            UpdateIntConstantSrc(static_cast<int16>(intConstantSrc->GetValue())); // sign-extend
                             break;
                         }
                         instr->m_opcode = Js::OpCode::MOVSXW;
@@ -1337,7 +1339,7 @@ LowererMD::Legalize(IR::Instr *const instr, bool fPostRegAlloc)
                     case TyUint16:
                         if(intConstantSrc)
                         {
-                            UpdateIntConstantSrc(static_cast<uint16>(intConstantSrc->m_value)); // zero-extend
+                            UpdateIntConstantSrc(static_cast<uint16>(intConstantSrc->GetValue())); // zero-extend
                             break;
                         }
                         instr->m_opcode = Js::OpCode::MOVZXW;
@@ -1347,7 +1349,7 @@ LowererMD::Legalize(IR::Instr *const instr, bool fPostRegAlloc)
                     case TyInt32:
                         if(intConstantSrc)
                         {
-                            UpdateIntConstantSrc(static_cast<int32>(intConstantSrc->m_value)); // sign-extend
+                            UpdateIntConstantSrc(static_cast<int32>(intConstantSrc->GetValue())); // sign-extend
                             break;
                         }
                         instr->m_opcode = Js::OpCode::MOVSXD;
@@ -1356,7 +1358,7 @@ LowererMD::Legalize(IR::Instr *const instr, bool fPostRegAlloc)
                     case TyUint32:
                         if(intConstantSrc)
                         {
-                            UpdateIntConstantSrc(static_cast<uint32>(intConstantSrc->m_value)); // zero-extend
+                            UpdateIntConstantSrc(static_cast<uint32>(intConstantSrc->GetValue())); // zero-extend
                             break;
                         }
                         switch(dst->GetKind())
@@ -2984,7 +2986,7 @@ LowererMD::GenerateFastAdd(IR::Instr * instrAdd)
     {
         Assert(opndSrc2->GetType() == TyInt32);
         opndSrc2 = opndSrc2->Use(this->m_func);
-        opndSrc2->AsIntConstOpnd()->m_value--;
+        opndSrc2->AsIntConstOpnd()->DecrValue(1);
     }
     else
     {
@@ -6359,7 +6361,7 @@ LowererMD::LowerInt4AddWithBailOut(
                     Js::OpCode::XOR,
                     dst,
                     dst,
-                    IR::IntConstOpnd::New(0x80000000, TyInt32, instr->m_func, true /* dontEncode */),
+                    IR::IntConstOpnd::New(INT32_MIN, TyInt32, instr->m_func, true /* dontEncode */),
                     instr->m_func)
             );
     }
@@ -6501,7 +6503,7 @@ LowererMD::GenerateSimplifiedInt4Mul(
 
     const auto constSrc = src1->IsIntConstOpnd() ? src1 : src2;
     const auto nonConstSrc = src1->IsIntConstOpnd() ? src2 : src1;
-    const auto constSrcValue = constSrc->AsIntConstOpnd()->m_value;
+    const auto constSrcValue = constSrc->AsIntConstOpnd()->AsInt32();
     auto nonConstSrcCopy = nonConstSrc;
     Assert(nonConstSrc->IsRegOpnd());
 
@@ -6733,7 +6735,7 @@ LowererMD::LowerInt4MulWithBailOut(
             newInstr->SetSrc2(nonConstSrc);
             bailOutLabel->InsertBefore(newInstr);
 
-            const auto constSrcValue = constSrc->AsIntConstOpnd()->m_value;
+            const auto constSrcValue = constSrc->AsIntConstOpnd()->GetValue();
             if(constSrcValue == 0)
             {
                 bailOutLabel->InsertBefore(IR::BranchInstr::New(Js::OpCode::JNSB, skipBailOutLabel, instr->m_func));
@@ -7807,7 +7809,9 @@ LowererMD::LowerGetCachedFunc(IR::Instr *instr)
 
     instr->m_opcode = Js::OpCode::MOV;
 
-    instr->SetSrc1(IR::IndirOpnd::New(src1Opnd, (src2Opnd->m_value * sizeof(Js::FuncCacheEntry)) + Js::ActivationObjectEx::GetOffsetOfCache() + offsetof(Js::FuncCacheEntry, func), TyVar, this->m_func));
+    IntConstType offset = (src2Opnd->GetValue() * sizeof(Js::FuncCacheEntry)) + Js::ActivationObjectEx::GetOffsetOfCache() + offsetof(Js::FuncCacheEntry, func);
+    Assert(Math::FitsInDWord(offset));
+    instr->SetSrc1(IR::IndirOpnd::New(src1Opnd, (int32)offset, TyVar, this->m_func));
 
     src2Opnd->Free(this->m_func);
 
@@ -7830,7 +7834,7 @@ LowererMD::LowerCommitScope(IR::Instr *instrCommit)
     IR::IntConstOpnd *intConstOpnd = instrCommit->UnlinkSrc2()->AsIntConstOpnd();
     LowererMD::ChangeToAssign(instrCommit);
 
-    const Js::PropertyIdArray *propIds = Js::ByteCodeReader::ReadPropertyIdArray(intConstOpnd->m_value, instrCommit->m_func->GetJnFunction());
+    const Js::PropertyIdArray *propIds = Js::ByteCodeReader::ReadPropertyIdArray(intConstOpnd->AsUint32(), instrCommit->m_func->GetJnFunction());
     intConstOpnd->Free(this->m_func);
 
     uint firstVarSlot = (uint)Js::ActivationObjectEx::GetFirstVarSlot(propIds);
@@ -8169,7 +8173,7 @@ LowererMD::GenerateFastIsInst(IR::Instr * instr)
 
     // We are going to use the extra ArgOut_A instructions to lower the helper call later,
     // so we leave them alone here and clean them up then.
-    inlineCache = instr->m_func->GetJnFunction()->GetIsInstInlineCache(instr->GetSrc1()->AsIntConstOpnd()->m_value);
+    inlineCache = instr->m_func->GetJnFunction()->GetIsInstInlineCache(instr->GetSrc1()->AsIntConstOpnd()->AsUint32());
     Assert(instr->GetSrc2()->AsRegOpnd()->m_sym->m_isSingleDef);
     instrArg = instr->GetSrc2()->AsRegOpnd()->m_sym->m_instrDef;
 
@@ -8865,7 +8869,7 @@ void LowererMD::GenerateFastInlineBuiltInCall(IR::Instr* instr, IR::JnHelperMeth
                 instr->InsertBefore(convertToIntInstr);
 
                 IR::LabelInstr * fallthrough = IR::LabelInstr::New(Js::OpCode::Label, this->m_func);
-                IR::Opnd * intOverflowValue = IR::IntConstOpnd::New(0x80000000, IRType::TyInt32, this->m_func, true);
+                IR::Opnd * intOverflowValue = IR::IntConstOpnd::New(INT32_MIN, IRType::TyInt32, this->m_func, true);
                 this->m_lowerer->InsertCompareBranch(originalDst, intOverflowValue, Js::OpCode::BrNeq_A, fallthrough, instr);
 
                 instr->InsertAfter(fallthrough);

@@ -197,7 +197,7 @@ HRESULT HeapInfo::ValidPointersMap<SmallAllocationBlockAttributes>::GenerateVali
         file,
         L"};\n"
         L"// The following is used to construct the InvalidBitsTable statically without forcing BVStatic to be an aggregate\n"
-        L"const HeapInfo::ValidPointersMap<SmallAllocationBlockAttributes>::InvalidBitsTable *HeapInfo::ValidPointersMap<SmallAllocationBlockAttributes>::invalidBitsBuffers =\n"
+        L"const HeapInfo::ValidPointersMap<SmallAllocationBlockAttributes>::InvalidBitsTable * const HeapInfo::ValidPointersMap<SmallAllocationBlockAttributes>::invalidBitsBuffers =\n"
         L"    reinterpret_cast<const HeapInfo::ValidPointersMap<SmallAllocationBlockAttributes>::InvalidBitsTable *>(&HeapInfo::ValidPointersMap<SmallAllocationBlockAttributes>::invalidBitsData);\n"));
 
     // Generate the block map table
@@ -293,7 +293,7 @@ HRESULT HeapInfo::ValidPointersMap<MediumAllocationBlockAttributes>::GenerateVal
         file,
         L"};\n"
         L"// The following is used to construct the InvalidBitsTable statically without forcing BVStatic to be an aggregate\n"
-        L"const HeapInfo::ValidPointersMap<MediumAllocationBlockAttributes>::InvalidBitsTable *HeapInfo::ValidPointersMap<MediumAllocationBlockAttributes>::invalidBitsBuffers =\n"
+        L"const HeapInfo::ValidPointersMap<MediumAllocationBlockAttributes>::InvalidBitsTable * const HeapInfo::ValidPointersMap<MediumAllocationBlockAttributes>::invalidBitsBuffers =\n"
         L"    reinterpret_cast<const HeapInfo::ValidPointersMap<MediumAllocationBlockAttributes>::InvalidBitsTable *>(&HeapInfo::ValidPointersMap<MediumAllocationBlockAttributes>::invalidBitsData);\n"));
 
     // Generate the block map table

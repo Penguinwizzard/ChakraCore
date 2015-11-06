@@ -9,7 +9,7 @@ namespace Js
     class JavascriptStringObject : public DynamicObject
     {
     private:
-        static PropertyId specialPropertyIds[];
+        static PropertyId const specialPropertyIds[];
 
     protected:
         JavascriptString* value;
@@ -22,6 +22,7 @@ namespace Js
         bool GetPropertyBuiltIns(PropertyId propertyId, Var* value, ScriptContext* requestContext, BOOL* result);
         bool SetPropertyBuiltIns(PropertyId propertyId, PropertyOperationFlags flags, bool* result);
         bool GetSetterBuiltIns(PropertyId propertyId, PropertyValueInfo* info, DescriptorFlags* descriptorFlags);
+        bool IsValidIndex(PropertyId propertyId, bool conditionMetBehavior);
 
     public:
         JavascriptStringObject(DynamicType * type);
@@ -57,6 +58,6 @@ namespace Js
         virtual BOOL GetDiagTypeString(StringBuilder<ArenaAllocator>* stringBuilder, ScriptContext* requestContext) override;
         virtual BOOL GetSpecialPropertyName(uint32 index, Var *propertyName, ScriptContext * requestContext) override;
         virtual uint GetSpecialPropertyCount() const override;
-        virtual PropertyId* GetSpecialPropertyIds() const override;        
+        virtual PropertyId const * GetSpecialPropertyIds() const override;        
     };
 }

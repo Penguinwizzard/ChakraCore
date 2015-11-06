@@ -1576,7 +1576,7 @@ namespace Js
             // The + 1 is to include the terminating NUL.
             // Nit:  Technically, we know that the NUL only needs 1 byte instead of
             // 3, but that's difficult to express in a SAL annotation for "EncodeInto".
-            size_t cbUtf8Buffer = (length + 1) * 3;
+            size_t cbUtf8Buffer = AllocSizeMath::Mul(AllocSizeMath::Add(length , 1), 3);
 
             LPUTF8 utf8Script = RecyclerNewArrayLeafTrace(this->GetRecycler(), utf8char_t, cbUtf8Buffer);
 
@@ -2259,7 +2259,7 @@ namespace Js
     {
         size_t length = charCount + 1; // Add 1 for the NULL.
         wchar_t* copy = AnewArray(alloc, wchar_t, length);
-        js_memcpy_s(copy, (length - 1) * sizeof(wchar_t), str, (length - 1) * sizeof(wchar_t));
+        js_wmemcpy_s(copy, length, str, charCount);
         copy[length - 1] = L'\0';
         return copy;
     }

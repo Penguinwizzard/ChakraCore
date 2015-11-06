@@ -9,6 +9,6 @@ Length: 1
 keys
 Length: 1
 0 => prop2
-Syntax error
-Syntax error
+for-in loop head declarations cannot have an initializer
+for-in loop head declarations cannot have an initializer
 done

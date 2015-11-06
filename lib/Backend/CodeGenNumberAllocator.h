@@ -7,45 +7,45 @@
 /****************************************************************************
  * CodeGenNumberThreadAllocator
  *
- *   Recycler can't be use by multiple thread. This allocator is used by
- *   the JIT to allocate numbers in the background thread.  It allocated
- *   pages directory from the OS and then allocate number from these pages,
- *   along with a link list of chunk that holds the number so the native
- *   entry points can keep these number alive.   Then these memory are
- *   integrated back to the main thread's recycler at the beginning of
+ *   Recycler can't be used by multiple threads. This allocator is used by
+ *   the JIT to allocate numbers in the background thread. It allocates
+ *   pages directly from the OS and then allocates numbers from these pages,
+ *   along with a linked list of chunks that hold the numbers so the native
+ *   entry points can keep these numbers alive. Then this memory is
+ *   integrated back into the main thread's recycler at the beginning of
  *   GC.
  *
  *   This class requires intimate knowledge of how recycler allocates memory
- *   so the memory can be integrated back.  So changes in the recycler
+ *   so the memory can be integrated back. So changes in the recycler
  *   will affect this allocator.
  *
- *   An alternative solution to this is to record the number we need to create,
+ *   An alternative solution is to record the number we need to create,
  *   and only create them on the main thread when the entry point is used.
  *   However, since we don't have the address of the number at JIT time,
- *   we will have to incur two indirection (loading the array of pointers to
+ *   we will have to incur two indirections (loading the array of pointers to
  *   numbers and loading the numbers) in the JIT code which is not desirable.
  *
  * Implementation details:
  *
- *   The segments can be integrate back to the recycler's page allocator
- *   immediately.  They are all marked as used initially.
+ *   The segments can be integrated back to the recycler's page allocator
+ *   immediately. They are all marked as used initially.
  *
- *   Numbers and the link list chunks are allocated in separate pages
+ *   Numbers and the linked list chunks are allocated in separate pages
  *   as number will be a leaf page when integrated back to the recycler
- *   and the link list chunks will be normal pages.
+ *   and the linked list chunks will be normal pages.
  *
  *   Generally, when a page is full, it is (almost) ready to be integrated
- *   back to the recycler.  However the number pages needs to wait until
- *   the link list chunk that references to be integrated before it can be
+ *   back to the recycler. However the number pages need to wait until
+ *   the referencing linked list chunk is integrated before it can be
  *   integrated (otherwise, the recycler will not see the reference that
- *   keeps the numbers alive).  So when a number page is full, it will
- *   go pendingReferenceNumberBlock list.  Then when a link list chunk is full
- *   all the pages in pendingReferenceNumberBlock can go will go to the
- *   pendingFlushNumberBlock list and the link list chunk page will
+ *   keeps the numbers alive). So when a number page is full, it will
+ *   go to pendingReferenceNumberBlock list. Then, when a linked list 
+ *   chunk is full, all the pages in pendingReferenceNumberBlock can go to
+ *   pendingFlushNumberBlock list and the linked list chunk page will
  *   go to pendingFlushChunkBlock.
  *
  *   Once we finish jitting a function and the number link list is set on the
- *   entry point, these page are ready to be integrated back to recycler
+ *   entry point, these pages are ready to be integrated back to recycler
  *   and be moved to pendingIntegration*Pages lists. Access to the
  *   pendingIntegration*Pages are synchronized, therefore the main thread
  *   can do the integration before GC happens.

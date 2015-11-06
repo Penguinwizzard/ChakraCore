@@ -140,7 +140,6 @@ m.new2DMatrix(0, 13, 17);
 m.new2DMatrix(500, 13, 17);
 m.matrixSubtraction(0, 500, 1000);
 m.matrixSubtraction(1000, 0, 1500);
-
 // GEN_BASELINE(buffer, 1000);
 var RESULTS = [
 SIMD.Float32x4(0, 0, 0, 0),

@@ -20,39 +20,38 @@ arr.length=4294967295;
 write(arr.length.toString());
 
 try {
-	arr.length="-1";
+    arr.length="-1";
 }
 catch (e)
 {
-	write(e.message);
+    write(e.message);
 }
 
 try {
-	arr.length=4294967296;
+    arr.length=4294967296;
 }
 catch (e)
 {
-	write(e.message);
+    write(e.message);
 }
 
-
 try {
-	Array.length=10;
-	write(Array.length);
+    Array.length=10;
+    write(Array.length);
 }
 catch (e)
 {
-	write(e.message);
+    write(e.message);
 }
 
 try {
-	x = [];
-	x.length = true;
-	write(x.length);
+    x = [];
+    x.length = true;
+    write(x.length);
 }
 catch(e)
 {
-	write(e.message);
+    write(e.message);
 }
 
 try {
@@ -114,12 +113,11 @@ echo(b.length);
 
 function foo()
 {
-	var arr = new Array(10);
-	var x = arr.length--;
-	arr[arr.length + 1] = 20;
-	var y = --arr.length;
-	return y;
+    var arr = new Array(10);
+    var x = arr.length--;
+    arr[arr.length + 1] = 20;
+    var y = --arr.length;
+    return y;
 }
 WScript.Echo(foo());
-
 

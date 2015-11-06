@@ -3,7 +3,6 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-
 WScript.Echo("Checking for new Date() with DST issues: ");
 WScript.Echo("Backward loop starts");
 for (var working = new Date(2014, 2, 1) ; working.getFullYear() > 1940;)
@@ -43,4 +42,3 @@ for (var working = new Date(1940, 0, 0) ; working.getFullYear() < 2014;)
 }
 
 WScript.Echo("done.");
-

@@ -10,12 +10,12 @@ class DynamicProfileStorage
 public:
     static bool Initialize();
     static bool Uninitialize();
-   
+
     static bool IsEnabled() { return enabled; }
-    static bool DoCollectInfo()  { return collectInfo; }
+    static bool DoCollectInfo() { return collectInfo; }
 
     template <typename Fn>
-    static Js::SourceDynamicProfileManager * Load(__in_z wchar_t const * filename, Fn loadFn);        
+    static Js::SourceDynamicProfileManager * Load(__in_z wchar_t const * filename, Fn loadFn);
     static void SaveRecord(__in_z wchar_t const * filename, __in_ecount(sizeof(DWORD) + *record) char const * record);
 
     static char * AllocRecord(DWORD bufferSize);
@@ -31,10 +31,10 @@ private:
     static bool ExportFile(__in_z wchar_t const * filename);
     static bool SetupCacheDir(__in_z wchar_t const * dirname);
     static void DisableCacheDir();
-    
+
     static bool CreateCacheCatalog();
     static void ClearCacheCatalog();
-    static bool LoadCacheCatalog();     
+    static bool LoadCacheCatalog();
     static bool AppendCacheCatalog(__in_z wchar_t const * url);
     static bool AcquireLock();
     static bool ReleaseLock();
@@ -60,7 +60,7 @@ private:
 #endif
 #if DBG_DUMP
     static bool DoTrace();
-#endif  
+#endif
     class StorageInfo
     {
     public:
@@ -75,18 +75,18 @@ private:
         };
     };
     typedef JsUtil::BaseDictionary<wchar_t const *, StorageInfo, NoCheckHeapAllocator, PrimeSizePolicy, DefaultComparer, JsUtil::DictionaryEntry> InfoMap;
-    static InfoMap infoMap;         
+    static InfoMap infoMap;
 };
 
 template <class Fn>
-Js::SourceDynamicProfileManager *  
+Js::SourceDynamicProfileManager *
 DynamicProfileStorage::Load(wchar_t const * filename, Fn loadFn)
 {
     Assert(DynamicProfileStorage::IsEnabled());
     AutoCriticalSection autocs(&cs);
     if (useCacheDir && AcquireLock())
     {
-        LoadCacheCatalog();     // refresh the cache catalog
+        LoadCacheCatalog(); // refresh the cache catalog
     }
     StorageInfo * info;
     if (!infoMap.TryGetReference(filename, &info))
@@ -109,8 +109,8 @@ DynamicProfileStorage::Load(wchar_t const * filename, Fn loadFn)
     if (info->isFileStorage)
     {
         Assert(useCacheDir);
-        Assert(locked);        
-        record = info->ReadRecord();        
+        Assert(locked);
+        record = info->ReadRecord();
         ReleaseLock();
         if (record == nullptr)
         {
@@ -122,13 +122,13 @@ DynamicProfileStorage::Load(wchar_t const * filename, Fn loadFn)
             }
 #endif
             return nullptr;
-        }        
-    }    
+        }
+    }
     else
     {
         record = info->record;
     }
-    Js::SourceDynamicProfileManager * sourceDynamicProfileManager = loadFn(GetRecordBuffer(record), GetRecordSize(record));        
+    Js::SourceDynamicProfileManager * sourceDynamicProfileManager = loadFn(GetRecordBuffer(record), GetRecordSize(record));
     if (info->isFileStorage)
     {
         // The data is backed by a file, we can delete the memory
@@ -138,10 +138,10 @@ DynamicProfileStorage::Load(wchar_t const * filename, Fn loadFn)
 #if DBG_DUMP
     if (DynamicProfileStorage::DoTrace() && sourceDynamicProfileManager)
     {
-        Output::Print(L"TRACE: DynamicProfileStorage: Dynamic Profile Data Loaded: '%s'\n", filename);           
+        Output::Print(L"TRACE: DynamicProfileStorage: Dynamic Profile Data Loaded: '%s'\n", filename);
     }
 #endif
-    
+
     if (sourceDynamicProfileManager == nullptr)
     {
         wchar_t const * messageType = GetMessageType();

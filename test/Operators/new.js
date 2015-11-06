@@ -6,39 +6,39 @@
 var failed = 0;
 function runtest(name, func, throwException)
 {
-	try
-	{
-		func();
-		if (throwException)
-		{
-			WScript.Echo(name + ": Test failed, unexpected no exception thrown");
-			failed++;
-		}
-		else
-		{
-			WScript.Echo(name + ": Test passed, expected no exception thrown");
-		}
-	}
-	catch (e)
-	{
-		if (!throwException || (e.name != "TypeError" && e.name != "ReferenceError"))
-		{
-			WScript.Echo(name + ": test failed, unexpected " + e.name + "-" + e.message);
-			failed++;
-		}
-		else
-		{
-			WScript.Echo(name + ": Test passed, expected " + e.name + "-" + e.message);
-		}
-	}
+    try
+    {
+        func();
+        if (throwException)
+        {
+            WScript.Echo(name + ": Test failed, unexpected no exception thrown");
+            failed++;
+        }
+        else
+        {
+            WScript.Echo(name + ": Test passed, expected no exception thrown");
+        }
+    }
+    catch (e)
+    {
+        if (!throwException || (e.name != "TypeError" && e.name != "ReferenceError"))
+        {
+            WScript.Echo(name + ": test failed, unexpected " + e.name + "-" + e.message);
+            failed++;
+        }
+        else
+        {
+            WScript.Echo(name + ": Test passed, expected " + e.name + "-" + e.message);
+        }
+    }
 }
 
 function assert(cond)
 {
-	if (!cond)
-	{
-		throw new Error("AssertFailed");
-	}
+    if (!cond)
+    {
+        throw new Error("AssertFailed");
+    }
 }
 
 //-------------------------------------------------------------
@@ -47,8 +47,8 @@ function assert(cond)
 
 function test1()
 {
-	var i = 1;
-	new i;
+    var i = 1;
+    new i;
 }
 
 //-------------------------------------------------------------
@@ -57,7 +57,7 @@ function test1()
 
 function test2()
 {
-	new null();
+    new null();
 }
 //-------------------------------------------------------------
 // Test 3 - throw, new int constant
@@ -65,72 +65,71 @@ function test2()
 
 function test3()
 {
-	new 1();
+    new 1();
 }
 //-------------------------------------------------------------
 // Test 4 - success, plain old new Object()
 //-------------------------------------------------------------
 function test4()
 {
-	var o = new Object();
+    var o = new Object();
 }
 //-------------------------------------------------------------
 // Test 5 - throw, new object reference
 //-------------------------------------------------------------
 function test5()
 {
-	var o = new Object();
-	new o;
+    var o = new Object();
+    new o;
 }
 //-------------------------------------------------------------
 // Test 6 - throw, new undefined "Blah"
 //-------------------------------------------------------------
 function test6()
 {
-	new Blah();
+    new Blah();
 }
 //-------------------------------------------------------------
 // Test 7 - throw, new object reference
 //-------------------------------------------------------------
 function test7()
 {
-	var o = new Object();
-	new o;
+    var o = new Object();
+    new o;
 }
 //-------------------------------------------------------------
 // Test 8 - success, new function with prototype and field init
 //-------------------------------------------------------------
 function ClassProto()
 {
-	this.hello = "yay"
+    this.hello = "yay"
 }
 
 ClassProto.prototype.func = function()
 {
-	return 3;
+    return 3;
 }
 
 function test8()
 {
-	var o = new ClassProto();
-	assert(o.constructor == ClassProto);
-	assert(o.hello == "yay");
-	assert(o.func() == 3);
+    var o = new ClassProto();
+    assert(o.constructor == ClassProto);
+    assert(o.hello == "yay");
+    assert(o.func() == 3);
 }
 //-------------------------------------------------
 // Test 9 - success, new plain function without prototype
 //-------------------------------------------------
 function PlainFunction()
 {
-	this.hello = "yay2";
+    this.hello = "yay2";
 }
 function test9()
 {
-	var o = new PlainFunction();
-	assert(o.constructor == PlainFunction);
-	assert(o.hello == "yay2");
+    var o = new PlainFunction();
+    assert(o.constructor == PlainFunction);
+    assert(o.hello == "yay2");
 }
-
 
 runtest("test1", test1, true);
 runtest("test2", test2, true);
@@ -143,5 +142,5 @@ runtest("test8", test8, false);
 runtest("test9", test9, false);
 if (failed == 0)
 {
-	WScript.Echo("Passed");
+    WScript.Echo("Passed");
 }

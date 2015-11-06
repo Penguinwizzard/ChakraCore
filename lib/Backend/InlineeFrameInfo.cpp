@@ -43,7 +43,7 @@ Js::Var BailoutConstantValue::ToVar(Func* func, Js::ScriptContext* scriptContext
     }
     else if (!Js::TaggedInt::IsOverflow(this->u.intConst.value))
     {
-        varValue = Js::TaggedInt::ToVarUnchecked(this->u.intConst.value);
+        varValue = Js::TaggedInt::ToVarUnchecked((int32)this->u.intConst.value);
     }
     else
     {

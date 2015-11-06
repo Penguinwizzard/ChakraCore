@@ -16,7 +16,7 @@ namespace Js
     // This table gets memset to 0. The x86 CRT is optimized for doing copies 128 bytes
     // at a time, for 16 byte aligned memory. If this table isn't 16 byte aligned, we pay
     // an additional cost to pre-align it, dealing with trailing bytes, and the copy
-    // ends up being twice as slow...
+    // ends up being twice as slow.
     typedef Boyer_Moore_Jump __declspec(align(16)) JmpTable[0x80];
 #else
     typedef Boyer_Moore_Jump JmpTable[0x80];
@@ -34,13 +34,12 @@ namespace Js
     // To inspect strings in hybrid debugging, we use vtable lookup to find out concrete string type
     // then inspect string content accordingly.
     //
-    // To ensure all known string vtables are listed and exported from jscript9 and handler class
-    // exists in jscript9diag, declare an abstract method in base JavascriptString class. Any concrete
+    // To ensure all known string vtables are listed and exported from chakra.dll and handler class
+    // exists in chakradiag.dll, declare an abstract method in base JavascriptString class. Any concrete
     // subclass that has runtime string instance must DECLARE_CONCRETE_STRING_CLASS, otherwise
-    // we'll get a compile time error. The string class must also be listed in DiagVTableList.h, or
-    // we'll get a link error.
+    // we'll get a compile time error.
     //
-#if DBG
+#if DBG && defined(NTBUILD)
 #define DECLARE_CONCRETE_STRING_CLASS_BASE  virtual void _declareConcreteStringClass() = 0
 #define DECLARE_CONCRETE_STRING_CLASS       virtual void _declareConcreteStringClass() override
 #else
@@ -394,5 +393,3 @@ struct DefaultComparer<Js::JavascriptString*>
         return JsUtil::CharacterBuffer<wchar_t>::StaticGetHashCode(pStr->GetString(), pStr->GetLength());
     }
 };
-
-

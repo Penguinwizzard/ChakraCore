@@ -44,4 +44,4 @@ testScalarGetters();
 testExtractLane();
 
 testReplaceLane();
-WScript.Echo("PASS");
+print("PASS");

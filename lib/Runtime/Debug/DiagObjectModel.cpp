@@ -116,7 +116,7 @@ namespace Js
             pOMDisplay = Anew(pRefArena->Arena(), RecyclableObjectDisplay, this);
         }
 
-        if (this->isConst || this->propId == Js::PropertyIds::_superReferenceSymbol)
+        if (this->isConst || this->propId == Js::PropertyIds::_superReferenceSymbol || this->propId == Js::PropertyIds::_superReferenceSymbol)
         {
             pOMDisplay->SetDefaultTypeAttribute(DBGPROP_ATTRIB_VALUE_READONLY);
         }
@@ -354,7 +354,7 @@ namespace Js
             Assert(pResolvedObject->propId != Js::Constants::NoProperty);
             Assert(!Js::IsInternalPropertyId(pResolvedObject->propId));
 
-            if (pResolvedObject->propId == Js::PropertyIds::_superReferenceSymbol)
+            if (pResolvedObject->propId == Js::PropertyIds::_superReferenceSymbol || pResolvedObject->propId == Js::PropertyIds::_superCtorReferenceSymbol)
             {
                 pResolvedObject->name         = L"super";
             }
@@ -468,7 +468,7 @@ namespace Js
             return false;
         }
 
-        if (!allowSuperReference && propertyId == Js::PropertyIds::_superReferenceSymbol)
+        if (!allowSuperReference && (propertyId == Js::PropertyIds::_superReferenceSymbol || propertyId == Js::PropertyIds::_superCtorReferenceSymbol))
         {
             return false;
         }
@@ -1709,7 +1709,7 @@ namespace Js
                 if (Js::JavascriptFunction::Is(value))
                 {
                     Js::JavascriptFunction *pfunction = Js::JavascriptFunction::FromVar(value);
-                    //For an odd chance that the constructor wasn't called to create the object.
+                    // For an odd chance that the constructor wasn't called to create the object.
                     Js::ParseableFunctionInfo *pFuncBody = pfunction->GetFunctionProxy() != nullptr ? pfunction->GetFunctionProxy()->EnsureDeserialized() : nullptr;
                     if (pFuncBody)
                     {
@@ -2179,11 +2179,11 @@ namespace Js
                                     Var varValue;
                                     if (scriptContext->IsNumericPropertyId(propertyId, &indexVal) && object->GetItem(object, indexVal, &varValue, scriptContext))
                                     {
-                                        InsertItem(propertyId, false /*isConst*/, false /*isUnScoped*/, varValue, &pMethodsGroupWalker, true /*shouldPinProperty*/);
+                                        InsertItem(propertyId, false /*isConst*/, false /*isUnscoped*/, varValue, &pMethodsGroupWalker, true /*shouldPinProperty*/);
                                     }
                                     else
                                     {
-                                        InsertItem(originalObject, object, propertyId, false /*isConst*/, false /*isUnScoped*/, &pMethodsGroupWalker, true /*shouldPinProperty*/);
+                                        InsertItem(originalObject, object, propertyId, false /*isConst*/, false /*isUnscoped*/, &pMethodsGroupWalker, true /*shouldPinProperty*/);
                                     }
                                 }
                             }
@@ -2194,7 +2194,7 @@ namespace Js
                             if (error != nullptr && Js::JavascriptError::Is(error))
                             {
                                 Js::PropertyId propertyId = scriptContext->GetOrAddPropertyIdTracked(L"{error}");
-                                InsertItem(propertyId, false /*isConst*/, false /*isUnScoped*/, error, &pMethodsGroupWalker);
+                                InsertItem(propertyId, false /*isConst*/, false /*isUnscoped*/, error, &pMethodsGroupWalker);
                             }
                         }
 
@@ -2231,28 +2231,28 @@ namespace Js
                         for (int i = 0; i < count; i++)
                         {
                             Js::PropertyId propertyId = object->GetPropertyId((PropertyIndex)i);
-                            bool isUnScoped = false;
+                            bool isUnscoped = false;
                             if (wrapperObject && JavascriptOperators::IsPropertyUnscopable(object, propertyId))
                             {
-                                isUnScoped = true;
+                                isUnscoped = true;
                             }
                             if (propertyId != Js::Constants::NoProperty && !Js::IsInternalPropertyId(propertyId))
                             {
-                                InsertItem(originalObject, object, propertyId, false /*isConst*/, isUnScoped, &pMethodsGroupWalker);
+                                InsertItem(originalObject, object, propertyId, false /*isConst*/, isUnscoped, &pMethodsGroupWalker);
                             }
                         }
 
                         if (CONFIG_FLAG(EnumerateSpecialPropertiesInDebugger))
                         {
                             count = object->GetSpecialPropertyCount();
-                            PropertyId* specialPropertyIds = object->GetSpecialPropertyIds();
+                            PropertyId const * specialPropertyIds = object->GetSpecialPropertyIds();
                             for (int i = 0; i < count; i++)
                             {
                                 Js::PropertyId propertyId = specialPropertyIds[i];
-                                bool isUnScoped = false;
+                                bool isUnscoped = false;
                                 if (wrapperObject && JavascriptOperators::IsPropertyUnscopable(object, propertyId))
                                 {
-                                    isUnScoped = true;
+                                    isUnscoped = true;
                                 }
                                 if (propertyId != Js::Constants::NoProperty)
                                 {
@@ -2276,7 +2276,7 @@ namespace Js
 
                                     AssertMsg(!this->pMembersList->Any(containsPredicate), "Special property already on the object, no need to insert.");
 
-                                    InsertItem(originalObject, object, propertyId, isConst, isUnScoped, &pMethodsGroupWalker);
+                                    InsertItem(originalObject, object, propertyId, isConst, isUnscoped, &pMethodsGroupWalker);
                                 }
                             }
                             if (Js::JavascriptFunction::Is(object))
@@ -2287,22 +2287,22 @@ namespace Js
 
                                 if (regExp == object)
                                 {
-                                    bool isUnScoped = false;
+                                    bool isUnscoped = false;
                                     bool isConst = true;
                                     count = regExp->GetSpecialEnumerablePropertyCount();
-                                    PropertyId* specialPropertyIds = regExp->GetSpecialEnumerablePropertyIds();
+                                    PropertyId const * specialPropertyIds = regExp->GetSpecialEnumerablePropertyIds();
 
                                     for (int i = 0; i < count; i++)
                                     {
                                         Js::PropertyId propertyId = specialPropertyIds[i];
 
-                                        InsertItem(originalObject, object, propertyId, isConst, isUnScoped, &pMethodsGroupWalker);
+                                        InsertItem(originalObject, object, propertyId, isConst, isUnscoped, &pMethodsGroupWalker);
                                     }
                                 }
                                 else if (Js::JavascriptFunction::FromVar(object)->IsScriptFunction() || Js::JavascriptFunction::FromVar(object)->IsBoundFunction())
                                 {
                                     // Adding special property length for the ScriptFunction, like it is done in JavascriptFunction::GetSpecialNonEnumerablePropertyName
-                                    InsertItem(originalObject, object, PropertyIds::length, true/*not editable*/, false /*isUnScoped*/, &pMethodsGroupWalker);
+                                    InsertItem(originalObject, object, PropertyIds::length, true/*not editable*/, false /*isUnscoped*/, &pMethodsGroupWalker);
                                 }
                             }
                         }
@@ -2477,7 +2477,6 @@ namespace Js
         {
             DWORD flags = DebuggerPropertyDisplayInfoFlags_None;
             flags |= isConst ? DebuggerPropertyDisplayInfoFlags_Const : 0;
-            //TODO we should eventually use this flag to denote if a property is unscoped in the debugger
             flags |= isUnscoped ? DebuggerPropertyDisplayInfoFlags_Unscope : 0;
 
             DebuggerPropertyDisplayInfo *info = Anew(arena, DebuggerPropertyDisplayInfo, propertyId, itemObj, flags);

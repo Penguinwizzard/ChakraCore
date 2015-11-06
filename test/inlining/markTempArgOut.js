@@ -14,13 +14,13 @@ var f32 = new Float32Array(256);
 protoObj0 = Object(obj0);
 for (var _strvar30 in f32) {
   function v9() {
-	var v13 = {
-	  v14: function () {
-	    return function bar() {
-		  protoObj0.method0.apply(protoObj0, arguments);
-		  this.method0.apply(this.method0.apply(this, arguments), arguments);
-		};
-	  }
+    var v13 = {
+      v14: function () {
+        return function bar() {
+          protoObj0.method0.apply(protoObj0, arguments);
+          this.method0.apply(this.method0.apply(this, arguments), arguments);
+        };
+      }
     };
     protoObj0.v16 = v13.v14();
     protoObj0.v16.prototype = {
@@ -28,7 +28,7 @@ for (var _strvar30 in f32) {
         this.v20 = v20;
       }
     };
-    
+
     new protoObj0.v16(f32[11]);
   }
   v9();

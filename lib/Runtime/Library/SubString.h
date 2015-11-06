@@ -4,7 +4,8 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
-namespace Js {
+namespace Js
+{
     class SubString sealed : public JavascriptString
     {
         void const * originalFullStringReference;          // Only here to prevent recycler to free this buffer.

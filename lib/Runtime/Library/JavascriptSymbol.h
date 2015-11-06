@@ -47,8 +47,7 @@ namespace Js
         virtual BOOL GetDiagTypeString(StringBuilder<ArenaAllocator>* stringBuilder, ScriptContext* requestContext) override;
         virtual RecyclableObject* ToObject(ScriptContext * requestContext) override;
         virtual Var GetTypeOfString(ScriptContext * requestContext) override;
-        // should never be called, JavascriptConversion::ToPrimitive() short-circuits and returns input value
-        virtual BOOL ToPrimitive(JavascriptHint hint, Var* value, ScriptContext* requestContext) override { AssertMsg(false, "Symbol ToPrimitive should not be called"); *value = this; return true; }
+        virtual BOOL ToPrimitive(JavascriptHint hint, Var* value, ScriptContext* requestContext) override { AssertMsg(false, "Symbol ToPrimitive should never be called, JavascriptConversion::ToPrimitive() short-circuits and returns input value"); *value = this; return true; }
         virtual RecyclableObject * CloneToScriptContext(ScriptContext* requestContext) override;
 
         JavascriptString* ToString(ScriptContext * requestContext);

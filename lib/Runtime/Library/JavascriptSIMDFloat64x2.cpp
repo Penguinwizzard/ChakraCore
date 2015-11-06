@@ -11,7 +11,6 @@ namespace Js
         Assert(type->GetTypeId() == TypeIds_SIMDFloat64x2);
     }
 
-    
     JavascriptSIMDFloat64x2* JavascriptSIMDFloat64x2::New(SIMDValue *val, ScriptContext* requestContext)
     {
         return (JavascriptSIMDFloat64x2 *)AllocatorNew(Recycler, requestContext->GetRecycler(), JavascriptSIMDFloat64x2, val, requestContext->GetLibrary()->GetSIMDFloat64x2TypeStatic());
@@ -122,5 +121,4 @@ namespace Js
 
         return TaggedInt::ToVarUnchecked(signMask);
     }
-
 }

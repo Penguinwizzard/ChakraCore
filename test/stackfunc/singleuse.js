@@ -15,18 +15,18 @@ function test0(){
         WScript.Echo(o.prop0 + ' ' + o.prop1 + ' ' + o.prop2);
       }
     }
-    fPolyProp(litObj0); 
-    fPolyProp(litObj1); 
-    
+    fPolyProp(litObj0);
+    fPolyProp(litObj1);
+
     return 1 + x;
   })(1.1,1,1.1);
-  
+
 };
 
 // generate profile
-test0(); 
+test0();
 
 // run JITted code
 runningJITtedCode = true;
-test0(); 
+test0();
 

@@ -28,7 +28,7 @@ public:
     uint   MaxUncollectedAllocBytesPartialCollect;
 
     // Defines the PageSegment size for recycler small block page allocator.
-    size_t DefaultMaxAllocPageCount;
+    uint DefaultMaxAllocPageCount;
     
     // Used for RecyclerPageAllocator and determines how many free pages need to be there to trigger decommit
     // (most cases, not all).

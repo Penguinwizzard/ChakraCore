@@ -233,7 +233,7 @@ HRESULT CreateLibraryByteCodeHeader(LPCOLESTR fileContents, BYTE * contentsRaw, 
     outputStr = "};\r\n\r\n";
     IfFalseGo(WriteFile(bcFileHandle, outputStr, (DWORD)strlen(outputStr), &written, nullptr));
 
-    outputStr = "}";
+    outputStr = "}\r\n";
     IfFalseGo(WriteFile(bcFileHandle, outputStr, (DWORD)strlen(outputStr), &written, nullptr));
 
 Error:

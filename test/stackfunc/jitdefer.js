@@ -8,26 +8,26 @@ function foo(param)
 {
     var x = 100;
     function bar()
-    {       
-        WScript.Echo(x);        
+    {
+        WScript.Echo(x);
     }
     function baz(param1)
-    {   
-        function inner(){           
+    {
+        function inner(){
             count++;
             WScript.Echo("COUNT:  " + count);
             bar();
             o["i"] = arguments["callee"];
-            
+
         }
         if(param1)
             return inner()
-        else 
+        else
             return bar();
     }
     if(param)
         return baz(true);
-    else 
+    else
         return baz(false);
 }
 var count = 0;

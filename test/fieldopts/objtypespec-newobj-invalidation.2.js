@@ -34,7 +34,6 @@ for (var i = 0; i < 10; i++) {
 }
 WScript.Echo("");
 
-
 // This test invalidates the constructor cache guard by making one of the properties protected by the
 // guard read-only.  The property in question is added in the constructor.
 WScript.Echo("Test 2:");
@@ -91,6 +90,6 @@ WScript.Echo("{ p: " + o.p + ", q: " + o.q + ", x: " + o.x + ", y: " + o.y + " }
 for (var i = 0; i < 10; i++) {
     o = test3(false);
     WScript.Echo("{ p: " + o.p + ", q: " + o.q + ", x: " + o.x + ", y: " + o.y + " }");
-
 }
+
 WScript.Echo("");

@@ -262,25 +262,25 @@ equalSimd([5033.2001953125, 3401, 665.3400268554687, 32234.099609375], ret4, SIM
 equalSimd([90934.203125, 123.9000015258789, 419.3900146484375, 449], ret5, SIMD.Float32x4, "Test SIMDLink2");
 equalSimd([5033.2001953125, 3401, 665.3400268554687, 32234.099609375], ret6, SIMD.Float32x4, "Test SIMDLink2");
 
-WScript.Echo("PASS");
+print("PASS");
 
 
 /*
-WScript.Echo(typeof(ret7));
-WScript.Echo(ret7.toString());
+print(typeof(ret7));
+print(ret7.toString());
 
-WScript.Echo(typeof(ret8));
-WScript.Echo(ret8.toString());
+print(typeof(ret8));
+print(ret8.toString());
 
-WScript.Echo(typeof(ret9));
-WScript.Echo(ret9.toString());
+print(typeof(ret9));
+print(ret9.toString());
 
-WScript.Echo(typeof(ret10));
-WScript.Echo(ret10.toString());
+print(typeof(ret10));
+print(ret10.toString());
 
-WScript.Echo(typeof(ret11));
-WScript.Echo(ret11.toString());
+print(typeof(ret11));
+print(ret11.toString());
 
-WScript.Echo(typeof(ret12));
-WScript.Echo(ret12.toString());
+print(typeof(ret12));
+print(ret12.toString());
 */

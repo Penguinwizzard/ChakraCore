@@ -15,7 +15,7 @@ namespace Js
         ARGUMENTS(args, callInfo);
         ScriptContext* scriptContext = function->GetScriptContext();
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
-        //Assert(!(callInfo.Flags & CallFlags_New));    //comment out due to -ls -stress run
+        Assert(!(callInfo.Flags & CallFlags_New));
 
         Var undefinedVar = scriptContext->GetLibrary()->GetUndefined();
 

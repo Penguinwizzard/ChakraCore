@@ -8,7 +8,7 @@ namespace Js
 {
     const uint32 SparseArraySegmentBase::MaxLength = static_cast<uint32>(INT32_MAX);
 
-    SparseArraySegmentBase::SparseArraySegmentBase(uint32 left, uint32 length, uint32 size):left(left), length(length), size(size), next(nullptr)
+    SparseArraySegmentBase::SparseArraySegmentBase(uint32 left, uint32 length, uint32 size) : left(left), length(length), size(size), next(nullptr)
     {
     }
 

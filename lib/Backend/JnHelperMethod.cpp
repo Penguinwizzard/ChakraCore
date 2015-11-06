@@ -50,15 +50,12 @@ const void * const*GetHelperMethods()
     }
     return JnHelperMethodAddresses;
 }
-static const void * const * pJnHelperMethodAddresses = GetHelperMethods();
 #else
 
 const void *const*GetHelperMethods()
 {
     return JnHelperMethodAddresses;
 }
-
-static const void *const* pJnHelperMethodAddresses = JnHelperMethodAddresses;
 #endif
 
 #if ENABLE_DEBUG_CONFIG_OPTIONS && defined(_CONTROL_FLOW_GUARD)
@@ -97,7 +94,7 @@ void CheckJnHelperTable(const void * const *table)
 #endif
 
 
-static void const* helperMethodWrappers[] = {
+static void const* const helperMethodWrappers[] = {
     &Js::HelperMethodWrapper0,
     &Js::HelperMethodWrapper1,
     &Js::HelperMethodWrapper2,
@@ -331,7 +328,7 @@ DECLSPEC_GUARDIGNORE __declspec(noinline) void * const GetNonTableMethodAddress(
 ///----------------------------------------------------------------------------
 void const * GetMethodOriginalAddress(JnHelperMethod helperMethod)
 {
-    const void *address = pJnHelperMethodAddresses[static_cast<WORD>(helperMethod)];
+    const void *address = GetHelperMethods()[static_cast<WORD>(helperMethod)];
     if (address == nullptr)
     {
         return GetNonTableMethodAddress(helperMethod);

@@ -739,31 +739,24 @@ bool IntBoundCheck::SetBoundOffset(const int offset, const bool isLoopCountBased
     Assert(IsValid());
 
     // Determine the previous offset from the instruction (src1 <= src2 + dst)
-    IR::Opnd *opnd = instr->GetDst();
-    IntConstType *dstValue;
-    int previousOffset;
-    if(opnd)
+    IR::IntConstOpnd *dstOpnd = nullptr;
+    IntConstType previousOffset = 0;
+    if (instr->GetDst())
     {
-        dstValue = &opnd->AsIntConstOpnd()->m_value;
-        previousOffset = *dstValue;
+        dstOpnd = instr->GetDst()->AsIntConstOpnd();
+        previousOffset = dstOpnd->GetValue();
     }
-    else
+
+    IR::IntConstOpnd *src1Opnd = nullptr;
+    if (instr->GetSrc1()->IsIntConstOpnd())
     {
-        dstValue = nullptr;
-        previousOffset = 0;
-    }
-    opnd = instr->GetSrc1();
-    IntConstType *src1Value;
-    if(opnd->IsIntConstOpnd())
-    {
-        src1Value = &opnd->AsIntConstOpnd()->m_value;
-        if(Int32Math::Sub(previousOffset, *src1Value, &previousOffset))
+        src1Opnd = instr->GetSrc1()->AsIntConstOpnd();
+        if (IntConstMath::Sub(previousOffset, src1Opnd->GetValue(), &previousOffset))
             return false;
     }
-    else
-        src1Value = nullptr;
-    opnd = instr->GetSrc2();
-    if(opnd->IsIntConstOpnd() && Int32Math::Add(previousOffset, opnd->AsIntConstOpnd()->m_value, &previousOffset))
+    
+    IR::IntConstOpnd *src2Opnd = (instr->GetSrc2()->IsIntConstOpnd() ? instr->GetSrc2()->AsIntConstOpnd() : nullptr);
+    if(src2Opnd && IntConstMath::Add(previousOffset, src2Opnd->GetValue(), &previousOffset))
         return false;
 
     // Given a bounds check (a <= b + offset), the offset may only be decreased such that it does not invalidate the invariant
@@ -772,30 +765,31 @@ bool IntBoundCheck::SetBoundOffset(const int offset, const bool isLoopCountBased
     if(offset >= previousOffset)
         return true;
 
-    int offsetDecrease;
-    if(Int32Math::Sub(previousOffset, offset, &offsetDecrease))
+    IntConstType offsetDecrease;
+    if(IntConstMath::Sub(previousOffset, offset, &offsetDecrease))
         return false;
+
     Assert(offsetDecrease > 0);
-    if(src1Value)
+    if(src1Opnd)
     {
         // Prefer to increase src1, as this is an upper bound check and src1 corresponds to the index
-        int newSrc1Value;
-        if(Int32Math::Add(*src1Value, offsetDecrease, &newSrc1Value))
+        IntConstType newSrc1Value;
+        if(IntConstMath::Add(src1Opnd->GetValue(), offsetDecrease, &newSrc1Value))
             return false;
-        *src1Value = newSrc1Value;
+        src1Opnd->SetValue(newSrc1Value);
     }
-    else if(dstValue)
+    else if(dstOpnd)
     {
-        int newDstValue;
-        if(Int32Math::Sub(*dstValue, offsetDecrease, &newDstValue))
+        IntConstType newDstValue;
+        if(IntConstMath::Sub(dstOpnd->GetValue(), offsetDecrease, &newDstValue))
             return false;
-        if(newDstValue == 0)
+        if (newDstValue == 0)
             instr->FreeDst();
         else
-            *dstValue = newDstValue;
+            dstOpnd->SetValue(newDstValue);
     }
     else
-        instr->SetDst(IR::IntConstOpnd::New(-offsetDecrease, TyInt32, instr->m_func, true));
+        instr->SetDst(IR::IntConstOpnd::New(-offsetDecrease, TyMachReg, instr->m_func, true));
 
     switch(instr->GetBailOutKind())
     {

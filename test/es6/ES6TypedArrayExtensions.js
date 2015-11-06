@@ -2544,7 +2544,7 @@ var tests = [
             assert.areEqual(10, arr.slice().byteLength, "Calling ArrayBuffer.prototype.slice will use default constructor if [constructor] has [@@species] == undefined");
 
             arr.constructor[Symbol.species] = {};
-            assert.throws(function () { arr.slice(); }, TypeError, "Calling ArrayBuffer.prototype.slice will use default constructor if [constructor] has [@@species] == undefined", "Function '[@@species]' is not a constructor");
+            assert.throws(function () { arr.slice(); }, TypeError, "Calling ArrayBuffer.prototype.slice will use default constructor if [constructor] has [@@species] == undefined", "Function 'constructor[Symbol.species]' is not a constructor");
         }
     },
     {

@@ -9,9 +9,17 @@ namespace Js
     EnterScriptObject::EnterScriptObject(ScriptContext* scriptContext, ScriptEntryExitRecord* entryExitRecord,
         void * returnAddress, bool doCleanup, bool isCallRoot, bool hasCaller)
     {
+        Assert(scriptContext);
+
 #ifdef PROFILE_EXEC
         scriptContext->ProfileBegin(Js::RunPhase);
 #endif
+
+        if (scriptContext->GetThreadContext() &&
+            scriptContext->GetThreadContext()->IsNoScriptScope())
+        {
+            FromDOM_NoScriptScope_fatal_error();
+        }
 
         // Keep a copy locally so the optimizer can just copy prop it to the dtor
         this->scriptContext = scriptContext;

@@ -64,7 +64,6 @@ catch(e)
 
 delete ab.foo;
 
-
 var o = {};
 
 o.a = 1;
@@ -85,11 +84,11 @@ o.o = 15;
 o.p = 16;
 o.q = 17;
 
-Object.defineProperty(o, "qqq", 
-	{ 
-		set: function () { }, 
-		get: function() { WScript.Echo("get"); } 
-	});
+Object.defineProperty(o, "qqq",
+    {
+        set: function () { },
+        get: function() { WScript.Echo("get"); }
+    });
 
 WScript.Echo(o.qqq);
 delete o.qqq;
@@ -111,10 +110,10 @@ pt.z=12;
 pt.print();
 
 Object.defineProperty(this, "abc",
-	{ 
-		set: function () { }, 
-		get: function() { WScript.Echo("get global"); } 
-	});
+    {
+        set: function () { },
+        get: function() { WScript.Echo("get global"); }
+    });
 WScript.Echo(abc);
 delete this.abc;
 

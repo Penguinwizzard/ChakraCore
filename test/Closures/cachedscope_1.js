@@ -18,7 +18,6 @@ function test0(){
     b = arguments[((((b &= 1) >= 0 ? (b &= 1) : 0)) & 0XF)]; 
   }
   a = func0.call(obj0 , 1); 
-  // Snippets: implicitcalls2.ecs
   function v1877769()
   {
     var v1877770 = false;

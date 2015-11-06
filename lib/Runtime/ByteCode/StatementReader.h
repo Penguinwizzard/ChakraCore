@@ -21,10 +21,9 @@ namespace Js
     public:
         void Create(FunctionBody* functionRead, uint startOffset = 0);
         void Create(FunctionBody* functionRead, uint startOffset, bool useOriginalByteCode);
-        
+
         inline bool AtStatementBoundary(ByteCodeReader * reader) { return m_nextStatementBoundary == reader->GetIP(); }
         inline uint32 MoveNextStatementBoundary();
         inline uint32 GetStatementIndex() const { return m_statementIndex; }
     };
-
 } // namespace Js

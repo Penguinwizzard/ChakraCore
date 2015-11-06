@@ -1076,11 +1076,8 @@ namespace Js
             JavascriptSIMDFloat32x4::Is(args[2]) &&
             JavascriptSIMDFloat32x4::Is(args[3]))
         {
-            // TODO: Reuse Int32x4 select ? 
-
             JavascriptSIMDBool32x4 *fmask = JavascriptSIMDBool32x4::FromVar(args[1]);
             Assert(fmask);
-            //JavascriptSIMDFloat32x4 *fmask = (JavascriptSIMDFloat32x4*)SIMDConvertTypeFromBits<JavascriptSIMDBool32x4, JavascriptSIMDFloat32x4>(mask, scriptContext);
             JavascriptSIMDFloat32x4 *tvalue = JavascriptSIMDFloat32x4::FromVar(args[2]);
             JavascriptSIMDFloat32x4 *fvalue = JavascriptSIMDFloat32x4::FromVar(args[3]);
             Assert(fmask && tvalue && fvalue);

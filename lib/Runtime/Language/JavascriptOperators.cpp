@@ -3274,7 +3274,7 @@ CommonNumber:
                 break;
             }
 
-            case TypeIds_String: // fast path for string [string-base64 FTW]
+            case TypeIds_String: // fast path for string
             {
                 charcount_t indexInt = TaggedInt::ToUInt32(index);
                 JavascriptString* string = JavascriptString::FromVar(instance);
@@ -7750,9 +7750,9 @@ CommonNumber:
 
         Type *typeWithoutProperty = object->GetType();
 
-        // This is a hack.  Ideally the lowerer would emit a call to the right flavor of PatchInitValue, so that we can ensure that we only
-        // ever initialize to NULL in the right cases.  But the backend uses the StFld opcode for initialization, and threading the different
-        // helper calls all the way down would be a pain.
+        // Ideally the lowerer would emit a call to the right flavor of PatchInitValue, so that we can ensure that we only
+        // ever initialize to NULL in the right cases.  But the backend uses the StFld opcode for initialization, and it
+        // would be cumbersome to thread the different helper calls all the way down
         if (object->InitProperty(propertyId, newValue, flags, &info))
         {
             CacheOperators::CachePropertyWrite(object, false, typeWithoutProperty, propertyId, &info, scriptContext);
@@ -9098,17 +9098,34 @@ CommonNumber:
 
         Assert(thisObjPrototype != nullptr);
 
-        RecyclableObject *superClass = thisObjPrototype->GetPrototype();
+        RecyclableObject *superBase = thisObjPrototype->GetPrototype();
 
-        if (superClass == nullptr || !RecyclableObject::Is(superClass))
+        if (superBase == nullptr || !RecyclableObject::Is(superBase))
         {
             return scriptContext->GetLibrary()->GetUndefined();
         }
 
-        return superClass;
+        return superBase;
     }
 
-    Var JavascriptOperators::OP_ScopedLdSuper(Var scriptFunction, ScriptContext * scriptContext)
+    Var JavascriptOperators::OP_LdSuperCtor(Var scriptFunction, ScriptContext * scriptContext)
+    {
+        // use self as value of [[FunctionObject]] - this is true only for constructors
+
+        Assert(RecyclableObject::Is(scriptFunction));
+        Assert(JavascriptOperators::IsClassConstructor(scriptFunction));  // non-constructors cannot have direct super
+
+        RecyclableObject *superCtor = RecyclableObject::FromVar(scriptFunction)->GetPrototype();
+
+        if (superCtor == nullptr || !IsConstructor(superCtor))
+        {
+            JavascriptError::ThrowTypeError(scriptContext, JSERR_NotAConstructor, L"super");
+        }
+
+        return superCtor;
+    }
+
+    Var JavascriptOperators::ScopedLdSuperHelper(Var scriptFunction, Js::PropertyId propertyId, ScriptContext * scriptContext)
     {
         ScriptFunction *instance = ScriptFunction::FromVar(scriptFunction);
         Var superRef = nullptr;
@@ -9134,7 +9151,7 @@ CommonNumber:
                 }
 
                 RecyclableObject *recyclableObject = RecyclableObject::FromVar(currScope);
-                if (GetProperty(recyclableObject, Js::PropertyIds::_superReferenceSymbol, &superRef, scriptContext))
+                if (GetProperty(recyclableObject, propertyId, &superRef, scriptContext))
                 {
                     return superRef;
                 }
@@ -9154,6 +9171,16 @@ CommonNumber:
         }
 
         return superRef;
+    }
+
+    Var JavascriptOperators::OP_ScopedLdSuper(Var scriptFunction, ScriptContext * scriptContext)
+    {
+        return JavascriptOperators::ScopedLdSuperHelper(scriptFunction, Js::PropertyIds::_superReferenceSymbol, scriptContext);
+    }
+
+    Var JavascriptOperators::OP_ScopedLdSuperCtor(Var scriptFunction, ScriptContext * scriptContext)
+    {
+        return JavascriptOperators::ScopedLdSuperHelper(scriptFunction, Js::PropertyIds::_superCtorReferenceSymbol, scriptContext);
     }
 
     Var JavascriptOperators::OP_ResumeYield(ResumeYieldData* yieldData, RecyclableObject* iterator)
@@ -9574,7 +9601,7 @@ CommonNumber:
             return constructor;
         }
         //10.Throw a TypeError exception.
-        JavascriptError::ThrowTypeError(scriptContext, JSERR_NotAConstructor, L"[@@species]");
+        JavascriptError::ThrowTypeError(scriptContext, JSERR_NotAConstructor, L"constructor[Symbol.species]");
     }
 
     BOOL JavascriptOperators::GreaterEqual(Var aLeft, Var aRight, ScriptContext* scriptContext)

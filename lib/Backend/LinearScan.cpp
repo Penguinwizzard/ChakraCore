@@ -29,7 +29,7 @@ static const uint8 RegAttribs[RegNumCount] =
 #undef REGDAT
 };
 
-extern "C" const IRType RegTypes[RegNumCount] =
+extern const IRType RegTypes[RegNumCount] =
 {
 #define REGDAT(Name, ListName, Encode, Type, Attribs) Type,
 #include "RegList.h"
@@ -3481,8 +3481,7 @@ LinearScan::GetSpillCost(Lifetime *lifetime)
         length = 1;
     }
 
-    // Add a base length so that the difference between a length of 1 and a length of 2 is not so large. The base length was
-    // tuned based on some tests in Octane.
+    // Add a base length so that the difference between a length of 1 and a length of 2 is not so large
 #ifdef _M_X64
     length += 64;
 #else

@@ -228,5 +228,5 @@ equalSimd([2, 4, 6, 8], ret1, SIMD.Int32x4, "TestCalls");
 equalSimd([4, 8, 12, 16], ret2, SIMD.Int32x4, "TestCalls");
 equalSimd([8, 16, 24, 32], ret3, SIMD.Int32x4, "TestCalls");
 equalSimd([301, 301, 301, 301], ret4, SIMD.Int32x4, "TestCalls");
-WScript.Echo("PASS");
+print("PASS");
 

@@ -11,10 +11,10 @@ using namespace JsUtil;
 class CaseNode
 {
 private:
-    uint32              offset;          //offset - indicates the bytecode offset of the case instruction
-    uint32              targetOffset;    //targetOffset - indicates the bytecode offset of the target instruction (case block)
-    IR::BranchInstr*    caseInstr; // caseInstr - stores the case instruction
-    IR::Opnd*           lowerBound; //lower bound - used for integer cases
+    uint32              offset;         // offset - indicates the bytecode offset of the case instruction
+    uint32              targetOffset;   // targetOffset - indicates the bytecode offset of the target instruction (case block)
+    IR::BranchInstr*    caseInstr;      // caseInstr - stores the case instruction
+    IR::Opnd*           lowerBound;     // lowerBound - used for integer cases
 
 public:
     CaseNode(IR::BranchInstr* caseInstr, uint32 offset, uint32 targetOffset, IR::Opnd* lowerBound = nullptr)
@@ -25,7 +25,7 @@ public:
     {
     }
 
-    IntConstType GetSrc2IntConst()
+    int32 GetSrc2IntConst()
     {
         AssertMsg(caseInstr->GetSrc2()->GetStackSym()->IsIntConst(),"Source2 operand is not an integer constant");
         return caseInstr->GetSrc2()->GetStackSym()->GetIntConstValue();

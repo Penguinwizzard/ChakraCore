@@ -51,7 +51,7 @@ namespace Js
                 currentByte = buffer + offset;
             }
 
-            /// This does not do check if there is enough space for the copy to succeed.
+            // This does not do check if there is enough space for the copy to succeed.
             __inline void WriteUnsafe(__in_bcount(byteSize) const void* data, __in uint byteSize)
             {
                 AssertMsg(RemainingBytes() >= byteSize, "We do not have enough room");
@@ -61,15 +61,15 @@ namespace Js
             }
         };
 
-        /// This is a linked list of data chunks. It is designed to be allocated
-        /// once and re-used. After a call to Reset(), this data structure can be reused to
+        // This is a linked list of data chunks. It is designed to be allocated
+        // once and re-used. After a call to Reset(), this data structure can be reused to
         // store more data.
         struct Data
         {
         private:
             ArenaAllocator* tempAllocator;
-            DataChunk* head;    // First chunk to be written to
-            DataChunk* current; // The current chunk being written to
+            DataChunk* head;     // First chunk to be written to
+            DataChunk* current;  // The current chunk being written to
             uint currentOffset;  // The global offset of last byte written to in the linked data structure
             bool fixedGrowthPolicy;
 
@@ -138,21 +138,21 @@ namespace Js
         // Size of emitting a jump around byte code instruction
         static size_t const JumpAroundSize = sizeof(byte) + sizeof(OpLayoutBr);
         // Size of emitting a long jump byte code instruction
-        CompileAssert(OpCodeInfo<Js::OpCode::BrLong>::IsExtendedOpcode); // extended opcode, opcode size is always sizeof(OpCode)
+        CompileAssert(OpCodeInfo<Js::OpCode::BrLong>::IsExtendedOpcode);    // extended opcode, opcode size is always sizeof(OpCode)
         static size_t const LongBranchSize = sizeof(OpCode) + sizeof(OpLayoutBrLong);
 #endif
-        JsUtil::List<JumpInfo, ArenaAllocator> * m_jumpOffsets;           // Offsets to replace "ByteCodeLabel" with actual destination
-        JsUtil::List<LoopHeaderData, ArenaAllocator> * m_loopHeaders;  // Start/End offsets for loops
-        SListBase<size_t>  rootObjectLoadInlineCacheOffsets; // load inline cache offsets;
-        SListBase<size_t>  rootObjectStoreInlineCacheOffsets; // load inline cache offsets;
+        JsUtil::List<JumpInfo, ArenaAllocator> * m_jumpOffsets;             // Offsets to replace "ByteCodeLabel" with actual destination
+        JsUtil::List<LoopHeaderData, ArenaAllocator> * m_loopHeaders;       // Start/End offsets for loops
+        SListBase<size_t>  rootObjectLoadInlineCacheOffsets;                // load inline cache offsets
+        SListBase<size_t>  rootObjectStoreInlineCacheOffsets;               // load inline cache offsets
         SListBase<size_t>  rootObjectLoadMethodInlineCacheOffsets;
 
-        FunctionBody* m_functionWrite;    // Function being written
-        Data m_byteCodeData;     // Accumulated byte-code
-        Data m_auxiliaryData;    // Optional accumulated auxiliary data
-        Data m_auxContextData;   // Optional accumulated auxiliary ScriptContext specific data
-        uint m_beginCodeSpan; // Debug Info for where in  bytecode the current statement starts. (Statements do not nest.)
-        ParseNode* m_pMatchingNode; // Parse node for statement we are tracking debugInfo for.
+        FunctionBody* m_functionWrite;  // Function being written
+        Data m_byteCodeData;            // Accumulated byte-code
+        Data m_auxiliaryData;           // Optional accumulated auxiliary data
+        Data m_auxContextData;          // Optional accumulated auxiliary ScriptContext specific data
+        uint m_beginCodeSpan;           // Debug Info for where in  bytecode the current statement starts. (Statements do not nest.)
+        ParseNode* m_pMatchingNode;     // Parse node for statement we are tracking debugInfo for.
         // This ref count mechanism ensures that nested Start/End Statement with matching parse node will not mess-up the upper Start/End balance.
         // This count will be incremented/decremented when the nested Start/End has the same m_pMatchingNode.
         int m_matchingNodeRefCount;
@@ -168,7 +168,7 @@ namespace Js
         SmallSpanSequenceIter spanIter;
         int m_loopNest;
         uint m_byteCodeCount;
-        uint m_byteCodeWithoutLDACount;   // Number of total bytecodes except LD_A and LdUndef
+        uint m_byteCodeWithoutLDACount; // Number of total bytecodes except LD_A and LdUndef
         uint m_byteCodeInLoopCount;
         uint32 m_tmpRegCount;
         bool m_doJitLoopBodies;
@@ -184,7 +184,7 @@ namespace Js
         };
 
     protected:
-        // A map of, bytecode register in which the function to be called is, to the inline cache index associated with the load of the function
+        // A map of, bytecode register in which the function to be called is, to the inline cache index associated with the load of the function.
         typedef JsUtil::BaseDictionary<Js::RegSlot, CacheIdUnit, ArenaAllocator, PrimeSizePolicy> CallRegToLdFldCacheIndexMap;
         CallRegToLdFldCacheIndexMap* callRegToLdFldCacheIndexMap;
 
@@ -345,7 +345,6 @@ namespace Js
         void SetCurrent(uint offset, DataChunk * chunk) { m_byteCodeData.SetCurrent(offset, chunk); }
         bool ShouldIncrementCallSiteId(OpCode op);
         inline void SetCallSiteCount(Js::ProfileId callSiteId) { this->m_functionWrite->SetProfiledCallSiteCount(callSiteId); }
-
 
         // Debugger methods.
         DebuggerScope* RecordStartScopeObject(DiagExtraScopesType scopeType, RegSlot scopeLocation = Js::Constants::NoRegister, int* index = nullptr);

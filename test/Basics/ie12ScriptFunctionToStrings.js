@@ -102,7 +102,6 @@ var tests = [
         {
              var o = {['f']() {},g () {}};
              assert.areEqual("f() {}",o.f.toString());
-             //assert.areEqual("g() {}",o.g.toString());
         }
    },
    {

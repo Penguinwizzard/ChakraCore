@@ -59,6 +59,3 @@ namespace Js
         static uint32 GetOffsetOfPropertyCache() { return offsetof(PropertyString, propCache); }
     };
 }
-
-
-

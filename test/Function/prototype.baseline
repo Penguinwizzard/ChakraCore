@@ -7,5 +7,5 @@ function() {
 undefined
 undefined
 undefined
-TypeError: Object doesn't support this action
+TypeError: Function is not a constructor
 TypeError: Function does not have a valid prototype object

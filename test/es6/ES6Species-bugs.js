@@ -26,7 +26,7 @@ var tests = [
             var arr = [1,2,3,4,5,6];
             arr.constructor = null;
             arr.x = 1;
-            assert.throws(function() { Array.prototype.splice.call(arr, 0, 3); }, TypeError, "TypeError when [@@species] is not constructor", "Function '[@@species]' is not a constructor");
+            assert.throws(function() { Array.prototype.splice.call(arr, 0, 3); }, TypeError, "TypeError when constructor[Symbol.species] is not constructor", "Function 'constructor[Symbol.species]' is not a constructor");
         }
     },
 ];

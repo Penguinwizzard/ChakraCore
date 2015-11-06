@@ -756,7 +756,7 @@ namespace Js
 
         if (overridingNewTarget != nullptr)
         {
-            if (ScriptFunction::Is(functionObj) && ScriptFunction::FromVar(functionObj)->IsClassConstructor())
+            if (ScriptFunction::Is(functionObj) && ScriptFunction::FromVar(functionObj)->GetFunctionInfo()->IsClassConstructor())
             {
                 thisAlreadySpecified = true;
                 args.Values[0] = overridingNewTarget;
@@ -782,6 +782,7 @@ namespace Js
                     newValues[i] = args.Values[i];
                 }
 
+#pragma prefast(suppress:6386, "The write index args.Info.Count is in the bound")
                 newValues[args.Info.Count] = overridingNewTarget;
             }
         }
@@ -2080,7 +2081,7 @@ LABEL1:
 #endif
 
     /*static*/
-    PropertyId JavascriptFunction::specialPropertyIds[] =
+    PropertyId const JavascriptFunction::specialPropertyIds[] =
     {
         PropertyIds::caller,
         PropertyIds::arguments
@@ -2318,7 +2319,7 @@ LABEL1:
     }
 
     // Returns the list of special non-enumerable properties for the type.
-    PropertyId* JavascriptFunction::GetSpecialPropertyIds() const
+    PropertyId const * JavascriptFunction::GetSpecialPropertyIds() const
     {
         return specialPropertyIds;
     }
@@ -2408,8 +2409,7 @@ LABEL1:
             if (unhandledExceptionObject)
             {
                 JavascriptFunction* exceptionFunction = unhandledExceptionObject->GetFunction();
-                // This is for getcaller in window.onError.The behavior is different in
-                // different browser, and neither Firefox nor chrome can get the caller here.
+                // This is for getcaller in window.onError. The behavior is different in different browsers
                 if (exceptionFunction && scriptContext == exceptionFunction->GetScriptContext())
                 {
                     *value = exceptionFunction;

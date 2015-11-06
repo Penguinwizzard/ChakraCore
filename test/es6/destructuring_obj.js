@@ -144,8 +144,10 @@ var tests = [
       assert.doesNotThrow(function () { eval("let a, r1; ({a:(a1 = r1 = 44)} = {})"); }, "Object expression pattern with chained assignments as defaults under paren is valid syntax");
       assert.throws(function () { eval("let a, r1; ({a:(a1 = r1) = 44} = {})"); }, SyntaxError, "Object expression pattern with chained assignments but paren in between is not valid syntax", "Unexpected operator in destructuring expression");
       assert.doesNotThrow(function () { eval("var a; `${({a} = {})}`"); }, "Object expression pattern inside a string template is valid syntax");
-      assert.throws(function () { eval("for (let {x} = {} of []) {}"); }, SyntaxError, "for.of has declaration pattern with initializer is not valid syntax", "Destructuring expression cannot have an initializer");
-      assert.throws(function () { eval("for ({x} = {} of []) {}"); }, SyntaxError, "for.of has expression pattern with initializer is not valid syntax", "Destructuring expression cannot have an initializer");
+      assert.throws(function () { eval("for (let {x} = {} of []) {}"); }, SyntaxError, "for.of has declaration pattern with initializer is not valid syntax", "for-of loop head declarations cannot have an initializer");
+      assert.throws(function () { eval("for (let {x} = {} in []) {}"); }, SyntaxError, "for.in has declaration pattern with initializer is not valid syntax", "for-in loop head declarations cannot have an initializer");
+      assert.throws(function () { eval("for (var [x] = [] of []) {}"); }, SyntaxError, "for.of has var declaration pattern with initializer is not valid syntax", "for-of loop head declarations cannot have an initializer");
+      assert.throws(function () { eval("function foo() {for (let {x} = {} of []) {}; }; foo();"); }, SyntaxError, "Inside function - for.of has declaration pattern with initializer is not valid syntax", "for-of loop head declarations cannot have an initializer");
       assert.doesNotThrow(function () { eval("var a; [a = class aClass {}] = []"); }, "Expression pattern has class as initializer is valid syntax");
       assert.doesNotThrow(function () { eval("var a; for ({x:x = class aClass {}} of []) {}"); }, "for.of's expression pattern has class as initializer is valid syntax");
       assert.doesNotThrow(function () { eval("var {x:[...y]} = {x:[1]}"); }, "rest element nesting under object pattern is valid syntax");
@@ -161,7 +163,7 @@ var tests = [
       assert.throws(function () { eval("({get ['foo']() {}} = {});"); }, SyntaxError, "Invalid object expression pattern as it has the get function name as computed property instead of binding identifier", "Invalid destructuring assignment target");
       assert.throws(function () { eval("({set ['foo'](a) {}} = {});"); }, SyntaxError, "Invalid object expression pattern as it has the set function name as computed property instead of binding identifier", "Invalid destructuring assignment target");
       
-      assert.throws(function () { eval("for([z] = function ([a]) { } in []) {}"); }, SyntaxError, "Initializer as function expression is not valid syntax", "Expected ';'");
+      assert.throws(function () { eval("for(var [z] = function ([a]) { } in []) {}"); }, SyntaxError, "Initializer as function expression is not valid syntax", "for-in loop head declarations cannot have an initializer");
     }
   },
   {

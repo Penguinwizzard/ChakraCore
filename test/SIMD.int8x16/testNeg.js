@@ -4,14 +4,15 @@
 //-------------------------------------------------------------------------------------------------------
 
 function equal(a, b) {
-    if (a == b)
-        WScript.Echo("Correct");
-    else
-        WScript.Echo(">> Fail!");
+    if (a == b) {
+        print("Correct");
+    } else {
+        print(">> Fail!");
+    }
 }
 
 function testNeg() {
-    WScript.Echo("Int8x16 neg");
+    print("Int8x16 neg");
     var a = SIMD.Int8x16(-16, -15, -14, -13, -12, -11, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1);
     var c = SIMD.Int8x16.neg(a);
     equal(16, SIMD.Int8x16.extractLane(c, 0));

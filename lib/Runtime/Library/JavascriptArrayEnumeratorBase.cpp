@@ -61,12 +61,12 @@ namespace Js
         return GetCurrentAndMoveNext(propId, attributes) != nullptr;
     }
 
-    BOOL JavascriptArrayEnumeratorBase::GetCurrentPropertyId(PropertyId *pPropertyId)
+    bool JavascriptArrayEnumeratorBase::GetCurrentPropertyId(PropertyId *pPropertyId)
     {
         if (index != JavascriptArray::InvalidIndex && !doneArray)
         {
             *pPropertyId = Constants::NoProperty;
-            return FALSE;
+            return false;
         }
         else if (!doneObject)
         {
@@ -75,7 +75,7 @@ namespace Js
         else
         {
             *pPropertyId = Constants::NoProperty;
-            return FALSE;
+            return false;
         }
     }
 

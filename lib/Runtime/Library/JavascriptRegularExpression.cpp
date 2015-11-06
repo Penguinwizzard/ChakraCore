@@ -163,7 +163,7 @@ namespace Js
 
             if (callInfo.Count > 2 )
             {
-                // As per ES6 21.2.3.1: If 1st argument is RegExp and 2nd argument is flag then return regexp with same pattern as 1st
+                // As per ES 2015 21.2.3.1: If 1st argument is RegExp and 2nd argument is flag then return regexp with same pattern as 1st
                 // argument and flags supplied by the 2nd argument.
                 if (!JavascriptOperators::IsUndefinedObject(args[2], scriptContext))
                 {
@@ -641,13 +641,13 @@ namespace Js
         PropertyIds::ignoreCase, \
         PropertyIds::source, \
         PropertyIds::options
-    PropertyId JavascriptRegExp::specialPropertyIdsAll[] =
+    PropertyId const JavascriptRegExp::specialPropertyIdsAll[] =
     {
         DEFAULT_SPECIAL_PROPERTY_IDS,
         PropertyIds::unicode,
         PropertyIds::sticky
     };
-    PropertyId JavascriptRegExp::specialPropertyIdsWithoutUnicode[] =
+    PropertyId const JavascriptRegExp::specialPropertyIdsWithoutUnicode[] =
     {
         DEFAULT_SPECIAL_PROPERTY_IDS,
         PropertyIds::sticky
@@ -1088,12 +1088,12 @@ namespace Js
     }
 
     // Returns the list of special non-enumerable properties for the type.
-    PropertyId* JavascriptRegExp::GetSpecialPropertyIds() const
+    PropertyId const * JavascriptRegExp::GetSpecialPropertyIds() const
     {
         return GetSpecialPropertyIdsInlined();
     }
 
-    inline PropertyId* JavascriptRegExp::GetSpecialPropertyIdsInlined() const
+    inline PropertyId const * JavascriptRegExp::GetSpecialPropertyIdsInlined() const
     {
         return GetScriptContext()->GetConfig()->IsES6UnicodeExtensionsEnabled()
             ? specialPropertyIdsAll

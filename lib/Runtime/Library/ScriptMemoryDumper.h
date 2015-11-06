@@ -70,5 +70,4 @@ private:
     Js::PropertyId summaryId;
 
 };
-
 #endif

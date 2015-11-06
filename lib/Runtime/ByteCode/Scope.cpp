@@ -4,8 +4,7 @@
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeByteCodePch.h"
 
-bool
-Scope::IsGlobalEvalBlockScope() const
+bool Scope::IsGlobalEvalBlockScope() const
 {
     return this->scopeType == ScopeType_GlobalEvalBlock;
 }
@@ -47,7 +46,7 @@ void Scope::ForceAllSymbolNonLocalReference(ByteCodeGenerator *byteCodeGenerator
 {
     this->ForEachSymbol([this, byteCodeGenerator](Symbol *const sym)
     {
-        if(!sym->GetIsArguments())
+        if (!sym->GetIsArguments())
         {
             sym->SetHasNonLocalReference(true, byteCodeGenerator);
             this->GetFunc()->SetHasLocalInClosure(true);
@@ -77,7 +76,7 @@ void Scope::SetIsObject()
     this->isObject = true;
 
     // We might set the scope to be object after we have process the symbol
-    // (e.g. "With" scope referencing a symbol in an outer scope)
+    // (e.g. "With" scope referencing a symbol in an outer scope).
     // If we have func assignment, we need to mark the function to not do stack nested function
     // as these are now assigned to a scope object.
     FuncInfo * funcInfo = this->GetFunc();
@@ -95,7 +94,7 @@ void Scope::SetIsObject()
     }
 }
 
-void Scope::MergeParamAndBodyScopes(ParseNode *pnodeScope, ByteCodeGenerator * byteCodeGenerator)
+void Scope::MergeParamAndBodyScopes(ParseNode *pnodeScope, ByteCodeGenerator *byteCodeGenerator)
 {
     Assert(pnodeScope->sxFnc.funcInfo);
     Scope *paramScope = pnodeScope->sxFnc.pnodeScopes->sxBlock.scope;

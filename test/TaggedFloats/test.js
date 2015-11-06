@@ -3,11 +3,16 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-function hide(x)
-{
-	// disable inlining
-	eval("");
-	return x;
+function hide(x)
+
+{
+
+    // disable inlining
+
+    eval("");
+
+    return x;
+
 }
 function f0() {
 WScript.Echo(hide(-1.47688022616793e-310)  +  hide(-1.47688022616793e-310));

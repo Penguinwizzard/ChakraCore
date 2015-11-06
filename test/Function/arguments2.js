@@ -28,8 +28,7 @@ function Test1(a, b) {
 r = Test1(10, 20);
 verify("Test1", r, 30);
 
-
-// --------------------------------------------------------------------------------------------------    
+// --------------------------------------------------------------------------------------------------
 function Test2(a, b) {
     a = 100;
     verify("Test2 arguments[0]", arguments[0], 100);
@@ -311,7 +310,6 @@ delete_args_test(get_args(13, 24, "string", true),
 //[1] set after formal args [0][2]
                  );
 
-
 function Test11() {
     var _t11;
 
@@ -330,7 +328,7 @@ Test11();
 
 function Test12() {
     function inner12() {
-        throw arguments;	
+        throw arguments;
     }
 
     try {
@@ -357,7 +355,6 @@ function Test13() {
 }
 
 Test13();
-
 
 function TestBuiltInProperty(propName) {
     write("");
@@ -401,7 +398,6 @@ function Test16() {
 
 Test16(1, 2, 3);
 
-
 function Test17(a) {
     verify("Test17.1", arguments.length, 1);
     verify("Test17.2", a, "Feb20");
@@ -412,15 +408,13 @@ function Test17(a) {
 
 Test17("Feb20");
 
-
 // Test that changing arguments in one function is reflected in the caller
-
 
 function Test18_Helper() {
     Test18_Helper.caller.arguments.Test18_Value = "Test 18 Value";
 }
 
-function Test18() {        
+function Test18() {
     verify("Test18.1", arguments.Test18_Value, undefined);
     Test18_Helper();
     verify("Test18.2", arguments.Test18_Value, "Test 18 Value");
@@ -428,20 +422,19 @@ function Test18() {
 
 Test18();
 
-
-function Test19(flag) 
+function Test19(flag)
 {
     if (flag)
     {
-        write("test19 called");	
-    }    
+        write("test19 called");
+    }
     else
     {
         Test19_Helper();
-    }	
+    }
 }
 
-function Test19_Helper() 
+function Test19_Helper()
 {
     arguments.callee.caller(true);
 }

@@ -53,4 +53,4 @@ namespace Js
         virtual RecyclableObject * CloneToScriptContext(ScriptContext* requestContext) override;
         virtual RecyclableObject* ToObject(ScriptContext* requestContext) override;
     };
-} 
+}

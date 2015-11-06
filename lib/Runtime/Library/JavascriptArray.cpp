@@ -11258,7 +11258,7 @@ Case0:
 
         if (!JavascriptOperators::IsConstructor(constructor))
         {
-            JavascriptError::ThrowTypeError(scriptContext, JSERR_NotAConstructor, L"[@@species]");
+            JavascriptError::ThrowTypeError(scriptContext, JSERR_NotAConstructor, L"constructor[Symbol.species]");
         }
 
         Js::Var constructorArgs[] = { constructor, JavascriptNumber::ToVar(length, scriptContext) };
@@ -11267,7 +11267,7 @@ Case0:
         return RecyclableObject::FromVar(JavascriptOperators::NewScObject(constructor, Js::Arguments(constructorCallInfo, constructorArgs), scriptContext));
     }
     /*static*/
-    PropertyId JavascriptArray::specialPropertyIds[] =
+    PropertyId const JavascriptArray::specialPropertyIds[] =
     {
         PropertyIds::length
     };
@@ -11521,7 +11521,7 @@ Case0:
     }
 
     // Returns the list of special non-enumerable properties for the type.
-    PropertyId* JavascriptArray::GetSpecialPropertyIds() const
+    PropertyId const * JavascriptArray::GetSpecialPropertyIds() const
     {
         return specialPropertyIds;
     }

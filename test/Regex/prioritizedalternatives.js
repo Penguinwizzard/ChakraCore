@@ -11,7 +11,6 @@ a = "aaabab";
 
 WScript.Echo(a.match(r));
 
-
 r = /(aaa|aaab)/;
 a = "aaabab";
 
@@ -37,6 +36,6 @@ a = "p/u";
 var result = r.exec(a);
 WScript.Echo(result+"");
 
-var x = new RegExp("(([^:]*)://([^:/?]*)(:([0-9]+))?)?([^?#]*)([?]([^#]*))?(#(.*))?");	
+var x = new RegExp("(([^:]*)://([^:/?]*)(:([0-9]+))?)?([^?#]*)([?]([^#]*))?(#(.*))?");
 var y = "http://shop.ebay.com/i.html?rt=nc&LH_FS=1&_nkw=dell+optiplex&_fln=1&_trksid=p3286.c0.m283";
 WScript.Echo(y.match(x));

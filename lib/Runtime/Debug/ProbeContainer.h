@@ -18,7 +18,7 @@ namespace Js
     struct InterpreterHaltState;
 
     // This class contains the probes and list of function bodies.
-    // ÎÐThe object of this class is maintained by Script context.
+    // The object of this class is maintained by ScriptContext.
     class ProbeContainer
     {
         friend class RecyclableObjectDisplay;

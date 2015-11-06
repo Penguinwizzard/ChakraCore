@@ -16,7 +16,7 @@ namespace Js
     class JavascriptFunction : public DynamicObject
     {
     private:
-        static PropertyId specialPropertyIds[];
+        static PropertyId const specialPropertyIds[];
 
         // Need a constructor cache on every function (script and native) to avoid extra checks on the fast path, if the function isn't fixed.
         ConstructorCache* constructorCache;
@@ -173,7 +173,7 @@ namespace Js
         virtual BOOL IsWritable(PropertyId propertyId) override;
         virtual BOOL GetSpecialPropertyName(uint32 index, Var *propertyName, ScriptContext * requestContext) override;
         virtual uint GetSpecialPropertyCount() const override;
-        virtual PropertyId* GetSpecialPropertyIds() const override;
+        virtual PropertyId const * GetSpecialPropertyIds() const override;
         virtual BOOL DeleteProperty(PropertyId propertyId, PropertyOperationFlags flags) override;
         virtual BOOL GetDiagValueString(StringBuilder<ArenaAllocator>* stringBuilder, ScriptContext* requestContext) override;
         virtual BOOL GetDiagTypeString(StringBuilder<ArenaAllocator>* stringBuilder, ScriptContext* requestContext) override;

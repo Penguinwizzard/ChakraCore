@@ -8,8 +8,8 @@ IdleDecommitPageAllocator::IdleDecommitPageAllocator(AllocationPolicyManager * p
 #ifndef JD_PRIVATE
     Js::ConfigFlagsTable& flagTable,
 #endif
-    size_t maxFreePageCount, size_t maxIdleFreePageCount,
-    bool zeroPages, BackgroundPageQueue *  backgroundPageQueue, size_t maxAllocPageCount) :
+    uint maxFreePageCount, uint maxIdleFreePageCount,
+    bool zeroPages, BackgroundPageQueue *  backgroundPageQueue, uint maxAllocPageCount) :
 #ifdef IDLE_DECOMMIT_ENABLED
     idleDecommitTryEnterWaitFactor(0),
     hasDecommitTimer(false),

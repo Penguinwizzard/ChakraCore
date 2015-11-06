@@ -264,35 +264,35 @@ function asmModule(stdlib, imports) {
 var m = asmModule(this, { g1: SIMD.Float32x4(90934.2, 123.9, 419.39, 449.0), g2: SIMD.Int32x4(-1065353216, -1073741824, -1077936128, -1082130432) });
 
 var ret;
-//WScript.Echo("Func1");
+//print("Func1");
 //ret = m.func1();
-//WScript.Echo(typeof(ret));
-//WScript.Echo(ret.toString());
+//print(typeof(ret));
+//print(ret.toString());
 
-//WScript.Echo("Func2");
+//print("Func2");
 //ret = m.func2();
-//WScript.Echo(typeof(ret));
-//WScript.Echo(ret.toString());
+//print(typeof(ret));
+//print(ret.toString());
 
-//WScript.Echo("Func3");
+//print("Func3");
 //ret = m.func3();
-//WScript.Echo(typeof(ret));
-//WScript.Echo(ret.toString());
+//print(typeof(ret));
+//print(ret.toString());
 
-//WScript.Echo("Func4");
+//print("Func4");
 //ret = m.func4();
-//WScript.Echo(typeof(ret));
-//WScript.Echo(ret.toString());
+//print(typeof(ret));
+//print(ret.toString());
 
-WScript.Echo("Func5");
+print("Func5");
 ret = m.func5();
 equalSimd([-2130706432, -18048, 1073741824, 1065353216],ret, SIMD.Int32x4, "Test Fields");
 
-WScript.Echo("Func6");
+print("Func6");
 ret = m.func6();
 equal(10, ret);
 
-WScript.Echo("Func7");
+print("Func7");
 ret = m.func7();
 equalSimd([33, 10, -1, 20], ret, SIMD.Int32x4, "Test Fields");
-WScript.Echo("PASS");
+print("PASS");

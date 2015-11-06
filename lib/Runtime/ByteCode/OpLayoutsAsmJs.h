@@ -50,13 +50,13 @@ namespace Js
     inline bool operator>=(OpCodeAsmJs &o, uint i) { return ((uint)(o) >= i); }
     inline bool operator>=(uint i, OpCodeAsmJs &o) { return (i >= (uint)(o)); }
 
-    inline bool IsSimd128AsmJsOpcode(OpCodeAsmJs o) 
-    { 
-        return (o > Js::OpCodeAsmJs::Simd128_Start && o < Js::OpCodeAsmJs::Simd128_End) || (o > Js::OpCodeAsmJs::Simd128_Start_Extend && o < Js::OpCodeAsmJs::Simd128_End_Extend); 
+    inline bool IsSimd128AsmJsOpcode(OpCodeAsmJs o)
+    {
+        return (o > Js::OpCodeAsmJs::Simd128_Start && o < Js::OpCodeAsmJs::Simd128_End) || (o > Js::OpCodeAsmJs::Simd128_Start_Extend && o < Js::OpCodeAsmJs::Simd128_End_Extend);
     }
-    inline uint Simd128AsmJsOpcodeCount() 
-    { 
-        return (uint)(Js::OpCodeAsmJs::Simd128_End - Js::OpCodeAsmJs::Simd128_Start) + 1 + (uint)(Js::OpCodeAsmJs::Simd128_End_Extend - Js::OpCodeAsmJs::Simd128_Start_Extend) + 1; 
+    inline uint Simd128AsmJsOpcodeCount()
+    {
+        return (uint)(Js::OpCodeAsmJs::Simd128_End - Js::OpCodeAsmJs::Simd128_Start) + 1 + (uint)(Js::OpCodeAsmJs::Simd128_End_Extend - Js::OpCodeAsmJs::Simd128_Start_Extend) + 1;
     }
 
     ///----------------------------------------------------------------------------
@@ -341,7 +341,7 @@ namespace Js
         typename SizePolicy::RegSlotType    F4_0;
         typename SizePolicy::RegSlotType    F4_1;
     };
-    
+
     template <typename SizePolicy>
     struct OpLayoutT_Float32x4_3
     {
@@ -359,7 +359,7 @@ namespace Js
         typename SizePolicy::RegSlotType    F4_3;
     };
 
-    // 4 floats -> float32x4. 
+    // 4 floats -> float32x4.
     template <typename SizePolicy>
     struct OpLayoutT_Float32x4_1Float4
     {
@@ -607,7 +607,7 @@ namespace Js
         typename SizePolicy::RegSlotType    D2_3;
     };
 
-    
+
     template <typename SizePolicy>
     struct OpLayoutT_Float64x2_1Double2
     {
@@ -756,5 +756,4 @@ namespace Js
 #include "OpCodesAsmJs.h"
 #undef DEFINE_OPCODEINFO
 #undef DEFINE_OPCODEINFO_WMS
-
 }

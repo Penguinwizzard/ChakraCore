@@ -4,8 +4,8 @@
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeByteCodePch.h"
 
-namespace Js {
-
+namespace Js
+{
     void ByteCodeWriter::Create()
     {
         m_loopNest = 0;
@@ -86,8 +86,8 @@ namespace Js {
             // Read "labelID" stored at the offset within the byte-code.
             //
             uint jumpByteOffset = jumpInfo.patchOffset;
-            AssertMsg(jumpByteOffset < byteCount - sizeof(T) ,
-                    "Must have valid jump site within byte-code to back-patch");
+            AssertMsg(jumpByteOffset < byteCount - sizeof(T),
+                "Must have valid jump site within byte-code to back-patch");
 
             unaligned T * pnBackPatch = reinterpret_cast<unaligned T *>(&byteBuffer[jumpByteOffset]);
 
@@ -143,7 +143,7 @@ namespace Js {
         // Update all branch targets with their actual label destinations.
         //
 #ifdef BYTECODE_BRANCH_ISLAND
-        if( useBranchIsland )
+        if (useBranchIsland)
         {
             PatchJumpOffset<JumpOffset>(m_jumpOffsets, byteBuffer, byteCount);
             PatchJumpOffset<LongJumpOffset>(m_longJumpOffsets, byteBuffer, byteCount);
@@ -195,7 +195,7 @@ namespace Js {
         m_functionWrite->AllocateInlineCache();
         m_functionWrite->AllocateObjectLiteralTypeArray();
 
-        if(!PHASE_OFF(Js::ScriptFunctionWithInlineCachePhase, m_functionWrite) && !PHASE_OFF(Js::InlineApplyTargetPhase, m_functionWrite))
+        if (!PHASE_OFF(Js::ScriptFunctionWithInlineCachePhase, m_functionWrite) && !PHASE_OFF(Js::InlineApplyTargetPhase, m_functionWrite))
         {
             if (m_functionWrite->CanFunctionObjectHaveInlineCaches())
             {
@@ -240,10 +240,10 @@ namespace Js {
         m_functionWrite->AllocateLoopHeaders();
         m_loopHeaders->Map([this](int index, ByteCodeWriter::LoopHeaderData& data)
         {
-            LoopHeader *loopHeader  = m_functionWrite->GetLoopHeader(index);
+            LoopHeader *loopHeader = m_functionWrite->GetLoopHeader(index);
             loopHeader->startOffset = data.startOffset;
-            loopHeader->endOffset   = data.endOffset;
-            loopHeader->isNested    = data.isNested;
+            loopHeader->endOffset = data.endOffset;
+            loopHeader->isNested = data.isNested;
         });
     }
 
@@ -297,7 +297,6 @@ namespace Js {
 
     inline void ByteCodeWriter::CheckOp(OpCode op, OpLayoutType layoutType)
     {
-
         AssertMsg(OpCodeUtil::IsValidByteCodeOpcode(op), "Ensure valid OpCode");
         AssertMsg(!OpCodeAttr::BackEndOnly(op), "Can't write back end only OpCode");
         AssertMsg(OpCodeUtil::GetOpCodeLayout(op) == layoutType, "Ensure correct layout for OpCode");
@@ -306,7 +305,7 @@ namespace Js {
     inline void ByteCodeWriter::CheckLabel(ByteCodeLabel labelID)
     {
         AssertMsg(labelID < m_labelOffsets->Count(),
-                "Label must be previously defined before being marked in the byte-code");
+            "Label must be previously defined before being marked in the byte-code");
     }
 
     inline void ByteCodeWriter::CheckReg(RegSlot registerID)
@@ -368,7 +367,7 @@ namespace Js {
         {
             size_t offset = m_byteCodeData.EncodeT<SizePolicy::LayoutEnum>(op, &layout, sizeof(layout), this);
 
-            if(isRootLoad)
+            if (isRootLoad)
             {
                 size_t inlineCacheOffset = offset + OpCodeUtil::EncodedSize(op, SizePolicy::LayoutEnum)
                     + offsetof(OpLayoutT_Reg2WithICIndex<SizePolicy>, inlineCacheIndex);
@@ -440,25 +439,22 @@ namespace Js {
             isProfiled = true;
         }
 
-        Assert(DoProfileNewScObjArrayOp(op)  == false);
+        Assert(DoProfileNewScObjArrayOp(op) == false);
 
         Assert(DoProfileNewScObjectOp(op) == false);
 
-        if(
-            op == Js::OpCode::LdLen_A &&
-            (
-                DoDynamicProfileOpcode(AggressiveIntTypeSpecPhase) ||
+        if (op == Js::OpCode::LdLen_A
+            && (DoDynamicProfileOpcode(AggressiveIntTypeSpecPhase) ||
                 DoDynamicProfileOpcode(FloatTypeSpecPhase) ||
                 DoDynamicProfileOpcode(TypedArrayTypeSpecPhase) ||
-                DoDynamicProfileOpcode(ArrayCheckHoistPhase)
-            ) &&
-            this->m_functionWrite->AllocProfiledLdElemId(&profileId))
+                DoDynamicProfileOpcode(ArrayCheckHoistPhase))
+            && this->m_functionWrite->AllocProfiledLdElemId(&profileId))
         {
             OpCodeUtil::ConvertNonCallOpToProfiled(op);
             isProfiled = true;
         }
 
-        if(isReg2WithICIndex)
+        if (isReg2WithICIndex)
         {
             MULTISIZE_LAYOUT_WRITE(Reg2WithICIndex, op, R0, R1, unit.cacheId, unit.isRootObjectCache);
         }
@@ -512,7 +508,7 @@ namespace Js {
         }
         ProfileId profileId = 0;
         bool isProfiled = false;
-        if ( (DoDynamicProfileOpcode(FloatTypeSpecPhase) && (op == Js::OpCode::Div_A || op == Js::OpCode::Rem_A)) &&
+        if ((DoDynamicProfileOpcode(FloatTypeSpecPhase) && (op == Js::OpCode::Div_A || op == Js::OpCode::Rem_A)) &&
             this->m_functionWrite->AllocProfiledDivOrRem(&profileId))
         {
             isProfiled = true;
@@ -681,7 +677,7 @@ namespace Js {
     void ByteCodeWriter::ArgIn0(RegSlot reg)
     {
         AssertMsg(0 < m_functionWrite->GetInParamsCount(),
-                "Ensure source arg was declared in prologue");
+            "Ensure source arg was declared in prologue");
 
         Reg1(OpCode::ArgIn0, reg);
     }
@@ -722,12 +718,11 @@ namespace Js {
             return;
         }
 
-
         if (DoDynamicProfileOpcode(InlinePhase)
             && arg > 0 && arg < Js::Constants::MaximumArgumentCountForConstantArgumentInlining
             && (reg > FunctionBody::FirstRegSlot && reg < m_functionWrite->GetConstantCount())
             && callSiteId != Js::Constants::NoProfileId
-            && !m_isInDebugMode                                                         // We don't inline in debug mode, so no need to emit ProfiledArgOut_A
+            && !m_isInDebugMode // We don't inline in debug mode, so no need to emit ProfiledArgOut_A
             )
         {
             Assert((reg > FunctionBody::FirstRegSlot && reg < m_functionWrite->GetConstantCount()));
@@ -743,10 +738,10 @@ namespace Js {
 
     void ByteCodeWriter::Br(ByteCodeLabel labelID)
     {
-        Br(OpCode::Br,labelID);
+        Br(OpCode::Br, labelID);
     }
 
-    //For switch case - default branching
+    // For switch case - default branching
     void ByteCodeWriter::Br(OpCode op, ByteCodeLabel labelID)
     {
         CheckOpen();
@@ -772,7 +767,7 @@ namespace Js {
         size_t const offsetOfRelativeJumpOffsetFromEnd = sizeof(OpLayoutBrS) - offsetof(OpLayoutBrS, RelativeJumpOffset);
         OpLayoutBrS data;
         data.RelativeJumpOffset = offsetOfRelativeJumpOffsetFromEnd;
-        data.val     = val;
+        data.val = val;
 
         m_byteCodeData.Encode(op, &data, sizeof(data), this);
         AddJumpOffset(op, labelID, offsetOfRelativeJumpOffsetFromEnd);
@@ -864,9 +859,11 @@ namespace Js {
         case Phase::InlinePhase:
             // Do profile opcode everywhere if we are an inline candidate
             // Otherwise, only in loops if the function has loop
-            #pragma prefast(suppress:__WARNING_LOGICALORNONZERO, "DevDiv bug 830883. False positive when PHASE_OFF is #defined as '(false)'.")
-            return PHASE_FORCE(Phase::InlinePhase, this->m_functionWrite)
-                || (!this->m_functionWrite->GetDontInline() && (noHeuristics || !this->m_hasLoop || (this->m_loopNest != 0) || !(PHASE_OFF(InlineOutsideLoopsPhase, this->m_functionWrite))));
+#pragma prefast(suppress:__WARNING_LOGICALORNONZERO, "DevDiv bug 830883. False positive when PHASE_OFF is #defined as '(false)'.")
+            return PHASE_FORCE(Phase::InlinePhase, this->m_functionWrite) ||
+                (!this->m_functionWrite->GetDontInline() &&
+                    (noHeuristics || !this->m_hasLoop || (this->m_loopNest != 0) ||
+                        !(PHASE_OFF(InlineOutsideLoopsPhase, this->m_functionWrite))));
 
         default:
             return true;
@@ -876,8 +873,7 @@ namespace Js {
     {
         if ((DoProfileCallOp(op) && DoDynamicProfileOpcode(InlinePhase)) ||
             (DoProfileNewScObjArrayOp(op) && (DoDynamicProfileOpcode(NativeArrayPhase, true) || DoDynamicProfileOpcode(InlinePhase, true))) ||
-            (DoProfileNewScObjectOp(op) && (DoDynamicProfileOpcode(InlinePhase, true) || DoDynamicProfileOpcode(FixedNewObjPhase, true))
-            ))
+            (DoProfileNewScObjectOp(op) && (DoDynamicProfileOpcode(InlinePhase, true) || DoDynamicProfileOpcode(FixedNewObjPhase, true))))
         {
             return true;
         }
@@ -918,7 +914,7 @@ namespace Js {
         {
             size_t offset = m_byteCodeData.EncodeT<SizePolicy::LayoutEnum>(op, &layout, sizeof(layout), this);
 
-            if(isRootLoad)
+            if (isRootLoad)
             {
                 size_t inlineCacheOffset = offset + OpCodeUtil::EncodedSize(op, SizePolicy::LayoutEnum)
                     + offsetof(OpLayoutT_CallIExtendedWithICIndex<SizePolicy>, inlineCacheIndex);
@@ -929,7 +925,6 @@ namespace Js {
         }
         return false;
     }
-
 
     template <typename SizePolicy>
     bool ByteCodeWriter::TryWriteCallIExtendedFlags(OpCode op, RegSlot returnValueRegister, RegSlot functionRegister, ArgSlot givenArgCount, CallIExtendedOptions options, uint32 spreadArgsOffset, CallFlags callFlags)
@@ -990,7 +985,8 @@ namespace Js {
         }
         functionRegister = ConsumeReg(functionRegister);
 
-        // CallISpread is not going to use the ldFld cache index, but still remove it from the map as we expect the entry for a cache index to be removed once we have seen the corresponding call.
+        // CallISpread is not going to use the ldFld cache index, but still remove it from the map as we expect
+        // the entry for a cache index to be removed once we have seen the corresponding call.
         CacheIdUnit unit;
         unit.cacheId = Js::Constants::NoInlineCacheIndex;
         callRegToLdFldCacheIndexMap->TryGetValueAndRemove(functionRegister, &unit);
@@ -1001,8 +997,8 @@ namespace Js {
 
         if (DoProfileCallOp(op))
         {
-            if (DoDynamicProfileOpcode(InlinePhase)  &&
-                 callSiteId != Js::Constants::NoProfileId)
+            if (DoDynamicProfileOpcode(InlinePhase) &&
+                callSiteId != Js::Constants::NoProfileId)
             {
                 op = Js::OpCodeUtil::ConvertCallOpToProfiled(op);
                 isProfiled = true;
@@ -1014,32 +1010,21 @@ namespace Js {
                 isProfiled = true;
             }
         }
-        else if(DoProfileNewScObjArrayOp(op) &&
-                (DoDynamicProfileOpcode(NativeArrayPhase, true) || DoDynamicProfileOpcode(InlinePhase, true)) &&
-                callSiteId != Js::Constants::NoProfileId &&
-                this->m_functionWrite->AllocProfiledArrayCallSiteId(&profileId2))
+        else if (DoProfileNewScObjArrayOp(op) &&
+            (DoDynamicProfileOpcode(NativeArrayPhase, true) || DoDynamicProfileOpcode(InlinePhase, true)) &&
+            callSiteId != Js::Constants::NoProfileId &&
+            this->m_functionWrite->AllocProfiledArrayCallSiteId(&profileId2))
         {
             OpCodeUtil::ConvertNonCallOpToProfiled(op);
             isProfiled = true;
             isProfiled2 = true;
         }
-        else if(DoProfileNewScObjectOp(op) && (DoDynamicProfileOpcode(InlinePhase, true) || DoDynamicProfileOpcode(FixedNewObjPhase, true)) &&
+        else if (DoProfileNewScObjectOp(op) && (DoDynamicProfileOpcode(InlinePhase, true) || DoDynamicProfileOpcode(FixedNewObjPhase, true)) &&
             callSiteId != Js::Constants::NoProfileId)
         {
-            // Spread doesn't support IC
-            //if(unit.cacheId == Js::Constants::NoInlineCacheIndex || op == Js::OpCode::NewScObjArraySpread)
-            //{
-                OpCodeUtil::ConvertNonCallOpToProfiled(op);
-                isProfiled = true;
-            //}
-            //else
-            //{
-            //    isCallWithICIndex = true;
-            //    OpCodeUtil::ConvertNonCallOpToProfiledWithICIndex(op);
-            //    isProfiled = true;
-            //}
+            OpCodeUtil::ConvertNonCallOpToProfiled(op);
+            isProfiled = true;
         }
-
 
         uint spreadArgsOffset = 0;
         if (options & CallIExtended_SpreadArgs)
@@ -1048,7 +1033,7 @@ namespace Js {
             spreadArgsOffset = InsertAuxiliaryData(buffer, byteCount);
         }
 
-        if(isCallWithICIndex)
+        if (isCallWithICIndex)
         {
             if (hasCallFlags == true)
             {
@@ -1074,7 +1059,7 @@ namespace Js {
         if (isProfiled)
         {
             m_byteCodeData.Encode(&profileId, sizeof(Js::ProfileId));
-            if(isProfiled2)
+            if (isProfiled2)
             {
                 m_byteCodeData.Encode(&profileId2, sizeof(Js::ProfileId));
             }
@@ -1090,7 +1075,7 @@ namespace Js {
         {
             size_t offset = m_byteCodeData.EncodeT<SizePolicy::LayoutEnum>(op, &layout, sizeof(layout), this);
 
-            if(isRootLoad)
+            if (isRootLoad)
             {
                 size_t inlineCacheOffset = offset + OpCodeUtil::EncodedSize(op, SizePolicy::LayoutEnum)
                     + offsetof(OpLayoutT_CallIWithICIndex<SizePolicy>, inlineCacheIndex);
@@ -1196,7 +1181,7 @@ namespace Js {
             if (DoDynamicProfileOpcode(InlinePhase) &&
                 callSiteId != Js::Constants::NoProfileId)
             {
-                if(unit.cacheId == Js::Constants::NoInlineCacheIndex)
+                if (unit.cacheId == Js::Constants::NoInlineCacheIndex)
                 {
                     op = Js::OpCodeUtil::ConvertCallOpToProfiled(op);
                     isProfiled = true;
@@ -1215,20 +1200,20 @@ namespace Js {
                 isProfiled = true;
             }
         }
-        else if(DoProfileNewScObjArrayOp(op) &&
-                (DoDynamicProfileOpcode(NativeArrayPhase, true) || DoDynamicProfileOpcode(InlinePhase, true)) &&
-                callSiteId != Js::Constants::NoProfileId &&
-                this->m_functionWrite->AllocProfiledArrayCallSiteId(&profileId2))
+        else if (DoProfileNewScObjArrayOp(op) &&
+            (DoDynamicProfileOpcode(NativeArrayPhase, true) || DoDynamicProfileOpcode(InlinePhase, true)) &&
+            callSiteId != Js::Constants::NoProfileId &&
+            this->m_functionWrite->AllocProfiledArrayCallSiteId(&profileId2))
         {
             OpCodeUtil::ConvertNonCallOpToProfiled(op);
             isProfiled = true;
             isProfiled2 = true;
         }
-        else if(DoProfileNewScObjectOp(op) && (DoDynamicProfileOpcode(InlinePhase, true) || DoDynamicProfileOpcode(FixedNewObjPhase, true)) &&
-                callSiteId != Js::Constants::NoProfileId
-            )
+        else if (DoProfileNewScObjectOp(op) &&
+            (DoDynamicProfileOpcode(InlinePhase, true) || DoDynamicProfileOpcode(FixedNewObjPhase, true)) &&
+            callSiteId != Js::Constants::NoProfileId)
         {
-            if(unit.cacheId == Js::Constants::NoInlineCacheIndex)
+            if (unit.cacheId == Js::Constants::NoInlineCacheIndex)
             {
                 OpCodeUtil::ConvertNonCallOpToProfiled(op);
                 isProfiled = true;
@@ -1241,7 +1226,7 @@ namespace Js {
             }
         }
 
-        if(isCallWithICIndex)
+        if (isCallWithICIndex)
         {
             if (hasCallFlags == true)
             {
@@ -1313,7 +1298,7 @@ namespace Js {
             DoDynamicProfileOpcode(ArrayCheckHoistPhase))
         {
             OpCode newop;
-            switch(op)
+            switch (op)
             {
             case OpCode::LdElemI_A:
                 newop = OpCode::ProfiledLdElemI_A;
@@ -1398,27 +1383,23 @@ StoreCommon:
 #if DBG
         switch (op)
         {
-            case OpCode::InitSetFld:
-            case OpCode::InitGetFld:
-            case OpCode::InitClassMemberGet:
-            case OpCode::InitClassMemberSet:
-            case OpCode::InitProto:
-            case OpCode::DeleteFld:
-            case OpCode::DeleteRootFld:
-            case OpCode::LdElemUndefScoped:
-            case OpCode::StFuncExpr:
-            case OpCode::ScopedEnsureNoRedeclFld:
-            case OpCode::ScopedInitFunc:
-            case OpCode::ScopedDeleteFld:
-            {
-                break;
-            }
+        case OpCode::InitSetFld:
+        case OpCode::InitGetFld:
+        case OpCode::InitClassMemberGet:
+        case OpCode::InitClassMemberSet:
+        case OpCode::InitProto:
+        case OpCode::DeleteFld:
+        case OpCode::DeleteRootFld:
+        case OpCode::LdElemUndefScoped:
+        case OpCode::StFuncExpr:
+        case OpCode::ScopedEnsureNoRedeclFld:
+        case OpCode::ScopedInitFunc:
+        case OpCode::ScopedDeleteFld:
+            break;
 
-            default:
-            {
-                AssertMsg(false, "The specified OpCode is not intended for field-access");
-                break;
-            }
+        default:
+            AssertMsg(false, "The specified OpCode is not intended for field-access");
+            break;
         }
 #endif
 
@@ -1467,20 +1448,16 @@ StoreCommon:
 #if DBG
         switch (op)
         {
-            case OpCode::LdSlotArr:
-            case OpCode::StSlot:
-            case OpCode::StSlotChkUndecl:
-            case OpCode::StObjSlot:
-            case OpCode::StObjSlotChkUndecl:
-            {
-                break;
-            }
+        case OpCode::LdSlotArr:
+        case OpCode::StSlot:
+        case OpCode::StSlotChkUndecl:
+        case OpCode::StObjSlot:
+        case OpCode::StObjSlotChkUndecl:
+            break;
 
-            default:
-            {
-                AssertMsg(false, "The specified OpCode is not intended for slot access");
-                break;
-            }
+        default:
+            AssertMsg(false, "The specified OpCode is not intended for slot access");
+            break;
         }
 #endif
 
@@ -1498,22 +1475,20 @@ StoreCommon:
 
         switch (op)
         {
-            case OpCode::LdSlot:
-            case OpCode::LdSlotChkUndecl:
-            case OpCode::LdObjSlot:
-            case OpCode::LdObjSlotChkUndecl:
-                if ((DoDynamicProfileOpcode(AggressiveIntTypeSpecPhase) || DoDynamicProfileOpcode(FloatTypeSpecPhase)) &&
-                    profileId != Constants::NoProfileId)
-                {
-                    OpCodeUtil::ConvertNonCallOpToProfiled(op);
-                }
-                break;
-
-            default:
+        case OpCode::LdSlot:
+        case OpCode::LdSlotChkUndecl:
+        case OpCode::LdObjSlot:
+        case OpCode::LdObjSlotChkUndecl:
+            if ((DoDynamicProfileOpcode(AggressiveIntTypeSpecPhase) || DoDynamicProfileOpcode(FloatTypeSpecPhase)) &&
+                profileId != Constants::NoProfileId)
             {
-                AssertMsg(false, "The specified OpCode is not intended for slot access");
-                break;
+                OpCodeUtil::ConvertNonCallOpToProfiled(op);
             }
+            break;
+
+        default:
+            AssertMsg(false, "The specified OpCode is not intended for slot access");
+            break;
         }
 
         MULTISIZE_LAYOUT_WRITE(ElementSlot, op, value, instance, slotId);
@@ -1579,8 +1554,8 @@ StoreCommon:
             size_t inlineCacheOffset = offset + OpCodeUtil::EncodedSize(op, SizePolicy::LayoutEnum)
                 + offsetof(OpLayoutT_ElementRootCP<SizePolicy>, inlineCacheIndex);
 
-            // root object inline cache index are given out from 0, but it will be at index after
-            // all the plain inline cache. Store the offset of the inline cache index to patch it up later
+            // Root object inline cache index are given out from 0, but it will be at index after
+            // all the plain inline cache. Store the offset of the inline cache index to patch it up later.
             SListBase<size_t> * rootObjectInlineCacheOffsets = isStore ?
                 &rootObjectStoreInlineCacheOffsets : isLoadMethod ? &rootObjectLoadMethodInlineCacheOffsets : &rootObjectLoadInlineCacheOffsets;
             rootObjectInlineCacheOffsets->Prepend(this->m_labelOffsets->GetAllocator(), inlineCacheOffset);
@@ -1612,7 +1587,7 @@ StoreCommon:
             }
             break;
         case OpCode::LdRootMethodFld:
-            if(registerCacheIdForCall)
+            if (registerCacheIdForCall)
             {
                 CacheIdUnit unit(cacheId, true);
                 Assert(!callRegToLdFldCacheIndexMap->TryGetValue(value, &unit));
@@ -1665,9 +1640,9 @@ StoreCommon:
         {
         case OpCode::LdFldForTypeOf:
         case OpCode::LdFld:
-            if(isCtor) //The symbol loaded by this LdFld will be used as a constructor
+            if (isCtor) // The symbol loaded by this LdFld will be used as a constructor
             {
-                if(registerCacheIdForCall)
+                if (registerCacheIdForCall)
                 {
                     CacheIdUnit unit(cacheId);
                     Assert(!callRegToLdFldCacheIndexMap->TryGetValue(value, &unit));
@@ -1685,7 +1660,7 @@ StoreCommon:
             }
             break;
         case OpCode::LdMethodFld:
-            if(registerCacheIdForCall)
+            if (registerCacheIdForCall)
             {
                 CacheIdUnit unit(cacheId);
                 Assert(!callRegToLdFldCacheIndexMap->TryGetValue(value, &unit));
@@ -1735,7 +1710,7 @@ StoreCommon:
         switch (op)
         {
         case OpCode::LdSuperFld:
-            if (isCtor) //The symbol loaded by this LdSuperFld will be used as a constructor
+            if (isCtor) // The symbol loaded by this LdSuperFld will be used as a constructor
             {
                 if (registerCacheIdForCall)
                 {
@@ -1794,16 +1769,12 @@ StoreCommon:
 
         switch (op)
         {
-            case OpCode::ScopedLdInst:
-            {
-                break;
-            }
+        case OpCode::ScopedLdInst:
+            break;
 
-            default:
-            {
-                AssertMsg(false, "The specified OpCode is not intended for field-access with a second instance");
-                break;
-            }
+        default:
+            AssertMsg(false, "The specified OpCode is not intended for field-access with a second instance");
+            break;
         }
 
         MULTISIZE_LAYOUT_WRITE(ElementC2, op, value, instance, propertyIdIndex, value2);
@@ -1847,9 +1818,9 @@ StoreCommon:
         destinationRegister = ConsumeReg(destinationRegister);
         environmentRegister = ConsumeReg(environmentRegister);
         OpCode opcode = isGenerator ?
-                OpCode::NewScGenFunc :
-                this->m_functionWrite->DoStackNestedFunc() ?
-                    OpCode::NewStackScFunc : OpCode::NewScFunc;
+            OpCode::NewScGenFunc :
+            this->m_functionWrite->DoStackNestedFunc() ?
+                OpCode::NewStackScFunc : OpCode::NewScFunc;
         MULTISIZE_LAYOUT_WRITE(ElementSlot, opcode, destinationRegister, environmentRegister, index);
     }
 
@@ -1875,8 +1846,8 @@ StoreCommon:
 
         ProfileId profileId = Constants::NoProfileId;
         bool isProfiled = DoProfileNewScArrayOp(op) &&
-                 DoDynamicProfileOpcode(NativeArrayPhase, true) &&
-                 this->m_functionWrite->AllocProfiledArrayCallSiteId(&profileId);
+            DoDynamicProfileOpcode(NativeArrayPhase, true) &&
+            this->m_functionWrite->AllocProfiledArrayCallSiteId(&profileId);
 
         if (isProfiled)
         {
@@ -1978,18 +1949,18 @@ StoreCommon:
             OpCodeUtil::ConvertNonCallOpToProfiled(op);
 
             OpLayoutDynamicProfile<OpLayoutAuxiliary> data;
-            data.R0         = destinationRegister;
-            data.Offset     = currentOffset;
-            data.C1         = C1;
-            data.profileId  = profileId;
+            data.R0 = destinationRegister;
+            data.Offset = currentOffset;
+            data.C1 = C1;
+            data.profileId = profileId;
 
             m_byteCodeData.Encode(op, &data, sizeof(data), this);
         }
         else
         {
             OpLayoutAuxiliary data;
-            data.R0         = destinationRegister;
-            data.Offset     = currentOffset;
+            data.R0 = destinationRegister;
+            data.Offset = currentOffset;
             data.C1 = C1;
 
             m_byteCodeData.Encode(op, &data, sizeof(data), this);
@@ -2008,8 +1979,8 @@ StoreCommon:
         Assert(byteOffset < m_auxiliaryData.GetCurrentOffset());
 
         OpLayoutAuxiliary data;
-        data.R0         = destinationRegister;
-        data.Offset     = byteOffset;
+        data.R0 = destinationRegister;
+        data.Offset = byteOffset;
         data.C1 = C1;
 
         m_byteCodeData.Encode(op, &data, sizeof(data), this);
@@ -2036,9 +2007,9 @@ StoreCommon:
         //
 
         OpLayoutReg2Aux data;
-        data.R0         = R0;
-        data.R1         = R1;
-        data.Offset     = currentOffset;
+        data.R0 = R0;
+        data.R1 = R1;
+        data.Offset = currentOffset;
         data.C1 = C1;
 
         m_byteCodeData.Encode(op, &data, sizeof(data), this);
@@ -2059,9 +2030,9 @@ StoreCommon:
         Assert(byteOffset < m_auxiliaryData.GetCurrentOffset());
 
         OpLayoutReg2Aux data;
-        data.R0         = R0;
-        data.R1         = R1;
-        data.Offset     = byteOffset;
+        data.R0 = R0;
+        data.R1 = R1;
+        data.Offset = byteOffset;
         data.C1 = C1;
 
         m_byteCodeData.Encode(op, &data, sizeof(data), this);
@@ -2077,7 +2048,7 @@ StoreCommon:
         // Write the buffer's contents
         //
 
-        int currentOffset   = m_auxContextData.GetCurrentOffset();
+        int currentOffset = m_auxContextData.GetCurrentOffset();
         if (byteCount > 0)
         {
             m_auxContextData.Encode(buffer, byteCount);
@@ -2088,9 +2059,9 @@ StoreCommon:
         //
 
         OpLayoutAuxiliary data;
-        data.R0         = destinationRegister;
-        data.Offset     = currentOffset;
-        data.C1         = C1;
+        data.R0 = destinationRegister;
+        data.Offset = currentOffset;
+        data.C1 = C1;
 
         m_byteCodeData.Encode(op, &data, sizeof(data), this);
     }
@@ -2125,7 +2096,7 @@ StoreCommon:
         //   the byte-code, this will be updated.
         //
 
-        return (ByteCodeLabel) m_labelOffsets->Add(UINT_MAX);
+        return (ByteCodeLabel)m_labelOffsets->Add(UINT_MAX);
     }
 
     void ByteCodeWriter::MarkLabel(ByteCodeLabel labelID)
@@ -2134,10 +2105,10 @@ StoreCommon:
         CheckLabel(labelID);
 
 #ifdef BYTECODE_BRANCH_ISLAND
-        if( useBranchIsland )
+        if (useBranchIsland)
         {
-            // If we are going to emit a branch island, it should be before the label
-            EnsureLongBranch( Js::OpCode::Label );
+            // If we are going to emit a branch island, it should be before the label.
+            EnsureLongBranch(Js::OpCode::Label);
         }
 #endif
         //
@@ -2145,10 +2116,10 @@ StoreCommon:
         //
 
         AssertMsg(m_labelOffsets->Item(labelID) == UINT_MAX, "A label may only be defined at one location");
-        m_labelOffsets->SetExistingItem(labelID,  m_byteCodeData.GetCurrentOffset());
+        m_labelOffsets->SetExistingItem(labelID, m_byteCodeData.GetCurrentOffset());
     }
 
-    void ByteCodeWriter::AddJumpOffset(Js::OpCode op, ByteCodeLabel labelId, uint fieldByteOffsetFromEnd)  // Offset of "Offset" field in OpLayout, in bytes
+    void ByteCodeWriter::AddJumpOffset(Js::OpCode op, ByteCodeLabel labelId, uint fieldByteOffsetFromEnd) // Offset of "Offset" field in OpLayout, in bytes
     {
         AssertMsg(fieldByteOffsetFromEnd < 100, "Ensure valid field offset");
         CheckOpen();
@@ -2156,11 +2127,11 @@ StoreCommon:
 
         uint jumpByteOffset = m_byteCodeData.GetCurrentOffset() - fieldByteOffsetFromEnd;
 #ifdef BYTECODE_BRANCH_ISLAND
-        if( useBranchIsland )
+        if (useBranchIsland)
         {
-            // Any Jump might need a long jump, account for that emit the branch island earlier
+            // Any Jump might need a long jump, account for that emit the branch island earlier.
             // Even if it is a back edge and we are going to emit a long jump, we will still
-            // emit a branch around any way
+            // emit a branch around any way.
             this->nextBranchIslandOffset -= LongBranchSize;
 
             uint labelOffset = m_labelOffsets->Item(labelId);
@@ -2223,7 +2194,8 @@ StoreCommon:
 
         return SHRT_MAX + 1;
     }
-    void ByteCodeWriter::AddLongJumpOffset(ByteCodeLabel labelId, uint fieldByteOffsetFromEnd)  // Offset of "Offset" field in OpLayout, in bytes
+
+    void ByteCodeWriter::AddLongJumpOffset(ByteCodeLabel labelId, uint fieldByteOffsetFromEnd) // Offset of "Offset" field in OpLayout, in bytes
     {
         Assert(useBranchIsland);
         AssertMsg(fieldByteOffsetFromEnd < 100, "Ensure valid field offset");
@@ -2262,11 +2234,11 @@ StoreCommon:
     {
         this->firstUnknownJumpInfo = firstUnknownJumpInfo;
 
-        // We will need to emit the next branch from the first branch + branch limit
-        // But leave room for the jump around and one extra byte code instruction
-        // Also account for all the long branch we may have to emit as well
+        // We will need to emit the next branch from the first branch + branch limit.
+        // But leave room for the jump around and one extra byte code instruction.
+        // Also account for all the long branches we may have to emit as well.
         this->nextBranchIslandOffset = firstUnknownJumpOffset + GetBranchLimit()
-                - JumpAroundSize - MaxLayoutSize - MaxOpCodeSize - LongBranchSize * (m_jumpOffsets->Count() - firstUnknownJumpInfo);
+            - JumpAroundSize - MaxLayoutSize - MaxOpCodeSize - LongBranchSize * (m_jumpOffsets->Count() - firstUnknownJumpInfo);
     }
 
     void ByteCodeWriter::EnsureLongBranch(Js::OpCode op)
@@ -2274,14 +2246,14 @@ StoreCommon:
         Assert(useBranchIsland);
         int currentOffset = this->m_byteCodeData.GetCurrentOffset();
 
-        // See if we need to emit branch island yet, and avoid recursion
+        // See if we need to emit branch island yet, and avoid recursion.
         if (currentOffset < this->nextBranchIslandOffset || this->inEnsureLongBranch)
         {
             lastOpcode = op;
             return;
         }
 
-        // Leave actually may continue right after, it is only no fall through in the JIT
+        // Leave actually may continue right after, it is only no fall through in the JIT.
         bool needBranchAround = OpCodeAttr::HasFallThrough(lastOpcode) || lastOpcode == Js::OpCode::Leave;
         lastOpcode = op;
 
@@ -2302,8 +2274,8 @@ StoreCommon:
             // Read "labelID" stored at the offset within the byte-code.
             //
             uint jumpByteOffset = jumpInfo.patchOffset;
-            AssertMsg(jumpByteOffset <= this->m_byteCodeData.GetCurrentOffset()  - sizeof(JumpOffset) ,
-                    "Must have valid jump site within byte-code to back-patch");
+            AssertMsg(jumpByteOffset <= this->m_byteCodeData.GetCurrentOffset() - sizeof(JumpOffset),
+                "Must have valid jump site within byte-code to back-patch");
 
             ByteCodeLabel labelID = jumpInfo.labelId;
             CheckLabel(labelID);
@@ -2313,7 +2285,7 @@ StoreCommon:
             if (labelByteOffset != UINT_MAX)
             {
                 // If a label is already defined, then it should be short
-                // (otherwise we should have emitted a branch island for it already)
+                // (otherwise we should have emitted a branch island for it already).
                 Assert((int)labelByteOffset - (int)jumpByteOffset < GetBranchLimit()
                     && (int)labelByteOffset - (int)jumpByteOffset >= -GetBranchLimit());
                 return false;
@@ -2321,20 +2293,20 @@ StoreCommon:
 
             this->UpdateNextBranchIslandOffset(index, jumpByteOffset);
             // Flush all the jump that are half of the way to the limit as well so we don't have
-            // as many jump around of branch island
+            // as many jump around of branch island.
             int flushNextBranchIslandOffset = this->nextBranchIslandOffset - GetBranchLimit() / 2;
             if (currentOffset < flushNextBranchIslandOffset)
             {
-                // No need to for long branch yet.terminate the loop
+                // No need to for long branch yet. Terminate the loop.
                 return true;
             }
 
             if (labelID == branchAroundLabel)
             {
-                // Let's not flush the branchAroundLabel
-                // Should happen very rarely and mostly when the branch limit is very small
+                // Let's not flush the branchAroundLabel.
+                // Should happen very rarely and mostly when the branch limit is very small.
 
-                // This should be the last short jump I have just emitted (below)
+                // This should be the last short jump we have just emitted (below).
                 Assert(index == m_jumpOffsets->Count() - 1);
                 Assert(currentOffset < this->nextBranchIslandOffset);
                 return true;
@@ -2345,8 +2317,8 @@ StoreCommon:
             // Prevent recursion when we emit byte code here
             this->inEnsureLongBranch = true;
 
-            // Create the branch label and update the jumpInfo
-            // Need to update the jumpInfo before we add the branch island as that might resize the m_jumpOffsets list
+            // Create the branch label and update the jumpInfo.
+            // Need to update the jumpInfo before we add the branch island as that might resize the m_jumpOffsets list.
             ByteCodeLabel longBranchLabel = this->DefineLabel();
             jumpInfo.labelId = longBranchLabel;
 
@@ -2399,7 +2371,7 @@ StoreCommon:
             return;
         }
 #ifdef BYTECODE_BRANCH_ISLAND
-        if( useBranchIsland )
+        if (useBranchIsland)
         {
             // If we are going to emit a branch island, it should be before the statement start
             this->EnsureLongBranch(Js::OpCode::StatementBoundary);
@@ -2497,7 +2469,7 @@ StoreCommon:
         }
     }
 
-    // Pushes a new debugger scope onto the stack.  This information is used when determining
+    // Pushes a new debugger scope onto the stack. This information is used when determining
     // what the current scope is for tracking of let/const initialization offsets (for detecting
     // dead zones).
     void ByteCodeWriter::PushDebuggerScope(Js::DebuggerScope* debuggerScope)
@@ -2523,7 +2495,7 @@ StoreCommon:
 
     DebuggerScope* ByteCodeWriter::RecordStartScopeObject(DiagExtraScopesType scopeType, RegSlot scopeLocation, int* index)
     {
-        if(scopeLocation != Js::Constants::NoRegister)
+        if (scopeLocation != Js::Constants::NoRegister)
         {
             scopeLocation = ConsumeReg(scopeLocation);
         }
@@ -2543,7 +2515,7 @@ StoreCommon:
         Assert(debuggerScope);
 
         // Activation object doesn't use register and slot array location represents the
-        // index in the array.  Only need to consume for register slots.
+        // index in the array. Only need to consume for register slots.
         if (shouldConsumeRegister)
         {
             Assert(location != Js::Constants::NoRegister);
@@ -2558,8 +2530,8 @@ StoreCommon:
         {
             AssertMsg(this->m_currentDebuggerScope, "Function declarations can only be added in a block scope.");
             AssertMsg(debuggerScope == this->m_currentDebuggerScope
-                   || debuggerScope == this->m_currentDebuggerScope->siblingScope,
-                   "Function declarations should always be added to the current scope.");
+                || debuggerScope == this->m_currentDebuggerScope->siblingScope,
+                "Function declarations should always be added to the current scope.");
 
             // If this is a function declaration, it doesn't have a dead zone region so
             // we just update its byte code initialization offset to the start of the block.
@@ -2657,10 +2629,10 @@ StoreCommon:
     uint ByteCodeWriter::EnterLoop(Js::ByteCodeLabel loopEntrance)
     {
 #ifdef BYTECODE_BRANCH_ISLAND
-        if( useBranchIsland )
+        if (useBranchIsland)
         {
             // If we are going to emit a branch island, it should be before the loop header
-            this->EnsureLongBranch( Js::OpCode::StatementBoundary );
+            this->EnsureLongBranch(Js::OpCode::StatementBoundary);
         }
 #endif
 
@@ -2724,7 +2696,7 @@ StoreCommon:
     {
         currentOffset = 0;
         DataChunk* currentChunk = head;
-        while(currentChunk)
+        while (currentChunk)
         {
             // reset to the starting point
             currentChunk->Reset();
@@ -2757,9 +2729,9 @@ StoreCommon:
             DataChunk* currentChunk = head;
             size_t bytesLeftToCopy = cbFinalData;
             byte* currentDest = finalByteCodeBlock->GetBuffer();
-            while(true)
+            while (true)
             {
-                if(bytesLeftToCopy <= currentChunk->GetSize())
+                if (bytesLeftToCopy <= currentChunk->GetSize())
                 {
                     js_memcpy_s(currentDest, bytesLeftToCopy, currentChunk->GetBuffer(), bytesLeftToCopy);
                     break;
@@ -2781,9 +2753,9 @@ StoreCommon:
     __inline uint ByteCodeWriter::Data::EncodeT<SmallLayout>(OpCode op, ByteCodeWriter* writer)
     {
 #ifdef BYTECODE_BRANCH_ISLAND
-        if( writer->useBranchIsland )
+        if (writer->useBranchIsland)
         {
-            writer->EnsureLongBranch( op );
+            writer->EnsureLongBranch(op);
         }
 #endif
         Assert(op < Js::OpCode::ByteCodeLast);
@@ -2814,9 +2786,9 @@ StoreCommon:
     __inline uint ByteCodeWriter::Data::EncodeT(OpCode op, ByteCodeWriter* writer)
     {
 #ifdef BYTECODE_BRANCH_ISLAND
-        if( writer->useBranchIsland )
+        if (writer->useBranchIsland)
         {
-            writer->EnsureLongBranch( op );
+            writer->EnsureLongBranch(op);
         }
 #endif
 
@@ -2824,9 +2796,9 @@ StoreCommon:
         Assert(!OpCodeAttr::BackEndOnly(op));
         Assert(OpCodeAttr::HasMultiSizeLayout(op));
         CompileAssert(layoutSize != SmallLayout);
-        const byte exop = (byte)((op <= Js::OpCode::MaxByteSizedOpcodes)?
-            (layoutSize == LargeLayout? Js::OpCode::LargeLayoutPrefix : Js::OpCode::MediumLayoutPrefix) :
-            (layoutSize == LargeLayout? Js::OpCode::ExtendedLargeLayoutPrefix : Js::OpCode::ExtendedMediumLayoutPrefix));
+        const byte exop = (byte)((op <= Js::OpCode::MaxByteSizedOpcodes) ?
+            (layoutSize == LargeLayout ? Js::OpCode::LargeLayoutPrefix : Js::OpCode::MediumLayoutPrefix) :
+            (layoutSize == LargeLayout ? Js::OpCode::ExtendedLargeLayoutPrefix : Js::OpCode::ExtendedMediumLayoutPrefix));
 
         uint offset = Write(&exop, sizeof(byte));
         Write(&op, sizeof(byte));
@@ -2859,7 +2831,7 @@ StoreCommon:
     {
         // Simple case where the current chunk has enough space.
         uint bytesFree = current->RemainingBytes();
-        if(bytesFree >= byteSize)
+        if (bytesFree >= byteSize)
         {
             current->WriteUnsafe(data, byteSize);
         }
@@ -2885,10 +2857,10 @@ StoreCommon:
         {
             current->nextChunk->SetCurrentOffset(0);
         }
-        while(true)
+        while (true)
         {
             uint bytesFree = current->RemainingBytes();
-            if(bytesFree >= bytesLeftToWrite)
+            if (bytesFree >= bytesLeftToWrite)
             {
                 current->WriteUnsafe(dataToBeWritten, bytesLeftToWrite);
                 break;
@@ -2899,7 +2871,7 @@ StoreCommon:
             dataToBeWritten += bytesFree;
 
             // Create a new chunk when needed
-            if(!current->nextChunk)
+            if (!current->nextChunk)
             {
                 AddChunk(bytesLeftToWrite);
             }

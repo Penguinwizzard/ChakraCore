@@ -3,36 +3,35 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-
 var defvar = 10;
 WScript.Echo(defvar);
 try
 {
-	WScript.Echo(undefvar);
+    WScript.Echo(undefvar);
 }
 catch (e)
 {
-	WScript.Echo(e.message);
+    WScript.Echo(e.message);
 }
 WScript.Echo(this.defvar);
 WScript.Echo(this.undefvar);
 
 function func()
 {
-	WScript.Echo(defvar);
-	try
-	{
-		WScript.Echo(undefvar);
-	}
-	catch (e)
-	{
-		WScript.Echo(e.message);
-	}
+    WScript.Echo(defvar);
+    try
+    {
+        WScript.Echo(undefvar);
+    }
+    catch (e)
+    {
+        WScript.Echo(e.message);
+    }
 
-	// this refers to the global object
-	WScript.Echo(this.defvar);
-	WScript.Echo(this.undefvar);
-	return this;
+    // this refers to the global object
+    WScript.Echo(this.defvar);
+    WScript.Echo(this.undefvar);
+    return this;
 }
 
 var g = func();

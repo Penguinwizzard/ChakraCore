@@ -81,15 +81,6 @@ namespace Js
         }
         else
         {
-            // TODO: Implement this case to handle subclassing feature
-
-            // ES6 Spec changed since Map was implemented regarding subclassing; passed in objects to a Map call
-            // must have [[MapData]] on them already, via @@create method.  We do not currently support @@create,
-            // so we no longer support subclassing of Map for IE11 release.  Since a user cannot call @@create,
-            // they cannot obtain an object with the [[MapData]] internal property, and thus they cannot provide
-            // an object for the this argument here that would not cause the Map constructor to throw.  Therefore
-            // we always throw for now.
-
             JavascriptError::ThrowTypeErrorVar(scriptContext, JSERR_NeedObjectOfType, L"WeakMap", L"WeakMap");
         }
         Assert(weakMapObject != nullptr);
@@ -248,7 +239,7 @@ namespace Js
 
         if (!JavascriptOperators::IsObject(key) || JavascriptOperators::GetTypeId(key) == TypeIds_HostDispatch)
         {
-            // HostDispatch is not expando so can't have internal property added to it.
+            // HostDispatch can not expand so can't have internal property added to it.
             // TODO: Support HostDispatch as WeakMap key
             JavascriptError::ThrowTypeError(scriptContext, JSERR_WeakMapSetKeyNotAnObject, L"WeakMap.prototype.set");
         }

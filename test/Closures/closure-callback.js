@@ -35,5 +35,3 @@ callback = (function () {
 
 while (callback)
     callback();
-
-

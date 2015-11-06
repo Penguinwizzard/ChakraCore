@@ -111,15 +111,6 @@
       <tags>BugFix</tags>
     </default>
   </test>
-  <!-- Disabling for now because the syntax now causes early reference error, but wrapping in eval defeats the purpose
-  <test>
-    <default>
-      <files>bug_OS_2525694.js</files>
-      <compile-flags>-force:cachedscope</compile-flags>
-      <tags>BugFix</tags>
-    </default>
-  </test>
-  -->
   <test>
     <default>
       <files>bug_OS_2671095.js</files>

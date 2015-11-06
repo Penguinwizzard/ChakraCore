@@ -63,20 +63,6 @@ chkstk_done:
         ;; Frame args size.
         sub  rsp, r9
 
-if 0
-ifdef _CONTROL_FLOW_GUARD
-        ; don't need to save the rdx parameter (original frame pointer)
-        mov     rbx, rcx                   ; save call target
-        mov     rdi, r8
-        mov     rsi, r9
-        mov     r12, rax
-        call    [__guard_check_icall_fptr] ; verify that the call target is valid
-        mov     rcx, rbx                   ; restore call target
-        mov     r8, rdi                    ; restore args_size
-        mov     r9, rsi                    ; restore spill_size
-        mov     rax, r12
-endif
-endif
         rex_jmp_reg rcx
 
 amd64_CallWithFakeFrame ENDP

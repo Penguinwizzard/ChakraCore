@@ -76,4 +76,3 @@ namespace JSON
         friend class JSONParser;
     };
 } // namespace JSON
-

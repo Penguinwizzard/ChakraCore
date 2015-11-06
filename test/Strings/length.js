@@ -8,9 +8,9 @@ try
 {
     Object.prototype.createFunction=function()
     {
-	    print("createFunction called");
-	    print(this);
-	    return this
+        print("createFunction called");
+        print(this);
+        return this
     }
 
     Object.prototype.length=function()
@@ -24,7 +24,7 @@ try
     x.length();
     x.length();
 }
-catch (e) 
+catch (e)
 {
     print(e);
 }

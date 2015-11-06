@@ -5,12 +5,11 @@
 
 function f(x,y)
 {
-                
-                                
+
                 switch(x)
                 {
                                 case 1:
-                                                
+
                                    WScript.Echo(1);
                                    break;
                                 case 2:
@@ -84,12 +83,11 @@ function f(x,y)
                 }
 }
 
-
 f(5,16);
 
 for(i=0;i<15;i++)
 {
-	f(new Object,16);
+    f(new Object,16);
 }
 
 /* Test case to see if TEST is not generated when type specialized to float type*/
@@ -97,13 +95,13 @@ function test(){
   var b = 1;
     for(i=0;i<1;i++){
      switch((b++)) {
-      case 1: 
-	    break;
-      case 1: 
+      case 1:
         break;
-      case 1: 
+      case 1:
         break;
-      case 1: 
+      case 1:
+        break;
+      case 1:
         break;
       case 100:
         break;

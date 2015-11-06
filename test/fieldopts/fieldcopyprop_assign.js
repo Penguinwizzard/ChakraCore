@@ -3,7 +3,6 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-
 // Make sure assign to the object kill it's field's value for field copy prop.
 function f(o)
 {
@@ -14,7 +13,6 @@ function f(o)
         o = o.y;
         var b = o.x;
         v += a + b;
-        
     }
     return v;
 }
@@ -29,6 +27,5 @@ for (var i = 0; i < 10; i++)
     o.x = i;
 }
 o.y = a;
-
 
 WScript.Echo(f(a) == 80? "PASS" : "FAIL");

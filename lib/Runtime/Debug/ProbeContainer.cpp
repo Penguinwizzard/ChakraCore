@@ -258,8 +258,9 @@ namespace Js
 
                     if (oldOpcode == OpCode::Break && debugManager->stepController.stepType == STEP_DOCUMENT)
                     {
-                         // that means we have delivered the stepping to the debugger, where we had the breakpoint already, however it is possible that debugger can initiate the step_document. In that case debugger did not break
-                        // due to break. so we have break as a breakpoint reason.
+                        // That means we have delivered the stepping to the debugger, where we had the breakpoint
+                        // already, however it is possible that debugger can initiate the step_document. In that
+                        // case debugger did not break due to break. So we have break as a breakpoint reason.
                         *pOriginalOpcode = OpCode::Break;
                     }
                     else if (OpCode::Break == *pOriginalOpcode)
@@ -376,7 +377,7 @@ namespace Js
 
         jsExceptionObject = pHaltState->exceptionObject->GetThrownObject(nullptr);
 
-        // will store Current offset of the bytecode block.
+        // Will store current offset of the bytecode block.
         int currentOffset = -1;
 
         __try

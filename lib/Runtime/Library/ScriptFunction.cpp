@@ -91,7 +91,7 @@ namespace Js
             }
             else
             {
-                //allocate inline cache for this function object
+                // allocate inline cache for this function object
                 pfuncScriptWithInlineCache->CreateInlineCache();
             }
 
@@ -321,7 +321,7 @@ namespace Js
         {
             return entryPoint;
         }
-        //Based on the comment below, this shouldn't be a a defer deserialization function as it would have a deferred thunk
+        // Based on the comment below, this shouldn't be a a defer deserialization function as it would have a deferred thunk
         FunctionBody * functionBody = this->GetFunctionBody();
         // The original entry point should be an interpreter thunk or the native entry point;
         Assert(functionBody->IsInterpreterThunk() || functionBody->IsNativeOriginalEntryPoint());
@@ -348,7 +348,7 @@ namespace Js
 
         ScriptContext * scriptContext = this->GetScriptContext();
         JavascriptLibrary *javascriptLibrary = scriptContext->GetLibrary();
-        bool isClassMethod = this->GetFunctionInfo()->IsClassMethod() || IsClassConstructor();
+        bool isClassMethod = this->GetFunctionInfo()->IsClassMethod() || this->GetFunctionInfo()->IsClassConstructor();
 
         JavascriptString* prefixString = nullptr;
         uint prefixStringLength = 0;
@@ -385,7 +385,7 @@ namespace Js
         else
         {
 
-            if (IsClassConstructor())
+            if (this->GetFunctionInfo()->IsClassConstructor())
             {
                 name = L"constructor";
                 nameLength = _countof(L"constructor") -1; //subtract off \0
@@ -406,14 +406,17 @@ namespace Js
             nameLength = computedName->GetLength();
         }
 
-        //Length is a uint32 so max length of functionBody can't be more than that even if we are using 64bit pointers
-        uint functionBodyLength = inputString->GetLength() - ((uint)(paramStr - inputStr));
-
+        uint functionBodyLength = inputString->GetLength() - ((uint)(paramStr - inputStr)); 
         size_t totalLength = prefixStringLength + functionBodyLength + nameLength;        
+        
         if (!IsValidCharCount(totalLength))
         {
+            // We throw here because computed property names are evaluated at runtime and 
+            // thus are not a subset string of function body source (parameter inputString).
+            // For all other cases totalLength <= inputString->GetLength().
             JavascriptExceptionOperators::ThrowOutOfMemory(this->GetScriptContext());
         }
+        
         wchar_t * funcBodyStr = RecyclerNewArrayLeaf(this->GetScriptContext()->GetRecycler(), wchar_t, totalLength);
         wchar_t * funcBodyStrStart = funcBodyStr;
         if (prefixString != nullptr)
@@ -783,7 +786,8 @@ namespace Js
                 }
             }
         }
-        returnStr = DisplayNameHelper(name, length);
+        AssertMsg(IsValidCharCount(length), "JavascriptString can't be larger than charcount_t");
+        returnStr = DisplayNameHelper(name, static_cast<charcount_t>(length));
 
         LEAVE_PINNED_SCOPE();
 

@@ -3,39 +3,31 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-//------------------
-//Scenario--------------------------------
-//WScript.Echo("1. Verifying parsing with date string in GMT format.");
+// 1. Verifying parsing with date string in GMT format.
 
 var datestring = "Sat, 12 Aug 1995 13:30:00GMT";
 WScript.Echo(Date.parse(datestring));
 
-//------------------
-//WScript.Echo("2. Verifying parse date with timezone given in paranthesis.");
+// 2. Verifying parse date with timezone given in paranthesis.
 // This parses the date to local timezone and not the timezone given in paranthesis.           
 
 datestring = "Sat, 12 Aug 1995 13:30:00 ( GMT )";
 // Covers the code for space and ( )s int the parser.
 WScript.Echo(Date.parse(datestring));
 
-
-//------------------
-//WScript.Echo("3. Verifying parse date with invalid timezone.");
-
-//This should cover the error condition.
+// 3. Verifying parse date with invalid timezone.
+// This should cover the error condition.
 datestring = "Sat, 12 Aug 1995 13:30:00NX-01";
 
 var actualResult = Date.parse(datestring);
 WScript.Echo(actualResult);
 
-//------------------
-//WScript.Echo("4. Verifying parse date with timezone.");
+// 4. Verifying parse date with timezone.
 
 datestring = "Sat, 12 Aug 1995 13:00:00 z";
 WScript.Echo(Date.parse(datestring));
 
-//------------------
-//Wscript.Echo("5. Verifying conversion behaviors");
+// 5. Verifying conversion behaviors
 
 var toStrings;
 var valueOfs;
@@ -95,9 +87,6 @@ for (var ts in toStrings)
         valueOfCalled = false;
 
         var obj = { toString: toStrings[ts], valueOf: valueOfs[vo] };
-
-        //WScript.Echo("toString:\n    " + obj.toString);
-        //WScript.Echo("valueOf:\n    " + obj.valueOf);
 
         try
         {

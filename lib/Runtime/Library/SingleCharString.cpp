@@ -34,4 +34,4 @@ namespace Js
         return Anew(arena, SingleCharString, ch,
             scriptContext->GetLibrary()->GetStringTypeStatic());
     }
-} 
+}

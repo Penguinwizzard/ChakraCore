@@ -19,10 +19,10 @@ var p2 = new Proxy([0,1,2,3], {
         print('has trap: ' + property);
         return Reflect.has(target, property);
     },
-	deleteProperty: function(target, property){
-		print('delete trap: ' + property);
-		return true;
-	}
+    deleteProperty: function(target, property){
+        print('delete trap: ' + property);
+        return true;
+    }
 });
 
 print('concat test#1');

@@ -20,4 +20,4 @@ function test(param)
 WScript.Echo(test("test1"));
 WScript.Echo(test("test2"));
 
-        
+

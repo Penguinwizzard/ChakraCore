@@ -1152,9 +1152,10 @@ namespace Js
         bool HasValidProfileEntryPoint() const;
         bool HasValidNonProfileEntryPoint() const;
 #endif
-        virtual void SetDisplayName(const wchar_t* displayName, uint displayNameLength, SetDisplayNameFlags flags = SetDisplayNameFlagsNone) = 0;
+        virtual void SetDisplayName(const wchar_t* displayName, uint displayNameLength, uint displayShortNameOffset, SetDisplayNameFlags flags = SetDisplayNameFlagsNone) = 0;
         virtual const wchar_t* GetDisplayName() const = 0;
         virtual uint GetDisplayNameLength() const = 0;
+        virtual uint GetShortDisplayNameOffset() const = 0;
         static const wchar_t* WrapWithBrackets(const wchar_t* name, charcount_t sz, ScriptContext* scriptContext);
 
         // Used only in the library function stringify (toString, DiagGetValueString).
@@ -1234,23 +1235,25 @@ namespace Js
         friend struct ByteCodeSerializer;
 
     private:
-        DeferDeserializeFunctionInfo(int nestedFunctionCount, LocalFunctionId functionId, ByteCodeCache* byteCodeCache, const byte* serializedFunction, Utf8SourceInfo* sourceInfo, ScriptContext* scriptContext, uint functionNumber, const wchar_t* displayName, uint displayNameLength, NativeModule *nativeModule, Attributes attributes);
+        DeferDeserializeFunctionInfo(int nestedFunctionCount, LocalFunctionId functionId, ByteCodeCache* byteCodeCache, const byte* serializedFunction, Utf8SourceInfo* sourceInfo, ScriptContext* scriptContext, uint functionNumber, const wchar_t* displayName, uint displayNameLength, uint displayShortNameOffset, NativeModule *nativeModule, Attributes attributes);
     public:
-        static DeferDeserializeFunctionInfo* New(ScriptContext* scriptContext, int nestedFunctionCount, LocalFunctionId functionId, ByteCodeCache* byteCodeCache, const byte* serializedFunction, Utf8SourceInfo* utf8SourceInfo, const wchar_t* displayName, uint displayNameLength, NativeModule *nativeModule, Attributes attributes);
+        static DeferDeserializeFunctionInfo* New(ScriptContext* scriptContext, int nestedFunctionCount, LocalFunctionId functionId, ByteCodeCache* byteCodeCache, const byte* serializedFunction, Utf8SourceInfo* utf8SourceInfo, const wchar_t* displayName, uint displayNameLength, uint displayShortNameOffset, NativeModule *nativeModule, Attributes attributes);
 
         virtual void Finalize(bool isShutdown) override;
         FunctionBody* Deserialize();
 
         virtual const wchar_t* GetDisplayName() const override;
         void SetDisplayName(const wchar_t* displayName);
-        virtual void SetDisplayName(const wchar_t* displayName, uint displayNameLength, SetDisplayNameFlags flags = SetDisplayNameFlagsNone) override;
+        virtual void SetDisplayName(const wchar_t* displayName, uint displayNameLength, uint displayShortNameOffset, SetDisplayNameFlags flags = SetDisplayNameFlagsNone) override;
         virtual uint GetDisplayNameLength() const { return m_displayNameLength; }
+        virtual uint GetShortDisplayNameOffset() const { return m_displayShortNameOffset; }
         LPCWSTR GetSourceInfo(int& lineNumber, int& columnNumber) const;
     private:
         const byte* m_functionBytes;
         ByteCodeCache* m_cache;
         const wchar_t * m_displayName;  // Optional name
         uint m_displayNameLength;
+        uint m_displayShortNameOffset;
         NativeModule *m_nativeModule;
     };
 
@@ -1259,14 +1262,15 @@ namespace Js
         friend class ByteCodeBufferReader;
 
     protected:
-        ParseableFunctionInfo(JavascriptMethod method, int nestedFunctionCount, int derivedSize, LocalFunctionId functionId, Utf8SourceInfo* sourceInfo, ScriptContext* scriptContext, uint functionNumber, const wchar_t* displayName, uint m_displayNameLength, Attributes attributes, Js::PropertyRecordList* propertyRecordList);
+        ParseableFunctionInfo(JavascriptMethod method, int nestedFunctionCount, int derivedSize, LocalFunctionId functionId, Utf8SourceInfo* sourceInfo, ScriptContext* scriptContext, uint functionNumber, const wchar_t* displayName, uint m_displayNameLength, uint displayShortNameOffset, Attributes attributes, Js::PropertyRecordList* propertyRecordList);
     public:
-        static ParseableFunctionInfo* New(ScriptContext* scriptContext, int nestedFunctionCount, LocalFunctionId functionId, Utf8SourceInfo* utf8SourceInfo, const wchar_t* displayName, uint m_displayNameLength, Js::PropertyRecordList* propertyRecordList, Attributes attributes);
+        static ParseableFunctionInfo* New(ScriptContext* scriptContext, int nestedFunctionCount, LocalFunctionId functionId, Utf8SourceInfo* utf8SourceInfo, const wchar_t* displayName, uint m_displayNameLength, uint displayShortNameOffset, Js::PropertyRecordList* propertyRecordList, Attributes attributes);
 
         DEFINE_VTABLE_CTOR_NO_REGISTER(ParseableFunctionInfo, FunctionProxy);
         FunctionBody* Parse(ScriptFunction ** functionRef = nullptr, bool isByteCodeDeserialization = false);
         FunctionBody* ParseAsmJs(Parser * p, __out CompileScriptException * se, __out ParseNodePtr * ptree);
         virtual uint GetDisplayNameLength() const { return m_displayNameLength; }
+        virtual uint GetShortDisplayNameOffset() const { return m_displayShortNameOffset; }
         bool GetIsDeclaration() const { return m_isDeclaration; }
         void SetIsDeclaration(const bool is) { m_isDeclaration = is; }
         bool GetIsAccessor() const { return m_isAccessor; }
@@ -1419,7 +1423,7 @@ namespace Js
 
         virtual const wchar_t* GetDisplayName() const override;
         void SetDisplayName(const wchar_t* displayName);
-        virtual void SetDisplayName(const wchar_t* displayName, uint displayNameLength, SetDisplayNameFlags flags = SetDisplayNameFlagsNone) override;
+        virtual void SetDisplayName(const wchar_t* displayName, uint displayNameLength, uint displayShortNameOffset, SetDisplayNameFlags flags = SetDisplayNameFlagsNone) override;
 
         virtual void Finalize(bool isShutdown) override;
 
@@ -1490,6 +1494,7 @@ namespace Js
         ULONG m_columnNumber;
         WriteBarrierPtr<const wchar_t> m_displayName;  // Optional name
         uint m_displayNameLength;
+        uint m_displayShortNameOffset;
         WriteBarrierPtr<ScopeInfo> m_scopeInfo;         
         WriteBarrierPtr<PropertyRecordList> m_boundPropertyRecords;
         WriteBarrierVar cachedSourceString;
@@ -1865,7 +1870,7 @@ namespace Js
         // in order to avoid re-adding existing entries.
         NoWriteBarrierField<int> debuggerScopeIndex;
 
-        FunctionBody(ScriptContext* scriptContext, const wchar_t* displayName, uint displayNameLength, uint nestedCount, Utf8SourceInfo* sourceInfo,
+        FunctionBody(ScriptContext* scriptContext, const wchar_t* displayName, uint displayNameLength, uint displayShortNameOffset, uint nestedCount, Utf8SourceInfo* sourceInfo,
             uint uFunctionNumber, uint uScriptId, Js::LocalFunctionId functionId, Js::PropertyRecordList* propRecordList, Attributes attributes
 #ifdef PERF_COUNTERS
             , bool isDeserializedFunction = false
@@ -1887,20 +1892,20 @@ namespace Js
 
     public:
         FunctionBody(ByteCodeCache* cache, Utf8SourceInfo* sourceInfo, ScriptContext* scriptContext):
-            ParseableFunctionInfo((JavascriptMethod) nullptr, 0, 0, (LocalFunctionId) 0, sourceInfo, scriptContext, 0, nullptr, 0, None, nullptr)
+            ParseableFunctionInfo((JavascriptMethod) nullptr, 0, 0, (LocalFunctionId) 0, sourceInfo, scriptContext, 0, nullptr, 0, 0, None, nullptr)
         {
             // Dummy constructor- does nothing
             // Must be stack allocated
             // Used during deferred bytecode serialization
         }
 
-        static FunctionBody * NewFromRecycler(Js::ScriptContext * scriptContext, const wchar_t * displayName, uint displayNameLength, uint nestedCount,
+        static FunctionBody * NewFromRecycler(Js::ScriptContext * scriptContext, const wchar_t * displayName, uint displayNameLength, uint displayShortNameOffset, uint nestedCount,
             Utf8SourceInfo* sourceInfo, uint uScriptId, Js::LocalFunctionId functionId, Js::PropertyRecordList* boundPropertyRecords, Attributes attributes
 #ifdef PERF_COUNTERS
             , bool isDeserializedFunction
 #endif
             );
-        static FunctionBody * NewFromRecycler(Js::ScriptContext * scriptContext, const wchar_t * displayName, uint displayNameLength, uint nestedCount,
+        static FunctionBody * NewFromRecycler(Js::ScriptContext * scriptContext, const wchar_t * displayName, uint displayNameLength, uint displayShortNameOffset, uint nestedCount,
             Utf8SourceInfo* sourceInfo, uint uFunctionNumber, uint uScriptId, Js::LocalFunctionId functionId, Js::PropertyRecordList* boundPropertyRecords, Attributes attributes
 #ifdef PERF_COUNTERS
             , bool isDeserializedFunction

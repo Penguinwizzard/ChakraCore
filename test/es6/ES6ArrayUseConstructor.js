@@ -139,11 +139,11 @@ var tests = [
         body: function () {
             var arr = ['a','b','c','d','e','f'];
             arr['constructor'] = null;
-            assert.throws(function() { Array.prototype.splice.call(arr, 0, 3); }, TypeError, "TypeError when [@@species] is not constructor", "Function '[@@species]' is not a constructor");
+            assert.throws(function() { Array.prototype.splice.call(arr, 0, 3); }, TypeError, "TypeError when constructor[Symbol.species] is not constructor", "Function 'constructor[Symbol.species]' is not a constructor");
 
             var arr = ['a','b','c','d','e','f'];
             Object.defineProperty(arr, 'constructor', {enumerable: false, configurable: true, writable: true, value: null});
-            assert.throws(function() { Array.prototype.splice.call(arr, 0, 3); }, TypeError, "TypeError when [@@species] is not constructor", "Function '[@@species]' is not a constructor");
+            assert.throws(function() { Array.prototype.splice.call(arr, 0, 3); }, TypeError, "TypeError when constructor[Symbol.species] is not constructor", "Function 'constructor[Symbol.species]' is not a constructor");
 
             var arr = ['a','b','c','d','e','f'];
             arr['constructor'] = undefined;
@@ -190,11 +190,11 @@ var tests = [
         body: function () {
             var arr = [1,2,3,4,5,6];
             arr['constructor'] = null;
-            assert.throws(function() { Array.prototype.splice.call(arr, 0, 3); }, TypeError, "TypeError when [@@species] is not constructor", "Function '[@@species]' is not a constructor");
+            assert.throws(function() { Array.prototype.splice.call(arr, 0, 3); }, TypeError, "TypeError when constructor[Symbol.species] is not constructor", "Function 'constructor[Symbol.species]' is not a constructor");
             
             var arr = [1,2,3,4,5,6];
             Object.defineProperty(arr, 'constructor', {enumerable: false, configurable: true, writable: true, value: null});
-            assert.throws(function() { Array.prototype.splice.call(arr, 0, 3); }, TypeError, "TypeError when [@@species] is not constructor", "Function '[@@species]' is not a constructor");
+            assert.throws(function() { Array.prototype.splice.call(arr, 0, 3); }, TypeError, "TypeError when constructor[Symbol.species] is not constructor", "Function 'constructor[Symbol.species]' is not a constructor");
 
             var arr = [1,2,3,4,5,6];
             arr['constructor'] = undefined;
@@ -242,11 +242,11 @@ var tests = [
             var f = function(val) { return val; }
             var arr = ['a','b','c'];
             arr['constructor'] = null;
-            assert.throws(function() { Array.prototype.map.call(arr, f); }, TypeError, "TypeError when [@@species] is not constructor", "Function '[@@species]' is not a constructor");
+            assert.throws(function() { Array.prototype.map.call(arr, f); }, TypeError, "TypeError when constructor[Symbol.species] is not constructor", "Function 'constructor[Symbol.species]' is not a constructor");
 
             var arr = ['a','b','c'];
             Object.defineProperty(arr, 'constructor', {enumerable: false, configurable: true, writable: true, value: null});
-            assert.throws(function() { Array.prototype.map.call(arr, f); }, TypeError, "TypeError when [@@species] is not constructor", "Function '[@@species]' is not a constructor");
+            assert.throws(function() { Array.prototype.map.call(arr, f); }, TypeError, "TypeError when constructor[Symbol.species] is not constructor", "Function 'constructor[Symbol.species]' is not a constructor");
 
             var arr = ['a','b','c'];
             arr['constructor'] = undefined;
@@ -294,11 +294,11 @@ var tests = [
             var f = function(val) { return val; }
             var arr = [1,2,3];
             arr['constructor'] = null;
-            assert.throws(function() { Array.prototype.map.call(arr, f); }, TypeError, "TypeError when [@@species] is not constructor", "Function '[@@species]' is not a constructor");
+            assert.throws(function() { Array.prototype.map.call(arr, f); }, TypeError, "TypeError when constructor[Symbol.species] is not constructor", "Function 'constructor[Symbol.species]' is not a constructor");
 
             var arr = [1,2,3];
             Object.defineProperty(arr, 'constructor', {enumerable: false, configurable: true, writable: true, value: null});
-            assert.throws(function() { Array.prototype.map.call(arr, f); }, TypeError, "TypeError when [@@species] is not constructor", "Function '[@@species]' is not a constructor");
+            assert.throws(function() { Array.prototype.map.call(arr, f); }, TypeError, "TypeError when constructor[Symbol.species] is not constructor", "Function 'constructor[Symbol.species]' is not a constructor");
 
             var arr = [1,2,3];
             arr['constructor'] = undefined;

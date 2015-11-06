@@ -3,13 +3,12 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-
 function crossContextObject()
 {
    this.prop = "property";
 }
 function createObject()
 {
-	var o = new crossContextObject();
-	return o;
+    var o = new crossContextObject();
+    return o;
 }

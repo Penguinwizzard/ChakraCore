@@ -283,9 +283,9 @@ namespace Js
 
         HRESULT hr = S_OK;
 
-        // Get FunctionBodys which are distinctly parseable, i.e. they are not enclosed in any other function (finding out root node of the sub-tree, in which root node is
-        // not enclosed in any other available function) this is by walking over all function and comparing their range.
-        // functions and store in them in the temp container, by comparing their source range.
+        // Get FunctionBodys which are distinctly parseable, i.e. they are not enclosed in any other function (finding
+        // out root node of the sub-tree, in which root node is not enclosed in any other available function) this is
+        // by walking over all function and comparing their range.
 
         BEGIN_TRANSLATE_OOM_TO_HRESULT_NESTED
         {
@@ -297,8 +297,8 @@ namespace Js
                 {
                     if (pFuncBody->IsFakeGlobalFunc(pFuncBody->GetGrfscr()))
                     {
-                        // This is created due to 'Function' code or deferred parsed functions, there is nothing to re-compile in this function
-                        // as this is just a place-holder/fake function.
+                        // This is created due to 'Function' code or deferred parsed functions, there is nothing to
+                        // re-compile in this function as this is just a place-holder/fake function.
 
                         Assert(pFuncBody->GetByteCode() == NULL);
 
@@ -355,7 +355,7 @@ namespace Js
         Assert(hr == S_OK);
     }
 
-    // Create an ordered flat list of sources to reparse. Caller of a source should be added to the list before we add the source itself
+    // Create an ordered flat list of sources to reparse. Caller of a source should be added to the list before we add the source itself.
     void DebugContext::WalkAndAddUtf8SourceInfo(Js::Utf8SourceInfo* sourceInfo, JsUtil::List<Js::Utf8SourceInfo *, Recycler, false, Js::CopyRemovePolicy, RecyclerPointerComparer> *utf8SourceInfoList)
     {
         Js::Utf8SourceInfo* callerUtf8SourceInfo = sourceInfo->GetCallerUtf8SourceInfo();
@@ -371,7 +371,7 @@ namespace Js
             }
             else if (!callerScriptContext->IsInDebugOrSourceRundownMode())
             {
-                // The caller scriptContext is not in run down/debug mode so let's save the relationship so that we can re-parent callees afterwards
+                // The caller scriptContext is not in run down/debug mode so let's save the relationship so that we can re-parent callees afterwards.
                 callerScriptContext->AddCalleeSourceInfoToList(sourceInfo);
             }
         }

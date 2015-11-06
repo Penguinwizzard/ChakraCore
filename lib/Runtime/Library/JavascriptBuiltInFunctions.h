@@ -26,6 +26,6 @@ namespace Js
         static bool IsValidId(Js::LocalFunctionId builtInId);
 
     private:
-        static FunctionInfo * builtInFunctionInfo[MaxBuiltInEnum];
+        static FunctionInfo * const builtInFunctionInfo[MaxBuiltInEnum];
     };
 };

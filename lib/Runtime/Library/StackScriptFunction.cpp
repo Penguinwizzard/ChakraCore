@@ -345,7 +345,7 @@ namespace Js
             if (this->NeedBoxScriptFunction(callerScriptFunction))
             {
                 // TODO-STACK-NESTED-FUNC: Can't assert this yet, JIT might not do stack func allocation
-                // if the function hasn't been parse or deserialize yet.
+                // if the function hasn't been parsed or deserialized yet.
                 // Assert(ThreadContext::IsOnStack(callerScriptFunction));
                 if (ThreadContext::IsOnStack(callerScriptFunction))
                 {
@@ -568,7 +568,7 @@ namespace Js
         {
             // TODO: Once we allocate the slots on the stack, we can only look those slots
             Var * scopeSlots = (Var *)frameDisplay->GetItem(i);
-            size_t scopeSlotcount = ScopeSlots(scopeSlots).GetCount();//(size_t)scopeSlots[Js::ScopeSlots::EncodedSlotCountSlotIndex];
+            size_t scopeSlotcount = ScopeSlots(scopeSlots).GetCount(); // (size_t)scopeSlots[Js::ScopeSlots::EncodedSlotCountSlotIndex];
             // We don't do stack slots if we exceed max encoded slot count
             if (scopeSlotcount < ScopeSlots::MaxEncodedSlotCount)
             {

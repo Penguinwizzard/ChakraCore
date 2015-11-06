@@ -17,7 +17,6 @@ test0();
 // run JITted code
 test0();
 
-
 function test1() {
     var obj0 = {};
     var obj1 = {};
@@ -61,7 +60,6 @@ function test3() {
 test3();
 test3();
 
-
 // Test case where the type reference is hoisted, but the type is not live on the back edge.
 function test4(){
   var obj1 = {};
@@ -69,9 +67,9 @@ function test4(){
   this.prop5 = 1;
   Object.prototype.prop1 = 1;
   Object.prototype.prop5 = 1;
-  for(var __loopvar2 = 0; __loopvar2 < 3 && obj1.prop1 < ((-- this.prop4)); __loopvar2++ + obj1.prop1++) {
+  for (var __loopvar2 = 0; __loopvar2 < 3 && obj1.prop1 < ((-- this.prop4)); __loopvar2++ + obj1.prop1++) {
     var __loopvar3 = 0;
-    while((this.prop5) && __loopvar3 < 3) {
+    while ((this.prop5) && __loopvar3 < 3) {
       __loopvar3++;
       obj1.prop0 = this.prop4;
     }
@@ -93,11 +91,11 @@ function test5(){
     Math.floor(1);
     var i = 0;
     do {
-        obj0.prop0;            
+        obj0.prop0;
         obj0 = 1;
         obj0.prop0;
         i++;
-    } while(i < 3)
+    } while (i < 3)
 }
 test5();
 test5();

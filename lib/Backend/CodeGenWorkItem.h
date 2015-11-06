@@ -80,7 +80,7 @@ protected:
 protected:
     // This reference does not keep the entry point alive, and it's not expected to
     // The entry point is kept alive only if it's in the JIT queue, in which case recyclableData will be allocated and will keep the entry point alive
-    // If the entry point is getting collected, it'll actually removed itself from the work item list so this work item will get deleted when the EntryPointInfo goes away
+    // If the entry point is getting collected, it'll actually remove itself from the work item list so this work item will get deleted when the EntryPointInfo goes away
     Js::EntryPointInfo* entryPointInfo;
     Js::CodeGenRecyclableData *recyclableData;
 
@@ -93,10 +93,10 @@ private:
     EmitBufferAllocation *allocation;
 
 #ifdef IR_VIEWER
-public:  // FIXME (t-doilij) this isn't how it should be
-    bool isRejitIRViewerFunction;           // re-JIT function for IRViewer object generation
-    Js::DynamicObject *irViewerOutput;      // hold results of IRViewer APIs
-    Js::ScriptContext *irViewerRequestContext;  // FIXME (t-doilij) keep track of the request context (unneeded)
+public:
+    bool isRejitIRViewerFunction;               // re-JIT function for IRViewer object generation
+    Js::DynamicObject *irViewerOutput;          // hold results of IRViewer APIs
+    Js::ScriptContext *irViewerRequestContext;  // keep track of the request context
 
     Js::DynamicObject * GetIRViewerOutput(Js::ScriptContext *scriptContext)
     {
@@ -112,7 +112,6 @@ public:  // FIXME (t-doilij) this isn't how it should be
     {
         irViewerOutput = output;
     }
-
 #endif
 private:
 

@@ -10,11 +10,11 @@ namespace Js {
     class AsmJsByteCodeDumper : public ByteCodeDumper
     {
     public:
-        static void Dump( AsmJsFunc* func, FunctionBody* body );
-        static void DumpConstants( AsmJsFunc* func, FunctionBody* body );
-        static void DumpOp( OpCodeAsmJs op, LayoutSize layoutSize, ByteCodeReader& reader, FunctionBody* dumpFunction );
-        
-        static void DumpIntReg( RegSlot reg );
+        static void Dump(AsmJsFunc* func, FunctionBody* body);
+        static void DumpConstants(AsmJsFunc* func, FunctionBody* body);
+        static void DumpOp(OpCodeAsmJs op, LayoutSize layoutSize, ByteCodeReader& reader, FunctionBody* dumpFunction);
+
+        static void DumpIntReg(RegSlot reg);
         static void DumpDoubleReg(RegSlot reg);
         static void DumpFloatReg(RegSlot reg);
         static void DumpR8Float(float value);
@@ -28,8 +28,7 @@ namespace Js {
     template <class T> static void Dump##layout(OpCodeAsmJs op, const unaligned T* data, FunctionBody * dumpFunction, ByteCodeReader& reader);
 #include "LayoutTypesAsmJs.h"
 
-
     };
 #endif
 
-};
+}

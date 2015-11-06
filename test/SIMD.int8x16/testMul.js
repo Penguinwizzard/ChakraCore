@@ -4,14 +4,15 @@
 //-------------------------------------------------------------------------------------------------------
 
 function equal(a, b) {
-    if (a == b)
-        WScript.Echo("Correct");
-    else
-        WScript.Echo(">> Fail!");
+    if (a == b) {
+        print("Correct");
+    } else {
+        print(">> Fail!");
+    }
 }
 
 function testMul() {
-    WScript.Echo("Int8x16 mul");
+    print("Int8x16 mul");
     var a = SIMD.Int8x16(0xFF, 0xFF, 0x80, 0x0, 0xFF, 0xFF, 0x80, 0x0, 0xFF, 0xFF, 0x80, 0x0, 0xFF, 0xFF, 0x80, 0x0);
     var b = SIMD.Int8x16(0x1, 0xFF, 0x80, 0xFF, 0x1, 0xFF, 0x80, 0xFF, 0x1, 0xFF, 0x80, 0xFF, 0x1, 0xFF, 0x80, 0xFF);
     var c = SIMD.Int8x16.mul(a, b);

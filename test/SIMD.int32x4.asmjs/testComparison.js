@@ -213,27 +213,27 @@ var m = asmModule(this, {g1:SIMD.Float32x4(90934.2,123.9,419.39,449.0), g2:SIMD.
 
 
 
-WScript.Echo("Func1");
+print("Func1");
 equalSimd([0, -1, 0, -1], m.func1(0), SIMD.Int32x4, "TestComparison");
-WScript.Echo("Func2");
+print("Func2");
 equalSimd([0, -1, -1, 0], m.func2(0), SIMD.Int32x4, "TestComparison");
-WScript.Echo("Func3");
+print("Func3");
 equalSimd([-1, 0, 0, -1], m.func3(0), SIMD.Int32x4, "TestComparison");
 
-WScript.Echo("Func1");
+print("Func1");
 equalSimd([0, 0, 0, 0], m.func1(1), SIMD.Int32x4, "TestComparison");
-WScript.Echo("Func2");
+print("Func2");
 equalSimd([0, 0, 0, 0], m.func2(1), SIMD.Int32x4, "TestComparison");
-WScript.Echo("Func3");
+print("Func3");
 equalSimd([0, 0, 0, 0], m.func3(1), SIMD.Int32x4, "TestComparison");
 
-WScript.Echo("Func1");
+print("Func1");
 equalSimd([-1, 0, -1, 0], m.func1(2), SIMD.Int32x4, "TestComparison");
-WScript.Echo("Func2");
+print("Func2");
 equalSimd([-1, 0, 0, -1], m.func2(2), SIMD.Int32x4, "TestComparison");
-WScript.Echo("Func3");
+print("Func3");
 equalSimd([0, -1, -1, 0], m.func3(2), SIMD.Int32x4, "TestComparison");
-WScript.Echo("PASS");
+print("PASS");
 
 
 

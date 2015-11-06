@@ -2599,7 +2599,7 @@ bool Inline::InlineApplyTarget(IR::Instr *callInstr, const Js::FunctionCodeGenJi
     implicitThisArgOut->Remove();
 
     startCall->SetSrc2(IR::IntConstOpnd::New(startCall->GetArgOutCount(/*getInterpreterArgOutCount*/ false), TyUint32, startCall->m_func));
-    startCall->GetSrc1()->AsIntConstOpnd()->m_value -= 1; // update the count of argouts as seen by JIT, in the start call instruction
+    startCall->GetSrc1()->AsIntConstOpnd()->IncrValue(-1); // update the count of argouts as seen by JIT, in the start call instruction
 
     *returnInstr = InlineCallApplyTarget_Shared(callInstr, originalCallTargetStackSym, inlineeData->GetFunctionInfo(), inlineeData, inlineCacheIndex,
                                                 safeThis, /*isApplyTarget*/ true, /*isCallTarget*/ false, recursiveInlineDepth);
@@ -2893,7 +2893,7 @@ Inline::InlineCallTarget(IR::Instr *callInstr, const Js::FunctionCodeGenJitTimeD
     implicitThisArgOut->Remove();
 
     startCall->SetSrc2(IR::IntConstOpnd::New(startCall->GetArgOutCount(/*getInterpreterArgOutCount*/ false), TyUint32, startCall->m_func));
-    startCall->GetSrc1()->AsIntConstOpnd()->m_value -= 1;
+    startCall->GetSrc1()->AsIntConstOpnd()->SetValue(startCall->GetSrc1()->AsIntConstOpnd()->GetValue() - 1);
 
     *returnInstr = InlineCallApplyTarget_Shared(callInstr, originalCallTargetStackSym, inlineeData->GetFunctionInfo(), inlineeData, inlineCacheIndex,
                                                 safeThis, /*isApplyTarget*/ false, /*isCallTarget*/ true, recursiveInlineDepth);
@@ -4073,7 +4073,7 @@ bool Inline::InlConstFold(IR::Instr *instr, IntConstType *pValue, __in_ecount_op
         if (instr->m_opcode == Js::OpCode::LdC_A_I4)
         {
             // Found a constant
-            *pValue = src1->AsIntConstOpnd()->m_value;
+            *pValue = src1->AsIntConstOpnd()->GetValue();
             return true;
         }
         return false;
@@ -4172,7 +4172,8 @@ bool Inline::InlConstFold(IR::Instr *instr, IntConstType *pValue, __in_ecount_op
     {
         IntConstType src2Constant = *pValue;
 
-        if (!instr->BinaryCalculator(src1Constant, src2Constant, pValue))
+        if (!instr->BinaryCalculator(src1Constant, src2Constant, pValue)
+            || !Math::FitsInDWord(*pValue))
         {
             return false;
         }
@@ -4210,7 +4211,8 @@ bool Inline::InlConstFold(IR::Instr *instr, IntConstType *pValue, __in_ecount_op
     }
     else
     {
-        if (!instr->UnaryCalculator(src1Constant, pValue))
+        if (!instr->UnaryCalculator(src1Constant, pValue)
+            || !Math::FitsInDWord(*pValue))
         {
             // Skip over BytecodeArgOutCapture
             if (instr->m_opcode == Js::OpCode::BytecodeArgOutCapture)
@@ -4384,7 +4386,11 @@ Inline::MapActuals(IR::Instr *callInstr, __inout_ecount(maxParamCount) IR::Instr
     // Note that the StartCall will reflect the formal count only as of now; the actual count would be set during MapFormals
     if(*stackArgsArgOutExpanded)
     {
-        linkOpnd->AsRegOpnd()->m_sym->m_instrDef->GetSrc1()->AsIntConstOpnd()->m_value += fixupArgoutCount - 1;
+        // TODO: Is an underflow here intended, it triggers on test\inlining\OS_2733280.js
+        IR::IntConstOpnd * countOpnd = linkOpnd->AsRegOpnd()->m_sym->m_instrDef->GetSrc1()->AsIntConstOpnd();
+        int32 count = countOpnd->AsInt32();
+        count += fixupArgoutCount - 1;
+        countOpnd->SetValue(count);
 
         callInstr->m_func->EnsureCallSiteToArgumentsOffsetFixupMap();
         Assert(!(callInstr->m_func->callSiteToArgumentsOffsetFixupMap->ContainsKey(callSiteId)));
@@ -4551,7 +4557,7 @@ Inline::MapFormals(Func *inlinee,
                 }
 
                 Assert(instr->GetSrc1()->IsIntConstOpnd());
-                Js::ProfileId callSiteId = static_cast<Js::ProfileId>(instr->GetSrc1()->AsIntConstOpnd()->m_value);
+                Js::ProfileId callSiteId = static_cast<Js::ProfileId>(instr->GetSrc1()->AsIntConstOpnd()->GetValue());
 
                 argInstr = linkOpnd->AsSymOpnd()->m_sym->AsStackSym()->GetInstrDef();
                 while(linkOpnd->IsSymOpnd())
@@ -4569,7 +4575,7 @@ Inline::MapFormals(Func *inlinee,
                 if(actualCount < formalCountForInlinee)
                 {
                     RemoveExtraFixupArgouts(instr, formalCountForInlinee - actualCount, callSiteId);
-                    startCallForInlinee->GetSrc1()->AsIntConstOpnd()->m_value -= formalCountForInlinee - actualCount; // account for the extra formals
+                    startCallForInlinee->GetSrc1()->AsIntConstOpnd()->DecrValue(formalCountForInlinee - actualCount); //account for the extra formals
                 }
 
                 linkOpnd = instr->GetSrc2();
@@ -4613,7 +4619,7 @@ Inline::MapFormals(Func *inlinee,
                 if (formalCountForInlinee < actualCount)
                 {
                     FixupExtraActualParams(instr, argOuts, argOutsExtra, formalCountForInlinee, actualCount, callSiteId);
-                    startCallForInlinee->GetSrc1()->AsIntConstOpnd()->m_value += actualCount - formalCountForInlinee; // account for the extra actuals
+                    startCallForInlinee->GetSrc1()->AsIntConstOpnd()->IncrValue(actualCount - formalCountForInlinee); //account for the extra actuals
                 }
 
                 break;
@@ -4693,6 +4699,7 @@ Inline::MapFormals(Func *inlinee,
             break;
 
         case Js::OpCode::LdSuper:
+        case Js::OpCode::LdSuperCtor:
             if (instr->m_func == inlinee)
             {
                 instr->SetSrc1(funcObjOpnd);
@@ -4729,7 +4736,7 @@ Inline::MapFormals(Func *inlinee,
                         if (instr->m_opcode == Js::OpCode::LdThis)
                         {
                             thisConstVar = Js::JavascriptOperators::OP_GetThis(
-                                thisConstVar, instr->GetSrc2()->AsIntConstOpnd()->m_value, scriptContext);
+                                thisConstVar, instr->GetSrc2()->AsIntConstOpnd()->AsInt32(), scriptContext);
                             instr->FreeSrc2();
                         }
                         else

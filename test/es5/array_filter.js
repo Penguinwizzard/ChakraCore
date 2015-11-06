@@ -5,20 +5,20 @@
 
 function returnTrue(x,y,z)
 {
-	WScript.Echo("value:"+ x + " index:" + y + " Object:" + z); 
-	return true;
+    WScript.Echo("value:"+ x + " index:" + y + " Object:" + z);
+    return true;
 }
 
 function returnFalse(x,y,z)
 {
-	WScript.Echo("value:"+ x + " index:" + y + " Object:" + z); 
-	return false;
+    WScript.Echo("value:"+ x + " index:" + y + " Object:" + z);
+    return false;
 }
 
 function returnRandom(x,y,z)
 {
-	WScript.Echo("value:"+ x + " index:" + y + " Object:" + z); 
-	return y!=1;
+    WScript.Echo("value:"+ x + " index:" + y + " Object:" + z);
+    return y!=1;
 }
 
 Array.prototype[6] = 20;
@@ -27,7 +27,6 @@ var x = [1,2,3,4,5];
 var y = x.filter(returnTrue,this);
 WScript.Echo(y);
 
-
 x = [10,20,30,40,50];
 y = x.filter(returnFalse, this);
 WScript.Echo(y);
@@ -35,7 +34,6 @@ WScript.Echo(y);
 x = [10,20,30,40,50];
 y = x.filter(returnRandom, this);
 WScript.Echo(y);
-
 
 x = {0: "abc", 1: "def", 2: "xyz"}
 x.length = 3;

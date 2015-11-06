@@ -6,26 +6,25 @@
 function write(args)
 {
    if(typeof(WScript) == "undefined")
-      print(args);  
+      print(args);
    else
      WScript.Echo(args);
 }
-
 
 var x = { a: 1, b: 2};
 
 write("1st enumeration");
 for(var i in x)
 {
-	if(x[i] == 1)
-	{
-	    delete x.a;
-	    delete x.b;
-	    x.c = 3;
-	    x.d = 4;
-	}
-	else
-		write(x[i]);
+    if(x[i] == 1)
+    {
+        delete x.a;
+        delete x.b;
+        x.c = 3;
+        x.d = 4;
+    }
+    else
+        write(x[i]);
 }
 
 write("2nd enumeration");
@@ -40,4 +39,3 @@ for (var i in obj) {
     else
         write(obj[i]);
 }
-

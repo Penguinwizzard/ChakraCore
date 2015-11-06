@@ -61,12 +61,12 @@ namespace Js
         objectEnumerator = (Js::JavascriptEnumerator*)enumerator;
     }
 
-    BOOL ArgumentsObjectEnumerator::GetCurrentPropertyId(PropertyId *pPropertyId)
+    bool ArgumentsObjectEnumerator::GetCurrentPropertyId(PropertyId *pPropertyId)
     {
         if (!doneFormalArgs)
         {
             *pPropertyId = Constants::NoProperty;
-            return FALSE;
+            return false;
         }
         return objectEnumerator->GetCurrentPropertyId(pPropertyId);
     }

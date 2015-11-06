@@ -66,16 +66,16 @@ var buffer = new ArrayBuffer(16 * 1024 * 1024);
 var m = asmModule(this, null, buffer);
 
 InitBuffer1(buffer);
-WScript.Echo("List 1");
-WScript.Echo(m.linearSearch(13654, 10));
-WScript.Echo(m.linearSearch(23, 10));
-WScript.Echo(m.linearSearch(145764, 10));
-WScript.Echo(m.linearSearch(53, 10));
-WScript.Echo(m.linearSearch(-53, 10));
+print("List 1");
+print(m.linearSearch(13654, 10));
+print(m.linearSearch(23, 10));
+print(m.linearSearch(145764, 10));
+print(m.linearSearch(53, 10));
+print(m.linearSearch(-53, 10));
 
 InitBuffer2(buffer);
-WScript.Echo("List 2");
-WScript.Echo(m.linearSearch(13654, 999999));
-WScript.Echo(m.linearSearch(23, 999999));
-WScript.Echo(m.linearSearch(145764, 999999));
-WScript.Echo(m.linearSearch(-53, 999999));
+print("List 2");
+print(m.linearSearch(13654, 999999));
+print(m.linearSearch(23, 999999));
+print(m.linearSearch(145764, 999999));
+print(m.linearSearch(-53, 999999));

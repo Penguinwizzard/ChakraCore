@@ -5,7 +5,7 @@
 this.WScript.LoadScriptFile("..\\UnitTestFramework\\SimdJsHelpers.js");
 function asmModule(stdlib, imports) {
     "use asm";
-    
+
     var i4 = stdlib.SIMD.Int32x4;
     var i4check = i4.check;
     var i4splat = i4.splat;
@@ -184,9 +184,4 @@ var ret3 = m.func3(SIMD.Int32x4(1,2,3,4), SIMD.Float32x4(1,2,3,4), SIMD.Float64x
 equalSimd([100, 100, 100, 100], ret1, SIMD.Int32x4, "");
 equalSimd([14851, 14851, 14851, 14851], ret2, SIMD.Int32x4, "");
 equalSimd([1234, 1234, 1234, 1234], ret3, SIMD.Int32x4, "");
-WScript.Echo("PASS");
-
-
-
-
-
+print("PASS");

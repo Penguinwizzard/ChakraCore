@@ -8,9 +8,6 @@ var b = new Array();
 var c = new Array("muck", 3.2, 0, 18);
 c[-1] = "minus 1";
 
-// TODO: Figure out how booleans are supposed to be displayed with WScript.Echo()
-// var c = new Array("muck", 3.2, false, 18);
-
 WScript.Echo("Store a single item in a");
 a[1] = 10;
 WScript.Echo(a[1]);

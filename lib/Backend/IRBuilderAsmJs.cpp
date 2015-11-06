@@ -3240,6 +3240,7 @@ IRBuilderAsmJs::BuildFloat32x4_2(Js::OpCodeAsmJs newOpcode, uint32 offset)
     default:
         opcode = GetSimdOpcode(newOpcode);
     }
+
     AssertMsg((uint32)opcode, "Invalid backend SIMD opcode");
 
     IR::Instr * instr = IR::Instr::New(opcode, dstOpnd, src1Opnd, m_func);

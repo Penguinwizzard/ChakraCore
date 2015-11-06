@@ -23,7 +23,6 @@ namespace Js
         int intSIMDW = JavascriptConversion::ToInt32(args.Info.Count >= 5 ? args[4] : undefinedVar, scriptContext);
 
         SIMDValue lanes = SIMDInt32x4Operation::OpInt32x4(intSIMDX, intSIMDY, intSIMDZ, intSIMDW);
-
         return JavascriptSIMDInt32x4::New(&lanes, scriptContext);
     }
 
@@ -1181,5 +1180,4 @@ namespace Js
         }
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInvalidArgType, L"SIMD.Int32x4.store");
     }
-
 }

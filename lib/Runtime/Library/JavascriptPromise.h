@@ -234,7 +234,7 @@ namespace Js
         void SetReject(RecyclableObject* reject);
 
     public:
-        // Finalizable support       
+        // Finalizable support
         virtual void Finalize(bool isShutdown)
         {
         }
@@ -270,7 +270,7 @@ namespace Js
         RecyclableObject* GetHandler();
 
     public:
-        // Finalizable support       
+        // Finalizable support
         virtual void Finalize(bool isShutdown)
         {
         }

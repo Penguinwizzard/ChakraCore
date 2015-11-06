@@ -77,7 +77,7 @@ namespace Js {
             return NULL;
         }
         
-        virtual BOOL GetCurrentPropertyId(PropertyId *propertyId) 
+        virtual bool GetCurrentPropertyId(PropertyId *propertyId) 
         {
            *propertyId = Constants::NoProperty;
             return false; 

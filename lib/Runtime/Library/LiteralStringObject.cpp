@@ -14,8 +14,9 @@ namespace Js
         this->GetTypeHandler()->ClearHasOnlyWritableDataProperties(); // length is non-writable
         if(GetTypeHandler()->GetFlags() & DynamicTypeHandler::IsPrototypeFlag)
         {
-            // No need to invalidate store field caches for non-writable properties here.  Since this type is just being created, it cannot represent
-            // an object that is already a prototype.  If it becomes a prototype and then we attempt to add a property to an object derived from this
+
+            // No need to invalidate store field caches for non-writable properties here. Since this type is just being created, it cannot represent
+            // an object that is already a prototype. If it becomes a prototype and then we attempt to add a property to an object derived from this
             // object, then we will check if this property is writable, and only if it is will we do the fast path for add property.
             GetLibrary()->NoPrototypeChainsAreEnsuredToHaveOnlyWritableDataProperties();
         }
@@ -29,8 +30,8 @@ namespace Js
         this->GetTypeHandler()->ClearHasOnlyWritableDataProperties(); // length is non-writable
         if(GetTypeHandler()->GetFlags() & DynamicTypeHandler::IsPrototypeFlag)
         {
-            // No need to invalidate store field caches for non-writable properties here.  Since this type is just being created, it cannot represent
-            // an object that is already a prototype.  If it becomes a prototype and then we attempt to add a property to an object derived from this
+            // No need to invalidate store field caches for non-writable properties here. Since this type is just being created, it cannot represent
+            // an object that is already a prototype. If it becomes a prototype and then we attempt to add a property to an object derived from this
             // object, then we will check if this property is writable, and only if it is will we do the fast path for add property.
             GetLibrary()->NoPrototypeChainsAreEnsuredToHaveOnlyWritableDataProperties();
         }

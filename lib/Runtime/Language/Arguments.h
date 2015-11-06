@@ -52,7 +52,7 @@ namespace Js
                 // the eval built-in should see.
                 Assert(Info.Count > 0);
                 // The local version should be consistent. On the other hand, lots of code throughout
-                // jscript/trident uses the callInfo from stack to get argument list etc. We'll need
+                // jscript uses the callInfo from stack to get argument list etc. We'll need
                 // to change all the caller to be aware of the id or somehow make sure they don't use
                 // the stack version. Both seem risky. It would be safer and more robust to just
                 // change the stack version.

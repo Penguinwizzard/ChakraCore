@@ -173,7 +173,7 @@ namespace Js
                 JsUtil::BaseDictionary<AsmJsSIMDValue, RegSlot, ArenaAllocator, PowerOf2SizePolicy, AsmJsComparer>::EntryType &entry = it.Current();
                 RegSlot regSlot = entry.Value();
                 Assert((Var*)simdTable + regSlot < (Var*)funcBody->GetConstTable() + funcBody->GetConstantCount());
-                // we cannot do sequential copy since register are assigned to constants in the order they appear in the code, not per dictionary order.
+                // we cannot do sequential copy since registers are assigned to constants in the order they appear in the code, not per dictionary order.
                 simdTable[entry.Value()] = entry.Key();
             }
         }
@@ -181,7 +181,6 @@ namespace Js
 
     void AsmJSByteCodeGenerator::FinalizeRegisters( FunctionBody* byteCodeFunction )
     {
-        // REVIEW: check that this calculation makes sense
         // this value is the number of Var slots needed to allocate all the const
         int nbConst =
             ((mFunction->GetRegisterSpace<double>().GetConstCount() + 1) * DOUBLE_SLOTS_SPACE) // space required for all double constants + 1 return register reserved
@@ -578,11 +577,6 @@ namespace Js
             return EmitSwitch( pnode );
         case knopFor:
             MaybeTodo( pnode->sxFor.pnodeInverted != NULL );
-//             if( pnode->sxFor.pnodeInverted != NULL )
-//             {
-//                 byteCodeGenerator->EmitInvertedLoop( pnode, pnode->sxFor.pnodeInverted, funcInfo );
-//             }
-//             else
             {
                 const EmitExpressionInfo& initInfo = Emit( pnode->sxFor.pnodeInit );
                 mFunction->ReleaseLocationGeneric( &initInfo );
@@ -2496,7 +2490,7 @@ namespace Js
                 throw AsmJsCompilationException( L"Cannot assign value ArrayBuffer" );
             }
 
-            // REVIEW: this seems hacky, but to keep tmp registers in order, I need to release rhsEmit.local before indexInfo.location
+            // to keep tmp registers in order, I need to release rhsEmit.local before indexInfo.location
             mWriter.AsmTypedArr(op, rhsEmit.location, indexSlot, viewType);
             RegSlot rhsReg = rhsEmit.location;
             mFunction->ReleaseLocationGeneric(&rhsEmit);

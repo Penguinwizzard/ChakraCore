@@ -6,7 +6,7 @@
 
 namespace Js
 {
-    BreakpointProbe::BreakpointProbe(DebugDocument* debugDocument, StatementLocation &statement) :
+    BreakpointProbe::BreakpointProbe(DebugDocument* debugDocument, StatementLocation& statement) :
         debugDocument(debugDocument),
         functionBody(statement.function),
         characterOffset(statement.statement.begin),

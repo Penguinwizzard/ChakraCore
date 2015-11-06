@@ -21,13 +21,13 @@ function test() {
             uiktzz++;
         }
     };
-	return x;
+    return x;
 };
 
-//Interpreter call
+// Interpreter call
 test();
 
-//JIT call
+// JIT call
 test();
 test();
 test();

@@ -85,8 +85,7 @@ function asmModule(stdlib, imports, buffer) {
     var f4store1 = f4.store1;
     var f4store2 = f4.store2;
     var f4store3 = f4.store3;
-    
-    
+
     var d2 = stdlib.SIMD.Float64x2;  
     var d2check = d2.check;
     var d2splat = d2.splat;
@@ -115,14 +114,13 @@ function asmModule(stdlib, imports, buffer) {
     var d2greaterThan = d2.greaterThan;
     var d2greaterThanOrEqual = d2.greaterThanOrEqual;
     var d2select = d2.select;
-    
+
     var d2load  = d2.load;
     var d2load1 = d2.load1;
-    
+
     var d2store  = d2.store
     var d2store1 = d2.store1;
-    
-    
+
     var fround = stdlib.Math.fround;
 
     var globImportF4 = f4check(imports.g1);       // global var import
@@ -134,13 +132,11 @@ function asmModule(stdlib, imports, buffer) {
     var gval = 1234;
     var gval2 = 1234.0;
 
-
-    
     var loopCOUNT = 3;
-    
+
     var Int8Heap = new stdlib.Int8Array (buffer);    
     var Uint8Heap = new stdlib.Uint8Array (buffer);    
-    
+
     var Int16Heap = new stdlib.Int16Array(buffer);
     var Uint16Heap = new stdlib.Uint16Array(buffer);
     var Int32Heap = new stdlib.Int32Array(buffer);
@@ -170,7 +166,7 @@ function asmModule(stdlib, imports, buffer) {
         }
         return i4check(y);
     }
-    
+
     function func1OOB_1()
     {
         var x = i4(1, 2, 3, 4);
@@ -179,14 +175,14 @@ function asmModule(stdlib, imports, buffer) {
         var index = 0;
         var size = 10;
         var loopIndex = 0;
-        
+
         index = (0x10000-160)|0;
         for (loopIndex = 0; (loopIndex | 0) < (size | 0) ; loopIndex = (loopIndex + 1) | 0)
         {
             i4store(Int8Heap, index >> 0, x);
             index = (index + 16 ) | 0;
         }
-        
+
         // No OOB
         index = (0x10000-160)|0;
         for (loopIndex = 0; (loopIndex | 0) < (size | 0) ; loopIndex = (loopIndex + 1) | 0)
@@ -224,7 +220,7 @@ function asmModule(stdlib, imports, buffer) {
         }
         return i4check(y);
     }
-    
+
     function func2()
     {
         var x = i4(1, 2, 3, 4);
@@ -238,7 +234,7 @@ function asmModule(stdlib, imports, buffer) {
             i4store3(Uint16Heap, index >> 1, x);
             index = (index + 16 ) | 0;
         }
-        
+
         index = 100;
         for (loopIndex = 0; (loopIndex | 0) < (size | 0) ; loopIndex = (loopIndex + 1) | 0)
         {
@@ -264,8 +260,7 @@ function asmModule(stdlib, imports, buffer) {
             i4store3(Uint16Heap, index >> 1, x);
             index = (index + 16 ) | 0;
         }
-        
-        
+
         // No OOB here
         index = ((0x10000 - 160) + 4)|0;
         for (loopIndex = 0; (loopIndex | 0) < (size | 0) ; loopIndex = (loopIndex + 1) | 0)
@@ -276,7 +271,7 @@ function asmModule(stdlib, imports, buffer) {
         }
         return i4check(y);
     }
-    
+
     function func2OOB_2()
     {
         var x = i4(1, 2, 3, 4);
@@ -302,9 +297,7 @@ function asmModule(stdlib, imports, buffer) {
             index = (index + 16 ) | 0;
         }
     }
-    
 
-    
     function func3()
     {
         var x = i4(1, 2, 3, 4);
@@ -328,7 +321,7 @@ function asmModule(stdlib, imports, buffer) {
         }
         return i4check(y);
     }
-    
+
     function func3OOB_1()
     {
         var x = i4(1, 2, 3, 4);
@@ -355,7 +348,7 @@ function asmModule(stdlib, imports, buffer) {
         }
         return i4check(y);
     }
-    
+
     function func3OOB_2()
     {
         var x = i4(1, 2, 3, 4);
@@ -371,7 +364,7 @@ function asmModule(stdlib, imports, buffer) {
             i4store2(Uint16Heap, index >> 1, x);
             index = (index + 16 ) | 0;
         }
-        
+
         index = ((0x10000 - 160) + 32)|0;
         // OOB
         for (loopIndex = 0; (loopIndex | 0) < (size | 0) ; loopIndex = (loopIndex + 1) | 0)
@@ -382,7 +375,7 @@ function asmModule(stdlib, imports, buffer) {
         }
         return i4check(y);
     }
-    
+
     function func4()
     {
         var x = i4(1, 2, 3, 4);
@@ -406,7 +399,7 @@ function asmModule(stdlib, imports, buffer) {
         }
         return i4check(y);
     }
-    
+
     function func4OOB_1()
     {
         var x = i4(1, 2, 3, 4);
@@ -433,7 +426,7 @@ function asmModule(stdlib, imports, buffer) {
         }
         return i4check(y);
     }
-    
+
     function func4OOB_2()
     {
         var x = i4(1, 2, 3, 4);
@@ -460,7 +453,7 @@ function asmModule(stdlib, imports, buffer) {
         }
         return i4check(y);
     }
-    
+
     function func5()
     {
         var x = i4(1, 2, 3, 4);
@@ -474,7 +467,7 @@ function asmModule(stdlib, imports, buffer) {
             i4store(Uint32Heap, index >> 2, x);
             index = (index + 16 ) | 0;
         }
-        
+
         index = 100;
         for (loopIndex = 0; (loopIndex | 0) < (size | 0) ; loopIndex = (loopIndex + 1) | 0)
         {
@@ -510,7 +503,7 @@ function asmModule(stdlib, imports, buffer) {
         }
         return i4check(y);
     }
-    
+
     function func5OOB_2()
     {
         var x = i4(1, 2, 3, 4);
@@ -537,7 +530,7 @@ function asmModule(stdlib, imports, buffer) {
         }
         return i4check(y);
     }
-    
+
     function func6()
     {
         var x = i4(1, 2, 3, 4);
@@ -561,7 +554,7 @@ function asmModule(stdlib, imports, buffer) {
         }
         return i4check(y);
     }
-    
+
     function func6OOB_1()
     {
         var x = i4(1, 2, 3, 4);
@@ -570,14 +563,14 @@ function asmModule(stdlib, imports, buffer) {
         var index = 0;
         var size = 10;
         var loopIndex = 0;
-        
+
         index = (0x10000-160)|0;
         for (loopIndex = 0; (loopIndex | 0) < (size | 0) ; loopIndex = (loopIndex + 1) | 0)
         {
             i4store(Uint32Heap, index >> 2, x);
             index = (index + 16 ) | 0;
         }
-        
+
         index = ((0x10000 - 160) + 12)|0;
         // No OOB
         for (loopIndex = 0; (loopIndex | 0) < (size | 0) ; loopIndex = (loopIndex + 1) | 0)
@@ -588,7 +581,7 @@ function asmModule(stdlib, imports, buffer) {
         }
         return i4check(y);
     }
-    
+
     function func6OOB_2()
     {
         var x = i4(1, 2, 3, 4);
@@ -615,7 +608,7 @@ function asmModule(stdlib, imports, buffer) {
         }
         return i4check(y);
     }
-    
+
     // TODO: Test conversion of returned value
     function value()
     {
@@ -632,7 +625,7 @@ function asmModule(stdlib, imports, buffer) {
 
         return +ret;
     }
-    
+
     return {
         func1:func1, 
         func1OOB_1:func1OOB_1, 
@@ -665,33 +658,33 @@ var m = asmModule(this, {g1:SIMD.Float32x4(90934.2,123.9,419.39,449.0), g2:SIMD.
 var ret;
 
 ret = m.func1();
-WScript.Echo("func1");
+print("func1");
 equalSimd([10, 20, 30, 40], ret, SIMD.Int32x4, "Test Load Store");
 
 
 ret = m.func2();
-WScript.Echo("func3");
-WScript.Echo(typeof(ret));
+print("func3");
+print(typeof(ret));
 equalSimd([10, 20, 30, 0], ret, SIMD.Int32x4, "Test Load Store");
 
 
 ret = m.func3();
-WScript.Echo("func3");
+print("func3");
 equalSimd([10, 20, 0, 0], ret, SIMD.Int32x4, "Test Load Store");
 
 
 ret = m.func4();
-WScript.Echo("func4");
+print("func4");
 equalSimd([10, 0, 0, 0], ret, SIMD.Int32x4, "Test Load Store");
 
 
 ret = m.func5();
-WScript.Echo("func5");
+print("func5");
 equalSimd([10, 20, 0, 0], ret, SIMD.Int32x4, "Test Load Store");
 
 
 ret = m.func6();
-WScript.Echo("func6");
+print("func6");
 equalSimd([10, 0, 0, 0], ret, SIMD.Int32x4, "Test Load Store");
 
 
@@ -711,12 +704,12 @@ for (var i = 0; i < funcOOB1.length; i ++)
     try
     {
         ret = funcOOB1[i]();
-        WScript.Echo("func" + (i+1) + "OOB_1");
+        print("func" + (i+1) + "OOB_1");
         equalSimd(RESULTS[i], ret, SIMD.Int32x4, "Test Load Store");
 
     } catch(e)
     {
-        WScript.Echo("Wrong");
+        print("Wrong");
     }
 }
 
@@ -725,20 +718,19 @@ var funcOOB2 = [m.func1OOB_2, m.func2OOB_2 ,m.func3OOB_2, m.func4OOB_2, m.func5O
 
 for (var i = 0; i < funcOOB2.length; i ++)
 {
-    WScript.Echo("func" + (i+1) + "OOB_2");
+    print("func" + (i+1) + "OOB_2");
     try
     {
         ret = funcOOB2[i]();
-        WScript.Echo("Wrong");
+        print("Wrong");
         
     } catch(e)
     {
         if (e instanceof RangeError)
-            WScript.Echo("Correct");
+            print("Correct");
         else
-            WScript.Echo("Wrong");
+            print("Wrong");
         
     }
 }
-WScript.Echo("PASS");
-
+print("PASS");

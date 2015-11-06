@@ -26,7 +26,7 @@
 
 namespace Js
 {
-    SimplePropertyDescriptor JavascriptLibrary::SharedFunctionPropertyDescriptors[2] =
+    SimplePropertyDescriptor const JavascriptLibrary::SharedFunctionPropertyDescriptors[2] =
     {
         SimplePropertyDescriptor(BuiltInPropertyRecords::prototype, PropertyWritable),
         SimplePropertyDescriptor(BuiltInPropertyRecords::name, PropertyConfigurable | PropertyWritable)
@@ -41,20 +41,20 @@ namespace Js
     MissingPropertyTypeHandler JavascriptLibrary::MissingPropertyHolderTypeHandler;
 
 
-    SimplePropertyDescriptor JavascriptLibrary::HeapArgumentsPropertyDescriptorsV11[2] =
+    SimplePropertyDescriptor const JavascriptLibrary::HeapArgumentsPropertyDescriptorsV11[2] =
     {
         SimplePropertyDescriptor(BuiltInPropertyRecords::length, PropertyConfigurable | PropertyWritable),
         SimplePropertyDescriptor(BuiltInPropertyRecords::callee, PropertyConfigurable | PropertyWritable)
     };
 
-    SimplePropertyDescriptor JavascriptLibrary::HeapArgumentsPropertyDescriptors[3] =
+    SimplePropertyDescriptor const JavascriptLibrary::HeapArgumentsPropertyDescriptors[3] =
     {
         SimplePropertyDescriptor(BuiltInPropertyRecords::length, PropertyConfigurable | PropertyWritable),
         SimplePropertyDescriptor(BuiltInPropertyRecords::callee, PropertyConfigurable | PropertyWritable),
         SimplePropertyDescriptor(BuiltInPropertyRecords::_symbolIterator, PropertyConfigurable | PropertyWritable)
     };
 
-    SimplePropertyDescriptor JavascriptLibrary::FunctionWithLengthAndPrototypeTypeDescriptors[2] =
+    SimplePropertyDescriptor const JavascriptLibrary::FunctionWithLengthAndPrototypeTypeDescriptors[2] =
     {
         SimplePropertyDescriptor(BuiltInPropertyRecords::prototype, PropertyNone),
         SimplePropertyDescriptor(BuiltInPropertyRecords::length, PropertyConfigurable)
@@ -539,7 +539,7 @@ namespace Js
 
         // Initialize Array/Argument types
         uint heapArgumentPropertyDescriptorsCount = 0;
-        SimplePropertyDescriptor* heapArgumentPropertyDescriptors = nullptr;
+        SimplePropertyDescriptor const * heapArgumentPropertyDescriptors = nullptr;
         if (config->IsES6IteratorsEnabled())
         {
             heapArgumentPropertyDescriptors = HeapArgumentsPropertyDescriptors;
@@ -890,7 +890,7 @@ namespace Js
 
         if (scriptFunction)
         {
-            if (scriptFunction->IsClassConstructor())
+            if (scriptFunction->GetFunctionInfo()->IsClassConstructor())
             {
                 scriptFunction->SetWritable(Js::PropertyIds::prototype, FALSE);
             }
@@ -2660,9 +2660,12 @@ namespace Js
         library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::check, &SIMDFloat32x4Lib::EntryInfo::Check, 2, PropertyNone);
         library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::zero, &SIMDFloat32x4Lib::EntryInfo::Zero, 1, PropertyNone);
         library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::splat, &SIMDFloat32x4Lib::EntryInfo::Splat, 2, PropertyNone);
+
         // Lane Access
         library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::extractLane, &SIMDFloat32x4Lib::EntryInfo::ExtractLane, 3, PropertyNone);
         library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::replaceLane, &SIMDFloat32x4Lib::EntryInfo::ReplaceLane, 4, PropertyNone);
+
+
         // type conversions
         library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::fromFloat64x2,     &SIMDFloat32x4Lib::EntryInfo::FromFloat64x2,     2, PropertyNone);
         library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::fromFloat64x2Bits, &SIMDFloat32x4Lib::EntryInfo::FromFloat64x2Bits, 2, PropertyNone);
@@ -3607,7 +3610,7 @@ namespace Js
         return isFloatFunc;
     }
 
-    size_t JavascriptLibrary::LibraryFunctionArgC[] = {
+    size_t const JavascriptLibrary::LibraryFunctionArgC[] = {
 #define LIBRARY_FUNCTION(obj, name, argc, flags, entry) argc,
 #include "LibraryFunction.h"
 #undef LIBRARY_FUNCTION
@@ -3615,7 +3618,7 @@ namespace Js
     };
 
 #if ENABLE_DEBUG_CONFIG_OPTIONS
-    wchar_t* JavascriptLibrary::LibraryFunctionName[] = {
+    wchar_t const * const JavascriptLibrary::LibraryFunctionName[] = {
 #define LIBRARY_FUNCTION(obj, name, argc, flags, entry) L#obj L"." L#name,
 #include "LibraryFunction.h"
 #undef LIBRARY_FUNCTION
@@ -3623,7 +3626,7 @@ namespace Js
     };
 #endif
 
-    int JavascriptLibrary::LibraryFunctionFlags[] = {
+    int const JavascriptLibrary::LibraryFunctionFlags[] = {
 #define LIBRARY_FUNCTION(obj, name, argc, flags, entry) flags,
 #include "LibraryFunction.h"
 #undef LIBRARY_FUNCTION
@@ -6950,7 +6953,6 @@ namespace Js
         return hr;
     }
 
-    // SIMD_JS
     HRESULT JavascriptLibrary::ProfilerRegisterSIMD()
     {
         HRESULT hr = S_OK;

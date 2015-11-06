@@ -14,7 +14,7 @@ function base() {}
 var b = new base();
 var prop = new Object();
 var d = Object.create(b);
-write(typeof d);	
+write(typeof d);
 write(Object.getOwnPropertyNames(d));
 
 write("Test case 2");
@@ -31,7 +31,6 @@ var prop = {b:{value:10},c:{value:30},d:{value:70}};
 var  a = Object.defineProperties({}, prop);
 WScript.Echo(Object.getOwnPropertyNames(a));
 WScript.Echo(a.b);
-
 
 write("Test case 4");
 
@@ -57,7 +56,6 @@ o.p;
 o.p = 2;
 delete Number.prototype.p;
 
-
 write("Test case 6 - simple dictionary");
 var obj = {};
 Object.defineProperty(Object.prototype, "data", { value:"qrs", enumerable:true, writable:true, configurable:true });
@@ -71,7 +69,6 @@ write("Is global: " + (obj.data === "qrs"));
 Object.defineProperty(obj, "data", { value:10, enumerable:true, writable:true, configurable:true });
 write("Is local again: " + (obj.data === 10));
 
-
 write("Test case 7 - dictionary");
 var obj = {};
 Object.defineProperty(Object.prototype, "data", { value:"qrs", enumerable:true, writable:true, configurable:true });
@@ -84,5 +81,4 @@ write("Is global: " + (obj.data === "qrs"));
 // redeclare user defined property
 Object.defineProperty(obj, "data", { value:10, enumerable:true, writable:true, configurable:true });
 write("Is local again: " + (obj.data === 10));
-
 

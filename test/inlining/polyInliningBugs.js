@@ -25,7 +25,7 @@ function test0() {
                         protoObj0,
                         obj0
                     ];
-				uniqobj5[__counter % uniqobj5.length].method1();
+                uniqobj5[__counter % uniqobj5.length].method1();
             }
         }(1));
     }

@@ -10,6 +10,8 @@
     <default>
       <files>jx2.js</files>
       <baseline>jx2.baseline</baseline>
+      <!-- test is timezone-sensitive; remove exclude_jenkins after fix -->
+      <tags>exclude_jenkins</tags>
     </default>
   </test>
   <test>

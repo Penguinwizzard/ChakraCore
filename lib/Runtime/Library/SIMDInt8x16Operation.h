@@ -42,5 +42,4 @@ namespace Js {
         //Select
         static SIMDValue OpSelect(const SIMDValue& mV, const SIMDValue& tV, const SIMDValue& fV);
     };
-
 } // namespace Js

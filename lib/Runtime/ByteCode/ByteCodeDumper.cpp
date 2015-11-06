@@ -11,9 +11,10 @@
 #include "DebugWriter.h"
 #include "RegexPattern.h"
 #endif
+
 namespace Js
 {
-    // Pre-order recursive dump, head then children.
+    // Pre-order recursive dump, head first, then children.
     void ByteCodeDumper::DumpRecursively(FunctionBody* dumpFunction)
     {
         dumpFunction->EnsureDeserialized();
@@ -88,7 +89,7 @@ namespace Js
             DumpOp(op, layoutSize, reader, dumpFunction);
             if (Js::Configuration::Global.flags.Verbose)
             {
-                int layoutStart = byteOffset + 2;       // Account fo the prefix op
+                int layoutStart = byteOffset + 2; // Account fo the prefix op
                 int endByteOffset = reader.GetCurrentOffset();
                 Output::SkipToColumn(70);
                 if (layoutSize == LargeLayout)
@@ -113,7 +114,7 @@ namespace Js
                     else
                     {
                         Output::Print(L"   ");
-                        layoutStart--;          // don't have a prefix
+                        layoutStart--; // don't have a prefix
                     }
                 }
 
@@ -507,13 +508,13 @@ namespace Js
                 break;
             }
             // TODO: Change InitUndeclLetFld and InitUndeclConstFld to ElementU layout
-//                    case OpCode::InitUndeclLetFld:
-//                    case OpCode::InitUndeclConstFld:
-//                    {
-//                        PropertyRecord const * pPropertyName = scriptContext->GetPropertyName(data->PropertyIndex);
-//                        Output::Print(L" R%d.%s", data->Instance, pPropertyName->GetBuffer());
-//                        break;
-//                    }
+            // case OpCode::InitUndeclLetFld:
+            // case OpCode::InitUndeclConstFld:
+            // {
+            //     PropertyRecord const * pPropertyName = scriptContext->GetPropertyName(data->PropertyIndex);
+            //     Output::Print(L" R%d.%s", data->Instance, pPropertyName->GetBuffer());
+            //     break;
+            // }
             case OpCode::ClearAttributes:
             {
                 Output::Print(L" R%d.%s.writable/enumerable/configurable = 0", data->Instance, pPropertyName->GetBuffer());
@@ -526,6 +527,7 @@ namespace Js
             }
         }
     }
+
     template <class T>
     void ByteCodeDumper::DumpElementRootU(OpCode op, const unaligned T * data, Js::FunctionBody * dumpFunction, ByteCodeReader& reader)
     {
@@ -549,6 +551,7 @@ namespace Js
             }
         }
     }
+
     template <class T>
     void ByteCodeDumper::DumpElementC(OpCode op, const unaligned T * data, Js::FunctionBody * dumpFunction, ByteCodeReader& reader)
     {
@@ -606,6 +609,7 @@ namespace Js
             }
         }
     }
+
     template <class T>
     void ByteCodeDumper::DumpElementC2(OpCode op, const unaligned T * data, Js::FunctionBody * dumpFunction, ByteCodeReader& reader)
     {
@@ -652,6 +656,7 @@ namespace Js
             }
         }
     }
+
     template <class T>
     void ByteCodeDumper::DumpReg1Unsigned1(OpCode op, const unaligned T* data, Js::FunctionBody * dumpFunction, ByteCodeReader& reader)
     {
@@ -1152,7 +1157,7 @@ namespace Js
             const Js::PropertyIdArray *propIds = reader.ReadPropertyIdArray(playout->Offset, dumpFunction, 3);
             ScriptContext* scriptContext = dumpFunction->GetScriptContext();
             Output::Print(L" R%d = R%d, %d [", playout->R0, playout->R1, propIds->count);
-            for (uint i=0; i < propIds->count && i < 3; i++)
+            for (uint i = 0; i < propIds->count && i < 3; i++)
             {
                 PropertyRecord const * pPropertyName = scriptContext->GetPropertyName(propIds->elements[i]);
                 if (i != 0)
@@ -1168,7 +1173,7 @@ namespace Js
         {
             const Js::FuncInfoArray *arr = reader.ReadAuxArray<FuncInfoEntry>(playout->Offset, dumpFunction);
             Output::Print(L" R%d, env:R%d, %d [", playout->R0, playout->R1, arr->count);
-            for (uint i=0; i < arr->count && i < 3; i++)
+            for (uint i = 0; i < arr->count && i < 3; i++)
             {
                 Js::ParseableFunctionInfo *info = dumpFunction->GetNestedFunctionForExecution(arr->elements[i].nestedIndex);
                 if (i != 0)
@@ -1184,7 +1189,7 @@ namespace Js
         {
             const Js::AuxArray<uint32> *arr = reader.ReadAuxArray<uint32>(playout->Offset, dumpFunction);
             Output::Print(L" R%u <- R%u, %u spreadArgs [", playout->R0, playout->R1, arr->count);
-            for (uint i=0; i < arr->count; i++)
+            for (uint i = 0; i < arr->count; i++)
             {
                 if (i > 10)
                 {

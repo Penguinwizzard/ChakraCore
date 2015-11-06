@@ -28,9 +28,9 @@ check(1, 1);
 var x = 1;
 for(var i = 0; i < 50; ++i)
 {
-	check(x, x - 0.1);
-	check(-x + 1, -x + 0.1);
-	x = x * 2;	
+    check(x, x - 0.1);
+    check(-x + 1, -x + 0.1);
+    x = x * 2;
 }
 check(54, 53.7);
 check(112233581321, 112233581320.001);
@@ -42,25 +42,25 @@ check(-1.7976931348623157000e+308, -1.7976931348623157000e+308)
 // values around INT_MIN and INT_MAX for amd64 (Bug 179932)
 function foo(b)
 {
-	//Its okay to check only for ceil as correctness tests for floor are already here and floor and ceil will have the same value for the parameter passed for this test
-	var ceil = Math.ceil(b); 
-	
-	if(ceil <= 2147483647) 
-		return "fail";
-	
-	return "pass";
+    //Its okay to check only for ceil as correctness tests for floor are already here and floor and ceil will have the same value for the parameter passed for this test
+    var ceil = Math.ceil(b);
+
+    if(ceil <= 2147483647)
+        return "fail";
+
+    return "pass";
 }
 WScript.Echo(foo(2147483648));
 
 function bar(b)
 {
-	//Its okay to check only for ceil as correctness tests for floor are already here and floor and ceil will have the same value for the parameter passed for this test
-	var ceil = Math.ceil(b);
-		
-	if(ceil >= -2147483648) 
-		return "fail";
-		
-	return "pass";
+    //Its okay to check only for ceil as correctness tests for floor are already here and floor and ceil will have the same value for the parameter passed for this test
+    var ceil = Math.ceil(b);
+
+    if(ceil >= -2147483648)
+        return "fail";
+
+    return "pass";
 }
 WScript.Echo(bar(-2147483649));
 
@@ -68,24 +68,24 @@ WScript.Echo("done");
 
 function check(result, n)
 {
-	if(!isNaN(n))
-	{
-		if(Math.ceil(n) != result)
-		{
-			WScript.Echo("ceil(" + n + ") != " + result);
-		}
-		if(-Math.floor(-n) != result)
-		{
-			WScript.Echo("floor(" + (-n) + ") != " + (-result));
-		}
-	}
-	else
-	{
-		if(!isNaN(Math.ceil(n)) || !isNaN(-Math.floor(-n)))
-		{
-			WScript.Echo("error with ceil/floor of NaNs");
-		}
-	}
+    if(!isNaN(n))
+    {
+        if(Math.ceil(n) != result)
+        {
+            WScript.Echo("ceil(" + n + ") != " + result);
+        }
+        if(-Math.floor(-n) != result)
+        {
+            WScript.Echo("floor(" + (-n) + ") != " + (-result));
+        }
+    }
+    else
+    {
+        if(!isNaN(Math.ceil(n)) || !isNaN(-Math.floor(-n)))
+        {
+            WScript.Echo("error with ceil/floor of NaNs");
+        }
+    }
 }
 
 Verify("Math.ceil around negative 0", -Infinity, 1/Math.ceil(-0.1));

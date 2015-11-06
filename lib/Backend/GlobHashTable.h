@@ -43,8 +43,6 @@ public:
         NEXT_SLISTBASE_ENTRY; \
     }
 
-
-
 template<typename TData, typename TElement>
 class ValueHashTable
 {
@@ -365,7 +363,7 @@ public:
             this->table[i].Clear(this->alloc);
         }
 #if PROFILE_DICTIONARY
-        // To not loose previously collected data, we will treat cleared dictionary as a separate instance for stats tracking purpose
+        // To not lose previously collected data, we will treat cleared dictionary as a separate instance for stats tracking purpose
         stats = DictionaryStats::Create(typeid(this).name(), tableSize);
 #endif
     }

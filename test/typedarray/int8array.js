@@ -60,7 +60,7 @@ var test5 = new Int8Array(arrayBuffer, 3, 6);
 oneTest(test5);
 
 WScript.Echo("test6");
-var mybuffer = test1.buffer; 
+var mybuffer = test1.buffer;
 WScript.Echo(mybuffer);
 var test6 = new Int8Array(mybuffer);
 oneTest(test6);
@@ -86,7 +86,7 @@ oneTest(test9);
 
 WScript.Echo("test9.2");
 test9.set(test5);
-oneTest(test9); 
+oneTest(test9);
 
 WScript.Echo("test10");
 try {
@@ -95,7 +95,7 @@ oneTest(test10);
 }
 catch(e)
 {
-WScript.Echo("succeed with catching" + e); 
+WScript.Echo("succeed with catching" + e);
 }
 
 WScript.Echo("test11");
@@ -105,56 +105,52 @@ oneTest(test11);
 }
 catch(e)
 {
-WScript.Echo("succeed with catching" + e); 
+WScript.Echo("succeed with catching" + e);
 }
 
 WScript.Echo("test11.1");
 var test111 = new Int8Array(new String('abcdefg'));
 oneTest(test111);
 
-
 WScript.Echo("test12");
 var test12 = new Int8Array(0);
 oneTest(test12);
-
 
 WScript.Echo("test13");
 var test13 = new Int8Array(arrayBuffer, 0);
 oneTest(test13);
 
-
 WScript.Echo("test14");
-try 
+try
 {
 var test14 = new Int8Array(arrayBuffer, 0, 0);
 oneTest(test14);
 }
 catch(e)
 {
-WScript.Echo("succeed with catching" + e); 
+WScript.Echo("succeed with catching" + e);
 }
 
-
 WScript.Echo("test15");
-try 
+try
 {
 var test15 = new Int8Array(arrayBuffer, 0, 40);
 oneTest(test15);
 }
  catch(e)
 {
-WScript.Echo("succeed with catching" + e); 
+WScript.Echo("succeed with catching" + e);
 }
 
 WScript.Echo("test16");
-try 
+try
 {
 var test16 = new Int8Array(arrayBuffer, 40, 4);
 oneTest(test16);
 }
 catch(e)
 {
-WScript.Echo("succeed with catching" + e); 
+WScript.Echo("succeed with catching" + e);
 }
 
 printObj(test5);
@@ -191,8 +187,6 @@ WScript.Echo("test24");
 var test24 = test5.subarray(1, 3);
 printObj(test24);
 
-
-
 var arr;
 print("test23: constructor");
     var validSizeValues = ["abc",
@@ -202,10 +196,10 @@ print("test23: constructor");
                             ];
         for (var i = 0; i < validSizeValues.length; i++) {
             var size = validSizeValues[i];
- 	    print("size is" + size);
+        print("size is" + size);
             verifyNoThrow(function(){arr = new Int8Array(size);});
             printObj(arr);
-	}
+    }
 
     var invalidSizeValues = [ undefined,
                               -1,
@@ -216,7 +210,7 @@ print("test23: constructor");
         for (var i = 0; i < validSizeValues.length; i++) {
             var size = invalidSizeValues[i];
             verifyThrow(function(){arr = new Int8Array(size);});
-	}
+    }
 
 WScript.Echo("test24");
 WScript.Echo(Int8Array.prototype[10]);

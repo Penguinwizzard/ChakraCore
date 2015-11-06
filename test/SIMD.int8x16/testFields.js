@@ -4,14 +4,15 @@
 //-------------------------------------------------------------------------------------------------------
 
 function equal(a, b) {
-    if (a == b)
-        WScript.Echo("Correct")
-    else
-        WScript.Echo(">> Fail!")
+    if (a == b) {
+        print("Correct");
+    } else {
+        print(">> Fail!");
+    }
 }
 
 function testScalarGetters() {
-    WScript.Echo('Int8x16 scalar getters');
+    print('Int8x16 scalar getters');
     var a = SIMD.Int8x16(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
     equal(1, SIMD.Int8x16.extractLane(a, 0));
     equal(2, SIMD.Int8x16.extractLane(a, 1));

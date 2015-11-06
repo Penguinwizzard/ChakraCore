@@ -40,4 +40,4 @@ testreciprocalSqrtApproximation();
 testreciprocalSqrtApproximation();
 testreciprocalSqrtApproximation();
 testreciprocalSqrtApproximation();
-WScript.Echo("PASS");
+print("PASS");

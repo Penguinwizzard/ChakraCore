@@ -184,12 +184,12 @@ function asmModule(stdlib, imports) {
 var m = asmModule(this, {g1:SIMD.Float32x4(90934.2,123.9,419.39,449.0), g2:SIMD.Int32x4(-1065353216, -1073741824,-1077936128, -1082130432), g3:SIMD.Float64x2(110.20, 58967.0, 14511.670, 191766.23431)});
 
 
-WScript.Echo("Func1");
+print("Func1");
 equalSimd([-1115827495, -164134912, -1773145837, 5242848], m.func1(), SIMD.Int32x4, "Test Mul");
 
-WScript.Echo("Func2");
+print("Func2");
 equalSimd([1306834368, 1908105728, -1740529272, -296213152], m.func2(), SIMD.Int32x4, "Test Mul");
 
-WScript.Echo("Func3");
+print("Func3");
 equalSimd([-1571028992, 1735366152, -150797824, -1726173856], m.func3(), SIMD.Int32x4, "Test Mul");
-WScript.Echo("PASS");
+print("PASS");

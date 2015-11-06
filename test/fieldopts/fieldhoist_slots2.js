@@ -6,10 +6,10 @@
 function test0(){
   var workItem = { increment: 1, isDone: false };
   var func0 = function() {
-    workItem = { increment: 2, isDone: true } 
+    workItem = { increment: 2, isDone: true }
   }
   while (!workItem.isDone) {
-    for(var i = 0; i < 3 && !workItem.isDone; i += workItem.increment) {
+    for (var i = 0; i < 3 && !workItem.isDone; i += workItem.increment) {
       func0(i);
     }
   }
@@ -21,4 +21,3 @@ test0();
 
 // run JITted code
 test0();
-

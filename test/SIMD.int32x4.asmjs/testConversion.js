@@ -106,8 +106,6 @@ function asmModule(stdlib, imports) {
     var gval = 1234;
     var gval2 = 1234.0;
 
-
-    
     var loopCOUNT = 3;
 
     function conv1()
@@ -125,7 +123,7 @@ function asmModule(stdlib, imports) {
 
         return i4check(x);
     }
-    
+
     function conv2()
     {
         var x = i4(0,0,0,0);
@@ -155,7 +153,7 @@ function asmModule(stdlib, imports) {
 
         return i4check(x);
     }
-    
+
     function conv4()
     {
         var x = i4(0,0,0,0);
@@ -171,7 +169,7 @@ function asmModule(stdlib, imports) {
 
         return i4check(x);
     }
-    
+
     function conv5()
     {
         var x = i4(0,0,0,0);
@@ -201,9 +199,7 @@ function asmModule(stdlib, imports) {
 
         return i4check(x);
     }
-    
-    ////
-    
+
     function conv7()
     {
         var x = i4(0,0,0,0);
@@ -249,7 +245,7 @@ function asmModule(stdlib, imports) {
 
         return i4check(x);
     }
-    
+
     function conv10()
     {
         var x = i4(0,0,0,0);
@@ -265,7 +261,7 @@ function asmModule(stdlib, imports) {
 
         return i4check(x);
     }
-    
+
     function conv11()
     {
         var x = i4(0,0,0,0);
@@ -296,7 +292,7 @@ function asmModule(stdlib, imports) {
         return i4check(x);
     }
 
-    
+
     // TODO: Test conversion of returned value
     function value()
     {
@@ -315,7 +311,6 @@ function asmModule(stdlib, imports) {
         return +ret;
     }
 
-    
     return {func1:conv1, func2:conv2, func3:conv3, func4:conv4, func5:conv5, func6:conv6, func7:conv7, func8:conv8, func9:conv9, func10:conv10, func11:conv11, func12:conv12};
 }
 
@@ -359,4 +354,4 @@ equalSimd([1316880384, 1317011456, 1317044224, 1317076992], ret10, SIMD.Int32x4,
 equalSimd([1202821914, 1123536077, 1137816044, 1138786304], ret11, SIMD.Int32x4, "Test Conversion");
 equalSimd([1167935898, 1163169792, 1143363011, 1190908979], ret12, SIMD.Int32x4, "Test Conversion");
 
-WScript.Echo("PASS");
+print("PASS");

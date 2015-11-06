@@ -17,7 +17,7 @@ namespace Js
     }
     uint OpCodeUtil::EncodedSize(OpCode op, LayoutSize layoutSize)
     {
-        return (layoutSize == SmallLayout && IsSmallEncodedOpcode(op))? sizeof(BYTE) : sizeof(OpCode);
+        return (layoutSize == SmallLayout && IsSmallEncodedOpcode(op)) ? sizeof(BYTE) : sizeof(OpCode);
     }
 
     void OpCodeUtil::ConvertOpToNonProfiled(OpCode& op)
@@ -51,12 +51,12 @@ namespace Js
 
     void OpCodeUtil::ConvertNonCallOpToNonProfiled(OpCode& op)
     {
-        if(OpCodeAttr::IsProfiledOp(op))
+        if (OpCodeAttr::IsProfiledOp(op))
         {
             op -= 1;
             Assert(OpCodeAttr::HasProfiledOp(op));
         }
-        else if(OpCodeAttr::IsProfiledOpWithICIndex(op))
+        else if (OpCodeAttr::IsProfiledOpWithICIndex(op))
         {
             op -= 2;
             Assert(OpCodeAttr::HasProfiledOpWithICIndex(op));
@@ -129,14 +129,15 @@ namespace Js
         return Js::OpCode::Nop;
     }
 #endif
+
     OpCode OpCodeUtil::ConvertProfiledCallOpToNonProfiled(OpCode op)
     {
         OpCode newOpcode;
-        if(IsProfiledCallOp(op))
+        if (IsProfiledCallOp(op))
         {
             newOpcode = (OpCode)(op - Js::OpCode::ProfiledCallI + Js::OpCode::CallI);
         }
-        else if(IsProfiledCallOpWithICIndex(op))
+        else if (IsProfiledCallOpWithICIndex(op))
         {
             newOpcode = (OpCode)(op - Js::OpCode::ProfiledCallIWithICIndex + Js::OpCode::CallI);
         }
@@ -152,7 +153,7 @@ namespace Js
     OpCode OpCodeUtil::ConvertProfiledReturnTypeCallOpToNonProfiled(OpCode op)
     {
         OpCode newOpcode;
-        if(IsProfiledReturnTypeCallOp(op))
+        if (IsProfiledReturnTypeCallOp(op))
         {
             newOpcode = (OpCode)(op - Js::OpCode::ProfiledReturnTypeCallI + Js::OpCode::CallI);
         }
@@ -169,8 +170,8 @@ namespace Js
     OpCode OpCodeUtil::ConvertCallOpToProfiled(OpCode op, bool withICIndex)
     {
         return (!withICIndex) ?
-                    (OpCode)(op - OpCode::CallI + OpCode::ProfiledCallI) :
-                    (OpCode)(op - OpCode::CallI + OpCode::ProfiledCallIWithICIndex);
+            (OpCode)(op - OpCode::CallI + OpCode::ProfiledCallI) :
+            (OpCode)(op - OpCode::CallI + OpCode::ProfiledCallIWithICIndex);
     }
 
     OpCode OpCodeUtil::ConvertCallOpToProfiledReturnType(OpCode op)
@@ -182,7 +183,7 @@ namespace Js
     CompileAssert(((int)Js::OpCode::CallIExtendedFlags - (int)Js::OpCode::CallI) == ((int)Js::OpCode::ProfiledReturnTypeCallIExtendedFlags - (int)Js::OpCode::ProfiledReturnTypeCallI));
     CompileAssert(((int)Js::OpCode::CallIExtendedFlags - (int)Js::OpCode::CallI) == ((int)Js::OpCode::ProfiledCallIExtendedFlagsWithICIndex - (int)Js::OpCode::ProfiledCallIWithICIndex));
 
-    // Only include the opcode name on chk and fretest build
+    // Only include the opcode name on debug and test build
 #if DBG_DUMP || ENABLE_DEBUG_CONFIG_OPTIONS
 
     wchar_t const * const OpCodeUtil::OpCodeNames[] =
@@ -250,6 +251,7 @@ namespace Js
 #define DEF_OP(x, y, ...) OpLayoutType::y,
 #include "BackendOpCodeList.h"
     };
+
     OpLayoutType OpCodeUtil::GetOpCodeLayout(OpCode op)
     {
         if ((uint)op <= (uint)Js::OpCode::MaxByteSizedOpcodes)

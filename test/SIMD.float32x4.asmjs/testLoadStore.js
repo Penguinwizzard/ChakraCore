@@ -664,36 +664,30 @@ var m = asmModule(this, {g1:SIMD.Float32x4(90934.2,123.9,419.39,449.0), g2:SIMD.
 var ret;
 
 ret = m.func1();
-WScript.Echo("func1");
-// WScript.Echo(typeof(ret));
+print("func1");
 equalSimd([10, 20, 30, 40], ret, SIMD.Float32x4, "LoadStore")
 
 
 ret = m.func2();
-WScript.Echo("func3");
-// WScript.Echo(typeof(ret));
+print("func3");
 equalSimd([10, 20, 30, 0], ret, SIMD.Float32x4, "LoadStore")
 
 ret = m.func3();
-WScript.Echo("func3");
-// WScript.Echo(typeof(ret));
+print("func3");
 equalSimd([10, 20, 0, 0], ret, SIMD.Float32x4, "LoadStore")
 
 
 ret = m.func4();
-WScript.Echo("func4");
-// WScript.Echo(typeof(ret));
+print("func4");
 equalSimd([10, 0, 0, 0], ret, SIMD.Float32x4, "LoadStore")
 
 
 ret = m.func5();
-WScript.Echo("func5");
-// WScript.Echo(typeof(ret));
+print("func5");
 equalSimd([10, 20, 0, 0], ret, SIMD.Float32x4, "LoadStore")
 
 ret = m.func6();
-WScript.Echo("func6");
-// WScript.Echo(typeof(ret));
+print("func6");
 equalSimd([10, 0, 0, 0], ret, SIMD.Float32x4, "LoadStore")
 
 //
@@ -713,15 +707,13 @@ for (var i = 0; i < funcOOB1.length; i ++)
     {
         
         ret = funcOOB1[i]();
-        WScript.Echo("func" + (i+1) + "OOB_1");
-        // WScript.Echo(typeof(ret));
+        print("func" + (i+1) + "OOB_1");
         equalSimd(RESULT[i], ret, SIMD.Float32x4, "Load Store Out of bounds test");
     } catch(e)
     {
-        WScript.Echo("Wrong");
+        print("Wrong");
     }
 }
-
 
 //
 
@@ -729,19 +721,18 @@ var funcOOB2 = [m.func1OOB_2, m.func2OOB_2 ,m.func3OOB_2, m.func4OOB_2, m.func5O
 
 for (var i = 0; i < funcOOB2.length; i ++)
 {
-    WScript.Echo("func" + (i+1) + "OOB_2");
+    print("func" + (i+1) + "OOB_2");
     try
     {
         ret = funcOOB2[i]();
-        WScript.Echo("Wrong");
+        print("Wrong");
         
     } catch(e)
     {
         if (e instanceof RangeError)
-            WScript.Echo("Correct");
+            print("Correct");
         else
-            WScript.Echo("Wrong");
+            print("Wrong");
         
     }
 }
-

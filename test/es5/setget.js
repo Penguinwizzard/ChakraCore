@@ -21,7 +21,7 @@ var test = function ()
      }
    }
    x.value;
-   write(x.value);   
+   write(x.value);
 }
 test();
 test();
@@ -40,7 +40,7 @@ var test = function ()
      }
    }
    x.value = 10;
-   write(x.value);   
+   write(x.value);
 }
 test();
 test();
@@ -51,13 +51,13 @@ write("Test case 2");
 var test = function ()
 {
    var ab = {};
-   Object.defineProperty(ab,"foo",{get:function(){write("In getter"); return 10;}, configurable: true});   
-   write(ab.foo);   
+   Object.defineProperty(ab,"foo",{get:function(){write("In getter"); return 10;}, configurable: true});
+   write(ab.foo);
 }
 test();
 test();
 })();
-	
+
 write("Test case 3");
 (function() {
 var test = function (alter)
@@ -72,14 +72,13 @@ var test = function (alter)
    }
    if(alter)
    {
-     Object.defineProperty(x,"value",{value: 20, writable: true, enumerable: true, configurable: true});   
+     Object.defineProperty(x,"value",{value: 20, writable: true, enumerable: true, configurable: true});
    }
-   write(x.value);   
+   write(x.value);
 }
 test(false);
 test(true);
 })();
-
 
 write("Test case 4");
 (function() {
@@ -94,8 +93,8 @@ var test = function (alter)
          this._value = val;
      }
    }
-   delete x.value;   
-   write(x.value);   
+   delete x.value;
+   write(x.value);
 }
 test();
 test();
@@ -116,14 +115,13 @@ var test = function (alter)
    }
    if(alter)
    {
-     delete x.value;   
+     delete x.value;
    }
-   write(x.value);   
+   write(x.value);
 }
 test(false);
 test(true);
 })();
-
 
 write("Test case 6");
 (function() {
@@ -140,9 +138,9 @@ var test = function (alter)
    }
    if(alter)
    {
-     Object.defineProperty(x,"value",{get:function(){write("In getter");return 10;}, configurable: true});   
+     Object.defineProperty(x,"value",{get:function(){write("In getter");return 10;}, configurable: true});
    }
-   write(x.value);   
+   write(x.value);
 }
 test(false);
 test(true);
@@ -155,8 +153,8 @@ var test = function ()
    function foo(){ }
    foo.prototype.value = 10;
    var x = new foo();
-   Object.defineProperty(x,"value",{get:function(){write("In getter");return 10;}, configurable: true});   
-   write(x.value);   
+   Object.defineProperty(x,"value",{get:function(){write("In getter");return 10;}, configurable: true});
+   write(x.value);
 }
 test();
 test();
@@ -170,8 +168,8 @@ var test = function ()
    foo.prototype.value = 10;
    var x = new foo();
    write(x.value);
-   Object.defineProperty(x,"value",{get:function(){write("In getter");return 10;}, configurable: true});   
-   write(x.value);   
+   Object.defineProperty(x,"value",{get:function(){write("In getter");return 10;}, configurable: true});
+   write(x.value);
 }
 test();
 test();
@@ -187,8 +185,8 @@ var test = function (alter)
      foo.prototype.value = 10;
    }
    var x = new foo();
-   Object.defineProperty(x,"value",{get:function(){write("In getter");return 10;}, configurable: true});   
-   write(x.value);   
+   Object.defineProperty(x,"value",{get:function(){write("In getter");return 10;}, configurable: true});
+   write(x.value);
 }
 test(false);
 test(true);
@@ -198,26 +196,25 @@ write("Test case 10");
 (function() {
 var test = function (alter)
 {
-   var x = {value: 10}; 
+   var x = {value: 10};
    if (alter)
-   {  
-     write(x.value); 
+   {
+     write(x.value);
    }
-   Object.defineProperty(x,"value",{get:function(){write("In getter");return 10;}, configurable: true});   
-   write(x.value);   
+   Object.defineProperty(x,"value",{get:function(){write("In getter");return 10;}, configurable: true});
+   write(x.value);
 }
 test(false);
 test(true);
 })();
 
-
 write("Test case 11");
 (function() {
 var test = function (alter)
 {
-   var x = {}; 
-   Object.defineProperty(x,"value",{get:function(y){write("In getter");return 10 + y;}, configurable: true});   
-   write(x.value);   
+   var x = {};
+   Object.defineProperty(x,"value",{get:function(y){write("In getter");return 10 + y;}, configurable: true});
+   write(x.value);
 }
 test(false);
 test(true);

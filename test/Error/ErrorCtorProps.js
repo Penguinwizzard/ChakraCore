@@ -11,21 +11,21 @@ var props = ["message", "name", "description", "call", "apply"];
 
 for (var i in ctors)
 {
-	Test(ctors[i]);
+    Test(ctors[i]);
 }
 
 function Test(ctor)
 {
-	WScript.Echo("---------------------------------");
-	WScript.Echo("toString(): " + ctor.toString());
-	for (var j in props)
-	{
-		var prop = props[j];
-		WScript.Echo("Property: '" + prop + "'");
-		WScript.Echo("Value: '" + ctor[prop] + "'");
-		WScript.Echo("hasOwnProperty: " + ctor.hasOwnProperty(prop));
-	}
-	WScript.Echo();
+    WScript.Echo("---------------------------------");
+    WScript.Echo("toString(): " + ctor.toString());
+    for (var j in props)
+    {
+        var prop = props[j];
+        WScript.Echo("Property: '" + prop + "'");
+        WScript.Echo("Value: '" + ctor[prop] + "'");
+        WScript.Echo("hasOwnProperty: " + ctor.hasOwnProperty(prop));
+    }
+    WScript.Echo();
 }
 
 function safeCall(f) {

@@ -32,11 +32,11 @@ namespace Js
 
         Type *const type = propertyObject->GetType();
 
-        if(CheckLocal && type == u.local.type)
+        if (CheckLocal && type == u.local.type)
         {
             Assert(propertyObject->GetScriptContext() == requestContext); // we never cache a type from another script context
             *propertyValue = DynamicObject::FromVar(propertyObject)->GetInlineSlot(u.local.slotIndex);
-            Assert(*propertyValue == JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext) || 
+            Assert(*propertyValue == JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext) ||
                 *propertyValue == JavascriptOperators::GetRootProperty(propertyObject, propertyId, requestContext));
             if (ReturnOperationInfo)
             {
@@ -46,11 +46,11 @@ namespace Js
             return true;
         }
 
-        if(CheckLocal && TypeWithAuxSlotTag(type) == u.local.type)
+        if (CheckLocal && TypeWithAuxSlotTag(type) == u.local.type)
         {
             Assert(propertyObject->GetScriptContext() == requestContext); // we never cache a type from another script context
             *propertyValue = DynamicObject::FromVar(propertyObject)->GetAuxSlot(u.local.slotIndex);
-            Assert(*propertyValue == JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext) || 
+            Assert(*propertyValue == JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext) ||
                 *propertyValue == JavascriptOperators::GetRootProperty(propertyObject, propertyId, requestContext));
             if (ReturnOperationInfo)
             {
@@ -78,9 +78,9 @@ namespace Js
         {
             Assert(u.proto.prototypeObject->GetScriptContext() == requestContext); // we never cache a type from another script context
             *propertyValue = u.proto.prototypeObject->GetAuxSlot(u.proto.slotIndex);
-            // TODO: This assert often results in Assert(RootObjectBase::Is(object)) inside GetRootProperty, which is misleading 
+            // TODO: This assert often results in Assert(RootObjectBase::Is(object)) inside GetRootProperty, which is misleading
             // when the problem is that GetProperty returned a different value than propertyValue. Consider reworking it here and elsewhere.
-            Assert(*propertyValue == JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext) || 
+            Assert(*propertyValue == JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext) ||
                 *propertyValue == JavascriptOperators::GetRootProperty(propertyObject, propertyId, requestContext));
             if (ReturnOperationInfo)
             {
@@ -90,7 +90,7 @@ namespace Js
             return true;
         }
 
-        if(CheckAccessor && type == u.accessor.type)
+        if (CheckAccessor && type == u.accessor.type)
         {
             Assert(propertyObject->GetScriptContext() == requestContext); // we never cache a type from another script context
             Assert(u.accessor.flags & InlineCacheGetterFlag);
@@ -111,7 +111,7 @@ namespace Js
             return true;
         }
 
-        if(CheckAccessor && TypeWithAuxSlotTag(type) == u.accessor.type)
+        if (CheckAccessor && TypeWithAuxSlotTag(type) == u.accessor.type)
         {
             Assert(propertyObject->GetScriptContext() == requestContext); // we never cache a type from another script context
             Assert(u.accessor.flags & InlineCacheGetterFlag);
@@ -136,7 +136,7 @@ namespace Js
         {
             Assert(u.proto.prototypeObject->GetScriptContext() == requestContext); // we never cache a type from another script context
             *propertyValue = u.proto.prototypeObject->GetInlineSlot(u.proto.slotIndex);
-            // TODO: This assert often results in Assert(RootObjectBase::Is(object)) inside GetRootProperty, which is misleading 
+            // TODO: This assert often results in Assert(RootObjectBase::Is(object)) inside GetRootProperty, which is misleading
             // when the problem is that GetProperty returned a different value than propertyValue. Consider reworking it here and elsewhere.
             Assert(*propertyValue == JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext) ||
                 *propertyValue == JavascriptOperators::GetRootProperty(propertyObject, propertyId, requestContext));
@@ -160,7 +160,7 @@ namespace Js
         {
             Assert(u.proto.prototypeObject->GetScriptContext() == requestContext); // we never cache a type from another script context
             *propertyValue = u.proto.prototypeObject->GetAuxSlot(u.proto.slotIndex);
-            // TODO: This assert often results in Assert(RootObjectBase::Is(object)) inside GetRootProperty, which is misleading 
+            // TODO: This assert often results in Assert(RootObjectBase::Is(object)) inside GetRootProperty, which is misleading
             // when the problem is that GetProperty returned a different value than propertyValue. Consider reworking it here and elsewhere.
             Assert(*propertyValue == JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext) ||
                 *propertyValue == JavascriptOperators::GetRootProperty(propertyObject, propertyId, requestContext));
@@ -207,7 +207,7 @@ namespace Js
 #if DBG
         const bool isRoot = (propertyOperationFlags & PropertyOperation_Root) != 0;
 
-        bool canSetField;           // To verify if we can set a field on the object
+        bool canSetField; // To verify if we can set a field on the object
         Var setterValue = nullptr;
         {   // We need to disable implicit call to ensure the check doesn't cause unwanted side effects in debug code
             // Save old disableImplicitFlags and implicitCallFlags and disable implicit call and exception
@@ -221,7 +221,7 @@ namespace Js
             canSetField = !JavascriptOperators::CheckPrototypesForAccessorOrNonWritablePropertySlow(object, propertyId, &setterValue, &flags, isRoot, requestContext);
             if (threadContext->GetImplicitCallFlags() != Js::ImplicitCall_None)
             {
-                canSetField = true; // If there was implict call, inconclusive. Disable debug check.
+                canSetField = true; // If there was an implicit call, inconclusive. Disable debug check.
                 setterValue = nullptr;
             }
             else if ((flags & Accessor) == Accessor)
@@ -237,7 +237,7 @@ namespace Js
 
         Type *const type = object->GetType();
 
-        if(CheckLocal && type == u.local.type)
+        if (CheckLocal && type == u.local.type)
         {
             Assert(object->GetScriptContext() == requestContext); // we never cache a type from another script context
             Assert(isRoot || object->GetPropertyIndex(propertyId) == DynamicObject::FromVar(object)->GetTypeHandler()->InlineOrAuxSlotIndexToPropertyIndex(u.local.slotIndex, true));
@@ -253,7 +253,7 @@ namespace Js
             return true;
         }
 
-        if(CheckLocal && TypeWithAuxSlotTag(type) == u.local.type)
+        if (CheckLocal && TypeWithAuxSlotTag(type) == u.local.type)
         {
             Assert(object->GetScriptContext() == requestContext); // we never cache a type from another script context
             Assert(isRoot || object->GetPropertyIndex(propertyId) == DynamicObject::FromVar(object)->GetTypeHandler()->InlineOrAuxSlotIndexToPropertyIndex(u.local.slotIndex, false));
@@ -269,7 +269,7 @@ namespace Js
             return true;
         }
 
-        if(CheckLocalTypeWithoutProperty && type == u.local.typeWithoutProperty)
+        if (CheckLocalTypeWithoutProperty && type == u.local.typeWithoutProperty)
         {
             // CAREFUL! CheckIfPrototypeChainHasOnlyWritableDataProperties may do allocation that triggers GC and
             // clears this cache, so save any info that is needed from the cache before calling those functions.
@@ -284,7 +284,7 @@ namespace Js
             Assert(DynamicType::Is(typeWithProperty->GetTypeId()));
             Assert(((DynamicType*)typeWithProperty)->GetIsShared());
             Assert(((DynamicType*)typeWithProperty)->GetTypeHandler()->IsPathTypeHandler());
-            AssertMsg(!((DynamicType*)u.local.typeWithoutProperty)->GetTypeHandler()->GetIsPrototype(),  "Why did we cache a property add for a prototype?");
+            AssertMsg(!((DynamicType*)u.local.typeWithoutProperty)->GetTypeHandler()->GetIsPrototype(), "Why did we cache a property add for a prototype?");
             Assert(((DynamicType*)typeWithProperty)->GetTypeHandler()->CanStorePropertyValueDirectly((const DynamicObject*)object, propertyId, isRoot));
 
             DynamicObject *const dynamicObject = DynamicObject::FromVar(object);
@@ -308,7 +308,7 @@ namespace Js
             return true;
         }
 
-        if(CheckLocalTypeWithoutProperty && TypeWithAuxSlotTag(type) == u.local.typeWithoutProperty)
+        if (CheckLocalTypeWithoutProperty && TypeWithAuxSlotTag(type) == u.local.typeWithoutProperty)
         {
             // CAREFUL! CheckIfPrototypeChainHasOnlyWritableDataProperties or AdjustSlots may do allocation that triggers GC and
             // clears this cache, so save any info that is needed from the cache before calling those functions.
@@ -321,7 +321,7 @@ namespace Js
             Assert(DynamicType::Is(typeWithProperty->GetTypeId()));
             Assert(((DynamicType*)typeWithProperty)->GetIsShared());
             Assert(((DynamicType*)typeWithProperty)->GetTypeHandler()->IsPathTypeHandler());
-            AssertMsg(!((DynamicType*)TypeWithoutAuxSlotTag(u.local.typeWithoutProperty))->GetTypeHandler()->GetIsPrototype(),  "Why did we cache a property add for a prototype?");
+            AssertMsg(!((DynamicType*)TypeWithoutAuxSlotTag(u.local.typeWithoutProperty))->GetTypeHandler()->GetIsPrototype(), "Why did we cache a property add for a prototype?");
             Assert(((DynamicType*)typeWithProperty)->GetTypeHandler()->CanStorePropertyValueDirectly((const DynamicObject*)object, propertyId, isRoot));
 
             DynamicObject *const dynamicObject = DynamicObject::FromVar(object);
@@ -350,7 +350,7 @@ namespace Js
             return true;
         }
 
-        if(CheckAccessor && type == u.accessor.type)
+        if (CheckAccessor && type == u.accessor.type)
         {
             Assert(object->GetScriptContext() == requestContext); // we never cache a type from another script context
             Assert(u.accessor.flags & InlineCacheSetterFlag);
@@ -368,7 +368,7 @@ namespace Js
             return true;
         }
 
-        if(CheckAccessor && TypeWithAuxSlotTag(type) == u.accessor.type)
+        if (CheckAccessor && TypeWithAuxSlotTag(type) == u.accessor.type)
         {
             Assert(object->GetScriptContext() == requestContext); // we never cache a type from another script context
             Assert(u.accessor.flags & InlineCacheSetterFlag);
@@ -387,7 +387,7 @@ namespace Js
         }
 
         return false;
-    }  
+    }
 
     template<
         bool CheckLocal,
@@ -458,14 +458,14 @@ namespace Js
             }
             inlineCaches[tryInlineCacheIndex].u = inlineCaches[inlineCacheIndex].u;
             UpdateInlineCachesFillInfo(tryInlineCacheIndex, true /*set*/);
-            // Let's clear the cache slot on which we had the collision.  We might have stolen the invalidationListSlotPtr, so it may not pass VerifyRegistrationForInvalidation.
-            // Besides, it will be repopulated with the incoming data, and registered for invalidation, if necessary.           
+            // Let's clear the cache slot on which we had the collision. We might have stolen the invalidationListSlotPtr,
+            // so it may not pass VerifyRegistrationForInvalidation. Besides, it will be repopulated with the incoming data,
+            // and registered for invalidation, if necessary.
             inlineCaches[inlineCacheIndex].Clear();
             Assert((this->inlineCachesFillInfo & (1 << inlineCacheIndex)) != 0);
             UpdateInlineCachesFillInfo(inlineCacheIndex, false /*set*/);
         }
     }
-
 
 #ifdef CLONE_INLINECACHE_TO_EMPTYSLOT
     template <typename TDelegate>
@@ -517,14 +517,14 @@ namespace Js
         bool CheckMissing,
         bool IsInlineCacheAvailable,
         bool ReturnOperationInfo>
-        bool PolymorphicInlineCache::TryGetProperty(
-            Var const instance,
-            RecyclableObject *const propertyObject,
-            const PropertyId propertyId,
-            Var *const propertyValue,
-            ScriptContext *const requestContext,
-            PropertyCacheOperationInfo *const operationInfo,
-            InlineCache *const inlineCacheToPopulate)
+    bool PolymorphicInlineCache::TryGetProperty(
+        Var const instance,
+        RecyclableObject *const propertyObject,
+        const PropertyId propertyId,
+        Var *const propertyValue,
+        ScriptContext *const requestContext,
+        PropertyCacheOperationInfo *const operationInfo,
+        InlineCache *const inlineCacheToPopulate)
     {
         Assert(!IsInlineCacheAvailable || inlineCacheToPopulate);
         Assert(!ReturnOperationInfo || operationInfo);
@@ -578,13 +578,13 @@ namespace Js
         bool IsInlineCacheAvailable,
         bool ReturnOperationInfo>
     bool PolymorphicInlineCache::TrySetProperty(
-            RecyclableObject *const object,
-            const PropertyId propertyId,
-            Var propertyValue,
-            ScriptContext *const requestContext,
-            PropertyCacheOperationInfo *const operationInfo,
-            InlineCache *const inlineCacheToPopulate,
-            const PropertyOperationFlags propertyOperationFlags)
+        RecyclableObject *const object,
+        const PropertyId propertyId,
+        Var propertyValue,
+        ScriptContext *const requestContext,
+        PropertyCacheOperationInfo *const operationInfo,
+        InlineCache *const inlineCacheToPopulate,
+        const PropertyOperationFlags propertyOperationFlags)
     {
         Assert(!IsInlineCacheAvailable || inlineCacheToPopulate);
         Assert(!ReturnOperationInfo || operationInfo);
@@ -630,6 +630,4 @@ namespace Js
 
         return result;
     }
-
 }
-

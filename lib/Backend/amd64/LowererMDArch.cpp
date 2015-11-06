@@ -8,7 +8,7 @@
 
 const Js::OpCode LowererMD::MDExtend32Opcode = Js::OpCode::MOVSXD;
 
-extern "C" IRType RegTypes[RegNumCount];
+extern const IRType RegTypes[RegNumCount];
 
 BYTE
 LowererMDArch::GetDefaultIndirScale()
@@ -569,7 +569,7 @@ LowererMDArch::LowerCallIDynamic(IR::Instr *callInstr, IR::Instr*saveThisArgOutI
     /*callInfo*/
     if (callInstr->m_func->IsInlinee())
     {
-        Assert(argsLength->AsIntConstOpnd()->m_value == callInstr->m_func->actualCount);
+        Assert(argsLength->AsIntConstOpnd()->GetValue() == callInstr->m_func->actualCount);
         this->SetMaxArgSlots((Js::ArgSlot)callInstr->m_func->actualCount);
     }
     else

@@ -6,20 +6,20 @@
 function write(v) { WScript.Echo(v + ""); }
 
 function Test1() {
-	write(Math.PI);
-	write(Math.PI);
-	Math.PI++;
-	write(Math.PI);
-	write(Math.PI);
+    write(Math.PI);
+    write(Math.PI);
+    Math.PI++;
+    write(Math.PI);
+    write(Math.PI);
 }
 
 Test1();
 
 function Test2() {
-	var a = [ 10, 20]
+    var a = [ 10, 20]
 
-	write(a.concat());
-	write(a.concat());
+    write(a.concat());
+    write(a.concat());
 }
 
 Test2();
@@ -40,7 +40,7 @@ function Test3() {
 Test3();
 
 function Test4() {
- 
+
  Object.defineProperty(this, "x", ({get: function(){}}));
  eval("for(var i=0;i< 10; i++ ) {x=20;}");
 
