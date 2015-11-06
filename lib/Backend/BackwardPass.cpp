@@ -1918,7 +1918,7 @@ BackwardPass::DeadStoreTypeCheckBailOut(IR::Instr * instr)
     IR::PropertySymOpnd *propertySymOpnd =
         (instr->GetDst() && instr->GetDst()->IsSymOpnd()) ? instr->GetDst()->AsPropertySymOpnd() : instr->GetSrc1()->AsPropertySymOpnd();
 
-    bool isTypeCheckProtected;
+    bool isTypeCheckProtected = false;
     IR::BailOutKind bailOutKind;
     if (GlobOpt::NeedsTypeCheckBailOut(instr, propertySymOpnd, propertySymOpnd == instr->GetDst(), &isTypeCheckProtected, &bailOutKind))
     {

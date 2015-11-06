@@ -357,16 +357,16 @@ LargeHeapBlock::GetPagesNeeded(size_t size, bool multiplyRequest)
 {
     if (multiplyRequest)
     {
-        size = size * 4;
+        size = AllocSizeMath::Mul(size, 4);
     }
 
-    size = AllocSizeMath::Add(size, sizeof(LargeObjectHeader));
+    uint pageSize = AutoSystemInfo::PageSize;
+    size = AllocSizeMath::Add(size, sizeof(LargeObjectHeader) + (pageSize - 1));
     if (size == (size_t)-1)
     {
         return 0;
     }
-    uint pageSize = AutoSystemInfo::PageSize;
-    size_t pageCount = (size + pageSize - 1) / pageSize;
+    size_t pageCount = size / pageSize;
     return pageCount;
 }
 

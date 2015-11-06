@@ -336,14 +336,14 @@ private:
 
     inline size_t GetNumPagesForSize(size_t bytes)
     {
-        size_t allocSize = AllocSizeMath::Add(bytes, AutoSystemInfo::PageSize) - 1;
+        size_t allocSize = AllocSizeMath::Add(bytes, AutoSystemInfo::PageSize);
 
         if (allocSize == (size_t) -1)
         {
             return 0;
         }
 
-        return (allocSize / AutoSystemInfo::PageSize);
+        return ((allocSize - 1)/ AutoSystemInfo::PageSize);
     }
 
     inline BVIndex GetFreeIndexForPage(Page* page, size_t bytes)

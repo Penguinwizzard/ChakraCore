@@ -3412,11 +3412,15 @@ void LinearScan::TrackInlineeArgLifetimes(IR::Instr* instr)
                     if (this->currentBlock->inlineeFrameSyms.TryGetReference(sym->m_id, &value))
                     {
                         *value = *value - 1;
+                        if (*value == 0)
+                        {
+                            bool removed = this->currentBlock->inlineeFrameSyms.Remove(sym->m_id);
+                            Assert(removed);
+                        }
                     }
-                    if (*value == 0)
+                    else
                     {
-                        bool removed = this->currentBlock->inlineeFrameSyms.Remove(sym->m_id);
-                        Assert(removed);
+                        Assert(UNREACHED);
                     }
                     Assert(sym->scratch.linearScan.lifetime == lifetime);
                 }, /*reverse*/ true);
