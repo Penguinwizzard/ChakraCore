@@ -7,6 +7,7 @@ param (
     
     [string]$srcpath = ".\",
     [string]$binpath = "Build\VcBuild\bin\$arch_$flavor",
+    [string]$intpath = "Build\VcBuild\obj\$arch_$flavor",
 
     [string]$srcsrvcmdpath = "Build\script"
 )
@@ -63,6 +64,12 @@ if ($bvtcmd -ne "") {
         Write-Error "Failed"
         $exitcode = $lastexitcode
     }
+}
+
+# check prefast
+& $PSScriptRoot\check_prefast_error.ps1 -directory $intpath
+if ($LastExitCode -ne 0) {
+    $exitcode = $LastExitCode
 }
 
 exit $exitcode
