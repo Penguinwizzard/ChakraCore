@@ -83,10 +83,17 @@ var tests = [
        body: function () 
        {
             assert.areEqual("LoadScriptFile",WScript.LoadScriptFile.name,"check to make sure external functions are supported");
+            assert.areEqual("Quit",WScript.Quit.name,"check to make sure external functions are supported");
+            assert.areEqual("LoadScript",WScript.LoadScript.name,"check to make sure external functions are supported");
+            assert.areEqual("SetTimeout",WScript.SetTimeout.name,"check to make sure external functions are supported");
+            assert.areEqual("ClearTimeout",WScript.ClearTimeout.name,"check to make sure external functions are supported");
+            
             assert.areEqual("prototype,name,caller,arguments",Object.getOwnPropertyNames(WScript.Quit).toString(),"Check to make sure name is exposed");
+            
+            //Bug 639652
             var a = WScript.Echo.toString();
             var b = WScript.Echo.name;
-            assert.areEqual("Echo",b,"Check Bug 639652 is fixed b should be name not toString");
+            assert.areEqual("Echo",b,"b should be the name of function echo not toString of Echo function body");
             
        }
     },

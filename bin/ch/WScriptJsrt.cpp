@@ -358,16 +358,25 @@ Error:
     return JS_INVALID_REFERENCE;
 }
 
+bool WScriptJsrt::CreateNamedFunction(const wchar_t* nameString, JsNativeFunction callback, JsValueRef* functionVar)
+{
+    JsValueRef nameVar;
+    IfJsrtErrorFail(ChakraRTInterface::JsPointerToString(nameString, wcslen(nameString), &nameVar), false);
+    IfJsrtErrorFail(ChakraRTInterface::JsCreateNamedFunction(nameVar, callback, nullptr, functionVar), false);
+    return true;
+}
+
 bool WScriptJsrt::Initialize()
 {
     JsValueRef wscript;
     IfJsrtErrorFail(ChakraRTInterface::JsCreateObject(&wscript), false);
 
     JsValueRef echo;
-    IfJsrtErrorFail(ChakraRTInterface::JsCreateFunction(EchoCallback, nullptr, &echo), false);
-    JsPropertyIdRef echoName;
-    IfJsrtErrorFail(ChakraRTInterface::JsGetPropertyIdFromName(L"Echo", &echoName), false);
-    IfJsrtErrorFail(ChakraRTInterface::JsSetProperty(wscript, echoName, echo, true), false);
+    JsPropertyIdRef echoPropertyId;
+    const wchar_t* echoString = L"Echo";
+    CreateNamedFunction(echoString, EchoCallback, &echo);
+    IfJsrtErrorFail(ChakraRTInterface::JsGetPropertyIdFromName(echoString, &echoPropertyId), false);
+    IfJsrtErrorFail(ChakraRTInterface::JsSetProperty(wscript, echoPropertyId, echo, true), false);
 
     JsValueRef argsObject;
 
@@ -381,33 +390,38 @@ bool WScriptJsrt::Initialize()
     IfJsrtErrorFail(ChakraRTInterface::JsSetProperty(wscript, argsName, argsObject, true), false);
 
     JsValueRef quit;
-    IfJsrtErrorFail(ChakraRTInterface::JsCreateFunction(QuitCallback, nullptr, &quit), false);
-    JsPropertyIdRef quitName;
-    IfJsrtErrorFail(ChakraRTInterface::JsGetPropertyIdFromName(L"Quit", &quitName), false);
-    IfJsrtErrorFail(ChakraRTInterface::JsSetProperty(wscript, quitName, quit, true), false);
+    const wchar_t* quitString = L"Quit";
+    JsPropertyIdRef quitPropertyId;
+    IfJsrtErrorFail(ChakraRTInterface::JsGetPropertyIdFromName(quitString, &quitPropertyId), false);
+    CreateNamedFunction(quitString, QuitCallback, &quit);
+    IfJsrtErrorFail(ChakraRTInterface::JsSetProperty(wscript, quitPropertyId, quit, true), false);
 
     JsValueRef loadScriptFile;
-    IfJsrtErrorFail(ChakraRTInterface::JsCreateFunction(LoadScriptFileCallback, nullptr, &loadScriptFile), false);
-    JsPropertyIdRef loadScriptFileName;
-    IfJsrtErrorFail(ChakraRTInterface::JsGetPropertyIdFromName(L"LoadScriptFile", &loadScriptFileName), false);
-    IfJsrtErrorFail(ChakraRTInterface::JsSetProperty(wscript, loadScriptFileName, loadScriptFile, true), false);
+    const wchar_t* loadScriptFileString = L"LoadScriptFile";
+    JsPropertyIdRef loadScriptFilePropertyId;
+    IfJsrtErrorFail(ChakraRTInterface::JsGetPropertyIdFromName(loadScriptFileString, &loadScriptFilePropertyId), false);
+    CreateNamedFunction(loadScriptFileString, LoadScriptFileCallback, &loadScriptFile);
+    IfJsrtErrorFail(ChakraRTInterface::JsSetProperty(wscript, loadScriptFilePropertyId, loadScriptFile, true), false);
 
     JsValueRef loadScript;
-    IfJsrtErrorFail(ChakraRTInterface::JsCreateFunction(LoadScriptCallback, nullptr, &loadScript), false);
     JsPropertyIdRef loadScriptName;
-    IfJsrtErrorFail(ChakraRTInterface::JsGetPropertyIdFromName(L"LoadScript", &loadScriptName), false);
+    const wchar_t* loadScriptString = L"LoadScript";
+    IfJsrtErrorFail(ChakraRTInterface::JsGetPropertyIdFromName(loadScriptString, &loadScriptName), false);
+    CreateNamedFunction(loadScriptString, LoadScriptCallback, &loadScript);
     IfJsrtErrorFail(ChakraRTInterface::JsSetProperty(wscript, loadScriptName, loadScript, true), false);
 
     JsValueRef setTimeout;
-    IfJsrtErrorFail(ChakraRTInterface::JsCreateFunction(SetTimeoutCallback, nullptr, &setTimeout), false);
     JsPropertyIdRef setTimeoutName;
-    IfJsrtErrorFail(ChakraRTInterface::JsGetPropertyIdFromName(L"SetTimeout", &setTimeoutName), false);
+    const wchar_t* setTimeoutString = L"SetTimeout";
+    IfJsrtErrorFail(ChakraRTInterface::JsGetPropertyIdFromName(setTimeoutString, &setTimeoutName), false);
+    CreateNamedFunction(setTimeoutString, SetTimeoutCallback, &setTimeout);
     IfJsrtErrorFail(ChakraRTInterface::JsSetProperty(wscript, setTimeoutName, setTimeout, true), false);
 
     JsValueRef clearTimeout;
-    IfJsrtErrorFail(ChakraRTInterface::JsCreateFunction(ClearTimeoutCallback, nullptr, &clearTimeout), false);
     JsPropertyIdRef clearTimeoutName;
-    IfJsrtErrorFail(ChakraRTInterface::JsGetPropertyIdFromName(L"ClearTimeout", &clearTimeoutName), false);
+    const wchar_t* clearTimeoutString = L"ClearTimeout";
+    IfJsrtErrorFail(ChakraRTInterface::JsGetPropertyIdFromName(clearTimeoutString, &clearTimeoutName), false);
+    CreateNamedFunction(clearTimeoutString, ClearTimeoutCallback, &clearTimeout);
     IfJsrtErrorFail(ChakraRTInterface::JsSetProperty(wscript, clearTimeoutName, clearTimeout, true), false);
 
     JsPropertyIdRef wscriptName;

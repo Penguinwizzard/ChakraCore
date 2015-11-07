@@ -14,6 +14,7 @@ struct JsAPIHooks
     typedef JsErrorCode (WINAPI *JsrtCreateObjectPtr)(JsValueRef *object);
     typedef JsErrorCode (WINAPI *JsrtCreateExternalObjectPtr)(void* data, JsFinalizeCallback callback, JsValueRef *object);
     typedef JsErrorCode (WINAPI *JsrtCreateFunctionPtr)(JsNativeFunction nativeFunction, void *callbackState, JsValueRef *function);
+    typedef JsErrorCode (WINAPI *JsCreateNamedFunctionPtr)(JsValueRef name, JsNativeFunction nativeFunction, void *callbackState, JsValueRef *function);
     typedef JsErrorCode (WINAPI *JsrtPointerToStringPtr)(const wchar_t *stringValue, size_t length, JsValueRef *value);
     typedef JsErrorCode (WINAPI *JsrtSetPropertyPtr)(JsValueRef object, JsPropertyIdRef property, JsValueRef value, bool useStrictRules);
     typedef JsErrorCode (WINAPI *JsrtGetGlobalObjectPtr)(JsValueRef *globalObject);
@@ -53,6 +54,7 @@ struct JsAPIHooks
     JsrtCreateObjectPtr pfJsrtCreateObject;
     JsrtCreateExternalObjectPtr pfJsrtCreateExternalObject;
     JsrtCreateFunctionPtr pfJsrtCreateFunction;
+    JsCreateNamedFunctionPtr pfJsrtCreateNameFunction;
     JsrtPointerToStringPtr pfJsrtPointerToString;
     JsrtSetPropertyPtr pfJsrtSetProperty;
     JsrtGetGlobalObjectPtr pfJsrtGetGlobalObject;
@@ -156,6 +158,7 @@ public:
     static JsErrorCode WINAPI JsCreateObject(JsValueRef *object) { return m_jsApiHooks.pfJsrtCreateObject(object); }
     static JsErrorCode WINAPI JsCreateExternalObject(void *data, JsFinalizeCallback callback, JsValueRef *object) { return m_jsApiHooks.pfJsrtCreateExternalObject(data, callback, object); }
     static JsErrorCode WINAPI JsCreateFunction(JsNativeFunction nativeFunction, void *callbackState, JsValueRef *function) { return m_jsApiHooks.pfJsrtCreateFunction(nativeFunction, callbackState, function); }
+    static JsErrorCode WINAPI JsCreateNamedFunction(JsValueRef name, JsNativeFunction nativeFunction, void *callbackState, JsValueRef *function) { return m_jsApiHooks.pfJsrtCreateNameFunction(name, nativeFunction, callbackState, function); }
     static JsErrorCode WINAPI JsPointerToString(const wchar_t *stringValue, size_t length, JsValueRef *value) { return m_jsApiHooks.pfJsrtPointerToString(stringValue, length, value); }
     static JsErrorCode WINAPI JsSetProperty(JsValueRef object, JsPropertyIdRef property, JsValueRef value, bool useStrictRules) { return m_jsApiHooks.pfJsrtSetProperty(object, property, value, useStrictRules); }
     static JsErrorCode WINAPI JsGetGlobalObject(JsValueRef *globalObject) { return m_jsApiHooks.pfJsrtGetGlobalObject(globalObject); }

@@ -58,6 +58,7 @@ HINSTANCE ChakraRTInterface::LoadChakraDll(ArgInfo& argInfo)
     m_jsApiHooks.pfJsrtCreateObject = (JsAPIHooks::JsrtCreateObjectPtr)GetProcAddress(library, "JsCreateObject");
     m_jsApiHooks.pfJsrtCreateExternalObject = (JsAPIHooks::JsrtCreateExternalObjectPtr)GetProcAddress(library, "JsCreateExternalObject");
     m_jsApiHooks.pfJsrtCreateFunction = (JsAPIHooks::JsrtCreateFunctionPtr)GetProcAddress(library, "JsCreateFunction");
+    m_jsApiHooks.pfJsrtCreateNameFunction = (JsAPIHooks::JsCreateNamedFunctionPtr)GetProcAddress(library, "JsCreateNamedFunction");
     m_jsApiHooks.pfJsrtPointerToString = (JsAPIHooks::JsrtPointerToStringPtr)GetProcAddress(library, "JsPointerToString");
     m_jsApiHooks.pfJsrtSetProperty = (JsAPIHooks::JsrtSetPropertyPtr)GetProcAddress(library, "JsSetProperty");
     m_jsApiHooks.pfJsrtGetGlobalObject = (JsAPIHooks::JsrtGetGlobalObjectPtr)GetProcAddress(library, "JsGetGlobalObject");

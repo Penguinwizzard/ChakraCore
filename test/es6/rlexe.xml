@@ -112,8 +112,6 @@
     <default>
       <files>function.name.js</files>
       <compile-flags>-ES6Generators -es6toprimitive -ES6Classes -es6functionnamefull -args summary -endargs</compile-flags>
-      <!-- external function test fails in ch; is this a host dependent thing? -->
-      <tags>exclude_ch</tags>
     </default>
   </test>
   <test>

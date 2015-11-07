@@ -54,6 +54,7 @@ public:
 
 private:
     static bool CreateArgumentsObject(JsValueRef *argsObject);
+    static bool CreateNamedFunction(const wchar_t*, JsNativeFunction callback, JsValueRef* functionVar);
     static JsValueRef __stdcall EchoCallback(JsValueRef callee, bool isConstructCall, JsValueRef *arguments, unsigned short argumentCount, void *callbackState);
     static JsValueRef __stdcall QuitCallback(JsValueRef callee, bool isConstructCall, JsValueRef *arguments, unsigned short argumentCount, void *callbackState);
     static JsValueRef __stdcall LoadScriptFileCallback(JsValueRef callee, bool isConstructCall, JsValueRef *arguments, unsigned short argumentCount, void *callbackState);
