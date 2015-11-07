@@ -98,7 +98,8 @@ namespace JsUtil
         // We have been given some time to process jobs proactively, so process as many jobs as possible, trying not to exceed
         // the specified amount of time
 
-        const unsigned int startTime = milliseconds == INFINITE ? 0 : GetTickCount();
+        Js::Tick startTick = Js::Tick::Now();
+        Js::TickDelta endTickDelta = Js::TickDelta::FromMicroseconds((__int64)milliseconds * 1000);
         do
         {
             if(manager->numJobsAddedToProcessor != 0)
@@ -127,7 +128,7 @@ namespace JsUtil
 
             // No jobs from job managers either
             break;
-        } while(milliseconds == INFINITE || GetTickCount() - startTime < milliseconds);        
+        } while (milliseconds == INFINITE || Js::Tick::Now() - startTick < endTickDelta);
     }
 
     template<class TJobManager, class TJobHolder>
@@ -235,7 +236,8 @@ namespace JsUtil
             }
         }
 
-        const unsigned int startTime = milliseconds == INFINITE ? 0 : GetTickCount();
+        Js::Tick startTick = Js::Tick::Now();
+        Js::TickDelta endTickDelta = Js::TickDelta::FromMicroseconds((__int64)milliseconds * 1000);
         if(waitForQueuedJobs)
         {
             // Wait for the event, background thread should be alive 
@@ -287,7 +289,7 @@ namespace JsUtil
                         LastJobProcessed(manager);
                 }
             }
-        } while(milliseconds == INFINITE || GetTickCount() - startTime < milliseconds);        
+        } while (milliseconds == INFINITE || Js::Tick::Now() - startTick < endTickDelta);
     }
 
     template<class TJobManager, class TJobHolder>
