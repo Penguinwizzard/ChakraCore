@@ -25,6 +25,10 @@ set MSBUILD_VERSION=14.0
 set MSBUILD_PATH="%ProgramFiles%\msbuild\%MSBUILD_VERSION%\Bin\x86"
 
 if not exist %MSBUILD_PATH%\msbuild.exe (
+    set MSBUILD_PATH="%ProgramFiles(x86)%\msbuild\%MSBUILD_VERSION%\Bin"
+)
+
+if not exist %MSBUILD_PATH%\msbuild.exe (
     set MSBUILD_PATH="%ProgramFiles(x86)%\msbuild\%MSBUILD_VERSION%\Bin\amd64"
 )
 

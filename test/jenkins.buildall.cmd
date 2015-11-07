@@ -26,9 +26,9 @@ call jenkins.build.cmd x64 debug
 call jenkins.build.cmd x64 test
 call jenkins.build.cmd x64 release
 
-REM call jenkins.build.cmd arm debug
-REM call jenkins.build.cmd arm test
-REM call jenkins.build.cmd arm release
+call jenkins.build.cmd arm debug
+call jenkins.build.cmd arm test
+call jenkins.build.cmd arm release
 
 popd
 

@@ -21,7 +21,7 @@ if [ $? -eq 0 ]; then # grep found matches ($?==0), so we found CR (0x0d) in the
     echo "Displaying first 10 lines of hex dump where CR (0x0d) was found:" >> $ERRFILE
     xxd -g 1 $1 | grep -n '0d ' > $ERRFILETEMP
     head -n 10 $ERRFILETEMP >> $ERRFILE
-    # to help the user, display how many lines of hex output actually contained CR"
+    # To help the user, display how many lines of hex output actually contained CR.
     echo "Total hex dump lines containing CR (0x0d):" >> $ERRFILE
     wc -l $ERRFILETEMP >> $ERRFILE
     echo "--------------" >> $ERRFILE # same length as '--- ERRORS ---'

@@ -1,26 +1,30 @@
 // Import the utility functionality.
-// import jobs.generation.Utilities;
+import jobs.generation.Utilities;
 import jobs.generation.InternalUtilities;
 
 // Defines the name of the repo, used elsewhere in the file
 def project = 'Microsoft/ChakraCorePrivate'
 
+def msbuildTypeMap = [
+    'debug':'chk',
+    'test':'test',
+    'release':'fre'
+]
+
 // Generate the builds for debug and release, commit and PRJob
 [true, false].each { isPR -> // Defines a closure over true and false, value assigned to isPR
-    ['x86', 'x64'].each { buildArch -> // build both architectures
-        ['debug', 'test', 'release'].each { buildType -> // build all three configurations
-            // Determine the name for the new job.  The first parameter is the project,
-            // the second parameter is the base name for the job, and the last parameter
-            // is a boolean indicating whether the job will be a PR job.  If true, the
-            // suffix _prtest will be appended.
+    ['x86', 'x64', 'arm'].each { buildArch -> // build these architectures
+        ['debug', 'test', 'release'].each { buildType -> // build these configurations
             def config = "${buildArch}_${buildType}"
+
+            // Determine the name for the new job.
+            // params: Project, BaseTaskName, IsPullRequest (appends _prtest)
             def jobName = InternalUtilities.getFullJobName(project, config, isPR)
 
-            // Define build string
             def buildString = "call jenkins.buildone.cmd ${buildArch} ${buildType}"
-
             def testString = "call jenkins.testone.cmd ${buildArch} ${buildType} -includeSlow"
-            def testableConfig = buildType in ['debug', 'test']
+            def testableConfig = buildType in ['debug', 'test'] &&
+                buildArch != 'arm'
 
             // Create a new job with the specified name.  The brace opens a new closure
             // and calls made within that closure apply to the newly created job.
@@ -28,13 +32,26 @@ def project = 'Microsoft/ChakraCorePrivate'
                 label('windows') // run on Windows
 
                 // This opens the set of build steps that will be run.
+                // This looks strange, but it is actually a method call, with a
+                // closure as a param, since Groovy allows method calls without parens.
+                // (Compare with '.each' method used above.)
                 steps {
                     batchFile(buildString) // run the parameter as a batch script
                     if (testableConfig) {
+                        // The test script will only run if the build is successful
+                        // because Jenkins will notice the failure and stop before
+                        // executing any more build tasks.
                         batchFile(testString)
                     }
                 }
             }
+
+            def msbuildType = msbuildTypeMap.get(buildType)
+            def msbuildFlavor = "build_${buildArch}${msbuildType}"
+            Utilities.addArchival(newJob, "test/${msbuildFlavor}.*,test/logs/**",
+                '', // no exclusions from archival
+                false, // doNotFailIfNothingArchived=false ~= failIfNothingArchived
+                false) // archiveOnlyIfSuccessful=false ~= archiveAlways
 
             // This call performs remaining common job setup on the newly created job.
             // This is used most commonly for simple inner loop testing.
