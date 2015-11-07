@@ -149,6 +149,7 @@ LinearScanMD::InsertOpHelperSpillsAndRestores(const OpHelperBlock& opHelperBlock
         if (opHelperSpilledLifetime.spillAsArg)
         {
             sym = opHelperSpilledLifetime.lifetime->sym;
+            AnalysisAssert(sym);
             Assert(sym->IsAllocated());
         }
 

@@ -7,7 +7,7 @@
 // Conditionally-compiled on x64 and arm
 #if PDATA_ENABLED
 
-void PDataManager::RegisterPdata(RUNTIME_FUNCTION* pdataStart, _In_ const ULONG_PTR functionStart, _In_ const ULONG_PTR functionEnd, _Out_opt_ PVOID* pdataTable, ULONG entryCount, ULONG maxEntryCount)
+void PDataManager::RegisterPdata(RUNTIME_FUNCTION* pdataStart, _In_ const ULONG_PTR functionStart, _In_ const ULONG_PTR functionEnd, _Out_ PVOID* pdataTable, ULONG entryCount, ULONG maxEntryCount)
 {
     BOOLEAN success = FALSE;
     if (AutoSystemInfo::Data.IsWin8OrLater())

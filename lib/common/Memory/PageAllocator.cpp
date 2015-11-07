@@ -120,14 +120,14 @@ SegmentBase<T>::Initialize(DWORD allocFlags, bool excludeGuardPages)
         if (!allocator->CreateSecondaryAllocator(this, &this->secondaryAllocator))
         {
             GetAllocator()->GetVirtualAllocator()->Free(originalAddress, GetPageCount() * AutoSystemInfo::PageSize, MEM_RELEASE);
-            this->allocator->ReportFree(totalPages*AutoSystemInfo::PageSize);
+            this->allocator->ReportFree(totalPages * AutoSystemInfo::PageSize);
             this->address = nullptr;
         }
 #if defined(_M_X64_OR_ARM64) && defined(RECYCLER_WRITE_BARRIER_BYTE)
-        if (!RecyclerWriteBarrierManager::OnSegmentAlloc(this->address, this->segmentPageCount))
+        else if (!RecyclerWriteBarrierManager::OnSegmentAlloc(this->address, this->segmentPageCount))
         {
             GetAllocator()->GetVirtualAllocator()->Free(originalAddress, GetPageCount() * AutoSystemInfo::PageSize, MEM_RELEASE);
-            this->allocator->ReportFree(totalPages*AutoSystemInfo::PageSize);
+            this->allocator->ReportFree(totalPages * AutoSystemInfo::PageSize);
             this->address = nullptr;
         }
         else
@@ -151,7 +151,7 @@ SegmentBase<T>::Initialize(DWORD allocFlags, bool excludeGuardPages)
 
 template<typename T>
 PageSegmentBase<T>::PageSegmentBase(PageAllocatorBase<T> * allocator, bool external) :
-SegmentBase(allocator, allocator->maxAllocPageCount), decommitPageCount(0)
+    SegmentBase(allocator, allocator->maxAllocPageCount), decommitPageCount(0)
 {
     Assert(this->segmentPageCount == allocator->maxAllocPageCount + allocator->secondaryAllocPageCount);
 

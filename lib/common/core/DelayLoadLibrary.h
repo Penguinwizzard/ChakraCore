@@ -32,7 +32,7 @@ private:
 class NtdllLibrary : protected DelayLoadLibrary
 {
 private:
-    typedef DWORD (NTAPI *PFnRtlAddGrowableFunctionTable)(_Out_ PVOID * DynamicTable, 
+    typedef _Success_(return == 0) DWORD (NTAPI *PFnRtlAddGrowableFunctionTable)(_Out_ PVOID * DynamicTable,
         _In_reads_(MaximumEntryCount) PRUNTIME_FUNCTION FunctionTable, 
         _In_ DWORD EntryCount, 
         _In_ DWORD MaximumEntryCount, 
@@ -59,6 +59,7 @@ public:
 
     LPCTSTR GetLibraryName() const;
 
+    _Success_(return == 0)
     DWORD AddGrowableFunctionTable(_Out_ PVOID * DynamicTable,
         _In_reads_(MaximumEntryCount) PRUNTIME_FUNCTION FunctionTable,
         _In_ DWORD EntryCount,

@@ -156,7 +156,7 @@ namespace Js
          return JavascriptNumber::FromVar(aValue)->GetValue();
      }
 
-    __inline JavascriptNumber* JavascriptNumber::InPlaceNew(double value, ScriptContext* scriptContext, _Inout_ Js::JavascriptNumber *result)
+    __inline JavascriptNumber* JavascriptNumber::InPlaceNew(double value, ScriptContext* scriptContext, Js::JavascriptNumber *result)
     {
         AssertMsg( result != NULL, "Cannot use InPlaceNew without a value result location" );
         Assume(result != NULL); // Encourage the compiler to omit a NULL check on the return from placement new

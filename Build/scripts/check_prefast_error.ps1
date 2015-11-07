@@ -1,7 +1,27 @@
 
 param (
-    [string]$directory
+    [string]$directory,
+    [string]$logFile = ""
 )
+
+function WriteMessage($str)
+{
+    Write-Output $str
+    if ($logFile -ne "" )
+    {
+        Write-Output $str | Out-File $logFile
+    }
+}
+
+function WriteErrorMessage($str)
+{
+    $host.ui.WriteErrorLine($str);
+    if ($logFile -ne "" )
+    {
+        Write-Output $str | Out-File $logFile
+    }
+}
+
 
 if ((Test-Path $directory) -eq 0) {
     Write-Error ("ERROR: Directory {0} does not exist.  Cannot scan for prefast defects" -f $directory);
@@ -23,10 +43,10 @@ foreach ($file in $files) {
 }
 
 if ($count -ne 0) {
-    $host.ui.WriteErrorLine("ERROR: {0} prefast warning detected" -f $count)
+    WriteErrorMessage ("ERROR: {0} prefast warning detected" -f $count)
 } elseif ($filecount -ne 0) {
-    Write-Output "No prefast warning detected"
+    WriteMessage "No prefast warning detected" 
 } else {
-    Write-Output "No prefast result found"
+    WriteMessage "No prefast result found"
 }
 Exit($count)

@@ -19885,7 +19885,7 @@ Lowerer::GenerateCheckForCallFlagNew(IR::Instr* instrInsert)
 
     IR::RegOpnd* isNewFlagSetRegOpnd = IR::RegOpnd::New(TyUint32, func);
 
-    InsertAnd(isNewFlagSetRegOpnd, callInfoOpnd, IR::IntConstOpnd::New(Js::CallFlags_New << Js::CallInfo::ksizeofCount, TyUint32, func, true), instrInsert);
+    InsertAnd(isNewFlagSetRegOpnd, callInfoOpnd, IR::IntConstOpnd::New((IntConstType)Js::CallFlags_New << Js::CallInfo::ksizeofCount, TyUint32, func, true), instrInsert);
     InsertTestBranch(isNewFlagSetRegOpnd, isNewFlagSetRegOpnd, Js::OpCode::BrNeq_A, labelDone, instrInsert);
 
     IR::Instr *throwInstr = IR::Instr::New(
@@ -19943,10 +19943,10 @@ Lowerer::GenerateLoadNewTarget(IR::Instr* instrInsert)
 
     IR::RegOpnd* isNewFlagSetRegOpnd = IR::RegOpnd::New(TyUint32, func);
 
-    InsertAnd(isNewFlagSetRegOpnd, callInfoOpnd, IR::IntConstOpnd::New(Js::CallFlags_NewTarget << Js::CallInfo::ksizeofCount, TyUint32, func, true), instrInsert);
+    InsertAnd(isNewFlagSetRegOpnd, callInfoOpnd, IR::IntConstOpnd::New((IntConstType)Js::CallFlags_NewTarget << Js::CallInfo::ksizeofCount, TyUint32, func, true), instrInsert);
     InsertTestBranch(isNewFlagSetRegOpnd, isNewFlagSetRegOpnd, Js::OpCode::BrNeq_A, labelLoadArgNewTarget, instrInsert);
 
-    InsertAnd(isNewFlagSetRegOpnd, callInfoOpnd, IR::IntConstOpnd::New(Js::CallFlags_New << Js::CallInfo::ksizeofCount, TyUint32, func, true), instrInsert);
+    InsertAnd(isNewFlagSetRegOpnd, callInfoOpnd, IR::IntConstOpnd::New((IntConstType)Js::CallFlags_New << Js::CallInfo::ksizeofCount, TyUint32, func, true), instrInsert);
     GenerateNotZeroTest(isNewFlagSetRegOpnd, labelDone, instrInsert);
 
     IR::Instr* loadFuncInstr = IR::Instr::New(Js::OpCode::AND, func);

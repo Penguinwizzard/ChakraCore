@@ -756,6 +756,7 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
                 continue;
             }
 
+            AnalysisAssert(opr1);
             if (opr1->IsRegOpnd() && RegRAX == opr1->AsRegOpnd()->GetReg())
             {
                 AssertMsg(opr2, "Operand 2 must be present in AX_MEM mode");
@@ -805,6 +806,7 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
 
         // Short immediate/reg.
         case SHIMR:
+            AnalysisAssert(opr1);
             if (!opr1->IsRegOpnd())
             {
                 continue;

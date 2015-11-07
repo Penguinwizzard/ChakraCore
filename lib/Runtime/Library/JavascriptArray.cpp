@@ -1763,6 +1763,7 @@ namespace Js
                 SparseArraySegment<Var> *newSeg =
                     SparseArraySegment<Var>::AllocateSegment(recycler, left, length, nextSeg);
 
+                AnalysisAssert(newSeg);
                 Assert((prevSeg == nullptr) == (seg == intArray->head));
                 newSeg->next = nextSeg;
                 intArray->LinkSegments((SparseArraySegment<Var>*)prevSeg, newSeg);

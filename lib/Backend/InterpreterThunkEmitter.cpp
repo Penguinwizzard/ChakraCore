@@ -403,7 +403,7 @@ DWORD InterpreterThunkEmitter::EncodeMove(DWORD opCode, int reg, DWORD imm16)
     return encodedMove;
 }
 
-void InterpreterThunkEmitter::GeneratePdata( __in const BYTE* entryPoint, __in const DWORD functionSize, __inout RUNTIME_FUNCTION* function)
+void InterpreterThunkEmitter::GeneratePdata(_In_ const BYTE* entryPoint, _In_ const DWORD functionSize, _Out_ RUNTIME_FUNCTION* function)
 {
     function->BeginAddress   = 0x1;                        // Since our base address is the start of the function - this is offset from the base address
     function->Flag           = 1;                          // Packed unwind data is used
@@ -478,7 +478,7 @@ DWORD InterpreterThunkEmitter::EncodeMove(DWORD opCode, int reg, DWORD imm16)
     return encodedMove;
 }
 
-void InterpreterThunkEmitter::GeneratePdata(__in const BYTE* entryPoint, __in const DWORD functionSize, __inout RUNTIME_FUNCTION* function)
+void InterpreterThunkEmitter::GeneratePdata(_In_ const BYTE* entryPoint, _In_ const DWORD functionSize, _Out_ RUNTIME_FUNCTION* function)
 {
     function->BeginAddress = 0x0;               // Since our base address is the start of the function - this is offset from the base address
     function->Flag = 1;                         // Packed unwind data is used
@@ -492,7 +492,7 @@ void InterpreterThunkEmitter::GeneratePdata(__in const BYTE* entryPoint, __in co
     function->FrameSize = 5;                    // the number of bytes of stack that is allocated for this function divided by 16
 }
 #else
-void InterpreterThunkEmitter::EncodeInterpreterThunk(__inout_bcount(thunkSize) BYTE* thunkBuffer, __in BYTE* thunkBufferStartAddress, __inout const DWORD thunkSize, __in_bcount(epilogSize) BYTE* epilogStart, __in const DWORD epilogSize)
+void InterpreterThunkEmitter::EncodeInterpreterThunk(__in_bcount(thunkSize) BYTE* thunkBuffer, __in_bcount(thunkSize) BYTE* thunkBufferStartAddress, __in const DWORD thunkSize, __in_bcount(epilogSize) BYTE* epilogStart, __in const DWORD epilogSize)
 {
     _Analysis_assume_(thunkSize == HeaderSize);
     Emit(thunkBuffer, ThunkAddressOffset, (uintptr_t)interpreterThunk);

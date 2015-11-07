@@ -26,7 +26,7 @@ TestObject::TestObject(size_t _size, int _pointerCount) : size(_size), pointerCo
 
 size_t TestObject::CalculateCookie()
 {
-    return reinterpret_cast<size_t>(this) ^ (pointerCount << 12) ^ (size << 24) + 1;
+    return reinterpret_cast<size_t>(this) ^ (static_cast<size_t>(pointerCount) << 12) ^ (size << 24) + 1;
 }
 
 void TestObject::CheckCookie()

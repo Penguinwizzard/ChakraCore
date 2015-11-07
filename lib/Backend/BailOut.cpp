@@ -136,7 +136,7 @@ BailOutInfo::RecordStartCallInfo(uint i, uint argRestoreAdjust, IR::Instr *instr
 
 #ifdef MD_GROW_LOCALS_AREA_UP
 void
-BailOutInfo::FinalizeOffsets(int * offsets, uint count, Func *func, BVSparse<JitArenaAllocator> *bvInlinedArgSlot)
+BailOutInfo::FinalizeOffsets(__in_ecount(count) int * offsets, uint count, Func *func, BVSparse<JitArenaAllocator> *bvInlinedArgSlot)
 {
     // Turn positive SP-relative sym offsets into negative frame-pointer-relative offsets for the convenience
     // of the restore-value logic.

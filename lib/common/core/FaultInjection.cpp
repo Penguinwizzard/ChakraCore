@@ -114,7 +114,7 @@ namespace Js
         _In_ DWORD FramesToCapture,
         _Out_writes_to_(FramesToCapture, return) PVOID * BackTrace,
         _Out_opt_ PDWORD BackTraceHash,
-        _In_ const CONTEXT* pCtx = nullptr)
+        _In_opt_ const CONTEXT* pCtx = nullptr)
     {
         CONTEXT                         Context;
         KNONVOLATILE_CONTEXT_POINTERS   NvContext;

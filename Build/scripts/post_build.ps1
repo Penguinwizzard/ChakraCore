@@ -67,7 +67,7 @@ if ($bvtcmd -ne "") {
 }
 
 # check prefast
-& $PSScriptRoot\check_prefast_error.ps1 -directory $intpath
+& $PSScriptRoot\check_prefast_error.ps1 -directory $intpath -logFile "$binpath\PrefastCheck.log"
 if ($LastExitCode -ne 0) {
     $exitcode = $LastExitCode
 }

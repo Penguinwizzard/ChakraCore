@@ -54,7 +54,7 @@ private:
 public:
     XDataAllocator(BYTE* address, uint size);
 
-    bool Initialize(_In_ void* segmentStart, _In_ void* segmentEnd);
+    bool Initialize(void* segmentStart, void* segmentEnd);
     void Delete();
     bool Alloc(ULONG_PTR functionStart, DWORD functionSize, ushort pdataCount, ushort xdataSize, SecondaryAllocation* allocation);
     void Register(XDataAllocation& allocation, DWORD functionStart, DWORD functionSize);

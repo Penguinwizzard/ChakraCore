@@ -94,10 +94,10 @@ private:
 
     /* ------private helpers -----------*/
     void NewThunkBlock();
-    void EncodeInterpreterThunk(__inout_bcount(thunkSize) BYTE* thunkBuffer, __in BYTE* thunkBufferStartAddress, __inout const DWORD thunkSize, __in_bcount(epilogSize) BYTE* epilogStart, __in const DWORD epilogSize);
+    void EncodeInterpreterThunk(__in_bcount(thunkSize) BYTE* thunkBuffer, __in_bcount(thunkSize) BYTE* thunkBufferStartAddress, __in const DWORD thunkSize, __in_bcount(epilogSize) BYTE* epilogStart, __in const DWORD epilogSize);
 #if defined(_M_ARM32_OR_ARM64)
     DWORD EncodeMove(DWORD opCode, int reg, DWORD imm16);
-    void GeneratePdata(__in const BYTE* entryPoint, __in const DWORD functionSize, __inout RUNTIME_FUNCTION* function);
+    void GeneratePdata(_In_ const BYTE* entryPoint, _In_ const DWORD functionSize, _Out_ RUNTIME_FUNCTION* function);
 #endif
 
     /*-------static helpers ---------*/

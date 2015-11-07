@@ -60,6 +60,7 @@ LPCTSTR NtdllLibrary::GetLibraryName() const
     return L"ntdll.dll";
 }
 
+_Success_(return == 0)
 DWORD NtdllLibrary::AddGrowableFunctionTable( _Out_ PVOID * DynamicTable, 
     _In_reads_(MaximumEntryCount) PRUNTIME_FUNCTION FunctionTable, 
     _In_ DWORD EntryCount, 

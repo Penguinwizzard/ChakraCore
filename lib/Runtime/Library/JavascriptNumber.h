@@ -111,7 +111,7 @@ namespace Js
         static Var New(double value, ScriptContext* scriptContext);
         static Var NewWithCheck(double value, ScriptContext* scriptContext);
         static Var NewInlined(double value, ScriptContext* scriptContext);
-        static JavascriptNumber* InPlaceNew(double value, ScriptContext* scriptContext, _Inout_ JavascriptNumber* result);
+        static JavascriptNumber* InPlaceNew(double value, ScriptContext* scriptContext, JavascriptNumber* result);
         static Var NewCodeGenInstance(CodeGenNumberAllocator *alloc, double value, ScriptContext* scriptContext);
 
         __inline static bool IsSpecial(double value, uint64 nSpecial) { return NumberUtilities::IsSpecial(value, nSpecial); }

@@ -72,7 +72,7 @@ public:
 #endif
 
 private:
-    BVIndex GetSectionIndex(_In_ void* address);
+    BVIndex GetSectionIndex(void* address);
 
     // In our card table scheme, 4KB of memory is mapped to 1 byte indicating whether 
     // it's written to or not. A page in Windows is also 4KB. Therefore, a page's worth 
