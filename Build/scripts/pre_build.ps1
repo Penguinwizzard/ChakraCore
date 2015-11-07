@@ -7,6 +7,16 @@
 # such a commit exists, it saves it's description to the build
 # output to make it easy to inspect builds.
 #
+# Require Environment:
+#   $TF_BUILD_SOURCEGETVERSION
+#   $TF_BUILD_SOURCESDIRECTORY
+#   $TF_BUILD_DROPLOCATION
+#   $TF_BUILD_BUILDDEFINITIONNAME
+#   $TF_BUILD_BUILDNUMBER
+#   $TF_BUILD_BUILDURI
+#   $TF_BUILD_BUILDDIRECTORY
+#   $TF_BUILD_BUILDBINARIESDIRECTORY
+
 param (
     [string]$oauth
 )
@@ -73,16 +83,18 @@ if (Test-Path Env:\TF_BUILD_SOURCEGETVERSION)
 
     # generate build version prop file
     $buildInfoOutputFile = Join-Path -Path $buildInfoOutputDir -ChildPath "Chakra.Generated.BuildInfo.props"
-    Write-Output "<?xml version=""1.0"" encoding=""utf-16""?>" | Out-File $buildInfoOutputFile
-    Write-Output "<Project DefaultTargets=""Build"" ToolsVersion=""4.0"" xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">" | Out-File $buildInfoOutputFile -Append
-    Write-Output "  <PropertyGroup>" | Out-File $buildInfoOutputFile -Append
-    Write-Output ("    <OutBaseDir>{0}</OutBaseDir>" -f $Env:TF_BUILD_BINARIESDIRECTORY) | Out-File $buildInfoOutputFile -Append
-    Write-Output ("    <IntBaseDir>{0}</IntBaseDir>" -f $Env:TF_BUILD_BUILDDIRECTORY) | Out-File $buildInfoOutputFile -Append
-    Write-Output ("    <ChakraVersionBuildNumber>{0}</ChakraVersionBuildNumber>" -f $buildPushIdPart1) | Out-File $buildInfoOutputFile -Append
-    Write-Output ("    <ChakraVersionBuildQFENumber>{0}</ChakraVersionBuildQFENumber>" -f $buildPushIdPart2) | Out-File $buildInfoOutputFile -Append
-    Write-Output ("    <ChakraVersionBuildCommit>{0}</ChakraVersionBuildCommit>" -f $buildCommit) | Out-File $buildInfoOutputFile -Append
-    Write-Output ("    <ChakraVersionBuildDate>{0}</ChakraVersionBuildDate>" -f $buildDate) | Out-File $buildInfoOutputFile -Append
-    Write-Output "  </PropertyGroup>" | Out-File $buildInfoOutputFile -Append
-    Write-Output "</Project>" | Out-File $buildInfoOutputFile -Append
-    
+    $propsFile = @"
+<?xml version="1.0" encoding="utf-16"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003"> 
+  <PropertyGroup>
+    <OutBaseDir>{0}</OutBaseDir>
+    <IntBaseDir>{1}</IntBaseDir>
+    <ChakraVersionBuildNumber>{2}</ChakraVersionBuildNumber>
+    <ChakraVersionBuildQFENumber>{3}</ChakraVersionBuildQFENumber>
+    <ChakraVersionBuildCommit>{4}</ChakraVersionBuildCommit>
+    <ChakraVersionBuildDate>{5}</ChakraVersionBuildDate>
+  </PropertyGroup>
+</Project>
+"@ 
+    Write-Output ($propsFile -f $Env:TF_BUILD_BINARIESDIRECTORY, $Env:TF_BUILD_BUILDDIRECTORY, $buildPushIdPart1, $buildPushIdPart2, $buildCommit, $buildDate) | Out-File $buildInfoOutputFile
 }
