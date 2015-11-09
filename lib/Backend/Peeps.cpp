@@ -534,7 +534,7 @@ Peeps::PeepBranch(IR::BranchInstr *branchInstr, bool *const peepedRef)
     }
     else if (branchInstr->IsConditional())
     {
-        Assert(instrNext);
+        AnalysisAssert(instrNext);
         if (instrNext->IsBranchInstr()
             && instrNext->AsBranchInstr()->IsUnconditional()
             && targetInstr == instrNext->AsBranchInstr()->GetNextRealInstrOrLabel()
@@ -733,9 +733,10 @@ Peeps::HoistSameInstructionAboveSplit(IR::BranchInstr *branchInstr, IR::Instr *i
 IR::LabelInstr *
 Peeps::RetargetBrToBr(IR::BranchInstr *branchInstr, IR::LabelInstr * targetInstr)
 {
+    AnalysisAssert(targetInstr);
     IR::Instr *targetInstrNext = targetInstr->GetNextRealInstr();
-    AssertMsg(targetInstrNext, "GetNextRealInstr() failed to get next target");
-
+    AnalysisAssertMsg(targetInstrNext, "GetNextRealInstr() failed to get next target");
+    
     // Removing branch to branch breaks some lexical assumptions about loop in sccliveness/linearscan/second chance.
     if (!branchInstr->IsLowered())
     {
@@ -781,7 +782,7 @@ Peeps::RetargetBrToBr(IR::BranchInstr *branchInstr, IR::LabelInstr * targetInstr
 #endif
 
         IR::LabelInstr * reTargetLabel = branchAtTarget->GetTarget();
-        Assert(reTargetLabel);
+        AnalysisAssert(reTargetLabel);
         if (targetInstr == reTargetLabel)
         {
             // Infinite loop.

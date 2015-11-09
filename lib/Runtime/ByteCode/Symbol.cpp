@@ -133,7 +133,7 @@ void Symbol::SetHasNonLocalReference(bool b, ByteCodeGenerator *byteCodeGenerato
         return;
     }
 
-    Assert(funcChild);
+    AnalysisAssert(funcChild);
     ParseNode *pnodeChild = funcChild->root;
 
     Assert(pnodeChild && pnodeChild->nop == knopFncDecl);

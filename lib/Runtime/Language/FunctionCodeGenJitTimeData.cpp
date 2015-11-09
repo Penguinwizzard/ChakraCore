@@ -594,6 +594,7 @@ namespace Js
 
             typeNumber++;
         }
+        AnalysisAssert(typeNumber == typeCount);
 
         if (isAccessor && gatherDataForInlining)
         {

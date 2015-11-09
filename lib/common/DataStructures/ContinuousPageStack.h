@@ -276,7 +276,7 @@ void ContinuousPageStack<InitialPageCount>::Resize(size_t requestedSize)
         if (!pageAllocation)
         {
             outOfMemoryFunc();
-            Assert(false);
+            AnalysisAssert(false);
         }
         bufferSize = pageAllocation->GetSize();
         return;
@@ -286,7 +286,7 @@ void ContinuousPageStack<InitialPageCount>::Resize(size_t requestedSize)
     if (!newPageAllocation)
     {
         outOfMemoryFunc();
-        Assert(false);
+        AnalysisAssert(false);
     }
     js_memcpy_s(newPageAllocation->GetAddress(), newPageAllocation->GetSize(), Buffer(), nextTop);
     pageAllocator->ReleaseAllocation(pageAllocation);

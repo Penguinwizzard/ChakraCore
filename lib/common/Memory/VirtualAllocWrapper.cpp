@@ -33,7 +33,8 @@ LPVOID VirtualAllocWrapper::Alloc(LPVOID lpAddress, size_t dwSize, DWORD allocat
 BOOL VirtualAllocWrapper::Free(LPVOID lpAddress, size_t dwSize, DWORD dwFreeType)
 {
     Assert(this == nullptr);
-    size_t bytes = (dwFreeType & MEM_RELEASE) != 0 ? 0 : dwSize;
+    AnalysisAssert(dwFreeType == MEM_RELEASE || dwFreeType == MEM_DECOMMIT);
+    size_t bytes = (dwFreeType == MEM_RELEASE)? 0 : dwSize;
     return VirtualFree(lpAddress, bytes, dwFreeType);
 }
 

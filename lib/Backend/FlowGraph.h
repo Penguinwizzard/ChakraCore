@@ -984,7 +984,7 @@ struct MemCopyEmitData : public MemOpEmitData
     FOREACH_EDGE_IN_LIST(__edge, block->GetSuccList())\
     {\
         BasicBlock * blockSucc = __edge->GetSucc(); \
-        Assert(blockSucc);
+        AnalysisAssert(blockSucc);
 
 #define NEXT_SUCCESSOR_BLOCK\
     }\
@@ -994,7 +994,7 @@ struct MemCopyEmitData : public MemOpEmitData
     FOREACH_EDGE_IN_LIST_EDITING(__edge, block->GetSuccList(), iter)\
     {\
         BasicBlock * blockSucc = __edge->GetSucc(); \
-        Assert(blockSucc);
+        AnalysisAssert(blockSucc);
 
 #define NEXT_SUCCESSOR_BLOCK_EDITING\
     }\
@@ -1004,7 +1004,7 @@ struct MemCopyEmitData : public MemOpEmitData
     FOREACH_EDGE_IN_LIST(__edge, block->GetDeadSuccList())\
     {\
         BasicBlock * blockSucc = __edge->GetSucc(); \
-        Assert(blockSucc);
+        AnalysisAssert(blockSucc);
 
 #define NEXT_DEAD_SUCCESSOR_BLOCK\
     }\
@@ -1014,7 +1014,7 @@ struct MemCopyEmitData : public MemOpEmitData
     FOREACH_EDGE_IN_LIST(__edge, block->GetPredList())\
     {\
         BasicBlock * blockPred = __edge->GetPred(); \
-        Assert(blockPred);
+        AnalysisAssert(blockPred);
 
 #define NEXT_PREDECESSOR_BLOCK\
     }\
@@ -1024,7 +1024,7 @@ struct MemCopyEmitData : public MemOpEmitData
     FOREACH_EDGE_IN_LIST(__edge, block->GetDeadPredList())\
     {\
         BasicBlock * blockPred = __edge->GetPred(); \
-        Assert(blockPred);
+        AnalysisAssert(blockPred);
 
 #define NEXT_DEAD_PREDECESSOR_BLOCK\
     }\

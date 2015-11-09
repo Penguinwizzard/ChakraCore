@@ -476,7 +476,7 @@ SCCLiveness::ProcessStackSymUse(StackSym * stackSym, IR::Instr * instr, int usag
         Output::Print(L"\n");
         Output::Flush();
 #endif
-        AssertMsg(UNREACHED, "Uninitialized reg?");
+        AnalysisAssertMsg(UNREACHED, "Uninitialized reg?");
     }
     else
     {

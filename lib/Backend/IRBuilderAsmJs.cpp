@@ -1625,7 +1625,7 @@ IRBuilderAsmJs::BuildAsmCall(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::ArgSl
 #endif
     }
     Assert(argOffset == 0);
-    Assert(argInstr);
+    AnalysisAssert(argInstr);
     prevInstr->SetSrc2(argInstr->GetDst());
 
 #if defined(_M_X64)
@@ -3102,7 +3102,7 @@ IRBuilderAsmJs::GenerateLoopBodyStSlots(SymID loopParamSymId, uint offset)
         }
         else
         {
-            Assert(UNREACHED);
+            AnalysisAssert(UNREACHED);
         }
 
         if (scale)

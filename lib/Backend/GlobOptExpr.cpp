@@ -672,7 +672,7 @@ GlobOpt::CSEOptimize(BasicBlock *block, IR::Instr * *const instrRef, Value **pSr
         return true;
     }
 
-    Assert(valueInfo);
+    AnalysisAssert(valueInfo);
 
     IR::Opnd *cseOpnd;
 

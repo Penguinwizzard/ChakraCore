@@ -308,7 +308,7 @@ namespace Js
             {
                 if (lastInternalLoopBodyFrameType == InternalFrameType_LoopBody)
                 {
-                    Assert(this->interpreterFrame);
+                    AnalysisAssert(this->interpreterFrame);
                     loopNum = this->interpreterFrame->GetCurrentLoopNum();
                     Assert(loopNum != LoopHeader::NoLoop);
                 }
@@ -829,7 +829,7 @@ namespace Js
 
             if (this->ehFramesBeingWalkedFromBailout)
             {
-                Assert(this->tempInterpreterFrame != nullptr);
+                AnalysisAssert(this->tempInterpreterFrame != nullptr);
                 this->interpreterFrame = this->tempInterpreterFrame;
                 this->tempInterpreterFrame = this->tempInterpreterFrame->GetPreviousFrame();
 

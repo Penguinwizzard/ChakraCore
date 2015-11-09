@@ -17163,7 +17163,7 @@ Lowerer::GenerateFastInlineStringReplace(IR::Instr * instr)
     IR::Opnd * argsOpnd[3] = {0};
     bool result  = instr->FetchOperands(argsOpnd, 3);
     Assert(result);
-    Assert(argsOpnd[0] && argsOpnd[1] && argsOpnd[2]);
+    AnalysisAssert(argsOpnd[0] && argsOpnd[1] && argsOpnd[2]);
 
     if (!argsOpnd[0]->GetValueType().IsLikelyString()
         || argsOpnd[1]->GetValueType().IsNotObject()

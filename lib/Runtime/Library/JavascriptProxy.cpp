@@ -1931,7 +1931,7 @@ namespace Js
                 JavascriptError::ThrowRangeError(scriptContext, JSERR_ArgListTooLarge);
             }
             ushort newCount = (ushort)(args.Info.Count + 1);
-            
+
             // in [[construct]] case, we don't need to check if the function is a constructor: the function should throw there.
             Var newThisObject = nullptr;
             if (args.Info.Flags & CallFlags_New)
@@ -1962,6 +1962,7 @@ namespace Js
             {
                 newValues[argCount] = args.Values[argCount];
             }
+#pragma prefast(suppress:6386)
             newValues[args.Info.Count] = newTarget;
 
             Js::Arguments arguments(calleeInfo, newValues);

@@ -262,12 +262,13 @@ namespace Js
     void SegmentBTree::InsertNonFullNode(Recycler* recycler, SegmentBTree* node, SparseArraySegmentBase* newSeg)
     {
         Assert(!node->IsFullNode());
+        AnalysisAssert(node->segmentCount < MaxKeys);       // Same as !node->IsFullNode()
         Assert(newSeg != NULL);
 
         if (node->IsLeaf())
         {
             // Move the keys
-            uint32 i = node->segmentCount-1;
+            uint32 i = node->segmentCount - 1;
             while( (i != -1) && (newSeg->left < node->keys[i]))
             {
                 node->segments[i+1] = node->segments[i];
@@ -279,10 +280,10 @@ namespace Js
                 // Even though the segments point to a GC pointer, the main array should keep a references
                 // as well.  So just make it a leaf allocation
                 node->segments = AllocatorNewArrayLeafZ(Recycler, recycler, SparseArraySegmentBase*, MaxKeys);
-                node->keys = AllocatorNewArrayLeafZ(Recycler,recycler,uint32,MaxKeys);
+                node->keys = AllocatorNewArrayLeafZ(Recycler, recycler, uint32, MaxKeys);
             }
-            node->segments[i+1] = newSeg;
-            node->keys[i+1] = newSeg->left;
+            node->segments[i + 1] = newSeg;
+            node->keys[i + 1] = newSeg->left;
             node->segmentCount++;
         }
         else

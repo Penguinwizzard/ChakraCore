@@ -2020,7 +2020,7 @@ CommonNumber:
     {
         if (receiver)
         {
-            Assert(object);
+            AnalysisAssert(object);
             Assert(!TaggedNumber::Is(receiver));
             Var setterValueOrProxy = nullptr;
             DescriptorFlags flags = None;
@@ -5664,7 +5664,7 @@ CommonNumber:
         if (attributes & FunctionInfo::SkipDefaultNewObject)
         {
             // The constructor doesn't use the default new object.
-            #pragma prefast(suppress:__WARNING_LOGICALORNONZERO, "DevDiv bug 830883. False positive when PHASE_OFF is #defined as '(false)'.")
+#pragma prefast(suppress:6236, "DevDiv bug 830883. False positive when PHASE_OFF is #defined as '(false)'.")
             if (!PHASE_OFF1(ConstructorCachePhase) && (functionBody == nullptr || !PHASE_OFF(ConstructorCachePhase, functionBody)))
             {
                 constructorCache = constructor->EnsureValidConstructorCache();

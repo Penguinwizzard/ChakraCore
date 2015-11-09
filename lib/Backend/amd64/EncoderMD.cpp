@@ -846,6 +846,7 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
         // FALLTHROUGH
         case MODRM:
         modrm:
+            AnalysisAssert(opr1);
             if (opr2 == nullptr)
             {
                 BYTE byte2  = (this->GetOpcodeByte2(instr) >> 3);
@@ -873,6 +874,7 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
 
         // reg in opbyte. Only whole register allowed .
         case SH_REG:
+            AnalysisAssert(opr1);
             if (!opr1->IsRegOpnd())
             {
                 continue;
@@ -883,6 +885,7 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
 
         // short form immed. (must be unary)
         case SH_IM:
+            AnalysisAssert(opr1);
             if (!opr1->IsIntConstOpnd() && !opr1->IsAddrOpnd())
             {
                 continue;

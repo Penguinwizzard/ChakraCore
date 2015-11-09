@@ -739,7 +739,7 @@ namespace UnifiedRegex
                 return node;
             ECConsume(); // '|'
             Node* next = AlternativePass1();
-            Assert(next != nullptr);
+            AnalysisAssert(next != nullptr);
             Node* revisedPrev = UnionNodes(last == 0 ? node : last->head, next);
             if (revisedPrev != 0)
             {
@@ -763,7 +763,7 @@ namespace UnifiedRegex
                         last->head = revisedPrev;
                     nextList = nextList->tail;
                 }
-                Assert(nextList != nullptr);
+                AnalysisAssert(nextList != nullptr);
                 if (last == 0)
                     node = Anew(ctAllocator, AltNode, node, nextList);
                 else
@@ -895,7 +895,7 @@ namespace UnifiedRegex
         //  - a concat list never contains two consecutive match-character/match-literal nodes
         bool previousSurrogatePart = false;
         Node* node = TermPass1(&deferredCharNode, previousSurrogatePart);
-        Assert(node != nullptr);
+        AnalysisAssert(node != nullptr);
         ConcatNode* last = 0;
         // First node may be a concat
         if (node->tag == Node::Concat)
@@ -927,7 +927,7 @@ namespace UnifiedRegex
         while (!IsEndOfAlternative())
         {
             Node* next = TermPass1(&deferredCharNode, previousSurrogatePart);
-            Assert(next != nullptr);
+            AnalysisAssert(next != nullptr);
             if (next->LiteralLength() > 0)
             {
                 // Begin a new literal or grow the existing literal
@@ -968,7 +968,7 @@ namespace UnifiedRegex
                     AccumLiteral(&deferredLiteralNode, nextList->head);
                     nextList = nextList->tail;
                     // List has at least two items
-                    Assert(nextList != 0);
+                    AnalysisAssert(nextList != 0);
                     // List should be in canonical form, so no consecutive chars/literals
                     Assert(nextList->head->LiteralLength() == 0);
                 }
@@ -2300,7 +2300,7 @@ namespace UnifiedRegex
                 headToReturn = currentTail;
             }
 
-            Assert(currentTail != nullptr);
+            AnalysisAssert(currentTail != nullptr);
             while (currentTail->tail != nullptr)
             {
                 currentTail = currentTail->tail;

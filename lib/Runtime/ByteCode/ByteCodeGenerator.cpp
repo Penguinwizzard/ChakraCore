@@ -1653,11 +1653,11 @@ Symbol * ByteCodeGenerator::AddSymbolToScope(Scope *scope, const wchar_t *key, i
             sym = varDecl->sxVar.sym/*New*/;
             break;
         case knopName:
-            Assert(varDecl->sxPid.symRef);
+            AnalysisAssert(varDecl->sxPid.symRef);
             sym = *varDecl->sxPid.symRef;
             break;
         default:
-            Assert(0);
+            AnalysisAssert(0);
             sym = nullptr;
             break;
         }
@@ -3133,7 +3133,7 @@ void PreVisitBlock(ParseNode *pnodeBlock, ByteCodeGenerator *byteCodeGenerator)
 
         if (pnodeBlock->sxBlock.blockType == PnodeBlockType::Function)
         {
-            Assert(pnodeBlock->sxBlock.scope);
+            AnalysisAssert(pnodeBlock->sxBlock.scope);
             if (pnodeBlock->sxBlock.scope->GetScopeType() == ScopeType_Parameter
                 && scope->GetScopeType() == ScopeType_FunctionBody)
             {

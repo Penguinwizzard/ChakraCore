@@ -1549,7 +1549,7 @@ LSkip:
 
 LReturn:
     *pwExp10 = wExp10 + 1;
-    Assert(ib <= kcbMaxRgb);
+    AnalysisAssert(ib <= kcbMaxRgb);
     *ppbLim = &prgb[ib];
     return TRUE;
 
@@ -1961,9 +1961,10 @@ static BOOL FormatDigits(_In_reads_(pbLim - pbSrc) byte *pbSrc, byte *pbLim, int
     return TRUE;
 }
 
-
 __success(return <= nDstBufSize)
-static int FormatDigitsFixed(byte *pbSrc, byte *pbLim, int wExp10, int nFractionDigits, __out_ecount_part(nDstBufSize, return) wchar_t *pchDst, int nDstBufSize){
+#pragma prefast(suppress:6101, "when return value is > nDstBufSize, the pchDst is not initialized.  Prefast doesn't seems to pick that up in the annotation")
+static int FormatDigitsFixed(byte *pbSrc, byte *pbLim, int wExp10, int nFractionDigits, __out_ecount_part(nDstBufSize, return) wchar_t *pchDst, int nDstBufSize)
+{
     AnalysisAssert(pbLim > pbSrc);
     AssertArrMem(pbSrc, pbLim - pbSrc);
     AnalysisAssert(nFractionDigits >= -1);
@@ -1977,7 +1978,7 @@ static int FormatDigitsFixed(byte *pbSrc, byte *pbLim, int wExp10, int nFraction
         if( nFractionDigits < 0 )
         {
             // Set nFractionDigits such that we get all the significant digits and no trailing zeros
-            Assert(pbLim - pbSrc < INT_MAX);
+            AnalysisAssert(pbLim - pbSrc < INT_MAX);
             nFractionDigits = -wExp10 + (int)(pbLim - pbSrc);
         }
 
@@ -2173,6 +2174,7 @@ static int FormatDigitsExponential(
 *
 * Return value: 1 if an extra leading 1 needed to be added, 0 otherwise.
 */
+#pragma prefast(suppress:6101)
 static int RoundTo(byte *pbSrc, byte *pbLim, int nDigits, __out_bcount(nDigits+1) byte *pbDst, byte **ppbLimRes )
 {
     AnalysisAssert(pbLim > pbSrc);
@@ -2183,7 +2185,7 @@ static int RoundTo(byte *pbSrc, byte *pbLim, int nDigits, __out_bcount(nDigits+1
 
     if ((pbLim - pbSrc) < 0)
     {
-        Assert(FALSE);
+        AnalysisAssert(FALSE);
         return 0;
     }
 

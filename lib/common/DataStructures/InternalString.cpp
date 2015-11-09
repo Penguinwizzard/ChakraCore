@@ -8,7 +8,7 @@
 
 namespace Js
 {
-    InternalString::InternalString(__in const wchar_t* content, charcount_t length, unsigned char offset):
+    InternalString::InternalString(const wchar_t* content, charcount_t length, unsigned char offset):
         m_content(content),
         m_charLength(length),
         m_offset(offset)
@@ -38,8 +38,8 @@ namespace Js
 
         // Allocate 3 extra bytes, two for the first DWORD with the size, the third for the null character
         // This is so that we can pretend that internal strings are BSTRs for purposes of clients who want to use
-        // it as thus        
-        const unsigned char offset=sizeof(DWORD)/sizeof(wchar_t);
+        // it as thus
+        const unsigned char offset = sizeof(DWORD)/sizeof(wchar_t);
         InternalString* newInstance = RecyclerNewPlusLeaf(recycler, bytelength + (sizeof(DWORD) + sizeof(wchar_t)), InternalString, nullptr, length, offset);
         DWORD* allocbuffer = (DWORD*) (newInstance + 1);
         allocbuffer[0] = (DWORD) bytelength;

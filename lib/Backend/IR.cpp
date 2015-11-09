@@ -468,7 +468,7 @@ Instr::Copy()
 
         default:
             instrCopy = nullptr;
-            AssertMsg(UNREACHED, "Copy of other instr kinds NYI");
+            AnalysisAssertMsg(UNREACHED, "Copy of other instr kinds NYI");
         }
     }
 
@@ -3018,7 +3018,7 @@ Instr::ConvertToBailOutInstr(BailOutInfo * bailOutInfo, IR::BailOutKind kind, bo
             break;
         }
         default:
-            Assert(false);
+            AnalysisAssert(false);
         };
 
         this->m_next->m_prev = bailOutInstr;

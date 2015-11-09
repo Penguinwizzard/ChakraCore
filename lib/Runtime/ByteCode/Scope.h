@@ -244,7 +244,7 @@ public:
         {
             scope = scope->GetEnclosingScope();
         }
-        Assert(scope);
+        AnalysisAssert(scope);
         return scope->func;
     }
 

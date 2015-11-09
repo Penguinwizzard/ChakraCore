@@ -859,7 +859,7 @@ namespace Js
         case Phase::InlinePhase:
             // Do profile opcode everywhere if we are an inline candidate
             // Otherwise, only in loops if the function has loop
-#pragma prefast(suppress:__WARNING_LOGICALORNONZERO, "DevDiv bug 830883. False positive when PHASE_OFF is #defined as '(false)'.")
+#pragma prefast(suppress:6236, "DevDiv bug 830883. False positive when PHASE_OFF is #defined as '(false)'.")
             return PHASE_FORCE(Phase::InlinePhase, this->m_functionWrite) ||
                 (!this->m_functionWrite->GetDontInline() &&
                     (noHeuristics || !this->m_hasLoop || (this->m_loopNest != 0) ||

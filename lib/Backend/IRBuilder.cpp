@@ -144,7 +144,7 @@ IRBuilder::InsertBailOnNoProfile(uint offset)
         }
     } NEXT_SLIST_ENTRY;
 
-    Assert(startCall);
+    AnalysisAssert(startCall);
 
     if (startCall->m_prev->m_opcode != Js::OpCode::BailOnNoProfile)
     {
@@ -4005,7 +4005,7 @@ IRBuilder::BuildElementUnsigned1(Js::OpCode newOpcode, uint32 offset, Js::RegSlo
                 }
                 NEXT_INSTR_BACKWARD;
             }
-            Assert(defOpnd);
+            AnalysisAssert(defOpnd);
 
             // This instruction must not create missing values in the array
             baseOpnd->SetValueType(defOpnd->GetValueType());

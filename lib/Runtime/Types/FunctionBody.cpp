@@ -5459,7 +5459,7 @@ namespace Js
     // Returns nullptr if the scopes are part of different trees.
     DebuggerScope* DebuggerScope::FindCommonAncestor(DebuggerScope* debuggerScope)
     {
-        Assert(debuggerScope);
+        AnalysisAssert(debuggerScope);
 
         if (this == debuggerScope)
         {
@@ -5489,7 +5489,7 @@ namespace Js
         DebuggerScope*& nodeToBringUp = firstDepth > secondDepth ? firstNode : secondNode;
         while (depthDifference > 0)
         {
-            Assert(nodeToBringUp);
+            AnalysisAssert(nodeToBringUp);
             nodeToBringUp = nodeToBringUp->GetParentScope();
             --depthDifference;
         }
@@ -5580,8 +5580,8 @@ namespace Js
 #endif
             uint i = 0;
             uint plainInlineCacheEnd = rootObjectLoadInlineCacheStart;
-            __analysis_assume(plainInlineCacheEnd < totalCacheCount);
-            for (;i < plainInlineCacheEnd; i++)
+            __analysis_assume(plainInlineCacheEnd <= totalCacheCount);
+            for (; i < plainInlineCacheEnd; i++)
             {
                 inlineCaches[i] = AllocatorNewZ(InlineCacheAllocator,
                     this->m_scriptContext->GetInlineCacheAllocator(), InlineCache);
@@ -5589,26 +5589,28 @@ namespace Js
             Js::RootObjectBase * rootObject = this->GetRootObject();
             ThreadContext * threadContext = this->GetScriptContext()->GetThreadContext();
             uint rootObjectLoadInlineCacheEnd = rootObjectLoadMethodInlineCacheStart;
-            __analysis_assume(rootObjectLoadInlineCacheEnd < totalCacheCount);
+            __analysis_assume(rootObjectLoadInlineCacheEnd <= totalCacheCount);
             for (; i < rootObjectLoadInlineCacheEnd; i++)
             {
                 inlineCaches[i] = rootObject->GetInlineCache(
                     threadContext->GetPropertyName(this->GetPropertyIdFromCacheId(i)), false, false);
             }
             uint rootObjectLoadMethodInlineCacheEnd = rootObjectStoreInlineCacheStart;
-            __analysis_assume(rootObjectLoadMethodInlineCacheEnd < totalCacheCount);
+            __analysis_assume(rootObjectLoadMethodInlineCacheEnd <= totalCacheCount);
             for (; i < rootObjectLoadMethodInlineCacheEnd; i++)
             {
                 inlineCaches[i] = rootObject->GetInlineCache(
                     threadContext->GetPropertyName(this->GetPropertyIdFromCacheId(i)), true, false);
             }
             uint rootObjectStoreInlineCacheEnd = isInstInlineCacheStart;
+            __analysis_assume(rootObjectStoreInlineCacheEnd <= totalCacheCount);
             for (; i < rootObjectStoreInlineCacheEnd; i++)
             {
+#pragma prefast(suppress:6386, "The analysis assume didn't help prefast figure out this is in range")
                 inlineCaches[i] = rootObject->GetInlineCache(
                     threadContext->GetPropertyName(this->GetPropertyIdFromCacheId(i)), false, true);
             }
-            for (;i < totalCacheCount; i++)
+            for (; i < totalCacheCount; i++)
             {
                 inlineCaches[i] = AllocatorNewStructZ(IsInstInlineCacheAllocator,
                     this->m_scriptContext->GetIsInstInlineCacheAllocator(), IsInstInlineCache);

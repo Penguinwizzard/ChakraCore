@@ -139,7 +139,7 @@ ThreadContextTLSEntry * ThreadContextTLSEntry::CreateEntryForCurrentThread()
     Assert(TlsGetValue(s_tlsSlot) == NULL);
 
     ThreadContextTLSEntry * entry = HeapNewStructZ(ThreadContextTLSEntry);
-    
+#pragma prefast(suppress:6001, "Memory from HeapNewStructZ are zero initialized")
     entry->prober.Initialize();
     TlsSetValue(s_tlsSlot, entry);
 

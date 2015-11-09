@@ -2857,7 +2857,7 @@ bool
     {
         if (opndSrc2->IsRegOpnd())
         {
-            Assert(opndReg2);
+            AnalysisAssert(opndReg2);
             s2Value = opndReg2->m_sym->GetIntConstValue();
         }
         else

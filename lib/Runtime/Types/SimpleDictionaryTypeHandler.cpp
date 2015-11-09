@@ -2159,7 +2159,7 @@ namespace Js
     template <typename TPropertyIndex, typename TMapKey, bool IsNotExtensibleSupported>
     BOOL SimpleDictionaryTypeHandlerBase<TPropertyIndex, TMapKey, IsNotExtensibleSupported>::SetPropertyWithAttributes(DynamicObject* instance, PropertyId propertyId, Var value, PropertyAttributes attributes, PropertyValueInfo* info, PropertyOperationFlags flags, SideEffects possibleSideEffects)
     {
-        Assert(instance);
+        AnalysisAssert(instance);
         SimpleDictionaryPropertyDescriptor<TPropertyIndex>* descriptor;
         ScriptContext* scriptContext = instance->GetScriptContext();
         bool throwIfNotExtensible = (flags & PropertyOperation_ThrowIfNotExtensible) != 0;

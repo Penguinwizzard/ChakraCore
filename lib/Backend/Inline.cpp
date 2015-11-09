@@ -59,6 +59,7 @@ Inline::Optimize(Func *func, __in_ecount_opt(callerArgOutCount) IR::Instr *calle
                         // We only need to know if we are inside loop or not, it doesn't matter how many nested levels we are in.
                         // This is the cheap way of doing so.
                         loopTop = instr->AsLabelInstr();
+                        AnalysisAssert(loopTop);
                         this->isInLoop++;
                         backEdgeCount = loopTop->labelRefs.Count();
                     }
@@ -4248,7 +4249,7 @@ bool Inline::InlConstFold(IR::Instr *instr, IntConstType *pValue, __in_ecount_op
 
 
 Js::ArgSlot
-Inline::MapActuals(IR::Instr *callInstr, __inout_ecount(maxParamCount) IR::Instr *argOuts[],
+Inline::MapActuals(IR::Instr *callInstr, __out_ecount(maxParamCount) IR::Instr *argOuts[],
     Js::ArgSlot formalCount,
     Func* inlinee,
     Js::ProfileId callSiteId,
@@ -4369,6 +4370,7 @@ Inline::MapActuals(IR::Instr *callInstr, __inout_ecount(maxParamCount) IR::Instr
         Assert(actualCount <= Js::InlineeCallInfo::MaxInlineeArgoutCount);
         for(Js::ArgSlot i = 0; i < min(actualCount, formalCount); ++i)
         {
+#pragma prefast(suppress:6001)
             Assert(argOuts[i]);
         }
 #endif

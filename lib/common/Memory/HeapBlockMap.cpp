@@ -568,7 +568,7 @@ HeapBlockMap32::ForEachSegment(Recycler * recycler, Fn func)
             // New segment.
             Assert(currentSegment == nullptr || !currentSegment->IsInSegment(block->GetAddress()));
             currentSegment = block->GetSegment();
-            Assert(currentSegment != nullptr);
+            AnalysisAssert(currentSegment != nullptr);
             char * segmentStart = currentSegment->GetAddress();
             size_t segmentLength = currentSegment->GetPageCount() * PageSize;
 

@@ -673,7 +673,7 @@ LowererMDArch::GeneratePreCall(IR::Instr * callInstr, IR::Opnd  *functionObjOpnd
         }
         else
         {
-            AssertMsg(false, "Unexpected call target operand type.");
+            AnalysisAssertMsg(false, "Unexpected call target operand type.");
         }
         // entryPointRegOpnd(RAX) = MOV type->entryPoint
         entryPointIndirOpnd = IR::IndirOpnd::New(functionTypeRegOpnd, Js::Type::GetOffsetOfEntryPoint(), TyMachPtr, m_func);

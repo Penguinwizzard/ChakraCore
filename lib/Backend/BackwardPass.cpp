@@ -5361,7 +5361,7 @@ BackwardPass::TrackIntUsage(IR::Instr *const instr)
                 SetIntOverflowMattersInRange(instr->GetSrc2());
                 break;
             }
-            Assert(dstSym);
+            AnalysisAssert(dstSym);
 
             // The number of compounded add/sub uses of each src is at least the number of compounded add/sub uses of the dst,
             // + 1 for the current instruction
@@ -5394,7 +5394,7 @@ BackwardPass::TrackIntUsage(IR::Instr *const instr)
                 SetIntOverflowMattersInRange(instr->GetSrc2());
                 break;
             }
-            Assert(dstSym);
+            AnalysisAssert(dstSym);
 
             TransferCompoundedAddSubUsesToSrcs(instr, dstSym->scratch.globOpt.numCompoundedAddSubUses);
             lossy = opcode == Js::OpCode::ShrU_A;
@@ -5504,7 +5504,7 @@ BackwardPass::TrackIntUsage(IR::Instr *const instr)
                 // That's why it cannot be in the middle of a range.
                 if (instr->ignoreIntOverflowInRange)
                 {
-                    Assert(dstSym);
+                    AnalysisAssert(dstSym);
                     Assert(dstSym->scratch.globOpt.numCompoundedAddSubUses >= 0);
                     Assert(dstSym->scratch.globOpt.numCompoundedAddSubUses <= MaxCompoundedUsesInAddSubForIgnoringIntOverflow);
                     instr->ignoreOverflowBitCount = (uint8) (53 - dstSym->scratch.globOpt.numCompoundedAddSubUses);
@@ -6497,6 +6497,7 @@ BackwardPass::ProcessBailOnNoProfile(IR::Instr *instr, BasicBlock *block)
     Assert(this->tag == Js::BackwardPhase);
     Assert(instr->m_opcode == Js::OpCode::BailOnNoProfile);
     Assert(!instr->HasBailOutInfo());
+    AnalysisAssert(block);
 
     if (this->IsPrePass())
     {

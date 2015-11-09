@@ -55,7 +55,7 @@ namespace Js
         // the same translation unit to force an instantiation of the force-inlined function. Otherwise, if the force-inlined
         // function is not referenced in the same translation unit, it will not be generated and the linker is not able to find
         // the definition to inline the function in other translation units.
-        Assert(false);
+        AnalysisAssert(false);
 
         StringCopyInfo copyInfo;
         JavascriptString *const string = nullptr;

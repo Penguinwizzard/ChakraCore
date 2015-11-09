@@ -445,7 +445,7 @@ LinearScanMD::InsertOpHelperSpillsAndRestores(OpHelperBlock const& opHelperBlock
         if (opHelperSpilledLifetime.spillAsArg)
         {
             sym = opHelperSpilledLifetime.lifetime->sym;
-            Assert(sym);
+            AnalysisAssert(sym);
             Assert(sym->IsAllocated());
         }
         if (RegTypes[opHelperSpilledLifetime.reg] == TyFloat64)

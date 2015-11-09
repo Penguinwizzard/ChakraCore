@@ -2018,7 +2018,8 @@ LowererMD::GenerateFastDivByPow2(IR::Instr *instr)
     IR::LabelInstr *done = IR::LabelInstr::New(Js::OpCode::Label, m_func);
     IR::RegOpnd    *s1 = IR::RegOpnd::New(TyVar, m_func);
 
-    Assert(src2 && src2->IsVar() && Js::TaggedInt::Is(src2->m_address) && (Math::IsPow2(Js::TaggedInt::ToInt32(src2->m_address))));
+    AnalysisAssert(src2);
+    Assert(src2->IsVar() && Js::TaggedInt::Is(src2->m_address) && (Math::IsPow2(Js::TaggedInt::ToInt32(src2->m_address))));
     int32           src2Value = Js::TaggedInt::ToInt32(src2->m_address);
 
     // MOV s1, src1

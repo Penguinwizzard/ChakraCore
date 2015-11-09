@@ -399,8 +399,9 @@ namespace Js
         HSTRING geoString;
         HSTRING_HEADER geoStringHeader;
         IfFailedReturn(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(L"ZZ", 2, &geoStringHeader, &geoString));
-
+        AnalysisAssert(geoString);
         IfFailedReturn(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(currencyCode, static_cast<UINT32>(wcslen(currencyCode)), &hStringHdr, &hString));
+        AnalysisAssert(hString);
         IfFailedReturn(this->currencyFormatterFactory->CreateCurrencyFormatterCodeContext(hString, languages.Get(), geoString, currencyFormatter));
         return hr;
     }
@@ -422,7 +423,7 @@ namespace Js
         HSTRING geoString;
         HSTRING_HEADER geoStringHeader;
         IfFailedReturn(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(L"ZZ", 2, &geoStringHeader, &geoString));
-
+        AnalysisAssert(geoString);
         IfFailedReturn(this->decimalFormatterFactory->CreateDecimalFormatter(languages.Get(), geoString, numberFormatter));
         return hr;
     }
@@ -446,7 +447,7 @@ namespace Js
         HSTRING geoString;
         HSTRING_HEADER geoStringHeader;
         IfFailedReturn(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(L"ZZ", 2, &geoStringHeader, &geoString));
-
+        AnalysisAssert(geoString);
         IfFailedReturn(this->percentFormatterFactory->CreatePercentFormatter(languages.Get(), geoString, numberFormatter));
 
         return hr;
@@ -459,7 +460,7 @@ namespace Js
 
         if(numLocaleStrings == 0) return E_INVALIDARG;
 
-        Assert((calendar == nullptr && clock == nullptr) || (calendar != nullptr && clock != nullptr));
+        AnalysisAssert((calendar == nullptr && clock == nullptr) || (calendar != nullptr && clock != nullptr));
 
         HSTRING fsHString;
         HSTRING_HEADER fsHStringHdr;
@@ -467,6 +468,7 @@ namespace Js
         // OK for formatString to get truncated as it would pass incomplete formatString below which
         // will be rejected by globalization dll.
         IfFailedReturn(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(formatString, static_cast<UINT32>(wcslen(formatString)), &fsHStringHdr, &fsHString));
+        AnalysisAssert(fsHString);
 
         AutoArrayPtr<HSTRING> arr(HeapNewArray(HSTRING, numLocaleStrings), numLocaleStrings);
         AutoArrayPtr<HSTRING_HEADER> headers(HeapNewArray(HSTRING_HEADER, numLocaleStrings), numLocaleStrings);
@@ -494,11 +496,14 @@ namespace Js
             HSTRING_HEADER clockStringHeader;
 
             IfFailedReturn(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(L"ZZ", 2, &geoStringHeader, &geoString));
+            AnalysisAssert(geoString);
 
             // OK for calendar/clock to get truncated as it would pass incomplete text below which
             // will be rejected by globalization dll.
             IfFailedReturn(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(calendar, static_cast<UINT32>(wcslen(calendar)), &calStringHeader, &calString));
+            AnalysisAssert(calString);
             IfFailedReturn(GetWindowsGlobalizationLibrary(scriptContext)->WindowsCreateStringReference(clock, static_cast<UINT32>(wcslen(clock)), &clockStringHeader, &clockString));
+            AnalysisAssert(clockString);
             IfFailedReturn(this->dateTimeFormatterFactory->CreateDateTimeFormatterContext(fsHString, languages.Get(), geoString, calString, clockString, result));
         }
         return hr;

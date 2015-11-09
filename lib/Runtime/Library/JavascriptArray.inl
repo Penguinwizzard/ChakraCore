@@ -1125,7 +1125,7 @@ SECOND_PASS:
     {
         DebugOnly(VerifyNotNeedMarshal(newValue));
         this->EnsureHead<T>();
-        Assert(head);
+        AnalysisAssert(head);
 
 #ifdef VALIDATE_ARRAY
         ValidateArray();

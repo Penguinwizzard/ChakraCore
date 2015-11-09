@@ -492,7 +492,7 @@ Loop::RemoveBreakBlocks(FlowGraph *fg)
         loopTailBlock = block;
     }NEXT_BLOCK_IN_LOOP;
 
-    Assert(loopTailBlock);
+    AnalysisAssert(loopTailBlock);
 
     FOREACH_BLOCK_BACKWARD_IN_RANGE_EDITING(breakBlockEnd, loopTailBlock, this->GetHeadBlock(), blockPrev)
     {
@@ -810,6 +810,8 @@ bool Loop::EnsureMemOpVariablesInitialized()
 void
 FlowGraph::WalkLoopBlocks(BasicBlock *block, Loop *loop, JitArenaAllocator *tempAlloc)
 {
+    AnalysisAssert(loop);
+
     BVSparse<JitArenaAllocator> *loopBlocksBv = JitAnew(tempAlloc, BVSparse<JitArenaAllocator>, tempAlloc);
     BasicBlock *tailBlock = block;
     BasicBlock *lastBlock;
@@ -1349,7 +1351,7 @@ FlowGraph::UpdateRegionForBlock(BasicBlock * block, Region ** blockToRegion)
         NEXT_PREDECESSOR_BLOCK;
     }
 
-    AssertMsg(region != nullptr, "Failed to find region for block");
+    AnalysisAssertMsg(region != nullptr, "Failed to find region for block");
     if (!region->ehBailoutData)
     {
         region->AllocateEHBailoutData(this->func, tryInstr);
@@ -1687,7 +1689,7 @@ FlowGraph::InsertCompensationCodeForBlockMove(FlowEdge * edge,  bool insertToLoo
 void
 FlowGraph::RemoveUnreachableBlocks()
 {
-    Assert(this->blockList);
+    AnalysisAssert(this->blockList);
 
     FOREACH_BLOCK(block, this)
     {

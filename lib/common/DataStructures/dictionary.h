@@ -354,6 +354,7 @@ namespace JsUtil
             for (int i = 0; i < newSize; i++) newBuckets[i] = -1;
             EntryType* newEntries = RecyclerNewArray(recycler, EntryType, newSize);
             js_memcpy_s(newEntries, sizeof(EntryType) * newSize, entries, sizeof(EntryType) * count);
+            AnalysisAssert(count < newSize);
             for (int i = 0; i < count; i++)
             {
                 uint bucket = (uint)newEntries[i].hash % newSize;

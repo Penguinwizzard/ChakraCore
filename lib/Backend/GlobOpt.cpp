@@ -4954,7 +4954,7 @@ GlobOpt::OptTagChecks(IR::Instr *instr)
                 if (!srcOpnd)
                 {
                     srcOpnd = IR::RegOpnd::New(stackSym, stackSym->GetType(), instr->m_func);
-                    Assert(symOpnd);
+                    AnalysisAssert(symOpnd);
                     if (symOpnd->GetIsJITOptimizedReg())
                     {
                         srcOpnd->SetIsJITOptimizedReg(true);
@@ -13920,7 +13920,7 @@ GlobOpt::ToTypeSpecUse(IR::Instr *instr, IR::Opnd *opnd, BasicBlock *block, Valu
                 else
                 {
                     Assert(toType == TyFloat64);
-                    Assert(instr);
+                    AnalysisAssert(instr);
                     StackSym *const varSym = sym->IsTypeSpec() ? sym->GetVarEquivSym(instr->m_func) : sym;
                     block->globOptData.liveFloat64Syms->Set(varSym->m_id);
                 }
@@ -15188,7 +15188,7 @@ GlobOpt::ProcessValueKills(BasicBlock *const block, GlobOptBlockData *const bloc
 
     if(IsLoopPrePass() && block->loop == rootLoopPrePass)
     {
-        Assert(rootLoopPrePass);
+        AnalysisAssert(rootLoopPrePass);
         rootLoopPrePass->jsArrayKills.SetKillsAllArrays();
         Assert(!rootLoopPrePass->parent || rootLoopPrePass->jsArrayKills.AreSubsetOf(rootLoopPrePass->parent->jsArrayKills));
 
@@ -15629,7 +15629,7 @@ GlobOpt::OptArraySrc(IR::Instr * *const instrRef)
 
     if(needsBoundChecks && DoBoundCheckElimination())
     {
-        Assert(baseOwnerIndir);
+        AnalysisAssert(baseOwnerIndir);
         Assert(needsHeadSegmentLength);
 
         // Bound checks can be separated from the instruction only if it can bail out instead of making a helper call when a

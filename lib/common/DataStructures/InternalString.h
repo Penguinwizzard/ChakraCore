@@ -14,7 +14,7 @@ namespace Js
 
     public:
         InternalString() : m_charLength(0), m_content(NULL), m_offset(0) { };
-        InternalString(__in const wchar_t* content, charcount_t charLength, unsigned char offset = 0);
+        InternalString(const wchar_t* content, charcount_t charLength, unsigned char offset = 0);
         static InternalString* New(ArenaAllocator* alloc, const wchar_t* content, charcount_t length);
         static InternalString* New(Recycler* recycler, const wchar_t* content, charcount_t length);
         static InternalString* NewNoCopy(ArenaAllocator* alloc, const wchar_t* content, charcount_t length);

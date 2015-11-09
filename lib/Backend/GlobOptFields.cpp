@@ -264,6 +264,7 @@ GlobOpt::DoFieldPRE(Loop *loop) const
 
 bool GlobOpt::DoMemOp(Loop *loop)
 {
+#pragma prefast(suppress: 6285, "logical-or of constants is by design")
     return (
         loop &&
         (
@@ -749,7 +750,7 @@ GlobOpt::PrepareFieldHoisting(Loop * loop)
         {
             loop->hoistedFieldCopySyms = JitAnew(this->alloc, BVSparse<JitArenaAllocator>, this->alloc);
 
-            Assert(loop->parent && loop->parent->hasHoistedFields);
+            AnalysisAssert(loop->parent && loop->parent->hasHoistedFields);
             loop->hoistedFieldCopySyms->Copy(loop->parent->hoistedFieldCopySyms);
             loop->regAlloc.liveOnBackEdgeSyms->Or(loop->hoistedFieldCopySyms);
         }
@@ -3120,7 +3121,7 @@ GlobOpt::UpdateObjPtrValueType(IR::Opnd * opnd, IR::Instr * instr)
         }
     }
 
-    Assert(type);
+    AnalysisAssert(type);
     Js::TypeId typeId = type->GetTypeId();
 
     // Passing false for useVirtual as we would never have a virtual typed array hitting this code path

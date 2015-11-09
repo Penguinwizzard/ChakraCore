@@ -1953,7 +1953,7 @@ void ByteCodeGenerator::LoadAllConstants(FuncInfo *funcInfo)
             {
                 Assert(!this->TopFuncInfo()->GetParsedFunctionBody()->DoStackNestedFunc());
                 Js::RegSlot scopeLocation;
-                Assert(funcInfo->funcExprScope);
+                AnalysisAssert(funcInfo->funcExprScope);
                 if (funcInfo->funcExprScope->GetIsObject())
                 {
                     scopeLocation = funcInfo->funcExprScope->GetLocation();
@@ -6201,7 +6201,7 @@ void EmitConstantArgsToVarArray(ByteCodeGenerator *byteCodeGenerator, __out_ecou
         }
         else
         {
-            Assert(false);
+            AnalysisAssert(false);
         }
         args = args->sxBin.pnode2;
     }
@@ -6228,7 +6228,7 @@ void EmitConstantArgsToVarArray(ByteCodeGenerator *byteCodeGenerator, __out_ecou
     }
     else
     {
-        Assert(false);
+        AnalysisAssert(false);
     }
 }
 
@@ -7593,7 +7593,7 @@ void SetNewArrayElements(ParseNode *pnode, Js::RegSlot arrayLocation, ByteCodeGe
                     Js::RegSlot regVal = rhsLocation;
                     if (args->sxBin.pnode1->nop == knopEllipsis)
                     {
-                        Assert(spreadIndices);
+                        AnalysisAssert(spreadIndices);
                         regVal = funcInfo->AcquireTmpRegister();
                         byteCodeGenerator->Writer()->Reg2(Js::OpCode::LdCustomSpreadIteratorList, regVal, rhsLocation);
                         spreadIndices->elements[spreadIndex++] = i;
@@ -7622,7 +7622,7 @@ void SetNewArrayElements(ParseNode *pnode, Js::RegSlot arrayLocation, ByteCodeGe
                 {
                     regVal = funcInfo->AcquireTmpRegister();
                     byteCodeGenerator->Writer()->Reg2(Js::OpCode::LdCustomSpreadIteratorList, regVal, rhsLocation);
-                    Assert(spreadIndices);
+                    AnalysisAssert(spreadIndices);
                     spreadIndices->elements[spreadIndex] = i;
                 }
 

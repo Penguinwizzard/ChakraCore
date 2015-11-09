@@ -966,7 +966,7 @@ Symbol* Parser::AddDeclForPid(ParseNodePtr pnode, IdentPtr pid, SymbolType symbo
         if ((scope->GetScopeType() == ScopeType_FunctionBody || scope->GetScopeType() == ScopeType_Parameter) && symbolType != STFunction)
         {
             ParseNodePtr pnodeFnc = GetCurrentFunctionNode();
-            Assert(pnodeFnc);
+            AnalysisAssert(pnodeFnc);
             if (pnodeFnc->sxFnc.pnodeName &&
                 pnodeFnc->sxFnc.pnodeName->nop == knopVarDecl &&
                 pnodeFnc->sxFnc.pnodeName->sxVar.pid == pid)
@@ -1356,7 +1356,7 @@ void Parser::CheckPidIsValid(IdentPtr pid, bool autoArgumentsObject)
 // This prevents accidentally adding var declarations to the last parsed function.
 ParseNodePtr Parser::AddVarDeclNode(IdentPtr pid, ParseNodePtr pnodeFnc)
 {
-    Assert(pnodeFnc);
+    AnalysisAssert(pnodeFnc);
 
     ParseNodePtr *const ppnodeVarSave = m_ppnodeVar;
 
@@ -3830,7 +3830,7 @@ ParseNodePtr Parser::ParseFncDecl(ushort flags, LPCOLESTR pNameHint, const bool 
 
         if (BindDeferredPidRefs())
         {
-            Assert(pnodeFnc);
+            AnalysisAssert(pnodeFnc);
 
             if (!fLambda)
             {
@@ -3850,7 +3850,7 @@ ParseNodePtr Parser::ParseFncDecl(ushort flags, LPCOLESTR pNameHint, const bool 
 
     if (buildAST || BindDeferredPidRefs())
     {
-        Assert(pnodeFnc);
+        AnalysisAssert(pnodeFnc);
         pnodeFnc->sxFnc.SetIsAsync((flags & fFncAsync) != 0);
         pnodeFnc->sxFnc.SetIsLambda(fLambda);
         pnodeFnc->sxFnc.SetIsMethod((flags & fFncMethod) != 0);
@@ -3868,7 +3868,7 @@ ParseNodePtr Parser::ParseFncDecl(ushort flags, LPCOLESTR pNameHint, const bool 
 
     if (buildAST || BindDeferredPidRefs())
     {
-        Assert(pnodeFnc);
+        AnalysisAssert(pnodeFnc);
 
         *m_ppnodeVar = nullptr;
         m_ppnodeVar = ppnodeVarSave;
@@ -4203,7 +4203,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
             !fDeclaration && pnodeFnc && pnodeFnc->sxFnc.pnodeName == nullptr && fUnaryOrParen;
 
         BOOL isDeferredFnc = IsDeferredFnc();
-        Assert(isDeferredFnc || pnodeFnc);
+        AnalysisAssert(isDeferredFnc || pnodeFnc);
         isTopLevelDeferredFunc =
             (!isDeferredFnc
              && DeferredParse(pnodeFnc->sxFnc.functionId)
@@ -4267,7 +4267,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
         ParseNodePtr pnodeBlock = nullptr;
         if (buildAST || BindDeferredPidRefs())
         {
-            Assert(pnodeFnc);
+            AnalysisAssert(pnodeFnc);
             pnodeBlock = StartParseBlock<buildAST>(PnodeBlockType::Parameter, ScopeType_Parameter);
             pnodeFnc->sxFnc.pnodeScopes = pnodeBlock;
             m_ppnodeVar = &pnodeFnc->sxFnc.pnodeArgs;
@@ -4299,7 +4299,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
             pnodeInnerBlock = StartParseBlock<buildAST>(PnodeBlockType::Function, ScopeType_FunctionBody);
             // Set the parameter block's child to the function body block.
             *m_ppnodeScope = pnodeInnerBlock;
-            Assert(pnodeFnc);
+            AnalysisAssert(pnodeFnc);
             pnodeFnc->sxFnc.pnodeBodyScope = pnodeInnerBlock;
 
             // This synthetic block scope will contain all the nested scopes.
@@ -4391,7 +4391,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
 
             if (buildAST || BindDeferredPidRefs())
             {
-                Assert(pnodeFnc);
+                AnalysisAssert(pnodeFnc);
 
                 // Shouldn't be any temps in the arg list.
                 Assert(*m_ppnodeVar == nullptr);
@@ -4514,7 +4514,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
 
         if (fDeferred)
         {
-            Assert(pnodeFnc);
+            AnalysisAssert(pnodeFnc);
             pnodeFnc->sxFnc.pnodeVars = nullptr;
         }
 
@@ -4532,7 +4532,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
     }
 
     // after parsing asm.js module, we want to reset asm.js state before continuing
-    Assert(pnodeFnc);
+    AnalysisAssert(pnodeFnc);
     if (pnodeFnc->sxFnc.GetAsmjsMode())
     {
         m_InAsmMode = false;
@@ -5151,7 +5151,7 @@ bool Parser::ParseFncNames(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncParent, u
 
     if (buildAST)
     {
-        Assert(pnodeFnc);
+        AnalysisAssert(pnodeFnc);
         ichLimNames = pnodeT->ichLim;
         AddToNodeList(&pnodeFnc->sxFnc.pnodeName, pLastNodeRef, pnodeT);
 
@@ -5397,7 +5397,7 @@ void Parser::ParseFncFormals(ParseNodePtr pnodeFnc, ushort flags)
 
                     if (buildAST || BindDeferredPidRefs())
                     {
-                        Assert(pnodeT);
+                        AnalysisAssert(pnodeT);
                         pnodeT->sxVar.sym->SetIsNonSimpleParameter(true);
                         if (!isNonSimpleParameterList)
                         {
@@ -5673,7 +5673,7 @@ void Parser::CheckStrictFormalParameters()
 
 void Parser::FinishFncNode(ParseNodePtr pnodeFnc)
 {
-    Assert(pnodeFnc);
+    AnalysisAssert(pnodeFnc);
 
     // Finish the AST for a function that was deferred earlier, but which we decided
     // to finish after the fact.
@@ -7834,7 +7834,7 @@ ParseNodePtr Parser::ParseVariableDeclaration(
                 pnodeInit = ParseExpr<buildAST>(koplCma, nullptr, fAllowIn, FALSE, pNameHint, &nameHintLength, &nameHintOffset);
                 if (buildAST)
                 {
-                    Assert(pnodeThis);
+                    AnalysisAssert(pnodeThis);
                     pnodeThis->sxVar.pnodeInit = pnodeInit;
                     pnodeThis->ichLim = pnodeInit->ichLim;
 
@@ -9071,8 +9071,7 @@ LGetJumpStatement:
                 {
                     if (buildAST)
                     {
-                        AssertNodeMem(pstmt->pnodeStmt);
-                        AssertNodeMemN(pstmt->pnodeLab);
+                        AnalysisAssert(pstmt->pnodeStmt);
                         if (pstmt->pnodeStmt->Grfnop() & fnop)
                         {
                             pstmt->pnodeStmt->sxStmt.grfnop |= fnop;
@@ -9094,8 +9093,7 @@ LGetJumpStatement:
                         }
                         else
                         {
-                            AssertNodeMem(pstmt->pnodeStmt);
-                            AssertNodeMemN(pstmt->pnodeLab);
+                            AnalysisAssert(pstmt->pnodeStmt);
                             if (pstmt->pnodeStmt->Grfnop() & fnop)
                             {
                                 pstmt->pnodeStmt->sxStmt.grfnop |= fnop;
@@ -9217,7 +9215,7 @@ LDefaultToken:
 
             expressionStmt = true;
 
-            Assert(pnode);
+            AnalysisAssert(pnode);
             pnode->isUsed = false;
         }
         else

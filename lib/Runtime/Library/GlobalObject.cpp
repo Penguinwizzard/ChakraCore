@@ -795,7 +795,7 @@ namespace Js
     ScriptFunction* GlobalObject::DefaultEvalHelper(ScriptContext* scriptContext, const wchar_t *source, int sourceLength, ModuleID moduleID, ulong grfscr, LPCOLESTR pszTitle, BOOL registerDocument, BOOL isIndirect, BOOL strictMode)
     {
         Assert(sourceLength >= 0);
-
+        AnalysisAssert(scriptContext);
         if (scriptContext->GetThreadContext()->EvalDisabled())
         {
             throw Js::EvalDisabledException();

@@ -258,7 +258,7 @@ CONTEXT* Js::Amd64ContextsManager::Allocate()
         Amd64StackWalkerOutOfContexts_fatal_error((ULONG_PTR)this);
     }
 
-    Assert(pair);
+    AnalysisAssert(pair);
     memset(pair, 0, sizeof(CONTEXT) * CONTEXT_PAIR_COUNT);
     return pair;
 }

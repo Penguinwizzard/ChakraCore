@@ -1665,7 +1665,7 @@ bool GlobOpt::DetermineSymBoundOffsetOrValueRelativeToLandingPad(
             // The landing pad value became a constant value as part of a hoisting operation. The landing pad constant value is
             // a more aggressive bound, so use that instead, and take into consideration the change to the sym so far inside the
             // loop, using the relative bound to the landing pad value.
-            Assert(bounds);
+            AnalysisAssert(bounds);
             const ValueRelativeOffset *bound;
             AssertVerify(
                 (landingPadValueIsLowerBound ? bounds->RelativeLowerBounds() : bounds->RelativeUpperBounds())
@@ -1677,7 +1677,7 @@ bool GlobOpt::DetermineSymBoundOffsetOrValueRelativeToLandingPad(
         return true; // 'true' indicates that *boundOffsetOrValueRef contains the constant bound value
     }
 
-    Assert(bounds);
+    AnalysisAssert(bounds);
     const ValueRelativeOffset *bound;
     AssertVerify(
         (landingPadValueIsLowerBound ? bounds->RelativeLowerBounds() : bounds->RelativeUpperBounds())

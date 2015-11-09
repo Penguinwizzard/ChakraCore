@@ -1969,7 +1969,7 @@ namespace Js
     BOOL DictionaryTypeHandlerBase<T>::AddProperty(DynamicObject* instance, const PropertyRecord* propertyRecord, Var value,
         PropertyAttributes attributes, PropertyValueInfo* info, PropertyOperationFlags flags, bool throwIfNotExtensible, SideEffects possibleSideEffects)
     {
-        Assert(instance);
+        AnalysisAssert(instance);
         ScriptContext* scriptContext = instance->GetScriptContext();
         bool isForce = (flags & PropertyOperation_Force) != 0;
 

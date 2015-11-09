@@ -1846,6 +1846,7 @@ namespace UnifiedRegex
             item = 0;
             for (ConcatNode* curr = this; item <= min(emptyPrefix, n - 1); curr = curr->tail, item++)
             {
+                AnalysisAssert(curr);
                 firstSet->UnionInPlace(compiler.ctAllocator, *curr->head->firstSet);
                 if (!curr->head->isFirstExact)
                     isFirstExact = false;

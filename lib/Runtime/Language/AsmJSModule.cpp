@@ -2274,7 +2274,7 @@ namespace Js
                 break;
             case AsmJsSymbol::ArrayView:
             {
-                Assert(asmBuffer);
+                AnalysisAssert(asmBuffer);
 #ifdef _M_X64
                 const bool isOptimizedBuffer = true;
 #elif _M_IX86

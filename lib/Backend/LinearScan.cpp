@@ -2849,7 +2849,7 @@ LinearScan::SpillReg(RegNum reg, bool forceSpill /* = false */)
         return;
     }
 
-    Assert(spilledRange);
+    AnalysisAssert(spilledRange);
     Assert(!spilledRange->cantSpill);
 
     if ((!forceSpill) && this->IsInHelperBlock() && spilledRange->start < this->HelperBlockStartInstrNumber() && !spilledRange->cantOpHelperSpill)

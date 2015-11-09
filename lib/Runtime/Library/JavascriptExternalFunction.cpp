@@ -54,7 +54,7 @@ namespace Js
         HRESULT hr = E_FAIL;
 
         ScriptContext* scriptContext = object->GetScriptContext();
-        Assert(scriptContext);
+        AnalysisAssert(scriptContext);
         // Don't call the implicit call if disable implicit call
         if (scriptContext->GetThreadContext()->IsDisableImplicitCall())
         {
@@ -304,7 +304,7 @@ namespace Js
         externalFunction->PrepareExternalCall(&args);
 
         ScriptContext * scriptContext = externalFunction->type->GetScriptContext();
-        Assert(scriptContext);
+        AnalysisAssert(scriptContext);
         Var result = NULL;
 
         BEGIN_LEAVE_SCRIPT(scriptContext)

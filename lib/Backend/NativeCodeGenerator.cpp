@@ -532,7 +532,7 @@ NativeCodeGenerator::GenerateFunction(Js::FunctionBody *fn, Js::ScriptFunction *
 #ifdef ASMJS_PLAT
     if (fn->GetIsAsmjsMode())
     {
-        Assert(function != nullptr);
+        AnalysisAssert(function != nullptr);
         Js::FunctionEntryPointInfo* oldFuncObjEntryPointInfo = (Js::FunctionEntryPointInfo*)function->GetEntryPointInfo();
         Assert(oldFuncObjEntryPointInfo->GetIsAsmJSFunction()); // should be asmjs entrypoint info
 
