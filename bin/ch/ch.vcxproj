@@ -24,10 +24,9 @@
         $(MSBuildThisFileDirectory);
         $(ChakraCoreRootDirectory)Lib\Common;
         $(ChakraCoreRootDirectory)Bin\ChakraCore;
-        $(IntDir);        
+        $(IntDir);
         %(AdditionalIncludeDirectories);
       </AdditionalIncludeDirectories>
-      <RuntimeLibrary Condition="'$(Configuration)'=='Debug'">MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <ModuleDefinitionFile>ch.def</ModuleDefinitionFile>
@@ -43,7 +42,7 @@
   <ItemGroup>
     <ResourceCompile Include="$(MsBuildThisFileDirectory)ch.rc">
       <AdditionalIncludeDirectories>
-        $(ChakraCoreRootDirectory)lib\common;        
+        $(ChakraCoreRootDirectory)lib\common;
         %(AdditionalIncludeDirectories)
       </AdditionalIncludeDirectories>
     </ResourceCompile>
