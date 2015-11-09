@@ -585,7 +585,7 @@ Inline::InlinePolymorphicFunctionUsingFixedMethods(IR::Instr *callInstr, const J
     *pIsInlined = false;
 
     const Js::FunctionCodeGenJitTimeData* inlineeJitTimeData = inlinerData->GetInlinee(profileId);
-    Assert(inlineeJitTimeData);
+    AnalysisAssert(inlineeJitTimeData);
 
 #if defined(DBG_DUMP) || defined(ENABLE_DEBUG_CONFIG_OPTIONS)
     wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];

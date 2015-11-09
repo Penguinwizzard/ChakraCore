@@ -2194,6 +2194,7 @@ namespace Js
             for (int i = 0; i < info->GetFunctionCount(); i++)
             {
                 ScriptFunction* functionObj = (ScriptFunction*)localModuleFunctions[i];
+                AnalysisAssert(functionObj != nullptr);
                 // don't want to generate code for APIs like changeHeap
                 if (functionObj->GetEntryPoint() == Js::AsmJsExternalEntryPoint)
                 {

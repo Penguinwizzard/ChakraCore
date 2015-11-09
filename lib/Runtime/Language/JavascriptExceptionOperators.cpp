@@ -1059,7 +1059,7 @@ namespace Js
 
         ScriptContext *scriptContext = function->GetScriptContext();
 
-        Assert(scriptContext);
+        AnalysisAssert(scriptContext);
 
         // If the first argument to the accessor is not a recyclable object, return undefined
         // for compat with other browsers
@@ -1118,7 +1118,7 @@ namespace Js
                 if (currentFrame.IsScriptFunction())
                 {
                     ScriptContext* funcScriptContext = currentFrame.GetFunctionBody()->GetScriptContext();
-                    Assert(funcScriptContext);
+                    AnalysisAssert(funcScriptContext);
                     if (scriptContext != funcScriptContext && FAILED(scriptContext->GetHostScriptContext()->CheckCrossDomainScriptContext(funcScriptContext)))
                     {
                         continue; // Ignore this frame
