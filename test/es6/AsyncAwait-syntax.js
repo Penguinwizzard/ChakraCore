@@ -73,7 +73,7 @@ var tests = [
             assert.throws(function () { eval("a[await p];"); }, SyntaxError, "'await' keyword is not allowed in eval global scope", "Expected ']'");
             assert.throws(function () { eval("a + await p;"); }, SyntaxError, "'await' keyword is not allowed in eval global scope", "Expected ';'");
             assert.throws(function () { eval("await p + await q;"); }, SyntaxError, "'await' keyword is not allowed in eval global scope", "Expected ';'");
-            assert.throws(function () { eval("foo(await p, await q);"); }, SyntaxError, "'await' keyword is not allowed in eval global scope", "Expected ')'");                
+            assert.throws(function () { eval("foo(await p, await q);"); }, SyntaxError, "'await' keyword is not allowed in eval global scope", "Expected ')'");
 
             assert.throws(function () { eval("var lambdaParenNoArg = await () => x < y;"); }, SyntaxError, "'await' keyword is not allowed with a non-async lambda expression", "Syntax error");
             assert.throws(function () { eval("var lambdaArgs = await async (a, b ,c) => a + b + c;"); }, SyntaxError, "There miss parenthises", "Expected ';'");
@@ -117,6 +117,17 @@ var tests = [
             assert.isFalse(foo.hasOwnProperty('prototype'), "An async function does not have a property named 'prototype'.");
 
             assert.throws(function () { eval("new foo();"); }, TypeError, "An async function cannot be instantiated because it is not have a constructor.", "Function is not a constructor");
+        }
+    },
+    {
+        name: "async lambda parsing",
+        body: function () {
+            var a = async => async;
+            assert.areEqual(42, a(42), "async used as single parameter name for arrow function still works with async feature turned on");
+
+            var b = async () => { };
+            var c = async x => x;
+            var d = async (a, b) => { };
         }
     },
 ];

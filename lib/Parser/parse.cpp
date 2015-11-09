@@ -7466,8 +7466,16 @@ ParseNodePtr Parser::ParseExpr(int oplMin,
                 ichMin = m_pscan->IchMinTok();
                 iecpMin = m_pscan->IecpMinTok();
                 m_pscan->Scan();
-                flags |= fFncAsync;
-                isAsyncMethod = true;
+
+                if (m_token.tk == tkID || m_token.tk == tkLParen)
+                {
+                    flags |= fFncAsync;
+                    isAsyncMethod = true;
+                }
+                else
+                {
+                    m_pscan->SeekTo(termStart);
+                }
             }
             pnode = ParseFncDecl<buildAST>(flags, nullptr, /* isSourceElement = */ false, /* needsPIDOnRCurlyScan = */false, /* resetParsingSuperRestrictionState = */false);
             if (isAsyncMethod)
