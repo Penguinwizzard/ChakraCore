@@ -9,7 +9,7 @@
   <PropertyGroup>
     <NoThrowNewLib>nothrownew.obj</NoThrowNewLib>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(RunCodeAnalysis)'==''">
+  <PropertyGroup Condition="'$(RunCodeAnalysis)'=='' AND '$(Configuration)'=='Release'">
     <RunCodeAnalysis>$(BuildWithCodeAnalysis)</RunCodeAnalysis>
   </PropertyGroup>
   <ItemDefinitionGroup>
