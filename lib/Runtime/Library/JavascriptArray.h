@@ -205,6 +205,7 @@ namespace Js
             static FunctionInfo Filter;
             static FunctionInfo ForEach;
             static FunctionInfo IndexOf;
+            static FunctionInfo Includes;
             static FunctionInfo Join;
             static FunctionInfo LastIndexOf;
             static FunctionInfo Map;
@@ -242,6 +243,7 @@ namespace Js
         static Var EntryFilter(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryForEach(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryIndexOf(RecyclableObject* function, CallInfo callInfo, ...);
+        static Var EntryIncludes(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryJoin(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryLastIndexOf(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryMap(RecyclableObject* function, CallInfo callInfo, ...);
@@ -434,7 +436,7 @@ namespace Js
         static BOOL GetParamForIndexOf(T length, Arguments const & args, Var& search, T& fromIndex, ScriptContext * scriptContext);
         static BOOL GetParamForLastIndexOf(int64 length, Arguments const & args, Var& search, int64& fromIndex, ScriptContext * scriptContext);
 
-        template <typename T, typename P = uint32>
+        template <bool includesAlgorithm, typename T, typename P = uint32>
         static Var TemplatedIndexOfHelper(T* pArr, Var search, P fromIndex, P toIndex, ScriptContext * scriptContext);
         template <typename T>
         static Var LastIndexOfHelper(T* pArr, Var search, int64 fromIndex, ScriptContext * scriptContext);
@@ -495,8 +497,11 @@ namespace Js
         template <typename T>
         static JavascriptString* JoinArrayHelper(T * arr, JavascriptString* separatorStr, ScriptContext* scriptContext);
         static JavascriptString* JoinOtherHelper(RecyclableObject *object, JavascriptString* separatorStr, ScriptContext* scriptContext);
-        virtual int32 HeadSegmentIndexOfHelper(Var search, uint32 &fromIndex, uint32 toIndex, ScriptContext * scriptContext);
 
+        template <bool includesAlgorithm>
+        static Var IndexOfHelper(Arguments const & args, ScriptContext *scriptContext);
+
+        virtual int32 HeadSegmentIndexOfHelper(Var search, uint32 &fromIndex, uint32 toIndex, bool includesAlgorithm, ScriptContext * scriptContext);
 
 
         template<typename T>
@@ -939,7 +944,7 @@ namespace Js
         static DynamicType * GetInitialType(ScriptContext * scriptContext);
         static JavascriptNativeIntArray * BoxStackInstance(JavascriptNativeIntArray * instance);
     private:
-        virtual int32 HeadSegmentIndexOfHelper(Var search, uint32 &fromIndex, uint32 toIndex, ScriptContext * scriptContext) override;
+        virtual int32 HeadSegmentIndexOfHelper(Var search, uint32 &fromIndex, uint32 toIndex, bool includesAlgorithm, ScriptContext * scriptContext) override;
     };
 
     class JavascriptCopyOnAccessNativeIntArray : public JavascriptNativeIntArray
@@ -1054,6 +1059,6 @@ namespace Js
         static JavascriptNativeFloatArray * BoxStackInstance(JavascriptNativeFloatArray * instance);
         static double Pop(ScriptContext * scriptContext, Var nativeFloatArray);
     private:
-        virtual int32 HeadSegmentIndexOfHelper(Var search, uint32 &fromIndex, uint32 toIndex, ScriptContext * scriptContext) override;
+        virtual int32 HeadSegmentIndexOfHelper(Var search, uint32 &fromIndex, uint32 toIndex, bool includesAlgorithm, ScriptContext * scriptContext) override;
     };
 } // namespace Js

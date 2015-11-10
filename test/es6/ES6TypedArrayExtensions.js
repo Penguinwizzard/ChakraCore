@@ -121,6 +121,7 @@ var tests = [
             verifyTypedArrayPrototypePropertyFunction(typedArrayPrototype, "map", 1, "%TypedArrayPrototype%.map");
             verifyTypedArrayPrototypePropertyFunction(typedArrayPrototype, "forEach", 1, "%TypedArrayPrototype%.forEach");
             verifyTypedArrayPrototypePropertyFunction(typedArrayPrototype, "indexOf", 1, "%TypedArrayPrototype%.indexOf");
+            verifyTypedArrayPrototypePropertyFunction(typedArrayPrototype, "includes", 1, "%TypedArrayPrototype%.includes");            
             verifyTypedArrayPrototypePropertyFunction(typedArrayPrototype, "every", 1, "%TypedArrayPrototype%.every");
             verifyTypedArrayPrototypePropertyFunction(typedArrayPrototype, "filter", 1, "%TypedArrayPrototype%.filter");
             verifyTypedArrayPrototypePropertyFunction(typedArrayPrototype, "find", 1, "%TypedArrayPrototype%.find");
@@ -307,6 +308,7 @@ var tests = [
             verifyTypedArrayPrototypeDoesNotHaveOwnProperty('fill');
             verifyTypedArrayPrototypeDoesNotHaveOwnProperty('map');
             verifyTypedArrayPrototypeDoesNotHaveOwnProperty('indexOf');
+            verifyTypedArrayPrototypeDoesNotHaveOwnProperty('includes');            
             verifyTypedArrayPrototypeDoesNotHaveOwnProperty('forEach');
             verifyTypedArrayPrototypeDoesNotHaveOwnProperty('every');
             verifyTypedArrayPrototypeDoesNotHaveOwnProperty('filter');
@@ -1171,6 +1173,42 @@ var tests = [
             assert.throws(function() { indexOfFn.call('string'); }, TypeError, "Calling %TypedArrayPrototype%.indexOf with non-object this throws TypeError", "'this' is not a typed array object");
         }
     },
+    {
+        name: "%TypedArray%.prototype.includes behavior",
+        body: function() {
+            var includesFn = Int8Array.prototype.__proto__.includes;
+            
+            function getTypedArray() {
+                var t = new Int8Array(10);
+                
+                for(var i = 0; i < t.length; i++) {
+                    t[i] = i;
+                }
+                
+                return t;
+            }
+
+            assert.isFalse(includesFn.call(getTypedArray(), undefined), "Calling %TypedArrayPrototype%.includes with undefined returns true");
+            assert.isTrue(includesFn.call(getTypedArray(), 0), "Calling %TypedArrayPrototype%.includes searching for the first value");
+            assert.isTrue(includesFn.call(getTypedArray(), 9), "Calling %TypedArrayPrototype%.includes searching for the last value");
+            assert.isFalse(includesFn.call(getTypedArray(), 0, 1), "Calling %TypedArrayPrototype%.includes searching for the first value but skipping the first element returns false");
+            assert.isFalse(includesFn.call(getTypedArray(), 0, 11), "Calling %TypedArrayPrototype%.includes where fromIndex > length returns false");
+            assert.True(includesFn.call(getTypedArray(), 0, -10), "Calling %TypedArrayPrototype%.includes where fromIndex < 0 acts as indexed from the back");
+            assert.isTrue(includesFn.call(getTypedArray(), 5, -5), "Calling %TypedArrayPrototype%.includes where fromIndex < 0 acts as indexed from the back");
+            
+            // If we use Array.prototype.includes but pass TypedArray objects, make sure the property named length is used instead of the internal TypedArray length slot
+            var u = getTypedArray();
+            Object.defineProperty(u, 'length', { value: 0 });
+            assert.isFalse(Array.prototype.includes.call(u, 0), "Calling Array.prototype.includes where length is zero returns false");
+            var u = getTypedArray();
+            Object.defineProperty(u, 'length', { value: 5 });
+            assert.isFalse(Array.prototype.includes.call(u, 6), "Calling Array.prototype.includes with a TypedArray that lies about length - make sure we don't actually find the element");
+            
+            assert.throws(function() { includes.call(); }, TypeError, "Calling %TypedArrayPrototype%.includes with no this throws TypeError", "'this' is not a typed array object");
+            assert.throws(function() { includes.call(undefined); }, TypeError, "Calling %TypedArrayPrototype%.includes with undefined this throws TypeError", "'this' is not a typed array object");
+            assert.throws(function() { includes.call('string'); }, TypeError, "Calling %TypedArrayPrototype%.includes with non-object this throws TypeError", "'this' is not a typed array object");
+        }
+    },    
     {
         name: "%TypedArray%.prototype.lastIndexOf behavior",
         body: function() {

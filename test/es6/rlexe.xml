@@ -421,7 +421,7 @@
   <test>
     <default>
       <files>ES6ArrayAPI.js</files>
-      <compile-flags>-ES6 -ES6ObjectLiterals -ES6Iterators -ES6TypedArrayExtensions -args summary -endargs</compile-flags>
+      <compile-flags>-ES6 -ES6ObjectLiterals -ES6Iterators -ES6TypedArrayExtensions -es7Builtins -args summary -endargs</compile-flags>
     </default>
   </test>
   <test>

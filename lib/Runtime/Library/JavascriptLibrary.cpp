@@ -1724,6 +1724,11 @@ namespace Js
             /* No inlining            Array_CopyWithin     */ library->AddFunctionToLibraryObject(arrayPrototype, PropertyIds::copyWithin, &JavascriptArray::EntryInfo::CopyWithin, 2);
         }
 
+        if (scriptContext->GetConfig()->IsES7BuiltinsEnabled())
+        {
+            builtinFuncs[BuiltinFunction::Array_Includes] = library->AddFunctionToLibraryObject(arrayPrototype, PropertyIds::includes, &JavascriptArray::EntryInfo::Includes, 1);
+        }
+
         DebugOnly(CheckRegisteredBuiltIns(builtinFuncs, scriptContext));
 
         arrayPrototype->SetHasNoEnumerableProperties(true);
@@ -1893,6 +1898,12 @@ namespace Js
             JavascriptFunction* valuesFunc = library->AddFunctionToLibraryObject(typedarrayPrototype, PropertyIds::values, &TypedArrayBase::EntryInfo::Values, 0);
             library->AddMember(typedarrayPrototype, PropertyIds::_symbolIterator, valuesFunc);
         }
+
+        if (scriptContext->GetConfig()->IsES7BuiltinsEnabled())
+        {
+            library->AddFunctionToLibraryObject(typedarrayPrototype, PropertyIds::includes, &TypedArrayBase::EntryInfo::Includes, 1);
+        }
+
 
         library->AddAccessorsToLibraryObject(typedarrayPrototype, PropertyIds::buffer, &TypedArrayBase::EntryInfo::GetterBuffer, nullptr);
         library->AddAccessorsToLibraryObject(typedarrayPrototype, PropertyIds::byteLength, &TypedArrayBase::EntryInfo::GetterByteLength, nullptr);
@@ -3218,6 +3229,9 @@ namespace Js
 
         case PropertyIds::indexOf:
             return BuiltinFunction::Array_IndexOf;
+
+        case PropertyIds::includes:
+            return BuiltinFunction::Array_Includes;
 
         case PropertyIds::isArray:
             return BuiltinFunction::Array_IsArray;
@@ -6146,6 +6160,11 @@ namespace Js
             REG_OBJECTS_LIB_FUNC(of, JavascriptArray::EntryOf);
         }
 
+        if (config.IsES7BuiltinsEnabled())
+        {
+            REG_OBJECTS_LIB_FUNC(includes, JavascriptArray::EntryIncludes);
+        }
+
         return hr;
     }
 
@@ -6613,6 +6632,12 @@ namespace Js
         REG_OBJECTS_LIB_FUNC(slice, TypedArrayBase::EntrySlice);
         REG_OBJECTS_LIB_FUNC(some, TypedArrayBase::EntrySome);
         REG_OBJECTS_LIB_FUNC(sort, TypedArrayBase::EntrySort);
+
+        ScriptConfiguration const& config = *(scriptContext->GetConfig());
+        if (config.IsES7BuiltinsEnabled())
+        {
+            REG_OBJECTS_LIB_FUNC(includes, TypedArrayBase::EntryIncludes);
+        }
 
         return hr;
     }

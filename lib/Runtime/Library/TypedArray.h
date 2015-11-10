@@ -45,6 +45,7 @@ namespace Js
             static FunctionInfo FindIndex;
             static FunctionInfo ForEach;
             static FunctionInfo IndexOf;
+            static FunctionInfo Includes;
             static FunctionInfo Join;
             static FunctionInfo Keys;
             static FunctionInfo LastIndexOf;
@@ -82,6 +83,7 @@ namespace Js
         static Var EntryFindIndex(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryForEach(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryIndexOf(RecyclableObject* function, CallInfo callInfo, ...);
+        static Var EntryIncludes(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryJoin(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryKeys(RecyclableObject* function, CallInfo callInfo, ...);
         static Var EntryLastIndexOf(RecyclableObject* function, CallInfo callInfo, ...);

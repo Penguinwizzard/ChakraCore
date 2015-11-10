@@ -3460,21 +3460,20 @@ namespace Js
         return fromIndex;
     }
 
-    // Array.prototype.indexOf as defined in ES6.0 (final) Section 22.1.3.11
-    Var JavascriptArray::EntryIndexOf(RecyclableObject* function, CallInfo callInfo, ...)
+    // includesAlgorithm specifies to follow ES7 Array.prototoype.includes semantics instead of Array.prototype.indexOf
+    // Differences
+    //    1. Returns boolean true or false value instead of the search hit index
+    //    2. Follows SameValueZero algorithm instead of StrictEquals
+    //    3. Missing values are scanned if the search value is undefined
+
+    template <bool includesAlgorithm>
+    Var JavascriptArray::IndexOfHelper(Arguments const & args, ScriptContext *scriptContext)
     {
-        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
-
-        ARGUMENTS(args, callInfo);
-        ScriptContext* scriptContext = function->GetScriptContext();
-
-        Assert(!(callInfo.Flags & CallFlags_New));
-
-        CHAKRATEL_LANGSTATS_INC_BUILTINCOUNT(ArrayIndexOfCount);
-
         RecyclableObject* obj = nullptr;
         JavascriptArray* pArr = nullptr;
         BigIndex length;
+        Var trueValue = scriptContext->GetLibrary()->GetTrue();
+        Var falseValue = scriptContext->GetLibrary()->GetFalse();
 
         if (JavascriptArray::Is(args[0]))
         {
@@ -3497,7 +3496,7 @@ namespace Js
         {
             if (scriptContext->GetConfig()->IsES6ToLengthEnabled())
             {
-                length = (uint64) JavascriptConversion::ToLength(JavascriptOperators::OP_GetLength(obj, scriptContext), scriptContext);
+                length = (uint64)JavascriptConversion::ToLength(JavascriptOperators::OP_GetLength(obj, scriptContext), scriptContext);
 
             }
             else
@@ -3517,15 +3516,24 @@ namespace Js
             uint32 len = length.IsUint32Max() ? MaxArrayLength : length.GetSmallIndex();
             if (!GetParamForIndexOf(len, args, search, fromIndex, scriptContext))
             {
-                return TaggedInt::ToVarUnchecked(-1);
+                return includesAlgorithm ? falseValue : TaggedInt::ToVarUnchecked(-1);
             }
-            int32 index = pArr->HeadSegmentIndexOfHelper(search, fromIndex, len, scriptContext);
+            int32 index = pArr->HeadSegmentIndexOfHelper(search, fromIndex, len, includesAlgorithm, scriptContext);
 
             // If we found the search value in the head segment, or if we determined there is no need to search other segments,
             // we stop right here.
             if (index != -1 || fromIndex == -1)
             {
-                return JavascriptNumber::ToVar(index, scriptContext);
+                if (includesAlgorithm)
+                {
+                    //Array.prorotype.includes
+                    return (index == -1)? falseValue : trueValue;
+                }
+                else
+                {
+                    //Array.prorotype.indexOf
+                    return JavascriptNumber::ToVar(index, scriptContext);
+                }
             }
 
             //  If we really must search other segments, let's do it now. We'll have to search the slow way (dealing with holes, etc.).
@@ -3533,14 +3541,14 @@ namespace Js
             switch (pArr->GetTypeId())
             {
             case Js::TypeIds_Array:
-                return TemplatedIndexOfHelper(pArr, search, fromIndex, len, scriptContext);
+                return TemplatedIndexOfHelper<includesAlgorithm>(pArr, search, fromIndex, len, scriptContext);
             case Js::TypeIds_NativeIntArray:
-                return TemplatedIndexOfHelper(JavascriptNativeIntArray::FromVar(pArr), search, fromIndex, len, scriptContext);
+                return TemplatedIndexOfHelper<includesAlgorithm>(JavascriptNativeIntArray::FromVar(pArr), search, fromIndex, len, scriptContext);
             case Js::TypeIds_NativeFloatArray:
-                return TemplatedIndexOfHelper(JavascriptNativeFloatArray::FromVar(pArr), search, fromIndex, len, scriptContext);
+                return TemplatedIndexOfHelper<includesAlgorithm>(JavascriptNativeFloatArray::FromVar(pArr), search, fromIndex, len, scriptContext);
             default:
                 AssertMsg(FALSE, "invalid array typeid");
-                return TemplatedIndexOfHelper(pArr, search, fromIndex, len, scriptContext);
+                return TemplatedIndexOfHelper<includesAlgorithm>(pArr, search, fromIndex, len, scriptContext);
             }
         }
 
@@ -3554,9 +3562,9 @@ namespace Js
                 uint32 len = length.IsUint32Max() ? MaxArrayLength : length.GetSmallIndex();
                 if (!GetParamForIndexOf(len, args, search, fromIndex, scriptContext))
                 {
-                    return TaggedInt::ToVarUnchecked(-1);
+                    return includesAlgorithm ? falseValue : TaggedInt::ToVarUnchecked(-1);
                 }
-                return TemplatedIndexOfHelper(TypedArrayBase::FromVar(obj), search, fromIndex, length.GetSmallIndex(), scriptContext);
+                return TemplatedIndexOfHelper<includesAlgorithm>(TypedArrayBase::FromVar(obj), search, fromIndex, length.GetSmallIndex(), scriptContext);
             }
         }
         if (length.IsSmallIndex())
@@ -3565,9 +3573,9 @@ namespace Js
             uint32 fromIndex;
             if (!GetParamForIndexOf(length.GetSmallIndex(), args, search, fromIndex, scriptContext))
             {
-                return TaggedInt::ToVarUnchecked(-1);
+                return includesAlgorithm ? falseValue : TaggedInt::ToVarUnchecked(-1);
             }
-            return TemplatedIndexOfHelper(obj, search, fromIndex, length.GetSmallIndex(), scriptContext);
+            return TemplatedIndexOfHelper<includesAlgorithm>(obj, search, fromIndex, length.GetSmallIndex(), scriptContext);
         }
         else
         {
@@ -3575,11 +3583,49 @@ namespace Js
             uint64 fromIndex;
             if (!GetParamForIndexOf(length.GetBigIndex(), args, search, fromIndex, scriptContext))
             {
-                return TaggedInt::ToVarUnchecked(-1);
+                return includesAlgorithm ? falseValue : TaggedInt::ToVarUnchecked(-1);
             }
-            return TemplatedIndexOfHelper(obj, search,fromIndex, length.GetBigIndex(), scriptContext);
+            return TemplatedIndexOfHelper<includesAlgorithm>(obj, search, fromIndex, length.GetBigIndex(), scriptContext);
         }
     }
+
+    // Array.prototype.indexOf as defined in ES6.0 (final) Section 22.1.3.11
+    Var JavascriptArray::EntryIndexOf(RecyclableObject* function, CallInfo callInfo, ...)
+    {
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+
+        ARGUMENTS(args, callInfo);
+        ScriptContext* scriptContext = function->GetScriptContext();
+
+        Assert(!(callInfo.Flags & CallFlags_New));
+
+        CHAKRATEL_LANGSTATS_INC_BUILTINCOUNT(ArrayIndexOfCount);
+
+        Var returnValue =  IndexOfHelper<false>(args, scriptContext);
+        
+        //IndexOfHelper code is reused for array.prototype.includes as well. Let us assert here we didn't get a true or false instead of index
+        Assert(returnValue != scriptContext->GetLibrary()->GetTrue() && returnValue != scriptContext->GetLibrary()->GetFalse());
+
+        return returnValue;
+    }
+
+    Var JavascriptArray::EntryIncludes(RecyclableObject* function, CallInfo callInfo, ...)
+    {
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+
+        ARGUMENTS(args, callInfo);
+        ScriptContext* scriptContext = function->GetScriptContext();
+
+        Assert(!(callInfo.Flags & CallFlags_New));
+
+        CHAKRATEL_LANGSTATS_INC_BUILTINCOUNT(ArrayIncludesCount);
+
+        Var returnValue = IndexOfHelper<true>(args, scriptContext);
+        Assert(returnValue == scriptContext->GetLibrary()->GetTrue() || returnValue == scriptContext->GetLibrary()->GetFalse());
+
+        return returnValue;
+    }
+
 
     template<typename T>
     BOOL JavascriptArray::GetParamForIndexOf(T length, Arguments const& args, Var& search, T& fromIndex, ScriptContext * scriptContext)
@@ -3710,17 +3756,25 @@ namespace Js
     }
 
 
-    template <typename T, typename P>
+    template <bool includesAlgorithm, typename T, typename P>
     Var JavascriptArray::TemplatedIndexOfHelper(T * pArr, Var search, P fromIndex, P toIndex, ScriptContext * scriptContext)
     {
         Var element = nullptr;
         bool isSearchTaggedInt = TaggedInt::Is(search);
+        bool doUndefinedSearch = includesAlgorithm && JavascriptOperators::GetTypeId(search) == TypeIds_Undefined;
+
+        Var trueValue = scriptContext->GetLibrary()->GetTrue();
+        Var falseValue = scriptContext->GetLibrary()->GetFalse();
 
         //Consider: enumerating instead of walking all indices
         for (P i = fromIndex; i < toIndex; i++)
         {
             if (!TemplatedGetItem(pArr, i, &element, scriptContext))
             {
+                if (doUndefinedSearch)
+                {
+                    return trueValue;
+                }
                 continue;
             }
 
@@ -3728,21 +3782,33 @@ namespace Js
             {
                 if (element == search)
                 {
-                    return JavascriptNumber::ToVar(i, scriptContext);
+                    return includesAlgorithm? trueValue : JavascriptNumber::ToVar(i, scriptContext);
                 }
                 continue;
             }
 
-            if (JavascriptOperators::StrictEqual(element, search, scriptContext))
+            if (includesAlgorithm)
             {
-                return JavascriptNumber::ToVar(i, scriptContext);
+                //Array.prototype.includes
+                if (JavascriptConversion::SameValueZero(element, search))
+                {
+                    return trueValue;
+                }
+            }
+            else
+            {
+                //Array.prototype.indexOf
+                if (JavascriptOperators::StrictEqual(element, search, scriptContext))
+                {
+                    return JavascriptNumber::ToVar(i, scriptContext);
+                }
             }
         }
 
-        return TaggedInt::ToVarUnchecked(-1);
+        return includesAlgorithm ? falseValue :  TaggedInt::ToVarUnchecked(-1);
     }
 
-    int32 JavascriptArray::HeadSegmentIndexOfHelper(Var search, uint32 &fromIndex, uint32 toIndex, ScriptContext * scriptContext)
+    int32 JavascriptArray::HeadSegmentIndexOfHelper(Var search, uint32 &fromIndex, uint32 toIndex, bool includesAlgorithm, ScriptContext * scriptContext)
     {
         Assert(Is(GetTypeId()) && !JavascriptNativeArray::Is(GetTypeId()));
 
@@ -3767,8 +3833,14 @@ namespace Js
                     return i;
                 }
             }
+            else if (includesAlgorithm && JavascriptConversion::SameValueZero(element, search)) 
+            { 
+                //Array.prototoype.includes
+                return i;
+            }
             else if (JavascriptOperators::StrictEqual(element, search, scriptContext))
             {
+                //Array.prototoype.indexOf
                 return i;
             }
         }
@@ -3779,7 +3851,7 @@ namespace Js
         return -1;
     }
 
-    int32 JavascriptNativeIntArray::HeadSegmentIndexOfHelper(Var search, uint32 &fromIndex, uint32 toIndex, ScriptContext * scriptContext)
+    int32 JavascriptNativeIntArray::HeadSegmentIndexOfHelper(Var search, uint32 &fromIndex, uint32 toIndex, bool includesAlgorithm,  ScriptContext * scriptContext)
     {
         // We proceed largely in the same manner as in JavascriptArray's version of this method (see comments there for more information),
         // except when we can further optimize thanks to the knowledge that all elements in the array are int32's. This allows for two additional optimizations:
@@ -3835,7 +3907,7 @@ namespace Js
         return -1;
     }
 
-    int32 JavascriptNativeFloatArray::HeadSegmentIndexOfHelper(Var search, uint32 &fromIndex, uint32 toIndex, ScriptContext * scriptContext)
+    int32 JavascriptNativeFloatArray::HeadSegmentIndexOfHelper(Var search, uint32 &fromIndex, uint32 toIndex, bool includesAlgorithm, ScriptContext * scriptContext)
     {
         // We proceed largely in the same manner as in JavascriptArray's version of this method (see comments there for more information),
         // except when we can further optimize thanks to the knowledge that all elements in the array are doubles. This allows for two additional optimizations:
@@ -3867,13 +3939,24 @@ namespace Js
 
         SparseArraySegment<double> * head = static_cast<SparseArraySegment<double>*>(GetHead());
         uint32 toIndexTrimmed = toIndex <= head->length ? toIndex : head->length;
+
+        bool matchNaN = includesAlgorithm && JavascriptNumber::IsNan(searchAsDouble);
+
         for (uint32 i = fromIndex; i < toIndexTrimmed; i++)
         {
             double element = head->GetElement(i);
+
             if (element == searchAsDouble)
             {
                 return i;
             }
+
+            //NaN != NaN we expect to match for NaN in Array.prototype.includes algorithm
+            if (matchNaN && JavascriptNumber::IsNan(element))
+            {
+                return i;
+            }
+
         }
 
         fromIndex = toIndex > GetHead()->length ? GetHead()->length : -1;

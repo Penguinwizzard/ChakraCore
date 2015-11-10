@@ -444,6 +444,10 @@ bool InliningDecider::GetBuiltInInfo(
         *returnType = ValueType::String;
         goto CallDirectCommon;
 
+    case Js::JavascriptBuiltInFunction::JavascriptArray_Includes:
+        *returnType = ValueType::Boolean;
+        goto CallDirectCommon;
+
     case Js::JavascriptBuiltInFunction::JavascriptArray_IndexOf:
     case Js::JavascriptBuiltInFunction::JavascriptArray_LastIndexOf:
     case Js::JavascriptBuiltInFunction::JavascriptArray_Unshift:

@@ -1884,8 +1884,42 @@ namespace Js
             return TaggedInt::ToVarUnchecked(-1);
         }
 
-        return JavascriptArray::TemplatedIndexOfHelper(typedArrayBase, search, fromIndex, length, scriptContext);
+        return JavascriptArray::TemplatedIndexOfHelper<false>(typedArrayBase, search, fromIndex, length, scriptContext);
     }
+
+    Var TypedArrayBase::EntryIncludes(RecyclableObject* function, CallInfo callInfo, ...)
+    {
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+
+        ARGUMENTS(args, callInfo);
+        ScriptContext* scriptContext = function->GetScriptContext();
+
+        Assert(!(callInfo.Flags & CallFlags_New));
+        CHAKRATEL_LANGSTATS_INC_BUILTINCOUNT(TAIncludesCount);
+
+        // For the TypedArray version of the API, we need to throw immediately if this is not a TypedArray object
+        if (!TypedArrayBase::Is(args[0]))
+        {
+            JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NeedTypedArray, L"[TypedArray].prototype.includes");
+        }
+
+        TypedArrayBase* typedArrayBase = TypedArrayBase::FromVar(args[0]);
+        if (typedArrayBase->IsDetachedBuffer())
+        {
+            JavascriptError::ThrowTypeError(scriptContext, JSERR_DetachedTypedArray, L"[TypedArray].prototype.includes");
+        }
+        uint32 length = typedArrayBase->GetLength();
+
+        Var search;
+        uint32 fromIndex;
+        if (!JavascriptArray::GetParamForIndexOf(length, args, search, fromIndex, scriptContext))
+        {
+            return scriptContext->GetLibrary()->GetFalse();
+        }
+
+        return JavascriptArray::TemplatedIndexOfHelper<true>(typedArrayBase, search, fromIndex, length, scriptContext);
+    }
+
 
     Var TypedArrayBase::EntryJoin(RecyclableObject* function, CallInfo callInfo, ...)
     {
