@@ -4,24 +4,7 @@ param (
     [string]$logFile = ""
 )
 
-function WriteMessage($str)
-{
-    Write-Output $str
-    if ($logFile -ne "" )
-    {
-        Write-Output $str | Out-File $logFile
-    }
-}
-
-function WriteErrorMessage($str)
-{
-    $host.ui.WriteErrorLine($str);
-    if ($logFile -ne "" )
-    {
-        Write-Output $str | Out-File $logFile
-    }
-}
-
+. "$PSScriptRoot\util.ps1"
 
 if ((Test-Path $directory) -eq 0) {
     Write-Error ("ERROR: Directory {0} does not exist.  Cannot scan for prefast defects" -f $directory);
@@ -63,5 +46,5 @@ if ($count -ne 0) {
 } else {
     WriteMessage "No prefast result found"
 }
-Exit($count)
+exit $count
 

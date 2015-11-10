@@ -1,75 +1,82 @@
 param (
-    [ValidateSet("x86", "x64", "arm")]
-    [string]$arch="",
+    [ValidateSet("x86", "x64", "arm", "*")]
+    [string]$arch="*",
 
-    [ValidateSet("debug", "release", "test")]
-    [string]$flavor = "",
+    [ValidateSet("debug", "release", "test", "*")]
+    [string]$flavor = "*",
     
-    [string]$srcpath = ".\",
-    [string]$binpath = "Build\VcBuild\bin\$arch_$flavor",
-    [string]$intpath = "Build\VcBuild\obj\$arch_$flavor",
+    [string]$srcpath = "",
+    [string]$binpath = "",
+    [string]$objpath = "",
 
-    [string]$srcsrvcmdpath = "Build\script"
+    [string]$srcsrvcmdpath = "Build\script\srcsrv.bat",
+    [string]$bvtcmdpath="",
+    [string]$repo = "core",
+    [string]$logFile = "",
+    
+    [switch]$noaction
 )
 
-$repo = "core"
+$global:exitcode = 0
 
-if ($repo -eq "core") {
-    $bvtcmd="test\runcitests.cmd"
-} elseif ($repo -eq "full") {
-    $bvtcmd="tools\runcitests.cmd"
+
+if ($arch -eq "*") {
+
+    . "$PSScriptRoot\util.ps1"
+    foreach ($arch in ("x86", "x64", "arm")) {
+        ExecuteCommand "$PSScriptRoot\post_build.ps1 -arch $arch -flavor $flavor -srcpath ""$srcpath"" -binpath ""$binpath"" -objpath ""$objpath"" -srcsrvcmdpath ""$srcsrvcmdpath"" -bvtcmdpath ""$bvtcmdpath"" -repo ""$repo""" -logFile ""$logFile"";
+    }
+
+} elseif ($flavor -eq "*") {
+
+    . "$PSScriptRoot\util.ps1"
+    foreach ($flavor in ("debug", "test", "release")) {
+        ExecuteCommand "$PSScriptRoot\post_build.ps1 -arch $arch -flavor $flavor -srcpath ""$srcpath"" -binpath ""$binpath"" -objpath ""$objpath"" -srcsrvcmdpath ""$srcsrvcmdpath"" -bvtcmdpath ""$bvtcmdpath"" -repo ""$repo""" -logFile ""$logFile"";
+    }
+
 } else {
-    write-error Unknow repo $repo
-    exit -1;
-}
+    $OutterScriptRoot = $PSScriptRoot;
+    . "$PSScriptRoot\pre_post_util.ps1"
 
-$srcsrvcmd = "$srcsrvcmdpath\srcsrv.bat"
-$pogocmd = ""
-
-
-$exitcode = 0
-
-# generate srcsrv
-if ($srcsrvcmd -ne "" -and (Test-Path $srcsrvcmd) -and (Test-Path $srcpath) -and (Test-Path $binpath)) {
-    $cmd = "$srcsrvcmd $repo $srcpath $binpath\*.pdb"
-    write-host Running $cmd
-    invoke-expression $cmd 
-    write-host "ExitCode:" $lastexitcode
-    if($lastexitcode -ne 0) {
-        Write-Error "Failed"
-        $exitcode = $lastexitcode
+    if (($logFile -eq "") -and (Test-Path Env:\TF_BUILD_BINARIESDIRECTORY)) {
+        $logFile = "$Env:TF_BUILD_BINARIESDIRECTORY\logs\post_build_$arch_$flavor.log"
+        if (Test-Path -Path $logFile) {
+            Remove-Item $logFile -Force
+        } 
     }
-}
 
-# do PoGO
-if ($pogocmd -ne "") {
-    $cmd = "$pogocmd"
-    write-host Running $cmd
-    invoke-expression $cmd 
-    write-host "ExitCode:" $lastexitcode
-    if($lastexitcode -ne 0) {
-        Write-Error "Failed"
-        $exitcode = $lastexitcode
+
+    WriteMessage "======================================================================================"
+    WriteMessage "Post build script for $arch $flavor";
+    WriteMessage "======================================================================================"
+    $bvtcmdpath =  UseValueOrDefault $bvtcmdpath "" (Resolve-Path "$PSScriptRoot\..\..\test\runcitests.cmd");
+
+    WriteCommonArguments;
+    WriteMessage "BVT Command  : $bvtcmdpath"
+    WriteMessage ""
+
+    $srcsrvcmd = ("{0} {1} {2} {3}\bin\{4}_{5}\*.pdb" -f $srcsrvcmdpath, $repo, $srcpath, $binpath, $arch, $flavor);
+    $pogocmd = ""
+    $prefastcmd = "$PSScriptRoot\check_prefast_error.ps1 -directory $objpath -logFile ""$binpath\logs\PrefastCheck.log""";
+
+
+    # generate srcsrv
+    if ((Test-Path $srcsrvcmdpath) -and (Test-Path $srcpath) -and (Test-Path $binpath)) {
+        ExecuteCommand($srcsrvcmd);
     }
+
+    # do PoGO
+    ExecuteCommand($pogocmd);
+
+
+    # run test
+    ExecuteCommand("$bvtcmdpath -$arch$flavor");
+
+    # check prefast
+    ExecuteCommand($prefastcmd);
+
+    WriteMessage "";
 }
 
+exit $global:exitcode
 
-# run test
-if ($bvtcmd -ne "") {
-    $cmd = "$bvtcmd -$arch$flavor"
-    write-host Running $cmd
-    invoke-expression $cmd 
-    write-host "ExitCode:" $lastexitcode
-    if($lastexitcode -ne 0) {
-        Write-Error "Failed"
-        $exitcode = $lastexitcode
-    }
-}
-
-# check prefast
-& $PSScriptRoot\check_prefast_error.ps1 -directory $intpath -logFile "$binpath\PrefastCheck.log"
-if ($LastExitCode -ne 0) {
-    $exitcode = $LastExitCode
-}
-
-exit $exitcode

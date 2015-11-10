@@ -9,37 +9,51 @@
 #
 # Require Environment:
 #   $TF_BUILD_SOURCEGETVERSION
-#   $TF_BUILD_SOURCESDIRECTORY
 #   $TF_BUILD_DROPLOCATION
+#
+# Inferable Environment:
+#   $TF_BUILD_SOURCESDIRECTORY 
+#   $TF_BUILD_BUILDBINARIESDIRECTORY
+#   $TF_BUILD_BUILDDIRECTORY
+#
+# Optional information:
 #   $TF_BUILD_BUILDDEFINITIONNAME
 #   $TF_BUILD_BUILDNUMBER
 #   $TF_BUILD_BUILDURI
-#   $TF_BUILD_BUILDDIRECTORY
-#   $TF_BUILD_BUILDBINARIESDIRECTORY
 
 param (
+    [string]$srcpath = "",
+    [string]$binpath = "",
+    [string]$objpath = "",
+    [string]$logFile = "",
     [string]$oauth
 )
+
+$OutterScriptRoot = $PSScriptRoot;
+. "$PSScriptRoot\pre_post_util.ps1"
+if (($logFile -eq "") -and (Test-Path Env:\TF_BUILD_BINARIESDIRECTORY)) {
+    if (-not(Test-Path -Path "$Env:TF_BUILD_BINARIESDIRECTORY\logs")) {
+        New-Item -Path "$Env:TF_BUILD_BINARIESDIRECTORY\logs" -ItemType Directory -Force
+    }
+    $logFile = "$Env:TF_BUILD_BINARIESDIRECTORY\logs\pre_build.log"
+    if (Test-Path -Path $logFile) {
+        Remove-Item $logFile -Force
+    }
+}
+
+WriteCommonArguments;
+
 if (Test-Path Env:\TF_BUILD_SOURCEGETVERSION)
 {
     $commitHash = ($Env:TF_BUILD_SOURCEGETVERSION).split(':')[2]
-    $gitExe = "git.exe"
-
-    if (!(Get-Command $gitExe -ErrorAction SilentlyContinue)) {
-        $gitExe = "C:\1image\Git\bin\git.exe"
-        if (!(Test-Path $gitExe)) {
-            throw "git.exe not found in path- aborting."
-        }
-    }
-
-    $sourcesDir = $Env:TF_BUILD_SOURCESDIRECTORY
+    $gitExe = GetGitPath;
 
     $outputDir = $Env:TF_BUILD_DROPLOCATION
     if (-not(Test-Path -Path $outputDir)) {
         New-Item -Path $outputDir -ItemType Directory -Force
     }
 
-    Push-Location $sourcesDir
+    Push-Location $srcpath;
     $outputFile = Join-Path -Path $outputDir -ChildPath "change.txt"
 
     Write-Output "TF_BUILD_BUILDDEFINITIONNAME = $Env:TF_BUILD_BUILDDEFINITIONNAME" | Out-File $outputFile 
@@ -76,7 +90,7 @@ if (Test-Path Env:\TF_BUILD_SOURCEGETVERSION)
     # commit hash
     $buildCommit = ($Env:TF_BUILD_SOURCEGETVERSION).SubString(14);
 
-    $buildInfoOutputDir = $Env:TF_BUILD_BUILDDIRECTORY;
+    $buildInfoOutputDir = $objpath
     if (-not(Test-Path -Path $buildInfoOutputDir)) {
         New-Item -Path $buildInfoOutputDir -ItemType Directory -Force
     }
@@ -96,5 +110,10 @@ if (Test-Path Env:\TF_BUILD_SOURCEGETVERSION)
   </PropertyGroup>
 </Project>
 "@ 
-    Write-Output ($propsFile -f $Env:TF_BUILD_BINARIESDIRECTORY, $Env:TF_BUILD_BUILDDIRECTORY, $buildPushIdPart1, $buildPushIdPart2, $buildCommit, $buildDate) | Out-File $buildInfoOutputFile
+    Write-Output ($propsFile -f $binpath, $objpath, $buildPushIdPart1, $buildPushIdPart2, $buildCommit, $buildDate) | Out-File $buildInfoOutputFile
+}
+
+# Clean up code analysis summary files in case they get left behind
+if (Test-Path $objpath) {
+    Get-ChildItem $objpath -include vc.nativecodeanalysis.all.xml -recurse | Remove-Item 
 }
