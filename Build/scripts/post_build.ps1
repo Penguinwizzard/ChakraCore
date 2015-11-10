@@ -57,7 +57,8 @@ if ($arch -eq "*") {
 
     $srcsrvcmd = ("{0} {1} {2} {3}\bin\{4}_{5}\*.pdb" -f $srcsrvcmdpath, $repo, $srcpath, $binpath, $arch, $flavor);
     $pogocmd = ""
-    $prefastcmd = "$PSScriptRoot\check_prefast_error.ps1 -directory $objpath -logFile ""$binpath\logs\PrefastCheck.log""";
+    $prefastlog = ("{0}\logs\PrefastCheck_{1}_{2}.log" -f $binpath, $arch, $flavor);
+    $prefastcmd = "$PSScriptRoot\check_prefast_error.ps1 -directory $objpath -logFile $prefastlog";
 
 
     # generate srcsrv

@@ -11,6 +11,10 @@ if ((Test-Path $directory) -eq 0) {
     Exit(-1)
 }
 
+if (Test-Path -Path $logFile) {
+    Remove-Item $logFile -Force
+}
+
 # load rules
 $rulefilter = @{};
 
