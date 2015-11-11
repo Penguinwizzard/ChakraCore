@@ -9601,24 +9601,29 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
     case knopConstDecl:
     {
         ParseNodePtr initNode = pnode->sxVar.pnodeInit;
-        AssertMsg(pnode->sxVar.pnodeInit, "Const must be initialized");
+        Symbol * sym = pnode->sxVar.sym;
+
         byteCodeGenerator->StartStatement(pnode);
 
-        Symbol * sym = pnode->sxVar.sym;
-        Emit(pnode->sxVar.pnodeInit, byteCodeGenerator, funcInfo, false);
+        if (initNode)
+        {
+            Emit(initNode, byteCodeGenerator, funcInfo, false);
+
+            byteCodeGenerator->EmitPropStore(initNode->location, sym, nullptr, funcInfo, false, true);
+            funcInfo->ReleaseLoc(pnode->sxVar.pnodeInit);
+
+            if (initNode->nop == knopInt)
+            {
+                TrackIntConstantsOnGlobalObject(byteCodeGenerator, sym);
+            }
+        }
+
+        byteCodeGenerator->EndStatement(pnode);
+
         // Set NeedDeclaration to false AFTER emitting the initializer, otherwise we won't have "Use Before Declaration"
         // errors reported in the initializer for code like this:
         // { const a = a; }
         sym->SetNeedDeclaration(false);
-        byteCodeGenerator->EmitPropStore(pnode->sxVar.pnodeInit->location, sym, nullptr, funcInfo, false, true);
-        funcInfo->ReleaseLoc(pnode->sxVar.pnodeInit);
-
-        byteCodeGenerator->EndStatement(pnode);
-
-        if (initNode->nop == knopInt)
-        {
-            TrackIntConstantsOnGlobalObject(byteCodeGenerator, sym);
-        }
 
         break;
     }

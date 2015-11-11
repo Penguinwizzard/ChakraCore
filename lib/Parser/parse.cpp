@@ -7739,7 +7739,8 @@ ParseNodePtr Parser::ParseVariableDeclaration(
     BOOL* pfForInOk/* = nullptr*/,
     BOOL singleDefOnly/* = FALSE*/,
     BOOL allowInit/* = TRUE*/,
-    BOOL isTopVarParse/* = TRUE*/)
+    BOOL isTopVarParse/* = TRUE*/,
+    BOOL isFor/* = FALSE*/)
 {
     ParseNodePtr pnodeThis = nullptr;
     ParseNodePtr pnodeInit;
@@ -7859,7 +7860,9 @@ ParseNodePtr Parser::ParseVariableDeclaration(
                     pnodeThis->sxVar.sym->PromoteAssignmentState();
                 }
             }
-            else if (declarationType == tkCONST /*pnodeThis->nop == knopConstDecl*/ && !singleDefOnly)
+            else if (declarationType == tkCONST /*pnodeThis->nop == knopConstDecl*/ 
+                     && !singleDefOnly 
+                     && !(isFor && TokIsForInOrForOf()))
             {
                 Error(ERRUninitializedConst);
             }
@@ -8441,7 +8444,8 @@ LFunctionStatement:
                                                                 , /*pfForInOk = */&fForInOrOfOkay
                                                                 , /*singleDefOnly*/FALSE
                                                                 , /*allowInit*/TRUE
-                                                                , /*isTopVarParse*/FALSE);
+                                                                , /*isTopVarParse*/FALSE
+                                                                , /*isFor*/TRUE);
                     break;
                 }
                 m_pscan->SeekTo(parsedLet);
@@ -8467,7 +8471,8 @@ LFunctionStatement:
                                                             , /*pfForInOk = */&fForInOrOfOkay
                                                             , /*singleDefOnly*/FALSE
                                                             , /*allowInit*/TRUE
-                                                            , /*isTopVarParse*/FALSE);
+                                                            , /*isTopVarParse*/FALSE
+                                                            , /*isFor*/TRUE);
             }
             break;
         case tkSColon:
@@ -8521,7 +8526,7 @@ LDefaultTokenFor:
             break;
         }
 
-        if (m_token.tk == tkIN || (m_scriptContext->GetConfig()->IsES6IteratorsEnabled() && m_token.tk == tkID && m_token.GetIdentifier(m_phtbl) == wellKnownPropertyPids.of))
+        if (TokIsForInOrForOf())
         {
             bool isForOf = (m_token.tk != tkIN);
             Assert(!isForOf || (m_token.tk == tkID && m_token.GetIdentifier(m_phtbl) == wellKnownPropertyPids.of));
@@ -9351,6 +9356,15 @@ LNeedTerminator:
     }
 
     return pnode;
+}
+
+BOOL
+Parser::TokIsForInOrForOf()
+{
+    return m_token.tk == tkIN || 
+        (m_scriptContext->GetConfig()->IsES6IteratorsEnabled() && 
+         m_token.tk == tkID && 
+         m_token.GetIdentifier(m_phtbl) == wellKnownPropertyPids.of);
 }
 
 /***************************************************************************

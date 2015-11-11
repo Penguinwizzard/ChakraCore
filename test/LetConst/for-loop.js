@@ -40,3 +40,21 @@ function test3() {
     }
 }
 test3();
+
+// Should allow (implicit) initialization of const in for-in/for-of
+function for_in() {
+    for (const x in {a:'a',b:'b'}) {
+        WScript.Echo(x);
+    }
+}
+for_in();
+
+function for_of() {
+    for (const x of ['a', 'b']) {
+        WScript.Echo(x);
+    }
+}
+for_of();
+
+// Should not allow const without initializer in standard for loop header
+try { eval('for (const x; x < 0;) { WScript.Echo(x); }'); } catch (e) { print(e); }

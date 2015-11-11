@@ -640,7 +640,9 @@ private:
         BOOL* pfForInOk = nullptr,
         BOOL singleDefOnly = FALSE,
         BOOL allowInit = TRUE,
-        BOOL isTopVarParse = TRUE);
+        BOOL isTopVarParse = TRUE,
+        BOOL isFor = FALSE);
+    BOOL TokIsForInOrForOf();
 
     template<bool buildAST>
     void ParseStmtList(
