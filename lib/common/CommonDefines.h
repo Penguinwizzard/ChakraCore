@@ -12,6 +12,9 @@
 //----------------------------------------------------------------------------------------------------
 #define CHAKRA_CORE_MAJOR_VERSION 1
 #define CHAKRA_CORE_MINOR_VERSION 0
+#define CHAKRA_VERSION_BUILD_RELEASE 0
+#define CHAKRA_VERSION_BUILD_PRERELEASE 1
+#define CHAKRA_VERSION_BUILD_RELEASE_QFE 0
 
 //----------------------------------------------------------------------------------------------------
 // Default debug/fretest/release flags values

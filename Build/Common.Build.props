@@ -49,8 +49,6 @@
       <PreprocessorDefinitions Condition="'$(ChakraVersionBuildQFENumber)'!=''">%(PreprocessorDefinitions);CHAKRA_VERSION_BUILD_QFE=$(ChakraVersionBuildQFENumber)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(ChakraVersionBuildCommit)'!=''">%(PreprocessorDefinitions);CHAKRA_VERSION_BUILD_COMMIT=$(ChakraVersionBuildCommit)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(ChakraVersionBuildDate)'!=''">%(PreprocessorDefinitions);CHAKRA_VERSION_BUILD_DATE=$(ChakraVersionBuildDate)</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(ChakraVersionBuildOfficial)'=='true'">%(PreprocessorDefinitions);CHAKRA_VERSION_BUILD_OFFICIAL</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(ChakraVersionBuildRelease)'=='true'">%(PreprocessorDefinitions);CHAKRA_VERSION_BUILD_RELEASE</PreprocessorDefinitions>
     </ResourceCompile>
     <MASM>
       <!-- /Cx -->

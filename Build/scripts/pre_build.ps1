@@ -33,7 +33,7 @@ $OutterScriptRoot = $PSScriptRoot;
 . "$PSScriptRoot\pre_post_util.ps1"
 if (($logFile -eq "") -and (Test-Path Env:\TF_BUILD_BINARIESDIRECTORY)) {
     if (-not(Test-Path -Path "$Env:TF_BUILD_BINARIESDIRECTORY\logs")) {
-        New-Item -Path "$Env:TF_BUILD_BINARIESDIRECTORY\logs" -ItemType Directory -Force
+        $dummy = New-Item -Path "$Env:TF_BUILD_BINARIESDIRECTORY\logs" -ItemType Directory -Force
     }
     $logFile = "$Env:TF_BUILD_BINARIESDIRECTORY\logs\pre_build.log"
     if (Test-Path -Path $logFile) {
@@ -50,7 +50,7 @@ if (Test-Path Env:\TF_BUILD_SOURCEGETVERSION)
 
     $outputDir = $Env:TF_BUILD_DROPLOCATION
     if (-not(Test-Path -Path $outputDir)) {
-        New-Item -Path $outputDir -ItemType Directory -Force
+        $dummy = New-Item -Path $outputDir -ItemType Directory -Force
     }
 
     Push-Location $srcpath;
@@ -92,7 +92,7 @@ if (Test-Path Env:\TF_BUILD_SOURCEGETVERSION)
 
     $buildInfoOutputDir = $objpath
     if (-not(Test-Path -Path $buildInfoOutputDir)) {
-        New-Item -Path $buildInfoOutputDir -ItemType Directory -Force
+        $dummy = New-Item -Path $buildInfoOutputDir -ItemType Directory -Force
     }
 
     # generate build version prop file

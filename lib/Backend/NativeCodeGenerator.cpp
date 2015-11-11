@@ -1224,7 +1224,7 @@ NativeCodeGenerator::CheckCodeGenDone(
         {
             entryPointInfo->Cleanup(false /* isShutdown */, true /* capture cleanup stack */);
         }
-		address = functionBody->GetScriptContext()->CurrentThunk == ProfileEntryThunk ? ProfileEntryThunk : functionBody->GetOriginalEntryPoint();
+        address = functionBody->GetScriptContext()->CurrentThunk == ProfileEntryThunk ? ProfileEntryThunk : functionBody->GetOriginalEntryPoint();
         entryPointInfo->address = address;
     }
     else

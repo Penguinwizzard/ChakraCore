@@ -2192,7 +2192,7 @@ void AddVarsToScope(ParseNode *vars, ByteCodeGenerator *byteCodeGenerator)
         }
 
 #if DBG_DUMP
-        if (sym->GetSymbolType() == STVariable && byteCodeGenerator->Trace()) 
+        if (sym->GetSymbolType() == STVariable && byteCodeGenerator->Trace())
         {
             Output::Print(L"current context has declared var %s of type %s\n",
                 vars->sxVar.pid->Psz(), sym->GetSymbolTypeName());
