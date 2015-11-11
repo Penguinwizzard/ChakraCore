@@ -18,58 +18,55 @@ if "%_ENTRY_SCRIPT_NAME%"=="" (
 set "_msbuildArgs="
 
 :ContinueArgParse
-if not "%1"=="" (
+if not [%1]==[] (
     :: _BuildArch
-    if "%1"=="x86" (
+    if [%1]==[x86] (
         set _BuildArch=x86
         goto :ContinueArgParseEnd
-    ) else if "%1"=="x64" (
+    ) else if [%1]==[x64] (
         set _BuildArch=x64
         goto :ContinueArgParseEnd
-    ) else if "%1"=="arm" (
+    ) else if [%1]==[arm] (
         set _BuildArch=arm
         goto :ContinueArgParseEnd
     )
 
     :: _BuildArch (deprecated name)
-    if "%1"=="amd64" (
+    if [%1]==[amd64] (
         set _BuildArch=x64
         goto :ContinueArgParseEnd
     )
 
     :: _BuildType (new names)
-    if "%1"=="debug" (
+    if [%1]==[debug] (
         set _BuildType=chk
         goto :ContinueArgParseEnd
-    ) else if "%1"=="test" (
+    ) else if [%1]==[test] (
         set _BuildType=test
         goto :ContinueArgParseEnd
-    ) else if "%1"=="release" (
+    ) else if [%1]==[release] (
         set _BuildType=fre
         goto :ContinueArgParseEnd
     )
 
     :: _BuildType (old names)
-    if "%1"=="chk" (
+    if [%1]==[chk] (
         set _BuildType=chk
         goto :ContinueArgParseEnd
-    ) else if "%1"=="fre" (
+    ) else if [%1]==[fre] (
         set _BuildType=fre
         goto :ContinueArgParseEnd
     )
 
     :: _targets
-    if "%1" EQU "/c" (
-        set _targets=/t:Clean,Build
-        goto :ContinueArgParseEnd
-    ) else if "%1" EQU "/C" (
+    if /i [%1] EQU [/c] (
         set _targets=/t:Clean,Build
         goto :ContinueArgParseEnd
     )
 
     :: DEFAULT - add any other params to %_msBuildArgs%
     :: _msbuildArgs
-    if "%1" NEQ "" (
+    if [%1] NEQ [] (
         set _msbuildArgs=%_msbuildArgs% %1
         goto :ContinueArgParseEnd
     )
@@ -112,9 +109,9 @@ if "%_CoreBuild%" EQU "0" (
 
 echo MSBuildArgs are %_msBuildArgs%
 
-echo msbuild %_msBuildArgs% /m /p:Configuration=%_ChakraBuildConfig% /p:Platform=%_BuildArch% %_ChakraSolution% %_msbuildProj% %_LoggingParams% %_targets% /verbosity:minimal
+echo msbuild %_msBuildArgs% /m /p:Configuration=%_ChakraBuildConfig% /p:Platform=%_BuildArch% %_ChakraSolution% %_msbuildProj% %_LoggingParams% %_targets% /verbosity:minimal /nr:false
 
-msbuild %_msBuildArgs% /m /p:Configuration=%_ChakraBuildConfig% /p:Platform=%_BuildArch% %_ChakraSolution% %_msbuildProj% %_LoggingParams% %_targets% /verbosity:minimal
+msbuild %_msBuildArgs% /m /p:Configuration=%_ChakraBuildConfig% /p:Platform=%_BuildArch% %_ChakraSolution% %_msbuildProj% %_LoggingParams% %_targets% /verbosity:minimal /nr:false
 
 goto :end
 

@@ -21,10 +21,14 @@ def msbuildTypeMap = [
             // params: Project, BaseTaskName, IsPullRequest (appends _prtest)
             def jobName = InternalUtilities.getFullJobName(project, config, isPR)
 
-            def buildString = "call jenkins.buildone.cmd ${buildArch} ${buildType}"
-            def testString = "call jenkins.testone.cmd ${buildArch} ${buildType} -includeSlow"
             def testableConfig = buildType in ['debug', 'test'] &&
                 buildArch != 'arm'
+            def analysisConfig = buildType in ['release']
+
+            def buildScript = "call jenkins.buildone.cmd ${buildArch} ${buildType}"
+            buildScript += analysisConfig ? ' "/p:runcodeanalysis=true"' : ''
+            def testScript = "call jenkins.testone.cmd ${buildArch} ${buildType} -includeSlow"
+            def analysisScript = ".\\Build\\scripts\\check_prefast_error.ps1 . CodeAnalysis.err"
 
             // Create a new job with the specified name.  The brace opens a new closure
             // and calls made within that closure apply to the newly created job.
@@ -36,19 +40,27 @@ def msbuildTypeMap = [
                 // closure as a param, since Groovy allows method calls without parens.
                 // (Compare with '.each' method used above.)
                 steps {
-                    batchFile(buildString) // run the parameter as a batch script
+                    batchFile(buildScript) // run the parameter as a batch script
                     if (testableConfig) {
                         // The test script will only run if the build is successful
                         // because Jenkins will notice the failure and stop before
                         // executing any more build tasks.
-                        batchFile(testString)
+                        batchFile(testScript)
+                    }
+                    if (analysisConfig) {
+                        // For release builds we want to run code analysis checks
+                        powerShell(analysisScript)
                     }
                 }
             }
 
             def msbuildType = msbuildTypeMap.get(buildType)
             def msbuildFlavor = "build_${buildArch}${msbuildType}"
-            Utilities.addArchival(newJob, "test/${msbuildFlavor}.*,test/logs/**",
+
+            def archivalString = "test/${msbuildFlavor}.*,test/logs/**"
+            archivalString += analysisConfig ? ',CodeAnalysis.err' : ''
+
+            Utilities.addArchival(newJob, archivalString,
                 '', // no exclusions from archival
                 false, // doNotFailIfNothingArchived=false ~= failIfNothingArchived
                 false) // archiveOnlyIfSuccessful=false ~= archiveAlways
