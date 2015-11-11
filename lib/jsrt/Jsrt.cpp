@@ -132,16 +132,11 @@ STDAPI_(JsErrorCode) JsCreateRuntime(_In_ JsRuntimeAttributes attributes, _In_op
         bool enableExperimentalFeatures = (attributes & JsRuntimeAttributeEnableExperimentalFeatures) != 0;
         ThreadContext * threadContext = HeapNew(ThreadContext, policyManager, threadService, enableExperimentalFeatures);
 
-        if (((attributes & JsRuntimeAttributeDisableBackgroundWork) == 0)
+        if (((attributes & JsRuntimeAttributeDisableBackgroundWork) != 0) 
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
-            || Js::Configuration::Global.flags.ConcurrentRuntime
+            && !Js::Configuration::Global.flags.ConcurrentRuntime
 #endif
             )
-        {
-            threadContext->OptimizeForManyInstances(false);
-            threadContext->EnableBgJit(true);
-        }
-        else
         {
             threadContext->OptimizeForManyInstances(true);
             threadContext->EnableBgJit(false);

@@ -995,7 +995,7 @@
       <baseline>test143.baseline</baseline>
       <compile-flags>-bgJit- -off:simpleJit -loopInterpretCount:1 -testTrace:arrayCheckHoist</compile-flags>
       <!-- ch.exe doesn't output entire baseline before exiting; -testTrace flush issue? -->
-      <tags>exclude_dynapogo,exclude_ship,exclude_ch</tags>
+      <tags>exclude_dynapogo,exclude_ship</tags>
     </default>
   </test>
   <test>
