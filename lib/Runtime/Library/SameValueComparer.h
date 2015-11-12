@@ -47,8 +47,8 @@ namespace Js
 
             case TypeIds_Number:
                 {
-                    double v = JavascriptNumber::GetValue(i);
-                    if (JavascriptNumber::IsNan(v))
+                    double d = JavascriptNumber::GetValue(i);
+                    if (JavascriptNumber::IsNan(d))
                     {
                         return 0;
                     }
@@ -56,13 +56,14 @@ namespace Js
                     if (zero)
                     {
                         // SameValueZero treats -0 and +0 the same, so normalize to get same hash code
-                        if (JavascriptNumber::IsNegZero(v))
+                        if (JavascriptNumber::IsNegZero(d))
                         {
-                            v = 0.0;
+                            d = 0.0;
                         }
                     }
                     
-                    return (uint)(__int64)v ^ (uint)((__int64)v >> 32);
+                    __int64 v = *(__int64*)&d;
+                    return (uint)v ^ (uint)(v >> 32);
                 }
 
             case TypeIds_String:
