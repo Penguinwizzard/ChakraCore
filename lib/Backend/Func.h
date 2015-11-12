@@ -54,6 +54,15 @@ struct Cloner
 
 typedef JsUtil::Pair<uint32, IR::LabelInstr*> YieldOffsetResumeLabel;
 typedef JsUtil::List<YieldOffsetResumeLabel, JitArenaAllocator> YieldOffsetResumeLabelList;
+typedef HashTable<uint32, JitArenaAllocator> SlotArrayCheckTable;
+struct FrameDisplayCheckRecord
+{
+    SlotArrayCheckTable *table;
+    uint32               slotId;
+
+    FrameDisplayCheckRecord() : table(nullptr), slotId((uint32)-1) {}
+};
+typedef HashTable<FrameDisplayCheckRecord*, JitArenaAllocator> FrameDisplayCheckTable;
 
 class Func
 {
@@ -97,7 +106,7 @@ public:
 #endif
     }
 
-    void InitStackClosureSyms();
+    void InitLocalClosureSyms();
 
     bool HasAnyStackNestedFunc() const { return this->hasAnyStackNestedFunc; }
     bool DoStackNestedFunc() const { return this->stackNestedFunc; }
@@ -440,6 +449,9 @@ public:
     PropertyIdSet lazyBailoutProperties;
     bool anyPropertyMayBeWrittenTo;
 
+    SlotArrayCheckTable *slotArrayCheckTable;
+    FrameDisplayCheckTable *frameDisplayCheckTable;
+
     IR::Instr *         m_headInstr;
     IR::Instr *         m_exitInstr;
     IR::Instr *         m_tailInstr;
@@ -710,6 +722,9 @@ public:
     IR::IndirOpnd * GetConstantAddressIndirOpnd(void * address, IR::AddrOpndKind kind, IRType type, Js::OpCode loadOpCode);
     void MarkConstantAddressSyms(BVSparse<JitArenaAllocator> * bv);
     void DisableConstandAddressLoadHoist() { canHoistConstantAddressLoad = false; }
+
+    void AddSlotArrayCheck(IR::SymOpnd *fieldOpnd);
+    void AddFrameDisplayCheck(IR::SymOpnd *fieldOpnd, uint32 slotId = (uint32)-1);
 
 #if DBG
     bool                allowRemoveBailOutArgInstr;

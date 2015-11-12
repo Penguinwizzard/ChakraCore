@@ -2011,7 +2011,6 @@ GlobOpt::AssertCanCopyPropOrCSEFieldLoad(IR::Instr * instr)
     // Consider: Theoretically, we can copy prop/field hoist ScopedLdFld/ScopedStFld
     // but GlobOtp::TransferSrcValue blocks that now, and copy prop into that instruction is not supported yet.
     Assert(instr->m_opcode == Js::OpCode::LdSlot || instr->m_opcode == Js::OpCode::LdSlotArr
-        || instr->m_opcode == Js::OpCode::LdSlotChkUndecl
         || instr->m_opcode == Js::OpCode::LdFld || instr->m_opcode == Js::OpCode::LdFldForCallApplyTarget
         || instr->m_opcode == Js::OpCode::LdRootFld  || instr->m_opcode == Js::OpCode::LdSuperFld
         || instr->m_opcode == Js::OpCode::LdFldForTypeOf || instr->m_opcode == Js::OpCode::LdRootFldForTypeOf

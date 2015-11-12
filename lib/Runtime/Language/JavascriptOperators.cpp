@@ -1737,7 +1737,7 @@ CommonNumber:
         return defaultInstance;
     }
 
-    Var JavascriptOperators::OP_Ld_UnwrapWithObj(Var aValue)
+    Var JavascriptOperators::OP_UnwrapWithObj(Var aValue)
     {
         return RecyclableObject::FromVar(aValue)->GetThisObjectOrUnWrap();
     }

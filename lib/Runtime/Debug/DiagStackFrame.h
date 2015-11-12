@@ -62,6 +62,7 @@ namespace Js
         virtual void SetRegValue(RegSlot slotId, Var value) override;
         virtual Var GetArgumentsObject() override;
         virtual Var CreateHeapArguments() override;
+        virtual FrameDisplay * GetFrameDisplay() override;
     };
 
     class DiagNativeStackFrame : public DiagStackFrame

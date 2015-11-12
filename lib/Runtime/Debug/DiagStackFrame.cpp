@@ -76,7 +76,6 @@ namespace Js
         return display;
     }
 
-
     Var DiagStackFrame::GetScopeObjectFromFrameDisplay(uint index)
     {
         FrameDisplay * display = GetFrameDisplay();
@@ -153,6 +152,11 @@ namespace Js
     Var DiagInterpreterStackFrame::CreateHeapArguments()
     {
         return m_interpreterFrame->CreateHeapArguments(GetScriptContext());
+    }
+
+    FrameDisplay * DiagInterpreterStackFrame::GetFrameDisplay()
+    {
+        return m_interpreterFrame->GetFrameDisplayForNestedFunc();
     }
 
 

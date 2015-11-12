@@ -6110,7 +6110,6 @@ GlobOpt::CopyProp(IR::Opnd *opnd, IR::Instr *instr, Value *val, IR::IndirOpnd *p
 
         switch (instr->m_opcode)
         {
-        case Js::OpCode::LdSlotChkUndecl:
         case Js::OpCode::LdSlot:
         case Js::OpCode::LdSlotArr:
         case Js::OpCode::LdFld:
@@ -6305,7 +6304,6 @@ GlobOpt::CopyPropReplaceOpnd(IR::Instr * instr, IR::Opnd * opnd, StackSym * copy
 
     case Js::OpCode::LdSlot:
     case Js::OpCode::LdSlotArr:
-    case Js::OpCode::LdSlotChkUndecl:
         if (instr->GetDst()->IsRegOpnd() && instr->GetSrc1()->IsRegOpnd() &&
             instr->GetDst()->AsRegOpnd()->GetStackSym() == instr->GetSrc1()->AsRegOpnd()->GetStackSym())
         {
@@ -7086,7 +7084,6 @@ GlobOpt::ValueNumberDst(IR::Instr **pInstr, Value *src1Val, Value *src2Val)
 
     case Js::OpCode::LdSlot:
     case Js::OpCode::LdSlotArr:
-    case Js::OpCode::LdSlotChkUndecl:
     case Js::OpCode::LdFld:
     case Js::OpCode::LdFldForTypeOf:
     case Js::OpCode::LdFldForCallApplyTarget:
@@ -17987,6 +17984,7 @@ swap_srcs:
     case Js::OpCode::DOMFastPathSetter:
 #endif
     case Js::OpCode::NewScopeSlots:
+    case Js::OpCode::NewScopeSlotsWithoutPropIds:
     case Js::OpCode::NewStackScopeSlots:
     case Js::OpCode::IsInst:
     case Js::OpCode::BailOnEqual:

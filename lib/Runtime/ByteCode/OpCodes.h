@@ -95,8 +95,9 @@ MACRO_WMS(              BrLe_A,             BrReg2,         OpSideEffect|OpCalls
 MACRO_BACKEND_ONLY(     BrUnLe_A,           BrReg2,         OpSideEffect|OpCallsValueOf|OpHasImplicitCall|OpTempNumberSources|OpTempObjectSources|OpPostOpDbgBailOut)        // Branch if '<='
 MACRO_WMS(              BrSrEq_A,           BrReg2,         OpSideEffect|OpHasImplicitCall|OpTempNumberSources|OpTempObjectSources)        // Branch if '==='  (strict equals)       (NOTE: May have DOM implicit calls)
 MACRO_WMS(              BrSrNeq_A,          BrReg2,         OpSideEffect|OpHasImplicitCall|OpTempNumberSources|OpTempObjectSources)        // Branch if '!=='  (not strict equals)   (NOTE: May have DOM implicit calls)
-MACRO(                  BrOnHasProperty,    BrProperty,     OpSideEffect|OpHasImplicitCall|OpTempNumberSources|OpTempObjectSources)        // Branch if object has the given property (NOTE: May have DOM implicit calls)
+MACRO_EXTEND(           BrOnHasProperty,    BrProperty,     OpSideEffect|OpHasImplicitCall|OpTempNumberSources|OpTempObjectSources)        // Branch if object has the given property (NOTE: May have DOM implicit calls)
 MACRO(                  BrOnNoProperty,     BrProperty,     OpSideEffect|OpHasImplicitCall|OpTempNumberSources|OpTempObjectSources)        // Branch if object does not have the given property (NOTE: May have DOM implicit calls)
+MACRO(                  BrOnNoEnvProperty,  BrEnvProperty,  OpSideEffect|OpHasImplicitCall|OpTempNumberSources|OpTempObjectSources)        // Branch if object does not have the given property (NOTE: May have DOM implicit calls)
 MACRO_WMS(              BrOnObject_A,       BrReg1,         OpSideEffect|OpTempNumberSources|OpTempObjectSources)                          // Branch if typeId is not primitive type (i.e. > TypeIds_LastJavascriptPrimitiveType)
 MACRO_WMS(              BrNotNull_A,        BrReg1,         OpSideEffect|OpTempNumberSources|OpTempObjectSources)                          // Branch if not NULL
 MACRO_EXTEND_WMS(       BrNotUndecl_A,      BrReg1,         OpSideEffect|OpTempNumberSources|OpTempObjectSources)                          // Branch if source reg is NEQ to Undecl
@@ -269,7 +270,7 @@ MACRO_BACKEND_ONLY(     Conv_Bool,          Reg2,           OpTempNumberSources|
 
 
 // Register
-MACRO_EXTEND_WMS(       Ld_UnwrapWithObj,   Reg2,           OpSideEffect) // Copy Var register with unwrapped object
+MACRO_EXTEND_WMS(       UnwrapWithObj,      Reg2,           OpSideEffect) // Copy Var register with unwrapped object
 MACRO_EXTEND_WMS(       SetComputedNameVar, Reg2,           OpSideEffect)
 MACRO_WMS(              Ld_A,               Reg2,           OpTempNumberTransfer|OpTempObjectTransfer|OpNonIntTransfer|OpCanCSE) // Copy Var register
 MACRO_WMS(              LdC_A_Null,         Reg1,           OpByteCodeOnly|OpCanCSE)   // Load from 'null' as Var
@@ -283,17 +284,17 @@ MACRO_WMS(              ChkUndecl,                  Reg1,           OpSideEffect
 
 MACRO_WMS(              EnsureNoRootFld,            ElementRootU,   OpSideEffect|OpHasImplicitCall)
 MACRO_WMS(              EnsureNoRootRedeclFld,      ElementRootU,   OpSideEffect|OpHasImplicitCall)
-MACRO_WMS(              ScopedEnsureNoRedeclFld,    ElementC,       OpSideEffect|OpHasImplicitCall)
+MACRO_WMS(              ScopedEnsureNoRedeclFld,    ElementScopedC, OpSideEffect|OpHasImplicitCall)
 
 MACRO_WMS(              InitUndecl,                 Reg1,           OpCanCSE)
-MACRO_WMS(              InitUndeclSlot,             Reg1Unsigned1,  None)
+//MACRO_WMS(              InitUndeclSlot,             Reg1Unsigned1,  None)
 // TODO: Change InitUndeclLetFld and InitUndeclConstFld to ElementU layouts since they do not use their inline cache
 MACRO_WMS(              InitUndeclLetFld,           ElementCP,      OpByteCodeOnly|OpSideEffect|OpHasImplicitCall)
 MACRO_WMS(              InitUndeclRootLetFld,       ElementRootU,   OpSideEffect|OpHasImplicitCall)
 MACRO_WMS(              InitUndeclConstFld,         ElementCP,      OpByteCodeOnly|OpSideEffect|OpHasImplicitCall)
 MACRO_WMS(              InitUndeclRootConstFld,     ElementRootU,   OpSideEffect|OpHasImplicitCall)
-MACRO_EXTEND_WMS(       InitUndeclConsoleLetFld,    ElementU,       OpSideEffect|OpHasImplicitCall)
-MACRO_EXTEND_WMS(       InitUndeclConsoleConstFld,  ElementU,       OpSideEffect|OpHasImplicitCall)
+MACRO_EXTEND_WMS(       InitUndeclConsoleLetFld,    ElementScopedU, OpSideEffect|OpHasImplicitCall)
+MACRO_EXTEND_WMS(       InitUndeclConsoleConstFld,  ElementScopedU, OpSideEffect|OpHasImplicitCall)
 MACRO_WMS(              InitConst,                  Reg2,           OpTempNumberTransfer|OpTempObjectTransfer|OpNonIntTransfer|OpCanCSE)    // Create and initialize 'const' as property of global object
 MACRO_WMS(              InitConstSlot,              ElementSlot,    None)
 MACRO_WMS(              InitLetFld,                 ElementCP,      OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut)   // Declare a property with an initial value
@@ -316,6 +317,7 @@ MACRO_BACKEND_ONLY(     ArgOut_A_Inline,            Empty,          OpSideEffect
 MACRO_BACKEND_ONLY(     ArgOut_A_InlineBuiltIn,     Empty,          OpSideEffect|OpTempNumberTransfer|OpTempObjectTransfer) // Used as virtual ArgOut for inline built-ins (Math.sin, etc). Removed in lowerer.
 MACRO_BACKEND_ONLY(     ArgOut_A_InlineSpecialized, Empty,          OpSideEffect)       // Used as virtual ArgOut to keep function object around for inlining built-ins by direct call to helpers.
 MACRO_WMS(              ArgOut_ANonVar,             Arg,            OpByteCodeOnly|OpSideEffect) // Copy from "local slot" to "out slot"
+MACRO_WMS(              ArgOut_Env,                 ArgNoSrc,       OpByteCodeOnly|OpSideEffect) // Copy from "local slot" to "out slot"
 MACRO_BACKEND_ONLY(     ArgOut_A_Dynamic,           Empty,          OpSideEffect)       // Copy from "local slot" to "out slot"
 MACRO_BACKEND_ONLY(     ArgOut_A_FromStackArgs,     Empty,          OpSideEffect)       // Copy from "local slot" to "out slot"
 MACRO_BACKEND_ONLY(     ArgOut_A_FixupForStackArgs, Empty,          OpSideEffect)
@@ -326,6 +328,7 @@ MACRO_WMS(              Delete_A,                   Reg2,           OpSideEffect
 
 // Object operations
 MACRO_WMS_PROFILED_OP(  LdFld,                ElementCP,      OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut|OpCanLoadFixedFields)    // Load from ScriptObject instance's direct field
+MACRO_WMS(              LdEnvObj,             ElementSlotI1,  OpTempNumberSources)
 MACRO_EXTEND_WMS_AND_PROFILED_OP(LdSuperFld,  ElementC2,      OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut|OpCanLoadFixedFields)    // Load from ScriptObject super instance's direct field
 MACRO_WMS_PROFILED_OP(  LdFldForTypeOf,       ElementCP,      OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut|OpCanLoadFixedFields)
 MACRO_EXTEND_WMS_AND_PROFILED_OP(LdRootFldForTypeOf, ElementRootCP, OpSideEffect|OpHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut|OpCanLoadFixedFields)
@@ -351,25 +354,35 @@ MACRO_WMS(              DeleteFld,                  ElementC,       OpSideEffect
 MACRO_WMS(              DeleteRootFld,              ElementC,       OpSideEffect|OpHasImplicitCall|OpDoNotTransfer|OpPostOpDbgBailOut)  // Remove a property (access to let/const on root object)
 MACRO_WMS(              DeleteFldStrict,            ElementC,       OpSideEffect|OpHasImplicitCall|OpDoNotTransfer|OpPostOpDbgBailOut)  // Remove a property in strict mode
 MACRO_WMS(              DeleteRootFldStrict,        ElementC,       OpSideEffect|OpHasImplicitCall|OpDoNotTransfer|OpPostOpDbgBailOut)  // Remove a property in strict mode (access to let/const on root object)
-MACRO_WMS(              ScopedLdFld,                ElementCP,      OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                  // Load from function's scope stack
-MACRO_EXTEND_WMS(       ScopedLdFldForTypeOf,       ElementCP,      OpSideEffect|OpHasImplicitCall| OpPostOpDbgBailOut)                 // Load from function's scope stack for Typeof of a property
+MACRO_WMS(              ScopedLdFld,                ElementScopedP, OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                  // Load from function's scope stack
+MACRO_EXTEND_WMS(       ScopedLdFldForTypeOf,       ElementScopedP, OpSideEffect|OpHasImplicitCall| OpPostOpDbgBailOut)                 // Load from function's scope stack for Typeof of a property
 MACRO_WMS(              ScopedLdMethodFld,          ElementCP,      OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                  // Load call target from ScriptObject instance's direct field, but either scope object or root load from root object
-MACRO_WMS(              ScopedLdInst,               ElementC2,      OpSideEffect|OpHasImplicitCall)                                     // Load owning instance from function's scope stack (NOTE: HasProperty may call DOM)
-MACRO_WMS(              ScopedInitFunc,             ElementC,       OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                  // Init on instance on scope stack
-MACRO_WMS(              ScopedStFld,                ElementCP,      OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                  // Store to function's scope stack
-MACRO_EXTEND_WMS(       ConsoleScopedStFld,         ElementCP,      OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                  // Store to function's scope stack
-MACRO_WMS(              ScopedStFldStrict,          ElementCP,      OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                  // Store to function's scope stack
-MACRO_WMS(              ScopedDeleteFld,            ElementC,       OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                  // Remove a property through a stack of scopes
-MACRO_WMS(              ScopedDeleteFldStrict,      ElementC,       OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                  // Remove a property through a stack of scopes in strict mode
+MACRO_WMS(              ScopedLdInst,               ElementScopedC2,OpSideEffect|OpHasImplicitCall)                                     // Load owning instance from function's scope stack (NOTE: HasProperty may call DOM)
+MACRO_WMS(              ScopedInitFunc,             ElementScopedC, OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                  // Init on instance on scope stack
+MACRO_WMS(              ScopedStFld,                ElementScopedP, OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                  // Store to function's scope stack
+MACRO_EXTEND_WMS(       ConsoleScopedStFld,         ElementScopedP, OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                  // Store to function's scope stack
+MACRO_WMS(              ScopedStFldStrict,          ElementScopedP, OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                  // Store to function's scope stack
+MACRO_WMS(              ScopedDeleteFld,            ElementScopedC, OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                  // Remove a property through a stack of scopes
+MACRO_WMS(              ScopedDeleteFldStrict,      ElementScopedC, OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)                  // Remove a property through a stack of scopes in strict mode
 MACRO_WMS_PROFILED(     LdSlot,                     ElementSlot,    OpTempNumberSources)
-MACRO_WMS_PROFILED(     LdSlotChkUndecl,            ElementSlot,    OpTempNumberSources|OpSideEffect)
-MACRO_WMS(              LdSlotArr,                  ElementSlot,    OpTempNumberSources)
-MACRO_WMS_PROFILED(     LdObjSlot,                  ElementSlot,    None)
-MACRO_WMS_PROFILED(     LdObjSlotChkUndecl,         ElementSlot,    OpTempNumberSources|OpSideEffect)
-MACRO_WMS(              StSlot,                     ElementSlot,    None)
-MACRO_WMS(              StSlotChkUndecl,            ElementSlot,    OpSideEffect)
-MACRO_WMS(              StObjSlot,                  ElementSlot,    OpSideEffect)
-MACRO_WMS(              StObjSlotChkUndecl,         ElementSlot,    OpSideEffect)
+MACRO_WMS_PROFILED(     LdEnvSlot,                  ElementSlotI2,  OpTempNumberSources)
+MACRO_WMS_PROFILED(     LdInnerSlot,                ElementSlotI2,  OpTempNumberSources)
+MACRO_WMS_PROFILED(     LdLocalSlot,                ElementSlotI1,  OpTempNumberSources)
+MACRO_BACKEND_ONLY(     LdSlotArr,                  ElementSlot,    OpTempNumberSources)
+MACRO_EXTEND_WMS_AND_PROFILED(LdObjSlot,            ElementSlot,    None)
+MACRO_EXTEND_WMS_AND_PROFILED(LdEnvObjSlot,         ElementSlotI2,  None)
+MACRO_BACKEND_ONLY(     StSlot,                     ElementSlot,    None)
+MACRO_WMS(              StEnvSlot,                  ElementSlotI2,  None)
+MACRO_WMS(              StInnerSlot,                ElementSlotI2,  None)
+MACRO_WMS(              StLocalSlot,                ElementSlotI1,  None)
+MACRO_BACKEND_ONLY(     StSlotChkUndecl,            ElementSlot,    OpSideEffect)
+MACRO_EXTEND_WMS(       StEnvSlotChkUndecl,         ElementSlotI2,  OpSideEffect)
+MACRO_EXTEND_WMS(       StInnerSlotChkUndecl,       ElementSlotI2,  OpSideEffect)
+MACRO_EXTEND_WMS(       StLocalSlotChkUndecl,       ElementSlotI1,  OpSideEffect)
+MACRO_EXTEND_WMS(       StObjSlot,                  ElementSlot,    OpSideEffect)
+MACRO_EXTEND_WMS(       StEnvObjSlot,               ElementSlotI2,  OpSideEffect)
+MACRO_EXTEND_WMS(       StObjSlotChkUndecl,         ElementSlot,    OpSideEffect)
+MACRO_EXTEND_WMS(       StEnvObjSlotChkUndecl,      ElementSlotI2,  OpSideEffect)
 MACRO_BACKEND_ONLY(     LdAsmJsSlot,                ElementSlot,    OpTempNumberSources|OpCanCSE)
 MACRO_BACKEND_ONLY(     StAsmJsSlot,                ElementSlot,    None)
 #ifndef FLOAT_VAR
@@ -422,7 +435,7 @@ MACRO_WMS(              LdNaN,              Reg1,           OpByteCodeOnly|OpCan
 MACRO_WMS(              LdInfinity,         Reg1,           OpByteCodeOnly|OpCanCSE)       // Load 'Infinity'
 MACRO_WMS(              LdTrue,             Reg1,           OpByteCodeOnly|OpCanCSE)       // Load 'true' boolean primitive
 MACRO_WMS(              LdFalse,            Reg1,           OpByteCodeOnly|OpCanCSE)       // Load 'false' boolean primitive
-MACRO_WMS(              LdEnv,              Reg1,           OpCanCSE)       // Load the optional FixedSizeArray environment for closures
+MACRO_BACKEND_ONLY(     LdEnv,              Reg1,           OpCanCSE)       // Load the optional FixedSizeArray environment for closures
 MACRO_BACKEND_ONLY(     LdAsmJsEnv,         Reg1,           OpCanCSE)       // Load the asm.js memory
 
 MACRO_WMS(              LdArgCnt,           Reg1,           None)           // Load the argument count from the current function
@@ -441,20 +454,19 @@ MACRO_WMS_PROFILED_OP(  LdThis,       Reg2Int1,       OpHasImplicitCall|OpTempNu
 MACRO_WMS_PROFILED_OP(  StrictLdThis, Reg2,           OpHasImplicitCall|OpTempNumberTransfer)        // Load this object in strict mode
 MACRO_BACKEND_ONLY(     CheckThis,          Reg1,           OpCanCSE|OpBailOutRec)
 MACRO_BACKEND_ONLY(     StrictCheckThis,    Reg1,           OpCanCSE|OpBailOutRec)
-MACRO_WMS(              LdHandlerScope,     Reg2,           OpHasImplicitCall)     // Load a scope stack for an event handler (both "this" and parent scopes)
-MACRO_WMS(              LdFrameDisplay,     Reg3,           None)           // Set up a frame display for this function and its parent frames
-MACRO_WMS(              LdFrameDisplayNoParent,Reg2,        None)           // Set up a frame display for this function and its parent frames
-MACRO_WMS(              NewStackFrameDisplay,Reg3,          None)           // Set up a frame display allocated on the stack
-MACRO_WMS(              NewStackFrameDisplayNoParent,Reg2,  None)           // Set up a frame display allocated on the stack
-MACRO_WMS(              NewStrictStackFrameDisplay,Reg3,    None)           // Set up a frame display allocated on the stack in strict mode
-MACRO_WMS(              NewStrictStackFrameDisplayNoParent,Reg2,None)       // Set up a frame display allocated on the stack in strict mode
-MACRO_WMS(              LdLocalFrameDisplay, Reg1,          None)           // Set up a frame display allocated on the stack
-MACRO_WMS(              LdStrictFrameDisplay,Reg3,          None)           // Set up a frame display for this function and its parent frames
-MACRO_WMS(              LdStrictFrameDisplayNoParent,Reg2,  None)           // Set up a frame display for this function and its parent frames
+MACRO_WMS(              LdHandlerScope,     Reg1,           OpHasImplicitCall)     // Load a scope stack for an event handler (both "this" and parent scopes)
+MACRO_BACKEND_ONLY(     LdFrameDisplay,     Reg3,           None)           // Set up a frame display for this function and its parent frames
+MACRO_WMS(              LdFrameDisplayNoParent,Reg1,        None)           // Set up a frame display for this function and its parent frames
+MACRO_WMS(              LdInnerFrameDisplay,Reg3,           None)        // Set up a frame display for this function and its parent frames -- this is for an inner scope, not the function-level scope
+MACRO_WMS(              LdInnerFrameDisplayNoParent,Reg2,   None)        // Set up a frame display for this function and its parent frames -- this is for an inner scope, not the function-level scope
+MACRO_WMS(              LdIndexedFrameDisplay,Reg2Int1,         None)        // Set up a frame display for this function and its parent frames -- this is for an inner scope, not the function-level scope
+MACRO_WMS(              LdIndexedFrameDisplayNoParent,Reg1Unsigned1, None)        // Set up a frame display for this function and its parent frames -- this is for an inner scope, not the function-level scope
+MACRO_WMS(              LdFuncExprFrameDisplay,Reg2,        None)
+MACRO_BACKEND_ONLY(     NewStackFrameDisplay,Reg3,          None)           // Set up a frame display allocated on the stack
 MACRO_WMS(              IsIn,               Reg3,           OpSideEffect|OpCallsValueOf|OpHasImplicitCall|OpPostOpDbgBailOut)        // "x in y"  (NOTE: calls valueOf for the index
 MACRO_WMS(              LdArgumentsFromFrame,Reg1,          None)           // Load the argument object from frame
 MACRO_WMS(              LdElemUndef,        ElementU,       OpSideEffect)   // Load 'undefined' to instance.property if not already present
-MACRO_WMS(              LdElemUndefScoped,  ElementU,       OpSideEffect)   // Load 'undefined' to instance.property if not already present in the scope
+MACRO_WMS(              LdElemUndefScoped,  ElementScopedU, OpSideEffect)   // Load 'undefined' to [env].property if not already present in the scope
 MACRO_WMS(              LdFuncExpr,         Reg1,           None)           // Load the function expression to it's location
 MACRO(                  LdPropIds,          Auxiliary,      None)           // Load the property id array
 MACRO_WMS(              StFuncExpr,         ElementC,       OpSideEffect)   // Store the function expression to it's activation object with attributes
@@ -480,23 +492,26 @@ MACRO_PROFILED(         NewScIntArray,      Auxiliary,      OpSideEffect|OpTempO
 MACRO_PROFILED(         NewScFltArray,      Auxiliary,      OpSideEffect|OpTempObjectProducing)             // Create new ScriptArray instance
 MACRO_EXTEND_WMS(       InitClass,          Class,          OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)
 
-MACRO_WMS(              NewScFunc,          ElementSlot,    OpSideEffect)                   // Create new ScriptFunction instance
-MACRO_WMS(              NewScGenFunc,       ElementSlot,    OpSideEffect)                   // Create new JavascriptGeneratorFunction instance
-MACRO_WMS(              NewStackScFunc,     ElementSlot,    OpSideEffect|OpByteCodeOnly)    // Create new ScriptFunction instance
+MACRO_WMS(              NewScFunc,          ElementSlotI1,  OpSideEffect)  // Create new ScriptFunction instance
+MACRO_WMS(              NewScGenFunc,       ElementSlotI1,  OpSideEffect)  // Create new JavascriptGeneratorFunction instance
+MACRO_WMS(              NewStackScFunc,     ElementSlotI1,  OpSideEffect|OpByteCodeOnly)  // Create new ScriptFunction instance
+MACRO_EXTEND_WMS(       NewInnerScFunc,     ElementSlot,    OpSideEffect)  // Create new ScriptFunction instance
+MACRO_EXTEND_WMS(       NewInnerScGenFunc,  ElementSlot,    OpSideEffect)  // Create new JavascriptGeneratorFunction instance
+MACRO_EXTEND_WMS(       NewInnerStackScFunc,ElementSlot,    OpSideEffect|OpByteCodeOnly)  // Create new ScriptFunction instance
 MACRO_WMS(              NewScopeObject,     Reg1,           OpSideEffect)                   // Create new NewScopeObject
 MACRO(                  InitCachedScope,    Reg2Aux,        OpSideEffect)                   // Retrieve cached scope; create if not cached
 MACRO_EXTEND(           InitLetCachedScope, Reg2Aux,        OpSideEffect)                   // Retrieve cached scope; create if not cached (formals are let-like instead of var-like)
-MACRO(                  InitCachedFuncs,    Reg2Aux,        OpSideEffect)
+MACRO(                  InitCachedFuncs,    Auxiliary,      OpSideEffect)
 MACRO_WMS(              GetCachedFunc,      Reg2Int1,       None)
 MACRO(                  CommitScope,        Auxiliary,      OpSideEffect)   // Mark the cached scope object as committed on exit from the function
-MACRO_WMS(              InvalCachedScope,   Reg1Unsigned1,  OpSideEffect)
+MACRO_WMS(              InvalCachedScope,   Unsigned1,      OpSideEffect)
 MACRO_WMS(              NewPseudoScope,     Reg1,           OpSideEffect)   // Create new scope that can't take normal var inits
 MACRO_WMS(              NewBlockScope,      Reg1,           OpSideEffect)   // Create new scope that takes only block-scoped inits
-MACRO_WMS(              NewScopeSlots,      Reg1Unsigned1,  OpSideEffect)
-MACRO_WMS(              NewStackScopeSlots, Reg1,           OpSideEffect)
-MACRO_WMS(              LdLocalScopeSlots,  Reg1,           None)
-MACRO_BACKEND_ONLY(     InitStackClosure,   Reg1,           None)
-MACRO(                  NewScopeSlotsWithoutPropIds, Reg1Int2, OpSideEffect)
+MACRO_BACKEND_ONLY(     NewScopeSlots,      Reg1Unsigned1,  OpSideEffect)
+MACRO_BACKEND_ONLY(     NewStackScopeSlots, Reg1,           OpSideEffect)
+MACRO_BACKEND_ONLY(     InitLocalClosure,   Reg1,           None)
+MACRO_WMS(              NewInnerScopeSlots, Reg3,           OpSideEffect)
+MACRO_BACKEND_ONLY(     NewScopeSlotsWithoutPropIds, Reg1Int2, OpSideEffect)
 MACRO_WMS(              NewRegEx,           Reg1Unsigned1,  OpTempObjectCanStoreTemp|OpSideEffect)              // Create a new RegEx expression
 MACRO_WMS(              IsInst,             Reg3C,          OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)  // instanceof() - SideEffect: can throw...
 
@@ -691,6 +706,8 @@ MACRO_BACKEND_ONLY(     BrFncCachedScopeNeq,Reg2,           None)
 MACRO_BACKEND_ONLY(     GeneratorResumeJumpTable, Reg1,     OpSideEffect)
 MACRO_BACKEND_ONLY(     RestoreOutParam,    Empty,          None)
 
+MACRO_BACKEND_ONLY(     SlotArrayCheck,     Empty,          OpCanCSE)
+MACRO_BACKEND_ONLY(     FrameDisplayCheck,  Empty,          OpCanCSE)
 
 // All SIMD ops are backend only for non-asmjs.
 #define MACRO_SIMD(opcode, asmjsLayout, opCodeAttrAsmJs, OpCodeAttr, ...) MACRO_BACKEND_ONLY(opcode, Empty, OpCodeAttr)

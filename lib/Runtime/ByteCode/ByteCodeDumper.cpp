@@ -474,6 +474,9 @@ namespace Js
             case OpCode::ProfiledLdThis:
                 Output::Print(L" R%d = R%d, %d", data->R0, data->R1, data->C1);
                 break;
+            case OpCode::LdIndexedFrameDisplay:
+                Output::Print(L" R%d = [%d], R%d ", data->R0, data->C1, data->R1);
+                break;
             case OpCode::GetCachedFunc:
                 DumpReg(data->R0);
                 Output::Print(L"= func(");
@@ -487,8 +490,9 @@ namespace Js
                 break;
         }
     }
+
     template <class T>
-    void ByteCodeDumper::DumpElementU(OpCode op, const unaligned T * data, Js::FunctionBody * dumpFunction, ByteCodeReader& reader)
+    void ByteCodeDumper::DumpElementScopedU(OpCode op, const unaligned T * data, Js::FunctionBody * dumpFunction, ByteCodeReader& reader)
     {
         ScriptContext* scriptContext = dumpFunction->GetScriptContext();
         PropertyRecord const * pPropertyName = scriptContext->GetPropertyName(
@@ -497,12 +501,32 @@ namespace Js
         {
             case OpCode::LdElemUndefScoped:
             {
-                Output::Print(L" R%d.%s = undefined, R%d",data->Instance, pPropertyName->GetBuffer(), Js::FunctionBody::RootObjectRegSlot);
+                Output::Print(L" %s = undefined, R%d", pPropertyName->GetBuffer(), Js::FunctionBody::RootObjectRegSlot);
                 break;
             }
-            case OpCode::LdElemUndef:
             case OpCode::InitUndeclConsoleLetFld:
             case OpCode::InitUndeclConsoleConstFld:
+            {
+                Output::Print(L" %s = undefined", pPropertyName->GetBuffer());
+                break;
+            }
+            default:
+            {
+                AssertMsg(false, "Unknown OpCode for ElementScopedU");
+                break;
+            }
+        }
+    }
+
+    template <class T>
+    void ByteCodeDumper::DumpElementU(OpCode op, const unaligned T * data, Js::FunctionBody * dumpFunction, ByteCodeReader& reader)
+    {
+        ScriptContext* scriptContext = dumpFunction->GetScriptContext();
+        PropertyRecord const * pPropertyName = scriptContext->GetPropertyName(
+            dumpFunction->GetReferencedPropertyId(data->PropertyIdIndex));
+        switch (op)
+        {
+            case OpCode::LdElemUndef:
             {
                 Output::Print(L" R%d.%s = undefined", data->Instance, pPropertyName->GetBuffer());
                 break;
@@ -553,6 +577,35 @@ namespace Js
     }
 
     template <class T>
+    void ByteCodeDumper::DumpElementScopedC(OpCode op, const unaligned T * data, Js::FunctionBody * dumpFunction, ByteCodeReader& reader)
+    {
+        ScriptContext* scriptContext = dumpFunction->GetScriptContext();
+        PropertyRecord const * pPropertyName = scriptContext->GetPropertyName(
+            dumpFunction->GetReferencedPropertyId(data->PropertyIdIndex));
+        switch (op)
+        {
+            case OpCode::ScopedEnsureNoRedeclFld:
+            case OpCode::ScopedDeleteFld:
+            case OpCode::ScopedDeleteFldStrict:
+            {
+                Output::Print(L" %s, R%d", pPropertyName->GetBuffer(), data->Value);
+                break;
+            }
+            case OpCode::ScopedInitFunc:
+            {
+                Output::Print(L" %s = R%d, R%d", pPropertyName->GetBuffer(), data->Value,
+                    Js::FunctionBody::RootObjectRegSlot);
+                break;
+            }
+            default:
+            {
+                AssertMsg(false, "Unknown OpCode for OpLayoutElementScopedC");
+                break;
+            }
+        }
+    }
+
+    template <class T>
     void ByteCodeDumper::DumpElementC(OpCode op, const unaligned T * data, Js::FunctionBody * dumpFunction, ByteCodeReader& reader)
     {
         ScriptContext* scriptContext = dumpFunction->GetScriptContext();
@@ -566,11 +619,6 @@ namespace Js
             case OpCode::DeleteRootFldStrict:
             {
                 Output::Print(L" R%d.%s", data->Instance, pPropertyName->GetBuffer());
-                break;
-            }
-            case OpCode::ScopedEnsureNoRedeclFld:
-            {
-                Output::Print(L" R%d.%s, R%d", data->Instance, pPropertyName->GetBuffer(), data->Value);
                 break;
             }
             case OpCode::InitSetFld:
@@ -589,22 +637,30 @@ namespace Js
                         data->Value);
                 break;
             }
-            case OpCode::ScopedInitFunc:
+            default:
             {
-                Output::Print(L" R%d.%s = R%d, R%d", data->Instance, pPropertyName->GetBuffer(), data->Value,
-                    Js::FunctionBody::RootObjectRegSlot);
+                AssertMsg(false, "Unknown OpCode for OpLayoutElementC");
                 break;
             }
-            case OpCode::ScopedDeleteFld:
-            case OpCode::ScopedDeleteFldStrict:
+        }
+    }
+
+    template <class T>
+    void ByteCodeDumper::DumpElementScopedC2(OpCode op, const unaligned T * data, Js::FunctionBody * dumpFunction, ByteCodeReader& reader)
+    {
+        ScriptContext* scriptContext = dumpFunction->GetScriptContext();
+        PropertyRecord const * pPropertyName = scriptContext->GetPropertyName(
+            dumpFunction->GetReferencedPropertyId(data->PropertyIdIndex));
+        switch (op)
+        {
+            case OpCode::ScopedLdInst:
             {
-                Output::Print(L" R%d.%s, R%d", data->Instance, pPropertyName->GetBuffer(),
-                    Js::FunctionBody::RootObjectRegSlot);
+                Output::Print(L" R%d, R%d = %s", data->Value, data->Value2, pPropertyName->GetBuffer());
                 break;
             }
             default:
             {
-                AssertMsg(false, "Unknown OpCode for OpLayoutElementC");
+                AssertMsg(false, "Unknown OpCode for OpLayoutElementScopedC2");
                 break;
             }
         }
@@ -618,11 +674,6 @@ namespace Js
             dumpFunction->GetReferencedPropertyId(data->PropertyIdIndex));
         switch (op)
         {
-            case OpCode::ScopedLdInst:
-            {
-                Output::Print(L" R%d, R%d = R%d.%s", data->Value, data->Value2, data->Instance, pPropertyName->GetBuffer());
-                break;
-            }
             case OpCode::LdSuperFld:
             {
                 Output::Print(L" R%d = R%d(this=R%d).%s #%d", data->Value, data->Instance, data->Value2,
@@ -662,7 +713,6 @@ namespace Js
     {
         switch (op)
         {
-            case OpCode::InitUndeclSlot:
             case OpCode::InvalCachedScope:
             case OpCode::NewScopeSlots:
                 Output::Print(L" R%u[%u]", data->R0, data->C1);
@@ -692,9 +742,9 @@ namespace Js
     {
         switch (op)
         {
-            case OpCode::NewStackScFunc:
-            case OpCode::NewScFunc:
-            case OpCode::NewScGenFunc:
+            case OpCode::NewInnerStackScFunc:
+            case OpCode::NewInnerScFunc:
+            case OpCode::NewInnerScGenFunc:
             {
                 FunctionProxy* pfuncActual = dumpFunction->GetNestedFunc((uint)data->SlotIndex)->GetFunctionProxy();
                 Output::Print(L" R%d = env:R%d, %s()", data->Value, data->Instance,
@@ -708,15 +758,99 @@ namespace Js
                 Output::Print(L" R%d[%d] = R%d ",data->Instance,data->SlotIndex,data->Value);
                 break;
             case OpCode::LdSlot:
-            case OpCode::LdSlotChkUndecl:
             case OpCode::LdSlotArr:
             case OpCode::LdObjSlot:
-            case OpCode::LdObjSlotChkUndecl:
                 Output::Print(L" R%d = R%d[%d] ",data->Value,data->Instance,data->SlotIndex);
                 break;
             default:
             {
                 AssertMsg(false, "Unknown OpCode for OpLayoutElementSlot");
+                break;
+            }
+        }
+    }
+
+    template <class T>
+    void ByteCodeDumper::DumpElementSlotI1(OpCode op, const unaligned T * data, Js::FunctionBody * dumpFunction, ByteCodeReader& reader)
+    {
+        switch (op)
+        {
+            case OpCode::StLocalSlot:
+            case OpCode::StLocalSlotChkUndecl:
+                Output::Print(L" [%d] = R%d ",data->SlotIndex, data->Value);
+                break;
+            case OpCode::LdLocalSlot:
+            case OpCode::LdEnvObj:
+                Output::Print(L" R%d = [%d] ",data->Value, data->SlotIndex);
+                break;
+            case OpCode::NewScFunc:
+            case OpCode::NewStackScFunc:
+            case OpCode::NewScGenFunc:
+            {
+                FunctionProxy* pfuncActual = dumpFunction->GetNestedFunc((uint)data->SlotIndex)->GetFunctionProxy();
+                Output::Print(L" R%d = %s()", data->Value,
+                        pfuncActual->EnsureDeserialized()->GetDisplayName());
+                break;
+            }
+            default:
+            {
+                AssertMsg(false, "Unknown OpCode for OpLayoutElementSlotI1");
+                break;
+            }
+        }
+    }
+
+    template <class T>
+    void ByteCodeDumper::DumpElementSlotI2(OpCode op, const unaligned T * data, Js::FunctionBody * dumpFunction, ByteCodeReader& reader)
+    {
+        switch (op)
+        {
+            case OpCode::StInnerSlot:
+            case OpCode::StEnvSlot:
+            case OpCode::StEnvObjSlot:
+            case OpCode::StEnvSlotChkUndecl:
+            case OpCode::StEnvObjSlotChkUndecl:
+                Output::Print(L" [%d][%d] = R%d ",data->SlotIndex1, data->SlotIndex2, data->Value);
+                break;
+            case OpCode::LdInnerSlot:
+            case OpCode::LdEnvSlot:
+            case OpCode::LdEnvObjSlot:
+                Output::Print(L" R%d = [%d][%d] ",data->Value, data->SlotIndex1, data->SlotIndex2);
+                break;
+            default:
+            {
+                AssertMsg(false, "Unknown OpCode for OpLayoutElementSlotI2");
+                break;
+            }
+        }
+    }
+
+    template <class T>
+    void ByteCodeDumper::DumpElementScopedP(OpCode op, const unaligned T * data, Js::FunctionBody * dumpFunction, ByteCodeReader& reader)
+    {
+        ScriptContext* scriptContext = dumpFunction->GetScriptContext();
+        PropertyId propertyId = dumpFunction->GetPropertyIdFromCacheId(data->inlineCacheIndex);
+        PropertyRecord const * pPropertyName = scriptContext->GetPropertyName(propertyId);
+        switch (op)
+        {
+            case OpCode::ScopedLdFldForTypeOf:
+            case OpCode::ScopedLdFld:
+            {
+                Output::Print(L" R%d = %s, R%d #%d", data->Value, pPropertyName->GetBuffer(),
+                    Js::FunctionBody::RootObjectRegSlot, data->inlineCacheIndex);
+                break;
+            }
+            case OpCode::ScopedStFld:
+            case OpCode::ConsoleScopedStFld:
+            case OpCode::ScopedStFldStrict:
+            {
+                Output::Print(L" %s = R%d, R%d #%d", pPropertyName->GetBuffer(), data->Value,
+                    Js::FunctionBody::RootObjectRegSlot, data->inlineCacheIndex);
+                break;
+            }
+            default:
+            {
+                AssertMsg(false, "Unknown OpCode for OpLayoutElementP");
                 break;
             }
         }
@@ -730,21 +864,6 @@ namespace Js
         PropertyRecord const * pPropertyName = scriptContext->GetPropertyName(propertyId);
         switch (op)
         {
-            case OpCode::ScopedLdFldForTypeOf:
-            case OpCode::ScopedLdFld:
-            {
-                Output::Print(L" R%d = R%d.%s, R%d #%d", data->Value, data->Instance, pPropertyName->GetBuffer(),
-                    Js::FunctionBody::RootObjectRegSlot, data->inlineCacheIndex);
-                break;
-            }
-            case OpCode::ScopedStFld:
-            case OpCode::ConsoleScopedStFld:
-            case OpCode::ScopedStFldStrict:
-            {
-                Output::Print(L" R%d.%s = R%d, R%d #%d", data->Instance, pPropertyName->GetBuffer(), data->Value,
-                    Js::FunctionBody::RootObjectRegSlot, data->inlineCacheIndex);
-                break;
-            }
             case OpCode::LdFldForTypeOf:
             case OpCode::LdFld:
             case OpCode::LdFldForCallApplyTarget:
@@ -887,6 +1006,24 @@ namespace Js
         }
     }
 
+    template <class T>
+    void ByteCodeDumper::DumpArgNoSrc(OpCode op, const unaligned T * data, FunctionBody * dumpFunction, ByteCodeReader& reader)
+    {
+        switch (op)
+        {
+            case Js::OpCode::ArgOut_Env:
+            {
+                Output::Print(L" Out%d ", (int) data->Arg);
+                break;
+            }
+            default:
+            {
+                AssertMsg(false, "Unknown OpCode for OpLayoutArgNoSrc");
+                break;
+            }
+        }
+    }
+
     void
     ByteCodeDumper::DumpStartCall(OpCode op, const unaligned OpLayoutStartCall * data, FunctionBody * dumpFunction, ByteCodeReader& reader)
     {
@@ -931,9 +1068,18 @@ namespace Js
     template <class T> void
     ByteCodeDumper::DumpReg3(OpCode op, const unaligned T * data, FunctionBody * dumpFunction, ByteCodeReader& reader)
     {
-        DumpReg(data->R0);
-        DumpReg(data->R1);
-        DumpReg(data->R2);
+        switch (op)
+        {
+        case OpCode::NewInnerScopeSlots:
+            Output::Print(L" [%d], %d, %d ", data->R0, data->R1, data->R2);
+            break;
+
+        default:
+            DumpReg(data->R0);
+            DumpReg(data->R1);
+            DumpReg(data->R2);
+            break;
+        }
     }
 
     template <class T> void
@@ -1123,6 +1269,22 @@ namespace Js
                 Output::Print(L"]");
                 break;
             }
+            case Js::OpCode::InitCachedFuncs:
+            {
+                const Js::FuncInfoArray *arr = reader.ReadAuxArray<FuncInfoEntry>(playout->Offset, dumpFunction);
+                Output::Print(L" R%d, %d [", playout->R0, arr->count);
+                for (uint i = 0; i < arr->count && i < 3; i++)
+                {
+                    Js::ParseableFunctionInfo *info = dumpFunction->GetNestedFunctionForExecution(arr->elements[i].nestedIndex);
+                    if (i != 0)
+                    {
+                        Output::Print(L", ");
+                    }
+                    Output::Print(L"%s", info->GetDisplayName());
+                }
+                Output::Print(L"]");
+                break;
+            }
             case OpCode::CommitScope:
             {
                 const Js::PropertyIdArray *propIds = reader.ReadPropertyIdArray(playout->Offset, dumpFunction);
@@ -1167,22 +1329,6 @@ namespace Js
                 Output::Print(L"%s", pPropertyName->GetBuffer());
             }
             Output::Print(L"], LiteralId %d", playout->C1);
-            break;
-        }
-        case Js::OpCode::InitCachedFuncs:
-        {
-            const Js::FuncInfoArray *arr = reader.ReadAuxArray<FuncInfoEntry>(playout->Offset, dumpFunction);
-            Output::Print(L" R%d, env:R%d, %d [", playout->R0, playout->R1, arr->count);
-            for (uint i = 0; i < arr->count && i < 3; i++)
-            {
-                Js::ParseableFunctionInfo *info = dumpFunction->GetNestedFunctionForExecution(arr->elements[i].nestedIndex);
-                if (i != 0)
-                {
-                    Output::Print(L", ");
-                }
-                Output::Print(L"%s", info->GetDisplayName());
-            }
-            Output::Print(L"]");
             break;
         }
         case Js::OpCode::SpreadArrayLiteral:
@@ -1262,6 +1408,15 @@ namespace Js
         PropertyRecord const * pPropertyName = scriptContext->GetPropertyName(
             dumpFunction->GetReferencedPropertyId(data->PropertyIdIndex));
         Output::Print(L"R%d.%s", data->Instance, pPropertyName->GetBuffer());
+    }
+
+    void ByteCodeDumper::DumpBrEnvProperty(OpCode op, const unaligned OpLayoutBrEnvProperty * data, FunctionBody * dumpFunction, ByteCodeReader& reader)
+    {
+        DumpOffset(data->RelativeJumpOffset, reader);
+        ScriptContext* scriptContext = dumpFunction->GetScriptContext();
+        PropertyRecord const * pPropertyName = scriptContext->GetPropertyName(
+            dumpFunction->GetReferencedPropertyId(data->PropertyIdIndex));
+        Output::Print(L"[%d].%s", data->SlotIndex, pPropertyName->GetBuffer());
     }
 
 } // namespace Js

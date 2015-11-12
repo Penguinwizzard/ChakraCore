@@ -28,6 +28,7 @@ private:
     int m_count;
     ArenaAllocator *alloc;
     uint scopeSlotCount; // count of slots in the local scope
+    uint innerScopeIndex;
     ScopeType const scopeType;
     BYTE isDynamic : 1;
     BYTE isObject : 1;
@@ -54,6 +55,7 @@ public:
         m_symList(nullptr),
         m_count(0),
         scopeSlotCount(0),
+        innerScopeIndex((uint)-1),
         scopeType(scopeType)
 #if DBG
         , isRestored(false)
@@ -218,6 +220,11 @@ public:
         return this->scopeType;
     }
 
+    bool IsInnerScope() const
+    {
+        return scopeType == ScopeType_Block || scopeType == ScopeType_Catch || scopeType == ScopeType_CatchParamPattern;
+    }
+
     int Count() const
     {
         if (symbolTable)
@@ -274,6 +281,10 @@ public:
     uint GetScopeSlotCount() const { return scopeSlotCount; }
 
     void SetHasLocalInClosure(bool has);
+
+    bool HasInnerScopeIndex() const { return innerScopeIndex != (uint)-1; }
+    uint GetInnerScopeIndex() const { return innerScopeIndex; }
+    void SetInnerScopeIndex(uint index) { Assert(innerScopeIndex == (uint)-1); innerScopeIndex = index; }
 
     int AddScopeSlot();
 

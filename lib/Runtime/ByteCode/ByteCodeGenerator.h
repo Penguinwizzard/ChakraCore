@@ -241,7 +241,6 @@ public:
     void EmitInvertedLoop(ParseNode* outerLoop,ParseNode* invertedLoop,FuncInfo* funcInfo);
     void DefineFunctions(FuncInfo *funcInfoParent);
     Js::RegSlot DefineOneFunction(ParseNode *pnodeFnc, FuncInfo *funcInfoParent, bool generateAssignment=true, Js::RegSlot regEnv = Js::Constants::NoRegister, Js::RegSlot frameDisplayTemp = Js::Constants::NoRegister);
-    Js::RegSlot DefineOneFunctionHandleBoxedFD(ParseNode *pnodeFnc, FuncInfo *funcInfo, bool generateAssignment, Js::RegSlot regEnv = Js::Constants::NoRegister);
     void DefineCachedFunctions(FuncInfo *funcInfoParent);
     void DefineUncachedFunctions(FuncInfo *funcInfoParent);
     void DefineUserVars(FuncInfo *funcInfo);
@@ -258,7 +257,6 @@ public:
     void GetEnclosingNonLambdaScope(FuncInfo *funcInfo, Scope * &scope, Js::PropertyId &envIndex);
     void EmitInternalScopedSlotLoad(FuncInfo *funcInfo, Js::RegSlot slot, Js::RegSlot symbolRegister, bool chkUndecl = false);
     void EmitInternalScopedSlotLoad(FuncInfo *funcInfo, Scope *scope, Js::PropertyId envIndex, Js::RegSlot slot, Js::RegSlot symbolRegister, bool chkUndecl = false);
-    void EmitInternalScopedSlotLoad(FuncInfo *funcInfo, Scope *scope, Js::RegSlot scopeLocation, Js::RegSlot slot, Js::RegSlot symbolRegister, bool chkUndecl = false);
     void EmitInternalScopedSlotStore(FuncInfo *funcInfo, Js::RegSlot slot, Js::RegSlot symbolRegister);
     void EmitSuperCall(FuncInfo* funcInfo, ParseNode* pnode, BOOL fReturnValue);
     void EmitScopeSlotLoadThis(FuncInfo *funcInfo, Js::RegSlot regLoc, bool chkUndecl = true);
@@ -373,6 +371,10 @@ public:
     static bool NeedScopeObjectForArguments(FuncInfo *funcInfo, ParseNode *pnodeFnc);
 private:
     bool NeedCheckBlockVar(Symbol* sym, Scope* scope, FuncInfo* funcInfo) const;
+
+    Js::OpCode ToChkUndeclOp(Js::OpCode op) const;
+    Js::OpCode GetStSlotOp(Scope *scope, int envIndex, Js::RegSlot scopeLocation, bool chkBlockVar, FuncInfo *funcInfo);
+    Js::OpCode GetLdSlotOp(Scope *scope, int envIndex, Js::RegSlot scopeLocation, FuncInfo *funcInfo);
 };
 
 template<class Fn> void ByteCodeGenerator::IterateBlockScopedVariables(ParseNode *pnodeBlock, Fn fn)

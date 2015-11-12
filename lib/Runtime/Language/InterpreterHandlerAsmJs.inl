@@ -14,7 +14,7 @@ EXDEF2    (NOPASMJS          , NopEx        , Empty                             
   DEF2    (BR_ASM            , AsmBr        , OP_Br                                              )
 
   DEF2_WMS(FALLTHROUGH_ASM   , LdSlotArr    , /* Common case with LdSlot */                      )
-  DEF3_WMS(GET_ELEM_SLOT_ASM , LdSlot       , OP_LdSlot                    , ElementSlot         )
+  DEF3_WMS(GET_ELEM_SLOT_ASM , LdSlot       , OP_LdAsmJsSlot               , ElementSlot         )
   DEF2_WMS(FUNCtoA1Mem       , LdUndef      , JavascriptOperators::OP_LdUndef                    ) 
 
 // Function Calls

@@ -41,14 +41,7 @@ Var Js::InterpreterStackFrame::INTERPRETERLOOPNAME()
     {
         // If this is the start of the function, then we've waited until after the stack probe above
         // to set up the FD/SS pointers, so do it now.
-        if (this->m_functionBody->DoStackFrameDisplay())
-        {
-            this->SetLocalFrameDisplay(this->localFrameDisplay);
-        }
-        if (this->m_functionBody->DoStackScopeSlots())
-        {
-            this->SetLocalScopeSlots(this->localScopeSlots);
-        }
+        this->InitializeClosures();
     }
 
     Assert(this->returnAddress != nullptr);

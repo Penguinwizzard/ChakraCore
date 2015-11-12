@@ -404,6 +404,7 @@ namespace Js
         isInstInlineCacheCount(0),
         objLiteralCount(0),
         literalRegexCount(0),
+        innerScopeCount(0),
         m_byteCodeCount(0),
         m_byteCodeWithoutLDACount(0),
         m_argUsedForBranch(0),
@@ -430,7 +431,10 @@ namespace Js
         m_hasFunctionCompiledSent(false),
         byteCodeCache(nullptr),
         stackNestedFuncParent(nullptr),
-        stackClosureRegister(Constants::NoRegister),
+        localClosureRegister(Constants::NoRegister),
+        localFrameDisplayRegister(Constants::NoRegister),
+        envRegister(Constants::NoRegister),
+        firstInnerScopeRegister(Constants::NoRegister),
         m_tag(TRUE),
         m_nativeEntryPointUsed(FALSE),
         debuggerScopeIndex(0),
@@ -3339,7 +3343,11 @@ namespace Js
         newFunctionBody->m_outParamMaxDepth = this->m_outParamMaxDepth;
 
         newFunctionBody->m_firstTmpReg = this->m_firstTmpReg;
-        newFunctionBody->stackClosureRegister = this->stackClosureRegister;
+        newFunctionBody->localClosureRegister = this->localClosureRegister;
+        newFunctionBody->localFrameDisplayRegister = this->localFrameDisplayRegister;
+        newFunctionBody->envRegister = this->envRegister;
+        newFunctionBody->firstInnerScopeRegister = this->firstInnerScopeRegister;
+        newFunctionBody->innerScopeCount = this->innerScopeCount;
         newFunctionBody->loopCount = this->loopCount;
         newFunctionBody->profiledDivOrRemCount = this->profiledDivOrRemCount;
         newFunctionBody->profiledSwitchCount = this->profiledSwitchCount;
@@ -4639,7 +4647,11 @@ namespace Js
         this->m_firstTmpReg = Constants::NoRegister;
         this->m_varCount = 0;
         this->m_constCount = 0;
-        this->stackClosureRegister = Constants::NoRegister;
+        this->localClosureRegister = Constants::NoRegister;
+        this->localFrameDisplayRegister = Constants::NoRegister;
+        this->envRegister = Constants::NoRegister;
+        this->firstInnerScopeRegister = Constants::NoRegister;
+        this->innerScopeCount = 0;
 
         this->ResetObjectLiteralTypes();
 
@@ -5892,7 +5904,11 @@ namespace Js
         ResetProfileIds();
 
         m_firstTmpReg = Constants::NoRegister;
-        stackClosureRegister = Constants::NoRegister;
+        localClosureRegister = Constants::NoRegister;
+        localFrameDisplayRegister = Constants::NoRegister;
+        envRegister = Constants::NoRegister;
+        firstInnerScopeRegister = Constants::NoRegister;
+        innerScopeCount = 0;
         m_constCount = 0;
         this->m_constTable = nullptr;
         this->byteCodeBlock = nullptr;

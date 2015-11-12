@@ -277,7 +277,7 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             this->LowerNewScopeSlots(instr, false);
             break;
 
-        case Js::OpCode::InitStackClosure:
+        case Js::OpCode::InitLocalClosure:
             // Real initialization of the stack pointers happens on entry to the function, so this instruction
             // (which exists to provide a def in the IR) can go away.
             instr->Remove();
@@ -1664,8 +1664,8 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             m_lowererMD.ChangeToAssign(instr);
             break;
 
-        case Js::OpCode::Ld_UnwrapWithObj:
-            this->LowerUnaryHelper(instr, IR::HelperOp_LdUnwrapWithObj);
+        case Js::OpCode::UnwrapWithObj:
+            this->LowerUnaryHelper(instr, IR::HelperOp_UnwrapWithObj);
             break;
 
         case Js::OpCode::Ld_A:
@@ -2428,10 +2428,6 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             this->LowerStSlot(instr);
             break;
 
-        case Js::OpCode::LdSlotChkUndecl:
-            this->LowerLdSlotChkUndecl(instr);
-            break;
-
         case Js::OpCode::ChkUndecl:
             instrPrev = this->LowerChkUndecl(instr);
             break;
@@ -2543,19 +2539,11 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             break;
 
         case Js::OpCode::NewStackFrameDisplay:
-            this->LowerLdFrameDisplay(instr, false, m_func->DoStackFrameDisplay());
-            break;
-
-        case Js::OpCode::NewStrictStackFrameDisplay:
-            this->LowerLdFrameDisplay(instr, true, m_func->DoStackFrameDisplay());
+            this->LowerLdFrameDisplay(instr, m_func->DoStackFrameDisplay());
             break;
 
         case Js::OpCode::LdFrameDisplay:
-            this->LowerLdFrameDisplay(instr, false, false);
-            break;
-
-        case Js::OpCode::LdStrictFrameDisplay:
-            this->LowerLdFrameDisplay(instr, true, false);
+            this->LowerLdFrameDisplay(instr, false);
             break;
 
         case Js::OpCode::Throw:
@@ -2958,6 +2946,14 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
 
         case Js::OpCode::AsyncSpawn:
             this->LowerBinaryHelperMem(instr, IR::HelperAsyncSpawn);
+            break;
+
+        case Js::OpCode::FrameDisplayCheck:
+            instrPrev = this->LowerFrameDisplayCheck(instr);
+            break;
+
+        case Js::OpCode::SlotArrayCheck:
+            instrPrev = this->LowerSlotArrayCheck(instr);
             break;
 
         default:
@@ -7687,7 +7683,8 @@ Lowerer::LowerBinaryHelper(IR::Instr *instr, IR::JnHelperMethod helperMethod)
               Js::OpCodeUtil::GetOpCodeLayout(instr->m_opcode) == Js::OpLayoutType::Reg3 ||
               Js::OpCodeUtil::GetOpCodeLayout(instr->m_opcode) == Js::OpLayoutType::Reg2Int1 ||
               Js::OpCodeUtil::GetOpCodeLayout(instr->m_opcode) == Js::OpLayoutType::Reg1Int2 ||
-              Js::OpCodeUtil::GetOpCodeLayout(instr->m_opcode) == Js::OpLayoutType::ElementU, "Expected a binary instruction...");
+              Js::OpCodeUtil::GetOpCodeLayout(instr->m_opcode) == Js::OpLayoutType::ElementU ||
+              instr->m_opcode == Js::OpCode::InvalCachedScope, "Expected a binary instruction...");
 
     IR::Opnd *src2 = instr->UnlinkSrc2();
     if (helperMethod != IR::HelperOP_CmSrEq_EmptyString)
@@ -9187,7 +9184,9 @@ Lowerer::CreateOpndForSlotAccess(IR::Opnd * opnd)
     IR::SymOpnd * symOpnd = opnd->AsSymOpnd();
     PropertySym * dstSym = symOpnd->m_sym->AsPropertySym();
 
-    if (!m_func->IsLoopBody() && (dstSym->m_stackSym == m_func->GetLocalClosureSym() || dstSym->m_stackSym == m_func->GetLocalFrameDisplaySym()))
+    if (!m_func->IsLoopBody() && 
+        m_func->DoStackFrameDisplay() &&
+        (dstSym->m_stackSym == m_func->GetLocalClosureSym() || dstSym->m_stackSym == m_func->GetLocalFrameDisplaySym()))
     {
         // Stack closure syms are made to look like slot accesses for the benefit of GlobOpt, so that it can do proper
         // copy prop and implicit call bailout. But what we really want is local stack load/store.
@@ -9250,8 +9249,6 @@ void Lowerer::LowerProfileLdSlot(IR::Opnd *const valueOpnd, Func *const ldSlotFu
 
     Func *const irFunc = insertBeforeInstr->m_func;
 
-    //     void ProfilingHelpers::ProfileLdSlot(const Var value, FunctionBody *const functionBody, const uint profileId)
-
     m_lowererMD.LoadHelperArgument(insertBeforeInstr, IR::Opnd::CreateProfileIdOpnd(profileId, irFunc));
     m_lowererMD.LoadHelperArgument(insertBeforeInstr, CreateFunctionBodyOpnd(ldSlotFunc));
     m_lowererMD.LoadHelperArgument(insertBeforeInstr, valueOpnd);
@@ -9265,8 +9262,6 @@ void Lowerer::LowerProfileLdSlot(IR::Opnd *const valueOpnd, Func *const ldSlotFu
 IR::Instr *
 Lowerer::LowerLdSlot(IR::Instr *instr)
 {
-    // LdSlot stores the nth Var from the buffer pointed to by the property sym's stack sym.
-
     IR::Opnd * srcOpnd = instr->UnlinkSrc1();
     AssertMsg(srcOpnd, "Expected src opnd on LdSlot");
     IR::Opnd * srcNew = this->CreateOpndForSlotAccess(srcOpnd);
@@ -9275,33 +9270,6 @@ Lowerer::LowerLdSlot(IR::Instr *instr)
     instr->SetSrc1(srcNew);
     m_lowererMD.ChangeToAssign(instr);
     return instr;
-}
-
-IR::Instr *
-Lowerer::LowerLdSlotChkUndecl(IR::Instr *instrLdSlot)
-{
-    IR::Instr *instrInsert = instrLdSlot->m_next;
-    IR::Opnd *dstOpnd = instrLdSlot->GetDst();
-
-    Js::ProfileId profileId;
-    if(instrLdSlot->IsJitProfilingInstr())
-    {
-        profileId = instrLdSlot->AsJitProfilingInstr()->profileId;
-        Assert(profileId != Js::Constants::NoProfileId);
-    }
-    else
-    {
-        profileId = Js::Constants::NoProfileId;
-    }
-
-    this->GenUndeclChk(instrInsert, dstOpnd);
-    IR::Instr *const instrToReturn = this->LowerLdSlot(instrLdSlot);
-
-    if(profileId != Js::Constants::NoProfileId)
-    {
-        LowerProfileLdSlot(instrLdSlot->GetDst(), instrLdSlot->m_func, profileId, instrInsert);
-    }
-    return instrToReturn;
 }
 
 IR::Instr *
@@ -21157,11 +21125,17 @@ Lowerer::LowerNewScopeSlots(IR::Instr * instr, bool doStackSlots)
         loop->regAlloc.liveOnBackEdgeSyms->Set(dst->m_sym->m_id);
         loop->regAlloc.liveOnBackEdgeSyms->Set(undefinedOpnd->AsRegOpnd()->m_sym->m_id);
     }
+
+    if (!doStackSlots)
+    {
+        InsertMove(IR::RegOpnd::New(instr->m_func->GetLocalClosureSym(), TyMachPtr, func), dst, instr);
+    }
     instr->Remove();
 }
 
-void Lowerer::LowerLdFrameDisplay(IR::Instr *instr, bool isStrict, bool doStackFrameDisplay)
+void Lowerer::LowerLdFrameDisplay(IR::Instr *instr, bool doStackFrameDisplay)
 {
+    bool isStrict = instr->m_func->GetJnFunction()->GetIsStrictMode();
     uint16 envDepth = instr->m_func->GetJnFunction()->GetEnvDepth();
     Func *func = this->m_func;
 
@@ -21171,7 +21145,7 @@ void Lowerer::LowerLdFrameDisplay(IR::Instr *instr, bool isStrict, bool doStackF
     // If the dst opnd is a byte code temp, that indicates we're prepending a block scope or some such and
     // shouldn't attempt to do this.
     if (envDepth == (uint16)-1 ||
-        instr->GetDst()->AsRegOpnd()->m_sym->IsTempReg(instr->m_func) ||
+        (!doStackFrameDisplay && instr->GetDst()->AsRegOpnd()->m_sym->IsTempReg(instr->m_func)) ||
         PHASE_OFF(Js::FrameDisplayFastPathPhase, func))
     {
         if (isStrict)
@@ -21183,7 +21157,7 @@ void Lowerer::LowerLdFrameDisplay(IR::Instr *instr, bool isStrict, bool doStackF
             else
             {
 #if DBG
-                instr->m_opcode = Js::OpCode::LdStrictFrameDisplayNoParent;
+                instr->m_opcode = Js::OpCode::LdFrameDisplayNoParent;
 #endif
                 this->LowerUnaryHelperMem(instr, IR::HelperScrObj_LdStrictFrameDisplayNoParent);
             }
@@ -21876,6 +21850,127 @@ Lowerer::LowerLdEnv(IR::Instr * instr)
     }
 
     LowererMD::ChangeToAssign(instr);
+    return instrPrev;
+}
+
+IR::Instr *
+Lowerer::LowerFrameDisplayCheck(IR::Instr * instr)
+{
+    IR::Instr *instrPrev = instr->m_prev;
+    IR::Instr *insertInstr = instr->m_next;
+    IR::AddrOpnd *addrOpnd = instr->UnlinkSrc2()->AsAddrOpnd();
+    FrameDisplayCheckRecord *record = (FrameDisplayCheckRecord*)addrOpnd->m_address;
+
+    IR::LabelInstr *errorLabel = nullptr;
+    IR::LabelInstr *continueLabel = nullptr;
+    IR::RegOpnd *envOpnd = instr->GetDst()->AsRegOpnd();
+    uint32 frameDisplayOffset = Js::FrameDisplay::GetOffsetOfScopes()/sizeof(Js::Var);
+
+    if (record->slotId != (uint32)-1 && record->slotId > frameDisplayOffset)
+    {
+        // Check that the frame display has enough scopes in it to satisfy the code.
+        errorLabel = IR::LabelInstr::New(Js::OpCode::Label, m_func, true);
+        continueLabel = IR::LabelInstr::New(Js::OpCode::Label, m_func);
+
+        IR::IndirOpnd * indirOpnd = IR::IndirOpnd::New(envOpnd,
+                                                       Js::FrameDisplay::GetOffsetOfLength(),
+                                                       TyUint16, m_func, true);
+
+        IR::IntConstOpnd *slotIdOpnd = IR::IntConstOpnd::New(record->slotId - frameDisplayOffset, TyUint16, m_func);
+        InsertCompareBranch(indirOpnd, slotIdOpnd, Js::OpCode::BrLe_A, true, errorLabel, insertInstr);
+    }
+
+    if (record->table)
+    {
+        // Check the size of each of the slot arrays in the scope chain.
+        FOREACH_HASHTABLE_ENTRY(uint32, bucket, record->table)
+        {
+            uint32 slotId = bucket.element;
+            if (slotId != (uint32)-1 && slotId > Js::ScopeSlots::FirstSlotIndex)
+            {
+                if (errorLabel == nullptr)
+                {
+                    errorLabel = IR::LabelInstr::New(Js::OpCode::Label, m_func, true);
+                    continueLabel = IR::LabelInstr::New(Js::OpCode::Label, m_func);
+                }
+
+                IR::IndirOpnd * indirOpnd = IR::IndirOpnd::New(envOpnd, 
+                                                               bucket.value * sizeof(Js::Var), 
+                                                               TyVar, m_func, true);
+                IR::RegOpnd * slotArrayOpnd = IR::RegOpnd::New(TyVar, m_func);
+                InsertMove(slotArrayOpnd, indirOpnd, insertInstr);
+
+                indirOpnd = IR::IndirOpnd::New(slotArrayOpnd,
+                                               Js::ScopeSlots::EncodedSlotCountSlotIndex * sizeof(Js::Var),
+                                               TyUint32, m_func, true);
+                IR::IntConstOpnd * slotIdOpnd = IR::IntConstOpnd::New(slotId - Js::ScopeSlots::FirstSlotIndex,
+                                                                      TyUint32, m_func);
+                InsertCompareBranch(indirOpnd, slotIdOpnd, Js::OpCode::BrLe_A, true, errorLabel, insertInstr);
+            }
+        }
+        NEXT_HASHTABLE_ENTRY;
+    }
+
+    if (errorLabel)
+    {
+        InsertBranch(Js::OpCode::Br, continueLabel, insertInstr);
+
+        insertInstr->InsertBefore(errorLabel);
+        IR::Instr * instrHelper = IR::Instr::New(Js::OpCode::Call, m_func);
+        insertInstr->InsertBefore(instrHelper);
+        m_lowererMD.ChangeToHelperCall(instrHelper, IR::HelperOp_FatalInternalError);
+        insertInstr->InsertBefore(continueLabel);
+    }
+
+    m_lowererMD.ChangeToAssign(instr);
+
+    return instrPrev;
+}
+
+IR::Instr *
+Lowerer::LowerSlotArrayCheck(IR::Instr * instr)
+{
+    IR::Instr *instrPrev = instr->m_prev;
+    IR::Instr *insertInstr = instr->m_next;
+
+    IR::RegOpnd *slotArrayOpnd = instr->GetDst()->AsRegOpnd();
+    StackSym *stackSym = slotArrayOpnd->m_sym;
+
+    IR::IntConstOpnd *slotIdOpnd = instr->UnlinkSrc2()->AsIntConstOpnd();
+    uint32 slotId = (uint32)slotIdOpnd->GetValue();
+    Assert(slotId != (uint32)-1 && slotId >= Js::ScopeSlots::FirstSlotIndex);
+
+    if (slotId > Js::ScopeSlots::FirstSlotIndex)
+    {
+        if (m_func->DoStackFrameDisplay() && stackSym->m_id == m_func->GetLocalClosureSym()->m_id)
+        {
+            // The pointer we loaded points to the reserved/known address where the slot array can be boxed.
+            // Deref to get the real value.
+            IR::IndirOpnd * srcOpnd = IR::IndirOpnd::New(IR::RegOpnd::New(stackSym, TyVar, m_func), 0, TyVar, m_func);
+            IR::RegOpnd * dstOpnd = IR::RegOpnd::New(TyVar, m_func);
+            InsertMove(dstOpnd, srcOpnd, insertInstr);
+            stackSym = dstOpnd->m_sym;
+        }
+
+        IR::LabelInstr *errorLabel = IR::LabelInstr::New(Js::OpCode::Label, m_func, true);
+        IR::LabelInstr *continueLabel = IR::LabelInstr::New(Js::OpCode::Label, m_func);
+
+        IR::IndirOpnd * indirOpnd = IR::IndirOpnd::New(IR::RegOpnd::New(stackSym, TyVar, m_func),
+                                                       Js::ScopeSlots::EncodedSlotCountSlotIndex * sizeof(Js::Var),
+                                                       TyUint32, m_func, true);
+
+        slotIdOpnd->SetValue(slotId - Js::ScopeSlots::FirstSlotIndex);
+        InsertCompareBranch(indirOpnd, slotIdOpnd, Js::OpCode::BrGt_A, true, continueLabel, insertInstr);
+    
+        insertInstr->InsertBefore(errorLabel);
+        IR::Instr * instrHelper = IR::Instr::New(Js::OpCode::Call, m_func);
+        insertInstr->InsertBefore(instrHelper);
+        m_lowererMD.ChangeToHelperCall(instrHelper, IR::HelperOp_FatalInternalError);
+        insertInstr->InsertBefore(continueLabel);
+    }
+
+    m_lowererMD.ChangeToAssign(instr);
+
     return instrPrev;
 }
 

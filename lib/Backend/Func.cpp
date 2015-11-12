@@ -118,6 +118,8 @@ Func::Func(JitArenaAllocator *alloc, CodeGenWorkItem* workItem, const Js::Functi
     , constantAddressRegOpnd(alloc)
     , lastConstantAddressRegLoadInstr(nullptr)
     , m_totalJumpTableSizeInBytesForSwitchStatements(0)
+    , slotArrayCheckTable(nullptr)
+    , frameDisplayCheckTable(nullptr)
 {
     Assert(this->IsInlined() == !!runtimeData);
 
@@ -131,6 +133,10 @@ Func::Func(JitArenaAllocator *alloc, CodeGenWorkItem* workItem, const Js::Functi
     bool doStackClosure = m_jnFunction->DoStackClosure() && !PHASE_OFF(Js::FrameDisplayFastPathPhase, this);
     Assert(!doStackClosure || doStackNestedFunc);
     this->stackClosure = doStackClosure && this->IsTopFunc();
+    if (this->stackClosure)
+    {
+        m_workItem->GetEntryPoint()->SetHasJittedStackClosure();
+    }
     if (m_workItem->Type() == JsFunctionType)
     {
         if (m_jnFunction->GetDoBackendArgumentsOptimization() && !m_jnFunction->GetHasTry())
@@ -878,18 +884,88 @@ Func::GetLocalsPointer() const
 
 #endif
 
-void Func::InitStackClosureSyms()
+void Func::AddSlotArrayCheck(IR::SymOpnd *fieldOpnd)
 {
-    Assert(this->DoStackFrameDisplay());
+    if (PHASE_OFF(Js::ClosureRangeCheckPhase, this))
+    {
+        return;
+    }
+
+    Assert(IsTopFunc());
+    if (this->slotArrayCheckTable == nullptr)
+    {
+        this->slotArrayCheckTable = SlotArrayCheckTable::New(m_alloc, 4);
+    }
+
+    PropertySym *propertySym = fieldOpnd->m_sym->AsPropertySym();
+    uint32 slot = propertySym->m_propertyId;
+    uint32 *pSlotId = this->slotArrayCheckTable->FindOrInsert(slot, propertySym->m_stackSym->m_id);
+
+    if (pSlotId && (*pSlotId == (uint32)-1 || *pSlotId < slot))
+    {
+        *pSlotId = propertySym->m_propertyId;
+    }
+}
+
+void Func::AddFrameDisplayCheck(IR::SymOpnd *fieldOpnd, uint32 slotId)
+{
+    if (PHASE_OFF(Js::ClosureRangeCheckPhase, this))
+    {
+        return;
+    }
+
+    Assert(IsTopFunc());
+    if (this->frameDisplayCheckTable == nullptr)
+    {
+        this->frameDisplayCheckTable = FrameDisplayCheckTable::New(m_alloc, 4);
+    }
+
+    PropertySym *propertySym = fieldOpnd->m_sym->AsPropertySym();
+    FrameDisplayCheckRecord **record = this->frameDisplayCheckTable->FindOrInsertNew(propertySym->m_stackSym->m_id);
+    if (*record == nullptr)
+    {
+        *record = JitAnew(m_alloc, FrameDisplayCheckRecord);
+    }
+
+    uint32 frameDisplaySlot = propertySym->m_propertyId;
+    if ((*record)->table == nullptr || (*record)->slotId < frameDisplaySlot)
+    {
+        (*record)->slotId = frameDisplaySlot;
+    }
+
+    if (slotId != (uint32)-1)
+    {
+        if ((*record)->table == nullptr)
+        {
+            (*record)->table = SlotArrayCheckTable::New(m_alloc, 4);
+        }
+        uint32 *pSlotId = (*record)->table->FindOrInsert(slotId, frameDisplaySlot);
+        if (pSlotId && *pSlotId < slotId)
+        {
+            *pSlotId = slotId;
+        }
+    }
+}
+
+void Func::InitLocalClosureSyms()
+{
     Assert(this->m_localClosureSym == nullptr);
 
     // Allocate stack space for closure pointers. Do this only if we're jitting for stack closures, and
     // tell bailout that these are not byte code symbols so that we don't try to encode them in the bailout record,
     // as they don't have normal lifetimes.
-    Js::RegSlot regSlot = this->GetJnFunction()->GetStackScopeSlotsReg();
-    this->m_localClosureSym = StackSym::FindOrCreate(static_cast<SymID>(regSlot), (Js::RegSlot)-1, this);
-    regSlot = this->GetJnFunction()->GetStackFrameDisplayReg();
-    this->m_localFrameDisplaySym = StackSym::FindOrCreate(static_cast<SymID>(regSlot), (Js::RegSlot)-1, this);
+    Js::RegSlot regSlot = this->GetJnFunction()->GetLocalScopeSlotsReg();
+    Assert(regSlot != Js::Constants::NoRegister);
+    this->m_localClosureSym = 
+        StackSym::FindOrCreate(static_cast<SymID>(regSlot), 
+                               this->GetJnFunction()->DoStackFrameDisplay() && this->IsTopFunc() ? (Js::RegSlot)-1 : regSlot,
+                               this);
+    regSlot = this->GetJnFunction()->GetLocalFrameDisplayReg();
+    Assert(regSlot != Js::Constants::NoRegister);
+    this->m_localFrameDisplaySym = 
+        StackSym::FindOrCreate(static_cast<SymID>(regSlot), 
+                               this->GetJnFunction()->DoStackFrameDisplay() && this->IsTopFunc() ? (Js::RegSlot)-1 : regSlot, 
+                               this); 
 }
 
 bool Func::CanAllocInPreReservedHeapPageSegment ()
@@ -1105,12 +1181,6 @@ Func::EnsureLoopParamSym()
 {
     if (this->m_loopParamSym == nullptr)
     {
-        if (this->m_localClosureSym)
-        {
-            // In jitted loop body with stack closure, we need to access the loop param sym in the body of the function,
-            // so we need a non-temp. Just re-use the stack closure sym, which won't be used in the function body.
-            return this->m_localClosureSym;
-        }
         this->m_loopParamSym = StackSym::New(TyMachPtr, this);
     }
     return this->m_loopParamSym;

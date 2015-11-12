@@ -324,7 +324,7 @@ namespace Js
         static Var GetThisHelper(Var thisVar, TypeId typeId, int moduleID, ScriptContext *scriptContext);
         static Var GetThisFromModuleRoot(Var thisVar);
         static Var OP_GetThisScoped(FrameDisplay *pScope, Var defaultInstance, ScriptContext* scriptContext);
-        static Var OP_Ld_UnwrapWithObj(Var aValue);
+        static Var OP_UnwrapWithObj(Var aValue);
         static Var OP_GetInstanceScoped(FrameDisplay *pScope, PropertyId propertyId, Var rootObject, Var* result2, ScriptContext* scriptContext);
         static BOOL OP_InitPropertyScoped(FrameDisplay *pScope, PropertyId propertyId, Var newValue, Var defaultInstance, ScriptContext* scriptContext);
         static BOOL OP_InitFuncScoped(FrameDisplay *pScope, PropertyId propertyId, Var newValue, Var defaultInstance, ScriptContext* scriptContext);

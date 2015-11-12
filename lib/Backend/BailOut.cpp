@@ -1339,7 +1339,7 @@ BailOutRecord::BailOutHelper(Js::JavascriptCallStackLayout * layout, Js::ScriptF
             // It will live with the JavascriptGenerator object.
             //
             Js::Arguments generatorArgs = generator->GetArguments();
-            Js::InterpreterStackFrame::Setup setup(function, generatorArgs);
+            Js::InterpreterStackFrame::Setup setup(function, generatorArgs, isInlinee);
             size_t varAllocCount = setup.GetAllocationVarCount();
             size_t varSizeInBytes = varAllocCount * sizeof(Js::Var);
             DWORD_PTR stackAddr = reinterpret_cast<DWORD_PTR>(&generator); // as mentioned above, use any stack address from this frame to ensure correct debugging functionality
@@ -1364,7 +1364,7 @@ BailOutRecord::BailOutHelper(Js::JavascriptCallStackLayout * layout, Js::ScriptF
     }
     else
     {
-        Js::InterpreterStackFrame::Setup setup(function, args);
+        Js::InterpreterStackFrame::Setup setup(function, args, isInlinee);
         size_t varAllocCount = setup.GetAllocationVarCount();
         size_t varSizeInBytes = varAllocCount * sizeof(Js::Var);
 
@@ -1428,45 +1428,33 @@ BailOutRecord::BailOutHelper(Js::JavascriptCallStackLayout * layout, Js::ScriptF
         memset(newInstance->m_localSlots + constantCount, 0, varCount * sizeof(Js::Var));
     }
 
-    // If byte code was generated to do stack closures, restore closure pointers before the normal RestoreValues.
-    // If code was jitted for stack closures, we have to restore the pointers from known stack locations.
-    // (RestoreValues won't do it.) If stack closures were disabled for this function before we jitted,
-    // then the values on the stack are garbage, but if we need them then RestoreValues will overwrite with
-    // the correct values.
-    if (executeFunction->GetStackFrameDisplayReg() != Js::Constants::NoRegister)
+    Js::RegSlot localFrameDisplayReg = executeFunction->GetLocalFrameDisplayReg();
+    Js::RegSlot localScopeSlotsReg = executeFunction->GetLocalScopeSlotsReg();
+    
+    if (!isInlinee)
     {
-        Js::FrameDisplay *stackFrameDisplay;
-        if (isInlinee)
+        // If byte code was generated to do stack closures, restore closure pointers before the normal RestoreValues.
+        // If code was jitted for stack closures, we have to restore the pointers from known stack locations.
+        // (RestoreValues won't do it.) If stack closures were disabled for this function before we jitted,
+        // then the values on the stack are garbage, but if we need them then RestoreValues will overwrite with
+        // the correct values.
+        if (localFrameDisplayReg != Js::Constants::NoRegister)
         {
-            // No stack closure allocated in inlinee. Make sure the interpreter sees null so it will
-            // allocate on the heap if it sees NewStackFrameDisplay.
-            stackFrameDisplay = nullptr;
-        }
-        else
-        {
-            uintptr_t frameDisplayIndex = (uintptr_t)(
+            Js::FrameDisplay *localFrameDisplay;
+            uintptr_t frameDisplayIndex = (uintptr_t)( 
 #if _M_IX86 || _M_AMD64
                 executeFunction->GetInParamsCount() == 0 ?
                 Js::JavascriptFunctionArgIndex_StackFrameDisplayNoArg :
 #endif
                 Js::JavascriptFunctionArgIndex_StackFrameDisplay) - 2;
 
-            stackFrameDisplay = (Js::FrameDisplay*)layout->GetArgv()[frameDisplayIndex];
+            localFrameDisplay = (Js::FrameDisplay*)layout->GetArgv()[frameDisplayIndex];
+            newInstance->SetLocalFrameDisplay(localFrameDisplay);
         }
-        newInstance->SetLocalFrameDisplay(stackFrameDisplay);
-    }
 
-    if (executeFunction->GetStackScopeSlotsReg() != Js::Constants::NoRegister)
-    {
-        Js::Var *stackScopeSlots;
-        if (isInlinee)
+        if (localScopeSlotsReg != Js::Constants::NoRegister)
         {
-            // No stack closure allocated in inlinee. Make sure the interpreter sees null so it will
-            // allocate on the heap if it sees NewStackScopeSlots.
-            stackScopeSlots = nullptr;
-        }
-        else
-        {
+            Js::Var *localScopeSlots;
             uintptr_t scopeSlotsIndex = (uintptr_t)(
 #if _M_IX86 || _M_AMD64
                 executeFunction->GetInParamsCount() == 0 ?
@@ -1474,13 +1462,38 @@ BailOutRecord::BailOutHelper(Js::JavascriptCallStackLayout * layout, Js::ScriptF
 #endif
                 Js::JavascriptFunctionArgIndex_StackScopeSlots) - 2;
 
-            stackScopeSlots = (Js::Var*)layout->GetArgv()[scopeSlotsIndex];
+            localScopeSlots = (Js::Var*)layout->GetArgv()[scopeSlotsIndex];
+            newInstance->SetLocalScopeSlots(localScopeSlots);
         }
-        newInstance->SetLocalScopeSlots(stackScopeSlots);
     }
 
     // Restore bailout values
     bailOutRecord->RestoreValues(bailOutKind, layout, newInstance, functionScriptContext, false, registerSaves, bailOutReturnValue, pArgumentsObject, branchValue, returnAddress, useStartCall, argoutRestoreAddress);
+
+    // For functions that don't get the scope slot and frame display pointers back from the known stack locations
+    // (see above), get them back from the designated registers.
+    // In either case, clear the values from those registers, because the interpreter should not be able to access
+    // those values through the registers (only through its private fields).
+
+    if (localFrameDisplayReg != Js::Constants::NoRegister)
+    {
+        Js::FrameDisplay *frameDisplay = (Js::FrameDisplay*)newInstance->GetNonVarReg(localFrameDisplayReg);
+        if (frameDisplay)
+        {
+            newInstance->SetLocalFrameDisplay(frameDisplay);
+            newInstance->SetNonVarReg(localFrameDisplayReg, nullptr);
+        }
+    }
+
+    if (localScopeSlotsReg != Js::Constants::NoRegister)
+    {
+        Js::Var *slots = (Js::Var*)newInstance->GetNonVarReg(localScopeSlotsReg);
+        if (slots)
+        {
+            newInstance->SetLocalScopeSlots(slots);
+            newInstance->SetNonVarReg(localScopeSlotsReg, nullptr);
+        }
+    }
 
     // RestoreValues may call EnsureArguments and cause functions to be boxed.
     // Since the interpreter frame that hasn't started yet, StackScriptFunction::Box would not have replaced the function object

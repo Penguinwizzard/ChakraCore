@@ -64,7 +64,7 @@ HELPERCALL(Op_ToSpreadedFunctionArgument, Js::JavascriptOperators::OP_LdCustomSp
 HELPERCALL(Op_ConvObject, Js::JavascriptOperators::ToObject, AttrCanThrow)
 HELPERCALL(Op_NewWithObject, Js::JavascriptOperators::ToWithObject, AttrCanThrow)
 HELPERCALL(SetComputedNameVar, Js::JavascriptOperators::OP_SetComputedNameVar, 0)
-HELPERCALL(Op_LdUnwrapWithObj, Js::JavascriptOperators::OP_Ld_UnwrapWithObj, 0)
+HELPERCALL(Op_UnwrapWithObj, Js::JavascriptOperators::OP_UnwrapWithObj, 0)
 HELPERCALL(Op_ConvNumber_Full, Js::JavascriptOperators::ToNumber, AttrCanThrow)
 HELPERCALL(Op_ConvNumberInPlace, Js::JavascriptOperators::ToNumberInPlace, AttrCanThrow)
 HELPERCALL(Op_ConvNumber_Helper, Js::JavascriptConversion::ToNumber_Helper, 0)
@@ -344,6 +344,7 @@ HELPERCALL(Op_RuntimeTypeError, Js::JavascriptExceptionOperators::OP_RuntimeType
 HELPERCALL(Op_RuntimeRangeError, Js::JavascriptExceptionOperators::OP_RuntimeRangeError, AttrCanThrow)
 HELPERCALL(Op_RuntimeReferenceError, Js::JavascriptExceptionOperators::OP_RuntimeReferenceError, AttrCanThrow)
 HELPERCALL(Op_OutOfMemoryError, Js::Throw::OutOfMemory, AttrCanThrow)
+HELPERCALL(Op_FatalInternalError, Js::Throw::FatalInternalError, AttrCanThrow)
 
 HELPERCALL(Op_InvokePut, Js::JavascriptOperators::OP_InvokePut, 0)
 #if ENABLE_REGEX_CONFIG_OPTIONS

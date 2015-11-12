@@ -145,14 +145,23 @@ private:
     void                BuildReg2Int1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot dstRegSlot, Js::RegSlot srcRegSlot, int32 value);
     void                BuildElementC(Js::OpCode newOpcode, uint32 offset, Js::RegSlot fieldRegSlot, Js::RegSlot regSlot,
                             Js::PropertyIdIndexType propertyIdIndex);
+    void                BuildElementScopedC(Js::OpCode newOpcode, uint32 offset, Js::RegSlot regSlot,
+                            Js::PropertyIdIndexType propertyIdIndex);
     void                BuildElementSlot(Js::OpCode newOpcode, uint32 offset, Js::RegSlot fieldRegSlot, Js::RegSlot regSlot,
                             int32 slotId, Js::ProfileId profileId);
+    void                BuildElementSlotI1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot regSlot,
+                            int32 slotId, Js::ProfileId profileId);
+    void                BuildElementSlotI2(Js::OpCode newOpcode, uint32 offset, Js::RegSlot regSlot,
+                            int32 slotId1, int32 slotId2, Js::ProfileId profileId);
     void                BuildArgIn0(uint32 offset, Js::RegSlot R0);
     void                BuildArg(Js::OpCode newOpcode, uint32 offset, Js::ArgSlot argument, Js::RegSlot srcRegSlot);
     void                BuildArgIn(uint32 offset, Js::RegSlot dstRegSlot, uint16 argument);
     void                BuildArgInRest();
+    void                BuildElementScopedP(Js::OpCode newOpcode, uint32 offset, Js::RegSlot regSlot, Js::CacheId inlineCacheIndex);
     void                BuildElementCP(Js::OpCode newOpcode, uint32 offset, Js::RegSlot instance, Js::RegSlot regSlot, Js::CacheId inlineCacheIndex);
     void                BuildElementC2(Js::OpCode newOpcode, uint32 offset, Js::RegSlot instanceSlot, Js::RegSlot instance2Slot,
+                            Js::RegSlot regSlot, Js::PropertyIdIndexType propertyIdIndex);
+    void                BuildElementScopedC2(Js::OpCode newOpcode, uint32 offset, Js::RegSlot instance2Slot,
                             Js::RegSlot regSlot, Js::PropertyIdIndexType propertyIdIndex);
     void                BuildElementU(Js::OpCode newOpcode, uint32 offset, Js::RegSlot instance, Js::PropertyIdIndexType propertyIdIndex);
     void                BuildElementI(Js::OpCode newOpcode, uint32 offset, Js::RegSlot baseRegSlot, Js::RegSlot indexRegSlot,
@@ -203,6 +212,8 @@ private:
     uint                AddStatementBoundary(uint statementIndex, uint offset);
     void                CheckBuiltIn(PropertySym * propertySym, Js::BuiltinFunction *puBuiltInIndex);
     bool                IsFloatFunctionCallsite(Js::BuiltinFunction index, size_t argc);
+    IR::Instr *         BuildProfiledFieldLoad(Js::OpCode loadOp, IR::RegOpnd *dstOpnd, IR::SymOpnd *srcOpnd, Js::CacheId inlineCacheIndex, bool *pUnprofiled);
+    IR::Instr *         BuildProfiledSlotLoad(Js::OpCode loadOp, IR::RegOpnd *dstOpnd, IR::SymOpnd *srcOpnd, Js::ProfileId profileId, bool *pUnprofiled);
 
     SymID               GetMappedTemp(Js::RegSlot reg)
     {
@@ -252,6 +263,14 @@ private:
     {
         return reg > 0 && reg < this->m_func->GetJnFunction()->GetConstantCount();
     }
+
+    Js::RegSlot         GetEnvReg() const;
+    Js::RegSlot         GetEnvRegForEvalCode() const;
+    Js::RegSlot         GetEnvRegForInnerFrameDisplay() const;
+    void                AddEnvOpndForInnerFrameDisplay(IR::Instr *instr, uint offset);
+    bool                DoSlotArrayCheck(IR::SymOpnd *fieldOpnd, bool doDynamicCheck);
+    void                EmitClosureRangeChecks();
+    void                DoClosureRegCheck(Js::RegSlot reg);
 
     void                GenerateLoopBodySlotAccesses(uint offset);
     void                GenerateLoopBodyStSlots(SymID loopParamSymId, uint offset);

@@ -1042,6 +1042,7 @@ public:
                 DEFAULT_LAYOUT_WITH_ONEBYTE(Reg5);
                 DEFAULT_LAYOUT_WITH_ONEBYTE(Reg3C);
                 DEFAULT_LAYOUT_WITH_ONEBYTE_AND_PROFILED(Arg);
+                DEFAULT_LAYOUT_WITH_ONEBYTE(ArgNoSrc);
                 DEFAULT_LAYOUT(Br);
 #ifdef BYTECODE_BRANCH_ISLAND
                 DEFAULT_LAYOUT(BrLong);
@@ -1058,6 +1059,8 @@ public:
                 DEFAULT_LAYOUT_WITH_ONEBYTE_AND_PROFILED(ElementI);
                 DEFAULT_LAYOUT_WITH_ONEBYTE(ElementUnsigned1);
                 DEFAULT_LAYOUT_WITH_ONEBYTE_AND_PROFILED(ElementSlot);
+                DEFAULT_LAYOUT_WITH_ONEBYTE_AND_PROFILED(ElementSlotI1);
+                DEFAULT_LAYOUT_WITH_ONEBYTE_AND_PROFILED(ElementSlotI2);
                 DEFAULT_LAYOUT(W1);
                 DEFAULT_LAYOUT(Reg1Int2);
                 DEFAULT_LAYOUT_WITH_ONEBYTE_AND_PROFILED(Reg1Unsigned1);
@@ -1071,6 +1074,7 @@ public:
                 DEFAULT_LAYOUT_WITH_ONEBYTE(ElementU);
                 DEFAULT_LAYOUT_WITH_ONEBYTE(ElementRootU);
                 DEFAULT_LAYOUT(BrProperty);
+                DEFAULT_LAYOUT(BrEnvProperty);
                 DEFAULT_LAYOUT_WITH_ONEBYTE(ElementC2);
                 DEFAULT_LAYOUT_WITH_ONEBYTE(ElementC);
 
@@ -1079,6 +1083,14 @@ public:
                 case OpLayoutType::Auxiliary:
                     switch (op)
                     {
+                        case OpCode::InitCachedFuncs:
+                        {
+                            auto layout = reader.Auxiliary();
+                            AuxRecord record = { sakFuncInfoArray, layout->Offset };
+                            auxRecords.Prepend(record);
+                            saveBlock();
+                            break;
+                        }
                         case OpCode::NewScObjectLiteral:
                         {
                             auto layout = reader.Auxiliary();
@@ -1174,14 +1186,6 @@ public:
                         {
                             auto layout = reader.Reg2Aux();
                             AuxRecord record = { sakPropertyIdArrayForCachedScope, layout->Offset };
-                            auxRecords.Prepend(record);
-                            saveBlock();
-                            break;
-                        }
-                        case OpCode::InitCachedFuncs:
-                        {
-                            auto layout = reader.Reg2Aux();
-                            AuxRecord record = { sakFuncInfoArray, layout->Offset };
                             auxRecords.Prepend(record);
                             saveBlock();
                             break;

@@ -174,7 +174,6 @@ private:
     IR::Instr *     LowerStSlotBoxTemp(IR::Instr *instr);
 #endif
     IR::Instr *     LowerLdSlot(IR::Instr *instr);
-    IR::Instr *     LowerLdSlotChkUndecl(IR::Instr *instrLdSlot);
     IR::Instr *     LowerChkUndecl(IR::Instr *instr);
     void            GenUndeclChk(IR::Instr *insertInsert, IR::Opnd *opnd);
     IR::Instr *     LowerStLen(IR::Instr *instr);
@@ -511,7 +510,7 @@ private:
     IR::Instr*      LowerCallIDynamicSpread(IR::Instr * callInstr, ushort callFlags);
 
     void            LowerNewScopeSlots(IR::Instr * instr, bool doStackSlots);
-    void            LowerLdFrameDisplay(IR::Instr * instr, bool isStrict, bool doStackDisplay);
+    void            LowerLdFrameDisplay(IR::Instr * instr, bool doStackDisplay);
 
     IR::AddrOpnd *  CreateFunctionBodyOpnd(Func *const func) const;
     IR::AddrOpnd *  CreateFunctionBodyOpnd(Js::FunctionBody *const functionBody) const;
@@ -532,6 +531,10 @@ private:
     IR::Opnd *      LoadSlotArrayWithCachedProtoType(IR::Instr * instrInsert, IR::PropertySymOpnd *propertySymOpnd);
     IR::Instr *     LowerLdAsmJsEnv(IR::Instr *instr);
     IR::Instr *     LowerLdEnv(IR::Instr *instr);
+    IR::Instr *     LowerFrameDisplayCheck(IR::Instr * instr);
+    IR::Instr *     LowerSlotArrayCheck(IR::Instr * instr);
+    void            InsertSlotArrayCheck(IR::Instr * instr, StackSym * dstSym, uint32 slotId);
+    void            InsertFrameDisplayCheck(IR::Instr * instr, StackSym * dstSym, FrameDisplayCheckRecord * record);
 
     IR::RegOpnd *   LoadIndexFromLikelyFloat(IR::RegOpnd *indexOpnd, const bool skipNegativeCheck, IR::LabelInstr *const notTaggedIntLabel, IR::LabelInstr *const negativeLabel, IR::Instr *const insertBeforeInstr);
 

@@ -89,6 +89,8 @@ public:
     Js::ArgSlot inArgsCount; // number of in args (including 'this')
     Js::RegSlot outArgsMaxDepth; // max depth of out args stack
     Js::RegSlot outArgsCurrentExpr; // max number of out args accumulated in the current nested expression
+    uint        innerScopeCount;
+    uint        currentInnerScopeIndex;
 #if DBG
     uint32 outArgsDepth; // number of calls nested in a expression
 #endif
@@ -108,7 +110,7 @@ public:
     Js::RegSlot frameSlotsRegister; // location, if any, of the heap-allocated local frame
     Js::RegSlot frameDisplayRegister; // location, if any, of the display of nested frames
     Js::RegSlot funcObjRegister;
-    Js::RegSlot stackClosureReg;
+    Js::RegSlot localClosureReg;
     Js::RegSlot yieldRegister;
     Js::RegSlot firstTmpReg;
     Js::RegSlot curTmpReg;
@@ -235,6 +237,11 @@ public:
     {
         return constRegsCount + varRegsCount;
     }
+
+    uint InnerScopeCount() const { return innerScopeCount; }
+    uint CurrentInnerScopeIndex() const { return currentInnerScopeIndex; }
+    uint AcquireInnerScopeIndex();
+    void ReleaseInnerScopeIndex();
 
     bool GetApplyEnclosesArgs() const { return applyEnclosesArgs; }
     void SetApplyEnclosesArgs(bool b) { applyEnclosesArgs=b; }
@@ -398,7 +405,7 @@ public:
         hasDeferredChild = true;
     }
 
-    Js::FunctionBody* GetParsedFunctionBody()
+    Js::FunctionBody* GetParsedFunctionBody() const
     {
         AssertMsg(this->byteCodeFunction->IsFunctionParsed(), "Function must be parsed in order to call this method");
         Assert(!IsDeferred());
@@ -546,27 +553,18 @@ public:
         return this->yieldRegister;
     }
 
-    Js::RegSlot AssignStackClosureRegs()
+    Js::RegSlot GetLocalScopeSlotsReg()
     {
-        if (this->stackClosureReg == Js::Constants::NoRegister)
-        {
-            this->stackClosureReg = NextVarRegister();
-            this->GetParsedFunctionBody()->SetStackClosureRegister(this->stackClosureReg);
-            NextVarRegister();
-        }
-
-        return this->stackClosureReg;
+        return this->localClosureReg;
     }
 
-    Js::RegSlot GetStackScopeSlotsReg()
+    Js::RegSlot GetLocalFrameDisplayReg()
     {
-        return this->stackClosureReg;
+        return this->localClosureReg + 1;
     }
 
-    Js::RegSlot GetStackFrameDisplayReg()
-    {
-        return this->stackClosureReg + 1;
-    }
+    Js::RegSlot FirstInnerScopeReg() const;
+    void SetFirstInnerScopeReg(Js::RegSlot reg);
 
     void StartRecordingOutArgs(unsigned int argCount)
     {

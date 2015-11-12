@@ -258,6 +258,7 @@ namespace Js
         void ArgIn0(RegSlot arg);
         template <bool isVar>
         void ArgOut(ArgSlot arg, RegSlot reg, ProfileId callSiteId);
+        void ArgOutEnv(ArgSlot arg);
 #ifdef BYTECODE_BRANCH_ISLAND
         void BrLong(OpCode op, ByteCodeLabel labelID);
 #endif
@@ -267,6 +268,7 @@ namespace Js
         void BrS(OpCode op, ByteCodeLabel labelID, byte val);
         void BrReg2(OpCode op, ByteCodeLabel labelID, RegSlot R1, RegSlot R2);
         void BrProperty(OpCode op, ByteCodeLabel labelID, RegSlot R1, PropertyIdIndexType propertyIdIndex);
+        void BrEnvProperty(OpCode op, ByteCodeLabel labelID, PropertyIdIndexType propertyIdIndex, int32 slotIndex);
         void StartCall(OpCode op, ArgSlot ArgCount);
         void CallI(OpCode op, RegSlot returnValueRegister, RegSlot functionRegister, ArgSlot givenArgCount, ProfileId callSiteId, CallFlags callFlags = CallFlags_None);
         void CallIExtended(OpCode op, RegSlot returnValueRegister, RegSlot functionRegister, ArgSlot givenArgCount, CallIExtendedOptions options, const void *buffer, uint byteCount, ProfileId callSiteId, CallFlags callFlags = CallFlags_None);
@@ -274,18 +276,26 @@ namespace Js
         void Element(OpCode op, RegSlot value, RegSlot instance, RegSlot element, bool instanceAtReturnRegOK = false);
         void ElementUnsigned1(OpCode op, RegSlot value, RegSlot instance, uint32 element);
         void Property(OpCode op, RegSlot Value, RegSlot Instance, PropertyIdIndexType propertyIdIndex);
+        void ScopedProperty(OpCode op, RegSlot Value, PropertyIdIndexType propertyIdIndex);
         void Slot(OpCode op, RegSlot value, RegSlot instance, int32 slotId);
         void Slot(OpCode op, RegSlot value, RegSlot instance, int32 slotId, ProfileId profileId);
+        void SlotI1(OpCode op, RegSlot value, int32 slotId1);
+        void SlotI1(OpCode op, RegSlot value, int32 slotId1, ProfileId profileId);
+        void SlotI2(OpCode op, RegSlot value, int32 slotId1, int32 slotId2);
+        void SlotI2(OpCode op, RegSlot value, int32 slotId1, int32 slotId2, ProfileId profileId);
         void ElementU(OpCode op, RegSlot instance, PropertyIdIndexType propertyIdIndex);
+        void ElementScopedU(OpCode op, PropertyIdIndexType propertyIdIndex);
         void ElementRootU(OpCode op, PropertyIdIndexType propertyIdIndex);
+        void ElementScopedP(OpCode op, RegSlot value, uint cacheId);
         void PatchableRootProperty(OpCode op, RegSlot value, uint cacheId, bool isLoadMethod, bool isStore, bool registerCacheIdForCall = true);
         void PatchableProperty(OpCode op, RegSlot value, RegSlot instance, uint cacheId, bool isCtor = false, bool registerCacheIdForCall = true);
         void PatchablePropertyWithThisPtr(OpCode op, RegSlot value, RegSlot instance, RegSlot thisInstance, uint cacheId, bool isCtor = false, bool registerCacheIdForCall = true);
-        void Property2(OpCode op, RegSlot Value, RegSlot Instance, PropertyIdIndexType propertyIdIndex, RegSlot R2);
+        void ScopedProperty2(OpCode op, RegSlot Value, PropertyIdIndexType propertyIdIndex, RegSlot R2);
         void W1(OpCode op, unsigned short C1);
         void Reg1Int2(OpCode op, RegSlot R0, int C1, int C2);
         void Reg2Int1(OpCode op, RegSlot R0, RegSlot R1, int C1);
         void Unsigned1(OpCode op, uint C1);
+        void Num3(OpCode op, RegSlot C0, RegSlot C1, RegSlot C2);
 
         template <typename SizePolicy> bool TryWriteReg1(OpCode op, RegSlot R0);
         template <typename SizePolicy> bool TryWriteReg2(OpCode op, RegSlot R0, RegSlot R1);
@@ -298,6 +308,7 @@ namespace Js
         template <typename SizePolicy> bool TryWriteReg5(OpCode op, RegSlot R0, RegSlot R1, RegSlot R2, RegSlot R3, RegSlot R4);
         template <typename SizePolicy> bool TryWriteUnsigned1(OpCode op, uint C1);
         template <typename SizePolicy> bool TryWriteArg(OpCode op, ArgSlot arg, RegSlot reg);
+        template <typename SizePolicy> bool TryWriteArgNoSrc(OpCode op, ArgSlot arg);
         template <typename SizePolicy> bool TryWriteBrReg1(OpCode op, ByteCodeLabel labelID, RegSlot R1);
         template <typename SizePolicy> bool TryWriteBrReg2(OpCode op, ByteCodeLabel labelID, RegSlot R1, RegSlot R2);
         template <typename SizePolicy> bool TryWriteCallI(OpCode op, RegSlot returnValueRegister, RegSlot functionRegister, ArgSlot givenArgCount);
@@ -311,11 +322,17 @@ namespace Js
         template <typename SizePolicy> bool TryWriteElementI(OpCode op, RegSlot Value, RegSlot Instance, RegSlot Element);
         template <typename SizePolicy> bool TryWriteElementUnsigned1(OpCode op, RegSlot Value, RegSlot Instance, uint32 Element);
         template <typename SizePolicy> bool TryWriteElementC(OpCode op, RegSlot value, RegSlot instance, PropertyIdIndexType propertyIdIndex);
+        template <typename SizePolicy> bool TryWriteElementScopedC(OpCode op, RegSlot value, PropertyIdIndexType propertyIdIndex);
         template <typename SizePolicy> bool TryWriteElementSlot(OpCode op, RegSlot value, RegSlot instance, int32 slotId);
+        template <typename SizePolicy> bool TryWriteElementSlotI1(OpCode op, RegSlot value, int32 slotId);
+        template <typename SizePolicy> bool TryWriteElementSlotI2(OpCode op, RegSlot value, int32 slotId1, int32 slotId2);
         template <typename SizePolicy> bool TryWriteElementU(OpCode op, RegSlot instance, PropertyIdIndexType index);
+        template <typename SizePolicy> bool TryWriteElementScopedU(OpCode op, PropertyIdIndexType index);
         template <typename SizePolicy> bool TryWriteElementRootU(OpCode op, PropertyIdIndexType index);
         template <typename SizePolicy> bool TryWriteElementRootCP(OpCode op, RegSlot value, uint cacheId, bool isLoadMethod, bool isStore);
+        template <typename SizePolicy> bool TryWriteElementScopedP(OpCode op, RegSlot value, CacheId cacheId);
         template <typename SizePolicy> bool TryWriteElementCP(OpCode op, RegSlot value, RegSlot instance, CacheId cacheId);
+        template <typename SizePolicy> bool TryWriteElementScopedC2(OpCode op, RegSlot value, PropertyIdIndexType propertyIdIndex, RegSlot instance2);
         template <typename SizePolicy> bool TryWriteElementC2(OpCode op, RegSlot value, RegSlot instance, PropertyIdIndexType propertyIdIndex, RegSlot instance2);
         template <typename SizePolicy> bool TryWriteClass(OpCode op, RegSlot constructor, RegSlot extends);
         template <typename SizePolicy> bool TryWriteReg1Unsigned1(OpCode op, RegSlot R0, uint C1);
@@ -331,7 +348,8 @@ namespace Js
         void Reg1NoComsumeReg(OpCode op, RegSlot R0);
 
         void InitClass(RegSlot constructor, RegSlot extends = Js::Constants::NoRegister);
-        void NewFunction(RegSlot destinationRegister, uint index, RegSlot environmentRegister, bool isGenerator);
+        void NewFunction(RegSlot destinationRegister, uint index, bool isGenerator);
+        void NewInnerFunction(RegSlot destinationRegister, uint index, RegSlot environmentRegister, bool isGenerator);
         ByteCodeLabel DefineLabel();
         void MarkLabel(ByteCodeLabel labelID);
         void StartStatement(ParseNode* node, uint32 tmpRegCount);

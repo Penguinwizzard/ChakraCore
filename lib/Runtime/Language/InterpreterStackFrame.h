@@ -33,8 +33,8 @@ namespace Js
         class Setup
         {
         public:
-            Setup(ScriptFunction * function, Arguments& args);
-            Setup(ScriptFunction * function, Var * inParams, int inSlotsCount);
+            Setup(ScriptFunction * function, Arguments& args, bool inlinee = false);
+            Setup(ScriptFunction * function, Var * inParams, int inSlotsCount, bool inlinee = false);
             size_t GetAllocationVarCount() const { return varAllocCount; }
 
             InterpreterStackFrame * AllocateAndInitialize(bool doProfile, bool * releaseAlloc);
@@ -63,6 +63,7 @@ namespace Js
             uint varAllocCount;
             uint inlineCacheCount;
             Js::CallFlags callFlags;
+            bool bailedOutOfInlinee;
         };
     private:
         ByteCodeReader m_reader;        // Reader for current function
@@ -151,6 +152,9 @@ namespace Js
         void PushOut(Var aValue);
         void PopOut(ArgSlot argCount);
 
+        FrameDisplay * GetLocalFrameDisplay() const;
+        FrameDisplay * GetFrameDisplayForNestedFunc() const;
+
         void ValidateRegValue(Var value, bool allowStackVar = false, bool allowStackVarOnDisabledStackNestedFunc = true) const;
         void ValidateSetRegValue(Var value, bool allowStackVar = false, bool allowStackVarOnDisabledStackNestedFunc = true) const;
         template <typename RegSlotType> Var GetReg(RegSlotType localRegisterID) const;
@@ -195,6 +199,12 @@ namespace Js
         void OrFlags(UINT16 addTo) { m_flags |= addTo; }
         bool IsInCatchOrFinallyBlock();
         static bool IsDelayDynamicInterpreterThunk(void* entryPoint);
+
+        Var LdEnv() const;
+        void SetEnv(FrameDisplay *frameDisplay);
+        Var * NewScopeSlots(unsigned int size, ScriptContext *scriptContext, Var scope);
+        Var * NewScopeSlots();
+        FrameDisplay * NewFrameDisplay(void *argHead, void *argEnv);
 
         Var CreateHeapArguments(ScriptContext* scriptContext);
 
@@ -287,12 +297,14 @@ namespace Js
         void ResetOut();
 
         Var OP_ArgIn0();
+        template <class T> void OP_ArgOut_Env(const unaligned T* playout);
         template <class T> void OP_ArgOut_A(const unaligned T* playout);
         template <class T> void OP_ProfiledArgOut_A(const unaligned T * playout);
 #if DBG
         template <class T> void OP_ArgOut_ANonVar(const unaligned T* playout);
 #endif
-
+        FrameDisplay * GetEnvForEvalCode();
+        
         BOOL OP_BrFalse_A(Var aValue, ScriptContext* scriptContext);
         BOOL OP_BrTrue_A(Var aValue, ScriptContext* scriptContext);
         BOOL OP_BrNotNull_A(Var aValue);
@@ -300,6 +312,7 @@ namespace Js
         BOOL OP_BrNotUndecl_A(Var aValue);
         BOOL OP_BrOnHasProperty(Var argInstance, uint propertyIdIndex, ScriptContext* scriptContext);
         BOOL OP_BrOnNoProperty(Var argInstance, uint propertyIdIndex, ScriptContext* scriptContext);
+        BOOL OP_BrOnNoEnvProperty(Var envInstance, int32 slotIndex, uint propertyIdIndex, ScriptContext* scriptContext);
         BOOL OP_BrOnClassConstructor(Var aValue);
 
         RecyclableObject * OP_CallGetFunc(Var target);
@@ -348,7 +361,7 @@ namespace Js
         template <class T> void OP_GetProperty(unaligned T* playout);
         template <class T> void OP_GetSuperProperty(unaligned T* playout);
         template <class T> void OP_GetPropertyForTypeOf(unaligned T* playout);
-        template <class T> void OP_GetProperty_NoFastPath(unaligned T* playout);
+        template <class T> void OP_GetProperty_NoFastPath(Var instance, unaligned T* playout);
         template <class T> void OP_ProfiledGetProperty(unaligned T* playout);
         template <class T> void OP_ProfiledGetSuperProperty(unaligned T* playout);
         template <class T> void OP_ProfiledGetPropertyForTypeOf(unaligned T* playout);
@@ -359,9 +372,9 @@ namespace Js
         template <class T> void OP_GetMethodProperty(unaligned T* playout);
         template <class T> void OP_GetMethodProperty_NoFastPath(unaligned T* playout);
         template <class T> void OP_ProfiledGetMethodProperty(unaligned T* playout);
-        template <typename T> void OP_GetPropertyScoped(const unaligned OpLayoutT_ElementCP<T>* playout);
-        template <typename T> void OP_GetPropertyForTypeOfScoped(const unaligned OpLayoutT_ElementCP<T>* playout);
-        template <typename T> void OP_GetPropertyScoped_NoFastPath(const unaligned OpLayoutT_ElementCP<T>* playout);
+        template <typename T> void OP_GetPropertyScoped(const unaligned OpLayoutT_ElementScopedP<T>* playout);
+        template <typename T> void OP_GetPropertyForTypeOfScoped(const unaligned OpLayoutT_ElementScopedP<T>* playout);
+        template <typename T> void OP_GetPropertyScoped_NoFastPath(const unaligned OpLayoutT_ElementScopedP<T>* playout);
         template <class T> void OP_GetMethodPropertyScoped(unaligned T* playout);
         template <class T> void OP_GetMethodPropertyScoped_NoFastPath(unaligned T* playout);
 
@@ -475,31 +488,41 @@ namespace Js
         template <class T> inline void OP_InitClassMemberSet(const unaligned T * playout);
         template <class T> inline void OP_InitClassMemberGetComputedName(const unaligned T * playout);
         template <class T> inline void OP_InitClassMemberSetComputedName(const unaligned T * playout);
-        inline Var OP_LdEnv();
         template<typename T> uint32 LogSizeOf();
         template <typename T2> inline void OP_LdArr(  uint32 index, RegSlot value  );
         template <class T> inline void OP_LdArrFunc(const unaligned T* playout);
         template <class T> inline void OP_ReturnDb(const unaligned T* playout);
         template<typename T> T GetArrayViewOverflowVal();
         template <typename T2> inline void OP_StArr( uint32 index, RegSlot value );
+        template <class T> inline Var OP_LdAsmJsSlot(Var instance, const unaligned T* playout );
         template <class T, typename T2> inline void OP_StSlotPrimitive(const unaligned T* playout);
         template <class T, typename T2> inline void OP_LdSlotPrimitive( const unaligned T* playout );
         template <class T> inline void OP_LdArrGeneric   ( const unaligned T* playout );
         template <class T> inline void OP_LdArrConstIndex( const unaligned T* playout );
         template <class T> inline void OP_StArrGeneric   ( const unaligned T* playout );
         template <class T> inline void OP_StArrConstIndex( const unaligned T* playout );
+        inline Var OP_LdSlot(Var instance, int32 slotIndex);
+        inline Var OP_LdObjSlot(Var instance, int32 slotIndex);
+        inline Var OP_LdFrameDisplaySlot(Var instance, int32 slotIndex);
         template <class T> inline Var OP_LdSlot(Var instance, const unaligned T* playout);
         template <class T> inline Var OP_ProfiledLdSlot(Var instance, const unaligned T* playout);
-        template <class T> inline Var OP_LdSlotChkUndecl(Var instance, const unaligned T* playout);
-        template <class T> inline Var OP_ProfiledLdSlotChkUndecl(Var instance, const unaligned T* playout);
+        template <class T> inline Var OP_LdInnerSlot(Var instance, const unaligned T* playout);
+        template <class T> inline Var OP_ProfiledLdInnerSlot(Var instance, const unaligned T* playout);
+        template <class T> inline Var OP_LdEnvSlot(Var instance, const unaligned T* playout);
+        template <class T> inline Var OP_ProfiledLdEnvSlot(Var instance, const unaligned T* playout);
+        template <class T> inline Var OP_LdEnvObj(Var instance, const unaligned T* playout);
         template <class T> inline Var OP_LdObjSlot(Var instance, const unaligned T* playout);
         template <class T> inline Var OP_ProfiledLdObjSlot(Var instance, const unaligned T* playout);
-        template <class T> inline Var OP_LdObjSlotChkUndecl(Var instance, const unaligned T* playout);
-        template <class T> inline Var OP_ProfiledLdObjSlotChkUndecl(Var instance, const unaligned T* playout);
+        template <class T> inline Var OP_LdEnvObjSlot(Var instance, const unaligned T* playout);
+        template <class T> inline Var OP_ProfiledLdEnvObjSlot(Var instance, const unaligned T* playout);
         inline void OP_StSlot(Var instance, int32 slotIndex, Var value);
         inline void OP_StSlotChkUndecl(Var instance, int32 slotIndex, Var value);
+        inline void OP_StEnvSlot(Var instance, int32 slotIndex1, int32 slotIndex2, Var value);
+        inline void OP_StEnvSlotChkUndecl(Var instance, int32 slotIndex1, int32 slotIndex2, Var value);
         inline void OP_StObjSlot(Var instance, int32 slotIndex, Var value);
         inline void OP_StObjSlotChkUndecl(Var instance, int32 slotIndex, Var value);
+        inline void OP_StEnvObjSlot(Var instance, int32 slotIndex1, int32 slotIndex2, Var value);
+        inline void OP_StEnvObjSlotChkUndecl(Var instance, int32 slotIndex1, int32 slotIndex2, Var value);
         inline void* OP_LdArgCnt();
         inline Var OP_LdHeapArguments(Var frameObj, Var argsArray, ScriptContext* scriptContext);
         inline Var OP_LdLetHeapArguments(Var frameObj, Var argsArray, ScriptContext* scriptContext);
@@ -536,7 +559,7 @@ namespace Js
         void OP_NewScObject_A(const unaligned OpLayoutAuxiliary * playout) { return OP_NewScObject_A_Impl(playout); }
         void OP_InitCachedScope(const unaligned OpLayoutReg2Aux * playout);
         void OP_InitLetCachedScope(const unaligned OpLayoutReg2Aux * playout);
-        void OP_InitCachedFuncs(const unaligned OpLayoutReg2Aux * playout);
+        void OP_InitCachedFuncs(const unaligned OpLayoutAuxiliary * playout);
         Var OP_GetCachedFunc(Var instance, int32 index);
         void OP_CommitScope(const unaligned OpLayoutAuxiliary * playout);
         void OP_CommitScopeHelper(const unaligned OpLayoutAuxiliary *playout, const PropertyIdArray *propIds);
@@ -556,7 +579,7 @@ namespace Js
         inline Var OP_ScopedLdSuper(ScriptContext * scriptContext);
         inline Var OP_ScopedLdSuperCtor(ScriptContext * scriptContext);
         template <typename T> void OP_LdElementUndefined(const unaligned OpLayoutT_ElementU<T>* playout);
-        template <typename T> void OP_LdElementUndefinedScoped(const unaligned OpLayoutT_ElementU<T>* playout);
+        template <typename T> void OP_LdElementUndefinedScoped(const unaligned OpLayoutT_ElementScopedU<T>* playout);
         void OP_SpreadArrayLiteral(const unaligned OpLayoutReg2Aux * playout);
         template <LayoutSize layoutSize,bool profiled> const byte * OP_ProfiledLoopStart(const byte *ip);
         template <LayoutSize layoutSize,bool profiled> const byte * OP_ProfiledLoopEnd(const byte *ip);
@@ -564,20 +587,23 @@ namespace Js
         template <typename T> void OP_ApplyArgs(const unaligned OpLayoutT_Reg5<T> * playout);
         template <class T> void OP_EmitTmpRegCount(const unaligned OpLayoutT_Reg1<T> * ip);
 
-        template<bool strict> FrameDisplay * OP_NewStackFrameDisplay(void *argHead, void *argEnv);
-        template<bool strict> FrameDisplay * OP_NewStackFrameDisplayNoParent(void *argHead);
-        FrameDisplay * OP_LdLocalFrameDisplay();
-        Var * OP_NewStackScopeSlots();
-        Var * OP_LdLocalScopeSlots();
+        void  OP_NewInnerScopeSlots(RegSlot index, uint count, int scopeIndex, ScriptContext *scriptContext, FunctionBody *functionBody);
+        FrameDisplay * OP_LdFrameDisplay(void *argHead, void *argEnv, ScriptContext *scriptContext);
+        FrameDisplay * OP_LdFrameDisplaySetLocal(void *argHead, void *argEnv, ScriptContext *scriptContext);
+        template <bool innerFD> FrameDisplay * OP_LdFrameDisplayNoParent(void *argHead, ScriptContext *scriptContext);
+        FrameDisplay * OP_LdFrameDisplayNoParentSetLocal(void *argHead, ScriptContext *scriptContext);
+        FrameDisplay * OP_LdFuncExprFrameDisplaySetLocal(void *argHead1, void *argHead2, ScriptContext *scriptContext);
+
         template <class T> void OP_NewStackScFunc(const unaligned T * playout);
+        template <class T> void OP_NewInnerStackScFunc(const unaligned T * playout);
         template <class T> void OP_DeleteFld(const unaligned T * playout);
         template <class T> void OP_DeleteRootFld(const unaligned T * playout);
         template <class T> void OP_DeleteFldStrict(const unaligned T * playout);
         template <class T> void OP_DeleteRootFldStrict(const unaligned T * playout);
-        template <typename T> void OP_ScopedDeleteFld(const unaligned OpLayoutT_ElementC<T> * playout);
-        template <typename T> void OP_ScopedDeleteFldStrict(const unaligned OpLayoutT_ElementC<T> * playout);
+        template <typename T> void OP_ScopedDeleteFld(const unaligned OpLayoutT_ElementScopedC<T> * playout);
+        template <typename T> void OP_ScopedDeleteFldStrict(const unaligned OpLayoutT_ElementScopedC<T> * playout);
         template <class T> void OP_ScopedLdInst(const unaligned T * playout);
-        template <typename T> void OP_ScopedInitFunc(const unaligned OpLayoutT_ElementC<T> * playout);
+        template <typename T> void OP_ScopedInitFunc(const unaligned OpLayoutT_ElementScopedC<T> * playout);
         template <class T> void OP_ClearAttributes(const unaligned T * playout);
         template <class T> void OP_InitGetFld(const unaligned T * playout);
         template <class T> void OP_InitSetFld(const unaligned T * playout);
@@ -646,10 +672,12 @@ namespace Js
         void SetExecutingStackFunction(ScriptFunction * scriptFunction);
         friend class StackScriptFunction;
 
-        FrameDisplay *GetLocalFrameDisplay() const;// { return this->localFrameDisplay; }
-        void SetLocalFrameDisplay(FrameDisplay *frameDisplay);// { this->localFrameDisplay = frameDisplay; }
-        Var *GetLocalScopeSlots() const;// { return this->localScopeSlots; }
-        void SetLocalScopeSlots(Var *slotArray);// { this->localScopeSlots = slotArray; }
+        void InitializeClosures();
+        void SetLocalFrameDisplay(FrameDisplay *frameDisplay);
+        Var *GetLocalScopeSlots() const;
+        void SetLocalScopeSlots(Var *slotArray);
+        void SetInnerScopeSlots(uint index, Var *slotArray);
+        Var *GetInnerScopeSlots(uint index) const;
         void TrySetRetOffset();
     };
 

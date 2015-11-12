@@ -185,6 +185,12 @@ namespace Js {
     };
 
     template <typename SizePolicy>
+    struct OpLayoutT_ArgNoSrc     // OutArg
+    {
+        typename SizePolicy::ArgSlotType     Arg;
+    };
+
+    template <typename SizePolicy>
     struct OpLayoutT_Arg          // OutArg <- Reg   -- or --   Reg <- InArg
     {
         typename SizePolicy::ArgSlotType     Arg;
@@ -222,6 +228,13 @@ namespace Js {
         JumpOffset  RelativeJumpOffset;
         RegSlot     Instance;
         PropertyIdIndexType  PropertyIdIndex;
+    };
+
+    struct OpLayoutBrEnvProperty   // if (R1.R2) goto Offset
+    {
+        JumpOffset  RelativeJumpOffset;
+        PropertyIdIndexType  PropertyIdIndex;
+        int32 SlotIndex;
     };
 
 #ifdef BYTECODE_BRANCH_ISLAND
@@ -308,6 +321,12 @@ namespace Js {
     };
 
     template <typename SizePolicy>
+    struct OpLayoutT_ElementScopedU     // [env].PropertyIndex = <some constant value>. e.g. undefined
+    {
+        typename SizePolicy::PropertyIdIndexType     PropertyIdIndex;
+    };
+
+    template <typename SizePolicy>
     struct OpLayoutT_ElementRootU // Root.PropertyIndex = <some constant value>. e.g. undefined
     {
         typename SizePolicy::PropertyIdIndexType     PropertyIdIndex;
@@ -321,6 +340,12 @@ namespace Js {
         typename SizePolicy::PropertyIdIndexType     PropertyIdIndex;
     };
 
+    template <typename SizePolicy>
+    struct OpLayoutT_ElementScopedC     // Value = [env].PropertyIndex or [env].PropertyIndex = Value
+    {
+        typename SizePolicy::RegSlotType             Value;
+        typename SizePolicy::PropertyIdIndexType     PropertyIdIndex;
+    };
 
     template <typename SizePolicy>
     struct OpLayoutT_ElementSlot    // Value = Instance[SlotIndex] or Instance[SlotIndex] = Value
@@ -328,6 +353,21 @@ namespace Js {
         int32                                SlotIndex; // TODO: Make this one byte?
         typename SizePolicy::RegSlotType     Value;
         typename SizePolicy::RegSlotType     Instance;
+    };
+
+    template <typename SizePolicy>
+    struct OpLayoutT_ElementSlotI1
+    {
+        int32       SlotIndex;          // TODO: Make this one byte?
+        typename SizePolicy::RegSlotType     Value;
+    };
+
+    template <typename SizePolicy>
+    struct OpLayoutT_ElementSlotI2
+    {
+        int32       SlotIndex1;          // TODO: Make this one byte?
+        int32       SlotIndex2;          // TODO: Make this one byte?
+        typename SizePolicy::RegSlotType     Value;
     };
 
     template <typename SizePolicy>
@@ -339,10 +379,25 @@ namespace Js {
     };
 
     template <typename SizePolicy>
+    struct OpLayoutT_ElementScopedP      // As OpLayoutElementCP, but with no base pointer
+    {
+        typename SizePolicy::RegSlotType     Value;
+        typename SizePolicy::CacheIdType     inlineCacheIndex;
+    };
+
+    template <typename SizePolicy>
     struct OpLayoutT_ElementRootCP   // Same as ElementCP, but for root object
     {
         RootCacheId inlineCacheIndex;
         typename SizePolicy::RegSlotType     Value;
+    };
+
+    template <typename SizePolicy>
+    struct OpLayoutT_ElementScopedC2       // [implied base].PropertyIndex = Value, Instance2
+    {
+        typename SizePolicy::RegSlotType     Value;
+        typename SizePolicy::RegSlotType     Value2;
+        typename SizePolicy::PropertyIdIndexType PropertyIdIndex;
     };
 
     template <typename SizePolicy>

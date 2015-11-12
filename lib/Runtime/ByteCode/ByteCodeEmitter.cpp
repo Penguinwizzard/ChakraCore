@@ -228,6 +228,31 @@ static const Js::OpCode nopToCMOp[knopLim] =
 #include "ptlist.h"
 };
 
+Js::OpCode ByteCodeGenerator::ToChkUndeclOp(Js::OpCode op) const
+{
+    switch(op)
+    {
+    case Js::OpCode::StLocalSlot:
+        return Js::OpCode::StLocalSlotChkUndecl;
+
+    case Js::OpCode::StInnerSlot:
+        return Js::OpCode::StInnerSlotChkUndecl;
+
+    case Js::OpCode::StEnvSlot:
+        return Js::OpCode::StEnvSlotChkUndecl;
+
+    case Js::OpCode::StObjSlot:
+        return Js::OpCode::StObjSlotChkUndecl;
+
+    case Js::OpCode::StEnvObjSlot:
+        return Js::OpCode::StEnvObjSlotChkUndecl;
+
+    default:
+        AssertMsg(false, "Unknown opcode for chk undecl mapping");
+        return Js::OpCode::InvalidOpCode;
+    }
+}
+
 // Tracks a register slot let/const property for the passed in debugger block/catch scope.
 // debuggerScope         - The scope to add the variable to.
 // symbol                - The symbol that represents the register property.
@@ -588,7 +613,7 @@ void ByteCodeGenerator::InitBlockScopedContent(ParseNode *pnodeBlock, Js::Debugg
             {
                 AssertMsg(this->IsConsoleScopeEval(), "Let/Consts cannot be in global scope outside of console eval");
                 Js::OpCode op = (sym->GetDecl()->nop == knopConstDecl) ? Js::OpCode::InitUndeclConsoleConstFld : Js::OpCode::InitUndeclConsoleLetFld;
-                this->m_writer.ElementU(op, funcInfo->GetEnvRegister(), funcInfo->FindOrAddReferencedPropertyId(propertyId));
+                this->m_writer.ElementScopedU(op, funcInfo->FindOrAddReferencedPropertyId(propertyId));
             }
             else
             {
@@ -616,7 +641,10 @@ void ByteCodeGenerator::InitBlockScopedContent(ParseNode *pnodeBlock, Js::Debugg
             }
             else if (CONFIG_FLAG(TDZ))
             {
-                this->m_writer.Reg1Unsigned1(Js::OpCode::InitUndeclSlot, sym->GetScope()->GetLocation(), sym->GetScopeSlot() + Js::ScopeSlots::FirstSlotIndex);
+                Js::RegSlot tmpReg = funcInfo->AcquireTmpRegister();
+                this->m_writer.Reg1(Js::OpCode::InitUndecl, tmpReg);
+                this->EmitLocalPropInit(tmpReg, sym, funcInfo);
+                funcInfo->ReleaseTmpRegister(tmpReg);
 
                 // Slot array properties are tracked in non-debug mode as well because they need to stay
                 // around for heap enumeration and escaping during attach/detach.
@@ -687,26 +715,28 @@ void BeginEmitBlock(ParseNode *pnodeBlock, ByteCodeGenerator *byteCodeGenerator,
         Js::RegSlot scopeLocation = scope->GetLocation();
         if (scope->GetMustInstantiate())
         {
-            if (scopeLocation == Js::Constants::NoRegister)
-            {
-                scopeLocation = funcInfo->AcquireTmpRegister();
-                scope->SetLocation(scopeLocation);
-            }
-
             if (scope->GetIsObject())
             {
+                if (scopeLocation == Js::Constants::NoRegister)
+                {
+                    scopeLocation = funcInfo->AcquireTmpRegister();
+                    scope->SetLocation(scopeLocation);
+                }
+
                 debuggerScope = byteCodeGenerator->RecordStartScopeObject(pnodeBlock, Js::DiagExtraScopesType::DiagBlockScopeInObject, scopeLocation);
 
                 byteCodeGenerator->Writer()->Reg1(Js::OpCode::NewBlockScope, scopeLocation);
             }
             else
             {
+                scopeLocation = funcInfo->FirstInnerScopeReg() + scope->GetInnerScopeIndex();
+
                 int scopeIndex = Js::DebuggerScope::InvalidScopeIndex;
                 debuggerScope = byteCodeGenerator->RecordStartScopeObject(pnodeBlock, Js::DiagExtraScopesType::DiagBlockScopeInSlot, scopeLocation, &scopeIndex);
 
                 // TODO: Handle heap enumeration
                 int scopeSlotCount = scope->GetScopeSlotCount();
-                byteCodeGenerator->Writer()->Reg1Int2(Js::OpCode::NewScopeSlotsWithoutPropIds, scopeLocation, scopeSlotCount + Js::ScopeSlots::FirstSlotIndex, scopeIndex);
+                byteCodeGenerator->Writer()->Num3(Js::OpCode::NewInnerScopeSlots, scope->GetInnerScopeIndex(), scopeSlotCount + Js::ScopeSlots::FirstSlotIndex, scopeIndex);
             }
         }
         else
@@ -719,17 +749,7 @@ void BeginEmitBlock(ParseNode *pnodeBlock, ByteCodeGenerator *byteCodeGenerator,
 
         bool const isGlobalEvalBlockScope = scope->IsGlobalEvalBlockScope();
         Js::RegSlot frameDisplayLoc = Js::Constants::NoRegister;
-        Js::RegSlot tmpEnvReg = Js::Constants::NoRegister;
         Js::RegSlot tmpInnerEnvReg = Js::Constants::NoRegister;
-        if (funcInfo->GetParsedFunctionBody()->DoStackFrameDisplay() && !byteCodeGenerator->InPrologue())
-        {
-            // The parent function allocated a frame display on the stack, but this declaration happens after
-            // the frame display may have been boxed. So re-load it into a temp reg.
-            // Do this here, because we're going to want to re-use the result for all funcs declared in this block.
-            tmpEnvReg = funcInfo->AcquireTmpRegister();
-            byteCodeGenerator->Writer()->Reg1(Js::OpCode::LdLocalFrameDisplay, tmpEnvReg);
-        }
-
         ParseNodePtr pnodeScope;
         for (pnodeScope = pnodeBlock->sxBlock.pnodeScopes; pnodeScope;)
         {
@@ -744,11 +764,7 @@ void BeginEmitBlock(ParseNode *pnodeBlock, ByteCodeGenerator *byteCodeGenerator,
                     // So we'll supply a temp that we allocate and release here.
                     if (frameDisplayLoc == Js::Constants::NoRegister)
                     {
-                        if (tmpEnvReg != Js::Constants::NoRegister)
-                        {
-                            frameDisplayLoc = tmpEnvReg;
-                        }
-                        else if (funcInfo->frameDisplayRegister != Js::Constants::NoRegister)
+                        if (funcInfo->frameDisplayRegister != Js::Constants::NoRegister)
                         {
                             frameDisplayLoc = funcInfo->frameDisplayRegister;
                         }
@@ -791,11 +807,6 @@ void BeginEmitBlock(ParseNode *pnodeBlock, ByteCodeGenerator *byteCodeGenerator,
             funcInfo->ReleaseTmpRegister(tmpInnerEnvReg);
         }
 
-        if (tmpEnvReg != Js::Constants::NoRegister)
-        {
-            funcInfo->ReleaseTmpRegister(tmpEnvReg);
-        }
-
         if (pnodeBlock->sxBlock.scope->IsGlobalEvalBlockScope() && funcInfo->thisScopeSlot != Js::Constants::NoRegister)
         {
             Scope* scope = funcInfo->GetGlobalEvalBlockScope();
@@ -832,7 +843,7 @@ void EndEmitBlock(ParseNode *pnodeBlock, ByteCodeGenerator *byteCodeGenerator, F
         Scope *scope = pnodeBlock->sxBlock.scope;
         Assert(scope);
         Assert(scope == byteCodeGenerator->GetCurrentScope());
-        if (scope->GetMustInstantiate())
+        if (scope->GetMustInstantiate() && !(scope->HasInnerScopeIndex() && !scope->GetIsObject()))
         {
             funcInfo->ReleaseTmpRegister(scope->GetLocation());
         }
@@ -1016,9 +1027,8 @@ void ByteCodeGenerator::DefineCachedFunctions(FuncInfo *funcInfoParent)
     };
     MapContainerScopeFunctions(pnodeParent, fillEntries);
 
-    m_writer.Reg2Aux(Js::OpCode::InitCachedFuncs,
+    m_writer.Auxiliary(Js::OpCode::InitCachedFuncs,
         funcInfoParent->frameObjRegister,
-        funcInfoParent->frameDisplayRegister,
         info,
         sizeof(Js::FuncInfoArray) + extraBytes,
         sizeof(Js::FuncInfoArray) + extraBytes);
@@ -1135,28 +1145,6 @@ void EmitAssignmentToFuncName(ParseNode *pnodeFnc, ByteCodeGenerator *byteCodeGe
     }
 }
 
-Js::RegSlot ByteCodeGenerator::DefineOneFunctionHandleBoxedFD(
-    ParseNode *pnodeFnc, FuncInfo *funcInfo, bool generateAssignment, Js::RegSlot regEnv)
-{
-    Js::RegSlot tmpEnvReg = Js::Constants::NoRegister;
-    if (funcInfo->GetParsedFunctionBody()->DoStackFrameDisplay())
-    {
-        // The parent function allocated a frame display on the stack, but this declaration happens after
-        // the frame display may have been boxed. So re-load it into a temp reg.
-        // Do this here, because we're going to want to re-use the result for all funcs declared in this block.
-        funcInfo->AcquireLoc(pnodeFnc);
-        tmpEnvReg = funcInfo->AcquireTmpRegister();
-        m_writer.Reg1(Js::OpCode::LdLocalFrameDisplay, tmpEnvReg);
-    }
-    regEnv = this->DefineOneFunction(pnodeFnc, funcInfo, generateAssignment, regEnv, tmpEnvReg);
-    if (tmpEnvReg != Js::Constants::NoRegister)
-    {
-        funcInfo->ReleaseTmpRegister(tmpEnvReg);
-    }
-
-    return regEnv;
-}
-
 Js::RegSlot ByteCodeGenerator::DefineOneFunction(ParseNode *pnodeFnc, FuncInfo *funcInfoParent, bool generateAssignment, Js::RegSlot regEnv, Js::RegSlot frameDisplayTemp)
 {
     Assert(pnodeFnc->nop == knopFncDecl);
@@ -1189,7 +1177,14 @@ Js::RegSlot ByteCodeGenerator::DefineOneFunction(ParseNode *pnodeFnc, FuncInfo *
     // AssertMsg(funcInfo->nonLocalSymbols == 0 || regEnv != funcInfoParent->nullConstantRegister,
     // "We need a closure for the nested function");
 
-    m_writer.NewFunction(pnodeFnc->location, pnodeFnc->sxFnc.nestedIndex, regEnv, pnodeFnc->sxFnc.IsGenerator());
+    if (regEnv == funcInfoParent->frameDisplayRegister || regEnv == funcInfoParent->GetEnvRegister())
+    {
+        m_writer.NewFunction(pnodeFnc->location, pnodeFnc->sxFnc.nestedIndex, pnodeFnc->sxFnc.IsGenerator());
+    }
+    else
+    {
+        m_writer.NewInnerFunction(pnodeFnc->location, pnodeFnc->sxFnc.nestedIndex, regEnv, pnodeFnc->sxFnc.IsGenerator());
+    }
 
     if (funcInfoParent->IsGlobalFunction() && (this->flags & fscrEval))
     {
@@ -1312,9 +1307,8 @@ void ByteCodeGenerator::DefineUserVars(FuncInfo *funcInfo)
                         else
                         {
                             // The check and the init involve the first element in the scope chain.
-                            this->m_writer.ElementU(
-                                Js::OpCode::LdElemUndefScoped, funcInfo->GetEnvRegister(),
-                                funcInfo->FindOrAddReferencedPropertyId(propertyId));
+                            this->m_writer.ElementScopedU(
+                                Js::OpCode::LdElemUndefScoped, funcInfo->FindOrAddReferencedPropertyId(propertyId));
                         }
                     }
                     else
@@ -1659,11 +1653,33 @@ void ByteCodeGenerator::FinalizeRegisters(FuncInfo * funcInfo, Js::FunctionBody 
     // can distinguish constants from variables.
     byteCodeFunction->SetConstantCount(funcInfo->constRegsCount);
 
-    if (byteCodeFunction->DoStackFrameDisplay() && funcInfo->frameDisplayRegister != Js::Constants::NoRegister)
+    if (funcInfo->frameDisplayRegister != Js::Constants::NoRegister)
     {
-        funcInfo->AssignStackClosureRegs();
+        byteCodeFunction->SetLocalFrameDisplayReg(funcInfo->frameDisplayRegister);
     }
 
+    if (funcInfo->frameSlotsRegister != Js::Constants::NoRegister &&
+        funcInfo->frameObjRegister == Js::Constants::NoRegister)
+    {
+        byteCodeFunction->SetLocalScopeSlotsReg(funcInfo->frameSlotsRegister);
+    }
+
+    if (this->IsInDebugMode())
+    {
+        // Give permanent registers to the inner scopes in debug mode.
+        uint innerScopeCount = funcInfo->InnerScopeCount();
+        byteCodeFunction->SetInnerScopeCount(innerScopeCount);
+        if (innerScopeCount)
+        {
+            funcInfo->SetFirstInnerScopeReg(funcInfo->NextVarRegister());
+            for (uint i = 1; i < innerScopeCount; i++)
+            {
+                funcInfo->NextVarRegister();
+            }
+        }       
+    }
+
+    // NOTE: The FB expects the yield reg to be the final non-temp.
     if (byteCodeFunction->IsGenerator())
     {
         funcInfo->AssignYieldRegister();
@@ -1809,18 +1825,7 @@ void ByteCodeGenerator::LoadAllConstants(FuncInfo *funcInfo)
     else if (funcInfo->frameSlotsRegister != Js::Constants::NoRegister)
     {
         int scopeSlotCount = funcInfo->bodyScope->GetScopeSlotCount();
-        if (scopeSlotCount != 0)
-        {
-            if (byteCodeFunction->DoStackScopeSlots())
-            {
-                m_writer.Reg1(Js::OpCode::NewStackScopeSlots, funcInfo->frameSlotsRegister);
-            }
-            else
-            {
-                m_writer.Reg1Unsigned1(Js::OpCode::NewScopeSlots, funcInfo->frameSlotsRegister, scopeSlotCount + Js::ScopeSlots::FirstSlotIndex);
-            }
-        }
-        else
+        if (scopeSlotCount == 0)
         {
             AssertMsg(funcInfo->frameDisplayRegister != Js::Constants::NoRegister, "Why do we need scope slots?");
             m_writer.Reg1(Js::OpCode::LdC_A_Null, funcInfo->frameSlotsRegister);
@@ -1834,23 +1839,21 @@ void ByteCodeGenerator::LoadAllConstants(FuncInfo *funcInfo)
 
     bool thisLoadedFromParams = false;
 
-    if (funcInfo->GetIsEventHandler())
+    if (funcInfo->NeedEnvRegister())
     {
-        // The environment is the namespace hierarchy starting with "this".
-        if (funcInfo->NeedEnvRegister())
+        byteCodeFunction->SetEnvReg(funcInfo->GetEnvRegister());
+        if (funcInfo->GetIsEventHandler())
         {
+            // The environment is the namespace hierarchy starting with "this".
             Assert(!funcInfo->RegIsConst(funcInfo->GetEnvRegister()));
             thisLoadedFromParams = true;
 
             // load "this" from parameters
             this->m_writer.ArgIn0(funcInfo->thisPointerRegister);
-            this->m_writer.Reg2(Js::OpCode::LdHandlerScope, funcInfo->GetEnvRegister(), funcInfo->thisPointerRegister);
+            this->m_writer.Reg1(Js::OpCode::LdHandlerScope, funcInfo->thisPointerRegister);
             this->InvalidateCachedOuterScopes(funcInfo);
         }
-    }
-    else if (funcInfo->IsGlobalFunction() && !(this->flags & fscrEval))
-    {
-        if (funcInfo->NeedEnvRegister())
+        else if (funcInfo->IsGlobalFunction() && !(this->flags & fscrEval))
         {
             Assert(funcInfo->RegIsConst(funcInfo->GetEnvRegister()));
 
@@ -1863,14 +1866,10 @@ void ByteCodeGenerator::LoadAllConstants(FuncInfo *funcInfo)
                 byteCodeFunction->RecordNullDisplayConstant(byteCodeFunction->MapRegSlot(funcInfo->GetEnvRegister()));
             }
         }
-    }
-    else
-    {
-        // environment may be required to load "this"
-        if (funcInfo->NeedEnvRegister())
+        else
         {
+            // environment may be required to load "this"
             Assert(!funcInfo->RegIsConst(funcInfo->GetEnvRegister()));
-            m_writer.Reg1(Js::OpCode::LdEnv, funcInfo->GetEnvRegister());
             this->InvalidateCachedOuterScopes(funcInfo);
         }
     }
@@ -1996,7 +1995,7 @@ void ByteCodeGenerator::InvalidateCachedOuterScopes(FuncInfo *funcInfo)
             if (func->Escapes() && func->GetHasCachedScope())
             {
                 Assert(scope->GetIsObject());
-                this->m_writer.Reg1Unsigned1(Js::OpCode::InvalCachedScope, funcInfo->GetEnvRegister(), envIndex);
+                this->m_writer.Unsigned1(Js::OpCode::InvalCachedScope, envIndex);
             }
         }
         if (scope->GetMustInstantiate())
@@ -2092,7 +2091,7 @@ void ByteCodeGenerator::LoadNewTargetObject(FuncInfo *funcInfo)
         }
 
         uint cacheId = funcInfo->FindOrAddInlineCacheId(scopeLocation, Js::PropertyIds::_lexicalNewTargetSymbol, false, false);
-        this->m_writer.PatchableProperty(Js::OpCode::ScopedLdFld, funcInfo->newTargetRegister, scopeLocation, cacheId);
+        this->m_writer.ElementScopedP(Js::OpCode::ScopedLdFld, funcInfo->newTargetRegister, cacheId);
     }
     else if (funcInfo->IsGlobalFunction())
     {
@@ -2161,7 +2160,7 @@ void ByteCodeGenerator::EmitScopeSlotLoadThis(FuncInfo *funcInfo, Js::RegSlot re
         this->Writer()->BrReg1(Js::OpCode::BrNotUndecl_A, skipLabel, funcInfo->thisPointerRegister);
 
         uint cacheId = funcInfo->FindOrAddInlineCacheId(scopeLocation, Js::PropertyIds::_lexicalThisSlotSymbol, false, false);
-        this->m_writer.PatchableProperty(Js::OpCode::ScopedLdFld, funcInfo->thisPointerRegister, scopeLocation, cacheId);
+        this->m_writer.ElementScopedP(Js::OpCode::ScopedLdFld, funcInfo->thisPointerRegister, cacheId);
         if (chkUndecl)
         {
             this->m_writer.Reg1(Js::OpCode::ChkUndecl, funcInfo->thisPointerRegister);
@@ -2187,7 +2186,7 @@ void ByteCodeGenerator::EmitScopeSlotStoreThis(FuncInfo *funcInfo, Js::RegSlot r
         }
 
         uint cacheId = funcInfo->FindOrAddInlineCacheId(scopeLocation, Js::PropertyIds::_lexicalThisSlotSymbol, false, true);
-        this->m_writer.PatchableProperty(GetScopedStFldOpCode(funcInfo->byteCodeFunction->GetIsStrictMode()), funcInfo->thisPointerRegister, scopeLocation, cacheId);
+        this->m_writer.ElementScopedP(GetScopedStFldOpCode(funcInfo->byteCodeFunction->GetIsStrictMode()), funcInfo->thisPointerRegister, cacheId);
     }
     else if (regLoc != Js::Constants::NoRegister)
     {
@@ -2334,49 +2333,39 @@ void ByteCodeGenerator::EmitInternalScopedSlotLoad(FuncInfo *funcInfo, Js::RegSl
     else
     {
         scope = funcInfo->GetBodyScope();
-        Js::RegSlot scopeLocation = scope->GetLocation();
 
-        EmitInternalScopedSlotLoad(funcInfo, scope, scopeLocation, slot, symbolRegister, chkUndecl);
+        EmitInternalScopedSlotLoad(funcInfo, scope, -1, slot, symbolRegister, chkUndecl);
     }
 }
 
 void ByteCodeGenerator::EmitInternalScopedSlotLoad(FuncInfo *funcInfo, Scope *scope, Js::PropertyId envIndex, Js::RegSlot slot, Js::RegSlot symbolRegister, bool chkUndecl)
 {
-    Js::RegSlot scopeLocation = funcInfo->AcquireTmpRegister();
-    this->m_writer.Slot(Js::OpCode::LdSlotArr, scopeLocation, funcInfo->GetEnvRegister(), envIndex + Js::FrameDisplay::GetOffsetOfScopes() / sizeof(Js::Var));
-    funcInfo->ReleaseTmpRegister(scopeLocation);
-
-    EmitInternalScopedSlotLoad(funcInfo, scope, scopeLocation, slot, symbolRegister, chkUndecl);
-}
-
-void ByteCodeGenerator::EmitInternalScopedSlotLoad(FuncInfo *funcInfo, Scope *scope, Js::RegSlot scopeLocation, Js::RegSlot slot, Js::RegSlot symbolRegister, bool chkUndecl)
-{
     Assert(slot != Js::Constants::NoProperty);
     Js::ProfileId profileId = funcInfo->FindOrAddSlotProfileId(scope, symbolRegister);
     Js::OpCode opcode;
 
-    if (scope->GetIsDynamic() || (scope->GetIsObject() && scope->IsBlockScope(funcInfo)))
+    Js::RegSlot scopeLocation = scope->GetLocation();
+    opcode = this->GetLdSlotOp(scope, envIndex, scopeLocation, funcInfo);
+    slot += (scope->GetIsObject() ? 0 : Js::ScopeSlots::FirstSlotIndex);
+
+    if (envIndex != -1)
     {
-        opcode = chkUndecl ? Js::OpCode::LdObjSlotChkUndecl : Js::OpCode::LdObjSlot;
+        this->m_writer.SlotI2(opcode, symbolRegister, envIndex + Js::FrameDisplay::GetOffsetOfScopes()/sizeof(Js::Var), slot, profileId);
+    }
+    else if (scopeLocation != Js::Constants::NoRegister &&
+             scopeLocation == funcInfo->frameSlotsRegister)
+    {
+        this->m_writer.SlotI1(opcode, symbolRegister, slot, profileId);
     }
     else
     {
-        opcode = chkUndecl ? Js::OpCode::LdSlotChkUndecl : Js::OpCode::LdSlot;
-        slot += (scope->GetIsObject() ? 0 : Js::ScopeSlots::FirstSlotIndex);
-
-        if (scopeLocation == funcInfo->frameSlotsRegister &&
-            funcInfo->GetParsedFunctionBody()->DoStackScopeSlots() &&
-            !this->inPrologue)
-        {
-            // The function allocated local slots on the stack, but they may since have been boxed, so
-            // re-load them before accessing them.
-            scopeLocation = funcInfo->AcquireTmpRegister();
-            this->m_writer.Reg1(Js::OpCode::LdLocalScopeSlots, scopeLocation);
-            funcInfo->ReleaseTmpRegister(scopeLocation);
-        }
+        this->m_writer.Slot(opcode, symbolRegister, scopeLocation, slot, profileId);
     }
 
-    this->m_writer.Slot(opcode, symbolRegister, scopeLocation, slot, profileId);
+    if (chkUndecl)
+    {
+        this->m_writer.Reg1(Js::OpCode::ChkUndecl, symbolRegister);
+    }
 }
 
 void ByteCodeGenerator::EmitInternalScopedSlotStore(FuncInfo *funcInfo, Js::RegSlot slot, Js::RegSlot symbolRegister)
@@ -2385,47 +2374,38 @@ void ByteCodeGenerator::EmitInternalScopedSlotStore(FuncInfo *funcInfo, Js::RegS
 
     Scope* scope = nullptr;
     Js::OpCode opcode;
-    Js::RegSlot scopeLocation;
 
+    Js::PropertyId envIndex = -1;
     if (funcInfo->IsLambda())
     {
-        Js::PropertyId envIndex = -1;
         GetEnclosingNonLambdaScope(funcInfo, scope, envIndex);
-
-        scopeLocation = funcInfo->AcquireTmpRegister();
-        this->Writer()->Slot(Js::OpCode::LdSlotArr, scopeLocation, funcInfo->GetEnvRegister(), envIndex + Js::FrameDisplay::GetOffsetOfScopes() / sizeof(Js::Var));
-        funcInfo->ReleaseTmpRegister(scopeLocation);
     }
     else
     {
         scope = funcInfo->GetBodyScope();
-        scopeLocation = scope->GetLocation();
     }
 
-    Assert(scope != nullptr);
+    Js::RegSlot scopeLocation = scope->GetLocation();
+    opcode = this->GetStSlotOp(scope, envIndex, scopeLocation, false, funcInfo);
+    slot += (scope->GetIsObject() ? 0 : Js::ScopeSlots::FirstSlotIndex);
 
-    if (scope->GetIsDynamic() || (scope->GetIsObject() && scope->IsBlockScope(funcInfo)))
+    if (envIndex != -1)
     {
-        opcode = Js::OpCode::StObjSlot;
+        this->m_writer.SlotI2(opcode, symbolRegister, envIndex + Js::FrameDisplay::GetOffsetOfScopes()/sizeof(Js::Var), slot);
+    }
+    else if (scopeLocation != Js::Constants::NoRegister && 
+             scopeLocation == funcInfo->frameSlotsRegister)
+    {
+        this->m_writer.SlotI1(opcode, symbolRegister, slot);
+    }
+    else if (scope->GetIsObject())
+    {
+        this->m_writer.Slot(opcode, symbolRegister, scopeLocation, slot);
     }
     else
     {
-        opcode = Js::OpCode::StSlot;
-        slot += (scope->GetIsObject() ? 0 : Js::ScopeSlots::FirstSlotIndex);
-
-        if (scopeLocation == funcInfo->frameSlotsRegister &&
-            funcInfo->GetParsedFunctionBody()->DoStackScopeSlots() &&
-            !this->inPrologue)
-        {
-            // The function allocated local slots on the stack, but they may since have been boxed, so
-            // re-load them before accessing them.
-            scopeLocation = funcInfo->AcquireTmpRegister();
-            this->m_writer.Reg1(Js::OpCode::LdLocalScopeSlots, scopeLocation);
-            funcInfo->ReleaseTmpRegister(scopeLocation);
-        }
+        this->m_writer.SlotI2(opcode, symbolRegister, scope->GetInnerScopeIndex(), slot);
     }
-
-    this->Writer()->Slot(opcode, symbolRegister, scopeLocation, slot);
 }
 
 void ByteCodeGenerator::GetEnclosingNonLambdaScope(FuncInfo *funcInfo, Scope * &scope, Js::PropertyId &envIndex)
@@ -2500,38 +2480,28 @@ void ByteCodeGenerator::LoadFrameDisplay(FuncInfo *funcInfo)
     Scope *scope = funcInfo->bodyScope;
     Js::RegSlot regFrame = scope->GetIsObject() ? funcInfo->frameObjRegister : funcInfo->frameSlotsRegister;
 
+    Assert(regFrame != Js::Constants::NoRegister);
+    Assert(regEnv != Js::Constants::NoRegister);
+
     if (funcInfo->funcExprScope && funcInfo->funcExprScope->GetIsObject())
     {
+        Assert(scope && scope->GetIsObject());
+
         //
         // A new activation object is created for the function expression
         // That also should be part of the scope chain
         // FrameDisplay = [ FrameObject, FuncExpression, Environment ]
         //
         // FrameDisplay = [ FuncExpression, Environment ]
-        this->m_writer.Reg3(Js::OpCode::LdFrameDisplay, funcInfo->frameDisplayRegister, funcInfo->funcExprScope->GetLocation(), regEnv);
-
-        // Environment = FrameDisplay
-        regEnv = funcInfo->frameDisplayRegister;
+        this->m_writer.Reg2(Js::OpCode::LdFuncExprFrameDisplay, regFrame, funcInfo->funcExprScope->GetLocation());
 
         // TODO: Handle this case in frame display fast path
         funcInfo->GetParsedFunctionBody()->SetEnvDepth((uint16)-1);
     }
-
-    Assert(regFrame != Js::Constants::NoRegister);
-    Assert(regEnv != Js::Constants::NoRegister);
-
-    // FrameDisplay = [ FrameObject, Environment ]
-    Js::OpCode op;
-    Js::FunctionBody *functionBody = funcInfo->GetParsedFunctionBody();
-    if (funcInfo->GetParsedFunctionBody()->GetEnvDepth() == 0)
+    else if (scope->GetIsObject())
     {
-        op = functionBody->DoStackFrameDisplay() ? Js::OpCode::NewStackFrameDisplayNoParent : Js::OpCode::LdFrameDisplayNoParent;
-        this->m_writer.Reg2(op, funcInfo->frameDisplayRegister, regFrame);
-    }
-    else
-    {
-        op = functionBody->DoStackFrameDisplay() ? Js::OpCode::NewStackFrameDisplay : Js::OpCode::LdFrameDisplay;
-        this->m_writer.Reg3(op, funcInfo->frameDisplayRegister, regFrame, regEnv);
+        // FrameDisplay = [ FrameObject, Environment ]
+        this->m_writer.Reg1(Js::OpCode::LdFrameDisplayNoParent, regFrame);
     }
 }
 
@@ -2706,8 +2676,7 @@ void ByteCodeGenerator::EmitInitCapturedThis(FuncInfo* funcInfo, Scope* scope)
     }
     else
     {
-        Js::OpCode op = scope->IsBlockScope(funcInfo) ? Js::OpCode::StObjSlot : Js::OpCode::StSlot;
-        this->m_writer.Slot(op, funcInfo->thisPointerRegister, scope->GetLocation(), funcInfo->thisScopeSlot + Js::ScopeSlots::FirstSlotIndex);
+        this->EmitInternalScopedSlotStore(funcInfo, funcInfo->thisScopeSlot, funcInfo->thisPointerRegister);
     }
 }
 
@@ -2721,8 +2690,7 @@ void ByteCodeGenerator::EmitInitCapturedNewTarget(FuncInfo* funcInfo, Scope* sco
     }
     else
     {
-        Js::OpCode op = scope->IsBlockScope(funcInfo) ? Js::OpCode::StObjSlot : Js::OpCode::StSlot;
-        this->m_writer.Slot(op, funcInfo->newTargetRegister, scope->GetLocation(), funcInfo->newTargetScopeSlot + Js::ScopeSlots::FirstSlotIndex);
+        this->EmitInternalScopedSlotStore(funcInfo, funcInfo->newTargetScopeSlot, funcInfo->newTargetRegister);
     }
 }
 
@@ -2964,6 +2932,22 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
         FinalizeRegisters(funcInfo, byteCodeFunction);
         DebugOnly(Js::RegSlot firstTmpReg = funcInfo->varRegsCount);
 
+        // Reserve temp registers for the inner scopes. We prefer temps because the JIT will then renumber them
+        // and see different lifetimes. (Note that debug mode requires permanent registers. See FinalizeRegisters.)
+        uint innerScopeCount = funcInfo->InnerScopeCount();
+        if (!this->IsInDebugMode())
+        {
+            byteCodeFunction->SetInnerScopeCount(innerScopeCount);
+            if (innerScopeCount)
+            {
+                funcInfo->SetFirstInnerScopeReg(funcInfo->AcquireTmpRegister());
+                for (uint i = 1; i < innerScopeCount; i++)
+                {
+                    funcInfo->AcquireTmpRegister();
+                }
+            }
+        }
+
         funcInfo->inlineCacheMap = Anew(alloc, FuncInfo::InlineCacheMap,
             alloc,
             funcInfo->RegCount() // Pass the actual register count. // TODO: Check if we can reduce this count
@@ -3085,12 +3069,12 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
         {
             if (funcInfo->superScopeSlot != Js::Constants::NoRegister)
             {
-                this->m_writer.Slot(Js::OpCode::StSlot, funcInfo->superRegister, funcInfo->GetBodyScope()->GetLocation(), funcInfo->superScopeSlot + Js::ScopeSlots::FirstSlotIndex);
+                this->EmitInternalScopedSlotStore(funcInfo, funcInfo->superScopeSlot, funcInfo->superRegister);
             }
 
             if (funcInfo->superCtorScopeSlot != Js::Constants::NoRegister)
             {
-                this->m_writer.Slot(Js::OpCode::StSlot, funcInfo->superCtorRegister, funcInfo->GetBodyScope()->GetLocation(), funcInfo->superCtorScopeSlot + Js::ScopeSlots::FirstSlotIndex);
+                this->EmitInternalScopedSlotStore(funcInfo, funcInfo->superCtorScopeSlot, funcInfo->superCtorRegister);
             }
         }
 
@@ -3129,24 +3113,6 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
         {
             ::BeginEmitBlock(pnode->sxFnc.pnodeBodyScope, this, funcInfo);
         }
-
-        // If the local frame has a scope object, but we can still access its slots directly,
-        // then load a pointer to the slots so we can use it in the body of the function.
-        // We do this after everything has been initialized on the frame object, including
-        // both parameter and function body scopes.
-        if (funcInfo->frameObjRegister != Js::Constants::NoRegister &&
-            funcInfo->frameSlotsRegister != Js::Constants::NoRegister)
-        {
-            Assert(!byteCodeFunction->DoStackScopeSlots());
-            if (!funcInfo->GetApplyEnclosesArgs())
-            {
-                m_writer.Slot(Js::OpCode::LdSlotArr, funcInfo->frameSlotsRegister, funcInfo->frameObjRegister,
-                    Js::DynamicObject::GetOffsetOfAuxSlots() / sizeof(Js::Var));
-                // From now on, accesses to this scope go through the slots directly.
-                funcInfo->GetBodyScope()->SetLocation(funcInfo->frameSlotsRegister);
-            }
-        }
-
         DefineLabels(funcInfo);
 
         if (!pnode->sxFnc.IsSimpleParameterList())
@@ -3181,6 +3147,20 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
             ::EndEmitBlock(pnode->sxFnc.pnodeBodyScope, this, funcInfo);
         }
         ::EndEmitBlock(pnode->sxFnc.pnodeScopes, this, funcInfo);
+
+        if (!this->IsInDebugMode())
+        {
+            // Release the temp registers that we reserved for inner scopes above.
+            if (innerScopeCount)
+            {
+                Js::RegSlot tmpReg = funcInfo->FirstInnerScopeReg() + innerScopeCount - 1;
+                for (uint i = 0; i < innerScopeCount; i++)
+                {
+                    funcInfo->ReleaseTmpRegister(tmpReg);
+                    tmpReg--;
+                }
+            }
+        }
 
         Assert(funcInfo->firstTmpReg == firstTmpReg);
         Assert(funcInfo->curTmpReg == firstTmpReg);
@@ -3877,9 +3857,6 @@ void ByteCodeGenerator::StartEmitCatch(ParseNode *pnodeCatch)
 
     if (pnodeCatch->sxCatch.pnodeParam->nop == knopParamPattern)
     {
-        scope->SetCapturesAll(funcInfo->GetCallsEval() || funcInfo->GetChildCallsEval());
-        scope->SetMustInstantiate(scope->GetMustInstantiate() || scope->GetCapturesAll() || funcInfo->IsGlobalFunction());
-
         Parser::MapBindIdentifier(pnodeCatch->sxCatch.pnodeParam->sxParamPattern.pnode1, [&](ParseNodePtr item)
         {
             Symbol *sym = item->sxVar.sym;
@@ -3903,8 +3880,6 @@ void ByteCodeGenerator::StartEmitCatch(ParseNode *pnodeCatch)
         Symbol *sym = pnodeCatch->sxCatch.pnodeParam->sxPid.sym;
 
         // Catch object is stored in the catch scope if there may be an ambiguous lookup or a var declaration that hides it.
-        scope->SetCapturesAll(funcInfo->GetCallsEval() || funcInfo->GetChildCallsEval() || sym->GetHasNonLocalReference());
-        scope->SetMustInstantiate(scope->GetCapturesAll() || funcInfo->IsGlobalFunction() || currentScope != funcInfo->GetBodyScope());
 
         if (funcInfo->IsGlobalFunction())
         {
@@ -4029,16 +4004,37 @@ Js::RegSlot ByteCodeGenerator::PrependLocalScopes(Js::RegSlot evalEnv, Js::RegSl
     // but the list must first be reversed so that innermost scopes appear first in the list.
     while (currScope != funcScope)
     {
-        Scope *tmp;
-        for (tmp = currScope; tmp->GetEnclosingScope() != funcScope; tmp = tmp->GetEnclosingScope())
+        Scope *innerScope;
+        for (innerScope = currScope; innerScope->GetEnclosingScope() != funcScope; innerScope = innerScope->GetEnclosingScope())
             ;
-        if (tmp->GetMustInstantiate())
+        if (innerScope->GetMustInstantiate())
         {
-            this->m_writer.Reg3(Js::OpCode::LdFrameDisplay, tempLoc, tmp->GetLocation(), evalEnv);
+            if (innerScope->GetIsObject())
+            {
+                if (evalEnv == funcInfo->GetEnvRegister() || evalEnv == funcInfo->frameDisplayRegister)
+                {
+                    this->m_writer.Reg2(Js::OpCode::LdInnerFrameDisplayNoParent, tempLoc, innerScope->GetLocation());
+                }
+                else
+                {
+                    this->m_writer.Reg3(Js::OpCode::LdInnerFrameDisplay, tempLoc, innerScope->GetLocation(), evalEnv);
+                }
+            }
+            else
+            {
+                if (evalEnv == funcInfo->GetEnvRegister() || evalEnv == funcInfo->frameDisplayRegister)
+                {
+                    this->m_writer.Reg1Unsigned1(Js::OpCode::LdIndexedFrameDisplayNoParent, tempLoc, innerScope->GetInnerScopeIndex());
+                }
+                else
+                {
+                    this->m_writer.Reg2Int1(Js::OpCode::LdIndexedFrameDisplay, tempLoc, evalEnv, innerScope->GetInnerScopeIndex());
+                }
+            }
             evalEnv = tempLoc;
         }
-        funcScope = tmp;
-    }
+        funcScope = innerScope;
+    }    
 
     if (acquireTempLoc)
     {
@@ -4082,17 +4078,7 @@ void ByteCodeGenerator::EmitLoadInstance(Symbol *sym, IdentPtr pid, Js::RegSlot 
             }
         }
 
-        if (envIndex != -1)
-        {
-            // The scope is in the closure environment, so retrieve it.
-            if (scope != symScope || instLocation != Js::Constants::NoRegister)
-            {
-                scopeLocation = funcInfo->AcquireTmpRegister();
-                this->m_writer.Slot(Js::OpCode::LdSlotArr, scopeLocation, funcInfo->GetEnvRegister(), envIndex + Js::FrameDisplay::GetOffsetOfScopes() / sizeof(Js::Var));
-                funcInfo->ReleaseTmpRegister(scopeLocation);
-            }
-        }
-        else
+        if (envIndex == -1)
         {
             Assert(funcInfo == scope->GetFunc());
             scopeLocation = scope->GetLocation();
@@ -4114,15 +4100,41 @@ void ByteCodeGenerator::EmitLoadInstance(Symbol *sym, IdentPtr pid, Js::RegSlot 
 
         Js::ByteCodeLabel nextLabel = this->m_writer.DefineLabel();
         Js::PropertyId propertyId = sym ? sym->EnsurePosition(this) : pid->GetPropertyId();
-        this->m_writer.BrProperty(Js::OpCode::BrOnNoProperty, nextLabel, scopeLocation,
-            funcInfo->FindOrAddReferencedPropertyId(propertyId));
-        Js::OpCode ldToUse = (scope->GetScopeType() == ScopeType_With && scriptContext->GetConfig()->IsES6UnscopablesEnabled()) ?
-            Js::OpCode::Ld_UnwrapWithObj : Js::OpCode::Ld_A;
 
-        this->m_writer.Reg2(ldToUse, instLocation, scopeLocation);
-        if (thisLocation != Js::Constants::NoRegister)
+        bool unwrapWithObj = scope->GetScopeType() == ScopeType_With && scriptContext->GetConfig()->IsES6UnscopablesEnabled();
+        if (envIndex != -1)
         {
-            this->m_writer.Reg2(ldToUse, thisLocation, scopeLocation);
+            this->m_writer.BrEnvProperty(
+                Js::OpCode::BrOnNoEnvProperty, nextLabel,
+                funcInfo->FindOrAddReferencedPropertyId(propertyId),
+                envIndex + Js::FrameDisplay::GetOffsetOfScopes()/sizeof(Js::Var));
+
+            Js::RegSlot tmpReg = funcInfo->AcquireTmpRegister();
+            
+            this->m_writer.SlotI1(Js::OpCode::LdEnvObj, tmpReg, 
+                                  envIndex + Js::FrameDisplay::GetOffsetOfScopes()/sizeof(Js::Var));
+
+            Js::OpCode op = unwrapWithObj ? Js::OpCode::UnwrapWithObj : Js::OpCode::Ld_A;
+
+            this->m_writer.Reg2(op, instLocation, tmpReg);
+            if (thisLocation != Js::Constants::NoRegister)
+            {
+                this->m_writer.Reg2(op, thisLocation, tmpReg);
+            }
+
+            funcInfo->ReleaseTmpRegister(tmpReg);
+        }
+        else
+        {
+            this->m_writer.BrProperty(Js::OpCode::BrOnNoProperty, nextLabel, scopeLocation,
+                                      funcInfo->FindOrAddReferencedPropertyId(propertyId));
+
+            Js::OpCode op = unwrapWithObj ? Js::OpCode::UnwrapWithObj : Js::OpCode::Ld_A;
+            this->m_writer.Reg2(op, instLocation, scopeLocation);
+            if (thisLocation != Js::Constants::NoRegister)
+            {
+                this->m_writer.Reg2(op, thisLocation, scopeLocation);
+            }
         }
 
         this->m_writer.Br(doneLabel);
@@ -4140,12 +4152,6 @@ void ByteCodeGenerator::EmitLoadInstance(Symbol *sym, IdentPtr pid, Js::RegSlot 
                 instLocation = funcInfo->AcquireTmpRegister();
             }
 
-            Js::RegSlot ldFromReg = funcInfo->GetEnvRegister();
-            if (funcInfo->GetIsStrictMode() && funcInfo->IsGlobalFunction())
-            {
-                ldFromReg = funcInfo->frameDisplayRegister;
-            }
-
             // TODO: It should be possible to avoid this double call to ScopedLdInst by having it return both
             // results at once. The reason for the uncertainty here is that we don't know whether the callee
             // belongs to a "with" object. If it does, we have to pass the "with" object as "this"; in all other
@@ -4156,7 +4162,7 @@ void ByteCodeGenerator::EmitLoadInstance(Symbol *sym, IdentPtr pid, Js::RegSlot 
             {
                 thisLocation = funcInfo->AcquireTmpRegister();
             }
-            this->m_writer.Property2(Js::OpCode::ScopedLdInst, instLocation, ldFromReg,
+            this->m_writer.ScopedProperty2(Js::OpCode::ScopedLdInst, instLocation,
                 funcInfo->FindOrAddReferencedPropertyId(propertyId), thisLocation);
         }
         else
@@ -4182,7 +4188,12 @@ void ByteCodeGenerator::EmitLoadInstance(Symbol *sym, IdentPtr pid, Js::RegSlot 
     }
     else if (instLocation != Js::Constants::NoRegister)
     {
-        if (symScope != funcInfo->GetBodyScope())
+        if (envIndex != -1)
+        {
+            this->m_writer.SlotI1(Js::OpCode::LdEnvObj, instLocation,
+                                  envIndex + Js::FrameDisplay::GetOffsetOfScopes()/sizeof(Js::Var));
+        }
+        else if (symScope != funcInfo->GetBodyScope())
         {
             this->m_writer.Reg2(Js::OpCode::Ld_A, instLocation, scopeLocation);
         }
@@ -4219,17 +4230,8 @@ void ByteCodeGenerator::EmitGlobalFncDeclInit(Js::RegSlot rhsLocation, Js::Prope
         // That means that we have to use ScopedInitFld so that we initialize the property on the right instance
         // even if the instance doesn't have the property yet (i.e., collapse the init-to-undef and the store
         // into one operation). See WOOB 1121763 and 1120973.
-        if (funcInfo->GetIsStrictMode())
-        {
-            this->m_writer.Property(Js::OpCode::ScopedInitFunc, rhsLocation, funcInfo->frameDisplayRegister,
-                funcInfo->FindOrAddReferencedPropertyId(propertyId));
-        }
-        else
-        {
-            // Distinguish block-scope and function-scope cases.
-            this->m_writer.Property(Js::OpCode::ScopedInitFunc, rhsLocation, funcInfo->GetEnvRegister(),
-                funcInfo->FindOrAddReferencedPropertyId(propertyId));
-        }
+        this->m_writer.ScopedProperty(Js::OpCode::ScopedInitFunc, rhsLocation,
+                                      funcInfo->FindOrAddReferencedPropertyId(propertyId));
     }
     else
     {
@@ -4267,16 +4269,63 @@ void ByteCodeGenerator::EmitLocalPropInit(Js::RegSlot rhsLocation, Symbol *sym, 
         {
             // Make sure the property has a slot. This will bump up the size of the slot array if necessary.
             Js::PropertyId slot = sym->EnsureScopeSlot(funcInfo);
-
             Js::RegSlot slotReg = scope->GetCanMerge() ? funcInfo->frameSlotsRegister : scope->GetLocation();
             // Now store the property to its slot.
-            this->m_writer.Slot(Js::OpCode::StSlot, rhsLocation, slotReg, slot + Js::ScopeSlots::FirstSlotIndex);
+            Js::OpCode op = this->GetStSlotOp(scope, -1, slotReg, false, funcInfo);
+
+            if (slotReg != Js::Constants::NoRegister && slotReg == funcInfo->frameSlotsRegister)
+            {
+                this->m_writer.SlotI1(op, rhsLocation, slot + Js::ScopeSlots::FirstSlotIndex);
+            }       
+            else
+            {
+                this->m_writer.SlotI2(op, rhsLocation, scope->GetInnerScopeIndex(), slot + Js::ScopeSlots::FirstSlotIndex);
+            }
         }
     }
     if (sym->GetLocation() != Js::Constants::NoRegister && rhsLocation != sym->GetLocation())
     {
         this->m_writer.Reg2(Js::OpCode::Ld_A, sym->GetLocation(), rhsLocation);
     }
+}
+
+Js::OpCode
+ByteCodeGenerator::GetStSlotOp(Scope *scope, int envIndex, Js::RegSlot scopeLocation, bool chkBlockVar, FuncInfo *funcInfo)
+{
+    Js::OpCode op;
+
+    if (envIndex != -1)
+    {
+        if (scope->GetIsObject())
+        {
+            op = Js::OpCode::StEnvObjSlot;
+        }
+        else
+        {
+            op = Js::OpCode::StEnvSlot;
+        }
+    }
+    else if (scopeLocation != Js::Constants::NoRegister &&
+             scopeLocation == funcInfo->frameSlotsRegister)
+    {
+        op = Js::OpCode::StLocalSlot;
+    }
+    else if (scope->GetIsObject())
+    {
+        op = Js::OpCode::StObjSlot;
+    }
+    else
+    {
+        Assert(scope->HasInnerScopeIndex());
+        op = Js::OpCode::StInnerSlot;
+    }
+
+    if (chkBlockVar)
+    {
+        op = this->ToChkUndeclOp(op);
+    }
+
+    return op;
 }
 
 void ByteCodeGenerator::EmitPropStore(Js::RegSlot rhsLocation, Symbol *sym, IdentPtr pid, FuncInfo *funcInfo, bool isLetDecl, bool isConstDecl, bool isFncDeclVar)
@@ -4292,6 +4341,7 @@ void ByteCodeGenerator::EmitPropStore(Js::RegSlot rhsLocation, Symbol *sym, Iden
     Scope *scope = isFncDeclVar ? symScope : nullptr;
     Js::RegSlot scopeLocation = isFncDeclVar ? scope->GetLocation() : Js::Constants::NoRegister;
     bool scopeAcquired = false;
+    Js::OpCode op;
 
     while (!isFncDeclVar)
     {
@@ -4300,17 +4350,7 @@ void ByteCodeGenerator::EmitPropStore(Js::RegSlot rhsLocation, Symbol *sym, Iden
         {
             break;
         }
-        if (envIndex != -1)
-        {
-            // The scope is in the closure environment, so retrieve it.
-            if (!scopeAcquired)
-            {
-                scopeAcquired = true;
-                scopeLocation = funcInfo->AcquireTmpRegister();
-            }
-            this->m_writer.Slot(Js::OpCode::LdSlotArr, scopeLocation, funcInfo->GetEnvRegister(), envIndex + Js::FrameDisplay::GetOffsetOfScopes() / sizeof(Js::Var));
-        }
-        else
+        if (envIndex == -1)
         {
             Assert(funcInfo == scope->GetFunc());
             scopeLocation = scope->GetLocation();
@@ -4331,24 +4371,56 @@ void ByteCodeGenerator::EmitPropStore(Js::RegSlot rhsLocation, Symbol *sym, Iden
         }
         Js::ByteCodeLabel nextLabel = this->m_writer.DefineLabel();
         Js::PropertyId propertyId = sym ? sym->EnsurePosition(this) : pid->GetPropertyId();
-        this->m_writer.BrProperty(Js::OpCode::BrOnNoProperty, nextLabel, scopeLocation,
-            funcInfo->FindOrAddReferencedPropertyId(propertyId));
 
         Js::RegSlot unwrappedScopeLocation = scopeLocation;
-        bool perfomrWithScopeSpecifcLd = scope->GetScopeType() == ScopeType_With && scriptContext->GetConfig()->IsES6UnscopablesEnabled();
-        if (perfomrWithScopeSpecifcLd)
+        bool unwrapWithObj = scope->GetScopeType() == ScopeType_With && scriptContext->GetConfig()->IsES6UnscopablesEnabled();
+        if (envIndex != -1)
         {
-            unwrappedScopeLocation = funcInfo->AcquireTmpRegister();
-            this->m_writer.Reg2(Js::OpCode::Ld_UnwrapWithObj, unwrappedScopeLocation, scopeLocation);
+            this->m_writer.BrEnvProperty(
+                Js::OpCode::BrOnNoEnvProperty, 
+                nextLabel, 
+                funcInfo->FindOrAddReferencedPropertyId(propertyId),
+                envIndex + Js::FrameDisplay::GetOffsetOfScopes()/sizeof(Js::Var));
+
+            Js::RegSlot instLocation = funcInfo->AcquireTmpRegister();
+
+            this->m_writer.SlotI1(
+                Js::OpCode::LdEnvObj, 
+                instLocation, 
+                envIndex + Js::FrameDisplay::GetOffsetOfScopes()/sizeof(Js::Var));
+
+            if (unwrapWithObj)
+            {
+                this->m_writer.Reg2(Js::OpCode::UnwrapWithObj, instLocation, instLocation);
+            }
+            
+            this->m_writer.PatchableProperty(
+                Js::OpCode::StFld, 
+                rhsLocation, 
+                instLocation, 
+                funcInfo->FindOrAddInlineCacheId(instLocation, propertyId, false, true));
+
+            funcInfo->ReleaseTmpRegister(instLocation);
         }
-
-        uint cacheId = funcInfo->FindOrAddInlineCacheId(unwrappedScopeLocation, propertyId, false, true);
-        // REVIEW: isLetDecl and isConstDecl can never be true here now that eval's do not leak them, correct?
-        this->m_writer.PatchableProperty(GetStFldOpCode(funcInfo, false, isLetDecl, isConstDecl, false), rhsLocation, unwrappedScopeLocation, cacheId);
-
-        if (perfomrWithScopeSpecifcLd)
+        else
         {
-            funcInfo->ReleaseTmpRegister(unwrappedScopeLocation);
+            this->m_writer.BrProperty(Js::OpCode::BrOnNoProperty, nextLabel, scopeLocation,
+                                      funcInfo->FindOrAddReferencedPropertyId(propertyId));
+
+            if (unwrapWithObj)
+            {
+                unwrappedScopeLocation = funcInfo->AcquireTmpRegister();
+                this->m_writer.Reg2(Js::OpCode::UnwrapWithObj, unwrappedScopeLocation, scopeLocation);
+                scopeLocation = unwrappedScopeLocation;
+            }
+
+            uint cacheId = funcInfo->FindOrAddInlineCacheId(scopeLocation, propertyId, false, true);
+            this->m_writer.PatchableProperty(Js::OpCode::StFld, rhsLocation, scopeLocation, cacheId);
+
+            if (unwrapWithObj)
+            {
+                funcInfo->ReleaseTmpRegister(unwrappedScopeLocation);
+            }
         }
 
         this->m_writer.Br(doneLabel);
@@ -4364,14 +4436,14 @@ void ByteCodeGenerator::EmitPropStore(Js::RegSlot rhsLocation, Symbol *sym, Iden
             if (funcInfo->byteCodeFunction->GetIsStrictMode() && funcInfo->IsGlobalFunction())
             {
                 uint cacheId = funcInfo->FindOrAddInlineCacheId(funcInfo->frameDisplayRegister, propertyId, false, true);
-                this->m_writer.PatchableProperty(GetScopedStFldOpCode(funcInfo), rhsLocation, funcInfo->frameDisplayRegister, cacheId);
+                this->m_writer.ElementScopedP(GetScopedStFldOpCode(funcInfo), rhsLocation, cacheId);
             }
             else
             {
                 uint cacheId = funcInfo->FindOrAddInlineCacheId(funcInfo->GetEnvRegister(), propertyId, false, true);
                 bool isConsoleScopeLetConst = this->IsConsoleScopeEval() && (isLetDecl || isConstDecl);
                 // In "eval", store to a symbol with unknown scope goes through the closure environment.
-                this->m_writer.PatchableProperty(GetScopedStFldOpCode(funcInfo, isConsoleScopeLetConst), rhsLocation, funcInfo->GetEnvRegister(), cacheId);
+                this->m_writer.ElementScopedP(GetScopedStFldOpCode(funcInfo, isConsoleScopeLetConst), rhsLocation, cacheId);
             }
         }
         else if (this->flags & (fscrImplicitThis | fscrImplicitParents))
@@ -4379,7 +4451,7 @@ void ByteCodeGenerator::EmitPropStore(Js::RegSlot rhsLocation, Symbol *sym, Iden
             uint cacheId = funcInfo->FindOrAddInlineCacheId(funcInfo->GetEnvRegister(), propertyId, false, true);
 
             // In "eval", store to a symbol with unknown scope goes through the closure environment.
-            this->m_writer.PatchableProperty(GetScopedStFldOpCode(funcInfo), rhsLocation, funcInfo->GetEnvRegister(), cacheId);
+            this->m_writer.ElementScopedP(GetScopedStFldOpCode(funcInfo), rhsLocation, cacheId);
         }
         else
         {
@@ -4411,30 +4483,30 @@ void ByteCodeGenerator::EmitPropStore(Js::RegSlot rhsLocation, Symbol *sym, Iden
         Js::PropertyId slot = sym->EnsureScopeSlot(funcInfo);
         bool chkBlockVar = !isLetDecl && !isConstDecl && NeedCheckBlockVar(sym, scope, funcInfo);
 
-        // The property is in memory rather than in a register. We'll have to load it from the slots.
-        if (scope->GetIsDynamic() || (scope->GetIsObject() && scope->IsBlockScope(funcInfo)))
+        // The property is in memory rather than register. We'll have to load it from the slots.
+        op = this->GetStSlotOp(scope, envIndex, scopeLocation, chkBlockVar, funcInfo);
+
+        if (envIndex != -1)
         {
-            // The scope is an object whose slots are subject to change. First load them from the object.
-            Js::OpCode op = chkBlockVar ? Js::OpCode::StObjSlotChkUndecl : Js::OpCode::StObjSlot;
+            this->m_writer.SlotI2(op, rhsLocation,
+                                  envIndex + Js::FrameDisplay::GetOffsetOfScopes()/sizeof(Js::Var),
+                                  slot + (sym->GetScope()->GetIsObject()? 0 : Js::ScopeSlots::FirstSlotIndex));
+        }
+        else if (scopeLocation != Js::Constants::NoRegister &&
+                 scopeLocation == funcInfo->frameSlotsRegister)
+        {
+            this->m_writer.SlotI1(op, rhsLocation,
+                                  slot + (sym->GetScope()->GetIsObject()? 0 : Js::ScopeSlots::FirstSlotIndex));
+        }
+        else if (scope->GetIsObject())
+        {
             this->m_writer.Slot(op, rhsLocation, scopeLocation, slot);
         }
         else
         {
-            if (scopeLocation == funcInfo->frameSlotsRegister &&
-                funcInfo->GetParsedFunctionBody()->DoStackScopeSlots() &&
-                !this->inPrologue)
-            {
-                // The function allocated local slots on the stack, but they may since have been boxed, so
-                // re-load them before accessing them.
-                scopeLocation = funcInfo->AcquireTmpRegister();
-                this->m_writer.Reg1(Js::OpCode::LdLocalScopeSlots, scopeLocation);
-                funcInfo->ReleaseTmpRegister(scopeLocation);
-            }
-
-            // Now store the property to its slot.
-            Js::OpCode op = chkBlockVar ? Js::OpCode::StSlotChkUndecl : Js::OpCode::StSlot;
-            this->m_writer.Slot(op, rhsLocation, scopeLocation,
-                slot + (sym->GetScope()->GetIsObject() ? 0 : Js::ScopeSlots::FirstSlotIndex));
+            Assert(scope->HasInnerScopeIndex());
+            this->m_writer.SlotI2(op, rhsLocation, scope->GetInnerScopeIndex(),
+                slot + (sym->GetScope()->GetIsObject()? 0 : Js::ScopeSlots::FirstSlotIndex));
         }
 
         if (this->ShouldTrackDebuggerMetadata() && (isLetDecl || isConstDecl))
@@ -4481,6 +4553,40 @@ void ByteCodeGenerator::EmitPropStore(Js::RegSlot rhsLocation, Symbol *sym, Iden
     }
 }
 
+Js::OpCode
+ByteCodeGenerator::GetLdSlotOp(Scope *scope, int envIndex, Js::RegSlot scopeLocation, FuncInfo *funcInfo)
+{
+    Js::OpCode op;
+
+    if (envIndex != -1)
+    {
+        if (scope->GetIsObject())
+        {
+            op = Js::OpCode::LdEnvObjSlot;
+        }
+        else
+        {
+            op = Js::OpCode::LdEnvSlot;
+        }
+    }
+    else if (scopeLocation != Js::Constants::NoRegister &&
+             scopeLocation == funcInfo->frameSlotsRegister)
+    {
+        op = Js::OpCode::LdLocalSlot;
+    }
+    else if (scope->GetIsObject())
+    {
+        op = Js::OpCode::LdObjSlot;
+    }
+    else
+    {
+        Assert(scope->IsInnerScope() && scope->HasInnerScopeIndex());
+        op = Js::OpCode::LdInnerSlot;
+    }
+
+    return op;
+}
+
 void ByteCodeGenerator::EmitPropLoad(Js::RegSlot lhsLocation, Symbol *sym, IdentPtr pid, FuncInfo *funcInfo)
 {
     // If sym belongs to a parent frame, get it from the closure environment.
@@ -4504,18 +4610,7 @@ void ByteCodeGenerator::EmitPropLoad(Js::RegSlot lhsLocation, Symbol *sym, Ident
             break;
         }
 
-        if (envIndex != -1)
-        {
-            // The scope is in the closure environment, so retrieve it.
-            scopeLocation = funcInfo->AcquireTmpRegister();
-            this->m_writer.Slot(Js::OpCode::LdSlotArr, scopeLocation, funcInfo->GetEnvRegister(), envIndex + Js::FrameDisplay::GetOffsetOfScopes() / sizeof(Js::Var));
-            funcInfo->ReleaseTmpRegister(scopeLocation);
-        }
-        else
-        {
-            Assert(funcInfo == scope->GetFunc());
-            scopeLocation = scope->GetLocation();
-        }
+        scopeLocation = scope->GetLocation();
 
         if (scope == symScope)
         {
@@ -4533,22 +4628,58 @@ void ByteCodeGenerator::EmitPropLoad(Js::RegSlot lhsLocation, Symbol *sym, Ident
 
         Js::ByteCodeLabel nextLabel = this->m_writer.DefineLabel();
         Js::PropertyId propertyId = sym ? sym->EnsurePosition(this) : pid->GetPropertyId();
-        this->m_writer.BrProperty(Js::OpCode::BrOnNoProperty, nextLabel, scopeLocation,
-            funcInfo->FindOrAddReferencedPropertyId(propertyId));
-        Js::RegSlot unwrappedScopeLocation = scopeLocation;
-        bool perfomrWithScopeSpecifcLd = scope->GetScopeType() == ScopeType_With && scriptContext->GetConfig()->IsES6UnscopablesEnabled();
-        if (perfomrWithScopeSpecifcLd)
-        {
-            unwrappedScopeLocation = funcInfo->AcquireTmpRegister();
-            this->m_writer.Reg2(Js::OpCode::Ld_UnwrapWithObj, unwrappedScopeLocation, scopeLocation);
-        }
-        uint cacheId = funcInfo->FindOrAddInlineCacheId(unwrappedScopeLocation, propertyId, false, false);
-        this->m_writer.PatchableProperty(Js::OpCode::LdFld, lhsLocation, unwrappedScopeLocation, cacheId);
 
-        if (perfomrWithScopeSpecifcLd)
+        Js::RegSlot unwrappedScopeLocation = Js::Constants::NoRegister;
+        bool unwrapWithObj = scope->GetScopeType() == ScopeType_With && scriptContext->GetConfig()->IsES6UnscopablesEnabled();
+        if (envIndex != -1)
         {
-            funcInfo->ReleaseTmpRegister(unwrappedScopeLocation);
+            this->m_writer.BrEnvProperty(
+                Js::OpCode::BrOnNoEnvProperty, 
+                nextLabel, 
+                funcInfo->FindOrAddReferencedPropertyId(propertyId),
+                envIndex + Js::FrameDisplay::GetOffsetOfScopes()/sizeof(Js::Var));
+
+            Js::RegSlot instLocation = funcInfo->AcquireTmpRegister();
+
+            this->m_writer.SlotI1(
+                Js::OpCode::LdEnvObj, 
+                instLocation, 
+                envIndex + Js::FrameDisplay::GetOffsetOfScopes()/sizeof(Js::Var));
+
+            if (unwrapWithObj)
+            {
+                this->m_writer.Reg2(Js::OpCode::UnwrapWithObj, instLocation, instLocation);
+            }
+
+            this->m_writer.PatchableProperty(
+                Js::OpCode::LdFld, 
+                lhsLocation, 
+                instLocation, 
+                funcInfo->FindOrAddInlineCacheId(instLocation, propertyId, false, false));
+
+            funcInfo->ReleaseTmpRegister(instLocation);
         }
+        else
+        {
+            this->m_writer.BrProperty(Js::OpCode::BrOnNoProperty, nextLabel, scopeLocation,
+                                      funcInfo->FindOrAddReferencedPropertyId(propertyId));
+
+            if (unwrapWithObj)
+            {
+                unwrappedScopeLocation = funcInfo->AcquireTmpRegister();
+                this->m_writer.Reg2(Js::OpCode::UnwrapWithObj, unwrappedScopeLocation, scopeLocation);
+                scopeLocation = unwrappedScopeLocation;
+            }
+
+            uint cacheId = funcInfo->FindOrAddInlineCacheId(scopeLocation, propertyId, false, false);
+            this->m_writer.PatchableProperty(Js::OpCode::LdFld, lhsLocation, scopeLocation, cacheId);
+
+            if (unwrapWithObj)
+            {
+                funcInfo->ReleaseTmpRegister(unwrappedScopeLocation);
+            }
+        }
+
         this->m_writer.Br(doneLabel);
         this->m_writer.MarkLabel(nextLabel);
     }
@@ -4573,7 +4704,7 @@ void ByteCodeGenerator::EmitPropLoad(Js::RegSlot lhsLocation, Symbol *sym, Ident
             if (funcInfo->byteCodeFunction->GetIsStrictMode() && funcInfo->IsGlobalFunction())
             {
                 uint cacheId = funcInfo->FindOrAddInlineCacheId(funcInfo->frameDisplayRegister, propertyId, false, false);
-                this->m_writer.PatchableProperty(Js::OpCode::ScopedLdFld, lhsLocation, funcInfo->frameDisplayRegister, cacheId);
+                this->m_writer.ElementScopedP(Js::OpCode::ScopedLdFld, lhsLocation, cacheId);
             }
             else
             {
@@ -4581,7 +4712,7 @@ void ByteCodeGenerator::EmitPropLoad(Js::RegSlot lhsLocation, Symbol *sym, Ident
 
                 // Load of a symbol with unknown scope from within eval
                 // Get it from the closure environment.
-                this->m_writer.PatchableProperty(Js::OpCode::ScopedLdFld, lhsLocation, funcInfo->GetEnvRegister(), cacheId);
+                this->m_writer.ElementScopedP(Js::OpCode::ScopedLdFld, lhsLocation, cacheId);
             }
         }
         else if (this->flags & (fscrImplicitThis | fscrImplicitParents))
@@ -4590,7 +4721,7 @@ void ByteCodeGenerator::EmitPropLoad(Js::RegSlot lhsLocation, Symbol *sym, Ident
 
             // Load of a symbol with unknown scope from within eval or event handler.
             // Get it from the closure environment.
-            this->m_writer.PatchableProperty(Js::OpCode::ScopedLdFld, lhsLocation, funcInfo->GetEnvRegister(), cacheId);
+            this->m_writer.ElementScopedP(Js::OpCode::ScopedLdFld, lhsLocation, cacheId);
         }
         else
         {
@@ -4632,30 +4763,33 @@ void ByteCodeGenerator::EmitPropLoad(Js::RegSlot lhsLocation, Symbol *sym, Ident
         bool chkBlockVar = NeedCheckBlockVar(sym, scope, funcInfo);
         Js::OpCode op;
 
-        // The property is in memory rather than register. We'll have to load it from the slots.
-        if (scope->GetIsDynamic() || (scope->GetIsObject() && scope->IsBlockScope(funcInfo)))
+        // Now get the property from its slot.
+        op = this->GetLdSlotOp(scope, envIndex, scopeLocation, funcInfo);
+        slot = slot + (sym->GetScope()->GetIsObject() ? 0 : Js::ScopeSlots::FirstSlotIndex);
+
+        if (envIndex != -1)
         {
-            // The scope is an object whose slots are subject to change. First load them from the object.
-            op = chkBlockVar ? Js::OpCode::LdObjSlotChkUndecl : Js::OpCode::LdObjSlot;
+            this->m_writer.SlotI2(op, lhsLocation, envIndex + Js::FrameDisplay::GetOffsetOfScopes()/sizeof(Js::Var), slot, profileId);
         }
+        else if (scopeLocation != Js::Constants::NoRegister &&
+                 scopeLocation == funcInfo->frameSlotsRegister)
+        {
+            this->m_writer.SlotI1(op, lhsLocation, slot, profileId);
+        }
+        else if (scope->GetIsObject())
+        {
+            this->m_writer.Slot(op, lhsLocation, scopeLocation, slot, profileId);
+        }       
         else
         {
-            // Now get the property from its slot.
-            op = chkBlockVar ? Js::OpCode::LdSlotChkUndecl : Js::OpCode::LdSlot;
-            slot = slot + (sym->GetScope()->GetIsObject() ? 0 : Js::ScopeSlots::FirstSlotIndex);
-
-            if (scopeLocation == funcInfo->frameSlotsRegister &&
-                funcInfo->GetParsedFunctionBody()->DoStackScopeSlots() &&
-                !this->inPrologue)
-            {
-                // The function allocated local slots on the stack, but they may since have been boxed, so
-                // re-load them before accessing them.
-                scopeLocation = funcInfo->AcquireTmpRegister();
-                this->m_writer.Reg1(Js::OpCode::LdLocalScopeSlots, scopeLocation);
-                funcInfo->ReleaseTmpRegister(scopeLocation);
-            }
+            Assert(scope->HasInnerScopeIndex());
+            this->m_writer.SlotI2(op, lhsLocation, scope->GetInnerScopeIndex(), slot, profileId);
         }
-        this->m_writer.Slot(op, lhsLocation, scopeLocation, slot, profileId);
+
+        if (chkBlockVar)
+        {
+            this->m_writer.Reg1(Js::OpCode::ChkUndecl, lhsLocation);
+        }
     }
     else
     {
@@ -4693,7 +4827,7 @@ void ByteCodeGenerator::EmitPropDelete(Js::RegSlot lhsLocation, Symbol *sym, Ide
 
     Js::ByteCodeLabel doneLabel = 0;
     bool fLabelDefined = false;
-    Js::RegSlot scopeLocation;
+    Js::RegSlot scopeLocation = Js::Constants::NoRegister;
     Js::PropertyId envIndex = -1;
     Scope *scope = nullptr;
     Scope *symScope = sym ? sym->GetScope() : this->globalScope;
@@ -4706,14 +4840,7 @@ void ByteCodeGenerator::EmitPropDelete(Js::RegSlot lhsLocation, Symbol *sym, Ide
         {
             scopeLocation = ByteCodeGenerator::RootObjectRegister;
         }
-        else if (envIndex != -1)
-        {
-            // The scope is in the closure environment, so retrieve it.
-            scopeLocation = funcInfo->AcquireTmpRegister();
-            this->m_writer.Slot(Js::OpCode::LdSlotArr, scopeLocation, funcInfo->GetEnvRegister(), envIndex + Js::FrameDisplay::GetOffsetOfScopes() / sizeof(Js::Var));
-            funcInfo->ReleaseTmpRegister(scopeLocation);
-        }
-        else
+        else if (envIndex == -1)
         {
             Assert(funcInfo == scope->GetFunc());
             scopeLocation = scope->GetLocation();
@@ -4735,23 +4862,52 @@ void ByteCodeGenerator::EmitPropDelete(Js::RegSlot lhsLocation, Symbol *sym, Ide
 
         Js::ByteCodeLabel nextLabel = this->m_writer.DefineLabel();
         Js::PropertyId propertyId = sym ? sym->EnsurePosition(this) : pid->GetPropertyId();
-        this->m_writer.BrProperty(Js::OpCode::BrOnNoProperty, nextLabel, scopeLocation,
-            funcInfo->FindOrAddReferencedPropertyId(propertyId));
-
-        Js::RegSlot unwrappedScopeLocation = scopeLocation;
-        bool perfomrWithScopeSpecifcLd = scope->GetScopeType() == ScopeType_With && scriptContext->GetConfig()->IsES6UnscopablesEnabled();
-        if (perfomrWithScopeSpecifcLd)
+        bool unwrapWithObj = scope->GetScopeType() == ScopeType_With && scriptContext->GetConfig()->IsES6UnscopablesEnabled();
+        if (envIndex != -1)
         {
-            unwrappedScopeLocation = funcInfo->AcquireTmpRegister();
-            this->m_writer.Reg2(Js::OpCode::Ld_UnwrapWithObj, unwrappedScopeLocation, scopeLocation);
+            this->m_writer.BrEnvProperty(
+                Js::OpCode::BrOnNoEnvProperty, 
+                nextLabel, 
+                funcInfo->FindOrAddReferencedPropertyId(propertyId),
+                envIndex + Js::FrameDisplay::GetOffsetOfScopes()/sizeof(Js::Var));
+
+            Js::RegSlot instLocation = funcInfo->AcquireTmpRegister();
+
+            this->m_writer.SlotI1(
+                Js::OpCode::LdEnvObj,
+                instLocation,
+                envIndex + Js::FrameDisplay::GetOffsetOfScopes()/sizeof(Js::Var));              
+
+            if (unwrapWithObj)
+            {
+                this->m_writer.Reg2(Js::OpCode::UnwrapWithObj, instLocation, instLocation);
+            }
+
+            this->m_writer.Property(Js::OpCode::DeleteFld, lhsLocation, instLocation,
+                                    funcInfo->FindOrAddReferencedPropertyId(propertyId));
+
+            funcInfo->ReleaseTmpRegister(instLocation);
         }
-
-        this->m_writer.Property(Js::OpCode::DeleteFld, lhsLocation, unwrappedScopeLocation,
-            funcInfo->FindOrAddReferencedPropertyId(propertyId));
-
-        if (perfomrWithScopeSpecifcLd)
+        else
         {
-            funcInfo->ReleaseTmpRegister(unwrappedScopeLocation);
+            this->m_writer.BrProperty(Js::OpCode::BrOnNoProperty, nextLabel, scopeLocation,
+                                      funcInfo->FindOrAddReferencedPropertyId(propertyId));
+
+            Js::RegSlot unwrappedScopeLocation = Js::Constants::NoRegister;
+            if (unwrapWithObj)
+            {
+                unwrappedScopeLocation = funcInfo->AcquireTmpRegister();
+                this->m_writer.Reg2(Js::OpCode::UnwrapWithObj, unwrappedScopeLocation, scopeLocation);
+                scopeLocation = unwrappedScopeLocation;
+            }
+
+            this->m_writer.Property(Js::OpCode::DeleteFld, lhsLocation, scopeLocation,
+                                    funcInfo->FindOrAddReferencedPropertyId(propertyId));
+
+            if (unwrapWithObj)
+            {
+                funcInfo->ReleaseTmpRegister(unwrappedScopeLocation);
+            }
         }
 
         this->m_writer.Br(doneLabel);
@@ -4764,7 +4920,7 @@ void ByteCodeGenerator::EmitPropDelete(Js::RegSlot lhsLocation, Symbol *sym, Ide
         Js::PropertyId propertyId = sym ? sym->EnsurePosition(this) : pid->GetPropertyId();
         if (this->flags & (fscrEval | fscrImplicitThis | fscrImplicitParents))
         {
-            this->m_writer.Property(Js::OpCode::ScopedDeleteFld, lhsLocation, funcInfo->GetEnvRegister(),
+            this->m_writer.ScopedProperty(Js::OpCode::ScopedDeleteFld, lhsLocation,
                 funcInfo->FindOrAddReferencedPropertyId(propertyId));
         }
         else
@@ -4791,16 +4947,24 @@ void ByteCodeGenerator::EmitTypeOfFld(FuncInfo * funcInfo, Js::PropertyId proper
 
     uint cacheId;
     Js::RegSlot tmpReg = funcInfo->AcquireTmpRegister();
-    if (ldFldOp == Js::OpCode::LdRootFldForTypeOf)
+    switch (ldFldOp)
     {
+    case Js::OpCode::LdRootFldForTypeOf:
         cacheId = funcInfo->FindOrAddRootObjectInlineCacheId(propertyId, false, false);
         this->Writer()->PatchableRootProperty(ldFldOp, tmpReg, cacheId, false, false);
-    }
-    else
-    {
+        break;
+
+    case Js::OpCode::ScopedLdFldForTypeOf:
+        cacheId = funcInfo->FindOrAddInlineCacheId(instance, propertyId, false, false);
+        this->Writer()->ElementScopedP(ldFldOp, tmpReg, cacheId);
+        break;
+
+    default:
         cacheId = funcInfo->FindOrAddInlineCacheId(instance, propertyId, false, false);
         this->Writer()->PatchableProperty(ldFldOp, tmpReg, instance, cacheId);
+        break;
     }
+
     this->Writer()->Reg2(
         Js::OpCode::Typeof, value, tmpReg);
     funcInfo->ReleaseTmpRegister(tmpReg);
@@ -4815,7 +4979,7 @@ void ByteCodeGenerator::EmitPropTypeof(Js::RegSlot lhsLocation, Symbol *sym, Ide
 
     Js::ByteCodeLabel doneLabel = 0;
     bool fLabelDefined = false;
-    Js::RegSlot scopeLocation;
+    Js::RegSlot scopeLocation = Js::Constants::NoRegister;
     Js::PropertyId envIndex = -1;
     Scope *scope = nullptr;
     Scope *symScope = sym ? sym->GetScope() : this->globalScope;
@@ -4828,14 +4992,7 @@ void ByteCodeGenerator::EmitPropTypeof(Js::RegSlot lhsLocation, Symbol *sym, Ide
         {
             scopeLocation = ByteCodeGenerator::RootObjectRegister;
         }
-        else if (envIndex != -1)
-        {
-            // The scope is in the closure environment, so retrieve it.
-            scopeLocation = funcInfo->AcquireTmpRegister();
-            this->m_writer.Slot(Js::OpCode::LdSlotArr, scopeLocation, funcInfo->GetEnvRegister(), envIndex + Js::FrameDisplay::GetOffsetOfScopes() / sizeof(Js::Var));
-            funcInfo->ReleaseTmpRegister(scopeLocation);
-        }
-        else
+        else if (envIndex == -1)
         {
             Assert(funcInfo == scope->GetFunc());
             scopeLocation = scope->GetLocation();
@@ -4857,22 +5014,48 @@ void ByteCodeGenerator::EmitPropTypeof(Js::RegSlot lhsLocation, Symbol *sym, Ide
 
         Js::ByteCodeLabel nextLabel = this->m_writer.DefineLabel();
         Js::PropertyId propertyId = sym ? sym->EnsurePosition(this) : pid->GetPropertyId();
-        this->m_writer.BrProperty(Js::OpCode::BrOnNoProperty, nextLabel, scopeLocation,
-            funcInfo->FindOrAddReferencedPropertyId(propertyId));
 
-        Js::RegSlot unwrappedScopeLocation = scopeLocation;
-        bool perfomrWithScopeSpecifcLd = scope->GetScopeType() == ScopeType_With && scriptContext->GetConfig()->IsES6UnscopablesEnabled();
-        if (perfomrWithScopeSpecifcLd)
+        bool unwrapWithObj = scope->GetScopeType() == ScopeType_With && scriptContext->GetConfig()->IsES6UnscopablesEnabled();
+        if (envIndex != -1)
         {
-            unwrappedScopeLocation = funcInfo->AcquireTmpRegister();
-            this->m_writer.Reg2(Js::OpCode::Ld_UnwrapWithObj, unwrappedScopeLocation, scopeLocation);
+            this->m_writer.BrEnvProperty(Js::OpCode::BrOnNoEnvProperty, nextLabel, 
+                                         funcInfo->FindOrAddReferencedPropertyId(propertyId),
+                                         envIndex + Js::FrameDisplay::GetOffsetOfScopes()/sizeof(Js::Var));
+
+            Js::RegSlot instLocation = funcInfo->AcquireTmpRegister();
+
+            this->m_writer.SlotI1(Js::OpCode::LdEnvObj, 
+                                  instLocation, 
+                                  envIndex + Js::FrameDisplay::GetOffsetOfScopes()/sizeof(Js::Var));
+
+            if (unwrapWithObj)
+            {
+                this->m_writer.Reg2(Js::OpCode::UnwrapWithObj, instLocation, instLocation);
+            }
+
+            this->EmitTypeOfFld(funcInfo, propertyId, lhsLocation, instLocation, Js::OpCode::LdFldForTypeOf);
+
+            funcInfo->ReleaseTmpRegister(instLocation);
         }
-
-        this->EmitTypeOfFld(funcInfo, propertyId, lhsLocation, unwrappedScopeLocation, Js::OpCode::LdFldForTypeOf);
-
-        if (perfomrWithScopeSpecifcLd)
+        else
         {
-            funcInfo->ReleaseTmpRegister(unwrappedScopeLocation);
+            this->m_writer.BrProperty(Js::OpCode::BrOnNoProperty, nextLabel, scopeLocation,
+                                      funcInfo->FindOrAddReferencedPropertyId(propertyId));
+
+            Js::RegSlot unwrappedScopeLocation = Js::Constants::NoRegister;
+            if (unwrapWithObj)
+            {
+                unwrappedScopeLocation = funcInfo->AcquireTmpRegister();
+                this->m_writer.Reg2(Js::OpCode::UnwrapWithObj, unwrappedScopeLocation, scopeLocation);
+                scopeLocation = unwrappedScopeLocation;
+            }
+
+            this->EmitTypeOfFld(funcInfo, propertyId, lhsLocation, scopeLocation, Js::OpCode::LdFldForTypeOf);
+
+            if (unwrapWithObj)
+            {
+                funcInfo->ReleaseTmpRegister(unwrappedScopeLocation);
+            }
         }
 
         this->m_writer.Br(doneLabel);
@@ -4923,30 +5106,32 @@ void ByteCodeGenerator::EmitPropTypeof(Js::RegSlot lhsLocation, Symbol *sym, Ide
         bool chkBlockVar = NeedCheckBlockVar(sym, scope, funcInfo);
         Js::OpCode op;
 
-        // The property is in memory rather than register. We'll have to load it from the slots.
-        if (scope->GetIsDynamic() || (scope->GetIsObject() && scope->IsBlockScope(funcInfo)))
+        op = this->GetLdSlotOp(scope, envIndex, scopeLocation, funcInfo);
+        slot = slot + (sym->GetScope()->GetIsObject() ? 0 : Js::ScopeSlots::FirstSlotIndex);
+
+        if (envIndex != -1)
         {
-            // The scope is an object whose slots are subject to change. First load them from the object.
-            op = chkBlockVar ? Js::OpCode::LdObjSlotChkUndecl : Js::OpCode::LdObjSlot;
+            this->m_writer.SlotI2(op, tmpLocation, envIndex + Js::FrameDisplay::GetOffsetOfScopes()/sizeof(Js::Var), slot, profileId);
+        }
+        else if (scopeLocation != Js::Constants::NoRegister &&
+                 scopeLocation == funcInfo->frameSlotsRegister)
+        {
+            this->m_writer.SlotI1(op, tmpLocation, slot, profileId);
+        }
+        else if (scope->GetIsObject())
+        {
+            this->m_writer.Slot(op, tmpLocation, scopeLocation, slot, profileId);
         }
         else
         {
-            // Now get the property from its slot.
-            op = chkBlockVar ? Js::OpCode::LdSlotChkUndecl : Js::OpCode::LdSlot;
-            slot = slot + (sym->GetScope()->GetIsObject() ? 0 : Js::ScopeSlots::FirstSlotIndex);
-
-            if (scopeLocation == funcInfo->frameSlotsRegister &&
-                funcInfo->GetParsedFunctionBody()->DoStackScopeSlots() &&
-                !this->inPrologue)
-            {
-                // The function allocated local slots on the stack, but they may since have been boxed, so
-                // re-load them before accessing them.
-                scopeLocation = funcInfo->AcquireTmpRegister();
-                this->m_writer.Reg1(Js::OpCode::LdLocalScopeSlots, scopeLocation);
-                funcInfo->ReleaseTmpRegister(scopeLocation);
-            }
+            Assert(scope->HasInnerScopeIndex());
+            this->m_writer.SlotI2(op, tmpLocation, scope->GetInnerScopeIndex(), slot, profileId);
         }
-        this->m_writer.Slot(op, tmpLocation, scopeLocation, slot, profileId);
+
+        if (chkBlockVar)
+        {
+            this->m_writer.Reg1(Js::OpCode::ChkUndecl, tmpLocation);
+        }
 
         this->m_writer.Reg2(Js::OpCode::Typeof, lhsLocation, tmpLocation);
         funcInfo->ReleaseTmpRegister(tmpLocation);
@@ -5016,8 +5201,8 @@ void ByteCodeGenerator::EnsureNoRedeclarations(ParseNode *pnodeBlock, FuncInfo *
             {
                 if (!funcInfo->byteCodeFunction->GetIsStrictMode())
                 {
-                    this->m_writer.Property(Js::OpCode::ScopedEnsureNoRedeclFld, ByteCodeGenerator::RootObjectRegister, funcInfo->GetEnvRegister(),
-                        funcInfo->FindOrAddReferencedPropertyId(propertyId));
+                    this->m_writer.ScopedProperty(Js::OpCode::ScopedEnsureNoRedeclFld, ByteCodeGenerator::RootObjectRegister,
+                                                  funcInfo->FindOrAddReferencedPropertyId(propertyId));
                 }
             }
             else
@@ -6112,7 +6297,14 @@ Js::ArgSlot EmitArgListEnd(
             evalIndex = argSlotIndex + 1;
         }
 
-        byteCodeGenerator->Writer()->ArgOut<false>(evalIndex, evalEnv, callSiteId);
+        if (evalEnv == funcInfo->GetEnvRegister() || evalEnv == funcInfo->frameDisplayRegister)
+        {
+            byteCodeGenerator->Writer()->ArgOutEnv(evalIndex);
+        }
+        else
+        {
+            byteCodeGenerator->Writer()->ArgOut<false>(evalIndex, evalEnv, callSiteId);
+        }
     }
 
     if (fHasNewTarget)
@@ -9666,7 +9858,7 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
         // The "function declarations" were emitted in DefineFunctions()
         if (!pnode->sxFnc.IsDeclaration())
         {
-            byteCodeGenerator->DefineOneFunctionHandleBoxedFD(pnode, funcInfo, false);
+            byteCodeGenerator->DefineOneFunction(pnode, funcInfo, false);
         }
         break;
     // PTNODE(knopClassDecl, "class"    ,None    ,None ,fnopLeaf)
@@ -10158,20 +10350,22 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
 
         if (scope->GetMustInstantiate())
         {
-            scopeLocation = funcInfo->AcquireTmpRegister();
-            scope->SetLocation(scopeLocation);
-
             if (scope->GetIsObject())
             {
+                scopeLocation = funcInfo->AcquireTmpRegister();
+                scope->SetLocation(scopeLocation);
+
                 debuggerScope = byteCodeGenerator->RecordStartScopeObject(pnode, Js::DiagCatchScopeInObject, scopeLocation);
                 byteCodeGenerator->Writer()->Reg1(Js::OpCode::NewPseudoScope, scopeLocation);
             }
             else
             {
+                scopeLocation = funcInfo->FirstInnerScopeReg() + scope->GetInnerScopeIndex();
+
                 int index = Js::DebuggerScope::InvalidScopeIndex;
                 debuggerScope = byteCodeGenerator->RecordStartScopeObject(pnode, Js::DiagCatchScopeInSlot, scopeLocation, &index);
 
-                byteCodeGenerator->Writer()->Reg1Int2(Js::OpCode::NewScopeSlotsWithoutPropIds, scopeLocation, scope->GetScopeSlotCount() + Js::ScopeSlots::FirstSlotIndex, index);
+                byteCodeGenerator->Writer()->Num3(Js::OpCode::NewInnerScopeSlots, scope->GetInnerScopeIndex(), scope->GetScopeSlotCount() + Js::ScopeSlots::FirstSlotIndex, index);
             }
         }
         else
@@ -10199,11 +10393,14 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
                     byteCodeGenerator->TrackSlotArrayPropertyForDebugger(debuggerScope, sym, sym->EnsurePosition(byteCodeGenerator), debuggerPropertyFlags);
                     if (initializeParam)
                     {
-                        byteCodeGenerator->Writer()->Slot(Js::OpCode::StSlot, location, scopeLocation, Js::ScopeSlots::FirstSlotIndex);
+                        byteCodeGenerator->EmitLocalPropInit(location, sym, funcInfo);
                     }
                     else
                     {
-                        byteCodeGenerator->Writer()->Reg1Unsigned1(Js::OpCode::InitUndeclSlot, scopeLocation, sym->GetScopeSlot() + Js::ScopeSlots::FirstSlotIndex);
+                        Js::RegSlot tmpReg = funcInfo->AcquireTmpRegister();
+                        byteCodeGenerator->Writer()->Reg1(Js::OpCode::InitUndecl, tmpReg);
+                        byteCodeGenerator->EmitLocalPropInit(tmpReg, sym, funcInfo);
+                        funcInfo->ReleaseTmpRegister(tmpReg);
                     }
                 }
             }
@@ -10267,9 +10464,9 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
         if (scope->GetMustInstantiate() || isPattern)
         {
             byteCodeGenerator->PopScope();
-            if (scope->GetMustInstantiate())
+            if (scope->GetMustInstantiate() && scope->GetLocation() != Js::Constants::NoRegister)
             {
-                funcInfo->ReleaseTmpRegister(scopeLocation);
+                funcInfo->ReleaseTmpRegister(scope->GetLocation());
             }
         }
 

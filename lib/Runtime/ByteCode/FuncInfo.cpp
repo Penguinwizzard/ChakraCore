@@ -15,6 +15,8 @@ FuncInfo::FuncInfo(
     varRegsCount(0),
     constRegsCount(2),
     inArgsCount(0),
+    innerScopeCount(0),
+    currentInnerScopeIndex((uint)-1),
     firstTmpReg(Js::Constants::NoRegister),
     curTmpReg(Js::Constants::NoRegister),
     outArgsMaxDepth(0),
@@ -36,7 +38,7 @@ FuncInfo::FuncInfo(
     frameSlotsRegister(Js::Constants::NoRegister),
     frameDisplayRegister(Js::Constants::NoRegister),
     funcObjRegister(Js::Constants::NoRegister),
-    stackClosureReg(Js::Constants::NoRegister),
+    localClosureReg(Js::Constants::NoRegister),
     yieldRegister(Js::Constants::NoRegister),
     paramScope(paramScope),
     bodyScope(bodyScope),
@@ -373,6 +375,22 @@ void FuncInfo::ReleaseTmpRegister(Js::RegSlot tmpReg)
     }
 }
 
+Js::RegSlot FuncInfo::FirstInnerScopeReg() const
+{
+    // FunctionBody stores this as a mapped reg. Callers of this function want the pre-mapped value.
+
+    Js::RegSlot reg = this->GetParsedFunctionBody()->FirstInnerScopeReg();
+    Assert(reg != Js::Constants::NoRegister);
+
+    return reg - this->constRegsCount;
+}
+
+void FuncInfo::SetFirstInnerScopeReg(Js::RegSlot reg)
+{
+    // Just forward to the FunctionBody.
+    this->GetParsedFunctionBody()->SetFirstInnerScopeReg(reg);
+}
+
 void FuncInfo::AddCapturedSym(Symbol *sym)
 {
     if (this->capturedSyms == nullptr)
@@ -455,4 +473,43 @@ void FuncInfo::SetHasMaybeEscapedNestedFunc(DebugOnly(wchar_t const * reason))
         Output::Flush();
     }
     hasEscapedUseNestedFunc = true;
+}
+
+uint FuncInfo::AcquireInnerScopeIndex()
+{
+    uint index = this->currentInnerScopeIndex;
+    if (index == (uint)-1)
+    {
+        index = 0;
+    }
+    else
+    {
+        index++;
+        if (index == (uint)-1)
+        {
+            Js::Throw::OutOfMemory();
+        }
+    }
+    if (index == this->innerScopeCount)
+    {
+        this->innerScopeCount = index + 1;
+    }
+    this->currentInnerScopeIndex = index;
+    return index;
+}
+
+void FuncInfo::ReleaseInnerScopeIndex()
+{
+    uint index = this->currentInnerScopeIndex;
+    Assert(index != (uint)-1);
+
+    if (index == 0)
+    {
+        index = (uint)-1;
+    }
+    else
+    {
+        index--;
+    }
+    this->currentInnerScopeIndex = index;
 }

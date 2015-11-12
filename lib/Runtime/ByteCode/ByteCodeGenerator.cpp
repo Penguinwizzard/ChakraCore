@@ -81,6 +81,18 @@ void BeginVisitBlock(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
 {
     if (BlockHasOwnScope(pnode, byteCodeGenerator))
     {
+        Scope *scope = pnode->sxBlock.scope;
+        FuncInfo *func = scope->GetFunc();
+
+        if (scope->IsInnerScope() &&
+            !scope->GetIsObject() &&
+            scope->GetMustInstantiate())
+        {
+            // Give this scope an index so its slots can be accessed via the index in the byte code,
+            // not a register.
+            scope->SetInnerScopeIndex(func->AcquireInnerScopeIndex());
+        }
+
         byteCodeGenerator->PushBlock(pnode);
         byteCodeGenerator->PushScope(pnode->sxBlock.scope);
     }
@@ -90,7 +102,19 @@ void EndVisitBlock(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
 {
     if (BlockHasOwnScope(pnode, byteCodeGenerator))
     {
-        Assert(byteCodeGenerator->GetCurrentScope() == pnode->sxBlock.scope);
+        Scope *scope = pnode->sxBlock.scope;
+        FuncInfo *func = scope->GetFunc();
+
+        if (!byteCodeGenerator->IsInDebugMode() &&
+            scope->HasInnerScopeIndex())
+        {
+            // In debug mode, don't release the current index, as we're giving each scope a unique index, regardless
+            // of nesting.
+            Assert(scope->GetInnerScopeIndex() == func->CurrentInnerScopeIndex());
+            func->ReleaseInnerScopeIndex();
+        }
+
+        Assert(byteCodeGenerator->GetCurrentScope() == scope);
         byteCodeGenerator->PopScope();
         byteCodeGenerator->PopBlock();
     }
@@ -98,11 +122,41 @@ void EndVisitBlock(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
 
 void BeginVisitCatch(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
 {
+    Scope *scope = pnode->sxCatch.scope;
+    FuncInfo *func = scope->GetFunc();
+
+    scope->SetCapturesAll(func->GetCallsEval() || func->GetChildCallsEval());
+    scope->SetMustInstantiate(scope->GetMustInstantiate() || scope->GetCapturesAll() || func->IsGlobalFunction() || byteCodeGenerator->GetCurrentScope() != func->GetBodyScope());
+    if (func->GetCallsEval() || func->GetChildCallsEval() ||
+        (byteCodeGenerator->GetFlags() & (fscrEval | fscrImplicitThis | fscrImplicitParents)))
+    {
+        scope->SetIsObject();
+    }                       
+
+    if (!scope->GetIsObject() && scope->GetMustInstantiate())
+    {
+        // Give this scope an index so its slots can be accessed via the index in the byte code,
+        // not a register.
+        scope->SetInnerScopeIndex(func->AcquireInnerScopeIndex());
+    }
+    
     byteCodeGenerator->PushScope(pnode->sxCatch.scope);
 }
 
 void EndVisitCatch(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
 {
+    Scope *scope = pnode->sxCatch.scope;
+
+    if (scope->HasInnerScopeIndex() && !byteCodeGenerator->IsInDebugMode())
+    {
+        // In debug mode, don't release the current index, as we're giving each scope a unique index,
+        // regardless of nesting.
+        FuncInfo *func = scope->GetFunc();
+
+        Assert(scope->GetInnerScopeIndex() == func->CurrentInnerScopeIndex());
+        func->ReleaseInnerScopeIndex();
+    }
+
     byteCodeGenerator->PopScope();
 }
 
@@ -3318,19 +3372,6 @@ void BindFuncSymbol(ParseNode *pnodeFnc, ByteCodeGenerator *byteCodeGenerator)
         {
             func->SetHasGlobalRef(true);
         }
-        else
-        {
-            if (!func->IsGlobalFunction() && func->GetChildCallsEval())
-            {
-                // (How can the global function refer to a non-global function symbol?
-                // One way is if the symbol is a named function expression, and we're in ES5 mode.)
-                if (!sym->GetFuncExpr())
-                {
-                    sym->GetScope()->SetHasLocalInClosure(true);
-                    sym->SetHasNonLocalReference(true, byteCodeGenerator);
-                }
-            }
-        }
     }
 }
 
@@ -4382,7 +4423,7 @@ inline bool ContainsDirectSuper(ParseNodePtr pnode)
 void AssignRegisters(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
 {
     if (pnode == nullptr)
-{
+    {
         return;
     }
 
@@ -4970,7 +5011,10 @@ void AssignRegisters(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
         {
             if (pnode->sxBlock.scope && pnode->sxBlock.scope->GetMustInstantiate() && byteCodeGenerator->IsInDebugMode())
             {
-                pnode->sxBlock.scope->SetLocation(byteCodeGenerator->NextVarRegister());
+                if (pnode->sxBlock.scope->GetIsObject())
+                {
+                    pnode->sxBlock.scope->SetLocation(byteCodeGenerator->NextVarRegister());
+                }
             }
             break;
         }

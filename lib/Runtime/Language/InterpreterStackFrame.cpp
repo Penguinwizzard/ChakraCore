@@ -80,6 +80,9 @@
 #define PROCESS_CUSTOM_L_Arg2_COMMON(name, func, layout, suffix) PROCESS_CUSTOM_L_COMMON(name, func, layout, Arg, suffix)
 #define PROCESS_CUSTOM_L_Arg(name, func) PROCESS_CUSTOM_L_COMMON(name, func, Arg, Arg,)
 
+#define PROCESS_CUSTOM_ArgNoSrc_COMMON(name, func, suffix) PROCESS_CUSTOM_COMMON(name, func, ArgNoSrc, suffix)
+#define PROCESS_CUSTOM_ArgNoSrc(name, func) PROCESS_CUSTOM_COMMON(name, func, ArgNoSrc,)
+
 #define PROCESS_CUSTOM_L_R0_COMMON(name, func, layout, suffix) PROCESS_CUSTOM_L_COMMON(name, func, layout, R0, suffix)
 #define PROCESS_CUSTOM_L_R0(name, func, layout) PROCESS_CUSTOM_L_COMMON(name, func, layout, R0,)
 
@@ -291,6 +294,28 @@
 
 #define PROCESS_A1toA1MemNonVar(name, func) PROCESS_A1toA1MemNonVar_COMMON(name, func,)
 
+#define PROCESS_XXINNERtoA1MemNonVar_COMMON(name, func, suffix) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg1Unsigned1, suffix); \
+        SetNonVarReg(playout->R0, \
+                func(GetInnerScopeSlots(playout->C1), GetScriptContext())); \
+        break; \
+    }
+
+#define PROCESS_XXINNERtoA1MemNonVar(name, func) PROCESS_XXINNERtoA1MemNonVar_COMMON(name, func,)
+
+#define PROCESS_A1INNERtoA1MemNonVar_COMMON(name, func, suffix) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg2Int1, suffix); \
+        SetNonVarReg(playout->R0, \
+                func(GetInnerScopeSlots(playout->C1), GetNonVarReg(playout->R1), GetScriptContext())); \
+        break; \
+    }
+
+#define PROCESS_A1LOCALtoA1MemNonVar(name, func) PROCESS_A1LOCALtoA1MemNonVar_COMMON(name, func,)
+
 #define PROCESS_A1I1toA1_COMMON(name, func, suffix) \
     case OpCode::name: \
     { \
@@ -332,6 +357,18 @@
         break; \
     }
 
+#define PROCESS_A2toXX(name, func) PROCESS_A2toXX_COMMON(name, func,)
+
+#define PROCESS_A2toXXMemNonVar_COMMON(name, func, suffix) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg2, suffix); \
+        func(GetNonVarReg(playout->R0), GetNonVarReg(playout->R1), GetScriptContext()); \
+        break; \
+    }
+
+#define PROCESS_A2toXXMemNonVar(name, func) PROCESS_A2toXXMemNonVar_COMMON(name, func,)
+
 #define PROCESS_A1NonVarToA1_COMMON(name, func, suffix) \
     case OpCode::name: \
     { \
@@ -350,8 +387,6 @@
             func(GetNonVarReg(playout->R1), playout->R2)); \
         break; \
     }
-
-#define PROCESS_A2toXX(name, func) PROCESS_A2toXX_COMMON(name, func,)
 
 #define PROCESS_A2toA1Mem_COMMON(name, func, suffix) \
     case OpCode::name: \
@@ -422,8 +457,8 @@
 #define PROCESS_ELEM_C2_to_XX_COMMON(name, func, suffix) \
     case OpCode::name: \
     { \
-        PROCESS_READ_LAYOUT(name, ElementC, suffix); \
-        func(GetNonVarReg(playout->Instance), playout->PropertyIdIndex, GetReg(playout->Value)); \
+        PROCESS_READ_LAYOUT(name, ElementScopedC, suffix); \
+        func(GetEnvForEvalCode(), playout->PropertyIdIndex, GetReg(playout->Value)); \
         break; \
     }
 
@@ -439,6 +474,17 @@
     }
 
 #define PROCESS_GET_ELEM_SLOT_FB(name, func) PROCESS_GET_ELEM_SLOT_FB_COMMON(name, func,)
+
+#define PROCESS_GET_SLOT_FB_COMMON(name, func, suffix) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, ElementSlotI1, suffix); \
+        SetReg(playout->Value, \
+               func(this->GetFrameDisplayForNestedFunc(), reinterpret_cast<Js::FunctionProxy**>(this->m_functionBody->GetNestedFuncReference(playout->SlotIndex)))); \
+        break; \
+    }
+
+#define PROCESS_GET_SLOT_FB(name, func) PROCESS_GET_SLOT_FB_COMMON(name, func,)
 
 #define PROCESS_GET_ELEM_IMem_COMMON(name, func, suffix) \
     case OpCode::name: \
@@ -580,6 +626,17 @@
         break; \
     }
 
+#define PROCESS_BRENVPROP(name, func) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, BrEnvProperty,); \
+        if (func(LdEnv(), playout->SlotIndex, playout->PropertyIdIndex, GetScriptContext())) \
+        { \
+            ip = m_reader.SetCurrentRelativeOffset(ip, playout->RelativeJumpOffset); \
+        } \
+        break; \
+    }
+
 #define PROCESS_W1(name, func) \
     case OpCode::name: \
     { \
@@ -618,12 +675,13 @@
     }
 #define PROCESS_U1toA1NonVar_FuncBody(name, func) PROCESS_U1toA1NonVar_FuncBody_COMMON(name, func,)
 
-#define PROCESS_I1toA2NonVar_FuncBody(name, func) \
+#define PROCESS_A1I2toXXNonVar_FuncBody(name, func) PROCESS_A1I2toXXNonVar_FuncBody_COMMON(name, func,)
+
+#define PROCESS_A1I2toXXNonVar_FuncBody_COMMON(name, func, suffix) \
     case OpCode::name: \
     { \
-        PROCESS_READ_LAYOUT(name, Reg1Int2,); \
-        SetNonVarReg(playout->R0, \
-                func(playout->C1, playout->C2, GetScriptContext(), this->m_functionBody)); \
+        PROCESS_READ_LAYOUT(name, Reg3, suffix); \
+        func(playout->R0, playout->R1, playout->R2, GetScriptContext(), this->m_functionBody); \
         break; \
     }
 
@@ -637,6 +695,26 @@
 
 #define PROCESS_A1U1toXX(name, func) PROCESS_A1U1toXX_COMMON(name, func,)
 
+#define PROCESS_A1toEnvMemNonVar_COMMON(name, func, suffix) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Reg1, suffix); \
+        SetEnv(func(GetNonVarReg(playout->R0), GetScriptContext())); \
+        break; \
+    }
+    
+#define PROCESS_A1toEnvMemNonVar(name, func) PROCESS_A1toEnvMemNonVar_COMMON(name, func,)
+
+#define PROCESS_EnvU1toXX_COMMON(name, func, suffix) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, Unsigned1, suffix); \
+        func(LdEnv(), playout->C1); \
+        break; \
+    }
+    
+#define PROCESS_EnvU1toXX(name, func) PROCESS_EnvU1toXX_COMMON(name, func,)
+
 #define PROCESS_GET_ELEM_SLOTNonVar_COMMON(name, func, layout, suffix) \
     case OpCode::name: \
     { \
@@ -648,6 +726,39 @@
 
 #define PROCESS_GET_ELEM_SLOTNonVar(name, func, layout) PROCESS_GET_ELEM_SLOTNonVar_COMMON(name, func, layout,)
 
+#define PROCESS_GET_ELEM_LOCALSLOTNonVar_COMMON(name, func, layout, suffix) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, layout, suffix); \
+        SetNonVarReg(playout->Value, \
+                func(GetLocalScopeSlots(), playout)); \
+        break; \
+    }
+
+#define PROCESS_GET_ELEM_LOCALSLOTNonVar(name, func, layout) PROCESS_GET_ELEM_LOCALSLOTNonVar_COMMON(name, func, layout,)
+
+#define PROCESS_GET_ELEM_INNERSLOTNonVar_COMMON(name, func, layout, suffix) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, layout, suffix); \
+        SetNonVarReg(playout->Value, \
+                func(GetInnerScopeSlots(playout->SlotIndex1), playout)); \
+        break; \
+    }
+
+#define PROCESS_GET_ELEM_INNERSLOTNonVar(name, func, layout) PROCESS_GET_ELEM_INNERSLOTNonVar_COMMON(name, func, layout,)
+
+#define PROCESS_GET_ELEM_ENVSLOTNonVar_COMMON(name, func, layout, suffix) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, layout, suffix); \
+        SetNonVarReg(playout->Value, \
+                func(LdEnv(), playout)); \
+        break; \
+    }
+
+#define PROCESS_GET_ELEM_ENVSLOTNonVar(name, func, layout) PROCESS_GET_ELEM_ENVSLOTNonVar_COMMON(name, func, layout,)
+
 #define PROCESS_SET_ELEM_SLOTNonVar_COMMON(name, func, suffix) \
     case OpCode::name: \
     { \
@@ -657,6 +768,36 @@
     }
 
 #define PROCESS_SET_ELEM_SLOTNonVar(name, func) PROCESS_SET_ELEM_SLOTNonVar_COMMON(name, func,)
+
+#define PROCESS_SET_ELEM_LOCALSLOTNonVar_COMMON(name, func, suffix) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, ElementSlotI1, suffix); \
+        func(GetLocalScopeSlots(), playout->SlotIndex, GetRegAllowStackVarEnableOnly(playout->Value)); \
+        break; \
+    }
+
+#define PROCESS_SET_ELEM_LOCALSLOTNonVar(name, func) PROCESS_SET_ELEM_LOCALSLOTNonVar_COMMON(name, func,)
+
+#define PROCESS_SET_ELEM_INNERSLOTNonVar_COMMON(name, func, suffix) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, ElementSlotI2, suffix); \
+        func(GetInnerScopeSlots(playout->SlotIndex1), playout->SlotIndex2, GetRegAllowStackVarEnableOnly(playout->Value)); \
+        break; \
+    }
+
+#define PROCESS_SET_ELEM_INNERSLOTNonVar(name, func) PROCESS_SET_ELEM_INNERSLOTNonVar_COMMON(name, func,)
+
+#define PROCESS_SET_ELEM_ENVSLOTNonVar_COMMON(name, func, suffix) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, ElementSlotI2, suffix); \
+        func(LdEnv(), playout->SlotIndex1, playout->SlotIndex2, GetRegAllowStackVarEnableOnly(playout->Value)); \
+        break; \
+    }
+
+#define PROCESS_SET_ELEM_ENVSLOTNonVar(name, func) PROCESS_SET_ELEM_ENVSLOTNonVar_COMMON(name, func,)
 
 /*---------------------------------------------------------------------------------------------- */
 #define PROCESS_A3toA1Mem_COMMON(name, func, suffix) \
@@ -766,14 +907,14 @@ namespace Js
     };
 
     const int k_stackFrameVarCount = (sizeof(InterpreterStackFrame) + sizeof(Var) - 1) / sizeof(Var);
-    InterpreterStackFrame::Setup::Setup(Js::ScriptFunction * function, Js::Arguments& args)
-        : function(function), inParams(args.Values), inSlotsCount(args.Info.Count), executeFunction(function->GetFunctionBody()), callFlags(args.Info.Flags)
+    InterpreterStackFrame::Setup::Setup(Js::ScriptFunction * function, Js::Arguments& args, bool inlinee)
+        : function(function), inParams(args.Values), inSlotsCount(args.Info.Count), executeFunction(function->GetFunctionBody()), callFlags(args.Info.Flags), bailedOutOfInlinee(inlinee)
     {
         SetupInternal();
     }
 
-    InterpreterStackFrame::Setup::Setup(Js::ScriptFunction * function, Var * inParams, int inSlotsCount)
-        : function(function), inParams(inParams), inSlotsCount(inSlotsCount), executeFunction(function->GetFunctionBody()), callFlags(CallFlags_None)
+    InterpreterStackFrame::Setup::Setup(Js::ScriptFunction * function, Var * inParams, int inSlotsCount, bool inlinee)
+        : function(function), inParams(inParams), inSlotsCount(inSlotsCount), executeFunction(function->GetFunctionBody()), callFlags(CallFlags_None), bailedOutOfInlinee(inlinee)
     {
         SetupInternal();
     }
@@ -808,19 +949,22 @@ namespace Js
         {
             // Track stack funcs...
             this->varAllocCount += (sizeof(StackScriptFunction) * this->executeFunction->GetNestedCount()) / sizeof(Var);
-            // Frame display (if environment depth is statically known)...
-            if (this->executeFunction->DoStackFrameDisplay())
+            if (!this->bailedOutOfInlinee)
             {
-                uint16 envDepth = this->executeFunction->GetEnvDepth();
-                Assert(envDepth != (uint16)-1);
-                this->varAllocCount += sizeof(FrameDisplay) / sizeof(Var) + (envDepth + 1);
-            }
-            // ...and scope slots (if any)
-            if (this->executeFunction->DoStackScopeSlots())
-            {
-                uint32 scopeSlots = this->executeFunction->scopeSlotArraySize;
-                Assert(scopeSlots != 0);
-                this->varAllocCount += scopeSlots + Js::ScopeSlots::FirstSlotIndex;
+                // Frame display (if environment depth is statically known)...
+                if (this->executeFunction->DoStackFrameDisplay())
+                {
+                    uint16 envDepth = this->executeFunction->GetEnvDepth();
+                    Assert(envDepth != (uint16)-1);
+                    this->varAllocCount += sizeof(FrameDisplay) / sizeof(Var) + (envDepth + 1);
+                }
+                // ...and scope slots (if any)
+                if (this->executeFunction->DoStackScopeSlots())
+                {
+                    uint32 scopeSlots = this->executeFunction->scopeSlotArraySize;
+                    Assert(scopeSlots != 0);
+                    this->varAllocCount += scopeSlots + Js::ScopeSlots::FirstSlotIndex;
+                }
             }
         }
     }
@@ -867,6 +1011,8 @@ namespace Js
         newInstance->nestedCatchDepth = -1;
         newInstance->nestedFinallyDepth = -1;
         newInstance->retOffset = 0;
+        newInstance->localFrameDisplay = nullptr;
+        newInstance->localScopeSlots = nullptr;
 
         bool doInterruptProbe = newInstance->scriptContext->GetThreadContext()->DoInterruptProbe(this->executeFunction);
         bool doJITLoopBody =
@@ -915,20 +1061,23 @@ namespace Js
             newInstance->InitializeStackFunctions((StackScriptFunction *)nextAllocBytes);
             nextAllocBytes = nextAllocBytes + sizeof(StackScriptFunction) * this->executeFunction->GetNestedCount();
 
-            if (this->executeFunction->DoStackFrameDisplay())
+            if (!this->bailedOutOfInlinee)
             {
-                uint16 envDepth = this->executeFunction->GetEnvDepth();
-                Assert(envDepth != (uint16)-1);
-                newInstance->localFrameDisplay = (FrameDisplay*)nextAllocBytes;
-                nextAllocBytes += sizeof(FrameDisplay) + (envDepth + 1) * sizeof(Var);
-            }
+                if (this->executeFunction->DoStackFrameDisplay())
+                {
+                    uint16 envDepth = this->executeFunction->GetEnvDepth();
+                    Assert(envDepth != (uint16)-1);
+                    newInstance->localFrameDisplay = (FrameDisplay*)nextAllocBytes;
+                    nextAllocBytes += sizeof(FrameDisplay) + (envDepth + 1) * sizeof(Var);
+                }
 
-            if (this->executeFunction->DoStackScopeSlots())
-            {
-                uint32 scopeSlots = this->executeFunction->scopeSlotArraySize;
-                Assert(scopeSlots != 0);
-                newInstance->localScopeSlots = (Var*)nextAllocBytes;
-                nextAllocBytes += (scopeSlots + ScopeSlots::FirstSlotIndex) * sizeof(Var);
+                if (this->executeFunction->DoStackScopeSlots())
+                {
+                    uint32 scopeSlots = this->executeFunction->scopeSlotArraySize;
+                    Assert(scopeSlots != 0);
+                    newInstance->localScopeSlots = (Var*)nextAllocBytes;
+                    nextAllocBytes += (scopeSlots + ScopeSlots::FirstSlotIndex) * sizeof(Var);
+                }
             }
         }
         if (Js::DynamicProfileInfo::EnableImplicitCallFlags(this->executeFunction))
@@ -978,11 +1127,11 @@ namespace Js
         // That way we avoid trying to box these structures before they've been initialized in the byte code.
         if (this->executeFunction->DoStackFrameDisplay())
         {
-            newInstance->SetLocalFrameDisplay(nullptr);
+            newInstance->SetNonVarReg(executeFunction->GetLocalFrameDisplayReg(), nullptr);
         }
         if (this->executeFunction->DoStackScopeSlots())
         {
-            newInstance->SetLocalScopeSlots(nullptr);
+            newInstance->SetNonVarReg(executeFunction->GetLocalScopeSlotsReg(), nullptr);
         }
 
         Var *prestDest = &newInstance->m_localSlots[this->executeFunction->GetConstantCount()];
@@ -1007,6 +1156,13 @@ namespace Js
         if (this->executeFunction->GetHasRestParameter())
         {
             InitializeRestParam(newInstance, prestDest);
+        }
+
+        Js::RegSlot envReg = executeFunction->GetEnvReg();
+        if (envReg != Js::Constants::NoRegister && envReg < executeFunction->GetConstantCount())
+        {
+            // The correct FD (possibly distinct from the one on the function) is passed in the constant table.
+            this->function->SetEnvironment((Js::FrameDisplay*)newInstance->GetNonVarReg(envReg));
         }
 
         return newInstance;
@@ -1081,6 +1237,53 @@ namespace Js
         {
             // Rest is an empty array when there are no excess parameters.
             *dest = JavascriptArray::OP_NewScArray(0, executeFunction->GetScriptContext());
+        }
+    }
+
+    FrameDisplay * InterpreterStackFrame::GetEnvForEvalCode()
+    {
+        FrameDisplay *pScope;
+        if (m_functionBody->GetIsStrictMode() && m_functionBody->GetIsGlobalFunc())
+        {
+            pScope = this->GetLocalFrameDisplay();
+        }
+        else
+        {
+            pScope = (FrameDisplay*)this->LdEnv();
+        }
+
+        return pScope;
+    }
+
+    void InterpreterStackFrame::InitializeClosures()
+    {
+        FunctionBody *executeFunction = this->function->GetFunctionBody();
+
+        Js::RegSlot slotsReg = executeFunction->GetLocalScopeSlotsReg();
+        if (slotsReg != Js::Constants::NoRegister)
+        {
+            if (slotsReg >= executeFunction->GetConstantCount())
+            {
+                this->SetLocalScopeSlots(this->NewScopeSlots());
+            }
+            else
+            {
+                // The correct array (possibly distinct from the one on the function) is passed in the constant table.
+                this->SetLocalScopeSlots((Js::Var*)this->GetNonVarReg(slotsReg));
+            }
+            this->SetNonVarReg(slotsReg, nullptr);
+        }
+
+        Js::RegSlot frameDisplayReg = executeFunction->GetLocalFrameDisplayReg();
+        if (frameDisplayReg != Js::Constants::NoRegister && slotsReg != Js::Constants::NoRegister)
+        {
+            Assert(frameDisplayReg >= executeFunction->GetConstantCount());
+
+            void *argHead = this->GetLocalScopeSlots();
+            void *argEnv = this->LdEnv();
+            this->SetLocalFrameDisplay(this->NewFrameDisplay(argHead, argEnv));
+
+            this->SetNonVarReg(frameDisplayReg, nullptr);
         }
     }
 
@@ -3510,8 +3713,8 @@ namespace Js
                 return;
             }
         }
-        OP_GetProperty_NoFastPath(playout);
-    }
+        OP_GetProperty_NoFastPath(instance, playout);
+    }                
 
     template <class T>
     void InterpreterStackFrame::OP_GetSuperProperty(unaligned T* playout)
@@ -3548,11 +3751,9 @@ namespace Js
     }
 
     template <class T>
-    __declspec(noinline) void InterpreterStackFrame::OP_GetProperty_NoFastPath(unaligned T* playout)
+    __declspec(noinline) void InterpreterStackFrame::OP_GetProperty_NoFastPath(Var instance, unaligned T* playout)
     {
         PropertyId propertyId = GetPropertyIdFromCacheId(playout->inlineCacheIndex);
-
-        Var instance = this->GetReg(playout->Instance);
 
         Var value = JavascriptOperators::PatchGetValue<false>(
                 GetFunctionBody(),
@@ -3625,7 +3826,7 @@ namespace Js
     }
 
     template <typename T>
-    void InterpreterStackFrame::OP_GetPropertyScoped(const unaligned OpLayoutT_ElementCP<T>* playout)
+    void InterpreterStackFrame::OP_GetPropertyScoped(const unaligned OpLayoutT_ElementScopedP<T>* playout)
     {
         ThreadContext* threadContext = this->GetScriptContext()->GetThreadContext();
         ImplicitCallFlags savedImplicitCallFlags = threadContext->GetImplicitCallFlags();
@@ -3634,7 +3835,7 @@ namespace Js
         // Get the property, using a scope stack rather than an individual instance.
         // Use the cache
         PropertyId propertyId = GetPropertyIdFromCacheId(playout->inlineCacheIndex);
-        FrameDisplay *pScope = (FrameDisplay*)GetNonVarReg(playout->Instance);
+        FrameDisplay *pScope = this->GetEnvForEvalCode();
         InlineCache *inlineCache = this->GetInlineCache(playout->inlineCacheIndex);
         ScriptContext* scriptContext = GetScriptContext();
         int length = pScope->GetLength();
@@ -3662,7 +3863,7 @@ namespace Js
     }
 
     template <typename T>
-    void InterpreterStackFrame::OP_GetPropertyForTypeOfScoped(const unaligned OpLayoutT_ElementCP<T>* playout)
+    void InterpreterStackFrame::OP_GetPropertyForTypeOfScoped(const unaligned OpLayoutT_ElementScopedP<T>* playout)
     {
         ThreadContext* threadContext = this->GetScriptContext()->GetThreadContext();
         ImplicitCallFlags savedImplicitCallFlags = threadContext->GetImplicitCallFlags();
@@ -3671,7 +3872,7 @@ namespace Js
         // Get the property, using a scope stack rather than an individual instance.
         // Use the cache
         PropertyId propertyId = GetPropertyIdFromCacheId(playout->inlineCacheIndex);
-        FrameDisplay *pScope = (FrameDisplay*)GetNonVarReg(playout->Instance);
+        FrameDisplay *pScope = this->GetEnvForEvalCode();
         InlineCache *inlineCache = this->GetInlineCache(playout->inlineCacheIndex);
         ScriptContext* scriptContext = GetScriptContext();
         int length = pScope->GetLength();
@@ -3698,7 +3899,7 @@ namespace Js
             GetFunctionBody(),
             GetInlineCache(playout->inlineCacheIndex),
             playout->inlineCacheIndex,
-            (FrameDisplay*)GetNonVarReg(playout->Instance),
+            GetEnvForEvalCode(),
             GetPropertyIdFromCacheId(playout->inlineCacheIndex),
             GetReg(Js::FunctionBody::RootObjectRegSlot)));
 
@@ -3708,7 +3909,7 @@ namespace Js
 
 
     template <typename T>
-    __declspec(noinline) void InterpreterStackFrame::OP_GetPropertyScoped_NoFastPath(const unaligned OpLayoutT_ElementCP<T>* playout)
+    __declspec(noinline) void InterpreterStackFrame::OP_GetPropertyScoped_NoFastPath(const unaligned OpLayoutT_ElementScopedP<T>* playout)
     {
         // Implicit root object as default instance
         Var defaultInstance = GetReg(Js::FunctionBody::RootObjectRegSlot);
@@ -3720,7 +3921,7 @@ namespace Js
                 GetFunctionBody(),
                 GetInlineCache(playout->inlineCacheIndex),
                 playout->inlineCacheIndex,
-                (FrameDisplay*)GetNonVarReg(playout->Instance),
+                GetEnvForEvalCode(),
                 GetPropertyIdFromCacheId(playout->inlineCacheIndex),
                 defaultInstance));
     }
@@ -3735,7 +3936,7 @@ namespace Js
         // Set the property, using a scope stack rather than an individual instance.
         // Use the cache
         PropertyId propertyId = GetPropertyIdFromCacheId(playout->inlineCacheIndex);
-        FrameDisplay *pScope = (FrameDisplay*)GetNonVarReg(playout->Instance);
+        FrameDisplay *pScope = this->GetEnvForEvalCode();
         InlineCache *inlineCache = GetInlineCache(playout->inlineCacheIndex);
         ScriptContext* scriptContext = GetScriptContext();
         Var value = GetReg(playout->Value);
@@ -3773,7 +3974,7 @@ namespace Js
             GetFunctionBody(),
             GetInlineCache(playout->inlineCacheIndex),
             playout->inlineCacheIndex,
-            (FrameDisplay*)GetNonVarReg(playout->Instance),
+            GetEnvForEvalCode(),
             GetPropertyIdFromCacheId(playout->inlineCacheIndex),
             GetReg(playout->Value),
             defaultInstance,
@@ -4244,7 +4445,7 @@ namespace Js
     template <class T>
     void InterpreterStackFrame::OP_InitUndeclConsoleLetProperty(unaligned T* playout)
     {
-        FrameDisplay* pScope = (FrameDisplay*)GetNonVarReg(playout->Instance);
+        FrameDisplay* pScope = (FrameDisplay*)this->LdEnv();
         AssertMsg(ConsoleScopeActivationObject::Is((DynamicObject*)pScope->GetItem(pScope->GetLength() - 1)), "How come we got this opcode without ConsoleScopeActivationObject?");
         PropertyId propertyId = m_functionBody->GetReferencedPropertyId(playout->PropertyIdIndex);
         JavascriptOperators::OP_InitLetProperty(pScope->GetItem(0), propertyId, this->scriptContext->GetLibrary()->GetUndeclBlockVar());
@@ -4253,7 +4454,7 @@ namespace Js
     template <class T>
     void InterpreterStackFrame::OP_InitUndeclConsoleConstProperty(unaligned T* playout)
     {
-        FrameDisplay* pScope = (FrameDisplay*)GetNonVarReg(playout->Instance);
+        FrameDisplay* pScope = (FrameDisplay*)this->LdEnv();
         AssertMsg(ConsoleScopeActivationObject::Is((DynamicObject*)pScope->GetItem(pScope->GetLength() - 1)), "How come we got this opcode without ConsoleScopeActivationObject?");
         PropertyId propertyId = m_functionBody->GetReferencedPropertyId(playout->PropertyIdIndex);
         JavascriptOperators::OP_InitConstProperty(pScope->GetItem(0), propertyId, this->scriptContext->GetLibrary()->GetUndeclBlockVar());
@@ -4749,10 +4950,10 @@ namespace Js
         SetReg(playout->R0, newObj);
     }
 
-    void InterpreterStackFrame::OP_InitCachedFuncs(const unaligned OpLayoutReg2Aux * playout)
+    void InterpreterStackFrame::OP_InitCachedFuncs(const unaligned OpLayoutAuxiliary * playout)
     {
         const FuncInfoArray *info = Js::ByteCodeReader::ReadAuxArray<FuncInfoEntry>(playout->Offset, this->GetFunctionBody());
-        JavascriptOperators::OP_InitCachedFuncs(GetReg(playout->R0), (FrameDisplay*)GetNonVarReg(playout->R1), info, GetScriptContext());
+        JavascriptOperators::OP_InitCachedFuncs(GetReg(playout->R0), GetLocalFrameDisplay(), info, GetScriptContext());
     }
 
     Var InterpreterStackFrame::OP_GetCachedFunc(Var instance, int32 index)
@@ -5108,6 +5309,45 @@ namespace Js
 
             entryPointInfo->EnsureIsReadyToCall();
 
+            RegSlot envReg = this->m_functionBody->GetEnvReg();
+            if (envReg != Constants::NoRegister)
+            {
+                this->SetNonVarReg(envReg, this->LdEnv());
+            }
+
+            RegSlot localScopeSlotsReg = this->m_functionBody->GetLocalScopeSlotsReg();
+            RegSlot localFrameDisplayReg = this->m_functionBody->GetLocalFrameDisplayReg();
+
+            if (entryPointInfo->HasJittedStackClosure())
+            {
+                // The jitted code is expecting the closure registers to point to known stack locations where
+                // the closures can be found and possibly boxed.
+                // In a jitted loop body, those locations are the local closure fields on the interpreter instance.
+                if (localScopeSlotsReg != Constants::NoRegister)
+                {
+                    this->SetNonVarReg(localScopeSlotsReg, &this->localScopeSlots);
+                }
+
+                if (localFrameDisplayReg != Constants::NoRegister)
+                {
+                    this->SetNonVarReg(localFrameDisplayReg, &this->localFrameDisplay);
+                }
+            }
+            else
+            {
+                // In non-stack-closure jitted code, the closure registers are expected to hold the addresses
+                // of the actual structures.
+                if (localScopeSlotsReg != Constants::NoRegister)
+                {
+                    this->SetNonVarReg(localScopeSlotsReg, this->localScopeSlots);
+                }
+
+                if (localFrameDisplayReg != Constants::NoRegister)
+                {
+                    this->SetNonVarReg(localFrameDisplayReg, this->localFrameDisplay);
+                }
+            }
+
             uint newOffset = 0;
             if (fn->GetIsAsmJsFunction())
             {
@@ -5118,6 +5358,21 @@ namespace Js
             {
                 AutoRestoreLoopNumbers autoRestore(this, loopNumber, doProfileLoopCheck);
                 newOffset = this->CallLoopBody((JavascriptMethod)entryPointInfo->address);
+            }
+
+            if (envReg != Constants::NoRegister)
+            {
+                SetNonVarReg(envReg, nullptr);
+            }
+
+            if (localScopeSlotsReg != Constants::NoRegister)
+            {
+                SetNonVarReg(localScopeSlotsReg, nullptr);
+            }
+
+            if (localFrameDisplayReg != Constants::NoRegister)
+            {
+                SetNonVarReg(localFrameDisplayReg, nullptr);
             }
 
             Assert(Js::OpCodeUtil::GetOpCodeLayout(OpCode::ProfiledLoopBodyStart) == Js::OpLayoutType::Unsigned1);
@@ -5516,10 +5771,10 @@ namespace Js
     }
 
     template <typename T>
-    void InterpreterStackFrame::OP_LdElementUndefinedScoped(const unaligned OpLayoutT_ElementU<T>* playout)
+    void InterpreterStackFrame::OP_LdElementUndefinedScoped(const unaligned OpLayoutT_ElementScopedU<T>* playout)
     {
         // Implicit root object as default instance
-        JavascriptOperators::OP_LoadUndefinedToElementScoped((FrameDisplay*)GetNonVarReg(playout->Instance),
+        JavascriptOperators::OP_LoadUndefinedToElementScoped(GetEnvForEvalCode(),
             this->m_functionBody->GetReferencedPropertyId(playout->PropertyIdIndex), GetReg(Js::FunctionBody::RootObjectRegSlot), GetScriptContext());
     }
 
@@ -6038,20 +6293,42 @@ namespace Js
         SetReg(playout->R0, result);
     }
 
-    template<bool strict>
     FrameDisplay *
-    InterpreterStackFrame::OP_NewStackFrameDisplay(void *argHead, void *argEnv)
+    InterpreterStackFrame::OP_LdFrameDisplay(void *argHead, void *argEnv, ScriptContext *scriptContext)
     {
         FrameDisplay *frameDisplay;
+        bool strict = this->m_functionBody->GetIsStrictMode();
+        if (strict)
+        {
+            frameDisplay = JavascriptOperators::OP_LdStrictFrameDisplay(argHead, argEnv, scriptContext);
+        }
+        else
+        {
+            frameDisplay = JavascriptOperators::OP_LdFrameDisplay(argHead, argEnv, scriptContext);
+        }
+        return frameDisplay;
+    }
+
+    FrameDisplay * 
+    InterpreterStackFrame::OP_LdFrameDisplaySetLocal(void *argHead, void *argEnv, ScriptContext *scriptContext)
+    {
+        FrameDisplay *frameDisplay = OP_LdFrameDisplay(argHead, argEnv, scriptContext);
+        this->SetLocalFrameDisplay(frameDisplay);
+        return frameDisplay;
+    }
+
+    FrameDisplay * 
+    InterpreterStackFrame::NewFrameDisplay(void *argHead, void *argEnv)
+    {
+        FrameDisplay *frameDisplay;
+        bool strict = this->m_functionBody->GetIsStrictMode();
 
         if (!this->m_functionBody->DoStackFrameDisplay() || !this->GetLocalFrameDisplay())
         {
             // Null local frame display probably indicates that we bailed out of an inlinee.
             // Once we support stack closures in inlined functions, we can just assert that this value
             // is never null if we should be allocating on the stack.
-            frameDisplay = JavascriptOperators::OP_LdFrameDisplay(argHead, argEnv, this->GetScriptContext());
-            this->SetLocalFrameDisplay(frameDisplay);
-            return frameDisplay;
+            return this->OP_LdFrameDisplaySetLocal(argHead, argEnv, this->GetScriptContext());
         }
 
         frameDisplay = this->GetLocalFrameDisplay();
@@ -6071,51 +6348,130 @@ namespace Js
         return frameDisplay;
     }
 
-    template<bool strict>
+    template<bool innerFD>
     FrameDisplay *
-    InterpreterStackFrame::OP_NewStackFrameDisplayNoParent(void *argHead)
+    InterpreterStackFrame::OP_LdFrameDisplayNoParent(void *argHead, ScriptContext *scriptContext)
     {
-        return OP_NewStackFrameDisplay<strict>(argHead, (void*)(strict ? &StrictNullFrameDisplay : &NullFrameDisplay));
+        FrameDisplay *frameDisplay;
+        bool strict = this->m_functionBody->GetIsStrictMode();
+
+        Var argEnv = nullptr;
+        if (innerFD && this->m_functionBody->GetLocalFrameDisplayReg() != Constants::NoRegister)
+        {
+            argEnv = this->GetLocalFrameDisplay();
+        }
+        if (argEnv == nullptr && this->m_functionBody->GetEnvReg() != Constants::NoRegister)
+        {
+            argEnv = this->LdEnv();
+        }
+
+        if (argEnv == nullptr)
+        {
+            if (strict)
+            {
+                frameDisplay = JavascriptOperators::OP_LdStrictFrameDisplayNoParent(argHead, scriptContext);
+            }
+            else
+            {
+                frameDisplay = JavascriptOperators::OP_LdFrameDisplayNoParent(argHead, scriptContext);
+            }
+        }
+        else
+        {
+            if (strict)
+            {
+                frameDisplay = JavascriptOperators::OP_LdStrictFrameDisplay(argHead, argEnv, scriptContext);
+            }
+            else
+            {
+                frameDisplay = JavascriptOperators::OP_LdFrameDisplay(argHead, argEnv, scriptContext);
+            }
+        }
+        return frameDisplay;
     }
 
     FrameDisplay *
-    InterpreterStackFrame::OP_LdLocalFrameDisplay()
+    InterpreterStackFrame::OP_LdFrameDisplayNoParentSetLocal(void *argHead, ScriptContext *scriptContext)
     {
-        FrameDisplay *frameDisplay = this->GetLocalFrameDisplay();
-        Assert(frameDisplay != nullptr);
+        FrameDisplay *frameDisplay = OP_LdFrameDisplayNoParent<false>(argHead, scriptContext);
+        this->SetLocalFrameDisplay(frameDisplay);
+        return frameDisplay;
+    }
+
+    FrameDisplay *
+    InterpreterStackFrame::OP_LdFuncExprFrameDisplaySetLocal(void *argHead1, void *argHead2, ScriptContext *scriptContext)
+    {
+        FrameDisplay *frameDisplay = OP_LdFrameDisplayNoParent<false>(argHead2, scriptContext);
+        frameDisplay = OP_LdFrameDisplay(argHead1, frameDisplay, scriptContext);
+        this->SetLocalFrameDisplay(frameDisplay);
         return frameDisplay;
     }
 
     FrameDisplay* InterpreterStackFrame::GetLocalFrameDisplay() const
     {
-        RegSlot frameDisplayReg = this->m_functionBody->GetStackFrameDisplayReg();
-        Assert(frameDisplayReg > 0 && frameDisplayReg < this->m_functionBody->GetFirstTmpReg());
-        return (FrameDisplay*)this->GetNonVarReg(frameDisplayReg);
+        return this->localFrameDisplay;
     }
 
     void InterpreterStackFrame::SetLocalFrameDisplay(FrameDisplay* frameDisplay)
     {
-        RegSlot frameDisplayReg = this->m_functionBody->GetStackFrameDisplayReg();
-        Assert(frameDisplayReg > 0 && frameDisplayReg < this->m_functionBody->GetFirstTmpReg());
-        this->SetNonVarReg(frameDisplayReg, frameDisplay);
+        this->localFrameDisplay = frameDisplay;
     }
 
     Var* InterpreterStackFrame::GetLocalScopeSlots() const
     {
-        RegSlot scopeSlotsReg = this->m_functionBody->GetStackScopeSlotsReg();
-        Assert(scopeSlotsReg > 0 && scopeSlotsReg < this->m_functionBody->GetFirstTmpReg());
-        return (Var*)this->GetNonVarReg(scopeSlotsReg);
+        return this->localScopeSlots;
     }
 
     void InterpreterStackFrame::SetLocalScopeSlots(Var* scopeSlots)
     {
-        RegSlot scopeSlotsReg = this->m_functionBody->GetStackScopeSlotsReg();
-        Assert(scopeSlotsReg > 0 && scopeSlotsReg < this->m_functionBody->GetFirstTmpReg());
-        this->SetNonVarReg(scopeSlotsReg, scopeSlots);
+        this->localScopeSlots = scopeSlots;
+    }
+
+    Var* InterpreterStackFrame::GetInnerScopeSlots(uint innerScopeIndex) const
+    {
+        if (innerScopeIndex >= m_functionBody->GetInnerScopeCount())
+        {
+            Throw::FatalInternalError();
+        }
+        RegSlot reg = m_functionBody->FirstInnerScopeReg() + innerScopeIndex;
+        Assert(reg < m_functionBody->GetLocalsCount());
+        return (Var*)GetNonVarReg(reg);
+    }
+
+    void InterpreterStackFrame::SetInnerScopeSlots(uint innerScopeIndex, Var* slotArray)
+    {
+        Assert(!ThreadContext::IsOnStack(slotArray));
+        if (innerScopeIndex >= m_functionBody->GetInnerScopeCount())
+        {
+            Throw::FatalInternalError();
+        }
+        RegSlot reg = m_functionBody->FirstInnerScopeReg() + innerScopeIndex;
+        Assert(reg < m_functionBody->GetLocalsCount());
+        SetNonVarReg(reg, slotArray);
+    }
+
+    void  
+    InterpreterStackFrame::OP_NewInnerScopeSlots(uint innerScopeIndex, uint count, int scopeIndex, ScriptContext *scriptContext, FunctionBody *functionBody)
+    {
+        Var * slotArray;
+
+        slotArray = 
+            JavascriptOperators::OP_NewScopeSlotsWithoutPropIds(count, scopeIndex, scriptContext, functionBody);
+        this->SetInnerScopeSlots(innerScopeIndex, slotArray);
     }
 
     Var *
-    InterpreterStackFrame::OP_NewStackScopeSlots()
+    InterpreterStackFrame::NewScopeSlots(unsigned int size, ScriptContext *scriptContext, Var scope)
+    {
+        Var * slotArray;
+
+        slotArray = JavascriptOperators::OP_NewScopeSlots(size, scriptContext, scope);
+        this->SetLocalScopeSlots(slotArray);
+        return slotArray;
+    }
+
+    Var *
+    InterpreterStackFrame::NewScopeSlots()
     {
         Var * slotArray;
         FunctionBody * functionBody = this->m_functionBody;
@@ -6124,9 +6480,8 @@ namespace Js
 
         if (!functionBody->DoStackScopeSlots())
         {
-            slotArray = JavascriptOperators::OP_NewScopeSlots(scopeSlotCount + ScopeSlots::FirstSlotIndex, this->GetScriptContext(), (Var)functionBody);
-            this->SetLocalScopeSlots(slotArray);
-            return slotArray;
+            return this->NewScopeSlots(
+                scopeSlotCount + ScopeSlots::FirstSlotIndex, this->GetScriptContext(), (Var)functionBody);
         }
 
         slotArray = this->GetLocalScopeSlots();
@@ -6144,23 +6499,34 @@ namespace Js
         return slotArray;
     }
 
-    Var *
-    InterpreterStackFrame::OP_LdLocalScopeSlots()
+    FrameDisplay *
+    InterpreterStackFrame::GetFrameDisplayForNestedFunc() const
     {
-        Var * slotArray = this->GetLocalScopeSlots();
-        Assert(slotArray != nullptr);
-
-        Assert(ScopeSlots(slotArray).GetFunctionBody() == this->m_functionBody);
-
-        return slotArray;
+        if (this->localFrameDisplay == nullptr)
+        {
+            return (FrameDisplay*)LdEnv();
+        }
+        return this->localFrameDisplay;
     }
 
     template <class T>
     void InterpreterStackFrame::OP_NewStackScFunc(const unaligned T * playout)
     {
         uint funcIndex = playout->SlotIndex;
+        FrameDisplay *frameDisplay = this->GetFrameDisplayForNestedFunc();
         SetRegAllowStackVarEnableOnly(playout->Value,
-            StackScriptFunction::OP_NewStackScFunc((FrameDisplay*)GetNonVarReg(playout->Instance),
+            StackScriptFunction::OP_NewStackScFunc(frameDisplay,
+                reinterpret_cast<Js::FunctionProxy**>(this->m_functionBody->GetNestedFuncReference(funcIndex)),
+                this->GetStackNestedFunction(funcIndex)));
+    }
+
+    template <class T>
+    void InterpreterStackFrame::OP_NewInnerStackScFunc(const unaligned T * playout)
+    {
+        uint funcIndex = playout->SlotIndex;
+        FrameDisplay *frameDisplay = (FrameDisplay*)GetNonVarReg(playout->Instance);
+        SetRegAllowStackVarEnableOnly(playout->Value,
+            StackScriptFunction::OP_NewStackScFunc(frameDisplay,
                 reinterpret_cast<Js::FunctionProxy**>(this->m_functionBody->GetNestedFuncReference(funcIndex)),
                 this->GetStackNestedFunction(funcIndex)));
     }
@@ -6194,20 +6560,20 @@ namespace Js
     }
 
     template <typename T>
-    void InterpreterStackFrame::OP_ScopedDeleteFld(const unaligned OpLayoutT_ElementC<T> * playout)
+    void InterpreterStackFrame::OP_ScopedDeleteFld(const unaligned OpLayoutT_ElementScopedC<T> * playout)
     {
         // Implicit root object as default instance
-        Var result = JavascriptOperators::OP_DeletePropertyScoped((FrameDisplay*)GetNonVarReg(playout->Instance),
+        Var result = JavascriptOperators::OP_DeletePropertyScoped(GetEnvForEvalCode(),
             m_functionBody->GetReferencedPropertyId(playout->PropertyIdIndex),
             GetReg(Js::FunctionBody::RootObjectRegSlot), GetScriptContext());
         SetReg(playout->Value, result);
     }
 
     template <typename T>
-    void InterpreterStackFrame::OP_ScopedDeleteFldStrict(const unaligned OpLayoutT_ElementC<T> * playout)
+    void InterpreterStackFrame::OP_ScopedDeleteFldStrict(const unaligned OpLayoutT_ElementScopedC<T> * playout)
     {
         // Implicit root object as default instance
-        Var result = JavascriptOperators::OP_DeletePropertyScoped((FrameDisplay*)GetNonVarReg(playout->Instance),
+        Var result = JavascriptOperators::OP_DeletePropertyScoped(GetEnvForEvalCode(),
             m_functionBody->GetReferencedPropertyId(playout->PropertyIdIndex),
             GetReg(Js::FunctionBody::RootObjectRegSlot), GetScriptContext(), PropertyOperation_StrictMode);
         SetReg(playout->Value, result);
@@ -6218,16 +6584,16 @@ namespace Js
     {
         Var thisVar;
         Var rootObject = GetFunctionBody()->GetRootObject();
-        Var result = JavascriptOperators::OP_GetInstanceScoped((FrameDisplay*)GetNonVarReg(playout->Instance),
+        Var result = JavascriptOperators::OP_GetInstanceScoped(GetEnvForEvalCode(),
             m_functionBody->GetReferencedPropertyId(playout->PropertyIdIndex), rootObject, &thisVar, GetScriptContext());
         SetReg(playout->Value, result);
         SetReg(playout->Value2, thisVar);
     }
 
     template <typename T>
-    void InterpreterStackFrame::OP_ScopedInitFunc(const unaligned OpLayoutT_ElementC<T> * playout)
+    void InterpreterStackFrame::OP_ScopedInitFunc(const unaligned OpLayoutT_ElementScopedC<T> * playout)
     {
-        JavascriptOperators::OP_InitFuncScoped((FrameDisplay*)GetNonVarReg(playout->Instance),
+        JavascriptOperators::OP_InitFuncScoped(GetEnvForEvalCode(),
             m_functionBody->GetReferencedPropertyId(playout->PropertyIdIndex),
             GetReg(playout->Value), GetReg(Js::FunctionBody::RootObjectRegSlot), GetScriptContext());
     }
@@ -6364,11 +6730,13 @@ namespace Js
         return JavascriptOperators::OP_LdSuperCtor(function, scriptContext);
     }
 
-    Var InterpreterStackFrame::OP_ScopedLdSuper(ScriptContext * scriptContext) {
+    Var InterpreterStackFrame::OP_ScopedLdSuper(ScriptContext * scriptContext) 
+    {
         return JavascriptOperators::OP_ScopedLdSuper(function, scriptContext);
     }
 
-    Var InterpreterStackFrame::OP_ScopedLdSuperCtor(ScriptContext * scriptContext) {
+    Var InterpreterStackFrame::OP_ScopedLdSuperCtor(ScriptContext * scriptContext) 
+    {
         return JavascriptOperators::OP_ScopedLdSuperCtor(function, scriptContext);
     }
 
@@ -6662,6 +7030,21 @@ namespace Js
     }
 #endif
 
+    template <class T>
+    void InterpreterStackFrame::OP_ArgOut_Env(const unaligned T * playout)
+    {
+        Var argEnv;
+        if (this->m_functionBody->GetLocalFrameDisplayReg() != Constants::NoRegister)
+        {
+            argEnv = this->GetLocalFrameDisplay();
+        }
+        else
+        {
+            argEnv = this->LdEnv();
+        }
+        SetOut(playout->Arg, argEnv);
+    }
+
     BOOL InterpreterStackFrame::OP_BrFalse_A(Var aValue, ScriptContext* scriptContext)
     {
         return !JavascriptConversion::ToBoolean(aValue, scriptContext);
@@ -6696,6 +7079,13 @@ namespace Js
     BOOL InterpreterStackFrame::OP_BrOnNoProperty(Var argInstance, uint propertyIdIndex, ScriptContext* scriptContext)
     {
         return !JavascriptOperators::OP_HasProperty(argInstance,
+            this->m_functionBody->GetReferencedPropertyId(propertyIdIndex), scriptContext);
+    }
+
+    BOOL InterpreterStackFrame::OP_BrOnNoEnvProperty(Var envInstance, int32 slotIndex, uint propertyIdIndex, ScriptContext* scriptContext)
+    {
+        Var instance = OP_LdFrameDisplaySlot(envInstance, slotIndex);
+        return !JavascriptOperators::OP_HasProperty(instance,
             this->m_functionBody->GetReferencedPropertyId(propertyIdIndex), scriptContext);
     }
 
@@ -6792,9 +7182,14 @@ namespace Js
         return aValue;
     }
 
-    Var InterpreterStackFrame::OP_LdEnv()
+    Var InterpreterStackFrame::LdEnv() const
     {
         return this->function->GetEnvironment();
+    }
+
+    void InterpreterStackFrame::SetEnv(FrameDisplay *frameDisplay)
+    {
+        this->function->SetEnvironment(frameDisplay);
     }
 
     template <typename T2>
@@ -6847,6 +7242,12 @@ namespace Js
         buffer[playout->SlotIndex] = GetRegRaw<T2>(playout->Value);
     }
 
+    template <class T>
+    Var InterpreterStackFrame::OP_LdAsmJsSlot(Var instance, const unaligned T* playout)
+    {
+        return ((Var*)instance)[playout->SlotIndex];
+    }
+
     template <class T, typename T2>
     void InterpreterStackFrame::OP_LdSlotPrimitive(const unaligned T* playout)
     {
@@ -6883,64 +7284,110 @@ namespace Js
         (this->*StArrFunc[playout->ViewType])(index, playout->Value);
     }
 
+    Var InterpreterStackFrame::OP_LdSlot(Var instance, int32 slotIndex)
+    {
+        if (!PHASE_OFF(ClosureRangeCheckPhase, this->m_functionBody))
+        {
+            if ((uint32)((Var*)instance)[ScopeSlots::EncodedSlotCountSlotIndex] <= (uint32)slotIndex - ScopeSlots::FirstSlotIndex)
+            {
+                Js::Throw::FatalInternalError();
+            }
+        }
+        return ((Var*)(instance))[slotIndex];
+    }
+
     template <class T>
     Var InterpreterStackFrame::OP_LdSlot(Var instance, const unaligned T* playout)
     {
-        return ((Var*)(instance))[playout->SlotIndex];
+        return OP_LdSlot(instance, playout->SlotIndex);
     }
 
     template <class T>
     Var InterpreterStackFrame::OP_ProfiledLdSlot(Var instance, const unaligned T* playout)
     {
-        Var value = ((Var*)(instance))[playout->SlotIndex];
+        Var value = OP_LdSlot(instance, playout->SlotIndex);
         ProfilingHelpers::ProfileLdSlot(value, GetFunctionBody(), playout->profileId);
         return value;
     }
 
     template <class T>
-    Var InterpreterStackFrame::OP_LdSlotChkUndecl(Var instance, const unaligned T* playout)
+    Var InterpreterStackFrame::OP_LdInnerSlot(Var slotArray, const unaligned T* playout)
     {
-        Var value = OP_LdSlot(instance, playout);
-        OP_ChkUndecl(value);
-        return value;
+        return OP_LdSlot(slotArray, playout->SlotIndex2);
     }
 
     template <class T>
-    Var InterpreterStackFrame::OP_ProfiledLdSlotChkUndecl(Var instance, const unaligned T* playout)
+    Var InterpreterStackFrame::OP_ProfiledLdInnerSlot(Var slotArray, const unaligned T* playout)
     {
-        Var value = OP_LdSlotChkUndecl(instance, playout);
+        Var value = OP_LdInnerSlot(slotArray, playout);
         ProfilingHelpers::ProfileLdSlot(value, GetFunctionBody(), playout->profileId);
         return value;
+    }
+
+    Var InterpreterStackFrame::OP_LdFrameDisplaySlot(Var instance, int32 slotIndex)
+    {
+        if (!PHASE_OFF(ClosureRangeCheckPhase, this->m_functionBody))
+        {
+            if (((FrameDisplay*)instance)->GetLength() < slotIndex - Js::FrameDisplay::GetOffsetOfScopes()/sizeof(Var))
+            {
+                Js::Throw::FatalInternalError();
+            }
+        }
+        return ((Var*)instance)[slotIndex];
+    }
+
+    template <class T>
+    Var InterpreterStackFrame::OP_LdEnvObj(Var instance, const unaligned T* playout)
+    {
+        return OP_LdFrameDisplaySlot(instance, playout->SlotIndex);
+    }
+
+    template <class T>
+    Var InterpreterStackFrame::OP_LdEnvSlot(Var instance, const unaligned T* playout)
+    {
+        Var slotArray = OP_LdFrameDisplaySlot(instance, playout->SlotIndex1);
+        return OP_LdSlot(slotArray, playout->SlotIndex2);
+    }
+
+    template <class T>
+    Var InterpreterStackFrame::OP_ProfiledLdEnvSlot(Var instance, const unaligned T* playout)
+    {
+        Var value = OP_LdEnvSlot(instance, playout);
+        ProfilingHelpers::ProfileLdSlot(value, GetFunctionBody(), playout->profileId);
+        return value;
+    }
+
+    Var InterpreterStackFrame::OP_LdObjSlot(Var instance, int32 slotIndex)
+    {
+        Var *slotArray = *(Var**)((char*)instance + DynamicObject::GetOffsetOfAuxSlots());
+        return slotArray[slotIndex];
     }
 
     template <class T>
     Var InterpreterStackFrame::OP_LdObjSlot(Var instance, const unaligned T* playout)
     {
-        Var *slotArray = *(Var**)((char*)instance + DynamicObject::GetOffsetOfAuxSlots());
-        return slotArray[playout->SlotIndex];
+        return OP_LdObjSlot(instance, playout->SlotIndex);
     }
 
     template <class T>
     Var InterpreterStackFrame::OP_ProfiledLdObjSlot(Var instance, const unaligned T* playout)
     {
-        Var *slotArray = *(Var**)((char*)instance + DynamicObject::GetOffsetOfAuxSlots());
-        Var value = slotArray[playout->SlotIndex];
+        Var value = OP_LdObjSlot(instance, playout->SlotIndex);
         ProfilingHelpers::ProfileLdSlot(value, GetFunctionBody(), playout->profileId);
         return value;
     }
 
     template <class T>
-    Var InterpreterStackFrame::OP_LdObjSlotChkUndecl(Var instance, const unaligned T* playout)
+    Var InterpreterStackFrame::OP_LdEnvObjSlot(Var instance, const unaligned T* playout)
     {
-        Var value = OP_LdObjSlot(instance, playout);
-        OP_ChkUndecl(value);
-        return value;
+        Var slotArray = OP_LdFrameDisplaySlot(instance, playout->SlotIndex1);
+        return OP_LdObjSlot(slotArray, playout->SlotIndex2);
     }
 
     template <class T>
-    Var InterpreterStackFrame::OP_ProfiledLdObjSlotChkUndecl(Var instance, const unaligned T* playout)
+    Var InterpreterStackFrame::OP_ProfiledLdEnvObjSlot(Var instance, const unaligned T* playout)
     {
-        Var value = OP_LdObjSlotChkUndecl(instance, playout);
+        Var value = OP_LdEnvObjSlot(instance, playout);
         ProfilingHelpers::ProfileLdSlot(value, GetFunctionBody(), playout->profileId);
         return value;
     }
@@ -6948,14 +7395,40 @@ namespace Js
     void InterpreterStackFrame::OP_StSlot(Var instance, int32 slotIndex, Var value)
     {
         // We emit OpCode::StSlot in the bytecode only for scope slot arrays, which are not recyclable objects.
+        if (!PHASE_OFF(ClosureRangeCheckPhase, this->m_functionBody))
+        {
+            if ((uint32)((Var*)instance)[ScopeSlots::EncodedSlotCountSlotIndex] <= (uint32)slotIndex - ScopeSlots::FirstSlotIndex)
+            {
+                Js::Throw::FatalInternalError();
+            }
+        }
         ((Var*)(instance))[slotIndex] = value;
+    }
+
+    void InterpreterStackFrame::OP_StEnvSlot(Var instance, int32 slotIndex1, int32 slotIndex2, Var value)
+    {
+        Var slotArray = (Var*)OP_LdFrameDisplaySlot(instance, slotIndex1);
+        OP_StSlot(slotArray, slotIndex2, value);
     }
 
     void InterpreterStackFrame::OP_StSlotChkUndecl(Var instance, int32 slotIndex, Var value)
     {
         // We emit OpCode::StSlot in the bytecode only for scope slot arrays, which are not recyclable objects.
-        OP_ChkUndecl(((Var*)(instance))[slotIndex]);
+        if (!PHASE_OFF(ClosureRangeCheckPhase, this->m_functionBody))
+        {
+            if ((uint32)((Var*)instance)[ScopeSlots::EncodedSlotCountSlotIndex] <= (uint32)slotIndex - ScopeSlots::FirstSlotIndex)
+            {
+                Js::Throw::FatalInternalError();
+            }
+        }
+        OP_ChkUndecl(((Var*)instance)[slotIndex]);
         ((Var*)(instance))[slotIndex] = value;
+    }
+
+    void InterpreterStackFrame::OP_StEnvSlotChkUndecl(Var instance, int32 slotIndex1, int32 slotIndex2, Var value)
+    {
+        Var slotArray = (Var*)OP_LdFrameDisplaySlot(instance, slotIndex1);
+        OP_StSlotChkUndecl(slotArray, slotIndex2, value);
     }
 
     void InterpreterStackFrame::OP_StObjSlot(Var instance, int32 slotIndex, Var value)
@@ -6971,6 +7444,20 @@ namespace Js
         Var *slotArray = *(Var**)((char*)instance + DynamicObject::GetOffsetOfAuxSlots());
         OP_ChkUndecl(slotArray[slotIndex]);
         slotArray[slotIndex] = value;
+    }
+
+    void InterpreterStackFrame::OP_StEnvObjSlot(Var instance, int32 slotIndex1, int32 slotIndex2, Var value)
+    {
+        // It would be nice to assert that it's ok to store directly to slot, but we don't have the propertyId.
+        Var envInstance = (Var*)OP_LdFrameDisplaySlot(instance, slotIndex1);
+        OP_StObjSlot(envInstance, slotIndex2, value);
+    }
+
+    void InterpreterStackFrame::OP_StEnvObjSlotChkUndecl(Var instance, int32 slotIndex1, int32 slotIndex2, Var value)
+    {
+        // It would be nice to assert that it's ok to store directly to slot, but we don't have the propertyId.
+        Var envInstance = (Var*)OP_LdFrameDisplaySlot(instance, slotIndex1);
+        OP_StObjSlotChkUndecl(envInstance, slotIndex2, value);
     }
 
     Var InterpreterStackFrame::OP_LdStackArgPtr(void)

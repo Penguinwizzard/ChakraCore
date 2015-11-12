@@ -486,6 +486,7 @@ namespace Js
 #endif
         BYTE   pendingInlinerVersion;
         bool   isLoopBody;
+        bool   hasJittedStackClosure;
         ImplicitCallFlags pendingImplicitCallFlags;
 
     public:
@@ -499,7 +500,7 @@ namespace Js
             jitTransferData(nullptr), sharedPropertyGuards(nullptr), propertyGuardCount(0), propertyGuardWeakRefs(nullptr),
             equivalentTypeCacheCount(0), equivalentTypeCaches(nullptr), constructorCaches(nullptr), state(NotScheduled), data(nullptr),
             library(library), numberChunks(nullptr), polymorphicInlineCacheInfo(nullptr), runtimeTypeRefs(nullptr), validationCookie(validationCookie),
-            isLoopBody(isLoopBody), registeredEquivalentTypeCacheRef(nullptr), isAsmJsFunction(false), bailoutRecordMap(nullptr)
+            isLoopBody(isLoopBody), hasJittedStackClosure(false), registeredEquivalentTypeCacheRef(nullptr), isAsmJsFunction(false), bailoutRecordMap(nullptr)
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
             , cleanupStack(nullptr)
             , cleanupReason(NotCleanedUp)
@@ -607,6 +608,16 @@ namespace Js
         bool IsLoopBody() const
         {
             return this->isLoopBody;
+        }
+
+        bool HasJittedStackClosure() const
+        {
+            return this->hasJittedStackClosure;
+        }
+
+        void SetHasJittedStackClosure()
+        {
+            this->hasJittedStackClosure = true;
         }
 
         void SetModuleAddress(uintptr moduleAddress)
@@ -1929,10 +1940,16 @@ namespace Js
         uint GetByteCodeInLoopCount() const { return m_byteCodeInLoopCount; }
         uint16 GetEnvDepth() const { return m_envDepth; }
         void SetEnvDepth(uint16 depth) { m_envDepth = depth; }
-        RegSlot GetStackClosureRegister() const { return stackClosureRegister; }
-        void SetStackClosureRegister(RegSlot reg) { Assert(stackClosureRegister == Constants::NoRegister); stackClosureRegister = this->MapRegSlot(reg); }
-        RegSlot GetStackScopeSlotsReg() const { return stackClosureRegister; }
-        RegSlot GetStackFrameDisplayReg() const { return stackClosureRegister == Constants::NoRegister ? Constants::NoRegister : stackClosureRegister + 1; }
+        RegSlot GetEnvReg() const { return envRegister; }
+        void SetEnvReg(RegSlot reg) { Assert(envRegister == Constants::NoRegister); envRegister = this->MapRegSlot(reg); }
+        void SetLocalScopeSlotsReg(RegSlot reg) { Assert(localClosureRegister == Constants::NoRegister); localClosureRegister = this->MapRegSlot(reg); }
+        RegSlot GetLocalScopeSlotsReg() const { return localClosureRegister; }
+        void SetLocalFrameDisplayReg(RegSlot reg) { Assert(localFrameDisplayRegister == Constants::NoRegister); localFrameDisplayRegister = this->MapRegSlot(reg); }
+        RegSlot GetLocalFrameDisplayReg() const { return localFrameDisplayRegister; /*localClosureRegister == Constants::NoRegister ? Constants::NoRegister : localClosureRegister + 1;*/ }
+        RegSlot FirstInnerScopeReg() const { Assert(firstInnerScopeRegister != Constants::NoRegister); return firstInnerScopeRegister; }
+        void SetFirstInnerScopeReg(RegSlot reg) { Assert(reg != Constants::NoRegister); firstInnerScopeRegister = this->MapRegSlot(reg); }
+        uint GetInnerScopeCount() const { return innerScopeCount; }
+        void SetInnerScopeCount(uint count) { innerScopeCount = count; }
 
         size_t GetLoopBodyName(uint loopNumber, _Out_writes_opt_z_(sizeInChars) WCHAR* displayName, _In_ size_t sizeInChars);
 
