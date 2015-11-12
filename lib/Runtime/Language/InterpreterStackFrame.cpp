@@ -7288,7 +7288,7 @@ namespace Js
     {
         if (!PHASE_OFF(ClosureRangeCheckPhase, this->m_functionBody))
         {
-            if ((uint32)((Var*)instance)[ScopeSlots::EncodedSlotCountSlotIndex] <= (uint32)slotIndex - ScopeSlots::FirstSlotIndex)
+            if ((uintptr_t)((Var*)instance)[ScopeSlots::EncodedSlotCountSlotIndex] <= (uintptr_t)(slotIndex - ScopeSlots::FirstSlotIndex))
             {
                 Js::Throw::FatalInternalError();
             }
@@ -7397,7 +7397,7 @@ namespace Js
         // We emit OpCode::StSlot in the bytecode only for scope slot arrays, which are not recyclable objects.
         if (!PHASE_OFF(ClosureRangeCheckPhase, this->m_functionBody))
         {
-            if ((uint32)((Var*)instance)[ScopeSlots::EncodedSlotCountSlotIndex] <= (uint32)slotIndex - ScopeSlots::FirstSlotIndex)
+            if ((uintptr_t)((Var*)instance)[ScopeSlots::EncodedSlotCountSlotIndex] <= (uintptr_t)(slotIndex - ScopeSlots::FirstSlotIndex))
             {
                 Js::Throw::FatalInternalError();
             }
@@ -7416,7 +7416,7 @@ namespace Js
         // We emit OpCode::StSlot in the bytecode only for scope slot arrays, which are not recyclable objects.
         if (!PHASE_OFF(ClosureRangeCheckPhase, this->m_functionBody))
         {
-            if ((uint32)((Var*)instance)[ScopeSlots::EncodedSlotCountSlotIndex] <= (uint32)slotIndex - ScopeSlots::FirstSlotIndex)
+            if ((uintptr_t)((Var*)instance)[ScopeSlots::EncodedSlotCountSlotIndex] <= (uintptr_t)(slotIndex - ScopeSlots::FirstSlotIndex))
             {
                 Js::Throw::FatalInternalError();
             }
