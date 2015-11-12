@@ -1193,7 +1193,7 @@ var tests = [
             assert.isTrue(includesFn.call(getTypedArray(), 9), "Calling %TypedArrayPrototype%.includes searching for the last value");
             assert.isFalse(includesFn.call(getTypedArray(), 0, 1), "Calling %TypedArrayPrototype%.includes searching for the first value but skipping the first element returns false");
             assert.isFalse(includesFn.call(getTypedArray(), 0, 11), "Calling %TypedArrayPrototype%.includes where fromIndex > length returns false");
-            assert.True(includesFn.call(getTypedArray(), 0, -10), "Calling %TypedArrayPrototype%.includes where fromIndex < 0 acts as indexed from the back");
+            assert.isTrue(includesFn.call(getTypedArray(), 0, -10), "Calling %TypedArrayPrototype%.includes where fromIndex < 0 acts as indexed from the back");
             assert.isTrue(includesFn.call(getTypedArray(), 5, -5), "Calling %TypedArrayPrototype%.includes where fromIndex < 0 acts as indexed from the back");
             
             // If we use Array.prototype.includes but pass TypedArray objects, make sure the property named length is used instead of the internal TypedArray length slot
@@ -1204,9 +1204,9 @@ var tests = [
             Object.defineProperty(u, 'length', { value: 5 });
             assert.isFalse(Array.prototype.includes.call(u, 6), "Calling Array.prototype.includes with a TypedArray that lies about length - make sure we don't actually find the element");
             
-            assert.throws(function() { includes.call(); }, TypeError, "Calling %TypedArrayPrototype%.includes with no this throws TypeError", "'this' is not a typed array object");
-            assert.throws(function() { includes.call(undefined); }, TypeError, "Calling %TypedArrayPrototype%.includes with undefined this throws TypeError", "'this' is not a typed array object");
-            assert.throws(function() { includes.call('string'); }, TypeError, "Calling %TypedArrayPrototype%.includes with non-object this throws TypeError", "'this' is not a typed array object");
+            assert.throws(function() { includesFn.call(); }, TypeError, "Calling %TypedArrayPrototype%.includes with no this throws TypeError", "'this' is not a typed array object");
+            assert.throws(function() { includesFn.call(undefined); }, TypeError, "Calling %TypedArrayPrototype%.includes with undefined this throws TypeError", "'this' is not a typed array object");
+            assert.throws(function() { includesFn.call('string'); }, TypeError, "Calling %TypedArrayPrototype%.includes with non-object this throws TypeError", "'this' is not a typed array object");
         }
     },    
     {
