@@ -256,19 +256,17 @@ namespace Js
     {
         if ((uint)op <= (uint)Js::OpCode::MaxByteSizedOpcodes)
         {
-            Assert((uint)op < _countof(OpCodeLayouts));
+            AnalysisAssert((uint)op < _countof(OpCodeLayouts));
             return OpCodeLayouts[(uint)op];
         }
         else if (op < Js::OpCode::ByteCodeLast)
         {
             uint opIndex = op - (Js::OpCode::MaxByteSizedOpcodes + 1);
-            Assert(opIndex < _countof(ExtendedOpCodeLayouts));
-            __analysis_assume(opIndex < _countof(ExtendedOpCodeLayouts));
+            AnalysisAssert(opIndex < _countof(ExtendedOpCodeLayouts));            
             return ExtendedOpCodeLayouts[opIndex];
         }
         uint opIndex = op - (Js::OpCode::ByteCodeLast + 1);
-        Assert(opIndex < _countof(BackendOpCodeLayouts));
-        __analysis_assume(opIndex < _countof(BackendOpCodeLayouts));
+        AnalysisAssert(opIndex < _countof(BackendOpCodeLayouts));        
         return BackendOpCodeLayouts[opIndex];
     }
 

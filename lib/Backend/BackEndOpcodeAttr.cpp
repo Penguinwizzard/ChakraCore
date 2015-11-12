@@ -81,19 +81,17 @@ static const int GetOpCodeAttributes(Js::OpCode op)
 {
     if (op <= Js::OpCode::MaxByteSizedOpcodes)
     {
-        Assert(op < _countof(OpcodeAttributes));
+        AnalysisAssert(op < _countof(OpcodeAttributes));
         return OpcodeAttributes[(int)op];
     }
     else if (op < Js::OpCode::ByteCodeLast)
     {
         uint opIndex = op - (Js::OpCode::MaxByteSizedOpcodes + 1);
-        Assert(opIndex < _countof(ExtendedOpcodeAttributes));
-        __analysis_assume(opIndex < _countof(ExtendedOpcodeAttributes));
+        AnalysisAssert(opIndex < _countof(ExtendedOpcodeAttributes));        
         return ExtendedOpcodeAttributes[opIndex];
     }
     uint opIndex = op - (Js::OpCode::ByteCodeLast + 1);
-    Assert(opIndex < _countof(BackendOpCodeAttributes));
-    __analysis_assume(opIndex < _countof(BackendOpCodeAttributes));
+    AnalysisAssert(opIndex < _countof(BackendOpCodeAttributes));    
     return BackendOpCodeAttributes[opIndex];
 }
 
