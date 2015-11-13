@@ -3,7 +3,7 @@ import jobs.generation.Utilities;
 import jobs.generation.InternalUtilities;
 
 // Defines the name of the repo, used elsewhere in the file
-def project = 'Microsoft/ChakraCorePrivate'
+def project = 'Microsoft/ChakraCore'
 
 def msbuildTypeMap = [
     'debug':'chk',
