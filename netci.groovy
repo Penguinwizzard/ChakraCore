@@ -27,7 +27,7 @@ def msbuildTypeMap = [
 
             def buildScript = "call jenkins.buildone.cmd ${buildArch} ${buildType}"
             buildScript += analysisConfig ? ' "/p:runcodeanalysis=true"' : ''
-            def testScript = "call jenkins.testone.cmd ${buildArch} ${buildType} -includeSlow"
+            def testScript = "call jenkins.testone.cmd ${buildArch} ${buildType}"
             def analysisScript = ".\\Build\\scripts\\check_prefast_error.ps1 . CodeAnalysis.err"
 
             // Create a new job with the specified name.  The brace opens a new closure
