@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Condition="'$(ChakraBuildPathImported)'!='true'" Project="$(SolutionDir)Chakra.Build.Paths.props" />
+  <Import Project="$(BuildConfigPropsPath)Chakra.Build.ProjectConfiguration.props" />
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{2F1709B8-9F5A-4625-9404-C348298181B7}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>xUnitconsole</RootNamespace>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+  </PropertyGroup>
+  <Import Project="$(BuildConfigPropsPath)Chakra.Build.Default.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <Import Project="$(BuildConfigPropsPath)Chakra.Build.props" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>
+        %(AdditionalIncludeDirectories);
+      $(ChakraCoreRootDirectory)bin\nativetests\xunit;
+      $(ChakraCoreRootDirectory)\bin\nativetests\xUnit++.Utility
+      </AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <CallingConvention Condition="'$(Platform)'=='Win32'">CDecl</CallingConvention>
+      <PreprocessorDefinitions>WIN32;_VARIADIC_MAX=10</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="CommandLine.cpp" />
+    <ClCompile Include="ConsoleReporter.cpp" />
+    <ClCompile Include="main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="CommandLine.h" />
+    <ClInclude Include="ConsoleReporter.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\xUnit++.Utility\xUnit++.Utility.vcxproj">
+      <Project>{c40c9047-855e-45d8-ada8-9b98f3be0f6c}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\xunit\xUnit++.vcxproj">
+      <Project>{25df3961-f288-4a96-ae6b-a4950a00ab8e}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
