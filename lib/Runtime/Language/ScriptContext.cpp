@@ -1766,6 +1766,110 @@ namespace Js
         }
     }
 
+#ifdef ENABLE_WASM
+    JavascriptFunction* ScriptContext::LoadWasmScript(const wchar_t* script, SRCINFO const * pSrcInfo, CompileScriptException * pse, bool isExpression, bool disableDeferredParse, bool isForNativeCode, Utf8SourceInfo** ppSourceInfo, const wchar_t *rootDisplayName)
+    {
+        if (pSrcInfo == nullptr)
+        {
+            pSrcInfo = this->cache->noContextGlobalSourceInfo;
+        }
+
+        Assert(!this->threadContext->IsScriptActive());
+        Assert(pse != nullptr);
+        try
+        {
+            AUTO_NESTED_HANDLED_EXCEPTION_TYPE((ExceptionType)(ExceptionType_OutOfMemory | ExceptionType_StackOverflow));
+            Js::AutoDynamicCodeReference dynamicFunctionReference(this);
+
+            // Convert to UTF8 and then load that
+            size_t length = wcslen(script);
+            if (length > UINT_MAX)
+            {
+                Js::Throw::OutOfMemory();
+            }
+
+            // Allocate memory for the UTF8 output buffer.
+            // We need at most 3 bytes for each Unicode code point.
+            // The + 1 is to include the terminating NUL.
+            // Nit:  Technically, we know that the NUL only needs 1 byte instead of
+            // 3, but that's difficult to express in a SAL annotation for "EncodeInto".
+            size_t cbUtf8Buffer = (length + 1) * 3;
+
+            LPUTF8 utf8Script = RecyclerNewArrayLeafTrace(this->GetRecycler(), utf8char_t, cbUtf8Buffer);
+
+            Assert(length < MAXLONG);
+            size_t cbNeeded = utf8::EncodeIntoAndNullTerminate(utf8Script, script, static_cast<charcount_t>(length));
+
+#if DBG_DUMP
+            if (Js::Configuration::Global.flags.TraceMemory.IsEnabled(Js::ParsePhase) && Configuration::Global.flags.Verbose)
+            {
+                Output::Print(L"Loading script.\n"
+                    L"  Unicode (in bytes)    %u\n"
+                    L"  UTF-8 size (in bytes) %u\n"
+                    L"  Expected savings      %d\n", length * sizeof(wchar_t), cbNeeded, length * sizeof(wchar_t) - cbNeeded);
+            }
+#endif
+
+            // Free unused bytes
+            Assert(cbNeeded + 1 <= cbUtf8Buffer);
+            *ppSourceInfo = Utf8SourceInfo::New(this, utf8Script, length, cbNeeded, pSrcInfo);
+
+            //
+            // Parse and execute the JavaScript file.
+            //
+            Wasm::SExprParser parser(threadContext->GetPageAllocator(), utf8Script, cbNeeded);
+
+
+            Wasm::WasmBytecodeGenerator bytecodeGen(this, *ppSourceInfo, &parser);
+            Wasm::WasmScript * wasmScript = bytecodeGen.GenerateWasmScript();
+
+            /*
+            ScriptFunction * rootFunction = javascriptLibrary->CreateScriptFunction(wasmScript->globalBody);
+
+            rootFunction->GetDynamicType()->SetEntryPoint(AsmJsExternalEntryPoint);
+            */
+
+            Wasm::WasmFunction ** functionArray = wasmScript->module->functions->GetBuffer();
+            AsmJsModuleMemory * mem = RecyclerNew(GetRecycler(), AsmJsModuleMemory);
+
+            mem->mArrayBufferOffset = AsmJsModuleMemory::MemoryTableBeginOffset;
+            mem->mStdLibOffset = mem->mArrayBufferOffset + 1;
+            mem->mDoubleOffset = mem->mStdLibOffset + 1;
+            mem->mFuncOffset = mem->mDoubleOffset + (0 * DOUBLE_SLOTS_SPACE);
+            mem->mFFIOffset = mem->mFuncOffset + 0;
+            mem->mFuncPtrOffset = mem->mFFIOffset + 0;
+            mem->mFloatOffset = mem->mFuncPtrOffset + 0;
+            mem->mIntOffset = mem->mFloatOffset +0;
+            mem->mMemorySize = mem->mIntOffset + 0;
+
+            /*
+            for (uint i = 0; i < wasmScript->module->functions->Count(); ++i)
+            {*/
+                //ScriptFunction * funcObj = javascriptLibrary->CreateScriptFunction(functionArray[i]->body);
+            ScriptFunction * funcObj = javascriptLibrary->CreateScriptFunction(functionArray[0]->body);
+            FunctionEntryPointInfo* entypointInfo = (FunctionEntryPointInfo*)funcObj->GetEntryPointInfo();
+            entypointInfo->SetIsAsmJSFunction(true);
+            entypointInfo->address = AsmJsDefaultEntryThunk;
+            funcObj->GetDynamicType()->SetEntryPoint(AsmJsExternalEntryPoint);
+            // TODO: support multiple functions
+            FrameDisplay* frameDisplay = RecyclerNewPlus(GetRecycler(), sizeof(void*), FrameDisplay, 1);
+            frameDisplay->SetItem(0, mem);
+            funcObj->SetEnvironment(frameDisplay);
+            return funcObj;
+        }
+        catch (Js::OutOfMemoryException)
+        {
+            pse->ProcessError(nullptr, E_OUTOFMEMORY, nullptr);
+            return nullptr;
+        }
+        catch (Js::StackOverflowException)
+        {
+            pse->ProcessError(nullptr, VBSERR_OutOfStack, nullptr);
+            return nullptr;
+        }
+    }
+#endif
+
     JavascriptFunction* ScriptContext::GenerateRootFunction(ParseNodePtr parseTree, uint sourceIndex, Parser* parser, ulong grfscr, CompileScriptException * pse, const wchar_t *rootDisplayName)
     {
         HRESULT hr;

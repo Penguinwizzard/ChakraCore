@@ -276,6 +276,10 @@ namespace Js
         }
     }
 
+    void ByteCodeDumper::DumpR4(float value)
+    {
+        Output::Print(L" float:%g ", value);
+    }
     void ByteCodeDumper::DumpR8(double value)
     {
         Output::Print(L" double:%g ", value);

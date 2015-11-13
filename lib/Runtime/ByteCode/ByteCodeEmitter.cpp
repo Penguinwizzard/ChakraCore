@@ -2967,7 +2967,7 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
 
         byteCodeFunction->AllocateLiteralRegexArray();
         m_callSiteId = 0;
-        m_writer.Begin(this, byteCodeFunction, alloc, this->DoJitLoopBodies(funcInfo), funcInfo->hasLoop);
+        m_writer.Begin(byteCodeFunction, alloc, this->DoJitLoopBodies(funcInfo), funcInfo->hasLoop, this->IsInDebugMode());
         this->PushFuncInfo(L"EmitOneFunction", funcInfo);
 
         this->inPrologue = true;

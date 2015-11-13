@@ -433,7 +433,6 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Library\ScriptFunctionType.h"
 #include "Library\ScriptFunction.h"
 
-
 //
 // .inl files
 //
