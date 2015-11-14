@@ -120,6 +120,7 @@ namespace Wasm
 
         Js::OpCodeAsmJs GetOpCodeForBinNode() const;
         Js::AsmJsRetType GetAsmJsReturnType() const;
+        static Js::AsmJsVarType GetAsmJsVarType(WasmTypes::WasmType wasmType);
         WasmRegisterSpace * GetRegisterSpace(WasmTypes::WasmType type);
 
         ArenaAllocator m_alloc;
