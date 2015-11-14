@@ -134,22 +134,33 @@ WasmBytecodeGenerator::GenerateFunction()
     {
         Js::Throw::OutOfMemory();
     }
-    info->SetArgCount((Js::ArgSlot)m_funcInfo->GetParamCount());
+    Js::ArgSlot paramCount = (Js::ArgSlot)m_funcInfo->GetParamCount();
+    info->SetArgCount(paramCount);
 
-    Js::ArgSlot paramSize = 0;
-    for (uint i = 0; i < m_funcInfo->GetParamCount(); ++i)
+    info->SetArgSizeArrayLength(max(paramCount, 3ui16));
+    uint* argSizeArray = RecyclerNewArrayLeafZ(m_scriptContext->GetRecycler(), uint, paramCount);
+    info->SetArgsSizesArray(argSizeArray);
+
+    if (paramCount > 0)
     {
-        switch (m_funcInfo->GetParam(i))
+        info->SetArgTypeArray(RecyclerNewArrayLeaf(m_scriptContext->GetRecycler(), Js::AsmJsVarType::Which, paramCount));
+    }
+    Js::ArgSlot paramSize = 0;
+    for (Js::ArgSlot i = 0; i < paramCount; ++i)
+    {
+        WasmTypes::WasmType type = m_funcInfo->GetParam(i);
+        info->SetArgType(GetAsmJsVarType(type), i);
+        uint16 size = 0;
+        switch (type)
         {
         case WasmTypes::F32:
         case WasmTypes::I32:
             CompileAssert(sizeof(float) == sizeof(int32));
-            // TODO: optimize to reduce number of checks
 #ifdef _M_X64
             // on x64, we always alloc (at least) 8 bytes per arguments
-            paramSize = UInt16Math::Add(paramSize, sizeof(void*));
+            size = sizeof(void*);
 #elif _M_IX86
-            paramSize = UInt16Math::Add(paramSize, sizeof(int32));
+            size = sizeof(int32);
 #else
             Assert(UNREACHED);
 #endif
@@ -157,11 +168,14 @@ WasmBytecodeGenerator::GenerateFunction()
         case WasmTypes::F64:
         case WasmTypes::I64:
             CompileAssert(sizeof(double) == sizeof(int64));
-            paramSize = UInt16Math::Add(paramSize, sizeof(int64));
+            size = sizeof(int64);
             break;
         default:
             Assume(UNREACHED);
         }
+        argSizeArray[i] = size;
+        // REVIEW: reduce number of checked adds
+        paramSize = UInt16Math::Add(paramSize, size);
     }
     info->SetArgByteSize(paramSize);
 
@@ -174,6 +188,11 @@ WasmBytecodeGenerator::GenerateFunction()
     info->SetDoubleTmpCount(m_f64RegSlots.GetTmpCount());
 
     info->SetReturnType(GetAsmJsReturnType());
+
+    // Review: overflow checks? 
+    info->SetIntByteOffset(ReservedRegisterCount * sizeof(Js::Var));
+    info->SetFloatByteOffset(info->GetIntByteOffset() + m_i32RegSlots.GetRegisterCount() * sizeof(int32));
+    info->SetDoubleByteOffset(Math::Align<int>(info->GetFloatByteOffset() + m_f32RegSlots.GetRegisterCount() * sizeof(float), sizeof(double)));
 
     return m_func;
 }
@@ -385,6 +404,27 @@ WasmBytecodeGenerator::GetAsmJsReturnType() const
         break;
     case WasmTypes::Void:
         asmType = Js::AsmJsRetType::Void;
+        break;
+    default:
+        Assert(UNREACHED);
+    }
+    return asmType;
+}
+
+Js::AsmJsVarType
+WasmBytecodeGenerator::GetAsmJsVarType(WasmTypes::WasmType wasmType)
+{
+    Js::AsmJsVarType asmType = Js::AsmJsVarType::Int;
+    switch (wasmType)
+    {
+    case WasmTypes::F32:
+        asmType = Js::AsmJsVarType::Float;
+        break;
+    case WasmTypes::F64:
+        asmType = Js::AsmJsVarType::Double;
+        break;
+    case WasmTypes::I32:
+        asmType = Js::AsmJsVarType::Int;
         break;
     default:
         Assert(UNREACHED);
