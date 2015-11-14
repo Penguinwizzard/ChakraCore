@@ -23,6 +23,7 @@
 #include "Library\IntlEngineInterfaceExtensionObject.h"
 #include "Library\ThrowErrorObject.h"
 #include "Library\StackScriptFunction.h"
+#include "Types\ActivationObjectType.h"
 
 namespace Js
 {

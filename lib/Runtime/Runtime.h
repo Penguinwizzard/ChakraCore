@@ -133,6 +133,7 @@ namespace Js
     class ArgumentsObject;
     class HeapArgumentsObject;
     class ActivationObject;
+    class ActivationObjectEx;
     class JavascriptNumber;
     class JavascriptNumberObject;
 
@@ -310,19 +311,23 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Library\DelayLoadLibrary.h"
 #include "Language\CallInfo.h"
 #include "Language\ExecutionMode.h"
-#include "BackEndAPI.h"
 #include "DetachedStateBase.h"
-
 #include "Library\Constants.h"
+#include "Language\Arguments.h"
+#include "Library\ExpirableObject.h"
+
+#include "Language\StackTraceArguments.h"
+#include "Types\JavascriptExceptionContext.h"
+
+#include "BackEndAPI.h"
+
 #include "ByteCode\OpLayoutsCommon.h"
 #include "ByteCode\OpLayouts.h"
 #include "ByteCode\OpLayoutsAsmJs.h"
 #include "ByteCode\OpCodeUtil.h"
-#include "Language\Arguments.h"
 
 #include "Types\TypeId.h"
 #include "Types\RecyclableObject.h"
-#include "Library\ExpirableObject.h"
 #include "Types\Type.h"
 #include "Types\StaticType.h"
 #include "Types\CrossSite.h"
@@ -335,12 +340,9 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Types\TypePath.h"
 #include "Types\TypeHandler.h"
 #include "Types\SimplePropertyDescriptor.h"
-
 #include "Types\DynamicType.h"
 
-#include "Language\StackTraceArguments.h"
 #include "Types\PropertyDescriptor.h"
-#include "Types\ActivationObjectType.h"
 #include "Types\TempArenaAllocatorObject.h"
 #include "Language\ValueType.h"
 #include "Language\DynamicProfileInfo.h"
@@ -349,7 +351,6 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Language\InlineCachePointerArray.h"
 #include "Types\FunctionInfo.h"
 #include "Types\FunctionBody.h"
-#include "Types\JavascriptExceptionContext.h"
 #include "Types\JavascriptExceptionObject.h"
 #include "Types\PerfHint.h"
 
@@ -409,7 +410,6 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "ByteCode\ByteCodeReader.h"
 #include "Language\LeaveScriptObject.h"
 
-#include "Language\PropertyRecord.h"
 #include "Library\TaggedInt.h"
 
 #include "Library\RootObjectBase.h"
@@ -425,7 +425,6 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Library\JavascriptError.h"
 #include "Library\JavascriptArray.h"
 
-#include "Library\ES5Array.h"
 #include "Library\ArrayBuffer.h"
 #include "Library\TypedArray.h"
 #include "Library\JavascriptBoolean.h"

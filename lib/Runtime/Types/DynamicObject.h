@@ -87,7 +87,6 @@ namespace Js
 
         void InitSlots(DynamicObject * instance, ScriptContext * scriptContext);
         void SetTypeHandler(DynamicTypeHandler * typeHandler, bool hasChanged);
-        bool IsArrayInstance();
         void ReplaceType(DynamicType * type);
 
     protected:

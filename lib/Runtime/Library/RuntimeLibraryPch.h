@@ -53,6 +53,7 @@
 #include "Types\DictionaryPropertyDescriptor.h"
 #include "Types\DictionaryTypeHandler.h"
 #include "Library\ES5ArrayTypeHandler.h"
+#include "Library\ES5Array.h"
 
 #include "Library\ArgumentsObjectEnumerator.h"
 #include "Library\JavascriptArrayEnumeratorBase.h"

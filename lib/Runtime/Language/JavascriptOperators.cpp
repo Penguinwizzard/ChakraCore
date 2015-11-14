@@ -17,6 +17,8 @@
 #include "Types\DynamicObjectSnapshotEnumerator.h"
 #include "Types\DynamicObjectSnapshotEnumeratorWPCache.h"
 #include "Library\ForInObjectEnumerator.h"
+#include "Types\ActivationObjectType.h"
+#include "Library\ES5Array.h"
 
 #ifndef SCRIPT_DIRECT_TYPE
 typedef enum JsNativeValueType

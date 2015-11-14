@@ -28,9 +28,16 @@
 
 #include "Language\InterpreterStackFrame.h"
 #include "Library\ModuleRoot.h"
+#include "Types\ActivationObjectType.h"
 
 namespace Js
 {
+    class PropertyGuardValidator
+    {
+        // Required by EquivalentTypeGuard::SetType.
+        CompileAssert(offsetof(PropertyGuard, value) == 0);
+        CompileAssert(offsetof(ConstructorCache, guard.value) == offsetof(PropertyGuard, value));
+    };
 
 #ifdef FIELD_ACCESS_STATS
     void FieldAccessStats::Add(FieldAccessStats* other)

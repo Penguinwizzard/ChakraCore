@@ -2197,10 +2197,10 @@ namespace Js
         auto asmSlotMap = asmModuleInfo->GetAsmJsSlotMap();
         Assert((uint)asmModuleInfo->GetSlotsCount() == moduleBody->scopeSlotArraySize);
 
-        Js::ActivationObject* activeScopeObject = nullptr;
+        Js::DynamicObject* activeScopeObject = nullptr;
         if (moduleBody->GetObjectRegister() != 0)
         {
-            activeScopeObject = static_cast<ActivationObject*>(scriptContext->GetLibrary()->CreateActivationObject());
+            activeScopeObject = scriptContext->GetLibrary()->CreateActivationObject();
         }
 
         PropertyId* propertyIdArray = moduleBody->GetPropertyIdsForScopeSlotArray();

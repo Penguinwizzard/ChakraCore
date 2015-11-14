@@ -11,7 +11,7 @@
 
 #include "Language\InterpreterStackFrame.h"
 #include "Library\JavascriptGeneratorFunction.h"
-
+#include "Types\ActivationObjectType.h"
 
 ///----------------------------------------------------------------------------
 ///

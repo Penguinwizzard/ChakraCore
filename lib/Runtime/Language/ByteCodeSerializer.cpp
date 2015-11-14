@@ -6,6 +6,7 @@
 #include "RegexCommon.h"
 #include "RegexPattern.h"
 #include "Library\RegexHelper.h"
+#include "Library\ES5Array.h"
 
 #include "DataStructures\Option.h"
 #include "DataStructures\ImmutableList.h"

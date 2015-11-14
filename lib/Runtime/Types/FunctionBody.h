@@ -83,13 +83,6 @@ namespace Js
         void Invalidate() { this->value = 0; }
     };
 
-    class PropertyGuardValidator
-    {
-        // Required by EquivalentTypeGuard::SetType.
-        CompileAssert(offsetof(PropertyGuard, value) == 0);
-        CompileAssert(offsetof(ConstructorCache, guard.value) == offsetof(PropertyGuard, value));
-    };
-
     class JitIndexedPropertyGuard : public Js::PropertyGuard
     {
     private:

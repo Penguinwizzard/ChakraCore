@@ -9,6 +9,7 @@
 #include "Types\DynamicObjectSnapshotEnumerator.h"
 #include "Types\DynamicObjectSnapshotEnumeratorWPCache.h"
 #include "Library\ForInObjectEnumerator.h"
+#include "Types\ActivationObjectType.h"
 
 const Js::OpCode LowererMD::MDUncondBranchOpcode = Js::OpCode::JMP;
 const Js::OpCode LowererMD::MDTestOpcode = Js::OpCode::TEST;

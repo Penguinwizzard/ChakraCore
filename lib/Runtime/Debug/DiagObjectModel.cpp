@@ -22,11 +22,13 @@
 #include "Library\JavascriptWeakMap.h"
 #include "Library\JavascriptWeakSet.h"
 #include "Library\ArgumentsObject.h"
+#include "Library\ES5Array.h"
 
 #include "Types\DynamicObjectEnumerator.h"
 #include "Types\DynamicObjectSnapshotEnumerator.h"
 #include "Types\DynamicObjectSnapshotEnumeratorWPCache.h"
 #include "Library\ForInObjectEnumerator.h"
+#include "Types\ActivationObjectType.h"
 
 // Other includes
 #include <shlwapi.h>
