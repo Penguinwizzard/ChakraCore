@@ -229,6 +229,10 @@ WasmBytecodeGenerator::EmitExpr(WasmOp op)
     case wn##token: \
         return EmitBinExpr(wn##token);
 
+#define WASM_KEYWORD_COMPARE(token, ...) \
+    case wn##token: \
+        return EmitCompareExpr(wn##token);
+
 #include "WasmKeywords.h"
 
     default:
@@ -237,7 +241,8 @@ WasmBytecodeGenerator::EmitExpr(WasmOp op)
     return EmitInfo();
 }
 
-EmitInfo WasmBytecodeGenerator::EmitGetLocal()
+EmitInfo
+WasmBytecodeGenerator::EmitGetLocal()
 {
     if (m_funcInfo->GetLocalCount() < m_reader->m_currentNode.var.num)
     {
@@ -271,7 +276,8 @@ EmitInfo WasmBytecodeGenerator::EmitGetLocal()
     return EmitInfo(tmpReg, local.type);
 }
 
-EmitInfo WasmBytecodeGenerator::EmitSetLocal()
+EmitInfo
+WasmBytecodeGenerator::EmitSetLocal()
 {
     if (m_funcInfo->GetLocalCount() < m_reader->m_currentNode.var.num)
     {
@@ -315,7 +321,8 @@ EmitInfo WasmBytecodeGenerator::EmitSetLocal()
     return EmitInfo();
 }
 
-EmitInfo WasmBytecodeGenerator::EmitConst()
+EmitInfo
+WasmBytecodeGenerator::EmitConst()
 {
     WasmRegisterSpace * regSpace = GetRegisterSpace(m_reader->m_currentNode.type);
 
@@ -353,7 +360,8 @@ WasmBytecodeGenerator::GetConstReg(T constVal)
     return location;
 }
 
-EmitInfo WasmBytecodeGenerator::EmitReturnExpr()
+EmitInfo
+WasmBytecodeGenerator::EmitReturnExpr()
 {
     if (m_reader->m_currentNode.opt.exists)
     {
@@ -411,6 +419,33 @@ WasmBytecodeGenerator::GetOpCodeForBinNode() const
     switch (m_reader->m_currentNode.op)
     {
 #define WASM_KEYWORD_BIN_MATH(token, name, floatOp, doubleOp, intOp) \
+    case wn##token: \
+        switch(m_reader->m_currentNode.type) \
+        { \
+        case WasmTypes::F32: \
+            return Js::OpCodeAsmJs::##floatOp; \
+        case WasmTypes::F64: \
+            return Js::OpCodeAsmJs::##doubleOp; \
+        case WasmTypes::I32: \
+            return Js::OpCodeAsmJs::##intOp; \
+        default: \
+            Assume(UNREACHED); \
+        }
+
+#include "WasmKeywords.h"
+
+    default:
+        Assume(UNREACHED);
+    }
+    return Js::OpCodeAsmJs::Nop;
+}
+
+Js::OpCodeAsmJs
+WasmBytecodeGenerator::GetOpCodeForCompareNode() const
+{
+    switch (m_reader->m_currentNode.op)
+    {
+#define WASM_KEYWORD_COMPARE(token, name, floatOp, doubleOp, intOp) \
     case wn##token: \
         switch(m_reader->m_currentNode.type) \
         { \
@@ -496,6 +531,40 @@ WasmBytecodeGenerator::EmitBinExpr(WasmOp op)
         throw WasmCompilationException(L"Invalid type for RHS");
     }
 
+
+    if (opcode == Js::OpCodeAsmJs::Nop)
+    {
+        throw WasmCompilationException(L"Invalid type for operation");
+    }
+
+    WasmRegisterSpace * regSpace = GetRegisterSpace(type);
+
+    Js::RegSlot resultReg = regSpace->AcquireRegisterAndReleaseLocations(&lhs, &rhs);
+
+    m_writer.AsmReg3(opcode, resultReg, lhs.location, rhs.location);
+
+    return EmitInfo(resultReg, type);
+}
+
+EmitInfo
+WasmBytecodeGenerator::EmitCompareExpr(WasmOp op)
+{
+
+    WasmTypes::WasmType type = m_reader->m_currentNode.type;
+
+    Js::OpCodeAsmJs opcode = GetOpCodeForCompareNode();
+
+    EmitInfo lhs = EmitExpr(m_reader->ReadExpr());
+    EmitInfo rhs = EmitExpr(m_reader->ReadExpr());
+
+    if (type != lhs.type)
+    {
+        throw WasmCompilationException(L"Invalid type for LHS");
+    }
+    if (type != rhs.type)
+    {
+        throw WasmCompilationException(L"Invalid type for RHS");
+    }
 
     if (opcode == Js::OpCodeAsmJs::Nop)
     {

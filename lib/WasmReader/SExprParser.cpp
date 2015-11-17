@@ -146,7 +146,7 @@ SExprParser::ReadExpr()
 
 #define WASM_KEYWORD_BIN(token, name) \
         case wtk##token: \
-            ParseBasicExpr(wn##token); \
+            ParseExprWithType(wn##token); \
             return wn##token;
 #define WASM_KEYWORD_UNARY(token, name) WASM_KEYWORD_BIN(token, name)
 
@@ -410,7 +410,7 @@ SExprParser::ParseConstLitExpr()
 }
 
 void
-SExprParser::ParseBasicExpr(WasmOp opcode)
+SExprParser::ParseExprWithType(WasmOp opcode)
 {
     m_scanner->ScanToken(wtkDOT);
 

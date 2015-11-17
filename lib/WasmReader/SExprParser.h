@@ -37,7 +37,7 @@ namespace Wasm
         void ParseLocal();
         WasmOp ParseReturnExpr();
         WasmOp ParseConstLitExpr();
-        void ParseBasicExpr(WasmOp opcode);
+        void ParseExprWithType(WasmOp opcode);
         WasmNode * ParseInvoke();
         WasmNode * ParseAssertEq();
 
