@@ -222,7 +222,7 @@ public:
 
     bool IsInnerScope() const
     {
-        return scopeType == ScopeType_Block || scopeType == ScopeType_Catch || scopeType == ScopeType_CatchParamPattern;
+        return scopeType == ScopeType_Block || scopeType == ScopeType_Catch || scopeType == ScopeType_CatchParamPattern || scopeType == ScopeType_GlobalEvalBlock;
     }
 
     int Count() const
@@ -284,7 +284,7 @@ public:
 
     bool HasInnerScopeIndex() const { return innerScopeIndex != (uint)-1; }
     uint GetInnerScopeIndex() const { return innerScopeIndex; }
-    void SetInnerScopeIndex(uint index) { Assert(innerScopeIndex == (uint)-1); innerScopeIndex = index; }
+    void SetInnerScopeIndex(uint index) { Assert(innerScopeIndex == (uint)-1 || innerScopeIndex == index); innerScopeIndex = index; }
 
     int AddScopeSlot();
 

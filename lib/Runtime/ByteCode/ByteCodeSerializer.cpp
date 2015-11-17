@@ -785,6 +785,8 @@ public:
             }
         };
 
+        Assert(!function->HasCachedScopePropIds());
+
         while (!cantGenerate)
         {
             opStart = reader.GetIP();
@@ -967,6 +969,12 @@ public:
             }
         };
 
+        if (function->HasCachedScopePropIds())
+        {
+            AuxRecord record = { sakPropertyIdArrayForCachedScope, 0 };
+            auxRecords.Prepend(record);
+        }
+
         while(!cantGenerate)
         {
             opStart = reader.GetIP();
@@ -1047,6 +1055,8 @@ public:
                 DEFAULT_LAYOUT_WITH_ONEBYTE(Unsigned1);
                 DEFAULT_LAYOUT_WITH_ONEBYTE(ElementCP);
                 DEFAULT_LAYOUT_WITH_ONEBYTE(ElementRootCP);
+                DEFAULT_LAYOUT_WITH_ONEBYTE(ElementP);
+                DEFAULT_LAYOUT_WITH_ONEBYTE(ElementPIndexed);
                 DEFAULT_LAYOUT_WITH_ONEBYTE(Reg2B1);
                 DEFAULT_LAYOUT_WITH_ONEBYTE(Reg3B1);
                 DEFAULT_LAYOUT_WITH_ONEBYTE(Class);
@@ -1054,22 +1064,40 @@ public:
                 DEFAULT_LAYOUT_WITH_ONEBYTE(ElementRootU);
                 DEFAULT_LAYOUT(BrProperty);
                 DEFAULT_LAYOUT(BrEnvProperty);
+                DEFAULT_LAYOUT(BrLocalProperty);
                 DEFAULT_LAYOUT_WITH_ONEBYTE(ElementC2);
                 DEFAULT_LAYOUT_WITH_ONEBYTE(ElementC);
 
 #undef DEFAULT_LAYOUT
 #undef DEFAULT_LAYOUT_WITH_ONEBYTE
-                case OpLayoutType::Auxiliary:
+                case OpLayoutType::AuxNoReg:
                     switch (op)
                     {
                         case OpCode::InitCachedFuncs:
                         {
-                            auto layout = reader.Auxiliary();
+                            auto layout = reader.AuxNoReg();
                             AuxRecord record = { sakFuncInfoArray, layout->Offset };
                             auxRecords.Prepend(record);
                             saveBlock();
                             break;
                         }
+                        case OpCode::CommitScope:
+                        {
+                            // The propertyId array should be saved by the InitCacheScope
+                            auto layout = reader.AuxNoReg();
+                            Assert(layout);
+                            saveBlock();
+                            break;
+                        }
+                        default:
+                            AssertMsg(false, "Unknown OpCode for OpLayoutType::AuxNoReg");
+                            cantGenerate = true;
+                            break;
+                    }
+                    break;
+                case OpLayoutType::Auxiliary:
+                    switch (op)
+                    {
                         case OpCode::NewScObjectLiteral:
                         {
                             auto layout = reader.Auxiliary();
@@ -1099,14 +1127,6 @@ public:
                             auto layout = reader.Auxiliary();
                             AuxRecord record = { sakVarArrayVarCount, layout->Offset };
                             auxRecords.Prepend(record);
-                            saveBlock();
-                            break;
-                        }
-                        case OpCode::CommitScope:
-                        {
-                            // The propertyId array should be saved by the InitCacheScope
-                            auto layout = reader.Auxiliary();
-                            Assert(layout);
                             saveBlock();
                             break;
                         }
@@ -1160,15 +1180,6 @@ public:
                 case OpLayoutType::Reg2Aux:
                     switch (op)
                     {
-                        case OpCode::InitCachedScope:
-                        case OpCode::InitLetCachedScope:
-                        {
-                            auto layout = reader.Reg2Aux();
-                            AuxRecord record = { sakPropertyIdArrayForCachedScope, layout->Offset };
-                            auxRecords.Prepend(record);
-                            saveBlock();
-                            break;
-                        }
                         case OpCode::SpreadArrayLiteral:
                         {
                             auto layout = reader.Reg2Aux();
@@ -1418,7 +1429,7 @@ public:
                 break;
 
             case sakPropertyIdArrayForCachedScope:
-                writeAuxPropertyIdArray(auxRecord.offset, 3);
+                writeAuxPropertyIdArray(auxRecord.offset, ActivationObjectEx::ExtraSlotCount());
                 break;
 
             case sakFuncInfoArray:

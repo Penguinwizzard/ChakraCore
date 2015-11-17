@@ -157,7 +157,7 @@ private:
     void                BuildArg(Js::OpCode newOpcode, uint32 offset, Js::ArgSlot argument, Js::RegSlot srcRegSlot);
     void                BuildArgIn(uint32 offset, Js::RegSlot dstRegSlot, uint16 argument);
     void                BuildArgInRest();
-    void                BuildElementScopedP(Js::OpCode newOpcode, uint32 offset, Js::RegSlot regSlot, Js::CacheId inlineCacheIndex);
+    void                BuildElementP(Js::OpCode newOpcode, uint32 offset, Js::RegSlot regSlot, Js::CacheId inlineCacheIndex);
     void                BuildElementCP(Js::OpCode newOpcode, uint32 offset, Js::RegSlot instance, Js::RegSlot regSlot, Js::CacheId inlineCacheIndex);
     void                BuildElementC2(Js::OpCode newOpcode, uint32 offset, Js::RegSlot instanceSlot, Js::RegSlot instance2Slot,
                             Js::RegSlot regSlot, Js::PropertyIdIndexType propertyIdIndex);
@@ -205,7 +205,7 @@ private:
     SymID               BuildSrcStackSymID(Js::RegSlot regSlot);
     IR::RegOpnd *       BuildDstOpnd(Js::RegSlot dstRegSlot, IRType type = TyVar, bool isCatchObjectSym = false);
     IR::RegOpnd *       BuildSrcOpnd(Js::RegSlot srcRegSlot, IRType type = TyVar);
-    IR::Opnd *          BuildAuxArrayOpnd(AuxArrayValue auxArrayType, uint32 offset, uint32 auxArrayOffset, uint extraSlots = 0);
+    IR::AddrOpnd *      BuildAuxArrayOpnd(AuxArrayValue auxArrayType, uint32 offset, uint32 auxArrayOffset, uint extraSlots = 0);
     IR::Opnd *          BuildAuxObjectLiteralTypeRefOpnd(int objectId, uint32 offset);
 
 private:
@@ -264,6 +264,7 @@ private:
         return reg > 0 && reg < this->m_func->GetJnFunction()->GetConstantCount();
     }
 
+    Js::RegSlot         InnerScopeIndexToRegSlot(uint32) const;
     Js::RegSlot         GetEnvReg() const;
     Js::RegSlot         GetEnvRegForEvalCode() const;
     Js::RegSlot         GetEnvRegForInnerFrameDisplay() const;
@@ -271,6 +272,7 @@ private:
     bool                DoSlotArrayCheck(IR::SymOpnd *fieldOpnd, bool doDynamicCheck);
     void                EmitClosureRangeChecks();
     void                DoClosureRegCheck(Js::RegSlot reg);
+    void                BuildInitCachedScope(int auxOffset, int offset);
 
     void                GenerateLoopBodySlotAccesses(uint offset);
     void                GenerateLoopBodyStSlots(SymID loopParamSymId, uint offset);

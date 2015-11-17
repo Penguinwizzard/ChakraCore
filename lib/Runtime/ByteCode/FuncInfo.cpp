@@ -375,6 +375,16 @@ void FuncInfo::ReleaseTmpRegister(Js::RegSlot tmpReg)
     }
 }
 
+Js::RegSlot FuncInfo::InnerScopeToRegSlot(Scope *scope) const
+{
+    Js::RegSlot reg = FirstInnerScopeReg();
+    Assert(reg != Js::Constants::NoRegister);
+
+    uint32 index = scope->GetInnerScopeIndex();
+
+    return reg + index;
+}
+
 Js::RegSlot FuncInfo::FirstInnerScopeReg() const
 {
     // FunctionBody stores this as a mapped reg. Callers of this function want the pre-mapped value.

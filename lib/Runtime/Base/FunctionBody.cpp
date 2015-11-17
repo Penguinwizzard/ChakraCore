@@ -406,6 +406,7 @@ namespace Js
         objLiteralCount(0),
         literalRegexCount(0),
         innerScopeCount(0),
+        hasCachedScopePropIds(false),
         m_byteCodeCount(0),
         m_byteCodeWithoutLDACount(0),
         m_argUsedForBranch(0),
@@ -436,6 +437,7 @@ namespace Js
         localFrameDisplayRegister(Constants::NoRegister),
         envRegister(Constants::NoRegister),
         firstInnerScopeRegister(Constants::NoRegister),
+        funcExprScopeRegister(Constants::NoRegister),
         m_tag(TRUE),
         m_nativeEntryPointUsed(FALSE),
         debuggerScopeIndex(0),
@@ -471,6 +473,8 @@ namespace Js
         committedProfiledIterations(0),
         simpleJitEntryPointInfo(nullptr),
         wasCalledFromLoop(false),
+        hasScopeObject(false),
+//        hasFuncExprScopeObject(false),
         hasNestedLoop(false),
         recentlyBailedOutOfJittedLoopBody(false),
         serializationIndex(-1),
@@ -3349,7 +3353,9 @@ namespace Js
         newFunctionBody->localFrameDisplayRegister = this->localFrameDisplayRegister;
         newFunctionBody->envRegister = this->envRegister;
         newFunctionBody->firstInnerScopeRegister = this->firstInnerScopeRegister;
+        newFunctionBody->funcExprScopeRegister = this->funcExprScopeRegister;
         newFunctionBody->innerScopeCount = this->innerScopeCount;
+        newFunctionBody->hasCachedScopePropIds = this->hasCachedScopePropIds;
         newFunctionBody->loopCount = this->loopCount;
         newFunctionBody->profiledDivOrRemCount = this->profiledDivOrRemCount;
         newFunctionBody->profiledSwitchCount = this->profiledSwitchCount;
@@ -4653,7 +4659,9 @@ namespace Js
         this->localFrameDisplayRegister = Constants::NoRegister;
         this->envRegister = Constants::NoRegister;
         this->firstInnerScopeRegister = Constants::NoRegister;
+        this->funcExprScopeRegister = Constants::NoRegister;
         this->innerScopeCount = 0;
+        this->hasCachedScopePropIds = false;
 
         this->ResetObjectLiteralTypes();
 
@@ -5910,7 +5918,9 @@ namespace Js
         localFrameDisplayRegister = Constants::NoRegister;
         envRegister = Constants::NoRegister;
         firstInnerScopeRegister = Constants::NoRegister;
+        funcExprScopeRegister = Constants::NoRegister;
         innerScopeCount = 0;
+        hasCachedScopePropIds = false;
         m_constCount = 0;
         this->m_constTable = nullptr;
         this->byteCodeBlock = nullptr;

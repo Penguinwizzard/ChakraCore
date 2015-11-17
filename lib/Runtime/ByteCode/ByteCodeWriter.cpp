@@ -843,6 +843,22 @@ namespace Js
         AddJumpOffset(op, labelID, offsetOfRelativeJumpOffsetFromEnd);
     }
 
+    void ByteCodeWriter::BrLocalProperty(OpCode op, ByteCodeLabel labelID, PropertyIdIndexType index)
+    {
+        CheckOpen();
+        CheckOp(op, OpLayoutType::BrLocalProperty);
+        Assert(!OpCodeAttr::HasMultiSizeLayout(op));
+        CheckLabel(labelID);
+
+        size_t const offsetOfRelativeJumpOffsetFromEnd = sizeof(OpLayoutBrLocalProperty) - offsetof(OpLayoutBrLocalProperty, RelativeJumpOffset);
+        OpLayoutBrLocalProperty data;
+        data.RelativeJumpOffset = offsetOfRelativeJumpOffsetFromEnd;
+        data.PropertyIdIndex = index;
+
+        m_byteCodeData.Encode(op, &data, sizeof(data), this);
+        AddJumpOffset(op, labelID, offsetOfRelativeJumpOffsetFromEnd);
+    }
+
     void ByteCodeWriter::BrEnvProperty(OpCode op, ByteCodeLabel labelID, PropertyIdIndexType index, int32 slotIndex)
     {
         CheckOpen();
@@ -1576,7 +1592,9 @@ StoreCommon:
         {
             case OpCode::LdEnvObj:
             case OpCode::StLocalSlot:
+            case OpCode::StLocalObjSlot:
             case OpCode::StLocalSlotChkUndecl:
+            case OpCode::StLocalObjSlotChkUndecl:
             {
                 break;
             }
@@ -1603,6 +1621,7 @@ StoreCommon:
         switch (op)
         {
             case OpCode::LdLocalSlot:
+            case OpCode::LdLocalObjSlot:
                 if ((DoDynamicProfileOpcode(AggressiveIntTypeSpecPhase) || DoDynamicProfileOpcode(FloatTypeSpecPhase)) &&
                     profileId != Constants::NoProfileId)
                 {
@@ -1651,6 +1670,8 @@ StoreCommon:
         {
             case OpCode::StInnerSlot:
             case OpCode::StInnerSlotChkUndecl:
+            case OpCode::StInnerObjSlot:
+            case OpCode::StInnerObjSlotChkUndecl:
             case OpCode::StEnvSlot:
             case OpCode::StEnvSlotChkUndecl:
             case OpCode::StEnvObjSlot:
@@ -1681,6 +1702,7 @@ StoreCommon:
         switch (op)
         {
             case OpCode::LdInnerSlot:
+            case OpCode::LdInnerObjSlot:
             case OpCode::LdEnvSlot:
             case OpCode::LdEnvObjSlot:
                 if ((DoDynamicProfileOpcode(AggressiveIntTypeSpecPhase) || DoDynamicProfileOpcode(FloatTypeSpecPhase)) &&
@@ -1842,9 +1864,9 @@ StoreCommon:
     }
 
     template <typename SizePolicy>
-    bool ByteCodeWriter::TryWriteElementScopedP(OpCode op, RegSlot value, CacheId cacheId)
+    bool ByteCodeWriter::TryWriteElementP(OpCode op, RegSlot value, CacheId cacheId)
     {
-        OpLayoutT_ElementScopedP<SizePolicy> layout;
+        OpLayoutT_ElementP<SizePolicy> layout;
         if (SizePolicy::Assign(layout.Value, value)
             && SizePolicy::Assign(layout.inlineCacheIndex, cacheId))
         {
@@ -1854,10 +1876,10 @@ StoreCommon:
         return false;
     }
 
-    void ByteCodeWriter::ElementScopedP(OpCode op, RegSlot value, uint cacheId)
+    void ByteCodeWriter::ElementP(OpCode op, RegSlot value, uint cacheId, bool isCtor, bool registerCacheIdForCall)
     {
         CheckOpen();
-        CheckOp(op, OpLayoutType::ElementScopedP);
+        CheckOp(op, OpLayoutType::ElementP);
         Assert(OpCodeAttr::HasMultiSizeLayout(op));
 
         value = ConsumeReg(value);
@@ -1870,12 +1892,94 @@ StoreCommon:
         case OpCode::ScopedStFldStrict:
             break;
 
+        case OpCode::LdLocalFld:
+            if (isCtor) // The symbol loaded by this LdFld will be used as a constructor
+            {
+                if (registerCacheIdForCall)
+                {
+                    CacheIdUnit unit(cacheId);
+                    Assert(!callRegToLdFldCacheIndexMap->TryGetValue(value, &unit));
+                    callRegToLdFldCacheIndexMap->Add(value, unit);
+                }
+            }
+            if (DoDynamicProfileOpcode(AggressiveIntTypeSpecPhase) ||
+                DoDynamicProfileOpcode(FloatTypeSpecPhase) ||
+                DoDynamicProfileOpcode(ObjTypeSpecPhase) ||
+                DoDynamicProfileOpcode(InlinePhase) ||
+                DoDynamicProfileOpcode(ProfileBasedFldFastPathPhase))
+            {
+                OpCodeUtil::ConvertNonCallOpToProfiled(op);
+            }
+            break;          
+
+        case OpCode::LdLocalMethodFld:
+            if (registerCacheIdForCall)
+            {
+                CacheIdUnit unit(cacheId);
+                Assert(!callRegToLdFldCacheIndexMap->TryGetValue(value, &unit));
+                callRegToLdFldCacheIndexMap->Add(value, unit);
+            }
+            // fall-through
+        case OpCode::StLocalFld:
+        case OpCode::InitLocalFld:
+            if (DoDynamicProfileOpcode(ProfileBasedFldFastPathPhase) ||
+                DoDynamicProfileOpcode(InlinePhase) ||
+                DoDynamicProfileOpcode(ObjTypeSpecPhase))
+            {
+                OpCodeUtil::ConvertNonCallOpToProfiled(op);
+            }
+            break;
+
+        case OpCode::InitLocalLetFld:
+        case OpCode::InitUndeclLocalLetFld:
+        case OpCode::InitUndeclLocalConstFld:
+            break;
+
         default:
             AssertMsg(false, "The specified OpCode not intended for base-less patchable field access");
             break;
         }
 
-        MULTISIZE_LAYOUT_WRITE(ElementScopedP, op, value, cacheId);
+        MULTISIZE_LAYOUT_WRITE(ElementP, op, value, cacheId);
+    }
+
+    template <typename SizePolicy>
+    bool ByteCodeWriter::TryWriteElementPIndexed(OpCode op, RegSlot value, uint32 scopeIndex, CacheId cacheId)
+    {
+        OpLayoutT_ElementPIndexed<SizePolicy> layout;
+        if (SizePolicy::Assign(layout.Value, value)
+            && SizePolicy::Assign(layout.inlineCacheIndex, cacheId)
+            && SizePolicy::Assign(layout.scopeIndex, scopeIndex))
+        {
+            m_byteCodeData.EncodeT<SizePolicy::LayoutEnum>(op, &layout, sizeof(layout), this);
+            return true;
+        }
+        return false;
+    }
+
+    void ByteCodeWriter::ElementPIndexed(OpCode op, RegSlot value, uint32 scopeIndex, uint cacheId)
+    {
+        CheckOpen();
+        CheckOp(op, OpLayoutType::ElementPIndexed);
+        Assert(OpCodeAttr::HasMultiSizeLayout(op));
+
+        value = ConsumeReg(value);
+        switch (op)
+        {
+        case OpCode::InitInnerFld:
+        case OpCode::InitInnerLetFld:
+        case OpCode::InitUndeclLetFld:
+        case OpCode::InitUndeclConstFld:
+            break;
+
+            break;
+
+        default:
+            AssertMsg(false, "The specified OpCode not intended for base-less patchable inner field access");
+            break;
+        }
+
+        MULTISIZE_LAYOUT_WRITE(ElementPIndexed, op, value, scopeIndex, cacheId);
     }
 
     template <typename SizePolicy>
@@ -1943,8 +2047,6 @@ StoreCommon:
             break;
         case OpCode::InitLetFld:
         case OpCode::InitConstFld:
-        case OpCode::InitUndeclLetFld:
-        case OpCode::InitUndeclConstFld:
         case OpCode::InitClassMember:
         case OpCode::ScopedLdMethodFld:
             break;
@@ -2213,7 +2315,47 @@ StoreCommon:
         MULTISIZE_LAYOUT_WRITE(Reg3, op, C0, C1, C2);
     }
 
-    void ByteCodeWriter::Auxiliary(OpCode op, RegSlot destinationRegister, const void* buffer, int byteCount, int C1)
+    int ByteCodeWriter::AuxNoReg(OpCode op, const void* buffer, int byteCount, int C1)
+    {
+        CheckOpen();
+
+        //
+        // Write the buffer's contents
+        //
+
+        int currentOffset = InsertAuxiliaryData(buffer, byteCount);
+
+        //
+        // Write OpCode to create new auxiliary data
+        //
+
+        OpLayoutAuxNoReg data;
+        data.Offset = currentOffset;
+        data.C1 = C1;
+
+        m_byteCodeData.Encode(op, &data, sizeof(data), this);
+
+        return currentOffset;
+    }
+
+    void ByteCodeWriter::AuxNoReg(OpCode op, uint byteOffset, int C1)
+    {
+        CheckOpen();
+
+        //
+        // Write the buffer's contents
+        //
+
+        Assert(byteOffset < m_auxiliaryData.GetCurrentOffset());
+
+        OpLayoutAuxNoReg data;
+        data.Offset = byteOffset;
+        data.C1 = C1;
+
+        m_byteCodeData.Encode(op, &data, sizeof(data), this);
+    }
+
+    int ByteCodeWriter::Auxiliary(OpCode op, RegSlot destinationRegister, const void* buffer, int byteCount, int C1)
     {
         CheckOpen();
         destinationRegister = ConsumeReg(destinationRegister);
@@ -2222,12 +2364,7 @@ StoreCommon:
         // Write the buffer's contents
         //
 
-        uint currentOffset = m_auxiliaryData.GetCurrentOffset();
-
-        if (byteCount > 0)
-        {
-            m_auxiliaryData.Encode(buffer, byteCount);
-        }
+        int currentOffset = InsertAuxiliaryData(buffer, byteCount);
 
         //
         // Write OpCode to create new auxiliary data
@@ -2258,6 +2395,8 @@ StoreCommon:
 
             m_byteCodeData.Encode(op, &data, sizeof(data), this);
         }
+
+        return currentOffset;
     }
 
     void ByteCodeWriter::Auxiliary(OpCode op, RegSlot destinationRegister, uint byteOffset, int C1)
@@ -2289,11 +2428,7 @@ StoreCommon:
         // Write the buffer's contents
         //
 
-        int currentOffset   = m_auxiliaryData.GetCurrentOffset();
-        if (byteCount > 0)
-        {
-            m_auxiliaryData.Encode(buffer, byteCount);
-        }
+        int currentOffset   = InsertAuxiliaryData(buffer, byteCount);
 
         //
         // Write OpCode to create new auxiliary data

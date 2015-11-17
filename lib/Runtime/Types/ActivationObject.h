@@ -148,6 +148,7 @@ namespace Js
         // [0] - cached func count
         // [1] - first func slot
         // [2] - first var slot
+        // [3] - literal object reference
 
         static PropertyId GetCachedFuncCount(const PropertyIdArray *propIds)
         {
@@ -163,6 +164,13 @@ namespace Js
         {
             return ActivationObjectEx::GetCachedScopeInfo(propIds)[2];
         }
+
+        static PropertyId GetLiteralObjectRef(const PropertyIdArray *propIds)
+        {
+            return ActivationObjectEx::GetCachedScopeInfo(propIds)[3];
+        }
+
+        static uint32 ExtraSlotCount() { return 4; }
 
         static bool Is(void* instance)
         {

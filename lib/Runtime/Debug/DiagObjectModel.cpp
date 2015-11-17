@@ -907,7 +907,7 @@ namespace Js
                     case DiagBlockScopeInSlot:
                         {
                             SlotArrayVariablesWalker* blockScopeWalker = Anew(arena, SlotArrayVariablesWalker, pFrame,
-                                (Var)pFrame->GetNonVarRegValue(debuggerScope->GetLocation()), UIGroupType_InnerScope, /* allowLexicalThis */ false);
+                                (Var)pFrame->GetInnerScopeFromRegSlot(debuggerScope->GetLocation()), UIGroupType_InnerScope, /* allowLexicalThis */ false);
                             pDiagScopeObjects->Add(blockScopeWalker);
                             diagScopeVarCount += blockScopeWalker->GetChildrenCount();
                         }
@@ -921,7 +921,7 @@ namespace Js
                         break;
                     case DiagBlockScopeInObject:
                         {
-                            ObjectVariablesWalker* objectVariablesWalker = Anew(arena, ObjectVariablesWalker, pFrame, pFrame->GetRegValue(debuggerScope->GetLocation()), UIGroupType_InnerScope, /* allowLexicalThis */ false);
+                            ObjectVariablesWalker* objectVariablesWalker = Anew(arena, ObjectVariablesWalker, pFrame, pFrame->GetInnerScopeFromRegSlot(debuggerScope->GetLocation()), UIGroupType_InnerScope, /* allowLexicalThis */ false);
                             pDiagScopeObjects->Add(objectVariablesWalker);
                             diagScopeVarCount += objectVariablesWalker->GetChildrenCount();
                         }
@@ -1517,7 +1517,7 @@ namespace Js
         ScriptContext* scriptContext = pFrame->GetScriptContext();
         if (debuggerScope->scopeType == Js::DiagCatchScopeInObject)
         {
-            Var obj = pFrame->GetRegValue(debuggerScope->GetLocation());
+            Var obj = pFrame->GetInnerScopeFromRegSlot(debuggerScope->GetLocation());
             Assert(RecyclableObject::Is(obj));
 
             outValue = RecyclableObjectWalker::GetObject(RecyclableObject::FromVar(obj), RecyclableObject::FromVar(obj), scopeProperty.propId, scriptContext);

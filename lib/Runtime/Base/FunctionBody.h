@@ -1789,6 +1789,7 @@ namespace Js
         bool disableInlineSpread : 1;
         bool hasHotLoop: 1;
         bool wasCalledFromLoop : 1;
+//        bool hasScopeObject: 1;
         bool hasNestedLoop : 1;
         bool recentlyBailedOutOfJittedLoopBody : 1;
         bool m_firstFunctionObject: 1;
@@ -1942,14 +1943,20 @@ namespace Js
         void SetEnvDepth(uint16 depth) { m_envDepth = depth; }
         RegSlot GetEnvReg() const { return envRegister; }
         void SetEnvReg(RegSlot reg) { Assert(envRegister == Constants::NoRegister); envRegister = this->MapRegSlot(reg); }
-        void SetLocalScopeSlotsReg(RegSlot reg) { Assert(localClosureRegister == Constants::NoRegister); localClosureRegister = this->MapRegSlot(reg); }
-        RegSlot GetLocalScopeSlotsReg() const { return localClosureRegister; }
+        bool HasScopeObject() const { return hasScopeObject; }
+        void SetHasScopeObject(bool has) { hasScopeObject = has; }
+        void SetLocalClosureReg(RegSlot reg) { Assert(localClosureRegister == Constants::NoRegister); localClosureRegister = this->MapRegSlot(reg); }
+        RegSlot GetLocalClosureReg() const { return localClosureRegister; }
         void SetLocalFrameDisplayReg(RegSlot reg) { Assert(localFrameDisplayRegister == Constants::NoRegister); localFrameDisplayRegister = this->MapRegSlot(reg); }
         RegSlot GetLocalFrameDisplayReg() const { return localFrameDisplayRegister; /*localClosureRegister == Constants::NoRegister ? Constants::NoRegister : localClosureRegister + 1;*/ }
         RegSlot FirstInnerScopeReg() const { Assert(firstInnerScopeRegister != Constants::NoRegister); return firstInnerScopeRegister; }
         void SetFirstInnerScopeReg(RegSlot reg) { Assert(reg != Constants::NoRegister); firstInnerScopeRegister = this->MapRegSlot(reg); }
+        RegSlot GetFuncExprScopeReg() const { return funcExprScopeRegister; }
+        void SetFuncExprScopeReg(RegSlot reg) { Assert(reg != Constants::NoRegister); funcExprScopeRegister = this->MapRegSlot(reg); }
         uint GetInnerScopeCount() const { return innerScopeCount; }
         void SetInnerScopeCount(uint count) { innerScopeCount = count; }
+        bool HasCachedScopePropIds() const { return hasCachedScopePropIds; }
+        void SetHasCachedScopePropIds(bool has) { hasCachedScopePropIds = has; }
 
         size_t GetLoopBodyName(uint loopNumber, _Out_writes_opt_z_(sizeInChars) WCHAR* displayName, _In_ size_t sizeInChars);
 

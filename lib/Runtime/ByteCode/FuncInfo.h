@@ -563,6 +563,7 @@ public:
         return this->localClosureReg + 1;
     }
 
+    Js::RegSlot InnerScopeToRegSlot(Scope *scope) const;
     Js::RegSlot FirstInnerScopeReg() const;
     void SetFirstInnerScopeReg(Js::RegSlot reg);
 

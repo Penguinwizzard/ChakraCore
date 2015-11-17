@@ -219,12 +219,12 @@ namespace Js
                     }
                     if (callerFunctionBody->DoStackScopeSlots())
                     {
-                        Var* stackScopeSlots = interpreterFrame->GetLocalScopeSlots();
+                        Var* stackScopeSlots = (Var*)interpreterFrame->GetLocalClosure();
                         if (stackScopeSlots)
                         {
                             // Scope slot pointer may be null if bailout didn't restore it, which means we don't need it.
                             Var* boxedScopeSlots = this->BoxScopeSlots(stackScopeSlots, ScopeSlots(stackScopeSlots).GetCount());
-                            interpreterFrame->SetLocalScopeSlots(boxedScopeSlots);
+                            interpreterFrame->SetLocalClosure((Var)boxedScopeSlots);
                         }
                     }
 
