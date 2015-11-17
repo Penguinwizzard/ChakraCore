@@ -11,6 +11,10 @@
 #define WASM_KEYWORD_BIN(token, name) WASM_KEYWORD(token, name)
 #endif
 
+#ifndef WASM_KEYWORD_COMPARE
+#define WASM_KEYWORD_COMPARE(token, name, floatOp, doubleOp, intOp) WASM_KEYWORD_BIN(token, name)
+#endif
+
 #ifndef WASM_KEYWORD_BIN_MATH
 #define WASM_KEYWORD_BIN_MATH(token, name, floatOp, doubleOp, intOp) WASM_KEYWORD_BIN(token, name)
 #endif
@@ -117,20 +121,20 @@ WASM_KEYWORD_BIN_MATH(MOD, mod, Nop, Nop, Nop)
 WASM_KEYWORD_BIN_MATH(COPYSIGN, copysign, Nop, Nop, Nop)
 
 // compare ops
-WASM_KEYWORD(EQ,     eq)
-WASM_KEYWORD(NEQ,    neq)
-WASM_KEYWORD(LTS,    lts)
-WASM_KEYWORD(LTU,    ltu)
-WASM_KEYWORD(LES,    les)
-WASM_KEYWORD(LEU,    leu)
-WASM_KEYWORD(GTS,    gts)
-WASM_KEYWORD(GTU,    gtu)
-WASM_KEYWORD(GES,    ges)
-WASM_KEYWORD(GEU,    geu)
-WASM_KEYWORD(LT,     lt)
-WASM_KEYWORD(LE,     le)
-WASM_KEYWORD(GT,     gt)
-WASM_KEYWORD(GE,     ge)
+WASM_KEYWORD_COMPARE(EQ,     eq, CmEq_Flt, CmEq_Db, CmEq_Int)
+WASM_KEYWORD_COMPARE(NEQ,    neq, CmNe_Db, CmNe_Db, CmNe_Int)
+WASM_KEYWORD_COMPARE(LTS,    lts, Nop, Nop, CmLt_Int)
+WASM_KEYWORD_COMPARE(LTU,    ltu, Nop, Nop, CmLt_UnInt)
+WASM_KEYWORD_COMPARE(LES,    les, Nop, Nop, CmLe_Int)
+WASM_KEYWORD_COMPARE(LEU,    leu, Nop, Nop, CmLe_UnInt)
+WASM_KEYWORD_COMPARE(GTS,    gts, Nop, Nop, CmGt_Int)
+WASM_KEYWORD_COMPARE(GTU,    gtu, Nop, Nop, CmGt_UnInt)
+WASM_KEYWORD_COMPARE(GES,    ges, Nop, Nop, CmGe_Int)
+WASM_KEYWORD_COMPARE(GEU,    geu, Nop, Nop, CmGe_UnInt)
+WASM_KEYWORD_COMPARE(LT,     lt, CmLt_Flt, CmLt_Db, Nop)
+WASM_KEYWORD_COMPARE(LE,     le, CmLe_Flt, CmLe_Db, Nop)
+WASM_KEYWORD_COMPARE(GT,     gt, CmGt_Flt, CmGt_Db, Nop)
+WASM_KEYWORD_COMPARE(GE,     ge, CmGe_Flt, CmGe_Db, Nop)
 
 // conversions
 WASM_KEYWORD(CONVERTS,   converts)
@@ -142,6 +146,7 @@ WASM_KEYWORD(CAST,       cast)
 WASM_KEYWORD(INVOKE,     invoke)
 WASM_KEYWORD(ASSERTEQ,   asserteq)
 
+#undef WASM_KEYWORD_COMPARE
 #undef WASM_KEYWORD_UNARY
 #undef WASM_KEYWORD_BIN_MATH
 #undef WASM_KEYWORD_BIN

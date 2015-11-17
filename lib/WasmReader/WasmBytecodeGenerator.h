@@ -109,6 +109,7 @@ namespace Wasm
         EmitInfo EmitSetLocal();
         EmitInfo EmitReturnExpr();
         EmitInfo EmitBinExpr(WasmOp op);
+        EmitInfo EmitCompareExpr(WasmOp op);
 
         void EnregisterLocals();
         void AddExport();
@@ -120,6 +121,7 @@ namespace Wasm
         template <typename T> Js::RegSlot GetConstReg(T constVal);
 
         Js::OpCodeAsmJs GetOpCodeForBinNode() const;
+        Js::OpCodeAsmJs GetOpCodeForCompareNode() const;
         Js::AsmJsRetType GetAsmJsReturnType() const;
         static Js::AsmJsVarType GetAsmJsVarType(WasmTypes::WasmType wasmType);
         WasmRegisterSpace * GetRegisterSpace(WasmTypes::WasmType type);
