@@ -132,7 +132,7 @@ SExprParser::ReadExpr()
         op = wnGETLOCAL;
         goto ParseVarCommon;
     case wtkSETLOCAL:
-        op = wnSetLocal;
+        op = wnSETLOCAL;
         goto ParseVarCommon;
     case wtkGETGLOBAL:
         op = wnGetGlobal;
@@ -476,7 +476,11 @@ SExprParser::ParseVarNode(WasmOp opcode)
         ThrowSyntaxError();
     }
 
-    if (opcode != wnSetLocal && opcode != wnSetGlobal)
+    if (opcode == wnSETLOCAL || opcode == wnSetGlobal)
+    {
+        ++m_nestedRParens;
+    }
+    else
     {
         m_scanner->ScanToken(wtkRPAREN);
     }

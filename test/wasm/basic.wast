@@ -5,6 +5,7 @@
 
 (module
   (func (param i32) (result i32)
+    (setlocal 0 (const.i32 25))
     (return (add.i32 (getlocal 0) (const.i32 42)))
   )
 

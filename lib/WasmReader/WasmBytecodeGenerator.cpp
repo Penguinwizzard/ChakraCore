@@ -218,6 +218,8 @@ WasmBytecodeGenerator::EmitExpr(WasmOp op)
     {
     case wnGETLOCAL:
         return EmitGetLocal();
+    case wnSETLOCAL:
+        return EmitSetLocal();
     case wnRETURN:
         return EmitReturnExpr();
     case wnCONST:
@@ -237,8 +239,7 @@ WasmBytecodeGenerator::EmitExpr(WasmOp op)
 
 EmitInfo WasmBytecodeGenerator::EmitGetLocal()
 {
-    // TODO: signedness issue
-    if (m_funcInfo->GetLocalCount() < (int)m_reader->m_currentNode.var.num)
+    if (m_funcInfo->GetLocalCount() < m_reader->m_currentNode.var.num)
     {
         throw WasmCompilationException(L"%u is not a valid local", m_reader->m_currentNode.var.num);
     }
@@ -268,6 +269,50 @@ EmitInfo WasmBytecodeGenerator::EmitGetLocal()
     m_writer.AsmReg2(op, tmpReg, local.location);
 
     return EmitInfo(tmpReg, local.type);
+}
+
+EmitInfo WasmBytecodeGenerator::EmitSetLocal()
+{
+    if (m_funcInfo->GetLocalCount() < m_reader->m_currentNode.var.num)
+    {
+        throw WasmCompilationException(L"%u is not a valid local", m_reader->m_currentNode.var.num);
+    }
+
+    WasmLocal local = m_locals[m_reader->m_currentNode.var.num];
+
+    Js::OpCodeAsmJs op = Js::OpCodeAsmJs::Nop;
+    WasmRegisterSpace * regSpace = nullptr;
+    switch (local.type)
+    {
+    case WasmTypes::F32:
+        op = Js::OpCodeAsmJs::Ld_Flt;
+        regSpace = &m_f32RegSlots;
+        break;
+    case WasmTypes::F64:
+        op = Js::OpCodeAsmJs::Ld_Db;
+        regSpace = &m_f64RegSlots;
+        break;
+    case WasmTypes::I32:
+        op = Js::OpCodeAsmJs::Ld_Int;
+        regSpace = &m_i32RegSlots;
+        break;
+    default:
+        Assume(UNREACHED);
+    }
+
+    EmitInfo info = EmitExpr(m_reader->ReadExpr());
+
+    if (info.type != local.type)
+    {
+        throw WasmCompilationException(L"TypeError in setlocal for %u", m_reader->m_currentNode.var.num);
+    }
+
+    m_writer.AsmReg2(op, local.location, info.location);
+
+    regSpace->ReleaseLocation(&info);
+
+    // REVIEW: should this produce result of setlocal? currently produces void
+    return EmitInfo();
 }
 
 EmitInfo WasmBytecodeGenerator::EmitConst()
