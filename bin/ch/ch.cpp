@@ -114,9 +114,14 @@ int HostExceptionFilter(int exceptionCode, _EXCEPTION_POINTERS *ep)
     return EXCEPTION_EXECUTE_HANDLER;
 }
 
+void __stdcall PrintUsageFormat()
+{
+    wprintf(L"\nUsage: ch.exe [flaglist] filename\n");
+}
+
 void __stdcall PrintUsage()
 {
-    wprintf(L"\nUsage: ch.exe [flaglist] [filename]\n");
+    PrintUsageFormat();
     wprintf(L"Try 'ch.exe -?' for help\n");
 }
 
@@ -487,6 +492,8 @@ int _cdecl wmain(int argc, __in_ecount(argc) LPWSTR argv[])
         PrintUsage();
         return EXIT_FAILURE;
     }
+
+    HostConfigFlags::pfnPrintUsage = PrintUsageFormat;
 
     ATOM lock = ::AddAtom(szChakraCoreLock);
     AssertMsg(lock, "failed to lock chakracore.dll");
