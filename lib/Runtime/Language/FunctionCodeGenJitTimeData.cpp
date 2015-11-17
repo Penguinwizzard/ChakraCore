@@ -594,7 +594,6 @@ namespace Js
 
             typeNumber++;
         }
-        AnalysisAssert(typeNumber == typeCount);
 
         if (isAccessor && gatherDataForInlining)
         {
@@ -605,6 +604,8 @@ namespace Js
         {
             typeCount = 1;
         }
+
+        AnalysisAssert(typeNumber == typeCount);
 
         // Now that we've copied all material info into local variables, we can start allocating without fear
         // that a garbage collection will clear any of the live inline caches.
