@@ -37,7 +37,7 @@ namespace Wasm
         wnSWITCH,
         wnRETURN,
         wnGETLOCAL,
-        wnSetLocal,
+        wnSETLOCAL,
         wnGetGlobal,
         wnSetGlobal,
         wnGetNearS,

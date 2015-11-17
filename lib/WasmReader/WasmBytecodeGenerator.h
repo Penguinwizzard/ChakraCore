@@ -106,6 +106,7 @@ namespace Wasm
         EmitInfo EmitExpr(WasmOp op);
         EmitInfo EmitConst();
         EmitInfo EmitGetLocal();
+        EmitInfo EmitSetLocal();
         EmitInfo EmitReturnExpr();
         EmitInfo EmitBinExpr(WasmOp op);
 
