@@ -467,12 +467,17 @@ HRESULT ExecuteTestWithMemoryCheck(BSTR fileName)
 
     _flushall();
 #ifdef CHECK_MEMORY_LEAK
-    // temporary work around UCRT limitation.
-#if defined(_MSC_VER) && (_MSC_VER <= 1800)
     ChakraRTInterface::SetEnableCheckMemoryLeakOutput(true);
 #endif
-#endif
     return hr;
+}
+
+
+unsigned int WINAPI StaticThreadProc(void *lpParam)
+{
+    ChakraRTInterface::ArgInfo* argInfo = static_cast<ChakraRTInterface::ArgInfo* >(lpParam);
+    _endthreadex(ExecuteTestWithMemoryCheck(*(argInfo->filename)));
+    return 0;
 }
 
 int _cdecl wmain(int argc, __in_ecount(argc) LPWSTR argv[])
@@ -495,7 +500,19 @@ int _cdecl wmain(int argc, __in_ecount(argc) LPWSTR argv[])
 
     if (chakraLibrary != nullptr)
     {
-        ExecuteTestWithMemoryCheck(fileName.m_str);
+        HANDLE threadHandle;
+        threadHandle = reinterpret_cast<HANDLE>(_beginthreadex(0, 0, &StaticThreadProc, &argInfo, STACK_SIZE_PARAM_IS_A_RESERVATION, 0));
+        if (threadHandle != nullptr)
+        {
+            DWORD waitResult = WaitForSingleObject(threadHandle, INFINITE);
+            Assert(waitResult == WAIT_OBJECT_0);
+            CloseHandle(threadHandle);
+        }
+        else
+        {
+            fwprintf(stderr, L"FATAL ERROR: failed to create worker thread error code %d, exiting\n", errno);
+            AssertMsg(false, "failed to create worker thread");
+        }
         ChakraRTInterface::UnloadChakraDll(chakraLibrary);
     }
 
