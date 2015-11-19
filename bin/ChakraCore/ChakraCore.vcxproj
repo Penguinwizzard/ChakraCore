@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Condition="'$(ChakraBuildPathImported)'!='true'" Project="$(SolutionDir)Chakra.Build.Paths.props" />
   <Import Project="$(BuildConfigPropsPath)Chakra.Build.ProjectConfiguration.props" />
@@ -111,6 +111,9 @@
     <ProjectReference Include="..\..\Lib\Parser\Chakra.Parser.vcxproj">
       <Project>{f6fad160-5a4b-476a-93ac-33e0b3a18c0c}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\..\lib\Runtime\Base\Chakra.Runtime.Base.vcxproj">
+      <Project>{706083f7-6aa4-4558-a153-6352ef9110ee}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\..\Lib\Runtime\ByteCode\Chakra.Runtime.ByteCode.vcxproj">
       <Project>{706083f7-6aa4-4558-a153-6352ef9110f5}</Project>
     </ProjectReference>
@@ -133,6 +136,6 @@
   <ItemGroup>
     <ClInclude Include="TestHooks.h" />
   </ItemGroup>
-  <Import Project="$(BuildConfigPropsPath)Chakra.Build.targets" Condition="exists('$(BuildConfigPropsPath)Chakra.Build.targets')"/>
+  <Import Project="$(BuildConfigPropsPath)Chakra.Build.targets" Condition="exists('$(BuildConfigPropsPath)Chakra.Build.targets')" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

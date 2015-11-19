@@ -4,7 +4,7 @@
 //-------------------------------------------------------------------------------------------------------
 #include "JsrtPch.h"
 #include "JsrtRuntime.h"
-#include "Library\ThreadContextTLSEntry.h"
+#include "Base\ThreadContextTLSEntry.h"
 
 DWORD JsrtContext::s_tlsSlot = TLS_OUT_OF_INDEXES;
 

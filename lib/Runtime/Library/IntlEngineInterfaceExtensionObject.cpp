@@ -8,7 +8,7 @@
 #include "Types\DeferredTypeHandler.h"
 
 #ifdef ENABLE_INTL_OBJECT
-#include "Language\ByteCodeSerializer.h"
+#include "ByteCode\ByteCodeSerializer.h"
 #include "errstr.h"
 #include "ByteCode\ByteCodeDumper.h"
 using namespace Windows::Globalization;

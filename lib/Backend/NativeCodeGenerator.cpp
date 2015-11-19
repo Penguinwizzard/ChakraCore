@@ -3,7 +3,7 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 #include "BackEnd.h"
-#include "Language\ScriptContextProfiler.h"
+#include "Base\ScriptContextProfiler.h"
 
 #if DBG
 Js::JavascriptMethod checkCodeGenThunk;

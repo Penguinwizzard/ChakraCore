@@ -78,7 +78,7 @@ namespace Js
 #define ENTRY_SYMBOL(n, d) n,
 #define ENTRY(n) n,
 #define ENTRY2(n, s) n,
-#include "Library\JnDirectFields.h"
+#include "Base\JnDirectFields.h"
         _countJSOnlyProperty,
     END_ENUM_UINT()
 
@@ -226,5 +226,5 @@ namespace JSON
 #define JS_DEFAULT_EXTENDS_CTOR_DISPLAY_STRING      L"constructor(...args) { super(...args); }"
 
 
-#include "Library\SIMDUtils.h"
+#include "Language\SIMDUtils.h"
 

@@ -3,8 +3,8 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 #include "BackEnd.h"
-#include "Library\EtwTrace.h"
-#include "Language\ScriptContextProfiler.h"
+#include "Base\EtwTrace.h"
+#include "Base\ScriptContextProfiler.h"
 
 Func::Func(JitArenaAllocator *alloc, CodeGenWorkItem* workItem, const Js::FunctionCodeGenRuntimeData *const runtimeData,
     Js::PolymorphicInlineCacheInfo * const polymorphicInlineCacheInfo, CodeGenAllocators *const codeGenAllocators,

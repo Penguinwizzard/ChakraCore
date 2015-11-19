@@ -151,12 +151,6 @@ namespace Js
         return IsAnyArrayTypeId(JavascriptOperators::GetTypeId(aValue));
     }
 
-    // Check if this instance is of any array type, used for debug
-    bool DynamicObject::IsArrayInstance()
-    {
-        return JavascriptArray::Is(this) || ES5Array::Is(this);
-    }
-
     BOOL DynamicObject::HasObjectArrayItem(uint32 index)
     {
         return HasObjectArray() && GetObjectArrayOrFlagsAsArray()->HasItem(index);

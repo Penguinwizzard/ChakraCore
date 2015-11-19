@@ -72,11 +72,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)AsmJSModule.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)AsmJSTypes.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)AsmJSUtils.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)ByteCodeSerializer.cpp">
-      <AdditionalIncludeDirectories Condition="'$(OptimizedBuild)'=='true'">$(PublicInternalPath)\base\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)CacheOperators.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)CallInfo.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)CodeGenRecyclableData.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)DynamicProfileInfo.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)DynamicProfileMutator.cpp" />
@@ -85,24 +81,44 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)FunctionCodeGenJitTimeData.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)FunctionCodeGenRuntimeData.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)InlineCache.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptExceptionObject.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptExceptionOperators.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptMathOperators.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ProfilingHelpers.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)PropertyRecord.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ReadOnlyDynamicProfileInfo.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)SIMDFloat32x4Operation.cpp">
+      <ExcludedFromBuild Condition="'$(Platform)'!='ARM' AND '$(Platform)'!='Arm64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)SIMDfloat32x4OperationX86X64.cpp">
+      <ExcludedFromBuild Condition="'$(Platform)'!='Win32' AND '$(Platform)'!='x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)SIMDInt32x4Operation.cpp">
+      <ExcludedFromBuild Condition="'$(Platform)'!='ARM' AND '$(Platform)'!='Arm64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)SIMDInt32x4OperationX86X64.cpp">
+      <ExcludedFromBuild Condition="'$(Platform)'!='Win32' AND '$(Platform)'!='x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)SIMDInt8x16Operation.cpp">
+      <ExcludedFromBuild Condition="'$(Platform)'!='ARM' AND '$(Platform)'!='Arm64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)SIMDInt8x16OperationX86X64.cpp">
+      <ExcludedFromBuild Condition="'$(Platform)'!='Win32' AND '$(Platform)'!='x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)SIMDFloat64x2Operation.cpp">
+      <ExcludedFromBuild Condition="'$(Platform)'!='ARM' AND '$(Platform)'!='Arm64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)SIMDfloat64x2OperationX86X64.cpp">
+      <ExcludedFromBuild Condition="'$(Platform)'!='Win32' AND '$(Platform)'!='x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)SIMDUtils.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)SourceDynamicProfileManager.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)SourceHolder.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)StackTraceArguments.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)Utf8SourceInfo.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)TaggedInt.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ValueType.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)ScriptContextOptimizationOverrideInfo.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)InterpreterStackFrame.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptConversion.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptOperators.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptStackWalker.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)LeaveScriptObject.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)ScriptContext.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)ScriptContextProfiler.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)RuntimeLanguagePch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
@@ -127,8 +143,6 @@
     <ClInclude Include="AsmJsBuiltinNames.h" />
     <ClInclude Include="AsmJSTypes.h" />
     <ClInclude Include="AsmJSUtils.h" />
-    <ClInclude Include="ByteCodeSerializeFlags.h" />
-    <ClInclude Include="byteCodeCacheReleaseFileVersion.h" />
     <ClInclude Include="CacheOperators.h" />
     <ClInclude Include="i386\AsmJsInstructionTemplate.h">
       <ExcludedFromBuild Condition="'$(Platform)'!='Win32'">true</ExcludedFromBuild>
@@ -151,27 +165,26 @@
     <ClInclude Include="JavascriptExceptionOperators.h" />
     <ClInclude Include="JavascriptMathOperators.h" />
     <ClInclude Include="JavascriptNativeOperators.h" />
-    <ClInclude Include="LeaveScriptObject.h" />
     <ClInclude Include="ProfilingHelpers.h" />
-    <ClInclude Include="PropertyRecord.h" />
     <ClInclude Include="ReadOnlyDynamicProfileInfo.h" />
     <ClInclude Include="SourceDynamicProfileManager.h" />
-    <ClInclude Include="SourceHolder.h" />
     <ClInclude Include="StackTraceArguments.h" />
-    <ClInclude Include="Utf8SourceInfo.h" />
+    
     <ClInclude Include="ValueType.h" />
-    <ClInclude Include="ScriptContextOptimizationOverrideInfo.h" />
     <ClInclude Include="Arguments.h" />
-    <ClInclude Include="CallInfo.h" />
     <ClInclude Include="InterpreterStackFrame.h" />
     <ClInclude Include="JavascriptConversion.h" />
+    <ClInclude Include="JavascriptExceptionContext.h" />
+    <ClInclude Include="JavascriptExceptionObject.h" />
     <ClInclude Include="JavascriptOperators.h" />
     <ClInclude Include="JavascriptFunctionArgIndex.h" />
     <ClInclude Include="JavascriptStackWalker.h" />
-    <ClInclude Include="RegexPatternMruMap.h" />
-    <ClInclude Include="ScriptContext.h" />
-    <ClInclude Include="ScriptContextBase.h" />
-    <ClInclude Include="ScriptContextProfiler.h" />
+    <ClInclude Include="SIMDFloat32x4Operation.h" />
+    <ClInclude Include="SIMDFloat64x2Operation.h" />
+    <ClInclude Include="SIMDInt32x4Operation.h" />
+    <ClInclude Include="SIMDInt8x16Operation.h" />
+    <ClInclude Include="SIMDUtils.h" />
+    <ClInclude Include="TaggedInt.h" />
     <ClInclude Include="RuntimeLanguagePch.h" />
   </ItemGroup>
   <ItemGroup>
@@ -206,7 +219,7 @@
     <None Include="JavascriptMathOperators.inl" />
     <None Include="JavascriptConversion.inl" />
     <None Include="JavascriptOperators.inl" />
-    <None Include="ScriptContext.inl" />
+    <None Include="TaggedInt.inl" />
   </ItemGroup>
   <Import Project="$(BuildConfigPropsPath)Chakra.Build.targets" Condition="exists('$(BuildConfigPropsPath)Chakra.Build.targets')"/>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

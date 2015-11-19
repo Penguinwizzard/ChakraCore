@@ -9,10 +9,10 @@
 #include "RegexCommon.h"
 #include "Runtime.h"
 
-#include "Library\EtwTrace.h"
+#include "Base\EtwTrace.h"
 
 #include "Library\JavascriptNumberObject.h"
-#include "Library\LiteralStringObject.h"
+#include "Library\JavascriptStringObject.h"
 #include "Library\JavascriptBooleanObject.h"
 
 #include "Library\ObjectPrototypeObject.h"
@@ -52,7 +52,8 @@
 #include "Types\PropertyIndexRanges.h"
 #include "Types\DictionaryPropertyDescriptor.h"
 #include "Types\DictionaryTypeHandler.h"
-#include "Library\ES5ArrayTypeHandler.h"
+#include "Types\ES5ArrayTypeHandler.h"
+#include "Library\ES5Array.h"
 
 #include "Library\ArgumentsObjectEnumerator.h"
 #include "Library\JavascriptArrayEnumeratorBase.h"
@@ -91,19 +92,15 @@
 #include "Library\JavascriptSIMDInt32x4.h"
 #include "Library\JavascriptSIMDInt8x16.h"
 // SIMD operations
-#include "Library\SIMDFloat32x4Operation.h"
-#include "Library\SIMDFloat64x2Operation.h"
-#include "Library\SIMDInt32x4Operation.h"
-#include "Library\SIMDInt8x16Operation.h"
+#include "Language\SIMDFloat32x4Operation.h"
+#include "Language\SIMDFloat64x2Operation.h"
+#include "Language\SIMDInt32x4Operation.h"
+#include "Language\SIMDInt8x16Operation.h"
 // SIMD libs
 #include "Library\SIMDFloat32x4Lib.h"
 #include "Library\SIMDFloat64x2Lib.h"
 #include "Library\SIMDInt32x4Lib.h"
 #include "Library\SIMDInt8x16Lib.h"
-
-#ifdef ENABLE_DEBUG_CONFIG_OPTIONS
-#include "Library\ScriptMemoryDumper.h"
-#endif
 
 #include "Language\JavascriptStackWalker.h"
 

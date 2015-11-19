@@ -4,7 +4,7 @@
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeLanguagePch.h"
 #include "Library\JavascriptNumberObject.h"
-#include "Library\LiteralStringObject.h"
+#include "Library\JavascriptStringObject.h"
 #include "Library\DateImplementation.h"
 #include "Library\JavascriptDate.h"
 

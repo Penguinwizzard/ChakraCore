@@ -304,16 +304,16 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #define SDO_ENABLE_LIBRARY_STACK_FRAME ((SCRIPT_DEBUGGER_OPTIONS)0x8)
 #endif
 
-#include "Language\SourceHolder.h"
-#include "Language\Utf8SourceInfo.h"
-#include "Language\PropertyRecord.h"
-#include "Library\DelayLoadLibrary.h"
-#include "Language\CallInfo.h"
+#include "Base\SourceHolder.h"
+#include "Base\Utf8SourceInfo.h"
+#include "Base\PropertyRecord.h"
+#include "Base\DelayLoadLibrary.h"
+#include "Base\CallInfo.h"
 #include "Language\ExecutionMode.h"
 #include "BackEndAPI.h"
 #include "DetachedStateBase.h"
 
-#include "Library\Constants.h"
+#include "Base\Constants.h"
 #include "ByteCode\OpLayoutsCommon.h"
 #include "ByteCode\OpLayouts.h"
 #include "ByteCode\OpLayoutsAsmJs.h"
@@ -322,12 +322,12 @@ enum tagDEBUG_EVENT_INFO_TYPE
 
 #include "Types\TypeId.h"
 #include "Types\RecyclableObject.h"
-#include "Library\ExpirableObject.h"
+#include "Base\ExpirableObject.h"
 #include "Types\Type.h"
 #include "Types\StaticType.h"
-#include "Types\CrossSite.h"
-#include "Types\CrossSiteObject.h"
-#include "Types\CrossSiteEnumerator.h"
+#include "Base\CrossSite.h"
+#include "Base\CrossSiteObject.h"
+#include "Base\CrossSiteEnumerator.h"
 #include "Types\JavascriptEnumerator.h"
 #include "Types\DynamicObject.h"
 #include "Types\ArrayObject.h"
@@ -340,18 +340,18 @@ enum tagDEBUG_EVENT_INFO_TYPE
 
 #include "Language\StackTraceArguments.h"
 #include "Types\PropertyDescriptor.h"
-#include "Types\ActivationObjectType.h"
-#include "Types\TempArenaAllocatorObject.h"
+#include "Types\ActivationObject.h"
+#include "Base\TempArenaAllocatorObject.h"
 #include "Language\ValueType.h"
 #include "Language\DynamicProfileInfo.h"
 #include "Debug\SourceContextInfo.h"
 #include "Language\InlineCache.h"
 #include "Language\InlineCachePointerArray.h"
-#include "Types\FunctionInfo.h"
-#include "Types\FunctionBody.h"
-#include "Types\JavascriptExceptionContext.h"
-#include "Types\JavascriptExceptionObject.h"
-#include "Types\PerfHint.h"
+#include "Base\FunctionInfo.h"
+#include "Base\FunctionBody.h"
+#include "Language\JavascriptExceptionContext.h"
+#include "Language\JavascriptExceptionObject.h"
+#include "Base\PerfHint.h"
 
 #include "ByteCode\ByteBlock.h"
 
@@ -365,9 +365,10 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Library\RuntimeFunction.h"
 #include "Library\JavascriptExternalFunction.h"
 
+#include "Base\CharStringCache.h"
+
 #include "Library\JavascriptObject.h"
 #include "Library\BuiltInFlags.h"
-#include "Library\CharStringCache.h"
 #include "Library\ExternalLibraryBase.h"
 #include "Library\JavascriptLibraryBase.h"
 #include "Library\JavascriptLibrary.h"
@@ -375,18 +376,19 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Language\JavascriptExceptionOperators.h"
 #include "Language\JavascriptOperators.h"
 
-#include "Library\HiResTimer.h"
 #include "Library\MathLibrary.h"
 
-#include "Library\WindowsGlobalizationAdapter.h"
-#include "Library\WindowsFoundationAdapter.h"
-#include "Library\Debug.h"
+
+#include "Base\HiResTimer.h"
+#include "Base\WindowsGlobalizationAdapter.h"
+#include "Base\WindowsFoundationAdapter.h"
+#include "Base\Debug.h"
 
 #ifdef _M_X64
 #include "Language\amd64\stackframe.h"
 #endif
 
-#include "Library\Entropy.h"
+#include "Base\Entropy.h"
 #ifdef ENABLE_BASIC_TELEMETRY
 #include "DirectCall.h"
 #include "LanguageTelemetry.h"
@@ -394,23 +396,22 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #define CHAKRATEL_LANGSTATS_INC_BUILTINCOUNT(builtin)
 #define CHAKRATEL_LANGSTATS_INC_LANGFEATURECOUNT(feature, m_scriptContext)
 #endif
-#include "Library\ThreadContext.h"
+#include "Base\ThreadContext.h"
 
-#include "Library\StackProber.h"
+#include "Base\StackProber.h"
 
 #include "Language\EvalMapRecord.h"
-#include "Language\RegexPatternMruMap.h"
+#include "Base\RegexPatternMruMap.h"
 #include "Language\JavascriptConversion.h"
 
-#include "Language\ScriptContextOptimizationOverrideInfo.h"
-#include "Language\scriptContextbase.h"
-#include "Language\ScriptContext.h"
+#include "Base\ScriptContextOptimizationOverrideInfo.h"
+#include "Base\scriptContextbase.h"
+#include "Base\ScriptContext.h"
+#include "Base\LeaveScriptObject.h"
+#include "Base\PropertyRecord.h"
 
 #include "ByteCode\ByteCodeReader.h"
-#include "Language\LeaveScriptObject.h"
-
-#include "Language\PropertyRecord.h"
-#include "Library\TaggedInt.h"
+#include "Language\TaggedInt.h"
 
 #include "Library\RootObjectBase.h"
 #include "Library\GlobalObject.h"
@@ -425,12 +426,11 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Library\JavascriptError.h"
 #include "Library\JavascriptArray.h"
 
-#include "Library\ES5Array.h"
 #include "Library\ArrayBuffer.h"
 #include "Library\TypedArray.h"
 #include "Library\JavascriptBoolean.h"
 
-#include "Library\ScriptFunctionType.h"
+#include "Types\ScriptFunctionType.h"
 #include "Library\ScriptFunction.h"
 
 
@@ -451,4 +451,41 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Language\InlineCache.inl"
 #include "Language\InlineCachePointerArray.inl"
 #include "Language\JavascriptOperators.inl"
-#include "Library\TaggedInt.inl"
+#include "Language\TaggedInt.inl"
+
+
+#ifndef USED_IN_STATIC_LIB
+#ifdef ENABLE_INTL_OBJECT
+
+//The "helper" methods below are to resolve external symbol references to our delay-loaded libraries.
+inline HRESULT WindowsCreateString(_In_reads_opt_(length) const WCHAR * sourceString, UINT32 length, _Outptr_result_maybenull_ _Result_nullonfailure_ HSTRING * string)
+{
+    return ThreadContext::GetContextForCurrentThread()->GetWindowsGlobalizationLibrary()->WindowsCreateString(sourceString, length, string);
+}
+
+inline HRESULT WindowsCreateStringReference(_In_reads_opt_(length + 1) const WCHAR * sourceString, UINT32 length, _Out_ HSTRING_HEADER * header, _Outptr_result_maybenull_ _Result_nullonfailure_ HSTRING * string)
+{
+    return ThreadContext::GetContextForCurrentThread()->GetWindowsGlobalizationLibrary()->WindowsCreateStringReference(sourceString, length, header, string);
+}
+
+inline HRESULT WindowsDeleteString(_In_opt_ HSTRING string)
+{
+    return ThreadContext::GetContextForCurrentThread()->GetWindowsGlobalizationLibrary()->WindowsDeleteString(string);
+}
+
+inline PCWSTR WindowsGetStringRawBuffer(_In_opt_ HSTRING string, _Out_opt_ UINT32 * length)
+{
+    return ThreadContext::GetContextForCurrentThread()->GetWindowsGlobalizationLibrary()->WindowsGetStringRawBuffer(string, length);
+}
+
+inline HRESULT WindowsCompareStringOrdinal(_In_opt_ HSTRING string1, _In_opt_ HSTRING string2, _Out_ INT32 * result)
+{
+    return ThreadContext::GetContextForCurrentThread()->GetWindowsGlobalizationLibrary()->WindowsCompareStringOrdinal(string1, string2, result);
+}
+
+inline HRESULT WindowsDuplicateString(_In_opt_ HSTRING original, _Outptr_result_maybenull_ _Result_nullonfailure_ HSTRING *newString)
+{
+    return ThreadContext::GetContextForCurrentThread()->GetWindowsGlobalizationLibrary()->WindowsDuplicateString(original, newString);
+}
+#endif
+#endif

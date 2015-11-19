@@ -17,7 +17,7 @@
 #include "Types\SimpleDictionaryUnorderedTypeHandler.h"
 #include "Types\DictionaryPropertyDescriptor.h"
 #include "Types\DictionaryTypeHandler.h"
-#include "Library\ES5ArrayTypeHandler.h"
+#include "Types\ES5ArrayTypeHandler.h"
 
 #include "Types\DynamicObjectEnumerator.h"
 #include "Types\DynamicObjectSnapshotEnumerator.h"

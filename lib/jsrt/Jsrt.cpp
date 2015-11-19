@@ -8,11 +8,11 @@
 #include "JsrtExternalArrayBuffer.h"
 
 #include "JsrtSourceHolder.h"
-#include "Language\ByteCodeSerializer.h"
+#include "ByteCode\ByteCodeSerializer.h"
 #include "common\ByteSwap.h"
 #include "Library\dataview.h"
 #include "Library\JavascriptSymbol.h"
-#include "Library\ThreadContextTLSEntry.h"
+#include "Base\ThreadContextTLSEntry.h"
 
 // Parser Includes
 #include "cmperr.h"     // For ERRnoMemory

@@ -40,6 +40,9 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)ByteCodeGenerator.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ByteCodeReader.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ByteCodeWriter.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)ByteCodeSerializer.cpp">
+      <AdditionalIncludeDirectories Condition="'$(OptimizedBuild)'=='true'">$(PublicInternalPath)\base\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)FuncInfo.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Opcodes.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)OpCodeUtil.cpp" />
@@ -61,6 +64,9 @@
     <ClInclude Include="ByteCodeGenerator.h" />
     <ClInclude Include="ByteCodeReader.h" />
     <ClInclude Include="ByteCodeWriter.h" />
+    <ClInclude Include="ByteCodeSerializeFlags.h" />
+    <ClInclude Include="ByteCodeSerializer.h" />
+    <ClInclude Include="byteCodeCacheReleaseFileVersion.h" />
     <ClInclude Include="ExtendedOpCodeList.h" />
     <ClInclude Include="ExtendedOpCodeListAsmJs.h" />
     <ClInclude Include="FuncInfo.h" />

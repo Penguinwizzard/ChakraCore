@@ -35,10 +35,10 @@
 #include "Library\JavascriptSIMDInt32x4.h"
 #include "Library\JavascriptSIMDInt8x16.h"
 // SIMD operations
-#include "Library\SIMDFloat32x4Operation.h"
-#include "Library\SIMDFloat64x2Operation.h"
-#include "Library\SIMDInt32x4Operation.h"
-#include "Library\SIMDInt8x16Operation.h"
+#include "Language\SIMDFloat32x4Operation.h"
+#include "Language\SIMDFloat64x2Operation.h"
+#include "Language\SIMDInt32x4Operation.h"
+#include "Language\SIMDInt8x16Operation.h"
 // SIMD libs
 #include "Library\SIMDFloat32x4Lib.h"
 #include "Library\SIMDFloat64x2Lib.h"

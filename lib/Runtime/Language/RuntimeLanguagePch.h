@@ -8,7 +8,6 @@
 
 #include "Runtime.h"
 
-#include "Language\ByteCodeSerializer.h"
 #include "Language\AsmJsTypes.h"
 #include "Language\AsmJsUtils.h"
 #include "Language\AsmJsLink.h"
@@ -24,7 +23,6 @@
 #include "Language\ProfilingHelpers.h"
 #include "Language\CacheOperators.h"
 
-#include "Language\ScriptContextProfiler.h"
 #include "Language\JavascriptMathOperators.h"
 #include "Language\JavascriptStackWalker.h"
 #ifdef DYNAMIC_PROFILE_STORAGE
@@ -32,7 +30,7 @@
 #endif
 #include "Language\SourceDynamicProfileManager.h"
 
-#include "Library\EtwTrace.h"
+#include "Base\EtwTrace.h"
 
 #include "Library\ArgumentsObject.h"
 
@@ -58,16 +56,17 @@
 #include "Library\JavascriptSIMDInt32x4.h"
 #include "Library\JavascriptSIMDInt8x16.h"
 // SIMD operations
-#include "Library\SIMDFloat32x4Operation.h"
-#include "Library\SIMDFloat64x2Operation.h"
-#include "Library\SIMDInt32x4Operation.h"
-#include "Library\SIMDInt8x16Operation.h"
+#include "Language\SIMDFloat32x4Operation.h"
+#include "Language\SIMDFloat64x2Operation.h"
+#include "Language\SIMDInt32x4Operation.h"
+#include "Language\SIMDInt8x16Operation.h"
+#include "Language\SIMDUtils.h"
 // SIMD libs
 #include "Library\SIMDFloat32x4Lib.h"
 #include "Library\SIMDFloat64x2Lib.h"
 #include "Library\SIMDInt32x4Lib.h"
 #include "Library\SIMDInt8x16Lib.h"
-#include "Library\SIMDUtils.h"
+
 
 #include "Debug\DebuggingFlags.h"
 #include "Debug\DiagProbe.h"
