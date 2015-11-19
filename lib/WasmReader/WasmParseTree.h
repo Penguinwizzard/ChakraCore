@@ -36,6 +36,7 @@ namespace Wasm
         wnBREAK,
         wnSWITCH,
         wnRETURN,
+        wnIF,
         wnGETLOCAL,
         wnSETLOCAL,
         wnGetGlobal,

@@ -107,7 +107,7 @@ WasmBytecodeGenerator::GenerateFunction()
     m_func->body->SetIsAsmjsMode(true);
     m_func->body->SetIsWasmFunction(true);
     m_funcInfo = m_reader->m_currentNode.func.info;
-
+    m_nestedIfLevel = 0;
     EnregisterLocals();
 
     // TODO: fix these bools
@@ -187,6 +187,10 @@ WasmBytecodeGenerator::GenerateFunction()
     info->SetFloatTmpCount(m_f32RegSlots.GetTmpCount());
     info->SetDoubleTmpCount(m_f64RegSlots.GetTmpCount());
 
+    info->SetIntConstCount(ReservedRegisterCount);
+    info->SetFloatVarCount(ReservedRegisterCount);
+    info->SetDoubleVarCount(ReservedRegisterCount);
+
     info->SetReturnType(GetAsmJsReturnType());
 
     // Review: overflow checks? 
@@ -224,6 +228,8 @@ WasmBytecodeGenerator::EmitExpr(WasmOp op)
         return EmitReturnExpr();
     case wnCONST:
         return EmitConst();
+    case wnIF:
+        return EmitIfExpr();
 
 #define WASM_KEYWORD_BIN_MATH(token, ...) \
     case wn##token: \
@@ -344,6 +350,47 @@ WasmBytecodeGenerator::EmitConst()
     }
 
     return EmitInfo(tmpReg, m_reader->m_currentNode.type);
+}
+
+EmitInfo
+WasmBytecodeGenerator::EmitIfExpr()
+{
+    ++m_nestedIfLevel;
+
+    if (m_nestedIfLevel == 0)
+    {
+        // overflow
+        Js::Throw::OutOfMemory();
+    }
+
+    EmitInfo checkExpr = EmitExpr(m_reader->ReadExpr());
+
+    if (checkExpr.type != WasmTypes::I32)
+    {
+        throw WasmCompilationException(L"If expression must have type i32");
+    }
+
+    // TODO: save this so I can break
+    Js::ByteCodeLabel falseLabel = m_writer.DefineLabel();
+
+    m_writer.AsmBrReg1(Js::OpCodeAsmJs::BrFalse_Int, falseLabel, checkExpr.location);
+
+    GetRegisterSpace(checkExpr.type)->ReleaseLocation(&checkExpr);
+
+    EmitInfo innerExpr = EmitExpr(m_reader->ReadExpr());
+
+    if (innerExpr.type != WasmTypes::Void)
+    {
+        throw WasmCompilationException(L"Result of if must be void");
+    }
+
+    m_writer.MarkAsmJsLabel(falseLabel);
+
+    Assert(m_nestedIfLevel > 0);
+    --m_nestedIfLevel;
+
+    return EmitInfo();
+
 }
 
 template<typename T>

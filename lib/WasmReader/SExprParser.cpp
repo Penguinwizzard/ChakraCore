@@ -128,6 +128,8 @@ SExprParser::ReadExpr()
         return wnLABEL;
     case wtkRETURN:
         return ParseReturnExpr();
+    case wtkIF:
+        return ParseIfExpr();
     case wtkGETLOCAL:
         op = wnGETLOCAL;
         goto ParseVarCommon;
@@ -170,7 +172,6 @@ ParseVarCommon:
     case wtkCALL:
     case wtkDISPATCH:
     case wtkDESTRUCT:
-    case wtkIF:
     default:
         ThrowSyntaxError();
     }
@@ -346,7 +347,9 @@ SExprParser::ParseLocal()
     }
 }
 
-WasmOp SExprParser::ParseReturnExpr()
+
+WasmOp
+SExprParser::ParseReturnExpr()
 {
     m_currentNode.op = wnRETURN;
 
@@ -356,7 +359,7 @@ WasmOp SExprParser::ParseReturnExpr()
     {
         m_currentNode.opt.exists = false;
     }
-    else if(tok == wtkLPAREN)
+    else if (tok == wtkLPAREN)
     {
         m_currentNode.opt.exists = true;
         m_inExpr = true;
@@ -366,6 +369,17 @@ WasmOp SExprParser::ParseReturnExpr()
     {
         ThrowSyntaxError();
     }
+
+    return m_currentNode.op;
+}
+
+
+WasmOp
+SExprParser::ParseIfExpr()
+{
+    m_currentNode.op = wnIF;
+
+    ++m_nestedRParens;
 
     return m_currentNode.op;
 }
@@ -501,7 +515,8 @@ SExprParser::IsEndOfExpr(SExprTokenType tok) const
     ThrowSyntaxError();
 }
 
-WasmTypes::WasmType SExprParser::GetWasmType(SExprTokenType tok) const
+WasmTypes::WasmType
+SExprParser::GetWasmType(SExprTokenType tok) const
 {
     switch (tok)
     {
@@ -514,7 +529,8 @@ WasmTypes::WasmType SExprParser::GetWasmType(SExprTokenType tok) const
     }
 }
 
-void SExprParser::ThrowSyntaxError()
+void
+SExprParser::ThrowSyntaxError()
 {
     Js::Throw::InternalError();
 }

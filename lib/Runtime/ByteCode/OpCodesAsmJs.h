@@ -67,6 +67,7 @@ MACRO_WMS   ( AsmJsLoopBodyStart        , AsmUnsigned1    , None      )    // Ma
 // Branching
 MACRO       ( AsmBr                     , AsmBr        , OpNoFallThrough ) // Unconditional branch
 MACRO_WMS   ( BrTrue_Int                , BrInt1       , None            ) // Jumps to offset if int value is not 0
+MACRO_WMS   ( BrFalse_Int                , BrInt1       , None            ) // Jumps to offset if int value is 0
 MACRO_WMS   ( BrEq_Int                  , BrInt2       , None            ) // Jumps to offset if both int are equals
 
 // Switching

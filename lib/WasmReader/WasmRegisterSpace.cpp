@@ -12,29 +12,17 @@ namespace Wasm
 WasmRegisterSpace::WasmRegisterSpace() :
     m_registerCount(0),
     m_varCount(0),
-    m_tmpCount(0),
-    m_constCount(0),
     m_nextLocation(0),
-    m_firstTmpReg(0),
-    m_nextConstLocation(FirstConstReg)
+    m_firstTmpReg(0)
 {
 }
 
 WasmRegisterSpace::WasmRegisterSpace(Js::RegSlot reservedCount) :
     m_registerCount(reservedCount),
     m_varCount(reservedCount),
-    m_tmpCount(0),
-    m_constCount(0),
     m_nextLocation(reservedCount),
-    m_firstTmpReg(reservedCount),
-    m_nextConstLocation(FirstConstReg)
+    m_firstTmpReg(reservedCount)
 {
-}
-
-Js::RegSlot
-WasmRegisterSpace::GetConstCount() const
-{
-    return m_constCount;
 }
 
 Js::RegSlot
@@ -46,19 +34,13 @@ WasmRegisterSpace::GetFirstTmpRegister() const
 Js::RegSlot
 WasmRegisterSpace::GetTmpCount() const
 {
-    return m_tmpCount;
+    return m_registerCount - m_varCount;
 }
 
 Js::RegSlot
 WasmRegisterSpace::GetVarCount() const
 {
     return m_varCount;
-}
-
-Js::RegSlot
-WasmRegisterSpace::GetTotalVarCount() const
-{
-    return m_varCount + m_tmpCount;
 }
 
 Js::RegSlot
@@ -79,14 +61,6 @@ WasmRegisterSpace::AcquireRegister()
 }
 
 Js::RegSlot
-WasmRegisterSpace::AcquireConstRegister()
-{
-    ++m_constCount;
-    ++m_registerCount;
-    return m_nextConstLocation--;
-}
-
-Js::RegSlot
 WasmRegisterSpace::AcquireTmpRegister()
 {
     // Make sure this function is called correctly
@@ -96,7 +70,6 @@ WasmRegisterSpace::AcquireTmpRegister()
     if (m_nextLocation == m_registerCount)
     {
         ++m_registerCount;
-        ++m_tmpCount;
     }
     return m_nextLocation++;
 }
@@ -112,7 +85,6 @@ WasmRegisterSpace::ReleaseTmpRegister(Js::RegSlot tmpReg)
     {
         Assert(tmpReg == m_nextLocation - 1);
         --m_nextLocation;
-        --m_tmpCount;
     }
 }
 
@@ -120,13 +92,7 @@ bool
 WasmRegisterSpace::IsTmpReg(Js::RegSlot tmpReg) const
 {
     Assert(m_firstTmpReg != Js::Constants::NoRegister);
-    return !IsConstReg(tmpReg) && tmpReg >= m_firstTmpReg;
-}
-
-bool
-WasmRegisterSpace::IsConstReg(Js::RegSlot reg) const
-{
-    return reg > m_nextConstLocation && reg < Js::Constants::NoRegister;
+    return tmpReg >= m_firstTmpReg;
 }
 
 bool
@@ -156,16 +122,6 @@ WasmRegisterSpace::IsTmpLocation(const EmitInfo * info)
 }
 
 bool
-WasmRegisterSpace::IsConstLocation(const EmitInfo * info)
-{
-    if (info && info->location != Js::Constants::NoRegister)
-    {
-        return IsConstReg(info->location);
-    }
-    return false;
-}
-
-bool
 WasmRegisterSpace::IsVarLocation(const EmitInfo * info)
 {
     if (info && info->location != Js::Constants::NoRegister)
@@ -180,7 +136,7 @@ WasmRegisterSpace::IsValidLocation(const EmitInfo * info)
 {
     if (info && info->location != Js::Constants::NoRegister)
     {
-        return IsConstReg(info->location) || info->location < GetTotalVarCount();
+        return info->location < m_registerCount;
     }
     return false;
 }

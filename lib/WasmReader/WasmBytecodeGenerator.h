@@ -105,6 +105,7 @@ namespace Wasm
     private:
         EmitInfo EmitExpr(WasmOp op);
         EmitInfo EmitConst();
+        EmitInfo EmitIfExpr();
         EmitInfo EmitGetLocal();
         EmitInfo EmitSetLocal();
         EmitInfo EmitReturnExpr();
@@ -133,6 +134,8 @@ namespace Wasm
         WasmFunctionInfo * m_funcInfo;
         WasmFunction * m_func;
         WasmModule * m_module;
+
+        uint m_nestedIfLevel;
 
         WasmScript * m_wasmScript;
 

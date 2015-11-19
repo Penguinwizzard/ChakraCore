@@ -2818,6 +2818,8 @@ IRBuilderAsmJs::BuildBrInt1(Js::OpCodeAsmJs newOpcode, uint32 offset, int32 rela
 {
     Assert(newOpcode == Js::OpCodeAsmJs::BrTrue_Int);
 
+    // TODO (michhol): handle BrFalse_Int
+
     Js::RegSlot src1RegSlot = GetRegSlotFromIntReg(src);
     IR::RegOpnd * src1Opnd = BuildSrcOpnd(src1RegSlot, TyInt32);
     src1Opnd->SetValueType(ValueType::GetInt(false));
