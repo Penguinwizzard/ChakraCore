@@ -3595,6 +3595,7 @@ ParseNodePtr Parser::ParseMemberList(LPCOLESTR pNameHint, ulong* pNameHintLength
             Assert(pnodeArg->sxBin.pnode2 != nullptr);
             if (pnodeArg->sxBin.pnode2->nop == knopFncDecl)
             {
+                Assert(fullNameHintLength >= shortNameOffset);
                 pnodeArg->sxBin.pnode2->sxFnc.hint = pFullNameHint;
                 pnodeArg->sxBin.pnode2->sxFnc.hintLength =  fullNameHintLength;
                 pnodeArg->sxBin.pnode2->sxFnc.hintOffset  = shortNameOffset;
@@ -6238,6 +6239,7 @@ ParseNodePtr Parser::ParseClassDecl(BOOL isDeclaration, LPCOLESTR pNameHint, ulo
                 Error(ERRConstructorCannotBeGenerator);
             }
 
+            Assert(constructorNameLength >= constructorShortNameHintOffset);
             // The constructor function will get the same name as class.
             pnodeConstructor->sxFnc.hint = pConstructorName;
             pnodeConstructor->sxFnc.hintLength = constructorNameLength;
@@ -6338,6 +6340,7 @@ ParseNodePtr Parser::ParseClassDecl(BOOL isDeclaration, LPCOLESTR pNameHint, ulo
 
             if (buildAST)
             {
+                Assert(memberNameHintLength >= memberNameOffset);
                 pnodeMember->sxBin.pnode2->sxFnc.hint = pMemberNameHint; // Fully qualified name
                 pnodeMember->sxBin.pnode2->sxFnc.hintLength = memberNameHintLength;
                 pnodeMember->sxBin.pnode2->sxFnc.hintOffset = memberNameOffset;
@@ -6367,6 +6370,7 @@ ParseNodePtr Parser::ParseClassDecl(BOOL isDeclaration, LPCOLESTR pNameHint, ulo
             }
             else
             {
+                Assert(nameHintLength >= nameHintOffset);
                 pnodeConstructor->sxFnc.hint = pNameHint;
                 pnodeConstructor->sxFnc.hintLength = nameHintLength;
                 pnodeConstructor->sxFnc.hintOffset = nameHintOffset;
@@ -6897,6 +6901,10 @@ WCHAR * Parser::AllocateStringOfLength(ulong length)
 
 LPCOLESTR Parser::AppendNameHints(IdentPtr left, IdentPtr right, ulong *pNameLength, ulong *pShortNameOffset, bool ignoreAddDotWithSpace, bool wrapInBrackets)
 {
+    if (pShortNameOffset != nullptr)
+    {
+        *pShortNameOffset = 0;
+    }
 
     if (left == nullptr && !wrapInBrackets)
     {
@@ -6929,11 +6937,14 @@ LPCOLESTR Parser::AppendNameHints(IdentPtr left, IdentPtr right, ulong *pNameLen
 
 LPCOLESTR Parser::AppendNameHints(IdentPtr left, LPCOLESTR right, ulong *pNameLength, ulong *pShortNameOffset, bool ignoreAddDotWithSpace, bool wrapInBrackets)
 {
-    size_t rightLenL = (right == nullptr) ? 0 : wcslen(right);
+    ulong rightLen = (right == nullptr) ? 0 : (ulong) wcslen(right);
 
-    Assert(rightLenL <= ULONG_MAX); // name hints should not exceed ULONG_MAX characters
+    if (pShortNameOffset != nullptr)
+    {
+        *pShortNameOffset = 0;
+    }
 
-    ulong rightLen = (ulong)rightLenL;
+    Assert(rightLen <= ULONG_MAX); // name hints should not exceed ULONG_MAX characters
 
     if (left == nullptr && !wrapInBrackets)
     {
@@ -6961,11 +6972,14 @@ LPCOLESTR Parser::AppendNameHints(IdentPtr left, LPCOLESTR right, ulong *pNameLe
 
 LPCOLESTR Parser::AppendNameHints(LPCOLESTR left, IdentPtr right, ulong *pNameLength, ulong *pShortNameOffset, bool ignoreAddDotWithSpace, bool wrapInBrackets)
 {
-    size_t leftLenL = (left == nullptr) ? 0 : wcslen(left);
+    ulong leftLen = (left == nullptr) ? 0 : (ulong) wcslen(left);
 
-    Assert(leftLenL <= ULONG_MAX); // name hints should not exceed ULONG_MAX characters
+    if (pShortNameOffset != nullptr)
+    {
+        *pShortNameOffset = 0;
+    }
 
-    ulong leftLen = (ulong)leftLenL;
+    Assert(leftLen <= ULONG_MAX); // name hints should not exceed ULONG_MAX characters
 
     if (left == nullptr || leftLen == 0 && !wrapInBrackets)
     {
@@ -6990,13 +7004,13 @@ LPCOLESTR Parser::AppendNameHints(LPCOLESTR left, IdentPtr right, ulong *pNameLe
 
 LPCOLESTR Parser::AppendNameHints(LPCOLESTR left, LPCOLESTR right, ulong *pNameLength, ulong *pShortNameOffset, bool ignoreAddDotWithSpace, bool wrapInBrackets)
 {
-    size_t leftLenL = (left == nullptr) ? 0 : wcslen(left);
-    size_t rightLenL = (right == nullptr) ? 0 : wcslen(right);
-
-    Assert(rightLenL <= ULONG_MAX && leftLenL <= ULONG_MAX); // name hints should not exceed ULONG_MAX characters
-
-    ulong leftLen = (ulong)leftLenL;
-    ulong rightLen = (ulong)rightLenL;
+    ulong leftLen = (left == nullptr) ? 0 : (ulong) wcslen(left);
+    ulong rightLen = (right == nullptr) ? 0 : (ulong) wcslen(right);
+    if (pShortNameOffset != nullptr)
+    {
+        *pShortNameOffset = 0;
+    }
+    Assert(rightLen <= ULONG_MAX && leftLen <= ULONG_MAX); // name hints should not exceed ULONG_MAX characters
 
     if (leftLen == 0 && !wrapInBrackets)
     {
@@ -7306,6 +7320,7 @@ ParseNodePtr Parser::ParseExpr(int oplMin,
             {
                 pNameHint = pnode->sxPid.pid->Psz();
                 hintLength = pnode->sxPid.pid->Cch();
+                hintOffset = 0;
             }
             else if (pnode->nop == knopDot || pnode->nop == knopIndex)
             {
@@ -7495,9 +7510,11 @@ ParseNodePtr Parser::ParseExpr(int oplMin,
                 Assert(pnode->sxBin.pnode2 != NULL);
                 if (pnode->sxBin.pnode2->nop == knopFncDecl)
                 {
+                    Assert(hintLength >= hintOffset);
                     pnode->sxBin.pnode2->sxFnc.hint = pNameHint;
                     pnode->sxBin.pnode2->sxFnc.hintLength = hintLength;
                     pnode->sxBin.pnode2->sxFnc.hintOffset = hintOffset;
+
                     if (pnode->sxBin.pnode1->nop == knopDot)
                     {
                         pnode->sxBin.pnode2->sxFnc.isNameIdentifierRef  = false;
@@ -7849,6 +7866,7 @@ ParseNodePtr Parser::ParseVariableDeclaration(
 
                     if (pnodeInit->nop == knopFncDecl)
                     {
+                        Assert(nameHintLength >= nameHintOffset);
                         pnodeInit->sxFnc.hint = pNameHint;
                         pnodeInit->sxFnc.hintLength = nameHintLength;
                         pnodeInit->sxFnc.hintOffset = nameHintOffset;

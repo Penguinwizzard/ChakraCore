@@ -2063,6 +2063,7 @@ namespace Js
         uint shortNameOffset = this->GetShortDisplayNameOffset();
         const wchar_t * shortName = name + shortNameOffset;
         bool isBracketCase = shortNameOffset != 0 && name[shortNameOffset-1] == '[';
+        Assert(nameLength >= shortNameOffset);
         *shortNameLength = nameLength - shortNameOffset;
 
         if (!isBracketCase)
