@@ -15,33 +15,27 @@ my @testlist = ();
 
 my @testlistSwitches = ();
 
-my @variants = ("native", "interpreted");
+my @variants = ("native");
 
 my %switches = ( "interpreted" => "-NoNative",
-         "native" => "",
-         "debugmode" => "-ForceDiagnosticsMode");
+         "native" => "");
 
 my $other_switches = "";
 my $official_name;
 my $is_official = 0;
 my $is_baseline = 0;
-my $buildArch = $ENV{_BuildArch};
-my $buildType = $ENV{_BuildType};
-my $basefile = "perfbase$buildArch$buildType.txt";
+my $basefile = "perfbase.txt";
 my $binary = "ch.exe";
 my $dir = "";
 my $highprecisiondate = 1;
 my $args;
-my $defaultVersion = 6;
-my $version = $defaultVersion;
 my $parse_scores = 0;
 my $parse_time = 1;
 my $parse_latency = 0;
 my $is_dynamicProfileRun = 1;
-my $is_serializedRun = 0;
 my $profileFile="dynamicProfileInfo.dpl";
 my $perlScriptDir = dirname(__FILE__);
-my $testDescription = "SunSpider";
+my $testDescription = "";
 
 my %measured_data;
 my %measured;
@@ -67,12 +61,11 @@ if($is_baseline == 0 && !-e $basefile)
 
 check_switch();
 $other_switches .= " -dynamicProfileCache:$profileFile" if $is_dynamicProfileRun;
-$other_switches .= " -recreatenativecodefile -nativecodeserialized" if $is_serializedRun;
 
 print "NOTE: Baseline Run\n" if $is_baseline;
 print "NOTE: Official Run\n" if $is_official;
 print "Baseline file: $basefile\n";
-print "JNConsole binary: $binary\n";
+print "Binary: $binary\n";
 print "Iterations: $iter\n";
 print "High Precision Date not used!\n" if !$highprecisiondate;
 print "Switches: $other_switches\n" unless ($other_switches eq "");
@@ -81,7 +74,6 @@ $other_switches .= " -highprecisiondate" if $highprecisiondate;
 
 if(!$is_baseline)
 {
-    # otherwise, suck in the baseline file
     open(IN,"$basefile") or die "Couldn't open $basefile for reading.";
     while(<IN>)
     {
@@ -118,7 +110,7 @@ else
     delete_baseline();
 }
 
-# run the SunSpider tests
+# run the benchmark tests
 print "Running $testDescription...\n";
 
 
@@ -142,7 +134,7 @@ foreach my $variant(@variants)
     foreach my $test(@testlist)
     {
         my $testLatency = $test."Latency";
-		
+
         if($is_baseline)
         {
             print "Running $test...\n";
@@ -197,7 +189,7 @@ foreach my $variant(@variants)
             $measured{$test}{$variant}{"score"} = $result{"measured"};
             $variances{$test}{$variant}{"score"} = $result{"variance"};
         }
-		
+
         if ($parse_latency == 1)
         {
             # Check if this test has a Latency score available (Only Mandreel and Splay has latency scores as of 11/08/2013)
@@ -224,11 +216,11 @@ foreach my $variant(@variants)
         {
             my $testLatency = $test.Latency;
             if (!$is_baseline)
-            {	
+            {
                 $baselog += log($baseline{$test}{$variant}{"score"});
                 $basevariancelog += log(($baseline{$test}{$variant}{"score"} * $baseline_variances{$test}{$variant}{"score"}) / 100);
                 if($parse_latency == 1)
-                {		
+                {
                     if(exists $baseline{$testLatency})
                     {
                         $baselog += log($baseline{$testLatency}{$variant}{"score"});
@@ -236,12 +228,12 @@ foreach my $variant(@variants)
                     }
                 }
             }
-			
+
             $measuredlog += log($measured{$test}{$variant}{"score"});			
             $variancelog += log(($measured{$test}{$variant}{"score"} * $variances{$test}{$variant}{"score"}) / 100);
-			
+
             if($parse_latency == 1)
-            {				
+            {
                 if(exists $measured{$testLatency})
                 {
                     $measuredlog += log($measured{$testLatency}{$variant}{"score"});
@@ -372,9 +364,9 @@ if($is_baseline)
         foreach my $variant(@variants)
         {
             print OUT "$test($variant) $measured{$test}{$variant}{'time'} $variances{$test}{$variant}{'time'} $measured{$test}{$variant}{'score'} $variances{$test}{$variant}{'score'}\n";
-			
+
             my $testLatency = $test."Latency";
-			
+
             if(exists $measured{$testLatency})
             {
                 #Note: There are extra spaces in this output - which is deliberately added to match the regex (to read from the baseline file)
@@ -499,11 +491,11 @@ sub runtest($$)
 
     if(!$dir)
     {
-        system("$binary -Version:$version $switches{$variant} $other_switches $testcasename.js > _time.txt");
+        system("$binary $switches{$variant} $other_switches $testcasename.js > _time.txt");
     }
     else 
     {
-        system("$binary -Version:$version $switches{$variant} $other_switches $dir\\$testcasename.js > _time.txt");
+        system("$binary $switches{$variant} $other_switches $dir\\$testcasename.js > _time.txt");
     }
 
     open(IN,"_time.txt") or die;
@@ -552,27 +544,26 @@ sub usage()
 {
     print "Usage: perftest.pl [options]\n";
     print "Options:\n";
-    print "  -baseline           Generates a baseline, updating your local baseline file.  ";
-    print "                      NOTE: use only with base binary with clean clone from the Chakracore repo\n";
-    print "  -basefile:<file>    Uses <file> as your perf baseline (default: perfbase.txt)\n";
-    print "  -dir:<dirpath>      Uses the test files in the <dirpath>.\n";
-    print "  -binary:<filepath>  Uses <filepath> to run the JS files.\n";
-    print "                      (default: ch.exe found on the path.)\n";
-    print "  -iterations:<iter>  Number of iterations to run tests (default: 11)\n";
-    print "  -official:<name>    Generates an official report into results-<name>.xml\n";
-    print "  -native             Only run -native variation\n";
-    print "  -interpreted        Only run -interpreted variation\n";
-    print "  -debugmode          Run the diagnostics mode variation\n";
-    print "  -nodynamicProfile   Run without dynamic profile info\n";
-    print "  -dynamicProfile     Force Run with dynamic profile info\n";
-    print "  -serialized         Run with native code serialization\n";
-    print "  -kraken             Run the kraken benchmark\n";
-    print "  -octane             Run the Octane 2.0 benchmark\n";
-    print "  -jetstream          Run the JetStream benchmark (only non octane and sunspider tests)\n";
-    print "                      run all test <= given priority. :priority is optional. \n";
-    print "  -file:<file>        Run the specified js file\n";
-    print "  -args:<other args>  Other arguments to ch.exe\n";
-    print "  -score              Test output scores\n";
+    print "  -baseline              Generates a baseline, updating your local baseline file.  ";
+    print "                         NOTE: use only with base binary with clean clone from the Chakracore repo\n";
+    print "  -basefile:<file>       Uses <file> as your perf baseline (default: perfbase.txt)\n";
+    print "  -dir:<dirpath>         Uses the test files in the <dirpath>.\n";
+    print "  -binary:<filepath>     Uses <filepath> to run the JS files.\n";
+    print "                         (default: ch.exe found on the path.)\n";
+    print "  -iterations:<iter>     Number of iterations to run tests (default: 11)\n";
+    print "  -official:<name>       Generates an official report into results-<name>.xml\n";
+    print "  -native                Only run -native variation (default)\n";
+    print "  -interpreted           Only run -interpreted variation\n";    
+    print "  -nativeAndinterpreted  Run -interpreted along with -native variation\n";
+    print "  -nodynamicProfile      Run without dynamic profile info\n";
+    print "  -dynamicProfile        Force Run with dynamic profile info\n";
+    print "  -sunspider             Run the sunspider 1.0.2 benchmark\n";
+    print "  -kraken                Run the kraken benchmark\n";
+    print "  -octane                Run the Octane 2.0 benchmark\n";
+    print "  -jetstream             Run the JetStream benchmark (only non octane and sunspider tests)\n";
+    print "  -file:<file>           Run the specified js file\n";
+    print "  -args:<other args>     Other arguments to ch.exe\n";
+    print "  -score                 Test output scores\n";
 }
 sub parse_args()
 {
@@ -630,11 +621,6 @@ sub parse_args()
             $iter = $1;
 
         }
-        elsif($ARGV[$i] =~ /[-\/]version:(\d+)$/)
-        {
-            $version = $1;
-
-        }
         elsif($ARGV[$i] =~ /[-\/]official:(.*)$/)
         {
             $is_official = 1;
@@ -649,10 +635,10 @@ sub parse_args()
         {
             @variants = ("interpreted");
         }
-        elsif($ARGV[$i] =~ /[-\/]debugmode/)
+        elsif($ARGV[$i] =~ /[-\/]nativeAndInterpreted/)
         {
-            @variants = ("debugmode");
-        }
+            @variants = ("native", "interpreted");
+        }        
         elsif($ARGV[$i] =~ /[-\/]octane/)
         {
             if($iter == $defaultIter)
@@ -676,7 +662,7 @@ sub parse_args()
             $testDescription = "JetStream benchmark";
             $parse_time = 0;
             $parse_scores = 1;
-            $parse_latency = 0;			
+            $parse_latency = 0;
             $is_dynamicProfileRun = 0; # Currently  dyna-pogo info is not avialable in the browser - remove this when it is.
         }
         elsif($ARGV[$i] =~ /[-\/]kraken/i)
@@ -700,10 +686,11 @@ sub parse_args()
             "math-spectral-norm", "regexp-dna", "string-base64", "string-fasta", "string-tagcloud",
             "string-unpack-code", "string-validate-input");
 
-            $is_dynamicProfileRun = 0;
+            $is_dynamicProfileRun = 1;
         }
         elsif($ARGV[$i] =~ /[-\/]file:(.*).js$/i)
         {
+            # only supports octane, add additional support here for jetstream
             my %scoreTests = ( "box2d" => 1, "code-load" => 1, "crypto" => 1, "deltablue" => 1, 
                                "earley-boyer" => 1, "gbemu" => 1, "mandreel" => 1, "navier-stokes" => 1, 
                                "pdfjs" => 1, "raytrace" => 1, "regexp" => 1, "richards" => 1, "splay" => 1,
@@ -767,7 +754,7 @@ sub official_footer()
 sub official_header()
 {
     open(OFFICIAL,">results-$official_name.xml") or die;
-    print OFFICIAL "<data name=\"Eze Perf Tests\">\n";
+    print OFFICIAL "<data name=\"ChakraCore Perf Tests\">\n";
 }
 sub official_start_variant($)
 {
