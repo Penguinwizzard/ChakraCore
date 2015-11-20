@@ -228,6 +228,8 @@ WasmBytecodeGenerator::EmitExpr(WasmOp op)
         return EmitReturnExpr();
     case wnCONST:
         return EmitConst();
+    case wnBLOCK:
+        return EmitBlock();
     case wnIF:
         return EmitIfExpr();
 
@@ -257,29 +259,29 @@ WasmBytecodeGenerator::EmitGetLocal()
 
     WasmLocal local = m_locals[m_reader->m_currentNode.var.num];
 
-    Js::OpCodeAsmJs op = Js::OpCodeAsmJs::Nop;
-    switch (local.type)
-    {
-    case WasmTypes::F32:
-        op = Js::OpCodeAsmJs::Ld_Flt;
-        break;
-    case WasmTypes::F64:
-        op = Js::OpCodeAsmJs::Ld_Db;
-        break;
-    case WasmTypes::I32:
-        op = Js::OpCodeAsmJs::Ld_Int;
-        break;
-    default:
-        Assume(UNREACHED);
-    }
+Js::OpCodeAsmJs op = Js::OpCodeAsmJs::Nop;
+switch (local.type)
+{
+case WasmTypes::F32:
+    op = Js::OpCodeAsmJs::Ld_Flt;
+    break;
+case WasmTypes::F64:
+    op = Js::OpCodeAsmJs::Ld_Db;
+    break;
+case WasmTypes::I32:
+    op = Js::OpCodeAsmJs::Ld_Int;
+    break;
+default:
+    Assume(UNREACHED);
+}
 
-    WasmRegisterSpace * regSpace = GetRegisterSpace(local.type);
+WasmRegisterSpace * regSpace = GetRegisterSpace(local.type);
 
-    Js::RegSlot tmpReg = regSpace->AcquireTmpRegister();
+Js::RegSlot tmpReg = regSpace->AcquireTmpRegister();
 
-    m_writer.AsmReg2(op, tmpReg, local.location);
+m_writer.AsmReg2(op, tmpReg, local.location);
 
-    return EmitInfo(tmpReg, local.type);
+return EmitInfo(tmpReg, local.type);
 }
 
 EmitInfo
@@ -350,6 +352,27 @@ WasmBytecodeGenerator::EmitConst()
     }
 
     return EmitInfo(tmpReg, m_reader->m_currentNode.type);
+}
+
+EmitInfo
+WasmBytecodeGenerator::EmitBlock()
+{
+    WasmOp op = m_reader->ReadFromBlock();
+    if (op == wnLIMIT)
+    {
+        throw WasmCompilationException(L"Block must have at least one expression");
+    }
+    do
+    {
+        EmitInfo info = EmitExpr(op);
+        // REVIEW: should this be Assert or throw if false, or does this even hold?
+        Assert(info.type == WasmTypes::Void);
+        op = m_reader->ReadFromBlock();
+    }
+    while (op != wnLIMIT);
+
+    // REVIEW: can a block give a result?
+    return EmitInfo();
 }
 
 EmitInfo

@@ -14,6 +14,18 @@ namespace Wasm
         size_t length;
     };
 
+    namespace SExpr
+    {
+        enum BlockType
+        {
+            Module,
+            Function,
+            Expr,
+            Block,
+            Call
+        };
+    }
+
     class SExprParser : public BaseWasmReader
     {
     public:
@@ -21,6 +33,7 @@ namespace Wasm
 
         virtual WasmOp ReadFromScript() override;
         virtual WasmOp ReadFromModule() override;
+        virtual WasmOp ReadFromBlock() override;
         virtual WasmOp ReadExpr() override;
 
         static void __declspec(noreturn) ThrowSyntaxError();
@@ -30,6 +43,7 @@ namespace Wasm
         SExprToken          m_token;
 
     private:
+        WasmOp ReadExprCore(SExprTokenType tok);
         WasmOp ParseFunctionHeader();
         WasmOp ParseExport();
         void ParseParam();
@@ -37,6 +51,7 @@ namespace Wasm
         void ParseLocal();
         WasmOp ParseReturnExpr();
         WasmOp ParseIfExpr();
+        WasmOp ParseBlock();
         WasmOp ParseConstLitExpr();
         void ParseExprWithType(WasmOp opcode);
         WasmNode * ParseInvoke();
@@ -56,8 +71,9 @@ namespace Wasm
 
         NameToIndexMap * m_nameToLocalMap;
 
+        SList<SExpr::BlockType> * m_blockNesting;
+
         WasmFunctionInfo *  m_funcInfo;
-        uint m_nestedRParens;
 
         bool m_inExpr;
     };

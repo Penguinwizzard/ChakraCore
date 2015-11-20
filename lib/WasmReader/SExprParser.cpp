@@ -12,11 +12,10 @@ namespace Wasm
 
 SExprParser::SExprParser(PageAllocator * alloc, LPCUTF8 source, size_t length) :
     m_alloc(L"SExprParser", alloc, Js::Throw::OutOfMemory),
-    m_inExpr(false),
-    m_nestedRParens(0)
+    m_inExpr(false)
 {
     m_scanner = Anew(&m_alloc, SExprScanner, &m_alloc);
-
+    m_blockNesting = Anew(&m_alloc, SList<SExpr::BlockType>, &m_alloc);
     m_context.offset = 0;
     m_context.source = source;
     m_context.length = length;
@@ -86,25 +85,50 @@ SExprParser::ReadFromModule()
 }
 
 WasmOp
+SExprParser::ReadFromBlock()
+{
+    SExprTokenType tok = m_scanner->Scan();
+
+    // in some cases we will have already scanned the LParen
+    if (!m_inExpr)
+    {
+        // we could be in nested expression and might need to pop off some RParens
+        while (tok == wtkRPAREN && m_blockNesting->Count() > 0 && m_blockNesting->Top() == SExpr::Expr)
+        {
+            tok = m_scanner->Scan();
+            m_blockNesting->Pop();
+        }
+        // if we have a RParen, and no more nested exprs, then we are done with function
+        if (tok == wtkRPAREN && m_blockNesting->Count() > 0 && m_blockNesting->Top() == SExpr::Block)
+        {
+            m_blockNesting->Pop();
+            return wnLIMIT;
+        }
+        if (tok != wtkLPAREN || m_blockNesting->Count() == 0)
+        {
+            ThrowSyntaxError();
+        }
+        tok = m_scanner->Scan();
+    }
+    return ReadExprCore(tok);
+}
+
+WasmOp
 SExprParser::ReadExpr()
 {
     SExprTokenType tok = m_scanner->Scan();
 
     // in some cases we will have already scanned the LParen
-    if (m_inExpr)
-    {
-        m_inExpr = false;
-    }
-    else
+    if (!m_inExpr)
     {
         // we could be in nested expression and might need to pop off some RParens
-        while (tok == wtkRPAREN && m_nestedRParens > 0)
+        while (tok == wtkRPAREN && m_blockNesting->Count() > 0 && m_blockNesting->Top() == SExpr::Expr)
         {
             tok = m_scanner->Scan();
-            --m_nestedRParens;
+            m_blockNesting->Pop();
         }
         // if we have a RParen, and no more nested exprs, then we are done with function
-        if (tok == wtkRPAREN && m_nestedRParens == 0)
+        if (tok == wtkRPAREN && m_blockNesting->Count() == 0)
         {
             return wnLIMIT;
         }
@@ -115,13 +139,20 @@ SExprParser::ReadExpr()
         tok = m_scanner->Scan();
     }
 
+    return ReadExprCore(tok);
+}
+
+WasmOp
+SExprParser::ReadExprCore(SExprTokenType tok)
+{
+    m_inExpr = false;
     WasmOp op = WasmOp::wnLIMIT;
     switch (tok)
     {
     case wtkNOP:
         return wnNOP;
     case wtkBLOCK:
-        return wnBLOCK;
+        return ParseBlock();
     case wtkLOOP:
         return wnLOOP;
     case wtkLABEL:
@@ -175,7 +206,6 @@ ParseVarCommon:
     default:
         ThrowSyntaxError();
     }
-
 }
 
 WasmOp
@@ -363,7 +393,7 @@ SExprParser::ParseReturnExpr()
     {
         m_currentNode.opt.exists = true;
         m_inExpr = true;
-        ++m_nestedRParens;
+        m_blockNesting->Push(SExpr::Expr);
     }
     else
     {
@@ -378,10 +408,16 @@ WasmOp
 SExprParser::ParseIfExpr()
 {
     m_currentNode.op = wnIF;
-
-    ++m_nestedRParens;
+    
+    m_blockNesting->Push(SExpr::Expr);
 
     return m_currentNode.op;
+}
+
+WasmOp SExprParser::ParseBlock()
+{
+    m_blockNesting->Push(SExpr::Block);
+    return wnBLOCK;
 }
 
 WasmOp
@@ -430,8 +466,7 @@ SExprParser::ParseExprWithType(WasmOp opcode)
 
     m_currentNode.type = GetWasmType(m_scanner->Scan());
     m_currentNode.op = opcode;
-
-    ++m_nestedRParens;
+    m_blockNesting->Push(SExpr::Expr);
 }
 
 WasmNode *
@@ -492,7 +527,7 @@ SExprParser::ParseVarNode(WasmOp opcode)
 
     if (opcode == wnSETLOCAL || opcode == wnSetGlobal)
     {
-        ++m_nestedRParens;
+        m_blockNesting->Push(SExpr::Expr);
     }
     else
     {
