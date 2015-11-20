@@ -164,6 +164,8 @@ extern RLMODE Mode;
 
 #define DEFAULT_EXEC_TESTS_FLAGS ";"
 
+#define DEFAULT_TEST_TIMEOUT 60000
+
 #define DIR_LOCKFILE  "regrlock.txt"
 
 
@@ -198,6 +200,7 @@ enum TestInfoKind
    TIK_RL_DIRECTIVES,
    TIK_ENV,
    TIK_COMMAND,
+   TIK_TIMEOUT,
    _TIK_COUNT
 };
 
@@ -959,7 +962,7 @@ extern int ExecTest(CDirectory* pDir, Test * pTest, TestVariant * pTestVariant);
 
 // rlmp.cpp
 
-extern int ExecuteCommand(char* path, char* CommandLine, void* localEnvVars = NULL);
+extern int ExecuteCommand(char* path, char* CommandLine, DWORD millisecTimeout = INFINITE, void* localEnvVars = NULL);
 
 extern int DoOneExternalTest(
     CDirectory* pDir,
