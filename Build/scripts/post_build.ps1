@@ -14,6 +14,10 @@ param (
     [string]$repo = "core",
     [string]$logFile = "",
 
+    # comma separated list of [arch,flavor,arch2,flavor2,...] to build
+    [string[]]$pogo = @(),
+    [string]$pogoscript="",
+
     [switch]$noaction
 )
 
@@ -56,10 +60,9 @@ if ($arch -eq "*") {
     WriteMessage ""
 
     $srcsrvcmd = ("{0} {1} {2} {3}\bin\{4}_{5}\*.pdb" -f $srcsrvcmdpath, $repo, $srcpath, $binpath, $arch, $flavor);
-    $pogocmd = ""
+    $pogocmd = ("{0} {1} {2}" -f $pogoscript, $arch, $flavor);
     $prefastlog = ("{0}\logs\PrefastCheck_{1}_{2}.log" -f $binpath, $arch, $flavor);
     $prefastcmd = "$PSScriptRoot\check_prefast_error.ps1 -directory $objpath -logFile $prefastlog";
-
 
     # generate srcsrv
     if ((Test-Path $srcsrvcmdpath) -and (Test-Path $srcpath) -and (Test-Path $binpath)) {
@@ -67,8 +70,16 @@ if ($arch -eq "*") {
     }
 
     # do PoGO
-    ExecuteCommand($pogocmd);
-
+    $doPogo=$False
+    for ($i=0; $i -lt $pogo.length; $i=$i+2) {
+        if (($pogo[$i] -eq $arch) -and ($pogo[$i+1] -eq $flavor)) {
+            $doPogo=$True
+        }
+    }
+    if ($doPogo) {
+        WriteMessage "Building pogo for $arch $flavor"
+        ExecuteCommand($pogocmd);
+    }
 
     # run test
     ExecuteCommand("$bvtcmdpath -$arch$flavor");
