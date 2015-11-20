@@ -155,8 +155,6 @@ goto :main
   if /i "%1" == "-dirnottags"       set _DIRNOTTAGS=%_DIRNOTTAGS% -dirnottags:%~2&              goto :ArgOkShift2
   if /i "%1" == "-includeSlow"      set _includeSlow=1&                                         goto :ArgOk
   if /i "%1" == "-onlySlow"         set _onlySlow=1&                                            goto :ArgOk
-  if /i "%1" == "-includeChBroken"  set _excludeChBroken=&                                      goto :ArgOk
-  if /i "%1" == "-onlyChBroken"     set _excludeChBroken=& set _TAGS=%_TAGS% -tags:exclude_ch&  goto :ArgOk
   if /i "%1" == "-quiet"            set _quiet=-quiet&                                          goto :ArgOk
   :: TODO Consider removing -drt and exclude_drt in some reasonable manner
   if /i "%1" == "-drt"              set _drt=1& set _NOTTAGS=%_NOTTAGS% -nottags:exclude_drt&   goto :ArgOk
@@ -238,7 +236,6 @@ goto :main
   set _CleanUpAll=
   set _nightly=
   set TARGET_OS=win10
-  set _excludeChBroken=-nottags:exclude_ch
   set _quiet=
 
   goto :eof
@@ -397,7 +394,6 @@ goto :main
   set _rlArgs=%_rlArgs% %_exclude_nodeferparse%
   set _rlArgs=%_rlArgs% %_exclude_forceundodefer%
   set _rlArgs=%_rlArgs% %_ExcludeApolloTests%
-  set _rlArgs=%_rlArgs% %_excludeChBroken%
   set _rlArgs=%_rlArgs% %_quiet%
   set _rlArgs=%_rlArgs% -exe
   set _rlArgs=%_rlArgs% %EXTRA_RL_FLAGS%
