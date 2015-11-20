@@ -53,7 +53,7 @@ public:
     static DWORD_PTR GetNextSourceContext();
 
 #ifdef ENABLE_WASM
-    static JsValueRef LoadWasm(LPCWSTR fileName, size_t fileNameLength, LPCWSTR fileContent, LPCWSTR scriptInjectType);
+    static JsValueRef LoadWasm(LPCWSTR fileName, size_t fileNameLength, LPCWSTR fileContent, const bool isBinary, const UINT lengthBytes, LPCWSTR scriptInjectType);
 #endif
 private:
     static bool CreateArgumentsObject(JsValueRef *argsObject);

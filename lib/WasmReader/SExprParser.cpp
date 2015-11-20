@@ -23,6 +23,12 @@ SExprParser::SExprParser(PageAllocator * alloc, LPCUTF8 source, size_t length) :
     m_scanner->Init(&m_context, &m_token);
 }
 
+bool 
+SExprParser::IsBinaryReader()
+{
+    return false;
+}
+
 WasmOp
 SExprParser::ReadFromScript()
 {
