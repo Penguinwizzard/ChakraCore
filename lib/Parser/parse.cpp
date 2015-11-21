@@ -3573,7 +3573,7 @@ ParseNodePtr Parser::ParseMemberList(LPCOLESTR pNameHint, ulong* pNameHintLength
                         }
 
                         pnodeIdent = CreateNameNode(pidHint, idHintIchMin, idHintIchLim);
-                        PidRefStack *ref = this->FindOrAddPidRef(pidHint, blockInfo->pnodeBlock->sxBlock.blockId, maxScopeId);
+                        PidRefStack *ref = this->FindOrAddPidRef(pidHint, GetCurrentBlockInfo()->pnodeBlock->sxBlock.blockId, maxScopeId);
                         pnodeIdent->sxPid.SetSymRef(ref);
                     }
 

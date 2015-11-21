@@ -1110,4 +1110,11 @@
         <compile-flags>-args summary -endargs</compile-flags>
     </default>
 </test>
+  <test>
+    <default>
+      <files>object_literal_bug.js</files>
+      <compile-flags>-ES6Destructuring -args summary -endargs</compile-flags>
+      <tags>BugFix</tags>
+    </default>
+  </test>
 </regress-exe>
