@@ -97,6 +97,14 @@
       <LinkTimeCodeGeneration>true</LinkTimeCodeGeneration>
     </Lib>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition = "'$(Platform)' == 'ARM64'">
+    <ClCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);_ARM64_</PreprocessorDefinitions>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);_ARM64_</PreprocessorDefinitions>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
   <ItemGroup Condition="'$(ConfigurationType)'=='DynamicLibrary' OR '$(ConfigurationType)'=='Application'">
     <Clean Include="$(OutDir)$(TargetName).lib" />
     <Clean Include="$(OutDir)$(TargetName).exp" />

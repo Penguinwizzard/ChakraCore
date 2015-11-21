@@ -1,7 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="$(MsBuildThisFileDirectory)..\StdAfx.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)AsmJS.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)AsmJSBytecodeGenerator.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)AsmJSCodeGenerator.cpp" />
@@ -32,7 +31,6 @@
     <ClCompile Include="$(MsBuildThisFileDirectory)Utf8SourceInfo.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)ValueType.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)ScriptContextOptimizationOverrideInfo.cpp" />
-    <ClCompile Include="$(MsBuildThisFileDirectory)DiagHelperMethodWrapper.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)InterpreterStackFrame.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptConversion.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptOperators.cpp" />
@@ -57,7 +55,9 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)arm\stackframe.cpp">
       <Filter>arm</Filter>
     </ClCompile>
-    <ClCompile Include="JavascriptNativeOperators.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)LeaveScriptObject.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)RuntimeLanguagePch.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptNativeOperators.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AsmJS.h" />
@@ -96,7 +96,6 @@
     <ClInclude Include="ScriptContextOptimizationOverrideInfo.h" />
     <ClInclude Include="Arguments.h" />
     <ClInclude Include="CallInfo.h" />
-    <ClInclude Include="DiagHelperMethodWrapper.h" />
     <ClInclude Include="InterpreterStackFrame.h" />
     <ClInclude Include="JavascriptConversion.h" />
     <ClInclude Include="JavascriptOperators.h" />
@@ -121,6 +120,8 @@
     <ClInclude Include="AsmJSTypes.h" />
     <ClInclude Include="AsmJsBuiltinNames.h" />
     <ClInclude Include="JavascriptNativeOperators.h" />
+    <ClInclude Include="RegexPatternMruMap.h" />
+    <ClInclude Include="RuntimeLanguagePch.h" />
   </ItemGroup>
   <ItemGroup>
     <MASM Include="$(MSBuildThisFileDirectory)amd64\amd64_Thunks.asm">
@@ -139,14 +140,10 @@
     <None Include="InterpreterHandler.inl" />
     <None Include="InterpreterHandlerAsmJs.inl" />
     <None Include="InterpreterLoop.inl" />
-    <None Include="JavascriptExceptionOperators.inl" />
     <None Include="JavascriptMathOperators.inl" />
-    <None Include="JavascriptObject.inl" />
-    <None Include="InterpreterStackFrame.inl" />
     <None Include="JavascriptConversion.inl" />
     <None Include="JavascriptOperators.inl" />
     <None Include="ScriptContext.inl" />
-    <None Include="DiagHelperMethodWrapper.inl" />
     <None Include="amd64\stackframe.inl">
       <Filter>amd64</Filter>
     </None>

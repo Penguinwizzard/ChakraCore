@@ -35,6 +35,11 @@
     <NtTargetVersion Condition="'$(Platform)'=='ARM' or '$(Platform)'=='Arm64'">$(NtTargetVersion_Win8)</NtTargetVersion>
 
     <WindowsSDKDesktopARMSupport Condition="'$(Platform)'=='ARM'">true</WindowsSDKDesktopARMSupport>
+    <WindowsSDKDesktopARM64Support Condition="'$(Platform)'=='ARM64'">true</WindowsSDKDesktopARM64Support>
+    <VC_ExecutablePath_ARM64>F:\enlist\rs1\src\tools\dev12\x64\arm64</VC_ExecutablePath_ARM64>
+    <VC_ReferencesPath_ARM64>F:\enlist\rs1\src\tools\dev12\lib\arm64</VC_ReferencesPath_ARM64>
+    <VC_LibraryPath_ARM64>F:\enlist\rs1\src\tools\dev12\lib\arm64;C:\Program Files (x86)\Windows Kits\10\lib\10.0.10150.0\ucrt\arm64</VC_LibraryPath_ARM64>
+
   </PropertyGroup>
   <PropertyGroup Label="Configuration">
     <CharacterSet>Unicode</CharacterSet>

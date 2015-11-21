@@ -42,5 +42,16 @@
       <Platform>ARM</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemDefinitionGroup>
+    <Link>
+        <AdditionalOptions Condition="'$(Platform)'=='ARM64'">/Machine:ARM64</AdditionalOptions>
+    </Link>
+    <Midl>
+        <AdditionalOptions Condition="'$(Platform)'=='ARM64'">/ARM64 /env arm64</AdditionalOptions>
+    </Midl>
+  </ItemDefinitionGroup>
+  <PropertyGroup>
+    <_PlatformFolder>F:\ChakraNew\Build\ARM64ConfigFiles</_PlatformFolder>
+  </PropertyGroup>
 </Project>
 

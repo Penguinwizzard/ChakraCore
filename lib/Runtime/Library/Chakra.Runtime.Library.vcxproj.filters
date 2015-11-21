@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptSIMDFloat32x4.cpp" />
@@ -48,7 +48,6 @@
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptStringIterator.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptSymbol.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptSymbolObject.cpp" />
-    <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptTypedObjectSlotAccessorFunction.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptWeakMap.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JavascriptWeakSet.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)javascripttypednumber.cpp" />
@@ -124,9 +123,10 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)SIMDInt8x16OperationX86X64.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSIMDInt8x16.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)RuntimeLibraryPch.cpp" />
-    <ClCompile Include="ExternalLibraryBase.cpp" />
-    <ClCompile Include="IntlEngineInterfaceExtensionObject.cpp" />
-    <ClCompile Include="JavascriptErrorDebug.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)NullEnumerator.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)ExternalLibraryBase.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)IntlEngineInterfaceExtensionObject.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptErrorDebug.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\InternalPropertyList.h" />
@@ -152,7 +152,6 @@
     <ClInclude Include="DateImplementationData.h" />
     <ClInclude Include="Debug.h" />
     <ClInclude Include="DelayLoadLibrary.h" />
-    <ClInclude Include="DOMFastPathInfo.h" />
     <ClInclude Include="EngineInterfaceObject.h" />
     <ClInclude Include="Entropy.h" />
     <ClInclude Include="ES5ArrayIndexEnumerator.h" />
@@ -163,8 +162,6 @@
     <ClInclude Include="HostObjectBase.h" />
     <ClInclude Include="InJavascript\intl.js.bc.32b.h" />
     <ClInclude Include="InJavascript\intl.js.bc.64b.h" />
-    <ClInclude Include="InJavascript\Promise.js.bc.32b.h" />
-    <ClInclude Include="InJavascript\Promise.js.bc.64b.h" />
     <ClInclude Include="IteratorObjectEnumerator.h" />
     <ClInclude Include="JavascriptArrayEnumeratorBase.h" />
     <ClInclude Include="JavascriptArrayIndexEnumerator.h" />
@@ -191,7 +188,6 @@
     <ClInclude Include="JavascriptSymbol.h" />
     <ClInclude Include="JavascriptSymbolObject.h" />
     <ClInclude Include="javascripttypednumber.h" />
-    <ClInclude Include="JavascriptTypedObjectSlotAccessorFunction.h" />
     <ClInclude Include="JavascriptWeakMap.h" />
     <ClInclude Include="JavascriptWeakSet.h" />
     <ClInclude Include="JSONParser.h" />
@@ -271,13 +267,13 @@
     <ClInclude Include="ExternalLibraryBase.h" />
     <ClInclude Include="IntlEngineInterfaceExtensionObject.h" />
     <ClInclude Include="JavascriptErrorDebug.h" />
+    <ClInclude Include="NullEnumerator.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ConcatString.inl" />
     <None Include="InJavascript\BuildGenByteCodeBin.cmd" />
     <None Include="InJavascript\GenByteCode.cmd" />
     <None Include="InJavascript\Intl.js" />
-    <None Include="InJavascript\Promise.js" />
     <None Include="InJavascript\WarnGenByteCode.cmd" />
     <None Include="SparseArraySegment.inl" />
     <None Include="TaggedInt.inl" />
@@ -285,6 +281,7 @@
     <None Include="JavascriptLibrary.inl" />
     <None Include="JavascriptNumber.inl" />
     <None Include="JavascriptString.inl" />
+    <None Include="JavascriptBoolean.inl" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="arm">
