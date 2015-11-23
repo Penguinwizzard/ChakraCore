@@ -2,8 +2,8 @@
 import jobs.generation.Utilities;
 import jobs.generation.InternalUtilities;
 
-// Defines the name of the repo, used elsewhere in the file
-def project = 'Microsoft/ChakraCore'
+// Grab the github project name passed in
+def project = GithubProject
 
 def msbuildTypeMap = [
     'debug':'chk',
