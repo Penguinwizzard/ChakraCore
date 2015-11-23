@@ -1,6 +1,6 @@
 # ChakraCore
 
-ChakraCore is the core part of the engine that powers Microsoft Edge.  ChakraCore supports Just-in-time (JIT) compilation of JavaScript for x86/x64/ARM, garbage collection, and a wide range of the latest JavaScript features.  ChakraCore also supports the JavaScript Runtime (JSRT) API, which allows you to easily embed ChakraCore in your applications.
+ChakraCore is the core part of the Chakra engine that powers Microsoft Edge.  ChakraCore supports Just-in-time (JIT) compilation of JavaScript for x86/x64/ARM, garbage collection, and a wide range of the latest JavaScript features.  ChakraCore also supports the JavaScript Runtime (JSRT) API, which allows you to easily embed ChakraCore in your applications.
 
 You can stay up-to-date on progress by following the [Edge developer blog](http://blogs.windows.com/msedgedev/).
 
