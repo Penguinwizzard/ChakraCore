@@ -79,8 +79,8 @@
   </test>
   <test>
     <default>
-      <files>testZeroSplatBool.js</files>
-      <baseline>testZeroSplatBool.baseline</baseline>
+      <files>testSplat.js</files>
+      <baseline>testSplat.baseline</baseline>
       <compile-flags>-Simdjs</compile-flags>
     </default>
   </test>

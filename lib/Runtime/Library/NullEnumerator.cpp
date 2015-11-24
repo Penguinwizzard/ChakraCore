@@ -6,8 +6,8 @@
 
 #include "Library\NullEnumerator.h"
 
-namespace Js
-{
+namespace Js
+{
     Var NullEnumerator::GetCurrentIndex()
     {
         // This function may be called without calling MoveNext to verify element availbility 

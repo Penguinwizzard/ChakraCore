@@ -164,4 +164,3 @@ function foo()
 Array.prototype.unshift = function(){WScript.Echo ("Overriden unshift")};
 foo();
 WScript.Echo (a);
-

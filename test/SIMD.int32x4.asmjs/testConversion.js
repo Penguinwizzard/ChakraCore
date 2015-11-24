@@ -2,7 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
-
+this.WScript.LoadScriptFile("..\\UnitTestFramework\\SimdJsHelpers.js");
 function asmModule(stdlib, imports) {
     "use asm";
     
@@ -48,8 +48,8 @@ function asmModule(stdlib, imports) {
     var f4clamp = f4.clamp;
     var f4min = f4.min;
     var f4max = f4.max;
-    var f4reciprocal = f4.reciprocal;
-    var f4reciprocalSqrt = f4.reciprocalSqrt;
+
+
     var f4sqrt = f4.sqrt;
     //var f4swizzle = f4.swizzle;
     //var f4shuffle = f4.shuffle;
@@ -82,8 +82,8 @@ function asmModule(stdlib, imports) {
     var d2clamp = d2.clamp;
     var d2min = d2.min;
     var d2max = d2.max;
-    var d2reciprocal = d2.reciprocal;
-    var d2reciprocalSqrt = d2.reciprocalSqrt;
+
+
     var d2sqrt = d2.sqrt;
     //var d2swizzle = d2.swizzle;
     //var d2shuffle = d2.shuffle;
@@ -335,38 +335,23 @@ var ret10 = m.func10();
 var ret11 = m.func11();
 var ret12 = m.func12();
 
-print(typeof(ret1));
-print(ret1.toString());
 
-print(typeof(ret2));
-print(ret2.toString());
 
-print(typeof(ret3));
-print(ret3.toString());
 
-print(typeof(ret4));
-print(ret4.toString());
+equalSimd([21, 2, 0, 0], ret1, SIMD.Int32x4, "Test Conversion");
+equalSimd([110, 58967, 0, 0], ret2, SIMD.Int32x4, "Test Conversion");
+equalSimd([0, 1, 0, 0], ret3, SIMD.Int32x4, "Test Conversion");
 
-print(typeof(ret5));
-print(ret5.toString());
+equalSimd([1889785610, 1077250621, 824633721, 1073916936], ret4, SIMD.Int32x4, "Test Conversion");
+equalSimd([-858993459, 1079741644, 0, 1089260256], ret5, SIMD.Int32x4, "Test Conversion");
+equalSimd([-1962628256, 1069521347, 1257566424, 1073383001], ret6, SIMD.Int32x4, "Test Conversion");
 
-print(typeof(ret6));
-print(ret6.toString());
+equalSimd([1034, 22342, 1233, 40443], ret7, SIMD.Int32x4, "Test Conversion");
+equalSimd([90934, 123, 419, 449], ret8, SIMD.Int32x4, "Test Conversion");
+equalSimd([5033, 3401, 665, 32234], ret9, SIMD.Int32x4, "Test Conversion");
 
-print(typeof(ret7));
-print(ret7.toString());
+equalSimd([1316880384, 1317011456, 1317044224, 1317076992], ret10, SIMD.Int32x4, "Test Conversion");
+equalSimd([1202821914, 1123536077, 1137816044, 1138786304], ret11, SIMD.Int32x4, "Test Conversion");
+equalSimd([1167935898, 1163169792, 1143363011, 1190908979], ret12, SIMD.Int32x4, "Test Conversion");
 
-print(typeof(ret8));
-print(ret8.toString());
-
-print(typeof(ret9));
-print(ret9.toString());
-
-print(typeof(ret10));
-print(ret10.toString());
-
-print(typeof(ret11));
-print(ret11.toString());
-
-print(typeof(ret12));
-print(ret12.toString());
+print("PASS");
