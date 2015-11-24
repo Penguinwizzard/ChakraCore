@@ -146,7 +146,7 @@
   <test>
     <default>
       <files>ES5ArrayIndexList.js</files>
-      <tags>exclude_chk</tags>
+      <tags>exclude_chk,Slow</tags>
     </default>
   </test>
   <test>
