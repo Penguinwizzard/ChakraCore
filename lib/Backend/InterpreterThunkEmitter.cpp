@@ -115,10 +115,10 @@ const BYTE InterpreterThunkEmitter::InterpreterThunk[] = {
     0x02, 0x00, 0x40, 0xF9,                                         //ldr         x2, [x0, #0x00]       ;offset will be replaced with Offset of FunctionInfo
     0x43, 0x00, 0x40, 0xF9,                                         //ldr         x3, [x2, #0x00]       ;offset will be replaced with offset of DynamicInterpreterThunk
                                                                     //Following 4 MOV Instrs are to move the 64-bit address of the InterpreterThunk address into register x1.
-    0x01, 0x00, 0x80, 0xD2,                                         //movz        x1, #0x00             ;This is overwritten with the actual thunk address(16 - 0 bits) move
-    0x01, 0x00, 0xA0, 0xF2,                                         //movk        x1, #0x00, lsl #16    ;This is overwritten with the actual thunk address(32 - 16 bits) move
-    0x01, 0x00, 0xC0, 0xF2,                                         //movk        x1, #0x00, lsl #32    ;This is overwritten with the actual thunk address(48 - 32 bits) move
-    0x01, 0x00, 0xE0, 0xF2,                                         //movk        x1, #0x00, lsl #48    ;This is overwritten with the actual thunk address(64 - 48 bits) move
+    0x00, 0x00, 0x00, 0x00,                                         //movz        x1, #0x00             ;This is overwritten with the actual thunk address(16 - 0 bits) move
+    0x00, 0x00, 0x00, 0x00,                                         //movk        x1, #0x00, lsl #16    ;This is overwritten with the actual thunk address(32 - 16 bits) move
+    0x00, 0x00, 0x00, 0x00,                                         //movk        x1, #0x00, lsl #32    ;This is overwritten with the actual thunk address(48 - 32 bits) move
+    0x00, 0x00, 0x00, 0x00,                                         //movk        x1, #0x00, lsl #48    ;This is overwritten with the actual thunk address(64 - 48 bits) move
     0xE0, 0x43, 0x00, 0x91,                                         //add         x0, sp, #16
     0x60, 0x00, 0x1F, 0xD6                                          //br          x3
 };
