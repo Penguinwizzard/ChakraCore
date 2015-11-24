@@ -2,7 +2,7 @@
 
 ChakraCore is the core part of the Chakra engine that powers Microsoft Edge.  ChakraCore supports Just-in-time (JIT) compilation of JavaScript for x86/x64/ARM, garbage collection, and a wide range of the latest JavaScript features.  ChakraCore also supports the JavaScript Runtime (JSRT) API, which allows you to easily embed ChakraCore in your applications.
 
-You can stay up-to-date on progress by following the [Edge developer blog](http://blogs.windows.com/msedgedev/).
+You can stay up-to-date on progress by following the [MSEdge developer blog](http://blogs.windows.com/msedgedev/).
 
 ## Building ChakraCore
 
@@ -33,7 +33,7 @@ There are many ways to contribute to ChakraCore.
 
 * [Submit bugs](https://github.com/Microsoft/ChakraCore/issues) and help us verify fixes
 * [Submit pull requests](https://github.com/Microsoft/ChakraCore/pulls) for bug fixes and features and discuss existing proposals
-* Chat about [#ChakraCore](https://twitter.com/search?src=typd&q=ChakraCore) on Twitter
+* Chat about [@ChakraCore](https://twitter.com/ChakraCore) on Twitter
 
 Please refer to [Contribution guidelines](https://github.com/Microsoft/ChakraCore/wiki/Contributor-Guidance) for more details.
 
