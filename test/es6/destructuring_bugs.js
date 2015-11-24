@@ -20,6 +20,17 @@ var tests = [
       assert.throws(function () { eval("let a = [a] = [10]"); }, ReferenceError, "A let variable is used in the array pattern in the same statement where it is declared", "Use before declaration");
       assert.throws(function () { eval("let a = {a:a} = {}"); }, ReferenceError, "A let variable is used in object pattern in the same statement where it is declared", "Use before declaration");
     }
+  },
+  {
+    name: "Destructuring bug fix - function expression under destructuring pattern does not crash",
+    body: function () {
+      var a = [];
+      var b = 2;
+      function f() {
+        [ a [ function () { }, b ] ] = [2] ;
+      }
+      f();
+    }
   }
 ];
 
