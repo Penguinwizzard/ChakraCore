@@ -76,8 +76,9 @@ void HostConfigFlags::PrintUsage()
     if (pfnPrintUsage)
     {
         pfnPrintUsage();
-        return;
     }
+
+    wprintf(L"\nFlag List : \n");
     HostConfigFlags::PrintUsageString();
     ChakraRTInterface::PrintConfigFlagsUsageString();
 }
