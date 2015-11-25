@@ -23,6 +23,19 @@ var tests = [
             ({a2} = {a2:2});
             assert.areEqual(a2, 2, "Destructuring object pattern : Name node in object literal shorthand is binding correctly with inner block");
         }
+        {
+            // Object literal shorthand - referenced in different scopoe works correctly.
+            { d; }
+
+            {
+                { { d;} }; 
+                var c = {d};
+            }
+
+            {
+                var d = [];
+            }
+        }    
     }
   }
 ];

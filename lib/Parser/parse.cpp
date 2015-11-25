@@ -3551,29 +3551,8 @@ ParseNodePtr Parser::ParseMemberList(LPCOLESTR pNameHint, ulong* pNameHintLength
                 {
                     if (!isObjectPattern)
                     {
-                        // While doing a look up for identifier reference we have to make sure that we look in the param scope too.
-                        // So we have to pass the right maxScopeId.
-                        BlockInfoStack *blockInfo = GetCurrentFunctionBlockInfo();
-                        BlockInfoStack* outerBlockInfo = blockInfo->pBlockInfoOuter;
-                        int maxScopeId = blockInfo->pnodeBlock->sxBlock.blockId;
-                        if (outerBlockInfo != nullptr)
-                        {
-                            if (outerBlockInfo->pnodeBlock->sxBlock.scope != nullptr
-                                && outerBlockInfo->pnodeBlock->sxBlock.scope->GetScopeType() == ScopeType_CatchParamPattern)
-                            {
-                                maxScopeId = outerBlockInfo->pnodeBlock->sxBlock.blockId;
-                            }
-
-                            if (blockInfo->pnodeBlock->sxBlock.scope != nullptr
-                                && blockInfo->pnodeBlock->sxBlock.scope->GetScopeType() == ScopeType_FunctionBody
-                                && outerBlockInfo->pnodeBlock->sxBlock.blockType == PnodeBlockType::Parameter)
-                            {
-                                maxScopeId = outerBlockInfo->pnodeBlock->sxBlock.blockId;
-                            }
-                        }
-
                         pnodeIdent = CreateNameNode(pidHint, idHintIchMin, idHintIchLim);
-                        PidRefStack *ref = this->FindOrAddPidRef(pidHint, GetCurrentBlockInfo()->pnodeBlock->sxBlock.blockId, maxScopeId);
+                        PidRefStack *ref = PushPidRef(pidHint);
                         pnodeIdent->sxPid.SetSymRef(ref);
                     }
 
