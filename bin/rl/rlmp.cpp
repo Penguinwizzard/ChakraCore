@@ -622,16 +622,16 @@ __declspec(thread) unsigned BufSize = 512;
 
 struct FilterThreadData {
     int ThreadId;
-    unsigned& BufSize;
-    char*& StartPointer;
+    unsigned* pBufSize;
+    char** pStartPointer;
     COutputBuffer* ThreadOut;
     COutputBuffer* ThreadFull;
     FILE* ChildOutput;
 };
 
-DWORD WINAPI
+unsigned WINAPI
 FilterWorker(
-    LPVOID lpParam
+    void* param
     );
 
 int
@@ -642,14 +642,19 @@ FilterThread(
 {
     FilterThreadData data = {
         ThreadId,
-        BufSize,
-        StartPointer,
+        &BufSize,
+        &StartPointer,
         ThreadOut,
         ThreadFull,
         ChildOutput
     };
 
-    HANDLE hThreadWorker = CreateThread(nullptr, 0, FilterWorker, &data, 0, nullptr);
+    HANDLE hThreadWorker = (HANDLE)_beginthreadex(nullptr, 0, FilterWorker, &data, 0, nullptr);
+
+    if (hThreadWorker == 0) {
+        LogError("Failed to create FilterWorker thread - error = %d", GetLastError());
+        return -1;
+    }
 
     DWORD waitresult = WaitForSingleObject(hThreadWorker, millisecTimeout);
 
@@ -678,12 +683,12 @@ FilterThread(
     return rc;
 }
 
-DWORD WINAPI
+unsigned WINAPI
 FilterWorker(
-    LPVOID lpParam
+    void* param
     )
 {
-    FilterThreadData* data = static_cast<FilterThreadData*>(lpParam);
+    FilterThreadData* data = static_cast<FilterThreadData*>(param);
     size_t CountBytesRead;
     char* EndPointer;
     char* NewPointer;
@@ -694,20 +699,20 @@ FilterWorker(
         sprintf_s(buf, "%d>", data->ThreadId);
     }
 
-    if (data->StartPointer == NULL)
-        data->StartPointer = (char*)malloc(data->BufSize);
+    if (*data->pStartPointer == NULL)
+        *data->pStartPointer = (char*)malloc(*data->pBufSize);
 
     while (TRUE) {
-        EndPointer = data->StartPointer;
+        EndPointer = *data->pStartPointer;
         do {
-            if (data->BufSize - (EndPointer - data->StartPointer) < FILTER_READ_CHUNK) {
-                NewPointer = (char*)malloc(data->BufSize*2);
-                memcpy(NewPointer, data->StartPointer,
-                    EndPointer - data->StartPointer + 1);     // copy null byte, too
-                EndPointer = NewPointer + (EndPointer - data->StartPointer);
-                free(data->StartPointer);
-                data->StartPointer = NewPointer;
-                BufSize *= 2;
+            if (*data->pBufSize - (EndPointer - *data->pStartPointer) < FILTER_READ_CHUNK) {
+                NewPointer = (char*)malloc(*data->pBufSize*2);
+                memcpy(NewPointer, *data->pStartPointer,
+                    EndPointer - *data->pStartPointer + 1);     // copy null byte, too
+                EndPointer = NewPointer + (EndPointer - *data->pStartPointer);
+                free(*data->pStartPointer);
+                *data->pStartPointer = NewPointer;
+                *data->pBufSize *= 2;
             }
             if (NULL == fgets(EndPointer, FILTER_READ_CHUNK, data->ChildOutput)) {
                 if (ferror(data->ChildOutput)) {
@@ -720,12 +725,12 @@ FilterWorker(
         } while ((CountBytesRead == FILTER_READ_CHUNK - 1)
                 && *(EndPointer - 1) != '\n');
 
-        CountBytesRead = EndPointer - data->StartPointer;
+        CountBytesRead = EndPointer - *data->pStartPointer;
         if (CountBytesRead != 0) {
             data->ThreadOut->AddDirect(buf);
-            data->ThreadOut->AddDirect(data->StartPointer);
+            data->ThreadOut->AddDirect(*data->pStartPointer);
             data->ThreadFull->AddDirect(buf);
-            data->ThreadFull->AddDirect(data->StartPointer);
+            data->ThreadFull->AddDirect(*data->pStartPointer);
         }
     }
     
