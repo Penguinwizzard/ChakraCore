@@ -29,7 +29,7 @@ namespace Wasm
 
 #include "SExprScanner.h"
 #include "SExprParser.h"
-#include "WasmBinaryReader\WasmBinaryReader.h"
+#include "WasmBinaryReader.h"
 #include "WasmRegisterSpace.h"
 #include "WasmBytecodeGenerator.h"
 

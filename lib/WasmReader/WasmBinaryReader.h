@@ -4,7 +4,7 @@
 //-------------------------------------------------------------------------------------------------------
 
 #pragma once
-
+#ifdef ENABLE_WASM
 namespace Wasm
 {
     namespace Binary
@@ -20,27 +20,27 @@ namespace Wasm
         {
             // based on binary format encoding values
             enum LocalType {
-                Stmt = 0,  // void
-                I32 = 1,
-                I64 = 2,
-                F32 = 3,
-                F64 = 4,
-                Limit
+                bAstStmt = 0,  // void
+                bAstI32 = 1,
+                bAstI64 = 2,
+                bAstF32 = 3,
+                bAstF64 = 4,
+                bAstLimit
             };
 
             // memory and global types in binary format
             enum MemType {
-                I8 = 0,
-                U8 = 1,
-                I16 = 2,
-                U16 = 3,
-                I32 = 4,
-                U32 = 5,
-                I64 = 6,
-                U64 = 7,
-                F32 = 8,
-                F64 = 9,
-                Limit
+                bMemI8 = 0,
+                bMemU8 = 1,
+                bMemI16 = 2,
+                bMemU16 = 3,
+                bMemI32 = 4,
+                bMemU32 = 5,
+                bMemI64 = 6,
+                bMemU64 = 7,
+                bMemF32 = 8,
+                bMemF64 = 9,
+                bMemLimit
             };
 
             // for functions and opcodes
@@ -57,18 +57,18 @@ namespace Wasm
 
             enum OpSignatureId
             {
-#define WASM_SIGNATURE(id, ...) id,
+#define WASM_SIGNATURE(id, ...) bSig##id,
 #include "WasmBinaryOpcodes.h"
-                Limit
+                bSigLimit
             };
-        }
+        } // namespace WasmTypes
 
         // binary opcodes
         enum OpCodes
         {
-#define WASM_OPCODE(opname, opcode, token, sig) opname = opcode,
+#define WASM_OPCODE(opname, opcode, token, sig) wb##opname = opcode,
 #include "WasmBinaryOpcodes.h"
-            Limit
+            wbLimit
         };
 
         class WasmBinaryReader : public BaseWasmReader
@@ -76,10 +76,11 @@ namespace Wasm
         public:
             WasmBinaryReader(PageAllocator * alloc, byte* source, size_t length);
 
+            virtual bool IsBinaryReader() override;
             virtual WasmOp ReadFromScript() override;
             virtual WasmOp ReadFromModule() override;
             virtual WasmOp ReadExpr() override;
-
+            
             static void __declspec(noreturn) ThrowSyntaxError();
 
         protected:
@@ -93,11 +94,12 @@ namespace Wasm
 
             byte *m_start, *m_end;
             
-            WasmTypes::Signature opSignatureTable[WasmTypes::OpSignatureId::Limit];
-            WasmTypes::OpSignatureId opSignature[256];
+            WasmTypes::Signature opSignatureTable[WasmTypes::OpSignatureId::bSigLimit]; // table of opcode signatures
+            WasmTypes::OpSignatureId opSignature[256];                                  // opcode -> opcode signature ID
 
         };
 
     }
 
 } // namespace Wasm
+#endif // ENABLE_WASM

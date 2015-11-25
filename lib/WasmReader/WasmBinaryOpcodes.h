@@ -3,8 +3,6 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-#pragma once
-
 // define this to include all opcodes
 #ifndef WASM_OPCODE
 #define WASM_OPCODE(opname, opcode, token, sig)
@@ -30,35 +28,37 @@
 #define WASM_SIMPLE_OPCODE(opname, opcode, token, sig) WASM_OPCODE(opname, opcode, token, sig)
 #endif
 
+
 // built-in opcode signatures
 //              id, retType, arg0, arg1, arg2
-WASM_SIGNATURE(I_II,    3,   I32, I32, I32)
-WASM_SIGNATURE(I_I,     2,   I32, I32)
-WASM_SIGNATURE(I_V,     1,   I32)
-WASM_SIGNATURE(I_FF,    3,   I32, F32, F32)
-WASM_SIGNATURE(I_F,     2,   I32, F32)
-WASM_SIGNATURE(I_DD,    3,   I32, F64, F64)
-WASM_SIGNATURE(I_D,     2,   I32, F64)
-WASM_SIGNATURE(I_L,     2,   I32, I64)
-WASM_SIGNATURE(L_LL,    3,   I64, I64, I64)
-WASM_SIGNATURE(I_LL,    3,   I32, I64, I64)
-WASM_SIGNATURE(L_L,     2,   I64, I64)
-WASM_SIGNATURE(L_I,     2,   I64, I32)
-WASM_SIGNATURE(L_F,     2,   I64, F32)
-WASM_SIGNATURE(L_D,     2,   I64, F64)
-WASM_SIGNATURE(F_FF,    3,   F32, F32, F32)
-WASM_SIGNATURE(F_F,     2,   F32, F32)
-WASM_SIGNATURE(F_D,     2,   F32, F64)
-WASM_SIGNATURE(F_I,     2,   F32, I32)
-WASM_SIGNATURE(F_L,     2,   F32, I64)
-WASM_SIGNATURE(D_DD,    3,   F64, F64, F64)
-WASM_SIGNATURE(D_D,     2,   F64, F64)
-WASM_SIGNATURE(D_F,     2,   F64, F32)
-WASM_SIGNATURE(D_I,     2,   F64, I32)
-WASM_SIGNATURE(D_L,     2,   F64, I64)
-WASM_SIGNATURE(D_ID,    3,   F64, I32, F64)
-WASM_SIGNATURE(F_IF,    3,   F32, I32, F32)
-WASM_SIGNATURE(L_IL,    3,   I64, I32, I64)
+WASM_SIGNATURE(I_II,    3,   WasmTypes::bAstI32, WasmTypes::bAstI32, WasmTypes::bAstI32)
+WASM_SIGNATURE(I_I,     2,   WasmTypes::bAstI32, WasmTypes::bAstI32)
+WASM_SIGNATURE(I_V,     1,   WasmTypes::bAstI32) 
+WASM_SIGNATURE(I_FF,    3,   WasmTypes::bAstI32, WasmTypes::bAstF32, WasmTypes::bAstF32)
+WASM_SIGNATURE(I_F,     2,   WasmTypes::bAstI32, WasmTypes::bAstF32)
+WASM_SIGNATURE(I_DD,    3,   WasmTypes::bAstI32, WasmTypes::bAstF64, WasmTypes::bAstF64)
+WASM_SIGNATURE(I_D,     2,   WasmTypes::bAstI32, WasmTypes::bAstF64)
+WASM_SIGNATURE(I_L,     2,   WasmTypes::bAstI32, WasmTypes::bAstI64)
+WASM_SIGNATURE(L_LL,    3,   WasmTypes::bAstI64, WasmTypes::bAstI64, WasmTypes::bAstI64)
+WASM_SIGNATURE(I_LL,    3,   WasmTypes::bAstI32, WasmTypes::bAstI64, WasmTypes::bAstI64)
+WASM_SIGNATURE(L_L,     2,   WasmTypes::bAstI64, WasmTypes::bAstI64)
+WASM_SIGNATURE(L_I,     2,   WasmTypes::bAstI64, WasmTypes::bAstI32)
+WASM_SIGNATURE(L_F,     2,   WasmTypes::bAstI64, WasmTypes::bAstF32)
+WASM_SIGNATURE(L_D,     2,   WasmTypes::bAstI64, WasmTypes::bAstF64)
+WASM_SIGNATURE(F_FF,    3,   WasmTypes::bAstF32, WasmTypes::bAstF32, WasmTypes::bAstF32)
+WASM_SIGNATURE(F_F,     2,   WasmTypes::bAstF32, WasmTypes::bAstF32)
+WASM_SIGNATURE(F_D,     2,   WasmTypes::bAstF32, WasmTypes::bAstF64)
+WASM_SIGNATURE(F_I,     2,   WasmTypes::bAstF32, WasmTypes::bAstI32)
+WASM_SIGNATURE(F_L,     2,   WasmTypes::bAstF32, WasmTypes::bAstI64)
+WASM_SIGNATURE(D_DD,    3,   WasmTypes::bAstF64, WasmTypes::bAstF64, WasmTypes::bAstF64)
+WASM_SIGNATURE(D_D,     2,   WasmTypes::bAstF64, WasmTypes::bAstF64)
+WASM_SIGNATURE(D_F,     2,   WasmTypes::bAstF64, WasmTypes::bAstF32)
+WASM_SIGNATURE(D_I,     2,   WasmTypes::bAstF64, WasmTypes::bAstI32)
+WASM_SIGNATURE(D_L,     2,   WasmTypes::bAstF64, WasmTypes::bAstI64)
+WASM_SIGNATURE(D_ID,    3,   WasmTypes::bAstF64, WasmTypes::bAstI32, WasmTypes::bAstF64)
+WASM_SIGNATURE(F_IF,    3,   WasmTypes::bAstF32, WasmTypes::bAstI32, WasmTypes::bAstF32)
+WASM_SIGNATURE(L_IL,    3,   WasmTypes::bAstI64, WasmTypes::bAstI32, WasmTypes::bAstI64)
+
 
 WASM_CTRL_OPCODE(Nop,            0x00,       NOP,                Limit)
 WASM_CTRL_OPCODE(Block,          0x01,       BLOCK,              Limit)
@@ -71,6 +71,7 @@ WASM_CTRL_OPCODE(BrIf,           0x07,       BRIF,               Limit)
 WASM_CTRL_OPCODE(TableSwitch,    0x08,       TABLESWITCH,        Limit)
 WASM_CTRL_OPCODE(Return,         0x14,       RETURN,             Limit)
 WASM_CTRL_OPCODE(Unreachable,    0x15,       UNREACHABLE,        Limit)
+
 
 // Constants, locals, globals, and calls.
 WASM_MISC_OPCODE(I8Const,        0x09,        CONST,             Limit)
@@ -105,11 +106,11 @@ WASM_MEM_OPCODE(F64LoadMem,      0x2d,        LIMIT,                 D_I)
 // Store memory expressIons.                  
 WASM_MEM_OPCODE(I32StoreMem8,    0x2e,        LIMIT,                I_II)
 WASM_MEM_OPCODE(I32StoreMem16,   0x2f,        LIMIT,                I_II)
-WASM_MEM_OPCODE(I64StoreMem8,    0x30,        LIMIT,                L_Il)
-WASM_MEM_OPCODE(I64StoreMem16,   0x31,        LIMIT,                L_Il)
-WASM_MEM_OPCODE(I64StoreMem32,   0x32,        LIMIT,                L_Il)
+WASM_MEM_OPCODE(I64StoreMem8,    0x30,        LIMIT,                L_IL)
+WASM_MEM_OPCODE(I64StoreMem16,   0x31,        LIMIT,                L_IL)
+WASM_MEM_OPCODE(I64StoreMem32,   0x32,        LIMIT,                L_IL)
 WASM_MEM_OPCODE(I32StoreMem,     0x33,        LIMIT,                I_II)
-WASM_MEM_OPCODE(I64StoreMem,     0x34,        LIMIT,                L_Il)
+WASM_MEM_OPCODE(I64StoreMem,     0x34,        LIMIT,                L_IL)
 WASM_MEM_OPCODE(F32StoreMem,     0x35,        LIMIT,                F_IF)
 WASM_MEM_OPCODE(F64StoreMem,     0x36,        LIMIT,                D_ID)
                                               
@@ -238,10 +239,10 @@ WASM_SIMPLE_OPCODE(F64ReinterpretI64,   0xb3, LIMIT,            D_L)
 WASM_SIMPLE_OPCODE(I32ReinterpretF32,   0xb4, LIMIT,            I_F)
 WASM_SIMPLE_OPCODE(I64ReinterpretF64,   0xb5, LIMIT,            L_D)
 
+#undef WASM_SIMPLE_OPCODE
+#undef WASM_MEM_OPCODE
+#undef WASM_MISC_OPCODE
+#undef WASM_CTRL_OPCODE
 #undef WASM_OPCODE
 #undef WASM_SIGNATURE
-#undef WASM_CTRL_OPCODE
-#undef WASM_MISC_OPCODE
-#undef WASM_MEM_OPCODE
-#undef WASM_SIMPLE_OPCODE
 

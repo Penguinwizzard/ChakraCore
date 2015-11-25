@@ -67,11 +67,11 @@ WasmBytecodeGenerator::GenerateWasmScript()
 WasmModule *
 WasmBytecodeGenerator::GenerateModule()
 {
+    WasmOp op;
     m_module = Anew(&m_alloc, WasmModule);
     m_module->functions = Anew(&m_alloc, WasmFunctionArray, &m_alloc, 0);
     m_module->exports = Anew(&m_alloc, WasmExportDictionary, &m_alloc);
 
-    WasmOp op;
     while ((op = m_reader->ReadFromModule()) != wnLIMIT)
     {
         switch (op)
@@ -82,7 +82,7 @@ WasmBytecodeGenerator::GenerateModule()
         case wnEXPORT:
             AddExport();
             break;
-        // TODO: implement below ops
+            // TODO: implement below ops
         case wnGLOBAL:
         case wnTABLE:
         case wnMEMORY:

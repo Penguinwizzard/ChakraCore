@@ -2490,7 +2490,7 @@ STDAPI_(JsErrorCode) JsRunScript(_In_z_ const wchar_t * script, _In_ JsSourceCon
 }
 
 #ifdef ENABLE_WASM
-STDAPI_(JsErrorCode) JsRunWasmScript(const wchar_t * script, JsSourceContext sourceContext, const wchar_t *sourceUrl, JsValueRef * result)
+STDAPI_(JsErrorCode) JsRunWasmScript(const wchar_t * script, JsSourceContext sourceContext, const wchar_t *sourceUrl, bool isBinary, JsValueRef * result)
 {
     Js::JavascriptFunction *scriptFunction;
     CompileScriptException se;

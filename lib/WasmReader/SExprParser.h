@@ -22,7 +22,7 @@ namespace Wasm
         virtual WasmOp ReadFromScript() override;
         virtual WasmOp ReadFromModule() override;
         virtual WasmOp ReadExpr() override;
-
+        virtual bool IsBinaryReader() override;
         static void __declspec(noreturn) ThrowSyntaxError();
 
     protected:
