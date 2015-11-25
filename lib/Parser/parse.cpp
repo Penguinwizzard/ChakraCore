@@ -11067,17 +11067,33 @@ void Parser::ParseDestructuredLiteralWithScopeSave(tokens declarationType,
     DestructuringInitializerContext initializerContext/* = DIC_None*/,
     bool allowIn /*= true*/)
 {
-    // Store the current scope and point the current scope to the some temp scope
-    // so that ParseDestrucuturedLiteral will not make the current scope dirty
-    ParseNodePtr * ppScopeSave = m_ppnodeScope;
+    // We are going to parse the text again to validate the current grammar as Destructuring. Saving some scopes and 
+    // AST related information before the validation parsing and later they will be restored.
+
+    ParseNodePtr pnodeFncSave = m_currentNodeFunc;
+    long *pAstSizeSave = m_pCurrentAstSize;
+    uint *pNestedCountSave = m_pnestedCount;
+    ParseNodePtr *ppnodeScopeSave = m_ppnodeScope;
+    ParseNodePtr *ppnodeExprScopeSave = m_ppnodeExprScope;
+
     ParseNodePtr newTempScope = nullptr;
     m_ppnodeScope = &newTempScope;
-    // REVIEW: anything else we need to save?
+
+    long newTempAstSize = 0;
+    m_pCurrentAstSize = &newTempAstSize;
+
+    uint newTempNestedCount = 0;
+    m_pnestedCount = &newTempNestedCount;
+
+    m_ppnodeExprScope = nullptr;
 
     ParseDestructuredLiteral<false>(declarationType, isDecl, topLevel, initializerContext, allowIn);
 
-    // Restore this back
-    m_ppnodeScope = ppScopeSave;
+    m_currentNodeFunc = pnodeFncSave;
+    m_pCurrentAstSize = pAstSizeSave;
+    m_pnestedCount = pNestedCountSave;
+    m_ppnodeScope = ppnodeScopeSave;
+    m_ppnodeExprScope = ppnodeExprScopeSave;
 }
 
 template <bool buildAST>
