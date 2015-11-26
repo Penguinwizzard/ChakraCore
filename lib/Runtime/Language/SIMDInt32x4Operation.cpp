@@ -20,39 +20,11 @@ namespace Js
         return result;
     }
 
-    SIMDValue SIMDInt32x4Operation::OpInt32x4(const SIMDValue& v)
-    {
-    // overload function with input parameter as SIMDValue for completeness, may not need
-        SIMDValue result;
-
-        result = v;
-
-        return result;
-    }
-
-    SIMDValue SIMDInt32x4Operation::OpZero()
-    {
-        SIMDValue result;
-
-        result.i32[SIMD_X] = result.i32[SIMD_Y] = result.i32[SIMD_Z] = result.i32[SIMD_W] = 0;
-
-        return result;
-    }
-
     SIMDValue SIMDInt32x4Operation::OpSplat(int x)
     {
         SIMDValue result;
 
         result.i32[SIMD_X] = result.i32[SIMD_Y] = result.i32[SIMD_Z] = result.i32[SIMD_W] = x;
-
-        return result;
-    }
-
-    SIMDValue SIMDInt32x4Operation::OpSplat(const SIMDValue& v)
-    {
-        SIMDValue result;
-
-        result.i32[SIMD_X] = result.i32[SIMD_Y] = result.i32[SIMD_Z] = result.i32[SIMD_W] = v.i32[SIMD_X];
 
         return result;
     }
@@ -83,7 +55,6 @@ namespace Js
         Assert(v.i32[SIMD_Y] == 0 || v.i32[SIMD_Y] == -1);
         Assert(v.i32[SIMD_Z] == 0 || v.i32[SIMD_Z] == -1);
         Assert(v.i32[SIMD_W] == 0 || v.i32[SIMD_W] == -1);
-
         result = v;
         return result;
     }
@@ -124,20 +95,6 @@ namespace Js
         return result;
     }
 
-    SIMDValue SIMDInt32x4Operation::OpFromFloat32x4Bits(const SIMDValue& v)
-    {
-        SIMDValue result;
-
-        result.f64[SIMD_X] = v.f64[SIMD_X];
-        result.f64[SIMD_Y] = v.f64[SIMD_Y];
-
-        return result;
-    }
-
-    SIMDValue SIMDInt32x4Operation::OpFromFloat64x2Bits(const SIMDValue& v)
-    {
-        return OpFromFloat32x4Bits(v);
-    }
 
     // Unary Ops
     SIMDValue SIMDInt32x4Operation::OpAbs(const SIMDValue& value)
@@ -284,6 +241,18 @@ namespace Js
         return result;
     }
 
+    SIMDValue SIMDInt32x4Operation::OpLessThanOrEqual(const SIMDValue& aValue, const SIMDValue& bValue)
+    {
+        SIMDValue result;
+
+        result.i32[SIMD_X] = (aValue.i32[SIMD_X] <= bValue.i32[SIMD_X]) ? 0xffffffff : 0x0;
+        result.i32[SIMD_Y] = (aValue.i32[SIMD_Y] <= bValue.i32[SIMD_Y]) ? 0xffffffff : 0x0;
+        result.i32[SIMD_Z] = (aValue.i32[SIMD_Z] <= bValue.i32[SIMD_Z]) ? 0xffffffff : 0x0;
+        result.i32[SIMD_W] = (aValue.i32[SIMD_W] <= bValue.i32[SIMD_W]) ? 0xffffffff : 0x0;
+
+        return result;
+    }
+
     SIMDValue SIMDInt32x4Operation::OpEqual(const SIMDValue& aValue, const SIMDValue& bValue)
     {
         SIMDValue result;
@@ -296,6 +265,17 @@ namespace Js
         return result;
     }
 
+    SIMDValue SIMDInt32x4Operation::OpNotEqual(const SIMDValue& aValue, const SIMDValue& bValue)
+    {
+        SIMDValue result;
+
+        result.i32[SIMD_X] = (aValue.i32[SIMD_X] != bValue.i32[SIMD_X]) ? 0xffffffff : 0x0;
+        result.i32[SIMD_Y] = (aValue.i32[SIMD_Y] != bValue.i32[SIMD_Y]) ? 0xffffffff : 0x0;
+        result.i32[SIMD_Z] = (aValue.i32[SIMD_Z] != bValue.i32[SIMD_Z]) ? 0xffffffff : 0x0;
+        result.i32[SIMD_W] = (aValue.i32[SIMD_W] != bValue.i32[SIMD_W]) ? 0xffffffff : 0x0;
+
+        return result;
+    }
 
     SIMDValue SIMDInt32x4Operation::OpGreaterThan(const SIMDValue& aValue, const SIMDValue& bValue)
     {
@@ -309,7 +289,19 @@ namespace Js
         return result;
     }
 
-       SIMDValue SIMDInt32x4Operation::OpShiftLeft(const SIMDValue& value, int count)
+    SIMDValue SIMDInt32x4Operation::OpGreaterThanOrEqual(const SIMDValue& aValue, const SIMDValue& bValue)
+    {
+        SIMDValue result;
+
+        result.i32[SIMD_X] = (aValue.i32[SIMD_X] >= bValue.i32[SIMD_X]) ? 0xffffffff : 0x0;
+        result.i32[SIMD_Y] = (aValue.i32[SIMD_Y] >= bValue.i32[SIMD_Y]) ? 0xffffffff : 0x0;
+        result.i32[SIMD_Z] = (aValue.i32[SIMD_Z] >= bValue.i32[SIMD_Z]) ? 0xffffffff : 0x0;
+        result.i32[SIMD_W] = (aValue.i32[SIMD_W] >= bValue.i32[SIMD_W]) ? 0xffffffff : 0x0;
+
+        return result;
+    }
+
+    SIMDValue SIMDInt32x4Operation::OpShiftLeftByScalar(const SIMDValue& value, int count)
     {
         SIMDValue result;
 
@@ -321,22 +313,7 @@ namespace Js
         return result;
     }
 
-    SIMDValue SIMDInt32x4Operation::OpShiftRightLogical(const SIMDValue& value, int count)
-    {
-        SIMDValue result;
-
-        int nIntMin = INT_MIN; // INT_MIN = -2147483648 = 0x80000000
-        int mask = ~((nIntMin >> count) << 1); // now first count bits are 0
-        // right shift count bits and shift in with 0
-        result.i32[SIMD_X] = (value.i32[SIMD_X] >> count) & mask;
-        result.i32[SIMD_Y] = (value.i32[SIMD_Y] >> count) & mask;
-        result.i32[SIMD_Z] = (value.i32[SIMD_Z] >> count) & mask;
-        result.i32[SIMD_W] = (value.i32[SIMD_W] >> count) & mask;
-
-        return result;
-    }
-
-    SIMDValue SIMDInt32x4Operation::OpShiftRightArithmetic(const SIMDValue& value, int count)
+    SIMDValue SIMDInt32x4Operation::OpShiftRightByScalar(const SIMDValue& value, int count)
     {
         SIMDValue result;
 
@@ -367,7 +344,7 @@ namespace Js
         int result;
 
         // shift right 31 bits while shifting in with zero
-        SIMDValue value = SIMDInt32x4Operation::OpShiftRightLogical(v, 31);
+        SIMDValue value = SIMDInt32x4Operation::OpShiftRightByScalar(v, 31);
 
         // extract sign bit from each lane
         int mx = value.i32[SIMD_X];

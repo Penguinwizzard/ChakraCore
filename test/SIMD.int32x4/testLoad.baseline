@@ -1,4 +1,5 @@
-Int32x4 and
+Int32x4 load
+Int32x4 load: Test aligned loads
 Correct
 Correct
 Correct
@@ -15,11 +16,12 @@ Correct
 Correct
 Correct
 Correct
+Int32x4 load: Test 2 possible over-alignments
 Correct
 Correct
 Correct
 Correct
-Int32x4 and
+Int32x4 load: Test 7 possible mis-alignments
 Correct
 Correct
 Correct
@@ -40,7 +42,6 @@ Correct
 Correct
 Correct
 Correct
-Int32x4 and
 Correct
 Correct
 Correct
@@ -49,6 +50,8 @@ Correct
 Correct
 Correct
 Correct
+Int32x4 load1
+Int32x4 load1: Test aligned loads
 Correct
 Correct
 Correct
@@ -61,15 +64,16 @@ Correct
 Correct
 Correct
 Correct
-Int32x4 and
 Correct
 Correct
 Correct
 Correct
+Int32x4 load1: Test 2 possible over-alignments
 Correct
 Correct
 Correct
 Correct
+Int32x4 load1: Test 7 possible mis-alignments
 Correct
 Correct
 Correct
@@ -82,7 +86,6 @@ Correct
 Correct
 Correct
 Correct
-Int32x4 or
 Correct
 Correct
 Correct
@@ -91,7 +94,6 @@ Correct
 Correct
 Correct
 Correct
-Int32x4 or
 Correct
 Correct
 Correct
@@ -100,7 +102,8 @@ Correct
 Correct
 Correct
 Correct
-Int32x4 or
+Int32x4 load2
+Int32x4 load2: Test aligned loads
 Correct
 Correct
 Correct
@@ -109,7 +112,6 @@ Correct
 Correct
 Correct
 Correct
-Int32x4 or
 Correct
 Correct
 Correct
@@ -118,10 +120,12 @@ Correct
 Correct
 Correct
 Correct
+Int32x4 load2: Test 2 possible over-alignments
 Correct
 Correct
 Correct
 Correct
+Int32x4 load2: Test 7 possible mis-alignments
 Correct
 Correct
 Correct
@@ -138,6 +142,42 @@ Correct
 Correct
 Correct
 Correct
+Correct
+Correct
+Correct
+Correct
+Correct
+Correct
+Correct
+Correct
+Correct
+Correct
+Correct
+Correct
+Int32x4 load3
+Int32x4 load3: Test aligned loads
+Correct
+Correct
+Correct
+Correct
+Correct
+Correct
+Correct
+Correct
+Correct
+Correct
+Correct
+Correct
+Correct
+Correct
+Correct
+Correct
+Int32x4 load3: Test 2 possible over-alignments
+Correct
+Correct
+Correct
+Correct
+Int32x4 load3: Test 7 possible mis-alignments
 Correct
 Correct
 Correct

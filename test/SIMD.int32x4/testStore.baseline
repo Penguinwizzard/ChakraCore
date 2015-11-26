@@ -1,74 +1,67 @@
-Float32x4 Reciprocal
+Int32x4 store
 Correct
 Correct
 Correct
 Correct
-Float32x4 Reciprocal
 Correct
 Correct
 Correct
 Correct
-Float32x4 Reciprocal
 Correct
 Correct
 Correct
 Correct
-Float32x4 Reciprocal
 Correct
 Correct
 Correct
 Correct
-Float32x4 Reciprocal
+Int32x4 store1
 Correct
 Correct
 Correct
 Correct
-Float32x4 Reciprocal
 Correct
 Correct
 Correct
 Correct
-Float32x4 Reciprocal
 Correct
 Correct
 Correct
 Correct
-Float32x4 ReciprocalSqrt
 Correct
 Correct
 Correct
 Correct
-Float32x4 ReciprocalSqrt
+Int32x4 store2
 Correct
 Correct
 Correct
 Correct
-Float32x4 ReciprocalSqrt
 Correct
 Correct
 Correct
 Correct
-Float32x4 ReciprocalSqrt
 Correct
 Correct
 Correct
 Correct
-Float32x4 ReciprocalSqrt
 Correct
 Correct
 Correct
 Correct
-Float32x4 ReciprocalSqrt
+Int32x4 store3
 Correct
 Correct
 Correct
 Correct
-Float32x4 ReciprocalSqrt
 Correct
 Correct
 Correct
 Correct
-Float32x4 ReciprocalSqrt
+Correct
+Correct
+Correct
+Correct
 Correct
 Correct
 Correct
