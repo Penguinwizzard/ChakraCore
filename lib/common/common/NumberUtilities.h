@@ -1,4 +1,4 @@
-//-------------------------------------------------------------------------------------------------------
+﻿//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
@@ -24,6 +24,7 @@ namespace Js
         static const uint32     k_Float32Zero      = 0x00000000ul;
         static const uint32     k_Float32PointFive = 0x3F000000ul;
         static const uint32     k_Float32NegPointFive = 0xBF000000ul;
+        static const uint32     k_Float32NegZero   = 0x80000000ul;
 
         static const double     MAX_VALUE;
         static const double     MIN_VALUE;
@@ -39,7 +40,7 @@ namespace Js
         static float const MaskNegFloat[];
 
     };
-
+    
     class NumberUtilities : public NumberUtilitiesBase
     {
     public:
@@ -52,22 +53,24 @@ namespace Js
         static ulong &LuLoDbl(double &dbl);
         static INT64 TryToInt64(double d);
         static bool IsValidTryToInt64(__int64 value);   // Whether TryToInt64 resulted in a valid value.
-
+        
         static int CbitZeroLeft(ulong lu);
 
         static bool IsFinite(double value);
         static bool IsNan(double value);
+        static bool IsFloat32NegZero(float value);
         static bool IsSpecial(double value, uint64 nSpecial);
         static uint64 ToSpecial(double value);
+        static uint32 ToSpecial(float value);
 
-        // Convert a given UINT16 into its corresponding string.
+        // Convert a given UINT16 into its corresponding string. 
         // outBufferSize is in WCHAR elements (and used only for ASSERTs)
         // Returns the number of characters written to outBuffer (not including the \0)
         static charcount_t UInt16ToString(uint16 integer, __out __ecount(outBufferSize) WCHAR* outBuffer, charcount_t outBufferSize, char widthForPaddingZerosInsteadSpaces);
 
         // Try to parse an integer string to find out if the string contains an index property name.
         static BOOL TryConvertToUInt32(const wchar_t* str, int length, uint32* intVal);
-
+        
         static double Modulus(double dblLeft, double dblRight);
 
         enum FormatType

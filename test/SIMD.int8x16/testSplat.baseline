@@ -1,4 +1,4 @@
-Int32x4 add
+splat
 Correct
 Correct
 Correct
@@ -7,7 +7,6 @@ Correct
 Correct
 Correct
 Correct
-Int32x4 add
 Correct
 Correct
 Correct
@@ -16,7 +15,7 @@ Correct
 Correct
 Correct
 Correct
-Int32x4 add
+splat
 Correct
 Correct
 Correct
@@ -25,7 +24,6 @@ Correct
 Correct
 Correct
 Correct
-Int32x4 add
 Correct
 Correct
 Correct
@@ -34,7 +32,7 @@ Correct
 Correct
 Correct
 Correct
-Int32x4 add
+splat
 Correct
 Correct
 Correct
@@ -43,7 +41,6 @@ Correct
 Correct
 Correct
 Correct
-Int32x4 add
 Correct
 Correct
 Correct
@@ -52,7 +49,7 @@ Correct
 Correct
 Correct
 Correct
-Int32x4 add
+splat
 Correct
 Correct
 Correct
@@ -61,7 +58,6 @@ Correct
 Correct
 Correct
 Correct
-Int32x4 sub
 Correct
 Correct
 Correct
@@ -70,7 +66,7 @@ Correct
 Correct
 Correct
 Correct
-Int32x4 sub
+splat
 Correct
 Correct
 Correct
@@ -79,7 +75,6 @@ Correct
 Correct
 Correct
 Correct
-Int32x4 sub
 Correct
 Correct
 Correct
@@ -88,7 +83,7 @@ Correct
 Correct
 Correct
 Correct
-Int32x4 sub
+splat
 Correct
 Correct
 Correct
@@ -97,7 +92,6 @@ Correct
 Correct
 Correct
 Correct
-Int32x4 sub
 Correct
 Correct
 Correct
@@ -106,7 +100,7 @@ Correct
 Correct
 Correct
 Correct
-Int32x4 sub
+splat
 Correct
 Correct
 Correct
@@ -115,7 +109,23 @@ Correct
 Correct
 Correct
 Correct
-Int32x4 sub
+Correct
+Correct
+Correct
+Correct
+Correct
+Correct
+Correct
+Correct
+splat
+Correct
+Correct
+Correct
+Correct
+Correct
+Correct
+Correct
+Correct
 Correct
 Correct
 Correct
