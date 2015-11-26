@@ -1,23 +1,20 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <regress-exe>
   <test>
     <default>
       <files>testAddSub.js</files>
-      <baseline>testAddSub.baseline</baseline>
       <compile-flags>-Simdjs</compile-flags>
     </default>
   </test>
   <test>
     <default>
       <files>testAndOrXor.js</files>
-      <baseline>testAndOrXor.baseline</baseline>
       <compile-flags>-Simdjs</compile-flags>
     </default>
   </test>
   <test>
     <default>
       <files>testComparisons.js</files>
-      <baseline>testComparisons.baseline</baseline>
       <compile-flags>-Simdjs</compile-flags>
     </default>
   </test>
@@ -109,6 +106,27 @@
     <default>
       <files>testZeroSplatBool.js</files>
       <baseline>testZeroSplatBool.baseline</baseline>
+      <compile-flags>-Simdjs</compile-flags>
+    </default>
+  </test>
+  <test>
+    <default>
+      <files>testMinMax.js</files>
+      <baseline>testMinMax.baseline</baseline>
+      <compile-flags>-Simdjs</compile-flags>
+    </default>
+  </test>
+  <test>
+    <default>
+      <files>testLoad.js</files>
+      <baseline>testLoad.baseline</baseline>
+      <compile-flags>-Simdjs</compile-flags>
+    </default>
+  </test>
+  <test>
+    <default>
+      <files>testStore.js</files>
+      <baseline>testStore.baseline</baseline>
       <compile-flags>-Simdjs</compile-flags>
     </default>
   </test>

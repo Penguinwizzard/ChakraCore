@@ -126,7 +126,7 @@ namespace Js
     {
         return this->m_cchStartOffset;
     }
-
+    
     uint
     ParseableFunctionInfo::StartOffset() const
     {
@@ -2069,7 +2069,7 @@ namespace Js
         {
             return shortName;
         }
-
+        
         Assert(name[nameLength - 1] == ']');
         wchar_t * finalshorterName = RecyclerNewArrayLeaf(this->GetScriptContext()->GetRecycler(), wchar_t, *shortNameLength);
         js_wmemcpy_s(finalshorterName, *shortNameLength, shortName, *shortNameLength - 1); // we don't want the last character in shorterName
@@ -7993,7 +7993,7 @@ namespace Js
         Recycler* recycler = scriptContext->GetRecycler();
         if (this->jitTransferData->GetRuntimeTypeRefs() != nullptr)
         {
-            // Copy pinned types from a heap allocated array created on the background thread
+            // Copy pinned types from a heap allocated array created on the background thread 
             // to a recycler allocated array which will live as long as this EntryPointInfo.
             // The original heap allocated array will be freed at the end of NativeCodeGenerator::CheckCodeGenDone
             void** jitPinnedTypeRefs = this->jitTransferData->GetRuntimeTypeRefs();
@@ -8962,13 +8962,17 @@ namespace Js
                 {
                     OUTPUT_TRACE(Js::ExpirableCollectPhase, L"Type 0x%p uses this entry point- switching to default entry point\n", this);
                     functionType->SetEntryPointInfo(newEntryPoint);
-                    // we are allowed to replace the entry point on the type only if it's
-                    // directly using the jitted code or a type is referencing this entry point
+                    // we are allowed to replace the entry point on the type only if it's 
+                    // directly using the jitted code or a type is referencing this entry point 
                     // but the entry point hasn't been called since the codegen thunk was installed on it
                     if (functionType->GetEntryPoint() == functionProxy->GetDirectEntryPoint(this) || IsIntermediateCodeGenThunk(functionType->GetEntryPoint()))
                     {
                         functionType->SetEntryPoint(this->functionProxy->GetDirectEntryPoint(newEntryPoint));
                     }
+                }
+                else
+                {
+                    Assert((DWORD_PTR)functionType->GetEntryPoint() != this->GetNativeAddress());
                 }
             });
 

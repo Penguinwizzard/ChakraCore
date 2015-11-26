@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <regress-exe>
   <test>
     <default>
@@ -52,7 +52,6 @@
   <test>
     <default>
       <files>testFields.js</files>
-      <baseline>testFields.baseline</baseline>
       <compile-flags>-Simdjs</compile-flags>
     </default>
   </test>
@@ -73,7 +72,6 @@
   <test>
     <default>
       <files>testReciprocal.js</files>
-      <baseline>testReciprocal.baseline</baseline>
       <compile-flags>-Simdjs</compile-flags>
     </default>
   </test>

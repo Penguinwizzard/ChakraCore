@@ -25,7 +25,7 @@ enum SymbolType : byte;
 // Regex forward decl
 namespace UnifiedRegex
 {
-    struct RegexPattern;
+    struct RegexPattern;    
     template <typename T> class StandardChars;      // Used by ThreadContext.h
     struct TrigramAlphabet;
     struct RegexStacks;
@@ -58,7 +58,7 @@ namespace Js
 {
     //
     // Forward declarations
-    //
+    //    
     class CharClassifier;
     typedef int32 MessageId;
     /* enum */ struct PropertyIds;
@@ -79,7 +79,7 @@ namespace Js
     class DateImplementation;
     class BufferString;
     class BufferStringBuilder;
-    class ConcatString;
+    class ConcatString;   
     class CompoundString;
     class JavascriptBoolean;
     class JavascriptBooleanObject;
@@ -129,7 +129,7 @@ namespace Js
     class StringCopyInfo;
     class StringCopyInfoStack;
     class ObjectPrototypeObject;
-    class PropertyString;
+    class PropertyString;    
     class ArgumentsObject;
     class HeapArgumentsObject;
     class ActivationObject;
@@ -150,8 +150,14 @@ namespace Js
     class JavascriptSIMDFloat64x2;
     class SIMDInt32x4Lib;
     class JavascriptSIMDInt32x4;
+    class SIMDInt16x8Lib;
+    class JavascriptSIMDInt16x8;
     class SIMDInt8x16Lib;
     class JavascriptSIMDInt8x16;
+    class SIMDUint16x8Lib;
+    class JavascriptSIMDUint16x8;
+    class SIMDUint8x16Lib;
+    class JavascriptSIMDUint8x16;
 
     class RecyclableObject;
     class JavascriptRegExp;
@@ -163,7 +169,7 @@ namespace Js
     class JavascriptCopyOnAccessNativeIntArray;
     class JavascriptNativeFloatArray;
     class ES5Array;
-    class JavascriptFunction;
+    class JavascriptFunction;    
     class ScriptFunction;
     class ScriptFunctionWithInlineCache;
     class StackScriptFunction;
@@ -181,10 +187,10 @@ namespace Js
     class HostObjectBase;
     class RootObjectBase;
     class ModuleRoot;
-    class GlobalObject;
+    class GlobalObject;    
     class Math;
     class JavascriptOperators;
-    class JavascriptLibrary;
+    class JavascriptLibrary;    
     class JavascriptEncodeURI;
     class JavascriptEncodeURIComponent;
     class JavascriptDecodeURI;
@@ -192,15 +198,15 @@ namespace Js
     class DataView;
     struct ConstructorCache;
     enum class OpCode : ushort;
-    enum class OpCodeAsmJs : ushort;
+    enum class OpCodeAsmJs : ushort;    
     /* enum */ struct OpLayoutType;
-    /* enum */ struct OpLayoutTypeAsmJs;
-    class ExceptionBase;
+    /* enum */ struct OpLayoutTypeAsmJs;    
+    class ExceptionBase;    
     class OutOfMemoryException;
     class ScriptDebug;
     class ScriptContext;
     struct NativeModule;
-    template <class T> class RcRef;
+    template <class T> class RcRef;    
     class TaggedInt;
     class TaggedNumber;
     struct InterpreterStackFrame;
@@ -272,7 +278,7 @@ namespace Js
     typedef JsUtil::WeakReferenceDictionary<PropertyId, PropertyString, PowerOf2SizePolicy> PropertyStringCacheMap;
 
     extern const FrameDisplay NullFrameDisplay;
-    extern const FrameDisplay StrictNullFrameDisplay;
+    extern const FrameDisplay StrictNullFrameDisplay;    
 }
 
 #include "DataStructures\EvalMapString.h"
