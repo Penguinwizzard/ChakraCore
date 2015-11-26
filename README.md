@@ -18,7 +18,7 @@ More details in [Building ChakraCore](https://github.com/Microsoft/ChakraCore/wi
 Once built, you have a few options for how you can use ChakraCore:
 
 * The most basic is to test the engine is running correctly with the *ch.exe* binary.  This app is a lightweight hosting of JSRT that you can run small applications.  After building, you can find this binary in: `Build\VcBuild\bin\[platform+output]`  (eg. `Build\VcBuild\bin\x64_debug`)
-* You can [embed ChakraCore](https://github.com/Microsoft/ChakraCore/wiki/Embedding-ChakraCore) in your applications.  There are samples and documentation available on how to do this.
+* You can [embed ChakraCore](https://github.com/Microsoft/ChakraCore/wiki/Embedding-ChakraCore) in your applications. There are [samples](https://github.com/Microsoft/Chakra-Samples) and documentation available on how to do this.
 * Finally, you can also use ChakraCore as the JavaScript engine in Node.  You can learn more by reading how to use [Chakra as Node's JS engine](https://github.com/Microsoft/node)
 
 _A note about using ChakraCore_: ChakraCore is the foundational JavaScript engine, but it does not include the external APIs that make up the modern JavaScript development experience.  For example, DOM APIs like ```document.write()``` are additional APIs that are not available by default and would need to be provided.  For debugging, you may instead want to use ```print()```.
