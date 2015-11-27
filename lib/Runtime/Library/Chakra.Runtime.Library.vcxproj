@@ -150,6 +150,7 @@
     <ClInclude Include="SIMDFloat64x2Lib.h" />    
     <ClInclude Include="SIMDInt32x4Lib.h" />    
     <ClInclude Include="SIMDInt8x16Lib.h" />    
+    <ClInclude Include="SimdLib.h" />
     <ClInclude Include="ArrayBuffer.h" />
     <ClInclude Include="BoundFunction.h" />
     <ClInclude Include="BufferStringBuilder.h" />

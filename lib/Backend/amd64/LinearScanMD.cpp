@@ -22,6 +22,7 @@ LinearScanMD::LinearScanMD(Func *func)
         }
     } NEXT_REG;
 
+    memset(this->xmmSymTable128, 0, sizeof(this->xmmSymTable128));
     memset(this->xmmSymTable64, 0, sizeof(this->xmmSymTable64));
     memset(this->xmmSymTable32, 0, sizeof(this->xmmSymTable32));
 }
@@ -63,9 +64,14 @@ LinearScanMD::EnsureSpillSymForXmmReg(RegNum reg, Func *func, IRType type)
     {
         sym = this->xmmSymTable32[reg - FIRST_XMM_REG];
     }
-    else
+    else if (type == TyFloat64)
     {
         sym = this->xmmSymTable64[reg - FIRST_XMM_REG];
+    }
+    else
+    {
+        Assert(IRType_IsSimd128(type));
+        sym = this->xmmSymTable128[reg - FIRST_XMM_REG];
     }
 
     if (sym == nullptr)
@@ -79,9 +85,14 @@ LinearScanMD::EnsureSpillSymForXmmReg(RegNum reg, Func *func, IRType type)
         {
             this->xmmSymTable32[reg - FIRST_XMM_REG] = sym;
         }
-        else
+        else if (type == TyFloat64)
         {
             this->xmmSymTable64[reg - FIRST_XMM_REG] = sym;
+        }
+        else
+        {
+            Assert(IRType_IsSimd128(type));
+            this->xmmSymTable128[reg - FIRST_XMM_REG] = sym;
         }
     }
 
@@ -412,4 +423,23 @@ LinearScanMD::GenerateBailInForGeneratorYield(IR::Instr * resumeLabelInstr, Bail
     });
 
     return instrAfter;
+}
+
+uint LinearScanMD::GetRegisterSaveIndex(RegNum reg)
+{
+    if (RegTypes[reg] == TyFloat64)
+    {
+        // make room for maximum XMM reg size
+        Assert(reg >= RegXMM0);
+        return (reg - RegXMM0) * (sizeof(SIMDValue) / sizeof(Js::Var)) + RegXMM0;
+    }
+    else
+    {
+        return reg;
+    }
+}
+
+RegNum LinearScanMD::GetRegisterFromSaveIndex(uint offset)
+{
+    return (RegNum)(offset >= RegXMM0 ? (offset - RegXMM0) / (sizeof(SIMDValue) / sizeof(Js::Var)) + RegXMM0 : offset);
 }

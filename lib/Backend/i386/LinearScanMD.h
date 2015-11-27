@@ -13,6 +13,7 @@ class LinearScanMD : public LinearScanMDShared
 {
 private:
     BitVector   byteableRegsBv;
+    StackSym   *xmmSymTable128[XMM_REGCOUNT];
     StackSym   *xmmSymTable64[XMM_REGCOUNT];
     StackSym   *xmmSymTable32[XMM_REGCOUNT];
     Func       *func;
@@ -47,13 +48,14 @@ public:
     static uint GetRegisterSaveSlotCount() {
         return RegisterSaveSlotCount;
     }
+
     static uint GetRegisterSaveIndex(RegNum reg);
     static RegNum GetRegisterFromSaveIndex(uint offset);
 
-    // All regs plus an extra slot for float64s
-    static const uint RegisterSaveSlotCount = RegNumCount + XMM_REGCOUNT;
+    // All regs, including XMMs, plus extra slot space for XMMs (1 XMM = 4 Vars)
+    static const uint RegisterSaveSlotCount = RegNumCount + 3 * XMM_REGCOUNT;
 
 private:
     void        InsertOpHelperSpillsAndRestores(const OpHelperBlock& opHelperBlock);
-
 };
+

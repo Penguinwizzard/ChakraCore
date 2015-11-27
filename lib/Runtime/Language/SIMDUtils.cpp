@@ -252,8 +252,8 @@ namespace Js
         // bound check
         *tarray = TypedArrayBase::FromVar(arg1);
         uint32 bpe = (*tarray)->GetBytesPerElement();
-        uint32 offset = (*index) * bpe;
-        if (index < 0 || (offset + dataWidth) > (*tarray)->GetByteLength())
+        int32 offset = (*index) * bpe;
+        if (offset < 0 || (offset + dataWidth) >(int32)(*tarray)->GetByteLength())
         {
             JavascriptError::ThrowRangeError(scriptContext, JSERR_ArgumentOutOfRange, L"Simd typed array access");
         }
@@ -353,4 +353,17 @@ namespace Js
     template void SIMD128TypedArrayStore<JavascriptSIMDInt32x4>(Var arg1, Var arg2, Var simdVar, uint32 dataWidth, ScriptContext *scriptContext);
     template void SIMD128TypedArrayStore<JavascriptSIMDFloat64x2>(Var arg1, Var arg2, Var simdVar, uint32 dataWidth, ScriptContext *scriptContext);
 
+    // Maps Simd opcodes which are non-contigous to a zero-based linear space. Used to index a table using an Simd opcode.
+    uint32 SimdOpcodeAsIndex(Js::OpCode op)
+    {
+        if (op <= Js::OpCode::Simd128_End)
+        {
+            return (uint32)((Js::OpCode)op - Js::OpCode::Simd128_Start);
+        }
+        else
+        {
+            Assert(op >= Js::OpCode::Simd128_Start_Extend && op <= Js::OpCode::Simd128_End_Extend);
+            return (uint32)((Js::OpCode)op - Js::OpCode::Simd128_Start_Extend) + (uint32)(Js::OpCode::Simd128_End - Js::OpCode::Simd128_Start) + 1;
+        }
+    }
 }

@@ -2039,10 +2039,11 @@ Inline::InlineBuiltInFunction(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, 
 // SIMD_JS
         IR::Instr *eaInsertInstr = callInstr;
         IR::Opnd *eaLinkOpnd = nullptr;
-        Js::JavascriptLibrary::SimdFuncSignature simdFuncSignature;
+        ThreadContext::SimdFuncSignature simdFuncSignature;
         if (IsSimd128Opcode(callInstr->m_opcode))
         {
-            callInstr->m_func->GetScriptContext()->GetLibrary()->GetSimdFuncSignatureFromOpcode(callInstr->m_opcode, simdFuncSignature);
+            callInstr->m_func->GetScriptContext()->GetThreadContext()->GetSimdFuncSignatureFromOpcode(callInstr->m_opcode, simdFuncSignature);
+            Assert(simdFuncSignature.valid);
         }
 //
         inlineBuiltInEndInstr->IterateArgInstrs([&](IR::Instr* argInstr) {

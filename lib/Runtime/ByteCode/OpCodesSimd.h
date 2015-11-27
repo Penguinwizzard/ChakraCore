@@ -47,20 +47,20 @@ SIMD.js opcodes
 #define MACRO_SIMD_BACKEND_ONLY_EXTEND(opcode, asmjsLayout, opCodeAttrAsmJs, OpCodeAttr)
 #endif
 
-//                              OpCode                          , LayoutAsmJs                       , OpCodeAttrAsmJs,        OpCodeAttr              Addition macro args                      FuncInfo               Ret and Args ValueTypes
-//                                |                                    |                               |                       |                       |                                        |                           |
-//                                v                                    v                               v                       v                       v                                        v                           v
-MACRO_SIMD                  ( Simd128_Start                     , Empty                             , None           ,        None             ,       0)   // Just a marker to indicate SIMD opcodes region
+//                              OpCode                             , LayoutAsmJs                , OpCodeAttrAsmJs,          OpCodeAttr              Addition macro args                      FuncInfo               Ret and Args ValueTypes
+//                                |                                    |                                |                       |                       |                                        |                           |
+//                                v                                    v                                v                       v                       v                                        v                           v
+MACRO_SIMD                  ( Simd128_Start                     , Empty                              , None           ,        None                          ,        0)               // Just a marker to indicate SIMD opcodes region
 
 // Int32x4
-MACRO_SIMD_WMS              ( Simd128_IntsToI4                  , Int32x4_1Int4                     , None           ,        OpCanCSE         ,       6,   &SIMDInt32x4Lib::EntryInfo::Int32x4, ValueType::GetSimd128(ObjectType::Simd128Int32x4), ValueType::GetInt(false), ValueType::GetInt(false), ValueType::GetInt(false), ValueType::GetInt(false))
+MACRO_SIMD_WMS              ( Simd128_IntsToI4                  , Int32x4_1Int4                     , None           ,        OpCanCSE         ,       6,  &Js::SIMDInt32x4Lib::EntryInfo::Int32x4, ValueType::GetSimd128(ObjectType::Simd128Int32x4), ValueType::GetInt(false), ValueType::GetInt(false), ValueType::GetInt(false), ValueType::GetInt(false))
 MACRO_SIMD_WMS              ( Simd128_Splat_I4                  , Int32x4_1Int1                     , None           ,        OpCanCSE         ,       0)
 MACRO_SIMD_WMS              ( Simd128_FromFloat64x2_I4          , Int32x4_1Float64x2_1              , None           ,        OpCanCSE         ,       0)
 MACRO_SIMD_WMS              ( Simd128_FromFloat64x2Bits_I4      , Int32x4_1Float64x2_1              , None           ,        OpCanCSE         ,       0)
 MACRO_SIMD_WMS              ( Simd128_FromFloat32x4_I4          , Int32x4_1Float32x4_1              , None           ,        OpCanCSE         ,       0)
 MACRO_SIMD_WMS              ( Simd128_FromFloat32x4Bits_I4      , Int32x4_1Float32x4_1              , None           ,        OpCanCSE         ,       0)
 MACRO_SIMD_WMS              ( Simd128_Neg_I4                    , Int32x4_2                         , None           ,        OpCanCSE         ,       0)
-MACRO_SIMD_WMS              ( Simd128_Add_I4                    , Int32x4_3                         , None           ,        OpCanCSE         ,       4,   &SIMDInt32x4Lib::EntryInfo::Add,     ValueType::GetSimd128(ObjectType::Simd128Int32x4), ValueType::GetSimd128(ObjectType::Simd128Int32x4), ValueType::GetSimd128(ObjectType::Simd128Int32x4))
+MACRO_SIMD_WMS              ( Simd128_Add_I4                    , Int32x4_3                         , None           ,        OpCanCSE         ,       4,  &Js::SIMDInt32x4Lib::EntryInfo::Add,    ValueType::GetSimd128(ObjectType::Simd128Int32x4), ValueType::GetSimd128(ObjectType::Simd128Int32x4), ValueType::GetSimd128(ObjectType::Simd128Int32x4))
 MACRO_SIMD_WMS              ( Simd128_Sub_I4                    , Int32x4_3                         , None           ,        OpCanCSE         ,       0)
 MACRO_SIMD_WMS              ( Simd128_Mul_I4                    , Int32x4_3                         , None           ,        OpCanCSE         ,       0)
 MACRO_SIMD_WMS              ( Simd128_Lt_I4                     , Int32x4_3                         , None           ,        OpCanCSE         ,       0)
@@ -85,7 +85,7 @@ MACRO_SIMD_ASMJS_ONLY_WMS   ( Simd128_I_ArgOut_I4               , Reg1Int32x4_1 
 MACRO_SIMD_ASMJS_ONLY_WMS   ( Simd128_I_Conv_VTI4               , Int32x4_2                         , None           ,        None                      )
 
 // Float32x4
-MACRO_SIMD_WMS              ( Simd128_FloatsToF4                , Float32x4_1Float4                 , None           ,        OpCanCSE          ,      6,   &SIMDFloat32x4Lib::EntryInfo::Float32x4, ValueType::GetSimd128(ObjectType::Simd128Float32x4), ValueType::Float, ValueType::Float, ValueType::Float, ValueType::Float)
+MACRO_SIMD_WMS              ( Simd128_FloatsToF4                , Float32x4_1Float4                 , None           ,        OpCanCSE          ,      6,   &Js::SIMDFloat32x4Lib::EntryInfo::Float32x4, ValueType::GetSimd128(ObjectType::Simd128Float32x4), ValueType::Float, ValueType::Float, ValueType::Float, ValueType::Float)
 MACRO_SIMD_WMS              ( Simd128_Splat_F4                  , Float32x4_1Float1                 , None           ,        OpCanCSE          ,      0)
 MACRO_SIMD_WMS              ( Simd128_FromFloat64x2_F4          , Float32x4_1Float64x2_1            , None           ,        OpCanCSE          ,      0)
 MACRO_SIMD_WMS              ( Simd128_FromFloat64x2Bits_F4      , Float32x4_1Float64x2_1            , None           ,        OpCanCSE          ,      0)
@@ -93,7 +93,7 @@ MACRO_SIMD_WMS              ( Simd128_FromInt32x4_F4            , Float32x4_1Int
 MACRO_SIMD_WMS              ( Simd128_FromInt32x4Bits_F4        , Float32x4_1Int32x4_1              , None           ,        OpCanCSE          ,      0)
 MACRO_SIMD_WMS              ( Simd128_Abs_F4                    , Float32x4_2                       , None           ,        OpCanCSE          ,      0)
 MACRO_SIMD_WMS              ( Simd128_Neg_F4                    , Float32x4_2                       , None           ,        OpCanCSE          ,      0)
-MACRO_SIMD_WMS              ( Simd128_Add_F4                    , Float32x4_3                       , None           ,        OpCanCSE          ,      4,   &SIMDFloat32x4Lib::EntryInfo::Add,   ValueType::GetSimd128(ObjectType::Simd128Float32x4), ValueType::GetSimd128(ObjectType::Simd128Float32x4), ValueType::GetSimd128(ObjectType::Simd128Float32x4))
+MACRO_SIMD_WMS              ( Simd128_Add_F4                    , Float32x4_3                       , None           ,        OpCanCSE          ,      4,   &Js::SIMDFloat32x4Lib::EntryInfo::Add,   ValueType::GetSimd128(ObjectType::Simd128Float32x4), ValueType::GetSimd128(ObjectType::Simd128Float32x4), ValueType::GetSimd128(ObjectType::Simd128Float32x4))
 MACRO_SIMD_WMS              ( Simd128_Sub_F4                    , Float32x4_3                       , None           ,        OpCanCSE          ,      0)
 MACRO_SIMD_WMS              ( Simd128_Mul_F4                    , Float32x4_3                       , None           ,        OpCanCSE          ,      0)
 MACRO_SIMD_WMS              ( Simd128_Div_F4                    , Float32x4_3                       , None           ,        OpCanCSE          ,      0)

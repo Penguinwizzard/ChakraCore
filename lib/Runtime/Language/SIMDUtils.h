@@ -4,6 +4,8 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
+
+
 #define SIMD128_TYPE_SPEC_FLAG Js::Configuration::Global.flags.Simd128TypeSpec
 
 // The representations below assume little-endian.
@@ -161,4 +163,9 @@ namespace Js {
     Var   SIMD128TypedArrayLoad(Var arg1, Var arg2, uint32 dataWidth, ScriptContext *scriptContext);
     template <class SIMDType>
     void  SIMD128TypedArrayStore(Var arg1, Var arg2, Var simdVar, uint32 dataWidth, ScriptContext *scriptContext);
+
+    enum class OpCode : ushort;
+    uint32 SimdOpcodeAsIndex(Js::OpCode op);
+
+
 }

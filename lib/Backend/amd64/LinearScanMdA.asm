@@ -54,23 +54,23 @@ align 16
     mov [rax + 14 * 8], r14
     mov [rax + 15 * 8], r15
 
-    ;; Save the lower 64 bits of xmm registers (only the lower 64 bits are used by jitted code and bailout)
-    movsd mmword ptr [rax + 16 * 8], xmm0
-    movsd mmword ptr [rax + 17 * 8], xmm1
-    movsd mmword ptr [rax + 18 * 8], xmm2
-    movsd mmword ptr [rax + 19 * 8], xmm3
-    movsd mmword ptr [rax + 20 * 8], xmm4
-    movsd mmword ptr [rax + 21 * 8], xmm5
-    movsd mmword ptr [rax + 22 * 8], xmm6
-    movsd mmword ptr [rax + 23 * 8], xmm7
-    movsd mmword ptr [rax + 24 * 8], xmm8
-    movsd mmword ptr [rax + 25 * 8], xmm9
-    movsd mmword ptr [rax + 26 * 8], xmm10
-    movsd mmword ptr [rax + 27 * 8], xmm11
-    movsd mmword ptr [rax + 28 * 8], xmm12
-    movsd mmword ptr [rax + 29 * 8], xmm13
-    movsd mmword ptr [rax + 30 * 8], xmm14
-    movsd mmword ptr [rax + 31 * 8], xmm15
+    ;; Save all XMM regs (full width)
+    movups xmmword ptr [rax + 80h], xmm0         ;; [rax + 16 * 8 + 0 * 16] = xmm0
+    movups xmmword ptr [rax + 90h], xmm1         ;; [rax + 16 * 8 + 1 * 16] = xmm1
+    movups xmmword ptr [rax + 0a0h], xmm2        ;;  ...
+    movups xmmword ptr [rax + 0b0h], xmm3
+    movups xmmword ptr [rax + 0c0h], xmm4
+    movups xmmword ptr [rax + 0d0h], xmm5
+    movups xmmword ptr [rax + 0e0h], xmm6
+    movups xmmword ptr [rax + 0f0h], xmm7
+    movups xmmword ptr [rax + 100h], xmm8
+    movups xmmword ptr [rax + 110h], xmm9
+    movups xmmword ptr [rax + 120h], xmm10
+    movups xmmword ptr [rax + 130h], xmm11
+    movups xmmword ptr [rax + 140h], xmm12
+    movups xmmword ptr [rax + 150h], xmm13
+    movups xmmword ptr [rax + 160h], xmm14
+    movups xmmword ptr [rax + 170h], xmm15       ;; [rax + 16 * 8 + 15 * 16] = xmm15
 
     ret
 

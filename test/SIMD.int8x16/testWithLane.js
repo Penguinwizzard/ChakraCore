@@ -116,7 +116,7 @@ function testWithZ() {
     var n = SIMD.Int8x16.replaceLane(m, 2, 20);
     equal(1, SIMD.Int8x16.extractLane(n, 0));
     equal(2, SIMD.Int8x16.extractLane(n, 1));
-    equal(20, SIMD.Int8x16.extractLane(n, 12));
+    equal(20, SIMD.Int8x16.extractLane(n, 2));
     equal(4, SIMD.Int8x16.extractLane(n, 3));
     equal(1, SIMD.Int8x16.extractLane(n, 4));
     equal(2, SIMD.Int8x16.extractLane(n, 5));
@@ -162,7 +162,7 @@ function testWithW() {
     equal(2, SIMD.Int8x16.extractLane(n, 5));
     equal(3, SIMD.Int8x16.extractLane(n, 6));
     equal(4, SIMD.Int8x16.extractLane(n, 7));
-    equal(1, SIMD.Int8x16.extractLane(n, 8));
+    equal(20, SIMD.Int8x16.extractLane(n, 8));
     equal(2, SIMD.Int8x16.extractLane(n, 9));
     equal(3, SIMD.Int8x16.extractLane(n, 10));
     equal(4, SIMD.Int8x16.extractLane(n, 11));

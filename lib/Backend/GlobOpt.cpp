@@ -5545,9 +5545,9 @@ GlobOpt::OptSrc(IR::Opnd *opnd, IR::Instr * *pInstr, Value **indirIndexValRef, I
                 {
                     // Simd ops are strongly typed. We type-spec only if the type is likely/Definitely the expected type or if we have object which can come from merging different Simd types.
                     // Simd value must be initialized properly on all paths before the loop entry. Cannot be merged with Undefined/Null.
-                    Js::JavascriptLibrary::SimdFuncSignature funcSignature;
-                    bool found = instr->m_func->GetScriptContext()->GetLibrary()->GetSimdFuncSignatureFromOpcode(instr->m_opcode, funcSignature);
-                    Assert(found);
+                    ThreadContext::SimdFuncSignature funcSignature;
+                    instr->m_func->GetScriptContext()->GetThreadContext()->GetSimdFuncSignatureFromOpcode(instr->m_opcode, funcSignature);
+                    Assert(funcSignature.valid);
                     ValueType expectedType = funcSignature.args[opnd == instr->GetSrc1() ? 0 : 1];
 
                     if (expectedType.IsSimd128Float32x4())
@@ -7523,8 +7523,8 @@ GlobOpt::ValueNumberDst(IR::Instr **pInstr, Value *src1Val, Value *src2Val)
     // SIMD_JS
     if (Js::IsSimd128Opcode(instr->m_opcode) && !func->m_workItem->GetFunctionBody()->GetIsAsmjsMode())
     {
-        Js::JavascriptLibrary::SimdFuncSignature simdFuncSignature;
-        this->func->GetScriptContext()->GetLibrary()->GetSimdFuncSignatureFromOpcode(instr->m_opcode, simdFuncSignature);
+        ThreadContext::SimdFuncSignature simdFuncSignature;
+        instr->m_func->GetScriptContext()->GetThreadContext()->GetSimdFuncSignatureFromOpcode(instr->m_opcode, simdFuncSignature);
         return this->NewGenericValue(simdFuncSignature.returnType, dst);
     }
 

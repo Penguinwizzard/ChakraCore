@@ -79,23 +79,13 @@ namespace Js
         // Library is not zero-initialized. memset the memory occupied by builtinFunctions array to 0.
         memset(builtinFunctions, 0, sizeof(JavascriptFunction *) * BuiltinFunction::Count);
 
-        funcInfoToBuiltinIdMap = RecyclerNew(recycler, FuncInfoToBuiltinIdMap, recycler);
+        funcInfoToBuiltinIdMap = Anew(scriptContext->GeneralAllocator(), FuncInfoToBuiltinIdMap, scriptContext->GeneralAllocator());
 #define LIBRARY_FUNCTION(target, name, argc, flags, entry) \
     funcInfoToBuiltinIdMap->AddNew(&entry, BuiltinFunction::##target##_##name);
 #include "LibraryFunction.h"
 #undef LIBRARY_FUNCTION
 
-        simdFuncInfoToOpcodeMap = RecyclerNew(recycler, FuncInfoToOpcodeMap, recycler);
-        simdOpcodeToSignatureMap = RecyclerNew(recycler, OpcodeToSignatureMap, recycler);
-        {
 
-#define MACRO_SIMD_WMS(op, LayoutAsmJs, OpCodeAttrAsmJs, OpCodeAttr, ...) \
-    AddSimdFuncToMaps(Js::OpCode::##op, __VA_ARGS__);
-
-#define MACRO_SIMD_EXTEND_WMS(op, LayoutAsmJs, OpCodeAttrAsmJs, OpCodeAttr, ...) MACRO_SIMD_WMS(op, LayoutAsmJs, OpCodeAttrAsmJs, OpCodeAttr, __VA_ARGS__)
-
-#include "ByteCode\OpCodesSimd.h"
-        }
 
         // Note: InitializePrototypes and InitializeTypes must be called first.
         InitializePrototypes();
@@ -2847,58 +2837,6 @@ namespace Js
         library->AddFunctionToLibraryObject(int8x16Function, PropertyIds::replaceLane, &SIMDInt8x16Lib::EntryInfo::ReplaceLane, 4, PropertyNone);
 
         // end Int8x16
-    }
-
-    void JavascriptLibrary::AddSimdFuncToMaps(Js::OpCode op, ...)
-    {
-        Assert(simdFuncInfoToOpcodeMap != nullptr);
-        Assert(simdOpcodeToSignatureMap != nullptr);
-
-        va_list arguments;
-        va_start(arguments, op);
-
-        int argumentsCount = va_arg(arguments, int);
-        if (argumentsCount == 0)
-        {
-            // no info to add
-            return;
-        }
-        FunctionInfo *funcInfo = va_arg(arguments, FunctionInfo*);
-        simdFuncInfoToOpcodeMap->AddNew(funcInfo, op);
-
-        SimdFuncSignature simdFuncSignature;
-        simdFuncSignature.argCount = argumentsCount - 2; // arg count to Simd func = argumentsCount - FuncInfo and return Type fields.
-        simdFuncSignature.returnType = va_arg(arguments, ValueType);
-        simdFuncSignature.args = RecyclerNewPlus(recycler, simdFuncSignature.argCount * sizeof(ValueType), ValueType);
-        for (uint iArg = 0; iArg < simdFuncSignature.argCount; iArg++)
-        {
-            simdFuncSignature.args[iArg] = va_arg(arguments, ValueType);
-        }
-        simdOpcodeToSignatureMap->AddNew(op, simdFuncSignature);
-
-        va_end(arguments);
-    }
-
-    Js::OpCode JavascriptLibrary::GetSimdOpcodeFromFuncInfo(FunctionInfo * funcInfo)
-    {
-        Assert(simdFuncInfoToOpcodeMap != nullptr);
-        if (simdFuncInfoToOpcodeMap->ContainsKey(funcInfo))
-        {
-            return simdFuncInfoToOpcodeMap->Item(funcInfo);
-
-        }
-        return (Js::OpCode) 0;
-    }
-
-    bool JavascriptLibrary::GetSimdFuncSignatureFromOpcode(Js::OpCode op, SimdFuncSignature &funcSignature)
-    {
-        Assert(simdOpcodeToSignatureMap != nullptr);
-        if (simdOpcodeToSignatureMap->ContainsKey(op))
-        {
-            funcSignature = simdOpcodeToSignatureMap->Item(op);
-            return true;
-        }
-        return false;
     }
 
     void JavascriptLibrary::InitializeReflectObject(DynamicObject* reflectObject, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)

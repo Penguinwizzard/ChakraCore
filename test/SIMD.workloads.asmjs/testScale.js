@@ -250,13 +250,10 @@ function validateBuffer(buffer, count)
     SIMD.Float32x4(640.0,660.0,680.0,700.0),
     SIMD.Float32x4(720.0,740.0,760.0,780.0)
     ];
-    for (var i = 0; i < count/* * 16*/; i += 4)
+    for (var i = 0; i < count; i += 4)
     {
         f4 = SIMD.Float32x4.load(buffer, i);
 
-        //values = data[i/4];
-        //printF4(f4);
-        //printF4(values);
         equalSimd(data[i/4], f4, SIMD.Float32x4, "validateBuffer");
 
     }
@@ -280,9 +277,6 @@ function validateBuffer2(buffer, count)
     for (var i = 0; i < count; i += 4)
     {
         i4 = SIMD.Int32x4.load(buffer, i);
-        //values = data[i/4];
-        //print(i4.toString());
-        //print(values.toString());
         equalSimd(data[i/4], i4, SIMD.Int32x4, "validateBuffer2");
     }
 }
@@ -299,10 +293,6 @@ inputLength = initF32(buffer);
 var m = asmModule(this, {g0:initF32(buffer),g1:SIMD.Float32x4(9,9,9,9), g2:SIMD.Int32x4(1, 2, 3, 4), g3:SIMD.Float64x2(10, 10, 10, 10)}, buffer);
 var values = new Float32Array(buffer);
 
-//print("Test20 - nested");
-//var ret = m.nestedLoadStoreUint8(10); //Int8Heap load
-//printResults(ret);
-
 m.scale(0, 16 * 10); //Scale
 validateBuffer(values, 4 * 10);
 
@@ -310,14 +300,5 @@ initI32(buffer);
 
 m.scale2(0, 16 * 10); //Scale
 validateBuffer2(values, 4 * 10);
+WScript.Echo("PASS");
 
-/*
-// D2 not supported for now
-initF32(buffer);
-
-print("Heap");
-printBuffer3(values, 4 * 10);
-print("Scaling 5 d2 vectors by factor of 2.0");
-m.scale3(0, 16 * 10); //Scale
-printBuffer3(values, 4 * 10);
-*/

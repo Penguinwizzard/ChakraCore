@@ -590,9 +590,7 @@ bool InliningDecider::GetBuiltInInfo(
         // inline only if simdjs and simd128 type-spec is enabled.
         if (scriptContext->GetConfig()->IsSimdjsEnabled() && SIMD128_TYPE_SPEC_FLAG)
         {
-            Assert(scriptContext);
-            Js::JavascriptLibrary *library = scriptContext->GetLibrary();
-            *inlineCandidateOpCode = library->GetSimdOpcodeFromFuncInfo(funcInfo);
+            *inlineCandidateOpCode = scriptContext->GetThreadContext()->GetSimdOpcodeFromFuncInfo(funcInfo);
         }
         else
         {

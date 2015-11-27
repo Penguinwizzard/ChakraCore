@@ -183,6 +183,7 @@
     <ClInclude Include="SIMDFloat64x2Operation.h" />
     <ClInclude Include="SIMDInt32x4Operation.h" />
     <ClInclude Include="SIMDInt8x16Operation.h" />
+    <ClInclude Include="SimdOps.h" />
     <ClInclude Include="SIMDUtils.h" />
     <ClInclude Include="TaggedInt.h" />
     <ClInclude Include="RuntimeLanguagePch.h" />

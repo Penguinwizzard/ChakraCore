@@ -236,32 +236,32 @@ IR::Instr* LowererMD::Simd128LowerConstructor(IR::Instr *instr)
 
             if (src1->IsFloat64())
             {
+                IR::RegOpnd *regOpnd32 = IR::RegOpnd::New(TyFloat32, this->m_func);
                 // CVTSD2SS regOpnd32.f32, src.f64    -- Convert regOpnd from f64 to f32
-                IR::RegOpnd *regOpnd32 = src1->UseWithNewType(TyFloat32, this->m_func)->AsRegOpnd();
                 newInstr = IR::Instr::New(Js::OpCode::CVTSD2SS, regOpnd32, src1, this->m_func);
                 instr->InsertBefore(newInstr);
                 src1 = regOpnd32;
             }
             if (src2->IsFloat64())
             {
+                IR::RegOpnd *regOpnd32 = IR::RegOpnd::New(TyFloat32, this->m_func);
                 // CVTSD2SS regOpnd32.f32, src.f64    -- Convert regOpnd from f64 to f32
-                IR::RegOpnd *regOpnd32 = src2->UseWithNewType(TyFloat32, this->m_func)->AsRegOpnd();
                 newInstr = IR::Instr::New(Js::OpCode::CVTSD2SS, regOpnd32, src2, this->m_func);
                 instr->InsertBefore(newInstr);
                 src2 = regOpnd32;
             }
             if (src3->IsFloat64())
             {
+                IR::RegOpnd *regOpnd32 = IR::RegOpnd::New(TyFloat32, this->m_func);
                 // CVTSD2SS regOpnd32.f32, src.f64    -- Convert regOpnd from f64 to f32
-                IR::RegOpnd *regOpnd32 = src3->UseWithNewType(TyFloat32, this->m_func)->AsRegOpnd();
                 newInstr = IR::Instr::New(Js::OpCode::CVTSD2SS, regOpnd32, src3, this->m_func);
                 instr->InsertBefore(newInstr);
                 src3 = regOpnd32;
             }
             if (src4->IsFloat64())
             {
+                IR::RegOpnd *regOpnd32 = IR::RegOpnd::New(TyFloat32, this->m_func);
                 // CVTSD2SS regOpnd32.f32, src.f64    -- Convert regOpnd from f64 to f32
-                IR::RegOpnd *regOpnd32 = src4->UseWithNewType(TyFloat32, this->m_func)->AsRegOpnd();
                 newInstr = IR::Instr::New(Js::OpCode::CVTSD2SS, regOpnd32, src4, this->m_func);
                 instr->InsertBefore(newInstr);
                 src4 = regOpnd32;

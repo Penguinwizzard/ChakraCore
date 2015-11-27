@@ -22,6 +22,9 @@
 #include "Language\JavascriptStackWalker.h"
 #include "Base\ScriptMemoryDumper.h"
 
+// SIMD_JS
+#include "Library\SimdLib.h"
+
 #if DBG
 #include "Memory\StressTest.h"
 #endif
@@ -192,6 +195,19 @@ ThreadContext::ThreadContext(AllocationPolicyManager * allocationPolicyManager, 
 #if ENABLE_NATIVE_CODEGEN
     this->bailOutRegisterSaveSpace = AnewArrayZ(this->GetThreadAlloc(), Js::Var, GetBailOutRegisterSaveSlotCount());
 #endif
+
+    // SIMD_JS
+    simdFuncInfoToOpcodeMap = Anew(this->GetThreadAlloc(), FuncInfoToOpcodeMap, this->GetThreadAlloc());
+    simdOpcodeToSignatureMap = AnewArrayZ(this->GetThreadAlloc(), SimdFuncSignature, Js::Simd128OpcodeCount());
+    {
+#define MACRO_SIMD_WMS(op, LayoutAsmJs, OpCodeAttrAsmJs, OpCodeAttr, ...) \
+    AddSimdFuncToMaps(Js::OpCode::##op, __VA_ARGS__);
+
+#define MACRO_SIMD_EXTEND_WMS(op, LayoutAsmJs, OpCodeAttrAsmJs, OpCodeAttr, ...) MACRO_SIMD_WMS(op, LayoutAsmJs, OpCodeAttrAsmJs, OpCodeAttr, __VA_ARGS__)
+
+#include "ByteCode\OpCodesSimd.h"
+    }
+
 #if DBG_DUMP
     scriptSiteCount = 0;
     pageAllocator.debugName = L"Thread";
@@ -223,7 +239,6 @@ ThreadContext::ThreadContext(AllocationPolicyManager * allocationPolicyManager, 
     this->projectionMemoryInformation = nullptr;
 #endif
 #endif
-
     this->InitAvailableCommit();
 }
 
@@ -547,6 +562,56 @@ void ThreadContext::ValidateThreadContext()
         }
 
 #endif
+}
+
+void ThreadContext::AddSimdFuncToMaps(Js::OpCode op, ...)
+{
+    Assert(simdFuncInfoToOpcodeMap != nullptr);
+    Assert(simdOpcodeToSignatureMap != nullptr);
+
+    va_list arguments;
+    va_start(arguments, op);
+
+    int argumentsCount = va_arg(arguments, int);
+    if (argumentsCount == 0)
+    {
+        // no info to add
+        return;
+    }
+    Js::FunctionInfo *funcInfo = va_arg(arguments, Js::FunctionInfo*);
+    simdFuncInfoToOpcodeMap->AddNew(funcInfo, op);
+
+    SimdFuncSignature simdFuncSignature;
+    simdFuncSignature.valid = true;
+    simdFuncSignature.argCount = argumentsCount - 2; // arg count to Simd func = argumentsCount - FuncInfo and return Type fields.
+    simdFuncSignature.returnType = va_arg(arguments, ValueType);
+    simdFuncSignature.args = AnewArrayZ(this->GetThreadAlloc(), ValueType, simdFuncSignature.argCount);
+    for (uint iArg = 0; iArg < simdFuncSignature.argCount; iArg++)
+    {
+        simdFuncSignature.args[iArg] = va_arg(arguments, ValueType);
+    }
+
+    simdOpcodeToSignatureMap[Js::SimdOpcodeAsIndex(op)] = simdFuncSignature;
+
+    va_end(arguments);
+}
+
+Js::OpCode ThreadContext::GetSimdOpcodeFromFuncInfo(Js::FunctionInfo * funcInfo)
+{
+    Assert(simdFuncInfoToOpcodeMap != nullptr);
+    if (simdFuncInfoToOpcodeMap->ContainsKey(funcInfo))
+    {
+        return simdFuncInfoToOpcodeMap->Item(funcInfo);
+
+    }
+    return (Js::OpCode) 0;
+}
+
+void ThreadContext::GetSimdFuncSignatureFromOpcode(Js::OpCode op, SimdFuncSignature &funcSignature)
+{
+    Assert(simdOpcodeToSignatureMap != nullptr);
+    funcSignature = simdOpcodeToSignatureMap[SimdOpcodeAsIndex(op)];
+
 }
 
 class AutoRecyclerPtr : public AutoPtr<Recycler>

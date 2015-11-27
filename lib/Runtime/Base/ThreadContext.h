@@ -23,6 +23,7 @@ struct IActiveScriptProfilerHeapEnum;
 class DynamicProfileMutator;
 class StackProber;
 
+
 enum DisableImplicitFlags : BYTE
 {
     DisableImplicitNoFlag               = 0x00,
@@ -417,6 +418,24 @@ public:
 #endif
 
     bool CanPreReserveSegmentForCustomHeap();
+
+    // used by inliner. Maps Simd FuncInfo (library func) to equivalent opcode.
+    typedef JsUtil::BaseDictionary<Js::FunctionInfo *, Js::OpCode, ArenaAllocator> FuncInfoToOpcodeMap;
+    FuncInfoToOpcodeMap * simdFuncInfoToOpcodeMap;
+
+    struct SimdFuncSignature
+    {
+        bool valid;
+        uint argCount;          // actual arguments count (excluding this)
+        ValueType returnType;
+        ValueType *args;        // argument types
+    };
+
+    SimdFuncSignature *simdOpcodeToSignatureMap;
+
+    void AddSimdFuncToMaps(Js::OpCode op, ...);
+    Js::OpCode GetSimdOpcodeFromFuncInfo(Js::FunctionInfo * funcInfo);
+    void GetSimdFuncSignatureFromOpcode(Js::OpCode op, SimdFuncSignature &funcSignature);
 
 private:
     bool noScriptScope;

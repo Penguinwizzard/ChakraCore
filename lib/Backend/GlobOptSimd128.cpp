@@ -92,8 +92,8 @@ Value **pDstVal
     // Simd instr
     if (Simd128DoTypeSpec(instr, *pSrc1Val, *pSrc2Val, *pDstVal))
     {
-        Js::JavascriptLibrary::SimdFuncSignature simdFuncSignature;
-        instr->m_func->GetScriptContext()->GetLibrary()->GetSimdFuncSignatureFromOpcode(instr->m_opcode, simdFuncSignature);
+        ThreadContext::SimdFuncSignature simdFuncSignature;
+        instr->m_func->GetScriptContext()->GetThreadContext()->GetSimdFuncSignatureFromOpcode(instr->m_opcode, simdFuncSignature);
         // type-spec logic
 
         // For op with ExtendArg. All sources are already type-specialized, just type-specialize dst
@@ -160,8 +160,9 @@ GlobOpt::Simd128DoTypeSpec(IR::Instr *instr, const Value *src1Val, const Value *
     // TODO: Some operations require additional opnd constraints (e.g. shuffle/swizzle).
     if (Js::IsSimd128Opcode(instr->m_opcode))
     {
-        Js::JavascriptLibrary::SimdFuncSignature simdFuncSignature;
-        if (instr->m_func->GetScriptContext()->GetLibrary()->GetSimdFuncSignatureFromOpcode(instr->m_opcode, simdFuncSignature) == false)
+        ThreadContext::SimdFuncSignature simdFuncSignature;
+        instr->m_func->GetScriptContext()->GetThreadContext()->GetSimdFuncSignatureFromOpcode(instr->m_opcode, simdFuncSignature);
+        if (!simdFuncSignature.valid)
         {
             // not implemented yet.
             return false;
@@ -231,6 +232,10 @@ GlobOpt::Simd128DoTypeSpec(IR::Instr *instr, const Value *src1Val, const Value *
                         return false;
                     }
                 }
+                else
+                {
+                    Assert(UNREACHED);
+                }
 
                 eaInstr = GetExtendedArg(instr);
                 arg--;
@@ -263,6 +268,12 @@ bool GlobOpt::Simd128CanTypeSpecOpnd(const ValueType opndType, ValueType expecte
     {
         // Non-Simd types can be coerced or we bailout by a FromVar.
         return true;
+    }
+
+    // Simd type
+    if (opndType.HasBeenNull() || opndType.HasBeenUndefined())
+    {
+        return false;
     }
 
     if (
@@ -358,7 +369,7 @@ IR::BailOutKind GlobOpt::GetBailOutKindFromValueType(const ValueType &valueType)
     {
         return IR::BailOutIntOnly;
     }
-    else if (valueType.IsLikelySimd128Float32x4())
+    else if (valueType.IsSimd128Float32x4())
     {
         return IR::BailOutSimd128F4Only;
     }

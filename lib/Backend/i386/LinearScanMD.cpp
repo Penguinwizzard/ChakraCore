@@ -20,6 +20,7 @@ LinearScanMD::LinearScanMD(Func *func)
         }
     } NEXT_REG;
 
+    memset(this->xmmSymTable128, 0, sizeof(this->xmmSymTable128));
     memset(this->xmmSymTable64, 0, sizeof(this->xmmSymTable64));
     memset(this->xmmSymTable32, 0, sizeof(this->xmmSymTable32));
 }
@@ -61,9 +62,14 @@ LinearScanMD::EnsureSpillSymForXmmReg(RegNum reg, Func *func, IRType type)
     {
         sym = this->xmmSymTable32[reg - RegXMM0];
     }
-    else
+    else if (type == TyFloat64)
     {
         sym = this->xmmSymTable64[reg - RegXMM0];
+    }
+    else
+    {
+        Assert(IRType_IsSimd128(type));
+        sym = this->xmmSymTable128[reg - RegXMM0];
     }
 
     if (sym == NULL)
@@ -77,9 +83,14 @@ LinearScanMD::EnsureSpillSymForXmmReg(RegNum reg, Func *func, IRType type)
         {
             this->xmmSymTable32[reg - RegXMM0] = sym;
         }
-        else
+        else if (type == TyFloat64)
         {
             this->xmmSymTable64[reg - RegXMM0] = sym;
+        }
+        else
+        {
+            Assert(IRType_IsSimd128(type));
+            this->xmmSymTable128[reg - RegXMM0] = sym;
         }
     }
 
@@ -330,14 +341,14 @@ __declspec(naked) void LinearScanMD::SaveAllRegisters(BailOutRecord *const bailO
         mov [eax + (RegESI - 1) * 4], esi
         mov [eax + (RegEDI - 1) * 4], edi
 
-        movsd [eax + (RegXMM0 - 1) * 4], xmm0
-        movsd [eax + (RegXMM0 - 1) * 4 + (RegXMM1 - RegXMM0) * 8], xmm1
-        movsd [eax + (RegXMM0 - 1) * 4 + (RegXMM2 - RegXMM0) * 8], xmm2
-        movsd [eax + (RegXMM0 - 1) * 4 + (RegXMM3 - RegXMM0) * 8], xmm3
-        movsd [eax + (RegXMM0 - 1) * 4 + (RegXMM4 - RegXMM0) * 8], xmm4
-        movsd [eax + (RegXMM0 - 1) * 4 + (RegXMM5 - RegXMM0) * 8], xmm5
-        movsd [eax + (RegXMM0 - 1) * 4 + (RegXMM6 - RegXMM0) * 8], xmm6
-        movsd [eax + (RegXMM0 - 1) * 4 + (RegXMM7 - RegXMM0) * 8], xmm7
+        movups[eax + (RegXMM0 - 1) * 4], xmm0
+        movups[eax + (RegXMM0 - 1) * 4 + (RegXMM1 - RegXMM0) * 16], xmm1
+        movups[eax + (RegXMM0 - 1) * 4 + (RegXMM2 - RegXMM0) * 16], xmm2
+        movups[eax + (RegXMM0 - 1) * 4 + (RegXMM3 - RegXMM0) * 16], xmm3
+        movups[eax + (RegXMM0 - 1) * 4 + (RegXMM4 - RegXMM0) * 16], xmm4
+        movups[eax + (RegXMM0 - 1) * 4 + (RegXMM5 - RegXMM0) * 16], xmm5
+        movups[eax + (RegXMM0 - 1) * 4 + (RegXMM6 - RegXMM0) * 16], xmm6
+        movups[eax + (RegXMM0 - 1) * 4 + (RegXMM7 - RegXMM0) * 16], xmm7
 
         // Don't pop parameters, the caller will redirect into another function call
         ret
@@ -505,8 +516,9 @@ uint LinearScanMD::GetRegisterSaveIndex(RegNum reg)
 {
     if (RegTypes[reg] == TyFloat64)
     {
-        Assert(reg+1 >= RegXMM0);
-        return (reg - RegXMM0) * 2 + RegXMM0;
+        // make room for maximum XMM reg size
+        Assert(reg >= RegXMM0);
+        return (reg - RegXMM0) * (sizeof(SIMDValue) / sizeof(Js::Var)) + RegXMM0;
     }
     else
     {
@@ -514,8 +526,7 @@ uint LinearScanMD::GetRegisterSaveIndex(RegNum reg)
     }
 }
 
-// static
 RegNum LinearScanMD::GetRegisterFromSaveIndex(uint offset)
 {
-    return (RegNum)(offset >= RegXMM0 ? (offset - RegXMM0) / 2  + RegXMM0 : offset);
+    return (RegNum)(offset >= RegXMM0 ? (offset - RegXMM0) / (sizeof(SIMDValue) / sizeof(Js::Var)) + RegXMM0 : offset);
 }

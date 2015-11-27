@@ -231,3 +231,4 @@ equalSimd([8.000000,16.000000,24.000000,32.000000], c, SIMD.Float32x4, "func1");
 
 c = m.func4();
 equalSimd([301.000000,301.000000,301.000000,301.000000], c, SIMD.Float32x4, "func1");
+WScript.Echo("PASS");

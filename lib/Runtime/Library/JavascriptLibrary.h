@@ -210,7 +210,7 @@ namespace Js
 
         JavascriptFunction* builtinFunctions[BuiltinFunction::Count];
 
-        typedef JsUtil::BaseDictionary<FunctionInfo *, BuiltinFunction, Recycler> FuncInfoToBuiltinIdMap;
+        typedef JsUtil::BaseDictionary<FunctionInfo *, BuiltinFunction, ArenaAllocator > FuncInfoToBuiltinIdMap;
         FuncInfoToBuiltinIdMap * funcInfoToBuiltinIdMap;
 
         INT_PTR vtableAddresses[VTableValue::Count];
@@ -416,22 +416,7 @@ namespace Js
         static SimplePropertyDescriptor const FunctionWithLengthAndPrototypeTypeDescriptors[2];
 
     public:
-        // used by inliner. Maps Simd FuncInfo (library func) to equivalent opcode.
-        typedef JsUtil::BaseDictionary<FunctionInfo *, Js::OpCode, Recycler> FuncInfoToOpcodeMap;
-        FuncInfoToOpcodeMap * simdFuncInfoToOpcodeMap;
 
-        struct SimdFuncSignature
-        {
-            uint argCount;          // actual arguments count (excluding this)
-            ValueType returnType;
-            ValueType *args;        // argument types
-        };
-        typedef JsUtil::BaseDictionary<Js::OpCode, SimdFuncSignature, Recycler> OpcodeToSignatureMap;
-        OpcodeToSignatureMap * simdOpcodeToSignatureMap;
-
-        void AddSimdFuncToMaps(Js::OpCode op, ...);
-        Js::OpCode GetSimdOpcodeFromFuncInfo(FunctionInfo * funcInfo);
-        bool GetSimdFuncSignatureFromOpcode(Js::OpCode op, SimdFuncSignature &funcSignature);
 
         static const ObjectInfoBits EnumFunctionClass = EnumClass_1_Bit;
 

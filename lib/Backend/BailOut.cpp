@@ -700,7 +700,7 @@ BailOutRecord::IsOffsetNativeIntOrFloat(uint offsetIndex, int argOutSlotStart, b
     bool isInt32 = this->argOutOffsetInfo->argOutLosslessInt32Syms->Test(argOutSlotStart + offsetIndex) != 0;
     // SIMD_JS
     bool isSimd128F4 = this->argOutOffsetInfo->argOutSimd128F4Syms->Test(argOutSlotStart + offsetIndex) != 0;
-    bool isSimd128I4 = this->argOutOffsetInfo->argOutSimd128F4Syms->Test(argOutSlotStart + offsetIndex) != 0;
+    bool isSimd128I4 = this->argOutOffsetInfo->argOutSimd128I4Syms->Test(argOutSlotStart + offsetIndex) != 0;
 
     Assert(!isFloat64 || !isInt32 || !isSimd128F4 || !isSimd128I4);
 
@@ -760,28 +760,20 @@ BailOutRecord::RestoreValue(IR::BailOutKind bailOutKind, Js::JavascriptCallStack
         }
         else if (!isLocal)
         {
-            // Restore from argoutRestoreAddress
-            if (isFloat64)
-            {
-                dblValue = *((double *)(((char *)argoutRestoreAddress) + regSlot * MachPtr));
-            }
-            else if (isInt32)
-            {
-                int32Value = *((int32 *)(((char *)argoutRestoreAddress) + regSlot * MachPtr));
-            }
-            else if (isSimd128F4 || isSimd128I4)
-            {
-                // SIMD_JS
-                simdValue = *((SIMDValue *)(((char *)argoutRestoreAddress) + regSlot * MachPtr));
-            }
-            else
-            {
-                value = *((Js::Var *)(((char *)argoutRestoreAddress) + regSlot * MachPtr));
-                AssertMsg(!(scriptContext->IsInDebugMode() &&
-                    newInstance->function->GetFunctionBody()->IsNonTempLocalVar(regSlot) &&
-                    value == (Js::Var)Func::c_debugFillPattern),
-                    "Uninitialized value (debug mode only)? Try -trace:bailout -verbose and check last traced reg in byte code.");
-            }
+            // If we have:
+            // try {
+            //      bar(a, b, c);
+            // } catch(..) {..}
+            // and we bailout during bar args evaluation, we recover from args from argoutRestoreAddress, not from caller function frame.
+            // This is beceause try-catch is implemented as a C wrapper, so args will be a different offset from rbp in that case.
+            Assert(!isFloat64 && !isInt32 && !isSimd128F4 && !isSimd128I4);
+
+            value = *((Js::Var *)(((char *)argoutRestoreAddress) + regSlot * MachPtr));
+            AssertMsg(!(scriptContext->IsInDebugMode() &&
+                newInstance->function->GetFunctionBody()->IsNonTempLocalVar(regSlot) &&
+                value == (Js::Var)Func::c_debugFillPattern),
+                "Uninitialized value (debug mode only)? Try -trace:bailout -verbose and check last traced reg in byte code.");
+
         }
 
         BAILOUT_VERBOSE_TRACE(newInstance->function->GetFunctionBody(), bailOutKind, L"Stack offset %6d", offset);
@@ -801,7 +793,7 @@ BailOutRecord::RestoreValue(IR::BailOutKind bailOutKind, Js::JavascriptCallStack
 #ifdef _M_ARM
                 BAILOUT_VERBOSE_TRACE(newInstance->function->GetFunctionBody(), bailOutKind, L"Register %-4S  %4d", RegNames[(offset - RegD0) / 2 + RegD0], offset);
 #else
-                BAILOUT_VERBOSE_TRACE(newInstance->function->GetFunctionBody(), bailOutKind, L"Register %-4S  %4d", RegNames[offset], offset);
+                BAILOUT_VERBOSE_TRACE(newInstance->function->GetFunctionBody(), bailOutKind, L"Register %-4S  %4d", RegNames[LinearScanMD::GetRegisterFromSaveIndex(offset)], offset);
 #endif
             }
             else
@@ -821,7 +813,7 @@ BailOutRecord::RestoreValue(IR::BailOutKind bailOutKind, Js::JavascriptCallStack
                     value = registerSaveSpace[offset - 1];
                 }
 
-                BAILOUT_VERBOSE_TRACE(newInstance->function->GetFunctionBody(), bailOutKind, L"Register %-4S  %4d", RegNames[offset], offset);
+                BAILOUT_VERBOSE_TRACE(newInstance->function->GetFunctionBody(), bailOutKind, L"Register %-4S  %4d", RegNames[LinearScanMD::GetRegisterFromSaveIndex(offset)], offset);
             }
         }
         else if (BailOutRecord::IsArgumentsObject((uint)offset))

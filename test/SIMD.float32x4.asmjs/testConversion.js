@@ -357,3 +357,4 @@ equalSimd([-4.0,-2.0,-1.5,-1.0], c, SIMD.Float32x4, "func11");
 
 c = m.func12();
 equalSimd([1.0,2.0,3.0,4.0], c, SIMD.Float32x4, "func12");
+WScript.Echo("PASS");

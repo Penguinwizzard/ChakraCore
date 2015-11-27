@@ -290,9 +290,7 @@ function validateBuffer(buffer, count)
     for (var i = 0; i < count/* * 16*/; i += 4)
     {
         f4 = SIMD.Float32x4.load(buffer, i);
-        //printF4(f4);
-        //printF4(data[i/4]);
-        equalSimd(data[i/4], f4, SIMD.Float32x4, "validateBuffer");
+           equalSimd(data[i/4], f4, SIMD.Float32x4, "validateBuffer");
     }
 }
 function validateBuffer1(buffer, count)
@@ -332,11 +330,6 @@ function validateBuffer1(buffer, count)
     }
 }
 
-function printResults(res)
-{
-    print(typeof(res));
-    print(res.toString());
-}
 
 inputLength = initF32(buffer);
 
@@ -354,10 +347,4 @@ initI32(buffer);
 var ret = m.merge1(0, 5 * 16, 10 * 16, 5);
 validateBuffer1(values, 4 * 25);
 
-/*
-initF32(buffer);
-print("Heap");
-printBuffer2(values, 4 * 25);
-print("Merging 5 vectors from 0 and 5 indices and writing the results to the index 10.");
-var ret = m.merge2(0, 5 * 16, 10 * 16, 5);
-printBuffer2(values, 4 * 25);*/
+WScript.Echo("PASS");

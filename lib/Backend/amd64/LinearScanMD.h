@@ -16,6 +16,7 @@ private:
     Func      * func;
     uint32      maxOpHelperSpilledLiveranges;
     BitVector   byteableRegsBv;
+    StackSym   *xmmSymTable128[XMM_REGCOUNT];
     StackSym   *xmmSymTable64[XMM_REGCOUNT];
     StackSym   *xmmSymTable32[XMM_REGCOUNT];
 
@@ -48,15 +49,11 @@ public:
         return RegisterSaveSlotCount;
     }
 
-    static uint GetRegisterSaveIndex(RegNum reg) {
-        return reg;
-    }
-    static RegNum GetRegisterFromSaveIndex(uint offset)
-    {
-        return (RegNum)offset;
-    }
+    static uint GetRegisterSaveIndex(RegNum reg);
+    static RegNum GetRegisterFromSaveIndex(uint offset);
 
-    static const uint RegisterSaveSlotCount = RegNumCount;
+    // All regs, including XMMs, plus extra slot space for XMMs (1 XMM = 2 Vars)
+    static const uint RegisterSaveSlotCount = RegNumCount + XMM_REGCOUNT;
 private:
     void        InsertOpHelperSpillsAndRestores(const OpHelperBlock& opHelperBlock);
 };
