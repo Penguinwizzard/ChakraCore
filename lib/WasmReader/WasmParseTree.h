@@ -21,24 +21,6 @@ namespace Wasm
 
     enum WasmOp
     {
-        wnLIST,
-        wnFUNC,
-        wnMODULE,
-        wnPARAM,
-        wnGLOBAL,
-        wnRESULT,
-        wnLOCAL,
-        wnTABLE,
-        wnNOP,
-        wnBLOCK,
-        wnLOOP,
-        wnLABEL,
-        wnBREAK,
-        wnSWITCH,
-        wnRETURN,
-        wnIF,
-        wnGETLOCAL,
-        wnSETLOCAL,
         wnGetGlobal,
         wnSetGlobal,
         wnGetNearS,
@@ -49,13 +31,8 @@ namespace Wasm
         wnSetNearU,
         wnSetNearUnalignedS,
         wnSetNearUnalignedU,
-        wnCONST,
-        wnEXPORT,
-        wnINVOKE,
-        wnASSERT,
-        wnMEMORY,
-        wnDATA,
 #define WASM_KEYWORD_BIN(token, name) wn##token,
+#define WASM_KEYWORD(token, name) wn##token,
 #define WASM_KEYWORD_UNARY(token, name) wn##token,
 #include "WasmKeywords.h"
         wnLIMIT
@@ -103,7 +80,6 @@ namespace Wasm
     struct WasmNode
     {
         WasmOp op;
-        WasmTypes::WasmType type;
         union
         {
             WasmVarNode var;

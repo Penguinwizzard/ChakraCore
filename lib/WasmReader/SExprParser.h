@@ -52,8 +52,8 @@ namespace Wasm
         WasmOp ParseReturnExpr();
         WasmOp ParseIfExpr();
         WasmOp ParseBlock();
-        WasmOp ParseConstLitExpr();
-        void ParseExprWithType(WasmOp opcode);
+        WasmOp ParseConstLitExpr(SExprTokenType tok);
+        void ParseGeneralExpr(WasmOp opcode);
         WasmNode * ParseInvoke();
         WasmNode * ParseAssertEq();
 

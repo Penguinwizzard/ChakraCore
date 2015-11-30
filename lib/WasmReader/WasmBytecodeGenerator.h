@@ -104,14 +104,17 @@ namespace Wasm
 
     private:
         EmitInfo EmitExpr(WasmOp op);
-        EmitInfo EmitConst();
         EmitInfo EmitBlock();
         EmitInfo EmitIfExpr();
         EmitInfo EmitGetLocal();
         EmitInfo EmitSetLocal();
         EmitInfo EmitReturnExpr();
-        EmitInfo EmitBinExpr(WasmOp op);
-        EmitInfo EmitCompareExpr(WasmOp op);
+
+        template<Js::OpCodeAsmJs op, WasmTypes::WasmType resultType, WasmTypes::WasmType lhsType, WasmTypes::WasmType rhsType>
+        EmitInfo EmitBinExpr();
+
+        template<WasmTypes::WasmType type>
+        EmitInfo EmitConst();
 
         void EnregisterLocals();
         void AddExport();
@@ -120,13 +123,13 @@ namespace Wasm
         void ReadResult(WasmNode * paramExpr);
         void ReadLocals(WasmNode * localExpr);
 
-        template <typename T> Js::RegSlot GetConstReg(T constVal);
+        template <typename T>
+        Js::RegSlot GetConstReg(T constVal);
 
-        Js::OpCodeAsmJs GetOpCodeForBinNode() const;
         Js::OpCodeAsmJs GetOpCodeForCompareNode() const;
         Js::AsmJsRetType GetAsmJsReturnType() const;
         static Js::AsmJsVarType GetAsmJsVarType(WasmTypes::WasmType wasmType);
-        WasmRegisterSpace * GetRegisterSpace(WasmTypes::WasmType type);
+        WasmRegisterSpace * GetRegisterSpace(WasmTypes::WasmType type) const;
 
         ArenaAllocator m_alloc;
 
@@ -146,8 +149,8 @@ namespace Wasm
         Js::ScriptContext * m_scriptContext;
         Js::Utf8SourceInfo * m_sourceInfo;
 
-        WasmRegisterSpace m_i32RegSlots;
-        WasmRegisterSpace m_f32RegSlots;
-        WasmRegisterSpace m_f64RegSlots;
+        WasmRegisterSpace * m_i32RegSlots;
+        WasmRegisterSpace * m_f32RegSlots;
+        WasmRegisterSpace * m_f64RegSlots;
     };
 }

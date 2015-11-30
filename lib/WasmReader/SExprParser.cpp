@@ -50,7 +50,7 @@ SExprParser::ReadFromScript()
     case wtkINVOKE:
         return wnINVOKE;
     case wtkASSERTEQ:
-        return wnASSERT;
+        return wnASSERTEQ;
     default:
         ThrowSyntaxError();
     }
@@ -173,13 +173,15 @@ SExprParser::ReadExprCore(SExprTokenType tok)
     case wtkSETGLOBAL:
         op = wnSetGlobal;
         goto ParseVarCommon;
-    case wtkCONST:
-        return ParseConstLitExpr();
+    case wtkCONST_I32:
+    case wtkCONST_F32:
+    case wtkCONST_F64:
+        return ParseConstLitExpr(tok);
         break;
 
 #define WASM_KEYWORD_BIN(token, name) \
         case wtk##token: \
-            ParseExprWithType(wn##token); \
+            ParseGeneralExpr(wn##token); \
             return wn##token;
 #define WASM_KEYWORD_UNARY(token, name) WASM_KEYWORD_BIN(token, name)
 
@@ -421,33 +423,25 @@ WasmOp SExprParser::ParseBlock()
 }
 
 WasmOp
-SExprParser::ParseConstLitExpr()
+SExprParser::ParseConstLitExpr(SExprTokenType tok)
 {
-    m_scanner->ScanToken(wtkDOT);
-
-    SExprTokenType tok = m_scanner->Scan();
-    m_currentNode.type = GetWasmType(tok);
-    m_currentNode.op = wnCONST;
 
     switch (tok)
     {
-    case wtkI32:
+    case wtkCONST_I32:
         m_scanner->ScanToken(wtkINTLIT);
-
+        m_currentNode.op = wnCONST_I32;
         m_currentNode.cnst.i32 = (int32)m_token.u.lng;
 
         break;
-    case wtkI64:
-        m_scanner->ScanToken(wtkINTLIT);
-
-        m_currentNode.cnst.i64 = m_token.u.lng;
-        break;
-    case wtkF32:
+    case wtkCONST_F32:
+        m_currentNode.op = wnCONST_F32;
         m_scanner->ScanToken(wtkFLOATLIT);
 
         m_currentNode.cnst.f32 = (float)m_token.u.dbl;
         break;
-    case wtkF64:
+    case wtkCONST_F64:
+        m_currentNode.op = wnCONST_F64;
         m_scanner->ScanToken(wtkFLOATLIT);
 
         m_currentNode.cnst.f64 = m_token.u.dbl;
@@ -460,11 +454,8 @@ SExprParser::ParseConstLitExpr()
 }
 
 void
-SExprParser::ParseExprWithType(WasmOp opcode)
+SExprParser::ParseGeneralExpr(WasmOp opcode)
 {
-    m_scanner->ScanToken(wtkDOT);
-
-    m_currentNode.type = GetWasmType(m_scanner->Scan());
     m_currentNode.op = opcode;
     m_blockNesting->Push(SExpr::Expr);
 }
@@ -492,7 +483,7 @@ SExprParser::ParseAssertEq()
     m_scanner->ScanToken(wtkINVOKE);
 
     WasmNode * assertNode = Anew(&m_alloc, WasmNode);
-    assertNode->op = wnASSERT;
+    assertNode->op = wnASSERTEQ;
 
     m_scanner->ScanToken(wtkRPAREN);
 

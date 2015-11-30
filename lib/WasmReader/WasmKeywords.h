@@ -7,16 +7,79 @@
 #define WASM_KEYWORD(token, name)
 #endif
 
+#ifndef WASM_KEYWORD_FDI
+#define WASM_KEYWORD_FDI(token, name) \
+    WASM_KEYWORD(token##_F32, name) \
+    WASM_KEYWORD(token##_F64, name) \
+    WASM_KEYWORD(token##_I32, name)
+#endif
+
 #ifndef WASM_KEYWORD_BIN
 #define WASM_KEYWORD_BIN(token, name) WASM_KEYWORD(token, name)
 #endif
 
-#ifndef WASM_KEYWORD_COMPARE
-#define WASM_KEYWORD_COMPARE(token, name, floatOp, doubleOp, intOp) WASM_KEYWORD_BIN(token, name)
+#ifndef WASM_KEYWORD_BIN_TYPED
+#define WASM_KEYWORD_BIN_TYPED(token, name, op, resultType, lhsType, rhsType) \
+    WASM_KEYWORD_BIN(token, name)
 #endif
 
-#ifndef WASM_KEYWORD_BIN_MATH
-#define WASM_KEYWORD_BIN_MATH(token, name, floatOp, doubleOp, intOp) WASM_KEYWORD_BIN(token, name)
+#ifndef WASM_KEYWORD_COMPARE
+#define WASM_KEYWORD_COMPARE(token, name, op, type) \
+    WASM_KEYWORD_BIN_TYPED(token, name, op, I32, type, type)
+#endif
+
+#ifndef WASM_KEYWORD_COMPARE_F
+#define WASM_KEYWORD_COMPARE_F(token, name, op) \
+    WASM_KEYWORD_COMPARE(token##_F32, name, op, F32)
+#endif
+
+#ifndef WASM_KEYWORD_COMPARE_D
+#define WASM_KEYWORD_COMPARE_D(token, name, op) \
+    WASM_KEYWORD_COMPARE(token##_F64, name, op, F64)
+#endif
+
+#ifndef WASM_KEYWORD_COMPARE_I
+#define WASM_KEYWORD_COMPARE_I(token, name, op) \
+    WASM_KEYWORD_COMPARE(token##_I32, name, op, I32)
+#endif
+
+#ifndef WASM_KEYWORD_COMPARE_FD
+#define WASM_KEYWORD_COMPARE_FD(token, name, opPrefix) \
+    WASM_KEYWORD_COMPARE_F(token, name, opPrefix##_Flt) \
+    WASM_KEYWORD_COMPARE_D(token, name, opPrefix##_Db)
+#endif
+
+#ifndef WASM_KEYWORD_COMPARE_FDI
+#define WASM_KEYWORD_COMPARE_FDI(token, name, opPrefix) \
+    WASM_KEYWORD_COMPARE_FD(token, name, opPrefix) \
+    WASM_KEYWORD_COMPARE_I(token, name, opPrefix##_Int)
+#endif
+
+#ifndef WASM_KEYWORD_BIN_MATH_F
+#define WASM_KEYWORD_BIN_MATH_F(token, name, op) \
+    WASM_KEYWORD_BIN_TYPED(token##_F32, name, op, F32, F32, F32)
+#endif
+
+#ifndef WASM_KEYWORD_BIN_MATH_D
+#define WASM_KEYWORD_BIN_MATH_D(token, name, op) \
+    WASM_KEYWORD_BIN_TYPED(token##_F64, name, op, F64, F64, F64)
+#endif
+
+#ifndef WASM_KEYWORD_BIN_MATH_I
+#define WASM_KEYWORD_BIN_MATH_I(token, name, op) \
+    WASM_KEYWORD_BIN_TYPED(token##_I32, name, op, I32, I32, I32)
+#endif
+
+#ifndef WASM_KEYWORD_BIN_MATH_FD
+#define WASM_KEYWORD_BIN_MATH_FD(token, name, opPrefix) \
+    WASM_KEYWORD_BIN_MATH_F(token, name, opPrefix##_Flt) \
+    WASM_KEYWORD_BIN_MATH_D(token, name, opPrefix##_Db)
+#endif
+
+#ifndef WASM_KEYWORD_BIN_MATH_FDI
+#define WASM_KEYWORD_BIN_MATH_FDI(token, name, opPrefix) \
+    WASM_KEYWORD_BIN_MATH_FD(token, name, opPrefix) \
+    WASM_KEYWORD_BIN_MATH_I(token, name, opPrefix##_Int)
 #endif
 
 #ifndef WASM_KEYWORD_UNARY
@@ -77,7 +140,7 @@ WASM_KEYWORD(CALL,       call)
 WASM_KEYWORD(DISPATCH,   dispatch)
 WASM_KEYWORD(RETURN,     return)
 WASM_KEYWORD(DESTRUCT,   destruct)
-WASM_KEYWORD(CONST,      const)
+WASM_KEYWORD_FDI(CONST,      const)
 
 // structures
 WASM_KEYWORD(FUNC,       func)
@@ -103,38 +166,40 @@ WASM_KEYWORD_UNARY(TRUNC,  trunc)
 WASM_KEYWORD_UNARY(ROUND,  round)
 
 // binary ops
-WASM_KEYWORD_BIN_MATH(ADD,        add,       Add_Flt, Add_Db, Add_Int)
-WASM_KEYWORD_BIN_MATH(SUB, sub, Sub_Flt, Sub_Db, Sub_Int)
-WASM_KEYWORD_BIN_MATH(MUL, mul, Mul_Flt, Mul_Db, Mul_Int)
-WASM_KEYWORD_BIN_MATH(DIVS, divs, Nop, Nop, Div_Int)
-WASM_KEYWORD_BIN_MATH(DIVU, divu, Nop, Nop, Div_Int)
-WASM_KEYWORD_BIN_MATH(MODS, mods, Nop, Nop, Rem_Int)
-WASM_KEYWORD_BIN_MATH(MODU, modu, Nop, Nop, Rem_Int)
-WASM_KEYWORD_BIN_MATH(AND, and, Nop, Nop, And_Int)
-WASM_KEYWORD_BIN_MATH(OR, or, Nop, Nop, Or_Int)
-WASM_KEYWORD_BIN_MATH(XOR, xor, Nop, Nop, Xor_Int)
-WASM_KEYWORD_BIN_MATH(SHL, shl, Nop, Nop, Shl_Int)
-WASM_KEYWORD_BIN_MATH(SHR, shr, Nop, Nop, Shr_Int)
-WASM_KEYWORD_BIN_MATH(SAR, sar, Nop, Nop, Nop)
-WASM_KEYWORD_BIN_MATH(DIV, div, Nop, Nop, Nop)
-WASM_KEYWORD_BIN_MATH(MOD, mod, Nop, Nop, Nop)
-WASM_KEYWORD_BIN_MATH(COPYSIGN, copysign, Nop, Nop, Nop)
+WASM_KEYWORD_BIN_MATH_FDI(ADD, add, Add)
+WASM_KEYWORD_BIN_MATH_FDI(SUB, sub, Sub)
+WASM_KEYWORD_BIN_MATH_FDI(MUL, mul, Mul)
+
+WASM_KEYWORD_BIN_MATH_I(DIVS, divs, Div_Int)
+WASM_KEYWORD_BIN_MATH_I(MODS, mods, Rem_Int)
+WASM_KEYWORD_BIN_MATH_I(AND, and, And_Int)
+WASM_KEYWORD_BIN_MATH_I(OR, or, Or_Int)
+WASM_KEYWORD_BIN_MATH_I(XOR, xor, Xor_Int)
+WASM_KEYWORD_BIN_MATH_I(SHL, shl, Shl_Int)
+WASM_KEYWORD_BIN_MATH_I(SHR, shr, Shr_Int)
+WASM_KEYWORD_BIN_MATH_I(DIVU, divu, Div_UInt)
+WASM_KEYWORD_BIN_MATH_I(MODU, modu, Rem_UInt)
+
+WASM_KEYWORD_BIN_MATH_FD(DIV, div, Div)
+
+WASM_KEYWORD_BIN_MATH_D(MOD, mod, Rem_Db)
+
 
 // compare ops
-WASM_KEYWORD_COMPARE(EQ,     eq, CmEq_Flt, CmEq_Db, CmEq_Int)
-WASM_KEYWORD_COMPARE(NEQ,    neq, CmNe_Db, CmNe_Db, CmNe_Int)
-WASM_KEYWORD_COMPARE(LTS,    lts, Nop, Nop, CmLt_Int)
-WASM_KEYWORD_COMPARE(LTU,    ltu, Nop, Nop, CmLt_UnInt)
-WASM_KEYWORD_COMPARE(LES,    les, Nop, Nop, CmLe_Int)
-WASM_KEYWORD_COMPARE(LEU,    leu, Nop, Nop, CmLe_UnInt)
-WASM_KEYWORD_COMPARE(GTS,    gts, Nop, Nop, CmGt_Int)
-WASM_KEYWORD_COMPARE(GTU,    gtu, Nop, Nop, CmGt_UnInt)
-WASM_KEYWORD_COMPARE(GES,    ges, Nop, Nop, CmGe_Int)
-WASM_KEYWORD_COMPARE(GEU,    geu, Nop, Nop, CmGe_UnInt)
-WASM_KEYWORD_COMPARE(LT,     lt, CmLt_Flt, CmLt_Db, Nop)
-WASM_KEYWORD_COMPARE(LE,     le, CmLe_Flt, CmLe_Db, Nop)
-WASM_KEYWORD_COMPARE(GT,     gt, CmGt_Flt, CmGt_Db, Nop)
-WASM_KEYWORD_COMPARE(GE,     ge, CmGe_Flt, CmGe_Db, Nop)
+WASM_KEYWORD_COMPARE_FDI(EQ,    eq, CmEq)
+WASM_KEYWORD_COMPARE_FDI(NEQ,   neq, CmNe)
+WASM_KEYWORD_COMPARE_I(LTS,    lts, CmLt_Int)
+WASM_KEYWORD_COMPARE_I(LTU,    ltu, CmLt_UnInt)
+WASM_KEYWORD_COMPARE_I(LES,    les, CmLe_Int)
+WASM_KEYWORD_COMPARE_I(LEU,    leu, CmLe_UnInt)
+WASM_KEYWORD_COMPARE_I(GTS,    gts, CmGt_Int)
+WASM_KEYWORD_COMPARE_I(GTU,    gtu, CmGt_UnInt)
+WASM_KEYWORD_COMPARE_I(GES,    ges, CmGe_Int)
+WASM_KEYWORD_COMPARE_I(GEU,    geu, CmGe_UnInt)
+WASM_KEYWORD_COMPARE_FD(LT,     lt, CmLt)
+WASM_KEYWORD_COMPARE_FD(LE,     le, CmLe)
+WASM_KEYWORD_COMPARE_FD(GT,     gt, CmGt)
+WASM_KEYWORD_COMPARE_FD(GE,     ge, CmGe)
 
 // conversions
 WASM_KEYWORD(CONVERTS,   converts)
@@ -146,10 +211,21 @@ WASM_KEYWORD(CAST,       cast)
 WASM_KEYWORD(INVOKE,     invoke)
 WASM_KEYWORD(ASSERTEQ,   asserteq)
 
+#undef WASM_KEYWORD_COMPARE_FDI
+#undef WASM_KEYWORD_COMPARE_FD
+#undef WASM_KEYWORD_COMPARE_I
+#undef WASM_KEYWORD_COMPARE_D
+#undef WASM_KEYWORD_COMPARE_F
 #undef WASM_KEYWORD_COMPARE
 #undef WASM_KEYWORD_UNARY
-#undef WASM_KEYWORD_BIN_MATH
+#undef WASM_KEYWORD_BIN_MATH_FDI
+#undef WASM_KEYWORD_BIN_MATH_FD
+#undef WASM_KEYWORD_BIN_MATH_I
+#undef WASM_KEYWORD_BIN_MATH_D
+#undef WASM_KEYWORD_BIN_MATH_F
+#undef WASM_KEYWORD_BIN_TYPED
 #undef WASM_KEYWORD_BIN
 #undef WASM_LOCALTYPE
 #undef WASM_MEMTYPE
+#undef WASM_KEYWORD_FDI
 #undef WASM_KEYWORD

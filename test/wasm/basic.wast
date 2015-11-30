@@ -5,12 +5,12 @@
 
 (module
   (func (param i32) (result i32)
-    (if (ges.i32 (const.i32 26) (const.i32 25)) (setlocal 0 (add.i32 (getlocal 0) (const.i32 4))))
+    (if (i32.ges (i32.const 26) (i32.const 25)) (setlocal 0 (i32.add (getlocal 0) (i32.const 4))))
     (block
-    (setlocal 0 (add.i32 (getlocal 0) (const.i32 4)))
-    (setlocal 0 (add.i32 (getlocal 0) (const.i32 4)))
-    (setlocal 0 (add.i32 (getlocal 0) (const.i32 4))))
-    (return (add.i32 (getlocal 0) (const.i32 42)))
+    (setlocal 0 (i32.add (getlocal 0) (i32.const 4)))
+    (setlocal 0 (i32.add (getlocal 0) (i32.const 4)))
+    (setlocal 0 (i32.add (getlocal 0) (i32.const 4))))
+    (return (i32.add (getlocal 0) (i32.const 42)))
   )
 
   (export "a" 0)
