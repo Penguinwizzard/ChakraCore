@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Condition="'$(ChakraBuildPathImported)'!='true'" Project="$(SolutionDir)Chakra.Build.Paths.props" />
   <Import Project="$(BuildConfigPropsPath)Chakra.Build.ProjectConfiguration.props" />
@@ -41,8 +41,8 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSIMDFloat32x4.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSIMDFloat64x2.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSIMDInt32x4.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)SIMDFloat32x4Lib.cpp" />   
-    <ClCompile Include="$(MSBuildThisFileDirectory)SIMDFloat64x2Lib.cpp" />   
+    <ClCompile Include="$(MSBuildThisFileDirectory)SIMDFloat32x4Lib.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)SIMDFloat64x2Lib.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)SIMDInt32x4Lib.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ArrayBuffer.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)BoundFunction.cpp" />
@@ -115,7 +115,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptVariantDate.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JSONStack.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JSON.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)LiteralString.cpp" />    
+    <ClCompile Include="$(MSBuildThisFileDirectory)LiteralString.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptStringObject.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)MathLibrary.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)moduleroot.cpp" />
@@ -146,10 +146,10 @@
     <ClInclude Include="JavascriptSIMDFloat64x2.h" />
     <ClInclude Include="JavascriptSIMDInt32x4.h" />
     <ClInclude Include="JavascriptSIMDInt8x16.h" />
-    <ClInclude Include="SIMDFloat32x4Lib.h" />    
-    <ClInclude Include="SIMDFloat64x2Lib.h" />    
-    <ClInclude Include="SIMDInt32x4Lib.h" />    
-    <ClInclude Include="SIMDInt8x16Lib.h" />    
+    <ClInclude Include="SIMDFloat32x4Lib.h" />
+    <ClInclude Include="SIMDFloat64x2Lib.h" />
+    <ClInclude Include="SIMDInt32x4Lib.h" />
+    <ClInclude Include="SIMDInt8x16Lib.h" />
     <ClInclude Include="SimdLib.h" />
     <ClInclude Include="ArrayBuffer.h" />
     <ClInclude Include="BoundFunction.h" />
@@ -161,7 +161,6 @@
     <ClInclude Include="EngineInterfaceObject.h" />
     <ClInclude Include="ES5ArrayIndexEnumerator.h" />
     <ClInclude Include="ES5ArrayNonIndexEnumerator.h" />
-    <ClInclude Include="EtwTrace.h" />
     <ClInclude Include="HostObjectBase.h" />
     <ClInclude Include="InJavascript\intl.js.bc.32b.h" />
     <ClInclude Include="InJavascript\intl.js.bc.64b.h" />
@@ -206,7 +205,6 @@
     <ClInclude Include="SingleCharString.h" />
     <ClInclude Include="StackScriptFunction.h" />
     <ClInclude Include="StringCopyInfo.h" />
-    <ClInclude Include="TestEtwEventSink.h" />
     <ClInclude Include="ThrowErrorObject.h" />
     <ClInclude Include="typedarray.h" />
     <ClInclude Include="typedArrayEnumerator.h" />
@@ -236,7 +234,7 @@
     <ClInclude Include="JavascriptString.h" />
     <ClInclude Include="JavascriptStringEnumerator.h" />
     <ClInclude Include="JavascriptStringObject.h" />
-    <ClInclude Include="JavascriptVariantDate.h" />    
+    <ClInclude Include="JavascriptVariantDate.h" />
     <ClInclude Include="JSONStack.h" />
     <ClInclude Include="JSON.h" />
     <ClInclude Include="LiteralString.h" />
