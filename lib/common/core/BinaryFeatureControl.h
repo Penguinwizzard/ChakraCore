@@ -15,6 +15,5 @@ class BinaryFeatureControl
 {
 public:
     static bool RecyclerTest();
-    static bool JsGen();
     static BOOL GetMitigationPolicyForProcess(__in HANDLE hProcess, __in PROCESS_MITIGATION_POLICY MitigationPolicy, __out_bcount(nLength) PVOID lpBuffer, __in SIZE_T nLength);
 };

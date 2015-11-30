@@ -30,16 +30,6 @@ BinaryFeatureControl::RecyclerTest()
 #endif
 }
 
-bool
-BinaryFeatureControl::JsGen()
-{
-#ifdef JSGEN
-    return true;
-#else
-    return false;
-#endif
-}
-
 BOOL
 BinaryFeatureControl::GetMitigationPolicyForProcess(__in HANDLE hProcess, __in PROCESS_MITIGATION_POLICY MitigationPolicy, __out_bcount(nLength) PVOID lpBuffer, __in SIZE_T nLength)
 {
