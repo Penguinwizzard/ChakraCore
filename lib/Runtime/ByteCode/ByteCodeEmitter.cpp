@@ -6636,55 +6636,32 @@ void EmitMethodElem(ParseNode *pnode, Js::RegSlot callObjLocation, Js::RegSlot i
     byteCodeGenerator->Writer()->Element(Js::OpCode::LdMethodElem, pnode->location, callObjLocation, indexLocation);
 }
 
-// TODO (doilij): EmitCallTarget{Compat/ES5}: Compat mode is no longer a distinction, but this logic is still used, so these functions should be renamed.
-void EmitCallTargetCompat(
+void EmitCallTargetNoEvalComponents(
     ParseNode *pnodeTarget,
-    BOOL fEvaluateComponents,
     BOOL fSideEffectArgs,
     Js::RegSlot *thisLocation,
     Js::RegSlot *callObjLocation,
     ByteCodeGenerator *byteCodeGenerator,
     FuncInfo *funcInfo)
 {
-    // In compat mode, we first get a reference to the call target, then evaluate the arguments, then
+    // We first get a reference to the call target, then evaluate the arguments, then
     // evaluate the call target.
 
-    // If fEvaluateComponents is false, it means that all the evaluations have been done already and shouldn't
-    // be repeated. (This happens in put-call cases like f(x) = y and f(x) += y.)
+    // - emit reference to target
+    //    - copy instance to scratch reg if necessary.
+    //    - assign this
+    //    - assign instance for dynamic/global name
+    // - emit args
+    // - do call (CallFld/Elem/I)
 
     switch (pnodeTarget->nop)
     {
     case knopDot:
-        if (fEvaluateComponents)
-        {
-            // Assign the call target operand(s), putting them into expression temps if necessary to protect
-            // them from side-effects.
-            if (fSideEffectArgs)
-            {
-                SaveOpndValue(pnodeTarget->sxBin.pnode1, funcInfo);
-            }
-            Emit(pnodeTarget->sxBin.pnode1, byteCodeGenerator, funcInfo, false);
-        }
         *thisLocation = pnodeTarget->sxBin.pnode1->location;
         *callObjLocation = pnodeTarget->sxBin.pnode1->location;
         break;
 
     case knopIndex:
-        if (fEvaluateComponents)
-        {
-            // Assign the call target operand(s), putting them into expression temps if necessary to protect
-            // them from side-effects.
-            if (fSideEffectArgs || !(ParseNode::Grfnop(pnodeTarget->sxBin.pnode2->nop) & fnopLeaf))
-            {
-                SaveOpndValue(pnodeTarget->sxBin.pnode1, funcInfo);
-            }
-            Emit(pnodeTarget->sxBin.pnode1, byteCodeGenerator, funcInfo, false);
-            if (fSideEffectArgs)
-            {
-                SaveOpndValue(pnodeTarget->sxBin.pnode2, funcInfo);
-            }
-            Emit(pnodeTarget->sxBin.pnode2, byteCodeGenerator, funcInfo, false);
-        }
         *thisLocation = pnodeTarget->sxBin.pnode1->location;
         *callObjLocation = pnodeTarget->sxBin.pnode1->location;
         break;
@@ -6704,12 +6681,6 @@ void EmitCallTargetCompat(
         break;
 
     default:
-        if (fEvaluateComponents)
-        {
-            // Assign the call target operand(s), putting them into expression temps if necessary to protect
-            // them from side-effects.
-            Emit(pnodeTarget, byteCodeGenerator, funcInfo, false);
-        }
         *thisLocation = funcInfo->undefinedConstantRegister;
         break;
     }
@@ -6732,8 +6703,7 @@ void EmitSuperMethodBegin(
     }
 }
 
-// TODO (doilij): EmitCallTarget{Compat/ES5}: Compat mode is no longer a distinction, but this logic is still used, so these functions should be renamed.
-void EmitCallTargetES5(
+void EmitCallTarget(
     ParseNode *pnodeTarget,
     BOOL fSideEffectArgs,
     Js::RegSlot *thisLocation,
@@ -6741,8 +6711,13 @@ void EmitCallTargetES5(
     ByteCodeGenerator *byteCodeGenerator,
     FuncInfo *funcInfo)
 {
+    // - emit target
+    //    - assign this
+    // - emit args
+    // - do call
+
     // The call target is fully evaluated before the argument list. Note that we're not handling
-    // put-call cases here currently, as such cases lie outside ES5 (only apply to host objects)
+    // put-call cases here currently, as such cases only apply to host objects
     // and are very unlikely to behave differently depending on the order of evaluation.
 
     switch (pnodeTarget->nop)
@@ -6972,10 +6947,8 @@ void EmitCallI(
     }
 }
 
-// TODO (doilij): EmitCallInstr{Compat/ES5}: Compat mode is no longer a distinction, but this logic is still used, so these functions should be renamed.
-void EmitCallInstrCompat(
+void EmitCallInstrNoEvalComponents(
     ParseNode *pnode,
-    BOOL fEvaluateComponents,
     BOOL fIsPut,
     BOOL fIsEval,
     Js::RegSlot thisLocation,
@@ -6986,8 +6959,10 @@ void EmitCallInstrCompat(
     Js::ProfileId callSiteId,
     Js::AuxArray<uint32> *spreadIndices = nullptr)
 {
-    // Emit the call instruction. In compat mode, the call target is a reference at this point, and we evaluate
+    // Emit the call instruction. The call target is a reference at this point, and we evaluate
     // it as part of doing the actual call.
+    // Note that we don't handle the (fEvaluateComponents == TRUE) case in this function.
+    // (This function is only called on the !fEvaluateComponents branch in EmitCall.)
 
     ParseNode *pnodeTarget = pnode->sxBin.pnode1;
 
@@ -6998,30 +6973,15 @@ void EmitCallInstrCompat(
         Assert(pnodeTarget->sxBin.pnode2->nop == knopName);
         Js::PropertyId propertyId = pnodeTarget->sxBin.pnode2->sxPid.PropertyIdFromNameNode();
 
-        if (fEvaluateComponents)
-        {
-            // Release the call target operand we assigned above. If we didn't assign it here,
-            // we'll need it later, so we can't re-use it for the result of the call.
-            funcInfo->ReleaseLoc(pnodeTarget->sxBin.pnode1);
-            funcInfo->AcquireLoc(pnodeTarget);
-        }
         EmitMethodFld(pnodeTarget, callObjLocation, propertyId, byteCodeGenerator, funcInfo);
-        EmitCallI(pnode, fEvaluateComponents, fIsPut, fIsEval, /*fHasNewTarget*/ false, actualArgCount, byteCodeGenerator, funcInfo, callSiteId, spreadIndices);
+        EmitCallI(pnode, /*fEvaluateComponents*/ FALSE, fIsPut, fIsEval, /*fHasNewTarget*/ FALSE, actualArgCount, byteCodeGenerator, funcInfo, callSiteId, spreadIndices);
     }
     break;
 
     case knopIndex:
     {
-        if (fEvaluateComponents)
-        {
-            // Release the call target operands we assigned above. If we didn't assign them here,
-            // we'll need them later, so we can't re-use them for the result of the call.
-            funcInfo->ReleaseLoc(pnodeTarget->sxBin.pnode2);
-            funcInfo->ReleaseLoc(pnodeTarget->sxBin.pnode1);
-            funcInfo->AcquireLoc(pnodeTarget);
-        }
         EmitMethodElem(pnodeTarget, pnodeTarget->sxBin.pnode1->location, pnodeTarget->sxBin.pnode2->location, byteCodeGenerator);
-        EmitCallI(pnode, fEvaluateComponents, fIsPut, fIsEval, /*fHasNewTarget*/ false, actualArgCount, byteCodeGenerator, funcInfo, callSiteId, spreadIndices);
+        EmitCallI(pnode, /*fEvaluateComponents*/ FALSE, fIsPut, fIsEval, /*fHasNewTarget*/ FALSE, actualArgCount, byteCodeGenerator, funcInfo, callSiteId, spreadIndices);
     }
     break;
 
@@ -7035,33 +6995,22 @@ void EmitCallInstrCompat(
                 funcInfo->ReleaseTmpRegister(thisLocation);
             }
             funcInfo->ReleaseTmpRegister(callObjLocation);
-            if (fEvaluateComponents)
-            {
-                funcInfo->AcquireLoc(pnodeTarget);
-            }
+
             Js::PropertyId propertyId = pnodeTarget->sxPid.PropertyIdFromNameNode();
             EmitMethodFld(pnodeTarget, callObjLocation, propertyId, byteCodeGenerator, funcInfo);
-            EmitCallI(pnode, fEvaluateComponents, fIsPut, fIsEval, /*fHasNewTarget*/ false, actualArgCount, byteCodeGenerator, funcInfo, callSiteId, spreadIndices);
+            EmitCallI(pnode, /*fEvaluateComponents*/ FALSE, fIsPut, fIsEval, /*fHasNewTarget*/ FALSE, actualArgCount, byteCodeGenerator, funcInfo, callSiteId, spreadIndices);
             break;
-        }
-
-        // Call target is in a register, so fall through and CallI.
-        if (fEvaluateComponents)
-        {
-            // The target may, e.g., be in a closure slot, so get it now, after side-effects from evaluating args.
-            Emit(pnodeTarget, byteCodeGenerator, funcInfo, false);
         }
     }
     // FALL THROUGH
 
     default:
-        EmitCallI(pnode, fEvaluateComponents, fIsPut, fIsEval, /*fHasNewTarget*/ false, actualArgCount, byteCodeGenerator, funcInfo, callSiteId, spreadIndices);
+        EmitCallI(pnode, /*fEvaluateComponents*/ FALSE, fIsPut, fIsEval, /*fHasNewTarget*/ FALSE, actualArgCount, byteCodeGenerator, funcInfo, callSiteId, spreadIndices);
         break;
     }
 }
 
-// TODO (doilij): EmitCallInstr{Compat/ES5}: Compat mode is no longer a distinction, but this logic is still used, so these functions should be renamed.
-void EmitCallInstrES5(
+void EmitCallInstr(
     ParseNode *pnode,
     BOOL fIsPut,
     BOOL fIsEval,
@@ -7076,7 +7025,7 @@ void EmitCallInstrES5(
 {
     // Emit a call instruction. The call target has been fully evaluated already, so we always
     // emit a CallI through the register that holds the target value.
-    // Note that we don't handle !fEvaluateComponents cases in ES5 mode at this point.
+    // Note that we don't handle !fEvaluateComponents cases at this point.
     // (This function is only called on the fEvaluateComponents branch in EmitCall.)
 
     if (thisLocation != Js::Constants::NoRegister)
@@ -7090,7 +7039,7 @@ void EmitCallInstrES5(
         funcInfo->ReleaseTmpRegister(callObjLocation);
     }
 
-    EmitCallI(pnode, TRUE, fIsPut, fIsEval, fHasNewTarget, actualArgCount, byteCodeGenerator, funcInfo, callSiteId, spreadIndices);
+    EmitCallI(pnode, /*fEvaluateComponents*/ TRUE, fIsPut, fIsEval, fHasNewTarget, actualArgCount, byteCodeGenerator, funcInfo, callSiteId, spreadIndices);
 }
 
 void EmitCall(
@@ -7177,29 +7126,13 @@ void EmitCall(
     // Set up the call.
     //
 
-    // Compat:
-    // - emit reference to target
-    //    - copy instance to scratch reg if necessary.
-    //    - assign this
-    //    - assign instance for dynamic/global name
-    // - emit args
-    // - do call (CallFld/Elem/I)
-
-    // ES5:
-    // - emit target
-    //    - assign this
-    // - emit args
-    // - do call
-
-    // Send !fEvaluateComponents down the compat mode path at this point for the sake of stability.
-
     if (!fEvaluateComponents)
     {
-        EmitCallTargetCompat(pnodeTarget, fEvaluateComponents, fSideEffectArgs, &thisLocation, &callObjLocation, byteCodeGenerator, funcInfo);
+        EmitCallTargetNoEvalComponents(pnodeTarget, fSideEffectArgs, &thisLocation, &callObjLocation, byteCodeGenerator, funcInfo);
     }
     else
     {
-        EmitCallTargetES5(pnodeTarget, fSideEffectArgs, &thisLocation, &callObjLocation, byteCodeGenerator, funcInfo);
+        EmitCallTarget(pnodeTarget, fSideEffectArgs, &thisLocation, &callObjLocation, byteCodeGenerator, funcInfo);
     }
 
     bool releaseThisLocation = true;
@@ -7223,11 +7156,11 @@ void EmitCall(
 
     if (!fEvaluateComponents)
     {
-        EmitCallInstrCompat(pnode, fEvaluateComponents, fIsPut, fIsEval, thisLocation, callObjLocation, actualArgCount, byteCodeGenerator, funcInfo, callSiteId, spreadIndices);
+        EmitCallInstrNoEvalComponents(pnode, fIsPut, fIsEval, thisLocation, callObjLocation, actualArgCount, byteCodeGenerator, funcInfo, callSiteId, spreadIndices);
     }
     else
     {
-        EmitCallInstrES5(pnode, fIsPut, fIsEval, fHasNewTarget, releaseThisLocation ? thisLocation : Js::Constants::NoRegister, callObjLocation, actualArgCount, byteCodeGenerator, funcInfo, callSiteId, spreadIndices);
+        EmitCallInstr(pnode, fIsPut, fIsEval, fHasNewTarget, releaseThisLocation ? thisLocation : Js::Constants::NoRegister, callObjLocation, actualArgCount, byteCodeGenerator, funcInfo, callSiteId, spreadIndices);
     }
 
     // End call, pop param space
