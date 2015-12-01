@@ -323,7 +323,8 @@ int
     BOOL fCleanBefore,
     BOOL fCleanAfter,
     BOOL fSuppressNoGPF,
-    void *envFlags
+    void *envFlags,
+    DWORD millisecTimeout
     )
 {
 #define NMAKE "nmake -nologo -R -f "
@@ -442,7 +443,7 @@ int
 
         sprintf_s(cmdbuf, NMAKE"%s run", testCmd);
         Message(cmdbuf);
-        ExecuteCommand(pDir->GetDirectoryPath(), cmdbuf);
+        cmdResult = ExecuteCommand(pDir->GetDirectoryPath(), cmdbuf, millisecTimeout);
 
         QueryPerformanceCounter(&end_run);
         QueryPerformanceFrequency(&frequency);
@@ -469,7 +470,7 @@ int
         {
             return 0;
         }
-        ExecuteCommand(pDir->GetDirectoryPath(), cmdbuf, envFlags);
+        cmdResult = ExecuteCommand(pDir->GetDirectoryPath(), cmdbuf, millisecTimeout, envFlags);
     }
     else if (kind == TK_JSCRIPT || kind==TK_HTML || kind == TK_COMMAND)
     {
@@ -504,9 +505,9 @@ int
             return 0;
         }
 
-        cmdResult = ExecuteCommand(pDir->GetDirectoryPath(), cmdbuf, envFlags);
+        cmdResult = ExecuteCommand(pDir->GetDirectoryPath(), cmdbuf, millisecTimeout, envFlags);
 
-        if (cmdResult && !pTestVariant->testInfo.data[TIK_BASELINE]) // failure code, not baseline diffing
+        if (cmdResult && cmdResult != WAIT_TIMEOUT && !pTestVariant->testInfo.data[TIK_BASELINE]) // failure code, not baseline diffing
         {
             fFailed = TRUE;
             sprintf_s(nonZeroReturnBuf, "non-zero (%08X) return value from test command", cmdResult);
@@ -517,6 +518,17 @@ int
     else
     {
         ASSERTNR(UNREACHED);
+        cmdResult = NOERROR; // calm compiler warning about uninitialized variable usage
+    }
+
+    // Check for timeout.
+
+    if (cmdResult == WAIT_TIMEOUT) {
+        ASSERT(millisecTimeout != INFINITE);
+        sprintf_s(nonZeroReturnBuf, "timed out after %u second%s", millisecTimeout / 1000, millisecTimeout == 1000 ? "" : "s");
+        reason = nonZeroReturnBuf;
+        fFailed = TRUE;
+        goto logFailure;
     }
 
     // If we have a baseline test, we need to check the baseline file.
@@ -644,13 +656,14 @@ int
     TestVariant * pTestVariant,
     char *testCmd,
     ExternalTestKind kind,
-    BOOL fSuppressNoGPF
+    BOOL fSuppressNoGPF,
+    DWORD millisecTimeout
     )
 {
     char *ccFlags = pTestVariant->testInfo.data[TIK_COMPILE_FLAGS];
     void *envFlags = GetEnvFlags(pTestVariant);
     return DoOneExternalTest(pDir, pTestVariant, pTestVariant->optFlags, ccFlags, NULL,
-        testCmd, kind, TRUE, TRUE, TRUE, fSuppressNoGPF, envFlags);
+        testCmd, kind, TRUE, TRUE, TRUE, fSuppressNoGPF, envFlags, millisecTimeout);
 }
 
 int
@@ -659,7 +672,8 @@ int
     TestVariant * pTestVariant,
     char *testCmd,
     ExternalTestKind kind,
-    BOOL fSuppressNoGPF
+    BOOL fSuppressNoGPF,
+    DWORD millisecTimeout
     )
 {
     static char *pgc = "*.pgc";
@@ -691,8 +705,8 @@ int
     sprintf_s(ccFlags, "%s %s", PogoForceErrors, optFlags);
     sprintf_s(linkFlags, "-ltcg:pgi -pgd:%s", pgd);
 
-    if (DoOneExternalTest(pDir, pTestVariant, ccFlags, inCCFlags,
-        linkFlags, testCmd, kind, FALSE, TRUE, FALSE, fSuppressNoGPF, envFlags)) {
+    if (DoOneExternalTest(pDir, pTestVariant, ccFlags, inCCFlags, linkFlags,
+        testCmd, kind, FALSE, TRUE, FALSE, fSuppressNoGPF, envFlags, millisecTimeout)) {
             fFailed = TRUE;
             goto logFailure;
     }
@@ -709,7 +723,7 @@ int
     DeleteMultipleFiles(pDir, "*.asm");
 
     if (DoOneExternalTest(pDir, pTestVariant, ccFlags, inCCFlags, linkFlags,
-        testCmd, kind, FALSE, FALSE, TRUE, fSuppressNoGPF, envFlags)) {
+        testCmd, kind, FALSE, FALSE, TRUE, fSuppressNoGPF, envFlags, millisecTimeout)) {
             fFailed = TRUE;
     }
 
@@ -748,7 +762,8 @@ BOOL
     BOOL fSyncVariationWhenFinished,
     BOOL fCleanAfter,
     BOOL fLinkOnly,    // relink only
-    BOOL fSuppressNoGPF
+    BOOL fSuppressNoGPF,
+    DWORD millisecTimeout
     )
 {
     int rc;
@@ -990,9 +1005,18 @@ BOOL
 
     DeleteFileIfFound(tmp_file1);
 
-    ExecuteCommand(pDir->GetDirectoryPath(), buf, envFlags);
+    int retval = ExecuteCommand(pDir->GetDirectoryPath(), buf, millisecTimeout, envFlags);
 
     fFailed = FALSE;
+
+    // Check for timeout.
+
+    if (retval == WAIT_TIMEOUT) {
+        ASSERT(millisecTimeout != INFINITE);
+        LogOut("ERROR: Test timed out after %ul seconds", millisecTimeout / 1000);
+        fFailed = TRUE;
+        goto logFailure;
+    }
 
     // Check the output.
 
@@ -1158,13 +1182,14 @@ int
     CDirectory *pDir,
     Test * pTest,
     TestVariant * pTestVariant,
-    BOOL fSuppressNoGPF
+    BOOL fSuppressNoGPF,
+    DWORD millisecTimeout
     )
 {
     return DoOneSimpleTest(pDir, pTest, pTestVariant, pTestVariant->optFlags,
         pTestVariant->testInfo.data[TIK_COMPILE_FLAGS],
         pTestVariant->testInfo.data[TIK_LINK_FLAGS],
-        TRUE, TRUE, FALSE, fSuppressNoGPF);
+        TRUE, TRUE, FALSE, fSuppressNoGPF, millisecTimeout);
 }
 
 int
@@ -1172,7 +1197,8 @@ int
     CDirectory *pDir,
     Test * pTest,
     TestVariant * pTestVariant,
-    BOOL fSuppressNoGPF
+    BOOL fSuppressNoGPF,
+    DWORD millisecTimeout
     )
 {
     static char *pgc = "*.pgc";
@@ -1198,9 +1224,8 @@ int
     sprintf_s(ccFlags, "%s %s", PogoForceErrors, optFlags);
     sprintf_s(linkFlags, "-ltcg:pgi -pgd:%s", pgd);
 
-    if (DoOneSimpleTest(pDir, pTest, pTestVariant,
-        ccFlags, inCCFlags, linkFlags,
-        FALSE, FALSE, FALSE, fSuppressNoGPF)) {
+    if (DoOneSimpleTest(pDir, pTest, pTestVariant, ccFlags, inCCFlags,
+        linkFlags, FALSE, FALSE, FALSE, fSuppressNoGPF, millisecTimeout)) {
             fFailed = TRUE;
             goto logFailure;
     }
@@ -1213,9 +1238,8 @@ int
     sprintf_s(ccFlags, "%s %s", PogoForceErrors, optFlags);
     sprintf_s(linkFlags, "-ltcg:pgo -pgd:%s", pgd);
 
-    if (DoOneSimpleTest(pDir, pTest, pTestVariant,
-        ccFlags, inCCFlags, linkFlags,
-        FALSE, TRUE, TRUE, fSuppressNoGPF)) {
+    if (DoOneSimpleTest(pDir, pTest, pTestVariant, ccFlags, inCCFlags,
+        linkFlags, FALSE, TRUE, TRUE, fSuppressNoGPF, millisecTimeout)) {
             fFailed = TRUE;
     }
 
@@ -1252,7 +1276,19 @@ int
 {
     char *p = NULL;
     char full[MAX_PATH];
+    DWORD millisecTimeout = DEFAULT_TEST_TIMEOUT;
+    char *strTimeout = pTestVariant->testInfo.data[TIK_TIMEOUT];
 
+    if (strTimeout) {
+        char *end;
+        _set_errno(0);
+        unsigned long secTimeout = strtoul(strTimeout, &end, 10);
+        millisecTimeout = 1000 * secTimeout;
+        // Validation has already occurred so this string should
+        // parse fine and the value shouldn't overflow the DWORD.
+        ASSERT(errno == 0 && *end == 0);
+        ASSERT(millisecTimeout > secTimeout);
+    }
 
     // Check to see if all of the files exist.
 
@@ -1305,9 +1341,9 @@ int
         ASSERTNR(pTestVariant->testInfo.data[TIK_LINK_FLAGS] == NULL);
 
         if (IsPogoTest(pTest))
-            return DoPogoExternalTest(pDir, pTestVariant, full, TK_CMDSCRIPT, TRUE);
+            return DoPogoExternalTest(pDir, pTestVariant, full, TK_CMDSCRIPT, TRUE, millisecTimeout);
         else
-            return DoExternalTest(pDir, pTestVariant, full, TK_CMDSCRIPT, TRUE);
+            return DoExternalTest(pDir, pTestVariant, full, TK_CMDSCRIPT, TRUE, millisecTimeout);
     }
 
     // Special case for standardized RL makefiles.
@@ -1318,28 +1354,27 @@ int
         ASSERTNR(pTestVariant->testInfo.data[TIK_LINK_FLAGS] == NULL);
 
         if (IsPogoTest(pTest))
-            return DoPogoExternalTest(pDir, pTestVariant, full, TK_MAKEFILE, FALSE);
+            return DoPogoExternalTest(pDir, pTestVariant, full, TK_MAKEFILE, FALSE, millisecTimeout);
         else
-            return DoExternalTest(pDir, pTestVariant, full, TK_MAKEFILE,
-            SuppressNoGPF(pTest));
+            return DoExternalTest(pDir, pTestVariant, full, TK_MAKEFILE, SuppressNoGPF(pTest), millisecTimeout);
     }
 
     // Special case for files ending with ".js", ".html", ".htm" (<command> dealt with separately)
     else if (pTestVariant->testInfo.data[TIK_COMMAND] == NULL
         && !_stricmp(ext, ".js"))
     {
-        return DoExternalTest(pDir, pTestVariant, full, TK_JSCRIPT, FALSE);
+        return DoExternalTest(pDir, pTestVariant, full, TK_JSCRIPT, FALSE, millisecTimeout);
     }
     else if (pTestVariant->testInfo.data[TIK_COMMAND] == NULL
         && (!_stricmp(ext, ".html") || !_stricmp(ext, ".htm")))
     {
-        return DoExternalTest(pDir, pTestVariant, full, TK_HTML, FALSE);
+        return DoExternalTest(pDir, pTestVariant, full, TK_HTML, FALSE, millisecTimeout);
     }
 
     // Special case for tests with a <command> argument
     else if (pTestVariant->testInfo.data[TIK_COMMAND] != NULL)
     {
-        return DoExternalTest(pDir, pTestVariant, full, TK_COMMAND, FALSE);
+        return DoExternalTest(pDir, pTestVariant, full, TK_COMMAND, FALSE, millisecTimeout);
     }
 
     // Non-scripted test.
@@ -1351,11 +1386,11 @@ int
 
             ASSERTNR(pTestVariant->testInfo.data[TIK_LINK_FLAGS] == NULL);
 
-            return DoPogoSimpleTest(pDir, pTest, pTestVariant, FALSE);
+            return DoPogoSimpleTest(pDir, pTest, pTestVariant, FALSE, millisecTimeout);
         }
         else
         {
-            return DoSimpleTest(pDir, pTest, pTestVariant, SuppressNoGPF(pTest));
+            return DoSimpleTest(pDir, pTest, pTestVariant, SuppressNoGPF(pTest), millisecTimeout);
         }
     }
 }

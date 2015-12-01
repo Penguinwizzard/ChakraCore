@@ -273,6 +273,7 @@ const char * const TestInfoKindName[] =
    "rl",
    "env",
    "command",
+   "timeout",
    NULL
 };
 
@@ -3369,6 +3370,30 @@ FindTest(
 }
 
 BOOL
+IsTimeoutStringValid(char *strTimeout) {
+   char *end;
+   _set_errno(0);
+
+   unsigned long secTimeout = strtoul(strTimeout, &end, 10);
+
+   if (errno != 0 || *end != 0) {
+      return FALSE;
+   }
+
+   // Check to see if the value is too large and would cause overflow
+
+   // Do the multiplication using 64-bit unsigned math.
+   unsigned __int64 millisecTimeout = 1000ui64 * static_cast<unsigned __int64>(secTimeout);
+
+   // Does the result fit in 32-bits?
+   if (millisecTimeout >= (1ui64 << 32)) {
+      return FALSE;
+   }
+
+   return TRUE;
+}
+
+BOOL
 GetTestInfoFromNode
 (
    const char * fileName,
@@ -3394,23 +3419,33 @@ GetTestInfoFromNode
          }
          else
          {
-
-            if   (childNode->ChildList != NULL)
+            if (childNode->ChildList != NULL)
             {
-            CFG_ERROR_EX(fileName, node->LineNumber,
-            "Expected data, not child list\n", NULL);
-            childNode->Dump();
-            return FALSE;
+               CFG_ERROR_EX(fileName, node->LineNumber,
+               "Expected data, not child list\n", NULL);
+               childNode->Dump();
+               return FALSE;
             }
 
-             if   ((childNode->Data !=  NULL) && (childNode->Data[0] != '\0'))
-             {
-                testInfo->data[i] = childNode->Data;
-             }
-             else
-             {
-                testInfo->data[i] = NULL;
-             }
+            if (childNode->Data != NULL && childNode->Data[0] != '\0')
+            {
+               testInfo->data[i] = childNode->Data;
+            }
+            else
+            {
+               testInfo->data[i] = NULL;
+            }
+
+            if (i == TIK_TIMEOUT)
+            {
+               // Validate the timeout string now to fail early so we don't run any tests when there is an error.
+               if (!IsTimeoutStringValid(testInfo->data[i])) {
+                  CFG_ERROR_EX(fileName, node->LineNumber, 
+                     "Invalid timeout specified. Cannot parse or too large.\n", NULL);
+                  childNode->Dump();
+                  return FALSE;
+               }
+            }
          }
       }
    }

@@ -10,9 +10,10 @@
 
 /////////////////////////////////////////////////////////////////////////
 
-void
+int
 FilterThread(
-    FILE* ChildOutput
+    FILE* ChildOutput,
+    DWORD millisecTimeout
     );
 
 FILE *
@@ -23,7 +24,8 @@ PipeSpawn(
 
 int
 PipeSpawnClose(
-    FILE* pstream
+    FILE* pstream,
+    bool timedOut
 );
 
 /////////////////////////////////////////////////////////////////////////
@@ -555,6 +557,7 @@ int
 ExecuteCommand(
     char* path,
     char* CommandLine,
+    DWORD millisecTimeout,
     void* envFlags)
 {
     int rc;
@@ -594,8 +597,8 @@ ExecuteCommand(
     if (rc != 0) {
         LogError("Could not change directory to '%s' - errno == %d\n", path, errno);
     } else if (childOutput != NULL) {
-        FilterThread(childOutput);
-        rc = PipeSpawnClose(childOutput);
+        rc = FilterThread(childOutput, millisecTimeout);
+        rc = PipeSpawnClose(childOutput, rc == WAIT_TIMEOUT);
     }
 
     SetErrorMode(prevmode);
@@ -617,53 +620,121 @@ ExecuteCommand(
 __declspec(thread) char* StartPointer = NULL;
 __declspec(thread) unsigned BufSize = 512;
 
-void
+struct FilterThreadData {
+    int ThreadId;
+    unsigned* pBufSize;
+    char** pStartPointer;
+    COutputBuffer* ThreadOut;
+    COutputBuffer* ThreadFull;
+    FILE* ChildOutput;
+};
+
+unsigned WINAPI
+FilterWorker(
+    void* param
+    );
+
+int
 FilterThread(
-    FILE* ChildOutput
+    FILE* ChildOutput,
+    DWORD millisecTimeout
     )
 {
+    FilterThreadData data = {
+        ThreadId,
+        &BufSize,
+        &StartPointer,
+        ThreadOut,
+        ThreadFull,
+        ChildOutput
+    };
+
+    HANDLE hThreadWorker = (HANDLE)_beginthreadex(nullptr, 0, FilterWorker, &data, 0, nullptr);
+
+    if (hThreadWorker == 0) {
+        LogError("Failed to create FilterWorker thread - error = %d", GetLastError());
+        return -1;
+    }
+
+    DWORD waitresult = WaitForSingleObject(hThreadWorker, millisecTimeout);
+
+    int rc = 0;
+
+    if (waitresult == WAIT_TIMEOUT) {
+        // Abort the worker thread by cancelling the IO operations on the pipe
+        CancelIoEx((HANDLE)_get_osfhandle(_fileno(ChildOutput)), nullptr);
+        WaitForSingleObject(hThreadWorker, INFINITE);
+        rc = WAIT_TIMEOUT;
+    }
+    else {
+        DWORD ec;
+        if (!GetExitCodeThread(hThreadWorker, &ec)) {
+            LogError("Could not get exit code from FilterWorker worker thread - error = %d", GetLastError());
+            rc = -1;
+        }
+        if (ec != 0) {
+            LogError("Pipe read failed - errno = %d\n", ec);
+            rc = -1;
+        }
+    }
+
+    CloseHandle(hThreadWorker);
+
+    return rc;
+}
+
+unsigned WINAPI
+FilterWorker(
+    void* param
+    )
+{
+    FilterThreadData* data = static_cast<FilterThreadData*>(param);
     size_t CountBytesRead;
     char* EndPointer;
     char* NewPointer;
     char buf[50];
 
     buf[0] = '\0';
-    if (!FNoThreadId && ThreadId != 0 && NumberOfThreads > 1) {
-        sprintf_s(buf, "%d>", ThreadId);
+    if (!FNoThreadId && data->ThreadId != 0 && NumberOfThreads > 1) {
+        sprintf_s(buf, "%d>", data->ThreadId);
     }
 
-    if (StartPointer == NULL)
-        StartPointer = (char*)malloc(BufSize);
+    if (*data->pStartPointer == NULL)
+        *data->pStartPointer = (char*)malloc(*data->pBufSize);
 
     while (TRUE) {
-        EndPointer = StartPointer;
+        EndPointer = *data->pStartPointer;
         do {
-            if (BufSize - (EndPointer-StartPointer) < FILTER_READ_CHUNK) {
-                NewPointer = (char*)malloc(BufSize*2);
-                memcpy(NewPointer, StartPointer,
-                    EndPointer - StartPointer + 1);     // copy null byte, too
-                EndPointer = NewPointer + (EndPointer - StartPointer);
-                StartPointer = NewPointer;
-                BufSize *= 2;
+            if (*data->pBufSize - (EndPointer - *data->pStartPointer) < FILTER_READ_CHUNK) {
+                NewPointer = (char*)malloc(*data->pBufSize*2);
+                memcpy(NewPointer, *data->pStartPointer,
+                    EndPointer - *data->pStartPointer + 1);     // copy null byte, too
+                EndPointer = NewPointer + (EndPointer - *data->pStartPointer);
+                free(*data->pStartPointer);
+                *data->pStartPointer = NewPointer;
+                *data->pBufSize *= 2;
             }
-            if (NULL == fgets(EndPointer, FILTER_READ_CHUNK, ChildOutput)) {
-                if (ferror(ChildOutput))
-                    LogError("Pipe read failed - errno = %d\n", errno);
-                return;
+            if (NULL == fgets(EndPointer, FILTER_READ_CHUNK, data->ChildOutput)) {
+                if (ferror(data->ChildOutput)) {
+                    return errno;
+                }
+                return 0;
             }
             CountBytesRead = strlen(EndPointer);
             EndPointer = EndPointer + CountBytesRead;
         } while ((CountBytesRead == FILTER_READ_CHUNK - 1)
                 && *(EndPointer - 1) != '\n');
 
-        CountBytesRead = EndPointer - StartPointer;
+        CountBytesRead = EndPointer - *data->pStartPointer;
         if (CountBytesRead != 0) {
-            ThreadOut->AddDirect(buf);
-            ThreadOut->AddDirect(StartPointer);
-            ThreadFull->AddDirect(buf);
-            ThreadFull->AddDirect(StartPointer);
+            data->ThreadOut->AddDirect(buf);
+            data->ThreadOut->AddDirect(*data->pStartPointer);
+            data->ThreadFull->AddDirect(buf);
+            data->ThreadFull->AddDirect(*data->pStartPointer);
         }
     }
+    
+    return 0;
 }
 
 
@@ -779,10 +850,11 @@ PipeSpawn(
 
 int
 PipeSpawnClose(
-    FILE *pstream
-)
+    FILE *pstream,
+    bool timedOut
+    )
 {
-    DWORD retval = (DWORD)-1;
+    DWORD retval = (DWORD) -1;
 
     if (pstream == NULL) {
         return -1;
@@ -791,14 +863,29 @@ PipeSpawnClose(
     fclose(pstream);
     pstream = NULL;
 
-    if (WaitForSingleObject(ProcHandle, INFINITE) == WAIT_OBJECT_0) {
-        if (!GetExitCodeProcess(ProcHandle, &retval)) {
-            LogError("Getting process exit code - error == %d\n", GetLastError());
-            retval = (DWORD)-1;
+    if (timedOut) {
+        retval = WAIT_TIMEOUT;
+        // TerminateProcess doesn't kill child processes of the specified process.
+        // Use taskkill.exe command instead using its /T option to kill child
+        // processes as well.
+        char cmdbuf[50];
+        sprintf_s(cmdbuf, "taskkill.exe /PID %d /T /F", GetProcessId(ProcHandle));
+        int rc = ExecuteCommand(REGRESS, cmdbuf);
+        if (rc != 0) {
+            LogError("taskkill failed - exit code == %d\n", rc);
         }
-    } else {
-        LogError("Wait for process termination failed - error == %d\n", GetLastError());
-        retval = (DWORD)-1;
+    }
+    else {
+        if (WaitForSingleObject(ProcHandle, INFINITE) == WAIT_OBJECT_0) {
+            if (!GetExitCodeProcess(ProcHandle, &retval)) {
+                LogError("Getting process exit code - error == %d\n", GetLastError());
+                retval = (DWORD) -1;
+            }
+        }
+        else {
+            LogError("Wait for process termination failed - error == %d\n", GetLastError());
+            retval = (DWORD) -1;
+        }
     }
     CloseHandle(ProcHandle);
     ProcHandle = INVALID_HANDLE_VALUE;
