@@ -52,7 +52,7 @@
 // SIMD_JS
 #include "Library\SimdLib.h"
 #include "Language\SimdOps.h"
-#include "Library\SIMDUtils.h"
+#include "Language\SIMDUtils.h"
 
 #include "Debug\DebuggingFlags.h"
 #include "Debug\DiagProbe.h"

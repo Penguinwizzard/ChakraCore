@@ -269,4 +269,5 @@ var m = asmModule(this, {g1:SIMD.Float32x4(90934.2,123.9,419.39,449.0), g2:SIMD.
     equalSimd([0, -1, 0, -1], ret, SIMD.Int32x4, "Test comparison");
     ret = m.func3(5);
     equalSimd([0, -1, 0, -1], ret, SIMD.Int32x4, "Test comparison");
-
+    
+    print("PASS");

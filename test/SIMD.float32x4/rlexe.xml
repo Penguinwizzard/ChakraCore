@@ -164,14 +164,12 @@
   <test>
     <default>
       <files>testFields.js</files>
-      <baseline>testFields.baseline</baseline>
       <compile-flags>-bgjit- -simdjs -simd128typespec -on:simplejit -mic:1</compile-flags>
     </default>
   </test>
   <test>
     <default>
       <files>testFields.js</files>
-      <baseline>testFields.baseline</baseline>
       <compile-flags>-bgjit- -simdjs -simd128typespec -off:simplejit -mic:1</compile-flags>
     </default>
   </test>
@@ -229,14 +227,12 @@
   <test>
     <default>
       <files>testReciprocal.js</files>
-      <baseline>testReciprocal.baseline</baseline>
       <compile-flags>-bgjit- -simdjs -simd128typespec -on:simplejit -mic:1</compile-flags>
     </default>
   </test>
   <test>
     <default>
       <files>testReciprocal.js</files>
-      <baseline>testReciprocal.baseline</baseline>
       <compile-flags>-bgjit- -simdjs -simd128typespec -off:simplejit -mic:1</compile-flags>
     </default>
   </test>

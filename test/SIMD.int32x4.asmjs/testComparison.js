@@ -211,28 +211,17 @@ function asmModule(stdlib, imports) {
 
 var m = asmModule(this, {g1:SIMD.Float32x4(90934.2,123.9,419.39,449.0), g2:SIMD.Int32x4(-1065353216, -1073741824,-1077936128, -1082130432), g3:SIMD.Float64x2(110.20, 58967.0, 14511.670, 191766.23431)});
 
+equalSimd([0, -1, 0, -1], m.func1(0), SIMD.Int32x4, "Func1");
+equalSimd([0, -1, -1, 0], m.func2(0), SIMD.Int32x4, "Func2");
+equalSimd([-1, 0, 0, -1], m.func3(0), SIMD.Int32x4, "Func3");
 
+equalSimd([0, 0, 0, 0], m.func1(1), SIMD.Int32x4, "Func1");
+equalSimd([0, 0, 0, 0], m.func2(1), SIMD.Int32x4, "Func2");
+equalSimd([0, 0, 0, 0], m.func3(1), SIMD.Int32x4, "Func3");
 
-print("Func1");
-equalSimd([0, -1, 0, -1], m.func1(0), SIMD.Int32x4, "TestComparison");
-print("Func2");
-equalSimd([0, -1, -1, 0], m.func2(0), SIMD.Int32x4, "TestComparison");
-print("Func3");
-equalSimd([-1, 0, 0, -1], m.func3(0), SIMD.Int32x4, "TestComparison");
-
-print("Func1");
-equalSimd([0, 0, 0, 0], m.func1(1), SIMD.Int32x4, "TestComparison");
-print("Func2");
-equalSimd([0, 0, 0, 0], m.func2(1), SIMD.Int32x4, "TestComparison");
-print("Func3");
-equalSimd([0, 0, 0, 0], m.func3(1), SIMD.Int32x4, "TestComparison");
-
-print("Func1");
-equalSimd([-1, 0, -1, 0], m.func1(2), SIMD.Int32x4, "TestComparison");
-print("Func2");
-equalSimd([-1, 0, 0, -1], m.func2(2), SIMD.Int32x4, "TestComparison");
-print("Func3");
-equalSimd([0, -1, -1, 0], m.func3(2), SIMD.Int32x4, "TestComparison");
+equalSimd([-1, 0, -1, 0], m.func1(2), SIMD.Int32x4, "Func1");
+equalSimd([-1, 0, 0, -1], m.func2(2), SIMD.Int32x4, "Func2");
+equalSimd([0, -1, -1, 0], m.func3(2), SIMD.Int32x4, "Func3");
 print("PASS");
 
 
