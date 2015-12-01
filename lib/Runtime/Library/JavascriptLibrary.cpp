@@ -3113,36 +3113,6 @@ namespace Js
         /** end Uint8x16 **/
     }
 
-    void JavascriptLibrary::AddSimdFuncToMaps(Js::OpCode op, ...)
-    {
-        Assert(simdFuncInfoToOpcodeMap != nullptr);
-        Assert(simdOpcodeToSignatureMap != nullptr);
-
-        va_list arguments;
-        va_start(arguments, op);
-
-        int argumentsCount = va_arg(arguments, int);
-        if (argumentsCount == 0)
-        {
-            // no info to add
-            return;
-        }
-        FunctionInfo *funcInfo = va_arg(arguments, FunctionInfo*);
-        simdFuncInfoToOpcodeMap->AddNew(funcInfo, op);
-
-        SimdFuncSignature simdFuncSignature;
-        simdFuncSignature.argCount = argumentsCount - 2; // arg count to Simd func = argumentsCount - FuncInfo and return Type fields.
-        simdFuncSignature.returnType = va_arg(arguments, ValueType);
-        simdFuncSignature.args = AnewArrayZ(scriptContext->GeneralAllocator(), ValueType, simdFuncSignature.argCount);
-        for (uint iArg = 0; iArg < simdFuncSignature.argCount; iArg++)
-        {
-            simdFuncSignature.args[iArg] = va_arg(arguments, ValueType);
-        }
-        simdOpcodeToSignatureMap->AddNew(op, simdFuncSignature);
-
-        va_end(arguments);
-    }
-
     void JavascriptLibrary::InitializeReflectObject(DynamicObject* reflectObject, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
         typeHandler->Convert(reflectObject, mode, 12);

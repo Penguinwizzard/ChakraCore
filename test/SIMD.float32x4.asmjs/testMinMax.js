@@ -232,20 +232,16 @@ function asmModule(stdlib, imports) {
 var m = asmModule(this, {g1:SIMD.Float32x4(90934.2,123.9,419.39,449.0), g2:SIMD.Int32x4(-1065353216, -1073741824,-1077936128, -1082130432), g3:SIMD.Float64x2(110.20, 58967.0, 14511.670, 191766.23431)});
 
 
-print("Func1");
-equalSimd([-34183.8984375, -3401, -569437, -32234.099609375], m.func1(), SIMD.Float32x4, "MinMax");
+equalSimd([-34183.8984375, -3401, -569437, -32234.099609375], m.func1(), SIMD.Float32x4, "Func1");
 
-print("Func2");
-equalSimd([-5033.2001953125, -11201.5, 665.3400268554687, 334.79998779296875], m.func2(), SIMD.Float32x4, "MinMax");
+equalSimd([-5033.2001953125, -11201.5, 665.3400268554687, 334.79998779296875], m.func2(), SIMD.Float32x4, "Func2");
 
-print("Func3");
-equalSimd([-5033.2001953125, -3401, 665.3400268554687, -32234.099609375], m.func3(), SIMD.Float32x4, "MinMax");
+equalSimd([-5033.2001953125, -3401, 665.3400268554687, -32234.099609375], m.func3(), SIMD.Float32x4, "Func3");
 
-print("Func4");
-equalSimd([5033.2001953125, 0, 665.3400268554687, 0], m.func4(), SIMD.Float32x4, "MinMax");
+equalSimd([5033.2001953125, 0, 665.3400268554687, 0], m.func4(), SIMD.Float32x4, "Func4");
 
-print("Func5");
-equalSimd([-5033.2001953125, -3401, 665.3400268554687, 334.79998779296875], m.func5(), SIMD.Float32x4, "MinMax");
+equalSimd([-5033.2001953125, -3401, 665.3400268554687, 334.79998779296875], m.func5(), SIMD.Float32x4, "Func5");
 
-print("Func6");
-equalSimd([1194580.375, 212344.125, 63236.9296875, 65534.98828125], m.func6(), SIMD.Float32x4, "MinMax");
+equalSimd([1194580.375, 212344.125, 63236.9296875, 65534.98828125], m.func6(), SIMD.Float32x4, "Func6");
+
+print("PASS");
