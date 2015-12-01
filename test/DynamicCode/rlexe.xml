@@ -12,6 +12,7 @@
     <default>
       <tags>exclude_fre,Slow</tags>
       <files>eval-nativenumber.js</files>
+      <timeout>300</timeout>
     </default>
   </test>
   <test>

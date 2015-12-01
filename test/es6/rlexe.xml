@@ -629,6 +629,7 @@
       <baseline>unicode_regex_surrogate.baseline</baseline>
       <compile-flags> -ES6Unicode -ES6RegExSticky</compile-flags>
       <tags>exclude_ship,Slow</tags>
+      <timeout>300</timeout>
     </default>
   </test>
   <test>

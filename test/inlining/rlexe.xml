@@ -40,6 +40,7 @@
       <baseline>InlineConstructors.baseline</baseline>
       <compile-flags>-force:inline</compile-flags>
       <tags>exclude_ship,exclude_arm,Slow</tags>
+      <timeout>300</timeout>
     </default>
   </test>
   <test>

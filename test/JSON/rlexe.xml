@@ -28,6 +28,7 @@
       <baseline>stringify-replacerfunc.baseline</baseline>
       <compile-flags>-recyclerstress</compile-flags>
       <tags>exclude_fre,Slow</tags>
+      <timeout>300</timeout>
     </default>
   </test>
   <test>

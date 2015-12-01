@@ -5,6 +5,7 @@
       <files>test.js</files>
       <baseline>test.baseline</baseline>
       <tags>exclude_x86,exclude_arm,Slow</tags>
+      <timeout>300</timeout>
     </default>
   </test>
 </regress-exe>

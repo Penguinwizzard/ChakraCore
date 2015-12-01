@@ -136,6 +136,7 @@
       <files>property.js</files>
       <baseline>property.baseline</baseline>
       <tags>Slow</tags>
+      <timeout>300</timeout>
     </default>
   </test>
   <test>
