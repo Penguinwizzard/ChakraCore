@@ -28,6 +28,7 @@ namespace Js
     void ByteCodeDumper::Dump(FunctionBody* dumpFunction)
     {
         if (!CONFIG_FLAG(DumpDbgControllerBytecode) && dumpFunction->GetSourceContextInfo() &&
+            dumpFunction->GetSourceContextInfo()->url != nullptr &&
             _wcsicmp(dumpFunction->GetSourceContextInfo()->url, L"dbgcontroller.js") == 0)
         {
             return;
