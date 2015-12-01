@@ -110,10 +110,13 @@ FlowGraph::Build(void)
 
             if (OpCodeAttr::CallInstr(instr->m_opcode))
             {
-                 instr->m_func->SetHasCallsOnSelfAndParents();
+                if (!instr->isCallInstrProtectedByNoProfileBailout)
+                {
+                    instr->m_func->SetHasCallsOnSelfAndParents();
+                }
 
-            // For ARM & X64 because of their register calling convention
-            // the ArgOuts need to be moved next to the call.
+                // For ARM & X64 because of their register calling convention
+                // the ArgOuts need to be moved next to the call.
 #if defined(_M_ARM) || defined(_M_X64)
 
                 IR::Instr* argInsertInstr = instr;
