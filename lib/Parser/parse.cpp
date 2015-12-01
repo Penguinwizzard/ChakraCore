@@ -7280,7 +7280,7 @@ ParseNodePtr Parser::ParseExpr(int oplMin,
             *pfLikelyPattern = !!fLikelyPattern;
         }
 
-        if (m_token.tk == tkAsg && fLikelyPattern)
+        if (m_token.tk == tkAsg && oplMin <= koplAsg && fLikelyPattern)
         {
             m_pscan->SeekTo(termStart);
 
