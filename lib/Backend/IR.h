@@ -148,7 +148,8 @@ protected:
         loadedArrayHeadSegmentLength(false),
         extractedUpperBoundCheckWithoutHoisting(false),
         ignoreOverflowBitCount(32),
-        isCtorCall(false)
+        isCtorCall(false),
+        isCallInstrProtectedByNoProfileBailout(false)
     {
     }
 public:
@@ -477,6 +478,7 @@ public:
     bool            isCtorCall : 1;
     bool            dstIsAlwaysConvertedToInt32 : 1;
     bool            dstIsAlwaysConvertedToNumber : 1;
+    bool            isCallInstrProtectedByNoProfileBailout : 1;
 protected:
     bool            isCloned:1;
     bool            hasBailOutInfo:1;
