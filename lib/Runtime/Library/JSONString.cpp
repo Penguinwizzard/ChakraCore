@@ -57,12 +57,7 @@ namespace Js
     JSONString* JSONString::New(JavascriptString* originalString, charcount_t start, charcount_t extraChars)
     {
         Assert(extraChars > 0);
-        charcount_t length = UInt32Math::Add(originalString->GetLength(), UInt32Math::Add(extraChars, /*quotes*/ 2));
-        if (!IsValidCharCount(length))
-        {
-            Js::Throw::OutOfMemory();
-        }
-        JSONString* result = RecyclerNew(originalString->GetRecycler(), JSONString, originalString, start, length);
+        JSONString* result = RecyclerNew(originalString->GetRecycler(), JSONString, originalString, start, originalString->GetLength() + extraChars + /*quotes*/ +2);
         return result;
     }
 
