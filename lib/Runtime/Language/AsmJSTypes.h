@@ -951,7 +951,7 @@ namespace Js
         uint mArgCount;
         int mIntVarCount, mDoubleVarCount, mFloatVarCount, mIntTmpCount, mDoubleTmpCount, mFloatTmpCount;
         AsmJsVarType::Which * mArgType;
-        ArgSlot mArgSizesLength;
+        uint mArgSizesLength;
         uint * mArgSizes;
         int mArgByteSize;
         // offset in Byte from the beggining of the stack aka R0
@@ -1053,11 +1053,11 @@ namespace Js
         void SetModuleFunctionBody(FunctionBody* body){ asmJsModuleFunctionBody = body; };
         FunctionBody* GetModuleFunctionBody()const{ return asmJsModuleFunctionBody; };
 
-        ArgSlot GetArgSizeArrayLength()
+        uint GetArgSizeArrayLength()
         {
             return mArgSizesLength;
         }
-        void SetArgSizeArrayLength(ArgSlot val)
+        void SetArgSizeArrayLength(uint val)
         {
             mArgSizesLength = val;
         }
