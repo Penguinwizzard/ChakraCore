@@ -4398,10 +4398,12 @@ BackwardPass::InsertTypeTransitionsAtPotentialKills()
     // Final types can't be pushed up past certain instructions.
     IR::Instr *instr = this->currentInstr;
 
-    if (instr->HasBailOutInfo())
+    if (instr->HasBailOutInfo() || instr->m_opcode == Js::OpCode::UpdateNewScObjectCache)
     {
         // Final types can't be pushed up past a bailout point.
         // Insert any transitions called for by the current state of add-property buckets.
+        // Also do this for ctor cache updates, to avoid putting a type in the ctor cache that extends past
+        // the end of the ctor that the cache covers.
         this->ForEachAddPropertyCacheBucket([&](int symId, AddPropertyCacheBucket *data)->bool {
             this->InsertTypeTransitionAfterInstr(instr, symId, data);
             return false;
