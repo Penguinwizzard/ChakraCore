@@ -934,9 +934,7 @@ namespace Js
                 }
                 else
                 {
-                    AssertMsg(JavascriptArray::Is(instance) || TypedArrayBase::Is(instance), "Only SpreadArgument, TypedArray, and JavascriptArray should be listed as spread arguments");
-
-                    // We first try to interpret the spread parameter as a JavascriptArray.
+                    // We first try to interpret the spread parameter as an array.
                     JavascriptArray *arr = nullptr;
                     if (JavascriptArray::Is(instance))
                     {
@@ -947,12 +945,6 @@ namespace Js
                     {
                         // CONSIDER: Optimize by creating a JavascriptArray routine which allows
                         // memcpy-like semantics in optimal situations (no gaps, etc.)
-                        if (argsIndex + arr->GetLength() > destArgs.Info.Count)
-                        {
-                            AssertMsg(false, "The array length has changed since we allocated the destArgs buffer?");
-                            Throw::FatalInternalError();
-                        }
-
                         for (uint32 j = 0; j < arr->GetLength(); j++)
                         {
                             Var element;
@@ -960,12 +952,14 @@ namespace Js
                             {
                                 element = undefined;
                             }
+#pragma warning(push)
+#pragma warning(suppress: 26014) // SAL gets confused here when we use the stack allocated memory and thinks we might overflow.
                             destArgs.Values[argsIndex++] = element;
                         }
                     }
                     else
                     {
-                        // Emulate %ArrayPrototype%.values() iterator; basically iterate from 0 to length
+                        // Try to use the spread argument as an object with a length property.
                         RecyclableObject *propertyObject;
                         if (!JavascriptOperators::GetPropertyObject(instance, scriptContext, &propertyObject))
                         {
@@ -973,11 +967,6 @@ namespace Js
                         }
 
                         uint32 len = JavascriptArray::GetSpreadArgLen(instance, scriptContext);
-                        if (argsIndex + len > destArgs.Info.Count)
-                        {
-                            AssertMsg(false, "The array length has changed since we allocated the destArgs buffer?");
-                            Throw::FatalInternalError();
-                        }
 
                         for (uint j = 0; j < len; j++)
                         {
@@ -986,15 +975,17 @@ namespace Js
                             {
                                 element = undefined;
                             }
+#pragma warning(suppress: 26015) // SAL gets confused here when we use the stack allocated memory and thinks we might overflow.
                             destArgs.Values[argsIndex++] = element;
+#pragma warning(pop)
                         }
                     }
                 }
 
-                if (spreadArgIndex < spreadIndices->count - 1)
-                {
-                    spreadArgIndex++;
-                }
+            if (spreadArgIndex < spreadIndices->count - 1)
+            {
+                spreadArgIndex++;
+            }
             }
         }
     }
