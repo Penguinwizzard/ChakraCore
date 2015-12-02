@@ -61,14 +61,39 @@ namespace Js
         return X86SIMDValue::ToSIMDValue(x86Result);
     }
 
-    SIMDValue SIMDInt32x4Operation::OpFromFloat32x4(const SIMDValue& value)
+    SIMDValue SIMDInt32x4Operation::OpFromFloat32x4(const SIMDValue& value, bool &throws)
     {
-        X86SIMDValue x86Result;
+        X86SIMDValue x86Result = { 0 };
         X86SIMDValue v = X86SIMDValue::ToX86SIMDValue(value);
+        X86SIMDValue temp;
+        int mask = 0;
 
         // Converts the 4 single-precision, floating-point values to signed 32-bit integer values
         // using truncate, using truncate one instead of _mm_cvtps_epi32
         x86Result.m128i_value = _mm_cvttps_epi32(v.m128_value);
+
+        // check if any value is potentially out of range (0x80000000 in output)
+        temp.m128i_value = _mm_cmpeq_epi32(x86Result.m128i_value, X86_NEG_MASK_F4.m128i_value); 
+        mask = _mm_movemask_ps(temp.m128_value);
+
+        if (mask)
+        {
+            // potential overflow. Do bound checks.
+            temp.m128_value = _mm_cmpge_ps(v.m128_value, X86_TWO_31_F4.m128_value);
+            mask = _mm_movemask_ps(temp.m128_value);
+            if (mask)
+            {
+                throws = true;
+                return X86SIMDValue::ToSIMDValue(x86Result);
+            }
+            temp.m128_value = _mm_cmplt_ps(v.m128_value, X86_NEG_TWO_31_F4.m128_value);
+            mask = _mm_movemask_ps(temp.m128_value);
+            if (mask)
+            {
+                throws = true;
+                return X86SIMDValue::ToSIMDValue(x86Result);
+            }
+        }
 
         return X86SIMDValue::ToSIMDValue(x86Result);
     }

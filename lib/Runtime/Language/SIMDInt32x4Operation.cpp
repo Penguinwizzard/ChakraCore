@@ -72,15 +72,24 @@ namespace Js
         return result;
     }
 
-    SIMDValue SIMDInt32x4Operation::OpFromFloat32x4(const SIMDValue& v)
+    SIMDValue SIMDInt32x4Operation::OpFromFloat32x4(const SIMDValue& v, bool &throws)
     {
-        SIMDValue result;
+        SIMDValue result = { 0 };
+        const int MIN_INT = 0x80000000, MAX_INT = 0x7FFFFFFF;
 
-        result.i32[SIMD_X] = (int)(v.f32[SIMD_X]);
-        result.i32[SIMD_Y] = (int)(v.f32[SIMD_Y]);
-        result.i32[SIMD_Z] = (int)(v.f32[SIMD_Z]);
-        result.i32[SIMD_W] = (int)(v.f32[SIMD_W]);
-
+        for (uint i = 0; i < 4; i++)
+        {
+            if (v.f32[i] >= MIN_INT && v.f32[i] <= MAX_INT)
+            {
+                result.u32[i] = (int)(v.f32[i]);
+            }
+            else
+            {
+                // out of range. Caller should throw.
+                throws = true;
+                return result;
+            }
+        }
         return result;
     }
 

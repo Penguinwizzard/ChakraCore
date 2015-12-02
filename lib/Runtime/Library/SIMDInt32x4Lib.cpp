@@ -131,8 +131,15 @@ namespace Js
         {
             JavascriptSIMDFloat32x4 *instance = JavascriptSIMDFloat32x4::FromVar(args[1]);
             Assert(instance);
+            bool throws = false;
+            SIMDValue result = SIMDInt32x4Operation::OpFromFloat32x4(instance->GetValue(), throws);
 
-            return JavascriptSIMDInt32x4::FromFloat32x4(instance, scriptContext);
+            // out of range
+            if (throws)
+            {
+                JavascriptError::ThrowRangeError(scriptContext, JSERR_ArgumentOutOfRange, L"SIMD.Int32x4.FromFloat32x4");
+            }
+            return JavascriptSIMDInt32x4::New(&result, scriptContext);
         }
         JavascriptError::ThrowTypeError(scriptContext, JSERR_SimdInt32x4TypeMismatch, L"fromFloat32x4");
     }

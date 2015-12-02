@@ -19,7 +19,7 @@ namespace Js {
 
         // conversion
         static SIMDValue OpFromBool(const SIMDValue& value);
-        static SIMDValue OpFromFloat32x4(const SIMDValue& value);
+        static SIMDValue OpFromFloat32x4(const SIMDValue& value, bool &throws);
         static SIMDValue OpFromFloat64x2(const SIMDValue& value);
 
         // Unary Ops
