@@ -182,42 +182,6 @@ namespace Js
         return S_OK;
     }
 
-#if defined(DEBUG) && defined(NTBUILD)
-#include <WindowsDateTimeP.h>
-    void DateUtilities::DebugPrintWinRTDate(INT64 winrtDate)
-    {
-        INT64 dateTimeTicks = winrtDate % ticksPerDay;
-
-        if (dateTimeTicks < 0)
-        {
-            dateTimeTicks = ticksPerDay + dateTimeTicks;
-        }
-
-        __int32 hours =    (__int32) ((dateTimeTicks / ticksPerHour) % 24);
-        __int32 minutes =     (__int32) ((dateTimeTicks / ticksPerMinute) % 60);
-        __int32 seconds =     (__int32) ((dateTimeTicks / ticksPerSecond) % 60);
-        __int32 nanos = (__int32) ((dateTimeTicks % ticksPerSecond) * 100);
-
-        Windows::Foundation::DateTime ret;
-        ret.UniversalTime = winrtDate;
-
-        SYSTEMTIME systemTime;
-        if (FAILED(RoDateTimeToSystemTime(ret, &systemTime)))
-        {
-            printf("Overflow occurred");
-        }
-        else
-        {
-            printf("%d-%d-%d %d:%d:%d:%d\n", systemTime.wDay, systemTime.wMonth, systemTime.wYear, hours, minutes, seconds, nanos);
-        }
-    }
-#else
-    void DateUtilities::DebugPrintWinRTDate(INT64 /* winrtDate */)
-    {
-        // Do nothing, just get optimized away
-    }
-#endif
-
     ///------------------------------------------------------------------------------
     /// Get a time value from SYSTEMTIME structure.
     ///
