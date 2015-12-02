@@ -2888,15 +2888,13 @@ case_2:
         }
 
         cchThis = pThis->GetLength();
-        cchTotalChars = UInt32Math::Add(cchTag, cchTag);
-
         // 5 is for the <></> characters
-        cchTotalChars = UInt32Math::Add(cchTotalChars, 5);
+        cchTotalChars = (cchTag + cchTag + 5);
 
         if (nullptr != pszProp)
         {
             // Need one string argument.
-            if( args.Info.Count >= 2 )
+            if (args.Info.Count >= 2)
             {
                 if (JavascriptString::Is(args[1]))
                 {
@@ -2927,15 +2925,13 @@ case_2:
                 }
             }
 
-            cchTotalChars = UInt32Math::Add(cchTotalChars, cchProp);
-
             // 4 is for the _="" characters
-            cchTotalChars = UInt32Math::Add(cchTotalChars, 4);
+            cchTotalChars += (cchProp + 4);
 
             if (ES6FixesEnabled)
             {
                 // Account for the " escaping (&quot;)
-                cchTotalChars = UInt32Math::Add(cchTotalChars, UInt32Math::Mul(quotesCount, quotStrLen)) - quotesCount;
+                cchTotalChars += (quotesCount * quotStrLen) - quotesCount;
             }
         }
         else
@@ -2943,8 +2939,7 @@ case_2:
             cchPropertyValue = 0;
             cchProp = 0;
         }
-        cchTotalChars = UInt32Math::Add(cchTotalChars, cchThis);
-        cchTotalChars = UInt32Math::Add(cchTotalChars, cchPropertyValue);
+        cchTotalChars += cchThis + cchPropertyValue;
         if (!IsValidCharCount(cchTotalChars) || cchTotalChars < cchThis || cchTotalChars < cchPropertyValue)
         {
             Js::JavascriptError::ThrowOutOfMemoryError(scriptContext);
@@ -3045,7 +3040,6 @@ case_2:
 
         return builder.ToString();
     }
-
     Var JavascriptString::ToLocaleCaseHelper(Var thisObj, bool toUpper, ScriptContext *scriptContext)
     {
         JavascriptString * pThis;
