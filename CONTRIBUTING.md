@@ -1,6 +1,6 @@
 ## Contributing Code
 
-ChakraCore accepts bug fix pull requests. For a bug fix PR to be accepted, it must first have a tracking issue that has been marked approved. Your PR should link to the bug you are fixing. If you've submitted a PR for a bug, please post a comment in the bug to avoid duplication of effort. 
+ChakraCore accepts bug fix pull requests. For a bug fix PR to be accepted, it must first have a tracking issue that has been marked approved. Your PR should link to the bug you are fixing. If you've submitted a PR for a bug, please post a comment in the bug to avoid duplication of effort.
 
 ChakraCore also accepts new feature pull requests. For a feature-level PR to be accepted, it first needs to have design discussion. Design discussion can take one of two forms a) a feature request in the issue tracker that has been marked as approved or b) the PR must be accompanied by a full design spec and this spec is later approved in the open design discussion. Features are evaluated against their complexity, impact on other features, roadmap alignment, and maintainability.
 
@@ -31,21 +31,24 @@ ChakraCore is an organically grown codebase. The consistency of style reflects t
 
 ### Running the tests
 
-The unit tests can be run by:
+The unit tests can be run by following these steps:
 * Choose a build configuration to build and test, e.g. debug and x64.
-* Build that config. 
-  * Ensure rl.exe is built by building the all configuration or building the rl project directly.
+* Build `Chakra.Core.sln` for that config.
+  * Specifically, running tests requires that `rl.exe`, `ch.exe`, and `ChakraCore.dll` be built.
+* Call `test\runtests.cmd` and specify the build config
 
-* Call  tools\runtests.cmd  and specify the build config
-
-e.g.  tools\runtests.cmd -x64debug 
+e.g.  `test\runtests.cmd -x64debug`
 
 For full coverage, please run unit tests against debug and test for both x86 and x64:
-* test\runtests.cmd -x64debug 
-* test\runtests.cmd -x64test 
-* test\runtests.cmd -x86debug 
-* test\runtests.cmd -x86test 
+* `test\runtests.cmd -x64debug`
+* `test\runtests.cmd -x64test`
+* `test\runtests.cmd -x86debug`
+* `test\runtests.cmd -x86test`
+
+`runtests.cmd` can take more switches that are useful for running a subset of tests.  Read the script file for more information.
+
+`runtests.cmd` looks for the build output in the default build output folder `Build\VcBuild\bin`. If the build output path is changed from this default then use the `-bindir` switch to specify that path.
 
 ### Code Flow into Microsoft Edge
 Changes that make it into our ChakraCore GitHub master branch have a short journey to Chakra.dll. Code flows daily from GitHub to the internal repository from which builds of Chakra.dll are produced and then it flows into Windows and Microsoft Edge. While code flows quickly on this first leg of the journey, code flow from our internal branch to a Windows flighting branch is subject to any number of delays. So it is difficult to predict when your change in our GitHub repo will make it into a particular Windows flight.
-# 
+#
