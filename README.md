@@ -35,7 +35,7 @@ There are many ways to contribute to ChakraCore.
 * [Submit pull requests](https://github.com/Microsoft/ChakraCore/pulls) for bug fixes and features and discuss existing proposals
 * Chat about [@ChakraCore](https://twitter.com/ChakraCore) on Twitter
 
-Please refer to [Contribution guidelines](https://github.com/Microsoft/ChakraCore/wiki/Contributor-Guidance) for more details.
+Please refer to [Contribution guidelines](CONTRIBUTING.md) for more details.
 
 ## Roadmap
 For details on our planned features and future direction please refer to our [roadmap](https://github.com/Microsoft/ChakraCore/wiki/Roadmap).
