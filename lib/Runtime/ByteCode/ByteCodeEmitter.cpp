@@ -8163,6 +8163,8 @@ void EmitForInOrForOf(ParseNode *loopNode, ByteCodeGenerator *byteCodeGenerator,
     Emit(loopNode->sxForInOrForOf.pnodeObj, byteCodeGenerator, funcInfo, false); // evaluate collection expression
     funcInfo->ReleaseLoc(loopNode->sxForInOrForOf.pnodeObj);
 
+    EndEmitBlock(loopNode->sxForInOrForOf.pnodeBlock, byteCodeGenerator, funcInfo);
+
     // Grab registers for the enumerator and for the current enumerated item.
     // The enumerator register will be released after this call returns.
     loopNode->sxForInOrForOf.itemLocation = funcInfo->AcquireTmpRegister();
@@ -8228,6 +8230,8 @@ void EmitForInOrForOf(ParseNode *loopNode, ByteCodeGenerator *byteCodeGenerator,
         sym->SetNeedDeclaration(false);
     }
 
+    BeginEmitBlock(loopNode->sxForInOrForOf.pnodeBlock, byteCodeGenerator, funcInfo);
+
     EmitAssignment(nullptr, loopNode->sxForInOrForOf.pnodeLval, loopNode->sxForInOrForOf.itemLocation, byteCodeGenerator, funcInfo);
 
     byteCodeGenerator->EndStatement(loopNode->sxForInOrForOf.pnodeLval);
@@ -8236,6 +8240,9 @@ void EmitForInOrForOf(ParseNode *loopNode, ByteCodeGenerator *byteCodeGenerator,
 
     Emit(loopNode->sxForInOrForOf.pnodeBody, byteCodeGenerator, funcInfo, fReturnValue);
     funcInfo->ReleaseLoc(loopNode->sxForInOrForOf.pnodeBody);
+
+    EndEmitBlock(loopNode->sxForInOrForOf.pnodeBlock, byteCodeGenerator, funcInfo);
+
     funcInfo->ReleaseTmpRegister(loopNode->sxForInOrForOf.itemLocation);
     if (loopNode->emitLabels)
     {
@@ -8257,8 +8264,6 @@ void EmitForInOrForOf(ParseNode *loopNode, ByteCodeGenerator *byteCodeGenerator,
     {
         byteCodeGenerator->Writer()->MarkLabel(skipPastLoop);
     }
-
-    EndEmitBlock(loopNode->sxForInOrForOf.pnodeBlock, byteCodeGenerator, funcInfo);
 }
 
 void EmitArrayLiteral(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *funcInfo)
