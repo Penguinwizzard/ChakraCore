@@ -17,12 +17,7 @@
 #include "Language\AsmJSModule.h"
 #include "Library\ES5Array.h"
 
-#if DBG || !defined(NTBUILD)
-// __DATE__ and __TIME__ are only available in debug or NTBUILD
-#define USE_DATE_TIME_MACRO
-#else
-#include <rtlfilever.c> // For RtlGetVersionResourceFromSelf in release builds
-#endif
+void ChakraBinaryBuildDateTimeHash(DWORD * buildDateHash, DWORD * buildTimeHash);
 
 namespace Js
 {
@@ -110,11 +105,6 @@ enum FileVersionScheme : byte
 
 const FileVersionScheme currentFileVersionScheme = EngineeringVersioningScheme;
 const FileVersionScheme currentFileVersionSchemeLibrary = LibraryEngineeringVersioningScheme;
-
-#ifdef USE_DATE_TIME_MACRO
-const DWORD buildDateHash = JsUtil::CharacterBuffer<char>::StaticGetHashCode(__DATE__, _countof(__DATE__));
-const DWORD buildTimeHash = JsUtil::CharacterBuffer<char>::StaticGetHashCode(__TIME__, _countof(__TIME__));
-#endif
 
 // it should be in separate file for testing
 #include "byteCodeCacheReleaseFileVersion.h"
@@ -440,28 +430,12 @@ public:
             else
             {
                 Assert(actualFileVersionScheme == EngineeringVersioningScheme);
-                DWORD jscriptMajor, jscriptMinor;
-                Js::VerifyOkCatastrophic(AutoSystemInfo::GetJscriptFileVersion(&jscriptMajor, &jscriptMinor));
+                DWORD jscriptMajor, jscriptMinor, buildDateHash, buildTimeHash;
+                Js::VerifyOkCatastrophic(AutoSystemInfo::GetJscriptFileVersion(&jscriptMajor, &jscriptMinor, &buildDateHash, &buildTimeHash));
                 V1.value = jscriptMajor;
                 V2.value = jscriptMinor;
-#ifdef USE_DATE_TIME_MACRO
                 V3.value = buildDateHash;
                 V4.value = buildTimeHash;
-#else
-                // Release builds cannot use __DATE__ or __TIME__
-                RTL_VERSION_RESOURCE buildTimestamp;
-                RtlGetVersionResourceFromSelf(&buildTimestamp);
-
-                if (buildTimestamp.Success)
-                {
-                    V3.value = JsUtil::CharacterBuffer<wchar_t>::StaticGetHashCode(
-                            buildTimestamp.StringFileInfo.FileVersion.__Date__,
-                            _countof(buildTimestamp.StringFileInfo.FileVersion.__Date__));
-                    V4.value = JsUtil::CharacterBuffer<wchar_t>::StaticGetHashCode(
-                            buildTimestamp.StringFileInfo.FileVersion.__Time__,
-                            _countof(buildTimestamp.StringFileInfo.FileVersion.__Time__));
-                }
-#endif
             }
         }
         else
@@ -2634,25 +2608,7 @@ public:
             else
             {
                 Js::VerifyCatastrophic(expectedFileVersionScheme == EngineeringVersioningScheme);
-                Js::VerifyOkCatastrophic(AutoSystemInfo::GetJscriptFileVersion(&expectedV1, &expectedV2));
-#ifdef USE_DATE_TIME_MACRO
-                expectedV3 = buildDateHash;
-                expectedV4 = buildTimeHash;
-#else
-                // Release builds cannot use __DATE__ or __TIME__
-                RTL_VERSION_RESOURCE buildTimestamp;
-                RtlGetVersionResourceFromSelf(&buildTimestamp);
-
-                if (buildTimestamp.Success)
-                {
-                    expectedV3 = JsUtil::CharacterBuffer<wchar_t>::StaticGetHashCode(
-                            buildTimestamp.StringFileInfo.FileVersion.__Date__,
-                            _countof(buildTimestamp.StringFileInfo.FileVersion.__Date__));
-                    expectedV4 = JsUtil::CharacterBuffer<wchar_t>::StaticGetHashCode(
-                            buildTimestamp.StringFileInfo.FileVersion.__Time__,
-                            _countof(buildTimestamp.StringFileInfo.FileVersion.__Time__));
-                }
-#endif
+                Js::VerifyOkCatastrophic(AutoSystemInfo::GetJscriptFileVersion(&expectedV1, &expectedV2, &expectedV3, &expectedV4));
             }
         }
         else
