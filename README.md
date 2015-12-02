@@ -45,5 +45,5 @@ For details on our planned features and future direction please refer to our [ro
 * [Quickstart Embedding ChakraCore](https://github.com/Microsoft/ChakraCore/wiki/Embedding-ChakraCore)
 * [JSRT Reference](https://github.com/Microsoft/ChakraCore/wiki/JavaScript-Runtime-%28JSRT%29-Reference)
 * [Architecture overview](https://github.com/Microsoft/ChakraCore/wiki/Architecture-Overview)
-* [Contribution guidelines](https://github.com/Microsoft/ChakraCore/wiki/Contributor-Guidance)
+* [Contribution guidelines](CONTRIBUTING.md)
 * [Other resources](https://github.com/Microsoft/ChakraCore/wiki/Resources)
