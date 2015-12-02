@@ -9891,9 +9891,9 @@ Lowerer::LowerArgInAsmJs(IR::Instr * instrArgIn)
 {
     Assert(m_func->GetJnFunction()->GetIsAsmjsMode());
 
-    Js::ArgSlot argCount = m_func->GetJnFunction()->GetAsmJsFunctionInfo()->GetArgCount();
+    int32 argCount = m_func->GetJnFunction()->GetAsmJsFunctionInfo()->GetArgCount();
     IR::Instr * instr = instrArgIn;
-    for (int argNum = argCount - 1; argNum >= 0; --argNum)
+    for (int32 argNum = argCount - 1; argNum >= 0; --argNum)
     {
         IR::Instr * instrPrev = instr->m_prev;
         m_lowererMD.ChangeToAssign(instr);
