@@ -1924,9 +1924,8 @@ namespace Js
 
         if (nullptr == callMethod)
         {
-            // newCount is ushort. If args count is greater than or equal to 65535, an integer
-            // overflow will occur when newCount is set.
-            if (args.Info.Count >= USHORT_MAX) //check against CallInfo::kMaxCountArgs if newCount is ever made int
+            // too many arguments
+            if (args.Info.Count >= CallInfo::kMaxCountArgs)
             {
                 JavascriptError::ThrowRangeError(scriptContext, JSERR_ArgListTooLarge);
             }
