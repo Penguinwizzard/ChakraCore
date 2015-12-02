@@ -665,7 +665,7 @@ namespace Js
     class AsmJsFunctionDeclaration : public AsmJsSymbol
     {
         AsmJsRetType    mReturnType;
-        ArgSlot         mArgCount;
+        uint32_t        mArgCount;
         RegSlot         mLocation;
         AsmJsType*      mArgumentsType;
         bool            mReturnTypeKnown : 1;
@@ -676,7 +676,7 @@ namespace Js
             AsmJsSymbol( name, type )
             , mAllocator(allocator)
             , mReturnType( AsmJsRetType::Void )
-            , mArgCount(Constants::InvalidArgSlot)
+            , mArgCount(Constants::UninitializedValue)
             , mLocation( 0 )
             , mReturnTypeKnown( false )
             , mArgumentsType(nullptr)
@@ -684,39 +684,37 @@ namespace Js
         // returns false if the current return type is known and different
         virtual bool CheckAndSetReturnType( Js::AsmJsRetType val );
         inline Js::AsmJsRetType GetReturnType() const{return mReturnType;}
-        bool EnsureArgCount(ArgSlot count);
-        void SetArgCount(ArgSlot count );
+        bool EnsureArgCount(uint32_t count);
+        void SetArgCount( uint32_t count );
 
-        ArgSlot GetArgCount() const
+        uint32_t GetArgCount() const
         {
             return mArgCount;
         }
         AsmJsType* GetArgTypeArray();
 
-        const AsmJsType& GetArgType( ArgSlot index ) const
+        const AsmJsType& GetArgType( uint32 index ) const
         {
-            Assert( mArgumentsType && index < GetArgCount() );
-            return mArgumentsType[index];
+            Assert( mArgumentsType && index < GetArgCount() ); return mArgumentsType[index];
         }
-        void SetArgType(const AsmJsType& arg, ArgSlot index)
+        void SetArgType(const AsmJsType& arg, uint32 index)
         {
             Assert( index < GetArgCount() ); mArgumentsType[index] = arg;
         }
-        void SetArgType(AsmJsVarBase* arg, ArgSlot index)
+        void SetArgType(AsmJsVarBase* arg, uint32 index)
         {
-            Assert( mArgumentsType != nullptr && index < GetArgCount() );
-            SetArgType( arg->GetType(), index );
+            Assert( mArgumentsType != nullptr && index < GetArgCount() ); SetArgType( arg->GetType(), index );
         }
-        bool EnsureArgType(AsmJsVarBase* arg, ArgSlot index);
+        bool EnsureArgType(AsmJsVarBase* arg, int index);
         inline Js::RegSlot GetFunctionIndex() const{return mLocation;}
         inline void SetFunctionIndex( Js::RegSlot val ){mLocation = val;}
 
         // argCount : number of arguments to check
         // args : dynamic array with the argument type
         // retType : returnType associated with this function signature
-        virtual bool SupportsArgCall(ArgSlot argCount, AsmJsType* args, AsmJsRetType& retType);
+        virtual bool SupportsArgCall(uint argCount, AsmJsType* args, AsmJsRetType& retType);
         // Return the size in bytes of the arguments, inArgCount is the number of argument in the call ( can be different than mArgCount for FFI )
-        ArgSlot GetArgByteSize(ArgSlot inArgCount) const;
+        ArgSlot GetArgByteSize(int inArgCount) const;
 
         //AsmJsSymbol interface
         virtual AsmJsType GetType() const;
@@ -732,14 +730,14 @@ namespace Js
         AsmJsMathFunction* mOverload;
         OpCodeAsmJs mOpCode;
     public:
-        AsmJsMathFunction(PropertyName name, ArenaAllocator* allocator, ArgSlot argCount, AsmJSMathBuiltinFunction builtIn, OpCodeAsmJs op, AsmJsRetType retType, ...);
+        AsmJsMathFunction(PropertyName name, ArenaAllocator* allocator, uint argCount, AsmJSMathBuiltinFunction builtIn, OpCodeAsmJs op, AsmJsRetType retType, ...);
 
         void SetOverload( AsmJsMathFunction* val );
         AsmJSMathBuiltinFunction GetMathBuiltInFunction(){ return mBuiltIn; };
         virtual bool CheckAndSetReturnType( Js::AsmJsRetType val ) override;
-        bool SupportsMathCall(ArgSlot argCount, AsmJsType* args, OpCodeAsmJs& op, AsmJsRetType& retType);
+        bool SupportsMathCall(uint argCount, AsmJsType* args, OpCodeAsmJs& op, AsmJsRetType& retType);
     private:
-        virtual bool SupportsArgCall(ArgSlot argCount, AsmJsType* args, AsmJsRetType& retType ) override;
+        virtual bool SupportsArgCall( uint argCount, AsmJsType* args, AsmJsRetType& retType ) override;
 
     };
 
@@ -769,7 +767,7 @@ namespace Js
 
         // We cannot know the return type of an Import Function so always think its return type is correct
         virtual bool CheckAndSetReturnType( Js::AsmJsRetType val ) override{return true;}
-        virtual bool SupportsArgCall(ArgSlot argCount, AsmJsType* args, AsmJsRetType& retType ) override;
+        virtual bool SupportsArgCall( uint argCount, AsmJsType* args, AsmJsRetType& retType ) override;
     };
 
     class AsmJsFunctionTable : public AsmJsFunctionDeclaration
@@ -808,7 +806,7 @@ namespace Js
             Assert( index < mSize );
             return mTable.Item( index );
         }
-        virtual bool SupportsArgCall(ArgSlot argCount, AsmJsType* args, AsmJsRetType& retType );
+        virtual bool SupportsArgCall( uint argCount, AsmJsType* args, AsmJsRetType& retType );
 
     };
 
@@ -950,12 +948,12 @@ namespace Js
     class AsmJsFunctionInfo
     {
         int mIntConstCount, mDoubleConstCount, mFloatConstCount;
-        ArgSlot mArgCount;
+        uint mArgCount;
         int mIntVarCount, mDoubleVarCount, mFloatVarCount, mIntTmpCount, mDoubleTmpCount, mFloatTmpCount;
         AsmJsVarType::Which * mArgType;
         ArgSlot mArgSizesLength;
         uint * mArgSizes;
-        ArgSlot mArgByteSize;
+        int mArgByteSize;
         // offset in Byte from the beggining of the stack aka R0
         int mIntByteOffset, mDoubleByteOffset, mFloatByteOffset;
         AsmJsRetType mReturnType;
@@ -1014,11 +1012,11 @@ namespace Js
         inline void SetFloatTmpCount(int val) { mFloatTmpCount = val; }
         inline int GetDoubleTmpCount()const { return mDoubleTmpCount; }
         inline void SetDoubleTmpCount(int val) { mDoubleTmpCount = val; }
-        inline ArgSlot GetArgCount() const{ return mArgCount; }
+        inline uint GetArgCount() const{ return mArgCount; }
         inline void SetArgCount(ArgSlot val) { mArgCount = val; }
         inline AsmJsRetType GetReturnType() const{return mReturnType;}
         inline void SetReturnType(AsmJsRetType val) { mReturnType = val; }
-        inline ArgSlot GetArgByteSize() const{return mArgByteSize;}
+        inline int GetArgByteSize() const{return mArgByteSize;}
         inline void SetArgByteSize(ArgSlot val) { mArgByteSize = val; }
         inline int GetDoubleByteOffset() const{ return mDoubleByteOffset; }
         inline void SetDoubleByteOffset(int val) { mDoubleByteOffset = val; }
@@ -1044,10 +1042,10 @@ namespace Js
         inline int GetSimdAllCount() const { return GetSimdConstCount() + GetSimdVarCount() + GetSimdTmpCount(); }
 
         int GetTotalSizeinBytes()const;
-        void SetArgType(AsmJsVarType type, ArgSlot index);
-        inline AsmJsVarType GetArgType(ArgSlot index ) const
+        void SetArgType(AsmJsVarType type, uint index);
+        inline AsmJsVarType GetArgType( uint index ) const
         {
-            Assert(mArgCount != Constants::InvalidArgSlot);
+            Assert(mArgCount != Constants::UninitializedValue);
             AnalysisAssert( index < mArgCount);
             return mArgType[index];
         }
@@ -1101,14 +1099,13 @@ namespace Js
         AsmJsSIMDFunction* mOverload;
         OpCodeAsmJs mOpCode;
     public:
-        AsmJsSIMDFunction(PropertyName name, ArenaAllocator* allocator, ArgSlot argCount, AsmJsSIMDBuiltinFunction builtIn, OpCodeAsmJs op, AsmJsRetType retType, ...);
+        AsmJsSIMDFunction(PropertyName name, ArenaAllocator* allocator, int argCount, AsmJsSIMDBuiltinFunction builtIn, OpCodeAsmJs op, AsmJsRetType retType, ...);
 
         PropertyId GetBuiltinPropertyId();
         void SetOverload(AsmJsSIMDFunction* val);
         AsmJsSIMDBuiltinFunction GetSimdBuiltInFunction(){ return mBuiltIn; };
         virtual bool CheckAndSetReturnType(Js::AsmJsRetType val) override;
-
-        bool SupportsSIMDCall(ArgSlot argCount, AsmJsType* args, OpCodeAsmJs& op, AsmJsRetType& retType);
+        bool SupportsSIMDCall(int argCount, AsmJsType* args, OpCodeAsmJs& op, AsmJsRetType& retType);
 
         bool IsConstructor();
         bool IsConstructor(uint argCount);
@@ -1182,7 +1179,8 @@ namespace Js
         OpCodeAsmJs GetOpcode() { return mOpCode;  }
 
     private:
-        virtual bool SupportsArgCall(ArgSlot argCount, AsmJsType* args, AsmJsRetType& retType) override;
+        virtual bool SupportsArgCall(uint argCount, AsmJsType* args, AsmJsRetType& retType) override;
+
     };
 
 };

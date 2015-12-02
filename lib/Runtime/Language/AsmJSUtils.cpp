@@ -63,13 +63,12 @@ namespace Js
         return node->sxVar.pnodeNext;
     }
 
-    ParseNode* ParserWrapper::FunctionArgsList( ParseNode *node, ArgSlot &numformals )
+    ParseNode* ParserWrapper::FunctionArgsList( ParseNode *node, unsigned &numformals )
     {
         Assert( node->nop == knopFncDecl );
         PnFnc func = node->sxFnc;
         ParseNode* first = func.pnodeArgs;
-        // throws OOM on uint16 overflow
-        for( ParseNode* pnode = first; pnode; pnode = pnode->sxVar.pnodeNext, UInt16Math::Inc(numformals));
+        for( ParseNode* pnode = first; pnode; pnode = pnode->sxVar.pnodeNext, numformals++ );
         return first;
     }
 
@@ -186,7 +185,7 @@ namespace Js
     {
         AsmJsFunctionInfo* info = func->GetFunctionBody()->GetAsmJsFunctionInfo();
         int argSize = MachPtr;
-        for (ArgSlot i = 0; i < info->GetArgCount(); i++)
+        for (uint i = 0; i < info->GetArgCount(); i++)
         {
             if (info->GetArgType(i).isSIMD())
             {
@@ -218,7 +217,7 @@ namespace Js
 
         uint actualArgCount = callInfo.Count - 1; // -1 for ScriptFunction
         argDst = argDst + MachPtr; // add one first so as to skip the ScriptFunction argument
-        for (ArgSlot i = 0; i < info->GetArgCount(); i++)
+        for (uint i = 0; i < info->GetArgCount(); i++)
         {
 
             if (info->GetArgType(i).isInt())
@@ -388,7 +387,7 @@ namespace Js
         // Unbox Var to primitive type
         {
             int32 intVal; double doubleVal; float floatVal;
-            for (ArgSlot i = 0; i < info->GetArgCount(); i++)
+            for (uint i = 0; i < info->GetArgCount(); i++)
             {
                 if (info->GetArgType(i).isInt())
                 {

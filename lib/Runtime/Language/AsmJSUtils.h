@@ -52,7 +52,7 @@ namespace Js {
     public:
         static PropertyName FunctionName( ParseNode *node );
         static PropertyName VariableName( ParseNode *node );
-        static ParseNode* FunctionArgsList( ParseNode *node, ArgSlot &numformals );
+        static ParseNode* FunctionArgsList( ParseNode *node, unsigned &numformals );
         static ParseNode* NextVar( ParseNode *node );
         static ParseNode* NextInList( ParseNode *node );
         static inline ParseNode *GetListHead( ParseNode *node );

@@ -994,8 +994,7 @@ namespace Js
         const int funcOpCode = isFFI ? 0 : 1;
 
         // StartCall
-        const ArgSlot argCount = pnode->sxCall.argCount;
-
+        const uint16 argCount = pnode->sxCall.argCount;
         StartStatement(pnode);
         ++mNestedCallCount;
 
@@ -1003,7 +1002,7 @@ namespace Js
         auto startCallChunk = mWriter.GetCurrentChunk();
         uint startCallChunkOffset = startCallChunk->GetCurrentOffset();
 
-        bool patchStartCall = sym->GetArgCount() == Constants::InvalidArgSlot;
+        bool patchStartCall = sym->GetArgCount() == Constants::UninitializedValue;
         if (patchStartCall)
         {
             // we will not know the types of the arguments for the first call to a deferred function,
@@ -1014,18 +1013,18 @@ namespace Js
         else
         {
             // args size + 1 pointer
-            const ArgSlot argByteSize = UInt16Math::Add(sym->GetArgByteSize(argCount), sizeof(Var));
+            const ArgSlot argByteSize = sym->GetArgByteSize(argCount) + sizeof(Var);
             mWriter.AsmStartCall(callOpCode[funcOpCode][StartCallIndex], argByteSize);
         }
         AutoArrayPtr<AsmJsType> types(nullptr, 0);
-        int maxDepthForLevel = mFunction->GetArgOutDepth();
+        int maxDepthForLevel = 0;
         if( argCount > 0 )
         {
             ParseNode* argNode = pnode->sxCall.pnodeArgs;
             uint16 regSlotLocation = 1;
             types.Set(HeapNewArray( AsmJsType, argCount ), argCount);
 
-            for(ArgSlot i = 0; i < argCount; i++)
+            for( int i = 0; i < argCount; i++ )
             {
                 // Get i arg node
                 ParseNode* arg = argNode;
@@ -1122,16 +1121,15 @@ namespace Js
             throw AsmJsCompilationException( L"Function %s returns different type", funcName->Psz() );
         }
 
-        const ArgSlot argByteSize = UInt16Math::Add(sym->GetArgByteSize(argCount), sizeof(Var));
+        const ArgSlot argByteSize = sym->GetArgByteSize(argCount) + sizeof(Var);
         // +1 is for function object
-        ArgSlot runtimeArg = UInt16Math::Add(argCount, 1);
+        ArgSlot runtimeArg = argCount + 1;
         if (funcOpCode == 1) // for non import functions runtimeArg is calculated from argByteSize
         {
             runtimeArg = (ArgSlot)(::ceil((double)(argByteSize / sizeof(Var)))) + 1;
         }
-
         // +1 is for return address
-        maxDepthForLevel += UInt16Math::Add(runtimeArg, 1);
+        maxDepthForLevel += runtimeArg + 1;
 
         // Make sure we have enough memory allocated for OutParameters
         if (mNestedCallCount > 1)
@@ -1254,7 +1252,7 @@ namespace Js
         {
             ParseNode* argNode = pnode->sxCall.pnodeArgs;
 
-            for (ArgSlot i = 0; i < argCount; i++)
+            for (int i = 0; i < argCount; i++)
             {
                 // Get i arg node
                 ParseNode* arg = argNode;
@@ -1742,7 +1740,7 @@ namespace Js
 
         ++mNestedCallCount;
 
-        const ArgSlot argCount = pnode->sxCall.argCount;
+        const uint16 argCount = pnode->sxCall.argCount;
         ParseNode* argNode = pnode->sxCall.pnodeArgs;
 
         // for fround, if we have a fround(NumericLiteral), we want to just emit Ld_Flt NumericLiteral
@@ -1774,13 +1772,13 @@ namespace Js
 
         AutoArrayPtr<AsmJsType> types(nullptr, 0);
         AutoArrayPtr<EmitExpressionInfo> argsInfo(nullptr, 0);
-        int maxDepthForLevel = mFunction->GetArgOutDepth();
+        int maxDepthForLevel = 0;
         if( argCount > 0 )
         {
             types.Set(HeapNewArray(AsmJsType, argCount), argCount);
             argsInfo.Set(HeapNewArray(EmitExpressionInfo, argCount), argCount);
 
-            for(ArgSlot i = 0; i < argCount; i++)
+            for( int i = 0; i < argCount; i++ )
             {
                 // Get i arg node
                 ParseNode* arg = argNode;
@@ -1829,10 +1827,10 @@ namespace Js
             mFunction->ReleaseLocationGeneric( &argsInfo[i] );
         }
 
-        const int argByteSize = mathFunction->GetArgByteSize(argCount) + sizeof(Var);
-        // + 1 is for function object
-        int runtimeArg = (int)(::ceil((double)(argByteSize / sizeof(Var)))) + 1;
-        // + 1 for return address
+        const ArgSlot argByteSize = mathFunction->GetArgByteSize(argCount) + sizeof(Var);
+        // +1 is for function object
+        ArgSlot runtimeArg = (ArgSlot)(::ceil((double)(argByteSize / sizeof(Var)))) + 1;
+        // +1 is for return address
         maxDepthForLevel += runtimeArg + 1;
 
         // Make sure we have enough memory allocated for OutParameters
@@ -1955,9 +1953,9 @@ namespace Js
                 throw AsmJsCompilationException(L"Math builtin function doesn't support arguments");
             }
 
-            const int argByteSize = mathFunction->GetArgByteSize(argCount) + sizeof(Var);
+            const ArgSlot argByteSize = mathFunction->GetArgByteSize(argCount) + sizeof(Var);
             // +1 is for function object
-            int runtimeArg = (int)(::ceil((double)(argByteSize / sizeof(Var)))) + 1;
+            ArgSlot runtimeArg = (ArgSlot)(::ceil((double)(argByteSize / sizeof(Var)))) + 1;
             // +1 is for return address
             maxDepthForLevel += runtimeArg + 1;
 

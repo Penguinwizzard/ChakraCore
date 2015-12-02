@@ -298,7 +298,7 @@ namespace Js
     bool
     AsmJSCompiler::CheckModuleArguments(AsmJsModuleCompiler &m, ParseNode *fn)
     {
-        ArgSlot numFormals = 0;
+        unsigned numFormals = 0;
 
         ParseNode *arg1 = ParserWrapper::FunctionArgsList( fn, numFormals );
         ParseNode *arg2 = arg1 ? ParserWrapper::NextVar( arg1 ) : nullptr;

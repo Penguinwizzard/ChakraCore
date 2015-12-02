@@ -512,9 +512,9 @@ namespace Js
         return false;
     }
 
-    bool AsmJsFunctionDeclaration::EnsureArgCount(ArgSlot count)
+    bool AsmJsFunctionDeclaration::EnsureArgCount(uint32_t count)
     {
-        if (mArgCount == Constants::InvalidArgSlot)
+        if (mArgCount == Constants::UninitializedValue)
         {
             SetArgCount(count);
             return true;
@@ -525,11 +525,11 @@ namespace Js
         }
     }
 
-    void AsmJsFunctionDeclaration::SetArgCount(ArgSlot count )
+    void AsmJsFunctionDeclaration::SetArgCount( uint32_t count )
     {
         Assert( mArgumentsType == nullptr );
-        Assert(mArgCount == Constants::InvalidArgSlot);
-        Assert(count != Constants::InvalidArgSlot);
+        Assert(mArgCount == Constants::UninitializedValue);
+        Assert(count != Constants::UninitializedValue);
         mArgCount = count;
         if( count > 0 )
         {
@@ -564,7 +564,7 @@ namespace Js
     {
         return false;
     }
-    bool AsmJsFunctionDeclaration::EnsureArgType(AsmJsVarBase* arg, ArgSlot index)
+    bool AsmJsFunctionDeclaration::EnsureArgType(AsmJsVarBase* arg, int index)
     {
         if (mArgumentsType[index].GetWhich() == -1)
         {
@@ -577,14 +577,14 @@ namespace Js
         }
     }
 
-    bool AsmJsFunctionDeclaration::SupportsArgCall( ArgSlot argCount, AsmJsType* args, AsmJsRetType& retType )
+    bool AsmJsFunctionDeclaration::SupportsArgCall( uint argCount, AsmJsType* args, AsmJsRetType& retType )
     {
         // we will assume the first reference to the function is correct, until proven wrong
-        if (GetArgCount() == Constants::InvalidArgSlot)
+        if (GetArgCount() == Constants::UninitializedValue)
         {
             SetArgCount(argCount);
 
-            for (ArgSlot i = 0; i < argCount; i++)
+            for (uint i = 0; i < argCount; i++)
             {
                 if (args[i].isSubType(AsmJsType::Double))
                 {
@@ -613,7 +613,7 @@ namespace Js
         }
         else if( argCount == GetArgCount() )
         {
-            for(ArgSlot i = 0; i < argCount; i++ )
+            for( uint i = 0; i < argCount; i++ )
             {
                 if (!args[i].isSubType(mArgumentsType[i]))
                 {
@@ -626,68 +626,75 @@ namespace Js
         return false;
     }
 
-    ArgSlot AsmJsFunctionDeclaration::GetArgByteSize(ArgSlot inArgCount) const
+    Js::ArgSlot AsmJsFunctionDeclaration::GetArgByteSize(int inArgCount) const
     {
-        uint argSize = 0;
+#if _M_IX86
+        if( GetSymbolType() == AsmJsSymbol::ImportFunction )
+        {
+            Assert(inArgCount != Constants::UninitializedValue);
+            return static_cast<ArgSlot>( ( inArgCount*sizeof( Var ) ) );
+        }
+        Assert(GetArgCount() != Constants::UninitializedValue);
+        ArgSlot bytesize = 0;
+        for (uint i = 0; i < GetArgCount(); i++)
+        {
+            if( GetArgType(i).isMaybeDouble() )
+            {
+                bytesize += sizeof(double);
+            }
+            else if (GetArgType(i).isIntish())
+            {
+                bytesize += sizeof( int );
+            }
+            else if (GetArgType(i).isFloatish())
+            {
+                bytesize += sizeof(float);
+            }
+            else if (GetArgType(i).isSIMDType())
+            {
+                bytesize += sizeof(AsmJsSIMDValue);
+            }
+#if DBG
+            else
+            {
+                Assert(UNREACHED);
+            }
+#endif
+        }
+        return bytesize;
+
+
+#elif _M_X64
         if (GetSymbolType() == AsmJsSymbol::ImportFunction)
         {
-            Assert(inArgCount != Constants::InvalidArgSlot);
-            argSize = inArgCount * MachPtr;
+            Assert(inArgCount != Constants::UninitializedValue);
+            return static_cast<ArgSlot>(inArgCount*MachPtr);
         }
-#if _M_IX86
         else
         {
-            for (ArgSlot i = 0; i < GetArgCount(); i++)
-            {
-                if( GetArgType(i).isMaybeDouble() )
-                {
-                    argSize += sizeof(double);
-                }
-                else if (GetArgType(i).isIntish())
-                {
-                    argSize += sizeof(int);
-                }
-                else if (GetArgType(i).isFloatish())
-                {
-                    argSize += sizeof(float);
-                }
-                else if (GetArgType(i).isSIMDType())
-                {
-                    argSize += sizeof(AsmJsSIMDValue);
-                }
-                else
-                {
-                    Assume(UNREACHED);
-                }
-            }
-        }
-#elif _M_X64
-        else
-        {
-            for (ArgSlot i = 0; i < GetArgCount(); i++)
+            ArgSlot bytesize = 0;
+
+            for (uint i = 0; i < GetArgCount(); i++)
             {
                 if (GetArgType(i).isSIMDType())
                 {
-                    argSize += sizeof(AsmJsSIMDValue);
+                    bytesize += sizeof(AsmJsSIMDValue);
                 }
                 else
                 {
-                    argSize += MachPtr;
+                    bytesize += static_cast<ArgSlot>(MachPtr);
                 }
             }
+            return bytesize;
         }
 #else
         Assert(UNREACHED);
+        return 0;
 #endif
-        if (argSize >= (1 << 16))
-        {
-            // throw OOM on overflow
-            Throw::OutOfMemory();
-        }
-        return static_cast<ArgSlot>(argSize);
+
     }
 
-    AsmJsMathFunction::AsmJsMathFunction( PropertyName name, ArenaAllocator* allocator, ArgSlot argCount, AsmJSMathBuiltinFunction builtIn, OpCodeAsmJs op, AsmJsRetType retType, ... ) :
+    AsmJsMathFunction::AsmJsMathFunction( PropertyName name, ArenaAllocator* allocator, uint argCount, AsmJSMathBuiltinFunction builtIn, OpCodeAsmJs op, AsmJsRetType retType, ... ) :
         AsmJsFunctionDeclaration( name, AsmJsSymbol::MathBuiltinFunction, allocator )
         , mBuiltIn( builtIn )
         , mOverload( nullptr )
@@ -699,7 +706,7 @@ namespace Js
 
         SetArgCount( argCount );
         va_start( arguments, retType );
-        for(ArgSlot iArg = 0; iArg < argCount; iArg++)
+        for( uint iArg = 0; iArg < argCount; iArg++ )
         {
             SetArgType(va_arg(arguments, AsmJsType), iArg);
         }
@@ -736,12 +743,12 @@ namespace Js
         return AsmJsFunctionDeclaration::CheckAndSetReturnType(val) || (mOverload && mOverload->CheckAndSetReturnType(val));
     }
 
-    bool AsmJsMathFunction::SupportsArgCall(ArgSlot argCount, AsmJsType* args, AsmJsRetType& retType )
+    bool AsmJsMathFunction::SupportsArgCall( uint argCount, AsmJsType* args, AsmJsRetType& retType )
     {
         return AsmJsFunctionDeclaration::SupportsArgCall(argCount, args, retType) || (mOverload && mOverload->SupportsArgCall(argCount, args, retType));
     }
 
-    bool AsmJsMathFunction::SupportsMathCall(ArgSlot argCount, AsmJsType* args, OpCodeAsmJs& op, AsmJsRetType& retType )
+    bool AsmJsMathFunction::SupportsMathCall( uint argCount, AsmJsType* args, OpCodeAsmJs& op, AsmJsRetType& retType )
     {
         if (AsmJsFunctionDeclaration::SupportsArgCall(argCount, args, retType))
         {
@@ -884,7 +891,7 @@ namespace Js
 
         mbyteCodeTJMap = RecyclerNew(recycler, ByteCodeToTJMap,recycler);
 
-        for(ArgSlot i = 0; i < GetArgCount(); i++)
+        for( uint i = 0; i < GetArgCount(); i++ )
         {
             AsmJsType varType = func->GetArgType(i);
             SetArgType(AsmJsVarType::FromCheckedType(varType), i);
@@ -962,9 +969,9 @@ namespace Js
     }
 
 
-    void AsmJsFunctionInfo::SetArgType(AsmJsVarType type, ArgSlot index)
+    void AsmJsFunctionInfo::SetArgType(AsmJsVarType type, uint index)
     {
-        Assert(mArgCount != Constants::InvalidArgSlot);
+        Assert(mArgCount != Constants::UninitializedValue);
         AnalysisAssert(index < mArgCount);
 
         Assert(type.which() == AsmJsVarType::Int || type.which() == AsmJsVarType::Float || type.which() == AsmJsVarType::Double || type.isSIMD());
@@ -975,17 +982,17 @@ namespace Js
         // add 4 if int, 8 if double
         if (type.isDouble())
         {
-            mArgByteSize = UInt16Math::Add(mArgByteSize, sizeof(double));
+            mArgByteSize += sizeof(double);
             mArgSizes[index] = sizeof(double);
         }
         else if (type.isSIMD())
         {
-            mArgByteSize = UInt16Math::Add(mArgByteSize, sizeof(AsmJsSIMDValue));
+            mArgByteSize += sizeof(AsmJsSIMDValue);
             mArgSizes[index] = sizeof(AsmJsSIMDValue);
         }
         else
         {
-            mArgByteSize = UInt16Math::Add(mArgByteSize, sizeof(Var));
+            mArgByteSize += MachPtr;
             mArgSizes[index] = MachPtr;
         }
     }
@@ -1017,9 +1024,9 @@ namespace Js
     }
 
 
-    bool AsmJsImportFunction::SupportsArgCall(ArgSlot argCount, AsmJsType* args, AsmJsRetType& retType )
+    bool AsmJsImportFunction::SupportsArgCall( uint argCount, AsmJsType* args, AsmJsRetType& retType )
     {
-        for (ArgSlot i = 0; i < argCount ; i++)
+        for (uint i = 0; i < argCount ; i++)
         {
             if (!args[i].isExtern())
             {
@@ -1037,19 +1044,19 @@ namespace Js
     }
 
 
-    bool AsmJsFunctionTable::SupportsArgCall(ArgSlot argCount, AsmJsType* args, AsmJsRetType& retType )
+    bool AsmJsFunctionTable::SupportsArgCall( uint argCount, AsmJsType* args, AsmJsRetType& retType )
     {
         if (mAreArgumentsKnown)
         {
             return AsmJsFunctionDeclaration::SupportsArgCall(argCount, args, retType);
         }
 
-        Assert(GetArgCount() == Constants::InvalidArgSlot);
+        Assert(GetArgCount() == Constants::UninitializedValue);
         SetArgCount( argCount );
 
         retType = this->GetReturnType();
 
-        for (ArgSlot i = 0; i < argCount ; i++)
+        for (uint i = 0; i < argCount ; i++)
         {
             if (args[i].isInt())
             {
@@ -1073,7 +1080,7 @@ namespace Js
         return true;
     }
 
-    AsmJsSIMDFunction::AsmJsSIMDFunction(PropertyName name, ArenaAllocator* allocator, ArgSlot argCount, AsmJsSIMDBuiltinFunction builtIn, OpCodeAsmJs op, AsmJsRetType retType, ...) :
+    AsmJsSIMDFunction::AsmJsSIMDFunction(PropertyName name, ArenaAllocator* allocator, int argCount, AsmJsSIMDBuiltinFunction builtIn, OpCodeAsmJs op, AsmJsRetType retType, ...) :
         AsmJsFunctionDeclaration(name, AsmJsSymbol::SIMDBuiltinFunction, allocator)
         , mBuiltIn(builtIn)
         , mOverload(nullptr)
@@ -1085,14 +1092,14 @@ namespace Js
 
         SetArgCount(argCount);
         va_start(arguments, retType);
-        for (ArgSlot iArg = 0; iArg < argCount; iArg++)
+        for (int iArg = 0; iArg < argCount; iArg++)
         {
             SetArgType(va_arg(arguments, AsmJsType), iArg);
         }
         va_end(arguments);
     }
 
-    bool AsmJsSIMDFunction::SupportsSIMDCall(ArgSlot argCount, AsmJsType* args, OpCodeAsmJs& op, AsmJsRetType& retType)
+    bool AsmJsSIMDFunction::SupportsSIMDCall(int argCount, AsmJsType* args, OpCodeAsmJs& op, AsmJsRetType& retType)
     {
         if (AsmJsFunctionDeclaration::SupportsArgCall(argCount, args, retType))
         {
@@ -1102,7 +1109,7 @@ namespace Js
         return mOverload && mOverload->SupportsSIMDCall(argCount, args, op, retType);
     }
 
-    bool AsmJsSIMDFunction::SupportsArgCall(ArgSlot argCount, AsmJsType* args, AsmJsRetType& retType)
+    bool AsmJsSIMDFunction::SupportsArgCall(uint argCount, AsmJsType* args, AsmJsRetType& retType)
     {
         return AsmJsFunctionDeclaration::SupportsArgCall(argCount, args, retType) || (mOverload && mOverload->SupportsArgCall(argCount, args, retType));
     }
