@@ -292,6 +292,59 @@ function asmModule(stdlib, imports) {
         return i4check(x);
     }
 
+    function conv13()
+    {
+        // all in range
+        var a = f4(2147483520.0, -2147483520.0, 2147483520.0, -0.0);
+        var b = i4(0, 0, 0, 0);
+        var c = i4(0, 0, 0, 0);
+        var d = i4(0, 0, 0, 0);
+        
+        b = i4fromFloat32x4(a);
+
+        a = f4(2147483520.0, 2147483520.0, 2147483520.0, -0.0);
+        c = i4fromFloat32x4(a);
+    
+        a = f4(-2147483520.0, -2147483520.0, -2147483520.0, -0.0);
+        d = i4fromFloat32x4(a)
+        
+        b = i4add(b, c);
+        b = i4add(b, d);
+        return i4check(b);
+    }
+
+    // out of range
+    function conv14()
+    {
+
+        var a = f4(2147483648.0, -2147483648.0, 2147483648.0, -0.0);
+        var b = i4(0, 0, 0, 0);
+        
+        b = i4fromFloat32x4(a);
+        
+        return i4check(b);
+    }
+    
+    // out of range
+    function conv15()
+    {
+        var a = f4(2147483648.0, 2147483648.0, 2147483648.0, -0.0);
+        var b = i4(0, 0, 0, 0);
+        
+        b = i4fromFloat32x4(a);
+        return i4check(b);
+    }
+    
+    // out of range
+    function conv16()
+    {
+        var a = f4(-2147483904.0, -2147483648.0, -2147483648.0, -0.0);
+        var b = i4(0, 0, 0, 0);
+        
+        b = i4fromFloat32x4(a);
+        
+        return i4check(b);
+    }
 
     // TODO: Test conversion of returned value
     function value()
@@ -311,7 +364,24 @@ function asmModule(stdlib, imports) {
         return +ret;
     }
 
-    return {func1:conv1, func2:conv2, func3:conv3, func4:conv4, func5:conv5, func6:conv6, func7:conv7, func8:conv8, func9:conv9, func10:conv10, func11:conv11, func12:conv12};
+    return {
+    func1:conv1, 
+    func2:conv2, 
+    func3:conv3, 
+    func4:conv4, 
+    func5:conv5, 
+    func6:conv6, 
+    func7:conv7, 
+    func8:conv8, 
+    func9:conv9, 
+    func10:conv10, 
+    func11:conv11, 
+    func12:conv12, 
+    func13:conv13, 
+    func14:conv14,
+    func15:conv15,
+    func16:conv16
+    };
 }
 
 var m = asmModule(this, {g1:SIMD.Float32x4(90934.2,123.9,419.39,449.0), g2:SIMD.Int32x4(-1065353216, -1073741824,-1077936128, -1082130432), g3:SIMD.Float64x2(110.20, 58967.0, 14511.670, 191766.23431)});
@@ -353,5 +423,11 @@ equalSimd([5033, 3401, 665, 32234], ret9, SIMD.Int32x4, "Test Conversion");
 equalSimd([1316880384, 1317011456, 1317044224, 1317076992], ret10, SIMD.Int32x4, "Test Conversion");
 equalSimd([1202821914, 1123536077, 1137816044, 1138786304], ret11, SIMD.Int32x4, "Test Conversion");
 equalSimd([1167935898, 1163169792, 1143363011, 1190908979], ret12, SIMD.Int32x4, "Test Conversion");
+
+try{m.func13()}catch(e){print("Error13")};
+
+try{m.func14(); print("Error14");}catch(e){};
+try{m.func15(); print("Error15");}catch(e){};
+try{m.func16(); print("Error16");}catch(e){};
 
 print("PASS");

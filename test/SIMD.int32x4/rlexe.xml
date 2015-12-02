@@ -83,21 +83,18 @@
   <test>
     <default>
       <files>testConversions.js</files>
-      <baseline>testConversions.baseline</baseline>
       <compile-flags>-Simdjs</compile-flags>
     </default>
   </test>
   <test>
     <default>
       <files>testConversions.js</files>
-      <baseline>testConversions.baseline</baseline>
       <compile-flags>-bgjit- -simdjs -simd128typespec -off:simplejit -mic:1</compile-flags>
     </default>
   </test>
   <test>
     <default>
       <files>testConversions.js</files>
-      <baseline>testConversions.baseline</baseline>
       <compile-flags>-bgjit- -simdjs -simd128typespec -off:simplejit -mic:1</compile-flags>
     </default>
   </test>
