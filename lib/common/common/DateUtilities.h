@@ -28,10 +28,7 @@ namespace Js
         static HRESULT WinRTDateToES5Date(INT64 winrtDate, __out double* pResult);
         static HRESULT ES5DateToWinRTDate(double es5Date, __out INT64* pResult);
         static HRESULT WinRTTimeSpanToNumberV6(INT64 span, __out double* pResult);
-        static HRESULT NumberToWinRTTimeSpanV6(double span, __out INT64* pResult);
-
-
-        static void DebugPrintWinRTDate(INT64 winrtDate);
+        static HRESULT NumberToWinRTTimeSpanV6(double span, __out INT64* pResult);       
 
         static double TimeFromSt(SYSTEMTIME *pst);
         static double DayTimeFromSt(SYSTEMTIME *pst);

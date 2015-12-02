@@ -160,7 +160,8 @@ EXTERN_C BOOL WINAPI DllMain(HINSTANCE hmod, DWORD dwReason, PVOID pvReserved)
 }
 #endif // _WIN32 || _WIN64
 
-void ChakraInitPerImageSystemPolicy(AutoSystemInfo * autoSystemInfo)
+void ChakraBinaryAutoSystemInfoInit(AutoSystemInfo * autoSystemInfo)
 {
-    /* Do Nothing */
+    autoSystemInfo->buildDateHash = JsUtil::CharacterBuffer<char>::StaticGetHashCode(__DATE__, _countof(__DATE__));
+    autoSystemInfo->buildTimeHash = JsUtil::CharacterBuffer<char>::StaticGetHashCode(__TIME__, _countof(__TIME__));
 }

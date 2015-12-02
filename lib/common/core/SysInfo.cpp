@@ -25,10 +25,6 @@
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 
 AutoSystemInfo AutoSystemInfo::Data;
-WCHAR AutoSystemInfo::binaryName[MAX_PATH + 1];
-DWORD AutoSystemInfo::majorVersion = 0;
-DWORD AutoSystemInfo::minorVersion = 0;
-
 
 void
 AutoSystemInfo::Initialize()
@@ -77,7 +73,7 @@ AutoSystemInfo::Initialize()
     // 0 indicates we haven't retrieved the available commit. We get it lazily.
     this->availableCommit = 0;
 
-    ::ChakraInitPerImageSystemPolicy(this);
+    ::ChakraBinaryAutoSystemInfoInit(this);
 }
 
 
@@ -295,12 +291,12 @@ AutoSystemInfo::IsWinThresholdOrLater()
 
 DWORD AutoSystemInfo::SaveModuleFileName(HANDLE hMod)
 {
-    return ::GetModuleFileNameW((HMODULE)hMod, binaryName, MAX_PATH);
+    return ::GetModuleFileNameW((HMODULE)hMod, Data.binaryName, MAX_PATH);
 }
 
 LPCWSTR AutoSystemInfo::GetJscriptDllFileName()
 {
-    return (LPCWSTR)binaryName;
+    return (LPCWSTR)Data.binaryName;
 }
 
 bool AutoSystemInfo::IsLowMemoryProcess()
@@ -333,24 +329,34 @@ void AutoSystemInfo::SetAvailableCommit(ULONG64 commit)
 // Returns the major and minor version of the loaded binary. If the version info has been fetched once, it will be cached
 // and returned without any system calls to find the version number.
 //
-HRESULT AutoSystemInfo::GetJscriptFileVersion(DWORD* majorVersion, DWORD* minorVersion)
+HRESULT AutoSystemInfo::GetJscriptFileVersion(DWORD* majorVersion, DWORD* minorVersion, DWORD *buildDateHash, DWORD *buildTimeHash)
 {
     HRESULT hr = E_FAIL;
-    if(AutoSystemInfo::majorVersion == 0 && AutoSystemInfo::minorVersion == 0)
+    if(AutoSystemInfo::Data.majorVersion == 0 && AutoSystemInfo::Data.minorVersion == 0)
     {
         // uninitialized state  - call the system API to get the version info.
         LPCWSTR jscriptDllName = GetJscriptDllFileName();
         hr = GetVersionInfo(jscriptDllName, majorVersion, minorVersion);
 
-        AutoSystemInfo::majorVersion = *majorVersion;
-        AutoSystemInfo::minorVersion = *minorVersion;
+        AutoSystemInfo::Data.majorVersion = *majorVersion;
+        AutoSystemInfo::Data.minorVersion = *minorVersion;
     }
-    else if(AutoSystemInfo::majorVersion != INVALID_VERSION)
+    else if(AutoSystemInfo::Data.majorVersion != INVALID_VERSION)
     {
         // if the cached copy is valid, use it and return S_OK.
-        *majorVersion = AutoSystemInfo::majorVersion;
-        *minorVersion = AutoSystemInfo::minorVersion;
+        *majorVersion = AutoSystemInfo::Data.majorVersion;
+        *minorVersion = AutoSystemInfo::Data.minorVersion;
         hr = S_OK;
+    }
+
+    if (buildDateHash)
+    {
+        *buildDateHash = AutoSystemInfo::Data.buildDateHash;
+    }
+
+    if (buildTimeHash)
+    {
+        *buildTimeHash = AutoSystemInfo::Data.buildTimeHash;
     }
     return hr;
 }

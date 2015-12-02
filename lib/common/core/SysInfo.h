@@ -8,7 +8,7 @@
 
 class AutoSystemInfo : public SYSTEM_INFO
 {
-    friend void ChakraInitPerImageSystemPolicy(AutoSystemInfo *);  // The hosting DLL provides the implementation of this function.
+    friend void ChakraBinaryAutoSystemInfoInit(AutoSystemInfo *);  // The hosting DLL provides the implementation of this function.
 public:
     static AutoSystemInfo Data;
     uint GetAllocationGranularityPageCount() const;
@@ -43,7 +43,7 @@ public:
 #endif
     static DWORD SaveModuleFileName(HANDLE hMod);
     static LPCWSTR GetJscriptDllFileName();
-    static HRESULT GetJscriptFileVersion(DWORD* majorVersion, DWORD* minorVersion);
+    static HRESULT GetJscriptFileVersion(DWORD* majorVersion, DWORD* minorVersion, DWORD *buildDateHash = nullptr, DWORD *buildTimeHash = nullptr);
 #if DBG
     static bool IsInitialized() { return AutoSystemInfo::Data.initialized; }
 #endif
@@ -67,7 +67,7 @@ public:
     UINT_PTR dllLoadAddress;
     UINT_PTR dllHighAddress;
 private:
-    AutoSystemInfo() { Initialize(); }
+    AutoSystemInfo() : majorVersion(0), minorVersion(0), buildDateHash(0), buildTimeHash(0) { Initialize(); }
     void Initialize();
     bool isWindows8OrGreater;
     uint allocationGranularityPageCount;
@@ -93,9 +93,11 @@ private:
 
     bool InitPhysicalProcessorCount();
 
-    static WCHAR binaryName[MAX_PATH + 1];
-    static DWORD majorVersion;
-    static DWORD minorVersion;
+    WCHAR binaryName[MAX_PATH + 1];
+    DWORD majorVersion;
+    DWORD minorVersion;
+    DWORD buildDateHash;
+    DWORD buildTimeHash;
     static HRESULT GetVersionInfo(__in LPCWSTR pszPath, DWORD* majorVersion, DWORD* minorVersion);
 
     static const DWORD INVALID_VERSION = (DWORD)-1;
