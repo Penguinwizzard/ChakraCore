@@ -3208,7 +3208,7 @@ public:
         funcInfo->SetArgSizeArrayLength(argSizeArrayLength);
         uint* argArray = RecyclerNewArrayLeafZ(scriptContext->GetRecycler(), uint, argSizeArrayLength);
         funcInfo->SetArgsSizesArray(argArray);
-        for (int i = 0; i < argSizeArrayLength; i++)
+        for (uint i = 0; i < argSizeArrayLength; i++)
         {
             int32 size;
             current = ReadConstantSizedInt32(current, &size);

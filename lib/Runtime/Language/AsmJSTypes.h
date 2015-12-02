@@ -1013,11 +1013,11 @@ namespace Js
         inline int GetDoubleTmpCount()const { return mDoubleTmpCount; }
         inline void SetDoubleTmpCount(int val) { mDoubleTmpCount = val; }
         inline uint GetArgCount() const{ return mArgCount; }
-        inline void SetArgCount(ArgSlot val) { mArgCount = val; }
+        inline void SetArgCount(uint val) { mArgCount = val; }
         inline AsmJsRetType GetReturnType() const{return mReturnType;}
         inline void SetReturnType(AsmJsRetType val) { mReturnType = val; }
         inline int GetArgByteSize() const{return mArgByteSize;}
-        inline void SetArgByteSize(ArgSlot val) { mArgByteSize = val; }
+        inline void SetArgByteSize(uint val) { mArgByteSize = val; }
         inline int GetDoubleByteOffset() const{ return mDoubleByteOffset; }
         inline void SetDoubleByteOffset(int val) { mDoubleByteOffset = val; }
         inline int GetFloatByteOffset() const{ return mFloatByteOffset; }
