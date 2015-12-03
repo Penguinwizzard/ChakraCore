@@ -72,7 +72,7 @@ namespace Js
         {
             display = this->GetScriptFunction()->GetEnvironment();
         }
-
+ 
         return display;
     }
 
@@ -86,6 +86,11 @@ namespace Js
     {
         Assert(this->GetFunction());
         return this->GetFunction()->LoadRootObject();
+    }
+
+    Var DiagStackFrame::GetInnerScopeFromRegSlot(RegSlot location)
+    {
+        return GetNonVarRegValue(location);
     }
 
     DiagInterpreterStackFrame::DiagInterpreterStackFrame(InterpreterStackFrame* frame, int frameIndex) :
@@ -159,6 +164,10 @@ namespace Js
         return m_interpreterFrame->GetFrameDisplayForNestedFunc();
     }
 
+    Var DiagInterpreterStackFrame::GetInnerScopeFromRegSlot(RegSlot location)
+    {
+        return m_interpreterFrame->InnerScopeFromRegSlot(location);
+    }
 
     DiagNativeStackFrame::DiagNativeStackFrame(
         ScriptFunction* function,

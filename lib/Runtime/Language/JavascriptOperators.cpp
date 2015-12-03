@@ -6181,6 +6181,44 @@ CommonNumber:
         return OP_LdStrictFrameDisplay(argHead, (void*)&StrictNullFrameDisplay, scriptContext);
     }
 
+    FrameDisplay* JavascriptOperators::OP_LdInnerFrameDisplay(void *argHead, void *argEnv, ScriptContext* scriptContext)
+    {
+        CheckInnerFrameDisplayArgument(argHead);
+        return OP_LdFrameDisplay(argHead, argEnv, scriptContext);
+    }
+
+    FrameDisplay* JavascriptOperators::OP_LdInnerFrameDisplayNoParent(void *argHead, ScriptContext* scriptContext)
+    {
+        CheckInnerFrameDisplayArgument(argHead);
+        return OP_LdFrameDisplayNoParent(argHead, scriptContext);
+    }
+
+    FrameDisplay* JavascriptOperators::OP_LdStrictInnerFrameDisplay(void *argHead, void *argEnv, ScriptContext* scriptContext)
+    {
+        CheckInnerFrameDisplayArgument(argHead);
+        return OP_LdStrictFrameDisplay(argHead, argEnv, scriptContext);
+    }
+
+    FrameDisplay* JavascriptOperators::OP_LdStrictInnerFrameDisplayNoParent(void *argHead, ScriptContext* scriptContext)
+    {
+        CheckInnerFrameDisplayArgument(argHead);
+        return OP_LdStrictFrameDisplayNoParent(argHead, scriptContext);
+    }
+
+    void JavascriptOperators::CheckInnerFrameDisplayArgument(void *argHead)
+    {
+        if (ThreadContext::IsOnStack(argHead))
+        {
+            AssertMsg(false, "Illegal byte code: stack object as with scope");
+            Js::Throw::FatalInternalError();
+        }
+        if (!RecyclableObject::Is(argHead))
+        {
+            AssertMsg(false, "Illegal byte code: non-object as with scope");
+            Js::Throw::FatalInternalError();
+        }
+    }
+
     Js::PropertyId JavascriptOperators::GetPropertyId(Var propertyName, ScriptContext* scriptContext)
     {
         PropertyRecord const * propertyRecord = nullptr;

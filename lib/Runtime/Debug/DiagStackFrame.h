@@ -33,6 +33,7 @@ namespace Js
         virtual FrameDisplay * GetFrameDisplay();
         virtual Var GetScopeObjectFromFrameDisplay(uint index);
         virtual Var GetRootObject();
+        virtual Var GetInnerScopeFromRegSlot(RegSlot location);
 
         bool IsTopFrame();
         ScriptFunction* GetScriptFunction();
@@ -63,6 +64,7 @@ namespace Js
         virtual Var GetArgumentsObject() override;
         virtual Var CreateHeapArguments() override;
         virtual FrameDisplay * GetFrameDisplay() override;
+        virtual Var GetInnerScopeFromRegSlot(RegSlot location) override;
     };
 
     class DiagNativeStackFrame : public DiagStackFrame

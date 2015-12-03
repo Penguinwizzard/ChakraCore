@@ -2546,6 +2546,10 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             this->LowerLdFrameDisplay(instr, false);
             break;
 
+        case Js::OpCode::LdInnerFrameDisplay:
+            this->LowerLdInnerFrameDisplay(instr);
+            break;
+
         case Js::OpCode::Throw:
         case Js::OpCode::InlineThrow:
         case Js::OpCode::EHThrow:
@@ -21131,6 +21135,39 @@ Lowerer::LowerNewScopeSlots(IR::Instr * instr, bool doStackSlots)
         InsertMove(IR::RegOpnd::New(instr->m_func->GetLocalClosureSym(), TyMachPtr, func), dst, instr);
     }
     instr->Remove();
+}
+
+void Lowerer::LowerLdInnerFrameDisplay(IR::Instr *instr)
+{
+    bool isStrict = instr->m_func->GetJnFunction()->GetIsStrictMode();
+    if (isStrict)
+    {
+        if (instr->GetSrc2())
+        {
+            this->LowerBinaryHelperMem(instr, IR::HelperScrObj_LdStrictInnerFrameDisplay);
+        }
+        else
+        {
+#if DBG
+            instr->m_opcode = Js::OpCode::LdInnerFrameDisplayNoParent;
+#endif
+            this->LowerUnaryHelperMem(instr, IR::HelperScrObj_LdStrictInnerFrameDisplayNoParent);
+        }
+    }
+    else
+    {
+        if (instr->GetSrc2())
+        {
+            this->LowerBinaryHelperMem(instr, IR::HelperScrObj_LdInnerFrameDisplay);
+        }
+        else
+        {
+#if DBG
+            instr->m_opcode = Js::OpCode::LdInnerFrameDisplayNoParent;
+#endif
+            this->LowerUnaryHelperMem(instr, IR::HelperScrObj_LdInnerFrameDisplayNoParent);
+        }
+    }
 }
 
 void Lowerer::LowerLdFrameDisplay(IR::Instr *instr, bool doStackFrameDisplay)

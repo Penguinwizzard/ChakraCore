@@ -954,18 +954,22 @@ void Func::InitLocalClosureSyms()
     // Allocate stack space for closure pointers. Do this only if we're jitting for stack closures, and
     // tell bailout that these are not byte code symbols so that we don't try to encode them in the bailout record,
     // as they don't have normal lifetimes.
-    Js::RegSlot regSlot = this->GetJnFunction()->GetLocalScopeSlotsReg();
-    Assert(regSlot != Js::Constants::NoRegister);
-    this->m_localClosureSym =
-        StackSym::FindOrCreate(static_cast<SymID>(regSlot),
-                               this->GetJnFunction()->DoStackFrameDisplay() && this->IsTopFunc() ? (Js::RegSlot)-1 : regSlot,
-                               this);
+    Js::RegSlot regSlot = this->GetJnFunction()->GetLocalClosureReg();
+    if (regSlot != Js::Constants::NoRegister)
+    {
+        this->m_localClosureSym =
+            StackSym::FindOrCreate(static_cast<SymID>(regSlot),
+                                   this->DoStackFrameDisplay() ? (Js::RegSlot)-1 : regSlot,
+                                   this);
+    }
     regSlot = this->GetJnFunction()->GetLocalFrameDisplayReg();
-    Assert(regSlot != Js::Constants::NoRegister);
-    this->m_localFrameDisplaySym =
-        StackSym::FindOrCreate(static_cast<SymID>(regSlot),
-                               this->GetJnFunction()->DoStackFrameDisplay() && this->IsTopFunc() ? (Js::RegSlot)-1 : regSlot,
-                               this);
+    if (regSlot != Js::Constants::NoRegister)
+    {
+        this->m_localFrameDisplaySym =
+            StackSym::FindOrCreate(static_cast<SymID>(regSlot),
+                                   this->DoStackFrameDisplay() ? (Js::RegSlot)-1 : regSlot,
+                                   this);
+    }
 }
 
 bool Func::CanAllocInPreReservedHeapPageSegment ()

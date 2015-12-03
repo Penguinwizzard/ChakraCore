@@ -412,6 +412,11 @@ namespace Js
         static FrameDisplay* OP_LdFrameDisplayNoParent(void *argHead, ScriptContext* scriptContext);
         static FrameDisplay* OP_LdStrictFrameDisplay(void *argHead, void *argEnv, ScriptContext* scriptContext);
         static FrameDisplay* OP_LdStrictFrameDisplayNoParent(void *argHead, ScriptContext* scriptContext);
+        static FrameDisplay* OP_LdInnerFrameDisplay(void *argHead, void *argEnv, ScriptContext* scriptContext);
+        static FrameDisplay* OP_LdInnerFrameDisplayNoParent(void *argHead, ScriptContext* scriptContext);
+        static FrameDisplay* OP_LdStrictInnerFrameDisplay(void *argHead, void *argEnv, ScriptContext* scriptContext);
+        static FrameDisplay* OP_LdStrictInnerFrameDisplayNoParent(void *argHead, ScriptContext* scriptContext);
+        static void CheckInnerFrameDisplayArgument(void *argHead);
         static Var LoadHeapArguments(JavascriptFunction *funcCallee, unsigned int count, Var *pParams, Var frameObj, Var vArray, ScriptContext* scriptContext, bool nonSimpleParamList);
         static Var LoadHeapArgsCached(JavascriptFunction *funcCallee, uint32 actualsCount, uint32 formalsCount, Var *pParams, Var frameObj, ScriptContext* scriptContext, bool nonSimpleParamList);
         static HeapArgumentsObject *CreateHeapArguments(JavascriptFunction *funcCallee, uint32 actualsCount, uint32 formalsCount, Var frameObj, ScriptContext* scriptContext);

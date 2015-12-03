@@ -84,9 +84,7 @@ void BeginVisitBlock(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
         Scope *scope = pnode->sxBlock.scope;
         FuncInfo *func = scope->GetFunc();
 
-        if (scope->IsInnerScope() &&
-            !scope->GetIsObject() &&
-            scope->GetMustInstantiate())
+        if (scope->IsInnerScope())
         {
             // Give this scope an index so its slots can be accessed via the index in the byte code,
             // not a register.
@@ -125,20 +123,15 @@ void BeginVisitCatch(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
     Scope *scope = pnode->sxCatch.scope;
     FuncInfo *func = scope->GetFunc();
 
-    scope->SetCapturesAll(func->GetCallsEval() || func->GetChildCallsEval());
-    scope->SetMustInstantiate(scope->GetMustInstantiate() || scope->GetCapturesAll() || func->IsGlobalFunction() || byteCodeGenerator->GetCurrentScope() != func->GetBodyScope());
     if (func->GetCallsEval() || func->GetChildCallsEval() ||
         (byteCodeGenerator->GetFlags() & (fscrEval | fscrImplicitThis | fscrImplicitParents)))
     {
         scope->SetIsObject();
     }
 
-    if (!scope->GetIsObject() && scope->GetMustInstantiate())
-    {
-        // Give this scope an index so its slots can be accessed via the index in the byte code,
-        // not a register.
-        scope->SetInnerScopeIndex(func->AcquireInnerScopeIndex());
-    }
+    // Give this scope an index so its slots can be accessed via the index in the byte code,
+    // not a register.
+    scope->SetInnerScopeIndex(func->AcquireInnerScopeIndex());
 
     byteCodeGenerator->PushScope(pnode->sxCatch.scope);
 }
@@ -5007,17 +5000,7 @@ void AssignRegisters(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
             CheckMaybeEscapedUse(pnodeExpr, byteCodeGenerator);
             break;
         }
-    case knopBlock:
-        {
-            if (pnode->sxBlock.scope && pnode->sxBlock.scope->GetMustInstantiate() && byteCodeGenerator->IsInDebugMode())
-            {
-                if (pnode->sxBlock.scope->GetIsObject())
-                {
-                    pnode->sxBlock.scope->SetLocation(byteCodeGenerator->NextVarRegister());
-                }
-            }
-            break;
-        }
+
     case knopStrTemplate:
         {
             ParseNode* pnodeExprs = pnode->sxStrTemplate.pnodeSubstitutionExpressions;

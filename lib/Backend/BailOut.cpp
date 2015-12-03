@@ -507,7 +507,7 @@ uint32 BailOutRecord::GetArgumentsObjectOffset()
 Js::Var BailOutRecord::EnsureArguments(Js::InterpreterStackFrame * newInstance, Js::JavascriptCallStackLayout * layout, Js::ScriptContext* scriptContext, Js::Var* pArgumentsObject) const
 {
     Js::Var nullObj = scriptContext->GetLibrary()->GetNull();
-    newInstance->OP_LdHeapArguments(nullObj, nullObj, scriptContext);
+    newInstance->OP_LdHeapArguments(nullObj, scriptContext);
     Assert(newInstance->m_arguments);
     *pArgumentsObject = (Js::ArgumentsObject*)newInstance->m_arguments;
     return newInstance->m_arguments;
@@ -1421,7 +1421,7 @@ BailOutRecord::BailOutHelper(Js::JavascriptCallStackLayout * layout, Js::ScriptF
     }
 
     Js::RegSlot localFrameDisplayReg = executeFunction->GetLocalFrameDisplayReg();
-    Js::RegSlot localScopeSlotsReg = executeFunction->GetLocalScopeSlotsReg();
+    Js::RegSlot localClosureReg = executeFunction->GetLocalClosureReg();
 
     if (!isInlinee)
     {
@@ -1444,9 +1444,9 @@ BailOutRecord::BailOutHelper(Js::JavascriptCallStackLayout * layout, Js::ScriptF
             newInstance->SetLocalFrameDisplay(localFrameDisplay);
         }
 
-        if (localScopeSlotsReg != Js::Constants::NoRegister)
+        if (localClosureReg != Js::Constants::NoRegister)
         {
-            Js::Var *localScopeSlots;
+            Js::Var localClosure;
             uintptr_t scopeSlotsIndex = (uintptr_t)(
 #if _M_IX86 || _M_AMD64
                 executeFunction->GetInParamsCount() == 0 ?
@@ -1454,8 +1454,8 @@ BailOutRecord::BailOutHelper(Js::JavascriptCallStackLayout * layout, Js::ScriptF
 #endif
                 Js::JavascriptFunctionArgIndex_StackScopeSlots) - 2;
 
-            localScopeSlots = (Js::Var*)layout->GetArgv()[scopeSlotsIndex];
-            newInstance->SetLocalScopeSlots(localScopeSlots);
+            localClosure = layout->GetArgv()[scopeSlotsIndex];
+            newInstance->SetLocalClosure(localClosure);
         }
     }
 
@@ -1477,14 +1477,22 @@ BailOutRecord::BailOutHelper(Js::JavascriptCallStackLayout * layout, Js::ScriptF
         }
     }
 
-    if (localScopeSlotsReg != Js::Constants::NoRegister)
+    if (localClosureReg != Js::Constants::NoRegister)
     {
-        Js::Var *slots = (Js::Var*)newInstance->GetNonVarReg(localScopeSlotsReg);
-        if (slots)
+        Js::Var closure = newInstance->GetNonVarReg(localClosureReg);
+        if (closure)
         {
-            newInstance->SetLocalScopeSlots(slots);
-            newInstance->SetNonVarReg(localScopeSlotsReg, nullptr);
+            newInstance->SetLocalClosure(closure);
+            newInstance->SetNonVarReg(localClosureReg, nullptr);
         }
+    }
+
+    uint32 innerScopeCount = executeFunction->GetInnerScopeCount();
+    for (uint32 i = 0; i < innerScopeCount; i++)
+    {
+        Js::RegSlot reg = executeFunction->FirstInnerScopeReg() + i;
+        newInstance->SetInnerScopeFromIndex(i, newInstance->GetNonVarReg(reg));
+        newInstance->SetNonVarReg(reg, nullptr);
     }
 
     // RestoreValues may call EnsureArguments and cause functions to be boxed.

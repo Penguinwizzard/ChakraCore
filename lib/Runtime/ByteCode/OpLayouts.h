@@ -223,14 +223,20 @@ namespace Js {
         typename SizePolicy::RegSlotType     R2;
     };
 
-    struct OpLayoutBrProperty     // if (R1.R2) goto Offset
+    struct OpLayoutBrProperty     // if (R1.id) goto Offset
     {
         JumpOffset  RelativeJumpOffset;
         RegSlot     Instance;
         PropertyIdIndexType  PropertyIdIndex;
     };
 
-    struct OpLayoutBrEnvProperty   // if (R1.R2) goto Offset
+    struct OpLayoutBrLocalProperty     // if (id) goto Offset
+    {
+        JumpOffset  RelativeJumpOffset;
+        PropertyIdIndexType  PropertyIdIndex;
+    };
+
+    struct OpLayoutBrEnvProperty   // if ([1].id) goto Offset
     {
         JumpOffset  RelativeJumpOffset;
         PropertyIdIndexType  PropertyIdIndex;
@@ -379,10 +385,18 @@ namespace Js {
     };
 
     template <typename SizePolicy>
-    struct OpLayoutT_ElementScopedP      // As OpLayoutElementCP, but with no base pointer
+    struct OpLayoutT_ElementP      // As OpLayoutElementCP, but with no base pointer
     {
         typename SizePolicy::RegSlotType     Value;
         typename SizePolicy::CacheIdType     inlineCacheIndex;
+    };
+
+    template <typename SizePolicy>
+    struct OpLayoutT_ElementPIndexed      // As OpLayoutElementCP, but with scope index instead of base pointer
+    {
+        typename SizePolicy::RegSlotType     Value;
+        typename SizePolicy::CacheIdType     inlineCacheIndex;
+        typename SizePolicy::UnsignedType    scopeIndex;
     };
 
     template <typename SizePolicy>
@@ -445,10 +459,14 @@ namespace Js {
         typename SizePolicy::RegSlotType     R1;
     };
 
-    struct OpLayoutAuxiliary         // R0 <- Load(Offset, C1)
+    struct OpLayoutAuxNoReg
     {
         uint32      Offset;
         int32       C1;
+    };
+
+    struct OpLayoutAuxiliary : public OpLayoutAuxNoReg   // R0 <- Load(Offset, C1)
+    {
         RegSlot     R0;
     };
 

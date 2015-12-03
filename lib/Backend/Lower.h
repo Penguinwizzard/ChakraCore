@@ -511,6 +511,7 @@ private:
 
     void            LowerNewScopeSlots(IR::Instr * instr, bool doStackSlots);
     void            LowerLdFrameDisplay(IR::Instr * instr, bool doStackDisplay);
+    void            LowerLdInnerFrameDisplay(IR::Instr * instr);
 
     IR::AddrOpnd *  CreateFunctionBodyOpnd(Func *const func) const;
     IR::AddrOpnd *  CreateFunctionBodyOpnd(Js::FunctionBody *const functionBody) const;
