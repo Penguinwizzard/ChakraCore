@@ -6681,14 +6681,14 @@ namespace Js
 
         if (m_functionBody->HasCachedScopePropIds())
         {
-            const Js::PropertyIdArray *propIds = 
+            const Js::PropertyIdArray *propIds =
                 Js::ByteCodeReader::ReadPropertyIdArray(0, this->GetFunctionBody(), ActivationObjectEx::ExtraSlotCount());
             Var funcExpr = this->GetFunctionExpression();
             PropertyId objectId = ActivationObjectEx::GetLiteralObjectRef(propIds);
             scopeObject = JavascriptOperators::OP_InitCachedScope(funcExpr, propIds,
-                this->GetFunctionBody()->GetObjectLiteralTypeRef(objectId), 
+                this->GetFunctionBody()->GetObjectLiteralTypeRef(objectId),
                 propIds->hasNonSimpleParams, GetScriptContext());
-            
+
         }
         else
         {
@@ -7184,6 +7184,22 @@ namespace Js
         AsmJsSIMDValue value = GetRegRawSimd(srcReg);
         SIMDStData(data, value, dataWidth);
 
+    }
+
+    // handler for SIMD.Int32x4.FromFloat32x4
+    template <class T>
+    void InterpreterStackFrame::OP_SimdInt32x4FromFloat32x4(const unaligned T* playout)
+    {
+        bool throws = false;
+        AsmJsSIMDValue input = GetRegRawSimd(playout->F4_1);
+        AsmJsSIMDValue result = SIMDInt32x4Operation::OpFromFloat32x4(input, throws);
+
+        // value is out of bound
+        if (throws)
+        {
+            JavascriptError::ThrowRangeError(scriptContext, JSERR_ArgumentOutOfRange, L"SIMD.Int32x4.FromFloat32x4");
+        }
+        SetRegRawSimd(playout->I4_0, result);
     }
 
     Var InterpreterStackFrame::GetNonVarReg(RegSlot localRegisterID) const
