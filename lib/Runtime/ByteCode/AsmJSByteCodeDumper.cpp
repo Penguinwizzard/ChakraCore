@@ -13,22 +13,22 @@ namespace Js
     void AsmJsByteCodeDumper::Dump(AsmJsFunc* func, FunctionBody* body)
     {
         ByteCodeReader reader;
-        reader.Create( body );
+        reader.Create(body);
         StatementReader statementReader;
-        statementReader.Create( body );
+        statementReader.Create(body);
         body->DumpFullFunctionName();
-        Output::Print( L" Asm.js (" );
-        const int argCount = func->GetArgCount();
-        for (int i = 0; i < argCount ; i++)
+        Output::Print(L" Asm.js (");
+        const ArgSlot argCount = func->GetArgCount();
+        for (ArgSlot i = 0; i < argCount; i++)
         {
-            AsmJsType var = func->GetArgType( i );
-            if( i > 0 )
+            AsmJsType var = func->GetArgType(i);
+            if (i > 0)
             {
-                Output::Print( L", " );
+                Output::Print(L", ");
             }
-            if( var.isDouble() )
+            if (var.isDouble())
             {
-                Output::Print( L"+In%hu", i );
+                Output::Print(L"+In%hu", i);
             }
             else if (var.isFloat())
             {
@@ -94,12 +94,12 @@ namespace Js
         Output::Print(L"    Implicit Arg Ins:\n    ======== =====\n    ");
         int iArg = intRegisters.GetConstCount(), dArg = doubleRegisters.GetConstCount(), fArg = floatRegisters.GetConstCount();
         int simdArg = simdRegisters.GetConstCount();
-        for( int i = 0; i < argCount; i++ )
+        for (ArgSlot i = 0; i < argCount; i++)
         {
-            const AsmJsType& var = func->GetArgType( i );
-            if( var.isDouble() )
+            const AsmJsType& var = func->GetArgType(i);
+            if (var.isDouble())
             {
-                Output::Print( L" D%d  In%d",dArg++, i );
+                Output::Print(L" D%d  In%d", dArg++, i);
             }
             else if (var.isFloat())
             {

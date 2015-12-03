@@ -1839,15 +1839,15 @@ public:
         size += PrependInt32(builder, L"IntConstCount", funcInfo->GetIntConstCount());
         size += PrependInt32(builder, L"DoubleConstCount", funcInfo->GetDoubleConstCount());
         size += PrependInt32(builder, L"FloatConstCount", funcInfo->GetFloatConstCount());
-        size += PrependInt32(builder, L"ArgCount", funcInfo->GetArgCount());
-        size += PrependInt32(builder, L"ArgSize", funcInfo->GetArgByteSize());
+        size += PrependInt16(builder, L"ArgCount", funcInfo->GetArgCount());
+        size += PrependInt16(builder, L"ArgSize", funcInfo->GetArgByteSize());
         size += PrependInt32(builder, L"IntVarCount", funcInfo->GetIntVarCount());
         size += PrependInt32(builder, L"DoubleVarCount", funcInfo->GetDoubleVarCount());
         size += PrependInt32(builder, L"FloatVarCount", funcInfo->GetFloatVarCount());
         size += PrependInt32(builder, L"IntTmpCount", funcInfo->GetIntTmpCount());
         size += PrependInt32(builder, L"DoubleTmpCount", funcInfo->GetDoubleTmpCount());
         size += PrependInt32(builder, L"FloatTmpCount", funcInfo->GetFloatTmpCount());
-        size += PrependInt32(builder, L"ArgSizeArrayLength", funcInfo->GetArgSizeArrayLength());
+        size += PrependInt16(builder, L"ArgSizeArrayLength", funcInfo->GetArgSizeArrayLength());
         size += PrependUInt32Array(builder, funcInfo->GetArgSizeArrayLength(), funcInfo->GetArgsSizesArray());
         size += PrependByteArray(builder, funcInfo->GetArgCount(), (byte*)funcInfo->GetArgTypeArray());
         size += PrependInt32(builder, L"IntByteOffset", funcInfo->GetIntByteOffset());
@@ -3192,12 +3192,12 @@ public:
         current = ReadInt32(current, &count);
         funcInfo->SetFloatConstCount(count);
 
-        uint argCount;
-        current = ReadUInt32(current, &argCount);
+        ArgSlot argCount;
+        current = ReadUInt16(current, &argCount);
         funcInfo->SetArgCount(argCount);
 
-        uint argByteSize;
-        current = ReadUInt32(current, &argByteSize);
+        ArgSlot argByteSize;
+        current = ReadUInt16(current, &argByteSize);
         funcInfo->SetArgByteSize(argByteSize);
 
         current = ReadInt32(current, &count);
@@ -3214,12 +3214,12 @@ public:
         current = ReadInt32(current, &count);
         funcInfo->SetFloatTmpCount(count);
 
-        uint argSizeArrayLength;
-        current = ReadUInt32(current, &argSizeArrayLength);
+        ArgSlot argSizeArrayLength;
+        current = ReadUInt16(current, &argSizeArrayLength);
         funcInfo->SetArgSizeArrayLength(argSizeArrayLength);
         uint* argArray = RecyclerNewArrayLeafZ(scriptContext->GetRecycler(), uint, argSizeArrayLength);
         funcInfo->SetArgsSizesArray(argArray);
-        for (uint i = 0; i < argSizeArrayLength; i++)
+        for (int i = 0; i < argSizeArrayLength; i++)
         {
             int32 size;
             current = ReadConstantSizedInt32(current, &size);
