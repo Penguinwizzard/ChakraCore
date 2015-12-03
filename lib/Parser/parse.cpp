@@ -5443,6 +5443,7 @@ ParseNodePtr Parser::GenerateEmptyConstructor(bool extends)
         pnodeFnc->sxFnc.SetIsClassMember(TRUE);
         pnodeFnc->sxFnc.SetIsClassConstructor(TRUE);
         pnodeFnc->sxFnc.SetIsBaseClassConstructor(!extends);
+        pnodeFnc->sxFnc.SetHasNonThisStmt(extends);
         pnodeFnc->sxFnc.SetIsGeneratedDefault(TRUE);
 
         pnodeFnc->ichLim = m_pscan->IchLimTok();
