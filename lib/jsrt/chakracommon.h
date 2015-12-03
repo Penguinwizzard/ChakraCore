@@ -855,7 +855,8 @@
             _In_z_ const wchar_t *script,
             _In_ JsSourceContext sourceContext,
             _In_z_ const wchar_t *sourceUrl,
-            _In_ bool isBinary,
+            _In_ const bool isBinary,
+            _In_ const UINT lengthBytes,
             _Out_ JsValueRef *result);
 #endif
 

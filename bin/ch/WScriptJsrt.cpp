@@ -402,14 +402,24 @@ JsValueRef __stdcall WScriptJsrt::LoadWasmCallback(JsValueRef callee, bool isCon
         
         if (errorCode == JsNoError)
         {
-            HRESULT hr = Helpers::LoadScriptFromFile(fileName, fileContent);
+            HRESULT hr;
+            UINT lengthBytes = 0;
+
+            if (!isBinaryFormat)
+            {
+                hr = Helpers::LoadScriptFromFile(fileName, fileContent);
+            }
+            else
+            {
+                hr = Helpers::LoadBinaryFile(fileName, fileContent, lengthBytes);
+            }
             if (FAILED(hr))
             {
                 fwprintf(stderr, L"Couldn't load file.\n");
             }
             else
             {
-                returnValue = LoadWasm(fileName, fileNameLength, fileContent, isBinaryFormat, scriptInjectType);
+                returnValue = LoadWasm(fileName, fileNameLength, fileContent, isBinaryFormat, lengthBytes, scriptInjectType);
             }
         }
     }
@@ -418,7 +428,7 @@ Error:
     return returnValue;
 }
 
-JsValueRef WScriptJsrt::LoadWasm(LPCWSTR fileName, size_t fileNameLength, LPCWSTR fileContent, bool isBinary, LPCWSTR scriptInjectType)
+JsValueRef WScriptJsrt::LoadWasm(LPCWSTR fileName, size_t fileNameLength, LPCWSTR fileContent, const bool isBinary, const UINT lengthBytes, LPCWSTR scriptInjectType)
 {
     HRESULT hr = E_FAIL;
     JsErrorCode errorCode = JsNoError;
@@ -441,7 +451,7 @@ JsValueRef WScriptJsrt::LoadWasm(LPCWSTR fileName, size_t fileNameLength, LPCWST
 
     if (wcscmp(scriptInjectType, L"self") == 0)
     {
-        errorCode = ChakraRTInterface::JsRunWasmScript(fileContent, 0, fullPath, isBinary, &returnValue);
+        errorCode = ChakraRTInterface::JsRunWasmScript(fileContent, 0, fullPath, isBinary, lengthBytes, &returnValue);
         if (errorCode != JsNoError)
         {
             PrintException(fileName, errorCode);

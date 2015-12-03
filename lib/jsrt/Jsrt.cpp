@@ -2490,7 +2490,7 @@ STDAPI_(JsErrorCode) JsRunScript(_In_z_ const wchar_t * script, _In_ JsSourceCon
 }
 
 #ifdef ENABLE_WASM
-STDAPI_(JsErrorCode) JsRunWasmScript(const wchar_t * script, JsSourceContext sourceContext, const wchar_t *sourceUrl, bool isBinary, JsValueRef * result)
+STDAPI_(JsErrorCode) JsRunWasmScript(const wchar_t * script, JsSourceContext sourceContext, const wchar_t *sourceUrl, const bool isBinary, const uint lengthBytes, JsValueRef * result)
 {
     Js::JavascriptFunction *scriptFunction;
     CompileScriptException se;
@@ -2521,7 +2521,7 @@ STDAPI_(JsErrorCode) JsRunWasmScript(const wchar_t * script, JsSourceContext sou
         };
 
         Js::Utf8SourceInfo* utf8SourceInfo;
-        scriptFunction = scriptContext->LoadWasmScript(script, &si, &se, result != NULL, false, false, &utf8SourceInfo, Js::Constants::GlobalCode);
+        scriptFunction = scriptContext->LoadWasmScript(script, &si, &se, result != NULL, false, false, &utf8SourceInfo, isBinary, lengthBytes, Js::Constants::GlobalCode);
 
         JsrtContext * context = JsrtContext::GetCurrent();
         context->OnScriptLoad(scriptFunction, utf8SourceInfo);
