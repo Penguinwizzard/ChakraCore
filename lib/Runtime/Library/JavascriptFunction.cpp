@@ -774,7 +774,6 @@ namespace Js
                     newValues[i] = args.Values[i];
                 }
 
-#pragma prefast(suppress:6386, "The write index args.Info.Count is in the bound")
                 newValues[args.Info.Count] = overridingNewTarget;
             }
         }
@@ -944,8 +943,6 @@ namespace Js
                             {
                                 element = undefined;
                             }
-#pragma warning(push)
-#pragma warning(suppress: 26014) // SAL gets confused here when we use the stack allocated memory and thinks we might overflow.
                             destArgs.Values[argsIndex++] = element;
                         }
                     }
@@ -967,9 +964,7 @@ namespace Js
                             {
                                 element = undefined;
                             }
-#pragma warning(suppress: 26015) // SAL gets confused here when we use the stack allocated memory and thinks we might overflow.
                             destArgs.Values[argsIndex++] = element;
-#pragma warning(pop)
                         }
                     }
                 }
