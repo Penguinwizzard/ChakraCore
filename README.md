@@ -33,6 +33,8 @@ You can stay up-to-date on progress by following the [MSEdge developer blog](htt
 [armrelicon]: http://dotnet-ci.cloudapp.net/job/Private/job/Microsoft_ChakraCore_arm_release/badge/icon
 [armrellink]: http://dotnet-ci.cloudapp.net/job/Private/job/Microsoft_ChakraCore_arm_release/
 
+Note: these badges are correct but currently display on GitHub as image not found because of permissions. This will be fixed when the build jobs are public.
+
 ## Building ChakraCore
 
 In order to build ChakraCore, you will need [Visual Studio](https://www.visualstudio.com/products/visual-studio-community-vs) 2013 or 2015 with C++ support installed.  Once you have Visual Studio installed:
