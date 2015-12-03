@@ -474,7 +474,6 @@ namespace Js
         simpleJitEntryPointInfo(nullptr),
         wasCalledFromLoop(false),
         hasScopeObject(false),
-//        hasFuncExprScopeObject(false),
         hasNestedLoop(false),
         recentlyBailedOutOfJittedLoopBody(false),
         serializationIndex(-1),
