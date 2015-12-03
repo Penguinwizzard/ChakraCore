@@ -3010,11 +3010,11 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
                     {
                         // Stash the super reference in case something inside the eval or lambda references it.
                         uint cacheId = funcInfo->FindOrAddInlineCacheId(funcInfo->bodyScope->GetLocation(), Js::PropertyIds::_superReferenceSymbol, false, true);
-                        m_writer.ElementP(Js::OpCode::InitLocalFld, funcInfo->superRegister, /*funcInfo->bodyScope->GetLocation(),*/ cacheId);
+                        m_writer.ElementP(Js::OpCode::InitLocalFld, funcInfo->superRegister, cacheId);
                         if (funcInfo->superCtorRegister != Js::Constants::NoRegister)
                         {
                             cacheId = funcInfo->FindOrAddInlineCacheId(funcInfo->bodyScope->GetLocation(), Js::PropertyIds::_superCtorReferenceSymbol, false, true);
-                            m_writer.ElementP(Js::OpCode::InitLocalFld, funcInfo->superCtorRegister, /*funcInfo->bodyScope->GetLocation(),*/ cacheId);
+                            m_writer.ElementP(Js::OpCode::InitLocalFld, funcInfo->superCtorRegister, cacheId);
                         }
                     }
                     else if (funcInfo->superScopeSlot == Js::Constants::NoProperty || funcInfo->superCtorScopeSlot == Js::Constants::NoProperty)
