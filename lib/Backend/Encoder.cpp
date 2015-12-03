@@ -718,7 +718,9 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize)
         }
         else
         {
+        {
             Assert(false);
+        }
         }
 
         // compute current distance to label
