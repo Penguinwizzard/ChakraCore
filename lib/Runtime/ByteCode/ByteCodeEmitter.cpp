@@ -496,7 +496,6 @@ void ByteCodeGenerator::LoadUncachedHeapArguments(FuncInfo *funcInfo)
     Assert(argSym && argSym->GetIsArguments());
     Js::RegSlot argumentsLoc = argSym->GetLocation();
     Js::RegSlot propIdsLoc = funcInfo->nullConstantRegister;
-//    Js::RegSlot frameObjLoc = funcInfo->nullConstantRegister;
 
     Js::OpCode opcode = funcInfo->root->sxFnc.IsSimpleParameterList() ? Js::OpCode::LdHeapArguments : Js::OpCode::LdLetHeapArguments;
     bool hasRest = funcInfo->root->sxFnc.pnodeRest != nullptr;
@@ -517,8 +516,6 @@ void ByteCodeGenerator::LoadUncachedHeapArguments(FuncInfo *funcInfo)
         // at the expected location.
         propIdsLoc = argumentsLoc;
 
-//        frameObjLoc = funcInfo->frameObjRegister;
-
         Js::PropertyIdArray *propIds = AnewPlus(GetAllocator(), count * sizeof(Js::PropertyId), Js::PropertyIdArray, count);
 
         GetFormalArgsArray(this, funcInfo, propIds);
@@ -534,7 +531,7 @@ void ByteCodeGenerator::LoadUncachedHeapArguments(FuncInfo *funcInfo)
         AdeletePlus(GetAllocator(), count * sizeof(Js::PropertyId), propIds);
     }
 
-    this->m_writer.Reg2(opcode, argumentsLoc, /*frameObjLoc,*/ propIdsLoc);
+    this->m_writer.Reg2(opcode, argumentsLoc, propIdsLoc);
     EmitLocalPropInit(argSym->GetLocation(), argSym, funcInfo);
 }
 
@@ -550,7 +547,7 @@ void ByteCodeGenerator::LoadCachedHeapArguments(FuncInfo *funcInfo)
 
     Js::OpCode op = funcInfo->root->sxFnc.IsSimpleParameterList() ? Js::OpCode::LdHeapArgsCached : Js::OpCode::LdLetHeapArgsCached;
 
-    this->m_writer.Reg1(op, argumentsLoc/*, funcInfo->frameObjRegister*/);
+    this->m_writer.Reg1(op, argumentsLoc);
     EmitLocalPropInit(argumentsLoc, argSym, funcInfo);
 }
 
@@ -1827,7 +1824,6 @@ void ByteCodeGenerator::LoadAllConstants(FuncInfo *funcInfo)
 
     if (funcInfo->funcExprScope && funcInfo->funcExprScope->GetIsObject())
     {
-//        m_writer.Reg1(Js::OpCode::NewPseudoScope, funcInfo->funcExprScope->GetLocation());
         byteCodeFunction->SetFuncExprScopeReg(funcInfo->funcExprScope->GetLocation());
         byteCodeFunction->SetEnvDepth((uint16)-1);
     }
@@ -1872,7 +1868,6 @@ void ByteCodeGenerator::LoadAllConstants(FuncInfo *funcInfo)
     if (funcInfo->frameDisplayRegister != Js::Constants::NoRegister)
     {
         m_writer.RecordFrameDisplayRegister(funcInfo->frameDisplayRegister);
-//        this->LoadFrameDisplay(funcInfo);
     }
 
     // new.target may be used to construct the 'this' register so make sure to load it first
@@ -1948,7 +1943,7 @@ void ByteCodeGenerator::LoadAllConstants(FuncInfo *funcInfo)
                 Assert(!this->TopFuncInfo()->GetParsedFunctionBody()->DoStackNestedFunc());
                 Js::RegSlot scopeLocation;
                 AnalysisAssert(funcInfo->funcExprScope);
-#if 1
+
                 if (funcInfo->funcExprScope->GetIsObject())
                 {
                     scopeLocation = funcInfo->funcExprScope->GetLocation();
@@ -1956,7 +1951,6 @@ void ByteCodeGenerator::LoadAllConstants(FuncInfo *funcInfo)
                                             funcInfo->FindOrAddReferencedPropertyId(sym->GetPosition()));
                 }
                 else
-#endif
                 {
                     this->m_writer.ElementU(Js::OpCode::StLocalFuncExpr, sym->GetLocation(),
                                             funcInfo->FindOrAddReferencedPropertyId(sym->GetPosition()));

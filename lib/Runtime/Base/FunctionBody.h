@@ -1789,7 +1789,6 @@ namespace Js
         bool disableInlineSpread : 1;
         bool hasHotLoop: 1;
         bool wasCalledFromLoop : 1;
-//        bool hasScopeObject: 1;
         bool hasNestedLoop : 1;
         bool recentlyBailedOutOfJittedLoopBody : 1;
         bool m_firstFunctionObject: 1;
