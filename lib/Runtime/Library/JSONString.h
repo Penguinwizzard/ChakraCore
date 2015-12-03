@@ -96,7 +96,7 @@ namespace Js
                 {
                     if (wch < _countof(escapeMap))
                     {
-                        extra += escapeMapCount[(char)wch];
+                        extra = UInt32Math::Add(extra, escapeMapCount[(char)wch]);
                     }
                 }
                 else
