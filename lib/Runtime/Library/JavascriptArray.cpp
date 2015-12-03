@@ -9872,7 +9872,7 @@ Case0:
         if (Configuration::Global.flags.ForceES5Array)
         {
             // There's a bad interaction with the jitted code for native array creation here.
-            // forcees5array doesn’t interact well with native arrays
+            // forcees5array doesn't interact well with native arrays
             if (PHASE_OFF1(NativeArrayPhase))
             {
                 GetTypeHandler()->ConvertToTypeWithItemAttributes(this);
@@ -10903,7 +10903,9 @@ Case0:
                 }
                 else
                 {
-                    // We first try to interpret the spread parameter as an array.
+                    AssertMsg(JavascriptArray::Is(instance) || TypedArrayBase::Is(instance), "Only SpreadArgument, TypedArray, and JavascriptArray should be listed as spread arguments");
+
+                    // We first try to interpret the spread parameter as a JavascriptArray.
                     JavascriptArray *arr = nullptr;
                     if (JavascriptArray::Is(instance))
                     {
@@ -10953,12 +10955,6 @@ Case0:
             return arr->GetLength();
         }
 
-        if (ES5Array::Is(spreadArg))
-        {
-            ES5Array *arr = ES5Array::FromVar(spreadArg);
-            return arr->GetLength();
-        }
-
         if (TypedArrayBase::Is(spreadArg))
         {
             TypedArrayBase *tarr = TypedArrayBase::FromVar(spreadArg);
@@ -10971,23 +10967,8 @@ Case0:
             return spreadFunctionArgs->GetArgumentSpreadCount();
         }
 
-        // Coerce to object. Throw a type error if we give undefined or null.
-        RecyclableObject *spreadArgObj;
-        if (!JavascriptConversion::ToObject(spreadArg, scriptContext, &spreadArgObj))
-        {
-            JavascriptError::ThrowTypeError(scriptContext, JSERR_InvalidSpreadArgument);
-        }
-
-        Var lenProp = JavascriptOperators::OP_GetLength(spreadArgObj, scriptContext);
-        if (lenProp == nullptr)
-        {
-            JavascriptError::ThrowTypeError(scriptContext, JSERR_InvalidSpreadArgument);
-        }
-
-        // Several error cases are valid, let the spec defined function handle them.
-        uint32 len = JavascriptConversion::ToUInt32(lenProp, scriptContext);
-
-        return len;
+        AssertMsg(false, "LdCustomSpreadIteratorList should have converted the arg to one of the above types");
+        Throw::FatalInternalError();
     }
 
 #ifdef VALIDATE_ARRAY
