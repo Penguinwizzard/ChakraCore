@@ -45,6 +45,7 @@ struct JsAPIHooks
     typedef JsErrorCode (WINAPI *JsrtSerializeScriptPtr)(const wchar_t *script, BYTE *buffer, unsigned long *bufferSize);
     typedef JsErrorCode (WINAPI *JsrtRunSerializedScriptPtr)(const wchar_t *script, BYTE *buffer, DWORD_PTR sourceContext, const wchar_t *sourceUrl, JsValueRef* result);
     typedef JsErrorCode (WINAPI *JsrtSetPromiseContinuationCallbackPtr)(JsPromiseContinuationCallback callback, void *callbackState);
+    typedef JsErrorCode (WINAPI *JsrtGetContextOfObject)(JsValueRef object, JsContextRef *callbackState);
 
     JsrtCreateRuntimePtr pfJsrtCreateRuntime;
     JsrtCreateContextPtr pfJsrtCreateContext;
@@ -87,6 +88,7 @@ struct JsAPIHooks
     JsrtSerializeScriptPtr pfJsrtSerializeScript;
     JsrtRunSerializedScriptPtr pfJsrtRunSerializedScript;
     JsrtSetPromiseContinuationCallbackPtr pfJsrtSetPromiseContinuationCallback;
+    JsrtGetContextOfObject pfJsrtGetContextOfObject;
 };
 
 class ChakraRTInterface
@@ -191,4 +193,5 @@ public:
     static JsErrorCode WINAPI JsSerializeScript(const wchar_t *script, BYTE *buffer, unsigned long *bufferSize) { return m_jsApiHooks.pfJsrtSerializeScript(script, buffer, bufferSize); }
     static JsErrorCode WINAPI JsRunSerializedScript(const wchar_t *script, BYTE *buffer, DWORD_PTR sourceContext, const wchar_t *sourceUrl, JsValueRef* result) { return m_jsApiHooks.pfJsrtRunSerializedScript(script, buffer, sourceContext, sourceUrl, result); }
     static JsErrorCode WINAPI JsSetPromiseContinuationCallback(JsPromiseContinuationCallback callback, void *callbackState) { return m_jsApiHooks.pfJsrtSetPromiseContinuationCallback(callback, callbackState); }
+    static JsErrorCode WINAPI JsGetContextOfObject(JsValueRef object, JsContextRef* context) { return m_jsApiHooks.pfJsrtGetContextOfObject(object, context); }
 };

@@ -96,10 +96,12 @@ JsValueRef __stdcall WScriptJsrt::LoadScriptFileCallback(JsValueRef callee, bool
     HRESULT hr = E_FAIL;
     JsValueRef returnValue = JS_INVALID_REFERENCE;
     JsErrorCode errorCode = JsNoError;
+    LPCWSTR errorMessage = L"";
 
     if (argumentCount < 2 || argumentCount > 4)
     {
-        fwprintf(stderr, L"Too many or too few arguments.\n");
+        errorCode = JsErrorInvalidArgument;
+        errorMessage = L"Need more or fewer arguments for WScript.LoadScript";
     }
     else
     {
@@ -125,12 +127,26 @@ JsValueRef __stdcall WScriptJsrt::LoadScriptFileCallback(JsValueRef callee, bool
             }
             else
             {
-                returnValue = LoadScript(fileName, fileNameLength, fileContent, scriptInjectType);
+                returnValue = LoadScript(callee, fileName, fileNameLength, fileContent, scriptInjectType);
             }
         }
     }
 
 Error:
+    if (errorCode != JsNoError)
+    {
+        JsValueRef errorObject;
+        JsValueRef errorMessageString;
+
+        if (wcscmp(errorMessage, L"") == 0) {
+            errorMessage = ConvertErrorCodeToMessage(errorCode);
+        }
+
+        ChakraRTInterface::JsPointerToString(errorMessage, wcslen(errorMessage), &errorMessageString);
+        ChakraRTInterface::JsCreateError(errorMessageString, &errorObject);
+        ChakraRTInterface::JsSetException(errorObject);
+    }
+
     return returnValue;
 }
 
@@ -138,11 +154,13 @@ JsValueRef __stdcall WScriptJsrt::LoadScriptCallback(JsValueRef callee, bool isC
 {
     HRESULT hr = E_FAIL;
     JsErrorCode errorCode = JsNoError;
+    LPCWSTR errorMessage = L"";
     JsValueRef returnValue = JS_INVALID_REFERENCE;
 
     if (argumentCount < 2 || argumentCount > 4)
     {
-        fwprintf(stderr, L"Too many or too few arguments.\n");
+        errorCode = JsErrorInvalidArgument;
+        errorMessage = L"Need more or fewer arguments for WScript.LoadScript";
     }
     else
     {
@@ -166,14 +184,28 @@ JsValueRef __stdcall WScriptJsrt::LoadScriptCallback(JsValueRef callee, bool isC
         {
             IfJsrtErrorSetGo(ChakraRTInterface::JsStringToPointer(arguments[3], &fileName, &fileNameLength));
         }
-        returnValue = LoadScript(fileName, fileNameLength, fileContent, scriptInjectType);
+        returnValue = LoadScript(callee, fileName, fileNameLength, fileContent, scriptInjectType);
     }
 
 Error:
+    if (errorCode != JsNoError)
+    {
+        JsValueRef errorObject;
+        JsValueRef errorMessageString;
+
+        if (wcscmp(errorMessage, L"") == 0) {
+            errorMessage = ConvertErrorCodeToMessage(errorCode);
+        }
+
+        ChakraRTInterface::JsPointerToString(errorMessage, wcslen(errorMessage), &errorMessageString);
+        ChakraRTInterface::JsCreateError(errorMessageString, &errorObject);
+        ChakraRTInterface::JsSetException(errorObject);
+    }
+
     return returnValue;
 }
 
-JsValueRef WScriptJsrt::LoadScript(LPCWSTR fileName, size_t fileNameLength, LPCWSTR fileContent, LPCWSTR scriptInjectType)
+JsValueRef WScriptJsrt::LoadScript(JsValueRef callee, LPCWSTR fileName, size_t fileNameLength, LPCWSTR fileContent, LPCWSTR scriptInjectType)
 {
     HRESULT hr = E_FAIL;
     JsErrorCode errorCode = JsNoError;
@@ -181,6 +213,11 @@ JsValueRef WScriptJsrt::LoadScript(LPCWSTR fileName, size_t fileNameLength, LPCW
     size_t errorMessageLength = wcslen(errorMessage);
     JsValueRef returnValue = JS_INVALID_REFERENCE;
     JsErrorCode innerErrorCode = JsNoError;
+    JsContextRef currentContext = JS_INVALID_REFERENCE;
+    JsRuntimeHandle runtime = JS_INVALID_RUNTIME_HANDLE;
+
+    IfJsrtErrorSetGo(ChakraRTInterface::JsGetCurrentContext(&currentContext));
+    IfJsrtErrorSetGo(ChakraRTInterface::JsGetRuntime(currentContext, &runtime));
 
     wchar_t fullPath[_MAX_PATH];
     if (_wfullpath(fullPath, fileName, _MAX_PATH) == nullptr)
@@ -196,26 +233,24 @@ JsValueRef WScriptJsrt::LoadScript(LPCWSTR fileName, size_t fileNameLength, LPCW
 
     if (wcscmp(scriptInjectType, L"self") == 0)
     {
+        JsContextRef calleeContext;
+        IfJsrtErrorSetGo(ChakraRTInterface::JsGetContextOfObject(callee, &calleeContext));
+
+        IfJsrtErrorSetGo(ChakraRTInterface::JsSetCurrentContext(calleeContext));
         errorCode = ChakraRTInterface::JsRunScript(fileContent, GetNextSourceContext(), fullPath, &returnValue);
-        if (errorCode != JsNoError)
-        {
-            PrintException(fileName, errorCode);
-        }
-        else
+
+        if (errorCode == JsNoError)
         {
             errorCode = ChakraRTInterface::JsGetGlobalObject(&returnValue);
         }
+
+        IfJsrtErrorSetGo(ChakraRTInterface::JsSetCurrentContext(currentContext));
     }
     else if (wcscmp(scriptInjectType, L"samethread") == 0)
     {
-        JsValueRef context = JS_INVALID_REFERENCE;
         JsValueRef newContext = JS_INVALID_REFERENCE;
 
         // Create a new context and set it as the current context
-        IfJsrtErrorSetGo(ChakraRTInterface::JsGetCurrentContext(&context));
-        JsRuntimeHandle runtime = JS_INVALID_RUNTIME_HANDLE;
-        IfJsrtErrorSetGo(ChakraRTInterface::JsGetRuntime(context, &runtime));
-
         IfJsrtErrorSetGo(ChakraRTInterface::JsCreateContext(runtime, &newContext));
         IfJsrtErrorSetGo(ChakraRTInterface::JsSetCurrentContext(newContext));
 
@@ -223,17 +258,14 @@ JsValueRef WScriptJsrt::LoadScript(LPCWSTR fileName, size_t fileNameLength, LPCW
         Initialize();
 
         errorCode = ChakraRTInterface::JsRunScript(fileContent, GetNextSourceContext(), fullPath, &returnValue);
-        if (errorCode != JsNoError)
-        {
-            PrintException(fileName, errorCode);
-        }
-        else
+
+        if (errorCode == JsNoError)
         {
             errorCode = ChakraRTInterface::JsGetGlobalObject(&returnValue);
         }
 
         // Set the context back to the old one
-        ChakraRTInterface::JsSetCurrentContext(context);
+        ChakraRTInterface::JsSetCurrentContext(currentContext);
     }
     else
     {

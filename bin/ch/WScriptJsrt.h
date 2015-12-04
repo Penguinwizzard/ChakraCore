@@ -49,7 +49,7 @@ public:
     }
 
     static bool PrintException(LPCWSTR fileName, JsErrorCode jsErrorCode);
-    static JsValueRef LoadScript(LPCWSTR fileName, size_t fileNameLength, LPCWSTR fileContent, LPCWSTR scriptInjectType);
+    static JsValueRef LoadScript(JsValueRef callee, LPCWSTR fileName, size_t fileNameLength, LPCWSTR fileContent, LPCWSTR scriptInjectType);
     static DWORD_PTR GetNextSourceContext();
 
 private:
