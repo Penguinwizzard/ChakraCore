@@ -96,10 +96,12 @@ JsValueRef __stdcall WScriptJsrt::LoadScriptFileCallback(JsValueRef callee, bool
     HRESULT hr = E_FAIL;
     JsValueRef returnValue = JS_INVALID_REFERENCE;
     JsErrorCode errorCode = JsNoError;
+    LPCWSTR errorMessage = L"";
 
     if (argumentCount < 2 || argumentCount > 4)
     {
-        fwprintf(stderr, L"Too many or too few arguments.\n");
+        errorCode = JsErrorInvalidArgument;
+        errorMessage = L"Need more or fewer arguments for WScript.LoadScript";
     }
     else
     {
@@ -131,6 +133,20 @@ JsValueRef __stdcall WScriptJsrt::LoadScriptFileCallback(JsValueRef callee, bool
     }
 
 Error:
+    if (errorCode != JsNoError)
+    {
+        JsValueRef errorObject;
+        JsValueRef errorMessageString;
+
+        if (wcscmp(errorMessage, L"") == 0) {
+            errorMessage = ConvertErrorCodeToMessage(errorCode);
+        }
+
+        ChakraRTInterface::JsPointerToString(errorMessage, wcslen(errorMessage), &errorMessageString);
+        ChakraRTInterface::JsCreateError(errorMessageString, &errorObject);
+        ChakraRTInterface::JsSetException(errorObject);
+    }
+
     return returnValue;
 }
 
@@ -138,11 +154,13 @@ JsValueRef __stdcall WScriptJsrt::LoadScriptCallback(JsValueRef callee, bool isC
 {
     HRESULT hr = E_FAIL;
     JsErrorCode errorCode = JsNoError;
+    LPCWSTR errorMessage = L"";
     JsValueRef returnValue = JS_INVALID_REFERENCE;
 
     if (argumentCount < 2 || argumentCount > 4)
     {
-        fwprintf(stderr, L"Too many or too few arguments.\n");
+        errorCode = JsErrorInvalidArgument;
+        errorMessage = L"Need more or fewer arguments for WScript.LoadScript";
     }
     else
     {
@@ -170,6 +188,19 @@ JsValueRef __stdcall WScriptJsrt::LoadScriptCallback(JsValueRef callee, bool isC
     }
 
 Error:
+    if (errorCode != JsNoError)
+    {
+        JsValueRef errorObject;
+        JsValueRef errorMessageString;
+
+        if (wcscmp(errorMessage, L"") == 0) {
+            errorMessage = ConvertErrorCodeToMessage(errorCode);
+        }
+
+        ChakraRTInterface::JsPointerToString(errorMessage, wcslen(errorMessage), &errorMessageString);
+        ChakraRTInterface::JsCreateError(errorMessageString, &errorObject);
+        ChakraRTInterface::JsSetException(errorObject);
+    }
     return returnValue;
 }
 
