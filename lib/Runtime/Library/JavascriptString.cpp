@@ -2888,8 +2888,10 @@ case_2:
         }
 
         cchThis = pThis->GetLength();
+        cchTotalChars = UInt32Math::Add(cchTag, cchTag);
+
         // 5 is for the <></> characters
-        cchTotalChars = (cchTag + cchTag + 5);
+        cchTotalChars = UInt32Math::Add(cchTotalChars, 5);
 
         if (nullptr != pszProp)
         {
@@ -2925,13 +2927,15 @@ case_2:
                 }
             }
 
+            cchTotalChars = UInt32Math::Add(cchTotalChars, cchProp);
+
             // 4 is for the _="" characters
-            cchTotalChars += (cchProp + 4);
+            cchTotalChars = UInt32Math::Add(cchTotalChars, 4);
 
             if (ES6FixesEnabled)
             {
                 // Account for the " escaping (&quot;)
-                cchTotalChars += (quotesCount * quotStrLen) - quotesCount;
+                cchTotalChars = UInt32Math::Add(cchTotalChars, UInt32Math::Mul(quotesCount, quotStrLen)) - quotesCount;
             }
         }
         else
@@ -2939,7 +2943,8 @@ case_2:
             cchPropertyValue = 0;
             cchProp = 0;
         }
-        cchTotalChars += cchThis + cchPropertyValue;
+        cchTotalChars = UInt32Math::Add(cchTotalChars, cchThis);
+        cchTotalChars = UInt32Math::Add(cchTotalChars, cchPropertyValue);
         if (!IsValidCharCount(cchTotalChars) || cchTotalChars < cchThis || cchTotalChars < cchPropertyValue)
         {
             Js::JavascriptError::ThrowOutOfMemoryError(scriptContext);
