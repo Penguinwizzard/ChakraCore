@@ -228,11 +228,7 @@ JsValueRef WScriptJsrt::LoadScript(LPCWSTR fileName, size_t fileNameLength, LPCW
     if (wcscmp(scriptInjectType, L"self") == 0)
     {
         errorCode = ChakraRTInterface::JsRunScript(fileContent, GetNextSourceContext(), fullPath, &returnValue);
-        if (errorCode != JsNoError)
-        {
-            PrintException(fileName, errorCode);
-        }
-        else
+        if (errorCode == JsNoError)
         {
             errorCode = ChakraRTInterface::JsGetGlobalObject(&returnValue);
         }
@@ -254,11 +250,7 @@ JsValueRef WScriptJsrt::LoadScript(LPCWSTR fileName, size_t fileNameLength, LPCW
         Initialize();
 
         errorCode = ChakraRTInterface::JsRunScript(fileContent, GetNextSourceContext(), fullPath, &returnValue);
-        if (errorCode != JsNoError)
-        {
-            PrintException(fileName, errorCode);
-        }
-        else
+        if (errorCode == JsNoError)
         {
             errorCode = ChakraRTInterface::JsGetGlobalObject(&returnValue);
         }
