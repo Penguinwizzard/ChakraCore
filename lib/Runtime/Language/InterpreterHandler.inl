@@ -291,7 +291,6 @@ EXDEF2_WMS(A2toXX,                  SetHomeObj,                 JavascriptOperat
   DEF2_WMS(XXtoA1Mem,               LdHeapArgsCached,           OP_LdHeapArgsCached)
 EXDEF2_WMS(XXtoA1Mem,               LdLetHeapArgsCached,        OP_LdLetHeapArgsCached)
 EXDEF2_WMS(XXtoA1NonVar,            LdStackArgPtr,              OP_LdStackArgPtr)
-  DEF2_WMS(A1toEnvMemNonVar,        LdHandlerScope,             JavascriptOperators::OP_LdHandlerScope)
 EXDEF3_WMS(CUSTOM,                  InitSetFld,                 OP_InitSetFld, ElementC)
 EXDEF3_WMS(CUSTOM,                  InitGetFld,                 OP_InitGetFld, ElementC)
 EXDEF3_WMS(CUSTOM,                  InitSetElemI,               OP_InitSetElemI, ElementI)

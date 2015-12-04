@@ -436,6 +436,7 @@ namespace Js
         localClosureRegister(Constants::NoRegister),
         localFrameDisplayRegister(Constants::NoRegister),
         envRegister(Constants::NoRegister),
+        thisRegisterForEventHandler(Constants::NoRegister),
         firstInnerScopeRegister(Constants::NoRegister),
         funcExprScopeRegister(Constants::NoRegister),
         m_tag(TRUE),
@@ -3351,6 +3352,7 @@ namespace Js
         newFunctionBody->localClosureRegister = this->localClosureRegister;
         newFunctionBody->localFrameDisplayRegister = this->localFrameDisplayRegister;
         newFunctionBody->envRegister = this->envRegister;
+        newFunctionBody->thisRegisterForEventHandler = this->thisRegisterForEventHandler;
         newFunctionBody->firstInnerScopeRegister = this->firstInnerScopeRegister;
         newFunctionBody->funcExprScopeRegister = this->funcExprScopeRegister;
         newFunctionBody->innerScopeCount = this->innerScopeCount;
@@ -4657,6 +4659,7 @@ namespace Js
         this->localClosureRegister = Constants::NoRegister;
         this->localFrameDisplayRegister = Constants::NoRegister;
         this->envRegister = Constants::NoRegister;
+        this->thisRegisterForEventHandler = Constants::NoRegister;
         this->firstInnerScopeRegister = Constants::NoRegister;
         this->funcExprScopeRegister = Constants::NoRegister;
         this->innerScopeCount = 0;
@@ -5916,6 +5919,7 @@ namespace Js
         localClosureRegister = Constants::NoRegister;
         localFrameDisplayRegister = Constants::NoRegister;
         envRegister = Constants::NoRegister;
+        thisRegisterForEventHandler = Constants::NoRegister;
         firstInnerScopeRegister = Constants::NoRegister;
         funcExprScopeRegister = Constants::NoRegister;
         innerScopeCount = 0;

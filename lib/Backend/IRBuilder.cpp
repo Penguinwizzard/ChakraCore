@@ -512,7 +512,31 @@ IRBuilder::Build()
         Js::RegSlot envReg = funcBody->GetEnvReg();
         if (envReg != Js::Constants::NoRegister && !this->RegIsConstant(envReg))
         {
-            IR::Instr *instr = IR::Instr::New(Js::OpCode::LdEnv, BuildDstOpnd(envReg), m_func);
+            Js::OpCode newOpcode;
+            Js::RegSlot thisReg = funcBody->GetThisRegForEventHandler();
+            IR::RegOpnd *srcOpnd = nullptr;
+            IR::RegOpnd *dstOpnd = nullptr;
+            if (thisReg != Js::Constants::NoRegister)
+            {
+                this->BuildArgIn0(offset, thisReg);
+
+                srcOpnd = BuildSrcOpnd(thisReg);
+                newOpcode = Js::OpCode::LdHandlerScope;
+            }
+            else
+            {
+                newOpcode = Js::OpCode::LdEnv;
+            }
+            dstOpnd = BuildDstOpnd(envReg);
+            instr = IR::Instr::New(newOpcode, dstOpnd, m_func);
+            if (srcOpnd)
+            {
+                instr->SetSrc1(srcOpnd);
+            }
+            if (dstOpnd->m_sym->m_isSingleDef)
+            {
+                dstOpnd->m_sym->m_isNotInt = true;
+            }
             this->AddInstr(instr, offset);
         }
 
@@ -1594,19 +1618,6 @@ IRBuilder::BuildReg1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot R0)
         instr->SetSrc1(srcOpnd);
         this->AddInstr(instr, offset);
         return;
-
-    case Js::OpCode::LdHandlerScope:
-    {
-        srcOpnd = BuildSrcOpnd(srcRegOpnd);
-        IR::RegOpnd *dstOpnd = BuildDstOpnd(m_func->GetJnFunction()->GetEnvReg());
-        instr = IR::Instr::New(newOpcode, dstOpnd, srcOpnd, m_func);
-        if (dstOpnd->m_sym->m_isSingleDef)
-        {
-            dstOpnd->m_sym->m_isNotInt = true;
-        }
-        this->AddInstr(instr, offset);
-        return;
-    }
 
     case Js::OpCode::Catch:
         if (this->catchOffsetStack)

@@ -1835,13 +1835,10 @@ void ByteCodeGenerator::LoadAllConstants(FuncInfo *funcInfo)
         byteCodeFunction->SetEnvReg(funcInfo->GetEnvRegister());
         if (funcInfo->GetIsEventHandler())
         {
+            byteCodeFunction->SetThisRegForEventHandler(funcInfo->thisPointerRegister);
             // The environment is the namespace hierarchy starting with "this".
             Assert(!funcInfo->RegIsConst(funcInfo->GetEnvRegister()));
             thisLoadedFromParams = true;
-
-            // load "this" from parameters
-            this->m_writer.ArgIn0(funcInfo->thisPointerRegister);
-            this->m_writer.Reg1(Js::OpCode::LdHandlerScope, funcInfo->thisPointerRegister);
             this->InvalidateCachedOuterScopes(funcInfo);
         }
         else if (funcInfo->IsGlobalFunction() && !(this->flags & fscrEval))

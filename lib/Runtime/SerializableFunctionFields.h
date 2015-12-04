@@ -88,6 +88,7 @@ PRIVATE_FIELDS
     DECLARE_SERIALIZABLE_FIELD(RegSlot, localClosureRegister, RegSlot);
     DECLARE_SERIALIZABLE_FIELD(RegSlot, localFrameDisplayRegister, RegSlot);
     DECLARE_SERIALIZABLE_FIELD(RegSlot, envRegister, RegSlot);
+    DECLARE_SERIALIZABLE_FIELD(RegSlot, thisRegisterForEventHandler, RegSlot);
     DECLARE_SERIALIZABLE_FIELD(RegSlot, firstInnerScopeRegister, RegSlot);
     DECLARE_SERIALIZABLE_FIELD(RegSlot, funcExprScopeRegister, RegSlot);
 

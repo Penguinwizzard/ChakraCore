@@ -737,16 +737,6 @@
 
 #define PROCESS_A1U1toXX(name, func) PROCESS_A1U1toXX_COMMON(name, func,)
 
-#define PROCESS_A1toEnvMemNonVar_COMMON(name, func, suffix) \
-    case OpCode::name: \
-    { \
-        PROCESS_READ_LAYOUT(name, Reg1, suffix); \
-        SetEnv(func(GetNonVarReg(playout->R0), GetScriptContext())); \
-        break; \
-    }
-
-#define PROCESS_A1toEnvMemNonVar(name, func) PROCESS_A1toEnvMemNonVar_COMMON(name, func,)
-
 #define PROCESS_EnvU1toXX_COMMON(name, func, suffix) \
     case OpCode::name: \
     { \
@@ -1235,6 +1225,7 @@ namespace Js
         Js::RegSlot envReg = executeFunction->GetEnvReg();
         if (envReg != Js::Constants::NoRegister && envReg < executeFunction->GetConstantCount())
         {
+            Assert(this->executeFunction->GetThisRegForEventHandler() == Constants::NoRegister);
             // The correct FD (possibly distinct from the one on the function) is passed in the constant table.
             this->function->SetEnvironment((Js::FrameDisplay*)newInstance->GetNonVarReg(envReg));
         }
@@ -1332,9 +1323,22 @@ namespace Js
     void InterpreterStackFrame::InitializeClosures()
     {
         FunctionBody *executeFunction = this->function->GetFunctionBody();
-        Var environment = this->LdEnv();
+        Var environment;
 
-        Js::RegSlot closureReg = executeFunction->GetLocalClosureReg();
+        RegSlot thisRegForEventHandler = executeFunction->GetThisRegForEventHandler();
+        if (thisRegForEventHandler != Constants::NoRegister)
+        {
+            Var varThis = OP_ArgIn0();
+            SetReg(thisRegForEventHandler, varThis);
+            environment = JavascriptOperators::OP_LdHandlerScope(varThis, GetScriptContext());
+            this->SetEnv((FrameDisplay*)environment);
+        }
+        else
+        {
+            environment = this->LdEnv();
+        }
+
+        RegSlot closureReg = executeFunction->GetLocalClosureReg();
         if (closureReg != Js::Constants::NoRegister)
         {
             Assert(closureReg >= executeFunction->GetConstantCount());

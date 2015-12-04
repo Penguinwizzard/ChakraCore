@@ -1942,6 +1942,8 @@ namespace Js
         void SetEnvDepth(uint16 depth) { m_envDepth = depth; }
         RegSlot GetEnvReg() const { return envRegister; }
         void SetEnvReg(RegSlot reg) { Assert(envRegister == Constants::NoRegister); envRegister = this->MapRegSlot(reg); }
+        RegSlot GetThisRegForEventHandler() const { return thisRegisterForEventHandler; }
+        void SetThisRegForEventHandler(RegSlot reg) { Assert(thisRegisterForEventHandler == Constants::NoRegister); thisRegisterForEventHandler = this->MapRegSlot(reg); }
         bool HasScopeObject() const { return hasScopeObject; }
         void SetHasScopeObject(bool has) { hasScopeObject = has; }
         void SetLocalClosureReg(RegSlot reg) { Assert(localClosureRegister == Constants::NoRegister); localClosureRegister = this->MapRegSlot(reg); }
