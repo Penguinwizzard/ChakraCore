@@ -201,6 +201,7 @@ Error:
         ChakraRTInterface::JsCreateError(errorMessageString, &errorObject);
         ChakraRTInterface::JsSetException(errorObject);
     }
+
     return returnValue;
 }
 
@@ -233,11 +234,11 @@ JsValueRef WScriptJsrt::LoadScript(JsValueRef callee, LPCWSTR fileName, size_t f
     if (wcscmp(scriptInjectType, L"self") == 0)
     {
         JsContextRef calleeContext;
-        ChakraRTInterface::JsGetContextOfObject(callee, &calleeContext);
+        IfJsrtErrorSetGo(ChakraRTInterface::JsGetContextOfObject(callee, &calleeContext));
 
         IfJsrtErrorSetGo(ChakraRTInterface::JsSetCurrentContext(calleeContext));
-
         errorCode = ChakraRTInterface::JsRunScript(fileContent, GetNextSourceContext(), fullPath, &returnValue);
+
         if (errorCode == JsNoError)
         {
             errorCode = ChakraRTInterface::JsGetGlobalObject(&returnValue);
@@ -257,6 +258,7 @@ JsValueRef WScriptJsrt::LoadScript(JsValueRef callee, LPCWSTR fileName, size_t f
         Initialize();
 
         errorCode = ChakraRTInterface::JsRunScript(fileContent, GetNextSourceContext(), fullPath, &returnValue);
+
         if (errorCode == JsNoError)
         {
             errorCode = ChakraRTInterface::JsGetGlobalObject(&returnValue);
