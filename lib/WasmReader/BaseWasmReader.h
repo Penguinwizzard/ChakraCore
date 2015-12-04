@@ -9,6 +9,7 @@ namespace Wasm
         virtual WasmOp ReadFromModule() = 0;
         virtual WasmOp ReadExpr() = 0;
         virtual WasmOp ReadFromBlock() = 0;
+        virtual WasmOp ReadFromCall() = 0;
 
         WasmNode    m_currentNode;
 

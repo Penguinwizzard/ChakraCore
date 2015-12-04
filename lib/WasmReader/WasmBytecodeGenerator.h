@@ -52,11 +52,8 @@ namespace Wasm
             body(nullptr)
         {
         }
-        WasmFunction(Js::FunctionBody * body) :
-            body(body)
-        {
-        }
         Js::FunctionBody * body;
+        WasmFunctionInfo * wasmInfo;
     };
 
     typedef JsUtil::GrowingArray<WasmFunction*, ArenaAllocator> WasmFunctionArray;
@@ -70,6 +67,9 @@ namespace Wasm
         // TODO (michhol): use normal array, and get info from parser
         WasmFunctionArray * functions;
         WasmExportDictionary * exports;
+        uint heapOffset;
+        uint funcOffset;
+        uint memSize;
     };
 
     struct WasmScript
@@ -105,6 +105,7 @@ namespace Wasm
     private:
         EmitInfo EmitExpr(WasmOp op);
         EmitInfo EmitBlock();
+        EmitInfo EmitCall();
         EmitInfo EmitIfExpr();
         EmitInfo EmitGetLocal();
         EmitInfo EmitSetLocal();
@@ -126,7 +127,6 @@ namespace Wasm
         template <typename T>
         Js::RegSlot GetConstReg(T constVal);
 
-        Js::OpCodeAsmJs GetOpCodeForCompareNode() const;
         Js::AsmJsRetType GetAsmJsReturnType() const;
         static Js::AsmJsVarType GetAsmJsVarType(WasmTypes::WasmType wasmType);
         WasmRegisterSpace * GetRegisterSpace(WasmTypes::WasmType type) const;
@@ -140,6 +140,9 @@ namespace Wasm
         WasmModule * m_module;
 
         uint m_nestedIfLevel;
+        uint m_nestedCallDepth;
+        uint m_maxArgOutDepth;
+        uint m_argOutDepth;
 
         WasmScript * m_wasmScript;
 

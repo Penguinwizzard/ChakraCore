@@ -34,6 +34,7 @@ namespace Wasm
         virtual WasmOp ReadFromScript() override;
         virtual WasmOp ReadFromModule() override;
         virtual WasmOp ReadFromBlock() override;
+        virtual WasmOp ReadFromCall() override;
         virtual WasmOp ReadExpr() override;
 
         static void __declspec(noreturn) ThrowSyntaxError();
@@ -52,12 +53,15 @@ namespace Wasm
         WasmOp ParseReturnExpr();
         WasmOp ParseIfExpr();
         WasmOp ParseBlock();
+        WasmOp ParseCall();
         WasmOp ParseConstLitExpr(SExprTokenType tok);
         void ParseGeneralExpr(WasmOp opcode);
         WasmNode * ParseInvoke();
         WasmNode * ParseAssertEq();
 
         void ParseVarNode(WasmOp opcode);
+        void ParseVar();
+        void ParseFuncVar();
 
         bool IsEndOfExpr(SExprTokenType tok) const;
         WasmTypes::WasmType GetWasmType(SExprTokenType tok) const;

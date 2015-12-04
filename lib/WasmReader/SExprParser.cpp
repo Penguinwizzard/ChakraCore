@@ -98,8 +98,36 @@ SExprParser::ReadFromBlock()
             tok = m_scanner->Scan();
             m_blockNesting->Pop();
         }
-        // if we have a RParen, and no more nested exprs, then we are done with function
+
         if (tok == wtkRPAREN && m_blockNesting->Count() > 0 && m_blockNesting->Top() == SExpr::Block)
+        {
+            m_blockNesting->Pop();
+            return wnLIMIT;
+        }
+        if (tok != wtkLPAREN || m_blockNesting->Count() == 0)
+        {
+            ThrowSyntaxError();
+        }
+        tok = m_scanner->Scan();
+    }
+    return ReadExprCore(tok);
+}
+
+WasmOp
+SExprParser::ReadFromCall()
+{
+    SExprTokenType tok = m_scanner->Scan();
+
+    // in some cases we will have already scanned the LParen
+    if (!m_inExpr)
+    {
+        while (tok == wtkRPAREN && m_blockNesting->Count() > 0 && m_blockNesting->Top() == SExpr::Expr)
+        {
+            tok = m_scanner->Scan();
+            m_blockNesting->Pop();
+        }
+
+        if (tok == wtkRPAREN && m_blockNesting->Count() > 0 && m_blockNesting->Top() == SExpr::Call)
         {
             m_blockNesting->Pop();
             return wnLIMIT;
@@ -153,6 +181,8 @@ SExprParser::ReadExprCore(SExprTokenType tok)
         return wnNOP;
     case wtkBLOCK:
         return ParseBlock();
+    case wtkCALL:
+        return ParseCall();
     case wtkLOOP:
         return wnLOOP;
     case wtkLABEL:
@@ -202,7 +232,6 @@ ParseVarCommon:
     case wtkSET_NEAR_UNALIGNED_U:
     case wtkBREAK:
     case wtkSWITCH:
-    case wtkCALL:
     case wtkDISPATCH:
     case wtkDESTRUCT:
     default:
@@ -297,27 +326,8 @@ SExprParser::ParseExport()
 
     m_currentNode.var.exportName = m_token.u.m_sz;
 
-    SExprTokenType tok = m_scanner->Scan();
+    ParseFuncVar();
 
-    switch (tok)
-    {
-    case wtkID:
-        m_currentNode.var.num = m_nameToLocalMap->Lookup(m_token.u.m_sz, UINT_MAX);
-        if (m_currentNode.var.num == UINT_MAX)
-        {
-            ThrowSyntaxError();
-        }
-        break;
-    case wtkINTLIT:
-        if (m_token.u.lng < 0 || m_token.u.lng >= UINT_MAX)
-        {
-            ThrowSyntaxError();
-        }
-        m_currentNode.var.num = (uint)m_token.u.lng;
-        break;
-    default:
-        ThrowSyntaxError();
-    }
     m_scanner->ScanToken(wtkRPAREN);
 
     return m_currentNode.op;
@@ -422,6 +432,15 @@ WasmOp SExprParser::ParseBlock()
     return wnBLOCK;
 }
 
+WasmOp SExprParser::ParseCall()
+{
+    m_blockNesting->Push(SExpr::Call);
+    
+    ParseFuncVar();
+
+    return wnCALL;
+}
+
 WasmOp
 SExprParser::ParseConstLitExpr(SExprTokenType tok)
 {
@@ -493,9 +512,49 @@ SExprParser::ParseAssertEq()
 void
 SExprParser::ParseVarNode(WasmOp opcode)
 {
-    SExprTokenType tok = m_scanner->Scan();
+    ParseVar();
 
     m_currentNode.op = opcode;
+
+    if (opcode == wnSETLOCAL || opcode == wnSetGlobal)
+    {
+        m_blockNesting->Push(SExpr::Expr);
+    }
+    else
+    {
+        m_scanner->ScanToken(wtkRPAREN);
+    }
+
+}
+void SExprParser::ParseFuncVar()
+{
+    SExprTokenType tok = m_scanner->Scan();
+
+    switch (tok)
+    {
+    case wtkID:
+        m_currentNode.var.num = m_nameToFuncMap->Lookup(m_token.u.m_sz, UINT_MAX);
+        if (m_currentNode.var.num == UINT_MAX)
+        {
+            ThrowSyntaxError();
+        }
+        break;
+    case wtkINTLIT:
+        if (m_token.u.lng < 0 || m_token.u.lng >= UINT_MAX)
+        {
+            ThrowSyntaxError();
+        }
+        m_currentNode.var.num = (uint)m_token.u.lng;
+        break;
+    default:
+        ThrowSyntaxError();
+    }
+}
+
+void SExprParser::ParseVar()
+{
+    SExprTokenType tok = m_scanner->Scan();
+
     switch (tok)
     {
     case wtkID:
@@ -515,16 +574,6 @@ SExprParser::ParseVarNode(WasmOp opcode)
     default:
         ThrowSyntaxError();
     }
-
-    if (opcode == wnSETLOCAL || opcode == wnSetGlobal)
-    {
-        m_blockNesting->Push(SExpr::Expr);
-    }
-    else
-    {
-        m_scanner->ScanToken(wtkRPAREN);
-    }
-
 }
 
 bool

@@ -71,6 +71,9 @@ WasmBytecodeGenerator::GenerateModule()
     m_module->functions = Anew(&m_alloc, WasmFunctionArray, &m_alloc, 0);
     m_module->exports = Anew(&m_alloc, WasmExportDictionary, &m_alloc);
 
+    m_module->heapOffset = 0;
+    m_module->funcOffset = m_module->heapOffset + 1;
+
     WasmOp op;
     while ((op = m_reader->ReadFromModule()) != wnLIMIT)
     {
@@ -91,6 +94,7 @@ WasmBytecodeGenerator::GenerateModule()
             Assert(UNREACHED);
         }
     }
+    m_module->memSize = m_module->funcOffset + m_module->functions->Count();
 
     return m_module;
 }
@@ -107,7 +111,11 @@ WasmBytecodeGenerator::GenerateFunction()
     m_func->body->SetIsAsmjsMode(true);
     m_func->body->SetIsWasmFunction(true);
     m_funcInfo = m_reader->m_currentNode.func.info;
+    m_func->wasmInfo = m_funcInfo;
     m_nestedIfLevel = 0;
+    m_nestedCallDepth = 0;
+    m_maxArgOutDepth = 0;
+    m_argOutDepth = 0;
     EnregisterLocals();
 
     // TODO: fix these bools
@@ -193,10 +201,12 @@ WasmBytecodeGenerator::GenerateFunction()
 
     info->SetReturnType(GetAsmJsReturnType());
 
-    // Review: overflow checks? 
+    // REVIEW: overflow checks? 
     info->SetIntByteOffset(ReservedRegisterCount * sizeof(Js::Var));
     info->SetFloatByteOffset(info->GetIntByteOffset() + m_i32RegSlots->GetRegisterCount() * sizeof(int32));
     info->SetDoubleByteOffset(Math::Align<int>(info->GetFloatByteOffset() + m_f32RegSlots->GetRegisterCount() * sizeof(float), sizeof(double)));
+
+    m_func->body->SetOutParamDepth(m_maxArgOutDepth);
 
     return m_func;
 }
@@ -234,6 +244,8 @@ WasmBytecodeGenerator::EmitExpr(WasmOp op)
         return EmitConst<WasmTypes::I32>();
     case wnBLOCK:
         return EmitBlock();
+    case wnCALL:
+        return EmitCall();
     case wnIF:
         return EmitIfExpr();
 
@@ -374,6 +386,125 @@ WasmBytecodeGenerator::EmitBlock()
 
     // REVIEW: can a block give a result?
     return EmitInfo();
+}
+
+EmitInfo
+WasmBytecodeGenerator::EmitCall()
+{
+    ++m_nestedCallDepth;
+    
+    uint funcNum = m_reader->m_currentNode.var.num;
+    if (funcNum >= m_module->functions->Count())
+    {
+        // TODO: implement forward calls
+        AssertMsg(UNREACHED, "Forward calls currently unsupported");
+    }
+
+    WasmFunction * callee = m_module->functions->GetBuffer()[funcNum];
+
+    // emit start call
+    Js::ArgSlot argSize = callee->body->GetAsmJsFunctionInfo()->GetArgByteSize();
+    m_writer.AsmStartCall(Js::OpCodeAsmJs::I_StartCall, argSize);
+
+    WasmOp op;
+    uint i = 0;
+    Js::RegSlot nextLoc = 1;
+
+    uint maxDepthForLevel = m_argOutDepth;
+    while((op = m_reader->ReadFromCall()) != wnLIMIT && i < callee->wasmInfo->GetParamCount())
+    {
+        // emit args
+        EmitInfo info = EmitExpr(op);
+        if (callee->wasmInfo->GetParam(i) != info.type)
+        {
+            throw WasmCompilationException(L"Call argument does not match formal type");
+        }
+
+        Js::OpCodeAsmJs argOp = Js::OpCodeAsmJs::Nop;
+        Js::RegSlot argLoc = nextLoc;
+        switch (info.type)
+        {
+        case WasmTypes::F32:
+            argOp = Js::OpCodeAsmJs::I_ArgOut_Flt;
+            ++nextLoc;
+            break;
+        case WasmTypes::F64:
+            argOp = Js::OpCodeAsmJs::I_ArgOut_Db;
+            // this indexes into physical stack, so on x86 we need double width
+            nextLoc += sizeof(double) / sizeof(Js::Var);
+            break;
+        case WasmTypes::I32:
+            argOp = Js::OpCodeAsmJs::I_ArgOut_Int;
+            ++nextLoc;
+            break;
+        default:
+            Assume(UNREACHED);
+        }
+
+        m_writer.AsmReg2(argOp, argLoc, info.location);
+
+        // if there are nested calls, track whichever is the deepest
+        if (maxDepthForLevel < m_argOutDepth)
+        {
+            maxDepthForLevel = m_argOutDepth;
+        }
+
+        ++i;
+    }
+    
+    if (i != callee->wasmInfo->GetParamCount())
+    {
+        throw WasmCompilationException(L"Call has wrong number of arguments");
+    }
+
+    // emit call
+
+    m_writer.AsmSlot(Js::OpCodeAsmJs::LdSlot, 0, 1, funcNum + m_module->funcOffset);
+    // calculate number of RegSlots the arguments consume
+    Js::ArgSlot args = (Js::ArgSlot)(::ceil((double)(argSize / sizeof(Js::Var)))) + 1;
+    m_writer.AsmCall(Js::OpCodeAsmJs::I_Call, 0, 0, args, callee->body->GetAsmJsFunctionInfo()->GetReturnType());
+
+    // emit result coersion
+    EmitInfo retInfo;
+    retInfo.type = callee->wasmInfo->GetResultType();
+    switch (retInfo.type)
+    {
+    case WasmTypes::F32:
+        retInfo.location = m_f32RegSlots->AcquireTmpRegister();
+        m_writer.AsmReg2(Js::OpCodeAsmJs::I_Conv_VTF, retInfo.location, 0);
+        break;
+    case WasmTypes::F64:
+        retInfo.location = m_f64RegSlots->AcquireTmpRegister();
+        m_writer.AsmReg2(Js::OpCodeAsmJs::I_Conv_VTD, retInfo.location, 0);
+        break;
+    case WasmTypes::I32:
+        retInfo.location = m_i32RegSlots->AcquireTmpRegister();
+        m_writer.AsmReg2(Js::OpCodeAsmJs::I_Conv_VTI, retInfo.location, 0);
+        break;
+    }
+
+    
+    // track stack requirements for out params
+    
+    // + 1 for return address
+    maxDepthForLevel += args + 1;
+    if (m_nestedCallDepth > 1)
+    {
+        m_argOutDepth = maxDepthForLevel;
+    }
+    else
+    {
+        m_argOutDepth = 0;
+    }
+    if (maxDepthForLevel > m_maxArgOutDepth)
+    {
+        m_maxArgOutDepth = maxDepthForLevel;
+    }
+
+    Assert(m_nestedCallDepth > 0);
+    --m_nestedCallDepth;
+
+    return retInfo;
 }
 
 EmitInfo

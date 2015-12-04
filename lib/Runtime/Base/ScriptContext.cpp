@@ -1845,31 +1845,27 @@ namespace Js
             */
 
             Wasm::WasmFunction ** functionArray = wasmScript->module->functions->GetBuffer();
-            AsmJsModuleMemory * mem = RecyclerNew(GetRecycler(), AsmJsModuleMemory);
+            
+            Var* moduleMemoryPtr = RecyclerNewArray(GetRecycler(), Var, wasmScript->module->memSize);
+            Var* localModuleFunctions = moduleMemoryPtr + wasmScript->module->funcOffset;
 
-            mem->mArrayBufferOffset = AsmJsModuleMemory::MemoryTableBeginOffset;
-            mem->mStdLibOffset = mem->mArrayBufferOffset + 1;
-            mem->mDoubleOffset = mem->mStdLibOffset + 1;
-            mem->mFuncOffset = mem->mDoubleOffset + (0 * DOUBLE_SLOTS_SPACE);
-            mem->mFFIOffset = mem->mFuncOffset + 0;
-            mem->mFuncPtrOffset = mem->mFFIOffset + 0;
-            mem->mFloatOffset = mem->mFuncPtrOffset + 0;
-            mem->mIntOffset = mem->mFloatOffset +0;
-            mem->mMemorySize = mem->mIntOffset + 0;
+            
 
-            /*
+            FrameDisplay * frameDisplay = RecyclerNewPlus(GetRecycler(), sizeof(void*), FrameDisplay, 1);
+            frameDisplay->SetItem(0, moduleMemoryPtr);
+            AsmJsScriptFunction * funcObj = nullptr;
             for (uint i = 0; i < wasmScript->module->functions->Count(); ++i)
-            {*/
-                //ScriptFunction * funcObj = javascriptLibrary->CreateScriptFunction(functionArray[i]->body);
-            ScriptFunction * funcObj = javascriptLibrary->CreateScriptFunction(functionArray[0]->body);
-            FunctionEntryPointInfo* entypointInfo = (FunctionEntryPointInfo*)funcObj->GetEntryPointInfo();
-            entypointInfo->SetIsAsmJSFunction(true);
-            entypointInfo->address = AsmJsDefaultEntryThunk;
-            funcObj->GetDynamicType()->SetEntryPoint(AsmJsExternalEntryPoint);
-            // TODO: support multiple functions
-            FrameDisplay* frameDisplay = RecyclerNewPlus(GetRecycler(), sizeof(void*), FrameDisplay, 1);
-            frameDisplay->SetItem(0, mem);
-            funcObj->SetEnvironment(frameDisplay);
+            {
+                funcObj = javascriptLibrary->CreateAsmJsScriptFunction(functionArray[i]->body);
+                funcObj->GetDynamicType()->SetEntryPoint(AsmJsExternalEntryPoint);
+                funcObj->SetModuleMemory(moduleMemoryPtr);
+                FunctionEntryPointInfo * entypointInfo = (FunctionEntryPointInfo*)funcObj->GetEntryPointInfo();
+                entypointInfo->SetIsAsmJSFunction(true);
+                entypointInfo->address = AsmJsDefaultEntryThunk;
+                entypointInfo->SetModuleAddress((uintptr_t)moduleMemoryPtr);
+                funcObj->SetEnvironment(frameDisplay);
+                localModuleFunctions[i] = funcObj;
+            }
             return funcObj;
         }
         catch (Js::OutOfMemoryException)

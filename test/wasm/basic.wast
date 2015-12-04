@@ -4,12 +4,15 @@
 ;;-------------------------------------------------------------------------------------------------------
 
 (module
+  (func (result i32)
+    (return (i32.const 2))
+  )
   (func (param i32) (result i32)
     (if (i32.ges (i32.const 26) (i32.const 25)) (setlocal 0 (i32.add (getlocal 0) (i32.const 4))))
     (block
     (setlocal 0 (i32.add (getlocal 0) (i32.const 4)))
     (setlocal 0 (i32.add (getlocal 0) (i32.const 4)))
-    (setlocal 0 (i32.add (getlocal 0) (i32.const 4))))
+    (setlocal 0 (i32.add (getlocal 0) (call 0))))
     (return (i32.add (getlocal 0) (i32.const 42)))
   )
 
