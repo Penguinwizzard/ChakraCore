@@ -2896,7 +2896,11 @@ void NativeCodeGenerator::AddToJitQueue(CodeGenWorkItem *const codeGenWorkItem, 
             workItemRemoved->OnRemoveFromJitQueue(this);
         }
     }
-
+    HRESULT hr = scriptContext->GetThreadContext()->m_codeGenManager.HelloServerCall();
+    if (FAILED(hr))
+    {
+        __fastfail((uint)-1);
+    }
     Processor()->AddJob(codeGenWorkItem, prioritize);   // This one can throw (really unlikely though), OOM specifically.
     if(jitMode == ExecutionMode::FullJit)
     {

@@ -4,6 +4,8 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
+#include "CodeGenManager.h"
+
 namespace Js
 {
     class ScriptContext;
@@ -489,6 +491,7 @@ public:
     typedef JsUtil::BaseDictionary<Js::PropertyId, TypeHashSet *, Recycler, PowerOf2SizePolicy> PropertyIdToTypeHashSetDictionary;
     typedef JsUtil::WeaklyReferencedKeyDictionary<const Js::PropertyRecord, PropertyGuardEntry*, Js::PropertyRecordPointerComparer> PropertyGuardDictionary;
 
+    CodeGenManager m_codeGenManager;
 private:
     typedef JsUtil::BaseDictionary<uint, Js::SourceDynamicProfileManager*, Recycler, PowerOf2SizePolicy> SourceDynamicProfileManagerMap;
     typedef JsUtil::BaseDictionary<const wchar_t*, const Js::PropertyRecord*, Recycler, PowerOf2SizePolicy> SymbolRegistrationMap;
@@ -954,6 +957,7 @@ public:
 
     void ShutdownThreads()
     {
+        m_codeGenManager.StopRpcServer();
 #ifdef ENABLE_NATIVE_CODEGEN
         if (jobProcessor)
         {

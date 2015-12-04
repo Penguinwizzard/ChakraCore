@@ -347,7 +347,8 @@ Func::Codegen()
         Output::Flush();
     }
 #endif
-
+    //Js::ByteBlock * block = this->m_jnFunction->GetByteCode()->Clone(GetScriptContext()->GetRecycler());
+    //block = block->Clone(GetScriptContext()->GetRecycler());
     BEGIN_CODEGEN_PHASE(this, Js::BackEndPhase);
     {
         // IRBuilder

@@ -29,6 +29,7 @@
         $(MSBuildThisFileDirectory)..\..\Common;
         $(MSBuildThisFileDirectory)..\..\Parser;
         $(MSBuildThisFileDirectory)..\..\Backend;
+        $(MSBuildThisFileDirectory)..\..\CodeGenClient;
         %(AdditionalIncludeDirectories)
       </AdditionalIncludeDirectories>
       <!-- For mscorlib.tlb used in JavascriptErrorDebug.cpp -->

@@ -1,0 +1,17 @@
+//-------------------------------------------------------------------------------------------------------
+// Copyright (C) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+//-------------------------------------------------------------------------------------------------------
+
+import "wtypes.idl";
+
+[
+    uuid(ead694ed-2243-44cb-a9dc-85d3ba934dab),
+    version(1.0)
+]
+interface CodeGen
+{
+    void Shutdown([in] handle_t binding);
+
+    HRESULT HelloServer([in] handle_t binding);
+}

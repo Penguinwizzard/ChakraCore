@@ -433,6 +433,7 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Types\ScriptFunctionType.h"
 #include "Library\ScriptFunction.h"
 
+#include "CodeGenClient.h"
 
 //
 // .inl files

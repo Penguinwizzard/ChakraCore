@@ -287,6 +287,550 @@ Encoder::Encode()
     // Relocs
     m_encoderMD.ApplyRelocs((size_t) workItem->GetCodeAddress());
 
+    BYTE * buff2 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff2, codeSize, m_encodeBuffer, codeSize);
+    BYTE * buff3 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff3, codeSize, m_encodeBuffer, codeSize);
+    BYTE * buff4 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff4, codeSize, buff2, codeSize);
+
+    BYTE * buff5 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff5, codeSize, buff3, codeSize);
+    BYTE * buff6 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff6, codeSize, buff2, codeSize);
+    BYTE * buff7 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff7, codeSize, buff4, codeSize);
+    BYTE * buff8 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff8, codeSize, buff7, codeSize);
+
+    BYTE * buff9 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff9, codeSize, buff4, codeSize);
+    BYTE * buff10 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff10, codeSize, buff3, codeSize);
+    BYTE * buff11 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff11, codeSize, buff8, codeSize);
+    BYTE * buff12 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff12, codeSize, buff3, codeSize);
+
+    BYTE * buff13 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff13, codeSize, buff8, codeSize);
+    BYTE * buff14 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff14, codeSize, buff7, codeSize);
+    BYTE * buff15 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff15, codeSize, buff6, codeSize);
+    BYTE * buff16 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff16, codeSize, buff4, codeSize);
+
+    BYTE * buff20 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff20, codeSize, m_encodeBuffer, codeSize);
+    BYTE * buff30 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff30, codeSize, m_encodeBuffer, codeSize);
+    BYTE * buff40 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff40, codeSize, buff2, codeSize);
+
+    BYTE * buff50 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff50, codeSize, buff3, codeSize);
+    BYTE * buff60 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff60, codeSize, buff2, codeSize);
+    BYTE * buff70 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff70, codeSize, buff4, codeSize);
+    BYTE * buff80 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff80, codeSize, buff7, codeSize);
+
+    BYTE * buff90 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff90, codeSize, buff4, codeSize);
+    BYTE * buff100 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff100, codeSize, buff3, codeSize);
+    BYTE * buff110 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff110, codeSize, buff8, codeSize);
+    BYTE * buff120 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff120, codeSize, buff3, codeSize);
+
+    BYTE * buff130 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff130, codeSize, buff8, codeSize);
+    BYTE * buff140 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff140, codeSize, buff7, codeSize);
+    BYTE * buff150 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff150, codeSize, buff6, codeSize);
+    BYTE * buff160 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff160, codeSize, buff4, codeSize);
+
+    BYTE * buff200 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff200, codeSize, m_encodeBuffer, codeSize);
+    BYTE * buff300 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff300, codeSize, m_encodeBuffer, codeSize);
+    BYTE * buff400 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff400, codeSize, buff2, codeSize);
+
+    BYTE * buff500 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff500, codeSize, buff3, codeSize);
+    BYTE * buff600 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff600, codeSize, buff2, codeSize);
+    BYTE * buff700 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff700, codeSize, buff4, codeSize);
+    BYTE * buff800 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff800, codeSize, buff7, codeSize);
+
+    BYTE * buff900 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff900, codeSize, buff4, codeSize);
+    BYTE * buff1000 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff1000, codeSize, buff3, codeSize);
+    BYTE * buff1100 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff1100, codeSize, buff8, codeSize);
+    BYTE * buff1200 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff1200, codeSize, buff3, codeSize);
+
+    BYTE * buff1300 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff1300, codeSize, buff8, codeSize);
+    BYTE * buff1400 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff1400, codeSize, buff7, codeSize);
+    BYTE * buff1500 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff1500, codeSize, buff6, codeSize);
+    BYTE * buff1600 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff1600, codeSize, buff4, codeSize);
+
+    BYTE * buff2000 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff2000, codeSize, m_encodeBuffer, codeSize);
+    BYTE * buff3000 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff3000, codeSize, m_encodeBuffer, codeSize);
+    BYTE * buff4000 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff4000, codeSize, buff2, codeSize);
+
+    BYTE * buff5000 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff5000, codeSize, buff3, codeSize);
+    BYTE * buff6000 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff6000, codeSize, buff2, codeSize);
+    BYTE * buff7000 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff7000, codeSize, buff4, codeSize);
+    BYTE * buff8000 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff8000, codeSize, buff7, codeSize);
+
+    BYTE * buff9000 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff9000, codeSize, buff4, codeSize);
+    BYTE * buff10000 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff10000, codeSize, buff3, codeSize);
+    BYTE * buff11000 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff11000, codeSize, buff8, codeSize);
+    BYTE * buff12000 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff12000, codeSize, buff3, codeSize);
+
+    BYTE * buff13000 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff13000, codeSize, buff8, codeSize);
+    BYTE * buff14000 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff14000, codeSize, buff7, codeSize);
+    BYTE * buff15000 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff15000, codeSize, buff6, codeSize);
+    BYTE * buff16000 = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff16000, codeSize, buff4, codeSize);
+
+    BYTE * buff2a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff2a, codeSize, m_encodeBuffer, codeSize);
+    BYTE * buff3a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff3a, codeSize, m_encodeBuffer, codeSize);
+    BYTE * buff4a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff4a, codeSize, buff2, codeSize);
+
+    BYTE * buff5a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff5a, codeSize, buff3, codeSize);
+    BYTE * buff6a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff6a, codeSize, buff2, codeSize);
+    BYTE * buff7a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff7a, codeSize, buff4, codeSize);
+    BYTE * buff8a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff8a, codeSize, buff7, codeSize);
+
+    BYTE * buff9a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff9a, codeSize, buff4, codeSize);
+    BYTE * buff10a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff10a, codeSize, buff3, codeSize);
+    BYTE * buff11a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff11a, codeSize, buff8, codeSize);
+    BYTE * buff12a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff12a, codeSize, buff3, codeSize);
+
+    BYTE * buff13a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff13a, codeSize, buff8, codeSize);
+    BYTE * buff14a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff14a, codeSize, buff7, codeSize);
+    BYTE * buff15a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff15a, codeSize, buff6, codeSize);
+    BYTE * buff16a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff16a, codeSize, buff4, codeSize);
+
+    BYTE * buff20a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff20a, codeSize, m_encodeBuffer, codeSize);
+    BYTE * buff30a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff30a, codeSize, m_encodeBuffer, codeSize);
+    BYTE * buff40a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff40a, codeSize, buff2, codeSize);
+
+    BYTE * buff50a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff50a, codeSize, buff3, codeSize);
+    BYTE * buff60a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff60a, codeSize, buff2, codeSize);
+    BYTE * buff70a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff70a, codeSize, buff4, codeSize);
+    BYTE * buff80a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff80a, codeSize, buff7, codeSize);
+
+    BYTE * buff90a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff90a, codeSize, buff4, codeSize);
+    BYTE * buff100a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff100a, codeSize, buff3, codeSize);
+    BYTE * buff110a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff110a, codeSize, buff8, codeSize);
+    BYTE * buff120a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff120a, codeSize, buff3, codeSize);
+
+    BYTE * buff130a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff130a, codeSize, buff8, codeSize);
+    BYTE * buff140a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff140a, codeSize, buff7, codeSize);
+    BYTE * buff150a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff150a, codeSize, buff6, codeSize);
+    BYTE * buff160a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff160a, codeSize, buff4, codeSize);
+
+    BYTE * buff200a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff200a, codeSize, m_encodeBuffer, codeSize);
+    BYTE * buff300a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff300a, codeSize, m_encodeBuffer, codeSize);
+    BYTE * buff400a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff400a, codeSize, buff2, codeSize);
+
+    BYTE * buff500a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff500a, codeSize, buff3, codeSize);
+    BYTE * buff600a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff600a, codeSize, buff2, codeSize);
+    BYTE * buff700a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff700a, codeSize, buff4, codeSize);
+    BYTE * buff800a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff800a, codeSize, buff7, codeSize);
+
+    BYTE * buff900a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff900a, codeSize, buff4, codeSize);
+    BYTE * buff1000a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff1000a, codeSize, buff3, codeSize);
+    BYTE * buff1100a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff1100a, codeSize, buff8, codeSize);
+    BYTE * buff1200a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff1200a, codeSize, buff3, codeSize);
+
+    BYTE * buff1300a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff1300a, codeSize, buff8, codeSize);
+    BYTE * buff1400a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff1400a, codeSize, buff7, codeSize);
+    BYTE * buff1500a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff1500a, codeSize, buff6, codeSize);
+    BYTE * buff1600a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff1600a, codeSize, buff4, codeSize);
+
+    BYTE * buff2000a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff2000a, codeSize, m_encodeBuffer, codeSize);
+    BYTE * buff3000a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff3000a, codeSize, m_encodeBuffer, codeSize);
+    BYTE * buff4000a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff4000a, codeSize, buff2, codeSize);
+
+    BYTE * buff5000a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff5000a, codeSize, buff3, codeSize);
+    BYTE * buff6000a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff6000a, codeSize, buff2, codeSize);
+    BYTE * buff7000a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff7000a, codeSize, buff4, codeSize);
+    BYTE * buff8000a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff8000a, codeSize, buff7, codeSize);
+
+    BYTE * buff9000a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff9000a, codeSize, buff4, codeSize);
+    BYTE * buff10000a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff10000a, codeSize, buff3, codeSize);
+    BYTE * buff11000a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff11000a, codeSize, buff8, codeSize);
+    BYTE * buff12000a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff12000a, codeSize, buff3, codeSize);
+
+    BYTE * buff13000a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff13000a, codeSize, buff8, codeSize);
+    BYTE * buff14000a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff14000a, codeSize, buff7, codeSize);
+    BYTE * buff15000a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff15000a, codeSize, buff6, codeSize);
+    BYTE * buff16000a = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff16000a, codeSize, buff4, codeSize);
+
+    BYTE * buff2b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff2b, codeSize, m_encodeBuffer, codeSize);
+    BYTE * buff3b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff3b, codeSize, m_encodeBuffer, codeSize);
+    BYTE * buff4b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff4b, codeSize, buff2, codeSize);
+
+    BYTE * buff5b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff5b, codeSize, buff3, codeSize);
+    BYTE * buff6b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff6b, codeSize, buff2, codeSize);
+    BYTE * buff7b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff7b, codeSize, buff4, codeSize);
+    BYTE * buff8b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff8b, codeSize, buff7, codeSize);
+
+    BYTE * buff9b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff9b, codeSize, buff4, codeSize);
+    BYTE * buff10b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff10b, codeSize, buff3, codeSize);
+    BYTE * buff11b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff11b, codeSize, buff8, codeSize);
+    BYTE * buff12b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff12b, codeSize, buff3, codeSize);
+
+    BYTE * buff13b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff13b, codeSize, buff8, codeSize);
+    BYTE * buff14b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff14b, codeSize, buff7, codeSize);
+    BYTE * buff15b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff15b, codeSize, buff6, codeSize);
+    BYTE * buff16b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff16b, codeSize, buff4, codeSize);
+
+    BYTE * buff20b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff20b, codeSize, m_encodeBuffer, codeSize);
+    BYTE * buff30b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff30b, codeSize, m_encodeBuffer, codeSize);
+    BYTE * buff40b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff40b, codeSize, buff2, codeSize);
+
+    BYTE * buff50b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff50b, codeSize, buff3, codeSize);
+    BYTE * buff60b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff60b, codeSize, buff2, codeSize);
+    BYTE * buff70b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff70b, codeSize, buff4, codeSize);
+    BYTE * buff80b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff80b, codeSize, buff7, codeSize);
+
+    BYTE * buff90b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff90b, codeSize, buff4, codeSize);
+    BYTE * buff100b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff100b, codeSize, buff3, codeSize);
+    BYTE * buff110b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff110b, codeSize, buff8, codeSize);
+    BYTE * buff120b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff120b, codeSize, buff3, codeSize);
+
+    BYTE * buff130b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff130b, codeSize, buff8, codeSize);
+    BYTE * buff140b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff140b, codeSize, buff7, codeSize);
+    BYTE * buff150b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff150b, codeSize, buff6, codeSize);
+    BYTE * buff160b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff160b, codeSize, buff4, codeSize);
+
+    BYTE * buff200b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff200b, codeSize, m_encodeBuffer, codeSize);
+    BYTE * buff300b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff300b, codeSize, m_encodeBuffer, codeSize);
+    BYTE * buff400b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff400b, codeSize, buff2, codeSize);
+
+    BYTE * buff500b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff500b, codeSize, buff3, codeSize);
+    BYTE * buff600b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff600b, codeSize, buff2, codeSize);
+    BYTE * buff700b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff700b, codeSize, buff4, codeSize);
+    BYTE * buff800b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff800b, codeSize, buff7, codeSize);
+
+    BYTE * buff900b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff900b, codeSize, buff4, codeSize);
+    BYTE * buff1000b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff1000b, codeSize, buff3, codeSize);
+    BYTE * buff1100b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff1100b, codeSize, buff8, codeSize);
+    BYTE * buff1200b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff1200b, codeSize, buff3, codeSize);
+    /*
+    BYTE * buff1300b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff1300b, codeSize, buff8, codeSize);
+    BYTE * buff1400b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff1400b, codeSize, buff7, codeSize);
+    BYTE * buff1500b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff1500b, codeSize, buff6, codeSize);
+    BYTE * buff1600b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff1600b, codeSize, buff4, codeSize);
+
+    BYTE * buff2000b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff2000b, codeSize, m_encodeBuffer, codeSize);
+    BYTE * buff3000b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff3000b, codeSize, m_encodeBuffer, codeSize);
+    BYTE * buff4000b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff4000b, codeSize, buff2, codeSize);
+
+    BYTE * buff5000b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff5000b, codeSize, buff3, codeSize);
+    BYTE * buff6000b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff6000b, codeSize, buff2, codeSize);
+    BYTE * buff7000b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff7000b, codeSize, buff4, codeSize);
+    BYTE * buff8000b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff8000b, codeSize, buff7, codeSize);
+
+    BYTE * buff9000b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff9000b, codeSize, buff4, codeSize);
+    BYTE * buff10000b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff10000b, codeSize, buff3, codeSize);
+    BYTE * buff11000b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff11000b, codeSize, buff8, codeSize);
+    BYTE * buff12000b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff12000b, codeSize, buff3, codeSize);
+
+    BYTE * buff13000b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff13000b, codeSize, buff8, codeSize);
+    BYTE * buff14000b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff14000b, codeSize, buff7, codeSize);
+    BYTE * buff15000b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff15000b, codeSize, buff6, codeSize);
+    BYTE * buff16000b = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff16000b, codeSize, buff4, codeSize);
+
+    BYTE * buff2ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff2ab, codeSize, m_encodeBuffer, codeSize);
+    BYTE * buff3ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff3ab, codeSize, m_encodeBuffer, codeSize);
+    BYTE * buff4ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff4ab, codeSize, buff2, codeSize);
+
+    BYTE * buff5ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff5ab, codeSize, buff3, codeSize);
+    BYTE * buff6ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff6ab, codeSize, buff2, codeSize);
+    BYTE * buff7ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff7ab, codeSize, buff4, codeSize);
+    BYTE * buff8ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff8ab, codeSize, buff7, codeSize);
+
+    BYTE * buff9ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff9ab, codeSize, buff4, codeSize);
+    BYTE * buff10ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff10ab, codeSize, buff3, codeSize);
+    BYTE * buff11ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff11ab, codeSize, buff8, codeSize);
+    BYTE * buff12ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff12ab, codeSize, buff3, codeSize);
+
+    BYTE * buff13ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff13ab, codeSize, buff8, codeSize);
+    BYTE * buff14ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff14ab, codeSize, buff7, codeSize);
+    BYTE * buff15ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff15ab, codeSize, buff6, codeSize);
+    BYTE * buff16ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff16ab, codeSize, buff4, codeSize);
+
+    BYTE * buff20ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff20ab, codeSize, m_encodeBuffer, codeSize);
+    BYTE * buff30ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff30ab, codeSize, m_encodeBuffer, codeSize);
+    BYTE * buff40ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff40ab, codeSize, buff2, codeSize);
+
+    BYTE * buff50ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff50ab, codeSize, buff3, codeSize);
+    BYTE * buff60ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff60ab, codeSize, buff2, codeSize);
+    BYTE * buff70ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff70ab, codeSize, buff4, codeSize);
+    BYTE * buff80ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff80ab, codeSize, buff7, codeSize);
+
+    BYTE * buff90ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff90ab, codeSize, buff4, codeSize);
+    BYTE * buff100ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff100ab, codeSize, buff3, codeSize);
+    BYTE * buff110ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff110ab, codeSize, buff8, codeSize);
+    BYTE * buff120ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff120ab, codeSize, buff3, codeSize);
+
+    BYTE * buff130ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff130ab, codeSize, buff8, codeSize);
+    BYTE * buff140ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff140ab, codeSize, buff7, codeSize);
+    BYTE * buff150ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff150ab, codeSize, buff6, codeSize);
+    BYTE * buff160ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff160ab, codeSize, buff4, codeSize);
+
+    BYTE * buff200ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff200ab, codeSize, m_encodeBuffer, codeSize);
+    BYTE * buff300ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff300ab, codeSize, m_encodeBuffer, codeSize);
+    BYTE * buff400ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff400ab, codeSize, buff2, codeSize);
+
+    BYTE * buff500ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff500ab, codeSize, buff3, codeSize);
+    BYTE * buff600ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff600ab, codeSize, buff2, codeSize);
+    BYTE * buff700ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff700ab, codeSize, buff4, codeSize);
+    BYTE * buff800ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff800ab, codeSize, buff7, codeSize);
+
+    BYTE * buff900ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff900ab, codeSize, buff4, codeSize);
+    BYTE * buff1000ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff1000ab, codeSize, buff3, codeSize);
+    BYTE * buff1100ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff1100ab, codeSize, buff8, codeSize);
+    BYTE * buff1200ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff1200ab, codeSize, buff3, codeSize);
+
+    BYTE * buff1300ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff1300ab, codeSize, buff8, codeSize);
+    BYTE * buff1400ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff1400ab, codeSize, buff7, codeSize);
+    BYTE * buff1500ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff1500ab, codeSize, buff6, codeSize);
+    BYTE * buff1600ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff1600ab, codeSize, buff4, codeSize);
+
+    BYTE * buff2000ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff2000ab, codeSize, m_encodeBuffer, codeSize);
+    BYTE * buff3000ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff3000ab, codeSize, m_encodeBuffer, codeSize);
+    BYTE * buff4000ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff4000ab, codeSize, buff2, codeSize);
+
+    BYTE * buff5000ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff5000ab, codeSize, buff3, codeSize);
+    BYTE * buff6000ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff6000ab, codeSize, buff2, codeSize);
+    BYTE * buff7000ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff7000ab, codeSize, buff4, codeSize);
+    BYTE * buff8000ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff8000ab, codeSize, buff7, codeSize);
+
+    BYTE * buff9000ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff9000ab, codeSize, buff4, codeSize);
+    BYTE * buff10000ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff10000ab, codeSize, buff3, codeSize);
+    BYTE * buff11000ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff11000ab, codeSize, buff8, codeSize);
+    BYTE * buff12000ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff12000ab, codeSize, buff3, codeSize);
+
+    BYTE * buff13000ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff13000ab, codeSize, buff8, codeSize);
+    BYTE * buff14000ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff14000ab, codeSize, buff7, codeSize);
+    BYTE * buff15000ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff15000ab, codeSize, buff6, codeSize);
+    BYTE * buff16000ab = AnewArray(m_tempAlloc, BYTE, codeSize);
+    memcpy_s(buff16000ab, codeSize, buff4, codeSize);*/
+
     workItem->RecordNativeCode(m_func, m_encodeBuffer);
 
     m_func->GetScriptContext()->GetThreadContext()->SetValidCallTargetForCFG((PVOID) workItem->GetCodeAddress());
