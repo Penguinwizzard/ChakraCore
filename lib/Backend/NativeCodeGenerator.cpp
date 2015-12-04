@@ -1700,6 +1700,7 @@ NativeCodeGenerator::GatherCodeGenData(
     Js::FunctionCodeGenJitTimeData *const jitTimeData,
     Js::FunctionCodeGenRuntimeData *const runtimeData,
     Js::JavascriptFunction* function,
+    Js::Type * callerObjectType,
     bool isJitTimeDataComputed,
     uint32 recursiveInlineDepth)
 {
@@ -2065,7 +2066,8 @@ NativeCodeGenerator::GatherCodeGenData(
                                 Output::Flush();
                             }
 #endif
-                            Js::ObjTypeSpecFldInfo* objTypeSpecFldInfo = Js::ObjTypeSpecFldInfo::CreateFrom(objTypeSpecFldInfoList->Count(), polymorphicInlineCache, i, entryPoint, topFunctionBody, functionBody, InlineCacheStatsArg(jitTimeData));
+                            Js::ObjTypeSpecFldInfo* objTypeSpecFldInfo = Js::ObjTypeSpecFldInfo::CreateFrom(objTypeSpecFldInfoList->Count(), polymorphicInlineCache, i, entryPoint, topFunctionBody,
+                                                                                                            functionBody, InlineCacheStatsArg(jitTimeData), callerObjectType);
                             if (objTypeSpecFldInfo != nullptr)
                             {
                                 if (!isJitTimeDataComputed)
@@ -2254,6 +2256,7 @@ NativeCodeGenerator::GatherCodeGenData(
 
             uint ldFldInlineCacheIndex = profileData->GetLdFldCacheIndexFromCallSiteInfo(functionBody, profiledCallSiteId);
             Js::InlineCache * inlineCache = nullptr;
+            Js::Type *callerObjectType = nullptr;
             if ((ldFldInlineCacheIndex != Js::Constants::NoInlineCacheIndex) && (ldFldInlineCacheIndex < functionBody->GetInlineCacheCount()))
             {
                 if(function && Js::ScriptFunctionWithInlineCache::Is(function))
@@ -2263,6 +2266,11 @@ NativeCodeGenerator::GatherCodeGenData(
                 else
                 {
                     inlineCache = functionBody->GetInlineCache(ldFldInlineCacheIndex);
+                }
+
+                if (!functionBody->GetPolymorphicInlineCache(ldFldInlineCacheIndex))
+                {
+                    callerObjectType = inlineCache->GetRawType();
                 }
             }
 
@@ -2321,6 +2329,7 @@ NativeCodeGenerator::GatherCodeGenData(
                         inlineeJitTimeData,
                         inlineeRuntimeData,
                         fixedFunctionObject,
+                        callerObjectType,
                         doShareJitTimeData,
                         functionBody == inlineeFunctionBody ? recursiveInlineDepth + 1 : 0);
 
@@ -2344,7 +2353,8 @@ NativeCodeGenerator::GatherCodeGenData(
                     IsInlinee
                     ? runtimeData->EnsureInlinee(recycler, profiledCallSiteId, inlineeFunctionBody)
                     : functionBody->EnsureInlineeCodeGenRuntimeData(recycler, profiledCallSiteId, inlineeFunctionBody),
-                    fixedFunctionObject);
+                    fixedFunctionObject,
+                    callerObjectType);
 
                     AddInlineCacheStats(jitTimeData, inlineeJitTimeData);
             }

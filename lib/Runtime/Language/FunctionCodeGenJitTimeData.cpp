@@ -357,7 +357,7 @@ namespace Js
     }
 
     ObjTypeSpecFldInfo* ObjTypeSpecFldInfo::CreateFrom(uint id, PolymorphicInlineCache* cache, uint cacheId, EntryPointInfo *entryPoint,
-        FunctionBody* const topFunctionBody, FunctionBody *const functionBody, FieldAccessStatsPtr inlineCacheStats)
+        FunctionBody* const topFunctionBody, FunctionBody *const functionBody, FieldAccessStatsPtr inlineCacheStats, Js::Type* thisObjectType)
     {
 
 #ifdef FIELD_ACCESS_STATS
@@ -370,6 +370,7 @@ namespace Js
         auto profileData = topFunctionBody->GetAnyDynamicProfileInfo();
 
         bool gatherDataForInlining = cache->GetCloneForJitTimeUse() && functionBody->PolyInliningUsingFixedMethodsAllowedByConfigFlags(topFunctionBody);
+        bool thisObjectTypeMatched = false;
 
         if (PHASE_OFF(Js::EquivObjTypeSpecPhase, topFunctionBody) || profileData->IsEquivalentObjTypeSpecDisabled())
         {
@@ -396,6 +397,7 @@ namespace Js
 
         bool stress = PHASE_STRESS(Js::EquivObjTypeSpecPhase, topFunctionBody);
         bool areStressEquivalent = stress;
+        Js::InlineCache inlineCacheMatchingThisObjectType;
 
         uint16 typeCount = 0;
         for (uint16 i = 0; (areEquivalent || stress || gatherDataForInlining) && i < polyCacheSize; i++)
@@ -418,15 +420,24 @@ namespace Js
                 // when we add a property.  We also don't invalidate proto inline caches (and guards) unless the property being added exists on the proto chain.
                 // Missing properties by definition do not exist on the proto chain, so in the end we could have an EquivalentObjTypeSpec cache hit on a
                 // property that once was missing, but has since been added. (See OS Bugs 280582).
-                else if (inlineCache.IsProto() && !inlineCache.u.proto.isMissing)
+                else if (inlineCache.IsProto())
                 {
-                    isProto = true;
-                    typeId = TypeWithoutAuxSlotTag(inlineCache.u.proto.type)->GetTypeId();
-                    usesAuxSlot = TypeHasAuxSlotTag(inlineCache.u.proto.type);
-                    slotIndex = inlineCache.u.proto.slotIndex;
-                    prototypeObject = inlineCache.u.proto.prototypeObject;
+                    if (!inlineCache.u.proto.isMissing)
+                    {
+                        isProto = true;
+                        typeId = TypeWithoutAuxSlotTag(inlineCache.u.proto.type)->GetTypeId();
+                        usesAuxSlot = TypeHasAuxSlotTag(inlineCache.u.proto.type);
+                        slotIndex = inlineCache.u.proto.slotIndex;
+                        prototypeObject = inlineCache.u.proto.prototypeObject;
+                    }
+                    else
+                    {
+                        areEquivalent = false;
+                        areStressEquivalent = false;
+                        gatherDataForInlining = false;
+                    }
                 }
-                else
+                else if (inlineCache.IsAccessor())
                 {
                     if (!PHASE_OFF(Js::FixAccessorPropsPhase, functionBody))
                     {
@@ -444,6 +455,15 @@ namespace Js
                         areStressEquivalent = false;
                     }
                     gatherDataForInlining = false;
+                }
+
+                if (inlineCache.IsLocal() || (inlineCache.IsProto() && !inlineCache.u.proto.isMissing))
+                {
+                    if (thisObjectType == inlineCache.GetRawType())
+                    {
+                        thisObjectTypeMatched = true;
+                        inlineCacheMatchingThisObjectType = inlineCache;
+                    }
                 }
 
                 // If we're stressing equivalent object type spec then let's keep trying to find a cache that we could use.
@@ -485,6 +505,24 @@ namespace Js
                     }
                     gatherDataForInlining = false;
                 }
+
+                if (inlineCache.IsLocal() || (inlineCache.IsProto() && !inlineCache.u.proto.isMissing))
+                {
+                    if (thisObjectType == inlineCache.GetRawType())
+                    {
+                        thisObjectTypeMatched = true;
+                        inlineCacheMatchingThisObjectType = inlineCache;
+                        slotIndex = inlineCache.GetSlotIndex();
+                        usesAuxSlot = TypeHasAuxSlotTag(thisObjectType);
+                        typeId = inlineCache.GetType()->GetTypeId();
+                        isProto = inlineCache.IsProto();
+                        prototypeObject = inlineCache.IsProto() ? inlineCache.u.proto.prototypeObject : nullptr;
+                        isAccessor = false;
+                        isGetterAccessor = false;
+                        isAccessorOnProto = false;
+                        accessorOwnerObject = nullptr;
+                    }
+                }
             }
             typeCount++;
         }
@@ -505,7 +543,7 @@ namespace Js
         {
             IncInlineCacheCount(nonEquivPolyInlineCacheCount);
             cache->SetIgnoreForEquivalentObjTypeSpec(true);
-            if (!gatherDataForInlining)
+            if (!gatherDataForInlining && (!thisObjectTypeMatched || PHASE_OFF(Js::DepolymorphizePhase, functionBody)))
             {
                 return nullptr;
             }
@@ -552,60 +590,73 @@ namespace Js
             // TODO (ObjTypeSpec): Enable constructor caches on equivalent polymorphic field loads with fixed functions.
         }
 
+        if ((stress && (areEquivalent != areStressEquivalent)) || thisObjectTypeMatched)
+        {
+            typeCount = 1;
+        }
+
         // Let's get the types.
         Js::Type* localTypes[MaxPolymorphicInlineCacheSize];
-        uint16 typeNumber = 0;
         Js::JavascriptFunction* fixedFunctionObject = nullptr;
-        for (uint16 i = firstNonEmptyCacheIndex; i < polyCacheSize; i++)
+        Js::PropertyId propertyId = functionBody->GetPropertyIdFromCacheId(cacheId);
+        if (thisObjectTypeMatched)
         {
-            InlineCache& inlineCache = inlineCaches[i];
-            if (inlineCache.IsEmpty()) continue;
-
-            localTypes[typeNumber] = inlineCache.IsLocal() ? TypeWithoutAuxSlotTag(inlineCache.u.local.type) :
-                inlineCache.IsProto() ? TypeWithoutAuxSlotTag(inlineCache.u.proto.type) :
-                TypeWithoutAuxSlotTag(inlineCache.u.accessor.type);
-
-            if (gatherDataForInlining)
+            const PropertyRecord* propertyRecord = scriptContext->GetPropertyName(propertyId);
+            PHASE_PRINT_TRACE(Js::DepolymorphizePhase, topFunctionBody, L"One hit in %s, property: %s, caller %s\n", functionBody->GetDisplayName(), propertyRecord->GetBuffer(), topFunctionBody->GetDisplayName());
+            localTypes[0] = TypeWithoutAuxSlotTag(thisObjectType);
+            inlineCacheMatchingThisObjectType.TryGetFixedMethodFromCache(functionBody, cacheId, &fixedFunctionObject);
+            localFixedFieldInfoArray[0].fieldValue = fixedFunctionObject;
+            localFixedFieldInfoArray[0].type = thisObjectType;
+            localFixedFieldInfoArray[0].nextHasSameFixedField = false;
+        }
+        else
+        {
+            uint16 typeNumber = 0;
+            for (uint16 i = firstNonEmptyCacheIndex; i < polyCacheSize; i++)
             {
-                inlineCache.TryGetFixedMethodFromCache(functionBody, cacheId, &fixedFunctionObject);
-                if (!fixedFunctionObject || !fixedFunctionObject->GetFunctionInfo()->HasBody())
+                InlineCache& inlineCache = inlineCaches[i];
+                if (inlineCache.IsEmpty()) continue;
+
+                localTypes[typeNumber] = inlineCache.IsLocal() ? TypeWithoutAuxSlotTag(inlineCache.u.local.type) :
+                    inlineCache.IsProto() ? TypeWithoutAuxSlotTag(inlineCache.u.proto.type) :
+                    TypeWithoutAuxSlotTag(inlineCache.u.accessor.type);
+
+                if (gatherDataForInlining)
                 {
-                    if (!(areEquivalent || areStressEquivalent))
+                    inlineCache.TryGetFixedMethodFromCache(functionBody, cacheId, &fixedFunctionObject);
+                    if (!fixedFunctionObject || !fixedFunctionObject->GetFunctionInfo()->HasBody())
                     {
-                        // If we reach here only because we are gathering data for inlining, and one of the Inline Caches doesn't have a fixedfunction object, return.
-                        return nullptr;
+                        if (!(areEquivalent || areStressEquivalent))
+                        {
+                            // if we are reaching here only because we are gathering data for inlining, and one of the Inline Caches doesn't have a fixedfunction object, return
+                            return nullptr;
+                        }
+                        else
+                        {
+                            // If one of the inline caches doesn't have a fixed function object, abort gathering inlining data.
+                            gatherDataForInlining = false;
+                            typeNumber++;
+                            continue;
+                        }
                     }
-                    else
-                    {
-                        // If one of the inline caches doesn't have a fixed function object, abort gathering inlining data.
-                        gatherDataForInlining = false;
-                        typeNumber++;
-                        continue;
-                    }
+
+                    // We got a fixed function object from the cache
+
+                    localFixedFieldInfoArray[typeNumber].type = localTypes[typeNumber];
+                    localFixedFieldInfoArray[typeNumber].fieldValue = fixedFunctionObject;
+                    localFixedFieldInfoArray[typeNumber].nextHasSameFixedField = false;
+                    fixedFunctionCount++;
                 }
 
-                // We got a fixed function object from the cache.
-
-                localFixedFieldInfoArray[typeNumber].type = localTypes[typeNumber];
-                localFixedFieldInfoArray[typeNumber].fieldValue = fixedFunctionObject;
-                localFixedFieldInfoArray[typeNumber].nextHasSameFixedField = false;
-                fixedFunctionCount++;
+                typeNumber++;
             }
-
-            typeNumber++;
         }
+        AnalysisAssert(typeNumber == typeCount);
 
         if (isAccessor && gatherDataForInlining)
         {
             Assert(fixedFunctionCount <= 1);
         }
-
-        if (stress && (areEquivalent != areStressEquivalent))
-        {
-            typeCount = 1;
-        }
-
-        AnalysisAssert(typeNumber == typeCount);
 
         // Now that we've copied all material info into local variables, we can start allocating without fear
         // that a garbage collection will clear any of the live inline caches.
@@ -622,12 +673,11 @@ namespace Js
             memcpy(fixedFieldInfoArray, localFixedFieldInfoArray, 1 * sizeof(FixedFieldInfo));
         }
 
-        Js::PropertyId propertyId = functionBody->GetPropertyIdFromCacheId(cacheId);
         Js::PropertyGuard* propertyGuard = entryPoint->RegisterSharedPropertyGuard(propertyId, scriptContext);
 
         // For polymorphic, non-equivalent objTypeSpecFldInfo's, hasFixedValue is true only if each of the inline caches has a fixed function for the given cacheId, or
         // in the case of an accessor cache, only if the there is only one version of the accessor.
-        bool hasFixedValue = gatherDataForInlining ||
+        bool hasFixedValue = (gatherDataForInlining && !(thisObjectTypeMatched && !localFixedFieldInfoArray[0].fieldValue)) ||
             ((isProto || isAccessorOnProto) && (areEquivalent || areStressEquivalent) && localFixedFieldInfoArray[0].fieldValue);
 
         bool doesntHaveEquivalence = !(areEquivalent || areStressEquivalent);
@@ -635,7 +685,7 @@ namespace Js
         EquivalentTypeSet* typeSet = nullptr;
         auto jitTransferData = entryPoint->GetJitTransferData();
         Assert(jitTransferData != nullptr);
-        if (areEquivalent || areStressEquivalent)
+        if ((areEquivalent || areStressEquivalent) || thisObjectTypeMatched)
         {
             for (uint16 i = 0; i < typeCount; i++)
             {
@@ -662,25 +712,22 @@ namespace Js
         }
 
         ObjTypeSpecFldInfo* info = RecyclerNew(recycler, ObjTypeSpecFldInfo,
-            id, typeId, nullptr, typeSet, usesAuxSlot, isProto, isAccessor, hasFixedValue, hasFixedValue, doesntHaveEquivalence, true, slotIndex, propertyId,
+            id, typeId, nullptr, typeSet, usesAuxSlot, isProto, isAccessor, hasFixedValue, hasFixedValue, doesntHaveEquivalence, !thisObjectTypeMatched, slotIndex, propertyId,
             prototypeObject, propertyGuard, nullptr, fixedFieldInfoArray, fixedFunctionCount/*, nullptr, nullptr, nullptr*/);
 
         if (PHASE_TRACE(Js::ObjTypeSpecPhase, topFunctionBody) || PHASE_TRACE(Js::EquivObjTypeSpecPhase, topFunctionBody))
         {
-            if (PHASE_TRACE(Js::ObjTypeSpecPhase, topFunctionBody) || PHASE_TRACE(Js::EquivObjTypeSpecPhase, topFunctionBody))
+            if (typeSet)
             {
-                if (typeSet)
+                const PropertyRecord* propertyRecord = scriptContext->GetPropertyName(propertyId);
+                Output::Print(L"Created ObjTypeSpecFldInfo: id %u, property %s(#%u), slot %u, type set: ",
+                    id, propertyRecord->GetBuffer(), propertyId, slotIndex);
+                for (uint16 ti = 0; ti < typeCount - 1; ti++)
                 {
-                    const PropertyRecord* propertyRecord = scriptContext->GetPropertyName(propertyId);
-                    Output::Print(L"Created ObjTypeSpecFldInfo: id %u, property %s(#%u), slot %u, type set: ",
-                        id, propertyRecord->GetBuffer(), propertyId, slotIndex);
-                    for (uint16 ti = 0; ti < typeCount - 1; ti++)
-                    {
-                        Output::Print(L"0x%p, ", typeSet->GetType(ti));
-                    }
-                    Output::Print(L"0x%p\n", typeSet->GetType(typeCount - 1));
-                    Output::Flush();
+                    Output::Print(L"0x%p, ", typeSet->GetType(ti));
                 }
+                Output::Print(L"0x%p\n", typeSet->GetType(typeCount - 1));
+                Output::Flush();
             }
         }
 

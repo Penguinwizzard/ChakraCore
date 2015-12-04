@@ -89,6 +89,7 @@ private:
         Js::FunctionCodeGenJitTimeData *const jitTimeData,
         Js::FunctionCodeGenRuntimeData *const runtimeData,
         Js::JavascriptFunction* function = nullptr,
+        Js::Type * callerObjectType = nullptr,
         bool isJitTimeDataComputed = false,
         uint32 recursiveInlineDepth = 0);
     Js::CodeGenRecyclableData *GatherCodeGenData(Js::FunctionBody *const topFunctionBody, Js::FunctionBody *const functionBody, Js::EntryPointInfo *const entryPoint, CodeGenWorkItem* workItem, void* function = nullptr);
