@@ -84,6 +84,17 @@ WasmBinaryReader::ReadFromModule()
 }
 
 WasmOp
+WasmBinaryReader::ReadFromBlock()
+{
+    return wnLIMIT;
+}
+
+WasmOp
+WasmBinaryReader::ReadFromCall()
+{
+    return wnLIMIT;
+}
+WasmOp
 WasmBinaryReader::ReadExpr()
 {
     return wnLIMIT;

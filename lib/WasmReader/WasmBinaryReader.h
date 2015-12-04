@@ -79,9 +79,10 @@ namespace Wasm
             virtual bool IsBinaryReader() override;
             virtual WasmOp ReadFromScript() override;
             virtual WasmOp ReadFromModule() override;
+            virtual WasmOp ReadFromBlock() override;
+            virtual WasmOp ReadFromCall() override;
             virtual WasmOp ReadExpr() override;
             
-            static void __declspec(noreturn) ThrowSyntaxError();
 
         protected:
             DecoderContext   m_context;
@@ -96,6 +97,11 @@ namespace Wasm
             
             WasmTypes::Signature opSignatureTable[WasmTypes::OpSignatureId::bSigLimit]; // table of opcode signatures
             WasmTypes::OpSignatureId opSignature[256];                                  // opcode -> opcode signature ID
+
+            UINT LEB128(byte* ptr);
+            UINT U32(byte* ptr);
+            INT I32(byte* ptr);
+
 
         };
 
