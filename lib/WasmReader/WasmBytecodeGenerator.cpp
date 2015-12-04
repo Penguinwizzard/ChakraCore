@@ -403,7 +403,12 @@ WasmBytecodeGenerator::EmitCall()
     WasmFunction * callee = m_module->functions->GetBuffer()[funcNum];
 
     // emit start call
-    Js::ArgSlot argSize = callee->body->GetAsmJsFunctionInfo()->GetArgByteSize();
+    Js::ArgSlot argSize = (Js::ArgSlot)callee->body->GetAsmJsFunctionInfo()->GetArgByteSize();
+    if (argSize != callee->body->GetAsmJsFunctionInfo()->GetArgByteSize())
+    {
+        throw WasmCompilationException(L"Arg size overflows");
+    }
+
     m_writer.AsmStartCall(Js::OpCodeAsmJs::I_StartCall, argSize);
 
     WasmOp op;

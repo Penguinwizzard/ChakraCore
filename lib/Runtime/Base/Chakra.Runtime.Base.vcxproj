@@ -25,6 +25,7 @@
         $(MSBuildThisFileDirectory)..\..\Common;
         $(MSBuildThisFileDirectory)..\..\Parser;
         $(MSBuildThisFileDirectory)..\..\Backend;
+        $(MSBuildThisFileDirectory)..\..\WasmReader;
         %(AdditionalIncludeDirectories)
       </AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
