@@ -23,3 +23,6 @@ testout*
 profile.dpl.*
 *.bc
 *.err
+Build/Chakra.Core.VC.opendb
+test/benchmarks/*.txt
+test/benchmarks/*.dpl
