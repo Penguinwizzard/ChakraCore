@@ -650,8 +650,8 @@ namespace Js
 
                 typeNumber++;
             }
+            AnalysisAssert(typeNumber == typeCount);
         }
-        AnalysisAssert(typeNumber == typeCount);
 
         if (isAccessor && gatherDataForInlining)
         {
