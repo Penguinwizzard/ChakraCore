@@ -6671,7 +6671,7 @@ namespace Js
 
         ScopeSlots scopeSlots(slotArray);
         scopeSlots.SetCount(scopeSlotCount);
-        scopeSlots.SetScope((Var)functionBody);
+        scopeSlots.SetScopeMetadata((Var)functionBody);
         Var undef = functionBody->GetScriptContext()->GetLibrary()->GetUndefined();
         for (unsigned int i = 0; i < scopeSlotCount; i++)
         {

@@ -2836,14 +2836,14 @@ namespace Js
             return (DebuggerScope*)(slotArray[ScopeMetadataSlotIndex]);
         }
 
-        Var GetScope() const
+        Var GetScopeMetadataRaw() const
         {
             return slotArray[ScopeMetadataSlotIndex];
         }
 
-        void SetScope(Var scope)
+        void SetScopeMetadata(Var scopeMetadataObj)
         {
-            slotArray[ScopeMetadataSlotIndex] = scope;
+            slotArray[ScopeMetadataSlotIndex] = scopeMetadataObj;
         }
 
         uint GetCount() const

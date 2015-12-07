@@ -605,7 +605,7 @@ namespace Js
         ScopeSlots boxedScopeSlots(boxedSlotArray);
 
         boxedScopeSlots.SetCount(count);
-        boxedScopeSlots.SetScope(scopeSlots.GetScope());
+        boxedScopeSlots.SetScopeMetadata(scopeSlots.GetScopeMetadataRaw());
 
         // Box all the stack function in the parent's scope slot as well
         for (uint i = 0; i < count; i++)

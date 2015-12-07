@@ -6602,7 +6602,7 @@ CommonNumber:
         uint count = size - ScopeSlots::FirstSlotIndex;
         ScopeSlots slots(slotArray);
         slots.SetCount(count);
-        slots.SetScope(scope);
+        slots.SetScopeMetadata(scope);
         Var undef = scriptContext->GetLibrary()->GetUndefined();
         for (unsigned int i = 0; i < count; i++)
         {
