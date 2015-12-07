@@ -855,6 +855,22 @@ void EndEmitBlock(ParseNode *pnodeBlock, ByteCodeGenerator *byteCodeGenerator, F
     byteCodeGenerator->RecordEndScopeObject(pnodeBlock);
 }
 
+void CloneEmitBlock(ParseNode *pnodeBlock, ByteCodeGenerator *byteCodeGenerator, FuncInfo *funcInfo)
+{
+    if (BlockHasOwnScope(pnodeBlock, byteCodeGenerator))
+    {
+        Scope *scope = pnodeBlock->sxBlock.scope;
+        Assert(scope == byteCodeGenerator->GetCurrentScope());
+
+        if (scope->GetMustInstantiate())
+        {
+            Js::OpCode op = scope->GetIsObject() ? Js::OpCode::CloneBlockScope : Js::OpCode::CloneInnerScopeSlots;
+
+            byteCodeGenerator->Writer()->Unsigned1(op, scope->GetInnerScopeIndex());
+        }
+    }
+}
+
 void EmitBlock(ParseNode *pnodeBlock, ByteCodeGenerator *byteCodeGenerator, FuncInfo *funcInfo, BOOL fReturnValue)
 {
     Assert(pnodeBlock->nop == knopBlock);
@@ -7983,7 +7999,8 @@ void EmitLoop(
     ByteCodeGenerator *byteCodeGenerator,
     FuncInfo *funcInfo,
     BOOL fReturnValue,
-    BOOL doWhile = false)
+    BOOL doWhile = FALSE,
+    ParseNode *forLoopBlock = nullptr)
 {
     // Need to increment loop count whether we are going to profile or not for HasLoop()
 
@@ -8023,6 +8040,11 @@ void EmitLoop(
         }
         Emit(body, byteCodeGenerator, funcInfo, fReturnValue);
         funcInfo->ReleaseLoc(body);
+
+        if (forLoopBlock)
+        {
+            CloneEmitBlock(forLoopBlock, byteCodeGenerator, funcInfo);
+        }
 
         if (loopNode->emitLabels)
         {
@@ -10018,13 +10040,16 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
             BeginEmitBlock(pnode->sxFor.pnodeBlock, byteCodeGenerator, funcInfo);
             Emit(pnode->sxFor.pnodeInit, byteCodeGenerator, funcInfo, false);
             funcInfo->ReleaseLoc(pnode->sxFor.pnodeInit);
+            CloneEmitBlock(pnode->sxFor.pnodeBlock, byteCodeGenerator, funcInfo);
             EmitLoop(pnode,
                 pnode->sxFor.pnodeCond,
                 pnode->sxFor.pnodeBody,
                 pnode->sxFor.pnodeIncr,
                 byteCodeGenerator,
                 funcInfo,
-                fReturnValue);
+                fReturnValue,
+                FALSE,
+                pnode->sxFor.pnodeBlock);
             EndEmitBlock(pnode->sxFor.pnodeBlock, byteCodeGenerator, funcInfo);
         }
         break;
