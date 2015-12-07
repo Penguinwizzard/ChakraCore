@@ -126,6 +126,22 @@ namespace Js
         return false;
     }
 
+    BlockActivationObject* BlockActivationObject::Clone(ScriptContext *scriptContext)
+    {
+        DynamicType* type = this->GetDynamicType();
+        BlockActivationObject* blockScopeClone = DynamicObject::NewObject<BlockActivationObject>(scriptContext->GetRecycler(), type);
+        int slotCapacity = this->GetTypeHandler()->GetSlotCapacity();
+
+        for (int i = 0; i < slotCapacity; i += 1)
+        {
+            DebugOnly(PropertyId propId = this->GetPropertyId(i));
+            Var value = this->GetSlot(i);
+            blockScopeClone->SetSlot(SetSlotArguments(propId, i, value));
+        }
+
+        return blockScopeClone;
+    }
+
     BOOL PseudoActivationObject::InitPropertyScoped(PropertyId propertyId, Var value)
     {
         // eval, etc., should not create function properties on something like a "catch" scope

@@ -6642,6 +6642,28 @@ namespace Js
         this->SetInnerScopeFromIndex(innerScopeIndex, slotArray);
     }
 
+    template <typename T>
+    void InterpreterStackFrame::OP_CloneInnerScopeSlots(const unaligned OpLayoutT_Unsigned1<T> *playout)
+    {
+        uint innerScopeIndex = playout->C1;
+        Var * slotArray;
+
+        slotArray = (Var*)this->InnerScopeFromIndex(innerScopeIndex);
+        slotArray = JavascriptOperators::OP_CloneScopeSlots(slotArray, scriptContext);
+        this->SetInnerScopeFromIndex(innerScopeIndex, slotArray);
+    }
+
+    template <typename T>
+    void InterpreterStackFrame::OP_CloneBlockScope(const unaligned OpLayoutT_Unsigned1<T> *playout)
+    {
+        uint innerScopeIndex = playout->C1;
+        Var scope = this->InnerScopeFromIndex(innerScopeIndex);
+        BlockActivationObject* blockScope = BlockActivationObject::FromVar(scope);
+
+        scope = JavascriptOperators::OP_CloneBlockScope(blockScope, scriptContext);
+        this->SetInnerScopeFromIndex(innerScopeIndex, scope);
+    }
+
     Var *
     InterpreterStackFrame::NewScopeSlots(unsigned int size, ScriptContext *scriptContext, Var scope)
     {

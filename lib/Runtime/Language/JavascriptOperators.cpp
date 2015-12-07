@@ -6615,12 +6615,23 @@ CommonNumber:
     Var* JavascriptOperators::OP_NewScopeSlotsWithoutPropIds(unsigned int count, int scopeIndex, ScriptContext *scriptContext, FunctionBody *functionBody)
     {
         DebuggerScope* scope = Constants::FunctionBodyUnavailable;
-        if(scopeIndex != DebuggerScope::InvalidScopeIndex)
+        if (scopeIndex != DebuggerScope::InvalidScopeIndex)
         {
             AssertMsg(functionBody->GetScopeObjectChain(), "A scope chain should always be created when there are new scope slots for blocks.");
             scope = functionBody->GetScopeObjectChain()->pScopeChain->Item(scopeIndex);
         }
         return OP_NewScopeSlots(count, scriptContext, scope);
+    }
+
+    Var* JavascriptOperators::OP_CloneScopeSlots(Var *slotArray, ScriptContext *scriptContext)
+    {
+        ScopeSlots slots(slotArray);
+        uint size = ScopeSlots::FirstSlotIndex + slots.GetCount();
+
+        Var* slotArrayClone = RecyclerNewArray(scriptContext->GetRecycler(), Var, size);
+        memcpy_s(slotArrayClone, sizeof(Var) * size, slotArray, sizeof(Var) * size);
+
+        return slotArrayClone;
     }
 
     Var JavascriptOperators::OP_NewPseudoScope(ScriptContext *scriptContext)
@@ -6631,6 +6642,11 @@ CommonNumber:
     Var JavascriptOperators::OP_NewBlockScope(ScriptContext *scriptContext)
     {
         return scriptContext->GetLibrary()->CreateBlockActivationObject();
+    }
+
+    Var JavascriptOperators::OP_CloneBlockScope(BlockActivationObject *blockScope, ScriptContext *scriptContext)
+    {
+        return blockScope->Clone(scriptContext);
     }
 
     Var JavascriptOperators::OP_IsInst(Var instance, Var aClass, ScriptContext* scriptContext, IsInstInlineCache* inlineCache)
