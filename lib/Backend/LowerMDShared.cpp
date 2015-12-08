@@ -4843,7 +4843,11 @@ IR::RegOpnd *LowererMD::LoadNonnegativeIndex(
 
     if(indexOpnd->IsVar())
     {
-        if (indexOpnd->GetValueType().IsLikelyFloat())
+        if (indexOpnd->GetValueType().IsLikelyFloat()
+#ifdef _M_IX86
+            && AutoSystemInfo::Data.SSE2Available()
+#endif
+            )
         {
             return m_lowerer->LoadIndexFromLikelyFloat(indexOpnd, skipNegativeCheck, notTaggedIntLabel, negativeLabel, insertBeforeInstr);
         }

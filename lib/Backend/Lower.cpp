@@ -22019,6 +22019,11 @@ Lowerer::LoadIndexFromLikelyFloat(
     IR::LabelInstr *const negativeLabel,
     IR::Instr *const insertBeforeInstr)
 {
+#ifdef _M_IX86
+    // We should only generate this if sse2 is available
+    Assert(AutoSystemInfo::Data.SSE2Available());
+#endif
+
     Func *func = insertBeforeInstr->m_func;
 
     IR::LabelInstr * convertToUint = IR::LabelInstr::New(Js::OpCode::Label, func);
