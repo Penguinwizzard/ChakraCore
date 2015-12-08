@@ -608,6 +608,10 @@ namespace Js
             localFixedFieldInfoArray[0].fieldValue = fixedFunctionObject;
             localFixedFieldInfoArray[0].type = thisObjectType;
             localFixedFieldInfoArray[0].nextHasSameFixedField = false;
+            if (gatherDataForInlining)
+            {
+                fixedFunctionCount = 1;
+            }
         }
         else
         {
@@ -713,7 +717,7 @@ namespace Js
 
         ObjTypeSpecFldInfo* info = RecyclerNew(recycler, ObjTypeSpecFldInfo,
             id, typeId, nullptr, typeSet, usesAuxSlot, isProto, isAccessor, hasFixedValue, hasFixedValue, doesntHaveEquivalence, !thisObjectTypeMatched, slotIndex, propertyId,
-            prototypeObject, propertyGuard, nullptr, fixedFieldInfoArray, fixedFunctionCount/*, nullptr, nullptr, nullptr*/);
+            prototypeObject, propertyGuard, nullptr, fixedFieldInfoArray, !thisObjectTypeMatched ? fixedFunctionCount : 1/*, nullptr, nullptr, nullptr*/);
 
         if (PHASE_TRACE(Js::ObjTypeSpecPhase, topFunctionBody) || PHASE_TRACE(Js::EquivObjTypeSpecPhase, topFunctionBody))
         {
