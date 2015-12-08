@@ -428,6 +428,27 @@ bool ValueType::IsNotString() const
         || OneOnOneOff(Bits::Object, Bits::Likely);
 }
 
+bool ValueType::HasBeenSymbol() const
+{
+    return OneOnOneOff(Bits::Symbol, Bits::Object);
+}
+
+bool ValueType::IsSymbol() const
+{
+    return OneOnOthersOff(Bits::Symbol, Bits::CanBeTaggedValue);
+}
+
+bool ValueType::IsLikelySymbol() const
+{
+    return OneOnOthersOff(Bits::Symbol, Bits::Likely | Bits::CanBeTaggedValue);
+}
+
+bool ValueType::IsNotSymbol() const
+{
+    return AnyOnExcept(Bits::Likely | Bits::Object | Bits::Symbol | Bits::CanBeTaggedValue)
+        || OneOnOneOff(Bits::Object, Bits::Likely);
+}
+
 bool ValueType::HasBeenPrimitive() const
 {
     return
@@ -444,6 +465,7 @@ bool ValueType::HasBeenPrimitive() const
                     Bits::Number |
                     Bits::Boolean |
                     Bits::String |
+                    Bits::Symbol |
                     Bits::PrimitiveOrObject);
 }
 
@@ -451,7 +473,7 @@ bool ValueType::IsPrimitive() const
 {
     bool result =
         AnyOnOthersOff(
-            Bits::Undefined | Bits::Null | Bits::Int | Bits::Float | Bits::Number | Bits::Boolean | Bits::String,
+            Bits::Undefined | Bits::Null | Bits::Int | Bits::Float | Bits::Number | Bits::Boolean | Bits::String | Bits::Symbol,
             Bits::IntCanBeUntagged | Bits::IntIsLikelyUntagged | Bits::CanBeTaggedValue);
 
     result =  result || IsSimd128();
@@ -463,7 +485,7 @@ bool ValueType::IsLikelyPrimitive() const
 {
     bool result =
         AnyOnOthersOff(
-            Bits::Undefined | Bits::Null | Bits::Int | Bits::Float | Bits::Number | Bits::Boolean | Bits::String,
+            Bits::Undefined | Bits::Null | Bits::Int | Bits::Float | Bits::Number | Bits::Boolean | Bits::String | Bits::Symbol,
             Bits::Likely | Bits::IntCanBeUntagged | Bits::IntIsLikelyUntagged | Bits::CanBeTaggedValue);
 
     result = result || IsLikelySimd128();
@@ -1179,6 +1201,7 @@ void ValueType::InitializeTypeIdToBitsMap()
     TypeIdToBits[TypeIds_Null              ] = ValueType::Null.bits;
     TypeIdToBits[TypeIds_Boolean           ] = ValueType::Boolean.bits;
     TypeIdToBits[TypeIds_String            ] = ValueType::String.bits;
+    TypeIdToBits[TypeIds_Symbol            ] = ValueType::Symbol.bits;
     TypeIdToBits[TypeIds_RegEx             ] = GetObject(ObjectType::RegExp).bits;
     TypeIdToBits[TypeIds_Int8Array         ] = GetObject(ObjectType::Int8Array).bits;
     TypeIdToBits[TypeIds_Uint8Array        ] = GetObject(ObjectType::Uint8Array).bits;
@@ -1604,8 +1627,10 @@ void ValueType::ToString(char (&str)[VALUE_TYPE_MAX_STRING_SIZE]) const
         generalizedType = Null;
     else if(definiteType.IsBoolean())
         generalizedType = Boolean;
-    else if(definiteType.IsString())
+    else if (definiteType.IsString())
         generalizedType = String;
+    else if (definiteType.IsSymbol())
+        generalizedType = Symbol;
     else if(definiteType.IsPrimitive() && !IsLikelyObject())
     {
         strcpy_s(str, IsDefinite() ? "Primitive" : "LikelyPrimitive");

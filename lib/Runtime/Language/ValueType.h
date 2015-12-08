@@ -152,6 +152,11 @@ public:
     bool IsLikelyString() const;
     bool IsNotString() const;
 
+    bool HasBeenSymbol() const;
+    bool IsSymbol() const;
+    bool IsLikelySymbol() const;
+    bool IsNotSymbol() const;
+    
     bool HasBeenPrimitive() const;
     bool IsPrimitive() const;
     bool IsLikelyPrimitive() const;

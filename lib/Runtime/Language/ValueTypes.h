@@ -29,10 +29,11 @@ VALUE_TYPE_BIT(Float,                   static_cast<ValueType::TSize>(1 << 8    
 VALUE_TYPE_BIT(Number,                  static_cast<ValueType::TSize>(1 << 9    ))
 VALUE_TYPE_BIT(Boolean,                 static_cast<ValueType::TSize>(1 << 10   ))
 VALUE_TYPE_BIT(String,                  static_cast<ValueType::TSize>(1 << 11   ))
-VALUE_TYPE_BIT(PrimitiveOrObject,       static_cast<ValueType::TSize>(1 << 12   ))
+VALUE_TYPE_BIT(Symbol,                  static_cast<ValueType::TSize>(1 << 12   ))
+VALUE_TYPE_BIT(PrimitiveOrObject,       static_cast<ValueType::TSize>(1 << 13   ))
 
 #if !defined(VALUE_TYPE_NONOBJECT_BIT_COUNT)
-#define VALUE_TYPE_NONOBJECT_BIT_COUNT static_cast<ValueType::TSize>(8)
+#define VALUE_TYPE_NONOBJECT_BIT_COUNT static_cast<ValueType::TSize>(9)
 #endif
 
 // The following bits only apply when the Object bit is set
@@ -131,6 +132,7 @@ BASE_VALUE_TYPE(Undefined,              Bits::Undefined             )
 BASE_VALUE_TYPE(Null,                   Bits::Null                  )
 BASE_VALUE_TYPE(Boolean,                Bits::Boolean               )
 BASE_VALUE_TYPE(String,                 Bits::String                )
+BASE_VALUE_TYPE(Symbol,                 Bits::Symbol                )
 BASE_VALUE_TYPE(UninitializedObject,    Bits::Object                )
 BASE_VALUE_TYPE(PrimitiveOrObject,      Bits::PrimitiveOrObject     )
 
