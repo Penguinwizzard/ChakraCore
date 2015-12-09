@@ -2274,10 +2274,15 @@ NativeCodeGenerator::GatherCodeGenData(
                 }
             }
 
-            Js::JavascriptFunction* fixedFunctionObject = nullptr;
+            Js::JavascriptFunction *fixedFunctionObject = nullptr;
             if (inlineCache && (inlineCache->IsLocal() || inlineCache->IsProto()))
             {
-                inlineCache->TryGetFixedMethodFromCache(functionBody, ldFldInlineCacheIndex, &fixedFunctionObject);
+                Js::Var fixedProperty;
+                inlineCache->TryGetFixedPropertyFromCache(functionBody, ldFldInlineCacheIndex, &fixedProperty);
+                if (fixedProperty && Js::JavascriptFunction::Is(fixedProperty))
+                {
+                    fixedFunctionObject = Js::JavascriptFunction::FromVar(fixedProperty);
+                }
             }
 
             if (fixedFunctionObject && !fixedFunctionObject->GetFunctionInfo()->IsDeferred() && fixedFunctionObject->GetFunctionBody() != inlineeFunctionBody)

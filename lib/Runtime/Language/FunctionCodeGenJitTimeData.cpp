@@ -597,18 +597,17 @@ namespace Js
 
         // Let's get the types.
         Js::Type* localTypes[MaxPolymorphicInlineCacheSize];
-        Js::JavascriptFunction* fixedFunctionObject = nullptr;
         Js::PropertyId propertyId = functionBody->GetPropertyIdFromCacheId(cacheId);
         if (thisObjectTypeMatched)
         {
             const PropertyRecord* propertyRecord = scriptContext->GetPropertyName(propertyId);
             PHASE_PRINT_TRACE(Js::DepolymorphizePhase, topFunctionBody, L"One hit in %s, property: %s, caller %s\n", functionBody->GetDisplayName(), propertyRecord->GetBuffer(), topFunctionBody->GetDisplayName());
             localTypes[0] = TypeWithoutAuxSlotTag(thisObjectType);
-            inlineCacheMatchingThisObjectType.TryGetFixedMethodFromCache(functionBody, cacheId, &fixedFunctionObject);
-            localFixedFieldInfoArray[0].fieldValue = fixedFunctionObject;
-            localFixedFieldInfoArray[0].type = thisObjectType;
+            inlineCacheMatchingThisObjectType.TryGetFixedPropertyFromCache(functionBody, cacheId, &fixedProperty);
+            localFixedFieldInfoArray[0].fieldValue = fixedProperty;
+            localFixedFieldInfoArray[0].type = localTypes[0];
             localFixedFieldInfoArray[0].nextHasSameFixedField = false;
-            if (gatherDataForInlining)
+            if (gatherDataForInlining && fixedProperty && Js::JavascriptFunction::Is(fixedProperty))
             {
                 fixedFunctionCount = 1;
             }
@@ -627,8 +626,8 @@ namespace Js
 
                 if (gatherDataForInlining)
                 {
-                    inlineCache.TryGetFixedMethodFromCache(functionBody, cacheId, &fixedFunctionObject);
-                    if (!fixedFunctionObject || !fixedFunctionObject->GetFunctionInfo()->HasBody())
+                    inlineCache.TryGetFixedPropertyFromCache(functionBody, cacheId, &fixedProperty);
+                    if (!fixedProperty || !Js::JavascriptFunction::Is(fixedProperty) || !Js::JavascriptFunction::FromVar(fixedProperty)->GetFunctionInfo()->HasBody())
                     {
                         if (!(areEquivalent || areStressEquivalent))
                         {
@@ -647,7 +646,7 @@ namespace Js
                     // We got a fixed function object from the cache
 
                     localFixedFieldInfoArray[typeNumber].type = localTypes[typeNumber];
-                    localFixedFieldInfoArray[typeNumber].fieldValue = fixedFunctionObject;
+                    localFixedFieldInfoArray[typeNumber].fieldValue = fixedProperty;
                     localFixedFieldInfoArray[typeNumber].nextHasSameFixedField = false;
                     fixedFunctionCount++;
                 }

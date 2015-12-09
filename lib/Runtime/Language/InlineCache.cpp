@@ -389,9 +389,9 @@ namespace Js
         return clone;
     }
 
-    bool InlineCache::TryGetFixedMethodFromCache(Js::FunctionBody* functionBody, uint cacheId, Js::JavascriptFunction** pFixedMethod)
+    bool InlineCache::TryGetFixedPropertyFromCache(Js::FunctionBody* functionBody, uint cacheId, Var *pFixedProperty)
     {
-        Assert(pFixedMethod);
+        Assert(pFixedProperty);
 
         if (IsEmpty())
         {
@@ -423,18 +423,17 @@ namespace Js
             Js::PropertyId propertyId = functionBody->GetPropertyIdFromCacheId(cacheId);
             Js::PropertyRecord const * const methodPropertyRecord = functionBody->GetScriptContext()->GetPropertyName(propertyId);
 
-            Var fixedMethod = nullptr;
+            Var fixedProperty = nullptr;
             bool isUseFixedProperty;
             if (isLocal || isProto)
             {
-                isUseFixedProperty = propertyOwnerTypeHandler->TryUseFixedProperty(methodPropertyRecord, &fixedMethod, Js::FixedPropertyKind::FixedMethodProperty, functionBody->GetScriptContext());
+                isUseFixedProperty = propertyOwnerTypeHandler->TryUseFixedProperty(methodPropertyRecord, &fixedProperty, (Js::FixedPropertyKind)(Js::FixedPropertyKind::FixedMethodProperty | Js::FixedPropertyKind::FixedDataProperty), functionBody->GetScriptContext());
             }
             else
             {
-                isUseFixedProperty = propertyOwnerTypeHandler->TryUseFixedAccessor(methodPropertyRecord, &fixedMethod, Js::FixedPropertyKind::FixedAccessorProperty, this->IsGetterAccessor(), functionBody->GetScriptContext());
+                isUseFixedProperty = propertyOwnerTypeHandler->TryUseFixedAccessor(methodPropertyRecord, &fixedProperty, Js::FixedPropertyKind::FixedAccessorProperty, this->IsGetterAccessor(), functionBody->GetScriptContext());
             }
-            AssertMsg(fixedMethod == nullptr || Js::JavascriptFunction::Is(fixedMethod), "The fixed value should have been a Method !!!");
-            *pFixedMethod = reinterpret_cast<JavascriptFunction*>(fixedMethod);
+            *pFixedProperty = fixedProperty;
             return isUseFixedProperty;
         }
 
