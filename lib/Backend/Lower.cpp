@@ -314,6 +314,11 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             break;
 
         case Js::OpCode::LdFld:
+            if (instr->GetSrc1()->AsSymOpnd()->IsPropertySymOpnd())
+            {
+                instr->GetSrc1()->AsSymOpnd()->AsPropertySymOpnd()->TryDisableRuntimePolymorphicCache();
+            }
+
         case Js::OpCode::LdFldForCallApplyTarget:
             instrPrev = GenerateCompleteLdFld<false>(instr, !noFieldFastPath, IR::HelperOp_PatchGetValue, IR::HelperOp_PatchGetValuePolymorphic,
                 IR::HelperOp_PatchGetValue, IR::HelperOp_PatchGetValuePolymorphic);

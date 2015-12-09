@@ -585,7 +585,7 @@ IRBuilder::Build()
             }
             else
             {
-                Js::OpCode op = 
+                Js::OpCode op =
                     m_func->DoStackScopeSlots() ? Js::OpCode::NewStackScopeSlots : Js::OpCode::NewScopeSlots;
 
                 IR::Opnd * srcOpnd = IR::IntConstOpnd::New(
@@ -1490,7 +1490,7 @@ IRBuilder::BuildReg1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot R0)
             Js::Throw::FatalInternalError();
         }
         srcOpnd = BuildSrcOpnd(m_func->GetJnFunction()->GetLocalClosureReg());
-        isNotInt = true;        
+        isNotInt = true;
         break;
 
     case Js::OpCode::LdLocalObj:
@@ -1716,7 +1716,7 @@ IRBuilder::BuildReg2(Js::OpCode newOpcode, uint32 offset, Js::RegSlot R0, Js::Re
                 m_func->GetScriptContext()->GetLibrary()->GetNull(), IR::AddrOpndKindDynamicVar, m_func, true);
         }
         IR::RegOpnd * dstOpnd = BuildDstOpnd(R0);
-        IR::Instr * instr = IR::Instr::New(newOpcode, dstOpnd, opndFrameObj, src1Opnd, m_func);  
+        IR::Instr * instr = IR::Instr::New(newOpcode, dstOpnd, opndFrameObj, src1Opnd, m_func);
         this->AddInstr(instr, offset);
         StackSym * dstSym = dstOpnd->m_sym;
         if (dstSym->m_isSingleDef)
@@ -3429,8 +3429,8 @@ IRBuilder::BuildElementSlotI1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot r
                 instr = IR::Instr::New(newOpcode, regOpnd, fieldOpnd, m_func);
             }
             this->AddInstr(instr, offset);
-            break;      
-            
+            break;
+
         case Js::OpCode::StLocalSlot:
         case Js::OpCode::StLocalSlotChkUndecl:
 
@@ -4182,11 +4182,12 @@ IRBuilder::BuildElementCP(Js::OpCode newOpcode, uint32 offset, Js::RegSlot insta
     switch (newOpcode)
     {
     case Js::OpCode::LdFldForTypeOf:
-    case Js::OpCode::LdFld:
+
         if (fieldSymOpnd->IsPropertySymOpnd())
         {
             fieldSymOpnd->AsPropertySymOpnd()->TryDisableRuntimePolymorphicCache();
         }
+    case Js::OpCode::LdFld:
     case Js::OpCode::LdFldForCallApplyTarget:
     case Js::OpCode::LdRootFldForTypeOf:
     case Js::OpCode::LdRootFld:
@@ -4543,7 +4544,7 @@ IRBuilder::BuildElementU(Js::OpCode newOpcode, uint32 offset, Js::RegSlot instan
             regOpnd = BuildDstOpnd(instance);
             instr = IR::Instr::New(newOpcode, regOpnd, fieldSymOpnd, m_func);
             break;
-            
+
         default:
         {
             fieldSymOpnd = this->BuildFieldOpnd(newOpcode, instance, propertyId, propertyIdIndex, PropertyKindData);
@@ -4636,7 +4637,7 @@ IRBuilder::BuildAuxNoReg(Js::OpCode newOpcode, uint32 offset)
             Fatal();
             break;
         }
-    }    
+    }
 }
 
 void

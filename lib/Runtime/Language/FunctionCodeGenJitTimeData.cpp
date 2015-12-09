@@ -370,6 +370,7 @@ namespace Js
         auto profileData = topFunctionBody->GetAnyDynamicProfileInfo();
 
         bool gatherDataForInlining = cache->GetCloneForJitTimeUse() && functionBody->PolyInliningUsingFixedMethodsAllowedByConfigFlags(topFunctionBody);
+        bool gatherDataForDepolymorphication = !PHASE_OFF(Js::DePolymorphizePhase, functionBody);
 
         if (PHASE_OFF(Js::EquivObjTypeSpecPhase, topFunctionBody) || profileData->IsEquivalentObjTypeSpecDisabled())
         {
@@ -418,15 +419,25 @@ namespace Js
                 // when we add a property.  We also don't invalidate proto inline caches (and guards) unless the property being added exists on the proto chain.
                 // Missing properties by definition do not exist on the proto chain, so in the end we could have an EquivalentObjTypeSpec cache hit on a
                 // property that once was missing, but has since been added. (See OS Bugs 280582).
-                else if (inlineCache.IsProto() && !inlineCache.u.proto.isMissing)
+                else if (inlineCache.IsProto())
                 {
-                    isProto = true;
-                    typeId = TypeWithoutAuxSlotTag(inlineCache.u.proto.type)->GetTypeId();
-                    usesAuxSlot = TypeHasAuxSlotTag(inlineCache.u.proto.type);
-                    slotIndex = inlineCache.u.proto.slotIndex;
-                    prototypeObject = inlineCache.u.proto.prototypeObject;
+                    if (!inlineCache.u.proto.isMissing)
+                    {
+                        isProto = true;
+                        typeId = TypeWithoutAuxSlotTag(inlineCache.u.proto.type)->GetTypeId();
+                        usesAuxSlot = TypeHasAuxSlotTag(inlineCache.u.proto.type);
+                        slotIndex = inlineCache.u.proto.slotIndex;
+                        prototypeObject = inlineCache.u.proto.prototypeObject;
+                    }
+                    else
+                    {
+                        areEquivalent = false;
+                        areStressEquivalent = false;
+                        gatherDataForInlining = false;
+                        gatherDataForDepolymorphication = false;
+                    }
                 }
-                else
+                else if (inlineCache.IsAccessor())
                 {
                     if (!PHASE_OFF(Js::FixAccessorPropsPhase, functionBody))
                     {
@@ -444,6 +455,7 @@ namespace Js
                         areStressEquivalent = false;
                     }
                     gatherDataForInlining = false;
+                    gatherDataForDepolymorphication = false;
                 }
 
                 // If we're stressing equivalent object type spec then let's keep trying to find a cache that we could use.
@@ -470,6 +482,10 @@ namespace Js
                     {
                         areEquivalent = false;
                     }
+                    if (inlineCache.u.proto.isMissing)
+                    {
+                        gatherDataForDepolymorphication = false;
+                    }
                 }
                 else
                 {
@@ -484,6 +500,7 @@ namespace Js
                         areEquivalent = false;
                     }
                     gatherDataForInlining = false;
+                    gatherDataForDepolymorphication = false;
                 }
             }
             typeCount++;
@@ -505,7 +522,7 @@ namespace Js
         {
             IncInlineCacheCount(nonEquivPolyInlineCacheCount);
             cache->SetIgnoreForEquivalentObjTypeSpec(true);
-            if (!gatherDataForInlining)
+            if (!gatherDataForInlining && !gatherDataForDepolymorphication)
             {
                 return nullptr;
             }
@@ -570,7 +587,7 @@ namespace Js
                 inlineCache.TryGetFixedMethodFromCache(functionBody, cacheId, &fixedFunctionObject);
                 if (!fixedFunctionObject || !fixedFunctionObject->GetFunctionInfo()->HasBody())
                 {
-                    if (!(areEquivalent || areStressEquivalent))
+                    if (!(areEquivalent || areStressEquivalent) && !gatherDataForDepolymorphication)
                     {
                         // If we reach here only because we are gathering data for inlining, and one of the Inline Caches doesn't have a fixedfunction object, return.
                         return nullptr;

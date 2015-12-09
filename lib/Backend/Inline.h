@@ -36,12 +36,13 @@ private:
     bool TryOptimizeCallInstrWithFixedMethod(IR::Instr *callInstr, Js::FunctionInfo* functionInfo, bool isPolymorphic, bool isBuiltIn, bool isCtor, bool isInlined, bool& safeThis,
                                             bool dontOptimizeJustCheck = false, uint i = 0 /*i-th inlinee at a polymorphic call site*/);
     Js::Var TryOptimizeInstrWithFixedDataProperty(IR::Instr *&instr);
-    IR::Instr * InlineScriptFunction(IR::Instr *callInstr, const Js::FunctionCodeGenJitTimeData *const inlineeData, const StackSym *symThis, const Js::ProfileId profileId, bool* pIsInlined, uint recursiveInlineDepth);
+    IR::Instr * InlineScriptFunction(IR::Instr *callInstr, const Js::FunctionCodeGenJitTimeData *const inlineeData, const StackSym *symThis, const IR::PropertySymOpnd* methodValueOpnd,
+        const Js::ProfileId profileId, bool* pIsInlined, uint recursiveInlineDepth);
 #ifdef ENABLE_DOM_FAST_PATH
     IR::Instr * InlineDOMGetterSetterFunction(IR::Instr *ldFldInstr, const Js::FunctionCodeGenJitTimeData *const inlineeData, const Js::FunctionCodeGenJitTimeData *const inlinerData);
 #endif
     IR::Instr * InlineGetterSetterFunction(IR::Instr *accessorInstr, const Js::FunctionCodeGenJitTimeData *const inlineeData, const StackSym *symCallerThis, const uint inlineCacheIndex, bool isGetter, uint recursiveInlineDepth);
-    IR::Instr * InlineFunctionCommon(IR::Instr *callInstr, StackSym* originalCallTargetStackSym, Js::FunctionBody *funcBody, Func *inlinee, IR::Instr *instrNext,
+    IR::Instr * InlineFunctionCommon(IR::Instr *callInstr, StackSym* originalCallTargetStackSym, Js::FunctionBody *funcBody, Func *inlinee, IR::Instr *instrNext, const IR::PropertySymOpnd* methodValueOpnd,
                                 IR::RegOpnd * returnValueOpnd, IR::Instr *inlineBailoutChecksBeforeInstr, const StackSym *symCallerThis, uint recursiveInlineDepth, bool safeThis = false, bool isApplyTarget = false);
     IR::Instr * SimulateCallForGetterSetter(IR::Instr *accessorInstr, IR::Instr* insertInstr, IR::PropertySymOpnd* methodOpnd, bool isGetter);
 
@@ -82,7 +83,8 @@ private:
     IR::Instr*  PrepareInsertionPoint(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, IR::Instr *insertBeforeInstr, IR::BailOutKind bailOutKind = IR::BailOutOnInlineFunction);
     Js::ArgSlot MapActuals(IR::Instr *callInstr, __out_ecount(maxParamCount) IR::Instr *argOuts[], Js::ArgSlot formalCount, Func *inlinee, Js::ProfileId callSiteId, bool *stackArgsArgOutExpanded, IR::Instr *argOutsExtra[] = nullptr, Js::ArgSlot maxParamCount = Js::InlineeCallInfo::MaxInlineeArgoutCount);
     uint32      CountActuals(IR::Instr *callIntr);
-    void        MapFormals(Func *inlinee, __in_ecount(formalCount) IR::Instr *argOuts[], uint formalCount, uint actualCount, IR::RegOpnd *retOpnd, IR::Opnd * funcObjOpnd, const StackSym *symCallerThis, bool stackArgsArgOutExpanded, bool fixedFunctionSafeThis = false, IR::Instr *argOutsExtra[] = nullptr);
+    void        MapFormals(Func *inlinee, __in_ecount(formalCount) IR::Instr *argOuts[], uint formalCount, uint actualCount, const IR::PropertySymOpnd* methodValueOpnd,
+        IR::RegOpnd *retOpnd, IR::Opnd * funcObjOpnd, const StackSym *symCallerThis, bool stackArgsArgOutExpanded, bool fixedFunctionSafeThis = false, IR::Instr *argOutsExtra[] = nullptr);
     IR::Instr * DoCheckThisOpt(IR::Instr * instr);
     IR::Instr * RemoveLdThis(IR::Instr *instr);
     bool        GetInlineeHasArgumentObject(Func * inlinee);

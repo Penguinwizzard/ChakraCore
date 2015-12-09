@@ -207,7 +207,31 @@ namespace Js
         {
             return !this->isPolymorphic;
         }
+        void ChangeToMono(Js::Type *type)
+        {
+            this->isPolymorphic = false;
+            this->fixedFieldInfoArray[0].type = type;
+            this->fixedFieldCount = 1;
+        }
 
+        void ChangeSlotIndex(uint16 slotIndex)
+        {
+            this->slotIndex = slotIndex;
+        }
+
+        void SetIsLocal()
+        {
+            this->protoObject = nullptr;
+            this->isLocal = true;
+            this->isLoadedFromProto = false;
+        }
+
+        void SetIsProto(DynamicObject *protoObject)
+        {
+            this->protoObject = protoObject;
+            this->isLocal = false;
+            this->isLoadedFromProto = true;
+        }
         bool IsPoly() const
         {
             return this->isPolymorphic;

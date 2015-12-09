@@ -338,7 +338,7 @@ Inline::Optimize(Func *func, __in_ecount_opt(callerArgOutCount) IR::Instr *calle
 
                         instrNext = builtInInlineCandidateOpCode != 0 ?
                             this->InlineBuiltInFunction(instr, functionInfo, builtInInlineCandidateOpCode, inlinerData, symThis, &isInlined, profileId, recursiveInlineDepth) :
-                            this->InlineScriptFunction(instr, inlineeData, symThis, profileId, &isInlined, recursiveInlineDepth);
+                            this->InlineScriptFunction(instr, inlineeData, symThis, methodValueOpnd, profileId, &isInlined, recursiveInlineDepth);
 
                     }
                     if(++this->inlineesProcessed == inlinerData->InlineeCount())
@@ -1112,7 +1112,7 @@ void Inline::InsertOneInlinee(IR::Instr* callInstr, IR::RegOpnd* returnValueOpnd
         bool stackArgsArgOutExpanded = false;
         Js::ArgSlot actualCount = MapActuals(currentCallInstr, argOuts, Js::InlineeCallInfo::MaxInlineeArgoutCount, inlinee, (Js::ProfileId)callInstr->AsProfiledInstr()->u.profileId, &stackArgsArgOutExpanded);
         Assert(actualCount > 0);
-        MapFormals(inlinee, argOuts, funcBody->GetInParamsCount(), actualCount, returnValueOpnd, currentCallInstr->GetSrc1(), symCallerThis, stackArgsArgOutExpanded, fixedFunctionSafeThis, argOuts);
+        MapFormals(inlinee, argOuts, funcBody->GetInParamsCount(), actualCount, nullptr, returnValueOpnd, currentCallInstr->GetSrc1(), symCallerThis, stackArgsArgOutExpanded, fixedFunctionSafeThis, argOuts);
         currentCallInstr->m_func = inlinee;
 
         // Put the meta arguments that the stack walker expects to find on the stack.
@@ -2675,7 +2675,7 @@ Inline::InlineCallApplyTarget_Shared(IR::Instr *callInstr, StackSym* originalCal
     // instrNext
     IR::Instr* instrNext = callInstr->m_next;
 
-    return InlineFunctionCommon(callInstr, originalCallTargetStackSym, funcBody, inlinee, instrNext, returnValueOpnd, callInstr, nullptr, recursiveInlineDepth, safeThis, isApplyTarget);
+    return InlineFunctionCommon(callInstr, originalCallTargetStackSym, funcBody, inlinee, instrNext, nullptr, returnValueOpnd, callInstr, nullptr, recursiveInlineDepth, safeThis, isApplyTarget);
 }
 
 IR::Opnd *
@@ -3428,11 +3428,11 @@ Inline::InlineGetterSetterFunction(IR::Instr *accessorInstr, const Js::FunctionC
     bool safeThis = false;
     TryOptimizeCallInstrWithFixedMethod(accessorInstr, inlineeData->GetFunctionInfo(), false, false, false, true, safeThis);
 
-    return InlineFunctionCommon(accessorInstr, nullptr, funcBody, inlinee, instrNext, returnValueOpnd, inlineBailoutChecksBeforeInstr, symCallerThis, recursiveInlineDepth, safeThis);
+    return InlineFunctionCommon(accessorInstr, nullptr, funcBody, inlinee, instrNext, nullptr, returnValueOpnd, inlineBailoutChecksBeforeInstr, symCallerThis, recursiveInlineDepth, safeThis);
 }
 
 IR::Instr *
-Inline::InlineFunctionCommon(IR::Instr *callInstr, StackSym* originalCallTargetStackSym, Js::FunctionBody *funcBody, Func *inlinee, IR::Instr *instrNext,
+Inline::InlineFunctionCommon(IR::Instr *callInstr, StackSym* originalCallTargetStackSym, Js::FunctionBody *funcBody, Func *inlinee, IR::Instr *instrNext, const IR::PropertySymOpnd* methodValueOpnd,
                                 IR::RegOpnd * returnValueOpnd, IR::Instr *inlineBailoutChecksBeforeInstr, const StackSym *symCallerThis, uint recursiveInlineDepth, bool safeThis, bool isApplyTarget)
 {
     BuildIRForInlinee(inlinee, funcBody, callInstr, isApplyTarget, recursiveInlineDepth);
@@ -3471,7 +3471,7 @@ Inline::InlineFunctionCommon(IR::Instr *callInstr, StackSym* originalCallTargetS
     }
 #endif
 
-    MapFormals(inlinee, argOuts, formalCount, actualCount, returnValueOpnd, callInstr->GetSrc1(), symCallerThis, stackArgsArgOutExpanded, safeThis, argOutsExtra);
+    MapFormals(inlinee, argOuts, formalCount, actualCount, methodValueOpnd, returnValueOpnd, callInstr->GetSrc1(), symCallerThis, stackArgsArgOutExpanded, safeThis, argOutsExtra);
 
     if (callInstr->m_opcode == Js::OpCode::CallIFixed && !inlinee->isGetterSetter)
     {
@@ -3597,7 +3597,8 @@ Inline::InsertStatementBoundary(IR::Instr * instrNext)
 }
 
 IR::Instr *
-Inline::InlineScriptFunction(IR::Instr *callInstr, const Js::FunctionCodeGenJitTimeData *const inlineeData, const StackSym *symCallerThis, const Js::ProfileId profileId, bool* pIsInlined, uint recursiveInlineDepth)
+Inline::InlineScriptFunction(IR::Instr *callInstr, const Js::FunctionCodeGenJitTimeData *const inlineeData, const StackSym *symCallerThis, const IR::PropertySymOpnd* methodValueOpnd,
+    const Js::ProfileId profileId, bool* pIsInlined, uint recursiveInlineDepth)
 {
     *pIsInlined = false;
 
@@ -3715,7 +3716,7 @@ Inline::InlineScriptFunction(IR::Instr *callInstr, const Js::FunctionCodeGenJitT
                          callSiteId,
                          false);
 
-    return InlineFunctionCommon(callInstr, originalCallTargetStackSym, funcBody, inlinee, instrNext, returnValueOpnd, inlineBailoutChecksBeforeInstr, symCallerThis, recursiveInlineDepth, safeThis);
+    return InlineFunctionCommon(callInstr, originalCallTargetStackSym, funcBody, inlinee, instrNext, methodValueOpnd, returnValueOpnd, inlineBailoutChecksBeforeInstr, symCallerThis, recursiveInlineDepth, safeThis);
 }
 
 bool
@@ -4426,6 +4427,7 @@ Inline::MapFormals(Func *inlinee,
     __in_ecount(formalCount) IR::Instr *argOuts[],
     uint formalCount,
     uint actualCount,
+    const IR::PropertySymOpnd* methodValueOpnd,
     IR::RegOpnd *retOpnd,
     IR::Opnd * funcObjOpnd,
     const StackSym *symCallerThis,
@@ -4789,7 +4791,92 @@ Inline::MapFormals(Func *inlinee,
                 instr->SetDst(retOpnd);
             }
             break;
+
+        case Js::OpCode::LdFld:
+            if (instr->GetSrc1()->AsSymOpnd()->IsPropertySymOpnd())
+            {
+                IR::PropertySymOpnd *propertySymOpnd = instr->GetSrc1()->AsSymOpnd()->AsPropertySymOpnd();
+                if (PHASE_OFF(Js::DePolymorphizePhase, this->topFunc))
+                {
+                    TryResetObjTypeSpecFldInfoOn(propertySymOpnd);
+                    TryDisableRuntimePolymorphicCacheOn(propertySymOpnd);
+                    break;
+                }
+                if (!methodValueOpnd || !methodValueOpnd->IsMonoObjTypeSpecCandidate())
+                {
+                    TryResetObjTypeSpecFldInfoOn(propertySymOpnd);
+                    TryDisableRuntimePolymorphicCacheOn(propertySymOpnd);
+                    break;
+                }
+
+                Js::PolymorphicInlineCache * polyCache = propertySymOpnd->m_runtimePolymorphicInlineCache;
+                Js::InlineCache * monoCache = methodValueOpnd->m_runtimeInlineCache;
+
+                if (!polyCache)
+                {
+                    TryResetObjTypeSpecFldInfoOn(propertySymOpnd);
+                    TryDisableRuntimePolymorphicCacheOn(propertySymOpnd);
+                    break;
+                }
+
+                if (propertySymOpnd->m_sym->AsPropertySym()->m_stackSym != symThis)
+                {
+                    TryResetObjTypeSpecFldInfoOn(propertySymOpnd);
+                    TryDisableRuntimePolymorphicCacheOn(propertySymOpnd);
+                    break;
+                }
+
+                Js::Type *methodType = monoCache->GetType();
+
+                Assert(!monoCache->IsAccessor());
+                if (polyCache->HasDifferentType<false>(true /*isProto*/, methodType, nullptr) &&
+                    polyCache->HasDifferentType<false>(false /*isProto*/, methodType, nullptr))
+                {
+                    TryResetObjTypeSpecFldInfoOn(propertySymOpnd);
+                    TryDisableRuntimePolymorphicCacheOn(propertySymOpnd);
+                    break;
+                }
+                uint index = polyCache->GetInlineCacheIndexForType(methodType);
+
+                Js::InlineCache *monoCacheInPolyCache = &(polyCache->GetInlineCaches()[index]);
+
+                if (monoCacheInPolyCache->IsEmpty())
+                {
+                    TryResetObjTypeSpecFldInfoOn(propertySymOpnd);
+                    TryDisableRuntimePolymorphicCacheOn(propertySymOpnd);
+                    break;
+                }
+
+                // Found the type of "this" object in the polymorphic cache.
+                propertySymOpnd->m_runtimePolymorphicInlineCache = nullptr;
+                if (propertySymOpnd->GetObjTypeSpecInfo())
+                {
+                    propertySymOpnd->GetObjTypeSpecInfo()->ChangeToMono(methodType);
+                    uint16 slotIndex;
+                    if (monoCacheInPolyCache->IsLocal())
+                    {
+                        slotIndex = monoCacheInPolyCache->u.local.slotIndex;
+                        propertySymOpnd->GetObjTypeSpecInfo()->SetIsLocal();
+                    }
+                    else
+                    {
+                        Assert(monoCacheInPolyCache->IsProto());
+                        slotIndex = monoCacheInPolyCache->u.proto.slotIndex;
+                        propertySymOpnd->GetObjTypeSpecInfo()->SetIsProto(monoCacheInPolyCache->u.proto.prototypeObject);
+                    }
+                    propertySymOpnd->GetObjTypeSpecInfo()->SetUsesAuxSlot(TypeHasAuxSlotTag(monoCacheInPolyCache->GetRawType()));
+                    propertySymOpnd->GetObjTypeSpecInfo()->ChangeSlotIndex(slotIndex);
+                    propertySymOpnd->SetUsesAuxSlot(TypeHasAuxSlotTag(monoCacheInPolyCache->GetRawType()));
+                    propertySymOpnd->SetSlotIndex(slotIndex);
+                }
+
+                PHASE_PRINT_TRACE(Js::DePolymorphizePhase, this->topFunc, L"One hit in %s, caller %s\n", inlinee->GetJnFunction()->GetDisplayName(), this->topFunc->GetJnFunction()->GetDisplayName());
+            }
+            break;
         }
+
+
+
     } NEXT_INSTR_EDITING;
 }
 
