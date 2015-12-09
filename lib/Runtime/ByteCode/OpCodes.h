@@ -530,12 +530,12 @@ MACRO(                  CommitScope,        AuxNoReg,       OpSideEffect)   // M
 MACRO_WMS(              InvalCachedScope,   Unsigned1,      OpSideEffect)
 MACRO_WMS(              NewPseudoScope,     Unsigned1,      None)           // Create new scope that can't take normal var inits
 MACRO_WMS(              NewBlockScope,      Unsigned1,      None)           // Create new scope that takes only block-scoped inits
-MACRO_WMS(              CloneBlockScope,    Unsigned1,      None)           // Clone existing block scope in place for for-loop iterations
+MACRO_WMS(              CloneBlockScope,    Unsigned1,      OpSideEffect)   // Clone existing block scope in place for for-loop iterations
 MACRO_BACKEND_ONLY(     NewScopeSlots,      Reg1Unsigned1,  None)
 MACRO_BACKEND_ONLY(     NewStackScopeSlots, Reg1,           None)
 MACRO_BACKEND_ONLY(     InitLocalClosure,   Reg1,           None)
 MACRO_WMS(              NewInnerScopeSlots, Reg3,           None)
-MACRO_WMS(              CloneInnerScopeSlots, Unsigned1,    None)           // Clone existing inner scope slots in place for for-loop iterations
+MACRO_WMS(              CloneInnerScopeSlots, Unsigned1,    OpSideEffect)   // Clone existing inner scope slots in place for for-loop iterations
 MACRO_BACKEND_ONLY(     NewScopeSlotsWithoutPropIds, Reg1Int2, None)
 MACRO_WMS(              NewRegEx,           Reg1Unsigned1,  OpTempObjectCanStoreTemp|OpSideEffect)              // Create a new RegEx expression
 MACRO_WMS(              IsInst,             Reg3C,          OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)  // instanceof() - SideEffect: can throw...

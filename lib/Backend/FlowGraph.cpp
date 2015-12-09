@@ -101,6 +101,16 @@ FlowGraph::Build(void)
                 this->catchLabelStack->Pop();
             }
             break;
+
+        case Js::OpCode::CloneBlockScope:
+        case Js::OpCode::CloneInnerScopeSlots:
+            // It would be nice to do this in IRBuilder, but doing so gives us
+            // trouble when doing the DoSlotArrayCheck since it assume single def
+            // of the sym to do its check properly. So instead we assign the dst
+            // here in FlowGraph.
+            instr->SetDst(instr->GetSrc1());
+            break;
+
         }
 
         if (OpCodeAttr::UseAllFields(instr->m_opcode))
