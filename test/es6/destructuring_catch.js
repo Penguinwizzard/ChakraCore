@@ -3,9 +3,8 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in ch
-    this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
-}
+WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
+
 var tests = [
   {
     name: "Basic destructuring syntax as catch param",
@@ -63,14 +62,14 @@ var tests = [
         catch ([e1]) {
             assert.areEqual(e1, 1, "Array pattern as a catch param matches with actual exception and initializes the identifier correctly");
         }
-        
+
         try {
             throw {e2:2};
         }
         catch({e2}) {
             assert.areEqual(e2, 2, "Object pattern as a catch param matches with actual exception and initializes the identifier correctly");
         }
-        
+
         try {
             throw [3, {e4:[4]}];
         }
@@ -89,14 +88,14 @@ var tests = [
         catch ([e1 = 11]) {
             assert.areEqual(e1, 11, "Array pattern as a catach param has initializer and initializes with initializer value");
         }
-        
+
         try {
             throw {};
         }
         catch({e2:e2 = 22}) {
             assert.areEqual(e2, 22, "Object pattern as a catach param has initializer and initializes with initializer value");
         }
-        
+
         try {
             throw [, {e4:[]}];
         }
@@ -121,7 +120,7 @@ var tests = [
                 assert.areEqual(m, 'x1x2x3',  "Inner Function - capturing all identifiers from object pattern in inner function is working correctly");
             }
         })();
-        
+
         (function () {
             try {
                 throw ['y1', 'y2', 'y3'];
@@ -133,7 +132,7 @@ var tests = [
                 let m = x1+x2+x3;
                 assert.areEqual(m, 'y1y2y3',  "Inner Function - capturing all identifiers from array pattern in inner function is working correctly");
             }
-           
+
         })();
 
         (function () {
@@ -147,7 +146,7 @@ var tests = [
                 let m = x1+x2+x3;
                 assert.areEqual(m, 'y1y2y3',  "Inner Function - capturing only one identifier from pattern in inner function is working correctly");
             }
-           
+
         })();
 
         (function () {
@@ -159,9 +158,9 @@ var tests = [
                 let m = x1+x2+x3;
                 assert.areEqual(m, 'y1y2y3',  "Has eval - identifiers from catch params are initialized correctly");
             }
-           
+
         })();
-        
+
         (function () {
             try {
                 throw ['y1', 'y2', 'y3'];

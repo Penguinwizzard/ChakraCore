@@ -4,12 +4,7 @@
 //-------------------------------------------------------------------------------------------------------
 
 // JavaScript source code
-if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in ch
-    this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
-}
-else {
-    throw new Error('failed');
-}
+WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 
 var handler = {
     getOwnPropertyDescriptor: function (target, name) {
@@ -60,7 +55,7 @@ var tests = [
         name: "non-configurable property can't be reported as non-existent",
         body: function () {
             var target = {};
-            emulatedProps = {};  
+            emulatedProps = {};
             emulatedProps.x = { value: 'test', configurable: false };
 
             Object.defineProperty(target, 'x', emulatedProps.x);
@@ -76,7 +71,7 @@ var tests = [
         name: "existing property on non-extensible object cannot be reported as non-existent",
         body: function(){
             var target = {};
-            emulatedProps = {};  
+            emulatedProps = {};
 
             target.x = 20;
             Object.preventExtensions(target);

@@ -3,13 +3,12 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in ch
-    this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
-}
+WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
+
 var tests = [
    {
        name: "String.prototype is a String",
-       body: function () 
+       body: function ()
        {
             try
             {
@@ -26,7 +25,7 @@ var tests = [
    },
    {
        name: "Boolean.prototype is a Boolean",
-       body: function () 
+       body: function ()
        {
             try
             {
@@ -43,7 +42,7 @@ var tests = [
    },
    {
        name: "Number.prototype is a Number",
-       body: function () 
+       body: function ()
        {
             try
             {

@@ -3,9 +3,8 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in ch
-    this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
-}
+WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
+
 //TODO remove -nonative & exclude_dynapogo when Ian has generator native code support & Taylor has subclassable native support remove -nonnative and native code test exclusions
 var tests = [
    {

@@ -115,15 +115,13 @@ namespace ManagedWorkspace
 }
  */
 
-if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in ch
-    this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
-}
+WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 
 var tests = [
     {
         name: "Generated tests",
         body: function () {
-            
+
             assert.doesNotThrow(function () { WScript.LoadScript("","samethread").WScript.LoadScript('class X { constructor(){super();} }'); }, "generated test #1");
             assert.doesNotThrow(function () { WScript.LoadScript("","samethread").WScript.LoadScript('class X { constructor(){super.x;} }'); }, "generated test #2");
             assert.throws(() => { WScript.LoadScript("","samethread").WScript.LoadScript('class X { x(){super();} }'); }, SyntaxError, "generatedTest #3", "Invalid use of the 'super' keyword: generatedTest #3");

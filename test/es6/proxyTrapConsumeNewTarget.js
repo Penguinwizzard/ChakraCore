@@ -3,17 +3,14 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in
-    // jc/jshost
-    this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
-}
+WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 
 var tests = [{
     name: "Proxy construct trap consumes new.target",
     body: function() {
-        
+
         let result = "";
-        
+
         class A {
             constructor() {
                 assert.areEqual(B, new.target, "The whole point of the test is to make sure new.target flow through proxy!");
@@ -39,14 +36,14 @@ var tests = [{
         }
 
         new B();
-        assert.areEqual("BproxyObjectA", result, "Test indeed ran the code I expect it to"); 
+        assert.areEqual("BproxyObjectA", result, "Test indeed ran the code I expect it to");
     }
 }, {
     name: "Proxy construct trap consumes overriden new.target",
     body: function() {
 
         let testCompleted = false;
-        
+
         function MyNewTarget() {
             assert.isTrue(false, "We should not be creating instance of MyNewTarget");
         }
@@ -55,16 +52,16 @@ var tests = [{
             assert.areEqual(MyNewTarget, new.target, "myNewTarget is overridden in this case");
             testCompleted = true;
         }
-        
+
         Reflect.construct(MyConstructor, [], MyNewTarget);
-        
-        assert.isTrue(testCompleted, "Test indeed ran the code I expect it to"); 
+
+        assert.isTrue(testCompleted, "Test indeed ran the code I expect it to");
     }
 }, {
     name: "Proxy construct trap spread case",
     body: function() {
         let result = "";
-        
+
         function MyConstructor() {
             assert.areEqual(proxyObject, new.target, "myNewTarget is overridden in this case");
             result += "MyConstructor";
@@ -84,7 +81,7 @@ var tests = [{
 
         var args = [1, 2.25, undefined, 'hello'];
         var newProxyObject = new proxyObject(...args);
-        assert.areEqual("proxyObjectMyConstructor", result, "Test indeed ran the code I expect it to"); 
+        assert.areEqual("proxyObjectMyConstructor", result, "Test indeed ran the code I expect it to");
     }
 }];
 

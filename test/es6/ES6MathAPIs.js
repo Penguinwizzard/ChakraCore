@@ -5,9 +5,7 @@
 
 // ES6 Math API extensions tests -- verifies the API shape and basic functionality
 
-if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in ch
-    this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
-}
+WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 
 // WARNING!!  As a convenience in this test suite assert.areEqual is
 // overridden so that -0 does not equal +0.  The tests here all make

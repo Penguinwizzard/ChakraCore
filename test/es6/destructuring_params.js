@@ -3,9 +3,8 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in ch
-    this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
-}
+WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
+
 var tests = [
   {
     name: "Basic destructuring syntax as params",
@@ -16,11 +15,11 @@ var tests = [
 
       assert.doesNotThrow(function () { eval("function foo({x:x}, y) {}"); },   "Object destructuring pattern as a first formal is valid syntax");
       assert.doesNotThrow(function () { eval("function foo([x], y) {}"); },   "Array destructuring pattern as a first formal is valid syntax");
-      
+
       assert.doesNotThrow(function () { eval("function foo(y, {x:x}) {}"); },   "Object destructuring pattern as a second formal is valid syntax");
       assert.doesNotThrow(function () { eval("function foo(y, [x]) {}"); },   "Array destructuring pattern as a second formal is valid syntax");
 
-     
+
       assert.doesNotThrow(function () { eval("function foo({}) {}"); },   "Object destructuring pattern (with empty syntax) as a formal is valid syntax");
       assert.doesNotThrow(function () { eval("function foo([]) {}"); },   "Array destructuring pattern (with empty syntax) as a formal is valid syntax");
       assert.doesNotThrow(function () { eval("function foo([,]) {}"); },   "Array destructuring pattern (with empty syntax and comma) as a formal is valid syntax");
@@ -130,19 +129,19 @@ var tests = [
             }
             let ret = f1({x:1});
             assert.areEqual(ret, 1, "Object pattern as a formal matches with actual param and initializes the identifier correctly");
-            
+
             function f2([x]) {
                 return x;
             }
             ret = f2([2]);
             assert.areEqual(ret, 2,  "Array pattern as a formal matches with actual param and initializes the identifier correctly");
-            
+
             function f3({x}, [y], z) {
                 return x + y + z;
             }
             ret = f3({x:1}, [2], 3);
             assert.areEqual(ret, 6,  "First formal as object pattern and second formal as array pattern should match and initialize identifiers correctly");
-            
+
             let f4 = function ([x], {y:y}, z) {
                 return x + y + z;
             }
@@ -164,7 +163,7 @@ var tests = [
                 assert.areEqual(x2, 22, "Identifier from the second pattern gets undefined from the actual second param so initializes with initializer");
             }
             f2({}, []);
-            
+
             (function ({x:x1 = 11} = {x:111}, [x2 = 22] = [222]) {
                 assert.areEqual(x1, 111, "First pattern matches with default as the actual first param is undefined");
                 assert.areEqual(x2, 222, "Second pattern matches with default as the actual second param is undefined");
@@ -177,18 +176,18 @@ var tests = [
             (function({x:x1}) {
                 assert.areEqual(x1, 1,  "Anonymous function - object pattern as a formal matches with actual param and initializes identifier correctly");
             })({x:1});
-            
+
             let f1 = ([x1]) => x1 * 2;
             assert.areEqual(f1([2]), 4,  "Lambda - array pattern as a formal matches with actual param and initializes identifier correctly");
-            
+
             let f2 = ({x:x2}) => x2 * 4;
             assert.areEqual(f2({x:2}), 8,  "Lambda - object pattern as a formal matches with actual param and initializes identifier correctly");
-            
+
             let f3 = function foo({x:x1}) {
                 assert.areEqual(x1, 1,  "Named function expression - object pattern as a formal matches with actual param and initializes identifier correctly");
             }
             f3({x:1});
-            
+
             let f4 = new Function("{x}", "[y]", "return x + y");
             assert.areEqual(f4({x:1}, [2]), 3,  "Function constructor - patterns as formals match with actual params and initialize identifiers correctly");
         }
@@ -203,7 +202,7 @@ var tests = [
             f1_1();
         }
         f1({x:1});
-        
+
         function f2([x1]) {
             function f2_1() {
                 assert.areEqual(x1, 2,  "Identifier from array pattern is captured and initialized correctly");
@@ -234,7 +233,7 @@ var tests = [
             assert.areEqual(x2, 2,  "Function has eval - identifier from the array pattern is initialized correctly under eval");
         }
         f1({x:1}, [2]);
-        
+
         function f2({x:x1}, [x2]) {
             eval('');
             (function () {
@@ -292,7 +291,7 @@ var tests = [
             arguments[1] = 2;
             assert.areEqual(x2, 1,  "arguments object is unmapped - changing arguments[1] does not change second param");
         })([], 1);
-        
+
         (function ({x:x1}, x2) {
             x2 = 2;
             (function() {
@@ -308,7 +307,7 @@ var tests = [
             arguments[1] = 2;
             assert.areEqual(x2, 1,  "Function's inner function has eval - arguments object is unmapped - changing arguments[1] does not change second param");
         })([], 1);
-        
+
     }
   },
   {
@@ -394,26 +393,26 @@ var tests = [
             add([x1]) {
                 this.x1 += x1;
             }
-            
+
             set prop({x1}) {
                 this.x1 = x1;
             }
-            
+
             get prop() {
                 return this.x1;
             }
-            
+
             static Avg({x1}, [x2], x3) {
                 return (x1+x2+x3)/3;
             }
         }
 
         assert.areEqual(Foo.Avg({x1:3}, [4], 5), 4,  "Class's static function - identifiers from formal patterns are matched and initialized correctly");
-        
+
         let obj = new Foo();
         obj.prop = {x1:1};
         assert.areEqual(obj.prop, 1, "Class's setter - identifier from the formal object pattern is matched and initialized correctly");
-        
+
         obj.add([2]);
         assert.areEqual(obj.prop, 3, "Class's method - identifier from the formal array pattern is matched and initialized correctly");
      }

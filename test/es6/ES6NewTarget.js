@@ -3,11 +3,9 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-// ES6 new.target tests 
+// ES6 new.target tests
 
-if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in ch
-    this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
-}
+WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 
 var tests = [
     {
@@ -15,7 +13,7 @@ var tests = [
         body: function() {
             function target() { return { name: 'something' }; }
             var t = new target; // implicitly 'new target()'
-            
+
             assert.areEqual('something', t.name, "new target() returned our new object instead of new.target");
         }
     },
@@ -47,7 +45,7 @@ var tests = [
         name: "There is now a well-known PID for 'target' - ensure it doesn't break",
         body: function() {
             var obj = { target: 'something' };
-            
+
             assert.areEqual('something', obj.target, "The name 'target' can be used as an identifier");
         }
     },
@@ -65,17 +63,17 @@ var tests = [
         name: "Simple base class gets new.target correctly",
         body: function() {
             var called = false;
-            
+
             class SimpleBaseClass {
                 constructor() {
                     assert.isTrue(new.target === SimpleBaseClass, "new.target === SimpleBaseClass");
-                    
+
                     called = true;
                 }
             }
-            
+
             var myObj = new SimpleBaseClass();
-            
+
             assert.isTrue(called, "The constructor was called.");
         }
     },
@@ -83,11 +81,11 @@ var tests = [
         name: "Simple derived and base class passes new.target correctly",
         body: function() {
             var called = false;
-            
-            class BaseClassForB { 
+
+            class BaseClassForB {
                 constructor() {
                     assert.isTrue(new.target === DerivedClassForB, "new.target === DerivedClassForB");
-                    
+
                     called = true;
                 }
             }
@@ -95,13 +93,13 @@ var tests = [
             class DerivedClassForB extends BaseClassForB {
                 constructor() {
                     assert.isTrue(new.target === DerivedClassForB, "new.target === DerivedClassForB");
-                    
+
                     super();
                 }
             }
 
             var myB = new DerivedClassForB();
-            
+
             assert.isTrue(called, "The super-chain was called.");
         }
     },
@@ -109,21 +107,21 @@ var tests = [
         name: "Simple base class with arrow function using new.target correctly",
         body: function() {
             var called = false;
-            
+
             class SimpleBaseClass {
                 constructor() {
                     var arrow = () => {
                         assert.isTrue(new.target === SimpleBaseClass, "new.target === SimpleBaseClass");
-                        
+
                         called = true;
                     }
-                    
+
                     arrow();
                 }
             }
-            
+
             var myObj = new SimpleBaseClass();
-            
+
             assert.isTrue(called, "The constructor was called.");
         }
     },
@@ -131,7 +129,7 @@ var tests = [
         name: "new.target behavior in arrow function inside derived class",
         body: function() {
             let constructed = false;
-            
+
             class C {
                 constructor() {
                     let arrow = () => {
@@ -141,7 +139,7 @@ var tests = [
                     arrow();
                 }
             }
-            
+
             class D extends C {
                 constructor() {
                     let arrow = () => {
@@ -151,7 +149,7 @@ var tests = [
                     super();
                 }
             }
-            
+
             let myD = new D();
             assert.isTrue(constructed, "We actually ran the constructor code");
         }
@@ -161,10 +159,10 @@ var tests = [
         body: function() {
             function foo() {
                 assert.isTrue(undefined === new.target, "Normal function call has new.target set to undefined in the function body");
-                
+
                 return new.target;
             }
-            
+
             assert.isTrue(undefined === foo(), "Normal function returning new.target returns undefined");
         }
     },
@@ -173,10 +171,10 @@ var tests = [
         body: function() {
             function foo() {
                 assert.isTrue(foo === new.target, "Function called as new expression has new.target set to the function in the function body");
-                
+
                 return new.target;
             }
-            
+
             assert.isTrue(foo === new foo(), "Function called-as-constructor has new.target set to that function");
         }
     },
@@ -186,13 +184,13 @@ var tests = [
             function foo() {
                 let arrow = () => {
                     assert.isTrue(undefined === new.target, "Normal function call has new.target set to undefined in the function body");
-                
+
                     return new.target;
                 };
-                
+
                 return arrow();
             }
-            
+
             assert.isTrue(undefined === foo(), "Normal function returning new.target returns undefined");
         }
     },
@@ -202,13 +200,13 @@ var tests = [
             function foo() {
                 let arrow = () => {
                     assert.isTrue(foo === new.target, "Function called as new expression has new.target set to the function in the function body");
-                
+
                     return new.target;
                 };
-                
+
                 return arrow();
             }
-            
+
             assert.isTrue(foo === new foo(), "Function called-as-constructor has new.target set to that function");
         }
     },
@@ -219,10 +217,10 @@ var tests = [
                 constructor() {
                     let arrow = () => {
                         assert.isTrue(derived === new.target, "Function called as new expression has new.target set to the function in the function body");
-                    
+
                         return new.target;
                     };
-                    
+
                     return arrow;
                 }
             }
@@ -231,9 +229,9 @@ var tests = [
                     return super();
                 }
             }
-            
+
             let arrow = new derived();
-            
+
             assert.isTrue(derived === arrow(), "Arrow capturing new.target returns correct value");
         }
     },

@@ -6,9 +6,7 @@
 // Functional WeakMap tests -- verifies the APIs work correctly
 // Note however this does not verify the GC semantics of WeakMap
 
-if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in ch
-    this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
-}
+WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 
 var tests = [
     {

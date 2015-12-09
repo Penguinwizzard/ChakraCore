@@ -5,9 +5,7 @@
 
 // ES6 Object.is(x,y) API extension tests -- verifies the API shape and basic functionality
 
-if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in ch
-    this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
-}
+WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 
 var tests = [
     {
@@ -153,7 +151,7 @@ var tests = [
             function f() { 'use strict'; }
             var bf = f.bind();
             var bft = f.bind({});
-            
+
             assert.isTrue(Object.is(Object.getOwnPropertyDescriptor(Function.prototype, "arguments").set, Object.getOwnPropertyDescriptor(Function.prototype, "caller").set), "Object.is should return true when comparing different throw type error methods on the same function");
             assert.isTrue(Object.is(Object.getOwnPropertyDescriptor(Function.prototype, "arguments").set, Object.getOwnPropertyDescriptor(Function.prototype, "caller").get), "Object.is should return true when comparing different throw type error methods on the same function's different accessors");
             assert.isTrue(Object.is(Object.getOwnPropertyDescriptor(bf.__proto__, "arguments").set, Object.getOwnPropertyDescriptor(bf.__proto__, "caller").set), "Object.is should return true when comparing different throw type error methods on the same bound function");

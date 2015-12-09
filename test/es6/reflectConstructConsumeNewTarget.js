@@ -3,10 +3,7 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in
-  // jc/jshost
-  this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
-}
+WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 
 var tests = [
   {
@@ -17,13 +14,13 @@ var tests = [
                 assert.areEqual(myNewTarget, new.target, "the main point of the test is to make sure myNewTarget is passed into the constructor as new.target");
             }
         }
-  
+
         class myDerivedClass extends myBaseClass {
         }
-  
+
         function myNewTarget() {
         }
-        
+
         Reflect.construct(myDerivedClass, [], myNewTarget);
      }
   },
@@ -32,16 +29,16 @@ var tests = [
     body: function () {
         class myBaseClass {
             construct() {
-                
+
             }
         }
-  
+
         class myDerivedClass extends myBaseClass {
         }
-  
+
         function myNewTarget() {
         }
-        
+
         assert.throws(function () { Reflect.construct(myDerivedClass, [], undefined ) }, TypeError, "undefined is not a constructor", "'newTarget' is not a constructor");
      }
   }

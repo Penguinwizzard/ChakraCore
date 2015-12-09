@@ -5,9 +5,7 @@
 
 // ES6 Genertors functionality tests -- verifies behavior of generator functions
 
-if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in ch
-    this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
-}
+WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 
 function ExpectedException() {
     this.message = "Expected Exception";

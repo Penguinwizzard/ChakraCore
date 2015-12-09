@@ -3,11 +3,9 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-// ES6 super chain tests 
+// ES6 super chain tests
 
-if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in ch
-    this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
-}
+WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 
 class SimpleParent {
     constructor() {
@@ -23,13 +21,13 @@ class ConstructorCountingParent {
 }
 
 class UninitializedThisReturningArgumentConstructor extends SimpleParent {
-    constructor(arg) { 
+    constructor(arg) {
         return arg;
     }
 };
 
 class InitializedThisReturningArgumentConstructor extends SimpleParent {
-    constructor(arg) { 
+    constructor(arg) {
         super();
         return arg;
     }
@@ -45,7 +43,7 @@ var tests = [
                     this.bar = "DerivedClassUsingThis";
                 }
             };
-            
+
             let result = new DerivedClassUsingThis();
 
             assert.areEqual("DerivedClassUsingThis", result.bar, "This is initialized with the return value from super()");
@@ -62,7 +60,7 @@ var tests = [
                     this.bar = "DerivedClassUsingThisIllegally";
                 }
             };
-            
+
             assert.throws(function() { new DerivedClassUsingThisIllegally(); }, ReferenceError, "It's a ReferenceError to access 'this' without calling super", "Use before declaration");
         }
     },
@@ -75,7 +73,7 @@ var tests = [
                     super();
                 }
             };
-            
+
             assert.throws(function() { new DerivedClassUsingThisIllegally(); }, ReferenceError, "It's a ReferenceError to access 'this' without calling super", "Use before declaration");
         }
     },
@@ -89,7 +87,7 @@ var tests = [
                     arrow();
                 }
             };
-            
+
             let result = new DerivedClassUsingThisViaLambda();
 
             assert.areEqual("DerivedClassUsingThisViaLambda", result.bar, "Arrow is defined using this (before super call) and called after super call in derived constructor");
@@ -136,7 +134,7 @@ var tests = [
                     this_arrow();
                 }
             };
-            
+
             let result = new DerivedClassUsingThisAndSuperViaLambda();
 
             assert.areEqual("DerivedClassUsingThisAndSuperViaLambda", result.bar, "Arrow is defined using this (before super call) and called after super call in derived constructor");
@@ -156,7 +154,7 @@ var tests = [
                     this_arrow();
                 }
             };
-            
+
             let result = new DerivedClassUsingThisAndSuperViaLambda();
 
             assert.areEqual("DerivedClassUsingThisAndSuperViaLambda", result.bar, "Arrow is defined using this (before super call) and called after super call in derived constructor");
@@ -194,7 +192,7 @@ var tests = [
         name: "Derived class throws ReferenceError with empty constructor (implicit access of this)",
         body: function () {
             class EmptyConstructor extends SimpleParent {
-                constructor() { 
+                constructor() {
                     // Implicitly "return this;"
                 }
             };
@@ -209,20 +207,20 @@ var tests = [
                 // Implicitly
                 // constructor(...args) { super(...args); }
             };
-            
+
             let obj = new DefaultConstructor();
-            
+
             assert.areEqual('SimpleParent', obj.foo, "Object from base constructor should have been returned.");
             assert.isTrue(obj instanceof SimpleParent, "Result object is instanceof base class");
             assert.isTrue(obj instanceof DefaultConstructor, "Result object is instanceof derived class");
-            
+
             class DefaultConstructorReturningArgumentViaBaseClass extends UninitializedThisReturningArgumentConstructor {
                 // Implicitly
                 // constructor(...args) { super(...args); }
             };
-            
+
             obj = new DefaultConstructorReturningArgumentViaBaseClass({ bar: 'DefaultConstructorReturningArgumentViaBaseClass' });
-            
+
             assert.areEqual('DefaultConstructorReturningArgumentViaBaseClass', obj.bar, "Object from base constructor should have been returned.");
             assert.isFalse(obj instanceof UninitializedThisReturningArgumentConstructor, "Result object is not instanceof base class");
             assert.isFalse(obj instanceof DefaultConstructorReturningArgumentViaBaseClass, "Result object is not instanceof derived class");
@@ -264,17 +262,17 @@ var tests = [
                     return;
                 }
             }
-            
+
             assert.throws(function() { new ImplicitReturnUndefinedNotInitializedThis(); }, ReferenceError, "Derived class constructor implicitly returning undefined with no super call throws ReferenceError", "Use before declaration");
-            
+
             class ExplicitReturnUndefinedNotInitializedThis extends SimpleParent {
                 constructor() {
                     return undefined;
                 }
             }
-            
+
             assert.throws(function() { new ExplicitReturnUndefinedNotInitializedThis(); }, ReferenceError, "Derived class constructor explicitly returning undefined with no super call throws ReferenceError", "Use before declaration");
-            
+
             class ImplicitReturnUndefinedInitializedThis extends SimpleParent {
                 constructor() {
                     super();
@@ -282,14 +280,14 @@ var tests = [
                     return;
                 }
             }
-            
+
             let result = new ImplicitReturnUndefinedInitializedThis();
-            
+
             assert.areEqual('SimpleParent', result.foo, "Object from base constructor should have been returned.");
             assert.areEqual('ImplicitReturnUndefinedInitializedThis', result.bar, "'this' modified in derived constructor.");
             assert.isTrue(result instanceof ImplicitReturnUndefinedInitializedThis, "Result object is instanceof derived class");
             assert.isTrue(result instanceof SimpleParent, "Result object is not instanceof base class");
-            
+
             class ExplicitReturnUndefinedInitializedThis extends SimpleParent {
                 constructor() {
                     super();
@@ -297,9 +295,9 @@ var tests = [
                     return undefined;
                 }
             }
-            
+
             result = new ExplicitReturnUndefinedInitializedThis();
-            
+
             assert.areEqual('SimpleParent', result.foo, "Object from base constructor should have been returned.");
             assert.areEqual('ExplicitReturnUndefinedInitializedThis', result.bar, "'this' modified in derived constructor.");
             assert.isTrue(result instanceof ExplicitReturnUndefinedInitializedThis, "Result object is instanceof derived class");
@@ -310,7 +308,7 @@ var tests = [
         name: "Derived class returns any object and avoids super call / this initialization",
         body: function () {
             let obj = new UninitializedThisReturningArgumentConstructor({ foo: 'value' });
-            
+
             assert.areEqual('value', obj.foo, "We returned an object from the class constructor which didn't initialize 'this' so we should get that object back");
         }
     },
@@ -319,9 +317,9 @@ var tests = [
         body: function () {
             // Reset call counter in parent
             calls_to_ConstructorCountingParent = 0;
-            
+
             class IllegalSuperCallConstructor extends ConstructorCountingParent {
-                constructor() { 
+                constructor() {
                     super();
                     super();
                 }
@@ -336,9 +334,9 @@ var tests = [
         body: function () {
             // Reset call counter in parent
             calls_to_ConstructorCountingParent = 0;
-            
+
             class IllegalSuperCallConstructor extends ConstructorCountingParent {
-                constructor() { 
+                constructor() {
                     let arrow = () => { super(); };
                     super();
                     arrow();
@@ -354,9 +352,9 @@ var tests = [
         body: function () {
             // Reset call counter in parent
             calls_to_ConstructorCountingParent = 0;
-            
+
             class IllegalSuperCallConstructor extends ConstructorCountingParent {
-                constructor() { 
+                constructor() {
                     let arrow = () => { super(); };
                     let arrow2 = () => { super(); };
                     arrow();
@@ -373,9 +371,9 @@ var tests = [
         body: function () {
             // Reset call counter in parent
             calls_to_ConstructorCountingParent = 0;
-            
+
             class IllegalSuperCallConstructor extends ConstructorCountingParent {
-                constructor() { 
+                constructor() {
                     let arrow = () => { super(); super(); };
                     arrow();
                 }
@@ -395,7 +393,7 @@ var tests = [
                     this.bar = "DerivedClassCapturingThisAndSuper";
                 }
             };
-            
+
             let result = new DerivedClassCapturingThisAndSuper();
 
             assert.areEqual("DerivedClassCapturingThisAndSuper", result.bar, "This is initialized with the return value from super()");
@@ -414,9 +412,9 @@ var tests = [
                     this.bar = "SimpleDerivedClass";
                 }
             };
-            
+
             let result = new SimpleDerivedClass();
-            
+
             assert.isFalse(Object.hasOwnProperty(parent, 'bar'), "Parent object doesn't have derived class values");
             assert.areEqual("SimpleParent", parent.foo, "Parent class initialized the object");
             assert.isTrue(parent instanceof SimpleParent, "Parent object is instanceof base class");
@@ -437,14 +435,14 @@ var tests = [
                     this.bar = "MiddleDerivedClass";
                 }
             };
-            
+
             class BottomDerivedClass extends MiddleDerivedClass {
                 constructor() {
                     super();
                     this.baz = "BottomDerivedClass";
                 }
             };
-            
+
             let result = new BottomDerivedClass();
 
             assert.areEqual("BottomDerivedClass", result.baz, "This is initialized with the return value from super()");
@@ -458,7 +456,7 @@ var tests = [
     {
         name: "Derived class constructor leaks lambda which performs super",
         body: function() {
-            class A { 
+            class A {
                 constructor() {
                     this.a = 'A';
                 }
@@ -480,34 +478,34 @@ var tests = [
 
             var maker = new C();
             var result = maker();
-            
+
             assert.areEqual("C", result.c, "This is initialized with the return value from super()");
             assert.areEqual("B", result.b, "This is initialized with the return value from super()");
             assert.areEqual("A", result.a, "Parent class returned the object from super to derived constructor");
             assert.isTrue(result instanceof A, "Result object is instanceof base class");
             assert.isTrue(result instanceof B, "Result object is instanceof derived class");
             assert.isTrue(result instanceof C, "Result object is instanceof derived class");
-            
+
             assert.throws(function() { var result2 = maker(); }, ReferenceError, "Calling the escaped lambda again will throw since 'this' of the parent is already initialized", "Multiple calls to 'super' in a class constructor are not allowed");
-            
+
             // creating a new lambda should let us construct one more object
             maker = new C();
             result = maker();
-            
+
             assert.areEqual("C", result.c, "This is initialized with the return value from super()");
             assert.areEqual("B", result.b, "This is initialized with the return value from super()");
             assert.areEqual("A", result.a, "Parent class returned the object from super to derived constructor");
             assert.isTrue(result instanceof A, "Result object is instanceof base class");
             assert.isTrue(result instanceof B, "Result object is instanceof derived class");
             assert.isTrue(result instanceof C, "Result object is instanceof derived class");
-            
+
             assert.throws(function() { var result2 = maker(); }, ReferenceError, "Calling the escaped lambda again will throw since 'this' of the parent is already initialized", "Multiple calls to 'super' in a class constructor are not allowed");
         }
     },
     {
         name: "Derived class constructor leaks lambda which performs super (lamdba comes from middle derived class)",
         body: function() {
-            class A { 
+            class A {
                 constructor() {
                     this.a = 'A';
                 }
@@ -528,32 +526,32 @@ var tests = [
 
             var maker = new C();
             var result = maker();
-            
+
             assert.areEqual("B", result.b, "This is initialized with the return value from super()");
             assert.areEqual("A", result.a, "Parent class returned the object from super to derived constructor");
             assert.isTrue(result instanceof A, "Result object is instanceof base class");
             assert.isTrue(result instanceof B, "Result object is instanceof derived class");
             assert.isTrue(result instanceof C, "Result object is instanceof derived class");
-            
+
             assert.throws(function() { var result2 = maker(); }, ReferenceError, "Calling the escaped lambda again will throw since 'this' of the parent is already initialized", "Multiple calls to 'super' in a class constructor are not allowed");
-            
+
             // creating a new lambda should let us construct one more object
             maker = new C();
             result = maker();
-            
+
             assert.areEqual("B", result.b, "This is initialized with the return value from super()");
             assert.areEqual("A", result.a, "Parent class returned the object from super to derived constructor");
             assert.isTrue(result instanceof A, "Result object is instanceof base class");
             assert.isTrue(result instanceof B, "Result object is instanceof derived class");
             assert.isTrue(result instanceof C, "Result object is instanceof derived class");
-            
+
             assert.throws(function() { var result2 = maker(); }, ReferenceError, "Calling the escaped lambda again will throw since 'this' of the parent is already initialized", "Multiple calls to 'super' in a class constructor are not allowed");
         }
     },
     {
         name: "Derived class constructor leaks lambda which references 'this' in TDZ",
         body: function() {
-            class A { 
+            class A {
                 constructor() {
                     this.a = 'A';
                 }
@@ -574,14 +572,14 @@ var tests = [
             }
 
             var maker = new C();
-            
+
             assert.throws(function() { var result = maker(); }, ReferenceError, "Calling the escaped lambda throws since 'this' is accessed before super call", "Use before declaration");
         }
     },
     {
         name: "Derived class constructor leaks lambda which references 'this' in TDZ (lamdba comes from middle derived class)",
         body: function() {
-            class A { 
+            class A {
                 constructor() {
                     this.a = 'A';
                 }
@@ -601,7 +599,7 @@ var tests = [
             }
 
             var maker = new C();
-            
+
             assert.throws(function() { var result = maker(); }, ReferenceError, "Calling the escaped lambda throws since 'this' is accessed before super call", "Use before declaration");
         }
     },
@@ -610,7 +608,7 @@ var tests = [
         body: function () {
             class NullExtendsExpression extends null {
             };
-            
+
             assert.throws(function() { new NullExtendsExpression(); }, TypeError, "Class that extends null throws when we attempt to call super as [[construct]]", "Function 'super' is not a constructor");
         }
     },
@@ -622,9 +620,9 @@ var tests = [
                     return arg;
                 }
             };
-            
+
             var result = new NullExtendsExpressionWithConstructor({foo:'value'});
-            
+
             assert.areEqual('value', result.foo, "Class derived from null expression can return an object safely");
             assert.isFalse(result instanceof NullExtendsExpressionWithConstructor, "Result object is not instanceof class");
         }
@@ -641,9 +639,9 @@ var tests = [
                     this.bar = '';
                 }
             };
-            
+
             assert.throws(function() { new DerivedClassAccessThisImplicitReturn(); }, ReferenceError, "When super isn't called, this is undecl", "Use before declaration");
-            
+
             class DerivedClassImplicitReturn extends SimpleParent {
                 constructor() {
                     if (returnFalse()) {
@@ -651,9 +649,9 @@ var tests = [
                     }
                 }
             };
-            
+
             assert.throws(function() { new DerivedClassImplicitReturn(); }, ReferenceError, "When super isn't called, this is undecl", "Use before declaration");
-            
+
             class DerivedClassAccessThisExplicitReturn extends SimpleParent {
                 constructor() {
                     if (returnFalse()) {
@@ -663,9 +661,9 @@ var tests = [
                     return this;
                 }
             };
-            
+
             assert.throws(function() { new DerivedClassAccessThisExplicitReturn(); }, ReferenceError, "When super isn't called, this is undecl", "Use before declaration");
-            
+
             class DerivedClassExplicitReturn extends SimpleParent {
                 constructor() {
                     if (returnFalse()) {
@@ -674,9 +672,9 @@ var tests = [
                     return this;
                 }
             };
-            
+
             assert.throws(function() { new DerivedClassExplicitReturn(); }, ReferenceError, "When super isn't called, this is undecl", "Use before declaration");
-            
+
             class DerivedClassAccessThisViaLambdaImplicitReturn extends SimpleParent {
                 constructor() {
                     let arrow = () => { this.foo = ''; }
@@ -686,9 +684,9 @@ var tests = [
                     arrow();
                 }
             };
-            
+
             assert.throws(function() { new DerivedClassAccessThisViaLambdaImplicitReturn(); }, ReferenceError, "When super isn't called, this is undecl", "Use before declaration");
-            
+
             class DerivedClassAccessThisViaLambdaExplicitReturn extends SimpleParent {
                 constructor() {
                     let arrow = () => { this.foo = ''; }
@@ -699,9 +697,9 @@ var tests = [
                     return this;
                 }
             };
-            
+
             assert.throws(function() { new DerivedClassAccessThisViaLambdaExplicitReturn(); }, ReferenceError, "When super isn't called, this is undecl", "Use before declaration");
-            
+
             class DerivedClassWithThisScopeCaptureNoAccessImplicitReturn extends SimpleParent {
                 constructor() {
                     let arrow = () => { this.foo = ''; }
@@ -710,9 +708,9 @@ var tests = [
                     }
                 }
             };
-            
+
             assert.throws(function() { new DerivedClassWithThisScopeCaptureNoAccessImplicitReturn(); }, ReferenceError, "When super isn't called, this is undecl", "Use before declaration");
-            
+
             class DerivedClassWithThisScopeCaptureNoAccessExplicitReturn extends SimpleParent {
                 constructor() {
                     let arrow = () => { this.foo = ''; }
@@ -722,7 +720,7 @@ var tests = [
                     return this;
                 }
             };
-            
+
             assert.throws(function() { new DerivedClassWithThisScopeCaptureNoAccessExplicitReturn(); }, ReferenceError, "When super isn't called, this is undecl", "Use before declaration");
         }
     },
@@ -734,9 +732,9 @@ var tests = [
                     eval('super();');
                 }
             };
-            
+
             var result = new SuperCallInEvalClass();
-            
+
             assert.areEqual('SimpleParent', result.foo, "Class derived from SimpleParent has foo field set to 'SimpleParent'");
             assert.isTrue(result instanceof SimpleParent, "Result object is instanceof base class");
             assert.isTrue(result instanceof SuperCallInEvalClass, "Result object is instanceof derived class");
@@ -750,9 +748,9 @@ var tests = [
                     eval('super(); this.bar = "SuperCallInEvalClass";');
                 }
             };
-            
+
             var result = new SuperCallInEvalClass();
-            
+
             assert.areEqual('SimpleParent', result.foo, "Class derived from SimpleParent has foo field set to 'SimpleParent'");
             assert.areEqual('SuperCallInEvalClass', result.bar, "Class derived from SimpleParent can return an object safely");
             assert.isTrue(result instanceof SimpleParent, "Result object is instanceof base class");
@@ -767,9 +765,9 @@ var tests = [
                     eval('assert.areEqual(new.target, SuperCallInEvalClass, "new.target === SuperCallInEvalClass"); super();');
                 }
             };
-            
+
             var result = new SuperCallInEvalClass();
-            
+
             assert.areEqual('SimpleParent', result.foo, "Class derived from SimpleParent has foo field set to 'SimpleParent'");
             assert.isTrue(result instanceof SimpleParent, "Result object is instanceof base class");
             assert.isTrue(result instanceof SuperCallInEvalClass, "Result object is instanceof derived class");
@@ -783,9 +781,9 @@ var tests = [
                     eval('assert.areEqual(new.target, SuperCallInEvalClass); super(); this.bar = "SuperCallInEvalClass";');
                 }
             };
-            
+
             var result = new SuperCallInEvalClass();
-            
+
             assert.areEqual('SimpleParent', result.foo, "Class derived from SimpleParent has foo field set to 'SimpleParent'");
             assert.areEqual('SuperCallInEvalClass', result.bar, "Result object has derived field bar set to 'SuperCallInEvalClass'");
             assert.isTrue(result instanceof SimpleParent, "Result object is instanceof base class");
@@ -801,9 +799,9 @@ var tests = [
                     this.baz = "SuperCallInEvalClass_ctor";
                 }
             };
-            
+
             var result = new SuperCallInEvalClass();
-            
+
             assert.areEqual('SimpleParent', result.foo, "Class derived from SimpleParent has foo field set to 'SimpleParent'");
             assert.areEqual('SuperCallInEvalClass', result.bar, "Result object has derived field bar set to 'SuperCallInEvalClass'");
             assert.areEqual('SuperCallInEvalClass_ctor', result.baz, "Result object has derived field baz set to 'SuperCallInEvalClass_ctor'");
@@ -820,9 +818,9 @@ var tests = [
                     eval('this.bar = "SuperCallInEvalClass";');
                 }
             };
-            
+
             var result = new SuperCallInEvalClass();
-            
+
             assert.areEqual('SimpleParent', result.foo, "Class derived from SimpleParent has foo field set to 'SimpleParent'");
             assert.areEqual('SuperCallInEvalClass', result.bar, "Result object has derived field bar set to 'SuperCallInEvalClass'");
             assert.isTrue(result instanceof SimpleParent, "Result object is instanceof base class");
@@ -839,9 +837,9 @@ var tests = [
                     this.baz = "SuperCallInEvalClass_ctor";
                 }
             };
-            
+
             var result = new SuperCallInEvalClass();
-            
+
             assert.areEqual('SimpleParent', result.foo, "Class derived from SimpleParent has foo field set to 'SimpleParent'");
             assert.areEqual('SuperCallInEvalClass', result.bar, "Result object has derived field bar set to 'SuperCallInEvalClass'");
             assert.areEqual('SuperCallInEvalClass_ctor', result.baz, "Result object has derived field baz set to 'SuperCallInEvalClass_ctor'");
@@ -858,9 +856,9 @@ var tests = [
                     eval('super(); this.bar = "SuperCallInEvalClass";');
                 }
             };
-            
+
             var result = new SuperCallInEvalClass();
-            
+
             assert.areEqual('SimpleParent', result.foo, "Class derived from SimpleParent has foo field set to 'SimpleParent'");
             assert.areEqual('SuperCallInEvalClass', result.bar, "Result object has derived field bar set to 'SuperCallInEvalClass'");
             assert.isTrue(result instanceof SimpleParent, "Result object is instanceof base class");
@@ -877,9 +875,9 @@ var tests = [
                     eval('this.bar = "SuperCallInEvalClass";');
                 }
             };
-            
+
             var result = new SuperCallInEvalClass();
-            
+
             assert.areEqual('SimpleParent', result.foo, "Class derived from SimpleParent has foo field set to 'SimpleParent'");
             assert.areEqual('SuperCallInEvalClass', result.bar, "Result object has derived field bar set to 'SuperCallInEvalClass'");
             assert.isTrue(result instanceof SimpleParent, "Result object is instanceof base class");
@@ -891,17 +889,17 @@ var tests = [
         body: function () {
             class SuperCallInEvalClass extends SimpleParent {
                 constructor() {
-                    let arrow = () => { 
+                    let arrow = () => {
                         assert.areEqual(SuperCallInEvalClass, new.target, "SuperCallInEvalClass === new.target");
-                        super(); 
+                        super();
                     }
                     arrow();
                     eval('this.bar = "SuperCallInEvalClass";');
                 }
             };
-            
+
             var result = new SuperCallInEvalClass();
-            
+
             assert.areEqual('SimpleParent', result.foo, "Class derived from SimpleParent has foo field set to 'SimpleParent'");
             assert.areEqual('SuperCallInEvalClass', result.bar, "Result object has derived field bar set to 'SuperCallInEvalClass'");
             assert.isTrue(result instanceof SimpleParent, "Result object is instanceof base class");
@@ -913,18 +911,18 @@ var tests = [
         body: function () {
             class SuperCallInEvalClass extends SimpleParent {
                 constructor() {
-                    let arrow = () => { 
+                    let arrow = () => {
                         assert.areEqual(SuperCallInEvalClass, new.target, "SuperCallInEvalClass === new.target");
-                        super(); 
+                        super();
                         this.baz = "SuperCallInEvalClass_arrow";
                     }
                     arrow();
                     eval('assert.areEqual(SuperCallInEvalClass, new.target, "SuperCallInEvalClass === new.target"); this.bar = "SuperCallInEvalClass";');
                 }
             };
-            
+
             var result = new SuperCallInEvalClass();
-            
+
             assert.areEqual('SimpleParent', result.foo, "Class derived from SimpleParent has foo field set to 'SimpleParent'");
             assert.areEqual('SuperCallInEvalClass', result.bar, "Result object has derived field bar set to 'SuperCallInEvalClass'");
             assert.areEqual('SuperCallInEvalClass_arrow', result.baz, "Result object has derived field baz set to 'SuperCallInEvalClass_arrow'");
@@ -937,7 +935,7 @@ var tests = [
         body: function () {
             class SuperCallInEvalClass extends SimpleParent {
                 constructor() {
-                    let arrow = () => { 
+                    let arrow = () => {
                         assert.areEqual(SuperCallInEvalClass, new.target, "SuperCallInEvalClass === new.target");
                         this.baz = "SuperCallInEvalClass_arrow";
                     }
@@ -945,9 +943,9 @@ var tests = [
                     arrow();
                 }
             };
-            
+
             var result = new SuperCallInEvalClass();
-            
+
             assert.areEqual('SimpleParent', result.foo, "Class derived from SimpleParent has foo field set to 'SimpleParent'");
             assert.areEqual('SuperCallInEvalClass', result.bar, "Result object has derived field bar set to 'SuperCallInEvalClass'");
             assert.areEqual('SuperCallInEvalClass_arrow', result.baz, "Result object has derived field baz set to 'SuperCallInEvalClass_arrow'");
@@ -961,7 +959,7 @@ var tests = [
             class SuperCallInEvalClass extends SimpleParent {
                 constructor() {
                     eval('assert.areEqual(SuperCallInEvalClass, new.target, "SuperCallInEvalClass === new.target");');
-                    let arrow = () => { 
+                    let arrow = () => {
                         assert.areEqual(SuperCallInEvalClass, new.target, "SuperCallInEvalClass === new.target");
                         this.baz = "SuperCallInEvalClass_arrow";
                     }
@@ -970,9 +968,9 @@ var tests = [
                     eval('this.bar = "SuperCallInEvalClass";');
                 }
             };
-            
+
             var result = new SuperCallInEvalClass();
-            
+
             assert.areEqual('SimpleParent', result.foo, "Class derived from SimpleParent has foo field set to 'SimpleParent'");
             assert.areEqual('SuperCallInEvalClass', result.bar, "Result object has derived field bar set to 'SuperCallInEvalClass'");
             assert.areEqual('SuperCallInEvalClass_arrow', result.baz, "Result object has derived field baz set to 'SuperCallInEvalClass_arrow'");
@@ -987,8 +985,8 @@ var tests = [
                 constructor(callSuperInCtor, callSuperInLambda, callSuperInEval) {
                     assert.areEqual(SuperCallInEvalClass, new.target, "SuperCallInEvalClass === new.target");
                     eval('assert.areEqual(SuperCallInEvalClass, new.target, "SuperCallInEvalClass === new.target");');
-                    
-                    let arrow_pre = () => { 
+
+                    let arrow_pre = () => {
                         assert.areEqual(SuperCallInEvalClass, new.target, "SuperCallInEvalClass === new.target");
                     }
                     let arrow_post = () => {
@@ -997,7 +995,7 @@ var tests = [
                     let arrow_super = () => {
                         super();
                     }
-                    
+
                     arrow_pre();
                     if (callSuperInCtor) {
                         super();
@@ -1008,13 +1006,13 @@ var tests = [
                     if (callSuperInEval) {
                         eval('super();');
                     }
-                    
+
                     arrow_post();
                     eval('this.bar = "SuperCallInEvalClass_eval";');
                     this.bot = 'SuperCallInEvalClass_ctor';
                 }
             };
-            
+
             function verifyObj(result) {
                 assert.areEqual('SimpleParent', result.foo, "Class derived from SimpleParent has foo field set to 'SimpleParent'");
                 assert.areEqual('SuperCallInEvalClass_eval', result.bar, "Result object has derived field bar set to 'SuperCallInEvalClass_eval'");
@@ -1023,11 +1021,11 @@ var tests = [
                 assert.isTrue(result instanceof SimpleParent, "Result object is instanceof base class");
                 assert.isTrue(result instanceof SuperCallInEvalClass, "Result object is instanceof derived class");
             }
-            
+
             verifyObj(new SuperCallInEvalClass(true,false,false));
             verifyObj(new SuperCallInEvalClass(false,true,false));
             verifyObj(new SuperCallInEvalClass(false,false,true));
-            
+
             assert.throws(function() { new SuperCallInEvalClass(false,false,false); }, ReferenceError, "Not calling super at all will cause a ReferenceError", "Use before declaration");
             assert.throws(function() { new SuperCallInEvalClass(true,true,false); }, ReferenceError, "Calling super in the ctor and a lambda throws a ReferenceError", "Multiple calls to 'super' in a class constructor are not allowed");
             assert.throws(function() { new SuperCallInEvalClass(true,false,true); }, ReferenceError, "Calling super in the ctor and eval throws a ReferenceError", "Multiple calls to 'super' in a class constructor are not allowed");
@@ -1049,16 +1047,16 @@ var tests = [
                 }
             };
             class DerivedClassUsingDefaultConstructor extends DerivedClassUsingSuperInArrow {
-                
+
             }
             class BottomLevelDerivedClass extends DerivedClassUsingDefaultConstructor {
                 constructor() {
                     super();
                 }
             };
-            
+
             var result = new BottomLevelDerivedClass();
-            
+
             assert.areEqual('SimpleParent', result.foo, "Class derived from SimpleParent has foo field set to 'SimpleParent'");
             assert.isTrue(result instanceof SimpleParent, "Result object is instanceof base class");
             assert.isTrue(result instanceof DerivedClassUsingSuperInEval, "Result object is instanceof derived class");
@@ -1077,9 +1075,9 @@ var tests = [
                     eval('eval("super(); this.bar = inner;"); this.baz = outer;');
                 }
             };
-            
+
             var result = new SuperCallInEvalClass();
-            
+
             assert.areEqual('SimpleParent', result.foo, "Class derived from SimpleParent has foo field set to 'SimpleParent'");
             assert.areEqual('SuperCallInEvalClass_inner_eval', result.bar, "Result object has derived field bar set to 'SuperCallInEvalClass_inner_eval'");
             assert.areEqual('SuperCallInEvalClass_outer_eval', result.baz, "Result object has derived field baz set to 'SuperCallInEvalClass_outer_eval'");
@@ -1101,9 +1099,9 @@ var tests = [
                     arrow();
                 }
             };
-            
+
             var result = new SuperCallInEvalClass();
-            
+
             assert.areEqual('SimpleParent', result.foo, "Class derived from SimpleParent has foo field set to 'SimpleParent'");
             assert.areEqual('SuperCallInEvalClass_inner_eval', result.bar, "Result object has derived field bar set to 'SuperCallInEvalClass_inner_eval'");
             assert.areEqual('SuperCallInEvalClass_outer_eval', result.baz, "Result object has derived field baz set to 'SuperCallInEvalClass_outer_eval'");
@@ -1125,9 +1123,9 @@ var tests = [
                     arrow();
                 }
             };
-            
+
             var result = new SuperCallInEvalClass();
-            
+
             assert.areEqual('SimpleParent', result.foo, "Class derived from SimpleParent has foo field set to 'SimpleParent'");
             assert.areEqual('SuperCallInEvalClass_inner_eval', result.bar, "Result object has derived field bar set to 'SuperCallInEvalClass_inner_eval'");
             assert.areEqual('SuperCallInEvalClass_outer_eval', result.baz, "Result object has derived field baz set to 'SuperCallInEvalClass_outer_eval'");
@@ -1152,9 +1150,9 @@ var tests = [
                     exec_arrow();
                 }
             };
-            
+
             var result = new SuperCallInEvalClass();
-            
+
             assert.areEqual('SimpleParent', result.foo, "Class derived from SimpleParent has foo field set to 'SimpleParent'");
             assert.areEqual('SuperCallInEvalClass_inner_eval', result.bar, "Result object has derived field bar set to 'SuperCallInEvalClass_inner_eval'");
             assert.areEqual('SuperCallInEvalClass_outer_eval', result.baz, "Result object has derived field baz set to 'SuperCallInEvalClass_outer_eval'");
@@ -1217,13 +1215,13 @@ var tests = [
                     }
                 };
                 var o = new EvalDerivedClass();
-                
+
                 assert.isTrue(o instanceof EvalSimpleParent, "Result object is instanceof base class");
                 assert.isTrue(o instanceof EvalDerivedClass, "Result object is instanceof derived class");
 
                 o;
             `);
-            
+
             assert.areEqual('EvalSimpleParent', result.foo, "Class derived from EvalSimpleParent has foo field set to 'EvalSimpleParent'");
             assert.areEqual('EvalDerivedClass', result.bar, "Result object has derived field bar set to 'EvalDerivedClass'");
         }
@@ -1250,13 +1248,13 @@ var tests = [
                     }
                 };
                 var o = new EvalDerivedClass();
-                
+
                 assert.isTrue(o instanceof EvalSimpleParent, "Result object is instanceof base class");
                 assert.isTrue(o instanceof EvalDerivedClass, "Result object is instanceof derived class");
 
                 o;
             `);
-            
+
             assert.areEqual('EvalSimpleParent', result.foo, "Class derived from EvalSimpleParent has foo field set to 'EvalSimpleParent'");
             assert.areEqual('EvalDerivedClass_outer', result.bar, "Result object has derived field bar set to 'EvalDerivedClass_outer'");
             assert.areEqual('EvalDerivedClass_inner', result.baz, "Result object has derived field baz set to 'EvalDerivedClass_inner'");
@@ -1280,13 +1278,13 @@ var tests = [
                     }
                 };
                 var o = new EvalDerivedClass();
-                
+
                 assert.isTrue(o instanceof EvalSimpleParent, "Result object is instanceof base class");
                 assert.isTrue(o instanceof EvalDerivedClass, "Result object is instanceof derived class");
 
                 o;
             `);
-            
+
             assert.areEqual('EvalSimpleParent', result.foo, "Class derived from EvalSimpleParent has foo field set to 'EvalSimpleParent'");
             assert.areEqual('EvalDerivedClass_inner', result.bar, "Result object has derived field bar set to 'EvalDerivedClass_inner'");
             assert.areEqual('EvalDerivedClass_outer', result.baz, "Result object has derived field baz set to 'EvalDerivedClass_outer'");
@@ -1315,13 +1313,13 @@ var tests = [
                     }
                 };
                 var o = new EvalDerivedClass();
-                
+
                 assert.isTrue(o instanceof EvalSimpleParent, "Result object is instanceof base class");
                 assert.isTrue(o instanceof EvalDerivedClass, "Result object is instanceof derived class");
 
                 o;
             `);
-            
+
             assert.areEqual('EvalSimpleParent', result.foo, "Class derived from EvalSimpleParent has foo field set to 'EvalSimpleParent'");
             assert.areEqual('EvalDerivedClass_outer', result.bar, "Result object has derived field bar set to 'EvalDerivedClass_outer'");
             assert.areEqual('EvalDerivedClass_inner', result.baz, "Result object has derived field baz set to 'EvalDerivedClass_inner'");
@@ -1346,7 +1344,7 @@ var tests = [
                 }
             }
             let result = new Derived();
-                
+
             assert.isTrue(result instanceof Base, "Result object is instanceof base class");
             assert.isTrue(result instanceof Derived, "Result object is instanceof derived class");
             assert.areEqual('Base', result.foo, "Class derived from Base has foo field set to 'Base'");
@@ -1371,7 +1369,7 @@ var tests = [
                 }
             }
             let result = new Derived();
-                
+
             assert.isTrue(result instanceof Base, "Result object is instanceof base class");
             assert.isTrue(result instanceof Derived, "Result object is instanceof derived class");
             assert.areEqual('Base', result.foo, "Class derived from Base has foo field set to 'Base'");
@@ -1397,7 +1395,7 @@ var tests = [
                 }
             }
             let result = new Derived();
-                
+
             assert.isTrue(result instanceof Base, "Result object is instanceof base class");
             assert.isTrue(result instanceof Derived, "Result object is instanceof derived class");
             assert.areEqual('Base', result.foo, "Class derived from Base has foo field set to 'Base'");
@@ -1421,7 +1419,7 @@ var tests = [
                 }
             }
             let result = new Derived();
-                
+
             assert.isTrue(result instanceof Base, "Result object is instanceof base class");
             assert.isTrue(result instanceof Derived, "Result object is instanceof derived class");
             assert.areEqual('Base', result.foo, "Class derived from Base has foo field set to 'Base'");
@@ -1445,7 +1443,7 @@ var tests = [
                 }
             }
             let result = new Derived();
-                
+
             assert.isTrue(result instanceof Base, "Result object is instanceof base class");
             assert.isTrue(result instanceof Derived, "Result object is instanceof derived class");
             assert.areEqual('Base', result.foo, "Class derived from Base has foo field set to 'Base'");
@@ -1470,7 +1468,7 @@ var tests = [
                 }
             }
             let result = new Derived();
-                
+
             assert.isTrue(result instanceof Base, "Result object is instanceof base class");
             assert.isTrue(result instanceof Derived, "Result object is instanceof derived class");
             assert.areEqual('Base', result.foo, "Class derived from Base has foo field set to 'Base'");
@@ -1480,7 +1478,7 @@ var tests = [
     {
         name: "Function as a base class can't assign this to non-object via super call",
         body: function () {
-            function BaseReturnsArgument(arg) { 
+            function BaseReturnsArgument(arg) {
                 assert.areEqual(new.target, DerivedFromBase, "new.target === DerivedFromBase");
                 this.foo = 'BaseReturnsArgument';
                 return arg;
@@ -1495,16 +1493,16 @@ var tests = [
                     this.bar = 'DerivedFromBase';
                 }
             }
-            
+
             function testDerivedClass(arg) {
                 let result = new DerivedFromBase(arg);
-                
+
                 assert.isTrue(result instanceof BaseReturnsArgument, "Result object is instanceof base class");
                 assert.isTrue(result instanceof DerivedFromBase, "Result object is instanceof derived class");
                 assert.areEqual('BaseReturnsArgument', result.foo, "Class derived from Base has foo field set to 'Base'");
                 assert.areEqual('DerivedFromBase', result.bar, "Result object has derived field bar set to 'Derived'");
             }
-            
+
             testDerivedClass();
             testDerivedClass(undefined);
             testDerivedClass(null);
@@ -1516,7 +1514,7 @@ var tests = [
     {
         name: "Function as a base class can return an object to override this",
         body: function () {
-            function Base() { 
+            function Base() {
                 assert.areEqual(new.target, Derived, "new.target === Derived");
                 this.foo = 'bad';
                 return { foo: 'Base' };
@@ -1530,9 +1528,9 @@ var tests = [
                     this.bar = 'Derived';
                 }
             }
-        
+
             let result = new Derived();
-            
+
             assert.isFalse(result instanceof Base, "Result object is instanceof base class");
             assert.isFalse(result instanceof Derived, "Result object is instanceof derived class");
             assert.areEqual('Base', result.foo, "Class derived from Base has foo field set to 'Base'");
@@ -1542,7 +1540,7 @@ var tests = [
     {
         name: "Super call with expressions in arguments",
         body: function () {
-            function Base() { 
+            function Base() {
                 assert.areEqual(new.target, Derived, "new.target === Derived");
                 assert.areEqual(3, arguments[0], 'arguments[0] === 3')
                 assert.areEqual('str', arguments[1], 'arguments[1] === "str"')
@@ -1562,9 +1560,9 @@ var tests = [
                     this.bar = 'Derived';
                 }
             }
-            
+
             let result = new Derived();
-            
+
             assert.isTrue(result instanceof Base, "Result object is instanceof base class");
             assert.isTrue(result instanceof Derived, "Result object is instanceof derived class");
             assert.areEqual('Base', result.foo, "Class derived from Base has foo field set to 'Base'");

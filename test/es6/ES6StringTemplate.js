@@ -5,9 +5,7 @@
 
 // ES6 String Template tests -- verifies the API shape and basic functionality
 
-if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in ch
-    this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
-}
+WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 
 function ReturnString(str) {
     return str;

@@ -3,9 +3,7 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-if (this.WScript && this.WScript.LoadScriptFile) {
-  this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
-}
+WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 
 var tests = [
     {
@@ -24,7 +22,7 @@ var tests = [
             };
 
             assert.areEqual(obj.foo(), "foo");
-            assert.areEqual(({ foo: function() { }, foo() { return "foo"; } }).foo(), "foo"); 
+            assert.areEqual(({ foo: function() { }, foo() { return "foo"; } }).foo(), "foo");
             assert.areEqual(({ foo(x) { }, foo() { return "foo"; } }).foo(), "foo");
         }
     },
@@ -268,7 +266,7 @@ var tests = [
             assert.throws(function() { eval("var o = { __proto__ : Function.prototype, __proto__, __proto__ : Array.prototype };"); }, SyntaxError, "More than one regular productions can't define __proto__ even if there are other productions present");
             assert.isTrue({ __proto__, __proto__ : [], __proto__() {}, __proto__ } instanceof Array, "Regular production model should win over all other");
             assert.isTrue({ ['__proto__'] : Object.prototype, __proto__ : [], ['__proto__'] : {} } instanceof Array, "Computed property definition of __proto__ shouldn't override the regular production");
-            
+
             assert.isTrue({ __proto__ : [] } instanceof Array, "Regular production for __proto__ should set the internal prototype");
             assert.areEqual(Object.getPrototypeOf({ __proto__ : null }), null, "Null should be set as the prototype when specified using normal production");
             assert.areEqual(Object.getPrototypeOf({ __proto__ : undefined }),  Object.prototype, "Undefined should not be set as the internal prototype for object literal");

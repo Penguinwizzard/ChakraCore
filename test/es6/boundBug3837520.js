@@ -3,9 +3,7 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in ch
-    this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
-}
+WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 
 function correctProtoBound(proto, functionType) {
     Object.setPrototypeOf(functionType, proto);
@@ -16,7 +14,7 @@ function correctProtoBound(proto, functionType) {
 var tests = [
    {
        name: "Basic Function",
-       body: function () 
+       body: function ()
        {
             var f = function(){};
             var a = correctProtoBound(Function.prototype, f) && correctProtoBound({}, f)
@@ -26,7 +24,7 @@ var tests = [
    },
    {
        name: "Generator Functions",
-       body: function () 
+       body: function ()
        {
             var gf = function*(){};
             var a = correctProtoBound(Function.prototype, gf) && correctProtoBound({}, gf)
@@ -36,7 +34,7 @@ var tests = [
    },
    {
        name: "Arrow Functions",
-       body: function () 
+       body: function ()
        {
             var arrowfunction = ()=>5;
             var a = correctProtoBound(Function.prototype, arrowfunction) && correctProtoBound({}, arrowfunction)
@@ -46,7 +44,7 @@ var tests = [
    },
    {
        name: "Classes",
-       body: function () 
+       body: function ()
        {
             class C {}
             var a = correctProtoBound(Function.prototype, C) && correctProtoBound({}, C)
@@ -56,7 +54,7 @@ var tests = [
    },
    {
        name: "subClasses",
-       body: function () 
+       body: function ()
        {
             function correctProtoBound(superclass) {
                 class C extends superclass {
@@ -74,7 +72,7 @@ var tests = [
    },
    {
        name: "Proxy Function",
-       body: function () 
+       body: function ()
        {
             function correctProtoBound(proto) {
                 var p = new Proxy(function(){}, {});

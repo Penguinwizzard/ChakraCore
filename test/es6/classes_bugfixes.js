@@ -3,10 +3,7 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in
-  // jc/jshost
-  this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
-}
+WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 
 var tests = [
   {
@@ -40,19 +37,19 @@ var tests = [
       assert.throws(function() { eval("class { method(a) { var a; }; }"); },           SyntaxError, "Method formal parameters cannot be redeclared.");
       assert.throws(function() { eval("class { method(a) { let a; }; }"); },           SyntaxError, "Method formal parameters cannot be redeclared.");
       assert.throws(function() { eval("class { method(a) { const a; }; }"); },         SyntaxError, "Method formal parameters cannot be redeclared.");
-      
+
       assert.throws(function() { eval("class { method(a,b,c) { var b; }; }"); },       SyntaxError, "Method formal parameters cannot be redeclared.");
       assert.throws(function() { eval("class { method(a,b,c) { let b; }; }"); },       SyntaxError, "Method formal parameters cannot be redeclared.");
       assert.throws(function() { eval("class { method(a,b,c) { const b; }; }"); },     SyntaxError, "Method formal parameters cannot be redeclared.");
-      
+
       assert.throws(function() { eval("class { set method(a) { var a; }; }"); },       SyntaxError, "Method formal parameters cannot be redeclared.");
       assert.throws(function() { eval("class { set method(a) { let a; }; }"); },       SyntaxError, "Method formal parameters cannot be redeclared.");
       assert.throws(function() { eval("class { set method(a) { const a; }; }"); },     SyntaxError, "Method formal parameters cannot be redeclared.");
-      
+
       assert.throws(function() { eval("class { set method(a,b,c) { var b; }; }"); },   SyntaxError, "Method formal parameters cannot be redeclared.");
       assert.throws(function() { eval("class { set method(a,b,c) { let b; }; }"); },   SyntaxError, "Method formal parameters cannot be redeclared.");
       assert.throws(function() { eval("class { set method(a,b,c) { const b; }; }"); }, SyntaxError, "Method formal parameters cannot be redeclared.");
-      
+
       assert.throws(function() { eval("class { method(a,a,c) { }; }"); },              SyntaxError, "Method formal parameters cannot be redeclared.");
       assert.throws(function() { eval("class { set method(a,a,c) { }; }"); },          SyntaxError, "Method formal parameters cannot be redeclared.");
     }
@@ -237,11 +234,11 @@ var tests = [
 
         class B {
             set length(a) { this._length=a; }
-            get length() { return this._length; }            
+            get length() { return this._length; }
             set caller(a) { this._caller=a; }
-            get caller() { return this._caller; }          
+            get caller() { return this._caller; }
             set arguments(a) { this._arguments=a; }
-            get arguments() { return this._arguments; }            
+            get arguments() { return this._arguments; }
         };
         var b=new B();
         b.length=100;

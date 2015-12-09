@@ -3,11 +3,9 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-// ES6 super chain tests 
+// ES6 super chain tests
 
-if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in ch
-    this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
-}
+WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 
 var tests = [
     {
@@ -22,7 +20,7 @@ var tests = [
                     this.foo = "Simple";
                 }
             };
-            
+
             let result = new Simple('val');
 
             assert.areEqual("Simple", result.foo, "'this' is valid to use in Simple.constructor");
@@ -43,7 +41,7 @@ var tests = [
                     arrow();
                 }
             };
-            
+
             let result = new Simple('val');
 
             assert.areEqual("Simple", result.foo, "'this' is valid to use in Simple.constructor");
@@ -60,23 +58,23 @@ var tests = [
                     return val;
                 }
             };
-            
+
             let result = new ReturnArgumentBaseClass(null);
             assert.areEqual("ReturnArgumentBaseClass", result.foo, "new ReturnArgumentBaseClass(null); returns 'this'");
             assert.isTrue(result instanceof ReturnArgumentBaseClass, "new ReturnArgumentBaseClass(null); returns an instance of ReturnArgumentBaseClass");
-            
+
             result = new ReturnArgumentBaseClass(undefined);
             assert.areEqual("ReturnArgumentBaseClass", result.foo, "new ReturnArgumentBaseClass(undefined); returns 'this'");
             assert.isTrue(result instanceof ReturnArgumentBaseClass, "new ReturnArgumentBaseClass(undefined); returns an instance of ReturnArgumentBaseClass");
-            
+
             result = new ReturnArgumentBaseClass();
             assert.areEqual("ReturnArgumentBaseClass", result.foo, "new ReturnArgumentBaseClass(); returns 'this'");
             assert.isTrue(result instanceof ReturnArgumentBaseClass, "new ReturnArgumentBaseClass(); returns an instance of ReturnArgumentBaseClass");
-            
+
             result = new ReturnArgumentBaseClass('string');
             assert.areEqual("ReturnArgumentBaseClass", result.foo, "new ReturnArgumentBaseClass('string'); returns 'this'");
             assert.isTrue(result instanceof ReturnArgumentBaseClass, "new ReturnArgumentBaseClass('string'); returns an instance of ReturnArgumentBaseClass");
-            
+
             result = new ReturnArgumentBaseClass(5);
             assert.areEqual("ReturnArgumentBaseClass", result.foo, "new ReturnArgumentBaseClass(5); returns 'this'");
             assert.isTrue(result instanceof ReturnArgumentBaseClass, "new ReturnArgumentBaseClass(5); returns an instance of ReturnArgumentBaseClass");
@@ -91,11 +89,11 @@ var tests = [
                     return val;
                 }
             };
-            
+
             let result = new ReturnArgumentBaseClass({foo:'test'});
             assert.areEqual("test", result.foo, "new ReturnArgumentBaseClass({foo:'test'}); returns {foo:'test'}");
             assert.isFalse(result instanceof ReturnArgumentBaseClass, "new ReturnArgumentBaseClass({foo:'test'}); doesn't return an instance of ReturnArgumentBaseClass");
-            
+
             result = new ReturnArgumentBaseClass(new Boolean(false));
             assert.areEqual(new Boolean(false), result, "new ReturnArgumentBaseClass(new Boolean(false)); returns new Boolean(false)");
             assert.isTrue(result instanceof Boolean, "new ReturnArgumentBaseClass(new Boolean(false)); returns an instance of Boolean");

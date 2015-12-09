@@ -5,9 +5,7 @@
 
 // ES6 Species Built-In APIs tests -- verifies the shape and basic behavior of the built-in [@@species] property
 
-if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in ch
-    this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
-}
+WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 
 function checkSpeciesAccessorDescriptor(name, o, p)
 {
@@ -20,7 +18,7 @@ function checkSpeciesAccessorDescriptor(name, o, p)
     assert.areEqual(false, desc.enumerable, msg + " enumerable");
     assert.areEqual(true, desc.configurable, msg + " configurable");
     assert.areEqual("function", typeof desc.get, name + "[@@species] is an accessor property that has getter");
-    assert.areEqual("get [Symbol.species]", desc.get.name, 
+    assert.areEqual("get [Symbol.species]", desc.get.name,
         name + "[@@species] is an accessor property whose getter function has the 'name' property 'get [Symbol.species]'");
     assert.areEqual(undefined, desc.set, msg + " set");
 }
@@ -32,7 +30,7 @@ function getTypedArrayConstructor(o)
 
 function verifyHasNotSpecies(o)
 {
-    assert.isFalse(o.hasOwnProperty(Symbol.species), o + " should not have [@@species] defined");            
+    assert.isFalse(o.hasOwnProperty(Symbol.species), o + " should not have [@@species] defined");
     assert.areEqual(undefined, o[Symbol.species], o + " should have [@@species] that returns 'this'");
 }
 
@@ -121,7 +119,7 @@ var tests = [
             let TypedArray = getTypedArrayConstructor(Int8Array);
             assert.isTrue(TypedArray.hasOwnProperty(Symbol.species), "%TypedArray% should have [@@species] defined");
             checkSpeciesAccessorDescriptor("TypedArray", TypedArray, Symbol.species);
-           
+
             assert.isFalse(Int8Array.hasOwnProperty(Symbol.species), "Int8Array should not have [@@species] defined");
             assert.areEqual(Int8Array, Int8Array[Symbol.species], "Int8Array should have [@@species] that returns 'this'");
         }
@@ -132,7 +130,7 @@ var tests = [
             let TypedArray = getTypedArrayConstructor(Uint8Array);
             assert.isTrue(TypedArray.hasOwnProperty(Symbol.species), "%TypedArray% should have [@@species] defined");
             checkSpeciesAccessorDescriptor("TypedArray", TypedArray, Symbol.species);
-           
+
             assert.isFalse(Uint8Array.hasOwnProperty(Symbol.species), "Uint8Array should not have [@@species] defined");
             assert.areEqual(Uint8Array, Uint8Array[Symbol.species], "Uint8Array should have [@@species] that returns 'this'");
         }
@@ -143,7 +141,7 @@ var tests = [
             let TypedArray = getTypedArrayConstructor(Uint8ClampedArray);
             assert.isTrue(TypedArray.hasOwnProperty(Symbol.species), "%TypedArray% should have [@@species] defined");
             checkSpeciesAccessorDescriptor("TypedArray", TypedArray, Symbol.species);
-           
+
             assert.isFalse(Uint8ClampedArray.hasOwnProperty(Symbol.species), "Uint8ClampedArray should not have [@@species] defined");
             assert.areEqual(Uint8ClampedArray, Uint8ClampedArray[Symbol.species], "Uint8ClampedArray should have [@@species] that returns 'this'");
         }
@@ -154,7 +152,7 @@ var tests = [
             let TypedArray = getTypedArrayConstructor(Int16Array);
             assert.isTrue(TypedArray.hasOwnProperty(Symbol.species), "%TypedArray% should have [@@species] defined");
             checkSpeciesAccessorDescriptor("TypedArray", TypedArray, Symbol.species);
-           
+
             assert.isFalse(Int16Array.hasOwnProperty(Symbol.species), "Int16Array should not have [@@species] defined");
             assert.areEqual(Int16Array, Int16Array[Symbol.species], "Int16Array should have [@@species] that returns 'this'");
         }
@@ -165,7 +163,7 @@ var tests = [
             let TypedArray = getTypedArrayConstructor(Uint16Array);
             assert.isTrue(TypedArray.hasOwnProperty(Symbol.species), "%TypedArray% should have [@@species] defined");
             checkSpeciesAccessorDescriptor("TypedArray", TypedArray, Symbol.species);
-           
+
             assert.isFalse(Uint16Array.hasOwnProperty(Symbol.species), "Uint16Array should not have [@@species] defined");
             assert.areEqual(Uint16Array, Uint16Array[Symbol.species], "Uint16Array should have [@@species] that returns 'this'");
         }
@@ -176,7 +174,7 @@ var tests = [
             let TypedArray = getTypedArrayConstructor(Int32Array);
             assert.isTrue(TypedArray.hasOwnProperty(Symbol.species), "%TypedArray% should have [@@species] defined");
             checkSpeciesAccessorDescriptor("TypedArray", TypedArray, Symbol.species);
-           
+
             assert.isFalse(Int32Array.hasOwnProperty(Symbol.species), "Int32Array should not have [@@species] defined");
             assert.areEqual(Int32Array, Int32Array[Symbol.species], "Int32Array should have [@@species] that returns 'this'");
         }
@@ -187,7 +185,7 @@ var tests = [
             let TypedArray = getTypedArrayConstructor(Uint32Array);
             assert.isTrue(TypedArray.hasOwnProperty(Symbol.species), "%TypedArray% should have [@@species] defined");
             checkSpeciesAccessorDescriptor("TypedArray", TypedArray, Symbol.species);
-           
+
             assert.isFalse(Uint32Array.hasOwnProperty(Symbol.species), "Uint32Array should not have [@@species] defined");
             assert.areEqual(Uint32Array, Uint32Array[Symbol.species], "Uint32Array should have [@@species] that returns 'this'");
         }
@@ -198,7 +196,7 @@ var tests = [
             let TypedArray = getTypedArrayConstructor(Float32Array);
             assert.isTrue(TypedArray.hasOwnProperty(Symbol.species), "%TypedArray% should have [@@species] defined");
             checkSpeciesAccessorDescriptor("TypedArray", TypedArray, Symbol.species);
-           
+
             assert.isFalse(Float32Array.hasOwnProperty(Symbol.species), "Float32Array should not have [@@species] defined");
             assert.areEqual(Float32Array, Float32Array[Symbol.species], "Float32Array should have [@@species] that returns 'this'");
         }
@@ -209,7 +207,7 @@ var tests = [
             let TypedArray = getTypedArrayConstructor(Float64Array);
             assert.isTrue(TypedArray.hasOwnProperty(Symbol.species), "%TypedArray% should have [@@species] defined");
             checkSpeciesAccessorDescriptor("TypedArray", TypedArray, Symbol.species);
-           
+
             assert.isFalse(Float64Array.hasOwnProperty(Symbol.species), "Float64Array should not have [@@species] defined");
             assert.areEqual(Float64Array, Float64Array[Symbol.species], "Float64Array should have [@@species] that returns 'this'");
         }

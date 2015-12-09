@@ -3,20 +3,19 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in ch
-    this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
-}
+WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
+
 var tests = [
     {
         name: "Check if Symbol.unscopables is defined",
-        body: function () 
+        body: function ()
         {
             assert.isTrue(Array.prototype.hasOwnProperty(Symbol.unscopables), "Array should have Array.prototype[@@unscopables] property");
         }
-    },    
+    },
     {
         name: "Global scope test on Arrays",
-        body: function () 
+        body: function ()
         {
             var globalScope = -1;
             var find      = globalScope;
@@ -36,7 +35,7 @@ var tests = [
     },
     {
         name: "Add to Array.prototype[@@unscopables] blacklist",
-        body: function () 
+        body: function ()
         {
             var globalScope = -1;
             var find      = globalScope;
@@ -46,7 +45,7 @@ var tests = [
             var values    = globalScope;
             var slice     = globalScope;
             var a = [];
-            a[Symbol.unscopables]["slice"] = true;            
+            a[Symbol.unscopables]["slice"] = true;
             with(a)
             {
                 assert.areEqual(globalScope, find,     "find property is not brought into scope by the with statement");
@@ -55,22 +54,22 @@ var tests = [
                 assert.areEqual(globalScope, keys,     "keys property is not brought into scope by the with statement");
                 assert.areEqual(globalScope, values,   "values property is not brought into scope by the with statement");
                 assert.areEqual(globalScope, slice,    "slice property is not brought into scope by the with statement");
-            } 
+            }
         }
     },
     {
         name: "Overwrite @@unscopables blacklist",
-        body: function () 
+        body: function ()
         {
             var globalScope = -1;
-            
-            var c = 
+
+            var c =
             {
                 find : function () {},
                 slice: function () {},
                 [Symbol.unscopables]: {find : true }
             };
-            
+
             var find      = globalScope;
             var slice     = globalScope;
             with(c)
@@ -86,57 +85,57 @@ var tests = [
                 assert.areEqual(globalScope, slice, "slice should not be on Array scope");
             }
         }
-        
+
     },
     {
         name: "Adding to @@unscopables blacklist in a with statement",
-        body: function () 
+        body: function ()
         {
             var globalScope = -1;
             var find      = globalScope;
             var slice     = globalScope;
-            var c = 
+            var c =
             {
                 find : function () {},
                 slice: function () {},
                 [Symbol.unscopables]: {"find" : true}
             };
-           
-                  
+
+
             with(c)
             {
                 assert.areEqual(globalScope, find,  "find property is not brought into scope by the with statement");
                 c[Symbol.unscopables]["slice"] = true;
-                assert.areEqual(globalScope, slice, "slice property is not brought into scope by the with statement");      
-            } 
+                assert.areEqual(globalScope, slice, "slice property is not brought into scope by the with statement");
+            }
         }
     },
-        
+
     {
         name: "Make sure we did not break with Scope",
-        body: function () 
+        body: function ()
         {
             var b =1;
-            var c = 
+            var c =
             {
-                get : function () 
+                get : function ()
                 {
                     return 4;
                 },
-                valueOf: function () 
+                valueOf: function ()
                 {
                     WScript.Echo("valueOf");
                     return {}; // not a primitive
                  },
-                toString: function () 
+                toString: function ()
                 {
                     WScript.Echo("toString");
                     return {}; // not a primitive
                 }
             }
-            with ({a: 1 , e: { l : 1, w:2}}) 
+            with ({a: 1 , e: { l : 1, w:2}})
             {
-                function f() 
+                function f()
                 {
                     a = 2; //Set test
                     b = a; //Get test
@@ -157,7 +156,7 @@ var tests = [
     },
     {
         name: "Make sure we do not expose the with Object",
-        body: function () 
+        body: function ()
         {
             var o = {f: function(){ return this}, x : 2, [Symbol.unscopables]: {"x" : true}};
             var x = -1;
@@ -171,17 +170,17 @@ var tests = [
                 assert.areEqual(testValue,a,"This test checks testValue and a are equivalent");
                 assert.areEqual(-1,x,"x is not brought into scope by the with statement");
                 assert.areEqual(o.x,b.x,"x is not brought into scope by the with statement");
-                assert.areEqual(o.x,a.x,"x is not brought into scope by the with statement");   
+                assert.areEqual(o.x,a.x,"x is not brought into scope by the with statement");
             }
         }
     },
     {
         name: "Lambda expressions",
-        body: function () 
+        body: function ()
         {
-            var adder = function (x) 
+            var adder = function (x)
             {
-                return function (y) 
+                return function (y)
                 {
                     return x + y;
                 };
@@ -199,7 +198,7 @@ var tests = [
     },
     {
         name: "Operator precedence test",
-        body: function () 
+        body: function ()
         {
             var obj = {a : 1 };
             var a   = false;
@@ -214,7 +213,7 @@ var tests = [
     },
     {
         name: "Nested functions in with",
-        body: function () 
+        body: function ()
         {
             var globalScope = -1;
             var find      = globalScope;
@@ -246,9 +245,9 @@ var tests = [
     },
     {
         name: "Nested with statements",
-        body: function () 
+        body: function ()
         {
-            var str = 
+            var str =
             {
                 search : function () {},
                 split: function () {},
@@ -257,7 +256,7 @@ var tests = [
                 [Symbol.unscopables]: {"search" : true,"split": true,"concat" : true,"reduce" : true}
             };
 
-            var arr = 
+            var arr =
             {
                 find : function () {},
                 keys: function () {},
@@ -265,7 +264,7 @@ var tests = [
                 reduce: function () {},
                 [Symbol.unscopables]: {"find" : true,"keys" : true}
             };
-           
+
             var globalScope = -1;
             var find      = globalScope;
             var keys      = globalScope;
@@ -273,21 +272,21 @@ var tests = [
             var split    = globalScope;
             var reduce = globalScope;
             var concat   = globalScope;
-            
+
             var arrConcat   = arr.concat;
             var arrReduce = arr.reduce;
             with(arr)
             {
                 with(str)
                 {
-                  
+
                     assert.areEqual(globalScope, search,  "search property is not brought into scope by the with statement");
                     assert.areEqual(globalScope, split,   "split property is not brought into scope by the with statement");
                     assert.areEqual(arrConcat,  concat,   "concat should be on the array scope");
                     assert.areEqual(arrReduce,  reduce,   "toString should be on the array scope");
                     assert.areEqual(globalScope,  find,   "find property is not brought into scope by the with statement");
                     assert.areEqual(globalScope,  keys,   "keys property is not brought into scope by the with statement");
-                    
+
                 }
             }
             arr[Symbol.unscopables]["concat"] = true;
@@ -302,21 +301,21 @@ var tests = [
                     assert.areEqual(globalScope, reduce,  "toString property is not brought into scope by the with statement");
                     assert.areEqual(globalScope,   find,  "find property is not brought into scope by the with statement");
                     assert.areEqual(globalScope,   keys,  "keys property is not brought into scope by the with statement");
-                   
+
                 }
             }
         }
     },
     {
         name: "Inheritance test",
-        body: function () 
+        body: function ()
         {
             function foo ()
             {
                 var p = {a: 1};
                 var obj = {__proto__: p, [Symbol.unscopables]: {'a' : true}};
                 var a = 2;
-                with (obj) 
+                with (obj)
                 {
                     assert.areEqual(2,a,""); //Spec change we no longer inherit
                 }
@@ -325,17 +324,17 @@ var tests = [
             let p = {a: 1};
             let obj = {__proto__: p, [Symbol.unscopables]: {'a' : true}};
             let a = 2;
-            
-            with (obj) 
+
+            with (obj)
             {
                 assert.areEqual(2,a,"");
             }
-            
+
         }
     },
     {
         name: "Per object unscopables check",
-        body: function () 
+        body: function ()
         {
             var globalScope = -1;
             var proto  = { a: 1, b: 2, c: 3, [Symbol.unscopables]: {'a' : true} };
@@ -343,7 +342,7 @@ var tests = [
             var child2 = {__proto__: proto, b: 21, c: 31, [Symbol.unscopables]: {'b' : true} };
             var a = globalScope;
             var b = globalScope;
-            with(child) 
+            with(child)
             {
                 assert.areEqual(1, a, "Get @@unscopables finds {'b' : true} on child fist so a is not unscoped");
                 assert.areEqual(globalScope, b, "b is blacklisted in child and we don't property walk to find b on proto");
@@ -358,7 +357,7 @@ var tests = [
             assert.areEqual(1,proto.a,"proto.a should be set to 1");
             var a = globalScope;
             proto[Symbol.unscopables]["c"] = true;
-            with(child2) 
+            with(child2)
             {
                 assert.areEqual(1, a, "Get @@unscopables finds {'b' : true} on child fist so a is not unscoped");
                 assert.areEqual(globalScope, b, "b is blacklisted in child2 and we don't property walk to find b on proto");
@@ -374,13 +373,13 @@ var tests = [
     },
     {
         name: "@@unscopables overwritten as  something other than an object",
-        body: function () 
+        body: function ()
         {
             var globalScope = -1;
-            
+
             var find      = globalScope;
             var values    = globalScope;
-            var c = 
+            var c =
             {
                 find : function () {},
                 values: function () {},
@@ -400,13 +399,13 @@ var tests = [
         {
             var globalScope = -1;
             var find = globalScope;
-            var c = 
+            var c =
             {
                 find : function () {},
                 [Symbol.unscopables]: {"find" : true }
             };
-            
-            with (c) 
+
+            with (c)
             {
                 assert.areEqual(globalScope, eval("find"),"This property is not brought into scope by the with statement");
                 eval("find = 2");
@@ -421,7 +420,7 @@ var tests = [
         {
             var o = {a: 1};
             var a = 2;
-            with (o) 
+            with (o)
             {
                 o[Symbol.unscopables] = {'a' : true }
                 assert.areEqual(2,a, "root.a should have been set");
@@ -434,12 +433,12 @@ var tests = [
         {
             var o = {a: 1};
             var a = 2;
-            with (o) 
+            with (o)
             {
                 a += (o[Symbol.unscopables] = {'a' : true },2);
                 // This is a modification of Brian's Operator precedence test above
                 // This is a tricky one a is originally not blacklisted so the a we use is o.a
-                // then the assignment happens after the blacklisting 
+                // then the assignment happens after the blacklisting
                 assert.areEqual(3,a, "should be 1+2");
             }
             assert.areEqual(1,o.a, "root.a should not have changed");
@@ -460,21 +459,21 @@ var tests = [
             this[Symbol.unscopables]["c"] = true;
             var c = 1;
             assert.areEqual(1,b, "No with statement so blacklist should never hit");
-         
+
         }
     },
     {
         name: "Set test",
         body: function ()
         {
-            with ([]) 
+            with ([])
             {
                 find = 2;
                 assert.areEqual(2, find,"find property is not brought into scope by the with statement");
             }
              assert.areEqual(2, find,   "find property is not brought into scope by the with statement");
             // strict mode
-            with ([]) 
+            with ([])
             {
                function test()
                {
@@ -483,15 +482,15 @@ var tests = [
                }
                test();
             }
-            
+
             // assignment test with let
             let o = {[Symbol.unscopables]: {'b' : true }};
             let b = -1;
-            with (o) 
+            with (o)
             {
                 b = 1;
             }
-            
+
             // assignment test with evals
              assert.areEqual(undefined,o.b,"o.b should never have been set");
              assert.areEqual(1,b, "root.a should have been set");
@@ -500,12 +499,12 @@ var tests = [
                 eval("b =2;");
              }
              assert.areEqual(undefined,o.b,"o.b should never have been set");
-             assert.areEqual(2,b, "root.a should have been set");             
+             assert.areEqual(2,b, "root.a should have been set");
         }
     },
     {
         name: "Define unscopables for RegExp and then check Global Scope",
-        body: function () 
+        body: function ()
         {
             var globalScope = -1;
             var input       = globalScope;
@@ -521,18 +520,18 @@ var tests = [
             assert.isTrue(RegExp.hasOwnProperty(Symbol.unscopables), "RegExp should have RegExp.prototype[@@unscopables] property after definition");
             with(RegExp)
             {
-                
+
                 assert.areEqual(globalScope, input,       "input property is not brought into scope by the with statement");
                 assert.areEqual(globalScope, lastMatch,   "lastMatch property is not brought into scope by the with statement");
                 assert.areEqual(globalScope, lastParen,   "lastParen property is not brought into scope by the with statement");
                 assert.areEqual(globalScope, leftContext, "leftContext property is not brought into scope by the with statement");
-                
+
             }
         }
     },
     {
         name: "Confirm a call to @@unscopables happens if the environment record property is called",
-        body: function () 
+        body: function ()
         {
             var env = {x : 1};
             var callCount = 0;
@@ -541,7 +540,7 @@ var tests = [
                     callCount += 1;
                 }
             });
-            
+
             with (env) {
                 void x;
             }
@@ -550,7 +549,7 @@ var tests = [
     },
     {
         name: "Spec Bug Fix for OS 4892049",
-        body: function () 
+        body: function ()
         {
             var x = 0;
             var env = {};
@@ -560,12 +559,12 @@ var tests = [
                     callCount += 1;
                 }
             });
-            
+
             with (env) {
                 void x;
             }
             assert.areEqual(0, callCount, "If the environment record does not have requested property don't look up unscopables blacklist");
-            
+
             var x = 0;
             var env = { x: 1 };
             env[Symbol.unscopables] = {};
@@ -578,40 +577,40 @@ var tests = [
     },
     {
         name: "Let unscopables be Get(bindings, @@unscopables) should do prototype chain lookups on the blacklist",
-        body: function () 
+        body: function ()
         {
             var blackList =  { x : true };
             Object.setPrototypeOf(blackList, { y: true });
             var env = { x : 1, y : 2, [Symbol.unscopables] : blackList};
             var x = -1;
             var y = -2;
-            
+
             with(env)
             {
                 assert.areEqual(-1, x, "x is blacklist on the @@unscopables object");
                 assert.areEqual(-2, y, "y is blacklist on the @@unscopables prototype");
             }
-            
+
         }
     },
     {
         name: "Array.prototype[@@unscopables] [[prototype]] slot is null",
-        body: function () 
+        body: function ()
         {
             assert.areEqual(null, Object.getPrototypeOf(Array.prototype[Symbol.unscopables]), "Array.prototype[@@unscopables].__proto__ === null");
         }
     },
     {
         name: "Array.prototype[@@unscopables] property descriptor",
-        body: function () 
+        body: function ()
         {
             var p = Object.getOwnPropertyDescriptor(Array.prototype, Symbol.unscopables);
-            
+
             assert.isFalse(p.writable, "Object.getOwnPropertyDescriptor(Array.prototype, Symbol.unscopables).writable === false");
             assert.isFalse(p.enumerable, "Object.getOwnPropertyDescriptor(Array.prototype, Symbol.unscopables).enumerable === false");
             assert.isTrue(p.configurable, "Object.getOwnPropertyDescriptor(Array.prototype, Symbol.unscopables).configurable === true");
         }
     },
 ];
-    
+
 testRunner.runTests(tests, { verbose: WScript.Arguments[0] != "summary" });

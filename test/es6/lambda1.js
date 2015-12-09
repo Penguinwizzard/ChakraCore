@@ -5,9 +5,7 @@
 
 // ES6 Lambda Arrow Function tests -- verifies basic functionality and parsing
 
-if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in ch
-    this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
-}
+WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 
 var globalObject = this;
 var globalVar = 123;

@@ -3,10 +3,7 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in
-  // jc/jshost
-  this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
-}
+WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 
 function createMessage(message, prefix) {
     prefix = (prefix != undefined) ? prefix + ": " : "";
@@ -85,7 +82,7 @@ var tests = [
         assert.isTrue(str.match(re) == null, "Sticky = true, RegExp.match() result");
         assert.isTrue(re.lastIndex == 0, "Sticky = true, lastIndex result on RegExp.match()");
     }
-  },  
+  },
   {
     name: "RegExp.search() - matches for the beginning of string, otherwise terminates if sticky = true",
     body: function () {
@@ -130,7 +127,7 @@ var tests = [
 
         ["string", "function"].forEach(assertReplace);
     }
-  },  
+  },
   {
     name: "RegExp.replace() - matches for the beginning of string, otherwise terminates if sticky = true, global = true",
     body: function () {
@@ -146,7 +143,7 @@ var tests = [
 
         ["string", "function"].forEach(assertReplace);
     }
-  },  
+  },
   {
     name: "RegExp.replace() - matches for the beginning of string, otherwise terminates if global = true",
     body: function () {
@@ -162,7 +159,7 @@ var tests = [
 
         ["string", "function"].forEach(assertReplace);
     }
-  },   
+  },
   {
     name: "RegExp.replace() - returns the input string as it is when lastIndex >= input length",
     body: function () {

@@ -5,9 +5,7 @@
 
 // ES6 Genertors APIs tests -- verifies built-in API objects and properties
 
-if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in ch
-    this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
-}
+WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 
 var globObj = this;
 

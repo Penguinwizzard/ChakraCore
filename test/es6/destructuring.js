@@ -3,9 +3,8 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in ch
-    this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
-}
+WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
+
 var tests = [
   {
     name: "Basic parsing and early errors",
@@ -369,9 +368,9 @@ var tests = [
       {
         let a1, b1;
         [[...a1], ...b1]     = [[1, 2, 3, 4], 5, 6, 7, 8];
-        
+
         let [[...a2], ...b2] = [[1, 2, 3, 4], 5, 6, 7, 8];
-        
+
         assert.areEqual([a1, b1], [a2, b2],                     "Destructured array assignment and declaration with nested rest parameters match");
         assert.areEqual([a1, b1], [[1, 2, 3, 4], [5, 6, 7, 8]], "Destructured array assignment uses nested rest parameters correctly");
         assert.areEqual([a2, b2], [[1, 2, 3, 4], [5, 6, 7, 8]], "Destructured array declaration uses nested rest parameters correctly");
@@ -588,9 +587,9 @@ var tests = [
         (() => [a,, b, c] = [1, 2, 3])();
         assert.areEqual([1, 3, undefined], [a, b, c], "Destructuring array assignment inside a lambda expression works correctly");
       }
-          
+
           // nested destructuring
-          {       
+          {
         let [[a]=[1]] = [[2]];
                 assert.areEqual(a, 2, "Nested destructuring - value is present");
 
@@ -601,7 +600,7 @@ var tests = [
                 assert.areEqual(a, 1, "Nested destructuring - value is not present - use defult");
 
                 [[a]=1] = [[]];
-                assert.areEqual(a, undefined, "Nested destructuring - value is present - default is incorrect - does not have @@iterator");      
+                assert.areEqual(a, undefined, "Nested destructuring - value is present - default is incorrect - does not have @@iterator");
           }
 
        // Bug OSG : 4533495

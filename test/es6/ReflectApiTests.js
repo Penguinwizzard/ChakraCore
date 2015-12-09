@@ -3,9 +3,7 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-if (this.WScript && this.WScript.LoadScriptFile) {
-    this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
-}
+WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 
 var tests = [
    {
@@ -34,7 +32,7 @@ var tests = [
            assert.areEqual(Object.getPrototypeOf(result), Array.prototype, "Internal proto of the result object should be set according the newTarget");
            assert.areEqual(internPrototype, Array.prototype, "This object of the result is created from newTarget parameter and the internal proto is set from it");
            assert.areEqual(result.o, o, "Property set to this object during object construction should be retained");
-           
+
            class A1 {
                constructor() {
                    assert.areEqual(new.target, Array, "The new.target for the base class should be passed in as Array");

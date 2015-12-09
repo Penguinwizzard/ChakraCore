@@ -3,10 +3,7 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in
-  // jc/jshost
-  this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
-}
+WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 
 function p(x) {
   WScript.Echo(x);
@@ -16,52 +13,52 @@ function verifyClassMember(obj, name, expectedReturnValue, isGet, isSet, isGener
     let p = Object.getOwnPropertyDescriptor(obj, name);
     let strMethodSignature = `obj[${name}](${isGet},${isSet},${isGenerator})`;
     let fn;
-    
+
     if (isGet) {
         fn = p.get;
-        
+
         assert.areEqual('function', typeof fn, `${strMethodSignature}: Get method has 'get' property set in descriptor`);
         assert.areEqual(expectedReturnValue, obj[name], `${strMethodSignature}: Invoking class get method returns correct value`);
         assert.areEqual(expectedReturnValue, fn(), `${strMethodSignature}: Calling class get method function directly returns correct value`);
-        
+
         assert.isFalse('prototype' in fn, `${strMethodSignature}: Class method get does not have 'prototype' property`);
     } else if (isSet) {
         fn = p.set;
-        
+
         assert.areEqual('function', typeof fn, `${strMethodSignature}: Set method has 'set' property set in descriptor`);
         assert.areEqual(undefined, obj[name], `${strMethodSignature}: Invoking class set method returns undefined`);
         assert.areEqual(expectedReturnValue, fn(), `${strMethodSignature}: Calling class set method function directly returns correct value`);
-        
+
         assert.isFalse('prototype' in fn, `${strMethodSignature}: Class method set does not have 'prototype' property`);
-        
-        
+
+
     } else if (isGenerator) {
         fn = obj[name];
-        
+
         assert.areEqual('function', typeof fn, `${strMethodSignature}: Class method generator function has correct type`);
-        
+
         let s;
         for (s of fn()) {}
         assert.areEqual(expectedReturnValue, s, `${strMethodSignature}: Calling class method generator returns correct value`);
-        
+
         assert.isTrue(p.writable, `${strMethodSignature}: Class method generator functions are writable`);
-        
+
         assert.isTrue('prototype' in fn, `${strMethodSignature}: Class method generator does have 'prototype' property`);
     } else {
         fn = obj[name]
-        
+
         assert.areEqual('function', typeof fn, `${strMethodSignature}: Class method has correct type`);
         assert.areEqual(expectedReturnValue, fn(), `${strMethodSignature}: Calling class method returns correct value`);
-        
+
         // get/set property descriptors do not have writable properties
         assert.isTrue(p.writable, `${strMethodSignature}: Class method functions are writable`);
-        
+
         assert.isFalse('prototype' in fn, `${strMethodSignature}: Class method does not have 'prototype' property`);
     }
-    
+
     assert.isFalse(p.enumerable, `${strMethodSignature}: Class methods are not enumerable`);
     assert.isTrue(p.configurable, `${strMethodSignature}: Class methods are configurable`);
-    
+
     assert.isFalse(fn.hasOwnProperty('arguments'), `${strMethodSignature}: Class methods do not have an 'arguments' property`);
     assert.isFalse(fn.hasOwnProperty('caller'), `${strMethodSignature}: Class methods do not have an 'caller' property`);
 }
@@ -465,33 +462,33 @@ var tests = [
         method() { return "A3"; }
         static staticMethod() { return "static A3"; }
       }
-  
+
       class B extends A1 {
         method() { return super.method(); }
         static staticMethod() { return super.staticMethod(); }
       }
-  
+
       assert.areEqual(B.__proto__, A1);
       assert.areEqual(B.prototype.__proto__, A1.prototype);
-  
+
       let instanceB1 = new B();
       let instanceB2 = new B();
       assert.areEqual("A1",                instanceB1.method());
       assert.areEqual("static A1",         B.staticMethod());
       assert.areEqual(instanceB1.method(), instanceB2.method());
-  
+
       // Change the 'static' part of B
       B.__proto__ = A2;
-  
+
       assert.areEqual(B.__proto__,           A2);
       assert.areEqual(B.prototype.__proto__, A1.prototype);
       assert.areEqual("A1",                  instanceB1.method(), "Instance methods should not be affected by B.__proto__ change");
       assert.areEqual("static A2",           B.staticMethod(),    "Static method should have changed after B.__proto__ change");
       assert.areEqual(instanceB1.method(),   instanceB2.method(), "All instances should not have been affected by B.__proto__ change");
-  
+
       // Change the 'dynamic' part of B
       B.prototype.__proto__ = A3.prototype;
-  
+
       assert.areEqual(B.__proto__,           A2);
       assert.areEqual(B.prototype.__proto__, A3.prototype);
       assert.areEqual("A3",                  instanceB1.method(), "Instance methods should be affected after B.prototype.__proto__ change");
@@ -519,7 +516,7 @@ var tests = [
                 this.stringEval2Lambda = eval("eval(\"(()=>super.toString())()\")");
                 this.stringLambdaEval = (()=>eval("super.toString()"))() ;
                 this.stringLambda2Eval = (()=>(()=>eval("super.toString()"))())() ;
-                
+
                 this.func = super.toString;
                 this.funcLambda = (()=>super.toString)() ;
                 this.funcLambda2 = (()=>(()=>super.toString)())() ;
@@ -540,7 +537,7 @@ var tests = [
 
         a.dontDoThis();
         assert.areEqual(1, a.makeBugs);
-        
+
         assert.areEqual("[object Object]", b.string);
         assert.areEqual("[object Object]", b.stringCall);
         assert.areEqual("[object Object]", b.stringLambda);
@@ -552,7 +549,7 @@ var tests = [
         assert.areEqual("[object Object]", b.stringEval2Lambda);
         assert.areEqual("[object Object]", b.stringLambdaEval);
         assert.areEqual("[object Object]", b.stringLambda2Eval);
-        
+
         assert.areEqual(Object.prototype.toString, b.func);
         assert.areEqual(Object.prototype.toString, b.funcLambda);
         assert.areEqual(Object.prototype.toString, b.funcLambda2);
@@ -695,12 +692,12 @@ var tests = [
                     }
                 }
             };
-            
+
             let a = [];
             for (let i of new ClassWithGeneratorMethod().iter()) {
                 a.push(i);
             }
-            
+
             assert.areEqual([1,2,3], a, "");
         }
     },
@@ -714,12 +711,12 @@ var tests = [
                     }
                 }
             };
-            
+
             let a = [];
             for (let i of new ClassWithGeneratorMethod()) {
                 a.push(i);
             }
-            
+
             assert.areEqual([1,2,3], a, "");
         }
     },
@@ -727,7 +724,7 @@ var tests = [
         name: "Class static method descriptor values",
         body: function() {
             class B {
-                static method() { 
+                static method() {
                     return 'abc';
                 }
                 static ['method2']() {
@@ -752,7 +749,7 @@ var tests = [
                     yield 'vwx';
                 }
             }
-            
+
             verifyClassMember(B, 'method', 'abc');
             verifyClassMember(B, 'method2', 'def');
             verifyClassMember(B, 'method3', 'ghi', true);
@@ -767,7 +764,7 @@ var tests = [
         name: "Class method descriptor values",
         body: function() {
             class B {
-                method() { 
+                method() {
                     return 'abc';
                 }
                 ['method2']() {
@@ -792,7 +789,7 @@ var tests = [
                     yield 'vwx';
                 }
             }
-            
+
             verifyClassMember(B.prototype, 'method', 'abc');
             verifyClassMember(B.prototype, 'method2', 'def');
             verifyClassMember(B.prototype, 'method3', 'ghi', true);
@@ -807,17 +804,17 @@ var tests = [
         name: "Class constructor cannot be called without new keyword",
         body: function () {
             class A {}
-            
+
             assert.throws(function() { A(); }, TypeError, "Base class constructor does not have a [[call]] slot", "Class constructor cannot be called without the new keyword");
             assert.throws(function() { A.call(); }, TypeError, "Base class constructor does not have a [[call]] slot", "Class constructor cannot be called without the new keyword");
             assert.throws(function() { A.apply(); }, TypeError, "Base class constructor does not have a [[call]] slot", "Class constructor cannot be called without the new keyword");
-            
+
             class B extends A {}
-            
+
             assert.throws(function() { B(); }, TypeError, "Derived class constructor does not have a [[call]] slot", "Class constructor cannot be called without the new keyword");
             assert.throws(function() { B.call(); }, TypeError, "Derived class constructor does not have a [[call]] slot", "Class constructor cannot be called without the new keyword");
             assert.throws(function() { B.apply(); }, TypeError, "Derived class constructor does not have a [[call]] slot", "Class constructor cannot be called without the new keyword");
-            
+
             class SubArray extends Array { };
 
             assert.throws(function() { SubArray(); }, TypeError, "Class derived from built-in does not have a [[call]] slot", "Class constructor cannot be called without the new keyword");
@@ -836,10 +833,10 @@ var tests = [
                     return { foo: 'b' };
                 }
             }
-            
+
             assert.throws(function() { new B.prototype.method(); }, TypeError, "Base class prototype method cannot be new'd", "Function is not a constructor");
             assert.throws(function() { new B.method2(); }, TypeError, "Base class static method cannot be new'd", "Function is not a constructor");
-            
+
             class C extends B {
                 method3() {
                     return { foo: 'c' };
@@ -848,12 +845,12 @@ var tests = [
                     return { foo: 'd' };
                 }
             }
-            
+
             assert.throws(function() { new C.prototype.method(); }, TypeError, "Base class prototype method cannot be new'd", "Function is not a constructor");
             assert.throws(function() { new C.method2(); }, TypeError, "Base class static method cannot be new'd", "Function is not a constructor");
             assert.throws(function() { new C.prototype.method3(); }, TypeError, "Derived class prototype method cannot be new'd", "Function is not a constructor");
             assert.throws(function() { new C.method4(); }, TypeError, "Derived class static method cannot be new'd", "Function is not a constructor");
-            
+
             class D extends Array {
                 method5() {
                     return { foo: 'e' };
@@ -862,7 +859,7 @@ var tests = [
                     return { foo: 'f' };
                 }
             }
-            
+
             assert.throws(function() { new D.prototype.method5(); }, TypeError, "Derived class prototype method cannot be new'd", "Function is not a constructor");
             assert.throws(function() { new D.method6(); }, TypeError, "Derived class static method cannot be new'd", "Function is not a constructor");
         }
@@ -874,7 +871,7 @@ var tests = [
             assert.throws(function() { eval(`class A { static get ['prototype']() {} };`); }, TypeError, "Static get member cannot have computed name 'prototype'", "Class static member cannot be named 'prototype'");
             assert.throws(function() { eval(`class A { static set ['prototype']() {} };`); }, TypeError, "Static set member cannot have computed name 'prototype'", "Class static member cannot be named 'prototype'");
             assert.throws(function() { eval(`class A { static *['prototype']() {} };`); }, TypeError, "Static generator member cannot have computed name 'prototype'", "Class static member cannot be named 'prototype'");
-            
+
             assert.doesNotThrow(function() { eval(`class A { ['prototype']() {} };`); }, "Class member with computed name 'prototype' is fine");
             assert.doesNotThrow(function() { eval(`class A { get ['prototype']() {} };`); }, "Class get member with computed name 'prototype' is fine");
             assert.doesNotThrow(function() { eval(`class A { set ['prototype']() {} };`); }, "Class set member with computed name 'prototype' is fine");
@@ -887,7 +884,7 @@ var tests = [
             var BadClass = class extends function() { arguments.caller; } {};
             assert.throws(function() { Object.getPrototypeOf(BadClass).arguments; }, TypeError, "The extends expression of a class expression should be parsed in strict mode", "Accessing the 'arguments' property is restricted in this context");
             assert.throws(function() { new BadClass(); }, TypeError, "New'ing a class with a parent constructor that throws in strict mode, should throw", "Accessing the 'caller' property is restricted in this context");
-            
+
             assert.throws(function() { eval('class WorseClass extends (function foo() { with ({}); return foo; }()) {};'); }, SyntaxError, "The extends expression of a class decl should be parsed in strict mode", "'with' statements are not allowed in strict mode");
         }
     },
@@ -896,7 +893,7 @@ var tests = [
         body: function() {
             assert.throws(function() { eval('class arguments {};'); }, SyntaxError, "A class may not be named arguments because assigning to arguments in strict mode is not allowed", "Invalid usage of 'arguments' in strict mode");
             assert.throws(function() { eval('var x = class arguments {};'); }, SyntaxError, "A class may not be named arguments because assigning to arguments in strict mode is not allowed", "Invalid usage of 'arguments' in strict mode");
-            
+
             assert.throws(function() { eval('class eval {};'); }, SyntaxError, "A class may not be named eval because assigning to arguments in strict mode is not allowed", "Invalid usage of 'eval' in strict mode");
             assert.throws(function() { eval('var x = class eval {};'); }, SyntaxError, "A class may not be named eval because assigning to arguments in strict mode is not allowed", "Invalid usage of 'eval' in strict mode");
         }
@@ -907,16 +904,16 @@ var tests = [
             class ClassWithArgumentsAndCallerMethods {
                 static arguments() { return 'abc'; }
                 static caller() { return 'def'; }
-                
+
                 arguments() { return '123'; }
                 caller() { return '456'; }
             }
-            
+
             assert.areEqual('abc', ClassWithArgumentsAndCallerMethods.arguments(), "ClassWithArgumentsAndCallerMethods.arguments() === 'abc'");
             assert.areEqual('def', ClassWithArgumentsAndCallerMethods.caller(), "ClassWithArgumentsAndCallerMethods.caller() === 'def'");
             assert.areEqual('123', new ClassWithArgumentsAndCallerMethods().arguments(), "new ClassWithArgumentsAndCallerMethods().arguments() === '123'");
             assert.areEqual('456', new ClassWithArgumentsAndCallerMethods().caller(), "new ClassWithArgumentsAndCallerMethods().caller() === '456'");
-            
+
             let set_arguments = '';
             let set_caller = '';
             class ClassWithArgumentsAndCallerAccessors {
@@ -924,13 +921,13 @@ var tests = [
                 static set arguments(v) { set_arguments = v; }
                 static get caller() { return 'def'; }
                 static set caller(v) { set_caller = v; }
-                
+
                 get arguments() { return '123'; }
                 set arguments(v) { set_arguments = v; }
                 get caller() { return '456'; }
                 set caller(v) { set_caller = v; }
             }
-            
+
             assert.areEqual('abc', ClassWithArgumentsAndCallerAccessors.arguments, "ClassWithArgumentsAndCallerAccessors.arguments === 'abc'");
             assert.areEqual('def', ClassWithArgumentsAndCallerAccessors.caller, "ClassWithArgumentsAndCallerAccessors.caller === 'def'");
             assert.areEqual('123', new ClassWithArgumentsAndCallerAccessors().arguments, "new ClassWithArgumentsAndCallerAccessors().arguments === '123'");
@@ -943,15 +940,15 @@ var tests = [
             assert.areEqual(123, set_caller, "ClassWithArgumentsAndCallerAccessors.caller = 123 (calls setter)");
             new ClassWithArgumentsAndCallerAccessors().caller = 456
             assert.areEqual(456, set_caller, "new ClassWithArgumentsAndCallerAccessors().caller = 456 (calls setter)");
-            
+
             class ClassWithArgumentsAndCallerGeneratorMethods {
                 static *arguments() { yield 'abc'; }
                 static *caller() { yield 'def'; }
-                
+
                 *arguments() { yield '123'; }
                 *caller() { yield '456'; }
             }
-            
+
             let s;
             for (s of ClassWithArgumentsAndCallerGeneratorMethods.arguments()) {}
             assert.areEqual('abc', s, "s of ClassWithArgumentsAndCallerGeneratorMethods.arguments() === 'abc'");
@@ -964,32 +961,32 @@ var tests = [
             s;
             for (s of new ClassWithArgumentsAndCallerGeneratorMethods().caller()) {}
             assert.areEqual('456', s, "s of new ClassWithArgumentsAndCallerGeneratorMethods().caller() === '456'");
-            
+
             class ClassWithArgumentsAndCallerComputedNameMethods {
                 static ['arguments']() { return 'abc'; }
                 static ['caller']() { return 'def'; }
-                
+
                 ['arguments']() { return '123'; }
                 ['caller']() { return '456'; }
             }
-            
+
             assert.areEqual('abc', ClassWithArgumentsAndCallerComputedNameMethods.arguments(), "ClassWithArgumentsAndCallerComputedNameMethods.arguments() === 'abc'");
             assert.areEqual('def', ClassWithArgumentsAndCallerComputedNameMethods.caller(), "ClassWithArgumentsAndCallerComputedNameMethods.caller() === 'def'");
             assert.areEqual('123', new ClassWithArgumentsAndCallerComputedNameMethods().arguments(), "new ClassWithArgumentsAndCallerComputedNameMethods().arguments() === '123'");
             assert.areEqual('456', new ClassWithArgumentsAndCallerComputedNameMethods().caller(), "new ClassWithArgumentsAndCallerComputedNameMethods().caller() === '456'");
-            
+
             class ClassWithArgumentsAndCallerComputedNameAccessors {
                 static get ['arguments']() { return 'abc'; }
                 static set ['arguments'](v) { set_arguments = v; }
                 static get ['caller']() { return 'def'; }
                 static set ['caller'](v) { set_caller = v; }
-                
+
                 get ['arguments']() { return '123'; }
                 set ['arguments'](v) { set_arguments = v; }
                 get ['caller']() { return '456'; }
                 set ['caller'](v) { set_caller = v; }
             }
-            
+
             assert.areEqual('abc', ClassWithArgumentsAndCallerAccessors.arguments, "ClassWithArgumentsAndCallerAccessors.arguments === 'abc'");
             assert.areEqual('def', ClassWithArgumentsAndCallerAccessors.caller, "ClassWithArgumentsAndCallerAccessors.caller === 'def'");
             assert.areEqual('123', new ClassWithArgumentsAndCallerAccessors().arguments, "new ClassWithArgumentsAndCallerAccessors().arguments === '123'");
@@ -1002,15 +999,15 @@ var tests = [
             assert.areEqual(123, set_caller, "ClassWithArgumentsAndCallerAccessors.caller = 123 (calls setter)");
             new ClassWithArgumentsAndCallerAccessors().caller = 456
             assert.areEqual(456, set_caller, "new ClassWithArgumentsAndCallerAccessors().caller = 456 (calls setter)");
-            
+
             class ClassWithArgumentsAndCallerComputedNameGeneratorMethods {
                 static *['arguments']() { yield 'abc'; }
                 static *['caller']() { yield 'def'; }
-                
+
                 *['arguments']() { yield '123'; }
                 *['caller']() { yield '456'; }
             }
-            
+
             s;
             for (s of ClassWithArgumentsAndCallerComputedNameGeneratorMethods.arguments()) {}
             assert.areEqual('abc', s, "s of ClassWithArgumentsAndCallerComputedNameGeneratorMethods.arguments() === 'abc'");

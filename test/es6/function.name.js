@@ -3,9 +3,7 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in ch
-    this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
-}
+WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 
 function testGetProperyNames(foo,checkForName)
 {
@@ -31,11 +29,11 @@ function testGetProperyNames(foo,checkForName)
 var tests = [
    {
        name: "function.name",
-       body: function () 
+       body: function ()
        {
             function foo(){} //function declaration
             assert.areEqual("foo",foo.name,"name should be foo");
-            foo.name = "bar"; 
+            foo.name = "bar";
             assert.areEqual("foo",foo.name, "function names are read only");
             assert.areEqual("funcExpr",(function funcExpr(){}).name,"function expression case should still print a name");
             assignment = function(){}; // "assignment"
@@ -50,27 +48,27 @@ var tests = [
    },
    {
        name: "anonymous function",
-       body: function () 
+       body: function ()
        {
             var f = function() { };
             assert.areEqual("f", f.name, "function name is determined on assignment");
-            f.name = "foo"; 
+            f.name = "foo";
             assert.areEqual("f", f.name, "function names are read only");
             assert.areEqual(undefined, (function (){}).prototype.name, "function.prototype.name is undefined");
             assert.isFalse(Object.hasOwnProperty.call((function(){}), 'name'), "[hasProperyCheck]: anonymous function does not have a name property");
             assert.areEqual("", (function(){}).name);
             assert.areEqual("", (function(){})["name"]);
-            
+
             //lambdas () => {}
             assert.isFalse(Object.hasOwnProperty.call((() => {}), 'name'), "[hasProperyCheck]: anonymous lambda function does not have a name property");
             assert.areEqual("", (() => {}).name);
             assert.areEqual("", (() => {})["name"]);
-            
+
             //generators
             assert.isFalse(Object.hasOwnProperty.call((function*(){}), 'name'), "[hasProperyCheck]: anonymous generator function does not have name property");
             assert.areEqual("", (function*(){}).name);
             assert.areEqual("", (function*(){})["name"]);
-            
+
             //classes
             assert.isFalse(Object.hasOwnProperty.call(class {}, 'name'), "[hasProperyCheck]: anonymous class does not have a name property");
             assert.areEqual("", class {}.name);
@@ -80,39 +78,39 @@ var tests = [
    },
    {
        name: "function.name for external functions",
-       body: function () 
+       body: function ()
        {
             assert.areEqual("LoadScriptFile",WScript.LoadScriptFile.name,"check to make sure external functions are supported");
             assert.areEqual("Quit",WScript.Quit.name,"check to make sure external functions are supported");
             assert.areEqual("LoadScript",WScript.LoadScript.name,"check to make sure external functions are supported");
             assert.areEqual("SetTimeout",WScript.SetTimeout.name,"check to make sure external functions are supported");
             assert.areEqual("ClearTimeout",WScript.ClearTimeout.name,"check to make sure external functions are supported");
-            
+
             assert.areEqual("prototype,name,caller,arguments",Object.getOwnPropertyNames(WScript.Quit).toString(),"Check to make sure name is exposed");
-            
+
             //Bug 639652
             var a = WScript.Echo.toString();
             var b = WScript.Echo.name;
             assert.areEqual("Echo",b,"b should be the name of function echo not toString of Echo function body");
-            
+
        }
     },
     {
        name: "static name method overrides the creation of a name string.",
-       body: function () 
+       body: function ()
        {
              //default constructor case
              var qux = class { static name() {} };
-             assert.areEqual("function", typeof qux.name, 
+             assert.areEqual("function", typeof qux.name,
                 "14.5.15 Runtime Semantics: If the class definition included a 'name' static method then that method is not over-written");
              assert.areEqual("name",qux.name.name,"confirm we get the name 'name'");
              assert.areEqual(qux.name , qux.prototype.constructor.name,
                 "confirm qux.prototype.constructor.name is the same functionn as qux.name");
              assert.areEqual("Function",qux.constructor.name,"The function constructor should still have the name Function");
-             
+
              var qux = class { constructor(a,b) {} static name() {} };
              var quxobj = new qux(1,2);
-             assert.areEqual("function", typeof qux.name, 
+             assert.areEqual("function", typeof qux.name,
                 "14.5.15 Runtime Semantics: If the class definition included a \"name\" static method then that method is not over-written");
              assert.areEqual("name",qux.name.name,"confirm we get the name \"name\"");
              assert.areEqual(qux.name , qux.prototype.constructor.name,
@@ -122,7 +120,7 @@ var tests = [
     },
     {
        name: "function.name's that match IsConstantFunctionName",
-       body: function () 
+       body: function ()
        {
             var o = {
                 "" : function() {},
@@ -136,9 +134,9 @@ var tests = [
     },
     {
        name: "function.name for built in constructors",
-       body: function () 
+       body: function ()
        {
-            function* gf() { }             
+            function* gf() { }
             assert.areEqual("GeneratorFunction", gf.constructor.name);
             assert.areEqual("Array", Array.name);
             assert.areEqual("ArrayBuffer", ArrayBuffer.name);
@@ -166,7 +164,7 @@ var tests = [
     },
     {
        name: "Numeric value test cases",
-       body: function () 
+       body: function ()
        {
             var a = [];
             var b = 1;
@@ -188,20 +186,20 @@ var tests = [
             assert.areEqual("index1", o.index1.name);
             assert.areEqual("index2",o.index2.name);
             assert.areEqual("5", o[5].name, "when our name has brackets return the computed name")
-            assert.areEqual("b",a[1].name,"expressions are not evaluated, default to expression name"); 
-            assert.areEqual("c",a[2].name,"expressions are not evaluated, default to expression name"); 
+            assert.areEqual("b",a[1].name,"expressions are not evaluated, default to expression name");
+            assert.areEqual("c",a[2].name,"expressions are not evaluated, default to expression name");
             assert.areEqual("1.2",a[1.2].name,"constants are the given numeric literal");
-            var o = { 1.4 : function() {} }; 
+            var o = { 1.4 : function() {} };
             assert.areEqual("1.4",o[1.4].name,"constants are the given numeric literal");
             assert.areEqual("",a[3].name,"expressions are not evaluated, default to empty string since it lacks a variable name");
             assert.areEqual("4",a[4].name,"constants are the given numeric literal");
             assert.areEqual("5",a[5].name,"constants are the given numeric literal");
-            assert.areEqual("",a[7].name,"expressions are not evaluated, default to empty string since it lacks a variable name");            
+            assert.areEqual("",a[7].name,"expressions are not evaluated, default to empty string since it lacks a variable name");
        }
     },
     {
        name: "Strings With Brackets or Periods in them",
-       body: function () 
+       body: function ()
        {
             var o = { "hello.friend" : function() {},
                       "[a" : function() {},
@@ -211,20 +209,20 @@ var tests = [
             assert.areEqual("[a",o["[a"].name,"the bracket is included in the name don't shorten");
             assert.areEqual("]",o["]"].name,"the bracket is included in the name don't shorten");
             assert.areEqual("]a",o["]a"].name,"the bracket is included in the name don't shorten");
-            
+
             var o = { "a[" : function() {} };
             assert.areEqual("a[",o["a["].name,"the bracket is included in the name don't shorten");
             var o = { ["a["] : function() {} };
-            assert.areEqual("a[",o["a["].name,"computed property names use a different code path");             
+            assert.areEqual("a[",o["a["].name,"computed property names use a different code path");
             var a = [];
             a["["] = function() {};
             a["]"] = function() {};
             assert.areEqual("",a["["].name);
             assert.areEqual("",a["]"].name);
             a["hello.buddy"] = function() {};
-            assert.areEqual("",a["hello.buddy"].name); 
-            
-            class ClassTest 
+            assert.areEqual("",a["hello.buddy"].name);
+
+            class ClassTest
             {
               static [".f"]() {}
               static ["f."]() {}
@@ -243,7 +241,7 @@ var tests = [
             assert.areEqual("[f", ClassTest["[f"].name);
             assert.areEqual("[[[[[f", ClassTest["[[[[[f"].name);
             assert.areEqual("]f", ClassTest["]f"].name);
-            
+
             var a = {"\0" : { f : function() {}, c : class {} }}
             assert.areEqual("f", a["\0"].f.name);
             assert.areEqual("c", a["\0"].c.name);
@@ -251,7 +249,7 @@ var tests = [
     },
     {
        name: "Class.name",
-       body: function () 
+       body: function ()
        {
             var a = class foo {}
             assert.areEqual("foo",a.name,"should pick the class name not the assignment name");
@@ -261,11 +259,11 @@ var tests = [
             assert.areEqual("ClassDecl",ClassDecl.name,"name should be ClassDecl");
             assert.areEqual("c",c.name,"class name should be c");
             assert.areEqual("method",b.method.name,"c is a constructor, b is an instance so method is accessible on b");
-            ClassDecl.name = "foo"; 
+            ClassDecl.name = "foo";
             assert.areEqual("ClassDecl",ClassDecl.name, "function names are read only");
             assert.areEqual("ClassExpr",(class ClassExpr {}).name,"class expression case should still print a name");
-            
-            var classFoo  = class 
+
+            var classFoo  = class
             {
                 constructor(){}                 // "classFoo "
                 static func(){}                 // "func"
@@ -273,24 +271,24 @@ var tests = [
                 get getter(){}                  // "get getter"
                 set setter(v){}                 // "set setter"
             };
-            
+
             class classFoo2
             {
                 constructor(){}
             }
             assert.areEqual("Function",classFoo2.constructor.name, "classFoo2.constructor.name === 'Function'");
             assert.areEqual("classFoo2",classFoo2.prototype.constructor.name, "confirm that the prototype constructors name is the class name");
-            
+
             var oGet = Object.getOwnPropertyDescriptor(classFoo.prototype,"getter");
             var oSet = Object.getOwnPropertyDescriptor(classFoo.prototype,"setter");
-            assert.areEqual("Function",classFoo.constructor.name, "classFoo.constructor.name === 'Function'"); 
+            assert.areEqual("Function",classFoo.constructor.name, "classFoo.constructor.name === 'Function'");
             assert.areEqual("classFoo",classFoo.name, "Name of the class should be classFoo");
             assert.areEqual("classFoo",classFoo.prototype.constructor.name, "Name of the constructor should be the class name");
             assert.areEqual("func",classFoo.func.name, "Name should just be func");
             assert.areEqual("method",classFoo.prototype.method.name, "Name should be method");
-            assert.areEqual("get getter",oGet.get.name,"Accessors getter should be prefixed with get");  
+            assert.areEqual("get getter",oGet.get.name,"Accessors getter should be prefixed with get");
             assert.areEqual("set setter",oSet.set.name, "Accessors setter should be prefixed with set");
-            
+
             var instanceFoo = new classFoo();
             var instanceFoo2 = new classFoo2();
             assert.areEqual("classFoo2",instanceFoo2.constructor.name, "instance constructor should be class name");
@@ -300,7 +298,7 @@ var tests = [
     },
     {
        name: "Generator functions",
-       body: function () 
+       body: function ()
        {
             function* gf() { }
             var gfe = function* () { }
@@ -312,51 +310,51 @@ var tests = [
             assert.areEqual("anonymous",(new GeneratorFunction ).name,"Should be anonymous");
        }
     },
-    { 
+    {
        name: "function inside objects",
-       body: function () 
+       body: function ()
        {
-          let obj = 
+          let obj =
             {
-                prop: () => {},                 
-                noOverride: function named(){}, 
-                "literal": function(){},        
-                5: () => {}                     
+                prop: () => {},
+                noOverride: function named(){},
+                "literal": function(){},
+                5: () => {}
             };
-            
+
             assert.areEqual("prop",obj.prop.name,"lambda function name is assigned to prop");
             assert.areEqual("named",obj.noOverride.name, "noOverride inherits name from function named");
 
             assert.areEqual("literal",obj.literal.name, "string function definitions are valid");
             assert.areEqual("5",obj["5"].name, "numeral function definitions are valid");
-            
+
             var obj2 =
             {
-                method(){}  
+                method(){}
             }
             obj2.property = function(){};
-            
+
             assert.areEqual("method",obj2.method.name, "tests functions without the function reserved word");
-            assert.areEqual("",obj2.property.name, "test to make sure defining a property outside of a function is empty string"); 
+            assert.areEqual("",obj2.property.name, "test to make sure defining a property outside of a function is empty string");
         }
     },
     {
        name: "function.name's are read only",
-       body: function () 
+       body: function ()
        {
-            var object = 
+            var object =
             {
                 f: function() {}
             };
             assert.areEqual("f",object.f.name, "function name is f");
-            object.f.name = "foo"; 
+            object.f.name = "foo";
             assert.areEqual("f",object.f.name, "function names are read only");
 
         }
     },
     {
        name: "function.name test functions named get\set don't get confused for accessors",
-       body: function () 
+       body: function ()
        {
             var foo = {
                 value : 0,
@@ -373,9 +371,9 @@ var tests = [
             assert.areEqual("bar",obj3.set.name, "should inherited name bar");
        }
     },
-    { 
+    {
        name: "function.name accessor test",
-       body: function () 
+       body: function ()
        {
             var oRuntime = Object.getOwnPropertyDescriptor(Map.prototype,"size");
             assert.areEqual("get size",oRuntime.get.name, "Map.prototype.size is a getter");
@@ -385,8 +383,8 @@ var tests = [
             var descriptor = Object.getOwnPropertyDescriptor(o, "foo");
             assert.areEqual("get foo", descriptor.get.name, "get accessors on function foo are prefixed with get");
             assert.areEqual("set foo", descriptor.set.name, "set accessors on function foo are prefixed with set");
-            
-            let obj = 
+
+            let obj =
             {
                 get getter(){ return 0;},
                 set setter(v){}
@@ -395,17 +393,17 @@ var tests = [
             // Multiple property descriptors
             var oGet = Object.getOwnPropertyDescriptor(obj,"getter")
             var oSet = Object.getOwnPropertyDescriptor(obj,"setter");
-            assert.areEqual("get getter",oGet.get.name, "get accessors functions are prefixed with get");  
+            assert.areEqual("get getter",oGet.get.name, "get accessors functions are prefixed with get");
             assert.areEqual("set setter",oSet.set.name, "set accessors functions are prefixed with set");
        }
     },
-   
+
     {
        name: "function.name Property existence test",
-       body: function () 
+       body: function ()
        {
        	function foo(){}
-        
+
         assert.areEqual(true,testGetProperyNames(foo,true),"Properties on foo");
         assert.areEqual(0,Object.keys(foo).length,"no enumerable properties in function instance foo");
         Object.defineProperty(foo,"name",{writable: false,enumerable: true,configurable: true});
@@ -419,32 +417,32 @@ var tests = [
         assert.areEqual("name",Object.keys(foo).toString(),"Name should be the only enumerable property");
        }
     },
-   
+
     {
        name: "function.name delete test",
-       body: function () 
+       body: function ()
        {
             function foo(){}
-            
+
             assert.areEqual(true,testGetProperyNames(foo,true), "Properties on foo");
             delete foo.name;
             assert.areEqual(true,testGetProperyNames(foo,false),"Properties on foo");
        }
     },
-   
+
     {
        name: "built-in function.name",
-       body: function () 
+       body: function ()
        {
             assert.areEqual("slice",[].slice.name,"name should be slice");
-            [].slice.name = "bar"; 
+            [].slice.name = "bar";
             assert.areEqual("slice",[].slice.name, "function names are read only");
        }
     },
-   
+
    {
        name: "built-in function.name delete test",
-       body: function () 
+       body: function ()
        {
             assert.areEqual(true,testGetProperyNames([].splice,true),"Properties on foo");
             delete [].splice.name;
@@ -453,7 +451,7 @@ var tests = [
     },
     {
        name: "anonymous function special cases",
-       body: function () 
+       body: function ()
        {
            assert.areEqual("anonymous",(new Function).name,"Should be anonymous");
            assert.areEqual("",Function.prototype.name,"19.2.3 The value of the name property of the Function prototype object is the empty String.");
@@ -462,48 +460,48 @@ var tests = [
     },
     {
        name: "nested function assignment names",
-       body: function () 
+       body: function ()
        {
-           var obj = 
+           var obj =
            {
                 x : function(){},
                 y : () => {},
                 z : class {}
            };
-           
+
            assert.areEqual("x",obj.x.name,"x defined in obj Should be x");
            assert.areEqual("y",obj.y.name,"y defined in obj Should be y");
            assert.areEqual("z",obj.z.name,"z defined in obj Should be z");
-           
-           var obj = 
+
+           var obj =
            {
-                innerObj : 
+                innerObj :
                 {
                     x : function(){},
                     y : () => {},
                     z : class {}
                 }
            };
-           
+
            assert.areEqual("x",obj.innerObj.x.name,"Should be x");
            assert.areEqual("y",obj.innerObj.y.name,"Should be y");
            assert.areEqual("z",obj.innerObj.z.name,"Should be z");
-           
+
            var obj = {};
            obj.x = function(){};
            obj.y = () => {};
            obj.z = class {};
-           
+
            assert.areEqual("",obj.x.name,"Should be ''");
            assert.areEqual("",obj.y.name,"Should be ''");
            assert.areEqual("",obj.z.name,"Should be ''");
-           
+
            var obj = {innerObj : {}};
-           
+
            obj.innerObj.x = function(){};
            obj.innerObj.y = () => {};
            obj.innerObj.z = class {};
-           
+
            assert.areEqual("",obj.innerObj.x.name,"Should be ''");
            assert.areEqual("",obj.innerObj.y.name,"Should be ''");
            assert.areEqual("",obj.innerObj.z.name,"Should be ''");
@@ -512,40 +510,40 @@ var tests = [
     },
     {
        name: "Check the Class of an Object",
-       body: function () 
+       body: function ()
        {
             function foo(){}
             var f = new foo();
 
             assert.areEqual("foo",f.constructor.name,"The constructor is foo");
             assert.areEqual(undefined,f.name,"f is an instance of the function foo, the name exists only on the constructor");
-            
+
        }
     },
     {
        name: "Attributes test",
-       body: function () 
+       body: function ()
        {
             function foo(){}
             assert.areEqual(true, foo.hasOwnProperty("name"), "foo should have a name property");
             var o = Object.getOwnPropertyDescriptor(foo,"name");
-            
+
             assert.areEqual(false, o.writable,     "Name is not writable");
             assert.areEqual(false, o.enumerable,   "Name is not enumerable");
             assert.areEqual(true,  o.configurable, "Name is configurable");
             assert.areEqual("foo", o.value,        "Names value should be foo");
-            
+
        }
     },
     {
        name: "Symbol names",
-       body: function () 
+       body: function ()
        {
-            var sym1 = Symbol("foo"); 
-            var sym2 = Symbol("bar"); 
+            var sym1 = Symbol("foo");
+            var sym2 = Symbol("bar");
             var sym3 = Symbol("baz");
-            var sym4 = Symbol();            
-            var o = {[Symbol.toPrimitive]: function() {}, 
+            var sym4 = Symbol();
+            var o = {[Symbol.toPrimitive]: function() {},
                      [sym1] : function() {},
                      [sym3] : function bear() {},
                      [sym4] : function() {},
@@ -561,22 +559,22 @@ var tests = [
             assert.areEqual("", o[sym4].name, "empty symbols have empty string as a name");
        }
     },
-    {  
+    {
        name: "Redefine Attributes test",
-       body: function () 
+       body: function ()
        {
             function foo(){}
-            
+
             Object.defineProperty(foo,"name",{writable: true,enumerable: true,configurable: false});
             foo.name = "bar";
             var o  = Object.getOwnPropertyDescriptor(foo,"name");
-            
+
             assert.areEqual(true,  o.writable,     "Name is redefined to writable");
             assert.areEqual(true,  o.enumerable,   "Name is redefined to enumerable");
             assert.areEqual(false, o.configurable, "Name redefined not configurable");
             assert.areEqual("bar", o.value,        "Names value should be bar");
             assert.areEqual("bar",foo.name,"foo renamed to bar");
-       	
+
        }
     },
     {
@@ -608,13 +606,13 @@ var tests = [
         name: "Function Bind",
         body: function()
         {
-            function add(x, y) 
+            function add(x, y)
             {
                 return x+y;
             }
             var AddZer0  = add.bind(null,0 /* x */);
             var Add2Nums = add.bind();
-            
+
             assert.areEqual("bound add",AddZer0.name, "AddZer0  needs a bound prefix on add");
             assert.areEqual("bound add",Add2Nums.name,"Add2Nums needs a bound prefix on add");
         }
@@ -653,20 +651,20 @@ var tests = [
             var o = {
                 ['A'+'B'] : class extends B {},
                 ['C'+'B'] : class {},
-                
+
                 ['a'+'b'] : class extends B {foo_ab(){}},
                 ['c'+'b'] : class {foo_cb(){}},
-                
+
                 ['d'+'f'] : class extends B {static foo_df(){}},
                 ['f'+'d'] : class {static foo_fd(){}}
             }
-            
+
             assert.areEqual("AB", o.AB.name, "confirm empty super class is properly assigned to a computed property");
             assert.areEqual("CB", o.CB.name, "confirm empty base class is properly assigned to a computed property");
-            
+
             assert.areEqual("ab", o.ab.name, "confirm filled super class is properly assigned to a computed property");
             assert.areEqual("cb", o.cb.name, "confirm filled base class is properly assigned to a computed property");
-            
+
             assert.areEqual("df", o.df.name, "confirm static filled super class is properly assigned to a computed property");
             assert.areEqual("fd", o.fd.name, "confirm static filled base class is properly assigned to a computed property");
         }
@@ -695,27 +693,27 @@ var tests = [
             }
             var classASymbolSet = Object.getOwnPropertyDescriptor(A.prototype, namedSym).set;
             var classASymbolGet = Object.getOwnPropertyDescriptor(A.prototype, namedSym).get;
-            
+
             assert.areEqual("get [test]",classASymbolGet.name, " should not throw b\c of toString call on symbol");
             assert.areEqual("set [test]",classASymbolSet.name, " should not throw b\c of toString call on symbol");
-            
+
             class B {
                 set [anonSym](_) {}
                 get [anonSym]() {}
             }
             var classBSymbolSet = Object.getOwnPropertyDescriptor(B.prototype, anonSym).set;
             var classBSymbolGet = Object.getOwnPropertyDescriptor(B.prototype, anonSym).get;
-            
+
             assert.areEqual("get ",classBSymbolGet.name, " should not throw b\c of toString call on symbol");
             assert.areEqual("set ",classBSymbolSet.name, " should not throw b\c of toString call on symbol");
-            
+
         }
     },
     {
         name: "OS Bug 3933663 Classes Should not un-defer a class constructor before we store the computed property",
         body: function()
         {
-            var first  = 'a'; 
+            var first  = 'a';
             var second = 'b';
             var third  = Symbol('c');
             var fourth = Symbol();
@@ -739,7 +737,7 @@ var tests = [
             var b="barzee";
             class foo {
                 [b] () {}
-            };      
+            };
             var inst=new foo();
             inst[b].toString();
             assert.areEqual("barzee",inst[b].name);

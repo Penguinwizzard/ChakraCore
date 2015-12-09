@@ -5,9 +5,7 @@
 
 // ES6 Subclassable tests -- verifies subclass construction behavior
 
-if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in ch
-    this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
-}
+WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 
 var tests = [
     {
@@ -167,28 +165,28 @@ var tests = [
                     constructor(...args) { super(...args); this.prop0="method0"; }
                     method0() { return ">"+this.prop0; }
                 }
-    
+
                 function verifyProtoChain(obj)
                 {
                     assert.areEqual(isFunction, obj instanceof Function, "Subclass of "+ Type.name +" is" + (isFunction ? "" : " not")  + " a function object");
                     assert.areEqual(true, obj instanceof Type, "Subclass of " + Type.name + " is an instance of " + Type.name);
                     assert.areEqual(true, obj instanceof MyType, "Subclass of " + Type.name + " is an instance of 'MyType'");
                     assert.areEqual(true, obj instanceof OurType, "Subclass of " + Type.name + " is an instance of 'OurType'");
-    
+
                     assert.areEqual(OurType.prototype, obj.__proto__, "obj's [[Prototype]] slot points to OurType.prototype");
                     assert.areEqual(MyType.prototype, obj.__proto__.__proto__, "obj's 2nd-order [[Prototype]] points to MyType.prototype");
                     assert.areEqual(Type.prototype, obj.__proto__.__proto__.__proto__, "obj's 3rd-order [[Prototype]] chain points to Type.prototype");
-    
+
                     assert.areEqual(">method0", obj.method0(), "obj");
                     assert.areEqual(">method1", obj.method1(), "obj");
                 }
-                
+
                 assert.areEqual(MyType, OurType.__proto__, "OurType's [[Prototype]] slot points to MyType");
                 assert.areEqual(Type, MyType.__proto__, "MyType's [[Prototype]] slot points to Type");
-    
+
                 verifyProtoChain(eval("new OurType("+ctorArgs+")"));
             }
-            
+
             function testReflectConstructNewTarget (Type, isFunction, ctorArgs)
             {
                 class MyType extends Type {}
@@ -196,12 +194,12 @@ var tests = [
 
                 assert.areEqual(true, obj instanceof MyType, "new.target should be available in built-in subclassable constructor " + Type.name);
             }
-            
+
             function forEachBuiltinSubclassable(test)
             {
                 let GeneratorFunction = (function* g() {}).constructor;
                 let TypedArray = Int8Array.__proto__;
-                
+
                 test(Array, false, "");
                 test(ArrayBuffer, false, "");
                 test(Boolean, false, "");

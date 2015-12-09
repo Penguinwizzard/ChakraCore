@@ -3,9 +3,7 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in ch
-    this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
-}
+WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 
 var emptyIterator  = function(){ return {next: function () { return { done: true, value: 0};}}}
 var simpleIterator = function(args) {
@@ -14,7 +12,7 @@ var simpleIterator = function(args) {
      var length = args.length;
      return function Iterator() {
      return {next: function() {
-     
+
         if (j < length)
         {
             return { value: args[j++], done: false };
@@ -42,7 +40,7 @@ function __createIterableObject(a, b, c) {
           return eval("(function*() { yield a; yield b; yield c; }())");
         }
       }
-     
+
 var tests = [
    {
        name: "Spread TypeError: Function expected",
@@ -69,10 +67,10 @@ var tests = [
        {
              assert.areEqual("𠮷", Array(..."𠮷")[0]);
              assert.areEqual("a", Array(..."a")[0]);
-             
+
              assert.areEqual("𠮷", [..."𠮷"][0]);
              assert.areEqual("a", [..."a" ][0]);
-             
+
              var iterableNum = __createIterableObject(1, 2, 3);
              //assert.areEqual(3, Math.max(...Object.create(iterableNum))); //TODO look into why this doesn't work
              assert.areEqual(3, Math.max(...iterableNum));
@@ -140,7 +138,7 @@ var tests = [
                 d = "bar";
                 e = function goo() {}
                 return {next: function() {
-                
+
                 if (j < length)
                 {
                     return { value: args[j++], done: false };
@@ -154,12 +152,12 @@ var tests = [
                 return iter;};
 
             a[Symbol.iterator] = simpleIteratorWithParamSideEffect(a);
-            
+
             var result = [...a,b,c,d,e];
-            
+
             assert.areEqual(1,result[0]);
             assert.areEqual(2,result[1]);
-            assert.areEqual(5,result[2]); 
+            assert.areEqual(5,result[2]);
             assert.areEqual(true,result[3][0]);
             assert.areEqual("bar",result[4]);
             assert.areEqual("goo",result[5].name);
@@ -189,7 +187,7 @@ var tests = [
        {
              var buf = [2, 3, 4, 5];
              var typedArrays = [new Int8Array(buf), new Uint8Array(buf), new Uint8ClampedArray(buf), new Uint16Array(buf),
-                                new Int16Array(buf), new Int32Array(buf), new Uint32Array(buf), new Float32Array(buf), 
+                                new Int16Array(buf), new Int32Array(buf), new Uint32Array(buf), new Float32Array(buf),
                                 new Float64Array(buf)];
              for(var i = 0; i < typedArrays.length;i++)
              {
@@ -197,7 +195,7 @@ var tests = [
                 var b = [1,...a,6];
                 var results = [1,...buf,6];
                 assert.areEqual(results,b, "confirm TypedArrays still spread");
-                
+
                 a[Symbol.iterator] = simpleIterator(a);
                 var b = [1,...a,6];
                 assert.areEqual(results,b, "force typed arrays to use a user defined iterator that emulates the buitin iterator behavior");
@@ -215,7 +213,7 @@ var tests = [
              var myMap = new Map(kvArray);
              var b = [0,...myMap];
              assert.areEqual([0,["one", 1], ["two", 2]],b);
-             
+
              var mapIter = myMap.keys();
              var b = [0,...mapIter];
              assert.areEqual([0, "one", "two"],b,"should show 0 and then myMap's keys");
@@ -240,7 +238,7 @@ var tests = [
              assert.areEqual([1,1,1,1],b);
        }
    },
-   {   
+   {
        name: "Spread with WeakMaps & WeakSets",
        body: function ()
        {
@@ -249,7 +247,7 @@ var tests = [
              myMap[Symbol.iterator] = emptyIterator;
              var b = [0,...myMap];
              assert.areEqual([0],b, "confirm any object can spread as long as it has an iterator");
-             
+
              var aSet = new WeakSet([{},{},{},[4], [5], [5], [5], [5]]);
              aSet[Symbol.iterator] = emptyIterator;
              var b = [0,...aSet, 6];
@@ -284,7 +282,7 @@ var tests = [
        body: function ()
        {
              var buf = [2, 3, 4];
-             
+
              function test1(a,b,c,d,e)
              {
                 var expected = [a, ...buf, e];
@@ -299,18 +297,18 @@ var tests = [
                 assert.areEqual(undefined,d);
                 assert.areEqual(undefined,e);
              }
-             
+
              var typedArrays = [new Int8Array(buf), new Uint8Array(buf), new Uint8ClampedArray(buf), new Uint16Array(buf),
-                                new Int16Array(buf), new Int32Array(buf), new Uint32Array(buf), new Float32Array(buf), 
+                                new Int16Array(buf), new Int32Array(buf), new Uint32Array(buf), new Float32Array(buf),
                                 new Float64Array(buf)];
              for(var i = 0; i < typedArrays.length;i++)
              {
                 var a = typedArrays[i];
                 test1(1,...a,5);
-                
+
                 a[Symbol.iterator] = simpleIterator(a);
                 test1(1,...a,5);
-                
+
                 a[Symbol.iterator] = emptyIterator;
                 test2(1,...a,5);
              }
@@ -345,10 +343,10 @@ var tests = [
              a[Symbol.iterator] = function() {};
              function f(z,v) {}
              assert.throws(function () { f(0,...a); }, TypeError, "the @@iterator function should return an Object", "Object expected");
-             
+
        }
    },
-   
+
    {
        name: "Function Spread Iterator with Arguments",
        body: function ()
@@ -357,26 +355,26 @@ var tests = [
              class base {}
              class child extends base {}
              assert.doesNotThrow(function () { var o = new child(); }, "we should not, get a type Error, arguments has an iterator");
-             
+
              var a = [1];
              var b = 'a';
              var c = new Set([1,1,1,1]);
-             
+
              function test(a,b,c)
              {
                 assert.areEqual([1], a);
                 assert.areEqual('a', b);
                 assert.areEqual([1], [...c]);
              }
-             class child2 extends base { 
+             class child2 extends base {
              constructor(a,b,c) {
                super(...arguments);
                test(...arguments);
                }};
-             var o = new child2(a, b, c); 
-             class child3 extends base { 
+             var o = new child2(a, b, c);
+             class child3 extends base {
              constructor(a,b,c) {
-               arguments[Symbol.iterator] = simpleIterator(arguments); 
+               arguments[Symbol.iterator] = simpleIterator(arguments);
                super(...arguments);
                test(...arguments);
                }};
@@ -393,7 +391,7 @@ var tests = [
              a[Symbol.iterator] = simpleIterator(a);
              b[Symbol.iterator] = simpleIterator(b);
              c[Symbol.iterator] = simpleIterator(c);
-             function f(a, b, c, d, e, f, w, x, y, z) 
+             function f(a, b, c, d, e, f, w, x, y, z)
              {
                 assert.areEqual('f',a, "should be value at global string a[0]");
                 assert.areEqual('o',b, "should be value at global string a[1]");
@@ -405,10 +403,10 @@ var tests = [
                 assert.areEqual(2,x, "should be value at global object c[1]");
                 assert.areEqual(3,y, "should be value at global object c[2]");
                 assert.areEqual(4,z, "should be nonspreadable numeric primitive 4");
-                
+
              }
              f(...a, ...b, ...c, 4);
-             function d(a, b, c, d, e, f, w, x, y, z) 
+             function d(a, b, c, d, e, f, w, x, y, z)
              {
                 assert.areEqual(4,a, "should be nonspreadable numeric primitive 4");
                 assert.areEqual(undefined,b);
@@ -420,7 +418,7 @@ var tests = [
                 assert.areEqual(undefined,x);
                 assert.areEqual(undefined,y);
                 assert.areEqual(undefined,z);
-                
+
              }
              a[Symbol.iterator] = emptyIterator;
              b[Symbol.iterator] = emptyIterator;
@@ -443,7 +441,7 @@ var tests = [
                 c[Symbol.iterator] = emptyIterator;
                 a[Symbol.iterator] = emptyIterator;
                 return {next: function() {
-                
+
                 if (j < length)
                 {
                     return { value: args[j++], done: false };
@@ -466,7 +464,7 @@ var tests = [
                 assert.areEqual(undefined,e,"iterator side effect on array 'c' happens before spreading 'c'");
                 assert.areEqual(undefined,f,"iterator side effect on array 'c' happens before spreading 'c'");
             }
-            
+
             test(...a,...b,...c);
        }
    },
@@ -489,7 +487,7 @@ var tests = [
                 d = "bar";
                 e = function goo() {}
                 return {next: function() {
-                
+
                 if (j < length)
                 {
                     return { value: args[j++], done: false };
@@ -512,7 +510,7 @@ var tests = [
                 assert.areEqual("bar",e);
                 assert.areEqual("goo",f.name);
             }
-            
+
             test(...a,b,c,d,e);
        }
    },
@@ -525,7 +523,7 @@ var tests = [
              var c = {0 : 1, 1 : 2, 2 : 3, length : 3};
              a[Symbol.iterator] = simpleIterator(a);
              c[Symbol.iterator] = simpleIterator(c);
-             function f(a, b, c, d, e, f, w, x, y, z) 
+             function f(a, b, c, d, e, f, w, x, y, z)
              {
                 assert.areEqual('f',a, "should be value at global string a[0]");
                 assert.areEqual('o',b, "should be value at global string a[1]");
@@ -537,11 +535,11 @@ var tests = [
                 assert.areEqual(2,x, "should be value at global object c[1]");
                 assert.areEqual(3,y, "should be value at global object c[2]");
                 assert.areEqual(4,z, "should be nonspreadable numeric primitive 4");
-                
+
              }
              f(...a, ...b, ...c, 4);
-             
-             function d(a, b, c, d, e, f, w, x, y, z) 
+
+             function d(a, b, c, d, e, f, w, x, y, z)
              {
                 assert.areEqual(1,a, "should be value at global array b[0]");
                 assert.areEqual(2,b, "should be value at global array b[1]");
@@ -559,6 +557,6 @@ var tests = [
              d(...a, ...b, ...c, 4);
        }
    }
-   
+
 ];
 testRunner.runTests(tests, { verbose: WScript.Arguments[0] != "summary" });

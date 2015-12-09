@@ -3,9 +3,8 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in ch
-    this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
-}
+WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
+
 var tests = [
   {
     name: "Basic object destructuring syntax",
@@ -35,7 +34,7 @@ var tests = [
       assert.throws(function () { eval("const {a};"); }, SyntaxError, "const object declaration pattern without an initializer is not valid syntax", "Destructuring declarations must have an initializer");
       assert.throws(function () { eval("var {,} = {}"); }, SyntaxError, "Object declaration pattern without an identifier is not valid syntax", "Expected identifier, string or number");
       assert.throws(function () { eval("({,} = {});"); }, SyntaxError, "Object expression pattern without an identifier is not valid syntax", "Expected identifier, string or number");
-    
+
       assert.throws(function () { eval("var {x:y--} = {};"); }, SyntaxError, "Object declaration pattern with an operator -- is not valid syntax", "Unexpected operator in destructuring expression");
       assert.throws(function () { eval("var {x:y+1} = {};"); }, SyntaxError, "Object declaration pattern with an operator + is not valid syntax", "Unexpected operator in destructuring expression");
 
@@ -43,8 +42,8 @@ var tests = [
       assert.throws(function () { eval("var y; ({x:y+1} = {});"); }, SyntaxError, "Object expression pattern with an operator + is not valid syntax",   "Unexpected operator in destructuring expression");
     }
   },
-  
-  {  
+
+  {
     name: "Object destructuring syntax with initializer",
     body: function () {
       assert.doesNotThrow(function () { eval("var {x:x = 20} = {};"); }, "var object declaration pattern with default is valid syntax");
@@ -59,7 +58,7 @@ var tests = [
       assert.doesNotThrow(function () { eval("var z, y; ({x:z = 1, x1:y = 20} = {});"); }, "Object expression pattern with defaults on more than one is valid syntax");
     }
   },
-  
+
   {
     name: "Object destructuring syntax with identifier reference",
     body: function () {
@@ -78,11 +77,11 @@ var tests = [
       assert.throws(function () { eval("class foo { method() { var {x:super.x} = {}; } }"); }, SyntaxError, "Object declaration pattern with a property reference on super is not valid syntax", "The use of a keyword for an identifier is invalid");
       assert.doesNotThrow(function () { eval("class foo { method() { ({x:super.x} = {}); } }"); }, "Object expression pattern with a property reference on super is valid syntax");
       assert.doesNotThrow(function () { eval("class foo { method() { ({x:super['x']} = {}); } }"); }, "Object expression pattern with a property reference as an index on super is valid syntax");
-      
+
       assert.doesNotThrow(function () { eval("var a = [1], i = 0; ({x:a[i++]} = {});"); }, "Object Destructuring pattern assignment operators inside an identifier reference is valid syntax");
       }
    },
-   
+
    {
     name: "Object destructuring syntax with computed property name",
     body: function () {
@@ -162,7 +161,7 @@ var tests = [
       assert.throws(function () { eval("({set foo(a) {}} = {});"); }, SyntaxError, "Invalid object expression pattern as it has the set function short-hand instead of binding identifier", "Invalid destructuring assignment target");
       assert.throws(function () { eval("({get ['foo']() {}} = {});"); }, SyntaxError, "Invalid object expression pattern as it has the get function name as computed property instead of binding identifier", "Invalid destructuring assignment target");
       assert.throws(function () { eval("({set ['foo'](a) {}} = {});"); }, SyntaxError, "Invalid object expression pattern as it has the set function name as computed property instead of binding identifier", "Invalid destructuring assignment target");
-      
+
       assert.throws(function () { eval("for(var [z] = function ([a]) { } in []) {}"); }, SyntaxError, "Initializer as function expression is not valid syntax", "for-in loop head declarations cannot have an initializer");
     }
   },
@@ -178,11 +177,11 @@ var tests = [
 
            ({x:x3} = {x:20});
            assert.areEqual(x3, 20,  "Object expression pattern should match the pattern and initializes that variable correctly");
-           
+
            ({x4} = {x4:20});
            assert.areEqual(x4, 20,  "Object expression pattern (shorthand) should match the pattern and initializes that variable correctly even under a paren");
         }
-        
+
         {
            let {x:x1} = {};
            assert.areEqual(x1, undefined,  "Object declaration pattern find no match pattern on rhs and initialize to undefined");
@@ -206,13 +205,13 @@ var tests = [
 
            let x2, y2, z2;
            ({x:x2, y: y2, z: z2} = {x:11, bar:44, y:22, z:33});
-           
+
            assert.areEqual(x2, 11,  "Object expression pattern with multiple members should match the first member correctly");
            assert.areEqual(y2, 22,  "Object expression pattern with multiple members should match the second member correctly");
            assert.areEqual(z2, 33,  "Object expression pattern with multiple members should match the third member correctly");
 
         }
-        
+
         {
            var y1, x1;
            var z = {x:x1} = {y:y1} = {x:10, y:20};
@@ -224,14 +223,14 @@ var tests = [
   {
     name: "Object destructuring functionality with initializer",
     body : function () {
-        
+
            let {x:a = 1} = {x:undefined};
            assert.areEqual(a, 1,  "Object declaration pattern should match the pattern but it is evaluated to undefined so assign default correctly");
-           
+
            let {x:a1 = 1} = {x:null};
            assert.areEqual(a1, null,  "Object declaration pattern should match the pattern and assigned null correctly");
-           
-           
+
+
            let {x:x1 = 1, y:y1 = 2, z: z1 = 3} = {};
            assert.areEqual(x1, 1,  "Object declaration pattern - first member initialized with default when no match found on rhs");
            assert.areEqual(y1, 2,  "Object declaration pattern - second member initialized with default when no match found on rhs");
@@ -243,22 +242,22 @@ var tests = [
            assert.areEqual(x2, 1, "Object expression pattern - first member initialized with default when no match found on rhs");
            assert.areEqual(y2, 2, "Object expression pattern - second member initialized with default when no match found on rhs");
            assert.areEqual(z2, 11, "Object expression pattern - third member has pattern match on rhs and should have assigned correctly");
-           
+
            let { x: { y:z } = { y:21 } } = {};
            assert.areEqual(z, 21,  "Object declaration pattern has default on nested");
-           
 
-           let { 
-                x:{ 
-                    y:{ 
+
+           let {
+                x:{
+                    y:{
                         z:{
                             k:k2 = 31
-                          } = { k:21 } 
-                      } = { z:{ k:20 } } 
-                  } = { y: { z:{} } } 
+                          } = { k:21 }
+                      } = { z:{ k:20 } }
+                  } = { y: { z:{} } }
               } = { x:{ y:{ z:{} } } };
            assert.areEqual(k2, 31,  "Object declaration pattern has defaults on different level and got the inner most default");
-           
+
            ({
                x:{
                    y:{
@@ -278,29 +277,29 @@ var tests = [
            let {1:x1, 0:y1} = [11, 22];
            let {0:x2} = {"0":33};
            let {function:x3} = {function:44};
-           
+
            assert.areEqual(x1, 22,  "Object declaration pattern should match the second index on rhs array");
            assert.areEqual(y1, 11,  "Object declaration pattern should match the first index on rhs array");
            assert.areEqual(x2, 33,  "Object declaration pattern should match '0' on rhs");
            assert.areEqual(x3, 44,  "Object declaration pattern should match the name even though it is a keyword");
         }
     },
-    
+
     {
         name: "Object destructuring functionality with computed property",
         body : function () {
             {
                let key = 'x', x2;
-               let {[key]:x1} = {x:20}; 
+               let {[key]:x1} = {x:20};
                assert.areEqual(x1, 20,  "Object declaration pattern should match the computed property name as a pattern");
-               
+
                ({[key]:x2} = {x:20});
                assert.areEqual(x2, 20,  "Object expression pattern should match the computed property name as a pattern");
-               
+
                ({[`abc${"def"}`]:x2} = {abcdef:30});
                assert.areEqual(x2, 30,  "Object expression pattern should match the the complex computed property name as a pattern");
             }
-        
+
             {
                 let [i,j] = [0,0];
                 function getName() {
@@ -319,14 +318,14 @@ var tests = [
             }
         }
     },
-    
+
     {
         name: "Object destructuring functionality with property reference",
         body : function () {
             let a    = {};
             ({x:a.x} = {x:10});
             assert.areEqual(10, a.x, "Object expression pattern should assign value on property reference on object correctly");
-            
+
             ({x:a['x']} = {x:20});
             assert.areEqual(20, a["x"], "Object expression pattern should assign value on property reference as index on object correctly");
 
@@ -340,7 +339,7 @@ var tests = [
             (((((({x:foo().x, y:foo().y} = {x:201, y:301}))))));
             assert.areEqual(201, obj.x,  "Object expression pattern (under deep parens) should assign value on first property reference on a call expression correctly");
             assert.areEqual(301, obj.y, "Object expression pattern (under deep parens) should assign value on second property reference on a call expression correctly");
-            
+
         }
     },
     {
@@ -359,11 +358,11 @@ var tests = [
     {
         name: "Object destructuring functionality with mixed array and object pattern",
         body : function () {
-        
+
             let {first:f1, second : [,{y}]} = {first:'first', second:[{y:20, z:30}, {y:21, z:31}, {y:22, z:32}]};
             assert.areEqual(f1, 'first', "Destructing declaration pattern should match first pattern on rhs");
             assert.areEqual(y, 21, "Destructing declaration pattern should match second but nested array pattern on rhs");
-            
+
             let metadata = {
                 title: "Foobar",
                 copies: [
@@ -389,11 +388,11 @@ var tests = [
 
             ({ copies: [,{locale : myLocale}] } = metadata);
             assert.areEqual(myLocale,   'de',    "Destructing expression pattern should skip first array item and match second item on rhs");
-            
+
             let [{x}, {z}] = [{x:1, z:20}, {x:2, z:30}, {x:3,z:40}];
             assert.areEqual(x,   1,    "Object under array declaration pattern should match the first pattern");
             assert.areEqual(z,   30,    "Object under array declaration pattern should match the second pattern");
-            
+
             [{x:x}, , {z:z}] = [{x:11, z:201}, {x:21, z:301}, {x:31,z:401}];
             assert.areEqual(x,   11,    "Object under array expression pattern should match the first pattern");
             assert.areEqual(z,   401,    "Object under array expression pattern should match the third pattern");
@@ -406,21 +405,21 @@ var tests = [
             for ( let {x:item} of [{x:20}, {x:30}]) {
                 assert.areEqual(item,   data[i++],    "Object declaration pattern under for..of should match pattern correctly");
             }
-            
+
             function data2() {
                 return {x:[{y:[20]}, {y:[30]}]};
             }
-            
+
             i = 0;
             for ({y:[item]} of data2().x) {
                 assert.areEqual(item,   data[i++],    "Object expression pattern under for..of should match pattern correctly");
             }
-            
+
             i = 0; data = [10, 12, 14, 16, 18];
             for (let {x, y} = {x:10, y:20}; x<y; {x:x} = {x:x+2}) {
                 assert.areEqual(x,   data[i++],    "Object declaration pattern under native..for should match pattern correctly");
             }
-            
+
             let y2 = 20;
             i = 0; data = [18, 16, 14, 12, 10];
             while ({y:y2} = {y:y2-2}) {

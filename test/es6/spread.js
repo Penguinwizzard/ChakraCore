@@ -3,10 +3,7 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in
-                                                    // jc/jshost
-    this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
-}
+WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 
 function p(x) {
   WScript.Echo(x);
@@ -90,7 +87,7 @@ var tests = [
             assert.areEqual(undefined, d, "Spreading call arguments with array gaps: d is undefined");
         }
         spreadValid1(...[1, , 3,]);
-        
+
         function spreadValid2(e, f, g, h) {
             assert.areEqual(4,         e, "Spreading nested call arguments with array gaps: e is 4");
             assert.areEqual(undefined, f, "Spreading nested call arguments with array gaps: f is undefined");

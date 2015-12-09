@@ -3,13 +3,12 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in ch
-    this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
-}
+WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
+
 var tests = [
     {
        name: "Number Object Test",
-       body: function () 
+       body: function ()
        {
             var a = new Number(1);
             a[Symbol.toPrimitive] = function(hint)
@@ -23,7 +22,7 @@ var tests = [
                     return 10;
                 }
             }
-            
+
             assert.isTrue(10 == a,"should now call @@toprimitive and return 10");
             assert.isTrue(11 == a+1,"should now call @@toprimitive with default hint and return 10 then add 1 = 11");
             assert.areEqual("a",String(a),"should now call @@toPrimitive and return a");
@@ -136,7 +135,7 @@ var tests = [
 //    },
     {
        name: "String Object Test",
-       body: function () 
+       body: function ()
        {
             var a = new String("a");
             a[Symbol.toPrimitive] = function(hint)
@@ -153,7 +152,7 @@ var tests = [
             assert.isTrue(-1 == a,"should now call @@toprimitive and return -1");
             assert.isTrue("var_a" == String(a),"should now call @@toprimitive and return var_a");
             assert.isTrue(0 == a+1,"should now call @@toprimitive and return -1+1 = 0");
-            
+
             assert.isTrue("var_a1" == String(a)+1,"should now call @@toprimitive and return var_a1");
             assert.areEqual(-1,Number(a),"should now call @@toPrimitive and return a");
         }

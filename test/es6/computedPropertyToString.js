@@ -3,14 +3,12 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in ch
-    this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
-}
+WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 
 var tests = [
    {
        name: "computed functions",
-       body: function () 
+       body: function ()
        {
            var date = new Date(2011,10,30);
            var name0 = function() { var a = 1; var b = 2; var c = 3; return a+c+b};
@@ -35,7 +33,7 @@ var tests = [
                [name8()]() {}
                [name9()]() {}
                }
-           var quxObj = new qux();                
+           var quxObj = new qux();
            assert.areEqual("6() {}",           quxObj[name0()].toString(), "name0() adds 1+2+3, expecting 6");
            assert.areEqual("11b() {}",         quxObj[name1()].toString(), "name1() returns number 1 plus string 1 and string b should evaluate to 11b");
            assert.areEqual({}+date+{}+"() {}", quxObj[name2()].toString(), "name2() returns object + date + object should be toStrings of all three");
@@ -49,7 +47,7 @@ var tests = [
    },
    {
        name: "computed Values",
-       body: function () 
+       body: function ()
        {
            var date = new Date(2011,10,30);
            var a = 4;
@@ -63,7 +61,7 @@ var tests = [
                       ["foo"]() {}
                       ["fo\0o"+"bar"]() {}
                     }
-           var quxObj = new qux();                
+           var quxObj = new qux();
            assert.areEqual("5() {}",        quxObj[5].toString(),     "the result of 1+4 for the name");
            assert.areEqual(date+"() {}",    quxObj[date].toString(),  "date as the name");
            assert.areEqual("6() {}",        quxObj[6].toString(),     "the result of 4 + 2 for the name");
@@ -72,7 +70,7 @@ var tests = [
            assert.areEqual("fo\0obar() {}", quxObj["fo\0obar"].toString(), "the result of the concatenation of two strings");
        }
    },
-   
+
    ];
 
 testRunner.runTests(tests, { verbose: WScript.Arguments[0] != "summary" });

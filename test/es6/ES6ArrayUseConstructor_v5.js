@@ -5,9 +5,7 @@
 
 // Disabling ES6 Array builtins using this['constructor'] property to construct their return values
 
-if (this.WScript && this.WScript.LoadScriptFile) { // Check for running in ch
-    this.WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
-}
+WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 
 var tests = [
     {
@@ -15,9 +13,9 @@ var tests = [
         body: function () {
             var arr = ['a','b','c'];
             arr['constructor'] = Number;
-            
+
             var out = Array.prototype.concat.call(arr, [1,2,3]);
-            
+
             assert.isTrue(Array.isArray(out), "Return from Array.prototype.concat should be an Array object");
             assert.isFalse(out instanceof Number, "Return from Array.prototype.concat should not have been constructed from Number");
             assert.areEqual(6, out.length, "Array.prototype.concat sets the length property of returned object");
@@ -28,9 +26,9 @@ var tests = [
         body: function () {
             var arr = ['a','b','c'];
             arr['constructor'] = Number;
-            
+
             var out = Array.prototype.filter.call(arr, function() { return true; });
-            
+
             assert.isTrue(Array.isArray(out), "Return from Array.prototype.filter should be an Array object");
             assert.isFalse(out instanceof Number, "Return from Array.prototype.filter should not have been constructed from Number");
             assert.areEqual(3, out.length, "Array.prototype.filter does not set the length property of returned object, but it is Array.");
@@ -41,9 +39,9 @@ var tests = [
         body: function () {
             var arr = ['a','b','c'];
             arr['constructor'] = Number;
-            
+
             var out = Array.prototype.map.call(arr, function(val) { return val; });
-            
+
             assert.isTrue(Array.isArray(out), "Return from Array.prototype.map should be an Array object");
             assert.isFalse(out instanceof Number, "Return from Array.prototype.map should not have been constructed from Number");
             assert.areEqual(3, out.length, "Array.prototype.map does not set the length property of returned object, but it is Array.");
@@ -54,9 +52,9 @@ var tests = [
         body: function () {
             var arr = ['a','b','c'];
             arr['constructor'] = Number;
-            
+
             var out = Array.prototype.slice.call(arr);
-            
+
             assert.isTrue(Array.isArray(out), "Return from Array.prototype.slice should be an Array object");
             assert.isFalse(out instanceof Number, "Return from Array.prototype.slice should not have been constructed from Number");
             assert.areEqual(3, out.length, "Array.prototype.slice sets the length property of returned object");
@@ -67,9 +65,9 @@ var tests = [
         body: function () {
             var arr = ['a','b','c','d','e','f'];
             arr['constructor'] = Number;
-            
+
             var out = Array.prototype.splice.call(arr, 0, 3);
-            
+
             assert.isTrue(Array.isArray(out), "Return from Array.prototype.splice should be an Array object");
             assert.isFalse(out instanceof Number, "Return from Array.prototype.splice should not have been constructed from Number");
             assert.areEqual(3, out.length, "Array.prototype.splice sets the length property of returned object");
