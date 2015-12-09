@@ -1212,7 +1212,10 @@ STDAPI_(JsErrorCode) JsCreateTypedArray(_In_ JsTypedArrayType arrayType, _In_ Js
     _In_ unsigned int elementLength, _Out_ JsValueRef *result)
 {
     return ContextAPIWrapper<true>([&](Js::ScriptContext *scriptContext) -> JsErrorCode {
-        VALIDATE_INCOMING_REFERENCE(baseArray, scriptContext);
+        if (baseArray != JS_INVALID_REFERENCE)
+        {
+            VALIDATE_INCOMING_REFERENCE(baseArray, scriptContext);
+        }
         PARAM_NOT_NULL(result);
 
         Js::JavascriptLibrary* library = scriptContext->GetLibrary();

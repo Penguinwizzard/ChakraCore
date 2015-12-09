@@ -83,8 +83,8 @@ public:
 
     HRESULT CheckCrossDomainScriptContext(__in Js::ScriptContext* scriptContext) override
     {
-        Assert(false);
-        return E_NOTIMPL;
+        // no cross domain for jsrt. Return S_OK
+        return S_OK;
     }
 
     HRESULT GetHostContextUrl(__in DWORD_PTR hostSourceContext, __out BSTR& pUrl) override
@@ -109,7 +109,7 @@ public:
     bool IsHostCrossSiteThunk(Js::JavascriptMethod address) override
     {
         Assert(false);
-        return nullptr;
+        return false;
     }
 #endif
 
