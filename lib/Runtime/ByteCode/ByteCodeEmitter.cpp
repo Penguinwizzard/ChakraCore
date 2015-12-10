@@ -859,14 +859,30 @@ void CloneEmitBlock(ParseNode *pnodeBlock, ByteCodeGenerator *byteCodeGenerator,
 {
     if (BlockHasOwnScope(pnodeBlock, byteCodeGenerator))
     {
-        Scope *scope = pnodeBlock->sxBlock.scope;
-        Assert(scope == byteCodeGenerator->GetCurrentScope());
+        // Only let variables have observable behavior when there are per iteration
+        // bindings.  const variables do not since they are immutable.  Therefore,
+        // (and the spec agrees), only create new scope clones if the loop variable
+        // is a let declaration.
+        bool isConst = false;
+        pnodeBlock->sxBlock.scope->ForEachSymbolUntil([&isConst](Symbol * const sym) {
+            // Exploit the fact that a for loop sxBlock can only have let and const
+            // declarations, and can only have one or the other, regardless of how
+            // many syms there might be.  Thus only check the first sym.
+            isConst = sym->GetDecl()->nop == knopConstDecl;
+            return true;
+        });
 
-        if (scope->GetMustInstantiate())
+        if (!isConst)
         {
-            Js::OpCode op = scope->GetIsObject() ? Js::OpCode::CloneBlockScope : Js::OpCode::CloneInnerScopeSlots;
+            Scope *scope = pnodeBlock->sxBlock.scope;
+            Assert(scope == byteCodeGenerator->GetCurrentScope());
 
-            byteCodeGenerator->Writer()->Unsigned1(op, scope->GetInnerScopeIndex());
+            if (scope->GetMustInstantiate())
+            {
+                Js::OpCode op = scope->GetIsObject() ? Js::OpCode::CloneBlockScope : Js::OpCode::CloneInnerScopeSlots;
+
+                byteCodeGenerator->Writer()->Unsigned1(op, scope->GetInnerScopeIndex());
+            }
         }
     }
 }
