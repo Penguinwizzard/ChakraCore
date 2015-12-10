@@ -457,7 +457,7 @@ namespace Js
                     gatherDataForInlining = false;
                 }
 
-                if (inlineCache.IsLocal() || (inlineCache.IsProto() && !inlineCache.u.proto.isMissing))
+                if (inlineCache.IsLocal())// || (inlineCache.IsProto() && !inlineCache.u.proto.isMissing))
                 {
                     if (thisObjectType == inlineCache.GetRawType())
                     {
@@ -506,7 +506,7 @@ namespace Js
                     gatherDataForInlining = false;
                 }
 
-                if (inlineCache.IsLocal() || (inlineCache.IsProto() && !inlineCache.u.proto.isMissing))
+                if (inlineCache.IsLocal())// || (inlineCache.IsProto() && !inlineCache.u.proto.isMissing))
                 {
                     if (thisObjectType == inlineCache.GetRawType())
                     {
@@ -516,7 +516,7 @@ namespace Js
                         usesAuxSlot = TypeHasAuxSlotTag(thisObjectType);
                         typeId = inlineCache.GetType()->GetTypeId();
                         isProto = inlineCache.IsProto();
-                        prototypeObject = inlineCache.IsProto() ? inlineCache.u.proto.prototypeObject : nullptr;
+                        //prototypeObject = inlineCache.IsProto() ? inlineCache.u.proto.prototypeObject : nullptr;
                         isAccessor = false;
                         isGetterAccessor = false;
                         isAccessorOnProto = false;
@@ -601,7 +601,7 @@ namespace Js
         if (thisObjectTypeMatched)
         {
             const PropertyRecord* propertyRecord = scriptContext->GetPropertyName(propertyId);
-            PHASE_PRINT_TRACE(Js::DepolymorphizePhase, topFunctionBody, L"One hit in %s, property: %s, caller %s\n", functionBody->GetDisplayName(), propertyRecord->GetBuffer(), topFunctionBody->GetDisplayName());
+            PHASE_PRINT_TRACE(Js::DepolymorphizePhase, topFunctionBody, L"One hit in %s, property: %s (%d), caller %s\n", functionBody->GetDisplayName(), propertyRecord->GetBuffer(), propertyId, topFunctionBody->GetDisplayName());
             localTypes[0] = TypeWithoutAuxSlotTag(thisObjectType);
             inlineCacheMatchingThisObjectType.TryGetFixedPropertyFromCache(functionBody, cacheId, &fixedProperty);
             localFixedFieldInfoArray[0].fieldValue = fixedProperty;
