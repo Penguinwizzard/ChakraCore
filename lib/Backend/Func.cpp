@@ -1045,7 +1045,7 @@ Func::NumberInstrs()
 bool
 Func::IsInPhase(Js::Phase tag)
 {
-    return currentPhases.Contains(tag);
+    return this->GetTopFunc()->currentPhases.Contains(tag);
 }
 #endif
 
@@ -1060,7 +1060,7 @@ void
 Func::BeginPhase(Js::Phase tag)
 {
 #ifdef DBG
-    currentPhases.Push(tag);
+    this->GetTopFunc()->currentPhases.Push(tag);
 #endif
 
 #ifdef PROFILE_EXEC
@@ -1084,8 +1084,8 @@ void
 Func::EndProfiler(Js::Phase tag)
 {
 #ifdef DBG
-    Assert(currentPhases.Count() > 0);
-    Js::Phase popped = currentPhases.Pop();
+    Assert(this->GetTopFunc()->currentPhases.Count() > 0);
+    Js::Phase popped = this->GetTopFunc()->currentPhases.Pop();
     Assert(tag == popped);
 #endif
 
