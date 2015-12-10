@@ -2878,6 +2878,11 @@ ParseNodePtr Parser::ParseArgList( bool *pCallOfConstants, uint16 *pSpreadArgCou
             break;
         }
         m_pscan->Scan();
+
+        if (m_scriptContext->GetConfig()->IsES7TrailingCommaEnabled() && m_token.tk == tkRParen)
+        {
+            break;
+        }
     }
 
     if (pSpreadArgCount!=nullptr && (*pSpreadArgCount) > 0){
@@ -3046,7 +3051,7 @@ ParseNodePtr Parser::ParseArrayList(bool *pArrayOfTaggedInts, bool *pArrayOfInts
         }
         m_pscan->Scan();
 
-        if((tkRBrack == m_token.tk))
+        if (tkRBrack == m_token.tk)
         {
             break;
         }
@@ -5411,6 +5416,11 @@ void Parser::ParseFncFormals(ParseNodePtr pnodeFnc, ushort flags)
             }
 
             m_pscan->Scan();
+
+            if (m_scriptContext->GetConfig()->IsES7TrailingCommaEnabled() && m_token.tk == tkRParen)
+            {
+                break;
+            }
         }
 
         if (seenRestParameter)
@@ -5647,6 +5657,11 @@ void Parser::CheckStrictFormalParameters()
                 break;
             }
             m_pscan->ScanForcingPid();
+
+            if (m_scriptContext->GetConfig()->IsES7TrailingCommaEnabled() && m_token.tk == tkRParen)
+            {
+                break;
+            }
         }
     }
     Assert(m_token.tk == tkRParen);
@@ -5755,6 +5770,11 @@ void Parser::FinishFncNode(ParseNodePtr pnodeFnc)
                 break;
             }
             m_pscan->ScanNoKeywords();
+
+            if (m_scriptContext->GetConfig()->IsES7TrailingCommaEnabled() && m_token.tk == tkRParen)
+            {
+                break;
+            }
         }
     }
 

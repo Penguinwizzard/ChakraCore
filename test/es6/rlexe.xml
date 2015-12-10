@@ -1094,6 +1094,12 @@
 </test>
 <test>
     <default>
+        <files>trailingcomma.js</files>
+        <compile-flags>-args summary -endargs</compile-flags>
+    </default>
+</test>
+<test>
+    <default>
         <files>ES6HasInstance.js</files>
         <compile-flags>-es6HasInstance</compile-flags>
         <baseline>ES6HasInstance.baseline</baseline>
