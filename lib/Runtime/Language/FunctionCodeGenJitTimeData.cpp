@@ -553,20 +553,13 @@ namespace Js
         Assert(typeId != TypeIds_Limit);
         IncInlineCacheCount(equivPolyInlineCacheCount);
 
-        // If we're stressing equivalent object type spec and the types are not equivalent, let's grab the first one only.
-        if (stress && (areEquivalent != areStressEquivalent))
-        {
-            polyCacheSize = firstNonEmptyCacheIndex + 1;
-        }
-
         ScriptContext* scriptContext = functionBody->GetScriptContext();
         Recycler* recycler = scriptContext->GetRecycler();
-
-        uint16 fixedFunctionCount = 0;
 
         // Need to create a local array here and not allocate one from the recycler,
         // as the allocation may trigger a GC which can clear the inline caches.
         FixedFieldInfo localFixedFieldInfoArray[Js::DynamicProfileInfo::maxPolymorphicInliningSize] = { 0 };
+        uint16 fixedFunctionCount = 0;
 
         // For polymorphic field loads we only support fixed functions on prototypes. This helps keep the equivalence check helper simple.
         // Since all types in the polymorphic cache share the same prototype, it's enough to grab the fixed function from the prototype object.
@@ -614,6 +607,12 @@ namespace Js
         }
         else
         {
+            // If we're stressing equivalent object type spec and the types are not equivalent, let's grab the first one only.
+            if (stress && (areEquivalent != areStressEquivalent))
+            {
+                polyCacheSize = firstNonEmptyCacheIndex + 1;
+            }
+
             uint16 typeNumber = 0;
             for (uint16 i = firstNonEmptyCacheIndex; i < polyCacheSize; i++)
             {
