@@ -457,7 +457,7 @@ namespace Js
                     gatherDataForInlining = false;
                 }
 
-                if (inlineCache.IsLocal())// || (inlineCache.IsProto() && !inlineCache.u.proto.isMissing))
+                if (inlineCache.IsLocal() || (inlineCache.IsProto() && !inlineCache.u.proto.isMissing))
                 {
                     if (thisObjectType == inlineCache.GetRawType())
                     {
@@ -506,7 +506,7 @@ namespace Js
                     gatherDataForInlining = false;
                 }
 
-                if (inlineCache.IsLocal())// || (inlineCache.IsProto() && !inlineCache.u.proto.isMissing))
+                if (inlineCache.IsLocal() || (inlineCache.IsProto() && !inlineCache.u.proto.isMissing))
                 {
                     if (thisObjectType == inlineCache.GetRawType())
                     {
@@ -516,7 +516,7 @@ namespace Js
                         usesAuxSlot = TypeHasAuxSlotTag(thisObjectType);
                         typeId = inlineCache.GetType()->GetTypeId();
                         isProto = inlineCache.IsProto();
-                        //prototypeObject = inlineCache.IsProto() ? inlineCache.u.proto.prototypeObject : nullptr;
+                        prototypeObject = inlineCache.IsProto() ? inlineCache.u.proto.prototypeObject : nullptr;
                         isAccessor = false;
                         isGetterAccessor = false;
                         isAccessorOnProto = false;
