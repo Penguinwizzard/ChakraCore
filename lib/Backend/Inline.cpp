@@ -2240,7 +2240,7 @@ IR::Instr* Inline::InlineApply(IR::Instr *callInstr, Js::FunctionInfo *funcInfo,
     IR::Instr * returnInstr = nullptr;
     if (!PHASE_OFF(Js::InlineApplyTargetPhase, this->topFunc))
     {
-        if (InlineApplyTarget(callInstr, inlinerData, &inlineeData, funcInfo, symCallerThis, &returnInstr, recursiveInlineDepth))
+        if (isArrayOpndArgumentsObject && InlineApplyTarget(callInstr, inlinerData, &inlineeData, funcInfo, symCallerThis, &returnInstr, recursiveInlineDepth))
         {
             *pIsInlined = true;
             Assert(returnInstr);
