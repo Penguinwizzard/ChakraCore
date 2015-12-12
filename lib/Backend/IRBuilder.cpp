@@ -1469,13 +1469,6 @@ IRBuilder::BuildReg1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot R0)
     Js::RegSlot     srcRegOpnd, dstRegSlot;
     srcRegOpnd = dstRegSlot = R0;
 
-    if (m_func->IsJitInDebugMode() && newOpcode == Js::OpCode::EmitTmpRegCount)
-    {
-        // Note: EmitTmpRegCount is inserted when debugging, not needed for jit.
-        //       It's only needed in bytecode when used by debugger sees how many tmp regs are active.
-        return;
-    }
-
     IR::Opnd * srcOpnd = nullptr;
     bool isNotInt = false;
     bool dstIsCatchObject = false;
@@ -2507,6 +2500,12 @@ IRBuilder::BuildUnsigned1(Js::OpCode newOpcode, uint32 offset, uint32 num)
 {
     switch (newOpcode)
     {
+        case Js::OpCode::EmitTmpRegCount:
+            // Note: EmitTmpRegCount is inserted when debugging, not needed for jit.
+            //       It's only needed by the debugger to see how many tmp regs are active.
+            Assert(m_func->IsJitInDebugMode());
+            return;
+
         case Js::OpCode::NewBlockScope:
         case Js::OpCode::NewPseudoScope:
         {

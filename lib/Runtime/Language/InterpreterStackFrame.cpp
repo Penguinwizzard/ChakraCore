@@ -6925,9 +6925,9 @@ namespace Js
     }
 
     template <class T>
-    void InterpreterStackFrame::OP_EmitTmpRegCount(const unaligned OpLayoutT_Reg1<T> * playout)
+    void InterpreterStackFrame::OP_EmitTmpRegCount(const unaligned OpLayoutT_Unsigned1<T> * playout)
     {
-        this->scriptContext->GetDebugContext()->GetProbeContainer()->SetCurrentTmpRegCount((uint32)playout->R0);
+        this->scriptContext->GetDebugContext()->GetProbeContainer()->SetCurrentTmpRegCount(playout->C1);
     }
 
     Var InterpreterStackFrame::OP_LdSuper(ScriptContext * scriptContext)

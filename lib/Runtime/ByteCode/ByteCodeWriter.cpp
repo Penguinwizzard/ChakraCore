@@ -344,17 +344,11 @@ namespace Js
 
     void ByteCodeWriter::Reg1(OpCode op, RegSlot R0)
     {
-        R0 = ConsumeReg(R0);
-        Reg1NoComsumeReg(op, R0);
-    }
-
-    void ByteCodeWriter::Reg1NoComsumeReg(OpCode op, RegSlot R0)
-    {
-        // R0 will be the count of temp registers.
-
         CheckOpen();
         CheckOp(op, OpLayoutType::Reg1);
         Assert(OpCodeAttr::HasMultiSizeLayout(op));
+
+        R0 = ConsumeReg(R0);
 
         MULTISIZE_LAYOUT_WRITE(Reg1, op, R0);
     }
@@ -2810,7 +2804,7 @@ StoreCommon:
 
         if (m_isInDebugMode && m_tmpRegCount != tmpRegCount)
         {
-            Reg1NoComsumeReg(OpCode::EmitTmpRegCount, tmpRegCount);
+            Unsigned1(OpCode::EmitTmpRegCount, tmpRegCount);
             m_tmpRegCount = tmpRegCount;
         }
     }

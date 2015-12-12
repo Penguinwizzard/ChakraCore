@@ -350,8 +350,6 @@ namespace Js
         void Reg2Aux(OpCode op, RegSlot R0, RegSlot R1, uint byteOffset, int size);
         uint InsertAuxiliaryData(const void* buffer, uint byteCount);
 
-        void Reg1NoComsumeReg(OpCode op, RegSlot R0);
-
         void InitClass(RegSlot constructor, RegSlot extends = Js::Constants::NoRegister);
         void NewFunction(RegSlot destinationRegister, uint index, bool isGenerator);
         void NewInnerFunction(RegSlot destinationRegister, uint index, RegSlot environmentRegister, bool isGenerator);

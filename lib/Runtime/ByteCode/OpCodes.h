@@ -583,7 +583,7 @@ MACRO_WMS(              ProfiledReturnTypeCallIExtended,  ProfiledCallIExtended,
 MACRO_WMS(              ProfiledReturnTypeCallIExtendedFlags, ProfiledCallIExtendedFlags, OpByteCodeOnly|OpSideEffect|OpUseAllFields|OpCallInstr)
 
 
-MACRO_EXTEND_WMS(       EmitTmpRegCount,    Reg1,           OpByteCodeOnly)
+MACRO_EXTEND_WMS(       EmitTmpRegCount,    Unsigned1,      OpByteCodeOnly)
 MACRO_WMS(              Unused,             Reg1,           None)
 
 // String operations
