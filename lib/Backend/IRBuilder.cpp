@@ -3724,7 +3724,7 @@ IRBuilder::BuildElementSlotI2(Js::OpCode newOpcode, uint32 offset, Js::RegSlot r
                 instr = IR::Instr::New(Js::OpCode::LdSlotArr, slotOpnd, fieldOpnd, m_func);
                 this->AddInstr(instr, offset);
 
-                PropertySym *propertySym = PropertySym::FindOrCreate(slotOpnd->m_sym->m_id, slotId2, (Js::PropertyIdIndexType)-1, (Js::CacheId)-1, PropertyKindSlots, m_func);
+                PropertySym *propertySym = PropertySym::New(slotOpnd->m_sym, slotId2, (uint32)-1, (uint)-1, PropertyKindSlots, m_func);
                 fieldOpnd = IR::PropertySymOpnd::New(propertySym, (Js::CacheId)-1, TyVar, m_func);
             }
             else
