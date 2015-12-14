@@ -127,3 +127,21 @@ WScript.Echo(x[i][0]);
 // 9. Test that the extra scope chain parameter is hidden.
 eval = (function (x, y) { WScript.Echo(y + ''); });
 eval('hello');
+
+// 10. Test jitting of a store to a closure-captured block-scoped variable.
+function test5810363() {
+  (function () {
+    if (false) {
+      (function () {
+        eval('');
+      }());
+      function func13() {
+      }
+      while (func13 = func13) {
+      }
+    }
+  }());
+}
+test5810363();
+test5810363();
+test5810363();
