@@ -547,11 +547,11 @@ namespace Js
         inline void OP_StEnvObjSlot(Var instance, int32 slotIndex1, int32 slotIndex2, Var value);
         inline void OP_StEnvObjSlotChkUndecl(Var instance, int32 slotIndex1, int32 slotIndex2, Var value);
         inline void* OP_LdArgCnt();
-        template <bool letArgs> Var LdHeapArgumentsImpl(/*Var frameObj,*/ Var argsArray, ScriptContext* scriptContext);
-        inline Var OP_LdHeapArguments(/*Var frameObj,*/ Var argsArray, ScriptContext* scriptContext);
-        inline Var OP_LdLetHeapArguments(/*Var frameObj,*/ Var argsArray, ScriptContext* scriptContext);
-        inline Var OP_LdHeapArgsCached(/*Var frameObj,*/ ScriptContext* scriptContext);
-        inline Var OP_LdLetHeapArgsCached(/*Var frameObj,*/ ScriptContext* scriptContext);
+        template <bool letArgs> Var LdHeapArgumentsImpl(Var argsArray, ScriptContext* scriptContext);
+        inline Var OP_LdHeapArguments(Var argsArray, ScriptContext* scriptContext);
+        inline Var OP_LdLetHeapArguments(Var argsArray, ScriptContext* scriptContext);
+        inline Var OP_LdHeapArgsCached(ScriptContext* scriptContext);
+        inline Var OP_LdLetHeapArgsCached(ScriptContext* scriptContext);
         inline Var OP_LdStackArgPtr();
         inline Var OP_LdArgumentsFromFrame();
         Var OP_NewScObjectSimple();

@@ -1696,8 +1696,9 @@ IRBuilder::BuildReg2(Js::OpCode newOpcode, uint32 offset, Js::RegSlot R0, Js::Re
     case Js::OpCode::LdLetHeapArguments:
     {
         IR::Opnd * opndFrameObj;
-        if (m_func->GetJnFunction()->HasScopeObject() &&
-            m_func->GetJnFunction()->GetInParamsCount() >= 2)
+        if (m_func->GetJnFunction()->HasScopeObject() && 
+            src1Opnd->m_sym->m_instrDef &&
+            src1Opnd->m_sym->m_instrDef->m_opcode == Js::OpCode::LdPropIds)
         {
             Js::RegSlot regFrameObj = m_func->GetJnFunction()->GetLocalClosureReg();
             Assert(regFrameObj != Js::Constants::NoRegister);

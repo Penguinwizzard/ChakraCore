@@ -7716,11 +7716,10 @@ namespace Js
     }
 
     template <bool letArgs>
-    Var InterpreterStackFrame::LdHeapArgumentsImpl(/*Var frameObj,*/ Var argsArray, ScriptContext* scriptContext)
+    Var InterpreterStackFrame::LdHeapArgumentsImpl(Var argsArray, ScriptContext* scriptContext)
     {
         Var frameObj;
-        if (m_functionBody->HasScopeObject() &&
-            m_functionBody->GetInParamsCount() >= 2)
+        if (m_functionBody->HasScopeObject() && argsArray != scriptContext->GetLibrary()->GetNull())
         {
             frameObj = this->localClosure;
             Assert(frameObj);
@@ -7734,28 +7733,28 @@ namespace Js
         return args;
     }
 
-    Var InterpreterStackFrame::OP_LdHeapArguments(/*Var frameObj,*/ Var argsArray, ScriptContext* scriptContext)
+    Var InterpreterStackFrame::OP_LdHeapArguments(Var argsArray, ScriptContext* scriptContext)
     {
         return LdHeapArgumentsImpl<false>(argsArray, scriptContext);
     }
 
-    Var InterpreterStackFrame::OP_LdLetHeapArguments(/*Var frameObj,*/ Var argsArray, ScriptContext* scriptContext)
+    Var InterpreterStackFrame::OP_LdLetHeapArguments(Var argsArray, ScriptContext* scriptContext)
     {
         return LdHeapArgumentsImpl<true>(argsArray, scriptContext);
     }
 
-    Var InterpreterStackFrame::OP_LdHeapArgsCached(/*Var frameObj,*/ ScriptContext* scriptContext)
+    Var InterpreterStackFrame::OP_LdHeapArgsCached(ScriptContext* scriptContext)
     {
         uint32 formalsCount = this->m_functionBody->GetInParamsCount() - 1;
-        Var args = JavascriptOperators::LoadHeapArgsCached(this->function->GetRealFunctionObject(), this->m_inSlotsCount - 1, formalsCount, &this->m_inParams[1], /*frameObj*/this->localClosure, scriptContext, false);
+        Var args = JavascriptOperators::LoadHeapArgsCached(this->function->GetRealFunctionObject(), this->m_inSlotsCount - 1, formalsCount, &this->m_inParams[1], this->localClosure, scriptContext, false);
         this->m_arguments = args;
         return args;
     }
 
-    Var InterpreterStackFrame::OP_LdLetHeapArgsCached(/*Var frameObj,*/ ScriptContext* scriptContext)
+    Var InterpreterStackFrame::OP_LdLetHeapArgsCached(ScriptContext* scriptContext)
     {
         uint32 formalsCount = this->m_functionBody->GetInParamsCount() - 1;
-        Var args = JavascriptOperators::LoadHeapArgsCached(this->function->GetRealFunctionObject(), this->m_inSlotsCount - 1, formalsCount, &this->m_inParams[1], /*frameObj*/this->localClosure, scriptContext, true);
+        Var args = JavascriptOperators::LoadHeapArgsCached(this->function->GetRealFunctionObject(), this->m_inSlotsCount - 1, formalsCount, &this->m_inParams[1], this->localClosure, scriptContext, true);
         this->m_arguments = args;
         return args;
     }
