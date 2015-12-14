@@ -79,3 +79,6 @@ Please refer to [Contribution guidelines](CONTRIBUTING.md) for more details.
 
 ## Roadmap
 For details on our planned features and future direction please refer to our [roadmap](https://github.com/Microsoft/ChakraCore/wiki/Roadmap).
+
+## Contact us
+For questions about ChakraCore, please open an [issue](https://github.com/Microsoft/ChakraCore/issues/new) and prefix the issue title with [Question]. 
