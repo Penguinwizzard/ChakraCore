@@ -8189,6 +8189,7 @@ void EmitForInOrForOf(ParseNode *loopNode, ByteCodeGenerator *byteCodeGenerator,
     // (break every time on the loop back edge) and correct display of current statement under debugger.
     // See WinBlue 231880 for details.
     byteCodeGenerator->Writer()->RecordStatementAdjustment(Js::FunctionBody::SAT_All);
+    byteCodeGenerator->Writer()->RecordForInOrOfCollectionScope();
     Js::ByteCodeLabel loopEntrance = byteCodeGenerator->Writer()->DefineLabel();
     Js::ByteCodeLabel continuePastLoop = byteCodeGenerator->Writer()->DefineLabel();
     Js::ByteCodeLabel skipPastLoop = byteCodeGenerator->Writer()->DefineLabel();
@@ -8202,6 +8203,12 @@ void EmitForInOrForOf(ParseNode *loopNode, ByteCodeGenerator *byteCodeGenerator,
     funcInfo->ReleaseLoc(loopNode->sxForInOrForOf.pnodeObj);
 
     EndEmitBlock(loopNode->sxForInOrForOf.pnodeBlock, byteCodeGenerator, funcInfo);
+    if (loopNode->sxForInOrForOf.pnodeBlock->sxBlock.scope != nullptr)
+    {
+        loopNode->sxForInOrForOf.pnodeBlock->sxBlock.scope->ForEachSymbol([](Symbol *sym) {
+            sym->SetIsTrackedForDebugger(false);
+        });
+    }
 
     // Grab registers for the enumerator and for the current enumerated item.
     // The enumerator register will be released after this call returns.

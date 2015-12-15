@@ -5319,6 +5319,18 @@ namespace Js
         }
     }
 
+    void DebuggerScope::UpdatePropertiesInForInOrOfCollectionScope()
+    {
+        if (this->scopeProperties != nullptr)
+        {
+            this->scopeProperties->All([&](Js::DebuggerScopeProperty& propertyItem)
+            {
+                propertyItem.flags |= DebuggerScopePropertyFlags_ForInOrOfCollection;
+                return true;
+            });
+        }
+    }
+
     void DebuggerScope::EnsurePropertyListIsAllocated()
     {
         if (this->scopeProperties == nullptr)

@@ -3103,10 +3103,11 @@ namespace Js
 
     // Flags for the DebuggerScopeProperty object.
     typedef int DebuggerScopePropertyFlags;
-    const int DebuggerScopePropertyFlags_None          = 0x000000000;
-    const int DebuggerScopePropertyFlags_Const         = 0x000000001;
-    const int DebuggerScopePropertyFlags_CatchObject   = 0x000000002;
-    const int DebuggerScopePropertyFlags_WithObject    = 0x000000004;
+    const int DebuggerScopePropertyFlags_None                   = 0x000000000;
+    const int DebuggerScopePropertyFlags_Const                  = 0x000000001;
+    const int DebuggerScopePropertyFlags_CatchObject            = 0x000000002;
+    const int DebuggerScopePropertyFlags_WithObject             = 0x000000004;
+    const int DebuggerScopePropertyFlags_ForInOrOfCollection    = 0x000000008;
 
     // Used to store local property info for with/catch objects, lets, or consts
     // that are needed for the debugger.
@@ -3121,6 +3122,7 @@ namespace Js
         bool IsConst() const { return (flags & DebuggerScopePropertyFlags_Const) != 0; }
         bool IsCatchObject() const { return (flags & DebuggerScopePropertyFlags_CatchObject) != 0; }
         bool IsWithObject() const { return (flags & DebuggerScopePropertyFlags_WithObject) != 0; }
+        bool IsForInOrForOfCollectionScope() const { return (flags & DebuggerScopePropertyFlags_ForInOrOfCollection) != 0; }
 
     public:
         // Determines if the current property is in a dead zone.  Note that the property makes
@@ -3128,6 +3130,14 @@ namespace Js
         // byteCodeOffset - The current offset in bytecode that the debugger is at.
         bool IsInDeadZone(int byteCodeOffset) const
         {
+            if (IsForInOrForOfCollectionScope())
+            {
+                // These are let/const loop variables of a for-in or for-of loop
+                // in the scope for the collection expression.  They are always
+                // in TDZ in this scope, never initialized by the bytecode.
+                return true;
+            }
+
             if (this->byteCodeInitializationOffset == Constants::InvalidByteCodeOffset && !(IsCatchObject() || IsWithObject()))
             {
                 AssertMsg(false, "Debug let/const property never had its initialization point updated.  This indicates that a Ld or St operation in ByteCodeGenerator was missed that needs to have DebuggerScope::UpdatePropertyInitializationOffset() added to it.");
@@ -3179,6 +3189,7 @@ namespace Js
         bool TryGetValidProperty(Js::PropertyId propertyId, RegSlot location, int offset, DebuggerScopeProperty* outScopeProperty, bool* isInDeadZone) const;
         bool UpdatePropertyInitializationOffset(RegSlot location, Js::PropertyId propertyId, int byteCodeOffset, bool isFunctionDeclaration = false);
         void UpdateDueToByteCodeRegeneration(DiagExtraScopesType scopeType, int start, RegSlot scopeLocation);
+        void UpdatePropertiesInForInOrOfCollectionScope();
 
         void SetParentScope(DebuggerScope* parentScope) { this->parentScope = parentScope; }
         DebuggerScope* GetParentScope() const { return parentScope; }

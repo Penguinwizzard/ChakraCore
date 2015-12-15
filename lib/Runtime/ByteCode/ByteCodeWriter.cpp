@@ -3048,6 +3048,14 @@ StoreCommon:
         }
     }
 
+    void ByteCodeWriter::RecordForInOrOfCollectionScope()
+    {
+        if (m_isInDebugMode && this->m_currentDebuggerScope != nullptr)
+        {
+            this->m_currentDebuggerScope->UpdatePropertiesInForInOrOfCollectionScope();
+        }
+    }
+
     uint ByteCodeWriter::EnterLoop(Js::ByteCodeLabel loopEntrance)
     {
 #ifdef BYTECODE_BRANCH_ISLAND
