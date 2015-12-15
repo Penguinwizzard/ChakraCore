@@ -136,7 +136,7 @@ RT_ERROR_MSG(JSERR_FractionOutOfRange, 5026, "", "The number of fractional digit
 RT_ERROR_MSG(JSERR_PrecisionOutOfRange, 5027, "", "The precision is out of range", kjstRangeError, 0)
 RT_ERROR_MSG(JSERR_NeedArrayOrArg, 5028, "%s is not an Array or arguments object", "Array or arguments object expected", kjstTypeError, 0)
 RT_ERROR_MSG(JSERR_ArrayLengthConstructIncorrect, 5029, "", "Array length must be a finite positive integer", kjstRangeError, 0)
-RT_ERROR_MSG(JSERR_ArrayLengthAssignIncorrect, 5030, "", "Array length must be assigned a finite positive number", kjstRangeError, 0)
+RT_ERROR_MSG(JSERR_ArrayLengthAssignIncorrect, 5030, "", "Array length must be assigned a finite positive integer", kjstRangeError, 0)
 RT_ERROR_MSG(JSERR_NeedArrayObject, 5031, "%s is not an Array object", "Array object expected", kjstTypeError, 0)
 // RETIRED ECMACP removd ;; RT_ERROR_MSG(JSERR_NoCPEval,     5032, "", "'eval' is not available in the ECMA 327 Compact Profile",               kjstEvalError, 0)
 // RETIRED ECMACP removd ;; RT_ERROR_MSG(JSERR_NoCPFunction, 5033, "", "Function constructor is not available in the ECMA 327 Compact Profile", kjstEvalError, 0)
