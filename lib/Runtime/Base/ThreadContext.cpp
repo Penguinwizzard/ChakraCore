@@ -241,8 +241,6 @@ ThreadContext::ThreadContext(AllocationPolicyManager * allocationPolicyManager, 
 #endif
 #endif
 
-    m_codeGenManager.StartRpcServer();
-
     this->InitAvailableCommit();
 }
 

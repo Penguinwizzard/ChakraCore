@@ -20,56 +20,6 @@ void __RPC_USER midl_user_free(__inout void * ptr)
     }
 }
 
-HRESULT
-CodeGenManager::CreateServerProcess(
-    __in LPCWSTR rpcConnectionUuidString,
-    __out HANDLE * processHandle)
-{
-    HRESULT hr;
-    PROCESS_INFORMATION processInfo = { 0 };
-    STARTUPINFOW si = { 0 };
-    WCHAR cmdLine[MAX_PATH];
-
-    hr = StringCchCopyW(cmdLine, ARRAYSIZE(cmdLine), L"ChakraCodeGen.exe ");
-    if (FAILED(hr))
-    {
-        return hr;
-    }
-
-    hr = StringCchCatW(cmdLine, ARRAYSIZE(cmdLine), rpcConnectionUuidString);
-    if (FAILED(hr))
-    {
-        return hr;
-    }
-
-    if (!CreateProcessW(
-        NULL,
-        cmdLine,
-        NULL,
-        NULL,
-        FALSE,
-        CREATE_SUSPENDED,
-        NULL,
-        NULL,
-        &si,
-        &processInfo))
-    {
-        return HRESULT_FROM_WIN32(GetLastError());
-    }
-
-    if (ResumeThread(processInfo.hThread) == (DWORD)-1)
-    {
-        TerminateProcess(processInfo.hProcess, GetLastError());
-        CloseHandle(processInfo.hProcess);
-        CloseHandle(processInfo.hThread);
-        return HRESULT_FROM_WIN32(GetLastError());
-    }
-
-    CloseHandle(processInfo.hThread);
-    *processHandle = processInfo.hProcess;
-
-    return NOERROR;
-}
 // This routine creates a binding with the server.
 HRESULT
 CodeGenManager::CreateBinding(
@@ -179,20 +129,13 @@ CodeGenManager::CreateBinding(
 }
 
 HRESULT
-CodeGenManager::StartRpcServer()
+CodeGenManager::ConnectRpcServer(DWORD proccessId, UUID connectionUuid)
 {
     HRESULT hr;
     RPC_STATUS status;
-    UUID connectionUuid;
     HANDLE localServerProcessHandle = NULL;
     WCHAR* connectionUuidString = NULL;
     RPC_BINDING_HANDLE localBindingHandle;
-
-    status = UuidCreate(&connectionUuid);
-    if (status != RPC_S_OK && status != RPC_S_UUID_LOCAL_ONLY)
-    {
-        return HRESULT_FROM_WIN32(status);
-    }
 
     status = UuidToStringW(&connectionUuid, &connectionUuidString);
     if (status != S_OK)
@@ -200,39 +143,29 @@ CodeGenManager::StartRpcServer()
         return HRESULT_FROM_WIN32(status);
     }
 
-    hr = CreateServerProcess(connectionUuidString, &localServerProcessHandle);
-    RpcStringFree(&connectionUuidString);
-    if (FAILED(hr))
-    {
-        // log an event
-
-        return hr;
-    }
+    localServerProcessHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, proccessId);
 
     hr = CreateBinding(localServerProcessHandle, &connectionUuid, &localBindingHandle);
-    if (FAILED(hr))
+    if (SUCCEEDED(hr))
     {
-        TerminateProcess(localServerProcessHandle, (UINT)hr);
+        m_rpcBindingHandle = localBindingHandle;
+        m_rpcServerProcessHandle = localServerProcessHandle;
+    }
+    else
+    {
         CloseHandle(localServerProcessHandle);
-
-        // log an event
-
-        return hr;
     }
 
-    m_rpcBindingHandle = localBindingHandle;
-    m_rpcServerProcessHandle = localServerProcessHandle;
 
     // log an event
 
-    return S_OK;
+    return hr;
 }
 
 void
-CodeGenManager::StopRpcServer()
+CodeGenManager::DisconnectRpcServer()
 {
     HRESULT hr = S_OK;
-    DWORD waitResult;
 
     if (m_rpcBindingHandle == NULL)
     {
@@ -253,19 +186,6 @@ CodeGenManager::StopRpcServer()
 
     RpcBindingFree(&m_rpcBindingHandle);
     m_rpcBindingHandle = NULL;
-
-    waitResult = WaitForSingleObject(m_rpcServerProcessHandle, 15000);
-    if (waitResult != WAIT_OBJECT_0)
-    {
-        if (waitResult == WAIT_FAILED)
-        {
-            waitResult = (DWORD)GetLastError();
-        }
-
-        // log dirty shutdown event
-
-        TerminateProcess(m_rpcServerProcessHandle, (UINT)-1);
-    }
 
     // log an event
 

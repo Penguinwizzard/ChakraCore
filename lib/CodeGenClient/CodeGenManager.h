@@ -8,14 +8,11 @@
 class CodeGenManager
 {
 public:
-    HRESULT StartRpcServer();
-    void StopRpcServer();
+    HRESULT ConnectRpcServer(__in DWORD processId, __in UUID connectionUuid);
+    void DisconnectRpcServer();
     HRESULT HelloServerCall();
 
 private:
-    HRESULT CreateServerProcess(
-        __in LPCWSTR rpcConnectionUuidString,
-        __out HANDLE* processHandle);
 
     HRESULT CodeGenManager::CreateBinding(
         __in HANDLE serverProcessHandle,
