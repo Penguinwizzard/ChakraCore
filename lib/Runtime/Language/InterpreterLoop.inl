@@ -37,10 +37,11 @@ Var Js::InterpreterStackFrame::INTERPRETERLOOPNAME()
 {
     PROBE_STACK(scriptContext, Js::Constants::MinStackInterpreter);
 
-    if (this->m_reader.GetCurrentOffset() == 0)
+    if (!this->closureInitDone)
     {
         // If this is the start of the function, then we've waited until after the stack probe above
         // to set up the FD/SS pointers, so do it now.
+        Assert(this->m_reader.GetCurrentOffset() == 0);
         this->InitializeClosures();
     }
 

@@ -1060,6 +1060,7 @@ namespace Js
         newInstance->m_flags        = InterpreterStackFrameFlags_None;
         newInstance->switchProfileMode = false;
         newInstance->isAutoProfiling = false;
+        newInstance->closureInitDone = false;
         newInstance->switchProfileModeOnLoopEndNumber = 0u - 1;
         newInstance->ehBailoutData = nullptr;
         newInstance->nestedTryDepth = -1;
@@ -1374,6 +1375,8 @@ namespace Js
 
             this->SetNonVarReg(frameDisplayReg, nullptr);
         }
+
+        this->closureInitDone = true;
     }
 
 #ifdef _M_IX86

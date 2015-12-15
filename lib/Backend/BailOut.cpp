@@ -1495,6 +1495,8 @@ BailOutRecord::BailOutHelper(Js::JavascriptCallStackLayout * layout, Js::ScriptF
         newInstance->SetNonVarReg(reg, nullptr);
     }
 
+    newInstance->SetClosureInitDone(bailOutOffset != 0 || !(bailOutKind & IR::BailOutForDebuggerBits));
+
     // RestoreValues may call EnsureArguments and cause functions to be boxed.
     // Since the interpreter frame that hasn't started yet, StackScriptFunction::Box would not have replaced the function object
     // in the restoring interpreter frame. Let's make sure the current interpreter frame has the unboxed version.

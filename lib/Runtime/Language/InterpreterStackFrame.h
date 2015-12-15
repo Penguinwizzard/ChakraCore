@@ -102,6 +102,7 @@ namespace Js
 
         bool switchProfileMode : 1;
         bool isAutoProfiling : 1;
+        bool closureInitDone : 1;
         uint32 switchProfileModeOnLoopEndNumber;
         int16 nestedTryDepth;
         int16 nestedCatchDepth;
@@ -156,6 +157,7 @@ namespace Js
         FrameDisplay * GetLocalFrameDisplay() const;
         FrameDisplay * GetFrameDisplayForNestedFunc() const;
         Var InnerScopeFromRegSlot(RegSlot reg) const;
+        void SetClosureInitDone(bool done) { closureInitDone = done; }
 
         void ValidateRegValue(Var value, bool allowStackVar = false, bool allowStackVarOnDisabledStackNestedFunc = true) const;
         void ValidateSetRegValue(Var value, bool allowStackVar = false, bool allowStackVarOnDisabledStackNestedFunc = true) const;
