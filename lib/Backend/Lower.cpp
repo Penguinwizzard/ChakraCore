@@ -4612,23 +4612,37 @@ bool Lowerer::TryLowerNewScObjectWithFixedCtorCache(IR::Instr* newObjInstr, IR::
     IR::AddrOpnd* zeroOpnd = IR::AddrOpnd::NewNull(this->m_func);
     InsertCompareBranch(guardOpnd, zeroOpnd, Js::OpCode::BrEq_A, helperOrBailoutLabel, newObjInstr);
 
-    const Js::DynamicType* newObjectType = ctorCache->type;
-    Assert(newObjectType->GetIsShared());
+    // If we are calling new on a class constructor, the contract is that we pass new.target as the 'this' argument.
+    // function is the constructor on which we called new - which is new.target.
+    Js::JavascriptFunction* ctor = newObjInstr->GetFixedFunction();
+    Js::FunctionInfo* functionInfo = Js::JavascriptOperators::GetConstructorFunctionInfo(ctor, this->m_func->GetScriptContext());
+    Assert(functionInfo);
 
-    IR::AddrOpnd* typeSrc = IR::AddrOpnd::New(const_cast<void *>(reinterpret_cast<const void *>(newObjectType)), IR::AddrOpndKindDynamicType, m_func);
-
-    // For the next call:
-    //     inlineSlotSize == Number of slots to allocate beyond the DynamicObject header
-    //     slotSize - inlineSlotSize == Number of aux slots to allocate
-    int inlineSlotSize = ctorCache->inlineSlotCount;
-    int slotSize = ctorCache->slotCount;
-    if (newObjectType->GetTypeHandler()->IsObjectHeaderInlinedTypeHandler())
+    if (functionInfo->IsClassConstructor())
     {
-        Assert(inlineSlotSize >= Js::DynamicTypeHandler::GetObjectHeaderInlinableSlotCapacity());
-        Assert(inlineSlotSize == slotSize);
-        slotSize = inlineSlotSize -= Js::DynamicTypeHandler::GetObjectHeaderInlinableSlotCapacity();
+        // MOV newObjDst, function
+        this->m_lowererMD.CreateAssign(newObjDst, newObjInstr->GetSrc1(), newObjInstr);
     }
-    GenerateDynamicObjectAlloc(newObjInstr, inlineSlotSize, slotSize, newObjDst, typeSrc);
+    else
+    {
+        const Js::DynamicType* newObjectType = ctorCache->type;
+        Assert(newObjectType->GetIsShared());
+
+        IR::AddrOpnd* typeSrc = IR::AddrOpnd::New(const_cast<void *>(reinterpret_cast<const void *>(newObjectType)), IR::AddrOpndKindDynamicType, m_func);
+
+        // For the next call:
+        //     inlineSlotSize == Number of slots to allocate beyond the DynamicObject header
+        //     slotSize - inlineSlotSize == Number of aux slots to allocate
+        int inlineSlotSize = ctorCache->inlineSlotCount;
+        int slotSize = ctorCache->slotCount;
+        if (newObjectType->GetTypeHandler()->IsObjectHeaderInlinedTypeHandler())
+        {
+            Assert(inlineSlotSize >= Js::DynamicTypeHandler::GetObjectHeaderInlinableSlotCapacity());
+            Assert(inlineSlotSize == slotSize);
+            slotSize = inlineSlotSize -= Js::DynamicTypeHandler::GetObjectHeaderInlinableSlotCapacity();
+        }
+        GenerateDynamicObjectAlloc(newObjInstr, inlineSlotSize, slotSize, newObjDst, typeSrc);
+    }
 
     // JMP $callCtor
     IR::BranchInstr *callCtorBranch = IR::BranchInstr::New(Js::OpCode::Br, callCtorLabel, m_func);
