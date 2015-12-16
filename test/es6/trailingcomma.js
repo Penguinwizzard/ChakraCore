@@ -19,7 +19,7 @@ var tests = [
         }
     },
     {
-        name: "Trailin comma in call expression",
+        name: "Trailing comma in call expression",
         body: function () {
             assert.doesNotThrow(function () { eval("function foo() {}; foo(1, 2,);"); }, "Trailing comma in a user function call is a valid syntax");
             assert.doesNotThrow(function () { eval("Math.min(1, 2, );"); }, "Trailing comma in built-in function call is a valid syntax");
