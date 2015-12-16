@@ -2,6 +2,7 @@
 *.sdf
 *.suo
 *.opensdf
+*.opendb
 *.user
 *.i
 Build/VCBuild/
