@@ -342,6 +342,18 @@ var tests = [
         } while (false);
       }
     }
+  },
+  {
+    name: "OSG 5737917: Create arguments object when the only formal is a rest argument",
+    body: function () {
+      var func1 = function (...argArr0) {
+        eval('');
+        return (Object({
+          get: function () {
+          }
+        }));
+      }
+    }
   }
 ];
 
