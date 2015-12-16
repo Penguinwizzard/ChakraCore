@@ -8057,7 +8057,8 @@ void EmitLoop(
         Emit(body, byteCodeGenerator, funcInfo, fReturnValue);
         funcInfo->ReleaseLoc(body);
 
-        if (forLoopBlock)
+        if (byteCodeGenerator->IsES6ForLoopSemanticsEnabled() &&
+            forLoopBlock != nullptr)
         {
             CloneEmitBlock(forLoopBlock, byteCodeGenerator, funcInfo);
         }
@@ -8189,7 +8190,10 @@ void EmitForInOrForOf(ParseNode *loopNode, ByteCodeGenerator *byteCodeGenerator,
     // (break every time on the loop back edge) and correct display of current statement under debugger.
     // See WinBlue 231880 for details.
     byteCodeGenerator->Writer()->RecordStatementAdjustment(Js::FunctionBody::SAT_All);
-    byteCodeGenerator->Writer()->RecordForInOrOfCollectionScope();
+    if (byteCodeGenerator->IsES6ForLoopSemanticsEnabled())
+    {
+        byteCodeGenerator->Writer()->RecordForInOrOfCollectionScope();
+    }
     Js::ByteCodeLabel loopEntrance = byteCodeGenerator->Writer()->DefineLabel();
     Js::ByteCodeLabel continuePastLoop = byteCodeGenerator->Writer()->DefineLabel();
     Js::ByteCodeLabel skipPastLoop = byteCodeGenerator->Writer()->DefineLabel();
@@ -8202,12 +8206,15 @@ void EmitForInOrForOf(ParseNode *loopNode, ByteCodeGenerator *byteCodeGenerator,
     Emit(loopNode->sxForInOrForOf.pnodeObj, byteCodeGenerator, funcInfo, false); // evaluate collection expression
     funcInfo->ReleaseLoc(loopNode->sxForInOrForOf.pnodeObj);
 
-    EndEmitBlock(loopNode->sxForInOrForOf.pnodeBlock, byteCodeGenerator, funcInfo);
-    if (loopNode->sxForInOrForOf.pnodeBlock->sxBlock.scope != nullptr)
+    if (byteCodeGenerator->IsES6ForLoopSemanticsEnabled())
     {
-        loopNode->sxForInOrForOf.pnodeBlock->sxBlock.scope->ForEachSymbol([](Symbol *sym) {
-            sym->SetIsTrackedForDebugger(false);
-        });
+        EndEmitBlock(loopNode->sxForInOrForOf.pnodeBlock, byteCodeGenerator, funcInfo);
+        if (loopNode->sxForInOrForOf.pnodeBlock->sxBlock.scope != nullptr)
+        {
+            loopNode->sxForInOrForOf.pnodeBlock->sxBlock.scope->ForEachSymbol([](Symbol *sym) {
+                sym->SetIsTrackedForDebugger(false);
+            });
+        }
     }
 
     // Grab registers for the enumerator and for the current enumerated item.
@@ -8275,7 +8282,10 @@ void EmitForInOrForOf(ParseNode *loopNode, ByteCodeGenerator *byteCodeGenerator,
         sym->SetNeedDeclaration(false);
     }
 
-    BeginEmitBlock(loopNode->sxForInOrForOf.pnodeBlock, byteCodeGenerator, funcInfo);
+    if (byteCodeGenerator->IsES6ForLoopSemanticsEnabled())
+    {
+        BeginEmitBlock(loopNode->sxForInOrForOf.pnodeBlock, byteCodeGenerator, funcInfo);
+    }
 
     EmitAssignment(nullptr, loopNode->sxForInOrForOf.pnodeLval, loopNode->sxForInOrForOf.itemLocation, byteCodeGenerator, funcInfo);
 
@@ -8286,7 +8296,10 @@ void EmitForInOrForOf(ParseNode *loopNode, ByteCodeGenerator *byteCodeGenerator,
     Emit(loopNode->sxForInOrForOf.pnodeBody, byteCodeGenerator, funcInfo, fReturnValue);
     funcInfo->ReleaseLoc(loopNode->sxForInOrForOf.pnodeBody);
 
-    EndEmitBlock(loopNode->sxForInOrForOf.pnodeBlock, byteCodeGenerator, funcInfo);
+    if (byteCodeGenerator->IsES6ForLoopSemanticsEnabled())
+    {
+        EndEmitBlock(loopNode->sxForInOrForOf.pnodeBlock, byteCodeGenerator, funcInfo);
+    }
 
     funcInfo->ReleaseTmpRegister(loopNode->sxForInOrForOf.itemLocation);
     if (loopNode->emitLabels)
@@ -8308,6 +8321,11 @@ void EmitForInOrForOf(ParseNode *loopNode, ByteCodeGenerator *byteCodeGenerator,
     else
     {
         byteCodeGenerator->Writer()->MarkLabel(skipPastLoop);
+    }
+
+    if (!byteCodeGenerator->IsES6ForLoopSemanticsEnabled())
+    {
+        EndEmitBlock(loopNode->sxForInOrForOf.pnodeBlock, byteCodeGenerator, funcInfo);
     }
 }
 
@@ -10063,7 +10081,10 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
             BeginEmitBlock(pnode->sxFor.pnodeBlock, byteCodeGenerator, funcInfo);
             Emit(pnode->sxFor.pnodeInit, byteCodeGenerator, funcInfo, false);
             funcInfo->ReleaseLoc(pnode->sxFor.pnodeInit);
-            CloneEmitBlock(pnode->sxFor.pnodeBlock, byteCodeGenerator, funcInfo);
+            if (byteCodeGenerator->IsES6ForLoopSemanticsEnabled())
+            {
+                CloneEmitBlock(pnode->sxFor.pnodeBlock, byteCodeGenerator, funcInfo);
+            }
             EmitLoop(pnode,
                 pnode->sxFor.pnodeCond,
                 pnode->sxFor.pnodeBody,
