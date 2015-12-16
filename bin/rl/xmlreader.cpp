@@ -4,15 +4,14 @@
 //-------------------------------------------------------------------------------------------------------
 #include "rl.h"
 
-#include <msxml6.h>
+#include <objbase.h>
+#include <XmlLite.h>
 
 #define CHECKHR(x) {hr = x; if (FAILED(hr)) goto CleanUp;}
 #define SAFERELEASE(p) {if (p) {(p)->Release(); p = NULL;}}
 
 namespace Xml
 {
-
-IXMLDOMDocument *pDoc = NULL;
 
 Node * Node::TopNode;
 
@@ -154,143 +153,244 @@ Node::Dump()
 }
 
 Char *
-ConvertBSTR
+ConvertWCHAR
 (
-   BSTR bstr
+   const WCHAR * pWchar
 )
 {
-   int len = ::WideCharToMultiByte(CP_ACP, WC_NO_BEST_FIT_CHARS, bstr, -1,
+   int len = ::WideCharToMultiByte(CP_ACP, WC_NO_BEST_FIT_CHARS, pWchar, -1,
       NULL, 0, NULL, NULL);
 
    Char * newStr = new char[len + 1];
 
-   ::WideCharToMultiByte(CP_ACP, WC_NO_BEST_FIT_CHARS, bstr, -1,
+   ::WideCharToMultiByte(CP_ACP, WC_NO_BEST_FIT_CHARS, pWchar, -1,
       newStr, len + 1, NULL, NULL);
 
    return newStr;
 }
 
-Node *
-ConvertDoc
+HRESULT
+ParseAttributes
 (
-   IXMLDOMNode * pNode
+   IXmlReader * pReader,
+   Attribute ** ppAttrList
 )
 {
-    IXMLDOMNode * pChild;
-    IXMLDOMNode * pNext;
-    BSTR nodeName;
-    IXMLDOMNamedNodeMap * pattrs;
+   HRESULT hr;
+   const WCHAR * tmpString;
+   Attribute * attrLast = nullptr;
 
-    pNode->get_nodeName(&nodeName);
-
-    Char * newNodeName = ConvertBSTR(nodeName);
-
-    ::SysFreeString(nodeName);
-
-    Attribute * attrList = NULL;
-    Attribute * attrLast = NULL;
-
-    if (SUCCEEDED(pNode->get_attributes(&pattrs)) && pattrs != NULL)
-    {
-       Attribute * attrItem = NULL;
-
-       pattrs->nextNode(&pChild);
-
-       while (pChild != NULL)
-       {
-          BSTR name;
-          pChild->get_nodeName(&name);
-
-          Char * newName = ConvertBSTR(name);
-
-          ::SysFreeString(name);
-
-          VARIANT value;
-          pChild->get_nodeValue(&value);
-          ASSERTNR(value.vt == VT_BSTR);
-
-          Char * newValue = ConvertBSTR(V_BSTR(&value));
-
-          VariantClear(&value);
-          pChild->Release();
-
-          attrItem = new Attribute(newName, newValue);
-          if (attrLast != NULL)
-          {
-             attrLast->Next = attrItem;
-          }
-          else
-          {
-             attrList = attrItem;
-          }
-          attrLast = attrItem;
-
-          pattrs->nextNode(&pChild);
-       }
-       pattrs->Release();
-    }
-
-    Node * childList = NULL;
-    Node * childLast = NULL;
-
-    pNode->get_firstChild(&pChild);
-    while (pChild)
-    {
-       Node * childItem = ConvertDoc(pChild);
-
-       if (childLast != NULL)
-       {
-          childLast->Next = childItem;
-       }
-       else
-       {
-          childList = childItem;
-       }
-       childLast = childItem;
-
-       pChild->get_nextSibling(&pNext);
-       pChild->Release();
-       pChild = pNext;
-    }
-
-   Node * newNode = new Node(newNodeName, attrList);
-   newNode->ChildList = childList;
-
-   if (childList == NULL)
+   while (S_OK == (hr = pReader->MoveToNextAttribute()))
    {
-      BSTR text;
-      pNode->get_text(&text);
+      pReader->GetLocalName(&tmpString, nullptr);
+      Char * attrName = ConvertWCHAR(tmpString);
 
-      newNode->Data = ConvertBSTR(text);
+      pReader->GetValue(&tmpString, nullptr);
+      Char * attrValue = ConvertWCHAR(tmpString);
 
-      ::SysFreeString(text);
-   }
-   else if (childList == childLast)
-   {
-      // If we have a single child with data called "#text", then pull the data up to this node.
-
-      if ((childList->Data != NULL)
-       && (_stricmp(childList->Name, "#text") == 0))
+      Attribute * attrItem = new Attribute(attrName, attrValue);
+      if (attrLast != nullptr)
       {
-         newNode->Data = childList->Data;
-         newNode->ChildList = NULL;
+         attrLast->Next = attrItem;
       }
+      else
+      {
+         *ppAttrList = attrItem;
+      }
+      attrLast = attrItem;
    }
 
-   return newNode;
+   return hr;
 }
 
-bool
-Init()
+HRESULT
+ParseNode
+(
+   IXmlReader * pReader,
+   Node ** ppNode
+)
 {
    HRESULT hr;
 
-   CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
-   hr = CoCreateInstance(
-       __uuidof(DOMDocument), NULL, CLSCTX_INPROC_SERVER,
-       __uuidof(IXMLDOMDocument), (void**)&pDoc);
+   XmlNodeType nodeType;
+   Char * nodeName = nullptr;
 
-   return hr == 0;
+   Attribute * attrList = nullptr;
+
+   Node * childList = nullptr;
+   Node * childLast = nullptr;
+
+   const WCHAR * tmpString;
+
+#define APPEND_CHILD(childNode) \
+   if (childLast == nullptr) \
+   { \
+       childList = childLast = childNode; \
+   } \
+   else \
+   { \
+       childLast->Next = childNode; \
+       childLast = childNode; \
+   }
+
+   // This call won't fail we make sure the reader is positioned at a valid
+   // node before ParseNode() is called.
+   pReader->GetNodeType(&nodeType);
+
+   do
+   {
+      switch (nodeType)
+      {
+      case XmlNodeType_Element:
+      {
+         bool inOpenElement = nodeName != nullptr;
+         if (inOpenElement)
+         {
+            Node * childNode;
+            hr = ParseNode(pReader, &childNode);
+            if (hr == S_OK)
+            {
+               APPEND_CHILD(childNode);
+            }
+            else
+            {
+               return hr;
+            }
+         }
+         else
+         {
+            pReader->GetLocalName(&tmpString, nullptr);
+            nodeName = ConvertWCHAR(tmpString);
+
+            hr = ParseAttributes(pReader, &attrList);
+            if (FAILED(hr))
+            {
+               *ppNode = nullptr;
+               return hr;
+            }
+
+            *ppNode = new Node(nodeName, attrList);
+
+            if (pReader->IsEmptyElement())
+            {
+               return S_OK;
+            }
+         }
+
+         break;
+      }
+
+      case XmlNodeType_EndElement:
+      {
+         Node * node = *ppNode;
+
+         // If we have a single child with data called "#text", then pull the data up to this node.
+         if (childList != nullptr
+             && childList == childLast
+             && (childList->Data != nullptr)
+             && (_stricmp(childList->Name, "#text") == 0))
+         {
+            node->Data = childList->Data;
+            node->ChildList = nullptr;
+         }
+         else
+         {
+            node->ChildList = childList;
+         }
+
+         return S_OK;
+      }
+
+      case XmlNodeType_Attribute:
+         // Need to manually move to attributes when at an element node.
+         break;
+
+      case XmlNodeType_CDATA:
+      case XmlNodeType_Text:
+      {
+         pReader->GetValue(&tmpString, nullptr);
+         Node * node = new Node("#text", nullptr);
+         node->Data = ConvertWCHAR(tmpString);
+         APPEND_CHILD(node);
+
+         break;
+      }
+
+      case XmlNodeType_Comment:
+      case XmlNodeType_DocumentType:
+      case XmlNodeType_None:
+      case XmlNodeType_ProcessingInstruction:
+      case XmlNodeType_Whitespace:
+      case XmlNodeType_XmlDeclaration:
+         // Ignored.
+         break;
+      }
+   }
+   while (S_OK == (hr = pReader->Read(&nodeType)));
+
+   return hr;
+
+#undef APPEND_CHILD
+}
+
+HRESULT
+ParseXml
+(
+   IXmlReader * pReader,
+   Node ** ppNode
+)
+{
+   HRESULT hr;
+   XmlNodeType nodeType;
+
+   // ParseNode() ignores the XML declaration node, so there can be only one
+   // top level node.
+   if (SUCCEEDED(hr = pReader->Read(&nodeType)))
+   {
+      return ParseNode(pReader, ppNode);
+   }
+
+   return hr;
+}
+
+HRESULT
+CreateStreamOnHandle
+(
+   HANDLE handle,
+   IStream ** ppStream
+)
+{
+   // Note that this function reads the whole file into memory.
+   //
+   // There is no API on ARM similar to SHCreateStreamOnFileEx which creates
+   // an IStream object that reads a file lazily. Rather than writing our own
+   // IStream implementation that does this, we just read the whole file here
+   // given that XML files don't get quite large and it should be okay to keep
+   // everyting in memory.
+
+   DWORD fileSize, fileSizeHigh, bytesRead;
+   HGLOBAL buffer;
+
+   fileSize = GetFileSize(handle, &fileSizeHigh);
+   if (fileSize == INVALID_FILE_SIZE || fileSizeHigh != 0)
+   {
+      return E_FAIL;
+   }
+
+   buffer = GlobalAlloc(GPTR, fileSize + 1);
+   if (buffer == nullptr)
+   {
+      return E_FAIL;
+   }
+
+   if (!::ReadFile(handle, buffer, fileSize, &bytesRead, nullptr)
+       || FAILED(CreateStreamOnHGlobal(buffer, /* fDeleteOnRelease */ true, ppStream)))
+   {
+      GlobalFree(buffer);
+      return E_FAIL;
+   }
+
+   return S_OK;
 }
 
 Node *
@@ -299,73 +399,53 @@ ReadFile
    const char * fileName
 )
 {
-   IXMLDOMParseError * pXMLError = NULL;
-   VARIANT         vURL;
-   VARIANT_BOOL    vb;
-   HRESULT         hr;
-   BSTR pBURL = NULL;
-   WCHAR wszURL[MAX_PATH];
-   Node * topNode = NULL;
+   IStream * pStream;
+   IXmlReader * pReader;
 
-   ::MultiByteToWideChar(CP_ACP, 0, fileName, -1, wszURL, MAX_PATH);
-   pBURL = SysAllocString(wszURL);
-
-   hr = pDoc->put_async(VARIANT_FALSE);
-   if (FAILED(hr))
+   HANDLE fileHandle = CreateFile(fileName, FILE_GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, 0, nullptr);
+   if (fileHandle == INVALID_HANDLE_VALUE)
    {
-      return NULL;
+      Fatal("Cannot open XML file %s", fileName);
    }
 
-   // Load xml document from the given URL or file path
-   VariantInit(&vURL);
-   vURL.vt = VT_BSTR;
-   V_BSTR(&vURL) = pBURL;
-   pDoc->load(vURL, &vb);
-
-   LONG errorCode = E_FAIL;
-
-   pDoc->get_parseError(&pXMLError);
-   pXMLError->get_errorCode(&errorCode);
-
-   if (errorCode != 0)
+   if (FAILED(CreateStreamOnHandle(fileHandle, &pStream)))
    {
-      long line, linePos;
-      LONG errorCode;
-      BSTR pBReason;
-
-      pXMLError->get_line(&line);
-      pXMLError->get_linepos(&linePos);
-      pXMLError->get_errorCode(&errorCode);
-      pXMLError->get_reason(&pBReason);
-
-      if (line > 0)
-      {
-         fprintf(stderr, "Error on line %d, position %d in \"%S\".\n",
-            line, linePos, pBURL);
-         Fatal("%S", pBReason);
-      }
-      else
-      {
-         Fatal("%S: file could not be read", pBURL);
-      }
-   }
-   else
-   {
-      // Convert the MSXML2 format to the RL XML format to minimize the impact
-      // of this changeover.
-
-      IXMLDOMNode* pNode = NULL;
-      hr = pDoc->QueryInterface(__uuidof(IXMLDOMNode),(void**)&pNode);
-      if (FAILED(hr))
-      {
-         return NULL;
-      }
-
-      topNode = ConvertDoc(pNode);
-      pNode->Release();
+      Fatal("Cannot create stream from file");
    }
 
-   pXMLError->Release();
+   if (FAILED(CreateXmlReader(__uuidof(IXmlReader), (void**) &pReader, nullptr)))
+   {
+      Fatal("Cannot create XML reader");
+   }
+
+   if (FAILED(pReader->SetProperty(XmlReaderProperty_DtdProcessing, DtdProcessing_Prohibit)))
+   {
+      Fatal("Cannot prohibit DTD processing");
+   }
+
+   if (FAILED(pReader->SetInput(pStream)))
+   {
+      Fatal("Cannot set XML reader input");
+   }
+
+   Node * topNode;
+   if (FAILED(ParseXml(pReader, &topNode)))
+   {
+      unsigned int line, linePos;
+      pReader->GetLineNumber(&line);
+      pReader->GetLinePosition(&linePos);
+      fprintf(
+         stderr,
+         "Error on line %d, position %d in \"%s\".\n",
+         line,
+         linePos,
+         fileName);
+      Fatal("Error parsing XML");
+   }
+
+   SAFERELEASE(pReader);
+   SAFERELEASE(pStream);
+   CloseHandle(fileHandle);
 
    return topNode;
 }

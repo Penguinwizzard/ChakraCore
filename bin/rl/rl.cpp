@@ -3913,20 +3913,9 @@ ProcessConfig
    Xml::Node * testNode;
    Xml::Node * applyNode;
 
-   // Parser returns
-   // #document
-   //    xml...
-   //    <RL root node>
-   // Skip the first two.
+   // Parser doesn't return the XML declaration node, so topNode is the RL root node.
 
-   ASSERTNR(_stricmp(topNode->Name, "#document") == 0);
    ASSERTNR(topNode->Next == NULL);
-
-   topNode = topNode->ChildList;
-   if (_stricmp(topNode->Name, "xml") == 0)
-   {
-      topNode = topNode->Next;
-   }
 
    for (testNode = topNode->ChildList;
         testNode != NULL;
@@ -4853,11 +4842,6 @@ main(int argc, char *argv[])
    }
 
    atexit(NormalCleanUp);
-
-   if (!Xml::Init())
-   {
-      Fatal("XML parser failed to initialize");
-   }
 
    BuildDirList();
 
