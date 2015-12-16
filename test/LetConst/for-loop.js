@@ -7,7 +7,7 @@ function print(x) { WScript.Echo(x) }
 
 let a = 'global';
 
-for (let a = 'for', f = function() { a += ' loop' }; ; ) {
+for (let a = 'for'; f = function() { a += ' loop' }; ) {
     f();
     print(a);
     break;
