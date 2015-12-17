@@ -117,7 +117,7 @@ Value **pDstVal
         {
             // Emit bailout if not loop prepass.
             // The inliner inserts bytecodeUses of original args after the instruction. Bailout is safe.
-            IR::Instr * bailoutInstr = IR::BailOutInstr::New(Js::OpCode::BailOnNoSimdTypeSpec, IR::BailOutNoSimdTypeSpec, instr, this->func);
+            IR::Instr * bailoutInstr = IR::BailOutInstr::New(Js::OpCode::BailOnNoSimdTypeSpec, IR::BailOutNoSimdTypeSpec, instr, instr->m_func);
             bailoutInstr->SetByteCodeOffset(instr);
             instr->InsertAfter(bailoutInstr);
 
@@ -298,7 +298,6 @@ bool GlobOpt::Simd128ValidateIfLaneIndex(const IR::Instr * instr, IR::Opnd * opn
     uint laneIndex;
     uint argPosLo, argPosHi;
     uint laneIndexLo, laneIndexHi;
-    uint laneBias = 0;
     
     // operation takes a lane index ?
     switch (instr->m_opcode)
@@ -311,9 +310,7 @@ bool GlobOpt::Simd128ValidateIfLaneIndex(const IR::Instr * instr, IR::Opnd * opn
     case Js::OpCode::Simd128_Shuffle_F4:
     case Js::OpCode::Simd128_Shuffle_I4:
         argPosLo = 2; argPosHi = 5;
-        laneIndexLo = 0; laneIndexHi = 3;
-        // last two lane indices for a shuffle are in [4:7] range.
-        laneBias = (argPos >= 4 && argPos <= 5) ? 4 : 0;
+        laneIndexLo = 0; laneIndexHi = 7;
         break;
     case Js::OpCode::Simd128_ReplaceLane_F4:
     case Js::OpCode::Simd128_ReplaceLane_I4:
@@ -332,7 +329,7 @@ bool GlobOpt::Simd128ValidateIfLaneIndex(const IR::Instr * instr, IR::Opnd * opn
         return true; // not a lane index
     }
 
-    // It is a lane index
+    // It is a lane index ...
 
     // Arg is Int constant (literal or const prop'ed) ?
     if (!opnd->IsIntConstOpnd())
@@ -342,7 +339,7 @@ bool GlobOpt::Simd128ValidateIfLaneIndex(const IR::Instr * instr, IR::Opnd * opn
     laneIndex = opnd->AsIntConstOpnd()->GetValue();
 
     // In range ?
-    if (laneIndex < laneIndexLo + laneBias || laneIndex > laneIndexHi + laneBias)
+    if (laneIndex < laneIndexLo|| laneIndex > laneIndexHi)
     {
         return false;
     }
