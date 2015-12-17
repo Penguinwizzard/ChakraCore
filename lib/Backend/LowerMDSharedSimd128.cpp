@@ -878,32 +878,25 @@ IR::Instr* LowererMD::Simd128LowerShuffle4(IR::Instr* instr)
             uint8 ordLanes[4], reArrLanes[4];
             
             // order lanes based on which src they come from
-            for (uint i = 0, j1 = 0, j2 = 2; i < 4; i++)
+            // compute re-arrangement mask
+            for (uint8 i = 0, j1 = 0, j2 = 2; i < 4; i++)
             {
                 if (lanesSrc[i] == 1)
                 {
-                    ordLanes[j1++] = lanesSrc[i];
+                    ordLanes[j1] = lanes[i];
+                    reArrLanes[i] = j1;
+                    j1++;
                 }
                 else
                 {
                     Assert(lanesSrc[i] == 2);
-                    ordLanes[j2++] = lanesSrc[i];
+                    ordLanes[j2] = lanes[i];
+                    reArrLanes[i] = j2;
+                    j2++;
                 }
             }
             IR::RegOpnd *temp = IR::RegOpnd::New(dst->GetType(), m_func);
             InsertShufps(ordLanes, temp, srcs[0], srcs[1], instr);
-            // compute re-arrangement mask
-            for (uint8 i = 0; i < 4; i++)
-            {
-                for (uint8 j = 0; j < 4; j++)
-                {
-                    if (lanes[i] == ordLanes[j])
-                    {
-                        reArrLanes[i] = j;
-                        break;
-                    }
-                }
-            }
             InsertShufps(reArrLanes, dst, temp, temp, instr);
         }
     }
@@ -946,7 +939,7 @@ IR::Instr* LowererMD::Simd128LowerShuffle4(IR::Instr* instr)
         newInstr = IR::Instr::New(Js::OpCode::MOVUPS, temp3, IR::MemRefOpnd::New((void*)&X86_LANE0_MASK, dst->GetType(), m_func), m_func);
         instr->InsertBefore(newInstr);
         Legalize(newInstr);
-        newInstr = IR::Instr::New(Js::OpCode::PSLLDQ, temp3, temp3, IR::IntConstOpnd::New(minorityLane, TyInt32, m_func), m_func);
+        newInstr = IR::Instr::New(Js::OpCode::PSLLDQ, temp3, temp3, IR::IntConstOpnd::New(minorityLane * 4, TyInt32, m_func), m_func);
         instr->InsertBefore(newInstr);
         Legalize(newInstr);
         newInstr = IR::Instr::New(Js::OpCode::ANDPS, temp2, temp2, temp3, m_func);
@@ -1433,7 +1426,7 @@ void LowererMD::GenerateSimdStore(IR::Instr * instr)
 void LowererMD::CheckShuffleLanes4(uint8 lanes[], uint8 lanesSrc[], uint *fromSrc1, uint *fromSrc2)
 {
     Assert(lanes);
-    Assert(*lanesSrc);
+    Assert(lanesSrc);
     Assert(fromSrc1 && fromSrc2);
     *fromSrc1 = 0;
     *fromSrc2 = 0;
@@ -1441,12 +1434,12 @@ void LowererMD::CheckShuffleLanes4(uint8 lanes[], uint8 lanesSrc[], uint *fromSr
     {
         if (lanes[i] >= 0 && lanes[i] < 4)
         {
-            *fromSrc1++;
+            (*fromSrc1)++;
             lanesSrc[i] = 1;
         }
         else if (lanes[i] >= 4 && lanes[i] < 8)
         {
-            *fromSrc2++;
+            (*fromSrc2)++;
             lanesSrc[i] = 2;
         }
         else
@@ -1464,7 +1457,7 @@ void LowererMD::InsertShufps(uint8 lanes[], IR::Opnd *dst, IR::Opnd *src1, IR::O
     {
         normLanes[i] = (lanes[i] >= 4) ? (lanes[i] - 4) : lanes[i];
     }
-    shufMask = (int8)((lanes[3] << 6) | (lanes[2] << 4) | (lanes[1] << 2) | lanes[0]);
+    shufMask = (int8)((normLanes[3] << 6) | (normLanes[2] << 4) | (normLanes[1] << 2) | normLanes[0]);
     // MOVAPS dst, src1
     instr->InsertBefore(IR::Instr::New(Js::OpCode::MOVAPS, dst, src1, m_func));
     // SHUF dst, src2, imm8

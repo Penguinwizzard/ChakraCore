@@ -239,7 +239,7 @@ GlobOpt::Simd128DoTypeSpec(IR::Instr *instr, const Value *src1Val, const Value *
                     Assert(UNREACHED);
                 }
 
-                eaInstr = GetExtendedArg(instr);
+                eaInstr = GetExtendedArg(eaInstr);
                 arg--;
             }
             // all args are type-spec'd

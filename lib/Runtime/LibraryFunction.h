@@ -86,8 +86,6 @@ LIBRARY_FUNCTION(SIMD_Float32x4,    Mul,               2, BIF_IgnoreDst         
 LIBRARY_FUNCTION(SIMD_Float32x4,    Div,               2, BIF_IgnoreDst                                                 , SIMDFloat32x4Lib::EntryInfo::Div)
 LIBRARY_FUNCTION(SIMD_Float32x4,    Min,               2, BIF_IgnoreDst                                                 , SIMDFloat32x4Lib::EntryInfo::Min)
 LIBRARY_FUNCTION(SIMD_Float32x4,    Max,               2, BIF_IgnoreDst                                                 , SIMDFloat32x4Lib::EntryInfo::Max)
-
-
 LIBRARY_FUNCTION(SIMD_Float32x4,    Abs,               1, BIF_IgnoreDst                                                 , SIMDFloat32x4Lib::EntryInfo::Abs)
 LIBRARY_FUNCTION(SIMD_Float32x4,    Neg,               1, BIF_IgnoreDst                                                 , SIMDFloat32x4Lib::EntryInfo::Neg)
 LIBRARY_FUNCTION(SIMD_Float32x4,    Sqrt,              1, BIF_IgnoreDst                                                 , SIMDFloat32x4Lib::EntryInfo::Sqrt)

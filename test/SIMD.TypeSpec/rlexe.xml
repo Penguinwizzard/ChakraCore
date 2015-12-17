@@ -100,7 +100,7 @@
     </default>
   </test>
   
-    <test>
+  <test>
     <default>
       <files>loop-test-3.js</files>
       <compile-flags>-bgjit- -simdjs -simd128typespec -on:simplejit -mic:1</compile-flags>
@@ -121,6 +121,31 @@
   <test>
     <default>
       <files>loop-test-3.js</files>
+      <compile-flags>-bgjit- -simdjs -simd128typespec -off:simplejit -mic:1 -lic:1</compile-flags>
+    </default>
+  </test>
+  
+  <test>
+    <default>
+      <files>shuffle.js</files>
+      <compile-flags>-bgjit- -simdjs -simd128typespec -on:simplejit -mic:1</compile-flags>
+    </default>
+  </test>
+  <test>
+    <default>
+      <files>shuffle.js</files>
+      <compile-flags>-bgjit- -simdjs -simd128typespec -off:simplejit -mic:1</compile-flags>
+    </default>
+  </test>
+  <test>
+    <default>
+      <files>shuffle.js</files>
+      <compile-flags>-bgjit- -simdjs -simd128typespec -on:simplejit -mic:1 -lic:1</compile-flags>
+    </default>
+  </test>
+  <test>
+    <default>
+      <files>shuffle.js</files>
       <compile-flags>-bgjit- -simdjs -simd128typespec -off:simplejit -mic:1 -lic:1</compile-flags>
     </default>
   </test>

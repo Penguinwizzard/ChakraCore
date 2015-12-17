@@ -2672,8 +2672,8 @@ namespace Js
         library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::greaterThanOrEqual, &SIMDFloat32x4Lib::EntryInfo::GreaterThanOrEqual, 3, PropertyNone);
 
         // others
-        builtinFuncs[BuiltinFunction::SIMD_Float32x4_Shuffle] = library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::swizzle, &SIMDFloat32x4Lib::EntryInfo::Swizzle, 3, PropertyNone);
-        builtinFuncs[BuiltinFunction::SIMD_Float32x4_Swizzle] = library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::shuffle, &SIMDFloat32x4Lib::EntryInfo::Shuffle, 4, PropertyNone);
+        builtinFuncs[BuiltinFunction::SIMD_Float32x4_Shuffle] = library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::shuffle, &SIMDFloat32x4Lib::EntryInfo::Shuffle, 4, PropertyNone);
+        builtinFuncs[BuiltinFunction::SIMD_Float32x4_Swizzle] = library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::swizzle, &SIMDFloat32x4Lib::EntryInfo::Swizzle, 3, PropertyNone);
         library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::clamp,              &SIMDFloat32x4Lib::EntryInfo::Clamp,   4, PropertyNone);
         library->AddFunctionToLibraryObject(float32x4Function, PropertyIds::select,             &SIMDFloat32x4Lib::EntryInfo::Select,  4, PropertyNone);
 

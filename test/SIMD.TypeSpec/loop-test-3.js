@@ -6,11 +6,14 @@ function increment(a, b, lib)
 {
     
     var c = lib.add(a, b);
+    
     if (lib === SIMD.Float32x4)
     {
-        c = lib.abs(c);
+        c = lib.add(c, b);    
         globVar = lib.neg(lib.sub(a,c));
         c = globVar;
+        c = lib.abs(c);
+        globVar = c;
     }
     return c;
 }
@@ -66,7 +69,7 @@ d = !d;
 for (i = 0; i < 10; i++)
 {
     z = func1(c, d);
-    equalSimd([51.0, 51.0, 51.0, 51.0], globTotal, SIMD.Float32x4, "func1");
+    equalSimd([2.0, 2.0, 2.0, 2.0], globTotal, SIMD.Float32x4, "func2");
 }
 
 print("PASS");
