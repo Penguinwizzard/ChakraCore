@@ -66,7 +66,6 @@ public:
 };
 
 
-bool Init();
 Node * ReadFile(const char * fileName);
 
 

@@ -21,8 +21,7 @@
 //
 // <regress-asm>        // head node, tag unimportant
 //
-// <test name="benchf"> // test node, tag unimportant, name currently used
-//                      // only for error checking
+// <test> // test node, tag unimportant
 //
 //    <default>         // default test information
 //
@@ -3648,7 +3647,18 @@ ParseFiles
          testName = fileList->string;
       }
 
-      pTest = FindTest(pTestList, testName, fUserSpecified, defaultInfo);
+      if (cfg == RM_DIR)
+      {
+         pTest = FindTest(pTestList, testName, fUserSpecified, defaultInfo);
+      }
+      else
+      {
+         // Test names are unique for files, so there's no need to do a lookup.
+         // If this uniqueness constraint changes, be aware that the RL setup
+         // time would be quite long when there are lots of files given that
+         // "FindTest" does a linear search.
+         pTest = AddToTestList(pTestList, fileList);
+      }
 
       // If the filename doesn't exist yet, we may want to create it.
 
@@ -3903,20 +3913,9 @@ ProcessConfig
    Xml::Node * testNode;
    Xml::Node * applyNode;
 
-   // Parser returns
-   // #document
-   //    xml...
-   //    <RL root node>
-   // Skip the first two.
+   // Parser doesn't return the XML declaration node, so topNode is the RL root node.
 
-   ASSERTNR(_stricmp(topNode->Name, "#document") == 0);
    ASSERTNR(topNode->Next == NULL);
-
-   topNode = topNode->ChildList;
-   if (_stricmp(topNode->Name, "xml") == 0)
-   {
-      topNode = topNode->Next;
-   }
 
    for (testNode = topNode->ChildList;
         testNode != NULL;
@@ -3927,17 +3926,9 @@ ProcessConfig
          continue;
       }
 
-      char * testName = testNode->GetAttributeValue("name");
-
-      // Technically, we should have a name because that's how we resume or exclude tests. However,
-      // the user may opt not to provide a name, to make it easier to add tests. In that case we
-      // just give the test a number.
-      if (testName == NULL)
-      {
-         testName = new char[20];
-         sprintf_s(testName, 20, "UnnamedTest%d", unnamedCount);
-         ++unnamedCount;
-      }
+      char *testName = new char[20];
+      sprintf_s(testName, 20, "UnnamedTest%d", unnamedCount);
+      ++unnamedCount;
 
 #ifndef NODEBUG
 
@@ -4851,11 +4842,6 @@ main(int argc, char *argv[])
    }
 
    atexit(NormalCleanUp);
-
-   if (!Xml::Init())
-   {
-      Fatal("XML parser failed to initialize");
-   }
 
    BuildDirList();
 
