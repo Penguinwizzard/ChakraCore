@@ -49,7 +49,7 @@ namespace Js
         }
         else
         {
-            JavascriptError::ThrowTypeError(scriptContext, JSERR_NeedNumber, L"index");
+            return static_cast<int32>(JavascriptConversion::ToNumber(value, scriptContext));
         }
         return int32Value;
     }
