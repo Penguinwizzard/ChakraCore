@@ -5558,27 +5558,17 @@ void EmitReference(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncI
 
         case knopName:
         {
-            // If the call is being made to a call target defined in slots
-            // we will have to load it from the slot here.
-
             Symbol *sym = pnode->sxCall.pnodeTarget->sxPid.sym;
             if (!sym || sym->GetLocation() == Js::Constants::NoRegister)
             {
                 funcInfo->AcquireLoc(pnode->sxCall.pnodeTarget);
             }
-            if (sym && (sym->IsInSlot(funcInfo) || sym->GetScope()->GetFunc() != funcInfo))
-            {
-                // TODO: Why is EmitLoad needed? It seems like the value loaded is never used in this path, which is part of a call.
-                EmitLoad(pnode->sxCall.pnodeTarget, byteCodeGenerator, funcInfo);
-            }
-            else
-            {
-                EmitReference(pnode->sxCall.pnodeTarget, byteCodeGenerator, funcInfo);
-            }
+            EmitReference(pnode->sxCall.pnodeTarget, byteCodeGenerator, funcInfo);
             break;
         }
         default:
             EmitLoad(pnode->sxCall.pnodeTarget, byteCodeGenerator, funcInfo);
+            break;
         }
 
         // Now the arg list. We evaluate everything now and emit the ArgOut's later.
