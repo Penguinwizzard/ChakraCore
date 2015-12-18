@@ -442,11 +442,12 @@ namespace Js
         else if (length > 0)
         {
             Recycler* recycler = GetType()->GetLibrary()->GetRecycler();
+            recycler = recycler;
+            JavascriptError::ThrowOutOfMemoryError(GetScriptContext());
+            /*
             if (recycler->ReportExternalMemoryAllocation(length))
             {
                 buffer = (BYTE*)allocator(length);
-                JavascriptError::ThrowOutOfMemoryError(GetScriptContext());
-                /*
                 if (buffer == nullptr)
                 {
                     recycler->CollectNow<CollectOnTypedArrayAllocation>();
@@ -456,7 +457,6 @@ namespace Js
                         recycler->ReportExternalMemoryFailure(length);
                     }
                 }
-                */
             }
 
             if (buffer == nullptr)
@@ -466,6 +466,7 @@ namespace Js
 
             bufferLength = length;
             ZeroMemory(buffer, bufferLength);
+            */
         }
     }
 
