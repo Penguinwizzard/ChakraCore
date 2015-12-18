@@ -5559,7 +5559,10 @@ void EmitReference(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncI
         case knopName:
         {
             Symbol *sym = pnode->sxCall.pnodeTarget->sxPid.sym;
-            if (!sym || sym->GetLocation() == Js::Constants::NoRegister)
+            if (!sym || 
+                sym->GetLocation() == Js::Constants::NoRegister || 
+                sym->IsInSlot(funcInfo) ||
+                sym->GetScope()->GetFunc() != funcInfo)
             {
                 funcInfo->AcquireLoc(pnode->sxCall.pnodeTarget);
             }
