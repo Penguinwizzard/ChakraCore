@@ -445,6 +445,8 @@ namespace Js
             if (recycler->ReportExternalMemoryAllocation(length))
             {
                 buffer = (BYTE*)allocator(length);
+                JavascriptError::ThrowOutOfMemoryError(GetScriptContext());
+                /*
                 if (buffer == nullptr)
                 {
                     recycler->CollectNow<CollectOnTypedArrayAllocation>();
@@ -454,6 +456,7 @@ namespace Js
                         recycler->ReportExternalMemoryFailure(length);
                     }
                 }
+                */
             }
 
             if (buffer == nullptr)
