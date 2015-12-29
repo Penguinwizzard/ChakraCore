@@ -715,6 +715,11 @@ bool ByteCodeGenerator::IsES6DestructuringEnabled() const
     return scriptContext->GetConfig()->IsES6DestructuringEnabled();
 }
 
+bool ByteCodeGenerator::IsES6ForLoopSemanticsEnabled() const
+{
+    return scriptContext->GetConfig()->IsES6ForLoopSemanticsEnabled();
+}
+
 // ByteCodeGenerator debug mode means we are generating debug mode user-code. Library code is always in non-debug mode.
 bool ByteCodeGenerator::IsInDebugMode() const
 {
@@ -1576,6 +1581,7 @@ Symbol * ByteCodeGenerator::FindSymbol(Symbol **symRef, IdentPtr pid, bool forRe
             this->AssignPropertyId(pid);
             return nullptr;
         }
+        key = reinterpret_cast<const wchar_t*>(sym->GetPid()->Psz());
     }
 
     Scope *symScope = sym->GetScope();
@@ -1591,7 +1597,7 @@ Symbol * ByteCodeGenerator::FindSymbol(Symbol **symRef, IdentPtr pid, bool forRe
         else
         {
             Output::Print(L"did not resolve %s\n", key);
-    }
+        }
     }
 #endif
 
@@ -3245,9 +3251,11 @@ void PreVisitBlock(ParseNode *pnodeBlock, ByteCodeGenerator *byteCodeGenerator)
 #if DBG_DUMP
         if (sym->GetSymbolType() == STVariable && byteCodeGenerator->Trace())
         {
-                Output::Print(L"current context has declared const %s of type %s\n",
-                    pnode->sxVar.pid->Psz(), sym->GetSymbolTypeName());
-            }
+            Output::Print(L"current context has declared %s %s of type %s\n",
+                sym->GetDecl()->nop == knopLetDecl ? L"let" : L"const",
+                pnode->sxVar.pid->Psz(),
+                sym->GetSymbolTypeName());
+        }
 #endif
             sym->SetIsGlobal(isGlobalScope);
             sym->SetIsBlockVar(true);

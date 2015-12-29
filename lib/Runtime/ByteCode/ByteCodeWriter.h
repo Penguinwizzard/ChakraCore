@@ -377,6 +377,7 @@ namespace Js
 
         void RecordStatementAdjustment(FunctionBody::StatementAdjustmentType type);
         void RecordCrossFrameEntryExitRecord(bool isEnterBlock);
+        void RecordForInOrOfCollectionScope();
 
         uint EnterLoop(Js::ByteCodeLabel loopEntrance);
         void ExitLoop(uint loopId);

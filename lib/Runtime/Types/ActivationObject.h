@@ -54,6 +54,13 @@ namespace Js
         {
             return VirtualTableInfo<Js::BlockActivationObject>::HasVirtualTable(instance);
         }
+        static BlockActivationObject* FromVar(Var value)
+        {
+            Assert(BlockActivationObject::Is(value));
+            return static_cast<BlockActivationObject*>(DynamicObject::FromVar(value));
+        }
+
+        BlockActivationObject* Clone(ScriptContext *scriptContext);
     };
 
     // A pseudo-ActivationObject is a scope like a "catch" scope that shouldn't receive var inits.

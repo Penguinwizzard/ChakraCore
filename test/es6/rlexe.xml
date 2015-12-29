@@ -1132,4 +1132,10 @@
       <tags>exclude_dynapogo</tags>
     </default>
   </test>
+  <test>
+    <default>
+      <files>forloops-per-iteration-bindings.js</files>
+      <compile-flags>-args summary -endargs</compile-flags>
+    </default>
+  </test>
 </regress-exe>

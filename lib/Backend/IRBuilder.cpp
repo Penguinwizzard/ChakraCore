@@ -2525,6 +2525,21 @@ IRBuilder::BuildUnsigned1(Js::OpCode newOpcode, uint32 offset, uint32 num)
             break;
         }
 
+        case Js::OpCode::CloneInnerScopeSlots:
+        case Js::OpCode::CloneBlockScope:
+        {
+            if (num >= m_func->GetJnFunction()->GetInnerScopeCount())
+            {
+                Js::Throw::FatalInternalError();
+            }
+            Js::RegSlot srcRegSlot = num + m_func->GetJnFunction()->FirstInnerScopeReg();
+            IR::RegOpnd * srcOpnd = BuildSrcOpnd(srcRegSlot);
+            IR::Instr * instr = IR::Instr::New(newOpcode, m_func);
+            instr->SetSrc1(srcOpnd);
+            this->AddInstr(instr, offset);
+            break;
+        }
+
         case Js::OpCode::ProfiledLoopBodyStart:
         {
             if (!(m_func->DoSimpleJitDynamicProfile() && m_func->GetJnFunction()->DoJITLoopBody()))

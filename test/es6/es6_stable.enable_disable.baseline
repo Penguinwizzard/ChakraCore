@@ -13,6 +13,8 @@ FLAG ES6 = 1 - setting child flag ES6DefaultArgs = 0
 FLAG ES6DefaultArgs = 0
 FLAG ES6 = 1 - setting child flag ES6Destructuring = 1
 FLAG ES6Destructuring = 1
+FLAG ES6 = 1 - setting child flag ES6ForLoopSemantics = 1
+FLAG ES6ForLoopSemantics = 1
 FLAG ES6 = 1 - setting child flag ES6FunctionName = 1
 FLAG ES6FunctionName = 1
 FLAG ES6 = 1 - setting child flag ES6FunctionNameFull = 0
@@ -98,6 +100,8 @@ FLAG ES6 = 0 - setting child flag ES6DefaultArgs = 0
 FLAG ES6DefaultArgs = 0
 FLAG ES6 = 0 - setting child flag ES6Destructuring = 0
 FLAG ES6Destructuring = 0
+FLAG ES6 = 0 - setting child flag ES6ForLoopSemantics = 0
+FLAG ES6ForLoopSemantics = 0
 FLAG ES6 = 0 - setting child flag ES6FunctionName = 0
 FLAG ES6FunctionName = 0
 FLAG ES6 = 0 - setting child flag ES6FunctionNameFull = 0

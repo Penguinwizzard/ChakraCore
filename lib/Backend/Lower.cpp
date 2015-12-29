@@ -295,6 +295,14 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             m_lowererMD.ChangeToHelperCallMem(instr, IR::HelperOP_NewPseudoScope);
             break;
 
+        case Js::OpCode::CloneInnerScopeSlots:
+            this->LowerUnaryHelperMem(instr, IR::HelperOP_CloneInnerScopeSlots);
+            break;
+
+        case Js::OpCode::CloneBlockScope:
+            this->LowerUnaryHelperMem(instr, IR::HelperOP_CloneBlockScope);
+            break;
+
         case Js::OpCode::GetCachedFunc:
             m_lowererMD.LowerGetCachedFunc(instr);
             break;
@@ -7588,14 +7596,6 @@ Lowerer::LowerUnaryHelper(IR::Instr *instr, IR::JnHelperMethod helperMethod)
 {
     IR::Instr *instrPrev;
 
-    AssertMsg(Js::OpCodeUtil::GetOpCodeLayout(instr->m_opcode) == Js::OpLayoutType::Reg2
-        || Js::OpCodeUtil::GetOpCodeLayout(instr->m_opcode) == Js::OpLayoutType::ElementI
-        || Js::OpCodeUtil::GetOpCodeLayout(instr->m_opcode) == Js::OpLayoutType::W1
-        || Js::OpCodeUtil::GetOpCodeLayout(instr->m_opcode) == Js::OpLayoutType::Reg1Unsigned1
-        || (Js::OpCodeUtil::GetOpCodeLayout(instr->m_opcode) == Js::OpLayoutType::Reg1 && instr->GetSrc1() != nullptr
-        || instr->IsLowered()),
-              "Expected a unary instruction...");
-
     IR::Opnd *src1 = instr->UnlinkSrc1();
     instrPrev = m_lowererMD.LoadHelperArgument(instr, src1);
 
@@ -7610,14 +7610,6 @@ Lowerer::LowerUnaryHelperMem(IR::Instr *instr, IR::JnHelperMethod helperMethod)
 {
     IR::Instr *instrPrev;
 
-    AssertMsg(Js::OpCodeUtil::GetOpCodeLayout(instr->m_opcode) == Js::OpLayoutType::Reg2
-        || Js::OpCodeUtil::GetOpCodeLayout(instr->m_opcode) == Js::OpLayoutType::ElementI
-        || Js::OpCodeUtil::GetOpCodeLayout(instr->m_opcode) == Js::OpLayoutType::W1
-        || Js::OpCodeUtil::GetOpCodeLayout(instr->m_opcode) == Js::OpLayoutType::Reg1Unsigned1
-        || (Js::OpCodeUtil::GetOpCodeLayout(instr->m_opcode) == Js::OpLayoutType::Reg1 && instr->GetSrc1() != nullptr
-        || instr->IsLowered()),
-              "Expected a unary instruction...");
-
     instrPrev = LoadScriptContext(instr);
 
     return this->LowerUnaryHelper(instr, helperMethod);
@@ -7626,14 +7618,6 @@ Lowerer::LowerUnaryHelperMem(IR::Instr *instr, IR::JnHelperMethod helperMethod)
 IR::Instr *
 Lowerer::LowerUnaryHelperMemWithFuncBody(IR::Instr *instr, IR::JnHelperMethod helperMethod)
 {
-    AssertMsg(Js::OpCodeUtil::GetOpCodeLayout(instr->m_opcode) == Js::OpLayoutType::Reg2
-        || Js::OpCodeUtil::GetOpCodeLayout(instr->m_opcode) == Js::OpLayoutType::ElementI
-        || Js::OpCodeUtil::GetOpCodeLayout(instr->m_opcode) == Js::OpLayoutType::W1
-        || Js::OpCodeUtil::GetOpCodeLayout(instr->m_opcode) == Js::OpLayoutType::Reg1Unsigned1
-        || (Js::OpCodeUtil::GetOpCodeLayout(instr->m_opcode) == Js::OpLayoutType::Reg1 && instr->GetSrc1() != nullptr
-        || instr->IsLowered()),
-        "Expected a unary instruction...");
-
     m_lowererMD.LoadHelperArgument(instr, this->LoadFunctionBodyOpnd(instr));
     return this->LowerUnaryHelperMem(instr, helperMethod);
 }

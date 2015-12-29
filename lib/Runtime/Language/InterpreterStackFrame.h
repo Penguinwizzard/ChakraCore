@@ -614,7 +614,9 @@ namespace Js
 
         Var InnerScopeFromIndex(uint32 index) const;
         void SetInnerScopeFromIndex(uint32 index, Var scope);
-        void OP_NewInnerScopeSlots(RegSlot index, uint count, int scopeIndex, ScriptContext *scriptContext, FunctionBody *functionBody);
+        void OP_NewInnerScopeSlots(uint index, uint count, int scopeIndex, ScriptContext *scriptContext, FunctionBody *functionBody);
+        template <typename T> void OP_CloneInnerScopeSlots(const unaligned OpLayoutT_Unsigned1<T> *playout);
+        template <typename T> void OP_CloneBlockScope(const unaligned OpLayoutT_Unsigned1<T> *playout);
         FrameDisplay * OP_LdFrameDisplay(void *argHead, void *argEnv, ScriptContext *scriptContext);
         FrameDisplay * OP_LdFrameDisplaySetLocal(void *argHead, void *argEnv, ScriptContext *scriptContext);
         template <bool innerFD> FrameDisplay * OP_LdFrameDisplayNoParent(void *argHead, ScriptContext *scriptContext);

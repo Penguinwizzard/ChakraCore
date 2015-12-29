@@ -515,11 +515,11 @@ MACRO_PROFILED(         NewScIntArray,      Auxiliary,      OpSideEffect|OpTempO
 MACRO_PROFILED(         NewScFltArray,      Auxiliary,      OpSideEffect|OpTempObjectProducing)             // Create new ScriptArray instance
 MACRO_EXTEND_WMS(       InitClass,          Class,          OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)
 
-MACRO_WMS(              NewScFunc,          ElementSlotI1,  OpSideEffect)  // Create new ScriptFunction instance
-MACRO_WMS(              NewScGenFunc,       ElementSlotI1,  OpSideEffect)  // Create new JavascriptGeneratorFunction instance
+MACRO_WMS(              NewScFunc,          ElementSlotI1,  OpSideEffect)   // Create new ScriptFunction instance
+MACRO_WMS(              NewScGenFunc,       ElementSlotI1,  OpSideEffect)   // Create new JavascriptGeneratorFunction instance
 MACRO_WMS(              NewStackScFunc,     ElementSlotI1,  OpSideEffect|OpByteCodeOnly)  // Create new ScriptFunction instance
-MACRO_EXTEND_WMS(       NewInnerScFunc,     ElementSlot,    OpSideEffect)  // Create new ScriptFunction instance
-MACRO_EXTEND_WMS(       NewInnerScGenFunc,  ElementSlot,    OpSideEffect)  // Create new JavascriptGeneratorFunction instance
+MACRO_EXTEND_WMS(       NewInnerScFunc,     ElementSlot,    OpSideEffect)   // Create new ScriptFunction instance
+MACRO_EXTEND_WMS(       NewInnerScGenFunc,  ElementSlot,    OpSideEffect)   // Create new JavascriptGeneratorFunction instance
 MACRO_EXTEND_WMS(       NewInnerStackScFunc,ElementSlot,    OpSideEffect|OpByteCodeOnly)  // Create new ScriptFunction instance
 MACRO_BACKEND_ONLY(     NewScopeObject,     Reg1,           None)                       // Create new NewScopeObject
 MACRO_BACKEND_ONLY(     InitCachedScope,    Reg2Aux,        OpSideEffect)                   // Retrieve cached scope; create if not cached
@@ -528,12 +528,14 @@ MACRO(                  InitCachedFuncs,    AuxNoReg,       OpSideEffect)
 MACRO_WMS(              GetCachedFunc,      Reg1Unsigned1,  None)
 MACRO(                  CommitScope,        AuxNoReg,       OpSideEffect)   // Mark the cached scope object as committed on exit from the function
 MACRO_WMS(              InvalCachedScope,   Unsigned1,      OpSideEffect)
-MACRO_WMS(              NewPseudoScope,     Unsigned1,      None)          // Create new scope that can't take normal var inits
-MACRO_WMS(              NewBlockScope,      Unsigned1,      None)          // Create new scope that takes only block-scoped inits
+MACRO_WMS(              NewPseudoScope,     Unsigned1,      None)           // Create new scope that can't take normal var inits
+MACRO_WMS(              NewBlockScope,      Unsigned1,      None)           // Create new scope that takes only block-scoped inits
+MACRO_WMS(              CloneBlockScope,    Unsigned1,      OpSideEffect)   // Clone existing block scope in place for for-loop iterations
 MACRO_BACKEND_ONLY(     NewScopeSlots,      Reg1Unsigned1,  None)
 MACRO_BACKEND_ONLY(     NewStackScopeSlots, Reg1,           None)
 MACRO_BACKEND_ONLY(     InitLocalClosure,   Reg1,           None)
 MACRO_WMS(              NewInnerScopeSlots, Reg3,           None)
+MACRO_WMS(              CloneInnerScopeSlots, Unsigned1,    OpSideEffect)   // Clone existing inner scope slots in place for for-loop iterations
 MACRO_BACKEND_ONLY(     NewScopeSlotsWithoutPropIds, Reg1Int2, None)
 MACRO_WMS(              NewRegEx,           Reg1Unsigned1,  OpTempObjectCanStoreTemp|OpSideEffect)              // Create a new RegEx expression
 MACRO_WMS(              IsInst,             Reg3C,          OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)  // instanceof() - SideEffect: can throw...

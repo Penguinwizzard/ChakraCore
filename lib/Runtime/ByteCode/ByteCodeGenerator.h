@@ -342,6 +342,7 @@ public:
 
     bool UseParserBindings() const;
     bool IsES6DestructuringEnabled() const;
+    bool IsES6ForLoopSemanticsEnabled() const;
 
     // Debugger methods.
     bool IsInDebugMode() const;

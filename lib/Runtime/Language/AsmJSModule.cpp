@@ -2192,7 +2192,7 @@ namespace Js
 #endif
         ScopeSlots scopeSlots(slotArray);
         scopeSlots.SetCount(moduleBody->scopeSlotArraySize);
-        scopeSlots.SetScope(moduleBody);
+        scopeSlots.SetScopeMetadata(moduleBody);
 
         auto asmSlotMap = asmModuleInfo->GetAsmJsSlotMap();
         Assert((uint)asmModuleInfo->GetSlotsCount() == moduleBody->scopeSlotArraySize);

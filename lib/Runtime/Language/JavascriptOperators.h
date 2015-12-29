@@ -426,8 +426,10 @@ namespace Js
         static Var OP_NewScopeObject(ScriptContext*scriptContext);
         static Var* OP_NewScopeSlots(unsigned int count, ScriptContext *scriptContext, Var scope);
         static Var* OP_NewScopeSlotsWithoutPropIds(unsigned int count, int index, ScriptContext *scriptContext, FunctionBody *functionBody);
+        static Var* OP_CloneScopeSlots(Var *scopeSlots, ScriptContext *scriptContext);
         static Var OP_NewPseudoScope(ScriptContext *scriptContext);
         static Var OP_NewBlockScope(ScriptContext *scriptContext);
+        static Var OP_CloneBlockScope(BlockActivationObject *blockScope, ScriptContext *scriptContext);
         static void OP_InitClass(Var constructor, Var extends, ScriptContext * scriptContext);
         static void OP_LoadUndefinedToElement(Var instance, PropertyId propertyId);
         static void OP_LoadUndefinedToElementDynamic(Var instance, PropertyId propertyId, ScriptContext* scriptContext);
