@@ -1874,8 +1874,8 @@ namespace Js
         ScriptFunction * function = (ScriptFunction*)stack->functionObject;
         Var* paramsAddr = stack->args;
         int  flags = CallFlags_Value;
-        int nbArgs = function->GetFunctionBody()->GetAsmJsFunctionInfo()->GetArgCount() + 1;
-        CallInfo callInfo((CallFlags)flags, (ushort)nbArgs);
+        ArgSlot nbArgs = UInt16Math::Add(function->GetFunctionBody()->GetAsmJsFunctionInfo()->GetArgCount(), 1);
+        CallInfo callInfo((CallFlags)flags, nbArgs);
         ArgumentReader args(&callInfo, paramsAddr);
         void* returnAddress = _ReturnAddress();
         void* addressOfReturnAddress = _AddressOfReturnAddress();
@@ -1984,9 +1984,9 @@ namespace Js
     {
         Js::ScriptFunction * function = Js::ScriptFunction::FromVar(layout->functionObject);
         int  flags = CallFlags_Value;
-        int nbArgs = function->GetFunctionBody()->GetAsmJsFunctionInfo()->GetArgCount() + 1;
+        ArgSlot nbArgs = UInt16Math::Add(function->GetFunctionBody()->GetAsmJsFunctionInfo()->GetArgCount(), 1);
 
-        CallInfo callInfo((CallFlags)flags, (ushort)nbArgs);
+        CallInfo callInfo((CallFlags)flags, nbArgs);
         ArgumentReader args(&callInfo, (Var*)layout->args);
         void* returnAddress = _ReturnAddress();
         void* addressOfReturnAddress = _AddressOfReturnAddress();
@@ -2775,14 +2775,14 @@ namespace Js
 
         AsmJsSIMDValue* simdArg = m_localSimdSlots + simdConstCount;
         // Move the arguments to the right location
-        uint argCount = info->GetArgCount();
+        ArgSlot argCount = info->GetArgCount();
 
 #if _M_X64
         uint homingAreaSize = 0;
 #endif
 
         uintptr argAddress = (uintptr)m_inParams;
-        for (uint i = 0; i < argCount; i++)
+        for (ArgSlot i = 0; i < argCount; i++)
         {
 #if _M_X64
             // 3rd Argument should be at the end of the homing area.
@@ -6710,14 +6710,14 @@ namespace Js
 
         if (m_functionBody->HasCachedScopePropIds())
         {
-            const Js::PropertyIdArray *propIds = 
+            const Js::PropertyIdArray *propIds =
                 Js::ByteCodeReader::ReadPropertyIdArray(0, this->GetFunctionBody(), ActivationObjectEx::ExtraSlotCount());
             Var funcExpr = this->GetFunctionExpression();
             PropertyId objectId = ActivationObjectEx::GetLiteralObjectRef(propIds);
             scopeObject = JavascriptOperators::OP_InitCachedScope(funcExpr, propIds,
-                this->GetFunctionBody()->GetObjectLiteralTypeRef(objectId), 
+                this->GetFunctionBody()->GetObjectLiteralTypeRef(objectId),
                 propIds->hasNonSimpleParams, GetScriptContext());
-            
+
         }
         else
         {
