@@ -8190,7 +8190,8 @@ void EmitForInOrForOf(ParseNode *loopNode, ByteCodeGenerator *byteCodeGenerator,
     // (break every time on the loop back edge) and correct display of current statement under debugger.
     // See WinBlue 231880 for details.
     byteCodeGenerator->Writer()->RecordStatementAdjustment(Js::FunctionBody::SAT_All);
-    if (byteCodeGenerator->IsES6ForLoopSemanticsEnabled())
+    if (byteCodeGenerator->IsES6ForLoopSemanticsEnabled() &&
+        loopNode->sxForInOrForOf.pnodeBlock->sxBlock.HasBlockScopedContent())
     {
         byteCodeGenerator->Writer()->RecordForInOrOfCollectionScope();
     }
