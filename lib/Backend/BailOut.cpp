@@ -946,7 +946,7 @@ Js::Var BailOutRecord::BailOut(BailOutRecord const * bailOutRecord)
     Js::JavascriptCallStackLayout *const layout = bailOutRecord->GetStackLayout();
     if(bailOutRecord->globalBailOutRecordTable->isLoopBody)
     {
-        if(bailOutRecord->globalBailOutRecordTable->isInlinedFunction)
+        if (bailOutRecord->globalBailOutRecordTable->isInlinedFunction)
         {
             return reinterpret_cast<Js::Var>(BailOutFromLoopBodyInlined(layout, bailOutRecord, _ReturnAddress()));
         }
@@ -1031,7 +1031,7 @@ BailOutRecord::BailOutInlinedCommon(Js::JavascriptCallStackLayout * layout, Bail
     BailOutRecord const * currentBailOutRecord = bailOutRecord;
     BailOutReturnValue bailOutReturnValue;
     Js::ScriptFunction * innerMostInlinee;
-    BailOutInlinedHelper(layout, currentBailOutRecord, bailOutOffset, returnAddress, bailOutKind, registerSaves, &bailOutReturnValue, &innerMostInlinee, branchValue);
+    BailOutInlinedHelper(layout, currentBailOutRecord, bailOutOffset, returnAddress, bailOutKind, registerSaves, &bailOutReturnValue, &innerMostInlinee, false, branchValue);
     Js::Var result = BailOutCommonNoCodeGen(layout, currentBailOutRecord, currentBailOutRecord->bailOutOffset, returnAddress, bailOutKind, branchValue,
         registerSaves, &bailOutReturnValue);
     ScheduleFunctionCodeGen(Js::ScriptFunction::FromVar(layout->functionObject), innerMostInlinee, currentBailOutRecord, bailOutKind, returnAddress);
@@ -1058,24 +1058,37 @@ BailOutRecord::BailOutFromLoopBodyInlinedCommon(Js::JavascriptCallStackLayout * 
     BailOutRecord const * currentBailOutRecord = bailOutRecord;
     BailOutReturnValue bailOutReturnValue;
     Js::ScriptFunction * innerMostInlinee;
-    BailOutInlinedHelper(layout, currentBailOutRecord, bailOutOffset, returnAddress, bailOutKind, registerSaves, &bailOutReturnValue, &innerMostInlinee, branchValue);
+    BailOutInlinedHelper(layout, currentBailOutRecord, bailOutOffset, returnAddress, bailOutKind, registerSaves, &bailOutReturnValue, &innerMostInlinee, true, branchValue);
     uint32 result = BailOutFromLoopBodyHelper(layout, currentBailOutRecord, currentBailOutRecord->bailOutOffset,
-        bailOutKind, registerSaves, nullptr, &bailOutReturnValue);
+        bailOutKind, nullptr, registerSaves, &bailOutReturnValue);
     ScheduleLoopBodyCodeGen(Js::ScriptFunction::FromVar(layout->functionObject), innerMostInlinee, currentBailOutRecord, bailOutKind);
     return result;
 }
 
 void
 BailOutRecord::BailOutInlinedHelper(Js::JavascriptCallStackLayout * layout, BailOutRecord const *& currentBailOutRecord,
-    uint32 bailOutOffset, void * returnAddress, IR::BailOutKind bailOutKind, Js::Var * registerSaves, BailOutReturnValue * bailOutReturnValue, Js::ScriptFunction ** innerMostInlinee, Js::Var branchValue)
+    uint32 bailOutOffset, void * returnAddress, IR::BailOutKind bailOutKind, Js::Var * registerSaves, BailOutReturnValue * bailOutReturnValue, Js::ScriptFunction ** innerMostInlinee, bool isInLoopBody, Js::Var branchValue)
 {
     Assert(currentBailOutRecord->parent != nullptr);
     BailOutReturnValue * lastBailOutReturnValue = nullptr;
     *innerMostInlinee = nullptr;
+
     Js::FunctionBody* functionBody = Js::ScriptFunction::FromVar(layout->functionObject)->GetFunctionBody();
 
+    Js::EntryPointInfo *entryPointInfo;
+    if(isInLoopBody)
+    {
+        Js::InterpreterStackFrame * interpreterFrame = functionBody->GetScriptContext()->GetThreadContext()->GetLeafInterpreterFrame();
+        uint loopNum = interpreterFrame->GetCurrentLoopNum();
+
+        entryPointInfo = (Js::EntryPointInfo*)functionBody->GetLoopEntryPointInfoFromNativeAddress((DWORD_PTR)returnAddress, loopNum);
+    }
+    else
+    {
+        entryPointInfo = (Js::EntryPointInfo*)functionBody->GetEntryPointFromNativeAddress((DWORD_PTR)returnAddress);
+    }
+
     // Let's restore the inline stack - so that in case of a stack walk we have it available
-    Js::FunctionEntryPointInfo *entryPointInfo = functionBody->GetEntryPointFromNativeAddress((DWORD_PTR)returnAddress);
     if (entryPointInfo->HasInlinees())
     {
         InlineeFrameRecord* inlineeFrameRecord = entryPointInfo->FindInlineeFrame(returnAddress);
@@ -2236,6 +2249,8 @@ void BailOutRecord::ScheduleLoopBodyCodeGen(Js::ScriptFunction * function, Js::S
                 break;
 
             case IR::BailOutOnInlineFunction:
+            case IR::BailOutOnPolymorphicInlineFunction:
+            case IR::BailOutOnFailedPolymorphicInlineTypeCheck:
                 rejitReason = RejitReason::InlineeChanged;
                 break;
 
@@ -2308,10 +2323,7 @@ void BailOutRecord::ScheduleLoopBodyCodeGen(Js::ScriptFunction * function, Js::S
             }
 
             case IR::BailOutFailedFixedFieldCheck:
-                // Although we can use this bailout in a jitted loop body in the future, adding it here as it currently is used only for polymorphic inlining.
-            case IR::BailOutOnPolymorphicInlineFunction:
-            case IR::BailOutOnFailedPolymorphicInlineTypeCheck:
-                Assert(false);
+                rejitReason = RejitReason::FailedFixedFieldCheck;
                 break;
 
             case IR::BailOutOnTaggedValue:
@@ -2436,7 +2448,7 @@ Js::Var BranchBailOutRecord::BailOut(BranchBailOutRecord const * bailOutRecord, 
     Js::JavascriptCallStackLayout *const layout = bailOutRecord->GetStackLayout();
     if(bailOutRecord->globalBailOutRecordTable->isLoopBody)
     {
-        if(bailOutRecord->globalBailOutRecordTable->isInlinedFunction)
+        if (bailOutRecord->globalBailOutRecordTable->isInlinedFunction)
         {
             return reinterpret_cast<Js::Var>(BailOutFromLoopBodyInlined(layout, bailOutRecord, cond, _ReturnAddress()));
         }

@@ -450,6 +450,8 @@ namespace Js
 
     protected:
         JavascriptLibrary* library;
+        typedef JsUtil::List<NativeOffsetInlineeFramePair, HeapAllocator> InlineeFrameMap;
+        InlineeFrameMap*  inlineeFrameMap;
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
         StackBackTrace*    cleanupStack;
 #endif
@@ -464,6 +466,7 @@ namespace Js
             NativeCodeInstallFailure,
             CleanUpForFinalize
         };
+        uint frameHeight;
 
     private:
         typedef SListCounted<ConstructorCache*, Recycler> ConstructorCacheList;
@@ -811,6 +814,9 @@ namespace Js
         void SetPendingImplicitCallFlags(ImplicitCallFlags flags) { this->pendingImplicitCallFlags = flags; }
         virtual void Invalidate(bool prolongEntryPoint) { Assert(false); }
         void RecordBailOutMap(JsUtil::List<LazyBailOutRecord, ArenaAllocator>* bailoutMap);
+        void RecordInlineeFrameMap(JsUtil::List<NativeOffsetInlineeFramePair, ArenaAllocator>* tempInlineeFrameMap);
+        InlineeFrameRecord* FindInlineeFrame(void* returnAddress);
+        bool HasInlinees() { return this->frameHeight > 0; }
         void DoLazyBailout(BYTE** addressOfeturnAddress, Js::FunctionBody* functionBody, const PropertyRecord* propertyRecord);
 #if DBG_DUMP
      public:
@@ -861,7 +867,6 @@ namespace Js
     public:
         FunctionProxy * functionProxy;
         FunctionEntryPointInfo* nextEntryPoint;
-        uint frameHeight;
 
         // The offset on the native stack, from which the locals are located (Populated at RegAlloc phase). Used for debug purpose.
         int32 localVarSlotsOffset;
@@ -875,17 +880,14 @@ namespace Js
 
     private:
         ExecutionMode jitMode;
-        typedef JsUtil::List<NativeOffsetInlineeFramePair, HeapAllocator> InlineeFrameMap;
-        InlineeFrameMap*  inlineeFrameMap;
         FunctionEntryPointInfo* mOldFunctionEntryPointInfo; // strong ref to oldEntryPointInfo(Int or TJ) in asm to ensure we don't collect it before JIT is completed
-        bool       mIsTemplatizedJitMode; // true only if in TJ mode , used only for debugging
+        bool       mIsTemplatizedJitMode; // true only if in TJ mode, used only for debugging
     public:
         static const uint8 GetDecrCallCountPerBailout()
         {
             return (100 / (uint8)CONFIG_FLAG(RejitRatioLimit)) + 1;
         }
 
-        bool HasInlinees() { return this->frameHeight > 0; }
         FunctionEntryPointInfo(FunctionProxy * functionInfo, void * address, ThreadContext* context, void* validationCookie);
 
         //AsmJS Support
@@ -898,8 +900,6 @@ namespace Js
 
         ExecutionMode GetJitMode() const;
         void SetJitMode(const ExecutionMode jitMode);
-        void RecordInlineeFrameMap(JsUtil::List<NativeOffsetInlineeFramePair, ArenaAllocator>* tempInlineeFrameMap);
-        InlineeFrameRecord* FindInlineeFrame(void* returnAddress);
 
         virtual FunctionBody *GetFunctionBody() const override;
         virtual void Invalidate(bool prolongEntryPoint) override;
@@ -2465,8 +2465,8 @@ namespace Js
         uint8 IncrementBailOnMisingProfileCount() { return ++bailOnMisingProfileCount; }
         void ResetBailOnMisingProfileCount() { bailOnMisingProfileCount = 0; }
         uint8 IncrementBailOnMisingProfileRejitCount() { return ++bailOnMisingProfileRejitCount; }
-        uint32 GetFrameHeight(FunctionEntryPointInfo* entryPointInfo) const;
-        void SetFrameHeight(FunctionEntryPointInfo* entryPointInfo, uint32 frameHeight);
+        uint32 GetFrameHeight(EntryPointInfo* entryPointInfo) const;
+        void SetFrameHeight(EntryPointInfo* entryPointInfo, uint32 frameHeight);
 
         RegSlot GetLocalsCount();
         RegSlot GetConstantCount() const { return m_constCount; }
@@ -2656,6 +2656,7 @@ namespace Js
         BOOL GetMatchingStatementMapFromNativeOffset(DWORD_PTR codeAddress, uint32 offset, StatementData &data, FunctionBody *inlinee = nullptr);
 
         FunctionEntryPointInfo * GetEntryPointFromNativeAddress(DWORD_PTR codeAddress);
+        LoopEntryPointInfo * GetLoopEntryPointInfoFromNativeAddress(DWORD_PTR codeAddress, uint loopNum) const;
 
         void InsertSymbolToRegSlotList(JsUtil::CharacterBuffer<WCHAR> const& propName, RegSlot reg, RegSlot totalRegsCount);
         void InsertSymbolToRegSlotList(RegSlot reg, PropertyId propertyId, RegSlot totalRegsCount);
@@ -2791,7 +2792,6 @@ namespace Js
         BOOL               GetMatchingStatementMap(StatementData &data, int statementIndex, FunctionBody *inlinee);
         int                GetStatementIndexFromNativeOffset(SmallSpanSequence *pThrowSpanSequence, uint32 nativeOffset);
         int                GetStatementIndexFromNativeAddress(SmallSpanSequence *pThrowSpanSequence, DWORD_PTR codeAddress, DWORD_PTR nativeBaseAddress);
-        LoopEntryPointInfo * GetLoopEntryPointInfoFromNativeAddress(DWORD_PTR codeAddress, uint loopNum) const;
 
         void EnsureAuxStatementData();
         StatementAdjustmentRecordList* GetStatementAdjustmentRecords();

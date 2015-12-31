@@ -308,9 +308,7 @@ Encoder::Encode()
     if (this->m_inlineeFrameMap->Count() > 0 &&
         !(this->m_inlineeFrameMap->Count() == 1 && this->m_inlineeFrameMap->Item(0).record == nullptr))
     {
-        AssertMsg(!this->m_func->IsLoopBody(), "Loop body does not support inlining.");
-        Js::FunctionEntryPointInfo* functionEntryPointInfo = static_cast<Js::FunctionEntryPointInfo*>(entryPointInfo);
-        functionEntryPointInfo->RecordInlineeFrameMap(m_inlineeFrameMap);
+        entryPointInfo->RecordInlineeFrameMap(m_inlineeFrameMap);
     }
 
     if (this->m_bailoutRecordMap->Count() > 0)
@@ -594,7 +592,7 @@ void Encoder::RecordInlineeFrame(Func* inlinee, uint32 currentOffset)
 {
     // The only restriction for not supporting loop bodies is that inlinee frame map is created on FunctionEntryPointInfo & not
     // the base class EntryPointInfo.
-    if (!this->m_func->IsLoopBody() && !this->m_func->IsSimpleJit())
+    if (!this->m_func->IsSimpleJit())
     {
         InlineeFrameRecord* record = nullptr;
         if (inlinee->frameInfo && inlinee->m_hasInlineArgsOpt)

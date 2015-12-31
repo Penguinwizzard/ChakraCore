@@ -205,8 +205,8 @@ protected:
     static Js::Var BailOutHelper(Js::JavascriptCallStackLayout * layout, Js::ScriptFunction ** functionRef, Js::Arguments& args, const bool boxArgs,
         BailOutRecord const * bailOutRecord, uint32 bailOutOffset, void * returnAddress, IR::BailOutKind bailOutKind, Js::Var * registerSaves, BailOutReturnValue * returnValue, Js::Var* pArgumentsObject,
         Js::Var branchValue = nullptr, void * argoutRestoreAddress = nullptr);
-    static void BailOutInlinedHelper(Js::JavascriptCallStackLayout * layout, BailOutRecord const *& bailOutRecord,
-        uint32 bailOutOffset, void * returnAddress, IR::BailOutKind bailOutKind, Js::Var * registerSaves, BailOutReturnValue * returnValue, Js::ScriptFunction ** innerMostInlinee, Js::Var branchValue = nullptr);
+    static void BailOutInlinedHelper(Js::JavascriptCallStackLayout * layout, BailOutRecord const *& bailOutRecord, uint32 bailOutOffset, void * returnAddress,
+        IR::BailOutKind bailOutKind, Js::Var * registerSaves, BailOutReturnValue * returnValue, Js::ScriptFunction ** innerMostInlinee, bool isInLoopBody, Js::Var branchValue = nullptr);
     static uint32 BailOutFromLoopBodyHelper(Js::JavascriptCallStackLayout * layout, BailOutRecord const * bailOutRecord,
         uint32 bailOutOffset, IR::BailOutKind bailOutKind, Js::Var branchValue = nullptr, Js::Var * registerSaves = nullptr, BailOutReturnValue * returnValue = nullptr);
 

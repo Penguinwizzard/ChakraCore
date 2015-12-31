@@ -1457,12 +1457,10 @@ LowererMD::LowerEntryInstr(IR::EntryInstr * entryInstr)
     }
     Assert(fpOffsetSize >= 0);
 
-    if (this->m_func->GetMaxInlineeArgOutCount() && this->m_func->m_workItem->Type() == JsFunctionType)
+    if (this->m_func->GetMaxInlineeArgOutCount())
     {
-        JsFunctionCodeGen * functionCodeGen = reinterpret_cast<JsFunctionCodeGen *>(this->m_func->m_workItem);
-
-        // 2 subtraction for frame pointer & return address
-        functionCodeGen->GetFunctionBody()->SetFrameHeight(static_cast<Js::FunctionEntryPointInfo*>(functionCodeGen->GetEntryPoint()),
+        // subtracting 2 for frame pointer & return address
+        this->m_func->m_workItem->GetFunctionBody()->SetFrameHeight(this->m_func->m_workItem->GetEntryPoint(),
             this->m_func->m_localStackHeight + this->m_func->m_ArgumentsOffset - 2 * MachRegInt);
 
     }

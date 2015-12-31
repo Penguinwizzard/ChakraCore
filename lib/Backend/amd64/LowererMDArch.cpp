@@ -1389,11 +1389,9 @@ LowererMDArch::LowerEntryInstr(IR::EntryInstr * entryInstr)
         throw Js::OperationAbortedException();
     }
 
-    if (this->m_func->GetMaxInlineeArgOutCount() && this->m_func->m_workItem->Type() == JsFunctionType)
+    if (this->m_func->GetMaxInlineeArgOutCount())
     {
-        JsFunctionCodeGen * functionCodeGen = reinterpret_cast<JsFunctionCodeGen *>(this->m_func->m_workItem);
-        functionCodeGen->GetFunctionBody()->SetFrameHeight(static_cast<Js::FunctionEntryPointInfo*>(functionCodeGen->GetEntryPoint()),
-            this->m_func->m_localStackHeight);
+        this->m_func->m_workItem->GetFunctionBody()->SetFrameHeight(this->m_func->m_workItem->GetEntryPoint(), this->m_func->m_localStackHeight);
     }
 
     //

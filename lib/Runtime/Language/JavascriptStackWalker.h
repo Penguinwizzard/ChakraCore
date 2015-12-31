@@ -92,7 +92,7 @@ namespace Js
             Assert(currentIndex == -1);
         }
 
-        static bool             FromPhysicalFrame(InlinedFrameWalker& self, StackFrame& physicalFrame, Js::ScriptFunction *parent, bool fromBailout = false);
+        static bool             FromPhysicalFrame(InlinedFrameWalker& self, StackFrame& physicalFrame, Js::ScriptFunction *parent, bool fromBailout = false, int loopNum = -1, bool noAlloc = false);
         void                    Close();
         bool                    Next(CallInfo& callInfo);
         size_t                  GetArgc() const;
@@ -126,7 +126,7 @@ namespace Js
                 return (InlinedFrame*)next;
             }
 
-            static InlinedFrame *FromPhysicalFrame(StackFrame& currentFrame, void *entry, FunctionEntryPointInfo* entryPointInfo)
+            static InlinedFrame *FromPhysicalFrame(StackFrame& currentFrame, void *entry, EntryPointInfo* entryPointInfo)
             {
                 struct InlinedFrame *inlinedFrame = nullptr;
                 if (!currentFrame.IsInStackCheckCode(entry))
@@ -207,6 +207,8 @@ namespace Js
 
         void SetCachedInternalFrameAddress(void *address, InternalFrameType type);
         void ClearCachedInternalFrameAddress();
+        void SetCachedInternalFrameInfoForLoopBody();
+        bool IsCurrentPhysicalFrameForLoopBody() const; 
 
         // noinline, we want to use own stack frame.
         static __declspec(noinline) BOOL GetCaller(JavascriptFunction** ppFunc, ScriptContext* scriptContext);

@@ -840,12 +840,12 @@ namespace Js
         return entryPoint;
     }
 
-    uint32 FunctionBody::GetFrameHeight(FunctionEntryPointInfo* entryPointInfo) const
+    uint32 FunctionBody::GetFrameHeight(EntryPointInfo* entryPointInfo) const
     {
         return entryPointInfo->frameHeight;
     }
 
-    void FunctionBody::SetFrameHeight(FunctionEntryPointInfo* entryPointInfo, uint32 frameHeight)
+    void FunctionBody::SetFrameHeight(EntryPointInfo* entryPointInfo, uint32 frameHeight)
     {
         entryPointInfo->frameHeight = frameHeight;
     }
@@ -8293,6 +8293,46 @@ namespace Js
         this->bailoutRecordMap->Copy(bailoutMap);
     }
 
+    void EntryPointInfo::RecordInlineeFrameMap(JsUtil::List<NativeOffsetInlineeFramePair, ArenaAllocator>* tempInlineeFrameMap)
+    {
+        Assert(this->inlineeFrameMap == nullptr);
+        if (tempInlineeFrameMap->Count() > 0)
+        {
+            this->inlineeFrameMap = HeapNew(InlineeFrameMap, &HeapAllocator::Instance);
+            this->inlineeFrameMap->Copy(tempInlineeFrameMap);
+        }
+    }
+
+    InlineeFrameRecord* EntryPointInfo::FindInlineeFrame(void* returnAddress)
+    {
+        if (this->inlineeFrameMap == nullptr)
+        {
+            return nullptr;
+        }
+
+        size_t offset = (size_t)((BYTE*)returnAddress - (BYTE*)this->GetNativeAddress());
+        int index = this->inlineeFrameMap->BinarySearch([=](const NativeOffsetInlineeFramePair& pair, int index) {
+            if (pair.offset >= offset)
+            {
+                if (index == 0 || index > 0 && this->inlineeFrameMap->Item(index - 1).offset < offset)
+                {
+                    return 0;
+                }
+                else
+                {
+                    return 1;
+                }
+            }
+            return -1;
+        });
+
+        if (index == -1)
+        {
+            return nullptr;
+        }
+        return this->inlineeFrameMap->Item(index).record;
+    }
+
     void EntryPointInfo::DoLazyBailout(BYTE** addressOfInstructionPointer, Js::FunctionBody* functionBody, const PropertyRecord* propertyRecord)
     {
         BYTE* instructionPointer = *addressOfInstructionPointer;
@@ -8333,46 +8373,6 @@ namespace Js
         {
             AssertMsg(false, "Lazy Bailout address mapping missing");
         }
-    }
-
-    void FunctionEntryPointInfo::RecordInlineeFrameMap(JsUtil::List<NativeOffsetInlineeFramePair, ArenaAllocator>* tempInlineeFrameMap)
-    {
-        Assert(this->inlineeFrameMap == nullptr);
-        if (tempInlineeFrameMap->Count() > 0)
-        {
-            this->inlineeFrameMap = HeapNew(InlineeFrameMap, &HeapAllocator::Instance);
-            this->inlineeFrameMap->Copy(tempInlineeFrameMap);
-        }
-    }
-
-    InlineeFrameRecord* FunctionEntryPointInfo::FindInlineeFrame(void* returnAddress)
-    {
-        if (this->inlineeFrameMap == nullptr)
-        {
-            return nullptr;
-        }
-
-        size_t offset = (size_t)((BYTE*)returnAddress - (BYTE*)this->GetNativeAddress());
-        int index = this->inlineeFrameMap->BinarySearch([=](const NativeOffsetInlineeFramePair& pair, int index){
-            if (pair.offset >= offset)
-            {
-                if (index == 0 || index > 0 && this->inlineeFrameMap->Item(index - 1).offset < offset)
-                {
-                    return 0;
-                }
-                else
-                {
-                    return 1;
-                }
-            }
-            return -1;
-        });
-
-        if (index == -1)
-        {
-            return nullptr;
-        }
-        return this->inlineeFrameMap->Item(index).record;
     }
 
     void EntryPointInfo::FreeJitTransferData()
@@ -8699,7 +8699,6 @@ namespace Js
 
     FunctionEntryPointInfo::FunctionEntryPointInfo(FunctionProxy * functionProxy, void * address, ThreadContext* context, void* cookie) :
         EntryPointInfo(address, functionProxy->GetScriptContext()->GetLibrary(), cookie, context),
-        frameHeight(0),
         localVarSlotsOffset(Js::Constants::InvalidOffset),
         localVarChangedOffset(Js::Constants::InvalidOffset),
         callsCount(0),
@@ -8707,8 +8706,7 @@ namespace Js
         nativeEntryPointProcessed(false),
         functionProxy(functionProxy),
         nextEntryPoint(nullptr),
-        mIsTemplatizedJitMode(false),
-        inlineeFrameMap(nullptr)
+        mIsTemplatizedJitMode(false)
     {
     }
 
@@ -9061,6 +9059,12 @@ namespace Js
         if (this->IsCodeGenDone() && !this->GetIsTJMode())
         {
             JS_ETW(EtwTrace::LogLoopBodyUnloadEvent(this->loopHeader->functionBody, this->loopHeader, this));
+
+            if (nullptr != this->inlineeFrameMap)
+            {
+                HeapDelete(this->inlineeFrameMap);
+                this->inlineeFrameMap = nullptr;
+            }
 
             if (!isShutdown)
             {
