@@ -982,16 +982,6 @@ IR::Instr* LowererMD::Simd128LowerLoadElem(IR::Instr *instr)
     IR::Instr * done;
     if (indexOpnd ||  (((uint32)src1->AsIndirOpnd()->GetOffset() + dataWidth) > 0x1000000 /* 16 MB */))
     {
-        // CMP indexOpnd, src2(arrSize)
-        // JA $helper
-        // JMP $load
-        // $helper:
-        // Throw RangeError
-        // JMP $done
-        // $load:
-        // MOVUPS dst, src1([arrayBuffer + indexOpnd]) // or other based on data width
-        // $done:
-
         uint32 bpe = 1;
         switch (arrType.GetObjectType())
         {
