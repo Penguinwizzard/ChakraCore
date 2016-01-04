@@ -1924,8 +1924,8 @@ namespace Js
 
         if (nullptr == callMethod)
         {
-            // too many arguments
-            if (args.Info.Count >= CallInfo::kMaxCountArgs)
+            // newCount is ushort.
+            if (args.Info.Count >= USHORT_MAX) //check against CallInfo::kMaxCountArgs if newCount is ever made int
             {
                 JavascriptError::ThrowRangeError(scriptContext, JSERR_ArgListTooLarge);
             }

@@ -722,6 +722,13 @@ namespace Js
         Assert(args.Info.Flags & CallFlags_New);
         Assert(scriptContext);
 
+        // newCount is ushort.
+        if (args.Info.Count >= USHORT_MAX)
+        {
+            JavascriptError::ThrowRangeError(scriptContext, JSERR_ArgListTooLarge);
+        }
+        AnalysisAssert(args.Info.Count < USHORT_MAX);
+
         // Create the empty object if necessary:
         // - Built-in constructor functions will return a new object of a specific type, so a new empty object does not need to
         //   be created
@@ -743,6 +750,7 @@ namespace Js
 
         Var* newValues = args.Values;
         CallFlags newFlags = args.Info.Flags;
+
         ushort newCount = args.Info.Count;
         bool thisAlreadySpecified = false;
 
@@ -773,7 +781,7 @@ namespace Js
                 {
                     newValues[i] = args.Values[i];
                 }
-
+#pragma prefast(suppress:6386, "The index is within the bounds")
                 newValues[args.Info.Count] = overridingNewTarget;
             }
         }
