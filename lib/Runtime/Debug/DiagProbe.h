@@ -92,6 +92,13 @@ namespace Js
         STEP_BAILOUT    = STEP_IN | STEP_OVER,
     };
 
+    struct DebuggerOptionsCallback
+    {
+        virtual bool IsFirstChanceExceptionEnabled() { return false; }
+        virtual bool IsNonUserCodeSupportEnabled() { return false; }
+        virtual bool IsLibraryStackFrameSupportEnabled() { return false; }
+    };
+
     class StepController
     {
         friend class ProbeManager;

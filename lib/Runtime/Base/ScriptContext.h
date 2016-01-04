@@ -26,6 +26,7 @@ namespace Js
     class StringProfiler;
     class DebugContext;
     struct HaltCallback;
+    struct DebuggerOptionsCallback;
 }
 
 // Created for every source buffer passed by host.
