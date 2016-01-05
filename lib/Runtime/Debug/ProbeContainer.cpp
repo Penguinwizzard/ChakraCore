@@ -592,7 +592,7 @@ namespace Js
 
     void ProbeContainer::InitializeDebuggerScriptOptionCallback(DebuggerOptionsCallback* debuggerOptionsCallback)
     {
-        Assert(debuggerOptionsCallback);
+        Assert(this->debuggerOptionsCallback == nullptr);
         this->debuggerOptionsCallback = debuggerOptionsCallback;
     }
 
