@@ -80,6 +80,8 @@ def msbuildTypeMap = [
 
             // Note: InternalUtilities variant also sets private permission
             InternalUtilities.simpleInnerLoopJobSetup(newJob, project, isPR, "Windows ${config}")
+            // Add private permissions for certain users
+            InternalUtilities.addPrivatePermissions(newJob, ['nmostafa', 'arunetm', 'litian2025'])
         }
     }
 }
@@ -98,4 +100,6 @@ def msbuildTypeMap = [
 
     // Note: InternalUtilities variant also sets private permission
     InternalUtilities.simpleInnerLoopJobSetup(newJob, project, isPR, "EOL Check")
+    // Add private permissions for certain users
+    InternalUtilities.addPrivatePermissions(newJob, ['nmostafa', 'arunetm', 'litian2025'])
 }
