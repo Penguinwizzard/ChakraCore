@@ -5333,14 +5333,17 @@ Inline::Simd128FixLoadStoreInstr(Js::BuiltinFunction builtInId, IR::Instr * call
     else
     {
         IR::Opnd *linkOpnd = callInstr->GetSrc1();
-        IR::Instr *eaInstr1 = linkOpnd->GetStackSym()->m_instrDef;
-        IR::Instr *eaInstr2, *eaInstr3;
+        IR::Instr *eaInstr1, *eaInstr2, *eaInstr3;
         IR::Opnd *value, *index, *arr;
         
+        eaInstr1 = linkOpnd->GetStackSym()->m_instrDef;
         value = eaInstr1->GetSrc1();
         linkOpnd = eaInstr1->GetSrc2();
+
         eaInstr2 = linkOpnd->GetStackSym()->m_instrDef;
-        index = eaInstr2->GetSrc2();
+        index = eaInstr2->GetSrc1();
+        linkOpnd = eaInstr2->GetSrc2();
+
         eaInstr3 = linkOpnd->GetStackSym()->m_instrDef;
         Assert(!eaInstr3->GetSrc2()); // end of args list
         arr = eaInstr3->GetSrc1();

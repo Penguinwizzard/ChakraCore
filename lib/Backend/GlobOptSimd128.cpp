@@ -93,6 +93,19 @@ Value **pDstVal
         instr->m_func->GetScriptContext()->GetThreadContext()->GetSimdFuncSignatureFromOpcode(instr->m_opcode, simdFuncSignature);
         // type-spec logic
 
+        // special handling for load/sotre
+        // OptArraySrc will type-spec the array and the index. We type-spec the value here.
+        if (Js::IsSimd128Load(instr->m_opcode))
+        {
+            TypeSpecializeSimd128Dst(GetIRTypeFromValueType(simdFuncSignature.returnType), instr, nullptr, *pSrc1Val, pDstVal);
+            return true;
+        }
+        if (Js::IsSimd128Store(instr->m_opcode))
+        {
+            ToTypeSpecUse(instr, instr->GetSrc1(), this->currentBlock, *pSrc1Val, nullptr, GetIRTypeFromValueType(simdFuncSignature.args[2]), GetBailOutKindFromValueType(simdFuncSignature.args[2]));
+            return true;
+        }
+
         // For op with ExtendArg. All sources are already type-specialized, just type-specialize dst
         if (simdFuncSignature.argCount <= 2)
         {
@@ -163,6 +176,11 @@ GlobOpt::Simd128DoTypeSpec(IR::Instr *instr, const Value *src1Val, const Value *
         {
             // not implemented yet.
             return false;
+        }
+        // special handling for Load/Store
+        if (Js::IsSimd128Load(instr->m_opcode) || Js::IsSimd128Store(instr->m_opcode))
+        {
+            return Simd128DoTypeSpecLoadStore(instr, src1Val, src2Val, dstVal, &simdFuncSignature);
         }
 
         const uint argCount = simdFuncSignature.argCount;
@@ -252,6 +270,60 @@ GlobOpt::Simd128DoTypeSpec(IR::Instr *instr, const Value *src1Val, const Value *
         Assert(instr->m_opcode == Js::OpCode::ExtendArg_A);
         // For ExtendArg, the expected type is encoded in the dst(link) operand.
         doTypeSpec = doTypeSpec && Simd128CanTypeSpecOpnd(src1Val->GetValueInfo()->Type(), instr->GetDst()->GetValueType());
+    }
+    
+    return doTypeSpec;
+}
+
+bool
+GlobOpt::Simd128DoTypeSpecLoadStore(IR::Instr *instr, const Value *src1Val, const Value *src2Val, const Value *dstVal, const ThreadContext::SimdFuncSignature *simdFuncSignature)
+{
+    IR::Opnd *baseOpnd = nullptr, *indexOpnd = nullptr, *valueOpnd = nullptr;
+    IR::Opnd *src, *dst;
+   
+    bool doTypeSpec = true;
+
+    // value = Ld [arr + index]
+    // [arr + index] = St value
+    src = instr->GetSrc1();
+    dst = instr->GetDst();
+    Assert(dst && src && !instr->GetSrc2());
+
+    if (Js::IsSimd128Load(instr->m_opcode))
+    {
+        Assert(src->IsIndirOpnd());
+        baseOpnd = instr->GetSrc1()->AsIndirOpnd()->GetBaseOpnd();
+        indexOpnd = instr->GetSrc1()->AsIndirOpnd()->GetIndexOpnd();
+        valueOpnd = instr->GetDst();
+    }
+    else if (Js::IsSimd128Store(instr->m_opcode))
+    {
+        Assert(dst->IsIndirOpnd());
+        baseOpnd = instr->GetDst()->AsIndirOpnd()->GetBaseOpnd();
+        indexOpnd = instr->GetDst()->AsIndirOpnd()->GetIndexOpnd();
+        valueOpnd = instr->GetSrc1();
+
+        // St(arr, index, value). Make sure value can be Simd128 type-spec'ed
+        doTypeSpec = doTypeSpec && Simd128CanTypeSpecOpnd(FindValue(valueOpnd->AsRegOpnd()->m_sym)->GetValueInfo()->Type(), simdFuncSignature->args[2]);
+    }
+    else
+    {
+        Assert(UNREACHED);
+    }
+
+    // array and index operands should have been type-specialized in OptArraySrc: ValueTypes should be definite at this point. If not, don't type-spec.
+    // We can be in a loop prepass, where opnd ValueInfo is not set yet. Get the ValueInfo from the Value Table instead.
+    ValueType baseOpndType = FindValue(baseOpnd->AsRegOpnd()->m_sym)->GetValueInfo()->Type();
+    ValueType indexOpndType = FindValue(indexOpnd->AsRegOpnd()->m_sym)->GetValueInfo()->Type();
+    if (IsLoopPrePass())
+    {
+        doTypeSpec = doTypeSpec && (baseOpndType.IsObject() && baseOpndType.GetObjectType() >= ObjectType::Int8Array && baseOpndType.GetObjectType() <= ObjectType::Float64Array);
+        doTypeSpec = doTypeSpec && indexOpndType.IsLikelyInt();
+    }
+    else
+    {
+        doTypeSpec = doTypeSpec && (baseOpndType.IsObject() && baseOpndType.GetObjectType() >= ObjectType::Int8Array && baseOpndType.GetObjectType() <= ObjectType::Float64Array);
+        doTypeSpec = doTypeSpec && indexOpndType.IsInt();
     }
     
     return doTypeSpec;
