@@ -981,19 +981,19 @@ namespace Js
 
     bool ProbeContainer::IsFirstChanceExceptionEnabled()
     {
-        return this->debuggerOptionsCallback != nullptr ? this->debuggerOptionsCallback->IsFirstChanceExceptionEnabled() : false;
+        return this->debuggerOptionsCallback != nullptr && this->debuggerOptionsCallback->IsFirstChanceExceptionEnabled();
     }
 
     // Mentions if the debugger has enabled the support to differentiate the exception kind.
     bool ProbeContainer::IsNonUserCodeSupportEnabled()
     {
-        return this->debuggerOptionsCallback != nullptr ? this->debuggerOptionsCallback->IsNonUserCodeSupportEnabled() : false;
+        return this->debuggerOptionsCallback != nullptr && this->debuggerOptionsCallback->IsNonUserCodeSupportEnabled();
     }
 
     // Mentions if the debugger has enabled the support to display library stack frame.
     bool ProbeContainer::IsLibraryStackFrameSupportEnabled()
     {
-        return CONFIG_FLAG(LibraryStackFrameDebugger) || (this->debuggerOptionsCallback != nullptr ? this->debuggerOptionsCallback->IsLibraryStackFrameSupportEnabled() : false);
+        return CONFIG_FLAG(LibraryStackFrameDebugger) || (this->debuggerOptionsCallback != nullptr && this->debuggerOptionsCallback->IsLibraryStackFrameSupportEnabled());
     }
 
     void ProbeContainer::PinPropertyRecord(const Js::PropertyRecord *propertyRecord)
