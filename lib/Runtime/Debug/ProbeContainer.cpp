@@ -12,7 +12,7 @@ namespace Js
         pScriptContext(nullptr),
         debugManager(nullptr),
         haltCallbackProbe(nullptr),
-        pDebugApp110(nullptr),
+        debuggerOptionsCallback(nullptr),
         pAsyncHaltCallback(nullptr),
         jsExceptionObject(nullptr),
         framePointers(nullptr),
@@ -39,10 +39,6 @@ namespace Js
         if (this->pScriptContext)
         {
             debugManager = this->pScriptContext->GetThreadContext()->GetDebugManager();
-            if (pDebugApp110)
-            {
-                pDebugApp110->Release();
-            }
         }
         else
         {
@@ -103,7 +99,7 @@ namespace Js
 
         JavascriptStackWalker walker(pScriptContext, !fMatchWithCurrentScriptContext, nullptr/*returnAddress*/, true/*forceFullWalk*/);
         DiagStack* tempFramePointers = Anew(pDiagArena, DiagStack, pDiagArena);
-        const BOOL isLibraryFrameEnabledDebugger = IsLibraryStackFrameSupportEnabled();
+        const bool isLibraryFrameEnabledDebugger = IsLibraryStackFrameSupportEnabled();
 
         walker.WalkUntil([&](JavascriptFunction* func, ushort frameIndex) -> bool
         {
@@ -228,14 +224,22 @@ namespace Js
         }
     }
 
+    bool ProbeContainer::CanDispatchHalt(InterpreterHaltState* pHaltState)
+    {
+        if (!haltCallbackProbe || haltCallbackProbe->IsInClosedState() || debugManager->IsAtDispatchHalt())
+        {
+            OUTPUT_VERBOSE_TRACE(Js::DebuggerPhase, L"ProbeContainer::CanDispatchHalt: Not in break mode. pHaltState = %p\n", pHaltState);
+            return false;
+        }
+        return true;
+    }
+
     void ProbeContainer::DispatchStepHandler(InterpreterHaltState* pHaltState, OpCode* pOriginalOpcode)
     {
         OUTPUT_TRACE(Js::DebuggerPhase, L"ProbeContainer::DispatchStepHandler: start: this=%p, pHaltState=%p, pOriginalOpcode=0x%x\n", this, pHaltState, pOriginalOpcode);
 
-        if (!haltCallbackProbe || haltCallbackProbe->IsInClosedState() || debugManager->IsAtDispatchHalt())
+        if (!CanDispatchHalt(pHaltState))
         {
-            // Will not be able to handle multiple break-hits.
-            OUTPUT_VERBOSE_TRACE(Js::DebuggerPhase, L"ProbeContainer::DispatchStepHandler: not in break mode: pHaltState=%p\n", pHaltState);
             return;
         }
 
@@ -282,10 +286,8 @@ namespace Js
     {
         OUTPUT_TRACE(Js::DebuggerPhase, L"ProbeContainer::DispatchAsyncBreak: start: this=%p, pHaltState=%p\n", this, pHaltState);
 
-        if (!this->pAsyncHaltCallback || !haltCallbackProbe || haltCallbackProbe->IsInClosedState() || debugManager->IsAtDispatchHalt())
+        if (!this->pAsyncHaltCallback || !CanDispatchHalt(pHaltState))
         {
-            OUTPUT_TRACE(Js::DebuggerPhase, L"ProbeContainer::DispatchAsyncBreak: not in break mode: pHaltState=%p\n", pHaltState);
-            // Did not put into async break-mode.
             return;
         }
 
@@ -322,10 +324,8 @@ namespace Js
     {
         OUTPUT_TRACE(Js::DebuggerPhase, L"ProbeContainer::DispatchInlineBreakpoint: start: this=%p, pHaltState=%p\n", this, pHaltState);
 
-        if (!haltCallbackProbe || haltCallbackProbe->IsInClosedState() || debugManager->IsAtDispatchHalt())
+        if (!CanDispatchHalt(pHaltState))
         {
-            OUTPUT_TRACE(Js::DebuggerPhase, L"ProbeContainer::DispatchInlineBreakpoint: not in break mode: pHaltState=%p\n", pHaltState);
-            // Will not be able to handle multiple break-hits.
             return;
         }
 
@@ -455,9 +455,8 @@ namespace Js
         Assert(pHaltState->stopType == STOP_MUTATIONBREAKPOINT);
 
         OUTPUT_TRACE(Js::DebuggerPhase, L"ProbeContainer::DispatchMutationBreakpoint: start: this=%p, pHaltState=%p\n", this, pHaltState);
-        if (!haltCallbackProbe || haltCallbackProbe->IsInClosedState() || debugManager->IsAtDispatchHalt())
+        if (!CanDispatchHalt(pHaltState))
         {
-            OUTPUT_TRACE(Js::DebuggerPhase, L"ProbeContainer::DispatchMutationBreakpoint: not in break mode: pHaltState=%p\n", pHaltState);
             return;
         }
 
@@ -506,9 +505,8 @@ namespace Js
 
     void ProbeContainer::DispatchProbeHandlers(InterpreterHaltState* pHaltState)
     {
-        if (!haltCallbackProbe || haltCallbackProbe->IsInClosedState() || debugManager->IsAtDispatchHalt())
+        if (!CanDispatchHalt(pHaltState))
         {
-            // Will not be able to handle multiple break-hits.
             return;
         }
 
@@ -590,21 +588,17 @@ namespace Js
     void ProbeContainer::UninstallInlineBreakpointProbe(HaltCallback* probe)
     {
         haltCallbackProbe = nullptr;
-        if (pDebugApp110)
-        {
-            pDebugApp110->Release();
-            pDebugApp110 = nullptr;
-        }
     }
 
-    void ProbeContainer::InitializeForScriptOption(IRemoteDebugApplication110 *pDebugApp)
+    void ProbeContainer::InitializeDebuggerScriptOptionCallback(DebuggerOptionsCallback* debuggerOptionsCallback)
     {
-        Assert(haltCallbackProbe);
-        if (pDebugApp110)
-        {
-            pDebugApp110->Release();
-        }
-        pDebugApp110 = pDebugApp;
+        Assert(this->debuggerOptionsCallback == nullptr);
+        this->debuggerOptionsCallback = debuggerOptionsCallback;
+    }
+
+    void ProbeContainer::UninstallDebuggerScriptOptionCallback()
+    {
+        this->debuggerOptionsCallback = nullptr;
     }
 
     void ProbeContainer::AddProbe(Probe* pProbe)
@@ -949,16 +943,15 @@ namespace Js
         bool fIsFirstChance = false;
         bool fHasAllowed = false;
         bool fIsInNonUserCode = false;
-        if (debugManager)
+
+        if (debugManager != nullptr)
         {
             fHasAllowed = !debugManager->pThreadContext->HasCatchHandler();
             if (!fHasAllowed)
             {
-                if (pDebugApp110 != nullptr)
+                if (IsFirstChanceExceptionEnabled())
                 {
-                    SCRIPT_DEBUGGER_OPTIONS option;
-                    fIsFirstChance = (pDebugApp110->GetCurrentDebuggerOptions(&option) == S_OK && ((option & SDO_ENABLE_FIRST_CHANCE_EXCEPTIONS) == SDO_ENABLE_FIRST_CHANCE_EXCEPTIONS));
-                    fHasAllowed = fIsFirstChance;
+                    fHasAllowed = fIsFirstChance = true;
                 }
 
                 // We must determine if the exception is in user code AND if it's first chance as some debuggers
@@ -986,27 +979,21 @@ namespace Js
         return fHasAllowed;
     }
 
-    BOOL ProbeContainer::IsScriptDebuggerOptionsEnabled(SCRIPT_DEBUGGER_OPTIONS flag)
+    bool ProbeContainer::IsFirstChanceExceptionEnabled()
     {
-        if (pDebugApp110 != nullptr)
-        {
-            SCRIPT_DEBUGGER_OPTIONS option;
-            return (pDebugApp110->GetCurrentDebuggerOptions(&option) == S_OK && ((option & flag) == flag));
-        }
-
-        return FALSE;
+        return this->debuggerOptionsCallback != nullptr && this->debuggerOptionsCallback->IsFirstChanceExceptionEnabled();
     }
 
     // Mentions if the debugger has enabled the support to differentiate the exception kind.
-    BOOL ProbeContainer::IsNonUserCodeSupportEnabled()
+    bool ProbeContainer::IsNonUserCodeSupportEnabled()
     {
-        return IsScriptDebuggerOptionsEnabled(SDO_ENABLE_NONUSER_CODE_SUPPORT);
+        return this->debuggerOptionsCallback != nullptr && this->debuggerOptionsCallback->IsNonUserCodeSupportEnabled();
     }
 
     // Mentions if the debugger has enabled the support to display library stack frame.
-    BOOL ProbeContainer::IsLibraryStackFrameSupportEnabled()
+    bool ProbeContainer::IsLibraryStackFrameSupportEnabled()
     {
-        return CONFIG_FLAG(LibraryStackFrameDebugger) || IsScriptDebuggerOptionsEnabled(SDO_ENABLE_LIBRARY_STACK_FRAME);
+        return CONFIG_FLAG(LibraryStackFrameDebugger) || (this->debuggerOptionsCallback != nullptr && this->debuggerOptionsCallback->IsLibraryStackFrameSupportEnabled());
     }
 
     void ProbeContainer::PinPropertyRecord(const Js::PropertyRecord *propertyRecord)

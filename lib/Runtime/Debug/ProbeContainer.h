@@ -35,7 +35,7 @@ namespace Js
         DiagStack* framePointers;
 
         HaltCallback* haltCallbackProbe;
-        IRemoteDebugApplication110 *pDebugApp110;
+        DebuggerOptionsCallback* debuggerOptionsCallback;
 
         // Refer to the callback which is responsible for making async break
         HaltCallback* pAsyncHaltCallback;
@@ -69,8 +69,6 @@ namespace Js
         bool ProbeContainer::GetNextUserStatementOffsetHelper(
             Js::FunctionBody* functionBody, int currentOffset, FunctionBody::StatementAdjustmentType adjType, int* nextStatementOffset);
 
-        BOOL IsScriptDebuggerOptionsEnabled(SCRIPT_DEBUGGER_OPTIONS flag);
-
 #ifdef ENABLE_MUTATION_BREAKPOINT
         void InitMutationBreakpointListIfNeeded();
         void ClearMutationBreakpoints();
@@ -96,14 +94,17 @@ namespace Js
 
         // A break engine responsible for breaking at iniline statement and error statement.
         void InitializeInlineBreakEngine(HaltCallback* pProbe);
-        void InitializeForScriptOption(IRemoteDebugApplication110 *pDebugApp);
+        void InitializeDebuggerScriptOptionCallback(DebuggerOptionsCallback* debuggerOptionsCallback);
 
         void UninstallInlineBreakpointProbe(HaltCallback* pProbe);
+        void UninstallDebuggerScriptOptionCallback();
 
         void AddProbe(Probe* pProbe);
         void RemoveProbe(Probe* pProbe);
 
         void RemoveAllProbes();
+
+        bool CanDispatchHalt(InterpreterHaltState* pHaltState);
 
         // When on breakpoint hit
         void DispatchProbeHandlers(InterpreterHaltState* pHaltState);
@@ -149,8 +150,9 @@ namespace Js
 
         void SetThrowIsInternal(bool set) { isThrowInternal = set; }
 
-        BOOL IsNonUserCodeSupportEnabled();
-        BOOL IsLibraryStackFrameSupportEnabled();
+        bool IsFirstChanceExceptionEnabled();
+        bool IsNonUserCodeSupportEnabled();
+        bool IsLibraryStackFrameSupportEnabled();
 
         void SetCurrentTmpRegCount(uint32 set) { tmpRegCount = set; }
         uint32 GetCurrentTmpRegCount() const { return tmpRegCount; }
