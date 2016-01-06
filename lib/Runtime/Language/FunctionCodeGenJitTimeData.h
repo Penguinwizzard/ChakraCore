@@ -575,6 +575,11 @@ namespace Js
             const InlineCacheIndex inlineCacheIndex,
             FunctionInfo *const inlinee);
 
+        void AddLdFldInlinee(
+            Recycler *const recycler,
+            const InlineCacheIndex inlineCacheIndex,
+            FunctionCodeGenJitTimeData *inlineeData);
+
         bool IsPolymorphicCallSite(const ProfileId profiledCallSiteId) const;
         // This function walks all the chained jittimedata and returns the one which match the functionInfo.
         // This can return null, if the functionInfo doesn't match.

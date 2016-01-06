@@ -2411,8 +2411,12 @@ NativeCodeGenerator::GatherCodeGenData(
                     continue;
                 }
 
-                Js::FunctionCodeGenRuntimeData *const inlineeRuntimeData = IsInlinee ? runtimeData->EnsureLdFldInlinee(recycler, inlineCacheIndex, inlineeFunctionBody) :
-                    functionBody->EnsureLdFldInlineeCodeGenRuntimeData(recycler, inlineCacheIndex, inlineeFunctionBody);
+
+                /*if (!isJitTimeDataComputed)
+                {*/
+                    Js::FunctionCodeGenRuntimeData *const inlineeRuntimeData = IsInlinee ? runtimeData->EnsureLdFldInlinee(recycler, inlineCacheIndex, inlineeFunctionBody) :
+                        functionBody->EnsureLdFldInlineeCodeGenRuntimeData(recycler, inlineCacheIndex, inlineeFunctionBody);
+
 
                     if (inlineeRuntimeData->GetFunctionBody() != inlineeFunctionBody)
                     {
@@ -2422,10 +2426,11 @@ NativeCodeGenerator::GatherCodeGenData(
                         continue;
                     }
 
-
+                    Js::FunctionCodeGenJitTimeData *inlineeJitTimeData = RecyclerNew(recycler, Js::FunctionCodeGenJitTimeData, inlinee, nullptr);
                     if (!isJitTimeDataComputed)
                     {
-                        Js::FunctionCodeGenJitTimeData *inlineeJitTimeData =  jitTimeData->AddLdFldInlinee(recycler, inlineCacheIndex, inlinee);
+                        jitTimeData->AddLdFldInlinee(recycler, inlineCacheIndex, inlineeJitTimeData);
+                    }
                         GatherCodeGenData<true>(
                             recycler,
                             topFunctionBody,
@@ -2438,10 +2443,10 @@ NativeCodeGenerator::GatherCodeGenData(
                             nullptr);
 
                         AddInlineCacheStats(jitTimeData, inlineeJitTimeData);
-                    }
-                }
+
             }
         }
+    }
 
 #ifdef FIELD_ACCESS_STATS
     if (PHASE_VERBOSE_TRACE(Js::ObjTypeSpecPhase, topFunctionBody) || PHASE_VERBOSE_TRACE(Js::EquivObjTypeSpecPhase, topFunctionBody))

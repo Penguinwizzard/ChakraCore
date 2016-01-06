@@ -924,6 +924,30 @@ namespace Js
         return inlineeData;
     }
 
+     void FunctionCodeGenJitTimeData::AddLdFldInlinee(
+        Recycler *const recycler,
+        const InlineCacheIndex inlineCacheIndex,
+        FunctionCodeGenJitTimeData *inlineeJitTimeData)
+    {
+        Assert(recycler);
+        const auto functionBody = GetFunctionBody();
+        Assert(functionBody);
+        Assert(inlineCacheIndex < GetFunctionBody()->GetInlineCacheCount());
+        Assert(inlineeJitTimeData);
+
+        if (!ldFldInlinees)
+        {
+            ldFldInlinees = RecyclerNewArrayZ(recycler, FunctionCodeGenJitTimeData *, GetFunctionBody()->GetInlineCacheCount());
+        }
+
+        Assert(!ldFldInlinees[inlineCacheIndex]);
+        ldFldInlinees[inlineCacheIndex] = inlineeJitTimeData;
+        if (++ldFldInlineeCount == 0)
+        {
+            Js::Throw::OutOfMemory();
+        }
+    }
+
     uint FunctionCodeGenJitTimeData::InlineeCount() const
     {
         return inlineeCount;
