@@ -5988,7 +5988,6 @@ GlobOpt::CopyProp(IR::Opnd *opnd, IR::Instr *instr, Value *val, IR::IndirOpnd *p
         return opnd;
     }
 
-    // SIMD_JS
     // Don't copy-prop operand of SIMD instr with ExtendedArg operands. Each instr should have its exclusive EA sequence.
     if (Js::IsSimd128Opcode(instr->m_opcode) && instr->GetSrc1() != nullptr && instr->GetSrc2() == nullptr &&  instr->GetSrc1()->GetStackSym()->IsSingleDef())
     {
@@ -20910,9 +20909,9 @@ GlobOpt::InspectInstrForMemCopyCandidate(Loop* loop, IR::Instr* instr, MemCopyEm
 
 // The caller is responsible to free the memory allocated between inOrderEmitData[iEmitData -> end]
 bool
-GlobOpt::ValidateMemOpCandidates(Loop * loop, MemOpEmitData** inOrderEmitData, int& iEmitData)
+GlobOpt::ValidateMemOpCandidates(Loop * loop, _Out_writes_(iEmitData) MemOpEmitData** inOrderEmitData, int& iEmitData)
 {
-    Assert(iEmitData >= (int)loop->memOpInfo->candidates->Count());
+    AnalysisAssert(iEmitData == (int)loop->memOpInfo->candidates->Count());
     // We iterate over the second block of the loop only. MemOp Works only if the loop has exactly 2 blocks
     Assert(loop->blockList.HasTwo());
 
@@ -20991,10 +20990,16 @@ GlobOpt::ValidateMemOpCandidates(Loop * loop, MemOpEmitData** inOrderEmitData, i
         }
         if (candidateFound)
         {
-            Assert(iEmitData > 0);
+            AnalysisAssert(iEmitData > 0);
+            if (iEmitData == 0)
+            {
+                // Explicit for OACR
+                break;
+            }
             inOrderEmitData[--iEmitData] = emitData;
             candidate = nullptr;
             emitData = nullptr;
+
         }
     } NEXT_INSTR_BACKWARD_IN_BLOCK;
 
@@ -21060,3 +21065,4 @@ GlobOpt::ProcessMemOp()
         }
     } NEXT_LOOP_EDITING;
 }
+

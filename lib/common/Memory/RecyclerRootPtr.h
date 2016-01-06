@@ -17,6 +17,10 @@ public:
 
     T * operator->() const { Assert(ptr != nullptr); return ptr; }
     operator T*() const { return ptr; }
+
+    RecyclerRootPtr(RecyclerRootPtr<T>&&);
+    RecyclerRootPtr& operator=(RecyclerRootPtr<T> &&);
+
 protected:
     T * ptr;
 private:

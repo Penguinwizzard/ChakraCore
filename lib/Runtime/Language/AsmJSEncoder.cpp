@@ -3,7 +3,7 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeLanguagePch.h"
-#include "..\Backend\CodeGenAllocators.h"
+#include "CodeGenAllocators.h"
 #ifdef DBG_DUMP
 #include "ByteCode\ByteCodeDumper.h"
 #include "ByteCode\AsmJSByteCodeDumper.h"
