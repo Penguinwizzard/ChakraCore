@@ -16219,6 +16219,8 @@ GlobOpt::OptArraySrc(IR::Instr * *const instrRef)
                     hoistHeadSegmentLengthLoadOutOfLoop,
                     failedToUpdateCompatibleLowerBoundCheck,
                     failedToUpdateCompatibleUpperBoundCheck);
+
+                UpdateBoundCheckHoistInfoForSimd(upperBoundCheckHoistInfo, newBaseValueType, instr);
             }
 
             if(!eliminatedLowerBoundCheck)
@@ -16724,7 +16726,7 @@ GlobOpt::OptArraySrc(IR::Instr * *const instrRef)
                     lowerBound->SetIsJITOptimizedReg(true);
                     IR::Opnd* upperBound = IR::RegOpnd::New(headSegmentLengthSym, headSegmentLengthSym->GetType(), instr->m_func);
                     upperBound->SetIsJITOptimizedReg(true);
-                    const int offset = -1;
+                    const int offset = GetBoundCheckOffsetForSimd(newBaseValueType, instr);
                     IR::Instr *boundCheck;
 
                     // index <= headSegmentLength - 1 (src1 <= src2 + dst)

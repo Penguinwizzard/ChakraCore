@@ -512,3 +512,66 @@ IR::BailOutKind GlobOpt::GetBailOutKindFromValueType(const ValueType &valueType)
         return IR::BailOutSimd128I4Only;
     }
 }
+
+void
+GlobOpt::UpdateBoundCheckHoistInfoForSimd(ArrayUpperBoundCheckHoistInfo &upperHoistInfo, ValueType arrValueType, const IR::Instr *instr)
+{
+    if (!upperHoistInfo.HasAnyInfo())
+    {
+        return;
+    }
+
+    int newOffset = GetBoundCheckOffsetForSimd(arrValueType, instr, upperHoistInfo.Offset());
+    upperHoistInfo.UpdateOffset(newOffset);
+}
+
+int
+GlobOpt::GetBoundCheckOffsetForSimd(ValueType arrValueType, const IR::Instr *instr, const int oldOffset /* = -1 */)
+{
+    if (!(Js::IsSimd128LoadStore(instr->m_opcode)))
+    {
+        return oldOffset;
+    }
+
+    if (!(arrValueType.GetObjectType() >= ObjectType::Int8Array && arrValueType.GetObjectType() <= ObjectType::Float64Array))
+    {
+        // no need to adjust for other types, we will not type-spec (see Simd128DoTypeSpecLoadStore)
+        return oldOffset;
+    }
+
+    Assert(instr->dataWidth == 4 || instr->dataWidth == 8 || instr->dataWidth == 12 || instr->dataWidth == 16);
+
+    uint bpe = 1;
+    int offsetBias;
+    // REVIEW: Do we care about Virtual and Mixed arrays ? The instruction won't be type-spec'ed (replaced by bailout) for Virtual/Mixed types.
+    switch (arrValueType.GetObjectType())
+    {
+    case ObjectType::Int8Array:
+    case ObjectType::Uint8Array:
+        break;
+    case ObjectType::Int16Array:
+    case ObjectType::Uint16Array:
+        bpe = 2;
+        break;
+    case ObjectType::Int32Array:
+    case ObjectType::Uint32Array:
+    case ObjectType::Float32Array:
+        bpe = 4;
+        break;
+    case ObjectType::Float64Array:
+        bpe = 8;
+        break;
+    default:
+        Assert(UNREACHED);
+    }
+
+    // we want to make bound checks more conservative. We compute how many extra elements we need to add to the bound check
+    // e.g. if original bound check is value <= Length + offset, and dataWidth is 16 bytes on Float32 array, then we need room for 4 elements. The bound check guarantees room for 1 element. 
+    // Hence, we need to ensure 3 more: value <= Length + offset - 3
+    // round up since dataWidth may span a partial lane (e.g. dataWidth = 12, bpe = 8 bytes)
+
+    offsetBias = -((int)::ceil(((float)instr->dataWidth) / bpe) - 1);
+    // we should
+    Assert(offsetBias <= 0);
+    return oldOffset + offsetBias;
+}

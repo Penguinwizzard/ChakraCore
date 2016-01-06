@@ -1391,6 +1391,8 @@ private:
     ValueType               GetValueTypeFromIRType(const IRType &type);
     IR::BailOutKind         GetBailOutKindFromValueType(const ValueType &valueType);
     IR::Instr *             GetExtendedArg(IR::Instr *instr);
+    void                    UpdateBoundCheckHoistInfoForSimd(ArrayUpperBoundCheckHoistInfo &upperHoistInfo, ValueType arrValueType, const IR::Instr *instr);
+    int                     GetBoundCheckOffsetForSimd(ValueType arrValueType, const IR::Instr *instr, const int oldOffset = -1);
 
 
     IR::Instr *             OptNewScObject(IR::Instr** instrPtr, Value* srcVal);
