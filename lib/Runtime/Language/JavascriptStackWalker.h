@@ -92,7 +92,7 @@ namespace Js
             Assert(currentIndex == -1);
         }
 
-        static bool             FromPhysicalFrame(InlinedFrameWalker& self, StackFrame& physicalFrame, Js::ScriptFunction *parent, bool fromBailout = false, int loopNum = -1, bool noAlloc = false);
+        static bool             FromPhysicalFrame(InlinedFrameWalker& self, StackFrame& physicalFrame, Js::ScriptFunction *parent, bool fromBailout = false, int loopNum = -1, const JavascriptStackWalker * const walker = nullptr, bool noAlloc = false);
         void                    Close();
         bool                    Next(CallInfo& callInfo);
         size_t                  GetArgc() const;
@@ -118,25 +118,17 @@ namespace Js
 
         struct InlinedFrame : public InlinedFrameLayout
         {
+            JavascriptStackWalker *walker;
             Js::Var argv[0];    // It's defined here as in C++ can't have 0-size array in the base class.
-
+            
             struct InlinedFrame *Next()
             {
                 InlinedFrameLayout *next = __super::Next();
                 return (InlinedFrame*)next;
             }
 
-            static InlinedFrame *FromPhysicalFrame(StackFrame& currentFrame, void *entry, EntryPointInfo* entryPointInfo)
-            {
-                struct InlinedFrame *inlinedFrame = nullptr;
-                if (!currentFrame.IsInStackCheckCode(entry))
-                {
-                    void *frame = currentFrame.GetFrame();
-                    inlinedFrame = (struct InlinedFrame *)(((uint8 *)frame) - entryPointInfo->frameHeight);
-                }
-
-                return inlinedFrame;
-            }
+            static InlinedFrame *FromPhysicalFrame(StackFrame& currentFrame, const JavascriptStackWalker * const stackWalker, void *entry, EntryPointInfo* entryPointInfo);
+            
         };
 
         void Initialize(int32 frameCount, __in_ecount(frameCount) InlinedFrame **frames, Js::ScriptFunction *parent);
@@ -149,6 +141,28 @@ namespace Js
         InlinedFrame          **frames;
         int32                   currentIndex;
         int32                   frameCount;
+    };
+
+    class InternalFrameInfo
+    {
+    public:
+        void *codeAddress;
+        void *framePointer;
+        size_t stackCheckCodeHeight;
+        InternalFrameType frameType;
+        InternalFrameType loopBodyFrameType;
+
+        InternalFrameInfo() : 
+            codeAddress(nullptr),
+            framePointer(nullptr),
+            stackCheckCodeHeight((uint)-1),
+            frameType(InternalFrameType_None),
+            loopBodyFrameType(InternalFrameType_None)
+        {
+        }
+
+        void Clear();
+        void Set(void *codeAddress, void *framePointer, size_t stackCheckCodeHeight, InternalFrameType frameType, InternalFrameType loopBodyFramType);
     };
 
     class JavascriptStackWalker
@@ -205,9 +219,9 @@ namespace Js
 
         static bool TryIsTopJavaScriptFrameNative(ScriptContext* scriptContext, bool* istopFrameNative, bool ignoreLibraryCode = false);
 
-        void SetCachedInternalFrameAddress(void *address, InternalFrameType type);
-        void ClearCachedInternalFrameAddress();
-        void SetCachedInternalFrameInfoForLoopBody();
+        void ClearCachedInternalFrameInfo();
+        void SetCachedInternalFrameInfo(InternalFrameType frameType, InternalFrameType loopBodyFrameType);
+        InternalFrameInfo GetCachedInternalFrameInfo() const { return this->lastInternalFrameInfo; }
         bool IsCurrentPhysicalFrameForLoopBody() const; 
 
         // noinline, we want to use own stack frame.
@@ -307,9 +321,7 @@ namespace Js
         Var GetCurrentNativeArgumentsObject() const;
         void SetCurrentNativeArgumentsObject(Var args);
 
-        void *lastInternalFrameAddress;
-        InternalFrameType lastInternalFrameType;
-        InternalFrameType lastInternalLoopBodyFrameType;
+        InternalFrameInfo lastInternalFrameInfo;
 
         mutable StackFrame currentFrame;
 
