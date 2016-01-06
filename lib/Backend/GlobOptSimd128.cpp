@@ -93,6 +93,19 @@ Value **pDstVal
         instr->m_func->GetScriptContext()->GetThreadContext()->GetSimdFuncSignatureFromOpcode(instr->m_opcode, simdFuncSignature);
         // type-spec logic
 
+        // special handling for load/sotre
+        // OptArraySrc will type-spec the array and the index. We type-spec the value here.
+        if (Js::IsSimd128Load(instr->m_opcode))
+        {
+            TypeSpecializeSimd128Dst(GetIRTypeFromValueType(simdFuncSignature.returnType), instr, nullptr, *pSrc1Val, pDstVal);
+            return true;
+        }
+        if (Js::IsSimd128Store(instr->m_opcode))
+        {
+            ToTypeSpecUse(instr, instr->GetSrc1(), this->currentBlock, *pSrc1Val, nullptr, GetIRTypeFromValueType(simdFuncSignature.args[2]), GetBailOutKindFromValueType(simdFuncSignature.args[2]));
+            return true;
+        }
+
         // For op with ExtendArg. All sources are already type-specialized, just type-specialize dst
         if (simdFuncSignature.argCount <= 2)
         {
@@ -163,6 +176,11 @@ GlobOpt::Simd128DoTypeSpec(IR::Instr *instr, const Value *src1Val, const Value *
         {
             // not implemented yet.
             return false;
+        }
+        // special handling for Load/Store
+        if (Js::IsSimd128Load(instr->m_opcode) || Js::IsSimd128Store(instr->m_opcode))
+        {
+            return Simd128DoTypeSpecLoadStore(instr, src1Val, src2Val, dstVal, &simdFuncSignature);
         }
 
         const uint argCount = simdFuncSignature.argCount;
@@ -252,6 +270,60 @@ GlobOpt::Simd128DoTypeSpec(IR::Instr *instr, const Value *src1Val, const Value *
         Assert(instr->m_opcode == Js::OpCode::ExtendArg_A);
         // For ExtendArg, the expected type is encoded in the dst(link) operand.
         doTypeSpec = doTypeSpec && Simd128CanTypeSpecOpnd(src1Val->GetValueInfo()->Type(), instr->GetDst()->GetValueType());
+    }
+
+    return doTypeSpec;
+}
+
+bool
+GlobOpt::Simd128DoTypeSpecLoadStore(IR::Instr *instr, const Value *src1Val, const Value *src2Val, const Value *dstVal, const ThreadContext::SimdFuncSignature *simdFuncSignature)
+{
+    IR::Opnd *baseOpnd = nullptr, *indexOpnd = nullptr, *valueOpnd = nullptr;
+    IR::Opnd *src, *dst;
+
+    bool doTypeSpec = true;
+
+    // value = Ld [arr + index]
+    // [arr + index] = St value
+    src = instr->GetSrc1();
+    dst = instr->GetDst();
+    Assert(dst && src && !instr->GetSrc2());
+
+    if (Js::IsSimd128Load(instr->m_opcode))
+    {
+        Assert(src->IsIndirOpnd());
+        baseOpnd = instr->GetSrc1()->AsIndirOpnd()->GetBaseOpnd();
+        indexOpnd = instr->GetSrc1()->AsIndirOpnd()->GetIndexOpnd();
+        valueOpnd = instr->GetDst();
+    }
+    else if (Js::IsSimd128Store(instr->m_opcode))
+    {
+        Assert(dst->IsIndirOpnd());
+        baseOpnd = instr->GetDst()->AsIndirOpnd()->GetBaseOpnd();
+        indexOpnd = instr->GetDst()->AsIndirOpnd()->GetIndexOpnd();
+        valueOpnd = instr->GetSrc1();
+
+        // St(arr, index, value). Make sure value can be Simd128 type-spec'ed
+        doTypeSpec = doTypeSpec && Simd128CanTypeSpecOpnd(FindValue(valueOpnd->AsRegOpnd()->m_sym)->GetValueInfo()->Type(), simdFuncSignature->args[2]);
+    }
+    else
+    {
+        Assert(UNREACHED);
+    }
+
+    // array and index operands should have been type-specialized in OptArraySrc: ValueTypes should be definite at this point. If not, don't type-spec.
+    // We can be in a loop prepass, where opnd ValueInfo is not set yet. Get the ValueInfo from the Value Table instead.
+    ValueType baseOpndType = FindValue(baseOpnd->AsRegOpnd()->m_sym)->GetValueInfo()->Type();
+    ValueType indexOpndType = FindValue(indexOpnd->AsRegOpnd()->m_sym)->GetValueInfo()->Type();
+    if (IsLoopPrePass())
+    {
+        doTypeSpec = doTypeSpec && (baseOpndType.IsObject() && baseOpndType.GetObjectType() >= ObjectType::Int8Array && baseOpndType.GetObjectType() <= ObjectType::Float64Array);
+        doTypeSpec = doTypeSpec && indexOpndType.IsLikelyInt();
+    }
+    else
+    {
+        doTypeSpec = doTypeSpec && (baseOpndType.IsObject() && baseOpndType.GetObjectType() >= ObjectType::Int8Array && baseOpndType.GetObjectType() <= ObjectType::Float64Array);
+        doTypeSpec = doTypeSpec && indexOpndType.IsInt();
     }
 
     return doTypeSpec;
@@ -439,4 +511,67 @@ IR::BailOutKind GlobOpt::GetBailOutKindFromValueType(const ValueType &valueType)
         Assert(valueType.IsSimd128Int32x4());
         return IR::BailOutSimd128I4Only;
     }
+}
+
+void
+GlobOpt::UpdateBoundCheckHoistInfoForSimd(ArrayUpperBoundCheckHoistInfo &upperHoistInfo, ValueType arrValueType, const IR::Instr *instr)
+{
+    if (!upperHoistInfo.HasAnyInfo())
+    {
+        return;
+    }
+
+    int newOffset = GetBoundCheckOffsetForSimd(arrValueType, instr, upperHoistInfo.Offset());
+    upperHoistInfo.UpdateOffset(newOffset);
+}
+
+int
+GlobOpt::GetBoundCheckOffsetForSimd(ValueType arrValueType, const IR::Instr *instr, const int oldOffset /* = -1 */)
+{
+    if (!(Js::IsSimd128LoadStore(instr->m_opcode)))
+    {
+        return oldOffset;
+    }
+
+    if (!(arrValueType.GetObjectType() >= ObjectType::Int8Array && arrValueType.GetObjectType() <= ObjectType::Float64Array))
+    {
+        // no need to adjust for other types, we will not type-spec (see Simd128DoTypeSpecLoadStore)
+        return oldOffset;
+    }
+
+    Assert(instr->dataWidth == 4 || instr->dataWidth == 8 || instr->dataWidth == 12 || instr->dataWidth == 16);
+
+    uint bpe = 1;
+    int offsetBias;
+    // REVIEW: Do we care about Virtual and Mixed arrays ? The instruction won't be type-spec'ed (replaced by bailout) for Virtual/Mixed types.
+    switch (arrValueType.GetObjectType())
+    {
+    case ObjectType::Int8Array:
+    case ObjectType::Uint8Array:
+        break;
+    case ObjectType::Int16Array:
+    case ObjectType::Uint16Array:
+        bpe = 2;
+        break;
+    case ObjectType::Int32Array:
+    case ObjectType::Uint32Array:
+    case ObjectType::Float32Array:
+        bpe = 4;
+        break;
+    case ObjectType::Float64Array:
+        bpe = 8;
+        break;
+    default:
+        Assert(UNREACHED);
+    }
+
+    // we want to make bound checks more conservative. We compute how many extra elements we need to add to the bound check
+    // e.g. if original bound check is value <= Length + offset, and dataWidth is 16 bytes on Float32 array, then we need room for 4 elements. The bound check guarantees room for 1 element.
+    // Hence, we need to ensure 3 more: value <= Length + offset - 3
+    // round up since dataWidth may span a partial lane (e.g. dataWidth = 12, bpe = 8 bytes)
+
+    offsetBias = -((int)::ceil(((float)instr->dataWidth) / bpe) - 1);
+    // we should
+    Assert(offsetBias <= 0);
+    return oldOffset + offsetBias;
 }
