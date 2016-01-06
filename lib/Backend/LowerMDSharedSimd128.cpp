@@ -152,7 +152,17 @@ IR::Instr* LowererMD::Simd128LowerUnMappedInstruction(IR::Instr *instr)
     case Js::OpCode::Simd128_LdArrConst_I4:
     case Js::OpCode::Simd128_LdArrConst_F4:
     case Js::OpCode::Simd128_LdArrConst_D2:
-        return Simd128LowerLoadElem(instr);
+        if (m_func->m_workItem->GetFunctionBody()->GetIsAsmjsMode())
+        {
+            // with bound checks
+            return Simd128AsmJsLowerLoadElem(instr);
+        }
+        else
+        {
+            // non-AsmJs, boundChecks are extracted from instr
+            return Simd128ConvertToLoad(instr);
+        }
+        
 
     case Js::OpCode::Simd128_StArr_I4:
     case Js::OpCode::Simd128_StArr_F4:
@@ -160,7 +170,14 @@ IR::Instr* LowererMD::Simd128LowerUnMappedInstruction(IR::Instr *instr)
     case Js::OpCode::Simd128_StArrConst_I4:
     case Js::OpCode::Simd128_StArrConst_F4:
     case Js::OpCode::Simd128_StArrConst_D2:
-        return Simd128LowerStoreElem(instr);
+        if (m_func->m_workItem->GetFunctionBody()->GetIsAsmjsMode())
+        {
+            return Simd128AsmJsLowerStoreElem(instr);
+        }
+        else
+        {
+            return Simd128ConvertToStore(instr);
+        }
 
     case Js::OpCode::Simd128_Swizzle_I4:
     case Js::OpCode::Simd128_Swizzle_F4:
@@ -957,7 +974,7 @@ IR::Instr* LowererMD::Simd128LowerShuffle4(IR::Instr* instr)
     return pInstr;
 }
 
-IR::Instr* LowererMD::Simd128LowerLoadElem(IR::Instr *instr)
+IR::Instr* LowererMD::Simd128AsmJsLowerLoadElem(IR::Instr *instr)
 {
     Assert(instr->m_opcode == Js::OpCode::Simd128_LdArr_I4 ||
         instr->m_opcode == Js::OpCode::Simd128_LdArr_F4 ||
@@ -1030,50 +1047,64 @@ IR::Instr* LowererMD::Simd128LowerLoadElem(IR::Instr *instr)
         done = instr;
     }
 
+    return Simd128ConvertToLoad(instr);
+}
+
+IR::Instr *
+LowererMD::Simd128ConvertToLoad(IR::Instr *instr)
+{
     IR::Instr *newInstr = nullptr;
+    uint8 dataWidth = instr->dataWidth;
+    IR::Opnd * src1 = instr->GetSrc1();
+    IR::Opnd * dst = instr->GetDst();
+    IR::Instr * instrPrev = instr->m_prev;
+
+    // Type-specialized.
+    Assert(dst->IsSimd128());
+    Assert(src1->AsIndirOpnd()->GetBaseOpnd()->GetValueType().IsTypedArray() && src1->AsIndirOpnd()->GetIndexOpnd()->GetValueType().IsInt());
+
     switch (dataWidth)
     {
     case 16:
         // MOVUPS dst, src1([arrayBuffer + indexOpnd])
-        newInstr = IR::Instr::New(LowererMDArch::GetAssignOp(src1->GetType()), dst, src1, m_func);
+        newInstr = IR::Instr::New(LowererMDArch::GetAssignOp(src1->GetType()), dst, src1, instr->m_func);
         instr->InsertBefore(newInstr);
         Legalize(newInstr);
         break;
     case 12:
     {
-       IR::RegOpnd *temp = IR::RegOpnd::New(src1->GetType(), m_func);
+        IR::RegOpnd *temp = IR::RegOpnd::New(src1->GetType(), instr->m_func);
 
-       // MOVSD dst, src1([arrayBuffer + indexOpnd])
-       newInstr = IR::Instr::New(Js::OpCode::MOVSD, dst, src1, m_func);
-       instr->InsertBefore(newInstr);
-       Legalize(newInstr);
+        // MOVSD dst, src1([arrayBuffer + indexOpnd])
+        newInstr = IR::Instr::New(Js::OpCode::MOVSD, dst, src1, instr->m_func);
+        instr->InsertBefore(newInstr);
+        Legalize(newInstr);
 
-       // MOVSS temp, src1([arrayBuffer + indexOpnd + 8])
-       newInstr = IR::Instr::New(Js::OpCode::MOVSS, temp, src1, m_func);
-       instr->InsertBefore(newInstr);
-       newInstr->GetSrc1()->AsIndirOpnd()->SetOffset(src1->AsIndirOpnd()->GetOffset() + 8, true);
-       Legalize(newInstr);
+        // MOVSS temp, src1([arrayBuffer + indexOpnd + 8])
+        newInstr = IR::Instr::New(Js::OpCode::MOVSS, temp, src1, instr->m_func);
+        instr->InsertBefore(newInstr);
+        newInstr->GetSrc1()->AsIndirOpnd()->SetOffset(src1->AsIndirOpnd()->GetOffset() + 8, true);
+        Legalize(newInstr);
 
-       // PSLLDQ temp, 0x08
-       instr->InsertBefore(IR::Instr::New(Js::OpCode::PSLLDQ, temp, temp, IR::IntConstOpnd::New(8, TyInt8, m_func, true), m_func));
+        // PSLLDQ temp, 0x08
+        instr->InsertBefore(IR::Instr::New(Js::OpCode::PSLLDQ, temp, temp, IR::IntConstOpnd::New(8, TyInt8, instr->m_func, true), instr->m_func));
 
-       // ORPS dst, temp
-       newInstr = IR::Instr::New(Js::OpCode::ORPS, dst, dst, temp, m_func);
-       instr->InsertBefore(newInstr);
-       Legalize(newInstr);
+        // ORPS dst, temp
+        newInstr = IR::Instr::New(Js::OpCode::ORPS, dst, dst, temp, instr->m_func);
+        instr->InsertBefore(newInstr);
+        Legalize(newInstr);
 
-       break;
+        break;
     }
-
     case 8:
         // MOVSD dst, src1([arrayBuffer + indexOpnd])
-        newInstr = IR::Instr::New(Js::OpCode::MOVSD, dst, src1, m_func);
+        newInstr = IR::Instr::New(Js::OpCode::MOVSD, dst, src1, instr->m_func);
         instr->InsertBefore(newInstr);
         Legalize(newInstr);
         break;
     case 4:
         // MOVSS dst, src1([arrayBuffer + indexOpnd])
-        newInstr = IR::Instr::New(Js::OpCode::MOVSS, dst, src1, m_func);
+        newInstr = IR::Instr::New(Js::OpCode::MOVSS, dst, src1, instr->m_func);
         instr->InsertBefore(newInstr);
         Legalize(newInstr);
         break;
@@ -1085,7 +1116,7 @@ IR::Instr* LowererMD::Simd128LowerLoadElem(IR::Instr *instr)
     return instrPrev;
 }
 
-IR::Instr* LowererMD::Simd128LowerStoreElem(IR::Instr *instr)
+IR::Instr* LowererMD::Simd128AsmJsLowerStoreElem(IR::Instr *instr)
 {
 
     Assert(instr->m_opcode == Js::OpCode::Simd128_StArr_I4 ||
@@ -1109,7 +1140,7 @@ IR::Instr* LowererMD::Simd128LowerStoreElem(IR::Instr *instr)
     Assert(dst->IsSimd128() && src1->IsSimd128() && src2->GetType() == TyUint32);
 
     IR::Instr * done;
-    bool doStore = true;
+    
     if (indexOpnd || ((uint32)dst->AsIndirOpnd()->GetOffset() + dataWidth > 0x1000000))
     {
         // CMP indexOpnd, src2(arrSize)
@@ -1154,50 +1185,62 @@ IR::Instr* LowererMD::Simd128LowerStoreElem(IR::Instr *instr)
         if (src2->IsIntConstOpnd() && ((uint32)dst->AsIndirOpnd()->GetOffset() + dataWidth > src2->AsIntConstOpnd()->AsUint32()))
         {
             m_lowerer->GenerateRuntimeError(instr, JSERR_ArgumentOutOfRange, IR::HelperOp_RuntimeRangeError);
-
-            doStore = false;
-
             src1->Free(m_func);
             dst->Free(m_func);
+            instr->FreeSrc2();
+            instr->Remove();
+            return instrPrev;
         }
         done = instr;
         instr->FreeSrc2();
     }
-    if (doStore)
+
+    return Simd128ConvertToStore(instr);
+}
+
+IR::Instr * 
+LowererMD::Simd128ConvertToStore(IR::Instr *instr)
+{
+    IR::Instr * instrPrev = instr->m_prev;
+    IR::Opnd * dst = instr->GetDst();
+    IR::Opnd * src1 = instr->GetSrc1();
+    uint8 dataWidth = instr->dataWidth;
+
+    Assert(src1->IsSimd128());
+    Assert(dst->AsIndirOpnd()->GetBaseOpnd()->GetValueType().IsTypedArray() && dst->AsIndirOpnd()->GetIndexOpnd()->GetValueType().IsInt());
+
+    switch (dataWidth)
     {
-        switch (dataWidth)
-        {
-        case 16:
-            // MOVUPS dst([arrayBuffer + indexOpnd]), src1
-            instr->InsertBefore(IR::Instr::New(LowererMDArch::GetAssignOp(src1->GetType()), dst, src1, m_func));
-            break;
-        case 12:
-        {
-                   IR::RegOpnd *temp = IR::RegOpnd::New(src1->GetType(), m_func);
-                   IR::Instr *movss;
-                   // MOVAPS temp, src
-                   instr->InsertBefore(IR::Instr::New(Js::OpCode::MOVAPS, temp, src1, m_func));
-                   // MOVSD dst([arrayBuffer + indexOpnd]), temp
-                   instr->InsertBefore(IR::Instr::New(Js::OpCode::MOVSD, dst, temp, m_func));
-                   // PSRLDQ temp, 0x08
-                   instr->InsertBefore(IR::Instr::New(Js::OpCode::PSRLDQ, temp, temp, IR::IntConstOpnd::New(8, TyInt8, m_func, true), m_func));
-                   // MOVSS dst([arrayBuffer + indexOpnd + 8]), temp
-                   movss = IR::Instr::New(Js::OpCode::MOVSS, dst, temp, m_func);
-                   instr->InsertBefore(movss);
-                   movss->GetDst()->AsIndirOpnd()->SetOffset(dst->AsIndirOpnd()->GetOffset() + 8, true);
-                   break;
-        }
-        case 8:
-            // MOVSD dst([arrayBuffer + indexOpnd]), src1
-            instr->InsertBefore(IR::Instr::New(Js::OpCode::MOVSD, dst, src1, m_func));
-            break;
-        case 4:
-            // MOVSS dst([arrayBuffer + indexOpnd]), src1
-            instr->InsertBefore(IR::Instr::New(Js::OpCode::MOVSS, dst, src1, m_func));
-            break;
-        default:;
-            Assume(UNREACHED);
-        }
+    case 16:
+        // MOVUPS dst([arrayBuffer + indexOpnd]), src1
+        instr->InsertBefore(IR::Instr::New(LowererMDArch::GetAssignOp(src1->GetType()), dst, src1, instr->m_func));
+        break;
+    case 12:
+    {
+               IR::RegOpnd *temp = IR::RegOpnd::New(src1->GetType(), instr->m_func);
+               IR::Instr *movss;
+               // MOVAPS temp, src
+               instr->InsertBefore(IR::Instr::New(Js::OpCode::MOVAPS, temp, src1, instr->m_func));
+               // MOVSD dst([arrayBuffer + indexOpnd]), temp
+               instr->InsertBefore(IR::Instr::New(Js::OpCode::MOVSD, dst, temp, instr->m_func));
+               // PSRLDQ temp, 0x08
+               instr->InsertBefore(IR::Instr::New(Js::OpCode::PSRLDQ, temp, temp, IR::IntConstOpnd::New(8, TyInt8, m_func, true), instr->m_func));
+               // MOVSS dst([arrayBuffer + indexOpnd + 8]), temp
+               movss = IR::Instr::New(Js::OpCode::MOVSS, dst, temp, instr->m_func);
+               instr->InsertBefore(movss);
+               movss->GetDst()->AsIndirOpnd()->SetOffset(dst->AsIndirOpnd()->GetOffset() + 8, true);
+               break;
+    }
+    case 8:
+        // MOVSD dst([arrayBuffer + indexOpnd]), src1
+        instr->InsertBefore(IR::Instr::New(Js::OpCode::MOVSD, dst, src1, instr->m_func));
+        break;
+    case 4:
+        // MOVSS dst([arrayBuffer + indexOpnd]), src1
+        instr->InsertBefore(IR::Instr::New(Js::OpCode::MOVSS, dst, src1, instr->m_func));
+        break;
+    default:;
+        Assume(UNREACHED);
     }
     instr->Remove();
     return instrPrev;

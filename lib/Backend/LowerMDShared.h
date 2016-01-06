@@ -315,8 +315,10 @@ public:
     IR::Instr*          Simd128LowerSelect(IR::Instr *instr);
     IR::Instr*          Simd128LowerNegI4(IR::Instr *instr);
     IR::Instr*          Simd128LowerMulI4(IR::Instr *instr);
-    IR::Instr*          Simd128LowerLoadElem(IR::Instr *instr);
-    IR::Instr*          Simd128LowerStoreElem(IR::Instr *instr);
+    IR::Instr*          Simd128AsmJsLowerLoadElem(IR::Instr *instr);
+    IR::Instr*          Simd128ConvertToLoad(IR::Instr *instr);
+    IR::Instr*          Simd128AsmJsLowerStoreElem(IR::Instr *instr);
+    IR::Instr*          Simd128ConvertToStore(IR::Instr *instr);
     IR::Instr*          Simd128LowerSwizzle4(IR::Instr *instr);
     IR::Instr*          Simd128LowerShuffle4(IR::Instr *instr);
     IR::Opnd *          EnregisterIntConst(IR::Instr* instr, IR::Opnd *constOpnd);
@@ -327,6 +329,7 @@ public:
     void                InsertShufps(uint8 lanes[], IR::Opnd *dst, IR::Opnd *src1, IR::Opnd *src2, IR::Instr *insertBeforeInstr);
 
 private:
+
     void GenerateFlagInlineCacheCheckForGetterSetter(
         IR::Instr * insertBeforeInstr,
         IR::RegOpnd * opndInlineCache,
