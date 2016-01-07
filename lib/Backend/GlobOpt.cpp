@@ -15330,6 +15330,12 @@ GlobOpt::OptArraySrc(IR::Instr * *const instrRef)
         // SIMD_JS
         case Js::OpCode::Simd128_LdArr_F4:
         case Js::OpCode::Simd128_LdArr_I4:
+            // no type-spec for Asm.js
+            if (this->GetIsAsmJSFunc())
+            {
+                return;
+            }
+            // fall through
         case Js::OpCode::LdElemI_A:
         case Js::OpCode::LdMethodElem:
             if(!instr->GetSrc1()->IsIndirOpnd())
@@ -15348,6 +15354,11 @@ GlobOpt::OptArraySrc(IR::Instr * *const instrRef)
         // SIMD_JS
         case Js::OpCode::Simd128_StArr_F4:
         case Js::OpCode::Simd128_StArr_I4:
+            if (this->GetIsAsmJSFunc())
+            {
+                return;
+            }
+            // fall through
         case Js::OpCode::StElemI_A:
         case Js::OpCode::StElemI_A_Strict:
         case Js::OpCode::StElemC:

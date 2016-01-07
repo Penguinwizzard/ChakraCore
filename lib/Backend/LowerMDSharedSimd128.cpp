@@ -160,7 +160,7 @@ IR::Instr* LowererMD::Simd128LowerUnMappedInstruction(IR::Instr *instr)
         else
         {
             // non-AsmJs, boundChecks are extracted from instr
-            return Simd128ConvertToLoad(instr);
+            return Simd128ConvertToLoad(instr->GetDst(), instr->GetSrc1(), instr->dataWidth, instr);
         }
         
 
@@ -176,7 +176,7 @@ IR::Instr* LowererMD::Simd128LowerUnMappedInstruction(IR::Instr *instr)
         }
         else
         {
-            return Simd128ConvertToStore(instr);
+            return Simd128ConvertToStore(instr->GetDst(), instr->GetSrc1(), instr->dataWidth, instr);
         }
 
     case Js::OpCode::Simd128_Swizzle_I4:
@@ -1031,59 +1031,53 @@ IR::Instr* LowererMD::Simd128AsmJsLowerLoadElem(IR::Instr *instr)
         // (1) constant heap or (2) variable heap with constant index < 16MB.
         // Case (1) requires static bound check. Case (2) means we are always in bound.
 
-        instr->UnlinkDst();
+
 
         // this can happen in cases where globopt props a constant access which was not known at bytecodegen time or when heap is non-constant
 
         if (src2->IsIntConstOpnd() && ((uint32)src1->AsIndirOpnd()->GetOffset() + dataWidth > src2->AsIntConstOpnd()->AsUint32()))
         {
             m_lowerer->GenerateRuntimeError(instr, JSERR_ArgumentOutOfRange, IR::HelperOp_RuntimeRangeError);
-            instr->FreeSrc1();
-            instr->FreeSrc2();
             instr->Remove();
             return instrPrev;
         }
-        instr->FreeSrc2();
         done = instr;
     }
 
-    return Simd128ConvertToLoad(instr);
+    return Simd128ConvertToLoad(dst, src1, dataWidth, instr);
 }
 
 IR::Instr *
-LowererMD::Simd128ConvertToLoad(IR::Instr *instr)
+LowererMD::Simd128ConvertToLoad(IR::Opnd *dst, IR::Opnd *src, uint8 dataWidth, IR::Instr* instr)
 {
     IR::Instr *newInstr = nullptr;
-    uint8 dataWidth = instr->dataWidth;
-    IR::Opnd * src1 = instr->GetSrc1();
-    IR::Opnd * dst = instr->GetDst();
     IR::Instr * instrPrev = instr->m_prev;
 
     // Type-specialized.
-    Assert(dst->IsSimd128());
-    Assert(src1->AsIndirOpnd()->GetBaseOpnd()->GetValueType().IsTypedArray() && src1->AsIndirOpnd()->GetIndexOpnd()->GetValueType().IsInt());
+    Assert(dst && dst->IsSimd128());
+    Assert(src->IsIndirOpnd());
 
     switch (dataWidth)
     {
     case 16:
         // MOVUPS dst, src1([arrayBuffer + indexOpnd])
-        newInstr = IR::Instr::New(LowererMDArch::GetAssignOp(src1->GetType()), dst, src1, instr->m_func);
+        newInstr = IR::Instr::New(LowererMDArch::GetAssignOp(src->GetType()), dst, src, instr->m_func);
         instr->InsertBefore(newInstr);
         Legalize(newInstr);
         break;
     case 12:
     {
-        IR::RegOpnd *temp = IR::RegOpnd::New(src1->GetType(), instr->m_func);
+        IR::RegOpnd *temp = IR::RegOpnd::New(src->GetType(), instr->m_func);
 
         // MOVSD dst, src1([arrayBuffer + indexOpnd])
-        newInstr = IR::Instr::New(Js::OpCode::MOVSD, dst, src1, instr->m_func);
+        newInstr = IR::Instr::New(Js::OpCode::MOVSD, dst, src, instr->m_func);
         instr->InsertBefore(newInstr);
         Legalize(newInstr);
 
         // MOVSS temp, src1([arrayBuffer + indexOpnd + 8])
-        newInstr = IR::Instr::New(Js::OpCode::MOVSS, temp, src1, instr->m_func);
+        newInstr = IR::Instr::New(Js::OpCode::MOVSS, temp, src, instr->m_func);
         instr->InsertBefore(newInstr);
-        newInstr->GetSrc1()->AsIndirOpnd()->SetOffset(src1->AsIndirOpnd()->GetOffset() + 8, true);
+        newInstr->GetSrc1()->AsIndirOpnd()->SetOffset(src->AsIndirOpnd()->GetOffset() + 8, true);
         Legalize(newInstr);
 
         // PSLLDQ temp, 0x08
@@ -1098,13 +1092,13 @@ LowererMD::Simd128ConvertToLoad(IR::Instr *instr)
     }
     case 8:
         // MOVSD dst, src1([arrayBuffer + indexOpnd])
-        newInstr = IR::Instr::New(Js::OpCode::MOVSD, dst, src1, instr->m_func);
+        newInstr = IR::Instr::New(Js::OpCode::MOVSD, dst, src, instr->m_func);
         instr->InsertBefore(newInstr);
         Legalize(newInstr);
         break;
     case 4:
         // MOVSS dst, src1([arrayBuffer + indexOpnd])
-        newInstr = IR::Instr::New(Js::OpCode::MOVSS, dst, src1, instr->m_func);
+        newInstr = IR::Instr::New(Js::OpCode::MOVSS, dst, src, instr->m_func);
         instr->InsertBefore(newInstr);
         Legalize(newInstr);
         break;
@@ -1178,36 +1172,27 @@ IR::Instr* LowererMD::Simd128AsmJsLowerStoreElem(IR::Instr *instr)
     }
     else
     {
-        instr->UnlinkDst();
-        instr->UnlinkSrc1();
-
         // we might have a constant index if globopt propped a constant store. we can ahead of time check if it is in-bounds
         if (src2->IsIntConstOpnd() && ((uint32)dst->AsIndirOpnd()->GetOffset() + dataWidth > src2->AsIntConstOpnd()->AsUint32()))
         {
             m_lowerer->GenerateRuntimeError(instr, JSERR_ArgumentOutOfRange, IR::HelperOp_RuntimeRangeError);
-            src1->Free(m_func);
-            dst->Free(m_func);
-            instr->FreeSrc2();
             instr->Remove();
             return instrPrev;
         }
         done = instr;
-        instr->FreeSrc2();
     }
 
-    return Simd128ConvertToStore(instr);
+    return Simd128ConvertToStore(dst, src1, dataWidth, instr);
 }
 
 IR::Instr * 
-LowererMD::Simd128ConvertToStore(IR::Instr *instr)
+LowererMD::Simd128ConvertToStore(IR::Opnd *dst, IR::Opnd *src1, uint8 dataWidth, IR::Instr* instr)
 {
     IR::Instr * instrPrev = instr->m_prev;
-    IR::Opnd * dst = instr->GetDst();
-    IR::Opnd * src1 = instr->GetSrc1();
-    uint8 dataWidth = instr->dataWidth;
+    
 
-    Assert(src1->IsSimd128());
-    Assert(dst->AsIndirOpnd()->GetBaseOpnd()->GetValueType().IsTypedArray() && dst->AsIndirOpnd()->GetIndexOpnd()->GetValueType().IsInt());
+    Assert(src1 && src1->IsSimd128());
+    Assert(dst->IsIndirOpnd());
 
     switch (dataWidth)
     {
