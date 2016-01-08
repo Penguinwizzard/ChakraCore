@@ -316,9 +316,13 @@ public:
     IR::Instr*          Simd128LowerNegI4(IR::Instr *instr);
     IR::Instr*          Simd128LowerMulI4(IR::Instr *instr);
     IR::Instr*          Simd128AsmJsLowerLoadElem(IR::Instr *instr);
+    IR::Instr*          Simd128LowerLoadElem(IR::Instr *instr);
     IR::Instr*          Simd128ConvertToLoad(IR::Opnd *dst, IR::Opnd *src1, uint8 dataWidth, IR::Instr* instr);
     IR::Instr*          Simd128AsmJsLowerStoreElem(IR::Instr *instr);
+    IR::Instr*          Simd128LowerStoreElem(IR::Instr *instr);
     IR::Instr*          Simd128ConvertToStore(IR::Opnd *dst, IR::Opnd *src1, uint8 dataWidth, IR::Instr* instr);
+    void                Simd128LoadHeadSegment(IR::IndirOpnd *indirOpnd, IR::Instr *instr);
+    void                Simd128GenerateUpperBoundCheck(IR::RegOpnd *indexOpnd, IR::IndirOpnd *indirOpnd, IR::Instr *instr);
     IR::Instr*          Simd128LowerSwizzle4(IR::Instr *instr);
     IR::Instr*          Simd128LowerShuffle4(IR::Instr *instr);
     IR::Opnd *          EnregisterIntConst(IR::Instr* instr, IR::Opnd *constOpnd);

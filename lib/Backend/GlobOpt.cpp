@@ -5990,12 +5990,17 @@ GlobOpt::CopyProp(IR::Opnd *opnd, IR::Instr *instr, Value *val, IR::IndirOpnd *p
 
     // SIMD_JS
     // Don't copy-prop operand of SIMD instr with ExtendedArg operands. Each instr should have its exclusive EA sequence.
-    if (Js::IsSimd128Opcode(instr->m_opcode) && instr->GetSrc1() != nullptr && instr->GetSrc2() == nullptr &&  instr->GetSrc1()->GetStackSym()->IsSingleDef())
+    if (
+            Js::IsSimd128Opcode(instr->m_opcode) && 
+            instr->GetSrc1() != nullptr && 
+            instr->GetSrc1()->IsRegOpnd() && 
+            instr->GetSrc2() == nullptr
+       )
     {
-        IR::Instr *defInstr = instr->GetSrc1()->GetStackSym()->GetInstrDef();
-        if (defInstr->m_opcode == Js::OpCode::ExtendArg_A)
+        StackSym *sym = instr->GetSrc1()->GetStackSym();
+        if (sym && sym->IsSingleDef() && sym->GetInstrDef()->m_opcode == Js::OpCode::ExtendArg_A)
         {
-            return opnd;
+                return opnd;
         }
     }
 
@@ -15737,13 +15742,15 @@ GlobOpt::OptArraySrc(IR::Instr * *const instrRef)
             }
             AssertVerify(headSegmentLengthValue->GetValueInfo()->TryGetIntConstantBounds(&headSegmentLengthConstantBounds));
 
-            if(ValueInfo::IsLessThan(
+            if (ValueInfo::IsLessThanOrEqualTo(
                     indexValue,
                     indexConstantBounds.LowerBound(),
                     indexConstantBounds.UpperBound(),
                     headSegmentLengthValue,
                     headSegmentLengthConstantBounds.LowerBound(),
-                    headSegmentLengthConstantBounds.UpperBound()))
+                    headSegmentLengthConstantBounds.UpperBound(),
+                    GetBoundCheckOffsetForSimd(newBaseValueType, instr, -1)
+                    ))
             {
                 eliminatedUpperBoundCheck = true;
                 if(eliminatedLowerBoundCheck)
@@ -16231,6 +16238,7 @@ GlobOpt::OptArraySrc(IR::Instr * *const instrRef)
                     failedToUpdateCompatibleLowerBoundCheck,
                     failedToUpdateCompatibleUpperBoundCheck);
 
+                // SIMD_JS
                 UpdateBoundCheckHoistInfoForSimd(upperBoundCheckHoistInfo, newBaseValueType, instr);
             }
 
@@ -16737,7 +16745,7 @@ GlobOpt::OptArraySrc(IR::Instr * *const instrRef)
                     lowerBound->SetIsJITOptimizedReg(true);
                     IR::Opnd* upperBound = IR::RegOpnd::New(headSegmentLengthSym, headSegmentLengthSym->GetType(), instr->m_func);
                     upperBound->SetIsJITOptimizedReg(true);
-                    const int offset = GetBoundCheckOffsetForSimd(newBaseValueType, instr);
+                    const int offset = GetBoundCheckOffsetForSimd(newBaseValueType, instr, -1);
                     IR::Instr *boundCheck;
 
                     // index <= headSegmentLength - 1 (src1 <= src2 + dst)

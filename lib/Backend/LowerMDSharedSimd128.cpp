@@ -1047,6 +1047,23 @@ IR::Instr* LowererMD::Simd128AsmJsLowerLoadElem(IR::Instr *instr)
     return Simd128ConvertToLoad(dst, src1, dataWidth, instr);
 }
 
+IR::Instr* LowererMD::Simd128LowerLoadElem(IR::Instr *instr)
+{
+    Assert(!m_func->m_workItem->GetFunctionBody()->GetIsAsmjsMode());
+
+    Assert(instr->m_opcode == Js::OpCode::Simd128_LdArr_I4 || instr->m_opcode == Js::OpCode::Simd128_LdArr_F4);
+
+    IR::Opnd * src = instr->GetSrc1();
+    IR::RegOpnd * indexOpnd =src->AsIndirOpnd()->GetIndexOpnd();
+    IR::Opnd * dst = instr->GetDst();
+    
+    uint8 dataWidth = instr->dataWidth;
+
+    Simd128GenerateUpperBoundCheck(indexOpnd, src->AsIndirOpnd(), instr);
+    Simd128LoadHeadSegment(src->AsIndirOpnd(), instr);
+    return Simd128ConvertToLoad(dst, src, dataWidth, instr);
+}
+
 IR::Instr *
 LowererMD::Simd128ConvertToLoad(IR::Opnd *dst, IR::Opnd *src, uint8 dataWidth, IR::Instr* instr)
 {
@@ -1087,7 +1104,6 @@ LowererMD::Simd128ConvertToLoad(IR::Opnd *dst, IR::Opnd *src, uint8 dataWidth, I
         newInstr = IR::Instr::New(Js::OpCode::ORPS, dst, dst, temp, instr->m_func);
         instr->InsertBefore(newInstr);
         Legalize(newInstr);
-
         break;
     }
     case 8:
@@ -1185,6 +1201,21 @@ IR::Instr* LowererMD::Simd128AsmJsLowerStoreElem(IR::Instr *instr)
     return Simd128ConvertToStore(dst, src1, dataWidth, instr);
 }
 
+IR::Instr* LowererMD::Simd128LowerStoreElem(IR::Instr *instr)
+{
+    Assert(!m_func->m_workItem->GetFunctionBody()->GetIsAsmjsMode());
+    Assert(instr->m_opcode == Js::OpCode::Simd128_StArr_I4 || instr->m_opcode == Js::OpCode::Simd128_StArr_F4);
+
+    IR::Opnd * dst = instr->GetDst();
+    IR::RegOpnd * indexOpnd = dst->AsIndirOpnd()->GetIndexOpnd();
+    IR::Opnd * src1 = instr->GetSrc1();
+    uint8 dataWidth = instr->dataWidth;
+
+    Simd128GenerateUpperBoundCheck(indexOpnd, dst->AsIndirOpnd(), instr);
+    Simd128LoadHeadSegment(dst->AsIndirOpnd(), instr);
+    return Simd128ConvertToStore(dst, src1, dataWidth, instr);
+}
+
 IR::Instr * 
 LowererMD::Simd128ConvertToStore(IR::Opnd *dst, IR::Opnd *src1, uint8 dataWidth, IR::Instr* instr)
 {
@@ -1193,7 +1224,7 @@ LowererMD::Simd128ConvertToStore(IR::Opnd *dst, IR::Opnd *src1, uint8 dataWidth,
 
     Assert(src1 && src1->IsSimd128());
     Assert(dst->IsIndirOpnd());
-
+    
     switch (dataWidth)
     {
     case 16:
@@ -1230,6 +1261,70 @@ LowererMD::Simd128ConvertToStore(IR::Opnd *dst, IR::Opnd *src1, uint8 dataWidth,
     instr->Remove();
     return instrPrev;
 }
+
+void
+LowererMD::Simd128GenerateUpperBoundCheck(IR::RegOpnd *indexOpnd, IR::IndirOpnd *indirOpnd, IR::Instr *instr)
+{
+    Assert(!m_func->m_workItem->GetFunctionBody()->GetIsAsmjsMode());
+
+    IR::ArrayRegOpnd *arrayRegOpnd = indirOpnd->GetBaseOpnd()->AsArrayRegOpnd();
+    IR::Opnd* headSegmentLengthOpnd;
+    if (arrayRegOpnd->EliminatedUpperBoundCheck())
+    {
+        // already eliminated or extracted by globOpt (OptArraySrc). Nothing to do. 
+        return;
+    }
+
+    if (arrayRegOpnd->HeadSegmentLengthSym())
+    {
+        headSegmentLengthOpnd = IR::RegOpnd::New(arrayRegOpnd->HeadSegmentLengthSym(), TyUint32, m_func);
+    }
+    else
+    {
+        // (headSegmentLength = [base + offset(length)])
+        int lengthOffset;
+        lengthOffset = Js::Float64Array::GetOffsetOfLength();
+        headSegmentLengthOpnd = IR::IndirOpnd::New(arrayRegOpnd, lengthOffset, TyUint32, m_func);
+    }
+
+    IR::LabelInstr * skipLabel = Lowerer::InsertLabel(false, instr);
+    //  ADD index,  dataWidth
+    //  CMP index, tmp  -- upper bound check
+    //  JBE  $storeLabel
+    //  Throw RuntimeError
+    //  skipLabel:
+    IR::RegOpnd *tmp = IR::RegOpnd::New(indexOpnd->GetType(), m_func);
+    Lowerer::InsertAdd(false, tmp, tmp, IR::IntConstOpnd::New((uint32)instr->dataWidth, TyInt8, m_func, true), skipLabel);
+    m_lowerer->InsertCompareBranch(indexOpnd, headSegmentLengthOpnd, Js::OpCode::BrLe_A, true, skipLabel, skipLabel);
+    m_lowerer->GenerateRuntimeError(skipLabel, JSERR_ArgumentOutOfRange, IR::HelperOp_RuntimeRangeError);
+    return;
+}
+
+void
+LowererMD::Simd128LoadHeadSegment(IR::IndirOpnd *indirOpnd, IR::Instr *instr)
+{
+
+    // For non-asm.js we check if headSeg symbol exists, else load it.
+    IR::ArrayRegOpnd *arrayRegOpnd = indirOpnd->GetBaseOpnd()->AsArrayRegOpnd();
+    IR::RegOpnd *headSegmentOpnd;
+    if (arrayRegOpnd->HeadSegmentSym())
+    {
+        headSegmentOpnd = IR::RegOpnd::New(arrayRegOpnd->HeadSegmentSym(), TyMachPtr, m_func);
+    }
+    else
+    {
+        // REVIEW: Is this needed ? Shouldn't globOpt make sure headSegSym is set and alive ?
+        //  MOV headSegment, [base + offset(head)]
+        IR::IndirOpnd * indirOpnd = IR::IndirOpnd::New(arrayRegOpnd, Js::JavascriptArray::GetOffsetOfHead(), TyMachPtr, this->m_func);
+        headSegmentOpnd = IR::RegOpnd::New(TyMachPtr, this->m_func);
+        m_lowerer->InsertMove(headSegmentOpnd, indirOpnd, instr);
+    }
+
+    // change base to be the head segment instead of the array object
+    indirOpnd->SetBaseOpnd(headSegmentOpnd);
+}
+
+
 
 // Builds args list <dst, src1, src2, src3 ..>
 SList<IR::Opnd*> * LowererMD::Simd128GetExtendedArgs(IR::Instr *instr)

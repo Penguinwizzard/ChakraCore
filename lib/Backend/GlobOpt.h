@@ -1393,6 +1393,7 @@ private:
     IR::Instr *             GetExtendedArg(IR::Instr *instr);
     void                    UpdateBoundCheckHoistInfoForSimd(ArrayUpperBoundCheckHoistInfo &upperHoistInfo, ValueType arrValueType, const IR::Instr *instr);
     int                     GetBoundCheckOffsetForSimd(ValueType arrValueType, const IR::Instr *instr, const int oldOffset = -1);
+    void                    Simd128SetIndirOpndType(IR::IndirOpnd *indirOpnd, Js::OpCode opcode);
 
 
     IR::Instr *             OptNewScObject(IR::Instr** instrPtr, Value* srcVal);

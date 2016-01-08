@@ -98,11 +98,13 @@ Value **pDstVal
         if (Js::IsSimd128Load(instr->m_opcode))
         {
             TypeSpecializeSimd128Dst(GetIRTypeFromValueType(simdFuncSignature.returnType), instr, nullptr, *pSrc1Val, pDstVal);
+            Simd128SetIndirOpndType(instr->GetSrc1()->AsIndirOpnd(), instr->m_opcode);
             return true;
         }
         if (Js::IsSimd128Store(instr->m_opcode))
         {
             ToTypeSpecUse(instr, instr->GetSrc1(), this->currentBlock, *pSrc1Val, nullptr, GetIRTypeFromValueType(simdFuncSignature.args[2]), GetBailOutKindFromValueType(simdFuncSignature.args[2]));
+            Simd128SetIndirOpndType(instr->GetDst()->AsIndirOpnd(), instr->m_opcode);
             return true;
         }
 
@@ -574,4 +576,25 @@ GlobOpt::GetBoundCheckOffsetForSimd(ValueType arrValueType, const IR::Instr *ins
     // we should
     Assert(offsetBias <= 0);
     return oldOffset + offsetBias;
+}
+
+void
+GlobOpt::Simd128SetIndirOpndType(IR::IndirOpnd *indirOpnd, Js::OpCode opcode)
+{
+    switch (opcode)
+    {
+    case Js::OpCode::Simd128_LdArr_F4:
+    case Js::OpCode::Simd128_StArr_F4:
+        indirOpnd->SetType(TySimd128F4);
+        indirOpnd->SetValueType(ValueType::GetSimd128(ObjectType::Simd128Float32x4));
+        break;
+    case Js::OpCode::Simd128_LdArr_I4:
+    case Js::OpCode::Simd128_StArr_I4:
+        indirOpnd->SetType(TySimd128I4);
+        indirOpnd->SetValueType(ValueType::GetSimd128(ObjectType::Simd128Int32x4));
+        break;
+    default:
+        Assert(UNREACHED);
+    }
+
 }
