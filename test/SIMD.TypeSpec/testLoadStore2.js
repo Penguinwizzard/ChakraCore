@@ -11,14 +11,17 @@ function func1(arr)
     {
         //print(i);
         f4 = SIMD.Float32x4(1111, 2222, 3, 4);    
+    
         //print(f4.toString());
         SIMD.Float32x4.store2(arr, i, f4);
-        f4 = arr[i];
-        //f4 = SIMD.Float32x4.load(arr, i);
+        //f4 = arr[i];
+        f4 = SIMD.Float32x4.load(arr, i);
         print(f4.toString());
     }
 
 }
+
+
 
 
 // Add different typed arrays

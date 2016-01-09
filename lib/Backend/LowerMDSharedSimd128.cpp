@@ -160,7 +160,7 @@ IR::Instr* LowererMD::Simd128LowerUnMappedInstruction(IR::Instr *instr)
         else
         {
             // non-AsmJs, boundChecks are extracted from instr
-            return Simd128ConvertToLoad(instr->GetDst(), instr->GetSrc1(), instr->dataWidth, instr);
+            return Simd128LowerLoadElem(instr);
         }
         
 
@@ -176,7 +176,7 @@ IR::Instr* LowererMD::Simd128LowerUnMappedInstruction(IR::Instr *instr)
         }
         else
         {
-            return Simd128ConvertToStore(instr->GetDst(), instr->GetSrc1(), instr->dataWidth, instr);
+            return Simd128LowerStoreElem(instr);
         }
 
     case Js::OpCode::Simd128_Swizzle_I4:
@@ -999,28 +999,7 @@ IR::Instr* LowererMD::Simd128AsmJsLowerLoadElem(IR::Instr *instr)
     IR::Instr * done;
     if (indexOpnd ||  (((uint32)src1->AsIndirOpnd()->GetOffset() + dataWidth) > 0x1000000 /* 16 MB */))
     {
-        uint32 bpe = 1;
-        switch (arrType.GetObjectType())
-        {
-        case ObjectType::Int8Array:
-        case ObjectType::Uint8Array:
-            break;
-        case ObjectType::Int16Array:
-        case ObjectType::Uint16Array:
-            bpe = 2;
-            break;
-        case ObjectType::Int32Array:
-        case ObjectType::Uint32Array:
-        case ObjectType::Float32Array:
-            bpe = 4;
-            break;
-        case ObjectType::Float64Array:
-            bpe = 8;
-            break;
-        default:
-            Assert(UNREACHED);
-        }
-
+        uint32 bpe = Simd128GetTypedArrBytesPerElem(arrType);
         // bound check and helper
         done = this->lowererMDArch.LowerAsmJsLdElemHelper(instr, true, bpe != dataWidth);
     }
@@ -1056,16 +1035,18 @@ IR::Instr* LowererMD::Simd128LowerLoadElem(IR::Instr *instr)
     IR::Opnd * src = instr->GetSrc1();
     IR::RegOpnd * indexOpnd =src->AsIndirOpnd()->GetIndexOpnd();
     IR::Opnd * dst = instr->GetDst();
-    
-    uint8 dataWidth = instr->dataWidth;
+    ValueType arrType = src->AsIndirOpnd()->GetBaseOpnd()->GetValueType();
 
-    Simd128GenerateUpperBoundCheck(indexOpnd, src->AsIndirOpnd(), instr);
-    Simd128LoadHeadSegment(src->AsIndirOpnd(), instr);
-    return Simd128ConvertToLoad(dst, src, dataWidth, instr);
+    // If we type-specialized, then array is a definite typed-array.
+    Assert(arrType.IsObject() && arrType.GetObjectType() >= ObjectType::Int8Array && arrType.GetObjectType() <= ObjectType::Float64Array);
+
+    Simd128GenerateUpperBoundCheck(indexOpnd, src->AsIndirOpnd(), arrType, instr);
+    Simd128LoadHeadSegment(src->AsIndirOpnd(), arrType, instr);
+    return Simd128ConvertToLoad(dst, src, instr->dataWidth, instr, m_lowerer->GetArrayIndirScale(arrType) /* scale factor */);
 }
 
 IR::Instr *
-LowererMD::Simd128ConvertToLoad(IR::Opnd *dst, IR::Opnd *src, uint8 dataWidth, IR::Instr* instr)
+LowererMD::Simd128ConvertToLoad(IR::Opnd *dst, IR::Opnd *src, uint8 dataWidth, IR::Instr* instr, byte scaleFactor /* = 0*/)
 {
     IR::Instr *newInstr = nullptr;
     IR::Instr * instrPrev = instr->m_prev;
@@ -1073,6 +1054,12 @@ LowererMD::Simd128ConvertToLoad(IR::Opnd *dst, IR::Opnd *src, uint8 dataWidth, I
     // Type-specialized.
     Assert(dst && dst->IsSimd128());
     Assert(src->IsIndirOpnd());
+    if (scaleFactor > 0)
+    {
+        // needed only for non-Asmjs code
+        Assert(!m_func->m_workItem->GetFunctionBody()->GetIsAsmjsMode());
+        src->AsIndirOpnd()->SetScale(scaleFactor);
+    }
 
     switch (dataWidth)
     {
@@ -1162,28 +1149,7 @@ IR::Instr* LowererMD::Simd128AsmJsLowerStoreElem(IR::Instr *instr)
         // $store:
         // MOV dst([arrayBuffer + indexOpnd]), src1
         // $done:
-
-        uint32 bpe = 1;
-        switch (arrType.GetObjectType())
-        {
-        case ObjectType::Int8Array:
-        case ObjectType::Uint8Array:
-            break;
-        case ObjectType::Int16Array:
-        case ObjectType::Uint16Array:
-            bpe = 2;
-            break;
-        case ObjectType::Int32Array:
-        case ObjectType::Uint32Array:
-        case ObjectType::Float32Array:
-            bpe = 4;
-            break;
-        case ObjectType::Float64Array:
-            bpe = 8;
-            break;
-        default:
-            Assert(UNREACHED);
-        }
+        uint32 bpe = Simd128GetTypedArrBytesPerElem(arrType);
         done = this->lowererMDArch.LowerAsmJsStElemHelper(instr, true, bpe != dataWidth);
     }
     else
@@ -1210,20 +1176,31 @@ IR::Instr* LowererMD::Simd128LowerStoreElem(IR::Instr *instr)
     IR::RegOpnd * indexOpnd = dst->AsIndirOpnd()->GetIndexOpnd();
     IR::Opnd * src1 = instr->GetSrc1();
     uint8 dataWidth = instr->dataWidth;
-
-    Simd128GenerateUpperBoundCheck(indexOpnd, dst->AsIndirOpnd(), instr);
-    Simd128LoadHeadSegment(dst->AsIndirOpnd(), instr);
-    return Simd128ConvertToStore(dst, src1, dataWidth, instr);
+    ValueType arrType = dst->AsIndirOpnd()->GetBaseOpnd()->GetValueType();
+    
+    // If we type-specialized, then array is a definite type-array.
+    Assert(arrType.IsObject() && arrType.GetObjectType() >= ObjectType::Int8Array && arrType.GetObjectType() <= ObjectType::Float64Array);
+    
+    Simd128GenerateUpperBoundCheck(indexOpnd, dst->AsIndirOpnd(), arrType, instr);
+    Simd128LoadHeadSegment(dst->AsIndirOpnd(), arrType, instr);
+    return Simd128ConvertToStore(dst, src1, dataWidth, instr, m_lowerer->GetArrayIndirScale(arrType) /*scale factor*/);
 }
 
 IR::Instr * 
-LowererMD::Simd128ConvertToStore(IR::Opnd *dst, IR::Opnd *src1, uint8 dataWidth, IR::Instr* instr)
+LowererMD::Simd128ConvertToStore(IR::Opnd *dst, IR::Opnd *src1, uint8 dataWidth, IR::Instr* instr, byte scaleFactor /* = 0 */)
 {
     IR::Instr * instrPrev = instr->m_prev;
     
 
     Assert(src1 && src1->IsSimd128());
     Assert(dst->IsIndirOpnd());
+    
+    if (scaleFactor > 0)
+    {
+        // needed only for non-Asmjs code
+        Assert(!m_func->m_workItem->GetFunctionBody()->GetIsAsmjsMode());
+        dst->AsIndirOpnd()->SetScale(scaleFactor);
+    }
     
     switch (dataWidth)
     {
@@ -1263,7 +1240,7 @@ LowererMD::Simd128ConvertToStore(IR::Opnd *dst, IR::Opnd *src1, uint8 dataWidth,
 }
 
 void
-LowererMD::Simd128GenerateUpperBoundCheck(IR::RegOpnd *indexOpnd, IR::IndirOpnd *indirOpnd, IR::Instr *instr)
+LowererMD::Simd128GenerateUpperBoundCheck(IR::RegOpnd *indexOpnd, IR::IndirOpnd *indirOpnd, ValueType arrType, IR::Instr *instr)
 {
     Assert(!m_func->m_workItem->GetFunctionBody()->GetIsAsmjsMode());
 
@@ -1283,30 +1260,32 @@ LowererMD::Simd128GenerateUpperBoundCheck(IR::RegOpnd *indexOpnd, IR::IndirOpnd 
     {
         // (headSegmentLength = [base + offset(length)])
         int lengthOffset;
-        lengthOffset = Js::Float64Array::GetOffsetOfLength();
+        lengthOffset = m_lowerer->GetArrayOffsetOfLength(arrType);
         headSegmentLengthOpnd = IR::IndirOpnd::New(arrayRegOpnd, lengthOffset, TyUint32, m_func);
     }
 
     IR::LabelInstr * skipLabel = Lowerer::InsertLabel(false, instr);
-    //  ADD index,  dataWidth
+    //  ADD index,  elemCount
     //  CMP index, tmp  -- upper bound check
     //  JBE  $storeLabel
     //  Throw RuntimeError
     //  skipLabel:
     IR::RegOpnd *tmp = IR::RegOpnd::New(indexOpnd->GetType(), m_func);
-    Lowerer::InsertAdd(false, tmp, tmp, IR::IntConstOpnd::New((uint32)instr->dataWidth, TyInt8, m_func, true), skipLabel);
+    IR::IntConstOpnd *elemCount = IR::IntConstOpnd::New(Js::SimdGetElementCountFromBytes(arrayRegOpnd->GetValueType(), instr->dataWidth), TyInt8, m_func, true);
+    Lowerer::InsertAdd(false, tmp, tmp, elemCount, skipLabel);
     m_lowerer->InsertCompareBranch(indexOpnd, headSegmentLengthOpnd, Js::OpCode::BrLe_A, true, skipLabel, skipLabel);
     m_lowerer->GenerateRuntimeError(skipLabel, JSERR_ArgumentOutOfRange, IR::HelperOp_RuntimeRangeError);
     return;
 }
 
 void
-LowererMD::Simd128LoadHeadSegment(IR::IndirOpnd *indirOpnd, IR::Instr *instr)
+LowererMD::Simd128LoadHeadSegment(IR::IndirOpnd *indirOpnd, ValueType arrType, IR::Instr *instr)
 {
 
     // For non-asm.js we check if headSeg symbol exists, else load it.
     IR::ArrayRegOpnd *arrayRegOpnd = indirOpnd->GetBaseOpnd()->AsArrayRegOpnd();
     IR::RegOpnd *headSegmentOpnd;
+    
     if (arrayRegOpnd->HeadSegmentSym())
     {
         headSegmentOpnd = IR::RegOpnd::New(arrayRegOpnd->HeadSegmentSym(), TyMachPtr, m_func);
@@ -1315,7 +1294,8 @@ LowererMD::Simd128LoadHeadSegment(IR::IndirOpnd *indirOpnd, IR::Instr *instr)
     {
         // REVIEW: Is this needed ? Shouldn't globOpt make sure headSegSym is set and alive ?
         //  MOV headSegment, [base + offset(head)]
-        IR::IndirOpnd * indirOpnd = IR::IndirOpnd::New(arrayRegOpnd, Js::JavascriptArray::GetOffsetOfHead(), TyMachPtr, this->m_func);
+        int32 headOffset = m_lowerer->GetArrayOffsetOfHeadSegment(arrType);
+        IR::IndirOpnd * indirOpnd = IR::IndirOpnd::New(arrayRegOpnd, headOffset, TyMachPtr, this->m_func);
         headSegmentOpnd = IR::RegOpnd::New(TyMachPtr, this->m_func);
         m_lowerer->InsertMove(headSegmentOpnd, indirOpnd, instr);
     }
@@ -1575,4 +1555,30 @@ void LowererMD::InsertShufps(uint8 lanes[], IR::Opnd *dst, IR::Opnd *src1, IR::O
     instr->InsertBefore(IR::Instr::New(Js::OpCode::MOVAPS, dst, src1, m_func));
     // SHUF dst, src2, imm8
     instr->InsertBefore(IR::Instr::New(Js::OpCode::SHUFPS, dst, src2, IR::IntConstOpnd::New((IntConstType)shufMask, TyInt8, m_func, true), m_func));
+}
+
+BYTE LowererMD::Simd128GetTypedArrBytesPerElem(ValueType arrType)
+{
+    BYTE bpe = 1;
+    switch (arrType.GetObjectType())
+    {
+    case ObjectType::Int8Array:
+    case ObjectType::Uint8Array:
+        break;
+    case ObjectType::Int16Array:
+    case ObjectType::Uint16Array:
+        bpe = 2;
+        break;
+    case ObjectType::Int32Array:
+    case ObjectType::Uint32Array:
+    case ObjectType::Float32Array:
+        bpe = 4;
+        break;
+    case ObjectType::Float64Array:
+        bpe = 8;
+        break;
+    default:
+        Assert(UNREACHED);
+    }
+    return bpe;
 }

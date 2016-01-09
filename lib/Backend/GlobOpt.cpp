@@ -15597,11 +15597,17 @@ GlobOpt::OptArraySrc(IR::Instr * *const instrRef)
     StackSym *const newHeadSegmentLengthSym = doHeadSegmentLengthLoad ? StackSym::New(TyUint32, instr->m_func) : nullptr;
     StackSym *const newLengthSym = doLengthLoad ? StackSym::New(TyUint32, instr->m_func) : nullptr;
 
-    bool canBailOutOnArrayAccessHelperCall = true;
+    bool canBailOutOnArrayAccessHelperCall;
 
-    if (!Js::IsSimd128LoadStore(instr->m_opcode))
+    if (Js::IsSimd128LoadStore(instr->m_opcode))
     {
-        (isProfilableLdElem || isProfilableStElem) &&
+        // SIMD_JS
+        // simd load/store never call helper
+        canBailOutOnArrayAccessHelperCall = true; 
+    }
+    else
+    {
+        canBailOutOnArrayAccessHelperCall = (isProfilableLdElem || isProfilableStElem) &&
         DoEliminateArrayAccessHelperCall() &&
         !(
             instr->IsProfiledInstr() &&
@@ -19390,7 +19396,10 @@ GlobOpt::RemoveCodeAfterNoFallthroughInstr(IR::Instr *instr)
     FOREACH_SUCCESSOR_BLOCK_EDITING(deadBlock, this->currentBlock, iter)
     {
         this->currentBlock->RemoveDeadSucc(deadBlock, this->func->m_fg);
-        this->currentBlock->DecrementDataUseCount();
+        if (this->currentBlock->GetDataUseCount() > 0)
+        {
+            this->currentBlock->DecrementDataUseCount();
+        }
     } NEXT_SUCCESSOR_BLOCK_EDITING;
 }
 
