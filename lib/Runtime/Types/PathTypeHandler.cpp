@@ -307,7 +307,7 @@ namespace Js
         {
             return PathTypeHandlerBase::DeleteItem(instance, indexVal, flags);
         }
-
+        PHASE_PRINT_TRACE1(Js::ConversionToSimpleDictionaryTypePhase, L"Conversion from path type handler; DeleteProperty\n");
         return  ConvertToSimpleDictionaryType(instance, GetPathLength())->DeleteProperty(instance, propertyId, flags);
     }
 
@@ -344,7 +344,12 @@ namespace Js
 #ifdef PROFILE_TYPES
         instance->GetScriptContext()->convertPathToDictionaryCount3++;
 #endif
-        return value || ConvertToSimpleDictionaryType(instance, GetPathLength())->SetEnumerable(instance, propertyId, value);
+        if (value)
+        {
+            return value;
+        }
+        PHASE_PRINT_TRACE1(Js::ConversionToSimpleDictionaryTypePhase, L"Conversion from path type handler; SetEnumerable\n");
+        return ConvertToSimpleDictionaryType(instance, GetPathLength())->SetEnumerable(instance, propertyId, value);
     }
 
     BOOL PathTypeHandlerBase::SetWritable(DynamicObject* instance, PropertyId propertyId, BOOL value)
@@ -352,7 +357,12 @@ namespace Js
 #ifdef PROFILE_TYPES
         instance->GetScriptContext()->convertPathToDictionaryCount3++;
 #endif
-        return value || ConvertToSimpleDictionaryType(instance, GetPathLength())->SetWritable(instance, propertyId, value);
+        if (value)
+        {
+            return value;
+        }
+        PHASE_PRINT_TRACE1(Js::ConversionToSimpleDictionaryTypePhase, L"Conversion from path type handler; SetWritable\n");
+        return ConvertToSimpleDictionaryType(instance, GetPathLength())->SetEnumerable(instance, propertyId, value);
     }
 
     BOOL PathTypeHandlerBase::SetConfigurable(DynamicObject* instance, PropertyId propertyId, BOOL value)
@@ -360,7 +370,12 @@ namespace Js
 #ifdef PROFILE_TYPES
         instance->GetScriptContext()->convertPathToDictionaryCount3++;
 #endif
-        return value || ConvertToSimpleDictionaryType(instance, GetPathLength())->SetConfigurable(instance, propertyId, value);
+        if (value)
+        {
+            return value;
+        }
+        PHASE_PRINT_TRACE1(Js::ConversionToSimpleDictionaryTypePhase, L"Conversion from path type handler; SetConfigurable\n");
+        return ConvertToSimpleDictionaryType(instance, GetPathLength())->SetEnumerable(instance, propertyId, value);
     }
 
     BOOL PathTypeHandlerBase::SetAccessors(DynamicObject* instance, PropertyId propertyId, Var getter, Var setter, PropertyOperationFlags flags)
@@ -859,6 +874,7 @@ namespace Js
         }
         else
         {
+            PHASE_PRINT_TRACE1(Js::ConversionToSimpleDictionaryTypePhase, L"Conversion from path type handler; setting property with non-default attributes in SetPropertyWithAttributes\n");
             return ConvertToSimpleDictionaryType(instance, GetPathLength() + 1)->SetPropertyWithAttributes(instance, propertyId, value, attributes, info, flags, possibleSideEffects);
         }
     }
@@ -870,7 +886,7 @@ namespace Js
 #ifdef PROFILE_TYPES
             instance->GetScriptContext()->convertPathToDictionaryCount3++;
 #endif
-
+            PHASE_PRINT_TRACE1(Js::ConversionToSimpleDictionaryTypePhase, L"Conversion from path type handler; setting non-default attributes in SetAttributes\n");
             return ConvertToSimpleDictionaryType(instance, GetPathLength())->SetAttributes(instance, propertyId, attributes);
         }
 
@@ -1161,6 +1177,7 @@ namespace Js
     {
         // The type path is allocated in the type allocator associated with the script context.
         // So we can't reuse it in other context.  Just convert the type to a simple dictionary type
+        PHASE_PRINT_TRACE1(Js::ConversionToSimpleDictionaryTypePhase, L"Conversion from path type handler; ResetTypeHandler\n");
         this->ConvertToSimpleDictionaryType(instance, GetPathLength());
     }
 
@@ -1220,6 +1237,7 @@ namespace Js
         {
             Assert(propertyId != Constants::NoProperty);
             PropertyRecord const* propertyRecord = instance->GetScriptContext()->GetPropertyName(propertyId);
+            PHASE_PRINT_TRACE1(Js::ConversionToSimpleDictionaryTypePhase, L"Conversion from path type handler; adding a property with non-default attributes in AddProperty\n");
             return ConvertToSimpleDictionaryType(instance, GetPathLength() + 1)->AddProperty(instance, propertyRecord, value, attributes, info, flags, possibleSideEffects);
         }
         return AddPropertyInternal(instance, propertyId, value, info, flags, possibleSideEffects);
@@ -1243,6 +1261,7 @@ namespace Js
 #ifdef PROFILE_TYPES
             scriptContext->convertPathToDictionaryCount1++;
 #endif
+            PHASE_PRINT_TRACE1(Js::ConversionToSimpleDictionaryTypePhase, L"Conversion from path type handler; adding a property beyond MaxPathTypeHandlerLength in AddPropertyInternal\n");
             return ConvertToSimpleDictionaryType(instance, GetPathLength() + 1)->AddProperty(instance, propertyRecord, value, PropertyDynamicTypeDefaults, info, PropertyOperation_None, possibleSideEffects);
         }
 
@@ -1372,6 +1391,7 @@ namespace Js
 
     void PathTypeHandlerBase::SetPrototype(DynamicObject* instance, RecyclableObject* newPrototype)
     {
+        PHASE_PRINT_TRACE1(Js::ConversionToSimpleDictionaryTypePhase, L"Conversion from path type handler; SetPrototype\n");
         ConvertToSimpleDictionaryType(instance, GetPathLength())->SetPrototype(instance, newPrototype);
     }
 
@@ -1397,6 +1417,7 @@ namespace Js
             // In that case the type handler change below won't change the type on the object, so we have to force it.
 
             DynamicType* oldType = instance->GetDynamicType();
+            PHASE_PRINT_TRACE1(Js::ConversionToSimpleDictionaryTypePhase, L"Conversion from path type handler; SetIsPrototype\n");
             ConvertToSimpleDictionaryType(instance, GetPathLength());
 
             if (ChangeTypeOnProto() && instance->GetDynamicType() == oldType)

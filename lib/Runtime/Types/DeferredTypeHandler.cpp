@@ -65,6 +65,7 @@ namespace Js
 
         if (isSimple)
         {
+            PHASE_PRINT_TRACE1(Js::ConversionToSimpleDictionaryTypePhase, L"Conversion from deferred type handler\n");
             newTypeHandler = ConvertToSimpleDictionaryType(instance, initSlotCapacity);
         }
         else

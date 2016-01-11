@@ -135,6 +135,7 @@ namespace Js
         if (this->isPrototype && (ChangeTypeOnProto() || (GetIsShared() && IsolatePrototypes())))
         {
             ScriptContext* scriptContext = instance->GetScriptContext();
+            PHASE_PRINT_TRACE1(Js::ConversionToSimpleDictionaryTypePhase, L"Conversion from null type handler\n");
             return ConvertToSimpleDictionaryType(instance)->AddProperty(instance, scriptContext->GetPropertyName(propertyId), value, attributes, info, flags, possibleSideEffects);
         }
         else

@@ -967,6 +967,23 @@ namespace Js
         {
             Assert(propertyId != Constants::NoProperty);
             PropertyRecord const* propertyRecord = scriptContext->GetPropertyName(propertyId);
+            if (size == 1)
+            {
+                PHASE_PRINT_TRACE1(Js::ConversionToSimpleDictionaryTypePhase,
+                    L"Conversion from simple type handler; Adding a property beyond the size of descriptors in AddProperty, propertyCount: %d, descriptors size: %d, property: %s, property being added: %s\n",
+                    propertyCount, sizeof(descriptors) / sizeof(SimplePropertyDescriptor), (wchar_t*)(descriptors[0].Id + 1), (wchar_t*)(scriptContext->GetPropertyName(propertyId) + 1));
+            }
+            else if (size == 2)
+            {
+                PHASE_PRINT_TRACE1(Js::ConversionToSimpleDictionaryTypePhase,
+                    L"Conversion from simple type handler; Adding a property beyond the size of descriptors in AddProperty, propertyCount: %d, descriptors size: %d, property1: %s, property2: %s, property being added: %s\n",
+                    propertyCount, sizeof(descriptors) / sizeof(SimplePropertyDescriptor), (wchar_t*)(descriptors[0].Id + 1), (wchar_t*)(descriptors[1].Id + 1),
+                    (wchar_t*)(scriptContext->GetPropertyName(propertyId) + 1));
+            }
+            else
+            {
+                Js::Throw::FatalInternalError();
+            }
             return ConvertToSimpleDictionaryType(instance)->AddProperty(instance, propertyRecord, value, attributes, info, flags, possibleSideEffects);
         }
 
@@ -1046,7 +1063,7 @@ namespace Js
         {
             return;
         }
-
+        PHASE_PRINT_TRACE1(Js::ConversionToSimpleDictionaryTypePhase, L"Conversion from path type handler; SetIsPrototype\n");
         ConvertToSimpleDictionaryType(instance)->SetIsPrototype(instance);
     }
 
