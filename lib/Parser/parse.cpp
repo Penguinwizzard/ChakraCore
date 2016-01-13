@@ -856,7 +856,7 @@ Symbol* Parser::AddDeclForPid(ParseNodePtr pnode, IdentPtr pid, SymbolType symbo
     {
         // Check if there is a parameter scope and try to get it first.
         BlockInfoStack *outerBlockInfo = blockInfo->pBlockInfoOuter;
-        if (outerBlockInfo != nullptr && outerBlockInfo->pnodeBlock->sxBlock.blockType == PnodeBlockType::Parameter)
+        if (outerBlockInfo != nullptr && outerBlockInfo->pnodeBlock->sxBlock.blockType == PnodeBlockType::Parameter && outerBlockInfo->pnodeBlock->sxBlock.scope->GetCanMergeWithBodyScope())
         {
             maxScopeId = outerBlockInfo->pnodeBlock->sxBlock.blockId;
         }
@@ -4424,6 +4424,19 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
                 // Start the var list.
                 pnodeFnc->sxFnc.pnodeVars = nullptr;
                 m_ppnodeVar = &pnodeFnc->sxFnc.pnodeVars;
+
+                if (pnodeFnc->sxFnc.nestedCount > 0 || pnodeFnc->sxFnc.CallsEval() || pnodeFnc->sxFnc.ChildCallsEval())
+                {
+                    // Nested count is more than 0 after parsing param scope, so there are function definitions in the param scope.
+                    // We can't merge the param scope and body scope any more as the nested methods may be capturing params.
+                    Scope* paramScope = pnodeFnc->sxFnc.pnodeScopes->sxBlock.scope;
+                    paramScope->SetCannotMergeWithBodyScope();
+
+                    // Now add a new symbol reference for each formal in the param scope to the body scope.
+                    paramScope->ForEachSymbol([this](Symbol* sym) {
+                        this->CreateVarDeclNode(sym->GetPid(), STVariable, false, nullptr, false);
+                    });
+                }
             }
 
             // Keep nested function declarations and expressions in the same list at function scope.
