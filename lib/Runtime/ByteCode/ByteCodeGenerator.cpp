@@ -3103,7 +3103,7 @@ void VisitNestedScopes(ParseNode* pnodeScopeList, ParseNode* pnodeParent, ByteCo
             // Merge parameter and body scopes, unless we are deferring the function.
             // If we are deferring the function, we will need both scopes to do the proper binding when
             // the function is undeferred. After the function is undeferred, it is safe to merge the scopes.
-            if (pnodeScope->sxFnc.funcInfo->paramScope != nullptr && pnodeScope->sxFnc.pnodeBody != nullptr)
+            if (pnodeScope->sxFnc.funcInfo->paramScope != nullptr && pnodeScope->sxFnc.pnodeBody != nullptr && pnodeScope->sxFnc.funcInfo->paramScope->GetCanMergeWithBodyScope())
             {
                 Scope::MergeParamAndBodyScopes(pnodeScope, byteCodeGenerator);
             }

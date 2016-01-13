@@ -3493,7 +3493,8 @@ void ByteCodeGenerator::StartEmitFunction(ParseNode *pnodeFnc)
         }
     }
 
-    Scope * const bodyScope = funcInfo->bodyScope;
+    Scope * const bodyScope = funcInfo->GetBodyScope();
+    Scope* const paramScope = funcInfo->GetParamScope();
 
     if (pnodeFnc->nop != knopProg)
     {
@@ -3548,6 +3549,10 @@ void ByteCodeGenerator::StartEmitFunction(ParseNode *pnodeFnc)
             ParseNode *pnode;
             Symbol *sym;
 
+            if (paramScope != nullptr && !paramScope->GetCanMergeWithBodyScope())
+            {
+                PushScope(paramScope);
+            }
             PushScope(bodyScope);
 
             // Turns on capturesAll temporarily if func has deferred child, so that the following EnsureScopeSlot
@@ -3720,6 +3725,10 @@ void ByteCodeGenerator::StartEmitFunction(ParseNode *pnodeFnc)
 
             pnodeFnc->sxFnc.MapContainerScopes([&](ParseNode *pnodeScope) { this->EnsureFncScopeSlots(pnodeScope, funcInfo); });
 
+            if (paramScope != nullptr && !paramScope->GetCanMergeWithBodyScope())
+            {
+                PushScope(paramScope);
+            }
             PushScope(bodyScope);
 
             for (pnode = pnodeFnc->sxFnc.pnodeVars; pnode; pnode = pnode->sxVar.pnodeNext)
@@ -3769,6 +3778,10 @@ void ByteCodeGenerator::StartEmitFunction(ParseNode *pnodeFnc)
             Assert(bodyScope->GetIsObject());
         }
 
+        if (paramScope != nullptr && !paramScope->GetCanMergeWithBodyScope())
+        {
+            PushScope(paramScope);
+        }
         PushScope(bodyScope);
     }
 

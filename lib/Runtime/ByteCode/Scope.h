@@ -37,6 +37,7 @@ private:
     BYTE mustInstantiate : 1;
     BYTE hasCrossScopeFuncAssignment : 1;
     BYTE hasDuplicateFormals : 1;
+    BYTE canMergeWithBodyScope : 1;
 public:
 #if DBG
     BYTE isRestored : 1;
@@ -52,6 +53,7 @@ public:
         mustInstantiate(false),
         hasCrossScopeFuncAssignment(false),
         hasDuplicateFormals(false),
+        canMergeWithBodyScope(true),
         location(Js::Constants::NoRegister),
         symbolTable(nullptr),
         m_symList(nullptr),
@@ -284,6 +286,9 @@ public:
 
     void SetHasDuplicateFormals() { hasDuplicateFormals = true; }
     bool GetHasDuplicateFormals() { return hasDuplicateFormals; }
+
+    void SetCannotMergeWithBodyScope() { canMergeWithBodyScope = true; }
+    bool GetCanMergeWithBodyScope() { return canMergeWithBodyScope; }
 
     void SetHasLocalInClosure(bool has);
 
