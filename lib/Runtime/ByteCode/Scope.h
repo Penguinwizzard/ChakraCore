@@ -287,7 +287,7 @@ public:
     void SetHasDuplicateFormals() { hasDuplicateFormals = true; }
     bool GetHasDuplicateFormals() { return hasDuplicateFormals; }
 
-    void SetCannotMergeWithBodyScope() { canMergeWithBodyScope = true; }
+    void SetCannotMergeWithBodyScope() { canMergeWithBodyScope = false; }
     bool GetCanMergeWithBodyScope() { return canMergeWithBodyScope; }
 
     void SetHasLocalInClosure(bool has);
