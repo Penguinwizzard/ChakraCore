@@ -1718,7 +1718,9 @@ void ByteCodeGenerator::FinalizeRegisters(FuncInfo * funcInfo, Js::FunctionBody 
 void ByteCodeGenerator::InitScopeSlotArray(FuncInfo * funcInfo)
 {
     // Record slots info for ScopeSlots/ScopeObject.
-    uint scopeSlotCount = funcInfo->bodyScope->GetScopeSlotCount();
+    Scope* paramScope = funcInfo->GetParamScope();
+    uint scopeSlotCount = funcInfo->bodyScope->GetScopeSlotCount()
+                            + ((paramScope == nullptr || paramScope->GetCanMergeWithBodyScope()) ? 0 : funcInfo->GetParamScope()->GetScopeSlotCount());
     if (scopeSlotCount == 0)
     {
         return;
@@ -3121,7 +3123,19 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
 
         if (!pnode->sxFnc.IsSimpleParameterList())
         {
+            // Set the closure register according to the param scope if needed.
+            if (funcInfo->frameSlotsRegisterForParamScope != Js::Constants::NoRegister)
+            {
+                byteCodeFunction->SetLocalClosureReg(funcInfo->frameSlotsRegisterForParamScope);
+            }
+
             EmitDefaultArgs(funcInfo, pnode);
+
+            // Revert the closure register to the previous value
+            if (funcInfo->frameSlotsRegister != Js::Constants::NoRegister)
+            {
+                byteCodeFunction->SetLocalClosureReg(funcInfo->frameSlotsRegister);
+            }
         }
         else if (funcInfo->GetHasArguments() && !NeedScopeObjectForArguments(funcInfo, pnode))
         {
@@ -3513,6 +3527,12 @@ void ByteCodeGenerator::StartEmitFunction(ParseNode *pnodeFnc)
         else
         {
             bodyScope->SetLocation(funcInfo->frameSlotsRegister);
+        }
+
+        if (paramScope != nullptr && !paramScope->GetCanMergeWithBodyScope() && funcInfo->frameSlotsRegisterForParamScope != Js::Constants::NoRegister)
+        {
+            paramScope->SetLocation(funcInfo->frameSlotsRegisterForParamScope);
+            paramScope->SetMustInstantiate(true);
         }
 
         bodyScope->SetMustInstantiate(funcInfo->frameObjRegister != Js::Constants::NoRegister || funcInfo->frameSlotsRegister != Js::Constants::NoRegister);
@@ -4334,7 +4354,7 @@ void ByteCodeGenerator::EmitLocalPropInit(Js::RegSlot rhsLocation, Symbol *sym, 
             // Now store the property to its slot.
             Js::OpCode op = this->GetStSlotOp(scope, -1, slotReg, false, funcInfo);
 
-            if (slotReg != Js::Constants::NoRegister && slotReg == funcInfo->frameSlotsRegister)
+            if (slotReg != Js::Constants::NoRegister && (slotReg == funcInfo->frameSlotsRegister || slotReg == funcInfo->frameSlotsRegisterForParamScope))
             {
                 this->m_writer.SlotI1(op, rhsLocation, slot + Js::ScopeSlots::FirstSlotIndex);
             }
@@ -4367,7 +4387,7 @@ ByteCodeGenerator::GetStSlotOp(Scope *scope, int envIndex, Js::RegSlot scopeLoca
         }
     }
     else if (scopeLocation != Js::Constants::NoRegister &&
-             scopeLocation == funcInfo->frameSlotsRegister)
+             (scopeLocation == funcInfo->frameSlotsRegister || scopeLocation == funcInfo->frameSlotsRegisterForParamScope))
     {
         op = Js::OpCode::StLocalSlot;
     }
@@ -4593,7 +4613,7 @@ void ByteCodeGenerator::EmitPropStore(Js::RegSlot rhsLocation, Symbol *sym, Iden
                                   slot + (sym->GetScope()->GetIsObject()? 0 : Js::ScopeSlots::FirstSlotIndex));
         }
         else if (scopeLocation != Js::Constants::NoRegister &&
-                 (scopeLocation == funcInfo->frameSlotsRegister || scopeLocation == funcInfo->frameObjRegister))
+                 (scopeLocation == funcInfo->frameSlotsRegister || scopeLocation == funcInfo->frameObjRegister || scopeLocation == funcInfo->frameSlotsRegisterForParamScope))
         {
             this->m_writer.SlotI1(op, rhsLocation,
                                   slot + (sym->GetScope()->GetIsObject()? 0 : Js::ScopeSlots::FirstSlotIndex));
@@ -4666,7 +4686,7 @@ ByteCodeGenerator::GetLdSlotOp(Scope *scope, int envIndex, Js::RegSlot scopeLoca
         }
     }
     else if (scopeLocation != Js::Constants::NoRegister &&
-             scopeLocation == funcInfo->frameSlotsRegister)
+             (scopeLocation == funcInfo->frameSlotsRegister || scopeLocation == funcInfo->frameSlotsRegisterForParamScope))
     {
         op = Js::OpCode::LdLocalSlot;
     }
