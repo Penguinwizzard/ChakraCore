@@ -882,6 +882,10 @@ void ByteCodeGenerator::AssignFrameSlotsRegister()
     if (top->frameSlotsRegister == Js::Constants::NoRegister)
     {
         top->frameSlotsRegister = NextVarRegister();
+        if (top->GetParamScope() != nullptr && !top->GetParamScope()->GetCanMergeWithBodyScope())
+        {
+            top->frameSlotsRegisterForParamScope = NextVarRegister();
+        }
     }
 }
 

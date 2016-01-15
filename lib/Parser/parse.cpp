@@ -4435,7 +4435,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
 
                     // Now add a new symbol reference for each formal in the param scope to the body scope.
                     paramScope->ForEachSymbol([this](Symbol* sym) {
-                        this->CreateVarDeclNode(sym->GetPid(), STVariable, false, nullptr, false);
+                        this->CreateVarDeclNode(sym->GetPid(), sym->GetSymbolType(), false, nullptr, false);
                     });
                 }
             }

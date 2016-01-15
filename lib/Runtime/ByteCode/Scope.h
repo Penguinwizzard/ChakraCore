@@ -279,7 +279,7 @@ public:
     bool GetMustInstantiate() const { return mustInstantiate; }
 
     void SetCanMerge(bool can) { canMerge = can; }
-    bool GetCanMerge() const { return canMerge && !mustInstantiate && !isObject; }
+    bool GetCanMerge() const { return canMerge && !mustInstantiate && !isObject && (this->scopeType != ScopeType::ScopeType_Parameter || this->GetCanMergeWithBodyScope()); }
 
     void SetScopeSlotCount(uint i) { scopeSlotCount = i; }
     uint GetScopeSlotCount() const { return scopeSlotCount; }
@@ -288,7 +288,7 @@ public:
     bool GetHasDuplicateFormals() { return hasDuplicateFormals; }
 
     void SetCannotMergeWithBodyScope() { canMergeWithBodyScope = false; }
-    bool GetCanMergeWithBodyScope() { return canMergeWithBodyScope; }
+    bool GetCanMergeWithBodyScope() const { return canMergeWithBodyScope; }
 
     void SetHasLocalInClosure(bool has);
 
