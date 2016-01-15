@@ -612,6 +612,25 @@ public:
         BailoutStatsMap *bailoutReasonCounts;
         uint *rejitReasonCounts;
 #endif
+#ifdef REDEFERRAL_STATS
+        struct RedeferralStats
+        {
+            uint totalFunctionsRedeferred;
+            uint totalFunctionsUsedAfterRedeferral;
+            typedef JsUtil::BaseDictionary<uint8, uint16, ArenaAllocator> AliveFunctionsPerGCMap;
+            AliveFunctionsPerGCMap* aliveFunctionsPerGCMap;
+            
+            typedef JsUtil::BaseDictionary<uint8, uint16, ArenaAllocator> InactiveGCsToFunctionsMap;
+            InactiveGCsToFunctionsMap* inactiveGCsToFunctionsMap;
+
+            typedef JsUtil::BaseDictionary<uint8, uint16, ArenaAllocator> RedeferredFunctionsPerGCMap;
+            RedeferredFunctionsPerGCMap* redeferredFunctionsPerGCMap;
+
+            RedeferralStats() : totalFunctionsRedeferred(0), totalFunctionsUsedAfterRedeferral(0), aliveFunctionsPerGCMap(nullptr), inactiveGCsToFunctionsMap(nullptr), redeferredFunctionsPerGCMap(nullptr){}
+        };
+
+        RedeferralStats redeferralStats;
+#endif
 #ifdef ENABLE_BASIC_TELEMETRY
 
     private:

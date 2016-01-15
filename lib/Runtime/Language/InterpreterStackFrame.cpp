@@ -3056,8 +3056,47 @@ namespace Js
                 this->ehBailoutData = nullptr;
             }
         }
-#ifndef TEMP_DISABLE_ASMJS
+
         FunctionBody *const functionBody = GetFunctionBody();
+        functionBody->m_interpretedSinceLastGC = true;
+
+        if (PHASE_STATS1(Js::RedeferralPhase) && !(m_flags & Js::InterpreterStackFrameFlags_FromBailOut))
+        {
+            if (functionBody->m_wasRedeferred)
+            {
+                functionBody->m_wasRedeferred = false;
+                functionBody->m_wasReparsed = true;
+#ifdef REDEFERRAL_STATS
+                scriptContext->redeferralStats.totalFunctionsUsedAfterRedeferral++;
+                if (PHASE_STATS1(Js::MinGcToNumFunctionsMapPhase))
+                {
+                    if (scriptContext->redeferralStats.inactiveGCsToFunctionsMap == nullptr)
+                    {
+                        scriptContext->redeferralStats.inactiveGCsToFunctionsMap = Anew(scriptContext->GeneralAllocator(), Js::ScriptContext::RedeferralStats::InactiveGCsToFunctionsMap, scriptContext->GeneralAllocator());
+                    }
+
+                    Js::ScriptContext::RedeferralStats::InactiveGCsToFunctionsMap* map = scriptContext->redeferralStats.inactiveGCsToFunctionsMap;
+                    if (functionBody->inactiveGCCount < functionBody->minInactiveGCCount)
+                    {
+                        uint16 minCountFunctions = 0;
+                        if (map->TryGetValue(functionBody->minInactiveGCCount, &minCountFunctions))
+                        {
+                            map->Item(functionBody->minInactiveGCCount, --minCountFunctions);
+                        }
+
+                        uint16 thisCountFunctions = 0;
+                        map->TryGetValue(functionBody->inactiveGCCount, &thisCountFunctions);
+                        map->Item(functionBody->inactiveGCCount, ++thisCountFunctions);
+
+                        functionBody->minInactiveGCCount = functionBody->inactiveGCCount;
+                    }
+                }
+#endif
+            }
+        }
+        functionBody->inactiveGCCount = -1;
+
+#ifndef TEMP_DISABLE_ASMJS
         if( functionBody->GetIsAsmjsMode() )
         {
             AsmJsFunctionInfo* asmInfo = functionBody->GetAsmJsFunctionInfo();

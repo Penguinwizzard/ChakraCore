@@ -132,6 +132,7 @@ ThreadContext::ThreadContext(AllocationPolicyManager * allocationPolicyManager, 
     temporaryGuestArenaAllocatorCount(0),
     crefSContextForDiag(0),
     scriptContextList(nullptr),
+    numGC(0),
     scriptContextEverRegistered(false),
 #if DBG_DUMP || defined(PROFILE_EXEC)
     topLevelScriptSite(nullptr),
@@ -2202,6 +2203,12 @@ ThreadContext::PreCollectionCallBack(CollectionFlags flags)
     // This needs to be done before ClearInlineCaches since that method can empty the list of
     // script contexts with inline caches
     this->ClearScriptContextCaches();
+    
+    //if (++this->numGC > CONFIG_FLAG(MinGCCountForRedeferral))//(++this->numGC % CONFIG_FLAG(GCCountIntervalForRedeferral)) == 0)
+    //{
+    ++this->numGC;
+    this->TryRedeferral();
+    //}
 
     // Clear up references to types to avoid keep them alive
     this->ClearPrototypeChainEnsuredToHaveOnlyWritableDataPropertiesCaches();
@@ -2483,6 +2490,54 @@ ThreadContext::ClearScriptContextCaches()
         scriptContext->ClearScriptContextCaches();
     }
     NEXT_DLISTBASE_ENTRY;
+}
+
+void
+ThreadContext::TryRedeferral()
+{
+    for (Js::ScriptContext *scriptContext = scriptContextList; scriptContext; scriptContext = scriptContext->next)
+    {
+        uint16 numFunctions = 0;
+        uint16 numFunctionsRedeferred = 0;
+        scriptContext->MapFunction([&](Js::FunctionBody* functionBody)
+        {
+            numFunctions++;
+            functionBody->inactiveGCCount++;
+            if ((this->numGC >= CONFIG_FLAG(MinGCCountForRedeferral)) &&
+                ((this->numGC - CONFIG_FLAG(MinGCCountForRedeferral)) % CONFIG_FLAG(GCCountIntervalForRedeferral) == 0)&&
+                /*!functionBody->m_interpretedSinceLastGC*/ functionBody->inactiveGCCount > CONFIG_FLAG(MinInactiveGCCountForRedeferral) &&
+                !functionBody->GetNativeEntryPointUsed() &&
+                !functionBody->m_wasRedeferred && !functionBody->m_wasReparsed)
+            {
+                functionBody->m_wasRedeferred = true;
+                numFunctionsRedeferred++;
+                if (PHASE_STATS1(Js::RedeferralPhase))
+                {
+                    scriptContext->redeferralStats.totalFunctionsRedeferred++;
+                }
+            }
+            else
+            {
+                functionBody->m_interpretedSinceLastGC = false;
+            }
+        });
+        if (PHASE_STATS1(Js::RedeferralPhase))
+        {
+            if (scriptContext->redeferralStats.redeferredFunctionsPerGCMap == nullptr)
+            {
+                scriptContext->redeferralStats.redeferredFunctionsPerGCMap = Anew(scriptContext->GeneralAllocator(), Js::ScriptContext::RedeferralStats::RedeferredFunctionsPerGCMap, scriptContext->GeneralAllocator());
+            }
+            scriptContext->redeferralStats.redeferredFunctionsPerGCMap->Add(this->numGC, numFunctionsRedeferred);
+            if (PHASE_STATS1(Js::AliveFunctionsPerGCMapPhase))
+            {
+                if (scriptContext->redeferralStats.aliveFunctionsPerGCMap == nullptr)
+                {
+                    scriptContext->redeferralStats.aliveFunctionsPerGCMap = Anew(scriptContext->GeneralAllocator(), Js::ScriptContext::RedeferralStats::AliveFunctionsPerGCMap, scriptContext->GeneralAllocator());
+                }
+                scriptContext->redeferralStats.aliveFunctionsPerGCMap->Add(this->numGC, numFunctions);
+            }
+        }
+    }
 }
 
 #ifdef PERSISTENT_INLINE_CACHES

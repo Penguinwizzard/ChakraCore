@@ -651,6 +651,7 @@ private:
 #endif
 
     Js::ScriptContext *scriptContextList;
+    uint8 numGC;
     bool scriptContextEverRegistered;
     static size_t processNativeCodeSize;
     size_t nativeCodeSize;
@@ -1238,6 +1239,7 @@ public:
     void ClearIsInstInlineCaches();
     void ClearEquivalentTypeCaches();
     void ClearScriptContextCaches();
+    void TryRedeferral();
 
     void RegisterTypeWithProtoPropertyCache(const Js::PropertyId propertyId, Js::Type *const type);
     void InvalidateProtoTypePropertyCaches(const Js::PropertyId propertyId);

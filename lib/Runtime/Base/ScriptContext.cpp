@@ -5006,6 +5006,60 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
         }
 #endif
 
+#ifdef REDEFERRAL_STATS
+        if (PHASE_STATS1(Js::RedeferralPhase))
+        {
+            Output::Print(L"\nUrl: %s\n", this->url);
+            Output::Print(L"Total number of functions redeferred: %d\n", redeferralStats.totalFunctionsRedeferred);
+            Output::Print(L"Total number of functions used after redeferral: %d\n", redeferralStats.totalFunctionsUsedAfterRedeferral);
+            if (redeferralStats.totalFunctionsRedeferred - redeferralStats.totalFunctionsUsedAfterRedeferral > 0)
+            {
+                double overallSuccessRate = ((double)(redeferralStats.totalFunctionsRedeferred - redeferralStats.totalFunctionsUsedAfterRedeferral) / redeferralStats.totalFunctionsRedeferred) * 100;
+                Output::Print(L"Redeferral success rate: %.2f\n\n", overallSuccessRate);
+            }
+            else if (redeferralStats.totalFunctionsRedeferred > 0)
+            {
+                Output::Print(L"Redeferral success rate: 0.00\n");
+            }
+
+            if (redeferralStats.redeferredFunctionsPerGCMap)
+            {
+                Output::Print(L"Number of functions redeferred at each GC\n");
+                Output::Print(L"GC-Id, %10s\n", L"Functions redeferred");
+
+                redeferralStats.redeferredFunctionsPerGCMap->Map([](uint8 gcId, uint16 numFunctions)
+                {
+                    Output::Print(L"%d, %10d\n", gcId, numFunctions);
+                });
+            }
+            if (PHASE_STATS1(Js::AliveFunctionsPerGCMapPhase))
+            {
+                if (redeferralStats.aliveFunctionsPerGCMap)
+                {
+                    Output::Print(L"Number of functions alive at each GC\n");
+                    Output::Print(L"GC-Id, %10s\n", L"Functions alive");
+                
+                    redeferralStats.aliveFunctionsPerGCMap->Map([](uint8 gcId, uint16 numFunctions)
+                    {
+                        Output::Print(L"%d, %10d\n", gcId, numFunctions);
+                    });
+                }
+            }
+            if (PHASE_STATS1(Js::MinGcToNumFunctionsMapPhase))
+            {
+                if (redeferralStats.inactiveGCsToFunctionsMap)
+                {
+                    Output::Print(L"Minimum number of GCs a function stays inactive after redeferral\n");
+                    Output::Print(L"Number of GCs %10s\n", L"Nuber of functions");
+                
+                    redeferralStats.inactiveGCsToFunctionsMap->Map([](uint8 numGC, uint16 numFunctions)
+                    {
+                        Output::Print(L"%5d, %10d\n", numGC, numFunctions);
+                    });
+                }
+            }
+        }
+#endif
 #ifdef FIELD_ACCESS_STATS
     if (PHASE_STATS1(Js::ObjTypeSpecPhase))
     {

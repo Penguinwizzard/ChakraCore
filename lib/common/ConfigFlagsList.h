@@ -285,6 +285,9 @@ PHASE(All)
         PHASE(Arena)
         PHASE(ApplyUsage)
         PHASE(ConversionToSimpleDictionaryType)
+        PHASE(Redeferral)
+        PHASE(AliveFunctionsPerGCMap)
+        PHASE(MinGcToNumFunctionsMap)
         PHASE(ObjectHeaderInlining)
             PHASE(ObjectHeaderInliningForConstructors)
             PHASE(ObjectHeaderInliningForObjectLiterals)
@@ -641,6 +644,9 @@ PHASE(All)
 
 #define DEFAULT_CONFIG_MinMemOpCount (16U)
 
+#define DEFAULT_CONFIG_GCCountIntervalForRedeferral (1U)
+#define DEFAULT_CONFIG_MinGCCountForRedeferral (1U)
+#define DEFAULT_CONFIG_MinInactiveGCCountForRedeferral (1U)
 #if ENABLE_COPYONACCESS_ARRAY
 #define DEFAULT_CONFIG_MaxCopyOnAccessArrayLength (32U)
 #define DEFAULT_CONFIG_MinCopyOnAccessArrayLength (5U)
@@ -1048,6 +1054,9 @@ FLAGNR(Number,  MinSimpleJitRunCount  , "Minimum number of times a function must
 FLAGNRA(Number, MaxInterpretCount     , Mic, "Maximum number of times a function can be interpreted", 0)
 FLAGNRA(Number, MaxSimpleJitRunCount  , Msjrc, "Maximum number of times a function will be run in SimpleJitted code", 0)
 FLAGNRA(Number, MinMemOpCount         , Mmoc, "Minimum count of a loop to activate MemOp", DEFAULT_CONFIG_MinMemOpCount)
+FLAGNRA(Number, GCCountIntervalForRedeferral, gcifr, "GCCountIntervalForRedeferral", DEFAULT_CONFIG_GCCountIntervalForRedeferral)
+FLAGNRA(Number, MinGCCountForRedeferral, mgcfr, "MinGCCountForRedeferral", DEFAULT_CONFIG_MinGCCountForRedeferral)
+FLAGNRA(Number, MinInactiveGCCountForRedeferral, migcfr, "MinInactiveGCCountForRedeferral", DEFAULT_CONFIG_MinInactiveGCCountForRedeferral)
 
 #if ENABLE_COPYONACCESS_ARRAY
 FLAGNR(Number,  MaxCopyOnAccessArrayLength, "Maximum length of copy-on-access array", DEFAULT_CONFIG_MaxCopyOnAccessArrayLength)

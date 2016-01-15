@@ -1834,6 +1834,11 @@ namespace Js
 #define CURRENT_ACCESS_MODIFIER public:
 #include "SerializableFunctionFields.h"
 
+        bool m_interpretedSinceLastGC : 1;
+        bool m_wasRedeferred : 1;
+        bool m_wasReparsed : 1;
+        int8 inactiveGCCount;
+        int8 minInactiveGCCount;
     private:
         bool m_tag : 1;                     // Used to tag the low bit to prevent possible GC false references
         bool m_nativeEntryPointUsed : 1;    // Code might have been generated but not yet used.
@@ -1893,7 +1898,7 @@ namespace Js
         bool m_isIRDumpEnabled : 1;
         WriteBarrierPtr<Js::DynamicObject> m_irDumpBaseObject;
 #endif /* IR_VIEWER */
-
+        
         NoWriteBarrierField<uint8> bailOnMisingProfileCount;
         NoWriteBarrierField<uint8> bailOnMisingProfileRejitCount;
 
