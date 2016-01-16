@@ -3120,18 +3120,36 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
 
         if (!pnode->sxFnc.IsSimpleParameterList())
         {
-            // Set the closure register according to the param scope if needed.
-            if (funcInfo->frameSlotsRegisterForParamScope != Js::Constants::NoRegister)
+            Scope* paramScope = funcInfo->GetParamScope();
+            Scope* currentScope = this->GetCurrentScope();
+            Assert(paramScope && currentScope->GetScopeType() == ScopeType_FunctionBody);
+
+            if (!paramScope->GetCanMergeWithBodyScope())
             {
-                byteCodeFunction->SetLocalClosureReg(funcInfo->frameSlotsRegisterForParamScope);
+                // Set the closure register according to the param scope if needed.
+                if (funcInfo->frameSlotsRegisterForParamScope != Js::Constants::NoRegister)
+                {
+                    byteCodeFunction->SetLocalClosureReg(funcInfo->frameSlotsRegisterForParamScope);
+                }
+
+                // Pop the body scope and param scope should be on top now
+                PopScope();
+                Assert(this->GetCurrentScope()->GetScopeType() == ScopeType_Parameter);
             }
 
             EmitDefaultArgs(funcInfo, pnode);
 
-            // Revert the closure register to the previous value
-            if (funcInfo->frameSlotsRegister != Js::Constants::NoRegister)
+            if (!paramScope->GetCanMergeWithBodyScope())
             {
-                byteCodeFunction->SetLocalClosureReg(funcInfo->frameSlotsRegister);
+                // Pop the param scope and push the body scope back in
+                PopScope();
+                PushScope(currentScope);
+
+                // Revert the closure register to the previous value
+                if (funcInfo->frameSlotsRegister != Js::Constants::NoRegister)
+                {
+                    byteCodeFunction->SetLocalClosureReg(funcInfo->frameSlotsRegister);
+                }
             }
         }
         else if (funcInfo->GetHasArguments() && !NeedScopeObjectForArguments(funcInfo, pnode))
@@ -3509,6 +3527,7 @@ void ByteCodeGenerator::StartEmitFunction(ParseNode *pnodeFnc)
 
     Scope * const bodyScope = funcInfo->GetBodyScope();
     Scope* const paramScope = funcInfo->GetParamScope();
+    bool isParamAndBodyScopeNotMerged = (paramScope != nullptr && !paramScope->GetCanMergeWithBodyScope());
 
     if (pnodeFnc->nop != knopProg)
     {
@@ -3526,7 +3545,7 @@ void ByteCodeGenerator::StartEmitFunction(ParseNode *pnodeFnc)
             bodyScope->SetLocation(funcInfo->frameSlotsRegister);
         }
 
-        if (paramScope != nullptr && !paramScope->GetCanMergeWithBodyScope() && funcInfo->frameSlotsRegisterForParamScope != Js::Constants::NoRegister)
+        if (isParamAndBodyScopeNotMerged && funcInfo->frameSlotsRegisterForParamScope != Js::Constants::NoRegister)
         {
             paramScope->SetLocation(funcInfo->frameSlotsRegisterForParamScope);
             paramScope->SetMustInstantiate(true);
@@ -3569,8 +3588,10 @@ void ByteCodeGenerator::StartEmitFunction(ParseNode *pnodeFnc)
             ParseNode *pnode;
             Symbol *sym;
 
-            if (paramScope != nullptr && !paramScope->GetCanMergeWithBodyScope())
+            if (isParamAndBodyScopeNotMerged)
             {
+                // We have to push the param scope here because when emitting all the nested scopes the functions can be
+                // in param scope or body scope. We don't differentiate them right now.
                 PushScope(paramScope);
             }
             PushScope(bodyScope);
@@ -3745,8 +3766,10 @@ void ByteCodeGenerator::StartEmitFunction(ParseNode *pnodeFnc)
 
             pnodeFnc->sxFnc.MapContainerScopes([&](ParseNode *pnodeScope) { this->EnsureFncScopeSlots(pnodeScope, funcInfo); });
 
-            if (paramScope != nullptr && !paramScope->GetCanMergeWithBodyScope())
+            if (isParamAndBodyScopeNotMerged)
             {
+                // We have to push the param scope here because when emitting all the nested scopes the functions can be
+                // in param scope or body scope. We don't differentiate them right now.
                 PushScope(paramScope);
             }
             PushScope(bodyScope);
@@ -3798,8 +3821,10 @@ void ByteCodeGenerator::StartEmitFunction(ParseNode *pnodeFnc)
             Assert(bodyScope->GetIsObject());
         }
 
-        if (paramScope != nullptr && !paramScope->GetCanMergeWithBodyScope())
+        if (isParamAndBodyScopeNotMerged)
         {
+            // We have to push the param scope here because when emitting all the nested scopes the functions can be
+            // in param scope or body scope. We don't differentiate them right now.
             PushScope(paramScope);
         }
         PushScope(bodyScope);
@@ -4030,7 +4055,7 @@ Js::RegSlot ByteCodeGenerator::PrependLocalScopes(Js::RegSlot evalEnv, Js::RegSl
     Scope *currScope = this->currentScope;
     Scope *funcScope = funcInfo->GetBodyScope();
 
-    if (currScope == funcScope)
+    if (currScope == funcScope || (currScope->GetScopeType() == ScopeType_Parameter && currScope->GetFunc() == funcInfo))
     {
         return evalEnv;
     }
