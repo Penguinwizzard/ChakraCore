@@ -3153,6 +3153,22 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
                 {
                     byteCodeFunction->SetLocalClosureReg(funcInfo->frameSlotsRegister);
                 }
+
+                // TODO: Get rid of this n2 loop
+                // Emit bytecode to copy the initial values from param names to their corrsponding body bindings
+                paramScope->ForEachSymbol([this, funcInfo] (Symbol* param) {
+                    Symbol* varSym = funcInfo->GetBodyScope()->FindLocalSymbol(param->GetName());
+                    // TODO: Check whether this condition is valid
+                    if (varSym && param->GetLocation() != Js::Constants::NoRegister && varSym->GetLocation() != Js::Constants::NoRegister)
+                    {
+                        this->EmitPropStore(param->GetLocation(), varSym, varSym->GetPid(), funcInfo);
+                    }
+                    else
+                    {
+                        // TODO: Put the assert back
+                        // Assert(varSym == funcInfo->GetArgumentsSymbol());
+                    }
+                });
             }
         }
         else if (funcInfo->GetHasArguments() && !NeedScopeObjectForArguments(funcInfo, pnode))
