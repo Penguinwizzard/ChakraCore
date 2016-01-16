@@ -1822,7 +1822,9 @@ Scope * ByteCodeGenerator::FindScopeForSym(Scope *symScope, Scope *scope, Js::Pr
 {
     for (scope = scope ? scope->GetEnclosingScope() : currentScope; scope; scope = scope->GetEnclosingScope())
     {
-        if (scope->GetFunc() != funcInfo && scope->GetMustInstantiate() && scope != this->globalScope)
+        if (scope->GetFunc() != funcInfo && scope->GetMustInstantiate() && scope != this->globalScope
+            // TODO: Remove this, this is a work around
+            && (symScope->GetScopeType() != ScopeType_Parameter || scope->GetScopeType() != ScopeType_Parameter || symScope->GetFunc() != scope->GetFunc()))
         {
             (*envIndex)++;
         }
