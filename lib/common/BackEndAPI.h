@@ -22,7 +22,7 @@
 
 #define DefaultDeferredDeserializeThunk Js::JavascriptFunction::DeferredDeserializeThunk
 #define ProfileDeferredDeserializeThunk Js::ScriptContext::ProfileModeDeferredDeserializeThunk
-#ifdef ENABLE_NATIVE_CODEGEN
+#if ENABLE_NATIVE_CODEGEN
 class NativeCodeGenerator;
 class ThreadContext;
 struct CodeGenWorkItem;
@@ -253,7 +253,9 @@ enum VTableValue {
     VtableFloat32VirtualArray,
     VtableFloat64VirtualArray,
     VtableNativeIntArray,
+#if ENABLE_COPYONACCESS_ARRAY
     VtableCopyOnAccessNativeIntArray,
+#endif
     VtableNativeFloatArray,
     VtableJavascriptNativeIntArray,
     VtableJavascriptRegExp,

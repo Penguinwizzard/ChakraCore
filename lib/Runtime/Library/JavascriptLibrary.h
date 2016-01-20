@@ -37,6 +37,7 @@ namespace Js
         UndeclaredBlockVariable(Type* type) : RecyclableObject(type) { }
     };
 
+#if ENABLE_COPYONACCESS_ARRAY
     struct CacheForCopyOnAccessArraySegments
     {
         static const uint32 MAX_SIZE = 31;
@@ -77,6 +78,7 @@ namespace Js
         }
 #endif
     };
+#endif
 
     template <typename T>
     struct StringTemplateCallsiteObjectComparer
@@ -126,7 +128,9 @@ namespace Js
         static const wchar_t* domBuiltinPropertyNames[];
 
     public:
+#if ENABLE_COPYONACCESS_ARRAY
         CacheForCopyOnAccessArraySegments *cacheForCopyOnAccessArraySegments;
+#endif
 
         static DWORD GetScriptContextOffset() { return offsetof(JavascriptLibrary, scriptContext); }
         static DWORD GetUndeclBlockVarOffset() { return offsetof(JavascriptLibrary, undeclBlockVarSentinel); }
@@ -145,7 +149,9 @@ namespace Js
         static DWORD GetPositiveInfinityOffset() { return offsetof(JavascriptLibrary, positiveInfinite); }
         static DWORD GetNaNOffset() { return offsetof(JavascriptLibrary, nan); }
         static DWORD GetNativeIntArrayTypeOffset() { return offsetof(JavascriptLibrary, nativeIntArrayType); }
+#if ENABLE_COPYONACCESS_ARRAY
         static DWORD GetCopyOnAccessNativeIntArrayTypeOffset() { return offsetof(JavascriptLibrary, copyOnAccessNativeIntArrayType); }
+#endif
         static DWORD GetNativeFloatArrayTypeOffset() { return offsetof(JavascriptLibrary, nativeFloatArrayType); }
         static DWORD GetVTableAddressesOffset() { return offsetof(JavascriptLibrary, vtableAddresses); }
         static DWORD GetConstructorCacheDefaultInstanceOffset() { return offsetof(JavascriptLibrary, constructorCacheDefaultInstance); }
@@ -176,7 +182,9 @@ namespace Js
         DynamicType * activationObjectType;
         DynamicType * arrayType;
         DynamicType * nativeIntArrayType;
+#if ENABLE_COPYONACCESS_ARRAY
         DynamicType * copyOnAccessNativeIntArrayType;
+#endif
         DynamicType * nativeFloatArrayType;
         DynamicType * arrayBufferType;
         DynamicType * dataViewType;
@@ -277,6 +285,7 @@ namespace Js
         JavascriptString* errorDisplayString;
         JavascriptString* functionPrefixString;
         JavascriptString* generatorFunctionPrefixString;
+        JavascriptString* asyncFunctionPrefixString;
         JavascriptString* functionDisplayString;
         JavascriptString* xDomainFunctionDisplayString;
         JavascriptString* undefinedDisplayString;
@@ -437,7 +446,9 @@ namespace Js
                               jsrtContextObject(nullptr),
                               externalLibraryList(nullptr),
                               cachedForInEnumerator(nullptr),
+#if ENABLE_COPYONACCESS_ARRAY
                               cacheForCopyOnAccessArraySegments(nullptr),
+#endif
                               isHybridDebugging(false),
                               isLibraryReadyForHybridDebugging(false),
                               referencedPropertyRecords(nullptr),
@@ -489,6 +500,7 @@ namespace Js
         JavascriptString* GetErrorDisplayString() const { return errorDisplayString; }
         JavascriptString* GetFunctionPrefixString() { return functionPrefixString; }
         JavascriptString* GetGeneratorFunctionPrefixString() { return generatorFunctionPrefixString; }
+        JavascriptString* GetAsyncFunctionPrefixString() { return asyncFunctionPrefixString; }
         JavascriptString* GetFunctionDisplayString() { return functionDisplayString; }
         JavascriptString* GetXDomainFunctionDisplayString() { return xDomainFunctionDisplayString; }
         JavascriptString* GetInvalidDateString() { return invalidDateString; }
@@ -540,6 +552,11 @@ namespace Js
         DynamicObject* GetINTLObject() const { return IntlObject; }
         void ResetIntlObject();
         void EnsureIntlObjectReady();
+        template <class Fn>
+        void InitializeIntlForProtototypes(Fn fn);
+        void InitializeIntlForStringPrototype();
+        void InitializeIntlForDatePrototype();
+        void InitializeIntlForNumberPrototype();
 #endif
 
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
@@ -586,7 +603,9 @@ namespace Js
         DynamicType * GetActivationObjectType() const { return activationObjectType; }
         DynamicType * GetArrayType() const { return arrayType; }
         DynamicType * GetNativeIntArrayType() const { return nativeIntArrayType; }
+#if ENABLE_COPYONACCESS_ARRAY
         DynamicType * GetCopyOnAccessNativeIntArrayType() const { return copyOnAccessNativeIntArrayType; }
+#endif
         DynamicType * GetNativeFloatArrayType() const { return nativeFloatArrayType; }
         DynamicType * GetRegexType() const { return regexType; }
         DynamicType * GetRegexResultType() const { return regexResultType; }
@@ -656,8 +675,10 @@ namespace Js
         JavascriptArray *CreateArrayOnStack(void *const stackAllocationPointer);
         JavascriptNativeIntArray* CreateNativeIntArray();
         JavascriptNativeIntArray* CreateNativeIntArray(uint32 length);
+#if ENABLE_COPYONACCESS_ARRAY
         JavascriptCopyOnAccessNativeIntArray* CreateCopyOnAccessNativeIntArray();
         JavascriptCopyOnAccessNativeIntArray* CreateCopyOnAccessNativeIntArray(uint32 length);
+#endif
         JavascriptNativeFloatArray* CreateNativeFloatArray();
         JavascriptNativeFloatArray* CreateNativeFloatArray(uint32 length);
         JavascriptArray* CreateArray(uint32 length, uint32 size);
@@ -691,7 +712,11 @@ namespace Js
         //
         JavascriptArray*            CreateArrayLiteral(uint32 length);
         JavascriptNativeIntArray*   CreateNativeIntArrayLiteral(uint32 length);
+
+#if ENABLE_PROFILE_INFO
         JavascriptNativeIntArray*   CreateCopyOnAccessNativeIntArrayLiteral(ArrayCallSiteInfo *arrayInfo, FunctionBody *functionBody, const Js::AuxArray<int32> *ints);
+#endif
+
         JavascriptNativeFloatArray* CreateNativeFloatArrayLiteral(uint32 length);
 
         JavascriptBoolean* CreateBoolean(BOOL value);
@@ -731,7 +756,7 @@ namespace Js
         static DynamicTypeHandler * GetDeferredAnonymousPrototypeGeneratorFunctionTypeHandler();
 
         DynamicTypeHandler * GetDeferredFunctionTypeHandler();
-        DynamicTypeHandler * ScriptFunctionTypeHandler(bool hasPrototype, bool isAnonymousFunction);
+        DynamicTypeHandler * ScriptFunctionTypeHandler(bool noPrototypeProperty, bool isAnonymousFunction);
         DynamicTypeHandler * GetDeferredAnonymousFunctionTypeHandler();
         template<bool isNameAvailable, bool isPrototypeAvailable = true>
         static DynamicTypeHandler * GetDeferredFunctionTypeHandlerBase();
@@ -769,7 +794,11 @@ namespace Js
         JavascriptPromiseResolveThenableTaskFunction* CreatePromiseResolveThenableTaskFunction(JavascriptMethod entryPoint, JavascriptPromise* promise, RecyclableObject* thenable, RecyclableObject* thenFunction);
         JavascriptPromiseAllResolveElementFunction* CreatePromiseAllResolveElementFunction(JavascriptMethod entryPoint, uint32 index, JavascriptArray* values, JavascriptPromiseCapability* capabilities, JavascriptPromiseAllResolveElementFunctionRemainingElementsWrapper* remainingElements);
         JavascriptExternalFunction* CreateWrappedExternalFunction(JavascriptExternalFunction* wrappedFunction);
+
+#if ENABLE_NATIVE_CODEGEN
         JavascriptNumber* CreateCodeGenNumber(CodeGenNumberAllocator *alloc, double value);
+#endif
+
         DynamicObject* CreateGeneratorConstructorPrototypeObject();
         DynamicObject* CreateConstructorPrototypeObject(JavascriptFunction * constructor);
         DynamicObject* CreateObject(const bool allowObjectHeaderInlining = false, const PropertyIndex requestedInlineSlotCapacity = 0);
@@ -822,10 +851,12 @@ namespace Js
         void SetDispatchProfile(bool fSet, JavascriptMethod dispatchInvoke);
         HRESULT ProfilerRegisterBuiltIns();
 
+#if ENABLE_COPYONACCESS_ARRAY
         static bool IsCopyOnAccessArrayCallSite(JavascriptLibrary *lib, ArrayCallSiteInfo *arrayInfo, uint32 length);
         static bool IsCachedCopyOnAccessArrayCallSite(const JavascriptLibrary *lib, ArrayCallSiteInfo *arrayInfo);
         template <typename T>
         static void CheckAndConvertCopyOnAccessNativeIntArray(const T instance);
+#endif
 
         void EnsureStringTemplateCallsiteObjectList();
         void AddStringTemplateCallsiteObject(RecyclableObject* callsite);
@@ -836,7 +867,6 @@ namespace Js
         static const wchar_t* GetStringTemplateCallsiteObjectKey(Var callsite);
 #endif
 
-#ifdef ENABLE_NATIVE_CODEGEN
         JavascriptFunction** GetBuiltinFunctions();
         INT_PTR* GetVTableAddresses();
         static BuiltinFunction GetBuiltinFunctionForPropId(PropertyId id);
@@ -878,7 +908,6 @@ namespace Js
             Assert(index < _countof(JavascriptLibrary::LibraryFunctionName));
             return JavascriptLibrary::LibraryFunctionName[index];
         }
-#endif
 #endif
 
         PropertyStringCacheMap* EnsurePropertyStringMap();
@@ -976,9 +1005,11 @@ namespace Js
         void InitializeComplexThings();
         void InitializeStaticValues();
         static void __cdecl InitializeMathObject(DynamicObject* mathObject, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
+#if ENABLE_NATIVE_CODEGEN
         // SIMD_JS
         static void __cdecl InitializeSIMDObject(DynamicObject* simdObject, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
         static void __cdecl InitializeSIMDOpCodeMaps();
+#endif
 
         static void __cdecl InitializeNumberConstructor(DynamicObject* numberConstructor, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
         static void __cdecl InitializeNumberPrototype(DynamicObject* numberPrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
@@ -1020,6 +1051,9 @@ namespace Js
         static void __cdecl InitializeGeneratorFunctionPrototype(DynamicObject* generatorFunctionPrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
         static void __cdecl InitializeGeneratorPrototype(DynamicObject* generatorPrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
 
+        static void __cdecl InitializeAsyncFunctionConstructor(DynamicObject* asyncFunctionConstructor, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
+        static void __cdecl InitializeAsyncFunctionPrototype(DynamicObject* asyncFunctionPrototype, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
+
         RuntimeFunction* CreateBuiltinConstructor(FunctionInfo * functionInfo, DynamicTypeHandler * typeHandler, DynamicObject* prototype = nullptr);
         RuntimeFunction* DefaultCreateFunction(FunctionInfo * functionInfo, int length, DynamicObject * prototype, DynamicType * functionType, PropertyId nameId);
         RuntimeFunction* DefaultCreateFunction(FunctionInfo * functionInfo, int length, DynamicObject * prototype, DynamicType * functionType, Var nameId);
@@ -1033,12 +1067,10 @@ namespace Js
         template<bool addPrototype>
         static void __cdecl InitializeFunction(DynamicObject* function, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode);
 
-#ifdef ENABLE_NATIVE_CODEGEN
         static size_t const LibraryFunctionArgC[BuiltinFunction::Count + 1];
         static int const LibraryFunctionFlags[BuiltinFunction::Count + 1];   // returns enum BuiltInFlags.
 #if ENABLE_DEBUG_CONFIG_OPTIONS
         static wchar_t const * const LibraryFunctionName[BuiltinFunction::Count + 1];
-#endif
 #endif
 
     public:
@@ -1100,7 +1132,9 @@ namespace Js
         HRESULT ProfilerRegisterProxy();
         HRESULT ProfilerRegisterReflect();
         HRESULT ProfilerRegisterGenerator();
+#if ENABLE_NATIVE_CODEGEN
         HRESULT ProfilerRegisterSIMD();
+#endif
 
 #ifdef IR_VIEWER
         HRESULT ProfilerRegisterIRViewer();

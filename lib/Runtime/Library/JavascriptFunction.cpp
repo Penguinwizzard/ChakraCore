@@ -138,9 +138,10 @@ namespace Js
 
     static wchar_t const funcName[] = L"function anonymous";
     static wchar_t const genFuncName[] = L"function* anonymous";
+    static wchar_t const asyncFuncName[] = L"async function anonymous";
     static wchar_t const bracket[] = L" {\012";
 
-    Var JavascriptFunction::NewInstanceHelper(ScriptContext *scriptContext, RecyclableObject* function, CallInfo callInfo, Js::ArgumentReader& args, bool isGenerator /* = false */)
+    Var JavascriptFunction::NewInstanceHelper(ScriptContext *scriptContext, RecyclableObject* function, CallInfo callInfo, Js::ArgumentReader& args, FunctionKind functionKind /* = FunctionKind::Normal */)
     {
         JavascriptLibrary* library = function->GetLibrary();
 
@@ -177,7 +178,9 @@ namespace Js
         // Create a string representing the anonymous function
         Assert(CountNewlines(funcName) + CountNewlines(bracket) == numberLinesPrependedToAnonymousFunction); // Be sure to add exactly one line to anonymous function
 
-        JavascriptString *bs = isGenerator ?
+        JavascriptString *bs = functionKind == FunctionKind::Async ?
+            library->CreateStringFromCppLiteral(asyncFuncName) :
+            functionKind == FunctionKind::Generator ?
             library->CreateStringFromCppLiteral(genFuncName) :
             library->CreateStringFromCppLiteral(funcName);
         bs = JavascriptString::Concat(bs, formals);
@@ -201,14 +204,18 @@ namespace Js
         EvalMapString key(sourceString, sourceLen, moduleID, strictMode, /* isLibraryCode = */ false);
         if (!scriptContext->IsInNewFunctionMap(key, &pfuncBodyCache))
         {
-            // ES3 and ES5 specs require validation of the formal list and the function body
-
             // Validate formals here
-            scriptContext->GetGlobalObject()->ValidateSyntax(scriptContext, formals->GetSz(), formals->GetLength(), isGenerator, &Parser::ValidateFormals);
+            scriptContext->GetGlobalObject()->ValidateSyntax(
+                scriptContext, formals->GetSz(), formals->GetLength(),
+                functionKind == FunctionKind::Generator, functionKind == FunctionKind::Async,
+                &Parser::ValidateFormals);
             if (fnBody != NULL)
             {
                 // Validate function body
-                scriptContext->GetGlobalObject()->ValidateSyntax(scriptContext, fnBody->GetSz(), fnBody->GetLength(), isGenerator, &Parser::ValidateSourceElementList);
+                scriptContext->GetGlobalObject()->ValidateSyntax(
+                    scriptContext, fnBody->GetSz(), fnBody->GetLength(),
+                    functionKind == FunctionKind::Generator, functionKind == FunctionKind::Async,
+                    &Parser::ValidateSourceElementList);
             }
 
             pfuncScript = scriptContext->GetGlobalObject()->EvalHelper(scriptContext, sourceString, sourceLen, moduleID, fscrNil, Constants::FunctionCode, TRUE, TRUE, strictMode);
@@ -238,7 +245,7 @@ namespace Js
 
         JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_FUNCTION(pfuncScript, EtwTrace::GetFunctionId(pfuncScript->GetFunctionProxy())));
 
-        if (isGenerator)
+        if (functionKind == FunctionKind::Generator)
         {
             Assert(pfuncScript->GetFunctionInfo()->IsGenerator());
             auto pfuncVirt = static_cast<GeneratorVirtualScriptFunction*>(pfuncScript);
@@ -273,6 +280,16 @@ namespace Js
         ScriptContext* scriptContext = function->GetScriptContext();
 
         return NewInstanceHelper(scriptContext, function, callInfo, args);
+    }
+
+    Var JavascriptFunction::NewAsyncFunctionInstance(RecyclableObject* function, CallInfo callInfo, ...)
+    {
+        // Get called when creating a new async function through the constructor (e.g. af.__proto__.constructor)
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+
+        ARGUMENTS(args, callInfo);
+
+        return JavascriptFunction::NewInstanceHelper(function->GetScriptContext(), function, callInfo, args, JavascriptFunction::FunctionKind::Async);
     }
 
     //
@@ -415,7 +432,9 @@ namespace Js
             }
             else if (isArray)
             {
+#if ENABLE_COPYONACCESS_ARRAY
                 JavascriptLibrary::CheckAndConvertCopyOnAccessNativeIntArray<Var>(argArray);
+#endif
                 arr = JavascriptArray::FromVar(argArray);
                 len = arr->GetLength();
             }
@@ -1042,7 +1061,7 @@ namespace Js
     {
         Js::Var varResult;
 
-#if DBG && defined(ENABLE_NATIVE_CODEGEN)
+#if DBG && ENABLE_NATIVE_CODEGEN
         CheckIsExecutable(function, entryPoint);
 #endif
         // compute size of stack to reserve
@@ -1125,7 +1144,7 @@ dbl_align:
         {
             PROBE_STACK_CALL(function->GetScriptContext(), function, argsSize);
         }
-#if DBG && defined(ENABLE_NATIVE_CODEGEN)
+#if DBG && ENABLE_NATIVE_CODEGEN
         CheckIsExecutable(function, entryPoint);
 #endif
 #ifdef _CONTROL_FLOW_GUARD
@@ -1150,7 +1169,7 @@ dbl_align:
             PROBE_STACK_CALL(function->GetScriptContext(), function, argsSize);
         }
 
-#if DBG && defined(ENABLE_NATIVE_CODEGEN)
+#if DBG && ENABLE_NATIVE_CODEGEN
         CheckIsExecutable(function, entryPoint);
 #endif
         Js::Var varResult;
@@ -1190,7 +1209,7 @@ dbl_align:
             PROBE_STACK_CALL(function->GetScriptContext(), function, argsSize);
         }
 
-#if DBG && defined(ENABLE_NATIVE_CODEGEN)
+#if DBG && ENABLE_NATIVE_CODEGEN
         CheckIsExecutable(function, entryPoint);
 #endif
         Js::Var varResult;
@@ -1202,7 +1221,7 @@ dbl_align:
 #else
     Var JavascriptFunction::CallFunction(RecyclableObject *function, JavascriptMethod entryPoint, Arguments args)
     {
-#if DBG && defined(ENABLE_NATIVE_CODEGEN)
+#if DBG && ENABLE_NATIVE_CODEGEN
         CheckIsExecutable(function, entryPoint);
 #endif
 #if 1
@@ -1387,12 +1406,14 @@ LABEL1:
     }
 #endif
 
-#ifdef ENABLE_NATIVE_CODEGEN
     BOOL JavascriptFunction::IsNativeAddress(ScriptContext * scriptContext, void * codeAddr)
     {
+#if ENABLE_NATIVE_CODEGEN
         return scriptContext->IsNativeAddress(codeAddr);
-    }
+#else
+        return false;
 #endif
+    }
 
     Js::JavascriptMethod JavascriptFunction::DeferredParse(ScriptFunction** functionRef)
     {
@@ -1414,8 +1435,10 @@ LABEL1:
             funcBody = functionInfo->Parse(functionRef);
             fParsed = funcBody->IsFunctionParsed() ? TRUE : FALSE;
 
+#if ENABLE_PROFILE_INFO
             // This is the first call to the function, ensure dynamic profile info
             funcBody->EnsureDynamicProfileInfo();
+#endif
         }
         else
         {
@@ -1441,8 +1464,10 @@ LABEL1:
 
         FunctionBody * funcBody = functionInfo->Parse(functionRef);
 
+#if ENABLE_PROFILE_INFO
         // This is the first call to the function, ensure dynamic profile info
         funcBody->EnsureDynamicProfileInfo();
+#endif
 
         (*functionRef)->UpdateUndeferredBody(funcBody);
     }
@@ -1555,7 +1580,9 @@ LABEL1:
             // This is the first call to the function, ensure dynamic profile info
             // Deserialize is a no-op if the function has already been deserialized
             funcBody = deferDeserializeFunction->Deserialize();
+#if ENABLE_PROFILE_INFO
             funcBody->EnsureDynamicProfileInfo();
+#endif
         }
         else
         {
@@ -1932,10 +1959,12 @@ LABEL1:
 
     int JavascriptFunction::ResumeForOutOfBoundsArrayRefs(int exceptionCode, PEXCEPTION_POINTERS exceptionInfo)
     {
+#if ENABLE_NATIVE_CODEGEN
         if (exceptionCode != STATUS_ACCESS_VIOLATION)
         {
             return EXCEPTION_CONTINUE_SEARCH;
         }
+
         ThreadContext* threadContext = ThreadContext::GetContextForCurrentThread();
 
         // AV should come from JITed code, since we don't eliminate bound checks in interpreter
@@ -2055,6 +2084,9 @@ LABEL1:
         exceptionInfo->ContextRecord->Rip = exceptionInfo->ContextRecord->Rip + instrData.instrSizeInByte;
 
         return EXCEPTION_CONTINUE_EXECUTION;
+#else
+        return EXCEPTION_CONTINUE_SEARCH;
+#endif
     }
 #endif
 #if DBG
@@ -2088,7 +2120,15 @@ LABEL1:
 
     bool JavascriptFunction::HasRestrictedProperties() const
     {
-        return !(this->functionInfo->IsClassMethod() || this->functionInfo->IsClassConstructor() || this->functionInfo->IsLambda() || this->IsGeneratorFunction() || this->IsBoundFunction() || this->IsStrictMode());
+        return !(
+            this->functionInfo->IsClassMethod() ||
+            this->functionInfo->IsClassConstructor() ||
+            this->functionInfo->IsLambda() ||
+            this->functionInfo->IsAsync() ||
+            this->IsGeneratorFunction() ||
+            this->IsBoundFunction() ||
+            this->IsStrictMode()
+            );
     }
 
     BOOL JavascriptFunction::HasProperty(PropertyId propertyId)

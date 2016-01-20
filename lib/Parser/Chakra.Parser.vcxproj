@@ -23,7 +23,8 @@
       <AdditionalIncludeDirectories>
         $(MSBuildThisFileDirectory)..\Common;
         $(MSBuildThisFileDirectory)..\Backend;
-        $(MSBuildThisFileDirectory)..\runtime;
+        $(MSBuildThisFileDirectory)..\Runtime;
+        $(MSBuildThisFileDirectory)..\Runtime\ByteCode;
         $(ChakraManifestsIncludeDirectory);
         %(AdditionalIncludeDirectories)
       </AdditionalIncludeDirectories>

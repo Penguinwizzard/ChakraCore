@@ -516,6 +516,7 @@ PHASE(All)
 #define DEFAULT_CONFIG_ES6Unscopables          (true)
 #define DEFAULT_CONFIG_ES6WeakSet              (true)
 #define DEFAULT_CONFIG_ES6RegExSticky          (true)
+#define DEFAULT_CONFIG_ES6RegExPrototypeProperties (false)
 #define DEFAULT_CONFIG_ES6HasInstanceOf        (false)
 #define DEFAULT_CONFIG_ArrayBufferTransfer     (false)
 #define DEFAULT_CONFIG_ES7ExponentionOperator  (false)
@@ -639,9 +640,11 @@ PHASE(All)
 
 #define DEFAULT_CONFIG_MinMemOpCount (16U)
 
+#if ENABLE_COPYONACCESS_ARRAY
 #define DEFAULT_CONFIG_MaxCopyOnAccessArrayLength (32U)
 #define DEFAULT_CONFIG_MinCopyOnAccessArrayLength (5U)
 #define DEFAULT_CONFIG_CopyOnAccessArraySegmentCacheSize (16U)
+#endif
 
 #if defined(_M_IX86) || defined(_M_X64)
 #define DEFAULT_CONFIG_LoopAlignNopLimit (6)
@@ -910,6 +913,7 @@ FLAGPR           (Boolean, ES6, ES6UnicodeVerbose      , "Enable ES6 Unicode 6.0
 FLAGPR           (Boolean, ES6, ES6Unscopables         , "Enable ES6 With Statement Unscopables"                    , DEFAULT_CONFIG_ES6Unscopables)
 FLAGPR           (Boolean, ES6, ES6WeakSet             , "Enable ES6 WeakSet"                                       , DEFAULT_CONFIG_ES6WeakSet)
 FLAGPR           (Boolean, ES6, ES6RegExSticky         , "Enable ES6 RegEx sticky flag"                             , DEFAULT_CONFIG_ES6RegExSticky)
+FLAGPR_REGOVR_EXP(Boolean, ES6, ES6RegExPrototypeProperties, "Enable ES6 properties on the RegEx prototype"         , DEFAULT_CONFIG_ES6RegExPrototypeProperties)
 FLAGPR           (Boolean, ES6, ES6HasInstance         , "Enable ES6 @@hasInstance symbol"                          , DEFAULT_CONFIG_ES6HasInstanceOf)
 FLAGPR           (Boolean, ES6, ES6Verbose             , "Enable ES6 verbose trace"                                 , DEFAULT_CONFIG_ES6Verbose)
 FLAGPR_REGOVR_EXP(Boolean, ES6, ArrayBufferTransfer    , "Enable ArrayBuffer.transfer"                              , DEFAULT_CONFIG_ArrayBufferTransfer)
@@ -1044,9 +1048,11 @@ FLAGNRA(Number, MaxInterpretCount     , Mic, "Maximum number of times a function
 FLAGNRA(Number, MaxSimpleJitRunCount  , Msjrc, "Maximum number of times a function will be run in SimpleJitted code", 0)
 FLAGNRA(Number, MinMemOpCount         , Mmoc, "Minimum count of a loop to activate MemOp", DEFAULT_CONFIG_MinMemOpCount)
 
+#if ENABLE_COPYONACCESS_ARRAY
 FLAGNR(Number,  MaxCopyOnAccessArrayLength, "Maximum length of copy-on-access array", DEFAULT_CONFIG_MaxCopyOnAccessArrayLength)
 FLAGNR(Number,  MinCopyOnAccessArrayLength, "Minimum length of copy-on-access array", DEFAULT_CONFIG_MinCopyOnAccessArrayLength)
 FLAGNR(Number,  CopyOnAccessArraySegmentCacheSize, "Size of copy-on-access array segment cache (1-32)", DEFAULT_CONFIG_CopyOnAccessArraySegmentCacheSize)
+#endif
 
 FLAGNR(Number, MinTemplatizedJitRunCount, "Minimum number of times a function must be Templatized Jitted", DEFAULT_CONFIG_MinTemplatizedJitRunCount)
 FLAGNR(Number, MinAsmJsInterpreterRunCount, "Minimum number of times a function must be Asm Interpreted", DEFAULT_CONFIG_MinAsmJsInterpreterRunCount)
@@ -1105,8 +1111,8 @@ FLAGNR(Number,  InMemoryTraceBufferSize, "The size of circular buffer for in-mem
 FLAGNR(Boolean, RichTraceFormat, "Whether to use extra data in Output/Trace header.", DEFAULT_CONFIG_RichTraceFormat)
 #ifdef STACK_BACK_TRACE
 FLAGNR(Boolean, TraceWithStack, "Whether the trace need to include stack trace (for each trace entry).", DEFAULT_CONFIG_TraceWithStack)
-#endif STACK_BACK_TRACE
-#endif ENABLE_TRACE
+#endif // STACK_BACK_TRACE
+#endif // ENABLE_TRACE
 FLAGNR(Boolean, PrintRunTimeDataCollectionTrace, "Print traces needed for runtime data collection", false)
 #ifdef ENABLE_PREJIT
 FLAGR (Boolean, Prejit                , "Prejit everything, including things that are not called, ignoring limits (default: false)", DEFAULT_CONFIG_Prejit)

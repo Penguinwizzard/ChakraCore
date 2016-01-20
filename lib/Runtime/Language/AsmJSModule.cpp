@@ -3,6 +3,8 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeLanguagePch.h"
+
+#ifndef TEMP_DISABLE_ASMJS
 #include "ByteCode\Symbol.h"
 #include "ByteCode\FuncInfo.h"
 #include "ByteCode\ByteCodeAPI.h"
@@ -91,7 +93,9 @@ namespace Js
             if (IsSimdjsEnabled())
             {
                 const auto& simdRegisterSpace = func->GetRegisterSpace<AsmJsSIMDValue>();
-                varCount += (int)(simdRegisterSpace.GetTotalVarCount() * SIMD_SLOTS_SPACE);
+                varCount += (int)((simdRegisterSpace.GetTotalVarCount() + 1) * SIMD_SLOTS_SPACE); /* + 1 to make room for possible alignment of SIMD values*/
+                // Aligned SIMD values.
+                Assert(asmInfo->GetSimdByteOffset() % sizeof(AsmJsSIMDValue) == 0);
             }
 
             functionBody->SetOutParamDepth(func->GetMaxArgOutDepth());
@@ -2003,13 +2007,14 @@ namespace Js
 
         if (IsSimdjsEnabled())
         {
+            // mSimdOffset is in SIMDValues, hence aligned
+            // mMemorySize is in Vars
             mModuleMemory.mSimdOffset = (int) ::ceil(mModuleMemory.mMemorySize / SIMD_SLOTS_SPACE);
             if (mSimdVarSpace.GetTotalVarCount())
             {
                 mModuleMemory.mMemorySize = (int)((mModuleMemory.mSimdOffset + mSimdVarSpace.GetTotalVarCount()) * SIMD_SLOTS_SPACE);
-                // no alignment
-                // mModuleMemory.mMemorySize += (int)SIMD_SLOTS_SPACE;
             }
+            
         }
     }
 
@@ -2578,3 +2583,4 @@ namespace Js
         return true;
     }
 };
+#endif
