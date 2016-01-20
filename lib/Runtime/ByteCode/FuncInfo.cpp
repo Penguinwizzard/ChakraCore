@@ -439,7 +439,7 @@ void FuncInfo::OnStartVisitScope(Scope *scope)
     if (scope->GetScopeType() == ScopeType_Parameter)
     {
         // If the scopes are unmerged and we are visiting the parameter scope, the child scope will be the function body scope.
-        Assert(this->GetCurrentChildScope()->GetEnclosingScope() == scope || this->GetCurrentChildScope() == nullptr);
+        Assert(!scope->GetCanMergeWithBodyScope() || this->GetCurrentChildScope()->GetEnclosingScope() == scope || this->GetCurrentChildScope() == nullptr);
     }
     else
     {
@@ -455,7 +455,7 @@ void FuncInfo::OnEndVisitScope(Scope *scope)
     {
         return;
     }
-    Assert(this->GetCurrentChildScope() == scope);
+    Assert(this->GetCurrentChildScope() == scope || (scope->GetScopeType() == ScopeType_Parameter && this->GetParamScope() == scope));
 
     this->SetCurrentChildScope(scope->GetEnclosingScope());
 }

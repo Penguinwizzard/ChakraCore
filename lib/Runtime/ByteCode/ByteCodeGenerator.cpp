@@ -74,6 +74,7 @@ bool BlockHasOwnScope(ParseNode* pnodeBlock, ByteCodeGenerator *byteCodeGenerato
     Assert(pnodeBlock->nop == knopBlock);
     return pnodeBlock->sxBlock.scope != nullptr &&
         (!(pnodeBlock->grfpn & fpnSyntheticNode) ||
+            (pnodeBlock->sxBlock.blockType == Parameter && !pnodeBlock->sxBlock.scope->GetCanMergeWithBodyScope()) ||
             (pnodeBlock->sxBlock.blockType == PnodeBlockType::Global && byteCodeGenerator->IsEvalWithBlockScopingNoParentScopeInfo()));
 }
 
@@ -1399,7 +1400,10 @@ FuncInfo * ByteCodeGenerator::StartBindFunction(const wchar_t *name, uint nameLe
     }
 
     PushFuncInfo(L"StartBindFunction", funcInfo);
-    PushScope(paramScope);
+    if (paramScope->GetCanMergeWithBodyScope())
+    {
+        PushScope(paramScope);
+    }
     PushScope(bodyScope);
 
     if (funcExprScope)
@@ -1428,9 +1432,8 @@ void ByteCodeGenerator::EndBindFunction(bool funcExprWithName)
     {
         Assert(currentScope == nullptr);
     }
-    else
+    else if (currentScope->GetScopeType() == ScopeType_Parameter)
     {
-        Assert(currentScope->GetScopeType() == ScopeType_Parameter);
         PopScope(); // parameter scope
     }
 
@@ -1817,9 +1820,7 @@ Scope * ByteCodeGenerator::FindScopeForSym(Scope *symScope, Scope *scope, Js::Pr
 {
     for (scope = scope ? scope->GetEnclosingScope() : currentScope; scope; scope = scope->GetEnclosingScope())
     {
-        if (scope->GetFunc() != funcInfo && scope->GetMustInstantiate() && scope != this->globalScope
-            // TODO: Remove this, this is a work around
-            && (symScope->GetScopeType() != ScopeType_Parameter || scope->GetScopeType() != ScopeType_Parameter || symScope->GetFunc() != scope->GetFunc()))
+        if (scope->GetFunc() != funcInfo && scope->GetMustInstantiate() && scope != this->globalScope)
         {
             (*envIndex)++;
         }
@@ -2582,7 +2583,13 @@ FuncInfo* PostVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerat
         if (!top->IsGlobalFunction())
         {
             PostVisitBlock(pnode->sxFnc.pnodeBodyScope, byteCodeGenerator);
-            PostVisitBlock(pnode->sxFnc.pnodeScopes, byteCodeGenerator);
+            ParseNodePtr paramScopeNode = pnode->sxFnc.pnodeScopes;
+            if (paramScopeNode->nop != knopBlock
+                || paramScopeNode->sxBlock.blockType != Parameter
+                || paramScopeNode->sxBlock.scope->GetCanMergeWithBodyScope())
+            {
+                PostVisitBlock(pnode->sxFnc.pnodeScopes, byteCodeGenerator);
+            }
         }
 
         if ((byteCodeGenerator->GetFlags() & fscrEvalCode) && top->GetCallsEval())
@@ -3079,7 +3086,11 @@ void VisitNestedScopes(ParseNode* pnodeScopeList, ParseNode* pnodeParent, ByteCo
                 Visit(pnode, byteCodeGenerator, prefix, postfix);
 
                 EndVisitBlock(pnodeScope->sxFnc.pnodeBodyScope, byteCodeGenerator);
-                EndVisitBlock(pnodeScope->sxFnc.pnodeScopes, byteCodeGenerator);
+                if (containerScope->nop != knopBlock || containerScope->sxBlock.blockType != Parameter
+                    || containerScope->sxBlock.scope->GetCanMergeWithBodyScope())
+                {
+                    EndVisitBlock(pnodeScope->sxFnc.pnodeScopes, byteCodeGenerator);
+                }
             }
             else if (pnodeScope->sxFnc.nestedCount)
             {
