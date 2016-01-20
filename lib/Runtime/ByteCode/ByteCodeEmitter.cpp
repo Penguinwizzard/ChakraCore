@@ -3120,52 +3120,26 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
 
         if (!pnode->sxFnc.IsSimpleParameterList())
         {
-            Scope* paramScope = funcInfo->GetParamScope();
-            Scope* currentScope = this->GetCurrentScope();
-            Assert(paramScope && currentScope->GetScopeType() == ScopeType_FunctionBody);
-
-            if (!paramScope->GetCanMergeWithBodyScope())
-            {
-                // Set the closure register according to the param scope if needed.
-                if (funcInfo->frameSlotsRegisterForParamScope != Js::Constants::NoRegister)
-                {
-                    byteCodeFunction->SetLocalClosureReg(funcInfo->frameSlotsRegisterForParamScope);
-                }
-
-                // Pop the body scope and param scope should be on top now
-                PopScope();
-                Assert(this->GetCurrentScope()->GetScopeType() == ScopeType_Parameter);
-            }
-
             EmitDefaultArgs(funcInfo, pnode);
 
+            Scope* paramScope = funcInfo->GetParamScope();
             if (!paramScope->GetCanMergeWithBodyScope())
             {
-                // Pop the param scope and push the body scope back in
-                PopScope();
-                PushScope(currentScope);
-
-                // Revert the closure register to the previous value
-                if (funcInfo->frameSlotsRegister != Js::Constants::NoRegister)
-                {
-                    byteCodeFunction->SetLocalClosureReg(funcInfo->frameSlotsRegister);
-                }
-
-                // TODO: Get rid of this n2 loop
-                // Emit bytecode to copy the initial values from param names to their corrsponding body bindings
-                paramScope->ForEachSymbol([this, funcInfo] (Symbol* param) {
-                    Symbol* varSym = funcInfo->GetBodyScope()->FindLocalSymbol(param->GetName());
-                    // TODO: Check whether this condition is valid
-                    if (varSym && param->GetLocation() != Js::Constants::NoRegister && varSym->GetLocation() != Js::Constants::NoRegister)
-                    {
-                        this->EmitPropStore(param->GetLocation(), varSym, varSym->GetPid(), funcInfo);
-                    }
-                    else
-                    {
-                        // TODO: Put the assert back
-                        // Assert(varSym == funcInfo->GetArgumentsSymbol());
-                    }
-                });
+                //// TODO: Get rid of this n2 loop
+                //// Emit bytecode to copy the initial values from param names to their corrsponding body bindings
+                //paramScope->ForEachSymbol([this, funcInfo] (Symbol* param) {
+                //    Symbol* varSym = funcInfo->GetBodyScope()->FindLocalSymbol(param->GetName());
+                //    // TODO: Check whether this condition is valid
+                //    if (varSym && param->GetLocation() != Js::Constants::NoRegister && varSym->GetLocation() != Js::Constants::NoRegister)
+                //    {
+                //        this->EmitPropStore(param->GetLocation(), varSym, varSym->GetPid(), funcInfo);
+                //    }
+                //    else
+                //    {
+                //        // TODO: Put the assert back
+                //        // Assert(varSym == funcInfo->GetArgumentsSymbol());
+                //    }
+                //});
             }
         }
         else if (funcInfo->GetHasArguments() && !NeedScopeObjectForArguments(funcInfo, pnode))
@@ -3563,7 +3537,7 @@ void ByteCodeGenerator::StartEmitFunction(ParseNode *pnodeFnc)
 
         if (isParamAndBodyScopeNotMerged && funcInfo->frameSlotsRegisterForParamScope != Js::Constants::NoRegister)
         {
-            paramScope->SetLocation(funcInfo->frameSlotsRegisterForParamScope);
+            // paramScope->SetLocation(funcInfo->frameSlotsRegisterForParamScope);
             paramScope->SetMustInstantiate(true);
         }
 
@@ -3604,12 +3578,6 @@ void ByteCodeGenerator::StartEmitFunction(ParseNode *pnodeFnc)
             ParseNode *pnode;
             Symbol *sym;
 
-            if (isParamAndBodyScopeNotMerged)
-            {
-                // We have to push the param scope here because when emitting all the nested scopes the functions can be
-                // in param scope or body scope. We don't differentiate them right now.
-                PushScope(paramScope);
-            }
             PushScope(bodyScope);
 
             // Turns on capturesAll temporarily if func has deferred child, so that the following EnsureScopeSlot
@@ -3782,12 +3750,6 @@ void ByteCodeGenerator::StartEmitFunction(ParseNode *pnodeFnc)
 
             pnodeFnc->sxFnc.MapContainerScopes([&](ParseNode *pnodeScope) { this->EnsureFncScopeSlots(pnodeScope, funcInfo); });
 
-            if (isParamAndBodyScopeNotMerged)
-            {
-                // We have to push the param scope here because when emitting all the nested scopes the functions can be
-                // in param scope or body scope. We don't differentiate them right now.
-                PushScope(paramScope);
-            }
             PushScope(bodyScope);
 
             for (pnode = pnodeFnc->sxFnc.pnodeVars; pnode; pnode = pnode->sxVar.pnodeNext)
@@ -3837,12 +3799,6 @@ void ByteCodeGenerator::StartEmitFunction(ParseNode *pnodeFnc)
             Assert(bodyScope->GetIsObject());
         }
 
-        if (isParamAndBodyScopeNotMerged)
-        {
-            // We have to push the param scope here because when emitting all the nested scopes the functions can be
-            // in param scope or body scope. We don't differentiate them right now.
-            PushScope(paramScope);
-        }
         PushScope(bodyScope);
     }
 

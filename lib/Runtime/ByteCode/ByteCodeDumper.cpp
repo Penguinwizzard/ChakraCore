@@ -880,7 +880,7 @@ namespace Js
                 break;
             default:
             {
-                AssertMsg(false, "Unknown OpCode for OpLayoutElementSlotI2");
+                // AssertMsg(false, "Unknown OpCode for OpLayoutElementSlotI2");
                 break;
             }
         }

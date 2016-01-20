@@ -226,7 +226,11 @@ public:
 
     bool IsInnerScope() const
     {
-        return scopeType == ScopeType_Block || scopeType == ScopeType_Catch || scopeType == ScopeType_CatchParamPattern || scopeType == ScopeType_GlobalEvalBlock;
+        return scopeType == ScopeType_Block
+            || scopeType == ScopeType_Catch
+            || scopeType == ScopeType_CatchParamPattern
+            || scopeType == ScopeType_GlobalEvalBlock
+            || (scopeType == ScopeType_Parameter && !this->GetCanMergeWithBodyScope());
     }
 
     int Count() const
