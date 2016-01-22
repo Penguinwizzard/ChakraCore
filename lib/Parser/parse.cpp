@@ -4432,6 +4432,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
                     Scope* paramScope = pnodeFnc->sxFnc.pnodeScopes->sxBlock.scope;
                     paramScope->SetCanMerge(false);
                     paramScope->SetCannotMergeWithBodyScope();
+                    paramScope->SetNestedCount(pnodeFnc->sxFnc.nestedCount);
 
                     // Now add a new symbol reference for each formal in the param scope to the body scope.
                     paramScope->ForEachSymbol([this](Symbol* sym) {
