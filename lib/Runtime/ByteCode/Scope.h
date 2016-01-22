@@ -30,6 +30,7 @@ private:
     uint scopeSlotCount; // count of slots in the local scope
     uint innerScopeIndex;
     ScopeType const scopeType;
+    uint nestedCount;
     BYTE isDynamic : 1;
     BYTE isObject : 1;
     BYTE canMerge : 1;
@@ -60,7 +61,8 @@ public:
         m_count(0),
         scopeSlotCount(0),
         innerScopeIndex((uint)-1),
-        scopeType(scopeType)
+        scopeType(scopeType),
+        nestedCount(0)
 #if DBG
         , isRestored(false)
 #endif
@@ -293,6 +295,9 @@ public:
 
     void SetCannotMergeWithBodyScope() { canMergeWithBodyScope = false; }
     bool GetCanMergeWithBodyScope() const { return canMergeWithBodyScope; }
+
+    void SetNestedCount(uint c) { nestedCount = c; }
+    uint GetNestedCount() { return nestedCount; }
 
     void SetHasLocalInClosure(bool has);
 

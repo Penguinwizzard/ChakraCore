@@ -1829,6 +1829,14 @@ Scope * ByteCodeGenerator::FindScopeForSym(Scope *symScope, Scope *scope, Js::Pr
         {
             break;
         }
+        else if (symScope->GetScopeType() == ScopeType_Parameter && scope->GetFunc() == symScope->GetFunc())
+        {
+            // Right now we don't have a way to mark the function definitions to say they are in a param scope.
+            // So if the symbol's scope is a param scope, check whether it is the current function or not.
+            // Note that during VisitNestedScope the param scope will not be on the stack.
+            scope = symScope;
+            break;
+        }
     }
 
     Assert(scope);
@@ -2638,7 +2646,7 @@ FuncInfo* PostVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerat
                 top->funcExprScope && top->funcExprScope->GetMustInstantiate())
             {
                 // TODO: Need to fix this the right way
-                if (!top->GetCallsEval() && (top->GetParamScope() == nullptr || top->GetParamScope()->GetCanMergeWithBodyScope()))
+                if (!top->GetCallsEval() && (top->GetParamScope() == nullptr || top->GetParamScope()->GetNestedCount() < pnode->sxFnc.nestedCount))
                 {
                     byteCodeGenerator->AssignFrameSlotsRegister();
                 }
