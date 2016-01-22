@@ -5014,10 +5014,22 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
             Output::Print(L"Total number of functions used after redeferral: %d\n", redeferralStats.totalFunctionsUsedAfterRedeferral);
             if (redeferralStats.totalFunctionsRedeferred - redeferralStats.totalFunctionsUsedAfterRedeferral > 0)
             {
-                double overallSuccessRate = ((double)(redeferralStats.totalFunctionsRedeferred - redeferralStats.totalFunctionsUsedAfterRedeferral) / redeferralStats.totalFunctionsRedeferred) * 100;
-                Output::Print(L"Redeferral success rate: %.2f\n\n", overallSuccessRate);
+                double successRate = ((double)(redeferralStats.totalFunctionsRedeferred - redeferralStats.totalFunctionsUsedAfterRedeferral) / redeferralStats.totalFunctionsRedeferred) * 100;
+                Output::Print(L"Redeferral success rate: %.2f\n\n", successRate);
             }
             else if (redeferralStats.totalFunctionsRedeferred > 0)
+            {
+                Output::Print(L"Redeferral success rate: 0.00\n");
+            }
+
+            Output::Print(L"Total number of functions redeferred after first redeferral try: %d\n", redeferralStats.totalFunctionsRedeferredAfterFirstTry);
+            Output::Print(L"Total number of functions used after redeferral after first redeferral try: %d\n", redeferralStats.totalFunctionsUsedAfterRedeferralAfterFirstTry);
+            if (redeferralStats.totalFunctionsRedeferredAfterFirstTry - redeferralStats.totalFunctionsUsedAfterRedeferralAfterFirstTry > 0)
+            {
+                double successRate = ((double)(redeferralStats.totalFunctionsRedeferredAfterFirstTry - redeferralStats.totalFunctionsUsedAfterRedeferralAfterFirstTry) / redeferralStats.totalFunctionsRedeferredAfterFirstTry) * 100;
+                Output::Print(L"Redeferral success rate: %.2f\n\n", successRate);
+            }
+            else if (redeferralStats.totalFunctionsRedeferredAfterFirstTry > 0)
             {
                 Output::Print(L"Redeferral success rate: 0.00\n");
             }

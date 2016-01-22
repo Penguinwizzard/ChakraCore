@@ -617,6 +617,8 @@ public:
         {
             uint totalFunctionsRedeferred;
             uint totalFunctionsUsedAfterRedeferral;
+            uint totalFunctionsRedeferredAfterFirstTry;
+            uint totalFunctionsUsedAfterRedeferralAfterFirstTry;
             typedef JsUtil::BaseDictionary<uint8, uint16, ArenaAllocator> AliveFunctionsPerGCMap;
             AliveFunctionsPerGCMap* aliveFunctionsPerGCMap;
             
@@ -626,7 +628,8 @@ public:
             typedef JsUtil::BaseDictionary<uint8, uint16, ArenaAllocator> RedeferredFunctionsPerGCMap;
             RedeferredFunctionsPerGCMap* redeferredFunctionsPerGCMap;
 
-            RedeferralStats() : totalFunctionsRedeferred(0), totalFunctionsUsedAfterRedeferral(0), aliveFunctionsPerGCMap(nullptr), inactiveGCsToFunctionsMap(nullptr), redeferredFunctionsPerGCMap(nullptr){}
+            RedeferralStats() : totalFunctionsRedeferred(0), totalFunctionsUsedAfterRedeferral(0), totalFunctionsRedeferredAfterFirstTry(0), totalFunctionsUsedAfterRedeferralAfterFirstTry(0),
+                aliveFunctionsPerGCMap(nullptr), inactiveGCsToFunctionsMap(nullptr), redeferredFunctionsPerGCMap(nullptr){}
         };
 
         RedeferralStats redeferralStats;

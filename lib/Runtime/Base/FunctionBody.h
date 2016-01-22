@@ -1834,8 +1834,8 @@ namespace Js
 #define CURRENT_ACCESS_MODIFIER public:
 #include "SerializableFunctionFields.h"
 
-        bool m_interpretedSinceLastGC : 1;
         bool m_wasRedeferred : 1;
+        bool m_wasRedeferredAfterFirstRedeferralTry : 1;
         bool m_wasReparsed : 1;
         int8 inactiveGCCount;
         int8 minInactiveGCCount;

@@ -2510,15 +2510,19 @@ ThreadContext::TryRedeferral()
                 !functionBody->m_wasRedeferred && !functionBody->m_wasReparsed)
             {
                 functionBody->m_wasRedeferred = true;
+                if (this->numGC > CONFIG_FLAG(MinGCCountForRedeferral))
+                {
+                    functionBody->m_wasRedeferredAfterFirstRedeferralTry = true;
+                }
                 numFunctionsRedeferred++;
                 if (PHASE_STATS1(Js::RedeferralPhase))
                 {
                     scriptContext->redeferralStats.totalFunctionsRedeferred++;
+                    if (this->numGC > CONFIG_FLAG(MinGCCountForRedeferral))
+                    {
+                        scriptContext->redeferralStats.totalFunctionsRedeferredAfterFirstTry++;
+                    }
                 }
-            }
-            else
-            {
-                functionBody->m_interpretedSinceLastGC = false;
             }
         });
         if (PHASE_STATS1(Js::RedeferralPhase))

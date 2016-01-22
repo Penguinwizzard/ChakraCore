@@ -3058,40 +3058,47 @@ namespace Js
         }
 
         FunctionBody *const functionBody = GetFunctionBody();
-        functionBody->m_interpretedSinceLastGC = true;
 
-        if (PHASE_STATS1(Js::RedeferralPhase) && !(m_flags & Js::InterpreterStackFrameFlags_FromBailOut))
+        if (!(m_flags & Js::InterpreterStackFrameFlags_FromBailOut))
         {
             if (functionBody->m_wasRedeferred)
             {
                 functionBody->m_wasRedeferred = false;
                 functionBody->m_wasReparsed = true;
 #ifdef REDEFERRAL_STATS
-                scriptContext->redeferralStats.totalFunctionsUsedAfterRedeferral++;
-                if (PHASE_STATS1(Js::MinGcToNumFunctionsMapPhase))
+                if (PHASE_STATS1(Js::RedeferralPhase))
                 {
-                    if (scriptContext->redeferralStats.inactiveGCsToFunctionsMap == nullptr)
+                    scriptContext->redeferralStats.totalFunctionsUsedAfterRedeferral++;
+                    if (functionBody->m_wasRedeferredAfterFirstRedeferralTry)
                     {
-                        scriptContext->redeferralStats.inactiveGCsToFunctionsMap = Anew(scriptContext->GeneralAllocator(), Js::ScriptContext::RedeferralStats::InactiveGCsToFunctionsMap, scriptContext->GeneralAllocator());
+                        scriptContext->redeferralStats.totalFunctionsUsedAfterRedeferralAfterFirstTry++;
                     }
-
-                    Js::ScriptContext::RedeferralStats::InactiveGCsToFunctionsMap* map = scriptContext->redeferralStats.inactiveGCsToFunctionsMap;
-                    if (functionBody->inactiveGCCount < functionBody->minInactiveGCCount)
+                    if (PHASE_STATS1(Js::MinGcToNumFunctionsMapPhase))
                     {
-                        uint16 minCountFunctions = 0;
-                        if (map->TryGetValue(functionBody->minInactiveGCCount, &minCountFunctions))
+                        if (scriptContext->redeferralStats.inactiveGCsToFunctionsMap == nullptr)
                         {
-                            map->Item(functionBody->minInactiveGCCount, --minCountFunctions);
+                            scriptContext->redeferralStats.inactiveGCsToFunctionsMap = Anew(scriptContext->GeneralAllocator(), Js::ScriptContext::RedeferralStats::InactiveGCsToFunctionsMap, scriptContext->GeneralAllocator());
                         }
 
-                        uint16 thisCountFunctions = 0;
-                        map->TryGetValue(functionBody->inactiveGCCount, &thisCountFunctions);
-                        map->Item(functionBody->inactiveGCCount, ++thisCountFunctions);
+                        Js::ScriptContext::RedeferralStats::InactiveGCsToFunctionsMap* map = scriptContext->redeferralStats.inactiveGCsToFunctionsMap;
+                        if (functionBody->inactiveGCCount < functionBody->minInactiveGCCount)
+                        {
+                            uint16 minCountFunctions = 0;
+                            if (map->TryGetValue(functionBody->minInactiveGCCount, &minCountFunctions))
+                            {
+                                map->Item(functionBody->minInactiveGCCount, --minCountFunctions);
+                            }
 
-                        functionBody->minInactiveGCCount = functionBody->inactiveGCCount;
+                            uint16 thisCountFunctions = 0;
+                            map->TryGetValue(functionBody->inactiveGCCount, &thisCountFunctions);
+                            map->Item(functionBody->inactiveGCCount, ++thisCountFunctions);
+
+                            functionBody->minInactiveGCCount = functionBody->inactiveGCCount;
+                        }
                     }
                 }
 #endif
+                functionBody->m_wasRedeferredAfterFirstRedeferralTry = false;
             }
         }
         functionBody->inactiveGCCount = -1;
