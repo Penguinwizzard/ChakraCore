@@ -883,10 +883,6 @@ void ByteCodeGenerator::AssignFrameSlotsRegister()
     if (top->frameSlotsRegister == Js::Constants::NoRegister)
     {
         top->frameSlotsRegister = NextVarRegister();
-        if (top->GetParamScope() != nullptr && !top->GetParamScope()->GetCanMergeWithBodyScope())
-        {
-            top->frameSlotsRegisterForParamScope = NextVarRegister();
-        }
     }
 }
 
@@ -2641,7 +2637,8 @@ FuncInfo* PostVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerat
                 top->GetHasLocalInClosure() ||
                 top->funcExprScope && top->funcExprScope->GetMustInstantiate())
             {
-                if (!top->GetCallsEval())
+                // TODO: Need to fix this the right way
+                if (!top->GetCallsEval() && (top->GetParamScope() == nullptr || top->GetParamScope()->GetCanMergeWithBodyScope()))
                 {
                     byteCodeGenerator->AssignFrameSlotsRegister();
                 }

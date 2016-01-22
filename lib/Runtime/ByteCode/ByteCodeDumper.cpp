@@ -866,6 +866,7 @@ namespace Js
         {
             case OpCode::StInnerSlot:
             case OpCode::StInnerObjSlot:
+            case OpCode::StInnerSlotChkUndecl:
             case OpCode::StEnvSlot:
             case OpCode::StEnvObjSlot:
             case OpCode::StEnvSlotChkUndecl:
@@ -880,7 +881,7 @@ namespace Js
                 break;
             default:
             {
-                // AssertMsg(false, "Unknown OpCode for OpLayoutElementSlotI2");
+                AssertMsg(false, "Unknown OpCode for OpLayoutElementSlotI2");
                 break;
             }
         }

@@ -236,7 +236,8 @@ Js::OpCode ByteCodeGenerator::ToChkUndeclOp(Js::OpCode op) const
         return Js::OpCode::StLocalSlotChkUndecl;
 
     case Js::OpCode::StInnerSlot:
-        return Js::OpCode::StInnerSlotChkUndecl;
+        return Js::OpCode::StInnerSlot;
+        // return Js::OpCode::StInnerSlotChkUndecl;
 
     case Js::OpCode::StEnvSlot:
         return Js::OpCode::StEnvSlotChkUndecl;
@@ -1209,7 +1210,7 @@ Js::RegSlot ByteCodeGenerator::DefineOneFunction(ParseNode *pnodeFnc, FuncInfo *
     // AssertMsg(funcInfo->nonLocalSymbols == 0 || regEnv != funcInfoParent->nullConstantRegister,
     // "We need a closure for the nested function");
 
-    if (regEnv == funcInfoParent->frameDisplayRegister || regEnv == funcInfoParent->GetEnvRegister())
+    if ((this->GetCurrentScope()->GetScopeType() != ScopeType_Parameter) && (regEnv == funcInfoParent->frameDisplayRegister || regEnv == funcInfoParent->GetEnvRegister()))
     {
         m_writer.NewFunction(pnodeFnc->location, pnodeFnc->sxFnc.nestedIndex, pnodeFnc->sxFnc.IsGenerator());
     }
@@ -1715,9 +1716,7 @@ void ByteCodeGenerator::FinalizeRegisters(FuncInfo * funcInfo, Js::FunctionBody 
 void ByteCodeGenerator::InitScopeSlotArray(FuncInfo * funcInfo)
 {
     // Record slots info for ScopeSlots/ScopeObject.
-    Scope* paramScope = funcInfo->GetParamScope();
-    uint scopeSlotCount = funcInfo->bodyScope->GetScopeSlotCount()
-                            + ((paramScope == nullptr || paramScope->GetCanMergeWithBodyScope()) ? 0 : funcInfo->GetParamScope()->GetScopeSlotCount());
+    uint scopeSlotCount = funcInfo->bodyScope->GetScopeSlotCount();
     if (scopeSlotCount == 0)
     {
         return;
@@ -2985,7 +2984,6 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
 
         // For now, emit all constant loads at top of function (should instead put in closest dominator of uses).
         LoadAllConstants(funcInfo);
-        HomeArguments(funcInfo);
 
         if (funcInfo->root->sxFnc.pnodeRest != nullptr)
         {
@@ -3112,6 +3110,9 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
 
         ::BeginEmitBlock(pnode->sxFnc.pnodeScopes, this, funcInfo);
 
+        // If the param scope has own scope then we should move the params only after the inner scope slot is created
+        HomeArguments(funcInfo);
+
         if (pnode->sxFnc.pnodeBodyScope != nullptr)
         {
             ::BeginEmitBlock(pnode->sxFnc.pnodeBodyScope, this, funcInfo);
@@ -3120,26 +3121,52 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
 
         if (!pnode->sxFnc.IsSimpleParameterList())
         {
-            EmitDefaultArgs(funcInfo, pnode);
-
             Scope* paramScope = funcInfo->GetParamScope();
+            Scope* bodyScope = funcInfo->GetBodyScope();
+
             if (!paramScope->GetCanMergeWithBodyScope())
             {
-                //// TODO: Get rid of this n2 loop
-                //// Emit bytecode to copy the initial values from param names to their corrsponding body bindings
-                //paramScope->ForEachSymbol([this, funcInfo] (Symbol* param) {
-                //    Symbol* varSym = funcInfo->GetBodyScope()->FindLocalSymbol(param->GetName());
-                //    // TODO: Check whether this condition is valid
-                //    if (varSym && param->GetLocation() != Js::Constants::NoRegister && varSym->GetLocation() != Js::Constants::NoRegister)
-                //    {
-                //        this->EmitPropStore(param->GetLocation(), varSym, varSym->GetPid(), funcInfo);
-                //    }
-                //    else
-                //    {
-                //        // TODO: Put the assert back
-                //        // Assert(varSym == funcInfo->GetArgumentsSymbol());
-                //    }
-                //});
+                // Set the closure register according to the param scope if needed.
+                if (funcInfo->frameSlotsRegisterForParamScope != Js::Constants::NoRegister)
+                {
+                    byteCodeFunction->SetLocalClosureReg(funcInfo->frameSlotsRegisterForParamScope);
+                }
+
+                // Pop the body scope and push the param scope
+                PopScope();
+                Assert(paramScope && bodyScope->GetScopeType() == ScopeType_FunctionBody);
+                PopScope();
+                PushScope(paramScope);
+            }
+
+            EmitDefaultArgs(funcInfo, pnode);
+
+            if (!paramScope->GetCanMergeWithBodyScope())
+            {
+                // Pop the param scope and push the body scope back in
+                PopScope();
+                PushScope(bodyScope);
+                PushScope(paramScope);
+
+                // TODO: Get rid of this n2 loop
+                // Emit bytecode to copy the initial values from param names to their corrsponding body bindings
+                paramScope->ForEachSymbol([this, funcInfo](Symbol* param) {
+                    Symbol* varSym = funcInfo->GetBodyScope()->FindLocalSymbol(param->GetName());
+                    // TODO: Check whether this condition is valid
+                    if (varSym && param->GetLocation() != Js::Constants::NoRegister && varSym->GetLocation() != Js::Constants::NoRegister)
+                    {
+                        Js::RegSlot tempReg = funcInfo->AcquireTmpRegister();
+                        this->EmitPropLoad(tempReg, param, param->GetPid(), funcInfo);
+                        this->EmitPropStore(tempReg, varSym, varSym->GetPid(), funcInfo);
+                        funcInfo->ReleaseTmpRegister(tempReg);
+                    }
+                    else
+                    {
+                        // TODO: Put the assert back
+                        // Assert(varSym == funcInfo->GetArgumentsSymbol());
+                    }
+                });
+
             }
         }
         else if (funcInfo->GetHasArguments() && !NeedScopeObjectForArguments(funcInfo, pnode))
@@ -3517,7 +3544,6 @@ void ByteCodeGenerator::StartEmitFunction(ParseNode *pnodeFnc)
 
     Scope * const bodyScope = funcInfo->GetBodyScope();
     Scope* const paramScope = funcInfo->GetParamScope();
-    bool isParamAndBodyScopeNotMerged = (paramScope != nullptr && !paramScope->GetCanMergeWithBodyScope());
 
     if (pnodeFnc->nop != knopProg)
     {
@@ -3535,9 +3561,8 @@ void ByteCodeGenerator::StartEmitFunction(ParseNode *pnodeFnc)
             bodyScope->SetLocation(funcInfo->frameSlotsRegister);
         }
 
-        if (isParamAndBodyScopeNotMerged && funcInfo->frameSlotsRegisterForParamScope != Js::Constants::NoRegister)
+        if (paramScope != nullptr && !paramScope->GetCanMergeWithBodyScope())
         {
-            // paramScope->SetLocation(funcInfo->frameSlotsRegisterForParamScope);
             paramScope->SetMustInstantiate(true);
         }
 
@@ -3868,6 +3893,12 @@ void ByteCodeGenerator::EndEmitFunction(ParseNode *pnodeFnc)
         PopScope();
     }
 
+    if (currentScope != nullptr && currentScope->GetScopeType() == ScopeType_Parameter && currentScope->GetFunc() == funcInfo)
+    {
+        // Pop the corresponding parameter scope
+        PopScope();
+    }
+
     if (CONFIG_FLAG(DeferNested))
     {
         Assert(funcInfo == this->TopFuncInfo());
@@ -4027,7 +4058,7 @@ Js::RegSlot ByteCodeGenerator::PrependLocalScopes(Js::RegSlot evalEnv, Js::RegSl
     Scope *currScope = this->currentScope;
     Scope *funcScope = funcInfo->GetBodyScope();
 
-    if (currScope == funcScope || (currScope->GetScopeType() == ScopeType_Parameter && currScope->GetFunc() == funcInfo))
+    if (currScope == funcScope)
     {
         return evalEnv;
     }
@@ -4043,7 +4074,7 @@ Js::RegSlot ByteCodeGenerator::PrependLocalScopes(Js::RegSlot evalEnv, Js::RegSl
     while (currScope != funcScope)
     {
         Scope *innerScope;
-        for (innerScope = currScope; innerScope->GetEnclosingScope() != funcScope; innerScope = innerScope->GetEnclosingScope())
+        for (innerScope = currScope; (innerScope->GetEnclosingScope() != funcScope) && (innerScope->GetScopeType() != ScopeType_Parameter || innerScope->GetFunc() != funcInfo); innerScope = innerScope->GetEnclosingScope())
             ;
         if (innerScope->GetMustInstantiate())
         {
@@ -4348,7 +4379,7 @@ void ByteCodeGenerator::EmitLocalPropInit(Js::RegSlot rhsLocation, Symbol *sym, 
             // Now store the property to its slot.
             Js::OpCode op = this->GetStSlotOp(scope, -1, slotReg, false, funcInfo);
 
-            if (slotReg != Js::Constants::NoRegister && (slotReg == funcInfo->frameSlotsRegister || slotReg == funcInfo->frameSlotsRegisterForParamScope))
+            if (slotReg != Js::Constants::NoRegister && slotReg == funcInfo->frameSlotsRegister)
             {
                 this->m_writer.SlotI1(op, rhsLocation, slot + Js::ScopeSlots::FirstSlotIndex);
             }
@@ -4380,8 +4411,7 @@ ByteCodeGenerator::GetStSlotOp(Scope *scope, int envIndex, Js::RegSlot scopeLoca
             op = Js::OpCode::StEnvSlot;
         }
     }
-    else if (scopeLocation != Js::Constants::NoRegister &&
-             (scopeLocation == funcInfo->frameSlotsRegister || scopeLocation == funcInfo->frameSlotsRegisterForParamScope))
+    else if (scopeLocation != Js::Constants::NoRegister && scopeLocation == funcInfo->frameSlotsRegister)
     {
         op = Js::OpCode::StLocalSlot;
     }
