@@ -2593,9 +2593,7 @@ FuncInfo* PostVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerat
         {
             PostVisitBlock(pnode->sxFnc.pnodeBodyScope, byteCodeGenerator);
             ParseNodePtr paramScopeNode = pnode->sxFnc.pnodeScopes;
-            if (paramScopeNode->nop != knopBlock
-                || paramScopeNode->sxBlock.blockType != Parameter
-                || paramScopeNode->sxBlock.scope->GetCanMergeWithBodyScope())
+            if (paramScopeNode->nop != knopBlock)
             {
                 PostVisitBlock(pnode->sxFnc.pnodeScopes, byteCodeGenerator);
             }
@@ -2646,6 +2644,7 @@ FuncInfo* PostVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerat
                 top->funcExprScope && top->funcExprScope->GetMustInstantiate())
             {
                 // TODO: Need to fix this the right way
+                // if (!top->GetCallsEval() && (top->GetParamScope() == nullptr || top->GetParamScope()->GetCanMergeWithBodyScope()))
                 if (!top->GetCallsEval() && (top->GetParamScope() == nullptr || top->GetParamScope()->GetNestedCount() < pnode->sxFnc.nestedCount))
                 {
                     byteCodeGenerator->AssignFrameSlotsRegister();
@@ -2719,6 +2718,24 @@ FuncInfo* PostVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerat
                     }
                 }
             }
+            else if (!top->paramScope->GetCanMergeWithBodyScope())
+            {
+                uint i = 0;
+                auto setFormalsScopeSlot = [&](ParseNode *pnodeArg)
+                {
+                    if (pnodeArg->IsVarLetOrConst())
+                    {
+                        i++;
+                    }
+                };
+
+                MapFormalsWithoutRest(pnode, setFormalsScopeSlot);
+                MapFormalsFromPattern(pnode, setFormalsScopeSlot);
+
+                // We have to set the scope slot count for creating the inner scope slot array
+                top->paramScope->SetScopeSlotCount(i);
+            }
+
         }
         else
         {
