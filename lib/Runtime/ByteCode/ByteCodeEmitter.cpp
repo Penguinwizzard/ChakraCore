@@ -3126,12 +3126,6 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
 
             if (!paramScope->GetCanMergeWithBodyScope())
             {
-                // Set the closure register according to the param scope if needed.
-                if (funcInfo->frameSlotsRegisterForParamScope != Js::Constants::NoRegister)
-                {
-                    byteCodeFunction->SetLocalClosureReg(funcInfo->frameSlotsRegisterForParamScope);
-                }
-
                 // Pop the body scope and push the param scope
                 PopScope();
                 Assert(paramScope && bodyScope->GetScopeType() == ScopeType_FunctionBody);
@@ -3899,12 +3893,6 @@ void ByteCodeGenerator::EndEmitFunction(ParseNode *pnodeFnc)
         PopScope();
     }
 
-    if (currentScope != nullptr && currentScope->GetScopeType() == ScopeType_Parameter && currentScope->GetFunc() == funcInfo)
-    {
-        // Pop the corresponding parameter scope
-        PopScope();
-    }
-
     if (CONFIG_FLAG(DeferNested))
     {
         Assert(funcInfo == this->TopFuncInfo());
@@ -4642,8 +4630,7 @@ void ByteCodeGenerator::EmitPropStore(Js::RegSlot rhsLocation, Symbol *sym, Iden
                                   envIndex + Js::FrameDisplay::GetOffsetOfScopes()/sizeof(Js::Var),
                                   slot + (sym->GetScope()->GetIsObject()? 0 : Js::ScopeSlots::FirstSlotIndex));
         }
-        else if (scopeLocation != Js::Constants::NoRegister &&
-                 (scopeLocation == funcInfo->frameSlotsRegister || scopeLocation == funcInfo->frameObjRegister || scopeLocation == funcInfo->frameSlotsRegisterForParamScope))
+        else if (scopeLocation != Js::Constants::NoRegister && (scopeLocation == funcInfo->frameSlotsRegister || scopeLocation == funcInfo->frameObjRegister))
         {
             this->m_writer.SlotI1(op, rhsLocation,
                                   slot + (sym->GetScope()->GetIsObject()? 0 : Js::ScopeSlots::FirstSlotIndex));
@@ -4715,8 +4702,7 @@ ByteCodeGenerator::GetLdSlotOp(Scope *scope, int envIndex, Js::RegSlot scopeLoca
             op = Js::OpCode::LdEnvSlot;
         }
     }
-    else if (scopeLocation != Js::Constants::NoRegister &&
-             (scopeLocation == funcInfo->frameSlotsRegister || scopeLocation == funcInfo->frameSlotsRegisterForParamScope))
+    else if (scopeLocation != Js::Constants::NoRegister && scopeLocation == funcInfo->frameSlotsRegister)
     {
         op = Js::OpCode::LdLocalSlot;
     }
