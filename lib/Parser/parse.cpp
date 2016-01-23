@@ -4430,7 +4430,6 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
                     // Nested count is more than 0 after parsing param scope, so there are function definitions in the param scope.
                     // We can't merge the param scope and body scope any more as the nested methods may be capturing params.
                     Scope* paramScope = pnodeFnc->sxFnc.pnodeScopes->sxBlock.scope;
-                    paramScope->SetCanMerge(false);
                     paramScope->SetCannotMergeWithBodyScope();
                     paramScope->SetNestedCount(pnodeFnc->sxFnc.nestedCount);
 

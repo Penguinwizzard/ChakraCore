@@ -2638,8 +2638,6 @@ FuncInfo* PostVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerat
                 top->GetHasLocalInClosure() ||
                 top->funcExprScope && top->funcExprScope->GetMustInstantiate())
             {
-                // TODO: Need to fix this the right way
-                // if (!top->GetCallsEval() && (top->GetParamScope() == nullptr || top->GetParamScope()->GetCanMergeWithBodyScope()))
                 if (!top->GetCallsEval() && (top->GetParamScope() == nullptr || top->GetParamScope()->GetNestedCount() < pnode->sxFnc.nestedCount))
                 {
                     byteCodeGenerator->AssignFrameSlotsRegister();
