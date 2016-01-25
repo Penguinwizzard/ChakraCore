@@ -2523,18 +2523,18 @@ ThreadContext::TryRedeferral()
         });
         if (PHASE_STATS1(Js::RedeferralPhase))
         {
-            if (scriptContext->redeferralStats.redeferredFunctionsPerGCMap == nullptr)
+            /*if (scriptContext->redeferralStats.redeferredFunctionsPerGCMap == nullptr)
             {
                 scriptContext->redeferralStats.redeferredFunctionsPerGCMap = Anew(scriptContext->GeneralAllocator(), Js::ScriptContext::RedeferralStats::RedeferredFunctionsPerGCMap, scriptContext->GeneralAllocator());
             }
-            scriptContext->redeferralStats.redeferredFunctionsPerGCMap->Add(this->numGC, numFunctionsRedeferred);
+            scriptContext->redeferralStats.redeferredFunctionsPerGCMap->Add(this->numGC, numFunctionsRedeferred);*/
             if (PHASE_STATS1(Js::AliveFunctionsPerGCMapPhase))
             {
-                if (scriptContext->redeferralStats.aliveFunctionsPerGCMap == nullptr)
+                /*if (scriptContext->redeferralStats.aliveFunctionsPerGCMap == nullptr)
                 {
                     scriptContext->redeferralStats.aliveFunctionsPerGCMap = Anew(scriptContext->GeneralAllocator(), Js::ScriptContext::RedeferralStats::AliveFunctionsPerGCMap, scriptContext->GeneralAllocator());
-                }
-                scriptContext->redeferralStats.aliveFunctionsPerGCMap->Add(this->numGC, numFunctions);
+                }*/
+                scriptContext->aliveFunctionsPerGCMap.Add(this->numGC, numFunctions);
             }
         }
     }

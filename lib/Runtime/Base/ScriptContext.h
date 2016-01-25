@@ -630,6 +630,7 @@ public:
         };
 
         RedeferralStats redeferralStats;
+        JsUtil::BaseDictionary<uint8, uint16, ArenaAllocator> aliveFunctionsPerGCMap;
 #endif
 #ifdef ENABLE_BASIC_TELEMETRY
 

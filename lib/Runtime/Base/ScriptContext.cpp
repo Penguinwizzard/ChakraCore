@@ -75,6 +75,7 @@ namespace Js
         disposeScriptByFaultInjectionEventHandler(nullptr),
 #endif
         integerStringMap(this->GeneralAllocator()),
+        aliveFunctionsPerGCMap(this->GeneralAllocator()),
         guestArena(nullptr),
         raiseMessageToDebuggerFunctionType(nullptr),
         transitionToDebugModeIfFirstSourceFn(nullptr),
@@ -538,6 +539,16 @@ namespace Js
     {
         this->PrintStats();
 
+        if (PHASE_STATS1(Js::RedeferralPhase))
+        {
+            uint numFunctions = 0;
+            this->MapFunction([&](Js::FunctionBody* body)
+            {
+                numFunctions++;
+            });
+            Output::Print(L"After PrintStats: %d\n", numFunctions);
+            Output::Flush();
+        }
         isScriptContextActuallyClosed = true;
 
         PERF_COUNTER_DEC(Basic, ScriptContextActive);
@@ -5022,7 +5033,7 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
                 Output::Print(L"Redeferral success rate: 0.00\n");
             }
 
-            if (redeferralStats.redeferredFunctionsPerGCMap)
+            /*if (redeferralStats.redeferredFunctionsPerGCMap)
             {
                 Output::Print(L"Number of functions redeferred at each GC\n");
                 Output::Print(L"GC-Id, %10s\n", L"Functions redeferred");
@@ -5031,15 +5042,15 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
                 {
                     Output::Print(L"%d, %10d\n", gcId, numFunctions);
                 });
-            }
+            }*/
             if (PHASE_STATS1(Js::AliveFunctionsPerGCMapPhase))
             {
-                if (redeferralStats.aliveFunctionsPerGCMap)
+                if (this->aliveFunctionsPerGCMap.Count()>0)
                 {
                     Output::Print(L"Number of functions alive at each GC\n");
                     Output::Print(L"GC-Id, %10s\n", L"Functions alive");
                 
-                    redeferralStats.aliveFunctionsPerGCMap->Map([](uint8 gcId, uint16 numFunctions)
+                    this->aliveFunctionsPerGCMap.Map([](uint8 gcId, uint16 numFunctions)
                     {
                         Output::Print(L"%d, %10d\n", gcId, numFunctions);
                     });
