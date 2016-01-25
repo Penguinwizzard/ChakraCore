@@ -2982,8 +2982,13 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
             m_writer.Empty(Js::OpCode::ChkNewCallFlag);
         }
 
+        Scope* paramScope = funcInfo->GetParamScope();
         // For now, emit all constant loads at top of function (should instead put in closest dominator of uses).
         LoadAllConstants(funcInfo);
+        if (paramScope == nullptr || paramScope->GetCanMergeWithBodyScope())
+        {
+            HomeArguments(funcInfo);
+        }
 
         if (funcInfo->root->sxFnc.pnodeRest != nullptr)
         {
@@ -3110,8 +3115,11 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
 
         ::BeginEmitBlock(pnode->sxFnc.pnodeScopes, this, funcInfo);
 
-        // If the param scope has own scope then we should move the params only after the inner scope slot is created
-        HomeArguments(funcInfo);
+        if (paramScope != nullptr && !paramScope->GetCanMergeWithBodyScope())
+        {
+            // If the param scope has own scope then we should move the params only after the inner scope slot is created
+            HomeArguments(funcInfo);
+        }
 
         if (pnode->sxFnc.pnodeBodyScope != nullptr)
         {
@@ -3121,7 +3129,6 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
 
         if (!pnode->sxFnc.IsSimpleParameterList())
         {
-            Scope* paramScope = funcInfo->GetParamScope();
             Scope* bodyScope = funcInfo->GetBodyScope();
 
             if (!paramScope->GetCanMergeWithBodyScope())

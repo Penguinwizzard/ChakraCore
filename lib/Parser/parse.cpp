@@ -4426,7 +4426,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
                 pnodeFnc->sxFnc.pnodeVars = nullptr;
                 m_ppnodeVar = &pnodeFnc->sxFnc.pnodeVars;
 
-                if (pnodeFnc->sxFnc.nestedCount > 0 || pnodeFnc->sxFnc.CallsEval() || pnodeFnc->sxFnc.ChildCallsEval())
+                if (pnodeFnc->sxFnc.nestedCount > 0 && !pnodeFnc->sxFnc.IsLambda() && !pnodeFnc->sxFnc.IsAsync())
                 {
                     // Nested count is more than 0 after parsing param scope, so there are function definitions in the param scope.
                     // We can't merge the param scope and body scope any more as the nested methods may be capturing params.
