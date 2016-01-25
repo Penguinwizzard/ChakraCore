@@ -542,11 +542,29 @@ namespace Js
         if (PHASE_STATS1(Js::RedeferralPhase))
         {
             uint numFunctions = 0;
+            uint numFunctionsRedeferred = 0;
+            uint numFunctionsReparsed = 0;
             this->MapFunction([&](Js::FunctionBody* body)
             {
+                if (body->m_wasReparsed)
+                {
+                    numFunctionsReparsed++;
+                }
+                if (body->m_wasRedeferred)
+                {
+                    numFunctionsRedeferred++;
+                }
                 numFunctions++;
             });
-            Output::Print(L"After PrintStats: %d\n", numFunctions);
+            Output::Print(L"After PrintStats\n");
+            Output::Print(L"Total: %d\n", numFunctions);
+            Output::Print(L"Redeferred: %d\n", numFunctionsRedeferred + numFunctionsReparsed);
+            Output::Print(L"Reparsed: %d\n", numFunctionsReparsed);
+            if (numFunctionsRedeferred + numFunctionsReparsed > 0)
+            {
+                double succressRate = ((double)(numFunctionsRedeferred) / (numFunctionsRedeferred + numFunctionsReparsed))*100;
+                Output::Print(L"%.2f\n", succressRate);
+            }
             Output::Flush();
         }
         isScriptContextActuallyClosed = true;

@@ -612,7 +612,7 @@ public:
         BailoutStatsMap *bailoutReasonCounts;
         uint *rejitReasonCounts;
 #endif
-#ifdef REDEFERRAL_STATS
+//#ifdef REDEFERRAL_STATS
         struct RedeferralStats
         {
             uint totalFunctionsRedeferred;
@@ -630,8 +630,9 @@ public:
         };
 
         RedeferralStats redeferralStats;
+        
+//#endif
         JsUtil::BaseDictionary<uint8, uint16, ArenaAllocator> aliveFunctionsPerGCMap;
-#endif
 #ifdef ENABLE_BASIC_TELEMETRY
 
     private:
