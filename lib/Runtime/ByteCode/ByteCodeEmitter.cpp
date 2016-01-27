@@ -1213,7 +1213,7 @@ Js::RegSlot ByteCodeGenerator::DefineOneFunction(ParseNode *pnodeFnc, FuncInfo *
     // AssertMsg(funcInfo->nonLocalSymbols == 0 || regEnv != funcInfoParent->nullConstantRegister,
     // "We need a closure for the nested function");
 
-    if ((this->GetCurrentScope()->GetScopeType() != ScopeType_Parameter) && (regEnv == funcInfoParent->frameDisplayRegister || regEnv == funcInfoParent->GetEnvRegister()))
+    if ((this->GetCurrentScope()->GetScopeType() != ScopeType_Parameter || this->GetCurrentScope()->GetCanMergeWithBodyScope()) && (regEnv == funcInfoParent->frameDisplayRegister || regEnv == funcInfoParent->GetEnvRegister()))
     {
         m_writer.NewFunction(pnodeFnc->location, pnodeFnc->sxFnc.nestedIndex, pnodeFnc->sxFnc.IsGenerator());
     }
@@ -4415,7 +4415,8 @@ ByteCodeGenerator::GetStSlotOp(Scope *scope, int envIndex, Js::RegSlot scopeLoca
             op = Js::OpCode::StEnvSlot;
         }
     }
-    else if (scopeLocation != Js::Constants::NoRegister && scopeLocation == funcInfo->frameSlotsRegister)
+    else if (scopeLocation != Js::Constants::NoRegister &&
+        scopeLocation == funcInfo->frameSlotsRegister)
     {
         op = Js::OpCode::StLocalSlot;
     }
@@ -4640,7 +4641,8 @@ void ByteCodeGenerator::EmitPropStore(Js::RegSlot rhsLocation, Symbol *sym, Iden
                                   envIndex + Js::FrameDisplay::GetOffsetOfScopes()/sizeof(Js::Var),
                                   slot + (sym->GetScope()->GetIsObject()? 0 : Js::ScopeSlots::FirstSlotIndex));
         }
-        else if (scopeLocation != Js::Constants::NoRegister && (scopeLocation == funcInfo->frameSlotsRegister || scopeLocation == funcInfo->frameObjRegister))
+        else if (scopeLocation != Js::Constants::NoRegister &&
+            (scopeLocation == funcInfo->frameSlotsRegister || scopeLocation == funcInfo->frameObjRegister))
         {
             this->m_writer.SlotI1(op, rhsLocation,
                                   slot + (sym->GetScope()->GetIsObject()? 0 : Js::ScopeSlots::FirstSlotIndex));
@@ -4712,7 +4714,8 @@ ByteCodeGenerator::GetLdSlotOp(Scope *scope, int envIndex, Js::RegSlot scopeLoca
             op = Js::OpCode::LdEnvSlot;
         }
     }
-    else if (scopeLocation != Js::Constants::NoRegister && scopeLocation == funcInfo->frameSlotsRegister)
+    else if (scopeLocation != Js::Constants::NoRegister &&
+        scopeLocation == funcInfo->frameSlotsRegister)
     {
         op = Js::OpCode::LdLocalSlot;
     }

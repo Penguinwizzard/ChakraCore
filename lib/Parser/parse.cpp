@@ -4434,8 +4434,8 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
                     paramScope->SetNestedCount(pnodeFnc->sxFnc.nestedCount);
 
                     // Now add a new symbol reference for each formal in the param scope to the body scope.
-                    paramScope->ForEachSymbol([this](Symbol* sym) {
-                        this->CreateVarDeclNode(sym->GetPid(), sym->GetSymbolType(), false, nullptr, false);
+                    paramScope->ForEachSymbol([this](Symbol* param) {
+                        this->CreateVarDeclNode(param->GetPid(), param->GetSymbolType(), false, nullptr, false);
                     });
                 }
             }
@@ -7772,10 +7772,10 @@ PidRefStack* Parser::PushPidRef(IdentPtr pid)
     Assert(GetCurrentBlock() != nullptr);
     AssertMsg(pid != nullptr, "PID should be created");
     PidRefStack *ref = pid->GetTopRef();
-    if (!ref || (ref->GetScopeId() < GetCurrentBlock()->sxBlock.blockId
-                // We could have the ref from the parameter scope. In that case we can skip creating a new one.
-                && !(m_currentBlockInfo->pBlockInfoOuter->pnodeBlock->sxBlock.blockType == PnodeBlockType::Parameter
-                    && m_currentBlockInfo->pBlockInfoOuter->pnodeBlock->sxBlock.blockId == ref->GetScopeId())))
+    if (!ref || (ref->GetScopeId() < GetCurrentBlock()->sxBlock.blockId))
+                //// We could have the ref from the parameter scope. In that case we can skip creating a new one.
+                //&& !(m_currentBlockInfo->pBlockInfoOuter->pnodeBlock->sxBlock.blockType == PnodeBlockType::Parameter
+                //    && m_currentBlockInfo->pBlockInfoOuter->pnodeBlock->sxBlock.blockId == ref->GetScopeId())))
     {
         ref = Anew(&m_nodeAllocator, PidRefStack);
         if (ref == nullptr)

@@ -2638,7 +2638,7 @@ FuncInfo* PostVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerat
                 top->GetHasLocalInClosure() ||
                 top->funcExprScope && top->funcExprScope->GetMustInstantiate())
             {
-                if (!top->GetCallsEval() && (top->GetParamScope() == nullptr || top->GetParamScope()->GetNestedCount() < pnode->sxFnc.nestedCount))
+                if (!top->GetCallsEval())
                 {
                     byteCodeGenerator->AssignFrameSlotsRegister();
                 }
@@ -2711,24 +2711,6 @@ FuncInfo* PostVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerat
                     }
                 }
             }
-            else if (!top->paramScope->GetCanMergeWithBodyScope())
-            {
-                uint i = 0;
-                auto setFormalsScopeSlot = [&](ParseNode *pnodeArg)
-                {
-                    if (pnodeArg->IsVarLetOrConst())
-                    {
-                        i++;
-                    }
-                };
-
-                MapFormalsWithoutRest(pnode, setFormalsScopeSlot);
-                MapFormalsFromPattern(pnode, setFormalsScopeSlot);
-
-                // We have to set the scope slot count for creating the inner scope slot array
-                top->paramScope->SetScopeSlotCount(i);
-            }
-
         }
         else
         {

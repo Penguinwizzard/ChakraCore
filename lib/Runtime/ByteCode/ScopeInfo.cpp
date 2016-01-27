@@ -193,7 +193,8 @@ namespace Js
         // We will have to implement encoding block scope info to enable, which will also
         // enable defer parsing function that are in block scopes.
 
-        Assert(byteCodeGenerator->GetCurrentScope() == funcInfo->GetBodyScope());
+        Scope* currentScope = byteCodeGenerator->GetCurrentScope();
+        Assert(currentScope == funcInfo->GetBodyScope());
         if (funcInfo->IsDeferred())
         {
             // Don't need to remember the parent function if we have a global function
@@ -204,14 +205,16 @@ namespace Js
 #if DBG
                 if (funcInfo->GetFuncExprScope() && funcInfo->GetFuncExprScope()->GetIsObject())
                 {
-                    Assert(byteCodeGenerator->GetCurrentScope()->GetEnclosingScope() == funcInfo->GetFuncExprScope() &&
-                        byteCodeGenerator->GetCurrentScope()->GetEnclosingScope()->GetEnclosingScope() ==
+                    Assert(currentScope->GetEnclosingScope() == funcInfo->GetFuncExprScope() &&
+                        currentScope->GetEnclosingScope()->GetEnclosingScope() ==
                         (parentFunc->IsGlobalFunction() ? parentFunc->GetGlobalEvalBlockScope() : parentFunc->GetBodyScope()));
                 }
                 else
                 {
-                    Assert(byteCodeGenerator->GetCurrentScope()->GetEnclosingScope() ==
-                        (parentFunc->IsGlobalFunction() ? parentFunc->GetGlobalEvalBlockScope() : parentFunc->GetBodyScope()));
+                    Assert((currentScope->GetEnclosingScope() ==
+                        (parentFunc->IsGlobalFunction() ? parentFunc->GetGlobalEvalBlockScope() : parentFunc->GetBodyScope())) ||
+                        // The method can be defined in the parameter scope of the parent function
+                        (currentScope->GetEnclosingScope() == parentFunc->GetParamScope() && !parentFunc->GetParamScope()->GetCanMergeWithBodyScope()));
                 }
 #endif
                 Js::ScopeInfo::SaveParentScopeInfo(parentFunc, funcInfo);
