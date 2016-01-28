@@ -4184,6 +4184,16 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
     pstmtSave = m_pstmtCur;
     SetCurrentStatement(nullptr);
 
+    // Check whether we are in a parameter scope. If we are then we have to mark the parent scope to indicate the same.
+    // If there is a method def in the default param scope then we can't merge the param and body scope of that function.
+    if (this->m_currentScope->GetScopeType() == ScopeType_Parameter && pnodeFncParent && !pnodeFncParent->sxFnc.IsLambda() && !pnodeFncParent->sxFnc.IsAsync())
+    {
+        if (pnodeFncParent->sxFnc.pnodeScopes && pnodeFncParent->sxFnc.pnodeScopes->sxBlock.scope)
+        {
+            pnodeFncParent->sxFnc.pnodeScopes->sxBlock.scope->SetCannotMergeWithBodyScope();
+        }
+    }
+
     RestorePoint beginFormals;
     m_pscan->Capture(&beginFormals);
     BOOL fWasAlreadyStrictMode = IsStrictMode();
@@ -4425,14 +4435,10 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
                 pnodeFnc->sxFnc.pnodeVars = nullptr;
                 m_ppnodeVar = &pnodeFnc->sxFnc.pnodeVars;
 
-                if (pnodeFnc->sxFnc.nestedCount > 0 && !pnodeFnc->sxFnc.IsLambda() && !pnodeFnc->sxFnc.IsAsync())
+                // We can't merge the param scope and body scope any more as the nested methods may be capturing params.
+                Scope* paramScope = pnodeFnc->sxFnc.pnodeScopes->sxBlock.scope;
+                if (!paramScope->GetCanMergeWithBodyScope())
                 {
-                    // Nested count is more than 0 after parsing param scope, so there are function definitions in the param scope.
-                    // We can't merge the param scope and body scope any more as the nested methods may be capturing params.
-                    Scope* paramScope = pnodeFnc->sxFnc.pnodeScopes->sxBlock.scope;
-                    paramScope->SetCannotMergeWithBodyScope();
-                    paramScope->SetNestedCount(pnodeFnc->sxFnc.nestedCount);
-
                     // Now add a new symbol reference for each formal in the param scope to the body scope.
                     paramScope->ForEachSymbol([this](Symbol* param) {
                         this->CreateVarDeclNode(param->GetPid(), param->GetSymbolType(), false, nullptr, false);
