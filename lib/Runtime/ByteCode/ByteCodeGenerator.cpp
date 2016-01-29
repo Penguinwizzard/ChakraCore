@@ -991,11 +991,6 @@ void ByteCodeGenerator::RestoreScopeInfo(Js::FunctionBody* functionBody)
         }
         FuncInfo* func = Anew(alloc, FuncInfo, functionBody->GetDisplayName(), alloc, paramScope, bodyScope, nullptr, functionBody);
 
-        if (paramScope != nullptr)
-        {
-            paramScope->SetFunc(func);
-        }
-
         if (bodyScope->GetScopeType() == ScopeType_GlobalEvalBlock)
         {
             func->bodyScope = this->currentScope;
@@ -1022,7 +1017,11 @@ void ByteCodeGenerator::RestoreScopeInfo(Js::FunctionBody* functionBody)
         }
 
         scopeInfo->GetScopeInfo(nullptr, this, func, bodyScope);
-        paramScopeInfo->GetScopeInfo(nullptr, this, func, paramScope);
+        if (paramScope != nullptr)
+        {
+            paramScope->SetFunc(func);
+            paramScopeInfo->GetScopeInfo(nullptr, this, func, paramScope);
+        }
     }
     else
     {
