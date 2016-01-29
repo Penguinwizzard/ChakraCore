@@ -2018,7 +2018,7 @@ namespace Js
         void SetThisRegForEventHandler(RegSlot reg) { Assert(thisRegisterForEventHandler == Constants::NoRegister); thisRegisterForEventHandler = this->MapRegSlot(reg); }
         bool HasScopeObject() const { return hasScopeObject; }
         void SetHasScopeObject(bool has) { hasScopeObject = has; }
-        void SetLocalClosureReg(RegSlot reg) { /* Assert(localClosureRegister == Constants::NoRegister); */ localClosureRegister = this->MapRegSlot(reg); }
+        void SetLocalClosureReg(RegSlot reg) { Assert(localClosureRegister == Constants::NoRegister); localClosureRegister = this->MapRegSlot(reg); }
         RegSlot GetLocalClosureReg() const { return localClosureRegister; }
         void SetLocalFrameDisplayReg(RegSlot reg) { Assert(localFrameDisplayRegister == Constants::NoRegister); localFrameDisplayRegister = this->MapRegSlot(reg); }
         RegSlot GetLocalFrameDisplayReg() const { return localFrameDisplayRegister; /*localClosureRegister == Constants::NoRegister ? Constants::NoRegister : localClosureRegister + 1;*/ }

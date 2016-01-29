@@ -3740,11 +3740,9 @@ ParseNodePtr Parser::ParseFncDecl(ushort flags, LPCOLESTR pNameHint, const bool 
                 {
                     Error(ERRsyntax);
                 }
-
                 pnodeFncBlockScope = StartParseBlock<buildAST>(PnodeBlockType::Regular, ScopeType_Block);
                 if (buildAST)
                 {
-                    
                     PushFuncBlockScope(pnodeFncBlockScope, &ppnodeScopeSave, &ppnodeExprScopeSave);
                 }
             }

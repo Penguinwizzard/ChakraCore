@@ -1424,6 +1424,7 @@ FuncInfo * ByteCodeGenerator::StartBindFunction(const wchar_t *name, uint nameLe
 void ByteCodeGenerator::EndBindFunction(bool funcExprWithName)
 {
     bool isGlobalScope = currentScope->GetScopeType() == ScopeType_Global;
+    Scope* bodyScope = currentScope;
 
     Assert(currentScope->GetScopeType() == ScopeType_FunctionBody || isGlobalScope);
     PopScope(); // function body
@@ -1432,9 +1433,14 @@ void ByteCodeGenerator::EndBindFunction(bool funcExprWithName)
     {
         Assert(currentScope == nullptr);
     }
-    else if (currentScope->GetScopeType() == ScopeType_Parameter)
+    else
     {
-        PopScope(); // parameter scope
+        Scope* paramScope = bodyScope->GetFunc()->GetParamScope();
+        if (paramScope == nullptr || paramScope->GetCanMergeWithBodyScope())
+        {
+            Assert(currentScope->GetScopeType() == ScopeType_Parameter);
+            PopScope(); // parameter scope
+        }
     }
 
     if (funcExprWithName)
@@ -2591,8 +2597,9 @@ FuncInfo* PostVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerat
         if (!top->IsGlobalFunction())
         {
             PostVisitBlock(pnode->sxFnc.pnodeBodyScope, byteCodeGenerator);
-            ParseNodePtr paramScopeNode = pnode->sxFnc.pnodeScopes;
-            if (paramScopeNode->nop != knopBlock)
+            if (pnode->sxFnc.pnodeScopes->nop != knopBlock
+                || pnode->sxFnc.pnodeBodyScope->sxBlock.scope->GetScopeType() != ScopeType_Parameter
+                || pnode->sxFnc.pnodeBodyScope->sxBlock.scope->GetCanMergeWithBodyScope())
             {
                 PostVisitBlock(pnode->sxFnc.pnodeScopes, byteCodeGenerator);
             }
@@ -3095,6 +3102,7 @@ void VisitNestedScopes(ParseNode* pnodeScopeList, ParseNode* pnodeParent, ByteCo
                 if (containerScope->nop != knopBlock || containerScope->sxBlock.blockType != Parameter
                     || containerScope->sxBlock.scope->GetCanMergeWithBodyScope())
                 {
+                    // When the param scope has own scope, the scope stack handling for it is done separate.
                     EndVisitBlock(pnodeScope->sxFnc.pnodeScopes, byteCodeGenerator);
                 }
             }
