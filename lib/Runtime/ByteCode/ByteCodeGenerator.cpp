@@ -968,6 +968,10 @@ void ByteCodeGenerator::RestoreScopeInfo(Js::FunctionBody* functionBody)
             {
                 paramScope = Anew(alloc, Scope, alloc, ScopeType_Parameter, true);
             }
+            if (!paramScopeInfo->GetCanMergerWithBodyScope())
+            {
+                paramScope->SetCannotMergeWithBodyScope();
+            }
             // We need the funcInfo before continuing the restoration of the param scope, so wait for the funcInfo to be created.
         }
 

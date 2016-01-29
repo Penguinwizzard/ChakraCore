@@ -126,6 +126,7 @@ Parser::Parser(Js::ScriptContext* scriptContext, BOOL strictMode, PageAllocator 
     m_deferAsmJs = true;
     m_scopeCountNoAst = 0;
     m_fExpectExternalSource = 0;
+    m_inParamScope = false;
 
     m_parseType = ParseType_Upfront;
 
@@ -3739,9 +3740,11 @@ ParseNodePtr Parser::ParseFncDecl(ushort flags, LPCOLESTR pNameHint, const bool 
                 {
                     Error(ERRsyntax);
                 }
+
                 pnodeFncBlockScope = StartParseBlock<buildAST>(PnodeBlockType::Regular, ScopeType_Block);
                 if (buildAST)
                 {
+                    
                     PushFuncBlockScope(pnodeFncBlockScope, &ppnodeScopeSave, &ppnodeExprScopeSave);
                 }
             }
@@ -4246,6 +4249,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
             // Assume it will be called as part of this expression.
              && (!isLikelyModulePattern || !topLevelStmt || PHASE_FORCE1(Js::DeferParsePhase))
              && !m_InAsmMode
+             && !m_inParamScope
                 );
 
         if (!fLambda &&
@@ -4325,7 +4329,11 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
         ppnodeExprScopeSave = m_ppnodeExprScope;
         m_ppnodeExprScope = nullptr;
 
+        bool cachedInParamScope = this->m_inParamScope;
+        this->m_inParamScope = true;
         this->ParseFncFormals<buildAST>(pnodeFnc, flags);
+        this->m_inParamScope = cachedInParamScope;
+        m_fUseStrictMode = oldStrictMode;
 
         // Create function body scope
         ParseNodePtr pnodeInnerBlock = nullptr;
@@ -7781,7 +7789,7 @@ PidRefStack* Parser::PushPidRef(IdentPtr pid)
     if (!ref || (ref->GetScopeId() < GetCurrentBlock()->sxBlock.blockId))
                 //// We could have the ref from the parameter scope. In that case we can skip creating a new one.
                 //&& !(m_currentBlockInfo->pBlockInfoOuter->pnodeBlock->sxBlock.blockType == PnodeBlockType::Parameter
-                //    && m_currentBlockInfo->pBlockInfoOuter->pnodeBlock->sxBlock.blockId == ref->GetScopeId())))
+                //    && m_currentBlockInfo->pBlockInfoOuter->pnodeBlock->sxBlock.blockId == ref->GetScopeId()))
     {
         ref = Anew(&m_nodeAllocator, PidRefStack);
         if (ref == nullptr)

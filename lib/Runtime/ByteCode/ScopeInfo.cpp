@@ -67,6 +67,7 @@ namespace Js
         scopeInfo->mustInstantiate = scope->GetMustInstantiate();
         scopeInfo->isCached = (scope->GetFunc()->GetBodyScope() == scope) && scope->GetFunc()->GetHasCachedScope();
         scopeInfo->isGlobalEval = scope->GetScopeType() == ScopeType_GlobalEvalBlock;
+        scopeInfo->canMergeWithBodyScope = scope->GetCanMergeWithBodyScope();
 
         TRACE_BYTECODE(L"\nSave ScopeInfo: %s parent: %s #symbols: %d %s\n",
             scope->GetFunc()->name, parent->GetDisplayName(), count, scopeInfo->isObject ? L"isObject" : L"");
