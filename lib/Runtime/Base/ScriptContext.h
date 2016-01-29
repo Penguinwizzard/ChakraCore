@@ -27,6 +27,7 @@ namespace Js
     class DebugContext;
     struct HaltCallback;
     struct DebuggerOptionsCallback;
+    class ModuleRecordBase;
 }
 
 // Created for every source buffer passed by host.
@@ -97,6 +98,9 @@ public:
         __out Js::ArrayBuffer **ppArrayBuffer) = 0;
     virtual Js::JavascriptError* CreateWinRTError(IErrorInfo* perrinfo, Js::RestrictedErrorStrings * proerrstr) = 0;
     virtual Js::JavascriptFunction* InitializeHostPromiseContinuationFunction() = 0;
+
+    virtual DWORD FetchImportedModule(Js::ModuleRecordBase* referencingModule, Js::JavascriptString* specifier, Js::ModuleRecordBase** dependentModuleRecord) = 0;
+    virtual DWORD NotifyModuleReady(Js::ModuleRecordBase* referencingModule, Js::Var exceptionVar) = 0;
 
     Js::ScriptContext* GetScriptContext() { return scriptContext; }
 
