@@ -291,7 +291,7 @@ public:
     void SetHasDuplicateFormals() { hasDuplicateFormals = true; }
     bool GetHasDuplicateFormals() { return hasDuplicateFormals; }
 
-    void SetCannotMergeWithBodyScope() { canMergeWithBodyScope = false; }
+    void SetCannotMergeWithBodyScope() { Assert(this->scopeType == ScopeType_Parameter); canMergeWithBodyScope = false; }
     bool GetCanMergeWithBodyScope() const { return canMergeWithBodyScope; }
 
     void SetHasLocalInClosure(bool has);

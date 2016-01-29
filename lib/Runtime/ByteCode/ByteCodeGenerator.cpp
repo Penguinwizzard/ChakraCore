@@ -990,6 +990,14 @@ void ByteCodeGenerator::RestoreScopeInfo(Js::FunctionBody* functionBody)
             }
         }
         FuncInfo* func = Anew(alloc, FuncInfo, functionBody->GetDisplayName(), alloc, paramScope, bodyScope, nullptr, functionBody);
+        if (paramScope != nullptr)
+        {
+            paramScope->SetFunc(func);
+            if (paramScope->GetCanMergeWithBodyScope())
+            {
+                paramScopeInfo->GetScopeInfo(nullptr, this, func, paramScope);
+            }
+        }
 
         if (bodyScope->GetScopeType() == ScopeType_GlobalEvalBlock)
         {
@@ -1017,9 +1025,9 @@ void ByteCodeGenerator::RestoreScopeInfo(Js::FunctionBody* functionBody)
         }
 
         scopeInfo->GetScopeInfo(nullptr, this, func, bodyScope);
-        if (paramScope != nullptr)
+        if (paramScope && !paramScope->GetCanMergeWithBodyScope())
         {
-            paramScope->SetFunc(func);
+            // If the param and body scopes are not merged the param scope needs to be treated like an inner scope
             paramScopeInfo->GetScopeInfo(nullptr, this, func, paramScope);
         }
     }

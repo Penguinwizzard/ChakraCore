@@ -4187,7 +4187,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
 
     // Check whether we are in a parameter scope. If we are then we have to mark the parent scope to indicate the same.
     // If there is a method def in the default param scope then we can't merge the param and body scope of that function.
-    if (this->m_currentScope->GetScopeType() == ScopeType_Parameter && pnodeFncParent && !pnodeFncParent->sxFnc.IsLambda() && !pnodeFncParent->sxFnc.IsAsync())
+    if (this->m_currentScope->GetScopeType() == ScopeType_Parameter && pnodeFncParent && !pnodeFncParent->sxFnc.IsSimpleParameterList() && !pnodeFncParent->sxFnc.IsLambda() && !pnodeFncParent->sxFnc.IsAsync())
     {
         if (pnodeFncParent->sxFnc.pnodeScopes && pnodeFncParent->sxFnc.pnodeScopes->sxBlock.scope)
         {
@@ -7784,10 +7784,11 @@ PidRefStack* Parser::PushPidRef(IdentPtr pid)
     Assert(GetCurrentBlock() != nullptr);
     AssertMsg(pid != nullptr, "PID should be created");
     PidRefStack *ref = pid->GetTopRef();
-    if (!ref || (ref->GetScopeId() < GetCurrentBlock()->sxBlock.blockId))
-                //// We could have the ref from the parameter scope. In that case we can skip creating a new one.
-                //&& !(m_currentBlockInfo->pBlockInfoOuter->pnodeBlock->sxBlock.blockType == PnodeBlockType::Parameter
-                //    && m_currentBlockInfo->pBlockInfoOuter->pnodeBlock->sxBlock.blockId == ref->GetScopeId()))
+    if (!ref || (ref->GetScopeId() < GetCurrentBlock()->sxBlock.blockId)
+                // We could have the ref from the parameter scope if it is merged with body scope. In that case we can skip creating a new one.
+                && !(m_currentBlockInfo->pBlockInfoOuter->pnodeBlock->sxBlock.blockType == PnodeBlockType::Parameter
+                    &&  m_currentBlockInfo->pBlockInfoOuter->pnodeBlock->sxBlock.blockId == ref->GetScopeId()
+                    && (m_currentBlockInfo->pBlockInfoOuter->pnodeBlock->sxBlock.scope == nullptr || m_currentBlockInfo->pBlockInfoOuter->pnodeBlock->sxBlock.scope->GetCanMergeWithBodyScope())))
     {
         ref = Anew(&m_nodeAllocator, PidRefStack);
         if (ref == nullptr)

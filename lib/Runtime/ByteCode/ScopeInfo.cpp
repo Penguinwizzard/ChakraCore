@@ -248,6 +248,10 @@ namespace Js
             scope->SetIsObject();
         }
         scope->SetMustInstantiate(this->mustInstantiate);
+        if (!this->GetCanMergerWithBodyScope())
+        {
+            scope->SetCannotMergeWithBodyScope();
+        }
         if (parser)
         {
             scriptContext = parser->GetScriptContext();
