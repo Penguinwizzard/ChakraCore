@@ -236,8 +236,7 @@ Js::OpCode ByteCodeGenerator::ToChkUndeclOp(Js::OpCode op) const
         return Js::OpCode::StLocalSlotChkUndecl;
 
     case Js::OpCode::StInnerSlot:
-        return Js::OpCode::StInnerSlot;
-        // return Js::OpCode::StInnerSlotChkUndecl;
+        return Js::OpCode::StInnerSlotChkUndecl;
 
     case Js::OpCode::StEnvSlot:
         return Js::OpCode::StEnvSlotChkUndecl;
@@ -4630,7 +4629,8 @@ void ByteCodeGenerator::EmitPropStore(Js::RegSlot rhsLocation, Symbol *sym, Iden
         }
         // Make sure the property has a slot. This will bump up the size of the slot array if necessary.
         Js::PropertyId slot = sym->EnsureScopeSlot(funcInfo);
-        bool chkBlockVar = !isLetDecl && !isConstDecl && NeedCheckBlockVar(sym, scope, funcInfo);
+        bool chkBlockVar = !isLetDecl && !isConstDecl && NeedCheckBlockVar(sym, scope, funcInfo)
+                            && (sym->GetScope()->GetScopeType() != ScopeType_Parameter || sym->GetScope()->GetCanMergeWithBodyScope());
 
         // The property is in memory rather than register. We'll have to load it from the slots.
         op = this->GetStSlotOp(scope, envIndex, scopeLocation, chkBlockVar, funcInfo);
