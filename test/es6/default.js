@@ -327,10 +327,18 @@ var tests = [
       function f1(a = 10, b = function () { return a; }) {
         assert.areEqual(a, 10, "Initial value of parameter in the body scope should be the same as the one in param scope");
         var a = 20;
-        assert.areEqual(a, 20, "New assignment in the body scope updates the variable's value");
+        assert.areEqual(a, 20, "New assignment in the body scope updates the variable's value in body scope");
         return b;
       }
       assert.areEqual(f1()(), 10, "Function defined in the param scope captures the formals from the param scope not body scope");
+
+      function f1(a = 10, b = function () { return a; }) {
+        assert.areEqual(a, 1, "Initial value of parameter in the body scope should be the same as the one passed in");
+        var a = 20;
+        assert.areEqual(a, 20, "Assignment in the body scope updates the variable's value in body scope");
+        return b;
+      }
+      assert.areEqual(f1(1)(), 10, "Function defined in the param scope captures the formals from the param scope even when the default expression is not applied for that param");
 
       (function (a = 10, b = a += 10, c = function () { return a + b; }) {
         assert.areEqual(a, 20, "Initial value of parameter in the body scope should be same as the corresponding symbol's final value in the param scope");
@@ -347,6 +355,21 @@ var tests = [
           return b;
       }
       assert.areEqual(f2()(), 10, "Even if the formals are not redeclared in the function body the symbol in the param scope and body scope are different");
+
+      function f3(a = 10, b = function () { return function () { return a; } }) {
+        var a = 20
+        return b;
+      }
+      assert.areEqual(f3()()(), 10, "Parameter scope works fine with nested functions");
+
+      var a1 = 10
+      function f4(b = function () { return a1; }) {
+        assert.areEqaul(a1, undefined, "Inside the function body the assignment hasn't happened yet");
+        var a = 20;
+        assert.areEqaul(a1, 20, "Assignment to the symbol inside the function changes the value");
+        return b;
+      }
+      assert.areEqual(f4()(), 10, "Function in the param scope correctly binds to the global variable");
 
       function g() {
         return 3 * 3;

@@ -4188,7 +4188,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
     // Check whether we are in a parameter scope. If we are then we have to mark the parent scope to indicate the same.
     // If there is a method def in the default param scope then we can't merge the param and body scope of that function.
     // Note: Lambdas and async functions will be addressed later.
-    if (this->m_currentScope->GetScopeType() == ScopeType_Parameter && pnodeFncParent && !pnodeFncParent->sxFnc.IsSimpleParameterList() && !pnodeFncParent->sxFnc.IsLambda() && !pnodeFncParent->sxFnc.IsAsync())
+    if (this->m_currentScope->GetScopeType() == ScopeType_Parameter && pnodeFncParent && !pnodeFncParent->sxFnc.IsSimpleParameterList() && !fLambda && !fAsync)
     {
         Assert(pnodeFncParent->sxFnc.pnodeScopes->sxBlock.scope != nullptr);
         pnodeFncParent->sxFnc.pnodeScopes->sxBlock.scope->SetCannotMergeWithBodyScope();
