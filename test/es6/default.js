@@ -394,6 +394,18 @@ var tests = [
       }
       assert.areEqual(f6(undefined, undefined, ...arr)(), 10, "Presence of rest parameter shouldn't affect the binding");
 
+      function f7( {a:a1, b:b1}, c = function() { return a1 + b1; } ) {
+          assert.areEqual(a1, 10, "Initial value of the first destructuring parameter in the body scope should be the same as the one in param scope");
+          assert.areEqual(a2, 20, "Initial value of the second destructuring parameter in the body scope should be the same as the one in param scope");
+          a1 = 1;
+          a2 = 2;
+          assert.areEqual(a1, 1, "New assignment in the body scope updates the first formal's value in body scope");
+          assert.areEqual(a2, 1, "New assignment in the body scope updates the second formal's value in body scope");
+          assert.areEqual(c(), 30, "The param scope method should return the sum of the destructured formals from the param scope");
+          return c;
+      }
+      assert.areEqual(f7({ a : 10, b : 20 })(), 30, "Returned method should return the sum of the destructured formals from the param scope");
+
       function g() {
         return 3 * 3;
       }
