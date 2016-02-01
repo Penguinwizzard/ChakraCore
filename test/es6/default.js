@@ -364,9 +364,9 @@ var tests = [
 
       var a1 = 10
       function f5(b = function () { return a1; }) {
-        assert.areEqaul(a1, undefined, "Inside the function body the assignment hasn't happened yet");
+        assert.areEqual(a1, undefined, "Inside the function body the assignment hasn't happened yet");
         var a1 = 20;
-        assert.areEqaul(a1, 20, "Assignment to the symbol inside the function changes the value");
+        assert.areEqual(a1, 20, "Assignment to the symbol inside the function changes the value");
         return b;
       }
       assert.areEqual(f5()(), 10, "Function in the param scope correctly binds to the global variable");
