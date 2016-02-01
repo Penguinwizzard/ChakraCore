@@ -52,11 +52,15 @@ namespace Js
         ModuleExportRecordList* GetLocalExportRecordList() const { return localExportRecordList; }
         ModuleExportRecordList* GetIndirectExportRecordList() const { return indirectExportRecordList; }
         ModuleExportRecordList* GetStarExportRecordList() const { return starExportRecordList; }
-        ExportedNames* GetExportedNames(ResolveSet* exportStarSet) override;
+        ExportedNames* GetExportedNames(ResolveSet* exportStarSet) override { Assert(false); return nullptr; }
         // return false when "ambiguous". otherwise exportRecord.
         bool ResolveExport(PropertyId exportName, ResolutionDictionary* resolveSet, ResolveSet* exportStarSet, ModuleNameRecord* exportRecord) override;
         void ModuleDeclarationInstantiation() override;
         Var ModuleEvaluation() override;
+
+        void Finalize(bool isShutdown) override { return; }
+        void Dispose(bool isShutdown) override { return; }
+        void Mark(Recycler * recycler) override { return; }
 
         void ResolveExternalModuleDependencies();
 
@@ -70,6 +74,15 @@ namespace Js
         void SetRequestModuleList(ModuleList* requestModules) { requestModuleList = requestModules; }
 
         ScriptContext* GetScriptContext() const { return scriptContext; }
+        HRESULT ParseSource(LPCWSTR sourceText, unsigned long sourceLength, Var* exceptionVar);
+
+        static SourceTextModuleRecord* FromHost(void* hostModuleRecord)
+        {
+            return static_cast<SourceTextModuleRecord*>(hostModuleRecord);
+        }
+#if DBG
+        void AddParent(SourceTextModuleRecord* parentRecord, LPCWSTR specifier, unsigned long specifierLength);
+#endif
 
     private:
         // This is the parsed tree resulted from compilation. 
@@ -78,6 +91,7 @@ namespace Js
         bool wasDeclarationInitialized;
         ParseNodePtr parseTree;
         SRCINFO scrInfo; // we need to keep a copy of the sourceInfo in preparation of bytecodegen later.
+        Parser* parser;  // we'll need to keep the parser around till we are done with bytecode gen.
         ParseableFunctionInfo* functionInfo;
         ScriptContext* scriptContext;
         ModuleList* requestModuleList;
@@ -89,5 +103,9 @@ namespace Js
         ChildModuleRecordSet* childrenModuleSet;
         ParentModuleRecordSet* parentModuleSet;
         Var errorObject;
+
+        TempArenaAllocatorObject* tempAllocatorObject;
+
+        TempArenaAllocatorObject* EnsureTempAllocator();
     };
 }
