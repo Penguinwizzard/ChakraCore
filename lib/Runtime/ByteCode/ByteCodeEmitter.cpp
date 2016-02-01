@@ -2742,7 +2742,8 @@ void ByteCodeGenerator::EmitDefaultArgs(FuncInfo *funcInfo, ParseNode *pnode)
             Js::ByteCodeLabel noDefaultLabel = this->m_writer.DefineLabel();
             Js::ByteCodeLabel endLabel = this->m_writer.DefineLabel();
             this->StartStatement(pnodeArg);
-            m_writer.BrReg2(Js::OpCode::BrNeq_A, noDefaultLabel, location, funcInfo->undefinedConstantRegister);
+            // Let us use strict not equal to differentiate between null and undefined
+            m_writer.BrReg2(Js::OpCode::BrSrNeq_A, noDefaultLabel, location, funcInfo->undefinedConstantRegister);
 
             Emit(pnodeArg->sxVar.pnodeInit, this, funcInfo, false);
             pnodeArg->sxVar.sym->SetNeedDeclaration(false); // After emit to prevent foo(a = a)
@@ -3150,19 +3151,6 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
                 PopScope();
                 PushScope(bodyScope);
                 PushScope(paramScope);
-
-                // Emit bytecode to copy the initial values from param names to their corresponding body bindings
-                paramScope->ForEachSymbol([this, funcInfo](Symbol* param) {
-                    Symbol* varSym = funcInfo->GetBodyScope()->FindLocalSymbol(param->GetName());
-                    if (varSym && param->GetLocation() != Js::Constants::NoRegister && varSym->GetLocation() != Js::Constants::NoRegister)
-                    {
-                        Js::RegSlot tempReg = funcInfo->AcquireTmpRegister();
-                        this->EmitPropLoad(tempReg, param, param->GetPid(), funcInfo);
-                        this->EmitPropStore(tempReg, varSym, varSym->GetPid(), funcInfo);
-                        funcInfo->ReleaseTmpRegister(tempReg);
-                    }
-                });
-
             }
         }
         else if (funcInfo->GetHasArguments() && !NeedScopeObjectForArguments(funcInfo, pnode))
@@ -3175,6 +3163,22 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
         if (pnode->sxFnc.pnodeRest != nullptr)
         {
             pnode->sxFnc.pnodeRest->sxVar.sym->SetNeedDeclaration(false);
+        }
+
+        if (paramScope && !paramScope->GetCanMergeWithBodyScope())
+        {
+            // Emit bytecode to copy the initial values from param names to their corresponding body bindings.
+            // We have to do this after the rest param is marked as false for need declaration.
+            paramScope->ForEachSymbol([this, funcInfo](Symbol* param) {
+                Symbol* varSym = funcInfo->GetBodyScope()->FindLocalSymbol(param->GetName());
+                if (varSym && param->GetLocation() != Js::Constants::NoRegister && varSym->GetLocation() != Js::Constants::NoRegister)
+                {
+                    Js::RegSlot tempReg = funcInfo->AcquireTmpRegister();
+                    this->EmitPropLoad(tempReg, param, param->GetPid(), funcInfo);
+                    this->EmitPropStore(tempReg, varSym, varSym->GetPid(), funcInfo);
+                    funcInfo->ReleaseTmpRegister(tempReg);
+                }
+            });
         }
 
         this->inPrologue = false;

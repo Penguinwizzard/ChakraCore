@@ -71,6 +71,19 @@ var tests = [
       function thisTest(a = this.val, b = this.val = 1.1, c = this.val, d = this.val2 = 2, e = this.val2) { return [a,b,c,d,e]; }
       assert.areEqual([{test:"test"}, 1.1, 1.1, 2, 2], thisTest(), "'this' is able to be referenced and modified");
 
+      var expAValue, expBValue, expCValue;
+      function f(a = 10, b = 20, c) {
+          assert.areEqual(a, expAValue, "First argument's value  is expected to be " + expAValue + " but got " + a);
+          assert.areEqual(b, expBValue, "Second argument's value  is expected to be " + expBValue + " but got " + b);
+          assert.areEqual(c, expCValue, "Third argument's value  is expected to be " + expCValue + " but got " + c);
+      }
+      expAValue = null, expBValue = 20, expCValue = 1;
+      f(null, undefined, 1);
+      expAValue = null, expBValue = null, expCValue = null;
+      f(null, null, null);
+      expAValue = 10, expBValue = null, expCValue = 3;
+      f(undefined, null, 3);
+
       function lambdaCapture() {
         this.propA = 1;
         var lambda = (a = this.propA++) => {
@@ -369,7 +382,17 @@ var tests = [
         assert.areEqual(a1, 20, "Assignment to the symbol inside the function changes the value");
         return b;
       }
-      assert.areEqual(f5()(), 10, "Function in the param scope correctly binds to the global variable");
+      assert.areEqual(f5()(), 10, "Function in the param scope correctly binds to the outer variable");
+
+      var arr = [2, 3, 4];
+      function f6(a = 10, b = function () { return a; }, ...c) {
+          assert.areEqual(arr.length, c.length, "Rest parameter should contain the same number of elements as the spread arg");
+          for (i = 0; i < arr.length; i++) {
+              assert.areEqual(arr[i], c[i], "Elements in the rest and the spread should be in the same order");
+          }
+          return b;
+      }
+      assert.areEqual(f6(undefined, undefined, ...arr)(), 10, "Presence of rest parameter shouldn't affect the binding");
 
       function g() {
         return 3 * 3;
