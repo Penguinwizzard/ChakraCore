@@ -854,7 +854,8 @@ Symbol* Parser::AddDeclForPid(ParseNodePtr pnode, IdentPtr pid, SymbolType symbo
 
     if (blockInfo->pnodeBlock->sxBlock.scope != nullptr && blockInfo->pnodeBlock->sxBlock.scope->GetScopeType() == ScopeType_FunctionBody)
     {
-        // Check if there is a parameter scope and try to get it first.
+        // Even though we have separate param and body scope it can get merged into one later.
+        // So when looking up the symbol check if there is a parameter scope and try to get it first.
         BlockInfoStack *outerBlockInfo = blockInfo->pBlockInfoOuter;
         if (outerBlockInfo != nullptr && outerBlockInfo->pnodeBlock->sxBlock.blockType == PnodeBlockType::Parameter && outerBlockInfo->pnodeBlock->sxBlock.scope->GetCanMergeWithBodyScope())
         {
@@ -4186,12 +4187,11 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
 
     // Check whether we are in a parameter scope. If we are then we have to mark the parent scope to indicate the same.
     // If there is a method def in the default param scope then we can't merge the param and body scope of that function.
+    // Note: Lambdas and async functions will be addressed later.
     if (this->m_currentScope->GetScopeType() == ScopeType_Parameter && pnodeFncParent && !pnodeFncParent->sxFnc.IsSimpleParameterList() && !pnodeFncParent->sxFnc.IsLambda() && !pnodeFncParent->sxFnc.IsAsync())
     {
-        if (pnodeFncParent->sxFnc.pnodeScopes && pnodeFncParent->sxFnc.pnodeScopes->sxBlock.scope)
-        {
-            pnodeFncParent->sxFnc.pnodeScopes->sxBlock.scope->SetCannotMergeWithBodyScope();
-        }
+        Assert(pnodeFncParent->sxFnc.pnodeScopes->sxBlock.scope != nullptr);
+        pnodeFncParent->sxFnc.pnodeScopes->sxBlock.scope->SetCannotMergeWithBodyScope();
     }
 
     RestorePoint beginFormals;
@@ -5444,6 +5444,7 @@ void Parser::ParseFncFormals(ParseNodePtr pnodeFnc, ushort flags)
 
                     // In defer parse mode we have to flag the function node to indicate that it has default arguments
                     // so that it will be considered for any syntax error scenario.
+                    // Also mark it before parsing the expression as it may contain functions.
                     ParseNode* currentFncNode = GetCurrentFunctionNode();
                     if (!currentFncNode->sxFnc.HasDefaultArguments())
                     {
@@ -7785,7 +7786,7 @@ PidRefStack* Parser::PushPidRef(IdentPtr pid)
     if (!ref || (ref->GetScopeId() < GetCurrentBlock()->sxBlock.blockId)
                 // We could have the ref from the parameter scope if it is merged with body scope. In that case we can skip creating a new one.
                 && !(m_currentBlockInfo->pBlockInfoOuter->pnodeBlock->sxBlock.blockType == PnodeBlockType::Parameter
-                    &&  m_currentBlockInfo->pBlockInfoOuter->pnodeBlock->sxBlock.blockId == ref->GetScopeId()
+                    && m_currentBlockInfo->pBlockInfoOuter->pnodeBlock->sxBlock.blockId == ref->GetScopeId()
                     && (m_currentBlockInfo->pBlockInfoOuter->pnodeBlock->sxBlock.scope == nullptr || m_currentBlockInfo->pBlockInfoOuter->pnodeBlock->sxBlock.scope->GetCanMergeWithBodyScope())))
     {
         ref = Anew(&m_nodeAllocator, PidRefStack);

@@ -2984,9 +2984,9 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
             m_writer.Empty(Js::OpCode::ChkNewCallFlag);
         }
 
-        Scope* paramScope = funcInfo->GetParamScope();
         // For now, emit all constant loads at top of function (should instead put in closest dominator of uses).
         LoadAllConstants(funcInfo);
+        Scope* paramScope = funcInfo->GetParamScope();
         if (paramScope == nullptr || paramScope->GetCanMergeWithBodyScope())
         {
             HomeArguments(funcInfo);
@@ -3136,8 +3136,8 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
             if (!paramScope->GetCanMergeWithBodyScope())
             {
                 // Pop the body scope and push the param scope
-                PopScope();
-                Assert(paramScope && bodyScope->GetScopeType() == ScopeType_FunctionBody);
+                PopScope(); // Params scope is pushed in during BeginEmitBlock as the param scope has own scope.
+                Assert(this->GetCurrentScope()->GetScopeType() == ScopeType_FunctionBody);
                 PopScope();
                 PushScope(paramScope);
             }
@@ -3151,22 +3151,15 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
                 PushScope(bodyScope);
                 PushScope(paramScope);
 
-                // TODO: Get rid of this n2 loop
-                // Emit bytecode to copy the initial values from param names to their corrsponding body bindings
+                // Emit bytecode to copy the initial values from param names to their corresponding body bindings
                 paramScope->ForEachSymbol([this, funcInfo](Symbol* param) {
                     Symbol* varSym = funcInfo->GetBodyScope()->FindLocalSymbol(param->GetName());
-                    // TODO: Check whether this condition is valid
                     if (varSym && param->GetLocation() != Js::Constants::NoRegister && varSym->GetLocation() != Js::Constants::NoRegister)
                     {
                         Js::RegSlot tempReg = funcInfo->AcquireTmpRegister();
                         this->EmitPropLoad(tempReg, param, param->GetPid(), funcInfo);
                         this->EmitPropStore(tempReg, varSym, varSym->GetPid(), funcInfo);
                         funcInfo->ReleaseTmpRegister(tempReg);
-                    }
-                    else
-                    {
-                        // TODO: Put the assert back
-                        // Assert(varSym == funcInfo->GetArgumentsSymbol());
                     }
                 });
 
@@ -4630,6 +4623,7 @@ void ByteCodeGenerator::EmitPropStore(Js::RegSlot rhsLocation, Symbol *sym, Iden
         // Make sure the property has a slot. This will bump up the size of the slot array if necessary.
         Js::PropertyId slot = sym->EnsureScopeSlot(funcInfo);
         bool chkBlockVar = !isLetDecl && !isConstDecl && NeedCheckBlockVar(sym, scope, funcInfo)
+                            // Skip the check for parameters when not merged with body scope
                             && (sym->GetScope()->GetScopeType() != ScopeType_Parameter || sym->GetScope()->GetCanMergeWithBodyScope());
 
         // The property is in memory rather than register. We'll have to load it from the slots.
