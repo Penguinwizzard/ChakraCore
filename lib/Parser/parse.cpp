@@ -126,7 +126,6 @@ Parser::Parser(Js::ScriptContext* scriptContext, BOOL strictMode, PageAllocator 
     m_deferAsmJs = true;
     m_scopeCountNoAst = 0;
     m_fExpectExternalSource = 0;
-    m_inParamScope = false;
 
     m_parseType = ParseType_Upfront;
 
@@ -4208,11 +4207,12 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
     uint uDeferSave = m_grfscr & fscrDeferFncParse;
     if ((!fDeclaration && m_ppnodeExprScope) ||
         (m_scriptContext->GetConfig()->IsBlockScopeEnabled() && fFunctionInBlock) ||
+        (this->m_currentScope->GetScopeType() == ScopeType_Parameter && pnodeFncParent && !pnodeFncParent->sxFnc.IsSimpleParameterList()) ||
         (flags & (fFncNoName | fFncLambda)))
     {
         // NOTE: Don't defer if this is a function expression inside a construct that induces
         // a scope nested within the current function (like a with, or a catch in ES5 mode, or
-        // any function declared inside a nested lexical block in ES6 mode).
+        // any function declared inside a nested lexical block or param scope in ES6 mode).
         // We won't be able to reconstruct the scope chain properly when we come back and
         // try to compile just the function expression.
         // Also shut off deferring on getter/setter or other construct with unusual text bounds
@@ -4247,7 +4247,6 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
             // Assume it will be called as part of this expression.
              && (!isLikelyModulePattern || !topLevelStmt || PHASE_FORCE1(Js::DeferParsePhase))
              && !m_InAsmMode
-             && !m_inParamScope
                 );
 
         if (!fLambda &&
@@ -4327,10 +4326,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
         ppnodeExprScopeSave = m_ppnodeExprScope;
         m_ppnodeExprScope = nullptr;
 
-        bool cachedInParamScope = this->m_inParamScope;
-        this->m_inParamScope = true;
         this->ParseFncFormals<buildAST>(pnodeFnc, flags);
-        this->m_inParamScope = cachedInParamScope;
         m_fUseStrictMode = oldStrictMode;
 
         // Create function body scope
@@ -4445,6 +4441,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
                 Scope* paramScope = pnodeFnc->sxFnc.pnodeScopes->sxBlock.scope;
                 if (!paramScope->GetCanMergeWithBodyScope())
                 {
+                    Assert(!pnodeFnc->sxFnc.IsSimpleParameterList());
                     // Now add a new symbol reference for each formal in the param scope to the body scope.
                     paramScope->ForEachSymbol([this](Symbol* param) {
                         this->CreateVarDeclNode(param->GetPid(), param->GetSymbolType(), false, nullptr, false);
@@ -5444,6 +5441,16 @@ void Parser::ParseFncFormals(ParseNodePtr pnodeFnc, ushort flags)
                     {
                         Error(ERRRestWithDefault);
                     }
+
+                    // In defer parse mode we have to flag the function node to indicate that it has default arguments
+                    // so that it will be considered for any syntax error scenario.
+                    ParseNode* currentFncNode = GetCurrentFunctionNode();
+                    if (!currentFncNode->sxFnc.HasDefaultArguments())
+                    {
+                        currentFncNode->sxFnc.SetHasDefaultArguments();
+                        currentFncNode->sxFnc.firstDefaultArg = argPos;
+                    }
+
                     m_pscan->Scan();
                     ParseNodePtr pnodeInit = ParseExpr<buildAST>(koplCma);
 
@@ -5463,15 +5470,6 @@ void Parser::ParseFncFormals(ParseNodePtr pnodeFnc, ushort flags)
                             // There may be previous parameters that need to be checked for duplicates.
                             isNonSimpleParameterList = true;
                         }
-                    }
-
-                    // In defer parse mode we have to flag the function node to indicate that it has default arguments
-                    // so that it will be considered for any syntax error scenario.
-                    ParseNode* currentFncNode = GetCurrentFunctionNode();
-                    if (!currentFncNode->sxFnc.HasDefaultArguments())
-                    {
-                        currentFncNode->sxFnc.SetHasDefaultArguments();
-                        currentFncNode->sxFnc.firstDefaultArg = argPos;
                     }
 
                     if (buildAST)

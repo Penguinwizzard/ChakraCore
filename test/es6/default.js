@@ -324,6 +324,30 @@ var tests = [
   {
     name: "Split parameter scope",
     body: function () {
+      function f1(a = 10, b = function () { return a; }) {
+        assert.areEqual(a, 10, "Initial value of parameter in the body scope should be the same as the one in param scope");
+        var a = 20;
+        assert.areEqual(a, 20, "New assignment in the body scope updates the variable's value");
+        return b;
+      }
+      assert.areEqual(f1()(), 10, "Function defined in the param scope captures the formals from the param scope not body scope");
+
+      (function (a = 10, b = a += 10, c = function () { return a + b; }) {
+        assert.areEqual(a, 20, "Initial value of parameter in the body scope should be same as the corresponding symbol's final value in the param scope");
+        var a2 = 40;
+        (function () { assert.areEqual(a2, 40, "Symbols defined in the body scope should be unaffected by the duplicate formal symbols"); })();
+        assert.areEqual(c(), 40, "Function defined in param scope uses the formals from param scope even when executed inside the body");
+      })();
+
+      (function (a = 10, b = function () { assert.areEqual(a, 10, "Function defined in the param scope captures the formals from the param scope when exectued from the param scope"); }, c = b()) {
+      })();
+
+      function f2(a = 10, b = function () { return a; }) {
+          a = 20;
+          return b;
+      }
+      assert.areEqual(f2()(), 10, "Even if the formals are not redeclared in the function body the symbol in the param scope and body scope are different");
+
       function g() {
         return 3 * 3;
       }

@@ -210,9 +210,6 @@ private:
     Span                m_asgToConst;
     int                 m_nextBlockId;
 
-    bool                m_inParamScope; // Indicates whether we are in the param scope.
-                                        // We need this to force not defer parse the functions defined inside param scope.
-
     // RegexPattern objects created for literal regexes are recycler-allocated and need to be kept alive until the function body
     // is created during byte code generation. The RegexPattern pointer is stored in the script context's guest
     // arena for that purpose. This list is then unregistered from the guest arena at the end of parsing/scanning.
