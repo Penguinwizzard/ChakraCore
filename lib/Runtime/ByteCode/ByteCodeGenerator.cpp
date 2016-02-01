@@ -989,7 +989,9 @@ void ByteCodeGenerator::RestoreScopeInfo(Js::FunctionBody* functionBody)
                 bodyScope = Anew(alloc, Scope, alloc, ScopeType_FunctionBody, true);
             }
         }
+
         FuncInfo* func = Anew(alloc, FuncInfo, functionBody->GetDisplayName(), alloc, paramScope, bodyScope, nullptr, functionBody);
+
         if (paramScope != nullptr)
         {
             paramScope->SetFunc(func);
@@ -1409,6 +1411,8 @@ FuncInfo * ByteCodeGenerator::StartBindFunction(const wchar_t *name, uint nameLe
     PushFuncInfo(L"StartBindFunction", funcInfo);
     if (paramScope->GetCanMergeWithBodyScope())
     {
+        // When param scope is not merged with body scope we don't have to push the param scope here.
+        // Symbols in both scopes are separate and can't reference each other.
         PushScope(paramScope);
     }
     PushScope(bodyScope);
@@ -1843,9 +1847,8 @@ Scope * ByteCodeGenerator::FindScopeForSym(Scope *symScope, Scope *scope, Js::Pr
         }
         else if (symScope->GetScopeType() == ScopeType_Parameter && scope->GetFunc() == symScope->GetFunc())
         {
-            // Right now we don't have a way to mark the function definitions to say they are in a param scope.
+            // During VisitNestedScope the param scope will not be on the stack for the unmerged scope case.
             // So if the symbol's scope is a param scope, check whether it is the current function or not.
-            // Note that during VisitNestedScope the param scope will not be on the stack.
             scope = symScope;
             break;
         }
