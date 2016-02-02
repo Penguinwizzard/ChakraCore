@@ -5333,7 +5333,7 @@ void Parser::ParseFncFormals(ParseNodePtr pnodeFnc, ushort flags)
             {
                 if (IsES6DestructuringEnabled() && IsPossiblePatternStart())
                 {
-                    // Mark that the function has a destructuring pattern here as the pattern can have function definitions in it.
+                    // Mark that the function has a destructuring pattern before parsing the pattern as it can have function definitions.
                     m_currentNodeFunc->sxFnc.SetHasDestructuringPattern();
 
                     ParseNodePtr *const ppnodeVarSave = m_ppnodeVar;
