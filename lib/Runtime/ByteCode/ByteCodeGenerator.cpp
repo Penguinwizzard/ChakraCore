@@ -1012,13 +1012,6 @@ void ByteCodeGenerator::RestoreScopeInfo(Js::FunctionBody* functionBody)
             func->hasEscapedUseNestedFunc = true;
         }
 
-        scopeInfo->GetScopeInfo(nullptr, this, func, bodyScope);
-        if (paramScope && !paramScope->GetCanMergeWithBodyScope())
-        {
-            // If the param and body scopes are not merged the param scope needs to be treated like an inner scope
-            paramScopeInfo->GetScopeInfo(nullptr, this, func, paramScope);
-        }
-
         Js::ScopeInfo* funcExprScopeInfo = scopeInfo->GetFuncExprScopeInfo();
         if (funcExprScopeInfo)
         {
@@ -1031,6 +1024,13 @@ void ByteCodeGenerator::RestoreScopeInfo(Js::FunctionBody* functionBody)
             funcExprScope->SetFunc(func);
             func->SetFuncExprScope(funcExprScope);
             funcExprScopeInfo->GetScopeInfo(nullptr, this, func, funcExprScope);
+        }
+
+        scopeInfo->GetScopeInfo(nullptr, this, func, bodyScope);
+        if (paramScope && !paramScope->GetCanMergeWithBodyScope())
+        {
+            // If the param and body scopes are not merged the param scope needs to be treated like an inner scope
+            paramScopeInfo->GetScopeInfo(nullptr, this, func, paramScope);
         }
     }
     else
@@ -4029,7 +4029,7 @@ void Bind(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
             FuncInfo* globFuncInfo = byteCodeGenerator->StartBindGlobalStatements(pnode);
             pnode->sxFnc.funcInfo = globFuncInfo;
             AddFunctionsToScope(pnode->sxFnc.GetTopLevelScope(), byteCodeGenerator);
-        AddVarsToScope(pnode->sxFnc.pnodeVars, byteCodeGenerator);
+            AddVarsToScope(pnode->sxFnc.pnodeVars, byteCodeGenerator);
             // There are no args to add, but "eval" gets a this pointer.
             byteCodeGenerator->SetNumberOfInArgs(!!(byteCodeGenerator->GetFlags() & fscrEvalCode));
             if (!globFuncInfo->IsFakeGlobalFunction(byteCodeGenerator->GetFlags()))
