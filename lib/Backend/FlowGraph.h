@@ -562,6 +562,7 @@ public:
     BVSparse<JitArenaAllocator> *forceSimd128I4SymsOnEntry;
 
     BVSparse<JitArenaAllocator> *symsDefInLoop;
+    BVSparse<JitArenaAllocator> *symsInitFromOutsideLoop;
     BailOutInfo *       bailOutInfo;
     IR::BailOutInstr *  toPrimitiveSideEffectCheck;
     BVSparse<JitArenaAllocator> * fieldHoistCandidates;
@@ -707,6 +708,7 @@ public:
         forceSimd128F4SymsOnEntry(nullptr),
         forceSimd128I4SymsOnEntry(nullptr),
         symsDefInLoop(nullptr),
+        symsInitFromOutsideLoop(nullptr),
         fieldHoistCandidateTypes(nullptr),
         fieldHoistSymMap(alloc),
         needImplicitCallBailoutChecksForJsArrayCheckHoist(false),

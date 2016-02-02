@@ -797,6 +797,7 @@ GlobOpt::OptLoops(Loop *loop)
         loop->forceSimd128I4SymsOnEntry = JitAnew(this->alloc, BVSparse<JitArenaAllocator>, this->alloc);
 
         loop->symsDefInLoop = JitAnew(this->alloc, BVSparse<JitArenaAllocator>, this->alloc);
+        loop->symsInitFromOutsideLoop = JitAnew(this->alloc, BVSparse<JitArenaAllocator>, this->alloc);
         loop->fieldKilled = JitAnew(alloc, BVSparse<JitArenaAllocator>, this->alloc);
         loop->fieldPRESymStore = JitAnew(alloc, BVSparse<JitArenaAllocator>, this->alloc);
         loop->allFieldsKilled = false;
@@ -814,6 +815,7 @@ GlobOpt::OptLoops(Loop *loop)
         loop->forceSimd128I4SymsOnEntry->ClearAll();
 
         loop->symsDefInLoop->ClearAll();
+        loop->symsInitFromOutsideLoop->ClearAll();
         loop->fieldKilled->ClearAll();
         loop->allFieldsKilled = false;
         loop->initialValueFieldMap.Reset();
@@ -1432,6 +1434,15 @@ GlobOpt::MergePredBlocksValueMaps(BasicBlock *block)
 
         loop->int32SymsOnEntry = JitAnew(this->alloc, BVSparse<JitArenaAllocator>, this->alloc);
         loop->int32SymsOnEntry->Copy(block->globOptData.liveInt32Syms);
+        FOREACH_PREDECESSOR_EDGE(edge, block)
+        {
+            BasicBlock *pred = edge->GetPred();
+            if (block->loop == pred->loop)
+            {
+                tempBv->And(pred->globOptData.liveInt32Syms, loop->symsInitFromOutsideLoop);
+                loop->int32SymsOnEntry->Or(tempBv);
+            }
+        } NEXT_PREDECESSOR_EDGE;
 
         loop->lossyInt32SymsOnEntry = JitAnew(this->alloc, BVSparse<JitArenaAllocator>, this->alloc);
         loop->lossyInt32SymsOnEntry->Copy(block->globOptData.liveLossyInt32Syms);
@@ -7196,6 +7207,13 @@ GlobOpt::ValueNumberDst(IR::Instr **pInstr, Value *src1Val, Value *src2Val)
             if (src1Val != dstVal)
             {
                 this->SetValue(&this->blockData, dstVal, instr->GetSrc1());
+            }
+        }
+        else
+        {
+            if (this->currentBlock->loop->landingPad->globOptData.liveFields->Test(instr->GetSrc1()->AsSymOpnd()->m_sym->m_id))
+            {
+                this->currentBlock->loop->symsInitFromOutsideLoop->Set(dst->AsRegOpnd()->m_sym->m_id);
             }
         }
         break;
@@ -13340,6 +13358,19 @@ GlobOpt::ToTypeSpecUse(IR::Instr *instr, IR::Opnd *opnd, BasicBlock *block, Valu
             // lossy while the value is definitely int. Since the bit-vectors are based on the sym and not the value, update the
             // lossy state.
             block->globOptData.liveLossyInt32Syms->Clear(varSym->m_id);
+        }
+
+        if (toType != TyInt32)
+        {
+            if (!IsLoopPrePass() && block->loop)
+            {
+                if (block->loop->int32SymsOnEntry->Test(varSym->m_id))
+                {
+                    // The symbol was an int32 on entry of this loop and we're converting to a different type
+                    // this new type will be invalid on exit of the loop so rejit without aggressive int typespec
+                    throw Js::RejitException(RejitReason::AggressiveIntTypeSpecDisabled);
+                }
+            }
         }
 
         if (toType == TyInt32)
