@@ -1012,6 +1012,13 @@ void ByteCodeGenerator::RestoreScopeInfo(Js::FunctionBody* functionBody)
             func->hasEscapedUseNestedFunc = true;
         }
 
+        scopeInfo->GetScopeInfo(nullptr, this, func, bodyScope);
+        if (paramScope && !paramScope->GetCanMergeWithBodyScope())
+        {
+            // If the param and body scopes are not merged the param scope needs to be treated like an inner scope
+            paramScopeInfo->GetScopeInfo(nullptr, this, func, paramScope);
+        }
+
         Js::ScopeInfo* funcExprScopeInfo = scopeInfo->GetFuncExprScopeInfo();
         if (funcExprScopeInfo)
         {
@@ -1024,13 +1031,6 @@ void ByteCodeGenerator::RestoreScopeInfo(Js::FunctionBody* functionBody)
             funcExprScope->SetFunc(func);
             func->SetFuncExprScope(funcExprScope);
             funcExprScopeInfo->GetScopeInfo(nullptr, this, func, funcExprScope);
-        }
-
-        scopeInfo->GetScopeInfo(nullptr, this, func, bodyScope);
-        if (paramScope && !paramScope->GetCanMergeWithBodyScope())
-        {
-            // If the param and body scopes are not merged the param scope needs to be treated like an inner scope
-            paramScopeInfo->GetScopeInfo(nullptr, this, func, paramScope);
         }
     }
     else

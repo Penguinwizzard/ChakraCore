@@ -4185,10 +4185,13 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
     pstmtSave = m_pstmtCur;
     SetCurrentStatement(nullptr);
 
+    bool isEnclosedInParamScope = this->m_currentScope->GetScopeType() == ScopeType_Parameter
+        || (this->m_currentScope->GetScopeType() == ScopeType_FuncExpr && this->m_currentScope->GetEnclosingScope()
+            && this->m_currentScope->GetEnclosingScope()->GetScopeType() == ScopeType_Parameter);
     // Check whether we are in a parameter scope. If we are then we have to mark the parent scope to indicate the same.
     // If there is a method def in the default param scope then we can't merge the param and body scope of that function.
     // Note: Lambdas and async functions will be addressed later.
-    if (this->m_currentScope->GetScopeType() == ScopeType_Parameter && pnodeFncParent && !pnodeFncParent->sxFnc.IsSimpleParameterList() && !fLambda && !fAsync)
+    if (isEnclosedInParamScope && pnodeFncParent && !pnodeFncParent->sxFnc.IsSimpleParameterList() && !fLambda && !fAsync)
     {
         Assert(pnodeFncParent->sxFnc.pnodeScopes->sxBlock.scope != nullptr);
         pnodeFncParent->sxFnc.pnodeScopes->sxBlock.scope->SetCannotMergeWithBodyScope();
@@ -4207,7 +4210,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
     uint uDeferSave = m_grfscr & fscrDeferFncParse;
     if ((!fDeclaration && m_ppnodeExprScope) ||
         (m_scriptContext->GetConfig()->IsBlockScopeEnabled() && fFunctionInBlock) ||
-        (this->m_currentScope->GetScopeType() == ScopeType_Parameter && pnodeFncParent && !pnodeFncParent->sxFnc.IsSimpleParameterList()) ||
+        (isEnclosedInParamScope && !pnodeFncParent->sxFnc.pnodeScopes->sxBlock.scope->GetCanMergeWithBodyScope()) ||
         (flags & (fFncNoName | fFncLambda)))
     {
         // NOTE: Don't defer if this is a function expression inside a construct that induces
@@ -5330,6 +5333,9 @@ void Parser::ParseFncFormals(ParseNodePtr pnodeFnc, ushort flags)
             {
                 if (IsES6DestructuringEnabled() && IsPossiblePatternStart())
                 {
+                    // Mark that the function has a destructuring pattern here as the pattern can have function definitions in it.
+                    m_currentNodeFunc->sxFnc.SetHasDestructuringPattern();
+
                     ParseNodePtr *const ppnodeVarSave = m_ppnodeVar;
                     m_ppnodeVar = &pnodeFnc->sxFnc.pnodeVars;
                     ParseNodePtr paramPattern = nullptr;
@@ -5355,7 +5361,6 @@ void Parser::ParseFncFormals(ParseNodePtr pnodeFnc, ushort flags)
                         *m_ppnodeVar = paramPattern;
                         paramPattern->sxParamPattern.pnodeNext = nullptr;
                         m_ppnodeVar = &paramPattern->sxParamPattern.pnodeNext;
-                        m_currentNodeFunc->sxFnc.SetHasDestructuringPattern();
                     }
 
                     isBindingPattern = true;
