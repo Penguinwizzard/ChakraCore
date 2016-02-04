@@ -1,0 +1,63 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Condition="'$(ChakraBuildPathImported)'!='true'" Project="$(SolutionDir)Chakra.Build.Paths.props" />
+  <Import Project="$(BuildConfigPropsPath)Chakra.Build.ProjectConfiguration.props" />
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{E768D2FA-50C2-40DC-8ABF-3B41A3C9566C}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>CTTests</RootNamespace>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+  </PropertyGroup>
+  <Import Project="$(BuildConfigPropsPath)Chakra.Build.Default.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <Import Project="$(BuildConfigPropsPath)Chakra.Build.props" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>
+      %(AdditionalIncludeDirectories);
+      $(ChakraCoreRootDirectory)Lib\Jsrt;
+     F:\mygit\Criterion\Build\external\include;
+     F:\mygit\Criterion\dependencies\valgrind\include;
+     F:\mygit\Criterion\dependencies\klib;
+     F:\mygit\Criterion\dependencies\nanopb;
+     F:\mygit\Criterion\include;
+     F:\mygit\Criterion\src;
+     F:\mygit\Criterion\samples\..\include;
+      </AdditionalIncludeDirectories>
+      <RuntimeLibrary Condition="'$(Configuration)'=='Debug'">MultiThreadedDebugDLL</RuntimeLibrary>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <SmallerTypeCheck>true</SmallerTypeCheck>
+      <MinimalRebuild>false</MinimalRebuild>
+      <PreprocessorDefinitions>CRITERION_BUILDING_DLL=1;PB_ENABLE_MALLOC=1;_CRT_SECURE_NO_WARNINGS=1;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <CallingConvention>CDecl</CallingConvention>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>F:\mygit\Criterion\Build\external\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>
+        %(AdditionalDependencies);
+        kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;
+        F:\mygit\Criterion\Build\Debug\criterion.lib;
+        csptr.lib;nanomsg.lib;dyncall_s.lib;wingetopt.lib
+      </AdditionalDependencies>
+      <SubSystem>Console</SubSystem>
+      <Version></Version>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="ct_test.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\ChakraCore\ChakraCore.vcxproj">
+      <Project>{ea882c8d-81fc-42fe-abd5-2666db933fdb}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
