@@ -1025,7 +1025,10 @@ public:
 #endif
         );
 
+#ifdef CONCURRENT_GC_ENABLED
     Js::ConfigFlagsTable& GetRecyclerFlagsTable() const { return this->recyclerFlagsTable; }
+#endif
+
     void SetMemProtectMode();
 
     bool IsMemProtectMode()
@@ -2139,7 +2142,12 @@ public:
     static CollectedRecyclerWeakRefHeapBlock Instance;
 private:
 
-    CollectedRecyclerWeakRefHeapBlock() : HeapBlock(BlockTypeCount) { isPendingConcurrentSweep = false; }
+    CollectedRecyclerWeakRefHeapBlock() : HeapBlock(BlockTypeCount)
+    {
+#ifdef CONCURRENT_GC_ENABLED        
+         isPendingConcurrentSweep = false;
+#endif
+    }
 };
 
 class AutoIdleDecommit

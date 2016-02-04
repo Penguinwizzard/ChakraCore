@@ -163,6 +163,7 @@ HeapBucketT<TBlockType>::ClearAllocators()
     this->explicitFreeList = nullptr;
 }
 
+#ifdef CONCURRENT_GC_ENABLED
 template <typename TBlockType>
 void
 HeapBucketT<TBlockType>::PrepareSweep()
@@ -174,6 +175,7 @@ HeapBucketT<TBlockType>::PrepareSweep()
     // (And remove rescan from leaf bucket, so this function doesn't need to exist)
     ClearAllocators();
 }
+#endif
 
 template <typename TBlockType>
 void

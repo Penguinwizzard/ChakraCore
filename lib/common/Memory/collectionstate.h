@@ -65,12 +65,10 @@ enum CollectionState
     CollectionStateSetupConcurrentSweep   = Collection_Sweep | Collection_ConcurrentSweepSetup,               // setting up concurrent sweep
     CollectionStateConcurrentSweep        = Collection_ConcurrentSweep | Collection_ExecutingConcurrent,      // concurrent sweep
     CollectionStateTransferSweptWait      = Collection_ConcurrentSweep | Collection_FinishConcurrent,         // transfer swept objects (after concurrent sweep)
+    
+    CollectionStateBackgroundParallelMark = Collection_ConcurrentMark | Collection_ExecutingConcurrent | Collection_Parallel,
+    CollectionStateConcurrentWrapperCallback = Collection_Concurrent | Collection_ExecutingConcurrent | Collection_WrapperCallback,
 #endif
     CollectionStateParallelMark           = Collection_Mark | Collection_Parallel,
-    CollectionStateBackgroundParallelMark = Collection_ConcurrentMark | Collection_ExecutingConcurrent | Collection_Parallel,
-
     CollectionStatePostCollectionCallback = Collection_PostCollectionCallback,
-
-    CollectionStateConcurrentWrapperCallback = Collection_Concurrent | Collection_ExecutingConcurrent | Collection_WrapperCallback,
-
 };

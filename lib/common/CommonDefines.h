@@ -100,8 +100,11 @@
 #define SUPPORT_FIXED_FIELDS_ON_PATH_TYPES          // *** TODO: Won't build if disabled currently
 
 // GC features
+#ifdef _WIN32
 #define CONCURRENT_GC_ENABLED 1                     // *** TODO: Won't build if disabled currently
 #define PARTIAL_GC_ENABLED 1                        // *** TODO: Won't build if disabled currently
+#endif
+
 #define BUCKETIZE_MEDIUM_ALLOCATIONS 1              // *** TODO: Won't build if disabled currently
 #define SMALLBLOCK_MEDIUM_ALLOC 1                   // *** TODO: Won't build if disabled currently
 #define LARGEHEAPBLOCK_ENCODING 1                   // Large heap block metadata encoding

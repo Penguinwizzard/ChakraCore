@@ -29,7 +29,7 @@ add_library (Chakra.Common.Memory
     PageAllocator.cpp
 
     # xplat-todo: Fix me
-    #Recycler.cpp
+    Recycler.cpp
 
     RecyclerHeuristic.cpp
     RecyclerObjectDumper.cpp
