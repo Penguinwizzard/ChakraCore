@@ -77,9 +77,11 @@ private:
 //      TAllocator      The allocator type used to allocate/free the objects.
 //      ArrayAllocator  The allocator type used to allocate/free the array.
 //
-template <typename T, typename TAllocator, typename ArrayAllocator = ForceNonLeafAllocator<TAllocator>::AllocatorType>
+template <typename T, typename TAllocator, typename ArrayAllocator = typename ForceNonLeafAllocator<TAllocator>::AllocatorType>
 class AutoAllocatorObjectArrayPtr : public AutoAllocatorArrayPtr<T*, ArrayAllocator>
 {
+    typedef typename AutoAllocatorArrayPtr<T*, ArrayAllocator>::AllocatorType AllocatorType;
+
 public:
     AutoAllocatorObjectArrayPtr(T** ptr, size_t elementCount, AllocatorType* allocator) :
         AutoAllocatorArrayPtr(ptr, elementCount, allocator)

@@ -19,9 +19,9 @@
 #include "arm64.h"
 #endif
 
-#include "core\BinaryFeatureControl.h"
-#include "Common\ThreadService.h"
-#include "Memory\AutoAllocatorObjectPtr.h"
+#include "core/BinaryFeatureControl.h"
+#include "common/ThreadService.h"
+#include "Memory/AutoAllocatorObjectPtr.h"
 
 DEFINE_RECYCLER_TRACKER_PERF_COUNTER(RecyclerWeakReferenceBase);
 
@@ -127,6 +127,7 @@ Recycler::Recycler(AllocationPolicyManager * policyManager, IdleDecommitPageAllo
     recyclerPageAllocator(this, policyManager, configFlagsTable, RecyclerHeuristic::Instance.DefaultMaxFreePageCount, RecyclerHeuristic::Instance.DefaultMaxAllocPageCount),
     recyclerLargeBlockPageAllocator(this, policyManager, configFlagsTable, RecyclerHeuristic::Instance.DefaultMaxFreePageCount),
     threadService(nullptr),
+    mainThreadHandle(NULL),
 #ifdef RECYCLER_WRITE_BARRIER_ALLOC_SEPARATE_PAGE
     recyclerWithBarrierPageAllocator(this, policyManager, configFlagsTable, RecyclerHeuristic::Instance.DefaultMaxFreePageCount),
 #endif
@@ -139,7 +140,6 @@ Recycler::Recycler(AllocationPolicyManager * policyManager, IdleDecommitPageAllo
     parallelMarkContext1(this, &this->parallelMarkPagePool1),
     parallelMarkContext2(this, &this->parallelMarkPagePool2),
     parallelMarkContext3(this, &this->parallelMarkPagePool3),
-    clientTrackedObjectAllocator(L"CTO-List", GetPageAllocator(), Js::Throw::OutOfMemory),
     outOfMemoryFunc(outOfMemoryFunc),
 #ifdef RECYCLER_TEST_SUPPORT
     checkFn(NULL),
@@ -162,7 +162,6 @@ Recycler::Recycler(AllocationPolicyManager * policyManager, IdleDecommitPageAllo
     concurrentThread(NULL),
     concurrentWorkReadyEvent(NULL),
     concurrentWorkDoneEvent(NULL),
-    mainThreadHandle(NULL),
     parallelThread1(this, &Recycler::ParallelWorkFunc<0>),
     parallelThread2(this, &Recycler::ParallelWorkFunc<1>),
     priorityBoost(false),
@@ -183,7 +182,9 @@ Recycler::Recycler(AllocationPolicyManager * policyManager, IdleDecommitPageAllo
 #endif
 #ifdef PARTIAL_GC_ENABLED
     inPartialCollectMode(false),
+    hasBackgroundFinishPartial(false),
     scanPinnedObjectMap(false),
+    clientTrackedObjectAllocator(CH_WSTR("CTO-List"), GetPageAllocator(), Js::Throw::OutOfMemory),
     partialUncollectedAllocBytes(0),
     uncollectedNewPageCountPartialCollect((size_t)-1),
     partialConcurrentNextCollection(false),
@@ -212,7 +213,6 @@ Recycler::Recycler(AllocationPolicyManager * policyManager, IdleDecommitPageAllo
     inCacheCleanupCollection(false),
     hasPendingDeleteGuestArena(false),
     needOOMRescan(false),
-    hasBackgroundFinishPartial(false),
     decommitOnFinish(false)
 #ifdef PROFILE_EXEC
     , profiler(nullptr)
@@ -481,12 +481,12 @@ Recycler::~Recycler()
         recyclerSweep->ShutdownCleanup();
         recyclerSweep = nullptr;
     }
+#endif
 
     if (mainThreadHandle != nullptr)
     {
         CloseHandle(mainThreadHandle);
     }
-#endif
 
     recyclerPageAllocator.Close();
     recyclerLargeBlockPageAllocator.Close();
@@ -556,7 +556,9 @@ Recycler::SetIsThreadBound()
     Assert(mainThreadHandle == nullptr);
     ::DuplicateHandle(::GetCurrentProcess(), ::GetCurrentThread(), ::GetCurrentProcess(),  &mainThreadHandle,
         0, FALSE, DUPLICATE_SAME_ACCESS);
+#ifdef CONCURRENT_GC_ENABLED
     stackBase = GetStackBase();
+#endif
 }
 
 void
@@ -656,6 +658,8 @@ Recycler::RootRelease(void* obj, uint *count)
         StackBackTraceNode::DeleteAll(&NoCheckHeapAllocator::Instance, refCount->stackBackTraces);
         refCount->stackBackTraces = nullptr;
 #endif
+
+#ifdef CONCURRENT_GC_ENABLED
         // Don't delete the entry if we are in concurrent find root state
         // We will delete it later on in-thread find root
         if (this->hasPendingConcurrentFindRoot)
@@ -663,6 +667,7 @@ Recycler::RootRelease(void* obj, uint *count)
             this->hasPendingUnpinnedObject = true;
         }
         else
+#endif
         {
             pinnedObjectMap.Remove(obj);
         }

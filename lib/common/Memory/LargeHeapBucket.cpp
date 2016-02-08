@@ -64,8 +64,14 @@ LargeHeapBucket::SnailAlloc(Recycler * recycler, size_t sizeCat, ObjectInfoBits 
     Assert((attributes & InternalObjectInfoBitMask) == attributes);
 
     // No free memory, try to collect with allocated bytes and time heuristic, and concurrently
+#ifdef CONCURRENT_GC_ENABLED
     BOOL collected = recycler->disableCollectOnAllocationHeuristics ? recycler->FinishConcurrent<FinishConcurrentOnAllocation>() :
         recycler->CollectNow<CollectOnAllocation>();
+#else
+    BOOL collected = recycler->disableCollectOnAllocationHeuristics ? false :
+        recycler->CollectNow<CollectOnAllocation>();
+#endif
+
     if (!collected)
     {
         memBlock = TryAllocFromNewHeapBlock(recycler, sizeCat, attributes, nothrow);

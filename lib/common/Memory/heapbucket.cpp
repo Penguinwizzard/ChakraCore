@@ -496,9 +496,12 @@ HeapBucketT<TBlockType>::SnailAlloc(Recycler * recycler, TBlockAllocatorType * a
     }
 
     // No free memory, try to collect with allocated bytes and time heuristic, and concurrently
+#ifdef CONCURRENT_GC_ENABLED
     BOOL collected = recycler->disableCollectOnAllocationHeuristics ? recycler->FinishConcurrent<FinishConcurrentOnAllocation>() :
         recycler->CollectNow<CollectOnAllocation>();
-
+#else
+    BOOL collected = recycler->disableCollectOnAllocationHeuristics ? false : recycler->CollectNow<CollectOnAllocation>();
+#endif
     AllocationVerboseTrace(recycler->GetRecyclerFlagsTable(), L"TryAlloc failed, forced collection on allocation [Collected: %d]\n", collected);
     if (!collected)
     {
@@ -941,10 +944,15 @@ HeapBucketT<TBlockType>::SweepHeapBlockList(RecyclerSweep& recyclerSweep, TBlock
 #else
                 Assert(!IsFinalizableBucket);
 #endif
+
+#ifdef CONCURRENT_GC_ENABLED
                 // CONCURRENT-TODO: We will zero heap block even if the number free page pool exceed
                 // the maximum and will get decommitted anyway
                 recyclerSweep.template QueueEmptyHeapBlock<TBlockType, pageheap>(this, heapBlock);
                 RECYCLER_STATS_INC(recycler, numZeroedOutSmallBlocks);
+#else
+                Assert(false);
+#endif
             }
             else
             {

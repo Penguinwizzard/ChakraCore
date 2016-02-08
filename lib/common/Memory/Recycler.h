@@ -683,6 +683,7 @@ private:
     };
 
     CollectionState collectionState;
+    Js::ConfigFlagsTable&  recyclerFlagsTable;
     IdleDecommitPageAllocator * threadPageAllocator;
 #ifdef RECYCLER_WRITE_BARRIER_ALLOC_SEPARATE_PAGE
     RecyclerPageAllocator recyclerWithBarrierPageAllocator;
@@ -691,6 +692,7 @@ private:
     RecyclerPageAllocator recyclerLargeBlockPageAllocator;
 
     JsUtil::ThreadService *threadService;
+    HANDLE mainThreadHandle;
 
     HeapBlockMap heapBlockMap;
 
@@ -864,7 +866,6 @@ private:
     HANDLE concurrentWorkReadyEvent; // main thread uses this event to tell concurrent threads that the work is ready
     HANDLE concurrentWorkDoneEvent; // concurrent threads use this event to tell main thread that the work allocated is done
     HANDLE concurrentThread;
-    HANDLE mainThreadHandle;
 
     class SavedRegisterState
     {
@@ -908,7 +909,6 @@ private:
 
     RecyclerParallelThread parallelThread1;
     RecyclerParallelThread parallelThread2;
-    Js::ConfigFlagsTable&  recyclerFlagsTable;
 
 #if DBG
     // Variable indicating if the concurrent thread has exited or not
@@ -2144,7 +2144,7 @@ private:
 
     CollectedRecyclerWeakRefHeapBlock() : HeapBlock(BlockTypeCount)
     {
-#ifdef CONCURRENT_GC_ENABLED        
+#ifdef CONCURRENT_GC_ENABLED
          isPendingConcurrentSweep = false;
 #endif
     }

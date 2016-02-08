@@ -39,11 +39,13 @@ protected:
     template <SweepMode mode>
     static TBlockType * SweepPendingObjects(Recycler * recycler, TBlockType * list);
 #endif
-#ifdef PARTIAL_GC_ENABLED
-    ~SmallNormalHeapBucketBase();
 
     template<bool pageheap>
     void Sweep(RecyclerSweep& recyclerSweep);
+
+#ifdef PARTIAL_GC_ENABLED
+    ~SmallNormalHeapBucketBase();
+
     template <class Fn>
     static void SweepPartialReusePages(RecyclerSweep& recyclerSweep, TBlockType * heapBlockList,
         TBlockType *& reuseBlocklist, TBlockType *&unusedBlockList, Fn callBack);
