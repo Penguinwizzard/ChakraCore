@@ -175,6 +175,7 @@ private:
     }
 
     bool IsInDebugMode() const;
+    bool IsInDebugMode(Js::FunctionBody *const functionBody) const;
     static ExecutionMode PrejitJitMode(Js::FunctionBody *const functionBody);
 
     bool TryAggressiveInlining(Js::FunctionBody *const topFunctionBody, Js::FunctionBody *const functionBody, InliningDecider &inliningDecider, uint32& inlineeCount, uint recursiveInlineDepth);
