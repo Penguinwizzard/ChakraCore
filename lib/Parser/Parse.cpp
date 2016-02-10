@@ -4869,7 +4869,9 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
                     {
                         Assert(sym->GetPid()->GetTopRef()->sym == sym);
                     }
+ 
                     return false;
+                    });
                 });
 
                 if (!m_scriptContext->GetConfig()->IsES6DefaultArgsSplitScopeEnabled() && (pnodeFnc->sxFnc.CallsEval() || pnodeFnc->sxFnc.ChildCallsEval()))
