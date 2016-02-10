@@ -38,7 +38,7 @@ namespace Js
         do
         {
             newIndex++;
-            if (!object->FindNextProperty(newIndex, &propertyString, &propertyId, attributes, GetTypeToEnumerate(), !enumNonEnumerable, /*enumSymbols*/enumSymbols) || newIndex >= initialPropertyCount)
+            if (!object->FindNextProperty(newIndex, &propertyString, &propertyId, attributes, GetTypeToEnumerate(), !enumNonEnumerable, /*enumSymbols*/enumSymbols) || newIndex >= initialSlotCount)
             {
                 newIndex--;
                 propertyString = nullptr;
@@ -48,6 +48,7 @@ namespace Js
         while (Js::IsInternalPropertyId(propertyId));
 
         index = newIndex;
+        objectPropertyId = propertyId;
         return propertyString;
     }
 
@@ -63,14 +64,20 @@ namespace Js
     void DynamicObjectSnapshotEnumerator<T, enumNonEnumerable, enumSymbols>::Reset()
     {
         __super::Reset();
-        initialPropertyCount = object->GetPropertyCount();
+
+        DynamicTypeHandler *const typeHandler = object->GetDynamicType()->GetTypeHandler();
+        typeHandler->EnsureObjectReady(object);
+        initialSlotCount = typeHandler->GetSlotCountAndPropertyCount(&initialPropertyCount);
     }
 
     template <typename T, bool enumNonEnumerable, bool enumSymbols>
     void DynamicObjectSnapshotEnumerator<T, enumNonEnumerable, enumSymbols>::Initialize(DynamicObject* object)
     {
         __super::Initialize(object);
-        initialPropertyCount = object->GetPropertyCount();
+
+        DynamicTypeHandler *const typeHandler = object->GetDynamicType()->GetTypeHandler();
+        typeHandler->EnsureObjectReady(object);
+        initialSlotCount = typeHandler->GetSlotCountAndPropertyCount(&initialPropertyCount);
     }
 
     template class DynamicObjectSnapshotEnumerator<PropertyIndex, true, true>;

@@ -57,7 +57,7 @@ namespace Js
 
         Assert(!TaggedInt::IsOverflow(NoSlots)); // the last deleted property's slot in the chain is going to store NoSlots as a tagged int
 
-        SetSlotUnchecked(object, propertyIndex, TaggedInt::ToVarUnchecked(deletedPropertyIndex));
+        SetSlotUnchecked(object, propertyIndex, ObjectSlotType::GetVar(), TaggedInt::ToVarUnchecked(deletedPropertyIndex));
         deletedPropertyIndex = propertyIndex;
         return true;
     }
@@ -79,7 +79,7 @@ namespace Js
         Assert(propertyMap->GetValueAt(deletedPropertyIndex).Attributes & PropertyDeleted);
 
         *propertyIndex = deletedPropertyIndex;
-        deletedPropertyIndex = static_cast<TPropertyIndex>(TaggedInt::ToInt32(object->GetSlot(deletedPropertyIndex)));
+        deletedPropertyIndex = static_cast<TPropertyIndex>(TaggedInt::ToInt32(object->GetSlot(deletedPropertyIndex, ObjectSlotType::GetVar())));
         return true;
     }
 

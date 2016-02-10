@@ -20,8 +20,6 @@ namespace Js
         Var ProfiledStrictLdThis(Var thisVar, FunctionBody* functionBody);
         Var ProfiledLdThis(Var thisVar, int moduleID, FunctionBody* functionBody);
         Var ProfiledSwitch(FunctionBody* functionBody,ProfileId profileId, Var exp);
-        Var ProfiledDivide(FunctionBody* functionBody, ProfileId profileId, Var aLeft, Var aRight);
-        Var ProfiledRemainder(FunctionBody* functionBody, ProfileId profileId, Var aLeft, Var aRight);
 
         void StoreArrayHelper(Var arr, uint32 index, Var value);
         void StoreArraySegHelper(Var arr, uint32 index, Var value);

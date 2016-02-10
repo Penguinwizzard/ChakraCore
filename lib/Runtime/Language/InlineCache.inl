@@ -32,114 +32,160 @@ namespace Js
 
         Type *const type = propertyObject->GetType();
 
-        if (CheckLocal && type == u.local.type)
+        if (CheckLocal && type == TypeWithoutAnyTags(u.local.type))
         {
             Assert(propertyObject->GetScriptContext() == requestContext); // we never cache a type from another script context
-            *propertyValue = DynamicObject::FromVar(propertyObject)->GetInlineSlot(u.local.slotIndex);
-            Assert(*propertyValue == JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext) ||
-                *propertyValue == JavascriptOperators::GetRootProperty(propertyObject, propertyId, requestContext));
-            if (ReturnOperationInfo)
+
+            const ObjectSlotType slotType = GetSlotType(u.local.type);
+            if(ReturnOperationInfo)
             {
                 operationInfo->cacheType = CacheType_Local;
-                operationInfo->slotType = SlotType_Inline;
+                operationInfo->slotType = slotType;
             }
+
+            if(!TypeHasAuxSlotTag(u.local.type))
+            {
+                if(ReturnOperationInfo)
+                {
+                    operationInfo->slotLocation = SlotLocation_Inline;
+                }
+
+                *propertyValue = DynamicObject::FromVar(propertyObject)->GetInlineSlot(u.local.slotIndex, slotType);
+            }
+            else
+            {
+                if(ReturnOperationInfo)
+                {
+                    operationInfo->slotLocation = SlotLocation_Aux;
+                }
+
+                *propertyValue = DynamicObject::FromVar(propertyObject)->GetAuxSlot(u.local.slotIndex, slotType);
+            }
+
+            Assert(
+                requestContext->AreVarsSameTypeAndValue(*propertyValue, JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext)) ||
+                requestContext->AreVarsSameTypeAndValue(*propertyValue, JavascriptOperators::GetRootProperty(propertyObject, propertyId, requestContext)));
             return true;
         }
 
-        if (CheckLocal && TypeWithAuxSlotTag(type) == u.local.type)
+        if(CheckProto && type == TypeWithoutAnyTags(u.proto.type) && !u.proto.isMissing)
         {
-            Assert(propertyObject->GetScriptContext() == requestContext); // we never cache a type from another script context
-            *propertyValue = DynamicObject::FromVar(propertyObject)->GetAuxSlot(u.local.slotIndex);
-            Assert(*propertyValue == JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext) ||
-                *propertyValue == JavascriptOperators::GetRootProperty(propertyObject, propertyId, requestContext));
-            if (ReturnOperationInfo)
-            {
-                operationInfo->cacheType = CacheType_Local;
-                operationInfo->slotType = SlotType_Aux;
-            }
-            return true;
-        }
-
-        if (CheckProto && type == u.proto.type && !this->u.proto.isMissing)
-        {
+            Assert(GetSlotType(u.proto.type).IsVar());
             Assert(u.proto.prototypeObject->GetScriptContext() == requestContext); // we never cache a type from another script context
-            *propertyValue = u.proto.prototypeObject->GetInlineSlot(u.proto.slotIndex);
-            Assert(*propertyValue == JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext) ||
-                *propertyValue == JavascriptOperators::GetRootProperty(propertyObject, propertyId, requestContext));
-            if (ReturnOperationInfo)
+
+            const ObjectSlotType slotType = ObjectSlotType::GetVar();
+            if(ReturnOperationInfo)
             {
                 operationInfo->cacheType = CacheType_Proto;
-                operationInfo->slotType = SlotType_Inline;
+                operationInfo->slotType = slotType;
             }
-            return true;
-        }
 
-        if (CheckProto && TypeWithAuxSlotTag(type) == u.proto.type && !this->u.proto.isMissing)
-        {
-            Assert(u.proto.prototypeObject->GetScriptContext() == requestContext); // we never cache a type from another script context
-            *propertyValue = u.proto.prototypeObject->GetAuxSlot(u.proto.slotIndex);
-            // TODO: This assert often results in Assert(RootObjectBase::Is(object)) inside GetRootProperty, which is misleading
+            if(!TypeHasAuxSlotTag(u.proto.type))
+            {
+                if(ReturnOperationInfo)
+                {
+                    operationInfo->slotLocation = SlotLocation_Inline;
+                }
+
+                *propertyValue = u.proto.prototypeObject->GetInlineSlot(u.proto.slotIndex, slotType);
+            }
+            else
+            {
+                if(ReturnOperationInfo)
+                {
+                    operationInfo->slotLocation = SlotLocation_Aux;
+                }
+
+                *propertyValue = u.proto.prototypeObject->GetAuxSlot(u.proto.slotIndex, slotType);
+            }
+
+            // TODO: This assert often results in Assert(RootObjectBase::Is(object)) inside GetRootProperty, which is misleading 
             // when the problem is that GetProperty returned a different value than propertyValue. Consider reworking it here and elsewhere.
-            Assert(*propertyValue == JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext) ||
-                *propertyValue == JavascriptOperators::GetRootProperty(propertyObject, propertyId, requestContext));
-            if (ReturnOperationInfo)
-            {
-                operationInfo->cacheType = CacheType_Proto;
-                operationInfo->slotType = SlotType_Aux;
-            }
+            Assert(
+                requestContext->AreVarsSameTypeAndValue(*propertyValue, JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext)) ||
+                requestContext->AreVarsSameTypeAndValue(*propertyValue, JavascriptOperators::GetRootProperty(propertyObject, propertyId, requestContext)));
             return true;
         }
 
-        if (CheckAccessor && type == u.accessor.type)
+        if (CheckAccessor && type == TypeWithoutAnyTags(u.accessor.type))
         {
+            Assert(GetSlotType(u.accessor.type).IsVar());
             Assert(propertyObject->GetScriptContext() == requestContext); // we never cache a type from another script context
             Assert(u.accessor.flags & InlineCacheGetterFlag);
 
-            RecyclableObject *const function = RecyclableObject::FromVar(u.accessor.object->GetInlineSlot(u.accessor.slotIndex));
+            const ObjectSlotType slotType = ObjectSlotType::GetVar();
+            if(ReturnOperationInfo)
+            {
+                operationInfo->cacheType = CacheType_Getter;
+                operationInfo->slotType = slotType;
+            }
 
-            *propertyValue = JavascriptOperators::CallGetter(function, instance, requestContext);
+            if(!TypeHasAuxSlotTag(u.accessor.type))
+            {
+                if(ReturnOperationInfo)
+                {
+                    operationInfo->slotLocation = SlotLocation_Inline;
+                }
+
+                RecyclableObject *const function = RecyclableObject::FromVar(u.accessor.object->GetInlineSlot(u.accessor.slotIndex, slotType));
+
+                *propertyValue = JavascriptOperators::CallGetter(function, instance, requestContext);
+            }
+            else
+            {
+                if(ReturnOperationInfo)
+                {
+                    operationInfo->slotLocation = SlotLocation_Aux;
+                }
+
+                RecyclableObject *const function = RecyclableObject::FromVar(u.accessor.object->GetAuxSlot(u.accessor.slotIndex, slotType));
+
+                *propertyValue = JavascriptOperators::CallGetter(function, instance, requestContext);
+            }
 
             // Can't assert because the getter could have a side effect
 #ifdef CHKGETTER
             Assert(JavascriptOperators::Equal(*propertyValue, JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext), requestContext));
 #endif
-            if (ReturnOperationInfo)
-            {
-                operationInfo->cacheType = CacheType_Getter;
-                operationInfo->slotType = SlotType_Inline;
-            }
             return true;
         }
 
-        if (CheckAccessor && TypeWithAuxSlotTag(type) == u.accessor.type)
+        if(CheckMissing && type == TypeWithoutAnyTags(u.proto.type) && u.proto.isMissing)
         {
-            Assert(propertyObject->GetScriptContext() == requestContext); // we never cache a type from another script context
-            Assert(u.accessor.flags & InlineCacheGetterFlag);
-
-            RecyclableObject *const function = RecyclableObject::FromVar(u.accessor.object->GetAuxSlot(u.accessor.slotIndex));
-
-            *propertyValue = JavascriptOperators::CallGetter(function, instance, requestContext);
-
-            // Can't assert because the getter could have a side effect
-#ifdef CHKGETTER
-            Assert(JavascriptOperators::Equal(*propertyValue, JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext), requestContext));
-#endif
-            if (ReturnOperationInfo)
-            {
-                operationInfo->cacheType = CacheType_Getter;
-                operationInfo->slotType = SlotType_Aux;
-            }
-            return true;
-        }
-
-        if (CheckMissing && type == u.proto.type && this->u.proto.isMissing)
-        {
+            Assert(GetSlotType(u.proto.type).IsVar());
             Assert(u.proto.prototypeObject->GetScriptContext() == requestContext); // we never cache a type from another script context
-            *propertyValue = u.proto.prototypeObject->GetInlineSlot(u.proto.slotIndex);
-            // TODO: This assert often results in Assert(RootObjectBase::Is(object)) inside GetRootProperty, which is misleading
+
+            const ObjectSlotType slotType = ObjectSlotType::GetVar();
+            if(ReturnOperationInfo)
+            {
+                operationInfo->cacheType = CacheType_Proto;
+                operationInfo->slotType = slotType;
+            }
+
+            if(!TypeHasAuxSlotTag(u.proto.type))
+            {
+                if(ReturnOperationInfo)
+                {
+                    operationInfo->slotLocation = SlotLocation_Inline;
+                }
+
+                *propertyValue = u.proto.prototypeObject->GetInlineSlot(u.proto.slotIndex, slotType);
+            }
+            else
+            {
+                if(ReturnOperationInfo)
+                {
+                    operationInfo->slotLocation = SlotLocation_Aux;
+                }
+
+                *propertyValue = u.proto.prototypeObject->GetAuxSlot(u.proto.slotIndex, slotType);
+            }
+
+            // TODO: This assert often results in Assert(RootObjectBase::Is(object)) inside GetRootProperty, which is misleading 
             // when the problem is that GetProperty returned a different value than propertyValue. Consider reworking it here and elsewhere.
-            Assert(*propertyValue == JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext) ||
-                *propertyValue == JavascriptOperators::GetRootProperty(propertyObject, propertyId, requestContext));
+            Assert(
+                requestContext->AreVarsSameTypeAndValue(*propertyValue, JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext)) ||
+                requestContext->AreVarsSameTypeAndValue(*propertyValue, JavascriptOperators::GetRootProperty(propertyObject, propertyId, requestContext)));
 
 #ifdef MISSING_PROPERTY_STATS
             if (PHASE_STATS1(MissingPropertyCachePhase))
@@ -147,36 +193,6 @@ namespace Js
                 requestContext->RecordMissingPropertyHit();
             }
 #endif
-
-            if (ReturnOperationInfo)
-            {
-                operationInfo->cacheType = CacheType_Proto;
-                operationInfo->slotType = SlotType_Inline;
-            }
-            return true;
-        }
-
-        if (CheckMissing && TypeWithAuxSlotTag(type) == u.proto.type && this->u.proto.isMissing)
-        {
-            Assert(u.proto.prototypeObject->GetScriptContext() == requestContext); // we never cache a type from another script context
-            *propertyValue = u.proto.prototypeObject->GetAuxSlot(u.proto.slotIndex);
-            // TODO: This assert often results in Assert(RootObjectBase::Is(object)) inside GetRootProperty, which is misleading
-            // when the problem is that GetProperty returned a different value than propertyValue. Consider reworking it here and elsewhere.
-            Assert(*propertyValue == JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext) ||
-                *propertyValue == JavascriptOperators::GetRootProperty(propertyObject, propertyId, requestContext));
-
-#ifdef MISSING_PROPERTY_STATS
-            if (PHASE_STATS1(MissingPropertyCachePhase))
-            {
-                requestContext->RecordMissingPropertyHit();
-            }
-#endif
-
-            if (ReturnOperationInfo)
-            {
-                operationInfo->cacheType = CacheType_Proto;
-                operationInfo->slotType = SlotType_Aux;
-            }
             return true;
         }
 
@@ -194,6 +210,7 @@ namespace Js
         Var propertyValue,
         ScriptContext *const requestContext,
         PropertyCacheOperationInfo *const operationInfo,
+        InlineCacheHitSlotTypeChangeInfo &cacheHitSlotTypeChangeInfo,
         const PropertyOperationFlags propertyOperationFlags)
     {
         CompileAssert(CheckLocal || CheckLocalTypeWithoutProperty || CheckAccessor);
@@ -239,156 +256,238 @@ namespace Js
 
         Type *const type = object->GetType();
 
-        if (CheckLocal && type == u.local.type)
+        if (CheckLocal && type == TypeWithoutAnyTags(u.local.type))
         {
             Assert(object->GetScriptContext() == requestContext); // we never cache a type from another script context
-            Assert(isRoot || object->GetPropertyIndex(propertyId) == DynamicObject::FromVar(object)->GetTypeHandler()->InlineOrAuxSlotIndexToPropertyIndex(u.local.slotIndex, true));
-            Assert(!isRoot || RootObjectBase::FromVar(object)->GetRootPropertyIndex(propertyId) == DynamicObject::FromVar(object)->GetTypeHandler()->InlineOrAuxSlotIndexToPropertyIndex(u.local.slotIndex, true));
+            Assert(isRoot || object->GetPropertyIndex(propertyId) == DynamicObject::FromVar(object)->GetTypeHandler()->InlineOrAuxSlotIndexToPropertyIndex(u.local.slotIndex, !TypeHasAuxSlotTag(u.local.type)));
+            Assert(!isRoot || RootObjectBase::FromVar(object)->GetRootPropertyIndex(propertyId) == DynamicObject::FromVar(object)->GetTypeHandler()->InlineOrAuxSlotIndexToPropertyIndex(u.local.slotIndex, !TypeHasAuxSlotTag(u.local.type)));
             Assert(object->CanStorePropertyValueDirectly(propertyId, isRoot));
-            DynamicObject::FromVar(object)->SetInlineSlot(SetSlotArgumentsRoot(propertyId, isRoot, u.local.slotIndex, propertyValue));
-            if (ReturnOperationInfo)
+
+            if(ReturnOperationInfo)
             {
                 operationInfo->cacheType = CacheType_Local;
-                operationInfo->slotType = SlotType_Inline;
             }
-            Assert(canSetField);
-            return true;
-        }
 
-        if (CheckLocal && TypeWithAuxSlotTag(type) == u.local.type)
-        {
-            Assert(object->GetScriptContext() == requestContext); // we never cache a type from another script context
-            Assert(isRoot || object->GetPropertyIndex(propertyId) == DynamicObject::FromVar(object)->GetTypeHandler()->InlineOrAuxSlotIndexToPropertyIndex(u.local.slotIndex, false));
-            Assert(!isRoot || RootObjectBase::FromVar(object)->GetRootPropertyIndex(propertyId) == DynamicObject::FromVar(object)->GetTypeHandler()->InlineOrAuxSlotIndexToPropertyIndex(u.local.slotIndex, false));
-            Assert(object->CanStorePropertyValueDirectly(propertyId, isRoot));
-            DynamicObject::FromVar(object)->SetAuxSlot(SetSlotArgumentsRoot(propertyId, isRoot, u.local.slotIndex, propertyValue));
-            if (ReturnOperationInfo)
+            const PropertyIndex slotIndex = u.local.slotIndex;
+            const ObjectSlotType slotTypeBeforeSet = GetSlotType(u.local.type);
+            if(!TypeHasAuxSlotTag(u.local.type))
             {
-                operationInfo->cacheType = CacheType_Local;
-                operationInfo->slotType = SlotType_Aux;
+                const ObjectSlotType slotTypeAfterSet =
+                    DynamicObject::FromVar(object)->SetInlineSlot(
+                        SetSlotArgumentsRoot(propertyId, isRoot, slotIndex, slotTypeBeforeSet, propertyValue));
+
+                if(slotTypeAfterSet != slotTypeBeforeSet)
+                {
+                    Assert(!slotTypeBeforeSet.IsValueTypeMoreConvervativeThan(slotTypeAfterSet));
+                    cacheHitSlotTypeChangeInfo = InlineCacheHitSlotTypeChangeInfo(slotTypeAfterSet, true, slotIndex);
+                }
+
+                if(ReturnOperationInfo)
+                {
+                    operationInfo->slotLocation = SlotLocation_Inline;
+                    operationInfo->slotType = slotTypeAfterSet;
+                }
             }
-            Assert(canSetField);
-            return true;
-        }
-
-        if (CheckLocalTypeWithoutProperty && type == u.local.typeWithoutProperty)
-        {
-            // CAREFUL! CheckIfPrototypeChainHasOnlyWritableDataProperties may do allocation that triggers GC and
-            // clears this cache, so save any info that is needed from the cache before calling those functions.
-            Type *const typeWithProperty = u.local.type;
-            const PropertyIndex propertyIndex = u.local.slotIndex;
-
-#if DBG
-            uint16 newAuxSlotCapacity = u.local.requiredAuxSlotCapacity;
-#endif
-            Assert(object->GetScriptContext() == requestContext); // we never cache a type from another script context
-            Assert(typeWithProperty);
-            Assert(DynamicType::Is(typeWithProperty->GetTypeId()));
-            Assert(((DynamicType*)typeWithProperty)->GetIsShared());
-            Assert(((DynamicType*)typeWithProperty)->GetTypeHandler()->IsPathTypeHandler());
-            AssertMsg(!((DynamicType*)u.local.typeWithoutProperty)->GetTypeHandler()->GetIsPrototype(), "Why did we cache a property add for a prototype?");
-            Assert(((DynamicType*)typeWithProperty)->GetTypeHandler()->CanStorePropertyValueDirectly((const DynamicObject*)object, propertyId, isRoot));
-
-            DynamicObject *const dynamicObject = DynamicObject::FromVar(object);
-
-            // If we're adding a property to an inlined slot, we should never need to adjust auxiliary slot array size.
-            Assert(newAuxSlotCapacity == 0);
-
-            dynamicObject->type = typeWithProperty;
-
-            Assert(isRoot || object->GetPropertyIndex(propertyId) == DynamicObject::FromVar(object)->GetTypeHandler()->InlineOrAuxSlotIndexToPropertyIndex(propertyIndex, true));
-            Assert(!isRoot || RootObjectBase::FromVar(object)->GetRootPropertyIndex(propertyId) == DynamicObject::FromVar(object)->GetTypeHandler()->InlineOrAuxSlotIndexToPropertyIndex(propertyIndex, true));
-
-            dynamicObject->SetInlineSlot(SetSlotArgumentsRoot(propertyId, isRoot, propertyIndex, propertyValue));
-
-            if (ReturnOperationInfo)
+            else
             {
-                operationInfo->cacheType = CacheType_LocalWithoutProperty;
-                operationInfo->slotType = SlotType_Inline;
+                const ObjectSlotType slotTypeAfterSet =
+                    DynamicObject::FromVar(object)->SetAuxSlot(
+                        SetSlotArgumentsRoot(propertyId, isRoot, slotIndex, slotTypeBeforeSet, propertyValue));
+
+                if(slotTypeAfterSet != slotTypeBeforeSet)
+                {
+                    Assert(!slotTypeBeforeSet.IsValueTypeMoreConvervativeThan(slotTypeAfterSet));
+                    cacheHitSlotTypeChangeInfo = InlineCacheHitSlotTypeChangeInfo(slotTypeAfterSet, false, slotIndex);
+                }
+
+                if(ReturnOperationInfo)
+                {
+                    operationInfo->slotLocation = SlotLocation_Aux;
+                    operationInfo->slotType = slotTypeAfterSet;
+                }
             }
             Assert(canSetField);
             return true;
         }
 
-        if (CheckLocalTypeWithoutProperty && TypeWithAuxSlotTag(type) == u.local.typeWithoutProperty)
+        if (CheckLocalTypeWithoutProperty && type == TypeWithoutAnyTags(u.local.typeWithoutProperty))
         {
             // CAREFUL! CheckIfPrototypeChainHasOnlyWritableDataProperties or AdjustSlots may do allocation that triggers GC and
             // clears this cache, so save any info that is needed from the cache before calling those functions.
-            Type *const typeWithProperty = TypeWithoutAuxSlotTag(u.local.type);
-            const PropertyIndex propertyIndex = u.local.slotIndex;
-            uint16 newAuxSlotCapacity = u.local.requiredAuxSlotCapacity;
+            Type *const typeWithProperty = TypeWithoutAnyTags(u.local.type);
+            const PropertyIndex slotIndex = u.local.slotIndex;
 
             Assert(object->GetScriptContext() == requestContext); // we never cache a type from another script context
             Assert(typeWithProperty);
             Assert(DynamicType::Is(typeWithProperty->GetTypeId()));
             Assert(((DynamicType*)typeWithProperty)->GetIsShared());
             Assert(((DynamicType*)typeWithProperty)->GetTypeHandler()->IsPathTypeHandler());
-            AssertMsg(!((DynamicType*)TypeWithoutAuxSlotTag(u.local.typeWithoutProperty))->GetTypeHandler()->GetIsPrototype(), "Why did we cache a property add for a prototype?");
+            AssertMsg(!((DynamicType*)TypeWithoutAnyTags(u.local.typeWithoutProperty))->GetTypeHandler()->GetIsPrototype(),  "Why did we cache a property add for a prototype?");
             Assert(((DynamicType*)typeWithProperty)->GetTypeHandler()->CanStorePropertyValueDirectly((const DynamicObject*)object, propertyId, isRoot));
+
+            if(ReturnOperationInfo)
+            {
+                operationInfo->cacheType = CacheType_LocalWithoutProperty;
+            }
 
             DynamicObject *const dynamicObject = DynamicObject::FromVar(object);
 
-            if (newAuxSlotCapacity > 0)
+            const ObjectSlotType slotTypeBeforeSet = GetSlotType(u.local.type);
+            if(!TypeHasAuxSlotTag(u.local.type))
             {
-                DynamicTypeHandler::AdjustSlots(
-                    dynamicObject,
-                    static_cast<DynamicType *>(typeWithProperty)->GetTypeHandler()->GetInlineSlotCapacity(),
-                    newAuxSlotCapacity);
+                // If we're adding a property to an inlined slot, we should never need to adjust auxiliary slot array size.
+                Assert(u.local.requiredAuxSlotCapacity == 0);
+
+                dynamicObject->type = typeWithProperty;
+
+                Assert(isRoot || object->GetPropertyIndex(propertyId) == DynamicObject::FromVar(object)->GetTypeHandler()->InlineOrAuxSlotIndexToPropertyIndex(slotIndex, true));
+                Assert(!isRoot || RootObjectBase::FromVar(object)->GetRootPropertyIndex(propertyId) == DynamicObject::FromVar(object)->GetTypeHandler()->InlineOrAuxSlotIndexToPropertyIndex(slotIndex, true));
+
+                const ObjectSlotType slotTypeAfterSet =
+                    dynamicObject->SetInlineSlot(
+                        SetSlotArgumentsRoot(propertyId, isRoot, slotIndex, slotTypeBeforeSet, propertyValue));
+                Assert(!slotTypeBeforeSet.IsValueTypeMoreConvervativeThan(slotTypeAfterSet));
+
+                if(ReturnOperationInfo)
+                {
+                    operationInfo->slotLocation = SlotLocation_Inline;
+                    operationInfo->slotType = slotTypeAfterSet;
+                }
             }
-
-            dynamicObject->type = typeWithProperty;
-
-            Assert(isRoot || object->GetPropertyIndex(propertyId) == DynamicObject::FromVar(object)->GetTypeHandler()->InlineOrAuxSlotIndexToPropertyIndex(propertyIndex, false));
-            Assert(!isRoot || RootObjectBase::FromVar(object)->GetRootPropertyIndex(propertyId) == DynamicObject::FromVar(object)->GetTypeHandler()->InlineOrAuxSlotIndexToPropertyIndex(propertyIndex, false));
-
-            dynamicObject->SetAuxSlot(SetSlotArgumentsRoot(propertyId, isRoot, propertyIndex, propertyValue));
-
-            if (ReturnOperationInfo)
+            else
             {
-                operationInfo->cacheType = CacheType_LocalWithoutProperty;
-                operationInfo->slotType = SlotType_Aux;
+                uint16 newAuxSlotCapacity = u.local.requiredAuxSlotCapacity;
+                if (newAuxSlotCapacity > 0)
+                {
+                    DynamicTypeHandler::AdjustSlots(
+                        dynamicObject,
+                        static_cast<DynamicType *>(typeWithProperty)->GetTypeHandler()->GetInlineSlotCapacity(),
+                        newAuxSlotCapacity);
+                }
+
+                dynamicObject->type = typeWithProperty;
+
+                Assert(isRoot || object->GetPropertyIndex(propertyId) == DynamicObject::FromVar(object)->GetTypeHandler()->InlineOrAuxSlotIndexToPropertyIndex(slotIndex, false));
+                Assert(!isRoot || RootObjectBase::FromVar(object)->GetRootPropertyIndex(propertyId) == DynamicObject::FromVar(object)->GetTypeHandler()->InlineOrAuxSlotIndexToPropertyIndex(slotIndex, false));
+
+                const ObjectSlotType slotTypeAfterSet =
+                    dynamicObject->SetAuxSlot(
+                        SetSlotArgumentsRoot(propertyId, isRoot, slotIndex, slotTypeBeforeSet, propertyValue));
+                Assert(!slotTypeBeforeSet.IsValueTypeMoreConvervativeThan(slotTypeAfterSet));
+
+                if(ReturnOperationInfo)
+                {
+                    operationInfo->slotLocation = SlotLocation_Aux;
+                    operationInfo->slotType = slotTypeAfterSet;
+                }
             }
             Assert(canSetField);
             return true;
         }
 
-        if (CheckAccessor && type == u.accessor.type)
+        if (CheckAccessor && type == TypeWithoutAnyTags(u.accessor.type))
         {
+            Assert(GetSlotType(u.accessor.type).IsVar());
             Assert(object->GetScriptContext() == requestContext); // we never cache a type from another script context
             Assert(u.accessor.flags & InlineCacheSetterFlag);
 
-            RecyclableObject *const function = RecyclableObject::FromVar(u.accessor.object->GetInlineSlot(u.accessor.slotIndex));
-
-            Assert(setterValue == nullptr || setterValue == function);
-            Js::JavascriptOperators::CallSetter(function, object, propertyValue, requestContext);
-
-            if (ReturnOperationInfo)
+            const ObjectSlotType slotType = ObjectSlotType::GetVar();
+            if(ReturnOperationInfo)
             {
                 operationInfo->cacheType = CacheType_Setter;
-                operationInfo->slotType = SlotType_Inline;
+                operationInfo->slotType = slotType;
             }
-            return true;
-        }
 
-        if (CheckAccessor && TypeWithAuxSlotTag(type) == u.accessor.type)
-        {
-            Assert(object->GetScriptContext() == requestContext); // we never cache a type from another script context
-            Assert(u.accessor.flags & InlineCacheSetterFlag);
-
-            RecyclableObject *const function = RecyclableObject::FromVar(u.accessor.object->GetAuxSlot(u.accessor.slotIndex));
-
-            Assert(setterValue == nullptr || setterValue == function);
-            Js::JavascriptOperators::CallSetter(function, object, propertyValue, requestContext);
-
-            if (ReturnOperationInfo)
+            if(!TypeHasAuxSlotTag(u.accessor.type))
             {
-                operationInfo->cacheType = CacheType_Setter;
-                operationInfo->slotType = SlotType_Aux;
+                if(ReturnOperationInfo)
+                {
+                    operationInfo->slotLocation = SlotLocation_Inline;
+                }
+
+                RecyclableObject *const function = RecyclableObject::FromVar(u.accessor.object->GetInlineSlot(u.accessor.slotIndex, slotType));
+
+                Assert(setterValue == nullptr || setterValue == function);
+                Js::JavascriptOperators::CallSetter(function, object, propertyValue, requestContext);
+            }
+            else
+            {
+                if(ReturnOperationInfo)
+                {
+                    operationInfo->slotLocation = SlotLocation_Aux;
+                }
+
+                RecyclableObject *const function = RecyclableObject::FromVar(u.accessor.object->GetAuxSlot(u.accessor.slotIndex, slotType));
+
+                Assert(setterValue == nullptr || setterValue == function);
+                Js::JavascriptOperators::CallSetter(function, object, propertyValue, requestContext);
             }
             return true;
         }
 
         return false;
+    }  
+
+    template<
+        bool CheckLocalAndAccessor,
+        bool CheckLocalTypeWithoutProperty>
+    bool InlineCache::PretendTrySetProperty(Type *const type, Type *const oldType, PropertyCacheOperationInfo * operationInfo)
+    {
+        if (CheckLocalAndAccessor && type == TypeWithoutAnyTags(u.local.type))
+        {
+            operationInfo->cacheType = CacheType_Local;
+            operationInfo->slotLocation = TypeHasAuxSlotTag(u.local.type) ? SlotLocation_Aux : SlotLocation_Inline;
+            operationInfo->slotType = GetSlotType(u.local.type);
+            return true;
+        }
+
+        if (CheckLocalTypeWithoutProperty && oldType != type && oldType == TypeWithoutAnyTags(u.local.typeWithoutProperty))
+        {
+            operationInfo->cacheType = CacheType_LocalWithoutProperty;
+            operationInfo->slotLocation = 
+                TypeHasAuxSlotTag(u.local.typeWithoutProperty) ? SlotLocation_Aux : SlotLocation_Inline;
+            operationInfo->slotType = GetSlotType(u.local.typeWithoutProperty);
+            return true;
+        }
+
+        if (CheckLocalAndAccessor && type == TypeWithoutAnyTags(u.accessor.type))
+        {
+            Assert(GetSlotType(u.accessor.type).IsVar());
+            if (u.accessor.flags & InlineCacheSetterFlag)
+            {
+                operationInfo->cacheType = CacheType_Setter;
+                operationInfo->slotLocation = TypeHasAuxSlotTag(u.accessor.type) ? SlotLocation_Aux : SlotLocation_Inline;
+                operationInfo->slotType = ObjectSlotType::GetVar();
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    template<bool IsCachingAccessor>
+    __inline bool PolymorphicInlineCache::ShouldBecomeMorePolymorphic(
+        const bool isCachingProto,
+        const Type *const type,
+        const Type *const typeWithoutProperty,
+        const ObjectSlotType slotType)
+    {
+        Assert(!IsCachingAccessor && !isCachingProto || !typeWithoutProperty);
+
+        const uint inlineCacheIndex =
+            GetInlineCacheIndexForType(IsCachingAccessor || !typeWithoutProperty ? type : typeWithoutProperty);
+        return
+            inlineCaches[inlineCacheIndex].ShouldBecomeMorePolymorphic<IsCachingAccessor>(
+                isCachingProto,
+                type,
+                typeWithoutProperty,
+                slotType);
+    }
+
+    __inline bool PolymorphicInlineCache::HasType_Accessor(const Type * type) const
+    {
+        uint inlineCacheIndex = GetInlineCacheIndexForType(type);
+        return inlineCaches[inlineCacheIndex].HasType_Accessor(type);
     }
 
     template<
@@ -585,6 +684,7 @@ namespace Js
         Var propertyValue,
         ScriptContext *const requestContext,
         PropertyCacheOperationInfo *const operationInfo,
+        InlineCacheHitSlotTypeChangeInfo &cacheHitSlotTypeChangeInfo,
         InlineCache *const inlineCacheToPopulate,
         const PropertyOperationFlags propertyOperationFlags)
     {
@@ -603,7 +703,7 @@ namespace Js
         }
 #endif
         bool result = cache->TrySetProperty<CheckLocal, CheckLocalTypeWithoutProperty, CheckAccessor, ReturnOperationInfo>(
-            object, propertyId, propertyValue, requestContext, operationInfo, propertyOperationFlags);
+                object, propertyId, propertyValue, requestContext, operationInfo, cacheHitSlotTypeChangeInfo, propertyOperationFlags);
 
 #ifdef CLONE_INLINECACHE_TO_EMPTYSLOT
         if (!result && !cache->IsEmpty())
@@ -612,12 +712,12 @@ namespace Js
             {
                 cache = &inlineCaches[tryInlineCacheIndex];
                 return cache->TrySetProperty<CheckLocal, CheckLocalTypeWithoutProperty, CheckAccessor, ReturnOperationInfo>(
-                    object, propertyId, propertyValue, requestContext, operationInfo, propertyOperationFlags);
+                    object, propertyId, propertyValue, requestContext, operationInfo, cacheHitSlotTypeChangeInfo, propertyOperationFlags);
             });
         }
 #endif
 
-        if (IsInlineCacheAvailable && result)
+        if(IsInlineCacheAvailable && result && !cacheHitSlotTypeChangeInfo.WasSlotTypeChanged())
         {
             cache->CopyTo(propertyId, requestContext, inlineCacheToPopulate);
         }

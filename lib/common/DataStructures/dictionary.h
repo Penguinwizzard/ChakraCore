@@ -173,6 +173,20 @@ namespace JsUtil
             return UncheckedInsert(weakRef, value);
         }
 
+        bool Remove(const TKey *const key)
+        {
+            if(!buckets)
+                return false;
+            hash_t hash = GetHashCode(key);
+            uint targetBucket = hash % size;
+            int last = -1;
+            int i = FindEntry<TKey>(key, hash, targetBucket, last);
+            if(i == -1)
+                return false;
+            RemoveEntry(i, last, targetBucket);
+            return true;
+        }
+
         template<class Fn>
         void Map(Fn fn)
         {

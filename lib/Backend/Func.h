@@ -151,10 +151,11 @@ public:
         return !this->HasFinally() && !this->IsLoopBody() && !PHASE_OFF(Js::OptimizeTryCatchPhase, this);
     }
 
+    bool DoBailOnNoProfile();
+
     bool DoSimpleJitDynamicProfile() const { return IsSimpleJit() && GetTopFunc()->GetJnFunction()->DoSimpleJitDynamicProfile(); }
     bool IsSimpleJit() const { return m_workItem->GetJitMode() == ExecutionMode::SimpleJit; }
 
-    void BuildIR();
     void Codegen();
 
     void ThrowIfScriptClosed();
@@ -282,10 +283,8 @@ static const unsigned __int64 c_debugFillPattern8 = 0xcececececececece;
     Js::JitEquivalentTypeGuard * CreateEquivalentTypeGuard(Js::Type* type, uint32 objTypeSpecFldId);
 
     void EnsurePropertyGuardsByPropertyId();
-    void EnsureCtorCachesByPropertyId();
 
     void LinkGuardToPropertyId(Js::PropertyId propertyId, Js::JitIndexedPropertyGuard* guard);
-    void LinkCtorCacheToPropertyId(Js::PropertyId propertyId, Js::JitTimeConstructorCache* cache);
 
     Js::JitTimeConstructorCache* GetConstructorCache(const Js::ProfileId profiledCallSiteId);
     void SetConstructorCache(const Js::ProfileId profiledCallSiteId, Js::JitTimeConstructorCache* constructorCache);
@@ -342,6 +341,9 @@ static const unsigned __int64 c_debugFillPattern8 = 0xcececececececece;
         Assert(m_inlineeFrameStartSym == nullptr);
         m_inlineeFrameStartSym = sym;
     }
+
+    IR::Opnd *GetInlineeFunctionObjectOpnd();
+    void SetInlineeFunctionObjectOpnd(IR::Opnd *const inlineeFunctionObjectOpnd);
 
     IR::SymOpnd *GetInlineeArgCountSlotOpnd()
     {
@@ -435,10 +437,6 @@ public:
     typedef JsUtil::BaseHashSet<Js::JitIndexedPropertyGuard*, JitArenaAllocator, PowerOf2SizePolicy> IndexedPropertyGuardSet;
     typedef JsUtil::BaseDictionary<Js::PropertyId, IndexedPropertyGuardSet*, JitArenaAllocator, PowerOf2SizePolicy> PropertyGuardByPropertyIdMap;
     PropertyGuardByPropertyIdMap* propertyGuardsByPropertyId;
-
-    typedef JsUtil::BaseHashSet<Js::ConstructorCache*, JitArenaAllocator, PowerOf2SizePolicy> CtorCacheSet;
-    typedef JsUtil::BaseDictionary<Js::PropertyId, CtorCacheSet*, JitArenaAllocator, PowerOf2SizePolicy> CtorCachesByPropertyIdMap;
-    CtorCachesByPropertyIdMap* ctorCachesByPropertyId;
 
     typedef JsUtil::BaseDictionary<Js::ProfileId, int32, JitArenaAllocator, PrimeSizePolicy> CallSiteToArgumentsOffsetFixupMap;
     CallSiteToArgumentsOffsetFixupMap* callSiteToArgumentsOffsetFixupMap;
@@ -756,8 +754,9 @@ private:
     Js::ScriptContextProfiler *const m_codeGenProfiler;
 #endif
     Js::FunctionBody*   m_jnFunction;
-    Func * const        parentFunc;
-    StackSym *          m_inlineeFrameStartSym;
+    Func * const        parentFunc;  
+    StackSym *          m_inlineeFrameStartSym;     
+    IR::Opnd *          inlineeFunctionObjectOpnd;
     uint                maxInlineeArgOutCount;
     const bool          m_isBackgroundJIT;
     bool                hasInstrNumber;

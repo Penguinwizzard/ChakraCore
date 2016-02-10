@@ -15,8 +15,7 @@ namespace Js
         friend class DynamicTypeHandler;
         friend class CrossSite;
         friend class TypePath;
-        friend class PathTypeHandlerBase;
-        friend class SimplePathTypeHandler;
+        friend class PathTypeTransitionInfo;
         friend class PathTypeHandler;
         friend class ES5ArrayType;
         friend class JavascriptOperators;
@@ -33,7 +32,9 @@ namespace Js
     protected:
         DynamicType(DynamicType * type) : Type(type), typeHandler(type->typeHandler), isLocked(false), isShared(false) {}
         DynamicType(DynamicType * type, DynamicTypeHandler *typeHandler, bool isLocked, bool isShared);
+        DynamicType(DynamicType * type, PathTypeHandler *typeHandler, bool isLocked, bool isShared);
         DynamicType(ScriptContext* scriptContext, TypeId typeId, RecyclableObject* prototype, JavascriptMethod entryPoint, DynamicTypeHandler * typeHandler, bool isLocked, bool isShared);
+        DynamicType(ScriptContext* scriptContext, TypeId typeId, RecyclableObject* prototype, JavascriptMethod entryPoint, PathTypeHandler * typeHandler, bool isLocked, bool isShared);
 
     public:
         DynamicTypeHandler * GetTypeHandler() const { return typeHandler; }
@@ -83,7 +84,10 @@ namespace Js
         void PrepareForTypeSnapshotEnumeration();
 
         static bool Is(TypeId typeId);
-        static DynamicType * New(ScriptContext* scriptContext, TypeId typeId, RecyclableObject* prototype, JavascriptMethod entryPoint, DynamicTypeHandler * typeHandler, bool isLocked = false, bool isShared = false);
+        static DynamicType *New(ScriptContext* scriptContext, TypeId typeId, RecyclableObject* prototype, JavascriptMethod entryPoint, DynamicTypeHandler * typeHandler, bool isLocked = false, bool isShared = false);
+        static DynamicType *New(ScriptContext* scriptContext, TypeId typeId, RecyclableObject* prototype, JavascriptMethod entryPoint, PathTypeHandler * typeHandler, bool isLocked = false, bool isShared = false);
+        static DynamicType *New(DynamicType *const type, DynamicTypeHandler *const typeHandler, const bool isLocked = false, const bool isShared = false);
+        static DynamicType *New(DynamicType *const type, PathTypeHandler *const typeHandler, const bool isLocked = false, const bool isShared = false);
 
         static uint32 GetOffsetOfTypeHandler() { return offsetof(DynamicType, typeHandler); }
         static uint32 GetOffsetOfIsShared() { return offsetof(DynamicType, isShared); }
@@ -92,6 +96,5 @@ namespace Js
         void SetIsLocked() { Assert(this->GetTypeHandler()->GetIsLocked()); this->isLocked = true; }
         void SetIsShared() { Assert(this->GetIsLocked() && this->GetTypeHandler()->GetIsShared()); this->isShared = true; }
         void SetIsLockedAndShared() { SetIsLocked(); SetIsShared(); }
-
     };
 };

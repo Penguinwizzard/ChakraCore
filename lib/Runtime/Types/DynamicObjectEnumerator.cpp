@@ -33,6 +33,7 @@ namespace Js
             return arrayEnumerator->GetCurrentIndex();
         }
 
+        FixObjectSlotIndexIfNecessary();
         JavascriptString* propertyString = nullptr;
         PropertyId propertyId = Constants::NoProperty;
         if (!object->FindNextProperty(objectIndex, &propertyString, &propertyId, nullptr, GetTypeToEnumerate(), !enumNonEnumerable, enumSymbols))
@@ -53,6 +54,7 @@ namespace Js
             return arrayEnumerator->GetCurrentValue();
         }
 
+        FixObjectSlotIndexIfNecessary();
         return object->GetNextProperty(objectIndex, GetTypeToEnumerate(), !enumNonEnumerable, enumSymbols);
     }
 
@@ -70,7 +72,7 @@ namespace Js
         {
             return arrayEnumerator->GetCurrentPropertyId(pPropertyId);
         }
-        Js::PropertyId propertyId = object->GetPropertyId((T) objectIndex);
+        Js::PropertyId propertyId = objectPropertyId;
 
         if ((enumNonEnumerable || (propertyId != Constants::NoProperty && object->IsEnumerable(propertyId))))
         {
@@ -123,8 +125,8 @@ namespace Js
             arrayEnumerator = NULL;
         }
 
+        FixObjectSlotIndexIfNecessary();
         JavascriptString* propertyString;
-
         do
         {
             objectIndex++;
@@ -138,11 +140,55 @@ namespace Js
         }
         while (Js::IsInternalPropertyId(propertyId));
 
+        objectPropertyId = propertyId;
         return propertyString;
     }
 
-    template <typename T, bool enumNonEnumerable, bool enumSymbols, bool snapShotSemantics>
-    void DynamicObjectEnumerator<T, enumNonEnumerable, enumSymbols, snapShotSemantics>::ResetHelper()
+    template <typename T, bool enumNonEnumerable, bool enumSymbols, bool snapShotSementics>
+    void DynamicObjectEnumerator<T, enumNonEnumerable, enumSymbols, snapShotSementics>::FixObjectSlotIndexIfNecessary()
+    {
+        // This function should be called before passing 'objectIndex' to an object or type handler to handle type changes
+
+        if(snapShotSementics ||
+            !ObjectSlotType::RequiresWideSlotSupport() ||
+            !previousPathTypeHandlerWithNativeFields ||
+            objectIndex == static_cast<T>(-1))
+        {
+            return;
+        }
+
+        DynamicTypeHandler *const typeHandler = object->GetTypeHandler();
+        if(typeHandler == previousPathTypeHandlerWithNativeFields)
+            return;
+
+        if(typeHandler->IsPathTypeHandler())
+        {
+            PathTypeHandler *const pathTypeHandler = PathTypeHandler::FromTypeHandler(typeHandler);
+            if(pathTypeHandler->DoNativeFields())
+            {
+                previousPathTypeHandlerWithNativeFields = pathTypeHandler;
+                return;
+            }
+        }
+
+        // The object's type handler changed from a PathTypeHandler with native fields enabled, to some other type handler that
+        // does not have native fields enabled, when the architecture requires wide slots. Such a type change will narrow all of
+        // the wide slots, along with changing the slot types to Var. Since the enumerator tracks the current slot index, fix
+        // the slot index for the new type handler.
+        TypePath *const typePath = previousPathTypeHandlerWithNativeFields->GetTypePath();
+        PropertyIndex oldSlotIndex = 0, newSlotIndex = 0;
+        while(oldSlotIndex < objectIndex)
+        {
+            ++newSlotIndex;
+            oldSlotIndex = typePath->GetNextSlotIndex(oldSlotIndex);
+        }
+        Assert(oldSlotIndex == objectIndex);
+        objectIndex = newSlotIndex;
+        previousPathTypeHandlerWithNativeFields = nullptr;
+    }
+
+    template <typename T, bool enumNonEnumerable, bool enumSymbols, bool snapShotSementics>
+    void DynamicObjectEnumerator<T, enumNonEnumerable, enumSymbols, snapShotSementics>::ResetHelper()
     {
         if (object->HasObjectArray())
         {
@@ -155,6 +201,20 @@ namespace Js
             arrayEnumerator = nullptr;
         }
         initialType = object->GetDynamicType();
+
+        previousPathTypeHandlerWithNativeFields = nullptr;
+        if(!snapShotSementics && ObjectSlotType::RequiresWideSlotSupport() && object->GetScriptContext()->DoNativeFields())
+        {
+            DynamicTypeHandler *const typeHandler = initialType->GetTypeHandler();
+            if(typeHandler->IsPathTypeHandler())
+            {
+                PathTypeHandler *const pathTypeHandler = PathTypeHandler::FromTypeHandler(typeHandler);
+                if(pathTypeHandler->DoNativeFields())
+                    previousPathTypeHandlerWithNativeFields = pathTypeHandler;
+            }
+        }
+
+        objectPropertyId = Constants::NoProperty;
         objectIndex = (T)-1; // This is Constants::NoSlot or Constants::NoBigSlot
     }
 

@@ -90,7 +90,13 @@ private:
     void TrackFloatSymEquivalence(IR::Instr *const instr);
 
     void DeadStoreImplicitCallBailOut(IR::Instr * instr, bool hasLiveFields);
+
+public:
+    static bool DoRemoveDeadTypeCheckBailouts();
+private:
     void DeadStoreTypeCheckBailOut(IR::Instr * instr);
+
+private:
     bool IsImplicitCallBailOutCurrentlyNeeded(IR::Instr * instr, bool mayNeedImplicitCallBailOut, bool hasLiveFields);
     bool TrackNoImplicitCallInlinees(IR::Instr *instr);
     bool ProcessBailOnNoProfile(IR::Instr *instr, BasicBlock *block);
@@ -129,7 +135,7 @@ private:
     void InsertTypeTransition(IR::Instr *instrInsertBefore, StackSym *objSym, AddPropertyCacheBucket *data);
     void InsertTypeTransitionAtBlock(BasicBlock *block, int symId, AddPropertyCacheBucket *data);
     void InsertTypeTransitionsAtPriorSuccessors(BasicBlock *block, BasicBlock *blockSucc, int symId, AddPropertyCacheBucket *data);
-    void InsertTypeTransitionAfterInstr(IR::Instr *instr, int symId, AddPropertyCacheBucket *data);
+    bool InsertTypeTransitionAfterInstr(IR::Instr *instr, int symId, AddPropertyCacheBucket *data);
     void InsertTypeTransitionsAtPotentialKills();
     bool TransitionUndoesObjectHeaderInlining(AddPropertyCacheBucket *data) const;
 

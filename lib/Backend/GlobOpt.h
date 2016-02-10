@@ -242,7 +242,7 @@ private:
     static bool IsLessThanOrEqualTo_NoConverse(const Value *const src1Value, const int32 min1, const int32 max1, const Value *const src2Value, const int32 min2, const int32 max2, const int src2Offset);
 
 public:
-    ValueInfo *SpecializeToInt32(JitArenaAllocator *const allocator, const bool isForLoopBackEdgeCompensation = false);
+    ValueInfo *SpecializeToInt32(JitArenaAllocator *const allocator);
     ValueInfo *SpecializeToFloat64(JitArenaAllocator *const allocator);
 
     // SIMD_JS
@@ -276,8 +276,10 @@ public:
 #if DBG_DUMP
     void                    Dump();
 #endif
+
 #if DBG
-    // Add a vtable in debug builds so that the actual can been inspected easily in the debugger without having to manually cast
+private:
+    // Add a vtable in debug builds so that the actual type can been inspected in the debugger without having to manually cast
     virtual void            AddVtable() { Assert(false); }
 #endif
 };
@@ -487,30 +489,34 @@ class JsTypeValueInfo : public ValueInfo
 private:
     const Js::Type * jsType;
     Js::EquivalentTypeSet * jsTypeSet;
+    const BVSparse<JitArenaAllocator> *nativeFieldAccessesRequiringTypeCheck;
     bool isShared;
 
 public:
     JsTypeValueInfo(Js::Type * type)
-        : ValueInfo(Uninitialized, ValueStructureKind::JsType),
-        jsType(type), jsTypeSet(nullptr), isShared(false)
+        : ValueInfo(Uninitialized, ValueStructureKind::JsType), 
+        jsType(type), jsTypeSet(nullptr), nativeFieldAccessesRequiringTypeCheck(nullptr), isShared(false)
     {
     }
 
     JsTypeValueInfo(Js::EquivalentTypeSet * typeSet)
-        : ValueInfo(Uninitialized, ValueStructureKind::JsType),
-        jsType(nullptr), jsTypeSet(typeSet), isShared(false)
+        : ValueInfo(Uninitialized, ValueStructureKind::JsType), 
+        jsType(nullptr), jsTypeSet(typeSet), nativeFieldAccessesRequiringTypeCheck(nullptr), isShared(false)
     {
     }
 
     JsTypeValueInfo(const JsTypeValueInfo& other)
         : ValueInfo(Uninitialized, ValueStructureKind::JsType),
-        jsType(other.jsType), jsTypeSet(other.jsTypeSet)
+        jsType(other.jsType),
+        jsTypeSet(other.jsTypeSet),
+        nativeFieldAccessesRequiringTypeCheck(other.nativeFieldAccessesRequiringTypeCheck),
+        isShared(false)
     {
     }
 
-    static JsTypeValueInfo * New(JitArenaAllocator *const allocator, Js::Type * typeSet)
+    static JsTypeValueInfo * New(JitArenaAllocator *const allocator, Js::Type * type)
     {
-        return JitAnew(allocator, JsTypeValueInfo, typeSet);
+        return JitAnew(allocator, JsTypeValueInfo, type);
     }
 
     static JsTypeValueInfo * New(JitArenaAllocator *const allocator, Js::EquivalentTypeSet * typeSet)
@@ -519,8 +525,8 @@ public:
     }
 
     JsTypeValueInfo(const Js::Type* type, Js::EquivalentTypeSet * typeSet)
-        : ValueInfo(Uninitialized, ValueStructureKind::JsType),
-        jsType(type), jsTypeSet(typeSet), isShared(false)
+        : ValueInfo(Uninitialized, ValueStructureKind::JsType), 
+        jsType(type), jsTypeSet(typeSet), nativeFieldAccessesRequiringTypeCheck(nullptr), isShared(false)
     {
     }
 
@@ -532,9 +538,7 @@ public:
 public:
     JsTypeValueInfo * Copy(JitArenaAllocator *const allocator) const
     {
-        JsTypeValueInfo * newInfo = JitAnew(allocator, JsTypeValueInfo, *this);
-        newInfo->isShared = false;
-        return newInfo;
+        return JitAnew(allocator, JsTypeValueInfo, *this);
     }
 
     const Js::Type * GetJsType() const
@@ -557,6 +561,20 @@ public:
     {
         Assert(!this->isShared);
         this->jsTypeSet = value;
+    }
+
+    const BVSparse<JitArenaAllocator> *GetNativeFieldAccessesRequiringTypeCheck() const
+    {
+        Assert(!nativeFieldAccessesRequiringTypeCheck || !nativeFieldAccessesRequiringTypeCheck->IsEmpty());
+        return nativeFieldAccessesRequiringTypeCheck;
+    }
+
+    void SetNativeFieldAccessesRequiringTypeCheck(const BVSparse<JitArenaAllocator> *const nativeFieldAccessesRequiringTypeCheck)
+    {
+        this->nativeFieldAccessesRequiringTypeCheck =
+            nativeFieldAccessesRequiringTypeCheck && !nativeFieldAccessesRequiringTypeCheck->IsEmpty()
+                ? nativeFieldAccessesRequiringTypeCheck
+                : nullptr;
     }
 
     bool GetIsShared() const { return this->isShared; }
@@ -1229,7 +1247,6 @@ private:
     bool                    inInlinedBuiltIn : 1;
     bool                    isRecursiveCallOnLandingPad : 1;
     bool                    updateInductionVariableValueNumber : 1;
-    bool                    isPerformingLoopBackEdgeCompensation : 1;
 
     bool                    doTypeSpec : 1;
     bool                    doAggressiveIntTypeSpec : 1;
@@ -1416,8 +1433,11 @@ private:
     bool                    TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc2Val, Value **pDstVal, Value *const src1OriginalVal, Value *const src2OriginalVal, bool *redoTypeSpecRef);
     bool                    TypeSpecializeFloatUnary(IR::Instr **pInstr, Value *src1Val, Value **pDstVal, bool skipDst = false);
     bool                    TypeSpecializeFloatBinary(IR::Instr *instr, Value *src1Val, Value *src2Val, Value **pDstVal);
-    void                    TypeSpecializeFloatDst(IR::Instr *instr, Value *valToTransfer, Value *const src1Value, Value *const src2Value, Value **pDstVal);
+    void                    TypeSpecializeFloatDst(IR::Instr *instr, Value *valToTransfer, Value *const src1Value, Value *const src2Value, Value **pDstVal, const ValueType defaultValueType = ValueType::Float);
     bool                    TypeSpecializeLdLen(IR::Instr * *const instrRef, Value * *const src1ValueRef, Value * *const dstValueRef, bool *const forceInvariantHoistingRef);
+    bool                    TypeSpecializeLdFld(IR::Instr * *const instrRef, Value *const srcValue, Value * *const dstValueRef);
+    bool                    TypeSpecializeStFld(IR::Instr * *const instrRef, Value *const srcValue, bool *const determinedTypeCheckBailoutRef);
+    void                    DeterminePotentialFieldSlotTypeChanges(IR::Instr *const instr);
     void                    TypeSpecializeIntDst(IR::Instr* instr, Js::OpCode originalOpCode, Value* valToTransfer, Value *const src1Value, Value *const src2Value, const IR::BailOutKind bailOutKind, int32 newMin, int32 newMax, Value** pDstVal, const AddSubConstantInfo *const addSubConstantInfo = nullptr);
     void                    TypeSpecializeIntDst(IR::Instr* instr, Js::OpCode originalOpCode, Value* valToTransfer, Value *const src1Value, Value *const src2Value, const IR::BailOutKind bailOutKind, ValueType valueType, Value** pDstVal, const AddSubConstantInfo *const addSubConstantInfo = nullptr);
     void                    TypeSpecializeIntDst(IR::Instr* instr, Js::OpCode originalOpCode, Value* valToTransfer, Value *const src1Value, Value *const src2Value, const IR::BailOutKind bailOutKind, ValueType valueType, int32 newMin, int32 newMax, Value** pDstVal, const AddSubConstantInfo *const addSubConstantInfo = nullptr);
@@ -1537,7 +1557,9 @@ private:
         IRType toType, IR::BailOutKind bailOutKind, bool lossy = false, IR::Instr *insertBeforeInstr = nullptr);
     void                    ToVarRegOpnd(IR::RegOpnd *dst, BasicBlock *block);
     void                    ToVarStackSym(StackSym *varSym, BasicBlock *block);
-    void                    ToInt32Dst(IR::Instr *instr, IR::RegOpnd *dst, BasicBlock *block);
+    void                    ToInt32StackSym(StackSym *const varSym, const bool lossy, BasicBlock *const block);
+    void                    ToFloat64StackSym(StackSym *const varSym, BasicBlock *const block);
+    void                    ToInt32Dst(IR::Instr *instr, IR::RegOpnd *dst, BasicBlock *block);    
     void                    ToUInt32Dst(IR::Instr *instr, IR::RegOpnd *dst, BasicBlock *block);
     void                    ToFloat64Dst(IR::Instr *instr, IR::RegOpnd *dst, BasicBlock *block);
     // SIMD_JS
@@ -1648,7 +1670,7 @@ private:
     bool                    IsImplicitCallBailOutCurrentlyNeeded(IR::Instr * instr, Value *src1Val, Value *src2Val, BasicBlock * block, bool hasLiveFields, bool mayNeedImplicitCallBailOut, bool isForwardPass);
     static bool             IsTypeCheckProtected(const IR::Instr * instr);
     static bool             MayNeedBailOnImplicitCall(const IR::Instr * instr, Value *src1Val, Value *src2Val);
-    static bool             MayNeedBailOnImplicitCall(IR::Opnd * opnd, Value *val, bool callsToPrimitive);
+    static bool             MayNeedBailOnImplicitCall(const IR::Instr *const instr, IR::Opnd * opnd, Value *val, bool callsToPrimitive);
 
     void                    GenerateBailAfterOperation(IR::Instr * *const pInstr, IR::BailOutKind kind);
 public:
@@ -1700,8 +1722,8 @@ private:
 
     static bool             HasHoistableFields(BasicBlock * block);
     static bool             HasHoistableFields(GlobOptBlockData const * globOptData);
-    bool                    IsHoistablePropertySym(SymID symId) const;
-    bool                    NeedBailOnImplicitCallWithFieldOpts(Loop *loop, bool hasLiveFields) const;
+    bool                    IsHoistablePropertySym(SymID symId) const;    
+    bool                    NeedBailOnImplicitCallWithFieldOpts(IR::Instr *const instr, Loop *loop, bool hasLiveFields) const;
     IR::Instr *             EnsureDisableImplicitCallRegion(Loop * loop);
     void                    UpdateObjPtrValueType(IR::Opnd * opnd, IR::Instr * instr);
 

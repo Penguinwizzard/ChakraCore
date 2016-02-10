@@ -55,6 +55,7 @@
     <ClInclude Include="ContinuousPageStack.h" />
     <ClInclude Include="DoublyLinkedList.h" />
     <ClInclude Include="DoublyLinkedListElement.h" />
+    <ClInclude Include="FixedMultibitVector.h" />
     <ClInclude Include="growingArray.h" />
     <ClInclude Include="ImmutableList.h" />
     <ClInclude Include="interval.h" />

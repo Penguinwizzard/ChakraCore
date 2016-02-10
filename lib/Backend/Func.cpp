@@ -23,7 +23,6 @@ Func::Func(JitArenaAllocator *alloc, CodeGenWorkItem* workItem, const Js::Functi
     singleTypeGuards(nullptr),
     equivalentTypeGuards(nullptr),
     propertyGuardsByPropertyId(nullptr),
-    ctorCachesByPropertyId(nullptr),
     callSiteToArgumentsOffsetFixupMap(nullptr),
     indexedPropertyGuardCount(0),
     propertiesWrittenTo(nullptr),
@@ -42,6 +41,7 @@ Func::Func(JitArenaAllocator *alloc, CodeGenWorkItem* workItem, const Js::Functi
     m_bailoutReturnValueSym(nullptr),
     m_hasBailedOutSym(nullptr),
     m_inlineeFrameStartSym(nullptr),
+    inlineeFunctionObjectOpnd(nullptr),
     m_regsUsed(0),
     m_fg(nullptr),
     m_labelCount(0),
@@ -223,6 +223,46 @@ bool
 Func::IsLoopBodyInTry() const
 {
     return IsLoopBody() && ((JsLoopBodyCodeGen*)this->m_workItem)->loopHeader->isInTry;
+}
+
+bool Func::DoBailOnNoProfile()
+{
+    Func *const topFunc = GetTopFunc();
+    if (PHASE_OFF(Js::BailOnNoProfilePhase, topFunc))
+    {
+        return false;
+    }
+
+    // Detect cases where the loop or function may not have been profiled before it's jitted. These are not real-world cases,
+    // but for the purpose of testing the JIT, it may be beneficial to generate code in unprofiled paths.
+    if(topFunc->IsLoopBody())
+    {
+        if(static_cast<uint>(CONFIG_FLAG(LoopInterpretCount)) == 0 || topFunc->GetJnFunction()->ForceJITLoopBody())
+        {
+            return false;
+        }
+    }
+    else if(topFunc->m_jitTimeData->GetProfiledIterations() == 0)
+    {
+        return false;
+    }
+
+    if (!topFunc->HasProfileInfo())
+    {
+        return false;
+    }
+
+    if (topFunc->GetProfileInfo()->IsNoProfileBailoutsDisabled())
+    {
+        return false;
+    }
+
+    if (!DoGlobOpt() || topFunc->HasTry())
+    {
+        return false;
+    }
+
+    return true;
 }
 
 ///----------------------------------------------------------------------------
@@ -1419,16 +1459,7 @@ Func::EnsurePropertyGuardsByPropertyId()
     }
 }
 
-void
-Func::EnsureCtorCachesByPropertyId()
-{
-    if (this->ctorCachesByPropertyId == nullptr)
-    {
-        this->ctorCachesByPropertyId = JitAnew(this->m_alloc, CtorCachesByPropertyIdMap, this->m_alloc);
-    }
-}
-
-void
+void 
 Func::LinkGuardToPropertyId(Js::PropertyId propertyId, Js::JitIndexedPropertyGuard* guard)
 {
     Assert(guard != nullptr);
@@ -1444,22 +1475,6 @@ Func::LinkGuardToPropertyId(Js::PropertyId propertyId, Js::JitIndexedPropertyGua
     }
 
     set->Item(guard);
-}
-
-void
-Func::LinkCtorCacheToPropertyId(Js::PropertyId propertyId, Js::JitTimeConstructorCache* cache)
-{
-    Assert(cache != nullptr);
-    Assert(this->ctorCachesByPropertyId != nullptr);
-
-    CtorCacheSet* set;
-    if (!this->ctorCachesByPropertyId->TryGetValue(propertyId, &set))
-    {
-        set = JitAnew(this->m_alloc, CtorCacheSet, this->m_alloc);
-        this->ctorCachesByPropertyId->Add(propertyId, set);
-    }
-
-    set->Item(cache->runtimeCache);
 }
 
 Js::JitTimeConstructorCache* Func::GetConstructorCache(const Js::ProfileId profiledCallSiteId)
@@ -1528,6 +1543,40 @@ Func::EnsureFuncEndLabel()
         m_funcEndLabel = IR::LabelInstr::New( Js::OpCode::Label, this );
     }
     return m_funcEndLabel;
+}
+
+IR::Opnd *Func::GetInlineeFunctionObjectOpnd()
+{
+    Assert(IsInlined());
+    Assert(IsInlinee());
+    Assert(inlineeFunctionObjectOpnd);
+
+    return inlineeFunctionObjectOpnd->Copy(this);
+}
+
+void Func::SetInlineeFunctionObjectOpnd(IR::Opnd *const inlineeFunctionObjectOpnd)
+{
+    Assert(IsInlined());
+    Assert(IsInlinee());
+    Assert(inlineeFunctionObjectOpnd);
+
+    if(inlineeFunctionObjectOpnd->IsRegOpnd())
+    {
+        IR::Instr *const inlineeFunctionObjectSymDefInstr = inlineeFunctionObjectOpnd->AsRegOpnd()->m_sym->GetInstrDef();
+        if(inlineeFunctionObjectSymDefInstr && inlineeFunctionObjectSymDefInstr->m_opcode == Js::OpCode::Ld_A)
+        {
+            IR::Opnd *const inlineeFunctionObjectSrc = inlineeFunctionObjectSymDefInstr->GetSrc1();
+            if(inlineeFunctionObjectSrc->IsAddrOpnd())
+            {
+                IR::AddrOpnd *const inlineeFunctionObjectAddrOpnd = inlineeFunctionObjectSrc->AsAddrOpnd();
+                Assert(inlineeFunctionObjectAddrOpnd->m_isFunction);
+                this->inlineeFunctionObjectOpnd = inlineeFunctionObjectAddrOpnd->CopyInternal(this);
+                return;
+            }
+        }
+    }
+
+    this->inlineeFunctionObjectOpnd = inlineeFunctionObjectOpnd->Copy(this);
 }
 
 void

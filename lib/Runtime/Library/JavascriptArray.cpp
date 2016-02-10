@@ -1590,6 +1590,7 @@ namespace Js
         {
             if (intArray->GetDynamicType()->GetIsLocked())
             {
+#if 0
                 DynamicTypeHandler *typeHandler = intArray->GetDynamicType()->GetTypeHandler();
                 if (typeHandler->IsPathTypeHandler())
                 {
@@ -1597,9 +1598,10 @@ namespace Js
                     // So go to a dictionary type handler, which will orphan the new type.
                     // This should be a corner case, so the inability to share the new type is unlikely to matter.
                     // If it does matter, try building a path from the new type's built-in root.
-                    static_cast<PathTypeHandlerBase*>(typeHandler)->ResetTypeHandler(intArray);
+                    PathTypeHandler::FromTypeHandler(typeHandler)->ResetTypeHandler(intArray);
                 }
                 else
+#endif
                 {
                     intArray->ChangeType();
                 }
@@ -1646,7 +1648,7 @@ namespace Js
                     // So go to a dictionary type handler, which will orphan the new type.
                     // This should be a corner case, so the inability to share the new type is unlikely to matter.
                     // If it does matter, try building a path from the new type's built-in root.
-                    static_cast<PathTypeHandlerBase*>(typeHandler)->ResetTypeHandler(varArray);
+                    PathTypeHandler::FromTypeHandler(typeHandler)->ResetTypeHandler(varArray);
                 }
                 else
                 {
@@ -1693,7 +1695,7 @@ namespace Js
                     // So go to a dictionary type handler, which will orphan the new type.
                     // This should be a corner case, so the inability to share the new type is unlikely to matter.
                     // If it does matter, try building a path from the new type's built-in root.
-                    static_cast<PathTypeHandlerBase*>(typeHandler)->ResetTypeHandler(varArray);
+                    PathTypeHandler::FromTypeHandler(typeHandler)->ResetTypeHandler(varArray);
                 }
                 else
                 {
@@ -1864,6 +1866,7 @@ namespace Js
         {
             if (intArray->GetDynamicType()->GetIsLocked())
             {
+#if 0
                 DynamicTypeHandler *typeHandler = intArray->GetDynamicType()->GetTypeHandler();
                 if (typeHandler->IsPathTypeHandler())
                 {
@@ -1871,9 +1874,10 @@ namespace Js
                     // So go to a dictionary type handler, which will orphan the new type.
                     // This should be a corner case, so the inability to share the new type is unlikely to matter.
                     // If it does matter, try building a path from the new type's built-in root.
-                    static_cast<PathTypeHandlerBase*>(typeHandler)->ResetTypeHandler(intArray);
+                    PathTypeHandler::FromTypeHandler(typeHandler)->ResetTypeHandler(intArray);
                 }
                 else
+#endif
                 {
                     intArray->ChangeType();
                 }
@@ -2060,6 +2064,7 @@ namespace Js
         {
             if (fArray->GetDynamicType()->GetIsLocked())
             {
+#if 0
                 DynamicTypeHandler *typeHandler = fArray->GetDynamicType()->GetTypeHandler();
                 if (typeHandler->IsPathTypeHandler())
                 {
@@ -2067,9 +2072,10 @@ namespace Js
                     // So go to a dictionary type handler, which will orphan the new type.
                     // This should be a corner case, so the inability to share the new type is unlikely to matter.
                     // If it does matter, try building a path from the new type's built-in root.
-                    static_cast<PathTypeHandlerBase*>(typeHandler)->ResetTypeHandler(fArray);
+                    PathTypeHandler::FromTypeHandler(typeHandler)->ResetTypeHandler(fArray);
                 }
                 else
+#endif
                 {
                     fArray->ChangeType();
                 }
@@ -3935,12 +3941,21 @@ namespace Js
         {
             searchAsInt32 = TaggedInt::ToInt32(search);
         }
-        else if (!JavascriptNumber::TryGetInt32Value<true>(JavascriptNumber::GetValue(search), &searchAsInt32))
+        else
         {
-            // The value can't be in the array, but it could be in a prototype, and we can only guarantee that
-            // the head segment has no gaps.
-            fromIndex = toIndex > GetHead()->length ? GetHead()->length : -1;
-            return -1;
+            bool isNegativeZero;
+            if (!JavascriptNumber::TryGetInt32Value(JavascriptNumber::GetValue(search), &searchAsInt32, &isNegativeZero))
+            {
+                if (isNegativeZero)
+                    searchAsInt32 = 0;
+                else
+                {
+                    // The value can't be in the array, but it could be in a prototype, and we can only guarantee that
+                    // the head segment has no gaps.
+                    fromIndex = toIndex > GetHead()->length ? GetHead()->length : -1;
+                    return -1;
+                }
+            }
         }
 
         // We need to cast head segment to SparseArraySegment<int32> to have access to GetElement (onSparseArraySegment<T>). Because there are separate overloads of this

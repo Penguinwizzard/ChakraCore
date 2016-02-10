@@ -60,6 +60,28 @@ namespace Js
         return min(maxSlotCapacity, inlineSlotCapacity + auxSlotCapacity);
     }
 
+    PropertyIndex DynamicTypeHandler::GetObjectHeaderExternalInlineSlotCapacity() const
+    {
+        PropertyIndex inlineSlotCapacity, slotCapacity;
+        if(IsPathTypeHandler())
+        {
+            PathTypeHandler::FromTypeHandler(this)->GetOriginalInlineSlotCapacityAndSlotCapacity(
+                &inlineSlotCapacity,
+                &slotCapacity);
+        }
+        else
+        {
+            inlineSlotCapacity = GetInlineSlotCapacity();
+        }
+
+        PropertyIndex objectHeaderExternalInlineSlotCapacity = inlineSlotCapacity;
+        if(IsObjectHeaderInlinedTypeHandler())
+        {
+            objectHeaderExternalInlineSlotCapacity -= GetObjectHeaderInlinableSlotCapacity();
+        }
+        return objectHeaderExternalInlineSlotCapacity;
+    }
+
     DynamicTypeHandler::DynamicTypeHandler(int slotCapacity, uint16 inlineSlotCapacity, uint16 offsetOfInlineSlots, BYTE flags) :
         flags(flags),
         propertyTypes(PropertyTypesWritableDataOnly | PropertyTypesReserved),
@@ -81,100 +103,214 @@ namespace Js
         Assert(IsObjectHeaderInlinedTypeHandler() == IsObjectHeaderInlined(offsetOfInlineSlots));
     }
 
-    Var DynamicTypeHandler::GetSlot(DynamicObject * instance, int index)
+    Var DynamicTypeHandler::GetSlot(DynamicObject * instance, int index, const ObjectSlotType slotType)
     {
-        if (index < inlineSlotCapacity)
-        {
-            Var * slots = reinterpret_cast<Var*>(reinterpret_cast<size_t>(instance) + offsetOfInlineSlots);
-            Var value = slots[index];
-            Assert(ThreadContext::IsOnStack(instance) || !ThreadContext::IsOnStack(value) || TaggedNumber::Is(value));
-            return value;
-        }
-        else
-        {
-            Var value = instance->auxSlots[index - inlineSlotCapacity];
-            Assert(ThreadContext::IsOnStack(instance) || !ThreadContext::IsOnStack(value) || TaggedNumber::Is(value));
-            return value;
-        }
-    }
-
-    Var DynamicTypeHandler::GetInlineSlot(DynamicObject * instance, int index)
-    {
-        AssertMsg(index >= (int)(offsetOfInlineSlots / sizeof(Var)), "index should be relative to the address of the object");
-        Assert(index - (int)(offsetOfInlineSlots / sizeof(Var)) < this->GetInlineSlotCapacity());
-        Var * slots = reinterpret_cast<Var*>(instance);
-        Var value = slots[index];
+        Var value = GetSlotAtAddress(GetSlotAddress(instance, index), slotType, instance, index);
         Assert(ThreadContext::IsOnStack(instance) || !ThreadContext::IsOnStack(value) || TaggedNumber::Is(value));
         return value;
     }
 
-    Var DynamicTypeHandler::GetAuxSlot(DynamicObject * instance, int index)
+    Var DynamicTypeHandler::GetSlotAsTypeHandler(
+        DynamicObject * instance,
+        DynamicTypeHandler *const typeHandler,
+        int index,
+        const ObjectSlotType slotType
+#if DBG
+        , DynamicTypeHandler *const oldTypeHandler
+#endif
+        )
     {
-        // We should only assign a stack value only to a stack object (current mark temp number in mark temp object)
+        Var value = GetSlotAtAddressAsTypeHandler(GetSlotAddressAsTypeHandler(instance, typeHandler, index), slotType, instance, index
+#if DBG
+                                                  , oldTypeHandler
+#endif
+            );
+        Assert(ThreadContext::IsOnStack(instance) || !ThreadContext::IsOnStack(value) || TaggedNumber::Is(value));
+        return value;
+    }
 
-        Assert(index < GetSlotCapacity() - GetInlineSlotCapacity());
-        Var value = instance->auxSlots[index];
+    Var DynamicTypeHandler::GetInlineSlot(DynamicObject * instance, int index, const ObjectSlotType slotType)
+    {
+        DynamicTypeHandler *const typeHandler = instance->GetTypeHandler();
+        AssertMsg(index >= (int)(typeHandler->offsetOfInlineSlots / sizeof(Var)), "index should be relative to the address of the object");
+        Assert(index - (int)(typeHandler->offsetOfInlineSlots / sizeof(Var)) < typeHandler->GetInlineSlotCapacity());
+
+        const BigPropertyIndex slotIndex =
+            static_cast<BigPropertyIndex>(index - typeHandler->offsetOfInlineSlots / sizeof(Var));
+        Var * slots = reinterpret_cast<Var*>(instance);
+        Var value = GetSlotAtAddress(&slots[index], slotType, instance, slotIndex);
+        Assert(ThreadContext::IsOnStack(instance) || !ThreadContext::IsOnStack(value) || TaggedNumber::Is(value));
+        return value;
+    }
+
+    Var DynamicTypeHandler::GetAuxSlot(DynamicObject * instance, int index, const ObjectSlotType slotType)
+    {
+        DynamicTypeHandler *const typeHandler = instance->GetTypeHandler();
+        Assert(index < typeHandler->GetSlotCapacity() - typeHandler->GetInlineSlotCapacity());
+
+        const BigPropertyIndex slotIndex = static_cast<BigPropertyIndex>(index + typeHandler->GetInlineSlotCapacity());
+        Var value = GetSlotAtAddress(&instance->auxSlots[index], slotType, instance, slotIndex);
         Assert(ThreadContext::IsOnStack(instance) || !ThreadContext::IsOnStack(value) || TaggedNumber::Is(value));
         return value;
     }
 
 #if DBG
-    void DynamicTypeHandler::SetSlot(DynamicObject* instance, PropertyId propertyId, bool allowLetConst, int index, Var value)
+    void DynamicTypeHandler::SetSlot(DynamicObject* instance, PropertyId propertyId, bool allowLetConst, int index, const ObjectSlotType slotType, Var value)
 #else
-    void DynamicTypeHandler::SetSlot(DynamicObject* instance, int index, Var value)
+    void DynamicTypeHandler::SetSlot(DynamicObject* instance, int index, const ObjectSlotType slotType, Var value)
 #endif
     {
-        Assert(index < GetSlotCapacity());
-        Assert(propertyId == Constants::NoProperty || CanStorePropertyValueDirectly(instance, propertyId, allowLetConst));
-        SetSlotUnchecked(instance, index, value);
+        DynamicTypeHandler *const typeHandler = instance->GetTypeHandler();
+        Assert(index < typeHandler->GetSlotCapacity());
+        Assert(propertyId == Constants::NoProperty || typeHandler->CanStorePropertyValueDirectly(instance, propertyId, allowLetConst));
+        SetSlotUnchecked(instance, index, slotType, value);
     }
 
-    void DynamicTypeHandler::SetSlotUnchecked(DynamicObject * instance, int index, Var value)
+    void DynamicTypeHandler::SetSlotUnchecked(DynamicObject * instance, int index, const ObjectSlotType slotType, Var value)
     {
-        // We should only assign a stack value only to a stack object (current mark temp number in mark temp object)
-        Assert(ThreadContext::IsOnStack(instance) || !ThreadContext::IsOnStack(value) || TaggedNumber::Is(value));
-        uint16 inlineSlotCapacity = instance->GetTypeHandler()->GetInlineSlotCapacity();
-        uint16 offsetOfInlineSlots = instance->GetTypeHandler()->GetOffsetOfInlineSlots();
-        int slotCapacity = instance->GetTypeHandler()->GetSlotCapacity();
-
-        if (index < inlineSlotCapacity)
-        {
-            Var * slots = reinterpret_cast<Var*>(reinterpret_cast<size_t>(instance) + offsetOfInlineSlots);
-            slots[index] = value;
-        }
-        else
-        {
-            Assert((index - inlineSlotCapacity) < (slotCapacity - inlineSlotCapacity));
-            instance->auxSlots[index - inlineSlotCapacity] = value;
-        }
+        SetSlotAtAddress(GetSlotAddress(instance, index), slotType, value, instance, index);
     }
 
 #if DBG
-    void DynamicTypeHandler::SetInlineSlot(DynamicObject* instance, PropertyId propertyId, bool allowLetConst, int index, Var value)
+    ObjectSlotType DynamicTypeHandler::SetInlineSlot(DynamicObject* instance, PropertyId propertyId, bool allowLetConst, int index, const ObjectSlotType slotType, Var value)
 #else
-    void DynamicTypeHandler::SetInlineSlot(DynamicObject* instance, int index, Var value)
+    ObjectSlotType DynamicTypeHandler::SetInlineSlot(DynamicObject* instance, int index, const ObjectSlotType slotType, Var value)
 #endif
     {
-        // We should only assign a stack value only to a stack object (current mark temp number in mark temp object)
+        DynamicTypeHandler *const typeHandler = instance->GetTypeHandler();
         Assert(ThreadContext::IsOnStack(instance) || !ThreadContext::IsOnStack(value) || TaggedNumber::Is(value));
-        AssertMsg(index >= (int)(offsetOfInlineSlots / sizeof(Var)), "index should be relative to the address of the object");
-        Assert(index - (int)(offsetOfInlineSlots / sizeof(Var)) < this->GetInlineSlotCapacity());
-        Assert(propertyId == Constants::NoProperty || CanStorePropertyValueDirectly(instance, propertyId, allowLetConst));
+        AssertMsg(index >= (int)(typeHandler->offsetOfInlineSlots / sizeof(Var)), "index should be relative to the address of the object");
+        Assert(index - (int)(typeHandler->offsetOfInlineSlots / sizeof(Var)) < typeHandler->GetInlineSlotCapacity());
+        Assert(propertyId == Constants::NoProperty || typeHandler->CanStorePropertyValueDirectly(instance, propertyId, allowLetConst));
+
+        const BigPropertyIndex slotIndex =
+            static_cast<BigPropertyIndex>(index - typeHandler->offsetOfInlineSlots / sizeof(Var));
         Var * slots = reinterpret_cast<Var*>(instance);
-        slots[index] = value;
+        return SetSlotAtAddress(&slots[index], slotType, value, instance, slotIndex);
     }
 
 #if DBG
-    void DynamicTypeHandler::SetAuxSlot(DynamicObject* instance, PropertyId propertyId, bool allowLetConst, int index, Var value)
+    ObjectSlotType DynamicTypeHandler::SetAuxSlot(DynamicObject* instance, PropertyId propertyId, bool allowLetConst, int index, const ObjectSlotType slotType, Var value)
 #else
-    void DynamicTypeHandler::SetAuxSlot(DynamicObject* instance, int index, Var value)
+    ObjectSlotType DynamicTypeHandler::SetAuxSlot(DynamicObject* instance, int index, const ObjectSlotType slotType, Var value)
 #endif
     {
-        // We should only assign a stack value only to a stack object (current mark temp number in mark temp object)
-        Assert(ThreadContext::IsOnStack(instance) || !ThreadContext::IsOnStack(value) || TaggedNumber::Is(value));
-        Assert(index < GetSlotCapacity() - GetInlineSlotCapacity());
-        Assert(propertyId == Constants::NoProperty || CanStorePropertyValueDirectly(instance, propertyId, allowLetConst));
-        instance->auxSlots[index] = value;
+        DynamicTypeHandler *const typeHandler = instance->GetTypeHandler();
+        Assert(index < typeHandler->GetSlotCapacity() - typeHandler->GetInlineSlotCapacity());
+        Assert(propertyId == Constants::NoProperty || typeHandler->CanStorePropertyValueDirectly(instance, propertyId, allowLetConst));
+
+        const BigPropertyIndex slotIndex = static_cast<BigPropertyIndex>(index + typeHandler->GetInlineSlotCapacity());
+        return SetSlotAtAddress(&instance->auxSlots[index], slotType, value, instance, slotIndex);
+    }
+
+    void *DynamicTypeHandler::GetSlotAddress(DynamicObject *const object, const BigPropertyIndex bigSlotIndex)
+    {
+        return GetSlotAddressAsTypeHandler(object, object->GetTypeHandler(), bigSlotIndex);
+    }
+
+    void *DynamicTypeHandler::GetSlotAddressAsTypeHandler(
+        DynamicObject *const object,
+        DynamicTypeHandler *const typeHandler,
+        const BigPropertyIndex bigSlotIndex)
+    {
+        if(bigSlotIndex < static_cast<BigPropertyIndex>(typeHandler->inlineSlotCapacity))
+        {
+            Var *const slots = reinterpret_cast<Var *>(reinterpret_cast<size_t>(object) + typeHandler->offsetOfInlineSlots);
+            return &slots[bigSlotIndex];
+        }
+
+        Assert(
+            (bigSlotIndex - static_cast<BigPropertyIndex>(typeHandler->inlineSlotCapacity)) <
+            (typeHandler->slotCapacity - static_cast<BigPropertyIndex>(typeHandler->inlineSlotCapacity)));
+        return &object->auxSlots[bigSlotIndex - static_cast<BigPropertyIndex>(typeHandler->inlineSlotCapacity)];
+    }
+
+    Var DynamicTypeHandler::GetSlotAtAddress(
+        const void *const slot,
+        const ObjectSlotType slotType,
+        DynamicObject *const object,
+        const BigPropertyIndex bigSlotIndex)
+    {
+        return GetSlotAtAddressAsTypeHandler(slot, slotType, object, bigSlotIndex
+#if DBG
+            , object->GetTypeHandler()
+#endif
+            );
+    }
+
+    Var DynamicTypeHandler::GetSlotAtAddressAsTypeHandler(
+        const void *const slot,
+        const ObjectSlotType slotType,
+        DynamicObject *const object,
+        const BigPropertyIndex bigSlotIndex
+#if DBG
+        , DynamicTypeHandler *const typeHandler
+#endif
+        )
+    {
+#if DBG
+        Assert(slotType.IsValueTypeEqualTo(typeHandler->GetSlotType(bigSlotIndex)));
+#endif
+
+        if(slotType.IsVar())
+        {
+            return GetVarSlotAtAddress(slot);
+        }
+        return GetNativeSlotAtAddress(slot, slotType, object);
+    }
+
+    Var DynamicTypeHandler::GetVarSlotAtAddress(const void *const slot)
+    {
+        return *static_cast<const Var *>(slot);
+    }
+
+    int32 DynamicTypeHandler::GetIntSlotAtAddress(const void *const slot)
+    {
+        return *static_cast<const int32 *>(slot);
+    }
+
+    double DynamicTypeHandler::GetFloatSlotAtAddress(const void *const slot)
+    {
+        return *static_cast<const double *>(slot);
+    }
+
+    ObjectSlotType DynamicTypeHandler::SetSlotAtAddress(
+        void *const slot,
+        const ObjectSlotType slotType,
+        const Var varValue,
+        DynamicObject *const object,
+        const BigPropertyIndex bigSlotIndex)
+    {
+        Assert(slotType.IsValueTypeEqualTo(object->GetTypeHandler()->GetSlotType(bigSlotIndex)));
+
+        if(slotType.IsVar())
+        {
+            SetVarSlotAtAddress(slot, varValue, object);
+            return slotType;
+        }
+
+        return SetNativeSlotAtAddress(slot, slotType, varValue, object, bigSlotIndex);
+    }
+
+    void DynamicTypeHandler::SetVarSlotAtAddress(
+        void *const slot,
+        const Var varValue,
+        DynamicObject *const object)
+    {
+        // We should only assign stack value only to an stack object (current mark temp number in mark temp object)
+        Assert(ThreadContext::IsOnStack(object) || !ThreadContext::IsOnStack(varValue) || TaggedNumber::Is(varValue));
+
+        *static_cast<Var *>(slot) = varValue;
+    }
+
+    void DynamicTypeHandler::SetIntSlotAtAddress(void *const slot, const int32 intValue)
+    {
+        *static_cast<int32 *>(slot) = intValue;
+    }
+
+    void DynamicTypeHandler::SetFloatSlotAtAddress(void *const slot, const double floatValue)
+    {
+        *static_cast<double *>(slot) = floatValue;
     }
 
     void
@@ -584,7 +720,14 @@ namespace Js
     void DynamicTypeHandler::EnsureSlots(DynamicObject* instance, int oldCount, int newCount, ScriptContext * scriptContext, DynamicTypeHandler * newTypeHandler)
     {
         Assert(oldCount == instance->GetTypeHandler()->GetSlotCapacity());
-        AssertMsg(oldCount <= newCount, "Old count should be less than or equal to new count");
+        Assert(
+            oldCount <= newCount ||
+            (
+                GetSlotCount() <= GetInlineSlotCapacity() &&
+                newTypeHandler->GetSlotCount() > GetInlineSlotCapacity() &&
+                newTypeHandler->IsPathTypeHandler() &&
+                PathTypeHandler::FromTypeHandler(newTypeHandler)->HasWastedInlineSlot()
+            ));
 
         if (oldCount < newCount && newCount > GetInlineSlotCapacity())
         {
@@ -592,6 +735,91 @@ namespace Js
             Assert(newCount > newInlineSlotCapacity);
             AdjustSlots(instance, newInlineSlotCapacity, newCount - newInlineSlotCapacity);
         }
+    }
+
+    void DynamicTypeHandler::VerifySlotAddress(
+        const void *const slot,
+        DynamicObject *const object,
+        const BigPropertyIndex bigSlotIndex)
+    {
+        Assert(slot == GetSlotAddress(object, bigSlotIndex));
+    }
+
+    Var DynamicTypeHandler::GetNativeSlotAtAddress(
+        const void *const slot,
+        const ObjectSlotType slotType,
+        DynamicObject *const object)
+    {
+        Assert(!slotType.IsVar());
+
+        ScriptContext *const scriptContext = object->GetScriptContext();
+        if(slotType.IsInt())
+        {
+            return JavascriptNumber::ToVar(GetIntSlotAtAddress(slot), scriptContext);
+        }
+
+        Assert(slotType.IsFloat());
+        return JavascriptNumber::ToVarIntCheck(GetFloatSlotAtAddress(slot), scriptContext);
+    }
+
+    ObjectSlotType DynamicTypeHandler::SetNativeSlotAtAddress(
+        void *const slot,
+        const ObjectSlotType slotType,
+        const Var varValue,
+        DynamicObject *const object,
+        const BigPropertyIndex bigSlotIndex)
+    {
+        Assert(!slotType.IsVar());
+
+        const PropertyIndex slotIndex = static_cast<PropertyIndex>(bigSlotIndex);
+        Assert(static_cast<BigPropertyIndex>(slotIndex) == bigSlotIndex);
+
+        if(TaggedInt::Is(varValue))
+        {
+            const int32 intValue = TaggedInt::ToInt32(varValue);
+            if(slotType.IsInt())
+            {
+                SetIntSlotAtAddress(slot, intValue);
+                return slotType;
+            }
+
+            Assert(slotType.IsFloat());
+            SetFloatSlotAtAddress(slot, static_cast<double>(intValue));
+            return slotType;
+        }
+
+        if(JavascriptNumber::Is_NoTaggedIntCheck(varValue))
+        {
+            const double floatValue = JavascriptNumber::GetValue(varValue);
+            if(slotType.IsFloat())
+            {
+                SetFloatSlotAtAddress(slot, floatValue);
+                return slotType;
+            }
+
+            Assert(slotType.IsInt());
+            int32 intValue;
+            if(JavascriptNumber::TryGetInt32Value(floatValue, &intValue))
+            {
+                SetIntSlotAtAddress(slot, intValue);
+                return slotType;
+            }
+
+            const ObjectSlotType newSlotType =
+                PathTypeHandler::FromTypeHandler(object->GetTypeHandler())->ChangeSlotType(
+                    object,
+                    slotIndex,
+                    ObjectSlotType::GetFloat());
+            if(newSlotType.IsFloat())
+                SetFloatSlotAtAddress(slot, floatValue);
+            else
+                SetVarSlotAtAddress(slot, varValue, object);
+            return newSlotType;
+        }
+
+        PathTypeHandler::FromTypeHandler(object->GetTypeHandler())->ChangeSlotType(object, slotIndex, ObjectSlotType::GetVar());
+        SetVarSlotAtAddress(slot, varValue, object);
+        return ObjectSlotType::GetConvertedVar();
     }
 
     void DynamicTypeHandler::AdjustSlots_Jit(
@@ -620,6 +848,7 @@ namespace Js
         const int newAuxSlotCapacity)
     {
         Assert(object);
+        Assert(newAuxSlotCapacity != 0);
 
         // Allocate new aux slot array
         Recycler *const recycler = object->GetRecycler();
@@ -627,10 +856,14 @@ namespace Js
         Var *const newAuxSlots = reinterpret_cast<Var *>(recycler->AllocZero(newAuxSlotCapacity * sizeof(Var)));
 
         DynamicTypeHandler *const oldTypeHandler = object->GetTypeHandler();
-        const PropertyIndex oldInlineSlotCapacity = oldTypeHandler->GetInlineSlotCapacity();
-        if(oldInlineSlotCapacity == newInlineSlotCapacity)
+        Assert(newInlineSlotCapacity <= oldTypeHandler->GetInlineSlotCapacity());
+        if(!oldTypeHandler->IsObjectHeaderInlinedTypeHandler())
         {
-            const int oldAuxSlotCapacity = oldTypeHandler->GetSlotCapacity() - oldInlineSlotCapacity;
+            Assert(
+                newInlineSlotCapacity == oldTypeHandler->GetInlineSlotCapacity() ||
+                oldTypeHandler->GetSlotCount() < oldTypeHandler->GetInlineSlotCapacity());
+
+            const int oldAuxSlotCapacity = oldTypeHandler->GetSlotCapacity() - oldTypeHandler->GetInlineSlotCapacity();
             Assert(oldAuxSlotCapacity < newAuxSlotCapacity);
             if(oldAuxSlotCapacity > 0)
             {
@@ -654,23 +887,32 @@ namespace Js
 
         // An object header-inlined type handler is transitioning into one that is not. Some inline slots need to move, and
         // there are no old aux slots that need to be copied.
-        Assert(oldTypeHandler->IsObjectHeaderInlinedTypeHandler());
-        Assert(oldInlineSlotCapacity > newInlineSlotCapacity);
-        Assert(oldInlineSlotCapacity - newInlineSlotCapacity == DynamicTypeHandler::GetObjectHeaderInlinableSlotCapacity());
-        Assert(newAuxSlotCapacity >= DynamicTypeHandler::GetObjectHeaderInlinableSlotCapacity());
 
-        // Move the last few inline slots into the aux slots
+        Assert(newInlineSlotCapacity < oldTypeHandler->GetInlineSlotCapacity());
+        Assert(
+            newInlineSlotCapacity <=
+            oldTypeHandler->GetInlineSlotCapacity() - DynamicTypeHandler::GetObjectHeaderInlinableSlotCapacity());
+
+        // Move the last few inline slots into the aux slots.
+        //   - (oldInlineSlotCount - newInlineSlotCapacity) is the number of inline slots that need to be moved into aux slots
+        //   - newInlineSlotCapacity is the index of the first inline slot that needs to be moved into aux slots
         if(PHASE_TRACE1(Js::ObjectHeaderInliningPhase))
         {
             Output::Print(L"ObjectHeaderInlining: Moving inlined properties to aux slots.\n");
             Output::Flush();
         }
+        const PropertyIndex oldInlineSlotCount = static_cast<PropertyIndex>(oldTypeHandler->GetSlotCount());
+        Assert(oldInlineSlotCount == oldTypeHandler->GetSlotCount());
+        Assert(newInlineSlotCapacity >= oldInlineSlotCount || newAuxSlotCapacity >= oldInlineSlotCount - newInlineSlotCapacity);
         Var *const oldInlineSlots =
             reinterpret_cast<Var *>(
                 reinterpret_cast<uintptr_t>(object) + DynamicTypeHandler::GetOffsetOfObjectHeaderInlineSlots());
-        Assert(DynamicTypeHandler::GetObjectHeaderInlinableSlotCapacity() == 2);
-        newAuxSlots[0] = oldInlineSlots[oldInlineSlotCapacity - 2];
-        newAuxSlots[1] = oldInlineSlots[oldInlineSlotCapacity - 1];
+        for(PropertyIndex newAuxSlotIndex = 0, oldInlineSlotIndex = newInlineSlotCapacity;
+            oldInlineSlotIndex < oldInlineSlotCount;
+            ++newAuxSlotIndex, ++oldInlineSlotIndex)
+        {
+            newAuxSlots[newAuxSlotIndex] = oldInlineSlots[oldInlineSlotIndex];
+        }
 
         if(newInlineSlotCapacity > 0)
         {

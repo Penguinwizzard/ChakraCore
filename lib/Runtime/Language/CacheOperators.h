@@ -18,7 +18,7 @@ namespace Js
             bool IsAccessor,
             bool IsRead,
             bool IncludeTypePropertyCache>
-        static void Cache(const bool isProto, DynamicObject *const objectWithProperty, const bool isRoot, Type *const type, Type *const typeWithoutProperty, const PropertyId propertyId, const PropertyIndex propertyIndex, const bool isInlineSlot, const bool isMissing, const int requiredAuxSlotCapacity, const PropertyValueInfo *const info, ScriptContext *const requestContext);
+        static void Cache(bool isProto, DynamicObject *const objectWithProperty, const bool isRoot, Type *type, Type *typeWithoutProperty, const PropertyId propertyId, const PropertyIndex propertyIndex, const bool isInlineSlot, const bool isMissing, int requiredAuxSlotCapacity, PropertyValueInfo *const info, ScriptContext *const requestContext);
 
         template<
             bool CheckLocal,
@@ -45,11 +45,11 @@ namespace Js
         template<
             bool IsInlineCacheAvailable,
             bool IsPolymorphicInlineCacheAvailable>
-        static void PretendTryGetProperty(Type *const type, PropertyCacheOperationInfo * operationInfo, PropertyValueInfo *const propertyValueInfo);
+        static bool PretendTryGetProperty(Type *const type, PropertyCacheOperationInfo * operationInfo, PropertyValueInfo *const propertyValueInfo);
         template<
             bool IsInlineCacheAvailable,
             bool IsPolymorphicInlineCacheAvailable>
-        static void PretendTrySetProperty(Type *const type, Type *const oldType, PropertyCacheOperationInfo * operationInfo, PropertyValueInfo *const propertyValueInfo);
+        static bool PretendTrySetProperty(Type *const type, Type *const oldType, PropertyCacheOperationInfo * operationInfo, PropertyValueInfo *const propertyValueInfo);
 
 #if DBG_DUMP
         static void TraceCache(InlineCache * inlineCache, const wchar_t * methodName, PropertyId propertyId, ScriptContext * requestContext, RecyclableObject * object);
@@ -61,6 +61,7 @@ namespace Js
         static bool CanCachePropertyRead(RecyclableObject * object, ScriptContext * requestContext);
         static bool CanCachePropertyWrite(const PropertyValueInfo *info, RecyclableObject * object, ScriptContext * requestContext);
         static bool CanCachePropertyWrite(RecyclableObject * object, ScriptContext * requestContext);
+        static bool CanCachePropertyAdd(DynamicObject *const object, Type *const typeWithoutProperty, const bool isInlineSlot, const PropertyIndex inlineOrAuxSlotIndex, const PropertyValueInfo *const info, int *const requiredAuxSlotCapacityRef);
 
 #if DBG_DUMP
         static void TraceCacheCommon(const wchar_t * methodName, PropertyId propertyId, ScriptContext * requestContext, RecyclableObject * object);

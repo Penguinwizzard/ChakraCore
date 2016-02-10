@@ -555,6 +555,8 @@ Js::Var StackSym::GetFloatConstValueAsVar_PostGlobOpt() const
     {
         Assert(defInstr->m_opcode == Js::OpCode::Ld_A);
         addrOpnd = src1->AsAddrOpnd();
+        Assert(addrOpnd->IsVar());
+        Assert(addrOpnd->GetValueType().IsNumber());
     }
     else
     {

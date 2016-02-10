@@ -913,7 +913,7 @@ GlobOpt::MayNeedBailOut(Loop * loop) const
 }
 
 bool
-GlobOpt::MayNeedBailOnImplicitCall(IR::Opnd * opnd, Value *val, bool callsToPrimitive)
+GlobOpt::MayNeedBailOnImplicitCall(const IR::Instr *const instr, IR::Opnd * opnd, Value *val, bool callsToPrimitive)
 {
     switch (opnd->GetKind())
     {
@@ -935,7 +935,7 @@ GlobOpt::MayNeedBailOnImplicitCall(IR::Opnd * opnd, Value *val, bool callsToPrim
         if (opnd->AsSymOpnd()->IsPropertySymOpnd())
         {
             IR::PropertySymOpnd* propertySymOpnd = opnd->AsSymOpnd()->AsPropertySymOpnd();
-            if (!propertySymOpnd->MayHaveImplicitCall())
+            if (instr->HasTypeCheckBailOut() || !propertySymOpnd->MayHaveImplicitCall())
             {
                 return false;
             }
@@ -963,7 +963,7 @@ GlobOpt::IsImplicitCallBailOutCurrentlyNeeded(IR::Instr * instr, Value *src1Val,
         (
             NeedBailOnImplicitCallForLiveValues(block, isForwardPass) ||
             NeedBailOnImplicitCallForCSE(block, isForwardPass) ||
-            NeedBailOnImplicitCallWithFieldOpts(block->loop, hasLiveFields) ||
+            NeedBailOnImplicitCallWithFieldOpts(instr, block->loop, hasLiveFields) ||
             NeedBailOnImplicitCallForArrayCheckHoist(block, isForwardPass)
         ) &&
         (!instr->HasTypeCheckBailOut() && MayNeedBailOnImplicitCall(instr, src1Val, src2Val)))
@@ -1104,12 +1104,12 @@ GlobOpt::MayNeedBailOnImplicitCall(const IR::Instr * instr, Value *src1Val, Valu
     IR::Opnd * opnd = instr->GetSrc1();
 
     bool callsToPrimitive = OpCodeAttr::CallsValueOf(instr->m_opcode);
-    if (opnd != nullptr && MayNeedBailOnImplicitCall(opnd, src1Val, callsToPrimitive))
+    if (opnd != nullptr && MayNeedBailOnImplicitCall(instr, opnd, src1Val, callsToPrimitive))
     {
         return true;
     }
     opnd = instr->GetSrc2();
-    if (opnd != nullptr && MayNeedBailOnImplicitCall(opnd, src2Val, callsToPrimitive))
+    if (opnd != nullptr && MayNeedBailOnImplicitCall(instr, opnd, src2Val, callsToPrimitive))
     {
         return true;
     }
@@ -1136,7 +1136,8 @@ GlobOpt::MayNeedBailOnImplicitCall(const IR::Instr * instr, Value *src1Val, Valu
             if (opnd->AsSymOpnd()->IsPropertySymOpnd())
             {
                 IR::PropertySymOpnd* propertySymOpnd = opnd->AsSymOpnd()->AsPropertySymOpnd();
-                if (!propertySymOpnd->MayHaveImplicitCall())
+                if (instr->HasTypeCheckBailOut() ||
+                    !propertySymOpnd->MayHaveImplicitCall() && !instr->HasBailOutKind(IR::BailOutOnFieldSlotTypeMismatch))
                 {
                     return false;
                 }
@@ -1162,6 +1163,9 @@ GlobOpt::GenerateBailAfterOperation(IR::Instr * *const pInstr, IR::BailOutKind k
 
     IR::Instr* instr = *pInstr;
     Assert(instr);
+    Assert(!instr->HasBailOutInfo());
+    Assert(instr->GetByteCodeOffset() != Js::Constants::NoByteCodeOffset);
+    Assert(kind != IR::BailOutInvalid);
 
     IR::Instr * nextInstr = instr->GetNextRealInstrOrLabel();
     uint32 currentOffset = instr->GetByteCodeOffset();
@@ -1186,6 +1190,7 @@ GlobOpt::GenerateBailAtOperation(IR::Instr * *const pInstr, const IR::BailOutKin
 
     IR::Instr * instr = *pInstr;
     Assert(instr);
+    Assert(!instr->HasBailOutInfo());
     Assert(instr->GetByteCodeOffset() != Js::Constants::NoByteCodeOffset);
     Assert(bailOutKind != IR::BailOutInvalid);
 

@@ -108,8 +108,7 @@ public:
               bool            GenerateFastShiftLeft(IR::Instr * instrShift) { __debugbreak(); return 0; }
               bool            GenerateFastShiftRight(IR::Instr * instrShift) { __debugbreak(); return 0; }
               void            GenerateFastBrS(IR::BranchInstr *brInstr) { __debugbreak(); }
-              IR::IndirOpnd * GenerateFastElemIStringIndexCommon(IR::Instr * instr, bool isStore, IR::IndirOpnd *indirOpnd, IR::LabelInstr * labelHelper) { __debugbreak(); return 0; }
-              void            GenerateFastInlineBuiltInCall(IR::Instr* instr, IR::JnHelperMethod helperMethod) { __debugbreak(); }
+              void            GenerateFastInlineBuiltInCall(IR::Instr* instr, IR::JnHelperMethod helperMethod) { __debugbreak(); }              
               void            HelperCallForAsmMathBuiltin(IR::Instr* instr, IR::JnHelperMethod helperMethodFloat, IR::JnHelperMethod helperMethodDouble) { __debugbreak(); }
               IR::Opnd *      CreateStackArgumentsSlotOpnd() { __debugbreak(); return 0; }
               void            GenerateSmIntTest(IR::Opnd *opndSrc, IR::Instr *insertInstr, IR::LabelInstr *labelHelper, IR::Instr **instrFirst = nullptr, bool fContinueLabel = false) { __debugbreak(); }
@@ -139,9 +138,9 @@ public:
        static void            EmitInt4Instr(IR::Instr *instr) { __debugbreak(); }
        static void            EmitPtrInstr(IR::Instr *instr) { __debugbreak(); }
               void            EmitLoadVar(IR::Instr *instr, bool isFromUint32 = false, bool isHelper = false) { __debugbreak(); }
-              bool            EmitLoadInt32(IR::Instr *instr, bool conversionFromObjectAllowed) { __debugbreak(); return 0; }
+              bool            EmitLoadInt32(IR::Instr *instr, const bool isInHelperBlock, bool conversionFromObjectAllowed) { __debugbreak(); return 0; }
 
-       static void            LowerInt4NegWithBailOut(IR::Instr *const instr, const IR::BailOutKind bailOutKind, IR::LabelInstr *const bailOutLabel, IR::LabelInstr *const skipBailOutLabel) { __debugbreak(); }
+              static void            LowerInt4NegWithBailOut(IR::Instr *const instr, const IR::BailOutKind bailOutKind, IR::LabelInstr *const bailOutLabel, IR::LabelInstr *const skipBailOutLabel) { __debugbreak(); }
        static void            LowerInt4AddWithBailOut(IR::Instr *const instr, const IR::BailOutKind bailOutKind, IR::LabelInstr *const bailOutLabel, IR::LabelInstr *const skipBailOutLabel) { __debugbreak(); }
        static void            LowerInt4SubWithBailOut(IR::Instr *const instr, const IR::BailOutKind bailOutKind, IR::LabelInstr *const bailOutLabel, IR::LabelInstr *const skipBailOutLabel) { __debugbreak(); }
        static void            LowerInt4MulWithBailOut(IR::Instr *const instr, const IR::BailOutKind bailOutKind, IR::LabelInstr *const bailOutLabel, IR::LabelInstr *const skipBailOutLabel) { __debugbreak(); }
@@ -150,9 +149,9 @@ public:
               void            GenerateNumberAllocation(IR::RegOpnd * opndDst, IR::Instr * instrInsert, bool isHelper) { __debugbreak(); }
               void            GenerateFastRecyclerAlloc(size_t allocSize, IR::RegOpnd* newObjDst, IR::Instr* insertionPointInstr, IR::LabelInstr* allocHelperLabel, IR::LabelInstr* allocDoneLabel) { __debugbreak(); }
               void            SaveDoubleToVar(IR::RegOpnd * dstOpnd, IR::RegOpnd *opndFloat, IR::Instr *instrOrig, IR::Instr *instrInsert, bool isHelper = false) { __debugbreak(); }
-              IR::RegOpnd *   EmitLoadFloat(IR::Opnd *dst, IR::Opnd *src, IR::Instr *insertInstr) { __debugbreak(); return 0; }
-              IR::Instr *     LoadCheckedFloat(IR::RegOpnd *opndOrig, IR::RegOpnd *opndFloat, IR::LabelInstr *labelInline, IR::LabelInstr *labelHelper, IR::Instr *instrInsert) { __debugbreak(); return 0; }
-
+              IR::RegOpnd *   EmitLoadFloat(IR::Opnd *dst, IR::Opnd *src, IR::Instr *insertInstr, const bool isInHelperBlock) { __debugbreak(); return 0; }
+              IR::Instr *     LoadCheckedFloat(IR::RegOpnd *opndOrig, IR::RegOpnd *opndFloat, IR::LabelInstr *labelInline, IR::LabelInstr *labelHelper, IR::Instr *instrInsert, const bool isInHelperBlock, const bool checkForNullInLoopBody = false) { __debugbreak(); return 0; }
+  
               void LoadFloatValue(IR::RegOpnd * javascriptNumber, IR::RegOpnd * opndFloat, IR::LabelInstr * labelHelper, IR::Instr * instrInsert) { __debugbreak(); }
 
               IR::Instr *     LoadStackAddress(StackSym *sym, IR::RegOpnd* regDst = nullptr) { __debugbreak(); return 0; }
@@ -200,7 +199,7 @@ public:
               void                EmitFloat32ToFloat64(IR::Opnd *dst, IR::Opnd *src, IR::Instr *instrInsert) { __debugbreak(); }
               static IR::Instr *  InsertConvertFloat64ToInt32(const RoundMode roundMode, IR::Opnd *const dst, IR::Opnd *const src, IR::Instr *const insertBeforeInstr) { __debugbreak(); return 0; }
               void                EmitLoadFloatFromNumber(IR::Opnd *dst, IR::Opnd *src, IR::Instr *insertInstr) { __debugbreak(); }
-              IR::LabelInstr*     EmitLoadFloatCommon(IR::Opnd *dst, IR::Opnd *src, IR::Instr *insertInstr, bool needHelperLabel) { __debugbreak(); return 0; }
+              IR::LabelInstr*     EmitLoadFloatCommon(IR::Opnd *dst, IR::Opnd *src, IR::Instr *insertInstr, bool needHelperLabel, const bool isInHelperBlock) { __debugbreak(); return 0; }
               static IR::Instr *  LoadFloatZero(IR::Opnd * opndDst, IR::Instr * instrInsert) { __debugbreak(); return 0; }
               static IR::Instr *  LoadFloatValue(IR::Opnd * opndDst, double value, IR::Instr * instrInsert) { __debugbreak(); return 0; }
 
@@ -243,8 +242,6 @@ public:
               // -4 is to avoid alignment issues popping up, we are conservative here.
               // We might check for IsSmallStack first to push R4 register & then align.
               static bool         IsSmallStack(uint32 size)   { return (size < (PAGESIZE - 4)); }
-
-              static void GenerateLoadTaggedType(IR::Instr * instrLdSt, IR::RegOpnd * opndType, IR::RegOpnd * opndTaggedType) { __debugbreak(); }
               static void GenerateLoadPolymorphicInlineCacheSlot(IR::Instr * instrLdSt, IR::RegOpnd * opndInlineCache, IR::RegOpnd * opndType, uint polymorphicInlineCacheSize) { __debugbreak(); }
               static IR::BranchInstr * GenerateLocalInlineCacheCheck(IR::Instr * instrLdSt, IR::RegOpnd * opndType, IR::RegOpnd * opndInlineCache, IR::LabelInstr * labelNext, bool checkTypeWithoutProperty = false) { __debugbreak(); return 0; }
               static IR::BranchInstr * GenerateProtoInlineCacheCheck(IR::Instr * instrLdSt, IR::RegOpnd * opndType, IR::RegOpnd * opndInlineCache, IR::LabelInstr * labelNext) { __debugbreak(); return 0; }
@@ -253,7 +250,6 @@ public:
               static IR::BranchInstr * GenerateFlagInlineCacheCheckForLocal(IR::Instr * instrLdSt, IR::RegOpnd * opndType, IR::RegOpnd * opndInlineCache, IR::LabelInstr * labelNext) { __debugbreak(); return 0; }
               static void GenerateLdFldFromLocalInlineCache(IR::Instr * instrLdFld, IR::RegOpnd * opndBase, IR::Opnd * opndDst, IR::RegOpnd * opndInlineCache, IR::LabelInstr * labelFallThru, bool isInlineSlot) { __debugbreak(); }
               static void GenerateLdFldFromProtoInlineCache(IR::Instr * instrLdFld, IR::RegOpnd * opndBase, IR::Opnd * opndDst, IR::RegOpnd * opndInlineCache, IR::LabelInstr * labelFallThru, bool isInlineSlot) { __debugbreak(); }
-              static void GenerateLdLocalFldFromFlagInlineCache(IR::Instr * instrLdFld, IR::RegOpnd * opndBase, IR::Opnd * opndDst, IR::RegOpnd * opndInlineCache, IR::LabelInstr * labelFallThru, bool isInlineSlot) { __debugbreak(); }
               static void GenerateStFldFromLocalInlineCache(IR::Instr * instrStFld, IR::RegOpnd * opndBase, IR::Opnd * opndSrc, IR::RegOpnd * opndInlineCache, IR::LabelInstr * labelFallThru, bool isInlineSlot) { __debugbreak(); }
 
               static void ChangeToWriteBarrierAssign(IR::Instr * assignInstr) { __debugbreak(); }

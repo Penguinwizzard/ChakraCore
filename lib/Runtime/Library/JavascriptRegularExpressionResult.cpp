@@ -14,7 +14,7 @@ namespace Js
         JavascriptArray* arr = JavascriptArray::New<JavascriptArray, InlineSlotCount>(stackAllocationPointer, 0, scriptContext->GetLibrary()->GetRegexResultType()); // use default array capacity
 
         Assert(JavascriptRegularExpressionResult::Is(arr));
-        arr->SetSlot(SetSlotArguments(BuiltInPropertyRecords::input.propertyRecord.GetPropertyId(), InputIndex, input));
+        arr->SetSlot(SetSlotArguments(BuiltInPropertyRecords::input.propertyRecord.GetPropertyId(), InputIndex, ObjectSlotType::GetVar(), input));
 
         // SetMatch must be called with a valid match before the object is given to script code
         // Each item will be filled in by the match loop
@@ -32,7 +32,7 @@ namespace Js
         JavascriptArray* arr = JavascriptArray::NewLiteral<JavascriptArray, InlineSlotCount>(stackAllocationPointer, numGroups, scriptContext->GetLibrary()->GetRegexResultType());
 
         Assert(JavascriptRegularExpressionResult::Is(arr));
-        arr->SetSlot(SetSlotArguments(BuiltInPropertyRecords::input.propertyRecord.GetPropertyId(), InputIndex, input));
+        arr->SetSlot(SetSlotArguments(BuiltInPropertyRecords::input.propertyRecord.GetPropertyId(), InputIndex, ObjectSlotType::GetVar(), input));
 
         // SetMatch must be called with a valid match before the object is given to script code
         // Each item will be filled in by the match loop
@@ -56,7 +56,7 @@ namespace Js
         Assert(!match.IsUndefined());
 
         ScriptContext* scriptContext = arr->GetScriptContext();
-        arr->SetSlot(SetSlotArguments(BuiltInPropertyRecords::index.propertyRecord.GetPropertyId(), IndexIndex, JavascriptNumber::ToVar(match.offset, scriptContext)));
+        arr->SetSlot(SetSlotArguments(BuiltInPropertyRecords::index.propertyRecord.GetPropertyId(), IndexIndex, ObjectSlotType::GetVar(), JavascriptNumber::ToVar(match.offset, scriptContext)));
     }
 
     void JavascriptRegularExpressionResult::InstantiateForceInlinedMembers()

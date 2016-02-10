@@ -451,7 +451,7 @@ NativeCodeGenerator::RejitIRViewerFunction(Js::FunctionBody *fn, Js::ScriptConte
 
     entryPoint->SetCodeGenPendingWithStackAllocatedWorkItem();
     entryPoint->SetCodeGenQueued();
-    const auto recyclableData = GatherCodeGenData(fn, fn, entryPoint, &workitem);
+    const auto recyclableData = GatherCodeGenData(fn, entryPoint, &workitem);
     workitem.SetRecyclableData(recyclableData);
 
     nativeCodeGenerator->CodeGen(pageAllocator, &workitem, true);
@@ -1167,11 +1167,8 @@ NativeCodeGenerator::CheckCodeGen(Js::ScriptFunction * function)
              || scriptContext->IsDynamicInterpreterThunk(originalEntryPoint)
              || originalEntryPoint == ProfileDeferredParsingThunk
              || originalEntryPoint == DefaultDeferredParsingThunk
-             || (
-                    functionBody->GetSimpleJitEntryPointInfo() &&
-                    originalEntryPoint ==
-                        reinterpret_cast<Js::JavascriptMethod>(functionBody->GetSimpleJitEntryPointInfo()->GetNativeAddress())
-                )
+             || functionBody->IsSimpleJitOriginalEntryPoint()
+             || functionBody->IsLastFullJitOriginalEntryPoint()
             ) ||
             functionBody->GetDefaultFunctionEntryPointInfo()->entryPointIndex > function->GetFunctionEntryPointInfo()->entryPointIndex);
         return (scriptContext->CurrentThunk == ProfileEntryThunk) ? ProfileEntryThunk : originalEntryPoint;
@@ -1635,7 +1632,7 @@ NativeCodeGenerator::GetJobToProcessProactively()
             }
             Js::FunctionBody *fn = workItem->GetFunctionBody();
             Js::EntryPointInfo *entryPoint = workItem->GetEntryPoint();
-            const auto recyclableData = GatherCodeGenData(fn, fn, entryPoint, workItem);
+            const auto recyclableData = GatherCodeGenData(fn, entryPoint, workItem);
 
             workItems.Unlink(workItem);
             workItem->SetRecyclableData(recyclableData);
@@ -1705,11 +1702,13 @@ NativeCodeGenerator::GatherCodeGenData(
 {
     ASSERT_THREAD();
     Assert(recycler);
+    Assert(topFunctionBody);
     Assert(functionBody);
+    Assert(entryPoint);
     Assert(jitTimeData);
     Assert(IsInlinee == !!runtimeData);
     Assert(!IsInlinee || !inliningDecider.GetIsLoopBody());
-    Assert(topFunctionBody != nullptr && (!entryPoint->GetWorkItem() || entryPoint->GetWorkItem()->GetFunctionBody() == topFunctionBody));
+    Assert(!entryPoint->GetWorkItem() || entryPoint->GetWorkItem()->GetFunctionBody() == topFunctionBody);
     Assert(objTypeSpecFldInfoList != nullptr);
 
 #ifdef FIELD_ACCESS_STATS
@@ -1732,10 +1731,14 @@ NativeCodeGenerator::GatherCodeGenData(
     if(PHASE_ON(Js::Phase::SimulatePolyCacheWithOneTypeForFunctionPhase, functionBody))
     {
         const Js::InlineCacheIndex inlineCacheIndex = CONFIG_FLAG(SimulatePolyCacheWithOneTypeForInlineCacheIndex);
+        Js::InlineCache *const inlineCache = functionBody->GetInlineCache(inlineCacheIndex);
+        Assert(inlineCache->IsLocal());
+        Assert(inlineCache->u.local.type);
         functionBody->CreateNewPolymorphicInlineCache(
             inlineCacheIndex,
             functionBody->GetPropertyIdFromCacheId(inlineCacheIndex),
-            functionBody->GetInlineCache(inlineCacheIndex));
+            Js::InlineCacheTypeTagger::GetSlotType(inlineCache->u.local.type),
+            inlineCache);
         if(functionBody->HasDynamicProfileInfo())
         {
             functionBody->GetAnyDynamicProfileInfo()->RecordPolymorphicFieldAccess(functionBody, inlineCacheIndex);
@@ -1845,6 +1848,13 @@ NativeCodeGenerator::GatherCodeGenData(
         Assert(functionBody->GetProfiledFldCount() == functionBody->GetInlineCacheCount()); // otherwise, isInst inline caches need to be cloned
         for(uint i = 0; i < functionBody->GetInlineCacheCount(); ++i)
         {
+            Js::InlineCache *const inlineCache =
+                function && Js::ScriptFunctionWithInlineCache::Is(function)
+                    ? Js::ScriptFunctionWithInlineCache::FromVar(function)->GetInlineCache(i)
+                    : functionBody->GetInlineCache(i);
+            inlineCache->InitializeSlotType(functionBody, i);
+            jitTimeData->SetFieldSlotType(i, inlineCache->GetSlotType());
+
             const auto cacheType = profileData->GetFldInfo(functionBody, i)->flags;
 
             PHASE_PRINT_VERBOSE_TESTTRACE(
@@ -1865,16 +1875,6 @@ NativeCodeGenerator::GatherCodeGenData(
             bool isPolymorphic = (cacheType & Js::FldInfo_Polymorphic) != 0;
             if (!isPolymorphic)
             {
-                Js::InlineCache *inlineCache;
-                if(function && Js::ScriptFunctionWithInlineCache::Is(function))
-                {
-                    inlineCache = Js::ScriptFunctionWithInlineCache::FromVar(function)->GetInlineCache(i);
-                }
-                else
-                {
-                    inlineCache = functionBody->GetInlineCache(i);
-                }
-
                 Js::ObjTypeSpecFldInfo* objTypeSpecFldInfo = nullptr;
 
 #if ENABLE_DEBUG_CONFIG_OPTIONS
@@ -1911,6 +1911,7 @@ NativeCodeGenerator::GatherCodeGenData(
                             objTypeSpecFldInfo = Js::ObjTypeSpecFldInfo::CreateFrom(objTypeSpecFldInfoList->Count(), inlineCache, i, entryPoint, topFunctionBody, functionBody, InlineCacheStatsArg(jitTimeData));
                             if (objTypeSpecFldInfo)
                             {
+                                Assert(objTypeSpecFldInfo->GetSlotType() == jitTimeData->GetFieldSlotType(i));
                                 IncInlineCacheCount(clonedMonoInlineCacheCount);
 
                                 if (!PHASE_OFF(Js::InlineApplyTargetPhase, functionBody) && (cacheType & Js::FldInfo_InlineCandidate))
@@ -1941,6 +1942,7 @@ NativeCodeGenerator::GatherCodeGenData(
                         objTypeSpecFldInfo = Js::ObjTypeSpecFldInfo::CreateFrom(objTypeSpecFldInfoList->Count(), inlineCache, i, entryPoint, topFunctionBody, functionBody, InlineCacheStatsArg(jitTimeData));
                         if (objTypeSpecFldInfo)
                         {
+                            Assert(objTypeSpecFldInfo->GetSlotType() == jitTimeData->GetFieldSlotType(i));
                             inlineGetterSetter = true;
                             if (!isJitTimeDataComputed)
                             {
@@ -1956,13 +1958,13 @@ NativeCodeGenerator::GatherCodeGenData(
                 {
                     if (i >= functionBody->GetRootObjectLoadInlineCacheStart() && inlineCache->IsLocal())
                     {
-                        void * rawType = inlineCache->u.local.type;
-                        Js::Type * type = TypeWithoutAuxSlotTag(rawType);
+                        Js::Type * rawType = inlineCache->u.local.type;
+                        Js::Type * type = Js::InlineCacheTypeTagger::TypeWithoutAnyTags(rawType);
                         Js::RootObjectBase * rootObject = functionBody->GetRootObject();
                         if (rootObject->GetType() == type)
                         {
                             Js::BigPropertyIndex propertyIndex = inlineCache->u.local.slotIndex;
-                            if (rawType == type)
+                            if (!Js::InlineCacheTypeTagger::TypeHasAuxSlotTag(rawType))
                             {
                                 // type is not tagged, inline slot
                                 propertyIndex = rootObject->GetPropertyIndexFromInlineSlotIndex(inlineCache->u.local.slotIndex);
@@ -1982,6 +1984,7 @@ NativeCodeGenerator::GatherCodeGenData(
                                     objTypeSpecFldInfo = Js::ObjTypeSpecFldInfo::CreateFrom(objTypeSpecFldInfoList->Count(), inlineCache, i, entryPoint, topFunctionBody, functionBody, InlineCacheStatsArg(jitTimeData));
                                     if (objTypeSpecFldInfo)
                                     {
+                                        Assert(objTypeSpecFldInfo->GetSlotType() == jitTimeData->GetFieldSlotType(i));
                                         IncInlineCacheCount(clonedMonoInlineCacheCount);
                                         jitTimeData->GetObjTypeSpecFldInfoArray()->SetInfo(recycler, functionBody, i, objTypeSpecFldInfo);
                                         objTypeSpecFldInfoList->Prepend(objTypeSpecFldInfo);
@@ -1999,9 +2002,7 @@ NativeCodeGenerator::GatherCodeGenData(
             // Even if the FldInfo says that the field access may be polymorphic, be optimistic that if the function object has inline caches, they'll be monomorphic
             else if(function && Js::ScriptFunctionWithInlineCache::Is(function) && (cacheType & Js::FldInfo_InlineCandidate || !polymorphicCacheOnFunctionBody))
             {
-                Js::InlineCache *inlineCache = Js::ScriptFunctionWithInlineCache::FromVar(function)->GetInlineCache(i);
                 Js::ObjTypeSpecFldInfo* objTypeSpecFldInfo = nullptr;
-
                 if(!PHASE_OFF(Js::ObjTypeSpecPhase, functionBody) || !PHASE_OFF(Js::FixedMethodsPhase, functionBody))
                 {
                     if(cacheType & (Js::FldInfo_FromLocal | Js::FldInfo_FromProto))  // Remove FldInfo_FromLocal?
@@ -2016,6 +2017,7 @@ NativeCodeGenerator::GatherCodeGenData(
                             objTypeSpecFldInfo = Js::ObjTypeSpecFldInfo::CreateFrom(objTypeSpecFldInfoList->Count(), inlineCache, i, entryPoint, topFunctionBody, functionBody, InlineCacheStatsArg(jitTimeData));
                             if (objTypeSpecFldInfo)
                             {
+                                Assert(objTypeSpecFldInfo->GetSlotType() == jitTimeData->GetFieldSlotType(i));
                                 IncInlineCacheCount(clonedMonoInlineCacheCount);
 
                                 if (!PHASE_OFF(Js::InlineApplyTargetPhase, functionBody) && IsInlinee && (cacheType & Js::FldInfo_InlineCandidate))
@@ -2038,6 +2040,8 @@ NativeCodeGenerator::GatherCodeGenData(
 
                 if (polymorphicInlineCache != nullptr)
                 {
+                    jitTimeData->SetFieldSlotType(i, polymorphicInlineCache->GetSlotType());
+
                     IncInlineCacheCount(polyInlineCacheCount);
                     if (profileData->GetFldInfo(functionBody, i)->ShouldUsePolymorphicInlineCache())
                     {
@@ -2069,6 +2073,7 @@ NativeCodeGenerator::GatherCodeGenData(
                             Js::ObjTypeSpecFldInfo* objTypeSpecFldInfo = Js::ObjTypeSpecFldInfo::CreateFrom(objTypeSpecFldInfoList->Count(), polymorphicInlineCache, i, entryPoint, topFunctionBody, functionBody, InlineCacheStatsArg(jitTimeData));
                             if (objTypeSpecFldInfo != nullptr)
                             {
+                                Assert(objTypeSpecFldInfo->GetSlotType() == jitTimeData->GetFieldSlotType(i));
                                 if (!isJitTimeDataComputed)
                                 {
                                     jitTimeData->GetObjTypeSpecFldInfoArray()->SetInfo(recycler, functionBody, i, objTypeSpecFldInfo);
@@ -2098,6 +2103,8 @@ NativeCodeGenerator::GatherCodeGenData(
 
                 if (polymorphicInlineCache != nullptr)
                 {
+                    Assert(jitTimeData->GetFieldSlotType(i) == polymorphicInlineCache->GetSlotType());
+
                     if (PHASE_VERBOSE_TRACE1(Js::PolymorphicInlineCachePhase))
                     {
                         if (IsInlinee) Output::Print(L"\t");
@@ -2130,10 +2137,6 @@ NativeCodeGenerator::GatherCodeGenData(
                 {
                     // Clone polymorphic inline caches for runtime usage in this inlinee. The JIT should only use the pointers to
                     // the inline caches, as their cached data is not guaranteed to be stable while jitting.
-                    Js::InlineCache *const inlineCache =
-                        function && Js::ScriptFunctionWithInlineCache::Is(function)
-                            ? Js::ScriptFunctionWithInlineCache::FromVar(function)->GetInlineCache(i)
-                            : functionBody->GetInlineCache(i);
                     Js::PropertyId propertyId = functionBody->GetPropertyIdFromCacheId(i);
                     const auto clone = runtimeData->ClonedInlineCaches()->GetInlineCache(functionBody, i);
                     if (clone)
@@ -2212,7 +2215,12 @@ NativeCodeGenerator::GatherCodeGenData(
 
                     if (!isJitTimeDataComputed)
                     {
-                        Js::FunctionCodeGenJitTimeData  *inlineeJitTimeData = jitTimeData->AddInlinee(recycler, profiledCallSiteId, inlineeFunctionBodyArray[id], isInlined);
+                        Js::FunctionCodeGenJitTimeData  *inlineeJitTimeData =
+                            jitTimeData->AddInlinee(
+                                recycler,
+                                profiledCallSiteId,
+                                inlineeFunctionBodyArray[id],
+                                isInlined);
                         if (isInlined)
                         {
                             GatherCodeGenData<true>(
@@ -2333,7 +2341,8 @@ NativeCodeGenerator::GatherCodeGenData(
             }
             else
             {
-                Js::FunctionCodeGenJitTimeData *const inlineeJitTimeData = jitTimeData->AddInlinee(recycler, profiledCallSiteId, inlinee);
+                Js::FunctionCodeGenJitTimeData *const inlineeJitTimeData =
+                    jitTimeData->AddInlinee(recycler, profiledCallSiteId, inlinee);
                 GatherCodeGenData<true>(
                     recycler,
                     topFunctionBody,
@@ -2343,8 +2352,8 @@ NativeCodeGenerator::GatherCodeGenData(
                     objTypeSpecFldInfoList,
                     inlineeJitTimeData,
                     IsInlinee
-                    ? runtimeData->EnsureInlinee(recycler, profiledCallSiteId, inlineeFunctionBody)
-                    : functionBody->EnsureInlineeCodeGenRuntimeData(recycler, profiledCallSiteId, inlineeFunctionBody),
+                        ? runtimeData->EnsureInlinee(recycler, profiledCallSiteId, inlineeFunctionBody)
+                        : functionBody->EnsureInlineeCodeGenRuntimeData(recycler, profiledCallSiteId, inlineeFunctionBody),
                     fixedFunctionObject);
 
                     AddInlineCacheStats(jitTimeData, inlineeJitTimeData);
@@ -2483,7 +2492,7 @@ NativeCodeGenerator::GatherCodeGenData(
 }
 
 Js::CodeGenRecyclableData *
-NativeCodeGenerator::GatherCodeGenData(Js::FunctionBody *const topFunctionBody, Js::FunctionBody *const functionBody, Js::EntryPointInfo *const entryPoint, CodeGenWorkItem* workItem, void* function)
+NativeCodeGenerator::GatherCodeGenData(Js::FunctionBody *const functionBody, Js::EntryPointInfo *const entryPoint, CodeGenWorkItem* workItem, void* function)
 {
     ASSERT_THREAD();
     Assert(functionBody);
@@ -2511,7 +2520,7 @@ NativeCodeGenerator::GatherCodeGenData(Js::FunctionBody *const topFunctionBody, 
 
     const auto recycler = scriptContext->GetRecycler();
     {
-        const auto jitTimeData = RecyclerNew(recycler, Js::FunctionCodeGenJitTimeData, functionBody, entryPoint);
+        const auto jitTimeData = RecyclerNew(recycler, Js::FunctionCodeGenJitTimeData, functionBody, entryPoint, false);
         InliningDecider inliningDecider(functionBody, workItem->Type() == JsLoopBodyWorkItemType, this->IsInDebugMode(), workItem->GetJitMode());
 
         BEGIN_TEMP_ALLOCATOR(gatherCodeGenDataAllocator, scriptContext, L"GatherCodeGenData");
@@ -2521,25 +2530,25 @@ NativeCodeGenerator::GatherCodeGenData(Js::FunctionBody *const topFunctionBody, 
 #if ENABLE_DEBUG_CONFIG_OPTIONS
         wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
         wchar_t debugStringBuffer2[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
-        if (PHASE_TRACE(Js::ObjTypeSpecPhase, topFunctionBody) || PHASE_TRACE(Js::EquivObjTypeSpecPhase, topFunctionBody))
+        if (PHASE_TRACE(Js::ObjTypeSpecPhase, functionBody) || PHASE_TRACE(Js::EquivObjTypeSpecPhase, functionBody))
         {
             Output::Print(L"ObjTypeSpec: top function %s (%s), function %s (%s): GatherCodeGenData(): \n",
-                topFunctionBody->GetDisplayName(), topFunctionBody->GetDebugNumberSet(debugStringBuffer), functionBody->GetDisplayName(), functionBody->GetDebugNumberSet(debugStringBuffer2));
+                functionBody->GetDisplayName(), functionBody->GetDebugNumberSet(debugStringBuffer), functionBody->GetDisplayName(), functionBody->GetDebugNumberSet(debugStringBuffer2));
         }
 #endif
-        GatherCodeGenData<false>(recycler, topFunctionBody, functionBody, entryPoint, inliningDecider, objTypeSpecFldInfoList, jitTimeData, nullptr, function ? Js::JavascriptFunction::FromVar(function) : nullptr, 0);
+        GatherCodeGenData<false>(recycler, functionBody, functionBody, entryPoint, inliningDecider, objTypeSpecFldInfoList, jitTimeData, nullptr, function ? Js::JavascriptFunction::FromVar(function) : nullptr, 0);
 
 #ifdef FIELD_ACCESS_STATS
         Js::FieldAccessStats* fieldAccessStats = entryPoint->EnsureFieldAccessStats(recycler);
         fieldAccessStats->Add(jitTimeData->inlineCacheStats);
-        entryPoint->GetScriptContext()->RecordFieldAccessStats(topFunctionBody, fieldAccessStats);
+        entryPoint->GetScriptContext()->RecordFieldAccessStats(functionBody, fieldAccessStats);
 #endif
 
 #ifdef FIELD_ACCESS_STATS
-        if (PHASE_TRACE(Js::ObjTypeSpecPhase, topFunctionBody) || PHASE_TRACE(Js::EquivObjTypeSpecPhase, topFunctionBody))
+        if (PHASE_TRACE(Js::ObjTypeSpecPhase, functionBody) || PHASE_TRACE(Js::EquivObjTypeSpecPhase, functionBody))
         {
             auto stats = jitTimeData->inlineCacheStats;
-            Output::Print(L"ObjTypeSpec: gathered code gen data for function %s (%s): inline cache stats:\n", topFunctionBody->GetDisplayName(), topFunctionBody->GetDebugNumberSet(debugStringBuffer));
+            Output::Print(L"ObjTypeSpec: gathered code gen data for function %s (%s): inline cache stats:\n", functionBody->GetDisplayName(), functionBody->GetDebugNumberSet(debugStringBuffer));
             Output::Print(L"    overall: total %u, no profile info %u\n", stats->totalInlineCacheCount, stats->noInfoInlineCacheCount);
             Output::Print(L"    mono: total %u, empty %u, cloned %u\n",
                 stats->monoInlineCacheCount, stats->emptyMonoInlineCacheCount, stats->clonedMonoInlineCacheCount);
@@ -2875,7 +2884,7 @@ void NativeCodeGenerator::AddToJitQueue(CodeGenWorkItem *const codeGenWorkItem, 
 {
     codeGenWorkItem->VerifyJitMode();
 
-    Js::CodeGenRecyclableData* recyclableData = GatherCodeGenData(codeGenWorkItem->GetFunctionBody(), codeGenWorkItem->GetFunctionBody(), codeGenWorkItem->GetEntryPoint(), codeGenWorkItem, function);
+    Js::CodeGenRecyclableData* recyclableData = GatherCodeGenData(codeGenWorkItem->GetFunctionBody(), codeGenWorkItem->GetEntryPoint(), codeGenWorkItem, function);
     codeGenWorkItem->SetRecyclableData(recyclableData);
 
     AutoOptionalCriticalSection autoLock(lock ? Processor()->GetCriticalSection() : nullptr);

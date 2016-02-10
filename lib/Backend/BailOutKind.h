@@ -6,7 +6,7 @@
     #error BAIL_OUT_KIND, BAIL_OUT_KIND_LAST, BAIL_OUT_KIND_VALUE, and BAIL_OUT_KIND_VALUE_LAST must be defined before including this file.
 #endif
                /* kind */                           /* allowed bits */
-BAIL_OUT_KIND(BailOutInvalid,                       IR::BailOutOnResultConditions | IR::BailOutForArrayBits | IR::BailOutForDebuggerBits | IR::BailOutMarkTempObject)
+BAIL_OUT_KIND(BailOutInvalid,                       IR::BailOutOnResultConditions | IR::BailOutForArrayBits | IR::BailOutForDebuggerBits | IR::BailOutOnMiscellaneousConditions)
 BAIL_OUT_KIND(BailOutIntOnly,                       IR::BailOutMarkTempObject)
 BAIL_OUT_KIND(BailOutNumberOnly,                    IR::BailOutMarkTempObject)
 BAIL_OUT_KIND(BailOutPrimitiveButString,            IR::BailOutMarkTempObject)
@@ -26,24 +26,24 @@ BAIL_OUT_KIND(BailOutConventionalTypedArrayAccessOnly, IR::BailOutMarkTempObject
 BAIL_OUT_KIND(BailOutOnIrregularLength,             IR::BailOutMarkTempObject)
 BAIL_OUT_KIND(BailOutCheckThis,                     0)
 BAIL_OUT_KIND(BailOutOnTaggedValue,                 0)
-BAIL_OUT_KIND(BailOutFailedTypeCheck,               IR::BailOutMarkTempObject)
-BAIL_OUT_KIND(BailOutFailedEquivalentTypeCheck,     IR::BailOutMarkTempObject)
+BAIL_OUT_KIND(BailOutFailedTypeCheck,               IR::BailOutMarkTempObject | IR::BailOutOnFieldSlotTypeMismatch)
+BAIL_OUT_KIND(BailOutFailedEquivalentTypeCheck,     IR::BailOutMarkTempObject | IR::BailOutOnFieldSlotTypeMismatch)
+BAIL_OUT_KIND(BailOutOnUnexpectedSlotTypeChange,    0) // For the JIT, (BailOutFailedEquivalentTypeCheck < BailOutOnUnexpectedSlotTypeChange < BailOutOnFieldSlotTypeMismatch) is required
 BAIL_OUT_KIND(BailOutInjected,                      0)
 BAIL_OUT_KIND(BailOutExpectingInteger,              0)
 BAIL_OUT_KIND(BailOutExpectingString,               0)
 BAIL_OUT_KIND(BailOutFailedInlineTypeCheck,         IR::BailOutMarkTempObject)
-BAIL_OUT_KIND(BailOutFailedFixedFieldTypeCheck,     IR::BailOutMarkTempObject)
+BAIL_OUT_KIND(BailOutFailedFixedFieldTypeCheck,     IR::BailOutMarkTempObject | IR::BailOutOnFieldSlotTypeMismatch)
 BAIL_OUT_KIND(BailOutFailedFixedFieldCheck,         0)
-BAIL_OUT_KIND(BailOutFailedEquivalentFixedFieldTypeCheck,     IR::BailOutMarkTempObject)
+BAIL_OUT_KIND(BailOutFailedEquivalentFixedFieldTypeCheck, IR::BailOutMarkTempObject | IR::BailOutOnFieldSlotTypeMismatch)
 BAIL_OUT_KIND(BailOutOnFloor,                       0)
 BAIL_OUT_KIND(BailOnModByPowerOf2,                  0)
 BAIL_OUT_KIND(BailOnIntMin,                         0)
 BAIL_OUT_KIND(BailOnDivResultNotInt,                IR::BailOutOnDivByZero | IR::BailOutOnDivOfMinInt | IR::BailOutOnNegativeZero)
 BAIL_OUT_KIND(BailOnSimpleJitToFullJitLoopBody,     0)
-BAIL_OUT_KIND(BailOutFailedCtorGuardCheck,          0)
 BAIL_OUT_KIND(BailOutOnFailedHoistedBoundCheck,     0)
-BAIL_OUT_KIND(LazyBailOut,                          0)
 BAIL_OUT_KIND(BailOutOnFailedHoistedLoopCountBasedBoundCheck, 0)
+BAIL_OUT_KIND(LazyBailOut,                          0)
 BAIL_OUT_KIND(BailOutForGeneratorYield,             0)
 BAIL_OUT_KIND(BailOutOnException,                   0)
 
@@ -53,6 +53,8 @@ BAIL_OUT_KIND(BailOutSimd128I4Only,                 0)
 BAIL_OUT_KIND(BailOutSimd128D2Only,                 0)
 BAIL_OUT_KIND(BailOutNoSimdTypeSpec,                0)
 
+BAIL_OUT_KIND(BailOutOnObjectLiteralFinalTypeMismatch, 0)
+BAIL_OUT_KIND(BailOutOnConstructorCacheTypeMismatch, 0)
 BAIL_OUT_KIND(BailOutKindEnd,                       0)
 
 // One bailout instruction can have multiple of the following reasons for bailout combined with any of the above. These tell
@@ -122,9 +124,10 @@ BAIL_OUT_KIND_VALUE(BailOutOnDivSrcConditions, BailOutOnDivByZero | BailOutOnDiv
 
 #define BAIL_OUT_KIND_MISC_BIT_START BAIL_OUT_KIND_DIV_SRC_CONDITIONS_BIT_START + 2
 BAIL_OUT_KIND_VALUE(BailOutMarkTempObject, 1 << (BAIL_OUT_KIND_MISC_BIT_START + 0))
+BAIL_OUT_KIND_VALUE(BailOutOnFieldSlotTypeMismatch, 1 << (BAIL_OUT_KIND_MISC_BIT_START + 1))
+BAIL_OUT_KIND_VALUE(BailOutOnMiscellaneousConditions, BailOutMarkTempObject | BailOutOnFieldSlotTypeMismatch)
 
-
-BAIL_OUT_KIND_VALUE_LAST(BailOutKindBits, BailOutMarkTempObject | BailOutOnDivSrcConditions | BailOutOnResultConditions | BailOutForArrayBits | BailOutForDebuggerBits)
+BAIL_OUT_KIND_VALUE_LAST(BailOutKindBits, BailOutOnMiscellaneousConditions | BailOutOnDivSrcConditions | BailOutOnResultConditions | BailOutForArrayBits | BailOutForDebuggerBits)
 
 // Help caller undefine the macros
 #undef BAIL_OUT_KIND_LAST

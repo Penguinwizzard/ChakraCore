@@ -146,32 +146,6 @@ namespace Js
         return exp;
     }
 
-    Var SimpleJitHelpers::ProfiledDivide(FunctionBody* functionBody, ProfileId profileId, Var aLeft, Var aRight)
-    {
-        Var result = JavascriptMath::Divide(aLeft, aRight,functionBody->GetScriptContext());
-        functionBody->GetDynamicProfileInfo()->RecordDivideResultType(functionBody, profileId, result);
-        return result;
-    }
-
-    Var SimpleJitHelpers::ProfiledRemainder(FunctionBody* functionBody, ProfileId profileId, Var aLeft, Var aRight)
-    {
-        if(TaggedInt::IsPair(aLeft, aRight))
-        {
-            int nLeft    = TaggedInt::ToInt32(aLeft);
-            int nRight   = TaggedInt::ToInt32(aRight);
-
-            // nLeft is positive and nRight is +2^i
-            // Fast path for Power of 2 divisor
-            if (nLeft > 0 && ::Math::IsPow2(nRight))
-            {
-                functionBody->GetDynamicProfileInfo()->RecordModulusOpType(functionBody, profileId, /*isModByPowerOf2*/ true);
-                return TaggedInt::ToVarUnchecked(nLeft & (nRight - 1));
-            }
-        }
-        functionBody->GetDynamicProfileInfo()->RecordModulusOpType(functionBody, profileId, /*isModByPowerOf2*/ false);
-        return JavascriptMath::Modulus(aLeft, aRight,functionBody->GetScriptContext());
-    }
-
     void SimpleJitHelpers::StoreArrayHelper(Var arr, uint32 index, Var value)
     {
         //Adapted from InterpreterStackFrame::OP_SetArrayItemC_CI4
