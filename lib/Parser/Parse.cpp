@@ -4834,6 +4834,11 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
                             paramScope->SetCannotMergeWithBodyScope();
                             return true;
                         }
+                        else
+                        {
+                            // If no non-local references are there then the top of the ref stack should point to the same symbol.
+                            Assert(sym->GetPid()->GetTopRef()->sym == sym);
+                        }
                         return false;
                     });
 

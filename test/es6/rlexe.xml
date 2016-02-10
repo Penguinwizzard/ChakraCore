@@ -689,7 +689,7 @@
   <test>
     <default>
       <files>default-splitscope.js</files>
-      <compile-flags> -ES6DefaultArgs -ES6Generators -nodeferparse -args summary -endargs</compile-flags>
+      <compile-flags> -ES6DefaultArgs -ES6Generators -off:deferparse -args summary -endargs</compile-flags>
     </default>
   </test>
   <test>
