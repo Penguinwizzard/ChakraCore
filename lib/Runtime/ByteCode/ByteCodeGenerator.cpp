@@ -2653,12 +2653,7 @@ FuncInfo* PostVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerat
         if (!top->IsGlobalFunction())
         {
             PostVisitBlock(pnode->sxFnc.pnodeBodyScope, byteCodeGenerator);
-            if (pnode->sxFnc.pnodeScopes->nop != knopBlock
-                || pnode->sxFnc.pnodeScopes->sxBlock.scope->GetScopeType() != ScopeType_Parameter
-                || pnode->sxFnc.pnodeScopes->sxBlock.scope->GetCanMergeWithBodyScope())
-            {
-                PostVisitBlock(pnode->sxFnc.pnodeScopes, byteCodeGenerator);
-            }
+            PostVisitBlock(pnode->sxFnc.pnodeScopes, byteCodeGenerator);
         }
 
         if ((byteCodeGenerator->GetFlags() & fscrEvalCode) && top->GetCallsEval())
@@ -3023,11 +3018,12 @@ void AddFunctionsToScope(ParseNodePtr scope, ByteCodeGenerator * byteCodeGenerat
             Scope* currentScope = byteCodeGenerator->GetCurrentScope();
             if (!currentScope->IsGlobalEvalBlockScope())
             {
-                if (currentScope->GetScopeType() != ScopeType_Parameter
+                // Do not add the function definitions from the body to the param scope if not merged with body scope.
+                if (currentScope->GetScopeType() != ScopeType_Parameter || currentScope->GetCanMergeWithBodyScope()
                     || pnodeName->sxVar.sym->GetScope()->GetScopeType() != ScopeType_FunctionBody
                     || pnodeName->sxVar.sym->GetScope() != currentScope->GetFunc()->GetBodyScope())
                 {
-                    sym = byteCodeGenerator->AddSymbolToScope(currentScope, fnName, pnodeName->sxVar.pid->Cch(), pnodeName, STFunction);
+                    sym = byteCodeGenerator->AddSymbolToScope(byteCodeGenerator->GetCurrentScope(), fnName, pnodeName->sxVar.pid->Cch(), pnodeName, STFunction);
                 }
             }
             else
@@ -3164,12 +3160,7 @@ void VisitNestedScopes(ParseNode* pnodeScopeList, ParseNode* pnodeParent, ByteCo
                 Visit(pnode, byteCodeGenerator, prefix, postfix);
 
                 EndVisitBlock(pnodeScope->sxFnc.pnodeBodyScope, byteCodeGenerator);
-                if (containerScope->nop != knopBlock || containerScope->sxBlock.blockType != Parameter
-                    || containerScope->sxBlock.scope->GetCanMergeWithBodyScope())
-                {
-                    // When the param scope has own scope, the scope stack handling for it is done separate.
-                    EndVisitBlock(pnodeScope->sxFnc.pnodeScopes, byteCodeGenerator);
-                }
+                EndVisitBlock(pnodeScope->sxFnc.pnodeScopes, byteCodeGenerator);
             }
             else if (pnodeScope->sxFnc.nestedCount)
             {
@@ -3285,6 +3276,7 @@ void PreVisitBlock(ParseNode *pnodeBlock, ByteCodeGenerator *byteCodeGenerator)
             if (pnodeBlock->sxBlock.scope->GetScopeType() == ScopeType_Parameter
                 && scope->GetScopeType() == ScopeType_FunctionBody)
             {
+                Assert(pnodeBlock->sxBlock.scope->GetCanMergeWithBodyScope());
                 scope = scope->GetEnclosingScope();
             }
         }
@@ -3367,17 +3359,26 @@ void PostVisitBlock(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
         return;
     }
 
+    Scope *scope = pnode->sxBlock.scope;
     if (pnode->sxBlock.GetCallsEval() || pnode->sxBlock.GetChildCallsEval() || (byteCodeGenerator->GetFlags() & (fscrEval | fscrImplicitThis | fscrImplicitParents)))
     {
-        Scope *scope = pnode->sxBlock.scope;
         bool scopeIsEmpty = scope->IsEmpty();
         scope->SetIsObject();
         scope->SetCapturesAll(true);
         scope->SetMustInstantiate(!scopeIsEmpty);
     }
 
-    byteCodeGenerator->PopScope();
-    byteCodeGenerator->PopBlock();
+    if (scope->GetScopeType() != ScopeType_Parameter)
+    {
+        byteCodeGenerator->PopScope();
+        byteCodeGenerator->PopBlock();
+    }
+    else
+    {
+        // If current block is a param scope then it was not pushed in during PreVisitBlock. So let's not do a pop here.
+        // Also the scope shouldn't be merged with body scope as it should have own block scope to reach here.
+        Assert(!scope->GetCanMergeWithBodyScope());
+    }
 
     ParseNode *currentBlock = byteCodeGenerator->GetCurrentBlock();
     if (currentBlock && (pnode->sxBlock.GetCallsEval() || pnode->sxBlock.GetChildCallsEval()))
@@ -4083,7 +4084,7 @@ void Bind(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
             FuncInfo* globFuncInfo = byteCodeGenerator->StartBindGlobalStatements(pnode);
             pnode->sxFnc.funcInfo = globFuncInfo;
             AddFunctionsToScope(pnode->sxFnc.GetTopLevelScope(), byteCodeGenerator);
-        AddVarsToScope(pnode->sxFnc.pnodeVars, byteCodeGenerator);
+            AddVarsToScope(pnode->sxFnc.pnodeVars, byteCodeGenerator);
             // There are no args to add, but "eval" gets a this pointer.
             byteCodeGenerator->SetNumberOfInArgs(!!(byteCodeGenerator->GetFlags() & fscrEvalCode));
             if (!globFuncInfo->IsFakeGlobalFunction(byteCodeGenerator->GetFlags()))

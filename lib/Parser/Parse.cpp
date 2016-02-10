@@ -4824,14 +4824,16 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
                 }
             }
 
-            AnalysisAssert(pnodeFnc);
+            if (buildAST || BindDeferredPidRefs())
+            {
+                AnalysisAssert(pnodeFnc);
 
-            // Shouldn't be any temps in the arg list.
-            Assert(*m_ppnodeVar == nullptr);
+                // Shouldn't be any temps in the arg list.
+                Assert(*m_ppnodeVar == nullptr);
 
-            // Start the var list.
-            pnodeFnc->sxFnc.pnodeVars = nullptr;
-            m_ppnodeVar = &pnodeFnc->sxFnc.pnodeVars;
+                // Start the var list.
+                pnodeFnc->sxFnc.pnodeVars = nullptr;
+                m_ppnodeVar = &pnodeFnc->sxFnc.pnodeVars;
 
             // We can't merge the param scope and body scope any more as the nested methods may be capturing params.
             if (pnodeFnc->sxFnc.HasNonSimpleParameterList() && !fAsync)
@@ -4866,11 +4868,10 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
 
                 if (!paramScope->GetCanMergeWithBodyScope())
                 {
-                    OUTPUT_TRACE_DEBUGONLY(Js::ParsePhase, L"The param and body scope of the function %s cannot be merged\n", pnodeFnc->sxFnc.pnodeName ? pnodeFnc->sxFnc.pnodeName->sxVar.pid->Psz() : L"Anonymous function");
-                    // Now add a new symbol reference for each formal in the param scope to the body scope.
-                    paramScope->ForEachSymbol([this](Symbol* param) {
-                        OUTPUT_TRACE_DEBUGONLY(Js::ParsePhase, L"Creating a duplicate symbol for the parameter %s in the body scope\n", param->GetPid()->Psz());
-                        this->CreateVarDeclNode(param->GetPid(), param->GetSymbolType(), false, nullptr, false);
+                    OUTPUT_TRACE_DEBUGONLY(Js::ParsePhase, L"Creating a duplicate symbol for the parameter %s in the body scope\n", param->GetPid()->Psz());
+                    ParseNodePtr paramNode = this->CreateVarDeclNode(param->GetPid(), STVariable, false, nullptr, false);
+                    Assert(paramNode && paramNode->sxVar.sym->GetScope()->GetScopeType() == ScopeType_FunctionBody);
+                    paramNode->sxVar.sym->SetHasInit(true);
                     });
                 }
             }

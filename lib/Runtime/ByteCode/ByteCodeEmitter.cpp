@@ -3805,12 +3805,6 @@ void ByteCodeGenerator::StartEmitFunction(ParseNode *pnodeFnc)
                     {
                         sym->EnsureScopeSlot(funcInfo);
                     }
-                    if (sym->GetSymbolType() == STFormal && sym->GetHasNonLocalReference() && paramScope && !paramScope->GetCanMergeWithBodyScope())
-                    {
-                        // One of the formals copied from param scope has a non local reference, so allocate a register now.
-                        // Symbol will be allocated scope slot later when the statement is visited.
-                        sym->SetLocation(NextVarRegister());
-                    }
                 }
             }
 
