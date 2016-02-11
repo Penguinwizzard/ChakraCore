@@ -144,12 +144,12 @@ namespace Js
         return propertyString;
     }
 
-    template <typename T, bool enumNonEnumerable, bool enumSymbols, bool snapShotSementics>
-    void DynamicObjectEnumerator<T, enumNonEnumerable, enumSymbols, snapShotSementics>::FixObjectSlotIndexIfNecessary()
+    template <typename T, bool enumNonEnumerable, bool enumSymbols, bool snapShotSemantics>
+    void DynamicObjectEnumerator<T, enumNonEnumerable, enumSymbols, snapShotSemantics>::FixObjectSlotIndexIfNecessary()
     {
         // This function should be called before passing 'objectIndex' to an object or type handler to handle type changes
 
-        if(snapShotSementics ||
+        if(snapShotSemantics ||
             !ObjectSlotType::RequiresWideSlotSupport() ||
             !previousPathTypeHandlerWithNativeFields ||
             objectIndex == static_cast<T>(-1))
@@ -187,8 +187,8 @@ namespace Js
         previousPathTypeHandlerWithNativeFields = nullptr;
     }
 
-    template <typename T, bool enumNonEnumerable, bool enumSymbols, bool snapShotSementics>
-    void DynamicObjectEnumerator<T, enumNonEnumerable, enumSymbols, snapShotSementics>::ResetHelper()
+    template <typename T, bool enumNonEnumerable, bool enumSymbols, bool snapShotSemantics>
+    void DynamicObjectEnumerator<T, enumNonEnumerable, enumSymbols, snapShotSemantics>::ResetHelper()
     {
         if (object->HasObjectArray())
         {
@@ -203,7 +203,7 @@ namespace Js
         initialType = object->GetDynamicType();
 
         previousPathTypeHandlerWithNativeFields = nullptr;
-        if(!snapShotSementics && ObjectSlotType::RequiresWideSlotSupport() && object->GetScriptContext()->DoNativeFields())
+        if(!snapShotSemantics && ObjectSlotType::RequiresWideSlotSupport() && object->GetScriptContext()->DoNativeFields())
         {
             DynamicTypeHandler *const typeHandler = initialType->GetTypeHandler();
             if(typeHandler->IsPathTypeHandler())

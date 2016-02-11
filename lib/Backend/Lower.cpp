@@ -17123,7 +17123,7 @@ Lowerer::GenerateFastStElemI(IR::Instr *& stElem, bool *instrIsInHelperBlockRef)
 
                     // Convert reg to int32
                     // Note: ToUint32 is implemented as (uint32)ToInt32()
-                    m_lowererMD.EmitLoadInt32(instr, true /*conversionFromObjectAllowed*/);
+                    m_lowererMD.EmitLoadInt32(instr, false, true /*conversionFromObjectAllowed*/);
 
                     // MOV indirOpnd, reg
                     InsertMove(indirOpnd, reg, stElem);
