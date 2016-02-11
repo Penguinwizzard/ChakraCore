@@ -1007,7 +1007,6 @@ LDone:
         ARGUMENTS(args, callInfo);
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         ScriptContext* scriptContext = function->GetScriptContext();
-        JavascriptLibrary *const library = scriptContext->GetLibrary();
 
         Assert(!(callInfo.Flags & CallFlags_New));
 
@@ -1021,9 +1020,9 @@ LDone:
             }
 
             double x = JavascriptConversion::ToNumber(args[1], scriptContext);
-            if(JavascriptNumber::IsNan(x))
+            if (JavascriptNumber::IsNan(x))
             {
-                return library->GetNaN();
+                return scriptContext->GetLibrary()->GetNaN();
             }
 
             // for doubles, if x >= 2^52 or <= -2^52, x must be an integer, and adding 0.5 will overflow the
@@ -1031,15 +1030,6 @@ LDone:
             if (x == 0.0 || !NumberUtilities::IsFinite(x) || x >= 4503599627370496.0 || x <= -4503599627370496.0)
             {
                 // 0.0 catches the -0 case...
-                return JavascriptNumber::IsNegZero(x) ? library->GetNegativeZero() : TaggedInt::ToVarUnchecked(0);
-            }
-
-            if(!NumberUtilities::IsFinite(x))
-            {
-                if(JavascriptNumber::IsPosInf(x))
-                    return library->GetPositiveInfinite();
-                if(JavascriptNumber::IsNegInf(x))
-                    return library->GetNegativeInfinite();
                 return JavascriptNumber::ToVarNoCheck(x, scriptContext);
             }
 
@@ -1047,16 +1037,16 @@ LDone:
                 return JavascriptNumber::ToVarNoCheck((double)Js::JavascriptNumber::k_Zero, scriptContext);
             }
 
-            if(x < 0 && x >= -0.5)
+            if (x < 0 && x >= -0.5)
             {
-                return library->GetNegativeZero();
+                return scriptContext->GetLibrary()->GetNegativeZero();
             }
 
-            return Math::FloorDouble(x+0.5, scriptContext);
+            return Math::FloorDouble(x + 0.5, scriptContext);
         }
         else
         {
-            return library->GetNaN();
+            return scriptContext->GetLibrary()->GetNaN();
         }
     }
 
