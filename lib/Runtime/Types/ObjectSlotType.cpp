@@ -17,11 +17,13 @@ namespace Js
         JsDiag_Inline ObjectSlotType ObjectSlotType::Get##name() \
         { \
             return SlotType::name; \
-        }
+        } 
     #define SLOT_TYPE_VALUE(name, value) SLOT_TYPE(name)
+    #define ATTRIBUTE_VALUE(name, value)
     #include "ObjectSlotTypes.h"
     #undef SLOT_TYPE
     #undef SLOT_TYPE_VALUE
+    #undef ATTRIBUTE_VALUE
 
     JsDiag_Inline ObjectSlotType::ObjectSlotType() : slotType(SlotType::Var)
     {
@@ -62,22 +64,37 @@ namespace Js
 
     JsDiag_Inline bool ObjectSlotType::IsWide() const
     {
-        return RequiresWideSlotSupport() && slotType != SlotType::Var;
+        return RequiresWideSlotSupport() && slotTypeWithoutAttributes != SlotType::Var;
     }
 
     JsDiag_Inline bool ObjectSlotType::IsVar() const
     {
-        return slotType < SlotType::Float;
+        return slotTypeWithoutAttributes < SlotType::Float;
     }
 
     JsDiag_Inline bool ObjectSlotType::IsFloat() const
     {
-        return slotType == SlotType::Float;
+        return slotTypeWithoutAttributes == SlotType::Float;
     }
 
     JsDiag_Inline bool ObjectSlotType::IsInt() const
     {
-        return slotType > SlotType::Float;
+        return slotTypeWithoutAttributes == SlotType::Int;
+    }
+
+    JsDiag_Inline bool ObjectSlotType::IsWritable() const
+    {
+        return !(slotType & SlotType::Writable);
+    }
+
+    JsDiag_Inline bool ObjectSlotType::IsEnumerable() const
+    {
+        return !(slotType & SlotType::Enumerable);
+    }
+    
+    JsDiag_Inline bool ObjectSlotType::IsConfigurable() const
+    {
+        return !(slotType & SlotType::Configurable);
     }
 
     #ifndef IsJsDiag
@@ -147,28 +164,28 @@ namespace Js
 
     bool ObjectSlotType::IsValueTypeEqualTo(const ObjectSlotType &other) const
     {
-        return *this == other || RequiresWideSlotSupport() && IsVar() && other.IsVar();
+        return (*this).slotTypeWithoutAttributes == other.slotTypeWithoutAttributes || RequiresWideSlotSupport() && IsVar() && other.IsVar();
     }
 
     bool ObjectSlotType::IsValueTypeMoreConvervativeThan(const ObjectSlotType &other) const
     {
-        return slotType < other.slotType && !(RequiresWideSlotSupport() && other.IsVar());
+        return slotTypeWithoutAttributes < other.slotTypeWithoutAttributes && !(RequiresWideSlotSupport() && other.IsVar());
     }
 
     ObjectSlotType ObjectSlotType::ToNormalizedValueType() const
     {
         // Intended for cases that don't care about the slot width, normalize wide var to narrow var
-        return RequiresWideSlotSupport() && slotType == SlotType::ConvertedVar ? SlotType::Var : slotType;
+        return RequiresWideSlotSupport() && slotTypeWithoutAttributes == SlotType::ConvertedVar ? SlotType::Var : slotTypeWithoutAttributes;
     }
 
     ObjectSlotType ObjectSlotType::MergeValueType(const ObjectSlotType &other) const
     {
-        return ObjectSlotType(min(slotType, other.slotType)).ToNormalizedValueType();
+        return ObjectSlotType(min(slotTypeWithoutAttributes, other.slotTypeWithoutAttributes)).ToNormalizedValueType();
     }
 
     ObjectSlotType ObjectSlotType::Merge(const ObjectSlotType &other) const
     {
-        if(RequiresWideSlotSupport() && (slotType == SlotType::ConvertedVar || other.slotType == SlotType::ConvertedVar))
+        if(RequiresWideSlotSupport() && (slotTypeWithoutAttributes == SlotType::ConvertedVar || other.slotTypeWithoutAttributes == SlotType::ConvertedVar))
             return SlotType::ConvertedVar;
         return MergeValueType(other);
     }
@@ -213,14 +230,16 @@ namespace Js
     {
         #define SLOT_TYPE(name) "" STRINGIZE(name) "",
         #define SLOT_TYPE_VALUE(name, value)
+        #define ATTRIBUTE_VALUE(name, value)
         #include "ObjectSlotTypes.h"
         #undef SLOT_TYPE
         #undef SLOT_TYPE_VALUE
+        #undef ATTRIBUTE_VALUE
     };
 
     const char *ObjectSlotType::ToString() const
     {
-        return SlotTypeNames[static_cast<TSize>(slotType)];
+        return SlotTypeNames[static_cast<TSize>(slotTypeWithoutAttributes)];
     }
 
     #endif
