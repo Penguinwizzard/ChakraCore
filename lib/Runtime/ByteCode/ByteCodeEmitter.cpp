@@ -3186,7 +3186,7 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
                 Symbol* varSym = funcInfo->GetBodyScope()->FindLocalSymbol(param->GetName());
                 Assert(varSym || param->GetIsArguments());
                 Assert(param->GetIsArguments() || param->IsInSlot(funcInfo));
-                if (varSym  && (varSym->IsInSlot(funcInfo) || varSym->GetLocation() != Js::Constants::NoRegister))
+                if (varSym && varSym->GetSymbolType() == STVariable && (varSym->IsInSlot(funcInfo) || varSym->GetLocation() != Js::Constants::NoRegister))
                 {
                     Js::RegSlot tempReg = funcInfo->AcquireTmpRegister();
                     this->EmitPropLoad(tempReg, param, param->GetPid(), funcInfo);
