@@ -154,7 +154,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)SimdBool8x16OperationX86X64.cpp">
       <ExcludedFromBuild Condition="'$(Platform)'!='Win32' AND '$(Platform)'!='x64'">true</ExcludedFromBuild>
     </ClCompile>
-
     <ClCompile Include="$(MSBuildThisFileDirectory)SimdUtils.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)SourceDynamicProfileManager.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)StackTraceArguments.cpp" />
@@ -168,6 +167,7 @@
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptNativeOperators.cpp" />
+    <ClCompile Include="ModuleNamespace.cpp" />
     <ClCompile Include="SourceTextModuleRecord.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -211,6 +211,7 @@
     <ClInclude Include="JavascriptExceptionOperators.h" />
     <ClInclude Include="JavascriptMathOperators.h" />
     <ClInclude Include="JavascriptNativeOperators.h" />
+    <ClInclude Include="ModuleNamespace.h" />
     <ClInclude Include="ProfilingHelpers.h" />
     <ClInclude Include="ReadOnlyDynamicProfileInfo.h" />
     <ClInclude Include="SourceDynamicProfileManager.h" />
