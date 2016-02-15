@@ -1666,6 +1666,24 @@ void ByteCodeGenerator::EmitScopeObjectInit(FuncInfo *funcInfo)
     AdeletePlus(alloc, extraAlloc, propIds);
 }
 
+void ByteCodeGenerator::SetClosureRegs(Js::FunctionBody* byteCodeFunction, Js::RegSlot frameDisplayRegister, Js::RegSlot frameObjRegister, Js::RegSlot frameSlotsRegister)
+{
+    if (frameDisplayRegister != Js::Constants::NoRegister)
+    {
+        byteCodeFunction->SetLocalFrameDisplayReg(frameDisplayRegister);
+    }
+
+    if (frameObjRegister != Js::Constants::NoRegister)
+    {
+        byteCodeFunction->SetLocalClosureReg(frameObjRegister);
+        byteCodeFunction->SetHasScopeObject(true);
+    }
+    else if (frameSlotsRegister != Js::Constants::NoRegister)
+    {
+        byteCodeFunction->SetLocalClosureReg(frameSlotsRegister);
+    }
+}
+
 void ByteCodeGenerator::FinalizeRegisters(FuncInfo * funcInfo, Js::FunctionBody * byteCodeFunction)
 {
     if (funcInfo->NeedEnvRegister())
@@ -1678,20 +1696,7 @@ void ByteCodeGenerator::FinalizeRegisters(FuncInfo * funcInfo, Js::FunctionBody 
     // can distinguish constants from variables.
     byteCodeFunction->SetConstantCount(funcInfo->constRegsCount);
 
-    if (funcInfo->frameDisplayRegister != Js::Constants::NoRegister)
-    {
-        byteCodeFunction->SetLocalFrameDisplayReg(funcInfo->frameDisplayRegister);
-    }
-
-    if (funcInfo->frameObjRegister != Js::Constants::NoRegister)
-    {
-        byteCodeFunction->SetLocalClosureReg(funcInfo->frameObjRegister);
-        byteCodeFunction->SetHasScopeObject(true);
-    }
-    else if (funcInfo->frameSlotsRegister != Js::Constants::NoRegister)
-    {
-        byteCodeFunction->SetLocalClosureReg(funcInfo->frameSlotsRegister);
-    }
+    this->SetClosureRegs(byteCodeFunction, funcInfo->frameDisplayRegister, funcInfo->frameObjRegister, funcInfo->frameSlotsRegister);
 
     if (this->IsInDebugMode())
     {
@@ -3122,21 +3127,10 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
         {
             DefineFunctions(funcInfo);
         }
+
         DefineUserVars(funcInfo);
 
         ::BeginEmitBlock(pnode->sxFnc.pnodeScopes, this, funcInfo);
-
-        if (paramScope != nullptr && !paramScope->GetCanMergeWithBodyScope())
-        {
-            // If the param scope has own scope then we should move the params only after the inner scope slot is created
-            HomeArguments(funcInfo);
-        }
-
-        if (pnode->sxFnc.pnodeBodyScope != nullptr)
-        {
-            ::BeginEmitBlock(pnode->sxFnc.pnodeBodyScope, this, funcInfo);
-        }
-        DefineLabels(funcInfo);
 
         if (pnode->sxFnc.HasNonSimpleParameterList())
         {
@@ -3195,6 +3189,12 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
                 }
             });
         }
+
+        if (pnode->sxFnc.pnodeBodyScope != nullptr)
+        {
+            ::BeginEmitBlock(pnode->sxFnc.pnodeBodyScope, this, funcInfo);
+        }
+        DefineLabels(funcInfo);
 
         this->inPrologue = false;
 
@@ -3456,7 +3456,28 @@ void ByteCodeGenerator::EmitScopeList(ParseNode *pnode)
             if (pnode->sxFnc.funcInfo)
             {
                 this->StartEmitFunction(pnode);
-                this->EmitScopeList(pnode->sxFnc.pnodeScopes);
+
+                Scope* paramScope = pnode->sxFnc.funcInfo->GetParamScope();
+                Scope* bodyScope = pnode->sxFnc.funcInfo->GetBodyScope();
+                if (paramScope && !paramScope->GetCanMergeWithBodyScope())
+                {
+                    // Pop the body scope
+                    PopScope();
+                    PushScope(paramScope);
+                    this->EmitScopeList(pnode->sxFnc.pnodeScopes);
+                    PushScope(bodyScope);
+                }
+                else
+                {
+                    if (pnode->sxFnc.pnodeBodyScope && pnode->sxFnc.pnodeBodyScope->sxBlock.pnodeScopes)
+                    {
+                        this->EmitScopeList(pnode->sxFnc.pnodeBodyScope->sxBlock.pnodeScopes);
+                    }
+                    else
+                    {
+                        this->EmitScopeList(pnode->sxFnc.pnodeScopes);
+                    }
+                }
                 this->EmitOneFunction(pnode);
                 this->EndEmitFunction(pnode);
             }
@@ -3514,6 +3535,64 @@ void CheckFncDeclScopeSlot(ParseNode *pnodeFnc, FuncInfo *funcInfo)
         if (sym && sym->NeedsSlotAlloc(funcInfo))
         {
             sym->EnsureScopeSlot(funcInfo);
+        }
+    }
+}
+
+void ByteCodeGenerator::EnsurePreDefinedScopeSlots(FuncInfo* funcInfo, Scope* scope)
+{
+    if (scope->GetIsObject())
+    {
+        if (funcInfo->isThisLexicallyCaptured)
+        {
+            funcInfo->EnsureThisScopeSlot(scope);
+        }
+
+        if (((!funcInfo->IsLambda() && funcInfo->GetCallsEval())
+            || funcInfo->isSuperLexicallyCaptured))
+        {
+            if (funcInfo->superRegister != Js::Constants::NoRegister)
+            {
+                funcInfo->EnsureSuperScopeSlot(scope);
+            }
+
+            if (funcInfo->superCtorRegister != Js::Constants::NoRegister)
+            {
+                funcInfo->EnsureSuperCtorScopeSlot(scope);
+            }
+        }
+
+        if (funcInfo->isNewTargetLexicallyCaptured)
+        {
+            funcInfo->EnsureNewTargetScopeSlot(scope);
+        }
+    }
+    else
+    {
+        // Don't rely on the Emit() pass to assign scope slots where needed, because peeps/shortcuts
+        // may cause some expressions not to be emitted. Assign the slots we need before we start
+        // emitting the prolog.
+        // TODO: Investigate moving detection of non-local references to Emit() so we don't assign
+        // slots to symbols that are never referenced in emitted code.
+
+        if (funcInfo->isThisLexicallyCaptured)
+        {
+            funcInfo->EnsureThisScopeSlot(scope);
+        }
+
+        if (funcInfo->isSuperLexicallyCaptured)
+        {
+            funcInfo->EnsureSuperScopeSlot(scope);
+        }
+
+        if (funcInfo->isSuperCtorLexicallyCaptured)
+        {
+            funcInfo->EnsureSuperCtorScopeSlot(scope);
+        }
+
+        if (funcInfo->isNewTargetLexicallyCaptured)
+        {
+            funcInfo->EnsureNewTargetScopeSlot(scope);
         }
     }
 }
@@ -3684,29 +3763,7 @@ void ByteCodeGenerator::StartEmitFunction(ParseNode *pnodeFnc)
                 MapFormalsFromPattern(pnodeFnc, [&](ParseNode *pnode) { pnode->sxVar.sym->EnsureScopeSlot(funcInfo); });
             }
 
-            if (funcInfo->isThisLexicallyCaptured)
-            {
-                funcInfo->EnsureThisScopeSlot();
-            }
-
-            if (((!funcInfo->IsLambda() && funcInfo->GetCallsEval())
-                || funcInfo->isSuperLexicallyCaptured))
-            {
-                if (funcInfo->superRegister != Js::Constants::NoRegister)
-                {
-                    funcInfo->EnsureSuperScopeSlot();
-                }
-
-                if (funcInfo->superCtorRegister != Js::Constants::NoRegister)
-                {
-                    funcInfo->EnsureSuperCtorScopeSlot();
-                }
-            }
-
-            if (funcInfo->isNewTargetLexicallyCaptured)
-            {
-                funcInfo->EnsureNewTargetScopeSlot();
-            }
+            this->EnsurePreDefinedScopeSlots(funcInfo, bodyScope);
 
             auto ensureFncDeclScopeSlots = [&](ParseNode *pnodeScope)
             {
@@ -3762,31 +3819,7 @@ void ByteCodeGenerator::StartEmitFunction(ParseNode *pnodeFnc)
             ParseNode *pnode;
             Symbol *sym;
 
-            // Don't rely on the Emit() pass to assign scope slots where needed, because peeps/shortcuts
-            // may cause some expressions not to be emitted. Assign the slots we need before we start
-            // emitting the prolog.
-            // TODO: Investigate moving detection of non-local references to Emit() so we don't assign
-            // slots to symbols that are never referenced in emitted code.
-
-            if (funcInfo->isThisLexicallyCaptured)
-            {
-                funcInfo->EnsureThisScopeSlot();
-            }
-
-            if (funcInfo->isSuperLexicallyCaptured)
-            {
-                funcInfo->EnsureSuperScopeSlot();
-            }
-
-            if (funcInfo->isSuperCtorLexicallyCaptured)
-            {
-                funcInfo->EnsureSuperCtorScopeSlot();
-            }
-
-            if (funcInfo->isNewTargetLexicallyCaptured)
-            {
-                funcInfo->EnsureNewTargetScopeSlot();
-            }
+            this->EnsurePreDefinedScopeSlots(funcInfo, bodyScope);
 
             pnodeFnc->sxFnc.MapContainerScopes([&](ParseNode *pnodeScope) { this->EnsureFncScopeSlots(pnodeScope, funcInfo); });
 
@@ -4042,7 +4075,7 @@ void ByteCodeGenerator::StartEmitBlock(ParseNode *pnodeBlock)
         FuncInfo *funcInfo = scope->GetFunc();
         if (scope->IsGlobalEvalBlockScope() && funcInfo->isThisLexicallyCaptured)
         {
-            funcInfo->EnsureThisScopeSlot();
+            funcInfo->EnsureThisScopeSlot(funcInfo->GetBodyScope());
         }
         this->EnsureFncScopeSlots(pnodeBlock->sxBlock.pnodeScopes, funcInfo);
         this->EnsureLetConstScopeSlots(pnodeBlock, funcInfo);

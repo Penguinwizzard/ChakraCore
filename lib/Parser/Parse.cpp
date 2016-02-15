@@ -4602,7 +4602,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
     uint uDeferSave = m_grfscr & fscrDeferFncParse;
     if ((!fDeclaration && m_ppnodeExprScope) ||
         fFunctionInBlock ||
-        (pnodeFncParent && pnodeFncParent->sxFnc.pnodeScopes && !pnodeFncParent->sxFnc.IsSimpleParameterList()) ||
+        (pnodeFncParent && pnodeFncParent->sxFnc.pnodeScopes && pnodeFncParent->sxFnc.HasNonSimpleParameterList()) ||
         (flags & (fFncNoName | fFncLambda)))
     {
         // NOTE: Don't defer if this is a function expression inside a construct that induces
@@ -4723,7 +4723,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
         // Create function body scope
         ParseNodePtr pnodeInnerBlock = StartParseBlock<buildAST>(PnodeBlockType::Function, ScopeType_FunctionBody);
         // Set the parameter block's child to the function body block.
-        *m_ppnodeScope = pnodeInnerBlock;
+        *m_ppnodeScope = pnodeInnerBlock; // //
         pnodeFnc->sxFnc.pnodeBodyScope = pnodeInnerBlock;
 
         // This synthetic block scope will contain all the nested scopes.
@@ -4812,7 +4812,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
                 }
             }
 
-            if (buildAST || BindDeferredPidRefs())
+            if (buildAST)
             {
                 AnalysisAssert(pnodeFnc);
 
@@ -4823,8 +4823,10 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
                 pnodeFnc->sxFnc.pnodeVars = nullptr;
                 m_ppnodeVar = &pnodeFnc->sxFnc.pnodeVars;
 
-                if (!pnodeFnc->sxFnc.IsSimpleParameterList() && !fAsync)
+                if (pnodeFnc->sxFnc.HasNonSimpleParameterList() && !fAsync)
                 {
+                    // m_pnestedCount = 0;
+
                     // We can't merge the param scope and body scope if the nested methods within the param scope captures any param.
                     Scope* paramScope = pnodeFnc->sxFnc.pnodeScopes->sxBlock.scope;
                     paramScope->ForEachSymbolUntil([paramScope](Symbol* sym) {
