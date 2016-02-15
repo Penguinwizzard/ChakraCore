@@ -141,36 +141,36 @@ BOOL FuncInfo::IsBaseClassConstructor() const
     return root->sxFnc.IsBaseClassConstructor();
 }
 
-void FuncInfo::EnsureThisScopeSlot()
+void FuncInfo::EnsureThisScopeSlot(Scope* scope)
 {
     if (this->thisScopeSlot == Js::Constants::NoRegister)
     {
-        Scope* scope = this->bodyScope->IsGlobalEvalBlockScope() ? this->GetGlobalEvalBlockScope() : this->bodyScope;
-        this->thisScopeSlot = scope->AddScopeSlot();
+        Scope* currentScope = scope->IsGlobalEvalBlockScope() ? this->GetGlobalEvalBlockScope() : scope;
+        this->thisScopeSlot = currentScope->AddScopeSlot();
     }
 }
 
-void FuncInfo::EnsureSuperScopeSlot()
+void FuncInfo::EnsureSuperScopeSlot(Scope* scope)
 {
     if (this->superScopeSlot == Js::Constants::NoRegister)
     {
-        this->superScopeSlot = this->bodyScope->AddScopeSlot();
+        this->superScopeSlot = scope->AddScopeSlot();
     }
 }
 
-void FuncInfo::EnsureSuperCtorScopeSlot()
+void FuncInfo::EnsureSuperCtorScopeSlot(Scope* scope)
 {
     if (this->superCtorScopeSlot == Js::Constants::NoRegister)
     {
-        this->superCtorScopeSlot = this->bodyScope->AddScopeSlot();
+        this->superCtorScopeSlot = scope->AddScopeSlot();
     }
 }
 
-void FuncInfo::EnsureNewTargetScopeSlot()
+void FuncInfo::EnsureNewTargetScopeSlot(Scope* scope)
 {
     if (this->newTargetScopeSlot == Js::Constants::NoRegister)
     {
-        this->newTargetScopeSlot = this->bodyScope->AddScopeSlot();
+        this->newTargetScopeSlot = scope->AddScopeSlot();
     }
 }
 

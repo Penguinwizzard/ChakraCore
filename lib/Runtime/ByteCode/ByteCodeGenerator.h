@@ -176,6 +176,8 @@ public:
 
     void InitScopeSlotArray(FuncInfo * funcInfo);
     void FinalizeRegisters(FuncInfo * funcInfo, Js::FunctionBody * byteCodeFunction);
+    void SetClosureRegs(Js::FunctionBody* byteCodeFunction, Js::RegSlot frameDisplayRegister, Js::RegSlot frameObjRegister, Js::RegSlot frameSlotsRegister);
+    void EnsurePreDefinedScopeSlots(FuncInfo* funcInfo, Scope* scope);
     void SetHasTry(bool has);
     void SetHasFinally(bool has);
     void SetNumberOfInArgs(Js::ArgSlot argCount);
