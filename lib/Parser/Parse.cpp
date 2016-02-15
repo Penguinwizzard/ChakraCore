@@ -4824,7 +4824,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
                 }
             }
 
-            if (buildAST || BindDeferredPidRefs())
+            if (buildAST)
             {
                 AnalysisAssert(pnodeFnc);
 
@@ -4855,11 +4855,12 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
                         }
                     }
                     else
-                            // If no non-local references are there then the top of the ref stack should point to the same symbol.
-                            Assert(sym->GetPid()->GetTopRef()->sym == sym);
-                        }
-                        return false;
-                    });
+                    {
+                        // If no non-local references are there then the top of the ref stack should point to the same symbol.
+                        Assert(sym->GetPid()->GetTopRef()->sym == sym);
+                    }
+                    return false;
+                });
 
                 if (!m_scriptContext->GetConfig()->IsES6DefaultArgsSplitScopeEnabled() && (pnodeFnc->sxFnc.CallsEval() || pnodeFnc->sxFnc.ChildCallsEval()))
                 {
