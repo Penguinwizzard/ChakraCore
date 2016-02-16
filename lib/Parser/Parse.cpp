@@ -4823,37 +4823,46 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
                 pnodeFnc->sxFnc.pnodeVars = nullptr;
                 m_ppnodeVar = &pnodeFnc->sxFnc.pnodeVars;
 
-                if (pnodeFnc->sxFnc.HasNonSimpleParameterList() && !fAsync)
+                if (pnodeFnc->sxFnc.funcInfo && pnodeFnc->sxFnc.HasNonSimpleParameterList() && !fAsync)
                 {
                     // m_pnestedCount = 0;
+                    Assert(!pnodeFnc->sxFnc.funcInfo->GetBodyScope()->GetIsObject());
 
-                    // We can't merge the param scope and body scope if the nested methods within the param scope captures any param.
                     Scope* paramScope = pnodeFnc->sxFnc.pnodeScopes->sxBlock.scope;
-                    paramScope->ForEachSymbolUntil([paramScope](Symbol* sym) {
-                        if (sym->GetPid()->GetTopRef()->sym == nullptr)
-                        {
-                            // One of the symbol has non local reference. Mark the param scope as we can't merge it with body scope.
-                            paramScope->SetCannotMergeWithBodyScope();
-                            return true;
-                        }
-                        else
-                        {
-                            // If no non-local references are there then the top of the ref stack should point to the same symbol.
-                            Assert(sym->GetPid()->GetTopRef()->sym == sym);
-                        }
-                        return false;
-                    });
-
-                    if (!paramScope->GetCanMergeWithBodyScope())
+                    if (pnodeFnc->sxFnc.CallsEval() || pnodeFnc->sxFnc.ChildCallsEval())
                     {
-                        OUTPUT_TRACE_DEBUGONLY(Js::ParsePhase, L"The param and body scope of the function %s cannot be merged\n", pnodeFnc->sxFnc.pnodeName ? pnodeFnc->sxFnc.pnodeName->sxVar.pid->Psz() : L"Anonymous function");
-                        // Add a new symbol reference for each formal in the param scope to the body scope.
-                        paramScope->ForEachSymbol([this](Symbol* param) {
-                            OUTPUT_TRACE_DEBUGONLY(Js::ParsePhase, L"Creating a duplicate symbol for the parameter %s in the body scope\n", param->GetPid()->Psz());
-                            ParseNodePtr paramNode = this->CreateVarDeclNode(param->GetPid(), STVariable, false, nullptr, false);
-                            Assert(paramNode && paramNode->sxVar.sym->GetScope()->GetScopeType() == ScopeType_FunctionBody);
-                            paramNode->sxVar.sym->SetHasInit(true);
+                        paramScope->SetIsObject();
+                        paramScope->SetCannotMergeWithBodyScope();
+                    }
+                    else
+                    {
+                        // We can't merge the param scope and body scope if the nested methods within the param scope captures any param.
+                        paramScope->ForEachSymbolUntil([paramScope](Symbol* sym) {
+                            if (sym->GetPid()->GetTopRef()->sym == nullptr)
+                            {
+                                // One of the symbol has non local reference. Mark the param scope as we can't merge it with body scope.
+                                paramScope->SetCannotMergeWithBodyScope();
+                                return true;
+                            }
+                            else
+                            {
+                                // If no non-local references are there then the top of the ref stack should point to the same symbol.
+                                Assert(sym->GetPid()->GetTopRef()->sym == sym);
+                            }
+                            return false;
                         });
+
+                        if (!paramScope->GetCanMergeWithBodyScope())
+                        {
+                            OUTPUT_TRACE_DEBUGONLY(Js::ParsePhase, L"The param and body scope of the function %s cannot be merged\n", pnodeFnc->sxFnc.pnodeName ? pnodeFnc->sxFnc.pnodeName->sxVar.pid->Psz() : L"Anonymous function");
+                            // Add a new symbol reference for each formal in the param scope to the body scope.
+                            paramScope->ForEachSymbol([this](Symbol* param) {
+                                OUTPUT_TRACE_DEBUGONLY(Js::ParsePhase, L"Creating a duplicate symbol for the parameter %s in the body scope\n", param->GetPid()->Psz());
+                                ParseNodePtr paramNode = this->CreateVarDeclNode(param->GetPid(), STVariable, false, nullptr, false);
+                                Assert(paramNode && paramNode->sxVar.sym->GetScope()->GetScopeType() == ScopeType_FunctionBody);
+                                paramNode->sxVar.sym->SetHasInit(true);
+                            });
+                        }
                     }
                 }
             }

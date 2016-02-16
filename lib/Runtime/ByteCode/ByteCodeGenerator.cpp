@@ -862,9 +862,16 @@ void ByteCodeGenerator::SetNeedEnvRegister()
 void ByteCodeGenerator::AssignFrameObjRegister()
 {
     FuncInfo* top = funcInfoStack->Top();
-    if (top->frameObjRegister == Js::Constants::NoRegister)
+    Scope* bodyScope = top->GetBodyScope();
+    Scope* paramScope = top->GetParamScope();
+
+    if (top->frameObjRegister == Js::Constants::NoRegister && bodyScope && bodyScope->GetIsObject())
     {
         top->frameObjRegister = top->NextVarRegister();
+    }
+    if (top->frameObjRegisterForParamScope == Js::Constants::NoRegister && paramScope && !paramScope->GetCanMergeWithBodyScope() && paramScope->GetIsObject())
+    {
+        top->frameObjRegisterForParamScope = top->NextVarRegister();
     }
 }
 
@@ -875,14 +882,24 @@ void ByteCodeGenerator::AssignFrameDisplayRegister()
     {
         top->frameDisplayRegister = top->NextVarRegister();
     }
+    if (top->GetParamScope() && !top->GetParamScope()->GetCanMergeWithBodyScope())
+    {
+        top->frameDisplayRegisterForParamScope = top->NextVarRegister();
+    }
 }
 
 void ByteCodeGenerator::AssignFrameSlotsRegister()
 {
     FuncInfo* top = funcInfoStack->Top();
+    Scope* paramScope = top->GetParamScope();
+
     if (top->frameSlotsRegister == Js::Constants::NoRegister)
     {
         top->frameSlotsRegister = NextVarRegister();
+    }
+    if (top->frameSlotsRegisterForParamScope == Js::Constants::NoRegister && paramScope && !paramScope->GetCanMergeWithBodyScope() && !paramScope->GetIsObject())
+    {
+        top->frameSlotsRegisterForParamScope = top->NextVarRegister();
     }
 }
 

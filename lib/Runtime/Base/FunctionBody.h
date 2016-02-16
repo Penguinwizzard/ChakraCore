@@ -2024,10 +2024,16 @@ namespace Js
         void SetThisRegForEventHandler(RegSlot reg) { Assert(thisRegisterForEventHandler == Constants::NoRegister); thisRegisterForEventHandler = this->MapRegSlot(reg); }
         bool HasScopeObject() const { return hasScopeObject; }
         void SetHasScopeObject(bool has) { hasScopeObject = has; }
+        bool HasScopeObjectForParamScope() const { return hasScopeObjectForParamScope; }
+        void SetHasScopeObjectForParamScope(bool has) { hasScopeObjectForParamScope = has; }
         void SetLocalClosureReg(RegSlot reg) { Assert(localClosureRegister == Constants::NoRegister); localClosureRegister = this->MapRegSlot(reg); }
+        void SetLocalClosureRegForParamScope(RegSlot reg) { Assert(localClosureRegisterForParamScope == Constants::NoRegister); localClosureRegisterForParamScope = this->MapRegSlot(reg); }
         RegSlot GetLocalClosureReg() const { return localClosureRegister; }
+        RegSlot GetLocalClosureRegForParamScope() const { return localClosureRegisterForParamScope; }
         void SetLocalFrameDisplayReg(RegSlot reg) { Assert(localFrameDisplayRegister == Constants::NoRegister); localFrameDisplayRegister = this->MapRegSlot(reg); }
+        void SetLocalFrameDisplayRegForParamScope(RegSlot reg) { Assert(localFrameDisplayRegisterForParamScope == Constants::NoRegister); localFrameDisplayRegisterForParamScope = this->MapRegSlot(reg); }
         RegSlot GetLocalFrameDisplayReg() const { return localFrameDisplayRegister; /*localClosureRegister == Constants::NoRegister ? Constants::NoRegister : localClosureRegister + 1;*/ }
+        RegSlot GetLocalFrameDisplayRegForParamScope() const { return localFrameDisplayRegisterForParamScope; }
         RegSlot FirstInnerScopeReg() const { Assert(firstInnerScopeRegister != Constants::NoRegister); return firstInnerScopeRegister; }
         void SetFirstInnerScopeReg(RegSlot reg) { Assert(reg != Constants::NoRegister); firstInnerScopeRegister = this->MapRegSlot(reg); }
         RegSlot GetFuncExprScopeReg() const { return funcExprScopeRegister; }

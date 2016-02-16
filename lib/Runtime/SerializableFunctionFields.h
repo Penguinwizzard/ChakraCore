@@ -75,7 +75,9 @@ PRIVATE_FIELDS
     DECLARE_SERIALIZABLE_FIELD(FunctionBodyFlags, flags, FunctionBodyFlags);
     DECLARE_SERIALIZABLE_FIELD(bool, m_hasFinally, Bool);
     DECLARE_SERIALIZABLE_FIELD(bool, hasScopeObject, Bool);
+    DECLARE_SERIALIZABLE_FIELD(bool, hasScopeObjectForParamScope, Bool);
     DECLARE_SERIALIZABLE_FIELD(bool, hasCachedScopePropIds, Bool);
+    DECLARE_SERIALIZABLE_FIELD(bool, hasBodyAndParamScopeMerged, Bool);
     DECLARE_SERIALIZABLE_FIELD(uint, inlineCacheCount, UInt32);
     DECLARE_SERIALIZABLE_FIELD(uint, rootObjectLoadInlineCacheStart, UInt32);
     DECLARE_SERIALIZABLE_FIELD(uint, rootObjectLoadMethodInlineCacheStart, UInt32);
@@ -86,7 +88,9 @@ PRIVATE_FIELDS
     DECLARE_SERIALIZABLE_FIELD(uint, literalRegexCount, UInt32);
     DECLARE_SERIALIZABLE_FIELD(uint, innerScopeCount, UInt32);
     DECLARE_SERIALIZABLE_FIELD(RegSlot, localClosureRegister, RegSlot);
+    DECLARE_SERIALIZABLE_FIELD(RegSlot, localClosureRegisterForParamScope, RegSlot);
     DECLARE_SERIALIZABLE_FIELD(RegSlot, localFrameDisplayRegister, RegSlot);
+    DECLARE_SERIALIZABLE_FIELD(RegSlot, localFrameDisplayRegisterForParamScope, RegSlot);
     DECLARE_SERIALIZABLE_FIELD(RegSlot, envRegister, RegSlot);
     DECLARE_SERIALIZABLE_FIELD(RegSlot, thisRegisterForEventHandler, RegSlot);
     DECLARE_SERIALIZABLE_FIELD(RegSlot, firstInnerScopeRegister, RegSlot);

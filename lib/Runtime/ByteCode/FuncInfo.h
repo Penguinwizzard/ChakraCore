@@ -107,8 +107,11 @@ private:
     Js::RegSlot envRegister; // location, if any, of the closure environment
 public:
     Js::RegSlot frameObjRegister; // location, if any, of the heap-allocated local frame
+    Js::RegSlot frameObjRegisterForParamScope; // location, if any, of the heap-allocated local frame for param scope
     Js::RegSlot frameSlotsRegister; // location, if any, of the heap-allocated local frame
+    Js::RegSlot frameSlotsRegisterForParamScope; // location, if any, of the heap-allocated local frame for param scope
     Js::RegSlot frameDisplayRegister; // location, if any, of the display of nested frames
+    Js::RegSlot frameDisplayRegisterForParamScope; // location, if any, of the display of nested frames
     Js::RegSlot funcObjRegister;
     Js::RegSlot localClosureReg;
     Js::RegSlot yieldRegister;

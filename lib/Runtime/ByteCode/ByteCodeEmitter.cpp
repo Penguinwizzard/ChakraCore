@@ -1666,21 +1666,39 @@ void ByteCodeGenerator::EmitScopeObjectInit(FuncInfo *funcInfo)
     AdeletePlus(alloc, extraAlloc, propIds);
 }
 
-void ByteCodeGenerator::SetClosureRegs(Js::FunctionBody* byteCodeFunction, Js::RegSlot frameDisplayRegister, Js::RegSlot frameObjRegister, Js::RegSlot frameSlotsRegister)
+void ByteCodeGenerator::SetClosureRegs(Js::FunctionBody* byteCodeFunction, FuncInfo* funcInfo)
 {
-    if (frameDisplayRegister != Js::Constants::NoRegister)
+    if (funcInfo->frameDisplayRegister != Js::Constants::NoRegister)
     {
-        byteCodeFunction->SetLocalFrameDisplayReg(frameDisplayRegister);
+        byteCodeFunction->SetLocalFrameDisplayReg(funcInfo->frameDisplayRegister);
     }
 
-    if (frameObjRegister != Js::Constants::NoRegister)
+    if (funcInfo->frameObjRegister != Js::Constants::NoRegister)
     {
-        byteCodeFunction->SetLocalClosureReg(frameObjRegister);
+        byteCodeFunction->SetLocalClosureReg(funcInfo->frameObjRegister);
         byteCodeFunction->SetHasScopeObject(true);
     }
-    else if (frameSlotsRegister != Js::Constants::NoRegister)
+    else if (funcInfo->frameSlotsRegister != Js::Constants::NoRegister)
     {
-        byteCodeFunction->SetLocalClosureReg(frameSlotsRegister);
+        byteCodeFunction->SetLocalClosureReg(funcInfo->frameSlotsRegister);
+    }
+}
+
+void ByteCodeGenerator::SetClosureRegsForParamScope(Js::FunctionBody* byteCodeFunction, FuncInfo* funcInfo)
+{
+    if (funcInfo->frameDisplayRegisterForParamScope != Js::Constants::NoRegister)
+    {
+        byteCodeFunction->SetLocalFrameDisplayRegForParamScope(funcInfo->frameDisplayRegisterForParamScope);
+    }
+
+    if (funcInfo->frameObjRegisterForParamScope != Js::Constants::NoRegister)
+    {
+        byteCodeFunction->SetLocalClosureRegForParamScope(funcInfo->frameObjRegisterForParamScope);
+        byteCodeFunction->SetHasScopeObjectForParamScope(true);
+    }
+    else if (funcInfo->frameSlotsRegisterForParamScope != Js::Constants::NoRegister)
+    {
+        byteCodeFunction->SetLocalClosureRegForParamScope(funcInfo->frameSlotsRegisterForParamScope);
     }
 }
 
@@ -1696,7 +1714,7 @@ void ByteCodeGenerator::FinalizeRegisters(FuncInfo * funcInfo, Js::FunctionBody 
     // can distinguish constants from variables.
     byteCodeFunction->SetConstantCount(funcInfo->constRegsCount);
 
-    this->SetClosureRegs(byteCodeFunction, funcInfo->frameDisplayRegister, funcInfo->frameObjRegister, funcInfo->frameSlotsRegister);
+    this->SetClosureRegs(byteCodeFunction, funcInfo);
 
     if (this->IsInDebugMode())
     {
@@ -3134,30 +3152,25 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
 
         if (pnode->sxFnc.HasNonSimpleParameterList())
         {
-            Scope* bodyScope = funcInfo->GetBodyScope();
-
             if (!paramScope->GetCanMergeWithBodyScope())
             {
-                // Right now the scope stack is like this: outer scope -> body scope -> param scope (Pushed during BeginEmitBlock)
-                // When param and body scopes are not merged they need to be considered at the same level. So we cannot have body
-                // scope as the enclosing scope of param scope. Both body scope and the param scope should have the outer scope as
-                // the enclosing scope. When emitting the formals the stack should be like this: outer scope -> param scope -> formals.
-                // When emitting the body the stack should be like this: outer scope -> body scope -> body statements.
-                // For that pop the param scope, pop the body scope and then push the param scope again.
+                // Right now the body scope is on top and the param scope below it.
+                // Pop the body scope before emitting the formals.
                 PopScope();
-                Assert(this->GetCurrentScope()->GetScopeType() == ScopeType_FunctionBody);
-                PopScope();
-                PushScope(paramScope);
+                // Set the closure registers to the param scope ones.
+                this->SetClosureRegsForParamScope(byteCodeFunction, funcInfo);
             }
 
             EmitDefaultArgs(funcInfo, pnode);
 
             if (!paramScope->GetCanMergeWithBodyScope())
             {
-                // Do the reverse of the above block. The param scope will be removed from the stack at the end during EndEmitBlock.
-                PopScope();
+                Scope* bodyScope = funcInfo->GetBodyScope();
+
+                // Do the reverse of the above. Push the body scope back
                 PushScope(bodyScope);
-                PushScope(paramScope);
+                // Set the closure registers back to the body scope ones.
+                this->SetClosureRegs(byteCodeFunction, funcInfo);
             }
         }
         else if (funcInfo->GetHasArguments() && !NeedScopeObjectForArguments(funcInfo, pnode))
@@ -3464,6 +3477,7 @@ void ByteCodeGenerator::EmitScopeList(ParseNode *pnode)
                     // Pop the body scope
                     PopScope();
                     PushScope(paramScope);
+                    // TODO: Stop emitting once you find the body block in this list
                     this->EmitScopeList(pnode->sxFnc.pnodeScopes);
                     PushScope(bodyScope);
                 }
@@ -3764,6 +3778,7 @@ void ByteCodeGenerator::StartEmitFunction(ParseNode *pnodeFnc)
             }
 
             this->EnsurePreDefinedScopeSlots(funcInfo, bodyScope);
+            this->EnsurePreDefinedScopeSlots(funcInfo, paramScope);
 
             auto ensureFncDeclScopeSlots = [&](ParseNode *pnodeScope)
             {
@@ -3820,6 +3835,7 @@ void ByteCodeGenerator::StartEmitFunction(ParseNode *pnodeFnc)
             Symbol *sym;
 
             this->EnsurePreDefinedScopeSlots(funcInfo, bodyScope);
+            this->EnsurePreDefinedScopeSlots(funcInfo, paramScope);
 
             pnodeFnc->sxFnc.MapContainerScopes([&](ParseNode *pnodeScope) { this->EnsureFncScopeSlots(pnodeScope, funcInfo); });
 
