@@ -81,7 +81,7 @@ public:
 #ifdef SUPPORT_FIXED_FIELDS_ON_PATH_TYPES
         // We sometimes set up PathTypeHandlers and associate TypePaths before we create any instances
         // that populate the corresponding slots, e.g. for object literals or constructors with only
-        // this statements.  This field keeps track of the longest instance associated with the given
+        // this statements. This field keeps track of the longest instance associated with the given
         // TypePath.
         PathTypePropertyIndex maxInitializedSlotCount;
         RecyclerWeakReference<DynamicObject>* singletonInstance;

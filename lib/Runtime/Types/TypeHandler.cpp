@@ -297,7 +297,7 @@ namespace Js
         const Var varValue,
         DynamicObject *const object)
     {
-        // We should only assign stack value only to an stack object (current mark temp number in mark temp object)
+        // We should only assign stack value only to a stack object (current mark temp number in mark temp object)
         Assert(ThreadContext::IsOnStack(object) || !ThreadContext::IsOnStack(varValue) || TaggedNumber::Is(varValue));
 
         *static_cast<Var *>(slot) = varValue;

@@ -358,7 +358,8 @@ namespace Js
         return SetProperty(instance, propertyRecord->GetPropertyId(), value, flags, info);
     }
 
-    BOOL PathTypeHandler::SetPropertyInternal(DynamicObject* instance, PropertyId propertyId, Var value, PropertyValueInfo* info, PropertyOperationFlags flags, SideEffects possibleSideEffects)
+    BOOL PathTypeHandler::SetPropertyInternal(DynamicObject* instance, PropertyId propertyId, Var value, PropertyValueInfo* info, PropertyOperationFlags flags, 
+        SideEffects possibleSideEffects, PropertyAttributes attributes)
     {
         // Path type handler doesn't support pre-initialization (PropertyOperation_PreInit). Pre-initialized properties
         // will get marked as fixed when pre-initialized and then as non-fixed when their actual values are set.
@@ -371,7 +372,7 @@ namespace Js
         
         if (index != Constants::NoSlot)
         {
-            // If type is shared then the handler must be shared as well.  This is a weaker invariant than in AddPropertyInternal,
+            // If type is shared then the handler must be shared as well. This is a weaker invariant than in AddPropertyInternal,
             // because the type coming in here may be the result of DynamicObject::ChangeType(). In that case the handler may have
             // already been shared, but the newly created type isn't - and likely never will be - shared (is typically unreachable).
             // In CacheOperators::CachePropertyWrite we ensure that we never cache property adds for types that aren't shared.
@@ -408,7 +409,7 @@ namespace Js
             return SetItem(instance, indexVal, value, PropertyOperation_None);
         }
 
-        return AddPropertyInternal(instance, propertyId, value, info, flags, possibleSideEffects);
+        return AddPropertyInternal(instance, propertyId, value, info, flags, possibleSideEffects, attributes);
     }
 
     void PathTypeHandler::SetExistingProperty_UpdateStateAfterSet(
@@ -513,6 +514,11 @@ namespace Js
 
     BOOL PathTypeHandler::SetEnumerable(DynamicObject* instance, PropertyId propertyId, BOOL value)
     {
+        if (!PHASE_OFF1(Js::SupportAttributesOnPathTypesPhase))
+        {
+            return true;
+        }
+
 #ifdef PROFILE_TYPES
         instance->GetScriptContext()->convertPathToDictionaryCount3++;
 #endif
@@ -521,14 +527,52 @@ namespace Js
 
     BOOL PathTypeHandler::SetWritable(DynamicObject* instance, PropertyId propertyId, BOOL value)
     {
+        if (!PHASE_OFF1(Js::SupportAttributesOnPathTypesPhase))
+        {
+            //const Type* oldType = instance->GetType();
+            //if (value)
+            //{
+            //    if (SetAttribute(instance, descriptor, PropertyWritable))
+            //    {
+            //        instance->ChangeTypeIf(oldType); // Ensure type change to invalidate caches
+            //    }
+            //}
+            //else
+            //{
+            //    if (ClearAttribute(instance, descriptor, PropertyWritable))
+            //    {
+            //        instance->ChangeTypeIf(oldType); // Ensure type change to invalidate caches
+
+            //                                         // Clearing the attribute may have changed the type handler, so make sure
+            //                                         // we access the current one.
+            //        DynamicTypeHandler *const typeHandler = GetCurrentTypeHandler(instance);
+            //        typeHandler->ClearHasOnlyWritableDataProperties();
+            //        if (typeHandler->GetFlags() & IsPrototypeFlag)
+            //        {
+            //            instance->GetScriptContext()->InvalidateStoreFieldCaches(propertyId);
+            //            instance->GetLibrary()->NoPrototypeChainsAreEnsuredToHaveOnlyWritableDataProperties();
+            //        }
+            //    }
+            //}
+
+            return true;
+        }
+        else
+        {
 #ifdef PROFILE_TYPES
-        instance->GetScriptContext()->convertPathToDictionaryCount3++;
+            instance->GetScriptContext()->convertPathToDictionaryCount3++;
 #endif
-        return value || ConvertToSimpleDictionaryType(instance, GetPropertyCountInternal())->SetWritable(instance, propertyId, value);
+            return value || ConvertToSimpleDictionaryType(instance, GetPropertyCountInternal())->SetWritable(instance, propertyId, value);
+        }
     }
 
     BOOL PathTypeHandler::SetConfigurable(DynamicObject* instance, PropertyId propertyId, BOOL value)
     {
+        if (!PHASE_OFF1(Js::SupportAttributesOnPathTypesPhase))
+        {
+            return true;
+        }
+
 #ifdef PROFILE_TYPES
         instance->GetScriptContext()->convertPathToDictionaryCount3++;
 #endif
@@ -1014,6 +1058,7 @@ namespace Js
         Assert(oldTypeHandler->GetSlotCountInternal() <= oldTypePath->GetMaxInitializedSlotCount());
         for (PropertyIndex i = 0; i < oldTypeHandler->GetSlotCountInternal(); i = oldTypePath->GetNextSlotIndex(i))
         {
+            // fetch attributes if there are any properties with non-default attributes
             if (FixPropsOnPathTypes())
             {
                 newTypeHandler->Add(oldTypePath->GetPropertyId(i), PropertyDynamicTypeDefaults,
@@ -1073,9 +1118,10 @@ namespace Js
 
     BOOL PathTypeHandler::SetPropertyWithAttributes(DynamicObject* instance, PropertyId propertyId, Var value, PropertyAttributes attributes, PropertyValueInfo* info, PropertyOperationFlags flags, SideEffects possibleSideEffects)
     {
-        if (attributes == PropertyDynamicTypeDefaults)
+        if ((!PHASE_OFF1(Js::SupportAttributesOnPathTypesPhase) && (attributes & !PropertyDynamicTypeDefaults) == 0) || 
+            attributes == PropertyDynamicTypeDefaults)
         {
-            return SetPropertyInternal(instance, propertyId, value, info, flags, possibleSideEffects);
+            return SetPropertyInternal(instance, propertyId, value, info, flags, possibleSideEffects, attributes);
         }
         else
         {
@@ -1085,13 +1131,21 @@ namespace Js
 
     BOOL PathTypeHandler::SetAttributes(DynamicObject* instance, PropertyId propertyId, PropertyAttributes attributes)
     {
-        if ( (attributes & PropertyDynamicTypeDefaults) != PropertyDynamicTypeDefaults)
+        if (PHASE_OFF1(Js::SupportAttributesOnPathTypesPhase))
         {
+            if ((attributes & PropertyDynamicTypeDefaults) != PropertyDynamicTypeDefaults)
+            {
 #ifdef PROFILE_TYPES
-            instance->GetScriptContext()->convertPathToDictionaryCount3++;
+                instance->GetScriptContext()->convertPathToDictionaryCount3++;
 #endif
 
-            return ConvertToSimpleDictionaryType(instance, GetPropertyCountInternal())->SetAttributes(instance, propertyId, attributes);
+                return ConvertToSimpleDictionaryType(instance, GetPropertyCountInternal())->SetAttributes(instance, propertyId, attributes);
+            }
+        }
+        else if ((attributes & !PropertyDynamicTypeDefaults) == 0)
+        {
+            // set attributes
+            return true;
         }
 
         return true;
@@ -1101,8 +1155,15 @@ namespace Js
     {
         if (index < this->GetSlotCountInternal())
         {
-            Assert(this->GetPropertyId(instance->GetScriptContext(), index) == propertyId);
-            *attributes = PropertyDynamicTypeDefaults;
+            if (PHASE_OFF1(Js::SupportAttributesOnPathTypesPhase))
+            {
+                Assert(this->GetPropertyId(instance->GetScriptContext(), index) == propertyId);
+                *attributes = PropertyDynamicTypeDefaults;
+            }
+            else
+            {
+                // get from transition info/slot type
+            }
             return true;
         }
         return false;
@@ -1508,16 +1569,19 @@ namespace Js
 
     BOOL PathTypeHandler::AddProperty(DynamicObject * instance, PropertyId propertyId, Js::Var value, PropertyAttributes attributes, PropertyValueInfo* info, PropertyOperationFlags flags, SideEffects possibleSideEffects)
     {
-        if (attributes != PropertyDynamicTypeDefaults)
+        if ((PHASE_OFF1(Js::SupportAttributesOnPathTypesPhase) && attributes != PropertyDynamicTypeDefaults) ||
+            ((attributes & !PropertyDynamicTypeDefaults) != 0))
         {
             Assert(propertyId != Constants::NoProperty);
             PropertyRecord const* propertyRecord = instance->GetScriptContext()->GetPropertyName(propertyId);
             return ConvertToSimpleDictionaryType(instance, GetPropertyCountInternal() + 1)->AddProperty(instance, propertyRecord, value, attributes, info, flags, possibleSideEffects);
         }
-        return AddPropertyInternal(instance, propertyId, value, info, flags, possibleSideEffects);
+
+        return AddPropertyInternal(instance, propertyId, value, info, flags, possibleSideEffects, attributes);
     }
 
-    BOOL PathTypeHandler::AddPropertyInternal(DynamicObject * instance, PropertyId propertyId, Js::Var value, PropertyValueInfo* info, PropertyOperationFlags flags, SideEffects possibleSideEffects)
+    BOOL PathTypeHandler::AddPropertyInternal(DynamicObject * instance, PropertyId propertyId, Js::Var value, PropertyValueInfo* info, PropertyOperationFlags flags, 
+        SideEffects possibleSideEffects, PropertyAttributes attributes)
     {
         VerifySlotCapacities();
         ScriptContext* scriptContext = instance->GetScriptContext();
@@ -1546,7 +1610,7 @@ namespace Js
 #ifdef PROFILE_TYPES
             scriptContext->convertPathToDictionaryCount1++;
 #endif
-            return ConvertToSimpleDictionaryType(instance, GetPropertyCountInternal() + 1)->AddProperty(instance, propertyRecord, value, PropertyDynamicTypeDefaults, info, PropertyOperation_None, possibleSideEffects);
+            return ConvertToSimpleDictionaryType(instance, GetPropertyCountInternal() + 1)->AddProperty(instance, propertyRecord, value, attributes, info, PropertyOperation_None, possibleSideEffects);
         }
 
         PropertyIndex index = GetSlotCountInternal();
