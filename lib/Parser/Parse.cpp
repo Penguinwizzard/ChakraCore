@@ -4723,7 +4723,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
         // Create function body scope
         ParseNodePtr pnodeInnerBlock = StartParseBlock<buildAST>(PnodeBlockType::Function, ScopeType_FunctionBody);
         // Set the parameter block's child to the function body block.
-        *m_ppnodeScope = pnodeInnerBlock; // //
+        *m_ppnodeScope = pnodeInnerBlock; //
         pnodeFnc->sxFnc.pnodeBodyScope = pnodeInnerBlock;
 
         // This synthetic block scope will contain all the nested scopes.
@@ -4823,11 +4823,8 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
                 pnodeFnc->sxFnc.pnodeVars = nullptr;
                 m_ppnodeVar = &pnodeFnc->sxFnc.pnodeVars;
 
-                if (pnodeFnc->sxFnc.funcInfo && pnodeFnc->sxFnc.HasNonSimpleParameterList() && !fAsync)
+                if (pnodeFnc->sxFnc.HasNonSimpleParameterList() && !fAsync)
                 {
-                    // m_pnestedCount = 0;
-                    Assert(!pnodeFnc->sxFnc.funcInfo->GetBodyScope()->GetIsObject());
-
                     Scope* paramScope = pnodeFnc->sxFnc.pnodeScopes->sxBlock.scope;
                     if (pnodeFnc->sxFnc.CallsEval() || pnodeFnc->sxFnc.ChildCallsEval())
                     {

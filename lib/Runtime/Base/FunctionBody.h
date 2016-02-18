@@ -1868,6 +1868,7 @@ namespace Js
         bool m_ChildCallsEval : 1;
         bool m_CallsEval : 1;
         bool m_hasReferenceableBuiltInArguments : 1;
+        bool m_isParamAndBodyScopeMerged : 1;
 
         // Used in the debug purpose. This is to avoid setting all locals to non-local-referenced, multiple times for each child function.
         bool m_hasDoneAllNonLocalReferenced : 1;
@@ -2467,10 +2468,13 @@ namespace Js
                 !PHASE_OFF(Js::PolymorphicInlineFixedMethodsPhase, this) && !PHASE_OFF(Js::PolymorphicInlineFixedMethodsPhase, topFunctionBody);
         }
 
+        void SetScopeSlotCount(uint count) { this->scopeSlotArraySize = count; }
+        void SetScopeSlotCountForParamScope(uint count) { this->scopeSlotArraySizeForParamScope = count; }
+
         Js::PropertyId * GetPropertyIdsForScopeSlotArray() const { return static_cast<Js::PropertyId *>(this->GetAuxPtr(AuxPointerType::PropertyIdsForScopeSlotArray)); }
         void SetPropertyIdsForScopeSlotArray(Js::PropertyId * propertyIdsForScopeSlotArray, uint scopeSlotCount)
         {
-            this->scopeSlotArraySize = scopeSlotCount;
+            this->SetScopeSlotCount(scopeSlotCount);
             this->SetAuxPtr(AuxPointerType::PropertyIdsForScopeSlotArray, propertyIdsForScopeSlotArray);
         }
 
@@ -2806,6 +2810,9 @@ namespace Js
 
         bool HasReferenceableBuiltInArguments() const { return m_hasReferenceableBuiltInArguments; }
         void SetHasReferenceableBuiltInArguments(bool value) { m_hasReferenceableBuiltInArguments = value; }
+
+        bool IsParamAndBodyScopeMerged() const { return m_isParamAndBodyScopeMerged; }
+        void SetParamAndBodyScopeNotMerged() { m_isParamAndBodyScopeMerged = false; }
 
         // Used for the debug purpose. This is to avoid setting all locals to non-local-referenced, multiple time for each child function.
         bool HasDoneAllNonLocalReferenced() const { return m_hasDoneAllNonLocalReferenced; }

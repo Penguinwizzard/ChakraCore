@@ -74,7 +74,6 @@ bool BlockHasOwnScope(ParseNode* pnodeBlock, ByteCodeGenerator *byteCodeGenerato
     Assert(pnodeBlock->nop == knopBlock);
     return pnodeBlock->sxBlock.scope != nullptr &&
         (!(pnodeBlock->grfpn & fpnSyntheticNode) ||
-            (pnodeBlock->sxBlock.blockType == Parameter && !pnodeBlock->sxBlock.scope->GetCanMergeWithBodyScope()) ||
             (pnodeBlock->sxBlock.blockType == PnodeBlockType::Global && byteCodeGenerator->IsEvalWithNoParentScopeInfo()));
 }
 
@@ -1426,12 +1425,8 @@ FuncInfo * ByteCodeGenerator::StartBindFunction(const wchar_t *name, uint nameLe
     }
 
     PushFuncInfo(L"StartBindFunction", funcInfo);
-    if (paramScope->GetCanMergeWithBodyScope())
-    {
-        // When param scope is not merged with body scope we don't have to push the param scope here.
-        // Symbols in both scopes are separate and can't reference each other.
-        PushScope(paramScope);
-    }
+
+    PushScope(paramScope);
     PushScope(bodyScope);
 
     if (funcExprScope)
@@ -1452,7 +1447,6 @@ FuncInfo * ByteCodeGenerator::StartBindFunction(const wchar_t *name, uint nameLe
 void ByteCodeGenerator::EndBindFunction(bool funcExprWithName)
 {
     bool isGlobalScope = currentScope->GetScopeType() == ScopeType_Global;
-    Scope* bodyScope = currentScope;
 
     Assert(currentScope->GetScopeType() == ScopeType_FunctionBody || isGlobalScope);
     PopScope(); // function body
@@ -1463,12 +1457,8 @@ void ByteCodeGenerator::EndBindFunction(bool funcExprWithName)
     }
     else
     {
-        Scope* paramScope = bodyScope->GetFunc()->GetParamScope();
-        if (paramScope->GetCanMergeWithBodyScope())
-        {
-            Assert(currentScope->GetScopeType() == ScopeType_Parameter);
-            PopScope(); // parameter scope
-        }
+        Assert(currentScope->GetScopeType() == ScopeType_Parameter);
+        PopScope(); // parameter scope
     }
 
     if (funcExprWithName)

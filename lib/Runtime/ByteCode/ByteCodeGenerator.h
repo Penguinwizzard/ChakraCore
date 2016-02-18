@@ -281,7 +281,7 @@ public:
 
     void DefineLabels(FuncInfo *funcInfo);
     void EmitProgram(ParseNode *pnodeProg);
-    void EmitScopeList(ParseNode *pnode);
+    void EmitScopeList(ParseNode *pnode, bool breakOnNonFncDecl = false);
     void EmitDefaultArgs(FuncInfo *funcInfo, ParseNode *pnode);
     void EmitOneFunction(ParseNode *pnode);
     void EmitGlobalFncDeclInit(Js::RegSlot rhsLocation, Js::PropertyId propertyId, FuncInfo * funcInfo);

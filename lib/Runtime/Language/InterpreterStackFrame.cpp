@@ -1155,13 +1155,18 @@ namespace Js
 
             if (!this->bailedOutOfInlinee)
             {
+                uint16 envDepth = this->executeFunction->GetEnvDepth();
+                Assert(envDepth != (uint16)-1);
                 if (this->executeFunction->DoStackFrameDisplay())
                 {
-                    uint16 envDepth = this->executeFunction->GetEnvDepth();
-                    Assert(envDepth != (uint16)-1);
                     newInstance->localFrameDisplay = (FrameDisplay*)nextAllocBytes;
                     nextAllocBytes += sizeof(FrameDisplay) + (envDepth + 1) * sizeof(Var);
                 }
+                /*if (!this->executeFunction->IsParamAndBodyScopeMerged())
+                {
+                    newInstance->localFrameDisplayForParamScope = (FrameDisplay*)nextAllocBytes;
+                    nextAllocBytes += sizeof(FrameDisplay) + (envDepth + 1) * sizeof(Var);
+                }*/
 
                 if (this->executeFunction->DoStackScopeSlots())
                 {
