@@ -116,6 +116,8 @@ public:
     HeapBucketT();
     ~HeapBucketT();
 
+    bool CanAlloc()const { return heapBlockList != nullptr; }
+
     bool IntegrateBlock(char * blockAddress, PageSegment * segment, Recycler * recycler);
 
     template <ObjectInfoBits attributes, bool nothrow>
@@ -226,7 +228,6 @@ protected:
     TBlockAllocatorType allocatorHead;
     TBlockType * nextAllocableBlockHead;
     TBlockType * emptyBlockList;     // list of blocks that is empty and has it's page freed
-
     TBlockType * fullBlockList;      // list of blocks that are fully allocated
     TBlockType * heapBlockList;      // list of blocks that has free objects
 

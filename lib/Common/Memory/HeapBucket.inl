@@ -15,6 +15,22 @@ HeapBucketT<TBlockType>::RealAlloc(Recycler * recycler, size_t sizeCat)
 
     if (memBlock == nullptr)
     {
+        if (!this->CanAlloc())
+        {
+            auto newSizeCat = sizeCat + 16;
+            if (HeapInfo::IsAlignedSmallObjectSize(newSizeCat))
+            {
+                auto& bucket = this->heapInfo->GetBucket<(ObjectInfoBits)(attributes & GetBlockTypeBitMask)>(newSizeCat);
+                if (bucket.CanAlloc())
+                {
+                    memBlock = bucket.RealAlloc<(ObjectInfoBits)(attributes & InternalObjectInfoBitMask), nothrow>(recycler, newSizeCat);
+                }
+            }
+        }
+    }
+
+    if (memBlock == nullptr)
+    {
         memBlock = SnailAlloc(recycler, &allocatorHead, sizeCat, attributes, nothrow);
         Assert(memBlock != nullptr || nothrow);
     }

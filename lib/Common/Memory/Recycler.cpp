@@ -1013,7 +1013,7 @@ template <typename TBlockAttributes>
 void Recycler::SetExplicitFreeBitOnSmallBlock(HeapBlock* heapBlock, size_t sizeCat, void* buffer, ObjectInfoBits attributes)
 {
     Assert(!heapBlock->IsLargeHeapBlock());
-    Assert(heapBlock->GetObjectSize(buffer) == sizeCat);
+    Assert(heapBlock->GetObjectSize(buffer) >= sizeCat);
     SmallHeapBlockT<TBlockAttributes>* smallBlock = (SmallHeapBlockT<TBlockAttributes>*)heapBlock;
     if ((attributes & ObjectInfoBits::LeafBit) == LeafBit)
     {
