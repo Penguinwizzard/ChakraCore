@@ -834,6 +834,7 @@ namespace Js
             case OpCode::StLocalSlot:
             case OpCode::StLocalObjSlot:
             case OpCode::StLocalSlotChkUndecl:
+            case OpCode::StLocalSlotChkUndeclForParamScope:
             case OpCode::StLocalObjSlotChkUndecl:
                 Output::Print(L" [%d] = R%d ",data->SlotIndex, data->Value);
                 break;

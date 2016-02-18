@@ -475,6 +475,7 @@ namespace Js
         committedProfiledIterations(0),
         wasCalledFromLoop(false),
         hasScopeObject(false),
+        hasScopeObjectForParamScope(false),
         hasNestedLoop(false),
         recentlyBailedOutOfJittedLoopBody(false),
         serializationIndex(-1),

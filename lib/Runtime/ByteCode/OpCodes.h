@@ -394,6 +394,7 @@ MACRO_BACKEND_ONLY(     StSlotChkUndecl,            ElementSlot,    OpSideEffect
 MACRO_EXTEND_WMS(       StEnvSlotChkUndecl,         ElementSlotI2,  OpSideEffect)
 MACRO_EXTEND_WMS(       StInnerSlotChkUndecl,       ElementSlotI2,  OpSideEffect)
 MACRO_EXTEND_WMS(       StLocalSlotChkUndecl,       ElementSlotI1,  OpSideEffect)
+MACRO_EXTEND_WMS(       StLocalSlotChkUndeclForParamScope, ElementSlotI1, OpSideEffect)
 MACRO_EXTEND_WMS(       StObjSlot,                  ElementSlot,    OpSideEffect)
 MACRO_EXTEND_WMS(       StInnerObjSlot,             ElementSlotI2,  OpSideEffect)
 MACRO_EXTEND_WMS(       StLocalObjSlot,             ElementSlotI1,  OpSideEffect)

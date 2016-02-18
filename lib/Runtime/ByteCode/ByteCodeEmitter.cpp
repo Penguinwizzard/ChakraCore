@@ -7,7 +7,7 @@
 #include "Language\AsmJs.h"
 
 void EmitReference(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *funcInfo);
-void EmitAssignment(ParseNode *asgnNode, ParseNode *lhs, Js::RegSlot rhsLocation, ByteCodeGenerator *byteCodeGenerator, FuncInfo *funcInfo);
+void EmitAssignment(ParseNode *asgnNode, ParseNode *lhs, Js::RegSlot rhsLocation, ByteCodeGenerator *byteCodeGenerator, FuncInfo *funcInfo, bool isParamScope = false);
 void EmitLoad(ParseNode *rhs, ByteCodeGenerator *byteCodeGenerator, FuncInfo *funcInfo);
 void EmitCall(ParseNode* pnode, Js::RegSlot rhsLocation, ByteCodeGenerator* byteCodeGenerator, FuncInfo* funcInfo, BOOL fReturnValue, BOOL fEvaluateComponents, BOOL fHasNewTarget, Js::RegSlot overrideThisLocation = Js::Constants::NoRegister);
 void EmitSuperFieldPatch(FuncInfo* funcInfo, ParseNode* pnode, ByteCodeGenerator* byteCodeGenerator);
@@ -252,6 +252,9 @@ Js::OpCode ByteCodeGenerator::ToChkUndeclOp(Js::OpCode op) const
 
     case Js::OpCode::StEnvObjSlot:
         return Js::OpCode::StEnvObjSlotChkUndecl;
+
+    case Js::OpCode::StLocalSlotChkUndeclForParamScope:
+        return Js::OpCode::StLocalSlotChkUndeclForParamScope;
 
     default:
         AssertMsg(false, "Unknown opcode for chk undecl mapping");
@@ -1200,10 +1203,17 @@ Js::RegSlot ByteCodeGenerator::DefineOneFunction(ParseNode *pnodeFnc, FuncInfo *
             // It's likely that the FD is on the stack, and we used the temp to load it back.
             regEnv = frameDisplayTemp;
         }
-        else if (funcInfoParent->frameDisplayRegister != Js::Constants::NoRegister)
+        else if (funcInfoParent->frameDisplayRegister != Js::Constants::NoRegister || funcInfoParent->frameDisplayRegisterForParamScope != Js::Constants::NoRegister)
         {
-            // This function has built a frame display, so pass it down.
-            regEnv = funcInfoParent->frameDisplayRegister;
+            if (currentScope == funcInfoParent->GetParamScope())
+            {
+                regEnv = funcInfoParent->frameDisplayRegisterForParamScope;
+            }
+            else
+            {
+                // This function has built a frame display, so pass it down.
+                regEnv = funcInfoParent->frameDisplayRegister;
+            }
         }
         else
         {
@@ -2771,7 +2781,7 @@ void ByteCodeGenerator::EmitDefaultArgs(FuncInfo *funcInfo, ParseNode *pnode)
             if (pnodeArg->sxVar.pnodeInit == nullptr)
             {
                 // Since the formal hasn't been initialized in LdLetHeapArguments, we'll initialize it here.
-                EmitPropStore(location, pnodeArg->sxVar.sym, pnodeArg->sxVar.pid, funcInfo, true);
+                EmitPropStore(location, pnodeArg->sxVar.sym, pnodeArg->sxVar.pid, funcInfo, true, false, false, true);
 
                 pnodeArg->sxVar.sym->SetNeedDeclaration(false);
                 return;
@@ -2789,13 +2799,13 @@ void ByteCodeGenerator::EmitDefaultArgs(FuncInfo *funcInfo, ParseNode *pnode)
 
             if (funcInfo->GetHasArguments() && pnodeArg->sxVar.sym->IsInSlot(funcInfo))
             {
-                EmitPropStore(pnodeArg->sxVar.pnodeInit->location, pnodeArg->sxVar.sym, pnodeArg->sxVar.pid, funcInfo, true);
+                EmitPropStore(pnodeArg->sxVar.pnodeInit->location, pnodeArg->sxVar.sym, pnodeArg->sxVar.pid, funcInfo, true, false, false, true);
 
                 m_writer.Br(endLabel);
             }
             else
             {
-                EmitAssignment(nullptr, pnodeArg, pnodeArg->sxVar.pnodeInit->location, this, funcInfo);
+                EmitAssignment(nullptr, pnodeArg, pnodeArg->sxVar.pnodeInit->location, this, funcInfo, true);
             }
 
             funcInfo->ReleaseLoc(pnodeArg->sxVar.pnodeInit);
@@ -2804,7 +2814,7 @@ void ByteCodeGenerator::EmitDefaultArgs(FuncInfo *funcInfo, ParseNode *pnode)
 
             if (funcInfo->GetHasArguments() && pnodeArg->sxVar.sym->IsInSlot(funcInfo))
             {
-                EmitPropStore(location, pnodeArg->sxVar.sym, pnodeArg->sxVar.pid, funcInfo, true);
+                EmitPropStore(location, pnodeArg->sxVar.sym, pnodeArg->sxVar.pid, funcInfo, true, false, false, true);
 
                 m_writer.MarkLabel(endLabel);
             }
@@ -4194,7 +4204,7 @@ Js::RegSlot ByteCodeGenerator::PrependLocalScopes(Js::RegSlot evalEnv, Js::RegSl
         {
             if (!innerScope->HasInnerScopeIndex())
             {
-                if (evalEnv == funcInfo->GetEnvRegister() || evalEnv == funcInfo->frameDisplayRegister)
+                if (evalEnv == funcInfo->GetEnvRegister() || evalEnv == funcInfo->frameDisplayRegister || evalEnv == funcInfo->frameDisplayRegisterForParamScope)
                 {
                     this->m_writer.Reg2(Js::OpCode::LdInnerFrameDisplayNoParent, tempLoc, innerScope->GetLocation());
                 }
@@ -4205,7 +4215,7 @@ Js::RegSlot ByteCodeGenerator::PrependLocalScopes(Js::RegSlot evalEnv, Js::RegSl
             }
             else
             {
-                if (evalEnv == funcInfo->GetEnvRegister() || evalEnv == funcInfo->frameDisplayRegister)
+                if (evalEnv == funcInfo->GetEnvRegister() || evalEnv == funcInfo->frameDisplayRegister || evalEnv == funcInfo->frameDisplayRegisterForParamScope)
                 {
                     this->m_writer.Reg1Unsigned1(Js::OpCode::LdIndexedFrameDisplayNoParent, tempLoc, innerScope->GetInnerScopeIndex());
                 }
@@ -4510,7 +4520,7 @@ void ByteCodeGenerator::EmitLocalPropInit(Js::RegSlot rhsLocation, Symbol *sym, 
 }
 
 Js::OpCode
-ByteCodeGenerator::GetStSlotOp(Scope *scope, int envIndex, Js::RegSlot scopeLocation, bool chkBlockVar, FuncInfo *funcInfo)
+ByteCodeGenerator::GetStSlotOp(Scope *scope, int envIndex, Js::RegSlot scopeLocation, bool chkBlockVar, FuncInfo *funcInfo, bool isParamScope)
 {
     Js::OpCode op;
 
@@ -4528,7 +4538,8 @@ ByteCodeGenerator::GetStSlotOp(Scope *scope, int envIndex, Js::RegSlot scopeLoca
     else if (scopeLocation != Js::Constants::NoRegister &&
              (scopeLocation == funcInfo->frameSlotsRegister || scopeLocation == funcInfo->frameSlotsRegisterForParamScope))
     {
-        op = Js::OpCode::StLocalSlot;
+        // TODO: Should this be StLocalSlotChkForParamScope??
+        op = isParamScope ? Js::OpCode::StLocalSlotChkUndeclForParamScope : Js::OpCode::StLocalSlot;
     }
     else if (scopeLocation != Js::Constants::NoRegister &&
              (scopeLocation == funcInfo->frameObjRegister || scopeLocation == funcInfo->frameObjRegisterForParamScope))
@@ -4578,7 +4589,7 @@ ByteCodeGenerator::GetInitFldOp(Scope *scope, Js::RegSlot scopeLocation, FuncInf
     return op;
 }
 
-void ByteCodeGenerator::EmitPropStore(Js::RegSlot rhsLocation, Symbol *sym, IdentPtr pid, FuncInfo *funcInfo, bool isLetDecl, bool isConstDecl, bool isFncDeclVar)
+void ByteCodeGenerator::EmitPropStore(Js::RegSlot rhsLocation, Symbol *sym, IdentPtr pid, FuncInfo *funcInfo, bool isLetDecl, bool isConstDecl, bool isFncDeclVar, bool isParamScope)
 {
     Js::ByteCodeLabel doneLabel = 0;
     bool fLabelDefined = false;
@@ -4756,7 +4767,7 @@ void ByteCodeGenerator::EmitPropStore(Js::RegSlot rhsLocation, Symbol *sym, Iden
         bool chkBlockVar = !isLetDecl && !isConstDecl && NeedCheckBlockVar(sym, scope, funcInfo);
 
         // The property is in memory rather than register. We'll have to load it from the slots.
-        op = this->GetStSlotOp(scope, envIndex, scopeLocation, chkBlockVar, funcInfo);
+        op = this->GetStSlotOp(scope, envIndex, scopeLocation, chkBlockVar, funcInfo, isParamScope);
 
         if (envIndex != -1)
         {
@@ -6284,7 +6295,8 @@ void EmitAssignment(
     ParseNode *lhs,
     Js::RegSlot rhsLocation,
     ByteCodeGenerator *byteCodeGenerator,
-    FuncInfo *funcInfo)
+    FuncInfo *funcInfo,
+    bool isParamScope)
 {
     switch (lhs->nop)
     {
@@ -6295,7 +6307,7 @@ void EmitAssignment(
     {
         Symbol *sym = lhs->sxVar.sym;
         Assert(sym != nullptr);
-        byteCodeGenerator->EmitPropStore(rhsLocation, sym, nullptr, funcInfo, lhs->nop == knopLetDecl, lhs->nop == knopConstDecl);
+        byteCodeGenerator->EmitPropStore(rhsLocation, sym, nullptr, funcInfo, lhs->nop == knopLetDecl, lhs->nop == knopConstDecl, false, isParamScope);
         break;
     }
 

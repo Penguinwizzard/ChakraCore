@@ -3448,6 +3448,7 @@ IRBuilder::BuildElementSlotI1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot r
 
         case Js::OpCode::StLocalSlot:
         case Js::OpCode::StLocalSlotChkUndecl:
+        case Js::OpCode::StLocalSlotChkUndeclForParamScope:
 
             if (PHASE_ON(Js::ClosureRangeCheckPhase, m_func))
             {

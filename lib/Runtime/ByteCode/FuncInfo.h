@@ -114,6 +114,7 @@ public:
     Js::RegSlot frameDisplayRegisterForParamScope; // location, if any, of the display of nested frames
     Js::RegSlot funcObjRegister;
     Js::RegSlot localClosureReg;
+    Js::RegSlot localClosureRegForParamScope;
     Js::RegSlot yieldRegister;
     Js::RegSlot firstTmpReg;
     Js::RegSlot curTmpReg;
@@ -564,6 +565,16 @@ public:
     Js::RegSlot GetLocalFrameDisplayReg()
     {
         return this->localClosureReg + 1;
+    }
+
+    Js::RegSlot GetLocalScopeSlotsRegForParamScope()
+    {
+        return this->localClosureRegForParamScope;
+    }
+
+    Js::RegSlot GetLocalFrameDisplayRegForParamScope()
+    {
+        return this->localClosureRegForParamScope + 1;
     }
 
     Js::RegSlot InnerScopeToRegSlot(Scope *scope) const;

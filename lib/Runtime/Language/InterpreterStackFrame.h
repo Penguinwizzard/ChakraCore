@@ -75,7 +75,9 @@ namespace Js
         Var  m_arguments;               // Dedicated location for this frame's arguments object
         StackScriptFunction * stackNestedFunctions;
         FrameDisplay * localFrameDisplay;
+        FrameDisplay * localFrameDisplayForParamScope;
         Var localClosure;
+        Var localClosureForParamScope;
         Var *innerScopeArray;
         ScriptContext* scriptContext;
         ScriptFunction * function;
@@ -213,7 +215,7 @@ namespace Js
 
         Var LdEnv() const;
         void SetEnv(FrameDisplay *frameDisplay);
-        Var * NewScopeSlots(unsigned int size, ScriptContext *scriptContext, Var scope);
+        Var * NewScopeSlots(unsigned int size, ScriptContext *scriptContext, Var scope, bool isParamScope = false);
         Var * NewScopeSlots();
         Var NewScopeObject();
         FrameDisplay * NewFrameDisplay(void *argHead, void *argEnv);
@@ -713,8 +715,11 @@ namespace Js
 
         void InitializeClosures();
         void SetLocalFrameDisplay(FrameDisplay *frameDisplay);
+        void SetLocalFrameDisplayForParamScope(FrameDisplay *frameDisplay);
         Var  GetLocalClosure() const;
         void SetLocalClosure(Var closure);
+        Var  GetLocalClosureForParamScope() const;
+        void SetLocalClosureForParamScope(Var closure);
         void TrySetRetOffset();
     };
 

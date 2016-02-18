@@ -42,6 +42,7 @@ FuncInfo::FuncInfo(
     frameDisplayRegisterForParamScope(Js::Constants::NoRegister),
     funcObjRegister(Js::Constants::NoRegister),
     localClosureReg(Js::Constants::NoRegister),
+    localClosureRegForParamScope(Js::Constants::NoRegister),
     yieldRegister(Js::Constants::NoRegister),
     paramScope(paramScope),
     bodyScope(bodyScope),

@@ -807,6 +807,16 @@
 
 #define PROCESS_SET_ELEM_LOCALSLOTNonVar(name, func) PROCESS_SET_ELEM_LOCALSLOTNonVar_COMMON(name, func,)
 
+#define PROCESS_SET_ELEM_LOCALSLOTNonVarForParamScope_COMMON(name, func, suffix) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, ElementSlotI1, suffix); \
+        func((Var*)GetLocalClosureForParamScope(), playout->SlotIndex, GetRegAllowStackVarEnableOnly(playout->Value)); \
+        break; \
+    }
+
+#define PROCESS_SET_ELEM_LOCALSLOTNonVarForParamScope(name, func) PROCESS_SET_ELEM_LOCALSLOTNonVarForParamScope_COMMON(name, func,)
+
 #define PROCESS_SET_ELEM_INNERSLOTNonVar_COMMON(name, func, suffix) \
     case OpCode::name: \
     { \
@@ -1082,7 +1092,9 @@ namespace Js
         newInstance->nestedFinallyDepth = -1;
         newInstance->retOffset = 0;
         newInstance->localFrameDisplay = nullptr;
+        newInstance->localFrameDisplayForParamScope = nullptr;
         newInstance->localClosure = nullptr;
+        newInstance->localClosureForParamScope = nullptr;
         newInstance->innerScopeArray = nullptr;
 
         bool doInterruptProbe = newInstance->scriptContext->GetThreadContext()->DoInterruptProbe(this->executeFunction);
@@ -1162,11 +1174,11 @@ namespace Js
                     newInstance->localFrameDisplay = (FrameDisplay*)nextAllocBytes;
                     nextAllocBytes += sizeof(FrameDisplay) + (envDepth + 1) * sizeof(Var);
                 }
-                /*if (!this->executeFunction->IsParamAndBodyScopeMerged())
+                if (!this->executeFunction->IsParamAndBodyScopeMerged())
                 {
                     newInstance->localFrameDisplayForParamScope = (FrameDisplay*)nextAllocBytes;
                     nextAllocBytes += sizeof(FrameDisplay) + (envDepth + 1) * sizeof(Var);
-                }*/
+                }
 
                 if (this->executeFunction->DoStackScopeSlots())
                 {
@@ -1405,6 +1417,10 @@ namespace Js
             }
             this->SetNonVarReg(closureReg, nullptr);
         }
+        if (executeFunction->GetLocalClosureRegForParamScope() != Js::Constants::NoRegister)
+        {
+            this->SetNonVarReg(executeFunction->GetLocalClosureRegForParamScope(), nullptr);
+        }
 
         Js::RegSlot frameDisplayReg = executeFunction->GetLocalFrameDisplayReg();
         if (frameDisplayReg != Js::Constants::NoRegister && closureReg != Js::Constants::NoRegister)
@@ -1415,6 +1431,16 @@ namespace Js
             this->SetLocalFrameDisplay(this->NewFrameDisplay(argHead, environment));
 
             this->SetNonVarReg(frameDisplayReg, nullptr);
+        }
+
+        Js::RegSlot closureRegForParamScope = executeFunction->GetLocalClosureRegForParamScope();
+        Js::RegSlot frameDisplayRegForParamScope = executeFunction->GetLocalFrameDisplayRegForParamScope();
+        if (frameDisplayRegForParamScope != Js::Constants::NoRegister && closureRegForParamScope != Js::Constants::NoRegister)
+        {
+            void *argHead = this->GetLocalClosureForParamScope();
+            this->SetLocalFrameDisplayForParamScope(this->NewFrameDisplay(argHead, environment));
+
+            this->SetNonVarReg(frameDisplayRegForParamScope, nullptr);
         }
 
         this->closureInitDone = true;
@@ -5665,6 +5691,8 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
 
             RegSlot localClosureReg = this->m_functionBody->GetLocalClosureReg();
             RegSlot localFrameDisplayReg = this->m_functionBody->GetLocalFrameDisplayReg();
+            RegSlot localClosureRegForParamScope = this->m_functionBody->GetLocalClosureRegForParamScope();
+            RegSlot localFrameDisplayRegForParamScope = this->m_functionBody->GetLocalFrameDisplayRegForParamScope();
 
             if (entryPointInfo->HasJittedStackClosure())
             {
@@ -5680,6 +5708,16 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
                 {
                     this->SetNonVarReg(localFrameDisplayReg, &this->localFrameDisplay);
                 }
+
+                if (localClosureRegForParamScope != Constants::NoRegister)
+                {
+                    this->SetNonVarReg(localClosureRegForParamScope, this->localClosureForParamScope);
+                }
+
+                if (localFrameDisplayRegForParamScope != Constants::NoRegister)
+                {
+                    this->SetNonVarReg(localFrameDisplayRegForParamScope, this->localFrameDisplayForParamScope);
+                }
             }
             else
             {
@@ -5693,6 +5731,16 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
                 if (localFrameDisplayReg != Constants::NoRegister)
                 {
                     this->SetNonVarReg(localFrameDisplayReg, this->localFrameDisplay);
+                }
+
+                if (localClosureRegForParamScope != Constants::NoRegister)
+                {
+                    this->SetNonVarReg(localClosureRegForParamScope, this->localClosureForParamScope);
+                }
+
+                if (localFrameDisplayRegForParamScope != Constants::NoRegister)
+                {
+                    this->SetNonVarReg(localFrameDisplayRegForParamScope, this->localFrameDisplayForParamScope);
                 }
             }
 
@@ -6821,6 +6869,11 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
         this->localFrameDisplay = frameDisplay;
     }
 
+    void InterpreterStackFrame::SetLocalFrameDisplayForParamScope(FrameDisplay* frameDisplay)
+    {
+        this->localFrameDisplayForParamScope = frameDisplay;
+    }
+
     Var InterpreterStackFrame::GetLocalClosure() const
     {
         return this->localClosure;
@@ -6829,6 +6882,16 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
     void InterpreterStackFrame::SetLocalClosure(Var closure)
     {
         this->localClosure = closure;
+    }
+
+    Var InterpreterStackFrame::GetLocalClosureForParamScope() const
+    {
+        return this->localClosureForParamScope;
+    }
+
+    void InterpreterStackFrame::SetLocalClosureForParamScope(Var closure)
+    {
+        this->localClosureForParamScope = closure;
     }
 
     void
@@ -6864,12 +6927,19 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
     }
 
     Var *
-    InterpreterStackFrame::NewScopeSlots(unsigned int size, ScriptContext *scriptContext, Var scope)
+    InterpreterStackFrame::NewScopeSlots(unsigned int size, ScriptContext *scriptContext, Var scope, bool isParamScope)
     {
         Var * slotArray;
 
         slotArray = JavascriptOperators::OP_NewScopeSlots(size, scriptContext, scope);
-        this->SetLocalClosure(slotArray);
+        if (isParamScope)
+        {
+            this->SetLocalClosureForParamScope(slotArray);
+        }
+        else
+        {
+            this->SetLocalClosure(slotArray);
+        }
         return slotArray;
     }
 
@@ -6878,13 +6948,25 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
     {
         Var * slotArray;
         FunctionBody * functionBody = this->m_functionBody;
-        uint scopeSlotCount = functionBody->scopeSlotArraySize;
+        // TODO: Fix the scopeSlotCount calculation
+        uint scopeSlotCount = functionBody->scopeSlotArraySize + functionBody->scopeSlotArraySizeForParamScope;
         Assert(scopeSlotCount != 0);
 
         if (!functionBody->DoStackScopeSlots())
         {
-            return this->NewScopeSlots(
-                scopeSlotCount + ScopeSlots::FirstSlotIndex, this->GetScriptContext(), (Var)functionBody);
+            Var* newScopeSlot = nullptr;
+            if (functionBody->scopeSlotArraySizeForParamScope)
+            {
+                newScopeSlot = this->NewScopeSlots(
+                    functionBody->scopeSlotArraySizeForParamScope + ScopeSlots::FirstSlotIndex, this->GetScriptContext(), (Var)functionBody, true);
+            }
+            if (functionBody->scopeSlotArraySize)
+            {
+                newScopeSlot = this->NewScopeSlots(
+                    functionBody->scopeSlotArraySize + ScopeSlots::FirstSlotIndex, this->GetScriptContext(), (Var)functionBody);
+            }
+
+            return newScopeSlot;
         }
 
         slotArray = (Var*)this->GetLocalClosure();

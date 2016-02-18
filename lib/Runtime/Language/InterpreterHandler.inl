@@ -237,6 +237,7 @@ EXDEF3_WMS(GET_ELEM_LOCALSLOTNonVar,LdLocalObjSlot,             OP_LdObjSlot, El
 EXDEF3_WMS(GET_ELEM_LOCALSLOTNonVar,ProfiledLdLocalObjSlot,     PROFILEDOP(OP_ProfiledLdObjSlot, OP_LdObjSlot), ProfiledElementSlotI1)
   DEF2_WMS(SET_ELEM_LOCALSLOTNonVar,StLocalSlot,                OP_StSlot)
 EXDEF2_WMS(SET_ELEM_LOCALSLOTNonVar,StLocalSlotChkUndecl,       OP_StSlotChkUndecl)
+EXDEF2_WMS(SET_ELEM_LOCALSLOTNonVarForParamScope,StLocalSlotChkUndeclForParamScope, OP_StSlotChkUndecl)
   DEF2_WMS(SET_ELEM_INNERSLOTNonVar,StInnerSlot,                OP_StSlot)
 EXDEF2_WMS(SET_ELEM_INNERSLOTNonVar,StInnerSlotChkUndecl,       OP_StSlotChkUndecl)
 EXDEF2_WMS(SET_ELEM_INNERSLOTNonVar,StInnerObjSlot,             OP_StObjSlot)
