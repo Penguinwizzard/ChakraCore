@@ -1727,7 +1727,7 @@ void ByteCodeGenerator::InitScopeSlotArray(FuncInfo * funcInfo)
 {
     // Record slots info for ScopeSlots/ScopeObject.
     uint scopeSlotCount = funcInfo->bodyScope->GetScopeSlotCount();
-    uint scopeSlotCountForParamScope = funcInfo->paramScope->GetScopeSlotCount();
+    uint scopeSlotCountForParamScope = funcInfo->paramScope ? funcInfo->paramScope->GetScopeSlotCount() : 0;
     if (scopeSlotCount == 0 && scopeSlotCountForParamScope == 0)
     {
         return;
@@ -3143,7 +3143,7 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
 
                 // Pop the body scope before emitting the default args
                 PopScope();
-                Assert(this->GetCurrentScope()->GetScopeType() == ScopeType_Parameter);
+                Assert(this->GetCurrentScope() == paramScope);
             }
 
             EmitDefaultArgs(funcInfo, pnode);
@@ -3151,10 +3151,10 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
             if (!paramScope->GetCanMergeWithBodyScope())
             {
                 // Do the reverse of the above block
+                Assert(this->GetCurrentScope() == paramScope);
                 PushScope(bodyScope);
+                this->Writer()->Empty(Js::OpCode::BeginBodyScope);
             }
-
-            this->Writer()->Empty(Js::OpCode::BeginBodyScope);
         }
         else if (funcInfo->GetHasArguments() && !NeedScopeObjectForArguments(funcInfo, pnode))
         {
@@ -3170,20 +3170,21 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
 
         if (paramScope && !paramScope->GetCanMergeWithBodyScope())
         {
-            // Emit bytecode to copy the initial values from param names to their corresponding body bindings.
-            // We have to do this after the rest param is marked as false for need declaration.
-            paramScope->ForEachSymbol([this, funcInfo](Symbol* param) {
-                Symbol* varSym = funcInfo->GetBodyScope()->FindLocalSymbol(param->GetName());
-                Assert(varSym || param->GetIsArguments());
-                Assert(param->GetIsArguments() || param->IsInSlot(funcInfo));
-                if (varSym && varSym->GetSymbolType() == STVariable && (varSym->IsInSlot(funcInfo) || varSym->GetLocation() != Js::Constants::NoRegister))
-                {
-                    Js::RegSlot tempReg = funcInfo->AcquireTmpRegister();
-                    this->EmitPropLoad(tempReg, param, param->GetPid(), funcInfo);
-                    this->EmitPropStore(tempReg, varSym, varSym->GetPid(), funcInfo);
-                    funcInfo->ReleaseTmpRegister(tempReg);
-                }
-            });
+            // TODO: Need to revisit this
+            //// Emit bytecode to copy the initial values from param names to their corresponding body bindings.
+            //// We have to do this after the rest param is marked as false for need declaration.
+            //paramScope->ForEachSymbol([this, funcInfo](Symbol* param) {
+            //    Symbol* varSym = funcInfo->GetBodyScope()->FindLocalSymbol(param->GetName());
+            //    Assert(varSym || param->GetIsArguments());
+            //    Assert(param->GetIsArguments() || param->IsInSlot(funcInfo));
+            //    if (varSym && varSym->GetSymbolType() == STVariable && (varSym->IsInSlot(funcInfo) || varSym->GetLocation() != Js::Constants::NoRegister))
+            //    {
+            //        Js::RegSlot tempReg = funcInfo->AcquireTmpRegister();
+            //        this->EmitPropLoad(tempReg, param, param->GetPid(), funcInfo);
+            //        this->EmitPropStore(tempReg, varSym, varSym->GetPid(), funcInfo);
+            //        funcInfo->ReleaseTmpRegister(tempReg);
+            //    }
+            //});
         }
 
         if (pnode->sxFnc.pnodeBodyScope != nullptr)
@@ -3420,7 +3421,7 @@ void ByteCodeGenerator::MapReferencedPropertyIds(FuncInfo * funcInfo)
 #endif
 }
 
-void ByteCodeGenerator::EmitScopeList(ParseNode *pnode)
+void ByteCodeGenerator::EmitScopeList(ParseNode *pnode, bool breakOnNonFunc)
 {
     while (pnode)
     {
@@ -3461,9 +3462,13 @@ void ByteCodeGenerator::EmitScopeList(ParseNode *pnode)
                 {
                     Assert(nestedScope->nop == knopBlock && nestedScope->sxBlock.blockType == Parameter);
                     // Pop the body scope
+                    Assert(this->GetCurrentScope() == bodyScope);
                     PopScope();
                     PushScope(paramScope);
-                    this->EmitScopeList(pnode->sxFnc.pnodeScopes->sxBlock.pnodeScopes);
+                    // While emitting the functions we have to stop when we see the body scope block.
+                    // Otherwise functions defined in the body scope will not be able to get the right references.
+                    this->EmitScopeList(pnode->sxFnc.pnodeScopes->sxBlock.pnodeScopes, true);
+                    Assert(this->GetCurrentScope() == paramScope);
                     PushScope(bodyScope);
 
                     nestedScope = nestedScope->sxBlock.pnodeScopes;
@@ -3485,6 +3490,10 @@ void ByteCodeGenerator::EmitScopeList(ParseNode *pnode)
             break;
 
         case knopBlock:
+            if (breakOnNonFunc)
+            {
+                break;
+            }
             this->StartEmitBlock(pnode);
             this->EmitScopeList(pnode->sxBlock.pnodeScopes);
             this->EndEmitBlock(pnode);
@@ -3492,6 +3501,10 @@ void ByteCodeGenerator::EmitScopeList(ParseNode *pnode)
             break;
 
         case knopCatch:
+            if (breakOnNonFunc)
+            {
+                break;
+            }
             this->StartEmitCatch(pnode);
             this->EmitScopeList(pnode->sxCatch.pnodeScopes);
             this->EndEmitCatch(pnode);
@@ -3499,6 +3512,10 @@ void ByteCodeGenerator::EmitScopeList(ParseNode *pnode)
             break;
 
         case knopWith:
+            if (breakOnNonFunc)
+            {
+                break;
+            }
             this->StartEmitWith(pnode);
             this->EmitScopeList(pnode->sxWith.pnodeScopes);
             this->EndEmitWith(pnode);
@@ -3507,6 +3524,11 @@ void ByteCodeGenerator::EmitScopeList(ParseNode *pnode)
 
         default:
             AssertMsg(false, "Unexpected opcode in tree of scopes");
+            break;
+        }
+
+        if (breakOnNonFunc && pnode && pnode->nop != knopFncDecl && pnode->nop != knopProg)
+        {
             break;
         }
     }
@@ -3665,7 +3687,7 @@ void ByteCodeGenerator::StartEmitFunction(ParseNode *pnodeFnc)
         }
 
         bodyScope->SetMustInstantiate(funcInfo->frameObjRegister != Js::Constants::NoRegister || funcInfo->frameSlotsRegister != Js::Constants::NoRegister);
-        paramScope->SetMustInstantiate(funcInfo->frameObjRegister != Js::Constants::NoRegister || funcInfo->frameSlotsRegister != Js::Constants::NoRegister);
+        // paramScope->SetMustInstantiate(funcInfo->frameObjRegister != Js::Constants::NoRegister || funcInfo->frameSlotsRegister != Js::Constants::NoRegister);
 
         if (bodyScope->GetIsObject())
         {
