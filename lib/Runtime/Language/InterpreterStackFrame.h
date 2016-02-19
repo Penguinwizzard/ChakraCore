@@ -651,6 +651,7 @@ namespace Js
         template <class T> void OP_InitGetElemI(const unaligned T * playout);
         template <class T> void OP_InitComputedProperty(const unaligned T * playout);
         template <class T> void OP_InitProto(const unaligned T * playout);
+        void OP_BeginBodyScope();
 
         uint CallLoopBody(JavascriptMethod address);
         uint CallAsmJsLoopBody(JavascriptMethod address);

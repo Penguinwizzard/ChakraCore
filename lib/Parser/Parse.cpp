@@ -4598,6 +4598,11 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
         isEnclosedInParamScope = this->m_currentScope->GetEnclosingScope() && this->m_currentScope->GetEnclosingScope()->GetScopeType() == ScopeType_Parameter;
     }
 
+    if (isEnclosedInParamScope)
+    {
+        // We cannot just do HasDefaultArguments here becasue we may be inside a destructuring pattern.
+        Assert(pnodeFncParent && pnodeFncParent->sxFnc.HasNonSimpleParameterList());
+    }
 
     RestorePoint beginFormals;
     m_pscan->Capture(&beginFormals);
@@ -4831,31 +4836,35 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
             pnodeFnc->sxFnc.pnodeVars = nullptr;
             m_ppnodeVar = &pnodeFnc->sxFnc.pnodeVars;
 
-            if (pnodeFnc->sxFnc.HasNonSimpleParameterList() && !fAsync)
+            if (pnodeFnc->sxFnc.HasDefaultArguments() && !fAsync)
             {
                 Scope* paramScope = pnodeFnc->sxFnc.pnodeScopes->sxBlock.scope;
                 Assert(paramScope);
 
                 if (pnodeFnc->sxFnc.CallsEval() || pnodeFnc->sxFnc.ChildCallsEval())
                 {
-                    paramScope->SetIsObject();
-                    paramScope->SetCannotMergeWithBodyScope();
+                    // TODO: Enable this later
+                    /*paramScope->SetIsObject();
+                    paramScope->SetCannotMergeWithBodyScope();*/
                 }
                 else
                 {
                     // We can't merge the param scope and body scope if the nested methods within the param scope captures any param.
 
                     paramScope->ForEachSymbolUntil([paramScope](Symbol* sym) {
-                        if (sym->GetPid()->GetTopRef()->sym == nullptr)
+                        if (!sym->GetIsArguments())
                         {
-                            // One of the symbol has non local reference. Mark the param scope as we can't merge it with body scope.
-                            paramScope->SetCannotMergeWithBodyScope();
-                            return true;
-                        }
-                        else
-                        {
-                            // If no non-local references are there then the top of the ref stack should point to the same symbol.
-                            Assert(sym->GetPid()->GetTopRef()->sym == sym);
+                            if (sym->GetPid()->GetTopRef()->sym == nullptr)
+                            {
+                                // One of the symbol has non local reference. Mark the param scope as we can't merge it with body scope.
+                                paramScope->SetCannotMergeWithBodyScope();
+                                return true;
+                            }
+                            else
+                            {
+                                // If no non-local references are there then the top of the ref stack should point to the same symbol.
+                                Assert(sym->GetPid()->GetTopRef()->sym == sym);
+                            }
                         }
                         return false;
                     });

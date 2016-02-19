@@ -284,211 +284,211 @@ var tests = [
             assert.areEqual((new c4()).f({})(), 10, "The method defined as the default destructured value of the parameter should capture the formal from the param scope");
         }
     },
-    {
-        name: "Split parameter scope in generator methods",
-        body: function () {
-            function *f1(a = 10, d, b = function () { return a; }, c) {
-                yield a;
-                var a = 20;
-                yield a;
-                yield b;
-            }
-            var f1Obj = f1();
-            assert.areEqual(f1Obj.next().value, 10, "Initial value of the parameter in the body scope should be the same as the final value of the parameter in param scope");
-            assert.areEqual(f1Obj.next().value, 20, "Assignment in the body scope updates the variable's value");
-            assert.areEqual(f1Obj.next().value(), 10, "Function defined in the param scope captures the formal from the param scope itself");
-
-            function *f2(a = 10, d, b = function () { return a; }, c) {
-                yield a;
-                a = 20;
-                yield a;
-                yield b;
-            }
-            var f2Obj = f2();
-            assert.areEqual(f2Obj.next().value, 10, "Initial value of the parameter in the body scope should be the same as the final value of the parameter in param scope");
-            assert.areEqual(f2Obj.next().value, 20, "Assignment in the body scope updates the variable's value");
-            assert.areEqual(f2Obj.next().value(), 10, "Function defined in the param scope captures the formal from the param scope itself even if it is not redeclared in the body");
-
-            function *f3(a = 10, d, b = function *() { yield a + c; }, c = 100) {
-                a = 20;
-                yield a;
-                yield b;
-            }
-            var f3Obj = f3();
-            assert.areEqual(f3Obj.next().value, 20, "Assignment in the body scope updates the variable's value");
-            assert.areEqual(f3Obj.next().value().next().value, 110, "Function defined in the param scope captures the formals from the param scope");
-
-            function *f4(a = 10, d, b = function *() { yield a; }, c) {
-                var a = 20;
-                yield function *() { yield a; };
-                yield b;
-            }
-            var f4Obj = f4();
-            assert.areEqual(f4Obj.next().value().next().value, 20, "Generator defined inside the body captures the symbol from the body scope");
-            assert.areEqual(f4Obj.next().value().next().value, 10, "Function defined in the param scope captures the formal from param scope even if it is captured in the body scope");
-        }
-    },
-    {
-        name: "Split parameter scope with destructuring",
-        body: function () {
-            function f1( {a:a1, b:b1}, c = function() { return a1 + b1; } ) {
-                assert.areEqual(a1, 10, "Initial value of the first destructuring parameter in the body scope should be the same as the one in param scope");
-                assert.areEqual(b1, 20, "Initial value of the second destructuring parameter in the body scope should be the same as the one in param scope");
-                a1 = 1;
-                b1 = 2;
-                assert.areEqual(a1, 1, "New assignment in the body scope updates the first formal's value in body scope");
-                assert.areEqual(b1, 2, "New assignment in the body scope updates the second formal's value in body scope");
-                assert.areEqual(c(), 30, "The param scope method should return the sum of the destructured formals from the param scope");
-                return c;
-            }
-            assert.areEqual(f1({ a : 10, b : 20 })(), 30, "Returned method should return the sum of the destructured formals from the param scope");
-
-            function f2({x:x = 10, y:y = function () { return x; }}) {
-                assert.areEqual(x, 10, "Initial value of the first destructuring parameter in the body scope should be the same as the one in param scope");
-                x = 20;
-                assert.areEqual(x, 20, "Assignment in the body updates the formal's value");
-                return y;
-            }
-            assert.areEqual(f2({ })(), 10, "Returned method should return the value of the destructured formal from the param scope");
-            
-            function f3({y:y = function () { return x; }, x:x = 10}) {
-                assert.areEqual(x, 10, "Initial value of the first destructuring parameter in the body scope should be the same as the one in param scope");
-                x = 20;
-                assert.areEqual(x, 20, "Assignment in the body updates the formal's value");
-                return y;
-            }
-            assert.areEqual(f3({ })(), 10, "Returned method should return the value of the destructured formal from the param scope even if declared after");
-            
-            (({x:x = 10, y:y = function () { return x; }}) => {
-                assert.areEqual(x, 10, "Initial value of the first destructuring parameter in the body scope should be the same as the one in param scope");
-                x = 20;
-                assert.areEqual(y(), 10, "Assignment in the body does not affect the formal captured from the param scope");
-            })({});
-        }
-    },
-    {
-      name: "Nested split scopes",
-      body: function () {
-            function f1(a = 10, b = function () { return a; }, c) {
-                function iFnc(d = 100, e = 200, pf1 = function () { return d + e; }) {
-                    d = 1000;
-                    e = 2000;
-                    pf2 = function () { return d + e; };
-                    return [pf1, pf2];
-                }
-                return [b].concat(iFnc());
-            }
-            var result = f1();
-            assert.areEqual(result[0](), 10, "Function defined in the param scope of the outer function should capture the symbols from its own param scope");
-            assert.areEqual(result[1](), 300, "Function defined in the param scope of the inner function should capture the symbols from its own param scope");
-            assert.areEqual(result[2](), 3000, "Function defined in the body scope of the inner function should capture the symbols from its body scope");
-
-            function f2(a = 10, b = function () { return a; }, c) {
-                a = 1000;
-                c = 2000;
-                function iFnc(a = 100, b = function () { return a + c; }, c = 200) {
-                    a = 1000;
-                    c = 2000;
-                    return b;
-                }
-                return [b, iFnc()];
-            }
-            result = f2();
-            assert.areEqual(result[0](), 10, "Function defined in the param scope of the outer function should capture the symbols from its own param scope even if formals are with the same name in inner function");
-            assert.areEqual(result[1](), 300, "Function defined in the param scope of the inner function should capture the symbols from its own param scope  if formals are with the same name in the outer function");
-
-            function f3(a = 10, b = function () { return a; }, c) {
-                a = 1000;
-                c = 2000;
-                function iFnc(a = 100, b = function () { return a + c; }, c = 200) {
-                    a = 1000;
-                    c = 2000;
-                    return b;
-                }
-                return [b, iFnc];
-            }
-            assert.areEqual(f3()[1]()(), 300, "Function defined in the param scope of the inner function should capture the right formals even if the inner function is executed outside");
-
-            function f4(a = 10, b = function () { return a; }, c) {
-                a = 1000;
-                function iFnc(a = 100, b = function () { return a + c; }, c = 200) {
-                    a = 1000;
-                    c = 2000;
-                    return b;
-                }
-                return [b, iFnc(undefined, b, c)];
-            }
-            result = f4(1, undefined, 3);
-            assert.areEqual(result[0](), 1, "Function defined in the param scope of the outer function correctly captures the passed in value for the formal");
-            assert.areEqual(result[1](), 1, "Function defined in the param scope of the inner function is replaced by the function definition from the param scope of the outer function");
-
-            function f5(a = 10, b = function () { return a; }, c) {
-                function iFnc(a = 100, b = function () { return a + c; }, c = 200) {
-                    a = 1000;
-                    c = 2000;
-                    return b;
-                }
-                return [b, iFnc(a, undefined, c)];
-            }
-            result = f5(1, undefined, 3);
-            assert.areEqual(result[0](), 1, "Function defined in the param scope of the outer function correctly captures the passed in value for the formal");
-            assert.areEqual(result[1](), 4, "Function defined in the param scope of the inner function captures the passed values for the formals");
-
-            function f6(a , b, c) {
-                function iFnc(a = 1, b = function () { return a + c; }, c = 2) {
-                    a = 10;
-                    c = 20;
-                    return b;
-                }
-                return iFnc;
-            }
-            assert.areEqual(f6()()(), 3, "Function defined in the param scope captures the formals when defined inside another method without split scope");
-
-            function f7(a = 10 , b = 20, c = function () { return a + b; }) {
-                return (function () {
-                    function iFnc(a = 100, b = function () { return a + c; }, c = 200) {
-                        a = 1000;
-                        c = 2000;
-                        return b;
-                    }
-                    return [c, iFnc];
-                })();
-            }
-            result = f7();
-            assert.areEqual(result[0](), 30, "Function defined in the param scope of the outer function should capture the symbols from its own param scope even in nested case");
-            assert.areEqual(result[1]()(), 300, "Function defined in the param scope of the inner function should capture the symbols from its own param scope even when nested inside a normal method and a split scope");
-
-            function f8(a = 1, b = function (d = 10, e = function () { return a + d; }) { assert.areEqual(d, 10, "Split scope function defined in param scope should capture the right formal value"); d = 20; return e; }, c) {
-                a = 2;
-                return b;
-            }
-            assert.areEqual(f8()()(), 11, "Split scope function defined within the param scope should capture the formals from the corresponding param scopes");
-
-            function f9(a = 1, b = function () { return function (d = 10, e = function () { return a + d; }) { d = 20; return e; } }, c) {
-                a = 2;
-                return b;
-            }
-            assert.areEqual(f9()()()(), 11, "Split scope function defined within the param scope should capture the formals from the corresponding param scope in nested scope");
-
-      }  
-    },
-    {
-        name: "Split parameter scope and eval",
-        body: function () {
-            function g() {
-                return 3 * 3;
-            }
-
-            function f(h = () => eval("g()")) { // cannot combine scopes
-                function g() {
-                    return 2 * 3;
-                }
-                return h(); // 9
-            }
-            // TODO(tcare): Re-enable when split scope support is implemented
-            //assert.areEqual(9, f(), "Paramater scope remains split");
-        }
-    }
+//     {
+//         name: "Split parameter scope in generator methods",
+//         body: function () {
+//             function *f1(a = 10, d, b = function () { return a; }, c) {
+//                 yield a;
+//                 var a = 20;
+//                 yield a;
+//                 yield b;
+//             }
+//             var f1Obj = f1();
+//             assert.areEqual(f1Obj.next().value, 10, "Initial value of the parameter in the body scope should be the same as the final value of the parameter in param scope");
+//             assert.areEqual(f1Obj.next().value, 20, "Assignment in the body scope updates the variable's value");
+//             assert.areEqual(f1Obj.next().value(), 10, "Function defined in the param scope captures the formal from the param scope itself");
+// 
+//             function *f2(a = 10, d, b = function () { return a; }, c) {
+//                 yield a;
+//                 a = 20;
+//                 yield a;
+//                 yield b;
+//             }
+//             var f2Obj = f2();
+//             assert.areEqual(f2Obj.next().value, 10, "Initial value of the parameter in the body scope should be the same as the final value of the parameter in param scope");
+//             assert.areEqual(f2Obj.next().value, 20, "Assignment in the body scope updates the variable's value");
+//             assert.areEqual(f2Obj.next().value(), 10, "Function defined in the param scope captures the formal from the param scope itself even if it is not redeclared in the body");
+// 
+//             function *f3(a = 10, d, b = function *() { yield a + c; }, c = 100) {
+//                 a = 20;
+//                 yield a;
+//                 yield b;
+//             }
+//             var f3Obj = f3();
+//             assert.areEqual(f3Obj.next().value, 20, "Assignment in the body scope updates the variable's value");
+//             assert.areEqual(f3Obj.next().value().next().value, 110, "Function defined in the param scope captures the formals from the param scope");
+// 
+//             function *f4(a = 10, d, b = function *() { yield a; }, c) {
+//                 var a = 20;
+//                 yield function *() { yield a; };
+//                 yield b;
+//             }
+//             var f4Obj = f4();
+//             assert.areEqual(f4Obj.next().value().next().value, 20, "Generator defined inside the body captures the symbol from the body scope");
+//             assert.areEqual(f4Obj.next().value().next().value, 10, "Function defined in the param scope captures the formal from param scope even if it is captured in the body scope");
+//         }
+//     },
+//     {
+//         name: "Split parameter scope with destructuring",
+//         body: function () {
+//             function f1( {a:a1, b:b1}, c = function() { return a1 + b1; } ) {
+//                 assert.areEqual(a1, 10, "Initial value of the first destructuring parameter in the body scope should be the same as the one in param scope");
+//                 assert.areEqual(b1, 20, "Initial value of the second destructuring parameter in the body scope should be the same as the one in param scope");
+//                 a1 = 1;
+//                 b1 = 2;
+//                 assert.areEqual(a1, 1, "New assignment in the body scope updates the first formal's value in body scope");
+//                 assert.areEqual(b1, 2, "New assignment in the body scope updates the second formal's value in body scope");
+//                 assert.areEqual(c(), 30, "The param scope method should return the sum of the destructured formals from the param scope");
+//                 return c;
+//             }
+//             assert.areEqual(f1({ a : 10, b : 20 })(), 30, "Returned method should return the sum of the destructured formals from the param scope");
+// 
+//             function f2({x:x = 10, y:y = function () { return x; }}) {
+//                 assert.areEqual(x, 10, "Initial value of the first destructuring parameter in the body scope should be the same as the one in param scope");
+//                 x = 20;
+//                 assert.areEqual(x, 20, "Assignment in the body updates the formal's value");
+//                 return y;
+//             }
+//             assert.areEqual(f2({ })(), 10, "Returned method should return the value of the destructured formal from the param scope");
+//             
+//             function f3({y:y = function () { return x; }, x:x = 10}) {
+//                 assert.areEqual(x, 10, "Initial value of the first destructuring parameter in the body scope should be the same as the one in param scope");
+//                 x = 20;
+//                 assert.areEqual(x, 20, "Assignment in the body updates the formal's value");
+//                 return y;
+//             }
+//             assert.areEqual(f3({ })(), 10, "Returned method should return the value of the destructured formal from the param scope even if declared after");
+//             
+//             (({x:x = 10, y:y = function () { return x; }}) => {
+//                 assert.areEqual(x, 10, "Initial value of the first destructuring parameter in the body scope should be the same as the one in param scope");
+//                 x = 20;
+//                 assert.areEqual(y(), 10, "Assignment in the body does not affect the formal captured from the param scope");
+//             })({});
+//         }
+//     },
+//     {
+//       name: "Nested split scopes",
+//       body: function () {
+//             function f1(a = 10, b = function () { return a; }, c) {
+//                 function iFnc(d = 100, e = 200, pf1 = function () { return d + e; }) {
+//                     d = 1000;
+//                     e = 2000;
+//                     pf2 = function () { return d + e; };
+//                     return [pf1, pf2];
+//                 }
+//                 return [b].concat(iFnc());
+//             }
+//             var result = f1();
+//             assert.areEqual(result[0](), 10, "Function defined in the param scope of the outer function should capture the symbols from its own param scope");
+//             assert.areEqual(result[1](), 300, "Function defined in the param scope of the inner function should capture the symbols from its own param scope");
+//             assert.areEqual(result[2](), 3000, "Function defined in the body scope of the inner function should capture the symbols from its body scope");
+// 
+//             function f2(a = 10, b = function () { return a; }, c) {
+//                 a = 1000;
+//                 c = 2000;
+//                 function iFnc(a = 100, b = function () { return a + c; }, c = 200) {
+//                     a = 1000;
+//                     c = 2000;
+//                     return b;
+//                 }
+//                 return [b, iFnc()];
+//             }
+//             result = f2();
+//             assert.areEqual(result[0](), 10, "Function defined in the param scope of the outer function should capture the symbols from its own param scope even if formals are with the same name in inner function");
+//             assert.areEqual(result[1](), 300, "Function defined in the param scope of the inner function should capture the symbols from its own param scope  if formals are with the same name in the outer function");
+// 
+//             function f3(a = 10, b = function () { return a; }, c) {
+//                 a = 1000;
+//                 c = 2000;
+//                 function iFnc(a = 100, b = function () { return a + c; }, c = 200) {
+//                     a = 1000;
+//                     c = 2000;
+//                     return b;
+//                 }
+//                 return [b, iFnc];
+//             }
+//             assert.areEqual(f3()[1]()(), 300, "Function defined in the param scope of the inner function should capture the right formals even if the inner function is executed outside");
+// 
+//             function f4(a = 10, b = function () { return a; }, c) {
+//                 a = 1000;
+//                 function iFnc(a = 100, b = function () { return a + c; }, c = 200) {
+//                     a = 1000;
+//                     c = 2000;
+//                     return b;
+//                 }
+//                 return [b, iFnc(undefined, b, c)];
+//             }
+//             result = f4(1, undefined, 3);
+//             assert.areEqual(result[0](), 1, "Function defined in the param scope of the outer function correctly captures the passed in value for the formal");
+//             assert.areEqual(result[1](), 1, "Function defined in the param scope of the inner function is replaced by the function definition from the param scope of the outer function");
+// 
+//             function f5(a = 10, b = function () { return a; }, c) {
+//                 function iFnc(a = 100, b = function () { return a + c; }, c = 200) {
+//                     a = 1000;
+//                     c = 2000;
+//                     return b;
+//                 }
+//                 return [b, iFnc(a, undefined, c)];
+//             }
+//             result = f5(1, undefined, 3);
+//             assert.areEqual(result[0](), 1, "Function defined in the param scope of the outer function correctly captures the passed in value for the formal");
+//             assert.areEqual(result[1](), 4, "Function defined in the param scope of the inner function captures the passed values for the formals");
+// 
+//             function f6(a , b, c) {
+//                 function iFnc(a = 1, b = function () { return a + c; }, c = 2) {
+//                     a = 10;
+//                     c = 20;
+//                     return b;
+//                 }
+//                 return iFnc;
+//             }
+//             assert.areEqual(f6()()(), 3, "Function defined in the param scope captures the formals when defined inside another method without split scope");
+// 
+//             function f7(a = 10 , b = 20, c = function () { return a + b; }) {
+//                 return (function () {
+//                     function iFnc(a = 100, b = function () { return a + c; }, c = 200) {
+//                         a = 1000;
+//                         c = 2000;
+//                         return b;
+//                     }
+//                     return [c, iFnc];
+//                 })();
+//             }
+//             result = f7();
+//             assert.areEqual(result[0](), 30, "Function defined in the param scope of the outer function should capture the symbols from its own param scope even in nested case");
+//             assert.areEqual(result[1]()(), 300, "Function defined in the param scope of the inner function should capture the symbols from its own param scope even when nested inside a normal method and a split scope");
+// 
+//             function f8(a = 1, b = function (d = 10, e = function () { return a + d; }) { assert.areEqual(d, 10, "Split scope function defined in param scope should capture the right formal value"); d = 20; return e; }, c) {
+//                 a = 2;
+//                 return b;
+//             }
+//             assert.areEqual(f8()()(), 11, "Split scope function defined within the param scope should capture the formals from the corresponding param scopes");
+// 
+//             function f9(a = 1, b = function () { return function (d = 10, e = function () { return a + d; }) { d = 20; return e; } }, c) {
+//                 a = 2;
+//                 return b;
+//             }
+//             assert.areEqual(f9()()()(), 11, "Split scope function defined within the param scope should capture the formals from the corresponding param scope in nested scope");
+// 
+//       }  
+//     },
+//     {
+//         name: "Split parameter scope and eval",
+//         body: function () {
+//             function g() {
+//                 return 3 * 3;
+//             }
+// 
+//             function f(h = () => eval("g()")) { // cannot combine scopes
+//                 function g() {
+//                     return 2 * 3;
+//                 }
+//                 return h(); // 9
+//             }
+//             // TODO(tcare): Re-enable when split scope support is implemented
+//             //assert.areEqual(9, f(), "Paramater scope remains split");
+//         }
+//     }
 ];
 
 testRunner.runTests(tests, { verbose: WScript.Arguments[0] != "summary" });
