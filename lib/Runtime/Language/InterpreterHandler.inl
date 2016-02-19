@@ -376,6 +376,7 @@ EXDEF2_WMS(A1toXX,                  ObjectFreeze,               JavascriptOperat
 EXDEF3_WMS(CUSTOM,                  ClearAttributes,            OP_ClearAttributes, ElementU)
   DEF3_WMS(CUSTOM,                  ApplyArgs,                  OP_ApplyArgs, Reg5)
 EXDEF3_WMS(CUSTOM,                  EmitTmpRegCount,            OP_EmitTmpRegCount, Unsigned1)
+EXDEF2    (EMPTY,                   BeginBodyScope,             OP_BeginBodyScope)
 
 #endif
 

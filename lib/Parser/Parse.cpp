@@ -4589,6 +4589,16 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
     pstmtSave = m_pstmtCur;
     SetCurrentStatement(nullptr);
 
+    // Function definition is inside the parent function's parameter scope    
+    bool isEnclosedInParamScope = this->m_currentScope->GetScopeType() == ScopeType_Parameter;
+
+    if (this->m_currentScope->GetScopeType() == ScopeType_FuncExpr)
+    {
+        // Or this is a function expression enclosed in a parameter scope    
+        isEnclosedInParamScope = this->m_currentScope->GetEnclosingScope() && this->m_currentScope->GetEnclosingScope()->GetScopeType() == ScopeType_Parameter;
+    }
+
+
     RestorePoint beginFormals;
     m_pscan->Capture(&beginFormals);
     BOOL fWasAlreadyStrictMode = IsStrictMode();
@@ -4602,7 +4612,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
     uint uDeferSave = m_grfscr & fscrDeferFncParse;
     if ((!fDeclaration && m_ppnodeExprScope) ||
         fFunctionInBlock ||
-        (pnodeFncParent && pnodeFncParent->sxFnc.pnodeScopes && pnodeFncParent->sxFnc.HasNonSimpleParameterList()) ||
+        isEnclosedInParamScope ||
         (flags & (fFncNoName | fFncLambda)))
     {
         // NOTE: Don't defer if this is a function expression inside a construct that induces
@@ -4812,23 +4822,29 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
                 }
             }
 
-            if (buildAST)
+            AnalysisAssert(pnodeFnc);
+
+            // Shouldn't be any temps in the arg list.
+            Assert(*m_ppnodeVar == nullptr);
+
+            // Start the var list.
+            pnodeFnc->sxFnc.pnodeVars = nullptr;
+            m_ppnodeVar = &pnodeFnc->sxFnc.pnodeVars;
+
+            if (pnodeFnc->sxFnc.HasNonSimpleParameterList() && !fAsync)
             {
-                AnalysisAssert(pnodeFnc);
+                Scope* paramScope = pnodeFnc->sxFnc.pnodeScopes->sxBlock.scope;
+                Assert(paramScope);
 
-                // Shouldn't be any temps in the arg list.
-                Assert(*m_ppnodeVar == nullptr);
-
-                // Start the var list.
-                pnodeFnc->sxFnc.pnodeVars = nullptr;
-                m_ppnodeVar = &pnodeFnc->sxFnc.pnodeVars;
-
-                if (pnodeFnc->sxFnc.HasNonSimpleParameterList() && !fAsync)
+                if (pnodeFnc->sxFnc.CallsEval() || pnodeFnc->sxFnc.ChildCallsEval())
                 {
-                    // m_pnestedCount = 0;
-
+                    paramScope->SetIsObject();
+                    paramScope->SetCannotMergeWithBodyScope();
+                }
+                else
+                {
                     // We can't merge the param scope and body scope if the nested methods within the param scope captures any param.
-                    Scope* paramScope = pnodeFnc->sxFnc.pnodeScopes->sxBlock.scope;
+
                     paramScope->ForEachSymbolUntil([paramScope](Symbol* sym) {
                         if (sym->GetPid()->GetTopRef()->sym == nullptr)
                         {
@@ -4843,18 +4859,18 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
                         }
                         return false;
                     });
+                }
 
-                    if (!paramScope->GetCanMergeWithBodyScope())
-                    {
-                        OUTPUT_TRACE_DEBUGONLY(Js::ParsePhase, L"The param and body scope of the function %s cannot be merged\n", pnodeFnc->sxFnc.pnodeName ? pnodeFnc->sxFnc.pnodeName->sxVar.pid->Psz() : L"Anonymous function");
-                        // Add a new symbol reference for each formal in the param scope to the body scope.
-                        paramScope->ForEachSymbol([this](Symbol* param) {
-                            OUTPUT_TRACE_DEBUGONLY(Js::ParsePhase, L"Creating a duplicate symbol for the parameter %s in the body scope\n", param->GetPid()->Psz());
-                            ParseNodePtr paramNode = this->CreateVarDeclNode(param->GetPid(), STVariable, false, nullptr, false);
-                            Assert(paramNode && paramNode->sxVar.sym->GetScope()->GetScopeType() == ScopeType_FunctionBody);
-                            paramNode->sxVar.sym->SetHasInit(true);
-                        });
-                    }
+                if (!paramScope->GetCanMergeWithBodyScope())
+                {
+                    OUTPUT_TRACE_DEBUGONLY(Js::ParsePhase, L"The param and body scope of the function %s cannot be merged\n", pnodeFnc->sxFnc.pnodeName ? pnodeFnc->sxFnc.pnodeName->sxVar.pid->Psz() : L"Anonymous function");
+                    // Add a new symbol reference for each formal in the param scope to the body scope.
+                    paramScope->ForEachSymbol([this](Symbol* param) {
+                        OUTPUT_TRACE_DEBUGONLY(Js::ParsePhase, L"Creating a duplicate symbol for the parameter %s in the body scope\n", param->GetPid()->Psz());
+                        ParseNodePtr paramNode = this->CreateVarDeclNode(param->GetPid(), STVariable, false, nullptr, false);
+                        Assert(paramNode && paramNode->sxVar.sym->GetScope()->GetScopeType() == ScopeType_FunctionBody);
+                        paramNode->sxVar.sym->SetHasInit(true);
+                    });
                 }
             }
 
