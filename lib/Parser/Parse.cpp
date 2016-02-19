@@ -4609,6 +4609,12 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
         isEnclosedInParamScope = this->m_currentScope->GetEnclosingScope() && this->m_currentScope->GetEnclosingScope()->GetScopeType() == ScopeType_Parameter;
     }
 
+    if (isEnclosedInParamScope)
+    {
+        // We cannot just do HasDefaultArguments here becasue we may be inside a destructuring pattern.
+        Assert(pnodeFncParent && pnodeFncParent->sxFnc.HasNonSimpleParameterList());
+    }
+
     RestorePoint beginFormals;
     m_pscan->Capture(&beginFormals);
     BOOL fWasAlreadyStrictMode = IsStrictMode();
@@ -4844,7 +4850,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
             pnodeFnc->sxFnc.pnodeVars = nullptr;
             m_ppnodeVar = &pnodeFnc->sxFnc.pnodeVars;
 
-            if (pnodeFnc->sxFnc.HasNonSimpleParameterList() && !fAsync)
+            if (pnodeFnc->sxFnc.HasDefaultArguments() && !fAsync)
             {
                 Scope* paramScope = pnodeFnc->sxFnc.pnodeScopes->sxBlock.scope;
                 Assert(paramScope);
