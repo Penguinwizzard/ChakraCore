@@ -4824,16 +4824,19 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
                 }
             }
 
-            if (buildAST)
+            AnalysisAssert(pnodeFnc);
+
+            // Shouldn't be any temps in the arg list.
+            Assert(*m_ppnodeVar == nullptr);
+
+            // Start the var list.
+            pnodeFnc->sxFnc.pnodeVars = nullptr;
+            m_ppnodeVar = &pnodeFnc->sxFnc.pnodeVars;
+
+            if (pnodeFnc->sxFnc.HasNonSimpleParameterList() && !fAsync)
             {
-                AnalysisAssert(pnodeFnc);
-
-                // Shouldn't be any temps in the arg list.
-                Assert(*m_ppnodeVar == nullptr);
-
-                // Start the var list.
-                pnodeFnc->sxFnc.pnodeVars = nullptr;
-                m_ppnodeVar = &pnodeFnc->sxFnc.pnodeVars;
+                Scope* paramScope = pnodeFnc->sxFnc.pnodeScopes->sxBlock.scope;
+                Assert(paramScope);
 
             // We can't merge the param scope and body scope any more as the nested methods may be capturing params.
             if (pnodeFnc->sxFnc.HasNonSimpleParameterList() && !fAsync)
@@ -4866,13 +4869,21 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
                 {
                     Error(ERREvalNotSupportedInParamScope);
                 }
+                else if (m_scriptContext->GetConfig()->IsES6DefaultArgsSplitScopeEnabled() && (pnodeFnc->sxFnc.CallsEval() || pnodeFnc->sxFnc.ChildCallsEval()))
+                {
+                    paramScope->SetIsObject(true);
+                    paramScope->SetCannotMergeWithBodyScope();
+                }
 
                 if (!paramScope->GetCanMergeWithBodyScope())
                 {
-                    OUTPUT_TRACE_DEBUGONLY(Js::ParsePhase, L"Creating a duplicate symbol for the parameter %s in the body scope\n", param->GetPid()->Psz());
-                    ParseNodePtr paramNode = this->CreateVarDeclNode(param->GetPid(), STVariable, false, nullptr, false);
-                    Assert(paramNode && paramNode->sxVar.sym->GetScope()->GetScopeType() == ScopeType_FunctionBody);
-                    paramNode->sxVar.sym->SetHasInit(true);
+                    OUTPUT_TRACE_DEBUGONLY(Js::ParsePhase, L"The param and body scope of the function %s cannot be merged\n", pnodeFnc->sxFnc.pnodeName ? pnodeFnc->sxFnc.pnodeName->sxVar.pid->Psz() : L"Anonymous function");
+                    // Add a new symbol reference for each formal in the param scope to the body scope.
+                    paramScope->ForEachSymbol([this](Symbol* param) {
+                        OUTPUT_TRACE_DEBUGONLY(Js::ParsePhase, L"Creating a duplicate symbol for the parameter %s in the body scope\n", param->GetPid()->Psz());
+                        ParseNodePtr paramNode = this->CreateVarDeclNode(param->GetPid(), STVariable, false, nullptr, false);
+                        Assert(paramNode && paramNode->sxVar.sym->GetScope()->GetScopeType() == ScopeType_FunctionBody);
+                        paramNode->sxVar.sym->SetHasInit(true);
                     });
                 }
             }

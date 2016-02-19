@@ -74,7 +74,6 @@ bool BlockHasOwnScope(ParseNode* pnodeBlock, ByteCodeGenerator *byteCodeGenerato
     Assert(pnodeBlock->nop == knopBlock);
     return pnodeBlock->sxBlock.scope != nullptr &&
         (!(pnodeBlock->grfpn & fpnSyntheticNode) ||
-            (pnodeBlock->sxBlock.blockType == Parameter && !pnodeBlock->sxBlock.scope->GetCanMergeWithBodyScope()) ||
             (pnodeBlock->sxBlock.blockType == PnodeBlockType::Global && byteCodeGenerator->IsEvalWithNoParentScopeInfo()));
 }
 
@@ -1409,12 +1408,8 @@ FuncInfo * ByteCodeGenerator::StartBindFunction(const wchar_t *name, uint nameLe
     }
 
     PushFuncInfo(L"StartBindFunction", funcInfo);
-    if (paramScope->GetCanMergeWithBodyScope())
-    {
-        // When param scope is not merged with body scope we don't have to push the param scope here.
-        // Symbols in both scopes are separate and can't reference each other.
-        PushScope(paramScope);
-    }
+
+    PushScope(paramScope);
     PushScope(bodyScope);
 
     if (funcExprScope)
@@ -1435,7 +1430,6 @@ FuncInfo * ByteCodeGenerator::StartBindFunction(const wchar_t *name, uint nameLe
 void ByteCodeGenerator::EndBindFunction(bool funcExprWithName)
 {
     bool isGlobalScope = currentScope->GetScopeType() == ScopeType_Global;
-    Scope* bodyScope = currentScope;
 
     Assert(currentScope->GetScopeType() == ScopeType_FunctionBody || isGlobalScope);
     PopScope(); // function body
@@ -1446,12 +1440,8 @@ void ByteCodeGenerator::EndBindFunction(bool funcExprWithName)
     }
     else
     {
-        Scope* paramScope = bodyScope->GetFunc()->GetParamScope();
-        if (paramScope->GetCanMergeWithBodyScope())
-        {
-            Assert(currentScope->GetScopeType() == ScopeType_Parameter);
-            PopScope(); // parameter scope
-        }
+        Assert(currentScope->GetScopeType() == ScopeType_Parameter);
+        PopScope(); // parameter scope
     }
 
     if (funcExprWithName)
@@ -1486,42 +1476,42 @@ void ByteCodeGenerator::PushScope(Scope *innerScope)
 {
     Assert(innerScope != nullptr);
 
-    if (isBinding && currentScope != nullptr && innerScope->GetMustInstantiate())
-    {
-        if (currentScope->GetScopeType() == ScopeType_FunctionBody)
-        {
-            // If the current scope is a function body, we don't expect another function body without going through a function expression or parameter
-            // scope (which is not merged with body scope) first. This also does not apply to incoming scopes marked as !mustInstantiate.
-            Assert(innerScope->GetScopeType() != ScopeType_FunctionBody || !innerScope->GetFunc()->GetParamScope()->GetCanMergeWithBodyScope());
-        }
+    //if (isBinding && currentScope != nullptr && innerScope->GetMustInstantiate())
+    //{
+    //    if (currentScope->GetScopeType() == ScopeType_FunctionBody)
+    //    {
+    //        // If the current scope is a function body, we don't expect another function body without going through a function expression or parameter
+    //        // scope (which is not merged with body scope) first. This also does not apply to incoming scopes marked as !mustInstantiate.
+    //        Assert(innerScope->GetScopeType() != ScopeType_FunctionBody || !innerScope->GetFunc()->GetParamScope()->GetCanMergeWithBodyScope());
+    //    }
 
-        if (currentScope->GetScopeType() == ScopeType_Parameter)
-        {
-            if (innerScope->GetScopeType() == ScopeType_FunctionBody)
-            {
-                // The current scope is a parameter scope and we are pushing in a function body scope then,
-                if (currentScope->GetFunc() == innerScope->GetFunc())
-                {
-                    // If both the param scope and the body scope belongs to the same function then both can be merged together.
-                    Assert(currentScope->GetCanMergeWithBodyScope());
-                }
-                else
-                {
-                    // If both the scopes belong to a different function then both functions have split scope.
-                    Assert(!innerScope->GetFunc()->GetParamScope()->GetCanMergeWithBodyScope()
-                            && !currentScope->GetCanMergeWithBodyScope());
-                }
-            }
-            else if (innerScope->GetScopeType() == ScopeType_Parameter)
-            {
-                // If we are pushing a parameter scope on top of another parameter scope then,
-                // Both of them cannot belong to the same function.
-                Assert(currentScope->GetFunc() != innerScope->GetFunc());
-                // Current function should have split scope.
-                Assert(!currentScope->GetCanMergeWithBodyScope());
-            }
-        }
-    }
+    //    if (currentScope->GetScopeType() == ScopeType_Parameter)
+    //    {
+    //        if (innerScope->GetScopeType() == ScopeType_FunctionBody)
+    //        {
+    //            // The current scope is a parameter scope and we are pushing in a function body scope then,
+    //            if (currentScope->GetFunc() == innerScope->GetFunc())
+    //            {
+    //                // If both the param scope and the body scope belongs to the same function then both can be merged together.
+    //                Assert(currentScope->GetCanMergeWithBodyScope());
+    //            }
+    //            else
+    //            {
+    //                // If both the scopes belong to a different function then both functions have split scope.
+    //                Assert(!innerScope->GetFunc()->GetParamScope()->GetCanMergeWithBodyScope()
+    //                        && !currentScope->GetCanMergeWithBodyScope());
+    //            }
+    //        }
+    //        else if (innerScope->GetScopeType() == ScopeType_Parameter)
+    //        {
+    //            // If we are pushing a parameter scope on top of another parameter scope then,
+    //            // Both of them cannot belong to the same function.
+    //            Assert(currentScope->GetFunc() != innerScope->GetFunc());
+    //            // Current function should have split scope.
+    //            Assert(!currentScope->GetCanMergeWithBodyScope());
+    //        }
+    //    }
+    //}
 
     innerScope->SetEnclosingScope(currentScope);
 
@@ -3019,7 +3009,7 @@ void AddFunctionsToScope(ParseNodePtr scope, ByteCodeGenerator * byteCodeGenerat
             if (!currentScope->IsGlobalEvalBlockScope())
             {
                 // Do not add the function definitions from the body to the param scope if not merged with body scope.
-                if (currentScope->GetScopeType() != ScopeType_Parameter || currentScope->GetCanMergeWithBodyScope()
+                if (currentScope->GetScopeType() != ScopeType_Parameter
                     || pnodeName->sxVar.sym->GetScope()->GetScopeType() != ScopeType_FunctionBody
                     || pnodeName->sxVar.sym->GetScope() != currentScope->GetFunc()->GetBodyScope())
                 {
@@ -3276,7 +3266,6 @@ void PreVisitBlock(ParseNode *pnodeBlock, ByteCodeGenerator *byteCodeGenerator)
             if (pnodeBlock->sxBlock.scope->GetScopeType() == ScopeType_Parameter
                 && scope->GetScopeType() == ScopeType_FunctionBody)
             {
-                Assert(pnodeBlock->sxBlock.scope->GetCanMergeWithBodyScope());
                 scope = scope->GetEnclosingScope();
             }
         }
@@ -3368,17 +3357,8 @@ void PostVisitBlock(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
         scope->SetMustInstantiate(!scopeIsEmpty);
     }
 
-    if (scope->GetScopeType() != ScopeType_Parameter)
-    {
-        byteCodeGenerator->PopScope();
-        byteCodeGenerator->PopBlock();
-    }
-    else
-    {
-        // If current block is a param scope then it was not pushed in during PreVisitBlock. So let's not do a pop here.
-        // Also the scope shouldn't be merged with body scope as it should have own block scope to reach here.
-        Assert(!scope->GetCanMergeWithBodyScope());
-    }
+    byteCodeGenerator->PopScope();
+    byteCodeGenerator->PopBlock();
 
     ParseNode *currentBlock = byteCodeGenerator->GetCurrentBlock();
     if (currentBlock && (pnode->sxBlock.GetCallsEval() || pnode->sxBlock.GetChildCallsEval()))

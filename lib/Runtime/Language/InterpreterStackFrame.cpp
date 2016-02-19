@@ -6462,6 +6462,17 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
                (this->m_flags & Js::InterpreterStackFrameFlags_WithinFinallyBlock);
     }
 
+    void InterpreterStackFrame::OP_BeginBodyScope()
+    {
+
+
+
+
+
+
+
+    }
+
     void InterpreterStackFrame::OP_ResumeCatch()
     {
         this->m_flags |= InterpreterStackFrameFlags_WithinCatchBlock;
