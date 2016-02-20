@@ -6179,6 +6179,15 @@ namespace Js
         return type;
     }
 
+    ModuleRecordList* JavascriptLibrary::EnsureModuleRecordList()
+    {
+        if (moduleRecordList == nullptr)
+        {
+            moduleRecordList = RecyclerNew(recycler, ModuleRecordList, recycler);
+        }
+        return moduleRecordList;
+    }
+
     // Register for profiler
 #define DEFINE_OBJECT_NAME(object) const wchar_t *pwszObjectName = L#object;
 
