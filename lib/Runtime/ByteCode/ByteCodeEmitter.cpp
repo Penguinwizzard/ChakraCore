@@ -1291,7 +1291,7 @@ Js::RegSlot ByteCodeGenerator::DefineOneFunction(ParseNode *pnodeFnc, FuncInfo *
     return regEnv;
 }
 
-void ByteCodeGenerator::DefineUserVars(FuncInfo *funcInfo)
+void ByteCodeGenerator::DefineUserVars(FuncInfo *funcInfo, ParseNodePtr pnodeScopes)
 {
     // Initialize scope-wide variables on entry to the scope. TODO: optimize by detecting uses that are always reached
     // by an existing initialization.
@@ -1414,7 +1414,7 @@ void ByteCodeGenerator::DefineUserVars(FuncInfo *funcInfo)
         m_writer.Reg1(Js::OpCode::LdUndef, funcInfo->nonUserNonTempRegistersToInitialize.Item(i));
     }
 
-    this->InitBlockScopedNonTemps(funcInfo->root->sxFnc.pnodeScopes, funcInfo);
+    this->InitBlockScopedNonTemps(pnodeScopes, funcInfo);
 }
 
 void ByteCodeGenerator::InitBlockScopedNonTemps(ParseNode *pnode, FuncInfo *funcInfo)
@@ -3119,23 +3119,18 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
             EnsureImportBindingScopeSlots(pnode, funcInfo);
         }
 
-        // Emit all scope-wide function definitions before emitting function bodies
-        // so that calls may reference functions they precede lexically.
-        // Note, global eval scope is a fake local scope and is handled as if it were
-        // a lexical block instead of a true global scope, so do not define the functions
-        // here. They will be defined during BeginEmitBlock.
-        if (!(funcInfo->IsGlobalFunction() && this->IsEvalWithNoParentScopeInfo()))
-        {
-            DefineFunctions(funcInfo);
-        }
 
-        DefineUserVars(funcInfo);
+
+
+
 
         ::BeginEmitBlock(pnode->sxFnc.pnodeScopes, this, funcInfo);
 
         if (pnode->sxFnc.HasNonSimpleParameterList())
         {
             Scope* bodyScope = funcInfo->GetBodyScope();
+
+            DefineUserVars(funcInfo, funcInfo->root->sxFnc.pnodeScopes);
 
             if (!paramScope->GetCanMergeWithBodyScope())
             {
@@ -3156,7 +3151,27 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
                 this->Writer()->Empty(Js::OpCode::BeginBodyScope);
             }
         }
-        else if (funcInfo->GetHasArguments() && !NeedScopeObjectForArguments(funcInfo, pnode))
+
+        // Emit all scope-wide function definitions before emitting function bodies
+        // so that calls may reference functions they precede lexically.
+        // Note, global eval scope is a fake local scope and is handled as if it were
+        // a lexical block instead of a true global scope, so do not define the functions
+        // here. They will be defined during BeginEmitBlock.
+        if (!(funcInfo->IsGlobalFunction() && this->IsEvalWithNoParentScopeInfo()))
+        {
+            // This only handles function declarations, which param scope cannot have any.
+            DefineFunctions(funcInfo);
+        }
+        if (!pnode->sxFnc.HasNonSimpleParameterList())
+        {
+            DefineUserVars(funcInfo, funcInfo->root->sxFnc.pnodeBodyScope);
+        }
+        else
+        {
+            DefineUserVars(funcInfo, funcInfo->root->sxFnc.pnodeScopes);
+        }
+
+        if (!pnode->sxFnc.HasNonSimpleParameterList() && funcInfo->GetHasArguments() && !NeedScopeObjectForArguments(funcInfo, pnode))
         {
             // If we didn't create a scope object and didn't have default args, we still need to transfer the formals to their slots.
             MapFormalsWithoutRest(pnode, [&](ParseNode *pnodeArg) { EmitPropStore(pnodeArg->sxVar.sym->GetLocation(), pnodeArg->sxVar.sym, pnodeArg->sxVar.pid, funcInfo); });
@@ -3490,10 +3505,6 @@ void ByteCodeGenerator::EmitScopeList(ParseNode *pnode, bool breakOnNonFunc)
             break;
 
         case knopBlock:
-            if (breakOnNonFunc)
-            {
-                break;
-            }
             this->StartEmitBlock(pnode);
             this->EmitScopeList(pnode->sxBlock.pnodeScopes);
             this->EndEmitBlock(pnode);
@@ -3501,10 +3512,6 @@ void ByteCodeGenerator::EmitScopeList(ParseNode *pnode, bool breakOnNonFunc)
             break;
 
         case knopCatch:
-            if (breakOnNonFunc)
-            {
-                break;
-            }
             this->StartEmitCatch(pnode);
             this->EmitScopeList(pnode->sxCatch.pnodeScopes);
             this->EndEmitCatch(pnode);
@@ -3512,10 +3519,6 @@ void ByteCodeGenerator::EmitScopeList(ParseNode *pnode, bool breakOnNonFunc)
             break;
 
         case knopWith:
-            if (breakOnNonFunc)
-            {
-                break;
-            }
             this->StartEmitWith(pnode);
             this->EmitScopeList(pnode->sxWith.pnodeScopes);
             this->EndEmitWith(pnode);
