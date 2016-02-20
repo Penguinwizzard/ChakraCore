@@ -66,7 +66,8 @@ namespace Js
             this->parser = (Parser*)AllocatorNew(ArenaAllocator, allocator, Parser, scriptContext);
             this->srcInfo = {};
             this->srcInfo.sourceContextInfo = scriptContext->CreateSourceContextInfo(sourceLength, Js::Constants::NoHostSourceContext);
-            this->srcInfo.moduleID = moduleId;
+            // TODO: enable this for byte code generation.
+            // this->srcInfo.moduleID = moduleId;
             LoadScriptFlag loadScriptFlag = (LoadScriptFlag)(LoadScriptFlag_Expression | LoadScriptFlag_Module |
                 (isUtf8 ? LoadScriptFlag_Utf8Source : LoadScriptFlag_None));
             this->parseTree = scriptContext->ParseScript(parser, sourceText, sourceLength, &srcInfo, &se, &pSourceInfo, L"module", loadScriptFlag, &sourceIndex);
@@ -175,7 +176,7 @@ namespace Js
         {
             exportStarSet = (ResolveSet*)AllocatorNew(ArenaAllocator, allocator, ResolveSet, allocator);
         }
-        
+        Assert(false);
         return false;
     }
 
@@ -255,21 +256,26 @@ namespace Js
         {
             InitializeLocalExports();
         }
-        if (this->indirectExportRecordList != nullptr)
-        {
-            ModuleNameRecord* exportRecord = nullptr;
-            indirectExportRecordList->Map([&](ModuleExportEntry exportEntry)
-            {
-                if (!this->ResolveExport(exportEntry.exportName->GetPropertyId(), nullptr, nullptr, &exportRecord) ||
-                    (exportRecord == nullptr))
-                {
-                    JavascriptError::ThrowSyntaxError(GetScriptContext(), JSERR_ModuleResolveExport, exportEntry.exportName->Psz());
-                }
-            });
-        }
+        //if (this->indirectExportRecordList != nullptr)
+        //{
+        //    ModuleNameRecord* exportRecord = nullptr;
+        //    indirectExportRecordList->Map([&](ModuleExportEntry exportEntry)
+        //    {
+        //        const PropertyRecord* propertyRecord;
+        //        scriptContext->GetOrAddPropertyRecord(exportEntry.exportName->Psz(), exportEntry.exportName->Cch(), &propertyRecord);
+        //        if (!this->ResolveExport(propertyRecord->GetPropertyId(), nullptr, nullptr, &exportRecord) ||
+        //            (exportRecord == nullptr))
+        //        {
+        //            JavascriptError::ThrowSyntaxError(GetScriptContext(), JSERR_ModuleResolveExport, exportEntry.exportName->Psz());
+        //        }
+        //    });
+        //}
         Js::AutoDynamicCodeReference dynamicFunctionReference(scriptContext);
+        // TODO: enable this after fixing bytecode gen.
+        //Assert(this == scriptContext->GetLibrary()->GetModuleRecord(srcInfo.moduleID));
         uint sourceIndex = scriptContext->SaveSourceNoCopy(this->pSourceInfo, static_cast<charcount_t>(this->pSourceInfo->GetCchLength()), /*isCesu8*/ true);
         CompileScriptException se;
+         //TODO: fix up byte code generation. moduleID in the SRCINFO is the moduleId of current module.
         this->rootFunction = scriptContext->GenerateRootFunction(parseTree, sourceIndex, this->parser, this->pSourceInfo->GetParseFlags(), &se, L"module");
         CleanupBeforeExecution();
         if (rootFunction == nullptr)
@@ -343,15 +349,21 @@ namespace Js
                 {
                     Assert(exportEntry.moduleRequest == nullptr);
                     Assert(exportEntry.importName == nullptr);
-                    localExportMap->Add(exportEntry.exportName->GetPropertyId(), localSlotCount);
-                    localSlotCount++;
-                    if (localSlotCount >= UINT_MAX)
+                    const PropertyRecord* propertyRecord;
+                    // BUGBUG workaround parser issue with class input. The name is empty here.
+                    if (exportEntry.exportName->Cch() > 1)
                     {
-                        JavascriptError::ThrowRangeError(scriptContext, JSERR_TooManyImportExprots);
+                        scriptContext->GetOrAddPropertyRecord(exportEntry.exportName->Psz(), exportEntry.exportName->Cch(), &propertyRecord);
+                        localExportMap->Add(propertyRecord->GetPropertyId(), currentSlotCount);
+                        currentSlotCount++;
+                        if (currentSlotCount >= UINT_MAX)
+                        {
+                            JavascriptError::ThrowRangeError(scriptContext, JSERR_TooManyImportExprots);
+                        }
                     }
                 });
-                localExportSlots = RecyclerNewArray(recycler, Var, localSlotCount);
-                for (uint i = 0; i < localSlotCount; i++)
+                localExportSlots = RecyclerNewArray(recycler, Var, currentSlotCount);
+                for (uint i = 0; i < currentSlotCount; i++)
                 {
                     localExportSlots[i] = undefineValue;
                 }

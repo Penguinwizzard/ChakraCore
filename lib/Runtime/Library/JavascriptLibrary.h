@@ -999,6 +999,7 @@ namespace Js
         void SetArrayObjectHasUserDefinedSpecies(bool val) { arrayObjectHasUserDefinedSpecies = val; }
 
         ModuleRecordList* EnsureModuleRecordList();
+        SourceTextModuleRecord* GetModuleRecord(uint moduleId);
 
     private:
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
