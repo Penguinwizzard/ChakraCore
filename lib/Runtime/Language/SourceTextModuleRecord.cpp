@@ -350,16 +350,12 @@ namespace Js
                     Assert(exportEntry.moduleRequest == nullptr);
                     Assert(exportEntry.importName == nullptr);
                     const PropertyRecord* propertyRecord;
-                    // BUGBUG workaround parser issue with class input. The name is empty here.
-                    if (exportEntry.exportName->Cch() > 1)
+                    scriptContext->GetOrAddPropertyRecord(exportEntry.exportName->Psz(), exportEntry.exportName->Cch(), &propertyRecord);
+                    localExportMap->Add(propertyRecord->GetPropertyId(), currentSlotCount);
+                    currentSlotCount++;
+                    if (currentSlotCount >= UINT_MAX)
                     {
-                        scriptContext->GetOrAddPropertyRecord(exportEntry.exportName->Psz(), exportEntry.exportName->Cch(), &propertyRecord);
-                        localExportMap->Add(propertyRecord->GetPropertyId(), currentSlotCount);
-                        currentSlotCount++;
-                        if (currentSlotCount >= UINT_MAX)
-                        {
-                            JavascriptError::ThrowRangeError(scriptContext, JSERR_TooManyImportExprots);
-                        }
+                        JavascriptError::ThrowRangeError(scriptContext, JSERR_TooManyImportExprots);
                     }
                 });
                 localExportSlots = RecyclerNewArray(recycler, Var, currentSlotCount);
