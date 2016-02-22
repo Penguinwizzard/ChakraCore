@@ -1071,6 +1071,7 @@ namespace Js
         newInstance->currentLoopCounter = 0;
         newInstance->m_flags        = InterpreterStackFrameFlags_None;
         newInstance->closureInitDone = false;
+        newInstance->isParamScopeDone = false;
 #if ENABLE_PROFILE_INFO
         newInstance->switchProfileMode = false;
         newInstance->isAutoProfiling = false;
@@ -1364,7 +1365,7 @@ namespace Js
 
         if (executeFunction->IsParamAndBodyScopeMerged())
         {
-            executeFunction->SetIsParamScopeDone(true);
+            this->SetIsParamScopeDone(true);
         }
 
         RegSlot thisRegForEventHandler = executeFunction->GetThisRegForEventHandler();
@@ -6471,8 +6472,8 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
     {
         FunctionBody *executeFunction = this->function->GetFunctionBody();
 
-        Assert(!executeFunction->IsParamScopeDone() && !executeFunction->IsParamAndBodyScopeMerged());
-        executeFunction->SetIsParamScopeDone(true);
+        Assert(!this->IsParamScopeDone() && !executeFunction->IsParamAndBodyScopeMerged());
+        this->SetIsParamScopeDone(true);
 
         if (executeFunction->scopeSlotArraySize > 0)
         {
@@ -6896,7 +6897,7 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
     {
         Var * slotArray;
         FunctionBody * functionBody = this->m_functionBody;
-        uint scopeSlotCount = functionBody->IsParamScopeDone() ? functionBody->scopeSlotArraySize : functionBody->scopeSlotArraySizeForParamScope;
+        uint scopeSlotCount = this->IsParamScopeDone() ? functionBody->scopeSlotArraySize : functionBody->scopeSlotArraySizeForParamScope;
         Assert(scopeSlotCount != 0);
 
         if (!functionBody->DoStackScopeSlots())
