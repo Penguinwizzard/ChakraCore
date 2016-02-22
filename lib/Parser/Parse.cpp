@@ -4839,15 +4839,11 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
             pnodeFnc->sxFnc.pnodeVars = nullptr;
             m_ppnodeVar = &pnodeFnc->sxFnc.pnodeVars;
 
-            if (pnodeFnc->sxFnc.HasDefaultArguments() && !fAsync)
-            {
-                Scope* paramScope = pnodeFnc->sxFnc.pnodeScopes->sxBlock.scope;
-                Assert(paramScope);
-
             // We can't merge the param scope and body scope any more as the nested methods may be capturing params.
             if (pnodeFnc->sxFnc.HasNonSimpleParameterList() && !fAsync)
             {
                 Scope* paramScope = pnodeFnc->sxFnc.pnodeScopes->sxBlock.scope;
+                Assert(paramScope);
 
                 paramScope->ForEachSymbolUntil([this, paramScope](Symbol* sym) {
                     if (sym->GetPid()->GetTopRef()->sym == nullptr)
@@ -4877,7 +4873,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
                 }
                 else if (m_scriptContext->GetConfig()->IsES6DefaultArgsSplitScopeEnabled() && (pnodeFnc->sxFnc.CallsEval() || pnodeFnc->sxFnc.ChildCallsEval()))
                 {
-                    paramScope->SetIsObject(true);
+                    paramScope->SetIsObject();
                     paramScope->SetCannotMergeWithBodyScope();
                 }
 
