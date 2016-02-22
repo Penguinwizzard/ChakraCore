@@ -3154,6 +3154,26 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
                 // Do the reverse of the above block
                 Assert(this->GetCurrentScope() == paramScope);
                 PushScope(bodyScope);
+
+                if (paramScope && !paramScope->GetCanMergeWithBodyScope())
+                {
+                    // TODO: Need to revisit this
+                    // Emit bytecode to copy the initial values from param names to their corresponding body bindings.
+                    // We have to do this after the rest param is marked as false for need declaration.
+                    paramScope->ForEachSymbol([this, funcInfo](Symbol* param) {
+                        Symbol* varSym = funcInfo->GetBodyScope()->FindLocalSymbol(param->GetName());
+                        Assert(varSym || param->GetIsArguments());
+                        Assert(param->GetIsArguments() || param->IsInSlot(funcInfo));
+                        if (varSym && varSym->GetSymbolType() == STVariable && (varSym->IsInSlot(funcInfo) || varSym->GetLocation() != Js::Constants::NoRegister))
+                        {
+                            Js::RegSlot tempReg = funcInfo->AcquireTmpRegister();
+                            this->EmitPropLoad(tempReg, param, param->GetPid(), funcInfo);
+                            this->EmitPropStore(tempReg, varSym, varSym->GetPid(), funcInfo);
+                            funcInfo->ReleaseTmpRegister(tempReg);
+                        }
+                    });
+                }
+
                 this->Writer()->Empty(Js::OpCode::BeginBodyScope);
             }
         }
@@ -3192,24 +3212,24 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
             pnode->sxFnc.pnodeRest->sxVar.sym->SetNeedDeclaration(false);
         }
 
-        if (paramScope && !paramScope->GetCanMergeWithBodyScope())
-        {
-            // TODO: Need to revisit this
-            //// Emit bytecode to copy the initial values from param names to their corresponding body bindings.
-            //// We have to do this after the rest param is marked as false for need declaration.
-            //paramScope->ForEachSymbol([this, funcInfo](Symbol* param) {
-            //    Symbol* varSym = funcInfo->GetBodyScope()->FindLocalSymbol(param->GetName());
-            //    Assert(varSym || param->GetIsArguments());
-            //    Assert(param->GetIsArguments() || param->IsInSlot(funcInfo));
-            //    if (varSym && varSym->GetSymbolType() == STVariable && (varSym->IsInSlot(funcInfo) || varSym->GetLocation() != Js::Constants::NoRegister))
-            //    {
-            //        Js::RegSlot tempReg = funcInfo->AcquireTmpRegister();
-            //        this->EmitPropLoad(tempReg, param, param->GetPid(), funcInfo);
-            //        this->EmitPropStore(tempReg, varSym, varSym->GetPid(), funcInfo);
-            //        funcInfo->ReleaseTmpRegister(tempReg);
-            //    }
-            //});
-        }
+        //if (paramScope && !paramScope->GetCanMergeWithBodyScope())
+        //{
+        //    // TODO: Need to revisit this
+        //    // Emit bytecode to copy the initial values from param names to their corresponding body bindings.
+        //    // We have to do this after the rest param is marked as false for need declaration.
+        //    paramScope->ForEachSymbol([this, funcInfo](Symbol* param) {
+        //        Symbol* varSym = funcInfo->GetBodyScope()->FindLocalSymbol(param->GetName());
+        //        Assert(varSym || param->GetIsArguments());
+        //        Assert(param->GetIsArguments() || param->IsInSlot(funcInfo));
+        //        if (varSym && varSym->GetSymbolType() == STVariable && (varSym->IsInSlot(funcInfo) || varSym->GetLocation() != Js::Constants::NoRegister))
+        //        {
+        //            Js::RegSlot tempReg = funcInfo->AcquireTmpRegister();
+        //            this->EmitPropLoad(tempReg, param, param->GetPid(), funcInfo);
+        //            this->EmitPropStore(tempReg, varSym, varSym->GetPid(), funcInfo);
+        //            funcInfo->ReleaseTmpRegister(tempReg);
+        //        }
+        //    });
+        //}
 
         if (pnode->sxFnc.pnodeBodyScope != nullptr)
         {

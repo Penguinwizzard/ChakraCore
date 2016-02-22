@@ -2812,9 +2812,6 @@ namespace Js
         bool IsParamAndBodyScopeMerged() const { return m_isParamAndBodyScopeMerged; }
         void SetParamAndBodyScopeNotMerged() { m_isParamAndBodyScopeMerged = false; }
 
-        bool IsParamScopeDone() const { return m_isParamScopeDone; }
-        void SetIsParamScopeDone(bool value) { m_isParamScopeDone = value; }
-
         // Used for the debug purpose. This is to avoid setting all locals to non-local-referenced, multiple time for each child function.
         bool HasDoneAllNonLocalReferenced() const { return m_hasDoneAllNonLocalReferenced; }
         void SetHasDoneAllNonLocalReferenced(bool set) { m_hasDoneAllNonLocalReferenced = set; }
