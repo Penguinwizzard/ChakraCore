@@ -383,9 +383,9 @@ namespace Js
     FunctionBody::FunctionBody(ScriptContext* scriptContext, const wchar_t* displayName, uint displayNameLength, uint displayShortNameOffset, uint nestedCount,
         Utf8SourceInfo* utf8SourceInfo, uint uFunctionNumber, uint uScriptId,
         Js::LocalFunctionId  functionId, Js::PropertyRecordList* boundPropertyRecords, Attributes attributes
-    #ifdef PERF_COUNTERS
+#ifdef PERF_COUNTERS
         , bool isDeserializedFunction
-    #endif
+#endif
         ) :
         ParseableFunctionInfo(scriptContext->CurrentThunk, nestedCount, sizeof(FunctionBody), functionId, utf8SourceInfo, scriptContext, uFunctionNumber, displayName, displayNameLength, displayShortNameOffset, attributes, boundPropertyRecords),
         m_uScriptId(uScriptId),
@@ -440,6 +440,7 @@ namespace Js
         m_ChildCallsEval(false),
         m_hasReferenceableBuiltInArguments(false),
         m_isParamAndBodyScopeMerged(true),
+        m_isParamScopeDone(false),
         m_firstFunctionObject(true),
         m_inlineCachesOnFunctionObject(false),
         m_hasDoneAllNonLocalReferenced(false),

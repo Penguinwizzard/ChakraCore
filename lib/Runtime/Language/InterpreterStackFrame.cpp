@@ -1362,6 +1362,11 @@ namespace Js
         FunctionBody *executeFunction = this->function->GetFunctionBody();
         Var environment;
 
+        if (executeFunction->IsParamAndBodyScopeMerged())
+        {
+            executeFunction->SetIsParamScopeDone(true);
+        }
+
         RegSlot thisRegForEventHandler = executeFunction->GetThisRegForEventHandler();
         if (thisRegForEventHandler != Constants::NoRegister)
         {
@@ -6464,8 +6469,15 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
 
     void InterpreterStackFrame::OP_BeginBodyScope()
     {
+        FunctionBody *executeFunction = this->function->GetFunctionBody();
 
-        this->InitializeClosures();
+        Assert(!executeFunction->IsParamScopeDone() && !executeFunction->IsParamAndBodyScopeMerged());
+        executeFunction->SetIsParamScopeDone(true);
+
+        if (executeFunction->scopeSlotArraySize > 0)
+        {
+            this->InitializeClosures();
+        }
 
 
 
@@ -6884,7 +6896,7 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
     {
         Var * slotArray;
         FunctionBody * functionBody = this->m_functionBody;
-        uint scopeSlotCount = functionBody->scopeSlotArraySize;
+        uint scopeSlotCount = functionBody->IsParamScopeDone() ? functionBody->scopeSlotArraySize : functionBody->scopeSlotArraySizeForParamScope;
         Assert(scopeSlotCount != 0);
 
         if (!functionBody->DoStackScopeSlots())
