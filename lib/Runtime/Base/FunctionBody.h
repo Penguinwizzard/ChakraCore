@@ -1869,6 +1869,7 @@ namespace Js
         bool m_CallsEval : 1;
         bool m_hasReferenceableBuiltInArguments : 1;
         bool m_isParamAndBodyScopeMerged : 1;
+        bool m_isParamScopeDone : 1;
 
         // Used in the debug purpose. This is to avoid setting all locals to non-local-referenced, multiple times for each child function.
         bool m_hasDoneAllNonLocalReferenced : 1;
@@ -2462,11 +2463,16 @@ namespace Js
                 !PHASE_OFF(Js::PolymorphicInlineFixedMethodsPhase, this) && !PHASE_OFF(Js::PolymorphicInlineFixedMethodsPhase, topFunctionBody);
         }
 
-        Js::PropertyId * GetPropertyIdsForScopeSlotArray() const { return static_cast<Js::PropertyId *>(this->GetAuxPtr(AuxPointerType::PropertyIdsForScopeSlotArray)); }
-        void SetPropertyIdsForScopeSlotArray(Js::PropertyId * propertyIdsForScopeSlotArray, uint scopeSlotCount, uint scopeSlotCountForParamScope = 0)
+        void SetScopeSlotArraySizes(uint scopeSlotCount, uint scopeSlotCountForParamScope)
         {
             this->scopeSlotArraySize = scopeSlotCount;
             this->scopeSlotArraySizeForParamScope = scopeSlotCountForParamScope;
+        }
+
+        Js::PropertyId * GetPropertyIdsForScopeSlotArray() const { return static_cast<Js::PropertyId *>(this->GetAuxPtr(AuxPointerType::PropertyIdsForScopeSlotArray)); }
+        void SetPropertyIdsForScopeSlotArray(Js::PropertyId * propertyIdsForScopeSlotArray, uint scopeSlotCount, uint scopeSlotCountForParamScope = 0)
+        {
+            SetScopeSlotArraySizes(scopeSlotCount, scopeSlotArraySizeForParamScope);
             this->SetAuxPtr(AuxPointerType::PropertyIdsForScopeSlotArray, propertyIdsForScopeSlotArray);
         }
 
@@ -2805,6 +2811,9 @@ namespace Js
 
         bool IsParamAndBodyScopeMerged() const { return m_isParamAndBodyScopeMerged; }
         void SetParamAndBodyScopeNotMerged() { m_isParamAndBodyScopeMerged = false; }
+
+        bool IsParamScopeDone() const { return m_isParamScopeDone; }
+        void SetIsParamScopeDone(bool value) { m_isParamScopeDone = value; }
 
         // Used for the debug purpose. This is to avoid setting all locals to non-local-referenced, multiple time for each child function.
         bool HasDoneAllNonLocalReferenced() const { return m_hasDoneAllNonLocalReferenced; }
