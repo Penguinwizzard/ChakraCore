@@ -1291,7 +1291,7 @@ Js::RegSlot ByteCodeGenerator::DefineOneFunction(ParseNode *pnodeFnc, FuncInfo *
     return regEnv;
 }
 
-void ByteCodeGenerator::DefineUserVars(FuncInfo *funcInfo, ParseNodePtr pnodeScopes)
+void ByteCodeGenerator::DefineUserVars(FuncInfo *funcInfo)
 {
     // Initialize scope-wide variables on entry to the scope. TODO: optimize by detecting uses that are always reached
     // by an existing initialization.
@@ -1413,8 +1413,6 @@ void ByteCodeGenerator::DefineUserVars(FuncInfo *funcInfo, ParseNodePtr pnodeSco
     {
         m_writer.Reg1(Js::OpCode::LdUndef, funcInfo->nonUserNonTempRegistersToInitialize.Item(i));
     }
-
-    this->InitBlockScopedNonTemps(pnodeScopes, funcInfo);
 }
 
 void ByteCodeGenerator::InitBlockScopedNonTemps(ParseNode *pnode, FuncInfo *funcInfo)
@@ -3130,7 +3128,7 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
         {
             Scope* bodyScope = funcInfo->GetBodyScope();
 
-            DefineUserVars(funcInfo, funcInfo->root->sxFnc.pnodeScopes);
+            this->InitBlockScopedNonTemps(funcInfo->root->sxFnc.pnodeScopes, funcInfo);
 
             if (!paramScope->GetCanMergeWithBodyScope())
             {
@@ -3162,13 +3160,16 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
             // This only handles function declarations, which param scope cannot have any.
             DefineFunctions(funcInfo);
         }
-        if (!pnode->sxFnc.HasNonSimpleParameterList())
+
+        if (pnode->sxFnc.HasNonSimpleParameterList())
         {
-            DefineUserVars(funcInfo, funcInfo->root->sxFnc.pnodeBodyScope);
+            DefineUserVars(funcInfo);
+            this->InitBlockScopedNonTemps(funcInfo->root->sxFnc.pnodeBodyScope, funcInfo);
         }
         else
         {
-            DefineUserVars(funcInfo, funcInfo->root->sxFnc.pnodeScopes);
+            DefineUserVars(funcInfo);
+            this->InitBlockScopedNonTemps(funcInfo->root->sxFnc.pnodeScopes, funcInfo);
         }
 
         if (!pnode->sxFnc.HasNonSimpleParameterList() && funcInfo->GetHasArguments() && !NeedScopeObjectForArguments(funcInfo, pnode))

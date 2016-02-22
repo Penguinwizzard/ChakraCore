@@ -6465,7 +6465,7 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
     void InterpreterStackFrame::OP_BeginBodyScope()
     {
 
-
+        this->InitializeClosures();
 
 
 

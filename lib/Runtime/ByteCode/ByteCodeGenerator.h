@@ -251,7 +251,7 @@ public:
     Js::RegSlot DefineOneFunction(ParseNode *pnodeFnc, FuncInfo *funcInfoParent, bool generateAssignment=true, Js::RegSlot regEnv = Js::Constants::NoRegister, Js::RegSlot frameDisplayTemp = Js::Constants::NoRegister);
     void DefineCachedFunctions(FuncInfo *funcInfoParent);
     void DefineUncachedFunctions(FuncInfo *funcInfoParent);
-    void DefineUserVars(FuncInfo *funcInfo, ParseNodePtr pnodeScopes);
+    void DefineUserVars(FuncInfo *funcInfo);
     void InitBlockScopedNonTemps(ParseNode *pnode, FuncInfo *funcInfo);
     // temporarily load all constants and special registers in a single block
     void LoadAllConstants(FuncInfo *funcInfo);
