@@ -3508,6 +3508,12 @@ void ByteCodeGenerator::EmitScopeList(ParseNode *pnode, bool breakOnNonFunc)
 
                 this->EmitOneFunction(pnode);
                 this->EndEmitFunction(pnode);
+
+                if (paramScope && !paramScope->GetCanMergeWithBodyScope())
+                {
+                    Assert(this->GetCurrentScope() == paramScope);
+                    PopScope(); // Pop the param scope
+                }
             }
             pnode = pnode->sxFnc.pnodeNext;
             break;
