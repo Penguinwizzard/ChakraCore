@@ -4856,6 +4856,16 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
                 Scope* paramScope = pnodeFnc->sxFnc.pnodeScopes->sxBlock.scope;
                 Assert(paramScope);
 
+                if (!m_scriptContext->GetConfig()->IsES6DefaultArgsSplitScopeEnabled() && (pnodeFnc->sxFnc.CallsEval() || pnodeFnc->sxFnc.ChildCallsEval()))
+                {
+                    Error(ERREvalNotSupportedInParamScope);
+                }
+                /*else if (m_scriptContext->GetConfig()->IsES6DefaultArgsSplitScopeEnabled() && (pnodeFnc->sxFnc.CallsEval() || pnodeFnc->sxFnc.ChildCallsEval()))
+                {
+                    paramScope->SetIsObject();
+                    paramScope->SetCannotMergeWithBodyScope();
+                }*/
+
                 paramScope->ForEachSymbolUntil([this, paramScope](Symbol* sym) {
                     if (sym->GetPid()->GetTopRef()->sym == nullptr)
                     {
@@ -4877,16 +4887,6 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
                     }
                     return false;
                 });
-
-                if (!m_scriptContext->GetConfig()->IsES6DefaultArgsSplitScopeEnabled() && (pnodeFnc->sxFnc.CallsEval() || pnodeFnc->sxFnc.ChildCallsEval()))
-                {
-                    Error(ERREvalNotSupportedInParamScope);
-                }
-                else if (m_scriptContext->GetConfig()->IsES6DefaultArgsSplitScopeEnabled() && (pnodeFnc->sxFnc.CallsEval() || pnodeFnc->sxFnc.ChildCallsEval()))
-                {
-                    paramScope->SetIsObject();
-                    paramScope->SetCannotMergeWithBodyScope();
-                }
 
                 if (!paramScope->GetCanMergeWithBodyScope())
                 {

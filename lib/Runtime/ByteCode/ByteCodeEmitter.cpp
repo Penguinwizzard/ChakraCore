@@ -3003,7 +3003,7 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
         // For now, emit all constant loads at top of function (should instead put in closest dominator of uses).
         LoadAllConstants(funcInfo);
         Scope* paramScope = funcInfo->GetParamScope();
-        if (paramScope == nullptr || paramScope->GetCanMergeWithBodyScope())
+        if (!pnode->sxFnc.HasNonSimpleParameterList() || paramScope->GetCanMergeWithBodyScope())
         {
             HomeArguments(funcInfo);
         }
@@ -3142,6 +3142,8 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
             {
                 byteCodeFunction->SetParamAndBodyScopeNotMerged();
 
+                HomeArguments(funcInfo);
+
                 // Pop the body scope before emitting the default args
                 PopScope();
                 Assert(this->GetCurrentScope() == paramScope);
@@ -3170,14 +3172,13 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
             DefineFunctions(funcInfo);
         }
 
+        DefineUserVars(funcInfo);
         if (pnode->sxFnc.HasNonSimpleParameterList())
         {
-            DefineUserVars(funcInfo);
             this->InitBlockScopedNonTemps(funcInfo->root->sxFnc.pnodeBodyScope, funcInfo);
         }
         else
         {
-            DefineUserVars(funcInfo);
             this->InitBlockScopedNonTemps(funcInfo->root->sxFnc.pnodeScopes, funcInfo);
         }
 
