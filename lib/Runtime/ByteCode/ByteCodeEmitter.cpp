@@ -3131,6 +3131,8 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
 
 
         ::BeginEmitBlock(pnode->sxFnc.pnodeScopes, this, funcInfo);
+        
+        DefineLabels(funcInfo);
 
         if (pnode->sxFnc.HasNonSimpleParameterList())
         {
@@ -3216,7 +3218,6 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
         {
             ::BeginEmitBlock(pnode->sxFnc.pnodeBodyScope, this, funcInfo);
         }
-        DefineLabels(funcInfo);
 
         this->inPrologue = false;
 
