@@ -1875,13 +1875,13 @@ Scope * ByteCodeGenerator::FindScopeForSym(Scope *symScope, Scope *scope, Js::Pr
         {
             break;
         }
-        //else if (symScope->GetScopeType() == ScopeType_Parameter && scope->GetFunc() == symScope->GetFunc())
-        //{
-        //    // During VisitNestedScope the param scope will not be on the stack for the unmerged scope case.
-        //    // So if the symbol's scope is a param scope, check whether it is the current function or not.
-        //    scope = symScope;
-        //    break;
-        //}
+        else if (symScope->GetScopeType() == ScopeType_Parameter && scope->GetFunc() == symScope->GetFunc())
+        {
+            // During VisitNestedScope the param scope will not be on the stack for the unmerged scope case.
+            // So if the symbol's scope is a param scope, check whether it is the current function or not.
+            scope = symScope;
+            break;
+        }
     }
 
     Assert(scope);
