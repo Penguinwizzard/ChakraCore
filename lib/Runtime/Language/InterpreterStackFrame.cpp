@@ -767,6 +767,16 @@
 
 #define PROCESS_GET_ELEM_LOCALSLOTNonVar(name, func, layout) PROCESS_GET_ELEM_LOCALSLOTNonVar_COMMON(name, func, layout,)
 
+#define PROCESS_GET_ELEM_PARAMSLOTNonVar_COMMON(name, func, layout, suffix) \
+    case OpCode::name: \
+    { \
+        PROCESS_READ_LAYOUT(name, layout, suffix); \
+        SetNonVarReg(playout->Value, func((Var*)GetParamClosure(), playout)); \
+        break; \
+    }
+
+#define PROCESS_GET_ELEM_PARAMSLOTNonVar(name, func, layout) PROCESS_GET_ELEM_PARAMSLOTNonVar_COMMON(name, func, layout,)
+
 #define PROCESS_GET_ELEM_INNERSLOTNonVar_COMMON(name, func, layout, suffix) \
     case OpCode::name: \
     { \
@@ -6471,8 +6481,11 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
     void InterpreterStackFrame::OP_BeginBodyScope()
     {
         FunctionBody *executeFunction = this->function->GetFunctionBody();
-
         Assert(!this->IsParamScopeDone() && !executeFunction->IsParamAndBodyScopeMerged());
+
+        // Save the current closure
+        this->SetParamClosure(this->GetLocalClosure());
+
         this->SetIsParamScopeDone(true);
 
         if (executeFunction->scopeSlotArraySize > 0)
@@ -6848,6 +6861,16 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
     void InterpreterStackFrame::SetLocalClosure(Var closure)
     {
         this->localClosure = closure;
+    }
+
+    Var InterpreterStackFrame::GetParamClosure() const
+    {
+        return this->paramClosure;
+    }
+
+    void InterpreterStackFrame::SetParamClosure(Var closure)
+    {
+        this->paramClosure = closure;
     }
 
     void

@@ -76,6 +76,7 @@ namespace Js
         StackScriptFunction * stackNestedFunctions;
         FrameDisplay * localFrameDisplay;
         Var localClosure;
+        Var paramClosure;
         Var *innerScopeArray;
         ScriptContext* scriptContext;
         ScriptFunction * function;
@@ -721,6 +722,8 @@ namespace Js
         void SetLocalFrameDisplay(FrameDisplay *frameDisplay);
         Var  GetLocalClosure() const;
         void SetLocalClosure(Var closure);
+        Var  GetParamClosure() const;
+        void SetParamClosure(Var closure);
         void TrySetRetOffset();
     };
 
