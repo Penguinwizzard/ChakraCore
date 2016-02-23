@@ -3503,7 +3503,7 @@ void ByteCodeGenerator::EmitScopeList(ParseNode *pnode, bool breakOnNonFunc)
                 }
                 else
                 {
-                    this->EmitScopeList(pnode->sxFnc.pnodeScopes->sxBlock.pnodeScopes);
+                    this->EmitScopeList(pnode->sxFnc.pnodeScopes);
                 }
 
                 this->EmitOneFunction(pnode);

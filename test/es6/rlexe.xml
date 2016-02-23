@@ -683,19 +683,21 @@
   <test>
     <default>
       <files>default.js</files>
-      <compile-flags>-force:CachedScope -nonative -ES6DefaultArgs -ES6Generators -args summary -endargs</compile-flags>
+      <compile-flags>-force:CachedScope -ES6DefaultArgs -ES6Generators -args summary -endargs</compile-flags>
     </default>
   </test>
   <test>
     <default>
       <files>default-splitscope.js</files>
       <compile-flags>-off:deferparse -nonative -ES6DefaultArgsSplitScope -ES6Generators -args summary -endargs</compile-flags>
+      <tags>exclude_dynapogo</tags>
     </default>
   </test>
   <test>
     <default>
       <files>default-splitscope.js</files>
-      <compile-flags>-force:deferparse -ES6DefaultArgsSplitScope -ES6Generators -args summary -endargs</compile-flags>
+      <compile-flags>-force:deferparse -nonative -ES6DefaultArgsSplitScope -ES6Generators -args summary -endargs</compile-flags>
+      <tags>exclude_dynapogo</tags>
     </default>
   </test>
   <test>
