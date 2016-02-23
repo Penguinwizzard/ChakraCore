@@ -4,7 +4,7 @@
 //-------------------------------------------------------------------------------------------------------
 #include "ParserPch.h"
 #include "FormalsUtil.h"
-#include "..\Runtime\Language\SourceDynamicProfileManager.h"
+#include "../Runtime/Language/SourceDynamicProfileManager.h"
 
 #if DBG_DUMP
 void PrintPnodeWIndent(ParseNode *pnode,int indentAmt);
@@ -4594,7 +4594,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
 
     if (this->m_currentScope->GetScopeType() == ScopeType_FuncExpr)
     {
-        // Or this is a function expression enclosed in a parameter scope    
+        // Or this is a function expression enclosed in a parameter scope  
         isEnclosedInParamScope = this->m_currentScope->GetEnclosingScope() && this->m_currentScope->GetEnclosingScope()->GetScopeType() == ScopeType_Parameter;
     }
 
@@ -4738,7 +4738,10 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
         // Create function body scope
         ParseNodePtr pnodeInnerBlock = StartParseBlock<buildAST>(PnodeBlockType::Function, ScopeType_FunctionBody);
         // Set the parameter block's child to the function body block.
-        *m_ppnodeScope = pnodeInnerBlock; // //
+        // The pnodeFnc->sxFnc.pnodeScopes list is constructed in such a way that it includes all the scopes in this list.
+        // For example if the param scope has one function and body scope has one function then the list will look like below,
+        // param scope block -> function decl from param scope -> body socpe block -> function decl from body scope.
+        *m_ppnodeScope = pnodeInnerBlock;
         pnodeFnc->sxFnc.pnodeBodyScope = pnodeInnerBlock;
 
         // This synthetic block scope will contain all the nested scopes.
@@ -4836,39 +4839,42 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
             pnodeFnc->sxFnc.pnodeVars = nullptr;
             m_ppnodeVar = &pnodeFnc->sxFnc.pnodeVars;
 
-            if (pnodeFnc->sxFnc.HasDefaultArguments() && !fAsync)
+            if (pnodeFnc->sxFnc.HasNonSimpleParameterList() && !fAsync)
             {
                 Scope* paramScope = pnodeFnc->sxFnc.pnodeScopes->sxBlock.scope;
                 Assert(paramScope);
 
-                if (pnodeFnc->sxFnc.CallsEval() || pnodeFnc->sxFnc.ChildCallsEval())
+                if (!m_scriptContext->GetConfig()->IsES6DefaultArgsSplitScopeEnabled() && (pnodeFnc->sxFnc.CallsEval() || pnodeFnc->sxFnc.ChildCallsEval()))
                 {
-                    // TODO: Enable this later
-                    /*paramScope->SetIsObject();
-                    paramScope->SetCannotMergeWithBodyScope();*/
+                    Error(ERREvalNotSupportedInParamScope);
                 }
-                else
+                /*else if (m_scriptContext->GetConfig()->IsES6DefaultArgsSplitScopeEnabled() && (pnodeFnc->sxFnc.CallsEval() || pnodeFnc->sxFnc.ChildCallsEval()))
                 {
-                    // We can't merge the param scope and body scope if the nested methods within the param scope captures any param.
+                    paramScope->SetIsObject();
+                    paramScope->SetCannotMergeWithBodyScope();
+                }*/
 
-                    paramScope->ForEachSymbolUntil([paramScope](Symbol* sym) {
-                        if (!sym->GetIsArguments())
+                paramScope->ForEachSymbolUntil([this, paramScope](Symbol* sym) {
+                    if (sym->GetPid()->GetTopRef()->sym == nullptr)
+                    {
+                        if (m_scriptContext->GetConfig()->IsES6DefaultArgsSplitScopeEnabled())
                         {
-                            if (sym->GetPid()->GetTopRef()->sym == nullptr)
-                            {
-                                // One of the symbol has non local reference. Mark the param scope as we can't merge it with body scope.
-                                paramScope->SetCannotMergeWithBodyScope();
-                                return true;
-                            }
-                            else
-                            {
-                                // If no non-local references are there then the top of the ref stack should point to the same symbol.
-                                Assert(sym->GetPid()->GetTopRef()->sym == sym);
-                            }
+                            // One of the symbol has non local reference. Mark the param scope as we can't merge it with body scope.
+                            paramScope->SetCannotMergeWithBodyScope();
+                            return true;
                         }
-                        return false;
-                    });
-                }
+                        else
+                        {
+                            Error(ERRFuncRefFormalNotSupportedInParamScope);
+                        }
+                    }
+                    else
+                    {
+                        // If no non-local references are there then the top of the ref stack should point to the same symbol.
+                        Assert(sym->GetPid()->GetTopRef()->sym == sym);
+                    }
+                    return false;
+                });
 
                 if (!paramScope->GetCanMergeWithBodyScope())
                 {
@@ -7291,6 +7297,10 @@ void Parser::TransformAsyncFncDeclAST(ParseNodePtr *pnodeBody, bool fLambda)
     {
         GetCurrentFunctionNode()->sxFnc.SetStrictMode();
     }
+    if (pnodeFncGenerator->sxFnc.UsesArguments())
+    {
+        GetCurrentFunctionNode()->sxFnc.SetUsesArguments();
+    }
     lastNodeRef = NULL;
 }
 
@@ -7309,6 +7319,7 @@ ParseNodePtr Parser::CreateAsyncSpawnGenerator()
     pnodeFncGenerator->sxFnc.SetStrictMode(IsStrictMode());
 
     pnodeFncGenerator->sxFnc.SetIsGenerator();
+    pnodeFncGenerator->sxFnc.SetIsLambda();
     pnodeFncGenerator->sxFnc.scope = nullptr;
 
     AppendFunctionToScopeList(false, pnodeFncGenerator);

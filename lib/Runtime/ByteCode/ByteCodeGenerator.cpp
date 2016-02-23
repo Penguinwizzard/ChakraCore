@@ -4,7 +4,7 @@
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeByteCodePch.h"
 #include "FormalsUtil.h"
-#include "Library\StackScriptFunction.h"
+#include "Library/StackScriptFunction.h"
 
 void PreVisitBlock(ParseNode *pnodeBlock, ByteCodeGenerator *byteCodeGenerator);
 void PostVisitBlock(ParseNode *pnodeBlock, ByteCodeGenerator *byteCodeGenerator);
@@ -711,7 +711,7 @@ bool ByteCodeGenerator::IsFalse(ParseNode* node)
 
 bool ByteCodeGenerator::UseParserBindings() const
 {
-    return IsInNonDebugMode() && !PHASE_OFF1(Js::ParserBindPhase);
+    return !PHASE_OFF1(Js::ParserBindPhase);
 }
 
 bool ByteCodeGenerator::IsES6DestructuringEnabled() const
@@ -3026,6 +3026,12 @@ void AddFunctionsToScope(ParseNodePtr scope, ByteCodeGenerator * byteCodeGenerat
             if (sym)
             {
                 pnodeName->sxVar.sym = sym;
+
+                if (sym->GetIsGlobal())
+                {
+                    FuncInfo* func = byteCodeGenerator->TopFuncInfo();
+                    func->SetHasGlobalRef(true);
+                }
 
                 if (sym->GetScope() != sym->GetScope()->GetFunc()->GetBodyScope() &&
                     sym->GetScope() != sym->GetScope()->GetFunc()->GetParamScope())

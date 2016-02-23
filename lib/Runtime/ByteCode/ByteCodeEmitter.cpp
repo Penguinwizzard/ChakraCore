@@ -4,7 +4,7 @@
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeByteCodePch.h"
 #include "FormalsUtil.h"
-#include "Language\AsmJs.h"
+#include "Language/AsmJs.h"
 
 void EmitReference(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *funcInfo);
 void EmitAssignment(ParseNode *asgnNode, ParseNode *lhs, Js::RegSlot rhsLocation, ByteCodeGenerator *byteCodeGenerator, FuncInfo *funcInfo);
@@ -1413,8 +1413,6 @@ void ByteCodeGenerator::DefineUserVars(FuncInfo *funcInfo, ParseNodePtr pnodeSco
     {
         m_writer.Reg1(Js::OpCode::LdUndef, funcInfo->nonUserNonTempRegistersToInitialize.Item(i));
     }
-
-    this->InitBlockScopedNonTemps(pnodeScopes, funcInfo);
 }
 
 void ByteCodeGenerator::InitBlockScopedNonTemps(ParseNode *pnode, FuncInfo *funcInfo)
@@ -1735,59 +1733,67 @@ void ByteCodeGenerator::InitScopeSlotArray(FuncInfo * funcInfo)
 
     // TODO: Fix the debugger scenario for param scope
     Js::FunctionBody *byteCodeFunction = funcInfo->GetParsedFunctionBody();
-    Js::PropertyId *propertyIdsForScopeSlotArray = RecyclerNewArrayLeafZ(scriptContext->GetRecycler(), Js::PropertyId, scopeSlotCount);
-    byteCodeFunction->SetPropertyIdsForScopeSlotArray(propertyIdsForScopeSlotArray, scopeSlotCount, scopeSlotCountForParamScope);
-    AssertMsg(!byteCodeFunction->IsReparsed() || byteCodeFunction->m_wasEverAsmjsMode || byteCodeFunction->scopeSlotArraySize == scopeSlotCount,
-        "The slot array size is different between debug and non-debug mode");
-#if DEBUG
-    for (UINT i = 0; i < scopeSlotCount; i++)
+    if (scopeSlotCount || scopeSlotCountForParamScope)
     {
-        propertyIdsForScopeSlotArray[i] = Js::Constants::NoProperty;
+        byteCodeFunction->SetScopeSlotArraySizes(scopeSlotCount, scopeSlotCountForParamScope);
     }
-#endif
 
-    auto setPropIdsForScopeSlotArray = [funcInfo, propertyIdsForScopeSlotArray](Symbol *const sym)
+    if (scopeSlotCount)
     {
-        if (sym->NeedsSlotAlloc(funcInfo))
+        Js::PropertyId *propertyIdsForScopeSlotArray = RecyclerNewArrayLeafZ(scriptContext->GetRecycler(), Js::PropertyId, scopeSlotCount);
+        byteCodeFunction->SetPropertyIdsForScopeSlotArray(propertyIdsForScopeSlotArray, scopeSlotCount, scopeSlotCountForParamScope);
+        AssertMsg(!byteCodeFunction->IsReparsed() || byteCodeFunction->m_wasEverAsmjsMode || byteCodeFunction->scopeSlotArraySize == scopeSlotCount,
+            "The slot array size is different between debug and non-debug mode");
+#if DEBUG
+        for (UINT i = 0; i < scopeSlotCount; i++)
         {
-            // All properties should get correct propertyId here.
-            Assert(sym->HasScopeSlot()); // We can't allocate scope slot now. Any symbol needing scope slot must have allocated it before this point.
-            propertyIdsForScopeSlotArray[sym->GetScopeSlot()] = sym->EnsurePosition(funcInfo);
+            propertyIdsForScopeSlotArray[i] = Js::Constants::NoProperty;
         }
-    };
-    if (funcInfo->GetParamScope() != nullptr)
-    {
-        funcInfo->GetParamScope()->ForEachSymbol(setPropIdsForScopeSlotArray);
-    }
-    funcInfo->GetBodyScope()->ForEachSymbol(setPropIdsForScopeSlotArray);
+#endif
 
-    if (funcInfo->thisScopeSlot != Js::Constants::NoRegister)
-    {
-        propertyIdsForScopeSlotArray[funcInfo->thisScopeSlot] = Js::PropertyIds::_lexicalThisSlotSymbol;
-    }
+        auto setPropIdsForScopeSlotArray = [funcInfo, propertyIdsForScopeSlotArray](Symbol *const sym)
+        {
+            if (sym->NeedsSlotAlloc(funcInfo))
+            {
+                // All properties should get correct propertyId here.
+                Assert(sym->HasScopeSlot()); // We can't allocate scope slot now. Any symbol needing scope slot must have allocated it before this point.
+                propertyIdsForScopeSlotArray[sym->GetScopeSlot()] = sym->EnsurePosition(funcInfo);
+            }
+        };
+        if (funcInfo->GetParamScope() != nullptr)
+        {
+            funcInfo->GetParamScope()->ForEachSymbol(setPropIdsForScopeSlotArray);
+        }
+        funcInfo->GetBodyScope()->ForEachSymbol(setPropIdsForScopeSlotArray);
 
-    if (funcInfo->newTargetScopeSlot != Js::Constants::NoRegister)
-    {
-        propertyIdsForScopeSlotArray[funcInfo->newTargetScopeSlot] = Js::PropertyIds::_lexicalNewTargetSymbol;
-    }
+        if (funcInfo->thisScopeSlot != Js::Constants::NoRegister)
+        {
+            propertyIdsForScopeSlotArray[funcInfo->thisScopeSlot] = Js::PropertyIds::_lexicalThisSlotSymbol;
+        }
 
-    if (funcInfo->superScopeSlot != Js::Constants::NoRegister)
-    {
-        propertyIdsForScopeSlotArray[funcInfo->superScopeSlot] = Js::PropertyIds::_superReferenceSymbol;
-    }
+        if (funcInfo->newTargetScopeSlot != Js::Constants::NoRegister)
+        {
+            propertyIdsForScopeSlotArray[funcInfo->newTargetScopeSlot] = Js::PropertyIds::_lexicalNewTargetSymbol;
+        }
 
-    if (funcInfo->superCtorScopeSlot != Js::Constants::NoRegister)
-    {
-        propertyIdsForScopeSlotArray[funcInfo->superCtorScopeSlot] = Js::PropertyIds::_superCtorReferenceSymbol;
-    }
+        if (funcInfo->superScopeSlot != Js::Constants::NoRegister)
+        {
+            propertyIdsForScopeSlotArray[funcInfo->superScopeSlot] = Js::PropertyIds::_superReferenceSymbol;
+        }
+
+        if (funcInfo->superCtorScopeSlot != Js::Constants::NoRegister)
+        {
+            propertyIdsForScopeSlotArray[funcInfo->superCtorScopeSlot] = Js::PropertyIds::_superCtorReferenceSymbol;
+        }
 
 #if DEBUG
-    for (UINT i = 0; i < scopeSlotCount; i++)
-    {
-        Assert(propertyIdsForScopeSlotArray[i] != Js::Constants::NoProperty
-            || funcInfo->frameObjRegister != Js::Constants::NoRegister); // ScopeObject may have unassigned entries, e.g. for same-named parameters
-    }
+        for (UINT i = 0; i < scopeSlotCount; i++)
+        {
+            Assert(propertyIdsForScopeSlotArray[i] != Js::Constants::NoProperty
+                || funcInfo->frameObjRegister != Js::Constants::NoRegister); // ScopeObject may have unassigned entries, e.g. for same-named parameters
+        }
 #endif
+    }
 }
 
 // temporarily load all constants and special registers in a single block
@@ -2997,7 +3003,7 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
         // For now, emit all constant loads at top of function (should instead put in closest dominator of uses).
         LoadAllConstants(funcInfo);
         Scope* paramScope = funcInfo->GetParamScope();
-        if (paramScope == nullptr || paramScope->GetCanMergeWithBodyScope())
+        if (!pnode->sxFnc.HasNonSimpleParameterList() || paramScope->GetCanMergeWithBodyScope())
         {
             HomeArguments(funcInfo);
         }
@@ -3130,11 +3136,13 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
         {
             Scope* bodyScope = funcInfo->GetBodyScope();
 
-            DefineUserVars(funcInfo, funcInfo->root->sxFnc.pnodeScopes);
+            this->InitBlockScopedNonTemps(funcInfo->root->sxFnc.pnodeScopes, funcInfo);
 
             if (!paramScope->GetCanMergeWithBodyScope())
             {
                 byteCodeFunction->SetParamAndBodyScopeNotMerged();
+
+                HomeArguments(funcInfo);
 
                 // Pop the body scope before emitting the default args
                 PopScope();
@@ -3148,6 +3156,7 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
                 // Do the reverse of the above block
                 Assert(this->GetCurrentScope() == paramScope);
                 PushScope(bodyScope);
+
                 this->Writer()->Empty(Js::OpCode::BeginBodyScope);
             }
         }
@@ -3162,13 +3171,15 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
             // This only handles function declarations, which param scope cannot have any.
             DefineFunctions(funcInfo);
         }
-        if (!pnode->sxFnc.HasNonSimpleParameterList())
+
+        DefineUserVars(funcInfo);
+        if (pnode->sxFnc.HasNonSimpleParameterList())
         {
-            DefineUserVars(funcInfo, funcInfo->root->sxFnc.pnodeBodyScope);
+            this->InitBlockScopedNonTemps(funcInfo->root->sxFnc.pnodeBodyScope, funcInfo);
         }
         else
         {
-            DefineUserVars(funcInfo, funcInfo->root->sxFnc.pnodeScopes);
+            this->InitBlockScopedNonTemps(funcInfo->root->sxFnc.pnodeScopes, funcInfo);
         }
 
         if (!pnode->sxFnc.HasNonSimpleParameterList() && funcInfo->GetHasArguments() && !NeedScopeObjectForArguments(funcInfo, pnode))
@@ -3185,21 +3196,20 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
 
         if (paramScope && !paramScope->GetCanMergeWithBodyScope())
         {
-            // TODO: Need to revisit this
-            //// Emit bytecode to copy the initial values from param names to their corresponding body bindings.
-            //// We have to do this after the rest param is marked as false for need declaration.
-            //paramScope->ForEachSymbol([this, funcInfo](Symbol* param) {
-            //    Symbol* varSym = funcInfo->GetBodyScope()->FindLocalSymbol(param->GetName());
-            //    Assert(varSym || param->GetIsArguments());
-            //    Assert(param->GetIsArguments() || param->IsInSlot(funcInfo));
-            //    if (varSym && varSym->GetSymbolType() == STVariable && (varSym->IsInSlot(funcInfo) || varSym->GetLocation() != Js::Constants::NoRegister))
-            //    {
-            //        Js::RegSlot tempReg = funcInfo->AcquireTmpRegister();
-            //        this->EmitPropLoad(tempReg, param, param->GetPid(), funcInfo);
-            //        this->EmitPropStore(tempReg, varSym, varSym->GetPid(), funcInfo);
-            //        funcInfo->ReleaseTmpRegister(tempReg);
-            //    }
-            //});
+            // Emit bytecode to copy the initial values from param names to their corresponding body bindings.
+            // We have to do this after the rest param is marked as false for need declaration.
+            paramScope->ForEachSymbol([this, funcInfo](Symbol* param) {
+                Symbol* varSym = funcInfo->GetBodyScope()->FindLocalSymbol(param->GetName());
+                Assert(varSym || param->GetIsArguments());
+                Assert(param->GetIsArguments() || param->IsInSlot(funcInfo));
+                if (varSym && varSym->GetSymbolType() == STVariable && (varSym->IsInSlot(funcInfo) || varSym->GetLocation() != Js::Constants::NoRegister))
+                {
+                    Js::RegSlot tempReg = funcInfo->AcquireTmpRegister();
+                    this->EmitPropLoad(tempReg, param, param->GetPid(), funcInfo, true);
+                    this->EmitPropStore(tempReg, varSym, varSym->GetPid(), funcInfo);
+                    funcInfo->ReleaseTmpRegister(tempReg);
+                }
+            });
         }
 
         if (pnode->sxFnc.pnodeBodyScope != nullptr)
@@ -3471,32 +3481,30 @@ void ByteCodeGenerator::EmitScopeList(ParseNode *pnode, bool breakOnNonFunc)
 
                 Scope* paramScope = pnode->sxFnc.funcInfo->GetParamScope();
                 Scope* bodyScope = pnode->sxFnc.funcInfo->GetBodyScope();
-                ParseNodePtr nestedScope = pnode->sxFnc.pnodeScopes;
 
                 if (paramScope && !paramScope->GetCanMergeWithBodyScope())
                 {
-                    Assert(nestedScope->nop == knopBlock && nestedScope->sxBlock.blockType == Parameter);
+                    ParseNodePtr paramBlock = pnode->sxFnc.pnodeScopes;
+                    Assert(paramBlock->nop == knopBlock && paramBlock->sxBlock.blockType == Parameter);
+
                     // Pop the body scope
                     Assert(this->GetCurrentScope() == bodyScope);
                     PopScope();
                     PushScope(paramScope);
+
+                    // TODO: Check whether this works fine with class defs
                     // While emitting the functions we have to stop when we see the body scope block.
                     // Otherwise functions defined in the body scope will not be able to get the right references.
-                    this->EmitScopeList(pnode->sxFnc.pnodeScopes->sxBlock.pnodeScopes, true);
+                    this->EmitScopeList(paramBlock->sxBlock.pnodeScopes, true);
                     Assert(this->GetCurrentScope() == paramScope);
                     PushScope(bodyScope);
 
-                    nestedScope = nestedScope->sxBlock.pnodeScopes;
-                    while (nestedScope && nestedScope->nop == knopFncDecl)
-                    {
-                        nestedScope = nestedScope->sxFnc.pnodeNext;
-                    }
-                    Assert(!nestedScope || nestedScope->nop == knopBlock);
-                    nestedScope = nestedScope->sxBlock.pnodeScopes;
-
+                    this->EmitScopeList(pnode->sxFnc.pnodeBodyScope->sxBlock.pnodeScopes);
                 }
-
-                this->EmitScopeList(nestedScope);
+                else
+                {
+                    this->EmitScopeList(pnode->sxFnc.pnodeScopes->sxBlock.pnodeScopes);
+                }
 
                 this->EmitOneFunction(pnode);
                 this->EndEmitFunction(pnode);
@@ -4851,7 +4859,7 @@ ByteCodeGenerator::GetLdSlotOp(Scope *scope, int envIndex, Js::RegSlot scopeLoca
     return op;
 }
 
-void ByteCodeGenerator::EmitPropLoad(Js::RegSlot lhsLocation, Symbol *sym, IdentPtr pid, FuncInfo *funcInfo)
+void ByteCodeGenerator::EmitPropLoad(Js::RegSlot lhsLocation, Symbol *sym, IdentPtr pid, FuncInfo *funcInfo, bool useParamScope)
 {
     // If sym belongs to a parent frame, get it from the closure environment.
     // If it belongs to this func, but there's a non-local reference, get it from the heap-allocated frame.
@@ -5048,6 +5056,10 @@ void ByteCodeGenerator::EmitPropLoad(Js::RegSlot lhsLocation, Symbol *sym, Ident
         if (envIndex != -1)
         {
             this->m_writer.SlotI2(op, lhsLocation, envIndex + Js::FrameDisplay::GetOffsetOfScopes()/sizeof(Js::Var), slot, profileId);
+        }
+        else if (useParamScope)
+        {
+            this->m_writer.SlotI1(Js::OpCode::LdParamSlot, lhsLocation, slot, profileId);
         }
         else if (scopeLocation != Js::Constants::NoRegister &&
                  (scopeLocation == funcInfo->frameSlotsRegister || scopeLocation == funcInfo->frameObjRegister))

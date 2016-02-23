@@ -2,14 +2,9 @@
 // Copyright (C) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
-#include "Backend.h"
 
-QueuedFullJitWorkItem::QueuedFullJitWorkItem(CodeGenWorkItem *const workItem) : workItem(workItem)
-{
-    Assert(workItem->GetJitMode() == ExecutionMode::FullJit);
-}
+// Non-configurable global properties are not shadowable.  Instead this causes an early error.
 
-CodeGenWorkItem *QueuedFullJitWorkItem::WorkItem() const
-{
-    return workItem;
-}
+print(undefined); // shouldn't execute
+let undefined = "foo";
+print(undefined); // shouldn't execute

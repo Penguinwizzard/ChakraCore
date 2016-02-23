@@ -1633,7 +1633,9 @@ StoreCommon:
                     OpCodeUtil::ConvertNonCallOpToProfiled(op);
                 }
                 break;
-
+            case OpCode::LdParamSlot:
+                // No prfiled opcode present for LdParamSlot
+                break;
             default:
             {
                 AssertMsg(false, "The specified OpCode is not intended for slot access");
