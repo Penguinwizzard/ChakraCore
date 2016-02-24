@@ -435,13 +435,24 @@ void FuncInfo::OnStartVisitScope(Scope *scope)
         return;
     }
 
-    if (scope->GetScopeType() == ScopeType_Parameter)
+    Scope* childScope = this->GetCurrentChildScope();
+    if (childScope)
     {
-        Assert(this->GetCurrentChildScope()->GetEnclosingScope() == scope || this->GetCurrentChildScope() == nullptr);
-    }
-    else
-    {
-        Assert(this->GetCurrentChildScope() == scope->GetEnclosingScope() || this->GetCurrentChildScope() == nullptr);
+        if (scope->GetScopeType() == ScopeType_Parameter)
+        {
+            Assert(childScope->GetEnclosingScope() == scope);
+        }
+        else if (childScope->GetScopeType() == ScopeType_Parameter
+                 && childScope->GetCanMergeWithBodyScope()
+                 && scope->GetScopeType() == ScopeType_Block)
+        {
+            // If param and body are merged then the class declaration in param scope will have body as the parent
+            Assert(childScope == scope->GetEnclosingScope()->GetEnclosingScope());
+        }
+        else
+        {
+            Assert(childScope == scope->GetEnclosingScope());
+        }
     }
 
     this->SetCurrentChildScope(scope);

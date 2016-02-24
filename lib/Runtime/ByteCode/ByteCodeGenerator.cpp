@@ -2991,7 +2991,7 @@ void AddFunctionsToScope(ParseNodePtr scope, ByteCodeGenerator * byteCodeGenerat
 
 template <class PrefixFn, class PostfixFn>
 void VisitNestedScopes(ParseNode* pnodeScopeList, ParseNode* pnodeParent, ByteCodeGenerator* byteCodeGenerator,
-    PrefixFn prefix, PostfixFn postfix, uint *pIndex)
+    PrefixFn prefix, PostfixFn postfix, uint *pIndex, bool breakOnNonFnc = false)
 {
     // Visit all scopes nested in this scope before visiting this function's statements. This way we have all the
     // attributes of all the inner functions before we assign registers within this function.
@@ -3064,13 +3064,39 @@ void VisitNestedScopes(ParseNode* pnodeScopeList, ParseNode* pnodeParent, ByteCo
                 i = 0;
                 ParseNodePtr containerScope = pnodeScope->sxFnc.pnodeScopes;
 
-                VisitNestedScopes(containerScope, pnodeScope, byteCodeGenerator, prefix, postfix, &i);
+                if (pnodeScope->sxFnc.HasNonSimpleParameterList() && !pnodeScope->sxFnc.funcInfo->GetParamScope()->GetCanMergeWithBodyScope())
+                {
+                    // Pop the body scope
+                    byteCodeGenerator->PopScope();
+
+
+                    // During OnStartVisitFunction we set the body scope as the current child scope of the function.
+                    // Right now we have to change it to param scope.
+                    pnodeScope->sxFnc.funcInfo->SetCurrentChildScope(pnodeScope->sxFnc.funcInfo->GetParamScope());
+                    Assert(containerScope->nop == knopBlock && containerScope->sxBlock.blockType == Parameter);
+                    VisitNestedScopes(containerScope->sxBlock.pnodeScopes, pnodeScope, byteCodeGenerator, prefix, postfix, &i, true);
+                }
+                else
+                {
+                    VisitNestedScopes(containerScope, pnodeScope, byteCodeGenerator, prefix, postfix, &i);
+                }
 
                 MapFormals(pnodeScope, [&](ParseNode *argNode) { Visit(argNode, byteCodeGenerator, prefix, postfix); });
 
                 if (pnodeScope->sxFnc.HasNonSimpleParameterList())
                 {
                     byteCodeGenerator->AssignUndefinedConstRegister();
+
+                    // Set the body scope as the current child scope of the function
+                    pnodeScope->sxFnc.funcInfo->SetCurrentChildScope(pnodeScope->sxFnc.funcInfo->GetBodyScope());
+
+                    if (!pnodeScope->sxFnc.funcInfo->GetParamScope()->GetCanMergeWithBodyScope())
+                    {
+                        // Push the body scope back
+                        Assert(pnodeScope->sxFnc.pnodeBodyScope->sxBlock.scope);
+                        byteCodeGenerator->PushScope(pnodeScope->sxFnc.funcInfo->GetBodyScope());
+                        VisitNestedScopes(pnodeScope->sxFnc.pnodeBodyScope->sxBlock.pnodeScopes, pnodeScope, byteCodeGenerator, prefix, postfix, &i);
+                    }
                 }
 
                 BeginVisitBlock(pnodeScope->sxFnc.pnodeBodyScope, byteCodeGenerator);
@@ -3175,6 +3201,11 @@ void VisitNestedScopes(ParseNode* pnodeScopeList, ParseNode* pnodeParent, ByteCo
         default:
             AssertMsg(false, "Unexpected opcode in tree of scopes");
             return;
+        }
+
+        if (breakOnNonFnc && pnodeScope->nop != knopFncDecl)
+        {
+            break;
         }
     }
 }

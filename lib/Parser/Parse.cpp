@@ -4603,9 +4603,9 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
     // Function definition is inside the parent function's parameter scope  
     bool isEnclosedInParamScope = this->m_currentScope->GetScopeType() == ScopeType_Parameter;
 
-    if (this->m_currentScope->GetScopeType() == ScopeType_FuncExpr)
+    if (this->m_currentScope->GetScopeType() == ScopeType_FuncExpr || this->m_currentScope->GetScopeType() == ScopeType_Block)
     {
-        // Or this is a function expression enclosed in a parameter scope  
+        // Or this is a function expression or class enclosed in a parameter scope  
         isEnclosedInParamScope = this->m_currentScope->GetEnclosingScope() && this->m_currentScope->GetEnclosingScope()->GetScopeType() == ScopeType_Parameter;
     }
 
