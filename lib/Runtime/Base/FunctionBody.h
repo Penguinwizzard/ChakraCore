@@ -1869,7 +1869,6 @@ namespace Js
         bool m_CallsEval : 1;
         bool m_hasReferenceableBuiltInArguments : 1;
         bool m_isParamAndBodyScopeMerged : 1;
-        bool m_isParamScopeDone : 1;
 
         // Used in the debug purpose. This is to avoid setting all locals to non-local-referenced, multiple times for each child function.
         bool m_hasDoneAllNonLocalReferenced : 1;

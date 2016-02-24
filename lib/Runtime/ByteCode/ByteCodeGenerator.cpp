@@ -994,10 +994,7 @@ void ByteCodeGenerator::RestoreScopeInfo(Js::FunctionBody* functionBody)
         if (paramScope != nullptr)
         {
             paramScope->SetFunc(func);
-            /*if (paramScope->GetCanMergeWithBodyScope())
-            {*/
-                paramScopeInfo->GetScopeInfo(nullptr, this, func, paramScope);
-            /*}*/
+            paramScopeInfo->GetScopeInfo(nullptr, this, func, paramScope);
         }
 
         if (bodyScope->GetScopeType() == ScopeType_GlobalEvalBlock)
@@ -1026,11 +1023,6 @@ void ByteCodeGenerator::RestoreScopeInfo(Js::FunctionBody* functionBody)
         }
 
         scopeInfo->GetScopeInfo(nullptr, this, func, bodyScope);
-        //if (paramScope && !paramScope->GetCanMergeWithBodyScope())
-        //{
-        //    // If the param and body scopes are not merged the param scope needs to be treated like an inner scope
-        //    paramScopeInfo->GetScopeInfo(nullptr, this, func, paramScope);
-        //}
     }
     else
     {
@@ -1873,13 +1865,6 @@ Scope * ByteCodeGenerator::FindScopeForSym(Scope *symScope, Scope *scope, Js::Pr
         }
         if (scope == symScope || scope->GetIsDynamic())
         {
-            break;
-        }
-        else if (symScope->GetScopeType() == ScopeType_Parameter && scope->GetFunc() == symScope->GetFunc())
-        {
-            // During VisitNestedScope the param scope will not be on the stack for the unmerged scope case.
-            // So if the symbol's scope is a param scope, check whether it is the current function or not.
-            scope = symScope;
             break;
         }
     }
@@ -3006,38 +2991,28 @@ void AddFunctionsToScope(ParseNodePtr scope, ByteCodeGenerator * byteCodeGenerat
             }
             // In ES6, functions are scoped to the block, which will be the current scope.
             // Pre-ES6, function declarations are scoped to the function body, so get that scope.
-            Symbol *sym = nullptr;
-            Scope* currentScope = byteCodeGenerator->GetCurrentScope();
-            if (!currentScope->IsGlobalEvalBlockScope())
+            Symbol *sym;
+            if (!byteCodeGenerator->GetCurrentScope()->IsGlobalEvalBlockScope())
             {
-                // Do not add the function definitions from the body to the param scope if not merged with body scope.
-                if (currentScope->GetScopeType() != ScopeType_Parameter
-                    || pnodeName->sxVar.sym->GetScope()->GetScopeType() != ScopeType_FunctionBody
-                    || pnodeName->sxVar.sym->GetScope() != currentScope->GetFunc()->GetBodyScope())
-                {
-                    sym = byteCodeGenerator->AddSymbolToScope(byteCodeGenerator->GetCurrentScope(), fnName, pnodeName->sxVar.pid->Cch(), pnodeName, STFunction);
-                }
+                sym = byteCodeGenerator->AddSymbolToScope(byteCodeGenerator->GetCurrentScope(), fnName, pnodeName->sxVar.pid->Cch(), pnodeName, STFunction);
             }
             else
             {
                 sym = byteCodeGenerator->AddSymbolToFunctionScope(fnName, pnodeName->sxVar.pid->Cch(), pnodeName, STFunction);
             }
 
-            if (sym)
+            pnodeName->sxVar.sym = sym;
+
+            if (sym->GetIsGlobal())
             {
-                pnodeName->sxVar.sym = sym;
+                FuncInfo* func = byteCodeGenerator->TopFuncInfo();
+                func->SetHasGlobalRef(true);
+            }
 
-                if (sym->GetIsGlobal())
-                {
-                    FuncInfo* func = byteCodeGenerator->TopFuncInfo();
-                    func->SetHasGlobalRef(true);
-                }
-
-                if (sym->GetScope() != sym->GetScope()->GetFunc()->GetBodyScope() &&
-                    sym->GetScope() != sym->GetScope()->GetFunc()->GetParamScope())
-                {
-                    sym->SetIsBlockVar(true);
-                }
+            if (sym->GetScope() != sym->GetScope()->GetFunc()->GetBodyScope() &&
+                sym->GetScope() != sym->GetScope()->GetFunc()->GetParamScope())
+            {
+                sym->SetIsBlockVar(true);
             }
         }
     });

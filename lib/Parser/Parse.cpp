@@ -4862,11 +4862,6 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
                     {
                         Error(ERREvalNotSupportedInParamScope);
                     }
-                    else
-                    {
-                        /*paramScope->SetIsObject();
-                        paramScope->SetCannotMergeWithBodyScope();*/
-                    }
                 }
                 else
                 {

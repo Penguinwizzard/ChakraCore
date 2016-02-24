@@ -440,7 +440,6 @@ namespace Js
         m_ChildCallsEval(false),
         m_hasReferenceableBuiltInArguments(false),
         m_isParamAndBodyScopeMerged(true),
-        m_isParamScopeDone(false),
         m_firstFunctionObject(true),
         m_inlineCachesOnFunctionObject(false),
         m_hasDoneAllNonLocalReferenced(false),
