@@ -6480,10 +6480,13 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
 
     void InterpreterStackFrame::OP_BeginBodyScope()
     {
+        // Currently we are using the closures created for the param scope.
+        // This marks the beginning of the body scope, so let's create new closures for the body scope.
         FunctionBody *executeFunction = this->function->GetFunctionBody();
         Assert(!this->IsParamScopeDone() && !executeFunction->IsParamAndBodyScopeMerged());
 
-        // Save the current closure
+        // Save the current closure. We have to use this while copying the initial value of body symbols
+        // from the corresponding symbols in the param.
         this->SetParamClosure(this->GetLocalClosure());
 
         this->SetIsParamScopeDone(true);
@@ -6492,11 +6495,6 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
         {
             this->InitializeClosures();
         }
-
-
-
-
-
     }
 
     void InterpreterStackFrame::OP_ResumeCatch()
