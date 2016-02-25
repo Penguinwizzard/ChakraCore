@@ -579,17 +579,17 @@ var tests = [
                                 "Attempting to redeclare a previous formal using const inside an eval does not leak"); 
 
             // Conditional declarations 
-            function test(x = eval("var a = 1; let b = 2; const c = 3;")) { 
+            function test(x = eval("var a1 = 1; let b1 = 2; const c1 = 3;")) { 
                 if (x === undefined) { 
                     // only a should be visible 
-                    assert.areEqual(1, a, "Var declarations leak out of eval into parameter scope"); 
+                    assert.areEqual(1, a1, "Var declarations leak out of eval into parameter scope"); 
                 } else { 
                     // none should be visible 
-                    assert.throws(function () { a }, ReferenceError, "Ignoring the default value does not result in an eval declaration leaking", "'a' is undefined"); 
+                    assert.throws(function () { a1 }, ReferenceError, "Ignoring the default value does not result in an eval declaration leaking", "'a1' is undefined"); 
                 } 
 
-                assert.throws(function () { b }, ReferenceError, "Let declarations do not leak out of eval to parameter scope",   "'b' is undefined"); 
-                assert.throws(function () { c }, ReferenceError, "Const declarations do not leak out of eval to parameter scope", "'c' is undefined"); 
+                assert.throws(function () { b1 }, ReferenceError, "Let declarations do not leak out of eval to parameter scope",   "'b1' is undefined"); 
+                assert.throws(function () { c1 }, ReferenceError, "Const declarations do not leak out of eval to parameter scope when x is ", "'c1' is undefined"); 
             } 
             test(); 
             test(123); 
