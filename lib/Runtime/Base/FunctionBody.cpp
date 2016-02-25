@@ -440,7 +440,6 @@ namespace Js
         m_ChildCallsEval(false),
         m_hasReferenceableBuiltInArguments(false),
         m_isParamAndBodyScopeMerged(true),
-        m_isParamScopeDone(false),
         m_firstFunctionObject(true),
         m_inlineCachesOnFunctionObject(false),
         m_hasDoneAllNonLocalReferenced(false),
@@ -1004,6 +1003,7 @@ namespace Js
         CopyDeferParseField(scopeObjectSize);
 #endif
         CopyDeferParseField(scopeSlotArraySize);
+        CopyDeferParseField(paramScopeSlotArraySize);
         other->SetCachedSourceString(this->GetCachedSourceString());
         other->SetDeferredStubs(this->GetDeferredStubs());
         CopyDeferParseField(m_isAsmjsMode);
@@ -1120,6 +1120,7 @@ namespace Js
       m_displayNameLength(0),
       m_displayShortNameOffset(0),
       scopeSlotArraySize(0),
+      paramScopeSlotArraySize(0),
       m_reparsed(false),
       m_isAsmJsFunction(false),
 #if DBG
@@ -2869,7 +2870,7 @@ namespace Js
     BOOL FunctionBody::IsNativeOriginalEntryPoint() const
     {
 #if ENABLE_NATIVE_CODEGEN
-        return IsNativeFunctionAddr(this->GetScriptContext(), this->originalEntryPoint);
+        return this->GetScriptContext()->IsNativeAddress(this->originalEntryPoint);
 #else
         return false;
 #endif
@@ -3655,6 +3656,7 @@ namespace Js
         newFunctionInfo->m_isPublicLibraryCode = this->m_isPublicLibraryCode;
 
         newFunctionInfo->scopeSlotArraySize = this->scopeSlotArraySize;
+        newFunctionInfo->paramScopeSlotArraySize = this->paramScopeSlotArraySize;
 
         for (uint index = 0; index < this->m_nestedCount; index++)
         {

@@ -3185,6 +3185,8 @@ namespace Js
         vtableAddresses[VTableValue::VtableJavascriptNativeIntArray] = VirtualTableInfo<Js::JavascriptNativeIntArray>::Address;
         vtableAddresses[VTableValue::VtableJavascriptRegExp] = VirtualTableInfo<Js::JavascriptRegExp>::Address;
         vtableAddresses[VTableValue::VtableStackScriptFunction] = VirtualTableInfo<Js::StackScriptFunction>::Address;
+        vtableAddresses[VTableValue::VtableScriptFunction] = VirtualTableInfo<Js::ScriptFunction>::Address;
+        vtableAddresses[VTableValue::VtableJavascriptGeneratorFunction] = VirtualTableInfo<Js::JavascriptGeneratorFunction>::Address;
         vtableAddresses[VTableValue::VtableConcatStringMulti] = VirtualTableInfo<Js::ConcatStringMulti>::Address;
         vtableAddresses[VTableValue::VtableCompoundString] = VirtualTableInfo<Js::CompoundString>::Address;
 
@@ -6177,6 +6179,25 @@ namespace Js
             ((1 << Js::BIAS_ArgSize) - 1));   // Mask-out everything to the left of interesting area.
 
         return type;
+    }
+
+    ModuleRecordList* JavascriptLibrary::EnsureModuleRecordList()
+    {
+        if (moduleRecordList == nullptr)
+        {
+            moduleRecordList = RecyclerNew(recycler, ModuleRecordList, recycler);
+        }
+        return moduleRecordList;
+    }
+
+    SourceTextModuleRecord* JavascriptLibrary::GetModuleRecord(uint moduleId)
+    {
+        Assert((moduleRecordList->Count() >= 0) && (moduleId < (uint)moduleRecordList->Count()));
+        if (moduleId >= (uint)moduleRecordList->Count())
+        {
+            Js::Throw::FatalInternalError();
+        }
+        return moduleRecordList->Item(moduleId);
     }
 
     // Register for profiler

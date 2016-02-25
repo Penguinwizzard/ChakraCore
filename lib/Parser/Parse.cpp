@@ -1953,7 +1953,7 @@ void Parser::ReduceDeferredScriptLength(size_t chars)
     if ((m_grfscr & fscrDeferFncParse) &&
         (
             PHASE_OFF1(Js::DeferEventHandlersPhase) || 
-            !(m_grfscr & (fscrImplicitThis|fscrImplicitParents))
+            (m_grfscr & fscrGlobalCode)
         )
     )
     {
@@ -2521,9 +2521,20 @@ ParseVarDecl:
         {
             pnode = ParseStatement<buildAST>();
 
+            // TODO: fix binding for anonymous function/class 
             if (buildAST)
             {
-                IdentPtr localName = pnode->sxFnc.pid;
+                IdentPtr localName;
+                if (pnode->nop == knopClassDecl)
+                {
+                    localName = pnode->sxClass.pnodeName->sxVar.pid;
+                }
+                else
+                {
+                    Assert(pnode->nop == knopFncDecl);
+                    localName = pnode->sxFnc.pid;
+                }
+                Assert(localName != nullptr);
 
                 AddModuleExportEntry(EnsureModuleLocalExportEntryList(), nullptr, localName, localName, nullptr);
             }
@@ -4592,9 +4603,9 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
     // Function definition is inside the parent function's parameter scope    
     bool isEnclosedInParamScope = this->m_currentScope->GetScopeType() == ScopeType_Parameter;
 
-    if (this->m_currentScope->GetScopeType() == ScopeType_FuncExpr)
+    if (this->m_currentScope->GetScopeType() == ScopeType_FuncExpr || this->m_currentScope->GetScopeType() == ScopeType_Block)
     {
-        // Or this is a function expression enclosed in a parameter scope  
+        // Or this is a function expression or class enclosed in a parameter scope  
         isEnclosedInParamScope = this->m_currentScope->GetEnclosingScope() && this->m_currentScope->GetEnclosingScope()->GetScopeType() == ScopeType_Parameter;
     }
 
@@ -4844,37 +4855,37 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
                 Scope* paramScope = pnodeFnc->sxFnc.pnodeScopes->sxBlock.scope;
                 Assert(paramScope);
 
-                if (!m_scriptContext->GetConfig()->IsES6DefaultArgsSplitScopeEnabled() && (pnodeFnc->sxFnc.CallsEval() || pnodeFnc->sxFnc.ChildCallsEval()))
+                if (pnodeFnc->sxFnc.CallsEval() || pnodeFnc->sxFnc.ChildCallsEval())
                 {
-                    Error(ERREvalNotSupportedInParamScope);
-                }
-                /*else if (m_scriptContext->GetConfig()->IsES6DefaultArgsSplitScopeEnabled() && (pnodeFnc->sxFnc.CallsEval() || pnodeFnc->sxFnc.ChildCallsEval()))
-                {
-                    paramScope->SetIsObject();
-                    paramScope->SetCannotMergeWithBodyScope();
-                }*/
-
-                paramScope->ForEachSymbolUntil([this, paramScope](Symbol* sym) {
-                    if (sym->GetPid()->GetTopRef()->sym == nullptr)
+                    if (!m_scriptContext->GetConfig()->IsES6DefaultArgsSplitScopeEnabled())
                     {
-                        if (m_scriptContext->GetConfig()->IsES6DefaultArgsSplitScopeEnabled())
+                        Error(ERREvalNotSupportedInParamScope);
+                    }
+                }
+                else
+                {
+                    paramScope->ForEachSymbolUntil([this, paramScope](Symbol* sym) {
+                        if (sym->GetPid()->GetTopRef()->sym == nullptr)
                         {
-                            // One of the symbol has non local reference. Mark the param scope as we can't merge it with body scope.
-                            paramScope->SetCannotMergeWithBodyScope();
-                            return true;
+                            if (m_scriptContext->GetConfig()->IsES6DefaultArgsSplitScopeEnabled())
+                            {
+                                // One of the symbol has non local reference. Mark the param scope as we can't merge it with body scope.
+                                paramScope->SetCannotMergeWithBodyScope();
+                                return true;
+                            }
+                            else
+                            {
+                                Error(ERRFuncRefFormalNotSupportedInParamScope);
+                            }
                         }
                         else
                         {
-                            Error(ERRFuncRefFormalNotSupportedInParamScope);
+                            // If no non-local references are there then the top of the ref stack should point to the same symbol.
+                            Assert(sym->GetPid()->GetTopRef()->sym == sym);
                         }
-                    }
-                    else
-                    {
-                        // If no non-local references are there then the top of the ref stack should point to the same symbol.
-                        Assert(sym->GetPid()->GetTopRef()->sym == sym);
-                    }
-                    return false;
-                });
+                        return false;
+                    });
+                }
 
                 if (!paramScope->GetCanMergeWithBodyScope())
                 {
@@ -10394,7 +10405,7 @@ ParseNodePtr Parser::Parse(LPCUTF8 pszSrc, size_t offset, size_t length, charcou
         // by command-line switch.
         grfscr &= ~fscrDeferFncParse;
     }
-    else if ((grfscr & (fscrImplicitThis | fscrImplicitParents)) &&
+    else if (!(grfscr & fscrGlobalCode) &&
              (
                  PHASE_OFF1(Js::Phase::DeferEventHandlersPhase) ||
                  this->m_scriptContext->IsInDebugOrSourceRundownMode()

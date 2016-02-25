@@ -1869,7 +1869,6 @@ namespace Js
         bool m_CallsEval : 1;
         bool m_hasReferenceableBuiltInArguments : 1;
         bool m_isParamAndBodyScopeMerged : 1;
-        bool m_isParamScopeDone : 1;
 
         // Used in the debug purpose. This is to avoid setting all locals to non-local-referenced, multiple times for each child function.
         bool m_hasDoneAllNonLocalReferenced : 1;
@@ -2466,13 +2465,13 @@ namespace Js
         void SetScopeSlotArraySizes(uint scopeSlotCount, uint scopeSlotCountForParamScope)
         {
             this->scopeSlotArraySize = scopeSlotCount;
-            this->scopeSlotArraySizeForParamScope = scopeSlotCountForParamScope;
+            this->paramScopeSlotArraySize = scopeSlotCountForParamScope;
         }
 
         Js::PropertyId * GetPropertyIdsForScopeSlotArray() const { return static_cast<Js::PropertyId *>(this->GetAuxPtr(AuxPointerType::PropertyIdsForScopeSlotArray)); }
         void SetPropertyIdsForScopeSlotArray(Js::PropertyId * propertyIdsForScopeSlotArray, uint scopeSlotCount, uint scopeSlotCountForParamScope = 0)
         {
-            SetScopeSlotArraySizes(scopeSlotCount, scopeSlotArraySizeForParamScope);
+            SetScopeSlotArraySizes(scopeSlotCount, scopeSlotCountForParamScope);
             this->SetAuxPtr(AuxPointerType::PropertyIdsForScopeSlotArray, propertyIdsForScopeSlotArray);
         }
 

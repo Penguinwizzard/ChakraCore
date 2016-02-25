@@ -176,8 +176,8 @@ public:
 
     void InitScopeSlotArray(FuncInfo * funcInfo);
     void FinalizeRegisters(FuncInfo * funcInfo, Js::FunctionBody * byteCodeFunction);
-    void SetClosureRegs(Js::FunctionBody* byteCodeFunction, Js::RegSlot frameDisplayRegister, Js::RegSlot frameObjRegister, Js::RegSlot frameSlotsRegister);
-    void EnsurePreDefinedScopeSlots(FuncInfo* funcInfo, Scope* scope);
+    void SetClosureRegisters(FuncInfo * funcInfo, Js::FunctionBody * byteCodeFunction);
+    void EnsureSpecialScopeSlots(FuncInfo* funcInfo, Scope* scope);
     void SetHasTry(bool has);
     void SetHasFinally(bool has);
     void SetNumberOfInArgs(Js::ArgSlot argCount);
@@ -380,7 +380,7 @@ public:
     static bool NeedScopeObjectForArguments(FuncInfo *funcInfo, ParseNode *pnodeFnc);
 
     Js::OpCode GetStSlotOp(Scope *scope, int envIndex, Js::RegSlot scopeLocation, bool chkBlockVar, FuncInfo *funcInfo);
-    Js::OpCode GetLdSlotOp(Scope *scope, int envIndex, Js::RegSlot scopeLocation, FuncInfo *funcInfo);
+    Js::OpCode GetLdSlotOp(Scope *scope, int envIndex, Js::RegSlot scopeLocation, FuncInfo *funcInfo, bool useParamScope = false);
     Js::OpCode GetInitFldOp(Scope *scope, Js::RegSlot scopeLocation, FuncInfo *funcInfo, bool letDecl = false);
 
 private:

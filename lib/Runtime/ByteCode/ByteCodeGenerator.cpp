@@ -994,10 +994,7 @@ void ByteCodeGenerator::RestoreScopeInfo(Js::FunctionBody* functionBody)
         if (paramScope != nullptr)
         {
             paramScope->SetFunc(func);
-            if (paramScope->GetCanMergeWithBodyScope())
-            {
-                paramScopeInfo->GetScopeInfo(nullptr, this, func, paramScope);
-            }
+            paramScopeInfo->GetScopeInfo(nullptr, this, func, paramScope);
         }
 
         if (bodyScope->GetScopeType() == ScopeType_GlobalEvalBlock)
@@ -1026,11 +1023,6 @@ void ByteCodeGenerator::RestoreScopeInfo(Js::FunctionBody* functionBody)
         }
 
         scopeInfo->GetScopeInfo(nullptr, this, func, bodyScope);
-        if (paramScope && !paramScope->GetCanMergeWithBodyScope())
-        {
-            // If the param and body scopes are not merged the param scope needs to be treated like an inner scope
-            paramScopeInfo->GetScopeInfo(nullptr, this, func, paramScope);
-        }
     }
     else
     {
@@ -1476,42 +1468,13 @@ void ByteCodeGenerator::PushScope(Scope *innerScope)
 {
     Assert(innerScope != nullptr);
 
-    //if (isBinding && currentScope != nullptr && innerScope->GetMustInstantiate())
-    //{
-    //    if (currentScope->GetScopeType() == ScopeType_FunctionBody)
-    //    {
-    //        // If the current scope is a function body, we don't expect another function body without going through a function expression or parameter
-    //        // scope (which is not merged with body scope) first. This also does not apply to incoming scopes marked as !mustInstantiate.
-    //        Assert(innerScope->GetScopeType() != ScopeType_FunctionBody || !innerScope->GetFunc()->GetParamScope()->GetCanMergeWithBodyScope());
-    //    }
-
-    //    if (currentScope->GetScopeType() == ScopeType_Parameter)
-    //    {
-    //        if (innerScope->GetScopeType() == ScopeType_FunctionBody)
-    //        {
-    //            // The current scope is a parameter scope and we are pushing in a function body scope then,
-    //            if (currentScope->GetFunc() == innerScope->GetFunc())
-    //            {
-    //                // If both the param scope and the body scope belongs to the same function then both can be merged together.
-    //                Assert(currentScope->GetCanMergeWithBodyScope());
-    //            }
-    //            else
-    //            {
-    //                // If both the scopes belong to a different function then both functions have split scope.
-    //                Assert(!innerScope->GetFunc()->GetParamScope()->GetCanMergeWithBodyScope()
-    //                        && !currentScope->GetCanMergeWithBodyScope());
-    //            }
-    //        }
-    //        else if (innerScope->GetScopeType() == ScopeType_Parameter)
-    //        {
-    //            // If we are pushing a parameter scope on top of another parameter scope then,
-    //            // Both of them cannot belong to the same function.
-    //            Assert(currentScope->GetFunc() != innerScope->GetFunc());
-    //            // Current function should have split scope.
-    //            Assert(!currentScope->GetCanMergeWithBodyScope());
-    //        }
-    //    }
-    //}
+    if (isBinding
+        && currentScope != nullptr
+        && currentScope->GetScopeType() == ScopeType_FunctionBody
+        && innerScope->GetMustInstantiate())
+    {
+        Assert(innerScope->GetScopeType() != ScopeType_FunctionBody);
+    }
 
     innerScope->SetEnclosingScope(currentScope);
 
@@ -1875,13 +1838,6 @@ Scope * ByteCodeGenerator::FindScopeForSym(Scope *symScope, Scope *scope, Js::Pr
         {
             break;
         }
-        //else if (symScope->GetScopeType() == ScopeType_Parameter && scope->GetFunc() == symScope->GetFunc())
-        //{
-        //    // During VisitNestedScope the param scope will not be on the stack for the unmerged scope case.
-        //    // So if the symbol's scope is a param scope, check whether it is the current function or not.
-        //    scope = symScope;
-        //    break;
-        //}
     }
 
     Assert(scope);
@@ -3006,38 +2962,28 @@ void AddFunctionsToScope(ParseNodePtr scope, ByteCodeGenerator * byteCodeGenerat
             }
             // In ES6, functions are scoped to the block, which will be the current scope.
             // Pre-ES6, function declarations are scoped to the function body, so get that scope.
-            Symbol *sym = nullptr;
-            Scope* currentScope = byteCodeGenerator->GetCurrentScope();
-            if (!currentScope->IsGlobalEvalBlockScope())
+            Symbol *sym;
+            if (!byteCodeGenerator->GetCurrentScope()->IsGlobalEvalBlockScope())
             {
-                // Do not add the function definitions from the body to the param scope if not merged with body scope.
-                if (currentScope->GetScopeType() != ScopeType_Parameter
-                    || pnodeName->sxVar.sym->GetScope()->GetScopeType() != ScopeType_FunctionBody
-                    || pnodeName->sxVar.sym->GetScope() != currentScope->GetFunc()->GetBodyScope())
-                {
-                    sym = byteCodeGenerator->AddSymbolToScope(byteCodeGenerator->GetCurrentScope(), fnName, pnodeName->sxVar.pid->Cch(), pnodeName, STFunction);
-                }
+                sym = byteCodeGenerator->AddSymbolToScope(byteCodeGenerator->GetCurrentScope(), fnName, pnodeName->sxVar.pid->Cch(), pnodeName, STFunction);
             }
             else
             {
                 sym = byteCodeGenerator->AddSymbolToFunctionScope(fnName, pnodeName->sxVar.pid->Cch(), pnodeName, STFunction);
             }
 
-            if (sym)
+            pnodeName->sxVar.sym = sym;
+
+            if (sym->GetIsGlobal())
             {
-                pnodeName->sxVar.sym = sym;
+                FuncInfo* func = byteCodeGenerator->TopFuncInfo();
+                func->SetHasGlobalRef(true);
+            }
 
-                if (sym->GetIsGlobal())
-                {
-                    FuncInfo* func = byteCodeGenerator->TopFuncInfo();
-                    func->SetHasGlobalRef(true);
-                }
-
-                if (sym->GetScope() != sym->GetScope()->GetFunc()->GetBodyScope() &&
-                    sym->GetScope() != sym->GetScope()->GetFunc()->GetParamScope())
-                {
-                    sym->SetIsBlockVar(true);
-                }
+            if (sym->GetScope() != sym->GetScope()->GetFunc()->GetBodyScope() &&
+                sym->GetScope() != sym->GetScope()->GetFunc()->GetParamScope())
+            {
+                sym->SetIsBlockVar(true);
             }
         }
     });
@@ -3045,7 +2991,7 @@ void AddFunctionsToScope(ParseNodePtr scope, ByteCodeGenerator * byteCodeGenerat
 
 template <class PrefixFn, class PostfixFn>
 void VisitNestedScopes(ParseNode* pnodeScopeList, ParseNode* pnodeParent, ByteCodeGenerator* byteCodeGenerator,
-    PrefixFn prefix, PostfixFn postfix, uint *pIndex)
+    PrefixFn prefix, PostfixFn postfix, uint *pIndex, bool breakOnNonFnc = false)
 {
     // Visit all scopes nested in this scope before visiting this function's statements. This way we have all the
     // attributes of all the inner functions before we assign registers within this function.
@@ -3118,13 +3064,39 @@ void VisitNestedScopes(ParseNode* pnodeScopeList, ParseNode* pnodeParent, ByteCo
                 i = 0;
                 ParseNodePtr containerScope = pnodeScope->sxFnc.pnodeScopes;
 
-                VisitNestedScopes(containerScope, pnodeScope, byteCodeGenerator, prefix, postfix, &i);
+                if (pnodeScope->sxFnc.HasNonSimpleParameterList() && !pnodeScope->sxFnc.funcInfo->GetParamScope()->GetCanMergeWithBodyScope())
+                {
+                    // Pop the body scope
+                    byteCodeGenerator->PopScope();
+
+
+                    // During OnStartVisitFunction we set the body scope as the current child scope of the function.
+                    // Right now we have to change it to param scope.
+                    pnodeScope->sxFnc.funcInfo->SetCurrentChildScope(pnodeScope->sxFnc.funcInfo->GetParamScope());
+                    Assert(containerScope->nop == knopBlock && containerScope->sxBlock.blockType == Parameter);
+                    VisitNestedScopes(containerScope->sxBlock.pnodeScopes, pnodeScope, byteCodeGenerator, prefix, postfix, &i, true);
+                }
+                else
+                {
+                    VisitNestedScopes(containerScope, pnodeScope, byteCodeGenerator, prefix, postfix, &i);
+                }
 
                 MapFormals(pnodeScope, [&](ParseNode *argNode) { Visit(argNode, byteCodeGenerator, prefix, postfix); });
 
                 if (pnodeScope->sxFnc.HasNonSimpleParameterList())
                 {
                     byteCodeGenerator->AssignUndefinedConstRegister();
+
+                    // Set the body scope as the current child scope of the function
+                    pnodeScope->sxFnc.funcInfo->SetCurrentChildScope(pnodeScope->sxFnc.funcInfo->GetBodyScope());
+
+                    if (!pnodeScope->sxFnc.funcInfo->GetParamScope()->GetCanMergeWithBodyScope())
+                    {
+                        // Push the body scope back
+                        Assert(pnodeScope->sxFnc.pnodeBodyScope->sxBlock.scope);
+                        byteCodeGenerator->PushScope(pnodeScope->sxFnc.funcInfo->GetBodyScope());
+                        VisitNestedScopes(pnodeScope->sxFnc.pnodeBodyScope->sxBlock.pnodeScopes, pnodeScope, byteCodeGenerator, prefix, postfix, &i);
+                    }
                 }
 
                 BeginVisitBlock(pnodeScope->sxFnc.pnodeBodyScope, byteCodeGenerator);
@@ -3229,6 +3201,11 @@ void VisitNestedScopes(ParseNode* pnodeScopeList, ParseNode* pnodeParent, ByteCo
         default:
             AssertMsg(false, "Unexpected opcode in tree of scopes");
             return;
+        }
+
+        if (breakOnNonFnc && pnodeScope->nop != knopFncDecl)
+        {
+            break;
         }
     }
 }
