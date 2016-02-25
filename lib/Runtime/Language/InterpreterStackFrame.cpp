@@ -6918,7 +6918,7 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
     {
         Var * slotArray;
         FunctionBody * functionBody = this->m_functionBody;
-        uint scopeSlotCount = this->IsParamScopeDone() ? functionBody->scopeSlotArraySize : functionBody->scopeSlotArraySizeForParamScope;
+        uint scopeSlotCount = this->IsParamScopeDone() ? functionBody->scopeSlotArraySize : functionBody->paramScopeSlotArraySize;
         Assert(scopeSlotCount != 0);
 
         if (!functionBody->DoStackScopeSlots())

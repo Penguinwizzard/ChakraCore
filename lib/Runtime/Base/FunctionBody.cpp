@@ -1003,6 +1003,7 @@ namespace Js
         CopyDeferParseField(scopeObjectSize);
 #endif
         CopyDeferParseField(scopeSlotArraySize);
+        CopyDeferParseField(paramScopeSlotArraySize);
         other->SetCachedSourceString(this->GetCachedSourceString());
         other->SetDeferredStubs(this->GetDeferredStubs());
         CopyDeferParseField(m_isAsmjsMode);
@@ -1119,6 +1120,7 @@ namespace Js
       m_displayNameLength(0),
       m_displayShortNameOffset(0),
       scopeSlotArraySize(0),
+      paramScopeSlotArraySize(0),
       m_reparsed(false),
       m_isAsmJsFunction(false),
 #if DBG
@@ -3654,6 +3656,7 @@ namespace Js
         newFunctionInfo->m_isPublicLibraryCode = this->m_isPublicLibraryCode;
 
         newFunctionInfo->scopeSlotArraySize = this->scopeSlotArraySize;
+        newFunctionInfo->paramScopeSlotArraySize = this->paramScopeSlotArraySize;
 
         for (uint index = 0; index < this->m_nestedCount; index++)
         {

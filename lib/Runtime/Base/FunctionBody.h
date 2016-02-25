@@ -2465,13 +2465,13 @@ namespace Js
         void SetScopeSlotArraySizes(uint scopeSlotCount, uint scopeSlotCountForParamScope)
         {
             this->scopeSlotArraySize = scopeSlotCount;
-            this->scopeSlotArraySizeForParamScope = scopeSlotCountForParamScope;
+            this->paramScopeSlotArraySize = scopeSlotCountForParamScope;
         }
 
         Js::PropertyId * GetPropertyIdsForScopeSlotArray() const { return static_cast<Js::PropertyId *>(this->GetAuxPtr(AuxPointerType::PropertyIdsForScopeSlotArray)); }
         void SetPropertyIdsForScopeSlotArray(Js::PropertyId * propertyIdsForScopeSlotArray, uint scopeSlotCount, uint scopeSlotCountForParamScope = 0)
         {
-            SetScopeSlotArraySizes(scopeSlotCount, scopeSlotArraySizeForParamScope);
+            SetScopeSlotArraySizes(scopeSlotCount, scopeSlotCountForParamScope);
             this->SetAuxPtr(AuxPointerType::PropertyIdsForScopeSlotArray, propertyIdsForScopeSlotArray);
         }
 
