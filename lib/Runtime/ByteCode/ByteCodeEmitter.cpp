@@ -625,7 +625,12 @@ void ByteCodeGenerator::InitBlockScopedContent(ParseNode *pnodeBlock, Js::Debugg
                 this->m_writer.ElementRootU(op, funcInfo->FindOrAddReferencedPropertyId(propertyId));
             }
         }
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1603_MSRC32443_BUG6398707
+        else if (sym->IsInSlot(funcInfo) || (scope->GetIsObject() && sym->NeedsSlotAlloc(funcInfo)))
+#else
         else if (sym->IsInSlot(funcInfo))
+#endif
         {
             if (scope->GetIsObject())
             {

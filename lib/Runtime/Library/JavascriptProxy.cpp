@@ -1927,6 +1927,7 @@ namespace Js
 
         if (nullptr == callMethod)
         {
+#include <VerifyGlobalMSRCSettings.inl>
 #ifdef PRERELEASE_REL1601_MSRC31897_BUG5120093
             // newCount is ushort. If args count is greater than or equal to 65535, an integer
             // too many arguments
@@ -1948,6 +1949,7 @@ namespace Js
                 args.Values[0] = newThisObject;
             }
 
+#include <VerifyGlobalMSRCSettings.inl>
 #ifndef PRERELEASE_REL1601_MSRC31897_BUG5120093
             // too many arguments
             if (args.Info.Count >= CallInfo::kMaxCountArgs)

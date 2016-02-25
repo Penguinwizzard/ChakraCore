@@ -21,7 +21,7 @@ namespace CustomHeap
 #pragma region "Constructor and Destructor"
 
 Heap::Heap(ArenaAllocator * alloc, CodePageAllocators * codePageAllocators):
-    auxiliaryAllocator(alloc),
+    auxilliaryAllocator(alloc),
     codePageAllocators(codePageAllocators)
 #if DBG_DUMP
     , freeObjectSize(0)
@@ -98,7 +98,6 @@ bool Heap::Free(__in Allocation* object)
     {
         return true;
     }
-
     return FreeAllocation(object);
 }
 
@@ -140,7 +139,6 @@ bool Heap::Decommit(__in Allocation* object)
     // Skip asserting here- multiple objects could be on the same page
     // Review: should we really decommit here or decommit only when all objects
     // on the page have been decommitted?
-
     if (!object->page->isDecommitted)
     {
 #if PDATA_ENABLED
@@ -420,7 +418,7 @@ Allocation* Heap::AllocLargeObject(size_t bytes, ushort pdataCount, ushort xdata
     }
 
 
-    Allocation* allocation = this->largeObjectAllocations.PrependNode(this->auxiliaryAllocator);
+    Allocation* allocation = this->largeObjectAllocations.PrependNode(this->auxilliaryAllocator);
     if (allocation == nullptr)
     {
         CodePageAllocators::AutoLock autoLock(this->codePageAllocators);
@@ -470,7 +468,7 @@ void Heap::FreeDecommittedLargeObjects()
 
         this->codePageAllocators->ReleaseDecommitted(allocation.address, allocation.GetPageCount(), allocation.largeObjectAllocation.segment);
 
-        largeObjectIter.RemoveCurrent(this->auxiliaryAllocator);
+        largeObjectIter.RemoveCurrent(this->auxilliaryAllocator);
     }
     NEXT_DLISTBASE_ENTRY_EDITING;
 }
@@ -497,7 +495,7 @@ DWORD Heap::EnsureAllocationExecuteWriteable(Allocation* allocation)
     else
     {
         return EnsureAllocationReadWrite<PAGE_EXECUTE_READWRITE>(allocation);
-    }   
+    }
 }
 
 template <bool freeAll>
@@ -514,7 +512,7 @@ bool Heap::FreeLargeObject(Allocation* address)
 #endif
             this->codePageAllocators->Release(allocation.address, allocation.GetPageCount(), allocation.largeObjectAllocation.segment);
 
-            largeObjectIter.RemoveCurrent(this->auxiliaryAllocator);
+            largeObjectIter.RemoveCurrent(this->auxilliaryAllocator);
             if (!freeAll) return true;
         }
     }
@@ -552,7 +550,7 @@ Allocation* Heap::AllocInPage(Page* page, size_t bytes, ushort pdataCount, ushor
     }
 #endif
 
-    Allocation* allocation = AnewNoThrowStruct(this->auxiliaryAllocator, Allocation);
+    Allocation* allocation = AnewNoThrowStruct(this->auxilliaryAllocator, Allocation);
     if (allocation == nullptr)
     {
 #if PDATA_ENABLED
@@ -650,7 +648,7 @@ Page* Heap::AllocNewPage(BucketId bucket, bool canAllocInPreReservedHeapPageSegm
 
     // Switch to allocating on a list of pages so we can do leak tracking later
     VerboseHeapTrace(L"Allocing new page in bucket %d\n", bucket);
-    Page* page = this->buckets[bucket].PrependNode(this->auxiliaryAllocator, address, pageSegment, bucket);
+    Page* page = this->buckets[bucket].PrependNode(this->auxilliaryAllocator, address, pageSegment, bucket);
 
     if (page == nullptr)
     {
@@ -738,7 +736,7 @@ void Heap::RemovePageFromFullList(Page* pageToRemove)
     {
         if (&page == pageToRemove)
         {
-            pageIter.RemoveCurrent(this->auxiliaryAllocator);
+            pageIter.RemoveCurrent(this->auxilliaryAllocator);
             return;
         }
     }
@@ -805,7 +803,7 @@ bool Heap::FreeAllocation(Allocation* object)
 #if DBG_DUMP
             this->totalAllocationSize -= pageSize;
 #endif
-            this->auxiliaryAllocator->Free(object, sizeof(Allocation));
+            this->auxilliaryAllocator->Free(object, sizeof(Allocation));
             {
                 CodePageAllocators::AutoLock autoLock(this->codePageAllocators);
                 this->codePageAllocators->ReleasePages(pageAddress, 1, segment);
@@ -848,7 +846,7 @@ bool Heap::FreeAllocation(Allocation* object)
     this->freesSinceLastCompact += object->size;
 #endif
 
-    this->auxiliaryAllocator->Free(object, sizeof(Allocation));
+    this->auxilliaryAllocator->Free(object, sizeof(Allocation));
 
     if (page->IsEmpty())
     {
@@ -863,7 +861,7 @@ bool Heap::FreeAllocation(Allocation* object)
                     CodePageAllocators::AutoLock autoLock(this->codePageAllocators);
                     this->codePageAllocators->ReleasePages(page->address, 1, page->segment);
                 }
-                pageIter.RemoveCurrent(this->auxiliaryAllocator);
+                pageIter.RemoveCurrent(this->auxilliaryAllocator);
 
 #if DBG_DUMP
                 this->freeObjectSize -= pageSize;
@@ -888,6 +886,7 @@ bool Heap::FreeAllocation(Allocation* object)
         {
             protectFlags = PAGE_EXECUTE;
         }
+
         this->codePageAllocators->ProtectPages(page->address, 1, segment, protectFlags, PAGE_EXECUTE_READWRITE);
         return true;
     }
@@ -900,7 +899,7 @@ void Heap::FreeDecommittedBuckets()
     FOREACH_DLISTBASE_ENTRY_EDITING(Page, page, &this->decommittedPages, iter)
     {
         this->codePageAllocators->TrackDecommittedPages(page.address, 1, page.segment);
-        iter.RemoveCurrent(this->auxiliaryAllocator);
+        iter.RemoveCurrent(this->auxilliaryAllocator);
     }
     NEXT_DLISTBASE_ENTRY_EDITING;
 }
@@ -932,7 +931,7 @@ void Heap::FreeBucket(DListBase<Page>* bucket, bool freeOnlyEmptyPages)
         if (!freeOnlyEmptyPages || page.IsEmpty())
         {
             FreePage(&page);
-            pageIter.RemoveCurrent(this->auxiliaryAllocator);
+            pageIter.RemoveCurrent(this->auxilliaryAllocator);
         }
     }
     NEXT_DLISTBASE_ENTRY_EDITING;

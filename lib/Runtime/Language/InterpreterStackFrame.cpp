@@ -25,9 +25,9 @@
 /// - X: Nothing
 ///
 /// Examples:
-/// - "A2toA1" reads two registers, each storing a Var, and writes a single
+/// - "A2toA1" reads two registers, each storing an Var, and writes a single
 ///   register with a new Var.
-/// - "A1I1toA2" reads two registers, first a Var and second an Int32, then
+/// - "A1I1toA2" reads two registers, first an Var and second an Int32, then
 ///   writes two Var registers.
 ///
 /// Although these could use lookup tables to standard OpLayout types, this
@@ -2091,7 +2091,12 @@ namespace Js
     inline void InterpreterStackFrame::OP_SetOutAsmDb( RegSlot outRegisterID, double val )
     {
         Assert( m_outParams + outRegisterID < m_outSp );
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1602_MSRC32037_BUG5919552
         m_outParams[outRegisterID] = JavascriptNumber::NewWithCheck( val, scriptContext );
+#else
+        m_outParams[outRegisterID] = JavascriptNumber::New( val, scriptContext );
+#endif
     }
 
     inline void InterpreterStackFrame::OP_SetOutAsmInt( RegSlot outRegisterID, int val )
@@ -7424,7 +7429,6 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
         }
         SetRegRawSimd(playout->I4_0, result);
     }
-
     Var InterpreterStackFrame::GetNonVarReg(RegSlot localRegisterID) const
     {
         return m_localSlots[localRegisterID];

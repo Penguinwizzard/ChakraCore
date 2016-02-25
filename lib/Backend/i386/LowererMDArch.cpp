@@ -916,6 +916,8 @@ LowererMDArch::LowerAsmJsLdElemHelper(IR::Instr * instr, bool isSimdLoad /*= fal
 
     Lowerer::InsertBranch(Js::OpCode::Br, loadLabel, helperLabel);
 
+#include <VerifyGlobalMSRCSettings.inl>
+#ifndef PRERELEASE_REL1603_MSRC32563_BUG6497035
     if (m_func->GetJnFunction()->GetAsmJsFunctionInfoWithLock()->IsHeapBufferConst())
     {
         src1->AsIndirOpnd()->ReplaceBaseOpnd(src1->AsIndirOpnd()->UnlinkIndexOpnd());
@@ -924,6 +926,7 @@ LowererMDArch::LowerAsmJsLdElemHelper(IR::Instr * instr, bool isSimdLoad /*= fal
         Assert(arrayBuffer);
         src1->AsIndirOpnd()->SetOffset((uintptr_t)arrayBuffer->GetBuffer(), true);
     }
+#endif
 
     if (isSimdLoad)
     {
@@ -992,6 +995,8 @@ LowererMDArch::LowerAsmJsStElemHelper(IR::Instr * instr, bool isSimdStore /*= fa
 
     Lowerer::InsertBranch(Js::OpCode::Br, doneLabel, storeLabel);
 
+#include <VerifyGlobalMSRCSettings.inl>
+#ifndef PRERELEASE_REL1603_MSRC32563_BUG6497035
     if (m_func->GetJnFunction()->GetAsmJsFunctionInfoWithLock()->IsHeapBufferConst())
     {
         dst->AsIndirOpnd()->ReplaceBaseOpnd(dst->AsIndirOpnd()->UnlinkIndexOpnd());
@@ -1000,6 +1005,8 @@ LowererMDArch::LowerAsmJsStElemHelper(IR::Instr * instr, bool isSimdStore /*= fa
         Assert(arrayBuffer);
         dst->AsIndirOpnd()->SetOffset((uintptr_t)arrayBuffer->GetBuffer(), true);
     }
+#endif
+
     return doneLabel;
 }
 

@@ -8350,7 +8350,13 @@ Lowerer::LowerLdArrViewElem(IR::Instr * instr)
     IR::Opnd * src2 = instr->GetSrc2();
 
     IR::Instr * done;
+
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1603_MSRC32563_BUG6497035
+    if (indexOpnd || m_func->GetJnFunction()->GetAsmJsFunctionInfo()->AccessNeedsBoundCheck((uint32)src1->AsIndirOpnd()->GetOffset()))
+#else
     if (indexOpnd || (uint32)src1->AsIndirOpnd()->GetOffset() >= 0x1000000)
+#endif
     {
         // CMP indexOpnd, src2(arrSize)
         // JA $helper
@@ -8563,7 +8569,12 @@ Lowerer::LowerStArrViewElem(IR::Instr * instr)
     Assert(!dst->IsFloat64() || src1->IsFloat64());
 
     IR::Instr * done;
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1603_MSRC32563_BUG6497035
+    if (indexOpnd || m_func->GetJnFunction()->GetAsmJsFunctionInfo()->AccessNeedsBoundCheck((uint32)dst->AsIndirOpnd()->GetOffset()))
+#else
     if (indexOpnd || (uint32)dst->AsIndirOpnd()->GetOffset() >= 0x1000000)
+#endif
     {
         // CMP indexOpnd, src2(arrSize)
         // JA $helper

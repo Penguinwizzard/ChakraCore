@@ -336,11 +336,11 @@ namespace Js
                 // If we want to start copying past the length of the array, all index are no-op
                 return true;
             }
-
             if (UInt32Math::Add(newStart, newLength) > GetLength())
             {
                 newLength = GetLength() - newStart;
             }
+#include <VerifyGlobalMSRCSettings.inl>
 #ifdef PRERELEASE_REL1602_MSRC32252_BUG6083445
             if (newStart >= GetLength())
             {
