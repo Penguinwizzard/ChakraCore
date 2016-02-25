@@ -1626,15 +1626,13 @@ StoreCommon:
         switch (op)
         {
             case OpCode::LdLocalSlot:
+            case OpCode::LdParamSlot:
             case OpCode::LdLocalObjSlot:
                 if ((DoDynamicProfileOpcode(AggressiveIntTypeSpecPhase) || DoDynamicProfileOpcode(FloatTypeSpecPhase)) &&
                     profileId != Constants::NoProfileId)
                 {
                     OpCodeUtil::ConvertNonCallOpToProfiled(op);
                 }
-                break;
-            case OpCode::LdParamSlot:
-                // No profiled opcode present for LdParamSlot
                 break;
             default:
             {

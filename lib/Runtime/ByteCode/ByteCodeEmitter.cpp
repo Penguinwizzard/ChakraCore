@@ -1291,7 +1291,7 @@ Js::RegSlot ByteCodeGenerator::DefineOneFunction(ParseNode *pnodeFnc, FuncInfo *
     return regEnv;
 }
 
-void ByteCodeGenerator::DefineUserVars(FuncInfo *funcInfo, ParseNodePtr pnodeScopes)
+void ByteCodeGenerator::DefineUserVars(FuncInfo *funcInfo)
 {
     // Initialize scope-wide variables on entry to the scope. TODO: optimize by detecting uses that are always reached
     // by an existing initialization.
@@ -3203,7 +3203,7 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
                 if (varSym && varSym->GetSymbolType() == STVariable && (varSym->IsInSlot(funcInfo) || varSym->GetLocation() != Js::Constants::NoRegister))
                 {
                     Js::RegSlot tempReg = funcInfo->AcquireTmpRegister();
-                    this->EmitPropLoad(tempReg, param, param->GetPid(), funcInfo, true);
+                    this->EmitPropLoad(tempReg, param, param->GetPid(), funcInfo);
                     this->EmitPropStore(tempReg, varSym, varSym->GetPid(), funcInfo);
                     funcInfo->ReleaseTmpRegister(tempReg);
                 }
@@ -3700,7 +3700,6 @@ void ByteCodeGenerator::StartEmitFunction(ParseNode *pnodeFnc)
         }
 
         bodyScope->SetMustInstantiate(funcInfo->frameObjRegister != Js::Constants::NoRegister || funcInfo->frameSlotsRegister != Js::Constants::NoRegister);
-        // paramScope->SetMustInstantiate(funcInfo->frameObjRegister != Js::Constants::NoRegister || funcInfo->frameSlotsRegister != Js::Constants::NoRegister);
 
         if (bodyScope->GetIsObject())
         {
@@ -4816,7 +4815,7 @@ void ByteCodeGenerator::EmitPropStore(Js::RegSlot rhsLocation, Symbol *sym, Iden
 }
 
 Js::OpCode
-ByteCodeGenerator::GetLdSlotOp(Scope *scope, int envIndex, Js::RegSlot scopeLocation, FuncInfo *funcInfo, bool useParamScope)
+ByteCodeGenerator::GetLdSlotOp(Scope *scope, int envIndex, Js::RegSlot scopeLocation, FuncInfo *funcInfo)
 {
     Js::OpCode op;
 
@@ -4831,9 +4830,11 @@ ByteCodeGenerator::GetLdSlotOp(Scope *scope, int envIndex, Js::RegSlot scopeLoca
             op = Js::OpCode::LdEnvSlot;
         }
     }
-    else if (useParamScope)
+    else if (!scope->GetCanMergeWithBodyScope() && this->currentScope == scope->GetFunc()->GetBodyScope())
     {
-        // Use this opcode to load the parameter from the param scope's closure, not body's closure
+        // When param and body scopes are not merged the only place where you try to load the value from a param scoped symbol,
+        // while in body scope, is when we use its value to initialize the corresponding value in the body scope. That time we
+        // cannot use the normal LdLocalSlot as we have to use the param scope closure to load that field.
         op = Js::OpCode::LdParamSlot;
     }
     else if (scopeLocation != Js::Constants::NoRegister &&
@@ -4866,7 +4867,7 @@ ByteCodeGenerator::GetLdSlotOp(Scope *scope, int envIndex, Js::RegSlot scopeLoca
     return op;
 }
 
-void ByteCodeGenerator::EmitPropLoad(Js::RegSlot lhsLocation, Symbol *sym, IdentPtr pid, FuncInfo *funcInfo, bool useParamScope)
+void ByteCodeGenerator::EmitPropLoad(Js::RegSlot lhsLocation, Symbol *sym, IdentPtr pid, FuncInfo *funcInfo)
 {
     // If sym belongs to a parent frame, get it from the closure environment.
     // If it belongs to this func, but there's a non-local reference, get it from the heap-allocated frame.
@@ -5057,16 +5058,12 @@ void ByteCodeGenerator::EmitPropLoad(Js::RegSlot lhsLocation, Symbol *sym, Ident
         Js::OpCode op;
 
         // Now get the property from its slot.
-        op = this->GetLdSlotOp(scope, envIndex, scopeLocation, funcInfo, useParamScope);
+        op = this->GetLdSlotOp(scope, envIndex, scopeLocation, funcInfo);
         slot = slot + (sym->GetScope()->GetIsObject() ? 0 : Js::ScopeSlots::FirstSlotIndex);
 
         if (envIndex != -1)
         {
             this->m_writer.SlotI2(op, lhsLocation, envIndex + Js::FrameDisplay::GetOffsetOfScopes()/sizeof(Js::Var), slot, profileId);
-        }
-        else if (useParamScope)
-        {
-            this->m_writer.SlotI1(Js::OpCode::LdParamSlot, lhsLocation, slot, profileId);
         }
         else if (scopeLocation != Js::Constants::NoRegister &&
                  (scopeLocation == funcInfo->frameSlotsRegister || scopeLocation == funcInfo->frameObjRegister))

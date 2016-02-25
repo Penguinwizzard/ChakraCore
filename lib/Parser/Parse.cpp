@@ -4891,7 +4891,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
                         OUTPUT_TRACE_DEBUGONLY(Js::ParsePhase, L"Creating a duplicate symbol for the parameter %s in the body scope\n", param->GetPid()->Psz());
                         ParseNodePtr paramNode = this->CreateVarDeclNode(param->GetPid(), STVariable, false, nullptr, false);
                         Assert(paramNode && paramNode->sxVar.sym->GetScope()->GetScopeType() == ScopeType_FunctionBody);
-                        // paramNode->sxVar.sym->SetHasInit(true);
+                        paramNode->sxVar.sym->SetHasInit(true);
                     });
                 }
             }
