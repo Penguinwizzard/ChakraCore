@@ -1731,13 +1731,13 @@ void ByteCodeGenerator::InitScopeSlotArray(FuncInfo * funcInfo)
         return;
     }
 
-    // TODO: Fix the debugger scenario for param scope
     Js::FunctionBody *byteCodeFunction = funcInfo->GetParsedFunctionBody();
-    if (scopeSlotCount || scopeSlotCountForParamScope)
+    if (scopeSlotCount > 0 || scopeSlotCountForParamScope > 0)
     {
         byteCodeFunction->SetScopeSlotArraySizes(scopeSlotCount, scopeSlotCountForParamScope);
     }
 
+    // TODO: Need to add property ids for the case when scopeSlotCountForParamSCope is non-zero
     if (scopeSlotCount)
     {
         Js::PropertyId *propertyIdsForScopeSlotArray = RecyclerNewArrayLeafZ(scriptContext->GetRecycler(), Js::PropertyId, scopeSlotCount);

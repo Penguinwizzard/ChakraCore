@@ -1634,7 +1634,7 @@ StoreCommon:
                 }
                 break;
             case OpCode::LdParamSlot:
-                // No prfiled opcode present for LdParamSlot
+                // No profiled opcode present for LdParamSlot
                 break;
             default:
             {
