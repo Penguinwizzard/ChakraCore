@@ -3144,15 +3144,19 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
                 // Pop the body scope before emitting the default args
                 PopScope();
                 Assert(this->GetCurrentScope() == paramScope);
+
+                funcInfo->SetCurrentChildScope(paramScope);
             }
 
             EmitDefaultArgs(funcInfo, pnode);
 
             if (!paramScope->GetCanMergeWithBodyScope())
             {
-                // Get the stack back to its previous state
                 Assert(this->GetCurrentScope() == paramScope);
+                // Push the body scope
                 PushScope(bodyScope);
+
+                funcInfo->SetCurrentChildScope(bodyScope);
 
                 // Mark the beginning of the body scope so that new scope slots can be created.
                 this->Writer()->Empty(Js::OpCode::BeginBodyScope);
@@ -3700,6 +3704,7 @@ void ByteCodeGenerator::StartEmitFunction(ParseNode *pnodeFnc)
         }
 
         bodyScope->SetMustInstantiate(funcInfo->frameObjRegister != Js::Constants::NoRegister || funcInfo->frameSlotsRegister != Js::Constants::NoRegister);
+        paramScope->SetMustInstantiate(!paramScope->GetCanMergeWithBodyScope());
 
         if (bodyScope->GetIsObject())
         {
@@ -4163,7 +4168,7 @@ void ByteCodeGenerator::EndEmitWith(ParseNode *pnodeWith)
 Js::RegSlot ByteCodeGenerator::PrependLocalScopes(Js::RegSlot evalEnv, Js::RegSlot tempLoc, FuncInfo *funcInfo)
 {
     Scope *currScope = this->currentScope;
-    Scope *funcScope = funcInfo->GetBodyScope();
+    Scope *funcScope = funcInfo->GetCurrentChildScope() ? funcInfo->GetCurrentChildScope() : funcInfo->GetBodyScope();
 
     if (currScope == funcScope)
     {
@@ -4181,7 +4186,7 @@ Js::RegSlot ByteCodeGenerator::PrependLocalScopes(Js::RegSlot evalEnv, Js::RegSl
     while (currScope != funcScope)
     {
         Scope *innerScope;
-        for (innerScope = currScope; (innerScope->GetEnclosingScope() != funcScope) && (innerScope->GetScopeType() != ScopeType_Parameter || innerScope->GetFunc() != funcInfo); innerScope = innerScope->GetEnclosingScope())
+        for (innerScope = currScope; innerScope->GetEnclosingScope() != funcScope; innerScope = innerScope->GetEnclosingScope())
             ;
         if (innerScope->GetMustInstantiate())
         {

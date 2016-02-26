@@ -1829,7 +1829,7 @@ Scope * ByteCodeGenerator::FindScopeForSym(Scope *symScope, Scope *scope, Js::Pr
     for (scope = scope ? scope->GetEnclosingScope() : currentScope; scope; scope = scope->GetEnclosingScope())
     {
         if (scope->GetFunc() != funcInfo
-            && (scope->GetMustInstantiate() || (scope->GetScopeType() == ScopeType_Parameter && !scope->GetCanMergeWithBodyScope()))
+            && scope->GetMustInstantiate()
             && scope != this->globalScope)
         {
             (*envIndex)++;
@@ -3327,9 +3327,9 @@ void PostVisitBlock(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
         return;
     }
 
-    Scope *scope = pnode->sxBlock.scope;
     if (pnode->sxBlock.GetCallsEval() || pnode->sxBlock.GetChildCallsEval() || (byteCodeGenerator->GetFlags() & (fscrEval | fscrImplicitThis | fscrImplicitParents)))
     {
+        Scope *scope = pnode->sxBlock.scope;
         bool scopeIsEmpty = scope->IsEmpty();
         scope->SetIsObject();
         scope->SetCapturesAll(true);

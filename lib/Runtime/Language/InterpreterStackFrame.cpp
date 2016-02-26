@@ -1094,6 +1094,7 @@ namespace Js
         newInstance->retOffset = 0;
         newInstance->localFrameDisplay = nullptr;
         newInstance->localClosure = nullptr;
+        newInstance->paramClosure = nullptr;
         newInstance->innerScopeArray = nullptr;
 
         bool doInterruptProbe = newInstance->scriptContext->GetThreadContext()->DoInterruptProbe(this->executeFunction);
@@ -1385,6 +1386,13 @@ namespace Js
             SetReg(thisRegForEventHandler, varThis);
             environment = JavascriptOperators::OP_LdHandlerScope(varThis, GetScriptContext());
             this->SetEnv((FrameDisplay*)environment);
+        }
+        else if (this->paramClosure != nullptr)
+        {
+            // When paramClosure is non-null we are calling this method to initialize the closure for body scope.
+            // In this case we have to use the param scope's closure as the parent for the body scope's frame display.
+            Assert(!executeFunction->IsParamAndBodyScopeMerged());
+            environment = this->GetLocalFrameDisplay();
         }
         else
         {
