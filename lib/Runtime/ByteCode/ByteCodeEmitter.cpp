@@ -3489,16 +3489,28 @@ void ByteCodeGenerator::EmitScopeList(ParseNode *pnode, bool breakOnNonFunc)
                     Assert(paramBlock->nop == knopBlock && paramBlock->sxBlock.blockType == Parameter);
 
                     // Pop the body scope
-                    Assert(this->GetCurrentScope() == bodyScope);
-                    PopScope();
+                    // Assert(this->GetCurrentScope() == bodyScope);
+                    // PopScope();
                     PushScope(paramScope);
 
                     // While emitting the functions we have to stop when we see the body scope block.
                     // Otherwise functions defined in the body scope will not be able to get the right references.
                     this->EmitScopeList(paramBlock->sxBlock.pnodeScopes, true);
                     Assert(this->GetCurrentScope() == paramScope);
-                    PushScope(bodyScope);
+                    // PushScope(bodyScope);
+                }
 
+                PushScope(bodyScope);
+                // Persist outer func scope info if nested func is deferred
+                if (CONFIG_FLAG(DeferNested))
+                {
+                    FuncInfo* parentFunc = TopFuncInfo();
+                    Js::ScopeInfo::SaveScopeInfoForDeferParse(this, parentFunc, pnode->sxFnc.funcInfo);
+                    PushFuncInfo(L"StartEmitFunction", pnode->sxFnc.funcInfo);
+                }
+
+                if (paramScope && !paramScope->GetCanMergeWithBodyScope())
+                {
                     this->EmitScopeList(pnode->sxFnc.pnodeBodyScope->sxBlock.pnodeScopes);
                 }
                 else
@@ -3741,7 +3753,10 @@ void ByteCodeGenerator::StartEmitFunction(ParseNode *pnodeFnc)
             ParseNode *pnode;
             Symbol *sym;
 
-            PushScope(bodyScope);
+            /*if (!paramScope || paramScope->GetCanMergeWithBodyScope())
+            {
+                PushScope(bodyScope);
+            }*/
 
             // Turns on capturesAll temporarily if func has deferred child, so that the following EnsureScopeSlot
             // will allocate scope slots no matter if symbol hasNonLocalRefence or not.
@@ -3867,7 +3882,10 @@ void ByteCodeGenerator::StartEmitFunction(ParseNode *pnodeFnc)
 
             pnodeFnc->sxFnc.MapContainerScopes([&](ParseNode *pnodeScope) { this->EnsureFncScopeSlots(pnodeScope, funcInfo); });
 
-            PushScope(bodyScope);
+            /*if (!paramScope || paramScope->GetCanMergeWithBodyScope())
+            {
+                PushScope(bodyScope);
+            }*/
 
             for (pnode = pnodeFnc->sxFnc.pnodeVars; pnode; pnode = pnode->sxVar.pnodeNext)
             {
@@ -3916,15 +3934,7 @@ void ByteCodeGenerator::StartEmitFunction(ParseNode *pnodeFnc)
             Assert(bodyScope->GetIsObject());
         }
 
-        PushScope(bodyScope);
-    }
-
-    // Persist outer func scope info if nested func is deferred
-    if (CONFIG_FLAG(DeferNested))
-    {
-        FuncInfo* parentFunc = TopFuncInfo();
-        Js::ScopeInfo::SaveScopeInfoForDeferParse(this, parentFunc, funcInfo);
-        PushFuncInfo(L"StartEmitFunction", funcInfo);
+        /*PushScope(bodyScope);*/
     }
 }
 
