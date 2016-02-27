@@ -38,6 +38,7 @@ Func::Func(JitArenaAllocator *alloc, CodeGenWorkItem* workItem, const Js::Functi
     m_loopParamSym(nullptr),
     m_funcObjSym(nullptr),
     m_localClosureSym(nullptr),
+    m_paramClosureSym(nullptr),
     m_localFrameDisplaySym(nullptr),
     m_bailoutReturnValueSym(nullptr),
     m_hasBailedOutSym(nullptr),
@@ -951,7 +952,7 @@ void Func::AddFrameDisplayCheck(IR::SymOpnd *fieldOpnd, uint32 slotId)
 
 void Func::InitLocalClosureSyms()
 {
-    Assert(this->m_localClosureSym == nullptr);
+    Assert(this->m_localClosureSym == nullptr || !this->GetJnFunction()->IsParamAndBodyScopeMerged());
 
     // Allocate stack space for closure pointers. Do this only if we're jitting for stack closures, and
     // tell bailout that these are not byte code symbols so that we don't try to encode them in the bailout record,

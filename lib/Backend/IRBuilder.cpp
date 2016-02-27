@@ -3415,6 +3415,40 @@ IRBuilder::BuildElementSlotI1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot r
             }
             break;
 
+        case Js::OpCode::LdParamSlot:
+
+            if (PHASE_ON(Js::ClosureRangeCheckPhase, m_func))
+            {
+                if ((uint32)slotId >= m_func->GetJnFunction()->paramScopeSlotArraySize + Js::ScopeSlots::FirstSlotIndex)
+                {
+                    Js::Throw::FatalInternalError();
+                }
+            }
+
+            // Read the scope slot pointer back using the stack closure sym.
+            newOpcode = Js::OpCode::LdSlot;
+
+            fieldSym = PropertySym::FindOrCreate(m_func->GetParamClosureSym()->m_id, slotId, (uint32)-1, (uint)-1, PropertyKindSlots, m_func);
+            fieldOpnd = IR::SymOpnd::New(fieldSym, TyVar, m_func);
+            regOpnd = this->BuildDstOpnd(regSlot);
+            instr = nullptr;
+            if (profileId != Js::Constants::NoProfileId)
+            {
+                instr = this->BuildProfiledSlotLoad(Js::OpCode::LdSlot, regOpnd, fieldOpnd, profileId, &isLdSlotThatWasNotProfiled);
+            }
+            if (!instr)
+            {
+                instr = IR::Instr::New(Js::OpCode::LdSlot, regOpnd, fieldOpnd, m_func);
+            }
+            this->AddInstr(instr, offset);
+
+            if (!m_func->DoStackFrameDisplay() && IsLoopBody())
+            {
+                // Need a dynamic check on the size of the local slot array.
+                m_func->GetTopFunc()->AddSlotArrayCheck(fieldOpnd);
+            }
+            break;
+
         case Js::OpCode::LdLocalObjSlot:
             if (m_func->GetLocalClosureSym()->HasByteCodeRegSlot())
             {
@@ -6613,6 +6647,21 @@ IRBuilder::BuildEmpty(Js::OpCode newOpcode, uint32 offset)
             // Default behavior, let's keep it for now, removed in lowerer.
             this->AddInstr(instr, offset);
         }
+        break;
+
+    case Js::OpCode::BeginBodyScope:
+        this->m_func->SetParamClosureSym(StackSym::New(this->m_func));
+/*        this->AddInstr(
+            IR::Instr::New(
+                Js::OpCode::Ld_A, IR::RegOpnd::New(this->m_func->GetParamClosureSym(), TyVar, m_func), IR::RegOpnd::New(this->m_func->GetLocalClosureSym(), TyVar, this->m_func), this->m_func),
+            (uint32)-1);*/
+            Js::OpCode op =
+                m_func->DoStackScopeSlots() ? Js::OpCode::NewStackScopeSlots : Js::OpCode::NewScopeSlots;
+
+            IR::Opnd * srcOpnd = IR::IntConstOpnd::New(
+                m_func->GetJnFunction()->paramScopeSlotArraySize + Js::ScopeSlots::FirstSlotIndex, TyUint32, m_func);
+            instr = IR::Instr::New(op, closureOpnd, srcOpnd, m_func);
+            this->AddInstr(instr, offset);
         break;
 
     default:
