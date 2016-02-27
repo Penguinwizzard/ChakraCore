@@ -90,11 +90,12 @@ public:
 #endif
 
         JsUtil::FixedMultibitVector<ObjectSlotType, ObjectSlotType::TSize, ObjectSlotType::BitSize, MaxSlotCapacity> slotTypes;
+        bool hasAllPropertiesWithDefaultAttributes;
 
         // PropertyRecord assignments are allocated off the end of the structure
         const PropertyRecord * assignments[0];
 
-        TypePath(const PropertyIndex slotCapacity) : slotCapacity(static_cast<PathTypePropertyIndex>(slotCapacity))
+        TypePath(const PropertyIndex slotCapacity) : slotCapacity(static_cast<PathTypePropertyIndex>(slotCapacity)), hasAllPropertiesWithDefaultAttributes(true)
         {
             CompileAssert(static_cast<PathTypePropertyIndex>(-1) >= static_cast<PathTypePropertyIndex>(0)); // must be unsigned
             CompileAssert(static_cast<PropertyIndex>(-1) >= static_cast<PropertyIndex>(0)); // must be unsigned
@@ -155,6 +156,16 @@ public:
                 return GetPropertyIdUnchecked(index);
             else
                 return nullptr;
+        }
+
+        bool GetHasAllPropertiesWithDefaultAttributes()
+        {
+            return hasAllPropertiesWithDefaultAttributes;
+        }
+
+        void SetHasAllPropertiesWithDefaultAttributes(bool value)
+        {
+            hasAllPropertiesWithDefaultAttributes = value;
         }
 
         const PropertyRecord ** GetPropertyAssignments()
@@ -236,7 +247,7 @@ public:
 
             slotCount = slotType.GetNextSlotIndexOrCount(newSlotIndex);
             assignments[newSlotIndex] = propId;
-            SetSlotType(newSlotIndex, slotType);
+            SetSlotType(newSlotIndex, slotType.GetSlotTypeWithoutAttributes());
             return newSlotIndex;
         }
 

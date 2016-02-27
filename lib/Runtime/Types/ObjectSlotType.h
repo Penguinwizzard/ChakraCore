@@ -88,6 +88,8 @@ namespace Js
         ObjectSlotType ToNormalizedValueType() const;
         ObjectSlotType MergeValueType(const ObjectSlotType &other) const;
         ObjectSlotType Merge(const ObjectSlotType &other) const;
+        const ObjectSlotType GetSlotTypeWithoutAttributes() const;
+        bool HasDefaultAttributes() const;
 
     public:
         PathTypePropertyIndex GetNextSlotIndexOrCount(const PropertyIndex slotIndexOrCount) const;

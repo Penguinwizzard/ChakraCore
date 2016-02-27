@@ -379,7 +379,35 @@ namespace Js
             Assert(!instance->GetDynamicType()->GetIsShared() || GetIsShared());
 
             // Setting the slot may cause the field type to change, which in turn would change the type and handler
-            const ObjectSlotType slotTypeBeforeSet = GetTypePath()->GetSlotType(index);
+            TypePath* typePath = this->GetTypePath();
+            if (!typePath->GetHasAllPropertiesWithDefaultAttributes())
+            {
+                // check whether the property is writable
+                PathTypeTransitionInfo* predecessorTransitionInfo = this->GetTransitionInfo();
+                PropertyIndex currentSlotIndex = typePath->GetSlotCount();
+                do
+                {
+                    predecessorTransitionInfo = predecessorTransitionInfo->GetPredecessor();
+                    currentSlotIndex = typePath->GetPreviousSlotIndex(currentSlotIndex);
+                } while (currentSlotIndex > index);
+
+                bool foundProperty = false;
+                for (auto it = predecessorTransitionInfo->GetSuccessorIterator(); it.IsValid(); it.MoveNext())
+                {
+                    PathTypeSuccessorKey currentSuccessorKey = it.CurrentSuccessorKey();
+                    if (currentSuccessorKey.GetPropertyId() == propertyId)
+                    {
+                        foundProperty = true;
+                        if (!currentSuccessorKey.GetSlotType().IsWritable())
+                        {
+                            // throw
+                        }
+                    }
+                }
+                Assert(foundProperty);
+            }
+
+            const ObjectSlotType slotTypeBeforeSet = typePath->GetSlotType(index);
             SetSlotUnchecked(instance, index, slotTypeBeforeSet, value);
 
             // Ensure that all subsequent state changes are made to the new type or handler
@@ -1614,7 +1642,8 @@ namespace Js
         }
 
         PropertyIndex index = GetSlotCountInternal();
-        DynamicType* newType = PromoteType(instance, propertyRecord, slotType, value, flags);
+        uint8 attributesBits = (ObjectSlotType)((attributes & PropertyDynamicTypeDefaults) << ObjectSlotType::BitSize);
+        DynamicType* newType = PromoteType(instance, propertyRecord, (ObjectSlotType)(slotType|attributesBits), value, flags);
 
         Assert(instance->GetTypeHandler()->IsPathTypeHandler());
         PathTypeHandler* newTypeHandler = (PathTypeHandler*)newType->GetTypeHandler();

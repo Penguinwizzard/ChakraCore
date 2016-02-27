@@ -367,6 +367,10 @@ namespace Js
             newTypePath = typePath;
 
         newTypePath->AddInternal(propertyRecord, slotType);
+        if (!slotType.HasDefaultAttributes())
+        {
+            newTypePath->SetHasAllPropertiesWithDefaultAttributes(false);
+        }
 
     #ifdef PROFILE_TYPES
         scriptContext->promoteCount++;

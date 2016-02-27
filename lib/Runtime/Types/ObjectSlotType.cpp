@@ -35,12 +35,12 @@ namespace Js
 
     JsDiag_Inline ObjectSlotType::ObjectSlotType(const SlotType slotType) : slotType(slotType)
     {
-        Assert(slotType < SlotType::Count);
+        //Assert(slotType < SlotType::Count);
     }
 
     JsDiag_Inline ObjectSlotType::ObjectSlotType(const size_t slotType) : slotType(static_cast<SlotType>(slotType))
     {
-        Assert(slotType < static_cast<TSize>(SlotType::Count));
+        //Assert(slotType < static_cast<TSize>(SlotType::Count));
     }
 
     #ifndef IsJsDiag
@@ -84,17 +84,17 @@ namespace Js
 
     JsDiag_Inline bool ObjectSlotType::IsWritable() const
     {
-        return !(slotType & SlotType::Writable);
+        return !!(slotType & SlotType::Writable);
     }
 
     JsDiag_Inline bool ObjectSlotType::IsEnumerable() const
     {
-        return !(slotType & SlotType::Enumerable);
+        return !!(slotType & SlotType::Enumerable);
     }
     
     JsDiag_Inline bool ObjectSlotType::IsConfigurable() const
     {
-        return !(slotType & SlotType::Configurable);
+        return !!(slotType & SlotType::Configurable);
     }
 
     #ifndef IsJsDiag
@@ -188,6 +188,16 @@ namespace Js
         if(RequiresWideSlotSupport() && (slotTypeWithoutAttributes == SlotType::ConvertedVar || other.slotTypeWithoutAttributes == SlotType::ConvertedVar))
             return SlotType::ConvertedVar;
         return MergeValueType(other);
+    }
+    
+    const ObjectSlotType ObjectSlotType::GetSlotTypeWithoutAttributes() const
+    {
+        return slotTypeWithoutAttributes;
+    }
+
+    bool ObjectSlotType::HasDefaultAttributes() const
+    {
+        return IsWritable() && IsEnumerable() && IsConfigurable();
     }
 
     #endif
