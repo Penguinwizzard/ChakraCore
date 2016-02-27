@@ -182,6 +182,12 @@ namespace Js
         scriptContext->GetDebugContext()->RegisterFunction(this, pszTitle);
     }
 
+    Recycler* FunctionProxy::GetRecycler() const
+    {
+        Assert(m_scriptContext != nullptr);
+        return m_scriptContext == nullptr ? nullptr : m_scriptContext->GetRecycler();
+    }
+
     // Given an offset into the source buffer, determine if the end of this SourceInfo
     // lies after the given offset.
     bool
@@ -421,10 +427,6 @@ namespace Js
         ) :
         ParseableFunctionInfo(scriptContext->CurrentThunk, nestedCount, sizeof(FunctionBody), functionId, utf8SourceInfo, scriptContext, uFunctionNumber, displayName, displayNameLength, displayShortNameOffset, attributes, boundPropertyRecords),
         m_uScriptId(uScriptId),
-        m_varCount(0),
-        m_outParamMaxDepth(0),
-        m_firstTmpReg(Constants::NoRegister),
-        loopCount(0),
         cleanedUp(false),
         sourceInfoCleanedUp(false),
         profiledLdElemCount(0),
@@ -441,18 +443,8 @@ namespace Js
         m_depth(0),
         inlineDepth(0),
         m_pendingLoopHeaderRelease(false),
-        inlineCacheCount(0),
-        rootObjectLoadInlineCacheStart(0),
-        rootObjectStoreInlineCacheStart(0),
-        isInstInlineCacheCount(0),
-        objLiteralCount(0),
-        literalRegexCount(0),
-        innerScopeCount(0),
         hasCachedScopePropIds(false),
-        m_byteCodeCount(0),
-        m_byteCodeWithoutLDACount(0),
         m_argUsedForBranch(0),
-        m_byteCodeInLoopCount(0),
         m_envDepth((uint16)-1),
         flags(Flags_HasNoExplicitReturnValue),
         m_hasFinally(false),
@@ -463,7 +455,6 @@ namespace Js
 #if ENABLE_NATIVE_CODEGEN
         savedImplicitCallsFlags(ImplicitCall_HasNoInfo),
 #endif
-        savedPolymorphicCacheState(0),
         hasExecutionDynamicProfileInfo(false),
         m_hasAllNonLocalReferenced(false),
         m_hasSetIsObject(false),
@@ -476,15 +467,15 @@ namespace Js
         m_hasDoneAllNonLocalReferenced(false),
         m_hasFunctionCompiledSent(false),
         byteCodeCache(nullptr),
-        localClosureRegister(Constants::NoRegister),
-        localFrameDisplayRegister(Constants::NoRegister),
-        envRegister(Constants::NoRegister),
-        thisRegisterForEventHandler(Constants::NoRegister),
-        firstInnerScopeRegister(Constants::NoRegister),
-        funcExprScopeRegister(Constants::NoRegister),
+        m_hasLocalClosureRegister(false),
+        m_hasLocalFrameDisplayRegister(false),
+        m_hasEnvRegister(false),
+        m_hasThisRegisterForEventHandler(false),
+        m_hasFirstInnerScopeRegister(false),
+        m_hasFuncExprScopeRegister(false),
+        m_hasFirstTmpRegister(false),
         m_tag(TRUE),
         m_nativeEntryPointUsed(FALSE),
-        debuggerScopeIndex(0),
         bailOnMisingProfileCount(0),
         bailOnMisingProfileRejitCount(0),
         byteCodeBlock(nullptr),
@@ -506,22 +497,17 @@ namespace Js
         hasScopeObject(false),
         hasNestedLoop(false),
         recentlyBailedOutOfJittedLoopBody(false),
-        serializationIndex(-1),
         m_isAsmJsScheduledForFullJIT(false),
-        m_asmJsTotalLoopCount(0),
-
+        m_asmJsTotalLoopCount(0)
         //
         // Even if the function does not require any locals, we must always have "R0" to propagate
         // a return value.  By enabling this here, we avoid unnecessary conditionals during execution.
         //
-        m_constCount(1)
 #ifdef IR_VIEWER
         ,m_isIRDumpEnabled(false)
         ,m_irDumpBaseObject(nullptr)
 #endif /* IR_VIEWER */
         , m_isFromNativeCodeModule(false)
-        , interpretedCount(0)
-        , loopInterpreterLimit(CONFIG_FLAG(LoopInterpretCount))
         , hasHotLoop(false)
         , m_isPartialDeserializedFunction(false)
 #ifdef PERF_COUNTERS
@@ -541,6 +527,11 @@ namespace Js
         , callCountStats(0)
 #endif
     {
+        this->counters->AllocCounters(this, 1);
+        SetCountField(CounterFields::ConstantCount, 1);
+        SetCountField(CounterFields::LoopInterpreterLimit, CONFIG_FLAG(LoopInterpretCount));
+        SetCountFieldSigned(CounterFields::SerializationIndex, -1);
+
         this->SetDefaultFunctionEntryPointInfo((FunctionEntryPointInfo*) this->GetDefaultEntryPointInfo(), DefaultEntryThunk);
         this->m_hasBeenParsed = true;
 
@@ -597,7 +588,11 @@ namespace Js
     const int
     FunctionBody::GetSerializationIndex() const
     {
-        return serializationIndex;
+        return GetCountFieldSigned(CounterFields::SerializationIndex);
+    }
+    void FunctionBody::SetSerializationIndex(int index) 
+    {
+        SetCountFieldSigned(CounterFields::SerializationIndex, index);
     }
 
     const wchar_t* ParseableFunctionInfo::GetExternalDisplayName() const
@@ -608,13 +603,13 @@ namespace Js
     RegSlot
     FunctionBody::GetLocalsCount()
     {
-        return m_constCount + m_varCount;
+        return GetConstantCount() + GetVarCount();
     }
 
     RegSlot
     FunctionBody::GetVarCount()
     {
-        return m_varCount;
+        return this->GetCountField(CounterFields::VarCount);
     }
 
     // Returns the number of non-temp local vars.
@@ -629,14 +624,15 @@ namespace Js
     FunctionBody::GetFirstNonTempLocalIndex()
     {
         // First local var starts when the const vars end.
-        return m_constCount;
+        return GetConstantCount();
     }
 
     uint32
     FunctionBody::GetEndNonTempLocalIndex()
     {
         // It will give the index on which current non temp locals ends, which is a first temp reg.
-        return m_firstTmpReg != Constants::NoRegister ? m_firstTmpReg : GetLocalsCount();
+        RegSlot firstTmpReg = GetFirstTmpRegister();
+        return firstTmpReg != Constants::NoRegister ? firstTmpReg : GetLocalsCount();
     }
 
     bool
@@ -657,23 +653,29 @@ namespace Js
     }
 
     void
-    FunctionBody::SetConstantCount(
-        RegSlot cNewConstants)                // New register count
+    FunctionBody::CheckAndSetConstantCount(RegSlot cNewConstants) // New register count
     {
         CheckNotExecuting();
-        AssertMsg(m_constCount <= cNewConstants, "Cannot shrink register usage");
+        AssertMsg(GetConstantCount() <= cNewConstants, "Cannot shrink register usage");
 
-        m_constCount = cNewConstants;
+        this->SetConstantCount(cNewConstants);
     }
-
     void
-    FunctionBody::SetVarCount(
-        RegSlot cNewVars)                     // New register count
+    FunctionBody::SetConstantCount(RegSlot cNewConstants) // New register count
+    {
+        this->SetCountField(CounterFields::ConstantCount, cNewConstants);
+    }
+    void
+    FunctionBody::CheckAndSetVarCount(RegSlot cNewVars)
     {
         CheckNotExecuting();
-        AssertMsg(m_varCount <= cNewVars, "Cannot shrink register usage");
-
-        m_varCount = cNewVars;
+        AssertMsg(this->GetVarCount() <= cNewVars, "Cannot shrink register usage");
+        this->SetVarCount(cNewVars);
+    }
+    void
+    FunctionBody::SetVarCount(RegSlot cNewVars) // New register count
+    {
+        this->SetCountField(FunctionBody::CounterFields::VarCount, cNewVars);
     }
 
     RegSlot
@@ -685,8 +687,8 @@ namespace Js
     RegSlot
     FunctionBody::GetFirstTmpReg()
     {
-        AssertMsg(m_firstTmpReg != Constants::NoRegister, "First temp hasn't been set yet");
-        return m_firstTmpReg;
+        AssertMsg(GetFirstTmpRegister() != Constants::NoRegister, "First temp hasn't been set yet");
+        return GetFirstTmpRegister();
     }
 
     void
@@ -694,30 +696,34 @@ namespace Js
         RegSlot firstTmpReg)
     {
         CheckNotExecuting();
-        AssertMsg(m_firstTmpReg == Constants::NoRegister, "Should not be resetting the first temp");
+        AssertMsg(GetFirstTmpRegister() == Constants::NoRegister, "Should not be resetting the first temp");
 
-        m_firstTmpReg = firstTmpReg;
+        SetFirstTmpRegister(firstTmpReg);
     }
 
     RegSlot
     FunctionBody::GetTempCount()
     {
-        return GetLocalsCount() - m_firstTmpReg;
+        return GetLocalsCount() - GetFirstTmpRegister();
     }
 
     void
-    FunctionBody::SetOutParamDepth(
-        RegSlot cOutParamsDepth)
+    FunctionBody::SetOutParamMaxDepth(RegSlot cOutParamsDepth)
     {
-        CheckNotExecuting();
-        m_outParamMaxDepth = cOutParamsDepth;
+        SetCountField(CounterFields::OutParamMaxDepth, cOutParamsDepth);
     }
 
+    void
+    FunctionBody::CheckAndSetOutParamMaxDepth(RegSlot cOutParamsDepth)
+    {
+        CheckNotExecuting();
+        SetOutParamMaxDepth(cOutParamsDepth);
+    }
 
     RegSlot
-    FunctionBody::GetOutParamsDepth()
+    FunctionBody::GetOutParamMaxDepth()
     {
-        return m_outParamMaxDepth;
+        return GetCountField(CounterFields::OutParamMaxDepth);
     }
 
     ModuleID
@@ -955,10 +961,15 @@ namespace Js
     }
 #endif
     
-    int
+    uint32
     FunctionBody::GetNextDebuggerScopeIndex()
     {
-        return this->debuggerScopeIndex++;
+        return this->IncreaseCountField(CounterFields::DebuggerScopeIndex);
+    }
+    void 
+    FunctionBody::SetDebuggerScopeIndex(uint32 index)
+    {
+        this->SetCountField(CounterFields::DebuggerScopeIndex, index);
     }
 
     SmallSpanSequence::SmallSpanSequence()
@@ -3278,9 +3289,9 @@ namespace Js
         PERF_COUNTER_ADD(Code, DynamicByteCodeSize, byteCodeSize);
 #endif
 
-        m_byteCodeCount = byteCodeCount;
-        m_byteCodeInLoopCount = byteCodeInLoopCount;
-        m_byteCodeWithoutLDACount = byteCodeWithoutLDACount;
+        SetByteCodeCount(byteCodeCount);
+        SetByteCodeInLoopCount(byteCodeInLoopCount);
+        SetByteCodeWithoutLDACount(byteCodeWithoutLDACount);
 
         InitializeExecutionModeAndLimits();
 
@@ -3402,20 +3413,20 @@ namespace Js
     {
         ((ParseableFunctionInfo*) this)->CopyFunctionInfoInto(scriptContext, newFunctionBody, sourceIndex);
 
-        newFunctionBody->m_constCount = this->m_constCount;
-        newFunctionBody->m_varCount = this->m_varCount;
-        newFunctionBody->m_outParamMaxDepth = this->m_outParamMaxDepth;
+        newFunctionBody->SetConstantCount(this->GetConstantCount());
+        newFunctionBody->SetVarCount(this->GetVarCount());
+        newFunctionBody->SetOutParamMaxDepth(this->GetOutParamMaxDepth());
 
-        newFunctionBody->m_firstTmpReg = this->m_firstTmpReg;
-        newFunctionBody->localClosureRegister = this->localClosureRegister;
-        newFunctionBody->localFrameDisplayRegister = this->localFrameDisplayRegister;
-        newFunctionBody->envRegister = this->envRegister;
-        newFunctionBody->thisRegisterForEventHandler = this->thisRegisterForEventHandler;
-        newFunctionBody->firstInnerScopeRegister = this->firstInnerScopeRegister;
-        newFunctionBody->funcExprScopeRegister = this->funcExprScopeRegister;
-        newFunctionBody->innerScopeCount = this->innerScopeCount;
+        newFunctionBody->SetFirstTmpRegister(this->GetFirstTmpRegister());
+        newFunctionBody->SetLocalClosureRegister(this->GetLocalClosureRegister());
+        newFunctionBody->SetLocalFrameDisplayRegister(this->GetLocalFrameDisplayRegister());
+        newFunctionBody->SetEnvRegister(this->GetEnvRegister());
+        newFunctionBody->SetThisRegisterForEventHandler(this->GetThisRegisterForEventHandler());
+        newFunctionBody->SetFirstInnerScopeRegister(this->GetFirstInnerScopeRegister());
+        newFunctionBody->SetFuncExprScopeRegister(this->GetFuncExprScopeRegister());
+        newFunctionBody->SetInnerScopeCount(this->GetInnerScopeCount());
         newFunctionBody->hasCachedScopePropIds = this->hasCachedScopePropIds;
-        newFunctionBody->loopCount = this->loopCount;
+        newFunctionBody->SetLoopCount(this->GetLoopCount());
         newFunctionBody->profiledDivOrRemCount = this->profiledDivOrRemCount;
         newFunctionBody->profiledSwitchCount = this->profiledSwitchCount;
         newFunctionBody->profiledCallSiteCount = this->profiledCallSiteCount;
@@ -3452,9 +3463,9 @@ namespace Js
         else
         {
             newFunctionBody->byteCodeBlock = this->byteCodeBlock->Clone(this->m_scriptContext->GetRecycler());
-            newFunctionBody->m_byteCodeCount = this->m_byteCodeCount;
-            newFunctionBody->m_byteCodeWithoutLDACount = this->m_byteCodeWithoutLDACount;
-            newFunctionBody->m_byteCodeInLoopCount = this->m_byteCodeInLoopCount;
+            newFunctionBody->SetByteCodeCount( this->GetByteCodeCount());
+            newFunctionBody->SetByteCodeWithoutLDACount(this->GetByteCodeWithoutLDACount());
+            newFunctionBody->SetByteCodeInLoopCount(this->GetByteCodeInLoopCount());
 
 #ifdef PERF_COUNTERS
             DWORD byteCodeSize = this->byteCodeBlock->GetLength();
@@ -3514,24 +3525,25 @@ namespace Js
         }
 
         // Create a new inline cache
-        newFunctionBody->inlineCacheCount = this->inlineCacheCount;
-        newFunctionBody->rootObjectLoadInlineCacheStart = this->rootObjectLoadInlineCacheStart;
-        newFunctionBody->rootObjectStoreInlineCacheStart = this->rootObjectStoreInlineCacheStart;
-        newFunctionBody->isInstInlineCacheCount = this->isInstInlineCacheCount;
-        newFunctionBody->referencedPropertyIdCount = this->referencedPropertyIdCount;
+        newFunctionBody->SetInlineCacheCount(this->GetInlineCacheCount());
+        newFunctionBody->SetRootObjectLoadInlineCacheStart(this->GetRootObjectLoadInlineCacheStart());
+        newFunctionBody->SetRootObjectStoreInlineCacheStart(this->GetRootObjectStoreInlineCacheStart());
+        newFunctionBody->SetIsInstInlineCacheCount(this->GetIsInstInlineCacheCount());
+        newFunctionBody->SetReferencedPropertyIdCount(this->GetReferencedPropertyIdCount());
         newFunctionBody->AllocateInlineCache();
 
-        newFunctionBody->objLiteralCount = this->objLiteralCount;
+        newFunctionBody->SetObjLiteralCount(this->GetObjLiteralCount());
         newFunctionBody->AllocateObjectLiteralTypeArray();
 
         newFunctionBody->SetSimpleJitEntryPointInfo(nullptr);
-        newFunctionBody->loopInterpreterLimit = loopInterpreterLimit;
+        newFunctionBody->SetLoopInterpreterLimit(this->GetLoopInterpreterLimit());
         newFunctionBody->ReinitializeExecutionModeAndLimits();
 
         // Clone literal regexes
-        newFunctionBody->literalRegexCount = this->literalRegexCount;
+        uint32 literalRegexCount = this->GetLiteralRegexCount();
+        newFunctionBody->SetLiteralRegexCount(literalRegexCount);
         newFunctionBody->AllocateLiteralRegexArray();
-        for(uint i = 0; i < this->literalRegexCount; ++i)
+        for(uint i = 0; i < literalRegexCount; ++i)
         {
             const auto literalRegex = this->GetLiteralRegexes()[i];
             if(!literalRegex)
@@ -3562,7 +3574,7 @@ namespace Js
             }
         }
 
-        newFunctionBody->serializationIndex = this->serializationIndex;
+        newFunctionBody->SetSerializationIndex(this->GetSerializationIndex());
         newFunctionBody->m_isFromNativeCodeModule = this->m_isFromNativeCodeModule;
     }
 
@@ -3765,17 +3777,17 @@ namespace Js
         uint rootObjectStoreInlineCacheStart,
         uint totalFieldAccessInlineCacheCount, uint isInstInlineCacheCount)
     {
-        Assert(this->rootObjectLoadInlineCacheStart == 0);
-        Assert(this->rootObjectLoadMethodInlineCacheStart == 0);
-        Assert(this->rootObjectStoreInlineCacheStart == 0);
-        Assert(this->inlineCacheCount == 0);
-        Assert(this->isInstInlineCacheCount == 0);
+        Assert(this->GetRootObjectLoadInlineCacheStart() == 0);
+        Assert(this->GetRootObjectLoadMethodInlineCacheStart() == 0);
+        Assert(this->GetRootObjectStoreInlineCacheStart() == 0);
+        Assert(this->GetInlineCacheCount() == 0);
+        Assert(this->GetIsInstInlineCacheCount() == 0);
 
-        this->rootObjectLoadInlineCacheStart = rootObjectLoadInlineCacheStart;
-        this->rootObjectLoadMethodInlineCacheStart = rootObjectLoadMethodInlineCacheStart;
-        this->rootObjectStoreInlineCacheStart = rootObjectStoreInlineCacheStart;
-        this->inlineCacheCount = totalFieldAccessInlineCacheCount;
-        this->isInstInlineCacheCount = isInstInlineCacheCount;
+        this->SetRootObjectLoadInlineCacheStart(rootObjectLoadInlineCacheStart);
+        this->SetRootObjectLoadMethodInlineCacheStart(rootObjectLoadMethodInlineCacheStart);
+        this->SetRootObjectStoreInlineCacheStart(rootObjectStoreInlineCacheStart);
+        this->SetInlineCacheCount(totalFieldAccessInlineCacheCount);
+        this->SetIsInstInlineCacheCount(isInstInlineCacheCount);
 
         this->CreateCacheIdToPropertyIdMap();
     }
@@ -3821,7 +3833,7 @@ namespace Js
 
     void FunctionBody::CreateReferencedPropertyIdMap(uint referencedPropertyIdCount)
     {
-        this->referencedPropertyIdCount = referencedPropertyIdCount;
+        this->SetReferencedPropertyIdCount(referencedPropertyIdCount);
         this->CreateReferencedPropertyIdMap();
     }
 
@@ -3898,9 +3910,9 @@ namespace Js
     void FunctionBody::CreateConstantTable()
     {
         Assert(this->GetConstTable() == nullptr);
-        Assert(m_constCount > FirstRegSlot);
+        Assert(GetConstantCount() > FirstRegSlot);
 
-        this->SetConstTable(RecyclerNewArrayZ(this->m_scriptContext->GetRecycler(), Var, m_constCount));
+        this->SetConstTable(RecyclerNewArrayZ(this->m_scriptContext->GetRecycler(), Var, GetConstantCount()));
 
         // Initialize with the root object, which will always be recorded here.
         Js::RootObjectBase * rootObject = this->LoadRootObject();
@@ -3918,7 +3930,7 @@ namespace Js
 
     void FunctionBody::RecordConstant(RegSlot location, Var var)
     {
-        Assert(location < m_constCount);
+        Assert(location < GetConstantCount());
         Assert(this->GetConstTable());
         Assert(var != nullptr);
         Assert(this->GetConstTable()[location - FunctionBody::FirstRegSlot] == nullptr);
@@ -4000,16 +4012,18 @@ namespace Js
     void FunctionBody::InitConstantSlots(Var *dstSlots)
     {
         // Initialize the given slots from the constant table.
-        Assert(m_constCount > FunctionBody::FirstRegSlot);
+        uint32 constCount = GetConstantCount();
+        Assert(constCount > FunctionBody::FirstRegSlot);
 
-        js_memcpy_s(dstSlots, (m_constCount - FunctionBody::FirstRegSlot) * sizeof(Var), this->GetConstTable(), (m_constCount - FunctionBody::FirstRegSlot) * sizeof(Var));
+        js_memcpy_s(dstSlots, (constCount - FunctionBody::FirstRegSlot) * sizeof(Var),
+            this->GetConstTable(), (constCount - FunctionBody::FirstRegSlot) * sizeof(Var));
     }
 
 
     Var FunctionBody::GetConstantVar(RegSlot location)
     {
         Assert(this->GetConstTable());
-        Assert(location < m_constCount);
+        Assert(location < GetConstantCount());
         Assert(location != 0);
 
         return this->GetConstTable()[location - FunctionBody::FirstRegSlot];
@@ -4022,7 +4036,8 @@ namespace Js
         newFunc->CreateConstantTable();
 
         // Start walking the slots after the root object.
-        for (RegSlot reg = FunctionBody::RootObjectRegSlot + 1; reg < m_constCount; reg++)
+        RegSlot constCount = GetConstantCount();
+        for (RegSlot reg = FunctionBody::RootObjectRegSlot + 1; reg < constCount; reg++)
         {
             Var oldVar = this->GetConstantVar(reg);
             Assert(oldVar != nullptr);
@@ -4724,49 +4739,49 @@ namespace Js
         this->profiledSwitchCount = 0;
         this->profiledReturnTypeCount = 0;
         this->profiledSlotCount = 0;
-        this->loopCount = 0;
+        this->SetLoopCount(0);
 
         this->m_envDepth = (uint16)-1;
 
-        this->m_byteCodeCount = 0;
-        this->m_byteCodeWithoutLDACount = 0;
-        this->m_byteCodeInLoopCount = 0;
+        this->SetByteCodeCount(0);
+        this->SetByteCodeWithoutLDACount(0);
+        this->SetByteCodeInLoopCount(0);
 
 #if ENABLE_PROFILE_INFO
         this->dynamicProfileInfo = nullptr;
 #endif
         this->hasExecutionDynamicProfileInfo = false;
 
-        this->m_firstTmpReg = Constants::NoRegister;
-        this->m_varCount = 0;
-        this->m_constCount = 0;
-        this->localClosureRegister = Constants::NoRegister;
-        this->localFrameDisplayRegister = Constants::NoRegister;
-        this->envRegister = Constants::NoRegister;
-        this->thisRegisterForEventHandler = Constants::NoRegister;
-        this->firstInnerScopeRegister = Constants::NoRegister;
-        this->funcExprScopeRegister = Constants::NoRegister;
-        this->innerScopeCount = 0;
+        this->SetFirstTmpRegister(Constants::NoRegister);
+        this->SetVarCount(0);
+        this->SetConstantCount(0);
+        this->SetLocalClosureRegister(Constants::NoRegister);
+        this->SetLocalFrameDisplayRegister(Constants::NoRegister);
+        this->SetEnvRegister(Constants::NoRegister);
+        this->SetThisRegisterForEventHandler(Constants::NoRegister);
+        this->SetFirstInnerScopeRegister(Constants::NoRegister);
+        this->SetFuncExprScopeRegister(Constants::NoRegister);
+        this->SetInnerScopeCount(0);
         this->hasCachedScopePropIds = false;
 
         this->ResetObjectLiteralTypes();
 
-        this->inlineCacheCount = 0;
-        this->rootObjectLoadInlineCacheStart = 0;
-        this->rootObjectLoadMethodInlineCacheStart = 0;
-        this->rootObjectStoreInlineCacheStart = 0;
-        this->isInstInlineCacheCount = 0;
+        this->SetInlineCacheCount(0);
+        this->SetRootObjectLoadInlineCacheStart(0);
+        this->SetRootObjectLoadMethodInlineCacheStart(0);
+        this->SetRootObjectStoreInlineCacheStart(0);
+        this->SetIsInstInlineCacheCount(0);
         this->m_inlineCachesOnFunctionObject = false;
-        this->referencedPropertyIdCount = 0;
+        this->SetReferencedPropertyIdCount(0);
 #if ENABLE_PROFILE_INFO
         this->SetPolymorphicCallSiteInfoHead(nullptr);
 #endif
 
-        this->interpretedCount = 0;
+        this->SetInterpretedCount(0);
 
         this->m_hasDoneAllNonLocalReferenced = false;
 
-        this->debuggerScopeIndex = 0;
+        this->SetDebuggerScopeIndex(0);
         this->GetUtf8SourceInfo()->DeleteLineOffsetCache();
 
         // Reset to default.
@@ -4781,7 +4796,7 @@ namespace Js
 
         recentlyBailedOutOfJittedLoopBody = false;
 
-        loopInterpreterLimit = CONFIG_FLAG(LoopInterpretCount);
+        SetLoopInterpreterLimit(CONFIG_FLAG(LoopInterpretCount));
         ReinitializeExecutionModeAndLimits();
 
         Assert(this->m_sourceInfo.m_probeCount == 0);
@@ -5689,7 +5704,7 @@ namespace Js
     {
         Assert(this->inlineCaches == nullptr);
         uint isInstInlineCacheStart = this->GetInlineCacheCount();
-        uint totalCacheCount = isInstInlineCacheStart + isInstInlineCacheCount;
+        uint totalCacheCount = isInstInlineCacheStart + GetIsInstInlineCacheCount();
 
         if (totalCacheCount != 0)
         {
@@ -5701,7 +5716,7 @@ namespace Js
                 byte, totalCacheCount);
 #endif
             uint i = 0;
-            uint plainInlineCacheEnd = rootObjectLoadInlineCacheStart;
+            uint plainInlineCacheEnd = GetRootObjectLoadInlineCacheStart();
             __analysis_assume(plainInlineCacheEnd <= totalCacheCount);
             for (; i < plainInlineCacheEnd; i++)
             {
@@ -5710,14 +5725,14 @@ namespace Js
             }
             Js::RootObjectBase * rootObject = this->GetRootObject();
             ThreadContext * threadContext = this->GetScriptContext()->GetThreadContext();
-            uint rootObjectLoadInlineCacheEnd = rootObjectLoadMethodInlineCacheStart;
+            uint rootObjectLoadInlineCacheEnd = GetRootObjectLoadMethodInlineCacheStart();
             __analysis_assume(rootObjectLoadInlineCacheEnd <= totalCacheCount);
             for (; i < rootObjectLoadInlineCacheEnd; i++)
             {
                 inlineCaches[i] = rootObject->GetInlineCache(
                     threadContext->GetPropertyName(this->GetPropertyIdFromCacheId(i)), false, false);
             }
-            uint rootObjectLoadMethodInlineCacheEnd = rootObjectStoreInlineCacheStart;
+            uint rootObjectLoadMethodInlineCacheEnd = GetRootObjectStoreInlineCacheStart();
             __analysis_assume(rootObjectLoadMethodInlineCacheEnd <= totalCacheCount);
             for (; i < rootObjectLoadMethodInlineCacheEnd; i++)
             {
@@ -5821,7 +5836,7 @@ namespace Js
     {
         Assert(GetPolymorphicInlineCache(index) == nullptr);
         // Only create polymorphic inline caches for non-root inline cache indexes
-        if (index < rootObjectLoadInlineCacheStart
+        if (index < GetRootObjectLoadInlineCacheStart()
 #if DBG
             && !PHASE_OFF1(Js::PolymorphicInlineCachePhase)
 #endif
@@ -5879,7 +5894,10 @@ namespace Js
 
     void FunctionBody::ResetInlineCaches()
     {
-        isInstInlineCacheCount = inlineCacheCount = rootObjectLoadInlineCacheStart = rootObjectStoreInlineCacheStart = 0;
+        SetInlineCacheCount(0);
+        SetRootObjectLoadInlineCacheStart(0);
+        SetRootObjectStoreInlineCacheStart(0);
+        SetIsInstInlineCacheCount(0);
         this->inlineCaches = nullptr;
         this->polymorphicInlineCaches.Reset();
     }
@@ -5895,12 +5913,12 @@ namespace Js
     uint FunctionBody::NewObjectLiteral()
     {
         Assert(this->GetObjectLiteralTypes() == nullptr);
-        return objLiteralCount++;
+        return IncObjLiteralCount();
     }
 
     DynamicType ** FunctionBody::GetObjectLiteralTypeRef(uint index)
     {
-        Assert(index < objLiteralCount);
+        Assert(index < GetObjLiteralCount());
         DynamicType ** literalTypes = this->GetObjectLiteralTypes();
         Assert(literalTypes != nullptr);
         return literalTypes + index;
@@ -5916,6 +5934,7 @@ namespace Js
     void FunctionBody::AllocateObjectLiteralTypeArray()
     {
         Assert(this->GetObjectLiteralTypes() == nullptr);
+        uint objLiteralCount = GetObjLiteralCount();
         if (objLiteralCount == 0)
         {
             return;
@@ -5927,18 +5946,14 @@ namespace Js
     uint FunctionBody::NewLiteralRegex()
     {
         Assert(!this->GetLiteralRegexes());
-        return literalRegexCount++;
+        return IncLiteralRegexCount();
     }
 
-    uint FunctionBody::GetLiteralRegexCount() const
-    {
-        return literalRegexCount;
-    }
 
     void FunctionBody::AllocateLiteralRegexArray()
     {
         Assert(!this->GetLiteralRegexes());
-
+        uint32 literalRegexCount = GetLiteralRegexCount();
         if (literalRegexCount == 0)
         {
             return;
@@ -5966,7 +5981,7 @@ namespace Js
 
     UnifiedRegex::RegexPattern *FunctionBody::GetLiteralRegex(const uint index)
     {
-        Assert(index < literalRegexCount);
+        Assert(index < GetLiteralRegexCount());
         Assert(this->GetLiteralRegexes());
 
         return this->GetLiteralRegexes()[index];
@@ -5982,7 +5997,7 @@ namespace Js
 
     void FunctionBody::SetLiteralRegex(const uint index, UnifiedRegex::RegexPattern *const pattern)
     {
-        Assert(index < literalRegexCount);
+        Assert(index < GetLiteralRegexCount());
         Assert(this->GetLiteralRegexes());
 
         auto literalRegexes = this->GetLiteralRegexes();
@@ -5998,12 +6013,12 @@ namespace Js
     void FunctionBody::ResetObjectLiteralTypes()
     {
         this->SetObjectLiteralTypes(nullptr);
-        this->objLiteralCount = 0;
+        this->SetObjLiteralCount(0);
     }
 
     void FunctionBody::ResetLiteralRegexes()
     {
-        literalRegexCount = 0;
+        SetLiteralRegexCount(0);
         this->SetLiteralRegexs(nullptr);
     }
 
@@ -6033,16 +6048,16 @@ namespace Js
         ResetLoops();
         ResetProfileIds();
 
-        m_firstTmpReg = Constants::NoRegister;
-        localClosureRegister = Constants::NoRegister;
-        localFrameDisplayRegister = Constants::NoRegister;
-        envRegister = Constants::NoRegister;
-        thisRegisterForEventHandler = Constants::NoRegister;
-        firstInnerScopeRegister = Constants::NoRegister;
-        funcExprScopeRegister = Constants::NoRegister;
-        innerScopeCount = 0;
+        SetFirstTmpRegister(Constants::NoRegister);
+        SetLocalClosureRegister(Constants::NoRegister);
+        SetLocalFrameDisplayRegister(Constants::NoRegister);
+        SetEnvRegister(Constants::NoRegister);
+        SetThisRegisterForEventHandler(Constants::NoRegister);
+        SetFirstInnerScopeRegister(Constants::NoRegister);
+        SetFuncExprScopeRegister(Constants::NoRegister);
+        SetInnerScopeCount(0);
         hasCachedScopePropIds = false;
-        m_constCount = 0;
+        this->SetConstantCount(0);
         this->SetConstTable(nullptr);
         this->byteCodeBlock = nullptr;
 
@@ -6127,7 +6142,7 @@ namespace Js
 
     const FunctionCodeGenRuntimeData *FunctionBody::GetLdFldInlineeCodeGenRuntimeData(const InlineCacheIndex inlineCacheIndex) const
     {
-        Assert(inlineCacheIndex < inlineCacheCount);
+        Assert(inlineCacheIndex < GetInlineCacheCount());
 
         FunctionCodeGenRuntimeData ** data = (FunctionCodeGenRuntimeData **)this->GetCodeGenGetSetRuntimeDataWithLock();
         return (data != nullptr) ? data[inlineCacheIndex] : nullptr;
@@ -6135,7 +6150,7 @@ namespace Js
 
     FunctionCodeGenRuntimeData *FunctionBody::EnsureLdFldInlineeCodeGenRuntimeData(
         Recycler *const recycler,
-        __in_range(0, this->inlineCacheCount - 1) const InlineCacheIndex inlineCacheIndex,
+        const InlineCacheIndex inlineCacheIndex,
         FunctionBody *const inlinee)
     {
         Assert(recycler);
@@ -6163,6 +6178,7 @@ namespace Js
     {
         Assert(this->GetLoopHeaderArray() == nullptr);
 
+        uint loopCount = GetLoopCount();
         if (loopCount != 0)
         {
             this->SetLoopHeaderArray(RecyclerNewArrayZ(this->m_scriptContext->GetRecycler(), LoopHeader, loopCount));
@@ -6186,7 +6202,7 @@ namespace Js
 
     void FunctionBody::ResetLoops()
     {
-        loopCount = 0;
+        SetLoopCount(0);
         this->SetLoopHeaderArray(nullptr);
     }
 
@@ -6259,7 +6275,7 @@ namespace Js
     LoopHeader *FunctionBody::GetLoopHeader(uint index) const
     {
         Assert(this->GetLoopHeaderArray() != nullptr);
-        Assert(index < loopCount);
+        Assert(index < GetLoopCount());
         return &this->GetLoopHeaderArray()[index];
     }
 
@@ -6392,7 +6408,7 @@ namespace Js
         switch(GetExecutionMode())
         {
             case ExecutionMode::Interpreter:
-                if(interpretedCount < interpreterLimit)
+                if(GetInterpretedCount() < interpreterLimit)
                 {
                     VerifyExecutionMode(GetExecutionMode());
                     return false;
@@ -6404,7 +6420,7 @@ namespace Js
                 if(autoProfilingInterpreter0Limit != 0 || autoProfilingInterpreter1Limit != 0)
                 {
                     SetExecutionMode(ExecutionMode::AutoProfilingInterpreter);
-                    interpretedCount = 0;
+                    SetInterpretedCount(0);
                     return true;
                 }
                 goto TransitionFromAutoProfilingInterpreter;
@@ -6415,7 +6431,7 @@ namespace Js
                     autoProfilingInterpreter0Limit == 0 && profilingInterpreter0Limit == 0
                         ? autoProfilingInterpreter1Limit
                         : autoProfilingInterpreter0Limit;
-                if(interpretedCount < autoProfilingInterpreterLimit)
+                if(GetInterpretedCount() < autoProfilingInterpreterLimit)
                 {
                     VerifyExecutionMode(GetExecutionMode());
                     return false;
@@ -6436,7 +6452,7 @@ namespace Js
                 if(profilingInterpreter0Limit != 0 || profilingInterpreter1Limit != 0)
                 {
                     SetExecutionMode(ExecutionMode::ProfilingInterpreter);
-                    interpretedCount = 0;
+                    SetInterpretedCount(0);
                     return true;
                 }
                 goto TransitionFromProfilingInterpreter;
@@ -6447,7 +6463,7 @@ namespace Js
                     profilingInterpreter0Limit == 0 && autoProfilingInterpreter1Limit == 0 && simpleJitLimit == 0
                         ? profilingInterpreter1Limit
                         : profilingInterpreter0Limit;
-                if(interpretedCount < profilingInterpreterLimit)
+                if(GetInterpretedCount() < profilingInterpreterLimit)
                 {
                     VerifyExecutionMode(GetExecutionMode());
                     return false;
@@ -6471,7 +6487,7 @@ namespace Js
 
                     // Zero the interpreted count here too, so that we can determine how many interpreter iterations ran
                     // while waiting for simple JIT
-                    interpretedCount = 0;
+                    SetInterpretedCount(0);
                     return true;
                 }
                 goto TransitionToProfilingInterpreter;
@@ -6716,7 +6732,7 @@ namespace Js
 
         Assert(fullJitThreshold >= scale);
         this->fullJitThreshold = fullJitThreshold - scale;
-        interpretedCount = 0;
+        SetInterpretedCount(0);
         SetExecutionMode(GetDefaultInterpreterExecutionMode());
         SetFullJitThreshold(fullJitThreshold);
         TryTransitionToNextInterpreterExecutionMode();
@@ -6826,7 +6842,7 @@ namespace Js
         switch(GetExecutionMode())
         {
             case ExecutionMode::Interpreter:
-                CommitExecutedIterations(interpreterLimit, interpretedCount);
+                CommitExecutedIterations(interpreterLimit, GetInterpretedCount());
                 break;
 
             case ExecutionMode::AutoProfilingInterpreter:
@@ -6834,7 +6850,7 @@ namespace Js
                     autoProfilingInterpreter0Limit == 0 && profilingInterpreter0Limit == 0
                         ? autoProfilingInterpreter1Limit
                         : autoProfilingInterpreter0Limit,
-                    interpretedCount);
+                    GetInterpretedCount());
                 break;
 
             case ExecutionMode::ProfilingInterpreter:
@@ -6842,7 +6858,7 @@ namespace Js
                     GetSimpleJitEntryPointInfo()
                         ? profilingInterpreter1Limit
                         : profilingInterpreter0Limit,
-                    interpretedCount);
+                    GetInterpretedCount());
                 break;
 
             case ExecutionMode::SimpleJit:
@@ -6916,7 +6932,7 @@ namespace Js
             simpleJitLimit = simpleJitNewLimit;
         }
 
-        interpretedCount = 0;
+        SetInterpretedCount(0);
         ResetSimpleJitCallCount();
     }
 
@@ -6932,6 +6948,7 @@ namespace Js
 
     void FunctionBody::ResetSimpleJitCallCount()
     {
+        uint32 interpretedCount = GetInterpretedCount();
         SetSimpleJitCallCount(
             simpleJitLimit > interpretedCount
                 ? simpleJitLimit - static_cast<uint16>(interpretedCount)
@@ -6947,6 +6964,7 @@ namespace Js
         {
             case ExecutionMode::ProfilingInterpreter:
             {
+                uint32 interpretedCount = GetInterpretedCount();
                 const uint16 clampedInterpretedCount =
                     interpretedCount <= MAXUINT16
                         ? static_cast<uint16>(interpretedCount)
@@ -7125,10 +7143,10 @@ namespace Js
 
         {
             // Reduce the loop interpreter limit too, for the same reasons as above
-            const uint oldLoopInterpreterLimit = loopInterpreterLimit;
+            const uint oldLoopInterpreterLimit = GetLoopInterpreterLimit();
             const uint newLoopInterpreterLimit = GetReducedLoopInterpretCount();
             Assert(newLoopInterpreterLimit <= oldLoopInterpreterLimit);
-            loopInterpreterLimit = newLoopInterpreterLimit;
+            SetLoopInterpreterLimit(newLoopInterpreterLimit);
 
             // Adjust loop headers' interpret counts to ensure that loops will still be profiled a number of times before
             // loop bodies are jitted
@@ -7213,10 +7231,10 @@ namespace Js
     {
         if(loopHeader->isNested)
         {
-            Assert(loopInterpreterLimit >= GetReducedLoopInterpretCount());
+            Assert(GetLoopInterpreterLimit() >= GetReducedLoopInterpretCount());
             return GetReducedLoopInterpretCount();
         }
-        return loopInterpreterLimit;
+        return GetLoopInterpreterLimit();
     }
 
     bool FunctionBody::DoObjectHeaderInlining()
@@ -7405,7 +7423,7 @@ namespace Js
                 }
             }
 
-            uint totalCacheCount = inlineCacheCount + GetIsInstInlineCacheCount();
+            uint totalCacheCount = GetInlineCacheCount() + GetIsInstInlineCacheCount();
             for (; i < totalCacheCount; i++)
             {
                 if (nullptr != this->inlineCaches[i])
@@ -7617,6 +7635,7 @@ namespace Js
 #if ENABLE_PROFILE_INFO
         this->SetPolymorphicCallSiteInfoHead(nullptr);
 #endif
+
         this->cleanedUp = true;
     }
 
@@ -7644,7 +7663,7 @@ namespace Js
         // DisableJIT-TODO: Move this to be under if DYNAMIC_PROFILE
 #if ENABLE_NATIVE_CODEGEN
         // (See also the FunctionBody member written in CaptureDynamicProfileState.)
-        this->savedPolymorphicCacheState = entryPointInfo->GetPendingPolymorphicCacheState();
+        this->SetSavedPolymorphicCacheState(entryPointInfo->GetPendingPolymorphicCacheState());
         this->savedInlinerVersion = entryPointInfo->GetPendingInlinerVersion();
         this->savedImplicitCallsFlags = entryPointInfo->GetPendingImplicitCallFlags();
 #endif
@@ -7660,7 +7679,11 @@ namespace Js
     uint32 FunctionBody::GetSavedPolymorphicCacheState() const
     {
         Assert(this->dynamicProfileInfo != nullptr);
-        return this->savedPolymorphicCacheState;
+        return this->GetCountField(CounterFields::SavedPolymorphicCacheState);
+    }
+    void FunctionBody::SetSavedPolymorphicCacheState(uint32 state)
+    {
+        this->SetCountField(CounterFields::SavedPolymorphicCacheState, state);
     }
 #endif
 
@@ -9402,7 +9425,7 @@ namespace Js
 
         uint maxRecursiveInlineDepth = (uint)CONFIG_FLAG(RecursiveInlineDepthMax);
         uint maxRecursiveBytecodeBudget = (uint)CONFIG_FLAG(RecursiveInlineThreshold);
-        uint numberOfAllowedFuncs = maxRecursiveBytecodeBudget / this->m_byteCodeWithoutLDACount;
+        uint numberOfAllowedFuncs = maxRecursiveBytecodeBudget / this->GetByteCodeWithoutLDACount();
         uint maxDepth;
 
         if (recursiveInlineSpan == 1)
@@ -9420,16 +9443,160 @@ namespace Js
 
 
     static const wchar_t LoopWStr[] = L"Loop";
-    size_t FunctionBody::GetLoopBodyName(uint loopNumber, _Out_writes_opt_z_(size) wchar_t* nameBuffer, _In_ size_t size)
+    size_t FunctionBody::GetLoopBodyName(uint loopNumber, _Out_writes_opt_z_(sizeInChars) WCHAR* displayName, _In_ size_t sizeInChars)
     {
         const wchar_t* functionName = this->GetExternalDisplayName();
         size_t length = wcslen(functionName) + /*length of largest int32*/ 10 + _countof(LoopWStr) + /*null*/ 1;
-        if (size < length || nameBuffer == nullptr)
+        if (sizeInChars < length || displayName == nullptr)
         {
             return length;
         }
-        int charsWritten = swprintf_s(nameBuffer, length, L"%s%s%u", functionName, LoopWStr, loopNumber + 1);
+        int charsWritten = swprintf_s(displayName, length, L"%s%s%u", functionName, LoopWStr, loopNumber + 1);
         Assert(charsWritten != -1);
         return charsWritten + /*nullptr*/ 1;
+    }
+
+    void FunctionBody::MapAndSetEnvRegister(RegSlot reg)
+    {
+        Assert(!m_hasEnvRegister);
+        SetEnvRegister(this->MapRegSlot(reg));
+    }
+    void FunctionBody::SetEnvRegister(RegSlot reg)
+    {
+        if (reg == Constants::NoRegister)
+        {
+            m_hasEnvRegister = false;
+        }
+        else
+        {
+            m_hasEnvRegister = true;
+            SetCountField(CounterFields::EnvRegister, reg);
+        }
+    }
+    RegSlot FunctionBody::GetEnvRegister() const
+    {
+        return m_hasEnvRegister ? GetCountField(CounterFields::EnvRegister) : Constants::NoRegister;
+    }
+    void FunctionBody::MapAndSetThisRegisterForEventHandler(RegSlot reg)
+    {
+        Assert(!m_hasThisRegisterForEventHandler);
+        SetThisRegisterForEventHandler(this->MapRegSlot(reg));
+    }
+    void FunctionBody::SetThisRegisterForEventHandler(RegSlot reg)
+    {
+        if (reg == Constants::NoRegister)
+        {
+            m_hasThisRegisterForEventHandler = false;
+        }
+        else
+        {
+            m_hasThisRegisterForEventHandler = true;
+            SetCountField(CounterFields::ThisRegisterForEventHandler, reg);
+        }
+    }
+    RegSlot FunctionBody::GetThisRegisterForEventHandler() const
+    {
+        return m_hasThisRegisterForEventHandler ? GetCountField(CounterFields::ThisRegisterForEventHandler) : Constants::NoRegister;
+    }
+    void FunctionBody::SetLocalClosureRegister(RegSlot reg)
+    {
+        if (reg == Constants::NoRegister)
+        {
+            m_hasLocalClosureRegister = false;
+        }
+        else
+        {
+            m_hasLocalClosureRegister = true;
+            SetCountField(CounterFields::LocalClosureRegister, reg);
+        }
+    }
+    void FunctionBody::MapAndSetLocalClosureRegister(RegSlot reg)
+    {
+        Assert(!m_hasLocalClosureRegister);
+        SetLocalClosureRegister(this->MapRegSlot(reg));
+    }
+    RegSlot FunctionBody::GetLocalClosureRegister() const
+    {
+        return m_hasLocalClosureRegister ? GetCountField(CounterFields::LocalClosureRegister) : Constants::NoRegister;
+    }
+    void FunctionBody::MapAndSetLocalFrameDisplayRegister(RegSlot reg)
+    {
+        Assert(!m_hasLocalFrameDisplayRegister);
+        SetLocalFrameDisplayRegister(this->MapRegSlot(reg));
+    }
+    void FunctionBody::SetLocalFrameDisplayRegister(RegSlot reg)
+    {
+        if (reg == Constants::NoRegister)
+        {
+            m_hasLocalFrameDisplayRegister = false;
+        }
+        else
+        {
+            m_hasLocalFrameDisplayRegister = true;
+            SetCountField(CounterFields::LocalFrameDisplayRegister, reg);
+        }
+    }
+    RegSlot FunctionBody::GetLocalFrameDisplayRegister() const
+    {
+        return m_hasLocalFrameDisplayRegister ? GetCountField(CounterFields::LocalFrameDisplayRegister) : Constants::NoRegister;
+    }
+    void FunctionBody::MapAndSetFirstInnerScopeRegister(RegSlot reg)
+    {
+        Assert(!m_hasFirstInnerScopeRegister);
+        SetFirstInnerScopeRegister(this->MapRegSlot(reg));
+    }
+    void FunctionBody::SetFirstInnerScopeRegister(RegSlot reg)
+    {
+        if (reg == Constants::NoRegister)
+        {
+            m_hasFirstInnerScopeRegister = false;
+        }
+        else
+        {
+            m_hasFirstInnerScopeRegister = true;
+            SetCountField(CounterFields::FirstInnerScopeRegister, reg);
+        }
+    }
+    RegSlot FunctionBody::GetFirstInnerScopeRegister() const
+    {
+        return m_hasFirstInnerScopeRegister ? GetCountField(CounterFields::FirstInnerScopeRegister) : Constants::NoRegister;
+    }
+    void FunctionBody::MapAndSetFuncExprScopeRegister(RegSlot reg)
+    {
+        Assert(!m_hasFuncExprScopeRegister);
+        SetFuncExprScopeRegister(this->MapRegSlot(reg));
+    }
+    void FunctionBody::SetFuncExprScopeRegister(RegSlot reg)
+    {
+        if (reg == Constants::NoRegister)
+        {
+            m_hasFuncExprScopeRegister = false;
+        }
+        else
+        {
+            m_hasFuncExprScopeRegister = true;
+            SetCountField(CounterFields::FuncExprScopeRegister, reg);
+        }
+    }
+    RegSlot FunctionBody::GetFuncExprScopeRegister() const
+    {
+        return m_hasFuncExprScopeRegister ? GetCountField(CounterFields::FuncExprScopeRegister) : Constants::NoRegister;
+    }
+
+    void FunctionBody::SetFirstTmpRegister(RegSlot reg) 
+    {
+        if (reg == Constants::NoRegister)
+        {
+            m_hasFirstTmpRegister = false;
+        }
+        else
+        {
+            m_hasFirstTmpRegister = true;
+            SetCountField(CounterFields::FirstTmpRegister, reg);
+        }
+    }
+    RegSlot FunctionBody::GetFirstTmpRegister() const
+    {
+        return m_hasFirstTmpRegister ? this->GetCountField(CounterFields::FirstTmpRegister) : Constants::NoRegister;
     }
 }

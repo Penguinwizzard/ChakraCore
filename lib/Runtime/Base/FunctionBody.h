@@ -5,6 +5,7 @@
 #pragma once
 
 #include "AuxPtrs.h"
+#include "CompactCounters.h"
 
 struct CodeGenWorkItem;
 class SourceContextInfo;
@@ -1302,6 +1303,8 @@ namespace Js
             return !PHASE_OFF(FullJitPhase, this);
         }
 
+        Recycler* GetRecycler() const;
+
     protected:
         // Static method(s)
         static void SetDisplayName(const wchar_t* srcName, WriteBarrierPtr<const wchar_t>* destName, uint displayNameLength, ScriptContext * scriptContext, SetDisplayNameFlags flags = SetDisplayNameFlagsNone);
@@ -1659,6 +1662,76 @@ namespace Js
             // same as MachDouble, used in the Func.h
             static const uint DIAGLOCALSLOTSIZE = 8;
 
+            enum class CounterFields : uint8
+            {
+                InterpretedCount                        = 0,
+                VarCount                                = 1,
+                ConstantCount                           = 2,
+                LoopInterpreterLimit                    = 3,
+                OutParamMaxDepth                        = 4,
+                ByteCodeCount                           = 5,
+                ByteCodeWithoutLDACount                 = 6,
+                ByteCodeInLoopCount                     = 7,
+                LoopCount                               = 8,
+                InlineCacheCount                        = 9,
+                RootObjectLoadInlineCacheStart          = 10,
+                RootObjectLoadMethodInlineCacheStart    = 11,
+                RootObjectStoreInlineCacheStart         = 12,
+                IsInstInlineCacheCount                  = 13,
+                ReferencedPropertyIdCount               = 14,
+                ObjLiteralCount                         = 15,
+                LiteralRegexCount                       = 16,
+                InnerScopeCount                         = 17,
+                SavedPolymorphicCacheState              = 18,
+                DebuggerScopeIndex                      = 19,
+
+                // Following counters uses ((uint32)-1) as default value
+                LocalClosureRegister                    = 20,
+                LocalFrameDisplayRegister               = 21,
+                EnvRegister                             = 22,
+                ThisRegisterForEventHandler             = 23,
+                FirstInnerScopeRegister                 = 24,
+                FuncExprScopeRegister                   = 25,
+                FirstTmpRegister                        = 26,
+
+                // Signed integers need keep the sign when promoting 
+                SignedFieldsStart                       = 27,
+                SerializationIndex                      = 27,
+
+                Max
+            };
+
+            typedef Counter<FunctionBody> CounterT;
+            WriteBarrierPtr<CounterT> counters;
+
+            uint32 GetCountField(FunctionBody::CounterFields fieldEnum) const
+            {
+                return counters->Get(fieldEnum);
+            }
+            uint32 SetCountField(FunctionBody::CounterFields fieldEnum, uint32 val)
+            {
+                return counters->Set(fieldEnum, val, this);
+            }
+            uint32 IncreaseCountField(FunctionBody::CounterFields fieldEnum)
+            {
+                return counters->Increase(fieldEnum, this);
+            }
+            int32 GetCountFieldSigned(FunctionBody::CounterFields fieldEnum) const
+            {
+                return counters->GetSigned(fieldEnum);
+            }
+            int32 SetCountFieldSigned(FunctionBody::CounterFields fieldEnum, int32 val)
+            {
+                return counters->SetSigned(fieldEnum, val, this);
+            }
+
+            uint32 GetInterpretedCount() const { return this->GetCountField(CounterFields::InterpretedCount); }
+            uint32 SetInterpretedCount(uint32 val) { return this->SetCountField(CounterFields::InterpretedCount, val); }
+            uint32 IncreaseInterpretedCount() { return this->IncreaseCountField(CounterFields::InterpretedCount); }
+
+            uint32 GetLoopInterpreterLimit() const { return this->GetCountField(CounterFields::LoopInterpreterLimit); }
+            uint32 SetLoopInterpreterLimit(uint32 val) { return this->SetCountField(CounterFields::LoopInterpreterLimit, val); }
+
             struct StatementMap
             {
                 StatementMap() : isSubexpression(false) {}
@@ -1797,8 +1870,6 @@ namespace Js
         NoWriteBarrierField<uint> regAllocLoadCount;
         NoWriteBarrierField<uint> callCountStats;
 #endif
-        NoWriteBarrierField<uint> interpretedCount;
-        NoWriteBarrierField<uint> loopInterpreterLimit;
 
         // >>>>>>WARNING! WARNING!<<<<<<<<<<
         //
@@ -1879,6 +1950,13 @@ namespace Js
         bool m_isFromNativeCodeModule : 1;
         bool m_isPartialDeserializedFunction : 1;
         bool m_isAsmJsScheduledForFullJIT : 1;
+        bool m_hasLocalClosureRegister : 1;
+        bool m_hasLocalFrameDisplayRegister : 1;
+        bool m_hasEnvRegister : 1;
+        bool m_hasThisRegisterForEventHandler : 1;
+        bool m_hasFirstInnerScopeRegister : 1;
+        bool m_hasFuncExprScopeRegister : 1;
+        bool m_hasFirstTmpRegister : 1;
 #ifdef PERF_COUNTERS
         bool m_isDeserializedFunction : 1;
 #endif
@@ -1941,14 +2019,6 @@ namespace Js
         NoWriteBarrierField<ImplicitCallFlags> savedImplicitCallsFlags;
 #endif
 
-        // State of inline caches (polymorphic vs. monomorphic) reflected in
-        // last jitted version of this func.
-        NoWriteBarrierField<uint32> savedPolymorphicCacheState;
-
-        // Used to track where we are when adding debugger scopes to the scope chain
-        // in order to avoid re-adding existing entries.
-        NoWriteBarrierField<int> debuggerScopeIndex;
-
         FunctionBody(ScriptContext* scriptContext, const wchar_t* displayName, uint displayNameLength, uint displayShortNameOffset, uint nestedCount, Utf8SourceInfo* sourceInfo,
             uint uFunctionNumber, uint uScriptId, Js::LocalFunctionId functionId, Js::PropertyRecordList* propRecordList, Attributes attributes
 #ifdef PERF_COUNTERS
@@ -1968,7 +2038,8 @@ namespace Js
 #endif
 
         // Gets the next index for tracking debugger scopes (increments the internal counter as well).
-        int GetNextDebuggerScopeIndex();
+        uint32 GetNextDebuggerScopeIndex();
+        void SetDebuggerScopeIndex(uint32 index);
 
 
     public:
@@ -2013,29 +2084,41 @@ namespace Js
                 this->byteCodeCache = byteCodeCache;
             }
         }
-        void SetSerializationIndex(int index) { Assert(serializationIndex == -1 && index != -1); serializationIndex = index; }
+        void SetSerializationIndex(int index);
         const int GetSerializationIndex() const;
-        uint GetByteCodeCount() const { return m_byteCodeCount; }
-        uint GetByteCodeWithoutLDACount() const { return m_byteCodeWithoutLDACount; }
-        uint GetByteCodeInLoopCount() const { return m_byteCodeInLoopCount; }
+        uint GetByteCodeCount() const { return GetCountField(CounterFields::ByteCodeCount); }
+        void SetByteCodeCount(uint count) { SetCountField(CounterFields::ByteCodeCount, count); }
+        uint GetByteCodeWithoutLDACount() const { return GetCountField(CounterFields::ByteCodeWithoutLDACount); }
+        void SetByteCodeWithoutLDACount(uint count) { SetCountField(CounterFields::ByteCodeWithoutLDACount, count); }
+        uint GetByteCodeInLoopCount() const { return GetCountField(CounterFields::ByteCodeInLoopCount); }
+        void SetByteCodeInLoopCount(uint count) { SetCountField(CounterFields::ByteCodeInLoopCount, count); }
         uint16 GetEnvDepth() const { return m_envDepth; }
         void SetEnvDepth(uint16 depth) { m_envDepth = depth; }
-        RegSlot GetEnvReg() const { return envRegister; }
-        void SetEnvReg(RegSlot reg) { Assert(envRegister == Constants::NoRegister); envRegister = this->MapRegSlot(reg); }
-        RegSlot GetThisRegForEventHandler() const { return thisRegisterForEventHandler; }
-        void SetThisRegForEventHandler(RegSlot reg) { Assert(thisRegisterForEventHandler == Constants::NoRegister); thisRegisterForEventHandler = this->MapRegSlot(reg); }
+
+        void SetEnvRegister(RegSlot reg);
+        void MapAndSetEnvRegister(RegSlot reg);
+        RegSlot GetEnvRegister() const;
+        void SetThisRegisterForEventHandler(RegSlot reg);
+        void MapAndSetThisRegisterForEventHandler(RegSlot reg);
+        RegSlot GetThisRegisterForEventHandler() const;
+        void SetLocalClosureRegister(RegSlot reg);
+        void MapAndSetLocalClosureRegister(RegSlot reg);
+        RegSlot GetLocalClosureRegister() const;
+
+        void SetLocalFrameDisplayRegister(RegSlot reg);
+        void MapAndSetLocalFrameDisplayRegister(RegSlot reg);
+        RegSlot GetLocalFrameDisplayRegister() const;
+        void SetFirstInnerScopeRegister(RegSlot reg);
+        void MapAndSetFirstInnerScopeRegister(RegSlot reg);
+        RegSlot GetFirstInnerScopeRegister() const;
+        void SetFuncExprScopeRegister(RegSlot reg);
+        void MapAndSetFuncExprScopeRegister(RegSlot reg);
+        RegSlot GetFuncExprScopeRegister() const;
+
         bool HasScopeObject() const { return hasScopeObject; }
         void SetHasScopeObject(bool has) { hasScopeObject = has; }
-        void SetLocalClosureReg(RegSlot reg) { Assert(localClosureRegister == Constants::NoRegister); localClosureRegister = this->MapRegSlot(reg); }
-        RegSlot GetLocalClosureReg() const { return localClosureRegister; }
-        void SetLocalFrameDisplayReg(RegSlot reg) { Assert(localFrameDisplayRegister == Constants::NoRegister); localFrameDisplayRegister = this->MapRegSlot(reg); }
-        RegSlot GetLocalFrameDisplayReg() const { return localFrameDisplayRegister; /*localClosureRegister == Constants::NoRegister ? Constants::NoRegister : localClosureRegister + 1;*/ }
-        RegSlot FirstInnerScopeReg() const { Assert(firstInnerScopeRegister != Constants::NoRegister); return firstInnerScopeRegister; }
-        void SetFirstInnerScopeReg(RegSlot reg) { Assert(reg != Constants::NoRegister); firstInnerScopeRegister = this->MapRegSlot(reg); }
-        RegSlot GetFuncExprScopeReg() const { return funcExprScopeRegister; }
-        void SetFuncExprScopeReg(RegSlot reg) { Assert(reg != Constants::NoRegister); funcExprScopeRegister = this->MapRegSlot(reg); }
-        uint GetInnerScopeCount() const { return innerScopeCount; }
-        void SetInnerScopeCount(uint count) { innerScopeCount = count; }
+        uint GetInnerScopeCount() const { return GetCountField(CounterFields::InnerScopeCount); }
+        void SetInnerScopeCount(uint count) { SetCountField(CounterFields::InnerScopeCount, count); }
         bool HasCachedScopePropIds() const { return hasCachedScopePropIds; }
         void SetHasCachedScopePropIds(bool has) { hasCachedScopePropIds = has; }
 
@@ -2408,9 +2491,10 @@ namespace Js
         bool GetIsFuncRegistered() { return m_isFuncRegistered; }
         void SetIsFuncRegistered(bool isRegistered) { m_isFuncRegistered = isRegistered; }
 
-        bool GetHasLoops() const { return loopCount != 0; }
-        uint IncrLoopCount() { return this->loopCount++; }
-        uint GetLoopCount() const { return this->loopCount; }
+        bool GetHasLoops() const { return this->GetLoopCount() != 0; }
+        uint IncrLoopCount() { return this->IncreaseCountField(CounterFields::LoopCount); }
+        uint GetLoopCount() const { return this->GetCountField(CounterFields::LoopCount); }
+        uint SetLoopCount(uint count) { return this->SetCountField(CounterFields::LoopCount, count); }
 
         bool AllocProfiledDivOrRem(ProfileId* profileId) { if (this->profiledDivOrRemCount != Constants::NoProfileId) { *profileId = this->profiledDivOrRemCount++; return true; } return false; }
         ProfileId GetProfiledDivOrRemCount() { return this->profiledDivOrRemCount; }
@@ -2586,10 +2670,12 @@ namespace Js
         void SetFrameHeight(EntryPointInfo* entryPointInfo, uint32 frameHeight);
 
         RegSlot GetLocalsCount();
-        RegSlot GetConstantCount() const { return m_constCount; }
+        RegSlot GetConstantCount() const { return this->GetCountField(CounterFields::ConstantCount); }
+        void CheckAndSetConstantCount(RegSlot cNewConstants);
         void SetConstantCount(RegSlot cNewConstants);
         RegSlot GetVarCount();
         void SetVarCount(RegSlot cNewVars);
+        void CheckAndSetVarCount(RegSlot cNewVars);
         RegSlot MapRegSlot(RegSlot reg)
         {
             if (this->RegIsConst(reg))
@@ -2612,10 +2698,14 @@ namespace Js
         bool IsNonTempLocalVar(uint32 varIndex);
         bool GetSlotOffset(RegSlot slotId, int32 * slotOffset, bool allowTemp = false);
 
-        RegSlot GetOutParamsDepth();
-        void SetOutParamDepth(RegSlot cOutParamsDepth);
+        RegSlot GetOutParamMaxDepth();
+        void SetOutParamMaxDepth(RegSlot cOutParamsDepth);
+        void CheckAndSetOutParamMaxDepth(RegSlot cOutParamsDepth);
 
         RegSlot GetYieldRegister();
+
+        RegSlot GetFirstTmpRegister() const;
+        void SetFirstTmpRegister(RegSlot reg);
 
         RegSlot GetFirstTmpReg();
         void SetFirstTmpReg(RegSlot firstTmpReg);
@@ -2654,12 +2744,33 @@ namespace Js
 
         static bool ShouldShareInlineCaches() { return CONFIG_FLAG(ShareInlineCaches); }
 
-        uint GetInlineCacheCount() const { return inlineCacheCount; }
-        uint GetRootObjectLoadInlineCacheStart() const { return rootObjectLoadInlineCacheStart; }
-        uint GetRootObjectLoadMethodInlineCacheStart() const { return rootObjectLoadMethodInlineCacheStart; }
-        uint GetRootObjectStoreInlineCacheStart() const { return rootObjectStoreInlineCacheStart; }
-        uint GetIsInstInlineCacheCount() const { return isInstInlineCacheCount; }
-        uint GetReferencedPropertyIdCount() const { return referencedPropertyIdCount; }
+        uint GetInlineCacheCount() const { return GetCountField(CounterFields::InlineCacheCount); }
+        void SetInlineCacheCount(uint count) { SetCountField(CounterFields::InlineCacheCount, count); }
+
+        uint GetRootObjectLoadInlineCacheStart() const { return GetCountField(CounterFields::RootObjectLoadInlineCacheStart); }
+        void SetRootObjectLoadInlineCacheStart(uint count) { SetCountField(CounterFields::RootObjectLoadInlineCacheStart, count); }
+
+        uint GetRootObjectLoadMethodInlineCacheStart() const { return GetCountField(CounterFields::RootObjectLoadMethodInlineCacheStart); }
+        void SetRootObjectLoadMethodInlineCacheStart(uint count) { SetCountField(CounterFields::RootObjectLoadMethodInlineCacheStart, count); }
+
+        uint GetRootObjectStoreInlineCacheStart() const { return GetCountField(CounterFields::RootObjectStoreInlineCacheStart); }
+        void SetRootObjectStoreInlineCacheStart(uint count) { SetCountField(CounterFields::RootObjectStoreInlineCacheStart, count); }
+
+        uint GetIsInstInlineCacheCount() const { return GetCountField(CounterFields::IsInstInlineCacheCount); }
+        void SetIsInstInlineCacheCount(uint count) { SetCountField(CounterFields::IsInstInlineCacheCount, count); }
+
+        uint GetReferencedPropertyIdCount() const { return GetCountField(CounterFields::ReferencedPropertyIdCount); }
+        void SetReferencedPropertyIdCount(uint count) { SetCountField(CounterFields::ReferencedPropertyIdCount, count); }
+
+        uint GetObjLiteralCount() const { return GetCountField(CounterFields::ObjLiteralCount); }
+        void SetObjLiteralCount(uint count) { SetCountField(CounterFields::ObjLiteralCount, count); }
+        uint IncObjLiteralCount() { return IncreaseCountField(CounterFields::ObjLiteralCount); }
+
+        uint GetLiteralRegexCount() const { return GetCountField(CounterFields::LiteralRegexCount); }
+        void SetLiteralRegexCount(uint count) { SetCountField(CounterFields::LiteralRegexCount, count); }
+        uint IncLiteralRegexCount() { return IncreaseCountField(CounterFields::LiteralRegexCount); }
+
+
         void AllocateInlineCache();
         InlineCache * GetInlineCache(uint index);
         bool CanFunctionObjectHaveInlineCaches();
@@ -2668,7 +2779,6 @@ namespace Js
 #if DBG
         byte* GetInlineCacheTypes();
 #endif
-        InlineCache * GetRootObjectInlineCache(uint index);
         IsInstInlineCache * GetIsInstInlineCache(uint index);
         PolymorphicInlineCache * GetPolymorphicInlineCache(uint index);
         PolymorphicInlineCache * CreateNewPolymorphicInlineCache(uint index, PropertyId propertyId, InlineCache * inlineCache);
@@ -2717,7 +2827,6 @@ namespace Js
         DynamicType ** GetObjectLiteralTypeRef(uint index);
         DynamicType ** GetObjectLiteralTypeRefWithLock(uint index);
         uint NewLiteralRegex();
-        uint GetLiteralRegexCount() const;
         void AllocateLiteralRegexArray();
         UnifiedRegex::RegexPattern **GetLiteralRegexes() const { return static_cast<UnifiedRegex::RegexPattern **>(this->GetAuxPtr(AuxPointerType::LiteralRegexes)); }
         UnifiedRegex::RegexPattern **GetLiteralRegexesWithLock() const { return static_cast<UnifiedRegex::RegexPattern **>(this->GetAuxPtrWithLock(AuxPointerType::LiteralRegexes)); }
@@ -2760,7 +2869,7 @@ namespace Js
         const FunctionCodeGenRuntimeData *GetLdFldInlineeCodeGenRuntimeData(const InlineCacheIndex inlineCacheIndex) const;
         FunctionCodeGenRuntimeData *EnsureLdFldInlineeCodeGenRuntimeData(
             Recycler *const recycler,
-            __in_range(0, this->inlineCacheCount - 1) const InlineCacheIndex inlineCacheIndex,
+            const InlineCacheIndex inlineCacheIndex,
             FunctionBody *const inlinee);
 
         void LoadDynamicProfileInfo();
@@ -2773,6 +2882,7 @@ namespace Js
         DynamicProfileInfo * AllocateDynamicProfile();
         BYTE GetSavedInlinerVersion() const;
         uint32 GetSavedPolymorphicCacheState() const;
+        void SetSavedPolymorphicCacheState(uint32 state);
         ImplicitCallFlags GetSavedImplicitCallsFlags() const;
         bool HasNonBuiltInCallee();
 
@@ -2873,6 +2983,7 @@ namespace Js
             Js::LoopHeader* loopHeaderArray = this->GetLoopHeaderArray();
             if(loopHeaderArray)
             {
+                uint loopCount = this->GetLoopCount();
                 for(uint i = 0; i < loopCount; i++)
                 {
                     fn(i , &loopHeaderArray[i]);

@@ -117,6 +117,7 @@ enum FileVersionScheme : byte
 
 // Used for selective serialization of Function Body fields to make the representation compact
 #define DECLARE_SERIALIZABLE_FIELD(type, name, serializableType) bool has_##name : 1
+#define DECLARE_SERIALIZABLE_ACCESSOR_FIELD(type, name, serializableType) bool has_##name : 1
 #define DECLARE_MANUAL_SERIALIZABLE_FIELD(type, name, serializableType, deserializeHere) bool has_##name: 1
 
 #define DEFINE_ALL_FIELDS
@@ -1597,7 +1598,7 @@ public:
         size += PrependInt32(builder, L"Start Constant Table", magicStartOfConstantTable);
 #endif
 
-        for (auto reg = FunctionBody::FirstRegSlot + 1; reg < function->m_constCount; reg++) // Ignore first slot, it is always global object or module root object
+        for (auto reg = FunctionBody::FirstRegSlot + 1; reg < function->GetConstantCount(); reg++) // Ignore first slot, it is always global object or module root object
         {
             auto var = function->GetConstantVar(reg);
             Assert(var != nullptr);
@@ -1975,7 +1976,9 @@ public:
         PrependInt32(builder, L"Start Function Table", magicStartOfFunctionBody);
 #endif
 
-        function->SetSerializationIndex((*serializationIndex)++);
+        Assert(function->GetSerializationIndex() == -1 && (*serializationIndex) != -1);
+        function->SetSerializationIndex(*serializationIndex);
+        (*serializationIndex)++;
 
         uint32 sourceDiff = 0;
 
@@ -2047,7 +2050,7 @@ public:
         }
 
         // This field should always be non-zero
-        Assert(function->m_constCount != 0);
+        Assert(function->GetConstantCount() != 0);
 
 #define PrependArgSlot PrependInt16
 #define PrependRegSlot PrependInt32
@@ -2079,6 +2082,11 @@ public:
                 definedFields.has_##name = true; \
                 Prepend##serializableType(builder, L#name, function->##name); \
             }
+#define DECLARE_SERIALIZABLE_ACCESSOR_FIELD(type, name, serializableType) \
+            if (function->Get##name##() != 0) { \
+                definedFields.has_##name = true; \
+                Prepend##serializableType(builder, L#name, function->Get##name##()); \
+            }
 #define DECLARE_MANUAL_SERIALIZABLE_FIELD(type, name, serializableType, serializeHere) \
             if (function->##name != 0 && serializeHere) { \
                 definedFields.has_##name = true; \
@@ -2094,7 +2102,8 @@ public:
             if (loopHeaderArray)
             {
                 PrependByte(builder, L"Loop Header Array Exists", 1);
-                for (uint i = 0; i < function->loopCount; ++i)
+                uint loopCount = function->GetLoopCount();
+                for (uint i = 0; i < loopCount; ++i)
                 {
                     PrependInt32(builder, L"Loop Header Start", loopHeaderArray[i].startOffset);
                     PrependInt32(builder, L"Loop Header End", loopHeaderArray[i].endOffset);
@@ -2154,7 +2163,7 @@ public:
             AddSlotArrayDebuggerScopes(builder, function, debuggerScopeSlotArraySize);
 
             // Literal regexes
-            for (uint i = 0; i < function->literalRegexCount; ++i)
+            for (uint i = 0; i < function->GetLiteralRegexCount(); ++i)
             {
                 const auto literalRegex = function->GetLiteralRegex(i);
                 if (!literalRegex)
@@ -2853,7 +2862,7 @@ public:
 
         function->CreateConstantTable();
 
-        for (auto reg = FunctionBody::FirstRegSlot + 1; reg < function->m_constCount; reg++) // Ignore first slot, it is always global or module root and has been preinitialized.
+        for (auto reg = FunctionBody::FirstRegSlot + 1; reg < function->GetConstantCount(); reg++) // Ignore first slot, it is always global or module root and has been preinitialized.
         {
             byte ct;
             current = ReadByte(current, &ct);
@@ -3501,7 +3510,7 @@ public:
             functionNumber = scriptContext->GetThreadContext()->NewFunctionNumber();
         }
 
-        if (definedFields->has_m_constCount)
+        if (definedFields->has_ConstantCount)
         {
             FunctionBody **functionBody = (FunctionBody **) function;
 
@@ -3516,7 +3525,9 @@ public:
                 );
 
             (*functionBody)->SetDisplayName(displayName, displayNameLength, displayShortNameOffset, FunctionProxy::SetDisplayNameFlags::SetDisplayNameFlagsDontCopy);
-            (*functionBody)->serializationIndex = serializationIndex;
+
+            Assert((*functionBody)->GetSerializationIndex() == -1 && serializationIndex != -1);
+            (*functionBody)->SetSerializationIndex(serializationIndex);
             (*functionBody)->SetByteCodeCache(cache);
             (*functionBody)->SetUtf8SourceInfo(utf8SourceInfo); // Set source info
             (*function)->m_utf8SourceHasBeenSet = true;
@@ -3558,7 +3569,7 @@ public:
         }
 #include "SerializableFunctionFields.h"
 
-        if (definedFields->has_m_constCount)
+        if (definedFields->has_ConstantCount)
         {
             FunctionBody **functionBody = (FunctionBody **)function;
 
@@ -3566,6 +3577,12 @@ public:
 #define DECLARE_SERIALIZABLE_FIELD(type, name, serializableType) \
             if (definedFields->has_##name == true) { \
                 current = Read##serializableType(current, &(*functionBody)->##name); \
+            }
+#define DECLARE_SERIALIZABLE_ACCESSOR_FIELD(type, name, serializableType) \
+            if (definedFields->has_##name == true) { \
+                type tmp##name=0; \
+                current = Read##serializableType(current, &tmp##name); \
+                (*functionBody)->Set##name##(tmp##name); \
             }
 #define DECLARE_MANUAL_SERIALIZABLE_FIELD(type, name, serializableType, deserializeHere) \
             if (deserializeHere && definedFields->has_##name == true) { \
@@ -3586,9 +3603,9 @@ public:
                 (*functionBody)->flags = (FunctionBody::FunctionBodyFlags)((*functionBody)->flags & ~FunctionBody::Flags_StackNestedFunc);
             }
 
-            if (definedFields->has_m_firstTmpReg == false)
+            if (definedFields->has_FirstTmpRegister == false)
             {
-                (*functionBody)->m_firstTmpReg = 0;
+                (*functionBody)->SetFirstTmpRegister(0);
             }
 
             if (definedFields->has_m_envDepth == false)
@@ -3618,7 +3635,8 @@ public:
             {
                 (*functionBody)->AllocateLoopHeaders();
                 auto loopHeaderArray = (*functionBody)->GetLoopHeaderArray();
-                for (uint i = 0; i < (*functionBody)->loopCount; ++i)
+                uint loopCount = (*functionBody)->GetLoopCount();
+                for (uint i = 0; i < loopCount; ++i)
                 {
                     uint startOffset, endOffset;
                     current = ReadUInt32(current, &startOffset);
@@ -3679,7 +3697,7 @@ public:
 
             // Literal regexes
             (*functionBody)->AllocateLiteralRegexArray();
-            for (uint i = 0; i < (*functionBody)->literalRegexCount; ++i)
+            for (uint i = 0; i < (*functionBody)->GetLiteralRegexCount(); ++i)
             {
                 int length;
                 current = ReadInt32(current, &length);
@@ -3746,7 +3764,7 @@ public:
             Throw::FatalInternalError();
         }
 #endif
-        if (definedFields->has_m_constCount)
+        if (definedFields->has_ConstantCount)
         {
             FunctionBody **functionBody = (FunctionBody **) function;
 #if DBG

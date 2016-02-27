@@ -182,6 +182,8 @@ namespace Js
     template<class T, typename FieldsEnum>
     void AuxPtrs<T, FieldsEnum>::AllocAuxPtr(T* host, uint8 count)
     {
+        Recycler* recycler = host->GetRecycler();
+        Assert(recycler != nullptr);
         Assert(count >= AuxPtrs32::MaxCount);
 
         Recycler* recycler = host->GetRecycler();
@@ -218,6 +220,7 @@ namespace Js
     template<class T, typename FieldsEnum>
     void AuxPtrs<T, FieldsEnum>::SetAuxPtr(T* host, FieldsEnum e, void* ptr)
     {
+
         if (host->auxPtrs == nullptr)
         {
             AuxPtrs<FunctionProxy, FieldsEnum>::AllocAuxPtrFix(host, 16);
