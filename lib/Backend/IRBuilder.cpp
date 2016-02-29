@@ -6596,6 +6596,7 @@ void
 IRBuilder::BuildEmpty(Js::OpCode newOpcode, uint32 offset)
 {
     IR::Instr *instr;
+    // StackSym* newSym = nullptr;
 
     m_jnReader.Empty();
 
@@ -6650,18 +6651,22 @@ IRBuilder::BuildEmpty(Js::OpCode newOpcode, uint32 offset)
         break;
 
     case Js::OpCode::BeginBodyScope:
-        this->m_func->SetParamClosureSym(StackSym::New(this->m_func));
+        /*newSym = StackSym::NewParamSlotSym(1, this->m_func);
+        this->m_func->SetArgOffset(newSym, LowererMD::GetFormalParamOffset() * MachPtr);*/
+        this->m_func->SetParamClosureSym(StackSym::New(TyVar, this->m_func));
+        this->m_func->GetParamClosureSym()->scratch.linearScan.lifetime = this->m_func->GetLocalClosureSym()->scratch.linearScan.lifetime;
+        //this->m_func->SetParamClosureSym(newSym);
 /*        this->AddInstr(
             IR::Instr::New(
                 Js::OpCode::Ld_A, IR::RegOpnd::New(this->m_func->GetParamClosureSym(), TyVar, m_func), IR::RegOpnd::New(this->m_func->GetLocalClosureSym(), TyVar, this->m_func), this->m_func),
             (uint32)-1);*/
-            Js::OpCode op =
+            /*Js::OpCode op =
                 m_func->DoStackScopeSlots() ? Js::OpCode::NewStackScopeSlots : Js::OpCode::NewScopeSlots;
 
             IR::Opnd * srcOpnd = IR::IntConstOpnd::New(
                 m_func->GetJnFunction()->paramScopeSlotArraySize + Js::ScopeSlots::FirstSlotIndex, TyUint32, m_func);
             instr = IR::Instr::New(op, closureOpnd, srcOpnd, m_func);
-            this->AddInstr(instr, offset);
+            this->AddInstr(instr, offset);*/
         break;
 
     default:
