@@ -27,6 +27,7 @@ namespace Js
         Counter()
             :fieldSize(1)
         {
+            memset(u8fields, 0, (uint8)CountT::Max);
         }
 
         void AllocCounters(T* host, uint8 newSize);
@@ -234,11 +235,11 @@ namespace Js
             {
                 for (; i < signedStart; i++)
                 {
-                    ((uint32*)newFieldsArray)[i] = this->u16Fileds[i];
+                    ((uint32*)newFieldsArray)[i] = this->u8fields[i];
                 }
                 for (; i < max; i++)
                 {
-                    ((int32*)newFieldsArray)[i] = this->i16Fileds[i];
+                    ((int32*)newFieldsArray)[i] = this->i8fields[i];
                 }
             }
         }
