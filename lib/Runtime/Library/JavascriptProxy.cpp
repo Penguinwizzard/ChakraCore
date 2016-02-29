@@ -1927,8 +1927,10 @@ namespace Js
 
         if (nullptr == callMethod)
         {
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1601_MSRC31897_BUG5120093
+#endif
+#if defined(PRERELEASE_REL1601_MSRC31897_BUG5120093) || defined(_COREBUILD)
             // newCount is ushort. If args count is greater than or equal to 65535, an integer
             // too many arguments
             if (args.Info.Count >= USHORT_MAX) //check against CallInfo::kMaxCountArgs if newCount is ever made int
@@ -1949,8 +1951,10 @@ namespace Js
                 args.Values[0] = newThisObject;
             }
 
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifndef PRERELEASE_REL1601_MSRC31897_BUG5120093
+#endif
+#if !defined(PRERELEASE_REL1601_MSRC31897_BUG5120093) && !defined(_COREBUILD)
             // too many arguments
             if (args.Info.Count >= CallInfo::kMaxCountArgs)
             {

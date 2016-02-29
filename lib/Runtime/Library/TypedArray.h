@@ -340,8 +340,10 @@ namespace Js
             {
                 newLength = GetLength() - newStart;
             }
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1602_MSRC32252_BUG6083445
+#endif
+#if defined(PRERELEASE_REL1602_MSRC32252_BUG6083445) || defined(_COREBUILD)
             if (newStart >= GetLength())
             {
                 // If we want to start copying past the length of the array, all index are no-op

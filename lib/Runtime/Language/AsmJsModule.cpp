@@ -2223,16 +2223,20 @@ namespace Js
                 switch (asmSlot->varType)
                 {
                 case AsmJsVarType::Double:
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1602_MSRC32037_BUG5919552
+#endif
+#if defined(PRERELEASE_REL1602_MSRC32037_BUG5919552) || defined(_COREBUILD)
                     value = JavascriptNumber::NewWithCheck(asmDoubleVars[asmSlot->location], scriptContext);
 #else
                     value = JavascriptNumber::New(asmDoubleVars[asmSlot->location], scriptContext);
 #endif
                     break;
                 case AsmJsVarType::Float:
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1602_MSRC32037_BUG5919552
+#endif
+#if defined(PRERELEASE_REL1602_MSRC32037_BUG5919552) || defined(_COREBUILD)
                     value = JavascriptNumber::NewWithCheck(asmFloatVars[asmSlot->location], scriptContext);
 #else
                     value = JavascriptNumber::New(asmFloatVars[asmSlot->location], scriptContext);
@@ -2284,8 +2288,10 @@ namespace Js
                 value = asmFuncs[asmSlot->location];
                 break;
             case AsmJsSymbol::MathConstant:
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1602_MSRC32037_BUG5919552
+#endif
+#if defined(PRERELEASE_REL1602_MSRC32037_BUG5919552) || defined(_COREBUILD)
                 value = JavascriptNumber::NewWithCheck(asmSlot->mathConstVal, scriptContext);
 #else
                 value = JavascriptNumber::New(asmSlot->mathConstVal, scriptContext);

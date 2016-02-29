@@ -34,8 +34,10 @@ namespace Js {
 
     Var AsmJsChangeHeapBuffer(RecyclableObject * function, CallInfo callInfo, ...);
 
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifndef PRERELEASE_REL1603_MSRC32418_BUG6346752
+#endif
+#if !defined(PRERELEASE_REL1603_MSRC32418_BUG6346752) && !defined(_COREBUILD)
     Var AsmJsExternalEntryPoint(Js::RecyclableObject* entryObject, Js::CallInfo callInfo, ...);
 #endif
 #if _M_X64

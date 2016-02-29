@@ -3145,8 +3145,10 @@ namespace Js
             size += SUB::EncodeInstruction<int>( buffer, InstrParamsRegImm<int8>( RegESP, 8 ) );
             size += MOVSD::EncodeInstruction<double>( buffer, InstrParamsAddrReg( RegESP, 0, regVariable ) );
 
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1602_MSRC32037_BUG5919552
+#endif
+#ifdef defined(PRERELEASE_REL1602_MSRC32037_BUG5919552) || defined(_COREBUILD)
             size += MOV::EncodeInstruction<int>( buffer, InstrParamsRegImm<int32>( RegEAX, (int32)(Var(*)(double,ScriptContext*))JavascriptNumber::NewWithCheck) );
 #else
             size += MOV::EncodeInstruction<int>(buffer, InstrParamsRegImm<int32>(RegEAX, (int32)(Var(*)(double, ScriptContext*))JavascriptNumber::New));

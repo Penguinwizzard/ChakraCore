@@ -1082,8 +1082,10 @@ namespace Js
             mArgType = val;
         }
 
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1603_MSRC32563_BUG6497035
+#endif
+#if defined(PRERELEASE_REL1603_MSRC32563_BUG6497035) || defined(_COREBUILD)
         inline bool AccessNeedsBoundCheck(uint offset) const
         {
             // Normally, heap has min size of 0x10000, but if you use ChangeHeap, min heap size is increased to 0x1000000
