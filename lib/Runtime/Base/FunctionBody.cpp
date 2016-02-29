@@ -33,7 +33,7 @@
 
 namespace Js
 {
-    CriticalSection FunctionProxy::auxPtrsLock;
+    CriticalSection FunctionProxy::GlobalLock;
 
 #ifdef FIELD_ACCESS_STATS
     void FieldAccessStats::Add(FieldAccessStats* other)
@@ -95,7 +95,7 @@ namespace Js
         {
             return nullptr;
         }
-        AutoCriticalSection autoCS(&auxPtrsLock);
+        AutoCriticalSection autoCS(&GlobalLock);
         return AuxPtrsT::GetAuxPtr(this, e);
     }
 
@@ -110,7 +110,7 @@ namespace Js
         }
 
         // when setting ptr to null we never need to promote
-        AutoCriticalSection aucoCS(&auxPtrsLock);
+        AutoCriticalSection aucoCS(&GlobalLock);
         AuxPtrsT::SetAuxPtr(this, e, ptr);
     }
 
@@ -180,12 +180,6 @@ namespace Js
     {
         // Register the function to the PDM as eval code (the debugger app will show file as 'eval code')
         scriptContext->GetDebugContext()->RegisterFunction(this, pszTitle);
-    }
-
-    Recycler* FunctionProxy::GetRecycler() const
-    {
-        Assert(m_scriptContext != nullptr);
-        return m_scriptContext == nullptr ? nullptr : m_scriptContext->GetRecycler();
     }
 
     // Given an offset into the source buffer, determine if the end of this SourceInfo
@@ -527,7 +521,6 @@ namespace Js
         , callCountStats(0)
 #endif
     {
-        this->counters->AllocCounters(this, 1);
         SetCountField(CounterFields::ConstantCount, 1);
         SetCountField(CounterFields::LoopInterpreterLimit, CONFIG_FLAG(LoopInterpretCount));
         SetCountFieldSigned(CounterFields::SerializationIndex, -1);
@@ -5925,7 +5918,7 @@ namespace Js
     }
     DynamicType ** FunctionBody::GetObjectLiteralTypeRefWithLock(uint index)
     {
-        Assert(index < objLiteralCount);
+        Assert(index < GetObjLiteralCount());
         DynamicType ** literalTypes = this->GetObjectLiteralTypesWithLock();
         Assert(literalTypes != nullptr);
         return literalTypes + index;
@@ -5989,7 +5982,7 @@ namespace Js
 
     UnifiedRegex::RegexPattern *FunctionBody::GetLiteralRegexWithLock(const uint index)
     {
-        Assert(index < literalRegexCount);
+        Assert(index < GetLiteralRegexCount());
         Assert(this->GetLiteralRegexesWithLock());
 
         return this->GetLiteralRegexesWithLock()[index];
@@ -6282,7 +6275,7 @@ namespace Js
     LoopHeader *FunctionBody::GetLoopHeaderWithLock(uint index) const
     {
         Assert(this->GetLoopHeaderArrayWithLock() != nullptr);
-        Assert(index < loopCount);
+        Assert(index < GetLoopCount());
         return &this->GetLoopHeaderArrayWithLock()[index];
     }
     FunctionEntryPointInfo *FunctionBody::GetSimpleJitEntryPointInfo() const

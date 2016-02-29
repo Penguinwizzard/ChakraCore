@@ -12,56 +12,86 @@ namespace Js
     template<class T, typename CountT = T::CounterFields>
     struct Counter
     {
-        uint8 fieldSize;
+
+        volatile uint8 fieldSize;
         union {
-            uint8 fields1[1];
-            uint16 fields2[1];
-            uint32 fields4[1];
-            int8 signedFields1[1];
-            int16 signedFields2[1];
-            int32 signedFields4[1];
+            uint8 u8fields[CountT::Max];
+            int8 i8fields[CountT::Max];
+            WriteBarrierPtr<uint16> u16Fileds;
+            WriteBarrierPtr<uint32> u32Fileds;
+            WriteBarrierPtr<int16> i16Fileds;
+            WriteBarrierPtr<int32> i32Fileds;
         };
 
-        Counter(uint8 size)
+
+        Counter()
+            :fieldSize(1)
         {
-            fieldSize = size;
         }
 
-        static void AllocCounters(T* host, uint8 newSize);
+        void AllocCounters(T* host, uint8 newSize);
 
         uint32 Get(CountT typeEnum) const
         {
             uint8 type = static_cast<uint8>(typeEnum);
-            if (fieldSize == 1)
+            uint8 localFieldSize = fieldSize;
+            uint32 value = 0;
+            if (localFieldSize == 1)
             {
-                return this->fields1[type];
+                value = this->u8fields[type];
             }
-            else if (fieldSize == 2)
+            else if (localFieldSize == 2)
             {
-                return this->fields2[type];
+                value = this->u16Fileds[type];
             }
             else
             {
-                Assert(fieldSize == 4);
-                return this->fields4[type];
+                Assert(localFieldSize == 4);
+                value = this->u32Fileds[type];
+            }
+
+            // check if main thread has updated the structure
+            if (localFieldSize == fieldSize) 
+            {
+                return value;
+            }
+            else 
+            {
+                Assert(!ThreadContext::GetContextForCurrentThread());
+                AutoCriticalSection autocs(T::GetLock());
+                return Get(typeEnum);
             }
         }
 
         int32 GetSigned(CountT typeEnum) const
         {
             uint8 type = static_cast<uint8>(typeEnum);
-            if (fieldSize == 1)
+            uint8 localFieldSize = fieldSize;
+            int32 value = 0;
+            if (localFieldSize == 1)
             {
-                return this->signedFields1[type];
+                value = this->i8fields[type];
             }
-            else if (fieldSize == 2)
+            else if (localFieldSize == 2)
             {
-                return this->signedFields2[type];
+                value = this->i16Fileds[type];
             }
             else
             {
-                Assert(fieldSize == 4);
-                return this->signedFields4[type];
+                Assert(localFieldSize == 4);
+                value = this->i32Fileds[type];
+            }
+
+            // check if main thread has updated the structure
+            if (localFieldSize == fieldSize)
+            {
+                return value;
+            }
+            else
+            {
+                Assert(!ThreadContext::GetContextForCurrentThread());
+                AutoCriticalSection autocs(T::GetLock());
+                return GetSigned(typeEnum);
             }
         }
 
@@ -72,30 +102,30 @@ namespace Js
             {
                 if (val <= UINT8_MAX)
                 {
-                    return fields1[type] = static_cast<uint8>(val);
+                    return this->u8fields[type] = static_cast<uint8>(val);
                 }
                 else
                 {
                     AllocCounters(host, val <= UINT16_MAX ? 2 : 4);
                 }
-                return host->counters->Set(typeEnum, val, host);
+                return this->Set(typeEnum, val, host);
             }
 
             if (fieldSize == 2)
             {
                 if (val <= UINT16_MAX)
                 {
-                    return fields2[type] = static_cast<uint16>(val);
+                    return this->u16Fileds[type] = static_cast<uint16>(val);
                 }
                 else
                 {
                     AllocCounters(host, 4);
                 }
-                return host->counters->Set(typeEnum, val, host);
+                return this->Set(typeEnum, val, host);
             }
 
             Assert(fieldSize == 4);
-            return fields4[type] = val;
+            return this->u32Fileds[type] = val;
         }
 
         int32 SetSigned(CountT typeEnum, int32 val, T* host)
@@ -105,30 +135,30 @@ namespace Js
             {
                 if (val <= INT8_MAX && val >= INT8_MIN)
                 {
-                    return signedFields1[type] = static_cast<uint8>(val);
+                    return this->i8fields[type] = static_cast<uint8>(val);
                 }
                 else
                 {
                     AllocCounters(host, (val <= INT16_MAX && val >= INT16_MIN) ? 2 : 4);
                 }
-                return host->counters->SetSigned(typeEnum, val, host);
+                return this->SetSigned(typeEnum, val, host);
             }
 
             if (fieldSize == 2)
             {
                 if (val <= INT16_MAX && val >= INT16_MIN)
                 {
-                    return signedFields2[type] = static_cast<uint16>(val);
+                    return this->i16Fileds[type] = static_cast<uint16>(val);
                 }
                 else
                 {
                     AllocCounters(host, 4);
                 }
-                return host->counters->SetSigned(typeEnum, val, host);
+                return this->SetSigned(typeEnum, val, host);
             }
 
             Assert(fieldSize == 4);
-            return signedFields4[type] = val;
+            return this->i32Fileds[type] = val;
         }
 
         uint32 Increase(CountT typeEnum, T* host)
@@ -136,32 +166,32 @@ namespace Js
             uint8 type = static_cast<uint8>(typeEnum);
             if (fieldSize == 1)
             {
-                if (fields1[type] < UINT8_MAX)
+                if (this->u8fields[type] < UINT8_MAX)
                 {
-                    return fields1[type]++;
+                    return this->u8fields[type]++;
                 }
                 else
                 {
-                    AllocCounters(host, fields1[type] < UINT16_MAX ? 2 : 4);
+                    AllocCounters(host, 2);
                 }
-                return host->counters->Increase(typeEnum, host);
+                return this->Increase(typeEnum, host);
             }
 
             if (fieldSize == 2)
             {
-                if (fields1[type] < UINT16_MAX)
+                if (this->u16Fileds[type] < UINT16_MAX)
                 {
-                    return fields2[type]++;
+                    return this->u16Fileds[type]++;
                 }
                 else
                 {
                     AllocCounters(host, 4);
                 }
-                return host->counters->Increase(typeEnum, host);
+                return this->Increase(typeEnum, host);
             }
 
             Assert(fieldSize == 4);
-            return fields4[type]++;
+            return this->u32Fileds[type]++;
         }
     };
 
@@ -169,60 +199,70 @@ namespace Js
     template<class T, typename CountT>
     void Counter<T, CountT>::AllocCounters(T* host, uint8 newSize)
     {
+        Assert(ThreadContext::GetContextForCurrentThread() || ThreadContext::GetCriticalSection()->IsLocked());
+
         typedef Counter<T, CountT> CounterT;
         Assert(host->GetRecycler() != nullptr);
 
         const uint8 signedStart = static_cast<uint8>(CountT::SignedFieldsStart);
         const uint8 max = static_cast<uint8>(CountT::Max);
-        auto plusSize = (max - 1)*newSize;
-        CounterT* newCounters = RecyclerNewPlusLeafZ(host->GetRecycler(), plusSize, CounterT, newSize);
 
-        if (host->counters != nullptr)
+        void* newFieldsArray = nullptr;
+        if (newSize == 2) {
+            newFieldsArray = RecyclerNewArrayLeafZ(host->GetRecycler(), uint16, max);
+        }
+        else {
+            Assert(newSize == 4);
+            newFieldsArray = RecyclerNewArrayLeafZ(host->GetRecycler(), uint32, max);
+        }
+
+        uint8 i = 0;
+        if (this->fieldSize == 1)
         {
-            uint8 i = 0;
-            if (host->counters->fieldSize == 1)
-            {
-                if (newSize == 2)
-                {
-                    for (; i < signedStart; i++)
-                    {
-                        newCounters->fields2[i] = host->counters->fields1[i];
-                    }
-                    for (; i < max; i++)
-                    {
-                        newCounters->signedFields2[i] = host->counters->signedFields1[i];
-                    }
-                }
-                else
-                {
-                    for (; i < signedStart; i++)
-                    {
-                        newCounters->fields4[i] = host->counters->fields1[i];
-                    }
-                    for (; i < max; i++)
-                    {
-                        newCounters->signedFields4[i] = host->counters->signedFields1[i];
-                    }
-                }
-            }
-            else if (host->counters->fieldSize == 2)
+            if (newSize == 2)
             {
                 for (; i < signedStart; i++)
                 {
-                    newCounters->fields4[i] = host->counters->fields2[i];
+                    ((uint16*)newFieldsArray)[i] = this->u8fields[i];
                 }
                 for (; i < max; i++)
                 {
-                    newCounters->signedFields4[i] = host->counters->signedFields2[i];
+                    ((int16*)newFieldsArray)[i] = this->i8fields[i];
                 }
             }
             else
             {
-                Assert(false);
+                for (; i < signedStart; i++)
+                {
+                    ((uint32*)newFieldsArray)[i] = this->u16Fileds[i];
+                }
+                for (; i < max; i++)
+                {
+                    ((int32*)newFieldsArray)[i] = this->i16Fileds[i];
+                }
             }
-
         }
-        host->counters = newCounters;
+        else if (this->fieldSize == 2)
+        {
+            for (; i < signedStart; i++)
+            {
+                ((uint32*)newFieldsArray)[i] = this->u16Fileds[i];
+            }
+            for (; i < max; i++)
+            {
+                ((int32*)newFieldsArray)[i] = this->i16Fileds[i];
+            }
+        }
+        else
+        {
+            Assert(false);
+        }
+        
+        AutoCriticalSection autocs(T::GetLock());
+        this->fieldSize = newSize;
+        this->u16Fileds = (uint16*)newFieldsArray;        
+
     }
+
 }
 #pragma warning(pop)

@@ -1162,8 +1162,9 @@ namespace Js
     //
     class FunctionProxy : public FunctionInfo
     {
-        static CriticalSection auxPtrsLock;
+        static CriticalSection GlobalLock;
     public:
+        static CriticalSection* GetLock() { return &GlobalLock; }
         typedef RecyclerWeakReference<DynamicType> FunctionTypeWeakRef;
         typedef JsUtil::List<FunctionTypeWeakRef*, Recycler, false, WeakRefFreeListedRemovePolicy> FunctionTypeWeakRefList;
 
@@ -1302,8 +1303,6 @@ namespace Js
         {
             return !PHASE_OFF(FullJitPhase, this);
         }
-
-        Recycler* GetRecycler() const;
 
     protected:
         // Static method(s)
@@ -1702,27 +1701,27 @@ namespace Js
             };
 
             typedef Counter<FunctionBody> CounterT;
-            WriteBarrierPtr<CounterT> counters;
+            CounterT counters;
 
             uint32 GetCountField(FunctionBody::CounterFields fieldEnum) const
             {
-                return counters->Get(fieldEnum);
+                return counters.Get(fieldEnum);
             }
             uint32 SetCountField(FunctionBody::CounterFields fieldEnum, uint32 val)
             {
-                return counters->Set(fieldEnum, val, this);
+                return counters.Set(fieldEnum, val, this);
             }
             uint32 IncreaseCountField(FunctionBody::CounterFields fieldEnum)
             {
-                return counters->Increase(fieldEnum, this);
+                return counters.Increase(fieldEnum, this);
             }
             int32 GetCountFieldSigned(FunctionBody::CounterFields fieldEnum) const
             {
-                return counters->GetSigned(fieldEnum);
+                return counters.GetSigned(fieldEnum);
             }
             int32 SetCountFieldSigned(FunctionBody::CounterFields fieldEnum, int32 val)
             {
-                return counters->SetSigned(fieldEnum, val, this);
+                return counters.SetSigned(fieldEnum, val, this);
             }
 
             uint32 GetInterpretedCount() const { return this->GetCountField(CounterFields::InterpretedCount); }

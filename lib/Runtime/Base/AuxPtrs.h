@@ -186,9 +186,6 @@ namespace Js
         Assert(recycler != nullptr);
         Assert(count >= AuxPtrs32::MaxCount);
 
-        Recycler* recycler = host->GetRecycler();
-        Assert(recycler != nullptr);
-
         auto requestSize = sizeof(AuxPtrs<T, FieldsEnum>) + (count - 1)*sizeof(void*);
         auto allocSize = ::Math::Align<uint8>((uint8)requestSize, 16);
         auto capacity = (uint8)((allocSize - offsetof(AuxPtrsT, ptrs)) / sizeof(void*));
