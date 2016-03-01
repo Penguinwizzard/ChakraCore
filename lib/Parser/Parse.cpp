@@ -1731,7 +1731,9 @@ void Parser::BindPidRefsInScopeImpl(IdentPtr pid, Symbol *sym, int blockId, uint
 
         if (ref->IsModuleExport())
         {
-            Assert(sym->GetIsGlobal());
+            {
+                m_currentNodeFunc->sxFnc.SetHasAnyWriteToFormals(true);
+            }
             sym->SetIsModuleExportStorage(true);
         }
 
@@ -8440,7 +8442,7 @@ ParseNodePtr Parser::ParseExpr(int oplMin,
                 Assert(lhs);
                 if (lhs->nop == knopDot)
                 {
-                    ParseNodePtr propertyNode = lhs->sxBin.pnode2;
+                    ParseNodePtr propertyNode = lhs->sxBin.pnode2;                    
                     if (propertyNode->nop == knopName)
                     {
                         propertyNode->sxPid.pid->PromoteAssignmentState();
@@ -8696,6 +8698,10 @@ ParseNodePtr Parser::ParseVariableDeclaration(
                 if (pnodeThis && pnodeThis->sxVar.pnodeInit != nullptr)
                 {
                     pnodeThis->sxVar.sym->PromoteAssignmentState();
+                    if (m_currentNodeFunc && pnodeThis->sxVar.sym->GetIsFormal())
+                    {
+                        m_currentNodeFunc->sxFnc.SetHasAnyWriteToFormals(true);
+                    }
                 }
             }
             else if (declarationType == tkCONST /*pnodeThis->nop == knopConstDecl*/
