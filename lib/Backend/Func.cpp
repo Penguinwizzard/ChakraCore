@@ -952,7 +952,7 @@ void Func::AddFrameDisplayCheck(IR::SymOpnd *fieldOpnd, uint32 slotId)
 
 void Func::InitLocalClosureSyms()
 {
-    Assert(this->m_localClosureSym == nullptr || !this->GetJnFunction()->IsParamAndBodyScopeMerged());
+    Assert(this->m_localClosureSym == nullptr);
 
     // Allocate stack space for closure pointers. Do this only if we're jitting for stack closures, and
     // tell bailout that these are not byte code symbols so that we don't try to encode them in the bailout record,
