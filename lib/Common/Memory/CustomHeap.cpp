@@ -471,7 +471,7 @@ DWORD Heap::EnsureAllocationExecuteWriteable(Allocation* allocation)
     else
     {
         return EnsureAllocationReadWrite<PAGE_EXECUTE_READWRITE>(allocation);
-    }   
+    }
 }
 
 void Heap::FreeLargeObjects()
@@ -826,7 +826,9 @@ bool Heap::FreeAllocation(Allocation* object)
         {
             protectFlags = PAGE_EXECUTE;
         }
+
         this->codePageAllocators->ProtectPages(page->address, 1, segment, protectFlags, PAGE_EXECUTE_READWRITE);
+        
         return true;
     }
 }

@@ -300,7 +300,18 @@ namespace Js
 
         if (funcInfo->HasBody())
         {
-            entryPoint = (JavascriptMethod)ScriptFunction::FromVar(function)->GetEntryPointInfo()->address;
+#include <VerifyGlobalMSRCSettings.inl>
+#if defined(ASMJS_PLAT) && defined(PRERELEASE_REL1603_MSRC32418_BUG6346752)
+            if (funcInfo->GetFunctionProxy()->IsFunctionBody() &&
+                funcInfo->GetFunctionBody()->GetIsAsmJsFunction())
+            {
+                entryPoint = Js::AsmJsExternalEntryPoint;
+            }
+            else
+#endif
+            {
+                entryPoint = (JavascriptMethod)ScriptFunction::FromVar(function)->GetEntryPointInfo()->address;
+            }
         }
         else
         {

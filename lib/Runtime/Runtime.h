@@ -275,6 +275,11 @@ namespace Js
     class AsmJsMathFunction;
     class AsmJsMathConst;
 #ifdef ASMJS_PLAT
+
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1603_MSRC32418_BUG6346752
+    Var AsmJsExternalEntryPoint(Js::RecyclableObject* entryObject, Js::CallInfo callInfo, ...);
+#endif
     class AsmJsCodeGenerator;
     class AsmJsEncoder;
 #endif

@@ -336,7 +336,6 @@ namespace Js
                 // If we want to start copying past the length of the array, all index are no-op
                 return true;
             }
-
             if (UInt32Math::Add(newStart, newLength) > GetLength())
             {
                 newLength = GetLength() - newStart;

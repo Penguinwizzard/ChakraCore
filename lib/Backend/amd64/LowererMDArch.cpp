@@ -1194,6 +1194,7 @@ LowererMDArch::LoadDynamicArgumentUsingLength(IR::Instr *instr)
 IR::Instr *
 LowererMDArch::LoadDoubleHelperArgument(IR::Instr * instrInsert, IR::Opnd * opndArg)
 {
+#include <VerifyGlobalMSRCSettings.inl>
 #ifdef PRERELEASE_REL1602_MSRC32037_BUG5919552
     IR::Opnd * float64Opnd;
     if (opndArg->GetType() == TyFloat32)

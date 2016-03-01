@@ -478,7 +478,6 @@ private:
     DWORD EnsurePageReadWrite(Page* page)
     {
         Assert(!page->isDecommitted);
-
         BOOL result = this->codePageAllocators->ProtectPages(page->address, 1, page->segment, readWriteFlags, PAGE_EXECUTE);
         Assert(result && (PAGE_EXECUTE & readWriteFlags) == 0);
         return PAGE_EXECUTE;

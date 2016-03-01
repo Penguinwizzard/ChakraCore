@@ -304,14 +304,12 @@ Below test fails with difference in space. Investigate the cause and re-enable t
       <compile-flags>-mic:1 -off:simplejit -off:JITLoopBody -mmoc:0</compile-flags>
     </default>
   </test>
-  <!-- Need to re-enable on merge of 1602 - tracked in OS 6347624
   <test>
     <default>
       <files>memset_neg.js</files>
       <compile-flags>-mic:1 -off:simplejit -bgjit- -mmoc:0</compile-flags>
     </default>
   </test>
-  -->
   <test>
     <default>
       <files>memset_neg.js</files>
