@@ -216,14 +216,6 @@ namespace JsUtil
     class WeakRefValueDictionaryEntry: public SimpleDictionaryEntry<TKey, TValue>
     {
     public:
-        void Clear()
-        {
-            // Assuming nullable keys for now
-            // This might change in future
-            this->key = NULL;
-            this->value = NULL;
-        }
-
         static bool SupportsCleanup()
         {
             return true;

@@ -106,6 +106,7 @@ template<> struct IntMath<int64> { using Type = Int64Math; };
 #include "DataStructures\List.h"
 #include "DataStructures\Stack.h"
 #include "DataStructures\Queue.h"
+#include "DataStructures\FixedMultibitVector.h"
 #include "DataStructures\CharacterBuffer.h"
 #include "DataStructures\InternalString.h"
 #include "DataStructures\Interval.h"

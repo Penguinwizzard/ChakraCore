@@ -52,27 +52,15 @@ namespace Js
         static bool IsPosInf(double value);
         static bool IsNegInf(double value);
 
-        template<bool acceptNegZero = false>
-        static bool TryGetInt32Value(const double value, int32 *const int32Value)
-        {
-            Assert(int32Value);
-
-            const int32 i = static_cast<int32>(value);
-            if (static_cast<double>(i) != value || (!acceptNegZero && IsNegZero(value)))
-            {
-                return false;
-            }
-
-            *int32Value = i;
-            return true;
-        }
-
-        static bool TryGetInt32OrUInt32Value(const double value, int32 *const int32Value, bool *const isInt32);
+        static bool TryGetInt32Value(const double value, int32 *const int32ValueRef, bool *const isNegativeZeroRef = nullptr);
+        static bool TryGetInt32Value_NoTaggedIntCheck(const Var object, int32 *const int32ValueRef);
+        static bool TryGetInt32OrUInt32Value(const double value, int32 *const int32ValueRef, bool *const isInt32Ref);
         static bool IsInt32(const double value);
         static bool IsInt32OrUInt32(const double value);
         static bool IsInt32_NoChecks(const Var number);
         static bool IsInt32OrUInt32_NoChecks(const Var number);
-        static int32 GetNonzeroInt32Value_NoTaggedIntCheck(const Var object);
+
+        static bool AreIdentical(const double d0, const double d1);
 
         static JavascriptString* ToString(double value, ScriptContext* scriptContext);
 

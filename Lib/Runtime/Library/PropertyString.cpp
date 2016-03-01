@@ -35,11 +35,7 @@ namespace Js
         return propCache;
     }
 
-    void PropertyString::ClearPropertyCache()
-    {
-        this->propCache->type = nullptr;
-    }
-    void const * PropertyString::GetOriginalStringReference()
+    void const * PropertyString::GetOriginalStringReference() 
     {
         // Property record is the allocation containing the string buffer
         return this->m_propertyRecord;
@@ -50,7 +46,12 @@ namespace Js
         return requestContext->GetLibrary()->CreatePropertyString(this->m_propertyRecord);
     }
 
-    void PropertyString::UpdateCache(Type * type, uint16 dataSlotIndex, bool isInlineSlot, bool isStoreFieldEnabled)
+    void PropertyString::UpdateCache(
+        Type * type,
+        uint16 dataSlotIndex,
+        const ObjectSlotType slotType,
+        bool isInlineSlot,
+        bool isStoreFieldEnabled)
     {
         Assert(type && type->GetScriptContext() == this->GetScriptContext());
         if (registerScriptContext)
@@ -61,6 +62,7 @@ namespace Js
         this->propCache->type = type;
         this->propCache->preventdataSlotIndexFalseRef = 1;
         this->propCache->dataSlotIndex = dataSlotIndex;
+        this->propCache->SetSlotType(slotType);
         this->propCache->preventFlagsFalseRef = 1;
         this->propCache->isInlineSlot = isInlineSlot;
         this->propCache->isStoreFieldEnabled = isStoreFieldEnabled;

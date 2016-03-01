@@ -8,6 +8,7 @@
 
 #include "Runtime.h"
 
+#include "Types\PathTypeHandler.h"
 #include "Debug\DebuggingFlags.h"
 #include "Debug\DiagProbe.h"
 #include "Debug\DebugManager.h"

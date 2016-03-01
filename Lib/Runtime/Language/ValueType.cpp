@@ -251,7 +251,7 @@ bool ValueType::CanBeTaggedValue() const
 
 ValueType ValueType::SetCanBeTaggedValue(const bool b) const
 {
-    if (b)
+    if(b)
     {
         Assert(!IsNotNumber());
         return Verify(bits | Bits::CanBeTaggedValue);
@@ -641,17 +641,20 @@ bool ValueType::IsTypedIntOrFloatArray() const
 
 bool ValueType::IsOptimizedTypedArray() const
 {
-    return IsObject() && ((GetObjectType() >= ObjectType::Int8Array  && GetObjectType() <= ObjectType::Float64MixedArray));
+    return IsObject() && GetObjectType() >= ObjectType::Int8Array  && GetObjectType() <= ObjectType::Float64MixedArray;
 }
 
 bool ValueType::IsLikelyOptimizedTypedArray() const
 {
-    return IsLikelyObject() && ((GetObjectType() >= ObjectType::Int8Array  &&  GetObjectType() <= ObjectType::Float64MixedArray));
+    return IsLikelyObject() && GetObjectType() >= ObjectType::Int8Array  &&  GetObjectType() <= ObjectType::Float64MixedArray;
 }
 
 bool ValueType::IsLikelyOptimizedVirtualTypedArray() const
 {
-    return IsLikelyObject() && (GetObjectType() >= ObjectType::Int8VirtualArray && GetObjectType() <= ObjectType::Float64VirtualArray);
+    return
+        IsLikelyObject() &&
+        GetObjectType() >= ObjectType::Int8VirtualArray &&
+        GetObjectType() <= ObjectType::Float64VirtualArray;
 }
 
 bool ValueType::IsAnyArrayWithNativeFloatValues() const
@@ -708,12 +711,15 @@ bool ValueType::IsLikelyAnyArray() const
 
 bool ValueType::IsAnyOptimizedArray() const
 {
-    return IsObject() && ((GetObjectType() >= ObjectType::ObjectWithArray &&  GetObjectType() <= ObjectType::Float64MixedArray));
+    return IsObject() && GetObjectType() >= ObjectType::ObjectWithArray && GetObjectType() <= ObjectType::Float64MixedArray;
 }
 
 bool ValueType::IsLikelyAnyOptimizedArray() const
 {
-    return IsLikelyObject() && ((GetObjectType() >= ObjectType::ObjectWithArray && GetObjectType() <= ObjectType::Float64MixedArray));
+    return
+        IsLikelyObject() &&
+        GetObjectType() >= ObjectType::ObjectWithArray &&
+        GetObjectType() <= ObjectType::Float64MixedArray;
 }
 
 bool ValueType::IsLikelyAnyUnOptimizedArray() const
@@ -782,7 +788,10 @@ bool ValueType::IsSimd128Float64x2() const
 
 bool ValueType::IsLikelySimd128() const
 {
-    return IsLikelyObject() && (GetObjectType() >= ObjectType::Simd128Float32x4 && GetObjectType() <= ObjectType::Simd128Float64x2);
+    return
+        IsLikelyObject() &&
+        GetObjectType() >= ObjectType::Simd128Float32x4 &&
+        GetObjectType() <= ObjectType::Simd128Float64x2;
 }
 
 bool ValueType::IsLikelySimd128Float32x4() const
@@ -893,7 +902,9 @@ ValueType ValueType::SetArrayTypeId(const Js::TypeId typeId) const
     using namespace Js;
     Assert(IsLikelyArrayOrObjectWithArray());
     Assert(JavascriptArray::Is(typeId));
-    Assert(typeId == TypeIds_Array || IsLikelyObject() && GetObjectType() == ObjectType::Array); // objects with native arrays are currently not supported
+
+    // Objects with native arrays are currently not supported
+    Assert(typeId == TypeIds_Array || IsLikelyObject() && GetObjectType() == ObjectType::Array);
 
     Bits newBits = bits & ~(Bits::NonInts | Bits::NonFloats);
     switch(typeId)
@@ -920,6 +931,7 @@ bool ValueType::IsSubsetOf(
         return other.IsUninitialized();
     if(other.IsUninitialized())
         return true;
+
     if(IsLikelyNumber() && other.IsLikelyNumber())
     {
         // Special case for numbers since there are multiple combinations of bits and a bit-subset produces incorrect results in
@@ -975,8 +987,12 @@ bool ValueType::IsSubsetOf(
             return other.AllOn(bits);
         return CanMergeToObject();
     }
+
     if(other.GetObjectType() == ObjectType::UninitializedObject && GetObjectType() != ObjectType::UninitializedObject)
-        return true; // object types other than UninitializedObject are a subset of UninitializedObject regardless of the Likely bit
+    {
+        // Object types other than UninitializedObject are a subset of UninitializedObject regardless of the Likely bit
+        return true;
+    }
     if(GetObjectType() != other.GetObjectType())
         return false;
     if(!OneOn(Bits::Likely) && other.OneOn(Bits::Likely) ||
@@ -1012,11 +1028,6 @@ ValueType ValueType::ToLikelyUntaggedInt() const
     return Verify(bits | (Bits::IntCanBeUntagged | Bits::IntIsLikelyUntagged));
 }
 
-ValueType ValueType::ToDefiniteNumber_PreferFloat() const
-{
-    return IsNumber() ? *this : ToDefiniteAnyFloat();
-}
-
 ValueType ValueType::ToDefiniteAnyFloat() const
 {
     // Not asserting on expected value type because float specialization allows specializing values of arbitrary types, even
@@ -1024,14 +1035,12 @@ ValueType ValueType::ToDefiniteAnyFloat() const
     return
         Verify(
             OneOn(Bits::Object)
-                ? (Bits::Float | Bits::CanBeTaggedValue)
-                : bits & (Bits::Int | Bits::IntCanBeUntagged | Bits::IntIsLikelyUntagged | Bits::CanBeTaggedValue | Bits::Number) | Bits::Float);
-}
-
-ValueType ValueType::ToDefiniteNumber() const
-{
-    Assert(IsLikelyNumber());
-    return IsNumber() ? *this : ToDefiniteAnyNumber();
+                ?   (Bits::Float | Bits::CanBeTaggedValue)
+                :   (
+                        bits &
+                        (Bits::Int | Bits::IntCanBeUntagged | Bits::IntIsLikelyUntagged | Bits::CanBeTaggedValue | Bits::Number)
+                    ) |
+                    Bits::Float);
 }
 
 ValueType ValueType::ToDefiniteAnyNumber() const
@@ -1054,6 +1063,21 @@ ValueType ValueType::ToDefiniteAnyNumber() const
     return Verify(numberBits);
 }
 
+ValueType ValueType::ToDefiniteNumber() const
+{
+    return IsNumber() ? *this : ToDefiniteAnyNumber();
+}
+
+ValueType ValueType::ToDefiniteNumber_PreferFloatForNonLikelyInt() const
+{
+    if(IsNumber())
+        return *this;
+
+    // If this value type is likely int, after float-specializing, it's preferable to use Int_Number rather than Float, as the
+    // former is also likely int and allows int specialization later. Otherwise, prefer tagging the resulting type with Float.
+    return IsLikelyInt() ? ToDefiniteAnyNumber() : ToDefiniteAnyFloat();
+}
+
 ValueType ValueType::ToDefinitePrimitiveSubset() const
 {
     // This function does not do a safe conversion of an arbitrary type to a definitely-primitive type. It only obtains the
@@ -1074,10 +1098,10 @@ ValueType ValueType::ToDefinitePrimitiveSubset() const
 
     return
         Verify(
-        bits &
-        (
-            OneOn(Bits::Object)
-                ?
+            bits &
+            (
+                OneOn(Bits::Object)
+                    ?
                         BitPattern(VALUE_TYPE_COMMON_BIT_COUNT) - (Bits::Likely | Bits::Object)
                     :
                         BitPattern(VALUE_TYPE_COMMON_BIT_COUNT + VALUE_TYPE_NONOBJECT_BIT_COUNT) -
@@ -1141,8 +1165,9 @@ ValueType ValueType::MergeWithObject(const ValueType other) const
 
     if(ValueType(bits & other.bits).OneOn(Bits::Object)) // both have the Object bit set
     {
-        if (GetObjectType() == other.GetObjectType())
+        if(GetObjectType() == other.GetObjectType())
             return Verify(merged);
+
         const ObjectType typedArrayMergedObjectType =
             TypedArrayMergeMap[static_cast<uint16>(GetObjectType())][static_cast<uint16>(other.GetObjectType())];
         if (typedArrayMergedObjectType != ObjectType::UninitializedObject)
@@ -1150,6 +1175,7 @@ ValueType ValueType::MergeWithObject(const ValueType other) const
             merged.SetObjectType(typedArrayMergedObjectType);
             return Verify(merged);
         }
+
         if(GetObjectType() != ObjectType::UninitializedObject && other.GetObjectType() != ObjectType::UninitializedObject)
         {
             // Any two different specific object types (excludes UninitializedObject and Object, which don't indicate any
@@ -1184,22 +1210,24 @@ ValueType ValueType::MergeWithObject(const ValueType other) const
     return Verify(bits | other.ToPrimitiveOrObject().bits); // see ToPrimitiveOrObject
 }
 
-__inline ValueType ValueType::Merge(const Js::Var var) const
+__inline ValueType ValueType::Merge(const Js::Var var, const Js::ObjectSlotType slotType) const
 {
     using namespace Js;
     Assert(var);
 
+    ValueType valueType;
     if(TaggedInt::Is(var))
-        return Merge(GetTaggedInt());
-    if(JavascriptNumber::Is_NoTaggedIntCheck(var))
+        valueType = slotType.IsFloat() ? GetInt(false) : GetTaggedInt();
+    else if(JavascriptNumber::Is_NoTaggedIntCheck(var))
     {
-        return
-            Merge(
-                (IsUninitialized() || IsLikelyInt()) && JavascriptNumber::IsInt32_NoChecks(var)
-                    ? GetInt(false)
-                    : ValueType::Float);
+        valueType =
+            (IsUninitialized() || IsLikelyInt()) && (slotType.IsInt() || JavascriptNumber::IsInt32_NoChecks(var))
+                ? GetInt(false)
+                : ValueType::Float;
     }
-    return Merge(FromObject(RecyclableObject::FromVar(var)));
+    else
+        valueType = FromObject(RecyclableObject::FromVar(var));
+    return Merge(valueType);
 }
 
 ValueType::Bits ValueType::TypeIdToBits[Js::TypeIds_Limit];
@@ -1210,29 +1238,28 @@ ObjectType ValueType::MixedTypedArrayPair[(uint16)ObjectType::Count];
 ObjectType ValueType::TypedArrayMergeMap[(uint16)ObjectType::Count][(uint16)ObjectType::Count];
 ObjectType ValueType::MixedTypedToVirtualTypedArray[(uint16)ObjectType::Count];
 
-
 void ValueType::InitializeTypeIdToBitsMap()
 {
     using namespace Js;
 
     // Initialize all static types to Uninitialized first, so that a zero will indicate that it's a dynamic type
-    for (TypeId typeId = static_cast<TypeId>(0); typeId <= TypeIds_LastStaticType; typeId = static_cast<TypeId>(typeId + 1))
+    for(TypeId typeId = static_cast<TypeId>(0); typeId <= TypeIds_LastStaticType; typeId = static_cast<TypeId>(typeId + 1))
     {
         TypeIdToBits[typeId] = ValueType::Uninitialized.bits;
         VirtualTypeIdToBits[typeId] = ValueType::Uninitialized.bits;
         TypeIdToVtable[typeId] = (INT_PTR)nullptr;
     }
 
-    for (ObjectType objType = static_cast<ObjectType>(0); objType <ObjectType::Count; objType = static_cast<ObjectType>((uint16)(objType) + 1))
+    for (ObjectType objType = static_cast<ObjectType>(0); objType < ObjectType::Count; ++objType)
     {
         VirtualTypedArrayPair[(uint16)objType] = ObjectType::UninitializedObject;
         MixedTypedArrayPair[(uint16)objType] = ObjectType::UninitializedObject;
         MixedTypedToVirtualTypedArray[(uint16)objType] = ObjectType::UninitializedObject;
     }
 
-    for (ObjectType objType = static_cast<ObjectType>(0); objType < ObjectType::Count; objType = static_cast<ObjectType>((uint16)(objType)+1))
+    for (ObjectType objType = static_cast<ObjectType>(0); objType < ObjectType::Count; ++objType)
     {
-        for (ObjectType objTypeInner = static_cast<ObjectType>(0); objTypeInner < ObjectType::Count; objTypeInner = static_cast<ObjectType>((uint16)(objTypeInner)+1))
+        for (ObjectType objTypeInner = static_cast<ObjectType>(0); objTypeInner < ObjectType::Count; ++objTypeInner)
             TypedArrayMergeMap[(uint16)objType][(uint16)objTypeInner] = ObjectType::UninitializedObject;
     }
 
@@ -1264,7 +1291,6 @@ void ValueType::InitializeTypeIdToBitsMap()
     TypeIdToBits[TypeIds_SIMDUint8x16      ] = GetObject(ObjectType::Simd128Int8x16).bits;
     TypeIdToBits[TypeIds_SIMDFloat64x2     ] = GetObject(ObjectType::Simd128Float64x2).bits;
 
-
     VirtualTypeIdToBits[TypeIds_Int8Array] = GetObject(ObjectType::Int8VirtualArray).bits;
     VirtualTypeIdToBits[TypeIds_Uint8Array] = GetObject(ObjectType::Uint8VirtualArray).bits;
     VirtualTypeIdToBits[TypeIds_Uint8ClampedArray] = GetObject(ObjectType::Uint8ClampedArray).bits;
@@ -1274,7 +1300,6 @@ void ValueType::InitializeTypeIdToBitsMap()
     VirtualTypeIdToBits[TypeIds_Uint32Array] = GetObject(ObjectType::Uint32VirtualArray).bits;
     VirtualTypeIdToBits[TypeIds_Float32Array] = GetObject(ObjectType::Float32VirtualArray).bits;
     VirtualTypeIdToBits[TypeIds_Float64Array] = GetObject(ObjectType::Float64VirtualArray).bits;
-
 
     TypeIdToVtable[TypeIds_Int8Array] = VirtualTableInfo<Int8VirtualArray>::Address;
     TypeIdToVtable[TypeIds_Uint8Array] = VirtualTableInfo<Uint8VirtualArray>::Address;
@@ -1323,7 +1348,6 @@ void ValueType::InitializeTypeIdToBitsMap()
     MixedTypedArrayPair[(int)ObjectType::Float32Array] = ObjectType::Float32MixedArray;
     MixedTypedArrayPair[(int)ObjectType::Float64VirtualArray] = ObjectType::Float64MixedArray;
     MixedTypedArrayPair[(int)ObjectType::Float64Array] = ObjectType::Float64MixedArray;
-
 
     MixedTypedToVirtualTypedArray[(int)ObjectType::Int8MixedArray] = ObjectType::Int8VirtualArray;
     MixedTypedToVirtualTypedArray[(int)ObjectType::Uint8MixedArray] = ObjectType::Uint8VirtualArray;
@@ -1397,7 +1421,6 @@ void ValueType::InitializeTypeIdToBitsMap()
     TypedArrayMergeMap[(int)ObjectType::Float64MixedArray][(int)ObjectType::Float64Array] = ObjectType::Float64MixedArray;
     TypedArrayMergeMap[(int)ObjectType::Float64Array][(int)ObjectType::Float64MixedArray] = ObjectType::Float64MixedArray;
     TypedArrayMergeMap[(int)ObjectType::Float64VirtualArray][(int)ObjectType::Float64MixedArray] = ObjectType::Float64MixedArray;
-
 }
 
 INT_PTR ValueType::GetVirtualTypedArrayVtable(const Js::TypeId typeId)
@@ -1422,7 +1445,7 @@ ValueType ValueType::FromTypeId(const Js::TypeId typeId, bool useVirtual)
         else
         {
             const Bits bits = TypeIdToBits[typeId];
-            if (!!bits)
+            if(!!bits)
                 return bits;
         }
     }
@@ -1433,16 +1456,18 @@ ValueType ValueType::FromObject(Js::RecyclableObject *const recyclableObject)
 {
     using namespace Js;
     Assert(recyclableObject);
+
     const TypeId typeId = recyclableObject->GetTypeId();
-    if (typeId < _countof(TypeIdToBits))
+    if(typeId < _countof(TypeIdToBits))
     {
         const Bits bits = TypeIdToBits[typeId];
-        if (!!bits)
+        if(!!bits)
         {
             const ValueType valueType = Verify(bits);
             if (!valueType.IsLikelyOptimizedTypedArray())
                 return valueType;
-            bool isVirtual = (VirtualTableInfoBase::GetVirtualTable(recyclableObject) == ValueType::GetVirtualTypedArrayVtable(typeId));
+            bool isVirtual =
+                VirtualTableInfoBase::GetVirtualTable(recyclableObject) == ValueType::GetVirtualTypedArrayVtable(typeId);
             if (!isVirtual)
                 return valueType;
             return GetObject(VirtualTypedArrayPair[static_cast<uint16>(valueType.GetObjectType())]);
@@ -1482,7 +1507,8 @@ __inline ValueType ValueType::FromObjectArray(Js::JavascriptArray *const objectA
     using namespace Js;
     Assert(objectArray);
 
-    return FromArray(ObjectType::ObjectWithArray, objectArray, TypeIds_Array); // objects with native arrays are currently not supported
+    // Objects with native arrays are currently not supported
+    return FromArray(ObjectType::ObjectWithArray, objectArray, TypeIds_Array);
 }
 
 __inline ValueType ValueType::FromArray(
@@ -1559,8 +1585,10 @@ void ValueType::ToVerboseString(char (&str)[VALUE_TYPE_MAX_STRING_SIZE]) const
     }
     else if(!CONFIG_FLAG(Verbose))
         b &= ~(Bits::IntCanBeUntagged | Bits::IntIsLikelyUntagged); // these will be simplified
+    if(!CONFIG_FLAG(Verbose))
+        b &= ~Bits::CanBeTaggedValue;
     size_t length = 0;
-    bool addUnderscore = false;
+    bool addUnderscore = CONFIG_FLAG(Verbose);
     size_t nameIndexOffset = 0;
     do
     {
@@ -1600,7 +1628,7 @@ void ValueType::ToVerboseString(char (&str)[VALUE_TYPE_MAX_STRING_SIZE]) const
             default:
                 size_t nameIndex = nameIndexOffset + GetLowestBitIndex(b);
                 Assert(nameIndex < sizeof(BitNames) / sizeof(BitNames[0]));
-                __analysis_assume(nameIndex < sizeof(BitNames) / sizeof(BitNames[0])); // function is not used in shipping builds, satisfy oacr
+                __analysis_assume(nameIndex < sizeof(BitNames) / sizeof(BitNames[0])); // satisfy oacr
                 name = BitNames[nameIndex];
                 break;
         }
@@ -1612,7 +1640,8 @@ void ValueType::ToVerboseString(char (&str)[VALUE_TYPE_MAX_STRING_SIZE]) const
 
         if(addUnderscore)
         {
-            str[length++] = '_';
+            if(length != 0)
+                str[length++] = '_';
             --nameLength;
         }
         else
@@ -1621,8 +1650,12 @@ void ValueType::ToVerboseString(char (&str)[VALUE_TYPE_MAX_STRING_SIZE]) const
         js_memcpy_s(&str[length], sizeof(str) / sizeof(str[0]) - 1 - length, name, nameLength);
         length += nameLength;
 
-        if((b & -b) == BitPattern(1, VALUE_TYPE_OBJECT_BIT_INDEX)) // if the bit that was just printed is the last common bit
-            nameIndexOffset += VALUE_TYPE_NONOBJECT_BIT_COUNT; // skip bit names for bits that only apply when the Object bit is set
+        // If the bit that was just printed is the last common bit...
+        if((b & -b) == BitPattern(1, VALUE_TYPE_OBJECT_BIT_INDEX))
+        {
+            // Skip bit names for bits that only apply when the Object bit is set
+            nameIndexOffset += VALUE_TYPE_NONOBJECT_BIT_COUNT;
+        }
         b &= b - 1; // unset the least significant set bit
     } while(!!b);
 
@@ -1787,7 +1820,10 @@ bool ValueType::IsVirtualTypedArrayPair(const ObjectType other) const
 
 bool ValueType::IsLikelyMixedTypedArrayType() const
 {
-    return (IsLikelyObject() && GetObjectType() >= ObjectType::Int8MixedArray && GetObjectType() <= ObjectType::Float64MixedArray);
+    return
+        IsLikelyObject() &&
+        GetObjectType() >= ObjectType::Int8MixedArray &&
+        GetObjectType() <= ObjectType::Float64MixedArray;
 }
 
 bool ValueType::IsMixedTypedArrayPair(const ValueType other) const

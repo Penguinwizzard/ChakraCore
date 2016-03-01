@@ -986,7 +986,7 @@ namespace Js
 
     void InterpreterStackFrame::Setup::SetupInternal()
     {
-        if (this->function->GetHasInlineCaches() && Js::ScriptFunctionWithInlineCache::Is(this->function))
+        if(function->GetHasInlineCaches())
         {
             this->inlineCaches = Js::ScriptFunctionWithInlineCache::FromVar(this->function)->GetInlineCaches();
         }
@@ -1092,8 +1092,6 @@ namespace Js
             !(this->executeFunction->GetHasTry() && (PHASE_OFF((Js::JITLoopBodyInTryCatchPhase), this->executeFunction) || this->executeFunction->GetHasFinally())) &&
             (this->executeFunction->ForceJITLoopBody() || this->executeFunction->IsJitLoopBodyPhaseEnabled()) &&
             !this->executeFunction->GetScriptContext()->IsInDebugMode();
-#else
-        const bool doJITLoopBody = false;
 #endif
 
         // Pick a version of the LoopBodyStart OpCode handlers that is hardcoded to do loop body JIT and
@@ -2552,8 +2550,7 @@ namespace Js
         // create export object
         if( info->GetExportsCount() )
         {
-            Var newObj = JavascriptOperators::NewScObjectLiteral( GetScriptContext(), info->GetExportsIdArray(),
-                                                                  this->GetFunctionBody()->GetObjectLiteralTypeRef( 0 ) );
+            Var newObj = JavascriptOperators::NewScObjectLiteral(asmJsModuleFunctionBody, info->GetExportsIdArray(), 0);
             for( int i = 0; i < info->GetExportsCount(); i++ )
             {
                 auto ex = info->GetExport( i );
@@ -3717,31 +3714,6 @@ namespace Js
     }
 
     template <class T>
-    void InterpreterStackFrame::OP_GetRootPropertyForTypeOf(unaligned T* playout)
-    {
-        Var rootInstance = GetRootObject();
-        PropertyId propertyId =  GetPropertyIdFromCacheId(playout->inlineCacheIndex);
-
-        Var value = JavascriptOperators::PatchGetRootValueForTypeOf<false>(
-            GetFunctionBody(),
-            GetInlineCache(playout->inlineCacheIndex),
-            playout->inlineCacheIndex,
-            DynamicObject::FromVar(rootInstance),
-            propertyId
-        );
-
-        SetReg(playout->Value, value);
-
-#ifdef TELEMETRY_INTERPRETER
-        if (TELEMETRY_PROPERTY_OPCODE_FILTER(propertyId))
-        {
-            // `successful` will be true as PatchGetRootValue throws an exception if not found.
-            this->scriptContext->GetTelemetry().GetOpcodeTelemetry().GetProperty(rootInstance, propertyId, value, /*successful:*/true);
-        }
-#endif
-    }
-
-    template <class T>
     __declspec(noinline) void InterpreterStackFrame::OP_GetRootProperty_NoFastPath(unaligned T* playout)
     {
         PropertyId propertyId = GetPropertyIdFromCacheId(playout->inlineCacheIndex);
@@ -3766,42 +3738,32 @@ namespace Js
 #endif
     }
 
+    template <class T>
+    void InterpreterStackFrame::OP_GetRootPropertyForTypeOf(unaligned T* playout)
+    {
+        Var rootInstance = GetRootObject();
+        PropertyId propertyId =  GetPropertyIdFromCacheId(playout->inlineCacheIndex);
+        
+        Var value = JavascriptOperators::PatchGetRootValueForTypeOf<false>(
+            GetFunctionBody(),
+            GetInlineCache(playout->inlineCacheIndex),
+            playout->inlineCacheIndex,
+            DynamicObject::FromVar(rootInstance),
+            propertyId
+        );
+        
+        SetReg(playout->Value, value);
+
+#ifdef TELEMETRY_INTERPRETER
+        if (TELEMETRY_PROPERTY_OPCODE_FILTER(propertyId))
+        {
+            // `successful` will be true as PatchGetRootValue throws an exception if not found.
+            this->scriptContext->GetTelemetry().GetOpcodeTelemetry().GetProperty(rootInstance, propertyId, value, /*successful:*/true);
+        }
+#endif
+    }
+
 #if ENABLE_PROFILE_INFO
-    template <class T>
-    void InterpreterStackFrame::UpdateFldInfoFlagsForGetSetInlineCandidate(unaligned T* playout, FldInfoFlags& fldInfoFlags, CacheType cacheType,
-                                                DynamicProfileInfo * dynamicProfileInfo, uint inlineCacheIndex, RecyclableObject * obj)
-    {
-        RecyclableObject *callee = nullptr;
-        //TODO: Setter case once we stop sharing inline caches for these callsites.
-        if ((cacheType & (CacheType_Getter | CacheType_Setter)) && GetInlineCache(inlineCacheIndex)->GetGetterSetter(obj->GetType(), &callee))
-        {
-            const auto functionBody = this->m_functionBody;
-            bool canInline = dynamicProfileInfo->RecordLdFldCallSiteInfo(functionBody, callee, false /*callApplyTarget*/);
-            if (canInline)
-            {
-                //updates this fldInfoFlags passed by reference.
-                fldInfoFlags = DynamicProfileInfo::MergeFldInfoFlags(fldInfoFlags, FldInfo_InlineCandidate);
-            }
-        }
-    }
-
-    template <class T>
-    void InterpreterStackFrame::UpdateFldInfoFlagsForCallApplyInlineCandidate(unaligned T* playout, FldInfoFlags& fldInfoFlags, CacheType cacheType,
-                                                DynamicProfileInfo * dynamicProfileInfo, uint inlineCacheIndex, RecyclableObject * obj)
-    {
-        RecyclableObject *callee = nullptr;
-        if (!(fldInfoFlags & FldInfo_Polymorphic) && GetInlineCache(inlineCacheIndex)->GetCallApplyTarget(obj, &callee))
-        {
-            const auto functionBody = this->m_functionBody;
-            bool canInline = dynamicProfileInfo->RecordLdFldCallSiteInfo(functionBody, callee, true /*callApplyTarget*/);
-            if (canInline)
-            {
-                //updates this fldInfoFlags passed by reference.
-                fldInfoFlags = DynamicProfileInfo::MergeFldInfoFlags(fldInfoFlags, FldInfo_InlineCandidate);
-            }
-        }
-    }
-
     template <class T, bool Root, bool Method, bool CallApplyTarget>
     void InterpreterStackFrame::ProfiledGetProperty(unaligned T* playout, const Var instance)
     {
@@ -4427,15 +4389,9 @@ namespace Js
     template <bool doProfile>
     Var InterpreterStackFrame::ProfiledDivide(Var aLeft, Var aRight, ScriptContext* scriptContext, ProfileId profileId)
     {
-        Var result = JavascriptMath::Divide(aLeft, aRight,scriptContext);
-
-        if (doProfile)
-        {
-            Js::FunctionBody* body = this->m_functionBody;
-            body->GetDynamicProfileInfo()->RecordDivideResultType(body, profileId, result);
-        }
-
-        return result;
+        if(doProfile)
+            return ProfilingHelpers::ProfiledDivide(aLeft, aRight, GetFunctionBody(), profileId);
+        return JavascriptMath::Divide(aLeft, aRight,scriptContext);
     }
 
     template <bool doProfile>
@@ -4444,24 +4400,7 @@ namespace Js
         // If both arguments are TaggedInt, then try to do integer division
             // This case is not handled by the lowerer.
         if (doProfile)
-        {
-            Js::FunctionBody* body = this->function->GetFunctionBody();
-            if(TaggedInt::IsPair(aLeft, aRight))
-            {
-                int nLeft    = TaggedInt::ToInt32(aLeft);
-                int nRight   = TaggedInt::ToInt32(aRight);
-
-                // nLeft is positive and nRight is +2^i
-                // Fast path for Power of 2 divisor
-                if (nLeft > 0 && ::Math::IsPow2(nRight))
-                {
-                    body->GetDynamicProfileInfo()->RecordModulusOpType(body, profileId, /*isModByPowerOf2*/ true);
-                    return TaggedInt::ToVarUnchecked(nLeft & (nRight - 1));
-                }
-            }
-            body->GetDynamicProfileInfo()->RecordModulusOpType(body, profileId, /*isModByPowerOf2*/ false);
-        }
-
+            return ProfilingHelpers::ProfiledRemainder(aLeft, aRight, GetFunctionBody(), profileId);
         return JavascriptMath::Modulus(aLeft, aRight,scriptContext);
     }
 
@@ -5291,7 +5230,7 @@ namespace Js
 
             for (uint i = firstVarSlot; i < propIds->count; i++)
             {
-                obj->SetSlot(SetSlotArguments(propIds->elements[i], i, undef));
+                obj->SetSlot(SetSlotArguments(propIds->elements[i], i, ObjectSlotType::GetVar(), undef));
             }
 
             obj->SetCommit(true);
@@ -5313,22 +5252,22 @@ namespace Js
 
     void InterpreterStackFrame::OP_NewScObjectLiteral(const unaligned OpLayoutAuxiliary * playout )
     {
-        const Js::PropertyIdArray *propIds = Js::ByteCodeReader::ReadPropertyIdArray(playout->Offset, this->GetFunctionBody());
+        FunctionBody *const functionBody = GetFunctionBody();
+        const Js::PropertyIdArray *propIds = Js::ByteCodeReader::ReadPropertyIdArray(playout->Offset, functionBody);
 
-        Var newObj = JavascriptOperators::NewScObjectLiteral(GetScriptContext(), propIds,
-            this->GetFunctionBody()->GetObjectLiteralTypeRef(playout->C1));
+        Var newObj = JavascriptOperators::NewScObjectLiteral(functionBody, propIds, playout->C1);
 
         SetReg(playout->R0, newObj);
     }
 
     void InterpreterStackFrame::OP_NewScObjectLiteral_LS(const unaligned OpLayoutAuxiliary * playout, RegSlot& target)
     {
-        const Js::PropertyIdArray *propIds = Js::ByteCodeReader::ReadPropertyIdArray(playout->Offset, this->GetFunctionBody());
+        FunctionBody *const functionBody = GetFunctionBody();
+        const Js::PropertyIdArray *propIds = Js::ByteCodeReader::ReadPropertyIdArray(playout->Offset, functionBody);
 
         target = playout->R0;
 
-        Var newObj = JavascriptOperators::NewScObjectLiteral(GetScriptContext(), propIds,
-            this->GetFunctionBody()->GetObjectLiteralTypeRef(playout->C1));
+        Var newObj = JavascriptOperators::NewScObjectLiteral(functionBody, propIds, playout->C1);
 
         SetReg(playout->R0, newObj);
 
@@ -6908,8 +6847,7 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
                 Js::ByteCodeReader::ReadPropertyIdArray(0, this->GetFunctionBody(), ActivationObjectEx::ExtraSlotCount());
             Var funcExpr = this->GetFunctionExpression();
             PropertyId objectId = ActivationObjectEx::GetLiteralObjectRef(propIds);
-            scopeObject = JavascriptOperators::OP_InitCachedScope(funcExpr, propIds,
-                this->GetFunctionBody()->GetObjectLiteralTypeRef(objectId),
+            scopeObject = JavascriptOperators::OP_InitCachedScope(funcExpr, propIds, objectId,
                 propIds->hasNonSimpleParams, GetScriptContext());
 
         }

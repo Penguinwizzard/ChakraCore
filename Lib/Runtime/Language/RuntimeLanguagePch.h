@@ -35,6 +35,8 @@
 #include "Library\ArgumentsObject.h"
 
 #include "Types\TypePropertyCache.h"
+#include "Types\PathTypeHandler.h"
+#include "Types\PropertyIndexRanges.h"
 #include "Library\JavascriptVariantDate.h"
 #include "Library\JavascriptProxy.h"
 #include "Library\JavascriptSymbol.h"

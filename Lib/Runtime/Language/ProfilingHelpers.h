@@ -58,8 +58,12 @@ namespace Js
 
     private:
         static void UpdateFldInfoFlagsForGetSetInlineCandidate(RecyclableObject *const object, FldInfoFlags &fldInfoFlags, const CacheType cacheType, InlineCache *const inlineCache, FunctionBody *const functionBody);
-        static void UpdateFldInfoFlagsForCallApplyInlineCandidate(RecyclableObject *const object, FldInfoFlags &fldInfoFlags, const CacheType cacheType, InlineCache *const inlineCache, FunctionBody *const functionBody);
+        static void UpdateFldInfoFlagsForCallApplyInlineCandidate(RecyclableObject *const object, FldInfoFlags &fldInfoFlags, InlineCache *const inlineCache, FunctionBody *const functionBody);
         static InlineCache *GetInlineCache(ScriptFunction *const scriptFunction, const InlineCacheIndex inlineCacheIndex);
+
+    public:
+        static Var ProfiledDivide(const Var left, const Var right, FunctionBody *const functionBody, const ProfileId profileId);
+        static Var ProfiledRemainder(const Var left, const Var right, FunctionBody *const functionBody, const ProfileId profileId);
     };
 #endif
 }

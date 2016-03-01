@@ -29,6 +29,7 @@ namespace Js
 
     typedef uint32 RegSlot;
     typedef uint16 ArgSlot;
+    typedef uint8 PathTypePropertyIndex;
     typedef uint16 PropertyIndex;
     typedef int32 BigPropertyIndex;
     typedef unsigned char PropertyAttributes;

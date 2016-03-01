@@ -121,9 +121,9 @@ namespace Js
     ///
     ///----------------------------------------------------------------------------
 #ifdef LOG_BYTECODE_AST_RATIO
-    void ByteCodeWriter::End(long currentAstSize, long maxAstSize)
+    void ByteCodeWriter::End(FuncInfo *const funcInfo, long maxAstSize)
 #else
-    void ByteCodeWriter::End()
+    void ByteCodeWriter::End(FuncInfo *const funcInfo)
 #endif
     {
         Assert(isInUse);
@@ -134,7 +134,8 @@ namespace Js
         ByteBlock* finalByteCodeBlock;
 
         ScriptContext* scriptContext = m_functionWrite->GetScriptContext();
-        m_byteCodeData.Copy(scriptContext->GetRecycler(), &finalByteCodeBlock);
+        Recycler *const recycler = scriptContext->GetRecycler();
+        m_byteCodeData.Copy(recycler, &finalByteCodeBlock);
 
         byte * byteBuffer = finalByteCodeBlock->GetBuffer();
         uint byteCount = m_byteCodeData.GetCurrentOffset();
@@ -193,7 +194,27 @@ namespace Js
         m_auxContextData.Copy(m_functionWrite->GetScriptContext()->GetRecycler(), &finalAuxiliaryContextBlock);
 
         m_functionWrite->AllocateInlineCache();
-        m_functionWrite->AllocateObjectLiteralTypeArray();
+
+        if(m_functionWrite->GetIsAsmjsMode() && !m_functionWrite->GetIsAsmJsFunction())
+        {
+            // This is an AsmJs module function. Allocate one object literal for the export object.
+            m_functionWrite->AllocateObjectLiteralCreationSiteInfos(1);
+            m_functionWrite->SetObjectLiteralCreationSiteInfo(0, ObjectLiteralCreationSiteInfo::New(0, recycler));
+        }
+        else
+        {
+            const uint objectLiteralCount = funcInfo->objectLiteralCreationSiteInfos.Count();
+            m_functionWrite->AllocateObjectLiteralCreationSiteInfos(objectLiteralCount);
+            for(uint objectLiteralIndex = 0; objectLiteralIndex < objectLiteralCount; ++objectLiteralIndex)
+            {
+                m_functionWrite->SetObjectLiteralCreationSiteInfo(
+                    objectLiteralIndex,
+                    ObjectLiteralCreationSiteInfo::New(
+                        funcInfo->objectLiteralCreationSiteInfos.Item(objectLiteralIndex)->GetInitialFieldCount(),
+                        recycler));
+            }
+        }
+        funcInfo->objectLiteralCreationSiteInfos.Reset();
 
         if (!PHASE_OFF(Js::ScriptFunctionWithInlineCachePhase, m_functionWrite) && !PHASE_OFF(Js::InlineApplyTargetPhase, m_functionWrite))
         {
@@ -221,7 +242,8 @@ namespace Js
         JS_ETW(EventWriteJSCRIPT_BYTECODEGEN_METHOD(m_functionWrite->GetHostSourceContext(), m_functionWrite->GetScriptContext(), m_functionWrite->GetLocalFunctionId(), m_functionWrite->GetByteCodeCount(), this->GetTotalSize(), m_functionWrite->GetExternalDisplayName()));
 
 #ifdef LOG_BYTECODE_AST_RATIO
-        // log the bytecode AST ratio
+        // log the bytecode ast ratio
+        const long currentAstSize = funcInfo->root->sxFnc.astSize;
         if (currentAstSize == maxAstSize)
         {
             float astBytecodeRatio = (float)currentAstSize / (float)byteCount;

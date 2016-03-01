@@ -546,7 +546,12 @@ public:
     }
 };
 
-#define InlineCacheAuxSlotTypeTag 4
+// Lowest bit is used for isLocal, isProto, and isAccessor, one of which is always set so that the corresponding type fields in
+// other layouts don't compare equal to the type being looked up
+#define InlineCacheAuxSlotTypeTag static_cast<size_t>(0x2)
+#define InlineCacheSlotTypeShift static_cast<size_t>(2) // ObjectSlotType::BitSize bits from this bit are used for the slot type
+#define InlineCacheSlotTypeMask static_cast<size_t>(0xc)
+
 #define MinPolymorphicInlineCacheSize 4
 #define MaxPolymorphicInlineCacheSize 32
 

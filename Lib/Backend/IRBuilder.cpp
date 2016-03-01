@@ -80,43 +80,7 @@ IRBuilder::InsertBailOutForDebugger(uint byteCodeOffset, IR::BailOutKind kind, I
 bool
 IRBuilder::DoBailOnNoProfile()
 {
-    if (PHASE_OFF(Js::BailOnNoProfilePhase, this->m_func->GetTopFunc()))
-    {
-        return false;
-    }
-
-    Func *const topFunc = m_func->GetTopFunc();
-    if(topFunc->m_jitTimeData->GetProfiledIterations() == 0)
-    {
-        // The top function has not been profiled yet. Some switch must have been used to force jitting. This is not a
-        // real-world case, but for the purpose of testing the JIT, it's beneficial to generate code in unprofiled paths.
-        return false;
-    }
-
-    if (this->m_func->GetProfileInfo()->IsNoProfileBailoutsDisabled())
-    {
-        return false;
-    }
-
-    if (!m_func->DoGlobOpt() || m_func->GetTopFunc()->HasTry())
-    {
-        return false;
-    }
-
-#ifdef ENABLE_DEBUG_CONFIG_OPTIONS
-    if (this->m_func->GetTopFunc() != this->m_func && Js::Configuration::Global.flags.IsEnabled(Js::ForceJITLoopBodyFlag))
-    {
-        // No profile data for loop bodies with -force...
-        return false;
-    }
-#endif
-
-    if (!this->m_func->HasProfileInfo())
-    {
-        return false;
-    }
-
-    return true;
+    return m_func->DoBailOnNoProfile();
 }
 
 void
@@ -154,16 +118,23 @@ IRBuilder::InsertBailOnNoProfile(uint offset)
 
 void IRBuilder::InsertBailOnNoProfile(IR::Instr *const insertBeforeInstr)
 {
-    Assert(DoBailOnNoProfile());
+    Func *const func = insertBeforeInstr->m_func;
+    IR::Instr *const bailOnNoProfileInstr = InsertBailOnNoProfile(insertBeforeInstr, func);
 
-    IR::Instr *const bailOnNoProfileInstr = IR::Instr::New(Js::OpCode::BailOnNoProfile, m_func);
-    bailOnNoProfileInstr->SetByteCodeOffset(insertBeforeInstr);
     uint32 offset = insertBeforeInstr->GetByteCodeOffset();
     if (m_offsetToInstruction[offset] == insertBeforeInstr)
     {
         m_offsetToInstruction[offset] = bailOnNoProfileInstr;
     }
+}
+
+IR::Instr * IRBuilder::InsertBailOnNoProfile(IR::Instr *const insertBeforeInstr, Func *const func)
+{
+    Assert(func->DoBailOnNoProfile());
+    IR::Instr *const bailOnNoProfileInstr = IR::Instr::New(Js::OpCode::BailOnNoProfile, func);
+    bailOnNoProfileInstr->SetByteCodeOffset(insertBeforeInstr);
     insertBeforeInstr->InsertBefore(bailOnNoProfileInstr);
+    return bailOnNoProfileInstr;
 }
 
 #ifdef BAILOUT_INJECTION
@@ -3901,7 +3872,7 @@ IRBuilder::BuildProfiledFieldLoad(Js::OpCode loadOp, IR::RegOpnd *dstOpnd, IR::S
         Js::ReadOnlyDynamicProfileInfo * profile = this->m_func->GetProfileInfo();
         instr = IR::ProfiledInstr::New(loadOp, dstOpnd, srcOpnd, m_func);
         instr->AsProfiledInstr()->u.FldInfo() = *(profile->GetFldInfo(this->m_func->GetJnFunction(), inlineCacheIndex));
-        *pUnprofiled = !instr->AsProfiledInstr()->u.FldInfo().WasLdFldProfiled();
+        *pUnprofiled = !instr->AsProfiledInstr()->u.FldInfo().WasProfiled();
         dstOpnd->SetValueType(instr->AsProfiledInstr()->u.FldInfo().valueType);
 #if ENABLE_DEBUG_CONFIG_OPTIONS
         if(Js::Configuration::Global.flags.TestTrace.IsEnabled(Js::DynamicProfilePhase))
@@ -4204,7 +4175,7 @@ IRBuilder::BuildElementCP(Js::OpCode newOpcode, uint32 offset, Js::RegSlot insta
     IR::RegOpnd *   regOpnd;
 
     IR::Instr *     instr = nullptr;
-    bool isLdFldThatWasNotProfiled = false;
+    bool hasNoProfileData = false;
     switch (newOpcode)
     {
     case Js::OpCode::LdFldForTypeOf:
@@ -4225,7 +4196,7 @@ IRBuilder::BuildElementCP(Js::OpCode newOpcode, uint32 offset, Js::RegSlot insta
 
         if (isProfiled)
         {
-            instr = this->BuildProfiledFieldLoad(newOpcode, regOpnd, fieldSymOpnd, inlineCacheIndex, &isLdFldThatWasNotProfiled);
+            instr = this->BuildProfiledFieldLoad(newOpcode, regOpnd, fieldSymOpnd, inlineCacheIndex, &hasNoProfileData);
         }
 
         // If it hasn't been set yet
@@ -4293,10 +4264,10 @@ IRBuilder::BuildElementCP(Js::OpCode newOpcode, uint32 offset, Js::RegSlot insta
             }
             else if (this->m_func->HasProfileInfo())
             {
-
                 Js::ReadOnlyDynamicProfileInfo * profile = this->m_func->GetProfileInfo();
                 instr = IR::ProfiledInstr::New(newOpcode, fieldSymOpnd, srcOpnd, m_func);
                 instr->AsProfiledInstr()->u.FldInfo() = *(profile->GetFldInfo(this->m_func->GetJnFunction(), inlineCacheIndex));
+                hasNoProfileData = !instr->AsProfiledInstr()->u.FldInfo().WasProfiled();
             }
         }
 
@@ -4315,7 +4286,7 @@ IRBuilder::BuildElementCP(Js::OpCode newOpcode, uint32 offset, Js::RegSlot insta
 
     this->AddInstr(instr, offset);
 
-    if(isLdFldThatWasNotProfiled && DoBailOnNoProfile())
+    if(hasNoProfileData && DoBailOnNoProfile())
     {
         InsertBailOnNoProfile(instr);
     }
@@ -4683,7 +4654,7 @@ IRBuilder::BuildAuxiliary(Js::OpCode newOpcode, uint32 offset)
     {
     case Js::OpCode::NewScObjectLiteral:
         {
-            int literalObjectId = auxInsn->C1;
+            uint objectLiteralIndex = auxInsn->C1;
 
             IR::RegOpnd *   dstOpnd;
             IR::Opnd*       srcOpnd;
@@ -4700,13 +4671,20 @@ IRBuilder::BuildAuxiliary(Js::OpCode newOpcode, uint32 offset)
 
             // Because we're going to be making decisions based off the value, we have to defer
             // this until we get to lowering.
-            instr->SetSrc2(IR::IntConstOpnd::New(literalObjectId, TyUint32, m_func, true));
+            instr->SetSrc2(IR::IntConstOpnd::New(objectLiteralIndex, TyUint32, m_func, true));
 
             if (dstOpnd->m_sym->m_isSingleDef)
             {
                 dstOpnd->m_sym->m_isSafeThis = true;
             }
-            break;
+
+            AddInstr(instr, offset);
+
+            if(!m_func->m_jitTimeData->GetObjectLiteralCreationSiteFinalType(objectLiteralIndex) && DoBailOnNoProfile())
+            {
+                InsertBailOnNoProfile(instr);
+            }
+            return;
         }
 
     case Js::OpCode::LdPropIds:
@@ -4998,7 +4976,7 @@ void IRBuilder::BuildInitCachedScope(int auxOffset, int offset)
 
     src2Opnd = this->BuildAuxArrayOpnd(AuxArrayValue::AuxPropertyIdArray, offset, auxOffset, Js::ActivationObjectEx::ExtraSlotCount());
     Js::PropertyIdArray * propIds = (Js::PropertyIdArray *)src2Opnd->AsAddrOpnd()->m_address;
-    src3Opnd = this->BuildAuxObjectLiteralTypeRefOpnd(Js::ActivationObjectEx::GetLiteralObjectRef(propIds), offset);
+    src3Opnd = IR::Opnd::CreateUint32Opnd(Js::ActivationObjectEx::GetLiteralObjectRef(propIds), m_func);
     dstOpnd = this->BuildDstOpnd(m_func->GetJnFunction()->GetLocalClosureReg());
 
     formalsAreLetDeclOpnd = IR::IntConstOpnd::New(propIds->hasNonSimpleParams, TyUint8, m_func);
@@ -5065,15 +5043,15 @@ IRBuilder::BuildReg2Aux(Js::OpCode newOpcode, uint32 offset)
             this->m_func->SetFuncObjSym(src1Opnd->m_sym);
 
             src2Opnd = this->BuildAuxArrayOpnd(AuxArrayValue::AuxPropertyIdArray, offset, auxInsn->Offset, 3);
-            src3Opnd = this->BuildAuxObjectLiteralTypeRefOpnd(literalObjectId, offset);
+            src3Opnd = IR::Opnd::CreateUint32Opnd(literalObjectId, m_func);
             dstOpnd = this->BuildDstOpnd(dstRegSlot);
 
             formalsAreLetDeclOpnd = IR::IntConstOpnd::New((IntConstType) (newOpcode == Js::OpCode::InitLetCachedScope), TyUint8, m_func);
 
-            instr = IR::Instr::New(Js::OpCode::ArgOut_A, IR::RegOpnd::New(TyVar, m_func), formalsAreLetDeclOpnd, m_func);
+            instr = IR::Instr::New(Js::OpCode::ArgOut_A, IR::RegOpnd::New(formalsAreLetDeclOpnd->GetType(), m_func), formalsAreLetDeclOpnd, m_func);
             this->AddInstr(instr, offset);
 
-            instr = IR::Instr::New(Js::OpCode::ArgOut_A, IR::RegOpnd::New(TyVar, m_func), src3Opnd, instr->GetDst(), m_func);
+            instr = IR::Instr::New(Js::OpCode::ArgOut_A, IR::RegOpnd::New(src3Opnd->GetType(), m_func), src3Opnd, instr->GetDst(), m_func);
             this->AddInstr(instr, Js::Constants::NoByteCodeOffset);
 
             instr = IR::Instr::New(Js::OpCode::ArgOut_A, IR::RegOpnd::New(TyVar, m_func), src2Opnd, instr->GetDst(), m_func);
@@ -7224,12 +7202,6 @@ IRBuilder::BuildAuxArrayOpnd(AuxArrayValue auxArrayType, uint32 offset, uint32 a
         Assert(false);
         return nullptr;
     }
-}
-
-IR::Opnd *
-IRBuilder::BuildAuxObjectLiteralTypeRefOpnd(int objectId, uint32 offset)
-{
-    return IR::AddrOpnd::New(m_func->GetJnFunction()->GetObjectLiteralTypeRef(objectId), IR::AddrOpndKindDynamicMisc, this->m_func);
 }
 
 void

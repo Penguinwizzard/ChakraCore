@@ -91,7 +91,6 @@ namespace Js
     {
         // Required by EquivalentTypeGuard::SetType.
         CompileAssert(offsetof(PropertyGuard, value) == 0);
-        CompileAssert(offsetof(ConstructorCache, guard.value) == offsetof(PropertyGuard, value));
     };
 
     class JitIndexedPropertyGuard : public Js::PropertyGuard
@@ -143,15 +142,6 @@ namespace Js
             this->strongRef = nullptr;
         }
     };
-
-    struct CtorCacheGuardTransferEntry
-    {
-        PropertyId propertyId;
-        ConstructorCache* caches[0];
-
-        CtorCacheGuardTransferEntry(): propertyId(Js::Constants::NoProperty) {}
-    };
-
 
 #define EQUIVALENT_TYPE_CACHE_SIZE (8)
 
@@ -371,11 +361,6 @@ namespace Js
             TypeGuardTransferEntry* propertyGuardsByPropertyId;
             size_t propertyGuardsByPropertyIdPlusSize;
 
-            // This is a dynamically sized array of dynamically sized CtorCacheGuardTransferEntry.  It's heap allocated by the JIT
-            // thread and lives until entry point is installed, at which point it is explicitly freed.
-            CtorCacheGuardTransferEntry* ctorCacheGuardsByPropertyId;
-            size_t ctorCacheGuardsByPropertyIdPlusSize;
-
             int equivalentTypeGuardCount;
             int lazyBailoutPropertyCount;
             // This is a dynamically sized array of JitEquivalentTypeGuards. It's heap allocated by the JIT thread and lives
@@ -392,7 +377,6 @@ namespace Js
             JitTransferData():
                 jitTimeTypeRefs(nullptr), runtimeTypeRefCount(0), runtimeTypeRefs(nullptr),
                 propertyGuardCount(0), propertyGuardsByPropertyId(nullptr), propertyGuardsByPropertyIdPlusSize(0),
-                ctorCacheGuardsByPropertyId(nullptr), ctorCacheGuardsByPropertyIdPlusSize(0),
                 equivalentTypeGuardCount(0), equivalentTypeGuards(nullptr), data(nullptr),
                 falseReferencePreventionBit(true), isReady(false), lazyBailoutProperties(nullptr), lazyBailoutPropertyCount(0){}
 
@@ -479,9 +463,6 @@ namespace Js
 
     private:
 #if ENABLE_NATIVE_CODEGEN
-        typedef SListCounted<ConstructorCache*, Recycler> ConstructorCacheList;
-        ConstructorCacheList* constructorCaches;
-
         EntryPointPolymorphicInlineCacheInfo * polymorphicInlineCacheInfo;
 
         // This field holds any recycler allocated references that must be kept alive until
@@ -491,6 +472,10 @@ namespace Js
 
         // If we pin types this array contains strong references to types, otherwise it holds weak references.
         void **runtimeTypeRefs;
+
+        // Other things that need to be kept alive as long as the jitted code is alive
+        typedef JsUtil::BaseHashSet<const void *, Recycler> PointerSet;
+        PointerSet *strongRefs;
 
         uint32 pendingPolymorphicCacheState;
 #endif
@@ -516,11 +501,12 @@ namespace Js
 #if ENABLE_NATIVE_CODEGEN
             nativeThrowSpanSequence(nullptr), workItem(nullptr), weakFuncRefSet(nullptr),
             jitTransferData(nullptr), sharedPropertyGuards(nullptr), propertyGuardCount(0), propertyGuardWeakRefs(nullptr),
-            equivalentTypeCacheCount(0), equivalentTypeCaches(nullptr), constructorCaches(nullptr), state(NotScheduled), data(nullptr),
+            equivalentTypeCacheCount(0), equivalentTypeCaches(nullptr), state(NotScheduled), data(nullptr),
             numberChunks(nullptr), polymorphicInlineCacheInfo(nullptr), runtimeTypeRefs(nullptr),
-            isLoopBody(isLoopBody), hasJittedStackClosure(false), registeredEquivalentTypeCacheRef(nullptr), bailoutRecordMap(nullptr),
+            isLoopBody(isLoopBody), hasJittedStackClosure(false), registeredEquivalentTypeCacheRef(nullptr), bailoutRecordMap(nullptr), strongRefs(nullptr),
 #endif
             library(library), codeSize(0), nativeAddress(nullptr), isAsmJsFunction(false), validationCookie(validationCookie)
+
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
             , cleanupStack(nullptr)
             , cleanupReason(NotCleanedUp)
@@ -846,15 +832,12 @@ namespace Js
         bool HasSharedPropertyGuard(Js::PropertyId propertyId);
         bool TryGetSharedPropertyGuard(Js::PropertyId propertyId, Js::PropertyGuard*& guard);
         void RecordTypeGuards(int propertyGuardCount, TypeGuardTransferEntry* typeGuardTransferRecord, size_t typeGuardTransferPlusSize);
-        void RecordCtorCacheGuards(CtorCacheGuardTransferEntry* ctorCacheTransferRecord, size_t ctorCacheTransferPlusSize);
         void FreePropertyGuards();
         void FreeJitTransferData();
         void RegisterEquivalentTypeCaches();
         void UnregisterEquivalentTypeCaches();
         bool ClearEquivalentTypeCaches();
 
-        void RegisterConstructorCache(Js::ConstructorCache* constructorCache, Recycler* recycler);
-        uint GetConstructorCacheCount() const { return this->constructorCaches != nullptr ? this->constructorCaches->Count() : 0; }
         uint32 GetPendingPolymorphicCacheState() const { return this->pendingPolymorphicCacheState; }
         void SetPendingPolymorphicCacheState(uint32 state) { this->pendingPolymorphicCacheState = state; }
         BYTE GetPendingInlinerVersion() const { return this->pendingInlinerVersion; }
@@ -868,6 +851,8 @@ namespace Js
         bool HasInlinees() { return this->frameHeight > 0; }
         void DoLazyBailout(BYTE** addressOfReturnAddress, Js::FunctionBody* functionBody, const PropertyRecord* propertyRecord);
 #endif
+        void AddStrongRef(const void *const p);
+
 #if DBG_DUMP
      public:
 #else if defined(VTUNE_PROFILING)
@@ -1926,9 +1911,11 @@ namespace Js
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
         static bool shareInlineCaches;
 #endif
+        WriteBarrierPtr<ObjectLiteralCreationSiteInfo *> objectLiteralCreationSiteInfos;
         WriteBarrierPtr<FunctionEntryPointInfo> defaultFunctionEntryPointInfo;
 
 #if ENABLE_PROFILE_INFO
+        WriteBarrierPtr<FunctionEntryPointInfo> lastFullJitEntryPointInfo;
         WriteBarrierPtr<DynamicProfileInfo> dynamicProfileInfo;
 #endif
 
@@ -2102,6 +2089,11 @@ namespace Js
         FunctionEntryPointInfo *GetSimpleJitEntryPointInfo() const;
         void SetSimpleJitEntryPointInfo(FunctionEntryPointInfo *const entryPointInfo);
 
+#if ENABLE_NATIVE_CODEGEN
+        FunctionEntryPointInfo *GetLastFullJitEntryPointInfo() const;
+        void SetLastFullJitEntryPointInfo(FunctionEntryPointInfo *const entryPointInfo);
+#endif
+
     private:
         void VerifyExecutionMode(const ExecutionMode executionMode) const;
     public:
@@ -2188,7 +2180,6 @@ namespace Js
         static bool DoObjectHeaderInliningForObjectLiterals();
     public:
         static bool DoObjectHeaderInliningForObjectLiteral(const uint32 inlineSlotCapacity);
-        static bool DoObjectHeaderInliningForObjectLiteral(const PropertyIdArray *const propIds, ScriptContext *const scriptContext);
         static bool DoObjectHeaderInliningForEmptyObjects();
 
     public:
@@ -2349,6 +2340,7 @@ namespace Js
         BOOL IsDynamicInterpreterThunk() const;
         BOOL IsNativeOriginalEntryPoint() const;
         bool IsSimpleJitOriginalEntryPoint() const;
+        bool IsLastFullJitOriginalEntryPoint() const;
 
 #if DYNAMIC_INTERPRETER_THUNK
         static BYTE GetOffsetOfDynamicInterpreterThunk() { return offsetof(FunctionBody, m_dynamicInterpreterThunk); }
@@ -2660,12 +2652,14 @@ namespace Js
         InlineCache * GetRootObjectInlineCache(uint index);
         IsInstInlineCache * GetIsInstInlineCache(uint index);
         PolymorphicInlineCache * GetPolymorphicInlineCache(uint index);
-        PolymorphicInlineCache * CreateNewPolymorphicInlineCache(uint index, PropertyId propertyId, InlineCache * inlineCache);
-        PolymorphicInlineCache * CreateBiggerPolymorphicInlineCache(uint index, PropertyId propertyId);
+        PolymorphicInlineCache * CreateNewPolymorphicInlineCache(uint index, PropertyId propertyId, const ObjectSlotType slotType, InlineCache * inlineCache);
+        PolymorphicInlineCache * CreateBiggerPolymorphicInlineCache(uint index, PropertyId propertyId, const ObjectSlotType slotType);
 
     private:
         void ResetInlineCaches();
-        PolymorphicInlineCache * CreatePolymorphicInlineCache(uint index, uint16 size);
+        PolymorphicInlineCache * CreatePolymorphicInlineCache(uint index, uint16 size, const ObjectSlotType slotType);
+
+    private:
         uint32 m_asmJsTotalLoopCount;
     public:
         void CreateCacheIdToPropertyIdMap();
@@ -2698,9 +2692,12 @@ namespace Js
 #endif
 
     public:
-        uint NewObjectLiteral();
-        void AllocateObjectLiteralTypeArray();
-        DynamicType ** GetObjectLiteralTypeRef(uint index);
+        uint GetObjectLiteralCount() const;
+        void AllocateObjectLiteralCreationSiteInfos(const uint objectLiteralCount);
+        ObjectLiteralCreationSiteInfo *GetObjectLiteralCreationSiteInfo(const uint objectLiteralIndex) const;
+        void SetObjectLiteralCreationSiteInfo(const uint objectLiteralIndex, ObjectLiteralCreationSiteInfo *const objectLiteralCreationSiteInfo);
+
+    public:
         uint NewLiteralRegex();
         uint GetLiteralRegexCount() const;
         void AllocateLiteralRegexArray();

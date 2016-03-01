@@ -233,4 +233,29 @@ bool CanLoadFixedFields(Js::OpCode opcode)
     return ((GetOpCodeAttributes(opcode) & OpCanLoadFixedFields) != 0);
 }
 
+bool MayLoadNativeField(const Js::OpCode opcode)
+{
+    switch(opcode)
+    {
+        case Js::OpCode::LdFld:
+        case Js::OpCode::LdFldForTypeOf:
+        case Js::OpCode::LdSuperFld:
+            return true;
+    }
+    return false;
+}
+
+bool MayStoreIntoNativeField(const Js::OpCode opcode)
+{
+    switch(opcode)
+    {
+        case Js::OpCode::InitFld:
+        // TODO: Native fields - To include InitLetFld and InitConstFld, they need to use inline caches
+        case Js::OpCode::StFld:
+        case Js::OpCode::StFldStrict:
+            return true;
+    }
+    return false;
+}
+
 }; // OpCodeAttr

@@ -70,4 +70,8 @@ namespace OpCodeAttr
     bool HasDeadFallThrough(Js::OpCode opcode);
     // True if the opcode can use fixed fields
     bool CanLoadFixedFields(Js::OpCode opcode);
+    // True if the operation loads a field that is not unlikely to have a native slot type (for instance, this excludes LdMethodFld)
+    bool MayLoadNativeField(const Js::OpCode opcode);
+    // True if the operation stores into a field that is not unlikely to have a native slot type (for instance, this excludes InitGetFld)
+    bool MayStoreIntoNativeField(const Js::OpCode opcode);
 };

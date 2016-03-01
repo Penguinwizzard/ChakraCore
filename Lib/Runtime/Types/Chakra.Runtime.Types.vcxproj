@@ -58,11 +58,16 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)RuntimeTypePch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)Type.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)TypeHandler.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)TypePath.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)TypePropertyCache.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)WithScopeObject.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)\Type.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)\TypeHandler.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)\TypePath.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)\TypePropertyCache.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)\WithScopeObject.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)\ObjectCreationSiteInfo.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)\ObjectLiteralCreationSiteInfo.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)\ObjectSlotIterator.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)\ObjectSlotType.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)\PathTypeTransitionInfo.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ActivationObject.h" />
@@ -80,7 +85,13 @@
     <ClInclude Include="JavascriptEnumerator.h" />
     <ClInclude Include="MissingPropertyTypeHandler.h" />
     <ClInclude Include="NullTypeHandler.h" />
+    <ClInclude Include="ObjectCreationSiteInfo.h" />
+    <ClInclude Include="ObjectLiteralCreationSiteInfo.h" />
+    <ClInclude Include="ObjectSlotIterator.h" />
+    <ClInclude Include="ObjectSlotType.h" />
+    <ClInclude Include="ObjectSlotTypes.h" />
     <ClInclude Include="PathTypeHandler.h" />
+    <ClInclude Include="PathTypeTransitionInfo.h" />
     <ClInclude Include="PropertyDescriptor.h" />
     <ClInclude Include="PropertyIndexRanges.h" />
     <ClInclude Include="RecyclableObject.h" />

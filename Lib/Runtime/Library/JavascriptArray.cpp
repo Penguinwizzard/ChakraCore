@@ -1593,11 +1593,9 @@ namespace Js
                 DynamicTypeHandler *typeHandler = intArray->GetDynamicType()->GetTypeHandler();
                 if (typeHandler->IsPathTypeHandler())
                 {
-                    // We can't allow a type with the new type ID to be promoted to the old type.
-                    // So go to a dictionary type handler, which will orphan the new type.
-                    // This should be a corner case, so the inability to share the new type is unlikely to matter.
-                    // If it does matter, try building a path from the new type's built-in root.
-                    static_cast<PathTypeHandlerBase*>(typeHandler)->ResetTypeHandler(intArray);
+                    // Build a type based on the root float array type.
+                    PathTypeHandler *baseTypeHandler = PathTypeHandler::FromTypeHandler(scriptContext->GetLibrary()->GetNativeFloatArrayType()->GetTypeHandler());
+                    baseTypeHandler->EvolveToMatchTypeHandler(PathTypeHandler::FromTypeHandler(typeHandler), intArray);
                 }
                 else
                 {
@@ -1646,7 +1644,7 @@ namespace Js
                     // So go to a dictionary type handler, which will orphan the new type.
                     // This should be a corner case, so the inability to share the new type is unlikely to matter.
                     // If it does matter, try building a path from the new type's built-in root.
-                    static_cast<PathTypeHandlerBase*>(typeHandler)->ResetTypeHandler(varArray);
+                    PathTypeHandler::FromTypeHandler(typeHandler)->ResetTypeHandler(varArray);
                 }
                 else
                 {
@@ -1693,7 +1691,7 @@ namespace Js
                     // So go to a dictionary type handler, which will orphan the new type.
                     // This should be a corner case, so the inability to share the new type is unlikely to matter.
                     // If it does matter, try building a path from the new type's built-in root.
-                    static_cast<PathTypeHandlerBase*>(typeHandler)->ResetTypeHandler(varArray);
+                    PathTypeHandler::FromTypeHandler(typeHandler)->ResetTypeHandler(varArray);
                 }
                 else
                 {
@@ -1867,11 +1865,9 @@ namespace Js
                 DynamicTypeHandler *typeHandler = intArray->GetDynamicType()->GetTypeHandler();
                 if (typeHandler->IsPathTypeHandler())
                 {
-                    // We can't allow a type with the new type ID to be promoted to the old type.
-                    // So go to a dictionary type handler, which will orphan the new type.
-                    // This should be a corner case, so the inability to share the new type is unlikely to matter.
-                    // If it does matter, try building a path from the new type's built-in root.
-                    static_cast<PathTypeHandlerBase*>(typeHandler)->ResetTypeHandler(intArray);
+                    // Build a type based on the root array type.
+                    PathTypeHandler *baseTypeHandler = PathTypeHandler::FromTypeHandler(scriptContext->GetLibrary()->GetArrayType()->GetTypeHandler());
+                    baseTypeHandler->EvolveToMatchTypeHandler(PathTypeHandler::FromTypeHandler(typeHandler), intArray);
                 }
                 else
                 {
@@ -1894,6 +1890,7 @@ namespace Js
 
         return intArray;
     }
+
     JavascriptArray *JavascriptNativeIntArray::ToVarArray(JavascriptNativeIntArray *intArray)
     {
 #if ENABLE_PROFILE_INFO
@@ -2063,11 +2060,9 @@ namespace Js
                 DynamicTypeHandler *typeHandler = fArray->GetDynamicType()->GetTypeHandler();
                 if (typeHandler->IsPathTypeHandler())
                 {
-                    // We can't allow a type with the new type ID to be promoted to the old type.
-                    // So go to a dictionary type handler, which will orphan the new type.
-                    // This should be a corner case, so the inability to share the new type is unlikely to matter.
-                    // If it does matter, try building a path from the new type's built-in root.
-                    static_cast<PathTypeHandlerBase*>(typeHandler)->ResetTypeHandler(fArray);
+                    // Build a new type based on the base array type.
+                    PathTypeHandler *baseTypeHandler = PathTypeHandler::FromTypeHandler(scriptContext->GetLibrary()->GetArrayType()->GetTypeHandler());
+                    baseTypeHandler->EvolveToMatchTypeHandler(PathTypeHandler::FromTypeHandler(typeHandler), fArray);
                 }
                 else
                 {
@@ -3935,12 +3930,21 @@ namespace Js
         {
             searchAsInt32 = TaggedInt::ToInt32(search);
         }
-        else if (!JavascriptNumber::TryGetInt32Value<true>(JavascriptNumber::GetValue(search), &searchAsInt32))
+        else
         {
-            // The value can't be in the array, but it could be in a prototype, and we can only guarantee that
-            // the head segment has no gaps.
-            fromIndex = toIndex > GetHead()->length ? GetHead()->length : -1;
-            return -1;
+            bool isNegativeZero;
+            if (!JavascriptNumber::TryGetInt32Value(JavascriptNumber::GetValue(search), &searchAsInt32, &isNegativeZero))
+            {
+                if (isNegativeZero)
+                    searchAsInt32 = 0;
+                else
+                {
+                    // The value can't be in the array, but it could be in a prototype, and we can only guarantee that
+                    // the head segment has no gaps.
+                    fromIndex = toIndex > GetHead()->length ? GetHead()->length : -1;
+                    return -1;
+                }
+            }
         }
 
         // We need to cast head segment to SparseArraySegment<int32> to have access to GetElement (onSparseArraySegment<T>). Because there are separate overloads of this

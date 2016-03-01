@@ -75,8 +75,15 @@ namespace Js
             PropertyId* propertyId, PropertyAttributes* attributes, Type* type, DynamicType *typeToEnumerate, bool requireEnumerable, bool enumSymbols = false) override;
         virtual PropertyIndex GetPropertyIndex(PropertyRecord const* propertyRecord) override;
         virtual bool GetPropertyEquivalenceInfo(PropertyRecord const* propertyRecord, PropertyEquivalenceInfo& info) override;
-        virtual bool IsObjTypeSpecEquivalent(const Type* type, const TypeEquivalenceRecord& record, uint& failedPropertyIndex) override;
-        virtual bool IsObjTypeSpecEquivalent(const Type* type, const EquivalentPropertyEntry* entry) override;
+
+    public:
+#if ENABLE_NATIVE_CODEGEN
+        virtual IR::BailOutKind IsObjTypeSpecEquivalent(DynamicObject *const object, const TypeEquivalenceRecord& record, uint& failedPropertyIndex) override;
+#endif
+    private:
+        bool IsObjTypeSpecEquivalent(DynamicObject *const object, const EquivalentPropertyEntry* entry);
+
+    public:
         virtual bool EnsureObjectReady(DynamicObject* instance) override;
         virtual BOOL HasProperty(DynamicObject* instance, PropertyId propertyId, __out_opt bool *noRedecl = nullptr) override;
         virtual BOOL HasProperty(DynamicObject* instance, JavascriptString* propertyNameString) override;
@@ -172,25 +179,27 @@ namespace Js
         return false;
     }
 
+#if ENABLE_NATIVE_CODEGEN
     template <DeferredTypeInitializer initializer, typename DeferredTypeFilter, bool isPrototypeTemplate, uint16 _inlineSlotCapacity, uint16 _offsetOfInlineSlots>
-    bool DeferredTypeHandler<initializer, DeferredTypeFilter, isPrototypeTemplate, _inlineSlotCapacity, _offsetOfInlineSlots>::IsObjTypeSpecEquivalent(const Type* type, const TypeEquivalenceRecord& record, uint& failedPropertyIndex)
+    IR::BailOutKind DeferredTypeHandler<initializer, DeferredTypeFilter, isPrototypeTemplate, _inlineSlotCapacity, _offsetOfInlineSlots>::IsObjTypeSpecEquivalent(DynamicObject *const object, const TypeEquivalenceRecord& record, uint& failedPropertyIndex)
     {
         uint propertyCount = record.propertyCount;
         EquivalentPropertyEntry* properties = record.properties;
         for (uint pi = 0; pi < propertyCount; pi++)
         {
             const EquivalentPropertyEntry* refInfo = &properties[pi];
-            if (!this->DeferredTypeHandler<initializer, DeferredTypeFilter, isPrototypeTemplate, _inlineSlotCapacity, _offsetOfInlineSlots>::IsObjTypeSpecEquivalent(type, refInfo))
+            if (!this->DeferredTypeHandler<initializer, DeferredTypeFilter, isPrototypeTemplate, _inlineSlotCapacity, _offsetOfInlineSlots>::IsObjTypeSpecEquivalent(object, refInfo))
             {
                 failedPropertyIndex = pi;
-                return false;
+                return IR::BailOutFailedEquivalentTypeCheck;
             }
         }
-        return true;
+        return IR::BailOutInvalid;
     }
+#endif
 
     template <DeferredTypeInitializer initializer, typename DeferredTypeFilter, bool isPrototypeTemplate, uint16 _inlineSlotCapacity, uint16 _offsetOfInlineSlots>
-    bool DeferredTypeHandler<initializer, DeferredTypeFilter, isPrototypeTemplate, _inlineSlotCapacity, _offsetOfInlineSlots>::IsObjTypeSpecEquivalent(const Type* type, const EquivalentPropertyEntry* entry)
+    bool DeferredTypeHandler<initializer, DeferredTypeFilter, isPrototypeTemplate, _inlineSlotCapacity, _offsetOfInlineSlots>::IsObjTypeSpecEquivalent(DynamicObject *const object, const EquivalentPropertyEntry* entry)
     {
         if (!DeferredTypeFilter::HasFilter())
         {

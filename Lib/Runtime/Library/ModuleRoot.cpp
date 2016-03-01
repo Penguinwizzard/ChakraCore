@@ -64,10 +64,10 @@ namespace Js
         PropertyIndex index = GetPropertyIndex(propertyId);
         if (index != Constants::NoSlot)
         {
-            *value = this->GetSlot(index);
+            *value = this->GetSlot(index, ObjectSlotType::GetVar());
             if (info) // Avoid testing IsWritable if info not being queried
             {
-                PropertyValueInfo::Set(info, this, index, IsWritable(propertyId) ? PropertyWritable : PropertyNone);
+                PropertyValueInfo::Set(info, this, index, ObjectSlotType::GetVar(), IsWritable(propertyId) ? PropertyWritable : PropertyNone);
                 if (this->IsFixedProperty(propertyId))
                 {
                     PropertyValueInfo::DisableStoreFieldCache(info);
@@ -94,10 +94,10 @@ namespace Js
         PropertyIndex index = GetRootPropertyIndex(propertyId);
         if (index != Constants::NoSlot)
         {
-            *value = this->GetSlot(index);
+            *value = this->GetSlot(index, ObjectSlotType::GetVar());
             if (info) // Avoid testing IsWritable if info not being queried
             {
-                PropertyValueInfo::Set(info, this, index, IsWritable(propertyId) ? PropertyWritable : PropertyNone);
+                PropertyValueInfo::Set(info, this, index, ObjectSlotType::GetVar(), IsWritable(propertyId) ? PropertyWritable : PropertyNone);
                 if (this->IsFixedProperty(propertyId))
                 {
                     PropertyValueInfo::DisableStoreFieldCache(info);
@@ -148,10 +148,10 @@ namespace Js
         PropertyIndex index = GetPropertyIndex(propertyId);
         if (index != Constants::NoSlot)
         {
-            *value = this->GetSlot(index);
+            *value = this->GetSlot(index, ObjectSlotType::GetVar());
             if (info) // Avoid testing IsWritable if info not being queried
             {
-                PropertyValueInfo::Set(info, this, index, IsWritable(propertyId) ? PropertyWritable : PropertyNone);
+                PropertyValueInfo::Set(info, this, index, ObjectSlotType::GetVar(), IsWritable(propertyId) ? PropertyWritable : PropertyNone);
                 if (this->IsFixedProperty(propertyId))
                 {
                     PropertyValueInfo::DisableStoreFieldCache(info);
@@ -179,10 +179,10 @@ namespace Js
         PropertyIndex index = GetRootPropertyIndex(propertyId);
         if (index != Constants::NoSlot)
         {
-            *value = this->GetSlot(index);
+            *value = this->GetSlot(index, ObjectSlotType::GetVar());
             if (info) // Avoid testing IsWritable if info not being queried
             {
-                PropertyValueInfo::Set(info, this, index, IsWritable(propertyId) ? PropertyWritable : PropertyNone);
+                PropertyValueInfo::Set(info, this, index, ObjectSlotType::GetVar(), IsWritable(propertyId) ? PropertyWritable : PropertyNone);
                 if (this->IsFixedProperty(propertyId))
                 {
                     PropertyValueInfo::DisableStoreFieldCache(info);
@@ -215,7 +215,7 @@ namespace Js
 
                 if (!this->IsFixedProperty(propertyId))
                 {
-                    PropertyValueInfo::Set(info, this, index, PropertyNone); // Try to cache property info even if not writable
+                    PropertyValueInfo::Set(info, this, index, ObjectSlotType::GetVar(), PropertyNone); // Try to cache property info even if not writable
                 }
                 else
                 {
@@ -223,10 +223,10 @@ namespace Js
                 }
                 return FALSE;
             }
-            this->SetSlot(SetSlotArguments(propertyId, index, value));
+            this->SetSlot(SetSlotArguments(propertyId, index, ObjectSlotType::GetVar(), value));
             if (!this->IsFixedProperty(propertyId))
             {
-                PropertyValueInfo::Set(info, this, index);
+                PropertyValueInfo::Set(info, this, index, ObjectSlotType::GetVar());
             }
             else
             {
@@ -274,7 +274,7 @@ namespace Js
 
                 if (!this->IsFixedProperty(propertyId))
                 {
-                    PropertyValueInfo::Set(info, this, index, PropertyNone); // Try to cache property info even if not writable
+                    PropertyValueInfo::Set(info, this, index, ObjectSlotType::GetVar(), PropertyNone); // Try to cache property info even if not writable
                 }
                 else
                 {
@@ -282,10 +282,10 @@ namespace Js
                 }
                 return FALSE;
             }
-            this->SetSlot(SetSlotArgumentsRoot(propertyId, true, index, value));
+            this->SetSlot(SetSlotArgumentsRoot(propertyId, true, index, ObjectSlotType::GetVar(), value));
             if (!this->IsFixedProperty(propertyId))
             {
-                PropertyValueInfo::Set(info, this, index);
+                PropertyValueInfo::Set(info, this, index, ObjectSlotType::GetVar());
             }
             else
             {

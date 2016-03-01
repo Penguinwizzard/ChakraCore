@@ -130,13 +130,15 @@ namespace Js
     {
         DynamicType* type = this->GetDynamicType();
         BlockActivationObject* blockScopeClone = DynamicObject::NewObject<BlockActivationObject>(scriptContext->GetRecycler(), type);
-        int slotCapacity = this->GetTypeHandler()->GetSlotCapacity();
 
-        for (int i = 0; i < slotCapacity; i += 1)
+        for (ObjectSlotIterator it(this); it.IsValid(); it.MoveNext())
         {
-            DebugOnly(PropertyId propId = this->GetPropertyId(i));
-            Var value = this->GetSlot(i);
-            blockScopeClone->SetSlot(SetSlotArguments(propId, i, value));
+            Var slotValue = this->GetSlot(it.CurrentSlotIndex(), it.CurrentSlotType());
+            blockScopeClone->SetSlot(
+                SetSlotArguments(it.CurrentPropertyId(scriptContext), 
+                                 it.CurrentSlotIndex(), 
+                                 it.CurrentSlotType(), 
+                                 slotValue));
         }
 
         return blockScopeClone;

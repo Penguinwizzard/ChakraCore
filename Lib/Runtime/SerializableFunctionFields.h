@@ -82,7 +82,7 @@ PRIVATE_FIELDS
     DECLARE_SERIALIZABLE_FIELD(uint, rootObjectStoreInlineCacheStart, UInt32);
     DECLARE_SERIALIZABLE_FIELD(uint, isInstInlineCacheCount, UInt32);
     DECLARE_SERIALIZABLE_FIELD(uint, referencedPropertyIdCount, UInt32);
-    DECLARE_SERIALIZABLE_FIELD(uint, objLiteralCount, UInt32);
+    DECLARE_SERIALIZABLE_FIELD(uint, objectLiteralCount, UInt32);
     DECLARE_SERIALIZABLE_FIELD(uint, literalRegexCount, UInt32);
     DECLARE_SERIALIZABLE_FIELD(uint, innerScopeCount, UInt32);
     DECLARE_SERIALIZABLE_FIELD(RegSlot, localClosureRegister, RegSlot);

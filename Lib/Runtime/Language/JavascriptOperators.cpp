@@ -1535,7 +1535,7 @@ CommonNumber:
                 Var property;
                 if (dynamicTypeHandler->CheckFixedProperty(requestContext->GetPropertyName(propertyId), &property, requestContext))
                 {
-                    Assert(value == nullptr || *value == property);
+                    Assert(value == nullptr || requestContext->AreVarsSameTypeAndValue(*value, property));
                 }
             }
 #endif
@@ -1583,7 +1583,7 @@ CommonNumber:
                     Output::Print(L"MissingPropertyCache: Caching missing property for property %d.\n", propertyId);
                 }
 
-                PropertyValueInfo::Set(info, requestContext->GetLibrary()->GetMissingPropertyHolder(), 0);
+                PropertyValueInfo::Set(info, requestContext->GetLibrary()->GetMissingPropertyHolder(), 0, ObjectSlotType::GetVar());
                 CacheOperators::CachePropertyRead(instance, requestContext->GetLibrary()->GetMissingPropertyHolder(), isRoot, propertyId, true, info, requestContext);
             }
 #if defined(TELEMETRY_JSO) || defined(TELEMETRY_AddToCache) // enabled for `TELEMETRY_AddToCache`, because this is the property-not-found codepath where the normal TELEMETRY_AddToCache code wouldn't be executed.
@@ -1624,7 +1624,7 @@ CommonNumber:
                         uint16 inlineOrAuxSlotIndex;
                         bool isInlineSlot;
                         DynamicObject::FromVar(info.GetInstance())->GetTypeHandler()->PropertyIndexToInlineOrAuxSlotIndex(slotIndex, &inlineOrAuxSlotIndex, &isInlineSlot);
-                        propertyString->UpdateCache(info.GetInstance()->GetType(), inlineOrAuxSlotIndex, isInlineSlot, info.IsStoreFieldCacheEnabled());
+                        propertyString->UpdateCache(info.GetInstance()->GetType(), inlineOrAuxSlotIndex, info.GetSlotType(), isInlineSlot, info.IsStoreFieldCacheEnabled());
                     }
                 }
                 return TRUE;
@@ -1884,7 +1884,7 @@ CommonNumber:
             Var property;
             if (dynamicTypeHandler->CheckFixedProperty(requestContext->GetPropertyName(propertyId), &property, requestContext))
             {
-                Assert(value == nullptr || *value == property);
+                Assert(value == nullptr || requestContext->AreVarsSameTypeAndValue(*value, property));
             }
         }
 #endif
@@ -2092,7 +2092,7 @@ CommonNumber:
                         uint16 inlineOrAuxSlotIndex;
                         bool isInlineSlot;
                         DynamicObject::FromVar(info.GetInstance())->GetTypeHandler()->PropertyIndexToInlineOrAuxSlotIndex(info.GetPropertyIndex(), &inlineOrAuxSlotIndex, &isInlineSlot);
-                        propertyString->UpdateCache(info.GetInstance()->GetType(), inlineOrAuxSlotIndex, isInlineSlot, info.IsStoreFieldCacheEnabled());
+                        propertyString->UpdateCache(info.GetInstance()->GetType(), inlineOrAuxSlotIndex, info.GetSlotType(), isInlineSlot, info.IsStoreFieldCacheEnabled());
                     }
                 }
                 return TRUE;
@@ -3515,15 +3515,16 @@ CommonNumber:
                     Var value;
                     if (cache->isInlineSlot)
                     {
-                        value = DynamicObject::FromVar(object)->GetInlineSlot(cache->dataSlotIndex);
+                        value = DynamicObject::FromVar(object)->GetInlineSlot(cache->dataSlotIndex, cache->GetSlotType());
                     }
                     else
                     {
-                        value = DynamicObject::FromVar(object)->GetAuxSlot(cache->dataSlotIndex);
+                        value = DynamicObject::FromVar(object)->GetAuxSlot(cache->dataSlotIndex, cache->GetSlotType());
                     }
                     Assert(!CrossSite::NeedMarshalVar(value, scriptContext));
-                    Assert(value == JavascriptOperators::GetProperty(object, propertyString->GetPropertyRecord()->GetPropertyId(), scriptContext)
-                        || value == JavascriptOperators::GetRootProperty(object, propertyString->GetPropertyRecord()->GetPropertyId(), scriptContext));
+                    Assert(
+                        scriptContext->AreVarsSameTypeAndValue(value, JavascriptOperators::GetProperty(object, propertyString->GetPropertyRecord()->GetPropertyId(), scriptContext)) ||
+                        scriptContext->AreVarsSameTypeAndValue(value, JavascriptOperators::GetRootProperty(object, propertyString->GetPropertyRecord()->GetPropertyId(), scriptContext)));
                     return value;
                 }
 #if DBG_DUMP
@@ -4184,11 +4185,11 @@ CommonNumber:
                 Assert(!CrossSite::NeedMarshalVar(value, scriptContext));
                 if (cache->isInlineSlot)
                 {
-                    DynamicObject::FromVar(object)->SetInlineSlot(SetSlotArguments(propertyRecord->GetPropertyId(), cache->dataSlotIndex, value));
+                    DynamicObject::FromVar(object)->SetInlineSlot(SetSlotArguments(propertyRecord->GetPropertyId(), cache->dataSlotIndex, cache->GetSlotType(), value));
                 }
                 else
                 {
-                    DynamicObject::FromVar(object)->SetAuxSlot(SetSlotArguments(propertyRecord->GetPropertyId(), cache->dataSlotIndex, value));
+                    DynamicObject::FromVar(object)->SetAuxSlot(SetSlotArguments(propertyRecord->GetPropertyId(), cache->dataSlotIndex, cache->GetSlotType(), value));
                 }
                 return true;
             }
@@ -5052,39 +5053,15 @@ CommonNumber:
         }
     }
 
-    DynamicType *
-    JavascriptOperators::EnsureObjectLiteralType(ScriptContext* scriptContext, const Js::PropertyIdArray *propIds, DynamicType ** literalType)
-    {
-        DynamicType * newType = *literalType;
-        if (newType != nullptr)
-        {
-            if (!newType->GetIsShared())
-            {
-                newType->ShareType();
-            }
-        }
-        else
-        {
-            DynamicType* objectType =
-                FunctionBody::DoObjectHeaderInliningForObjectLiteral(propIds, scriptContext)
-                    ?   scriptContext->GetLibrary()->GetObjectHeaderInlinedLiteralType((uint16)propIds->count)
-                    :   scriptContext->GetLibrary()->GetObjectLiteralType(
-                            static_cast<PropertyIndex>(
-                                min(propIds->count, static_cast<uint32>(MaxPreInitializedObjectTypeInlineSlotCount))));
-            newType = PathTypeHandlerBase::CreateTypeForNewScObject(scriptContext, objectType, propIds, false);
-            *literalType = newType;
-        }
-
-        Assert(GetLiteralInlineSlotCapacity(propIds, scriptContext) == newType->GetTypeHandler()->GetInlineSlotCapacity());
-        Assert(newType->GetTypeHandler()->GetSlotCapacity() >= 0);
-        Assert(GetLiteralSlotCapacity(propIds, scriptContext) == (uint)newType->GetTypeHandler()->GetSlotCapacity());
-        return newType;
-    }
-
-    Var JavascriptOperators::NewScObjectLiteral(ScriptContext* scriptContext, const Js::PropertyIdArray *propIds, DynamicType ** literalType)
+    Var JavascriptOperators::NewScObjectLiteral(
+        FunctionBody *const functionBody,
+        const PropertyIdArray *const propIds,
+        const uint objectLiteralIndex)
     {
         Assert(propIds->count != 0);
         Assert(!propIds->hadDuplicates);        // duplicates are removed by parser
+
+        ScriptContext *const scriptContext = functionBody->GetScriptContext();
 
 #ifdef PROFILE_OBJECT_LITERALS
         // Empty objects not counted in the object literal counts
@@ -5095,7 +5072,7 @@ CommonNumber:
         }
 #endif
 
-        DynamicType* newType = EnsureObjectLiteralType(scriptContext, propIds, literalType);
+        DynamicType* newType = PathTypeHandler::CreateTypeForNewScObject(functionBody, propIds, objectLiteralIndex);
         DynamicObject* instance = DynamicObject::New(scriptContext->GetRecycler(), newType);
 
         if (!newType->GetIsShared())
@@ -5113,30 +5090,7 @@ CommonNumber:
         return instance;
     }
 
-    uint JavascriptOperators::GetLiteralSlotCapacity(Js::PropertyIdArray const * propIds, ScriptContext *const scriptContext)
-    {
-        const uint inlineSlotCapacity = GetLiteralInlineSlotCapacity(propIds, scriptContext);
-        return DynamicTypeHandler::RoundUpSlotCapacity(propIds->count, static_cast<PropertyIndex>(inlineSlotCapacity));
-    }
-
-    uint JavascriptOperators::GetLiteralInlineSlotCapacity(
-        Js::PropertyIdArray const * propIds,
-        ScriptContext *const scriptContext)
-    {
-        if (propIds->hadDuplicates)
-        {
-            return 0;
-        }
-
-        return
-            FunctionBody::DoObjectHeaderInliningForObjectLiteral(propIds, scriptContext)
-                ?   DynamicTypeHandler::RoundUpObjectHeaderInlinedInlineSlotCapacity(static_cast<PropertyIndex>(propIds->count))
-                :   DynamicTypeHandler::RoundUpInlineSlotCapacity(
-                        static_cast<PropertyIndex>(
-                            min(propIds->count, static_cast<uint32>(MaxPreInitializedObjectTypeInlineSlotCount))));
-    }
-
-    Var JavascriptOperators::OP_InitCachedScope(Var varFunc, const Js::PropertyIdArray *propIds, DynamicType ** literalType, bool formalsAreLetDecls, ScriptContext *scriptContext)
+    Var JavascriptOperators::OP_InitCachedScope(Var varFunc, const Js::PropertyIdArray *propIds, const uint objectLiteralIndex, bool formalsAreLetDecls, ScriptContext *scriptContext)
     {
         ScriptFunction *func = JavascriptGeneratorFunction::Is(varFunc) ?
             JavascriptGeneratorFunction::FromVar(varFunc)->GetGeneratorVirtualScriptFunction() :
@@ -5168,7 +5122,9 @@ CommonNumber:
             }
         }
 
-        DynamicType *type = *literalType;
+        ObjectLiteralCreationSiteInfo *const objectLiteralCreationSiteInfo =
+            func->GetFunctionBody()->GetObjectLiteralCreationSiteInfo(objectLiteralIndex);
+        DynamicType *type = objectLiteralCreationSiteInfo->GetType();
         if (type != nullptr)
         {
 #ifdef PROFILE_OBJECT_LITERALS
@@ -5183,13 +5139,13 @@ CommonNumber:
                 uint formalsSlotLimit = (firstFuncSlot != Constants::NoProperty) ? (uint)firstFuncSlot :
                                         (firstVarSlot != Constants::NoProperty) ? (uint)firstVarSlot :
                                         propIds->count;
-                type = PathTypeHandlerBase::CreateNewScopeObject(scriptContext, type, propIds, PropertyLet, formalsSlotLimit);
+                type = PathTypeHandler::CreateNewScopeObject(scriptContext, type, propIds, PropertyLet, formalsSlotLimit);
             }
             else
             {
-                type = PathTypeHandlerBase::CreateNewScopeObject(scriptContext, type, propIds);
+                type = PathTypeHandler::CreateNewScopeObject(scriptContext, type, propIds);
             }
-            *literalType = type;
+            objectLiteralCreationSiteInfo->SetType(type, false);
         }
         Var undef = scriptContext->GetLibrary()->GetUndefined();
 
@@ -5201,7 +5157,7 @@ CommonNumber:
 #if DBG
             for (uint i = firstVarSlot; i < propIds->count; i++)
             {
-                AssertMsg(scopeObjEx->GetSlot(i) == undef, "Var attached to cached scope");
+                AssertMsg(scopeObjEx->GetSlot(i, ObjectSlotType::GetVar()) == undef, "Var attached to cached scope");
             }
 #endif
         }
@@ -5216,7 +5172,7 @@ CommonNumber:
 
             for (uint i = firstVarSlot; i < propIds->count; i++)
             {
-                scopeObjEx->SetSlot(SetSlotArguments(propIds->elements[i], i, undef));
+                scopeObjEx->SetSlot(SetSlotArguments(propIds->elements[i], i, ObjectSlotType::GetVar(), undef));
             }
         }
 
@@ -5271,8 +5227,8 @@ CommonNumber:
                 scopeSlot = info->elements[i].scopeSlot;
                 if (scopeSlot != Constants::NoProperty)
                 {
-                    // CONSIDER: Store property IDs in FuncInfoArray in debug builds so we can properly assert in SetAuxSlot
-                    scopeObj->SetAuxSlot(SetSlotArguments(Constants::NoProperty, scopeSlot, entry->func));
+                    // Consider: Store property IDs in FuncInfoArray in debug builds so we can properly assert in SetAuxSlot
+                    scopeObj->SetAuxSlot(SetSlotArguments(Constants::NoProperty, scopeSlot, ObjectSlotType::GetVar(), entry->func));
                 }
             }
             return;
@@ -5296,8 +5252,8 @@ CommonNumber:
             scopeObj->SetCachedFunc(i, func);
             if (scopeSlot != Constants::NoProperty)
             {
-                // CONSIDER: Store property IDs in FuncInfoArray in debug builds so we can properly assert in SetAuxSlot
-                scopeObj->SetAuxSlot(SetSlotArguments(Constants::NoProperty, scopeSlot, func));
+                // CONSIDER: Store property IDs in FuncInfoArray in debug builds so we can properly assert in SetAuxSlot.
+                scopeObj->SetAuxSlot(SetSlotArguments(Constants::NoProperty, scopeSlot, ObjectSlotType::GetVar(), func));
             }
         }
     }
@@ -5647,7 +5603,7 @@ CommonNumber:
             "Why did we populate a constructor cache with a mismatched script context?");
 
         Assert(constructorCache != nullptr);
-        DynamicType* type = constructorCache->GetGuardValueAsType();
+        DynamicType* type = constructorCache->GetType();
         if (type != nullptr && constructorCache->GetScriptContext() == requestContext)
         {
 #if DBG
@@ -5742,7 +5698,23 @@ CommonNumber:
         RecyclableObject* prototype = JavascriptOperators::GetPrototypeObjectForConstructorCache(function, constructorScriptContext, prototypeCanBeCached);
         prototype = RecyclableObject::FromVar(CrossSite::MarshalVar(requestContext, prototype));
 
-        DynamicObject* newObject = requestContext->GetLibrary()->CreateObject(prototype, 8);
+        PathTypeTransitionInfo *const lastUsedRootTransitionInfo = constructorCache->GetLastUsedRootTransitionInfo();
+        if(lastUsedRootTransitionInfo &&
+            lastUsedRootTransitionInfo->GetType()->GetScriptContext() == requestContext &&
+            lastUsedRootTransitionInfo->GetType()->GetPrototype() == prototype)
+        {
+            type = lastUsedRootTransitionInfo->GetType();
+        }
+        else
+        {
+            type =
+                requestContext->GetLibrary()->CreateObjectType(
+                    prototype,
+                    functionBody && functionBody->GetHasOnlyThisStmts()
+                        ? static_cast<PropertyIndex>(CONFIG_FLAG(MaxSimpleConstructedObjectInlineSlots))
+                        : static_cast<PropertyIndex>(CONFIG_FLAG(MaxComplexConstructedObjectInlineSlots)));
+        }
+        DynamicObject* newObject = DynamicObject::New(requestContext->GetRecycler(), type);
 
         JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_OBJECT(newObject));
 #if ENABLE_DEBUG_CONFIG_OPTIONS
@@ -5821,13 +5793,10 @@ CommonNumber:
             return;
         }
 
-        // Review : What happens if the cache got invalidated between NewScObject and here?
-        // Should we allocate new?  Should we mark it as polymorphic?
         ConstructorCache* constructorCache = constructor->GetConstructorCache();
         Assert(constructorCache->IsConsistent());
         Assert(!ConstructorCache::IsDefault(constructorCache));
-        AssertMsg(constructorCache->GetScriptContext() == constructor->GetScriptContext(), "Why did we populate a constructor cache with a mismatched script context?");
-        AssertMsg(constructorCache->IsPopulated(), "Why are we updating a constructor cache that hasn't been populated?");
+        Assert(constructorCache->GetType());
 
         // The presence of the updateAfterCtor flag guarantees that this cache hasn't been used in JIT-ed fast path.  Even, if the
         // cache is invalidated, this flag is not changed.
@@ -5848,18 +5817,7 @@ CommonNumber:
         AssertMsg(constructorBody != nullptr, "Constructor function doesn't have a function body.");
         Assert(RecyclableObject::Is(instance));
 
-        // The cache might have been invalidated between NewScObjectCommon and UpdateNewScObjectCache.  This could occur, for example, if
-        // the constructor updates its own prototype property.  If that happens we don't want to re-populate it here.  A new cache will
-        // be created when the constructor is called again.
-        if (constructorCache->IsInvalidated())
-        {
-#if DBG_DUMP
-            TraceUpdateConstructorCache(constructorCache, constructorBody, false, L"because cache is invalidated");
-#endif
-            return;
-        }
-
-        Assert(constructorCache->GetGuardValueAsType() != nullptr);
+        Assert(constructorCache->GetType() != nullptr);
 
         if (DynamicType::Is(RecyclableObject::FromVar(instance)->GetTypeId()))
         {
@@ -5888,27 +5846,12 @@ CommonNumber:
                     if ((profileInfo != nullptr && profileInfo->GetImplicitCallFlags() <= ImplicitCall_None) ||
                         CheckIfPrototypeChainHasOnlyWritableDataProperties(type->GetPrototype()))
                     {
-                        Assert(typeHandler->GetPropertyCount() < Js::PropertyIndexRanges<PropertyIndex>::MaxValue);
-
-                        for (PropertyIndex pi = 0; pi < typeHandler->GetPropertyCount(); pi++)
-                        {
-                            requestContext->RegisterConstructorCache(typeHandler->GetPropertyId(requestContext, pi), constructorCache);
-                        }
-
                         Assert(constructorBody->GetUtf8SourceInfo()->GetIsLibraryCode() || !constructor->GetScriptContext()->IsInDebugMode());
 
-                        if (constructorCache->TryUpdateAfterConstructor(type, constructor->GetScriptContext()))
-                        {
+                        constructorCache->UpdateAfterConstructor(type, constructor->GetScriptContext());
 #if DBG_DUMP
-                            TraceUpdateConstructorCache(constructorCache, constructorBody, true, L"");
+                        TraceUpdateConstructorCache(constructorCache, constructorBody, true, L"");
 #endif
-                        }
-                        else
-                        {
-#if DBG_DUMP
-                            TraceUpdateConstructorCache(constructorCache, constructorBody, false, L"because number of slots > MaxCachedSlotCount");
-#endif
-                        }
                     }
 #if DBG_DUMP
                     else
@@ -5957,9 +5900,9 @@ CommonNumber:
         }
 
         // Whatever the constructor returned, if we're caching a type we want to be sure we shrink its inline slot capacity.
-        if (finalizeCachedType && constructorCache->IsEnabled())
+        if (finalizeCachedType && constructorCache->GetType())
         {
-            DynamicType* cachedType = constructorCache->NeedsTypeUpdate() ? constructorCache->GetPendingType() : constructorCache->GetType();
+            DynamicType* cachedType = constructorCache->GetType();
             DynamicTypeHandler* cachedTypeHandler = cachedType->GetTypeHandler();
 
             // Consider: We could delay inline slot capacity shrinking until the second time this constructor is invoked.  In some cases
@@ -6434,7 +6377,7 @@ CommonNumber:
         // Now as the unmapping is done we need to fill those frame object with Undecl
         for (i = 0; i < formalsCount; i++)
         {
-            frameObject->SetSlot(SetSlotArguments(propIds != nullptr ? propIds->elements[i] : Js::Constants::NoProperty, i, scriptContext->GetLibrary()->GetUndeclBlockVar()));
+            frameObject->SetSlot(SetSlotArguments(propIds != nullptr ? propIds->elements[i] : Js::Constants::NoProperty, i, ObjectSlotType::GetVar(), scriptContext->GetLibrary()->GetUndeclBlockVar()));
         }
 
         return argumentsObject;
@@ -6469,7 +6412,7 @@ CommonNumber:
             // CONSIDER : When we delay type sharing until the second instance is created, pass an argument indicating we want the types
             // and handlers created here to be marked as shared up-front. This is to ensure we don't get any fixed fields and that the handler
             // is ready for storing values directly to slots.
-            DynamicType* newType = PathTypeHandlerBase::CreateNewScopeObject(scriptContext, frameObject->GetDynamicType(), propIds, nonSimpleParamList ? PropertyLetDefaults : PropertyNone);
+            DynamicType* newType = PathTypeHandler::CreateNewScopeObject(scriptContext, frameObject->GetDynamicType(), propIds, nonSimpleParamList ? PropertyLetDefaults : PropertyNone);
 
             int oldSlotCapacity = frameObject->GetDynamicType()->GetTypeHandler()->GetSlotCapacity();
             int newSlotCapacity = newType->GetTypeHandler()->GetSlotCapacity();
@@ -6485,7 +6428,7 @@ CommonNumber:
 
             for (i = 0; i < formalsCount && i < paramCount; i++, tmpAddr++)
             {
-                frameObject->SetSlot(SetSlotArguments(propIds->elements[i], i, *tmpAddr));
+                frameObject->SetSlot(SetSlotArguments(propIds->elements[i], i, ObjectSlotType::GetVar(), *tmpAddr));
             }
 
             if (i < formalsCount)
@@ -6494,7 +6437,7 @@ CommonNumber:
                 // their names will be found. Initialize them to "undefined".
                 for (; i < formalsCount; i++)
                 {
-                    frameObject->SetSlot(SetSlotArguments(propIds->elements[i], i, scriptContext->GetLibrary()->GetUndefined()));
+                    frameObject->SetSlot(SetSlotArguments(propIds->elements[i], i, ObjectSlotType::GetVar(), scriptContext->GetLibrary()->GetUndefined()));
                 }
             }
         }
@@ -6545,7 +6488,7 @@ CommonNumber:
             for (i = 0; i < formalsCount && i < actualsCount; i++, tmpAddr++)
             {
                 // We don't know the propertyId at this point.
-                frameObject->SetSlot(SetSlotArguments(Constants::NoProperty, i, *tmpAddr));
+                frameObject->SetSlot(SetSlotArguments(Constants::NoProperty, i, ObjectSlotType::GetVar(), *tmpAddr));
             }
 
             if (i < formalsCount)
@@ -6555,7 +6498,7 @@ CommonNumber:
                 for (; i < formalsCount; i++)
                 {
                     // We don't know the propertyId at this point.
-                    frameObject->SetSlot(SetSlotArguments(Constants::NoProperty, i, scriptContext->GetLibrary()->GetUndefined()));
+                    frameObject->SetSlot(SetSlotArguments(Constants::NoProperty, i, ObjectSlotType::GetVar(), scriptContext->GetLibrary()->GetUndefined()));
                 }
             }
         }
@@ -6902,12 +6845,124 @@ CommonNumber:
         return JavascriptBoolean::ToVar(result, scriptContext);
     }
 
+    template<class TInlineCache>
+    bool JavascriptOperators::ShouldBailOutOnFieldSlotTypeMismatch(
+        const TInlineCache *const inlineCache,
+        const ObjectSlotType expectedNativeSlotType)
+    {
+        Assert(inlineCache);
+        Assert(!expectedNativeSlotType.IsVar());
+
+        // If the inline cache has a more conservative slot type than what the jitted code is expecting, since inline caches
+        // converge on the slot type, the jitted code will always fail the jitted inline cache fast paths and bail out on this
+        // path. In that case, have the jitted code bail out so that upon rejit it can expect a more conservative slot type,
+        // allowing it to hit the jitted fast path.
+        return inlineCache->GetSlotType().IsValueTypeMoreConvervativeThan(expectedNativeSlotType);
+    }
+
+    template<class TInlineCache>
+    bool JavascriptOperators::FieldLoadSlotTypeBailoutCheckAndConvert(
+        const TInlineCache *const inlineCache,
+        const ObjectSlotType expectedNativeSlotType,
+        const Var value,
+        int32 *const specializedValueRef)
+    {
+        Assert(inlineCache);
+        Assert(!expectedNativeSlotType.IsVar());
+        Assert(specializedValueRef);
+
+        if(!value || ShouldBailOutOnFieldSlotTypeMismatch(inlineCache, expectedNativeSlotType))
+            return true; // bail out
+        if(TaggedInt::Is(value))
+        {
+            *specializedValueRef = TaggedInt::ToInt32(value);
+            return false;
+        }
+        if(JavascriptNumber::Is_NoTaggedIntCheck(value) &&
+            JavascriptNumber::TryGetInt32Value(JavascriptNumber::GetValue(value), specializedValueRef))
+        {
+            return false;
+        }
+        return true; // bail out
+    }
+
+    template<class TInlineCache>
+    bool JavascriptOperators::FieldLoadSlotTypeBailoutCheckAndConvert(
+        const TInlineCache *const inlineCache,
+        const ObjectSlotType expectedNativeSlotType,
+        const Var value,
+        double *const specializedValueRef)
+    {
+        Assert(inlineCache);
+        Assert(!expectedNativeSlotType.IsVar());
+        Assert(specializedValueRef);
+
+        if(!value || ShouldBailOutOnFieldSlotTypeMismatch(inlineCache, expectedNativeSlotType))
+            return true; // bail out
+        if(TaggedInt::Is(value))
+        {
+            *specializedValueRef = TaggedInt::ToDouble(value);
+            return false;
+        }
+        if(JavascriptNumber::Is_NoTaggedIntCheck(value))
+        {
+            *specializedValueRef = JavascriptNumber::GetValue(value);
+            return false;
+        }
+        return true; // bail out
+    }
+
+    template<class TInlineCache>
+    bool JavascriptOperators::FieldLoadSlotTypeBailoutCheckAndConvert(
+        const TInlineCache *const inlineCache,
+        const ObjectSlotType expectedNativeSlotType,
+        const Var value,
+        Var *const specializedValueRef)
+    {
+        Assert(inlineCache);
+        Assert(!expectedNativeSlotType.IsVar());
+
+        if(!value || ShouldBailOutOnFieldSlotTypeMismatch(inlineCache, expectedNativeSlotType))
+            return true; // bail out
+        *specializedValueRef = value;
+        return false;
+    }
+
     template <bool IsFromFullJit, class TInlineCache>
     __inline Var JavascriptOperators::PatchGetValue(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId)
     {
         return PatchGetValueWithThisPtr<IsFromFullJit, TInlineCache>(functionBody, inlineCache, inlineCacheIndex, instance, propertyId, instance);
     }
+    template Var JavascriptOperators::PatchGetValue<false, InlineCache>(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId);
+    template Var JavascriptOperators::PatchGetValue<true, InlineCache>(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId);
+    template Var JavascriptOperators::PatchGetValue<false, PolymorphicInlineCache>(FunctionBody *const functionBody, PolymorphicInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId);
+    template Var JavascriptOperators::PatchGetValue<true, PolymorphicInlineCache>(FunctionBody *const functionBody, PolymorphicInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId);
 
+#if ENABLE_NATIVE_CODEGEN
+    template<class TInlineCache, class TValueType>
+    IR::BailOutKind JavascriptOperators::PatchGetValue_SlotTypeBailoutCheck(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, const ObjectSlotType expectedNativeSlotType, TValueType *const valueRef)
+    {
+        ScriptContext *const objectScriptContext =
+            RecyclableObject::Is(instance)
+                ? RecyclableObject::FromVar(instance)->GetScriptContext()
+                : functionBody->GetScriptContext();
+        objectScriptContext->SetSlotTypeForAnyTypeChanged(false);
+
+        const Var value = PatchGetValue<true>(functionBody, inlineCache, inlineCacheIndex, instance, propertyId);
+
+        if(FieldLoadSlotTypeBailoutCheckAndConvert(inlineCache, expectedNativeSlotType, value, valueRef))
+            return IR::BailOutOnFieldSlotTypeMismatch;
+        if(objectScriptContext->SlotTypeForAnyTypeChanged())
+            return IR::BailOutOnUnexpectedSlotTypeChange;
+        return IR::BailOutInvalid;
+    }
+    template IR::BailOutKind JavascriptOperators::PatchGetValue_SlotTypeBailoutCheck(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, const ObjectSlotType expectedNativeSlotType, int32 *const valueRef);
+    template IR::BailOutKind JavascriptOperators::PatchGetValue_SlotTypeBailoutCheck(FunctionBody *const functionBody, PolymorphicInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, const ObjectSlotType expectedNativeSlotType, int32 *const valueRef);
+    template IR::BailOutKind JavascriptOperators::PatchGetValue_SlotTypeBailoutCheck(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, const ObjectSlotType expectedNativeSlotType, double *const valueRef);
+    template IR::BailOutKind JavascriptOperators::PatchGetValue_SlotTypeBailoutCheck(FunctionBody *const functionBody, PolymorphicInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, const ObjectSlotType expectedNativeSlotType, double *const valueRef);
+    template IR::BailOutKind JavascriptOperators::PatchGetValue_SlotTypeBailoutCheck(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, const ObjectSlotType expectedNativeSlotType, Var *const valueRef);
+    template IR::BailOutKind JavascriptOperators::PatchGetValue_SlotTypeBailoutCheck(FunctionBody *const functionBody, PolymorphicInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, const ObjectSlotType expectedNativeSlotType, Var *const valueRef);
+#endif
 
     template <bool IsFromFullJit, class TInlineCache>
     __forceinline Var JavascriptOperators::PatchGetValueWithThisPtr(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var thisInstance)
@@ -6932,7 +6987,7 @@ CommonNumber:
 
         PropertyValueInfo info;
         PropertyValueInfo::SetCacheInfo(&info, functionBody, inlineCache, inlineCacheIndex, !IsFromFullJit);
-        Var value;
+        Var value = nullptr;
         if (CacheOperators::TryGetProperty<true, true, true, true, true, true, !TInlineCache::IsPolymorphic, TInlineCache::IsPolymorphic, false>(
                 thisInstance, false, object, propertyId, &value, scriptContext, nullptr, &info))
         {
@@ -6948,17 +7003,36 @@ CommonNumber:
 
         return JavascriptOperators::GetProperty(thisInstance, object, propertyId, scriptContext, &info);
     }
-
-
-    template Var JavascriptOperators::PatchGetValue<false, InlineCache>(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId);
-    template Var JavascriptOperators::PatchGetValue<true, InlineCache>(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId);
-    template Var JavascriptOperators::PatchGetValue<false, PolymorphicInlineCache>(FunctionBody *const functionBody, PolymorphicInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId);
-    template Var JavascriptOperators::PatchGetValue<true, PolymorphicInlineCache>(FunctionBody *const functionBody, PolymorphicInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId);
-
     template Var JavascriptOperators::PatchGetValueWithThisPtr<false, InlineCache>(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var thisInstance);
     template Var JavascriptOperators::PatchGetValueWithThisPtr<true, InlineCache>(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var thisInstance);
     template Var JavascriptOperators::PatchGetValueWithThisPtr<false, PolymorphicInlineCache>(FunctionBody *const functionBody, PolymorphicInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var thisInstance);
     template Var JavascriptOperators::PatchGetValueWithThisPtr<true, PolymorphicInlineCache>(FunctionBody *const functionBody, PolymorphicInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var thisInstance);
+
+#if ENABLE_NATIVE_CODEGEN
+    template<class TInlineCache, class TValueType>
+    __forceinline IR::BailOutKind JavascriptOperators::PatchGetValueWithThisPtr_SlotTypeBailoutCheck(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var thisInstance, const ObjectSlotType expectedNativeSlotType, TValueType *const valueRef)
+    {
+        ScriptContext *const objectScriptContext =
+            RecyclableObject::Is(instance)
+                ? RecyclableObject::FromVar(instance)->GetScriptContext()
+                : functionBody->GetScriptContext();
+        objectScriptContext->SetSlotTypeForAnyTypeChanged(false);
+
+        const Var value = PatchGetValueWithThisPtr<true>(functionBody, inlineCache, inlineCacheIndex, instance, propertyId, thisInstance);
+
+        if(FieldLoadSlotTypeBailoutCheckAndConvert(inlineCache, expectedNativeSlotType, value, valueRef))
+            return IR::BailOutOnFieldSlotTypeMismatch;
+        if(objectScriptContext->SlotTypeForAnyTypeChanged())
+            return IR::BailOutOnUnexpectedSlotTypeChange;
+        return IR::BailOutInvalid;
+    }
+    template IR::BailOutKind JavascriptOperators::PatchGetValueWithThisPtr_SlotTypeBailoutCheck(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var thisInstance, const ObjectSlotType expectedNativeSlotType, int32 *const valueRef);
+    template IR::BailOutKind JavascriptOperators::PatchGetValueWithThisPtr_SlotTypeBailoutCheck(FunctionBody *const functionBody, PolymorphicInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var thisInstance, const ObjectSlotType expectedNativeSlotType, int32 *const valueRef);
+    template IR::BailOutKind JavascriptOperators::PatchGetValueWithThisPtr_SlotTypeBailoutCheck(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var thisInstance, const ObjectSlotType expectedNativeSlotType, double *const valueRef);
+    template IR::BailOutKind JavascriptOperators::PatchGetValueWithThisPtr_SlotTypeBailoutCheck(FunctionBody *const functionBody, PolymorphicInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var thisInstance, const ObjectSlotType expectedNativeSlotType, double *const valueRef);
+    template IR::BailOutKind JavascriptOperators::PatchGetValueWithThisPtr_SlotTypeBailoutCheck(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var thisInstance, const ObjectSlotType expectedNativeSlotType, Var *const valueRef);
+    template IR::BailOutKind JavascriptOperators::PatchGetValueWithThisPtr_SlotTypeBailoutCheck(FunctionBody *const functionBody, PolymorphicInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var thisInstance, const ObjectSlotType expectedNativeSlotType, Var *const valueRef);
+#endif
 
     template <bool IsFromFullJit, class TInlineCache>
     Var JavascriptOperators::PatchGetValueForTypeOf(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId)
@@ -6983,7 +7057,7 @@ CommonNumber:
 
         PropertyValueInfo info;
         PropertyValueInfo::SetCacheInfo(&info, functionBody, inlineCache, inlineCacheIndex, !IsFromFullJit);
-        Var value;
+        Var value = nullptr;
         if (CacheOperators::TryGetProperty<true, true, true, true, true, true, !TInlineCache::IsPolymorphic, TInlineCache::IsPolymorphic, false>(
             instance, false, object, propertyId, &value, scriptContext, nullptr, &info))
         {
@@ -7009,6 +7083,31 @@ CommonNumber:
     template Var JavascriptOperators::PatchGetValueForTypeOf<false, PolymorphicInlineCache>(FunctionBody *const functionBody, PolymorphicInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId);
     template Var JavascriptOperators::PatchGetValueForTypeOf<true, PolymorphicInlineCache>(FunctionBody *const functionBody, PolymorphicInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId);
 
+#if ENABLE_NATIVE_CODEGEN
+    template<class TInlineCache, class TValueType>
+    IR::BailOutKind JavascriptOperators::PatchGetValueForTypeOf_SlotTypeBailoutCheck(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, const ObjectSlotType expectedNativeSlotType, TValueType *const valueRef)
+    {
+        ScriptContext *const objectScriptContext =
+            RecyclableObject::Is(instance)
+                ? RecyclableObject::FromVar(instance)->GetScriptContext()
+                : functionBody->GetScriptContext();
+        objectScriptContext->SetSlotTypeForAnyTypeChanged(false);
+
+        const Var value = PatchGetValueForTypeOf<true>(functionBody, inlineCache, inlineCacheIndex, instance, propertyId);
+
+        if(FieldLoadSlotTypeBailoutCheckAndConvert(inlineCache, expectedNativeSlotType, value, valueRef))
+            return IR::BailOutOnFieldSlotTypeMismatch;
+        if(objectScriptContext->SlotTypeForAnyTypeChanged())
+            return IR::BailOutOnUnexpectedSlotTypeChange;
+        return IR::BailOutInvalid;
+    }
+    template IR::BailOutKind JavascriptOperators::PatchGetValueForTypeOf_SlotTypeBailoutCheck(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, const ObjectSlotType expectedNativeSlotType, int32 *const valueRef);
+    template IR::BailOutKind JavascriptOperators::PatchGetValueForTypeOf_SlotTypeBailoutCheck(FunctionBody *const functionBody, PolymorphicInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, const ObjectSlotType expectedNativeSlotType, int32 *const valueRef);
+    template IR::BailOutKind JavascriptOperators::PatchGetValueForTypeOf_SlotTypeBailoutCheck(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, const ObjectSlotType expectedNativeSlotType, double *const valueRef);
+    template IR::BailOutKind JavascriptOperators::PatchGetValueForTypeOf_SlotTypeBailoutCheck(FunctionBody *const functionBody, PolymorphicInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, const ObjectSlotType expectedNativeSlotType, double *const valueRef);
+    template IR::BailOutKind JavascriptOperators::PatchGetValueForTypeOf_SlotTypeBailoutCheck(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, const ObjectSlotType expectedNativeSlotType, Var *const valueRef);
+    template IR::BailOutKind JavascriptOperators::PatchGetValueForTypeOf_SlotTypeBailoutCheck(FunctionBody *const functionBody, PolymorphicInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, const ObjectSlotType expectedNativeSlotType, Var *const valueRef);
+#endif
 
     Var JavascriptOperators::PatchGetValueUsingSpecifiedInlineCache(InlineCache * inlineCache, Var instance, RecyclableObject * object, PropertyId propertyId, ScriptContext* scriptContext)
     {
@@ -7130,7 +7229,6 @@ CommonNumber:
     template Var JavascriptOperators::PatchGetRootValueForTypeOf<true, InlineCache>(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, DynamicObject * object, PropertyId propertyId);
     template Var JavascriptOperators::PatchGetRootValueForTypeOf<false, PolymorphicInlineCache>(FunctionBody *const functionBody, PolymorphicInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, DynamicObject * object, PropertyId propertyId);
     template Var JavascriptOperators::PatchGetRootValueForTypeOf<true, PolymorphicInlineCache>(FunctionBody *const functionBody, PolymorphicInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, DynamicObject * object, PropertyId propertyId);
-
 
     Var JavascriptOperators::PatchGetRootValueNoFastPath_Var(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId)
     {
@@ -7256,7 +7354,7 @@ CommonNumber:
 
         PropertyValueInfo info;
         PropertyValueInfo::SetCacheInfo(&info, functionBody, inlineCache, inlineCacheIndex, !IsFromFullJit);
-        Var value;
+        Var value = nullptr;
         if (CacheOperators::TryGetProperty<true, true, true, false, true, true, !TInlineCache::IsPolymorphic, TInlineCache::IsPolymorphic, false>(
                 instance, false, object, propertyId, &value, scriptContext, nullptr, &info))
         {
@@ -7542,6 +7640,30 @@ CommonNumber:
     template void JavascriptOperators::PatchPutValue<false, PolymorphicInlineCache>(FunctionBody *const functionBody, PolymorphicInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, PropertyOperationFlags flags);
     template void JavascriptOperators::PatchPutValue<true, PolymorphicInlineCache>(FunctionBody *const functionBody, PolymorphicInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, PropertyOperationFlags flags);
 
+#if ENABLE_NATIVE_CODEGEN
+    template<class TInlineCache, class TExpectedNativeSlotType>
+    IR::BailOutKind JavascriptOperators::PatchPutValue_SlotTypeBailoutCheck(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, PropertyOperationFlags flags)
+    {
+        ScriptContext *const objectScriptContext =
+            RecyclableObject::Is(instance)
+                ? RecyclableObject::FromVar(instance)->GetScriptContext()
+                : functionBody->GetScriptContext();
+        objectScriptContext->SetSlotTypeForAnyTypeChanged(false);
+
+        PatchPutValue<true>(functionBody, inlineCache, inlineCacheIndex, instance, propertyId, newValue, flags);
+
+        if(ShouldBailOutOnFieldSlotTypeMismatch(inlineCache, ObjectSlotType::FromValueType<TExpectedNativeSlotType>()))
+            return IR::BailOutOnFieldSlotTypeMismatch;
+        if(objectScriptContext->SlotTypeForAnyTypeChanged())
+            return IR::BailOutOnUnexpectedSlotTypeChange;
+        return IR::BailOutInvalid;
+    }
+    template IR::BailOutKind JavascriptOperators::PatchPutValue_SlotTypeBailoutCheck<InlineCache, int32>(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, PropertyOperationFlags flags);
+    template IR::BailOutKind JavascriptOperators::PatchPutValue_SlotTypeBailoutCheck<PolymorphicInlineCache, int32>(FunctionBody *const functionBody, PolymorphicInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, PropertyOperationFlags flags);
+    template IR::BailOutKind JavascriptOperators::PatchPutValue_SlotTypeBailoutCheck<InlineCache, double>(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, PropertyOperationFlags flags);
+    template IR::BailOutKind JavascriptOperators::PatchPutValue_SlotTypeBailoutCheck<PolymorphicInlineCache, double>(FunctionBody *const functionBody, PolymorphicInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, PropertyOperationFlags flags);
+#endif
+
     template <bool IsFromFullJit, class TInlineCache>
     __inline void JavascriptOperators::PatchPutRootValue(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, PropertyOperationFlags flags)
     {
@@ -7608,7 +7730,7 @@ CommonNumber:
 
         PropertyValueInfo info;
         PropertyValueInfo::SetCacheInfo(&info, functionBody, inlineCache, inlineCacheIndex, !IsFromFullJit);
-        if (CacheOperators::TrySetProperty<!TInlineCache::IsPolymorphic, true, true, true, true, !TInlineCache::IsPolymorphic, TInlineCache::IsPolymorphic, false>(
+        if (CacheOperators::TrySetProperty<true, true, true, true, true, !TInlineCache::IsPolymorphic, TInlineCache::IsPolymorphic, false>(
                 object, false, propertyId, newValue, scriptContext, flags, nullptr, &info))
         {
             return;
@@ -7643,6 +7765,30 @@ CommonNumber:
     template void JavascriptOperators::PatchPutValueNoLocalFastPath<true, InlineCache>(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, PropertyOperationFlags flags);
     template void JavascriptOperators::PatchPutValueNoLocalFastPath<false, PolymorphicInlineCache>(FunctionBody *const functionBody, PolymorphicInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, PropertyOperationFlags flags);
     template void JavascriptOperators::PatchPutValueNoLocalFastPath<true, PolymorphicInlineCache>(FunctionBody *const functionBody, PolymorphicInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, PropertyOperationFlags flags);
+
+#if ENABLE_NATIVE_CODEGEN
+    template<class TInlineCache, class TExpectedNativeSlotType>
+    IR::BailOutKind JavascriptOperators::PatchPutValueNoLocalFastPath_SlotTypeBailoutCheck(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, PropertyOperationFlags flags)
+    {
+        ScriptContext *const objectScriptContext =
+            RecyclableObject::Is(instance)
+                ? RecyclableObject::FromVar(instance)->GetScriptContext()
+                : functionBody->GetScriptContext();
+        objectScriptContext->SetSlotTypeForAnyTypeChanged(false);
+
+        PatchPutValueNoLocalFastPath<true>(functionBody, inlineCache, inlineCacheIndex, instance, propertyId, newValue, flags);
+
+        if(ShouldBailOutOnFieldSlotTypeMismatch(inlineCache, ObjectSlotType::FromValueType<TExpectedNativeSlotType>()))
+            return IR::BailOutOnFieldSlotTypeMismatch;
+        if(objectScriptContext->SlotTypeForAnyTypeChanged())
+            return IR::BailOutOnUnexpectedSlotTypeChange;
+        return IR::BailOutInvalid;
+    }
+    template IR::BailOutKind JavascriptOperators::PatchPutValueNoLocalFastPath_SlotTypeBailoutCheck<InlineCache, int32>(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, PropertyOperationFlags flags);
+    template IR::BailOutKind JavascriptOperators::PatchPutValueNoLocalFastPath_SlotTypeBailoutCheck<PolymorphicInlineCache, int32>(FunctionBody *const functionBody, PolymorphicInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, PropertyOperationFlags flags);
+    template IR::BailOutKind JavascriptOperators::PatchPutValueNoLocalFastPath_SlotTypeBailoutCheck<InlineCache, double>(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, PropertyOperationFlags flags);
+    template IR::BailOutKind JavascriptOperators::PatchPutValueNoLocalFastPath_SlotTypeBailoutCheck<PolymorphicInlineCache, double>(FunctionBody *const functionBody, PolymorphicInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, PropertyOperationFlags flags);
+#endif
 
     template <bool IsFromFullJit, class TInlineCache>
     __inline void JavascriptOperators::PatchPutValueWithThisPtrNoLocalFastPath(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, Var thisInstance, PropertyOperationFlags flags)
@@ -7702,6 +7848,30 @@ CommonNumber:
     template void JavascriptOperators::PatchPutValueWithThisPtrNoLocalFastPath<false, PolymorphicInlineCache>(FunctionBody *const functionBody, PolymorphicInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, Var thisInstance, PropertyOperationFlags flags);
     template void JavascriptOperators::PatchPutValueWithThisPtrNoLocalFastPath<true, PolymorphicInlineCache>(FunctionBody *const functionBody, PolymorphicInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, Var thisInstance, PropertyOperationFlags flags);
 
+#if ENABLE_NATIVE_CODEGEN
+    template<class TInlineCache, class TExpectedNativeSlotType>
+    IR::BailOutKind JavascriptOperators::PatchPutValueWithThisPtrNoLocalFastPath_SlotTypeBailoutCheck(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, Var thisInstance, PropertyOperationFlags flags)
+    {
+        ScriptContext *const objectScriptContext =
+            RecyclableObject::Is(instance)
+                ? RecyclableObject::FromVar(instance)->GetScriptContext()
+                : functionBody->GetScriptContext();
+        objectScriptContext->SetSlotTypeForAnyTypeChanged(false);
+
+        PatchPutValueWithThisPtrNoLocalFastPath<true>(functionBody, inlineCache, inlineCacheIndex, instance, propertyId, newValue, thisInstance, flags);
+
+        if(ShouldBailOutOnFieldSlotTypeMismatch(inlineCache, ObjectSlotType::FromValueType<TExpectedNativeSlotType>()))
+            return IR::BailOutOnFieldSlotTypeMismatch;
+        if(objectScriptContext->SlotTypeForAnyTypeChanged())
+            return IR::BailOutOnUnexpectedSlotTypeChange;
+        return IR::BailOutInvalid;
+    }
+    template IR::BailOutKind JavascriptOperators::PatchPutValueWithThisPtrNoLocalFastPath_SlotTypeBailoutCheck<InlineCache, int32>(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, Var thisInstance, PropertyOperationFlags flags);
+    template IR::BailOutKind JavascriptOperators::PatchPutValueWithThisPtrNoLocalFastPath_SlotTypeBailoutCheck<PolymorphicInlineCache, int32>(FunctionBody *const functionBody, PolymorphicInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, Var thisInstance, PropertyOperationFlags flags);
+    template IR::BailOutKind JavascriptOperators::PatchPutValueWithThisPtrNoLocalFastPath_SlotTypeBailoutCheck<InlineCache, double>(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, Var thisInstance, PropertyOperationFlags flags);
+    template IR::BailOutKind JavascriptOperators::PatchPutValueWithThisPtrNoLocalFastPath_SlotTypeBailoutCheck<PolymorphicInlineCache, double>(FunctionBody *const functionBody, PolymorphicInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, Var thisInstance, PropertyOperationFlags flags);
+#endif
+
     template <bool IsFromFullJit, class TInlineCache>
     __inline void JavascriptOperators::PatchPutRootValueNoLocalFastPath(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, PropertyOperationFlags flags)
     {
@@ -7711,7 +7881,7 @@ CommonNumber:
 
         PropertyValueInfo info;
         PropertyValueInfo::SetCacheInfo(&info, functionBody, inlineCache, inlineCacheIndex, !IsFromFullJit);
-        if (CacheOperators::TrySetProperty<!TInlineCache::IsPolymorphic, true, true, true, false, !TInlineCache::IsPolymorphic, TInlineCache::IsPolymorphic, false>(
+        if (CacheOperators::TrySetProperty<true, true, true, true, false, !TInlineCache::IsPolymorphic, TInlineCache::IsPolymorphic, false>(
                 object, true, propertyId, newValue, scriptContext, flags, nullptr, &info))
         {
             return;
@@ -7795,6 +7965,7 @@ CommonNumber:
         const PropertyOperationFlags flags = newValue == NULL ? PropertyOperation_SpecialValue : PropertyOperation_None;
         PropertyValueInfo info;
         PropertyValueInfo::SetCacheInfo(&info, functionBody, inlineCache, inlineCacheIndex, !IsFromFullJit);
+        info.SetIsInitField();
         if (CacheOperators::TrySetProperty<true, true, false, true, true, !TInlineCache::IsPolymorphic, TInlineCache::IsPolymorphic, false>(
                 object, false, propertyId, newValue, scriptContext, flags, nullptr, &info))
         {
@@ -7823,10 +7994,32 @@ CommonNumber:
     template void JavascriptOperators::PatchInitValue<false, PolymorphicInlineCache>(FunctionBody *const functionBody, PolymorphicInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, RecyclableObject* object, PropertyId propertyId, Var newValue);
     template void JavascriptOperators::PatchInitValue<true, PolymorphicInlineCache>(FunctionBody *const functionBody, PolymorphicInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, RecyclableObject* object, PropertyId propertyId, Var newValue);
 
+#if ENABLE_NATIVE_CODEGEN
+    template<class TInlineCache, class TExpectedNativeSlotType>
+    IR::BailOutKind JavascriptOperators::PatchInitValue_SlotTypeBailoutCheck(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, RecyclableObject* object, PropertyId propertyId, Var newValue)
+    {
+        ScriptContext *const objectScriptContext = object->GetScriptContext();
+        objectScriptContext->SetSlotTypeForAnyTypeChanged(false);
+
+        PatchInitValue<true>(functionBody, inlineCache, inlineCacheIndex, object, propertyId, newValue);
+
+        if(ShouldBailOutOnFieldSlotTypeMismatch(inlineCache, ObjectSlotType::FromValueType<TExpectedNativeSlotType>()))
+            return IR::BailOutOnFieldSlotTypeMismatch;
+        if(objectScriptContext->SlotTypeForAnyTypeChanged())
+            return IR::BailOutOnUnexpectedSlotTypeChange;
+        return IR::BailOutInvalid;
+    }
+    template IR::BailOutKind JavascriptOperators::PatchInitValue_SlotTypeBailoutCheck<InlineCache, int32>(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, RecyclableObject* object, PropertyId propertyId, Var newValue);
+    template IR::BailOutKind JavascriptOperators::PatchInitValue_SlotTypeBailoutCheck<PolymorphicInlineCache, int32>(FunctionBody *const functionBody, PolymorphicInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, RecyclableObject* object, PropertyId propertyId, Var newValue);
+    template IR::BailOutKind JavascriptOperators::PatchInitValue_SlotTypeBailoutCheck<InlineCache, double>(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, RecyclableObject* object, PropertyId propertyId, Var newValue);
+    template IR::BailOutKind JavascriptOperators::PatchInitValue_SlotTypeBailoutCheck<PolymorphicInlineCache, double>(FunctionBody *const functionBody, PolymorphicInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, RecyclableObject* object, PropertyId propertyId, Var newValue);
+#endif
+
     void JavascriptOperators::PatchInitValueNoFastPath(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, RecyclableObject* object, PropertyId propertyId, Var newValue)
     {
         PropertyValueInfo info;
         PropertyValueInfo::SetCacheInfo(&info, functionBody, inlineCache, inlineCacheIndex, true);
+        info.SetIsInitField();
         Type *typeWithoutProperty = object->GetType();
         if (object->InitProperty(propertyId, newValue, PropertyOperation_None, &info))
         {
@@ -7863,7 +8056,7 @@ CommonNumber:
             else
             {
                 const EquivalentPropertyEntry* refInfo = &record.properties[failedPropertyIndex];
-                Js::PropertyEquivalenceInfo info(Constants::NoSlot, false, false);
+                Js::PropertyEquivalenceInfo info;
                 const PropertyRecord* propertyRecord = scriptContext->GetPropertyName(refInfo->propertyId);
                 if (DynamicType::Is(type->GetTypeId()))
                 {
@@ -7873,8 +8066,8 @@ CommonNumber:
 
                 Output::Print(L"EquivObjTypeSpec: check failed for %s (#%d) on operation %u:\n",
                     propertyRecord->GetBuffer(), propertyRecord->GetPropertyId(), guard->GetObjTypeSpecFldId());
-                Output::Print(L"    type = 0x%p, ref type = 0x%p, slot = 0x%u (%d), ref slot = 0x%u (%d), is writable = %d, required writable = %d\n",
-                    type, refType, info.slotIndex, refInfo->slotIndex, info.isAuxSlot, refInfo->isAuxSlot, info.isWritable, refInfo->mustBeWritable);
+                Output::Print(L"    type = 0x%p, ref type = 0x%p, slot = 0x%u (%d), ref slot = 0x%u (%d), slot type = %S, ref slot type = %S, is writable = %d, required writable = %d\n",
+                    type, refType, info.slotIndex, refInfo->slotIndex, info.slotType.ToString(), refInfo->slotType.ToString(), info.isAuxSlot, refInfo->isAuxSlot, info.isWritable, refInfo->mustBeWritable);
             }
 
             Output::Flush();
@@ -7904,17 +8097,19 @@ CommonNumber:
         return entry->slotIndex == Constants::NoSlot && !entry->mustBeWritable;
     }
 
-    bool JavascriptOperators::CheckIfTypeIsEquivalent(Type* type, JitEquivalentTypeGuard* guard)
+#if ENABLE_NATIVE_CODEGEN
+    IR::BailOutKind JavascriptOperators::CheckIfTypeIsEquivalent(RecyclableObject *const object, JitEquivalentTypeGuard* guard)
     {
         if (guard->GetValue() == 0)
         {
-            return false;
+            return IR::BailOutFailedEquivalentTypeCheck;
         }
 
+        Type *type = object->GetType();
         if (guard->GetType()->GetScriptContext() != type->GetScriptContext())
         {
             // Can't cache cross-context objects
-            return false;
+            return IR::BailOutFailedEquivalentTypeCheck;
         }
 
         // CONSIDER : Add stats on how often the cache hits, and simply force bailout if
@@ -7930,7 +8125,7 @@ CommonNumber:
             type == equivTypes[4] || type == equivTypes[5] || type == equivTypes[6] || type == equivTypes[7])
         {
             guard->SetType(type);
-            return true;
+            return IR::BailOutInvalid;
         }
 
         // If we didn't find the type in the cache, let's check if it's equivalent the slow way, by comparing
@@ -7947,7 +8142,7 @@ CommonNumber:
         Type* refType = equivTypes[0];
         if (refType == nullptr)
         {
-            return false;
+            return IR::BailOutFailedEquivalentTypeCheck;
         }
 
         if (cache->IsLoadedFromProto() && type->GetPrototype() != refType->GetPrototype())
@@ -7959,7 +8154,7 @@ CommonNumber:
                 Output::Flush();
             }
 
-            return false;
+            return IR::BailOutFailedEquivalentTypeCheck;
         }
 
         if (type->GetTypeId() != refType->GetTypeId())
@@ -7971,7 +8166,7 @@ CommonNumber:
                 Output::Flush();
             }
 
-            return false;
+            return IR::BailOutFailedEquivalentTypeCheck;
         }
 
         // Review : This is quite slow.  We could make it somewhat faster, by keeping slot indexes instead
@@ -7984,26 +8179,60 @@ CommonNumber:
         // field operations protected by a type check (keep a counter on the type's value info), and if that counter exceeds
         // some threshold, simply stop optimizing any further instructions.
 
-        bool isEquivalent;
+        IR::BailOutKind bailOutKind;
         uint failedPropertyIndex;
         if (DynamicType::Is(type->GetTypeId()))
         {
             Js::DynamicTypeHandler* typeHandler = (static_cast<DynamicType*>(type))->GetTypeHandler();
-            isEquivalent = typeHandler->IsObjTypeSpecEquivalent(type, cache->record, failedPropertyIndex);
+            DynamicObject *const dynamicObject = DynamicObject::FromVar(object);
+            bailOutKind = typeHandler->IsObjTypeSpecEquivalent(dynamicObject, cache->record, failedPropertyIndex);
+
+            DynamicType *const newType = dynamicObject->GetDynamicType();
+            if(newType != type)
+            {
+                // The object's slot types may have changed in order to converge the slot types and hopefully make its type
+                // equivalent with the expected. Check if the new type is already cached to avoid evicting a type.
+                if(bailOutKind != IR::BailOutFailedEquivalentTypeCheck &&
+                    (
+                        newType == equivTypes[0] ||
+                        newType == equivTypes[1] ||
+                        newType == equivTypes[2] ||
+                        newType == equivTypes[3] ||
+                        newType == equivTypes[4] ||
+                        newType == equivTypes[5] ||
+                        newType == equivTypes[6] ||
+                        newType == equivTypes[7]
+                    ))
+                {
+                    if(cache->HasFixedValue() && !newType->GetIsLocked())
+                    {
+                        // Fixed field checks allow us to assume a specific type ID, but the assumption is only
+                        // valid if we lock the type. Otherwise, the type ID may change out from under us without
+                        // evolving the type.
+                        newType->LockType();
+                    }
+                    guard->SetType(newType);
+                    return bailOutKind;
+                }
+                type = newType;
+            }
         }
         else
         {
             Assert(StaticType::Is(type->GetTypeId()));
-            isEquivalent = IsStaticTypeObjTypeSpecEquivalent(cache->record, failedPropertyIndex);
+            bailOutKind =
+                IsStaticTypeObjTypeSpecEquivalent(cache->record, failedPropertyIndex)
+                    ? IR::BailOutInvalid
+                    : IR::BailOutFailedEquivalentTypeCheck;
         }
 
 #if ENABLE_DEBUG_CONFIG_OPTIONS
-        TracePropertyEquivalenceCheck(guard, type, refType, isEquivalent, failedPropertyIndex);
+        TracePropertyEquivalenceCheck(guard, type, refType, bailOutKind != IR::BailOutFailedEquivalentTypeCheck, failedPropertyIndex);
 #endif
 
-        if (!isEquivalent)
+        if (bailOutKind == IR::BailOutFailedEquivalentTypeCheck)
         {
-            return false;
+            return bailOutKind;
         }
 
         // CONSIDER (EquivObjTypeSpec): Invent some form of least recently used eviction scheme.
@@ -8054,8 +8283,9 @@ CommonNumber:
         }
 
         guard->SetType(type);
-        return true;
+        return bailOutKind;
     }
+#endif
 
     void JavascriptOperators::GetPropertyIdForInt(uint64 value, ScriptContext* scriptContext, PropertyRecord const ** propertyRecord)
     {

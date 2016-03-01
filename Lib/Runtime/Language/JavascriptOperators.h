@@ -84,7 +84,7 @@ namespace Js
 
 #define END_PROFILED_TYPEOF_ERROR_HANDLER(scriptContext, var, functionBody, inlineCacheIndex) \
     TYPEOF_ERROR_HANDLER_CATCH(scriptContext, var) \
-        functionBody->GetDynamicProfileInfo()->RecordFieldAccess(functionBody, inlineCacheIndex, var, FldInfo_NoInfo); \
+        functionBody->GetDynamicProfileInfo()->RecordFieldAccess(functionBody, inlineCacheIndex, var, FldInfo_NoInfo, false); \
     TYPEOF_ERROR_HANDLER_THROW(scriptContext, var)
 
 
@@ -371,10 +371,7 @@ namespace Js
         static bool IsObjectDetached(Var var);
         // This will return a new object from the state returned by the above operation
         static Var NewVarFromDetachedState(DetachedStateBase* state, JavascriptLibrary *library);
-        static Var NewScObjectLiteral(ScriptContext* scriptContext, const Js::PropertyIdArray *propIds, DynamicType ** literalType);
-        static DynamicType * EnsureObjectLiteralType(ScriptContext* scriptContext, const Js::PropertyIdArray *propIds, DynamicType ** literalType);
-        static uint GetLiteralSlotCapacity(Js::PropertyIdArray const * propIds, ScriptContext *const scriptContext);
-        static uint GetLiteralInlineSlotCapacity(Js::PropertyIdArray const * propIds, ScriptContext *const scriptContext);
+        static Var NewScObjectLiteral(FunctionBody *const functionBody, const PropertyIdArray *const propIds, const uint objectLiteralIndex);
         static Var NewJavascriptObjectNoArg(ScriptContext* requestContext);
         static Var NewJavascriptArrayNoArg(ScriptContext* requestContext);
         static Var NewScObjectNoCtorCommon(Var instance, ScriptContext* requestContext, bool isBaseClassConstructorNewScObject = false);
@@ -424,7 +421,7 @@ namespace Js
         static Var LoadHeapArguments(JavascriptFunction *funcCallee, unsigned int count, Var *pParams, Var frameObj, Var vArray, ScriptContext* scriptContext, bool nonSimpleParamList);
         static Var LoadHeapArgsCached(JavascriptFunction *funcCallee, uint32 actualsCount, uint32 formalsCount, Var *pParams, Var frameObj, ScriptContext* scriptContext, bool nonSimpleParamList);
         static HeapArgumentsObject *CreateHeapArguments(JavascriptFunction *funcCallee, uint32 actualsCount, uint32 formalsCount, Var frameObj, ScriptContext* scriptContext);
-        static Var OP_InitCachedScope(Var varFunc, const PropertyIdArray *propIds, DynamicType ** literalType, bool formalsAreLetDecls, ScriptContext *scriptContext);
+        static Var OP_InitCachedScope(Var varFunc, const PropertyIdArray *propIds, const uint objectLiteralIndex, bool formalsAreLetDecls, ScriptContext *scriptContext);
         static void OP_InvalidateCachedScope(Var varEnv, int32 envIndex);
         static void OP_InitCachedFuncs(Var varScope, FrameDisplay *pDisplay, const FuncInfoArray *info, ScriptContext *scriptContext);
         static Var OP_NewScopeObject(ScriptContext*scriptContext);
@@ -443,17 +440,28 @@ namespace Js
         static BOOL GetRemoteTypeId(Var instance, TypeId* typeId);
         static FunctionProxy* GetDeferredDeserializedFunctionProxy(JavascriptFunction* func);
 
-        template <bool IsFromFullJit, class TInlineCache> static Var PatchGetValue(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId);
-        template <bool IsFromFullJit, class TInlineCache> static Var PatchGetValueWithThisPtr(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var thisInstance);
-        template <bool IsFromFullJit, class TInlineCache> static Var PatchGetValueForTypeOf(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId);
+        template<class TInlineCache> static bool ShouldBailOutOnFieldSlotTypeMismatch(const TInlineCache *const inlineCache, const ObjectSlotType expectedNativeSlotType);
+        template<class TInlineCache> static bool FieldLoadSlotTypeBailoutCheckAndConvert(const TInlineCache *const inlineCache, const ObjectSlotType expectedNativeSlotType, const Var value, int32 *const specializedValueRef);
+        template<class TInlineCache> static bool FieldLoadSlotTypeBailoutCheckAndConvert(const TInlineCache *const inlineCache, const ObjectSlotType expectedNativeSlotType, const Var value, double *const specializedValueRef);
+        template<class TInlineCache> static bool FieldLoadSlotTypeBailoutCheckAndConvert(const TInlineCache *const inlineCache, const ObjectSlotType expectedNativeSlotType, const Var value, Var *const specializedValueRef);
 
+        template<bool IsFromFullJit, class TInlineCache> static Var PatchGetValue(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId);
+        template<bool IsFromFullJit, class TInlineCache> static Var PatchGetValueWithThisPtr(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var thisInstance);
+        template<bool IsFromFullJit, class TInlineCache> static Var PatchGetValueForTypeOf(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId);
+
+#if ENABLE_NATIVE_CODEGEN
+        template<class TInlineCache, class TValueType> static IR::BailOutKind PatchGetValue_SlotTypeBailoutCheck(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, const ObjectSlotType expectedNativeSlotType, TValueType *const valueRef);
+        template<class TInlineCache, class TValueType> static IR::BailOutKind PatchGetValueWithThisPtr_SlotTypeBailoutCheck(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var thisInstance, const ObjectSlotType expectedNativeSlotType, TValueType *const valueRef);
+        template<class TInlineCache, class TValueType> static IR::BailOutKind PatchGetValueForTypeOf_SlotTypeBailoutCheck(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, const ObjectSlotType expectedNativeSlotType, TValueType *const valueRef);
+#endif
+        
         static Var PatchGetValueUsingSpecifiedInlineCache(InlineCache * inlineCache, Var instance, RecyclableObject * object, PropertyId propertyId, ScriptContext* scriptContext);
         static Var PatchGetValueNoFastPath(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId);
         static Var PatchGetValueWithThisPtrNoFastPath(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var thisInstance);
 
         template <bool IsFromFullJit, class TInlineCache> static Var PatchGetRootValue(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, DynamicObject* object, PropertyId propertyId);
         template <bool IsFromFullJit, class TInlineCache> static Var PatchGetRootValueForTypeOf(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, DynamicObject* object, PropertyId propertyId);
-
+        
         static Var PatchGetRootValueNoFastPath_Var(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId);
         static Var PatchGetRootValueNoFastPath(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, DynamicObject* object, PropertyId propertyId);
 
@@ -461,19 +469,30 @@ namespace Js
         template <bool IsFromFullJit, class TInlineCache> static void PatchSetPropertyScoped(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, FrameDisplay *pScope, PropertyId propertyId, Var newValue, Var defaultInstance, PropertyOperationFlags flags = PropertyOperation_None);
 
         template <bool IsFromFullJit, class TInlineCache> static Var PatchGetPropertyForTypeOfScoped(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, FrameDisplay *pScope, PropertyId propertyId, Var defaultInstance);
-
-        template <bool IsFromFullJit, class TInlineCache> static void PatchPutValue(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var obj, PropertyId propertyId, Var newValue, PropertyOperationFlags flags = PropertyOperation_None);
+        
+        template<bool IsFromFullJit, class TInlineCache> static void PatchPutValue(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var obj, PropertyId propertyId, Var newValue, PropertyOperationFlags flags = PropertyOperation_None);
+        template<bool IsFromFullJit, class TInlineCache> static void PatchPutValueNoLocalFastPath(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, PropertyOperationFlags flags = PropertyOperation_None);
         template <bool IsFromFullJit, class TInlineCache> static void PatchPutValueWithThisPtr(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var obj, PropertyId propertyId, Var newValue, Var thisInstance, PropertyOperationFlags flags = PropertyOperation_None);
-        template <bool IsFromFullJit, class TInlineCache> static void PatchPutRootValue(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var obj, PropertyId propertyId, Var newValue, PropertyOperationFlags flags = PropertyOperation_None);
-        template <bool IsFromFullJit, class TInlineCache> static void PatchPutValueNoLocalFastPath(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, PropertyOperationFlags flags = PropertyOperation_None);
         template <bool IsFromFullJit, class TInlineCache> static void PatchPutValueWithThisPtrNoLocalFastPath(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, Var thisInstance, PropertyOperationFlags flags = PropertyOperation_None);
-        template <bool IsFromFullJit, class TInlineCache> static void PatchPutRootValueNoLocalFastPath(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, PropertyOperationFlags flags = PropertyOperation_None);
+
+#if ENABLE_NATIVE_CODEGEN
+        template<class TInlineCache, class TExpectedNativeSlotType> static IR::BailOutKind PatchPutValue_SlotTypeBailoutCheck(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var obj, PropertyId propertyId, Var newValue, PropertyOperationFlags flags = PropertyOperation_None);
+        template<class TInlineCache, class TExpectedNativeSlotType> static IR::BailOutKind PatchPutValueNoLocalFastPath_SlotTypeBailoutCheck(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, PropertyOperationFlags flags = PropertyOperation_None);
+        template<class TInlineCache, class TExpectedNativeSlotType> static IR::BailOutKind PatchPutValueWithThisPtrNoLocalFastPath_SlotTypeBailoutCheck(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, Var thisInstance, PropertyOperationFlags flags = PropertyOperation_None);
+#endif
+
+        template<bool IsFromFullJit, class TInlineCache> static void PatchPutRootValue(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var obj, PropertyId propertyId, Var newValue, PropertyOperationFlags flags = PropertyOperation_None);
+        template<bool IsFromFullJit, class TInlineCache> static void PatchPutRootValueNoLocalFastPath(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId, Var newValue, PropertyOperationFlags flags = PropertyOperation_None);
+        template<bool IsFromFullJit, class TInlineCache> static void PatchInitValue(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, RecyclableObject* object, PropertyId propertyId, Var newValue);
+
+#if ENABLE_NATIVE_CODEGEN
+        template<class TInlineCache, class TExpectedNativeSlotType> static IR::BailOutKind PatchInitValue_SlotTypeBailoutCheck(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, RecyclableObject* object, PropertyId propertyId, Var newValue);
+#endif
+
+        static void PatchInitValueNoFastPath(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, RecyclableObject* object, PropertyId propertyId, Var newValue);
         static void PatchPutValueNoFastPath(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var obj, PropertyId propertyId, Var newValue, PropertyOperationFlags flags = PropertyOperation_None);
         static void PatchPutValueWithThisPtrNoFastPath(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var obj, PropertyId propertyId, Var newValue, Var thisInstance, PropertyOperationFlags flags = PropertyOperation_None);
         static void PatchPutRootValueNoFastPath(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var obj, PropertyId propertyId, Var newValue, PropertyOperationFlags flags = PropertyOperation_None);
-
-        template <bool IsFromFullJit, class TInlineCache> static void PatchInitValue(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, RecyclableObject* object, PropertyId propertyId, Var newValue);
-        static void PatchInitValueNoFastPath(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, RecyclableObject* object, PropertyId propertyId, Var newValue);
 
         template <bool IsFromFullJit, class TInlineCache> static Var PatchGetMethod(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, Var instance, PropertyId propertyId);
         template <bool IsFromFullJit, class TInlineCache> static Var PatchGetRootMethod(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, DynamicObject* object, PropertyId propertyId);
@@ -489,7 +508,10 @@ namespace Js
 #endif
         static bool IsStaticTypeObjTypeSpecEquivalent(const TypeEquivalenceRecord& equivalenceRecord, uint& failedIndex);
         static bool IsStaticTypeObjTypeSpecEquivalent(const EquivalentPropertyEntry *entry);
-        static bool CheckIfTypeIsEquivalent(Type* type, JitEquivalentTypeGuard* guard);
+
+#if ENABLE_NATIVE_CODEGEN
+        static IR::BailOutKind CheckIfTypeIsEquivalent(RecyclableObject *const object, JitEquivalentTypeGuard* guard);
+#endif
 
         static void GetPropertyIdForInt(uint64 value, ScriptContext* scriptContext, PropertyRecord const ** propertyRecord);
         static void GetPropertyIdForInt(uint32 value, ScriptContext* scriptContext, PropertyRecord const ** propertyRecord);

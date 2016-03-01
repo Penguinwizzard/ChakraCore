@@ -180,6 +180,7 @@ public:
     bool isNewTargetLexicallyCaptured;
     Symbol *argumentsSymbol;
     JsUtil::List<Js::RegSlot, ArenaAllocator> nonUserNonTempRegistersToInitialize;
+    JsUtil::List<Js::ObjectLiteralCreationSiteInfo *, ArenaAllocator> objectLiteralCreationSiteInfos;
 
     // constRegsCount is set to 2 because R0 is the return register, and R1 is the root object.
     FuncInfo(

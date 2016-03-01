@@ -22,13 +22,30 @@ namespace Js
         {
             struct
             {
-                uint16 preventFlagsFalseRef;
+                uint8 preventFlagsFalseRef;
+                ObjectSlotType::TSize slotTypeBits;
                 bool isInlineSlot;
                 bool isStoreFieldEnabled;
             };
             intptr_t ptrSlot2;
         };
         intptr_t blank;
+
+        ObjectSlotType GetSlotType() const
+        {
+            return ObjectSlotType(slotTypeBits);
+        }
+
+        void SetSlotType(const ObjectSlotType slotType)
+        {
+            slotTypeBits = static_cast<ObjectSlotType::TSize>(slotType);
+            Assert(GetSlotType() == slotType);
+        }
+
+        static size_t GetOffsetOfSlotTypeBits()
+        {
+            return offsetof(PropertyCache, slotTypeBits);
+        }
     };
 
     CompileAssert(sizeof(PropertyCache) == sizeof(InlineCacheAllocator::CacheLayout));
@@ -46,11 +63,10 @@ namespace Js
         PropertyString(StaticType* type, const Js::PropertyRecord* propertyRecord, bool registerScriptContext);
     public:
         PropertyCache const * GetPropertyCache() const;
-        void ClearPropertyCache();
         Js::PropertyRecord const * GetPropertyRecord() const { return m_propertyRecord; }
         static PropertyString* New(StaticType* type, const Js::PropertyRecord* propertyRecord, Recycler *recycler);
         static PropertyString* New(StaticType* type, const Js::PropertyRecord* propertyRecord, ArenaAllocator *arena);
-        void UpdateCache(Type * type, uint16 dataSlotIndex, bool isInlineSlot, bool isStoreFieldEnabled);
+        void UpdateCache(Type * type, uint16 dataSlotIndex, const ObjectSlotType slotType, bool isInlineSlot, bool isStoreFieldEnabled);
         void ClearCache() { propCache->type = nullptr; }
 
         virtual void const * GetOriginalStringReference() override;

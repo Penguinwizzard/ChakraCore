@@ -16,32 +16,37 @@ namespace JSON
         Js::DynamicType* typeWithProperty;
         JsonTypeCache* next;
         Js::PropertyIndex propertyIndex;
+        Js::ObjectSlotType slotType;
 
-        JsonTypeCache(const Js::PropertyRecord* propertyRecord, Js::DynamicType* typeWithoutProperty, Js::DynamicType* typeWithProperty, Js::PropertyIndex propertyIndex) :
+        JsonTypeCache(const Js::PropertyRecord* propertyRecord, Js::DynamicType* typeWithoutProperty, Js::DynamicType* typeWithProperty, Js::PropertyIndex propertyIndex, const Js::ObjectSlotType slotType) : 
             propertyRecord(propertyRecord),
             typeWithoutProperty(typeWithoutProperty),
             typeWithProperty(typeWithProperty),
             propertyIndex(propertyIndex),
+            slotType(slotType),
             next(nullptr) {}
 
-        static JsonTypeCache* JsonTypeCache::New(ArenaAllocator* allocator,
-            const Js::PropertyRecord* propertyRecord,
-            Js::DynamicType* typeWithoutProperty,
-            Js::DynamicType* typeWithProperty,
-            Js::PropertyIndex propertyIndex)
+        static JsonTypeCache* JsonTypeCache::New(ArenaAllocator* allocator, 
+            const Js::PropertyRecord* propertyRecord, 
+            Js::DynamicType* typeWithoutProperty, 
+            Js::DynamicType* typeWithProperty, 
+            Js::PropertyIndex propertyIndex,
+            const Js::ObjectSlotType slotType)
         {
-            return Anew(allocator, JsonTypeCache, propertyRecord, typeWithoutProperty, typeWithProperty, propertyIndex);
+            return Anew(allocator, JsonTypeCache, propertyRecord, typeWithoutProperty, typeWithProperty, propertyIndex, slotType);
         }
 
-        void Update(const Js::PropertyRecord* propertyRecord,
-            Js::DynamicType* typeWithoutProperty,
-            Js::DynamicType* typeWithProperty,
-            Js::PropertyIndex propertyIndex)
+        void Update(const Js::PropertyRecord* propertyRecord, 
+            Js::DynamicType* typeWithoutProperty, 
+            Js::DynamicType* typeWithProperty, 
+            Js::PropertyIndex propertyIndex,
+            const Js::ObjectSlotType slotType)
         {
             this->propertyRecord = propertyRecord;
             this->typeWithoutProperty = typeWithoutProperty;
             this->typeWithProperty = typeWithProperty;
             this->propertyIndex = propertyIndex;
+            this->slotType = slotType;
         }
     };
 

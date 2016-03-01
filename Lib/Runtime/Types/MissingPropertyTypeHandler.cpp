@@ -43,16 +43,13 @@ namespace Js
         return false;
     }
 
-    bool MissingPropertyTypeHandler::IsObjTypeSpecEquivalent(const Type* type, const TypeEquivalenceRecord& record, uint& failedPropertyIndex)
+#if ENABLE_NATIVE_CODEGEN
+    IR::BailOutKind MissingPropertyTypeHandler::IsObjTypeSpecEquivalent(DynamicObject *const object, const TypeEquivalenceRecord& record, uint& failedPropertyIndex)
     {
         failedPropertyIndex = 0;
-        return false;
+        return IR::BailOutFailedEquivalentTypeCheck;
     }
-
-    bool MissingPropertyTypeHandler::IsObjTypeSpecEquivalent(const Type* type, const EquivalentPropertyEntry *entry)
-    {
-        return false;
-    }
+#endif
 
     BOOL MissingPropertyTypeHandler::HasProperty(DynamicObject* instance, PropertyId propertyId, __out_opt bool *noRedecl)
     {

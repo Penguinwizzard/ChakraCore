@@ -4799,8 +4799,8 @@ LowererMD::GenerateLdFldFromLocalInlineCache(
 
     if (!isInlineSlot)
     {
-        opndSlotArray = IR::RegOpnd::New(TyMachReg, instrLdFld->m_func);
-        opndIndir = IR::IndirOpnd::New(opndBase, Js::DynamicObject::GetOffsetOfAuxSlots(), TyMachReg, instrLdFld->m_func);
+        opndSlotArray = IR::RegOpnd::New(TyMachPtr, instrLdFld->m_func);
+        opndIndir = IR::IndirOpnd::New(opndBase, Js::DynamicObject::GetOffsetOfAuxSlots(), TyMachPtr, instrLdFld->m_func);
         instr = IR::Instr::New(Js::OpCode::LDR, opndSlotArray, opndIndir, instrLdFld->m_func);
         instrLdFld->InsertBefore(instr);
     }
@@ -4814,21 +4814,21 @@ LowererMD::GenerateLdFldFromLocalInlineCache(
     if (isInlineSlot)
     {
         // LDR dst, [base, s2, LSL #2] -- load the value directly from the inline slot (dst = base + s2 * 4)
-        opndIndir = IR::IndirOpnd::New(opndBase, s2, GetDefaultIndirScale(), TyMachReg, instrLdFld->m_func);
-        instr = IR::Instr::New(Js::OpCode::LDR, opndDst, opndIndir, instrLdFld->m_func);
-        instrLdFld->InsertBefore(instr);
+        opndIndir = IR::IndirOpnd::New(opndBase, s2, GetDefaultIndirScale(), opndDst->GetType(), instrLdFld->m_func);
     }
     else
     {
         // LDR dst, [s1, s2, LSL #2]  -- load the value directly from the slot (dst = s1 + s2 * 4)
-        opndIndir = IR::IndirOpnd::New(opndSlotArray, s2, GetDefaultIndirScale(), TyMachReg, instrLdFld->m_func);
-        instr = IR::Instr::New(Js::OpCode::LDR, opndDst, opndIndir, instrLdFld->m_func);
+        opndIndir = IR::IndirOpnd::New(opndSlotArray, s2, GetDefaultIndirScale(), opndDst->GetType(), instrLdFld->m_func);
+    }
+    Lowerer::InsertMove(opndDst, opndIndir, instrLdFld);
+
+    if(labelFallThru)
+    {
+        // B $fallthru
+        instr = IR::BranchInstr::New(Js::OpCode::B, labelFallThru, instrLdFld->m_func);
         instrLdFld->InsertBefore(instr);
     }
-
-    // B $fallthru
-    instr = IR::BranchInstr::New(Js::OpCode::B, labelFallThru, instrLdFld->m_func);
-    instrLdFld->InsertBefore(instr);
 }
 
 void
@@ -4852,16 +4852,16 @@ LowererMD::GenerateLdFldFromProtoInlineCache(
     IR::RegOpnd * opndProtoSlots = nullptr;
 
     // LDR s1, [inlineCache, offset(u.proto.prototypeObject)]
-    IR::RegOpnd * opndProto = IR::RegOpnd::New(TyMachReg, instrLdFld->m_func);
-    IR::IndirOpnd * opndIndir = IR::IndirOpnd::New(opndInlineCache, (int32)offsetof(Js::InlineCache, u.proto.prototypeObject), TyMachReg, instrLdFld->m_func);
+    IR::RegOpnd * opndProto = IR::RegOpnd::New(TyVar, instrLdFld->m_func);
+    IR::IndirOpnd * opndIndir = IR::IndirOpnd::New(opndInlineCache, (int32)offsetof(Js::InlineCache, u.proto.prototypeObject), TyVar, instrLdFld->m_func);
     instr = IR::Instr::New(Js::OpCode::LDR, opndProto, opndIndir, instrLdFld->m_func);
     instrLdFld->InsertBefore(instr);
 
     if (!isInlineSlot)
     {
         // LDR s1, [s1, offset(slots)] -- load the slot array
-        opndProtoSlots = IR::RegOpnd::New(TyMachReg, instrLdFld->m_func);
-        opndIndir = IR::IndirOpnd::New(opndProto, Js::DynamicObject::GetOffsetOfAuxSlots(), TyMachReg, instrLdFld->m_func);
+        opndProtoSlots = IR::RegOpnd::New(TyMachPtr, instrLdFld->m_func);
+        opndIndir = IR::IndirOpnd::New(opndProto, Js::DynamicObject::GetOffsetOfAuxSlots(), TyMachPtr, instrLdFld->m_func);
         instr = IR::Instr::New(Js::OpCode::LDR, opndProtoSlots, opndIndir, instrLdFld->m_func);
         instrLdFld->InsertBefore(instr);
     }
@@ -4875,75 +4875,21 @@ LowererMD::GenerateLdFldFromProtoInlineCache(
     if (isInlineSlot)
     {
         // LDR dst, [s1, s8, LSL #2]
-        opndIndir = IR::IndirOpnd::New(opndProto, opndSlotIndex, GetDefaultIndirScale(), TyMachReg, instrLdFld->m_func);
-        instr = IR::Instr::New(Js::OpCode::LDR, opndDst, opndIndir, instrLdFld->m_func);
-        instrLdFld->InsertBefore(instr);
+        opndIndir = IR::IndirOpnd::New(opndProto, opndSlotIndex, GetDefaultIndirScale(), opndDst->GetType(), instrLdFld->m_func);
     }
     else
     {
         // LDR dst, [s7, s8, LSL #2]
-        opndIndir = IR::IndirOpnd::New(opndProtoSlots, opndSlotIndex, GetDefaultIndirScale(), TyMachReg, instrLdFld->m_func);
-        instr = IR::Instr::New(Js::OpCode::LDR, opndDst, opndIndir, instrLdFld->m_func);
-        instrLdFld->InsertBefore(instr);
+        opndIndir = IR::IndirOpnd::New(opndProtoSlots, opndSlotIndex, GetDefaultIndirScale(), opndDst->GetType(), instrLdFld->m_func);
     }
+    Lowerer::InsertMove(opndDst, opndIndir, instrLdFld);
 
-    // B $fallthru
-    instr = IR::BranchInstr::New(Js::OpCode::B, labelFallThru, instrLdFld->m_func);
-    instrLdFld->InsertBefore(instr);
-}
-
-void
-LowererMD::GenerateLdLocalFldFromFlagInlineCache(
-    IR::Instr * instrLdFld,
-    IR::RegOpnd * opndBase,
-    IR::Opnd * opndDst,
-    IR::RegOpnd * opndInlineCache,
-    IR::LabelInstr * labelFallThru,
-    bool isInlineSlot)
-{
-    // Generate:
-    //
-    //     LDR s1, [base, offset(slots)]
-    //     LDR s2, [inlineCache, offset(u.flags.slotIndex)] -- load the cached slot index
-    //     LDR dst, [s1, s2, LSL #2]  -- load the value directly from the slot (dst = s3 + s4 * 4)
-    //     B $fallthru
-
-    IR::Instr * instr;
-    IR::IndirOpnd * opndIndir;
-    IR::RegOpnd * opndSlotArray = nullptr;
-
-    if (!isInlineSlot)
+    if(labelFallThru)
     {
-        opndSlotArray = IR::RegOpnd::New(TyMachReg, instrLdFld->m_func);
-        opndIndir = IR::IndirOpnd::New(opndBase, Js::DynamicObject::GetOffsetOfAuxSlots(), TyMachReg, instrLdFld->m_func);
-        instr = IR::Instr::New(Js::OpCode::LDR, opndSlotArray, opndIndir, instrLdFld->m_func);
+        // B $fallthru
+        instr = IR::BranchInstr::New(Js::OpCode::B, labelFallThru, instrLdFld->m_func);
         instrLdFld->InsertBefore(instr);
     }
-
-    // s2 = LDR [inlineCache, offset(u.local.slotIndex)] -- load the cached slot index
-    IR::RegOpnd * s2 = IR::RegOpnd::New(TyUint16, instrLdFld->m_func);
-    opndIndir = IR::IndirOpnd::New(opndInlineCache, offsetof(Js::InlineCache, u.accessor.slotIndex), TyUint16, instrLdFld->m_func);
-    instr = IR::Instr::New(Js::OpCode::LDR, s2, opndIndir, instrLdFld->m_func);
-    instrLdFld->InsertBefore(instr);
-
-    if (isInlineSlot)
-    {
-        // LDR dst, [base, s2, LSL #2] -- load the value directly from the inline slot (dst = base + s2 * 4)
-        opndIndir = IR::IndirOpnd::New(opndBase, s2, GetDefaultIndirScale(), TyMachReg, instrLdFld->m_func);
-        instr = IR::Instr::New(Js::OpCode::LDR, opndDst, opndIndir, instrLdFld->m_func);
-        instrLdFld->InsertBefore(instr);
-    }
-    else
-    {
-        // LDR dst, [s1, s2, LSL #2]  -- load the value directly from the slot (dst = s1 + s2 * 4)
-        opndIndir = IR::IndirOpnd::New(opndSlotArray, s2, GetDefaultIndirScale(), TyMachReg, instrLdFld->m_func);
-        instr = IR::Instr::New(Js::OpCode::LDR, opndDst, opndIndir, instrLdFld->m_func);
-        instrLdFld->InsertBefore(instr);
-    }
-
-    // B $fallthru
-    instr = IR::BranchInstr::New(Js::OpCode::B, labelFallThru, instrLdFld->m_func);
-    instrLdFld->InsertBefore(instr);
 }
 
 void
@@ -4967,16 +4913,16 @@ LowererMD::GenerateLdFldFromFlagInlineCache(
     IR::RegOpnd * opndObjSlots = nullptr;
 
     // LDR s1, [inlineCache, offset(u.flags.object)]
-    IR::RegOpnd * object = IR::RegOpnd::New(TyMachReg, this->m_func);
-    IR::IndirOpnd * opndIndir = IR::IndirOpnd::New(opndInlineCache, (int32)offsetof(Js::InlineCache, u.accessor.object), TyMachReg, this->m_func);
+    IR::RegOpnd * object = IR::RegOpnd::New(TyVar, this->m_func);
+    IR::IndirOpnd * opndIndir = IR::IndirOpnd::New(opndInlineCache, (int32)offsetof(Js::InlineCache, u.accessor.object), TyVar, this->m_func);
     instr = IR::Instr::New(Js::OpCode::LDR, object, opndIndir, this->m_func);
     insertBeforeInstr->InsertBefore(instr);
 
     if (!isInlineSlot)
     {
         // LDR s1, [s1, offset(slots)] -- load the slot array
-        opndObjSlots = IR::RegOpnd::New(TyMachReg, this->m_func);
-        opndIndir = IR::IndirOpnd::New(object, Js::DynamicObject::GetOffsetOfAuxSlots(), TyMachReg, this->m_func);
+        opndObjSlots = IR::RegOpnd::New(TyMachPtr, this->m_func);
+        opndIndir = IR::IndirOpnd::New(object, Js::DynamicObject::GetOffsetOfAuxSlots(), TyMachPtr, this->m_func);
         instr = IR::Instr::New(Js::OpCode::LDR, opndObjSlots, opndIndir, this->m_func);
         insertBeforeInstr->InsertBefore(instr);
     }
@@ -4990,14 +4936,14 @@ LowererMD::GenerateLdFldFromFlagInlineCache(
     if (isInlineSlot)
     {
         // LDR dst, [s1, s8, LSL #2]
-        opndIndir = IR::IndirOpnd::New(object, opndSlotIndex, this->GetDefaultIndirScale(), TyMachReg, this->m_func);
+        opndIndir = IR::IndirOpnd::New(object, opndSlotIndex, this->GetDefaultIndirScale(), opndDst->GetType(), this->m_func);
         instr = IR::Instr::New(Js::OpCode::LDR, opndDst, opndIndir, this->m_func);
         insertBeforeInstr->InsertBefore(instr);
     }
     else
     {
         // LDR dst, [s7, s8, LSL #2]
-        opndIndir = IR::IndirOpnd::New(opndObjSlots, opndSlotIndex, this->GetDefaultIndirScale(), TyMachReg, this->m_func);
+        opndIndir = IR::IndirOpnd::New(opndObjSlots, opndSlotIndex, this->GetDefaultIndirScale(), opndDst->GetType(), this->m_func);
         instr = IR::Instr::New(Js::OpCode::LDR, opndDst, opndIndir, this->m_func);
         insertBeforeInstr->InsertBefore(instr);
     }
@@ -5005,15 +4951,6 @@ LowererMD::GenerateLdFldFromFlagInlineCache(
     // B $fallthru
     instr = IR::BranchInstr::New(Js::OpCode::B, labelFallThru, this->m_func);
     insertBeforeInstr->InsertBefore(instr);
-}
-
-void
-LowererMD::GenerateLoadTaggedType(IR::Instr * instrLdSt, IR::RegOpnd * opndType, IR::RegOpnd * opndTaggedType)
-{
-    // taggedType = OR type, InlineCacheAuxSlotTypeTag
-    IR::IntConstOpnd * opndAuxSlotTag = IR::IntConstOpnd::New(InlineCacheAuxSlotTypeTag, TyInt8, instrLdSt->m_func);
-    IR::Instr * instr = IR::Instr::New(Js::OpCode::ORR, opndTaggedType, opndType, opndAuxSlotTag, instrLdSt->m_func);
-    instrLdSt->InsertBefore(instr);
 }
 
 void
@@ -5124,8 +5061,7 @@ LowererMD::GenerateFastLdMethodFromFlags(IR::Instr * instrLdFld)
 
     // Check the flag cache with the tagged type
     instrLdFld->InsertBefore(labelFlagAux);
-    IR::RegOpnd * opndTaggedType = IR::RegOpnd::New(TyMachReg, this->m_func);
-    GenerateLoadTaggedType(instrLdFld, opndType, opndTaggedType);
+    IR::RegOpnd * opndTaggedType = Lowerer::GenerateLoadTypeWithAuxSlotTag(opndType, true, instrLdFld);
     GenerateFlagInlineCacheCheck(instrLdFld, opndTaggedType, opndInlineCache, bailOutLabel);
     GenerateLdFldFromFlagInlineCache(instrLdFld, opndBase, opndInlineCache, opndDst, labelFallThru, false);
 
@@ -5244,8 +5180,7 @@ LowererMD::GenerateFastScopedFld(IR::Instr * instrScopedFld, bool isLoad)
     labelFallThru = IR::LabelInstr::New(Js::OpCode::Label, this->m_func);
 
     // Check the local cache with the tagged type
-    IR::RegOpnd * opndTaggedType = IR::RegOpnd::New(TyMachReg, this->m_func);
-    GenerateLoadTaggedType(instrScopedFld, opndType, opndTaggedType);
+    IR::RegOpnd * opndTaggedType = Lowerer::GenerateLoadTypeWithAuxSlotTag(opndType, true, instrScopedFld);
     GenerateLocalInlineCacheCheck(instrScopedFld, opndTaggedType, opndInlineCache, labelHelper);
     if (isLoad)
     {
@@ -5356,8 +5291,8 @@ LowererMD::GenerateStFldFromLocalInlineCache(
     if (!isInlineSlot)
     {
         // s2 = MOV base->slots -- load the slot array
-        opndSlotArray = IR::RegOpnd::New(TyMachReg, instrStFld->m_func);
-        opndIndir = IR::IndirOpnd::New(opndBase, Js::DynamicObject::GetOffsetOfAuxSlots(), TyMachReg, instrStFld->m_func);
+        opndSlotArray = IR::RegOpnd::New(TyMachPtr, instrStFld->m_func);
+        opndIndir = IR::IndirOpnd::New(opndBase, Js::DynamicObject::GetOffsetOfAuxSlots(), TyMachPtr, instrStFld->m_func);
         LowererMD::CreateAssign(opndSlotArray, opndIndir, instrStFld);
     }
 
@@ -5367,141 +5302,14 @@ LowererMD::GenerateStFldFromLocalInlineCache(
     instr = IR::Instr::New(Js::OpCode::LDR, opndSlotIndex, opndIndir, instrStFld->m_func);
     instrStFld->InsertBefore(instr);
 
-    if (isInlineSlot)
-    {
-        // STR src, [base, s5, LSL #2]  -- store the value directly to the slot [s4 + s5 * 4] = src
-        opndIndir = IR::IndirOpnd::New(opndBase, opndSlotIndex, LowererMD::GetDefaultIndirScale(), TyMachReg, instrStFld->m_func);
-        instr = IR::Instr::New(Js::OpCode::STR, opndIndir, opndSrc, instrStFld->m_func);
-        instrStFld->InsertBefore(instr);
-        LegalizeMD::LegalizeInstr(instr, false);
-    }
-    else
-    {
-        // STR src, [s4, s5, LSL #2]  -- store the value directly to the slot [s4 + s5 * 4] = src
-        opndIndir = IR::IndirOpnd::New(opndSlotArray, opndSlotIndex, LowererMD::GetDefaultIndirScale(), TyMachReg, instrStFld->m_func);
-        instr = IR::Instr::New(Js::OpCode::STR, opndIndir, opndSrc, instrStFld->m_func);
-        instrStFld->InsertBefore(instr);
-        LegalizeMD::LegalizeInstr(instr, false);
-    }
+    // STR src, [indirBase, s5, LSL #2]  -- store the value directly to the slot [indirBase + s5 * 4] = src
+    IR::RegOpnd *const opndIndirBase = isInlineSlot ? opndBase : opndSlotArray;
+    opndIndir = IR::IndirOpnd::New(opndIndirBase, opndSlotIndex, LowererMD::GetDefaultIndirScale(), opndSrc->GetType(), instrStFld->m_func);
+    Lowerer::InsertMove(opndIndir, opndSrc, instrStFld, true);
 
     // B $done
     instr = IR::BranchInstr::New(Js::OpCode::B, labelFallThru, instrStFld->m_func);
     instrStFld->InsertBefore(instr);
-}
-
-IR::IndirOpnd *
-LowererMD::GenerateFastElemIStringIndexCommon(
-    IR::Instr * instrInsert,
-    bool isStore,
-    IR::IndirOpnd *indirOpnd,
-    IR::LabelInstr * labelHelper
-)
-{
-    // Generates:
-    //      CMP indexOpnd, PropertyString::`vtable'                 -- check if index is property string
-    //      BNE $helper
-    //      LDR propertyCacheOpnd, index->propCache
-    //      TST baseOpnd, AtomTag                                   -- check base not tagged int
-    //      BNE $helper
-    //      LDR objectTypeOpnd, baseOpnd->type
-    //      CMP [propertyCacheOpnd->type], objectTypeOpnd           -- check if object type match the cache
-    //      BNE $helper
-    //      CMP [propertyCacheOpnd->isInlineSlot,1]                 -- check if it is inline slots
-    //      BEQ $inlineSlot
-    //      LDR slotOpnd, [baseOpnd->slot]                          -- load the aux slot
-    //      B   $afterLabel
-    // $inlineSlot:
-    //      LDR slotOpnd, baseOpnd                                  -- use the object as start of the slot offset
-    // $afterLabel:
-    //      LDR offsetOpnd, [propertyCacheOpnd->dataSlotIndex]   -- load the slot index
-    //      <return slotOpnd, offsetOpnd, PtrSize as ppHead,p pIndex, pScale>
-
-    IR::RegOpnd *indexOpnd = indirOpnd->GetIndexOpnd();
-    IR::RegOpnd *baseOpnd = indirOpnd->GetBaseOpnd();
-    Assert(baseOpnd != nullptr);
-    Assert(indexOpnd->GetValueType().IsString());
-
-    //      CMP [indexOpnd], PropertyString::`vtable'               -- check if index is property string
-    //      BNE $helper
-    IR::Instr * checkVtableInstr = IR::Instr::New(Js::OpCode::CMP, this->m_func);
-    checkVtableInstr->SetSrc1(IR::IndirOpnd::New(indexOpnd, (int32)0, TyMachPtr, this->m_func));
-    checkVtableInstr->SetSrc2(m_lowerer->LoadVTableValueOpnd(instrInsert, VTableValue::VtablePropertyString));
-    instrInsert->InsertBefore(checkVtableInstr);
-    LegalizeMD::LegalizeInstr(checkVtableInstr, false);
-
-    instrInsert->InsertBefore(IR::BranchInstr::New(Js::OpCode::BNE, labelHelper, this->m_func));
-
-    //      LDR propertyCacheOpnd, index->propCache
-    IR::RegOpnd * propertyCacheOpnd = IR::RegOpnd::New(TyMachPtr, this->m_func);
-    IR::Instr * loadPropertyCacheInstr = IR::Instr::New(Js::OpCode::LDR, propertyCacheOpnd,
-        IR::IndirOpnd::New(indexOpnd, Js::PropertyString::GetOffsetOfPropertyCache(), TyMachReg, this->m_func), this->m_func);
-    instrInsert->InsertBefore(loadPropertyCacheInstr);
-
-    //      TST baseOpnd, AtomTag                                   -- check base not tagged int
-    //      BNE $helper
-    if (!(baseOpnd->m_sym->m_isNotInt || baseOpnd->GetValueType().IsNotInt()))
-    {
-        GenerateObjectTest(baseOpnd, instrInsert, labelHelper);
-    }
-
-    //      LDR s2, baseOpnd->type
-    //      CMP [propertyCacheOpnd->type], s2                       -- check if object type match the cache
-    //      BNE $helper
-
-    IR::RegOpnd * objectTypeOpnd = IR::RegOpnd::New(TyMachPtr, this->m_func);
-    IR::Instr * loadObjectTypeInstr = IR::Instr::New(Js::OpCode::LDR,
-        objectTypeOpnd, IR::IndirOpnd::New(baseOpnd, Js::RecyclableObject::GetOffsetOfType(), TyMachPtr, this->m_func),
-        this->m_func);
-    instrInsert->InsertBefore(loadObjectTypeInstr);
-
-    IR::Instr * checkTypeInstr = IR::Instr::New(Js::OpCode::CMP, this->m_func);
-    checkTypeInstr->SetSrc1(IR::IndirOpnd::New(propertyCacheOpnd, (int32)offsetof(Js::PropertyCache, type), TyMachPtr, this->m_func));
-    checkTypeInstr->SetSrc2(objectTypeOpnd);
-    instrInsert->InsertBefore(checkTypeInstr);
-    LegalizeMD::LegalizeInstr(checkTypeInstr, false);
-    instrInsert->InsertBefore(IR::BranchInstr::New(Js::OpCode::BNE, labelHelper, this->m_func));
-
-    if (isStore)
-    {
-        IR::IndirOpnd* isStoreEnabledOpnd = IR::IndirOpnd::New(propertyCacheOpnd, (int32)offsetof(Js::PropertyCache, isStoreFieldEnabled), TyInt8, this->m_func);
-        IR::IntConstOpnd* zeroOpnd = IR::IntConstOpnd::New(0, TyInt8, this->m_func, /* dontEncode = */ true);
-        this->m_lowerer->InsertCompareBranch(isStoreEnabledOpnd, zeroOpnd, Js::OpCode::BrEq_A, labelHelper, instrInsert);
-    }
-
-    //      CMP [propertyCacheOpnd->isInlineSlot,1]                 -- check if it is inline slots
-    //      BEQ $inlineSlot
-    IR::Instr * inlineSlotTestInstr = IR::Instr::New(Js::OpCode::CMP, this->m_func);
-    inlineSlotTestInstr->SetSrc1(IR::IndirOpnd::New(propertyCacheOpnd, (int32)offsetof(Js::PropertyCache, isInlineSlot), TyInt8, this->m_func));
-    inlineSlotTestInstr->SetSrc2(IR::IntConstOpnd::New(1, TyInt8, this->m_func));
-    instrInsert->InsertBefore(inlineSlotTestInstr);
-    LegalizeMD::LegalizeInstr(inlineSlotTestInstr, false);
-
-    IR::LabelInstr * isInlineSlotLabel = IR::LabelInstr::New(Js::OpCode::Label, this->m_func);
-    instrInsert->InsertBefore(IR::BranchInstr::New(Js::OpCode::BEQ, isInlineSlotLabel, this->m_func));
-
-    //      LDR slotOpnd, [baseOpnd->slot]                          -- load the aux slot
-    //      B $afterLabel
-    IR::RegOpnd * slotOpnd = IR::RegOpnd::New(TyMachPtr, this->m_func);
-    instrInsert->InsertBefore(IR::Instr::New(Js::OpCode::LDR, slotOpnd,
-        IR::IndirOpnd::New(baseOpnd, Js::DynamicObject::GetOffsetOfAuxSlots(), TyMachPtr, this->m_func), this->m_func));
-
-    IR::LabelInstr * afterLabel = IR::LabelInstr::New(Js::OpCode::Label, this->m_func);
-    instrInsert->InsertBefore(IR::BranchInstr::New(Js::OpCode::B, afterLabel, this->m_func));
-
-    // $inlineSlot:
-    //      LDR slotOpnd, baseOpnd                                  -- use the object as start of the slot offset
-    instrInsert->InsertBefore(isInlineSlotLabel);
-    instrInsert->InsertBefore(IR::Instr::New(Js::OpCode::LDR, slotOpnd, baseOpnd, this->m_func));
-
-    // $afterLabel:
-    //      LDR offsetOpnd, [propertyCacheOpnd->dataSlotIndex]      -- load the slot index
-    instrInsert->InsertBefore(afterLabel);
-    IR::RegOpnd * offsetOpnd = IR::RegOpnd::New(TyInt32, this->m_func);
-    instrInsert->InsertBefore(IR::Instr::New(Js::OpCode::LDR, offsetOpnd,
-        IR::IndirOpnd::New(propertyCacheOpnd, (int32)offsetof(Js::PropertyCache, dataSlotIndex), TyUint16, this->m_func), this->m_func));
-
-    // return [slotOpnd + offsetOpnd * PtrSize]
-    return IR::IndirOpnd::New(slotOpnd, offsetOpnd, this->GetDefaultIndirScale(), TyVar, this->m_func);
 }
 
 IR::Opnd *
@@ -6090,6 +5898,7 @@ LowererMD::LoadCheckedFloat(
     IR::LabelInstr *labelInline,
     IR::LabelInstr *labelHelper,
     IR::Instr *instrInsert,
+    const bool isInHelperBlock,
     const bool checkForNullInLoopBody)
 {
     // Load one floating-point var into a VFP register, inserting checks to see if it's really a float:
@@ -6113,7 +5922,7 @@ LowererMD::LoadCheckedFloat(
     instrInsert->InsertBefore(instrFirst);
     LegalizeMD::LegalizeInstr(instrFirst, false);
 
-    IR::LabelInstr * labelVar = IR::LabelInstr::New(Js::OpCode::Label, this->m_func);
+    IR::LabelInstr * labelVar = IR::LabelInstr::New(Js::OpCode::Label, this->m_func, isInHelperBlock);
     instr = IR::BranchInstr::New(Js::OpCode::BCC, labelVar, this->m_func);
     instrInsert->InsertBefore(instr);
 
@@ -6147,7 +5956,7 @@ LowererMD::EmitLoadFloatFromNumber(IR::Opnd *dst, IR::Opnd *src, IR::Instr *inse
 {
     IR::LabelInstr *labelDone;
     IR::Instr *instr;
-    labelDone = EmitLoadFloatCommon(dst, src, insertInstr, insertInstr->HasBailOutInfo());
+    labelDone = EmitLoadFloatCommon(dst, src, insertInstr, insertInstr->HasBailOutInfo(), false);
 
     if (labelDone == nullptr)
     {
@@ -6241,7 +6050,7 @@ LowererMD::EmitLoadFloatFromNumber(IR::Opnd *dst, IR::Opnd *src, IR::Instr *inse
 }
 
 IR::LabelInstr*
-LowererMD::EmitLoadFloatCommon(IR::Opnd *dst, IR::Opnd *src, IR::Instr *insertInstr, bool needHelperLabel)
+LowererMD::EmitLoadFloatCommon(IR::Opnd *dst, IR::Opnd *src, IR::Instr *insertInstr, bool needHelperLabel, const bool isInHelperBlock)
 {
     IR::Instr *instr;
 
@@ -6293,9 +6102,9 @@ LowererMD::EmitLoadFloatCommon(IR::Opnd *dst, IR::Opnd *src, IR::Instr *insertIn
     }
     Assert(src->IsRegOpnd());
 
-    IR::LabelInstr *labelStore = IR::LabelInstr::New(Js::OpCode::Label, this->m_func);
+    IR::LabelInstr *labelStore = IR::LabelInstr::New(Js::OpCode::Label, this->m_func, isInHelperBlock);
     IR::LabelInstr *labelHelper;
-    IR::LabelInstr *labelDone = IR::LabelInstr::New(Js::OpCode::Label, this->m_func);
+    IR::LabelInstr *labelDone = IR::LabelInstr::New(Js::OpCode::Label, this->m_func, isInHelperBlock);
     if (needHelperLabel)
     {
         labelHelper = IR::LabelInstr::New(Js::OpCode::Label, this->m_func, true);
@@ -6306,7 +6115,7 @@ LowererMD::EmitLoadFloatCommon(IR::Opnd *dst, IR::Opnd *src, IR::Instr *insertIn
     }
     IR::RegOpnd *reg2 = IR::RegOpnd::New(TyMachDouble, this->m_func);
     // Load the float value in reg2
-    this->LoadCheckedFloat(src->AsRegOpnd(), reg2, labelStore, labelHelper, insertInstr, needHelperLabel);
+    this->LoadCheckedFloat(src->AsRegOpnd(), reg2, labelStore, labelHelper, insertInstr, isInHelperBlock, needHelperLabel);
 
     // $Store
     insertInstr->InsertBefore(labelStore);
@@ -6343,7 +6152,7 @@ LowererMD::EmitLoadFloatCommon(IR::Opnd *dst, IR::Opnd *src, IR::Instr *insertIn
 }
 
 IR::RegOpnd *
-LowererMD::EmitLoadFloat(IR::Opnd *dst, IR::Opnd *src, IR::Instr *insertInstr)
+LowererMD::EmitLoadFloat(IR::Opnd *dst, IR::Opnd *src, IR::Instr *insertInstr, const bool isInHelperBlock)
 {
     IR::LabelInstr *labelDone;
     IR::Instr *instr;
@@ -6357,7 +6166,7 @@ LowererMD::EmitLoadFloat(IR::Opnd *dst, IR::Opnd *src, IR::Instr *insertInstr)
         LegalizeMD::LegalizeIndirOpndForVFP(insertInstr, dst->AsIndirOpnd(), false);
     }
 
-    labelDone = EmitLoadFloatCommon(dst, src, insertInstr, true);
+    labelDone = EmitLoadFloatCommon(dst, src, insertInstr, true, isInHelperBlock);
 
     if (labelDone == nullptr)
     {
@@ -7521,7 +7330,7 @@ LowererMD::EmitLoadVarNoCheck(IR::RegOpnd * dst, IR::RegOpnd * src, IR::Instr *i
 }
 
 bool
-LowererMD::EmitLoadInt32(IR::Instr *instrLoad, bool conversionFromObjectAllowed)
+LowererMD::EmitLoadInt32(IR::Instr *instrLoad, bool conversionFromObjectAllowed, const bool isInHelperBlock)
 {
     // isInt:
     //   dst = ASR r1, AtomTag
@@ -7571,7 +7380,7 @@ LowererMD::EmitLoadInt32(IR::Instr *instrLoad, bool conversionFromObjectAllowed)
             {
                 if(doFloatToIntFastPath)
                 {
-                    labelFloat = IR::LabelInstr::New(Js::OpCode::Label, instrLoad->m_func, false);
+                    labelFloat = IR::LabelInstr::New(Js::OpCode::Label, instrLoad->m_func, isInHelperBlock);
                 }
                 else
                 {
@@ -7585,7 +7394,7 @@ LowererMD::EmitLoadInt32(IR::Instr *instrLoad, bool conversionFromObjectAllowed)
                 Js::OpCode::ASRS, instrLoad->GetDst(), src1, IR::IntConstOpnd::New(Js::AtomTag, TyMachReg, this->m_func), this->m_func);
             instrLoad->InsertBefore(instr);
 
-            labelDone = instrLoad->GetOrCreateContinueLabel();
+            labelDone = instrLoad->GetOrCreateContinueLabel(isInHelperBlock);
             instr = IR::BranchInstr::New(Js::OpCode::BCS, labelDone, this->m_func);
             instrLoad->InsertBefore(instr);
         }
@@ -7602,7 +7411,7 @@ LowererMD::EmitLoadInt32(IR::Instr *instrLoad, bool conversionFromObjectAllowed)
             }
             if(!labelDone)
             {
-                labelDone = instrLoad->GetOrCreateContinueLabel();
+                labelDone = instrLoad->GetOrCreateContinueLabel(isInHelperBlock);
             }
 
             IR::RegOpnd *floatReg = IR::RegOpnd::New(TyFloat64, this->m_func);
@@ -7617,7 +7426,7 @@ LowererMD::EmitLoadInt32(IR::Instr *instrLoad, bool conversionFromObjectAllowed)
         if(instrLoad->HasBailOutInfo() && (instrLoad->GetBailOutKind() == IR::BailOutIntOnly || instrLoad->GetBailOutKind() == IR::BailOutExpectingInteger))
         {
             // Avoid bailout if we have a JavascriptNumber whose value is a signed 32-bit integer
-            m_lowerer->LoadInt32FromUntaggedVar(instrLoad);
+            m_lowerer->LoadInt32FromUntaggedVar(instrLoad, isInHelperBlock);
 
             // Need to bail out instead of calling a helper
             return true;
@@ -9057,7 +8866,19 @@ IR::Instr *
 LowererMD::LoadFloatZero(IR::Opnd * opndDst, IR::Instr * instrInsert)
 {
     Assert(opndDst->GetType() == TyFloat64);
-    IR::Opnd * zero = IR::MemRefOpnd::New((double*)&(Js::JavascriptNumber::k_Zero), TyFloat64, instrInsert->m_func, IR::AddrOpndKindDynamicDoubleRef);
+
+    Func *const func = instrInsert->m_func;
+
+    if(sizeof(void *) == sizeof(double) && opndDst->IsMemoryOpnd())
+    {
+        return
+            Lowerer::InsertMove(
+                opndDst->Copy(func)->UseWithNewType(TyMachPtr, func),
+                IR::AddrOpnd::NewNull(func),
+                instrInsert);
+    }
+
+    IR::Opnd * zero = IR::MemRefOpnd::New((double*)&(Js::JavascriptNumber::k_Zero), TyFloat64, func, IR::AddrOpndKindDynamicDoubleRef);
     return Lowerer::InsertMove(opndDst, zero, instrInsert);
 }
 
