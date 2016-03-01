@@ -328,6 +328,12 @@ StackSym::GetByteCodeFunc() const
 }
 
 void
+StackSym::SetIsParamArray()
+{
+    this->m_isParamArraySym = true;
+}
+
+void
 StackSym::IncrementArgSlotNum()
 {
     Assert(IsArgSlotSym());

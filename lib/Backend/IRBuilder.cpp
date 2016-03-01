@@ -5086,6 +5086,7 @@ IRBuilder::BuildReg2Aux(Js::OpCode newOpcode, uint32 offset)
 
             helperOpnd = IR::HelperCallOpnd::New(IR::HelperOP_InitCachedScope, this->m_func);
 
+            dstOpnd->GetStackSym()->m_isParamArraySym = true;
             instr = IR::Instr::New(Js::OpCode::CallHelper, dstOpnd, helperOpnd, instr->GetDst(), m_func);
             this->AddInstr(instr, Js::Constants::NoByteCodeOffset);
 

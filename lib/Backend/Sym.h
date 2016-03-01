@@ -150,6 +150,7 @@ public:
     bool            IsTypeSpec() const { return this->m_isTypeSpec; }
     static StackSym *GetVarEquivStackSym_NoCreate(Sym *const sym);
 
+    void            SetIsParamArray();
     bool            HasByteCodeRegSlot() const { return m_hasByteCodeRegSlot; }
     Func *          GetByteCodeFunc() const;
     Js::RegSlot     GetByteCodeRegSlot() const;
@@ -207,6 +208,7 @@ public:
     uint8           m_isArgCaptured: 1;       // True if there is a ByteCodeArgOutCapture for this symbol
     uint8           m_nonEscapingArgObjAlias : 1;
     uint8           m_isCatchObjectSym : 1;   // a catch object sym (used while jitting loop bodies)
+    uint8           m_isParamArraySym : 1; // Tracks Array which stores function params.
     IRType          m_type;
     Js::BuiltinFunction m_builtInIndex;
 
