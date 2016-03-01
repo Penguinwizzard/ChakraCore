@@ -3424,6 +3424,14 @@ IRBuilder::BuildElementSlotI1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot r
                     Js::Throw::FatalInternalError();
                 }
             }
+            
+            //if (m_func->GetLocalClosureSym()->HasByteCodeRegSlot())
+            //{
+            //    byteCodeUse = IR::ByteCodeUsesInstr::New(m_func);
+            //    byteCodeUse->byteCodeUpwardExposedUsed = JitAnew(m_func->m_alloc, BVSparse<JitArenaAllocator>, m_func->m_alloc);
+            //    byteCodeUse->byteCodeUpwardExposedUsed->Set(m_func->GetParamClosureSym()->m_id);
+            //    this->AddInstr(byteCodeUse, offset);
+            //}
 
             // Read the scope slot pointer back using the stack closure sym.
             newOpcode = Js::OpCode::LdSlot;
@@ -6654,12 +6662,11 @@ IRBuilder::BuildEmpty(Js::OpCode newOpcode, uint32 offset)
         /*newSym = StackSym::NewParamSlotSym(1, this->m_func);
         this->m_func->SetArgOffset(newSym, LowererMD::GetFormalParamOffset() * MachPtr);*/
         this->m_func->SetParamClosureSym(StackSym::New(TyVar, this->m_func));
-        this->m_func->GetParamClosureSym()->scratch.linearScan.lifetime = this->m_func->GetLocalClosureSym()->scratch.linearScan.lifetime;
         //this->m_func->SetParamClosureSym(newSym);
-/*        this->AddInstr(
+        this->AddInstr(
             IR::Instr::New(
                 Js::OpCode::Ld_A, IR::RegOpnd::New(this->m_func->GetParamClosureSym(), TyVar, m_func), IR::RegOpnd::New(this->m_func->GetLocalClosureSym(), TyVar, this->m_func), this->m_func),
-            (uint32)-1);*/
+            offset);
             /*Js::OpCode op =
                 m_func->DoStackScopeSlots() ? Js::OpCode::NewStackScopeSlots : Js::OpCode::NewScopeSlots;
 

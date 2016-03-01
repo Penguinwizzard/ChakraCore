@@ -1866,7 +1866,8 @@ void ByteCodeGenerator::LoadAllConstants(FuncInfo *funcInfo)
     else if (funcInfo->frameSlotsRegister != Js::Constants::NoRegister)
     {
         int scopeSlotCount = funcInfo->bodyScope->GetScopeSlotCount();
-        if (scopeSlotCount == 0)
+        int paramSlotCount = funcInfo->paramScope->GetScopeSlotCount();
+        if (scopeSlotCount == 0 && paramSlotCount == 0)
         {
             AssertMsg(funcInfo->frameDisplayRegister != Js::Constants::NoRegister, "Why do we need scope slots?");
             m_writer.Reg1(Js::OpCode::LdC_A_Null, funcInfo->frameSlotsRegister);
