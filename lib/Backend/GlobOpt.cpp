@@ -3887,9 +3887,14 @@ GlobOpt::OptArguments(IR::Instr *instr)
     case Js::OpCode::LdLen_A:
     {
         Assert(src1->IsRegOpnd());
-        if(IsArgumentsOpnd(src1))
+    }
+    case Js::OpCode::LdSlotArr:
+    case Js::OpCode::LdSlot:
+    {
+        if (instr->GetSrc1()->GetPropertyStackSym()->m_isParamArraySym)
         {
             instr->usesStackArguments = true;
+            instr->GetDst()->GetStackSym()->m_isParamArraySym = true;
         }
         break;
     }

@@ -353,10 +353,9 @@ Opnd::GetIdFromPropertyStackSym() const
 {
     Assert(this->IsSymOpnd());
     const SymOpnd * symOpnd = static_cast<SymOpnd const *>(this);
-    Assert(symOpnd->m_sym->IsPropertySym() && symOpnd->m_sym->AsPropertySym()->HasPropertyIdIndex());
-    int32 propertyIndex = symOpnd->m_sym->AsPropertySym()->GetPropertyIdIndex();
+    int32 propertyIndex = symOpnd->m_sym->AsPropertySym()->m_propertyId;
     Assert(propertyIndex < (2^16));
-    return propertyIndex;
+    return (Js::ArgSlot)(propertyIndex);
 }
 
 intptr_t

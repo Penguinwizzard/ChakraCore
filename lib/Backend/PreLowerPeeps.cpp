@@ -30,7 +30,7 @@ IR::Instr *Lowerer::PreLowerPeepInstr(IR::Instr *instr, IR::Instr **pInstrPrev)
     {
         if (instr->DoStackArgsOpt(this->m_func) && instr->GetSrc1()->GetPropertyStackSym()->m_isParamArraySym)
         {
-            ConvertToArgIn(instr);
+            return ConvertToArgIn(instr);
         }
         break;
     }
@@ -69,6 +69,7 @@ IR::Instr * Lowerer::ConvertToArgIn(IR::Instr * instr)
 
     IR::Instr * argInInstr = IR::Instr::New(Js::OpCode::ArgIn_A, dstOpnd, srcOpnd, m_func);
     instr->InsertBefore(argInInstr);
+    instr->Remove();
     return argInInstr;
 }
 
