@@ -1168,6 +1168,62 @@ namespace Js
         else if ((attributes & !PropertyDynamicTypeDefaults) == 0)
         {
             // set attributes
+            //if (!GetIsLocked())
+            //{
+            //    SimpleDictionaryPropertyDescriptor<TPropertyIndex>* descriptor;
+            //    Assert(propertyId != Constants::NoProperty);
+            //    PropertyRecord const* propertyRecord = instance->GetScriptContext()->GetPropertyName(propertyId);
+            //    if (propertyMap->TryGetReference(propertyRecord, &descriptor))
+            //    {
+            //        if (attributes & PropertyLetConstGlobal)
+            //        {
+            //            Assert(!(descriptor->Attributes & PropertyLetConstGlobal));
+            //            // Need to implement type transition to DictionaryTypeHandler in the case of
+            //            // shadowing a var or global property with a let in a new script body.
+            //            Throw::NotImplemented();
+            //        }
+            //        if (descriptor->Attributes & PropertyLetConstGlobal)
+            //        {
+            //            Assert(!(attributes & PropertyLetConstGlobal));
+            //            Assert(false);
+            //        }
+
+            //        if (descriptor->Attributes & PropertyDeleted)
+            //        {
+            //            return false;
+            //        }
+
+            //        descriptor->Attributes = (descriptor->Attributes & ~PropertyDynamicTypeDefaults) | (attributes & PropertyDynamicTypeDefaults);
+
+            //        if (attributes & PropertyEnumerable)
+            //        {
+            //            instance->SetHasNoEnumerableProperties(false);
+            //        }
+
+            //        if (!(descriptor->Attributes & PropertyWritable))
+            //        {
+            //            this->ClearHasOnlyWritableDataProperties();
+            //            if (GetFlags() & IsPrototypeFlag)
+            //            {
+            //                instance->GetScriptContext()->InvalidateStoreFieldCaches(propertyId);
+            //                instance->GetLibrary()->NoPrototypeChainsAreEnsuredToHaveOnlyWritableDataProperties();
+            //            }
+            //        }
+
+            //        return true;
+            //    }
+
+            //    // Check numeric propertyRecord only if objectArray available
+            //    if (instance->HasObjectArray() && propertyRecord->IsNumeric())
+            //    {
+            //        return SimpleDictionaryTypeHandlerBase<TPropertyIndex, TMapKey, IsNotExtensibleSupported>::SetItemAttributes(instance, propertyRecord->GetNumericValue(), attributes);
+            //    }
+            //}
+            //else
+            //{
+            //    return ConvertToNonSharedSimpleDictionaryType(instance)->SetAttributes(instance, propertyId, attributes);
+            //}
+            //return false;
             return true;
         }
 

@@ -9006,14 +9006,17 @@ CommonNumber:
         Assert(object);
 
         BOOL isWritable = FALSE;
+        bool setWritable = false;
         if (descriptor.IsDataDescriptor())
         {
             isWritable = descriptor.WritableSpecified() ? descriptor.IsWritable() : FALSE;
+            setWritable = descriptor.WritableSpecified();
         }
         else if (descriptor.IsAccessorDescriptor())
         {
             // The reason is that JavascriptOperators::OP_SetProperty checks for RecyclableObject::FromVar(instance)->IsWritableOrAccessor(propertyId),
             // which should in fact check for 'is writable or accessor' but since there is no GetAttributes, we can't do that efficiently.
+            setWritable = true;
             isWritable = TRUE;
         }
 
@@ -9033,9 +9036,9 @@ CommonNumber:
                 FALSE :
                 currentDescriptor->EnumerableSpecified() && currentDescriptor->IsEnumerable() ? PropertyEnumerable : FALSE;
 
-            attributes |= descriptor.WritableSpecified() ?
-                descriptor.IsWritable() ?
-                PropertyWritable :
+            attributes |= setWritable ? 
+                isWritable ?
+                PropertyWritable:
                 FALSE :
                 currentDescriptor->WritableSpecified() && currentDescriptor->IsWritable() ? PropertyWritable : FALSE;
 
@@ -9047,7 +9050,11 @@ CommonNumber:
         else
         {
             // CONSIDER: call object->SetAttributes which is much more efficient as that's 1 call instead of 3.
-            //       Can't do that now as object->SetAttributes doesn't provide a way which attributes to modify and which not.
+            // Can't do that now as object->SetAttributes doesn't provide a way which attributes to modify and which not.
+            // Implementing the above suggestion would involve going through all the overridden definitions of
+            // SetAttributes and modifying them to make sure we do the equivalent of Set<Attribute> for the class overriding SetAttributes.
+            // SetAttributes needs to be implemented for HeapArgumentsObject and ES5HeapArgumentsObject and changed for 
+            // (Simple)DictionaryTypeHandler, SimpleTypeHandler, ES5ArrayTypeHandler, JavascriptArray
             if (force || descriptor.ConfigurableSpecified())
             {
                 object->SetConfigurable(propId, descriptor.ConfigurableSpecified() ? descriptor.IsConfigurable() : FALSE);
@@ -9056,7 +9063,7 @@ CommonNumber:
             {
                 object->SetEnumerable(propId, descriptor.EnumerableSpecified() ? descriptor.IsEnumerable() : FALSE);
             }
-            if (force || descriptor.WritableSpecified() || isWritable)
+            if (force || setWritable)
             {
                 object->SetWritable(propId, isWritable);
             }
