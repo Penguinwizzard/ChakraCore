@@ -43,7 +43,9 @@ namespace Js
         Assert(!key->GetInternalProperty(key, InternalPropertyIds::WeakMapKeyMap, &unused, nullptr, nullptr) || unused == nullptr);
 
         WeakMapKeyMap* weakMapKeyData = RecyclerNew(GetScriptContext()->GetRecycler(), WeakMapKeyMap, GetScriptContext()->GetRecycler());
-        BOOL success = key->SetInternalProperty(InternalPropertyIds::WeakMapKeyMap, weakMapKeyData, PropertyOperation_Force, nullptr);
+        BOOL success = key->SetInternalProperty(
+            InternalPropertyIds::WeakMapKeyMap, weakMapKeyData, 
+            (PropertyOperationFlags)(PropertyOperation_Force | PropertyOperation_SpecialValue), nullptr);
         Assert(success);
 
         return weakMapKeyData;

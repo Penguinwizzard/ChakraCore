@@ -427,63 +427,6 @@ Encoder::Encode()
         entryPointInfo->RecordTypeGuards(this->m_func->indexedPropertyGuardCount, typeGuardTransferRecord, typeGuardTransferSize);
     }
 
-    // Save all constructor caches on the JIT transfer data in a map keyed by property ID. We will use this map when installing the entry
-    // point to register each cache for invalidation.
-    if (this->m_func->ctorCachesByPropertyId != nullptr)
-    {
-        Assert(!isSimpleJit);
-
-        AssertMsg(!(PHASE_OFF(Js::ObjTypeSpecPhase, this->m_func) && PHASE_OFF(Js::FixedMethodsPhase, this->m_func)),
-            "Why do we have constructor cache guards if we don't do object type spec or fixed methods?");
-
-        int propertyCount = this->m_func->ctorCachesByPropertyId->Count();
-        Assert(propertyCount > 0);
-
-#if DBG
-        int cacheCount = entryPointInfo->GetConstructorCacheCount();
-        Assert(cacheCount > 0);
-#endif
-
-        int cacheSlotCount = 0;
-        this->m_func->ctorCachesByPropertyId->Map([&cacheSlotCount](Js::PropertyId propertyId, Func::CtorCacheSet* cacheSet) -> void
-        {
-            cacheSlotCount += cacheSet->Count();
-        });
-
-        size_t ctorCachesTransferSize =                                // Reserve enough room for:
-            propertyCount * sizeof(Js::CtorCacheGuardTransferEntry) +  //   each propertyId,
-            propertyCount * sizeof(Js::ConstructorCache*) +            //   terminating null cache for each propertyId,
-            cacheSlotCount * sizeof(Js::JitIndexedPropertyGuard*);     //   a pointer for each cache we counted above.
-
-        // The extra room for sizeof(Js::CtorCacheGuardTransferEntry) allocated by HeapNewPlus will be used for the terminating invalid propertyId.
-        // Review (jedmiad): Skip zeroing?  This is heap allocated so there shouldn't be any false recycler references.
-        Js::CtorCacheGuardTransferEntry* ctorCachesTransferRecord = HeapNewPlusZ(ctorCachesTransferSize, Js::CtorCacheGuardTransferEntry);
-
-        Func* func = this->m_func;
-
-        Js::CtorCacheGuardTransferEntry* dstEntry = ctorCachesTransferRecord;
-        this->m_func->ctorCachesByPropertyId->Map([func, &dstEntry](Js::PropertyId propertyId, Func::CtorCacheSet* srcCacheSet) -> void
-        {
-            dstEntry->propertyId = propertyId;
-
-            int cacheIndex = 0;
-
-            srcCacheSet->Map([dstEntry, &cacheIndex](Js::ConstructorCache* cache) -> void
-            {
-                dstEntry->caches[cacheIndex++] = cache;
-            });
-
-            dstEntry->caches[cacheIndex++] = nullptr;
-            dstEntry = reinterpret_cast<Js::CtorCacheGuardTransferEntry*>(&dstEntry->caches[cacheIndex]);
-        });
-        dstEntry->propertyId = Js::Constants::NoProperty;
-        dstEntry++;
-
-        Assert(reinterpret_cast<char*>(dstEntry) <= reinterpret_cast<char*>(ctorCachesTransferRecord) + ctorCachesTransferSize + sizeof(Js::CtorCacheGuardTransferEntry));
-
-        entryPointInfo->RecordCtorCacheGuards(ctorCachesTransferRecord, ctorCachesTransferSize);
-    }
-
     if(!isSimpleJit)
     {
         entryPointInfo->GetJitTransferData()->SetIsReady();

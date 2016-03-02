@@ -36,6 +36,21 @@ namespace JsUtil
             });
         }
 
+        EntryIterator<const WeakReferenceDictionary> GetIterator() const
+        {
+            return EntryIterator<const WeakReferenceDictionary>(*this);
+        }
+
+        EntryIterator<WeakReferenceDictionary> GetIterator()
+        {
+            return EntryIterator<WeakReferenceDictionary>(*this);
+        }
+
+        BucketEntryIterator<WeakReferenceDictionary> GetIteratorWithRemovalSupport()
+        {
+            return BucketEntryIterator<WeakReferenceDictionary>(*this);
+        }
+
     private:
         using BaseDictionary::Clone;
         using BaseDictionary::Copy;

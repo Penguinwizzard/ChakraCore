@@ -461,6 +461,13 @@ namespace Js
         {
             Off.Enable(DeferParsePhase);
         }
+        if(!IsolatePrototypes && !Off.IsEnabled(NativeFieldsPhase))
+        {
+            // IsolatePrototypes is on by default, and property caching for native fields depends on it (proto caches assume a
+            // Var field slot type)
+            Enable(IsolatePrototypesFlag);
+            IsolatePrototypes = true;
+        }
 
         bool dontEnforceLimitsForSimpleJitAfterOrFullJitAfter = false;
         if((IsEnabled(MinInterpretCountFlag) || IsEnabled(MaxInterpretCountFlag)) &&

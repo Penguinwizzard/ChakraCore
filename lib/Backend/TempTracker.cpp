@@ -1086,25 +1086,26 @@ ObjectTemp::CanStoreTemp(IR::Instr * instr)
     if (OpCodeAttr::TempObjectCanStoreTemp(opcode))
     {
         // Special cases where stack allocation doesn't happen
-#if ENABLE_REGEX_CONFIG_OPTIONS
-        if (opcode == Js::OpCode::NewRegEx && REGEX_CONFIG_FLAG(RegexTracing))
+        switch(opcode)
         {
-            return false;
-        }
-#endif
-        if (opcode == Js::OpCode::NewScObjectNoCtor)
-        {
-            if (PHASE_OFF(Js::FixedNewObjPhase, instr->m_func->GetJnFunction()) && PHASE_OFF(Js::ObjTypeSpecNewObjPhase, instr->m_func->GetTopFunc()))
-            {
-                return false;
-            }
+            case Js::OpCode::NewRegEx:
+                return !REGEX_CONFIG_FLAG(RegexTracing);
 
-            // Only if we have BailOutFailedCtorGuardCheck would we generate a stack object.
-            // Otherwise we will call the helper, which will not generate stack object.
-            return instr->HasBailOutInfo();
-        }
+            case Js::OpCode::NewScObjectNoCtor:
+                if (PHASE_OFF(Js::FixedNewObjPhase, instr->m_func->GetJnFunction()) && PHASE_OFF(Js::ObjTypeSpecNewObjPhase, instr->m_func->GetTopFunc()))
+                {
+                    return false;
+                }
+            
+                // Only if we have BailOutOnConstructorCacheTypeMismatch would we generate a stack object.
+                // Otherwise we will call the helper, which will not generate a stack object.
+                return instr->HasBailOutInfo();
 
-        return true;
+            case Js::OpCode::NewScObjectLiteral:
+                return
+                    !!instr->m_func->m_jitTimeData->GetObjectLiteralCreationSiteFinalType(
+                        instr->GetSrc2()->AsIntConstOpnd()->AsUint32());
+        }
     }
     return false;
 }
@@ -1113,7 +1114,15 @@ bool
 ObjectTemp::CanMarkTemp(IR::Instr * instr, BackwardPass * backwardPass)
 {
     // We mark the ArgOut with the call in ProcessInstr, no need to do it here
-    return IsTempProducing(instr) || IsTempTransfer(instr);
+    if(!IsTempProducing(instr) && !IsTempTransfer(instr))
+        return false;
+
+    if(instr->m_opcode == Js::OpCode::NewScObjectLiteral &&
+        !instr->m_func->m_jitTimeData->GetObjectLiteralCreationSiteFinalType(instr->GetSrc2()->AsIntConstOpnd()->AsUint32()))
+    {
+        return false;
+    }
+    return true;
 }
 
 void
@@ -1306,8 +1315,15 @@ bool
 ObjectTempVerify::CanMarkTemp(IR::Instr * instr, BackwardPass * backwardPass)
 {
     // We mark the ArgOut with the call in ProcessInstr, no need to do it here
-    return ObjectTemp::IsTempProducing(instr)
-        || IsTempTransfer(instr);
+    if(!ObjectTemp::IsTempProducing(instr) && !IsTempTransfer(instr))
+        return false;
+
+    if(instr->m_opcode == Js::OpCode::NewScObjectLiteral &&
+        !instr->m_func->m_jitTimeData->GetObjectLiteralCreationSiteFinalType(instr->GetSrc2()->AsIntConstOpnd()->AsUint32()))
+    {
+        return false;
+    }
+    return true;
 }
 
 void

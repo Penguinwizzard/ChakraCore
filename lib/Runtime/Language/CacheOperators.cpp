@@ -209,66 +209,17 @@ namespace Js
         if (!isSetter)
         {
             AssertMsg(instance == object, "invalid instance for non setter");
-            Assert(DynamicType::Is(typeWithoutProperty->GetTypeId()));
             Assert(info->IsNoCache() || !info->IsStoreFieldCacheEnabled() || object->CanStorePropertyValueDirectly(propertyId, isRoot));
             Assert(info->IsWritable());
 
-            DynamicType* newType = (DynamicType*)object->GetType();
-            DynamicType* oldType = (DynamicType*)typeWithoutProperty;
-
-            Assert(newType);
-
             int requiredAuxSlotCapacity;
-            // Don't cache property adds for types that aren't (yet) shared.  We must go down the slow path to force type sharing
-            // and invalidate any potential fixed fields this type may have.
-            // Don't cache property adds to prototypes, so we don't have to check if the object is a prototype on the fast path.
-            if (newType != oldType && newType->GetIsShared() && newType->GetTypeHandler()->IsPathTypeHandler() && (!oldType->GetTypeHandler()->GetIsPrototype()))
-            {
-                DynamicTypeHandler* oldTypeHandler = oldType->GetTypeHandler();
-                DynamicTypeHandler* newTypeHandler = newType->GetTypeHandler();
-
-                // the newType is a path-type so the old one should be too:
-                Assert(oldTypeHandler->IsPathTypeHandler());
-
-                int oldCapacity = oldTypeHandler->GetSlotCapacity();
-                int newCapacity = newTypeHandler->GetSlotCapacity();
-                int newInlineCapacity = newTypeHandler->GetInlineSlotCapacity();
-
-                // We are adding only one property here.  If some other properties were added as a side effect on the slow path
-                // we should never cache the type transition, as the other property slots will not be populated by the fast path.
-                AssertMsg(((PathTypeHandlerBase *)oldTypeHandler)->GetPropertyCount() + 1 == ((PathTypeHandlerBase *)newTypeHandler)->GetPropertyCount(),
-                    "Don't cache type transitions that add multiple properties.");
-
-                // InlineCache::TrySetProperty assumes the following invariants to decide if and how to adjust auxiliary slot capacity.
-                AssertMsg(DynamicObject::IsTypeHandlerCompatibleForObjectHeaderInlining(oldTypeHandler, newTypeHandler),
-                    "TypeHandler should be compatible for transition.");
-
-                // If the slot is inlined then we should never need to adjust auxiliary slot capacity.
-                Assert(!isInlineSlot || oldCapacity == newCapacity || newCapacity <= newInlineCapacity);
-                // If the slot is not inlined then the new type must have some auxiliary slots.
-                Assert(isInlineSlot || newCapacity > newInlineCapacity);
-
-                // If the slot is not inlined and the property being added exceeds the old type's slot capacity, then slotIndex corresponds
-                // to the number of occupied auxiliary slots (i.e. the old type's auxiliary slot capacity).
-                // If the object is optimized for <=2 properties, then slotIndex should be same as the oldCapacity(as there is no inlineSlots in the new typeHandler).
-                Assert(
-                    isInlineSlot ||
-                    oldCapacity == newCapacity ||
-                    slotIndex == oldCapacity - oldTypeHandler->GetInlineSlotCapacity() ||
-                    (
-                        oldTypeHandler->IsObjectHeaderInlinedTypeHandler() &&
-                        newInlineCapacity ==
-                            oldTypeHandler->GetInlineSlotCapacity() -
-                            DynamicTypeHandler::GetObjectHeaderInlinableSlotCapacity() &&
-                        slotIndex == DynamicTypeHandler::GetObjectHeaderInlinableSlotCapacity()
-                    ));
-
-                requiredAuxSlotCapacity = (!isInlineSlot && oldCapacity < newCapacity) ? newCapacity - newInlineCapacity : 0;
-
-                // Required auxiliary slot capacity must fit in the available inline cache bits.
-                Assert(requiredAuxSlotCapacity < (0x01 << InlineCache::RequiredAuxSlotCapacityBitCount));
-            }
-            else
+            if (!CanCachePropertyAdd(
+                    DynamicObject::FromVar(object),
+                    typeWithoutProperty,
+                    isInlineSlot,
+                    slotIndex,
+                    info,
+                    &requiredAuxSlotCapacity))
             {
                 typeWithoutProperty = nullptr;
                 requiredAuxSlotCapacity = 0;
@@ -337,6 +288,88 @@ namespace Js
     bool CacheOperators::CanCachePropertyWrite(RecyclableObject * object, ScriptContext * requestContext)
     {
         return object->GetScriptContext() == requestContext && DynamicType::Is(object->GetTypeId()) && !PHASE_OFF1(InlineCachePhase);
+    }
+
+    bool CacheOperators::CanCachePropertyAdd(
+        DynamicObject *const object,
+        Type *const typeWithoutProperty,
+        const bool isInlineSlot,
+        const PropertyIndex inlineOrAuxSlotIndex,
+        const PropertyValueInfo *const info,
+        int *const requiredAuxSlotCapacityRef)
+    {
+        Assert(DynamicType::Is(typeWithoutProperty->GetTypeId()));
+        Assert(requiredAuxSlotCapacityRef);
+
+        DynamicType* newType = (DynamicType*)object->GetType();
+        DynamicType* oldType = (DynamicType*)typeWithoutProperty;
+
+        // Don't cache property adds for types that aren't (yet) shared.  We must go down the slow path to force type sharing
+        // and invalidate any potential fixed fields this type may have.
+        // Don't cache property adds to prototypes, so we don't have to check if the object is a prototype on the fast path.
+        if( newType == oldType ||
+            info->IsInitField() || // InitFld bypasses prototype setters, and this info cannot be used by a StFld
+            !newType->GetIsShared() ||
+            !newType->GetTypeHandler()->IsPathTypeHandler() ||
+            info->GetPropertyIndex() < PathTypeHandler::FromTypeHandler(oldType->GetTypeHandler())->GetSlotCount() ||
+            oldType->GetTypeHandler()->GetIsPrototype())
+        {
+            return false;
+        }
+
+        PathTypeHandler* oldTypeHandler = PathTypeHandler::FromTypeHandler(oldType->GetTypeHandler());
+        PathTypeHandler* newTypeHandler = PathTypeHandler::FromTypeHandler(newType->GetTypeHandler());
+
+        int oldCapacity = oldTypeHandler->GetSlotCapacity();
+        int newCapacity = newTypeHandler->GetSlotCapacity();
+        int newInlineCapacity = newTypeHandler->GetInlineSlotCapacity();
+
+        // We are adding only one property here.  If some other properties were added as a side effect on the slow path
+        // (for an example see CopyOnWrite::Detach) we should never cache the type transition, as the other property slots 
+        // will not be populated by the fast path.
+        AssertMsg(PathTypeHandler::FromTypeHandler(oldTypeHandler)->GetPropertyCount() + 1 == PathTypeHandler::FromTypeHandler(newTypeHandler)->GetPropertyCount(), 
+            "Don't cache type transitions that add multiple properties.");
+
+        Assert(info->GetSlotType().IsValueTypeEqualTo(newTypeHandler->GetSlotType(info->GetPropertyIndex())));
+
+        // InlineCache::TrySetProperty assumes the following invariants to decide if and how to adjust auxiliary slot capacity.
+        AssertMsg(DynamicObject::IsTypeHandlerCompatibleForObjectHeaderInlining(oldTypeHandler, newTypeHandler),
+            "TypeHandler should be compatible for transition.");
+
+        // If the slot is inlined then we should never need to adjust auxiliary slot capacity.
+        Assert(!isInlineSlot || oldCapacity == newCapacity || newCapacity <= newInlineCapacity);
+        // If the slot is not inlined then the new type must have some auxiliary slots.
+        Assert(isInlineSlot || newCapacity > newInlineCapacity);
+
+        // If the slot is not inlined and the property being added exceeds the old type's slot capacity, then inlineOrAuxSlotIndex corresponds
+        // to the number of occupied auxiliary slots (i.e. the old type's auxiliary slot capacity).
+        // If the object is optimized for <=2 properties, then inlineOrAuxSlotIndex should be same as the oldCapacity(as there is no inlineSlots in the new typeHandler).
+        const int oldAuxSlotCapacity = oldCapacity - oldTypeHandler->GetInlineSlotCapacity();
+        Assert(
+            isInlineSlot ||
+            oldCapacity == newCapacity ||
+            inlineOrAuxSlotIndex == oldAuxSlotCapacity ||
+            (
+                // Despite growing the aux slot capacity, the new aux slot index may be less than the old aux slot capacity
+                // because the new slot may be a wide slot that does not fit
+                inlineOrAuxSlotIndex < oldAuxSlotCapacity &&
+                info->GetSlotType().GetNextSlotIndexOrCount(inlineOrAuxSlotIndex) > oldAuxSlotCapacity
+            ) ||
+            (
+                oldTypeHandler->IsObjectHeaderInlinedTypeHandler() &&
+                newInlineCapacity ==
+                    oldTypeHandler->GetInlineSlotCapacity() -
+                    DynamicTypeHandler::GetObjectHeaderInlinableSlotCapacity() -
+                    static_cast<PropertyIndex>(newTypeHandler->HasWastedInlineSlot()) &&
+                inlineOrAuxSlotIndex == oldTypeHandler->GetSlotCount() - newInlineCapacity
+            ));
+
+        *requiredAuxSlotCapacityRef = (!isInlineSlot && oldCapacity < newCapacity) ? newCapacity - newInlineCapacity : 0;
+
+        // Required auxiliary slot capacity must fit in the available inline cache bits.
+        Assert(*requiredAuxSlotCapacityRef < (0x01 << InlineCache::RequiredAuxSlotCapacityBitCount));
+
+        return true;
     }
 
 #if DBG_DUMP

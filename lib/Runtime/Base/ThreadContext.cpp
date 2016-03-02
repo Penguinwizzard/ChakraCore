@@ -85,6 +85,7 @@ ThreadContext::RecyclableData::RecyclableData(Recycler *const recycler) :
     oomErrorObject(nullptr, nullptr, nullptr, true),
     terminatedErrorObject(nullptr, nullptr, nullptr),
     typesWithProtoPropertyCache(recycler),
+    constructorCachesByPropertyId(nullptr),
     propertyGuards(recycler, 128),
     oldEntryPointInfo(nullptr),
     returnedValueList(nullptr)
@@ -2701,6 +2702,10 @@ ThreadContext::RegisterStoreFieldInlineCache(Js::InlineCache * inlineCache, Js::
 void
 ThreadContext::RegisterInlineCache(InlineCacheListMapByPropertyId& inlineCacheMap, Js::InlineCache * inlineCache, Js::PropertyId propertyId)
 {
+    // It's dangerous to register an already registered cache, as its data may be modified after it's deleted as part of
+    // invalidation, and it may corrupt the arena's free list since it uses part of the data for free list linking purposes
+    Assert(!inlineCache->invalidationListSlotPtr);
+
     InlineCacheList* inlineCacheList;
     if (!inlineCacheMap.TryGetValue(propertyId, &inlineCacheList))
     {
@@ -2760,6 +2765,30 @@ ThreadContext::InvalidateStoreFieldInlineCaches(Js::PropertyId propertyId)
     }
 }
 
+void ThreadContext::InvalidateAddPropertyInlineCaches(const Js::PropertyId propertyId, Js::DynamicType *const typeWithProperty)
+{
+    using namespace Js;
+    Assert(propertyId != Constants::NoProperty);
+
+    InlineCacheList *inlineCacheList;
+    if(!storeFieldInlineCacheByPropId.TryGetValue(propertyId, &inlineCacheList))
+        return;
+
+    FOREACH_SLISTBASE_ENTRY(InlineCache *, inlineCache, inlineCacheList)
+    {
+        if(!inlineCache || !inlineCache->IsLocal())
+            continue;
+        Assert(!inlineCache->IsEmpty());
+        if(!inlineCache->u.local.typeWithoutProperty)
+            continue;
+        if(InlineCacheTypeTagger::TypeWithoutAnyTags(inlineCache->u.local.type) == typeWithProperty)
+            inlineCache->Clear();
+    } NEXT_SLISTBASE_ENTRY;
+
+    // TODO: Invalidate only add-property guards that make use of a type transition to typeWithProperty
+    InvalidatePropertyGuards(propertyId);
+}
+
 void
 ThreadContext::InvalidateInlineCacheList(InlineCacheList* inlineCacheList)
 {
@@ -2777,7 +2806,7 @@ ThreadContext::InvalidateInlineCacheList(InlineCacheList* inlineCacheList)
                 Output::Flush();
             }
 
-            memset(inlineCache, 0, sizeof(Js::InlineCache));
+            inlineCache->Clear();
         }
     }
     NEXT_SLISTBASE_ENTRY;
@@ -2983,12 +3012,101 @@ ThreadContext::RegisterUniquePropertyGuard(Js::PropertyId propertyId, RecyclerWe
     }
 }
 
-void
-ThreadContext::RegisterConstructorCache(Js::PropertyId propertyId, Js::ConstructorCache* cache)
+void 
+ThreadContext::RegisterConstructorCache(const Js::PropertyId propertyId, Js::ConstructorCache *const cache)
 {
-    Assert(Js::ConstructorCache::GetOffsetOfGuardValue() == Js::PropertyGuard::GetOffsetOfValue());
-    Assert(Js::ConstructorCache::GetSizeOfGuardValue() == Js::PropertyGuard::GetSizeOfValue());
-    RegisterUniquePropertyGuard(propertyId, reinterpret_cast<Js::PropertyGuard*>(cache));
+    Assert(propertyId != Js::Constants::NoProperty);
+    Assert(IsActivePropertyId(propertyId));
+    Assert(cache);
+
+    ConstructorCacheWeakRefHashSet *constructorCacheHashSet;
+    PropertyIdToConstructorCacheWeakRefHashSetDictionary *&constructorCachesByPropertyId =
+        recyclableData->constructorCachesByPropertyId;
+    if(constructorCachesByPropertyId)
+        constructorCacheHashSet = constructorCachesByPropertyId->Lookup(propertyId, nullptr);
+    else
+    {
+        constructorCachesByPropertyId = RecyclerNew(recycler, PropertyIdToConstructorCacheWeakRefHashSetDictionary, recycler);
+        constructorCacheHashSet = nullptr;
+    }
+    if(!constructorCacheHashSet)
+    {
+        constructorCacheHashSet = RecyclerNew(recycler, ConstructorCacheWeakRefHashSet, recycler, 3); // default initial capacity is 17!
+        constructorCachesByPropertyId->Add(propertyId, constructorCacheHashSet);
+    }
+    else
+    {
+        Assert(constructorCacheHashSet->Lookup(cache, true));
+    }
+    constructorCacheHashSet->UncheckedAdd(cache, false);
+}
+
+void 
+ThreadContext::UnregisterConstructorCache(const Js::PropertyId propertyId, Js::ConstructorCache *const cache)
+{
+    Assert(propertyId != Js::Constants::NoProperty);
+    Assert(IsActivePropertyId(propertyId));
+    Assert(cache);
+
+    const PropertyIdToConstructorCacheWeakRefHashSetDictionary *const constructorCachesByPropertyId =
+        recyclableData->constructorCachesByPropertyId;
+    ConstructorCacheWeakRefHashSet *const constructorCacheHashSet = constructorCachesByPropertyId->Lookup(propertyId, nullptr);
+    if(constructorCacheHashSet)
+        constructorCacheHashSet->Remove(cache);
+}
+
+void 
+ThreadContext::InvalidateConstructorCaches(const Js::PropertyId propertyId)
+{
+    Assert(propertyId != Js::Constants::NoProperty);
+    Assert(IsActivePropertyId(propertyId));
+
+    PropertyIdToConstructorCacheWeakRefHashSetDictionary *const constructorCachesByPropertyId =
+        recyclableData->constructorCachesByPropertyId;
+    if(!constructorCachesByPropertyId)
+        return;
+
+    ConstructorCacheWeakRefHashSet *constructorCacheHashSet;
+    if(!constructorCachesByPropertyId->TryGetValueAndRemove(propertyId, &constructorCacheHashSet))
+        return;
+
+    constructorCacheHashSet->Map(
+        [](Js::ConstructorCache *const cache,
+            bool,
+            const RecyclerWeakReference<Js::ConstructorCache> *)
+        {
+            cache->ClearType();
+        });
+}
+
+void 
+ThreadContext::InvalidateAllConstructorCaches()
+{
+    const PropertyIdToConstructorCacheWeakRefHashSetDictionary *const constructorCachesByPropertyId =
+        recyclableData->constructorCachesByPropertyId;
+    if(!constructorCachesByPropertyId)
+        return;
+    recyclableData->constructorCachesByPropertyId = nullptr;
+
+    for(auto it = constructorCachesByPropertyId->GetIterator(); it.IsValid(); it.MoveNext())
+    {
+        ConstructorCacheWeakRefHashSet *const constructorCacheHashSet = it.CurrentValue();
+        constructorCacheHashSet->Map(
+            [](Js::ConstructorCache *const cache,
+                bool,
+                const RecyclerWeakReference<Js::ConstructorCache> *)
+            {
+                // A constructor cache may be registered with multiple property IDs, so check if it has already been invalidated
+                if(cache->GetType())
+                    cache->ClearType();
+            });
+    }
+}
+
+bool 
+ThreadContext::ShouldInvalidateConstructorCaches() const
+{
+    return !!recyclableData->constructorCachesByPropertyId;
 }
 
 void
@@ -3074,7 +3192,11 @@ ThreadContext::InvalidatePropertyGuardEntry(const Js::PropertyRecord* propertyRe
 void
 ThreadContext::InvalidatePropertyGuards(Js::PropertyId propertyId)
 {
-    const Js::PropertyRecord* propertyRecord = GetPropertyName(propertyId);
+    InvalidatePropertyGuards(GetPropertyName(propertyId));
+}
+
+void ThreadContext::InvalidatePropertyGuards(const Js::PropertyRecord *const propertyRecord)
+{
     PropertyGuardDictionary &guards = this->recyclableData->propertyGuards;
     PropertyGuardEntry* entry;
     if (guards.TryGetValueAndRemove(propertyRecord, &entry))

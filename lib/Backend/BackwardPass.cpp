@@ -1895,6 +1895,11 @@ BackwardPass::IsImplicitCallBailOutCurrentlyNeeded(IR::Instr * instr, bool mayNe
         instr, nullptr, nullptr, this->currentBlock, hasLiveFields, mayNeedImplicitCallBailOut, false);
 }
 
+bool BackwardPass::DoRemoveDeadTypeCheckBailouts()
+{
+    return !PHASE_OFF1(Js::Phase::RemoveDeadTypeCheckBailoutsPhase);
+}
+
 void
 BackwardPass::DeadStoreTypeCheckBailOut(IR::Instr * instr)
 {
@@ -1934,7 +1939,7 @@ BackwardPass::DeadStoreTypeCheckBailOut(IR::Instr * instr)
         // regardless of whether the checked type is dead.  Hence, the bailout kind may change here.
         Assert((oldBailOutKind & ~IR::BailOutKindBits) == bailOutKind ||
             bailOutKind == IR::BailOutFailedFixedFieldTypeCheck || bailOutKind == IR::BailOutFailedEquivalentFixedFieldTypeCheck);
-        instr->SetBailOutKind(bailOutKind);
+        instr->SetBailOutKind(bailOutKind | oldBailOutKind & IR::BailOutKindBits);
         return;
     }
     else if (isTypeCheckProtected)
@@ -1965,26 +1970,63 @@ BackwardPass::DeadStoreTypeCheckBailOut(IR::Instr * instr)
         return;
     }
 
-    // We don't need BailOutFailedTypeCheck but may need BailOutOnImplicitCall.
-    // Consider: are we in the loop landing pad? If so, no bailout, since implicit calls will be checked at
-    // the end of the block.
-    if (this->currentBlock->IsLandingPad())
-    {
-        // We're in the landing pad.
-        if (preOpBailOutInstrToProcess == instr)
-        {
-            preOpBailOutInstrToProcess = nullptr;
-        }
-        instr->UnlinkBailOutInfo();
+    if(!DoRemoveDeadTypeCheckBailouts())
         return;
+
+    const bool canDisableImplicitCalls =
+        (
+            currentBlock->loop
+                ? GlobOpt::ImplicitCallFlagsAllowOpts(currentBlock->loop)
+                : GlobOpt::ImplicitCallFlagsAllowOpts(func)
+        ) &&
+        !instr->CallsAccessor();
+    if(!canDisableImplicitCalls)
+        return;
+
+    IR::BailOutKind newBailOutKind = IR::BailOutOnImplicitCallsPreOp;
+
+    if(OpCodeAttr::MayLoadNativeField(instr->m_opcode))
+    {
+        const IR::PropertySymOpnd *const specializablePropertySymOpnd = instr->GetSrc1()->AsPropertySymOpnd();
+        if(specializablePropertySymOpnd->MayHaveImplicitCall() && !instr->GetSlotType(specializablePropertySymOpnd).IsVar())
+        {
+            newBailOutKind |= IR::BailOutOnFieldSlotTypeMismatch;
+        }
+    }
+    else if(OpCodeAttr::MayStoreIntoNativeField(instr->m_opcode))
+    {
+        const IR::PropertySymOpnd *const specializablePropertySymOpnd = instr->GetDst()->AsPropertySymOpnd();
+        if((instr->GetSrc1()->IsVar() || specializablePropertySymOpnd->MayHaveImplicitCall()) &&
+            !instr->GetSlotType(specializablePropertySymOpnd).IsVar())
+        {
+            newBailOutKind |= IR::BailOutOnFieldSlotTypeMismatch;
+        }
     }
 
     // We're not checking for polymorphism, so don't let the bailout indicate that we
     // detected polymorphism.
     instr->GetBailOutInfo()->polymorphicCacheIndex = (uint)-1;
 
+    // We don't need BailOutFailedTypeCheck but may need BailOutOnImplicitCall.
+    // Consider: are we in the loop landing pad? If so, no bailout, since implicit calls will be checked at
+    // the end of the block.
+    if (this->currentBlock->IsLandingPad())
+    {
+        // We're in the landing pad.
+        newBailOutKind -= IR::BailOutOnImplicitCallsPreOp;
+        if(newBailOutKind == IR::BailOutInvalid)
+        {
+            if (preOpBailOutInstrToProcess == instr)
+            {
+                preOpBailOutInstrToProcess = nullptr;
+            }
+            instr->UnlinkBailOutInfo();
+            return;
+        }
+    }
+
     // Keep the mark temp object bit if it is there so that we will not remove the implicit call check
-    instr->SetBailOutKind(IR::BailOutOnImplicitCallsPreOp | (oldBailOutKind & IR::BailOutMarkTempObject));
+    instr->SetBailOutKind(newBailOutKind | (oldBailOutKind & IR::BailOutKindBits));
 }
 
 void
@@ -2014,9 +2056,8 @@ BackwardPass::DeadStoreImplicitCallBailOut(IR::Instr * instr, bool hasLiveFields
         Assert(kindNoBits != IR::BailOutOnImplicitCalls);
         if (kindNoBits == IR::BailOutInvalid)
         {
-            // We should only have combined with array bits
-            Assert((kind & ~IR::BailOutForArrayBits) == IR::BailOutMarkTempObject);
-            // Don't need to install if we are not going to do helper calls,
+            Assert(!(kind & ~(IR::BailOutMarkTempObject | IR::BailOutForArrayBits | IR::BailOutOnFieldSlotTypeMismatch)));
+            // Don't need to install if we are not going to do helper calls, 
             // or we are in the landingPad since implicit calls are already turned off.
             if ((kind & IR::BailOutOnArrayAccessHelperCall) == 0 && !this->currentBlock->IsLandingPad())
             {
@@ -3294,7 +3335,7 @@ BackwardPass::ProcessNewScObject(IR::Instr* instr)
     if (instr->HasBailOutInfo())
     {
         Assert(instr->IsProfiledInstr());
-        Assert(instr->GetBailOutKind() == IR::BailOutFailedCtorGuardCheck);
+        Assert(instr->GetBailOutKind() == IR::BailOutOnConstructorCacheTypeMismatch);
         Assert(instr->GetDst()->IsRegOpnd());
 
         BasicBlock * block = this->currentBlock;
@@ -3307,6 +3348,7 @@ BackwardPass::ProcessNewScObject(IR::Instr* instr)
             Assert(instr->GetDst()->AsRegOpnd()->GetStackSym()->HasObjectTypeSym());
 
             Js::JitTimeConstructorCache* ctorCache = instr->m_func->GetConstructorCache(static_cast<Js::ProfileId>(instr->AsProfiledInstr()->u.profileId));
+            Assert(ctorCache->IsPopulated());
 
             if (block->stackSymToFinalType != nullptr)
             {
@@ -3344,9 +3386,6 @@ BackwardPass::ProcessNewScObject(IR::Instr* instr)
                     BVSparse<JitArenaAllocator>* guardedPropertyOps = bucket->GetGuardedPropertyOps();
                     if (guardedPropertyOps != nullptr)
                     {
-                        ctorCache->EnsureGuardedPropOps(this->func->m_alloc);
-                        ctorCache->AddGuardedPropOps(guardedPropertyOps);
-
                         bucket->SetGuardedPropertyOps(nullptr);
                         JitAdelete(this->tempAlloc, guardedPropertyOps);
                         block->stackSymToGuardedProperties->Clear(objSym->m_id);
@@ -4320,9 +4359,37 @@ BackwardPass::InsertTypeTransition(IR::Instr *instrInsertBefore, StackSym *objSy
     instrInsertBefore->InsertBefore(adjustTypeInstr);
 }
 
-void
+bool
 BackwardPass::InsertTypeTransitionAfterInstr(IR::Instr *instr, int symId, AddPropertyCacheBucket *data)
 {
+    IR::Opnd *const dst = instr->GetDst();
+    if(dst && dst->IsSymOpnd() && dst->AsSymOpnd()->IsPropertySymOpnd())
+    {
+        IR::PropertySymOpnd *const propertyDst = dst->AsPropertySymOpnd();
+        if(propertyDst->HasObjTypeSpecFldInfo() &&
+            propertyDst->HasInitialType() &&
+            propertyDst->GetInitialType() == data->GetInitialType() &&
+            propertyDst->HasFinalType() &&
+            propertyDst->GetFinalType() == data->GetFinalType())
+        {
+            // The current instr initiated the type transition. We are trying to do the type transition after the instr
+            // because it has bailout info that prevents propagating the type transition upstream. Due to the bailout,
+            // it would not be legal to do the type transition before the instr. So, we simply cannot do the type
+            // transition. Remove the type transition info that is going to flow upstream.
+            Assert(instr->HasBailOutInfo());
+        #if DBG
+            data->deadStoreUnavailableInitialType = data->GetInitialType();
+            if(!data->deadStoreUnavailableFinalType)
+                data->deadStoreUnavailableFinalType = data->GetFinalType();
+            data->SetInitialType(nullptr);
+            data->SetFinalType(nullptr);
+            return false;
+        #else
+            return true; // remove bucket
+        #endif
+        }
+    }
+
     if (!this->IsPrePass())
     {
         // Transition to the final type if we don't bail out.
@@ -4337,9 +4404,11 @@ BackwardPass::InsertTypeTransitionAfterInstr(IR::Instr *instr, int symId, AddPro
             this->InsertTypeTransition(instr->m_next, symId, data);
         }
     }
+
     // Note: we could probably clear this entry out of the table, but I don't know
     // whether it's worth it, because it's likely coming right back.
     data->SetFinalType(data->GetInitialType());
+    return false;
 }
 
 void
@@ -4413,8 +4482,7 @@ BackwardPass::InsertTypeTransitionsAtPotentialKills()
         // Also do this for ctor cache updates, to avoid putting a type in the ctor cache that extends past
         // the end of the ctor that the cache covers.
         this->ForEachAddPropertyCacheBucket([&](int symId, AddPropertyCacheBucket *data)->bool {
-            this->InsertTypeTransitionAfterInstr(instr, symId, data);
-            return false;
+            return this->InsertTypeTransitionAfterInstr(instr, symId, data);
         });
     }
     else
@@ -4457,20 +4525,26 @@ BackwardPass::ForEachAddPropertyCacheBucket(Fn fn)
         return;
     }
 
-    FOREACH_HASHTABLE_ENTRY(AddPropertyCacheBucket, bucket, block->stackSymToFinalType)
+    for(uint tableIndex = 0; tableIndex < block->stackSymToFinalType->tableSize; ++tableIndex)
     {
-        AddPropertyCacheBucket *data = &bucket.element;
-        if (data->GetInitialType() != nullptr &&
-            data->GetInitialType() != data->GetFinalType())
+        FOREACH_SLISTBASE_ENTRY_EDITING(
+            Bucket<AddPropertyCacheBucket>,
+            bucket,
+            &block->stackSymToFinalType->table[tableIndex],
+            iter)
         {
-            bool done = fn(bucket.value, data);
-            if (done)
+            AddPropertyCacheBucket *data = &bucket.element;
+            if (data->GetInitialType() != nullptr &&
+                data->GetInitialType() != data->GetFinalType())
             {
-                break;
+                const bool remove = fn(bucket.value, data);
+                if (remove)
+                {
+                    iter.RemoveCurrent(block->stackSymToFinalType->alloc);
+                }
             }
-        }
+        } NEXT_SLISTBASE_ENTRY_EDITING;
     }
-    NEXT_HASHTABLE_ENTRY;
 }
 
 bool
@@ -6482,6 +6556,16 @@ BackwardPass::ProcessInlineeEnd(IR::Instr* instr)
             {
                 this->currentBlock->upwardExposedUses->Set(argSym->m_id);
             });
+        }
+
+        // The lowerer may use the inlinee function object opnd for helper calls. Treat it as used at the point of the
+        // InlineeEnd, and let the register allocator figure out if there are actually any uses.
+        IR::Opnd *const inlineeFunctionObjectOpnd = instr->m_func->GetInlineeFunctionObjectOpnd();
+        Assert(inlineeFunctionObjectOpnd);
+        Assert(inlineeFunctionObjectOpnd->IsRegOpnd() || inlineeFunctionObjectOpnd->IsAddrOpnd());
+        if(inlineeFunctionObjectOpnd->IsRegOpnd())
+        {
+            currentBlock->upwardExposedUses->Set(inlineeFunctionObjectOpnd->AsRegOpnd()->m_sym->m_id);
         }
     }
 }

@@ -49,22 +49,24 @@ namespace Js
         return false;
     }
 
-    bool NullTypeHandlerBase::IsObjTypeSpecEquivalent(const Type* type, const TypeEquivalenceRecord& record, uint& failedPropertyIndex)
+#if ENABLE_NATIVE_CODEGEN
+    IR::BailOutKind NullTypeHandlerBase::IsObjTypeSpecEquivalent(DynamicObject *const object, const TypeEquivalenceRecord& record, uint& failedPropertyIndex)
     {
         uint propertyCount = record.propertyCount;
         EquivalentPropertyEntry* properties = record.properties;
         for (uint pi = 0; pi < propertyCount; pi++)
         {
             const EquivalentPropertyEntry* refInfo = &properties[pi];
-            if (!this->NullTypeHandlerBase::IsObjTypeSpecEquivalent(type, refInfo))
+            if (!this->NullTypeHandlerBase::IsObjTypeSpecEquivalent(object, refInfo))
             {
-                return false;
+                return IR::BailOutFailedEquivalentTypeCheck;
             }
         }
-        return true;
+        return IR::BailOutInvalid;
     }
-
-    bool NullTypeHandlerBase::IsObjTypeSpecEquivalent(const Type* type, const EquivalentPropertyEntry *entry)
+#endif
+    
+    bool NullTypeHandlerBase::IsObjTypeSpecEquivalent(DynamicObject *const object, const EquivalentPropertyEntry *entry)
     {
         return entry->slotIndex == Constants::NoSlot && !entry->mustBeWritable;
     }

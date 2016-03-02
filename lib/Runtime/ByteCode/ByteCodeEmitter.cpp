@@ -1656,7 +1656,10 @@ void ByteCodeGenerator::EmitScopeObjectInit(FuncInfo *funcInfo)
     slots[0] = cachedFuncCount;
     slots[1] = firstFuncSlot;
     slots[2] = firstVarSlot;
-    slots[3] = funcInfo->GetParsedFunctionBody()->NewObjectLiteral();
+
+    Js::ObjectLiteralCreationSiteInfo *const objectLiteralCreationSiteInfo =
+        Js::ObjectLiteralCreationSiteInfo::New(0, GetAllocator());
+    slots[3] = funcInfo->objectLiteralCreationSiteInfos.Add(objectLiteralCreationSiteInfo);
 
     propIds->hasNonSimpleParams = funcInfo->root->sxFnc.HasNonSimpleParameterList();
     funcInfo->localPropIdOffset = m_writer.InsertAuxiliaryData(propIds, sizeof(Js::PropertyIdArray) + extraAlloc);
@@ -3260,9 +3263,9 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
         PopFuncInfo(L"EmitOneFunction");
         m_writer.SetCallSiteCount(m_callSiteId);
 #ifdef LOG_BYTECODE_AST_RATIO
-        m_writer.End(funcInfo->root->sxFnc.astSize, this->maxAstSize);
+        m_writer.End(funcInfo, this->maxAstSize);
 #else
-        m_writer.End();
+        m_writer.End(funcInfo);
 #endif
     }
     catch (...)
@@ -7486,10 +7489,15 @@ void EmitComputedFunctionNameVar(ParseNode *nameNode, ParseNode *exprNode, ByteC
     }
 }
 
-void EmitMemberNode(ParseNode *memberNode, Js::RegSlot objectLocation, ByteCodeGenerator *byteCodeGenerator, FuncInfo *funcInfo, ParseNode* parentNode, bool useStore, bool* isObjectEmpty = nullptr)
+void EmitMemberNode(ParseNode *memberNode, Js::RegSlot objectLocation, ByteCodeGenerator *byteCodeGenerator, FuncInfo *funcInfo, ParseNode* parentNode, bool useStore = false, bool* isObjectEmpty = nullptr, bool *const isIndexPropertyRef = nullptr) 
 {
-    ParseNode *nameNode = memberNode->sxBin.pnode1;
-    ParseNode *exprNode = memberNode->sxBin.pnode2;
+    if(isIndexPropertyRef)
+    {
+        *isIndexPropertyRef = false;
+    }
+
+    ParseNode *nameNode=memberNode->sxBin.pnode1;
+    ParseNode *exprNode=memberNode->sxBin.pnode2;
 
     bool isFncDecl = exprNode->nop == knopFncDecl;
     bool isClassMember = isFncDecl && exprNode->sxFnc.IsClassMember();
@@ -7589,6 +7597,17 @@ void EmitMemberNode(ParseNode *memberNode, Js::RegSlot objectLocation, ByteCodeG
             }
 
             byteCodeGenerator->Writer()->PatchableProperty(patchablePropertyOpCode, exprNode->location, objectLocation, cacheId);
+
+            uint32 intPropertyNameValue;
+            if(isIndexPropertyRef &&
+                byteCodeGenerator->GetScriptContext()->IsNumericPropertyId(
+                    memberNode->sxBin.pnode1->sxPid.PropertyIdFromNameNode(),
+                    &intPropertyNameValue))
+            {
+                // Don't need an inline cache for index properties, but the InitFld layout requires it. Indicate that this is an
+                // index property so that the caller is aware that this value does not go into field slots.
+                *isIndexPropertyRef = true;
+            }
         }
     }
     else
@@ -7687,6 +7706,7 @@ void EmitObjectInitializers(ParseNode *memberList, Js::RegSlot objectLocation, B
     argCount = propertyIds->Count();
 
     memberList = pmemberList;
+    Js::ObjectLiteralCreationSiteInfo *objectLiteralCreationSiteInfo = nullptr;
     if ((memberList == nullptr) || (argCount == 0))
     {
         // Empty literal or numeric property only object literal
@@ -7704,32 +7724,65 @@ void EmitObjectInitializers(ParseNode *memberList, Js::RegSlot objectLocation, B
         }
 
         unsigned int argIndex = 0;
+        bool trackInitialFields = true;
+        uint initialFieldCount = 0;
         while (memberList->nop == knopList)
         {
-            if (memberList->sxBin.pnode1->sxBin.pnode1->nop == knopComputedName)
+            ParseNode *const memberNode = memberList->sxBin.pnode1;
+            if (memberNode->sxBin.pnode1->nop == knopComputedName)
             {
                 break;
             }
-            propertyId = memberList->sxBin.pnode1->sxBin.pnode1->sxPid.PropertyIdFromNameNode();
+
+            if(memberNode->nop != knopMember && memberNode->nop != knopMemberShort)
+            {
+                Assert(memberNode->nop == knopGetMember || memberNode->nop == knopSetMember);
+                propIds->hasAccessors = true;
+                trackInitialFields = false;
+                initialFieldCount = 0;
+            }
+
+            propertyId = memberNode->sxBin.pnode1->sxPid.PropertyIdFromNameNode();
             if (!byteCodeGenerator->GetScriptContext()->IsNumericPropertyId(propertyId, &value) && propertyIds->Remove(propertyId))
             {
                 propIds->elements[argIndex] = propertyId;
                 argIndex++;
+                if(trackInitialFields)
+                {
+                    ++initialFieldCount;
+                }
             }
             memberList = memberList->sxBin.pnode2;
         }
 
         if (memberList->sxBin.pnode1->nop != knopComputedName && !hasComputedName)
         {
-            propertyId = memberList->sxBin.pnode1->sxPid.PropertyIdFromNameNode();
+            ParseNode *const memberNode = memberList;
+            if(memberNode->nop != knopMember && memberNode->nop != knopMemberShort)
+            {
+                Assert(memberNode->nop == knopGetMember || memberNode->nop == knopSetMember);
+                propIds->hasAccessors = true;
+                trackInitialFields = false;
+                initialFieldCount = 0;
+            }
+
+            propertyId = memberNode->sxBin.pnode1->sxPid.PropertyIdFromNameNode();
             if (!byteCodeGenerator->GetScriptContext()->IsNumericPropertyId(propertyId, &value) && propertyIds->Remove(propertyId))
             {
                 propIds->elements[argIndex] = propertyId;
                 argIndex++;
+                if(trackInitialFields)
+                {
+                    ++initialFieldCount;
+                }
             }
         }
 
-        uint32 literalObjectId = funcInfo->GetParsedFunctionBody()->NewObjectLiteral();
+        objectLiteralCreationSiteInfo =
+            Js::ObjectLiteralCreationSiteInfo::New(
+                static_cast<Js::PropertyIndex>(min(initialFieldCount, static_cast<uint>(Js::TypePath::MaxSlotCapacity))),
+                byteCodeGenerator->GetAllocator());
+        uint32 literalObjectId = funcInfo->objectLiteralCreationSiteInfos.Add(objectLiteralCreationSiteInfo);
 
         // Generate the opcode with propIds and cacheId
         byteCodeGenerator->Writer()->Auxiliary(Js::OpCode::NewScObjectLiteral, objectLocation, propIds, sizeof(Js::PropertyIdArray) + argCount * sizeof(Js::PropertyId), literalObjectId);
@@ -7745,6 +7798,8 @@ void EmitObjectInitializers(ParseNode *memberList, Js::RegSlot objectLocation, B
     // Generate the actual assignment to those properties
     if (memberList != nullptr)
     {
+        Js::PropertyIndex initialFieldIndex = 0;
+        bool isIndexProperty;
         while (memberList->nop == knopList)
         {
             ParseNode *memberNode = memberList->sxBin.pnode1;
@@ -7752,17 +7807,39 @@ void EmitObjectInitializers(ParseNode *memberList, Js::RegSlot objectLocation, B
             if (memberNode->sxBin.pnode1->nop == knopComputedName)
             {
                 useStore = true;
+                Assert(
+                    initialFieldIndex ==
+                    (objectLiteralCreationSiteInfo ? objectLiteralCreationSiteInfo->GetInitialFieldCount() : 0));
             }
 
             byteCodeGenerator->StartSubexpression(memberNode);
-            EmitMemberNode(memberNode, objectLocation, byteCodeGenerator, funcInfo, nullptr, useStore);
+            EmitMemberNode(memberNode, objectLocation, byteCodeGenerator, funcInfo, nullptr, useStore, nullptr, &isIndexProperty);
+            if(objectLiteralCreationSiteInfo &&
+                !isIndexProperty &&
+                initialFieldIndex < objectLiteralCreationSiteInfo->GetInitialFieldCount())
+            {
+                Assert(memberNode->sxBin.pnode1->nop != knopComputedName);
+                Assert(!useStore);
+                ++initialFieldIndex;
+            }
             byteCodeGenerator->EndSubexpression(memberNode);
             memberList = memberList->sxBin.pnode2;
         }
 
         byteCodeGenerator->StartSubexpression(memberList);
-        EmitMemberNode(memberList, objectLocation, byteCodeGenerator, funcInfo, nullptr, useStore);
+        EmitMemberNode(memberList, objectLocation, byteCodeGenerator, funcInfo, nullptr, useStore, nullptr, &isIndexProperty);
+        if(objectLiteralCreationSiteInfo &&
+            !isIndexProperty &&
+            initialFieldIndex < objectLiteralCreationSiteInfo->GetInitialFieldCount())
+        {
+            Assert(memberList->sxBin.pnode1->nop != knopComputedName);
+            Assert(!useStore);
+            ++initialFieldIndex;
+        }
         byteCodeGenerator->EndSubexpression(memberList);
+        Assert(
+            initialFieldIndex ==
+            (objectLiteralCreationSiteInfo ? objectLiteralCreationSiteInfo->GetInitialFieldCount() : 0));
     }
 }
 

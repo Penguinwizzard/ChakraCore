@@ -663,17 +663,17 @@ namespace Js
         const InlineCacheIndex inlineCacheIndex,
         void *const framePointer,
         const Var thisInstance)
-        {
+    {
         ScriptFunction *const scriptFunction =
             ScriptFunction::FromVar(JavascriptCallStackLayout::FromFramePointer(framePointer)->functionObject);
         return
             ProfiledLdFld<false, false, false>(
-            instance,
-            propertyId,
-            GetInlineCache(scriptFunction, inlineCacheIndex),
-            inlineCacheIndex,
-            scriptFunction->GetFunctionBody(),
-            thisInstance);
+                instance,
+                propertyId,
+                GetInlineCache(scriptFunction, inlineCacheIndex),
+                inlineCacheIndex,
+                scriptFunction->GetFunctionBody(),
+                thisInstance);
     }
 
     Var ProfilingHelpers::ProfiledLdFldForTypeOf_Jit(
@@ -807,7 +807,9 @@ namespace Js
         DynamicProfileInfo *const dynamicProfileInfo = functionBody->GetDynamicProfileInfo();
         Var value;
         FldInfoFlags fldInfoFlags = FldInfo_NoInfo;
-        if (Root || (RecyclableObject::Is(instance) && RecyclableObject::Is(thisInstance)))
+        ObjectSlotType slotType = ObjectSlotType::GetVar();
+        bool isSlotTypePrecise = false;
+        if(Root || (RecyclableObject::Is(instance) && RecyclableObject::Is(thisInstance)))
         {
             RecyclableObject *const object = RecyclableObject::FromVar(instance);
             RecyclableObject *const thisObject = RecyclableObject::FromVar(thisInstance);
@@ -818,16 +820,17 @@ namespace Js
                 // undefer the function right here if it was defer parsed before. This is required so that the load of "apply"/"call"
                 // happens from the same "type". Otherwise, we will have a polymorphic cache for load of "apply"/"call".
                 ScriptFunction *fn = ScriptFunction::FromVar(object);
-                if (fn->GetType()->GetEntryPoint() == JavascriptFunction::DeferredParsingThunk)
+                if(fn->GetType()->GetEntryPoint() == JavascriptFunction::DeferredParsingThunk)
                 {
                     JavascriptFunction::DeferredParse(&fn);
                 }
             }
 
+            isSlotTypePrecise = true;
             PropertyCacheOperationInfo operationInfo;
             PropertyValueInfo propertyValueInfo;
             PropertyValueInfo::SetCacheInfo(&propertyValueInfo, functionBody, inlineCache, inlineCacheIndex, true);
-            if (!CacheOperators::TryGetProperty<true, true, true, !Root && !Method, true, !Root, true, false, true>(
+            if(!CacheOperators::TryGetProperty<true, true, true, !Root && !Method, true, !Root, true, false, true>(
                     thisObject,
                     Root,
                     object,
@@ -845,23 +848,28 @@ namespace Js
                     Root
                         ? Method ? PatchGetRootMethod : PatchGetRootValue
                         : PatchGetMethod ;
-                value = (!Root && !Method) ? PatchGetValue(functionBody, inlineCache, inlineCacheIndex, object, propertyId, thisObject) :
-                    PatchGet(functionBody, inlineCache, inlineCacheIndex, object, propertyId);
-                CacheOperators::PretendTryGetProperty<true, false>(object->GetType(), &operationInfo, &propertyValueInfo);
+                value =
+                    !Root && !Method
+                        ? PatchGetValue(functionBody, inlineCache, inlineCacheIndex, object, propertyId, thisObject)
+                        : PatchGet(functionBody, inlineCache, inlineCacheIndex, object, propertyId);
+                if(!CacheOperators::PretendTryGetProperty<true, false>(object->GetType(), &operationInfo, &propertyValueInfo))
+                    isSlotTypePrecise = false;
             }
-            else if (!Root && !Method)
+            else if(!Root && !Method)
             {
                 // Inline cache hit. oldflags must match the new ones. If not there is mark it as polymorphic as there is likely
                 // a bailout to interpreter and change in the inline cache type.
                 const FldInfoFlags oldflags = dynamicProfileInfo->GetFldInfo(functionBody, inlineCacheIndex)->flags;
-                if ((oldflags != FldInfo_NoInfo) &&
+                if((oldflags != FldInfo_NoInfo) &&
                     !(oldflags & DynamicProfileInfo::FldInfoFlagsFromCacheType(operationInfo.cacheType)))
                 {
                     fldInfoFlags = DynamicProfileInfo::MergeFldInfoFlags(fldInfoFlags, FldInfo_Polymorphic);
                 }
             }
 
-            if (!Root && operationInfo.isPolymorphic)
+            slotType = operationInfo.slotType;
+
+            if(!Root && operationInfo.isPolymorphic)
             {
                 fldInfoFlags = DynamicProfileInfo::MergeFldInfoFlags(fldInfoFlags, FldInfo_Polymorphic);
             }
@@ -872,9 +880,9 @@ namespace Js
             fldInfoFlags =
                 DynamicProfileInfo::MergeFldInfoFlags(
                     fldInfoFlags,
-                    DynamicProfileInfo::FldInfoFlagsFromSlotType(operationInfo.slotType));
+                    DynamicProfileInfo::FldInfoFlagsFromSlotLocation(operationInfo.slotLocation));
 
-            if (!Method)
+            if(!Method)
             {
                 UpdateFldInfoFlagsForGetSetInlineCandidate(
                     object,
@@ -882,12 +890,11 @@ namespace Js
                     operationInfo.cacheType,
                     inlineCache,
                     functionBody);
-                if (!Root && CallApplyTarget)
+                if(!Root && CallApplyTarget)
                 {
                     UpdateFldInfoFlagsForCallApplyInlineCandidate(
                         object,
                         fldInfoFlags,
-                        operationInfo.cacheType,
                         inlineCache,
                         functionBody);
                 }
@@ -902,7 +909,7 @@ namespace Js
             value = PatchGet(functionBody, inlineCache, inlineCacheIndex, instance, propertyId);
         }
 
-        dynamicProfileInfo->RecordFieldAccess(functionBody, inlineCacheIndex, value, fldInfoFlags);
+        dynamicProfileInfo->RecordFieldAccess(functionBody, inlineCacheIndex, value, fldInfoFlags, isSlotTypePrecise, slotType);
         return value;
     }
 
@@ -1059,8 +1066,11 @@ namespace Js
 
         ScriptContext *const scriptContext = functionBody->GetScriptContext();
         FldInfoFlags fldInfoFlags = FldInfo_NoInfo;
+        ObjectSlotType slotType = ObjectSlotType::GetVar();
+        bool isSlotTypePrecise = false;
         if(Root || (RecyclableObject::Is(instance) && RecyclableObject::Is(thisInstance)))
         {
+            isSlotTypePrecise = true;
             RecyclableObject *const object = RecyclableObject::FromVar(instance);
             RecyclableObject *const thisObject = RecyclableObject::FromVar(thisInstance);
             PropertyCacheOperationInfo operationInfo;
@@ -1086,12 +1096,17 @@ namespace Js
                 {
                     JavascriptOperators::PatchPutValueWithThisPtrNoFastPath(functionBody, inlineCache, inlineCacheIndex, object, propertyId, value, thisObject, flags);
                 }
-                CacheOperators::PretendTrySetProperty<true, false>(
-                    object->GetType(),
-                    oldType,
-                    &operationInfo,
-                    &propertyValueInfo);
+                if(!CacheOperators::PretendTrySetProperty<true, false>(
+                        object->GetType(),
+                        oldType,
+                        &operationInfo,
+                        &propertyValueInfo))
+                {
+                    isSlotTypePrecise = false;
+                }
             }
+
+            slotType = operationInfo.slotType;
 
             // Only make the field polymorphic if we are not using the root object inline cache
             if(operationInfo.isPolymorphic && inlineCacheIndex < functionBody->GetRootObjectStoreInlineCacheStart())
@@ -1107,7 +1122,7 @@ namespace Js
             fldInfoFlags =
                 DynamicProfileInfo::MergeFldInfoFlags(
                     fldInfoFlags,
-                    DynamicProfileInfo::FldInfoFlagsFromSlotType(operationInfo.slotType));
+                    DynamicProfileInfo::FldInfoFlagsFromSlotLocation(operationInfo.slotLocation));
 
             UpdateFldInfoFlagsForGetSetInlineCandidate(
                 object,
@@ -1138,7 +1153,13 @@ namespace Js
                 flags);
         }
 
-        functionBody->GetDynamicProfileInfo()->RecordFieldAccess(functionBody, inlineCacheIndex, nullptr, fldInfoFlags);
+        functionBody->GetDynamicProfileInfo()->RecordFieldAccess(
+            functionBody,
+            inlineCacheIndex,
+            nullptr,
+            fldInfoFlags,
+            isSlotTypePrecise,
+            slotType);
     }
 
     void ProfilingHelpers::ProfiledInitFld_Jit(
@@ -1174,6 +1195,7 @@ namespace Js
         Assert(inlineCacheIndex < functionBody->GetInlineCacheCount());
         Assert(value);
 
+        bool isSlotTypePrecise = true;
         ScriptContext *const scriptContext = functionBody->GetScriptContext();
         FldInfoFlags fldInfoFlags = FldInfo_NoInfo;
         PropertyCacheOperationInfo operationInfo;
@@ -1197,7 +1219,8 @@ namespace Js
                 object,
                 propertyId,
                 value);
-            CacheOperators::PretendTrySetProperty<true, false>(object->GetType(), oldType, &operationInfo, &propertyValueInfo);
+            if(!CacheOperators::PretendTrySetProperty<true, false>(object->GetType(), oldType, &operationInfo, &propertyValueInfo))
+                isSlotTypePrecise = false;
         }
 
         // Only make the field polymorphic if the we are not using the root object inline cache
@@ -1207,13 +1230,25 @@ namespace Js
             Assert(inlineCacheIndex < functionBody->GetRootObjectLoadInlineCacheStart());
             fldInfoFlags = DynamicProfileInfo::MergeFldInfoFlags(fldInfoFlags, FldInfo_Polymorphic);
         }
-        fldInfoFlags = DynamicProfileInfo::MergeFldInfoFlags(fldInfoFlags, DynamicProfileInfo::FldInfoFlagsFromCacheType(operationInfo.cacheType));
-        fldInfoFlags = DynamicProfileInfo::MergeFldInfoFlags(fldInfoFlags, DynamicProfileInfo::FldInfoFlagsFromSlotType(operationInfo.slotType));
+        fldInfoFlags =
+            DynamicProfileInfo::MergeFldInfoFlags(
+                fldInfoFlags,
+                DynamicProfileInfo::FldInfoFlagsFromCacheType(operationInfo.cacheType));
+        fldInfoFlags =
+            DynamicProfileInfo::MergeFldInfoFlags(
+                fldInfoFlags,
+                DynamicProfileInfo::FldInfoFlagsFromSlotLocation(operationInfo.slotLocation));
 
-        functionBody->GetDynamicProfileInfo()->RecordFieldAccess(functionBody, inlineCacheIndex, nullptr, fldInfoFlags);
+        functionBody->GetDynamicProfileInfo()->RecordFieldAccess(
+            functionBody,
+            inlineCacheIndex,
+            nullptr,
+            fldInfoFlags,
+            isSlotTypePrecise,
+            operationInfo.slotType);
     }
 
-    void ProfilingHelpers::UpdateFldInfoFlagsForGetSetInlineCandidate(
+    __inline void ProfilingHelpers::UpdateFldInfoFlagsForGetSetInlineCandidate(
         RecyclableObject *const object,
         FldInfoFlags &fldInfoFlags,
         const CacheType cacheType,
@@ -1233,10 +1268,9 @@ namespace Js
         }
     }
 
-    void ProfilingHelpers::UpdateFldInfoFlagsForCallApplyInlineCandidate(
+    __inline void ProfilingHelpers::UpdateFldInfoFlagsForCallApplyInlineCandidate(
         RecyclableObject *const object,
         FldInfoFlags &fldInfoFlags,
-        const CacheType cacheType,
         InlineCache *const inlineCache,
         FunctionBody *const functionBody)
     {
@@ -1261,6 +1295,65 @@ namespace Js
             scriptFunction->GetHasInlineCaches()
                 ? ScriptFunctionWithInlineCache::FromVar(scriptFunction)->GetInlineCache(inlineCacheIndex)
                 : scriptFunction->GetFunctionBody()->GetInlineCache(inlineCacheIndex);
+    }
+
+    Var ProfilingHelpers::ProfiledDivide(const Var left, const Var right, FunctionBody *const functionBody, const ProfileId profileId)
+    {
+        const Var quotient = JavascriptMath::Divide(left, right, functionBody->GetScriptContext());
+        functionBody->GetDynamicProfileInfo()->RecordDivideResultType(functionBody, profileId, quotient);
+        return quotient;
+    }
+
+    Var ProfilingHelpers::ProfiledRemainder(const Var left, const Var right, FunctionBody *const functionBody, const ProfileId profileId)
+    {
+        do
+        {
+            int leftInt = 0, rightInt = 0;
+            if(TaggedInt::IsPair(left, right))
+            {
+                leftInt = TaggedInt::ToInt32(left);
+                if(leftInt < 0)
+                    break;
+                rightInt = TaggedInt::ToInt32(right);
+            }
+            else
+            {
+                if(TaggedInt::Is(left))
+                {
+                    leftInt = TaggedInt::ToInt32(left);
+                    if(leftInt < 0)
+                        break;
+                }
+                else if(
+                    !JavascriptNumber::Is_NoTaggedIntCheck(left) ||
+                    !JavascriptNumber::TryGetInt32Value(JavascriptNumber::GetValue(left), &leftInt) ||
+                    leftInt < 0)
+                {
+                    break;
+                }
+
+                if(TaggedInt::Is(right))
+                    rightInt = TaggedInt::ToInt32(right);
+                else if(
+                    !JavascriptNumber::Is_NoTaggedIntCheck(right) ||
+                    !JavascriptNumber::TryGetInt32Value(JavascriptNumber::GetValue(right), &rightInt))
+                {
+                    break;
+                }
+            }
+            // leftInt is nonnegative
+
+            if(!::Math::IsPow2(rightInt))
+                break;
+            // rightInt is +2^i
+
+            // Fast path for Power of 2 divisor
+            functionBody->GetDynamicProfileInfo()->RecordModulusOpType(functionBody, profileId, /*isModByPowerOf2*/ true);
+            return TaggedInt::ToVarUnchecked(leftInt & (rightInt - 1));
+        } while(false);
+
+        functionBody->GetDynamicProfileInfo()->RecordModulusOpType(functionBody, profileId, /*isModByPowerOf2*/ false);
+        return JavascriptMath::Modulus(left, right, functionBody->GetScriptContext());
     }
 #endif
 }

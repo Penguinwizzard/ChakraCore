@@ -2955,7 +2955,7 @@ LABEL1:
         if (this->GetTypeHandler()->GetHasKnownSlot0())
         {
             Assert(this->GetDynamicType()->GetTypeHandler()->GetPropertyId(scriptContext, (PropertyIndex)0) == PropertyIds::prototype);
-            funcPrototype = this->GetSlot(0);
+            funcPrototype = this->GetSlot(0, ObjectSlotType::GetVar());
         }
         else
         {

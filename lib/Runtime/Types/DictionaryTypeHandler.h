@@ -14,7 +14,7 @@ namespace Js
         friend class DeferredTypeHandlerBase;
         template <DeferredTypeInitializer initializer, typename DeferredTypeFilter, bool isPrototypeTemplate, uint16 inlineSlotCapacity, uint16 offsetOfInlineSlots>
         friend class DeferredTypeHandler;
-        friend class PathTypeHandlerBase;
+        friend class PathTypeHandler;
         template<size_t size>
         friend class SimpleTypeHandler;
         friend class DynamicObject;
@@ -77,9 +77,15 @@ namespace Js
 
         virtual PropertyIndex GetPropertyIndex(PropertyRecord const* propertyRecord) override;
         virtual bool GetPropertyEquivalenceInfo(PropertyRecord const* propertyRecord, PropertyEquivalenceInfo& info) override;
-        virtual bool IsObjTypeSpecEquivalent(const Type* type, const TypeEquivalenceRecord& record, uint& failedPropertyIndex) override;
-        virtual bool IsObjTypeSpecEquivalent(const Type* type, const EquivalentPropertyEntry* entry) override;
 
+    public:
+#if ENABLE_NATIVE_CODEGEN
+        virtual IR::BailOutKind IsObjTypeSpecEquivalent(DynamicObject *const object, const TypeEquivalenceRecord& record, uint& failedPropertyIndex) override;
+#endif
+    private:
+        bool IsObjTypeSpecEquivalent(DynamicObject *const object, const EquivalentPropertyEntry* entry);
+
+    public:
         virtual BOOL HasProperty(DynamicObject* instance, PropertyId propertyId, bool *noRedecl = nullptr) override;
         virtual BOOL HasProperty(DynamicObject* instance, JavascriptString* propertyNameString) override;
         virtual BOOL GetProperty(DynamicObject* instance, Var originalInstance, PropertyId propertyId, Var* value, PropertyValueInfo* info, ScriptContext* requestContext) override;
@@ -163,8 +169,8 @@ namespace Js
 #endif
 
     private:
-        template<bool doLock>
-        bool IsObjTypeSpecEquivalentImpl(const Type* type, const EquivalentPropertyEntry *entry);
+        template<bool doLock> 
+        bool IsObjTypeSpecEquivalentImpl(DynamicObject *const object, const EquivalentPropertyEntry *entry);
         template <bool allowNonExistent, bool markAsUsed>
         bool TryGetFixedProperty(PropertyRecord const * propertyRecord, Var * pProperty, FixedPropertyKind propertyType, ScriptContext * requestContext);
         template <bool allowNonExistent, bool markAsUsed>

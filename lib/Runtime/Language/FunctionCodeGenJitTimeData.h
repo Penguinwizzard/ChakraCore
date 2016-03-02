@@ -25,20 +25,34 @@ namespace Js
         bool isUsed;
 
     public:
+        JitTimeConstructorCache()
+            : constructor(nullptr),
+            runtimeCache(nullptr),
+            scriptContext(nullptr),
+            type(nullptr),
+            guardedPropOps(nullptr),
+            slotCount(0),
+            inlineSlotCount(0),
+            skipNewScObject(false),
+            ctorHasNoExplicitReturnValue(false),
+            typeIsFinal(false),
+            isUsed(false)
+        {
+        }
+
         JitTimeConstructorCache(const JavascriptFunction* constructor, ConstructorCache* runtimeCache)
         {
             Assert(constructor != nullptr);
             Assert(runtimeCache != nullptr);
             this->constructor = constructor;
             this->runtimeCache = runtimeCache;
-            this->type = runtimeCache->content.type;
-            this->guardedPropOps = nullptr;
-            this->scriptContext = runtimeCache->content.scriptContext;
-            this->slotCount = runtimeCache->content.slotCount;
-            this->inlineSlotCount = runtimeCache->content.inlineSlotCount;
-            this->skipNewScObject = runtimeCache->content.skipDefaultNewObject;
-            this->ctorHasNoExplicitReturnValue = runtimeCache->content.ctorHasNoExplicitReturnValue;
-            this->typeIsFinal = runtimeCache->content.typeIsFinal;
+            this->type = runtimeCache->GetType();
+            this->scriptContext = runtimeCache->GetScriptContext();
+            this->slotCount = runtimeCache->GetSlotCount();
+            this->inlineSlotCount = runtimeCache->GetInlineSlotCount();
+            this->skipNewScObject = runtimeCache->SkipDefaultNewObject();
+            this->ctorHasNoExplicitReturnValue = runtimeCache->GetCtorHasNoExplicitReturnValue();
+            this->typeIsFinal = runtimeCache->TypeIsFinal();
             this->isUsed = false;
         }
 
@@ -50,7 +64,6 @@ namespace Js
             this->constructor = other->constructor;
             this->runtimeCache = other->runtimeCache;
             this->type = other->type;
-            this->guardedPropOps = nullptr;
             this->scriptContext = other->scriptContext;
             this->slotCount = other->slotCount;
             this->inlineSlotCount = other->inlineSlotCount;
@@ -66,29 +79,9 @@ namespace Js
             return clone;
         }
 
-        const BVSparse<JitArenaAllocator>* GetGuardedPropOps() const
+        bool IsPopulated() const
         {
-            return this->guardedPropOps;
-        }
-
-        void EnsureGuardedPropOps(JitArenaAllocator* allocator)
-        {
-            if (this->guardedPropOps == nullptr)
-            {
-                this->guardedPropOps = Anew(allocator, BVSparse<JitArenaAllocator>, allocator);
-            }
-        }
-
-        void SetGuardedPropOp(uint propOpId)
-        {
-            Assert(this->guardedPropOps != nullptr);
-            this->guardedPropOps->Set(propOpId);
-        }
-
-        void AddGuardedPropOps(const BVSparse<JitArenaAllocator>* propOps)
-        {
-            Assert(this->guardedPropOps != nullptr);
-            this->guardedPropOps->Or(propOps);
+            return !!runtimeCache;
         }
     };
 
@@ -145,20 +138,27 @@ namespace Js
 
         uint16 fixedFieldCount; // currently used only for fields that are functions
 
+        ObjectSlotType slotType;
+
     public:
-        ObjTypeSpecFldInfo() :
-            id(0), typeId(TypeIds_Limit), typeSet(nullptr), initialType(nullptr), flags(InitialObjTypeSpecFldInfoFlagValue),
-            slotIndex(Constants::NoSlot), propertyId(Constants::NoProperty), protoObject(nullptr), propertyGuard(nullptr),
-            ctorCache(nullptr), fixedFieldInfoArray(nullptr) {}
+        ObjTypeSpecFldInfo():
+            id(0), typeId(TypeIds_Limit), typeSet(nullptr), initialType(nullptr), flags(InitialObjTypeSpecFldInfoFlagValue), 
+            slotIndex(Constants::NoSlot), slotType(ObjectSlotType::GetVar()), propertyId(Constants::NoProperty), protoObject(nullptr), propertyGuard(nullptr), 
+            ctorCache(nullptr), fixedFieldInfoArray(nullptr)
+        {
+            Assert(slotType == slotType.ToNormalizedValueType());
+        }
 
         ObjTypeSpecFldInfo(uint id, TypeId typeId, Type* initialType,
             bool usesAuxSlot, bool isLoadedFromProto, bool usesAccessor, bool isFieldValueFixed, bool keepFieldValue, bool isBuiltIn,
-            uint16 slotIndex, PropertyId propertyId, DynamicObject* protoObject, PropertyGuard* propertyGuard,
+            uint16 slotIndex, const ObjectSlotType slotType, PropertyId propertyId, DynamicObject* protoObject, PropertyGuard* propertyGuard,
             JitTimeConstructorCache* ctorCache, FixedFieldInfo* fixedFieldInfoArray) :
             id(id), typeId(typeId), typeSet(nullptr), initialType(initialType), flags(InitialObjTypeSpecFldInfoFlagValue),
-            slotIndex(slotIndex), propertyId(propertyId), protoObject(protoObject), propertyGuard(propertyGuard),
+            slotIndex(slotIndex), slotType(slotType), propertyId(propertyId), protoObject(protoObject), propertyGuard(propertyGuard),
             ctorCache(ctorCache), fixedFieldInfoArray(fixedFieldInfoArray)
         {
+            Assert(slotType == slotType.ToNormalizedValueType());
+
             this->isPolymorphic = false;
             this->usesAuxSlot = usesAuxSlot;
             this->isLocal = !isLoadedFromProto && !usesAccessor;
@@ -174,12 +174,14 @@ namespace Js
 
         ObjTypeSpecFldInfo(uint id, TypeId typeId, Type* initialType, EquivalentTypeSet* typeSet,
             bool usesAuxSlot, bool isLoadedFromProto, bool usesAccessor, bool isFieldValueFixed, bool keepFieldValue, bool doesntHaveEquivalence, bool isPolymorphic,
-            uint16 slotIndex, PropertyId propertyId, DynamicObject* protoObject, PropertyGuard* propertyGuard,
+            uint16 slotIndex, const ObjectSlotType slotType, PropertyId propertyId, DynamicObject* protoObject, PropertyGuard* propertyGuard,
             JitTimeConstructorCache* ctorCache, FixedFieldInfo* fixedFieldInfoArray, uint16 fixedFieldCount) :
             id(id), typeId(typeId), typeSet(typeSet), initialType(initialType), flags(InitialObjTypeSpecFldInfoFlagValue),
-            slotIndex(slotIndex), propertyId(propertyId), protoObject(protoObject), propertyGuard(propertyGuard),
+            slotIndex(slotIndex), slotType(slotType), propertyId(propertyId), protoObject(protoObject), propertyGuard(propertyGuard),
             ctorCache(ctorCache), fixedFieldInfoArray(fixedFieldInfoArray)
         {
+            Assert(slotType == slotType.ToNormalizedValueType());
+
             this->isPolymorphic = isPolymorphic;
             this->usesAuxSlot = usesAuxSlot;
             this->isLocal = !isLoadedFromProto && !usesAccessor;
@@ -308,6 +310,11 @@ namespace Js
         void SetSlotIndex(uint16 index)
         {
             this->slotIndex = index;
+        }
+
+        ObjectSlotType GetSlotType() const
+        {
+            return this->slotType;
         }
 
         PropertyId GetPropertyId() const
@@ -508,6 +515,14 @@ namespace Js
         uint globalObjTypeSpecFldInfoCount;
         ObjTypeSpecFldInfo** globalObjTypeSpecFldInfoArray;
 
+        // Array of slot types indexed by an inline cache index
+        ObjectSlotType *fieldSlotTypes;
+
+        // List of cached final types for object literal creation sites. The cached final type may change, so it must be copied
+        // for use by the JIT. Non-null types are also added to the top function's entry point info's strong references list to
+        // keep those types alive as long as the jitted code is alive.
+        DynamicType **objectLiteralCreationSiteFinalTypes;
+
         // There will be a non-null entry for each profiled call site where a function is to be inlined
         FunctionCodeGenJitTimeData **inlinees;
         FunctionCodeGenJitTimeData **ldFldInlinees;
@@ -551,6 +566,13 @@ namespace Js
         const ObjTypeSpecFldInfoArray* GetObjTypeSpecFldInfoArray() const { return &this->objTypeSpecFldInfoArray; }
         ObjTypeSpecFldInfoArray* GetObjTypeSpecFldInfoArray() { return &this->objTypeSpecFldInfoArray; }
         EntryPointInfo* GetEntryPointInfo() const { return this->entryPointInfo; }
+
+    public:
+        ObjectSlotType GetFieldSlotType(const InlineCacheIndex inlineCacheIndex) const;
+        void SetFieldSlotType(const InlineCacheIndex inlineCacheIndex, const ObjectSlotType slotType);
+
+    public:
+        DynamicType *GetObjectLiteralCreationSiteFinalType(const uint objectLiteralIndex) const;
 
     public:
         const FunctionCodeGenJitTimeData *GetInlinee(const ProfileId profiledCallSiteId) const;

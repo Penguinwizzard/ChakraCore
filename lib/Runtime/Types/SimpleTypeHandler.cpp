@@ -1,4 +1,4 @@
-//-------------------------------------------------------------------------------------------------------
+\//-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
@@ -106,7 +106,7 @@ namespace Js
 
         for (int i = 0; i < propertyCount; i++)
         {
-            Var value = instance->GetSlot(i);
+            Var value = instance->GetSlot(i, ObjectSlotType::GetVar());
             Assert(value != nullptr || IsInternalPropertyId(descriptors[i].Id->GetPropertyId()));
             bool markAsFixed = allowFixedFields && !IsInternalPropertyId(descriptors[i].Id->GetPropertyId()) &&
                 (JavascriptFunction::Is(value) ? ShouldFixMethodProperties() : false);
@@ -229,7 +229,7 @@ namespace Js
                     bool isInlineSlot;
                     PropertyIndexToInlineOrAuxSlotIndex(index, &inlineOrAuxSlotIndex, &isInlineSlot);
 
-                    propertyString->UpdateCache(type, inlineOrAuxSlotIndex, isInlineSlot, true);
+                    propertyString->UpdateCache(type, inlineOrAuxSlotIndex, ObjectSlotType::GetVar(), isInlineSlot, true);
                 }
                 else
                 {
@@ -275,25 +275,27 @@ namespace Js
         }
     }
 
+#if ENABLE_NATIVE_CODEGEN
     template<size_t size>
-    bool SimpleTypeHandler<size>::IsObjTypeSpecEquivalent(const Type* type, const TypeEquivalenceRecord& record, uint& failedPropertyIndex)
+    IR::BailOutKind SimpleTypeHandler<size>::IsObjTypeSpecEquivalent(DynamicObject *const object, const TypeEquivalenceRecord& record, uint& failedPropertyIndex)
     {
         Js::EquivalentPropertyEntry* properties = record.properties;
         for (uint pi = 0; pi < record.propertyCount; pi++)
         {
             const EquivalentPropertyEntry* refInfo = &properties[pi];
-            if (!this->SimpleTypeHandler<size>::IsObjTypeSpecEquivalent(type, refInfo))
+            if (!this->SimpleTypeHandler<size>::IsObjTypeSpecEquivalent(object, refInfo))
             {
                 failedPropertyIndex = pi;
-                return false;
+                return IR::BailOutFailedEquivalentTypeCheck;
             }
         }
 
-        return true;
+        return IR::BailOutInvalid;
     }
+#endif
 
     template<size_t size>
-    bool SimpleTypeHandler<size>::IsObjTypeSpecEquivalent(const Type* type, const EquivalentPropertyEntry *entry)
+    bool SimpleTypeHandler<size>::IsObjTypeSpecEquivalent(DynamicObject *const object, const EquivalentPropertyEntry *entry)
     {
         if (this->propertyCount > 0)
         {
@@ -307,6 +309,7 @@ namespace Js
                     Js::PropertyIndex relSlotIndex = AdjustValidSlotIndexForInlineSlots(static_cast<PropertyIndex>(0));
                     if (relSlotIndex != entry->slotIndex ||
                         entry->isAuxSlot != (GetInlineSlotCapacity() == 0) ||
+                        !entry->slotType.IsVar() ||
                         (entry->mustBeWritable && !(descriptor->Attributes & PropertyWritable)))
                     {
                         return false;
@@ -397,8 +400,8 @@ namespace Js
                 {
                     return false;
                 }
-                *value = instance->GetSlot(i);
-                PropertyValueInfo::Set(info, instance, static_cast<PropertyIndex>(i), descriptors[i].Attributes);
+                *value = instance->GetSlot(i, ObjectSlotType::GetVar());
+                PropertyValueInfo::Set(info, instance, static_cast<PropertyIndex>(i), ObjectSlotType::GetVar(), descriptors[i].Attributes);
                 return true;
             }
         }
@@ -429,8 +432,8 @@ namespace Js
                 {
                     return false;
                 }
-                *value = instance->GetSlot(i);
-                PropertyValueInfo::Set(info, instance, static_cast<PropertyIndex>(i), descriptors[i].Attributes);
+                *value = instance->GetSlot(i, ObjectSlotType::GetVar());
+                PropertyValueInfo::Set(info, instance, static_cast<PropertyIndex>(i), ObjectSlotType::GetVar(), descriptors[i].Attributes);
                 return true;
             }
         }
@@ -456,12 +459,12 @@ namespace Js
             {
                 JavascriptError::ThrowCantAssignIfStrictMode(flags, scriptContext);
 
-                PropertyValueInfo::Set(info, instance, static_cast<PropertyIndex>(index), descriptors[index].Attributes); // Try to cache property info even if not writable
+                PropertyValueInfo::Set(info, instance, static_cast<PropertyIndex>(index), ObjectSlotType::GetVar(), descriptors[index].Attributes); // Try to cache property info even if not writable
                 return false;
             }
 
-            SetSlotUnchecked(instance, index, value);
-            PropertyValueInfo::Set(info, instance, static_cast<PropertyIndex>(index), descriptors[index].Attributes);
+            SetSlotUnchecked(instance, index, ObjectSlotType::GetVar(), value);
+            PropertyValueInfo::Set(info, instance, static_cast<PropertyIndex>(index), ObjectSlotType::GetVar(), descriptors[index].Attributes);
             SetPropertyUpdateSideEffect(instance, propertyId, value, SideEffects_Any);
             return true;
         }
@@ -565,7 +568,7 @@ namespace Js
 
 
             CompileAssert(_countof(descriptors) == size);
-            SetSlotUnchecked(instance, index, nullptr);
+            SetSlotUnchecked(instance, index, ObjectSlotType::GetVar(), nullptr);
 
             NullTypeHandlerBase* nullTypeHandler = ((this->GetFlags() & IsPrototypeFlag) != 0) ?
                 (NullTypeHandlerBase*)NullTypeHandler<true>::GetDefaultInstance() : (NullTypeHandlerBase*)NullTypeHandler<false>::GetDefaultInstance();
@@ -880,8 +883,8 @@ namespace Js
                     }
                 }
             }
-            SetSlotUnchecked(instance, index, value);
-            PropertyValueInfo::Set(info, instance, static_cast<PropertyIndex>(index), descriptors[index].Attributes);
+            SetSlotUnchecked(instance, index, ObjectSlotType::GetVar(), value);
+            PropertyValueInfo::Set(info, instance, static_cast<PropertyIndex>(index), ObjectSlotType::GetVar(), descriptors[index].Attributes);
             SetPropertyUpdateSideEffect(instance, propertyId, value, possibleSideEffects);
             return true;
         }
@@ -985,8 +988,8 @@ namespace Js
                 instance->GetLibrary()->NoPrototypeChainsAreEnsuredToHaveOnlyWritableDataProperties();
             }
         }
-        SetSlotUnchecked(instance, propertyCount, value);
-        PropertyValueInfo::Set(info, instance, static_cast<PropertyIndex>(propertyCount), attributes);
+        SetSlotUnchecked(instance, propertyCount, ObjectSlotType::GetVar(), value);
+        PropertyValueInfo::Set(info, instance, static_cast<PropertyIndex>(propertyCount), ObjectSlotType::GetVar(), attributes);
         propertyCount++;
 
         if ((this->GetFlags() && IsPrototypeFlag)
@@ -1010,7 +1013,7 @@ namespace Js
         Js::RecyclableObject* undefined = instance->GetLibrary()->GetUndefined();
         for (int propertyIndex = 0; propertyIndex < this->propertyCount; propertyIndex++)
         {
-            SetSlotUnchecked(instance, propertyIndex, undefined);
+            SetSlotUnchecked(instance, propertyIndex, ObjectSlotType::GetVar(), undefined);
         }
     }
 
@@ -1025,7 +1028,7 @@ namespace Js
         // We can ignore invalidateFixedFields, because SimpleTypeHandler doesn't support fixed fields at this point.
         for (int propertyIndex = 0; propertyIndex < this->propertyCount; propertyIndex++)
         {
-            SetSlotUnchecked(instance, propertyIndex, CrossSite::MarshalVar(targetScriptContext, GetSlot(instance, propertyIndex)));
+            SetSlotUnchecked(instance, propertyIndex, ObjectSlotType::GetVar(), CrossSite::MarshalVar(targetScriptContext, GetSlot(instance, propertyIndex, ObjectSlotType::GetVar())));
         }
     }
 

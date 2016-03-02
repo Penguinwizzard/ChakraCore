@@ -206,7 +206,6 @@ private:
     IR::RegOpnd *       BuildDstOpnd(Js::RegSlot dstRegSlot, IRType type = TyVar, bool isCatchObjectSym = false);
     IR::RegOpnd *       BuildSrcOpnd(Js::RegSlot srcRegSlot, IRType type = TyVar);
     IR::AddrOpnd *      BuildAuxArrayOpnd(AuxArrayValue auxArrayType, uint32 offset, uint32 auxArrayOffset, uint extraSlots = 0);
-    IR::Opnd *          BuildAuxObjectLiteralTypeRefOpnd(int objectId, uint32 offset);
 
 private:
     uint                AddStatementBoundary(uint statementIndex, uint offset);
@@ -288,12 +287,16 @@ private:
     IR::Opnd *          InsertLoopBodyReturnIPInstr(uint targetOffset, uint offset);
     IR::Instr *         CreateLoopBodyReturnIPInstr(uint targetOffset, uint offset);
 
-
+private:
     void                InsertBailOutForDebugger(uint offset, IR::BailOutKind kind, IR::Instr* insertBeforeInstr = nullptr);
     void                InsertBailOnNoProfile(uint offset);
     void                InsertBailOnNoProfile(IR::Instr *const insertBeforeInstr);
+public:
+    static IR::Instr *  InsertBailOnNoProfile(IR::Instr *const insertBeforeInstr, Func *const func);
+private:
     bool                DoBailOnNoProfile();
 
+private:
     void                InsertIncrLoopBodyLoopCounter(IR::LabelInstr *loopTopLabelInstr);
     void                InsertInitLoopBodyLoopCounter(uint loopNum);
     void                InsertDoneLoopBodyLoopCounter(uint32 lastOffset);

@@ -27,16 +27,16 @@ namespace Js
         bool isGetter = localCache.IsGetterAccessor();
         if (isLocal)
         {
-            type = TypeWithoutAuxSlotTag(localCache.u.local.type);
+            type = InlineCacheTypeTagger::TypeWithoutAnyTags(localCache.u.local.type);
             if (localCache.u.local.typeWithoutProperty)
             {
-                typeWithoutProperty = TypeWithoutAuxSlotTag(localCache.u.local.typeWithoutProperty);
+                typeWithoutProperty = InlineCacheTypeTagger::TypeWithoutAnyTags(localCache.u.local.typeWithoutProperty);
             }
             propertyOwnerType = type;
         }
         else if (isProto)
         {
-            type = TypeWithoutAuxSlotTag(localCache.u.proto.type);
+            type = InlineCacheTypeTagger::TypeWithoutAnyTags(localCache.u.proto.type);
             propertyOwnerType = localCache.u.proto.prototypeObject->GetType();
         }
         else
@@ -45,8 +45,8 @@ namespace Js
             {
                 return nullptr;
             }
-
-            type = TypeWithoutAuxSlotTag(localCache.u.accessor.type);
+            
+            type = InlineCacheTypeTagger::TypeWithoutAnyTags(localCache.u.accessor.type);
             propertyOwnerType = localCache.u.accessor.object->GetType();
         }
 
@@ -55,6 +55,7 @@ namespace Js
 
         Js::PropertyId propertyId = functionBody->GetPropertyIdFromCacheId(cacheId);
         uint16 slotIndex = Constants::NoSlot;
+        ObjectSlotType slotType = ObjectSlotType::GetVar();
         bool usesAuxSlot = false;
         DynamicObject* prototypeObject = nullptr;
         PropertyGuard* propertyGuard = nullptr;
@@ -71,7 +72,8 @@ namespace Js
         if (isLocal)
         {
             slotIndex = localCache.u.local.slotIndex;
-            if (type != localCache.u.local.type)
+            slotType = InlineCacheTypeTagger::GetSlotType(localCache.u.local.type);
+            if (InlineCacheTypeTagger::TypeHasAuxSlotTag(localCache.u.local.type))
             {
                 usesAuxSlot = true;
             }
@@ -90,14 +92,15 @@ namespace Js
         {
             prototypeObject = localCache.u.proto.prototypeObject;
             slotIndex = localCache.u.proto.slotIndex;
-            if (type != localCache.u.proto.type)
+            Assert(InlineCacheTypeTagger::GetSlotType(localCache.u.proto.type).IsVar());
+            if (InlineCacheTypeTagger::TypeHasAuxSlotTag(localCache.u.proto.type))
             {
                 usesAuxSlot = true;
-                fieldValue = prototypeObject->GetAuxSlot(slotIndex);
+                fieldValue = prototypeObject->GetAuxSlot(slotIndex, slotType);
             }
             else
             {
-                fieldValue = prototypeObject->GetInlineSlot(slotIndex);
+                fieldValue = prototypeObject->GetInlineSlot(slotIndex, slotType);
             }
             isMissing = localCache.u.proto.isMissing;
             propertyGuard = entryPoint->RegisterSharedPropertyGuard(propertyId, scriptContext);
@@ -105,14 +108,15 @@ namespace Js
         else
         {
             slotIndex = localCache.u.accessor.slotIndex;
-            if (type != localCache.u.accessor.type)
+            Assert(InlineCacheTypeTagger::GetSlotType(localCache.u.accessor.type).IsVar());
+            if (InlineCacheTypeTagger::TypeHasAuxSlotTag(localCache.u.accessor.type))
             {
                 usesAuxSlot = true;
-                fieldValue = localCache.u.accessor.object->GetAuxSlot(slotIndex);
+                fieldValue = localCache.u.accessor.object->GetAuxSlot(slotIndex, slotType);
             }
             else
             {
-                fieldValue = localCache.u.accessor.object->GetInlineSlot(slotIndex);
+                fieldValue = localCache.u.accessor.object->GetInlineSlot(slotIndex, slotType);
             }
         }
 
@@ -195,57 +199,68 @@ namespace Js
                     // we're about to emit cannot reach the object to try to access any of this object's properties.
 
                     ConstructorCache* runtimeConstructorCache = functionObject->GetConstructorCache();
-                    if (runtimeConstructorCache->IsSetUpForJit() && runtimeConstructorCache->GetScriptContext() == scriptContext)
+                    if (runtimeConstructorCache->GetScriptContext() == scriptContext)
                     {
-                        FunctionInfo* functionInfo = functionObject->GetFunctionInfo();
-                        Assert(functionInfo != nullptr);
-                        Assert((functionInfo->GetAttributes() & FunctionInfo::ErrorOnNew) == 0);
-
-                        Assert(!runtimeConstructorCache->IsDefault());
-
-                        if (runtimeConstructorCache->IsNormal())
+                        if(runtimeConstructorCache->IsSetUpForJit())
                         {
-                            Assert(runtimeConstructorCache->GetType()->GetIsShared());
-                            // If we populated the cache with initial type before calling the constructor, but then didn't end up updating the cache
-                            // after the constructor and shrinking (and locking) the inline slot capacity, we must lock it now.  In that case it is
-                            // also possible that the inline slot capacity was shrunk since we originally cached it, so we must update it also.
-#if DBG_DUMP
-                            if (!runtimeConstructorCache->GetType()->GetTypeHandler()->GetIsInlineSlotCapacityLocked())
+                            FunctionInfo* functionInfo = functionObject->GetFunctionInfo();
+                            Assert(functionInfo != nullptr);
+                            Assert((functionInfo->GetAttributes() & FunctionInfo::ErrorOnNew) == 0);
+
+                            Assert(!runtimeConstructorCache->IsDefault());
+
+                            if(runtimeConstructorCache->GetType())
                             {
-                                if (PHASE_TRACE(Js::FixedNewObjPhase, functionBody))
+                                Assert(runtimeConstructorCache->GetType()->GetIsShared());
+                                // If we populated the cache with initial type before calling the constructor, but then didn't end up updating the cache
+                                // after the constructor and shrinking (and locking) the inline slot capacity, we must lock it now.  In that case it is 
+                                // also possible that the inline slot capacity was shrunk since we originally cached it, so we must update it also.
+#if DBG_DUMP
+                                if (!runtimeConstructorCache->GetType()->GetTypeHandler()->GetIsInlineSlotCapacityLocked())
                                 {
-                                    wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
-                                    wchar_t debugStringBuffer2[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
+                                    if (PHASE_TRACE(Js::FixedNewObjPhase, functionBody))
+                                    {
+                                        wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
+                                        wchar_t debugStringBuffer2[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
 
-                                    Output::Print(L"FixedNewObj: function %s (%s) ctor cache for %s (%s) about to be cloned has unlocked inline slot count: guard value = 0x%p, type = 0x%p, slots = %d, inline slots = %d\n",
-                                        functionBody->GetDisplayName(), functionBody->GetDebugNumberSet(debugStringBuffer), fixedPropertyRecord->GetBuffer(), functionObject->GetFunctionInfo()->GetFunctionBody() ?
-                                        functionObject->GetFunctionInfo()->GetFunctionBody()->GetDebugNumberSet(debugStringBuffer2) : L"(null)",
-                                        runtimeConstructorCache->GetRawGuardValue(), runtimeConstructorCache->GetType(),
-                                        runtimeConstructorCache->GetSlotCount(), runtimeConstructorCache->GetInlineSlotCount());
-                                    Output::Flush();
+                                        Output::Print(L"FixedNewObj: function %s (%s) ctor cache for %s (%s) about to be cloned has unlocked inline slot count: type = 0x%p, slots = %d, inline slots = %d\n", 
+                                            functionBody->GetDisplayName(), functionBody->GetDebugNumberSet(debugStringBuffer), fixedPropertyRecord->GetBuffer(), functionObject->GetFunctionInfo()->GetFunctionBody() ?
+                                            functionObject->GetFunctionInfo()->GetFunctionBody()->GetDebugNumberSet(debugStringBuffer2) : L"(null)",
+                                            runtimeConstructorCache->GetType(),
+                                            runtimeConstructorCache->GetSlotCount(), runtimeConstructorCache->GetInlineSlotCount());
+                                        Output::Flush();
+                                    }
                                 }
-                            }
 #endif
-                            runtimeConstructorCache->GetType()->GetTypeHandler()->EnsureInlineSlotCapacityIsLocked();
-                            runtimeConstructorCache->UpdateInlineSlotCount();
+                                runtimeConstructorCache->GetType()->GetTypeHandler()->EnsureInlineSlotCapacityIsLocked();
+                                runtimeConstructorCache->UpdateInlineSlotCount();
+                            }
+
+                            // We must keep the runtime cache alive as long as this entry point exists and may try to dereference it.
+                            entryPoint->AddStrongRef(runtimeConstructorCache);
+                            ctorCache = RecyclerNew(recycler, JitTimeConstructorCache, functionObject, runtimeConstructorCache);
+
+                            if (PHASE_TRACE(Js::FixedNewObjPhase, functionBody))
+                            {
+                                wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
+                                wchar_t debugStringBuffer2[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
+
+                                Output::Print(L"FixedNewObj: function %s (%s) cloning ctor cache for %s (%s): type = 0x%p, slots = %d, inline slots = %d\n", 
+                                    functionBody->GetDisplayName(), functionBody->GetDebugNumberSet(debugStringBuffer), fixedPropertyRecord->GetBuffer(), functionObject->GetFunctionInfo()->GetFunctionBody() ?
+                                    functionObject->GetFunctionInfo()->GetFunctionBody()->GetDebugNumberSet(debugStringBuffer2) : L"(null)", functionObject, functionObject->GetFunctionInfo(),
+                                    runtimeConstructorCache->GetType(),
+                                    runtimeConstructorCache->GetSlotCount(), runtimeConstructorCache->GetInlineSlotCount());
+                                Output::Flush();
+                            }
                         }
-
-                        // We must keep the runtime cache alive as long as this entry point exists and may try to dereference it.
-                        entryPoint->RegisterConstructorCache(runtimeConstructorCache, recycler);
-                        ctorCache = RecyclerNew(recycler, JitTimeConstructorCache, functionObject, runtimeConstructorCache);
-
-                        if (PHASE_TRACE(Js::FixedNewObjPhase, functionBody))
+                        else if(!runtimeConstructorCache->IsPopulated())
                         {
-                            wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
-                            wchar_t debugStringBuffer2[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
-
-                            Output::Print(L"FixedNewObj: function %s (%s) cloning ctor cache for %s (%s): guard value = 0x%p, type = 0x%p, slots = %d, inline slots = %d\n",
-                                functionBody->GetDisplayName(), functionBody->GetDebugNumberSet(debugStringBuffer), fixedPropertyRecord->GetBuffer(), functionObject->GetFunctionInfo()->GetFunctionBody() ?
-                                functionObject->GetFunctionInfo()->GetFunctionBody()->GetDebugNumberSet(debugStringBuffer2) : L"(null)", functionObject, functionObject->GetFunctionInfo(),
-                                runtimeConstructorCache->GetRawGuardValue(), runtimeConstructorCache->IsNormal() ? runtimeConstructorCache->GetType() : nullptr,
-                                runtimeConstructorCache->GetSlotCount(), runtimeConstructorCache->GetInlineSlotCount());
-                            Output::Flush();
+                            // Create a JitTimeConstructorCache to indicate that this cache is not populated. NewScObject call
+                            // sites that have a constructor cache available through a fixed function, but one that is not
+                            // populated, will insert a BailOnNoProfile.
+                            ctorCache = RecyclerNew(recycler, JitTimeConstructorCache);
                         }
+
                     }
                     else
                     {
@@ -256,17 +271,15 @@ namespace Js
                                 wchar_t debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
                                 wchar_t debugStringBuffer2[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
 
-                                Output::Print(L"FixedNewObj: function %s (%s) skipping ctor cache for %s (%s), because %s (guard value = 0x%p, script context = %p).\n",
+                                Output::Print(L"FixedNewObj: function %s (%s) skipping ctor cache for %s (%s), because %s (type = 0x%p, script context = %p).\n", 
                                     functionBody->GetDisplayName(), functionBody->GetDebugNumberSet(debugStringBuffer), fixedPropertyRecord->GetBuffer(), functionObject->GetFunctionInfo()->GetFunctionBody() ?
                                     functionObject->GetFunctionInfo()->GetFunctionBody()->GetDebugNumberSet(debugStringBuffer2) : L"(null)", functionObject, functionObject->GetFunctionInfo(),
-                                    runtimeConstructorCache->IsEmpty() ? L"cache is empty (or has been cleared)" :
-                                    runtimeConstructorCache->IsInvalidated() ? L"cache is invalidated" :
                                     runtimeConstructorCache->SkipDefaultNewObject() ? L"default new object isn't needed" :
-                                    runtimeConstructorCache->NeedsTypeUpdate() ? L"cache needs to be updated" :
+                                    !runtimeConstructorCache->GetType() ? L"cache is empty, cleared, or invalidated" :
                                     runtimeConstructorCache->NeedsUpdateAfterCtor() ? L"cache needs update after ctor" :
                                     runtimeConstructorCache->IsPolymorphic() ? L"cache is polymorphic" :
-                                    runtimeConstructorCache->GetScriptContext() != functionBody->GetScriptContext() ? L"script context mismatch" : L"of an unexpected situation",
-                                    runtimeConstructorCache->GetRawGuardValue(), runtimeConstructorCache->GetScriptContext());
+                                    runtimeConstructorCache->GetScriptContext() != functionBody->GetScriptContext() ? L"script context mismatch" : L"of an unexpected situation", 
+                                    runtimeConstructorCache->GetType(), runtimeConstructorCache->GetScriptContext());
                                 Output::Flush();
                             }
                         }
@@ -328,28 +341,28 @@ namespace Js
             EquivalentTypeSet* typeSet = RecyclerNew(recycler, EquivalentTypeSet, types, typeCount);
 
             info = RecyclerNew(recycler, ObjTypeSpecFldInfo,
-                id, type->GetTypeId(), typeWithoutProperty, typeSet, usesAuxSlot, isProto, isAccessor, isFieldValueFixed, keepFieldValue, false/*doesntHaveEquivalence*/, false, slotIndex, propertyId,
+                id, type->GetTypeId(), typeWithoutProperty, typeSet, usesAuxSlot, isProto, isAccessor, isFieldValueFixed, keepFieldValue, false/*doesntHaveEquivalence*/, false, slotIndex, slotType, propertyId,
                 prototypeObject, propertyGuard, ctorCache, fixedFieldInfoArray, 1);
 
             if (PHASE_TRACE(Js::ObjTypeSpecPhase, topFunctionBody) || PHASE_TRACE(Js::EquivObjTypeSpecPhase, topFunctionBody))
             {
                 const PropertyRecord* propertyRecord = scriptContext->GetPropertyName(propertyId);
-                Output::Print(L"Created ObjTypeSpecFldInfo: id %u, property %s(#%u), slot %u, type set: 0x%p\n",
-                    id, propertyRecord->GetBuffer(), propertyId, slotIndex, type);
+                Output::Print(L"Created ObjTypeSpecFldInfo: id %u, property %s(#%u), slot %u, slotType: %S, type set: 0x%p\n", 
+                    id, propertyRecord->GetBuffer(), propertyId, slotIndex, slotType.ToString(), type);
                 Output::Flush();
             }
         }
         else
         {
             info = RecyclerNew(recycler, ObjTypeSpecFldInfo,
-                id, type->GetTypeId(), typeWithoutProperty, usesAuxSlot, isProto, isAccessor, isFieldValueFixed, keepFieldValue, isBuiltIn, slotIndex, propertyId,
+                id, type->GetTypeId(), typeWithoutProperty, usesAuxSlot, isProto, isAccessor, isFieldValueFixed, keepFieldValue, isBuiltIn, slotIndex, slotType, propertyId,
                 prototypeObject, propertyGuard, ctorCache, fixedFieldInfoArray);
 
             if (PHASE_TRACE(Js::ObjTypeSpecPhase, topFunctionBody) || PHASE_TRACE(Js::EquivObjTypeSpecPhase, topFunctionBody))
             {
                 const PropertyRecord* propertyRecord = scriptContext->GetPropertyName(propertyId);
-                Output::Print(L"Created ObjTypeSpecFldInfo: id %u, property %s(#%u), slot %u, type: 0x%p\n",
-                    id, propertyRecord->GetBuffer(), propertyId, slotIndex, type);
+                Output::Print(L"Created ObjTypeSpecFldInfo: id %u, property %s(#%u), slot %u, slotType: %S, type: 0x%p\n", 
+                    id, propertyRecord->GetBuffer(), propertyId, slotIndex, slotType.ToString(), type);
                 Output::Flush();
             }
         }
@@ -388,6 +401,7 @@ namespace Js
         uint16 polyCacheSize = (uint16)cache->GetSize();
         uint16 firstNonEmptyCacheIndex = MAXUINT16;
         uint16 slotIndex = 0;
+        ObjectSlotType slotType = ObjectSlotType::GetVar();
         bool areEquivalent = true;
         bool usesAuxSlot = false;
         bool isProto = false;
@@ -408,9 +422,10 @@ namespace Js
             {
                 if (inlineCache.IsLocal())
                 {
-                    typeId = TypeWithoutAuxSlotTag(inlineCache.u.local.type)->GetTypeId();
-                    usesAuxSlot = TypeHasAuxSlotTag(inlineCache.u.local.type);
+                    typeId = InlineCacheTypeTagger::TypeWithoutAnyTags(inlineCache.u.local.type)->GetTypeId();
+                    usesAuxSlot = InlineCacheTypeTagger::TypeHasAuxSlotTag(inlineCache.u.local.type);
                     slotIndex = inlineCache.u.local.slotIndex;
+                    slotType = InlineCacheTypeTagger::GetSlotType(inlineCache.u.local.type);
                     // We don't support equivalent object type spec for adding properties.
                     areEquivalent = inlineCache.u.local.typeWithoutProperty == nullptr;
                     gatherDataForInlining = false;
@@ -422,21 +437,23 @@ namespace Js
                 else if (inlineCache.IsProto() && !inlineCache.u.proto.isMissing)
                 {
                     isProto = true;
-                    typeId = TypeWithoutAuxSlotTag(inlineCache.u.proto.type)->GetTypeId();
-                    usesAuxSlot = TypeHasAuxSlotTag(inlineCache.u.proto.type);
+                    typeId = InlineCacheTypeTagger::TypeWithoutAnyTags(inlineCache.u.proto.type)->GetTypeId();
+                    usesAuxSlot = InlineCacheTypeTagger::TypeHasAuxSlotTag(inlineCache.u.proto.type);
                     slotIndex = inlineCache.u.proto.slotIndex;
+                    Assert(InlineCacheTypeTagger::GetSlotType(inlineCache.u.proto.type).IsVar());
                     prototypeObject = inlineCache.u.proto.prototypeObject;
                 }
                 else
                 {
+                    Assert(InlineCacheTypeTagger::GetSlotType(inlineCache.u.accessor.type).IsVar());
                     if (!PHASE_OFF(Js::FixAccessorPropsPhase, functionBody))
                     {
                         isAccessor = true;
                         isGetterAccessor = inlineCache.IsGetterAccessor();
                         isAccessorOnProto = inlineCache.u.accessor.isOnProto;
                         accessorOwnerObject = inlineCache.u.accessor.object;
-                        typeId = TypeWithoutAuxSlotTag(inlineCache.u.accessor.type)->GetTypeId();
-                        usesAuxSlot = TypeHasAuxSlotTag(inlineCache.u.accessor.type);
+                        typeId = InlineCacheTypeTagger::TypeWithoutAnyTags(inlineCache.u.accessor.type)->GetTypeId();
+                        usesAuxSlot = InlineCacheTypeTagger::TypeHasAuxSlotTag(inlineCache.u.accessor.type);
                         slotIndex = inlineCache.u.accessor.slotIndex;
                     }
                     else
@@ -458,7 +475,8 @@ namespace Js
                 if (inlineCache.IsLocal())
                 {
                     if (isProto || isAccessor || inlineCache.u.local.typeWithoutProperty != nullptr || slotIndex != inlineCache.u.local.slotIndex ||
-                        typeId != TypeWithoutAuxSlotTag(inlineCache.u.local.type)->GetTypeId() || usesAuxSlot != TypeHasAuxSlotTag(inlineCache.u.local.type))
+                        slotType != InlineCacheTypeTagger::GetSlotType(inlineCache.u.local.type) ||
+                        typeId != InlineCacheTypeTagger::TypeWithoutAnyTags(inlineCache.u.local.type)->GetTypeId() || usesAuxSlot != InlineCacheTypeTagger::TypeHasAuxSlotTag(inlineCache.u.local.type))
                     {
                         areEquivalent = false;
                     }
@@ -466,8 +484,9 @@ namespace Js
                 }
                 else if (inlineCache.IsProto())
                 {
-                    if (!isProto || isAccessor || prototypeObject != inlineCache.u.proto.prototypeObject || slotIndex != inlineCache.u.proto.slotIndex ||
-                        typeId != TypeWithoutAuxSlotTag(inlineCache.u.proto.type)->GetTypeId() || usesAuxSlot != TypeHasAuxSlotTag(inlineCache.u.proto.type))
+                    if (!isProto || isAccessor || prototypeObject != inlineCache.u.proto.prototypeObject || slotIndex != inlineCache.u.proto.slotIndex || 
+                        slotType != InlineCacheTypeTagger::GetSlotType(inlineCache.u.proto.type) ||
+                        typeId != InlineCacheTypeTagger::TypeWithoutAnyTags(inlineCache.u.proto.type)->GetTypeId() || usesAuxSlot != InlineCacheTypeTagger::TypeHasAuxSlotTag(inlineCache.u.proto.type))
                     {
                         areEquivalent = false;
                     }
@@ -479,8 +498,9 @@ namespace Js
                     // 2. the types are equivalent.
                     //
                     // This is done to keep the equivalence check helper as-is
-                    if (!isAccessor || isGetterAccessor != inlineCache.IsGetterAccessor() || !isAccessorOnProto || !inlineCache.u.accessor.isOnProto || accessorOwnerObject != inlineCache.u.accessor.object ||
-                        slotIndex != inlineCache.u.accessor.slotIndex || typeId != TypeWithoutAuxSlotTag(inlineCache.u.accessor.type)->GetTypeId() || usesAuxSlot != TypeHasAuxSlotTag(inlineCache.u.accessor.type))
+                    Assert(InlineCacheTypeTagger::GetSlotType(inlineCache.u.accessor.type).IsVar());
+                    if (!isAccessor || isGetterAccessor != inlineCache.IsGetterAccessor() || !isAccessorOnProto  || !inlineCache.u.accessor.isOnProto || accessorOwnerObject != inlineCache.u.accessor.object  ||
+                        slotIndex != inlineCache.u.accessor.slotIndex || typeId != InlineCacheTypeTagger::TypeWithoutAnyTags(inlineCache.u.accessor.type)->GetTypeId() || usesAuxSlot != InlineCacheTypeTagger::TypeHasAuxSlotTag(inlineCache.u.accessor.type))
                     {
                         areEquivalent = false;
                     }
@@ -562,10 +582,10 @@ namespace Js
             InlineCache& inlineCache = inlineCaches[i];
             if (inlineCache.IsEmpty()) continue;
 
-            localTypes[typeNumber] = inlineCache.IsLocal() ? TypeWithoutAuxSlotTag(inlineCache.u.local.type) :
-                inlineCache.IsProto() ? TypeWithoutAuxSlotTag(inlineCache.u.proto.type) :
-                TypeWithoutAuxSlotTag(inlineCache.u.accessor.type);
-
+            localTypes[typeNumber] = inlineCache.IsLocal() ? InlineCacheTypeTagger::TypeWithoutAnyTags(inlineCache.u.local.type) :
+                                     inlineCache.IsProto() ? InlineCacheTypeTagger::TypeWithoutAnyTags(inlineCache.u.proto.type) :
+                                     InlineCacheTypeTagger::TypeWithoutAnyTags(inlineCache.u.accessor.type);
+            
             if (gatherDataForInlining)
             {
                 inlineCache.TryGetFixedMethodFromCache(functionBody, cacheId, &fixedFunctionObject);
@@ -663,7 +683,7 @@ namespace Js
         }
 
         ObjTypeSpecFldInfo* info = RecyclerNew(recycler, ObjTypeSpecFldInfo,
-            id, typeId, nullptr, typeSet, usesAuxSlot, isProto, isAccessor, hasFixedValue, hasFixedValue, doesntHaveEquivalence, true, slotIndex, propertyId,
+            id, typeId, nullptr, typeSet, usesAuxSlot, isProto, isAccessor, hasFixedValue, hasFixedValue, doesntHaveEquivalence, true, slotIndex, slotType, propertyId, 
             prototypeObject, propertyGuard, nullptr, fixedFieldInfoArray, fixedFunctionCount/*, nullptr, nullptr, nullptr*/);
 
         if (PHASE_TRACE(Js::ObjTypeSpecPhase, topFunctionBody) || PHASE_TRACE(Js::EquivObjTypeSpecPhase, topFunctionBody))
@@ -808,6 +828,8 @@ namespace Js
 
     FunctionCodeGenJitTimeData::FunctionCodeGenJitTimeData(FunctionInfo *const functionInfo, EntryPointInfo *const entryPoint, bool isInlined) :
         functionInfo(functionInfo), entryPointInfo(entryPoint), globalObjTypeSpecFldInfoCount(0), globalObjTypeSpecFldInfoArray(nullptr),
+        fieldSlotTypes(nullptr),
+        objectLiteralCreationSiteFinalTypes(nullptr),
         weakFuncRef(nullptr), inlinees(nullptr), inlineeCount(0), ldFldInlineeCount(0), isInlined(isInlined), isAggressiveInliningEnabled(false),
 #ifdef FIELD_ACCESS_STATS
         inlineCacheStats(nullptr),
@@ -815,6 +837,27 @@ namespace Js
         profiledIterations(GetFunctionBody() ? GetFunctionBody()->GetProfiledIterations() : 0),
         next(0)
     {
+        if(!functionInfo->HasBody())
+        {
+            return;
+        }
+
+        FunctionBody *const functionBody = functionInfo->GetFunctionBody();
+        const uint objectLiteralCount = functionBody->GetObjectLiteralCount();
+        if(objectLiteralCount == 0)
+        {
+            return;
+        }
+
+        objectLiteralCreationSiteFinalTypes =
+            RecyclerNewArray(functionBody->GetScriptContext()->GetRecycler(), DynamicType *, objectLiteralCount);
+        for(uint i = 0; i < objectLiteralCount; ++i)
+        {
+            DynamicType *const finalType = functionBody->GetObjectLiteralCreationSiteInfo(i)->GetType();
+            objectLiteralCreationSiteFinalTypes[i] = finalType;
+            if(finalType && !finalType->GetIsShared())
+                finalType->ShareType();
+        }
     }
 
     FunctionInfo *FunctionCodeGenJitTimeData::GetFunctionInfo() const
@@ -833,6 +876,38 @@ namespace Js
         Assert(profiledCallSiteId < GetFunctionBody()->GetProfiledCallSiteCount());
 
         return inlinees ? inlinees[profiledCallSiteId]->next != nullptr : false;
+    }
+
+    ObjectSlotType FunctionCodeGenJitTimeData::GetFieldSlotType(const InlineCacheIndex inlineCacheIndex) const
+    {
+        Assert(inlineCacheIndex < GetFunctionBody()->GetInlineCacheCount());
+        return fieldSlotTypes ? fieldSlotTypes[inlineCacheIndex] : ObjectSlotType::GetVar();
+    }
+
+    void FunctionCodeGenJitTimeData::SetFieldSlotType(const InlineCacheIndex inlineCacheIndex, const ObjectSlotType slotType)
+    {
+        FunctionBody *const functionBody = GetFunctionBody();
+        Assert(inlineCacheIndex < functionBody->GetInlineCacheCount());
+        Assert(slotType == slotType.ToNormalizedValueType());
+
+        if(!fieldSlotTypes)
+        {
+            if(slotType.IsVar())
+                return;
+            fieldSlotTypes =
+                ObjectSlotType::NewArrayOfVarSlotTypes(
+                    functionBody->GetInlineCacheCount(),
+                    functionBody->GetScriptContext()->GetRecycler());
+        }
+        fieldSlotTypes[inlineCacheIndex] = slotType;
+    }
+
+    DynamicType *FunctionCodeGenJitTimeData::GetObjectLiteralCreationSiteFinalType(const uint objectLiteralIndex) const
+    {
+        Assert(objectLiteralCreationSiteFinalTypes);
+        Assert(objectLiteralIndex < GetFunctionBody()->GetObjectLiteralCount());
+
+        return objectLiteralCreationSiteFinalTypes[objectLiteralIndex];
     }
 
     const FunctionCodeGenJitTimeData *FunctionCodeGenJitTimeData::GetInlinee(const ProfileId profiledCallSiteId) const
@@ -878,10 +953,10 @@ namespace Js
             inlinees = RecyclerNewArrayZ(recycler, FunctionCodeGenJitTimeData *, functionBody->GetProfiledCallSiteCount());
         }
 
-        FunctionCodeGenJitTimeData *inlineeData = nullptr;
+        FunctionCodeGenJitTimeData *const inlineeData =
+            RecyclerNew(recycler, FunctionCodeGenJitTimeData, inlinee, nullptr /* entryPoint */, isInlined);
         if (!inlinees[profiledCallSiteId])
         {
-            inlineeData = RecyclerNew(recycler, FunctionCodeGenJitTimeData, inlinee, nullptr /* entryPoint */, isInlined);
             inlinees[profiledCallSiteId] = inlineeData;
             if (++inlineeCount == 0)
             {
@@ -890,7 +965,6 @@ namespace Js
         }
         else
         {
-            inlineeData = RecyclerNew(recycler, FunctionCodeGenJitTimeData, inlinee, nullptr /* entryPoint */, isInlined);
             // This is polymorphic, chain the data.
             inlineeData->next = inlinees[profiledCallSiteId];
             inlinees[profiledCallSiteId] = inlineeData;

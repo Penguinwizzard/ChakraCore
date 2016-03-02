@@ -484,6 +484,8 @@ public:
         PropertyNoCaseSetType;
     typedef JsUtil::WeaklyReferencedKeyDictionary<Js::Type, bool> TypeHashSet;
     typedef JsUtil::BaseDictionary<Js::PropertyId, TypeHashSet *, Recycler, PowerOf2SizePolicy> PropertyIdToTypeHashSetDictionary;
+    typedef JsUtil::WeaklyReferencedKeyDictionary<Js::ConstructorCache, bool> ConstructorCacheWeakRefHashSet;
+    typedef JsUtil::BaseDictionary<Js::PropertyId, ConstructorCacheWeakRefHashSet *, Recycler> PropertyIdToConstructorCacheWeakRefHashSetDictionary;
     typedef JsUtil::WeaklyReferencedKeyDictionary<const Js::PropertyRecord, PropertyGuardEntry*, Js::PropertyRecordPointerComparer> PropertyGuardDictionary;
 
 private:
@@ -537,6 +539,10 @@ private:
         // is reclaimed. If none of those happen, then this collection may contain weak reference handles to deleted objects
         // that would not get removed, but it would also not get any bigger.
         PropertyIdToTypeHashSetDictionary typesWithProtoPropertyCache;
+
+        // A constructor cache is registered for each property ID in the final type that is cached. If the proto chain changes,
+        // the cached final type is invalidated.
+        PropertyIdToConstructorCacheWeakRefHashSetDictionary *constructorCachesByPropertyId;
 
         // The property guard dictionary contains property guards which need to be invalidated in response to properties changing
         // from writable to read-only and vice versa, properties being shadowed or unshadowed on prototypes, etc.  The dictionary
@@ -1169,8 +1175,13 @@ public:
     void RegisterLazyBailout(Js::PropertyId propertyId, Js::EntryPointInfo* entryPoint);
     void RegisterUniquePropertyGuard(Js::PropertyId propertyId, Js::PropertyGuard* guard);
     void RegisterUniquePropertyGuard(Js::PropertyId propertyId, RecyclerWeakReference<Js::PropertyGuard>* guardWeakRef);
-    void RegisterConstructorCache(Js::PropertyId propertyId, Js::ConstructorCache* cache);
 #endif
+public:
+    void RegisterConstructorCache(const Js::PropertyId propertyId, Js::ConstructorCache *const cache);
+    void UnregisterConstructorCache(const Js::PropertyId propertyId, Js::ConstructorCache *const cache);
+    void InvalidateConstructorCaches(const Js::PropertyId propertyId);
+    void InvalidateAllConstructorCaches();
+    bool ShouldInvalidateConstructorCaches() const;
 
 private:
     void RegisterInlineCache(InlineCacheListMapByPropertyId& inlineCacheMap, Js::InlineCache* inlineCache, Js::PropertyId propertyId);
@@ -1214,10 +1225,12 @@ public:
 
     void InvalidateProtoInlineCaches(Js::PropertyId propertyId);
     void InvalidateStoreFieldInlineCaches(Js::PropertyId propertyId);
+    void InvalidateAddPropertyInlineCaches(const Js::PropertyId propertyId, Js::DynamicType *const typeWithProperty);
     void InvalidateAllProtoInlineCaches();
     bool AreAllProtoInlineCachesInvalidated();
     void InvalidateAllStoreFieldInlineCaches();
     bool AreAllStoreFieldInlineCachesInvalidated();
+    void InvalidatePropertyGuards(const Js::PropertyRecord *const propertyRecord);
     void InvalidatePropertyGuards(Js::PropertyId propertyId);
     void InvalidateAllPropertyGuards();
     void RegisterIsInstInlineCache(Js::IsInstInlineCache * inlineCache, Js::Var function);

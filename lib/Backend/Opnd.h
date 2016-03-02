@@ -730,6 +730,17 @@ public:
         slotIndex = index;
     }
 
+    bool HasSlotType() const
+    {
+        return HasObjTypeSpecFldInfo();
+    }
+
+    Js::ObjectSlotType GetSlotType() const
+    {
+        Assert(HasObjTypeSpecFldInfo());
+        return GetObjTypeSpecInfo()->GetSlotType();
+    }
+
     uint16 GetCheckedTypeSetIndex() const
     {
         Assert(HasEquivalentTypeSet());
@@ -744,8 +755,7 @@ public:
 
     Js::PropertyId GetPropertyId() const
     {
-        Assert(HasObjTypeSpecFldInfo());
-        return this->objTypeSpecFldInfo->GetPropertyId();
+        return HasObjTypeSpecFldInfo() ? this->objTypeSpecFldInfo->GetPropertyId() : m_sym->AsPropertySym()->m_propertyId;
     }
 
     Js::DynamicObject* GetProtoObject() const
@@ -941,25 +951,8 @@ public:
         return IsTypeCheckSeqCandidate() && IsTypeChecked();
     }
 
-    bool NeedsPrimaryTypeCheck() const
-    {
-        // Only indicate that we need a primary type check, i.e. the type isn't yet available but will be needed downstream.
-        // Type checks and bailouts may still be needed in other places (e.g. loads from proto, fixed field checks, or
-        // property adds), if a primary type check cannot protect them.
-        Assert(MayNeedTypeCheckProtection());
-        Assert(TypeCheckSeqBitsSetOnlyIfCandidate());
-        return IsTypeCheckSeqCandidate() && !IsTypeDead() && !IsTypeChecked() && !HasTypeMismatch();
-    }
-
-    bool NeedsLocalTypeCheck() const
-    {
-        Assert(MayNeedTypeCheckProtection());
-        Assert(TypeCheckSeqBitsSetOnlyIfCandidate());
-        // Indicate whether this operation needs a type check for its own sake, since the type is dead and no downstream
-        // operations require the type to be checked.
-        return !PHASE_OFF1(Js::ObjTypeSpecIsolatedFldOpsPhase) &&
-            IsTypeCheckSeqCandidate() && IsTypeDead() && !IsTypeCheckOnly() && !IsTypeChecked() && !HasTypeMismatch();
-    }
+    bool NeedsPrimaryTypeCheck() const;
+    bool NeedsLocalTypeCheck() const;
 
     bool NeedsWriteGuardTypeCheck() const
     {

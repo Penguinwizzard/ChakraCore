@@ -210,7 +210,6 @@ namespace Js
         convertSimpleDictionaryToDictionaryCount = 0;
         convertSimpleSharedDictionaryToNonSharedCount = 0;
         convertSimpleSharedToNonSharedCount = 0;
-        simplePathTypeHandlerCount = 0;
         pathTypeHandlerCount = 0;
         promoteCount = 0;
         cacheCount = 0;
@@ -906,7 +905,6 @@ namespace Js
         Output::Print(L"    Path Branches                  %8d\n", branchCount);
         Output::Print(L"    Path Promotions                %8d\n", promoteCount);
         Output::Print(L"    Path Length (max)              %8d\n", maxPathLength);
-        Output::Print(L"    SimplePathTypeHandlers         %8d\n", simplePathTypeHandlerCount);
         Output::Print(L"    PathTypeHandlers               %8d\n", pathTypeHandlerCount);
         Output::Print(L"\n");
         Output::Print(L"Type Statistics:                   %8s   %8s\n", L"Types", L"Instances");
@@ -975,7 +973,7 @@ namespace Js
         Output::Print(L"    Object Lit Cache Hits......... %d\n", objectLiteralCacheCount);
         Output::Print(L"    Object Lit Branch count....... %d\n", objectLiteralBranchCount);
 
-        for (int i = 0; i < TypePath::MaxPathTypeHandlerLength; i++)
+        for (int i = 0; i < TypePath::MaxSlotCapacity; i++)
         {
             if (objectLiteralCount[i] != 0)
             {
@@ -1490,7 +1488,7 @@ namespace Js
                 PropertyCache const* cache = string->GetPropertyCache();
                 if (cache->type == type)
                 {
-                    string->ClearPropertyCache();
+                    string->ClearCache();
                 }
             }
         }
@@ -4043,6 +4041,7 @@ namespace Js
         threadContext->InvalidatePropertyGuards(propertyId);
 #endif
         threadContext->InvalidateProtoTypePropertyCaches(propertyId);
+        threadContext->InvalidateConstructorCaches(propertyId);
     }
 
     void ScriptContext::InvalidateAllProtoCaches()
@@ -4055,6 +4054,7 @@ namespace Js
         threadContext->InvalidateAllPropertyGuards();
 #endif
         threadContext->InvalidateAllProtoTypePropertyCaches();
+        threadContext->InvalidateAllConstructorCaches();
     }
 
     void ScriptContext::RegisterStoreFieldInlineCache(InlineCache *pCache, PropertyId propId)
@@ -4069,11 +4069,14 @@ namespace Js
 #if ENABLE_NATIVE_CODEGEN
         threadContext->InvalidatePropertyGuards(propertyId);
 #endif
+        threadContext->InvalidateConstructorCaches(propertyId);
     }
 
     void ScriptContext::InvalidateAllStoreFieldCaches()
     {
         threadContext->InvalidateAllStoreFieldInlineCaches();
+        threadContext->InvalidateAllPropertyGuards();
+        threadContext->InvalidateAllConstructorCaches();
     }
 
     void ScriptContext::RegisterIsInstInlineCache(Js::IsInstInlineCache * cache, Js::Var function)
@@ -4223,13 +4226,6 @@ void ScriptContext::ClearInlineCachesWithDeadWeakRefs()
     Assert(this->entryInScriptContextWithInlineCachesRegistry != nullptr);
     GetInlineCacheAllocator()->ClearCachesWithDeadWeakRefs(this->recycler);
     Assert(GetInlineCacheAllocator()->HasNoDeadWeakRefs(this->recycler));
-}
-#endif
-
-#if ENABLE_NATIVE_CODEGEN
-void ScriptContext::RegisterConstructorCache(Js::PropertyId propertyId, Js::ConstructorCache* cache)
-{
-    this->threadContext->RegisterConstructorCache(propertyId, cache);
 }
 #endif
 
@@ -5080,6 +5076,54 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
         this->GetDebugContext()->GetProbeContainer()->InsertMutationBreakpoint(mutationBreakpoint);
     }
 #endif
+
+    bool ScriptContext::DoNativeFields() const
+    {
+        const bool doNativeFields =
+            (
+                PHASE_FORCE1(Phase::NativeFieldsPhase) ||
+                !PHASE_OFF1(Phase::NativeFieldsPhase) && !GetConfig()->IsNoNative()
+            ) &&
+            AutoSystemInfo::Data.SSE2Available();
+
+        // IsolatePrototypes is on by default, and property caching for native fields depends on it (proto caches assume a Var
+        // field slot type)
+        Assert(!doNativeFields || PathTypeHandler::IsolatePrototypes());
+
+        return doNativeFields;
+    }
+
+    bool ScriptContext::AreVarsSameTypeAndValue(const Var v0, const Var v1) const
+    {
+        Assert(v0);
+        Assert(v1);
+
+        if(v0 == v1)
+        {
+            return true;
+        }
+
+    #if FLOATVAR
+        return false;
+    #else
+        // With native fields, we can get two different JavascriptNumber vars with the same value
+        return
+            DoNativeFields() &&
+            JavascriptNumber::Is(v0) &&
+            JavascriptNumber::Is(v1) &&
+            JavascriptNumber::AreIdentical(JavascriptNumber::GetValue(v0), JavascriptNumber::GetValue(v1));
+    #endif
+    }
+
+    bool ScriptContext::SlotTypeForAnyTypeChanged() const
+    {
+        return slotTypeForAnyTypeChanged;
+    }
+
+    void ScriptContext::SetSlotTypeForAnyTypeChanged(const bool changed)
+    {
+        slotTypeForAnyTypeChanged = changed;
+    }
 
 #ifdef REJIT_STATS
     void ScriptContext::LogDataForFunctionBody(Js::FunctionBody *body, uint idx, bool isRejit)

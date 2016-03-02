@@ -1202,9 +1202,9 @@ bool InlineCacheAllocator::CacheHasDeadWeakRefs(Recycler* recycler, CacheLayout*
             continue;
         }
 
-        curWeakRef &= ~(intptr_t)InlineCacheAuxSlotTypeTag;
+        curWeakRef &= ~(intptr_t)(InlineCacheAuxSlotTypeTag | InlineCacheSlotTypeMask);
 
-        if ((curWeakRef & (HeapConstants::ObjectGranularity - 1)) != 0)
+        if (curWeakRef == 0 || (curWeakRef & (HeapConstants::ObjectGranularity - 1)) != 0)
         {
             continue;
         }
@@ -1282,9 +1282,9 @@ void InlineCacheAllocator::ClearCacheIfHasDeadWeakRefs(Recycler* recycler, Cache
             continue;
         }
 
-        curWeakRef &= ~(intptr_t)InlineCacheAuxSlotTypeTag;
+        curWeakRef &= ~(intptr_t)(InlineCacheAuxSlotTypeTag | InlineCacheSlotTypeMask);
 
-        if ((curWeakRef & (HeapConstants::ObjectGranularity - 1)) != 0)
+        if (curWeakRef == 0 || (curWeakRef & (HeapConstants::ObjectGranularity - 1)) != 0)
         {
             continue;
         }

@@ -72,6 +72,37 @@ Instr::DoStackArgsOpt(Func *topFunc) const
     return this->usesStackArgumentsObject && this->m_func->GetHasStackArgs() && topFunc->GetHasStackArgs();
 }
 
+bool Instr::HasBailOutKind(const IR::BailOutKind bailOutKind) const
+{
+    Assert(bailOutKind != IR::BailOutInvalid);
+
+    if(!HasBailOutInfo())
+        return false;
+
+    const IR::BailOutKind myBailOutKind = GetBailOutKind();
+    if(bailOutKind & IR::BailOutKindBits)
+    {
+        Assert(!(bailOutKind & ~IR::BailOutKindBits)); // shouldn't be combined with a non-bits bailout kind
+        Assert(!(bailOutKind & bailOutKind - static_cast<IR::BailOutKind>(1))); // should have only one bit set
+        return !!(myBailOutKind & bailOutKind);
+    }
+
+    Assert(bailOutKind < IR::BailOutKindEnd);
+    return (myBailOutKind & ~IR::BailOutKindBits) == bailOutKind;
+}
+
+void Instr::RemoveBailOutKind(const IR::BailOutKind bailOutKind)
+{
+    if(!HasBailOutKind(bailOutKind))
+        return;
+
+    const BailOutKind newBailOutKind = GetBailOutKind() ^ bailOutKind;
+    if(newBailOutKind == BailOutInvalid)
+        ClearBailOutInfo();
+    else
+        SetBailOutKind(newBailOutKind);
+}
+
 bool
 Instr::HasTypeCheckBailOut() const
 {
@@ -836,6 +867,7 @@ ProfiledInstr::New(Js::OpCode opcode, Opnd *dstOpnd, Opnd *src1Opnd, Func * func
         profiledInstr->SetSrc1(src1Opnd);
     }
 
+    profiledInstr->u.FldInfo() = Js::FldInfo();
     profiledInstr->u.ldElemInfo = nullptr;
     return profiledInstr;
 }
@@ -3159,6 +3191,19 @@ void Instr::Move(IR::Instr* insertInstr)
     this->ClearByteCodeOffset();
     this->SetByteCodeOffset(insertInstr);
     insertInstr->InsertBefore(this);
+}
+
+Js::ObjectSlotType Instr::GetSlotType(const IR::PropertySymOpnd *const propertyOpnd) const
+{
+    using namespace Js;
+    Assert(propertyOpnd);
+
+    const ObjectSlotType slotType =
+        propertyOpnd->HasSlotType()
+            ? propertyOpnd->GetSlotType()
+            : m_func->m_jitTimeData->GetFieldSlotType(propertyOpnd->m_inlineCacheIndex);
+    Assert(slotType == slotType.ToNormalizedValueType());
+    return slotType;
 }
 
 IR::Instr* Instr::GetBytecodeArgOutCapture()

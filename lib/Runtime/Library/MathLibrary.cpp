@@ -91,6 +91,10 @@ namespace Js
 
             double x = JavascriptConversion::ToNumber(args[1], scriptContext);
 
+            if (x == 0.0)
+            {
+                return TaggedInt::ToVarUnchecked(0);
+            }
             double result = Math::Abs(x);
             return JavascriptNumber::ToVarNoCheck(result, scriptContext);
         }
@@ -1003,6 +1007,7 @@ LDone:
         ARGUMENTS(args, callInfo);
         AssertMsg(args.Info.Count > 0, "Should always have implicit 'this'");
         ScriptContext* scriptContext = function->GetScriptContext();
+        JavascriptLibrary *const library = scriptContext->GetLibrary();
 
         Assert(!(callInfo.Flags & CallFlags_New));
 
@@ -1018,14 +1023,23 @@ LDone:
             double x = JavascriptConversion::ToNumber(args[1], scriptContext);
             if(JavascriptNumber::IsNan(x))
             {
-                return scriptContext->GetLibrary()->GetNaN();
+                return library->GetNaN();
+            }
+
+            if (x == 0.0)
+            {
+                // 0.0 catches the -0 case...
+                return JavascriptNumber::IsNegZero(x) ? library->GetNegativeZero() : TaggedInt::ToVarUnchecked(0);
             }
 
             // for doubles, if x >= 2^52 or <= -2^52, x must be an integer, and adding 0.5 will overflow the
             // integer to the next one. Therefore, we directly return x.
-            if (x == 0.0 || !NumberUtilities::IsFinite(x) || x >= 4503599627370496.0 || x <= -4503599627370496.0)
+            if(!NumberUtilities::IsFinite(x) || x >= 4503599627370496.0 || x <= -4503599627370496.0)
             {
-                // 0.0 catches the -0 case...
+                if(JavascriptNumber::IsPosInf(x))
+                    return library->GetPositiveInfinite();
+                if(JavascriptNumber::IsNegInf(x))
+                    return library->GetNegativeInfinite();
                 return JavascriptNumber::ToVarNoCheck(x, scriptContext);
             }
 
@@ -1035,14 +1049,14 @@ LDone:
 
             if(x < 0 && x >= -0.5)
             {
-                return scriptContext->GetLibrary()->GetNegativeZero();
+                return library->GetNegativeZero();
             }
 
             return Math::FloorDouble(x+0.5, scriptContext);
         }
         else
         {
-            return scriptContext->GetLibrary()->GetNaN();
+            return library->GetNaN();
         }
     }
 

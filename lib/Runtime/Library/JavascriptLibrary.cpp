@@ -147,7 +147,7 @@ namespace Js
                     DeferredTypeHandler<InitializeArrayBufferPrototype>::GetDefaultInstance()));
 
                 arrayBufferType = DynamicType::New(scriptContext, TypeIds_ArrayBuffer, arrayBufferPrototype, nullptr,
-                    SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+                    PathTypeHandler::New(scriptContext), true, true);
 
                 dataViewPrototype = DynamicObject::New(recycler,
                     DynamicType::New(scriptContext, TypeIds_Object, objectPrototype, nullptr,
@@ -217,7 +217,7 @@ namespace Js
                     DeferredTypeHandler<InitializeArrayBufferPrototype>::GetDefaultInstance()));
 
                 arrayBufferType = DynamicType::New(scriptContext, TypeIds_ArrayBuffer, arrayBufferPrototype, nullptr,
-                    SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+                    PathTypeHandler::New(scriptContext), true, true);
 
                 baseArrayBuffer = JavascriptArrayBuffer::Create(0, arrayBufferType);
                 Int8ArrayPrototype = RecyclerNew(recycler, Int8Array, baseArrayBuffer, 0, 0,
@@ -504,65 +504,64 @@ namespace Js
         heapArgumentsType = DynamicType::New(scriptContext, TypeIds_Arguments, objectPrototype, nullptr,
             SimpleDictionaryTypeHandler::New(scriptContext, HeapArgumentsPropertyDescriptors, _countof(HeapArgumentsPropertyDescriptors), 0, 0, true, true), true, true);
         activationObjectType = DynamicType::New(scriptContext, TypeIds_ActivationObject, nullValue, nullptr,
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+            PathTypeHandler::New(scriptContext, true /* disableNativeFields */), true, true);
         arrayType = DynamicType::New(scriptContext, TypeIds_Array, arrayPrototype, nullptr,
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+            PathTypeHandler::New(scriptContext), true, true);
         nativeIntArrayType = DynamicType::New(scriptContext, TypeIds_NativeIntArray, arrayPrototype, nullptr,
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+            PathTypeHandler::New(scriptContext), true, true);
 #if ENABLE_COPYONACCESS_ARRAY
         copyOnAccessNativeIntArrayType = DynamicType::New(scriptContext, TypeIds_CopyOnAccessNativeIntArray, arrayPrototype, nullptr,
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+            PathTypeHandler::New(scriptContext), true, true);
 #endif
         nativeFloatArrayType = DynamicType::New(scriptContext, TypeIds_NativeFloatArray, arrayPrototype, nullptr,
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+            PathTypeHandler::New(scriptContext), true, true);
 
         arrayBufferType = DynamicType::New(scriptContext, TypeIds_ArrayBuffer, arrayBufferPrototype, nullptr,
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+            PathTypeHandler::New(scriptContext), true, true);
         dataViewType = DynamicType::New(scriptContext, TypeIds_DataView, dataViewPrototype, nullptr,
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+            PathTypeHandler::New(scriptContext), true, true);
 
         int8ArrayType = DynamicType::New(scriptContext, TypeIds_Int8Array, Int8ArrayPrototype, nullptr,
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
-
+            PathTypeHandler::New(scriptContext), true, true);
         uint8ArrayType = DynamicType::New(scriptContext, TypeIds_Uint8Array, Uint8ArrayPrototype, nullptr,
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+            PathTypeHandler::New(scriptContext), true, true);
         uint8ClampedArrayType = DynamicType::New(scriptContext, TypeIds_Uint8ClampedArray, Uint8ClampedArrayPrototype, nullptr,
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+            PathTypeHandler::New(scriptContext), true, true);
         int16ArrayType = DynamicType::New(scriptContext, TypeIds_Int16Array, Int16ArrayPrototype, nullptr,
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+            PathTypeHandler::New(scriptContext), true, true);
         uint16ArrayType = DynamicType::New(scriptContext, TypeIds_Uint16Array, Uint16ArrayPrototype, nullptr,
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+            PathTypeHandler::New(scriptContext), true, true);
         int32ArrayType = DynamicType::New(scriptContext, TypeIds_Int32Array, Int32ArrayPrototype, nullptr,
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+            PathTypeHandler::New(scriptContext), true, true);
         uint32ArrayType = DynamicType::New(scriptContext, TypeIds_Uint32Array, Uint32ArrayPrototype, nullptr,
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+            PathTypeHandler::New(scriptContext), true, true);
         float32ArrayType = DynamicType::New(scriptContext, TypeIds_Float32Array, Float32ArrayPrototype, nullptr,
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+            PathTypeHandler::New(scriptContext), true, true);
         float64ArrayType = DynamicType::New(scriptContext, TypeIds_Float64Array, Float64ArrayPrototype, nullptr,
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+            PathTypeHandler::New(scriptContext), true, true);
         int64ArrayType = DynamicType::New(scriptContext, TypeIds_Int64Array, Int64ArrayPrototype, nullptr,
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+            PathTypeHandler::New(scriptContext), true, true);
         uint64ArrayType = DynamicType::New(scriptContext, TypeIds_Uint64Array, Uint64ArrayPrototype, nullptr,
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+            PathTypeHandler::New(scriptContext), true, true);
         boolArrayType = DynamicType::New(scriptContext, TypeIds_BoolArray, BoolArrayPrototype, nullptr,
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+            PathTypeHandler::New(scriptContext), true, true);
         charArrayType = DynamicType::New(scriptContext, TypeIds_CharArray, CharArrayPrototype, nullptr,
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+            PathTypeHandler::New(scriptContext), true, true);
 
         errorType = DynamicType::New(scriptContext, TypeIds_Error, errorPrototype, nullptr,
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+            PathTypeHandler::New(scriptContext), true, true);
         evalErrorType = DynamicType::New(scriptContext, TypeIds_Error, evalErrorPrototype, nullptr,
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+            PathTypeHandler::New(scriptContext), true, true);
         rangeErrorType = DynamicType::New(scriptContext, TypeIds_Error, rangeErrorPrototype, nullptr,
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+            PathTypeHandler::New(scriptContext), true, true);
         referenceErrorType = DynamicType::New(scriptContext, TypeIds_Error, referenceErrorPrototype, nullptr,
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+            PathTypeHandler::New(scriptContext), true, true);
         syntaxErrorType = DynamicType::New(scriptContext, TypeIds_Error, syntaxErrorPrototype, nullptr,
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+            PathTypeHandler::New(scriptContext), true, true);
         typeErrorType = DynamicType::New(scriptContext, TypeIds_Error, typeErrorPrototype, nullptr,
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+            PathTypeHandler::New(scriptContext), true, true);
         uriErrorType = DynamicType::New(scriptContext, TypeIds_Error, uriErrorPrototype, nullptr,
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+            PathTypeHandler::New(scriptContext), true, true);
 
         withType    = nullptr;
         proxyType   = nullptr;
@@ -596,7 +595,7 @@ namespace Js
 
             javascriptEnumeratorIteratorType = DynamicType::New(scriptContext, TypeIds_JavascriptEnumeratorIterator, javascriptEnumeratorIteratorPrototype, nullptr,
 
-                SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+                PathTypeHandler::New(scriptContext), true, true);
         }
 
         if (config->IsES6PromiseEnabled())
@@ -606,7 +605,7 @@ namespace Js
 
         // Initialize Date types
         dateType = DynamicType::New(scriptContext, TypeIds_Date, datePrototype, nullptr,
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+            PathTypeHandler::New(scriptContext), true, true);
         variantDateType = StaticType::New(scriptContext, TypeIds_VariantDate, nullValue, nullptr);
 
         anonymousFunctionTypeHandler = NullTypeHandler<false>::GetDefaultInstance();
@@ -647,7 +646,7 @@ namespace Js
         else
         {
             boundFunctionType = DynamicType::New(scriptContext, TypeIds_Function, functionPrototype, BoundFunction::NewInstance,
-                SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+                PathTypeHandler::New(scriptContext), true, true);
         }
         crossSiteDeferredPrototypeFunctionType = CreateDeferredPrototypeFunctionTypeNoProfileThunk(
             scriptContext->CurrentCrossSiteThunk, true /*isShared*/);
@@ -684,29 +683,22 @@ namespace Js
         // Initialize Object types
         for (int16 i = 0; i < PreInitializedObjectTypeCount; i++)
         {
-            SimplePathTypeHandler * typeHandler =
-                SimplePathTypeHandler::New(
-                    scriptContext,
-                    scriptContext->GetRootPath(),
-                    0,
-                    i * InlineSlotCountIncrement,
-                    sizeof(DynamicObject),
-                    true,
-                    true);
+            const PropertyIndex inlineSlotCapacity = i * InlineSlotCountIncrement;
+            PathTypeHandler *const typeHandler =
+                PathTypeHandler::New(scriptContext, inlineSlotCapacity, inlineSlotCapacity, sizeof(DynamicObject));
             typeHandler->SetIsInlineSlotCapacityLocked();
             objectTypes[i] = DynamicType::New(scriptContext, TypeIds_Object, objectPrototype, nullptr, typeHandler, true, true);
         }
         for (int16 i = 0; i < PreInitializedObjectTypeCount; i++)
         {
-            SimplePathTypeHandler * typeHandler =
-                SimplePathTypeHandler::New(
+            const PropertyIndex inlineSlotCapacity =
+                DynamicTypeHandler::GetObjectHeaderInlinableSlotCapacity() + i * InlineSlotCountIncrement;
+            PathTypeHandler *const typeHandler =
+                PathTypeHandler::New(
                     scriptContext,
-                    scriptContext->GetRootPath(),
-                    0,
-                    DynamicTypeHandler::GetObjectHeaderInlinableSlotCapacity() + i * InlineSlotCountIncrement,
-                    DynamicTypeHandler::GetOffsetOfObjectHeaderInlineSlots(),
-                    true,
-                    true);
+                    inlineSlotCapacity,
+                    inlineSlotCapacity,
+                    DynamicTypeHandler::GetOffsetOfObjectHeaderInlineSlots());
             typeHandler->SetIsInlineSlotCapacityLocked();
             objectHeaderInlinedTypes[i] =
                 DynamicType::New(scriptContext, TypeIds_Object, objectPrototype, nullptr, typeHandler, true, true);
@@ -714,10 +706,24 @@ namespace Js
 
         // Initialize regex types
         TypePath *const regexResultPath = TypePath::New(recycler);
-        regexResultPath->Add(BuiltInPropertyRecords::input);
-        regexResultPath->Add(BuiltInPropertyRecords::index);
-        regexResultType = DynamicType::New(scriptContext, TypeIds_Array, arrayPrototype, nullptr,
-            SimplePathTypeHandler::New(scriptContext, regexResultPath, regexResultPath->GetPathLength(), JavascriptRegularExpressionResult::InlineSlotCount, sizeof(JavascriptArray), true, true), true, true);
+        regexResultPath->Add(BuiltInPropertyRecords::input, ObjectSlotType::GetVar());
+        regexResultPath->Add(BuiltInPropertyRecords::index, ObjectSlotType::GetVar());
+        regexResultType =
+            DynamicType::New(
+                scriptContext,
+                TypeIds_Array,
+                arrayPrototype,
+                nullptr,
+                PathTypeHandler::New(
+                    scriptContext,
+                    regexResultPath,
+                    regexResultPath->GetSlotCount(),
+                    2,
+                    JavascriptRegularExpressionResult::InlineSlotCount,
+                    JavascriptRegularExpressionResult::InlineSlotCount,
+                    sizeof(JavascriptArray)),
+                true,
+                true);
 
         // Initialize string types
         stringTypeStatic = StaticType::New(scriptContext, TypeIds_String, stringPrototype, nullptr);
@@ -727,31 +733,45 @@ namespace Js
         throwErrorObjectType = StaticType::New(scriptContext, TypeIds_Undefined, nullValue, ThrowErrorObject::DefaultEntryPoint);
 
         mapType = DynamicType::New(scriptContext, TypeIds_Map, mapPrototype, nullptr,
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+            PathTypeHandler::New(scriptContext), true, true);
 
         setType = DynamicType::New(scriptContext, TypeIds_Set, setPrototype, nullptr,
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+            PathTypeHandler::New(scriptContext), true, true);
 
         weakMapType = DynamicType::New(scriptContext, TypeIds_WeakMap, weakMapPrototype, nullptr,
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+            PathTypeHandler::New(scriptContext), true, true);
 
         weakSetType = DynamicType::New(scriptContext, TypeIds_WeakSet, weakSetPrototype, nullptr,
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+            PathTypeHandler::New(scriptContext), true, true);
 
         TypePath *const iteratorResultPath = TypePath::New(recycler);
-        iteratorResultPath->Add(BuiltInPropertyRecords::value);
-        iteratorResultPath->Add(BuiltInPropertyRecords::done);
-        iteratorResultType = DynamicType::New(scriptContext, TypeIds_Object, objectPrototype, nullptr,
-            SimplePathTypeHandler::New(scriptContext, iteratorResultPath, iteratorResultPath->GetPathLength(), 2, sizeof(DynamicObject), true, true), true, true);
+        iteratorResultPath->Add(BuiltInPropertyRecords::value, ObjectSlotType::GetVar());
+        iteratorResultPath->Add(BuiltInPropertyRecords::done, ObjectSlotType::GetVar());
+        iteratorResultType =
+            DynamicType::New(
+                scriptContext,
+                TypeIds_Object,
+                objectPrototype,
+                nullptr,
+                PathTypeHandler::New(
+                    scriptContext,
+                    iteratorResultPath,
+                    iteratorResultPath->GetSlotCount(),
+                    2,
+                    2,
+                    2,
+                    sizeof(DynamicObject)),
+                true,
+                true);
 
         arrayIteratorType = DynamicType::New(scriptContext, TypeIds_ArrayIterator, arrayIteratorPrototype, nullptr,
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+            PathTypeHandler::New(scriptContext), true, true);
         mapIteratorType = DynamicType::New(scriptContext, TypeIds_MapIterator, mapIteratorPrototype, nullptr,
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+            PathTypeHandler::New(scriptContext), true, true);
         setIteratorType = DynamicType::New(scriptContext, TypeIds_SetIterator, setIteratorPrototype, nullptr,
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+            PathTypeHandler::New(scriptContext), true, true);
         stringIteratorType = DynamicType::New(scriptContext, TypeIds_StringIterator, stringIteratorPrototype, nullptr,
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+            PathTypeHandler::New(scriptContext), true, true);
 
         if (config->IsES6GeneratorsEnabled())
         {
@@ -763,10 +783,10 @@ namespace Js
 
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
         debugDisposableObjectType = DynamicType::New(scriptContext, TypeIds_Object, objectPrototype, nullptr,
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+            PathTypeHandler::New(scriptContext), true, true);
 
         debugFuncExecutorInDisposeObjectType = DynamicType::New(scriptContext, TypeIds_Object, objectPrototype, nullptr,
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+            PathTypeHandler::New(scriptContext), true, true);
 #endif
     }
 
@@ -2537,8 +2557,7 @@ namespace Js
                 DeferredTypeHandler<InitializeRegexPrototype>::GetDefaultInstance()));
         }
 
-        SimplePathTypeHandler *typeHandler =
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true);
+        PathTypeHandler *typeHandler = PathTypeHandler::New(scriptContext);
         // See JavascriptRegExp::IsWritable for property writability
         if (!scriptConfig->IsES6RegExPrototypePropertiesEnabled())
         {
@@ -5825,7 +5844,8 @@ namespace Js
             }
         }
 
-        SimplePathTypeHandler* typeHandler = SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, requestedInlineSlotCapacity, offsetOfInlineSlots, true, true);
+        PathTypeHandler* typeHandler =
+            PathTypeHandler::New(scriptContext, requestedInlineSlotCapacity, requestedInlineSlotCapacity, offsetOfInlineSlots);
         dynamicType = DynamicType::New(scriptContext, typeId, prototype, RecyclableObject::DefaultEntryPoint, typeHandler, true, true);
 
         if (useCache)
@@ -5838,8 +5858,8 @@ namespace Js
 
     DynamicType* JavascriptLibrary::CreateObjectTypeNoCache(RecyclableObject* prototype, Js::TypeId typeId)
     {
-        return DynamicType::New(scriptContext, typeId, prototype, RecyclableObject::DefaultEntryPoint,
-            SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true), true, true);
+        return DynamicType::New(scriptContext, typeId, prototype, RecyclableObject::DefaultEntryPoint, 
+            PathTypeHandler::New(scriptContext), true, true);
     }
 
     DynamicType* JavascriptLibrary::CreateObjectType(RecyclableObject* prototype, uint16 requestedInlineSlotCapacity)
@@ -5993,8 +6013,8 @@ namespace Js
     {
         DynamicObject* iteratorResult = DynamicObject::New(this->GetRecycler(), iteratorResultType);
 
-        iteratorResult->SetSlot(SetSlotArguments(Js::PropertyIds::value, 0, value));
-        iteratorResult->SetSlot(SetSlotArguments(Js::PropertyIds::done, 1, done));
+        iteratorResult->SetSlot(SetSlotArguments(Js::PropertyIds::value, 0, ObjectSlotType::GetVar(), value));
+        iteratorResult->SetSlot(SetSlotArguments(Js::PropertyIds::done, 1, ObjectSlotType::GetVar(), done));
 
         return iteratorResult;
     }

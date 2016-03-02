@@ -20,6 +20,7 @@ namespace Js {
     private:
         RecyclableObject* m_instance;    // Slot owner instance
         PropertyIndex m_propertyIndex;   // Slot index on m_instance for the property, or NoSlot to indicate the object can't cache
+        ObjectSlotType slotType;
         PropertyAttributes m_attributes; // Attributes of the property -- only Writable is used
         InlineCacheFlags flags;
         CacheInfoFlag cacheInfoFlag;
@@ -28,11 +29,13 @@ namespace Js {
         FunctionBody * functionBody;
         uint inlineCacheIndex;
         bool allowResizingPolymorphicInlineCache;
+        bool isInitField;
 
-        void Set(RecyclableObject* instance, PropertyIndex propertyIndex, PropertyAttributes attributes, InlineCacheFlags flags)
+        void Set(RecyclableObject* instance, PropertyIndex propertyIndex, const ObjectSlotType slotType, PropertyAttributes attributes, InlineCacheFlags flags)
         {
             m_instance = instance;
             m_propertyIndex = propertyIndex;
+            this->slotType = slotType;
             m_attributes = attributes;
             this->flags = flags;
         }
@@ -43,29 +46,32 @@ namespace Js {
 
     public:
         PropertyValueInfo()
-            : m_instance(NULL), m_propertyIndex(Constants::NoSlot), m_attributes(PropertyNone), flags(InlineCacheNoFlags),
+            : m_instance(NULL), m_propertyIndex(Constants::NoSlot), slotType(ObjectSlotType::GetVar()), m_attributes(PropertyNone), flags(InlineCacheNoFlags),
             cacheInfoFlag(CacheInfoFlag::defaultInfoFlags), inlineCache(NULL), polymorphicInlineCache(NULL), functionBody(NULL),
             inlineCacheIndex(Constants::NoInlineCacheIndex),
-            allowResizingPolymorphicInlineCache(true)
+            allowResizingPolymorphicInlineCache(true),
+            isInitField(false)
         {
         }
 
-        RecyclableObject* GetInstance() const       { return m_instance; }
-        PropertyIndex GetPropertyIndex() const      { return m_propertyIndex; }
-        bool IsWritable() const                     { return (m_attributes & PropertyWritable) != 0; }
-        bool IsEnumerable() const                   { return (m_attributes & PropertyEnumerable) != 0; }
-        bool IsNoCache() const                      { return m_instance && m_propertyIndex == Constants::NoSlot; }
-        void AddFlags(InlineCacheFlags newFlag)     { flags = (InlineCacheFlags)(flags | newFlag); }
-        InlineCacheFlags GetFlags() const           { return flags; }
-        PropertyAttributes GetAttributes() const    { return m_attributes; }
+        RecyclableObject* GetInstance() const { return m_instance; }
+        PropertyIndex GetPropertyIndex() const { return m_propertyIndex; }
+        ObjectSlotType GetSlotType() const { return slotType; }
+        void SetSlotType(const ObjectSlotType slotType) { this->slotType = slotType; }
+        bool IsWritable() const { return (m_attributes & PropertyWritable) != 0; }
+        bool IsEnumerable() const { return (m_attributes & PropertyEnumerable) != 0; }
+        bool IsNoCache() const { return m_instance && m_propertyIndex == Constants::NoSlot; }
+        void AddFlags(InlineCacheFlags newFlag) { flags = (InlineCacheFlags)(flags | newFlag); }
+        InlineCacheFlags GetFlags() const { return flags; }
+        PropertyAttributes GetAttributes() const { return m_attributes; }
 
         // Set property index and IsWritable cache info
-        static void Set(PropertyValueInfo* info, RecyclableObject* instance, PropertyIndex propertyIndex, PropertyAttributes attributes = PropertyWritable,
+        static void Set(PropertyValueInfo* info, RecyclableObject* instance, PropertyIndex propertyIndex, const ObjectSlotType slotType, PropertyAttributes attributes = PropertyWritable,
             InlineCacheFlags flags = InlineCacheNoFlags)
         {
             if (info)
             {
-                info->Set(instance, propertyIndex, attributes, flags);
+                info->Set(instance, propertyIndex, slotType, attributes, flags);
             }
         }
 
@@ -99,10 +105,20 @@ namespace Js {
             return allowResizingPolymorphicInlineCache;
         }
 
+        bool IsInitField() const
+        {
+            return isInitField;
+        }
+
+        void SetIsInitField()
+        {
+            isInitField = true;
+        }
+
         // Set to indicate the instance can't cache property index / IsWritable
         static void SetNoCache(PropertyValueInfo* info, RecyclableObject* instance)
         {
-            Set(info, instance, Constants::NoSlot, PropertyNone, InlineCacheNoFlags);
+            Set(info, instance, Constants::NoSlot, ObjectSlotType::GetVar(), PropertyNone, InlineCacheNoFlags);
         }
 
         static void DisablePrototypeCache(PropertyValueInfo* info, RecyclableObject* instance)

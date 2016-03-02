@@ -68,49 +68,65 @@ namespace Js
         return InPlaceNew(static_cast<double>(nValue), scriptContext, result);
     }
 
-    Var JavascriptNumber::ToVarIntCheck(double value,ScriptContext* scriptContext)
+    Var JavascriptNumber::ToVarIntCheck(double value, ScriptContext* scriptContext)
     {
         //
         // Check if a well-known value:
         // - This significantly cuts down on the below floating-point to integer conversions.
         //
 
-        if (value == 0.0)
+        int32 int32Value;
+        bool isNegativeZero;
+        if(TryGetInt32Value(value, &int32Value, &isNegativeZero))
         {
-            if(IsNegZero(value))
-            {
-                return scriptContext->GetLibrary()->GetNegativeZero();
-            }
-            return TaggedInt::ToVarUnchecked(0);
+            if(!TaggedInt::IsOverflow(int32Value))
+                return TaggedInt::ToVarUnchecked(int32Value);
         }
-        if (value == 1.0)
-        {
-            return TaggedInt::ToVarUnchecked(1);
-        }
-
-        //
-        // Check if number can be reduced back into a TaggedInt:
-        // - This avoids extra GC.
-        //
-
-        int nValue      = (int) value;
-        double dblCheck = (double) nValue;
-        if ((dblCheck == value) && (!TaggedInt::IsOverflow(nValue)))
-        {
-            return TaggedInt::ToVarUnchecked(nValue);
-        }
-
+        else if(isNegativeZero)
+            return scriptContext->GetLibrary()->GetNegativeZero();
         return JavascriptNumber::NewInlined(value,scriptContext);
     }
 
-    bool JavascriptNumber::TryGetInt32OrUInt32Value(const double value, int32 *const int32Value, bool *const isInt32)
+    bool JavascriptNumber::TryGetInt32Value(const double value, int32 *const int32ValueRef, bool *const isNegativeZeroRef)
     {
-        Assert(int32Value);
-        Assert(isInt32);
+        Assert(int32ValueRef);
+
+        const int32 i = static_cast<int32>(value);
+        if(static_cast<double>(i) != value)
+        {
+            if(isNegativeZeroRef)
+                *isNegativeZeroRef = false;
+            return false;
+        }
+
+        if(IsNegZero(value))
+        {
+            if(isNegativeZeroRef)
+                *isNegativeZeroRef = true;
+            return false;
+        }
+
+        *int32ValueRef = i;
+        if(isNegativeZeroRef)
+            *isNegativeZeroRef = false;
+        return true;
+    }
+
+    // This function is called directly by jitted code
+    bool JavascriptNumber::TryGetInt32Value_NoTaggedIntCheck(const Var object, int32 *const int32ValueRef)
+    {
+        Assert(object);
+        return Is_NoTaggedIntCheck(object) && TryGetInt32Value(JavascriptNumber::GetValue(object), int32ValueRef);
+    }
+
+    bool JavascriptNumber::TryGetInt32OrUInt32Value(const double value, int32 *const int32ValueRef, bool *const isInt32Ref)
+    {
+        Assert(int32ValueRef);
+        Assert(isInt32Ref);
 
         if(value <= 0)
         {
-            return *isInt32 = TryGetInt32Value(value, int32Value);
+            return *isInt32Ref = TryGetInt32Value(value, int32ValueRef);
         }
 
         const uint32 i = static_cast<uint32>(value);
@@ -119,8 +135,8 @@ namespace Js
             return false;
         }
 
-        *int32Value = i;
-        *isInt32 = static_cast<int32>(i) >= 0;
+        *int32ValueRef = i;
+        *isInt32Ref = static_cast<int32>(i) >= 0;
         return true;
     }
 
@@ -153,13 +169,9 @@ namespace Js
         return IsInt32OrUInt32(GetValue(number));
     }
 
-    int32 JavascriptNumber::GetNonzeroInt32Value_NoTaggedIntCheck(const Var object)
+    bool JavascriptNumber::AreIdentical(const double d0, const double d1)
     {
-        Assert(object);
-        Assert(!TaggedInt::Is(object));
-
-        int32 i;
-        return Is_NoTaggedIntCheck(object) && TryGetInt32Value(GetValue(object), &i) ? i : 0;
+        return ToSpecial(d0) == ToSpecial(d1);
     }
 
 #if _M_IX86

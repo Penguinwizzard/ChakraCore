@@ -397,14 +397,6 @@ namespace Js
         template <class T> void OP_GetMethodPropertyScoped(unaligned T* playout);
         template <class T> void OP_GetMethodPropertyScoped_NoFastPath(unaligned T* playout);
 
-#if ENABLE_PROFILE_INFO
-        template <class T> void UpdateFldInfoFlagsForGetSetInlineCandidate(unaligned T* playout, FldInfoFlags& fldInfoFlags, CacheType cacheType,
-                                                DynamicProfileInfo * dynamicProfileInfo, uint inlineCacheIndex, RecyclableObject * obj);
-
-        template <class T> void UpdateFldInfoFlagsForCallApplyInlineCandidate(unaligned T* playout, FldInfoFlags& fldInfoFlags, CacheType cacheType,
-                                                DynamicProfileInfo * dynamicProfileInfo, uint inlineCacheIndex, RecyclableObject * obj);
-#endif
-
         template <class T> void OP_SetProperty(unaligned T* playout);
         template <class T> void OP_SetLocalProperty(unaligned T* playout);
         template <class T> void OP_SetSuperProperty(unaligned T* playout);

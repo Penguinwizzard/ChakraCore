@@ -151,6 +151,9 @@ class BailOutRecord
 {
 public:
     BailOutRecord(uint32 bailOutOffset, uint bailOutCacheIndex, IR::BailOutKind kind, Func *bailOutFunc);
+
+    static bool UpdateFunctionEntryPointInfo(Js::ScriptFunction *const function);
+
     static Js::Var BailOut(BailOutRecord const * bailOutRecord);
     static Js::Var BailOutFromFunction(Js::JavascriptCallStackLayout * layout, BailOutRecord const * bailOutRecord, void * returnAddress, void * argoutRestoreAddress);
     static uint32 BailOutFromLoopBody(Js::JavascriptCallStackLayout * layout, BailOutRecord const * bailOutRecord);

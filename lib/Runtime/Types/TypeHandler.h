@@ -24,21 +24,25 @@ namespace Js
     struct PropertyEquivalenceInfo
     {
         PropertyIndex slotIndex;
+        ObjectSlotType slotType;
         bool isAuxSlot;
         bool isWritable;
 
-        PropertyEquivalenceInfo():
-            slotIndex(Constants::NoSlot), isAuxSlot(false), isWritable(false) {}
-        PropertyEquivalenceInfo(PropertyIndex slotIndex, bool isAuxSlot, bool isWritable):
-            slotIndex(slotIndex), isAuxSlot(isAuxSlot), isWritable(isWritable) {}
+        PropertyEquivalenceInfo(): 
+            slotIndex(Constants::NoSlot), slotType(ObjectSlotType::GetVar()), isAuxSlot(false), isWritable(false) {}
     };
 
     struct EquivalentPropertyEntry
     {
         Js::PropertyId propertyId;
         Js::PropertyIndex slotIndex;
+        Js::ObjectSlotType slotType;
         bool isAuxSlot;
         bool mustBeWritable;
+
+        EquivalentPropertyEntry() : slotType(ObjectSlotType::GetVar())
+        {
+        }
     };
 
     struct TypeEquivalenceRecord
@@ -54,7 +58,8 @@ namespace Js
         friend class DeferredTypeHandlerBase;
         template <DeferredTypeInitializer initializer, typename DeferredTypeFilter, bool isPrototypeTemplate, uint16 _inlineSlotCapacity, uint16 _offsetOfInlineSlots>
         friend class DeferredTypeHandler;
-        friend class PathTypeHandlerBase;
+        friend class PathTypeTransitionInfo;
+        friend class PathTypeHandler;
         friend struct InlineCache;
         friend class DynamicObject;
 
@@ -142,23 +147,18 @@ namespace Js
         uint16 GetInlineSlotCapacity() const { return this->inlineSlotCapacity; }
         int GetSlotCapacity() const { return this->slotCapacity; }
 
+    public:
+        PropertyIndex GetObjectHeaderExternalInlineSlotCapacity() const;
+
         size_t GetInlineSlotsSize() const
         {
-            PropertyIndex inlineSlotsToAllocate = GetInlineSlotCapacity();
-            if(IsObjectHeaderInlinedTypeHandler())
-            {
-                inlineSlotsToAllocate -= GetObjectHeaderInlinableSlotCapacity();
-            }
-            return inlineSlotsToAllocate * sizeof(Var);
+            return GetObjectHeaderExternalInlineSlotCapacity() * sizeof(Var);
         }
 
+    public:
         uint16 GetOffsetOfInlineSlots() const { return this->offsetOfInlineSlots; }
 
         void EnsureSlots(DynamicObject * instance, int oldCount, int newCount, ScriptContext * scriptContext, DynamicTypeHandler * newTypeHandler = nullptr);
-
-        Var GetSlot(DynamicObject * instance, int index);
-        Var GetInlineSlot(DynamicObject * instance, int index);
-        Var GetAuxSlot(DynamicObject * instance, int index);
 
         void TraceUseFixedProperty(PropertyRecord const * propertyRecord, Var * pProperty, bool result, LPCWSTR typeHandlerName, ScriptContext * requestContext);
 
@@ -171,18 +171,60 @@ namespace Js
         static bool CheckHeuristicsForFixedDataProps(DynamicObject* instance, PropertyId propertyId, Var value);
         static bool CheckHeuristicsForFixedDataProps(DynamicObject* instance, JavascriptString * propertyKey, Var value);
 
+    public:
+        static Var GetSlot(DynamicObject * instance, int index, const ObjectSlotType slotType);
+    protected:
+        static Var GetSlotAsTypeHandler(DynamicObject * instance, DynamicTypeHandler *const typeHandler, int index, const ObjectSlotType slotType
 #if DBG
-        void SetSlot(DynamicObject * instance, PropertyId propertyId, bool allowLetConst, int index, Var value);
-        void SetInlineSlot(DynamicObject * instance, PropertyId propertyId, bool allowLetConst, int index, Var value);
-        void SetAuxSlot(DynamicObject * instance, PropertyId propertyId, bool allowLetConst, int index, Var value);
+            , DynamicTypeHandler *const oldTypeHandler
+#endif
+            );
+    public:
+        static Var GetInlineSlot(DynamicObject * instance, int index, const ObjectSlotType slotType);
+        static Var GetAuxSlot(DynamicObject * instance, int index, const ObjectSlotType slotType);
+
+    public:
+#if DBG
+        static void SetSlot(DynamicObject * instance, PropertyId propertyId, bool allowLetConst, int index, const ObjectSlotType slotType, Var value);
+        static ObjectSlotType SetInlineSlot(DynamicObject * instance, PropertyId propertyId, bool allowLetConst, int index, const ObjectSlotType slotType, Var value);
+        static ObjectSlotType SetAuxSlot(DynamicObject * instance, PropertyId propertyId, bool allowLetConst, int index, const ObjectSlotType slotType, Var value);
 #else
-        void SetSlot(DynamicObject * instance, int index, Var value);
-        void SetInlineSlot(DynamicObject * instance, int index, Var value);
-        void SetAuxSlot(DynamicObject * instance, int index, Var value);
+        static void SetSlot(DynamicObject * instance, int index, const ObjectSlotType slotType, Var value);
+        static ObjectSlotType SetInlineSlot(DynamicObject * instance, int index, const ObjectSlotType slotType, Var value);
+        static ObjectSlotType SetAuxSlot(DynamicObject * instance, int index, const ObjectSlotType slotType, Var value);
 #endif
 
     protected:
-        void SetSlotUnchecked(DynamicObject * instance, int index, Var value);
+        static void SetSlotUnchecked(DynamicObject * instance, int index, const ObjectSlotType slotType, Var value);
+
+    private:
+        static void VerifySlotAddress(const void *const slot, DynamicObject *const object, const BigPropertyIndex bigSlotIndex);
+    public:
+        static void *GetSlotAddress(DynamicObject *const object, const BigPropertyIndex bigSlotIndex);
+    private:
+        static void *GetSlotAddressAsTypeHandler(DynamicObject *const object, DynamicTypeHandler *const typeHandler, const BigPropertyIndex bigSlotIndex);
+    public:
+        static Var GetSlotAtAddress(const void *const slot, const ObjectSlotType slotType, DynamicObject *const object, const BigPropertyIndex bigSlotIndex);
+    private:
+        static Var GetSlotAtAddressAsTypeHandler(
+            const void *const slot, 
+            const ObjectSlotType slotType, 
+            DynamicObject *const object, const 
+            BigPropertyIndex bigSlotIndex
+#if DBG
+            , DynamicTypeHandler *const typeHandler
+#endif
+            );
+    public:
+        static Var GetNativeSlotAtAddress(const void *const slot, const ObjectSlotType slotType, DynamicObject *const object);
+        static Var GetVarSlotAtAddress(const void *const slot);
+        static int32 GetIntSlotAtAddress(const void *const slot);
+        static double GetFloatSlotAtAddress(const void *const slot);
+        static ObjectSlotType SetSlotAtAddress(void *const slot, const ObjectSlotType slotType, const Var varValue, DynamicObject *const object, const BigPropertyIndex bigSlotIndex);
+        static ObjectSlotType SetNativeSlotAtAddress(void *const slot, const ObjectSlotType slotType, const Var varValue, DynamicObject *const object, const BigPropertyIndex bigSlotIndex);
+        static void SetVarSlotAtAddress(void *const slot, const Var varValue, DynamicObject *const object);
+        static void SetIntSlotAtAddress(void *const slot, const int32 intValue);
+        static void SetFloatSlotAtAddress(void *const slot, const double floatValue);
 
     public:
         __inline PropertyIndex AdjustSlotIndexForInlineSlots(PropertyIndex slotIndex)
@@ -211,7 +253,7 @@ namespace Js
             }
         }
 
-        PropertyIndex InlineOrAuxSlotIndexToPropertyIndex(PropertyIndex inlineOrAuxSlotIndex, bool isInlineSlot) const
+        __inline PropertyIndex InlineOrAuxSlotIndexToPropertyIndex(PropertyIndex inlineOrAuxSlotIndex, bool isInlineSlot) const
         {
             if (isInlineSlot)
             {
@@ -318,8 +360,9 @@ namespace Js
             Assert((this->propertyTypes & PropertyTypesReserved) != 0);
         }
 
-        static bool CanBeSingletonInstance(DynamicObject * instance);
     public:
+        static bool CanBeSingletonInstance(DynamicObject * instance);
+
         BYTE GetFlags() const { return this->flags; }
         static int GetOffsetOfFlags() { return offsetof(DynamicTypeHandler, flags); }
         static int GetOffsetOfOffsetOfInlineSlots() { return offsetof(DynamicTypeHandler, offsetOfInlineSlots); }
@@ -398,7 +441,9 @@ namespace Js
         virtual BOOL IsSharable() const = 0;
         virtual void DoShareTypeHandler(ScriptContext* scriptContext) {};
 
+        virtual BigPropertyIndex GetSlotCount() { return GetPropertyCount(); }
         virtual int GetPropertyCount() = 0;
+        virtual BigPropertyIndex GetSlotCountAndPropertyCount(int *const propertyCountRef) { Assert(propertyCountRef); return *propertyCountRef = GetPropertyCount(); }
         virtual PropertyId GetPropertyId(ScriptContext* scriptContext, PropertyIndex index) = 0;
         virtual PropertyId GetPropertyId(ScriptContext* scriptContext, BigPropertyIndex index) = 0;
         virtual BOOL FindNextProperty(ScriptContext* scriptContext, PropertyIndex& index, JavascriptString** propertyString,
@@ -406,9 +451,11 @@ namespace Js
         virtual BOOL FindNextProperty(ScriptContext* scriptContext, BigPropertyIndex& index, JavascriptString** propertyString,
             PropertyId* propertyId, PropertyAttributes* attributes, Type* type, DynamicType *typeToEnumerate, bool requireEnumerable, bool enumSymbols = false);
         virtual PropertyIndex GetPropertyIndex(PropertyRecord const* propertyRecord) = 0;
+        virtual ObjectSlotType GetSlotType(const BigPropertyIndex bigSlotIndex) const { return ObjectSlotType::GetVar(); }
         virtual bool GetPropertyEquivalenceInfo(PropertyRecord const* propertyRecord, PropertyEquivalenceInfo& info) = 0;
-        virtual bool IsObjTypeSpecEquivalent(const Type* type, const Js::TypeEquivalenceRecord& record, uint& failedPropertyIndex) = 0;
-        virtual bool IsObjTypeSpecEquivalent(const Type* type, const EquivalentPropertyEntry* entry) = 0;
+#if ENABLE_NATIVE_CODEGEN
+        virtual IR::BailOutKind IsObjTypeSpecEquivalent(DynamicObject *const object, const Js::TypeEquivalenceRecord& record, uint& failedPropertyIndex) = 0;
+#endif
 
         virtual bool EnsureObjectReady(DynamicObject* instance) { return true; }
         virtual BOOL HasProperty(DynamicObject* instance, PropertyId propertyId, __out_opt bool *pNoRedecl = nullptr) = 0;
@@ -585,7 +632,7 @@ namespace Js
         BigPropertyIndex GetPropertyIndexFromAuxSlotIndex(uint auxIndex);
 
     protected:
-        void SetPropertyUpdateSideEffect(DynamicObject* instance, PropertyId propertyId, Var value, SideEffects possibleSideEffects);
+        static void SetPropertyUpdateSideEffect(DynamicObject* instance, PropertyId propertyId, Var value, SideEffects possibleSideEffects);
         bool VerifyIsExtensible(ScriptContext* scriptContext, bool alwaysThrow);
 
         void SetOffsetOfInlineSlots(const uint16 offsetOfInlineSlots) { this->offsetOfInlineSlots = offsetOfInlineSlots; }

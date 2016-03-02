@@ -4,7 +4,8 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
-#define MAX_SIZE_PATH_LENGTH (128)
+// If this value is modified, the copy in the JD project (TypePath::MaxSlotCapacity) needs to be updated as well
+#define MAX_SLOT_CAPACITY (128)
 
 namespace Js
 {
@@ -12,7 +13,7 @@ namespace Js
     {
         static const int PowerOf2_BUCKETS = 8;
         static const byte NIL = 0xff;
-        static const int NEXTPTRCOUNT = MAX_SIZE_PATH_LENGTH;
+        static const int NEXTPTRCOUNT = MAX_SLOT_CAPACITY;
 
         byte buckets[PowerOf2_BUCKETS];
         byte next[NEXTPTRCOUNT];
@@ -38,7 +39,7 @@ public:
 
         // Template shared with diagnostics
         template <class Data>
-        __inline bool TryGetValue(PropertyId key, PropertyIndex* index, const Data& data)
+        __inline bool TryGetValue(PropertyId key, PropertyIndex* index, const Data& data) const
         {
             uint32 bucketIndex = key&(PowerOf2_BUCKETS-1);
 
@@ -60,62 +61,97 @@ public:
 
     class TypePath
     {
-        friend class PathTypeHandlerBase;
         friend class DynamicObject;
-        friend class SimplePathTypeHandler;
+        friend class PathTypeTransitionInfo;
+        friend class PathTypeSingleSuccessorTransitionInfo;
+        friend class PathTypeMultipleSuccessorTransitionInfo;
         friend class PathTypeHandler;
 
     public:
-        static const uint MaxPathTypeHandlerLength = MAX_SIZE_PATH_LENGTH;
-        static const uint InitialTypePathSize = 16;
+        static const PropertyIndex MaxSlotCapacity = MAX_SLOT_CAPACITY;
+
+    private:
+        static const PropertyIndex InitialSlotCapacity = 16;
 
     private:
         TinyDictionary map;
-        uint16 pathLength;      // Entries in use
-        uint16 pathSize;        // Allocated entries
+        PathTypePropertyIndex slotCount;        // Entries in use
+        PathTypePropertyIndex slotCapacity;     // Allocated entries
 
 #ifdef SUPPORT_FIXED_FIELDS_ON_PATH_TYPES
         // We sometimes set up PathTypeHandlers and associate TypePaths before we create any instances
         // that populate the corresponding slots, e.g. for object literals or constructors with only
         // this statements.  This field keeps track of the longest instance associated with the given
         // TypePath.
-        int maxInitializedLength;
+        PathTypePropertyIndex maxInitializedSlotCount;
         RecyclerWeakReference<DynamicObject>* singletonInstance;
-        BVStatic<MAX_SIZE_PATH_LENGTH> fixedFields;
-        BVStatic<MAX_SIZE_PATH_LENGTH> usedFixedFields;
+        BVStatic<MaxSlotCapacity> fixedFields;
+        BVStatic<MaxSlotCapacity> usedFixedFields;
 #endif
+
+        JsUtil::FixedMultibitVector<ObjectSlotType, ObjectSlotType::TSize, ObjectSlotType::BitSize, MaxSlotCapacity> slotTypes;
 
         // PropertyRecord assignments are allocated off the end of the structure
         const PropertyRecord * assignments[0];
 
-#ifdef SUPPORT_FIXED_FIELDS_ON_PATH_TYPES
-        TypePath()
-            : pathLength(0), maxInitializedLength(0), singletonInstance(nullptr)
+        TypePath(const PropertyIndex slotCapacity) : slotCapacity(static_cast<PathTypePropertyIndex>(slotCapacity))
         {
+            CompileAssert(static_cast<PathTypePropertyIndex>(-1) >= static_cast<PathTypePropertyIndex>(0)); // must be unsigned
+            CompileAssert(static_cast<PropertyIndex>(-1) >= static_cast<PropertyIndex>(0)); // must be unsigned
+
+            CompileAssert(InitialSlotCapacity != 0);
+            CompileAssert(!(InitialSlotCapacity & InitialSlotCapacity - 1)); // is power of 2
+
+            CompileAssert(MaxSlotCapacity >= InitialSlotCapacity);
+            CompileAssert(MaxSlotCapacity <= static_cast<PathTypePropertyIndex>(-1));
+            CompileAssert(!(MaxSlotCapacity & MaxSlotCapacity - 1)); // is power of 2
+
+            Assert(slotCapacity <= MaxSlotCapacity);
+
+            // The instance is zero-allocated in New
         }
-#else
-        TypePath()
-            : pathLength(0)
-        {
-        }
-#endif
 
     public:
-        static TypePath* New(Recycler* recycler, uint size = InitialTypePathSize);
+        static TypePath* New(Recycler* recycler, PropertyIndex slotCapacity = InitialSlotCapacity);
 
-        TypePath * Branch(Recycler * alloc, int pathLength, bool couldSeeProto);
+    public:
+        bool IsValidSlotIndex(const PropertyIndex slotIndex) const;
+    private:
+        void VerifySlotIndex(const PropertyIndex slotIndex) const;
+        void VerifySlotIndex(const PropertyIndex slotIndex, const PropertyIndex objectSlotCount) const;
+
+    public:
+        ObjectSlotType GetSlotType(const PropertyIndex slotIndex) const;
+    #ifdef IsJsDiag
+        ObjectSlotType GetSlotType_JsDiag(const PropertyIndex slotIndex) const;
+    #endif
+    private:
+        void SetSlotType(const PropertyIndex slotIndex, const ObjectSlotType slotType);
+
+    public:
+        PropertyIndex GetNextSlotIndex(const PropertyIndex slotIndex) const;
+    #ifdef IsJsDiag
+        PropertyIndex GetNextSlotIndex_JsDiag(const PropertyIndex slotIndex);
+    #endif
+        PropertyIndex GetPreviousSlotIndex(const PropertyIndex slotIndexOrCount) const;
+        bool IsLastInlineSlotWasted(const PropertyIndex inlineSlotCapacity) const;
+        bool HasCapacityForNewSlot(const ObjectSlotType slotType) const;
+        static bool CanObjectGrowForNewSlot(const PropertyIndex objectSlotCount, const ObjectSlotType slotType);
+
+    public:
+        TypePath * Branch(Recycler * alloc, PropertyIndex objectSlotCount, const ObjectSlotType slotType, bool couldSeeProto);
 
         TypePath * Grow(Recycler * alloc);
 
-        const PropertyRecord* GetPropertyIdUnchecked(int index)
+        const PropertyRecord* GetPropertyIdUnchecked(PropertyIndex index) const
         {
-            Assert(((uint)index) < ((uint)pathLength));
+            VerifySlotIndex(index);
             return assignments[index];
         }
 
-        const PropertyRecord* GetPropertyId(int index)
+        const PropertyRecord* GetPropertyId(PropertyIndex index) const
         {
-            if (((uint)index) < ((uint)pathLength))
+            if (index < GetSlotCount())
                 return GetPropertyIdUnchecked(index);
             else
                 return nullptr;
@@ -126,33 +162,95 @@ public:
             return assignments;
         }
 
-        int Add(const PropertyRecord * propertyRecord)
+        PropertyIndex Add(const PropertyRecord * propertyRecord, const ObjectSlotType slotType)
         {
 #ifdef SUPPORT_FIXED_FIELDS_ON_PATH_TYPES
-            Assert(this->pathLength == this->maxInitializedLength);
-            this->maxInitializedLength++;
+            Assert(this->slotCount == this->maxInitializedSlotCount);
 #endif
-            return AddInternal(propertyRecord);
+
+            const PropertyIndex newSlotIndex = AddInternal(propertyRecord, slotType);
+
+#ifdef SUPPORT_FIXED_FIELDS_ON_PATH_TYPES
+            SetMaxInitializedSlotCount(slotCount);
+#endif
+
+            return newSlotIndex;
         }
 
-        uint16 GetPathLength() { return this->pathLength; }
-        uint16 GetPathSize() const { return this->pathSize; }
+        PropertyIndex GetSlotCount() const { return this->slotCount; }
 
-        PropertyIndex Lookup(PropertyId propId,int typePathLength);
-        PropertyIndex LookupInline(PropertyId propId,int typePathLength);
+        PropertyIndex GetSlotCapacity() const
+        {
+            Assert(slotCapacity >= InitialSlotCapacity);
+            Assert(slotCapacity <= MaxSlotCapacity);
+            Assert(!(slotCapacity & slotCapacity - 1)); // is power of 2
+
+            return this->slotCapacity;
+        }
+        
+        PropertyIndex Lookup(PropertyId propId, PropertyIndex objectSlotCount);
+        PropertyIndex LookupInline(PropertyId propId, PropertyIndex objectSlotCount);
 
     private:
-        int AddInternal(const PropertyRecord* propId);
+        PropertyIndex AddInternal(const PropertyRecord* propId, const ObjectSlotType slotType)
+        {
+            Assert(HasCapacityForNewSlot(slotType));
+            if (!HasCapacityForNewSlot(slotType))
+            {
+                Throw::InternalError();
+            }
+
+            const PathTypePropertyIndex newSlotIndex = slotCount;
+
+            // The previous dictionary did not replace on dupes.
+            // I believe a dupe here would be a bug, but to be conservative
+            // replicate the exact previous behavior.
+#if DBG
+            PropertyIndex temp;
+            if (map.TryGetValue(propId->GetPropertyId(), &temp, assignments))
+            {
+                AssertMsg(false, "Adding a duplicate to the type path");
+            }
+#endif 
+
+            map.Add(propId->GetPropertyId(), (byte)newSlotIndex);
 
 #ifdef SUPPORT_FIXED_FIELDS_ON_PATH_TYPES
-        int GetMaxInitializedLength() { return this->maxInitializedLength; }
-        void SetMaxInitializedLength(int newMaxInitializedLength)
-        {
-            Assert(this->maxInitializedLength <= newMaxInitializedLength);
-            this->maxInitializedLength = newMaxInitializedLength;
+            if (PHASE_VERBOSE_TRACE1(FixMethodPropsPhase))
+            {
+                Output::Print(L"FixedFields: TypePath::AddInternal: singleton = 0x%p(0x%p)\n", 
+                    this->singletonInstance, this->singletonInstance != nullptr ? this->singletonInstance->Get() : nullptr);
+                Output::Print(L"   fixed fields:");
+
+                for (PropertyIndex i = 0; i < GetSlotCount(); i = GetNextSlotIndex(i))
+                {
+                    Output::Print(L" %s %d%d%d,", GetPropertyId(i)->GetBuffer(),
+                        i < GetMaxInitializedSlotCount() ? 1 : 0,
+                        GetIsFixedFieldAt(i, GetSlotCount()) ? 1 : 0,
+                        GetIsUsedFixedFieldAt(i, GetSlotCount()) ? 1 : 0);
+                }
+                
+                Output::Print(L"\n");
+            }
+#endif
+
+            slotCount = slotType.GetNextSlotIndexOrCount(newSlotIndex);
+            assignments[newSlotIndex] = propId;
+            SetSlotType(newSlotIndex, slotType);
+            return newSlotIndex;
         }
 
-        Var GetSingletonFixedFieldAt(PropertyIndex index, int typePathLength, ScriptContext * requestContext);
+#ifdef SUPPORT_FIXED_FIELDS_ON_PATH_TYPES
+        PropertyIndex GetMaxInitializedSlotCount() { return this->maxInitializedSlotCount; }
+        void SetMaxInitializedSlotCount(PropertyIndex newMaxInitializedSlotCount)
+        {
+            Assert(newMaxInitializedSlotCount <= MaxSlotCapacity);
+            Assert(this->maxInitializedSlotCount <= newMaxInitializedSlotCount);
+            this->maxInitializedSlotCount = static_cast<PathTypePropertyIndex>(newMaxInitializedSlotCount);
+            Assert(GetMaxInitializedSlotCount() <= GetSlotCount());
+        }
+
+        Var GetSingletonFixedFieldAt(PropertyIndex index, PropertyIndex objectSlotCount, ScriptContext * requestContext);
 
         bool HasSingletonInstance() const
         {
@@ -164,10 +262,10 @@ public:
             return this->singletonInstance;
         }
 
-        void SetSingletonInstance(RecyclerWeakReference<DynamicObject>* instance, int typePathLength)
+        void SetSingletonInstance(RecyclerWeakReference<DynamicObject>* instance, PropertyIndex objectSlotCount)
         {
             Assert(this->singletonInstance == nullptr && instance != nullptr);
-            Assert(typePathLength >= this->maxInitializedLength);
+            Assert(objectSlotCount >= this->maxInitializedSlotCount);
             this->singletonInstance = instance;
         }
 
@@ -192,78 +290,162 @@ public:
             }
         }
 
-        bool GetIsFixedFieldAt(PropertyIndex index, int typePathLength)
+        bool GetIsFixedFieldAt(PropertyIndex index, PropertyIndex objectSlotCount)
         {
-            Assert(index < this->pathLength);
-            Assert(index < typePathLength);
-            Assert(typePathLength <= this->pathLength);
-
+            VerifySlotIndex(index, objectSlotCount);
             return this->fixedFields.Test(index) != 0;
         }
 
-        bool GetIsUsedFixedFieldAt(PropertyIndex index, int typePathLength)
+        bool GetIsUsedFixedFieldAt(PropertyIndex index, PropertyIndex objectSlotCount)
         {
-            Assert(index < this->pathLength);
-            Assert(index < typePathLength);
-            Assert(typePathLength <= this->pathLength);
-
+            VerifySlotIndex(index, objectSlotCount);
             return this->usedFixedFields.Test(index) != 0;
         }
 
-        void SetIsUsedFixedFieldAt(PropertyIndex index, int typePathLength)
+        void SetIsUsedFixedFieldAt(PropertyIndex index, PropertyIndex objectSlotCount)
         {
-            Assert(index < this->maxInitializedLength);
-            Assert(CanHaveFixedFields(typePathLength));
+            VerifySlotIndex(index, objectSlotCount);
+            Assert(index < this->maxInitializedSlotCount);
+            Assert(CanHaveFixedFields(objectSlotCount));
             this->usedFixedFields.Set(index);
         }
 
-        void ClearIsFixedFieldAt(PropertyIndex index, int typePathLength)
+        void ClearIsFixedFieldAt(PropertyIndex index, PropertyIndex objectSlotCount)
         {
-            Assert(index < this->maxInitializedLength);
-            Assert(index < typePathLength);
-            Assert(typePathLength <= this->pathLength);
+            VerifySlotIndex(index, objectSlotCount);
+            Assert(index < this->maxInitializedSlotCount);
 
             this->fixedFields.Clear(index);
             this->usedFixedFields.Clear(index);
         }
 
-        bool CanHaveFixedFields(int typePathLength)
+        bool CanHaveFixedFields(PropertyIndex objectSlotCount)
         {
             // We only support fixed fields on singleton instances.
             // If the instance in question is a singleton, it must be the tip of the type path.
-            return this->singletonInstance != nullptr && typePathLength >= this->maxInitializedLength;
+            return this->singletonInstance != nullptr && objectSlotCount >= this->maxInitializedSlotCount;
         }
 
-        void AddBlankFieldAt(PropertyIndex index, int typePathLength);
+        void AddBlankFieldAt(PropertyIndex index, PropertyIndex objectSlotCount)
+        {
+            Assert(index >= this->maxInitializedSlotCount);
+            SetMaxInitializedSlotCount(GetNextSlotIndex(index));
 
-        void AddSingletonInstanceFieldAt(DynamicObject* instance, PropertyIndex index, bool isFixed, int typePathLength);
+#ifdef SUPPORT_FIXED_FIELDS_ON_PATH_TYPES
+            if (PHASE_VERBOSE_TRACE1(FixMethodPropsPhase))
+            {
+                Output::Print(L"FixedFields: TypePath::AddBlankFieldAt: singleton = 0x%p(0x%p)\n", 
+                    this->singletonInstance, this->singletonInstance != nullptr ? this->singletonInstance->Get() : nullptr);
+                Output::Print(L"   fixed fields:");
 
-        void AddSingletonInstanceFieldAt(PropertyIndex index, int typePathLength);
+                for (PropertyIndex i = 0; i < GetSlotCount(); i = GetNextSlotIndex(i))
+                {
+                    Output::Print(L" %s %d%d%d,", GetPropertyId(i)->GetBuffer(),
+                        i < GetMaxInitializedSlotCount() ? 1 : 0,
+                        GetIsFixedFieldAt(i, GetSlotCount()) ? 1 : 0,
+                        GetIsUsedFixedFieldAt(i, GetSlotCount()) ? 1 : 0);
+                }
+                
+                Output::Print(L"\n");
+            }
+#endif
+        }
+
+        void AddSingletonInstanceFieldAt(DynamicObject* instance, PropertyIndex index, bool isFixed, PropertyIndex objectSlotCount)
+        {
+            VerifySlotIndex(index, objectSlotCount);
+            Assert(objectSlotCount >= this->maxInitializedSlotCount);
+            Assert(index >= this->maxInitializedSlotCount);
+            // This invariant is predicated on the properties getting initialized in the order of indexes in the type handler.
+            Assert(instance != nullptr);
+            Assert(this->singletonInstance == nullptr || this->singletonInstance->Get() == instance);
+            Assert(!fixedFields.Test(index) && !usedFixedFields.Test(index));
+
+            if (this->singletonInstance == nullptr)
+            {
+                this->singletonInstance = instance->CreateWeakReferenceToSelf();
+            }
+
+            SetMaxInitializedSlotCount(GetNextSlotIndex(index));
+
+            if (isFixed)
+            {
+                this->fixedFields.Set(index);
+            }
+
+#ifdef SUPPORT_FIXED_FIELDS_ON_PATH_TYPES
+            if (PHASE_VERBOSE_TRACE1(FixMethodPropsPhase))
+            {
+                Output::Print(L"FixedFields: TypePath::AddSingletonInstanceFieldAt: singleton = 0x%p(0x%p)\n", 
+                    this->singletonInstance, this->singletonInstance != nullptr ? this->singletonInstance->Get() : nullptr);
+                Output::Print(L"   fixed fields:");
+
+                for (PropertyIndex i = 0; i < GetSlotCount(); i = GetNextSlotIndex(i))
+                {
+                    Output::Print(L" %s %d%d%d,", GetPropertyId(i)->GetBuffer(),
+                        i < GetMaxInitializedSlotCount() ? 1 : 0,
+                        GetIsFixedFieldAt(i, GetSlotCount()) ? 1 : 0,
+                        GetIsUsedFixedFieldAt(i, GetSlotCount()) ? 1 : 0);
+                }
+                
+                Output::Print(L"\n");
+            }
+#endif
+        }
+
+        void AddSingletonInstanceFieldAt(PropertyIndex index, PropertyIndex objectSlotCount)
+        {
+            VerifySlotIndex(index, objectSlotCount);
+            Assert(objectSlotCount >= this->maxInitializedSlotCount);
+            Assert(index >= this->maxInitializedSlotCount);
+            Assert(!fixedFields.Test(index) && !usedFixedFields.Test(index));
+
+            SetMaxInitializedSlotCount(GetNextSlotIndex(index));
+
+#ifdef SUPPORT_FIXED_FIELDS_ON_PATH_TYPES
+            if (PHASE_VERBOSE_TRACE1(FixMethodPropsPhase))
+            {
+                Output::Print(L"FixedFields: TypePath::AddSingletonInstanceFieldAt: singleton = 0x%p(0x%p)\n", 
+                    this->singletonInstance, this->singletonInstance != nullptr ? this->singletonInstance->Get() : nullptr);
+                Output::Print(L"   fixed fields:");
+
+                for (PropertyIndex i = 0; i < GetSlotCount(); i = GetNextSlotIndex(i))
+                {
+                    Output::Print(L" %s %d%d%d,", GetPropertyId(i)->GetBuffer(),
+                        i < GetMaxInitializedSlotCount() ? 1 : 0,
+                        GetIsFixedFieldAt(i, GetSlotCount()) ? 1 : 0,
+                        GetIsUsedFixedFieldAt(i, GetSlotCount()) ? 1 : 0);
+                }
+                
+                Output::Print(L"\n");
+            }
+#endif
+        }
 
 #if DBG
         bool HasSingletonInstanceOnlyIfNeeded();
 #endif
 
 #else
-        int GetMaxInitializedLength() { Assert(false); return this->pathLength; }
+        PropertyIndex GetMaxInitializedSlotCount() { Assert(false); return this->slotCount; }
 
-        Var GetSingletonFixedFieldAt(PropertyIndex index, int typePathLength, ScriptContext * requestContext);
+        Var GetSingletonFixedFieldAt(PropertyIndex index, PropertyIndex objectSlotCount, ScriptContext * requestContext);
 
         bool HasSingletonInstance() const { Assert(false); return false; }
         RecyclerWeakReference<DynamicObject>* GetSingletonInstance() const { Assert(false); return nullptr; }
-        void SetSingletonInstance(RecyclerWeakReference<DynamicObject>* instance, int typePathLength) { Assert(false); }
+        void SetSingletonInstance(RecyclerWeakReference<DynamicObject>* instance, PropertyIndex objectSlotCount) { Assert(false); }
         void ClearSingletonInstance() { Assert(false); }
         void ClearSingletonInstanceIfSame(RecyclerWeakReference<DynamicObject>* instance) { Assert(false); }
         void ClearSingletonInstanceIfDifferent(RecyclerWeakReference<DynamicObject>* instance) { Assert(false); }
 
-        bool GetIsFixedFieldAt(PropertyIndex index, int typePathLength) { Assert(false); return false; }
-        bool GetIsUsedFixedFieldAt(PropertyIndex index, int typePathLength) { Assert(false); return false; }
-        void SetIsUsedFixedFieldAt(PropertyIndex index, int typePathLength) { Assert(false); }
-        void ClearIsFixedFieldAt(PropertyIndex index, int typePathLength) { Assert(false); }
-        bool CanHaveFixedFields(int typePathLength) { Assert(false); return false; }
-        void AddBlankFieldAt(PropertyIndex index, int typePathLength) { Assert(false); }
-        void AddSingletonInstanceFieldAt(DynamicObject* instance, PropertyIndex index, bool isFixed, int typePathLength) { Assert(false); }
-        void AddSingletonInstanceFieldAt(PropertyIndex index, int typePathLength) { Assert(false); }
+        bool GetIsFixedFieldAt(PropertyIndex index, PropertyIndex objectSlotCount) { Assert(false); return false; }
+        bool GetIsUsedFixedFieldAt(PropertyIndex index, PropertyIndex objectSlotCount) { Assert(false); return false; }
+        void SetIsUsedFixedFieldAt(PropertyIndex index, PropertyIndex objectSlotCount) { Assert(false); }
+        void ClearIsFixedFieldAt(PropertyIndex index, PropertyIndex objectSlotCount) { Assert(false); }
+        bool CanHaveFixedFields(PropertyIndex objectSlotCount) { Assert(false); return false; }
+        void AddBlankFieldAt(PropertyIndex index, PropertyIndex objectSlotCount) { Assert(false); }
+        void AddSingletonInstanceFieldAt(DynamicObject* instance, PropertyIndex index, bool isFixed, PropertyIndex objectSlotCount) { Assert(false); }
+        void AddSingletonInstanceFieldAt(PropertyIndex index, PropertyIndex objectSlotCount) { Assert(false); }
 #if DBG
         bool HasSingletonInstanceOnlyIfNeeded();
 #endif
@@ -271,3 +453,4 @@ public:
     };
 }
 
+#undef MAX_SLOT_CAPACITY

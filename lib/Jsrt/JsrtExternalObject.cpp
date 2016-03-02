@@ -11,9 +11,9 @@ JsrtExternalType::JsrtExternalType(Js::ScriptContext* scriptContext, JsFinalizeC
         scriptContext,
         Js::TypeIds_Object,
         scriptContext->GetLibrary()->GetObjectPrototype(),
-        nullptr,
-        Js::SimplePathTypeHandler::New(scriptContext, scriptContext->GetRootPath(), 0, 0, 0, true, true),
-        true,
+        nullptr, 
+        Js::PathTypeHandler::New(scriptContext), 
+        true, 
         true)
         , jsFinalizeCallback(finalizeCallback)
 {

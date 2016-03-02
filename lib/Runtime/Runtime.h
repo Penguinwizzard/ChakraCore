@@ -228,6 +228,8 @@ namespace Js
     struct Tick;
     struct TickDelta;
     class ByteBlock;
+    class ObjectCreationSiteInfo;
+    class ObjectLiteralCreationSiteInfo;
     class FunctionInfo;
     class FunctionBody;
     class ParseableFunctionInfo;
@@ -358,6 +360,7 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Language/Arguments.h"
 
 #include "Types/TypeId.h"
+#include "Types\ObjectSlotType.h"
 #include "Types/RecyclableObject.h"
 #include "Base/ExpirableObject.h"
 #include "Types/Type.h"
@@ -368,22 +371,25 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Types/JavascriptEnumerator.h"
 #include "Types/DynamicObject.h"
 #include "Types/ArrayObject.h"
-
+#include "Language\ValueType.h"
+#include "Language\DynamicProfileInfo.h"
+#include "Language\ReadOnlyDynamicProfileInfo.h"
 #include "Types/TypePath.h"
 #include "Types/TypeHandler.h"
 #include "Types/SimplePropertyDescriptor.h"
-
+#include "Types\PathTypeTransitionInfo.h"
 #include "Types/DynamicType.h"
+#include "Types\ObjectSlotIterator.h"
 
 #include "Language/StackTraceArguments.h"
 #include "Types/PropertyDescriptor.h"
 #include "Types/ActivationObject.h"
 #include "Base/TempArenaAllocatorObject.h"
-#include "Language/ValueType.h"
-#include "Language/DynamicProfileInfo.h"
 #include "Debug/SourceContextInfo.h"
+#include "Types\ObjectCreationSiteInfo.h"
 #include "Language/InlineCache.h"
 #include "Language/InlineCachePointerArray.h"
+#include "Types\ObjectLiteralCreationSiteInfo.h"
 #include "Base/FunctionInfo.h"
 #include "Base/FunctionBody.h"
 #include "Language/JavascriptExceptionContext.h"

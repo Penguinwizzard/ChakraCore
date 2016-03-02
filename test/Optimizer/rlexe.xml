@@ -1220,6 +1220,38 @@
   </test>
   <test>
     <default>
+      <files>NativeFields_test0.js</files>
+      <baseline>NativeFields_test0.baseline</baseline>
+      <compile-flags>-bgJit- -off:simpleJit -fullJitAfter:1</compile-flags>
+      <tags>exclude_dynapogo,exclude_serialized,exclude_default,exclude_ship</tags>
+    </default>
+  </test>
+  <test>
+    <default>
+      <files>NativeFields_test1.js</files>
+      <baseline>NativeFields_test1.baseline</baseline>
+      <compile-flags>-bgJit- -off:simpleJit -fullJitAfter:1</compile-flags>
+      <tags>exclude_dynapogo,exclude_serialized,exclude_default,exclude_ship</tags>
+    </default>
+  </test>
+  <test>
+    <default>
+      <files>NativeFields_test2.js</files>
+      <baseline>NativeFields_test2.baseline</baseline>
+      <compile-flags>-bgJit- -off:simpleJit -fullJitAfter:1</compile-flags>
+      <tags>exclude_dynapogo,exclude_serialized,exclude_default,exclude_ship</tags>
+    </default>
+  </test>
+  <test>
+    <default>
+      <files>NativeFields_test2.js</files>
+      <baseline>NativeFields_test2.baseline</baseline>
+      <compile-flags>-bgJit- -off:simpleJit -fullJitAfter:1</compile-flags>
+      <tags>exclude_dynapogo,exclude_serialized,exclude_default,exclude_ship</tags>
+    </default>
+  </test>
+  <test>
+    <default>
       <files>Miscellaneous_MaxInterpret.js</files>
       <baseline>Miscellaneous_MaxInterpret.baseline</baseline>
       <compile-flags>-bgJit- -minInterpretCount:1 -maxInterpretCount:1 -off:simpleJit</compile-flags>

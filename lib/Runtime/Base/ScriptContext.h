@@ -549,7 +549,6 @@ public:
         int convertSimpleDictionaryToDictionaryCount;
         int convertSimpleSharedDictionaryToNonSharedCount;
         int convertSimpleSharedToNonSharedCount;
-        int simplePathTypeHandlerCount;
         int pathTypeHandlerCount;
         int promoteCount;
         int cacheCount;
@@ -569,7 +568,7 @@ public:
 #ifdef  PROFILE_OBJECT_LITERALS
         int objectLiteralInstanceCount;
         int objectLiteralPathCount;
-        int objectLiteralCount[TypePath::MaxPathTypeHandlerLength];
+        int objectLiteralCount[TypePath::MaxSlotCapacity];
         int objectLiteralSimpleDictionaryCount;
         uint32 objectLiteralMaxLength;
         int objectLiteralPromoteCount;
@@ -782,6 +781,8 @@ private:
         IActiveScriptProfilerCallback2 *m_pProfileCallback2;
         BOOL m_fTraceDomCall;
         BOOL m_inProfileCallback;
+
+        bool slotTypeForAnyTypeChanged;
 
 #if ENABLE_PROFILE_INFO
 #if DBG_DUMP || defined(DYNAMIC_PROFILE_STORAGE) || defined(RUNTIME_DATA_COLLECTION)
@@ -1302,9 +1303,6 @@ private:
         void ClearInlineCachesWithDeadWeakRefs();
 #endif
         void ClearScriptContextCaches();
-#if ENABLE_NATIVE_CODEGEN
-        void RegisterConstructorCache(Js::PropertyId propertyId, Js::ConstructorCache* cache);
-#endif
 
     public:
         void RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertiesScriptContext();
@@ -1551,6 +1549,14 @@ private:
         bool HasMutationBreakpoints();
         void InsertMutationBreakpoint(Js::MutationBreakpoint *mutationBreakpoint);
 #endif
+
+    public:
+        bool DoNativeFields() const;
+        bool AreVarsSameTypeAndValue(const Var v0, const Var v1) const;
+
+    public:
+        bool SlotTypeForAnyTypeChanged() const;
+        void SetSlotTypeForAnyTypeChanged(const bool changed);
     };
 
     class AutoDynamicCodeReference

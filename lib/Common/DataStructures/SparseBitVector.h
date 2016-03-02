@@ -128,6 +128,7 @@ protected:
 public:
 
             BOOLEAN         operator[](BVIndex i) const;
+            BOOLEAN         Test(BVIndex i) const;
             BOOLEAN         Test(BVIndex i);
             BVIndex         GetNextBit(BVIndex i) const;
             BVIndex         GetNextBit(BVSparseNode * node) const;
@@ -444,9 +445,16 @@ BVSparse<TAllocator>::TestEmpty() const
 }
 
 template <class TAllocator>
-BOOLEAN
-BVSparse<TAllocator>::Test(BVIndex i)
+BOOLEAN BVSparse<TAllocator>::Test(BVIndex i) const
 {
+    // TODO: There shouldn't be a non-const version of Test()
+    return const_cast<BVSparse<TAllocator> *>(this)->Test(i);
+}
+
+template <class TAllocator>
+BOOLEAN 
+BVSparse<TAllocator>::Test(BVIndex i) 
+{    
     return this->BitsFromIndex(i, false)->Test(SparseBVUnit::Offset(i));
 }
 

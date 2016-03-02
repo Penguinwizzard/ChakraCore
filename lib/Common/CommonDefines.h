@@ -80,6 +80,11 @@
 #define TARGET_64 1
 #endif
 
+/*
+#if !defined(_M_IX86_OR_ARM32) && !defined(_M_X64_OR_ARM64)
+    #error Unsupported platform
+#endif
+*/
 //----------------------------------------------------------------------------------------------------
 // Enabled features
 //----------------------------------------------------------------------------------------------------
@@ -207,6 +212,13 @@
 
 #if ENABLE_DEBUG_CONFIG_OPTIONS
 #define ENABLE_DIRECTCALL_TELEMETRY_STATS
+#endif
+
+// Native fields
+#if defined(_M_IX86_OR_ARM32)
+    #define OBJECT_WIDE_SLOTS 1
+#else
+    #define OBJECT_WIDE_SLOTS 0
 #endif
 
 //----------------------------------------------------------------------------------------------------

@@ -206,11 +206,34 @@ HELPERCALL(Op_Memset, Js::JavascriptOperators::OP_Memset, AttrCanThrow)
 HELPERCALL(Op_Memcopy, Js::JavascriptOperators::OP_Memcopy, AttrCanThrow)
 
 HELPERCALL(Op_PatchGetValue, ((Js::Var (*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId))Js::JavascriptOperators::PatchGetValue<true, Js::InlineCache>), AttrCanThrow)
-HELPERCALL(Op_PatchGetValueWithThisPtr, ((Js::Var(*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var))Js::JavascriptOperators::PatchGetValueWithThisPtr<true, Js::InlineCache>), AttrCanThrow)
-HELPERCALL(Op_PatchGetValueForTypeOf, ((Js::Var(*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId))Js::JavascriptOperators::PatchGetValueForTypeOf<true, Js::InlineCache>), AttrCanThrow)
 HELPERCALL(Op_PatchGetValuePolymorphic, ((Js::Var (*)(Js::FunctionBody *const, Js::PolymorphicInlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId))Js::JavascriptOperators::PatchGetValue<true, Js::PolymorphicInlineCache>), AttrCanThrow)
+
+HELPERCALL(Op_PatchGetValue_SlotTypeBailoutCheck_Int32, ((bool (*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, const Js::ObjectSlotType, int32 *const))Js::JavascriptOperators::PatchGetValue_SlotTypeBailoutCheck<Js::InlineCache, int32>), AttrCanThrow)
+HELPERCALL(Op_PatchGetValuePolymorphic_SlotTypeBailoutCheck_Int32, ((bool (*)(Js::FunctionBody *const, Js::PolymorphicInlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, const Js::ObjectSlotType, int32 *const))Js::JavascriptOperators::PatchGetValue_SlotTypeBailoutCheck<Js::PolymorphicInlineCache, int32>), AttrCanThrow)
+HELPERCALL(Op_PatchGetValue_SlotTypeBailoutCheck_Float64, ((bool (*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, const Js::ObjectSlotType, double *const))Js::JavascriptOperators::PatchGetValue_SlotTypeBailoutCheck<Js::InlineCache, double>), AttrCanThrow)
+HELPERCALL(Op_PatchGetValuePolymorphic_SlotTypeBailoutCheck_Float64, ((bool (*)(Js::FunctionBody *const, Js::PolymorphicInlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, const Js::ObjectSlotType, double *const))Js::JavascriptOperators::PatchGetValue_SlotTypeBailoutCheck<Js::PolymorphicInlineCache, double>), AttrCanThrow)
+HELPERCALL(Op_PatchGetValue_SlotTypeBailoutCheck_Var, ((bool (*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, const Js::ObjectSlotType, Js::Var *const))Js::JavascriptOperators::PatchGetValue_SlotTypeBailoutCheck<Js::InlineCache, Js::Var>), AttrCanThrow)
+HELPERCALL(Op_PatchGetValuePolymorphic_SlotTypeBailoutCheck_Var, ((bool (*)(Js::FunctionBody *const, Js::PolymorphicInlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, const Js::ObjectSlotType, Js::Var *const))Js::JavascriptOperators::PatchGetValue_SlotTypeBailoutCheck<Js::PolymorphicInlineCache, Js::Var>), AttrCanThrow)
+
+HELPERCALL(Op_PatchGetValueWithThisPtr, ((Js::Var(*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var))Js::JavascriptOperators::PatchGetValueWithThisPtr<true, Js::InlineCache>), AttrCanThrow)
 HELPERCALL(Op_PatchGetValuePolymorphicWithThisPtr, ((Js::Var(*)(Js::FunctionBody *const, Js::PolymorphicInlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var))Js::JavascriptOperators::PatchGetValueWithThisPtr<true, Js::PolymorphicInlineCache>), AttrCanThrow)
+
+HELPERCALL(Op_PatchGetValueWithThisPtr_SlotTypeBailoutCheck_Int32, ((bool (*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, const Js::ObjectSlotType, int32 *const))Js::JavascriptOperators::PatchGetValueWithThisPtr_SlotTypeBailoutCheck<Js::InlineCache, int32>), AttrCanThrow)
+HELPERCALL(Op_PatchGetValuePolymorphicWithThisPtr_SlotTypeBailoutCheck_Int32, ((bool (*)(Js::FunctionBody *const, Js::PolymorphicInlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, const Js::ObjectSlotType, int32 *const))Js::JavascriptOperators::PatchGetValueWithThisPtr_SlotTypeBailoutCheck<Js::PolymorphicInlineCache, int32>), AttrCanThrow)
+HELPERCALL(Op_PatchGetValueWithThisPtr_SlotTypeBailoutCheck_Float64, ((bool (*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, const Js::ObjectSlotType, double *const))Js::JavascriptOperators::PatchGetValueWithThisPtr_SlotTypeBailoutCheck<Js::InlineCache, double>), AttrCanThrow)
+HELPERCALL(Op_PatchGetValuePolymorphicWithThisPtr_SlotTypeBailoutCheck_Float64, ((bool (*)(Js::FunctionBody *const, Js::PolymorphicInlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, const Js::ObjectSlotType, double *const))Js::JavascriptOperators::PatchGetValueWithThisPtr_SlotTypeBailoutCheck<Js::PolymorphicInlineCache, double>), AttrCanThrow)
+HELPERCALL(Op_PatchGetValueWithThisPtr_SlotTypeBailoutCheck_Var, ((bool (*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, const Js::ObjectSlotType, Js::Var *const))Js::JavascriptOperators::PatchGetValueWithThisPtr_SlotTypeBailoutCheck<Js::InlineCache, Js::Var>), AttrCanThrow)
+HELPERCALL(Op_PatchGetValuePolymorphicWithThisPtr_SlotTypeBailoutCheck_Var, ((bool (*)(Js::FunctionBody *const, Js::PolymorphicInlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, const Js::ObjectSlotType, Js::Var *const))Js::JavascriptOperators::PatchGetValueWithThisPtr_SlotTypeBailoutCheck<Js::PolymorphicInlineCache, Js::Var>), AttrCanThrow)
+
+HELPERCALL(Op_PatchGetValueForTypeOf, ((Js::Var(*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId))Js::JavascriptOperators::PatchGetValueForTypeOf<true, Js::InlineCache>), AttrCanThrow)
 HELPERCALL(Op_PatchGetValuePolymorphicForTypeOf, ((Js::Var(*)(Js::FunctionBody *const, Js::PolymorphicInlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId))Js::JavascriptOperators::PatchGetValueForTypeOf<true, Js::PolymorphicInlineCache>), AttrCanThrow)
+
+HELPERCALL(Op_PatchGetValueForTypeOf_SlotTypeBailoutCheck_Int32, ((bool (*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, const Js::ObjectSlotType, int32 *const))Js::JavascriptOperators::PatchGetValueForTypeOf_SlotTypeBailoutCheck<Js::InlineCache, int32>), AttrCanThrow)
+HELPERCALL(Op_PatchGetValuePolymorphicForTypeOf_SlotTypeBailoutCheck_Int32, ((bool (*)(Js::FunctionBody *const, Js::PolymorphicInlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, const Js::ObjectSlotType, int32 *const))Js::JavascriptOperators::PatchGetValueForTypeOf_SlotTypeBailoutCheck<Js::PolymorphicInlineCache, int32>), AttrCanThrow)
+HELPERCALL(Op_PatchGetValueForTypeOf_SlotTypeBailoutCheck_Float64, ((bool (*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, const Js::ObjectSlotType, double *const))Js::JavascriptOperators::PatchGetValueForTypeOf_SlotTypeBailoutCheck<Js::InlineCache, double>), AttrCanThrow)
+HELPERCALL(Op_PatchGetValuePolymorphicForTypeOf_SlotTypeBailoutCheck_Float64, ((bool (*)(Js::FunctionBody *const, Js::PolymorphicInlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, const Js::ObjectSlotType, double *const))Js::JavascriptOperators::PatchGetValueForTypeOf_SlotTypeBailoutCheck<Js::PolymorphicInlineCache, double>), AttrCanThrow)
+HELPERCALL(Op_PatchGetValueForTypeOf_SlotTypeBailoutCheck_Var, ((bool (*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, const Js::ObjectSlotType, Js::Var *const))Js::JavascriptOperators::PatchGetValueForTypeOf_SlotTypeBailoutCheck<Js::InlineCache, Js::Var>), AttrCanThrow)
+HELPERCALL(Op_PatchGetValuePolymorphicForTypeOf_SlotTypeBailoutCheck_Var, ((bool (*)(Js::FunctionBody *const, Js::PolymorphicInlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, const Js::ObjectSlotType, Js::Var *const))Js::JavascriptOperators::PatchGetValueForTypeOf_SlotTypeBailoutCheck<Js::PolymorphicInlineCache, Js::Var>), AttrCanThrow)
 
 HELPERCALL(Op_PatchGetRootValue, ((Js::Var (*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::DynamicObject*, Js::PropertyId))Js::JavascriptOperators::PatchGetRootValue<true, Js::InlineCache>), AttrCanThrow)
 HELPERCALL(Op_PatchGetRootValuePolymorphic, ((Js::Var (*)(Js::FunctionBody *const, Js::PolymorphicInlineCache *const, const Js::InlineCacheIndex, Js::DynamicObject*, Js::PropertyId))Js::JavascriptOperators::PatchGetRootValue<true, Js::PolymorphicInlineCache>), AttrCanThrow)
@@ -224,17 +247,41 @@ HELPERCALL(Op_PatchGetPropertyForTypeOfScoped, ((Js::Var(*)(Js::FunctionBody *co
 HELPERCALL(Op_PatchInitValue, ((void (*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::RecyclableObject*, Js::PropertyId, Js::Var))Js::JavascriptOperators::PatchInitValue<true, Js::InlineCache>), AttrCanThrow)
 HELPERCALL(Op_PatchInitValuePolymorphic, ((void (*)(Js::FunctionBody *const, Js::PolymorphicInlineCache *const, const Js::InlineCacheIndex, Js::RecyclableObject*, Js::PropertyId, Js::Var))Js::JavascriptOperators::PatchInitValue<true, Js::PolymorphicInlineCache>), AttrCanThrow)
 
+HELPERCALL(Op_PatchInitValue_SlotTypeBailoutCheck_Int32, ((bool (*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::RecyclableObject*, Js::PropertyId, Js::Var))Js::JavascriptOperators::PatchInitValue_SlotTypeBailoutCheck<Js::InlineCache, int32>), AttrCanThrow)
+HELPERCALL(Op_PatchInitValuePolymorphic_SlotTypeBailoutCheck_Int32, ((bool (*)(Js::FunctionBody *const, Js::PolymorphicInlineCache *const, const Js::InlineCacheIndex, Js::RecyclableObject*, Js::PropertyId, Js::Var))Js::JavascriptOperators::PatchInitValue_SlotTypeBailoutCheck<Js::PolymorphicInlineCache, int32>), AttrCanThrow)
+HELPERCALL(Op_PatchInitValue_SlotTypeBailoutCheck_Float64, ((bool (*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::RecyclableObject*, Js::PropertyId, Js::Var))Js::JavascriptOperators::PatchInitValue_SlotTypeBailoutCheck<Js::InlineCache, double>), AttrCanThrow)
+HELPERCALL(Op_PatchInitValuePolymorphic_SlotTypeBailoutCheck_Float64, ((bool (*)(Js::FunctionBody *const, Js::PolymorphicInlineCache *const, const Js::InlineCacheIndex, Js::RecyclableObject*, Js::PropertyId, Js::Var))Js::JavascriptOperators::PatchInitValue_SlotTypeBailoutCheck<Js::PolymorphicInlineCache, double>), AttrCanThrow)
+
 HELPERCALL(Op_PatchPutValue, ((void (*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchPutValue<true, Js::InlineCache>), AttrCanThrow)
-HELPERCALL(Op_PatchPutValueWithThisPtr, ((void (*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchPutValueWithThisPtr<true, Js::InlineCache>), AttrCanThrow)
 HELPERCALL(Op_PatchPutValuePolymorphic, ((void (*)(Js::FunctionBody *const, Js::PolymorphicInlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchPutValue<true, Js::PolymorphicInlineCache>), AttrCanThrow)
+
+HELPERCALL(Op_PatchPutValue_SlotTypeBailoutCheck_Int32, ((bool (*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchPutValue_SlotTypeBailoutCheck<Js::InlineCache, int32>), AttrCanThrow)
+HELPERCALL(Op_PatchPutValuePolymorphic_SlotTypeBailoutCheck_Int32, ((bool (*)(Js::FunctionBody *const, Js::PolymorphicInlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchPutValue_SlotTypeBailoutCheck<Js::PolymorphicInlineCache, int32>), AttrCanThrow)
+HELPERCALL(Op_PatchPutValue_SlotTypeBailoutCheck_Float64, ((bool (*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchPutValue_SlotTypeBailoutCheck<Js::InlineCache, double>), AttrCanThrow)
+HELPERCALL(Op_PatchPutValuePolymorphic_SlotTypeBailoutCheck_Float64, ((bool (*)(Js::FunctionBody *const, Js::PolymorphicInlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchPutValue_SlotTypeBailoutCheck<Js::PolymorphicInlineCache, double>), AttrCanThrow)
+
+HELPERCALL(Op_PatchPutValueWithThisPtr, ((void (*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchPutValueWithThisPtr<true, Js::InlineCache>), AttrCanThrow)
 HELPERCALL(Op_PatchPutValueWithThisPtrPolymorphic, ((void (*)(Js::FunctionBody *const, Js::PolymorphicInlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchPutValueWithThisPtr<true, Js::PolymorphicInlineCache>), AttrCanThrow)
+
 HELPERCALL(Op_PatchPutRootValue, ((void (*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchPutRootValue<true, Js::InlineCache>), AttrCanThrow)
 HELPERCALL(Op_PatchPutRootValuePolymorphic, ((void (*)(Js::FunctionBody *const, Js::PolymorphicInlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchPutRootValue<true, Js::PolymorphicInlineCache>), AttrCanThrow)
 
 HELPERCALL(Op_PatchPutValueNoLocalFastPath, ((void (*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchPutValueNoLocalFastPath<true, Js::InlineCache>), AttrCanThrow)
-HELPERCALL(Op_PatchPutValueWithThisPtrNoLocalFastPath, ((void (*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchPutValueWithThisPtrNoLocalFastPath<true, Js::InlineCache>), AttrCanThrow)
 HELPERCALL(Op_PatchPutValueNoLocalFastPathPolymorphic, ((void (*)(Js::FunctionBody *const, Js::PolymorphicInlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchPutValueNoLocalFastPath<true, Js::PolymorphicInlineCache>), AttrCanThrow)
+
+HELPERCALL(Op_PatchPutValueNoLocalFastPath_SlotTypeBailoutCheck_Int32, ((bool (*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchPutValueNoLocalFastPath_SlotTypeBailoutCheck<Js::InlineCache, int32>), AttrCanThrow)
+HELPERCALL(Op_PatchPutValueNoLocalFastPathPolymorphic_SlotTypeBailoutCheck_Int32, ((bool (*)(Js::FunctionBody *const, Js::PolymorphicInlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchPutValueNoLocalFastPath_SlotTypeBailoutCheck<Js::PolymorphicInlineCache, int32>), AttrCanThrow)
+HELPERCALL(Op_PatchPutValueNoLocalFastPath_SlotTypeBailoutCheck_Float64, ((bool (*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchPutValueNoLocalFastPath_SlotTypeBailoutCheck<Js::InlineCache, double>), AttrCanThrow)
+HELPERCALL(Op_PatchPutValueNoLocalFastPathPolymorphic_SlotTypeBailoutCheck_Float64, ((bool (*)(Js::FunctionBody *const, Js::PolymorphicInlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchPutValueNoLocalFastPath_SlotTypeBailoutCheck<Js::PolymorphicInlineCache, double>), AttrCanThrow)
+
+HELPERCALL(Op_PatchPutValueWithThisPtrNoLocalFastPath, ((void (*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchPutValueWithThisPtrNoLocalFastPath<true, Js::InlineCache>), AttrCanThrow)
 HELPERCALL(Op_PatchPutValueWithThisPtrNoLocalFastPathPolymorphic, ((void (*)(Js::FunctionBody *const, Js::PolymorphicInlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchPutValueWithThisPtrNoLocalFastPath<true, Js::PolymorphicInlineCache>), AttrCanThrow)
+
+HELPERCALL(Op_PatchPutValueWithThisPtrNoLocalFastPath_SlotTypeBailoutCheck_Int32, ((bool (*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchPutValueWithThisPtrNoLocalFastPath_SlotTypeBailoutCheck<Js::InlineCache, int32>), AttrCanThrow)
+HELPERCALL(Op_PatchPutValueWithThisPtrNoLocalFastPathPolymorphic_SlotTypeBailoutCheck_Int32, ((bool (*)(Js::FunctionBody *const, Js::PolymorphicInlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchPutValueWithThisPtrNoLocalFastPath_SlotTypeBailoutCheck<Js::PolymorphicInlineCache, int32>), AttrCanThrow)
+HELPERCALL(Op_PatchPutValueWithThisPtrNoLocalFastPath_SlotTypeBailoutCheck_Float64, ((bool (*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchPutValueWithThisPtrNoLocalFastPath_SlotTypeBailoutCheck<Js::InlineCache, double>), AttrCanThrow)
+HELPERCALL(Op_PatchPutValueWithThisPtrNoLocalFastPathPolymorphic_SlotTypeBailoutCheck_Float64, ((bool (*)(Js::FunctionBody *const, Js::PolymorphicInlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchPutValueWithThisPtrNoLocalFastPath_SlotTypeBailoutCheck<Js::PolymorphicInlineCache, double>), AttrCanThrow)
+
 HELPERCALL(Op_PatchPutRootValueNoLocalFastPath, ((void (*)(Js::FunctionBody *const, Js::InlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchPutRootValueNoLocalFastPath<true, Js::InlineCache>), AttrCanThrow)
 HELPERCALL(Op_PatchPutRootValueNoLocalFastPathPolymorphic, ((void (*)(Js::FunctionBody *const, Js::PolymorphicInlineCache *const, const Js::InlineCacheIndex, Js::Var, Js::PropertyId, Js::Var, Js::PropertyOperationFlags))Js::JavascriptOperators::PatchPutRootValueNoLocalFastPath<true, Js::PolymorphicInlineCache>), AttrCanThrow)
 
@@ -307,7 +354,7 @@ HELPERCALL(NewScObjectNoCtorFull, Js::JavascriptOperators::NewScObjectNoCtorFull
 HELPERCALL(NewScObjectNoArgNoCtorFull, Js::JavascriptOperators::NewScObjectNoArgNoCtorFull, 0)
 HELPERCALL(NewScObjectNoArgNoCtor, Js::JavascriptOperators::NewScObjectNoArgNoCtor, 0)
 HELPERCALL(UpdateNewScObjectCache, Js::JavascriptOperators::UpdateNewScObjectCache, 0)
-HELPERCALL(EnsureObjectLiteralType, Js::JavascriptOperators::EnsureObjectLiteralType, 0)
+HELPERCALL(NewScObjectLiteral, Js::JavascriptOperators::NewScObjectLiteral, 0)
 
 HELPERCALL(OP_InitClass, Js::JavascriptOperators::OP_InitClass, AttrCanThrow)
 
@@ -388,6 +435,8 @@ HELPERCALL(ProfiledStFld_Strict, Js::ProfilingHelpers::ProfiledStFld_Strict_Jit,
 HELPERCALL(ProfiledStRootFld, Js::ProfilingHelpers::ProfiledStRootFld_Jit, 0)
 HELPERCALL(ProfiledStRootFld_Strict, Js::ProfilingHelpers::ProfiledStRootFld_Strict_Jit, 0)
 HELPERCALL(ProfiledInitFld, Js::ProfilingHelpers::ProfiledInitFld_Jit, 0)
+HELPERCALL(ProfiledDivide, Js::ProfilingHelpers::ProfiledDivide, 0)
+HELPERCALL(ProfiledRemainder, Js::ProfilingHelpers::ProfiledRemainder, 0)
 
 HELPERCALL(TransitionFromSimpleJit, NativeCodeGenerator::Jit_TransitionFromSimpleJit, 0)
 HELPERCALL(SimpleProfileCall_DefaultInlineCacheIndex, Js::SimpleJitHelpers::ProfileCall_DefaultInlineCacheIndex, 0)
@@ -397,8 +446,6 @@ HELPERCALL(SimpleProfiledLdLen, Js::SimpleJitHelpers::ProfiledLdLen_A, AttrCanTh
 HELPERCALL(SimpleProfiledStrictLdThis, Js::SimpleJitHelpers::ProfiledStrictLdThis, 0)
 HELPERCALL(SimpleProfiledLdThis, Js::SimpleJitHelpers::ProfiledLdThis, 0)
 HELPERCALL(SimpleProfiledSwitch, Js::SimpleJitHelpers::ProfiledSwitch, 0)
-HELPERCALL(SimpleProfiledDivide, Js::SimpleJitHelpers::ProfiledDivide, 0)
-HELPERCALL(SimpleProfiledRemainder, Js::SimpleJitHelpers::ProfiledRemainder, 0)
 HELPERCALL(SimpleStoreArrayHelper, Js::SimpleJitHelpers::StoreArrayHelper, 0)
 HELPERCALL(SimpleStoreArraySegHelper, Js::SimpleJitHelpers::StoreArraySegHelper, 0)
 HELPERCALL(SimpleProfileParameters, Js::SimpleJitHelpers::ProfileParameters, 0)
@@ -502,7 +549,7 @@ HELPERCALL(AsyncSpawn,    Js::JavascriptOperators::OP_AsyncSpawn,    AttrCanThro
 HELPERCALL(BoxStackNumber, Js::JavascriptNumber::BoxStackNumber, 0)
 #endif
 
-HELPERCALL(GetNonzeroInt32Value_NoTaggedIntCheck, Js::JavascriptNumber::GetNonzeroInt32Value_NoTaggedIntCheck, 0)
+HELPERCALL(TryGetInt32Value_NoTaggedIntCheck, Js::JavascriptNumber::TryGetInt32Value_NoTaggedIntCheck, 0)
 HELPERCALL(IsNegZero, Js::JavascriptNumber::IsNegZero, 0)
 
 HELPERCALL(DirectMath_Pow, (double(*)(double, double))Js::JavascriptNumber::DirectPow, 0)
