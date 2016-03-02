@@ -2505,18 +2505,30 @@ BackwardPass::ProcessBlock(BasicBlock * block)
             switch(instr->m_opcode)
             {
                 case Js::OpCode::LdSlotArr:
-                    if (instr->DoStackArgsOpt(this->func) && instr->GetSrc1()->GetPropertyStackSym()->m_isParamArraySym)
+                    if (instr->DoStackArgsOpt(this->func))
                     {
-                        IR::Instr * returnInstr = instr->m_next;
+                        Assert(instr->GetSrc1()->GetPropertyStackSym()->m_isParamArraySym);
                         instr->Remove();
                         continue;
                     }
                     break;
                 case Js::OpCode::LdSlot:
                 {
-                    if (instr->DoStackArgsOpt(this->func) && instr->GetSrc1()->GetPropertyStackSym()->m_isParamArraySym)
+                    if (instr->DoStackArgsOpt(this->func))
                     {
+                        Assert(instr->GetSrc1()->GetPropertyStackSym()->m_isParamArraySym);
                         instr = ConvertToArgIn(instr);
+                    }
+                    break;
+                }
+                case Js::OpCode::LdHeapArgsCached:
+                {
+                    if (instr->DoStackArgsOpt(this->func))
+                    {
+                        Assert(instr->GetSrc1()->GetPropertyStackSym()->m_isParamArraySym);
+                        instr->m_opcode = Js::OpCode::LdHeapArguments;
+                        Assert(instr->m_prev->m_opcode == Js::OpCode::CallHelper);
+                        instr->m_prev->Remove();
                     }
                     break;
                 }

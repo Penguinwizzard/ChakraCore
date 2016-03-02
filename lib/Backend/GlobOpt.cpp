@@ -3898,6 +3898,14 @@ GlobOpt::OptArguments(IR::Instr *instr)
         }
         break;
     }
+    case Js::OpCode::LdHeapArgsCached:
+    {
+        if (instr->GetSrc1()->GetPropertyStackSym()->m_isParamArraySym)
+        {
+            instr->usesStackArguments = true;
+        }
+        break;
+    }
     case Js::OpCode::ArgOut_A_InlineBuiltIn:
     {
         if (IsArgumentsOpnd(src1) &&
