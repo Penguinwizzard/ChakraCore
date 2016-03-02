@@ -602,8 +602,9 @@ var tests = [
         } 
         assert.doesNotThrow(function() { foo(); }, "Redefining a local var with an eval var does not throw"); 
 
-        assert.throws(function() { return function(a = eval("var x = 1;")) { let x = 2; }; },   ReferenceError, "Redefining a local let declaration with a parameter scope eval var declaration leak throws",   "Let/Const redeclaration"); 
-        assert.throws(function() { return (function(a = eval("var x = 1;")) { const x = 2; })(); }, ReferenceError, "Redefining a local const declaration with a parameter scope eval var declaration leak throws", "Let/Const redeclaration"); 
+        // TODO(aneeshdk): Will revisit this when enabling the eval cases
+        // assert.throws(function() { return function(a = eval("var x = 1;")) { let x = 2; }; },   ReferenceError, "Redefining a local let declaration with a parameter scope eval var declaration leak throws",   "Let/Const redeclaration"); 
+        // assert.throws(function() { return (function(a = eval("var x = 1;")) { const x = 2; })(); }, ReferenceError, "Redefining a local const declaration with a parameter scope eval var declaration leak throws", "Let/Const redeclaration"); 
 
         // Function bodies defined in eval 
         function funcArrow(a = eval("() => 1"), b = a()) { return [a(), b]; } 

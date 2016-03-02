@@ -1399,9 +1399,6 @@ FuncInfo * ByteCodeGenerator::StartBindFunction(const wchar_t *name, uint nameLe
 
     PushFuncInfo(L"StartBindFunction", funcInfo);
 
-    PushScope(paramScope);
-    PushScope(bodyScope);
-
     if (funcExprScope)
     {
         funcExprScope->SetFunc(funcInfo);
@@ -2441,8 +2438,6 @@ FuncInfo* PreVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerato
     // If we have arguments, we are going to need locations if the function is in strict mode or we have a non-simple parameter list. This is because we will not create a scope object.
     bool assignLocationForFormals = !(funcInfo->GetHasHeapArguments() && ByteCodeGenerator::NeedScopeObjectForArguments(funcInfo, funcInfo->root));
     AddArgsToScope(pnode, byteCodeGenerator, assignLocationForFormals);
-    PreVisitBlock(pnode->sxFnc.pnodeBodyScope, byteCodeGenerator);
-    AddVarsToScope(pnode->sxFnc.pnodeVars, byteCodeGenerator);
 
     return funcInfo;
 }
@@ -3062,19 +3057,25 @@ void VisitNestedScopes(ParseNode* pnodeScopeList, ParseNode* pnodeParent, ByteCo
                 i = 0;
                 ParseNodePtr containerScope = pnodeScope->sxFnc.pnodeScopes;
 
+                // Push the param scope
+                byteCodeGenerator->PushScope(pnodeScope->sxFnc.funcInfo->GetParamScope());
+
                 if (pnodeScope->sxFnc.HasNonSimpleParameterList() && !pnodeScope->sxFnc.funcInfo->GetParamScope()->GetCanMergeWithBodyScope())
                 {
-                    // Pop the body scope
-                    byteCodeGenerator->PopScope();
-
-
-                    // During OnStartVisitFunction we set the body scope as the current child scope of the function.
-                    // Right now we have to change it to param scope.
+                    // Set param scope as the current child scope.
                     pnodeScope->sxFnc.funcInfo->SetCurrentChildScope(pnodeScope->sxFnc.funcInfo->GetParamScope());
                     Assert(containerScope->nop == knopBlock && containerScope->sxBlock.blockType == Parameter);
                     VisitNestedScopes(containerScope->sxBlock.pnodeScopes, pnodeScope, byteCodeGenerator, prefix, postfix, &i, true);
                 }
-                else
+
+                // Push the body scope
+                byteCodeGenerator->PushScope(pnodeScope->sxFnc.funcInfo->GetBodyScope());
+                pnodeScope->sxFnc.funcInfo->SetCurrentChildScope(pnodeScope->sxFnc.funcInfo->GetBodyScope());
+
+                PreVisitBlock(pnodeScope->sxFnc.pnodeBodyScope, byteCodeGenerator);
+                AddVarsToScope(pnodeScope->sxFnc.pnodeVars, byteCodeGenerator);
+
+                if (!pnodeScope->sxFnc.HasNonSimpleParameterList() || pnodeScope->sxFnc.funcInfo->GetParamScope()->GetCanMergeWithBodyScope())
                 {
                     VisitNestedScopes(containerScope, pnodeScope, byteCodeGenerator, prefix, postfix, &i);
                 }
@@ -3085,14 +3086,9 @@ void VisitNestedScopes(ParseNode* pnodeScopeList, ParseNode* pnodeParent, ByteCo
                 {
                     byteCodeGenerator->AssignUndefinedConstRegister();
 
-                    // Set the body scope as the current child scope of the function
-                    pnodeScope->sxFnc.funcInfo->SetCurrentChildScope(pnodeScope->sxFnc.funcInfo->GetBodyScope());
-
                     if (!pnodeScope->sxFnc.funcInfo->GetParamScope()->GetCanMergeWithBodyScope())
                     {
-                        // Push the body scope back
                         Assert(pnodeScope->sxFnc.pnodeBodyScope->sxBlock.scope);
-                        byteCodeGenerator->PushScope(pnodeScope->sxFnc.funcInfo->GetBodyScope());
                         VisitNestedScopes(pnodeScope->sxFnc.pnodeBodyScope->sxBlock.pnodeScopes, pnodeScope, byteCodeGenerator, prefix, postfix, &i);
                     }
                 }
@@ -3132,6 +3128,14 @@ void VisitNestedScopes(ParseNode* pnodeScopeList, ParseNode* pnodeParent, ByteCo
 
                 memset(pnodeScope->sxFnc.funcInfo->byteCodeFunction->GetNestedFuncArray(), 0, pnodeScope->sxFnc.nestedCount * sizeof(Js::FunctionBody*));
             }
+
+            if (!pnodeScope->sxFnc.pnodeBody)
+            {
+                // For defer prase scenario push the scopes here
+                byteCodeGenerator->PushScope(pnodeScope->sxFnc.funcInfo->GetParamScope());
+                byteCodeGenerator->PushScope(pnodeScope->sxFnc.funcInfo->GetBodyScope());
+            }
+
             pnodeScope->sxFnc.nestedIndex = *pIndex;
             parentFunc->SetNestedFunc(pnodeScope->sxFnc.funcInfo->byteCodeFunction, (*pIndex)++, byteCodeGenerator->GetFlags());
 

@@ -1667,17 +1667,17 @@ void ByteCodeGenerator::SetClosureRegisters(FuncInfo* funcInfo, Js::FunctionBody
 {
     if (funcInfo->frameDisplayRegister != Js::Constants::NoRegister)
     {
-        byteCodeFunction->SetLocalFrameDisplayReg(funcInfo->frameDisplayRegister);
+        byteCodeFunction->MapAndSetLocalFrameDisplayRegister(funcInfo->frameDisplayRegister);
     }
 
     if (funcInfo->frameObjRegister != Js::Constants::NoRegister)
     {
-        byteCodeFunction->SetLocalClosureReg(funcInfo->frameObjRegister);
+        byteCodeFunction->MapAndSetLocalClosureRegister(funcInfo->frameObjRegister);
         byteCodeFunction->SetHasScopeObject(true);
     }
     else if (funcInfo->frameSlotsRegister != Js::Constants::NoRegister)
     {
-        byteCodeFunction->SetLocalClosureReg(funcInfo->frameSlotsRegister);
+        byteCodeFunction->MapAndSetLocalClosureRegister(funcInfo->frameSlotsRegister);
     }
 }
 
@@ -1691,7 +1691,7 @@ void ByteCodeGenerator::FinalizeRegisters(FuncInfo * funcInfo, Js::FunctionBody 
 
     // Set the function body's constant count before emitting anything so that the byte code writer
     // can distinguish constants from variables.
-    byteCodeFunction->SetConstantCount(funcInfo->constRegsCount);
+    byteCodeFunction->CheckAndSetConstantCount(funcInfo->constRegsCount);
 
     this->SetClosureRegisters(funcInfo, byteCodeFunction);
 
@@ -1876,7 +1876,7 @@ void ByteCodeGenerator::LoadAllConstants(FuncInfo *funcInfo)
 
     if (funcInfo->funcExprScope && funcInfo->funcExprScope->GetIsObject())
     {
-        byteCodeFunction->SetFuncExprScopeReg(funcInfo->funcExprScope->GetLocation());
+        byteCodeFunction->MapAndSetFuncExprScopeRegister(funcInfo->funcExprScope->GetLocation());
         byteCodeFunction->SetEnvDepth((uint16)-1);
     }
 
@@ -1884,10 +1884,10 @@ void ByteCodeGenerator::LoadAllConstants(FuncInfo *funcInfo)
 
     if (funcInfo->NeedEnvRegister())
     {
-        byteCodeFunction->SetEnvReg(funcInfo->GetEnvRegister());
+        byteCodeFunction->MapAndSetEnvRegister(funcInfo->GetEnvRegister());
         if (funcInfo->GetIsEventHandler())
         {
-            byteCodeFunction->SetThisRegForEventHandler(funcInfo->thisPointerRegister);
+            byteCodeFunction->MapAndSetThisRegisterForEventHandler(funcInfo->thisPointerRegister);
             // The environment is the namespace hierarchy starting with "this".
             Assert(!funcInfo->RegIsConst(funcInfo->GetEnvRegister()));
             thisLoadedFromParams = true;
@@ -3132,10 +3132,9 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
 
         if (pnode->sxFnc.HasNonSimpleParameterList())
         {
-            Scope* bodyScope = funcInfo->GetBodyScope();
-
             this->InitBlockScopedNonTemps(funcInfo->root->sxFnc.pnodeScopes, funcInfo);
 
+            Scope* bodyScope = funcInfo->GetBodyScope();
             if (!paramScope->GetCanMergeWithBodyScope())
             {
                 byteCodeFunction->SetParamAndBodyScopeNotMerged();
@@ -3208,7 +3207,7 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
                 if (varSym && varSym->GetSymbolType() == STVariable && (varSym->IsInSlot(funcInfo) || varSym->GetLocation() != Js::Constants::NoRegister))
                 {
                     Js::RegSlot tempReg = funcInfo->AcquireTmpRegister();
-                    this->EmitPropLoad(tempReg, param, param->GetPid(), funcInfo);
+                    this->EmitPropLoad(tempReg, param, param->GetPid(), funcInfo, true);
                     this->EmitPropStore(tempReg, varSym, varSym->GetPid(), funcInfo);
                     funcInfo->ReleaseTmpRegister(tempReg);
                 }
@@ -3255,8 +3254,8 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
         Assert(funcInfo->curTmpReg == firstTmpReg);
         Assert(byteCodeFunction->GetFirstTmpReg() == firstTmpReg + byteCodeFunction->GetConstantCount());
 
-        byteCodeFunction->SetVarCount(funcInfo->varRegsCount);
-        byteCodeFunction->SetOutParamDepth(funcInfo->outArgsMaxDepth);
+        byteCodeFunction->CheckAndSetVarCount(funcInfo->varRegsCount);
+        byteCodeFunction->CheckAndSetOutParamMaxDepth(funcInfo->outArgsMaxDepth);
 
         // Do a uint32 add just to verify that we haven't overflowed the reg slot type.
         UInt32Math::Add(funcInfo->varRegsCount, funcInfo->constRegsCount);
@@ -3487,16 +3486,12 @@ void ByteCodeGenerator::EmitScopeList(ParseNode *pnode, bool breakOnNonFunc)
                     ParseNodePtr paramBlock = pnode->sxFnc.pnodeScopes;
                     Assert(paramBlock->nop == knopBlock && paramBlock->sxBlock.blockType == Parameter);
 
-                    // Pop the body scope
-                    // Assert(this->GetCurrentScope() == bodyScope);
-                    // PopScope();
                     PushScope(paramScope);
 
                     // While emitting the functions we have to stop when we see the body scope block.
                     // Otherwise functions defined in the body scope will not be able to get the right references.
                     this->EmitScopeList(paramBlock->sxBlock.pnodeScopes, true);
                     Assert(this->GetCurrentScope() == paramScope);
-                    // PushScope(bodyScope);
                 }
 
                 PushScope(bodyScope);
@@ -3752,11 +3747,6 @@ void ByteCodeGenerator::StartEmitFunction(ParseNode *pnodeFnc)
             ParseNode *pnode;
             Symbol *sym;
 
-            /*if (!paramScope || paramScope->GetCanMergeWithBodyScope())
-            {
-                PushScope(bodyScope);
-            }*/
-
             // Turns on capturesAll temporarily if func has deferred child, so that the following EnsureScopeSlot
             // will allocate scope slots no matter if symbol hasNonLocalRefence or not.
             Js::ScopeInfo::AutoCapturesAllScope autoCapturesAllScope(bodyScope, funcInfo->HasDeferredChild());
@@ -3881,11 +3871,6 @@ void ByteCodeGenerator::StartEmitFunction(ParseNode *pnodeFnc)
 
             pnodeFnc->sxFnc.MapContainerScopes([&](ParseNode *pnodeScope) { this->EnsureFncScopeSlots(pnodeScope, funcInfo); });
 
-            /*if (!paramScope || paramScope->GetCanMergeWithBodyScope())
-            {
-                PushScope(bodyScope);
-            }*/
-
             for (pnode = pnodeFnc->sxFnc.pnodeVars; pnode; pnode = pnode->sxVar.pnodeNext)
             {
                 sym = pnode->sxVar.sym;
@@ -3932,8 +3917,6 @@ void ByteCodeGenerator::StartEmitFunction(ParseNode *pnodeFnc)
         {
             Assert(bodyScope->GetIsObject());
         }
-
-        /*PushScope(bodyScope);*/
     }
 }
 
@@ -4830,7 +4813,7 @@ void ByteCodeGenerator::EmitPropStore(Js::RegSlot rhsLocation, Symbol *sym, Iden
 }
 
 Js::OpCode
-ByteCodeGenerator::GetLdSlotOp(Scope *scope, int envIndex, Js::RegSlot scopeLocation, FuncInfo *funcInfo)
+ByteCodeGenerator::GetLdSlotOp(Scope *scope, int envIndex, Js::RegSlot scopeLocation, FuncInfo *funcInfo, bool useParamScope)
 {
     Js::OpCode op;
 
@@ -4882,7 +4865,7 @@ ByteCodeGenerator::GetLdSlotOp(Scope *scope, int envIndex, Js::RegSlot scopeLoca
     return op;
 }
 
-void ByteCodeGenerator::EmitPropLoad(Js::RegSlot lhsLocation, Symbol *sym, IdentPtr pid, FuncInfo *funcInfo)
+void ByteCodeGenerator::EmitPropLoad(Js::RegSlot lhsLocation, Symbol *sym, IdentPtr pid, FuncInfo *funcInfo, bool useParamScope)
 {
     // If sym belongs to a parent frame, get it from the closure environment.
     // If it belongs to this func, but there's a non-local reference, get it from the heap-allocated frame.
@@ -5073,7 +5056,7 @@ void ByteCodeGenerator::EmitPropLoad(Js::RegSlot lhsLocation, Symbol *sym, Ident
         Js::OpCode op;
 
         // Now get the property from its slot.
-        op = this->GetLdSlotOp(scope, envIndex, scopeLocation, funcInfo);
+        op = this->GetLdSlotOp(scope, envIndex, scopeLocation, funcInfo, useParamScope);
         slot = slot + (sym->GetScope()->GetIsObject() ? 0 : Js::ScopeSlots::FirstSlotIndex);
 
         if (envIndex != -1)
