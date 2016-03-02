@@ -3827,7 +3827,7 @@ GlobOpt::OptArguments(IR::Instr *instr)
         return;
     }
 
-    if (instr->m_opcode == Js::OpCode::LdHeapArguments || instr->m_opcode == Js::OpCode::LdLetHeapArguments)
+    if (instr->m_opcode == Js::OpCode::LdHeapArguments || instr->m_opcode == Js::OpCode::LdLetHeapArguments || instr->m_opcode == Js::OpCode::LdHeapArgsCached)
     {
         TrackArgumentsSym(dst->AsRegOpnd());
         return;
@@ -3880,7 +3880,7 @@ GlobOpt::OptArguments(IR::Instr *instr)
         id = baseOpnd->m_sym->m_id;
         if (IsArgumentsSymID(id, this->blockData))
         {
-            instr->usesStackArgumentsObject = true;
+            instr->usesStackArguments = true;
         }
         break;
     }
@@ -3889,7 +3889,7 @@ GlobOpt::OptArguments(IR::Instr *instr)
         Assert(src1->IsRegOpnd());
         if(IsArgumentsOpnd(src1))
         {
-            instr->usesStackArgumentsObject = true;
+            instr->usesStackArguments = true;
         }
         break;
     }
@@ -5015,6 +5015,16 @@ GlobOpt::OptDst(
                  instr->m_opcode == Js::OpCode::InitComputedProperty)
         {
             this->KillObjectHeaderInlinedTypeSyms(this->currentBlock, false);
+        }
+
+        if (instr->m_opcode == Js::OpCode::LdSlotArr)
+        {
+            opnd->GetStackSym()->m_isParamArraySym = instr->GetSrc1()->GetPropertyStackSym()->m_isParamArraySym;
+        }
+
+        if (instr->m_opcode == Js::OpCode::StSlot && opnd->GetPropertyStackSym()->m_isParamArraySym)
+        {
+            CannotAllocateArgumentsObjectOnStack();
         }
 
         if (opnd->IsIndirOpnd() && !this->IsLoopPrePass())

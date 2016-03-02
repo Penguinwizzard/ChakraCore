@@ -170,6 +170,8 @@ public:
     Opnd *              CloneDef(Func *func);
     Opnd *              CloneUse(Func *func);
     StackSym *          GetStackSym() const;
+    StackSym *          GetPropertyStackSym() const;
+    Js::ArgSlot         GetIdFromPropertyStackSym() const;
     Opnd *              UseWithNewType(IRType type, Func * func);
 
     bool                IsEqual(Opnd *opnd);

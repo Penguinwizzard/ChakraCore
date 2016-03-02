@@ -56,6 +56,7 @@ public:
     void LowerGeneratorResumeJumpTable();
 
     void DoInterruptProbes();
+    IR::Instr * ConvertToArgIn(IR::Instr *instr);
     IR::Instr *PreLowerPeepInstr(IR::Instr *instr, IR::Instr **pInstrPrev);
     IR::Instr *PeepShl(IR::Instr *instr);
     IR::Instr *PeepBrBool(IR::Instr *instr);

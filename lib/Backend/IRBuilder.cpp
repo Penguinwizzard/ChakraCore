@@ -5024,7 +5024,7 @@ void IRBuilder::BuildInitCachedScope(int auxOffset, int offset)
     IR::HelperCallOpnd *helperOpnd;
 
     helperOpnd = IR::HelperCallOpnd::New(IR::HelperOP_InitCachedScope, this->m_func);
-
+    dstOpnd->GetStackSym()->m_isParamArraySym = true;
     instr = IR::Instr::New(Js::OpCode::CallHelper, dstOpnd, helperOpnd, instr->GetDst(), m_func);
     this->AddInstr(instr, Js::Constants::NoByteCodeOffset);
 }

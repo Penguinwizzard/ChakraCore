@@ -49,6 +49,7 @@ StackSym::New(SymID id, IRType type, Js::RegSlot byteCodeRegSlot, Func *func)
     stackSym->m_isArgCaptured = false;
     stackSym->m_requiresBailOnNotNumber = false;
     stackSym->m_isCatchObjectSym = false;
+    stackSym->m_isParamArraySym = false;
     stackSym->m_builtInIndex = Js::BuiltinFunction::None;
     stackSym->m_paramSlotNum = StackSym::InvalidSlot;
 

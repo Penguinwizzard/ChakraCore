@@ -339,6 +339,26 @@ Opnd::GetStackSym() const
     }
 }
 
+StackSym *
+Opnd::GetPropertyStackSym() const
+{
+    Assert(this->IsSymOpnd());
+    const SymOpnd * symOpnd = static_cast<SymOpnd const *>(this);
+    Assert(symOpnd->m_sym->IsPropertySym());
+    return symOpnd->m_sym->AsPropertySym()->m_stackSym;
+}
+
+Js::ArgSlot
+Opnd::GetIdFromPropertyStackSym() const
+{
+    Assert(this->IsSymOpnd());
+    const SymOpnd * symOpnd = static_cast<SymOpnd const *>(this);
+    Assert(symOpnd->m_sym->IsPropertySym() && symOpnd->m_sym->AsPropertySym()->HasPropertyIdIndex());
+    int32 propertyIndex = symOpnd->m_sym->AsPropertySym()->GetPropertyIdIndex();
+    Assert(propertyIndex < (2^16));
+    return propertyIndex;
+}
+
 intptr_t
 Opnd::GetImmediateValue()
 {
