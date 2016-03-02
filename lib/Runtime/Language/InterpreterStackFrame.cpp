@@ -2090,13 +2090,8 @@ namespace Js
 
     inline void InterpreterStackFrame::OP_SetOutAsmDb( RegSlot outRegisterID, double val )
     {
-        Assert( m_outParams + outRegisterID < m_outSp );
-#include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1602_MSRC32037_BUG5919552
+        Assert(m_outParams + outRegisterID < m_outSp);
         m_outParams[outRegisterID] = JavascriptNumber::NewWithCheck( val, scriptContext );
-#else
-        m_outParams[outRegisterID] = JavascriptNumber::New( val, scriptContext );
-#endif
     }
 
     inline void InterpreterStackFrame::OP_SetOutAsmInt( RegSlot outRegisterID, int val )

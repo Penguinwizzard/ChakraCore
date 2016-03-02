@@ -1927,15 +1927,12 @@ namespace Js
 
         if (nullptr == callMethod)
         {
-#include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1601_MSRC31897_BUG5120093
             // newCount is ushort. If args count is greater than or equal to 65535, an integer
             // too many arguments
             if (args.Info.Count >= USHORT_MAX) //check against CallInfo::kMaxCountArgs if newCount is ever made int
             {
                 JavascriptError::ThrowRangeError(scriptContext, JSERR_ArgListTooLarge);
             }
-#endif
 
             // in [[construct]] case, we don't need to check if the function is a constructor: the function should throw there.
             Var newThisObject = nullptr;
@@ -1949,14 +1946,6 @@ namespace Js
                 args.Values[0] = newThisObject;
             }
 
-#include <VerifyGlobalMSRCSettings.inl>
-#ifndef PRERELEASE_REL1601_MSRC31897_BUG5120093
-            // too many arguments
-            if (args.Info.Count >= CallInfo::kMaxCountArgs)
-            {
-                JavascriptError::ThrowRangeError(scriptContext, JSERR_ArgListTooLarge);
-            }
-#endif
             ushort newCount = (ushort)(args.Info.Count + 1);
             Var* newValues;
             const unsigned STACK_ARGS_ALLOCA_THRESHOLD = 8; // Number of stack args we allow before using _alloca
