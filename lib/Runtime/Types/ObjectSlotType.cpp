@@ -25,7 +25,7 @@ namespace Js
     #undef SLOT_TYPE_VALUE
     #undef ATTRIBUTE_VALUE
 
-    JsDiag_Inline ObjectSlotType::ObjectSlotType() : slotType(SlotType::Var)
+    JsDiag_Inline ObjectSlotType::ObjectSlotType() : slotType(SlotType::Var|SlotType::Configurable|SlotType::Enumerable|SlotType::Writable)
     {
         CompileAssert(static_cast<TSize>(-1) >= static_cast<TSize>(0));
         CompileAssert(sizeof(TSize) == sizeof(ObjectSlotType));
@@ -193,6 +193,11 @@ namespace Js
     const ObjectSlotType ObjectSlotType::GetSlotTypeWithoutAttributes() const
     {
         return slotTypeWithoutAttributes;
+    }
+
+    PropertyAttributes ObjectSlotType::GetAttributes()
+    {
+        return (PropertyAttributes)attributes;
     }
 
     bool ObjectSlotType::HasDefaultAttributes() const

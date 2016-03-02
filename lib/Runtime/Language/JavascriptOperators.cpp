@@ -9000,7 +9000,8 @@ CommonNumber:
     // Set attributes on the object as provided by property descriptor.
     // If force parameter is true, we force SetAttributes call even if none of the attributes are defined by the descriptor.
     // NOTE: does not set [[Get]], [Set]], [[Value]]
-    void JavascriptOperators::SetAttributes(RecyclableObject* object, PropertyId propId, const PropertyDescriptor& descriptor, bool force)
+    // This method is called when we are updating the attributes on an existing properties. Attributes not specified in the descriptor retain their values.
+    void JavascriptOperators::SetAttributes(RecyclableObject* object, PropertyId propId, const PropertyDescriptor& descriptor, bool force, const PropertyDescriptor* currentDescriptor)
     {
         Assert(object);
 
@@ -9016,20 +9017,51 @@ CommonNumber:
             isWritable = TRUE;
         }
 
-        // CONSIDER: call object->SetAttributes which is much more efficient as that's 1 call instead of 3.
-        //       Can't do that now as object->SetAttributes doesn't provide a way which attributes to modify and which not.
-        if (force || descriptor.ConfigurableSpecified())
+        if (currentDescriptor && DynamicObject::Is(object) && DynamicObject::FromVar(object)->GetDynamicType()->GetTypeHandler()->IsPathTypeHandler())
         {
-            object->SetConfigurable(propId, descriptor.ConfigurableSpecified() ? descriptor.IsConfigurable() : FALSE);
+            PropertyAttributes attributes = PropertyNone;
+
+            attributes |= descriptor.ConfigurableSpecified() ?
+                descriptor.IsConfigurable() ?
+                PropertyConfigurable :
+                FALSE :
+                currentDescriptor->ConfigurableSpecified() && currentDescriptor->IsConfigurable() ? PropertyConfigurable : FALSE;
+
+            attributes |= descriptor.EnumerableSpecified() ?
+                descriptor.IsEnumerable() ?
+                PropertyEnumerable :
+                FALSE :
+                currentDescriptor->EnumerableSpecified() && currentDescriptor->IsEnumerable() ? PropertyEnumerable : FALSE;
+
+            attributes |= descriptor.WritableSpecified() ?
+                descriptor.IsWritable() ?
+                PropertyWritable :
+                FALSE :
+                currentDescriptor->WritableSpecified() && currentDescriptor->IsWritable() ? PropertyWritable : FALSE;
+
+            if (descriptor.ConfigurableSpecified() || descriptor.EnumerableSpecified() || descriptor.WritableSpecified() || force)
+            {
+                object->SetAttributes(propId, attributes);
+            }
         }
-        if (force || descriptor.EnumerableSpecified())
+        else
         {
-            object->SetEnumerable(propId, descriptor.EnumerableSpecified() ? descriptor.IsEnumerable() : FALSE);
+            // CONSIDER: call object->SetAttributes which is much more efficient as that's 1 call instead of 3.
+            //       Can't do that now as object->SetAttributes doesn't provide a way which attributes to modify and which not.
+            if (force || descriptor.ConfigurableSpecified())
+            {
+                object->SetConfigurable(propId, descriptor.ConfigurableSpecified() ? descriptor.IsConfigurable() : FALSE);
+            }
+            if (force || descriptor.EnumerableSpecified())
+            {
+                object->SetEnumerable(propId, descriptor.EnumerableSpecified() ? descriptor.IsEnumerable() : FALSE);
+            }
+            if (force || descriptor.WritableSpecified() || isWritable)
+            {
+                object->SetWritable(propId, isWritable);
+            }
         }
-        if (force || descriptor.WritableSpecified() || isWritable)
-        {
-            object->SetWritable(propId, isWritable);
-        }
+
     }
 
     void JavascriptOperators::OP_ClearAttributes(Var instance, PropertyId propertyId)

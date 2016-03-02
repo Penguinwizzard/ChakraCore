@@ -378,35 +378,20 @@ namespace Js
             // In CacheOperators::CachePropertyWrite we ensure that we never cache property adds for types that aren't shared.
             Assert(!instance->GetDynamicType()->GetIsShared() || GetIsShared());
 
-            // Setting the slot may cause the field type to change, which in turn would change the type and handler
             TypePath* typePath = this->GetTypePath();
             if (!typePath->GetHasAllPropertiesWithDefaultAttributes())
             {
                 // check whether the property is writable
-                PathTypeTransitionInfo* predecessorTransitionInfo = this->GetTransitionInfo();
-                PropertyIndex currentSlotIndex = typePath->GetSlotCount();
-                do
+                PropertyAttributes attributes = this->GetAttributesForProperty(propertyId);
+                if (((attributes & PropertyWritable) == 0) && !(flags & PropertyOperation_AllowUndeclInConsoleScope))
                 {
-                    predecessorTransitionInfo = predecessorTransitionInfo->GetPredecessor();
-                    currentSlotIndex = typePath->GetPreviousSlotIndex(currentSlotIndex);
-                } while (currentSlotIndex > index);
-
-                bool foundProperty = false;
-                for (auto it = predecessorTransitionInfo->GetSuccessorIterator(); it.IsValid(); it.MoveNext())
-                {
-                    PathTypeSuccessorKey currentSuccessorKey = it.CurrentSuccessorKey();
-                    if (currentSuccessorKey.GetPropertyId() == propertyId)
-                    {
-                        foundProperty = true;
-                        if (!currentSuccessorKey.GetSlotType().IsWritable())
-                        {
-                            // throw
-                        }
-                    }
+                    JavascriptError::ThrowCantAssignIfStrictMode(flags, instance->GetScriptContext());
+                    PropertyValueInfo::SetNoCache(info, instance);
+                    return FALSE;
                 }
-                Assert(foundProperty);
             }
-
+            
+            // Setting the slot may cause the field type to change, which in turn would change the type and handler
             const ObjectSlotType slotTypeBeforeSet = typePath->GetSlotType(index);
             SetSlotUnchecked(instance, index, slotTypeBeforeSet, value);
 
@@ -557,31 +542,41 @@ namespace Js
     {
         if (!PHASE_OFF1(Js::SupportAttributesOnPathTypesPhase))
         {
-            //const Type* oldType = instance->GetType();
-            //if (value)
-            //{
-            //    if (SetAttribute(instance, descriptor, PropertyWritable))
-            //    {
-            //        instance->ChangeTypeIf(oldType); // Ensure type change to invalidate caches
-            //    }
-            //}
-            //else
-            //{
-            //    if (ClearAttribute(instance, descriptor, PropertyWritable))
-            //    {
-            //        instance->ChangeTypeIf(oldType); // Ensure type change to invalidate caches
+            PropertyIndex index = GetPropertyIndex(propertyId);
+            if (index == Constants::NoSlot)
+            {
+                uint32 indexVal;
+                if (instance->HasObjectArray() && instance->GetScriptContext()->IsNumericPropertyId(propertyId, &indexVal))
+                {
+                    return ConvertToDictionaryType(instance)->SetWritable(instance, propertyId, value);
+                }
+                return true;
+            }
+            const Type* oldType = instance->GetType();
+            if (value)
+            {
+                if (SetAttribute(instance, propertyId, PropertyWritable))
+                {
+                    instance->ChangeTypeIf(oldType); // Ensure type change to invalidate caches
+                }
+            }
+            else
+            {
+                if (ClearAttribute(instance, propertyId, PropertyWritable))
+                {
+                    instance->ChangeTypeIf(oldType); // Ensure type change to invalidate caches
 
-            //                                         // Clearing the attribute may have changed the type handler, so make sure
-            //                                         // we access the current one.
-            //        DynamicTypeHandler *const typeHandler = GetCurrentTypeHandler(instance);
-            //        typeHandler->ClearHasOnlyWritableDataProperties();
-            //        if (typeHandler->GetFlags() & IsPrototypeFlag)
-            //        {
-            //            instance->GetScriptContext()->InvalidateStoreFieldCaches(propertyId);
-            //            instance->GetLibrary()->NoPrototypeChainsAreEnsuredToHaveOnlyWritableDataProperties();
-            //        }
-            //    }
-            //}
+                    // Clearing the attribute may have changed the type handler, so make sure
+                    // we access the current one.
+                    DynamicTypeHandler *const typeHandler = GetCurrentTypeHandler(instance);
+                    typeHandler->ClearHasOnlyWritableDataProperties();
+                    if (typeHandler->GetFlags() & IsPrototypeFlag)
+                    {
+                        instance->GetScriptContext()->InvalidateStoreFieldCaches(propertyId);
+                        instance->GetLibrary()->NoPrototypeChainsAreEnsuredToHaveOnlyWritableDataProperties();
+                    }
+                }
+            }
 
             return true;
         }
@@ -1179,6 +1174,63 @@ namespace Js
         return true;
     }
 
+    BOOL PathTypeHandler::SetAttribute(DynamicObject* instance, PropertyId propertyId, PropertyAttributes attribute)
+    {
+        PropertyAttributes currentAttributes = GetAttributesForProperty(propertyId);
+        PropertyAttributes newAttributes = currentAttributes | attribute;
+
+        if (newAttributes == currentAttributes)
+        {
+            return FALSE;
+        }
+
+        return TRUE;
+        // Branch/point to a (new) type that reflects this change in attributes
+    }
+
+    BOOL PathTypeHandler::ClearAttribute(DynamicObject* instance, PropertyId propertyId, PropertyAttributes attribute)
+    {
+        PropertyAttributes currentAttributes = GetAttributesForProperty(propertyId);
+        PropertyAttributes newAttributes = currentAttributes & ~attribute;
+
+        if (newAttributes == currentAttributes)
+        {
+            return FALSE;
+        }
+
+        // Branch/point to a (new) type that reflects this change in attributes
+        return TRUE;
+    }
+
+    PropertyAttributes PathTypeHandler::GetAttributesForProperty(PropertyId propertyId)
+    {
+        PropertyAttributes attributes = PropertyDynamicTypeDefaults;
+        PropertyIndex index = this->GetPropertyIndex(propertyId);
+        TypePath* typePath = this->GetTypePath();
+
+        PropertyIndex currentSlotIndex = typePath->GetSlotCount();
+        PathTypeTransitionInfo* predecessorTransitionInfo = this->GetTransitionInfo();
+        do
+        {
+            predecessorTransitionInfo = predecessorTransitionInfo->GetPredecessor();
+            currentSlotIndex = typePath->GetPreviousSlotIndex(currentSlotIndex);
+        } while (currentSlotIndex > index);
+
+        bool foundProperty = false;
+        for (auto it = predecessorTransitionInfo->GetSuccessorIterator(); it.IsValid(); it.MoveNext())
+        {
+            PathTypeSuccessorKey currentSuccessorKey = it.CurrentSuccessorKey();
+            if (currentSuccessorKey.GetPropertyId() == propertyId)
+            {
+                foundProperty = true;
+                attributes = currentSuccessorKey.GetSlotType().GetAttributes();
+                break;
+            }
+        }
+        Assert(foundProperty);
+        return attributes;
+    }
+
     BOOL PathTypeHandler::GetAttributesWithPropertyIndex(DynamicObject * instance, PropertyId propertyId, BigPropertyIndex index, PropertyAttributes * attributes)
     {
         if (index < this->GetSlotCountInternal())
@@ -1627,8 +1679,8 @@ namespace Js
         double floatValue = 0;
         const ObjectSlotType requiredSlotType =
             ObjectSlotType::FromVar(DoNativeFields() && !(flags & PropertyOperation_SpecialValue), 
-                                    value, &intValue, &floatValue);
-        const ObjectSlotType slotType = GetPreferredSuccessorSlotType(propertyRecord->GetPropertyId(), requiredSlotType);
+                                    value, &intValue, &floatValue); // without attributes
+        const ObjectSlotType slotType = GetPreferredSuccessorSlotType(propertyRecord->GetPropertyId(), requiredSlotType); // without attributes
         Assert(!requiredSlotType.IsValueTypeMoreConvervativeThan(slotType));
         if(requiredSlotType.IsInt() && slotType.IsFloat())
             floatValue = static_cast<double>(intValue);
@@ -1641,9 +1693,8 @@ namespace Js
             return ConvertToSimpleDictionaryType(instance, GetPropertyCountInternal() + 1)->AddProperty(instance, propertyRecord, value, attributes, info, PropertyOperation_None, possibleSideEffects);
         }
 
-        PropertyIndex index = GetSlotCountInternal();
         uint8 attributesBits = (ObjectSlotType)((attributes & PropertyDynamicTypeDefaults) << ObjectSlotType::BitSize);
-        DynamicType* newType = PromoteType(instance, propertyRecord, (ObjectSlotType)(slotType|attributesBits), value, flags);
+        DynamicType* newType = PromoteType(instance, propertyRecord, (ObjectSlotType)(slotType|attributesBits), value, flags); // with attributes
 
         Assert(instance->GetTypeHandler()->IsPathTypeHandler());
         PathTypeHandler* newTypeHandler = (PathTypeHandler*)newType->GetTypeHandler();
@@ -1654,6 +1705,7 @@ namespace Js
 
         Assert(newType->GetIsShared() == newTypeHandler->GetIsShared());
 
+        PropertyIndex index = GetSlotCountInternal();
         void *const slot = GetSlotAddress(instance, index);
         if(slotType.IsVar())
         {
@@ -1672,14 +1724,16 @@ namespace Js
         // Don't populate inline cache if this handler isn't yet shared.  If we did, a new instance could
         // reach this handler without us noticing and we could fail to release the old singleton instance, which may later
         // become collectible (not referenced by anything other than this handler), thus we would leak the old singleton instance.
-        const bool populateInlineCache =
+        bool populateInlineCache =
             newTypeHandler->GetIsShared() ||
             !newTypeHandler->GetTypePath()->GetIsFixedFieldAt(index, newTypeHandler->GetSlotCountInternal());
+
         Assert(
             populateInlineCache ==
             !newTypeHandler->GetTypePath()->GetIsFixedFieldAt(index, newTypeHandler->GetSlotCountInternal()));
         Assert(populateInlineCache == newTypeHandler->CanStorePropertyValueDirectly(index));
 
+        populateInlineCache = populateInlineCache && (attributes == PropertyDynamicTypeDefaults);
         if (populateInlineCache)
         {
             Assert((instance->GetDynamicType()->GetIsShared()) || (FixPropsOnPathTypes() && instance->GetDynamicType()->GetTypeHandler()->GetIsOrMayBecomeShared()));

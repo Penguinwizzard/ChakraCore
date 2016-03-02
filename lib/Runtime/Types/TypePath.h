@@ -247,7 +247,7 @@ public:
 
             slotCount = slotType.GetNextSlotIndexOrCount(newSlotIndex);
             assignments[newSlotIndex] = propId;
-            SetSlotType(newSlotIndex, slotType.GetSlotTypeWithoutAttributes());
+            SetSlotType(newSlotIndex, slotType);
             return newSlotIndex;
         }
 

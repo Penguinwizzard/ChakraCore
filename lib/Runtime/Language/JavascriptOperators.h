@@ -541,7 +541,7 @@ namespace Js
         static Var DefaultAccessor(RecyclableObject* function, CallInfo callInfo, ...);
         static bool IsUndefinedAccessor(Var accessor, ScriptContext* scriptContext);
 
-        static void SetAttributes(RecyclableObject* object, PropertyId propId, const PropertyDescriptor& descriptor, bool force);
+        static void SetAttributes(RecyclableObject* object, PropertyId propId, const PropertyDescriptor& descriptor, bool force, const PropertyDescriptor* currentDescriptor = nullptr);
 
         static void OP_ClearAttributes(Var instance, PropertyId propertyId);
         static void OP_Freeze(Var instance);

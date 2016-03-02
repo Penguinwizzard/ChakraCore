@@ -89,6 +89,7 @@ namespace Js
         ObjectSlotType MergeValueType(const ObjectSlotType &other) const;
         ObjectSlotType Merge(const ObjectSlotType &other) const;
         const ObjectSlotType GetSlotTypeWithoutAttributes() const;
+        PropertyAttributes GetAttributes();
         bool HasDefaultAttributes() const;
 
     public:

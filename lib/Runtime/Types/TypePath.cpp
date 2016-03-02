@@ -77,7 +77,7 @@ namespace Js
     void TypePath::SetSlotType(const PropertyIndex slotIndex, const ObjectSlotType slotType)
     {
         VerifySlotIndex(slotIndex);
-        slotTypes.Item(slotIndex, slotType);
+        slotTypes.Item(slotIndex, slotType.GetSlotTypeWithoutAttributes());
     }
 
     PropertyIndex TypePath::GetNextSlotIndex(const PropertyIndex slotIndex) const
