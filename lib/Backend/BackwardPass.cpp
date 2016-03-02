@@ -2345,6 +2345,40 @@ BackwardPass::ProcessBailOutInfo(IR::Instr * instr, BailOutInfo * bailOutInfo)
     }
 }
 
+IR::Instr * BackwardPass::ConvertToArgIn(IR::Instr * instr)
+{
+    IR::SymOpnd *   srcOpnd;
+    IR::RegOpnd *   dstOpnd;
+
+    Js::ArgSlot argument = instr->GetSrc1()->GetIdFromPropertyStackSym() + 1; // TODO: Check for overflow ?
+    StackSym *      symSrc = StackSym::NewParamSlotSym(argument + 1, func);
+
+    this->func->SetArgOffset(symSrc, (argument + LowererMD::GetFormalParamOffset()) * MachPtr);
+
+    srcOpnd = IR::SymOpnd::New(symSrc, TyVar, func);
+    dstOpnd = instr->GetDst()->AsRegOpnd();
+
+    //if (!this->m_func->IsLoopBody() && this->m_func->HasProfileInfo())
+    //{
+    //    // Skip "this" pointer; "this" profile data is captured by ProfiledLdThis.
+    //    // Subtract 1 to skip "this" pointer, subtract 1 again to get the index to index into profileData->parameterInfo.
+    //    int paramSlotIndex = symSrc->GetParamSlotNum() - 2;
+    //    if (paramSlotIndex >= 0)
+    //    {
+    //        ValueType profiledValueType;
+    //        profiledValueType = this->m_func->GetProfileInfo()->GetParameterInfo(
+    //            this->m_func->GetJnFunction(), static_cast<Js::ArgSlot>(paramSlotIndex));
+    //        dstOpnd->SetValueType(profiledValueType);
+    //    }
+    //}
+
+    IR::Instr * argInInstr = IR::Instr::New(Js::OpCode::ArgIn_A, dstOpnd, srcOpnd, func);
+    instr->InsertBefore(argInInstr);
+    instr->Remove();
+    return argInInstr;
+}
+
+
 void
 BackwardPass::ProcessBlock(BasicBlock * block)
 {
@@ -2470,6 +2504,22 @@ BackwardPass::ProcessBlock(BasicBlock * block)
         {
             switch(instr->m_opcode)
             {
+                case Js::OpCode::LdSlotArr:
+                    if (instr->DoStackArgsOpt(this->func) && instr->GetSrc1()->GetPropertyStackSym()->m_isParamArraySym)
+                    {
+                        IR::Instr * returnInstr = instr->m_next;
+                        instr->Remove();
+                        continue;
+                    }
+                    break;
+                case Js::OpCode::LdSlot:
+                {
+                    if (instr->DoStackArgsOpt(this->func) && instr->GetSrc1()->GetPropertyStackSym()->m_isParamArraySym)
+                    {
+                        instr = ConvertToArgIn(instr);
+                    }
+                    break;
+                }
                 case Js::OpCode::InlineArrayPush:
                 case Js::OpCode::InlineArrayPop:
                 {

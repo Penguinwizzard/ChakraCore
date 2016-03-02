@@ -18,6 +18,7 @@ public:
     static bool DoDeadStore(Func* func, StackSym* sym);
 
 private:
+    IR::Instr * ConvertToArgIn(IR::Instr * instr);
     void CleanupBackwardPassInfoInFlowGraph();
     void OptBlock(BasicBlock * block);
     void MergeSuccBlocksInfo(BasicBlock * block);
