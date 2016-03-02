@@ -1144,14 +1144,9 @@ namespace Js
     };
 
     class FunctionProxy;
-#ifdef RECYCLER_WRITE_BARRIER
-    CompileAssert(sizeof(WriteBarrierPtr<FunctionProxy>) == sizeof(FunctionProxy*));
-    typedef WriteBarrierPtr<FunctionProxy>* FunctionProxyArray;
-    typedef WriteBarrierPtr<FunctionProxy>* FunctionProxyPtrPtr;
-#else
+
     typedef FunctionProxy** FunctionProxyArray;
     typedef FunctionProxy** FunctionProxyPtrPtr;
-#endif
 
     //
     // FunctionProxy represents a user defined function
@@ -1161,12 +1156,13 @@ namespace Js
     //
     class FunctionProxy : public FunctionInfo
     {
+        static CriticalSection auxPtrsLock;
     public:
         typedef RecyclerWeakReference<DynamicType> FunctionTypeWeakRef;
         typedef JsUtil::List<FunctionTypeWeakRef*, Recycler, false, WeakRefFreeListedRemovePolicy> FunctionTypeWeakRefList;
 
     protected:
-        FunctionProxy(JavascriptMethod entryPoint, Attributes attributes, int nestedCount, int derivedSize,
+        FunctionProxy(JavascriptMethod entryPoint, Attributes attributes,
             LocalFunctionId functionId, ScriptContext* scriptContext, Utf8SourceInfo* utf8SourceInfo, uint functionNumber);
         DEFINE_VTABLE_CTOR_NO_REGISTER(FunctionProxy, FunctionInfo);
 
@@ -1201,6 +1197,7 @@ namespace Js
         friend AuxPtrsT;
         WriteBarrierPtr<AuxPtrsT> auxPtrs;
         void* GetAuxPtr(AuxPointerType e) const;
+        void* GetAuxPtrWithLock(AuxPointerType e) const;
         void SetAuxPtr(AuxPointerType e, void* ptr);
 
     public:
@@ -1211,12 +1208,12 @@ namespace Js
             SetDisplayNameFlagsRecyclerAllocated = 2
         };
 
+        Recycler* GetRecycler() const;
         uint32 GetSourceContextId() const;
         wchar_t* GetDebugNumberSet(wchar(&bufferToWriteTo)[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE]) const;
         bool GetIsTopLevel() { return m_isTopLevel; }
         void SetIsTopLevel(bool set) { m_isTopLevel = set; }
         bool GetIsAnonymousFunction() const { return this->GetDisplayName() == Js::Constants::AnonymousFunction; }
-        uint GetNestedCount() const { return m_nestedCount; }
         void Copy(FunctionProxy* other);
         ParseableFunctionInfo* EnsureDeserialized();
         ScriptContext* GetScriptContext() const;
@@ -1224,6 +1221,7 @@ namespace Js
         void SetUtf8SourceInfo(Utf8SourceInfo* utf8SourceInfo) { m_utf8SourceInfo = utf8SourceInfo; }
         void SetReferenceInParentFunction(FunctionProxyPtrPtr reference);
         void UpdateReferenceInParentFunction(FunctionProxy* newFunctionInfo);
+        bool IsInDebugMode() const { return this->m_utf8SourceInfo->IsInDebugMode(); }
 
         DWORD_PTR GetSecondaryHostSourceContext() const;
         DWORD_PTR GetHostSourceContext() const;
@@ -1312,12 +1310,7 @@ namespace Js
         WriteBarrierPtr<ScriptFunctionType> deferredPrototypeType;
         WriteBarrierPtr<ProxyEntryPointInfo> m_defaultEntryPointInfo; // The default entry point info for the function proxy
 
-        NoWriteBarrierField<uint> m_derivedSize;
         NoWriteBarrierField<uint> m_functionNumber;  // Per thread global function number
-
-#define DEFINE_FUNCTION_PROXY_FIELDS 1
-#define CURRENT_ACCESS_MODIFIER protected:
-#include "SerializableFunctionFields.h"
 
         bool m_isTopLevel : 1; // Indicates that this function is top-level function, currently being used in script profiler and debugger
         bool m_isPublicLibraryCode: 1; // Indicates this function is public boundary library code that should be visible in JS stack
@@ -1368,7 +1361,34 @@ namespace Js
         friend class ByteCodeBufferReader;
 
     protected:
-        ParseableFunctionInfo(JavascriptMethod method, int nestedFunctionCount, int derivedSize, LocalFunctionId functionId, Utf8SourceInfo* sourceInfo, ScriptContext* scriptContext, uint functionNumber, const wchar_t* displayName, uint m_displayNameLength, uint displayShortNameOffset, Attributes attributes, Js::PropertyRecordList* propertyRecordList);
+        ParseableFunctionInfo(JavascriptMethod method, int nestedFunctionCount, LocalFunctionId functionId, Utf8SourceInfo* sourceInfo, ScriptContext* scriptContext, uint functionNumber, const wchar_t* displayName, uint m_displayNameLength, uint displayShortNameOffset, Attributes attributes, Js::PropertyRecordList* propertyRecordList);
+
+    public:
+        struct NestedArray
+        {
+            NestedArray(uint32 count) :nestedCount(count) {}
+            uint32 nestedCount;
+            FunctionProxy* functionProxyArray[1];
+        };
+        template<typename Fn>
+        void ForEachNestedFunc(Fn fn)
+        {
+            NestedArray* nestedArray = GetNestedArray();
+            if (nestedArray != nullptr)
+            {
+                for (uint i = 0; i < nestedArray->nestedCount; i++)
+                {
+                    if (!fn(nestedArray->functionProxyArray[i], i))
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+
+        NestedArray* GetNestedArray() const { return nestedArray; }
+        uint GetNestedCount() const { return nestedArray == nullptr ? 0 : nestedArray->nestedCount; }
+
     public:
         static ParseableFunctionInfo* New(ScriptContext* scriptContext, int nestedFunctionCount, LocalFunctionId functionId, Utf8SourceInfo* utf8SourceInfo, const wchar_t* displayName, uint m_displayNameLength, uint displayShortNameOffset, Js::PropertyRecordList* propertyRecordList, Attributes attributes);
 
@@ -1484,8 +1504,6 @@ namespace Js
         LPCUTF8 GetStartOfDocument(const wchar_t* reason = nullptr) const;
         bool IsReparsed() const { return m_reparsed; }
         void SetReparsed(bool set) { m_reparsed = set; }
-        bool IsByteCodeDebugMode() { return isByteCodeDebugMode; }
-        void SetIsByteCodeDebugMode(bool set) { isByteCodeDebugMode = set; }
         bool GetExternalDisplaySourceName(BSTR* sourceName);
 
         void SetDoBackendArgumentsOptimization(bool set)
@@ -1578,7 +1596,6 @@ namespace Js
 
         // Indicates if the function has been reparsed for debug attach/detach scenario.
         bool m_reparsed : 1;
-        bool isByteCodeDebugMode : 1;    // Whether last time generated bytecode was generated for debug mode.
 
         // This field is not required for deferred parsing but because our thunks can't handle offsets > 128 bytes
         // yet, leaving this here for now. We can look at optimizing the function info and function proxy structures some
@@ -1603,6 +1620,7 @@ namespace Js
         uint m_displayNameLength;
         uint m_displayShortNameOffset;
         WriteBarrierPtr<PropertyRecordList> m_boundPropertyRecords;
+        WriteBarrierPtr<NestedArray> nestedArray;
 
     public:
 #if DBG
@@ -1973,7 +1991,7 @@ namespace Js
 
     public:
         FunctionBody(ByteCodeCache* cache, Utf8SourceInfo* sourceInfo, ScriptContext* scriptContext):
-            ParseableFunctionInfo((JavascriptMethod) nullptr, 0, 0, (LocalFunctionId) 0, sourceInfo, scriptContext, 0, nullptr, 0, 0, None, nullptr)
+            ParseableFunctionInfo((JavascriptMethod) nullptr, 0, (LocalFunctionId) 0, sourceInfo, scriptContext, 0, nullptr, 0, 0, None, nullptr)
         {
             // Dummy constructor- does nothing
             // Must be stack allocated
@@ -1999,8 +2017,10 @@ namespace Js
         Js::RootObjectBase * LoadRootObject() const;
         Js::RootObjectBase * GetRootObject() const;
         ByteBlock* GetAuxiliaryData() const { return static_cast<ByteBlock*>(this->GetAuxPtr(AuxPointerType::AuxBlock)); }
+        ByteBlock* GetAuxiliaryDataWithLock() const { return static_cast<ByteBlock*>(this->GetAuxPtrWithLock(AuxPointerType::AuxBlock)); }
         void SetAuxiliaryData(ByteBlock* auxBlock) { this->SetAuxPtr(AuxPointerType::AuxBlock, auxBlock); }
         ByteBlock* GetAuxiliaryContextData()const { return static_cast<ByteBlock*>(this->GetAuxPtr(AuxPointerType::AuxContextBlock)); }
+        ByteBlock* GetAuxiliaryContextDataWithLock()const { return static_cast<ByteBlock*>(this->GetAuxPtrWithLock(AuxPointerType::AuxContextBlock)); }
         void SetAuxiliaryContextData(ByteBlock* auxContextBlock) { this->SetAuxPtr(AuxPointerType::AuxContextBlock, auxContextBlock); }
         ByteBlock* GetByteCode();
         ByteBlock* GetOriginalByteCode(); // Returns original bytecode without probes (such as BPs).
@@ -2043,6 +2063,7 @@ namespace Js
         void AllocateLoopHeaders();
         void ReleaseLoopHeaders();
         Js::LoopHeader * GetLoopHeader(uint index) const;
+        Js::LoopHeader * GetLoopHeaderWithLock(uint index) const;
         Js::Var GetLoopHeaderArrayPtr() const
         {
             Assert(this->GetLoopHeaderArray() != nullptr);
@@ -2255,13 +2276,15 @@ namespace Js
         DebuggerScope* AddScopeObject(DiagExtraScopesType scopeType, int start, RegSlot scopeLocation);
         bool TryGetDebuggerScopeAt(int index, DebuggerScope*& debuggerScope);
 
-        StatementMapList * GetStatementMaps() const { return static_cast<StatementMapList *>(this->GetAuxPtr(AuxPointerType::StatementMaps)); }
+        StatementMapList * GetStatementMaps() const { return static_cast<StatementMapList *>(this->GetAuxPtrWithLock(AuxPointerType::StatementMaps)); }
         void SetStatementMaps(StatementMapList *pStatementMaps) { this->SetAuxPtr(AuxPointerType::StatementMaps, pStatementMaps); }
 
         FunctionCodeGenRuntimeData ** GetCodeGenGetSetRuntimeData() const { return static_cast<FunctionCodeGenRuntimeData**>(this->GetAuxPtr(AuxPointerType::CodeGenGetSetRuntimeData)); }
+        FunctionCodeGenRuntimeData ** GetCodeGenGetSetRuntimeDataWithLock() const { return static_cast<FunctionCodeGenRuntimeData**>(this->GetAuxPtrWithLock(AuxPointerType::CodeGenGetSetRuntimeData)); }
         void SetCodeGenGetSetRuntimeData(FunctionCodeGenRuntimeData** codeGenGetSetRuntimeData) { this->SetAuxPtr(AuxPointerType::CodeGenGetSetRuntimeData, codeGenGetSetRuntimeData); }
 
         FunctionCodeGenRuntimeData ** GetCodeGenRuntimeData() const { return static_cast<FunctionCodeGenRuntimeData**>(this->GetAuxPtr(AuxPointerType::CodeGenRuntimeData)); }
+        FunctionCodeGenRuntimeData ** GetCodeGenRuntimeDataWithLock() const { return static_cast<FunctionCodeGenRuntimeData**>(this->GetAuxPtrWithLock(AuxPointerType::CodeGenRuntimeData)); }
         void SetCodeGenRuntimeData(FunctionCodeGenRuntimeData** codeGenRuntimeData) { this->SetAuxPtr(AuxPointerType::CodeGenRuntimeData, codeGenRuntimeData); }
 
         static StatementMap * GetNextNonSubexpressionStatementMap(StatementMapList *statementMapList, int & startingAtIndex);
@@ -2332,8 +2355,10 @@ namespace Js
         void SetIsFromNativeCodeModule(bool isFromNativeCodeModule) { m_isFromNativeCodeModule = isFromNativeCodeModule; }
 
         uint GetLoopNumber(LoopHeader const * loopHeader) const;
+        uint GetLoopNumberWithLock(LoopHeader const * loopHeader) const;
         bool GetHasAllocatedLoopHeaders() { return this->GetLoopHeaderArray() != nullptr; }
         Js::LoopHeader* GetLoopHeaderArray() const { return static_cast<Js::LoopHeader*>(this->GetAuxPtr(AuxPointerType::LoopHeaderArray)); }
+        Js::LoopHeader* GetLoopHeaderArrayWithLock() const { return static_cast<Js::LoopHeader*>(this->GetAuxPtrWithLock(AuxPointerType::LoopHeaderArray)); }
         void SetLoopHeaderArray(Js::LoopHeader* loopHeaderArray) { this->SetAuxPtr(AuxPointerType::LoopHeaderArray, loopHeaderArray); }
 
 #if ENABLE_NATIVE_CODEGEN
@@ -2478,6 +2503,10 @@ namespace Js
         Js::PropertyIdOnRegSlotsContainer * GetPropertyIdOnRegSlotsContainer() const
         {
             return static_cast<Js::PropertyIdOnRegSlotsContainer *>(this->GetAuxPtr(AuxPointerType::PropertyIdOnRegSlotsContainer));
+        }
+        Js::PropertyIdOnRegSlotsContainer * GetPropertyIdOnRegSlotsContainerWithLock() const
+        {
+            return static_cast<Js::PropertyIdOnRegSlotsContainer *>(this->GetAuxPtrWithLock(AuxPointerType::PropertyIdOnRegSlotsContainer));
         }
         void SetPropertyIdOnRegSlotsContainer(Js::PropertyIdOnRegSlotsContainer *propertyIdOnRegSlotsContainer)
         {
@@ -2689,12 +2718,15 @@ namespace Js
         void VerifyCacheIdToPropertyIdMap();
 #endif
         PropertyId* GetReferencedPropertyIdMap() const { return static_cast<PropertyId*>(this->GetAuxPtr(AuxPointerType::ReferencedPropertyIdMap)); }
+        PropertyId* GetReferencedPropertyIdMapWithLock() const { return static_cast<PropertyId*>(this->GetAuxPtrWithLock(AuxPointerType::ReferencedPropertyIdMap)); }
         void SetReferencedPropertyIdMap(PropertyId* propIdMap) { this->SetAuxPtr(AuxPointerType::ReferencedPropertyIdMap, propIdMap); }
         void CreateReferencedPropertyIdMap(uint referencedPropertyIdCount);
         void CreateReferencedPropertyIdMap();
         PropertyId GetReferencedPropertyIdWithMapIndex(uint mapIndex);
+        PropertyId GetReferencedPropertyIdWithMapIndexWithLock(uint mapIndex);
         void SetReferencedPropertyIdWithMapIndex(uint mapIndex, PropertyId propertyId);
         PropertyId GetReferencedPropertyId(uint index);
+        PropertyId GetReferencedPropertyIdWithLock(uint index);
 #if DBG
         void VerifyReferencedPropertyIdMap();
 #endif
@@ -2708,14 +2740,18 @@ namespace Js
         uint NewObjectLiteral();
         void AllocateObjectLiteralTypeArray();
         DynamicType ** GetObjectLiteralTypeRef(uint index);
+        DynamicType ** GetObjectLiteralTypeRefWithLock(uint index);
         uint NewLiteralRegex();
         uint GetLiteralRegexCount() const;
         void AllocateLiteralRegexArray();
         UnifiedRegex::RegexPattern **GetLiteralRegexes() const { return static_cast<UnifiedRegex::RegexPattern **>(this->GetAuxPtr(AuxPointerType::LiteralRegexes)); }
+        UnifiedRegex::RegexPattern **GetLiteralRegexesWithLock() const { return static_cast<UnifiedRegex::RegexPattern **>(this->GetAuxPtrWithLock(AuxPointerType::LiteralRegexes)); }
         void SetLiteralRegexs(UnifiedRegex::RegexPattern ** literalRegexes) { this->SetAuxPtr(AuxPointerType::LiteralRegexes, literalRegexes); }
         UnifiedRegex::RegexPattern *GetLiteralRegex(const uint index);
+        UnifiedRegex::RegexPattern *GetLiteralRegexWithLock(const uint index);
 #ifndef TEMP_DISABLE_ASMJS
         AsmJsFunctionInfo* GetAsmJsFunctionInfo()const { return static_cast<AsmJsFunctionInfo*>(this->GetAuxPtr(AuxPointerType::AsmJsFunctionInfo)); }
+        AsmJsFunctionInfo* GetAsmJsFunctionInfoWithLock()const { return static_cast<AsmJsFunctionInfo*>(this->GetAuxPtrWithLock(AuxPointerType::AsmJsFunctionInfo)); }
         AsmJsFunctionInfo* AllocateAsmJsFunctionInfo();
         AsmJsModuleInfo* GetAsmJsModuleInfo()const { return static_cast<AsmJsModuleInfo*>(this->GetAuxPtr(AuxPointerType::AsmJsModuleInfo)); }
         void ResetAsmJsInfo()
@@ -2731,6 +2767,7 @@ namespace Js
         void ResetLiteralRegexes();
         void ResetObjectLiteralTypes();
         DynamicType** GetObjectLiteralTypes() const { return static_cast<DynamicType**>(this->GetAuxPtr(AuxPointerType::ObjLiteralTypes)); }
+        DynamicType** GetObjectLiteralTypesWithLock() const { return static_cast<DynamicType**>(this->GetAuxPtrWithLock(AuxPointerType::ObjLiteralTypes)); }
         void SetObjectLiteralTypes(DynamicType** objLiteralTypes) { this->SetAuxPtr(AuxPointerType::ObjLiteralTypes, objLiteralTypes); };
     public:
 
@@ -2870,6 +2907,18 @@ namespace Js
                 }
             }
         }
+        template<class Fn>
+        void MapLoopHeadersWithLock(Fn fn) const
+        {
+            Js::LoopHeader* loopHeaderArray = this->GetLoopHeaderArrayWithLock();
+            if (loopHeaderArray)
+            {
+                for (uint i = 0; i < loopCount; i++)
+                {
+                    fn(i, &loopHeaderArray[i]);
+                }
+            }
+        }
 
         template <class Fn>
         void MapEntryPoints(Fn fn) const
@@ -2888,7 +2937,7 @@ namespace Js
 
         bool DoJITLoopBody() const
         {
-            return IsJitLoopBodyPhaseEnabled() && this->GetAuxPtr(AuxPointerType::LoopHeaderArray) != nullptr;
+            return IsJitLoopBodyPhaseEnabled() && this->GetLoopHeaderArrayWithLock() != nullptr;
         }
 
         bool ForceJITLoopBody() const

@@ -2337,7 +2337,7 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
                     this->InsertBranch(LowererMD::MDUncondBranchOpcode, true, checkDoBailout, entryPointIsNull);
 
                     // If the entry point is null
-                    auto head = m_func->GetJnFunction()->GetLoopHeader(loopNum);
+                    auto head = m_func->GetJnFunction()->GetLoopHeaderWithLock(loopNum);
                     Assert(head);
 
                     static_assert(sizeof(head->interpretCount) == 4, "Change the type in the following line");
@@ -3434,7 +3434,7 @@ Lowerer::LowerNewScObjectLiteral(IR::Instr *newObjInstr)
 {
     Func * func = m_func;
     IR::IntConstOpnd * literalObjectIdOpnd = newObjInstr->UnlinkSrc2()->AsIntConstOpnd();
-    Js::DynamicType ** literalTypeRef = newObjInstr->m_func->GetJnFunction()->GetObjectLiteralTypeRef(literalObjectIdOpnd->AsUint32());
+    Js::DynamicType ** literalTypeRef = newObjInstr->m_func->GetJnFunction()->GetObjectLiteralTypeRefWithLock(literalObjectIdOpnd->AsUint32());
     Js::DynamicType * literalType = *literalTypeRef;
 
     IR::LabelInstr * helperLabel = nullptr;
@@ -3444,7 +3444,7 @@ Lowerer::LowerNewScObjectLiteral(IR::Instr *newObjInstr)
     IR::Opnd * propertyArrayOpnd;
 
     IR::IntConstOpnd * propertyArrayIdOpnd = newObjInstr->UnlinkSrc1()->AsIntConstOpnd();
-    const Js::PropertyIdArray * propIds = Js::ByteCodeReader::ReadPropertyIdArray(propertyArrayIdOpnd->AsUint32(), newObjInstr->m_func->GetJnFunction());
+    const Js::PropertyIdArray * propIds = Js::ByteCodeReader::ReadPropertyIdArrayWithLock(propertyArrayIdOpnd->AsUint32(), newObjInstr->m_func->GetJnFunction());
     Js::ScriptContext *const scriptContext = newObjInstr->m_func->GetJnFunction()->GetScriptContext();
     uint inlineSlotCapacity = Js::JavascriptOperators::GetLiteralInlineSlotCapacity(propIds, scriptContext);
     uint slotCapacity = Js::JavascriptOperators::GetLiteralSlotCapacity(propIds, scriptContext);
@@ -9226,7 +9226,7 @@ Lowerer::CreateOpndForSlotAccess(IR::Opnd * opnd)
     }
     if (m_func->IsTJLoopBody())
     {
-        offset = offset - m_func->GetJnFunction()->GetAsmJsFunctionInfo()->GetTotalSizeinBytes();
+        offset = offset - m_func->GetJnFunction()->GetAsmJsFunctionInfoWithLock()->GetTotalSizeinBytes();
     }
 
     IR::IndirOpnd *indirOpnd = IR::IndirOpnd::New(symOpnd->CreatePropertyOwnerOpnd(m_func),
@@ -9916,7 +9916,7 @@ Lowerer::LowerArgInAsmJs(IR::Instr * instrArgIn)
 {
     Assert(m_func->GetJnFunction()->GetIsAsmjsMode());
 
-    Js::ArgSlot argCount = m_func->GetJnFunction()->GetAsmJsFunctionInfo()->GetArgCount();
+    Js::ArgSlot argCount = m_func->GetJnFunction()->GetAsmJsFunctionInfoWithLock()->GetArgCount();
     IR::Instr * instr = instrArgIn;
     for (int argNum = argCount - 1; argNum >= 0; --argNum)
     {
@@ -14897,14 +14897,14 @@ Lowerer::GenerateFastStringLdElem(IR::Instr * ldElem, IR::LabelInstr * labelHelp
     {
         // Just use the offset to indirect into the string buffer
         charIndirOpnd = IR::IndirOpnd::New(bufferOpnd, indirOpnd->GetOffset() * sizeof(wchar_t), TyUint16, this->m_func);
-        index32CmpOpnd = IR::IntConstOpnd::New(indirOpnd->GetOffset(), TyUint32, this->m_func);
+        index32CmpOpnd = IR::IntConstOpnd::New((uint32)indirOpnd->GetOffset(), TyUint32, this->m_func);
     }
 
     // Check if the index is in range of the string length
     //  CMP [baseOpnd + offset(length)], indexOpnd     --  string length
     //  JBE $helper                                    -- unsigned compare, and string length are at most INT_MAX - 1
     //                                                 -- so that even if we have a negative index, this will fail
-    InsertCompareBranch(IR::IndirOpnd::New(baseOpnd, offsetof(Js::JavascriptString, m_charLength), TyInt32, this->m_func)
+    InsertCompareBranch(IR::IndirOpnd::New(baseOpnd, offsetof(Js::JavascriptString, m_charLength), TyUint32, this->m_func)
         , index32CmpOpnd, Js::OpCode::BrLe_A, true, labelHelper, ldElem);
 
     // Load the string buffer and make sure it is not null
@@ -14920,7 +14920,7 @@ Lowerer::GenerateFastStringLdElem(IR::Instr * ldElem, IR::LabelInstr * labelHelp
     //  MOV charOpnd, [bufferOpnd + index32Opnd]
     //  CMP charOpnd, 0x80
     //  JAE $helper
-    IR::RegOpnd * charOpnd = IR::RegOpnd::New(TyInt32, this->m_func);
+    IR::RegOpnd * charOpnd = IR::RegOpnd::New(TyUint32, this->m_func);
     const IR::AutoReuseOpnd autoReuseCharOpnd(charOpnd, m_func);
     InsertMove(charOpnd, charIndirOpnd, ldElem);
     InsertCompareBranch(charOpnd, IR::IntConstOpnd::New(Js::CharStringCache::CharStringCacheSize, TyUint16, this->m_func),
