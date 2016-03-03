@@ -74,6 +74,10 @@ namespace Wasm
             bSectDataSegments   = 0x04,
             bSectFunctionTable  = 0x05,
             bSectEnd            = 0x06, // marks end of module
+            bSectStartFunction  = 0x07,
+            bSectImportTable    = 0x08,
+            bSectExportTable    = 0x09,
+            bSectIndirectFunctionTable = 0x0a,
             bSectLimit
         };
 
@@ -93,6 +97,7 @@ namespace Wasm
 
             virtual bool IsBinaryReader() override;
             virtual WasmOp ReadFromModule() override;
+            SectionCode ReadSectionHeader();
             virtual WasmOp ReadFromBlock() override;
             virtual WasmOp ReadFromCall() override;
             virtual WasmOp ReadExpr() override;

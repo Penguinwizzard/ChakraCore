@@ -72,6 +72,17 @@ WasmBinaryReader::ReadFromModule()
 
     SectionCode sectionId;
     UINT length = 0;
+
+    if (ReadConst<UINT32>() != 0x6d836100)
+    {
+        ThrowDecodingError(L"Malformed WASM module header!");
+    }
+
+    if (ReadConst<UINT32>() != 10)
+    {
+        ThrowDecodingError(L"Invalid WASM version!");
+    }
+
     while (!EndOfModule())
     {
         if (m_moduleState.secId > bSectSignatures && m_moduleState.count < m_moduleState.size)
@@ -167,6 +178,33 @@ WasmBinaryReader::ReadFromModule()
      return wnLIMIT;
 }
 
+SectionCode
+WasmBinaryReader::ReadSectionHeader()
+{
+    UINT len;
+    UINT sectionSize;
+    UINT idSize;
+
+    sectionSize = LEB128(len);
+    m_moduleState.count += len;
+    idSize = LEB128(len);
+    m_moduleState.count += len;
+    const char *sectionName = Name((UINT)m_pc, idSize);
+
+    auto cmp = [sectionName, idSize](const char* n) { return !strncmp(sectionName, sectionName, idSize); };
+    if (cmp("memory")) return bSectMemory;
+    if (cmp("signatures")) return bSectSignatures;
+    if (cmp("import_table")) return bSectImportTable;
+    if (cmp("functions")) return bSectFunctionTable;
+    if (cmp("export_table")) return bSectExportTable;
+    if (cmp("start_function")) return bSectStartFunction;
+    if (cmp("data_segments")) return bSectDataSegments;
+    if (cmp("function_table")) return bSectIndirectFunctionTable;
+    if (cmp("end")) return bSectEnd;
+    
+    return bSectInvalid;
+}
+
 
 WasmOp
 WasmBinaryReader::ReadFromBlock()
@@ -236,7 +274,7 @@ WasmBinaryReader::ASTNode()
         m_funcState.count += sizeof(INT8);
         break;
     case wbI32Const:
-        this->ConstNode<WasmTypes::bAstI32>();
+        ConstNode<WasmTypes::bAstI32>();
         break;
     case wbF32Const:
         ConstNode<WasmTypes::bAstF32>();
