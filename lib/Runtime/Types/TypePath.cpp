@@ -12,7 +12,7 @@ namespace Js
 {
     #ifndef IsJsDiag
 
-    TypePath* TypePath::New(Recycler* recycler, PropertyIndex slotCapacity)
+    TypePath* TypePath::New(Recycler* recycler, PropertyIndex slotCapacity, bool hasAllPropertiesWithDefaultAttributes)
     {
         Assert(slotCapacity <= MaxSlotCapacity);
 
@@ -31,7 +31,7 @@ namespace Js
             slotCapacity = static_cast<PropertyIndex>(powerOf2SlotCapacity);
         }
 
-        return RecyclerNewPlusZ(recycler, sizeof(PropertyRecord *) * slotCapacity, TypePath, slotCapacity);
+        return RecyclerNewPlusZ(recycler, sizeof(PropertyRecord *) * slotCapacity, TypePath, slotCapacity, hasAllPropertiesWithDefaultAttributes);
     }
 
     bool TypePath::IsValidSlotIndex(const PropertyIndex slotIndex) const
@@ -186,7 +186,7 @@ namespace Js
         
         // Ensure there is at least one free entry in the new path, so we can extend it.
         // TypePath::New will take care of aligning this appropriately.
-        TypePath * branchedPath = TypePath::New(recycler, slotType.GetNextSlotIndexOrCount(objectSlotCount));
+        TypePath * branchedPath = TypePath::New(recycler, slotType.GetNextSlotIndexOrCount(objectSlotCount), this->hasAllPropertiesWithDefaultAttributes);
 
         for (PropertyIndex i = 0; i < objectSlotCount; i = GetNextSlotIndex(i))
         {
@@ -256,7 +256,7 @@ namespace Js
 
         // Ensure there is at least one free entry in the new path, so we can extend it.
         // TypePath::New will take care of aligning this appropriately.
-        TypePath * clonedPath = TypePath::New(recycler, this->slotCapacity + 2);
+        TypePath * clonedPath = TypePath::New(recycler, this->slotCapacity + 2, this->hasAllPropertiesWithDefaultAttributes);
 
         for (PropertyIndex i = 0; i < slotCount; i = GetNextSlotIndex(i))
         {

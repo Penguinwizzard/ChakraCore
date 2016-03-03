@@ -95,7 +95,8 @@ public:
         // PropertyRecord assignments are allocated off the end of the structure
         const PropertyRecord * assignments[0];
 
-        TypePath(const PropertyIndex slotCapacity) : slotCapacity(static_cast<PathTypePropertyIndex>(slotCapacity)), hasAllPropertiesWithDefaultAttributes(true)
+        TypePath(const PropertyIndex slotCapacity, bool hasAllPropertiesWithDefaultAttributes) : 
+            slotCapacity(static_cast<PathTypePropertyIndex>(slotCapacity)), hasAllPropertiesWithDefaultAttributes(hasAllPropertiesWithDefaultAttributes)
         {
             CompileAssert(static_cast<PathTypePropertyIndex>(-1) >= static_cast<PathTypePropertyIndex>(0)); // must be unsigned
             CompileAssert(static_cast<PropertyIndex>(-1) >= static_cast<PropertyIndex>(0)); // must be unsigned
@@ -113,7 +114,7 @@ public:
         }
 
     public:
-        static TypePath* New(Recycler* recycler, PropertyIndex slotCapacity = InitialSlotCapacity);
+        static TypePath* New(Recycler* recycler, PropertyIndex slotCapacity = InitialSlotCapacity, bool hasAllPropertiesWithDefaultAttributes = true);
 
     public:
         bool IsValidSlotIndex(const PropertyIndex slotIndex) const;

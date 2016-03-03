@@ -9020,6 +9020,9 @@ CommonNumber:
             isWritable = TRUE;
         }
 
+        // For objects with PathTypeHandlers, we want to have one type transition per (re)definition of a property. For instance, if we are setting 
+        // writable and enumerable to true, we should have one transition to a type that has writable and enumerable true for the given property id,
+        // and not one transition for writable and another for enumerable.
         if (currentDescriptor && DynamicObject::Is(object) && DynamicObject::FromVar(object)->GetDynamicType()->GetTypeHandler()->IsPathTypeHandler())
         {
             PropertyAttributes attributes = PropertyNone;

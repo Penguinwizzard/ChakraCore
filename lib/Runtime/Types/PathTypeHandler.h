@@ -210,9 +210,7 @@ namespace Js
         BOOL AddPropertyInternal(DynamicObject * instance, PropertyId propertyId, Js::Var value, PropertyValueInfo* info, PropertyOperationFlags flags, SideEffects possibleSideEffects, PropertyAttributes attributes = PropertyDynamicTypeDefaults);
         BOOL AddProperty(DynamicObject* instance, PropertyId propertyId, Var value, PropertyAttributes attributes, PropertyValueInfo* info, PropertyOperationFlags flags, SideEffects possibleSideEffects);
         BOOL SetPropertyInternal(DynamicObject* instance, PropertyId propertyId, Var value, PropertyValueInfo* info, PropertyOperationFlags flags, SideEffects possibleSideEffects, PropertyAttributes attributes = PropertyDynamicTypeDefaults);
-        BOOL SetAttribute(DynamicObject* instance, PropertyId propertyId, PropertyAttributes attribute);
-        BOOL ClearAttribute(DynamicObject* instance, PropertyId propertyId, PropertyAttributes attribute);
-        PropertyAttributes GetAttributesForProperty(PropertyId propertyId);
+        PropertyAttributes GetAttributesForProperty(PropertyId propertyId, PathTypeTransitionInfo* successorTransitionInfo);
         void SetExistingProperty_UpdateStateAfterSet(DynamicObject *const instance, const PropertyId propertyId, const PropertyIndex slotIndex, const Var value, const bool slotTypeWasChanged, PropertyValueInfo *const info, const PropertyOperationFlags flags, const SideEffects possibleSideEffects);
         virtual BOOL FreezeImpl(DynamicObject* instance, bool isConvertedType) override;
 
@@ -288,6 +286,7 @@ namespace Js
         void ChangeAllSlotStorageToVar(DynamicObject *const object);
     public:
         ObjectSlotType ChangeSlotType(DynamicObject *const object, const PropertyIndex slotIndex, ObjectSlotType newSlotType);
+        ObjectSlotType ChangeSlotTypeForAttributes(DynamicObject *const object, const PropertyIndex slotIndex, ObjectSlotType newSlotType, PathTypeTransitionInfo* successorTransitionInfo);
         void ChangeSlotTypes(DynamicObject *const object, PropertyIdToSlotTypeMap *const propertyIdToNewSlotTypeMap);
 
     private:

@@ -16,7 +16,7 @@ namespace Js
     #define SLOT_TYPE(name) \
         JsDiag_Inline ObjectSlotType ObjectSlotType::Get##name() \
         { \
-            return SlotType::name; \
+            return SlotType::name|SlotType::DynamicTypeDefaultAttributes; \
         } 
     #define SLOT_TYPE_VALUE(name, value) SLOT_TYPE(name)
     #define ATTRIBUTE_VALUE(name, value)
@@ -25,7 +25,12 @@ namespace Js
     #undef SLOT_TYPE_VALUE
     #undef ATTRIBUTE_VALUE
 
-    JsDiag_Inline ObjectSlotType::ObjectSlotType() : slotType(SlotType::Var|SlotType::Configurable|SlotType::Enumerable|SlotType::Writable)
+    JsDiag_Inline ObjectSlotType ObjectSlotType::GetDynamicTypeDefaultAttributes()
+    {
+        return SlotType::DynamicTypeDefaultAttributes;
+    }
+
+    JsDiag_Inline ObjectSlotType::ObjectSlotType() : slotType(SlotType::Var|SlotType::DynamicTypeDefaultAttributes)
     {
         CompileAssert(static_cast<TSize>(-1) >= static_cast<TSize>(0));
         CompileAssert(sizeof(TSize) == sizeof(ObjectSlotType));
@@ -198,6 +203,16 @@ namespace Js
     PropertyAttributes ObjectSlotType::GetAttributes()
     {
         return (PropertyAttributes)attributes;
+    }
+
+    ObjectSlotType ObjectSlotType::GetAttributesMask()
+    {
+        return (ObjectSlotType)(SlotType::DynamicTypeDefaultAttributes << ObjectSlotType::BitSize);
+    }
+
+    ObjectSlotType ObjectSlotType::GetAttributesBitsInSlotType(PropertyAttributes attributes)
+    {
+        return (ObjectSlotType)((attributes & PropertyDynamicTypeDefaults) << ObjectSlotType::BitSize);
     }
 
     bool ObjectSlotType::HasDefaultAttributes() const

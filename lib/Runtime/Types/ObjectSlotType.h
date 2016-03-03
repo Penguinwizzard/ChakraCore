@@ -26,6 +26,8 @@ namespace Js
             #undef SLOT_TYPE_VALUE
             #undef SLOT_TYPE_FAKE
             #undef ATTRIBUTE_VALUE
+
+            DynamicTypeDefaultAttributes = Configurable|Enumerable|Writable
         };
 
     public:
@@ -41,6 +43,8 @@ namespace Js
         #undef SLOT_TYPE
         #undef SLOT_TYPE_VALUE
         #undef ATTRIBUTE_VALUE
+
+        static ObjectSlotType GetDynamicTypeDefaultAttributes();
 
     private:
         static const char *const SlotTypeNames[static_cast<TSize>(SlotType::Count)];
@@ -66,6 +70,8 @@ namespace Js
 
     public:
         static ObjectSlotType *NewArrayOfVarSlotTypes(const size_t count, Recycler *const recycler);
+        static ObjectSlotType GetAttributesMask();
+        static ObjectSlotType GetAttributesBitsInSlotType(PropertyAttributes attributes);
 
     public:
         static bool RequiresWideSlotSupport();
