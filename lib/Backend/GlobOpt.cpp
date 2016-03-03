@@ -3886,7 +3886,7 @@ GlobOpt::OptArguments(IR::Instr *instr)
         id = baseOpnd->m_sym->m_id;
         if (IsArgumentsSymID(id, this->blockData))
         {
-            instr->usesStackArguments = true;
+            //instr->usesStackArguments = true;
         }
         break;
     }

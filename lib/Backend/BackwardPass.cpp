@@ -2523,7 +2523,7 @@ BackwardPass::ProcessBlock(BasicBlock * block)
                 }
                 case Js::OpCode::LdHeapArgsCached:
                 {
-                    if (instr->DoStackArgsOpt(this->func))
+                    if (0 && instr->DoStackArgsOpt(this->func))
                     {
                         Assert(instr->GetSrc1()->GetStackSym()->m_isParamArraySym);
                         instr->m_opcode = Js::OpCode::LdHeapArguments;
