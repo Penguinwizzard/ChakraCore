@@ -3904,7 +3904,7 @@ GlobOpt::OptArguments(IR::Instr *instr)
         }
         break;
     }
-    case Js::OpCode::CommitScope:
+    /*case Js::OpCode::CommitScope:
     {
         if (instr->GetSrc1()->GetStackSym()->m_isParamArraySym)
         {
@@ -3920,7 +3920,7 @@ GlobOpt::OptArguments(IR::Instr *instr)
             instr->usesStackArguments = true;
         }
         break;
-    }
+    }*/
 
     case Js::OpCode::ArgOut_A_InlineBuiltIn:
     {

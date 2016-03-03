@@ -2405,12 +2405,6 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
 #endif
 
         case Js::OpCode::LdSlotArr:
-        {
-            if (instr->GetSrc1()->GetPropertyStackSym()->m_isParamArraySym)
-            {
-                break;
-            }
-        }
         case Js::OpCode::LdSlot:
         {
             Js::ProfileId profileId;

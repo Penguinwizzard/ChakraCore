@@ -2508,8 +2508,8 @@ BackwardPass::ProcessBlock(BasicBlock * block)
                     if (instr->DoStackArgsOpt(this->func))
                     {
                         Assert(instr->GetSrc1()->GetPropertyStackSym()->m_isParamArraySym);
-                        instr->Remove();
-                        continue;
+                        //instr->Remove();
+                       // continue;
                     }
                     break;
                 case Js::OpCode::LdSlot:
@@ -2517,7 +2517,7 @@ BackwardPass::ProcessBlock(BasicBlock * block)
                     if (instr->DoStackArgsOpt(this->func))
                     {
                         Assert(instr->GetSrc1()->GetPropertyStackSym()->m_isParamArraySym);
-                        instr = ConvertToArgIn(instr);
+                        //instr = ConvertToArgIn(instr);
                     }
                     break;
                 }
@@ -2537,7 +2537,7 @@ BackwardPass::ProcessBlock(BasicBlock * block)
                     }
                     break;
                 }
-                case Js::OpCode::CommitScope:
+                /*case Js::OpCode::CommitScope:
                 {
                     instrPrev = instr->m_prev;
                     instr->Remove();
@@ -2551,8 +2551,8 @@ BackwardPass::ProcessBlock(BasicBlock * block)
                     instr->m_prev->Remove();
                     instr->Remove();
                     continue;
-                }
-                case Js::OpCode::CallHelper:
+                }*/
+               /* case Js::OpCode::CallHelper:
                 {
                     if (instr->GetSrc1()->AsHelperCallOpnd()->m_fnHelper == IR::JnHelperMethod::HelperOP_InitCachedScope && instr->GetDst()->GetStackSym()->m_isParamArraySym)
                     {
@@ -2591,7 +2591,7 @@ BackwardPass::ProcessBlock(BasicBlock * block)
                         continue;
                     }
                     break;
-                }
+                }*/
                 case Js::OpCode::InlineArrayPush:
                 case Js::OpCode::InlineArrayPop:
                 {
