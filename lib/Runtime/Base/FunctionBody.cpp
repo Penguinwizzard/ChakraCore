@@ -6297,6 +6297,13 @@ namespace Js
         return &this->GetLoopHeaderArray()[index];
     }
 
+    LoopHeader *FunctionBody::GetLoopHeaderWithLock(uint index) const
+    {
+        Assert(this->GetLoopHeaderArrayWithLock() != nullptr);
+        Assert(index < GetLoopCount());
+        return &this->GetLoopHeaderArrayWithLock()[index];
+    }
+
 #if ENABLE_NATIVE_CODEGEN
     FunctionEntryPointInfo *FunctionBody::GetSimpleJitEntryPointInfo() const
     {
