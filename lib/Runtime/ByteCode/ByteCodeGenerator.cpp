@@ -883,6 +883,10 @@ void ByteCodeGenerator::AssignFrameSlotsRegister()
     {
         top->frameSlotsRegister = NextVarRegister();
     }
+    if (top->GetParamScope() && !top->GetParamScope()->GetCanMergeWithBodyScope())
+    {
+        top->paramSlotRegister = NextVarRegister();
+    }
 }
 
 void ByteCodeGenerator::SetNumberOfInArgs(Js::ArgSlot argCount)

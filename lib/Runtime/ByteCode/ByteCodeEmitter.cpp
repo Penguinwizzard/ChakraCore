@@ -1678,6 +1678,10 @@ void ByteCodeGenerator::SetClosureRegisters(FuncInfo* funcInfo, Js::FunctionBody
     else if (funcInfo->frameSlotsRegister != Js::Constants::NoRegister)
     {
         byteCodeFunction->MapAndSetLocalClosureRegister(funcInfo->frameSlotsRegister);
+        if (funcInfo->paramSlotRegister != Js::Constants::NoRegister)
+        {
+            byteCodeFunction->MapAndSetParamClosureRegister(funcInfo->paramSlotRegister);
+        }
     }
 }
 

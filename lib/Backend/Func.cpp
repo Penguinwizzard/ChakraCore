@@ -965,6 +965,14 @@ void Func::InitLocalClosureSyms()
                                    this->DoStackFrameDisplay() ? (Js::RegSlot)-1 : regSlot,
                                    this);
     }
+    regSlot = this->GetJnFunction()->GetParamClosureRegister();
+    if (regSlot != Js::Constants::NoRegister)
+    {
+        this->m_paramClosureSym =
+            StackSym::FindOrCreate(static_cast<SymID>(regSlot),
+                this->DoStackFrameDisplay() ? (Js::RegSlot) - 1 : regSlot,
+                this);
+    }
     regSlot = this->GetJnFunction()->GetLocalFrameDisplayRegister();
     if (regSlot != Js::Constants::NoRegister)
     {

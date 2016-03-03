@@ -427,6 +427,8 @@ IRBuilder::Build()
     if (this->m_func->GetJnFunction()->GetLocalClosureRegister() != Js::Constants::NoRegister)
     {
         m_func->InitLocalClosureSyms();
+
+        // this->m_func->SetParamClosureSym(StackSym::New(TyVar, this->m_func));
     }
 
     m_functionStartOffset = m_jnReader.GetCurrentOffset();
@@ -588,10 +590,17 @@ IRBuilder::Build()
                 Js::OpCode op =
                     m_func->DoStackScopeSlots() ? Js::OpCode::NewStackScopeSlots : Js::OpCode::NewScopeSlots;
 
+                uint size = m_func->GetJnFunction()->IsParamAndBodyScopeMerged() ? m_func->GetJnFunction()->scopeSlotArraySize : m_func->GetJnFunction()->paramScopeSlotArraySize;
                 IR::Opnd * srcOpnd = IR::IntConstOpnd::New(
-                    m_func->GetJnFunction()->scopeSlotArraySize + Js::ScopeSlots::FirstSlotIndex, TyUint32, m_func);
+                    size + Js::ScopeSlots::FirstSlotIndex, TyUint32, m_func);
                 instr = IR::Instr::New(op, closureOpnd, srcOpnd, m_func);
                 this->AddInstr(instr, offset);
+
+                /*IR::RegOpnd *paramClosureOpnd = this->BuildDstOpnd(this->m_func->GetJnFunction()->GetParamClosureRegister());
+                srcOpnd = IR::IntConstOpnd::New(
+                    m_func->GetJnFunction()->paramScopeSlotArraySize + Js::ScopeSlots::FirstSlotIndex, TyUint32, m_func);
+                instr = IR::Instr::New(op, paramClosureOpnd, srcOpnd, m_func);
+                this->AddInstr(instr, (uint32)-1);*/
             }
             if (closureOpnd->m_sym->m_isSingleDef)
             {
@@ -662,6 +671,17 @@ IRBuilder::Build()
                     (uint32)-1);
             }
         }
+
+        //if (this->m_func->GetJnFunction()->GetLocalClosureRegister() != Js::Constants::NoRegister)
+        //{
+        //    this->AddInstr(
+        //        IR::Instr::New(
+        //            Js::OpCode::Ld_A,
+        //            this->BuildDstOpnd(this->m_func->GetJnFunction()->GetParamClosureRegister()),
+        //            IR::RegOpnd::New(this->m_func->GetLocalClosureSym(), TyVar, this->m_func),
+        //            this->m_func),
+        //        Js::Constants::NoByteCodeOffset);
+        //}
     }
 
     // For label instr we can add bailout only after all labels were finalized. Put to list/add in the end.
@@ -3424,19 +3444,11 @@ IRBuilder::BuildElementSlotI1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot r
                     Js::Throw::FatalInternalError();
                 }
             }
-            
-            //if (m_func->GetLocalClosureSym()->HasByteCodeRegSlot())
-            //{
-            //    byteCodeUse = IR::ByteCodeUsesInstr::New(m_func);
-            //    byteCodeUse->byteCodeUpwardExposedUsed = JitAnew(m_func->m_alloc, BVSparse<JitArenaAllocator>, m_func->m_alloc);
-            //    byteCodeUse->byteCodeUpwardExposedUsed->Set(m_func->GetParamClosureSym()->m_id);
-            //    this->AddInstr(byteCodeUse, offset);
-            //}
 
             // Read the scope slot pointer back using the stack closure sym.
             newOpcode = Js::OpCode::LdSlot;
 
-            fieldSym = PropertySym::FindOrCreate(m_func->GetParamClosureSym()->m_id, slotId, (uint32)-1, (uint)-1, PropertyKindSlots, m_func);
+            fieldSym = PropertySym::FindOrCreate(m_func->GetJnFunction()->GetParamClosureRegister(), slotId, (uint32)-1, (uint)-1, PropertyKindSlots, m_func);
             fieldOpnd = IR::SymOpnd::New(fieldSym, TyVar, m_func);
             regOpnd = this->BuildDstOpnd(regSlot);
             instr = nullptr;
@@ -6659,21 +6671,33 @@ IRBuilder::BuildEmpty(Js::OpCode newOpcode, uint32 offset)
         break;
 
     case Js::OpCode::BeginBodyScope:
-        /*newSym = StackSym::NewParamSlotSym(1, this->m_func);
-        this->m_func->SetArgOffset(newSym, LowererMD::GetFormalParamOffset() * MachPtr);*/
-        this->m_func->SetParamClosureSym(StackSym::New(TyVar, this->m_func));
-        //this->m_func->SetParamClosureSym(newSym);
+        // this->m_func->SetParamClosureSym(StackSym::New(TyVar, this->m_func));
         this->AddInstr(
             IR::Instr::New(
-                Js::OpCode::Ld_A, IR::RegOpnd::New(this->m_func->GetParamClosureSym(), TyVar, m_func), IR::RegOpnd::New(this->m_func->GetLocalClosureSym(), TyVar, this->m_func), this->m_func),
+                Js::OpCode::Ld_A,
+                this->BuildDstOpnd(this->m_func->GetJnFunction()->GetParamClosureRegister()),
+                IR::RegOpnd::New(this->m_func->GetLocalClosureSym(), TyVar, this->m_func),
+                this->m_func),
             offset);
-            /*Js::OpCode op =
-                m_func->DoStackScopeSlots() ? Js::OpCode::NewStackScopeSlots : Js::OpCode::NewScopeSlots;
 
-            IR::Opnd * srcOpnd = IR::IntConstOpnd::New(
-                m_func->GetJnFunction()->paramScopeSlotArraySize + Js::ScopeSlots::FirstSlotIndex, TyUint32, m_func);
-            instr = IR::Instr::New(op, closureOpnd, srcOpnd, m_func);
-            this->AddInstr(instr, offset);*/
+        this->AddInstr(
+            IR::Instr::New(
+                Js::OpCode::NewScopeSlots,
+                this->BuildDstOpnd(this->m_func->GetJnFunction()->GetLocalClosureRegister()),
+                IR::IntConstOpnd::New(m_func->GetJnFunction()->scopeSlotArraySize + Js::ScopeSlots::FirstSlotIndex, TyUint32, m_func),
+                m_func),
+            Js::Constants::NoByteCodeOffset);
+
+        // Js::OpCode::LdFrameDisplay
+        this->AddInstr(
+            IR::Instr::New(
+                Js::OpCode::LdFrameDisplay,
+                this->BuildDstOpnd(this->m_func->GetJnFunction()->GetFrameDisplayRegister()),
+                this->BuildSrcOpnd(this->m_func->GetJnFunction()->GetLocalClosureRegister()),
+                this->BuildSrcOpnd(this->m_func->GetJnFunction()->GetFrameDisplayRegister()),
+                m_func),
+            (uint32)-1);
+
         break;
 
     default:
