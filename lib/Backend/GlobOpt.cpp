@@ -3830,6 +3830,12 @@ GlobOpt::OptArguments(IR::Instr *instr)
     if (instr->m_opcode == Js::OpCode::LdHeapArguments || instr->m_opcode == Js::OpCode::LdLetHeapArguments || instr->m_opcode == Js::OpCode::LdHeapArgsCached)
     {
         TrackArgumentsSym(dst->AsRegOpnd());
+
+        if (instr->m_opcode == Js::OpCode::LdHeapArgsCached && instr->GetSrc1()->GetStackSym()->m_isParamArraySym)
+        {
+            instr->usesStackArguments = true;
+        }
+
         return;
     }
     // Keep track of arguments objects and its aliases
@@ -3898,14 +3904,24 @@ GlobOpt::OptArguments(IR::Instr *instr)
         }
         break;
     }
-    case Js::OpCode::LdHeapArgsCached:
+    case Js::OpCode::CommitScope:
     {
-        if (instr->GetSrc1()->GetPropertyStackSym()->m_isParamArraySym)
+        if (instr->GetSrc1()->GetStackSym()->m_isParamArraySym)
         {
             instr->usesStackArguments = true;
         }
         break;
     }
+    case Js::OpCode::BrFncCachedScopeEq:
+    case Js::OpCode::BrFncCachedScopeNeq:
+    {
+        if (instr->GetSrc2()->GetStackSym()->m_isParamArraySym)
+        {
+            instr->usesStackArguments = true;
+        }
+        break;
+    }
+
     case Js::OpCode::ArgOut_A_InlineBuiltIn:
     {
         if (IsArgumentsOpnd(src1) &&

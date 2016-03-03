@@ -2525,10 +2525,70 @@ BackwardPass::ProcessBlock(BasicBlock * block)
                 {
                     if (instr->DoStackArgsOpt(this->func))
                     {
-                        Assert(instr->GetSrc1()->GetPropertyStackSym()->m_isParamArraySym);
+                        Assert(instr->GetSrc1()->GetStackSym()->m_isParamArraySym);
                         instr->m_opcode = Js::OpCode::LdHeapArguments;
+
+                        IR::Opnd * opndFrameObj = IR::AddrOpnd::New(
+                            func->GetScriptContext()->GetLibrary()->GetNull(), IR::AddrOpndKindDynamicVar, func, true);
+
+                        instr->ReplaceSrc1(opndFrameObj);
+                        instr->SetSrc2(opndFrameObj);
                         Assert(instr->m_prev->m_opcode == Js::OpCode::CallHelper);
-                        instr->m_prev->Remove();
+                    }
+                    break;
+                }
+                case Js::OpCode::CommitScope:
+                {
+                    instrPrev = instr->m_prev;
+                    instr->Remove();
+                    continue;
+                }
+                case Js::OpCode::BrFncCachedScopeEq:
+                case Js::OpCode::BrFncCachedScopeNeq:
+                {
+                    instrPrev = instr->m_prev->m_prev;
+                    Assert(instr->m_prev->m_opcode == Js::OpCode::LdFuncExpr);
+                    instr->m_prev->Remove();
+                    instr->Remove();
+                    continue;
+                }
+                case Js::OpCode::CallHelper:
+                {
+                    if (instr->GetSrc1()->AsHelperCallOpnd()->m_fnHelper == IR::JnHelperMethod::HelperOP_InitCachedScope && instr->GetDst()->GetStackSym()->m_isParamArraySym)
+                    {
+                        IR::Opnd           *argOpnd = instr->UnlinkSrc2();
+
+                        instr->FreeSrc1();
+                        while (argOpnd)
+                        {
+                            Assert(argOpnd->IsRegOpnd());
+                            IR::RegOpnd *regArg = argOpnd->AsRegOpnd();
+
+                            Assert(regArg->m_sym->m_isSingleDef);
+                            IR::Instr *instrArg = regArg->m_sym->m_instrDef;
+
+                            Assert(instrArg->m_opcode == Js::OpCode::ArgOut_A);
+                            IR::Opnd * src1Opnd = instrArg->UnlinkSrc1();
+                            if (src1Opnd->IsRegOpnd())
+                            {
+                                IR::Instr * src1Instr = src1Opnd->AsRegOpnd()->m_sym->m_instrDef;
+                                src1Instr->Remove();
+                            }
+                            src1Opnd->Free(this->func);
+
+                            regArg->Free(this->func);
+                            argOpnd = instrArg->GetSrc2();
+
+                            if (argOpnd)
+                            {
+                                instrArg->UnlinkSrc2();
+                            }
+
+                            instrArg->Remove();
+                        }
+                        instrPrev = instr->m_prev;
+                        instr->Remove();
+                        continue;
                     }
                     break;
                 }
