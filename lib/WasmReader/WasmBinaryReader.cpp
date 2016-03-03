@@ -93,7 +93,7 @@ WasmBinaryReader::ReadFromModule()
         else
         {
             // next section
-            sectionId = m_moduleState.secId = (SectionCode)ReadConst<UINT8>();
+            sectionId = m_moduleState.secId = ReadSectionHeader();
             m_moduleState.count = 0;
             if (sectionId == bSectMemory || sectionId == bSectEnd)
             {
