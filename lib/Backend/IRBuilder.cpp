@@ -427,8 +427,6 @@ IRBuilder::Build()
     if (this->m_func->GetJnFunction()->GetLocalClosureRegister() != Js::Constants::NoRegister)
     {
         m_func->InitLocalClosureSyms();
-
-        // this->m_func->SetParamClosureSym(StackSym::New(TyVar, this->m_func));
     }
 
     m_functionStartOffset = m_jnReader.GetCurrentOffset();
@@ -591,16 +589,9 @@ IRBuilder::Build()
                     m_func->DoStackScopeSlots() ? Js::OpCode::NewStackScopeSlots : Js::OpCode::NewScopeSlots;
 
                 uint size = m_func->GetJnFunction()->IsParamAndBodyScopeMerged() ? m_func->GetJnFunction()->scopeSlotArraySize : m_func->GetJnFunction()->paramScopeSlotArraySize;
-                IR::Opnd * srcOpnd = IR::IntConstOpnd::New(
-                    size + Js::ScopeSlots::FirstSlotIndex, TyUint32, m_func);
+                IR::Opnd * srcOpnd = IR::IntConstOpnd::New(size + Js::ScopeSlots::FirstSlotIndex, TyUint32, m_func);
                 instr = IR::Instr::New(op, closureOpnd, srcOpnd, m_func);
                 this->AddInstr(instr, offset);
-
-                /*IR::RegOpnd *paramClosureOpnd = this->BuildDstOpnd(this->m_func->GetJnFunction()->GetParamClosureRegister());
-                srcOpnd = IR::IntConstOpnd::New(
-                    m_func->GetJnFunction()->paramScopeSlotArraySize + Js::ScopeSlots::FirstSlotIndex, TyUint32, m_func);
-                instr = IR::Instr::New(op, paramClosureOpnd, srcOpnd, m_func);
-                this->AddInstr(instr, (uint32)-1);*/
             }
             if (closureOpnd->m_sym->m_isSingleDef)
             {
@@ -671,17 +662,6 @@ IRBuilder::Build()
                     (uint32)-1);
             }
         }
-
-        //if (this->m_func->GetJnFunction()->GetLocalClosureRegister() != Js::Constants::NoRegister)
-        //{
-        //    this->AddInstr(
-        //        IR::Instr::New(
-        //            Js::OpCode::Ld_A,
-        //            this->BuildDstOpnd(this->m_func->GetJnFunction()->GetParamClosureRegister()),
-        //            IR::RegOpnd::New(this->m_func->GetLocalClosureSym(), TyVar, this->m_func),
-        //            this->m_func),
-        //        Js::Constants::NoByteCodeOffset);
-        //}
     }
 
     // For label instr we can add bailout only after all labels were finalized. Put to list/add in the end.
@@ -3366,24 +3346,36 @@ IRBuilder::BuildElementSlotI1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot r
     PropertySym *fieldSym;
     SymID        symID;
     bool isLdSlotThatWasNotProfiled = false;
+    uint scopeSlotSize = 0;
+    StackSym* closureSym = m_func->GetLocalClosureSym();
 
     switch (newOpcode)
     {
-        case Js::OpCode::LdLocalSlot:
+        case Js::OpCode::LdParamSlot:
+            scopeSlotSize = m_func->GetJnFunction()->paramScopeSlotArraySize;
+            closureSym = m_func->GetParamClosureSym();
+            symID = m_func->GetJnFunction()->GetParamClosureRegister();
+            goto LdLocalSlot;
+            break;
 
+        case Js::OpCode::LdLocalSlot:
+            scopeSlotSize = m_func->GetJnFunction()->scopeSlotArraySize;
+            symID = m_func->GetJnFunction()->GetLocalClosureRegister();
+
+LdLocalSlot:
             if (PHASE_ON(Js::ClosureRangeCheckPhase, m_func))
             {
-                if ((uint32)slotId >= m_func->GetJnFunction()->scopeSlotArraySize + Js::ScopeSlots::FirstSlotIndex)
+                if ((uint32)slotId >= scopeSlotSize + Js::ScopeSlots::FirstSlotIndex)
                 {
                     Js::Throw::FatalInternalError();
                 }
             }
 
-            if (m_func->GetLocalClosureSym()->HasByteCodeRegSlot())
+            if (closureSym->HasByteCodeRegSlot())
             {
                 byteCodeUse = IR::ByteCodeUsesInstr::New(m_func);
                 byteCodeUse->byteCodeUpwardExposedUsed = JitAnew(m_func->m_alloc, BVSparse<JitArenaAllocator>, m_func->m_alloc);
-                byteCodeUse->byteCodeUpwardExposedUsed->Set(m_func->GetLocalClosureSym()->m_id);
+                byteCodeUse->byteCodeUpwardExposedUsed->Set(closureSym->m_id);
                 this->AddInstr(byteCodeUse, offset);
             }
 
@@ -3392,7 +3384,7 @@ IRBuilder::BuildElementSlotI1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot r
             if (m_func->DoStackFrameDisplay())
             {
                 // Read the scope slot pointer back using the stack closure sym.
-                fieldOpnd = this->BuildFieldOpnd(Js::OpCode::LdSlotArr, m_func->GetLocalClosureSym()->m_id, 0, (Js::PropertyIdIndexType)-1, PropertyKindSlotArray);
+                fieldOpnd = this->BuildFieldOpnd(Js::OpCode::LdSlotArr, closureSym->m_id, 0, (Js::PropertyIdIndexType)-1, PropertyKindSlotArray);
 
                 regOpnd = IR::RegOpnd::New(TyVar, m_func);
                 instr = IR::Instr::New(Js::OpCode::LdSlotArr, regOpnd, fieldOpnd, m_func);
@@ -3401,19 +3393,16 @@ IRBuilder::BuildElementSlotI1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot r
 
                 if (IsLoopBody())
                 {
-                    fieldOpnd = this->BuildFieldOpnd(Js::OpCode::LdSlotArr, m_func->GetLocalClosureSym()->m_id, slotId, (Js::PropertyIdIndexType)-1, PropertyKindSlotArray);
+                    fieldOpnd = this->BuildFieldOpnd(Js::OpCode::LdSlotArr, closureSym->m_id, slotId, (Js::PropertyIdIndexType)-1, PropertyKindSlotArray);
                     // Need a dynamic check on the size of the local slot array.
                     m_func->GetTopFunc()->AddSlotArrayCheck(fieldOpnd);
                 }
             }
-            else
+            else if (IsLoopBody())
             {
-                symID = m_func->GetJnFunction()->GetLocalClosureRegister();
-                if (IsLoopBody())
-                {
-                    this->EnsureLoopBodyLoadSlot(symID);
-                }
+                this->EnsureLoopBodyLoadSlot(symID);
             }
+
             fieldSym = PropertySym::FindOrCreate(symID, slotId, (uint32)-1, (uint)-1, PropertyKindSlots, m_func);
             fieldOpnd = IR::SymOpnd::New(fieldSym, TyVar, m_func);
             regOpnd = this->BuildDstOpnd(regSlot);
@@ -3435,46 +3424,12 @@ IRBuilder::BuildElementSlotI1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot r
             }
             break;
 
-        case Js::OpCode::LdParamSlot:
-
-            if (PHASE_ON(Js::ClosureRangeCheckPhase, m_func))
-            {
-                if ((uint32)slotId >= m_func->GetJnFunction()->paramScopeSlotArraySize + Js::ScopeSlots::FirstSlotIndex)
-                {
-                    Js::Throw::FatalInternalError();
-                }
-            }
-
-            // Read the scope slot pointer back using the stack closure sym.
-            newOpcode = Js::OpCode::LdSlot;
-
-            fieldSym = PropertySym::FindOrCreate(m_func->GetJnFunction()->GetParamClosureRegister(), slotId, (uint32)-1, (uint)-1, PropertyKindSlots, m_func);
-            fieldOpnd = IR::SymOpnd::New(fieldSym, TyVar, m_func);
-            regOpnd = this->BuildDstOpnd(regSlot);
-            instr = nullptr;
-            if (profileId != Js::Constants::NoProfileId)
-            {
-                instr = this->BuildProfiledSlotLoad(Js::OpCode::LdSlot, regOpnd, fieldOpnd, profileId, &isLdSlotThatWasNotProfiled);
-            }
-            if (!instr)
-            {
-                instr = IR::Instr::New(Js::OpCode::LdSlot, regOpnd, fieldOpnd, m_func);
-            }
-            this->AddInstr(instr, offset);
-
-            if (!m_func->DoStackFrameDisplay() && IsLoopBody())
-            {
-                // Need a dynamic check on the size of the local slot array.
-                m_func->GetTopFunc()->AddSlotArrayCheck(fieldOpnd);
-            }
-            break;
-
         case Js::OpCode::LdLocalObjSlot:
-            if (m_func->GetLocalClosureSym()->HasByteCodeRegSlot())
+            if (closureSym->HasByteCodeRegSlot())
             {
                 byteCodeUse = IR::ByteCodeUsesInstr::New(m_func);
                 byteCodeUse->byteCodeUpwardExposedUsed = JitAnew(m_func->m_alloc, BVSparse<JitArenaAllocator>, m_func->m_alloc);
-                byteCodeUse->byteCodeUpwardExposedUsed->Set(m_func->GetLocalClosureSym()->m_id);
+                byteCodeUse->byteCodeUpwardExposedUsed->Set(closureSym->m_id);
                 this->AddInstr(byteCodeUse, offset);
             }
 
@@ -3511,11 +3466,11 @@ IRBuilder::BuildElementSlotI1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot r
                 }
             }
 
-            if (m_func->GetLocalClosureSym()->HasByteCodeRegSlot())
+            if (closureSym->HasByteCodeRegSlot())
             {
                 byteCodeUse = IR::ByteCodeUsesInstr::New(m_func);
                 byteCodeUse->byteCodeUpwardExposedUsed = JitAnew(m_func->m_alloc, BVSparse<JitArenaAllocator>, m_func->m_alloc);
-                byteCodeUse->byteCodeUpwardExposedUsed->Set(m_func->GetLocalClosureSym()->m_id);
+                byteCodeUse->byteCodeUpwardExposedUsed->Set(closureSym->m_id);
                 this->AddInstr(byteCodeUse, offset);
             }
 
@@ -3524,7 +3479,7 @@ IRBuilder::BuildElementSlotI1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot r
             {
                 regOpnd = IR::RegOpnd::New(TyVar, m_func);
                 // Read the scope slot pointer back using the stack closure sym.
-                fieldOpnd = this->BuildFieldOpnd(Js::OpCode::LdSlotArr, m_func->GetLocalClosureSym()->m_id, 0, (Js::PropertyIdIndexType)-1, PropertyKindSlotArray);
+                fieldOpnd = this->BuildFieldOpnd(Js::OpCode::LdSlotArr, closureSym->m_id, 0, (Js::PropertyIdIndexType)-1, PropertyKindSlotArray);
 
                 instr = IR::Instr::New(Js::OpCode::LdSlotArr, regOpnd, fieldOpnd, m_func);
                 this->AddInstr(instr, offset);
@@ -3532,7 +3487,7 @@ IRBuilder::BuildElementSlotI1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot r
 
                 if (IsLoopBody())
                 {
-                    fieldOpnd = this->BuildFieldOpnd(Js::OpCode::LdSlotArr, m_func->GetLocalClosureSym()->m_id, slotId, (Js::PropertyIdIndexType)-1, PropertyKindSlotArray);
+                    fieldOpnd = this->BuildFieldOpnd(Js::OpCode::LdSlotArr, closureSym->m_id, slotId, (Js::PropertyIdIndexType)-1, PropertyKindSlotArray);
                     // Need a dynamic check on the size of the local slot array.
                     m_func->GetTopFunc()->AddSlotArrayCheck(fieldOpnd);
                 }
@@ -3565,11 +3520,11 @@ IRBuilder::BuildElementSlotI1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot r
         case Js::OpCode::StLocalObjSlot:
         case Js::OpCode::StLocalObjSlotChkUndecl:
 
-            if (m_func->GetLocalClosureSym()->HasByteCodeRegSlot())
+            if (closureSym->HasByteCodeRegSlot())
             {
                 byteCodeUse = IR::ByteCodeUsesInstr::New(m_func);
                 byteCodeUse->byteCodeUpwardExposedUsed = JitAnew(m_func->m_alloc, BVSparse<JitArenaAllocator>, m_func->m_alloc);
-                byteCodeUse->byteCodeUpwardExposedUsed->Set(m_func->GetLocalClosureSym()->m_id);
+                byteCodeUse->byteCodeUpwardExposedUsed->Set(closureSym->m_id);
                 this->AddInstr(byteCodeUse, offset);
             }
 
@@ -6671,7 +6626,6 @@ IRBuilder::BuildEmpty(Js::OpCode newOpcode, uint32 offset)
         break;
 
     case Js::OpCode::BeginBodyScope:
-        // this->m_func->SetParamClosureSym(StackSym::New(TyVar, this->m_func));
         this->AddInstr(
             IR::Instr::New(
                 Js::OpCode::Ld_A,
@@ -6688,7 +6642,6 @@ IRBuilder::BuildEmpty(Js::OpCode newOpcode, uint32 offset)
                 m_func),
             Js::Constants::NoByteCodeOffset);
 
-        // Js::OpCode::LdFrameDisplay
         this->AddInstr(
             IR::Instr::New(
                 Js::OpCode::LdFrameDisplay,
@@ -6697,7 +6650,6 @@ IRBuilder::BuildEmpty(Js::OpCode newOpcode, uint32 offset)
                 this->BuildSrcOpnd(this->m_func->GetJnFunction()->GetFrameDisplayRegister()),
                 m_func),
             (uint32)-1);
-
         break;
 
     default:
