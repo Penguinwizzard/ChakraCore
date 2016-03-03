@@ -2508,8 +2508,8 @@ BackwardPass::ProcessBlock(BasicBlock * block)
                     if (instr->DoStackArgsOpt(this->func))
                     {
                         Assert(instr->GetSrc1()->GetPropertyStackSym()->m_isParamArraySym);
-                        //instr->Remove();
-                       // continue;
+                        instr->Remove();
+                        continue;
                     }
                     break;
                 case Js::OpCode::LdSlot:
@@ -2517,7 +2517,7 @@ BackwardPass::ProcessBlock(BasicBlock * block)
                     if (instr->DoStackArgsOpt(this->func))
                     {
                         Assert(instr->GetSrc1()->GetPropertyStackSym()->m_isParamArraySym);
-                        //instr = ConvertToArgIn(instr);
+                        instr = ConvertToArgIn(instr);
                     }
                     break;
                 }
