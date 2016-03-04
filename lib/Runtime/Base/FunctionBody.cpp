@@ -465,7 +465,6 @@ namespace Js
         m_hasFunctionCompiledSent(false),
         byteCodeCache(nullptr),
         m_hasLocalClosureRegister(false),
-        m_hasParamClosureRegister(false),
         m_hasLocalFrameDisplayRegister(false),
         m_hasEnvRegister(false),
         m_hasThisRegisterForEventHandler(false),
@@ -9503,27 +9502,6 @@ namespace Js
     RegSlot FunctionBody::GetLocalClosureRegister() const
     {
         return m_hasLocalClosureRegister ? GetCountField(CounterFields::LocalClosureRegister) : Constants::NoRegister;
-    }
-    void FunctionBody::SetParamClosureRegister(RegSlot reg)
-    {
-        if (reg == Constants::NoRegister)
-        {
-            m_hasParamClosureRegister = false;
-        }
-        else
-        {
-            m_hasParamClosureRegister = true;
-            SetCountField(CounterFields::ParamClosureRegister, reg);
-        }
-    }
-    void FunctionBody::MapAndSetParamClosureRegister(RegSlot reg)
-    {
-        Assert(!m_hasParamClosureRegister);
-        SetParamClosureRegister(this->MapRegSlot(reg));
-    }
-    RegSlot FunctionBody::GetParamClosureRegister() const
-    {
-        return m_hasParamClosureRegister ? GetCountField(CounterFields::ParamClosureRegister) : Constants::NoRegister;
     }
 
     void FunctionBody::MapAndSetLocalFrameDisplayRegister(RegSlot reg)

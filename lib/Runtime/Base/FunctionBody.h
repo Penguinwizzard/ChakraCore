@@ -1710,8 +1710,6 @@ namespace Js
                 SignedFieldsStart                       = 23,
                 SerializationIndex                      = 23,
 
-                ParamClosureRegister                    = 24,
-
                 Max
             };
 
@@ -1959,7 +1957,6 @@ namespace Js
         bool m_isPartialDeserializedFunction : 1;
         bool m_isAsmJsScheduledForFullJIT : 1;
         bool m_hasLocalClosureRegister : 1;
-        bool m_hasParamClosureRegister : 1;
         bool m_hasLocalFrameDisplayRegister : 1;
         bool m_hasEnvRegister : 1;
         bool m_hasThisRegisterForEventHandler : 1;
@@ -2112,9 +2109,6 @@ namespace Js
         void SetLocalClosureRegister(RegSlot reg);
         void MapAndSetLocalClosureRegister(RegSlot reg);
         RegSlot GetLocalClosureRegister() const;
-        void SetParamClosureRegister(RegSlot reg);
-        void MapAndSetParamClosureRegister(RegSlot reg);
-        RegSlot GetParamClosureRegister() const;
 
         void SetLocalFrameDisplayRegister(RegSlot reg);
         void MapAndSetLocalFrameDisplayRegister(RegSlot reg);

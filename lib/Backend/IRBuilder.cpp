@@ -3343,7 +3343,7 @@ IRBuilder::BuildElementSlotI1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot r
     IR::SymOpnd *fieldOpnd;
     IR::Instr   *instr = nullptr;
     IR::ByteCodeUsesInstr *byteCodeUse;
-    PropertySym *fieldSym;
+    PropertySym *fieldSym = nullptr;
     SymID        symID;
     bool isLdSlotThatWasNotProfiled = false;
     uint scopeSlotSize = 0;
@@ -3354,7 +3354,8 @@ IRBuilder::BuildElementSlotI1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot r
         case Js::OpCode::LdParamSlot:
             scopeSlotSize = m_func->GetJnFunction()->paramScopeSlotArraySize;
             closureSym = m_func->GetParamClosureSym();
-            symID = m_func->GetJnFunction()->GetParamClosureRegister();
+            symID = m_func->GetParamClosureSym()->m_id;
+            fieldSym = PropertySym::New(closureSym, slotId, (uint32)-1, (uint)-1, PropertyKindSlots, m_func);
             goto LdLocalSlot;
             break;
 
@@ -3403,7 +3404,7 @@ LdLocalSlot:
                 this->EnsureLoopBodyLoadSlot(symID);
             }
 
-            fieldSym = PropertySym::FindOrCreate(symID, slotId, (uint32)-1, (uint)-1, PropertyKindSlots, m_func);
+            fieldSym = fieldSym ? fieldSym : PropertySym::FindOrCreate(symID, slotId, (uint32)-1, (uint)-1, PropertyKindSlots, m_func);
             fieldOpnd = IR::SymOpnd::New(fieldSym, TyVar, m_func);
             regOpnd = this->BuildDstOpnd(regSlot);
             instr = nullptr;
@@ -6629,7 +6630,7 @@ IRBuilder::BuildEmpty(Js::OpCode newOpcode, uint32 offset)
         this->AddInstr(
             IR::Instr::New(
                 Js::OpCode::Ld_A,
-                this->BuildDstOpnd(this->m_func->GetJnFunction()->GetParamClosureRegister()),
+                IR::RegOpnd::New(this->m_func->GetParamClosureSym(), TyVar, this->m_func),
                 IR::RegOpnd::New(this->m_func->GetLocalClosureSym(), TyVar, this->m_func),
                 this->m_func),
             offset);
@@ -6638,7 +6639,7 @@ IRBuilder::BuildEmpty(Js::OpCode newOpcode, uint32 offset)
             IR::Instr::New(
                 Js::OpCode::NewScopeSlots,
                 this->BuildDstOpnd(this->m_func->GetJnFunction()->GetLocalClosureRegister()),
-                IR::IntConstOpnd::New(m_func->GetJnFunction()->scopeSlotArraySize + Js::ScopeSlots::FirstSlotIndex, TyUint32, m_func),
+                IR::IntConstOpnd::New(this->m_func->GetJnFunction()->scopeSlotArraySize + Js::ScopeSlots::FirstSlotIndex, TyUint32, this->m_func),
                 m_func),
             Js::Constants::NoByteCodeOffset);
 
