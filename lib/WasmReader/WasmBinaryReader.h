@@ -96,7 +96,6 @@ namespace Wasm
 
             virtual bool IsBinaryReader() override;
             virtual WasmOp ReadFromModule() override;
-            SectionCode ReadSectionHeader();
             virtual WasmOp ReadFromBlock() override;
             virtual WasmOp ReadFromCall() override;
             virtual WasmOp ReadExpr() override;
@@ -130,7 +129,7 @@ namespace Wasm
             UINT32 Offset();
             UINT LEB128(UINT &length);
             template <typename T> T ReadConst();
-
+            SectionCode SectionHeader();
 
 
 

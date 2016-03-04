@@ -93,7 +93,7 @@ WasmBinaryReader::ReadFromModule()
         else
         {
             // next section
-            sectionId = m_moduleState.secId = ReadSectionHeader();
+            sectionId = m_moduleState.secId = SectionHeader();
             m_moduleState.count = 0;
             if (sectionId == bSectMemory || sectionId == bSectEnd)
             {
@@ -179,7 +179,7 @@ WasmBinaryReader::ReadFromModule()
 }
 
 SectionCode
-WasmBinaryReader::ReadSectionHeader()
+WasmBinaryReader::SectionHeader()
 {
     UINT len;
     UINT sectionSize;
@@ -203,7 +203,7 @@ WasmBinaryReader::ReadSectionHeader()
     if (cmp("data_segments")) return bSectDataSegments;
     if (cmp("function_table")) return bSectIndirectFunctionTable;
     if (cmp("end")) return bSectEnd;
-    
+
     return bSectInvalid;
 }
 
