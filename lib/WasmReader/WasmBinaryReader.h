@@ -72,12 +72,11 @@ namespace Wasm
             bSectFunctions      = 0x02,
             bSectGlobals        = 0x03,
             bSectDataSegments   = 0x04,
-            bSectFunctionTable  = 0x05,
+            bSectIndirectFunctionTable = 0x05,
             bSectEnd            = 0x06, // marks end of module
             bSectStartFunction  = 0x07,
             bSectImportTable    = 0x08,
             bSectExportTable    = 0x09,
-            bSectIndirectFunctionTable = 0x0a,
             bSectLimit
         };
 

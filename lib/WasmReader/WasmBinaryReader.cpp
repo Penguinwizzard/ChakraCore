@@ -73,7 +73,7 @@ WasmBinaryReader::ReadFromModule()
     SectionCode sectionId;
     UINT length = 0;
 
-    if (ReadConst<UINT32>() != 0x6d836100)
+    if (ReadConst<UINT32>() != 0x6d736100)
     {
         ThrowDecodingError(L"Malformed WASM module header!");
     }
@@ -154,7 +154,7 @@ WasmBinaryReader::ReadFromModule()
 
             return wnFUNC;
 
-        case bSectFunctionTable:
+        case bSectIndirectFunctionTable:
             if (!m_visitedSections->Test(bSectFunctions))
             {
                 ThrowDecodingError(L"Function declarations section missing before function table");
@@ -189,13 +189,15 @@ WasmBinaryReader::ReadSectionHeader()
     m_moduleState.count += len;
     idSize = LEB128(len);
     m_moduleState.count += len;
-    const char *sectionName = Name((UINT)m_pc, idSize);
+    const char *sectionName = (char*)(m_pc);
+    m_pc += idSize;
+    m_moduleState.count += idSize;
 
-    auto cmp = [sectionName, idSize](const char* n) { return !strncmp(sectionName, sectionName, idSize); };
+    auto cmp = [&sectionName, &idSize](const char* n) { return !strncmp(n, sectionName, idSize); };
     if (cmp("memory")) return bSectMemory;
     if (cmp("signatures")) return bSectSignatures;
     if (cmp("import_table")) return bSectImportTable;
-    if (cmp("functions")) return bSectFunctionTable;
+    if (cmp("functions")) return bSectFunctions;
     if (cmp("export_table")) return bSectExportTable;
     if (cmp("start_function")) return bSectStartFunction;
     if (cmp("data_segments")) return bSectDataSegments;
