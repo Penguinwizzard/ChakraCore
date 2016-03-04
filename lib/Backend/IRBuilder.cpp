@@ -3354,7 +3354,7 @@ IRBuilder::BuildElementSlotI1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot r
         case Js::OpCode::LdParamSlot:
             scopeSlotSize = m_func->GetJnFunction()->paramScopeSlotArraySize;
             closureSym = m_func->GetParamClosureSym();
-            symID = m_func->GetParamClosureSym()->m_id;
+            symID = closureSym->m_id;
             fieldSym = PropertySym::New(closureSym, slotId, (uint32)-1, (uint)-1, PropertyKindSlots, m_func);
             goto LdLocalSlot;
             break;
@@ -6572,7 +6572,6 @@ void
 IRBuilder::BuildEmpty(Js::OpCode newOpcode, uint32 offset)
 {
     IR::Instr *instr;
-    // StackSym* newSym = nullptr;
 
     m_jnReader.Empty();
 
@@ -6627,6 +6626,9 @@ IRBuilder::BuildEmpty(Js::OpCode newOpcode, uint32 offset)
         break;
 
     case Js::OpCode::BeginBodyScope:
+        // This marks the end of a param socpe which is not merged with body scope.
+        // So we have to first cache the closure so that we can use it to copy the initial values for
+        // body syms from corresponding param syms (LdParamSlot). Body should get its own scope slot.
         this->AddInstr(
             IR::Instr::New(
                 Js::OpCode::Ld_A,

@@ -9503,7 +9503,6 @@ namespace Js
     {
         return m_hasLocalClosureRegister ? GetCountField(CounterFields::LocalClosureRegister) : Constants::NoRegister;
     }
-
     void FunctionBody::MapAndSetLocalFrameDisplayRegister(RegSlot reg)
     {
         Assert(!m_hasLocalFrameDisplayRegister);
