@@ -1392,7 +1392,10 @@ FuncInfo * ByteCodeGenerator::StartBindFunction(const wchar_t *name, uint nameLe
         bodyScope->SetIsObject();
         bodyScope->SetCapturesAll(true);
         bodyScope->SetMustInstantiate(true);
-        paramScope->SetIsObject();
+        if (paramScope->GetCanMergeWithBodyScope())
+        {
+            paramScope->SetIsObject();
+        }
         paramScope->SetMustInstantiate(true);
         paramScope->SetCapturesAll(true);
     }
@@ -1829,7 +1832,7 @@ Scope * ByteCodeGenerator::FindScopeForSym(Scope *symScope, Scope *scope, Js::Pr
         {
             (*envIndex)++;
         }
-        if (scope == symScope || scope->GetIsDynamic())
+        if (scope == symScope || (scope->GetIsDynamic() && symScope->GetCanMergeWithBodyScope()))
         {
             break;
         }
@@ -2639,9 +2642,10 @@ FuncInfo* PostVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerat
                 top->GetChildCallsEval() ||
                 (top->GetHasArguments() && ByteCodeGenerator::NeedScopeObjectForArguments(top, pnode) && pnode->sxFnc.pnodeParams != nullptr) ||
                 top->GetHasLocalInClosure() ||
-                top->funcExprScope && top->funcExprScope->GetMustInstantiate())
+                top->funcExprScope && top->funcExprScope->GetMustInstantiate() ||
+                !top->paramScope->GetCanMergeWithBodyScope())
             {
-                if (!top->GetCallsEval())
+                if (!top->GetCallsEval() || !top->paramScope->GetCanMergeWithBodyScope())
                 {
                     byteCodeGenerator->AssignFrameSlotsRegister();
                 }
@@ -3066,6 +3070,8 @@ void VisitNestedScopes(ParseNode* pnodeScopeList, ParseNode* pnodeParent, ByteCo
                     pnodeScope->sxFnc.funcInfo->SetCurrentChildScope(pnodeScope->sxFnc.funcInfo->GetParamScope());
                     Assert(containerScope->nop == knopBlock && containerScope->sxBlock.blockType == Parameter);
                     VisitNestedScopes(containerScope->sxBlock.pnodeScopes, pnodeScope, byteCodeGenerator, prefix, postfix, &i, true);
+
+                    MapFormals(pnodeScope, [&](ParseNode *argNode) { Visit(argNode, byteCodeGenerator, prefix, postfix); });
                 }
 
                 // Push the body scope
@@ -3078,9 +3084,8 @@ void VisitNestedScopes(ParseNode* pnodeScopeList, ParseNode* pnodeParent, ByteCo
                 if (!pnodeScope->sxFnc.HasNonSimpleParameterList() || pnodeScope->sxFnc.funcInfo->GetParamScope()->GetCanMergeWithBodyScope())
                 {
                     VisitNestedScopes(containerScope, pnodeScope, byteCodeGenerator, prefix, postfix, &i);
+                    MapFormals(pnodeScope, [&](ParseNode *argNode) { Visit(argNode, byteCodeGenerator, prefix, postfix); });
                 }
-
-                MapFormals(pnodeScope, [&](ParseNode *argNode) { Visit(argNode, byteCodeGenerator, prefix, postfix); });
 
                 if (pnodeScope->sxFnc.HasNonSimpleParameterList())
                 {

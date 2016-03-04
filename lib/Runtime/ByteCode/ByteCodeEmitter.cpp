@@ -493,8 +493,6 @@ void ByteCodeGenerator::LoadUncachedHeapArguments(FuncInfo *funcInfo)
 {
     Assert(funcInfo->GetHasHeapArguments());
 
-    Scope *scope = funcInfo->GetBodyScope();
-    Assert(scope);
     Symbol *argSym = funcInfo->GetArgumentsSymbol();
     Assert(argSym && argSym->GetIsArguments());
     Js::RegSlot argumentsLoc = argSym->GetLocation();
@@ -1939,7 +1937,7 @@ void ByteCodeGenerator::LoadAllConstants(FuncInfo *funcInfo)
         byteCodeFunction->RecordFloatConstant(byteCodeFunction->MapRegSlot(location), d);
     });
 
-    if (funcInfo->GetHasArguments())
+    if (funcInfo->GetHasArguments() && (!funcInfo->GetParamScope() || funcInfo->GetParamScope()->GetCanMergeWithBodyScope()))
     {
         sym = funcInfo->GetArgumentsSymbol();
         Assert(sym);
@@ -1963,7 +1961,7 @@ void ByteCodeGenerator::LoadAllConstants(FuncInfo *funcInfo)
         }
     }
 
-    //
+   //
     // If the function is a function expression with a name,
     // load the function object at runtime to its activation object.
     //

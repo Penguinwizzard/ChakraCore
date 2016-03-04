@@ -1403,7 +1403,7 @@ namespace Js
         if (closureReg != Js::Constants::NoRegister)
         {
             Assert(closureReg >= executeFunction->GetConstantCount());
-            if (executeFunction->HasScopeObject())
+            if (executeFunction->HasScopeObject() && this->IsParamScopeDone())
             {
                 Js::RegSlot funcExprScopeReg = executeFunction->GetFuncExprScopeRegister();
                 if (funcExprScopeReg != Constants::NoRegister)
