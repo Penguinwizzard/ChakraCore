@@ -22,6 +22,7 @@ namespace Binary
 {
 
 bool WasmBinaryReader::isInit = false;
+bool WasmBinaryReader::seenModuleHeader = false;
 WasmTypes::Signature WasmBinaryReader::opSignatureTable[WasmTypes::OpSignatureId::bSigLimit]; // table of opcode signatures
 WasmTypes::OpSignatureId WasmBinaryReader::opSignature[WasmBinOp::wbLimit];                   // opcode -> opcode signature ID
 const Wasm::WasmTypes::WasmType WasmBinaryReader::binaryToWasmTypes[] = { Wasm::WasmTypes::WasmType::Void, Wasm::WasmTypes::WasmType::I32, Wasm::WasmTypes::WasmType::I64, Wasm::WasmTypes::WasmType::F32, Wasm::WasmTypes::WasmType::F64 };
@@ -73,14 +74,18 @@ WasmBinaryReader::ReadFromModule()
     SectionCode sectionId;
     UINT length = 0;
 
-    if (ReadConst<UINT32>() != 0x6d736100)
+    if (!seenModuleHeader)
     {
-        ThrowDecodingError(L"Malformed WASM module header!");
-    }
+        if (ReadConst<UINT32>() != 0x6d736100)
+        {
+            ThrowDecodingError(L"Malformed WASM module header!");
+        }
 
-    if (ReadConst<UINT32>() != 10)
-    {
-        ThrowDecodingError(L"Invalid WASM version!");
+        if (ReadConst<UINT32>() != 10)
+        {
+            ThrowDecodingError(L"Invalid WASM version!");
+        }
+        seenModuleHeader = true;
     }
 
     while (!EndOfModule())
@@ -193,7 +198,7 @@ WasmBinaryReader::SectionHeader()
     m_pc += idSize;
     m_moduleState.count += idSize;
 
-    auto cmp = [&sectionName, &idSize](const char* n) { return !strncmp(n, sectionName, idSize); };
+    auto cmp = [&sectionName, &idSize](const char* n) { return !memcmp(n, sectionName, idSize); };
     if (cmp("memory")) return bSectMemory;
     if (cmp("signatures")) return bSectSignatures;
     if (cmp("import_table")) return bSectImportTable;
@@ -519,7 +524,6 @@ WasmBinaryReader::FunctionHeader()
     {
         ThrowDecodingError(L"Imports and exports must be named!");
     }
-
     // params
     sig = m_moduleInfo->GetSignature(sigId);
     m_funcInfo->SetSignature(sig);

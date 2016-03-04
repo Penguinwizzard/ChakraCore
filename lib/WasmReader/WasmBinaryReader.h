@@ -150,6 +150,7 @@ namespace Wasm
         private:
 
             static bool isInit;
+            static bool seenModuleHeader;
             static WasmTypes::Signature opSignatureTable[WasmTypes::OpSignatureId::bSigLimit]; // table of opcode signatures
             static WasmTypes::OpSignatureId opSignature[WasmBinOp::wbLimit];                   // opcode -> opcode signature ID
             // maps from binary format to sexpr codes
