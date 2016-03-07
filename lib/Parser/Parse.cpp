@@ -679,6 +679,7 @@ void Parser::InitNode(OpCode nop,ParseNodePtr pnode) {
     pnode->notEscapedUse = false;
     pnode->isInList = false;
     pnode->isCallApplyTargetLoad = false;
+    pnode->isArgElemOrArgLenLoad = false;
 }
 
 // Create nodes using Arena
@@ -8438,11 +8439,11 @@ ParseNodePtr Parser::ParseExpr(int oplMin,
             if (nodeType & fnopBin)
             {
                 ParseNodePtr lhs = pnode->sxBin.pnode1;
-
                 Assert(lhs);
+
                 if (lhs->nop == knopDot)
                 {
-                    ParseNodePtr propertyNode = lhs->sxBin.pnode2;                    
+                    ParseNodePtr propertyNode = lhs->sxBin.pnode2;
                     if (propertyNode->nop == knopName)
                     {
                         propertyNode->sxPid.pid->PromoteAssignmentState();

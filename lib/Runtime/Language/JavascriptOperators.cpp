@@ -6704,8 +6704,7 @@ CommonNumber:
         DynamicObject* frameObject,
         Js::PropertyIdArray *propIds,
         uint32 formalsCount,
-        ScriptContext* scriptContext,
-        bool isStackArgs)
+        ScriptContext* scriptContext)
     {
         Var *paramIter = paramAddr;
         uint32 i = 0;
@@ -6773,7 +6772,7 @@ CommonNumber:
 
             if (nonSimpleParamList)
             {
-                return ConvertToUnmappedArguments(argsObj, paramCount, paramAddr, frameObject, propIds, formalsCount, scriptContext, isStackArgsOpt);
+                return ConvertToUnmappedArguments(argsObj, paramCount, paramAddr, frameObject, propIds, formalsCount, scriptContext);
             }
 
             for (i = 0; i < formalsCount && i < paramCount; i++, tmpAddr++)
@@ -6840,7 +6839,7 @@ CommonNumber:
 
             if (nonSimpleParamList)
             {
-                return ConvertToUnmappedArguments(argsObj, actualsCount, paramAddr, frameObject, nullptr /*propIds*/, formalsCount, scriptContext, isStackArgOpt);
+                return ConvertToUnmappedArguments(argsObj, actualsCount, paramAddr, frameObject, nullptr /*propIds*/, formalsCount, scriptContext);
             }
 
             for (i = 0; i < formalsCount && i < actualsCount; i++, tmpAddr++)
