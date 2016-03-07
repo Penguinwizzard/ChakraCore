@@ -2602,6 +2602,12 @@ bool Inline::InlineApplyTarget(IR::Instr *callInstr, const Js::FunctionCodeGenJi
 
     *returnInstr = InlineCallApplyTarget_Shared(callInstr, originalCallTargetStackSym, inlineeData->GetFunctionInfo(), inlineeData, inlineCacheIndex,
                                                 safeThis, /*isApplyTarget*/ true, /*isCallTarget*/ false, recursiveInlineDepth);
+
+    //if (callInstr->m_func->GetInParamsCount() != 1 && callInstr->m_func->GetTopFunc()->GetHasArgumentObject())
+    //{
+    //    callInstr->m_func->GetTopFunc()->SetHasStackArgs(false);
+    //}
+    
     return true;
 }
 

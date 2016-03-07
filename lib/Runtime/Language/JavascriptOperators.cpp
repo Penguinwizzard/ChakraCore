@@ -6419,8 +6419,7 @@ CommonNumber:
         DynamicObject* frameObject,
         Js::PropertyIdArray *propIds,
         uint32 formalsCount,
-        ScriptContext* scriptContext,
-        bool isStackArgs)
+        ScriptContext* scriptContext)
     {
         Var *paramIter = paramAddr;
         uint32 i = 0;
@@ -6444,11 +6443,10 @@ CommonNumber:
         return argumentsObject;
     }
 
-    Var JavascriptOperators::LoadHeapArguments(JavascriptFunction *funcCallee, uint32 paramCount, Var *paramAddr, Var frameObj, Var vArray, ScriptContext* scriptContext, bool nonSimpleParamList, bool isStackArgsOpt)
+
+    bool JavascriptOperators::FillFrameObject(uint32 paramCount, Var* paramAddr, Var frameObj, Var vArray, ScriptContext* scriptContext, bool nonSimpleParamList, HeapArgumentsObject * argsObj)
     {
         AssertMsg(paramCount != (unsigned int)-1, "Loading the arguments object in the global function?");
-
-        // Create and initialize the Arguments object.
 
         uint32 formalsCount = 0;
         Js::PropertyIdArray *propIds = nullptr;
@@ -6456,12 +6454,6 @@ CommonNumber:
         {
             propIds = (Js::PropertyIdArray *)vArray;
             formalsCount = propIds->count;
-        }
-
-        HeapArgumentsObject *argsObj = nullptr;
-        if (!isStackArgsOpt)
-        {
-            argsObj = JavascriptOperators::CreateHeapArguments(funcCallee, paramCount, formalsCount, frameObj, scriptContext);
         }
 
         // Transfer formal arguments (that were actually passed) from their ArgIn slots to the local frame object.
@@ -6488,7 +6480,8 @@ CommonNumber:
 
             if (nonSimpleParamList)
             {
-                return ConvertToUnmappedArguments(argsObj, paramCount, paramAddr, frameObject, propIds, formalsCount, scriptContext, isStackArgsOpt);
+                ConvertToUnmappedArguments(argsObj, paramCount, paramAddr, frameObject, propIds, formalsCount, scriptContext);
+                return true;
             }
 
             for (i = 0; i < formalsCount && i < paramCount; i++, tmpAddr++)
@@ -6506,25 +6499,82 @@ CommonNumber:
                 }
             }
         }
+        return false;
+    }
+    
+    Var JavascriptOperators::LoadHeapArguments(JavascriptFunction *funcCallee, uint32 paramCount, Var *paramAddr, Var frameObj, Var vArray, ScriptContext* scriptContext, bool nonSimpleParamList)
+    {
+        AssertMsg(paramCount != (unsigned int)-1, "Loading the arguments object in the global function?");
+        
+        // Create and initialize the Arguments object.
 
-        if (!isStackArgsOpt)
+        uint32 formalsCount = 0;
+        Js::PropertyIdArray *propIds = nullptr;
+        if (vArray != scriptContext->GetLibrary()->GetNull())
         {
-            Assert(argsObj);
-            // Transfer the unnamed actual arguments, if any, to the Arguments object itself.
-            for (i = formalsCount, tmpAddr = paramAddr + i; i < paramCount; i++, tmpAddr++)
-            {
-                // ES5 10.6.11: use [[DefineOwnProperty]] semantics (instead of [[Put]]):
-                // do not check whether property is non-writable/etc in the prototype.
-                // ES3 semantics is same.
-                JavascriptOperators::SetItem(argsObj, argsObj, i, *tmpAddr, scriptContext, PropertyOperation_None, /* skipPrototypeCheck = */ TRUE);
-            }
+            propIds = (Js::PropertyIdArray *)vArray;
+            formalsCount = propIds->count;
+        }
 
-            if (funcCallee->IsStrictMode())
-            {
-                // If the formals are let decls, then we just overwrote the frame object slots with
-                // Undecl sentinels, and we can use the original arguments that were passed to the HeapArgumentsObject.
-                return argsObj->ConvertToUnmappedArgumentsObject(!nonSimpleParamList);
-            }
+        HeapArgumentsObject *argsObj = JavascriptOperators::CreateHeapArguments(funcCallee, paramCount, formalsCount, frameObj, scriptContext);
+
+        // Transfer formal arguments (that were actually passed) from their ArgIn slots to the local frame object.
+        bool isArgumentsUnMapped = FillFrameObject(paramCount, paramAddr, frameObj, vArray, scriptContext, nonSimpleParamList, argsObj);
+
+        if (isArgumentsUnMapped)
+        {
+            return argsObj;
+        }
+
+        uint32 i;
+
+        Var *tmpAddr = paramAddr;
+
+        Assert(argsObj);
+        // Transfer the unnamed actual arguments, if any, to the Arguments object itself.
+        for (i = formalsCount, tmpAddr = paramAddr + i; i < paramCount; i++, tmpAddr++)
+        {
+            // ES5 10.6.11: use [[DefineOwnProperty]] semantics (instead of [[Put]]):
+            // do not check whether property is non-writable/etc in the prototype.
+            // ES3 semantics is same.
+            JavascriptOperators::SetItem(argsObj, argsObj, i, *tmpAddr, scriptContext, PropertyOperation_None, /* skipPrototypeCheck = */ TRUE);
+        }
+
+        if (funcCallee->IsStrictMode())
+        {
+            // If the formals are let decls, then we just overwrote the frame object slots with
+            // Undecl sentinels, and we can use the original arguments that were passed to the HeapArgumentsObject.
+            return argsObj->ConvertToUnmappedArgumentsObject(!nonSimpleParamList);
+        }
+
+        return argsObj;
+    }
+
+    Var JavascriptOperators::LoadHeapArgumentsWithFrameObj(JavascriptFunction *funcCallee, uint32 paramCount, uint32 formalsCount, Var *paramAddr, Var frameObj, ScriptContext* scriptContext, bool nonSimpleParamList)
+    {
+        AssertMsg(paramCount != (unsigned int)-1, "Loading the arguments object in the global function?");
+        HeapArgumentsObject *argsObj = JavascriptOperators::CreateHeapArguments(funcCallee, paramCount, formalsCount, frameObj, scriptContext);
+        
+        Var *tmpAddr = nullptr;
+        uint32 i= 0;
+
+        //TODO: saravind : Unmap for non-simple parameters ?
+
+        Assert(argsObj);
+        // Transfer the unnamed actual arguments, if any, to the Arguments object itself.
+        for (i = formalsCount, tmpAddr = paramAddr + i; i < paramCount; i++, tmpAddr++)
+        {
+            // ES5 10.6.11: use [[DefineOwnProperty]] semantics (instead of [[Put]]):
+            // do not check whether property is non-writable/etc in the prototype.
+            // ES3 semantics is same.
+            JavascriptOperators::SetItem(argsObj, argsObj, i, *tmpAddr, scriptContext, PropertyOperation_None, /* skipPrototypeCheck = */ TRUE);
+        }
+
+        if (funcCallee->IsStrictMode())
+        {
+            // If the formals are let decls, then we just overwrote the frame object slots with
+            // Undecl sentinels, and we can use the original arguments that were passed to the HeapArgumentsObject.
+            return argsObj->ConvertToUnmappedArgumentsObject(!nonSimpleParamList);
         }
 
         return argsObj;
@@ -6543,6 +6593,8 @@ CommonNumber:
             argsObj = JavascriptOperators::CreateHeapArguments(funcCallee, actualsCount, formalsCount, frameObj, scriptContext);
         }
 
+        Assert(formalsCount == (uint32)funcCallee->GetFunctionBody()->GetInParamsCount() - 1);
+
         // Transfer formal arguments (that were actually passed) from their ArgIn slots to the local frame object.
         uint32 i;
 
@@ -6555,7 +6607,7 @@ CommonNumber:
 
             if (nonSimpleParamList)
             {
-                return ConvertToUnmappedArguments(argsObj, actualsCount, paramAddr, frameObject, nullptr /*propIds*/, formalsCount, scriptContext, isStackArgOpt);
+                return ConvertToUnmappedArguments(argsObj, actualsCount, paramAddr, frameObject, nullptr /*propIds*/, formalsCount, scriptContext);
             }
 
             for (i = 0; i < formalsCount && i < actualsCount; i++, tmpAddr++)
