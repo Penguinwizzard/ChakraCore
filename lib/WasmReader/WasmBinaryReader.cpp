@@ -217,6 +217,15 @@ WasmBinaryReader::ProcessSection(SectionCode sectionId, bool isEntry /*= true*/)
         m_moduleState.count += m_moduleState.size;
         break;
 
+    case bSectImportTable:
+        for (UINT i = 0; i < m_moduleState.size; i++)
+        {
+            ImportEntry();
+        }
+        Assert(m_moduleState.count == 0);
+        m_moduleState.count += m_moduleState.size;
+        break;
+
     case bSectEnd:
         // One module per file. We will have to skip over func names and data segments.
         m_pc = m_end; // skip to end, we are done.
@@ -650,6 +659,33 @@ WasmBinaryReader::FunctionBodyHeader()
     }
 
     TRACE_WASM_DECODER(L"Function body header: i32 = %u, i64 = %u, f32 = %u, f64 = %u", i32Count, i64Count, f32Count, f64Count);
+}
+
+void
+WasmBinaryReader::ImportEntry()
+{
+    UINT len = 0;
+    UINT sigId = LEB128(len);
+    //UINT modNameOffset = LEB128(len);
+    UINT fnNameOffset = LEB128(len);
+
+    m_funcInfo = Anew(&m_alloc, WasmFunctionInfo, &m_alloc);
+    m_currentNode.func.info = m_funcInfo;
+    m_funcInfo->SetImported(true);
+    const char *fnName = Name(fnNameOffset, len);
+
+    AssertMsg(len > 0, "Invalid function name length");
+    LPCUTF8 utf8FuncName = AnewArray(&m_alloc, CUTF8, len);
+    strcpy_s((char*)utf8FuncName, len, fnName);
+    m_funcInfo->SetName(utf8FuncName);
+
+    if (sigId >= m_moduleInfo->GetSignatureCount())
+    {
+        ThrowDecodingError(L"Function signature is out of bound");
+    }
+
+    WasmSignature* sig = m_moduleInfo->GetSignature(sigId);
+    m_funcInfo->SetSignature(sig);
 }
 
 const char *

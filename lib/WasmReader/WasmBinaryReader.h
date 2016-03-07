@@ -118,6 +118,8 @@ namespace Wasm
             void Signature();
             void ReadFunctionsSignatures();
             void FunctionBodyHeader();
+            void ImportEntry();
+
             const char* Name(UINT32 offset, UINT &length);
             UINT32 Offset();
             UINT LEB128(UINT &length, bool sgn = false);
