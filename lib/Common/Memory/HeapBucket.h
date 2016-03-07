@@ -224,7 +224,10 @@ protected:
     void VerifyMark();
 #endif
     TBlockAllocatorType allocatorHead;
-    TBlockType * nextAllocableBlockHead;
+    TBlockType * nextAllocableBlockHead;    
+    TBlockType * tempAllocableBlock;
+    TBlockType * tempAllocableBlockHead;
+    TBlockType * tempAllocableBlockTail;
     TBlockType * emptyBlockList;     // list of blocks that is empty and has it's page freed
 
     TBlockType * fullBlockList;      // list of blocks that are fully allocated

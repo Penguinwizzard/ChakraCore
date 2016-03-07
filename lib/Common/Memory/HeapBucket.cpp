@@ -37,6 +37,9 @@ EXPLICIT_INSTANTIATE_WITH_SMALL_HEAP_BLOCK_TYPE(HeapBucketT);
 template <typename TBlockType>
 HeapBucketT<TBlockType>::HeapBucketT() :
     nextAllocableBlockHead(nullptr),
+    tempAllocableBlock(nullptr),
+    tempAllocableBlockHead(nullptr),
+    tempAllocableBlockTail(nullptr),
     emptyBlockList(nullptr),
     fullBlockList(nullptr),
     heapBlockList(nullptr),
@@ -297,6 +300,7 @@ HeapBucketT<TBlockType>::GetNonEmptyHeapBlockCount(bool checkCount) const
 {
     size_t currentHeapBlockCount = HeapBlockList::Count(fullBlockList);
     currentHeapBlockCount += HeapBlockList::Count(heapBlockList);
+    currentHeapBlockCount += HeapBlockList::Count(tempAllocableBlockHead);
 #if ENABLE_CONCURRENT_GC
     // Recycler can be null if we have OOM in the ctor
     if (this->GetRecycler() && this->GetRecycler()->recyclerSweep != nullptr)
@@ -336,6 +340,11 @@ HeapBucketT<TBlockType>::TryAlloc(Recycler * recycler, TBlockAllocatorType * all
         this->nextAllocableBlockHead = heapBlock->GetNextBlock();
 
         allocator->Set(heapBlock);
+    }
+    else if (this->tempAllocableBlock != nullptr)
+    {
+        allocator->Set(this->tempAllocableBlock);
+        this->tempAllocableBlock = nullptr;
     }
     else if (this->explicitFreeList != nullptr)
     {
@@ -740,7 +749,7 @@ HeapBucketT<TBlockType>::VerifyBlockConsistencyInList(TBlockType * heapBlock, Re
         // blocks before nextAllocableBlockHead that are not being bump allocated from must be considered "full".
         // However, the exception is if this is the only heap block in this bucket, in which case nextAllocableBlockHead
         // would be null
-        Assert(*expectFull == (!heapBlock->HasFreeObject() || heapBlock->IsInAllocator()) || nextAllocableBlockHead == nullptr);
+   //     Assert(*expectFull == (!heapBlock->HasFreeObject() || heapBlock->IsInAllocator()) || nextAllocableBlockHead == nullptr);
     }
 }
 
@@ -906,8 +915,23 @@ HeapBucketT<TBlockType>::SweepHeapBlockList(RecyclerSweep& recyclerSweep, TBlock
         {
             Assert(this->nextAllocableBlockHead == nullptr);
             Assert(heapBlock->HasFreeObject());
-            heapBlock->SetNextBlock(this->heapBlockList);
-            this->heapBlockList = heapBlock;
+            if (recyclerSweep.IsBackground() && this->tempAllocableBlock == nullptr)
+            {
+                this->tempAllocableBlock = heapBlock;
+
+                heapBlock->SetNextBlock(this->tempAllocableBlockHead);
+                this->tempAllocableBlockHead = heapBlock;
+                if (this->tempAllocableBlockTail == nullptr)
+                {
+                    this->tempAllocableBlockTail = heapBlock;
+                }
+            }
+            else
+            {
+                
+                heapBlock->SetNextBlock(this->heapBlockList);
+                this->heapBlockList = heapBlock;
+            }
 #if ENABLE_PARTIAL_GC
             recyclerSweep.NotifyAllocableObjects(heapBlock);
 #endif
@@ -1042,6 +1066,7 @@ HeapBucketT<TBlockType>::StopAllocationBeforeSweep()
     Assert(!this->IsAllocationStopped());
     DebugOnly(this->isAllocationStopped = true);
     this->nextAllocableBlockHead = nullptr;
+    this->tempAllocableBlock = nullptr;
 }
 
 template <typename TBlockType>
@@ -1051,6 +1076,13 @@ HeapBucketT<TBlockType>::StartAllocationAfterSweep()
     Assert(this->IsAllocationStopped());
     DebugOnly(this->isAllocationStopped = false);
     this->nextAllocableBlockHead = this->heapBlockList;
+    if (this->tempAllocableBlockTail != nullptr)
+    {
+        this->tempAllocableBlockTail->SetNextBlock(this->heapBlockList);
+        this->heapBlockList = this->tempAllocableBlockHead;
+        this->tempAllocableBlockTail = nullptr;
+        this->tempAllocableBlockHead = nullptr;
+    }
 }
 
 
@@ -1204,7 +1236,16 @@ HeapBucketT<TBlockType>::Check(bool checkCount)
     Assert(this->GetRecycler()->recyclerSweep == nullptr);
     UpdateAllocators();
     size_t smallHeapBlockCount = HeapInfo::Check(true, false, this->fullBlockList);
-    smallHeapBlockCount += HeapInfo::Check(true, false, this->heapBlockList, this->nextAllocableBlockHead);
+    if (this->tempAllocableBlock)
+    {
+        smallHeapBlockCount += HeapInfo::Check(true, false, this->heapBlockList, this->tempAllocableBlock);
+        smallHeapBlockCount += HeapInfo::Check(false, false, this->tempAllocableBlock, this->tempAllocableBlock->GetNextBlock());
+        smallHeapBlockCount += HeapInfo::Check(true, false, this->tempAllocableBlock->GetNextBlock(), this->nextAllocableBlockHead);
+    }
+    else
+    {
+        smallHeapBlockCount += HeapInfo::Check(true, false, this->heapBlockList, this->nextAllocableBlockHead);
+    }
     smallHeapBlockCount += HeapInfo::Check(false, false, this->nextAllocableBlockHead);
     Assert(!checkCount || this->heapBlockCount == smallHeapBlockCount);
     return smallHeapBlockCount;
