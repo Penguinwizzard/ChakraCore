@@ -21,7 +21,7 @@ namespace CustomHeap
 #pragma region "Constructor and Destructor"
 
 Heap::Heap(ArenaAllocator * alloc, CodePageAllocators * codePageAllocators):
-    auxiliaryAllocator(alloc),
+    auxilliaryAllocator(alloc),
     codePageAllocators(codePageAllocators),
     lastSecondaryAllocStateChangedCount(0)
 #if DBG_DUMP
@@ -408,7 +408,7 @@ Allocation* Heap::AllocLargeObject(size_t bytes, ushort pdataCount, ushort xdata
     }
 
 
-    Allocation* allocation = this->largeObjectAllocations.PrependNode(this->auxiliaryAllocator);
+    Allocation* allocation = this->largeObjectAllocations.PrependNode(this->auxilliaryAllocator);
     if (allocation == nullptr)
     {
         CodePageAllocators::AutoLock autoLock(this->codePageAllocators);
@@ -444,7 +444,7 @@ void Heap::FreeDecommittedLargeObjects()
 
         this->codePageAllocators->ReleaseDecommitted(allocation.address, allocation.GetPageCount(), allocation.largeObjectAllocation.segment);
 
-        largeObjectIter.RemoveCurrent(this->auxiliaryAllocator);
+        largeObjectIter.RemoveCurrent(this->auxilliaryAllocator);
     }
     NEXT_DLISTBASE_ENTRY_EDITING;
 }
@@ -485,7 +485,7 @@ void Heap::FreeLargeObjects()
 #endif
         this->codePageAllocators->Release(allocation.address, allocation.GetPageCount(), allocation.largeObjectAllocation.segment);
 
-        largeObjectIter.RemoveCurrent(this->auxiliaryAllocator);
+            largeObjectIter.RemoveCurrent(this->auxilliaryAllocator);
     }
     NEXT_DLISTBASE_ENTRY_EDITING;
 }
@@ -500,7 +500,7 @@ void Heap::FreeLargeObject(Allocation* allocation)
 #endif
     this->codePageAllocators->Release(allocation->address, allocation->GetPageCount(), allocation->largeObjectAllocation.segment);
 
-    this->largeObjectAllocations.RemoveElement(this->auxiliaryAllocator, allocation);
+    this->largeObjectAllocations.RemoveElement(this->auxilliaryAllocator, allocation);
 }
 
 #pragma endregion
@@ -509,7 +509,7 @@ void Heap::FreeLargeObject(Allocation* allocation)
 
 bool Heap::AllocInPage(Page* page, size_t bytes, ushort pdataCount, ushort xdataSize, Allocation ** allocationOut)
 {
-    Allocation * allocation = AnewNoThrowStruct(this->auxiliaryAllocator, Allocation);
+    Allocation * allocation = AnewNoThrowStruct(this->auxilliaryAllocator, Allocation);
     if (allocation == nullptr)
     {
         return true;
@@ -529,7 +529,7 @@ bool Heap::AllocInPage(Page* page, size_t bytes, ushort pdataCount, ushort xdata
         CodePageAllocators::AutoLock autoLock(this->codePageAllocators);
         if (this->ShouldBeInFullList(page))
         {
-            Adelete(this->auxiliaryAllocator, allocation);
+            Adelete(this->auxilliaryAllocator, allocation);
             // If we run out of XData space with the segment, move the page to the full page list, and return false to try the next page.
             BucketId bucket = page->currentBucket;
             VerboseHeapTrace(_u("Moving page from bucket %d to full list\n"), bucket);
@@ -542,7 +542,7 @@ bool Heap::AllocInPage(Page* page, size_t bytes, ushort pdataCount, ushort xdata
 
         if (!this->codePageAllocators->AllocSecondary(page->segment, (ULONG_PTR)address, bytes, pdataCount, xdataSize, &xdata))
         {
-            Adelete(this->auxiliaryAllocator, allocation);
+            Adelete(this->auxilliaryAllocator, allocation);
             return true;
         }
     }
@@ -621,7 +621,7 @@ Page* Heap::AllocNewPage(BucketId bucket, bool canAllocInPreReservedHeapPageSegm
 
     // Switch to allocating on a list of pages so we can do leak tracking later
     VerboseHeapTrace(_u("Allocing new page in bucket %d\n"), bucket);
-    Page* page = this->buckets[bucket].PrependNode(this->auxiliaryAllocator, address, pageSegment, bucket);
+    Page* page = this->buckets[bucket].PrependNode(this->auxilliaryAllocator, address, pageSegment, bucket);
 
     if (page == nullptr)
     {
@@ -756,7 +756,7 @@ bool Heap::FreeAllocation(Allocation* object)
 
             void* pageAddress = page->address;
 
-            this->fullPages[page->currentBucket].RemoveElement(this->auxiliaryAllocator, page);            
+            this->fullPages[page->currentBucket].RemoveElement(this->auxilliaryAllocator, page);            
 
             // The page is not in any bucket- just update the stats, free the allocation
             // and dump the page- we don't need to update free object size since the object
@@ -764,7 +764,7 @@ bool Heap::FreeAllocation(Allocation* object)
 #if DBG_DUMP
             this->totalAllocationSize -= pageSize;
 #endif
-            this->auxiliaryAllocator->Free(object, sizeof(Allocation));
+            this->auxilliaryAllocator->Free(object, sizeof(Allocation));
             {
                 CodePageAllocators::AutoLock autoLock(this->codePageAllocators);
                 this->codePageAllocators->ReleasePages(pageAddress, 1, segment);
@@ -807,11 +807,11 @@ bool Heap::FreeAllocation(Allocation* object)
     this->freesSinceLastCompact += object->size;
 #endif
 
-    this->auxiliaryAllocator->Free(object, sizeof(Allocation));
+    this->auxilliaryAllocator->Free(object, sizeof(Allocation));
 
     if (page->IsEmpty())
     {
-        this->buckets[page->currentBucket].RemoveElement(this->auxiliaryAllocator, page);
+        this->buckets[page->currentBucket].RemoveElement(this->auxilliaryAllocator, page);
         return false;
     }
     else // after freeing part of the page, the page should be in PAGE_EXECUTE_READWRITE protection, and turning to PAGE_EXECUTE (always with TARGETS_NO_UPDATE state)
@@ -840,7 +840,7 @@ void Heap::FreeDecommittedBuckets()
     FOREACH_DLISTBASE_ENTRY_EDITING(Page, page, &this->decommittedPages, iter)
     {
         this->codePageAllocators->TrackDecommittedPages(page.address, 1, page.segment);
-        iter.RemoveCurrent(this->auxiliaryAllocator);
+        iter.RemoveCurrent(this->auxilliaryAllocator);
     }
     NEXT_DLISTBASE_ENTRY_EDITING;
 }
@@ -872,7 +872,7 @@ void Heap::FreeBucket(DListBase<Page>* bucket, bool freeOnlyEmptyPages)
         if (!freeOnlyEmptyPages || page.IsEmpty())
         {
             FreePage(&page);
-            pageIter.RemoveCurrent(this->auxiliaryAllocator);
+            pageIter.RemoveCurrent(this->auxilliaryAllocator);
         }
     }
     NEXT_DLISTBASE_ENTRY_EDITING;
