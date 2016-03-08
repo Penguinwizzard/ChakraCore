@@ -58,7 +58,7 @@ namespace Js
 #endif
 
     // FunctionProxy methods
-    FunctionProxy::FunctionProxy(JavascriptMethod entryPoint, Attributes attributes, LocalFunctionId functionId, ScriptContext* scriptContext, Utf8SourceInfo* utf8SourceInfo, uint functionNumber):
+    FunctionProxy::FunctionProxy(JavascriptMethod entryPoint, Attributes attributes, int nestedCount, LocalFunctionId functionId, ScriptContext* scriptContext, Utf8SourceInfo* utf8SourceInfo, uint functionNumber):
         FunctionInfo(entryPoint, attributes, functionId, (FunctionBody*) this),
         m_isTopLevel(false),
         m_isPublicLibraryCode(false),
@@ -68,6 +68,15 @@ namespace Js
         m_functionNumber(functionNumber),
         m_defaultEntryPointInfo(nullptr)
     {
+        if (nestedCount > 0)
+        {
+            nestedArray = RecyclerNewPlusZ(m_scriptContext->GetRecycler(),
+                nestedCount*sizeof(FunctionProxy), NestedArray, nestedCount);
+        }
+        else
+        {
+            nestedArray = nullptr;
+        }
         PERF_COUNTER_INC(Code, TotalFunction);
     }
 
@@ -1059,7 +1068,7 @@ namespace Js
     // DeferDeserializeFunctionInfo methods
 
     DeferDeserializeFunctionInfo::DeferDeserializeFunctionInfo(int nestedCount, LocalFunctionId functionId, ByteCodeCache* byteCodeCache, const byte* serializedFunction, Utf8SourceInfo* sourceInfo, ScriptContext* scriptContext, uint functionNumber, const wchar_t* displayName, uint displayNameLength, uint displayShortNameOffset, NativeModule *nativeModule, Attributes attributes) :
-        FunctionProxy(DefaultDeferredDeserializeThunk, (Attributes)(attributes | DeferredDeserialize), functionId, scriptContext, sourceInfo, functionNumber),
+        FunctionProxy(DefaultDeferredDeserializeThunk, (Attributes)(attributes | DeferredDeserialize), nestedCount, functionId, scriptContext, sourceInfo, functionNumber),
         m_cache(byteCodeCache),
         m_functionBytes(serializedFunction),
         m_displayName(nullptr),
@@ -1100,7 +1109,7 @@ namespace Js
     ParseableFunctionInfo::ParseableFunctionInfo(JavascriptMethod entryPoint, int nestedCount,
         LocalFunctionId functionId, Utf8SourceInfo* sourceInfo, ScriptContext* scriptContext, uint functionNumber,
         const wchar_t* displayName, uint displayNameLength, uint displayShortNameOffset, Attributes attributes, Js::PropertyRecordList* propertyRecords) :
-      FunctionProxy(entryPoint, attributes, functionId, scriptContext, sourceInfo, functionNumber),
+      FunctionProxy(entryPoint, attributes, nestedCount, functionId, scriptContext, sourceInfo, functionNumber),
 #if DYNAMIC_INTERPRETER_THUNK
       m_dynamicInterpreterThunk(nullptr),
 #endif
@@ -1140,16 +1149,6 @@ namespace Js
       ,scopeObjectSize(0)
 #endif
     {
-        if (nestedCount > 0)
-        {
-            nestedArray = RecyclerNewPlusZ(m_scriptContext->GetRecycler(),
-                nestedCount*sizeof(FunctionProxy*), NestedArray, nestedCount);
-        }
-        else
-        {
-            nestedArray = nullptr;
-        }
-
         SetBoundPropertyRecords(propertyRecords);
         if ((attributes & Js::FunctionInfo::DeferredParse) == 0)
         {

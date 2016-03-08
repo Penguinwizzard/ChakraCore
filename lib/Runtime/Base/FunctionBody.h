@@ -1163,8 +1163,34 @@ namespace Js
         typedef RecyclerWeakReference<DynamicType> FunctionTypeWeakRef;
         typedef JsUtil::List<FunctionTypeWeakRef*, Recycler, false, WeakRefFreeListedRemovePolicy> FunctionTypeWeakRefList;
 
+        struct NestedArray
+        {
+            NestedArray(uint32 count) :nestedCount(count) {}
+            uint32 nestedCount;
+            FunctionProxy* functionProxyArray[0];
+        };
+    public:
+        template<typename Fn>
+        void ForEachNestedFunc(Fn fn)
+        {
+            NestedArray* nestedArray = GetNestedArray();
+            if (nestedArray != nullptr)
+            {
+                for (uint i = 0; i < nestedArray->nestedCount; i++)
+                {
+                    if (!fn(nestedArray->functionProxyArray[i], i))
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+
+        NestedArray* GetNestedArray() const { return nestedArray; }
+        uint GetNestedCount() const { return nestedArray == nullptr ? 0 : nestedArray->nestedCount; }
+
     protected:
-        FunctionProxy(JavascriptMethod entryPoint, Attributes attributes,
+        FunctionProxy(JavascriptMethod entryPoint, Attributes attributes, int nestedCount,
             LocalFunctionId functionId, ScriptContext* scriptContext, Utf8SourceInfo* utf8SourceInfo, uint functionNumber);
         DEFINE_VTABLE_CTOR_NO_REGISTER(FunctionProxy, FunctionInfo);
 
@@ -1201,6 +1227,7 @@ namespace Js
         void* GetAuxPtr(AuxPointerType e) const;
         void* GetAuxPtrWithLock(AuxPointerType e) const;
         void SetAuxPtr(AuxPointerType e, void* ptr);
+        WriteBarrierPtr<NestedArray> nestedArray;
 
     public:
         enum SetDisplayNameFlags
@@ -1364,32 +1391,6 @@ namespace Js
 
     protected:
         ParseableFunctionInfo(JavascriptMethod method, int nestedFunctionCount, LocalFunctionId functionId, Utf8SourceInfo* sourceInfo, ScriptContext* scriptContext, uint functionNumber, const wchar_t* displayName, uint m_displayNameLength, uint displayShortNameOffset, Attributes attributes, Js::PropertyRecordList* propertyRecordList);
-
-    public:
-        struct NestedArray
-        {
-            NestedArray(uint32 count) :nestedCount(count) {}
-            uint32 nestedCount;
-            FunctionProxy* functionProxyArray[0];
-        };
-        template<typename Fn>
-        void ForEachNestedFunc(Fn fn)
-        {
-            NestedArray* nestedArray = GetNestedArray();
-            if (nestedArray != nullptr)
-            {
-                for (uint i = 0; i < nestedArray->nestedCount; i++)
-                {
-                    if (!fn(nestedArray->functionProxyArray[i], i))
-                    {
-                        break;
-                    }
-                }
-            }
-        }
-
-        NestedArray* GetNestedArray() const { return nestedArray; }
-        uint GetNestedCount() const { return nestedArray == nullptr ? 0 : nestedArray->nestedCount; }
 
     public:
         static ParseableFunctionInfo* New(ScriptContext* scriptContext, int nestedFunctionCount, LocalFunctionId functionId, Utf8SourceInfo* utf8SourceInfo, const wchar_t* displayName, uint m_displayNameLength, uint displayShortNameOffset, Js::PropertyRecordList* propertyRecordList, Attributes attributes);
@@ -1622,7 +1623,6 @@ namespace Js
         uint m_displayNameLength;
         uint m_displayShortNameOffset;
         WriteBarrierPtr<PropertyRecordList> m_boundPropertyRecords;
-        WriteBarrierPtr<NestedArray> nestedArray;
 
     public:
 #if DBG
