@@ -424,9 +424,9 @@ namespace Js
         static FrameDisplay* OP_LdStrictInnerFrameDisplayNoParent(void *argHead, ScriptContext* scriptContext);
         static void CheckInnerFrameDisplayArgument(void *argHead);
         static Var LoadHeapArguments(JavascriptFunction *funcCallee, unsigned int count, Var *pParams, Var frameObj, Var vArray, ScriptContext* scriptContext, bool nonSimpleParamList);
-        static Var LoadHeapArgsCached(JavascriptFunction *funcCallee, uint32 actualsCount, uint32 formalsCount, Var *pParams, Var frameObj, ScriptContext* scriptContext, bool nonSimpleParamList, bool isStackArgOpt = false);
+        static Var LoadHeapArgsCached(JavascriptFunction *funcCallee, uint32 actualsCount, uint32 formalsCount, Var *pParams, Var frameObj, ScriptContext* scriptContext, bool nonSimpleParamList);
         static bool FillFrameObject(uint32 paramCount, Var *paramAddr, Var frameObj, Var vArray, ScriptContext* scriptContext, bool nonSimpleParamList, HeapArgumentsObject * argsObj = nullptr);
-        static Var LoadHeapArgumentsWithFrameObj(JavascriptFunction *funcCallee, uint32 paramCount, uint32 formalsCount, Var *paramAddr, Var frameObj, ScriptContext* scriptContext, bool nonSimpleParamList);
+        static bool FillFrameObjectCached(uint32 actualsCount, uint32 formalsCount, Var *paramAddr, Var frameObj, ScriptContext* scriptContext, bool nonSimpleParamList, HeapArgumentsObject *argsObj = nullptr);
         static HeapArgumentsObject *CreateHeapArguments(JavascriptFunction *funcCallee, uint32 actualsCount, uint32 formalsCount, Var frameObj, ScriptContext* scriptContext);
         static Var OP_InitCachedScope(Var varFunc, const PropertyIdArray *propIds, DynamicType ** literalType, bool formalsAreLetDecls, ScriptContext *scriptContext);
         static void OP_InvalidateCachedScope(Var varEnv, int32 envIndex);

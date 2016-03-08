@@ -8252,8 +8252,19 @@ ParseNodePtr Parser::ParseExpr(int oplMin,
             if (nodeType & fnopBin)
             {
                 ParseNodePtr lhs = pnode->sxBin.pnode1;
+                ParseNodePtr rhs = pnode->sxBin.pnode2;
 
                 Assert(lhs);
+
+                // For assignments to arguments[i] pattern
+                if (m_currentNodeFunc && ((lhs->nop == knopIndex && lhs->sxBin.pnode1->nop == knopName &&
+                    lhs->sxBin.pnode1->sxPid.pid == wellKnownPropertyPids.arguments) ||
+                    lhs->nop == knopName && lhs->sxPid.pid == wellKnownPropertyPids.arguments ||
+                    rhs->nop == knopName && rhs->sxPid.pid == wellKnownPropertyPids.arguments))
+                {
+                    m_currentNodeFunc->sxFnc.SetHasAnyWriteToFormals(true);
+                }
+
                 if (lhs->nop == knopDot)
                 {
                     ParseNodePtr propertyNode = lhs->sxBin.pnode2;                    
@@ -8551,7 +8562,8 @@ ParseNodePtr Parser::ParseVariableDeclaration(
                 if (pnodeThis && pnodeThis->sxVar.pnodeInit != nullptr)
                 {
                     pnodeThis->sxVar.sym->PromoteAssignmentState();
-                    if (m_currentNodeFunc && pnodeThis->sxVar.sym->GetIsFormal())
+
+                    if (m_currentNodeFunc && (pnodeThis->sxVar.sym->GetIsFormal() || pnodeThis->sxVar.pid == wellKnownPropertyPids.arguments) || (pnodeInit->nop == knopName && pnodeInit->sxPid.pid == wellKnownPropertyPids.arguments))
                     {
                         m_currentNodeFunc->sxFnc.SetHasAnyWriteToFormals(true);
                     }

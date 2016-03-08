@@ -2417,7 +2417,13 @@ FuncInfo* PreVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerato
             funcInfo->SetHasArguments(true);
             if (pnode->sxFnc.HasHeapArguments())
             {
-                funcInfo->SetHasHeapArguments(true, !pnode->sxFnc.IsGenerator() && !pnode->sxFnc.HasAnyWriteToFormals() /*= Optimize arguments in backend*/);
+                bool doStackArgsOpt = true;
+                if (funcInfo->GetParsedFunctionBody()->GetInParamsCount() != 1)
+                {
+                    doStackArgsOpt = !pnode->sxFnc.HasAnyWriteToFormals();
+                }
+
+                funcInfo->SetHasHeapArguments(true, !pnode->sxFnc.IsGenerator() && doStackArgsOpt /*= Optimize arguments in backend*/);
                 if (funcInfo->inArgsCount == 0)
                 {
                     // If no formals to function, no need to create the propertyid array
