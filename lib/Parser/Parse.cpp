@@ -4981,6 +4981,16 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
 
         this->ParseFncFormals<buildAST>(pnodeFnc, flags);
 
+        // If there is an eval call in the param scope it is a syntax error
+        if (pnodeFnc->sxFnc.CallsEval() || pnodeFnc->sxFnc.ChildCallsEval())
+        {
+            Assert(pnodeFnc->sxFnc.HasNonSimpleParameterList());
+            if (!m_scriptContext->GetConfig()->IsES6DefaultArgsSplitScopeEnabled())
+            {
+                Error(ERREvalNotSupportedInParamScope);
+            }
+        }
+
         // Create function body scope
         ParseNodePtr pnodeInnerBlock = StartParseBlock<buildAST>(PnodeBlockType::Function, ScopeType_FunctionBody);
         // Set the parameter block's child to the function body block.
@@ -5090,37 +5100,27 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
                 Scope* paramScope = pnodeFnc->sxFnc.pnodeScopes->sxBlock.scope;
                 Assert(paramScope != nullptr);
 
-                if (pnodeFnc->sxFnc.CallsEval() || pnodeFnc->sxFnc.ChildCallsEval())
-                {
-                    if (!m_scriptContext->GetConfig()->IsES6DefaultArgsSplitScopeEnabled())
+                paramScope->ForEachSymbolUntil([this, paramScope](Symbol* sym) {
+                    if (sym->GetPid()->GetTopRef()->sym == nullptr)
                     {
-                        Error(ERREvalNotSupportedInParamScope);
-                    }
-                }
-                else
-                {
-                    paramScope->ForEachSymbolUntil([this, paramScope](Symbol* sym) {
-                        if (sym->GetPid()->GetTopRef()->sym == nullptr)
+                        if (m_scriptContext->GetConfig()->IsES6DefaultArgsSplitScopeEnabled())
                         {
-                            if (m_scriptContext->GetConfig()->IsES6DefaultArgsSplitScopeEnabled())
-                            {
-                                // One of the symbol has non local reference. Mark the param scope as we can't merge it with body scope.
-                                paramScope->SetCannotMergeWithBodyScope();
-                                return true;
-                            }
-                            else
-                            {
-                                Error(ERRFuncRefFormalNotSupportedInParamScope);
-                            }
+                            // One of the symbol has non local reference. Mark the param scope as we can't merge it with body scope.
+                            paramScope->SetCannotMergeWithBodyScope();
+                            return true;
                         }
                         else
                         {
-                            // If no non-local references are there then the top of the ref stack should point to the same symbol.
-                            Assert(sym->GetPid()->GetTopRef()->sym == sym);
+                            Error(ERRFuncRefFormalNotSupportedInParamScope);
                         }
-                        return false;
-                    });
-                }
+                    }
+                    else
+                    {
+                        // If no non-local references are there then the top of the ref stack should point to the same symbol.
+                        Assert(sym->GetPid()->GetTopRef()->sym == sym);
+                    }
+                    return false;
+                });
 
                 if (!paramScope->GetCanMergeWithBodyScope())
                 {
