@@ -37,6 +37,8 @@ private:
     bool funcEscapes;
     bool inPrologue;
     bool inDestructuredPattern;
+    //TODO: saravind: move this bool somewhere else ?
+    bool isargsObjectSeen;
     Parser* parser; // currently active parser (used for AST transformation)
 
     Js::Utf8SourceInfo *m_utf8SourceInfo;
@@ -47,6 +49,9 @@ private:
 public:
     // This points to the current function body which can be reused when parsing a subtree (called due to deferred parsing logic).
     Js::FunctionBody * pCurrentFunction;
+
+    bool GetIsArgsObjSeen() const { return isargsObjectSeen; }
+    void SetIsArgsObjSeen(bool set) { isargsObjectSeen = set; }
 
     bool InDestructuredPattern() const { return inDestructuredPattern; }
     void SetInDestructuredPattern(bool in) { inDestructuredPattern = in; }

@@ -4517,8 +4517,39 @@ void AssignRegisters(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
         break;
 
     case knopDot:
+    {
         CheckMaybeEscapedUse(pnode->sxBin.pnode1, byteCodeGenerator);
+        if (pnode->sxFnc.UsesArguments() && byteCodeGenerator->GetIsArgsObjSeen() && pnode->sxFnc.funcInfo->byteCodeFunction->GetDoBackendArgumentsOptimization())
+        {
+            if (pnode->sxBin.pnode1->nop != knopName || pnode->sxBin.pnode2->nop != knopName ||
+                !(pnode->sxBin.pnode1->sxPid.pid == byteCodeGenerator->GetParser()->GetArgumentsPid()) ||
+                wcscmp(pnode->sxBin.pnode2->sxPid.pid->Psz(), L"length") != 0)
+            {
+                pnode->sxFnc.funcInfo->byteCodeFunction->SetDoBackendArgumentsOptimization(false);
+            }
+            else
+            {
+                byteCodeGenerator->SetIsArgsObjSeen(false);
+            }
+        }
         break;
+    }
+    case knopIndex:
+    {
+        if (pnode->sxFnc.UsesArguments() && byteCodeGenerator->GetIsArgsObjSeen() && pnode->sxFnc.funcInfo->byteCodeFunction->GetDoBackendArgumentsOptimization())
+        {
+            if (pnode->sxBin.pnode1->nop != knopName ||
+                !(pnode->sxBin.pnode1->sxPid.pid == byteCodeGenerator->GetParser()->GetArgumentsPid()))
+            {
+                pnode->sxFnc.funcInfo->byteCodeFunction->SetDoBackendArgumentsOptimization(false);
+            }
+            else
+            {
+                byteCodeGenerator->SetIsArgsObjSeen(false);
+            }
+        }
+        break;
+    }
     case knopMember:
     case knopMemberShort:
     case knopGetMember:
@@ -4528,7 +4559,10 @@ void AssignRegisters(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
 
     case knopAsg:
         {
-        Symbol * sym = pnode->sxBin.pnode1->nop == knopName ? pnode->sxBin.pnode1->sxPid.sym : nullptr;
+            Symbol * sym = pnode->sxBin.pnode1->nop == knopName ? pnode->sxBin.pnode1->sxPid.sym : nullptr;
+
+            ParseNodePtr pnode2 = pnode->sxBin.pnode2;
+
             CheckFuncAssignment(sym, pnode->sxBin.pnode2, byteCodeGenerator);
 
             if (pnode->IsInList())
@@ -4546,6 +4580,41 @@ void AssignRegisters(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
                 byteCodeGenerator->EnregisterConstant(0);
             }
 
+            if (pnode->sxFnc.UsesArguments() && byteCodeGenerator->GetIsArgsObjSeen() && pnode->sxFnc.funcInfo->byteCodeFunction->GetDoBackendArgumentsOptimization())
+            {
+                switch (pnode2->nop)
+                {
+                    case knopDot:
+                    {
+                        if (pnode2->sxBin.pnode1->nop != knopName || pnode2->sxBin.pnode1->sxPid.pid != byteCodeGenerator->GetParser()->GetArgumentsPid() ||
+                            pnode2->sxBin.pnode2->nop != knopName || wcscmp(pnode2->sxBin.pnode2->sxPid.pid->Psz(), L"length") != 0)
+                        {
+                            pnode->sxFnc.funcInfo->byteCodeFunction->SetDoBackendArgumentsOptimization(false);
+                        }
+                        else
+                        {
+                            byteCodeGenerator->SetIsArgsObjSeen(false);
+                        }
+                        break;
+                    }
+                    case knopIndex:
+                    {
+                        if (pnode2->sxBin.pnode1->nop != knopName || pnode2->sxBin.pnode1->sxPid.pid != byteCodeGenerator->GetParser()->GetArgumentsPid())
+                        {
+                            pnode->sxFnc.funcInfo->byteCodeFunction->SetDoBackendArgumentsOptimization(false);
+                        }
+                        else
+                        {
+                            byteCodeGenerator->SetIsArgsObjSeen(false);
+                        }
+                        break;
+                    }
+                    default:
+                    {
+                        pnode->sxFnc.funcInfo->byteCodeFunction->SetDoBackendArgumentsOptimization(false);
+                    }
+                }
+            }
         break;
     }
 
@@ -5056,6 +5125,11 @@ void AssignRegisters(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
                     // don't have to do dynamic binding. Just use the home location for this reference.
                     pnode->location = sym->GetLocation();
                 }
+            }
+
+            if (sym->GetIsArguments())
+            {
+                byteCodeGenerator->SetIsArgsObjSeen(true);
             }
         }
         if (pnode->IsInList() && !pnode->IsNotEscapedUse())

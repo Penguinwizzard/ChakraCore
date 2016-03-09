@@ -2188,6 +2188,9 @@ LowererMD::LoadHeapArguments(IR::Instr * instrArgs, bool force /* = false */, IR
     }
     else
     {
+        // s8 = Stack Args Optimization
+        this->LoadHelperArgument(instrArgs, IR::IntConstOpnd::New(!force && func->GetHasStackArgs() && this->m_func->GetHasStackArgs() ? TRUE : FALSE, TyUint8, func));
+
         // s7 = formals are let decls
         this->LoadHelperArgument(instrArgs, IR::IntConstOpnd::New(instrArgs->m_opcode == Js::OpCode::LdLetHeapArguments ? TRUE : FALSE, TyUint8, func));
 
@@ -2214,11 +2217,8 @@ LowererMD::LoadHeapArguments(IR::Instr * instrArgs, bool force /* = false */, IR
             // s2 = actual argument count (without counting "this").
             this->LoadHelperArgument(instrArgs, IR::IntConstOpnd::New(func->actualCount - 1, TyUint32, func));
 
-            if (!this->m_func->GetHasStackArgs() || force)
-            {
-                // s1 = current function.
-                this->LoadHelperArgument(instrArgs, func->GetInlineeFunctionObjectSlotOpnd());
-            }
+            // s1 = current function.
+            this->LoadHelperArgument(instrArgs, func->GetInlineeFunctionObjectSlotOpnd());
 
             // Save the newly-created args object to its dedicated stack slot.
             IR::SymOpnd *argObjSlotOpnd = func->GetInlineeArgumentsObjectSlotOpnd();
@@ -2239,28 +2239,17 @@ LowererMD::LoadHeapArguments(IR::Instr * instrArgs, bool force /* = false */, IR
             }
             this->LoadHelperArgument(instrArgs, opndInputParamCount);
 
-            if (!this->m_func->GetHasStackArgs() || force)
-            {
-                // s1 = current function
-                StackSym * paramSym = GetImplicitParamSlotSym(0);
-                IR::Opnd * srcOpnd = IR::SymOpnd::New(paramSym, TyMachReg, func);
-                this->LoadHelperArgument(instrArgs, srcOpnd);
-            }
+            // s1 = current function
+            StackSym * paramSym = GetImplicitParamSlotSym(0);
+            IR::Opnd * srcOpnd = IR::SymOpnd::New(paramSym, TyMachReg, func);
+            this->LoadHelperArgument(instrArgs, srcOpnd);
 
             // Save the newly-created args object to its dedicated stack slot.
             IR::IndirOpnd *indirOpnd = IR::IndirOpnd::New(IR::RegOpnd::New(nullptr, FRAME_REG , TyMachReg, func),
                 -MachArgsSlotOffset, TyMachPtr, m_func);
             LowererMD::CreateAssign(indirOpnd, instrArgs->GetDst(), instrArgs->m_next);
         }
-
-        if (!this->m_func->GetHasStackArgs() || force)
-        {
-            this->ChangeToHelperCall(instrArgs, IR::HelperOp_LoadHeapArguments);
-        }
-        else
-        {
-            this->ChangeToHelperCall(instrArgs, IR::HelperOp_FillFrameObject);
-        }
+        this->ChangeToHelperCall(instrArgs, IR::HelperOp_LoadHeapArguments);
     }
     return instrPrev;
 }
@@ -2280,6 +2269,7 @@ LowererMD::LoadHeapArgsCached(IR::Instr * instrArgs)
     ASSERT_INLINEE_FUNC(instrArgs);
     Func *func = instrArgs->m_func;
 
+    // s8 = isStackArgOptimization
     // s7 = formals are let decls
     // s6 = memory context
     // s5 = local frame instance
@@ -2290,6 +2280,10 @@ LowererMD::LoadHeapArgsCached(IR::Instr * instrArgs)
     // dst = JavascriptOperators::LoadHeapArgsCached(s1, s2, s3, s4, s5, s6, s7)
 
     IR::Instr * instrPrev = instrArgs->m_prev;
+
+    // s8 = isStackArgOptimization
+    IR::Opnd * isStackArgOpt = IR::IntConstOpnd::New((IntConstType)(func->GetHasStackArgs() && this->m_func->GetHasStackArgs() ? TRUE : FALSE), TyUint8, func);
+    this->LoadHelperArgument(instrArgs, isStackArgOpt);
 
     // s7 = formals are let decls
     IR::Opnd * formalsAreLetDecls = IR::IntConstOpnd::New((IntConstType)(instrArgs->m_opcode == Js::OpCode::LdLetHeapArgsCached), TyUint8, func);
@@ -2319,11 +2313,8 @@ LowererMD::LoadHeapArgsCached(IR::Instr * instrArgs)
         // s2 = actual argument count (without counting "this").
         this->LoadHelperArgument(instrArgs, IR::IntConstOpnd::New(func->actualCount - 1, TyUint32, func));
 
-        if (!this->m_func->GetHasStackArgs())
-        {
-            // s1 = current function.
-            this->LoadHelperArgument(instrArgs, func->GetInlineeFunctionObjectSlotOpnd());
-        }
+        // s1 = current function.
+        this->LoadHelperArgument(instrArgs, func->GetInlineeFunctionObjectSlotOpnd());
 
         // Save the newly-created args object to its dedicated stack slot.
         IR::SymOpnd *argObjSlotOpnd = func->GetInlineeArgumentsObjectSlotOpnd();
@@ -2343,13 +2334,10 @@ LowererMD::LoadHeapArgsCached(IR::Instr * instrArgs)
         instr = this->LoadInputParamCount(instrArgs, -1);
         this->LoadHelperArgument(instrArgs, instr->GetDst());
 
-        if (!this->m_func->GetHasStackArgs())
-        {
-            // s1 = current function
-            StackSym * paramSym = GetImplicitParamSlotSym(0);
-            IR::Opnd * srcOpnd = IR::SymOpnd::New(paramSym, TyMachReg, func);
-            this->LoadHelperArgument(instrArgs, srcOpnd);
-        }
+        // s1 = current function
+        StackSym * paramSym = GetImplicitParamSlotSym(0);
+        IR::Opnd * srcOpnd = IR::SymOpnd::New(paramSym, TyMachReg, func);
+        this->LoadHelperArgument(instrArgs, srcOpnd);
 
 
         // Save the newly-created args object to its dedicated stack slot.
@@ -2359,14 +2347,7 @@ LowererMD::LoadHeapArgsCached(IR::Instr * instrArgs)
 
     }
     
-    if (!this->m_func->GetHasStackArgs())
-    {
-        this->ChangeToHelperCall(instrArgs, IR::HelperOp_LoadHeapArgsCached);
-    }
-    else
-    {
-        this->ChangeToHelperCall(instrArgs, IR::HelperOp_FillFrameObjectCached);
-    }
+    this->ChangeToHelperCall(instrArgs, IR::HelperOp_LoadHeapArgsCached);
     return instrPrev;
 }
 
