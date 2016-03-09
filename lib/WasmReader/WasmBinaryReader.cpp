@@ -218,7 +218,8 @@ WasmBinaryReader::ProcessSection(SectionCode sectionId, bool isEntry /*= true*/)
         break;
 
     case bSectImportTable:
-        for (UINT i = 0; i < m_moduleState.size; i++)
+        m_moduleState.size = LEB128(length);
+        for (UINT32 i = 0; i < m_moduleState.size; i++)
         {
             ImportEntry();
         }
@@ -666,10 +667,11 @@ WasmBinaryReader::ImportEntry()
 {
     UINT len = 0;
     UINT sigId = LEB128(len);
+
+    m_funcInfo = Anew(&m_alloc, WasmFunctionInfo, &m_alloc);
     m_funcInfo->SetModuleName(ReadString());
     m_funcInfo->SetName(ReadString());
 
-    m_funcInfo = Anew(&m_alloc, WasmFunctionInfo, &m_alloc);
     m_currentNode.func.info = m_funcInfo;
     m_funcInfo->SetImported(true);    
 
@@ -716,8 +718,9 @@ WasmBinaryReader::ReadString()
     // but current not called inside where m_funcState.count would matter.
 
     AssertMsg(slen > 0, "Invalid string length");
-    LPCUTF8 utf8str = AnewArray(&m_alloc, CUTF8, slen);
-    strcpy_s((char*)utf8str, slen, (char*)str);
+    LPUTF8 utf8str = AnewArray(&m_alloc, utf8char_t, slen+1);
+    memcpy_s((char*)utf8str, slen, (char*)str, slen);
+    utf8str[slen] = '\0';
     return utf8str;
 }
 

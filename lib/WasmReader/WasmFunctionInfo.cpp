@@ -14,7 +14,8 @@ WasmFunctionInfo::WasmFunctionInfo(ArenaAllocator * alloc)
     : m_alloc(alloc),
     m_exported(false),
     m_imported(false),
-    m_name(nullptr)
+    m_name(nullptr),
+    m_mod(nullptr)
 {
     m_i32Consts = Anew(m_alloc, ConstMap<int32>, m_alloc);
     m_i64Consts = Anew(m_alloc, ConstMap<int64>, m_alloc);

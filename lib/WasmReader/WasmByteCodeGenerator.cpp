@@ -68,7 +68,11 @@ WasmBytecodeGenerator::GenerateModule()
     sectionProcess[bSectImportTable] = [](WasmBytecodeGenerator* gen, SectionCode code) {
         Assert(code == bSectImportTable);
         // todo::
-        return psrInvalid;
+        if (gen->m_reader->ProcessSection(code) != psrEnd)
+        {
+            return psrInvalid;
+        }
+        return psrEnd;
     };
 
     sectionProcess[bSectFunctionBodies] = [](WasmBytecodeGenerator* gen, SectionCode code) {
@@ -87,7 +91,7 @@ WasmBytecodeGenerator::GenerateModule()
     {
         if (m_reader->ReadNextSection((SectionCode)sectionCode))
         {
-            if (!sectionProcess[sectionCode](this, (SectionCode)sectionCode))
+            if (sectionProcess[sectionCode](this, (SectionCode)sectionCode) == psrInvalid)
             {
                 throw WasmCompilationException(L"Error while reading section %d", sectionCode);
             }
