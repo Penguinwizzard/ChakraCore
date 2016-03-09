@@ -666,26 +666,12 @@ WasmBinaryReader::ImportEntry()
 {
     UINT len = 0;
     UINT sigId = LEB128(len);
-    UINT modNameLen = LEB128(len);
-    byte* modName = m_pc;
-    m_pc += modNameLen;
-    UINT fnNameLen = LEB128(len);
-    byte* fnName = m_pc;
-    m_pc += fnNameLen;
+    m_funcInfo->SetModuleName(ReadString());
+    m_funcInfo->SetName(ReadString());
 
     m_funcInfo = Anew(&m_alloc, WasmFunctionInfo, &m_alloc);
     m_currentNode.func.info = m_funcInfo;
-    m_funcInfo->SetImported(true);
-
-    AssertMsg(modNameLen > 0, "Invalid module name length");
-    LPCUTF8 utf8ModName = AnewArray(&m_alloc, CUTF8, modNameLen);
-    strcpy_s((char*)utf8ModName, modNameLen, (char*)modName);
-    m_funcInfo->SetModuleName(utf8ModName);
-
-    AssertMsg(fnNameLen > 0, "Invalid function name length");
-    LPCUTF8 utf8FnName = AnewArray(&m_alloc, CUTF8, fnNameLen);
-    strcpy_s((char*)utf8FnName, fnNameLen, (char*)fnName);
-    m_funcInfo->SetName(utf8FnName);
+    m_funcInfo->SetImported(true);    
 
     if (sigId >= m_moduleInfo->GetSignatureCount())
     {
@@ -726,7 +712,8 @@ WasmBinaryReader::ReadString()
     byte* str = m_pc;
     m_pc += slen;
 
-    // TODO: possibly bump m_funcState.count if inside a function
+    // TODO: possibly bump m_funcState.count if called inside a function
+    // but current not called inside where m_funcState.count would matter.
 
     AssertMsg(slen > 0, "Invalid string length");
     LPCUTF8 utf8str = AnewArray(&m_alloc, CUTF8, slen);
