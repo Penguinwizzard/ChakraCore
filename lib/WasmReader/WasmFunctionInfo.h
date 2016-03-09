@@ -29,6 +29,8 @@ namespace Wasm
         bool Exported() const;
         void SetName(LPCUTF8 name);
         LPCUTF8 GetName() const;
+        void SetModuleName(LPCUTF8 name);
+        LPCUTF8 GetModuleName() const;
 
         void SetNumber(UINT32 number);
         UINT32 GetNumber() const;
@@ -54,6 +56,7 @@ namespace Wasm
         WasmSignature * m_signature;
         Js::ByteCodeLabel m_ExitLabel;
         LPCUTF8 m_name;
+        LPCUTF8 m_mod; // imported module
         UINT32 m_number;
     };
 } // namespace Wasm

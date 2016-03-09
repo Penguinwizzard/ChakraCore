@@ -121,6 +121,7 @@ namespace Wasm
             void ImportEntry();
 
             const char* Name(UINT32 offset, UINT &length);
+            LPCUTF8 ReadString(); // Read an LEB128 length prefixed string (non-null terminated)
             UINT32 Offset();
             UINT LEB128(UINT &length, bool sgn = false);
             INT SLEB128(UINT &length);

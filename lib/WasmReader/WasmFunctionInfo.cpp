@@ -159,7 +159,19 @@ WasmFunctionInfo::GetName() const
     return m_name;
 }
 
-void
+void 
+WasmFunctionInfo::SetModuleName(LPCUTF8 name)
+{
+    m_mod = name;
+}
+
+LPCUTF8
+WasmFunctionInfo::GetModuleName() const
+{
+    return m_mod;
+}
+
+void 
 WasmFunctionInfo::SetNumber(UINT32 number)
 {
     m_number = number;
