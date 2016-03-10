@@ -1829,21 +1829,39 @@ namespace Js
                 return false;
             }
 
+            if (!descriptor->HasNonLetConstGlobal())
+            {
+                AssertMsg(RootObjectBase::Is(instance), "object must be a global object if letconstglobal is set");
+                return false;
+            }
+
+            // should we have this early exit path?
+            // if (attributes == descriptor->Attributes)
+            // {
+            //     return true;
+            // }
+
             descriptor->Attributes = (descriptor->Attributes & ~PropertyDynamicTypeDefaults) | (attributes & PropertyDynamicTypeDefaults);
 
-            if (descriptor->Attributes & PropertyEnumerable)
+            // enumerable
+            if (attributes & PropertyEnumerable)
             {
                 instance->SetHasNoEnumerableProperties(false);
             }
 
-            if (!(descriptor->Attributes & PropertyWritable))
+            // writable
+            if ((descriptor->Attributes & PropertyWritable) != (attributes & PropertyWritable))
             {
-                this->ClearHasOnlyWritableDataProperties();
-                if(GetFlags() & IsPrototypeFlag)
+                if (!(attributes & PropertyWritable))
                 {
-                    scriptContext->InvalidateStoreFieldCaches(propertyId);
-                    instance->GetLibrary()->NoPrototypeChainsAreEnsuredToHaveOnlyWritableDataProperties();
+                    this->ClearHasOnlyWritableDataProperties();
+                    if (GetFlags() & IsPrototypeFlag)
+                    {
+                        scriptContext->InvalidateStoreFieldCaches(propertyId);
+                        instance->GetLibrary()->NoPrototypeChainsAreEnsuredToHaveOnlyWritableDataProperties();
+                    }
                 }
+                instance->ChangeType();
             }
 
             return true;
