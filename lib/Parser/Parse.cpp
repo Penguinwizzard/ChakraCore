@@ -8258,7 +8258,7 @@ ParseNodePtr Parser::ParseExpr(int oplMin,
 
                 if (lhs->nop == knopDot)
                 {
-                    ParseNodePtr propertyNode = lhs->sxBin.pnode2;                    
+                    ParseNodePtr propertyNode = lhs->sxBin.pnode2;
                     if (propertyNode->nop == knopName)
                     {
                         propertyNode->sxPid.pid->PromoteAssignmentState();

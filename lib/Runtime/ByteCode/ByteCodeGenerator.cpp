@@ -4047,13 +4047,13 @@ void TrackLdElemOrLdLenOfArgumentsObject(ParseNode *pnode, ByteCodeGenerator *by
 {
     if (pnode == nullptr || 
         !byteCodeGenerator->TopFuncInfo() || 
-        !byteCodeGenerator->TopFuncInfo()->byteCodeFunction->IsFunctionParsed() ||
-        byteCodeGenerator->TopFuncInfo()->GetParsedFunctionBody()->GetInParamsCount() == 1 /*no formals*/ ||
+        !byteCodeGenerator->TopFuncInfo()->byteCodeFunction->IsFunctionParsed() /*we don't care if the function is deferred*/||
+        byteCodeGenerator->TopFuncInfo()->inArgsCount == 1 /*no formals*/ ||
         !byteCodeGenerator->TopFuncInfo()->byteCodeFunction->GetDoBackendArgumentsOptimization() /*ArgsOpt already switched off*/)
     {
         return;
     }
-
+    
     OpCode nop = pnode->nop;
     uint nodeType = ParseNode::Grfnop(pnode->nop);
 
