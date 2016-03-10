@@ -527,13 +527,18 @@ namespace Js
             // No need to change hasNoEnumerableProperties. See comment in ES5ArrayTypeHandlerBase<T>::SetItemWithAttributes.
             Assert(!arr->GetHasNoEnumerableProperties());
 
-            indexPropertyMap->Add(index, IndexPropertyDescriptor(attributes & PropertyDynamicTypeDefaults));
-            if (!(attributes & PropertyWritable))
+            PropertyAttributes newAttr = GetDataItemAttributes();
+            newAttr = (newAttr & ~PropertyDynamicTypeDefaults) | (attributes & PropertyDynamicTypeDefaults);
+            if (newAttr != attributes)
             {
-                this->ClearHasOnlyWritableDataProperties();
-                if(GetFlags() & IsPrototypeFlag)
+                indexPropertyMap->Add(index, IndexPropertyDescriptor(attributes & PropertyDynamicTypeDefaults));
+                if (!(attributes & PropertyWritable))
                 {
-                    instance->GetLibrary()->NoPrototypeChainsAreEnsuredToHaveOnlyWritableDataProperties();
+                    this->ClearHasOnlyWritableDataProperties();
+                    if (GetFlags() & IsPrototypeFlag)
+                    {
+                        instance->GetLibrary()->NoPrototypeChainsAreEnsuredToHaveOnlyWritableDataProperties();
+                    }
                 }
             }
             return true;
@@ -1304,6 +1309,19 @@ namespace Js
     template <class T>
     BOOL ES5ArrayTypeHandlerBase<T>::SetAttributes(DynamicObject* instance, PropertyId propertyId, PropertyAttributes attributes)
     {
+        if (propertyId == PropertyIds::length)
+        {
+            Assert(((attributes & PropertyConfigurable) == 0) &&
+                ((attributes & PropertyEnumerable) == 0));
+
+            SetLengthWritable((attributes & PropertyWritable) ? true : false);
+            if (!(attributes & PropertyWritable) && GetFlags() & IsPrototypeFlag)
+            {
+                instance->GetLibrary()->NoPrototypeChainsAreEnsuredToHaveOnlyWritableDataProperties();
+            }
+            return true;
+        }
+
         ScriptContext* scriptContext = instance->GetScriptContext();
 
         uint32 index;
