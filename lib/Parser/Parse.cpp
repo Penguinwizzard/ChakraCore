@@ -685,6 +685,7 @@ void Parser::InitNode(OpCode nop,ParseNodePtr pnode) {
     pnode->notEscapedUse = false;
     pnode->isInList = false;
     pnode->isCallApplyTargetLoad = false;
+    pnode->isArgElemOrArgLenLoad = false;
 }
 
 // Create nodes using Arena
@@ -8252,18 +8253,8 @@ ParseNodePtr Parser::ParseExpr(int oplMin,
             if (nodeType & fnopBin)
             {
                 ParseNodePtr lhs = pnode->sxBin.pnode1;
-                ParseNodePtr rhs = pnode->sxBin.pnode2;
 
                 Assert(lhs);
-
-                // For assignments to arguments[i] pattern
-                if (m_currentNodeFunc && ((lhs->nop == knopIndex && lhs->sxBin.pnode1->nop == knopName &&
-                    lhs->sxBin.pnode1->sxPid.pid == wellKnownPropertyPids.arguments) ||
-                    lhs->nop == knopName && lhs->sxPid.pid == wellKnownPropertyPids.arguments ||
-                    rhs->nop == knopName && rhs->sxPid.pid == wellKnownPropertyPids.arguments))
-                {
-                    m_currentNodeFunc->sxFnc.SetHasAnyWriteToFormals(true);
-                }
 
                 if (lhs->nop == knopDot)
                 {
@@ -8563,7 +8554,7 @@ ParseNodePtr Parser::ParseVariableDeclaration(
                 {
                     pnodeThis->sxVar.sym->PromoteAssignmentState();
 
-                    if (m_currentNodeFunc && (pnodeThis->sxVar.sym->GetIsFormal() || pnodeThis->sxVar.pid == wellKnownPropertyPids.arguments) || (pnodeInit->nop == knopName && pnodeInit->sxPid.pid == wellKnownPropertyPids.arguments))
+                    if (m_currentNodeFunc && pnodeThis->sxVar.sym->GetIsFormal())
                     {
                         m_currentNodeFunc->sxFnc.SetHasAnyWriteToFormals(true);
                     }
