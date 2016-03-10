@@ -2421,20 +2421,45 @@ namespace Js
                     return false;
                 }
 
-                descriptor->Attributes = (descriptor->Attributes & ~PropertyDynamicTypeDefaults) | (attributes & PropertyDynamicTypeDefaults);
+                if (attributes == descriptor->Attributes)
+                {
+                    return true;
+                }
 
+                const Type* oldType = instance->GetType();
+                if (GetIsLocked())
+                {
+                    PropertyAttributes oldAttributes = descriptor->Attributes;
+                    descriptor->Attributes = (descriptor->Attributes & ~PropertyDynamicTypeDefaults) | (attributes & PropertyDynamicTypeDefaults);;
+                    ConvertToNonSharedSimpleDictionaryType(instance); // This changes TypeHandler, but non-necessarily Type.
+                    descriptor->Attributes = oldAttributes;
+                }
+                else
+                {
+                    descriptor->Attributes = (descriptor->Attributes & ~PropertyDynamicTypeDefaults) | (attributes & PropertyDynamicTypeDefaults);
+                }
+                
+                // enumerable
                 if (attributes & PropertyEnumerable)
                 {
                     instance->SetHasNoEnumerableProperties(false);
                 }
 
-                if (!(descriptor->Attributes & PropertyWritable))
+                // writable
+                if ((descriptor->Attributes & PropertyWritable) != (attributes & PropertyWritable))
                 {
-                    this->ClearHasOnlyWritableDataProperties();
-                    if(GetFlags() & IsPrototypeFlag)
+                    instance->ChangeTypeIf(oldType); // Ensure type change to invalidate caches
+                    if (!(attributes & PropertyWritable))
                     {
-                        instance->GetScriptContext()->InvalidateStoreFieldCaches(propertyId);
-                        instance->GetLibrary()->NoPrototypeChainsAreEnsuredToHaveOnlyWritableDataProperties();
+                        // Clearing the writable attribute may have changed the type handler, so make sure
+                        // we access the current one.
+                        DynamicTypeHandler *const typeHandler = GetCurrentTypeHandler(instance);
+                        typeHandler->ClearHasOnlyWritableDataProperties();
+                        if (typeHandler->GetFlags() & IsPrototypeFlag)
+                        {
+                            instance->GetScriptContext()->InvalidateStoreFieldCaches(propertyId);
+                            instance->GetLibrary()->NoPrototypeChainsAreEnsuredToHaveOnlyWritableDataProperties();
+                        }
                     }
                 }
 
