@@ -479,6 +479,17 @@ namespace Js
         return __super::SetWritable(propertyId, value);
     }
 
+    BOOL HeapArgumentsObject::SetAttributes(PropertyId propertyId, PropertyAttributes attributes)
+    {
+        uint32 index;
+        if (this->IsFormalArgument(propertyId, &index))
+        {
+            return this->ConvertToES5HeapArgumentsObject()->SetAttributesForFormal(propertyId, attributes);
+        }
+
+        return __super::SetAttributes(propertyId, attributes);
+    }
+
     BOOL HeapArgumentsObject::SetAccessors(PropertyId propertyId, Var getter, Var setter, PropertyOperationFlags flags)
     {
         uint32 index;
@@ -559,6 +570,17 @@ namespace Js
             return this->SetWritableForFormal(index, propertyId, value);
         }
         return this->DynamicObject::SetWritable(propertyId, value);
+    }
+
+    BOOL ES5HeapArgumentsObject::SetAttributes(PropertyId propertyId, PropertyAttributes attributes)
+    {
+        uint32 index;
+        if (this->IsFormalArgument(propertyId, &index))
+        {
+            return this->SetAttributesForFormal(propertyId, attributes, index);
+        }
+
+        return this->DynamicObject::SetAttributes(propertyId, attributes);
     }
 
     BOOL ES5HeapArgumentsObject::SetAccessors(PropertyId propertyId, Var getter, Var setter, PropertyOperationFlags flags)
@@ -806,6 +828,35 @@ namespace Js
             }
         }
 
+        return result;
+    }
+
+    BOOL ES5HeapArgumentsObject::SetAttributesForFormal(PropertyId propertyId, PropertyAttributes attributes, uint32 index)
+    {
+        AssertMsg(this->IsFormalArgument(propertyId), "SetPropertyWithAttributesForFormal: called for non-formal");
+
+        AutoObjectArrayItemExistsValidator autoItemAddRelease(this, index);
+
+        BOOL isDisconnected = IsFormalDisconnectedFromNamedArgument(index);
+        if (!isDisconnected && !(attributes & PropertyWritable))
+        {
+            // Setting writable to false causes disconnect.
+            // It will be too late to copy the value after setting writable = false, as we would not be able to.
+            // Since we are connected, it does not matter the value is, so it's safe (no matter if SetWritable fails) to copy it here.
+            this->SetObjectArrayItem(index, this->frameObject->GetSlot(index), PropertyOperation_None);
+        }
+
+        BOOL result = this->DynamicObject::SetAttributes(propertyId, attributes);
+        if (result)
+        {
+            if (!(attributes & PropertyWritable) && !isDisconnected)
+            {
+                // Setting writable to false should cause disconnect.
+                this->DisconnectFormalFromNamedArgument(index);
+            }
+        }
+
+        autoItemAddRelease.m_isReleaseItemNeeded = !result;
         return result;
     }
 

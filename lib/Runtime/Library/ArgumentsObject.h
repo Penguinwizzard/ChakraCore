@@ -101,6 +101,7 @@ namespace Js
         virtual BOOL SetConfigurable(PropertyId propertyId, BOOL value) override;
         virtual BOOL SetEnumerable(PropertyId propertyId, BOOL value) override;
         virtual BOOL SetWritable(PropertyId propertyId, BOOL value) override;
+        virtual BOOL SetAttributes(PropertyId propertyId, PropertyAttributes attributes) override;
         virtual BOOL SetAccessors(PropertyId propertyId, Var getter, Var setter, PropertyOperationFlags flags = PropertyOperation_None) override;
         virtual BOOL SetPropertyWithAttributes(PropertyId propertyId, Var value, PropertyAttributes attributes, PropertyValueInfo* info, PropertyOperationFlags flags = PropertyOperation_None, SideEffects possibleSideEffects = SideEffects_Any) override;
         virtual BOOL PreventExtensions() override;
@@ -166,6 +167,7 @@ namespace Js
         virtual BOOL SetConfigurable(PropertyId propertyId, BOOL value) override;
         virtual BOOL SetEnumerable(PropertyId propertyId, BOOL value) override;
         virtual BOOL SetWritable(PropertyId propertyId, BOOL value) override;
+        virtual BOOL SetAttributes(PropertyId propertyId, PropertyAttributes attributes) override;
         virtual BOOL SetAccessors(PropertyId propertyId, Var getter, Var setter, PropertyOperationFlags flags) override;
         virtual BOOL SetPropertyWithAttributes(PropertyId propertyId, Var value, PropertyAttributes attributes, PropertyValueInfo* info, PropertyOperationFlags flags = PropertyOperation_None, SideEffects possibleSideEffects = SideEffects_Any) override;
         virtual BOOL GetEnumerator(BOOL enumNonEnumerable, Var* enumerator, ScriptContext * requestContext, bool preferSnapshotSemantics = true, bool enumSymbols = false) override;
@@ -187,5 +189,6 @@ namespace Js
         BOOL SetWritableForFormal(uint32 index, PropertyId propertyId, BOOL value);
         BOOL SetAccessorsForFormal(uint32 index, PropertyId propertyId, Var getter, Var setter, PropertyOperationFlags flags = PropertyOperation_None);
         BOOL SetPropertyWithAttributesForFormal(uint32 index, PropertyId propertyId, Var value, PropertyAttributes attributes, PropertyValueInfo* info, PropertyOperationFlags flags = PropertyOperation_None, SideEffects possibleSideEffects = SideEffects_Any);
+        BOOL SetAttributesForFormal(PropertyId propertyId, PropertyAttributes attributes, uint32 index);
    };
 }
