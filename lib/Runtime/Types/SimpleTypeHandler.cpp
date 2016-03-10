@@ -909,7 +909,7 @@ namespace Js
                     return false;
                 }
 
-                if (attributes == descriptors[i]->Attributes)
+                if (attributes == descriptors[i].Attributes)
                 {
                     return true;
                 }
@@ -928,7 +928,7 @@ namespace Js
                 }
                 else
                 {
-                    descriptors[i]->Attributes = attributes;
+                    descriptors[i].Attributes = attributes;
                 }
                 
                 // enumerable
@@ -938,7 +938,7 @@ namespace Js
                 }
 
                 // writable
-                if ((descriptors[i]->Attributes & PropertyWritable) != (attributes & PropertyWritable))
+                if ((descriptors[i].Attributes & PropertyWritable) != (attributes & PropertyWritable))
                 {
                     instance->ChangeTypeIf(oldType); // Ensure type change to invalidate caches
                     if (!(attributes & PropertyWritable))

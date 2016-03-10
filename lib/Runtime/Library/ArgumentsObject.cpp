@@ -484,7 +484,7 @@ namespace Js
         uint32 index;
         if (this->IsFormalArgument(propertyId, &index))
         {
-            return this->ConvertToES5HeapArgumentsObject()->SetAttributesForFormal(propertyId, attributes);
+            return this->ConvertToES5HeapArgumentsObject()->SetAttributesForFormal(propertyId, attributes, index);
         }
 
         return __super::SetAttributes(propertyId, attributes);
