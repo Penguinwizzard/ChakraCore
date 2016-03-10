@@ -132,7 +132,7 @@ void Scope::MergeParamAndBodyScopes(ParseNode *pnodeScope, ByteCodeGenerator *by
     // the argument object works properly. Other symbols need to be reassigned slot positions.
     paramScope->ForEachSymbol([&](Symbol * sym)
     {
-        if (sym->GetSymbolType() != STFormal && sym->GetScopeSlot() != Js::Constants::NoProperty)
+        if ((sym->GetSymbolType() != STFormal && sym->GetScopeSlot() != Js::Constants::NoProperty) || sym->GetIsArguments())
         {
             sym->SetScopeSlot(Js::Constants::NoProperty);
             sym->EnsureScopeSlot(pnodeScope->sxFnc.funcInfo);
