@@ -11586,9 +11586,21 @@ Case0:
     {
         ScriptContext* scriptContext = this->GetScriptContext();
 
-        // SetAttributes on "length" is not expected. DefineOwnProperty uses SetWritable. If this is
-        // changed, we need to handle it here.
-        Assert(propertyId != PropertyIds::length);
+        if (propertyId == PropertyIds::length)
+        {
+            Assert(((attributes & PropertyConfigurable) == 0) &&
+                ((attributes & PropertyEnumerable) == 0));
+
+            if (IsWritable(propertyId) && (attributes & PropertyWritable))
+            {
+                return true;
+            }
+            else
+            {
+                return GetTypeHandler()->ConvertToTypeWithItemAttributes(this)
+                    ->SetAttributes(this, propertyId, attributes);
+            }
+        }
 
         uint32 index;
         if (scriptContext->IsNumericPropertyId(propertyId, &index))
