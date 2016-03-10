@@ -3360,7 +3360,7 @@ ParseNodePtr Parser::ParsePostfixOperators(
                         // Note: we used to leave it up to the byte code generator to detect eval calls
                         // at global scope, but now it relies on the flag the parser sets, so set it here.
 
-                        if (count > 0 && this->NodeIsEvalName(pnode->sxCall.pnodeTarget))
+                        if (this->NodeIsEvalName(pnode->sxCall.pnodeTarget))
                         {
                             this->MarkEvalCaller();
                             fCallIsEval = true;
@@ -4981,16 +4981,6 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
 
         this->ParseFncFormals<buildAST>(pnodeFnc, flags);
 
-        // If there is an eval call in the param scope it is a syntax error
-        if (pnodeFnc->sxFnc.CallsEval() || pnodeFnc->sxFnc.ChildCallsEval())
-        {
-            Assert(pnodeFnc->sxFnc.HasNonSimpleParameterList());
-            if (!m_scriptContext->GetConfig()->IsES6DefaultArgsSplitScopeEnabled())
-            {
-                Error(ERREvalNotSupportedInParamScope);
-            }
-        }
-
         // Create function body scope
         ParseNodePtr pnodeInnerBlock = StartParseBlock<buildAST>(PnodeBlockType::Function, ScopeType_FunctionBody);
         // Set the parameter block's child to the function body block.
@@ -5100,27 +5090,37 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
                 Scope* paramScope = pnodeFnc->sxFnc.pnodeScopes->sxBlock.scope;
                 Assert(paramScope != nullptr);
 
-                paramScope->ForEachSymbolUntil([this, paramScope](Symbol* sym) {
-                    if (sym->GetPid()->GetTopRef()->sym == nullptr)
+                if (pnodeFnc->sxFnc.CallsEval() || pnodeFnc->sxFnc.ChildCallsEval())
+                {
+                    if (!m_scriptContext->GetConfig()->IsES6DefaultArgsSplitScopeEnabled())
                     {
-                        if (m_scriptContext->GetConfig()->IsES6DefaultArgsSplitScopeEnabled())
+                        Error(ERREvalNotSupportedInParamScope);
+                    }
+                }
+                else
+                {
+                    paramScope->ForEachSymbolUntil([this, paramScope](Symbol* sym) {
+                        if (sym->GetPid()->GetTopRef()->sym == nullptr)
                         {
-                            // One of the symbol has non local reference. Mark the param scope as we can't merge it with body scope.
-                            paramScope->SetCannotMergeWithBodyScope();
-                            return true;
+                            if (m_scriptContext->GetConfig()->IsES6DefaultArgsSplitScopeEnabled())
+                            {
+                                // One of the symbol has non local reference. Mark the param scope as we can't merge it with body scope.
+                                paramScope->SetCannotMergeWithBodyScope();
+                                return true;
+                            }
+                            else
+                            {
+                                Error(ERRFuncRefFormalNotSupportedInParamScope);
+                            }
                         }
                         else
                         {
-                            Error(ERRFuncRefFormalNotSupportedInParamScope);
+                            // If no non-local references are there then the top of the ref stack should point to the same symbol.
+                            Assert(sym->GetPid()->GetTopRef()->sym == sym);
                         }
-                    }
-                    else
-                    {
-                        // If no non-local references are there then the top of the ref stack should point to the same symbol.
-                        Assert(sym->GetPid()->GetTopRef()->sym == sym);
-                    }
-                    return false;
-                });
+                        return false;
+                    });
+                }
 
                 if (!paramScope->GetCanMergeWithBodyScope())
                 {

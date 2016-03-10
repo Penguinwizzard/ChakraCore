@@ -481,7 +481,7 @@ private:
 
     void MarkEvalCaller()
     {
-        if (m_currentNodeFunc)
+        if (GetCurrentFunctionNode())
         {
             ParseNodePtr pnodeFunc = GetCurrentFunctionNode();
             pnodeFunc->sxFnc.SetCallsEval(true);
