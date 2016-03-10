@@ -382,7 +382,6 @@ private:
         IdentPtr from;
         IdentPtr as;
         IdentPtr default;
-        IdentPtr length;
         IdentPtr _star; // Special '*' identifier for modules
         IdentPtr _starDefaultStar; // Special '*default*' identifier for modules
     };
@@ -913,7 +912,6 @@ public:
     IdentPtr GetArgumentsPid() const { return wellKnownPropertyPids.arguments; }
     IdentPtr GetEvalPid() const { return wellKnownPropertyPids.eval; }
     IdentPtr GetTargetPid() const { return wellKnownPropertyPids.target; }
-    IdentPtr GetLengthPid() const { return wellKnownPropertyPids.length; }
     BackgroundParseItem *GetCurrBackgroundParseItem() const { return currBackgroundParseItem; }
     void SetCurrBackgroundParseItem(BackgroundParseItem *item) { currBackgroundParseItem = item; }
 

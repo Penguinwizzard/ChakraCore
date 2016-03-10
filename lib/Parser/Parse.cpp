@@ -8253,7 +8253,6 @@ ParseNodePtr Parser::ParseExpr(int oplMin,
             if (nodeType & fnopBin)
             {
                 ParseNodePtr lhs = pnode->sxBin.pnode1;
-
                 Assert(lhs);
 
                 if (lhs->nop == knopDot)
@@ -8553,7 +8552,6 @@ ParseNodePtr Parser::ParseVariableDeclaration(
                 if (pnodeThis && pnodeThis->sxVar.pnodeInit != nullptr)
                 {
                     pnodeThis->sxVar.sym->PromoteAssignmentState();
-
                     if (m_currentNodeFunc && pnodeThis->sxVar.sym->GetIsFormal())
                     {
                         m_currentNodeFunc->sxFnc.SetHasAnyWriteToFormals(true);

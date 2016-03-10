@@ -479,7 +479,6 @@ void Visit(ParseNode *pnode, ByteCodeGenerator* byteCodeGenerator, PrefixFn pref
     {
         PropagateFlags(pnode, pnodeParent);
     }
-
     postfix(pnode, byteCodeGenerator);
 }
 
@@ -4030,11 +4029,13 @@ bool IsArgsObjElementOrLen(ParseNodePtr pnode, ByteCodeGenerator * byteCodeGener
 {
     switch (pnode->nop)
     {
+    /*arguments.length*/
     case knopDot:
     {
         return (pnode->sxBin.pnode1->nop == knopName && pnode->sxBin.pnode1->sxPid.pid == byteCodeGenerator->GetParser()->GetArgumentsPid() &&
             pnode->sxBin.pnode2->nop == knopName && wcscmp(pnode->sxBin.pnode2->sxPid.pid->Psz(), L"length") == 0);
     }
+    /*arguments[<expr>]*/
     case knopIndex:
     {
         return (pnode->sxBin.pnode1->nop == knopName && pnode->sxBin.pnode1->sxPid.pid == byteCodeGenerator->GetParser()->GetArgumentsPid());
@@ -4086,7 +4087,7 @@ void TrackLdElemOrLdLenOfArgumentsObject(ParseNode *pnode, ByteCodeGenerator *by
     }
     else if(IsArgsObjElementOrLen(pnode, byteCodeGenerator))
     {
-        //Mark the node, if it is a Load of arguments[i] or arguments.length
+        //Mark the arguments node, if it is a Load of arguments[i] or arguments.length
         pnode->sxBin.pnode1->SetIsArgElemOrArgLenLoad();
     }
 }
@@ -4266,10 +4267,8 @@ void Bind(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
         byteCodeGenerator->AddTargetStmt(pnode);
         break;
     case knopAsg:
-    {
         BindReference(pnode, byteCodeGenerator);
         CheckLocalVarDef(pnode, byteCodeGenerator);
-    }
         break;
     case knopVarDecl:
         // "arguments" symbol or decl w/o RHS may have been bound already; otherwise, do the binding here.
@@ -4582,10 +4581,8 @@ void AssignRegisters(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
         break;
 
     case knopDot:
-    {
         CheckMaybeEscapedUse(pnode->sxBin.pnode1, byteCodeGenerator);
         break;
-    }
     case knopMember:
     case knopMemberShort:
     case knopGetMember:
@@ -4596,7 +4593,6 @@ void AssignRegisters(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
     case knopAsg:
         {
             Symbol * sym = pnode->sxBin.pnode1->nop == knopName ? pnode->sxBin.pnode1->sxPid.sym : nullptr;
-
             CheckFuncAssignment(sym, pnode->sxBin.pnode2, byteCodeGenerator);
 
             if (pnode->IsInList())

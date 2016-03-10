@@ -28,17 +28,15 @@ private:
 
     long maxAstSize;
     uint16 envDepth;
-    uint16 m_callSiteId;
     uint sourceIndex;
     uint dynamicScopeCount;
+    uint loopDepth;
+    uint16 m_callSiteId;
     bool isBinding;
     bool trackEnvDepth;
     bool funcEscapes;
     bool inPrologue;
     bool inDestructuredPattern;
-    uint loopDepth;
-    //TODO: saravind: move this bool somewhere else ?
-    bool isargsObjectSeen;
     Parser* parser; // currently active parser (used for AST transformation)
 
     Js::Utf8SourceInfo *m_utf8SourceInfo;
