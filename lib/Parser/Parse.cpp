@@ -3360,7 +3360,7 @@ ParseNodePtr Parser::ParsePostfixOperators(
                         // Note: we used to leave it up to the byte code generator to detect eval calls
                         // at global scope, but now it relies on the flag the parser sets, so set it here.
 
-                        if (this->NodeIsEvalName(pnode->sxCall.pnodeTarget))
+                        if (count > 0 && this->NodeIsEvalName(pnode->sxCall.pnodeTarget))
                         {
                             this->MarkEvalCaller();
                             fCallIsEval = true;
@@ -3375,7 +3375,7 @@ ParseNodePtr Parser::ParsePostfixOperators(
                     }
                     else
                     {
-                        if (pToken->tk == tkID && pToken->pid == wellKnownPropertyPids.eval) // Detect eval
+                        if (count > 0 && pToken->tk == tkID && pToken->pid == wellKnownPropertyPids.eval) // Detect eval
                         {
                             this->MarkEvalCaller();
                         }
