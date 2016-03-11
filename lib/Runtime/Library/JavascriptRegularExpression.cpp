@@ -754,7 +754,7 @@ namespace Js
 
         CHAKRATEL_LANGSTATS_INC_BUILTINCOUNT(RegexSymbolReplaceCount);
 
-        PCWSTR varName = L"RegExp.prototype[Symbol.replace]";
+        PCWSTR varName = _u("RegExp.prototype[Symbol.replace]");
 
         RecyclableObject* thisObj = GetThisObject(args, varName, scriptContext);
         JavascriptString* string = GetFirstStringArg(args, scriptContext);

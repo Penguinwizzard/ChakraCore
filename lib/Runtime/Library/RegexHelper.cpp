@@ -663,7 +663,7 @@ namespace Js
         , int numGroups
         , GroupFn getGroup
         , JavascriptString* input
-        , const wchar_t* matchedString
+        , const char16* matchedString
         , UnifiedRegex::GroupInfo match
         , JavascriptString* replace
         , int substitutions
@@ -794,8 +794,8 @@ namespace Js
         else
         {
             PCWSTR varName = scriptConfig->IsES6RegExSymbolsEnabled()
-                ? L"RegExp.prototype[Symbol.replace]"
-                : L"String.prototype.replace";
+                ? _u("RegExp.prototype[Symbol.replace]")
+                : _u("String.prototype.replace");
             JavascriptRegExp* regularExpression = JavascriptRegExp::ToRegExp(thisObj, varName, scriptContext);
             return RegexEs5ReplaceImpl(scriptContext, regularExpression, input, replace, noResult);
         }
@@ -814,7 +814,7 @@ namespace Js
     Var RegexHelper::RegexEs6ReplaceImpl(ScriptContext* scriptContext, RecyclableObject* thisObj, JavascriptString* input, JavascriptString* replace, bool noResult)
     {
         auto appendReplacement = [&](
-            CompoundString::Builder<64 * sizeof(void *) / sizeof(wchar_t)>& resultBuilder,
+            CompoundString::Builder<64 * sizeof(void *) / sizeof(char16)>& resultBuilder,
             ArenaAllocator* tempAlloc,
             JavascriptString* matchStr,
             int numberOfCaptures,
@@ -850,7 +850,7 @@ namespace Js
     Var RegexHelper::RegexEs6ReplaceImpl(ScriptContext* scriptContext, RecyclableObject* thisObj, JavascriptString* input, JavascriptFunction* replaceFn)
     {
         auto appendReplacement = [&](
-            CompoundString::Builder<64 * sizeof(void *) / sizeof(wchar_t)>& resultBuilder,
+            CompoundString::Builder<64 * sizeof(void *) / sizeof(char16)>& resultBuilder,
             ArenaAllocator* tempAlloc,
             JavascriptString* matchStr,
             int numberOfCaptures,
@@ -905,14 +905,14 @@ namespace Js
 
         JavascriptString* accumulatedResult = nullptr;
 
-        BEGIN_TEMP_ALLOCATOR(tempAlloc, scriptContext, L"RegexHelper")
+        BEGIN_TEMP_ALLOCATOR(tempAlloc, scriptContext, _u("RegexHelper"))
         {
             JsUtil::List<RecyclableObject*, ArenaAllocator>* results =
                 JsUtil::List<RecyclableObject*, ArenaAllocator>::New(tempAlloc);
 
             while (true)
             {
-                PCWSTR varName = L"RegExp.prototype[Symbol.replace]";
+                PCWSTR varName = _u("RegExp.prototype[Symbol.replace]");
                 Var result = JavascriptRegExp::CallExec(thisObj, input, varName, scriptContext);
                 if (JavascriptOperators::IsNull(result))
                 {
@@ -932,7 +932,7 @@ namespace Js
                 AdvanceLastIndex(thisObj, input, matchStr, unicode, scriptContext);
             }
 
-            CompoundString::Builder<64 * sizeof(void *) / sizeof(wchar_t)> accumulatedResultBuilder(scriptContext);
+            CompoundString::Builder<64 * sizeof(void *) / sizeof(char16)> accumulatedResultBuilder(scriptContext);
             CharCount inputLength = input->GetLength();
             CharCount nextSourcePosition = 0;
 
@@ -1073,7 +1073,7 @@ namespace Js
                     auto getGroup = [&](int captureIndex, Var nonMatchValue) {
                         return GetGroup(scriptContext, pattern, input, nonMatchValue, captureIndex);
                     };
-                    const wchar_t* matchedString = inputStr + lastActualMatch.offset;
+                    const char16* matchedString = inputStr + lastActualMatch.offset;
                     ReplaceFormatString(scriptContext, pattern->NumGroups(), getGroup, input, matchedString, lastActualMatch, replace, substitutions, substitutionOffsets, concatenated);
                 }
                 else
@@ -1147,8 +1147,8 @@ namespace Js
         else
         {
             PCWSTR varName = scriptConfig->IsES6RegExSymbolsEnabled()
-                ? L"RegExp.prototype[Symbol.replace]"
-                : L"String.prototype.replace";
+                ? _u("RegExp.prototype[Symbol.replace]")
+                : _u("String.prototype.replace");
             JavascriptRegExp* regularExpression = JavascriptRegExp::ToRegExp(thisObj, varName, scriptContext);
             return RegexEs5ReplaceImpl(scriptContext, regularExpression, input, replacefn);
         }
