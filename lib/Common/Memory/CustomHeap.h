@@ -544,7 +544,7 @@ private:
      * Allocator stuff
      */
     CodePageAllocators *                              codePageAllocators;
-    ArenaAllocator*                                   auxilliaryAllocator;
+    ArenaAllocator*                                   auxiliaryAllocator;
 
     /*
      * Various tracking lists
