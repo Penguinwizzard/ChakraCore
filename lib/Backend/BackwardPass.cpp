@@ -5101,8 +5101,8 @@ BackwardPass::TrackIntUsage(IR::Instr *const instr)
                 Assert(instr->GetSrc2()->IsRegOpnd() || instr->GetSrc2()->IsIntConstOpnd());
 
                 if (instr->ignoreNegativeZero ||
-                    (instr->GetSrc1()->IsConstOpnd() && instr->GetSrc1()->AsIntConstOpnd()->GetValue() != 0) ||
-                    (instr->GetSrc2()->IsConstOpnd() && instr->GetSrc2()->AsIntConstOpnd()->GetValue() != 0))
+                    (instr->GetSrc1()->IsIntConstOpnd() && instr->GetSrc1()->AsIntConstOpnd()->GetValue() != 0) ||
+                    (instr->GetSrc2()->IsIntConstOpnd() && instr->GetSrc2()->AsIntConstOpnd()->GetValue() != 0))
                 {
                     // -0 does not matter for dst, 
                     // or this instruction does not generate -0 since one of the srcs is not -0 (regardless of -0 bailout checks)
@@ -5112,40 +5112,56 @@ BackwardPass::TrackIntUsage(IR::Instr *const instr)
                 }
                 bool canSrc1BeNegativeZero = true;
                 bool canSrc2BeNegativeZero = true;
-                if (!(instr->GetSrc1()->IsRegOpnd() && instr->GetSrc1()->AsRegOpnd()->m_wasNegativeZeroPreventedByBailout))
+                if (instr->GetSrc1()->IsRegOpnd() && !instr->GetSrc1()->AsRegOpnd()->m_wasNegativeZeroPreventedByBailout)
                 {
                     IR::Opnd * src1 = instr->GetSrc1();
-                    FOREACH_INSTR_BACKWARD(tmpInstr, instr->m_prev)
+                    IR::Instr * src1DefInstr = nullptr;
+                    if (src1->GetStackSym()->IsSingleDef())
                     {
-                        if (tmpInstr->GetDst() && src1->GetStackSym() == tmpInstr->GetDst()->GetStackSym())
+                        src1DefInstr = src1->GetStackSym()->GetInstrDef();
+                    }
+                    else
+                    {
+                        FOREACH_INSTR_BACKWARD(tmpInstr, instr->m_prev)
                         {
-                            if (tmpInstr->CouldBeProtectedByNegZeroBailout())
+                            if (tmpInstr->GetDst() && src1->GetStackSym() == tmpInstr->GetDst()->GetStackSym())
                             {
-                                canSrc1BeNegativeZero = false;
+                                src1DefInstr = tmpInstr;
                                 break;
                             }
-                            break;
                         }
+                        NEXT_INSTR_BACKWARD
                     }
-                    NEXT_INSTR_BACKWARD
+                    if (src1DefInstr->CouldBeProtectedByNegZeroBailout())
+                    {
+                        canSrc1BeNegativeZero = false;
+                    }
                 }
 
-                if (canSrc1BeNegativeZero && !(instr->GetSrc2()->IsRegOpnd() && instr->GetSrc2()->AsRegOpnd()->m_wasNegativeZeroPreventedByBailout))
+                if (canSrc1BeNegativeZero && instr->GetSrc2()->IsRegOpnd() && !instr->GetSrc2()->AsRegOpnd()->m_wasNegativeZeroPreventedByBailout)
                 {
                     IR::Opnd * src2 = instr->GetSrc2();
-                    FOREACH_INSTR_BACKWARD(tmpInstr2, instr->m_prev)
+                    IR::Instr * src2DefInstr = nullptr;
+                    if (src2->GetStackSym()->IsSingleDef())
                     {
-                        if (tmpInstr2->GetDst() && (src2->GetStackSym() == tmpInstr2->GetDst()->GetStackSym()))
+                        src2DefInstr = src2->GetStackSym()->GetInstrDef();
+                    }
+                    else
+                    {
+                        FOREACH_INSTR_BACKWARD(tmpInstr, instr->m_prev)
                         {
-                            if (tmpInstr2->CouldBeProtectedByNegZeroBailout())
+                            if (tmpInstr->GetDst() && src2->GetStackSym() == tmpInstr->GetDst()->GetStackSym())
                             {
-                                canSrc2BeNegativeZero = false;
+                                src2DefInstr = tmpInstr;
                                 break;
                             }
-                            break;
                         }
+                        NEXT_INSTR_BACKWARD
                     }
-                    NEXT_INSTR_BACKWARD
+                    if (src2DefInstr->CouldBeProtectedByNegZeroBailout())
+                    {
+                        canSrc2BeNegativeZero = false;
+                    }
                 }
 
                 if (!canSrc1BeNegativeZero || !canSrc2BeNegativeZero)
@@ -5155,20 +5171,28 @@ BackwardPass::TrackIntUsage(IR::Instr *const instr)
                     break;
                 }
 
-            //NegativeZero_AddI4_Default:
-                // -0 + -0 == -0. As long as one src is guaranteed to not be -0, -0 does not matter for the other src. Pick a
-                // src for which to ignore negative zero, based on which sym is last-use. If both syms are last-use, src2 is
-                // picked arbitrarily.
-                if (instr->GetSrc2()->IsRegOpnd() &&
-                    !currentBlock->upwardExposedUses->Test(instr->GetSrc2()->AsRegOpnd()->m_sym->m_id))
+                if (!(instr->GetSrc1()->IsRegOpnd() && instr->GetSrc1()->AsRegOpnd()->m_wasNegativeZeroPreventedByBailout) ||
+                    !(instr->GetSrc2()->IsRegOpnd() && instr->GetSrc2()->AsRegOpnd()->m_wasNegativeZeroPreventedByBailout))
                 {
-                    SetNegativeZeroDoesNotMatterIfLastUse(instr->GetSrc2());
                     SetNegativeZeroMatters(instr->GetSrc1());
+                    SetNegativeZeroMatters(instr->GetSrc2());
                 }
                 else
                 {
-                    SetNegativeZeroDoesNotMatterIfLastUse(instr->GetSrc1());
-                    SetNegativeZeroMatters(instr->GetSrc2());
+                    // -0 + -0 == -0. As long as one src is guaranteed to not be -0, -0 does not matter for the other src. Pick a
+                    // src for which to ignore negative zero, based on which sym is last-use. If both syms are last-use, src2 is
+                    // picked arbitrarily.
+                    if (instr->GetSrc2()->IsRegOpnd() &&
+                        !currentBlock->upwardExposedUses->Test(instr->GetSrc2()->AsRegOpnd()->m_sym->m_id))
+                    {
+                        SetNegativeZeroDoesNotMatterIfLastUse(instr->GetSrc2());
+                        SetNegativeZeroMatters(instr->GetSrc1());
+                    }
+                    else
+                    {
+                        SetNegativeZeroDoesNotMatterIfLastUse(instr->GetSrc1());
+                        SetNegativeZeroMatters(instr->GetSrc2());
+                    }
                 }
                 break;
             }
