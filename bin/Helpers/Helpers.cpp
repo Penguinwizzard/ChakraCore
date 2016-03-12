@@ -3,6 +3,7 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 #include "stdafx.h"
+#include "Helpers.h"
 #include "Codex/Utf8Codex.h"
 
 HRESULT Helpers::LoadScriptFromFile(LPCWSTR filename, LPCWSTR& contents, bool* isUtf8Out, LPCWSTR* contentsRawOut, UINT* lengthBytesOut, bool printFileOpenError)
@@ -37,7 +38,7 @@ HRESULT Helpers::LoadScriptFromFile(LPCWSTR filename, LPCWSTR& contents, bool* i
                 fwprintf(stderr, _u(": %s"), wszBuff);
             }
             fwprintf(stderr, _u("\n"));
-            IfFailGo(E_FAIL);
+            Fail(E_FAIL);
         }
         else
         {
@@ -55,7 +56,7 @@ HRESULT Helpers::LoadScriptFromFile(LPCWSTR filename, LPCWSTR& contents, bool* i
     if (nullptr == contentsRaw)
     {
         fwprintf(stderr, _u("out of memory"));
-        IfFailGo(E_OUTOFMEMORY);
+        Fail(E_OUTOFMEMORY);
     }
 
     //
@@ -81,7 +82,7 @@ HRESULT Helpers::LoadScriptFromFile(LPCWSTR filename, LPCWSTR& contents, bool* i
     {
         // unicode unsupported
         fwprintf(stderr, _u("unsupported file encoding"));
-        IfFailGo(E_UNEXPECTED);
+        Fail(E_UNEXPECTED);
     }
     else if (0xFEFF == *contentsRaw)
     {
@@ -104,7 +105,7 @@ HRESULT Helpers::LoadScriptFromFile(LPCWSTR filename, LPCWSTR& contents, bool* i
         if (nullptr == contents)
         {
             fwprintf(stderr, _u("out of memory"));
-            IfFailGo(E_OUTOFMEMORY);
+            Fail(E_OUTOFMEMORY);
         }
 
         utf8::DecodeIntoAndNullTerminate((char16*) contents, pRawBytes, cUtf16Chars, decodeOptions);
