@@ -10189,7 +10189,7 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
     case knopAsgLsh:
     case knopAsgRsh:
     case knopAsgRs2:
-        STARTSTATEMENET_IFTOPLEVEL(isTopLevel, pnode);
+        byteCodeGenerator->StartStatement(pnode);
         // Assign a register for the result only if the result is used or the LHS can't be assigned to
         // (i.e., is a constant).
         if (pnode->isUsed || fReturnValue || funcInfo->RegIsConst(pnode->sxBin.pnode1->location))
@@ -10218,7 +10218,7 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
         }
         funcInfo->ReleaseLoad(pnode->sxBin.pnode1);
 
-        ENDSTATEMENET_IFTOPLEVEL(isTopLevel, pnode);
+        byteCodeGenerator->EndStatement(pnode);
         break;
 
     // General nodes.
