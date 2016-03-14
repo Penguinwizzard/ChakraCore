@@ -525,8 +525,7 @@ WasmBytecodeGenerator::EmitLoop()
 
     Js::ByteCodeLabel loopHeaderLabel = m_writer.DefineLabel();
     m_labels->Push(loopHeaderLabel);
-
-    m_writer.MarkAsmJsLabel(loopHeaderLabel);
+    const uint loopId = m_writer.EnterLoop(loopHeaderLabel);
 
     EmitInfo loopInfo;
     if (m_reader->IsBinaryReader())
@@ -547,6 +546,7 @@ WasmBytecodeGenerator::EmitLoop()
     m_writer.MarkAsmJsLabel(loopTailLabel);
     m_labels->Pop();
     m_labels->Pop();
+    m_writer.ExitLoop(loopId);
 
     return loopInfo;
 }

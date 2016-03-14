@@ -1900,10 +1900,7 @@ namespace Js
 #if ENABLE_DEBUG_CONFIG_OPTIONS
                 if (CONFIG_FLAG(MaxAsmJsInterpreterRunCount) == 0)
                 {
-                    if (funcObj->GetEntryPoint() == Js::AsmJsExternalEntryPoint)
-                    {
-                        GenerateFunction(GetNativeCodeGenerator(), funcObj->GetFunctionBody(), funcObj);
-                    }
+                    GenerateFunction(GetNativeCodeGenerator(), funcObj->GetFunctionBody(), funcObj);
                 }
 #endif
 
