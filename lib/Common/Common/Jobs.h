@@ -8,7 +8,7 @@
 #undef AddJob
 #undef GetJob
 
-class Parser;
+template <typename TScriptContextImpl> class Parser;
 class CompileScriptException;
 
 namespace JsUtil
@@ -400,7 +400,7 @@ namespace JsUtil
         PageAllocator backgroundPageAllocator;
         ArenaAllocator *threadArena;
         BackgroundJobProcessor *processor;
-        Parser *parser;
+        Parser<Js::ScriptContext> *parser;
         CompileScriptException *pse;
 
         ParallelThreadData(AllocationPolicyManager* policyManager) :

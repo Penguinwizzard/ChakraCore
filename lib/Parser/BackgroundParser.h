@@ -9,7 +9,7 @@ typedef DList<ParseNode*, ArenaAllocator> NodeDList;
 
 struct BackgroundParseItem sealed : public JsUtil::Job
 {
-    BackgroundParseItem(JsUtil::JobManager *const manager, Parser *const parser, ParseNode *parseNode, bool defer);
+    BackgroundParseItem(JsUtil::JobManager *const manager, Parser<Js::ScriptContext> *const parser, ParseNode *parseNode, bool defer);
 
     ParseContext *GetParseContext() { return &parseContext; }
     ParseNode *GetParseNode() const { return parseNode; }
@@ -25,8 +25,8 @@ struct BackgroundParseItem sealed : public JsUtil::Job
 
     uint GetMaxBlockId() const { return maxBlockId; }
     void SetMaxBlockId(uint blockId) { maxBlockId = blockId; }
-    Parser *GetParser() const { return parser; }
-    void SetParser(Parser *p) { parser = p; }
+    Parser<Js::ScriptContext> *GetParser() const { return parser; }
+    void SetParser(Parser<Js::ScriptContext> *p) { parser = p; }
     BackgroundParseItem *GetNext() const { return nextItem; }
     void SetNext(BackgroundParseItem *item) { nextItem = item; }
     BackgroundParseItem *GetNextUnprocessedItem() const { return nextUnprocessedItem; }
@@ -41,7 +41,7 @@ struct BackgroundParseItem sealed : public JsUtil::Job
 
 private:
     ParseContext parseContext;
-    Parser *parser;
+    Parser<Js::ScriptContext> *parser;
     BackgroundParseItem *nextItem;
     BackgroundParseItem *nextUnprocessedItem;
     BackgroundParseItem *prevUnprocessedItem;
@@ -71,9 +71,9 @@ public:
     virtual void JobProcessed(JsUtil::Job *const job, const bool succeeded) override;
     virtual void OnDecommit(JsUtil::ParallelThreadData *threadData) override;
 
-    bool Process(JsUtil::Job *const job, Parser *parser, CompileScriptException *pse);
-    bool ParseBackgroundItem(Parser *parser, ParseNode *parseNode, bool isDeferred);
-    BackgroundParseItem * NewBackgroundParseItem(Parser *parser, ParseNode *parseNode, bool isDeferred);
+    bool Process(JsUtil::Job *const job, Parser<Js::ScriptContext> *parser, CompileScriptException *pse);
+    bool ParseBackgroundItem(Parser<Js::ScriptContext> *parser, ParseNode *parseNode, bool isDeferred);
+    BackgroundParseItem * NewBackgroundParseItem(Parser<Js::ScriptContext> *parser, ParseNode *parseNode, bool isDeferred);
 
     BackgroundParseItem *GetJob(BackgroundParseItem *item) const;
     bool WasAddedToJobProcessor(JsUtil::Job *const job) const;

@@ -90,7 +90,7 @@ namespace Js
         SRCINFO srcInfo; 
         Utf8SourceInfo* pSourceInfo;
         uint sourceIndex;
-        Parser* parser;  // we'll need to keep the parser around till we are done with bytecode gen.
+        Parser<Js::ScriptContext>* parser;  // we'll need to keep the parser around till we are done with bytecode gen.
         ScriptContext* scriptContext;
         IdentPtrList* requestedModuleList;
         ModuleImportEntryList* importRecordList;

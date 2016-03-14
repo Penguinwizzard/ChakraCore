@@ -352,6 +352,14 @@ namespace Js
         SRCINFO const ** moduleSrcInfo;
     };
 
+    template <typename TScriptContextImpl>
+    class ScriptContextParseFacade
+    {
+    public:
+
+        TScriptContextImpl* scriptContextImpl;
+    };
+
     class ScriptContext : public ScriptContextBase
     {
         friend class LowererMD;
@@ -472,7 +480,8 @@ namespace Js
     private:
         PropertyStringMap* propertyStrings[80];
 
-        JavascriptFunction* GenerateRootFunction(ParseNodePtr parseTree, uint sourceIndex, Parser* parser, ulong grfscr, CompileScriptException * pse, const char16 *rootDisplayName);
+        // REVIEW: Should we templatize this too?
+        JavascriptFunction* GenerateRootFunction(ParseNodePtr parseTree, uint sourceIndex, Parser<Js::ScriptContext>* parser, ulong grfscr, CompileScriptException * pse, const char16 *rootDisplayName);
 
         typedef void (*EventHandler)(ScriptContext *);
         ScriptContext ** entryInScriptContextWithInlineCachesRegistry;
@@ -1108,7 +1117,11 @@ private:
         WellKnownHostType GetWellKnownHostType(Js::TypeId typeId) { return threadContext->GetWellKnownHostType(typeId); }
         void SetWellKnownHostTypeId(WellKnownHostType wellKnownType, Js::TypeId typeId) { threadContext->SetWellKnownHostTypeId(wellKnownType, typeId); }
 
-        ParseNodePtr ParseScript(Parser* parser, const byte* script, size_t cb, SRCINFO const * pSrcInfo,
+        template <typename TScriptContextImpl>
+        ScriptContextParseFacade<TScriptContextImpl>* GetParseFacade(ArenaAllocator* alloc);
+
+        template <typename TScriptContextImpl>
+        ParseNodePtr ParseScript(Parser<TScriptContextImpl>* parser, const byte* script, size_t cb, SRCINFO const * pSrcInfo,
             CompileScriptException * pse, Utf8SourceInfo** ppSourceInfo, const char16 *rootDisplayName, LoadScriptFlag loadScriptFlag, uint* sourceIndex);
         JavascriptFunction* LoadScript(const byte* script, size_t cb, SRCINFO const * pSrcInfo,
             CompileScriptException * pse, Utf8SourceInfo** ppSourceInfo, const char16 *rootDisplayName, LoadScriptFlag loadScriptFlag);

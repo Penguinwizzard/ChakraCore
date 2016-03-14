@@ -24,7 +24,8 @@ const uint ParseNode::mpnopgrfnop[knopLim] =
 #include "ptlist.h"
 };
 
-bool Parser::IsES6DestructuringEnabled() const
+template <typename TScriptContextImpl>
+bool Parser<TScriptContextImpl>::IsES6DestructuringEnabled() const
 {
     return m_scriptContext->GetConfig()->IsES6DestructuringEnabled();
 }
@@ -68,12 +69,13 @@ struct BlockInfoStack
     BlockInfoStack *pBlockInfoFunction;     // nearest function's BlockInfoStack (if pnodeBlock is a function, this points to itself)
 };
 
+template <typename TScriptContextImpl>
 #if DEBUG
-Parser::Parser(Js::ScriptContext* scriptContext, BOOL strictMode, PageAllocator *alloc, bool isBackground, size_t size)
+Parser<TScriptContextImpl>::Parser(Js::ScriptContextParseFacade<TScriptContextImpl>* scriptContextParseFacade, BOOL strictMode, PageAllocator *alloc, bool isBackground, size_t size)
 #else
-Parser::Parser(Js::ScriptContext* scriptContext, BOOL strictMode, PageAllocator *alloc, bool isBackground)
+Parser<TScriptContextImpl>::Parser(Js::ScriptContextParseFacade<TScriptContextImpl>* scriptContextParseFacade, BOOL strictMode, PageAllocator *alloc, bool isBackground)
 #endif
-    : m_nodeAllocator(_u("Parser"), alloc ? alloc : scriptContext->GetThreadContext()->GetPageAllocator(), Parser::OutOfMemory),
+    : m_nodeAllocator(_u("Parser"), alloc ? alloc : scriptContext->GetThreadContext()->GetPageAllocator(), Parser<TScriptContextImpl>::OutOfMemory),
     // use the GuestArena directly for keeping the RegexPattern* alive during byte code generation
     m_registeredRegexPatterns(scriptContext->GetGuestArena())
 {
@@ -86,7 +88,7 @@ Parser::Parser(Js::ScriptContext* scriptContext, BOOL strictMode, PageAllocator 
     m_stoppedDeferredParse = FALSE;
     m_hasParallelJob = false;
     m_doingFastScan = false;
-    m_scriptContext = scriptContext;
+    m_scriptContextParseFacade = scriptContextParseFacade;
     m_pCurrentAstSize = nullptr;
     m_arrayDepth = 0;
     m_funcInArrayDepth = 0;
@@ -127,7 +129,8 @@ Parser::Parser(Js::ScriptContext* scriptContext, BOOL strictMode, PageAllocator 
     m_parsingSuperRestrictionState = ParsingSuperRestrictionState_SuperDisallowed;
 }
 
-Parser::~Parser(void)
+template <typename TScriptContextImpl>
+Parser<TScriptContextImpl>::~Parser(void)
 {
     if (m_scriptContext == nullptr || m_scriptContext->GetGuestArena() == nullptr)
     {
@@ -159,18 +162,21 @@ Parser::~Parser(void)
 
 }
 
-void Parser::OutOfMemory()
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::OutOfMemory()
 {
     throw ParseExceptionObject(ERRnoMemory);
 }
 
-void Parser::Error(HRESULT hr)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::Error(HRESULT hr)
 {
     Assert(FAILED(hr));
     m_err.Throw(hr);
 }
 
-void Parser::Error(HRESULT hr, ParseNodePtr pnode)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::Error(HRESULT hr, ParseNodePtr pnode)
 {
     if (pnode && pnode->ichLim)
     {
@@ -182,13 +188,15 @@ void Parser::Error(HRESULT hr, ParseNodePtr pnode)
     }
 }
 
-void Parser::Error(HRESULT hr, charcount_t ichMin, charcount_t ichLim)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::Error(HRESULT hr, charcount_t ichMin, charcount_t ichLim)
 {
     m_pscan->SetErrorPosition(ichMin, ichLim);
     Error(hr);
 }
 
-void Parser::IdentifierExpectedError(const Token& token)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::IdentifierExpectedError(const Token& token)
 {
     Assert(token.tk != tkID);
 
@@ -224,7 +232,8 @@ void Parser::IdentifierExpectedError(const Token& token)
     Error(hr);
 }
 
-HRESULT Parser::ValidateSyntax(LPCUTF8 pszSrc, size_t encodedCharCount, bool isGenerator, bool isAsync, CompileScriptException *pse, void (Parser::*validateFunction)())
+template <typename TScriptContextImpl>
+HRESULT Parser<TScriptContextImpl>::ValidateSyntax(LPCUTF8 pszSrc, size_t encodedCharCount, bool isGenerator, bool isAsync, CompileScriptException *pse, void (Parser<TScriptContextImpl>::*validateFunction)())
 {
     AssertPsz(pszSrc);
     AssertMemN(pse);
@@ -325,7 +334,8 @@ HRESULT Parser::ValidateSyntax(LPCUTF8 pszSrc, size_t encodedCharCount, bool isG
     return hr;
 }
 
-HRESULT Parser::ParseSourceInternal(
+template <typename TScriptContextImpl>
+HRESULT Parser<TScriptContextImpl>::ParseSourceInternal(
     __out ParseNodePtr* parseTree, LPCUTF8 pszSrc, size_t offsetInBytes, size_t encodedCharCount, charcount_t offsetInChars,
     bool fromExternal, ULONG grfscr, CompileScriptException *pse, Js::LocalFunctionId * nextFunctionId, ULONG lineNumber, SourceContextInfo * sourceContextInfo)
 {
@@ -368,7 +378,7 @@ HRESULT Parser::ParseSourceInternal(
         if ((grfscr & fscrEvalCode) != 0)
         {
             // This makes the parser to believe when eval() is called, it accept any super access in global scope.
-            this->m_parsingSuperRestrictionState = Parser::ParsingSuperRestrictionState_SuperCallAndPropertyAllowed;
+            this->m_parsingSuperRestrictionState = Parser<TScriptContextImpl>::ParsingSuperRestrictionState_SuperCallAndPropertyAllowed;
         }
 
         if ((grfscr & fscrIsModuleCode) != 0)
@@ -458,7 +468,8 @@ HRESULT Parser::ParseSourceInternal(
 }
 
 #if ENABLE_BACKGROUND_PARSING
-void Parser::WaitForBackgroundJobs(BackgroundParser *bgp, CompileScriptException *pse)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::WaitForBackgroundJobs(BackgroundParser *bgp, CompileScriptException *pse)
 {
     // The scan of the script is done, but there may be unfinished background jobs in the queue.
     // Enlist the main thread to help with those.
@@ -528,7 +539,8 @@ void Parser::WaitForBackgroundJobs(BackgroundParser *bgp, CompileScriptException
     *this->m_nextFunctionId = functionIdSave;
 }
 
-void Parser::FinishBackgroundPidRefs(BackgroundParseItem *item, bool isOtherParser)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::FinishBackgroundPidRefs(BackgroundParseItem *item, bool isOtherParser)
 {
     for (BlockInfoStack *blockInfo = item->GetParseContext()->currentBlockInfo; blockInfo; blockInfo = blockInfo->pBlockInfoOuter)
     {
@@ -543,7 +555,8 @@ void Parser::FinishBackgroundPidRefs(BackgroundParseItem *item, bool isOtherPars
     }
 }
 
-void Parser::FinishBackgroundRegExpNodes()
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::FinishBackgroundRegExpNodes()
 {
     // We have a list of RegExp nodes that we saw on the UI thread in functions we're parallel parsing,
     // and for each background job we have a list of RegExp nodes for which we couldn't allocate patterns.
@@ -650,7 +663,8 @@ void Parser::FinishBackgroundRegExpNodes()
 }
 #endif
 
-LabelId* Parser::CreateLabelId(IdentToken* pToken)
+template <typename TScriptContextImpl>
+LabelId* Parser<TScriptContextImpl>::CreateLabelId(IdentToken* pToken)
 {
     LabelId* pLabelId;
 
@@ -676,7 +690,8 @@ static const int g_mpnopcbNode[] =
 const Js::RegSlot NoRegister = (Js::RegSlot)-1;
 const Js::RegSlot OneByteRegister = (Js::RegSlot_OneByte)-1;
 
-void Parser::InitNode(OpCode nop,ParseNodePtr pnode) {
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::InitNode(OpCode nop,ParseNodePtr pnode) {
     pnode->nop = nop;
     pnode->grfpn = PNodeFlags::fpnNone;
     pnode->location = NoRegister;
@@ -688,8 +703,9 @@ void Parser::InitNode(OpCode nop,ParseNodePtr pnode) {
 }
 
 // Create nodes using Arena
+template <typename TScriptContextImpl>
 template <OpCode nop>
-ParseNodePtr Parser::StaticCreateNodeT(ArenaAllocator* alloc, charcount_t ichMin, charcount_t ichLim)
+ParseNodePtr Parser<TScriptContextImpl>::StaticCreateNodeT(ArenaAllocator* alloc, charcount_t ichMin, charcount_t ichLim)
 {
     ParseNodePtr pnode = StaticAllocNode<nop>(alloc);
     InitNode(nop,pnode);
@@ -700,15 +716,17 @@ ParseNodePtr Parser::StaticCreateNodeT(ArenaAllocator* alloc, charcount_t ichMin
     return pnode;
 }
 
+template <typename TScriptContextImpl>
 ParseNodePtr
-Parser::StaticCreateBlockNode(ArenaAllocator* alloc, charcount_t ichMin , charcount_t ichLim, int blockId, PnodeBlockType blockType)
+Parser<TScriptContextImpl>::StaticCreateBlockNode(ArenaAllocator* alloc, charcount_t ichMin , charcount_t ichLim, int blockId, PnodeBlockType blockType)
 {
     ParseNodePtr pnode = StaticCreateNodeT<knopBlock>(alloc, ichMin, ichLim);
     InitBlockNode(pnode, blockId, blockType);
     return pnode;
 }
 
-void Parser::InitBlockNode(ParseNodePtr pnode, int blockId, PnodeBlockType blockType)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::InitBlockNode(ParseNodePtr pnode, int blockId, PnodeBlockType blockType)
 {
     Assert(pnode->nop == knopBlock);
     pnode->sxBlock.pnodeScopes = nullptr;
@@ -731,8 +749,9 @@ void Parser::InitBlockNode(ParseNodePtr pnode, int blockId, PnodeBlockType block
 }
 
 // Create Node with limit
+template <typename TScriptContextImpl>
 template <OpCode nop>
-ParseNodePtr Parser::CreateNodeT(charcount_t ichMin,charcount_t ichLim)
+ParseNodePtr Parser<TScriptContextImpl>::CreateNodeT(charcount_t ichMin,charcount_t ichLim)
 {
     Assert(!this->m_deferringAST);
     ParseNodePtr pnode = StaticCreateNodeT<nop>(&m_nodeAllocator, ichMin, ichLim);
@@ -743,7 +762,8 @@ ParseNodePtr Parser::CreateNodeT(charcount_t ichMin,charcount_t ichLim)
     return pnode;
 }
 
-ParseNodePtr Parser::CreateDeclNode(OpCode nop, IdentPtr pid, SymbolType symbolType, bool errorOnRedecl)
+template <typename TScriptContextImpl>
+ParseNodePtr Parser<TScriptContextImpl>::CreateDeclNode(OpCode nop, IdentPtr pid, SymbolType symbolType, bool errorOnRedecl)
 {
     ParseNodePtr pnode = CreateNode(nop);
 
@@ -757,7 +777,8 @@ ParseNodePtr Parser::CreateDeclNode(OpCode nop, IdentPtr pid, SymbolType symbolT
     return pnode;
 }
 
-Symbol* Parser::AddDeclForPid(ParseNodePtr pnode, IdentPtr pid, SymbolType symbolType, bool errorOnRedecl)
+template <typename TScriptContextImpl>
+Symbol* Parser<TScriptContextImpl>::AddDeclForPid(ParseNodePtr pnode, IdentPtr pid, SymbolType symbolType, bool errorOnRedecl)
 {
     Assert(pnode->IsVarLetOrConst());
 
@@ -996,7 +1017,8 @@ Symbol* Parser::AddDeclForPid(ParseNodePtr pnode, IdentPtr pid, SymbolType symbo
     return sym;
 }
 
-void Parser::RestorePidRefForSym(Symbol *sym)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::RestorePidRefForSym(Symbol *sym)
 {
     IdentPtr pid = m_pscan->m_phtbl->PidHashNameLen(sym->GetName().GetBuffer(), sym->GetName().GetLength());
     Assert(pid);
@@ -1005,12 +1027,14 @@ void Parser::RestorePidRefForSym(Symbol *sym)
     ref->SetSym(sym);
 }
 
-IdentPtr Parser::GenerateIdentPtr(__ecount(len) char16* name, long len)
+template <typename TScriptContextImpl>
+IdentPtr Parser<TScriptContextImpl>::GenerateIdentPtr(__ecount(len) char16* name, long len)
 {
     return m_phtbl->PidHashNameLen(name,len);
 }
 
-IdentPtr Parser::PidFromNode(ParseNodePtr pnode)
+template <typename TScriptContextImpl>
+IdentPtr Parser<TScriptContextImpl>::PidFromNode(ParseNodePtr pnode)
 {
     for (;;)
     {
@@ -1046,7 +1070,8 @@ void VerifyNodeSize(OpCode nop, int size)
 }
 #endif
 
-ParseNodePtr Parser::StaticCreateBinNode(OpCode nop, ParseNodePtr pnode1,
+template <typename TScriptContextImpl>
+ParseNodePtr Parser<TScriptContextImpl>::StaticCreateBinNode(OpCode nop, ParseNodePtr pnode1,
                                    ParseNodePtr pnode2,ArenaAllocator* alloc)
 {
     DebugOnly(VerifyNodeSize(nop, kcbPnBin));
@@ -1075,7 +1100,8 @@ ParseNodePtr Parser::StaticCreateBinNode(OpCode nop, ParseNodePtr pnode1,
 
 // Create nodes using parser allocator
 
-ParseNodePtr Parser::CreateNode(OpCode nop, charcount_t ichMin)
+template <typename TScriptContextImpl>
+ParseNodePtr Parser<TScriptContextImpl>::CreateNode(OpCode nop, charcount_t ichMin)
 {
     bool nodeAllowed = IsNodeAllowedForDeferParse(nop);
     Assert(nodeAllowed);
@@ -1105,7 +1131,8 @@ ParseNodePtr Parser::CreateNode(OpCode nop, charcount_t ichMin)
     return pnode;
 }
 
-ParseNodePtr Parser::CreateUniNode(OpCode nop, ParseNodePtr pnode1)
+template <typename TScriptContextImpl>
+ParseNodePtr Parser<TScriptContextImpl>::CreateUniNode(OpCode nop, ParseNodePtr pnode1)
 {
     Assert(!this->m_deferringAST);
     DebugOnly(VerifyNodeSize(nop, kcbPnUni));
@@ -1133,7 +1160,8 @@ ParseNodePtr Parser::CreateUniNode(OpCode nop, ParseNodePtr pnode1)
     return pnode;
 }
 
-ParseNodePtr Parser::CreateBinNode(OpCode nop, ParseNodePtr pnode1, ParseNodePtr pnode2)
+template <typename TScriptContextImpl>
+ParseNodePtr Parser<TScriptContextImpl>::CreateBinNode(OpCode nop, ParseNodePtr pnode1, ParseNodePtr pnode2)
 {
     Assert(!this->m_deferringAST);
     charcount_t ichMin;
@@ -1173,7 +1201,8 @@ ParseNodePtr Parser::CreateBinNode(OpCode nop, ParseNodePtr pnode1, ParseNodePtr
     return CreateBinNode(nop, pnode1, pnode2, ichMin, ichLim);
 }
 
-ParseNodePtr Parser::CreateTriNode(OpCode nop, ParseNodePtr pnode1,
+template <typename TScriptContextImpl>
+ParseNodePtr Parser<TScriptContextImpl>::CreateTriNode(OpCode nop, ParseNodePtr pnode1,
                                    ParseNodePtr pnode2, ParseNodePtr pnode3)
 {
     charcount_t ichMin;
@@ -1210,13 +1239,15 @@ ParseNodePtr Parser::CreateTriNode(OpCode nop, ParseNodePtr pnode1,
     return CreateTriNode(nop, pnode1, pnode2, pnode3, ichMin, ichLim);
 }
 
-ParseNodePtr Parser::CreateBlockNode(charcount_t ichMin,charcount_t ichLim, PnodeBlockType blockType)
+template <typename TScriptContextImpl>
+ParseNodePtr Parser<TScriptContextImpl>::CreateBlockNode(charcount_t ichMin,charcount_t ichLim, PnodeBlockType blockType)
 {
     return StaticCreateBlockNode(&m_nodeAllocator, ichMin, ichLim, this->m_nextBlockId++, blockType);
 }
 
+template <typename TScriptContextImpl>
 ParseNodePtr
-Parser::CreateCallNode(OpCode nop, ParseNodePtr pnode1, ParseNodePtr pnode2,charcount_t ichMin,charcount_t ichLim)
+Parser<TScriptContextImpl>::CreateCallNode(OpCode nop, ParseNodePtr pnode1, ParseNodePtr pnode2,charcount_t ichMin,charcount_t ichLim)
 {
     Assert(!this->m_deferringAST);
     DebugOnly(VerifyNodeSize(nop, kcbPnCall));
@@ -1241,7 +1272,8 @@ Parser::CreateCallNode(OpCode nop, ParseNodePtr pnode1, ParseNodePtr pnode2,char
     return pnode;
 }
 
-ParseNodePtr Parser::CreateStrNode(IdentPtr pid)
+template <typename TScriptContextImpl>
+ParseNodePtr Parser<TScriptContextImpl>::CreateStrNode(IdentPtr pid)
 {
     Assert(!this->m_deferringAST);
 
@@ -1251,7 +1283,8 @@ ParseNodePtr Parser::CreateStrNode(IdentPtr pid)
     return pnode;
 }
 
-ParseNodePtr Parser::CreateIntNode(long lw)
+template <typename TScriptContextImpl>
+ParseNodePtr Parser<TScriptContextImpl>::CreateIntNode(long lw)
 {
     ParseNodePtr pnode = CreateNode(knopInt);
     pnode->sxInt.lw = lw;
@@ -1259,21 +1292,24 @@ ParseNodePtr Parser::CreateIntNode(long lw)
 }
 
 // Create Node with scanner limit
+template <typename TScriptContextImpl>
 template <OpCode nop>
-ParseNodePtr Parser::CreateNodeWithScanner()
+ParseNodePtr Parser<TScriptContextImpl>::CreateNodeWithScanner()
 {
     Assert(m_pscan != nullptr);
     return CreateNodeWithScanner<nop>(m_pscan->IchMinTok());
 }
 
+template <typename TScriptContextImpl>
 template <OpCode nop>
-ParseNodePtr Parser::CreateNodeWithScanner(charcount_t ichMin)
+ParseNodePtr Parser<TScriptContextImpl>::CreateNodeWithScanner(charcount_t ichMin)
 {
     Assert(m_pscan != nullptr);
     return CreateNodeT<nop>(ichMin, m_pscan->IchLimTok());
 }
 
-ParseNodePtr Parser::CreateProgNodeWithScanner(bool isModuleSource)
+template <typename TScriptContextImpl>
+ParseNodePtr Parser<TScriptContextImpl>::CreateProgNodeWithScanner(bool isModuleSource)
 {
     ParseNodePtr pnodeProg;
 
@@ -1296,7 +1332,8 @@ ParseNodePtr Parser::CreateProgNodeWithScanner(bool isModuleSource)
     return pnodeProg;
 }
 
-ParseNodePtr Parser::CreateCallNode(OpCode nop, ParseNodePtr pnode1, ParseNodePtr pnode2)
+template <typename TScriptContextImpl>
+ParseNodePtr Parser<TScriptContextImpl>::CreateCallNode(OpCode nop, ParseNodePtr pnode1, ParseNodePtr pnode2)
 {
     charcount_t ichMin;
     charcount_t ichLim;
@@ -1327,7 +1364,8 @@ ParseNodePtr Parser::CreateCallNode(OpCode nop, ParseNodePtr pnode1, ParseNodePt
     return CreateCallNode(nop, pnode1, pnode2, ichMin, ichLim);
 }
 
-ParseNodePtr Parser::CreateStrNodeWithScanner(IdentPtr pid)
+template <typename TScriptContextImpl>
+ParseNodePtr Parser<TScriptContextImpl>::CreateStrNodeWithScanner(IdentPtr pid)
 {
     Assert(!this->m_deferringAST);
 
@@ -1337,7 +1375,8 @@ ParseNodePtr Parser::CreateStrNodeWithScanner(IdentPtr pid)
     return pnode;
 }
 
-ParseNodePtr Parser::CreateIntNodeWithScanner(long lw)
+template <typename TScriptContextImpl>
+ParseNodePtr Parser<TScriptContextImpl>::CreateIntNodeWithScanner(long lw)
 {
     Assert(!this->m_deferringAST);
     ParseNodePtr pnode = CreateNodeWithScanner<knopInt>();
@@ -1345,7 +1384,8 @@ ParseNodePtr Parser::CreateIntNodeWithScanner(long lw)
     return pnode;
 }
 
-ParseNodePtr Parser::CreateTempNode(ParseNode* initExpr)
+template <typename TScriptContextImpl>
+ParseNodePtr Parser<TScriptContextImpl>::CreateTempNode(ParseNode* initExpr)
 {
     ParseNodePtr pnode = CreateNode(knopTemp, (charcount_t)0);
     pnode->sxVar.pnodeInit =initExpr;
@@ -1353,13 +1393,15 @@ ParseNodePtr Parser::CreateTempNode(ParseNode* initExpr)
     return pnode;
 }
 
-ParseNodePtr Parser::CreateTempRef(ParseNode* tempNode)
+template <typename TScriptContextImpl>
+ParseNodePtr Parser<TScriptContextImpl>::CreateTempRef(ParseNode* tempNode)
 {
     ParseNodePtr pnode = CreateUniNode(knopTempRef, tempNode);
     return pnode;
 }
 
-void Parser::CheckPidIsValid(IdentPtr pid, bool autoArgumentsObject)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::CheckPidIsValid(IdentPtr pid, bool autoArgumentsObject)
 {
     if (IsStrictMode())
     {
@@ -1379,7 +1421,8 @@ void Parser::CheckPidIsValid(IdentPtr pid, bool autoArgumentsObject)
 // Post-parsing rewriting during bytecode gen may have m_ppnodeVar pointing to the last parsed function.
 // This function sets up m_ppnodeVar to point to the given pnodeFnc and creates the new var declaration.
 // This prevents accidentally adding var declarations to the last parsed function.
-ParseNodePtr Parser::AddVarDeclNode(IdentPtr pid, ParseNodePtr pnodeFnc)
+template <typename TScriptContextImpl>
+ParseNodePtr Parser<TScriptContextImpl>::AddVarDeclNode(IdentPtr pid, ParseNodePtr pnodeFnc)
 {
     AnalysisAssert(pnodeFnc);
 
@@ -1398,7 +1441,8 @@ ParseNodePtr Parser::AddVarDeclNode(IdentPtr pid, ParseNodePtr pnodeFnc)
     return pnode;
 }
 
-Js::PropertyId Parser::EnsurePropertyId(IdentPtr pid)
+template <typename TScriptContextImpl>
+Js::PropertyId Parser<TScriptContextImpl>::EnsurePropertyId(IdentPtr pid)
 {
     Js::PropertyId propertyId = pid->GetPropertyId();
     if (propertyId == Js::Constants::NoProperty)
@@ -1409,7 +1453,8 @@ Js::PropertyId Parser::EnsurePropertyId(IdentPtr pid)
     return propertyId;
 }
 
-ParseNodePtr Parser::CreateModuleImportDeclNode(IdentPtr localName)
+template <typename TScriptContextImpl>
+ParseNodePtr Parser<TScriptContextImpl>::CreateModuleImportDeclNode(IdentPtr localName)
 {
     ParseNodePtr declNode = CreateBlockScopedDeclNode(localName, knopConstDecl);
     Symbol* sym = declNode->sxVar.sym;
@@ -1419,7 +1464,8 @@ ParseNodePtr Parser::CreateModuleImportDeclNode(IdentPtr localName)
     return declNode;
 }
 
-void Parser::MarkIdentifierReferenceIsModuleExport(IdentPtr localName)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::MarkIdentifierReferenceIsModuleExport(IdentPtr localName)
 {
     PidRefStack* pidRef = this->PushPidRef(localName);
 
@@ -1428,7 +1474,8 @@ void Parser::MarkIdentifierReferenceIsModuleExport(IdentPtr localName)
     pidRef->SetModuleExport();
 }
 
-ParseNodePtr Parser::CreateVarDeclNode(IdentPtr pid, SymbolType symbolType, bool autoArgumentsObject, ParseNodePtr pnodeFnc, bool errorOnRedecl)
+template <typename TScriptContextImpl>
+ParseNodePtr Parser<TScriptContextImpl>::CreateVarDeclNode(IdentPtr pid, SymbolType symbolType, bool autoArgumentsObject, ParseNodePtr pnodeFnc, bool errorOnRedecl)
 {
     ParseNodePtr pnode = CreateDeclNode(knopVarDecl, pid, symbolType, errorOnRedecl);
 
@@ -1447,7 +1494,8 @@ ParseNodePtr Parser::CreateVarDeclNode(IdentPtr pid, SymbolType symbolType, bool
     return pnode;
 }
 
-ParseNodePtr Parser::CreateBlockScopedDeclNode(IdentPtr pid, OpCode nodeType)
+template <typename TScriptContextImpl>
+ParseNodePtr Parser<TScriptContextImpl>::CreateBlockScopedDeclNode(IdentPtr pid, OpCode nodeType)
 {
     Assert(nodeType == knopConstDecl || nodeType == knopLetDecl);
 
@@ -1464,7 +1512,8 @@ ParseNodePtr Parser::CreateBlockScopedDeclNode(IdentPtr pid, OpCode nodeType)
     return pnode;
 }
 
-void Parser::AddVarDeclToBlock(ParseNode *pnode)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::AddVarDeclToBlock(ParseNode *pnode)
 {
     Assert(pnode->nop == knopConstDecl || pnode->nop == knopLetDecl);
 
@@ -1477,13 +1526,15 @@ void Parser::AddVarDeclToBlock(ParseNode *pnode)
     pnode->sxVar.pnodeNext = nullptr;
 }
 
-void Parser::SetCurrentStatement(StmtNest *stmt)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::SetCurrentStatement(StmtNest *stmt)
 {
     m_pstmtCur = stmt;
 }
 
+template <typename TScriptContextImpl>
 template<bool buildAST>
-ParseNodePtr Parser::StartParseBlockWithCapacity(PnodeBlockType blockType, ScopeType scopeType, int capacity)
+ParseNodePtr Parser<TScriptContextImpl>::StartParseBlockWithCapacity(PnodeBlockType blockType, ScopeType scopeType, int capacity)
 {
     Scope *scope = nullptr;
     // Block scopes are created lazily when we discover block-scoped content.
@@ -1496,8 +1547,9 @@ ParseNodePtr Parser::StartParseBlockWithCapacity(PnodeBlockType blockType, Scope
     return StartParseBlockHelper<buildAST>(blockType, scope, nullptr, nullptr);
 }
 
+template <typename TScriptContextImpl>
 template<bool buildAST>
-ParseNodePtr Parser::StartParseBlock(PnodeBlockType blockType, ScopeType scopeType, ParseNodePtr pnodeLabel, LabelId* pLabelId)
+ParseNodePtr Parser<TScriptContextImpl>::StartParseBlock(PnodeBlockType blockType, ScopeType scopeType, ParseNodePtr pnodeLabel, LabelId* pLabelId)
 {
     Scope *scope = nullptr;
     // Block scopes are created lazily when we discover block-scoped content.
@@ -1510,8 +1562,9 @@ ParseNodePtr Parser::StartParseBlock(PnodeBlockType blockType, ScopeType scopeTy
     return StartParseBlockHelper<buildAST>(blockType, scope, pnodeLabel, pLabelId);
 }
 
+template <typename TScriptContextImpl>
 template<bool buildAST>
-ParseNodePtr Parser::StartParseBlockHelper(PnodeBlockType blockType, Scope *scope, ParseNodePtr pnodeLabel, LabelId* pLabelId)
+ParseNodePtr Parser<TScriptContextImpl>::StartParseBlockHelper(PnodeBlockType blockType, Scope *scope, ParseNodePtr pnodeLabel, LabelId* pLabelId)
 {
     ParseNodePtr pnodeBlock = CreateBlockNode(blockType);
     pnodeBlock->sxBlock.scope = scope;
@@ -1522,21 +1575,24 @@ ParseNodePtr Parser::StartParseBlockHelper(PnodeBlockType blockType, Scope *scop
     return pnodeBlock;
 }
 
-void Parser::PushScope(Scope *scope)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::PushScope(Scope *scope)
 {
     Assert(scope);
     scope->SetEnclosingScope(m_currentScope);
     m_currentScope = scope;
 }
 
-void Parser::PopScope(Scope *scope)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::PopScope(Scope *scope)
 {
     Assert(scope == m_currentScope);
     m_currentScope = scope->GetEnclosingScope();
     scope->SetEnclosingScope(nullptr);
 }
 
-void Parser::PushFuncBlockScope(ParseNodePtr pnodeBlock, ParseNodePtr **ppnodeScopeSave, ParseNodePtr **ppnodeExprScopeSave)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::PushFuncBlockScope(ParseNodePtr pnodeBlock, ParseNodePtr **ppnodeScopeSave, ParseNodePtr **ppnodeExprScopeSave)
 {
     // Maintain the scope tree.
 
@@ -1569,7 +1625,8 @@ void Parser::PushFuncBlockScope(ParseNodePtr pnodeBlock, ParseNodePtr **ppnodeSc
     m_ppnodeExprScope = nullptr;
 }
 
-void Parser::PopFuncBlockScope(ParseNodePtr *ppnodeScopeSave, ParseNodePtr *ppnodeExprScopeSave)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::PopFuncBlockScope(ParseNodePtr *ppnodeScopeSave, ParseNodePtr *ppnodeExprScopeSave)
 {
     Assert(m_ppnodeExprScope == nullptr || *m_ppnodeExprScope == nullptr);
     m_ppnodeExprScope = ppnodeExprScopeSave;
@@ -1579,8 +1636,9 @@ void Parser::PopFuncBlockScope(ParseNodePtr *ppnodeScopeSave, ParseNodePtr *ppno
     m_ppnodeScope = ppnodeScopeSave;
 }
 
+template <typename TScriptContextImpl>
 template<bool buildAST>
-ParseNodePtr Parser::ParseBlock(ParseNodePtr pnodeLabel, LabelId* pLabelId)
+ParseNodePtr Parser<TScriptContextImpl>::ParseBlock(ParseNodePtr pnodeLabel, LabelId* pLabelId)
 {
     ParseNodePtr pnodeBlock = nullptr;
     ParseNodePtr *ppnodeScopeSave = nullptr;
@@ -1611,7 +1669,8 @@ ParseNodePtr Parser::ParseBlock(ParseNodePtr pnodeLabel, LabelId* pLabelId)
     return pnodeBlock;
 }
 
-void Parser::FinishParseBlock(ParseNode *pnodeBlock, bool needScanRCurly)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::FinishParseBlock(ParseNode *pnodeBlock, bool needScanRCurly)
 {
     Assert(m_currentBlockInfo != nullptr && pnodeBlock == m_currentBlockInfo->pnodeBlock);
 
@@ -1636,7 +1695,8 @@ void Parser::FinishParseBlock(ParseNode *pnodeBlock, bool needScanRCurly)
     }
 }
 
-void Parser::FinishParseFncExprScope(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncExprScope)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::FinishParseFncExprScope(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncExprScope)
 {
     int fncExprScopeId = pnodeFncExprScope->sxBlock.blockId;
     ParseNodePtr pnodeName = pnodeFnc->sxFnc.pnodeName;
@@ -1648,8 +1708,9 @@ void Parser::FinishParseFncExprScope(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFn
     FinishParseBlock(pnodeFncExprScope);
 }
 
+template <typename TScriptContextImpl>
 template <const bool backgroundPidRef>
-void Parser::BindPidRefs(BlockInfoStack *blockInfo, uint maxBlockId)
+void Parser<TScriptContextImpl>::BindPidRefs(BlockInfoStack *blockInfo, uint maxBlockId)
 {
     // We need to bind all assignments in order to emit assignment to 'const' error
     int blockId = blockInfo->pnodeBlock->sxBlock.blockId;
@@ -1726,18 +1787,21 @@ void Parser::BindPidRefs(BlockInfoStack *blockInfo, uint maxBlockId)
     }
 }
 
-void Parser::BindPidRefsInScope(IdentPtr pid, Symbol *sym, int blockId, uint maxBlockId)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::BindPidRefsInScope(IdentPtr pid, Symbol *sym, int blockId, uint maxBlockId)
 {
     this->BindPidRefsInScopeImpl<false>(pid, sym, blockId, maxBlockId);
 }
 
-void Parser::BindConstPidRefsInScope(IdentPtr pid, Symbol *sym, int blockId, uint maxBlockId)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::BindConstPidRefsInScope(IdentPtr pid, Symbol *sym, int blockId, uint maxBlockId)
 {
     this->BindPidRefsInScopeImpl<true>(pid, sym, blockId, maxBlockId);
 }
 
+template <typename TScriptContextImpl>
 template<const bool isConstBinding>
-void Parser::BindPidRefsInScopeImpl(IdentPtr pid, Symbol *sym, int blockId, uint maxBlockId)
+void Parser<TScriptContextImpl>::BindPidRefsInScopeImpl(IdentPtr pid, Symbol *sym, int blockId, uint maxBlockId)
 {
     PidRefStack *ref, *nextRef, *lastRef = nullptr;
     Assert(sym);
@@ -1780,13 +1844,15 @@ void Parser::BindPidRefsInScopeImpl(IdentPtr pid, Symbol *sym, int blockId, uint
     }
 }
 
-void Parser::PopStmt(StmtNest *pStmt)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::PopStmt(StmtNest *pStmt)
 {
     Assert(pStmt == m_pstmtCur);
     SetCurrentStatement(m_pstmtCur->pstmtOuter);
 }
 
-BlockInfoStack *Parser::PushBlockInfo(ParseNodePtr pnodeBlock)
+template <typename TScriptContextImpl>
+BlockInfoStack *Parser<TScriptContextImpl>::PushBlockInfo(ParseNodePtr pnodeBlock)
 {
     BlockInfoStack *newBlockInfo = (BlockInfoStack *)m_nodeAllocator.Alloc(sizeof(BlockInfoStack));
     Assert(nullptr != newBlockInfo);
@@ -1809,14 +1875,16 @@ BlockInfoStack *Parser::PushBlockInfo(ParseNodePtr pnodeBlock)
     return newBlockInfo;
 }
 
-void Parser::PopBlockInfo()
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::PopBlockInfo()
 {
     Assert(m_currentBlockInfo);
     PopDynamicBlock();
     m_currentBlockInfo = m_currentBlockInfo->pBlockInfoOuter;
 }
 
-void Parser::PushDynamicBlock()
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::PushDynamicBlock()
 {
     Assert(GetCurrentBlock());
     int blockId = GetCurrentBlock()->sxBlock.blockId;
@@ -1835,7 +1903,8 @@ void Parser::PushDynamicBlock()
     m_currentDynamicBlock = info;
 }
 
-void Parser::PopDynamicBlock()
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::PopDynamicBlock()
 {
     int blockId = GetCurrentDynamicBlockId();
     if (GetCurrentBlock()->sxBlock.blockId != blockId || blockId == -1)
@@ -1856,12 +1925,14 @@ void Parser::PopDynamicBlock()
     m_currentDynamicBlock = m_currentDynamicBlock->prev;
 }
 
-int Parser::GetCurrentDynamicBlockId() const
+template <typename TScriptContextImpl>
+int Parser<TScriptContextImpl>::GetCurrentDynamicBlockId() const
 {
     return m_currentDynamicBlock ? m_currentDynamicBlock->id : -1;
 }
 
-ParseNode *Parser::GetCurrentFunctionNode()
+template <typename TScriptContextImpl>
+ParseNode *Parser<TScriptContextImpl>::GetCurrentFunctionNode()
 {
     if (m_currentNodeDeferredFunc != nullptr)
     {
@@ -1879,7 +1950,8 @@ ParseNode *Parser::GetCurrentFunctionNode()
     }
 }
 
-ParseNode *Parser::GetCurrentNonLamdaFunctionNode()
+template <typename TScriptContextImpl>
+ParseNode *Parser<TScriptContextImpl>::GetCurrentNonLamdaFunctionNode()
 {
     if (m_currentNodeNonLambdaDeferredFunc != nullptr)
     {
@@ -1888,18 +1960,21 @@ ParseNode *Parser::GetCurrentNonLamdaFunctionNode()
     return m_currentNodeNonLambdaFunc;
 
 }
-void Parser::RegisterRegexPattern(UnifiedRegex::RegexPattern *const regexPattern)
+
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::RegisterRegexPattern(UnifiedRegex::RegexPattern *const regexPattern)
 {
     Assert(regexPattern);
 
     // ensure a no-throw add behavior here, to catch out of memory exceptions, using the guest arena allocator
     if (!m_registeredRegexPatterns.PrependNoThrow(m_scriptContext->GetGuestArena(), regexPattern))
     {
-        Parser::Error(ERRnoMemory);
+        Parser<TScriptContextImpl>::Error(ERRnoMemory);
     }
 }
 
-void Parser::CaptureState(ParserState *state)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::CaptureState(ParserState *state)
 {
     Assert(state != nullptr);
 
@@ -1918,7 +1993,8 @@ void Parser::CaptureState(ParserState *state)
 #endif
 }
 
-void Parser::RestoreStateFrom(ParserState *state)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::RestoreStateFrom(ParserState *state)
 {
     Assert(state != nullptr);
     Assert(state->m_currentBlockInfo == m_currentBlockInfo);
@@ -1942,14 +2018,16 @@ void Parser::RestoreStateFrom(ParserState *state)
     m_ppnodeExprScope = state->m_ppnodeExprScopeSave;
 }
 
-void Parser::AddToNodeListEscapedUse(ParseNode ** ppnodeList, ParseNode *** pppnodeLast,
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::AddToNodeListEscapedUse(ParseNode ** ppnodeList, ParseNode *** pppnodeLast,
                            ParseNode * pnodeAdd)
 {
     AddToNodeList(ppnodeList, pppnodeLast, pnodeAdd);
     pnodeAdd->SetIsInList();
 }
 
-void Parser::AddToNodeList(ParseNode ** ppnodeList, ParseNode *** pppnodeLast,
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::AddToNodeList(ParseNode ** ppnodeList, ParseNode *** pppnodeLast,
                            ParseNode * pnodeAdd)
 {
     Assert(!this->m_deferringAST);
@@ -1974,7 +2052,8 @@ void Parser::AddToNodeList(ParseNode ** ppnodeList, ParseNode *** pppnodeLast,
 }
 
 // Check reference to "arguments" that indicates the object may escape.
-void Parser::CheckArguments(ParseNodePtr pnode)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::CheckArguments(ParseNodePtr pnode)
 {
     if (m_currentNodeFunc && this->NodeIsIdent(pnode, wellKnownPropertyPids.arguments))
     {
@@ -1983,7 +2062,8 @@ void Parser::CheckArguments(ParseNodePtr pnode)
 }
 
 // Check use of "arguments" that requires instantiation of the object.
-void Parser::CheckArgumentsUse(IdentPtr pid, ParseNodePtr pnodeFnc)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::CheckArgumentsUse(IdentPtr pid, ParseNodePtr pnodeFnc)
 {
     if (pid == wellKnownPropertyPids.arguments)
     {
@@ -1998,7 +2078,8 @@ void Parser::CheckArgumentsUse(IdentPtr pid, ParseNodePtr pnodeFnc)
     }
 }
 
-void Parser::CheckStrictModeEvalArgumentsUsage(IdentPtr pid, ParseNodePtr pnode)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::CheckStrictModeEvalArgumentsUsage(IdentPtr pid, ParseNodePtr pnode)
 {
     if (pid != nullptr)
     {
@@ -2015,7 +2096,8 @@ void Parser::CheckStrictModeEvalArgumentsUsage(IdentPtr pid, ParseNodePtr pnode)
     }
 }
 
-void Parser::ReduceDeferredScriptLength(size_t chars)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::ReduceDeferredScriptLength(size_t chars)
 {
     // If we're in deferred mode, subtract the given char count from the total length,
     // and see if this puts us under the deferral threshold.
@@ -2034,7 +2116,7 @@ void Parser::ReduceDeferredScriptLength(size_t chars)
         {
             m_length = 0;
         }
-        if (m_length < Parser::GetDeferralThreshold(this->m_sourceContextInfo->IsSourceProfileLoaded()))
+        if (m_length < Parser<TScriptContextImpl>::GetDeferralThreshold(this->m_sourceContextInfo->IsSourceProfileLoaded()))
         {
             // Stop deferring.
             m_grfscr &= ~fscrDeferFncParse;
@@ -2046,7 +2128,8 @@ void Parser::ReduceDeferredScriptLength(size_t chars)
 /***************************************************************************
 Look for an existing label with the given name.
 ***************************************************************************/
-BOOL Parser::PnodeLabelNoAST(IdentToken* pToken, LabelId* pLabelIdList)
+template <typename TScriptContextImpl>
+BOOL Parser<TScriptContextImpl>::PnodeLabelNoAST(IdentToken* pToken, LabelId* pLabelIdList)
 {
     StmtNest* pStmt;
     LabelId* pLabelId;
@@ -2071,7 +2154,8 @@ BOOL Parser::PnodeLabelNoAST(IdentToken* pToken, LabelId* pLabelIdList)
     return FALSE;
 }
 
-void Parser::EnsureStackAvailable()
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::EnsureStackAvailable()
 {
     if (!m_scriptContext->GetThreadContext()->IsStackAvailable(Js::Constants::MinStackCompile))
     {
@@ -2079,7 +2163,8 @@ void Parser::EnsureStackAvailable()
     }
 }
 
-void Parser::ThrowNewTargetSyntaxErrForGlobalScope()
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::ThrowNewTargetSyntaxErrForGlobalScope()
 {
     //TODO: (falotfi) we need reliably distinguish eval in global scope vs in a function
     // The rule for this syntax error is any time new.target is called at global scope
@@ -2090,8 +2175,9 @@ void Parser::ThrowNewTargetSyntaxErrForGlobalScope()
     }
 }
 
+template <typename TScriptContextImpl>
 template<bool buildAST>
-ParseNodePtr Parser::ParseMetaProperty(tokens metaParentKeyword, charcount_t ichMin, _Out_opt_ BOOL* pfCanAssign)
+ParseNodePtr Parser<TScriptContextImpl>::ParseMetaProperty(tokens metaParentKeyword, charcount_t ichMin, _Out_opt_ BOOL* pfCanAssign)
 {
     AssertMsg(metaParentKeyword == tkNEW, "Only supported for tkNEW parent keywords");
     AssertMsg(this->m_token.tk == tkDot, "We must be currently sitting on the dot after the parent keyword");
@@ -2118,8 +2204,9 @@ ParseNodePtr Parser::ParseMetaProperty(tokens metaParentKeyword, charcount_t ich
     return nullptr;
 }
 
+template <typename TScriptContextImpl>
 template<bool buildAST>
-void Parser::ParseNamedImportOrExportClause(ModuleImportEntryList* importEntryList, ModuleExportEntryList* exportEntryList, bool isExportClause)
+void Parser<TScriptContextImpl>::ParseNamedImportOrExportClause(ModuleImportEntryList* importEntryList, ModuleExportEntryList* exportEntryList, bool isExportClause)
 {
     Assert(m_token.tk == tkLCurly);
     Assert(importEntryList == nullptr || exportEntryList == nullptr);
@@ -2202,32 +2289,38 @@ void Parser::ParseNamedImportOrExportClause(ModuleImportEntryList* importEntryLi
     ChkCurTokNoScan(tkRCurly, ERRsyntax);
 }
 
-IdentPtrList* Parser::GetRequestedModulesList()
+template <typename TScriptContextImpl>
+IdentPtrList* Parser<TScriptContextImpl>::GetRequestedModulesList()
 {
     return m_currentNodeProg->sxModule.requestedModules;
 }
 
-ModuleImportEntryList* Parser::GetModuleImportEntryList()
+template <typename TScriptContextImpl>
+ModuleImportEntryList* Parser<TScriptContextImpl>::GetModuleImportEntryList()
 {
     return m_currentNodeProg->sxModule.importEntries;
 }
 
-ModuleExportEntryList* Parser::GetModuleLocalExportEntryList()
+template <typename TScriptContextImpl>
+ModuleExportEntryList* Parser<TScriptContextImpl>::GetModuleLocalExportEntryList()
 {
     return m_currentNodeProg->sxModule.localExportEntries;
 }
 
-ModuleExportEntryList* Parser::GetModuleIndirectExportEntryList()
+template <typename TScriptContextImpl>
+ModuleExportEntryList* Parser<TScriptContextImpl>::GetModuleIndirectExportEntryList()
 {
     return m_currentNodeProg->sxModule.indirectExportEntries;
 }
 
-ModuleExportEntryList* Parser::GetModuleStarExportEntryList()
+template <typename TScriptContextImpl>
+ModuleExportEntryList* Parser<TScriptContextImpl>::GetModuleStarExportEntryList()
 {
     return m_currentNodeProg->sxModule.starExportEntries;
 }
 
-IdentPtrList* Parser::EnsureRequestedModulesList()
+template <typename TScriptContextImpl>
+IdentPtrList* Parser<TScriptContextImpl>::EnsureRequestedModulesList()
 {
     if (m_currentNodeProg->sxModule.requestedModules == nullptr)
     {
@@ -2236,7 +2329,8 @@ IdentPtrList* Parser::EnsureRequestedModulesList()
     return m_currentNodeProg->sxModule.requestedModules;
 }
 
-ModuleImportEntryList* Parser::EnsureModuleImportEntryList()
+template <typename TScriptContextImpl>
+ModuleImportEntryList* Parser<TScriptContextImpl>::EnsureModuleImportEntryList()
 {
     if (m_currentNodeProg->sxModule.importEntries == nullptr)
     {
@@ -2245,7 +2339,8 @@ ModuleImportEntryList* Parser::EnsureModuleImportEntryList()
     return m_currentNodeProg->sxModule.importEntries;
 }
 
-ModuleExportEntryList* Parser::EnsureModuleLocalExportEntryList()
+template <typename TScriptContextImpl>
+ModuleExportEntryList* Parser<TScriptContextImpl>::EnsureModuleLocalExportEntryList()
 {
     if (m_currentNodeProg->sxModule.localExportEntries == nullptr)
     {
@@ -2254,7 +2349,8 @@ ModuleExportEntryList* Parser::EnsureModuleLocalExportEntryList()
     return m_currentNodeProg->sxModule.localExportEntries;
 }
 
-ModuleExportEntryList* Parser::EnsureModuleIndirectExportEntryList()
+template <typename TScriptContextImpl>
+ModuleExportEntryList* Parser<TScriptContextImpl>::EnsureModuleIndirectExportEntryList()
 {
     if (m_currentNodeProg->sxModule.indirectExportEntries == nullptr)
     {
@@ -2263,7 +2359,8 @@ ModuleExportEntryList* Parser::EnsureModuleIndirectExportEntryList()
     return m_currentNodeProg->sxModule.indirectExportEntries;
 }
 
-ModuleExportEntryList* Parser::EnsureModuleStarExportEntryList()
+template <typename TScriptContextImpl>
+ModuleExportEntryList* Parser<TScriptContextImpl>::EnsureModuleStarExportEntryList()
 {
     if (m_currentNodeProg->sxModule.starExportEntries == nullptr)
     {
@@ -2272,7 +2369,8 @@ ModuleExportEntryList* Parser::EnsureModuleStarExportEntryList()
     return m_currentNodeProg->sxModule.starExportEntries;
 }
 
-void Parser::AddModuleSpecifier(IdentPtr moduleRequest)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::AddModuleSpecifier(IdentPtr moduleRequest)
 {
     IdentPtrList* requestedModulesList = EnsureRequestedModulesList();
 
@@ -2282,7 +2380,8 @@ void Parser::AddModuleSpecifier(IdentPtr moduleRequest)
     }
 }
 
-void Parser::AddModuleImportEntry(ModuleImportEntryList* importEntryList, IdentPtr importName, IdentPtr localName, IdentPtr moduleRequest, ParseNodePtr declNode)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::AddModuleImportEntry(ModuleImportEntryList* importEntryList, IdentPtr importName, IdentPtr localName, IdentPtr moduleRequest, ParseNodePtr declNode)
 {
     ModuleImportEntry* importEntry = Anew(&m_nodeAllocator, ModuleImportEntry);
 
@@ -2294,7 +2393,8 @@ void Parser::AddModuleImportEntry(ModuleImportEntryList* importEntryList, IdentP
     importEntryList->Prepend(*importEntry);
 }
 
-void Parser::CheckForDuplicateExportEntry(ModuleExportEntryList* exportEntryList, IdentPtr exportName)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::CheckForDuplicateExportEntry(ModuleExportEntryList* exportEntryList, IdentPtr exportName)
 {
     ModuleExportEntry* findResult = exportEntryList->Find([&](ModuleExportEntry exportEntry)
     {
@@ -2311,7 +2411,8 @@ void Parser::CheckForDuplicateExportEntry(ModuleExportEntryList* exportEntryList
     }
 }
 
-void Parser::AddModuleExportEntry(ModuleExportEntryList* exportEntryList, IdentPtr importName, IdentPtr localName, IdentPtr exportName, IdentPtr moduleRequest)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::AddModuleExportEntry(ModuleExportEntryList* exportEntryList, IdentPtr importName, IdentPtr localName, IdentPtr exportName, IdentPtr moduleRequest)
 {
     ModuleExportEntry* exportEntry = Anew(&m_nodeAllocator, ModuleExportEntry);
 
@@ -2323,14 +2424,16 @@ void Parser::AddModuleExportEntry(ModuleExportEntryList* exportEntryList, IdentP
     return AddModuleExportEntry(exportEntryList, exportEntry);
 }
 
-void Parser::AddModuleExportEntry(ModuleExportEntryList* exportEntryList, ModuleExportEntry* exportEntry)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::AddModuleExportEntry(ModuleExportEntryList* exportEntryList, ModuleExportEntry* exportEntry)
 {
     CheckForDuplicateExportEntry(exportEntryList, exportEntry->exportName);
 
     exportEntryList->Prepend(*exportEntry);
 }
 
-void Parser::AddModuleLocalExportEntry(ParseNodePtr varDeclNode)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::AddModuleLocalExportEntry(ParseNodePtr varDeclNode)
 {
     Assert(varDeclNode->nop == knopVarDecl || varDeclNode->nop == knopLetDecl || varDeclNode->nop == knopConstDecl);
 
@@ -2340,8 +2443,9 @@ void Parser::AddModuleLocalExportEntry(ParseNodePtr varDeclNode)
     AddModuleExportEntry(EnsureModuleLocalExportEntryList(), nullptr, localName, localName, nullptr);
 }
 
+template <typename TScriptContextImpl>
 template<bool buildAST>
-void Parser::ParseImportClause(ModuleImportEntryList* importEntryList, bool parsingAfterComma)
+void Parser<TScriptContextImpl>::ParseImportClause(ModuleImportEntryList* importEntryList, bool parsingAfterComma)
 {
     bool parsedNamespaceOrNamedImport = false;
 
@@ -2422,7 +2526,8 @@ void Parser::ParseImportClause(ModuleImportEntryList* importEntryList, bool pars
     }
 }
 
-bool Parser::IsImportOrExportStatementValidHere()
+template <typename TScriptContextImpl>
+bool Parser<TScriptContextImpl>::IsImportOrExportStatementValidHere()
 {
     // Import must be located in the global scope of the module.
     return GetCurrentFunctionNode()->nop == knopProg
@@ -2431,8 +2536,9 @@ bool Parser::IsImportOrExportStatementValidHere()
         && this->m_currentBlockInfo->pBlockInfoOuter == nullptr;
 }
 
+template <typename TScriptContextImpl>
 template<bool buildAST>
-ParseNodePtr Parser::ParseImportDeclaration()
+ParseNodePtr Parser<TScriptContextImpl>::ParseImportDeclaration()
 {
     Assert(m_scriptContext->GetConfig()->IsES6ModuleEnabled());
     Assert(m_token.tk == tkIMPORT);
@@ -2486,8 +2592,9 @@ ParseNodePtr Parser::ParseImportDeclaration()
     return nullptr;
 }
 
+template <typename TScriptContextImpl>
 template<bool buildAST>
-IdentPtr Parser::ParseImportOrExportFromClause(bool throwIfNotFound)
+IdentPtr Parser<TScriptContextImpl>::ParseImportOrExportFromClause(bool throwIfNotFound)
 {
     IdentPtr moduleSpecifier = nullptr;
 
@@ -2513,8 +2620,9 @@ IdentPtr Parser::ParseImportOrExportFromClause(bool throwIfNotFound)
     return moduleSpecifier;
 }
 
+template <typename TScriptContextImpl>
 template<bool buildAST>
-ParseNodePtr Parser::ParseDefaultExportClause()
+ParseNodePtr Parser<TScriptContextImpl>::ParseDefaultExportClause()
 {
     Assert(m_token.tk == tkDEFAULT);
 
@@ -2653,8 +2761,9 @@ LDefault:
     return pnode;
 }
 
+template <typename TScriptContextImpl>
 template<bool buildAST>
-ParseNodePtr Parser::ParseExportDeclaration()
+ParseNodePtr Parser<TScriptContextImpl>::ParseExportDeclaration()
 {
     Assert(m_scriptContext->GetConfig()->IsES6ModuleEnabled());
     Assert(m_token.tk == tkEXPORT);
@@ -2831,8 +2940,9 @@ ErrorToken:
 /***************************************************************************
 Parse an expression term.
 ***************************************************************************/
+template <typename TScriptContextImpl>
 template<bool buildAST>
-ParseNodePtr Parser::ParseTerm(BOOL fAllowCall,
+ParseNodePtr Parser<TScriptContextImpl>::ParseTerm(BOOL fAllowCall,
     LPCOLESTR pNameHint,
     ulong *pHintLength,
     ulong *pShortNameOffset,
@@ -3231,8 +3341,9 @@ LFunction :
     return pnode;
 }
 
+template <typename TScriptContextImpl>
 template <bool buildAST>
-ParseNodePtr Parser::ParseRegExp()
+ParseNodePtr Parser<TScriptContextImpl>::ParseRegExp()
 {
     ParseNodePtr pnode = nullptr;
 
@@ -3273,20 +3384,23 @@ ParseNodePtr Parser::ParseRegExp()
     return pnode;
 }
 
-BOOL Parser::NodeIsEvalName(ParseNodePtr pnode)
+template <typename TScriptContextImpl>
+BOOL Parser<TScriptContextImpl>::NodeIsEvalName(ParseNodePtr pnode)
 {
     //WOOB 1107758 Special case of indirect eval binds to local scope in standards mode
     return pnode->nop == knopName && (pnode->sxPid.pid == wellKnownPropertyPids.eval);
 }
 
-BOOL Parser::NodeEqualsName(ParseNodePtr pnode, LPCOLESTR sz, ulong cch)
+template <typename TScriptContextImpl>
+BOOL Parser<TScriptContextImpl>::NodeEqualsName(ParseNodePtr pnode, LPCOLESTR sz, ulong cch)
 {
     return pnode->nop == knopName &&
         pnode->sxPid.pid->Cch() == cch &&
         !wmemcmp(pnode->sxPid.pid->Psz(), sz, cch);
 }
 
-BOOL Parser::NodeIsIdent(ParseNodePtr pnode, IdentPtr pid)
+template <typename TScriptContextImpl>
+BOOL Parser<TScriptContextImpl>::NodeIsIdent(ParseNodePtr pnode, IdentPtr pid)
 {
     for (;;)
     {
@@ -3305,8 +3419,9 @@ BOOL Parser::NodeIsIdent(ParseNodePtr pnode, IdentPtr pid)
     }
 }
 
+template <typename TScriptContextImpl>
 template<bool buildAST>
-ParseNodePtr Parser::ParsePostfixOperators(
+ParseNodePtr Parser<TScriptContextImpl>::ParsePostfixOperators(
     ParseNodePtr pnode,
     BOOL fAllowCall,
     BOOL fInNew,
@@ -3449,7 +3564,7 @@ ParseNodePtr Parser::ParsePostfixOperators(
                     else
                     {
                         bool doConvertToProperty = false;    // Convert a["x"] -> a.x.
-                        if (!Parser::IsNaNOrInfinityLiteral<true>(str))
+                        if (!Parser<TScriptContextImpl>::IsNaNOrInfinityLiteral<true>(str))
                         {
                             const OLECHAR* terminalChar;
                             double dbl = Js::NumberUtilities::StrToDbl(str, &terminalChar, m_scriptContext);
@@ -3486,7 +3601,7 @@ ParseNodePtr Parser::ParsePostfixOperators(
             // Convert a.Nan, a.Infinity into a["NaN"], a["Infinity"].
             // We don't care about -Infinity case here because x.-Infinity is invalid in JavaScript.
             // Both NaN and Infinity are identifiers.
-            else if (buildAST && Parser::IsNaNOrInfinityLiteral<false>(m_token.GetIdentifier(m_phtbl)->Psz()))
+            else if (buildAST && Parser<TScriptContextImpl>::IsNaNOrInfinityLiteral<false>(m_token.GetIdentifier(m_phtbl)->Psz()))
             {
                 opCode = knopIndex;
             }
@@ -3544,7 +3659,8 @@ ParseNodePtr Parser::ParsePostfixOperators(
 /***************************************************************************
 Look for an existing label with the given name.
 ***************************************************************************/
-ParseNodePtr Parser::PnodeLabel(IdentPtr pid, ParseNodePtr pnodeLabels)
+template <typename TScriptContextImpl>
+ParseNodePtr Parser<TScriptContextImpl>::PnodeLabel(IdentPtr pid, ParseNodePtr pnodeLabels)
 {
     AssertMem(pid);
     AssertNodeMemN(pnodeLabels);
@@ -3581,7 +3697,8 @@ ParseNodePtr Parser::PnodeLabel(IdentPtr pid, ParseNodePtr pnodeLabels)
 
 // Currently only ints and floats are treated as constants in function call
 // TODO: Check if we need for other constants as well
-BOOL Parser::IsConstantInFunctionCall(ParseNodePtr pnode)
+template <typename TScriptContextImpl>
+BOOL Parser<TScriptContextImpl>::IsConstantInFunctionCall(ParseNodePtr pnode)
 {
     if (pnode->nop == knopInt && !Js::TaggedInt::IsOverflow(pnode->sxInt.lw))
     {
@@ -3599,8 +3716,9 @@ BOOL Parser::IsConstantInFunctionCall(ParseNodePtr pnode)
 /***************************************************************************
 Parse a list of arguments.
 ***************************************************************************/
+template <typename TScriptContextImpl>
 template<bool buildAST>
-ParseNodePtr Parser::ParseArgList( bool *pCallOfConstants, uint16 *pSpreadArgCount, uint16 * pCount)
+ParseNodePtr Parser<TScriptContextImpl>::ParseArgList( bool *pCallOfConstants, uint16 *pSpreadArgCount, uint16 * pCount)
 {
     ParseNodePtr pnodeArg;
     ParseNodePtr pnodeList = nullptr;
@@ -3671,7 +3789,8 @@ ParseNodePtr Parser::ParseArgList( bool *pCallOfConstants, uint16 *pSpreadArgCou
 }
 
 // Currently only ints are treated as constants in ArrayLiterals
-BOOL Parser::IsConstantInArrayLiteral(ParseNodePtr pnode)
+template <typename TScriptContextImpl>
+BOOL Parser<TScriptContextImpl>::IsConstantInArrayLiteral(ParseNodePtr pnode)
 {
     if (pnode->nop == knopInt && !Js::TaggedInt::IsOverflow(pnode->sxInt.lw))
     {
@@ -3680,8 +3799,9 @@ BOOL Parser::IsConstantInArrayLiteral(ParseNodePtr pnode)
     return FALSE;
 }
 
+template <typename TScriptContextImpl>
 template<bool buildAST>
-ParseNodePtr Parser::ParseArrayLiteral()
+ParseNodePtr Parser<TScriptContextImpl>::ParseArrayLiteral()
 {
     ParseNodePtr pnode = nullptr;
     bool arrayOfTaggedInts = false;
@@ -3717,8 +3837,9 @@ ParseNodePtr Parser::ParseArrayLiteral()
 Create an ArrayLiteral node
 Parse a list of array elements. [ a, b, , c, ]
 ***************************************************************************/
+template <typename TScriptContextImpl>
 template<bool buildAST>
-ParseNodePtr Parser::ParseArrayList(bool *pArrayOfTaggedInts, bool *pArrayOfInts, bool *pArrayOfNumbers, bool *pHasMissingValues, uint *count, uint *spreadCount)
+ParseNodePtr Parser<TScriptContextImpl>::ParseArrayList(bool *pArrayOfTaggedInts, bool *pArrayOfInts, bool *pArrayOfNumbers, bool *pHasMissingValues, uint *count, uint *spreadCount)
 {
     ParseNodePtr pnodeArg = nullptr;
     ParseNodePtr pnodeList = nullptr;
@@ -3851,13 +3972,15 @@ ParseNodePtr Parser::ParseArrayList(bool *pArrayOfTaggedInts, bool *pArrayOfInts
     return pnodeList;
 }
 
-Parser::MemberNameToTypeMap* Parser::CreateMemberNameMap(ArenaAllocator* pAllocator)
+template <typename TScriptContextImpl>
+typename Parser<TScriptContextImpl>::MemberNameToTypeMap* Parser<TScriptContextImpl>::CreateMemberNameMap(ArenaAllocator* pAllocator)
 {
     Assert(pAllocator);
     return Anew(pAllocator, MemberNameToTypeMap, pAllocator, 5);
 }
 
-template<bool buildAST> void Parser::ParseComputedName(ParseNodePtr* ppnodeName, LPCOLESTR* ppNameHint, LPCOLESTR* ppFullNameHint, ulong *pNameLength, ulong *pShortNameOffset)
+template <typename TScriptContextImpl>
+template<bool buildAST> void Parser<TScriptContextImpl>::ParseComputedName(ParseNodePtr* ppnodeName, LPCOLESTR* ppNameHint, LPCOLESTR* ppFullNameHint, ulong *pNameLength, ulong *pShortNameOffset)
 {
     m_pscan->Scan();
     ParseNodePtr pnodeNameExpr = ParseExpr<buildAST>(koplCma, nullptr, TRUE, FALSE, *ppNameHint, pNameLength, pShortNameOffset);
@@ -3879,8 +4002,9 @@ template<bool buildAST> void Parser::ParseComputedName(ParseNodePtr* ppnodeName,
     Parse a list of object set/get members, e.g.:
     { get foo(){ ... }, set bar(arg) { ... } }
 ***************************************************************************/
+template <typename TScriptContextImpl>
 template<bool buildAST>
-ParseNodePtr Parser::ParseMemberGetSet(OpCode nop, LPCOLESTR* ppNameHint)
+ParseNodePtr Parser<TScriptContextImpl>::ParseMemberGetSet(OpCode nop, LPCOLESTR* ppNameHint)
 {
     ParseNodePtr pnodeName = nullptr;
     Assert(nop == knopGetMember || nop == knopSetMember);
@@ -3991,8 +4115,9 @@ ParseNodePtr Parser::ParseMemberGetSet(OpCode nop, LPCOLESTR* ppNameHint)
 /***************************************************************************
 Parse a list of object members. e.g. { x:foo, 'y me':bar }
 ***************************************************************************/
+template <typename TScriptContextImpl>
 template<bool buildAST>
-ParseNodePtr Parser::ParseMemberList(LPCOLESTR pNameHint, ulong* pNameHintLength, tokens declarationType)
+ParseNodePtr Parser<TScriptContextImpl>::ParseMemberList(LPCOLESTR pNameHint, ulong* pNameHintLength, tokens declarationType)
 {
     ParseNodePtr pnodeArg = nullptr;
     ParseNodePtr pnodeName = nullptr;
@@ -4012,7 +4137,7 @@ ParseNodePtr Parser::ParseMemberList(LPCOLESTR pNameHint, ulong* pNameHintLength
         return nullptr;
     }
 
-    ArenaAllocator tempAllocator(_u("MemberNames"), m_nodeAllocator.GetPageAllocator(), Parser::OutOfMemory);
+    ArenaAllocator tempAllocator(_u("MemberNames"), m_nodeAllocator.GetPageAllocator(), Parser<TScriptContextImpl>::OutOfMemory);
 
     bool hasDeferredInitError = false;
 
@@ -4381,7 +4506,8 @@ ParseNodePtr Parser::ParseMemberList(LPCOLESTR pNameHint, ulong* pNameHintLength
     return pnodeList;
 }
 
-BOOL Parser::DeferredParse(Js::LocalFunctionId functionId)
+template <typename TScriptContextImpl>
+BOOL Parser<TScriptContextImpl>::DeferredParse(Js::LocalFunctionId functionId)
 {
     if ((m_grfscr & fscrDeferFncParse) != 0)
     {
@@ -4416,7 +4542,8 @@ BOOL Parser::DeferredParse(Js::LocalFunctionId functionId)
 // Call this in ParseFncDecl only to check (and reset) if ParseFncDecl is re-parsing a deferred
 // function body. If a deferred function is called and being re-parsed, it shouldn't be deferred again.
 //
-BOOL Parser::IsDeferredFnc()
+template <typename TScriptContextImpl>
+BOOL Parser<TScriptContextImpl>::IsDeferredFnc()
 {
     if (m_grfscr & fscrDeferredFnc)
     {
@@ -4427,8 +4554,9 @@ BOOL Parser::IsDeferredFnc()
     return false;
 }
 
+template <typename TScriptContextImpl>
 template<bool buildAST>
-ParseNodePtr Parser::ParseFncDecl(ushort flags, LPCOLESTR pNameHint, const bool needsPIDOnRCurlyScan, bool resetParsingSuperRestrictionState, bool fUnaryOrParen)
+ParseNodePtr Parser<TScriptContextImpl>::ParseFncDecl(ushort flags, LPCOLESTR pNameHint, const bool needsPIDOnRCurlyScan, bool resetParsingSuperRestrictionState, bool fUnaryOrParen)
 {
     AutoParsingSuperRestrictionStateRestorer restorer(this);
     if (resetParsingSuperRestrictionState)
@@ -4714,14 +4842,16 @@ ParseNodePtr Parser::ParseFncDecl(ushort flags, LPCOLESTR pNameHint, const bool 
     return pnodeFnc;
 }
 
-bool Parser::FncDeclAllowedWithoutContext(ushort flags)
+template <typename TScriptContextImpl>
+bool Parser<TScriptContextImpl>::FncDeclAllowedWithoutContext(ushort flags)
 {
     // Statement context required for strict mode, async functions, and generators.
     // Note that generators aren't detected yet when this method is called; they're checked elsewhere.
     return !IsStrictMode() && !(flags & fFncAsync);
 }
 
-uint Parser::CalculateFunctionColumnNumber()
+template <typename TScriptContextImpl>
+uint Parser<TScriptContextImpl>::CalculateFunctionColumnNumber()
 {
     uint columnNumber;
 
@@ -4751,7 +4881,8 @@ uint Parser::CalculateFunctionColumnNumber()
     return columnNumber;
 }
 
-void Parser::AppendFunctionToScopeList(bool fDeclaration, ParseNodePtr pnodeFnc)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::AppendFunctionToScopeList(bool fDeclaration, ParseNodePtr pnodeFnc)
 {
     if (!fDeclaration && m_ppnodeExprScope)
     {
@@ -4772,8 +4903,9 @@ void Parser::AppendFunctionToScopeList(bool fDeclaration, ParseNodePtr pnodeFnc)
 /***************************************************************************
 Parse a function definition.
 ***************************************************************************/
+template <typename TScriptContextImpl>
 template<bool buildAST>
-bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncParent, LPCOLESTR pNameHint, ushort flags, bool *pHasName, bool fUnaryOrParen, bool noStmtContext, bool *pNeedScanRCurly)
+bool Parser<TScriptContextImpl>::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncParent, LPCOLESTR pNameHint, ushort flags, bool *pHasName, bool fUnaryOrParen, bool noStmtContext, bool *pNeedScanRCurly)
 {
     bool fDeclaration = (flags & fFncDeclaration) != 0;
     bool fLambda = (flags & fFncLambda) != 0;
@@ -5299,7 +5431,8 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
     return true;
 }
 
-void Parser::ParseTopLevelDeferredFunc(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncParent, LPCOLESTR pNameHint)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::ParseTopLevelDeferredFunc(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncParent, LPCOLESTR pNameHint)
 {
     // Parse a function body that is a transition point from building AST to doing fast syntax check.
 
@@ -5377,7 +5510,8 @@ void Parser::ParseTopLevelDeferredFunc(ParseNodePtr pnodeFnc, ParseNodePtr pnode
     this->m_deferringAST = FALSE;
 }
 
-bool Parser::DoParallelParse(ParseNodePtr pnodeFnc) const
+template <typename TScriptContextImpl>
+bool Parser<TScriptContextImpl>::DoParallelParse(ParseNodePtr pnodeFnc) const
 {
 #if ENABLE_BACKGROUND_PARSING
     if (!PHASE_ON_RAW(Js::ParallelParsePhase, m_sourceContextInfo->sourceContextId, pnodeFnc->sxFnc.functionId))
@@ -5392,7 +5526,8 @@ bool Parser::DoParallelParse(ParseNodePtr pnodeFnc) const
 #endif
 }
 
-bool Parser::ScanAheadToFunctionEnd(uint count)
+template <typename TScriptContextImpl>
+bool Parser<TScriptContextImpl>::ScanAheadToFunctionEnd(uint count)
 {
     bool found = false;
     uint curlyDepth = 0;
@@ -5414,7 +5549,7 @@ bool Parser::ScanAheadToFunctionEnd(uint count)
                 goto LEnd;
 
             case tkLCurly:
-                UInt32Math::Inc(curlyDepth, Parser::OutOfMemory);
+                UInt32Math::Inc(curlyDepth, Parser<TScriptContextImpl>::OutOfMemory);
                 break;
 
             case tkRCurly:
@@ -5439,7 +5574,8 @@ bool Parser::ScanAheadToFunctionEnd(uint count)
     return found;
 }
 
-bool Parser::FastScanFormalsAndBody()
+template <typename TScriptContextImpl>
+bool Parser<TScriptContextImpl>::FastScanFormalsAndBody()
 {
     // The scanner is currently pointing just past the name of a function.
     // The idea here is to find the end of the function body as quickly as possible,
@@ -5477,12 +5613,12 @@ bool Parser::FastScanFormalsAndBody()
         switch (m_token.tk)
         {
             case tkStrTmplBegin:
-                UInt32Math::Inc(strTmplDepth, Parser::OutOfMemory);
+                UInt32Math::Inc(strTmplDepth, Parser<TScriptContextImpl>::OutOfMemory);
                 // Fall through
 
             case tkStrTmplMid:
             case tkLCurly:
-                UInt32Math::Inc(curlyDepth, Parser::OutOfMemory);
+                UInt32Math::Inc(curlyDepth, Parser<TScriptContextImpl>::OutOfMemory);
                 Int32Math::Inc(m_nextBlockId, &m_nextBlockId);
                 break;
 
@@ -5681,7 +5817,8 @@ bool Parser::FastScanFormalsAndBody()
     }
 }
 
-ParseNodePtr Parser::CreateDummyFuncNode(bool fDeclaration)
+template <typename TScriptContextImpl>
+ParseNodePtr Parser<TScriptContextImpl>::CreateDummyFuncNode(bool fDeclaration)
 {
     // Create a dummy node and make it look like the current function declaration.
     // Do this in situations where we want to parse statements without impacting
@@ -5716,7 +5853,8 @@ ParseNodePtr Parser::CreateDummyFuncNode(bool fDeclaration)
     return pnodeFnc;
 }
 
-void Parser::ParseNestedDeferredFunc(ParseNodePtr pnodeFnc, bool fLambda, bool *pNeedScanRCurly, bool *pStrictModeTurnedOn)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::ParseNestedDeferredFunc(ParseNodePtr pnodeFnc, bool fLambda, bool *pNeedScanRCurly, bool *pStrictModeTurnedOn)
 {
     // Parse a function nested inside another deferred function.
 
@@ -5759,8 +5897,9 @@ void Parser::ParseNestedDeferredFunc(ParseNodePtr pnodeFnc, bool fLambda, bool *
     }
 }
 
+template <typename TScriptContextImpl>
 template<bool buildAST>
-bool Parser::ParseFncNames(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncParent, ushort flags, ParseNodePtr **pLastNodeRef)
+bool Parser<TScriptContextImpl>::ParseFncNames(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncParent, ushort flags, ParseNodePtr **pLastNodeRef)
 {
     BOOL fDeclaration = flags & fFncDeclaration;
     BOOL fIsAsync = flags & fFncAsync;
@@ -5908,19 +6047,22 @@ bool Parser::ParseFncNames(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncParent, u
     return true;
 }
 
-void Parser::ValidateFormals()
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::ValidateFormals()
 {
     ParseFncFormals<false>(NULL, fFncNoFlgs);
     // Eat the tkRParen. The ParseFncDeclHelper caller expects to see it.
     m_pscan->Scan();
 }
 
-void Parser::ValidateSourceElementList()
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::ValidateSourceElementList()
 {
     ParseStmtList<false>(NULL, NULL, SM_NotUsed, true);
 }
 
-void Parser::UpdateOrCheckForDuplicateInFormals(IdentPtr pid, SList<IdentPtr> *formals)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::UpdateOrCheckForDuplicateInFormals(IdentPtr pid, SList<IdentPtr> *formals)
 {
     bool isStrictMode = IsStrictMode();
     if (isStrictMode)
@@ -5945,8 +6087,9 @@ void Parser::UpdateOrCheckForDuplicateInFormals(IdentPtr pid, SList<IdentPtr> *f
     }
 }
 
+template <typename TScriptContextImpl>
 template<bool buildAST>
-void Parser::ParseFncFormals(ParseNodePtr pnodeFnc, ushort flags)
+void Parser<TScriptContextImpl>::ParseFncFormals(ParseNodePtr pnodeFnc, ushort flags)
 {
     bool fLambda = (flags & fFncLambda) != 0;
     bool fMethod = (flags & fFncMethod) != 0;
@@ -6208,8 +6351,9 @@ void Parser::ParseFncFormals(ParseNodePtr pnodeFnc, ushort flags)
     Assert(m_token.tk == tkRParen);
 }
 
+template <typename TScriptContextImpl>
 template<bool buildAST>
-ParseNodePtr Parser::GenerateEmptyConstructor(bool extends)
+ParseNodePtr Parser<TScriptContextImpl>::GenerateEmptyConstructor(bool extends)
 {
     ParseNodePtr pnodeFnc;
 
@@ -6339,8 +6483,9 @@ ParseNodePtr Parser::GenerateEmptyConstructor(bool extends)
     return pnodeFnc;
 }
 
+template <typename TScriptContextImpl>
 template<bool buildAST>
-void Parser::ParseExpressionLambdaBody(ParseNodePtr pnodeLambda)
+void Parser<TScriptContextImpl>::ParseExpressionLambdaBody(ParseNodePtr pnodeLambda)
 {
     ParseNodePtr *lastNodeRef = nullptr;
 
@@ -6385,7 +6530,8 @@ void Parser::ParseExpressionLambdaBody(ParseNodePtr pnodeLambda)
     }
 }
 
-void Parser::CheckStrictFormalParameters()
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::CheckStrictFormalParameters()
 {
     if (m_token.tk == tkID)
     {
@@ -6444,7 +6590,8 @@ void Parser::CheckStrictFormalParameters()
     Assert(m_token.tk == tkRParen);
 }
 
-void Parser::FinishFncNode(ParseNodePtr pnodeFnc)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::FinishFncNode(ParseNodePtr pnodeFnc)
 {
     AnalysisAssert(pnodeFnc);
 
@@ -6600,7 +6747,8 @@ void Parser::FinishFncNode(ParseNodePtr pnodeFnc)
     m_pscan->SetAwaitIsKeyword(fPreviousAwaitIsKeyword);
 }
 
-void Parser::FinishFncDecl(ParseNodePtr pnodeFnc, LPCOLESTR pNameHint, ParseNodePtr *lastNodeRef)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::FinishFncDecl(ParseNodePtr pnodeFnc, LPCOLESTR pNameHint, ParseNodePtr *lastNodeRef)
 {
     LPCOLESTR name = NULL;
     JS_ETW(long startAstSize = *m_pCurrentAstSize);
@@ -6647,7 +6795,8 @@ void Parser::FinishFncDecl(ParseNodePtr pnodeFnc, LPCOLESTR pNameHint, ParseNode
 #endif
 }
 
-void Parser::AddArgumentsNodeToVars(ParseNodePtr pnodeFnc)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::AddArgumentsNodeToVars(ParseNodePtr pnodeFnc)
 {
     if((pnodeFnc->grfpn & PNodeFlags::fpnArguments_overriddenByDecl) || pnodeFnc->sxFnc.IsLambda())
     {
@@ -6683,7 +6832,8 @@ void Parser::AddArgumentsNodeToVars(ParseNodePtr pnodeFnc)
     }
 }
 
-LPCOLESTR Parser::GetFunctionName(ParseNodePtr pnodeFnc, LPCOLESTR pNameHint)
+template <typename TScriptContextImpl>
+LPCOLESTR Parser<TScriptContextImpl>::GetFunctionName(ParseNodePtr pnodeFnc, LPCOLESTR pNameHint)
 {
     LPCOLESTR name = nullptr;
     if(pnodeFnc->sxFnc.pnodeName != nullptr && knopVarDecl == pnodeFnc->sxFnc.pnodeName->nop)
@@ -6705,7 +6855,8 @@ LPCOLESTR Parser::GetFunctionName(ParseNodePtr pnodeFnc, LPCOLESTR pNameHint)
     return name;
 }
 
-IdentPtr Parser::ParseClassPropertyName(IdentPtr * pidHint)
+template <typename TScriptContextImpl>
+IdentPtr Parser<TScriptContextImpl>::ParseClassPropertyName(IdentPtr * pidHint)
 {
     if (m_token.tk == tkID || m_token.tk == tkStrCon || m_token.IsReservedWord())
     {
@@ -6748,7 +6899,8 @@ IdentPtr Parser::ParseClassPropertyName(IdentPtr * pidHint)
     Error(ERRnoMemberIdent);
 }
 
-LPCOLESTR Parser::ConstructFinalHintNode(IdentPtr pClassName, IdentPtr pMemberName, IdentPtr pGetSet, bool isStatic, ulong* nameLength, ulong* pShortNameOffset, bool isComputedName, LPCOLESTR pMemberNameHint)
+template <typename TScriptContextImpl>
+LPCOLESTR Parser<TScriptContextImpl>::ConstructFinalHintNode(IdentPtr pClassName, IdentPtr pMemberName, IdentPtr pGetSet, bool isStatic, ulong* nameLength, ulong* pShortNameOffset, bool isComputedName, LPCOLESTR pMemberNameHint)
 {
     if ((pMemberName == nullptr && !isComputedName) ||
         (pMemberNameHint == nullptr && isComputedName) ||
@@ -6799,10 +6951,11 @@ LPCOLESTR Parser::ConstructFinalHintNode(IdentPtr pClassName, IdentPtr pMemberNa
     return pFinalName;
 }
 
+template <typename TScriptContextImpl>
 class AutoParsingSuperRestrictionStateRestorer
 {
-public:
-    AutoParsingSuperRestrictionStateRestorer(Parser* parser) : m_parser(parser)
+public:    
+    AutoParsingSuperRestrictionStateRestorer(Parser<TScriptContextImpl>* parser) : m_parser(parser)
     {
         AssertMsg(this->m_parser != nullptr, "This just should not happen");
         this->m_originalParsingSuperRestrictionState = this->m_parser->m_parsingSuperRestrictionState;
@@ -6813,12 +6966,13 @@ public:
         this->m_parser->m_parsingSuperRestrictionState = m_originalParsingSuperRestrictionState;
     }
 private:
-    Parser* m_parser;
+    Parser<TScriptContextImpl>* m_parser;
     int m_originalParsingSuperRestrictionState;
 };
 
+template <typename TScriptContextImpl>
 template<bool buildAST>
-ParseNodePtr Parser::ParseClassDecl(BOOL isDeclaration, LPCOLESTR pNameHint, ulong *pHintLength, ulong *pShortNameOffset)
+ParseNodePtr Parser<TScriptContextImpl>::ParseClassDecl(BOOL isDeclaration, LPCOLESTR pNameHint, ulong *pHintLength, ulong *pShortNameOffset)
 {
     bool hasConstructor = false;
     bool hasExtends = false;
@@ -6833,7 +6987,7 @@ ParseNodePtr Parser::ParseClassDecl(BOOL isDeclaration, LPCOLESTR pNameHint, ulo
     ulong nameHintLength = pHintLength ? *pHintLength : 0;
     ulong nameHintOffset = pShortNameOffset ? *pShortNameOffset : 0;
 
-    ArenaAllocator tempAllocator(_u("ClassMemberNames"), m_nodeAllocator.GetPageAllocator(), Parser::OutOfMemory);
+    ArenaAllocator tempAllocator(_u("ClassMemberNames"), m_nodeAllocator.GetPageAllocator(), Parser<TScriptContextImpl>::OutOfMemory);
 
     ParseNodePtr pnodeClass = nullptr;
     if (buildAST)
@@ -7193,8 +7347,9 @@ ParseNodePtr Parser::ParseClassDecl(BOOL isDeclaration, LPCOLESTR pNameHint, ulo
     return pnodeClass;
 }
 
+template <typename TScriptContextImpl>
 template<bool buildAST>
-ParseNodePtr Parser::ParseStringTemplateDecl(ParseNodePtr pnodeTagFnc)
+ParseNodePtr Parser<TScriptContextImpl>::ParseStringTemplateDecl(ParseNodePtr pnodeTagFnc)
 {
     ParseNodePtr pnodeStringLiterals = nullptr;
     ParseNodePtr* lastStringLiteralNodeRef = nullptr;
@@ -7379,7 +7534,8 @@ ParseNodePtr Parser::ParseStringTemplateDecl(ParseNodePtr pnodeTagFnc)
     return pnodeStringTemplate;
 }
 
-void Parser::TransformAsyncFncDeclAST(ParseNodePtr *pnodeBody, bool fLambda)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::TransformAsyncFncDeclAST(ParseNodePtr *pnodeBody, bool fLambda)
 {
     StmtNest *pstmtSave;
 
@@ -7556,7 +7712,8 @@ void Parser::TransformAsyncFncDeclAST(ParseNodePtr *pnodeBody, bool fLambda)
     lastNodeRef = NULL;
 }
 
-ParseNodePtr Parser::CreateAsyncSpawnGenerator()
+template <typename TScriptContextImpl>
+ParseNodePtr Parser<TScriptContextImpl>::CreateAsyncSpawnGenerator()
 {
     ParseNodePtr pnodeFncGenerator = nullptr;
 
@@ -7579,7 +7736,8 @@ ParseNodePtr Parser::CreateAsyncSpawnGenerator()
     return pnodeFncGenerator;
 }
 
-LPCOLESTR Parser::FormatPropertyString(LPCOLESTR propertyString, ParseNodePtr pNode, ulong *fullNameHintLength, ulong *pShortNameOffset)
+template <typename TScriptContextImpl>
+LPCOLESTR Parser<TScriptContextImpl>::FormatPropertyString(LPCOLESTR propertyString, ParseNodePtr pNode, ulong *fullNameHintLength, ulong *pShortNameOffset)
 {
     // propertyString could be null, such as 'this.foo' =
     // propertyString could be empty, found in pattern as in (-1)[""][(x = z)]
@@ -7612,7 +7770,8 @@ LPCOLESTR Parser::FormatPropertyString(LPCOLESTR propertyString, ParseNodePtr pN
     return AppendNameHints(propertyString, rightNode, fullNameHintLength, pShortNameOffset, false, true/*add brackets*/);
 }
 
-LPCOLESTR Parser::ConstructNameHint(ParseNodePtr pNode, ulong* fullNameHintLength, ulong *pShortNameOffset)
+template <typename TScriptContextImpl>
+LPCOLESTR Parser<TScriptContextImpl>::ConstructNameHint(ParseNodePtr pNode, ulong* fullNameHintLength, ulong *pShortNameOffset)
 {
     Assert(pNode != nullptr);
     Assert(pNode->nop == knopDot || pNode->nop == knopIndex);
@@ -7652,7 +7811,8 @@ LPCOLESTR Parser::ConstructNameHint(ParseNodePtr pNode, ulong* fullNameHintLengt
     return AppendNameHints(leftNode, rightNode, fullNameHintLength, pShortNameOffset, false, wrapWithBrackets);
 }
 
-LPCOLESTR Parser::AppendNameHints(LPCOLESTR leftStr, ulong leftLen, LPCOLESTR rightStr, ulong rightLen, ulong *pNameLength, ulong *pShortNameOffset, bool ignoreAddDotWithSpace, bool wrapInBrackets)
+template <typename TScriptContextImpl>
+LPCOLESTR Parser<TScriptContextImpl>::AppendNameHints(LPCOLESTR leftStr, ulong leftLen, LPCOLESTR rightStr, ulong rightLen, ulong *pNameLength, ulong *pShortNameOffset, bool ignoreAddDotWithSpace, bool wrapInBrackets)
 {
     Assert(rightStr != nullptr);
     Assert(leftLen  != 0 || wrapInBrackets);
@@ -7703,7 +7863,8 @@ LPCOLESTR Parser::AppendNameHints(LPCOLESTR leftStr, ulong leftLen, LPCOLESTR ri
     return finalName;
 }
 
-WCHAR * Parser::AllocateStringOfLength(ulong length)
+template <typename TScriptContextImpl>
+WCHAR * Parser<TScriptContextImpl>::AllocateStringOfLength(ulong length)
 {
     Assert(length > 0);
     ULONG totalBytes;
@@ -7719,7 +7880,8 @@ WCHAR * Parser::AllocateStringOfLength(ulong length)
     return finalName;
 }
 
-LPCOLESTR Parser::AppendNameHints(IdentPtr left, IdentPtr right, ulong *pNameLength, ulong *pShortNameOffset, bool ignoreAddDotWithSpace, bool wrapInBrackets)
+template <typename TScriptContextImpl>
+LPCOLESTR Parser<TScriptContextImpl>::AppendNameHints(IdentPtr left, IdentPtr right, ulong *pNameLength, ulong *pShortNameOffset, bool ignoreAddDotWithSpace, bool wrapInBrackets)
 {
     if (pShortNameOffset != nullptr)
     {
@@ -7755,7 +7917,8 @@ LPCOLESTR Parser::AppendNameHints(IdentPtr left, IdentPtr right, ulong *pNameLen
     return AppendNameHints(leftStr, leftLen, right->Psz(), rightLen, pNameLength, pShortNameOffset, ignoreAddDotWithSpace, wrapInBrackets);
 }
 
-LPCOLESTR Parser::AppendNameHints(IdentPtr left, LPCOLESTR right, ulong *pNameLength, ulong *pShortNameOffset, bool ignoreAddDotWithSpace, bool wrapInBrackets)
+template <typename TScriptContextImpl>
+LPCOLESTR Parser<TScriptContextImpl>::AppendNameHints(IdentPtr left, LPCOLESTR right, ulong *pNameLength, ulong *pShortNameOffset, bool ignoreAddDotWithSpace, bool wrapInBrackets)
 {
     ulong rightLen = (right == nullptr) ? 0 : (ulong) wcslen(right);
 
@@ -7790,7 +7953,8 @@ LPCOLESTR Parser::AppendNameHints(IdentPtr left, LPCOLESTR right, ulong *pNameLe
     return AppendNameHints(leftStr, leftLen, right, rightLen, pNameLength, pShortNameOffset, ignoreAddDotWithSpace, wrapInBrackets);
 }
 
-LPCOLESTR Parser::AppendNameHints(LPCOLESTR left, IdentPtr right, ulong *pNameLength, ulong *pShortNameOffset, bool ignoreAddDotWithSpace, bool wrapInBrackets)
+template <typename TScriptContextImpl>
+LPCOLESTR Parser<TScriptContextImpl>::AppendNameHints(LPCOLESTR left, IdentPtr right, ulong *pNameLength, ulong *pShortNameOffset, bool ignoreAddDotWithSpace, bool wrapInBrackets)
 {
     ulong leftLen = (left == nullptr) ? 0 : (ulong) wcslen(left);
 
@@ -7822,7 +7986,8 @@ LPCOLESTR Parser::AppendNameHints(LPCOLESTR left, IdentPtr right, ulong *pNameLe
 }
 
 
-LPCOLESTR Parser::AppendNameHints(LPCOLESTR left, LPCOLESTR right, ulong *pNameLength, ulong *pShortNameOffset, bool ignoreAddDotWithSpace, bool wrapInBrackets)
+template <typename TScriptContextImpl>
+LPCOLESTR Parser<TScriptContextImpl>::AppendNameHints(LPCOLESTR left, LPCOLESTR right, ulong *pNameLength, ulong *pShortNameOffset, bool ignoreAddDotWithSpace, bool wrapInBrackets)
 {
     ulong leftLen = (left == nullptr) ? 0 : (ulong) wcslen(left);
     ulong rightLen = (right == nullptr) ? 0 : (ulong) wcslen(right);
@@ -7860,7 +8025,8 @@ LPCOLESTR Parser::AppendNameHints(LPCOLESTR left, LPCOLESTR right, ulong *pNameL
  * the expression is a lambda parameter list or not.
  *
  */
-void Parser::DeferOrEmitPotentialSpreadError(ParseNodePtr pnodeT)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::DeferOrEmitPotentialSpreadError(ParseNodePtr pnodeT)
 {
     if (m_parenDepth > 0)
     {
@@ -7889,8 +8055,9 @@ Parse an optional sub expression returning null if there was no expression.
 Checks for no expression by looking for a token that can follow an
 Expression grammar production.
 ***************************************************************************/
+template <typename TScriptContextImpl>
 template<bool buildAST>
-bool Parser::ParseOptionalExpr(ParseNodePtr* pnode, bool fUnaryOrParen, int oplMin, BOOL *pfCanAssign, BOOL fAllowIn, BOOL fAllowEllipsis, _Inout_opt_ IdentToken* pToken)
+bool Parser<TScriptContextImpl>::ParseOptionalExpr(ParseNodePtr* pnode, bool fUnaryOrParen, int oplMin, BOOL *pfCanAssign, BOOL fAllowIn, BOOL fAllowEllipsis, _Inout_opt_ IdentToken* pToken)
 {
     *pnode = nullptr;
     if (m_token.tk == tkRCurly ||
@@ -7914,8 +8081,9 @@ Parse a sub expression.
 'fAllowIn' indicates if the 'in' operator should be allowed in the initializing
 expression ( it is not allowed in the context of the first expression in a  'for' loop).
 ***************************************************************************/
+template <typename TScriptContextImpl>
 template<bool buildAST>
-ParseNodePtr Parser::ParseExpr(int oplMin,
+ParseNodePtr Parser<TScriptContextImpl>::ParseExpr(int oplMin,
     BOOL *pfCanAssign,
     BOOL fAllowIn,
     BOOL fAllowEllipsis,
@@ -8464,8 +8632,9 @@ ParseNodePtr Parser::ParseExpr(int oplMin,
     return pnode;
 }
 
+template <typename TScriptContextImpl>
 template<bool buildAST>
-void Parser::TrackAssignment(ParseNodePtr pnodeT, IdentToken* pToken, charcount_t ichMin, charcount_t ichLim)
+void Parser<TScriptContextImpl>::TrackAssignment(ParseNodePtr pnodeT, IdentToken* pToken, charcount_t ichMin, charcount_t ichLim)
 {
     if (buildAST)
     {
@@ -8525,7 +8694,8 @@ Js::PropertyId PnPid::PropertyIdFromNameNode() const
     return propertyId;
 }
 
-PidRefStack* Parser::PushPidRef(IdentPtr pid)
+template <typename TScriptContextImpl>
+PidRefStack* Parser<TScriptContextImpl>::PushPidRef(IdentPtr pid)
 {
     if (PHASE_ON1(Js::ParallelParsePhase))
     {
@@ -8555,7 +8725,8 @@ PidRefStack* Parser::PushPidRef(IdentPtr pid)
     return ref;
 }
 
-PidRefStack* Parser::FindOrAddPidRef(IdentPtr pid, int scopeId, int maxScopeId)
+template <typename TScriptContextImpl>
+PidRefStack* Parser<TScriptContextImpl>::FindOrAddPidRef(IdentPtr pid, int scopeId, int maxScopeId)
 {
     PidRefStack *ref = pid->FindOrAddPidRef(&m_nodeAllocator, scopeId, maxScopeId);
     if (ref == NULL)
@@ -8565,7 +8736,8 @@ PidRefStack* Parser::FindOrAddPidRef(IdentPtr pid, int scopeId, int maxScopeId)
     return ref;
 }
 
-void Parser::RemovePrevPidRef(IdentPtr pid, PidRefStack *ref)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::RemovePrevPidRef(IdentPtr pid, PidRefStack *ref)
 {
     PidRefStack *prevRef = pid->RemovePrevPidRef(ref);
     Assert(prevRef);
@@ -8575,7 +8747,8 @@ void Parser::RemovePrevPidRef(IdentPtr pid, PidRefStack *ref)
     }
 }
 
-void Parser::SetPidRefsInScopeDynamic(IdentPtr pid, int blockId)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::SetPidRefsInScopeDynamic(IdentPtr pid, int blockId)
 {
     PidRefStack *ref = pid->GetTopRef();
     while (ref && ref->GetScopeId() >= blockId)
@@ -8585,24 +8758,28 @@ void Parser::SetPidRefsInScopeDynamic(IdentPtr pid, int blockId)
     }
 }
 
-ParseNode* Parser::GetFunctionBlock()
+template <typename TScriptContextImpl>
+ParseNode* Parser<TScriptContextImpl>::GetFunctionBlock()
 {
     Assert(m_currentBlockInfo != nullptr);
     return m_currentBlockInfo->pBlockInfoFunction->pnodeBlock;
 }
 
 
-ParseNode* Parser::GetCurrentBlock()
+template <typename TScriptContextImpl>
+ParseNode* Parser<TScriptContextImpl>::GetCurrentBlock()
 {
     return m_currentBlockInfo != nullptr ? m_currentBlockInfo->pnodeBlock : nullptr;
 }
 
-BlockInfoStack* Parser::GetCurrentBlockInfo()
+template <typename TScriptContextImpl>
+BlockInfoStack* Parser<TScriptContextImpl>::GetCurrentBlockInfo()
 {
     return m_currentBlockInfo;
 }
 
-BlockInfoStack* Parser::GetCurrentFunctionBlockInfo()
+template <typename TScriptContextImpl>
+BlockInfoStack* Parser<TScriptContextImpl>::GetCurrentFunctionBlockInfo()
 {
     return m_currentBlockInfo->pBlockInfoFunction;
 }
@@ -8612,8 +8789,9 @@ Parse a variable declaration.
 'fAllowIn' indicates if the 'in' operator should be allowed in the initializing
 expression ( it is not allowed in the context of the first expression in a  'for' loop).
 ***************************************************************************/
+template <typename TScriptContextImpl>
 template<bool buildAST>
-ParseNodePtr Parser::ParseVariableDeclaration(
+ParseNodePtr Parser<TScriptContextImpl>::ParseVariableDeclaration(
     tokens declarationType, charcount_t ichMin,
     BOOL fAllowIn/* = TRUE*/,
     BOOL* pfForInOk/* = nullptr*/,
@@ -8779,8 +8957,9 @@ Parse try-catch-finally statement
 
 // Eze try-catch-finally tree nests the try-catch within a try-finally.
 // This matches the new runtime implementation.
+template <typename TScriptContextImpl>
 template<bool buildAST>
-ParseNodePtr Parser::ParseTryCatchFinally()
+ParseNodePtr Parser<TScriptContextImpl>::ParseTryCatchFinally()
 {
     this->m_tryCatchOrFinallyDepth++;
 
@@ -8845,8 +9024,9 @@ ParseNodePtr Parser::ParseTryCatchFinally()
     return pnodeTF;
 }
 
+template <typename TScriptContextImpl>
 template<bool buildAST>
-ParseNodePtr Parser::ParseTry()
+ParseNodePtr Parser<TScriptContextImpl>::ParseTry()
 {
     ParseNodePtr pnode = nullptr;
     StmtNest stmt;
@@ -8873,8 +9053,9 @@ ParseNodePtr Parser::ParseTry()
     return pnode;
 }
 
+template <typename TScriptContextImpl>
 template<bool buildAST>
-ParseNodePtr Parser::ParseFinally()
+ParseNodePtr Parser<TScriptContextImpl>::ParseFinally()
 {
     ParseNodePtr pnode = nullptr;
     StmtNest stmt;
@@ -8905,8 +9086,9 @@ ParseNodePtr Parser::ParseFinally()
     return pnode;
 }
 
+template <typename TScriptContextImpl>
 template<bool buildAST>
-ParseNodePtr Parser::ParseCatch()
+ParseNodePtr Parser<TScriptContextImpl>::ParseCatch()
 {
     ParseNodePtr rootNode = nullptr;
     ParseNodePtr* ppnode = &rootNode;
@@ -9064,8 +9246,9 @@ ParseNodePtr Parser::ParseCatch()
     return rootNode;
 }
 
+template <typename TScriptContextImpl>
 template<bool buildAST>
-ParseNodePtr Parser::ParseCase(ParseNodePtr *ppnodeBody)
+ParseNodePtr Parser<TScriptContextImpl>::ParseCase(ParseNodePtr *ppnodeBody)
 {
     ParseNodePtr pnodeT = nullptr;
 
@@ -9090,8 +9273,9 @@ ParseNodePtr Parser::ParseCase(ParseNodePtr *ppnodeBody)
 /***************************************************************************
 Parse a single statement. Digest a trailing semicolon.
 ***************************************************************************/
+template <typename TScriptContextImpl>
 template<bool buildAST>
-ParseNodePtr Parser::ParseStatement()
+ParseNodePtr Parser<TScriptContextImpl>::ParseStatement()
 {
     ParseNodePtr *ppnodeT;
     ParseNodePtr pnodeT;
@@ -10215,8 +10399,9 @@ LNeedTerminator:
     return pnode;
 }
 
+template <typename TScriptContextImpl>
 BOOL
-Parser::TokIsForInOrForOf()
+Parser<TScriptContextImpl>::TokIsForInOrForOf()
 {
     return m_token.tk == tkIN ||
         (m_token.tk == tkID &&
@@ -10226,8 +10411,9 @@ Parser::TokIsForInOrForOf()
 /***************************************************************************
 Parse a sequence of statements.
 ***************************************************************************/
+template <typename TScriptContextImpl>
 template<bool buildAST>
-void Parser::ParseStmtList(ParseNodePtr *ppnodeList, ParseNodePtr **pppnodeLast, StrictModeEnvironment smEnvironment, const bool isSourceElementList, bool* strictModeOn)
+void Parser<TScriptContextImpl>::ParseStmtList(ParseNodePtr *ppnodeList, ParseNodePtr **pppnodeLast, StrictModeEnvironment smEnvironment, const bool isSourceElementList, bool* strictModeOn)
 {
     BOOL doneDirectives = !isSourceElementList; // directives may only exist in a SourceElementList, not a StatementList
     BOOL seenDirectiveContainingOctal = false; // Have we seen an octal directive before a use strict directive?
@@ -10354,8 +10540,9 @@ void Parser::ParseStmtList(ParseNodePtr *ppnodeList, ParseNodePtr **pppnodeLast,
     }
 }
 
+template <typename TScriptContextImpl>
 template <class Fn>
-void Parser::VisitFunctionsInScope(ParseNodePtr pnodeScopeList, Fn fn)
+void Parser<TScriptContextImpl>::VisitFunctionsInScope(ParseNodePtr pnodeScopeList, Fn fn)
 {
     ParseNodePtr pnodeScope;
     for (pnodeScope = pnodeScopeList; pnodeScope;)
@@ -10391,7 +10578,8 @@ void Parser::VisitFunctionsInScope(ParseNodePtr pnodeScopeList, Fn fn)
 
 // Scripts above this size (minus string literals and comments) will have parsing of
 // function bodies deferred.
-ULONG Parser::GetDeferralThreshold(bool isProfileLoaded)
+template <typename TScriptContextImpl>
+ULONG Parser<TScriptContextImpl>::GetDeferralThreshold(bool isProfileLoaded)
 {
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
     if (CONFIG_FLAG(ForceDeferParse) ||
@@ -10415,7 +10603,8 @@ ULONG Parser::GetDeferralThreshold(bool isProfileLoaded)
     }
 }
 
-void Parser::FinishDeferredFunction(ParseNodePtr pnodeScopeList)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::FinishDeferredFunction(ParseNodePtr pnodeScopeList)
 {
     VisitFunctionsInScope(pnodeScopeList,
         [this](ParseNodePtr pnodeFnc)
@@ -10531,7 +10720,8 @@ void Parser::FinishDeferredFunction(ParseNodePtr pnodeScopeList)
     });
 }
 
-void Parser::InitPids()
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::InitPids()
 {
     AssertMemN(m_phtbl);
     wellKnownPropertyPids.arguments = m_phtbl->PidHashNameLen(g_ssym_arguments.sz, g_ssym_arguments.cch);
@@ -10552,7 +10742,8 @@ void Parser::InitPids()
     wellKnownPropertyPids._star = m_phtbl->PidHashNameLen(_u("*"), sizeof("*") - 1);
 }
 
-void Parser::RestoreScopeInfo(Js::FunctionBody* functionBody)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::RestoreScopeInfo(Js::FunctionBody* functionBody)
 {
     if (!functionBody)
     {
@@ -10608,7 +10799,8 @@ void Parser::RestoreScopeInfo(Js::FunctionBody* functionBody)
     scopeInfo->GetScopeInfo(this, nullptr, nullptr, scope);
 }
 
-void Parser::FinishScopeInfo(Js::FunctionBody *functionBody)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::FinishScopeInfo(Js::FunctionBody *functionBody)
 {
     if (!functionBody)
     {
@@ -10672,7 +10864,8 @@ void Parser::FinishScopeInfo(Js::FunctionBody *functionBody)
 /***************************************************************************
 Parse the code.
 ***************************************************************************/
-ParseNodePtr Parser::Parse(LPCUTF8 pszSrc, size_t offset, size_t length, charcount_t charOffset, ULONG grfscr, ULONG lineNumber, Js::LocalFunctionId * nextFunctionId, CompileScriptException *pse)
+template <typename TScriptContextImpl>
+ParseNodePtr Parser<TScriptContextImpl>::Parse(LPCUTF8 pszSrc, size_t offset, size_t length, charcount_t charOffset, ULONG grfscr, ULONG lineNumber, Js::LocalFunctionId * nextFunctionId, CompileScriptException *pse)
 {
     ParseNodePtr pnodeProg;
     ParseNodePtr *lastNodeRef = nullptr;
@@ -10916,7 +11109,8 @@ ParseNodePtr Parser::Parse(LPCUTF8 pszSrc, size_t offset, size_t length, charcou
 }
 
 
-bool Parser::CheckForDirective(bool* pIsUseStrict, bool *pIsUseAsm, bool* pIsOctalInString)
+template <typename TScriptContextImpl>
+bool Parser<TScriptContextImpl>::CheckForDirective(bool* pIsUseStrict, bool *pIsUseAsm, bool* pIsOctalInString)
 {
     // A directive is a string constant followed by a statement terminating token
     if (m_token.tk != tkStrCon)
@@ -10968,7 +11162,8 @@ bool Parser::CheckForDirective(bool* pIsUseStrict, bool *pIsUseAsm, bool* pIsOct
     return isDirective;
 }
 
-bool Parser::CheckStrictModeStrPid(IdentPtr pid)
+template <typename TScriptContextImpl>
+bool Parser<TScriptContextImpl>::CheckStrictModeStrPid(IdentPtr pid)
 {
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
     if (Js::Configuration::Global.flags.NoStrictMode)
@@ -10981,7 +11176,8 @@ bool Parser::CheckStrictModeStrPid(IdentPtr pid)
         wcsncmp(pid->Psz(), _u("use strict"), 10) == 0;
 }
 
-bool Parser::CheckAsmjsModeStrPid(IdentPtr pid)
+template <typename TScriptContextImpl>
+bool Parser<TScriptContextImpl>::CheckAsmjsModeStrPid(IdentPtr pid)
 {
 #ifdef ASMJS_PLAT
     if (!CONFIG_FLAG_RELEASE(Asmjs))
@@ -11009,7 +11205,8 @@ bool Parser::CheckAsmjsModeStrPid(IdentPtr pid)
 #endif
 }
 
-HRESULT Parser::ParseUtf8Source(__out ParseNodePtr* parseTree, LPCUTF8 pSrc, size_t length, ULONG grfsrc, CompileScriptException *pse,
+template <typename TScriptContextImpl>
+HRESULT Parser<TScriptContextImpl>::ParseUtf8Source(__out ParseNodePtr* parseTree, LPCUTF8 pSrc, size_t length, ULONG grfsrc, CompileScriptException *pse,
     Js::LocalFunctionId * nextFunctionId, SourceContextInfo * sourceContextInfo)
 {
     m_functionBody = nullptr;
@@ -11017,7 +11214,8 @@ HRESULT Parser::ParseUtf8Source(__out ParseNodePtr* parseTree, LPCUTF8 pSrc, siz
     return ParseSourceInternal( parseTree, pSrc, 0, length, 0, true, grfsrc, pse, nextFunctionId, 0, sourceContextInfo);
 }
 
-HRESULT Parser::ParseCesu8Source(__out ParseNodePtr* parseTree, LPCUTF8 pSrc, size_t length, ULONG grfsrc, CompileScriptException *pse,
+template <typename TScriptContextImpl>
+HRESULT Parser<TScriptContextImpl>::ParseCesu8Source(__out ParseNodePtr* parseTree, LPCUTF8 pSrc, size_t length, ULONG grfsrc, CompileScriptException *pse,
     Js::LocalFunctionId * nextFunctionId, SourceContextInfo * sourceContextInfo)
 {
     m_functionBody = nullptr;
@@ -11025,7 +11223,8 @@ HRESULT Parser::ParseCesu8Source(__out ParseNodePtr* parseTree, LPCUTF8 pSrc, si
     return ParseSourceInternal( parseTree, pSrc, 0, length, 0, false, grfsrc, pse, nextFunctionId, 0, sourceContextInfo);
 }
 
-void Parser::PrepareScanner(bool fromExternal)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::PrepareScanner(bool fromExternal)
 {
     // NOTE: HashTbl and Scanner are currently allocated from the CRT heap. If we want to allocate them from the
     // parser arena, then we also need to change the way the HashTbl allocates PID's from its underlying
@@ -11046,12 +11245,14 @@ void Parser::PrepareScanner(bool fromExternal)
 }
 
 #if ENABLE_BACKGROUND_PARSING
-void Parser::PrepareForBackgroundParse()
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::PrepareForBackgroundParse()
 {
     m_pscan->PrepareForBackgroundParse(m_scriptContext);
 }
 
-void Parser::AddBackgroundParseItem(BackgroundParseItem *const item)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::AddBackgroundParseItem(BackgroundParseItem *const item)
 {
     if (currBackgroundParseItem == nullptr)
     {
@@ -11065,7 +11266,8 @@ void Parser::AddBackgroundParseItem(BackgroundParseItem *const item)
 }
 #endif
 
-void Parser::AddFastScannedRegExpNode(ParseNodePtr const pnode)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::AddFastScannedRegExpNode(ParseNodePtr const pnode)
 {
     Assert(!IsBackgroundParser());
     Assert(m_doingFastScan);
@@ -11078,7 +11280,8 @@ void Parser::AddFastScannedRegExpNode(ParseNodePtr const pnode)
 }
 
 #if ENABLE_BACKGROUND_PARSING
-void Parser::AddBackgroundRegExpNode(ParseNodePtr const pnode)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::AddBackgroundRegExpNode(ParseNodePtr const pnode)
 {
     Assert(IsBackgroundParser());
     Assert(currBackgroundParseItem != nullptr);
@@ -11087,7 +11290,8 @@ void Parser::AddBackgroundRegExpNode(ParseNodePtr const pnode)
 }
 #endif
 
-HRESULT Parser::ParseFunctionInBackground(ParseNodePtr pnodeFnc, ParseContext *parseContext, bool topLevelDeferred, CompileScriptException *pse)
+template <typename TScriptContextImpl>
+HRESULT Parser<TScriptContextImpl>::ParseFunctionInBackground(ParseNodePtr pnodeFnc, ParseContext *parseContext, bool topLevelDeferred, CompileScriptException *pse)
 {
     m_functionBody = nullptr;
     m_parseType = ParseType_Upfront;
@@ -11195,7 +11399,8 @@ HRESULT Parser::ParseFunctionInBackground(ParseNodePtr pnodeFnc, ParseContext *p
     return hr;
 }
 
-HRESULT Parser::ParseSourceWithOffset(__out ParseNodePtr* parseTree, LPCUTF8 pSrc, size_t offset, size_t cbLength, charcount_t cchOffset,
+template <typename TScriptContextImpl>
+HRESULT Parser<TScriptContextImpl>::ParseSourceWithOffset(__out ParseNodePtr* parseTree, LPCUTF8 pSrc, size_t offset, size_t cbLength, charcount_t cchOffset,
         bool isCesu8, ULONG grfscr, CompileScriptException *pse, Js::LocalFunctionId * nextFunctionId, ULONG lineNumber, SourceContextInfo * sourceContextInfo,
         Js::ParseableFunctionInfo* functionInfo)
 {
@@ -11210,13 +11415,15 @@ HRESULT Parser::ParseSourceWithOffset(__out ParseNodePtr* parseTree, LPCUTF8 pSr
     return ParseSourceInternal( parseTree, pSrc, offset, cbLength, cchOffset, !isCesu8, grfscr, pse, nextFunctionId, lineNumber, sourceContextInfo);
 }
 
-bool Parser::IsStrictMode() const
+template <typename TScriptContextImpl>
+bool Parser<TScriptContextImpl>::IsStrictMode() const
 {
     return (m_fUseStrictMode ||
            (m_currentNodeFunc != nullptr && m_currentNodeFunc->sxFnc.GetStrictMode()));
 }
 
-BOOL Parser::ExpectingExternalSource()
+template <typename TScriptContextImpl>
+BOOL Parser<TScriptContextImpl>::ExpectingExternalSource()
 {
     return m_fExpectExternalSource;
 }
@@ -11261,7 +11468,8 @@ ParseNodePtr PnFnc::GetBodyScope() const
 }
 
 // Create node versions with explicit token limits
-ParseNodePtr Parser::CreateNode(OpCode nop, charcount_t ichMin, charcount_t ichLim)
+template <typename TScriptContextImpl>
+ParseNodePtr Parser<TScriptContextImpl>::CreateNode(OpCode nop, charcount_t ichMin, charcount_t ichLim)
 {
     Assert(!this->m_deferringAST);
     Assert(nop >= 0 && nop < knopLim);
@@ -11283,7 +11491,8 @@ ParseNodePtr Parser::CreateNode(OpCode nop, charcount_t ichMin, charcount_t ichL
     return pnode;
 }
 
-ParseNodePtr Parser::CreateNameNode(IdentPtr pid,charcount_t ichMin,charcount_t ichLim) {
+template <typename TScriptContextImpl>
+ParseNodePtr Parser<TScriptContextImpl>::CreateNameNode(IdentPtr pid,charcount_t ichMin,charcount_t ichLim) {
   ParseNodePtr pnode = CreateNodeT<knopName>(ichMin,ichLim);
   pnode->sxPid.pid = pid;
   pnode->sxPid.sym=NULL;
@@ -11291,7 +11500,8 @@ ParseNodePtr Parser::CreateNameNode(IdentPtr pid,charcount_t ichMin,charcount_t 
   return pnode;
 }
 
-ParseNodePtr Parser::CreateUniNode(OpCode nop, ParseNodePtr pnode1, charcount_t ichMin,charcount_t ichLim)
+template <typename TScriptContextImpl>
+ParseNodePtr Parser<TScriptContextImpl>::CreateUniNode(OpCode nop, ParseNodePtr pnode1, charcount_t ichMin,charcount_t ichLim)
 {
     Assert(!this->m_deferringAST);
     DebugOnly(VerifyNodeSize(nop, kcbPnUni));
@@ -11311,7 +11521,8 @@ ParseNodePtr Parser::CreateUniNode(OpCode nop, ParseNodePtr pnode1, charcount_t 
     return pnode;
 }
 
-ParseNodePtr Parser::CreateBinNode(OpCode nop, ParseNodePtr pnode1,
+template <typename TScriptContextImpl>
+ParseNodePtr Parser<TScriptContextImpl>::CreateBinNode(OpCode nop, ParseNodePtr pnode1,
                                    ParseNodePtr pnode2,charcount_t ichMin,charcount_t ichLim)
 {
     Assert(!this->m_deferringAST);
@@ -11326,7 +11537,8 @@ ParseNodePtr Parser::CreateBinNode(OpCode nop, ParseNodePtr pnode1,
     return pnode;
 }
 
-ParseNodePtr Parser::CreateTriNode(OpCode nop, ParseNodePtr pnode1,
+template <typename TScriptContextImpl>
+ParseNodePtr Parser<TScriptContextImpl>::CreateTriNode(OpCode nop, ParseNodePtr pnode1,
                                    ParseNodePtr pnode2, ParseNodePtr pnode3,
                                    charcount_t ichMin,charcount_t ichLim)
 {
@@ -11393,7 +11605,8 @@ bool PnBlock::HasBlockScopedContent() const
 class ByteCodeGenerator;
 
 // Copy AST; this works mostly on expressions for now
-ParseNode* Parser::CopyPnode(ParseNode *pnode) {
+template <typename TScriptContextImpl>
+ParseNode* Parser<TScriptContextImpl>::CopyPnode(ParseNode *pnode) {
     if (pnode==NULL)
         return NULL;
     switch (pnode->nop) {
@@ -11692,8 +11905,9 @@ ParseNode* Parser::CopyPnode(ParseNode *pnode) {
 // Returns true when str is string for Nan, Infinity or -Infinity.
 // Does not check for double number value being in NaN/Infinity range.
 // static
+template <typename TScriptContextImpl>
 template<bool CheckForNegativeInfinity>
-inline bool Parser::IsNaNOrInfinityLiteral(LPCOLESTR str)
+inline bool Parser<TScriptContextImpl>::IsNaNOrInfinityLiteral(LPCOLESTR str)
 {
     // Note: wcscmp crashes when one of the parameters is NULL.
     return str &&
@@ -11702,8 +11916,9 @@ inline bool Parser::IsNaNOrInfinityLiteral(LPCOLESTR str)
            CheckForNegativeInfinity && wcscmp(_u("-Infinity"), str) == 0);
 }
 
+template <typename TScriptContextImpl>
 template <bool buildAST>
-ParseNodePtr Parser::ParseSuper(ParseNodePtr pnode, bool fAllowCall)
+ParseNodePtr Parser<TScriptContextImpl>::ParseSuper(ParseNodePtr pnode, bool fAllowCall)
 {
     ParseNodePtr currentNodeFunc = GetCurrentFunctionNode();
 
@@ -11752,7 +11967,8 @@ ParseNodePtr Parser::ParseSuper(ParseNodePtr pnode, bool fAllowCall)
     return pnode;
 }
 
-void Parser::AppendToList(ParseNodePtr *node, ParseNodePtr nodeToAppend)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::AppendToList(ParseNodePtr *node, ParseNodePtr nodeToAppend)
 {
     Assert(nodeToAppend);
     ParseNodePtr* lastPtr = node;
@@ -11771,7 +11987,8 @@ void Parser::AppendToList(ParseNodePtr *node, ParseNodePtr nodeToAppend)
     }
 }
 
-ParseNodePtr Parser::ConvertArrayToArrayPattern(ParseNodePtr pnode)
+template <typename TScriptContextImpl>
+ParseNodePtr Parser<TScriptContextImpl>::ConvertArrayToArrayPattern(ParseNodePtr pnode)
 {
     Assert(pnode->nop == knopArray);
     pnode->nop = knopArrayPattern;
@@ -11810,7 +12027,8 @@ ParseNodePtr Parser::ConvertArrayToArrayPattern(ParseNodePtr pnode)
     return pnode;
 }
 
-ParseNodePtr Parser::CreateParamPatternNode(ParseNodePtr pnode1)
+template <typename TScriptContextImpl>
+ParseNodePtr Parser<TScriptContextImpl>::CreateParamPatternNode(ParseNodePtr pnode1)
 {
     ParseNodePtr paramPatternNode = CreateNode(knopParamPattern, pnode1->ichMin, pnode1->ichLim);
     paramPatternNode->sxParamPattern.pnode1 = pnode1;
@@ -11819,7 +12037,8 @@ ParseNodePtr Parser::CreateParamPatternNode(ParseNodePtr pnode1)
     return paramPatternNode;
 }
 
-ParseNodePtr Parser::ConvertObjectToObjectPattern(ParseNodePtr pnodeMemberList)
+template <typename TScriptContextImpl>
+ParseNodePtr Parser<TScriptContextImpl>::ConvertObjectToObjectPattern(ParseNodePtr pnodeMemberList)
 {
     charcount_t ichMin = m_pscan->IchMinTok();
     charcount_t ichLim = m_pscan->IchLimTok();
@@ -11839,7 +12058,8 @@ ParseNodePtr Parser::ConvertObjectToObjectPattern(ParseNodePtr pnodeMemberList)
     return CreateUniNode(knopObjectPattern, pnodeMemberNodeList, ichMin, ichLim);
 }
 
-ParseNodePtr Parser::GetRightSideNodeFromPattern(ParseNodePtr pnode)
+template <typename TScriptContextImpl>
+ParseNodePtr Parser<TScriptContextImpl>::GetRightSideNodeFromPattern(ParseNodePtr pnode)
 {
     Assert(pnode != nullptr);
     ParseNodePtr rightNode = nullptr;
@@ -11860,7 +12080,8 @@ ParseNodePtr Parser::GetRightSideNodeFromPattern(ParseNodePtr pnode)
     return rightNode;
 }
 
-ParseNodePtr Parser::ConvertMemberToMemberPattern(ParseNodePtr pnodeMember)
+template <typename TScriptContextImpl>
+ParseNodePtr Parser<TScriptContextImpl>::ConvertMemberToMemberPattern(ParseNodePtr pnodeMember)
 {
     if (pnodeMember->nop == knopObjectPatternMember)
     {
@@ -11876,7 +12097,8 @@ ParseNodePtr Parser::ConvertMemberToMemberPattern(ParseNodePtr pnodeMember)
     return resultNode;
 }
 
-ParseNodePtr Parser::ConvertToPattern(ParseNodePtr pnode)
+template <typename TScriptContextImpl>
+ParseNodePtr Parser<TScriptContextImpl>::ConvertToPattern(ParseNodePtr pnode)
 {
     if (pnode != nullptr)
     {
@@ -11893,7 +12115,8 @@ ParseNodePtr Parser::ConvertToPattern(ParseNodePtr pnode)
 }
 
 // This essentially be called for verifying the structure of the current tree with satisfying the destructuring grammar.
-void Parser::ParseDestructuredLiteralWithScopeSave(tokens declarationType,
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::ParseDestructuredLiteralWithScopeSave(tokens declarationType,
     bool isDecl,
     bool topLevel,
     DestructuringInitializerContext initializerContext/* = DIC_None*/,
@@ -11936,8 +12159,9 @@ void Parser::ParseDestructuredLiteralWithScopeSave(tokens declarationType,
     m_funcInArrayDepth = funcInArrayDepthSave;
 }
 
+template <typename TScriptContextImpl>
 template <bool buildAST>
-ParseNodePtr Parser::ParseDestructuredLiteral(tokens declarationType,
+ParseNodePtr Parser<TScriptContextImpl>::ParseDestructuredLiteral(tokens declarationType,
     bool isDecl,
     bool topLevel/* = true*/,
     DestructuringInitializerContext initializerContext/* = DIC_None*/,
@@ -11959,8 +12183,9 @@ ParseNodePtr Parser::ParseDestructuredLiteral(tokens declarationType,
     return ParseDestructuredInitializer<buildAST>(pnode, isDecl, topLevel, initializerContext, allowIn, forInOfOkay, nativeForOkay);
 }
 
+template <typename TScriptContextImpl>
 template <bool buildAST>
-ParseNodePtr Parser::ParseDestructuredInitializer(ParseNodePtr lhsNode,
+ParseNodePtr Parser<TScriptContextImpl>::ParseDestructuredInitializer(ParseNodePtr lhsNode,
     bool isDecl,
     bool topLevel,
     DestructuringInitializerContext initializerContext,
@@ -12025,8 +12250,9 @@ ParseNodePtr Parser::ParseDestructuredInitializer(ParseNodePtr lhsNode,
     return pnodeDestructAsg;
 }
 
+template <typename TScriptContextImpl>
 template <bool buildAST>
-ParseNodePtr Parser::ParseDestructuredObjectLiteral(tokens declarationType, bool isDecl, bool topLevel/* = true*/)
+ParseNodePtr Parser<TScriptContextImpl>::ParseDestructuredObjectLiteral(tokens declarationType, bool isDecl, bool topLevel/* = true*/)
 {
     Assert(m_token.tk == tkLCurly);
     charcount_t ichMin = m_pscan->IchMinTok();
@@ -12048,8 +12274,9 @@ ParseNodePtr Parser::ParseDestructuredObjectLiteral(tokens declarationType, bool
     return objectPatternNode;
 }
 
+template <typename TScriptContextImpl>
 template <bool buildAST>
-ParseNodePtr Parser::ParseDestructuredVarDecl(tokens declarationType, bool isDecl, bool *hasSeenRest, bool topLevel/* = true*/)
+ParseNodePtr Parser<TScriptContextImpl>::ParseDestructuredVarDecl(tokens declarationType, bool isDecl, bool *hasSeenRest, bool topLevel/* = true*/)
 {
     ParseNodePtr pnodeElem = nullptr;
     int parenCount = 0;
@@ -12207,8 +12434,9 @@ ParseNodePtr Parser::ParseDestructuredVarDecl(tokens declarationType, bool isDec
     return pnodeElem;
 }
 
+template <typename TScriptContextImpl>
 template <bool buildAST>
-ParseNodePtr Parser::ParseDestructuredArrayLiteral(tokens declarationType, bool isDecl, bool topLevel)
+ParseNodePtr Parser<TScriptContextImpl>::ParseDestructuredArrayLiteral(tokens declarationType, bool isDecl, bool topLevel)
 {
     Assert(m_token.tk == tkLBrack);
     charcount_t ichMin = m_pscan->IchMinTok();
@@ -12275,7 +12503,8 @@ ParseNodePtr Parser::ParseDestructuredArrayLiteral(tokens declarationType, bool 
     return pnodeDestructArr;
 }
 
-void Parser::CaptureContext(ParseContext *parseContext) const
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::CaptureContext(ParseContext *parseContext) const
 {
     parseContext->pszSrc = m_pscan->PchBase();
     parseContext->length = this->m_originalLength;
@@ -12292,7 +12521,8 @@ void Parser::CaptureContext(ParseContext *parseContext) const
     parseContext->nextBlockId = this->m_nextBlockId;
 }
 
-void Parser::RestoreContext(ParseContext *const parseContext)
+template <typename TScriptContextImpl>
+void Parser<TScriptContextImpl>::RestoreContext(ParseContext *const parseContext)
 {
     m_sourceContextInfo = parseContext->sourceContextInfo;
     m_currentBlockInfo = parseContext->currentBlockInfo;

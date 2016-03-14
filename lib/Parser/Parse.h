@@ -57,7 +57,7 @@ typedef ArenaAllocator ParseNodeAllocator;
 Parser object.
 ***************************************************************************/
 class CompileScriptException;
-class Parser;
+template <typename TScriptContextImpl> class Parser;
 class SourceContextInfo;
 struct BlockIdsStack;
 class Span;
@@ -94,7 +94,7 @@ struct ParseContext
 
 template <bool nullTerminated> class UTF8EncodingPolicyBase;
 typedef UTF8EncodingPolicyBase<false> NotNullTerminatedUTF8EncodingPolicy;
-template <typename T> class Scanner;
+template <typename T, typename U> class Scanner;
 
 namespace Js
 {
@@ -102,9 +102,13 @@ namespace Js
     class FunctionBody;
 };
 
+template <typename TScriptContextImpl>
 class Parser
 {
-    typedef Scanner<NotNullTerminatedUTF8EncodingPolicy> Scanner_t;
+    typedef Scanner<NotNullTerminatedUTF8EncodingPolicy, TScriptContextImpl> Scanner_t;
+
+public:
+    typedef TScriptContextImpl ScriptContextImplType;
 
 private:
     template <OpCode nop> static int GetNodeSize();
@@ -119,14 +123,14 @@ private:
 
 public:
 #if DEBUG
-    Parser(Js::ScriptContext* scriptContext, BOOL strictMode = FALSE, PageAllocator *alloc = nullptr, bool isBackground = false, size_t size = sizeof(Parser));
+    Parser(Js::ScriptContextParseFacade<TScriptContextImpl>* scriptContextParseFacade, BOOL strictMode = FALSE, PageAllocator *alloc = nullptr, bool isBackground = false, size_t size = sizeof(Parser));
 #else
-    Parser(Js::ScriptContext* scriptContext, BOOL strictMode = FALSE, PageAllocator *alloc = nullptr, bool isBackground = false);
+    Parser(Js::ScriptContextParseFacade<TScriptContextImpl>* scriptContextParseFacade, BOOL strictMode = FALSE, PageAllocator *alloc = nullptr, bool isBackground = false);
 #endif
     ~Parser(void);
 
-    Js::ScriptContext* GetScriptContext() const { return m_scriptContext; }
-    void ClearScriptContext() { m_scriptContext = nullptr; }
+    Js::ScriptContextParseFacade<TScriptContextImpl>* GetScriptContext() const { return m_scriptContextParseFacade; }
+    void ClearScriptContext() { m_scriptContextParseFacade = nullptr; }
 
     bool IsBackgroundParser() const { return m_isInBackground; }
     bool IsDoingFastScan() const { return m_doingFastScan; }
@@ -204,7 +208,7 @@ private:
     SList<UnifiedRegex::RegexPattern *, ArenaAllocator> m_registeredRegexPatterns;
 
 protected:
-    Js::ScriptContext* m_scriptContext;
+    Js::ScriptContextParseFacade<TScriptContextImpl>* m_scriptContextParseFacade;
     HashTbl *   m_phtbl;
     ErrHandler  m_err;
 
@@ -403,6 +407,8 @@ private:
     static const uint ParsingSuperRestrictionState_SuperCallAndPropertyAllowed = 1;
     static const uint ParsingSuperRestrictionState_SuperPropertyAllowed = 2;
     uint m_parsingSuperRestrictionState;
+    
+    template <typename T>
     friend class AutoParsingSuperRestrictionStateRestorer;
 
     // Used for issuing spread and rest errors when there is ambiguity with parameter list and parenthesized expressions
@@ -1032,6 +1038,11 @@ public:
 
 };
 
+#ifndef T_PARSERFACADE_SC_IMPL
+#define T_PARSERFACADE_SC_IMPL Js::ScriptContext
+#endif
+
 #define PTNODE(nop,sn,pc,nk,ok,json) \
-    template<> inline int Parser::GetNodeSize<nop>() { return kcbPn##nk; }
+    template<>                       \
+    template<> inline int Parser<T_PARSERFACADE_SC_IMPL>::GetNodeSize<nop>() { return kcbPn##nk; }
 #include "ptlist.h"

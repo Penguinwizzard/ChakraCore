@@ -198,7 +198,8 @@ namespace Js {
         ScopeInfo *CloneFor(ParseableFunctionInfo *body);
         void EnsurePidTracking(ScriptContext* scriptContext);
 
-        void GetScopeInfo(Parser *parser, ByteCodeGenerator* byteCodeGenerator, FuncInfo* funcInfo, Scope* scope);
+        // REVIEW: This is for defered parsing, correct? As in, we shouldn't need to templatize the type for the ParseFacade?
+        void GetScopeInfo(Parser<Js::ScriptContext> *parser, ByteCodeGenerator* byteCodeGenerator, FuncInfo* funcInfo, Scope* scope);
 
         //
         // Turn on capturesAll for a Scope temporarily. Restore old capturesAll when this object

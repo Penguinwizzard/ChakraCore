@@ -95,7 +95,8 @@ BOOL Token::IsKeyword() const
     return (tk <= tkYIELD);
 }
 
-tokens Token::SetRegex(UnifiedRegex::RegexPattern *const pattern, Parser *const parser)
+template <typename TScriptContextImpl>
+tokens Token::SetRegex(UnifiedRegex::RegexPattern *const pattern, Parser<TScriptContextImpl> *const parser)
 {
     Assert(parser);
 
@@ -123,8 +124,8 @@ IdentPtr Token::CreateIdentifier(HashTbl * hashTbl)
     return pid;
 }
 
-template <typename EncodingPolicy>
-Scanner<EncodingPolicy>::Scanner(Parser* parser, HashTbl *phtbl, Token *ptoken, ErrHandler *perr, Js::ScriptContext* scriptContext)
+template <typename EncodingPolicy, typename TScriptContextImpl>
+Scanner<EncodingPolicy, TScriptContextImpl>::Scanner(Parser<TScriptContextImpl>* parser, HashTbl *phtbl, Token *ptoken, ErrHandler *perr, Js::ScriptContextParseFacade<TScriptContextImpl>* scriptContextParseFacade)
 {
     AssertMem(phtbl);
     AssertMem(ptoken);
@@ -142,7 +143,7 @@ Scanner<EncodingPolicy>::Scanner(Parser* parser, HashTbl *phtbl, Token *ptoken, 
     m_fStringTemplateDepth = 0;
 
     m_scanState = ScanStateNormal;
-    m_scriptContext = scriptContext;
+    m_scriptContextParseFacade = scriptContextParseFacade;
 
     m_line = 0;
     m_startLine = 0;
@@ -164,8 +165,8 @@ Scanner<EncodingPolicy>::Scanner(Parser* parser, HashTbl *phtbl, Token *ptoken, 
     m_fAwaitIsKeyword = false;
 }
 
-template <typename EncodingPolicy>
-Scanner<EncodingPolicy>::~Scanner(void)
+template <typename EncodingPolicy, typename TScriptContextImpl>
+Scanner<EncodingPolicy, TScriptContextImpl>::~Scanner(void)
 {
 }
 
@@ -173,8 +174,8 @@ Scanner<EncodingPolicy>::~Scanner(void)
 *
 *  Initializes the scanner to prepare to scan the given source text.
 */
-template <typename EncodingPolicy>
-void Scanner<EncodingPolicy>::SetText(EncodedCharPtr pszSrc, size_t offset, size_t length, charcount_t charOffset, ULONG grfscr, ULONG lineNumber)
+template <typename EncodingPolicy, typename TScriptContextImpl>
+void Scanner<EncodingPolicy, TScriptContextImpl>::SetText(EncodedCharPtr pszSrc, size_t offset, size_t length, charcount_t charOffset, ULONG grfscr, ULONG lineNumber)
 {
     // Save the start of the script and add the offset to get the point where we should start scanning.
     m_pchBase = pszSrc;
@@ -208,8 +209,8 @@ void Scanner<EncodingPolicy>::SetText(EncodedCharPtr pszSrc, size_t offset, size
     m_DeferredParseFlags = ScanFlagNone;
 }
 
-template <typename EncodingPolicy>
-void Scanner<EncodingPolicy>::PrepareForBackgroundParse(Js::ScriptContext *scriptContext)
+template <typename EncodingPolicy, typename TScriptContextImpl>
+void Scanner<EncodingPolicy, TScriptContextImpl>::PrepareForBackgroundParse(Js::ScriptContext *scriptContext)
 {
     scriptContext->GetThreadContext()->GetStandardChars((EncodedChar*)0);
     scriptContext->GetThreadContext()->GetStandardChars((char16*)0);
@@ -221,8 +222,8 @@ void Scanner<EncodingPolicy>::PrepareForBackgroundParse(Js::ScriptContext *scrip
 //
 // This is used to determine a length of BSTR, which can't contain a NUL character.
 //-----------------------------------------------------------------------------
-template <typename EncodingPolicy>
-charcount_t Scanner<EncodingPolicy>::LineLength(EncodedCharPtr first, EncodedCharPtr last)
+template <typename EncodingPolicy, typename TScriptContextImpl>
+charcount_t Scanner<EncodingPolicy, TScriptContextImpl>::LineLength(EncodedCharPtr first, EncodedCharPtr last)
 {
     charcount_t result = 0;
     EncodedCharPtr p = first;
@@ -242,8 +243,8 @@ charcount_t Scanner<EncodingPolicy>::LineLength(EncodedCharPtr first, EncodedCha
     }
 }
 
-template <typename EncodingPolicy>
-charcount_t Scanner<EncodingPolicy>::UpdateLine(long &line, EncodedCharPtr start, EncodedCharPtr last, charcount_t ichStart, charcount_t ichEnd)
+template <typename EncodingPolicy, typename TScriptContextImpl>
+charcount_t Scanner<EncodingPolicy, TScriptContextImpl>::UpdateLine(long &line, EncodedCharPtr start, EncodedCharPtr last, charcount_t ichStart, charcount_t ichEnd)
 {
     EncodedCharPtr p = start;
     charcount_t ich = ichStart;
@@ -280,8 +281,8 @@ done:
     return lastStart;
 }
 
-template <typename EncodingPolicy>
-bool Scanner<EncodingPolicy>::TryReadEscape(EncodedCharPtr& startingLocation, EncodedCharPtr endOfSource, codepoint_t *outChar)
+template <typename EncodingPolicy, typename TScriptContextImpl>
+bool Scanner<EncodingPolicy, TScriptContextImpl>::TryReadEscape(EncodedCharPtr& startingLocation, EncodedCharPtr endOfSource, codepoint_t *outChar)
 {
     Assert(outChar != nullptr);
     Assert(startingLocation <= endOfSource);
@@ -343,9 +344,9 @@ bool Scanner<EncodingPolicy>::TryReadEscape(EncodedCharPtr& startingLocation, En
     return true;
 }
 
-template <typename EncodingPolicy>
+template <typename EncodingPolicy, typename TScriptContextImpl>
 template <bool bScan>
-bool Scanner<EncodingPolicy>::TryReadCodePointRest(codepoint_t lower, EncodedCharPtr& startingLocation, EncodedCharPtr endOfSource, codepoint_t *outChar, bool *outContainsMultiUnitChar)
+bool Scanner<EncodingPolicy, TScriptContextImpl>::TryReadCodePointRest(codepoint_t lower, EncodedCharPtr& startingLocation, EncodedCharPtr endOfSource, codepoint_t *outChar, bool *outContainsMultiUnitChar)
 
 {
     Assert(outChar != nullptr);
@@ -381,9 +382,9 @@ bool Scanner<EncodingPolicy>::TryReadCodePointRest(codepoint_t lower, EncodedCha
     return true;
 }
 
-template <typename EncodingPolicy>
+template <typename EncodingPolicy, typename TScriptContextImpl>
 template <bool bScan>
-__inline bool Scanner<EncodingPolicy>::TryReadCodePoint(EncodedCharPtr &startingLocation, EncodedCharPtr endOfSource, codepoint_t *outChar, bool *hasEscape, bool *outContainsMultiUnitChar)
+__inline bool Scanner<EncodingPolicy, TScriptContextImpl>::TryReadCodePoint(EncodedCharPtr &startingLocation, EncodedCharPtr endOfSource, codepoint_t *outChar, bool *hasEscape, bool *outContainsMultiUnitChar)
 {
     Assert(outChar != nullptr);
     Assert(outContainsMultiUnitChar != nullptr);
@@ -415,8 +416,8 @@ __inline bool Scanner<EncodingPolicy>::TryReadCodePoint(EncodedCharPtr &starting
     return true;
 }
 
-template <typename EncodingPolicy>
-tokens Scanner<EncodingPolicy>::ScanIdentifier(bool identifyKwds, EncodedCharPtr *pp)
+template <typename EncodingPolicy, typename TScriptContextImpl>
+tokens Scanner<EncodingPolicy, TScriptContextImpl>::ScanIdentifier(bool identifyKwds, EncodedCharPtr *pp)
 {
     EncodedCharPtr p = *pp;
     EncodedCharPtr pchMin = p;
@@ -449,8 +450,8 @@ tokens Scanner<EncodingPolicy>::ScanIdentifier(bool identifyKwds, EncodedCharPtr
     return ScanIdentifierContinue(identifyKwds, fHasEscape, fHasMultiChar, pchMin, p, pp);
 }
 
-template <typename EncodingPolicy>
-BOOL Scanner<EncodingPolicy>::FastIdentifierContinue(EncodedCharPtr&p, EncodedCharPtr last)
+template <typename EncodingPolicy, typename TScriptContextImpl>
+BOOL Scanner<EncodingPolicy, TScriptContextImpl>::FastIdentifierContinue(EncodedCharPtr&p, EncodedCharPtr last)
 {
     if (MultiUnitEncoding)
     {
@@ -478,8 +479,8 @@ BOOL Scanner<EncodingPolicy>::FastIdentifierContinue(EncodedCharPtr&p, EncodedCh
     return false;
 }
 
-template <typename EncodingPolicy>
-tokens Scanner<EncodingPolicy>::ScanIdentifierContinue(bool identifyKwds, bool fHasEscape, bool fHasMultiChar,
+template <typename EncodingPolicy, typename TScriptContextImpl>
+tokens Scanner<EncodingPolicy, TScriptContextImpl>::ScanIdentifierContinue(bool identifyKwds, bool fHasEscape, bool fHasMultiChar,
     EncodedCharPtr pchMin, EncodedCharPtr p, EncodedCharPtr *pp)
 {
     EncodedCharPtr last = m_pchLast;
@@ -582,15 +583,15 @@ tokens Scanner<EncodingPolicy>::ScanIdentifierContinue(bool identifyKwds, bool f
     return tk == tkID || (tk == tkYIELD && !m_fYieldIsKeyword) || (tk == tkAWAIT && !m_fAwaitIsKeyword) ? tkID : tkNone;
 }
 
-template <typename EncodingPolicy>
-IdentPtr Scanner<EncodingPolicy>::PidAt(size_t iecpMin, size_t iecpLim)
+template <typename EncodingPolicy, typename TScriptContextImpl>
+IdentPtr Scanner<EncodingPolicy, TScriptContextImpl>::PidAt(size_t iecpMin, size_t iecpLim)
 {
     Assert(iecpMin < AdjustedLength() && iecpLim <= AdjustedLength() && iecpLim > iecpMin);
     return PidOfIdentiferAt(m_pchBase + iecpMin, m_pchBase + iecpLim);
 }
 
-template <typename EncodingPolicy>
-ulong Scanner<EncodingPolicy>::UnescapeToTempBuf(EncodedCharPtr p, EncodedCharPtr last)
+template <typename EncodingPolicy, typename TScriptContextImpl>
+ulong Scanner<EncodingPolicy, TScriptContextImpl>::UnescapeToTempBuf(EncodedCharPtr p, EncodedCharPtr last)
 {
     m_tempChBuf.Init();
     while( p < last )
@@ -615,15 +616,15 @@ ulong Scanner<EncodingPolicy>::UnescapeToTempBuf(EncodedCharPtr p, EncodedCharPt
     return m_tempChBuf.m_ichCur;
 }
 
-template <typename EncodingPolicy>
-IdentPtr Scanner<EncodingPolicy>::PidOfIdentiferAt(EncodedCharPtr p, EncodedCharPtr last)
+template <typename EncodingPolicy, typename TScriptContextImpl>
+IdentPtr Scanner<EncodingPolicy, TScriptContextImpl>::PidOfIdentiferAt(EncodedCharPtr p, EncodedCharPtr last)
 {
     long cch = UnescapeToTempBuf(p, last);
     return m_phtbl->PidHashNameLen(m_tempChBuf.m_prgch, cch);
 }
 
-template <typename EncodingPolicy>
-IdentPtr Scanner<EncodingPolicy>::PidOfIdentiferAt(EncodedCharPtr p, EncodedCharPtr last, bool fHadEscape, bool fHasMultiChar)
+template <typename EncodingPolicy, typename TScriptContextImpl>
+IdentPtr Scanner<EncodingPolicy, TScriptContextImpl>::PidOfIdentiferAt(EncodedCharPtr p, EncodedCharPtr last, bool fHadEscape, bool fHasMultiChar)
 {
     // If there is an escape sequence in the JS6 identifier or it is a UTF8
     // source then we have to convert it to the equivalent char so we use a
@@ -644,8 +645,8 @@ IdentPtr Scanner<EncodingPolicy>::PidOfIdentiferAt(EncodedCharPtr p, EncodedChar
     }
 }
 
-template <typename EncodingPolicy>
-typename Scanner<EncodingPolicy>::EncodedCharPtr Scanner<EncodingPolicy>::FScanNumber(EncodedCharPtr p, double *pdbl, bool& likelyInt)
+template <typename EncodingPolicy, typename TScriptContextImpl>
+typename Scanner<EncodingPolicy, TScriptContextImpl>::EncodedCharPtr Scanner<EncodingPolicy, TScriptContextImpl>::FScanNumber(EncodedCharPtr p, double *pdbl, bool& likelyInt)
 {
     EncodedCharPtr last = m_pchLast;
     EncodedCharPtr pchT;
@@ -732,8 +733,8 @@ LFloat:
     }
 }
 
-template <typename EncodingPolicy>
-BOOL Scanner<EncodingPolicy>::oFScanNumber(double *pdbl, bool& likelyInt)
+template <typename EncodingPolicy, typename TScriptContextImpl>
+BOOL Scanner<EncodingPolicy, TScriptContextImpl>::oFScanNumber(double *pdbl, bool& likelyInt)
 {
     EncodedCharPtr pchT;
     m_OctOrLeadingZeroOnLastTKNumber = false;
@@ -829,8 +830,8 @@ LFloat:
     return TRUE;
 }
 
-template <typename EncodingPolicy>
-tokens Scanner<EncodingPolicy>::TryRescanRegExp()
+template <typename EncodingPolicy, typename TScriptContextImpl>
+tokens Scanner<EncodingPolicy, TScriptContextImpl>::TryRescanRegExp()
 {
     EncodedCharPtr current = m_currentCharacter;
     tokens result = RescanRegExp();
@@ -839,8 +840,8 @@ tokens Scanner<EncodingPolicy>::TryRescanRegExp()
     return result;
 }
 
-template <typename EncodingPolicy>
-tokens Scanner<EncodingPolicy>::RescanRegExp()
+template <typename EncodingPolicy, typename TScriptContextImpl>
+tokens Scanner<EncodingPolicy, TScriptContextImpl>::RescanRegExp()
 {
 #if DEBUG
     switch (m_ptoken->tk)
@@ -872,8 +873,8 @@ tokens Scanner<EncodingPolicy>::RescanRegExp()
     return tk;
 }
 
-template <typename EncodingPolicy>
-tokens Scanner<EncodingPolicy>::RescanRegExpNoAST()
+template <typename EncodingPolicy, typename TScriptContextImpl>
+tokens Scanner<EncodingPolicy, TScriptContextImpl>::RescanRegExpNoAST()
 {
 #if DEBUG
     switch (m_ptoken->tk)
@@ -907,8 +908,8 @@ tokens Scanner<EncodingPolicy>::RescanRegExpNoAST()
     return tk;
 }
 
-template <typename EncodingPolicy>
-tokens Scanner<EncodingPolicy>::RescanRegExpTokenizer()
+template <typename EncodingPolicy, typename TScriptContextImpl>
+tokens Scanner<EncodingPolicy, TScriptContextImpl>::RescanRegExpTokenizer()
 {
 #if DEBUG
     switch (m_ptoken->tk)
@@ -947,8 +948,8 @@ tokens Scanner<EncodingPolicy>::RescanRegExpTokenizer()
     return tk;
 }
 
-template <typename EncodingPolicy>
-tokens Scanner<EncodingPolicy>::ScanRegExpConstant(ArenaAllocator* alloc)
+template <typename EncodingPolicy, typename TScriptContextImpl>
+tokens Scanner<EncodingPolicy, TScriptContextImpl>::ScanRegExpConstant(ArenaAllocator* alloc)
 {
     if (m_parser && m_parser->IsBackgroundParser())
     {
@@ -1019,8 +1020,8 @@ tokens Scanner<EncodingPolicy>::ScanRegExpConstant(ArenaAllocator* alloc)
     return m_ptoken->SetRegex(pattern, m_parser);
 }
 
-template<typename EncodingPolicy>
-tokens Scanner<EncodingPolicy>::ScanRegExpConstantNoAST(ArenaAllocator* alloc)
+template <typename EncodingPolicy, typename TScriptContextImpl>
+tokens Scanner<EncodingPolicy, TScriptContextImpl>::ScanRegExpConstantNoAST(ArenaAllocator* alloc)
 {
     if (m_parser && m_parser->IsBackgroundParser())
     {
@@ -1067,8 +1068,8 @@ tokens Scanner<EncodingPolicy>::ScanRegExpConstantNoAST(ArenaAllocator* alloc)
 
 }
 
-template<typename EncodingPolicy>
-tokens Scanner<EncodingPolicy>::ScanStringTemplateBegin(EncodedCharPtr *pp)
+template <typename EncodingPolicy, typename TScriptContextImpl>
+tokens Scanner<EncodingPolicy, TScriptContextImpl>::ScanStringTemplateBegin(EncodedCharPtr *pp)
 {
     // String template must begin with a string constant followed by '`' or '${'
     ScanStringConstant<true, true>('`', pp);
@@ -1104,8 +1105,8 @@ tokens Scanner<EncodingPolicy>::ScanStringTemplateBegin(EncodedCharPtr *pp)
     return ScanError(m_currentCharacter, tkStrTmplBegin);
 }
 
-template<typename EncodingPolicy>
-tokens Scanner<EncodingPolicy>::ScanStringTemplateMiddleOrEnd(EncodedCharPtr *pp)
+template <typename EncodingPolicy, typename TScriptContextImpl>
+tokens Scanner<EncodingPolicy, TScriptContextImpl>::ScanStringTemplateMiddleOrEnd(EncodedCharPtr *pp)
 {
     // String template middle and end tokens must begin with a string constant
     ScanStringConstant<true, true>('`', pp);
@@ -1146,9 +1147,9 @@ tokens Scanner<EncodingPolicy>::ScanStringTemplateMiddleOrEnd(EncodedCharPtr *pp
 *  the string should be saved off before the next token is scanned.
 */
 
-template<typename EncodingPolicy>
+template <typename EncodingPolicy, typename TScriptContextImpl>
 template<bool stringTemplateMode, bool createRawString>
-tokens Scanner<EncodingPolicy>::ScanStringConstant(OLECHAR delim, EncodedCharPtr *pp)
+tokens Scanner<EncodingPolicy, TScriptContextImpl>::ScanStringConstant(OLECHAR delim, EncodedCharPtr *pp)
 {
     static_assert((stringTemplateMode && createRawString) || (!stringTemplateMode && !createRawString), "stringTemplateMode and createRawString must have the same value");
 
@@ -1579,8 +1580,8 @@ LBreak:
     return tkStrCon;
 }
 
-template<typename EncodingPolicy>
-tokens Scanner<EncodingPolicy>::ScanStringConstant(OLECHAR delim, EncodedCharPtr *pp)
+template <typename EncodingPolicy, typename TScriptContextImpl>
+tokens Scanner<EncodingPolicy, TScriptContextImpl>::ScanStringConstant(OLECHAR delim, EncodedCharPtr *pp)
 {
     return ScanStringConstant<false, false>(delim, pp);
 }
@@ -1589,8 +1590,8 @@ tokens Scanner<EncodingPolicy>::ScanStringConstant(OLECHAR delim, EncodedCharPtr
 *
 *  Consume a C-style comment.
 */
-template<typename EncodingPolicy>
-tokens Scanner<EncodingPolicy>::SkipComment(EncodedCharPtr *pp, /* out */ bool* containTypeDef)
+template <typename EncodingPolicy, typename TScriptContextImpl>
+tokens Scanner<EncodingPolicy, TScriptContextImpl>::SkipComment(EncodedCharPtr *pp, /* out */ bool* containTypeDef)
 {
     Assert(containTypeDef != nullptr);
     EncodedCharPtr p = *pp;
@@ -1664,8 +1665,8 @@ LLineBreak:
 *
 *  We've encountered a newline - update various counters and things.
 */
-template<typename EncodingPolicy>
-void Scanner<EncodingPolicy>::ScanNewLine(uint ch)
+template <typename EncodingPolicy, typename TScriptContextImpl>
+void Scanner<EncodingPolicy, TScriptContextImpl>::ScanNewLine(uint ch)
 {
     if (ch == '\r' && PeekNextChar() == '\n')
     {
@@ -1679,8 +1680,8 @@ void Scanner<EncodingPolicy>::ScanNewLine(uint ch)
 *
 *  We've encountered a newline - update various counters and things.
 */
-template<typename EncodingPolicy>
-void Scanner<EncodingPolicy>::NotifyScannedNewLine()
+template <typename EncodingPolicy, typename TScriptContextImpl>
+void Scanner<EncodingPolicy, TScriptContextImpl>::NotifyScannedNewLine()
 {
     // update in scanner:  previous line, current line, number of lines.
     m_line++;
@@ -1695,8 +1696,8 @@ void Scanner<EncodingPolicy>::NotifyScannedNewLine()
 */
 
 
-template<typename EncodingPolicy>
-tokens Scanner<EncodingPolicy>::ScanForcingPid()
+template <typename EncodingPolicy, typename TScriptContextImpl>
+tokens Scanner<EncodingPolicy, TScriptContextImpl>::ScanForcingPid()
 {
     if (m_DeferredParseFlags != ScanFlagNone)
     {
@@ -1716,26 +1717,26 @@ tokens Scanner<EncodingPolicy>::ScanForcingPid()
     return Scan();
 }
 
-template<typename EncodingPolicy>
-tokens Scanner<EncodingPolicy>::Scan()
+template <typename EncodingPolicy, typename TScriptContextImpl>
+tokens Scanner<EncodingPolicy, TScriptContextImpl>::Scan()
 {
     return ScanCore(true);
 }
 
-template<typename EncodingPolicy>
-tokens Scanner<EncodingPolicy>::ScanNoKeywords()
+template <typename EncodingPolicy, typename TScriptContextImpl>
+tokens Scanner<EncodingPolicy, TScriptContextImpl>::ScanNoKeywords()
 {
     return ScanCore(false);
 }
 
-template<typename EncodingPolicy>
-tokens Scanner<EncodingPolicy>::ScanAhead()
+template <typename EncodingPolicy, typename TScriptContextImpl>
+tokens Scanner<EncodingPolicy, TScriptContextImpl>::ScanAhead()
 {
     return ScanNoKeywords();
 }
 
-template<typename EncodingPolicy>
-tokens Scanner<EncodingPolicy>::ScanCore(bool identifyKwds)
+template <typename EncodingPolicy, typename TScriptContextImpl>
+tokens Scanner<EncodingPolicy, TScriptContextImpl>::ScanCore(bool identifyKwds)
 {
     codepoint_t ch;
     OLECHAR firstChar;
@@ -2373,8 +2374,8 @@ LDone:
     return (m_ptoken->tk = token);
 }
 
-template <typename EncodingPolicy>
-IdentPtr Scanner<EncodingPolicy>::GetSecondaryBufferAsPid()
+template <typename EncodingPolicy, typename TScriptContextImpl>
+IdentPtr Scanner<EncodingPolicy, TScriptContextImpl>::GetSecondaryBufferAsPid()
 {
     bool createPid = true;
 
@@ -2393,21 +2394,21 @@ IdentPtr Scanner<EncodingPolicy>::GetSecondaryBufferAsPid()
     }
 }
 
-template <typename EncodingPolicy>
-LPCOLESTR Scanner<EncodingPolicy>::StringFromLong(long lw)
+template <typename EncodingPolicy, typename TScriptContextImpl>
+LPCOLESTR Scanner<EncodingPolicy, TScriptContextImpl>::StringFromLong(long lw)
 {
     _ltow_s(lw, m_tempChBuf.m_prgch, m_tempChBuf.m_cchMax, 10);
     return m_tempChBuf.m_prgch;
 }
 
-template <typename EncodingPolicy>
-IdentPtr Scanner<EncodingPolicy>::PidFromLong(long lw)
+template <typename EncodingPolicy, typename TScriptContextImpl>
+IdentPtr Scanner<EncodingPolicy, TScriptContextImpl>::PidFromLong(long lw)
 {
     return m_phtbl->PidHashName(StringFromLong(lw));
 }
 
-template <typename EncodingPolicy>
-LPCOLESTR Scanner<EncodingPolicy>::StringFromDbl(double dbl)
+template <typename EncodingPolicy, typename TScriptContextImpl>
+LPCOLESTR Scanner<EncodingPolicy, TScriptContextImpl>::StringFromDbl(double dbl)
 {
     if (!Js::NumberUtilities::FDblToStr(dbl, m_tempChBuf.m_prgch, m_tempChBuf.m_cchMax))
     {
@@ -2416,21 +2417,21 @@ LPCOLESTR Scanner<EncodingPolicy>::StringFromDbl(double dbl)
     return m_tempChBuf.m_prgch;
 }
 
-template <typename EncodingPolicy>
-IdentPtr Scanner<EncodingPolicy>::PidFromDbl(double dbl)
+template <typename EncodingPolicy, typename TScriptContextImpl>
+IdentPtr Scanner<EncodingPolicy, TScriptContextImpl>::PidFromDbl(double dbl)
 {
     return m_phtbl->PidHashName(StringFromDbl(dbl));
 }
 
 
-template <typename EncodingPolicy>
-void Scanner<EncodingPolicy>::Capture(_Out_ RestorePoint* restorePoint)
+template <typename EncodingPolicy, typename TScriptContextImpl>
+void Scanner<EncodingPolicy, TScriptContextImpl>::Capture(_Out_ RestorePoint* restorePoint)
 {
     Capture(restorePoint, 0, 0);
 }
 
-template <typename EncodingPolicy>
-void Scanner<EncodingPolicy>::Capture(_Out_ RestorePoint* restorePoint, uint functionIdIncrement, size_t lengthDecr)
+template <typename EncodingPolicy, typename TScriptContextImpl>
+void Scanner<EncodingPolicy, TScriptContextImpl>::Capture(_Out_ RestorePoint* restorePoint, uint functionIdIncrement, size_t lengthDecr)
 {
     restorePoint->m_ichMinTok = this->IchMinTok();
     restorePoint->m_ichMinLine = this->IchMinLine();
@@ -2447,21 +2448,21 @@ void Scanner<EncodingPolicy>::Capture(_Out_ RestorePoint* restorePoint, uint fun
 #endif
 }
 
-template <typename EncodingPolicy>
-void Scanner<EncodingPolicy>::SeekTo(const RestorePoint& restorePoint)
+template <typename EncodingPolicy, typename TScriptContextImpl>
+void Scanner<EncodingPolicy, TScriptContextImpl>::SeekTo(const RestorePoint& restorePoint)
 {
     SeekAndScan<false>(restorePoint);
 }
 
-template <typename EncodingPolicy>
-void Scanner<EncodingPolicy>::SeekToForcingPid(const RestorePoint& restorePoint)
+template <typename EncodingPolicy, typename TScriptContextImpl>
+void Scanner<EncodingPolicy, TScriptContextImpl>::SeekToForcingPid(const RestorePoint& restorePoint)
 {
     SeekAndScan<true>(restorePoint);
 }
 
-template <typename EncodingPolicy>
+template <typename EncodingPolicy, typename TScriptContextImpl>
 template <bool forcePid>
-void Scanner<EncodingPolicy>::SeekAndScan(const RestorePoint& restorePoint)
+void Scanner<EncodingPolicy, TScriptContextImpl>::SeekAndScan(const RestorePoint& restorePoint)
 {
     this->m_currentCharacter = this->m_pchBase + restorePoint.m_ichMinTok + restorePoint.m_cMinTokMultiUnits;
     this->m_pchMinLine = this->m_pchBase + restorePoint.m_ichMinLine + restorePoint.m_cMinLineMultiUnits;
@@ -2485,16 +2486,16 @@ void Scanner<EncodingPolicy>::SeekAndScan(const RestorePoint& restorePoint)
     Assert(this->m_cMultiUnits == restorePoint.m_cMultiUnits);
 }
 
-template <typename EncodingPolicy>
-void Scanner<EncodingPolicy>::SeekTo(const RestorePoint& restorePoint, uint *nextFunctionId)
+template <typename EncodingPolicy, typename TScriptContextImpl>
+void Scanner<EncodingPolicy, TScriptContextImpl>::SeekTo(const RestorePoint& restorePoint, uint *nextFunctionId)
 {
     SeekTo(restorePoint);
     *nextFunctionId += restorePoint.functionIdIncrement;
 }
 
 // Called by CompileScriptException::ProcessError to retrieve a BSTR for the line on which an error occurred.
-template<typename EncodingPolicy>
-HRESULT Scanner<EncodingPolicy>::SysAllocErrorLine(long ichMinLine, __out BSTR* pbstrLine)
+template <typename EncodingPolicy, typename TScriptContextImpl>
+HRESULT Scanner<EncodingPolicy, TScriptContextImpl>::SysAllocErrorLine(long ichMinLine, __out BSTR* pbstrLine)
 {
     if( !pbstrLine )
     {
@@ -2524,6 +2525,6 @@ HRESULT Scanner<EncodingPolicy>::SysAllocErrorLine(long ichMinLine, __out BSTR* 
     return S_OK;
 }
 
-template class Scanner<NullTerminatedUnicodeEncodingPolicy>;
-template class Scanner<NullTerminatedUTF8EncodingPolicy>;
-template class Scanner<NotNullTerminatedUTF8EncodingPolicy>;
+template class Scanner<NullTerminatedUnicodeEncodingPolicy, ScannerNS::TScriptContextImpl>;
+template class Scanner<NullTerminatedUTF8EncodingPolicy, ScannerNS::TScriptContextImpl>;
+template class Scanner<NotNullTerminatedUTF8EncodingPolicy, ScannerNS::TScriptContextImpl>;

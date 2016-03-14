@@ -1398,7 +1398,7 @@ namespace Js
         DEFINE_VTABLE_CTOR_NO_REGISTER(ParseableFunctionInfo, FunctionProxy);
         FunctionBody* Parse(ScriptFunction ** functionRef = nullptr, bool isByteCodeDeserialization = false);
 #ifndef TEMP_DISABLE_ASMJS
-        FunctionBody* ParseAsmJs(Parser * p, __out CompileScriptException * se, __out ParseNodePtr * ptree);
+        FunctionBody* ParseAsmJs(Parser<Js::ScriptContext> * p, __out CompileScriptException * se, __out ParseNodePtr * ptree);
 #endif
         virtual uint GetDisplayNameLength() const { return m_displayNameLength; }
         virtual uint GetShortDisplayNameOffset() const { return m_displayShortNameOffset; }

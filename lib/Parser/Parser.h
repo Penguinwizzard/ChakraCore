@@ -11,7 +11,8 @@
 // FORWARD
 namespace Js
 {
-    class ScriptContext;
+    template <typename TScriptContextImpl>
+    class ScriptContextParseFacade;
     class JavascriptString;
 }
 

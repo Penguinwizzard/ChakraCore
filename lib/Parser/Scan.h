@@ -14,7 +14,7 @@ namespace Js
 
 int CountNewlines(LPCOLESTR psz, int cch = -1);
 
-class Parser;
+template <typename TScriptContextImpl> class Parser;
 struct ParseContext;
 
 struct Token
@@ -138,7 +138,8 @@ public:
         this->u.maybeInt = maybeInt;
     }
 
-    tokens SetRegex(UnifiedRegex::RegexPattern *const pattern, Parser *const parser);
+    template <typename TParserFacadeScriptContextImpl>
+    tokens SetRegex(UnifiedRegex::RegexPattern *const pattern, Parser<TParserFacadeScriptContextImpl> *const parser);
 };
 
 typedef BYTE UTF8Char;
@@ -340,17 +341,17 @@ struct RestorePoint
     };
 };
 
-template <typename EncodingPolicy>
+template <typename EncodingPolicy, typename TParseFacadeScriptContextImpl>
 class Scanner : public IScanner, public EncodingPolicy
 {
-    friend Parser;
+    friend Parser<TParseFacadeScriptContextImpl>;
     typedef typename EncodingPolicy::EncodedChar EncodedChar;
     typedef typename EncodingPolicy::EncodedCharPtr EncodedCharPtr;
 
 public:
-    static Scanner * Create(Parser* parser, HashTbl *phtbl, Token *ptoken, ErrHandler *perr, Js::ScriptContext *scriptContext)
+    static Scanner * Create(Parser<TParseFacadeScriptContextImpl>* parser, HashTbl *phtbl, Token *ptoken, ErrHandler *perr, Js::ScriptContextParseFacade<TParseFacadeScriptContextImpl> *scriptContextParseFacade)
     {
-        return HeapNewNoThrow(Scanner, parser, phtbl, ptoken, perr, scriptContext);
+        return HeapNewNoThrow(Scanner, parser, phtbl, ptoken, perr, scriptContextParseFacade);
     }
     void Release(void)
     {
@@ -553,14 +554,16 @@ public:
 
     virtual HRESULT SysAllocErrorLine(long ichMinLine, __out BSTR* pbstrLine);
     charcount_t UpdateLine(long &line, EncodedCharPtr start, EncodedCharPtr last, charcount_t ichStart, charcount_t ichEnd);
+
+    template <typename TParseFacadeScriptContextImpl>
     class TemporaryBuffer
     {
-        friend Scanner<EncodingPolicy>;
+        friend Scanner<EncodingPolicy, TParseFacadeScriptContextImpl>;
 
     private:
         // Keep a reference to the scanner.
         // We will use it to signal an error if we fail to allocate the buffer.
-        Scanner<EncodingPolicy>* m_pscanner;
+        Scanner<EncodingPolicy, TParseFacadeScriptContextImpl>* m_pscanner;
         ulong m_cchMax;
         ulong m_ichCur;
         __field_ecount(m_cchMax) OLECHAR *m_prgch;
@@ -650,7 +653,7 @@ public:
     }
 
 private:
-    Parser *m_parser;
+    Parser<TParseFacadeScriptContextImpl> *m_parser;
     HashTbl *m_phtbl;
     Token *m_ptoken;
     EncodedCharPtr m_pchBase;          // beginning of source
@@ -677,8 +680,8 @@ private:
     bool m_fAwaitIsKeyword;             // Whether to treat 'await' as an identifier or keyword
 
     // Temporary buffer.
-    TemporaryBuffer m_tempChBuf;
-    TemporaryBuffer m_tempChBufSecondary;
+    TemporaryBuffer<TParseFacadeScriptContextImpl> m_tempChBuf;
+    TemporaryBuffer<TParseFacadeScriptContextImpl> m_tempChBufSecondary;
 
     charcount_t m_line;
     ScanState m_scanState;
@@ -689,13 +692,13 @@ private:
     charcount_t m_startLine;
     EncodedCharPtr m_pchStartLine;
 
-    Js::ScriptContext* m_scriptContext;
+    Js::ScriptContextParseFacade<TParseFacadeScriptContextImpl>* m_scriptContextParseFacade;
     const Js::CharClassifier *charClassifier;
 
     tokens m_tkPrevious;
     size_t m_iecpLimTokPrevious;
 
-    Scanner(Parser* parser, HashTbl *phtbl, Token *ptoken, ErrHandler *perr, Js::ScriptContext *scriptContext);
+    Scanner(Parser<TParseFacadeScriptContextImpl>* parser, HashTbl *phtbl, Token *ptoken, ErrHandler *perr, Js::ScriptContextParseFacade<TParseFacadeScriptContextImpl> *scriptContext);
     ~Scanner(void);
 
     template <bool forcePid>
@@ -804,4 +807,12 @@ private:
 
 };
 
-typedef Scanner<NullTerminatedUTF8EncodingPolicy> UTF8Scanner;
+namespace ScannerNS
+{
+#ifndef T_PARSERFACADE_SC_IMPL
+    typedef Js::ScriptContext TScriptContextImpl;
+#else
+    typedef T_PARSERFACADE_SC_IMPL TScriptContextImpl;
+#endif
+};
+
