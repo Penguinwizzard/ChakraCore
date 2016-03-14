@@ -4109,8 +4109,8 @@ void TrackLdElemOrLdLenOfArgumentsObject(ParseNode *pnode, ByteCodeGenerator *by
 {
     if (pnode == nullptr || 
         !byteCodeGenerator->TopFuncInfo() || 
-        !byteCodeGenerator->TopFuncInfo()->byteCodeFunction->IsFunctionParsed() /*we don't care if the function is deferred*/||
         byteCodeGenerator->TopFuncInfo()->inArgsCount == 1 /*no formals*/ ||
+        !byteCodeGenerator->TopFuncInfo()->byteCodeFunction->IsFunctionParsed() /*we don't care if the function is deferred*/||
         !byteCodeGenerator->TopFuncInfo()->byteCodeFunction->GetDoBackendArgumentsOptimization() /*ArgsOpt already switched off*/)
     {
         return;
@@ -4136,6 +4136,12 @@ void TrackLdElemOrLdLenOfArgumentsObject(ParseNode *pnode, ByteCodeGenerator *by
         if (IsArgsObjElementOrLen(pnode1, byteCodeGenerator))
         {
             byteCodeGenerator->TopFuncInfo()->byteCodeFunction->SetDoBackendArgumentsOptimization(false);
+#ifdef PERF_HINT
+            if (PHASE_TRACE1(Js::PerfHintPhase))
+            {
+                WritePerfHint(PerfHints::HeapArgumentsDueToFormals, byteCodeGenerator->TopFuncInfo()->byteCodeFunction->GetFunctionBody(), 0);
+            }
+#endif
             return;
         }
     }
@@ -4145,6 +4151,12 @@ void TrackLdElemOrLdLenOfArgumentsObject(ParseNode *pnode, ByteCodeGenerator *by
         (nop == knopVarDecl && pnode->sxVar.pid == byteCodeGenerator->GetParser()->GetArgumentsPid()))
     {
         byteCodeGenerator->TopFuncInfo()->byteCodeFunction->SetDoBackendArgumentsOptimization(false);
+#ifdef PERF_HINT
+        if (PHASE_TRACE1(Js::PerfHintPhase))
+        {
+            WritePerfHint(PerfHints::HeapArgumentsDueToFormals, byteCodeGenerator->TopFuncInfo()->byteCodeFunction->GetFunctionBody(), 0);
+        }
+#endif
     }
     else if(IsArgsObjElementOrLen(pnode, byteCodeGenerator))
     {
