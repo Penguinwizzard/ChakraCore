@@ -1,0 +1,85 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Condition="'$(ChakraBuildPathImported)'!='true'" Project="$(SolutionDir)Chakra.Build.Paths.props" />
+  <Import Project="$(BuildConfigPropsPath)Chakra.Build.ProjectConfiguration.props" />
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{B71D7563-D353-48F3-9C82-0C00A5DF673B}</ProjectGuid>
+    <RootNamespace>Js</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+  </PropertyGroup>
+  <Import Project="$(BuildConfigPropsPath)Chakra.Build.Default.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <Import Project="$(BuildConfigPropsPath)Chakra.Build.props" />
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>
+          $(ChakraCoreRootDirectory)\bin\Helpers;
+          $(ChakraCoreRootDirectory)\lib\Parser;
+          $(ChakraCoreRootDirectory)\lib\Runtime;
+          $(ChakraCoreRootDirectory)\lib\Common;
+          %(AdditionalIncludeDirectories)
+      </AdditionalIncludeDirectories>
+      <BrowseInformation Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</BrowseInformation>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>
+        $(ChakraParserLib);
+        $(ChakraCommonMemoryLib);
+        $(ChakraCommonLinkDependencies);
+        %(AdditionalDependencies);
+      </AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <Bscmake>
+      <PreserveSbr Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</PreserveSbr>
+    </Bscmake>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="jsbc.cpp" />
+    <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="StubExternalApi.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\lib\Common\Codex\Chakra.Common.Codex.vcxproj">
+      <Project>{1876E800-AD77-48C4-A2F7-E5265F24AC38}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\lib\Common\Common\Chakra.Common.Common.vcxproj">
+      <Project>{bb4153ff-ac3e-4734-b562-cc23812df31b}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\lib\Common\Core\Chakra.Common.Core.vcxproj">
+      <Project>{cc4153ff-ac3e-4734-b562-cc23812df31b}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\lib\Common\DataStructures\Chakra.Common.DataStructures.vcxproj">
+      <Project>{5643d42a-c38d-4d82-9662-58470b3ac9f7}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\lib\Common\Exceptions\Chakra.Common.Exceptions.vcxproj">
+      <Project>{fd8eec40-4141-448a-bf4b-1589fbe4f60d}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\lib\Common\Util\Chakra.Common.Util.vcxproj">
+      <Project>{6979EC58-7A28-465C-A694-F3323A1F5401}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\lib\Common\Memory\Chakra.Common.Memory.vcxproj">
+      <Project>{bb4153ff-ac3e-4734-b562-ff23812df31b}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Helpers\Chakra.Bin.Helpers.vcxproj">
+      <Project>{0484DD1A-762E-4A7F-B3E3-37BECBF37119}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\lib\Runtime\Base\Chakra.Runtime.Base.vcxproj">
+      <Project>{706083F7-6AA4-4558-A153-6352EF9110EE}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\lib\Parser\Chakra.Parser.vcxproj">
+      <Project>{F6FAD160-5A4B-476A-93AC-33E0B3A18C0C}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="jsbc.h" />
+    <ClInclude Include="stdafx.h" />
+  </ItemGroup>
+  <Import Project="$(BuildConfigPropsPath)Chakra.Build.targets" Condition="exists('$(BuildConfigPropsPath)Chakra.Build.targets')" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

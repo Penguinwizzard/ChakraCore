@@ -146,6 +146,7 @@
     <ClInclude Include="SimdBool32x4Operation.h" />
     <ClInclude Include="SimdBool16x8Operation.h" />
     <ClInclude Include="SimdBool8x16Operation.h" />
+    <ClInclude Include="ModuleNamespace.h" />
   </ItemGroup>
   <ItemGroup>
     <MASM Include="$(MSBuildThisFileDirectory)amd64\amd64_Thunks.asm">

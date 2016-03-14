@@ -37,6 +37,7 @@ typedef uintptr_t  UIntConstType;
 typedef IntMath<intptr_t>::Type IntConstMath;
 typedef double  FloatConstType;
 
+#if !DISABLE_JIT
 #include "EmitBuffer.h"
 #include "InterpreterThunkEmitter.h"
 #include "BackendOpCodeAttr.h"
@@ -46,6 +47,7 @@ typedef double  FloatConstType;
 #include "JnHelperMethod.h"
 #include "IRType.h"
 #include "InlineeFrameInfo.h"
+#endif
 
 NativeCodeGenerator * NewNativeCodeGenerator(Js::ScriptContext * nativeCodeGen);
 void DeleteNativeCodeGenerator(NativeCodeGenerator * nativeCodeGen);
