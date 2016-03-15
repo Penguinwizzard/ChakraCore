@@ -236,6 +236,7 @@ public:
 
         // Search for the corresponding PidRef, or the position to insert the new PidRef.
         PidRefStack *ref = m_pidRefStack;
+        PidRefStack *prevRef = nullptr;
         while (1)
         {
             // We may already have a ref for this scopeId.
@@ -266,8 +267,16 @@ public:
                     // Without parameter scope, we would have just pushed the ref instead of inserting.
                     // We effectively had a false positive match (a parameter scope ref with no sym)
                     // so we need to push the Pid rather than inserting.
-                    newRef->prev = m_pidRefStack;
-                    m_pidRefStack = newRef;
+                    if (prevRef)
+                    {
+                        newRef->prev = prevRef->prev;
+                        prevRef->prev = newRef;
+                    }
+                    else
+                    {
+                        newRef->prev = m_pidRefStack;
+                        m_pidRefStack = newRef;
+                    }
                 }
                 else
                 {
@@ -278,6 +287,7 @@ public:
             }
 
             Assert(ref->prev->id <= ref->id);
+            prevRef = ref;
             ref = ref->prev;
         }
     }
