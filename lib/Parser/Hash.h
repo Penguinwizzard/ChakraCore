@@ -274,8 +274,7 @@ public:
                     }
                     else
                     {
-                        newRef->prev = m_pidRefStack;
-                        m_pidRefStack = newRef;
+                        AssertMsg(false, "Wrong order in the pid reference stack");
                     }
                 }
                 else
