@@ -10950,7 +10950,7 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
                 if (instr->GetSrc1()->IsRegOpnd())
                 {
                     StackSym *sym = instr->GetSrc1()->AsRegOpnd()->m_sym;
-                    if (this->IsInt32TypeSpecialized(sym, this->currentBlock))
+                    if (this->IsInt32TypeSpecialized(sym, this->currentBlock) && src1Val->GetValueInfo()->IsLikelyInt())
                     {
                         opcode = instr->m_opcode;
                         skipDst = true;                 // We should keep dst as is, otherwise the link opnd for next ArgOut/InlineBuiltInStart would be broken.
@@ -10958,13 +10958,13 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
                         newMin = min1; newMax = max1;   // Values don't matter, these are unused.
                         goto LOutsideSwitch;            // Continue to int-type-specialize.
                     }
-                    else if (this->IsFloat64TypeSpecialized(sym, this->currentBlock))
+                    else if (this->IsFloat64TypeSpecialized(sym, this->currentBlock) && src1Val->GetValueInfo()->IsLikelyFloat())
                     {
                         src1Val = src1OriginalVal;
                         src2Val = src2OriginalVal;
                         return this->TypeSpecializeFloatBinary(instr, src1Val, src2Val, pDstVal);
                     }
-                    else if (this->IsSimd128F4TypeSpecialized(sym, this->currentBlock))
+                    else if (this->IsSimd128F4TypeSpecialized(sym, this->currentBlock) && src1Val->GetValueInfo()->IsLikelySimd128Float32x4())
                     {
                         // SIMD_JS
                         // We should be already using the SIMD type-spec sym. See TypeSpecializeSimd128.
