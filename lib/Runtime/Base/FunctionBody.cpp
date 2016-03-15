@@ -1814,7 +1814,7 @@ namespace Js
                 BEGIN_TRANSLATE_EXCEPTION_TO_HRESULT
                 {
                     CompileScriptException se;
-                    Parser ps(m_scriptContext, funcBody->GetIsStrictMode() ? TRUE : FALSE);
+                    Parser<Js::ScriptContext> ps(m_scriptContext->GetParseFacade<Js::ScriptContext>(m_scriptContext->SourceCodeAllocator()), funcBody->GetIsStrictMode() ? TRUE : FALSE);
                     ParseNodePtr parseTree;
 
                     uint nextFunctionId = funcBody->GetLocalFunctionId();
@@ -1916,7 +1916,7 @@ namespace Js
     }
 
 #ifndef TEMP_DISABLE_ASMJS
-    FunctionBody* ParseableFunctionInfo::ParseAsmJs(Parser * ps, __out CompileScriptException * se, __out ParseNodePtr * parseTree)
+    FunctionBody* ParseableFunctionInfo::ParseAsmJs(Parser<Js::ScriptContext> * ps, __out CompileScriptException * se, __out ParseNodePtr * parseTree)
     {
         Assert(IsDeferredParseFunction());
         Assert(m_isAsmjsMode);

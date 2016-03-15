@@ -5,7 +5,7 @@
 #pragma once
 
 HRESULT GenerateByteCode(__in ParseNode *pnode, __in ulong grfscr, __in Js::ScriptContext* scriptContext, __inout Js::ParseableFunctionInfo ** ppRootFunc,
-                         __in uint sourceIndex, __in bool forceNoNative, __in Parser* parser, __in CompileScriptException *pse, Js::ScopeInfo* parentScopeInfo = nullptr,
+                         __in uint sourceIndex, __in bool forceNoNative, __in Parser<Js::ScriptContext>* parser, __in CompileScriptException *pse, Js::ScopeInfo* parentScopeInfo = nullptr,
                          Js::ScriptFunction ** functionRef = nullptr);
 
 //

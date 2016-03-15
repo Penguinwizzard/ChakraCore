@@ -37,7 +37,7 @@ private:
     bool funcEscapes;
     bool inPrologue;
     bool inDestructuredPattern;
-    Parser* parser; // currently active parser (used for AST transformation)
+    Parser<Js::ScriptContext>* parser; // currently active parser (used for AST transformation)
 
     Js::Utf8SourceInfo *m_utf8SourceInfo;
 
@@ -53,7 +53,7 @@ public:
 
     bool InPrologue() const { return inPrologue; }
     void SetInPrologue(bool val) { inPrologue = val; }
-    Parser* GetParser() { return parser; }
+    Parser<Js::ScriptContext>* GetParser() { return parser; }
     Js::ParseableFunctionInfo * GetRootFunc(){return pRootFunc;}
     void SetRootFuncInfo(FuncInfo* funcInfo);
     // Treat the return value register like a constant register so that the byte code writer maps it to the bottom

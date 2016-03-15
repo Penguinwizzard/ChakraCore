@@ -109,19 +109,17 @@ namespace UnifiedRegex
     {
     }
 
-    template <typename P, const bool IsLiteral>
-    Parser<P, IsLiteral>::Parser
-        ( Js::ScriptContext* scriptContext
-        , ArenaAllocator* ctAllocator
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    Parser<P, IsLiteral, TScriptContextImpl>::Parser
+        (ArenaAllocator* ctAllocator
         , StandardChars<EncodedChar>* standardEncodedChars
         , StandardChars<Char>* standardChars
         , bool isFromExternalSource
 #if ENABLE_REGEX_CONFIG_OPTIONS
         , DebugWriter* w
 #endif
-        )
-        : scriptContext(scriptContext)
-        , ctAllocator(ctAllocator)
+        ):
+        ctAllocator(ctAllocator)
         , standardEncodedChars(standardEncodedChars)
         , standardChars(standardChars)
 #if ENABLE_REGEX_CONFIG_OPTIONS
@@ -156,8 +154,8 @@ namespace UnifiedRegex
     // Input buffer management
     //
 
-    template <typename P, const bool IsLiteral>
-    void Parser<P, IsLiteral>::SetPosition(const EncodedChar* input, const EncodedChar* inputLim, bool inBody)
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    void Parser<P, IsLiteral, TScriptContextImpl>::SetPosition(const EncodedChar* input, const EncodedChar* inputLim, bool inBody)
     {
         this->input = input;
         this->inputLim = inputLim;
@@ -166,44 +164,44 @@ namespace UnifiedRegex
         RestoreMultiUnits(0);
     }
 
-    template <typename P, const bool IsLiteral>
-    inline CharCount Parser<P, IsLiteral>::Pos()
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    inline CharCount Parser<P, IsLiteral, TScriptContextImpl>::Pos()
     {
         CharCount nextOffset = Chars<EncodedChar>::OSB(next, input);
         Assert(nextOffset >= m_cMultiUnits);
         return nextOffset - (CharCount)m_cMultiUnits;
     }
 
-    template <typename P, const bool IsLiteral>
-    inline bool Parser<P, IsLiteral>::IsEOF()
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    inline bool Parser<P, IsLiteral, TScriptContextImpl>::IsEOF()
     {
         return next >= inputLim;
     }
 
-    template <typename P, const bool IsLiteral>
-    inline bool Parser<P, IsLiteral>::ECCanConsume(CharCount n /*= 1*/)
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    inline bool Parser<P, IsLiteral, TScriptContextImpl>::ECCanConsume(CharCount n /*= 1*/)
     {
         return next + n <= inputLim;
     }
 
-    template <typename P, const bool IsLiteral>
-    inline typename P::EncodedChar Parser<P, IsLiteral>::ECLookahead(CharCount n /*= 0*/)
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    inline typename P::EncodedChar Parser<P, IsLiteral, TScriptContextImpl>::ECLookahead(CharCount n /*= 0*/)
     {
         // Ok to look ahead to terminating 0
         Assert(next + n <= inputLim);
         return next[n];
     }
 
-    template <typename P, const bool IsLiteral>
-    inline typename P::EncodedChar Parser<P, IsLiteral>::ECLookback(CharCount n /*= 0*/)
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    inline typename P::EncodedChar Parser<P, IsLiteral, TScriptContextImpl>::ECLookback(CharCount n /*= 0*/)
     {
         // Ok to look ahead to terminating 0
         Assert(n + input <= next);
         return *(next - n);
     }
 
-    template <typename P, const bool IsLiteral>
-    inline void Parser<P, IsLiteral>::ECConsume(CharCount n /*= 1*/)
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    inline void Parser<P, IsLiteral, TScriptContextImpl>::ECConsume(CharCount n /*= 1*/)
     {
         Assert(next + n <= inputLim);
 #if DBG
@@ -213,15 +211,15 @@ namespace UnifiedRegex
         next += n;
     }
 
-    template <typename P, const bool IsLiteral>
-    inline void Parser<P, IsLiteral>::ECConsumeMultiUnit(CharCount n /*= 1*/)
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    inline void Parser<P, IsLiteral, TScriptContextImpl>::ECConsumeMultiUnit(CharCount n /*= 1*/)
     {
         Assert(next + n <= inputLim);
         next += n;
     }
 
-    template <typename P, const bool IsLiteral>
-    inline void Parser<P, IsLiteral>::ECRevert(CharCount n /*= 1*/)
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    inline void Parser<P, IsLiteral, TScriptContextImpl>::ECRevert(CharCount n /*= 1*/)
     {
         Assert(n + input <= next);
         next -= n;
@@ -230,10 +228,10 @@ namespace UnifiedRegex
     //
     // Helpers
     //
-    template <typename P, const bool IsLiteral>
-    int Parser<P, IsLiteral>::TryParseExtendedUnicodeEscape(Char& c, bool& previousSurrogatePart, bool trackSurrogatePair = false)
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    int Parser<P, IsLiteral, TScriptContextImpl>::TryParseExtendedUnicodeEscape(Char& c, bool& previousSurrogatePart, bool trackSurrogatePair = false)
     {
-        if (!scriptContext->GetConfig()->IsES6UnicodeExtensionsEnabled())
+        if (!config->IsES6UnicodeExtensionsEnabled())
         {
             return 0;
         }
@@ -268,7 +266,7 @@ namespace UnifiedRegex
         uint consumptionNumber = i + 1;
         Assert(consumptionNumber >= 3);
 
-        if (!previousSurrogatePart && trackSurrogatePair && this->scriptContext->GetConfig()->IsES6UnicodeExtensionsEnabled())
+        if (!previousSurrogatePart && trackSurrogatePair && this->config->IsES6UnicodeExtensionsEnabled())
         {
             // Current location
             TrackIfSurrogatePair(codePoint, (next - 1), consumptionNumber + 1);
@@ -307,8 +305,8 @@ namespace UnifiedRegex
     //     - A pointer to the current location of the linked list
     //     - If a previous location is tracked, then it is of a parsed character (not given character) before current, and not same to current
     //       This can't be asserted directly, and has to be followed by callers. Term pass can reset with each iteration, as well as this method in cases it needs.
-    template <typename P, const bool IsLiteral>
-    void Parser<P, IsLiteral>:: TrackIfSurrogatePair(codepoint_t codePoint,  const EncodedChar* location, uint32 consumptionLength)
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    void Parser<P, IsLiteral, TScriptContextImpl>:: TrackIfSurrogatePair(codepoint_t codePoint,  const EncodedChar* location, uint32 consumptionLength)
     {
         Assert(codePoint < 0x110000);
         Assert(location != nullptr);
@@ -358,8 +356,8 @@ namespace UnifiedRegex
             }
         }
     }
-    template <typename P, const bool IsLiteral>
-    Node* Parser<P, IsLiteral>::CreateSurrogatePairAtom(char16 lower, char16 upper)
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    Node* Parser<P, IsLiteral, TScriptContextImpl>::CreateSurrogatePairAtom(char16 lower, char16 upper)
     {
         MatchLiteralNode * literalNode = Anew(this->ctAllocator, MatchLiteralNode, 0, 0);
         MatchCharNode lowerNode(lower);
@@ -394,13 +392,13 @@ namespace UnifiedRegex
     // prefix is between [ and _
     // suffix is between ^ and ]
     // full range is between _ and ^
-    template <typename P, const bool IsLiteral>
-    AltNode* Parser<P, IsLiteral>::AppendSurrogateRangeToDisjunction(codepoint_t minorCodePoint, codepoint_t majorCodePoint, AltNode *lastAltNode)
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    AltNode* Parser<P, IsLiteral, TScriptContextImpl>::AppendSurrogateRangeToDisjunction(codepoint_t minorCodePoint, codepoint_t majorCodePoint, AltNode *lastAltNode)
     {
         Assert(minorCodePoint < majorCodePoint);
         Assert(minorCodePoint >= 0x10000u);
         Assert(majorCodePoint >= 0x10000u);
-        Assert(scriptContext->GetConfig()->IsES6UnicodeExtensionsEnabled() && unicodeFlagPresent);
+        Assert(config->IsES6UnicodeExtensionsEnabled() && unicodeFlagPresent);
 
         char16 lowerMinorCodeUnit, upperMinorCodeUnit, lowerMajorCodeUnit, upperMajorCodeUnit;
         Js::NumberUtilities::CodePointAsSurrogatePair(minorCodePoint, &lowerMinorCodeUnit, &upperMinorCodeUnit);
@@ -537,8 +535,8 @@ namespace UnifiedRegex
         return tailToAdd;
     }
 
-    template <typename P, const bool IsLiteral>
-    AltNode* Parser<P, IsLiteral>::AppendSurrogatePairToDisjunction(codepoint_t codePoint, AltNode *lastAltNode)
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    AltNode* Parser<P, IsLiteral, TScriptContextImpl>::AppendSurrogatePairToDisjunction(codepoint_t codePoint, AltNode *lastAltNode)
     {
         char16 lower, upper;
         Js::NumberUtilities::CodePointAsSurrogatePair(codePoint, &lower, &upper);
@@ -557,17 +555,17 @@ namespace UnifiedRegex
     // Errors
     //
 
-    template <typename P, const bool IsLiteral>
-    void Parser<P, IsLiteral>::Fail(HRESULT error)
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    void Parser<P, IsLiteral, TScriptContextImpl>::Fail(HRESULT error)
     {
         throw ParseError(inBody, Pos(), Chars<EncodedChar>::OSB(next, input), error);
     }
 
     // This doesn't throw, but stores first error code for throwing later
-    template <typename P, const bool IsLiteral>
-    void Parser<P, IsLiteral>::DeferredFailIfUnicode(HRESULT error)
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    void Parser<P, IsLiteral, TScriptContextImpl>::DeferredFailIfUnicode(HRESULT error)
     {
-        Assert(this->scriptContext->GetConfig()->IsES6UnicodeExtensionsEnabled());
+        Assert(this->config->IsES6UnicodeExtensionsEnabled());
         if (this->deferredIfUnicodeError == nullptr)
         {
             this->deferredIfUnicodeError = Anew(ctAllocator, ParseError, inBody, Pos(), Chars<EncodedChar>::OSB(next, input), error);
@@ -575,18 +573,18 @@ namespace UnifiedRegex
     }
 
     // This doesn't throw, but stores first error code for throwing later
-    template <typename P, const bool IsLiteral>
-    void Parser<P, IsLiteral>::DeferredFailIfNotUnicode(HRESULT error)
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    void Parser<P, IsLiteral, TScriptContextImpl>::DeferredFailIfNotUnicode(HRESULT error)
     {
-        Assert(this->scriptContext->GetConfig()->IsES6UnicodeExtensionsEnabled());
+        Assert(this->config->IsES6UnicodeExtensionsEnabled());
         if (this->deferredIfNotUnicodeError == nullptr)
         {
             this->deferredIfNotUnicodeError = Anew(ctAllocator, ParseError, inBody, Pos(), Chars<EncodedChar>::OSB(next, input), error);
         }
     }
 
-    template <typename P, const bool IsLiteral>
-    inline void Parser<P, IsLiteral>::ECMust(EncodedChar ec, HRESULT error)
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    inline void Parser<P, IsLiteral, TScriptContextImpl>::ECMust(EncodedChar ec, HRESULT error)
     {
         // We never look for 0
         Assert(ec != 0);
@@ -595,8 +593,8 @@ namespace UnifiedRegex
         ECConsume();
     }
 
-    template <typename P, const bool IsLiteral>
-    inline char16 Parser<P, IsLiteral>::NextChar()
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    inline char16 Parser<P, IsLiteral, TScriptContextImpl>::NextChar()
     {
         Assert(!IsEOF());
         // Could be an embedded 0
@@ -611,8 +609,8 @@ namespace UnifiedRegex
     // Patterns/Disjunctions/Alternatives
     //
 
-    template <typename P, const bool IsLiteral>
-    void Parser<P, IsLiteral>::PatternPass0()
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    void Parser<P, IsLiteral, TScriptContextImpl>::PatternPass0()
     {
         this->positionAfterLastSurrogate = nullptr;
         this->deferredIfNotUnicodeError = nullptr;
@@ -620,14 +618,14 @@ namespace UnifiedRegex
         DisjunctionPass0(0);
     }
 
-    template <typename P, const bool IsLiteral>
-    Node* Parser<P, IsLiteral>::PatternPass1()
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    Node* Parser<P, IsLiteral, TScriptContextImpl>::PatternPass1()
     {
         return DisjunctionPass1();
     }
 
-    template <typename P, const bool IsLiteral>
-    Node* Parser<P, IsLiteral>::UnionNodes(Node* prev, Node* curr)
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    Node* Parser<P, IsLiteral, TScriptContextImpl>::UnionNodes(Node* prev, Node* curr)
     {
         if (prev->tag == Node::MatchChar)
         {
@@ -701,8 +699,8 @@ namespace UnifiedRegex
             return 0;
     }
 
-    template <typename P, const bool IsLiteral>
-    void Parser<P, IsLiteral>::DisjunctionPass0(int depth)
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    void Parser<P, IsLiteral, TScriptContextImpl>::DisjunctionPass0(int depth)
     {
         AlternativePass0(depth);
         while (true)
@@ -715,8 +713,8 @@ namespace UnifiedRegex
         }
     }
 
-    template <typename P, const bool IsLiteral>
-    Node* Parser<P, IsLiteral>::DisjunctionPass1()
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    Node* Parser<P, IsLiteral, TScriptContextImpl>::DisjunctionPass1()
     {
         // Maintain the invariants:
         //  - alt lists have two or more items
@@ -785,16 +783,16 @@ namespace UnifiedRegex
         }
     }
 
-    template <typename P, const bool IsLiteral>
-    inline bool Parser<P, IsLiteral>::IsEndOfAlternative()
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    inline bool Parser<P, IsLiteral, TScriptContextImpl>::IsEndOfAlternative()
     {
         EncodedChar ec = ECLookahead();
         // Could be terminating 0, but embedded 0 is part of alternative
         return (ec == 0 && IsEOF()) || ec == ')' || ec == '|' || (IsLiteral && ec == '/');
     }
 
-    template <typename P, const bool IsLiteral>
-    void Parser<P, IsLiteral>::EnsureLitbuf(CharCount size)
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    void Parser<P, IsLiteral, TScriptContextImpl>::EnsureLitbuf(CharCount size)
     {
         if (litbufLen - litbufNext < size)
         {
@@ -806,8 +804,8 @@ namespace UnifiedRegex
         }
     }
 
-    template <typename P, const bool IsLiteral>
-    void Parser<P, IsLiteral>::AccumLiteral(MatchLiteralNode* deferredLiteralNode, Node* charOrLiteralNode)
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    void Parser<P, IsLiteral, TScriptContextImpl>::AccumLiteral(MatchLiteralNode* deferredLiteralNode, Node* charOrLiteralNode)
     {
         Assert(charOrLiteralNode->tag == Node::MatchChar || charOrLiteralNode->tag == Node::MatchLiteral);
         CharCount addLen = charOrLiteralNode->LiteralLength();
@@ -846,8 +844,8 @@ namespace UnifiedRegex
         }
     }
 
-    template <typename P, const bool IsLiteral>
-    Node* Parser<P, IsLiteral>::FinalTerm(Node* node, MatchLiteralNode* deferredLiteralNode)
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    Node* Parser<P, IsLiteral, TScriptContextImpl>::FinalTerm(Node* node, MatchLiteralNode* deferredLiteralNode)
     {
         if (node == deferredLiteralNode)
         {
@@ -873,15 +871,15 @@ namespace UnifiedRegex
         return node;
     }
 
-    template <typename P, const bool IsLiteral>
-    void Parser<P, IsLiteral>::AlternativePass0(int depth)
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    void Parser<P, IsLiteral, TScriptContextImpl>::AlternativePass0(int depth)
     {
         while (!IsEndOfAlternative())
             TermPass0(depth);
     }
 
-    template <typename P, const bool IsLiteral>
-    Node* Parser<P, IsLiteral>::AlternativePass1()
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    Node* Parser<P, IsLiteral, TScriptContextImpl>::AlternativePass1()
     {
         if (IsEndOfAlternative())
             return Anew(ctAllocator, SimpleNode, Node::Empty);
@@ -1023,8 +1021,8 @@ namespace UnifiedRegex
     // Terms
     //
 
-    template <typename P, const bool IsLiteral>
-    Node* Parser<P, IsLiteral>::NewLoopNode(CharCount lower, CharCountOrFlag upper, bool isGreedy, Node* body)
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    Node* Parser<P, IsLiteral, TScriptContextImpl>::NewLoopNode(CharCount lower, CharCountOrFlag upper, bool isGreedy, Node* body)
     {
         //
         // NOTE: We'd like to represent r? (i.e. r{0,1}) as r|<empty> since the loop representation has high overhead.
@@ -1044,8 +1042,8 @@ namespace UnifiedRegex
             return Anew(ctAllocator, LoopNode, lower, upper, isGreedy, body);
     }
 
-    template <typename P, const bool IsLiteral>
-    bool Parser<P, IsLiteral>::AtQuantifier()
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    bool Parser<P, IsLiteral, TScriptContextImpl>::AtQuantifier()
     {
         // Could be terminating 0
         switch (ECLookahead())
@@ -1087,8 +1085,8 @@ namespace UnifiedRegex
         }
     }
 
-    template <typename P, const bool IsLiteral>
-    bool Parser<P, IsLiteral>::OptNonGreedy()
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    bool Parser<P, IsLiteral, TScriptContextImpl>::OptNonGreedy()
     {
         // Could be terminating 0
         if (ECLookahead() != '?')
@@ -1097,8 +1095,8 @@ namespace UnifiedRegex
         return false;
     }
 
-    template <typename P, const bool IsLiteral>
-    CharCount Parser<P, IsLiteral>::RepeatCount()
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    CharCount Parser<P, IsLiteral, TScriptContextImpl>::RepeatCount()
     {
         CharCount n = 0;
         int digits = 0;
@@ -1123,10 +1121,12 @@ namespace UnifiedRegex
         }
     }
 
-    template <typename P, const bool IsLiteral>
-    void Parser<P, IsLiteral>::TermPass0(int depth)
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    void Parser<P, IsLiteral, TScriptContextImpl>::TermPass0(int depth)
     {
-        PROBE_STACK(scriptContext, Js::Constants::MinStackRegex);
+        // Stack probing is supported only by the "real" script context implementation
+        // REVIEW: Is there a better way to do this than the unsafe cast?
+        PROBE_STACK(((Js::ScriptContextParseFacade<Js::ScriptContext>*) scriptContextParseFacade)->GetImpl(), Js::Constants::MinStackRegex);
         // Either we have a location at the start, or the end, never both. As in between it should have been cleared if surrogate pair
         // Or must be cleared if we didn't perform the check
         bool clearLocationIfPresent = this->tempLocationOfSurrogatePair != nullptr;
@@ -1210,7 +1210,7 @@ namespace UnifiedRegex
             {
                 const EncodedChar* current = next;
                 Char c = NextChar();
-                if (scriptContext->GetConfig()->IsES6UnicodeExtensionsEnabled())
+                if (config->IsES6UnicodeExtensionsEnabled())
                 {
                     TrackIfSurrogatePair(c, current, (uint32)(next - current));
                 }
@@ -1276,10 +1276,12 @@ namespace UnifiedRegex
         }
     }
 
-    template <typename P, const bool IsLiteral>
-    Node* Parser<P, IsLiteral>::TermPass1(MatchCharNode* deferredCharNode, bool& previousSurrogatePart)
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    Node* Parser<P, IsLiteral, TScriptContextImpl>::TermPass1(MatchCharNode* deferredCharNode, bool& previousSurrogatePart)
     {
-        PROBE_STACK(scriptContext, Js::Constants::MinStackRegex);
+        // Stack probing is supported only by the "real" script context implementation
+        // REVIEW: Is there a better way to do this than the unsafe cast?
+        PROBE_STACK(((Js::ScriptContextParseFacade<Js::ScriptContext>*) scriptContextParseFacade)->GetImpl(), Js::Constants::MinStackRegex);
 
         Node* node = 0;
         bool containsSurrogatePair = false;
@@ -1471,8 +1473,8 @@ namespace UnifiedRegex
 
 #pragma warning(push)
 #pragma warning(disable:4702)   // unreachable code
-    template <typename P, const bool IsLiteral>
-    bool Parser<P, IsLiteral>::AtomEscapePass0()
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    bool Parser<P, IsLiteral, TScriptContextImpl>::AtomEscapePass0()
     {
         EncodedChar ec = ECLookahead();
         if (ec == 0 && IsEOF())
@@ -1535,7 +1537,7 @@ namespace UnifiedRegex
                     standardEncodedChars->IsHex(ECLookahead(2)) &&
                     standardEncodedChars->IsHex(ECLookahead(3)))
                 {
-                    if (this->scriptContext->GetConfig()->IsES6UnicodeExtensionsEnabled())
+                    if (this->config->IsES6UnicodeExtensionsEnabled())
                     {
                         codepoint_t value = (standardEncodedChars->DigitValue(ECLookahead(0)) << 12) |
                                             (standardEncodedChars->DigitValue(ECLookahead(1)) << 8) |
@@ -1554,8 +1556,8 @@ namespace UnifiedRegex
     }
 #pragma warning(pop)
 
-    template <typename P, const bool IsLiteral>
-    bool Parser<P, IsLiteral>::AtomEscapePass1(Node*& node, MatchCharNode* deferredCharNode, bool& previousSurrogatePart)
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    bool Parser<P, IsLiteral, TScriptContextImpl>::AtomEscapePass1(Node*& node, MatchCharNode* deferredCharNode, bool& previousSurrogatePart)
     {
         Assert(!IsEOF()); // checked for terminating 0 in pass 0
         if (standardEncodedChars->IsDigit(ECLookahead()))
@@ -1742,10 +1744,10 @@ namespace UnifiedRegex
         }
     }
 
-    template <typename P, const bool IsLiteral>
-    bool Parser<P, IsLiteral>::SurrogatePairPass1(Node*& node, MatchCharNode* deferredCharNode, bool& previousSurrogatePart)
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    bool Parser<P, IsLiteral, TScriptContextImpl>::SurrogatePairPass1(Node*& node, MatchCharNode* deferredCharNode, bool& previousSurrogatePart)
     {
-        if (!this->scriptContext->GetConfig()->IsES6UnicodeExtensionsEnabled() || !unicodeFlagPresent)
+        if (!this->config->IsES6UnicodeExtensionsEnabled() || !unicodeFlagPresent)
         {
             return false;
         }
@@ -1829,8 +1831,8 @@ namespace UnifiedRegex
     // Classes
     //
 
-    template <typename P, const bool IsLiteral>
-    bool Parser<P, IsLiteral>::AtSecondSingletonClassAtom()
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    bool Parser<P, IsLiteral, TScriptContextImpl>::AtSecondSingletonClassAtom()
     {
         Assert(ECLookahead() == '-');
         if (ECLookahead(1) == '\\')
@@ -1853,8 +1855,8 @@ namespace UnifiedRegex
         return true;
     }
 
-    template <typename P, const bool IsLiteral>
-    void Parser<P, IsLiteral>::CharacterClassPass0()
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    void Parser<P, IsLiteral, TScriptContextImpl>::CharacterClassPass0()
     {
         // Could be terminating 0
         if (ECLookahead() == '^')
@@ -1936,13 +1938,13 @@ namespace UnifiedRegex
             {
                 lastCodepoint = NextChar();
 
-                if (scriptContext->GetConfig()->IsES6UnicodeExtensionsEnabled())
+                if (config->IsES6UnicodeExtensionsEnabled())
                 {
                     TrackIfSurrogatePair(lastCodepoint, current, (uint32)(next - current));
                 }
             }
 
-            if (!scriptContext->GetConfig()->IsES6UnicodeExtensionsEnabled())
+            if (!config->IsES6UnicodeExtensionsEnabled())
             {
                 // This is much easier to handle.
                 if (pendingRangeStart != INVALID_CODEPOINT && lastCodepoint != INVALID_CODEPOINT)
@@ -2034,9 +2036,9 @@ namespace UnifiedRegex
     }
 
 
-    template <typename P, const bool IsLiteral>
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
     template <bool containsSurrogates>
-    Node* Parser<P, IsLiteral>::CharacterClassPass1()
+    Node* Parser<P, IsLiteral, TScriptContextImpl>::CharacterClassPass1()
     {
         Assert(containsSurrogates ? unicodeFlagPresent : true);
 
@@ -2171,7 +2173,7 @@ namespace UnifiedRegex
         }
 
         // Everything past here must be under the flag
-        Assert(scriptContext->GetConfig()->IsES6UnicodeExtensionsEnabled());
+        Assert(config->IsES6UnicodeExtensionsEnabled());
 
         if (codePointSet.IsEmpty())
         {
@@ -2323,8 +2325,8 @@ namespace UnifiedRegex
 
 #pragma warning(push)
 #pragma warning(disable:4702)   // unreachable code
-    template <typename P, const bool IsLiteral>
-    bool Parser<P, IsLiteral>::ClassEscapePass0(Char& singleton, bool& previousSurrogatePart)
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    bool Parser<P, IsLiteral, TScriptContextImpl>::ClassEscapePass0(Char& singleton, bool& previousSurrogatePart)
     {
         // Could be terminating 0
         EncodedChar ec = ECLookahead();
@@ -2439,7 +2441,7 @@ namespace UnifiedRegex
                             (standardEncodedChars->DigitValue(ECLookahead(1)) << 8) |
                             (standardEncodedChars->DigitValue(ECLookahead(2)) << 4) |
                             (standardEncodedChars->DigitValue(ECLookahead(3))));
-                    if (this->scriptContext->GetConfig()->IsES6UnicodeExtensionsEnabled())
+                    if (this->config->IsES6UnicodeExtensionsEnabled())
                     {
                         // Current location
                         TrackIfSurrogatePair(singleton, (next - 1), 5);
@@ -2459,8 +2461,8 @@ namespace UnifiedRegex
     }
 #pragma warning(pop)
 
-    template <typename P, const bool IsLiteral>
-    Node* Parser<P, IsLiteral>::ClassEscapePass1(MatchCharNode* deferredCharNode, MatchSetNode* deferredSetNode, bool& previousSurrogatePart)
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    Node* Parser<P, IsLiteral, TScriptContextImpl>::ClassEscapePass1(MatchCharNode* deferredCharNode, MatchSetNode* deferredSetNode, bool& previousSurrogatePart)
     {
         // Checked for terminating 0 is pass 0
         Assert(!IsEOF());
@@ -2599,8 +2601,8 @@ namespace UnifiedRegex
     // Options
     //
 
-    template <typename P, const bool IsLiteral>
-    void Parser<P, IsLiteral>::Options(RegexFlags& flags)
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    void Parser<P, IsLiteral, TScriptContextImpl>::Options(RegexFlags& flags)
     {
         while (true)
         {
@@ -2621,7 +2623,7 @@ namespace UnifiedRegex
                 standardEncodedChars->IsHex(ECLookahead(4)) &&
                 standardEncodedChars->IsHex(ECLookahead(5)))
             {
-                if (scriptContext->GetConfig()->IsES6UnicodeExtensionsEnabled())
+                if (config->IsES6UnicodeExtensionsEnabled())
                 {
                     Fail(JSERR_RegExpSyntax);
                     return;
@@ -2666,7 +2668,7 @@ namespace UnifiedRegex
                 break;
             case 'u':
                 // If we don't have unicode enabled, fall through to default
-                if (scriptContext->GetConfig()->IsES6UnicodeExtensionsEnabled())
+                if (config->IsES6UnicodeExtensionsEnabled())
                 {
                     if ((flags & UnicodeRegexFlag) != 0)
                     {
@@ -2679,7 +2681,7 @@ namespace UnifiedRegex
                     break;
                 }
             case 'y':
-                if (scriptContext->GetConfig()->IsES6RegExStickyEnabled())
+                if (config->IsES6RegExStickyEnabled())
                 {
                     if ((flags & StickyRegexFlag) != 0)
                     {
@@ -2709,8 +2711,8 @@ namespace UnifiedRegex
     // Entry points
     //
 
-    template <typename P, const bool IsLiteral>
-    Node* Parser<P, IsLiteral>::ParseDynamic
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    Node* Parser<P, IsLiteral, TScriptContextImpl>::ParseDynamic
         ( const EncodedChar* body
         , const EncodedChar* bodyLim
         , const EncodedChar* opts
@@ -2738,7 +2740,7 @@ namespace UnifiedRegex
                 Fail(JSERR_RegExpSyntax);
             this->unicodeFlagPresent = (flags & UnifiedRegex::UnicodeRegexFlag) == UnifiedRegex::UnicodeRegexFlag;
             this->caseInsensitiveFlagPresent = (flags & UnifiedRegex::IgnoreCaseRegexFlag) == UnifiedRegex::IgnoreCaseRegexFlag;
-            Assert(!this->unicodeFlagPresent || scriptContext->GetConfig()->IsES6UnicodeExtensionsEnabled());
+            Assert(!this->unicodeFlagPresent || config->IsES6UnicodeExtensionsEnabled());
         }
         else
         {
@@ -2767,8 +2769,8 @@ namespace UnifiedRegex
         return root;
     }
 
-    template <typename P, const bool IsLiteral>
-    Node* Parser<P, IsLiteral>::ParseLiteral
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    Node* Parser<P, IsLiteral, TScriptContextImpl>::ParseLiteral
         ( const EncodedChar* input
         , const EncodedChar* inputLim
         , CharCount& outBodyEncodedChars
@@ -2797,7 +2799,7 @@ namespace UnifiedRegex
         Options(flags);
         this->unicodeFlagPresent = (flags & UnifiedRegex::UnicodeRegexFlag) == UnifiedRegex::UnicodeRegexFlag;
         this->caseInsensitiveFlagPresent = (flags & UnifiedRegex::IgnoreCaseRegexFlag) == UnifiedRegex::IgnoreCaseRegexFlag;
-        Assert(!this->unicodeFlagPresent || scriptContext->GetConfig()->IsES6UnicodeExtensionsEnabled());
+        Assert(!this->unicodeFlagPresent || config->IsES6UnicodeExtensionsEnabled());
 
         // If this HR has been set, that means we have an earlier failure than the one caught above.
         if (this->deferredIfNotUnicodeError != nullptr && !this->unicodeFlagPresent)
@@ -2827,8 +2829,8 @@ namespace UnifiedRegex
         return root;
     }
 
-    template <typename P, const bool IsLiteral>
-    void Parser<P, IsLiteral>::ParseLiteralNoAST
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    void Parser<P, IsLiteral, TScriptContextImpl>::ParseLiteralNoAST
         ( const EncodedChar* input
         , const EncodedChar* inputLim
         , CharCount& outBodyEncodedChars
@@ -2866,9 +2868,9 @@ namespace UnifiedRegex
         }
     }
 
-    template <typename P, const bool IsLiteral>
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
     template <const bool buildAST>
-    RegexPattern * Parser<P, IsLiteral>::CompileProgram
+    RegexPattern * Parser<P, IsLiteral, TScriptContextImpl>::CompileProgram
         ( Node* root,
           const EncodedChar*& currentCharacter,
           const CharCount totalLen,
@@ -2882,7 +2884,7 @@ namespace UnifiedRegex
 
         if (buildAST)
         {
-            const auto recycler = this->scriptContext->GetRecycler();
+            const auto recycler = this->scriptContextParseFacade->GetThreadContext()->GetRecycler();
             program = Program::New(recycler, flags);
             this->CaptureSourceAndGroups(recycler, program, currentCharacter, bodyChars);
         }
@@ -2895,29 +2897,29 @@ namespace UnifiedRegex
             return nullptr;
         }
 
-        RegexPattern* pattern = RegexPattern::New(this->scriptContext, program, true);
+        RegexPattern* pattern = RegexPattern::New(this->scriptContextParseFacade->GetImpl(), program, true);
 
 #if ENABLE_REGEX_CONFIG_OPTIONS
         RegexStats* stats = 0;
         if (REGEX_CONFIG_FLAG(RegexProfile))
         {
-            stats = this->scriptContext->GetRegexStatsDatabase()->GetRegexStats(pattern);
-            this->scriptContext->GetRegexStatsDatabase()->EndProfile(stats, RegexStats::Parse);
+            stats = this->scriptContextParseFacade->GetRegexStatsDatabase()->GetRegexStats(pattern);
+            this->scriptContextParseFacade->GetRegexStatsDatabase()->EndProfile(stats, RegexStats::Parse);
         }
         if (REGEX_CONFIG_FLAG(RegexTracing))
         {
-            DebugWriter* tw = this->scriptContext->GetRegexDebugWriter();
+            DebugWriter* tw = this->scriptContextParseFacade->GetRegexDebugWriter();
             tw->Print(_u("// REGEX COMPILE "));
             pattern->Print(tw);
             tw->EOL();
         }
         if (REGEX_CONFIG_FLAG(RegexProfile))
-            this->scriptContext->GetRegexStatsDatabase()->BeginProfile();
+            this->scriptContextParseFacade->GetRegexStatsDatabase()->BeginProfile();
 #endif
 
-        ArenaAllocator* rtAllocator = this->scriptContext->RegexAllocator();
+        ArenaAllocator* rtAllocator = this->scriptContextParseFacade->RegexAllocator();
         Compiler::Compile
-            ( this->scriptContext
+            ( this->scriptContextParseFacade
               , ctAllocator
               , rtAllocator
               , standardChars
@@ -2933,18 +2935,18 @@ namespace UnifiedRegex
 
 #if ENABLE_REGEX_CONFIG_OPTIONS
         if (REGEX_CONFIG_FLAG(RegexProfile))
-            this->scriptContext->GetRegexStatsDatabase()->EndProfile(stats, RegexStats::Compile);
+            this->scriptContextParseFacade->GetRegexStatsDatabase()->EndProfile(stats, RegexStats::Compile);
 #endif
 
 #ifdef PROFILE_EXEC
-        this->scriptContext->ProfileEnd(Js::RegexCompilePhase);
+        this->scriptContextParseFacade->ProfileEnd(Js::RegexCompilePhase);
 #endif
 
         return pattern;
     }
 
-    template <typename P, const bool IsLiteral>
-    void Parser<P, IsLiteral>::CaptureEmptySourceAndNoGroups(Program* program)
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    void Parser<P, IsLiteral, TScriptContextImpl>::CaptureEmptySourceAndNoGroups(Program* program)
     {
         Assert(program->source == 0);
 
@@ -2956,8 +2958,8 @@ namespace UnifiedRegex
         // Remaining to set during compilation: litbuf, litbufLen, numLoops, insts, instsLen, entryPointLabel
     }
 
-    template <typename P, const bool IsLiteral>
-    void Parser<P, IsLiteral>::CaptureSourceAndGroups(Recycler* recycler, Program* program, const EncodedChar* body, CharCount bodyChars)
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    void Parser<P, IsLiteral, TScriptContextImpl>::CaptureSourceAndGroups(Recycler* recycler, Program* program, const EncodedChar* body, CharCount bodyChars)
     {
         Assert(program->source == 0);
         Assert(body != 0);
@@ -2974,11 +2976,11 @@ namespace UnifiedRegex
         // Remaining to set during compilation: litbuf, litbufLen, numLoops, insts, instsLen, entryPointLabel
     }
 
-    template <typename P, const bool IsLiteral>
-    Node* Parser<P, IsLiteral>::GetNodeWithValidCharacterSet(EncodedChar cc)
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    Node* Parser<P, IsLiteral, TScriptContextImpl>::GetNodeWithValidCharacterSet(EncodedChar cc)
     {
         Node* nodeToReturn = nullptr;
-        if (this->scriptContext->GetConfig()->IsES6UnicodeExtensionsEnabled() && this->unicodeFlagPresent)
+        if (this->config->IsES6UnicodeExtensionsEnabled() && this->unicodeFlagPresent)
         {
             MatchSetNode *lowerRangeNode = Anew(ctAllocator, MatchSetNode, false, false);
             lowerRangeNode->set.SetRange(ctAllocator, (Char)0xD800, (Char)0xDBFF);
@@ -3042,8 +3044,8 @@ namespace UnifiedRegex
         return nodeToReturn;
     }
 
-    template <typename P, const bool IsLiteral>
-    void Parser<P, IsLiteral>::FreeBody()
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
+    void Parser<P, IsLiteral, TScriptContextImpl>::FreeBody()
     {
         if (litbuf != 0)
         {
@@ -3058,13 +3060,15 @@ namespace UnifiedRegex
     // Template instantiation
     //
 
-    template <typename P, const bool IsLiteral>
+    template <typename P, const bool IsLiteral, typename TScriptContextImpl>
     void UnifiedRegexParserForceInstantiation()
     {
         typedef typename P::EncodedChar EncodedChar;
-        Parser<P, IsLiteral> p
-            ( 0
-            , 0
+
+        typedef typename Parser<P, IsLiteral, TScriptContextImpl> ParserClass;
+
+        ParserClass p
+            (0
             , 0
             , 0
             , false
@@ -3088,11 +3092,11 @@ namespace UnifiedRegex
 
     void UnifiedRegexParserForceAllInstantiations()
     {
-        UnifiedRegexParserForceInstantiation<NullTerminatedUnicodeEncodingPolicy, false>();
-        UnifiedRegexParserForceInstantiation<NullTerminatedUnicodeEncodingPolicy, true>();
-        UnifiedRegexParserForceInstantiation<NullTerminatedUTF8EncodingPolicy, false>();
-        UnifiedRegexParserForceInstantiation<NullTerminatedUTF8EncodingPolicy, true>();
-        UnifiedRegexParserForceInstantiation<NotNullTerminatedUTF8EncodingPolicy, false>();
-        UnifiedRegexParserForceInstantiation<NotNullTerminatedUTF8EncodingPolicy, true>();
+        UnifiedRegexParserForceInstantiation<NullTerminatedUnicodeEncodingPolicy, false, Js::ScriptContext>();
+        UnifiedRegexParserForceInstantiation<NullTerminatedUnicodeEncodingPolicy, true, Js::ScriptContext>();
+        UnifiedRegexParserForceInstantiation<NullTerminatedUTF8EncodingPolicy, false, Js::ScriptContext>();
+        UnifiedRegexParserForceInstantiation<NullTerminatedUTF8EncodingPolicy, true, Js::ScriptContext>();
+        UnifiedRegexParserForceInstantiation<NotNullTerminatedUTF8EncodingPolicy, false, Js::ScriptContext>();
+        UnifiedRegexParserForceInstantiation<NotNullTerminatedUTF8EncodingPolicy, true, Js::ScriptContext>();
     }
 }

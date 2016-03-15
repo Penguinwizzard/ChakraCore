@@ -262,7 +262,7 @@ namespace Js {
         bool AddFunctionTable( PropertyName name, const int size );
         void AddMathLibName(PropertyId pid);
         //Immutable interface
-        Parser *GetParser() const;
+        Parser<Js::ScriptContext> *GetParser() const;
         ByteCodeGenerator* GetByteCodeGenerator() const;
         ScriptContext  *GetScriptContext() const;
 

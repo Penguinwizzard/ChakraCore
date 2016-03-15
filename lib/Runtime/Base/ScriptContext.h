@@ -356,6 +356,85 @@ namespace Js
     class ScriptContextParseFacade
     {
     public:
+        ScriptContextParseFacade(TScriptContextImpl* scriptContextImpl) :
+            scriptContextImpl(scriptContextImpl)
+        {}
+
+        const Js::CharClassifier* GetCharClassifier() const
+        {
+            return scriptContextImpl->GetCharClassifier();
+        }
+
+        const Js::ScriptConfiguration* GetConfig() const
+        {
+            return scriptContextImpl->GetConfig();
+        }
+
+#ifdef PROFILE_EXEC
+        // void DisableProfiler();
+        // void SetRecyclerProfiler();
+        // void SetProfilerFromScriptContext(ScriptContext * scriptContext);
+        void ProfileBegin(Js::Phase p)
+        {
+            scriptContextImpl->ProfileBegin(p);
+        }
+
+        void ProfileEnd(Js::Phase p)
+        {
+            scriptContextImpl->ProfileEnd(p);
+        }
+
+        // void ProfileSuspend(Js::Phase, Js::Profiler::SuspendRecord * suspendRecord);
+        // void ProfileResume(Js::Profiler::SuspendRecord * suspendRecord);
+        // void ProfilePrint();
+        // bool IsProfilerCreated() const { return isProfilerCreated; }
+#endif
+
+        //
+        // Regex helpers
+        //
+#if ENABLE_REGEX_CONFIG_OPTIONS
+        UnifiedRegex::RegexStatsDatabase* GetRegexStatsDatabase()
+        {
+            return scriptContextImpl->GetRegexStatsDatabase();
+        }
+
+        UnifiedRegex::DebugWriter* GetRegexDebugWriter()
+        {
+            return scriptContextImpl->GetRegexDebugWriter();
+        }
+#endif
+
+        // REVIEW: We should probably not implement this
+        // and instead expose the individual items that 
+        // are needed from the thread context
+        ThreadContext* GetThreadContext() const
+        {
+            return scriptContextImpl->GetThreadContext();
+        }
+
+        TScriptContextImpl* GetImpl() 
+        {
+            return scriptContextImpl;
+        }
+
+        // Regex specific- could be split out into it's own facade
+        ArenaAllocator* RegexAllocator() 
+        { 
+            return scriptContextImpl->RegexAllocator(); 
+        }
+
+        Recycler* GetRecycler()
+        {
+            return scriptContextImpl->GetRecycler();
+        }
+
+        void SetTrigramAlphabet(UnifiedRegex::TrigramAlphabet * trigramAlphabet)
+        {
+            scriptContextImpl->SetTrigramAlphabet(trigramAlphabet);
+        }
+
+        // End regex specific
 
         TScriptContextImpl* scriptContextImpl;
     };

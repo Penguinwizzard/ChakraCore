@@ -4,6 +4,11 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
+namespace Js
+{
+    class ScriptConfiguration;
+};
+
 namespace UnifiedRegex
 {
     struct ParseError
@@ -16,7 +21,7 @@ namespace UnifiedRegex
         ParseError(bool isBody, CharCount pos, CharCount encodedPos, HRESULT error);
     };
 
-    template <typename EncodingPolicy, const bool IsLiteral>
+    template <typename EncodingPolicy, const bool IsLiteral, typename TParseFacadeScriptContextImpl>
     class Parser : private EncodingPolicy, private Chars<char16>
     {
     private:
@@ -61,7 +66,8 @@ namespace UnifiedRegex
 
         static const CharCount initLitbufSize = 16;
 
-        Js::ScriptContext* scriptContext;
+        Js::ScriptContextParseFacade<TParseFacadeScriptContextImpl>* scriptContextParseFacade;
+        const Js::ScriptConfiguration* config;
         // Arena for nodes and items needed only during compilation
         ArenaAllocator* ctAllocator;
         // Standard characters using raw encoding character representation (eg char for utf-8)
@@ -195,10 +201,20 @@ namespace UnifiedRegex
         void Options(RegexFlags& flags);
 
     public:
+#ifndef T_PARSERFACADE_SC_IMPL
+        typedef Js::ScriptContext TScriptContextImpl;
+#else
+        typedef T_PARSERFACADE_SC_IMPL TScriptContextImpl;
+#endif
+
+        inline void SetParseFacade(Js::ScriptContextParseFacade<TParseFacadeScriptContextImpl>* facade)
+        {
+            this->scriptContextParseFacade = facade;
+            this->config = facade->GetConfig();
+        }
 
         Parser
-            ( Js::ScriptContext* scriptContext
-            , ArenaAllocator* ctAllocator
+            (ArenaAllocator* ctAllocator
             , StandardChars<EncodedChar>* standardEncodedChars
             , StandardChars<Char>* standardChars
             , bool isFromExternalSource

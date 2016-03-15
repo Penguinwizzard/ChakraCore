@@ -1574,7 +1574,8 @@ namespace Js
         Js::JavascriptError::MapAndThrowError(this, E_FAIL);
     }
 
-    ParseNode* ScriptContext::ParseScript(Parser* parser,
+    template <typename TScriptContextImpl>
+    ParseNode* ScriptContext::ParseScript(Parser<TScriptContextImpl>* parser,
         const byte* script,
         size_t cb,
         SRCINFO const * pSrcInfo,
@@ -1650,7 +1651,7 @@ namespace Js
         // TODO: yongqu handle non-global code.
         ULONG grfscr = fscrGlobalCode | ((loadScriptFlag & LoadScriptFlag_Expression) == LoadScriptFlag_Expression ? fscrReturnExpression : 0);
         if (((loadScriptFlag & LoadScriptFlag_disableDeferredParse) != LoadScriptFlag_disableDeferredParse) &&
-            (length > Parser::GetDeferralThreshold(sourceContextInfo->IsSourceProfileLoaded())))
+            (length > Parser<TScriptContextImpl>::GetDeferralThreshold(sourceContextInfo->IsSourceProfileLoaded())))
         {
             grfscr |= fscrDeferFncParse;
         }
@@ -1720,7 +1721,7 @@ namespace Js
         {
             AUTO_NESTED_HANDLED_EXCEPTION_TYPE((ExceptionType)(ExceptionType_OutOfMemory | ExceptionType_StackOverflow));
             Js::AutoDynamicCodeReference dynamicFunctionReference(this);
-            Parser parser(this);
+            Parser<Js::ScriptContext> parser(this->GetParseFacade<Js::ScriptContext>(this->SourceCodeAllocator()));
             uint sourceIndex;
             JavascriptFunction * pFunction = nullptr;
 
@@ -1759,7 +1760,7 @@ namespace Js
         }
     }
 
-    JavascriptFunction* ScriptContext::GenerateRootFunction(ParseNodePtr parseTree, uint sourceIndex, Parser* parser, ulong grfscr, CompileScriptException * pse, const char16 *rootDisplayName)
+    JavascriptFunction* ScriptContext::GenerateRootFunction(ParseNodePtr parseTree, uint sourceIndex, Parser<Js::ScriptContext>* parser, ulong grfscr, CompileScriptException * pse, const char16 *rootDisplayName)
     {
         HRESULT hr;
 

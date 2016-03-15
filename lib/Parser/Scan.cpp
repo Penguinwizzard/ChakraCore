@@ -157,9 +157,9 @@ Scanner<EncodingPolicy, TScriptContextImpl>::Scanner(Parser<TScriptContextImpl>*
 
     m_iecpLimTokPrevious = (size_t)-1;
 
-    this->charClassifier = scriptContext->GetCharClassifier();
+    this->charClassifier = scriptContextParseFacade->GetCharClassifier();
 
-    this->es6UnicodeMode = scriptContext->GetConfig()->IsES6UnicodeExtensionsEnabled();
+    this->es6UnicodeMode = scriptContextParseFacade->GetConfig()->IsES6UnicodeExtensionsEnabled();
 
     m_fYieldIsKeyword = false;
     m_fAwaitIsKeyword = false;
@@ -953,34 +953,33 @@ tokens Scanner<EncodingPolicy, TScriptContextImpl>::ScanRegExpConstant(ArenaAllo
 {
     if (m_parser && m_parser->IsBackgroundParser())
     {
-        PROBE_STACK_NO_DISPOSE(m_scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(m_scriptContextParseFacade->GetImpl(), Js::Constants::MinStackRegex);
     }
     else
     {
-        PROBE_STACK(m_scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK(m_scriptContextParseFacade->GetImpl(), Js::Constants::MinStackRegex);
     }
 
     // SEE ALSO: RegexHelper::PrimCompileDynamic()
 
 #ifdef PROFILE_EXEC
-    m_scriptContext->ProfileBegin(Js::RegexCompilePhase);
+    m_scriptContextParseFacade->ProfileBegin(Js::RegexCompilePhase);
 #endif
     ArenaAllocator* ctAllocator = alloc;
-    UnifiedRegex::StandardChars<EncodedChar>* standardEncodedChars = m_scriptContext->GetThreadContext()->GetStandardChars((EncodedChar*)0);
-    UnifiedRegex::StandardChars<char16>* standardChars = m_scriptContext->GetThreadContext()->GetStandardChars((char16*)0);
+    UnifiedRegex::StandardChars<EncodedChar>* standardEncodedChars = m_scriptContextParseFacade->GetThreadContext()->GetStandardChars((EncodedChar*)0);
+    UnifiedRegex::StandardChars<char16>* standardChars = m_scriptContextParseFacade->GetThreadContext()->GetStandardChars((char16*)0);
 #if ENABLE_REGEX_CONFIG_OPTIONS
     UnifiedRegex::DebugWriter *w = 0;
     if (REGEX_CONFIG_FLAG(RegexDebug))
-        w = m_scriptContext->GetRegexDebugWriter();
+        w = m_scriptContextParseFacade->GetRegexDebugWriter();
     if (REGEX_CONFIG_FLAG(RegexProfile))
-        m_scriptContext->GetRegexStatsDatabase()->BeginProfile();
+        m_scriptContextParseFacade->GetRegexStatsDatabase()->BeginProfile();
 #endif
     UnifiedRegex::Node* root = 0;
     charcount_t totalLen = 0, bodyChars = 0, totalChars = 0, bodyLen = 0;
     UnifiedRegex::RegexFlags flags = UnifiedRegex::NoRegexFlags;
-    UnifiedRegex::Parser<EncodingPolicy, true> parser
-            ( m_scriptContext
-            , ctAllocator
+    UnifiedRegex::Parser<EncodingPolicy, true, TScriptContextImpl> parser
+            ( ctAllocator
             , standardEncodedChars
             , standardChars
             , IsFromExternalSource()
@@ -988,6 +987,8 @@ tokens Scanner<EncodingPolicy, TScriptContextImpl>::ScanRegExpConstant(ArenaAllo
             , w
 #endif
             );
+    parser.SetParseFacade(m_scriptContextParseFacade);
+
     try
     {
         root = parser.ParseLiteral(m_currentCharacter, m_pchLast, bodyLen, totalLen, bodyChars, totalChars, flags);
@@ -995,7 +996,7 @@ tokens Scanner<EncodingPolicy, TScriptContextImpl>::ScanRegExpConstant(ArenaAllo
     catch (UnifiedRegex::ParseError e)
     {
 #ifdef PROFILE_EXEC
-        m_scriptContext->ProfileEnd(Js::RegexCompilePhase);
+        m_scriptContextParseFacade->ProfileEnd(Js::RegexCompilePhase);
 #endif
         if (m_fSyntaxColor)
             return ScanError(m_currentCharacter + e.encodedPos, tkRegExp);
@@ -1025,20 +1026,19 @@ tokens Scanner<EncodingPolicy, TScriptContextImpl>::ScanRegExpConstantNoAST(Aren
 {
     if (m_parser && m_parser->IsBackgroundParser())
     {
-        PROBE_STACK_NO_DISPOSE(m_scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(m_scriptContextParseFacade->GetImpl(), Js::Constants::MinStackRegex);
     }
     else
     {
-        PROBE_STACK(m_scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK(m_scriptContextParseFacade->GetImpl(), Js::Constants::MinStackRegex);
     }
 
-    ThreadContext *threadContext = m_fSyntaxColor ? ThreadContext::GetContextForCurrentThread() : m_scriptContext->GetThreadContext();
+    ThreadContext *threadContext = m_fSyntaxColor ? ThreadContext::GetContextForCurrentThread() : m_scriptContextParseFacade->GetThreadContext();
     UnifiedRegex::StandardChars<EncodedChar>* standardEncodedChars = threadContext->GetStandardChars((EncodedChar*)0);
     UnifiedRegex::StandardChars<char16>* standardChars = threadContext->GetStandardChars((char16*)0);
     charcount_t totalLen = 0, bodyChars = 0, totalChars = 0, bodyLen = 0;
-    UnifiedRegex::Parser<EncodingPolicy, true> parser
-            ( m_scriptContext
-            , alloc
+    UnifiedRegex::Parser<EncodingPolicy, true, TScriptContextImpl> parser
+            ( alloc
             , standardEncodedChars
             , standardChars
             , IsFromExternalSource()
@@ -1046,6 +1046,7 @@ tokens Scanner<EncodingPolicy, TScriptContextImpl>::ScanRegExpConstantNoAST(Aren
             , 0
 #endif
             );
+    parser.SetParseFacade(m_scriptContextParseFacade);
     try
     {
         parser.ParseLiteralNoAST(m_currentCharacter, m_pchLast, bodyLen, totalLen, bodyChars, totalChars);
@@ -1887,7 +1888,7 @@ LEof:
             if (!Js::NumberUtilities::IsDigit(*p))
             {
                 // Not a double
-                if (m_scriptContext->GetConfig()->IsES6SpreadEnabled() && PeekFirst(p, last) == '.' && PeekFirst(p + 1, last) == '.')
+                if (this->m_scriptContextParseFacade->GetConfig()->IsES6SpreadEnabled() && PeekFirst(p, last) == '.' && PeekFirst(p + 1, last) == '.')
                 {
                     token = tkEllipsis;
                     p += 2;
@@ -2113,7 +2114,7 @@ LIdentifier:
                 token = tkAsgMul;
                 break;
             case '*' :
-                if (!m_scriptContext->GetConfig()->IsES7ExponentiationOperatorEnabled())
+                if (!m_scriptContextParseFacade->GetConfig()->IsES7ExponentiationOperatorEnabled())
                 {
                     break;
                 }

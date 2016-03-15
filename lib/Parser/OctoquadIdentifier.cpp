@@ -241,11 +241,12 @@ namespace UnifiedRegex
             currPatternNum == NumPatterns - 1;
     }
 
-    void OctoquadIdentifier::SetTrigramAlphabet(Js::ScriptContext * scriptContext,
+    template <typename TParseFacadeScriptContextImpl> 
+    void OctoquadIdentifier::SetTrigramAlphabet(Js::ScriptContextParseFacade<TParseFacadeScriptContextImpl> * scriptContextParseFacade,
         __in_xcount(regex::TrigramAlphabet::AlphaCount) char* alpha
         , __in_xcount(regex::TrigramAlphabet::AsciiTableSize) char* alphaBits)
     {
-        ArenaAllocator* alloc = scriptContext->RegexAllocator();
+        ArenaAllocator* alloc = scriptContextParseFacade->RegexAllocator();
         TrigramAlphabet * trigramAlphabet = AnewStruct(alloc, UnifiedRegex::TrigramAlphabet);
         for (uint i = 0; i < UnifiedRegex::TrigramAlphabet::AsciiTableSize; i++) {
             trigramAlphabet->alphaBits[i] = UnifiedRegex::TrigramAlphabet::BitsNotInAlpha;
@@ -255,10 +256,11 @@ namespace UnifiedRegex
             trigramAlphabet->alphaBits[alpha[i]] = alphaBits[alpha[i]];
         }
         trigramAlphabet->InitTrigramMap();
-        scriptContext->SetTrigramAlphabet(trigramAlphabet);
+        scriptContextParseFacade->SetTrigramAlphabet(trigramAlphabet);
     }
 
-    void OctoquadIdentifier::InitializeTrigramInfo(Js::ScriptContext* scriptContext, RegexPattern* const pattern)
+    template <typename TParseFacadeScriptContextImpl>
+    void OctoquadIdentifier::InitializeTrigramInfo(Js::ScriptContextParseFacade<TParseFacadeScriptContextImpl>* scriptContextParseFacade, RegexPattern* const pattern)
     {
         if(!scriptContext->GetTrigramAlphabet())
         {

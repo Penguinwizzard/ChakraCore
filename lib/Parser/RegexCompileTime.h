@@ -590,7 +590,6 @@ namespace UnifiedRegex
     private:
         static const CharCount initInstBufSize = 128;
 
-        Js::ScriptContext* scriptContext;
         // Arena for nodes and items needed only during compilation
         ArenaAllocator* ctAllocator;
         // Arena for literals, sets and items needed during runtime
@@ -605,6 +604,11 @@ namespace UnifiedRegex
         CharCount instLen;  // size of instBuf in bytes
         CharCount instNext; // offset to emit next instruction into
         int nextLoopId;
+
+#ifndef NO_STACK_PROBE
+        Js::ScriptContext* stackProbeScriptContext;
+#endif
+        Recycler* recycler;
 
     private:
 
@@ -633,6 +637,11 @@ namespace UnifiedRegex
             return instNext;
         }
 
+        inline Recycler* GetRecycler() const
+        {
+            return recycler;
+        }
+
         template <typename T>
         inline T* LabelToInstPointer(Inst::InstTag tag, Label label)
         {
@@ -644,11 +653,6 @@ namespace UnifiedRegex
         inline int Compiler::NextLoopId()
         {
             return nextLoopId++;
-        }
-
-        inline Js::ScriptContext *GetScriptContext() const
-        {
-            return scriptContext;
         }
 
         inline Program *GetProgram() const
@@ -680,8 +684,9 @@ namespace UnifiedRegex
         void CaptureInsts();
         void FreeBody();
 
+        template <typename TParseFacadeScriptContextImpl>
         Compiler
-            ( Js::ScriptContext* scriptContext
+            ( Recycler* recycler
             , ArenaAllocator* ctAllocator
             , ArenaAllocator* rtAllocator
             , StandardChars<Char>* standardChars
@@ -702,8 +707,9 @@ namespace UnifiedRegex
 #endif
             );
 
+        template <typename TParseFacadeScriptContextImpl>
         static void Compile
-            ( Js::ScriptContext* scriptContext
+            ( Js::ScriptContextParseFacade<TParseFacadeScriptContextImpl>* scriptContextParseFacade
             , ArenaAllocator* ctAllocator
             , ArenaAllocator* rtAllocator
             , StandardChars<Char>* standardChars

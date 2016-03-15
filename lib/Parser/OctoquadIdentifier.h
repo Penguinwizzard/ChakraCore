@@ -98,7 +98,8 @@ namespace UnifiedRegex
         int currPatternLength;
         int currPatternNum;
 
-        void SetTrigramAlphabet(Js::ScriptContext * scriptContext,
+        template <class TParseFacadeScriptContextImpl> 
+        void SetTrigramAlphabet(Js::ScriptContextParseFacade<TParseFacadeScriptContextImpl> * scriptContextParseFacade,
             __in_xcount(regex::TrigramAlphabet::AlphaCount) char* alpha,
             __in_xcount(regex::TrigramAlphabet::AsciiTableSize) char* alphaBits);
     public:
@@ -120,7 +121,8 @@ namespace UnifiedRegex
         void EndUnions();
         bool IsOctoquad();
 
-        void InitializeTrigramInfo(Js::ScriptContext* scriptContext, RegexPattern* const pattern);
+        template <class TParseFacadeScriptContextImpl>
+        void InitializeTrigramInfo(Js::ScriptContextParseFacade<TParseFacadeScriptContextImpl>* scriptContext, RegexPattern* const pattern);
 
     };
 
