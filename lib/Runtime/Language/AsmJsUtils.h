@@ -33,13 +33,6 @@ namespace Js {
     static const double SIMD_SLOTS_SPACE = (sizeof(SIMDValue) / sizeof(Var)); // 4 in x86 and 2 in x64
 
     Var AsmJsChangeHeapBuffer(RecyclableObject * function, CallInfo callInfo, ...);
-
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if !defined(PRERELEASE_REL1603_MSRC32418_BUG6346752) && !defined(_CHAKRACOREBUILD)
-    Var AsmJsExternalEntryPoint(Js::RecyclableObject* entryObject, Js::CallInfo callInfo, ...);
-#endif
 #if _M_X64
     int GetStackSizeForAsmJsUnboxing(ScriptFunction* func);
     void * UnboxAsmJsArguments(ScriptFunction* func, Var * origArgs, char * argDst, CallInfo callInfo);

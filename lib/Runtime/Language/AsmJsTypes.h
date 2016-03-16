@@ -1131,16 +1131,11 @@ namespace Js
             mArgType = val;
         }
 
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1603_MSRC32563_BUG6497035) || defined(_CHAKRACOREBUILD)
         inline bool AccessNeedsBoundCheck(uint offset) const
         {
             // Normally, heap has min size of 0x10000, but if you use ChangeHeap, min heap size is increased to 0x1000000
             return offset >= 0x1000000 || (IsHeapBufferConst() && offset >= 0x10000);
         }
-#endif
     };
 
     // The asm.js spec recognizes this set of builtin SIMD functions.

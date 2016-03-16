@@ -300,10 +300,7 @@ namespace Js
 
         if (funcInfo->HasBody())
         {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(ASMJS_PLAT) && (defined(PRERELEASE_REL1603_MSRC32418_BUG6346752) || defined(_CHAKRACOREBUILD))
+#ifdef ASMJS_PLAT
             if (funcInfo->GetFunctionProxy()->IsFunctionBody() &&
                 funcInfo->GetFunctionBody()->GetIsAsmJsFunction())
             {
