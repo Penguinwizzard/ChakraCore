@@ -1535,7 +1535,11 @@ void ByteCodeGenerator::EmitScopeObjectInit(FuncInfo *funcInfo)
         return;
     }
 
-    uint slotCount = funcInfo->bodyScope->GetScopeSlotCount();
+    // TODO: Need more test cases with different number of variables in both body and param
+    // to verify this is valid or not.
+    uint slotCount = funcInfo->paramScope->GetCanMergeWithBodyScope() ?
+                        funcInfo->bodyScope->GetScopeSlotCount()
+                        : funcInfo->paramScope->GetScopeSlotCount();
     uint cachedFuncCount = 0;
     Js::PropertyId firstFuncSlot = Js::Constants::NoProperty;
     Js::PropertyId firstVarSlot = Js::Constants::NoProperty;
