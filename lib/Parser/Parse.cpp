@@ -6200,10 +6200,21 @@ void Parser::ParseFncFormals(ParseNodePtr pnodeFnc, ushort flags)
             Error(ERRnoRparen);
         }
 
-        if ((this->GetCurrentFunctionNode()->sxFnc.CallsEval() || this->GetCurrentFunctionNode()->sxFnc.ChildCallsEval())
-            && !m_scriptContext->GetConfig()->IsES6DefaultArgsSplitScopeEnabled())
+        ParseNodePtr currentFncNode = this->GetCurrentFunctionNode();
+        if ((currentFncNode->sxFnc.CallsEval() || currentFncNode->sxFnc.ChildCallsEval()))
         {
-            Error(ERREvalNotSupportedInParamScope);
+            if (!m_scriptContext->GetConfig()->IsES6DefaultArgsSplitScopeEnabled())
+            {
+                Error(ERREvalNotSupportedInParamScope);
+            }
+            else
+            {
+                Scope* paramScope = currentFncNode->sxFnc.pnodeScopes->sxBlock.scope;
+                paramScope->SetCannotMergeWithBodyScope();
+                paramScope->SetIsObject();
+                // Reset the calls eval flag. We have to set the calls eval flag only is the call occurs in the body.
+                currentFncNode->sxFnc.SetCallsEval(false);
+            }
         }
     }
     Assert(m_token.tk == tkRParen);

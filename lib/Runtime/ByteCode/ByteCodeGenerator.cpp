@@ -1410,6 +1410,17 @@ FuncInfo * ByteCodeGenerator::StartBindFunction(const char16 *name, uint nameLen
         paramScope->SetMustInstantiate(true);
     }
 
+    if (pnode->sxFnc.HasNonSimpleParameterList() && !paramScope->GetIsObject())
+    {
+        if (pnode->sxFnc.pnodeScopes->sxBlock.GetCallsEval()
+            || pnode->sxFnc.pnodeScopes->sxBlock.GetChildCallsEval())
+        {
+            paramScope->SetIsObject();
+            paramScope->SetCapturesAll(true);
+            paramScope->SetMustInstantiate(true);
+        }
+    }
+
     PushFuncInfo(_u("StartBindFunction"), funcInfo);
 
     if (funcExprScope)
@@ -2630,7 +2641,8 @@ FuncInfo* PostVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerat
             top->GetHasClosureReference() ||
             ((top->GetHasGlobalRef() &&
             (byteCodeGenerator->InDynamicScope() ||
-            (byteCodeGenerator->GetFlags() & (fscrImplicitThis | fscrImplicitParents | fscrEval))))))
+            (byteCodeGenerator->GetFlags() & (fscrImplicitThis | fscrImplicitParents | fscrEval))))) ||
+            (top->GetParamScope() && !top->GetParamScope()->GetCanMergeWithBodyScope()))
         {
             byteCodeGenerator->SetNeedEnvRegister();
             if (top->GetIsTopLevelEventHandler())
@@ -2652,7 +2664,8 @@ FuncInfo* PostVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerat
                 top->GetChildCallsEval() ||
                 (top->GetHasArguments() && ByteCodeGenerator::NeedScopeObjectForArguments(top, pnode) && pnode->sxFnc.pnodeParams != nullptr) ||
                 top->GetHasLocalInClosure() ||
-                top->funcExprScope && top->funcExprScope->GetMustInstantiate())
+                top->funcExprScope && top->funcExprScope->GetMustInstantiate() ||
+                (top->paramScope && !top->paramScope->GetCanMergeWithBodyScope()))
             {
                 if (!top->GetCallsEval())
                 {
@@ -2679,7 +2692,8 @@ FuncInfo* PostVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerat
                     pnode->sxFnc.nestedCount != 0
                     || (top->GetHasArguments()
                         && (pnode->sxFnc.pnodeParams != nullptr)
-                        && byteCodeGenerator->IsInDebugMode()))
+                        && byteCodeGenerator->IsInDebugMode())
+                    || (top->paramScope && !top->paramScope->GetCanMergeWithBodyScope()))
                 {
                     byteCodeGenerator->SetNeedEnvRegister(); // This to ensure that Env should be there when the FrameDisplay register is there.
                     byteCodeGenerator->AssignFrameDisplayRegister();
@@ -3083,7 +3097,10 @@ void VisitNestedScopes(ParseNode* pnodeScopeList, ParseNode* pnodeParent, ByteCo
                     // Set param scope as the current child scope.
                     pnodeScope->sxFnc.funcInfo->SetCurrentChildScope(pnodeScope->sxFnc.funcInfo->GetParamScope());
                     Assert(containerScope->nop == knopBlock && containerScope->sxBlock.blockType == Parameter);
-                    VisitNestedScopes(containerScope->sxBlock.pnodeScopes, pnodeScope, byteCodeGenerator, prefix, postfix, &i, true);
+                    if (pnodeScope->sxFnc.pnodeBodyScope != containerScope->sxBlock.pnodeScopes)
+                    {
+                        VisitNestedScopes(containerScope->sxBlock.pnodeScopes, pnodeScope, byteCodeGenerator, prefix, postfix, &i, true);
+                    }
                     MapFormals(pnodeScope, [&](ParseNode *argNode) { Visit(argNode, byteCodeGenerator, prefix, postfix); });
                 }
 
@@ -4882,9 +4899,13 @@ void AssignRegisters(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
         {
             if (!funcInfo->GetParsedFunctionBody()->IsReparsed())
             {
-                Assert(funcInfo->IsGlobalFunction() || funcInfo->GetCallsEval());
-                funcInfo->SetCallsEval(true);
-                funcInfo->GetParsedFunctionBody()->SetCallsEval(true);
+                Assert(funcInfo->IsGlobalFunction() || funcInfo->GetCallsEval()
+                    || (funcInfo->GetParamScope()->GetIsObject() && byteCodeGenerator->GetCurrentScope() == funcInfo->GetParamScope()));
+                if (funcInfo->bodyScope->GetIsObject())
+                {
+                    funcInfo->SetCallsEval(true);
+                    funcInfo->GetParsedFunctionBody()->SetCallsEval(true);
+                }
             }
             else
             {
