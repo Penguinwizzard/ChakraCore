@@ -177,6 +177,7 @@ LPVOID PreReservedVirtualAllocWrapper::EnsurePreReservedRegionInternal()
         return startAddress;
     }
 
+    bool supportPreReservedRegion = true;
 #if defined(_CONTROL_FLOW_GUARD)
 #if !_M_X64_OR_ARM64
 #if _M_IX86
@@ -188,15 +189,15 @@ LPVOID PreReservedVirtualAllocWrapper::EnsurePreReservedRegionInternal()
 
     if (PreReservedVirtualAllocWrapper::numPreReservedSegment > PreReservedVirtualAllocWrapper::MaxPreReserveSegment)
     {
-        return nullptr;
+        supportPreReservedRegion = false;
     }
 #else
     // TODO: fast check for prereserved segment is not implementated in ARM yet, so it is only enabled for x86
-    return nullptr;
+    supportPreReservedRegion = false;
 #endif // _M_IX86
 #endif
 
-    if (AutoSystemInfo::Data.IsCFGEnabled())
+    if (AutoSystemInfo::Data.IsCFGEnabled() && supportPreReservedRegion)
     {
         startAddress = VirtualAlloc(NULL, bytes, MEM_RESERVE, PAGE_READWRITE);
         PreReservedHeapTrace(_u("Reserving PreReservedSegment For the first time(CFG Enabled). Address: 0x%p\n"), preReservedStartAddress);

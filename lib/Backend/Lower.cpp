@@ -8348,6 +8348,7 @@ Lowerer::LowerLdArrViewElem(IR::Instr * instr)
     IR::Opnd * src2 = instr->GetSrc2();
 
     IR::Instr * done;
+
     if (indexOpnd || m_func->GetJnFunction()->GetAsmJsFunctionInfo()->AccessNeedsBoundCheck((uint32)src1->AsIndirOpnd()->GetOffset()))
     {
         // CMP indexOpnd, src2(arrSize)
@@ -20163,7 +20164,7 @@ Lowerer::GenerateLdSuper(IR::Instr* instrInsert)
     Assert(dstOpnd->IsRegOpnd());
     LowererMD::CreateAssign(dstOpnd, opndUndefAddress, instrInsert);
 
-    IR::Opnd * functionObjOpnd;
+    IR::Opnd * functionObjOpnd = nullptr;
     m_lowererMD.LoadFunctionObjectOpnd(instrInsert, functionObjOpnd);
     LowererMD::CreateAssign(instanceRegOpnd, functionObjOpnd, instrInsert);
 

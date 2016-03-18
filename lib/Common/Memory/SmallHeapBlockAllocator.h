@@ -15,18 +15,18 @@ public:
     void Initialize();
 
     template <ObjectInfoBits attributes>
-    __inline char * InlinedAlloc(Recycler * recycler, size_t sizeCat);
+    __inline char * InlinedAlloc(Recycler * recycler, __declspec(guard(overflow)) size_t sizeCat);
 
     // Pass through template parameter to InlinedAllocImpl
     template <bool canFaultInject>
-    __inline char * SlowAlloc(Recycler * recycler, size_t sizeCat, ObjectInfoBits attributes);
+    __inline char * SlowAlloc(Recycler * recycler, __declspec(guard(overflow)) size_t sizeCat, ObjectInfoBits attributes);
 
     // There are paths where we simply can't OOM here, so we shouldn't fault inject as it creates a bit of a mess
     template <bool canFaultInject>
-    __inline char* InlinedAllocImpl(Recycler * recycler, size_t sizeCat, ObjectInfoBits attributes);
+    __inline char* InlinedAllocImpl(Recycler * recycler, __declspec(guard(overflow)) size_t sizeCat, ObjectInfoBits attributes);
 
 #ifdef RECYCLER_PAGE_HEAP
-    __inline char *PageHeapAlloc(Recycler * recycler, size_t sizeCat, ObjectInfoBits attributes, PageHeapMode mode);
+    __inline char *PageHeapAlloc(Recycler * recycler, __declspec(guard(overflow)) size_t sizeCat, ObjectInfoBits attributes, PageHeapMode mode);
 #endif
 
     TBlockType * GetHeapBlock() const { return heapBlock; }
@@ -105,7 +105,7 @@ private:
 template <typename TBlockType>
 __inline
 char *
-SmallHeapBlockAllocator<TBlockType>::PageHeapAlloc(Recycler * recycler, size_t sizeCat, ObjectInfoBits attributes, PageHeapMode mode)
+SmallHeapBlockAllocator<TBlockType>::PageHeapAlloc(Recycler * recycler, __declspec(guard(overflow)) size_t sizeCat, ObjectInfoBits attributes, PageHeapMode mode)
 {
     if (this->heapBlock == nullptr)
     {
