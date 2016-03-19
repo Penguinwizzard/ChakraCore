@@ -2411,39 +2411,35 @@ NativeCodeGenerator::GatherCodeGenData(
                     continue;
                 }
 
-
-                /*if (!isJitTimeDataComputed)
-                {*/
-                    Js::FunctionCodeGenRuntimeData *const inlineeRuntimeData = IsInlinee ? runtimeData->EnsureLdFldInlinee(recycler, inlineCacheIndex, inlineeFunctionBody) :
-                        functionBody->EnsureLdFldInlineeCodeGenRuntimeData(recycler, inlineCacheIndex, inlineeFunctionBody);
+                Js::FunctionCodeGenRuntimeData *const inlineeRuntimeData = IsInlinee ? runtimeData->EnsureLdFldInlinee(recycler, inlineCacheIndex, inlineeFunctionBody) :
+                    functionBody->EnsureLdFldInlineeCodeGenRuntimeData(recycler, inlineCacheIndex, inlineeFunctionBody);
 
 
-                    if (inlineeRuntimeData->GetFunctionBody() != inlineeFunctionBody)
-                    {
-                        //There are obscure cases where profileData has not yet seen the polymorphic LdFld but the inlineCache has the newer object from which getter is invoked.
-                        //In this case we don't want to inline that getter. Polymorphic bit will be set later correctly.
-                        //See WinBlue 54540
-                        continue;
-                    }
+                if (inlineeRuntimeData->GetFunctionBody() != inlineeFunctionBody)
+                {
+                    //There are obscure cases where profileData has not yet seen the polymorphic LdFld but the inlineCache has the newer object from which getter is invoked.
+                    //In this case we don't want to inline that getter. Polymorphic bit will be set later correctly.
+                    //See WinBlue 54540
+                    continue;
+                }
 
-                    Js::FunctionCodeGenJitTimeData *inlineeJitTimeData = RecyclerNew(recycler, Js::FunctionCodeGenJitTimeData, inlinee, nullptr);
-                    if (!isJitTimeDataComputed)
-                    {
-                        jitTimeData->AddLdFldInlinee(recycler, inlineCacheIndex, inlineeJitTimeData);
-                    }
-                        GatherCodeGenData<true>(
-                            recycler,
-                            topFunctionBody,
-                            inlineeFunctionBody,
-                            entryPoint,
-                            inliningDecider,
-                            objTypeSpecFldInfoList,
-                            inlineeJitTimeData,
-                            inlineeRuntimeData,
-                            nullptr);
+                Js::FunctionCodeGenJitTimeData *inlineeJitTimeData = RecyclerNew(recycler, Js::FunctionCodeGenJitTimeData, inlinee, nullptr);
+                if (!isJitTimeDataComputed)
+                {
+                    jitTimeData->AddLdFldInlinee(recycler, inlineCacheIndex, inlineeJitTimeData);
+                }
+                GatherCodeGenData<true>(
+                    recycler,
+                    topFunctionBody,
+                    inlineeFunctionBody,
+                    entryPoint,
+                    inliningDecider,
+                    objTypeSpecFldInfoList,
+                    inlineeJitTimeData,
+                    inlineeRuntimeData,
+                    nullptr);
 
-                        AddInlineCacheStats(jitTimeData, inlineeJitTimeData);
-
+                AddInlineCacheStats(jitTimeData, inlineeJitTimeData);
             }
         }
     }
