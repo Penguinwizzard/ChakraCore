@@ -177,8 +177,8 @@ LPVOID PreReservedVirtualAllocWrapper::EnsurePreReservedRegionInternal()
         return startAddress;
     }
 
-    bool supportPreReservedRegion = true;
 #if defined(_CONTROL_FLOW_GUARD)
+    bool supportPreReservedRegion = true;
 #if !_M_X64_OR_ARM64
 #if _M_IX86
     // We want to restrict the number of prereserved segment for 32-bit process so that we don't use up the address space
