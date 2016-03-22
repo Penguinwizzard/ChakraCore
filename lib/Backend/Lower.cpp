@@ -8349,7 +8349,7 @@ Lowerer::LowerLdArrViewElem(IR::Instr * instr)
 
     IR::Instr * done;
 
-    if (indexOpnd || m_func->GetJnFunction()->GetAsmJsFunctionInfo()->AccessNeedsBoundCheck((uint32)src1->AsIndirOpnd()->GetOffset()))
+    if (indexOpnd || m_func->GetJnFunction()->GetAsmJsFunctionInfoWithLock()->AccessNeedsBoundCheck((uint32)src1->AsIndirOpnd()->GetOffset()))
     {
         // CMP indexOpnd, src2(arrSize)
         // JA $helper
@@ -8562,7 +8562,7 @@ Lowerer::LowerStArrViewElem(IR::Instr * instr)
     Assert(!dst->IsFloat64() || src1->IsFloat64());
 
     IR::Instr * done;
-    if (indexOpnd || m_func->GetJnFunction()->GetAsmJsFunctionInfo()->AccessNeedsBoundCheck((uint32)dst->AsIndirOpnd()->GetOffset()))
+    if (indexOpnd || m_func->GetJnFunction()->GetAsmJsFunctionInfoWithLock()->AccessNeedsBoundCheck((uint32)dst->AsIndirOpnd()->GetOffset()))
     {
         // CMP indexOpnd, src2(arrSize)
         // JA $helper
