@@ -341,12 +341,6 @@ namespace Js
                 newLength = GetLength() - newStart;
             }
 
-            if (newStart >= GetLength())
-            {
-                // If we want to start copying past the length of the array, all index are no-op
-                return true;
-            }
-
             TypeName* typedBuffer = (TypeName*)buffer;
 
             if (typedValue == 0 || sizeof(TypeName) == 1)

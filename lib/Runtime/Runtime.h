@@ -276,8 +276,6 @@ namespace Js
     class AsmJsMathFunction;
     class AsmJsMathConst;
 #ifdef ASMJS_PLAT
-
-
     Var AsmJsExternalEntryPoint(Js::RecyclableObject* entryObject, Js::CallInfo callInfo, ...);
     class AsmJsCodeGenerator;
     class AsmJsEncoder;

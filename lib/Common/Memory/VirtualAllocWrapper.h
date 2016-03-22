@@ -63,7 +63,7 @@ private:
     LPVOID      EnsurePreReservedRegionInternal();
     bool        IsPreReservedRegionPresent();
     LPVOID      GetPreReservedStartAddress();
-	
+
     BVStatic<PreReservedAllocationSegmentCount>     freeSegments;
     LPVOID                                          preReservedStartAddress;
     CriticalSection                                 cs;

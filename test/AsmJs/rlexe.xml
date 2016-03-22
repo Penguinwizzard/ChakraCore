@@ -501,36 +501,6 @@
       <compile-flags>-testtrace:asmjs -simdjs -maic:0</compile-flags>
     </default>
   </test>
-  <!-- Temporarily disable due to IEMSRCSettings.h dependance. Re-enable with release of 1602.
-  <test>
-    <default>
-      <files>nanbug.js</files>
-      <baseline>nanbug.baseline</baseline>
-      <compile-flags>-testtrace:asmjs -simdjs -maic:0</compile-flags>
-    </default>
-  </test>
-  <test>
-    <default>
-      <files>nanbug.js</files>
-      <baseline>nanbug.baseline</baseline>
-      <compile-flags>-testtrace:asmjs -simdjs</compile-flags>
-    </default>
-  </test>
-  -->
-  <test>
-    <default>
-      <files>nanbug.js</files>
-      <baseline>nanbug.baseline</baseline>
-      <compile-flags>-testtrace:asmjs -simdjs -maic:0</compile-flags>
-    </default>
-  </test>
-  <test>
-    <default>
-      <files>nanbug.js</files>
-      <baseline>nanbug.baseline</baseline>
-      <compile-flags>-testtrace:asmjs -simdjs</compile-flags>
-    </default>
-  </test>
   <test>
     <default>
       <files>nanbug.js</files>

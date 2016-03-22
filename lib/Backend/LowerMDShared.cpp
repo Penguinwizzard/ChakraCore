@@ -6122,7 +6122,6 @@ LowererMD::SaveDoubleToVar(IR::RegOpnd * dstOpnd, IR::RegOpnd *opndFloat, IR::In
         Lowerer::InsertMove(s1, opndNaN, done);
     }
 
-
     // s1 = XOR s1, FloatTag_Value
     // dst = s1
     
