@@ -5852,8 +5852,8 @@ namespace Js
     {
         Assert(scriptContext->GetConfig()->IsES6PromiseEnabled());
 
-        FunctionInfo* functionInfo = RecyclerNew(this->GetRecycler(), FunctionInfo, entryPoint);
-        DynamicType* type = CreateDeferredPrototypeFunctionType(entryPoint);
+        FunctionInfo* functionInfo = &Js::JavascriptPromise::EntryInfo::CapabilitiesExecutorFunction;
+        DynamicType* type = DynamicType::New(scriptContext, TypeIds_Function, functionPrototype, entryPoint, GetDeferredAnonymousFunctionTypeHandler());        
         JavascriptPromiseCapabilitiesExecutorFunction* function = EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptPromiseCapabilitiesExecutorFunction, type, functionInfo, capability));
 
         function->SetPropertyWithAttributes(PropertyIds::length, TaggedInt::ToVarUnchecked(2), PropertyConfigurable, nullptr);
@@ -5866,7 +5866,7 @@ namespace Js
         Assert(scriptContext->GetConfig()->IsES6PromiseEnabled());
 
         FunctionInfo* functionInfo = &Js::JavascriptPromise::EntryInfo::ResolveOrRejectFunction;
-        DynamicType* type = CreateDeferredPrototypeFunctionType(entryPoint);
+        DynamicType* type = DynamicType::New(scriptContext, TypeIds_Function, functionPrototype, entryPoint, GetDeferredAnonymousFunctionTypeHandler());
         JavascriptPromiseResolveOrRejectFunction* function = EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptPromiseResolveOrRejectFunction, type, functionInfo, promise, isReject, alreadyResolvedRecord));
 
         function->SetPropertyWithAttributes(PropertyIds::length, TaggedInt::ToVarUnchecked(1), PropertyConfigurable, nullptr);
@@ -5899,7 +5899,7 @@ namespace Js
         Assert(scriptContext->GetConfig()->IsES6PromiseEnabled());
 
         FunctionInfo* functionInfo = &Js::JavascriptPromise::EntryInfo::AllResolveElementFunction;
-        DynamicType* type = CreateDeferredPrototypeFunctionType(entryPoint);
+        DynamicType* type = DynamicType::New(scriptContext, TypeIds_Function, functionPrototype, entryPoint, GetDeferredAnonymousFunctionTypeHandler());
         JavascriptPromiseAllResolveElementFunction* function = EnsureReadyIfHybridDebugging(RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptPromiseAllResolveElementFunction, type, functionInfo, index, values, capabilities, remainingElements));
 
         function->SetPropertyWithAttributes(PropertyIds::length, TaggedInt::ToVarUnchecked(1), PropertyConfigurable, nullptr);
