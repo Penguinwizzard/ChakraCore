@@ -93,7 +93,7 @@ namespace Js
             Assert(sourceLength == 0);
             hr = E_FAIL;
             JavascriptError *pError = scriptContext->GetLibrary()->CreateError();
-            JavascriptError::SetErrorMessageProperties(pError, hr, _u("empty module"), scriptContext);
+            JavascriptError::SetErrorMessageProperties(pError, hr, _u("host failed to download module"), scriptContext);
             *exceptionVar = pError;
         }
         else
@@ -104,7 +104,6 @@ namespace Js
                 this->parser = (Parser*)AllocatorNew(ArenaAllocator, allocator, Parser, scriptContext);
                 this->srcInfo = {};
                 this->srcInfo.sourceContextInfo = scriptContext->CreateSourceContextInfo(sourceLength, Js::Constants::NoHostSourceContext);
-                //            this->srcInfo.sourceContextInfo->url = nullptr;
                 this->srcInfo.moduleID = moduleId;
                 LoadScriptFlag loadScriptFlag = (LoadScriptFlag)(LoadScriptFlag_Expression | LoadScriptFlag_Module |
                     (isUtf8 ? LoadScriptFlag_Utf8Source : LoadScriptFlag_None));
@@ -522,7 +521,8 @@ namespace Js
         Assert(wasParsed);
         Assert(wasEvaluated);
         Assert(wasDeclarationInitialized);
-        Finalize(false);
+        // Debugger can reparse the source and generate the byte code again. Don't cleanup the 
+        // helper information for now.
     }
 
     void SourceTextModuleRecord::ModuleDeclarationInstantiation()
@@ -565,7 +565,6 @@ namespace Js
         }
         Js::AutoDynamicCodeReference dynamicFunctionReference(scriptContext);
         Assert(this == scriptContext->GetLibrary()->GetModuleRecord(srcInfo.moduleID));
-        uint sourceIndex = scriptContext->SaveSourceNoCopy(this->pSourceInfo, static_cast<charcount_t>(this->pSourceInfo->GetCchLength()), /*isCesu8*/ true);
         CompileScriptException se;
         this->rootFunction = scriptContext->GenerateRootFunction(parseTree, sourceIndex, this->parser, this->pSourceInfo->GetParseFlags(), &se, _u("module"));
         if (rootFunction == nullptr)
