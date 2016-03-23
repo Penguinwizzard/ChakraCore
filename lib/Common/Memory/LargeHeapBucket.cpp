@@ -159,6 +159,11 @@ LargeHeapBucket::PageHeapAlloc(Recycler * recycler, size_t size, ObjectInfoBits 
         return nullptr;
     }
 
+    if (!(guardPageOldProtectFlags == PAGE_NOACCESS || guardPageOldProtectFlags == PAGE_READWRITE))
+    {
+        HeapBlock_BadPageState_fatal_error((ULONG_PTR)this);
+    }
+
 #ifdef RECYCLER_ZERO_MEM_CHECK
     recycler->VerifyZeroFill(address, pageCount * AutoSystemInfo::PageSize);
 #endif

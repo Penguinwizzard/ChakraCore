@@ -18,7 +18,8 @@ enum ErrorReason
     Fatal_Version_Inconsistency = 10,
     MarkStack_OUTOFMEMORY = 11,
     EnterScript_FromDOM_NoScriptScope = 12,
-    Fatal_FailedToBox_OUTOFMEMORY = 13
+    Fatal_FailedToBox_OUTOFMEMORY = 13,
+    HeapBlock_MEMORYCORRUPTION = 14
 };
 
 extern "C" void ReportFatalException(
@@ -33,6 +34,9 @@ void JavascriptDispatch_OOM_fatal_error(
     __in ULONG_PTR context);
 
 void CustomHeap_BadPageState_fatal_error(
+    __in ULONG_PTR context);
+
+void HeapBlock_BadPageState_fatal_error(
     __in ULONG_PTR context);
 
 void Amd64StackWalkerOutOfContexts_fatal_error(

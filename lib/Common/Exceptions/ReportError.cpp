@@ -106,4 +106,11 @@ __declspec(noinline) void FromDOM_NoScriptScope_fatal_error()
     ReportFatalException(NULL, E_UNEXPECTED, EnterScript_FromDOM_NoScriptScope, scenario);
 }
 
+__declspec(noinline) void HeapBlock_BadPageState_fatal_error(
+    __in ULONG_PTR context)
+{
+    int scenario = 1;
+    ReportFatalException(context, E_UNEXPECTED, HeapBlock_MEMORYCORRUPTION, scenario);
+};
+
 #pragma optimize("",on)

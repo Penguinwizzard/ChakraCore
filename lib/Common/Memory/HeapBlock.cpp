@@ -396,10 +396,15 @@ SmallHeapBlockT<TBlockAttributes>::ClearPageHeapState()
         Assert(this->InPageHeapMode());
         DWORD oldProtectFlags = 0;
 
+        this->guardPageOldProtectFlags &= (PAGE_NOACCESS | PAGE_READWRITE);
+
         BOOL ret = ::VirtualProtect(static_cast<LPVOID>(this->guardPageAddress), AutoSystemInfo::PageSize, this->guardPageOldProtectFlags, &oldProtectFlags);
 
         Assert(ret == TRUE);
-        Assert(oldProtectFlags == PAGE_NOACCESS);
+        if (oldProtectFlags != PAGE_NOACCESS)
+        {
+            HeapBlock_BadPageState_fatal_error((ULONG_PTR)this);
+        }
     }
 }
 #endif
@@ -435,6 +440,11 @@ SmallHeapBlockT<TBlockAttributes>::SetPage(__in_ecount_pagesize char * baseAddre
                 if (::VirtualProtect(static_cast<LPVOID>(this->guardPageAddress), AutoSystemInfo::PageSize, PAGE_NOACCESS, &guardPageOldProtectFlags) == FALSE)
                 {
                     return FALSE;
+                }
+
+                if (!(guardPageOldProtectFlags == PAGE_NOACCESS || guardPageOldProtectFlags == PAGE_READWRITE))
+                {
+                    HeapBlock_BadPageState_fatal_error((ULONG_PTR)this);
                 }
             }
         }

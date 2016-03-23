@@ -312,12 +312,18 @@ LargeHeapBlock::ReleasePages(Recycler * recycler)
             if (guardPageAddress != nullptr)
             {
                 DWORD noAccess;
+                
+                this->guardPageOldProtectFlags &= (PAGE_NOACCESS | PAGE_READWRITE);
+
                 if (::VirtualProtect(static_cast<LPVOID>(guardPageAddress), AutoSystemInfo::PageSize, guardPageOldProtectFlags, &noAccess) == FALSE)
                 {
                     AssertMsg(false, "Unable to set permission for guard page.");
                     return;
                 }
-                AssertMsg(noAccess == PAGE_NOACCESS, "Guard page should be PAGE_NOACCESS");
+                if (noAccess != PAGE_NOACCESS)
+                {
+                    HeapBlock_BadPageState_fatal_error((ULONG_PTR)this);
+                }
 
                 if (this->pageHeapMode == PageHeapMode::PageHeapModeBlockStart)
                 {
