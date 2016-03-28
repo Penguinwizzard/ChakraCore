@@ -159,7 +159,7 @@ LargeHeapBucket::PageHeapAlloc(Recycler * recycler, size_t size, ObjectInfoBits 
         return nullptr;
     }
 
-    if (!(guardPageOldProtectFlags == PAGE_NOACCESS || guardPageOldProtectFlags == PAGE_READWRITE))
+    if (guardPageOldProtectFlags != PAGE_READWRITE)
     {
         HeapBlock_BadPageState_fatal_error((ULONG_PTR)this);
     }

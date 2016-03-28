@@ -442,7 +442,7 @@ SmallHeapBlockT<TBlockAttributes>::SetPage(__in_ecount_pagesize char * baseAddre
                     return FALSE;
                 }
 
-                if (!(guardPageOldProtectFlags == PAGE_NOACCESS || guardPageOldProtectFlags == PAGE_READWRITE))
+                if (guardPageOldProtectFlags != PAGE_READWRITE)
                 {
                     HeapBlock_BadPageState_fatal_error((ULONG_PTR)this);
                 }
