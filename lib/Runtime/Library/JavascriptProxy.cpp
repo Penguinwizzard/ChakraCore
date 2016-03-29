@@ -1299,7 +1299,12 @@ namespace Js
         Var getPrototypeOfResult;
         if (nullptr == getPrototypeOfMethod || GetScriptContext()->IsHeapEnumInProgress())
         {
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1604_MSRC32399_BUG6363150
+            return RecyclableObject::FromVar(JavascriptObject::GetPrototypeOf(target, scriptContext));
+#else
             return target->GetPrototype();
+#endif
         }
         CallInfo callInfo(CallFlags_Value, 2);
         Var varArgs[2];
