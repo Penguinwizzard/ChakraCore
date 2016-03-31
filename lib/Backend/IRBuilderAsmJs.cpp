@@ -2837,7 +2837,7 @@ IRBuilderAsmJs::BuildFloat2(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::RegSlo
     case Js::OpCodeAsmJs::Copysign_Flt:
     case Js::OpCodeAsmJs::Trunc_Flt:
     case Js::OpCodeAsmJs::Nearest_Flt:
-        break;
+        Assert(UNREACHED);
     default:
         Assume(UNREACHED);
     }

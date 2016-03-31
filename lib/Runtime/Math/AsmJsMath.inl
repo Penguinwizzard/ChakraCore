@@ -182,12 +182,14 @@ namespace Js
     template<typename T>
     inline T AsmJsMath::Trunc(T value)
     {
+        Assert(UNREACHED);
         return value;
     }
 
     template<typename T>
     inline T AsmJsMath::Nearest(T value)
     {
+        Assert(UNREACHED);
         return value;
     }
 }
