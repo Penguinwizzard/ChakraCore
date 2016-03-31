@@ -182,14 +182,56 @@ namespace Js
     template<typename T>
     inline T AsmJsMath::Trunc(T value)
     {
-        Assert(UNREACHED);
-        return value;
+        if (value == 0.0)
+        {
+            return value;
+        }
+        else
+        {
+            T result;
+            if (value < 0.0)
+            {
+                result = ceil(value);
+            }
+            else
+            {
+                result = floor(value);
+            }
+            if (NumberUtilities::IsNan(result))
+            {
+                return (T)NumberConstants::NaN;  // XXX
+            }
+            return result;
+        }
     }
 
     template<typename T>
     inline T AsmJsMath::Nearest(T value)
     {
-        Assert(UNREACHED);
-        return value;
+        if (value == 0.0)
+        {
+            return value;
+        }
+        else
+        {
+            T result;
+            T u = ceil(value);
+            T d = floor(value);
+            T um = fabs(value - u);
+            T dm = fabs(value - d);
+            if (um < dm || (um == dm && floor(u / 2) == u / 2))
+            {
+                result = u;
+            }
+            else
+            {
+                result = d;
+            }
+            if (NumberUtilities::IsNan(result))
+            {
+                return (T)NumberConstants::NaN; // XXX
+            }
+            return result;
+        }
     }
 }
