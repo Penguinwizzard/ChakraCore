@@ -20,3 +20,5 @@ print(a.trunc(0.5)); // == 0
 print(a.trunc(-1.5)); // == -1 
 print(a.trunc(Number.NaN)); // == NaN
 print(a.trunc(-Number.NaN)); // == -NaN
+print(a.ifeqz(0)); // == 1
+print(a.ifeqz(-1)); // == 0

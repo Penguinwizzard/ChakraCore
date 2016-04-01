@@ -7,9 +7,23 @@
     </default>
 </test>
 <test>
+    <default>
+        <files>rot.js</files>
+        <baseline>rot.baseline</baseline>
+        <compiler-flags>-maic:0</compiler-flags>
+    </default>
+</test>    
+<test>
      <default>
        <files>misc.js</files>
        <baseline>misc.baseline</baseline>
      </default>
+</test>
+<test>
+    <default>
+        <files>misc.js</files>
+        <baseline>misc.baseline</baseline>
+        <compiler-flags>-maic:0</compiler-flags>
+    </default>
 </test>
 </regress-exe>
