@@ -16,7 +16,6 @@ namespace Js
         template<typename T> static T Rem( T aLeft, T aRight );
         template<typename T> static T Min( T aLeft, T aRight );
         template<typename T> static T Max( T aLeft, T aRight );
-        template<typename T> static T Copysign(T aLeft, T aRight);
 
         static int And( int aLeft, int aRight );
         static int Or( int aLeft, int aRight );
@@ -24,16 +23,11 @@ namespace Js
         static int Shl( int aLeft, int aRight );
         static int Shr( int aLeft, int aRight );
         static int ShrU( int aLeft, int aRight );
-        static int Rol( int aLeft, int aRight );
-        static int Ror( int aLeft, int aRight );
         template<typename T> static T Neg( T aLeft);
         static int Not( int aLeft);
         static int LogNot( int aLeft);
         static int ToBool( int aLeft );
         static int Clz32( int value);
-        static int Eqz(int value);
-        template<typename T> static T Trunc(T aLeft);
-        template<typename T> static T Nearest(T aLeft);
 
         template<typename T> static int CmpLt( T aLeft, T aRight );
         template<typename T> static int CmpLe( T aLeft, T aRight );

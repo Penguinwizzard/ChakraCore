@@ -127,16 +127,6 @@ namespace Js
         return (unsigned int)aLeft >> (unsigned int)aRight;
     }
 
-    __inline int AsmJsMath::Rol( int aLeft, int aRight )
-    {
-        return _rotl(aLeft, aRight);
-    }
-
-    __inline int AsmJsMath::Ror( int aLeft, int aRight )
-    {
-        return _rotr(aLeft, aRight);
-    }
-
     template<typename T>
     __inline T AsmJsMath::Neg( T aLeft )
     {
@@ -168,70 +158,4 @@ namespace Js
         return 32;
     }
 
-    inline int AsmJsMath::Eqz(int value)
-    {
-        return value == 0;
-    }
-
-    template<typename T>
-    inline T AsmJsMath::Copysign(T aLeft, T aRight)
-    {
-        return copysign(aLeft, aRight);
-    }
-
-    template<typename T>
-    inline T AsmJsMath::Trunc(T value)
-    {
-        if (value == 0.0)
-        {
-            return value;
-        }
-        else
-        {
-            T result;
-            if (value < 0.0)
-            {
-                result = ceil(value);
-            }
-            else
-            {
-                result = floor(value);
-            }
-            if (NumberUtilities::IsNan(result))
-            {
-                return (T)(((uint)value | (sizeof(T)*8)) * NumberConstants::NaN);  // XXX
-            }
-            return result;
-        }
-    }
-
-    template<typename T>
-    inline T AsmJsMath::Nearest(T value)
-    {
-        if (value == 0.0)
-        {
-            return value;
-        }
-        else
-        {
-            T result;
-            T u = ceil(value);
-            T d = floor(value);
-            T um = fabs(value - u);
-            T dm = fabs(value - d);
-            if (um < dm || (um == dm && floor(u / 2) == u / 2))
-            {
-                result = u;
-            }
-            else
-            {
-                result = d;
-            }
-            if (NumberUtilities::IsNan(result))
-            {
-                return (T)(((uint)value | (sizeof(T) * 8)) * NumberConstants::NaN); // XXX
-            }
-            return result;
-        }
-    }
 }
