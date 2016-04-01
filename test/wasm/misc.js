@@ -16,3 +16,7 @@ print(a.f64copysign(255.0,-1.0)); // == -255.0
 print(a.eqz(0)); // == 1
 print(a.eqz(-1)); // == 0
 print(a.eqz(1)); // == 0
+print(a.trunc(0.5)); // == 0
+print(a.trunc(-1.5)); // == -1 
+print(a.trunc(Number.NaN)); // == NaN
+print(a.trunc(-Number.NaN)); // == -NaN

@@ -199,7 +199,7 @@ namespace Js
             }
             if (NumberUtilities::IsNan(result))
             {
-                return (T)NumberConstants::NaN;  // XXX
+                return (T)(((uint)value | (sizeof(T)*8)) * NumberConstants::NaN);  // XXX
             }
             return result;
         }
@@ -229,7 +229,7 @@ namespace Js
             }
             if (NumberUtilities::IsNan(result))
             {
-                return (T)NumberConstants::NaN; // XXX
+                return (T)(((uint)value | (sizeof(T) * 8)) * NumberConstants::NaN); // XXX
             }
             return result;
         }
