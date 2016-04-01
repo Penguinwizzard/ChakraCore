@@ -6082,6 +6082,24 @@ LowererMD::GenerateFastRecyclerAlloc(size_t allocSize, IR::RegOpnd* newObjDst, I
 }
 
 void
+LowererMD::GenerateCopysign(IR::Instr * instr)
+{
+    Assert(UNREACHED);
+}
+
+void
+LowererMD::GenerateTrunc(IR::Instr * instr)
+{
+    Assert(UNREACHED);
+}
+
+void
+LowererMD::GenerateNearest(IR::Instr * instr)
+{
+    Assert(UNREACHED);
+}
+
+void
 LowererMD::SaveDoubleToVar(IR::RegOpnd * dstOpnd, IR::RegOpnd *opndFloat, IR::Instr *instrOrig, IR::Instr *instrInsert, bool isHelper)
 {
     Assert(opndFloat->GetType() == TyFloat64);

@@ -742,6 +742,11 @@ MACRO_BACKEND_ONLY(     SlotArrayCheck,     Empty,          OpCanCSE)
 MACRO_BACKEND_ONLY(     FrameDisplayCheck,  Empty,          OpCanCSE)
 MACRO_EXTEND(           BeginBodyScope,     Empty,          OpSideEffect)
 
+MACRO_BACKEND_ONLY(Copysign_A, Empty, OpInlinableBuiltIn | OpTempNumberSources | OpCanCSE | OpProducesNumber)
+MACRO_BACKEND_ONLY(Trunc_A,    Empty, OpInlinableBuiltIn | OpTempNumberSources | OpCanCSE | OpProducesNumber)
+MACRO_BACKEND_ONLY(Nearest_A,  Empty, OpInlinableBuiltIn | OpTempNumberSources | OpCanCSE | OpProducesNumber)
+
+
 // All SIMD ops are backend only for non-asmjs.
 #define MACRO_SIMD(opcode, asmjsLayout, opCodeAttrAsmJs, OpCodeAttr, ...) MACRO_BACKEND_ONLY(opcode, Empty, OpCodeAttr)
 #define MACRO_SIMD_WMS(opcode, asmjsLayout, opCodeAttrAsmJs, OpCodeAttr, ...) MACRO_BACKEND_ONLY(opcode, Empty, OpCodeAttr)

@@ -318,6 +318,10 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             m_lowererMD.LowerCommitScope(instr);
             break;
 
+        case Js::OpCode::Copysign_A:
+            m_lowererMD.GenerateCopysign(instr);
+            break;
+
         case Js::OpCode::LdFldForTypeOf:
             instrPrev = GenerateCompleteLdFld<false>(instr, !noFieldFastPath, IR::HelperOp_PatchGetValueForTypeOf, IR::HelperOp_PatchGetValuePolymorphicForTypeOf,
                 IR::HelperOp_PatchGetValueForTypeOf, IR::HelperOp_PatchGetValuePolymorphicForTypeOf);
@@ -1036,6 +1040,10 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             m_lowererMD.EmitPtrInstr(instr);
             break;
 
+        case Js::OpCode::Trunc_A:
+            m_lowererMD.GenerateTrunc(instr);
+            break;
+
         case Js::OpCode::Typeof:
             this->LowerUnaryHelperMem(instr, IR::HelperOp_Typeof);
             break;
@@ -1140,6 +1148,10 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             m_lowererMD.GenerateLdThisStrict(instr);
             instr->FreeSrc1();
             this->GenerateBailOut(instr);
+            break;
+
+        case Js::OpCode::Nearest_A:
+            m_lowererMD.GenerateNearest(instr);
             break;
 
         case Js::OpCode::NewScArray:
