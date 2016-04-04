@@ -820,31 +820,7 @@ Symbol* Parser::AddDeclForPid(ParseNodePtr pnode, IdentPtr pid, SymbolType symbo
         blockInfo = blockInfo->pBlockInfoOuter;
     }
 
-    int maxScopeId = blockInfo->pnodeBlock->sxBlock.blockId;
-
-    // The body of catch may have let declared variable. In the case of pattern, found at catch parameter level,
-    // we need to search the duplication at that scope level as well - thus extending the scope lookup range.
-    if (IsES6DestructuringEnabled()
-        && fBlockScope
-        && blockInfo->pBlockInfoOuter != nullptr
-        && blockInfo->pBlockInfoOuter->pnodeBlock->sxBlock.scope != nullptr
-        && blockInfo->pBlockInfoOuter->pnodeBlock->sxBlock.scope->GetScopeType() == ScopeType_CatchParamPattern)
-    {
-        maxScopeId = blockInfo->pBlockInfoOuter->pnodeBlock->sxBlock.blockId;
-    }
-
-    if (blockInfo->pnodeBlock->sxBlock.scope != nullptr && blockInfo->pnodeBlock->sxBlock.scope->GetScopeType() == ScopeType_FunctionBody)
-    {
-        // Even though we have separate param and body scope it can get merged into one later.
-        // So when looking up the symbol check if there is a parameter scope and try to get it first.
-        BlockInfoStack *outerBlockInfo = blockInfo->pBlockInfoOuter;
-        if (outerBlockInfo != nullptr && outerBlockInfo->pnodeBlock->sxBlock.blockType == PnodeBlockType::Parameter && outerBlockInfo->pnodeBlock->sxBlock.scope->GetCanMergeWithBodyScope())
-        {
-            maxScopeId = outerBlockInfo->pnodeBlock->sxBlock.blockId;
-        }
-    }
-
-    refForDecl = this->FindOrAddPidRef(pid, blockInfo->pnodeBlock->sxBlock.blockId, maxScopeId);
+    refForDecl = this->FindOrAddPidRef(pid, blockInfo->pnodeBlock->sxBlock.blockId);
 
     if (refForDecl == nullptr)
     {
@@ -5088,6 +5064,14 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
                         paramNode->sxVar.sym->SetHasInit(true);
                     });
                 }
+                else
+                {
+                    paramScope->ForEachSymbol([this](Symbol* paramSym)
+                    {
+                        // Push an additional pid ref for the body references
+                        PushPidRef(paramSym->GetPid());
+                    });
+                }
             }
 
             // Keep nested function declarations and expressions in the same list at function scope.
@@ -8503,9 +8487,9 @@ PidRefStack* Parser::PushPidRef(IdentPtr pid)
     return ref;
 }
 
-PidRefStack* Parser::FindOrAddPidRef(IdentPtr pid, int scopeId, int maxScopeId)
+PidRefStack* Parser::FindOrAddPidRef(IdentPtr pid, int scopeId)
 {
-    PidRefStack *ref = pid->FindOrAddPidRef(&m_nodeAllocator, scopeId, maxScopeId);
+    PidRefStack *ref = pid->FindOrAddPidRef(&m_nodeAllocator, scopeId);
     if (ref == NULL)
     {
         Error(ERRnoMemory);

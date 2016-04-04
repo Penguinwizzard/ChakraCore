@@ -124,8 +124,10 @@ void Scope::MergeParamAndBodyScopes(ParseNode *pnodeScope, ByteCodeGenerator *by
             return;
         }
 
-        Assert(paramScope->m_symList == nullptr || paramScope->FindLocalSymbol(sym->GetName()) == nullptr);
-        paramScope->AddNewSymbol(sym);
+        if (paramScope->FindLocalSymbol(sym->GetName()) == nullptr)
+        {
+            paramScope->AddNewSymbol(sym);
+        }
     });
 
     // Reassign non-formal slot positions. Formals need to keep their slot positions to ensure
