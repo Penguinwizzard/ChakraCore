@@ -5030,9 +5030,9 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
             pnodeFnc->sxFnc.pnodeVars = nullptr;
             m_ppnodeVar = &pnodeFnc->sxFnc.pnodeVars;
 
+            Scope* paramScope = pnodeFnc->sxFnc.pnodeScopes->sxBlock.scope;
             if (pnodeFnc->sxFnc.HasNonSimpleParameterList() && !fAsync)
             {
-                Scope* paramScope = pnodeFnc->sxFnc.pnodeScopes->sxBlock.scope;
                 Assert(paramScope != nullptr);
 
                 if (paramScope->GetCanMergeWithBodyScope())
@@ -5064,19 +5064,22 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
                         paramNode->sxVar.sym->SetHasInit(true);
                     });
                 }
-                else
-                {
-                    paramScope->ForEachSymbol([this](Symbol* paramSym)
-                    {
-                        // Push an additional pid ref for the body references
-                        PushPidRef(paramSym->GetPid());
-                    });
-                }
             }
 
             // Keep nested function declarations and expressions in the same list at function scope.
             // (Indicate this by nulling out the current function expressions list.)
             m_ppnodeExprScope = nullptr;
+
+            if (paramScope != nullptr && paramScope->GetCanMergeWithBodyScope())
+            {
+                paramScope->ForEachSymbol([this](Symbol* paramSym)
+                {
+                    // Push an additional pid ref for the body references
+                    Symbol* sym = paramSym->GetPid()->GetTopRef()->GetSym();
+                    PidRefStack* ref = PushPidRef(paramSym->GetPid());
+                    ref->SetSym(sym);
+                });
+            }
 
             if (buildAST)
             {
@@ -8470,11 +8473,7 @@ PidRefStack* Parser::PushPidRef(IdentPtr pid)
     Assert(GetCurrentBlock() != nullptr);
     AssertMsg(pid != nullptr, "PID should be created");
     PidRefStack *ref = pid->GetTopRef();
-    if (!ref || (ref->GetScopeId() < GetCurrentBlock()->sxBlock.blockId)
-                // We could have the ref from the parameter scope if it is merged with body scope. In that case we can skip creating a new one.
-                && !(m_currentBlockInfo->pBlockInfoOuter->pnodeBlock->sxBlock.blockId == ref->GetScopeId()
-                    && m_currentBlockInfo->pBlockInfoOuter->pnodeBlock->sxBlock.blockType == PnodeBlockType::Parameter
-                    && m_currentBlockInfo->pBlockInfoOuter->pnodeBlock->sxBlock.scope->GetCanMergeWithBodyScope()))
+    if (!ref || (ref->GetScopeId() < GetCurrentBlock()->sxBlock.blockId))
     {
         ref = Anew(&m_nodeAllocator, PidRefStack);
         if (ref == nullptr)
