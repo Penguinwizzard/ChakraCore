@@ -4967,7 +4967,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
             (
                 !PHASE_FORCE_RAW(Js::DeferParsePhase, m_sourceContextInfo->sourceContextId, pnodeFnc->sxFnc.functionId) ||
                 PHASE_FORCE_RAW(Js::ScanAheadPhase, m_sourceContextInfo->sourceContextId, pnodeFnc->sxFnc.functionId)
-            ))
+                ))
         {
             // Try to scan ahead to the end of the function. If we get there before we've scanned a minimum
             // number of tokens, don't bother deferring, because it's too small.
@@ -4986,6 +4986,41 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
             }
             // Same than before, we increment the nestedCount because we will have a Generator inside any async function.
             pnodeFnc->sxFnc.nestedCount++;
+        }
+
+        Scope* paramScope = pnodeFnc->sxFnc.pnodeScopes ? pnodeFnc->sxFnc.pnodeScopes->sxBlock.scope : nullptr;
+        if (paramScope != nullptr && pnodeFnc->sxFnc.HasNonSimpleParameterList() && !fAsync)
+        {
+            Assert(paramScope != nullptr);
+
+            if (paramScope->GetCanMergeWithBodyScope())
+            {
+                paramScope->ForEachSymbolUntil([this, paramScope](Symbol* sym) {
+                    if (sym->GetPid()->GetTopRef()->sym == nullptr)
+                    {
+                        // One of the symbol has non local reference. Mark the param scope as we can't merge it with body scope.
+                        paramScope->SetCannotMergeWithBodyScope();
+                        return true;
+                    }
+                    else
+                    {
+                        // If no non-local references are there then the top of the ref stack should point to the same symbol.
+                        Assert(sym->GetPid()->GetTopRef()->sym == sym);
+                    }
+                    return false;
+                });
+            }
+        }
+
+        if (paramScope != nullptr && paramScope->GetCanMergeWithBodyScope() && (isTopLevelDeferredFunc || !fAsync))
+        {
+            paramScope->ForEachSymbol([this](Symbol* paramSym)
+            {
+                // Push an additional pid ref for the body references
+                Symbol* sym = paramSym->GetPid()->GetTopRef()->GetSym();
+                PidRefStack* ref = PushPidRef(paramSym->GetPid());
+                ref->SetSym(sym);
+            });
         }
 
         if (isTopLevelDeferredFunc || (m_InAsmMode && m_deferAsmJs))
@@ -5030,56 +5065,21 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
             pnodeFnc->sxFnc.pnodeVars = nullptr;
             m_ppnodeVar = &pnodeFnc->sxFnc.pnodeVars;
 
-            Scope* paramScope = pnodeFnc->sxFnc.pnodeScopes->sxBlock.scope;
-            if (pnodeFnc->sxFnc.HasNonSimpleParameterList() && !fAsync)
+            if (!paramScope->GetCanMergeWithBodyScope())
             {
-                Assert(paramScope != nullptr);
-
-                if (paramScope->GetCanMergeWithBodyScope())
-                {
-                    paramScope->ForEachSymbolUntil([this, paramScope](Symbol* sym) {
-                        if (sym->GetPid()->GetTopRef()->sym == nullptr)
-                        {
-                            // One of the symbol has non local reference. Mark the param scope as we can't merge it with body scope.
-                            paramScope->SetCannotMergeWithBodyScope();
-                            return true;
-                        }
-                        else
-                        {
-                            // If no non-local references are there then the top of the ref stack should point to the same symbol.
-                            Assert(sym->GetPid()->GetTopRef()->sym == sym);
-                        }
-                        return false;
-                    });
-                }
-
-                if (!paramScope->GetCanMergeWithBodyScope())
-                {
-                    OUTPUT_TRACE_DEBUGONLY(Js::ParsePhase, _u("The param and body scope of the function %s cannot be merged\n"), pnodeFnc->sxFnc.pnodeName ? pnodeFnc->sxFnc.pnodeName->sxVar.pid->Psz() : _u("Anonymous function"));
-                    // Add a new symbol reference for each formal in the param scope to the body scope.
-                    paramScope->ForEachSymbol([this](Symbol* param) {
-                        OUTPUT_TRACE_DEBUGONLY(Js::ParsePhase, _u("Creating a duplicate symbol for the parameter %s in the body scope\n"), param->GetPid()->Psz());
-                        ParseNodePtr paramNode = this->CreateVarDeclNode(param->GetPid(), STVariable, false, nullptr, false);
-                        Assert(paramNode && paramNode->sxVar.sym->GetScope()->GetScopeType() == ScopeType_FunctionBody);
-                        paramNode->sxVar.sym->SetHasInit(true);
-                    });
-                }
+                OUTPUT_TRACE_DEBUGONLY(Js::ParsePhase, _u("The param and body scope of the function %s cannot be merged\n"), pnodeFnc->sxFnc.pnodeName ? pnodeFnc->sxFnc.pnodeName->sxVar.pid->Psz() : _u("Anonymous function"));
+                // Add a new symbol reference for each formal in the param scope to the body scope.
+                paramScope->ForEachSymbol([this](Symbol* param) {
+                    OUTPUT_TRACE_DEBUGONLY(Js::ParsePhase, _u("Creating a duplicate symbol for the parameter %s in the body scope\n"), param->GetPid()->Psz());
+                    ParseNodePtr paramNode = this->CreateVarDeclNode(param->GetPid(), STVariable, false, nullptr, false);
+                    Assert(paramNode && paramNode->sxVar.sym->GetScope()->GetScopeType() == ScopeType_FunctionBody);
+                    paramNode->sxVar.sym->SetHasInit(true);
+                });
             }
 
             // Keep nested function declarations and expressions in the same list at function scope.
             // (Indicate this by nulling out the current function expressions list.)
             m_ppnodeExprScope = nullptr;
-
-            if (paramScope != nullptr && paramScope->GetCanMergeWithBodyScope() && !fAsync)
-            {
-                paramScope->ForEachSymbol([this](Symbol* paramSym)
-                {
-                    // Push an additional pid ref for the body references
-                    Symbol* sym = paramSym->GetPid()->GetTopRef()->GetSym();
-                    PidRefStack* ref = PushPidRef(paramSym->GetPid());
-                    ref->SetSym(sym);
-                });
-            }
 
             if (buildAST)
             {
