@@ -5070,7 +5070,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
             // (Indicate this by nulling out the current function expressions list.)
             m_ppnodeExprScope = nullptr;
 
-            if (paramScope != nullptr && paramScope->GetCanMergeWithBodyScope())
+            if (paramScope != nullptr && paramScope->GetCanMergeWithBodyScope() && !fAsync)
             {
                 paramScope->ForEachSymbol([this](Symbol* paramSym)
                 {
@@ -7440,6 +7440,12 @@ void Parser::TransformAsyncFncDeclAST(ParseNodePtr *pnodeBody, bool fLambda)
     // meaning post-parsing that won't match the actual parameter list of the generator.
     pnodeFncGenerator->sxFnc.SetHasNonSimpleParameterList(hasNonSimpleParameterList);
 
+    paramScope->ForEachSymbol([this] (Symbol* param)
+    {
+        Symbol* sym = param->GetPid()->GetTopRef()->GetSym();
+        PidRefStack* ref = PushPidRef(param->GetPid());
+        ref->SetSym(sym);
+    });
     pnodeFncGenerator->sxFnc.pnodeBody = nullptr;
     if (fLambda)
     {
