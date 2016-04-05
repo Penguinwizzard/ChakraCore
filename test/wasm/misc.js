@@ -21,4 +21,7 @@ print(a.trunc(Number.NaN)); // == NaN
 print(a.trunc(-Number.NaN)); // == -NaN
 print(a.ifeqz(0)); // == 1
 print(a.ifeqz(-1)); // == 0
+print(a.nearest(-0.1)); // == 0
+print(a.nearest(-0.7)); // == -1
+print(a.nearest(-1.5)); // == -2
 //print(a.f64copysign(255.0,-1.0)); // == -255.0

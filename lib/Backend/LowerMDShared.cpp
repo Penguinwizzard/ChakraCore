@@ -6085,19 +6085,46 @@ LowererMD::GenerateFastRecyclerAlloc(size_t allocSize, IR::RegOpnd* newObjDst, I
 void
 LowererMD::GenerateCopysign(IR::Instr * instr)
 {
-    Assert(UNREACHED);
+    Assert(instr->GetSrc1()->IsFloat32() && instr->GetSrc2()->IsFloat32());
+    //IR::Opnd* left = instr->GetSrc1();
+    //IR::Opnd* right = instr->GetSrc2();
+    //IR::IntConstOpnd * const32 = IR::IntConstOpnd::New(32, TyInt8, m_func);
+    IR::Instr* abs = IR::Instr::New(Js::OpCode::NEG, instr->GetDst(), instr->GetSrc1(), m_func);
+
+    instr->InsertBefore(abs);
+    Legalize(abs);
+    IR::Opnd* intMax = IR::IntConstOpnd::New(INT_MAX, TyUint32, m_func);
+    IR::Instr* andInsn = IR::Instr::New(Js::OpCode::ANDPS, instr->GetSrc2(), instr->GetSrc2(), intMax, m_func);
+    instr->InsertBefore(andInsn);
+    Legalize(andInsn);
+    instr->m_opcode = Js::OpCode::ORPS;
+    instr->UnlinkSrc1();
+    instr->SetSrc1(abs->GetDst());
+    Legalize(instr);
+    //instr->SetDst(instr->UnlinkSrc1());
+    //Assert(UNREACHED);
 };
 
 void
 LowererMD::GenerateTrunc(IR::Instr * instr)
 {
-    Assert(UNREACHED);
+    instr->m_opcode = Js::OpCode::XOR;
+    //instr->UnlinkSrc1();
+    //instr->SetSrc1(instr->GetDst());
+    instr->SetSrc2(instr->GetSrc1());
+    Legalize(instr);
+    //Assert(UNREACHED);
 }
 
 void
 LowererMD::GenerateNearest(IR::Instr * instr)
 {
-    Assert(UNREACHED);
+    instr->m_opcode = Js::OpCode::XOR;
+    //instr->UnlinkSrc1();
+    //instr->SetSrc1(instr->GetDst());
+    instr->SetSrc2(instr->GetSrc1());
+    Legalize(instr);
+    //Assert(UNREACHED);
 }
 #endif //ENABLE_WASM
 
