@@ -3039,6 +3039,7 @@ IRBuilderAsmJs::BuildDouble3(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::RegSl
         break;
 
     case Js::OpCodeAsmJs::Copysign_Db:
+        Assert(UNREACHED);
         instr = IR::Instr::New(Js::OpCode::Copysign_A, dstOpnd, src1Opnd, src2Opnd, m_func);
         break;
 
