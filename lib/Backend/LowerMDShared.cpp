@@ -6086,20 +6086,60 @@ void
 LowererMD::GenerateCopysign(IR::Instr * instr)
 {
     Assert(instr->GetSrc1()->IsFloat32() && instr->GetSrc2()->IsFloat32());
-    //IR::Opnd* left = instr->GetSrc1();
-    //IR::Opnd* right = instr->GetSrc2();
-    //IR::IntConstOpnd * const32 = IR::IntConstOpnd::New(32, TyInt8, m_func);
-    IR::Instr* abs = IR::Instr::New(Js::OpCode::NEG, instr->GetDst(), instr->GetSrc1(), m_func);
+#if defined(_M_IX86)
+    // We should only generate this if sse2 is available
+    Assert(AutoSystemInfo::Data.SSE2Available());
+#endif
 
-    instr->InsertBefore(abs);
-    Legalize(abs);
-    IR::Opnd* intMax = IR::IntConstOpnd::New(INT_MAX, TyUint32, m_func);
-    IR::Instr* andInsn = IR::Instr::New(Js::OpCode::ANDPS, instr->GetSrc2(), instr->GetSrc2(), intMax, m_func);
+   IR::Opnd* intMax = IR::IntConstOpnd::New(INT32_MAX, TyInt32, m_func);
+#if 0
+    //IR::Opnd* tmp = IR::RegOpnd::New(instr->GetSrc1()->GetType(), this->m_func);
+
+
+    IR::Instr* andInsn = IR::Instr::New(Js::OpCode::ANDPS, instr->GetSrc1(), instr->GetSrc1(), intMax, m_func);
     instr->InsertBefore(andInsn);
     Legalize(andInsn);
+    IR::Instr* absInsn = IR::Instr::New(Js::OpCode::XORPS, andInsn->GetDst(), andInsn->GetDst(), instr->GetSrc1(), m_func);
+    instr->InsertBefore(absInsn);
+    Legalize(absInsn);
+    IR::Instr* cvtInsn = IR::Instr::New(Js::OpCode::CVTSS2SD, instr->GetSrc1(), instr->GetSrc1(), m_func);
+    instr->InsertBefore(cvtInsn);
+    Legalize(cvtInsn);
+    IR::Opnd* intMin = IR::IntConstOpnd::New(INT_MIN, TyUint32, m_func);
+    IR::Instr* minAndInsn = IR::Instr::New(Js::OpCode::ANDPS, instr->GetSrc2(), instr->GetSrc2(), intMin, m_func);
+    instr->InsertBefore(minAndInsn);
+    Legalize(minAndInsn);
+
+
     instr->m_opcode = Js::OpCode::ORPS;
     instr->UnlinkSrc1();
-    instr->SetSrc1(abs->GetDst());
+    instr->SetSrc1(absInsn->GetDst());
+    instr->UnlinkSrc2();
+    instr->SetSrc2(minAndInsn->GetDst());
+#endif 
+    //IR::Opnd* tmp = IR::RegOpnd::New(instr->GetSrc1()->GetType(), this->m_func);
+    //IR::Instr* t0 = IR::Instr::New(Js::OpCode::MOVD, tmp, instr->GetSrc1(), m_func);
+    //instr->InsertBefore(t0);
+    //Legalize(t0);
+
+    IR::Instr* t1 = IR::Instr::New(Js::OpCode::AND, instr->GetSrc1(), instr->GetSrc1(), intMax, m_func);
+    instr->InsertBefore(t1);
+    Legalize(t1);
+
+    IR::Opnd* intMin = IR::IntConstOpnd::New(INT_MIN, TyInt32, m_func);
+    IR::Instr* t2 = IR::Instr::New(Js::OpCode::AND, instr->GetSrc2(), instr->GetSrc2(), intMin, m_func);
+    instr->InsertBefore(t2);
+    Legalize(t2);
+
+    IR::Instr* t3 = IR::Instr::New(Js::OpCode::OR, t2->GetDst(), t2->GetDst(), t1->GetDst(), m_func);
+    instr->InsertBefore(t3);
+    Legalize(t3);
+
+    instr->m_opcode = Js::OpCode::MOV;
+    instr->UnlinkSrc1();
+    instr->SetSrc1(t3->GetDst());
+    instr->UnlinkSrc2();
+    //instr->SetSrc2(t2->GetDst());
     Legalize(instr);
     //instr->SetDst(instr->UnlinkSrc1());
     //Assert(UNREACHED);
