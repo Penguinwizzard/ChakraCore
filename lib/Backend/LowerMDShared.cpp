@@ -6091,42 +6091,17 @@ LowererMD::GenerateCopysign(IR::Instr * instr)
     Assert(AutoSystemInfo::Data.SSE2Available());
 #endif
 
-   IR::Opnd* intMax = IR::IntConstOpnd::New(INT32_MAX, TyInt32, m_func);
-#if 0
-    //IR::Opnd* tmp = IR::RegOpnd::New(instr->GetSrc1()->GetType(), this->m_func);
-
-
-    IR::Instr* andInsn = IR::Instr::New(Js::OpCode::ANDPS, instr->GetSrc1(), instr->GetSrc1(), intMax, m_func);
-    instr->InsertBefore(andInsn);
-    Legalize(andInsn);
-    IR::Instr* absInsn = IR::Instr::New(Js::OpCode::XORPS, andInsn->GetDst(), andInsn->GetDst(), instr->GetSrc1(), m_func);
-    instr->InsertBefore(absInsn);
-    Legalize(absInsn);
-    IR::Instr* cvtInsn = IR::Instr::New(Js::OpCode::CVTSS2SD, instr->GetSrc1(), instr->GetSrc1(), m_func);
-    instr->InsertBefore(cvtInsn);
-    Legalize(cvtInsn);
-    IR::Opnd* intMin = IR::IntConstOpnd::New(INT_MIN, TyUint32, m_func);
-    IR::Instr* minAndInsn = IR::Instr::New(Js::OpCode::ANDPS, instr->GetSrc2(), instr->GetSrc2(), intMin, m_func);
-    instr->InsertBefore(minAndInsn);
-    Legalize(minAndInsn);
-
-
-    instr->m_opcode = Js::OpCode::ORPS;
-    instr->UnlinkSrc1();
-    instr->SetSrc1(absInsn->GetDst());
-    instr->UnlinkSrc2();
-    instr->SetSrc2(minAndInsn->GetDst());
-#endif 
     //IR::Opnd* tmp = IR::RegOpnd::New(instr->GetSrc1()->GetType(), this->m_func);
     //IR::Instr* t0 = IR::Instr::New(Js::OpCode::MOVD, tmp, instr->GetSrc1(), m_func);
     //instr->InsertBefore(t0);
     //Legalize(t0);
 
+    IR::Opnd* intMax = IR::IntConstOpnd::New(INT32_MAX, TyInt32, m_func);
     IR::Instr* t1 = IR::Instr::New(Js::OpCode::AND, instr->GetSrc1(), instr->GetSrc1(), intMax, m_func);
     instr->InsertBefore(t1);
     Legalize(t1);
 
-    IR::Opnd* intMin = IR::IntConstOpnd::New(INT_MIN, TyInt32, m_func);
+    IR::Opnd* intMin = IR::IntConstOpnd::New(INT32_MIN, TyInt32, m_func);
     IR::Instr* t2 = IR::Instr::New(Js::OpCode::AND, instr->GetSrc2(), instr->GetSrc2(), intMin, m_func);
     instr->InsertBefore(t2);
     Legalize(t2);
