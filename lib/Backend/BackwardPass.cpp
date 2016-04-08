@@ -249,6 +249,7 @@ BackwardPass::CleanupBackwardPassInfoInFlowGraph()
         block->noImplicitCallNativeArrayUses = nullptr;
         block->noImplicitCallJsArrayHeadSegmentSymUses = nullptr;
         block->noImplicitCallArrayLengthSymUses = nullptr;
+        block->couldRemoveNegZeroBailoutForDef = nullptr;
 
         if (block->loop != nullptr)
         {
@@ -372,6 +373,7 @@ BackwardPass::MergeSuccBlocksInfo(BasicBlock * block)
     BVSparse<JitArenaAllocator> * fieldHoistCandidates = nullptr;
     BVSparse<JitArenaAllocator> * slotDeadStoreCandidates = nullptr;
     BVSparse<JitArenaAllocator> * byteCodeUpwardExposedUsed = nullptr;
+    BVSparse<JitArenaAllocator> * couldRemoveNegZeroBailoutForDef = nullptr;
 #if DBG
     uint byteCodeLocalsCount = func->GetJnFunction()->GetLocalsCount();
     StackSym ** byteCodeRestoreSyms = nullptr;
@@ -434,6 +436,10 @@ BackwardPass::MergeSuccBlocksInfo(BasicBlock * block)
             if (this->tag == Js::BackwardPhase)
             {
                 cloneStrCandidates = JitAnew(this->globOpt->alloc, BVSparse<JitArenaAllocator>, this->globOpt->alloc);
+            }
+            else
+            {
+                couldRemoveNegZeroBailoutForDef = JitAnew(this->tempAlloc, BVSparse<JitArenaAllocator>, this->tempAlloc);
             }
         }
 
@@ -802,6 +808,16 @@ BackwardPass::MergeSuccBlocksInfo(BasicBlock * block)
                     }
 #endif
                 }
+
+                if (blockSucc->couldRemoveNegZeroBailoutForDef != nullptr)
+                {
+                    couldRemoveNegZeroBailoutForDef->And(blockSucc->couldRemoveNegZeroBailoutForDef);
+                    if (deleteData)
+                    {
+                        JitAdelete(this->tempAlloc, blockSucc->couldRemoveNegZeroBailoutForDef);
+                        blockSucc->couldRemoveNegZeroBailoutForDef = nullptr;
+                    }
+                }
             }
 
             if (blockSucc->noImplicitCallUses != nullptr)
@@ -1002,6 +1018,7 @@ BackwardPass::MergeSuccBlocksInfo(BasicBlock * block)
             Assert(block->noImplicitCallNativeArrayUses == nullptr);
             Assert(block->noImplicitCallJsArrayHeadSegmentSymUses == nullptr);
             Assert(block->noImplicitCallArrayLengthSymUses == nullptr);
+            Assert(block->couldRemoveNegZeroBailoutForDef == nullptr);
         }
         else
         {
@@ -1053,6 +1070,7 @@ BackwardPass::MergeSuccBlocksInfo(BasicBlock * block)
     block->noImplicitCallNativeArrayUses = noImplicitCallNativeArrayUses;
     block->noImplicitCallJsArrayHeadSegmentSymUses = noImplicitCallJsArrayHeadSegmentSymUses;
     block->noImplicitCallArrayLengthSymUses = noImplicitCallArrayLengthSymUses;
+    block->couldRemoveNegZeroBailoutForDef = couldRemoveNegZeroBailoutForDef;
 }
 
 ObjTypeGuardBucket
@@ -1219,6 +1237,11 @@ BackwardPass::DeleteBlockData(BasicBlock * block)
         JitAdeleteArray(this->tempAlloc, func->GetJnFunction()->GetLocalsCount(), block->byteCodeRestoreSyms);
         block->byteCodeRestoreSyms = nullptr;
 #endif
+    }
+    if (block->couldRemoveNegZeroBailoutForDef != nullptr)
+    {
+        JitAdelete(this->tempAlloc, block->couldRemoveNegZeroBailoutForDef);
+        block->couldRemoveNegZeroBailoutForDef = nullptr;
     }
 }
 
@@ -2459,6 +2482,39 @@ BackwardPass::ProcessBlock(BasicBlock * block)
                 this->ProcessFieldHoistKills(instr);
             }
 
+            if (tag == Js::DeadStorePhase && instr->HasBailOutInfo())
+            {
+                StackSym * dstSym = IR::RegOpnd::TryGetStackSym(instr->GetDst());
+                if (dstSym && ((instr->GetBailOutKind() & IR::BailOutOnNegativeZero) == IR::BailOutOnNegativeZero))
+                {
+                    if (this->currentBlock->couldRemoveNegZeroBailoutForDef->Test(dstSym->m_id))
+                    {
+                        IR::BailOutKind bailOutKind = instr->GetBailOutKind();
+                        bailOutKind -= IR::BailOutOnNegativeZero;
+                        if (bailOutKind)
+                        {
+                            instr->SetBailOutKind(bailOutKind);
+                        }
+                        else
+                        {
+                            instr->ClearBailOutInfo();
+                            if (preOpBailOutInstrToProcess == instr)
+                            {
+                                preOpBailOutInstrToProcess = nullptr;
+                            }
+                        }
+                        this->currentBlock->couldRemoveNegZeroBailoutForDef->Clear(dstSym->m_id);
+                    }
+                    else
+                    {
+                        this->currentBlock->couldRemoveNegZeroBailoutForDef->ClearAll();
+                    }
+                }
+                else
+                {
+                    this->currentBlock->couldRemoveNegZeroBailoutForDef->ClearAll();
+                }
+            }
             TrackIntUsage(instr);
             TrackBitWiseOrNumberOp(instr);
 
@@ -5102,6 +5158,10 @@ BackwardPass::TrackIntUsage(IR::Instr *const instr)
                 Assert(instr->GetSrc2());
                 Assert(instr->GetSrc2()->IsRegOpnd() || instr->GetSrc2()->IsIntConstOpnd());
 
+                /*StackSym * sym1 = IR::RegOpnd::TryGetStackSym(instr->GetSrc1());
+                StackSym * sym2 = IR::RegOpnd::TryGetStackSym(instr->GetSrc2());*/
+
+                //if(instr->ignoreNegativeZero ||)
                 if(instr->ignoreNegativeZero ||
                     !(instr->GetSrc1()->IsRegOpnd() && instr->GetSrc1()->AsRegOpnd()->m_wasNegativeZeroPreventedByBailout) ||
                     !(instr->GetSrc2()->IsRegOpnd() && instr->GetSrc2()->AsRegOpnd()->m_wasNegativeZeroPreventedByBailout))
@@ -5149,11 +5209,39 @@ BackwardPass::TrackIntUsage(IR::Instr *const instr)
                 break;
 
             case Js::OpCode::Sub_I4:
+            {
                 Assert(dstSym);
                 Assert(instr->GetSrc1());
                 Assert(instr->GetSrc1()->IsRegOpnd() || instr->GetSrc1()->IsIntConstOpnd());
                 Assert(instr->GetSrc2());
                 Assert(instr->GetSrc2()->IsRegOpnd() || instr->GetSrc2()->IsIntConstOpnd());
+
+                /*if (!this->func->GetJnFunction()->GetIsAsmJsFunction())
+                {
+                    StackSym * sym1 = IR::RegOpnd::TryGetStackSym(instr->GetSrc1());
+                    StackSym * sym2 = IR::RegOpnd::TryGetStackSym(instr->GetSrc2());
+                    if (instr->ignoreNegativeZero ||
+                        (instr->GetSrc1()->IsIntConstOpnd() && instr->GetSrc1()->AsIntConstOpnd()->GetValue() != 0) ||
+                        instr->GetSrc2()->IsIntConstOpnd() && instr->GetSrc2()->AsIntConstOpnd()->GetValue() != 0)
+                    {
+                        if (sym1 && !this->currentBlock->upwardExposedUses->Test(sym1->m_id))
+                        {
+                            this->currentBlock->couldRemoveNegZeroBailoutForDef->Set(sym1->m_id);
+                        }
+                        if (sym2 && !this->currentBlock->upwardExposedUses->Test(sym2->m_id))
+                        {
+                            this->currentBlock->couldRemoveNegZeroBailoutForDef->Set(sym2->m_id);
+                        }
+                    }
+                    else
+                    {
+                        if (sym2 && !this->currentBlock->upwardExposedUses->Test(sym2->m_id))
+                        {
+                            this->currentBlock->couldRemoveNegZeroBailoutForDef->Set(sym2->m_id);
+                        }
+                    }
+                    break;
+                }*/
 
                 if(instr->ignoreNegativeZero ||
                     !(instr->GetSrc1()->IsRegOpnd() && instr->GetSrc1()->AsRegOpnd()->m_wasNegativeZeroPreventedByBailout) ||
@@ -5168,7 +5256,7 @@ BackwardPass::TrackIntUsage(IR::Instr *const instr)
                     break;
                 }
                 goto NegativeZero_Sub_Default;
-
+            }
             case Js::OpCode::Sub_A:
                 Assert(dstSym);
                 Assert(instr->GetSrc1());
@@ -5197,7 +5285,15 @@ BackwardPass::TrackIntUsage(IR::Instr *const instr)
             NegativeZero_Sub_Default:
                 // -0 - 0 == -0. As long as src1 is guaranteed to not be -0, -0 does not matter for src2.
                 SetNegativeZeroMatters(instr->GetSrc1());
-                SetNegativeZeroDoesNotMatterIfLastUse(instr->GetSrc2());
+                SetNegativeZeroMatters(instr->GetSrc2());
+                /*if (this->tag == Js::BackwardPhase)
+                {
+                    SetNegativeZeroMatters(instr->GetSrc2());
+                }
+                else
+                {
+                    SetNegativeZeroDoesNotMatterIfLastUse(instr->GetSrc2());
+                }*/
                 break;
 
             case Js::OpCode::BrEq_I4:
