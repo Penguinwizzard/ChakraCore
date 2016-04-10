@@ -6086,38 +6086,25 @@ void
 LowererMD::GenerateCopysign(IR::Instr * instr)
 {
     Assert(instr->GetSrc1()->IsFloat32() && instr->GetSrc2()->IsFloat32());
+
 #if defined(_M_IX86)
     // We should only generate this if sse2 is available
     Assert(AutoSystemInfo::Data.SSE2Available());
 #endif
 
-    //IR::Opnd* tmp = IR::RegOpnd::New(instr->GetSrc1()->GetType(), this->m_func);
-    //IR::Instr* t0 = IR::Instr::New(Js::OpCode::MOVD, tmp, instr->GetSrc1(), m_func);
-    //instr->InsertBefore(t0);
-    //Legalize(t0);
+    // Copy sign from src2 to src1
+    IR::Opnd* src1 = instr->GetSrc1();
+    //IR::Opnd* src2 = instr->UnlinkSrc2();
+    GenerateFloatAbs(src1->AsRegOpnd(), instr);
 
-    IR::Opnd* intMax = IR::IntConstOpnd::New(INT32_MAX, TyInt32, m_func);
-    IR::Instr* t1 = IR::Instr::New(Js::OpCode::AND, instr->GetSrc1(), instr->GetSrc1(), intMax, m_func);
-    instr->InsertBefore(t1);
-    Legalize(t1);
-
-    IR::Opnd* intMin = IR::IntConstOpnd::New(INT32_MIN, TyInt32, m_func);
-    IR::Instr* t2 = IR::Instr::New(Js::OpCode::AND, instr->GetSrc2(), instr->GetSrc2(), intMin, m_func);
+    IR::Instr* t2 = IR::Instr::New(Js::OpCode::ANDPS, instr->GetSrc2(), instr->GetSrc2(), 
+        IR::MemRefOpnd::New((void *)&Js::JavascriptNumber::SgnBitCst, TyFloat32, this->m_func, IR::AddrOpndKindDynamicFloatRef), 
+        m_func);
     instr->InsertBefore(t2);
     Legalize(t2);
 
-    IR::Instr* t3 = IR::Instr::New(Js::OpCode::OR, t2->GetDst(), t2->GetDst(), t1->GetDst(), m_func);
-    instr->InsertBefore(t3);
-    Legalize(t3);
-
-    instr->m_opcode = Js::OpCode::MOV;
-    instr->UnlinkSrc1();
-    instr->SetSrc1(t3->GetDst());
-    instr->UnlinkSrc2();
-    //instr->SetSrc2(t2->GetDst());
+    instr->m_opcode = Js::OpCode::ORPS;
     Legalize(instr);
-    //instr->SetDst(instr->UnlinkSrc1());
-    //Assert(UNREACHED);
 };
 
 void
