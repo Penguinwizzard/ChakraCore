@@ -13969,7 +13969,7 @@ void Lowerer::InsertFloatCheckForZeroOrNanBranch(
 
 IR::IndirOpnd *
 Lowerer::GenerateFastElemICommon(
-    IR::Instr * ldElem,
+    IR::Instr * instr,
     bool isStore,
     IR::IndirOpnd * indirOpnd,
     IR::LabelInstr * labelHelper,
@@ -14012,7 +14012,7 @@ Lowerer::GenerateFastElemICommon(
                 // If profile data says that it's a typed array - do not generate the property string fast path as the src. could be a temp and that would cause a bug.
                 *pIsTypedArrayElement = false;
                 *pIsStringIndex = true;
-                return m_lowererMD.GenerateFastElemIStringIndexCommon(ldElem, isStore, indirOpnd, labelHelper);
+                return m_lowererMD.GenerateFastElemIStringIndexCommon(instr, isStore, indirOpnd, labelHelper);
             }
             else
             {
@@ -14023,7 +14023,7 @@ Lowerer::GenerateFastElemICommon(
     }
     return
         GenerateFastElemIIntIndexCommon(
-            ldElem,
+            instr,
             isStore,
             indirOpnd,
             labelHelper,
@@ -14040,7 +14040,7 @@ Lowerer::GenerateFastElemICommon(
 
 IR::IndirOpnd *
 Lowerer::GenerateFastElemIIntIndexCommon(
-    IR::Instr * ldElem,
+    IR::Instr * instr,
     bool isStore,
     IR::IndirOpnd * indirOpnd,
     IR::LabelInstr * labelHelper,
@@ -14151,14 +14151,14 @@ Lowerer::GenerateFastElemIIntIndexCommon(
     IRType elementType = TyIllegal;
     IR::Opnd * element = nullptr;
 
-    if(ldElem->m_opcode == Js::OpCode::InlineArrayPush)
+    if(instr->m_opcode == Js::OpCode::InlineArrayPush)
     {
-        element = ldElem->GetSrc2();
+        element = instr->GetSrc2();
         elementType = element->GetType();
     }
-    else if(isStore && ldElem->GetSrc1())
+    else if(isStore && instr->GetSrc1())
     {
-        element = ldElem->GetSrc1();
+        element = instr->GetSrc1();
         elementType = element->GetType();
     }
 
@@ -14179,7 +14179,7 @@ Lowerer::GenerateFastElemIIntIndexCommon(
     bool indexIsLessThanHeadSegmentLength = false;
     if(!baseValueType.IsAnyOptimizedArray())
     {
-        arrayOpnd = GenerateArrayTest(baseOpnd, labelCantUseArray, labelCantUseArray, ldElem, true, isStore);
+        arrayOpnd = GenerateArrayTest(baseOpnd, labelCantUseArray, labelCantUseArray, instr, true, isStore);
     }
     else
     {
@@ -14219,7 +14219,7 @@ Lowerer::GenerateFastElemIIntIndexCommon(
         {
             return;
         }
-        arrayOpnd = LoadObjectArray(arrayOpnd, ldElem);
+        arrayOpnd = LoadObjectArray(arrayOpnd, instr);
         autoReuseArrayOpnd.Initialize(arrayOpnd, m_func);
     };
 
@@ -14239,7 +14239,7 @@ Lowerer::GenerateFastElemIIntIndexCommon(
             ),
             labelCantUseArray,
             labelHelper,
-            ldElem);
+            instr);
     }
     const IR::AutoReuseOpnd autoReuseIndexValueOpnd(indexValueOpnd, m_func);
 
@@ -14261,11 +14261,11 @@ Lowerer::GenerateFastElemIIntIndexCommon(
             //  CMP index, headSegmentLength  -- upper bound check
             if(!invertBoundCheckComparison)
             {
-                InsertCompare(indexValueOpnd, headSegmentLengthOpnd, ldElem);
+                InsertCompare(indexValueOpnd, headSegmentLengthOpnd, instr);
             }
             else
             {
-                InsertCompare(headSegmentLengthOpnd, indexValueOpnd, ldElem);
+                InsertCompare(headSegmentLengthOpnd, indexValueOpnd, instr);
             }
         }
     }
@@ -14277,15 +14277,15 @@ Lowerer::GenerateFastElemIIntIndexCommon(
             baseValueType.IsLikelyNativeIntArray() &&
             (!element->IsIntConstOpnd() || Js::SparseArraySegment<int32>::GetMissingItem() == element->AsIntConstOpnd()->AsInt32()))
         {
-            Assert(ldElem->m_opcode != Js::OpCode::InlineArrayPush || bailOutLabelInstr);
+            Assert(instr->m_opcode != Js::OpCode::InlineArrayPush || bailOutLabelInstr);
 
             // Check for a write of the MissingItem value.
             InsertCompareBranch(
                 element,
                 GetMissingItemOpnd(elementType, m_func),
                 Js::OpCode::BrEq_A,
-                ldElem->m_opcode == Js::OpCode::InlineArrayPush ? bailOutLabelInstr : labelCantUseArray,
-                ldElem,
+                instr->m_opcode == Js::OpCode::InlineArrayPush ? bailOutLabelInstr : labelCantUseArray,
+                instr,
                 true);
         }
 
@@ -14297,7 +14297,7 @@ Lowerer::GenerateFastElemIIntIndexCommon(
             indirOpnd = IR::IndirOpnd::New(arrayOpnd, Js::JavascriptArray::GetOffsetOfHead(), TyMachPtr, this->m_func);
             headSegmentOpnd = IR::RegOpnd::New(TyMachPtr, this->m_func);
             autoReuseHeadSegmentOpnd.Initialize(headSegmentOpnd, m_func);
-            InsertMove(headSegmentOpnd, indirOpnd, ldElem);
+            InsertMove(headSegmentOpnd, indirOpnd, instr);
         }
 
         if(doUpperBoundCheck)
@@ -14313,23 +14313,26 @@ Lowerer::GenerateFastElemIIntIndexCommon(
             //  CMP index, headSegmentLength  -- upper bound check
             if(!invertBoundCheckComparison)
             {
-                InsertCompare(indexValueOpnd, headSegmentLengthOpnd, ldElem);
+                InsertCompare(indexValueOpnd, headSegmentLengthOpnd, instr);
             }
             else
             {
-                InsertCompare(headSegmentLengthOpnd, indexValueOpnd, ldElem);
+                InsertCompare(headSegmentLengthOpnd, indexValueOpnd, instr);
             }
         }
     }
 
-    const IR::BailOutKind bailOutKind = ldElem->HasBailOutInfo() ? ldElem->GetBailOutKind() : IR::BailOutInvalid;
-    if(indexIsLessThanHeadSegmentLength ||
-        bailOutKind & (IR::BailOutOnArrayAccessHelperCall | IR::BailOutOnInvalidatedArrayHeadSegment))
+    const IR::BailOutKind bailOutKind = instr->HasBailOutInfo() ? instr->GetBailOutKind() : IR::BailOutInvalid;
+    const bool needBailOutOnInvalidLength = !!(bailOutKind & (IR::BailOutOnInvalidatedArrayHeadSegment));
+    const bool needBailOutToHelper = !!(bailOutKind & (IR::BailOutOnArrayAccessHelperCall | IR::BailOutOnInvalidatedArrayLength));
+    const bool needBailOutOnSegmentLengthCompare = needBailOutToHelper || needBailOutOnInvalidLength;
+    
+    if(indexIsLessThanHeadSegmentLength || needBailOutOnSegmentLengthCompare)
     {
-        if(bailOutKind & (IR::BailOutOnArrayAccessHelperCall | IR::BailOutOnInvalidatedArrayHeadSegment))
+        if (needBailOutOnSegmentLengthCompare)
         {
             // The bailout must be pre-op because it will not have completed the operation
-            Assert(ldElem->GetBailOutInfo()->bailOutOffset == ldElem->GetByteCodeOffset());
+            Assert(instr->GetBailOutInfo()->bailOutOffset == instr->GetByteCodeOffset());
 
             // Verify other bailouts these can be combined with
             Assert(
@@ -14341,11 +14344,12 @@ Lowerer::GenerateFastElemIIntIndexCommon(
                         IR::BailOutOnInvalidatedArrayHeadSegment |
                         IR::BailOutOnInvalidatedArrayLength |
                         IR::BailOutConventionalNativeArrayAccessOnly |
+                        IR::BailOutOnMissingValue |
                         (bailOutKind & IR::BailOutOnArrayAccessHelperCall ? IR::BailOutInvalid : IR::BailOutConvertedNativeArray)
-                    )
-                ));
+                        )
+                    ));
 
-            if(bailOutKind & IR::BailOutOnArrayAccessHelperCall)
+            if (bailOutKind & IR::BailOutOnArrayAccessHelperCall)
             {
                 // Omit the helper call and generate a bailout instead
                 Assert(emitBailoutRef);
@@ -14353,38 +14357,37 @@ Lowerer::GenerateFastElemIIntIndexCommon(
             }
         }
 
-        if(indexIsLessThanHeadSegmentLength)
+        if (indexIsLessThanHeadSegmentLength)
         {
             Assert(!(bailOutKind & IR::BailOutOnInvalidatedArrayHeadSegment));
         }
         else
         {
             IR::LabelInstr *bailOutLabel;
-            if(bailOutKind & IR::BailOutOnInvalidatedArrayHeadSegment)
+            if (needBailOutOnInvalidLength)
             {
                 Assert(isStore);
-
                 // Lower a separate (but shared) bailout for this case, and preserve the bailout kind in the instruction if the
                 // helper call is going to be generated, because the bailout kind needs to be lowered again and differently in the
                 // helper call path.
                 //
                 // Generate:
-                //     (LdElem)
+                //     (instr)
                 //     jmp $continue
                 //   $bailOut:
                 //     Bail out with IR::BailOutOnInvalidatedArrayHeadSegment
                 //   $continue:
                 LowerOneBailOutKind(
-                    ldElem,
+                    instr,
                     IR::BailOutOnInvalidatedArrayHeadSegment,
                     false,
                     !(bailOutKind & IR::BailOutOnArrayAccessHelperCall));
-                bailOutLabel = ldElem->GetOrCreateContinueLabel(true);
+                bailOutLabel = instr->GetOrCreateContinueLabel(true);
                 InsertBranch(Js::OpCode::Br, labelFallthrough, bailOutLabel);
             }
             else
             {
-                Assert(bailOutKind & IR::BailOutOnArrayAccessHelperCall);
+                Assert(needBailOutToHelper);
                 bailOutLabel = labelHelper;
             }
 
@@ -14395,7 +14398,7 @@ Lowerer::GenerateFastElemIIntIndexCommon(
                 !invertBoundCheckComparison ? Js::OpCode::BrGe_A : Js::OpCode::BrLe_A,
                 true /* isUnsigned */,
                 bailOutLabel,
-                ldElem);
+                instr);
         }
     }
     else if (isStore && !baseValueType.IsLikelyTypedArray()) //  #if (opcode == StElemI_A)
@@ -14403,7 +14406,7 @@ Lowerer::GenerateFastElemIIntIndexCommon(
         IR::LabelInstr *labelDone = IR::LabelInstr::New(Js::OpCode::Label, this->m_func);
         IR::LabelInstr *labelSegmentLengthIncreased = nullptr;
 
-        const bool isPush = ldElem->m_opcode != Js::OpCode::StElemI_A && ldElem->m_opcode != Js::OpCode::StElemI_A_Strict;
+        const bool isPush = instr->m_opcode != Js::OpCode::StElemI_A && instr->m_opcode != Js::OpCode::StElemI_A_Strict;
 
         // Put the head segment size check and length updates in a helper block since they're not the common path for StElem.
         // For push, that is the common path so keep it in a non-helper block.
@@ -14414,8 +14417,8 @@ Lowerer::GenerateFastElemIIntIndexCommon(
             if(pLabelSegmentLengthIncreased &&
                 !(
                     baseValueType.IsArrayOrObjectWithArray() && baseValueType.HasNoMissingValues() ||
-                    (ldElem->m_opcode == Js::OpCode::StElemI_A || ldElem->m_opcode == Js::OpCode::StElemI_A_Strict) &&
-                        ldElem->IsProfiledInstr() && !ldElem->AsProfiledInstr()->u.stElemInfo->LikelyFillsMissingValue()
+                    (instr->m_opcode == Js::OpCode::StElemI_A || instr->m_opcode == Js::OpCode::StElemI_A_Strict) &&
+                        instr->IsProfiledInstr() && !instr->AsProfiledInstr()->u.stElemInfo->LikelyFillsMissingValue()
                 ))
             {
                 // For arrays that are not guaranteed to have no missing values, before storing to an element where
@@ -14436,12 +14439,12 @@ Lowerer::GenerateFastElemIIntIndexCommon(
                 !invertBoundCheckComparison ? Js::OpCode::BrLt_A : Js::OpCode::BrGt_A,
                 true /* isUnsigned */,
                 labelDone,
-                ldElem);
+                instr);
         }
 
         if(isInHelperBlock)
         {
-            InsertLabel(true /* isHelper */, ldElem);
+            InsertLabel(true /* isHelper */, instr);
         }
 
         EnsureObjectArrayLoaded();
@@ -14450,14 +14453,14 @@ Lowerer::GenerateFastElemIIntIndexCommon(
         {
             if(checkArrayLengthOverflow)
             {
-                if(ldElem->HasBailOutInfo() && ldElem->GetBailOutKind() & IR::BailOutOnMissingValue)
+                if(instr->HasBailOutInfo() && instr->GetBailOutKind() & IR::BailOutOnMissingValue)
                 {
                     // Need to bail out if this store would create a missing value. The store would cause a missing value to be
                     // created if (index > length && index < size). If (index >= size) we would go to helper anyway, and the bailout
                     // handling for this is done after the helper call, so just go to helper if (index > length).
                     //
                     // jne  $helper // branch for (cmp index, headSegmentLength)
-                    InsertBranch(Js::OpCode::BrNeq_A, labelHelper, ldElem);
+                    InsertBranch(Js::OpCode::BrNeq_A, labelHelper, instr);
                 }
                 else
                 {
@@ -14474,8 +14477,8 @@ Lowerer::GenerateFastElemIIntIndexCommon(
                     //     and  [array + offsetOf(objectArrayOrFlags)], ~Js::DynamicObjectFlags::HasNoMissingValues
                     // indexLessThanSize:
 
-                    IR::LabelInstr *const indexGreaterThanLengthLabel = InsertLabel(true /* isHelper */, ldElem);
-                    IR::LabelInstr *const indexLessThanSizeLabel = InsertLabel(isInHelperBlock, ldElem);
+                    IR::LabelInstr *const indexGreaterThanLengthLabel = InsertLabel(true /* isHelper */, instr);
+                    IR::LabelInstr *const indexLessThanSizeLabel = InsertLabel(isInHelperBlock, instr);
 
                     //     jne  indexGreaterThanLength // branch for (cmp index, headSegmentLength)
                     //     cmp  index, [headSegment + offset(size)]
@@ -14525,12 +14528,12 @@ Lowerer::GenerateFastElemIIntIndexCommon(
             //      CMP index, [headSegment + offset(size)]
             //      JAE $helper
             indirOpnd = IR::IndirOpnd::New(headSegmentOpnd, offsetof(Js::SparseArraySegmentBase, size), TyUint32, this->m_func);
-            InsertCompareBranch(indexValueOpnd, indirOpnd, Js::OpCode::BrGe_A, true /* isUnsigned */, labelHelper, ldElem);
+            InsertCompareBranch(indexValueOpnd, indirOpnd, Js::OpCode::BrGe_A, true /* isUnsigned */, labelHelper, instr);
         } while(false);
 
         if(isPush)
         {
-            IR::LabelInstr *const updateLengthLabel = InsertLabel(isInHelperBlock, ldElem);
+            IR::LabelInstr *const updateLengthLabel = InsertLabel(isInHelperBlock, instr);
 
             if(!doUpperBoundCheck && !headSegmentLengthOpnd)
             {
@@ -14572,7 +14575,7 @@ Lowerer::GenerateFastElemIIntIndexCommon(
         {
             // We didn't emit an array check, but if we are going to grow the array
             // We need to go to helper if there is an ES5 array/objectarray used as prototype
-            GenerateIsEnabledArraySetElementFastPathCheck(labelHelper, ldElem);
+            GenerateIsEnabledArraySetElementFastPathCheck(labelHelper, instr);
         }
 
         IR::Opnd *newLengthOpnd;
@@ -14582,7 +14585,7 @@ Lowerer::GenerateFastElemIIntIndexCommon(
             //      LEA newLength, [index + 1]
             newLengthOpnd = IR::RegOpnd::New(TyUint32, this->m_func);
             autoReuseNewLengthOpnd.Initialize(newLengthOpnd, m_func);
-            InsertAdd(false /* needFlags */, newLengthOpnd, indexValueOpnd, IR::IntConstOpnd::New(1, TyUint32, m_func), ldElem);
+            InsertAdd(false /* needFlags */, newLengthOpnd, indexValueOpnd, IR::IntConstOpnd::New(1, TyUint32, m_func), instr);
         }
         else
         {
@@ -14592,7 +14595,7 @@ Lowerer::GenerateFastElemIIntIndexCommon(
 
         //      MOV [headSegment + offset(length)], newLength
         indirOpnd = IR::IndirOpnd::New(headSegmentOpnd, offsetof(Js::SparseArraySegmentBase, length), TyUint32, this->m_func);
-        InsertMove(indirOpnd, newLengthOpnd, ldElem);
+        InsertMove(indirOpnd, newLengthOpnd, instr);
 
         if (checkArrayLengthOverflow)
         {
@@ -14606,17 +14609,17 @@ Lowerer::GenerateFastElemIIntIndexCommon(
                 Js::OpCode::BrLe_A,
                 true /* isUnsigned */,
                 labelSegmentLengthIncreased,
-                ldElem);
+                instr);
 
             if(!isInHelperBlock)
             {
-                InsertLabel(true /* isHelper */, ldElem);
+                InsertLabel(true /* isHelper */, instr);
             }
         }
 
         //      MOV [base + offset(length)], newLength
         indirOpnd = IR::IndirOpnd::New(arrayOpnd, Js::JavascriptArray::GetOffsetOfLength(), TyUint32, this->m_func);
-        InsertMove(indirOpnd, newLengthOpnd, ldElem);
+        InsertMove(indirOpnd, newLengthOpnd, instr);
 
         if(returnLength)
         {
@@ -14627,20 +14630,20 @@ Lowerer::GenerateFastElemIIntIndexCommon(
 
             //      SHL newLength, AtomTag
             //      INC newLength
-            this->m_lowererMD.GenerateInt32ToVarConversion(newLengthOpnd, ldElem);
+            this->m_lowererMD.GenerateInt32ToVarConversion(newLengthOpnd, instr);
 
             //      MOV dst, newLength
-            InsertMove(ldElem->GetDst(), newLengthOpnd, ldElem);
+            InsertMove(instr->GetDst(), newLengthOpnd, instr);
         }
 
         if(labelSegmentLengthIncreased && labelSegmentLengthIncreased != labelDone)
         {
             // labelSegmentLengthIncreased:
-            ldElem->InsertBefore(labelSegmentLengthIncreased);
+            instr->InsertBefore(labelSegmentLengthIncreased);
         }
 
         //     $done
-        ldElem->InsertBefore(labelDone);
+        instr->InsertBefore(labelDone);
     }
     else //  #else
     {
@@ -14655,20 +14658,20 @@ Lowerer::GenerateFastElemIIntIndexCommon(
                     !invertBoundCheckComparison ? Js::OpCode::BrLt_A : Js::OpCode::BrGt_A,
                     true /* isUnsigned */,
                     labelInlineSet,
-                    ldElem);
+                    instr);
 
                 // For typed array, call ToNumber before we fallThrough.
-                if (ldElem->GetSrc1()->GetType() == TyVar && !ldElem->GetSrc1()->GetValueType().IsPrimitive())
+                if (instr->GetSrc1()->GetType() == TyVar && !instr->GetSrc1()->GetValueType().IsPrimitive())
                 {
                     IR::Instr *toNumberInstr = IR::Instr::New(Js::OpCode::Call, this->m_func);
-                    toNumberInstr->SetSrc1(ldElem->GetSrc1());
-                    ldElem->InsertBefore(toNumberInstr);
+                    toNumberInstr->SetSrc1(instr->GetSrc1());
+                    instr->InsertBefore(toNumberInstr);
 
                     LowerUnaryHelperMem(toNumberInstr, IR::HelperOp_ConvNumber_Full);
                 }
-                InsertBranch(Js::OpCode::Br, labelFallthrough, ldElem);  //Jump to fallThrough
+                InsertBranch(Js::OpCode::Br, labelFallthrough, instr);  //Jump to fallThrough
 
-                ldElem->InsertBefore(labelInlineSet);
+                instr->InsertBefore(labelInlineSet);
             }
             else
             {
@@ -14677,13 +14680,13 @@ Lowerer::GenerateFastElemIIntIndexCommon(
                     !invertBoundCheckComparison ? Js::OpCode::BrGe_A : Js::OpCode::BrLe_A,
                     true /* isUnsigned */,
                     labelHelper,
-                    ldElem);
+                    instr);
             }
         }
 
         EnsureObjectArrayLoaded();
 
-        if (ldElem->m_opcode == Js::OpCode::InlineArrayPop)
+        if (instr->m_opcode == Js::OpCode::InlineArrayPop)
         {
             Assert(!baseValueType.IsLikelyTypedArray());
             Assert(bailOutLabelInstr);
@@ -14703,7 +14706,7 @@ Lowerer::GenerateFastElemIIntIndexCommon(
             }
 
             IR::Opnd * tmpDst = nullptr;
-            IR::Opnd * dst = ldElem->GetDst();
+            IR::Opnd * dst = instr->GetDst();
             //Pop might not have a dst, if not don't worry about returning the last element. But we still have to
             // worry about gaps, because these force us to access the prototype chain, which may have side-effects.
             if (dst || !baseValueType.HasNoMissingValues())
@@ -14719,7 +14722,7 @@ Lowerer::GenerateFastElemIIntIndexCommon(
                 }
 
                 //  MOV dst, [head + offset]
-                InsertMove(dst, indirOpnd, ldElem);
+                InsertMove(dst, indirOpnd, instr);
 
                 //If the array has missing values, check for one
                 if (!baseValueType.HasNoMissingValues())
@@ -14729,12 +14732,12 @@ Lowerer::GenerateFastElemIIntIndexCommon(
                         GetMissingItemOpnd(indirType, m_func),
                         Js::OpCode::BrEq_A,
                         bailOutLabelInstr,
-                        ldElem,
+                        instr,
                         true);
                 }
             }
             //  MOV [head + offset], missing
-            InsertMove(indirOpnd, GetMissingItemOpnd(indirType, m_func), ldElem);
+            InsertMove(indirOpnd, GetMissingItemOpnd(indirType, m_func), instr);
 
             IR::Opnd *newLengthOpnd;
             IR::AutoReuseOpnd autoReuseNewLengthOpnd;
@@ -14753,17 +14756,17 @@ Lowerer::GenerateFastElemIIntIndexCommon(
             //update segment length and array length
             //      MOV [headSegment + offset(length)], newLength
             IR::IndirOpnd *lengthIndirOpnd = IR::IndirOpnd::New(headSegmentOpnd, offsetof(Js::SparseArraySegmentBase, length), TyUint32, this->m_func);
-            InsertMove(lengthIndirOpnd, newLengthOpnd, ldElem);
+            InsertMove(lengthIndirOpnd, newLengthOpnd, instr);
 
             //      MOV [base + offset(length)], newLength
             lengthIndirOpnd = IR::IndirOpnd::New(arrayOpnd, Js::JavascriptArray::GetOffsetOfLength(), TyUint32, this->m_func);
-            InsertMove(lengthIndirOpnd, newLengthOpnd, ldElem);
+            InsertMove(lengthIndirOpnd, newLengthOpnd, instr);
 
             if (tmpDst)
             {
                 // The array opnd and the destination is the same, need to move the value in the tmp dst
                 // to the actual dst
-                InsertMove(ldElem->GetDst(), tmpDst, ldElem);
+                InsertMove(instr->GetDst(), tmpDst, instr);
             }
 
             return indirOpnd;
@@ -14780,7 +14783,7 @@ Lowerer::GenerateFastElemIIntIndexCommon(
             indirOpnd = IR::IndirOpnd::New(arrayOpnd, bufferOffset, TyMachPtr, this->m_func);
             headSegmentOpnd = IR::RegOpnd::New(TyMachPtr, this->m_func);
             autoReuseHeadSegmentOpnd.Initialize(headSegmentOpnd, m_func);
-            InsertMove(headSegmentOpnd, indirOpnd, ldElem);
+            InsertMove(headSegmentOpnd, indirOpnd, instr);
         }
 
         //  indirOpnd = [headSegment + index]
