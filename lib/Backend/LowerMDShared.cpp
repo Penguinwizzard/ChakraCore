@@ -6089,11 +6089,11 @@ LowererMD::GenerateCopysign(IR::Instr * instr)
     // We should only generate this if sse2 is available
     Assert(AutoSystemInfo::Data.SSE2Available());
 #endif
-    
+
     // ANDPS reg0, absDoubleCst
     // ANDPS reg1, sgnBitDoubleCst
     // ORPS reg0, reg1
-    
+
     // Copy sign from src2 to src1
     IR::Opnd* src1 = instr->GetSrc1();
     //IR::Opnd* src2 = instr->UnlinkSrc2();
