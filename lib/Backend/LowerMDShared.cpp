@@ -6096,7 +6096,6 @@ LowererMD::GenerateCopysign(IR::Instr * instr)
 
     // Copy sign from src2 to src1
     IR::Opnd* src1 = instr->GetSrc1();
-    //IR::Opnd* src2 = instr->UnlinkSrc2();
     GenerateFloatAbs(src1->AsRegOpnd(), instr);
 
     if (src1->IsFloat64())
