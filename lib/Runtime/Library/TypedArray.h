@@ -138,8 +138,10 @@ namespace Js
         static BOOL IsDetachedTypedArray(Var aValue);
         static HRESULT GetBuffer(Var aValue, ArrayBuffer** outBuffer, uint32* outOffset, uint32* outLength);
 
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
         virtual BOOL DirectSetItem(__in uint32 index, __in Js::Var value) = 0;
         virtual BOOL DirectSetItemNoSet(__in uint32 index, __in Js::Var value) = 0;
 #else
@@ -367,8 +369,10 @@ namespace Js
             return TRUE;
         }
 
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
         __inline BOOL BaseTypedDirectSetItem(__in uint32 index, __in Js::Var value, TypeName (*convFunc)(Var value, ScriptContext* scriptContext))
 #else
         __inline BOOL BaseTypedDirectSetItem(__in uint32 index, __in Js::Var value, __in bool skipSetElement, TypeName (*convFunc)(Var value, ScriptContext* scriptContext))
@@ -383,8 +387,10 @@ namespace Js
                 JavascriptError::ThrowTypeError(GetScriptContext(), JSERR_DetachedTypedArray);
             }
 
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
             if (index >= GetLength())
 #else
             if (skipSetElement)
@@ -402,8 +408,10 @@ namespace Js
             return TRUE;
         }
 
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
         __inline BOOL BaseTypedDirectSetItemNoSet(__in uint32 index, __in Js::Var value, TypeName (*convFunc)(Var value, ScriptContext* scriptContext))
         {
             // This call can potentially invoke user code, and may end up detaching the underlying array (this).
@@ -430,8 +438,10 @@ namespace Js
         {
             AssertMsg(arr != nullptr, "Array shouldn't be nullptr.");
 
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
             return arr->DirectSetItem(index, value);
 #else
             return arr->DirectSetItem(index, value, index >= arr->GetLength());
@@ -480,8 +490,10 @@ namespace Js
         Var Subarray(uint32 begin, uint32 end);
         static CharArray* FromVar(Var aValue);
 
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
         virtual BOOL DirectSetItem(__in uint32 index, __in Js::Var value) override;
         virtual BOOL DirectSetItemNoSet(__in uint32 index, __in Js::Var value) override;
 #else

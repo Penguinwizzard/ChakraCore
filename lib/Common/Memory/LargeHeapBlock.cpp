@@ -313,9 +313,11 @@ LargeHeapBlock::ReleasePages(Recycler * recycler)
             if (guardPageAddress != nullptr)
             {
                 DWORD noAccess;
-                
+
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32801_BUG6908887
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32801_BUG6908887) || defined(_CHAKRACOREBUILD)
                 this->guardPageOldProtectFlags &= (PAGE_NOACCESS | PAGE_READWRITE);
 #endif
                 
@@ -324,8 +326,10 @@ LargeHeapBlock::ReleasePages(Recycler * recycler)
                     AssertMsg(false, "Unable to set permission for guard page.");
                     return;
                 }
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32801_BUG6908887
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32801_BUG6908887) || defined(_CHAKRACOREBUILD)
                 if (noAccess != PAGE_NOACCESS)
                 {
                     HeapBlock_BadPageState_fatal_error((ULONG_PTR)this);

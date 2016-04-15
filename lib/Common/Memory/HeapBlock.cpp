@@ -397,16 +397,21 @@ SmallHeapBlockT<TBlockAttributes>::ClearPageHeapState()
         Assert(this->InPageHeapMode());
         DWORD oldProtectFlags = 0;
 
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32801_BUG6908887
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32801_BUG6908887) || defined(_CHAKRACOREBUILD)
         this->guardPageOldProtectFlags &= (PAGE_NOACCESS | PAGE_READWRITE);
 #endif
-        
+
         BOOL ret = ::VirtualProtect(static_cast<LPVOID>(this->guardPageAddress), AutoSystemInfo::PageSize, this->guardPageOldProtectFlags, &oldProtectFlags);
 
         Assert(ret == TRUE);
+
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32801_BUG6908887        
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32801_BUG6908887) || defined(_CHAKRACOREBUILD)
         if (oldProtectFlags != PAGE_NOACCESS)
         {
             HeapBlock_BadPageState_fatal_error((ULONG_PTR)this);
@@ -450,8 +455,10 @@ SmallHeapBlockT<TBlockAttributes>::SetPage(__in_ecount_pagesize char * baseAddre
                 {
                     return FALSE;
                 }
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32801_BUG6908887
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32801_BUG6908887) || defined(_CHAKRACOREBUILD)
                 if (guardPageOldProtectFlags != PAGE_READWRITE)
                 {
                     HeapBlock_BadPageState_fatal_error((ULONG_PTR)this);

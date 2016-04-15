@@ -5183,8 +5183,10 @@ Case0:
                     lowerExists = typedArrayBase->HasItem(lower);
                     upperExists = typedArrayBase->HasItem(upper);
 
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
                     h.ThrowTypeErrorOnFailure(typedArrayBase->DirectSetItem(lower, upperValue));
                     h.ThrowTypeErrorOnFailure(typedArrayBase->DirectSetItem(upper, lowerValue));
 #else
@@ -5209,8 +5211,10 @@ Case0:
                     {
                         if (upperExists)
                         {
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
                             h.ThrowTypeErrorOnFailure(typedArrayBase->DirectSetItem(lower, upperValue));
                             h.ThrowTypeErrorOnFailure(typedArrayBase->DirectSetItem(upper, lowerValue));
 #else
@@ -5222,8 +5226,10 @@ Case0:
                         {
                             // This will always fail for a TypedArray if lower < length
                             h.ThrowTypeErrorOnFailure(typedArrayBase->DeleteItem(lower, PropertyOperation_ThrowIfNotExtensible));
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
                             h.ThrowTypeErrorOnFailure(typedArrayBase->DirectSetItem(upper, lowerValue));
 #else
                             h.ThrowTypeErrorOnFailure(typedArrayBase->DirectSetItem(upper, lowerValue, false));
@@ -5234,8 +5240,10 @@ Case0:
                     {
                         if (upperExists)
                         {
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
                             h.ThrowTypeErrorOnFailure(typedArrayBase->DirectSetItem(lower, upperValue));
 #else
                             h.ThrowTypeErrorOnFailure(typedArrayBase->DirectSetItem(lower, upperValue, false));
@@ -5962,8 +5970,10 @@ Case0:
                 // The object we got back from the constructor might not be a TypedArray. In fact, it could be any object.
                 if (newTypedArray)
                 {
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
                     newTypedArray->DirectSetItem(i, element);
 #else
                     newTypedArray->DirectSetItem(i, element, false);
@@ -8622,8 +8632,10 @@ Case0:
                     {
                         Var val = typedArrayBase->DirectGetItem(fromIndex);
 
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
                         typedArrayBase->DirectSetItem(toIndex, val);
 #else
                         typedArrayBase->DirectSetItem(toIndex, val, false);
@@ -8739,8 +8751,10 @@ Case0:
             {
                 if (typedArrayBase)
                 {
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
                     typedArrayBase->DirectSetItem(u32k, fillValue);
 #else
                     typedArrayBase->DirectSetItem(u32k, fillValue, false);
@@ -8999,8 +9013,10 @@ Case0:
                 // the normal Set path.
                 if (newTypedArray)
                 {
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
                     newTypedArray->DirectSetItem(k, mappedValue);
 #else
                     newTypedArray->DirectSetItem(k, mappedValue, false);
@@ -9909,8 +9925,10 @@ Case0:
             {
                 Var kValue = args[k + 1];
 
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
                 newTypedArray->DirectSetItem(k, kValue);
 #else
                 newTypedArray->DirectSetItem(k, kValue, false);

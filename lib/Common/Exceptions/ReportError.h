@@ -20,8 +20,10 @@ enum ErrorReason
     MarkStack_OUTOFMEMORY = 11,
     EnterScript_FromDOM_NoScriptScope = 12,
     Fatal_FailedToBox_OUTOFMEMORY = 13
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32801_BUG6908887
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32801_BUG6908887) || defined(_CHAKRACOREBUILD)
     ,HeapBlock_MEMORYCORRUPTION = 14
 #endif
 };
@@ -40,8 +42,10 @@ void JavascriptDispatch_OOM_fatal_error(
 void CustomHeap_BadPageState_fatal_error(
     __in ULONG_PTR context);
 
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32801_BUG6908887
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32801_BUG6908887) || defined(_CHAKRACOREBUILD)
 void HeapBlock_BadPageState_fatal_error(
     __in ULONG_PTR context);
 #endif
