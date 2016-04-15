@@ -3,6 +3,7 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 #include "CommonMemoryPch.h"
+#include <GlobalMSRCSettings.h>
 
 //=====================================================================================================
 // Initialization
@@ -158,6 +159,15 @@ LargeHeapBucket::PageHeapAlloc(Recycler * recycler, size_t size, ObjectInfoBits 
         AssertMsg(false, "Unable to set permission for guard page.");
         return nullptr;
     }
+
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32801_BUG6908887    
+    if (guardPageOldProtectFlags != PAGE_READWRITE)
+    {
+        HeapBlock_BadPageState_fatal_error((ULONG_PTR)this);
+    }
+#endif
+
 
 #ifdef RECYCLER_ZERO_MEM_CHECK
     recycler->VerifyZeroFill(address, pageCount * AutoSystemInfo::PageSize);

@@ -3,6 +3,7 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 #include "CommonMemoryPch.h"
+#include <GlobalMSRCSettings.h>
 
 template <typename TBlockAttributes>
 SmallNormalHeapBlockT<TBlockAttributes> *
@@ -396,10 +397,23 @@ SmallHeapBlockT<TBlockAttributes>::ClearPageHeapState()
         Assert(this->InPageHeapMode());
         DWORD oldProtectFlags = 0;
 
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32801_BUG6908887
+        this->guardPageOldProtectFlags &= (PAGE_NOACCESS | PAGE_READWRITE);
+#endif
+        
         BOOL ret = ::VirtualProtect(static_cast<LPVOID>(this->guardPageAddress), AutoSystemInfo::PageSize, this->guardPageOldProtectFlags, &oldProtectFlags);
 
         Assert(ret == TRUE);
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32801_BUG6908887        
+        if (oldProtectFlags != PAGE_NOACCESS)
+        {
+            HeapBlock_BadPageState_fatal_error((ULONG_PTR)this);
+        }
+#else
         Assert(oldProtectFlags == PAGE_NOACCESS);
+#endif
     }
 }
 #endif
@@ -436,6 +450,13 @@ SmallHeapBlockT<TBlockAttributes>::SetPage(__in_ecount_pagesize char * baseAddre
                 {
                     return FALSE;
                 }
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32801_BUG6908887
+                if (guardPageOldProtectFlags != PAGE_READWRITE)
+                {
+                    HeapBlock_BadPageState_fatal_error((ULONG_PTR)this);
+                }
+#endif
             }
         }
     }

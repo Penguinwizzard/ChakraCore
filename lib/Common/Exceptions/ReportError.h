@@ -3,6 +3,7 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 #pragma once
+#include <GlobalMSRCSettings.h>
 
 enum ErrorReason
 {
@@ -19,6 +20,10 @@ enum ErrorReason
     MarkStack_OUTOFMEMORY = 11,
     EnterScript_FromDOM_NoScriptScope = 12,
     Fatal_FailedToBox_OUTOFMEMORY = 13
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32801_BUG6908887
+    ,HeapBlock_MEMORYCORRUPTION = 14
+#endif
 };
 
 extern "C" void ReportFatalException(
@@ -34,6 +39,12 @@ void JavascriptDispatch_OOM_fatal_error(
 
 void CustomHeap_BadPageState_fatal_error(
     __in ULONG_PTR context);
+
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32801_BUG6908887
+void HeapBlock_BadPageState_fatal_error(
+    __in ULONG_PTR context);
+#endif
 
 void Amd64StackWalkerOutOfContexts_fatal_error(
     __in ULONG_PTR context);

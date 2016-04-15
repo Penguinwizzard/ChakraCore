@@ -5183,8 +5183,14 @@ Case0:
                     lowerExists = typedArrayBase->HasItem(lower);
                     upperExists = typedArrayBase->HasItem(upper);
 
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+                    h.ThrowTypeErrorOnFailure(typedArrayBase->DirectSetItem(lower, upperValue));
+                    h.ThrowTypeErrorOnFailure(typedArrayBase->DirectSetItem(upper, lowerValue));
+#else
                     h.ThrowTypeErrorOnFailure(typedArrayBase->DirectSetItem(lower, upperValue, false));
                     h.ThrowTypeErrorOnFailure(typedArrayBase->DirectSetItem(upper, lowerValue, false));
+#endif
                 }
             }
             else
@@ -5203,21 +5209,37 @@ Case0:
                     {
                         if (upperExists)
                         {
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+                            h.ThrowTypeErrorOnFailure(typedArrayBase->DirectSetItem(lower, upperValue));
+                            h.ThrowTypeErrorOnFailure(typedArrayBase->DirectSetItem(upper, lowerValue));
+#else
                             h.ThrowTypeErrorOnFailure(typedArrayBase->DirectSetItem(lower, upperValue, false));
                             h.ThrowTypeErrorOnFailure(typedArrayBase->DirectSetItem(upper, lowerValue, false));
+#endif
                         }
                         else
                         {
                             // This will always fail for a TypedArray if lower < length
                             h.ThrowTypeErrorOnFailure(typedArrayBase->DeleteItem(lower, PropertyOperation_ThrowIfNotExtensible));
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+                            h.ThrowTypeErrorOnFailure(typedArrayBase->DirectSetItem(upper, lowerValue));
+#else
                             h.ThrowTypeErrorOnFailure(typedArrayBase->DirectSetItem(upper, lowerValue, false));
+#endif
                         }
                     }
                     else
                     {
                         if (upperExists)
                         {
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+                            h.ThrowTypeErrorOnFailure(typedArrayBase->DirectSetItem(lower, upperValue));
+#else
                             h.ThrowTypeErrorOnFailure(typedArrayBase->DirectSetItem(lower, upperValue, false));
+#endif
                             // This will always fail for a TypedArray if upper < length
                             h.ThrowTypeErrorOnFailure(typedArrayBase->DeleteItem(upper, PropertyOperation_ThrowIfNotExtensible));
                         }
@@ -5940,7 +5962,12 @@ Case0:
                 // The object we got back from the constructor might not be a TypedArray. In fact, it could be any object.
                 if (newTypedArray)
                 {
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+                    newTypedArray->DirectSetItem(i, element);
+#else
                     newTypedArray->DirectSetItem(i, element, false);
+#endif
                 }
                 else if (newArr)
                 {
@@ -8595,7 +8622,12 @@ Case0:
                     {
                         Var val = typedArrayBase->DirectGetItem(fromIndex);
 
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+                        typedArrayBase->DirectSetItem(toIndex, val);
+#else
                         typedArrayBase->DirectSetItem(toIndex, val, false);
+#endif
                     }
                     else if (pArr)
                     {
@@ -8707,7 +8739,12 @@ Case0:
             {
                 if (typedArrayBase)
                 {
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+                    typedArrayBase->DirectSetItem(u32k, fillValue);
+#else
                     typedArrayBase->DirectSetItem(u32k, fillValue, false);
+#endif
                 }
                 else if (pArr)
                 {
@@ -8962,7 +8999,12 @@ Case0:
                 // the normal Set path.
                 if (newTypedArray)
                 {
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+                    newTypedArray->DirectSetItem(k, mappedValue);
+#else
                     newTypedArray->DirectSetItem(k, mappedValue, false);
+#endif
                 }
                 else if (newArr)
                 {
@@ -9867,7 +9909,12 @@ Case0:
             {
                 Var kValue = args[k + 1];
 
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+                newTypedArray->DirectSetItem(k, kValue);
+#else
                 newTypedArray->DirectSetItem(k, kValue, false);
+#endif
             }
         }
         else
