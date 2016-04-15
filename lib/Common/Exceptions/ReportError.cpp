@@ -3,7 +3,6 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 #include "CommonExceptionsPch.h"
-#include <GlobalMSRCSettings.h>
 
 __inline void ReportFatalException(
     __in ULONG_PTR context,
