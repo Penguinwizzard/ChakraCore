@@ -138,7 +138,13 @@ namespace Js
         static BOOL IsDetachedTypedArray(Var aValue);
         static HRESULT GetBuffer(Var aValue, ArrayBuffer** outBuffer, uint32* outOffset, uint32* outLength);
 
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+        virtual BOOL DirectSetItem(__in uint32 index, __in Js::Var value) = 0;
+        virtual BOOL DirectSetItemNoSet(__in uint32 index, __in Js::Var value) = 0;
+#else
         virtual BOOL DirectSetItem(__in uint32 index, __in Js::Var value, __in bool skipSetItem) = 0;
+#endif
         virtual Var  DirectGetItem(__in uint32 index) = 0;
 
         uint32 GetByteLength() const { return length * BYTES_PER_ELEMENT; }
@@ -361,7 +367,12 @@ namespace Js
             return TRUE;
         }
 
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+        __inline BOOL BaseTypedDirectSetItem(__in uint32 index, __in Js::Var value, TypeName (*convFunc)(Var value, ScriptContext* scriptContext))
+#else
         __inline BOOL BaseTypedDirectSetItem(__in uint32 index, __in Js::Var value, __in bool skipSetElement, TypeName (*convFunc)(Var value, ScriptContext* scriptContext))
+#endif
         {
             // This call can potentially invoke user code, and may end up detaching the underlying array (this).
             // Therefore it was brought out and above the IsDetached check
@@ -372,7 +383,12 @@ namespace Js
                 JavascriptError::ThrowTypeError(GetScriptContext(), JSERR_DetachedTypedArray);
             }
 
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+            if (index >= GetLength())
+#else
             if (skipSetElement)
+#endif
             {
                 return FALSE;
             }
@@ -384,9 +400,29 @@ namespace Js
             typedBuffer[index] = typedValue;
 
             return TRUE;
+        }
+
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+        __inline BOOL BaseTypedDirectSetItemNoSet(__in uint32 index, __in Js::Var value, TypeName (*convFunc)(Var value, ScriptContext* scriptContext))
+        {
+            // This call can potentially invoke user code, and may end up detaching the underlying array (this).
+            // Therefore it was brought out and above the IsDetached check
+            convFunc(value, GetScriptContext());
+
+            if (this->IsDetachedBuffer()) // 9.4.5.9 IntegerIndexedElementSet
+            {
+                JavascriptError::ThrowTypeError(GetScriptContext(), JSERR_DetachedTypedArray);
             }
 
+            return FALSE;
+        }
+
+        virtual BOOL DirectSetItem(__in uint32 index, __in Js::Var value) override sealed;
+        virtual BOOL DirectSetItemNoSet(__in uint32 index, __in Js::Var value) override sealed;
+#else
         virtual BOOL DirectSetItem(__in uint32 index, __in Js::Var value, __in bool skipSetItem) override sealed;
+#endif
         virtual Var  DirectGetItem(__in uint32 index) override sealed;
 
 
@@ -394,7 +430,12 @@ namespace Js
         {
             AssertMsg(arr != nullptr, "Array shouldn't be nullptr.");
 
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+            return arr->DirectSetItem(index, value);
+#else
             return arr->DirectSetItem(index, value, index >= arr->GetLength());
+#endif
         }
 
     protected:
@@ -439,7 +480,13 @@ namespace Js
         Var Subarray(uint32 begin, uint32 end);
         static CharArray* FromVar(Var aValue);
 
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+        virtual BOOL DirectSetItem(__in uint32 index, __in Js::Var value) override;
+        virtual BOOL DirectSetItemNoSet(__in uint32 index, __in Js::Var value) override;
+#else
         virtual BOOL DirectSetItem(__in uint32 index, __in Js::Var value, __in bool skipSetItem) override;
+#endif
         virtual Var  DirectGetItem(__in uint32 index) override;
 
     protected:

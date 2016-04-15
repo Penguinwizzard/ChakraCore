@@ -3,6 +3,7 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 #include "CommonMemoryPch.h"
+#include <GlobalMSRCSettings.h>
 
 CompileAssert(
     sizeof(LargeObjectHeader) == HeapConstants::ObjectGranularity ||
@@ -312,13 +313,26 @@ LargeHeapBlock::ReleasePages(Recycler * recycler)
             if (guardPageAddress != nullptr)
             {
                 DWORD noAccess;
+                
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32801_BUG6908887
+                this->guardPageOldProtectFlags &= (PAGE_NOACCESS | PAGE_READWRITE);
+#endif
+                
                 if (::VirtualProtect(static_cast<LPVOID>(guardPageAddress), AutoSystemInfo::PageSize, guardPageOldProtectFlags, &noAccess) == FALSE)
                 {
                     AssertMsg(false, "Unable to set permission for guard page.");
                     return;
                 }
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32801_BUG6908887
+                if (noAccess != PAGE_NOACCESS)
+                {
+                    HeapBlock_BadPageState_fatal_error((ULONG_PTR)this);
+                }
+#else
                 AssertMsg(noAccess == PAGE_NOACCESS, "Guard page should be PAGE_NOACCESS");
-
+#endif
                 if (this->pageHeapMode == PageHeapMode::PageHeapModeBlockStart)
                 {
                     pageAddress = guardPageAddress;

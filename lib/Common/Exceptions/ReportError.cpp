@@ -3,6 +3,7 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 #include "CommonExceptionsPch.h"
+#include <GlobalMSRCSettings.h>
 
 __inline void ReportFatalException(
     __in ULONG_PTR context,
@@ -105,5 +106,15 @@ __declspec(noinline) void FromDOM_NoScriptScope_fatal_error()
     int scenario = 5;
     ReportFatalException(NULL, E_UNEXPECTED, EnterScript_FromDOM_NoScriptScope, scenario);
 }
+
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32801_BUG6908887
+__declspec(noinline) void HeapBlock_BadPageState_fatal_error(
+    __in ULONG_PTR context)
+{
+    int scenario = 1;
+    ReportFatalException(context, E_UNEXPECTED, HeapBlock_MEMORYCORRUPTION, scenario);
+};
+#endif
 
 #pragma optimize("",on)
