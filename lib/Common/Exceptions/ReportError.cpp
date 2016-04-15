@@ -107,8 +107,10 @@ __declspec(noinline) void FromDOM_NoScriptScope_fatal_error()
     ReportFatalException(NULL, E_UNEXPECTED, EnterScript_FromDOM_NoScriptScope, scenario);
 }
 
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32801_BUG6908887
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32801_BUG6908887) || defined(_CHAKRACOREBUILD)
 __declspec(noinline) void HeapBlock_BadPageState_fatal_error(
     __in ULONG_PTR context)
 {

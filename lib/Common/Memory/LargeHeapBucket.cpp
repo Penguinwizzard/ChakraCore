@@ -160,8 +160,10 @@ LargeHeapBucket::PageHeapAlloc(Recycler * recycler, size_t size, ObjectInfoBits 
         return nullptr;
     }
 
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32801_BUG6908887    
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32801_BUG6908887) || defined(_CHAKRACOREBUILD)
     if (guardPageOldProtectFlags != PAGE_READWRITE)
     {
         HeapBlock_BadPageState_fatal_error((ULONG_PTR)this);

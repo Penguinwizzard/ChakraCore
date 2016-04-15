@@ -524,8 +524,10 @@ namespace Js
         }
         else if (GetScriptContext()->IsNumericPropertyId(propertyId, &index))
         {
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
             this->DirectSetItem(index, value);
 #else
             this->DirectSetItem(index, value, index >= GetLength());
@@ -562,8 +564,10 @@ namespace Js
 
     BOOL TypedArrayBase::SetItem(uint32 index, Var value, PropertyOperationFlags flags)
     {
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
         DirectSetItem(index, value);
 #else
         // Skip set item if index >= GetLength()
@@ -839,8 +843,10 @@ namespace Js
             {
                 for (uint32 i = 0; i < sourceLength; i++)
                 {
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
                     DirectSetItem(offset + i, source->DirectGetItem(i));
 #else
                     DirectSetItem(offset + i, source->DirectGetItem(i), false);
@@ -858,8 +864,10 @@ namespace Js
                 }
                 for (uint32 i = 0; i < sourceLength; i++)
                 {
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
                     DirectSetItem(offset + i, tmpArray->DirectGetItem(i));
 #else
                     DirectSetItem(offset + i, tmpArray->DirectGetItem(i), false);
@@ -890,8 +898,10 @@ namespace Js
             {
                 itemValue = undefinedValue;
             }
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
             DirectSetItem(offset + i, itemValue);
 #else
             DirectSetItem(offset + i, itemValue, false);
@@ -1504,8 +1514,10 @@ namespace Js
                     // We're likely to have constructed a new TypedArray, but the constructor could return any object
                     if (newTypedArrayBase)
                     {
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
                         newTypedArrayBase->DirectSetItem(k, kValue);
 #else
                         newTypedArrayBase->DirectSetItem(k, kValue, false);
@@ -1587,8 +1599,10 @@ namespace Js
                 // If constructor built a TypedArray (likely) or Array (maybe likely) we can do a more direct set operation
                 if (newTypedArrayBase)
                 {
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
                     newTypedArrayBase->DirectSetItem(k, kValue);
 #else
                     newTypedArrayBase->DirectSetItem(k, kValue, false);
@@ -1815,8 +1829,10 @@ namespace Js
 
                 for (uint32 i = 0; i < captured; i++)
                 {
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
                     newArr->DirectSetItem(i, tempList->Item(i));
 #else
                     newArr->DirectSetItem(i, tempList->Item(i), false);
@@ -2590,8 +2606,10 @@ namespace Js
         // If index is not numeric, goto [[Set]] property path
         if (*isNumericIndex)
         {
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
             return skipSetItem ?
                 DirectSetItemNoSet(indexToSet, value) :
                 DirectSetItem(indexToSet, value);
@@ -3082,8 +3100,10 @@ namespace Js
         return static_cast<BoolArray*>(RecyclableObject::FromVar(aValue));
     }
 
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
     __inline BOOL Int8Array::DirectSetItem(__in uint32 index, __in Js::Var value)
     {
         return BaseTypedDirectSetItem(index, value, JavascriptConversion::ToInt8);
@@ -3667,8 +3687,10 @@ namespace Js
         return static_cast<CharArray*>(RecyclableObject::FromVar(aValue));
     }
 
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
     __inline BOOL CharArray::DirectSetItem(__in uint32 index, __in Js::Var value)
 #else
     __inline BOOL CharArray::DirectSetItem(__in uint32 index, __in Js::Var value, __in bool skipSetElement)
@@ -3683,8 +3705,10 @@ namespace Js
             JavascriptError::ThrowTypeError(scriptContext, JSERR_DetachedTypedArray);
         }
 
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
         if (index >= GetLength())
 #else
         if (skipSetElement)
@@ -3709,8 +3733,10 @@ namespace Js
         return TRUE;
     }
 
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32927_BUG6911906
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
     __inline BOOL CharArray::DirectSetItemNoSet(__in uint32 index, __in Js::Var value)
     {
         ScriptContext* scriptContext = GetScriptContext();
