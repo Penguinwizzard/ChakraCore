@@ -66,9 +66,8 @@ namespace Js
                 Assert(UNREACHED);
             }
         }
-        else if (IsExtendedOpCode(op)) 
+        else if (IsExtendedOpCode(op))
         {
-            
             switch (layoutSize)
             {
             case MediumLayout:
@@ -96,7 +95,6 @@ namespace Js
             default:
                 Assert(UNREACHED);
             }
-            
         }
         uint offset = Write(&exop, sizeof(byte));
         byte byteop = (byte)op;
