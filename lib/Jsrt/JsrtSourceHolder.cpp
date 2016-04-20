@@ -13,7 +13,7 @@ namespace Js
     // returned.
     template <typename TLoadCallback, typename TUnloadCallback>
     void JsrtSourceHolder<TLoadCallback, TUnloadCallback>::ScriptToUtf8(_When_(heapAlloc, _In_opt_) _When_(!heapAlloc, _In_) Js::ScriptContext *scriptContext,
-        _In_z_ const wchar_t *script, _Outptr_result_buffer_(*utf8Length) utf8char_t **utf8Script, _Out_ size_t *utf8Length,
+        _In_z_ const char16 *script, _Outptr_result_buffer_(*utf8Length) utf8char_t **utf8Script, _Out_ size_t *utf8Length,
         _Out_ size_t *scriptLength, _Out_opt_ size_t *utf8AllocLength, _In_ bool heapAlloc)
     {
         Assert(utf8Script != nullptr);
@@ -63,7 +63,7 @@ namespace Js
     }
 
     template <typename TLoadCallback, typename TUnloadCallback>
-    void JsrtSourceHolder<TLoadCallback, TUnloadCallback>::EnsureSource(MapRequestFor requestedFor, const wchar_t* reasonString)
+    void JsrtSourceHolder<TLoadCallback, TUnloadCallback>::EnsureSource(MapRequestFor requestedFor, const char16* reasonString)
     {
         if (this->mappedSource != nullptr)
         {
@@ -73,7 +73,7 @@ namespace Js
         Assert(scriptLoadCallback != nullptr);
         Assert(this->mappedSource == nullptr);
 
-        const wchar_t *source = nullptr;
+        const char16 *source = nullptr;
         size_t sourceLength = 0;
         utf8char_t *utf8Source = nullptr;
         size_t utf8Length = 0;

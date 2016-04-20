@@ -36,11 +36,11 @@ namespace Js
             return mappedSourceByteLength;
         };
 
-        void EnsureSource(MapRequestFor requestedFor, const wchar_t* reasonString);
+        void EnsureSource(MapRequestFor requestedFor, const char16* reasonString);
     public:
 
         static void ScriptToUtf8(_When_(heapAlloc, _In_opt_) _When_(!heapAlloc, _In_) Js::ScriptContext *scriptContext,
-            _In_z_ const wchar_t *script, _Outptr_result_buffer_(*utf8Length) LPUTF8 *utf8Script, _Out_ size_t *utf8Length,
+            _In_z_ const char16 *script, _Outptr_result_buffer_(*utf8Length) LPUTF8 *utf8Script, _Out_ size_t *utf8Length,
             _Out_ size_t *scriptLength, _Out_opt_ size_t *utf8AllocLength = NULL, _In_ bool heapAlloc = false);
 
         JsrtSourceHolder(_In_ TLoadCallback scriptLoadCallback,
@@ -68,13 +68,13 @@ namespace Js
         }
 
         // Following two methods are calls to EnsureSource before attempting to get the source
-        virtual LPCUTF8 GetSource(const wchar_t* reasonString) override
+        virtual LPCUTF8 GetSource(const char16* reasonString) override
         {
             this->EnsureSource(MapRequestFor::Source, reasonString);
             return this->GetMappedSource();
         }
 
-        virtual size_t GetByteLength(const wchar_t* reasonString) override
+        virtual size_t GetByteLength(const char16* reasonString) override
         {
             this->EnsureSource(MapRequestFor::Length, reasonString);
             return this->GetMappedSourceLength();

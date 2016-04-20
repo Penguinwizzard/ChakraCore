@@ -115,9 +115,9 @@ JsValueRef WScriptJsrt::LoadScriptFileHelper(JsValueRef callee, JsValueRef *argu
     }
     else
     {
-        const wchar_t *fileContent;
-        const wchar_t *fileName;
-        const wchar_t *scriptInjectType = _u("self");
+        const char16 *fileContent;
+        const char16 *fileName;
+        const char16 *scriptInjectType = _u("self");
         size_t fileNameLength;
         size_t scriptInjectTypeLength;
         char *fileNameNarrow;
@@ -187,9 +187,9 @@ JsValueRef WScriptJsrt::LoadScriptHelper(JsValueRef callee, bool isConstructCall
     }
     else
     {
-        const wchar_t *fileContent;
+        const char16 *fileContent;
         char *fileName;
-        const wchar_t *scriptInjectType = _u("self");
+        const char16 *scriptInjectType = _u("self");
         size_t fileContentLength;
         size_t fileNameLength;
         size_t scriptInjectTypeLength;
@@ -207,7 +207,7 @@ JsValueRef WScriptJsrt::LoadScriptHelper(JsValueRef callee, bool isConstructCall
         if (argumentCount > 3)
         {
             size_t fileNameWideLength = 0;
-            const wchar_t* fileNameWide = nullptr;
+            const char16* fileNameWide = nullptr;
             IfJsrtErrorSetGo(ChakraRTInterface::JsStringToPointer(arguments[3], &fileNameWide, &fileNameWideLength));
             IfFailGo(Helpers::WideStringToNarrowDynamic(fileNameWide, &fileName));
             freeFileName = true;
@@ -249,7 +249,7 @@ JsValueRef WScriptJsrt::LoadScript(JsValueRef callee, LPCSTR fileName, LPCWSTR f
     JsContextRef currentContext = JS_INVALID_REFERENCE;
     JsRuntimeHandle runtime = JS_INVALID_RUNTIME_HANDLE;
     
-    wchar_t* fullPath = nullptr;
+    char16* fullPath = nullptr;
     char fullPathNarrow[_MAX_PATH];
     size_t len = 0;
     
@@ -447,7 +447,7 @@ Error:
     return JS_INVALID_REFERENCE;
 }
 
-bool WScriptJsrt::CreateNamedFunction(const wchar_t* nameString, JsNativeFunction callback, JsValueRef* functionVar)
+bool WScriptJsrt::CreateNamedFunction(const char16* nameString, JsNativeFunction callback, JsValueRef* functionVar)
 {
     JsValueRef nameVar;
     IfJsrtErrorFail(ChakraRTInterface::JsPointerToString(nameString, wcslen(nameString), &nameVar), false);
@@ -462,7 +462,7 @@ bool WScriptJsrt::Initialize()
 
     JsValueRef echo;
     JsPropertyIdRef echoPropertyId;
-    const wchar_t* echoString = _u("Echo");
+    const char16* echoString = _u("Echo");
     CreateNamedFunction(echoString, EchoCallback, &echo);
     IfJsrtErrorFail(ChakraRTInterface::JsGetPropertyIdFromName(echoString, &echoPropertyId), false);
     IfJsrtErrorFail(ChakraRTInterface::JsSetProperty(wscript, echoPropertyId, echo, true), false);
@@ -479,21 +479,21 @@ bool WScriptJsrt::Initialize()
     IfJsrtErrorFail(ChakraRTInterface::JsSetProperty(wscript, argsName, argsObject, true), false);
 
     JsValueRef quit;
-    const wchar_t* quitString = _u("Quit");
+    const char16* quitString = _u("Quit");
     JsPropertyIdRef quitPropertyId;
     IfJsrtErrorFail(ChakraRTInterface::JsGetPropertyIdFromName(quitString, &quitPropertyId), false);
     CreateNamedFunction(quitString, QuitCallback, &quit);
     IfJsrtErrorFail(ChakraRTInterface::JsSetProperty(wscript, quitPropertyId, quit, true), false);
 
     JsValueRef loadScriptFile;
-    const wchar_t* loadScriptFileString = _u("LoadScriptFile");
+    const char16* loadScriptFileString = _u("LoadScriptFile");
     JsPropertyIdRef loadScriptFilePropertyId;
     IfJsrtErrorFail(ChakraRTInterface::JsGetPropertyIdFromName(loadScriptFileString, &loadScriptFilePropertyId), false);
     CreateNamedFunction(loadScriptFileString, LoadScriptFileCallback, &loadScriptFile);
     IfJsrtErrorFail(ChakraRTInterface::JsSetProperty(wscript, loadScriptFilePropertyId, loadScriptFile, true), false);
 
     JsValueRef loadModuleFile;
-    const wchar_t* loadModuleFileString = _u("LoadModuleFile");
+    const char16* loadModuleFileString = _u("LoadModuleFile");
     JsPropertyIdRef loadModuleFilePropertyId;
     IfJsrtErrorFail(ChakraRTInterface::JsGetPropertyIdFromName(loadModuleFileString, &loadModuleFilePropertyId), false);
     CreateNamedFunction(loadModuleFileString, LoadModuleFileCallback, &loadModuleFile);
@@ -501,28 +501,28 @@ bool WScriptJsrt::Initialize()
 
     JsValueRef loadScript;
     JsPropertyIdRef loadScriptName;
-    const wchar_t* loadScriptString = _u("LoadScript");
+    const char16* loadScriptString = _u("LoadScript");
     IfJsrtErrorFail(ChakraRTInterface::JsGetPropertyIdFromName(loadScriptString, &loadScriptName), false);
     CreateNamedFunction(loadScriptString, LoadScriptCallback, &loadScript);
     IfJsrtErrorFail(ChakraRTInterface::JsSetProperty(wscript, loadScriptName, loadScript, true), false);
 
     JsValueRef loadModule;
     JsPropertyIdRef loadModuleName;
-    const wchar_t* loadModuleString = _u("LoadModule");
+    const char16* loadModuleString = _u("LoadModule");
     IfJsrtErrorFail(ChakraRTInterface::JsGetPropertyIdFromName(loadModuleString, &loadModuleName), false);
     CreateNamedFunction(loadModuleString, LoadModuleCallback, &loadModule);
     IfJsrtErrorFail(ChakraRTInterface::JsSetProperty(wscript, loadModuleName, loadModule, true), false);
 
     JsValueRef setTimeout;
     JsPropertyIdRef setTimeoutName;
-    const wchar_t* setTimeoutString = _u("SetTimeout");
+    const char16* setTimeoutString = _u("SetTimeout");
     IfJsrtErrorFail(ChakraRTInterface::JsGetPropertyIdFromName(setTimeoutString, &setTimeoutName), false);
     CreateNamedFunction(setTimeoutString, SetTimeoutCallback, &setTimeout);
     IfJsrtErrorFail(ChakraRTInterface::JsSetProperty(wscript, setTimeoutName, setTimeout, true), false);
 
     JsValueRef clearTimeout;
     JsPropertyIdRef clearTimeoutName;
-    const wchar_t* clearTimeoutString = _u("ClearTimeout");
+    const char16* clearTimeoutString = _u("ClearTimeout");
     IfJsrtErrorFail(ChakraRTInterface::JsGetPropertyIdFromName(clearTimeoutString, &clearTimeoutName), false);
     CreateNamedFunction(clearTimeoutString, ClearTimeoutCallback, &clearTimeout);
     IfJsrtErrorFail(ChakraRTInterface::JsSetProperty(wscript, clearTimeoutName, clearTimeout, true), false);
