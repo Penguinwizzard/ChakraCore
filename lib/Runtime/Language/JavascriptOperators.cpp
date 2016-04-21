@@ -10387,6 +10387,17 @@ CommonNumber:
         return JavascriptOperators::GetPropertyReference(instance, instance, propertyId, value, requestContext, info);
     }
 
+    Var JavascriptOperators::GetItem(RecyclableObject* instance, uint32 index, ScriptContext* requestContext)
+    {
+        Var value;
+        if (GetItem(instance, index, &value, requestContext))
+        {
+            return value;
+        }
+
+        return requestContext->GetMissingItemResult();
+    }
+
     Var JavascriptOperators::GetItem(RecyclableObject* instance, uint64 index, ScriptContext* requestContext)
     {
         Var value;

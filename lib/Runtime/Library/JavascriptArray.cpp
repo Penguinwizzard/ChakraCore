@@ -7,6 +7,8 @@
 #include "Types/PathTypeHandler.h"
 #include "Types/SpreadArgument.h"
 
+#include <GlobalMSRCSettings.h>
+
 namespace Js
 {
     // Make sure EmptySegment points to read-only memory.
@@ -2979,7 +2981,13 @@ namespace Js
                     {
                         if (JavascriptOperators::HasItem(itemObject, idxSubItem))
                         {
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32922_BUG6908898
+                            subItem = JavascriptOperators::GetItem(itemObject, idxSubItem, scriptContext);
+
+#else
                             JavascriptOperators::GetItem(itemObject, idxSubItem, &subItem, scriptContext);
+#endif
                             if (pDestArray)
                             {
                                 pDestArray->DirectSetItemAt(idxDest, subItem);
@@ -5261,6 +5269,14 @@ Case0:
             {
                 T upper = length - lower - 1;
 
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32922_BUG6908898
+                lowerExists = JavascriptOperators::HasItem(obj, lower) &&
+                              JavascriptOperators::GetItem(obj, lower, &lowerValue, scriptContext);
+
+                upperExists = JavascriptOperators::HasItem(obj, upper) &&
+                              JavascriptOperators::GetItem(obj, upper, &upperValue, scriptContext);
+#else
                 lowerExists = JavascriptOperators::HasItem(obj, lower);
                 if (lowerExists)
                 {
@@ -5273,6 +5289,7 @@ Case0:
                     BOOL getResult = JavascriptOperators::GetItem(obj, upper, &upperValue, scriptContext);
                     Assert(getResult);
                 }
+#endif
 
                 if (lowerExists)
                 {
@@ -5513,6 +5530,14 @@ Case0:
             uint32 lengthToUin32Max = length.IsSmallIndex() ? length.GetSmallIndex() : MaxArrayLength;
             for (uint32 i = 0u; i < lengthToUin32Max; i++)
             {
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32922_BUG6908898
+                if (JavascriptOperators::HasItem(dynamicObject, i + 1))
+                {
+                    Var element = JavascriptOperators::GetItem(dynamicObject, i + 1, scriptContext);
+                    h.ThrowTypeErrorOnFailure(JavascriptOperators::SetItem(dynamicObject, dynamicObject, i, element, scriptContext, PropertyOperation_ThrowIfNotExtensible, /*skipPrototypeCheck*/ true));
+                }
+#else
                 Var element;
                 if (JavascriptOperators::HasItem(dynamicObject, i + 1))
                 {
@@ -5520,6 +5545,7 @@ Case0:
                     Assert(getResult);
                     h.ThrowTypeErrorOnFailure(JavascriptOperators::SetItem(dynamicObject, dynamicObject, i, element, scriptContext, PropertyOperation_ThrowIfNotExtensible, /*skipPrototypeCheck*/ true));
                 }
+#endif
                 else
                 {
                     h.ThrowTypeErrorOnFailure(JavascriptOperators::DeleteItem(dynamicObject, i, PropertyOperation_ThrowIfNotExtensible));
@@ -5528,6 +5554,14 @@ Case0:
 
             for (uint64 i = MaxArrayLength; length > i; i++)
             {
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32922_BUG6908898
+                if (JavascriptOperators::HasItem(dynamicObject, i + 1))
+                {
+                    Var element = JavascriptOperators::GetItem(dynamicObject, i + 1, scriptContext);
+                    h.ThrowTypeErrorOnFailure(JavascriptOperators::SetItem(dynamicObject, dynamicObject, i, element, scriptContext, PropertyOperation_ThrowIfNotExtensible));
+                }
+#else
                 Var element;
                 if (JavascriptOperators::HasItem(dynamicObject, i + 1))
                 {
@@ -5535,6 +5569,7 @@ Case0:
                     Assert(getResult);
                     h.ThrowTypeErrorOnFailure(JavascriptOperators::SetItem(dynamicObject, dynamicObject, i, element, scriptContext, PropertyOperation_ThrowIfNotExtensible));
                 }
+#endif
                 else
                 {
                     h.ThrowTypeErrorOnFailure(JavascriptOperators::DeleteItem(dynamicObject, i, PropertyOperation_ThrowIfNotExtensible));
@@ -5991,6 +6026,24 @@ Case0:
         }
         else
         {
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32922_BUG6908898
+            for (uint32 i = 0; i < newLen; i++)
+            {
+                if (JavascriptOperators::HasItem(obj, i + start))
+                {
+                    Var element = JavascriptOperators::GetItem(obj, i + start, scriptContext);
+                    if (newArr != nullptr)
+                    {
+                        newArr->DirectSetItemAt(i, element);
+                    }
+                    else
+                    {
+                        JavascriptOperators::OP_SetElementI_UInt32(newObj, i, element, scriptContext, PropertyOperation_ThrowIfNotExtensible);
+                    }
+                }
+            }
+#else
             Var element;
 
             for (uint32 i = 0; i < newLen; i++)
@@ -6010,6 +6063,7 @@ Case0:
                     JavascriptOperators::OP_SetElementI_UInt32(newObj, i, element, scriptContext, PropertyOperation_ThrowIfNotExtensible);
                 }
             }
+#endif
         }
 
         if (!isTypedArrayEntryPoint)
@@ -7149,6 +7203,21 @@ Case0:
         {
             for (uint32 i = 0; i < deleteLen; i++)
             {
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32922_BUG6908898
+               if (JavascriptOperators::HasItem(pObj, start+i))
+               {
+                   Var element = JavascriptOperators::GetItem(pObj, start + i, scriptContext);
+                   if (pnewArr)
+                   {
+                       pnewArr->DirectSetItemAt(i, element);
+                   }
+                   else
+                   {
+                       JavascriptArray::SetArrayLikeObjects(pNewObj, i, element);
+                   }
+               }
+#else
                Var element;
                if (JavascriptOperators::HasItem(pObj, start+i))
                {
@@ -7163,6 +7232,7 @@ Case0:
                        JavascriptArray::SetArrayLikeObjects(pNewObj, i, element);
                    }
                }
+#endif
             }
         }
 
@@ -7185,6 +7255,14 @@ Case0:
             uint32 j = 0;
             for (uint32 i = start + deleteLen; i < len; i++)
             {
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32922_BUG6908898
+                if (JavascriptOperators::HasItem(pObj, i))
+                {
+                    Var element = JavascriptOperators::GetItem(pObj, i, scriptContext);
+                    h.ThrowTypeErrorOnFailure(JavascriptOperators::SetItem(pObj, pObj, start + insertLen + j, element, scriptContext, PropertyOperation_ThrowIfNotExtensible));
+                }
+#else
                 Var element;
                 if (JavascriptOperators::HasItem(pObj, i))
                 {
@@ -7192,6 +7270,7 @@ Case0:
                     Assert(getResult);
                     h.ThrowTypeErrorOnFailure(JavascriptOperators::SetItem(pObj, pObj, start + insertLen + j, element, scriptContext, PropertyOperation_ThrowIfNotExtensible));
                 }
+#endif
                 else
                 {
                     h.ThrowTypeErrorOnFailure(JavascriptOperators::DeleteItem(pObj, start + insertLen + j, PropertyOperation_ThrowIfNotExtensible));
@@ -7277,6 +7356,14 @@ Case0:
                 uint64 i64 = end;
                 for (; i64 > UINT32_MAX; i64--)
                 {
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32922_BUG6908898
+                    if (JavascriptOperators::HasItem(obj, i64 - 1))
+                    {
+                        Var element = JavascriptOperators::GetItem(obj, i64 - 1, scriptContext);
+                        h.ThrowTypeErrorOnFailure(index_trace::SetItem(obj, dst, element, PropertyOperation_ThrowIfNotExtensible));
+                    }
+#else
                     Var element;
                     if (JavascriptOperators::HasItem(obj, i64 - 1))
                     {
@@ -7284,6 +7371,7 @@ Case0:
                         Assert(getResult);
                         h.ThrowTypeErrorOnFailure(index_trace::SetItem(obj, dst, element, PropertyOperation_ThrowIfNotExtensible));
                     }
+#endif
                     else
                     {
                         h.ThrowTypeErrorOnFailure(index_trace::DeleteItem(obj, dst, PropertyOperation_ThrowIfNotExtensible));
@@ -7299,6 +7387,14 @@ Case0:
             }
             for (; i > start; i--)
             {
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32922_BUG6908898
+                if (JavascriptOperators::HasItem(obj, i-1))
+                {
+                    Var element = JavascriptOperators::GetItem(obj, i - 1, scriptContext);
+                    h.ThrowTypeErrorOnFailure(index_trace::SetItem(obj, dst, element, PropertyOperation_ThrowIfNotExtensible));
+                }
+#else
                 Var element;
                 if (JavascriptOperators::HasItem(obj, i-1))
                 {
@@ -7306,6 +7402,7 @@ Case0:
                     Assert(getResult);
                     h.ThrowTypeErrorOnFailure(index_trace::SetItem(obj, dst, element, PropertyOperation_ThrowIfNotExtensible));
                 }
+#endif
                 else
                 {
                     h.ThrowTypeErrorOnFailure(index_trace::DeleteItem(obj, dst, PropertyOperation_ThrowIfNotExtensible));
@@ -7832,10 +7929,17 @@ Case0:
         CallFlags flags = CallFlags_Value;
         Var element = nullptr;
         Var testResult = nullptr;
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32922_BUG6908898
+        if (pArr)
+        {
+            Var undefined = scriptContext->GetLibrary()->GetUndefined();
+#else
         Var undefined = scriptContext->GetLibrary()->GetUndefined();
 
         if (pArr)
         {
+#endif
             for (uint32 k = 0; k < length; k++)
             {
                 element = undefined;
@@ -7877,8 +7981,13 @@ Case0:
         {
             for (uint32 k = 0; k < length; k++)
             {
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32922_BUG6908898
+                element = JavascriptOperators::GetItem(obj, k, scriptContext);
+#else
                 element = undefined;
                 JavascriptOperators::GetItem(obj, k, &element, scriptContext);
+#endif
                 Var index = JavascriptNumber::ToVar(k, scriptContext);
 
                 testResult = callBackFn->GetEntryPoint()(callBackFn, CallInfo(flags, 4), thisArg,
@@ -7891,7 +8000,6 @@ Case0:
                     return findIndex ? index : element;
                 }
             }
-
         }
 
         return findIndex ? JavascriptNumber::ToVar(-1, scriptContext) : scriptContext->GetLibrary()->GetUndefined();
@@ -8177,6 +8285,27 @@ Case0:
         }
         else
         {
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32922_BUG6908898
+            for (T k = 0; k < length; k++)
+            {
+                // According to es6 spec, we need to call Has first before calling Get
+                if (JavascriptOperators::HasItem(obj, k))
+                {
+                    element = JavascriptOperators::GetItem(obj, k, scriptContext);
+
+                    testResult = callBackFn->GetEntryPoint()(callBackFn, CallInfo(flags, 4), thisArg,
+                        element,
+                        JavascriptNumber::ToVar(k, scriptContext),
+                        obj);
+
+                    if (!JavascriptConversion::ToBoolean(testResult, scriptContext))
+                    {
+                        return scriptContext->GetLibrary()->GetFalse();
+                    }
+                }
+            }
+#else
             for (T k = 0; k < length; k++)
             {
                 // According to es6 spec, we need to call Has first before calling Get
@@ -8197,7 +8326,7 @@ Case0:
                     return scriptContext->GetLibrary()->GetFalse();
                 }
             }
-
+#endif
         }
 
         return scriptContext->GetLibrary()->GetTrue();
@@ -8353,6 +8482,25 @@ Case0:
         }
         else
         {
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32922_BUG6908898
+            for (T k = 0; k < length; k++)
+            {
+                if (JavascriptOperators::HasItem(obj, k))
+                {
+                    element = JavascriptOperators::GetItem(obj, k, scriptContext);
+                    testResult = callBackFn->GetEntryPoint()(callBackFn, CallInfo(flags, 4), thisArg,
+                        element,
+                        JavascriptNumber::ToVar(k, scriptContext),
+                        obj);
+
+                    if (JavascriptConversion::ToBoolean(testResult, scriptContext))
+                    {
+                        return scriptContext->GetLibrary()->GetTrue();
+                    }
+                }
+            }
+#else
             for (T k = 0; k < length; k++)
             {
                 if (!JavascriptOperators::HasItem(obj, k))
@@ -8371,6 +8519,7 @@ Case0:
                     return scriptContext->GetLibrary()->GetTrue();
                 }
             }
+#endif
         }
 
         return scriptContext->GetLibrary()->GetFalse();
@@ -9034,6 +9183,29 @@ Case0:
         }
         else
         {
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32922_BUG6908898
+            for (uint32 k = 0; k < length; k++)
+            {
+                if (JavascriptOperators::HasItem(obj, k))
+                {
+                    element = JavascriptOperators::GetItem(obj, k, scriptContext);
+                    mappedValue = callBackFn->GetEntryPoint()(callBackFn, callBackFnInfo, thisArg,
+                        element,
+                        JavascriptNumber::ToVar(k, scriptContext),
+                        obj);
+
+                    if (newArr)
+                    {
+                        newArr->DirectSetItemAt(k, mappedValue);
+                    }
+                    else
+                    {
+                        JavascriptArray::SetArrayLikeObjects(RecyclableObject::FromVar(newObj), k, mappedValue);
+                    }
+                }
+            }
+#else
             for (uint32 k = 0; k < length; k++)
             {
                 if (!JavascriptOperators::HasItem(obj, k))
@@ -9057,6 +9229,7 @@ Case0:
                     JavascriptArray::SetArrayLikeObjects(RecyclableObject::FromVar(newObj), k, mappedValue);
                 }
             }
+#endif
         }
 
 #ifdef VALIDATE_ARRAY
@@ -9198,6 +9371,33 @@ Case0:
         }
         else
         {
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32922_BUG6908898
+            for (BigIndex k = 0u; k < length; ++k)
+            {
+                if (JavascriptOperators::HasItem(dynamicObject, k.IsSmallIndex() ? k.GetSmallIndex() : k.GetBigIndex()))
+                {
+                    element = JavascriptOperators::GetItem(dynamicObject, k.IsSmallIndex() ? k.GetSmallIndex() : k.GetBigIndex(), scriptContext);
+                    selected = callBackFn->GetEntryPoint()(callBackFn, CallInfo(flags, 4), thisArg,
+                                                                    element,
+                                                                    JavascriptNumber::ToVar(k.IsSmallIndex() ? k.GetSmallIndex() : k.GetBigIndex(), scriptContext),
+                                                                    dynamicObject);
+
+                    if (JavascriptConversion::ToBoolean(selected, scriptContext))
+                    {
+                        if (newArr)
+                        {
+                            newArr->DirectSetItemAt(i, element);
+                        }
+                        else
+                        {
+                            JavascriptArray::SetArrayLikeObjects(RecyclableObject::FromVar(newObj), i, element);
+                        }
+                        ++i;
+                    }
+                }
+            }
+#else
             for (BigIndex k = 0u; k < length; ++k)
             {
                 if (!JavascriptOperators::HasItem(dynamicObject, k.IsSmallIndex() ? k.GetSmallIndex() : k.GetBigIndex()))
@@ -9224,6 +9424,7 @@ Case0:
                     ++i;
                 }
             }
+#endif
         }
 
 #ifdef VALIDATE_ARRAY
@@ -9360,6 +9561,17 @@ Case0:
             }
             else
             {
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32922_BUG6908898
+                for (; k < length && bPresent == false; k++)
+                {
+                    if (JavascriptOperators::HasItem(obj, k))
+                    {
+                        accumulator = JavascriptOperators::GetItem(obj, k, scriptContext);
+                        bPresent = true;
+                    }
+                }
+#else
                 for (; k < length && bPresent == false; k++)
                 {
                     if (!JavascriptOperators::HasItem(obj, k))
@@ -9371,6 +9583,7 @@ Case0:
                     Assert(getResult);
                     bPresent = true;
                 }
+#endif
             }
 
             if (bPresent == false)
@@ -9422,6 +9635,22 @@ Case0:
         }
         else
         {
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32922_BUG6908898
+            for (; k < length; k++)
+            {
+                if (JavascriptOperators::HasItem(obj, k))
+                {
+                    element = JavascriptOperators::GetItem(obj, k, scriptContext);
+
+                    accumulator = callBackFn->GetEntryPoint()(callBackFn, CallInfo(flags, 5), undefinedValue,
+                        accumulator,
+                        element,
+                        JavascriptNumber::ToVar(k, scriptContext),
+                        obj);
+                }
+            }
+#else
             for (; k < length; k++)
             {
                 if (!JavascriptOperators::HasItem(obj, k))
@@ -9437,6 +9666,7 @@ Case0:
                     JavascriptNumber::ToVar(k, scriptContext),
                     obj);
             }
+#endif
         }
 
         return accumulator;
@@ -9571,6 +9801,18 @@ Case0:
             }
             else
             {
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32922_BUG6908898
+                for (; k < length && bPresent == false; k++)
+                {
+                    index = length - k - 1;
+                    if (JavascriptOperators::HasItem(obj, index))
+                    {
+                        accumulator = JavascriptOperators::GetItem(obj, index, scriptContext);
+                        bPresent = true;
+                    }
+                }
+#else
                 for (; k < length && bPresent == false; k++)
                 {
                     index = length - k - 1;
@@ -9582,6 +9824,7 @@ Case0:
                     Assert(getResult);
                     bPresent = true;
                 }
+#endif
             }
             if (bPresent == false)
             {
@@ -9633,6 +9876,22 @@ Case0:
         }
         else
         {
+#include <VerifyGlobalMSRCSettings.inl>
+#ifdef PRERELEASE_REL1605_MSRC32922_BUG6908898
+            for (; k < length; k++)
+            {
+                index = length - k - 1;
+                if (JavascriptOperators::HasItem(obj, index))
+                {
+                    element = JavascriptOperators::GetItem(obj, index, scriptContext);
+                    accumulator = callBackFn->GetEntryPoint()(callBackFn, CallInfo(flags, 5), undefinedValue,
+                        accumulator,
+                        element,
+                        JavascriptNumber::ToVar(index, scriptContext),
+                        obj);
+                }
+            }
+#else
             for (; k < length; k++)
             {
                 index = length - k - 1;
@@ -9649,6 +9908,7 @@ Case0:
                     JavascriptNumber::ToVar(index, scriptContext),
                     obj);
             }
+#endif
         }
 
         return accumulator;
