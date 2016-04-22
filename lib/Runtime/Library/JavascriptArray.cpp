@@ -7,8 +7,6 @@
 #include "Types/PathTypeHandler.h"
 #include "Types/SpreadArgument.h"
 
-#include <GlobalMSRCSettings.h>
-
 namespace Js
 {
     // Make sure EmptySegment points to read-only memory.
@@ -2981,8 +2979,10 @@ namespace Js
                     {
                         if (JavascriptOperators::HasItem(itemObject, idxSubItem))
                         {
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32922_BUG6908898
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32922_BUG6908898) || defined(_CHAKRACOREBUILD)
                             subItem = JavascriptOperators::GetItem(itemObject, idxSubItem, scriptContext);
 
 #else
@@ -5269,8 +5269,10 @@ Case0:
             {
                 T upper = length - lower - 1;
 
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32922_BUG6908898
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32922_BUG6908898) || defined(_CHAKRACOREBUILD)
                 lowerExists = JavascriptOperators::HasItem(obj, lower) &&
                               JavascriptOperators::GetItem(obj, lower, &lowerValue, scriptContext);
 
@@ -5530,8 +5532,10 @@ Case0:
             uint32 lengthToUin32Max = length.IsSmallIndex() ? length.GetSmallIndex() : MaxArrayLength;
             for (uint32 i = 0u; i < lengthToUin32Max; i++)
             {
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32922_BUG6908898
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32922_BUG6908898) || defined(_CHAKRACOREBUILD)
                 if (JavascriptOperators::HasItem(dynamicObject, i + 1))
                 {
                     Var element = JavascriptOperators::GetItem(dynamicObject, i + 1, scriptContext);
@@ -5554,8 +5558,10 @@ Case0:
 
             for (uint64 i = MaxArrayLength; length > i; i++)
             {
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32922_BUG6908898
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32922_BUG6908898) || defined(_CHAKRACOREBUILD)
                 if (JavascriptOperators::HasItem(dynamicObject, i + 1))
                 {
                     Var element = JavascriptOperators::GetItem(dynamicObject, i + 1, scriptContext);
@@ -6026,8 +6032,10 @@ Case0:
         }
         else
         {
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32922_BUG6908898
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32922_BUG6908898) || defined(_CHAKRACOREBUILD)
             for (uint32 i = 0; i < newLen; i++)
             {
                 if (JavascriptOperators::HasItem(obj, i + start))
@@ -7203,8 +7211,10 @@ Case0:
         {
             for (uint32 i = 0; i < deleteLen; i++)
             {
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32922_BUG6908898
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32922_BUG6908898) || defined(_CHAKRACOREBUILD)
                if (JavascriptOperators::HasItem(pObj, start+i))
                {
                    Var element = JavascriptOperators::GetItem(pObj, start + i, scriptContext);
@@ -7255,8 +7265,10 @@ Case0:
             uint32 j = 0;
             for (uint32 i = start + deleteLen; i < len; i++)
             {
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32922_BUG6908898
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32922_BUG6908898) || defined(_CHAKRACOREBUILD)
                 if (JavascriptOperators::HasItem(pObj, i))
                 {
                     Var element = JavascriptOperators::GetItem(pObj, i, scriptContext);
@@ -7356,8 +7368,10 @@ Case0:
                 uint64 i64 = end;
                 for (; i64 > UINT32_MAX; i64--)
                 {
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32922_BUG6908898
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32922_BUG6908898) || defined(_CHAKRACOREBUILD)
                     if (JavascriptOperators::HasItem(obj, i64 - 1))
                     {
                         Var element = JavascriptOperators::GetItem(obj, i64 - 1, scriptContext);
@@ -7387,8 +7401,10 @@ Case0:
             }
             for (; i > start; i--)
             {
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32922_BUG6908898
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32922_BUG6908898) || defined(_CHAKRACOREBUILD)
                 if (JavascriptOperators::HasItem(obj, i-1))
                 {
                     Var element = JavascriptOperators::GetItem(obj, i - 1, scriptContext);
@@ -7929,8 +7945,10 @@ Case0:
         CallFlags flags = CallFlags_Value;
         Var element = nullptr;
         Var testResult = nullptr;
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32922_BUG6908898
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32922_BUG6908898) || defined(_CHAKRACOREBUILD)
         if (pArr)
         {
             Var undefined = scriptContext->GetLibrary()->GetUndefined();
@@ -7981,8 +7999,10 @@ Case0:
         {
             for (uint32 k = 0; k < length; k++)
             {
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32922_BUG6908898
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32922_BUG6908898) || defined(_CHAKRACOREBUILD)
                 element = JavascriptOperators::GetItem(obj, k, scriptContext);
 #else
                 element = undefined;
@@ -8285,8 +8305,10 @@ Case0:
         }
         else
         {
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32922_BUG6908898
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32922_BUG6908898) || defined(_CHAKRACOREBUILD)
             for (T k = 0; k < length; k++)
             {
                 // According to es6 spec, we need to call Has first before calling Get
@@ -8482,8 +8504,10 @@ Case0:
         }
         else
         {
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32922_BUG6908898
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32922_BUG6908898) || defined(_CHAKRACOREBUILD)
             for (T k = 0; k < length; k++)
             {
                 if (JavascriptOperators::HasItem(obj, k))
@@ -9183,8 +9207,10 @@ Case0:
         }
         else
         {
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32922_BUG6908898
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32922_BUG6908898) || defined(_CHAKRACOREBUILD)
             for (uint32 k = 0; k < length; k++)
             {
                 if (JavascriptOperators::HasItem(obj, k))
@@ -9371,8 +9397,10 @@ Case0:
         }
         else
         {
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32922_BUG6908898
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32922_BUG6908898) || defined(_CHAKRACOREBUILD)
             for (BigIndex k = 0u; k < length; ++k)
             {
                 if (JavascriptOperators::HasItem(dynamicObject, k.IsSmallIndex() ? k.GetSmallIndex() : k.GetBigIndex()))
@@ -9561,8 +9589,10 @@ Case0:
             }
             else
             {
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32922_BUG6908898
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32922_BUG6908898) || defined(_CHAKRACOREBUILD)
                 for (; k < length && bPresent == false; k++)
                 {
                     if (JavascriptOperators::HasItem(obj, k))
@@ -9635,8 +9665,10 @@ Case0:
         }
         else
         {
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32922_BUG6908898
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32922_BUG6908898) || defined(_CHAKRACOREBUILD)
             for (; k < length; k++)
             {
                 if (JavascriptOperators::HasItem(obj, k))
@@ -9801,8 +9833,10 @@ Case0:
             }
             else
             {
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32922_BUG6908898
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32922_BUG6908898) || defined(_CHAKRACOREBUILD)
                 for (; k < length && bPresent == false; k++)
                 {
                     index = length - k - 1;
@@ -9876,8 +9910,10 @@ Case0:
         }
         else
         {
+#ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
-#ifdef PRERELEASE_REL1605_MSRC32922_BUG6908898
+#endif
+#if defined(PRERELEASE_REL1605_MSRC32922_BUG6908898) || defined(_CHAKRACOREBUILD)
             for (; k < length; k++)
             {
                 index = length - k - 1;
