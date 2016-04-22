@@ -416,8 +416,8 @@ public:
     }
 
     BOOL ProtectAllocation(__in Allocation* allocation, DWORD dwVirtualProtectFlags, DWORD desiredOldProtectFlag, __in_opt char* addressInPage = nullptr);
-    BOOL ProtectAllocationWithExecuteReadWrite(Allocation *allocation, char* addressInPage = nullptr);
-    BOOL ProtectAllocationWithExecuteReadOnly(Allocation *allocation, char* addressInPage = nullptr);
+    BOOL ProtectAllocationWithExecuteReadWrite(Allocation *allocation, __in_opt char* addressInPage = nullptr);
+    BOOL ProtectAllocationWithExecuteReadOnly(Allocation *allocation, __in_opt char* addressInPage = nullptr);
 
     ~Heap();
 
