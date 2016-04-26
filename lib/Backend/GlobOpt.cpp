@@ -18492,7 +18492,7 @@ GlobOpt::OptHoistInvariant(
         case Js::OpCode::FromVar:
         {
             StackSym* src1StackSym = IR::RegOpnd::TryGetStackSym(instr->GetSrc1());
-            if (src1StackSym && bailoutKind != IR::BailOutInvalid)
+            if (src1StackSym && !instr->HasBailOutInfo() && bailoutKind != IR::BailOutInvalid)
             {
                 if (src1StackSym->IsTypeSpec())
                 {
@@ -18505,8 +18505,8 @@ GlobOpt::OptHoistInvariant(
                 ValueInfo *landingPadSrc1ValueInfo = landingPadSrc1val->GetValueInfo();
                 IRType dstType = dst->GetType();
 
-                // The source of FromVar could have a definite value type inside the loop (due to forcing type spec in the loop header), but a 
-                // likely value type in the landing pad of a parent loop. In such cases, the FromVar needs a bailout in its new position
+                // We may be hoisting FromVar from a region where it didn't need a bailout (src1 had a definite value type) to a region
+                // where it would. In such cases, the FromVar needs a bailout based on the value type of src1 in its new position.
                 if ((dstType == TyInt32 && src1ValueInfo->IsInt() && !landingPadSrc1ValueInfo->IsInt()) ||
                     (dstType == TyFloat64 && src1ValueInfo->IsNumber() && !landingPadSrc1ValueInfo->IsNumber()) ||
                     (IRType_IsSimd128(dstType) && src1ValueInfo->IsSimd128() && !landingPadSrc1ValueInfo->IsSimd128()))
