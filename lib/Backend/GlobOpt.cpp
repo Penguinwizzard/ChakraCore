@@ -18503,9 +18503,13 @@ GlobOpt::OptHoistInvariant(
 
                 ValueInfo *src1ValueInfo = src1Val->GetValueInfo();
                 ValueInfo *landingPadSrc1ValueInfo = landingPadSrc1val->GetValueInfo();
-                if ((instr->GetDst()->GetType() == TyInt32 && src1ValueInfo->IsInt() && !landingPadSrc1ValueInfo->IsInt()) ||
-                    (instr->GetDst()->GetType() == TyFloat64 && src1ValueInfo->IsNumber() && !landingPadSrc1ValueInfo->IsNumber()) ||
-                    (IRType_IsSimd128(instr->GetDst()->GetType()) && src1ValueInfo->IsSimd128() && !landingPadSrc1ValueInfo->IsSimd128()))
+                IRType dstType = dst->GetType();
+
+                // The source of FromVar could have a definite value type inside the loop (due to forcing type spec in the loop header), but a 
+                // likely value type in the landing pad of a parent loop. In such cases, the FromVar needs a bailout in its new position
+                if ((dstType == TyInt32 && src1ValueInfo->IsInt() && !landingPadSrc1ValueInfo->IsInt()) ||
+                    (dstType == TyFloat64 && src1ValueInfo->IsNumber() && !landingPadSrc1ValueInfo->IsNumber()) ||
+                    (IRType_IsSimd128(dstType) && src1ValueInfo->IsSimd128() && !landingPadSrc1ValueInfo->IsSimd128()))
                 {
                     instr->GetSrc1()->SetValueType(landingPadSrc1val->GetValueInfo()->Type());
                     EnsureBailTarget(loop);
