@@ -13530,6 +13530,16 @@ GlobOpt::ToTypeSpecUse(IR::Instr *instr, IR::Opnd *opnd, BasicBlock *block, Valu
                     }
                 }
             }
+            if (!lossy)
+            {
+                Assert(!IsLoopPrePass());
+                if (block->loop)
+                {
+                    Assert(bailOutKind == IR::BailOutIntOnly || bailOutKind == IR::BailOutExpectingInteger);
+                    // Since we introduce a bailout for this symbols we can safely use it as an int
+                    block->loop->int32SymsOnPrePass->Clear(varSym->m_id);
+                }
+            }
             GOPT_TRACE_OPND(regSrc, _u("Converting to int32\n"));
         }
         else if (toType == TyFloat64)
