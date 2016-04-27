@@ -4961,7 +4961,7 @@ BackwardPass::RemoveNegativeZeroBailout(IR::Instr* instr)
 {
     Assert(instr->HasBailOutInfo() && (instr->GetBailOutKind() & IR::BailOutOnNegativeZero));
     IR::BailOutKind bailOutKind = instr->GetBailOutKind();
-    bailOutKind -= IR::BailOutOnNegativeZero;
+    bailOutKind = bailOutKind & ~IR::BailOutOnNegativeZero;
     if (bailOutKind)
     {
         instr->SetBailOutKind(bailOutKind);
@@ -5034,6 +5034,7 @@ BackwardPass::TrackIntUsage(IR::Instr *const instr)
                 {
                     if (instr->HasBailOutInfo())
                     {
+
                         if (instr->GetBailOutKind() & IR::BailOutOnNegativeZero)
                         {
                             if (this->currentBlock->couldRemoveNegZeroBailoutForDef->TestAndClear(dstSym->m_id))
