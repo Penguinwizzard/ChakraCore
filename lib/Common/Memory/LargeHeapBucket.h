@@ -41,9 +41,9 @@ public:
     LargeHeapBlock* AddLargeHeapBlock(__declspec(guard(overflow)) size_t size, bool nothrow);
 
     template <ObjectInfoBits attributes, bool nothrow>
-    char* Alloc(Recycler * recycler, __declspec(guard(overflow)) size_t sizeCat);
+    char* Alloc(Recycler * recycler, size_t sizeCat);
 #ifdef RECYCLER_PAGE_HEAP
-    char *PageHeapAlloc(Recycler * recycler, __declspec(guard(overflow)) size_t sizeCat, ObjectInfoBits attributes, PageHeapMode mode, bool nothrow);
+    char *PageHeapAlloc(Recycler * recycler, __declspec(guard(overflow)) size_t sizeCat, size_t size, ObjectInfoBits attributes, PageHeapMode mode, bool nothrow);
 #endif
     void ExplicitFree(void * object, size_t sizeCat);
 
@@ -51,7 +51,6 @@ public:
     void ScanInitialImplicitRoots(Recycler * recycler);
     void ScanNewImplicitRoots(Recycler * recycler);
 
-    template<bool pageheap>
     void Sweep(RecyclerSweep& recyclerSweep);
     void ReinsertLargeHeapBlock(LargeHeapBlock * heapBlock);
 
@@ -94,16 +93,15 @@ public:
 #endif
 
 private:
-    char * SnailAlloc(Recycler * recycler, __declspec(guard(overflow)) size_t sizeCat, ObjectInfoBits attributes, bool nothrow);
+    char * SnailAlloc(Recycler * recycler, __declspec(guard(overflow)) size_t sizeCat, size_t size, ObjectInfoBits attributes, bool nothrow);
     char * TryAlloc(Recycler * recycler, __declspec(guard(overflow)) size_t sizeCat, ObjectInfoBits attributes);
-    char * TryAllocFromNewHeapBlock(Recycler * recycler, __declspec(guard(overflow)) size_t sizeCat, ObjectInfoBits attributes, bool nothrow);
+    char * TryAllocFromNewHeapBlock(Recycler * recycler, __declspec(guard(overflow)) size_t sizeCat, size_t size, ObjectInfoBits attributes, bool nothrow);
     char * TryAllocFromFreeList(Recycler * recycler, __declspec(guard(overflow)) size_t sizeCat, ObjectInfoBits attributes);
     char * TryAllocFromExplicitFreeList(Recycler * recycler, __declspec(guard(overflow)) size_t sizeCat, ObjectInfoBits attributes);
 
     template <class Fn> void ForEachLargeHeapBlock(Fn fn);
     template <class Fn> void ForEachEditingLargeHeapBlock(Fn fn);
     void Finalize(Recycler* recycler, LargeHeapBlock* heapBlock);
-    template<bool pageheap>
     void SweepLargeHeapBlockList(RecyclerSweep& recyclerSweep, LargeHeapBlock * heapBlockList);
 
     void ConstructFreelist(LargeHeapBlock * heapBlock);
