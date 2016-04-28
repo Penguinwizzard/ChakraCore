@@ -276,6 +276,13 @@ protected:
         uint argOutSymStart;
     };
 
+    enum BailoutRecordType : byte
+    {
+        Normal = 1,
+        Branch = 2,
+        Aux    = 4
+    };
+
     // The offset to 'globalBailOutRecordTable' is hard-coded in LinearScanMD::SaveAllRegisters, so let this be the first member variable
     GlobalBailOutRecordDataTable *globalBailOutRecordTable;
     ArgOutOffsetInfo *argOutOffsetInfo;
@@ -308,6 +315,7 @@ protected:
     void DumpLocalOffsets(uint count, int argOutSlotStart);
     void DumpValue(int offset, bool isFloat64);
 #endif
+    BailoutRecordType type;
     ushort bailOutCount;
     uint32 m_bailOutRecordId;
 
@@ -336,6 +344,17 @@ public:
     static uint32 BailOutFromLoopBodyInlined(Js::JavascriptCallStackLayout * layout, BranchBailOutRecord const * bailOutRecord, BOOL cond, void * returnAddress);
 private:
     uint falseBailOutOffset;
+};
+
+class SharedBailOutRecord : public BailOutRecord
+{
+public:
+    Js::FunctionBody* functionBody; //inlinee function body in case of bailout hoisted out from inlinee to the landing pad of a loop containing the inlinee
+
+    SharedBailOutRecord(uint32 bailOutOffset, uint bailOutCacheIndex, IR::BailOutKind kind, Func *bailOutFunc);
+
+    static Js::Var BailOut(SharedBailOutRecord const * bailOutRecord);
+    static size_t GetOffsetOfFunctionBody() { return offsetof(SharedBailOutRecord, functionBody); }
 };
 
 template <typename Fn>
