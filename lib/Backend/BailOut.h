@@ -338,15 +338,6 @@ private:
     uint falseBailOutOffset;
 };
 
-class FunctionBailOutRecord
-{
-public:
-    FunctionBailOutRecord() : constantCount(0), constants(nullptr) {}
-
-    uint constantCount;
-    Js::Var * constants;
-};
-
 template <typename Fn>
 inline void BailOutRecord::MapStartCallParamCounts(Fn fn)
 {

@@ -1290,7 +1290,7 @@ void BailOutRecord::UpdatePolymorphicFieldAccess(Js::JavascriptFunction *  funct
 
         if (bailOutRecord->polymorphicCacheIndex != (uint)-1)
         {
-            dynamicProfileInfo->RecordPolymorphicFieldAccess(function->GetFunctionBody(), bailOutRecord->polymorphicCacheIndex);
+            dynamicProfileInfo->RecordPolymorphicFieldAccess(executeFunction, bailOutRecord->polymorphicCacheIndex);
             if (IR::IsEquivalentTypeCheckBailOutKind(bailOutRecord->bailOutKind))
             {
                 // If we've already got a polymorphic inline cache, and if we've got an equivalent type check
