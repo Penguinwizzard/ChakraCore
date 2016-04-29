@@ -200,6 +200,13 @@ public:
     template <typename Fn>
     void MapArgOutOffsets(Fn fn);
 
+    enum BailoutRecordType : byte
+    {
+        Normal = 0,
+        Branch = 1,
+        Shared = 2
+    };
+    BailoutRecordType GetType() { return type; }
 protected:
     struct BailOutReturnValue
     {
@@ -276,12 +283,7 @@ protected:
         uint argOutSymStart;
     };
 
-    enum BailoutRecordType : byte
-    {
-        Normal = 1,
-        Branch = 2,
-        Aux    = 4
-    };
+    
 
     // The offset to 'globalBailOutRecordTable' is hard-coded in LinearScanMD::SaveAllRegisters, so let this be the first member variable
     GlobalBailOutRecordDataTable *globalBailOutRecordTable;
@@ -353,7 +355,6 @@ public:
 
     SharedBailOutRecord(uint32 bailOutOffset, uint bailOutCacheIndex, IR::BailOutKind kind, Func *bailOutFunc);
 
-    static Js::Var BailOut(SharedBailOutRecord const * bailOutRecord);
     static size_t GetOffsetOfFunctionBody() { return offsetof(SharedBailOutRecord, functionBody); }
 };
 

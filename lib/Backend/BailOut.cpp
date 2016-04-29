@@ -1281,7 +1281,7 @@ BailOutRecord::BailOutFromLoopBodyHelper(Js::JavascriptCallStackLayout * layout,
 
 void BailOutRecord::UpdatePolymorphicFieldAccess(Js::JavascriptFunction * function, BailOutRecord const * bailOutRecord)
 {
-    Js::FunctionBody * executeFunction = bailOutRecord->type == Aux ? ((SharedBailOutRecord*)bailOutRecord)->functionBody : function->GetFunctionBody();
+    Js::FunctionBody * executeFunction = bailOutRecord->type == Shared ? ((SharedBailOutRecord*)bailOutRecord)->functionBody : function->GetFunctionBody();
     Js::DynamicProfileInfo *dynamicProfileInfo = nullptr;
     if (executeFunction->HasDynamicProfileInfo())
     {
@@ -2638,13 +2638,7 @@ SharedBailOutRecord::SharedBailOutRecord(uint32 bailOutOffset, uint bailOutCache
     : BailOutRecord(bailOutOffset, bailOutCacheIndex, kind, bailOutFunc)
 {
     this->functionBody = nullptr;
-    this->type = BailoutRecordType::Aux;
-}
-
-Js::Var
-SharedBailOutRecord::BailOut(SharedBailOutRecord const * bailOutRecord)
-{
-    return __super::BailOut(bailOutRecord);
+    this->type = BailoutRecordType::Shared;
 }
 
 void LazyBailOutRecord::SetBailOutKind()
