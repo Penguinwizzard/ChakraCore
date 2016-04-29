@@ -5034,22 +5034,14 @@ BackwardPass::TrackIntUsage(IR::Instr *const instr)
                 {
                     if (instr->HasBailOutInfo())
                     {
-
                         if (instr->GetBailOutKind() & IR::BailOutOnNegativeZero)
                         {
                             if (this->currentBlock->couldRemoveNegZeroBailoutForDef->TestAndClear(dstSym->m_id))
                             {
                                 RemoveNegativeZeroBailout(instr);
                             }
-                            else
-                            {
-                                this->currentBlock->couldRemoveNegZeroBailoutForDef->ClearAll();
-                            }
                         }
-                        else
-                        {
-                            this->currentBlock->couldRemoveNegZeroBailoutForDef->ClearAll();
-                        }
+                        this->currentBlock->couldRemoveNegZeroBailoutForDef->ClearAll();
                     }
                 }
             }
