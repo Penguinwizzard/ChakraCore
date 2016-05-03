@@ -824,11 +824,15 @@ template void HeapBucketT<SmallNormalHeapBlock>::SweepHeapBlockList<true>(Recycl
 template void HeapBucketT<SmallNormalHeapBlock>::SweepHeapBlockList<false>(RecyclerSweep&, SmallNormalHeapBlock *, bool);
 template void HeapBucketT<SmallFinalizableHeapBlock>::SweepHeapBlockList<true>(RecyclerSweep&, SmallFinalizableHeapBlock *, bool);
 template void HeapBucketT<SmallFinalizableHeapBlock>::SweepHeapBlockList<false>(RecyclerSweep&, SmallFinalizableHeapBlock *, bool);
+template void HeapBucketT<MediumFinalizableHeapBlock>::SweepHeapBlockList<true>(RecyclerSweep&, MediumFinalizableHeapBlock *, bool);
+template void HeapBucketT<MediumFinalizableHeapBlock>::SweepHeapBlockList<false>(RecyclerSweep&, MediumFinalizableHeapBlock *, bool);
 #ifdef RECYCLER_WRITE_BARRIER
 template void HeapBucketT<SmallNormalWithBarrierHeapBlock>::SweepHeapBlockList<true>(RecyclerSweep&, SmallNormalWithBarrierHeapBlock *, bool);
 template void HeapBucketT<SmallNormalWithBarrierHeapBlock>::SweepHeapBlockList<false>(RecyclerSweep&, SmallNormalWithBarrierHeapBlock *, bool);
 template void HeapBucketT<SmallFinalizableWithBarrierHeapBlock>::SweepHeapBlockList<true>(RecyclerSweep&, SmallFinalizableWithBarrierHeapBlock *, bool);
 template void HeapBucketT<SmallFinalizableWithBarrierHeapBlock>::SweepHeapBlockList<false>(RecyclerSweep&, SmallFinalizableWithBarrierHeapBlock *, bool);
+template void HeapBucketT<MediumFinalizableWithBarrierHeapBlock>::SweepHeapBlockList<true>(RecyclerSweep&, MediumFinalizableWithBarrierHeapBlock *, bool);
+template void HeapBucketT<MediumFinalizableWithBarrierHeapBlock>::SweepHeapBlockList<false>(RecyclerSweep&, MediumFinalizableWithBarrierHeapBlock *, bool);
 #endif
 
 template <typename TBlockType>

@@ -97,7 +97,7 @@ struct PnUniSlot : PnUni
 
 struct PnInt
 {
-    long lw;
+    int lw;
 };
 
 struct PnFlt

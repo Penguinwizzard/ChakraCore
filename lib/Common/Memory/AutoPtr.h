@@ -38,7 +38,7 @@ class AutoArrayPtr : public BasePtr<T>
 protected:
     size_t m_elementCount;
 public:
-    AutoArrayPtr(T * ptr, size_t elementCount) : BasePtr(ptr), m_elementCount(elementCount) {}
+    AutoArrayPtr(T * ptr, size_t elementCount) : BasePtr<T>(ptr), m_elementCount(elementCount) {}
     ~AutoArrayPtr()
     {
         Clear();
@@ -66,7 +66,7 @@ template <typename T>
 class AutoArrayAndItemsPtr : public AutoArrayPtr<T>
 {
 public:
-    AutoArrayAndItemsPtr(T * ptr, size_t elementCount) : AutoArrayPtr(ptr, elementCount) {}
+    AutoArrayAndItemsPtr(T * ptr, size_t elementCount) : AutoArrayPtr<T>(ptr, elementCount) {}
 
     ~AutoArrayAndItemsPtr()
     {
@@ -92,11 +92,11 @@ private:
     }
 };
 
-template  <typename T>
+template <typename T>
 class AutoReleasePtr : public BasePtr<T>
 {
 public:
-    AutoReleasePtr(T * ptr = nullptr) : BasePtr(ptr) {}
+    AutoReleasePtr(T * ptr = nullptr) : BasePtr<T>(ptr) {}
     ~AutoReleasePtr()
     {
         Release();
@@ -112,11 +112,11 @@ public:
     }
 };
 
-template < typename T>
+template <typename T>
 class AutoCOMPtr : public AutoReleasePtr<T>
 {
 public:
-    AutoCOMPtr(T * ptr = nullptr) : AutoReleasePtr(ptr)
+    AutoCOMPtr(T * ptr = nullptr) : AutoReleasePtr<T>(ptr)
     {
         if (ptr != nullptr)
         {
