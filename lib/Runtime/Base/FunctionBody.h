@@ -939,11 +939,6 @@ namespace Js
         FunctionEntryPointInfo* mOldFunctionEntryPointInfo; // strong ref to oldEntryPointInfo(Int or TJ) in asm to ensure we don't collect it before JIT is completed
         bool       mIsTemplatizedJitMode; // true only if in TJ mode, used only for debugging
     public:
-        static const uint8 GetDecrCallCountPerBailout()
-        {
-            return (100 / (uint8)CONFIG_FLAG(CallsToBailoutsRatioForRejit)) + 1;
-        }
-
         FunctionEntryPointInfo(FunctionProxy * functionInfo, void * address, ThreadContext* context, void* validationCookie);
 
 #ifndef TEMP_DISABLE_ASMJS
@@ -965,6 +960,10 @@ namespace Js
         virtual void Expire() override;
         virtual void EnterExpirableCollectMode() override;
         virtual void ResetOnNativeCodeInstallFailure() override;
+        static const uint8 GetDecrCallCountPerBailout()
+        {
+            return (uint8)CONFIG_FLAG(CallsToBailoutsRatioForRejit) + 1;
+        }
 #endif
 
         virtual void OnCleanup(bool isShutdown) override;
@@ -981,8 +980,10 @@ namespace Js
     {
     public:
         LoopHeader* loopHeader;
+        uint jittedLoopIterations;      // number of times the loop iterated in the jitted code before bailing out 
+        uint totalJittedLoopIterations; // total number of times the loop has iterated in the jitted code for this entry point for a particular invocation of the loop
         LoopEntryPointInfo(LoopHeader* loopHeader, Js::JavascriptLibrary* library, void* validationCookie) :
-            loopHeader(loopHeader), mIsTemplatizedJitMode(false),EntryPointInfo(nullptr, library, validationCookie, /*threadContext*/ nullptr, /*isLoopBody*/ true)
+            loopHeader(loopHeader), jittedLoopIterations(0), totalJittedLoopIterations(0), mIsTemplatizedJitMode(false),EntryPointInfo(nullptr, library, validationCookie, /*threadContext*/ nullptr, /*isLoopBody*/ true)
 
 #ifdef BGJIT_STATS
             ,used(false)
@@ -995,6 +996,10 @@ namespace Js
 
 #if ENABLE_NATIVE_CODEGEN
         virtual void ResetOnNativeCodeInstallFailure() override;
+        static const uint8 GetDecrLoopCountPerBailout()
+        {
+            return (uint8)CONFIG_FLAG(LoopIterationsToBailoutsRatioForRejit) + 1;
+        }
 #endif
 
 #ifndef TEMP_DISABLE_ASMJS
@@ -1061,7 +1066,7 @@ namespace Js
         static const uint GetOffsetOfProfiledLoopCounter() { return offsetof(LoopHeader, profiledLoopCounter); }
         static const uint GetOffsetOfInterpretCount() { return offsetof(LoopHeader, interpretCount); }
 
-                bool Contains(Js::LoopHeader * loopHeader) const
+        bool Contains(Js::LoopHeader * loopHeader) const
         {
             return (this->startOffset <= loopHeader->startOffset && loopHeader->endOffset <= this->endOffset);
         }
@@ -2199,6 +2204,12 @@ namespace Js
         {
             FunctionEntryPointInfo* entryPoint = (FunctionEntryPointInfo*) info;
             return &entryPoint->callsCount;
+        }
+
+        uint *GetJittedLoopIterationsAddress(EntryPointInfo* info) const
+        {
+            LoopEntryPointInfo* entryPoint = (LoopEntryPointInfo*)info;
+            return &entryPoint->jittedLoopIterations;
         }
 
         FunctionEntryPointInfo* GetDefaultFunctionEntryPointInfo() const;

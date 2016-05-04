@@ -1275,6 +1275,16 @@ Func::GetCallsCountAddress() const
     return functionCodeGen->GetFunctionBody()->GetCallsCountAddress(functionCodeGen->GetEntryPoint());
 }
 
+uint *
+Func::GetJittedLoopIterationsAddress() const
+{
+    Assert(this->m_workItem->Type() == JsLoopBodyWorkItemType);
+
+    JsLoopBodyCodeGen * loopBodyCodeGen = static_cast<JsLoopBodyCodeGen *>(this->m_workItem);
+
+    return loopBodyCodeGen->GetFunctionBody()->GetJittedLoopIterationsAddress(loopBodyCodeGen->GetEntryPoint());
+}
+
 RecyclerWeakReference<Js::FunctionBody> *
 Func::GetWeakFuncRef() const
 {
