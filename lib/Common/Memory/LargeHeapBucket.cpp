@@ -170,6 +170,10 @@ LargeHeapBucket::PageHeapAlloc(Recycler * recycler, size_t sizeCat, size_t size,
     heapBlock->heapInfo = this->heapInfo;
     heapBlock->actualPageCount = actualPageCount;
     heapBlock->guardPageAddress = guardPageAddress;
+
+    // fill pattern before set pageHeapMode, so background scan do not verify the pattern before the fill is done
+    size_t usedSpace = sizeof(LargeObjectHeader) + size;
+    memset(address + usedSpace, 0xF0, pageCount * AutoSystemInfo::PageSize - usedSpace);
     heapBlock->pageHeapMode = heapInfo->pageHeapMode;
 
     if (!recycler->heapBlockMap.SetHeapBlock(address, pageCount, heapBlock, HeapBlock::HeapBlockType::LargeBlockType, 0))
@@ -186,8 +190,6 @@ LargeHeapBucket::PageHeapAlloc(Recycler * recycler, size_t sizeCat, size_t size,
     char * memBlock = heapBlock->Alloc(size, attributes);
     Assert(memBlock != nullptr);
 
-    // fill pattern
-    memset(heapBlock->allocAddressEnd, 0xF0, heapBlock->addressEnd - heapBlock->allocAddressEnd);
 
 #pragma prefast(suppress:6250, "This method decommits memory")
     if (::VirtualFree(guardPageAddress, AutoSystemInfo::PageSize * guardPageCount, MEM_DECOMMIT) == FALSE)
