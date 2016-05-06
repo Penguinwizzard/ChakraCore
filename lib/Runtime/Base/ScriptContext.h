@@ -329,14 +329,21 @@ namespace Js
         int validPropStrings;
     };
 
-    // Holder for all cached pointers. These are allocated on a guest arena
-    // ensuring they cause the related objects to be pinned.
-    struct Cache
+    typedef JsUtil::BaseDictionary<JavascriptMethod, JavascriptFunction*, Recycler, PowerOf2SizePolicy> BuiltInLibraryFunctionMap;
+
+    // this is allocated in GC directly to avoid force pinning the object, it is linked from JavascriptLibrary such that it has
+    // the same lifetime as JavascriptLibrary, and it can be collected without ScriptContext Close.
+    // Allocate it as Finalizable such that it will be still available during JavascriptLibrary Dispose time
+    class Cache : public FinalizableObject
     {
+    public:
+        virtual void Finalize(bool isShutdown) override {}
+        virtual void Dispose(bool isShutdown) override {}
+        virtual void Mark(Recycler *recycler) override { AssertMsg(false, "Mark called on object that isn't TrackableObject"); }
+
         JavascriptString * lastNumberToStringRadix10String;
         EnumeratedObjectCache enumObjCache;
         JavascriptString * lastUtcTimeFromStrString;
-        TypePath* rootPath;
         EvalCacheDictionary* evalCacheDictionary;
         EvalCacheDictionary* indirectEvalCacheDictionary;
         NewFunctionCache* newFunctionCache;
@@ -346,12 +353,14 @@ namespace Js
         SourceContextInfo* noContextSourceContextInfo;
         SRCINFO* noContextGlobalSourceInfo;
         SRCINFO const ** moduleSrcInfo;
+        BuiltInLibraryFunctionMap* builtInLibraryFunctions;
     };
 
     class ScriptContext : public ScriptContextBase
     {
         friend class LowererMD;
         friend class RemoteScriptContext;
+        friend class GlobalObject; // InitializeCache
         friend class SourceTextModuleRecord; // for module bytecode gen.
     public:
         static DWORD GetThreadContextOffset() { return offsetof(ScriptContext, threadContext); }
@@ -816,6 +825,7 @@ private:
         void InitializeAllocations();
         void InitializePreGlobal();
         void InitializePostGlobal();
+        void InitializeCache();
 
         // Source Info
         void EnsureSourceContextInfoMap();
@@ -860,8 +870,6 @@ private:
 
         void SetDirectHostTypeId(TypeId typeId) {directHostTypeId = typeId; }
         TypeId GetDirectHostTypeId() const { return directHostTypeId; }
-
-        TypePath* GetRootPath() { return cache->rootPath; }
 
 #ifdef ENABLE_DOM_FAST_PATH
         DOMFastPathIRHelperMap* EnsureDOMFastPathIRHelperMap();
@@ -1527,7 +1535,6 @@ private:
         JavascriptFunction* GetBuiltInLibraryFunction(JavascriptMethod entryPoint);
 
     private:
-        typedef JsUtil::BaseDictionary<JavascriptMethod, JavascriptFunction*, Recycler, PowerOf2SizePolicy> BuiltInLibraryFunctionMap;
         BuiltInLibraryFunctionMap* builtInLibraryFunctions;
 
 #ifdef RECYCLER_PERF_COUNTERS

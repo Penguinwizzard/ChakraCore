@@ -415,6 +415,8 @@ namespace Js
         PromiseContinuationCallback nativeHostPromiseContinuationFunction;
         void *nativeHostPromiseContinuationFunctionState;
 
+        TypePath* rootPath;         // this should be in library instead of ScriptContext::Cache
+        void* scriptContextCache;   // forward declaration for point to ScriptContext::Cache such that we don't need to hard pin it.
         FinalizableObject* jsrtContextObject;
 
         typedef JsUtil::BaseHashSet<RecyclerWeakReference<RecyclableObject>*, Recycler, PowerOf2SizePolicy, RecyclerWeakReference<RecyclableObject>*, StringTemplateCallsiteObjectComparer> StringTemplateCallsiteObjectList;
@@ -508,6 +510,7 @@ namespace Js
                               identityFunction(nullptr),
                               throwerFunction(nullptr),
                               jsrtContextObject(nullptr),
+                              scriptContextCache(nullptr),
                               externalLibraryList(nullptr),
                               cachedForInEnumerator(nullptr),
 #if ENABLE_COPYONACCESS_ARRAY
@@ -762,6 +765,8 @@ namespace Js
         int GetRegexGlobalGetterSlotIndex() const { return regexGlobalGetterSlotIndex;  }
         int GetRegexStickyGetterSlotIndex() const { return regexStickyGetterSlotIndex;  }
         int GetRegexUnicodeGetterSlotIndex() const { return regexUnicodeGetterSlotIndex;  }
+
+        TypePath* GetRootPath() const { return rootPath; }
 
         void SetDebugObjectNonUserAccessor(FunctionInfo *funcGetter, FunctionInfo *funcSetter);
 

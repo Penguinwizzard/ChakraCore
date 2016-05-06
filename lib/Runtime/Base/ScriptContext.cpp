@@ -995,7 +995,6 @@ namespace Js
     RegexPatternMruMap* ScriptContext::GetDynamicRegexMap() const
     {
         Assert(!isScriptContextActuallyClosed);
-        Assert(guestArena);
         Assert(cache);
         Assert(cache->dynamicRegexMap);
 
@@ -1070,28 +1069,15 @@ namespace Js
         this->threadContext->ReleaseTemporaryGuestAllocator(tempGuestAllocator);
     }
 
-    void ScriptContext::InitializePreGlobal()
+    void ScriptContext::InitializeCache()
     {
-        this->guestArena = this->GetRecycler()->CreateGuestArena(_u("Guest"), Throw::OutOfMemory);
-#if ENABLE_PROFILE_INFO
-#if DBG_DUMP || defined(DYNAMIC_PROFILE_STORAGE) || defined(RUNTIME_DATA_COLLECTION)
-        if (DynamicProfileInfo::NeedProfileInfoList())
-        {
-            this->profileInfoList.Root(RecyclerNew(this->GetRecycler(), SListBase<DynamicProfileInfo *>), recycler);
-        }
-#endif
-#endif
+        this->cache = RecyclerNewFinalized(recycler, Cache);
+        this->javascriptLibrary->scriptContextCache = this->cache;
 
-        {
-            AutoCriticalSection critSec(this->threadContext->GetEtwRundownCriticalSection());
-            this->cache = AnewStructZ(guestArena, Cache);
-        }
-
-        this->cache->rootPath = TypePath::New(recycler);
         this->cache->dynamicRegexMap =
             RegexPatternMruMap::New(
-            recycler,
-            REGEX_CONFIG_FLAG(DynamicRegexMruListSize) <= 0 ? 16 : REGEX_CONFIG_FLAG(DynamicRegexMruListSize));
+                recycler,
+                REGEX_CONFIG_FLAG(DynamicRegexMruListSize) <= 0 ? 16 : REGEX_CONFIG_FLAG(DynamicRegexMruListSize));
 
         SourceContextInfo* sourceContextInfo = RecyclerNewStructZ(this->GetRecycler(), SourceContextInfo);
         sourceContextInfo->dwHostSourceContext = Js::Constants::NoHostSourceContext;
@@ -1103,6 +1089,19 @@ namespace Js
         srcInfo->sourceContextInfo = this->cache->noContextSourceContextInfo;
         srcInfo->moduleID = kmodGlobal;
         this->cache->noContextGlobalSourceInfo = srcInfo;
+    }
+
+    void ScriptContext::InitializePreGlobal()
+    {
+        this->guestArena = this->GetRecycler()->CreateGuestArena(_u("Guest"), Throw::OutOfMemory);
+#if ENABLE_PROFILE_INFO
+#if DBG_DUMP || defined(DYNAMIC_PROFILE_STORAGE) || defined(RUNTIME_DATA_COLLECTION)
+        if (DynamicProfileInfo::NeedProfileInfoList())
+        {
+            this->profileInfoList.Root(RecyclerNew(this->GetRecycler(), SListBase<DynamicProfileInfo *>), recycler);
+        }
+#endif
+#endif
 
 #if ENABLE_BACKGROUND_PARSING
         if (PHASE_ON1(Js::ParallelParsePhase))
@@ -4318,7 +4317,8 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
                 Assert(this->recycler);
 
                 builtInLibraryFunctions = RecyclerNew(this->recycler, BuiltInLibraryFunctionMap, this->recycler);
-                BindReference(builtInLibraryFunctions);
+                cache->builtInLibraryFunctions = builtInLibraryFunctions;
+                //BindReference(builtInLibraryFunctions);
             }
 
             builtInLibraryFunctions->Item(entryPoint, function);
@@ -5012,7 +5012,6 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
         Output::Flush();
     }
     void ScriptContext::SetNextPendingClose(ScriptContext * nextPendingClose) {
-        Assert(this->nextPendingClose == nullptr && nextPendingClose != nullptr);
         this->nextPendingClose = nextPendingClose;
     }
 

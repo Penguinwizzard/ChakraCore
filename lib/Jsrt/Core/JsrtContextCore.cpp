@@ -33,7 +33,7 @@ JsrtContextCore::JsrtContextCore(JsrtRuntime * runtime) :
 /* static */
 JsrtContextCore *JsrtContextCore::New(JsrtRuntime * runtime)
 {
-    return RecyclerNewFinalizedLeaf(runtime->GetThreadContext()->EnsureRecycler(), JsrtContextCore, runtime);
+    return RecyclerNewFinalized(runtime->GetThreadContext()->EnsureRecycler(), JsrtContextCore, runtime);
 }
 
 void JsrtContextCore::Dispose(bool isShutdown)
@@ -41,7 +41,7 @@ void JsrtContextCore::Dispose(bool isShutdown)
     if (nullptr != this->GetScriptContext())
     {
         this->GetScriptContext()->MarkForClose();
-        this->SetScriptContext(nullptr);
+        this->SetJavascriptLibrary(nullptr);
         Unlink();
     }
 }
@@ -59,7 +59,7 @@ Js::ScriptContext* JsrtContextCore::EnsureScriptContext()
     hostContext = HeapNew(ChakraCoreHostScriptContext, newScriptContext);
     newScriptContext->SetHostScriptContext(hostContext);
 
-    this->SetScriptContext(newScriptContext.Detach());
+    this->SetJavascriptLibrary(newScriptContext.Detach()->GetLibrary());
 
     Js::JavascriptLibrary *library = this->GetScriptContext()->GetLibrary();
     Assert(library != nullptr);
