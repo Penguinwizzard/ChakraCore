@@ -6449,12 +6449,24 @@ namespace Js
 
     void JavascriptLibrary::BindReference(void * addr)
     {
+        // The last void* is the linklist connecting to next block. 
         if (bindRefChunkCurrent == bindRefChunkEnd)
         {
-            bindRefChunkCurrent = RecyclerNewArrayZ(recycler, void *, ArenaAllocator::ObjectAlignment / sizeof(void *));
-            bindRefChunkEnd = bindRefChunkCurrent + ArenaAllocator::ObjectAlignment / sizeof(void *);
+            void** tmpBindRefChunk = RecyclerNewArrayZ(recycler, void *, HeapConstants::ObjectGranularity / sizeof(void *));
+            // reserve the last void* as the linklist node.
+            bindRefChunkEnd = tmpBindRefChunk + (HeapConstants::ObjectGranularity / sizeof(void *) -1 );
+            if (bindRefChunkBegin == nullptr)
+            {
+                bindRefChunkCurrent = tmpBindRefChunk;
+                bindRefChunkBegin = bindRefChunkCurrent;
+            }
+            else
+            {
+                *bindRefChunkCurrent = tmpBindRefChunk;
+                bindRefChunkCurrent = tmpBindRefChunk;
+            }
         }
-        Assert((bindRefChunkCurrent + 1) <= bindRefChunkEnd);
+        Assert((bindRefChunkCurrent+1) <= bindRefChunkEnd);
         *bindRefChunkCurrent = addr;
         bindRefChunkCurrent++;
     }

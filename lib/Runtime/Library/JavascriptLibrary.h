@@ -417,6 +417,7 @@ namespace Js
 
         typedef SList<Js::FunctionProxy*, Recycler> FunctionReferenceList;
 
+        void * bindRefChunkBegin;
         void ** bindRefChunkCurrent;
         void ** bindRefChunkEnd;
         TypePath* rootPath;         // this should be in library instead of ScriptContext::Cache
@@ -528,6 +529,7 @@ namespace Js
                               stringTemplateCallsiteObjectList(nullptr),
                               moduleRecordList(nullptr),
                               rootPath(nullptr),
+                              bindRefChunkBegin(nullptr),
                               bindRefChunkCurrent(nullptr),
                               bindRefChunkEnd(nullptr),
                               dynamicFunctionReference(nullptr)
