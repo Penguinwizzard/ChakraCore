@@ -6447,6 +6447,56 @@ namespace Js
         return moduleRecordList->Item(moduleId);
     }
 
+    void JavascriptLibrary::BindReference(void * addr)
+    {
+        if (bindRefChunkCurrent == bindRefChunkEnd)
+        {
+            bindRefChunkCurrent = RecyclerNewArrayZ(recycler, void *, ArenaAllocator::ObjectAlignment / sizeof(void *));
+            bindRefChunkEnd = bindRefChunkCurrent + ArenaAllocator::ObjectAlignment / sizeof(void *);
+        }
+        Assert((bindRefChunkCurrent + 1) <= bindRefChunkEnd);
+        *bindRefChunkCurrent = addr;
+        bindRefChunkCurrent++;
+    }
+
+    void JavascriptLibrary::CleanupForClose()
+    {
+        bindRefChunkCurrent = nullptr;
+        bindRefChunkEnd = nullptr;
+        scriptContextCache = nullptr;
+    }
+
+    void JavascriptLibrary::BeginDynamicFunctionReferences()
+    {
+        if (this->dynamicFunctionReference == nullptr)
+        {
+            this->dynamicFunctionReference = RecyclerNew(this->recycler, FunctionReferenceList, this->recycler);
+            this->BindReference(this->dynamicFunctionReference);
+            this->dynamicFunctionReferenceDepth = 0;
+        }
+
+        this->dynamicFunctionReferenceDepth++;
+    }
+
+    void JavascriptLibrary::EndDynamicFunctionReferences()
+    {
+        Assert(this->dynamicFunctionReference != nullptr);
+
+        this->dynamicFunctionReferenceDepth--;
+
+        if (this->dynamicFunctionReferenceDepth == 0)
+        {
+            this->dynamicFunctionReference->Clear();
+        }
+    }
+
+    void JavascriptLibrary::RegisterDynamicFunctionReference(FunctionProxy* func)
+    {
+        Assert(this->dynamicFunctionReferenceDepth > 0);
+        this->dynamicFunctionReference->Push(func);
+    }
+
+
     // Register for profiler
 #define DEFINE_OBJECT_NAME(object) const char16 *pwszObjectName = _u(#object);
 

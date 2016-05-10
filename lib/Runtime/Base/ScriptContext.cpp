@@ -51,7 +51,6 @@ namespace Js
     ScriptContext::ScriptContext(ThreadContext* threadContext) :
         ScriptContextBase(),
         interpreterArena(nullptr),
-        dynamicFunctionReference(nullptr),
         moduleSrcInfoCount(0),
         // Regex globals
 #if ENABLE_REGEX_CONFIG_OPTIONS
@@ -123,8 +122,6 @@ namespace Js
         hasIsInstInlineCache(false),
         registeredPrototypeChainEnsuredToHaveOnlyWritableDataPropertiesScriptContext(nullptr),
         cache(nullptr),
-        bindRefChunkCurrent(nullptr),
-        bindRefChunkEnd(nullptr),
         firstInterpreterFrameReturnAddress(nullptr),
         builtInLibraryFunctions(nullptr),
         isWeakReferenceDictionaryListCleared(false)
@@ -671,10 +668,9 @@ namespace Js
         {
             ReleaseGuestArena();
             guestArena = nullptr;
-            cache = nullptr;
-            bindRefChunkCurrent = nullptr;
-            bindRefChunkEnd = nullptr;
         }
+        cache = nullptr;
+        javascriptLibrary->CleanupForClose();
 
         builtInLibraryFunctions = nullptr;
 
@@ -1119,14 +1115,7 @@ namespace Js
         this->CreateProfiler();
 #endif
 
-#ifdef FIELD_ACCESS_STATS
-        this->fieldAccessStatsByFunctionNumber = RecyclerNew(this->recycler, FieldAccessStatsByFunctionNumberMap, recycler);
-        BindReference(this->fieldAccessStatsByFunctionNumber);
-#endif
-
         this->operationStack = Anew(GeneralAllocator(), JsUtil::Stack<Var>, GeneralAllocator());
-
-        this->GetDebugContext()->Initialize();
 
         Tick::InitType();
     }
@@ -1144,13 +1133,20 @@ namespace Js
 
     void ScriptContext::InitializePostGlobal()
     {
+        this->GetDebugContext()->Initialize();
+
         this->GetDebugContext()->GetProbeContainer()->Initialize(this);
 
         AssertMsg(this->CurrentThunk == DefaultEntryThunk, "Creating non default thunk while initializing");
         AssertMsg(this->DeferredParsingThunk == DefaultDeferredParsingThunk, "Creating non default thunk while initializing");
         AssertMsg(this->DeferredDeserializationThunk == DefaultDeferredDeserializeThunk, "Creating non default thunk while initializing");
 
-        if (!sourceList)
+#ifdef FIELD_ACCESS_STATS
+        this->fieldAccessStatsByFunctionNumber = RecyclerNew(this->recycler, FieldAccessStatsByFunctionNumberMap, recycler);
+        BindReference(this->fieldAccessStatsByFunctionNumber);
+#endif
+
+if (!sourceList)
         {
             AutoCriticalSection critSec(threadContext->GetEtwRundownCriticalSection());
             sourceList.Root(RecyclerNew(this->GetRecycler(), SourceList, this->GetRecycler()), this->GetRecycler());
@@ -2070,36 +2066,6 @@ namespace Js
         }
 
         return success;
-    }
-
-    void ScriptContext::BeginDynamicFunctionReferences()
-    {
-        if (this->dynamicFunctionReference == nullptr)
-        {
-            this->dynamicFunctionReference = RecyclerNew(this->recycler, FunctionReferenceList, this->recycler);
-            this->BindReference(this->dynamicFunctionReference);
-            this->dynamicFunctionReferenceDepth = 0;
-        }
-
-        this->dynamicFunctionReferenceDepth++;
-    }
-
-    void ScriptContext::EndDynamicFunctionReferences()
-    {
-        Assert(this->dynamicFunctionReference != nullptr);
-
-        this->dynamicFunctionReferenceDepth--;
-
-        if (this->dynamicFunctionReferenceDepth == 0)
-        {
-            this->dynamicFunctionReference->Clear();
-        }
-    }
-
-    void ScriptContext::RegisterDynamicFunctionReference(FunctionProxy* func)
-    {
-        Assert(this->dynamicFunctionReferenceDepth > 0);
-        this->dynamicFunctionReference->Push(func);
     }
 
     void ScriptContext::AddToEvalMap(FastEvalMapString const& key, BOOL isIndirect, ScriptFunction *pFuncScript)
@@ -3940,14 +3906,7 @@ namespace Js
         Assert(!bindRef.ContainsKey(addr));     // Make sure we don't bind the same pointer twice
         bindRef.AddNew(addr);
 #endif
-        if (bindRefChunkCurrent == bindRefChunkEnd)
-        {
-            bindRefChunkCurrent = AnewArrayZ(this->guestArena, void *, ArenaAllocator::ObjectAlignment / sizeof(void *));
-            bindRefChunkEnd = bindRefChunkCurrent + ArenaAllocator::ObjectAlignment / sizeof(void *);
-        }
-        Assert((bindRefChunkCurrent + 1) <= bindRefChunkEnd);
-        *bindRefChunkCurrent = addr;
-        bindRefChunkCurrent++;
+        javascriptLibrary->BindReference(addr);
 
 #ifdef RECYCLER_PERF_COUNTERS
         this->bindReferenceCount++;

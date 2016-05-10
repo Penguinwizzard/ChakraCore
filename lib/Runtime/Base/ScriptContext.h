@@ -299,7 +299,6 @@ namespace Js
     typedef JsUtil::BaseDictionary<EvalMapString, ScriptFunction*, RecyclerNonLeafAllocator, PrimeSizePolicy> SecondLevelEvalCache;
     typedef TwoLevelHashRecord<FastEvalMapString, ScriptFunction*, SecondLevelEvalCache, EvalMapString> EvalMapRecord;
     typedef JsUtil::Cache<FastEvalMapString, EvalMapRecord*, RecyclerNonLeafAllocator, PrimeSizePolicy, JsUtil::MRURetentionPolicy<FastEvalMapString, EvalMRUSize>, FastEvalMapStringComparer> EvalCacheTopLevelDictionary;
-    typedef SList<Js::FunctionProxy*, Recycler> FunctionReferenceList;
     typedef JsUtil::Cache<EvalMapString, ParseableFunctionInfo*, RecyclerNonLeafAllocator, PrimeSizePolicy, JsUtil::MRURetentionPolicy<EvalMapString, EvalMRUSize>> NewFunctionCache;
     typedef JsUtil::BaseDictionary<ParseableFunctionInfo*, ParseableFunctionInfo*, Recycler, PrimeSizePolicy, RecyclerPointerComparer> ParseableFunctionInfoMap;
     // This is the dictionary used by script context to cache the eval.
@@ -489,8 +488,6 @@ namespace Js
         ArenaAllocator* guestArena;
 
         ArenaAllocator* diagnosticArena;
-        void ** bindRefChunkCurrent;
-        void ** bindRefChunkEnd;
 
         bool startupComplete; // Indicates if the heuristic startup phase for this script context is complete
         bool isInvalidatedForHostObjects;  // Indicates that we've invalidate all objects in the host so stop calling them.
@@ -708,9 +705,6 @@ private:
 #endif
         UnifiedRegex::TrigramAlphabet* trigramAlphabet;
         UnifiedRegex::RegexStacks *regexStacks;
-
-        FunctionReferenceList* dynamicFunctionReference;
-        uint dynamicFunctionReferenceDepth;
 
         JsUtil::Stack<Var>* operationStack;
         Recycler* recycler;
@@ -986,9 +980,6 @@ private:
         FunctionBody* FindFunction(TDelegate predicate);
 
         __inline bool EnableEvalMapCleanup() { return CONFIG_FLAG(EnableEvalMapCleanup); };
-        void BeginDynamicFunctionReferences();
-        void EndDynamicFunctionReferences();
-        void RegisterDynamicFunctionReference(FunctionProxy* func);
         uint GetNextSourceContextId();
 
         bool IsInNewFunctionMap(EvalMapString const& key, ParseableFunctionInfo **ppFuncBody);
@@ -1559,12 +1550,12 @@ private:
         AutoDynamicCodeReference(ScriptContext* scriptContext):
           m_scriptContext(scriptContext)
           {
-              scriptContext->BeginDynamicFunctionReferences();
+              scriptContext->GetLibrary()->BeginDynamicFunctionReferences();
           }
 
           ~AutoDynamicCodeReference()
           {
-              m_scriptContext->EndDynamicFunctionReferences();
+              m_scriptContext->GetLibrary()->EndDynamicFunctionReferences();
           }
 
     private:
