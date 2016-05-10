@@ -44,6 +44,7 @@ public:
     static JsrtContext *New(JsrtRuntime * runtime);
 
     Js::ScriptContext * GetScriptContext() const { return this->javascriptLibrary->scriptContext; }
+    Js::JavascriptLibrary* GetJavascriptLibrary() const { return this->javascriptLibrary; }
     JsrtRuntime * GetRuntime() const { return this->runtime; }
     void* GetExternalData() const { return this->externalData; }
     void SetExternalData(void * data) { this->externalData = data; }

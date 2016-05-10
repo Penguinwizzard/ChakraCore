@@ -38,9 +38,9 @@ JsrtContextCore *JsrtContextCore::New(JsrtRuntime * runtime)
 
 void JsrtContextCore::Dispose(bool isShutdown)
 {
-    if (nullptr != this->GetScriptContext())
+    if (nullptr != this->GetJavascriptLibrary())
     {
-        this->GetScriptContext()->MarkForClose();
+        this->GetJavascriptLibrary()->GetScriptContext()->MarkForClose();
         this->SetJavascriptLibrary(nullptr);
         Unlink();
     }
@@ -48,7 +48,7 @@ void JsrtContextCore::Dispose(bool isShutdown)
 
 Js::ScriptContext* JsrtContextCore::EnsureScriptContext()
 {
-    Assert(this->GetScriptContext() == nullptr);
+    Assert(this->GetJavascriptLibrary() == nullptr);
 
     ThreadContext* localThreadContext = this->GetRuntime()->GetThreadContext();
 
