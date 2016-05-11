@@ -554,3 +554,5 @@ void TryFinally(const TryFunc& tryFunc, const FinallyFunc& finallyFunc)
 
     finallyFunc(hasException);
 }
+
+#include "PlatformAgnostic/DateTime.h"
