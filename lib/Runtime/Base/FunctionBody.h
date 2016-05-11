@@ -1904,7 +1904,6 @@ namespace Js
         ParseableFunctionInfo* GetNestedFunctionForExecution(uint index);
         void SetNestedFunc(FunctionProxy* nestedFunc, uint index, uint32 flags);
         void ClearNestedFunctionParentFunctionReference();
-
         void BuildDeferredStubs(ParseNode *pnodeFnc);
         DeferredFunctionStub *GetDeferredStubs() const { return static_cast<DeferredFunctionStub *>(this->GetAuxPtr(AuxPointerType::DeferredStubs)); }
         void SetDeferredStubs(DeferredFunctionStub *stub) { this->SetAuxPtr(AuxPointerType::DeferredStubs, stub); }
