@@ -1,0 +1,136 @@
+diff --git a/lib/Runtime/PlatformAgnostic/Platform/Windows/DaylightHelper.cpp b/lib/Runtime/PlatformAgnostic/Platform/Windows/DaylightHelper.cpp
+index be37c84..a191a90 100644
+--- a/lib/Runtime/PlatformAgnostic/Platform/Windows/DaylightHelper.cpp
++++ b/lib/Runtime/PlatformAgnostic/Platform/Windows/DaylightHelper.cpp
+@@ -94,38 +94,30 @@ namespace DateTime
+         return sysUtcToLocal(NULL, utc, local);
+     }
+ 
+-    static TimeZoneInfo* GetTimeZoneInfo(DaylightTimeHelperPlatformData &data, const int year)
++    static TimeZoneInfo* GetTimeZoneInfo(DaylightTimeHelperPlatformData &data, const double time)
+     {
+-        if (data.cache1.IsValid(year)) return &(data.cache1);
+-        if (data.cache2.IsValid(year)) return &(data.cache2);
++        if (data.cache1.IsValid(time)) return &(data.cache1);
++        if (data.cache2.IsValid(time)) return &(data.cache2);
+ 
+         if (data.useFirstCache)
+         {
+-            data.cache1.Update(year);
++            data.cache1.Update(time);
+             data.useFirstCache = false;
+             return &(data.cache1);
+         }
+         else
+         {
+-            data.cache2.Update(year);
++            data.cache2.Update(time);
+             data.useFirstCache = true;
+             return &(data.cache2);
+         }
+     }
+ 
+-    static TimeZoneInfo* GetTimeZoneInfoFromDouble(DaylightTimeHelperPlatformData &data, double time)
+-    {
+-      int32 year, yearType;
+-      Js::DateUtilities::GetYearFromTv(time, year, yearType);
+-
+-      return GetTimeZoneInfo(data, year);
+-    }
+-
+     // we consider January 1st, December 31st and days when daylight savings time
+     // starts and ands to be critical, because there might be ambiguous cases in
+     // local->utc->local conversions, so in order to be consistent with Windows
+     // we rely on it to perform conversions. But it is slow.
+-    static bool IsCritical(double time, TimeZoneInfo *timeZoneInfo)
++    static inline bool IsCritical(const double time, TimeZoneInfo *timeZoneInfo)
+     {
+         return time > criticalMin && time < criticalMax &&
+             (fabs(time - timeZoneInfo->daylightDate) < DateTimeTicks_PerLargestTZOffset ||
+@@ -139,7 +131,7 @@ namespace DateTime
+     // to know whether current time is standard or daylight savings in order to
+     // create a string representation of a date. So just compare whether difference
+     // between local and utc time equal to bias.
+-    static bool IsDaylightSavings(double utcTime, double localTime, int bias)
++    static inline bool IsDaylightSavings(const double utcTime, const double localTime, const int bias)
+     {
+         return ((int)(utcTime - localTime)) / ((int)(DateTimeTicks_PerMinute)) != bias;
+     }
+@@ -147,7 +139,7 @@ namespace DateTime
+ 
+     // This function does not properly handle boundary cases.
+     // But while we use IsCritical we don't care about it.
+-    static bool IsDaylightSavingsUnsafe(double time, TimeZoneInfo *timeZoneInfo)
++    static bool IsDaylightSavingsUnsafe(const double time, TimeZoneInfo *timeZoneInfo)
+     {
+         return timeZoneInfo->isDaylightTimeApplicable
+                 && ((timeZoneInfo->daylightDate < timeZoneInfo->standardDate)
+@@ -155,7 +147,7 @@ namespace DateTime
+             : time < timeZoneInfo->standardDate || timeZoneInfo->daylightDate <= time);
+     }
+ 
+-    double UtcToLocalFast(double utcTime, TimeZoneInfo *timeZoneInfo, int &bias,
++    double UtcToLocalFast(const double utcTime, TimeZoneInfo *timeZoneInfo, int &bias,
+                           int &offset, bool &isDaylightSavings)
+     {
+         double localTime;
+@@ -174,7 +166,7 @@ namespace DateTime
+         return localTime;
+     }
+ 
+-    static double UtcToLocalCritical(DaylightTimeHelperPlatformData &data, double utcTime,
++    static double UtcToLocalCritical(DaylightTimeHelperPlatformData &data, const double utcTime,
+                               TimeZoneInfo *timeZoneInfo, int &bias, int &offset, bool &isDaylightSavings)
+     {
+         double localTime;
+@@ -195,7 +187,7 @@ namespace DateTime
+         localTime = Js::DateUtilities::TimeFromSt(&localSystem);
+         if (localSystem.wYear != utcSystem.wYear)
+         {
+-            timeZoneInfo = GetTimeZoneInfo(data, localSystem.wYear);
++            timeZoneInfo = GetTimeZoneInfo(data, localTime);
+         }
+ 
+         bias = timeZoneInfo->bias;
+@@ -207,9 +199,9 @@ namespace DateTime
+         return localTime;
+     }
+ 
+-    double DaylightTimeHelper::UtcToLocal(double utcTime, int &bias, int &offset, bool &isDaylightSavings)
++    double DaylightTimeHelper::UtcToLocal(const double utcTime, int &bias, int &offset, bool &isDaylightSavings)
+     {
+-        TimeZoneInfo *timeZoneInfo = GetTimeZoneInfoFromDouble(data, utcTime);
++        TimeZoneInfo *timeZoneInfo = GetTimeZoneInfo(data, utcTime);
+ 
+         if (IsCritical(utcTime, timeZoneInfo))
+         {
+@@ -221,7 +213,7 @@ namespace DateTime
+         }
+     }
+ 
+-    static double LocalToUtcFast(double localTime, TimeZoneInfo *timeZoneInfo)
++    static double LocalToUtcFast(const double localTime, TimeZoneInfo *timeZoneInfo)
+     {
+         double utcTime = localTime + DateTimeTicks_PerMinute * timeZoneInfo->bias;
+         bool isDaylightSavings = IsDaylightSavingsUnsafe(localTime, timeZoneInfo);
+@@ -236,7 +228,7 @@ namespace DateTime
+         return utcTime;
+     }
+ 
+-    static double LocalToUtcCritical(double localTime, TimeZoneInfo *timeZoneInfo)
++    static double LocalToUtcCritical(const double localTime, TimeZoneInfo *timeZoneInfo)
+     {
+         SYSTEMTIME localSystem, utcSystem;
+         YMD ymd;
+@@ -253,9 +245,9 @@ namespace DateTime
+         return Js::DateUtilities::TimeFromSt(&utcSystem);
+     }
+ 
+-    double DaylightTimeHelper::LocalToUtc(double localTime)
++    double DaylightTimeHelper::LocalToUtc(const double localTime)
+     {
+-        TimeZoneInfo *timeZoneInfo = GetTimeZoneInfoFromDouble(data, localTime);
++        TimeZoneInfo *timeZoneInfo = GetTimeZoneInfo(data, localTime);
+ 
+         if (IsCritical(localTime, timeZoneInfo))
+         {
