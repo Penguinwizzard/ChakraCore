@@ -2,15 +2,21 @@
 // Copyright (C) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
-#include "RuntimeBasePch.h"
 
-namespace Js
+#include "RuntimePlatformAgnosticPch.h"
+#include "Runtime.h"
+#include "ChakraPlatform.h"
+
+namespace PlatformAgnostic
 {
+namespace DateTime
+{
+
     double HiResTimer::GetSystemTime()
     {
         SYSTEMTIME stTime;
         ::GetSystemTime(&stTime);
-        return DateUtilities::TimeFromSt(&stTime);
+        return Js::DateUtilities::TimeFromSt(&stTime);
     }
 
     // determine if the system time is being adjusted every tick to gradually
@@ -100,4 +106,6 @@ namespace Js
         fReset = false;
         return dLastTime;
     }
-} // namespace Js.
+
+} // namespace DateTime
+} // namespace PlatformAgnostic
