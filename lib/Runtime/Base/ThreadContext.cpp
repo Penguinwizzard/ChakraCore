@@ -2333,6 +2333,10 @@ ThreadContext::PreCollectionCallBack(CollectionFlags flags)
 #ifdef PERF_COUNTERS
     PHASE_PRINT_TESTTRACE1(Js::DeferParsePhase, _u("TestTrace: deferparse - # of func: %d # deferparsed: %d\n"), PerfCounter::CodeCounterSet::GetTotalFunctionCounter().GetValue(), PerfCounter::CodeCounterSet::GetDeferredFunctionCounter().GetValue());
 #endif
+
+    // Do redeferral here, before collecting, so we get the benefit right away.
+    this->RedeferFunctionBodies();
+
     // This needs to be done before ClearInlineCaches since that method can empty the list of
     // script contexts with inline caches
     this->ClearScriptContextCaches();
@@ -2415,6 +2419,64 @@ ThreadContext::PostCollectionCallBack()
         for (Js::ScriptContext *scriptContext = scriptContextList; scriptContext; scriptContext = scriptContext->next)
         {
             scriptContext->CleanupWeakReferenceDictionaries();
+        }
+    }
+}
+
+void
+ThreadContext::RedeferFunctionBodies()
+{
+    // TODO: Heuristic to decide whether we need/want to redefer now.
+    if (!PHASE_ON1(Js::RedeferralPhase))
+    {
+        return;
+    }
+
+    // Collect the set of active functions.
+    ActiveFunctionSet *pActiveFuncs = nullptr;
+    {
+        HRESULT hr = S_OK;
+        BEGIN_TRANSLATE_TO_HRESULT(ExceptionType_OutOfMemory)
+        {
+            pActiveFuncs = Anew(this->GetThreadAlloc(), ActiveFunctionSet, this->GetThreadAlloc());
+            this->GetActiveFunctions(pActiveFuncs);
+        }
+        END_TRANSLATE_OOM_TO_HRESULT(hr);
+        if (hr != S_OK)
+        {
+            return;
+        }
+    }
+
+    Js::ScriptContext *scriptContext;
+    for (scriptContext = GetScriptContextList(); scriptContext; scriptContext = scriptContext->next)
+    {
+        if (scriptContext->IsClosed())
+        {
+            continue;
+        }
+        scriptContext->RedeferFunctionBodies(pActiveFuncs);
+    }
+
+    Adelete(this->GetThreadAlloc(), pActiveFuncs);
+}
+
+void
+ThreadContext::GetActiveFunctions(ActiveFunctionSet * pActiveFuncs)
+{
+    if (!this->IsInScript())
+    {
+        return;
+    }
+
+    Js::JavascriptStackWalker walker(GetScriptContextList());
+    Js::JavascriptFunction *function = nullptr;
+    while (walker.GetCaller(&function))
+    {
+        if (function->GetFunctionInfo()->HasBody())
+        {
+            Js::FunctionProxy *proxy = function->GetFunctionInfo()->GetFunctionProxy();
+            pActiveFuncs->Set(proxy->GetFunctionNumber());
         }
     }
 }
