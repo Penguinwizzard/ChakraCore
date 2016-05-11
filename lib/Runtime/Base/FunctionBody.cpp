@@ -328,16 +328,6 @@ namespace Js
     void
     FunctionBody::CopySourceInfo(ParseableFunctionInfo* originalFunctionInfo)
     {
-        this->m_sourceIndex = originalFunctionInfo->GetSourceIndex();
-        this->m_cchStartOffset = originalFunctionInfo->StartInDocument();
-        this->m_cchLength = originalFunctionInfo->LengthInChars();
-        this->m_lineNumber = originalFunctionInfo->GetRelativeLineNumber();
-        this->m_columnNumber = originalFunctionInfo->GetRelativeColumnNumber();
-        this->m_isEval = originalFunctionInfo->IsEval();
-        this->m_isDynamicFunction = originalFunctionInfo->IsDynamicFunction();
-        this->m_cbStartOffset = originalFunctionInfo->StartOffset();
-        this->m_cbLength = originalFunctionInfo->LengthInBytes();
-
         this->FinishSourceInfo();
     }
 
@@ -453,7 +443,6 @@ namespace Js
         loopInterpreterLimit(CONFIG_FLAG(LoopInterpretCount)),
         savedPolymorphicCacheState(0),
         debuggerScopeIndex(0),
-        flags(Flags_HasNoExplicitReturnValue),
         m_hasFinally(false),
 #if ENABLE_PROFILE_INFO
         dynamicProfileInfo(nullptr),
@@ -562,6 +551,32 @@ namespace Js
 
         InitDisableInlineApply();
         InitDisableInlineSpread();
+    }
+
+    void FunctionBody::RedeferFunction()
+    {
+        Assert(this->CanBeDeferred());
+        PHASE_PRINT_TRACE(Js::RedeferralPhase, this, L"Redeferring function %d.%d: %s\n", 
+                          GetSourceContextId(), GetLocalFunctionId(),
+                          GetDisplayName() ? GetDisplayName() : L"(Anonymous function)");
+
+        ParseableFunctionInfo * parseableFunctionInfo = 
+            Js::ParseableFunctionInfo::NewDeferredFunctionFromFunctionBody(this);
+
+        FunctionInfo * functionInfo = this->GetFunctionInfo();
+        functionInfo->SetAttributes((FunctionInfo::Attributes)(functionInfo->GetAttributes() | FunctionInfo::Attributes::DeferredParse));
+        functionInfo->SetFunctionProxy(parseableFunctionInfo);
+
+        // In either case register the function reference
+//        GetScriptContext()->GetLibrary()->RegisterDynamicFunctionReference(parseableFunctionInfo);
+
+        this->MapFunctionObjectTypes([&](DynamicType* type)
+        {
+            Assert(type->GetTypeId() == TypeIds_Function);
+
+            ScriptFunctionType* functionType = (ScriptFunctionType*)type;
+            functionType->SetEntryPoint(GetScriptContext()->DeferredParsingThunk);
+        });
     }
 
     void FunctionBody::SetDefaultFunctionEntryPointInfo(FunctionEntryPointInfo* entryPointInfo, const JavascriptMethod originalEntryPoint)
@@ -1040,9 +1055,10 @@ namespace Js
         }
     }
 
-    void ParseableFunctionInfo::Copy(FunctionBody* other)
+    void ParseableFunctionInfo::Copy(ParseableFunctionInfo * other)
     {
 #define CopyDeferParseField(field) other->field = this->field;
+        CopyDeferParseField(flags);
         CopyDeferParseField(m_isDeclaration);
         CopyDeferParseField(m_isAccessor);
         CopyDeferParseField(m_isStrictMode);
@@ -1067,8 +1083,21 @@ namespace Js
         other->SetDeferredStubs(this->GetDeferredStubs());
         CopyDeferParseField(m_isAsmjsMode);
         CopyDeferParseField(m_isAsmJsFunction);
-#undef CopyDeferParseField
 
+        CopyDeferParseField(m_sourceIndex);
+        CopyDeferParseField(m_cchStartOffset);
+        CopyDeferParseField(m_cchLength);
+        CopyDeferParseField(m_lineNumber);
+        CopyDeferParseField(m_columnNumber);
+        CopyDeferParseField(m_cbStartOffset);
+        CopyDeferParseField(m_cbLength);
+
+#undef CopyDeferParseField 
+   }
+
+    void ParseableFunctionInfo::Copy(FunctionBody* other)
+    {
+        this->Copy(static_cast<ParseableFunctionInfo*>(other));
         other->CopySourceInfo(this);
     }
 
@@ -1137,6 +1166,7 @@ namespace Js
 #if DYNAMIC_INTERPRETER_THUNK
       m_dynamicInterpreterThunk(nullptr),
 #endif
+      flags(Flags_HasNoExplicitReturnValue),
       m_hasBeenParsed(false),
       m_isGlobalFunc(false),
       m_isDeclaration(false),
@@ -1207,6 +1237,41 @@ namespace Js
         this->SetOriginalEntryPoint(DefaultEntryThunk);
     }
 
+    ParseableFunctionInfo::ParseableFunctionInfo(ParseableFunctionInfo * proxy) :
+      FunctionProxy(proxy->GetScriptContext(), proxy->GetUtf8SourceInfo(), proxy->GetFunctionNumber()),
+#if DYNAMIC_INTERPRETER_THUNK
+      m_dynamicInterpreterThunk(nullptr),
+#endif
+      m_hasBeenParsed(false),
+      m_isNamedFunctionExpression(proxy->GetIsNamedFunctionExpression()),
+      m_isNameIdentifierRef (proxy->GetIsNameIdentifierRef()),
+      m_isStaticNameFunction(proxy->GetIsStaticNameFunction()),
+      m_reportedInParamCount(proxy->GetReportedInParamsCount()),
+      m_reparsed(proxy->IsReparsed())
+#if DBG
+      ,m_wasEverAsmjsMode(proxy->m_wasEverAsmjsMode)
+#endif
+    {
+        proxy->Copy(this);
+
+        FunctionInfo * functionInfo = proxy->GetFunctionInfo();
+        this->functionInfo = functionInfo;
+
+        uint nestedCount = proxy->GetNestedCount();
+        if (nestedCount > 0)
+        {
+            nestedArray = RecyclerNewPlusZ(m_scriptContext->GetRecycler(),
+                nestedCount*sizeof(FunctionProxy*), NestedArray, nestedCount);
+        }
+        else
+        {
+            nestedArray = nullptr;
+        }
+
+        SetBoundPropertyRecords(proxy->GetBoundPropertyRecords());
+        SetDisplayName(proxy->GetDisplayName(), proxy->GetDisplayNameLength(), proxy->GetShortDisplayNameOffset());
+    }
+
     ParseableFunctionInfo* ParseableFunctionInfo::New(ScriptContext* scriptContext, int nestedCount,
         LocalFunctionId functionId, Utf8SourceInfo* sourceInfo, const char16* displayName, uint displayNameLength, uint displayShortNameOffset, Js::PropertyRecordList* propertyRecords, FunctionInfo::Attributes attributes)
     {
@@ -1245,6 +1310,38 @@ namespace Js
             displayShortNameOffset,
             (FunctionInfo::Attributes)(attributes | FunctionInfo::Attributes::DeferredParse),
             propertyRecords);
+    }
+
+    ParseableFunctionInfo * 
+    ParseableFunctionInfo::NewDeferredFunctionFromFunctionBody(FunctionBody * functionBody)
+    {
+        ScriptContext * scriptContext = functionBody->GetScriptContext();
+        FunctionInfo * functionInfo = functionBody->GetFunctionInfo();
+        uint nestedCount = functionBody->GetNestedCount();
+
+        ParseableFunctionInfo * info = RecyclerNewWithBarrierFinalized(scriptContext->GetRecycler(),
+            ParseableFunctionInfo,
+            functionBody);
+
+        // Create new entry point info
+        info->m_defaultEntryPointInfo = RecyclerNew(scriptContext->GetRecycler(), ProxyEntryPointInfo, scriptContext->DeferredParsingThunk);
+
+        // New allocation is done at this point, so update existing structures
+        // Adjust functionInfo attributes, point to new proxy
+        functionInfo->SetAttributes((FunctionInfo::Attributes)(functionInfo->GetAttributes() | FunctionInfo::Attributes::DeferredParse));
+        functionInfo->SetFunctionProxy(info);
+        functionInfo->SetOriginalEntryPoint(DefaultEntryThunk);
+
+        // Initialize nested function array, update back pointers
+        for (uint i = 0; i < nestedCount; i++)
+        {
+            FunctionProxy * nestedProxy = functionBody->GetNestedFunc(i);
+            info->SetNestedFunc(nestedProxy, i, 0);
+        }
+
+        // Update function objects
+
+        return info;
     }
 
     DWORD_PTR FunctionProxy::GetSecondaryHostSourceContext() const
@@ -1734,6 +1831,11 @@ namespace Js
             this->Copy(funcBody);
             PERF_COUNTER_DEC(Code, DeferredFunction);
 
+            this->UpdateFunctionBodyImpl(funcBody);
+//            FunctionInfo * functionInfo = this->GetFunctionInfo();
+//            funcBody->SetFunctionInfo(functionInfo);
+//            functionInfo->SetFunctionProxy(funcBody);
+
             if (!this->GetSourceContextInfo()->IsDynamic())
             {
                 PHASE_PRINT_TESTTRACE1(Js::DeferParsePhase, _u("TestTrace: Deferred function parsed - ID: %d; Display Name: %s; Length: %d; Nested Function Count: %d; Utf8SourceInfo: %d; Source Length: %d; Is Top Level: %s; Source Url: %s\n"), m_functionNumber, m_displayName, this->m_cchLength, this->GetNestedCount(), this->m_utf8SourceInfo->GetSourceInfoId(), this->m_utf8SourceInfo->GetCchLength(), this->GetIsTopLevel() ? _u("True") : _u("False"), this->GetSourceContextInfo()->url);
@@ -1870,7 +1972,7 @@ namespace Js
                     hrParser = ps.ParseSourceWithOffset(&parseTree, pszStart, offset, length, charOffset, isCesu8, grfscr, &se,
                         &nextFunctionId, funcBody->GetRelativeLineNumber(), funcBody->GetSourceContextInfo(),
                         funcBody);
-                    Assert(FAILED(hrParser) || nextFunctionId == funcBody->deferredParseNextFunctionId || isDebugOrAsmJsReparse || isByteCodeDeserialization);
+//                    Assert(FAILED(hrParser) || nextFunctionId == funcBody->deferredParseNextFunctionId || isDebugOrAsmJsReparse || isByteCodeDeserialization);
 
                     if (FAILED(hrParser))
                     {
@@ -1956,7 +2058,7 @@ namespace Js
             // Restore if the function has nameIdentifier reference, as that name on the left side will not be parsed again while deferparse.
             funcBody->SetIsNameIdentifierRef(this->GetIsNameIdentifierRef());
 
-            this->UpdateFunctionBodyImpl(funcBody);
+//            this->UpdateFunctionBodyImpl(funcBody);
             this->m_hasBeenParsed = true;
             returnFunctionBody = funcBody;
         }
@@ -3420,33 +3522,34 @@ namespace Js
         }
     }
 
-    void FunctionBody::SetStackNestedFuncParent(FunctionBody * parentFunctionBody)
+    void FunctionBody::SetStackNestedFuncParent(FunctionInfo * parentFunctionInfo)
     {
+        FunctionBody * parentFunctionBody = parentFunctionInfo->GetFunctionBody();
         Assert(this->GetStackNestedFuncParent() == nullptr);
         Assert(CanDoStackNestedFunc());
         Assert(parentFunctionBody->DoStackNestedFunc());
 
-        this->SetAuxPtr(AuxPointerType::StackNestedFuncParent, this->GetScriptContext()->GetRecycler()->CreateWeakReferenceHandle(parentFunctionBody));
+        this->SetAuxPtr(AuxPointerType::StackNestedFuncParent, this->GetScriptContext()->GetRecycler()->CreateWeakReferenceHandle(parentFunctionInfo));
     }
 
-    FunctionBody * FunctionBody::GetStackNestedFuncParentStrongRef()
+    FunctionInfo * FunctionBody::GetStackNestedFuncParentStrongRef()
     {
         Assert(this->GetStackNestedFuncParent() != nullptr);
         return this->GetStackNestedFuncParent()->Get();
     }
 
-    RecyclerWeakReference<FunctionBody> * FunctionBody::GetStackNestedFuncParent()
+    RecyclerWeakReference<FunctionInfo> * FunctionBody::GetStackNestedFuncParent()
     {
-        return static_cast<RecyclerWeakReference<FunctionBody>*>(this->GetAuxPtr(AuxPointerType::StackNestedFuncParent));
+        return static_cast<RecyclerWeakReference<FunctionInfo>*>(this->GetAuxPtr(AuxPointerType::StackNestedFuncParent));
     }
 
-    FunctionBody * FunctionBody::GetAndClearStackNestedFuncParent()
+    FunctionInfo * FunctionBody::GetAndClearStackNestedFuncParent()
     {
         if (this->GetAuxPtr(AuxPointerType::StackNestedFuncParent))
         {
-            FunctionBody * parentFunctionBody = GetStackNestedFuncParentStrongRef();
+            FunctionInfo * parentFunctionInfo = GetStackNestedFuncParentStrongRef();
             ClearStackNestedFuncParent();
-            return parentFunctionBody;
+            return parentFunctionInfo;
         }
         return nullptr;
     }
@@ -4098,7 +4201,7 @@ namespace Js
     }
 #endif
 
-    void FunctionBody::SetIsNonUserCode(bool set)
+    void ParseableFunctionInfo::SetIsNonUserCode(bool set)
     {
         // Mark current function as a non-user code, so that we can distinguish cases where exceptions are
         // caught in non-user code (see ProbeContainer::HasAllowedForException).
@@ -4107,7 +4210,7 @@ namespace Js
         // Propagate setting for all functions in this scope (nested).
         this->ForEachNestedFunc([&](FunctionProxy* proxy, uint32 index)
         {
-            Js::FunctionBody * pBody = proxy->GetFunctionBody();
+            ParseableFunctionInfo * pBody = proxy->GetParseableFunctionInfo();
             if (pBody != nullptr)
             {
                 pBody->SetIsNonUserCode(set);
