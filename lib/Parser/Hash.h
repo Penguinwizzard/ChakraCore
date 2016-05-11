@@ -74,10 +74,11 @@ public:
 
 struct PidRefStack
 {
-    PidRefStack() : isDynamic(false), id(0), sym(nullptr), prev(nullptr), isModuleExport(false) {}
-    PidRefStack(int id) : isDynamic(false), id(id), sym(nullptr), prev(nullptr), isModuleExport(false) {}
+    PidRefStack() : isDynamic(false), id(0), funcId(0), sym(nullptr), prev(nullptr), isModuleExport(false) {}
+    PidRefStack(int id, Js::LocalFunctionId funcId) : isDynamic(false), id(id), funcId(funcId), sym(nullptr), prev(nullptr), isModuleExport(false) {}
 
     int GetScopeId() const    { return id; }
+    Js::LocalFunctionId GetFuncScopeId() const { return funcId; }
     Symbol *GetSym() const    { return sym; }
     void SetSym(Symbol *sym)  { this->sym = sym; }
     bool IsDynamicBinding() const { return isDynamic; }
@@ -93,6 +94,7 @@ struct PidRefStack
     bool           isDynamic;
     bool           isModuleExport;
     int            id;
+    Js::LocalFunctionId funcId;
     Symbol        *sym;
     PidRefStack   *prev;
 };
@@ -176,10 +178,11 @@ public:
         return nullptr;
     }
 
-    void PushPidRef(int blockId, PidRefStack *newRef)
+    void PushPidRef(int blockId, Js::LocalFunctionId funcId, PidRefStack *newRef)
     {
         AssertMsg(blockId >= 0, "Block Id's should be greater than 0");
         newRef->id = blockId;
+        newRef->funcId = funcId;
         newRef->prev = m_pidRefStack;
         m_pidRefStack = newRef;
     }
@@ -202,13 +205,13 @@ public:
         return prevRef;
     }
 
-    PidRefStack * FindOrAddPidRef(ArenaAllocator *alloc, int scopeId)
+    PidRefStack * FindOrAddPidRef(ArenaAllocator *alloc, int scopeId, Js::LocalFunctionId funcId)
     {
         // If the stack is empty, or we are pushing to the innermost scope already,
         // we can go ahead and push a new PidRef on the stack.
         if (m_pidRefStack == nullptr)
         {
-            PidRefStack *newRef = Anew(alloc, PidRefStack, scopeId);
+            PidRefStack *newRef = Anew(alloc, PidRefStack, scopeId, funcId);
             if (newRef == nullptr)
             {
                 return nullptr;
@@ -232,7 +235,7 @@ public:
             if (ref->prev == nullptr || ref->id  < scopeId)
             {
                 // No existing PidRef for this scopeId, so create and insert one at this position.
-                PidRefStack *newRef = Anew(alloc, PidRefStack, scopeId);
+                PidRefStack *newRef = Anew(alloc, PidRefStack, scopeId, funcId);
                 if (newRef == nullptr)
                 {
                     return nullptr;
