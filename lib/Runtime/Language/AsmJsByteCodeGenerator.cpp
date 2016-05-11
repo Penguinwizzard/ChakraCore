@@ -269,7 +269,7 @@ namespace Js
             byteCodeGen->MapCacheIdsToPropertyIds( mInfo );
             byteCodeGen->MapReferencedPropertyIds( mInfo );
 
-            mWriter.End();
+            mWriter.End(mInfo);
             autoCleanup.FinishCompilation();
 
             functionBody->SetInitialDefaultEntryPoint();
@@ -3351,7 +3351,7 @@ namespace Js
         byteCodeGen->Writer()->StartStatement(functionNode, 0);
         byteCodeGen->Writer()->Empty(OpCode::Nop);
         byteCodeGen->Writer()->EndStatement(functionNode);
-        byteCodeGen->Writer()->End();
+        byteCodeGen->Writer()->End(funcInfo);
 
         autoCleanup.Done();
     }

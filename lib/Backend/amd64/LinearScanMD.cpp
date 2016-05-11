@@ -100,39 +100,6 @@ LinearScanMD::EnsureSpillSymForXmmReg(RegNum reg, Func *func, IRType type)
 }
 
 void
-LinearScanMD::LegalizeConstantUse(IR::Instr * instr, IR::Opnd * opnd)
-{
-    Assert(opnd->IsAddrOpnd() || opnd->IsIntConstOpnd());
-    intptr_t value = opnd->IsAddrOpnd() ? (intptr_t)opnd->AsAddrOpnd()->m_address : opnd->AsIntConstOpnd()->GetValue();
-    if (value == 0
-        && instr->m_opcode == Js::OpCode::MOV
-        && !instr->GetDst()->IsRegOpnd()
-        && TySize[opnd->GetType()] >= 4)
-    {
-        Assert(this->linearScan->instrUseRegs.IsEmpty());
-
-        // MOV doesn't have an imm8 encoding for 32-bit/64-bit assignment, so if we have a register available,
-        // we should hoist it and generate xor reg, reg and MOV dst, reg
-        BitVector regsBv;
-        regsBv.Copy(this->linearScan->activeRegs);
-        regsBv.ComplimentAll();
-        regsBv.And(this->linearScan->int32Regs);
-        regsBv.Minus(this->linearScan->tempRegs);       // Avoid tempRegs
-        BVIndex regIndex = regsBv.GetNextBit();
-        if (regIndex != BVInvalidIndex)
-        {
-            instr->HoistSrc1(Js::OpCode::MOV, (RegNum)regIndex);
-            this->linearScan->instrUseRegs.Set(regIndex);
-            this->func->m_regsUsed.Set(regIndex);
-
-            // If we are in a loop, we need to mark the register being used by the loop so that
-            // reload to that register will not be hoisted out of the loop
-            this->linearScan->RecordLoopUse(nullptr, (RegNum)regIndex);
-        }
-    }
-}
-
-void
 LinearScanMD::InsertOpHelperSpillAndRestores(SList<OpHelperBlock> *opHelperBlockList)
 {
     if (maxOpHelperSpilledLiveranges)

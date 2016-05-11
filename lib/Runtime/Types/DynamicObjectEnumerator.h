@@ -13,6 +13,8 @@ namespace Js
         DynamicObject* object;
         JavascriptEnumerator* arrayEnumerator;
         DynamicType *initialType;
+        PathTypeHandler *previousPathTypeHandlerWithNativeFields;
+        PropertyId objectPropertyId;
         T objectIndex;
 
         DynamicObjectEnumerator(ScriptContext* scriptContext)
@@ -42,6 +44,10 @@ namespace Js
         virtual uint32 GetCurrentItemIndex() override;
         virtual Var GetCurrentAndMoveNext(PropertyId& propertyId, PropertyAttributes* attributes = nullptr) override;
 
+    private:
+        void FixObjectSlotIndexIfNecessary();
+
+    public:
         static uint32 GetOffsetOfObject() { return offsetof(DynamicObjectEnumerator, object); }
         static uint32 GetOffsetOfArrayEnumerator() { return offsetof(DynamicObjectEnumerator, arrayEnumerator); }
         static uint32 GetOffsetOfObjectIndex() { return offsetof(DynamicObjectEnumerator, objectIndex); }

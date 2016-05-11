@@ -300,8 +300,10 @@ namespace JSON
                     Scan();
                     return object;
                 }
+
                 JsonTypeCache* previousCache = nullptr;
                 JsonTypeCache* currentCache = nullptr;
+
                 //parse the list of members
                 while(true)
                 {
@@ -330,7 +332,7 @@ namespace JSON
                             currentCache->propertyRecord->Equals(JsUtil::CharacterBuffer<WCHAR>(currentStr, currentStrLength)))
                         {
                             //check and consume ":"
-                            if(Scan() != tkColon )
+                            if(Scan() != tkColon)
                             {
                                 Js::JavascriptError::ThrowSyntaxError(scriptContext, ERRnoColon);
                             }
@@ -338,17 +340,37 @@ namespace JSON
 
                             // Cache all values from currentCache as there is a chance that ParseObject might change the cache
                             DynamicType* typeWithProperty = currentCache->typeWithProperty;
-                            PropertyId propertyId = currentCache->propertyRecord->GetPropertyId();
+                            const PropertyRecord *const propertyRecord = currentCache->propertyRecord;
                             PropertyIndex propertyIndex = currentCache->propertyIndex;
-                            previousCache = currentCache;
-                            currentCache = currentCache->next;
+                            const Js::ObjectSlotType cachedSlotType = currentCache->slotType;
+                            
+                            Js::Var value = ParseObject();
 
                             // fast path for type transition and property set
                             object->EnsureSlots(typeWithoutProperty->GetTypeHandler()->GetSlotCapacity(),
                                 typeWithProperty->GetTypeHandler()->GetSlotCapacity(), scriptContext, typeWithProperty->GetTypeHandler());
                             object->ReplaceType(typeWithProperty);
-                            Js::Var value = ParseObject();
-                            object->SetSlot(SetSlotArguments(propertyId, propertyIndex, value));
+                            object->SetSlot(SetSlotArguments(propertyRecord->GetPropertyId(), propertyIndex, cachedSlotType, value));
+
+                            Js::DynamicType *const newTypeWithProperty = object->GetDynamicType();
+                            if(newTypeWithProperty != typeWithProperty && newTypeWithProperty->GetIsShared())
+                            {
+                                // The slot type changed. Get the new slot type and update the cache.
+                                const Js::ObjectSlotType newSlotType =
+                                    PathTypeHandler
+                                        ::FromTypeHandler(newTypeWithProperty->GetTypeHandler())
+                                        ->GetSlotType(propertyIndex);
+                                Assert(newSlotType.IsValueTypeMoreConvervativeThan(cachedSlotType));
+                                currentCache->Update(
+                                    propertyRecord,
+                                    typeWithoutProperty,
+                                    newTypeWithProperty,
+                                    propertyIndex,
+                                    newSlotType);
+                            }
+
+                            previousCache = currentCache;
+                            currentCache = currentCache->next;
 
                             // if the next token is not a comma consider the list of members done.
                             if (tkComma != m_token.tk)
@@ -363,35 +385,44 @@ namespace JSON
                     scriptContext->GetOrAddPropertyRecord(currentStr, currentStrLength, &propertyRecord);
 
                     //check and consume ":"
-                    if(Scan() != tkColon )
+                    if(Scan() != tkColon)
                     {
                         Js::JavascriptError::ThrowSyntaxError(scriptContext, ERRnoColon);
                     }
                     Scan();
                     Js::Var value = ParseObject();
+
                     PropertyValueInfo info;
                     object->SetProperty(propertyRecord->GetPropertyId(), value, PropertyOperation_None, &info);
 
                     DynamicType* typeWithProperty = object->GetDynamicType();
-                    if(IsCaching() && !propertyRecord->IsNumeric() && !info.IsNoCache() && typeWithProperty->GetIsShared() && typeWithProperty->GetTypeHandler()->IsPathTypeHandler())
+                    if( IsCaching() &&
+                        !propertyRecord->IsNumeric() &&
+                        !info.IsNoCache() &&
+                        typeWithProperty->GetIsShared() &&
+                        typeWithProperty->GetTypeHandler()->IsPathTypeHandler() &&
+                        (
+                            info.GetPropertyIndex() >=
+                            PathTypeHandler::FromTypeHandler(typeWithoutProperty->GetTypeHandler())->GetSlotCount()
+                        ))
                     {
                         PropertyIndex propertyIndex = info.GetPropertyIndex();
 
                         if(!previousCache)
                         {
                             // This is the first property in the set add it to the dictionary.
-                            currentCache = JsonTypeCache::New(this->arenaAllocator, propertyRecord, typeWithoutProperty, typeWithProperty, propertyIndex);
+                            currentCache = JsonTypeCache::New(this->arenaAllocator, propertyRecord, typeWithoutProperty, typeWithProperty, propertyIndex, info.GetSlotType());
                             typeCacheList->AddNew(propertyRecord, currentCache);
                         }
                         else if(!currentCache)
                         {
-                            currentCache = JsonTypeCache::New(this->arenaAllocator, propertyRecord, typeWithoutProperty, typeWithProperty, propertyIndex);
-                            previousCache->next = currentCache;
+                            currentCache = JsonTypeCache::New(this->arenaAllocator, propertyRecord, typeWithoutProperty, typeWithProperty, propertyIndex, info.GetSlotType());
+                            previousCache->next = currentCache;    
                         }
                         else
                         {
                             // cache miss!!
-                            currentCache->Update(propertyRecord, typeWithoutProperty, typeWithProperty, propertyIndex);
+                            currentCache->Update(propertyRecord, typeWithoutProperty, typeWithProperty, propertyIndex, info.GetSlotType());
                         }
                         previousCache = currentCache;
                         currentCache = currentCache->next;

@@ -52,6 +52,7 @@
 #include "Types/PropertyIndexRanges.h"
 #include "Types/DictionaryPropertyDescriptor.h"
 #include "Types/DictionaryTypeHandler.h"
+#include "Types/PathTypeHandler.h"
 #include "Types/ES5ArrayTypeHandler.h"
 #include "Library/ES5Array.h"
 

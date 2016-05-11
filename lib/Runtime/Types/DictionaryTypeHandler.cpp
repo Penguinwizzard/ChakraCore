@@ -121,7 +121,7 @@ namespace Js
                     bool isInlineSlot;
                     PropertyIndexToInlineOrAuxSlotIndex(dataSlot, &inlineOrAuxSlotIndex, &isInlineSlot);
 
-                    propertyString->UpdateCache(type, inlineOrAuxSlotIndex, isInlineSlot, descriptor.IsInitialized && !descriptor.IsFixed);
+                    propertyString->UpdateCache(type, inlineOrAuxSlotIndex, ObjectSlotType::GetVar(), isInlineSlot, descriptor.IsInitialized && !descriptor.IsFixed);
                 }
                 else
                 {
@@ -230,35 +230,37 @@ namespace Js
         return info.slotIndex != Constants::NoSlot;
     }
 
+#if ENABLE_NATIVE_CODEGEN
     template <typename T>
-    bool DictionaryTypeHandlerBase<T>::IsObjTypeSpecEquivalent(const Type* type, const TypeEquivalenceRecord& record, uint& failedPropertyIndex)
+    IR::BailOutKind DictionaryTypeHandlerBase<T>::IsObjTypeSpecEquivalent(DynamicObject *const object, const TypeEquivalenceRecord& record, uint& failedPropertyIndex)
     {
         uint propertyCount = record.propertyCount;
         EquivalentPropertyEntry* properties = record.properties;
         for (uint pi = 0; pi < propertyCount; pi++)
         {
             const EquivalentPropertyEntry* refInfo = &properties[pi];
-            if (!this->IsObjTypeSpecEquivalentImpl<false>(type, refInfo))
+            if (!this->IsObjTypeSpecEquivalentImpl<false>(object, refInfo))
             {
                 failedPropertyIndex = pi;
-                return false;
+                return IR::BailOutFailedEquivalentTypeCheck;
             }
         }
 
-        return true;
+        return IR::BailOutInvalid;
     }
+#endif
 
     template <typename T>
-    bool DictionaryTypeHandlerBase<T>::IsObjTypeSpecEquivalent(const Type* type, const EquivalentPropertyEntry *entry)
+    bool DictionaryTypeHandlerBase<T>::IsObjTypeSpecEquivalent(DynamicObject *const object, const EquivalentPropertyEntry *entry)
     {
-        return this->IsObjTypeSpecEquivalentImpl<true>(type, entry);
+        return this->IsObjTypeSpecEquivalentImpl<true>(object, entry);
     }
 
     template <typename T>
     template <bool doLock>
-    bool DictionaryTypeHandlerBase<T>::IsObjTypeSpecEquivalentImpl(const Type* type, const EquivalentPropertyEntry *entry)
+    bool DictionaryTypeHandlerBase<T>::IsObjTypeSpecEquivalentImpl(DynamicObject *const object, const EquivalentPropertyEntry *entry)
     {
-        ScriptContext* scriptContext = type->GetScriptContext();
+        ScriptContext* scriptContext = object->GetScriptContext();
 
         T absSlotIndex = Constants::NoSlot;
         PropertyIndex relSlotIndex = Constants::NoSlot;
@@ -285,7 +287,9 @@ namespace Js
 
         if (relSlotIndex != Constants::NoSlot)
         {
-            if (relSlotIndex != entry->slotIndex || ((absSlotIndex >= GetInlineSlotCapacity()) != entry->isAuxSlot))
+            if (relSlotIndex != entry->slotIndex ||
+                ((absSlotIndex >= GetInlineSlotCapacity()) != entry->isAuxSlot) ||
+                !entry->slotType.IsVar())
             {
                 return false;
             }
@@ -501,7 +505,7 @@ namespace Js
         T dataSlot = descriptor->GetDataPropertyIndex<allowLetConstGlobal>();
         if (dataSlot != NoSlots)
         {
-            *value = instance->GetSlot(dataSlot);
+            *value = instance->GetSlot(dataSlot, ObjectSlotType::GetVar());
             SetPropertyValueInfo(info, instance, dataSlot, descriptor->Attributes);
             if (!descriptor->IsInitialized || descriptor->IsFixed)
             {
@@ -520,8 +524,8 @@ namespace Js
             CacheOperators::CachePropertyReadForGetter(info, originalInstance, propertyT, requestContext);
             PropertyValueInfo::SetNoCache(info, instance); // we already cached getter, so we don't have to do it once more
 
-            RecyclableObject* func = RecyclableObject::FromVar(instance->GetSlot(descriptor->GetGetterPropertyIndex()));
-            *value = JavascriptOperators::CallGetter(func, originalInstance, requestContext);
+            RecyclableObject* func = RecyclableObject::FromVar(instance->GetSlot(descriptor->GetGetterPropertyIndex(), ObjectSlotType::GetVar()));
+            *value = JavascriptOperators::CallGetter(func, originalInstance, requestContext);   
             return true;
         }
         else
@@ -576,7 +580,7 @@ namespace Js
     template <typename T>
     void DictionaryTypeHandlerBase<T>::SetPropertyValueInfo(PropertyValueInfo* info, RecyclableObject* instance, T propIndex, PropertyAttributes attributes, InlineCacheFlags flags)
     {
-        PropertyValueInfo::Set(info, instance, propIndex, attributes, flags);
+        PropertyValueInfo::Set(info, instance, propIndex, ObjectSlotType::GetVar(), attributes, flags);
     }
 
 
@@ -648,7 +652,7 @@ namespace Js
         }
         else if (descriptor->GetSetterPropertyIndex() != NoSlots)
         {
-            *setterValue=((DynamicObject*)instance)->GetSlot(descriptor->GetSetterPropertyIndex());
+            *setterValue=((DynamicObject*)instance)->GetSlot(descriptor->GetSetterPropertyIndex(), ObjectSlotType::GetVar());
             SetPropertyValueInfo(info, instance, descriptor->GetSetterPropertyIndex(), descriptor->Attributes, InlineCacheSetterFlag);
             return Accessor;
         }
@@ -710,7 +714,7 @@ namespace Js
                 && !(flags & PropertyOperation_AllowUndecl))
             {
                 ScriptContext* scriptContext = instance->GetScriptContext();
-                if (scriptContext->IsUndeclBlockVar(instance->GetSlot(dataSlot)))
+                if (scriptContext->IsUndeclBlockVar(instance->GetSlot(dataSlot, ObjectSlotType::GetVar())))
                 {
                     JavascriptError::ThrowReferenceError(scriptContext, JSERR_UseBeforeDeclaration);
                 }
@@ -736,7 +740,7 @@ namespace Js
                 InvalidateFixedField(instance, propertyId, descriptor);
             }
 
-            SetSlotUnchecked(instance, dataSlot, value);
+            SetSlotUnchecked(instance, dataSlot, ObjectSlotType::GetVar(), value);
 
             // If we just added a fixed method, don't populate the inline cache so that we always take the slow path
             // when overwriting this property and correctly invalidate any JIT-ed code that hard-coded this method.
@@ -751,7 +755,7 @@ namespace Js
         }
         else if (descriptor->GetSetterPropertyIndex() != NoSlots)
         {
-            RecyclableObject* func = RecyclableObject::FromVar(instance->GetSlot(descriptor->GetSetterPropertyIndex()));
+            RecyclableObject* func = RecyclableObject::FromVar(instance->GetSlot(descriptor->GetSetterPropertyIndex(), ObjectSlotType::GetVar()));
             JavascriptOperators::CallSetter(func, instance, value, NULL);
 
             // Wait for the setter to return before setting up the inline cache info, as the setter may change
@@ -902,13 +906,13 @@ namespace Js
                 T dataSlot = descriptor->GetDataPropertyIndex<false>();
                 if (dataSlot != NoSlots)
                 {
-                    SetSlotUnchecked(instance, dataSlot, undefined);
+                    SetSlotUnchecked(instance, dataSlot, ObjectSlotType::GetVar(), undefined);
                 }
                 else
                 {
                     Assert(descriptor->IsAccessor);
-                    SetSlotUnchecked(instance, descriptor->GetGetterPropertyIndex(), undefined);
-                    SetSlotUnchecked(instance, descriptor->GetSetterPropertyIndex(), undefined);
+                    SetSlotUnchecked(instance, descriptor->GetGetterPropertyIndex(), ObjectSlotType::GetVar(), undefined);
+                    SetSlotUnchecked(instance, descriptor->GetSetterPropertyIndex(), ObjectSlotType::GetVar(), undefined);
                 }
 
                 if (this->GetFlags() & IsPrototypeFlag)
@@ -1408,12 +1412,12 @@ namespace Js
                 bool getset = false;
                 if (descriptor->GetGetterPropertyIndex() != NoSlots)
                 {
-                    *getter = instance->GetSlot(descriptor->GetGetterPropertyIndex());
+                    *getter = instance->GetSlot(descriptor->GetGetterPropertyIndex(), ObjectSlotType::GetVar());
                     getset = true;
                 }
                 if (descriptor->GetSetterPropertyIndex() != NoSlots)
                 {
-                    *setter = instance->GetSlot(descriptor->GetSetterPropertyIndex());
+                    *setter = instance->GetSlot(descriptor->GetSetterPropertyIndex(), ObjectSlotType::GetVar());
                     getset = true;
                 }
                 return getset;
@@ -1523,8 +1527,8 @@ namespace Js
             else if (descriptor->IsOnlyOneAccessorInitialized)
             {
                 // Only one of getter/setter was initialized, allow the isFixed to stay if we are defining the other one.
-                Var oldGetter = GetSlot(instance, descriptor->GetGetterPropertyIndex());
-                Var oldSetter = GetSlot(instance, descriptor->GetSetterPropertyIndex());
+                Var oldGetter = GetSlot(instance, descriptor->GetGetterPropertyIndex(), ObjectSlotType::GetVar());
+                Var oldSetter = GetSlot(instance, descriptor->GetSetterPropertyIndex(), ObjectSlotType::GetVar());
 
                 if (((getter == oldGetter || !isGetterSet) && oldSetter == library->GetDefaultAccessorFunction()) ||
                     ((setter == oldSetter || !isSetterSet) && oldGetter == library->GetDefaultAccessorFunction()))
@@ -1545,12 +1549,12 @@ namespace Js
             if (getter != nullptr)
             {
                 getter = CanonicalizeAccessor(getter, library);
-                SetSlotUnchecked(instance, descriptor->GetGetterPropertyIndex(), getter);
+                SetSlotUnchecked(instance, descriptor->GetGetterPropertyIndex(), ObjectSlotType::GetVar(), getter);
             }
             if (setter != nullptr)
             {
                 setter = CanonicalizeAccessor(setter, library);
-                SetSlotUnchecked(instance, descriptor->GetSetterPropertyIndex(), setter);
+                SetSlotUnchecked(instance, descriptor->GetSetterPropertyIndex(), ObjectSlotType::GetVar(), setter);
             }
             instance->ChangeType();
             this->ClearHasOnlyWritableDataProperties();
@@ -1562,7 +1566,7 @@ namespace Js
             SetPropertyUpdateSideEffect(instance, propertyId, nullptr, SideEffects_Any);
 
             // Let's make sure we always have a getter and a setter
-            Assert(instance->GetSlot(descriptor->GetGetterPropertyIndex()) != nullptr && instance->GetSlot(descriptor->GetSetterPropertyIndex()) != nullptr);
+            Assert(instance->GetSlot(descriptor->GetGetterPropertyIndex(), ObjectSlotType::GetVar()) != nullptr && instance->GetSlot(descriptor->GetSetterPropertyIndex(), ObjectSlotType::GetVar()) != nullptr);
 
             return true;
         }
@@ -1610,8 +1614,8 @@ namespace Js
 
         propertyMap->Add(propertyRecord, newDescriptor);
 
-        SetSlotUnchecked(instance, newDescriptor.GetGetterPropertyIndex(), getter);
-        SetSlotUnchecked(instance, newDescriptor.GetSetterPropertyIndex(), setter);
+        SetSlotUnchecked(instance, newDescriptor.GetGetterPropertyIndex(), ObjectSlotType::GetVar(), getter);
+        SetSlotUnchecked(instance, newDescriptor.GetSetterPropertyIndex(), ObjectSlotType::GetVar(), setter);
         this->ClearHasOnlyWritableDataProperties();
         if(GetFlags() & IsPrototypeFlag)
         {
@@ -1621,7 +1625,7 @@ namespace Js
         SetPropertyUpdateSideEffect(instance, propertyId, nullptr, SideEffects_Any);
 
         // Let's make sure we always have a getter and a setter
-        Assert(instance->GetSlot(newDescriptor.GetGetterPropertyIndex()) != nullptr && instance->GetSlot(newDescriptor.GetSetterPropertyIndex()) != nullptr);
+        Assert(instance->GetSlot(newDescriptor.GetGetterPropertyIndex(), ObjectSlotType::GetVar()) != nullptr && instance->GetSlot(newDescriptor.GetSetterPropertyIndex(), ObjectSlotType::GetVar()) != nullptr);
 
         return true;
     }
@@ -1930,7 +1934,7 @@ namespace Js
         newTypeHandler->SetFlags(IsPrototypeFlag, this->GetFlags());
         newTypeHandler->ChangeFlags(IsExtensibleFlag, this->GetFlags());
         // Any new type handler we expect to see here should have inline slot capacity locked.  If this were to change, we would need
-        // to update our shrinking logic (see PathTypeHandlerBase::ShrinkSlotAndInlineSlotCapacity).
+        // to update our shrinking logic (see PathTypeHandler::ShrinkSlotAndInlineSlotCapacity).
         Assert(newTypeHandler->GetIsInlineSlotCapacityLocked());
         newTypeHandler->SetPropertyTypes(PropertyTypesWritableDataOnly | PropertyTypesWritableDataOnlyDetection,  this->GetPropertyTypes());
         newTypeHandler->SetInstanceTypeHandler(instance);
@@ -2043,7 +2047,7 @@ namespace Js
             }
         }
 
-        SetSlotUnchecked(instance, index, value);
+        SetSlotUnchecked(instance, index, ObjectSlotType::GetVar(), value);
 
         // If we just added a fixed method, don't populate the inline cache so that we always take the
         // slow path when overwriting this property and correctly invalidate any JIT-ed code that hard-coded
@@ -2123,12 +2127,12 @@ namespace Js
             T dataPropertyIndex = descriptor->GetDataPropertyIndex<false>();
             if (dataPropertyIndex != NoSlots)
             {
-                SetSlotUnchecked(instance, dataPropertyIndex, undefined);
+                SetSlotUnchecked(instance, dataPropertyIndex, ObjectSlotType::GetVar(), undefined);
             }
             else
             {
-                SetSlotUnchecked(instance, descriptor->GetGetterPropertyIndex(), defaultAccessor);
-                SetSlotUnchecked(instance, descriptor->GetSetterPropertyIndex(), defaultAccessor);
+                SetSlotUnchecked(instance, descriptor->GetGetterPropertyIndex(), ObjectSlotType::GetVar(), defaultAccessor);
+                SetSlotUnchecked(instance, descriptor->GetSetterPropertyIndex(), ObjectSlotType::GetVar(), defaultAccessor);
             }
         }
     }
@@ -2154,7 +2158,7 @@ namespace Js
         int slotCount = this->nextPropertyIndex;
         for (int slotIndex = 0; slotIndex < slotCount; slotIndex++)
         {
-            SetSlotUnchecked(instance, slotIndex, CrossSite::MarshalVar(targetScriptContext, GetSlot(instance, slotIndex)));
+            SetSlotUnchecked(instance, slotIndex, ObjectSlotType::GetVar(), CrossSite::MarshalVar(targetScriptContext, GetSlot(instance, slotIndex, ObjectSlotType::GetVar())));
         }
     }
 
@@ -2188,7 +2192,7 @@ namespace Js
             }
             if (!(descriptor->Attributes & PropertyDeleted))
             {
-                // See PathTypeHandlerBase::ConvertToSimpleDictionaryType for rules governing fixed field bits during type
+                // See PathTypeHandler::ConvertToSimpleDictionaryType for rules governing fixed field bits during type
                 // handler transitions.  In addition, we know that the current instance is not yet a prototype.
 
                 Assert(descriptor->SanityCheckFixedBits());
@@ -2202,7 +2206,7 @@ namespace Js
                         T dataSlot = descriptor->GetDataPropertyIndex<false>();
                         if (dataSlot != NoSlots)
                         {
-                            Var value = instance->GetSlot(dataSlot);
+                            Var value = instance->GetSlot(dataSlot, ObjectSlotType::GetVar());
                             // Because DictionaryTypeHandlers are never shared we should always have a property value if the handler
                             // says it's initialized.
                             Assert(value != nullptr);
@@ -2369,8 +2373,8 @@ namespace Js
                 if (dataSlot != NoSlots)
                 {
                     Assert(!IsInternalPropertyId(propertyRecord->GetPropertyId()));
-                    Var value = localSingletonInstance->GetSlot(dataSlot);
-                    if (value && ((IsFixedMethodProperty(propertyType) && JavascriptFunction::Is(value)) || IsFixedDataProperty(propertyType)))
+                    Var value = localSingletonInstance->GetSlot(dataSlot, ObjectSlotType::GetVar());
+                    if (value && ((IsFixedMethodProperty(propertyType) && JavascriptFunction::Is(value)) || IsFixedDataProperty(propertyType))) 
                     {
                         *pProperty = value;
                         if (markAsUsed)
@@ -2411,7 +2415,7 @@ namespace Js
                 if (accessorSlot != NoSlots)
                 {
                     Assert(!IsInternalPropertyId(propertyRecord->GetPropertyId()));
-                    Var value = localSingletonInstance->GetSlot(accessorSlot);
+                    Var value = localSingletonInstance->GetSlot(accessorSlot, ObjectSlotType::GetVar());
                     if (value && IsFixedAccessorProperty(propertyType) && JavascriptFunction::Is(value))
                     {
                         *pAccessor = value;
@@ -2494,7 +2498,7 @@ namespace Js
             if (descriptor.Attributes & PropertyLetConstGlobal)
             {
                 *propertyRecord = propertyMap->GetKeyAt(index);
-                *value = instance->GetSlot(descriptor.GetDataPropertyIndex<true>());
+                *value = instance->GetSlot(descriptor.GetDataPropertyIndex<true>(), ObjectSlotType::GetVar());
                 *isConst = (descriptor.Attributes & PropertyConst) != 0;
 
                 index += 1;

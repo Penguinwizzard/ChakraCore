@@ -91,7 +91,7 @@ private:
         Js::JavascriptFunction* function = nullptr,
         bool isJitTimeDataComputed = false,
         uint32 recursiveInlineDepth = 0);
-    Js::CodeGenRecyclableData *GatherCodeGenData(Js::FunctionBody *const topFunctionBody, Js::FunctionBody *const functionBody, Js::EntryPointInfo *const entryPoint, CodeGenWorkItem* workItem, void* function = nullptr);
+    Js::CodeGenRecyclableData *GatherCodeGenData(Js::FunctionBody *const functionBody, Js::EntryPointInfo *const entryPoint, CodeGenWorkItem* workItem, void* function = nullptr);
 
 public:
     void UpdateQueueForDebugMode();

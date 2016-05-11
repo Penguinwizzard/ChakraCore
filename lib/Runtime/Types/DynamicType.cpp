@@ -14,8 +14,20 @@ namespace Js
     {
         Assert(!this->isLocked || this->typeHandler->GetIsLocked());
         Assert(!this->isShared || this->typeHandler->GetIsShared());
+        Assert(!typeHandler->IsPathTypeHandler() || PathTypeHandler::FromTypeHandler(typeHandler)->GetType());
     }
 
+    DynamicType::DynamicType(DynamicType * type, PathTypeHandler *typeHandler, bool isLocked, bool isShared)
+        : Type(type), typeHandler(typeHandler), isLocked(isLocked), isShared(isShared) 
+    {
+        Assert(!this->isLocked || this->typeHandler->GetIsLocked());
+        Assert(!this->isShared || this->typeHandler->GetIsShared());
+
+        if(!typeHandler->GetType())
+        {
+            typeHandler->SetType(this);
+        }
+    }
 
     DynamicType::DynamicType(ScriptContext* scriptContext, TypeId typeId, RecyclableObject* prototype, JavascriptMethod entryPoint, DynamicTypeHandler * typeHandler, bool isLocked, bool isShared)
         : Type(scriptContext, typeId, prototype, entryPoint) , typeHandler(typeHandler), isLocked(isLocked), isShared(isShared), hasNoEnumerableProperties(false)
@@ -23,12 +35,50 @@ namespace Js
         Assert(typeHandler != nullptr);
         Assert(!this->isLocked || this->typeHandler->GetIsLocked());
         Assert(!this->isShared || this->typeHandler->GetIsShared());
+        Assert(!typeHandler->IsPathTypeHandler() || PathTypeHandler::FromTypeHandler(typeHandler)->GetType());
+    }
+
+    DynamicType::DynamicType(ScriptContext* scriptContext, TypeId typeId, RecyclableObject* prototype, JavascriptMethod entryPoint, PathTypeHandler * typeHandler, bool isLocked, bool isShared)
+        : Type(scriptContext, typeId, prototype, entryPoint) , typeHandler(typeHandler), isLocked(isLocked), isShared(isShared), hasNoEnumerableProperties(false)
+    {
+        Assert(typeHandler != nullptr);        
+        Assert(!this->isLocked || this->typeHandler->GetIsLocked());
+        Assert(!this->isShared || this->typeHandler->GetIsShared());
+
+        if(!typeHandler->GetType())
+        {
+            typeHandler->SetType(this);
+        }
     }
 
     DynamicType *
     DynamicType::New(ScriptContext* scriptContext, TypeId typeId, RecyclableObject* prototype, JavascriptMethod entryPoint, DynamicTypeHandler * typeHandler, bool isLocked, bool isShared)
     {
         return RecyclerNew(scriptContext->GetRecycler(), DynamicType, scriptContext, typeId, prototype, entryPoint, typeHandler, isLocked, isShared);
+    }
+
+    DynamicType *
+    DynamicType::New(ScriptContext* scriptContext, TypeId typeId, RecyclableObject* prototype, JavascriptMethod entryPoint, PathTypeHandler * typeHandler, bool isLocked, bool isShared)
+    {
+        return RecyclerNew(scriptContext->GetRecycler(), DynamicType, scriptContext, typeId, prototype, entryPoint, typeHandler, isLocked, isShared);
+    }
+
+    DynamicType *DynamicType::New(
+        DynamicType *const type,
+        DynamicTypeHandler *const typeHandler,
+        const bool isLocked,
+        const bool isShared)
+    {
+        return RecyclerNew(type->GetRecycler(), DynamicType, type, typeHandler, isLocked, isShared);
+    }
+
+    DynamicType *DynamicType::New(
+        DynamicType *const type,
+        PathTypeHandler *const typeHandler,
+        const bool isLocked,
+        const bool isShared)
+    {
+        return RecyclerNew(type->GetRecycler(), DynamicType, type, typeHandler, isLocked, isShared);
     }
 
     bool

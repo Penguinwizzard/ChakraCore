@@ -2288,6 +2288,16 @@ public:
                 PrependByte(builder, _u("Literal regex flags"), literalRegex->GetFlags());
             }
 
+            // Object literal creation site infos
+            for(uint objectLiteralIndex = 0; objectLiteralIndex < function->objectLiteralCount; ++objectLiteralIndex)
+            {
+                const ObjectLiteralCreationSiteInfo *const objectLiteralCreationSiteInfo =
+                    function->GetObjectLiteralCreationSiteInfo(objectLiteralIndex);
+                const PropertyIndex initialFieldCount = objectLiteralCreationSiteInfo->GetInitialFieldCount();
+                CompileAssert(sizeof(PropertyIndex) == sizeof(uint16));
+                PrependUInt16(builder, L"Object literal creation site info - initial field count", initialFieldCount);
+            }
+
             // Write the SourceInfo stuff
             PrependSmallSpanSequence(builder, _u("Span Sequence"), function->m_sourceInfo.pSpanSequence);
         }
@@ -3799,8 +3809,6 @@ public:
             current = ReadUInt32(current, &debuggerScopeCount);
             current = ReadSlotArrayDebuggerScopes(current, *functionBody, debuggerScopeCount);
 
-            (*functionBody)->AllocateObjectLiteralTypeArray();
-
             // Literal regexes
             (*functionBody)->AllocateLiteralRegexArray();
             for (uint i = 0; i < (*functionBody)->GetLiteralRegexCount(); ++i)
@@ -3821,6 +3829,19 @@ public:
                 CompileAssert(sizeof(flags) == sizeof(byte));
                 current = ReadByte(current, reinterpret_cast<byte *>(&flags));
                 (*functionBody)->SetLiteralRegex(i, RegexHelper::CompileDynamic(scriptContext, source, length, flags, true));
+            }
+
+            // Object literal creation site infos
+            Recycler *const recycler = scriptContext->GetRecycler();
+            (*functionBody)->AllocateObjectLiteralCreationSiteInfos((*functionBody)->objectLiteralCount);
+            for(uint objectLiteralIndex = 0; objectLiteralIndex < (*functionBody)->objectLiteralCount; ++objectLiteralIndex)
+            {
+                CompileAssert(sizeof(PropertyIndex) == sizeof(uint16));
+                PropertyIndex initialFieldCount;
+                current = ReadUInt16(current, &initialFieldCount);
+                ObjectLiteralCreationSiteInfo *const objectLiteralCreationSiteInfo =
+                    ObjectLiteralCreationSiteInfo::New(initialFieldCount, recycler);
+                (*functionBody)->SetObjectLiteralCreationSiteInfo(objectLiteralIndex, objectLiteralCreationSiteInfo);
             }
 
             // Read source information

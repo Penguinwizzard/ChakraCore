@@ -32,7 +32,7 @@ namespace Js
         Assert(propertyCount <= typeHandler->GetSlotCapacity());
         for(BigPropertyIndex i = 0; i < propertyCount; ++i)
         {
-            typeHandler->SetSlotUnchecked(instance, i, undefined);
+            typeHandler->SetSlotUnchecked(instance, i, ObjectSlotType::GetVar(), undefined);
         }
 
         if (isProto)

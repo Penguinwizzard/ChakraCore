@@ -4,6 +4,7 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
+#ifndef IsJsDiag
 #include "Runtime.h"
 #include "Language/CacheOperators.h"
 #include "Language/InlineCachePointerArray.h"
@@ -26,3 +27,4 @@
 // .inl files
 #include "Language/CacheOperators.inl"
 
+#endif // !IsJsDiag

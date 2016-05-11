@@ -2219,7 +2219,7 @@ LowererMDArch::EmitUIntToFloat(IR::Opnd *dst, IR::Opnd *src, IR::Instr *instrIns
 }
 
 bool
-LowererMDArch::EmitLoadInt32(IR::Instr *instrLoad, bool conversionFromObjectAllowed)
+LowererMDArch::EmitLoadInt32(IR::Instr *instrLoad, bool conversionFromObjectAllowed, const bool isInHelperBlock)
 {
     // if(doShiftFirst)
     // {
@@ -2294,7 +2294,7 @@ LowererMDArch::EmitLoadInt32(IR::Instr *instrLoad, bool conversionFromObjectAllo
         {
             if(doFloatToIntFastPath)
             {
-                labelFloat = IR::LabelInstr::New(Js::OpCode::Label, this->m_func, false);
+                labelFloat = IR::LabelInstr::New(Js::OpCode::Label, this->m_func, isInHelperBlock);
             }
             else
             {
@@ -2348,7 +2348,7 @@ LowererMDArch::EmitLoadInt32(IR::Instr *instrLoad, bool conversionFromObjectAllo
         if (!isInt)
         {
             // JMP $Done
-            labelDone = instrLoad->GetOrCreateContinueLabel();
+            labelDone = instrLoad->GetOrCreateContinueLabel(isInHelperBlock);
             instr = IR::BranchInstr::New(Js::OpCode::JMP, labelDone, this->m_func);
             instrLoad->InsertBefore(instr);
         }
@@ -2370,7 +2370,7 @@ LowererMDArch::EmitLoadInt32(IR::Instr *instrLoad, bool conversionFromObjectAllo
 
             if(!labelDone)
             {
-                labelDone = instrLoad->GetOrCreateContinueLabel();
+                labelDone = instrLoad->GetOrCreateContinueLabel(isInHelperBlock);
             }
 
             this->lowererMD->GenerateFloatTest(src1, instrLoad, labelHelper, instrLoad->HasBailOutInfo());
@@ -2389,7 +2389,7 @@ LowererMDArch::EmitLoadInt32(IR::Instr *instrLoad, bool conversionFromObjectAllo
         if(instrLoad->HasBailOutInfo() && (instrLoad->GetBailOutKind() == IR::BailOutIntOnly || instrLoad->GetBailOutKind() == IR::BailOutExpectingInteger))
         {
             // Avoid bailout if we have a JavascriptNumber whose value is a signed 32-bit integer
-            lowererMD->m_lowerer->LoadInt32FromUntaggedVar(instrLoad);
+            lowererMD->m_lowerer->LoadInt32FromUntaggedVar(instrLoad, isInHelperBlock);
 
             // Need to bail out instead of calling a helper
             return true;
@@ -2419,6 +2419,7 @@ LowererMDArch::LoadCheckedFloat(
     IR::LabelInstr *labelInline,
     IR::LabelInstr *labelHelper,
     IR::Instr *instrInsert,
+    const bool isInHelperBlock,
     const bool checkForNullInLoopBody)
 {
     // Load one floating-point var into an XMM register, inserting checks to see if it's really a float:
@@ -2440,7 +2441,7 @@ LowererMDArch::LoadCheckedFloat(
     instrFirst->SetSrc2(IR::IntConstOpnd::New(Js::AtomTag, TyMachReg, this->m_func));
     instrInsert->InsertBefore(instrFirst);
 
-    IR::LabelInstr * labelVar = IR::LabelInstr::New(Js::OpCode::Label, this->m_func);
+    IR::LabelInstr * labelVar = IR::LabelInstr::New(Js::OpCode::Label, this->m_func, isInHelperBlock);
     instr = IR::BranchInstr::New(Js::OpCode::JEQ, labelVar, this->m_func);
     instrInsert->InsertBefore(instr);
 

@@ -10,6 +10,7 @@ namespace Js
         Type *const type,
         const PropertyId propertyId,
         const PropertyIndex propertyIndex,
+        const ObjectSlotType slotType,
         const bool isInlineSlot,
         Type *const typeWithoutProperty,
         int requiredAuxSlotCapacity,
@@ -29,23 +30,15 @@ namespace Js
         requestContext->SetHasUsedInlineCache(true);
 
         // Add cache into a store field cache list if required, but not there yet.
-        if (typeWithoutProperty != nullptr && invalidationListSlotPtr == nullptr)
+        if (typeWithoutProperty != nullptr)
         {
             // Note, this can throw due to OOM, so we need to do it before the inline cache is set below.
-            requestContext->RegisterStoreFieldInlineCache(this, propertyId);
+            RegisterStoreFieldInlineCache(requestContext, propertyId);
         }
 
-        if (isInlineSlot)
-        {
-            u.local.type = type;
-            u.local.typeWithoutProperty = typeWithoutProperty;
-        }
-        else
-        {
-            u.local.type = TypeWithAuxSlotTag(type);
-            u.local.typeWithoutProperty = typeWithoutProperty ? TypeWithAuxSlotTag(typeWithoutProperty) : nullptr;
-        }
-
+        u.local.type = TypeWithAllTags(type, slotType, isInlineSlot);
+        u.local.typeWithoutProperty =
+            typeWithoutProperty ? TypeWithAllTags(typeWithoutProperty, slotType, isInlineSlot) : nullptr;
         u.local.isLocal = true;
         u.local.slotIndex = propertyIndex;
         u.local.requiredAuxSlotCapacity = requiredAuxSlotCapacity;
@@ -94,11 +87,8 @@ namespace Js
         requestContext->SetHasUsedInlineCache(true);
 
         // Add cache into a proto cache list if not there yet.
-        if (invalidationListSlotPtr == nullptr)
-        {
-            // Note, this can throw due to OOM, so we need to do it before the inline cache is set below.
-            requestContext->RegisterProtoInlineCache(this, propertyId);
-        }
+        // Note, this can throw due to OOM, so we need to do it before the inline cache is set below.
+        RegisterProtoInlineCache(requestContext, propertyId);
 
         u.proto.prototypeObject = prototypeObjectWithProperty;
         u.proto.isProto = true;
@@ -112,6 +102,7 @@ namespace Js
         {
             u.proto.type = TypeWithAuxSlotTag(type);
         }
+        Assert(GetSlotType(u.proto.type).IsVar());
 
         DebugOnly(VerifyRegistrationForInvalidation(this, requestContext, propertyId));
         Assert(u.proto.isMissing == (uint16)(u.proto.prototypeObject == requestContext->GetLibrary()->GetMissingPropertyHolder()));
@@ -151,7 +142,7 @@ namespace Js
 
         requestContext->SetHasUsedInlineCache(true);
 
-        if (isOnProto && invalidationListSlotPtr == nullptr)
+        if (isOnProto)
         {
             // Note, this can throw due to OOM, so we need to do it before the inline cache is set below.
             if (!isGetter)
@@ -159,11 +150,11 @@ namespace Js
                 // If the setter is on a prototype, this cache must be invalidated whenever proto
                 // caches are invalidated, so we must register it here.  Note that store field inline
                 // caches are invalidated any time proto caches are invalidated.
-                requestContext->RegisterStoreFieldInlineCache(this, propertyId);
+                RegisterStoreFieldInlineCache(requestContext, propertyId);
             }
             else
             {
-                requestContext->RegisterProtoInlineCache(this, propertyId);
+                RegisterProtoInlineCache(requestContext, propertyId);
             }
         }
 
@@ -173,6 +164,7 @@ namespace Js
         u.accessor.flags = isGetter ? InlineCacheGetterFlag : InlineCacheSetterFlag;
         u.accessor.isOnProto = isOnProto;
         u.accessor.type = isInlineSlot ? type : TypeWithAuxSlotTag(type);
+        Assert(GetSlotType(u.accessor.type).IsVar());
         u.accessor.slotIndex = propertyIndex;
         u.accessor.object = object;
 
@@ -191,103 +183,32 @@ namespace Js
 
     bool InlineCache::PretendTryGetProperty(Type *const type, PropertyCacheOperationInfo * operationInfo)
     {
-        if (type == u.local.type)
+        if (type == TypeWithoutAnyTags(u.local.type))
         {
             operationInfo->cacheType = CacheType_Local;
-            operationInfo->slotType = SlotType_Inline;
+            operationInfo->slotLocation = TypeHasAuxSlotTag(u.local.type) ? SlotLocation_Aux : SlotLocation_Inline;
+            operationInfo->slotType = GetSlotType(u.local.type);
             return true;
         }
 
-        if (TypeWithAuxSlotTag(type) == u.local.type)
+        if (type == TypeWithoutAnyTags(u.proto.type))
         {
-            operationInfo->cacheType = CacheType_Local;
-            operationInfo->slotType = SlotType_Aux;
-            return true;
-        }
-
-        if (type == u.proto.type)
-        {
+            Assert(GetSlotType(u.proto.type).IsVar());
             operationInfo->cacheType = CacheType_Proto;
-            operationInfo->slotType = SlotType_Inline;
+            operationInfo->slotLocation = TypeHasAuxSlotTag(u.proto.type) ? SlotLocation_Aux : SlotLocation_Inline;
+            operationInfo->slotType = ObjectSlotType::GetVar();
             return true;
         }
 
-        if (TypeWithAuxSlotTag(type) == u.proto.type)
+        if (type == TypeWithoutAnyTags(u.accessor.type))
         {
-            operationInfo->cacheType = CacheType_Proto;
-            operationInfo->slotType = SlotType_Aux;
-            return true;
-        }
-
-        if (type == u.accessor.type)
-        {
+            Assert(GetSlotType(u.accessor.type).IsVar());
             Assert(u.accessor.flags & InlineCacheGetterFlag);
 
             operationInfo->cacheType = CacheType_Getter;
-            operationInfo->slotType = SlotType_Inline;
+            operationInfo->slotLocation = TypeHasAuxSlotTag(u.accessor.type) ? SlotLocation_Aux : SlotLocation_Inline;
+            operationInfo->slotType = ObjectSlotType::GetVar();
             return true;
-        }
-
-        if (TypeWithAuxSlotTag(type) == u.accessor.type)
-        {
-            Assert(u.accessor.flags & InlineCacheGetterFlag);
-
-            operationInfo->cacheType = CacheType_Getter;
-            operationInfo->slotType = SlotType_Aux;
-            return true;
-        }
-
-        return false;
-    }
-
-    bool InlineCache::PretendTrySetProperty(Type *const type, Type *const oldType, PropertyCacheOperationInfo * operationInfo)
-    {
-        if (oldType == u.local.typeWithoutProperty)
-        {
-            operationInfo->cacheType = CacheType_LocalWithoutProperty;
-            operationInfo->slotType = SlotType_Inline;
-            return true;
-        }
-
-        if (TypeWithAuxSlotTag(oldType) == u.local.typeWithoutProperty)
-        {
-            operationInfo->cacheType = CacheType_LocalWithoutProperty;
-            operationInfo->slotType = SlotType_Aux;
-            return true;
-        }
-
-        if (type == u.local.type)
-        {
-            operationInfo->cacheType = CacheType_Local;
-            operationInfo->slotType = SlotType_Inline;
-            return true;
-        }
-
-        if (TypeWithAuxSlotTag(type) == u.local.type)
-        {
-            operationInfo->cacheType = CacheType_Local;
-            operationInfo->slotType = SlotType_Aux;
-            return true;
-        }
-
-        if (type == u.accessor.type)
-        {
-            if (u.accessor.flags & InlineCacheSetterFlag)
-            {
-                operationInfo->cacheType = CacheType_Setter;
-                operationInfo->slotType = SlotType_Inline;
-                return true;
-            }
-        }
-
-        if (TypeWithAuxSlotTag(type) == u.accessor.type)
-        {
-            if (u.accessor.flags & InlineCacheSetterFlag)
-            {
-                operationInfo->cacheType = CacheType_Setter;
-                operationInfo->slotType = SlotType_Aux;
-                return true;
-            }
         }
 
         return false;
@@ -302,12 +223,12 @@ namespace Js
         {
             if (type == u.accessor.type)
             {
-                *callee = RecyclableObject::FromVar(u.accessor.object->GetInlineSlot(u.accessor.slotIndex));
+                *callee = RecyclableObject::FromVar(u.accessor.object->GetInlineSlot(u.accessor.slotIndex, ObjectSlotType::GetVar()));
                 return true;
             }
             else if (taggedType == u.accessor.type)
             {
-                *callee = RecyclableObject::FromVar(u.accessor.object->GetAuxSlot(u.accessor.slotIndex));
+                *callee = RecyclableObject::FromVar(u.accessor.object->GetAuxSlot(u.accessor.slotIndex, ObjectSlotType::GetVar()));
                 return true;
             }
         }
@@ -324,7 +245,7 @@ namespace Js
         {
             if (type == u.local.type)
             {
-                const Var objectAtInlineSlot = DynamicObject::FromVar(obj)->GetInlineSlot(u.local.slotIndex);
+                const Var objectAtInlineSlot = DynamicObject::FromVar(obj)->GetInlineSlot(u.local.slotIndex, ObjectSlotType::GetVar());
                 if (!Js::TaggedNumber::Is(objectAtInlineSlot))
                 {
                     *callee = RecyclableObject::FromVar(objectAtInlineSlot);
@@ -333,10 +254,10 @@ namespace Js
             }
             else if (taggedType == u.local.type)
             {
-                const Var objectAtAuxSlot = DynamicObject::FromVar(obj)->GetAuxSlot(u.local.slotIndex);
+                const Var objectAtAuxSlot = DynamicObject::FromVar(obj)->GetAuxSlot(u.local.slotIndex, ObjectSlotType::GetVar());
                 if (!Js::TaggedNumber::Is(objectAtAuxSlot))
                 {
-                    *callee = RecyclableObject::FromVar(DynamicObject::FromVar(obj)->GetAuxSlot(u.local.slotIndex));
+                    *callee = RecyclableObject::FromVar(objectAtAuxSlot);
                     return true;
                 }
             }
@@ -346,7 +267,7 @@ namespace Js
         {
             if (type == u.proto.type)
             {
-                const Var objectAtInlineSlot = u.proto.prototypeObject->GetInlineSlot(u.proto.slotIndex);
+                const Var objectAtInlineSlot = u.proto.prototypeObject->GetInlineSlot(u.proto.slotIndex, ObjectSlotType::GetVar());
                 if (!Js::TaggedNumber::Is(objectAtInlineSlot))
                 {
                     *callee = RecyclableObject::FromVar(objectAtInlineSlot);
@@ -355,7 +276,7 @@ namespace Js
             }
             else if (taggedType == u.proto.type)
             {
-                const Var objectAtAuxSlot = u.proto.prototypeObject->GetAuxSlot(u.proto.slotIndex);
+                const Var objectAtAuxSlot = u.proto.prototypeObject->GetAuxSlot(u.proto.slotIndex, ObjectSlotType::GetVar());
                 if (!Js::TaggedNumber::Is(objectAtAuxSlot))
                 {
                     *callee = RecyclableObject::FromVar(objectAtAuxSlot);
@@ -369,12 +290,17 @@ namespace Js
 
     void InlineCache::Clear()
     {
+        // Preserve the slot type 
+        const ObjectSlotType slotType = GetSlotType();
+
         // IsEmpty() is a quick check to see that the cache is not populated, it only checks u.local.type, which does not
         // guarantee that the proto or flags cache would not hit. So Clear() must still clear everything.
-
         u.local.type = nullptr;
-        u.local.isLocal = true;
-        u.local.typeWithoutProperty = nullptr;
+        u.proto.type = nullptr;
+        u.accessor.type = nullptr;
+        RemoveFromInvalidationList();
+
+        SetSlotTypeForEmptyCache(slotType);
     }
 
     InlineCache *InlineCache::Clone(Js::PropertyId propertyId, ScriptContext* scriptContext)
@@ -402,7 +328,7 @@ namespace Js
         bool isProto = IsProto();
         if (isLocal)
         {
-            propertyOwnerType = TypeWithoutAuxSlotTag(this->u.local.type);
+            propertyOwnerType = TypeWithoutAnyTags(this->u.local.type);
         }
         else if (isProto)
         {
@@ -447,51 +373,146 @@ namespace Js
         DebugOnly(VerifyRegistrationForInvalidation(clone, scriptContext, propertyId));
         Assert(clone != nullptr);
 
+        clone->RemoveFromInvalidationList();
+
         // Note, the Register methods can throw due to OOM, so we need to do it before the inline cache is copied below.
-        if (this->invalidationListSlotPtr != nullptr && clone->invalidationListSlotPtr == nullptr)
+        if (this->invalidationListSlotPtr != nullptr)
         {
             if (this->NeedsToBeRegisteredForProtoInvalidation())
             {
-                scriptContext->RegisterProtoInlineCache(clone, propertyId);
+                clone->RegisterProtoInlineCache(scriptContext, propertyId);
             }
             else if (this->NeedsToBeRegisteredForStoreFieldInvalidation())
             {
-                scriptContext->RegisterStoreFieldInlineCache(clone, propertyId);
+                clone->RegisterStoreFieldInlineCache(scriptContext, propertyId);
             }
         }
 
         clone->u = this->u;
-
+        
         DebugOnly(VerifyRegistrationForInvalidation(clone, scriptContext, propertyId));
-    }
+    }   
 
-    template <bool isAccessor>
-    bool InlineCache::HasDifferentType(const bool isProto, const Type * type, const Type * typeWithoutProperty) const
+    Type *InlineCacheTypeTagger::TypeWithAllTags(const Type *const type, const ObjectSlotType slotType, const bool isInlineSlot)
     {
-        Assert(!isAccessor && !isProto || !typeWithoutProperty);
+        Assert(!TypeHasAuxSlotTag(type));
 
-        if (isAccessor)
-        {
-            return !IsEmpty() && u.accessor.type != type && u.accessor.type != TypeWithAuxSlotTag(type);
-        }
-        if (isProto)
-        {
-            return !IsEmpty() && u.proto.type != type && u.proto.type != TypeWithAuxSlotTag(type);
-        }
-
-        // If the new type matches the cached type, the types without property must also match (unless one of them is null).
-        Assert((u.local.typeWithoutProperty == nullptr || typeWithoutProperty == nullptr) ||
-            ((u.local.type != type || u.local.typeWithoutProperty == typeWithoutProperty) &&
-                (u.local.type != TypeWithAuxSlotTag(type) || u.local.typeWithoutProperty == TypeWithAuxSlotTag(typeWithoutProperty))));
-
-        // Don't consider a cache polymorphic, if it differs only by the typeWithoutProperty.  We can handle this case with
-        // the monomorphic cache.
-        return !IsEmpty() && (u.local.type != type && u.local.type != TypeWithAuxSlotTag(type));
+        Type *taggedType = TypeWithSlotType(type, slotType);
+        if(!isInlineSlot)
+            taggedType = TypeWithAuxSlotTag(taggedType);
+        return taggedType;
     }
 
-    // explicit instantiation
-    template bool InlineCache::HasDifferentType<true>(const bool isProto, const Type * type, const Type * typeWithoutProperty) const;
-    template bool InlineCache::HasDifferentType<false>(const bool isProto, const Type * type, const Type * typeWithoutProperty) const;
+    Type *InlineCacheTypeTagger::TypeWithoutAnyTags(const Type *const type)
+    {
+        return
+            reinterpret_cast<Type *>(
+                reinterpret_cast<size_t>(type) & ~(InlineCacheAuxSlotTypeTag | InlineCacheSlotTypeMask));
+    }
+
+    bool InlineCacheTypeTagger::TypeHasAuxSlotTag(const Type *const type)
+    {
+        return !!(reinterpret_cast<size_t>(type) & InlineCacheAuxSlotTypeTag);
+    }
+
+    Type *InlineCacheTypeTagger::TypeWithAuxSlotTag(const Type *const type)
+    {
+        Assert(!TypeHasAuxSlotTag(type));
+        return reinterpret_cast<Type *>(reinterpret_cast<size_t>(type) | InlineCacheAuxSlotTypeTag);
+    }
+
+    ObjectSlotType InlineCacheTypeTagger::GetSlotType(const Type *const type)
+    {
+        CompileAssert(
+            (InlineCacheSlotTypeMask >> InlineCacheSlotTypeShift) ==
+            ((static_cast<size_t>(1) << ObjectSlotType::BitSize) - 1));
+        CompileAssert(!(InlineCacheAuxSlotTypeTag & InlineCacheSlotTypeMask));
+
+        return ObjectSlotType((reinterpret_cast<size_t>(type) & InlineCacheSlotTypeMask) >> InlineCacheSlotTypeShift);
+    }
+
+    Type *InlineCacheTypeTagger::TypeWithSlotType(const Type *const type, const ObjectSlotType slotType)
+    {
+        Assert(static_cast<ObjectSlotType::TSize>(GetSlotType(type)) == 0);
+        Assert(GetSlotType(type) == ObjectSlotType::GetVar());
+
+        if(slotType.IsVar())
+            return const_cast<Type *>(type);
+        return
+            reinterpret_cast<Type *>(
+                reinterpret_cast<size_t>(type) | (static_cast<size_t>(slotType) << InlineCacheSlotTypeShift));
+    }
+
+    Type *InlineCacheTypeTagger::TypeWithoutSlotType(const Type *const type)
+    {
+        return reinterpret_cast<Type *>(reinterpret_cast<size_t>(type) & ~InlineCacheSlotTypeMask);
+    }
+
+    ObjectSlotType InlineCache::GetSlotType() const
+    {
+        if(IsLocal())
+        {
+            Assert(!IsEmpty());
+            return GetSlotType(u.local.type);
+        }
+
+        return IsEmpty() ? GetSlotTypeForEmptyCache() : ObjectSlotType::GetVar();
+    }
+
+    void InlineCache::InitializeSlotType(FunctionBody *const functionBody, const InlineCacheIndex cacheIndex)
+    {
+        Assert(functionBody);
+        Assert(cacheIndex < functionBody->GetInlineCacheCount());
+
+#if ENABLE_NATIVE_CODEGEN       
+        if(!IsEmpty() || HasSlotTypeForEmptyCache() || !functionBody->HasDynamicProfileInfo())
+        {
+            return;
+        }
+
+        ObjectSlotType slotType = functionBody->GetAnyDynamicProfileInfo()->GetFldInfo(functionBody, cacheIndex)->slotType;
+        PolymorphicInlineCache *const polymorphicInlineCache = functionBody->GetPolymorphicInlineCache(cacheIndex);
+        if(polymorphicInlineCache)
+        {
+            slotType = slotType.MergeValueType(polymorphicInlineCache->GetSlotType());
+            polymorphicInlineCache->SetSlotType(slotType);
+        }
+        SetSlotTypeForEmptyCache(slotType);
+#else
+        return;
+#endif
+    }
+
+    bool InlineCache::HasSlotTypeForEmptyCache() const
+    {
+        Assert(IsEmpty());
+
+        // See SetSlotTypeForEmptyCache()
+        return static_cast<ObjectSlotType::TSize>(u.local.requiredAuxSlotCapacity) != 0;
+    }
+
+    ObjectSlotType InlineCache::GetSlotTypeForEmptyCache() const
+    {
+        Assert(IsEmpty());
+
+        // See SetSlotTypeForEmptyCache()
+        const ObjectSlotType::TSize slotTypeValue = static_cast<ObjectSlotType::TSize>(u.local.requiredAuxSlotCapacity);
+        return slotTypeValue == 0 ? ObjectSlotType::GetInt() : ObjectSlotType(slotTypeValue - 1);
+    }
+
+    void InlineCache::SetSlotTypeForEmptyCache(const ObjectSlotType slotType)
+    {
+        Assert(!u.local.type);
+        Assert(!u.proto.type);
+        Assert(!u.accessor.type);
+        Assert(slotType == slotType.ToNormalizedValueType());
+
+        // We want an originally empty (zerored) cache to allow the most aggressive slot type initially (Int), but invalidated
+        // caches that call this function to allow only the specified slot type or a more conservative slot type such that
+        // invalidation does not lose the slot type convergence that has taken place so far. To tell the difference, add one to
+        // the slot type value. Preserve the slot type in u.local.requiredAuxSlotCapacity in empty caches.
+        u.local.requiredAuxSlotCapacity = static_cast<ObjectSlotType::TSize>(slotType) + 1;
+    }
 
     bool InlineCache::NeedsToBeRegisteredForProtoInvalidation() const
     {
@@ -501,6 +522,28 @@ namespace Js
     bool InlineCache::NeedsToBeRegisteredForStoreFieldInvalidation() const
     {
         return (IsLocal() && this->u.local.typeWithoutProperty != nullptr) || IsSetterAccessorOnProto();
+    }
+
+    void InlineCache::RegisterStoreFieldInlineCache(ScriptContext *const requestContext, const PropertyId propertyId)
+    {
+        if(invalidationListSlotPtr)
+        {
+            if(NeedsToBeRegisteredForStoreFieldInvalidation())
+                return;
+            RemoveFromInvalidationList();
+        }
+        requestContext->RegisterStoreFieldInlineCache(this, propertyId);
+    }
+
+    void InlineCache::RegisterProtoInlineCache(ScriptContext *const requestContext, const PropertyId propertyId)
+    {
+        if(invalidationListSlotPtr)
+        {
+            if(NeedsToBeRegisteredForProtoInvalidation())
+                return;
+            RemoveFromInvalidationList();
+        }
+        requestContext->RegisterProtoInlineCache(this, propertyId);
     }
 
 #if DEBUG
@@ -580,14 +623,15 @@ namespace Js
     }
 
 #endif
-    PolymorphicInlineCache * PolymorphicInlineCache::New(uint16 size, FunctionBody * functionBody)
+
+    PolymorphicInlineCache * PolymorphicInlineCache::New(uint16 size, FunctionBody * functionBody, ObjectSlotType slotType)
     {
         ScriptContext * scriptContext = functionBody->GetScriptContext();
         InlineCache * inlineCaches = AllocatorNewArrayZ(InlineCacheAllocator, scriptContext->GetInlineCacheAllocator(), InlineCache, size);
 #ifdef POLY_INLINE_CACHE_SIZE_STATS
         scriptContext->GetInlineCacheAllocator()->LogPolyCacheAlloc(size * sizeof(InlineCache));
 #endif
-        PolymorphicInlineCache * polymorphicInlineCache = RecyclerNewFinalizedLeaf(scriptContext->GetRecycler(), PolymorphicInlineCache, inlineCaches, size, functionBody);
+        PolymorphicInlineCache * polymorphicInlineCache = RecyclerNewFinalizedLeaf(scriptContext->GetRecycler(), PolymorphicInlineCache, inlineCaches, size, functionBody, slotType);
 
         // Insert the cache into finalization list.  We maintain this linked list of polymorphic caches because when we allocate
         // a larger cache, the old one might still be used by some code on the stack.  Consequently, we can't release
@@ -602,39 +646,6 @@ namespace Js
         functionBody->SetPolymorphicInlineCachesHead(polymorphicInlineCache);
 
         return polymorphicInlineCache;
-    }
-
-    template<bool isAccessor>
-    bool PolymorphicInlineCache::HasDifferentType(
-        const bool isProto,
-        const Type * type,
-        const Type * typeWithoutProperty) const
-    {
-        Assert(!isAccessor && !isProto || !typeWithoutProperty);
-
-        uint inlineCacheIndex = GetInlineCacheIndexForType(type);
-        if (inlineCaches[inlineCacheIndex].HasDifferentType<isAccessor>(isProto, type, typeWithoutProperty))
-        {
-            return true;
-        }
-
-        if (!isAccessor && !isProto && typeWithoutProperty)
-        {
-            inlineCacheIndex = GetInlineCacheIndexForType(typeWithoutProperty);
-            return inlineCaches[inlineCacheIndex].HasDifferentType<isAccessor>(isProto, type, typeWithoutProperty);
-        }
-
-        return false;
-    }
-
-    // explicit instantiation
-    template bool PolymorphicInlineCache::HasDifferentType<true>(const bool isProto, const Type * type, const Type * typeWithoutProperty) const;
-    template bool PolymorphicInlineCache::HasDifferentType<false>(const bool isProto, const Type * type, const Type * typeWithoutProperty) const;
-
-    bool PolymorphicInlineCache::HasType_Flags(const Type * type) const
-    {
-        uint inlineCacheIndex = GetInlineCacheIndexForType(type);
-        return inlineCaches[inlineCacheIndex].HasType_Flags(type);
     }
 
     void PolymorphicInlineCache::UpdateInlineCachesFillInfo(uint index, bool set)
@@ -660,11 +671,14 @@ namespace Js
         Type *const type,
         const PropertyId propertyId,
         const PropertyIndex propertyIndex,
+        const ObjectSlotType slotType,
         const bool isInlineSlot,
         Type *const typeWithoutProperty,
         int requiredAuxSlotCapacity,
         ScriptContext *const requestContext)
     {
+        Assert(slotType.IsValueTypeEqualTo(GetSlotType()));
+
         // Let's not waste polymorphic cache slots by caching both the type without property and type with property. If the
         // cache is used for both adding a property and setting the existing property, then those instances will cause both
         // types to be cached. Until then, caching both types proactively here can unnecessarily trash useful cached info
@@ -695,7 +709,7 @@ namespace Js
             }
 
             inlineCaches[inlineCacheIndex].CacheLocal(
-                type, propertyId, propertyIndex, isInlineSlot, nullptr, requiredAuxSlotCapacity, requestContext);
+                type, propertyId, propertyIndex, slotType, isInlineSlot, nullptr, requiredAuxSlotCapacity, requestContext);
             UpdateInlineCachesFillInfo(inlineCacheIndex, true /*set*/);
 
 #if DBG_DUMP
@@ -718,7 +732,7 @@ namespace Js
             bool collision = !inlineCaches[inlineCacheIndex].IsEmpty();
 #endif
             inlineCaches[inlineCacheIndex].CacheLocal(
-                type, propertyId, propertyIndex, isInlineSlot, typeWithoutProperty, requiredAuxSlotCapacity, requestContext);
+                type, propertyId, propertyIndex, slotType, isInlineSlot, typeWithoutProperty, requiredAuxSlotCapacity, requestContext);
             UpdateInlineCachesFillInfo(inlineCacheIndex, true /*set*/);
 
 #if DBG_DUMP
@@ -745,6 +759,8 @@ namespace Js
         Type *const type,
         ScriptContext *const requestContext)
     {
+        Assert(GetSlotType().IsVar());
+
         uint inlineCacheIndex = GetInlineCacheIndexForType(type);
 #if INTRUSIVE_TESTTRACE_PolymorphicInlineCache
         bool collision = !inlineCaches[inlineCacheIndex].IsEmpty();
@@ -796,6 +812,8 @@ namespace Js
         const bool isOnProto,
         ScriptContext *const requestContext)
     {
+        Assert(GetSlotType().IsVar());
+
         uint inlineCacheIndex = GetInlineCacheIndexForType(type);
 #if INTRUSIVE_TESTTRACE_PolymorphicInlineCache
         bool collision = !inlineCaches[inlineCacheIndex].IsEmpty();
@@ -849,8 +867,15 @@ namespace Js
         Type *const oldType,
         PropertyCacheOperationInfo * operationInfo)
     {
-        uint inlineCacheIndex = GetInlineCacheIndexForType(type);
-        return inlineCaches[inlineCacheIndex].PretendTrySetProperty(type, oldType, operationInfo);
+        return
+            inlineCaches[GetInlineCacheIndexForType(type)].PretendTrySetProperty<true, false>(type, oldType, operationInfo) ||
+            (
+                oldType != type &&
+                inlineCaches[GetInlineCacheIndexForType(oldType)].PretendTrySetProperty<false, true>(
+                    type,
+                    oldType,
+                    operationInfo)
+            );
     }
 
     void PolymorphicInlineCache::CopyTo(PropertyId propertyId, ScriptContext* scriptContext, PolymorphicInlineCache *const clone)
@@ -865,7 +890,7 @@ namespace Js
             Type * type = inlineCaches[i].GetType();
             if (type)
             {
-                uint inlineCacheIndex = clone->GetInlineCacheIndexForType(type);
+                uint inlineCacheIndex = clone->GetInlineCacheIndexForType(inlineCaches[i].GetTypeForHashing());
 
                 // When copying inline caches from one polymorphic cache to another, types are again hashed to get the corresponding indices in the new polymorphic cache.
                 // This might lead to collision in the new cache. We need to try to resolve that collision.
@@ -908,6 +933,29 @@ namespace Js
         }
     }
 #endif
+
+    ObjectSlotType PolymorphicInlineCache::GetSlotType() const
+    {
+        return slotType;
+    }
+
+    void PolymorphicInlineCache::SetSlotType(ObjectSlotType slotType)
+    {
+        slotType = slotType.ToNormalizedValueType();
+        if(this->slotType == slotType)
+        {
+            return;
+        }
+
+        Assert(slotType.IsValueTypeMoreConvervativeThan(this->slotType));
+        this->slotType = slotType;
+
+        // The slot type has become more conservative. Going forward, any types with more aggressive slot types will be
+        // converted, so to prevent unnecessary collisions, clear the polymorhpic cache
+        for(uint16 i = 0; i < size; ++i)
+            inlineCaches[i].RemoveFromInvalidationList();
+        memset(inlineCaches, 0, size * sizeof(InlineCache));
+    }
 
     bool EquivalentTypeSet::Contains(const Js::Type * type, uint16* pIndex)
     {
@@ -1047,65 +1095,68 @@ namespace Js
 
         ConstructorCache* newCache = currentCache;
 
-        // If the old cache has been invalidated, we need to create a new one to avoid incorrectly re-validating
-        // caches that may have been hard-coded in the JIT-ed code with different prototype and type.  However, if
-        // the cache is already polymorphic, it will not be hard-coded, and hence we don't need to allocate a new
-        // one - in case the prototype property changes frequently.
-        if (ConstructorCache::IsDefault(currentCache) || (currentCache->IsInvalidated() && !currentCache->IsPolymorphic()))
+        if (ConstructorCache::IsDefault(currentCache))
         {
-            // Review (jedmiad): I don't think we need to zero the struct, since we initialize each field.
             newCache = RecyclerNew(scriptContext->GetRecycler(), ConstructorCache);
-            // TODO: Consider marking the cache as polymorphic only if the prototype and type actually changed.  In fact,
-            // if they didn't change we could reuse the same cache and simply mark it as valid.  Not really true.  The cache
-            // might have been invalidated due to a property becoming read-only.  In that case we can't re-validate an old
-            // monomorphic cache.  We must allocate a new one.
-            newCache->content.isPolymorphic = currentCache->content.isPopulated && currentCache->content.hasPrototypeChanged;
         }
-
-        // If we kept the old invalidated cache, it better be marked as polymorphic.
-        Assert(!newCache->IsInvalidated() || newCache->IsPolymorphic());
-
-        // If the cache was polymorphic, we shouldn't have allocated a new one.
-        Assert(!currentCache->IsPolymorphic() || newCache == currentCache);
 
         return newCache;
     }
 
-    void ConstructorCache::InvalidateOnPrototypeChange()
+    void ConstructorCache::UpdateAfterConstructor(DynamicType* type, ScriptContext* scriptContext)
     {
-        if (IsDefault(this))
-        {
-            Assert(this->guard.value == CtorCacheGuardValues::Invalid);
-            Assert(!this->content.isPopulated);
-        }
-        else if (this->guard.value == CtorCacheGuardValues::Special && this->content.skipDefaultNewObject)
-        {
-            // Do nothing.  If we skip the default object, changes to the prototype property don't affect
-            // what we'll do during object allocation.
-
-            // Can't assert the following because we set the prototype property during library initialization.
-            // AssertMsg(false, "Overriding a prototype on a built-in constructor should be illegal.");
-        }
-        else
-        {
-            this->guard.value = CtorCacheGuardValues::Invalid;
-            this->content.hasPrototypeChanged = true;
-            // Make sure we don't leak the old type.
-            Assert(this->content.type == nullptr);
-            this->content.pendingType = nullptr;
-            Assert(this->content.pendingType == nullptr);
-            Assert(IsInvalidated());
-        }
+        Assert(scriptContext == type->GetScriptContext());
+        Assert(type->GetTypeHandler()->GetMayBecomeShared());
+        Assert(type->GetIsShared());
+        Assert(type->GetTypeHandler()->GetSlotCapacity() < Js::PropertyIndexRanges<PropertyIndex>::MaxValue);
         Assert(IsConsistent());
+        Assert(GetType());
+        Assert(this->scriptContext == scriptContext);
+        Assert(this->ctorHasNoExplicitReturnValue);
+
+        const bool updateAfterCtor = this->updateAfterCtor;
+        ClearType();
+        SetType(type, true);
+        this->updateAfterCtor = updateAfterCtor;
+        this->typeIsFinal = true;
+        this->slotCount = type->GetTypeHandler()->GetSlotCapacity();
+        this->inlineSlotCount = type->GetTypeHandler()->GetInlineSlotCapacity();
+
+        DynamicTypeHandler *const typeHandler = type->GetTypeHandler();
+        if(typeHandler->IsPathTypeHandler())
+            PathTypeHandler::FromTypeHandler(typeHandler)->RegisterObjectCreationSiteInfo(this);
+
+        ThreadContext *const threadContext = scriptContext->GetThreadContext();
+        for(ObjectSlotIterator it(type); it.IsValid(); it.MoveNext())
+            threadContext->RegisterConstructorCache(it.CurrentPropertyId(scriptContext), this);
+
+        Assert(IsConsistent());
+    }
+
+    void ConstructorCache::Unregister()
+    {
+        Assert(GetType());
+
+        Base::Unregister();
+
+        updateAfterCtor = false;
+
+        DynamicType *const type = GetType();
+        ScriptContext *const scriptContext = type->GetScriptContext();
+        ThreadContext *const threadContext = scriptContext->GetThreadContext();
+        if(!threadContext->ShouldInvalidateConstructorCaches())
+            return;
+        for(ObjectSlotIterator it(type); it.IsValid(); it.MoveNext())
+            threadContext->UnregisterConstructorCache(it.CurrentPropertyId(scriptContext), this);
     }
 
 #if DBG_DUMP
     void ConstructorCache::Dump() const
     {
-        Output::Print(_u("guard value or type = 0x%p, script context = 0x%p, pending type = 0x%p, slots = %d, inline slots = %d, populated = %d, polymorphic = %d, update cache = %d, update type = %d, skip default = %d, no return = %d"),
-            this->GetRawGuardValue(), this->GetScriptContext(), this->GetPendingType(), this->GetSlotCount(), this->GetInlineSlotCount(),
-            this->IsPopulated(), this->IsPolymorphic(), this->GetUpdateCacheAfterCtor(), this->GetTypeUpdatePending(),
-            this->GetSkipDefaultNewObject(), this->GetCtorHasNoExplicitReturnValue());
+        Output::Print(L"type = 0x%p, script context = 0x%p, slots = %d, inline slots = %d, polymorphic = %d, update cache = %d, skip default = %d, no return = %d", 
+            this->GetType(), this->GetScriptContext(), this->GetSlotCount(), this->GetInlineSlotCount(), 
+            this->IsPolymorphic(), this->GetUpdateCacheAfterCtor(),
+            this->SkipDefaultNewObject(), this->GetCtorHasNoExplicitReturnValue());
     }
 #endif
 

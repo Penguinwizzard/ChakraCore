@@ -333,7 +333,7 @@ namespace JsUtil
             return defaultValue;
         }
 
-        inline const TValue& Lookup(const TKey& key, const TValue& defaultValue)
+        inline const TValue& Lookup(const TKey& key, const TValue& defaultValue) const
         {
             return LookupWithKey<TKey>(key, defaultValue);
         }
@@ -1150,18 +1150,29 @@ namespace JsUtil
 
         #if DBG
         protected:
-            TDictionary &dictionary;
+            TDictionary *const dictionary;
         private:
             int usedEntryCount;
         #endif
 
         protected:
+            IteratorBase()
+                : entries(nullptr),
+                entryIndex(0)
+            #if DBG
+                ,
+                dictionary(nullptr),
+                usedEntryCount(0)
+            #endif
+            {
+            }
+
             IteratorBase(TDictionary &dictionary, const int entryIndex)
                 : entries(dictionary.entries),
                 entryIndex(entryIndex)
             #if DBG
                 ,
-                dictionary(dictionary),
+                dictionary(&dictionary),
                 usedEntryCount(dictionary.Count())
             #endif
             {
@@ -1182,8 +1193,8 @@ namespace JsUtil
         protected:
             bool IsValid() const
             {
-                Assert(dictionary.entries == entries);
-                Assert(dictionary.Count() == usedEntryCount);
+                Assert(!dictionary || dictionary->entries == entries);
+                Assert(!dictionary || dictionary->Count() == usedEntryCount);
 
                 return true;
             }
@@ -1237,6 +1248,11 @@ namespace JsUtil
             const int entryCount;
 
         public:
+            EntryIterator() : entryCount(0)
+            {
+                Assert(!IsValid());
+            }
+
             EntryIterator(TDictionary &dictionary) : Base(dictionary, 0), entryCount(dictionary.count)
             {
                 if(IsValid() && IsFreeEntry(entries[entryIndex]))
@@ -1248,7 +1264,7 @@ namespace JsUtil
         public:
             bool IsValid() const
             {
-                Assert(dictionary.count == entryCount);
+                Assert(!dictionary || dictionary->count == entryCount);
                 Assert(entryIndex >= 0);
                 Assert(entryIndex <= entryCount);
 

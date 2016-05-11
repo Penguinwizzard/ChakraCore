@@ -404,11 +404,9 @@ namespace Js
         TraceFixedFieldsBeforeTypeHandlerChange(_u("SimpleDictionaryTypeHandler"), _u("[Simple]DictionaryTypeHandler"), instance, this, oldType, oldSingletonInstance);
 #endif
 
-        bool const canBeSingletonInstance = DynamicTypeHandler::CanBeSingletonInstance(instance);
-        // If this type had been installed on a stack instance it shouldn't have a singleton Instance
-        Assert(canBeSingletonInstance || !this->HasSingletonInstance());
-
-        if (canBeSingletonInstance)
+        // We assume the new type handler is not shared.  Hence it's ok to set this instance as the handler's singleton instance.
+        Assert(HasSingletonInstanceOnlyIfNeeded());
+        if (AreSingletonInstancesNeeded() && CanBeSingletonInstance(instance))
         {
             // We assume the new type handler is not shared.  Hence it's ok to set this instance as the handler's singleton instance.
             Assert(HasSingletonInstanceOnlyIfNeeded());
@@ -427,7 +425,7 @@ namespace Js
         }
 
         // If we are a prototype or may become a prototype we must transfer used as fixed bits.
-        // See point 4 in PathTypeHandlerBase::ConvertToSimpleDictionaryType.
+        // See point 4 in PathTypeHandler::ConvertToSimpleDictionaryType.
         bool isGlobalObject = instance->GetTypeId() == TypeIds_GlobalObject;
         bool isTypeLocked = instance->GetDynamicType()->GetIsLocked();
         bool isOrMayBecomeShared = GetIsOrMayBecomeShared();
@@ -464,7 +462,7 @@ namespace Js
         newTypeHandler->SetFlags(IsPrototypeFlag, this->GetFlags());
         newTypeHandler->ChangeFlags(IsExtensibleFlag | IsSealedOnceFlag | IsFrozenOnceFlag, this->GetFlags());
         // Any new type handler we expect to see here should have inline slot capacity locked.  If this were to change, we would need
-        // to update our shrinking logic (see PathTypeHandlerBase::ShrinkSlotAndInlineSlotCapacity).
+        // to update our shrinking logic (see PathTypeHandler::ShrinkSlotAndInlineSlotCapacity).
         Assert(newTypeHandler->GetIsInlineSlotCapacityLocked());
         newTypeHandler->SetPropertyTypes(PropertyTypesWritableDataOnly | PropertyTypesWritableDataOnlyDetection, this->GetPropertyTypes());
         newTypeHandler->SetInstanceTypeHandler(instance);
@@ -610,7 +608,7 @@ namespace Js
                         bool isInlineSlot;
                         PropertyIndexToInlineOrAuxSlotIndex(descriptor.propertyIndex, &inlineOrAuxSlotIndex, &isInlineSlot);
 
-                        propertyString->UpdateCache(type, inlineOrAuxSlotIndex, isInlineSlot, descriptor.isInitialized && !descriptor.isFixed);
+                        propertyString->UpdateCache(type, inlineOrAuxSlotIndex, ObjectSlotType::GetVar(), isInlineSlot, descriptor.isInitialized && !descriptor.isFixed);
                     }
                     else
                     {
@@ -677,7 +675,7 @@ namespace Js
                     if (VirtualTableInfo<PropertyString>::HasVirtualTable(*propertyStringName))
                     {
                         PropertyString* propertyString = (PropertyString*)(*propertyStringName);
-                        propertyString->UpdateCache(type, inlineOrAuxSlotIndex, isInlineSlot, descriptor.isInitialized && !descriptor.isFixed);
+                        propertyString->UpdateCache(type, inlineOrAuxSlotIndex, ObjectSlotType::GetVar(), isInlineSlot, descriptor.isInitialized && !descriptor.isFixed);
                     }
                 }
                 else
@@ -903,38 +901,40 @@ namespace Js
         return info.slotIndex != Constants::NoSlot;
     }
 
+#if ENABLE_NATIVE_CODEGEN
     template <typename TPropertyIndex, typename TMapKey, bool IsNotExtensibleSupported>
-    bool SimpleDictionaryTypeHandlerBase<TPropertyIndex, TMapKey, IsNotExtensibleSupported>::IsObjTypeSpecEquivalent(const Type* type, const TypeEquivalenceRecord& record, uint& failedPropertyIndex)
+    IR::BailOutKind SimpleDictionaryTypeHandlerBase<TPropertyIndex, TMapKey, IsNotExtensibleSupported>::IsObjTypeSpecEquivalent(DynamicObject *const object, const TypeEquivalenceRecord& record, uint& failedPropertyIndex)
     {
         uint propertyCount = record.propertyCount;
         Js::EquivalentPropertyEntry* properties = record.properties;
         for (uint pi = 0; pi < propertyCount; pi++)
         {
             const EquivalentPropertyEntry* refInfo = &properties[pi];
-            if (!this->IsObjTypeSpecEquivalentImpl<false>(type, refInfo))
+            if (!this->IsObjTypeSpecEquivalentImpl<false>(object, refInfo))
             {
                 failedPropertyIndex = pi;
-                return false;
+                return IR::BailOutFailedEquivalentTypeCheck;
             }
         }
 
-        return true;
+        return IR::BailOutInvalid;
     }
+#endif
 
     template <typename TPropertyIndex, typename TMapKey, bool IsNotExtensibleSupported>
-    bool SimpleDictionaryTypeHandlerBase<TPropertyIndex, TMapKey, IsNotExtensibleSupported>::IsObjTypeSpecEquivalent(const Type* type, const EquivalentPropertyEntry *entry)
+    bool SimpleDictionaryTypeHandlerBase<TPropertyIndex, TMapKey, IsNotExtensibleSupported>::IsObjTypeSpecEquivalent(DynamicObject *const object, const EquivalentPropertyEntry *entry)
     {
-        return this->IsObjTypeSpecEquivalentImpl<true>(type, entry);
+        return this->IsObjTypeSpecEquivalentImpl<true>(object, entry);
     }
 
     template <typename TPropertyIndex, typename TMapKey, bool IsNotExtensibleSupported>
     template <bool doLock>
-    bool SimpleDictionaryTypeHandlerBase<TPropertyIndex, TMapKey, IsNotExtensibleSupported>::IsObjTypeSpecEquivalentImpl(const Type* type, const EquivalentPropertyEntry *entry)
+    bool SimpleDictionaryTypeHandlerBase<TPropertyIndex, TMapKey, IsNotExtensibleSupported>::IsObjTypeSpecEquivalentImpl(DynamicObject *const object, const EquivalentPropertyEntry *entry)
     {
         TPropertyIndex absSlotIndex = Constants::NoSlot;
         PropertyIndex relSlotIndex = Constants::NoSlot;
 
-        ScriptContext* scriptContext = type->GetScriptContext();
+        ScriptContext* scriptContext = object->GetScriptContext();
 
         const PropertyRecord* propertyRecord =
             doLock ? scriptContext->GetPropertyNameLocked(entry->propertyId) : scriptContext->GetPropertyName(entry->propertyId);
@@ -950,7 +950,9 @@ namespace Js
 
         if (relSlotIndex != Constants::NoSlot)
         {
-            if (relSlotIndex != entry->slotIndex || ((absSlotIndex >= GetInlineSlotCapacity()) != entry->isAuxSlot))
+            if (relSlotIndex != entry->slotIndex ||
+                ((absSlotIndex >= GetInlineSlotCapacity()) != entry->isAuxSlot) ||
+                !entry->slotType.IsVar())
             {
                 return false;
             }
@@ -1197,7 +1199,7 @@ namespace Js
         }
         if (descriptor->propertyIndex != NoSlots)
         {
-            *value = instance->GetSlot(descriptor->propertyIndex);
+            *value = instance->GetSlot(descriptor->propertyIndex, ObjectSlotType::GetVar());
             SetPropertyValueInfo(info, instance, descriptor->propertyIndex, descriptor->Attributes);
             if (!descriptor->isInitialized || descriptor->isFixed)
             {
@@ -1386,7 +1388,8 @@ namespace Js
         {
             if ((descriptor->Attributes & PropertyNoRedecl) && !(flags & PropertyOperation_AllowUndecl))
             {
-                if (scriptContext->IsUndeclBlockVar(instance->GetSlot(descriptor->propertyIndex)) && !(flags & PropertyOperation_AllowUndeclInConsoleScope))
+                if (scriptContext->IsUndeclBlockVar(instance->GetSlot(descriptor->propertyIndex, ObjectSlotType::GetVar())) &&
+                    !(flags & PropertyOperation_AllowUndeclInConsoleScope))
                 {
                     JavascriptError::ThrowReferenceError(scriptContext, JSERR_UseBeforeDeclaration);
                 }
@@ -1418,7 +1421,7 @@ namespace Js
                 InvalidateFixedField(TMapKey_OptionalConvertPropertyIdToPropertyRecord(scriptContext, propertyKey), descriptor, instance->GetScriptContext());
             }
 
-            SetSlotUnchecked(instance, descriptor->propertyIndex, value);
+            SetSlotUnchecked(instance, descriptor->propertyIndex, ObjectSlotType::GetVar(), value);
 
             if (descriptor->isInitialized && !descriptor->isFixed)
             {
@@ -1626,7 +1629,7 @@ namespace Js
                     if(!isUnordered ||
                         !AsUnordered()->TryRegisterDeletedPropertyIndex(instance, descriptor->propertyIndex))
                     {
-                        SetSlotUnchecked(instance, descriptor->propertyIndex, undefined);
+                        SetSlotUnchecked(instance, descriptor->propertyIndex, ObjectSlotType::GetVar(), undefined);
                     }
                 }
                 descriptor->Attributes = PropertyDeletedDefaults;
@@ -2301,7 +2304,7 @@ namespace Js
                     InvalidateFixedField(propertyRecord, descriptor, instance->GetScriptContext());
                 }
 
-                SetSlotUnchecked(instance, descriptor->propertyIndex, value);
+                SetSlotUnchecked(instance, descriptor->propertyIndex, ObjectSlotType::GetVar(), value);
 
                 if (descriptor->isInitialized && !descriptor->isFixed)
                 {
@@ -2571,7 +2574,7 @@ namespace Js
             instance->SetHasNoEnumerableProperties(false);
         }
 
-        SetSlotUnchecked(instance, index, value);
+        SetSlotUnchecked(instance, index, ObjectSlotType::GetVar(), value);
 
         // It's ok to populate inline cache here even if this handler isn't shared yet, because we don't have property add
         // inline cache flavor for SimpleDictionaryTypeHandlers.  This ensures that a) no new instance reaches this handler
@@ -2633,7 +2636,7 @@ namespace Js
         int slotCount = this->nextPropertyIndex;
         for (int slotIndex = 0; slotIndex < slotCount; slotIndex++)
         {
-            SetSlotUnchecked(instance, slotIndex, undefined);
+            SetSlotUnchecked(instance, slotIndex, ObjectSlotType::GetVar(), undefined);
         }
     }
 
@@ -2660,7 +2663,7 @@ namespace Js
         int slotCount = this->nextPropertyIndex;
         for (int slotIndex = 0; slotIndex < slotCount; slotIndex++)
         {
-            SetSlotUnchecked(instance, slotIndex, CrossSite::MarshalVar(targetScriptContext, GetSlot(instance, slotIndex)));
+            SetSlotUnchecked(instance, slotIndex, ObjectSlotType::GetVar(), CrossSite::MarshalVar(targetScriptContext, GetSlot(instance, slotIndex, ObjectSlotType::GetVar())));
         }
     }
 
@@ -2700,14 +2703,14 @@ namespace Js
             }
             if (!(descriptor->Attributes & PropertyDeleted) && !(descriptor->Attributes & PropertyLetConstGlobal))
             {
-                // See PathTypeHandlerBase::ConvertToSimpleDictionaryType for rules governing fixed field bits during type
+                // See PathTypeHandler::ConvertToSimpleDictionaryType for rules governing fixed field bits during type
                 // handler transitions.  In addition, we know that the current instance is not yet a prototype.
                 if (descriptor->propertyIndex != NoSlots)
                 {
                     // Consider: If we decide to fix all types of properties, we could skip loading the value from the instance.
                     if (descriptor->isInitialized)
                     {
-                        Var value = instance->GetSlot(descriptor->propertyIndex);
+                        Var value = instance->GetSlot(descriptor->propertyIndex, ObjectSlotType::GetVar());
                         // Even though the handler says the property is initialized the particular instance may not yet have
                         // a value for this property.  This should only happen if the handler is shared.
                         if (value != nullptr)
@@ -2767,7 +2770,7 @@ namespace Js
             {
                 Assert(this->singletonInstance == nullptr || this->singletonInstance->Get() == instance);
                 Assert(HasSingletonInstanceOnlyIfNeeded());
-                if (AreSingletonInstancesNeeded() && this->singletonInstance == nullptr)
+                if (AreSingletonInstancesNeeded() && this->singletonInstance == nullptr && CanBeSingletonInstance(instance))
                 {
                     this->singletonInstance = instance->CreateWeakReferenceToSelf();
                 }
@@ -2895,8 +2898,8 @@ namespace Js
                 {
                     AssertMsg(!(descriptor->Attributes & PropertyLetConstGlobal), "can't have fixed global let/const");
                     Assert(!IsInternalPropertyId(propertyRecord->GetPropertyId()));
-                    Var value = localSingletonInstance->GetSlot(descriptor->propertyIndex);
-                    if (value && ((IsFixedMethodProperty(propertyType) && JavascriptFunction::Is(value)) || IsFixedDataProperty(propertyType)))
+                    Var value = localSingletonInstance->GetSlot(descriptor->propertyIndex, ObjectSlotType::GetVar());
+                    if (value && ((IsFixedMethodProperty(propertyType) && JavascriptFunction::Is(value)) || IsFixedDataProperty(propertyType))) 
                     {
                         *pProperty = value;
                         if (markAsUsed)
@@ -2962,7 +2965,7 @@ namespace Js
             if (descriptor.Attributes & PropertyLetConstGlobal)
             {
                 *propertyRecord = TMapKey_ConvertKey<const PropertyRecord*>(scriptContext, propertyMap->GetKeyAt(index));
-                *value = instance->GetSlot(descriptor.propertyIndex);
+                *value = instance->GetSlot(descriptor.propertyIndex, ObjectSlotType::GetVar());
                 *isConst = (descriptor.Attributes & PropertyConst) != 0;
 
                 index += 1;
@@ -3122,7 +3125,7 @@ namespace Js
     template <typename TPropertyIndex, typename TMapKey, bool IsNotExtensibleSupported>
     void SimpleDictionaryTypeHandlerBase<TPropertyIndex, TMapKey, IsNotExtensibleSupported>::SetPropertyValueInfo(PropertyValueInfo* info, RecyclableObject* instance, TPropertyIndex propIndex, PropertyAttributes attributes, InlineCacheFlags flags)
     {
-        PropertyValueInfo::Set(info, instance, propIndex, attributes, flags);
+        PropertyValueInfo::Set(info, instance, propIndex, ObjectSlotType::GetVar(), attributes, flags);
     }
 
     template <>

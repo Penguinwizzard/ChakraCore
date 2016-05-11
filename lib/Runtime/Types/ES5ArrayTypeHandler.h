@@ -91,7 +91,7 @@ namespace Js
         friend class DeferredTypeHandlerBase;
         template <DeferredTypeInitializer initializer, typename DeferredTypeFilter, bool isPrototypeTemplate, uint16 inlineSlotCapacity, uint16 offsetOfInlineSlots>
         friend class DeferredTypeHandler;
-        friend class PathTypeHandlerBase;
+        friend class PathTypeHandler;
         template<size_t size>
         friend class SimpleTypeHandler;
         template <typename TPropertyIndex, typename TMapKey, bool IsNotExtensibleSupported> friend class SimpleDictionaryTypeHandlerBase;

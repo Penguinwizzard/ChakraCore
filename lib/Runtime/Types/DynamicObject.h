@@ -22,11 +22,11 @@ namespace Js
 #endif
 
 #if DBG
-#define SetSlotArguments(propertyId, slotIndex, value) propertyId, false, slotIndex, value
-#define SetSlotArgumentsRoot(propertyId, allowLetConst, slotIndex, value) propertyId, allowLetConst, slotIndex, value
+#define SetSlotArguments(propertyId, slotIndex, slotType, value) propertyId, false, slotIndex, slotType, value
+#define SetSlotArgumentsRoot(propertyId, allowLetConst, slotIndex, slotType, value) propertyId, allowLetConst, slotIndex, slotType, value
 #else
-#define SetSlotArguments(propertyId, slotIndex, value) slotIndex, value
-#define SetSlotArgumentsRoot(propertyId, allowLetConst, slotIndex, value) slotIndex, value
+#define SetSlotArguments(propertyId, slotIndex, slotType, value) slotIndex, slotType, value
+#define SetSlotArgumentsRoot(propertyId, allowLetConst, slotIndex, slotType, value) slotIndex, slotType, value
 #endif
 
     enum class DynamicObjectFlags : uint16
@@ -55,7 +55,7 @@ namespace Js
         friend class ForInObjectEnumerator; // for cache enumerator
 
         friend class JavascriptOperators; // for ReplaceType
-        friend class PathTypeHandlerBase; // for ReplaceType
+        friend class PathTypeHandler; // for ReplaceType
         friend class JavascriptLibrary;  // for ReplaceType
         friend class ScriptFunction; // for ReplaceType;
         friend class JSON::JSONParser; //for ReplaceType
@@ -116,18 +116,18 @@ namespace Js
         void EnsureSlots(int oldCount, int newCount, ScriptContext * scriptContext, DynamicTypeHandler * newTypeHandler = nullptr);
         void EnsureSlots(int newCount, ScriptContext *scriptContext);
 
-        Var GetSlot(int index);
-        Var GetInlineSlot(int index);
-        Var GetAuxSlot(int index);
+        Var GetSlot(int index, const ObjectSlotType slotType);
+        Var GetInlineSlot(int index, const ObjectSlotType slotType);
+        Var GetAuxSlot(int index, const ObjectSlotType slotType);
 
 #if DBG
-        void SetSlot(PropertyId propertyId, bool allowLetConst, int index, Var value);
-        void SetInlineSlot(PropertyId propertyId, bool allowLetConst, int index, Var value);
-        void SetAuxSlot(PropertyId propertyId, bool allowLetConst, int index, Var value);
+        void SetSlot(PropertyId propertyId, bool allowLetConst, int index, const ObjectSlotType slotType, Var value);
+        ObjectSlotType SetInlineSlot(PropertyId propertyId, bool allowLetConst, int index, const ObjectSlotType slotType, Var value);
+        ObjectSlotType SetAuxSlot(PropertyId propertyId, bool allowLetConst, int index, const ObjectSlotType slotType, Var value);
 #else
-        void SetSlot(int index, Var value);
-        void SetInlineSlot(int index, Var value);
-        void SetAuxSlot(int index, Var value);
+        void SetSlot(int index, const ObjectSlotType slotType, Var value);
+        ObjectSlotType SetInlineSlot(int index, const ObjectSlotType slotType, Var value);
+        ObjectSlotType SetAuxSlot(int index, const ObjectSlotType slotType, Var value);
 #endif
 
     private:

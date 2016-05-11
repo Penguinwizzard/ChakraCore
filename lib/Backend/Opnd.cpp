@@ -821,6 +821,26 @@ PropertySymOpnd::CopyInternalSub(Func *func)
     return newOpnd;
 }
 
+bool PropertySymOpnd::NeedsPrimaryTypeCheck() const
+{
+    // Only indicate that we need a primary type check, i.e. the type isn't yet available but will be needed downstream.
+    // Type checks and bailouts may still be needed in other places (e.g. loads from proto, fixed field checks, or
+    // property adds), if a primary type check cannot protect them.
+    Assert(MayNeedTypeCheckProtection());
+    Assert(TypeCheckSeqBitsSetOnlyIfCandidate());
+    return IsTypeCheckSeqCandidate() && !(BackwardPass::DoRemoveDeadTypeCheckBailouts() && IsTypeDead()) && !IsTypeChecked() && !HasTypeMismatch();
+}
+
+bool PropertySymOpnd::NeedsLocalTypeCheck() const
+{
+    Assert(MayNeedTypeCheckProtection());
+    Assert(TypeCheckSeqBitsSetOnlyIfCandidate());
+    // Indicate whether this operation needs a type check for its own sake, since the type is dead and no downstream
+    // operations require the type to be checked.
+    return !PHASE_OFF1(Js::ObjTypeSpecIsolatedFldOpsPhase) && BackwardPass::DoRemoveDeadTypeCheckBailouts() &&
+        IsTypeCheckSeqCandidate() && IsTypeDead() && !IsTypeCheckOnly() && !IsTypeChecked() && !HasTypeMismatch();
+}
+
 bool
 PropertySymOpnd::IsObjectHeaderInlined() const
 {

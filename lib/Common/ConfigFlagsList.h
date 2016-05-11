@@ -121,6 +121,7 @@ PHASE(All)
                     PHASE(TraceObjTypeSpecWriteGuards)
                     PHASE(LiveOutFields)
                     PHASE(DisabledObjTypeSpec)
+                    PHASE(RemoveDeadTypeCheckBailouts)
                     #if DBG
                         PHASE(SimulatePolyCacheWithOneTypeForFunction)
                     #endif
@@ -165,7 +166,8 @@ PHASE(All)
                 PHASE(MemOp)
                     PHASE(MemSet)
                     PHASE(MemCopy)
-            PHASE(DeadStore)
+                PHASE(NativeFields)
+                PHASE(DeadStore)
                 PHASE(ReverseCopyProp)
                 PHASE(MarkTemp)
                     PHASE(MarkTempNumber)
@@ -396,6 +398,8 @@ PHASE(All)
 #define DEFAULT_CONFIG_InlineThresholdAdjustCountInSmallFunction  (10)
 #define DEFAULT_CONFIG_ConstructorInlineThreshold (21)      //Monomorphic constructor threshold
 #define DEFAULT_CONFIG_ConstructorCallsRequiredToFinalizeCachedType (2)
+#define DEFAULT_CONFIG_MaxSimpleConstructedObjectInlineSlots (8)
+#define DEFAULT_CONFIG_MaxComplexConstructedObjectInlineSlots (8)
 #define DEFAULT_CONFIG_OutsideLoopInlineThreshold (16)      //Threshold to inline outside loops
 #define DEFAULT_CONFIG_LeafInlineThreshold  (60)            //Inlinee threshold for function which is leaf (irrespective of it has loops or not)
 #define DEFAULT_CONFIG_LoopInlineThreshold  (25)            //Inlinee threshold for function with loops
@@ -792,6 +796,8 @@ FLAGNR(Boolean, Console               , "Create console window in GUI app", fals
 FLAGNR(Boolean, ConsoleExitPause      , "Pause on exit when a console window is created in GUI app", false)
 FLAGNR(Number,  ConstructorInlineThreshold      , "Maximum size in bytecodes of a constructor inline candidate with monomorphic field access", DEFAULT_CONFIG_ConstructorInlineThreshold)
 FLAGNR(Number,  ConstructorCallsRequiredToFinalizeCachedType, "Number of calls to a constructor required before the type cached in the constructor cache is finalized", DEFAULT_CONFIG_ConstructorCallsRequiredToFinalizeCachedType)
+FLAGNR(Number,  MaxSimpleConstructedObjectInlineSlots, "Maximum number of inline slots to allocate for an object created for a simple constructor (one that has this-only statements)", DEFAULT_CONFIG_MaxSimpleConstructedObjectInlineSlots)
+FLAGNR(Number,  MaxComplexConstructedObjectInlineSlots, "Maximum number of inline slots to allocate for an object created for a complex constructor (one that does not have this-only statements)", DEFAULT_CONFIG_MaxComplexConstructedObjectInlineSlots)
 #ifdef SECURITY_TESTING
 FLAGNR(Boolean, CrashOnException      , "Removes the top-level exception handler, allowing jc.exe to crash on an unhandled exception.  No effect on IE. (default: false)", false)
 #endif

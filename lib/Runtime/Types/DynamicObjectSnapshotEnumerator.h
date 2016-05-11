@@ -10,6 +10,7 @@ namespace Js
     class DynamicObjectSnapshotEnumerator : public DynamicObjectEnumerator<T, enumNonEnumerable, enumSymbols, /*snapShotSemantics*/true>
     {
     protected:
+        int initialSlotCount;
         int initialPropertyCount;
 
         DynamicObjectSnapshotEnumerator(ScriptContext* scriptContext)

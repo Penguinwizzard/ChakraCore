@@ -259,7 +259,7 @@ namespace Js
         virtual IDiagObjectAddress * GetObjectAddress(int index) override;
 
     protected:
-        void AddObjectProperties(int count, Js::RecyclableObject* object);
+        void AddObjectProperties(ObjectSlotIterator &it, Js::RecyclableObject* object);
     };
 
     class RootObjectVariablesWalker : public ObjectVariablesWalker

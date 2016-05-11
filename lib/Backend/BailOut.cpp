@@ -580,11 +580,22 @@ BailOutRecord::RestoreValues(IR::BailOutKind bailOutKind, Js::JavascriptCallStac
                     Assert(ThreadContext::IsOnStack(value));
 
                     Js::DynamicObject * obj = Js::DynamicObject::FromVar(value);
-                    uint propertyCount = obj->GetPropertyCount();
-                    for (uint j = record.initFldCount; j < propertyCount; j++)
+                    Js::ObjectSlotIterator it(obj);
+                    it.SetCurrentSlotIndexFromPropertyIndex(record.initFldCount);
+                    for (; it.IsValid(); it.MoveNext())
                     {
-                        obj->SetSlot(SetSlotArgumentsRoot(Js::Constants::NoProperty, false, j, nullptr));
-                    }
+                        void *const slot = it.GetTypeHandler()->GetSlotAddress(obj, it.CurrentSlotIndex());
+                        const Js::ObjectSlotType slotType = it.CurrentSlotType();
+                        if(slotType.IsVar())
+                            it.GetTypeHandler()->SetVarSlotAtAddress(slot, nullptr, obj);
+                        else if(slotType.IsInt())
+                            it.GetTypeHandler()->SetIntSlotAtAddress(slot, 0);
+                        else
+                        {
+                            Assert(slotType.IsFloat());
+                            it.GetTypeHandler()->SetFloatSlotAtAddress(slot, 0);
+                        }
+                    }           
                 }
             }
         });
@@ -1034,6 +1045,18 @@ BailOutRecord::RestoreValues(IR::BailOutKind bailOutKind, Js::JavascriptCallStac
     }
 }
 
+bool BailOutRecord::UpdateFunctionEntryPointInfo(Js::ScriptFunction *const function)
+{
+    Js::FunctionBody *const functionBody = function->GetFunctionBody();
+    Js::FunctionEntryPointInfo *const defaultEntryPointInfo = functionBody->GetDefaultFunctionEntryPointInfo();
+    const Js::JavascriptMethod directEntryPoint = functionBody->GetDirectEntryPoint(defaultEntryPointInfo);
+    bool isOldEntryPoint = function->GetFunctionEntryPointInfo() != defaultEntryPointInfo;
+    if(isOldEntryPoint)
+        function->UpdateThunkEntryPoint(defaultEntryPointInfo, directEntryPoint);
+    isOldEntryPoint = isOldEntryPoint || IsIntermediateCodeGenThunk(directEntryPoint);
+    return isOldEntryPoint;
+}
+
 Js::Var BailOutRecord::BailOut(BailOutRecord const * bailOutRecord)
 {
     Assert(bailOutRecord);
@@ -1118,8 +1141,13 @@ uint32 bailOutOffset, void * returnAddress, IR::BailOutKind bailOutKind, Js::Var
     js_memcpy_s(registerSaves, sizeof(registerSaves), layout->functionObject->GetScriptContext()->GetThreadContext()->GetBailOutRegisterSaveSpace(),
         sizeof(registerSaves));
 
+    Js::ScriptFunction *const function = Js::ScriptFunction::FromVar(layout->functionObject);
+    const bool isOldEntryPoint = UpdateFunctionEntryPointInfo(function);
+
     Js::Var result = BailOutCommonNoCodeGen(layout, bailOutRecord, bailOutOffset, returnAddress, bailOutKind, branchValue, nullptr, bailOutReturnValue, argoutRestoreAddress);
-    ScheduleFunctionCodeGen(Js::ScriptFunction::FromVar(layout->functionObject), nullptr, bailOutRecord, bailOutKind, returnAddress);
+
+    if(!isOldEntryPoint)
+        ScheduleFunctionCodeGen(function, nullptr, bailOutRecord, bailOutKind, returnAddress);
     return result;
 }
 
@@ -1134,13 +1162,19 @@ BailOutRecord::BailOutInlinedCommon(Js::JavascriptCallStackLayout * layout, Bail
     Js::Var registerSaves[BailOutRegisterSaveSlotCount];
     js_memcpy_s(registerSaves, sizeof(registerSaves), layout->functionObject->GetScriptContext()->GetThreadContext()->GetBailOutRegisterSaveSpace(),
         sizeof(registerSaves));
+
+    Js::ScriptFunction *const function = Js::ScriptFunction::FromVar(layout->functionObject);
+    const bool isOldEntryPoint = UpdateFunctionEntryPointInfo(function);
+
     BailOutRecord const * currentBailOutRecord = bailOutRecord;
     BailOutReturnValue bailOutReturnValue;
     Js::ScriptFunction * innerMostInlinee;
     BailOutInlinedHelper(layout, currentBailOutRecord, bailOutOffset, returnAddress, bailOutKind, registerSaves, &bailOutReturnValue, &innerMostInlinee, false, branchValue);
     Js::Var result = BailOutCommonNoCodeGen(layout, currentBailOutRecord, currentBailOutRecord->bailOutOffset, returnAddress, bailOutKind, branchValue,
         registerSaves, &bailOutReturnValue);
-    ScheduleFunctionCodeGen(Js::ScriptFunction::FromVar(layout->functionObject), innerMostInlinee, currentBailOutRecord, bailOutKind, returnAddress);
+
+    if(!isOldEntryPoint)
+        ScheduleFunctionCodeGen(function, innerMostInlinee, currentBailOutRecord, bailOutKind, returnAddress);
     return result;
 }
 
@@ -1148,8 +1182,12 @@ uint32
 BailOutRecord::BailOutFromLoopBodyCommon(Js::JavascriptCallStackLayout * layout, BailOutRecord const * bailOutRecord, uint32 bailOutOffset,
     IR::BailOutKind bailOutKind, Js::Var branchValue)
 {
+    Js::ScriptFunction *const function = Js::ScriptFunction::FromVar(layout->functionObject);
+    UpdateFunctionEntryPointInfo(function);
+
     uint32 result = BailOutFromLoopBodyHelper(layout, bailOutRecord, bailOutOffset, bailOutKind, branchValue);
-    ScheduleLoopBodyCodeGen(Js::ScriptFunction::FromVar(layout->functionObject), nullptr, bailOutRecord, bailOutKind);
+
+    ScheduleLoopBodyCodeGen(function, nullptr, bailOutRecord, bailOutKind);
     return result;
 }
 
@@ -1161,13 +1199,18 @@ BailOutRecord::BailOutFromLoopBodyInlinedCommon(Js::JavascriptCallStackLayout * 
     Js::Var registerSaves[BailOutRegisterSaveSlotCount];
     js_memcpy_s(registerSaves, sizeof(registerSaves), layout->functionObject->GetScriptContext()->GetThreadContext()->GetBailOutRegisterSaveSpace(),
         sizeof(registerSaves));
+
+    Js::ScriptFunction *const function = Js::ScriptFunction::FromVar(layout->functionObject);
+    UpdateFunctionEntryPointInfo(function);
+
     BailOutRecord const * currentBailOutRecord = bailOutRecord;
     BailOutReturnValue bailOutReturnValue;
     Js::ScriptFunction * innerMostInlinee;
     BailOutInlinedHelper(layout, currentBailOutRecord, bailOutOffset, returnAddress, bailOutKind, registerSaves, &bailOutReturnValue, &innerMostInlinee, true, branchValue);
     uint32 result = BailOutFromLoopBodyHelper(layout, currentBailOutRecord, currentBailOutRecord->bailOutOffset,
-        bailOutKind, nullptr, registerSaves, &bailOutReturnValue);
-    ScheduleLoopBodyCodeGen(Js::ScriptFunction::FromVar(layout->functionObject), innerMostInlinee, currentBailOutRecord, bailOutKind);
+        bailOutKind, registerSaves, nullptr, &bailOutReturnValue);
+
+    ScheduleLoopBodyCodeGen(function, innerMostInlinee, currentBailOutRecord, bailOutKind);
     return result;
 }
 
@@ -1749,10 +1792,12 @@ void BailOutRecord::ScheduleFunctionCodeGen(Js::ScriptFunction * function, Js::S
             case IR::BailOutOnInlineFunction:
             case IR::BailOutFailedTypeCheck:
             case IR::BailOutFailedFixedFieldTypeCheck:
-            case IR::BailOutFailedCtorGuardCheck:
             case IR::BailOutFailedFixedFieldCheck:
             case IR::BailOutFailedEquivalentTypeCheck:
             case IR::BailOutFailedEquivalentFixedFieldTypeCheck:
+            case IR::BailOutOnObjectLiteralFinalTypeMismatch:
+            case IR::BailOutOnConstructorCacheTypeMismatch:
+            case IR::BailOutOnFieldSlotTypeMismatch:
                 {
                     // If we consistently see RejitMaxBailOutCount bailouts for these kinds, then likely we have stale profile data and it is beneficial to rejit.
                     // Note you need to include only bailout kinds which don't disable the entire optimizations.
@@ -1776,7 +1821,10 @@ void BailOutRecord::ScheduleFunctionCodeGen(Js::ScriptFunction * function, Js::S
     {
         Js::DynamicProfileInfo * profileInfo = executeFunction->GetAnyDynamicProfileInfo();
 
-        if ((bailOutKind & (IR::BailOutOnResultConditions | IR::BailOutOnDivSrcConditions)) || bailOutKind == IR::BailOutIntOnly || bailOutKind == IR::BailOnIntMin || bailOutKind == IR::BailOnDivResultNotInt)
+        if ((bailOutKind & (IR::BailOutOnResultConditions | IR::BailOutOnDivSrcConditions)) ||
+            bailOutKind == IR::BailOutIntOnly ||
+            bailOutKind == IR::BailOnIntMin ||
+            bailOutKind == IR::BailOnDivResultNotInt)
         {
             // Note WRT BailOnIntMin: it wouldn't make sense to re-jit without changing anything here, as interpreter will not change the (int) type,
             // so the options are: (1) rejit with disabling int type spec, (2) don't rejit, always bailout.
@@ -1793,7 +1841,9 @@ void BailOutRecord::ScheduleFunctionCodeGen(Js::ScriptFunction * function, Js::S
                     rejitReason = RejitReason::AggressiveMulIntTypeSpecDisabled;
                 }
             }
-            else if ((bailOutKind & (IR::BailOutOnDivByZero | IR::BailOutOnDivOfMinInt)) || bailOutKind == IR::BailOnDivResultNotInt)
+            else if (
+                (bailOutKind & (IR::BailOutOnDivByZero | IR::BailOutOnDivOfMinInt)) ||
+                bailOutKind == IR::BailOnDivResultNotInt)
             {
                 if (profileInfo->IsDivIntTypeSpecDisabled(false))
                 {
@@ -2125,19 +2175,6 @@ void BailOutRecord::ScheduleFunctionCodeGen(Js::ScriptFunction * function, Js::S
                 rejitReason = RejitReason::FailedFixedFieldCheck;
                 break;
 
-            case IR::BailOutFailedCtorGuardCheck:
-                // (ObjTypeSpec): Consider scheduling re-JIT right after the first bailout.  We will never successfully execute the
-                // function from which we just bailed out, unless we take a different code path through it.
-
-                // A constructor cache guard may be invalidated for one of two reasons:
-                // a) the constructor's prototype property has changed, or
-                // b) one of the properties protected by the guard (this constructor cache served as) has changed in some way (e.g. became read-only).
-                // In the former case, the cache itself will be marked as polymorphic and on re-JIT we won't do the optimization.
-                // In the latter case, the inline cache for the offending property will be cleared and on re-JIT the guard will not be enlisted
-                // to protect that property operation.
-                rejitReason = RejitReason::CtorGuardInvalidated;
-                break;
-
             case IR::BailOutOnFloor:
             {
                 if (profileInfo->IsFloorInliningDisabled())
@@ -2151,6 +2188,25 @@ void BailOutRecord::ScheduleFunctionCodeGen(Js::ScriptFunction * function, Js::S
                 }
                 break;
             }
+
+            case IR::BailOutOnObjectLiteralFinalTypeMismatch:
+                // Changes to the cached final type diminish as a slot type always converges to a more conservative type
+                rejitReason = RejitReason::ObjectLiteralFinalTypeChanged;
+                break;
+
+            case IR::BailOutOnConstructorCacheTypeMismatch:
+                // Changes to the cached type diminish as a slot type always converges to a more conservative type
+                rejitReason = RejitReason::ConstructorCacheTypeChanged;
+                break;
+
+            case IR::BailOutOnFieldSlotTypeMismatch:
+                // Changes to the expected slot type diminish as a slot type always converges to a more conservative type
+                rejitReason = RejitReason::FieldSlotTypeChanged;
+                break;
+
+            case IR::BailOutOnUnexpectedSlotTypeChange:
+                // No rejit for this case, see PathTypeHandler::IsObjTypeSpecEquivalent()
+                break;
         }
 
         Assert(!(rejitReason != RejitReason::None && reThunk));
@@ -2263,14 +2319,19 @@ void BailOutRecord::ScheduleLoopBodyCodeGen(Js::ScriptFunction * function, Js::S
     {
         Js::DynamicProfileInfo * profileInfo = executeFunction->GetAnyDynamicProfileInfo();
 
-        if ((bailOutKind & (IR::BailOutOnResultConditions | IR::BailOutOnDivSrcConditions)) || bailOutKind == IR::BailOutIntOnly || bailOutKind == IR::BailOnIntMin)
-        {
+        if ((bailOutKind & (IR::BailOutOnResultConditions | IR::BailOutOnDivSrcConditions)) ||
+            bailOutKind == IR::BailOutIntOnly ||
+            bailOutKind == IR::BailOnIntMin ||
+            bailOutKind == IR::BailOnDivResultNotInt)
+        {        
             if (bailOutKind & IR::BailOutOnMulOverflow)
             {
                 profileInfo->DisableAggressiveMulIntTypeSpec(true);
                 rejitReason = RejitReason::AggressiveMulIntTypeSpecDisabled;
             }
-            else if ((bailOutKind & (IR::BailOutOnDivByZero | IR::BailOutOnDivOfMinInt)) || bailOutKind == IR::BailOnDivResultNotInt)
+            else if (
+                (bailOutKind & (IR::BailOutOnDivByZero | IR::BailOutOnDivOfMinInt)) ||
+                bailOutKind == IR::BailOnDivResultNotInt)
             {
                 profileInfo->DisableDivIntTypeSpec(true);
                 rejitReason = RejitReason::DivIntTypeSpecDisabled;
@@ -2436,20 +2497,6 @@ void BailOutRecord::ScheduleLoopBodyCodeGen(Js::ScriptFunction * function, Js::S
                     RejitReason::FailedEquivalentTypeCheck : RejitReason::FailedEquivalentFixedFieldTypeCheck;
                 break;
 
-            case IR::BailOutFailedCtorGuardCheck:
-                // (ObjTypeSpec): Consider scheduling re-JIT right after the first bailout.  We will never successfully execute the
-                // function from which we just bailed out, unless we take a different code path through it.
-
-                // A constructor cache guard may be invalidated for one of two reasons:
-                // a) the constructor's prototype property has changed, or
-                // b) one of the properties protected by the guard (this constructor cache served as) has changed in some way (e.g. became
-                // read-only).
-                // In the former case, the cache itself will be marked as polymorphic and on re-JIT we won't do the optimization.
-                // In the latter case, the inline cache for the offending property will be cleared and on re-JIT the guard will not be enlisted
-                // to protect that property operation.
-                rejitReason = RejitReason::CtorGuardInvalidated;
-                break;
-
             case IR::BailOutOnFloor:
             {
                 profileInfo->DisableFloorInlining();
@@ -2463,6 +2510,25 @@ void BailOutRecord::ScheduleLoopBodyCodeGen(Js::ScriptFunction * function, Js::S
 
             case IR::BailOutOnTaggedValue:
                 rejitReason = RejitReason::FailedTagCheck;
+                break;
+
+            case IR::BailOutOnObjectLiteralFinalTypeMismatch:
+                // Changes to the cached final type diminish as a slot type always converges to a more conservative type
+                rejitReason = RejitReason::ObjectLiteralFinalTypeChanged;
+                break;
+
+            case IR::BailOutOnConstructorCacheTypeMismatch:
+                // Changes to the cached diminish as a slot type always converges to a more conservative type
+                rejitReason = RejitReason::ConstructorCacheTypeChanged;
+                break;
+
+            case IR::BailOutOnFieldSlotTypeMismatch:
+                // Changes to the expected slot type diminish as a slot type always converges to a more conservative type
+                rejitReason = RejitReason::FieldSlotTypeChanged;
+                break;
+
+            case IR::BailOutOnUnexpectedSlotTypeChange:
+                // No rejit for this case, see PathTypeHandler::IsObjTypeSpecEquivalent()
                 break;
         }
 

@@ -10,7 +10,8 @@ namespace Js
     // TypePropertyCacheElement
     // -------------------------------------------------------------------------------------------------------------------------
 
-    TypePropertyCacheElement::TypePropertyCacheElement() : id(Constants::NoProperty), index(0), prototypeObjectWithProperty(0)
+    TypePropertyCacheElement::TypePropertyCacheElement()
+        : prototypeObjectWithProperty(nullptr), id(Constants::NoProperty), index(0), slotType(0), bits(0)
     {
     }
 
@@ -22,6 +23,11 @@ namespace Js
     PropertyIndex TypePropertyCacheElement::Index() const
     {
         return index;
+    }
+
+    ObjectSlotType TypePropertyCacheElement::SlotType() const
+    {
+        return slotType;
     }
 
     bool TypePropertyCacheElement::IsInlineSlot() const
@@ -47,6 +53,7 @@ namespace Js
     void TypePropertyCacheElement::Cache(
         const PropertyId id,
         const PropertyIndex index,
+        const ObjectSlotType slotType,
         const bool isInlineSlot,
         const bool isSetPropertyAllowed)
     {
@@ -55,15 +62,17 @@ namespace Js
 
         this->id = id;
         this->index = index;
+        this->slotType = slotType;
         this->isInlineSlot = isInlineSlot;
         this->isSetPropertyAllowed = isSetPropertyAllowed;
         this->isMissing = false;
-        this->prototypeObjectWithProperty = 0;
+        this->prototypeObjectWithProperty = nullptr;
     }
 
     void TypePropertyCacheElement::Cache(
         const PropertyId id,
         const PropertyIndex index,
+        const ObjectSlotType slotType,
         const bool isInlineSlot,
         const bool isSetPropertyAllowed,
         const bool isMissing,
@@ -80,11 +89,14 @@ namespace Js
 
         this->id = id;
         this->index = index;
+        this->slotType = slotType;
         this->isInlineSlot = isInlineSlot;
         this->isSetPropertyAllowed = isSetPropertyAllowed;
         this->isMissing = isMissing;
         this->prototypeObjectWithProperty = prototypeObjectWithProperty;
-        Assert(this->isMissing == (uint16)(this->prototypeObjectWithProperty == this->prototypeObjectWithProperty->GetLibrary()->GetMissingPropertyHolder()));
+        Assert(
+            this->isMissing ==
+            (this->prototypeObjectWithProperty == this->prototypeObjectWithProperty->GetLibrary()->GetMissingPropertyHolder()));
     }
 
     void TypePropertyCacheElement::Clear()
@@ -107,34 +119,37 @@ namespace Js
     __inline bool TypePropertyCache::TryGetIndexForLoad(
         const bool checkMissing,
         const PropertyId id,
-        PropertyIndex *const index,
-        bool *const isInlineSlot,
-        bool *const isMissing,
-        DynamicObject * *const prototypeObjectWithProperty) const
+        PropertyIndex *const indexRef,
+        ObjectSlotType *const slotTypeRef,
+        bool *const isInlineSlotRef,
+        bool *const isMissingRef,
+        DynamicObject * *const prototypeObjectWithPropertyRef) const
     {
-        Assert(index);
-        Assert(isInlineSlot);
-        Assert(isMissing);
-        Assert(prototypeObjectWithProperty);
+        Assert(indexRef);
+        Assert(isInlineSlotRef);
+        Assert(isMissingRef);
+        Assert(prototypeObjectWithPropertyRef);
 
         const TypePropertyCacheElement &element = elements[ElementIndex(id)];
         if(element.Id() != id || !checkMissing && element.IsMissing())
             return false;
 
-        *index = element.Index();
-        *isInlineSlot = element.IsInlineSlot();
-        *isMissing = checkMissing ? element.IsMissing() : false;
-        *prototypeObjectWithProperty = element.PrototypeObjectWithProperty();
+        *indexRef = element.Index();
+        *slotTypeRef = element.SlotType();
+        *isInlineSlotRef = element.IsInlineSlot();
+        *isMissingRef = checkMissing ? element.IsMissing() : false;
+        *prototypeObjectWithPropertyRef = element.PrototypeObjectWithProperty();
         return true;
     }
 
     __inline bool TypePropertyCache::TryGetIndexForStore(
         const PropertyId id,
-        PropertyIndex *const index,
-        bool *const isInlineSlot) const
+        PropertyIndex *const indexRef,
+        ObjectSlotType *const slotTypeRef,
+        bool *const isInlineSlotRef) const
     {
-        Assert(index);
-        Assert(isInlineSlot);
+        Assert(indexRef);
+        Assert(isInlineSlotRef);
 
         const TypePropertyCacheElement &element = elements[ElementIndex(id)];
         if(element.Id() != id ||
@@ -145,8 +160,9 @@ namespace Js
         }
 
         Assert(!element.IsMissing());
-        *index = element.Index();
-        *isInlineSlot = element.IsInlineSlot();
+        *indexRef = element.Index();
+        *slotTypeRef = element.SlotType();
+        *isInlineSlotRef = element.IsInlineSlot();
         return true;
     }
 
@@ -163,12 +179,14 @@ namespace Js
         Assert(propertyValueInfo->GetInlineCache() || propertyValueInfo->GetPolymorphicInlineCache());
 
         PropertyIndex propertyIndex;
+        ObjectSlotType slotType = ObjectSlotType::GetVar();
         DynamicObject *prototypeObjectWithProperty;
         bool isInlineSlot, isMissing;
         if(!TryGetIndexForLoad(
                 checkMissing,
                 propertyId,
                 &propertyIndex,
+                &slotType,
                 &isInlineSlot,
                 &isMissing,
                 &prototypeObjectWithProperty))
@@ -202,22 +220,32 @@ namespace Js
         #endif
 
         #if DBG
-            const PropertyIndex typeHandlerPropertyIndex =
-                DynamicObject
-                    ::FromVar(propertyObject)
-                    ->GetDynamicType()
-                    ->GetTypeHandler()
-                    ->InlineOrAuxSlotIndexToPropertyIndex(propertyIndex, isInlineSlot);
-            Assert(typeHandlerPropertyIndex == propertyObject->GetPropertyIndex(propertyId));
+            {
+                DynamicTypeHandler *const typeHandler =
+                    DynamicObject::FromVar(propertyObject)->GetDynamicType()->GetTypeHandler();
+                const PropertyIndex typeHandlerPropertyIndex =
+                    typeHandler->InlineOrAuxSlotIndexToPropertyIndex(propertyIndex, isInlineSlot);
+                Assert(typeHandlerPropertyIndex == propertyObject->GetPropertyIndex(propertyId));
+                Assert(slotType.IsValueTypeEqualTo(typeHandler->GetSlotType(typeHandlerPropertyIndex)));
+            }
         #endif
 
             *propertyValue =
                 isInlineSlot
-                    ? DynamicObject::FromVar(propertyObject)->GetInlineSlot(propertyIndex)
-                    : DynamicObject::FromVar(propertyObject)->GetAuxSlot(propertyIndex);
+                    ? DynamicObject::FromVar(propertyObject)->GetInlineSlot(propertyIndex, slotType)
+                    : DynamicObject::FromVar(propertyObject)->GetAuxSlot(propertyIndex, slotType);
             if(propertyObject->GetScriptContext() == requestContext)
             {
-                Assert(*propertyValue == JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext));
+                Assert(
+                    requestContext->AreVarsSameTypeAndValue(
+                        *propertyValue,
+                        JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext)));
+
+                DynamicTypeHandler *const typeHandler =
+                    DynamicObject::FromVar(propertyObject)->GetDynamicType()->GetTypeHandler();
+                const PropertyIndex typeHandlerPropertyIndex =
+                    typeHandler->InlineOrAuxSlotIndexToPropertyIndex(propertyIndex, isInlineSlot);
+                PropertyValueInfo::Set(propertyValueInfo, propertyObject, typeHandlerPropertyIndex, slotType);
 
                 CacheOperators::Cache<false, true, false>(
                     false,
@@ -241,10 +269,14 @@ namespace Js
             if(operationInfo)
             {
                 operationInfo->cacheType = CacheType_TypeProperty;
-                operationInfo->slotType = isInlineSlot ? SlotType_Inline : SlotType_Aux;
+                operationInfo->slotLocation = isInlineSlot ? SlotLocation_Inline : SlotLocation_Aux;
+                operationInfo->slotType = slotType;
             }
             return true;
         }
+
+        Assert(slotType.IsVar());
+        slotType = ObjectSlotType::GetVar();
 
     #if DBG_DUMP
         if(PHASE_TRACE1(TypePropertyCachePhase))
@@ -259,26 +291,35 @@ namespace Js
     #endif
 
     #if DBG
-        const PropertyIndex typeHandlerPropertyIndex =
-            prototypeObjectWithProperty
-                ->GetDynamicType()
-                ->GetTypeHandler()
-                ->InlineOrAuxSlotIndexToPropertyIndex(propertyIndex, isInlineSlot);
-        Assert(typeHandlerPropertyIndex == prototypeObjectWithProperty->GetPropertyIndex(propertyId));
+        {
+            DynamicTypeHandler *const prototypeTypeHandler = prototypeObjectWithProperty->GetDynamicType()->GetTypeHandler();
+            const PropertyIndex prototypeTypeHandlerPropertyIndex =
+                prototypeTypeHandler->InlineOrAuxSlotIndexToPropertyIndex(propertyIndex, isInlineSlot);
+            Assert(prototypeTypeHandlerPropertyIndex == prototypeObjectWithProperty->GetPropertyIndex(propertyId));
+            Assert(slotType.IsValueTypeEqualTo(prototypeTypeHandler->GetSlotType(prototypeTypeHandlerPropertyIndex)));
+        }
     #endif
 
         *propertyValue =
             isInlineSlot
-                ? prototypeObjectWithProperty->GetInlineSlot(propertyIndex)
-                : prototypeObjectWithProperty->GetAuxSlot(propertyIndex);
+                ? prototypeObjectWithProperty->GetInlineSlot(propertyIndex, slotType)
+                : prototypeObjectWithProperty->GetAuxSlot(propertyIndex, slotType);
         if(prototypeObjectWithProperty->GetScriptContext() == requestContext)
         {
-            Assert(*propertyValue == JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext));
+            Assert(
+                requestContext->AreVarsSameTypeAndValue(
+                    *propertyValue,
+                    JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext)));
 
             if(propertyObject->GetScriptContext() != requestContext)
             {
                 return true;
             }
+
+            DynamicTypeHandler *const prototypeTypeHandler = prototypeObjectWithProperty->GetDynamicType()->GetTypeHandler();
+            const PropertyIndex prototypeTypeHandlerPropertyIndex =
+                prototypeTypeHandler->InlineOrAuxSlotIndexToPropertyIndex(propertyIndex, isInlineSlot);
+            PropertyValueInfo::Set(propertyValueInfo, prototypeObjectWithProperty, prototypeTypeHandlerPropertyIndex, slotType);
 
             CacheOperators::Cache<false, true, false>(
                 true,
@@ -302,7 +343,8 @@ namespace Js
         if(operationInfo)
         {
             operationInfo->cacheType = CacheType_TypeProperty;
-            operationInfo->slotType = isInlineSlot ? SlotType_Inline : SlotType_Aux;
+            operationInfo->slotLocation = isInlineSlot ? SlotLocation_Inline : SlotLocation_Aux;
+            operationInfo->slotType = slotType;
         }
         return true;
     }
@@ -319,8 +361,9 @@ namespace Js
         Assert(propertyValueInfo->GetInlineCache() || propertyValueInfo->GetPolymorphicInlineCache());
 
         PropertyIndex propertyIndex;
+        ObjectSlotType slotTypeBeforeSet = ObjectSlotType::GetVar();
         bool isInlineSlot;
-        if(!TryGetIndexForStore(propertyId, &propertyIndex, &isInlineSlot))
+        if(!TryGetIndexForStore(propertyId, &propertyIndex, &slotTypeBeforeSet, &isInlineSlot))
         {
         #if DBG_DUMP
             if(PHASE_TRACE1(TypePropertyCachePhase))
@@ -348,16 +391,17 @@ namespace Js
         }
     #endif
 
+    #if DBG
+        {
+            DynamicTypeHandler *const typeHandler =
+                DynamicObject::FromVar(object)->GetDynamicType()->GetTypeHandler();
+            const PropertyIndex typeHandlerPropertyIndex =
+                typeHandler->InlineOrAuxSlotIndexToPropertyIndex(propertyIndex, isInlineSlot);
+            Assert(typeHandlerPropertyIndex == object->GetPropertyIndex(propertyId));
+            Assert(slotTypeBeforeSet.IsValueTypeEqualTo(typeHandler->GetSlotType(typeHandlerPropertyIndex)));
+        }
+    #endif
         Assert(!object->IsFixedProperty(propertyId));
-        Assert(
-            (
-                DynamicObject
-                    ::FromVar(object)
-                    ->GetDynamicType()
-                    ->GetTypeHandler()
-                    ->InlineOrAuxSlotIndexToPropertyIndex(propertyIndex, isInlineSlot)
-            ) ==
-            object->GetPropertyIndex(propertyId));
         Assert(object->CanStorePropertyValueDirectly(propertyId, false));
 
         ScriptContext *const objectScriptContext = object->GetScriptContext();
@@ -366,17 +410,29 @@ namespace Js
             propertyValue = CrossSite::MarshalVar(objectScriptContext, propertyValue);
         }
 
+        ObjectSlotType slotTypeAfterSet = ObjectSlotType::GetVar();
         if(isInlineSlot)
         {
-            DynamicObject::FromVar(object)->SetInlineSlot(SetSlotArguments(propertyId, propertyIndex, propertyValue));
+            slotTypeAfterSet =
+                DynamicObject::FromVar(object)->SetInlineSlot(
+                    SetSlotArguments(propertyId, propertyIndex, slotTypeBeforeSet, propertyValue));
         }
         else
         {
-            DynamicObject::FromVar(object)->SetAuxSlot(SetSlotArguments(propertyId, propertyIndex, propertyValue));
+            slotTypeAfterSet =
+                DynamicObject::FromVar(object)->SetAuxSlot(
+                    SetSlotArguments(propertyId, propertyIndex, slotTypeBeforeSet, propertyValue));
         }
+        Assert(!slotTypeBeforeSet.IsValueTypeMoreConvervativeThan(slotTypeAfterSet));
 
         if(objectScriptContext == requestContext)
         {
+            DynamicTypeHandler *const typeHandler =
+                DynamicObject::FromVar(object)->GetDynamicType()->GetTypeHandler();
+            const PropertyIndex typeHandlerPropertyIndex =
+                typeHandler->InlineOrAuxSlotIndexToPropertyIndex(propertyIndex, isInlineSlot);
+            PropertyValueInfo::Set(propertyValueInfo, object, typeHandlerPropertyIndex, slotTypeAfterSet);
+
             CacheOperators::Cache<false, false, false>(
                 false,
                 DynamicObject::FromVar(object),
@@ -396,7 +452,8 @@ namespace Js
         if(operationInfo)
         {
             operationInfo->cacheType = CacheType_TypeProperty;
-            operationInfo->slotType = isInlineSlot ? SlotType_Inline : SlotType_Aux;
+            operationInfo->slotLocation = isInlineSlot ? SlotLocation_Inline : SlotLocation_Aux;
+            operationInfo->slotType = slotTypeAfterSet;
         }
         return true;
     }
@@ -404,15 +461,17 @@ namespace Js
     void TypePropertyCache::Cache(
         const PropertyId id,
         const PropertyIndex index,
+        const ObjectSlotType slotType,
         const bool isInlineSlot,
         const bool isSetPropertyAllowed)
     {
-        elements[ElementIndex(id)].Cache(id, index, isInlineSlot, isSetPropertyAllowed);
+        elements[ElementIndex(id)].Cache(id, index, slotType, isInlineSlot, isSetPropertyAllowed);
     }
 
     void TypePropertyCache::Cache(
         const PropertyId id,
         const PropertyIndex index,
+        const ObjectSlotType slotType,
         const bool isInlineSlot,
         const bool isSetPropertyAllowed,
         const bool isMissing,
@@ -425,6 +484,7 @@ namespace Js
         elements[ElementIndex(id)].Cache(
             id,
             index,
+            slotType,
             isInlineSlot,
             isSetPropertyAllowed,
             isMissing,

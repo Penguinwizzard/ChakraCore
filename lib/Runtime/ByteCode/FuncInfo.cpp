@@ -88,6 +88,7 @@ FuncInfo::FuncInfo(
     referencedPropertyIdCount(0),
     argumentsSymbol(nullptr),
     nonUserNonTempRegistersToInitialize(alloc),
+    objectLiteralCreationSiteInfos(alloc),
     constantToRegister(alloc, 17),
     stringToRegister(alloc, 17),
     doubleConstantToRegister(alloc, 17),

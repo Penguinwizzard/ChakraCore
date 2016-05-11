@@ -2355,7 +2355,7 @@ LowererMDArch::EmitUIntToFloat(IR::Opnd *dst, IR::Opnd *src, IR::Instr *instrIns
 }
 
 bool
-LowererMDArch::EmitLoadInt32(IR::Instr *instrLoad, bool conversionFromObjectAllowed)
+LowererMDArch::EmitLoadInt32(IR::Instr *instrLoad, bool conversionFromObjectAllowed, const bool isInHelperBlock)
 {
     //
     //    r1 = MOV src1
@@ -2414,7 +2414,7 @@ LowererMDArch::EmitLoadInt32(IR::Instr *instrLoad, bool conversionFromObjectAllo
         {
             if(doFloatToIntFastPath)
             {
-                labelFloat = IR::LabelInstr::New(Js::OpCode::Label, instrLoad->m_func, false);
+                labelFloat = IR::LabelInstr::New(Js::OpCode::Label, instrLoad->m_func, isInHelperBlock);
             }
             else
             {
@@ -2452,7 +2452,7 @@ LowererMDArch::EmitLoadInt32(IR::Instr *instrLoad, bool conversionFromObjectAllo
         if (!isInt)
         {
             // JMP $done
-            done = instrLoad->GetOrCreateContinueLabel();
+            done = instrLoad->GetOrCreateContinueLabel(isInHelperBlock);
             instrLoad->InsertBefore(IR::BranchInstr::New(Js::OpCode::JMP, done, m_func));
         }
     }
@@ -2472,7 +2472,7 @@ LowererMDArch::EmitLoadInt32(IR::Instr *instrLoad, bool conversionFromObjectAllo
 
             if(!done)
             {
-                done = instrLoad->GetOrCreateContinueLabel();
+                done = instrLoad->GetOrCreateContinueLabel(isInHelperBlock);
             }
 #if FLOATVAR
             IR::RegOpnd* floatOpnd = this->lowererMD->CheckFloatAndUntag(src1, instrLoad, helper);
@@ -2491,7 +2491,7 @@ LowererMDArch::EmitLoadInt32(IR::Instr *instrLoad, bool conversionFromObjectAllo
         if(instrLoad->HasBailOutInfo() && (instrLoad->GetBailOutKind() == IR::BailOutIntOnly || instrLoad->GetBailOutKind() == IR::BailOutExpectingInteger))
         {
             // Avoid bailout if we have a JavascriptNumber whose value is a signed 32-bit integer
-            lowererMD->m_lowerer->LoadInt32FromUntaggedVar(instrLoad);
+            lowererMD->m_lowerer->LoadInt32FromUntaggedVar(instrLoad, isInHelperBlock);
 
             // Need to bail out instead of calling a helper
             return true;
@@ -2515,7 +2515,7 @@ LowererMDArch::EmitLoadInt32(IR::Instr *instrLoad, bool conversionFromObjectAllo
 }
 
 IR::Instr *
-LowererMDArch::LoadCheckedFloat(IR::RegOpnd *opndOrig, IR::RegOpnd *opndFloat, IR::LabelInstr *labelInline, IR::LabelInstr *labelHelper, IR::Instr *instrInsert, const bool checkForNullInLoopBody)
+LowererMDArch::LoadCheckedFloat(IR::RegOpnd *opndOrig, IR::RegOpnd *opndFloat, IR::LabelInstr *labelInline, IR::LabelInstr *labelHelper, IR::Instr *instrInsert, const bool isInHelperBlock, const bool checkForNullInLoopBody)
 {
     //
     //   if (TaggedInt::Is(opndOrig))
@@ -2538,7 +2538,7 @@ LowererMDArch::LoadCheckedFloat(IR::RegOpnd *opndOrig, IR::RegOpnd *opndFloat, I
 
     IR::Instr *instrFirst = nullptr;
 
-    IR::LabelInstr *labelOpndIsNotInt = IR::LabelInstr::New(Js::OpCode::Label, this->m_func);
+    IR::LabelInstr *labelOpndIsNotInt = IR::LabelInstr::New(Js::OpCode::Label, this->m_func, isInHelperBlock);
     lowererMD->GenerateSmIntTest(opndOrig, instrInsert, labelOpndIsNotInt, &instrFirst);
 
     if (opndOrig->GetValueType().IsLikelyFloat())

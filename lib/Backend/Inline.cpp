@@ -839,7 +839,7 @@ Inline::InlinePolymorphicFunctionUsingFixedMethods(IR::Instr *callInstr, const J
         IR::LabelInstr* inlineeStartLabel = IR::LabelInstr::New(Js::OpCode::Label, callInstr->m_func);
         callInstr->InsertBefore(inlineeStartLabel);
 
-        IR::AddrOpnd * constMethodValueOpnd = IR::AddrOpnd::New(methodPropertyOpnd->GetFieldValue(i), IR::AddrOpndKind::AddrOpndKindDynamicVar, callInstr->m_func);
+        IR::AddrOpnd * constMethodValueOpnd = IR::AddrOpnd::New(methodPropertyOpnd->GetFieldValue(i), IR::AddrOpndKind::AddrOpndKindDynamicVar, callInstr->m_func, true);
         constMethodValueOpnd->m_isFunction = true;
 
         InsertOneInlinee(callInstr, returnValueOpnd, constMethodValueOpnd, inlineesDataArray[i], doneLabel, symCallerThis, safeThis, recursiveInlineDepth);
@@ -1594,18 +1594,25 @@ Inline::TryOptimizeCallInstrWithFixedMethod(IR::Instr *callInstr, Js::FunctionIn
             // The profile ID's hung from array ctor opcodes don't match up with normal profiled call sites.
             if (callInstr->m_opcode != Js::OpCode::NewScObjArray)
             {
-                // Because we are storing flow sensitive info in the cache (guarded property operations),
-                // we must make sure the same cache cannot be used multiple times in the flow.
-                if (constructorCache->isUsed)
+                if(constructorCache->IsPopulated())
                 {
-                    // It's okay to allocate a JitTimeConstructorCache from the func's allocator (rather than recycler),
-                    // because we only use these during JIT. We use the underlying runtime cache as a guard that must
-                    // live after JIT, and these are added to the EntryPointInfo during work item creation and thus kept alive.
-                    constructorCache = constructorCache->Clone(this->topFunc->m_alloc);
+                    // Because we are storing flow sensitive info in the cache (guarded property operations), 
+                    // we must make sure the same cache cannot be used multiple times in the flow.
+                    if (constructorCache->isUsed)
+                    {
+                        // It's ok to allocate a JitTimeConstructorCache from the func's allocator (rather than recycler),
+                        // because we only use these during JIT. We use the underlying runtime cache as a guard that must
+                        // live after JIT, and these are added to the EntryPointInfo during work item creation and thus kept alive.
+                        constructorCache = constructorCache->Clone(this->topFunc->m_alloc);
+                    }
+                    Assert(!constructorCache->isUsed);
+                    constructorCache->isUsed = true;
+                    callInstr->m_func->SetConstructorCache(static_cast<Js::ProfileId>(callInstr->AsProfiledInstr()->u.profileId), constructorCache);
                 }
-                Assert(!constructorCache->isUsed);
-                constructorCache->isUsed = true;
-                callInstr->m_func->SetConstructorCache(static_cast<Js::ProfileId>(callInstr->AsProfiledInstr()->u.profileId), constructorCache);
+                else if(callInstr->m_func->DoBailOnNoProfile())
+                {
+                    IRBuilder::InsertBailOnNoProfile(callInstr, callInstr->m_func);
+                }
             }
         }
         else
@@ -1633,7 +1640,7 @@ Inline::TryOptimizeCallInstrWithFixedMethod(IR::Instr *callInstr, Js::FunctionIn
     }
 
     // Insert a load instruction to place the constant address in methodOpnd (the Ld[Root]MethodFld's original dst).
-    IR::AddrOpnd * constMethodValueOpnd = IR::AddrOpnd::New((Js::Var)functionObject, IR::AddrOpndKind::AddrOpndKindDynamicVar, callInstr->m_func);
+    IR::AddrOpnd * constMethodValueOpnd = IR::AddrOpnd::New((Js::Var)functionObject, IR::AddrOpndKind::AddrOpndKindDynamicVar, callInstr->m_func, true);
     constMethodValueOpnd->m_isFunction = true;
     IR::Instr * ldMethodValueInstr = IR::Instr::New(Js::OpCode::Ld_A, methodValueDstOpnd, constMethodValueOpnd, callInstr->m_func);
     StackSym* methodSym = methodValueDstOpnd->AsRegOpnd()->m_sym;
@@ -3777,6 +3784,7 @@ Inline::SplitConstructorCallCommon(
     {
         Js::ProfileId profiledCallSiteId = static_cast<Js::ProfileId>(newObjInstr->AsProfiledInstr()->u.profileId);
         constructorCache = newObjInstr->m_func->GetConstructorCache(profiledCallSiteId);
+        Assert(!constructorCache || constructorCache->IsPopulated());
         returnCreatedObject = constructorCache != nullptr && constructorCache->ctorHasNoExplicitReturnValue;
         skipNewScObj = constructorCache != nullptr && constructorCache->skipNewScObject;
         if (!skipNewScObj)

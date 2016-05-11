@@ -197,7 +197,6 @@ GlobOpt::GlobOpt(Func * func)
     instrCountSinceLastCleanUp(0),
     isRecursiveCallOnLandingPad(false),
     updateInductionVariableValueNumber(false),
-    isPerformingLoopBackEdgeCompensation(false),
     currentRegion(nullptr),
     doTypeSpec(
         !IsTypeSpecPhaseOff(func)),
@@ -641,8 +640,6 @@ GlobOpt::OptBlock(BasicBlock *block)
         }
         else
         {
-            isPerformingLoopBackEdgeCompensation = true;
-
             Assert(this->tempBv->IsEmpty());
             BVSparse<JitArenaAllocator> tempBv2(this->tempAlloc);
 
@@ -733,8 +730,6 @@ GlobOpt::OptBlock(BasicBlock *block)
             } NEXT_SUCCESSOR_BLOCK;
 
             this->tempBv->ClearAll();
-
-            isPerformingLoopBackEdgeCompensation = false;
         }
     }
     block->globOptData.hasCSECandidates = this->blockData.hasCSECandidates;
@@ -3375,6 +3370,21 @@ JsTypeValueInfo* GlobOpt::MergeJsTypeValueInfo(JsTypeValueInfo * toValueInfo, Js
     Js::EquivalentTypeSet* fromTypeSet = fromValueInfo->GetJsTypeSet();
     Js::EquivalentTypeSet* mergedTypeSet = (toTypeSet != nullptr && fromTypeSet != nullptr && AreTypeSetsIdentical(toTypeSet, fromTypeSet)) ? toTypeSet : nullptr;
 
+    const BVSparse<JitArenaAllocator> *mergedNativeFieldAccessesRequiringTypeCheck = nullptr;
+    if(fromValueInfo->GetNativeFieldAccessesRequiringTypeCheck() || toValueInfo->GetNativeFieldAccessesRequiringTypeCheck())
+    {
+        if(fromValueInfo->GetNativeFieldAccessesRequiringTypeCheck() && toValueInfo->GetNativeFieldAccessesRequiringTypeCheck())
+        {
+            mergedNativeFieldAccessesRequiringTypeCheck =
+                fromValueInfo->GetNativeFieldAccessesRequiringTypeCheck()->OrNew(
+                    toValueInfo->GetNativeFieldAccessesRequiringTypeCheck());
+        }
+        else if(fromValueInfo->GetNativeFieldAccessesRequiringTypeCheck())
+            mergedNativeFieldAccessesRequiringTypeCheck = fromValueInfo->GetNativeFieldAccessesRequiringTypeCheck();
+        else
+            mergedNativeFieldAccessesRequiringTypeCheck = toValueInfo->GetNativeFieldAccessesRequiringTypeCheck();
+    }
+
 #if DBG_DUMP
     if (PHASE_TRACE(Js::ObjTypeSpecPhase, this->func) || PHASE_TRACE(Js::EquivObjTypeSpecPhase, this->func))
     {
@@ -3386,7 +3396,9 @@ JsTypeValueInfo* GlobOpt::MergeJsTypeValueInfo(JsTypeValueInfo * toValueInfo, Js
     }
 #endif
 
-    if (mergedType == toType && mergedTypeSet == toTypeSet)
+    if (mergedType == toType &&
+        mergedTypeSet == toTypeSet &&
+        mergedNativeFieldAccessesRequiringTypeCheck == toValueInfo->GetNativeFieldAccessesRequiringTypeCheck())
     {
 #if DBG_DUMP
         if (PHASE_TRACE(Js::ObjTypeSpecPhase, this->func) || PHASE_TRACE(Js::EquivObjTypeSpecPhase, this->func))
@@ -3399,7 +3411,7 @@ JsTypeValueInfo* GlobOpt::MergeJsTypeValueInfo(JsTypeValueInfo * toValueInfo, Js
         return toValueInfo;
     }
 
-    if (mergedType == nullptr && mergedTypeSet == nullptr)
+    if (mergedType == nullptr && mergedTypeSet == nullptr && !mergedNativeFieldAccessesRequiringTypeCheck)
     {
         // No info, so don't bother making a value.
         return nullptr;
@@ -3408,6 +3420,8 @@ JsTypeValueInfo* GlobOpt::MergeJsTypeValueInfo(JsTypeValueInfo * toValueInfo, Js
     if (toValueInfo->GetIsShared())
     {
         JsTypeValueInfo* mergedValueInfo = JsTypeValueInfo::New(this->alloc, mergedType, mergedTypeSet);
+        mergedValueInfo->SetNativeFieldAccessesRequiringTypeCheck(mergedNativeFieldAccessesRequiringTypeCheck);
+
 #if DBG_DUMP
         if (PHASE_TRACE(Js::ObjTypeSpecPhase, this->func) || PHASE_TRACE(Js::EquivObjTypeSpecPhase, this->func))
         {
@@ -3422,6 +3436,8 @@ JsTypeValueInfo* GlobOpt::MergeJsTypeValueInfo(JsTypeValueInfo * toValueInfo, Js
     {
         toValueInfo->SetJsType(mergedType);
         toValueInfo->SetJsTypeSet(mergedTypeSet);
+        toValueInfo->SetNativeFieldAccessesRequiringTypeCheck(mergedNativeFieldAccessesRequiringTypeCheck);
+
 #if DBG_DUMP
         if (PHASE_TRACE(Js::ObjTypeSpecPhase, this->func) || PHASE_TRACE(Js::EquivObjTypeSpecPhase, this->func))
         {
@@ -4675,9 +4691,23 @@ GlobOpt::OptInstr(IR::Instr *&instr, bool* isInstrRemoved)
             src2Val = this->OptSrc(src2, &instr);
         }
     }
-    if(instr->GetDst() && instr->GetDst()->IsIndirOpnd())
+    if(instr->GetDst())
     {
-        this->OptSrc(instr->GetDst(), &instr, &dstIndirIndexVal);
+        if(instr->GetDst()->IsIndirOpnd())
+        {
+            this->OptSrc(instr->GetDst(), &instr, &dstIndirIndexVal);
+        }
+        else if(instr->GetDst()->IsSymOpnd())
+        {
+            // The object pointer sym in a dst PropertySymOpnd is actually a use and not a def. Do all things necessary for
+            // optimizing the object pointer sym use.
+            IR::SymOpnd *const symDst = instr->GetDst()->AsSymOpnd();
+            if(symDst->m_sym->IsPropertySym())
+                CopyPropPropertySymObj(symDst, instr);
+            ToVarUses(instr, symDst, true, nullptr);
+            if(symDst->IsPropertySymOpnd())
+                FinishOptPropOp(instr, symDst->AsPropertySymOpnd());
+        }
     }
 
     MarkArgumentsUsedForBranch(instr);
@@ -4789,6 +4819,13 @@ GlobOpt::OptInstr(IR::Instr *&instr, bool* isInstrRemoved)
         VerifyIntSpecForIgnoringIntOverflow(instr);
     }
 
+    if(instr->m_opcode == Js::OpCode::NewScObjectLiteral &&
+        !IsLoopPrePass() &&
+        instr->m_func->m_jitTimeData->GetObjectLiteralCreationSiteFinalType(instr->GetSrc2()->AsIntConstOpnd()->AsUint32()))
+    {
+        GenerateBailAtOperation(&instr, IR::BailOutKind::BailOutOnObjectLiteralFinalTypeMismatch);
+    }
+
     // Track calls after any pre-op bailouts have been inserted before the call, because they will need to restore out params.
     // We don't inline in asmjs and hence we don't need to track calls in asmjs too, skipping this step for asmjs.
     if (!GetIsAsmJSFunc())
@@ -4820,16 +4857,16 @@ GlobOpt::OptInstr(IR::Instr *&instr, bool* isInstrRemoved)
 
     dstVal = this->OptDst(&instr, dstVal, src1Val, src2Val, dstIndirIndexVal, src1IndirIndexVal);
     dst = instr->GetDst();
-
     instrNext = instr->m_next;
-    if (dst)
+
+    if(dst)
     {
+        DeterminePotentialFieldSlotTypeChanges(instr);
+
         if (this->func->HasTry() && this->func->DoOptimizeTryCatch())
         {
             this->InsertToVarAtDefInTryRegion(instr, dst);
         }
-        instr = this->SetTypeCheckBailOut(dst, instr, nullptr);
-        this->UpdateObjPtrValueType(dst, instr);
     }
 
     BVSparse<JitArenaAllocator> instrByteCodeStackSymUsedAfter(this->alloc);
@@ -4918,6 +4955,11 @@ GlobOpt::OptInstr(IR::Instr *&instr, bool* isInstrRemoved)
             // Capture value of the bailout after the operation is done.
             this->GenerateBailAfterOperation(&instr, kind);
         }
+    }
+
+    if(instr->m_opcode == Js::OpCode::InlineeStart)
+    {
+        instr->m_func->SetInlineeFunctionObjectOpnd(instr->GetSrc1());
     }
 
     return instrNext;
@@ -5063,13 +5105,12 @@ GlobOpt::OptDst(
 
     if (opnd)
     {
-        if (opnd->IsSymOpnd() && opnd->AsSymOpnd()->IsPropertySymOpnd())
-        {
-            this->FinishOptPropOp(instr, opnd->AsPropertySymOpnd());
-        }
-        else if (instr->m_opcode == Js::OpCode::StElemI_A ||
-                 instr->m_opcode == Js::OpCode::StElemI_A_Strict ||
-                 instr->m_opcode == Js::OpCode::InitComputedProperty)
+        if (!(opnd->IsSymOpnd() && opnd->AsSymOpnd()->IsPropertySymOpnd()) &&
+            (
+                instr->m_opcode == Js::OpCode::StElemI_A ||
+                instr->m_opcode == Js::OpCode::StElemI_A_Strict ||
+                instr->m_opcode == Js::OpCode::InitComputedProperty
+            ))
         {
             this->KillObjectHeaderInlinedTypeSyms(this->currentBlock, false);
         }
@@ -5239,20 +5280,8 @@ GlobOpt::CopyPropDstUses(IR::Opnd *opnd, IR::Instr *instr, Value *src1Val)
 
         if (symOpnd->m_sym->IsPropertySym())
         {
-            PropertySym * originalPropertySym = symOpnd->m_sym->AsPropertySym();
-
-            Value *const objectValue = FindValue(originalPropertySym->m_stackSym);
-            symOpnd->SetPropertyOwnerValueType(objectValue ? objectValue->GetValueInfo()->Type() : ValueType::Uninitialized);
-
-            this->FieldHoistOptDst(instr, originalPropertySym, src1Val);
-            PropertySym * sym = this->CopyPropPropertySymObj(symOpnd, instr);
-            if (sym != originalPropertySym && !this->IsLoopPrePass())
-            {
-                // Consider: This doesn't detect hoistability of a property sym after object pointer copy prop
-                // on loop prepass. But if it so happened that the property sym is hoisted, we might as well do so.
-                this->FieldHoistOptDst(instr, sym, src1Val);
-            }
-
+            PropertySym * sym = symOpnd->m_sym->AsPropertySym();
+            this->FieldHoistOptDst(instr, sym, src1Val);
         }
     }
 }
@@ -7159,6 +7188,7 @@ GlobOpt::ValueNumberDst(IR::Instr **pInstr, Value *src1Val, Value *src2Val)
     case Js::OpCode::LdSlot:
     case Js::OpCode::LdSlotArr:
     case Js::OpCode::LdFld:
+    case Js::OpCode::LdSuperFld:
     case Js::OpCode::LdFldForTypeOf:
     case Js::OpCode::LdFldForCallApplyTarget:
     // Do not transfer value type on ldFldForTypeOf to prevent copy-prop to LdRootFld in case the field doesn't exist since LdRootFldForTypeOf does not throw
@@ -7244,6 +7274,7 @@ GlobOpt::ValueNumberDst(IR::Instr **pInstr, Value *src1Val, Value *src2Val)
     //case Js::OpCode::LdElemUndef:
     case Js::OpCode::StSlot:
     case Js::OpCode::StSlotChkUndecl:
+    case Js::OpCode::InitFld:
     case Js::OpCode::StFld:
     case Js::OpCode::StRootFld:
     case Js::OpCode::StFldStrict:
@@ -7260,7 +7291,11 @@ GlobOpt::ValueNumberDst(IR::Instr **pInstr, Value *src1Val, Value *src2Val)
 
             Assert(sym->IsPropertySym());
             SymID symId = sym->m_id;
-            Assert(instr->m_opcode == Js::OpCode::StSlot || instr->m_opcode == Js::OpCode::StSlotChkUndecl || !this->blockData.liveFields->Test(symId));
+            Assert(
+                instr->m_opcode == Js::OpCode::StSlot ||
+                instr->m_opcode == Js::OpCode::StSlotChkUndecl ||
+                instr->m_opcode == Js::OpCode::InitFld ||
+                !this->blockData.liveFields->Test(symId));
             if (IsHoistablePropertySym(symId))
             {
                 // We have changed the value of a hoistable field, load afterwards shouldn't get hoisted,
@@ -7593,6 +7628,11 @@ GlobOpt::ValueNumberDst(IR::Instr **pInstr, Value *src1Val, Value *src2Val)
         {
             return this->NewGenericValue(ValueType::GetObject(ObjectType::Object), dst);
         }
+        break;
+
+    default:
+        Assert(!OpCodeAttr::MayLoadNativeField(instr->m_opcode));
+        Assert(!OpCodeAttr::MayStoreIntoNativeField(instr->m_opcode));
         break;
     }
 
@@ -8472,6 +8512,25 @@ GlobOpt::TypeSpecialization(
     }
     const AutoRestoreVal autoRestoreSrc1Val(src1OriginalVal, &src1Val);
     const AutoRestoreVal autoRestoreSrc2Val(src2OriginalVal, &src2Val);
+
+    bool determinedStFldTypeCheckBailout = false;
+    if(OpCodeAttr::MayLoadNativeField(instr->m_opcode)
+            ?   TypeSpecializeLdFld(&instr, src1Val, pDstVal)
+            :   OpCodeAttr::MayStoreIntoNativeField(instr->m_opcode) &&
+                TypeSpecializeStFld(&instr, src1Val, &determinedStFldTypeCheckBailout))
+    {
+        return instr;
+    }
+
+    if(!determinedStFldTypeCheckBailout &&
+        instr->GetDst() &&
+        instr->GetDst()->IsSymOpnd() &&
+        instr->GetDst()->AsSymOpnd()->IsPropertySymOpnd())
+    {
+        IR::PropertySymOpnd *const propertyDst = instr->GetDst()->AsPropertySymOpnd();
+        instr = SetTypeCheckBailOut(propertyDst, instr, nullptr);
+        UpdateObjPtrValueType(propertyDst, instr);
+    }
 
     if (src1Val && instr->GetSrc2() == nullptr)
     {
@@ -9451,9 +9510,9 @@ GlobOpt::TypeSpecializeUnary(
     }
 
     // Consider: If type spec wasn't completely done, make sure that we don't type-spec the dst 2nd time.
-    if(instr->m_opcode == Js::OpCode::LdLen_A && TypeSpecializeLdLen(&instr, &src1Val, pDstVal, forceInvariantHoistingRef))
+    if(instr->m_opcode == Js::OpCode::LdLen_A)
     {
-        return true;
+        return TypeSpecializeLdLen(&instr, &src1Val, pDstVal, forceInvariantHoistingRef);
     }
 
     if (!src1Val->GetValueInfo()->GetIntValMinMax(&min, &max, this->DoAggressiveIntTypeSpec()))
@@ -10463,7 +10522,9 @@ GlobOpt::TypeSpecializeIntDst(IR::Instr* instr, Js::OpCode originalOpCode, Value
         *pDstVal =
             dstBounds
                 ? NewIntBoundedValue(valueType, dstBounds, wasNegativeZeroPreventedByBailout, nullptr)
-                : NewIntRangeValue(newMin, newMax, wasNegativeZeroPreventedByBailout, nullptr);
+                : newMax + 1 == newMin && !wasNegativeZeroPreventedByBailout
+                    ? NewGenericValue(valueType)
+                    : NewIntRangeValue(newMin, newMax, wasNegativeZeroPreventedByBailout, nullptr);
     }
     else
     {
@@ -12392,8 +12453,8 @@ GlobOpt::TypeSpecializeFloatUnary(IR::Instr **pInstr, Value *src1Val, Value **pD
 }
 
 // Unconditionally type-spec dst to float.
-void
-GlobOpt::TypeSpecializeFloatDst(IR::Instr *instr, Value *valToTransfer, Value *const src1Value, Value *const src2Value, Value **pDstVal)
+void 
+GlobOpt::TypeSpecializeFloatDst(IR::Instr *instr, Value *valToTransfer, Value *const src1Value, Value *const src2Value, Value **pDstVal, const ValueType defaultValueType)
 {
     IR::Opnd* dst = instr->GetDst();
     Assert(dst);
@@ -12408,7 +12469,8 @@ GlobOpt::TypeSpecializeFloatDst(IR::Instr *instr, Value *valToTransfer, Value *c
     }
     else
     {
-        *pDstVal = CreateDstUntransferredValue(ValueType::Float, instr, src1Value, src2Value);
+        Assert(defaultValueType.IsNumber());
+        *pDstVal = CreateDstUntransferredValue(defaultValueType, instr, src1Value, src2Value);
     }
 }
 
@@ -12522,6 +12584,299 @@ GlobOpt::TypeSpecializeLdLen(
         INT32_MAX,
         &dstValue);
     return true;
+}
+
+bool GlobOpt::TypeSpecializeLdFld(IR::Instr * *const instrRef, Value *const srcValue, Value * *const dstValueRef)
+{
+    Assert(instrRef);
+    IR::Instr *&instr = *instrRef;
+    Assert(instr);
+    Assert(OpCodeAttr::MayLoadNativeField(instr->m_opcode));
+    Assert(dstValueRef);
+    Value *&dstValue = *dstValueRef;
+
+    IR::PropertySymOpnd *const propertyOpnd = instr->GetSrc1()->AsPropertySymOpnd();
+    const Js::ObjectSlotType slotType = instr->GetSlotType(propertyOpnd);
+    if(slotType.IsVar())
+        return false;
+    Assert(slotType.IsInt() || slotType.IsFloat());
+
+    const bool canDisableImplicitCalls =
+        (currentBlock->loop ? ImplicitCallFlagsAllowOpts(currentBlock->loop) : ImplicitCallFlagsAllowOpts(func)) &&
+        !instr->CallsAccessor();
+    bool specialize = false;
+    if(canDisableImplicitCalls && srcValue && !IsTypeSpecPhaseOff(func))
+    {
+        const ValueType srcValueType = srcValue->GetValueInfo()->Type();
+        if(slotType.IsInt() ? srcValueType.IsLikelyInt() : srcValueType.IsLikelyNumber())
+            specialize = true;
+    }
+
+    if(specialize)
+        ToVarUses(instr, propertyOpnd, false, nullptr);
+
+    const IR::BailOutKind bailOutKind = IR::BailOutOnFieldSlotTypeMismatch;
+    if(!IsLoopPrePass())
+    {
+        if(specialize)
+        {
+            ChangeValueInfo(
+                currentBlock,
+                srcValue,
+                slotType.IsInt()
+                    ? srcValue->GetValueInfo()->SpecializeToInt32(alloc)
+                    : srcValue->GetValueInfo()->SpecializeToFloat64(alloc));
+            propertyOpnd->SetValueType(srcValue->GetValueInfo()->Type());
+        }
+
+        // This IR type doesn't matter, it's set even when not specializing just to show in the dump output what slot type is
+        // expected
+        propertyOpnd->SetType(slotType.IsInt() ? TyInt32 : TyFloat64);
+
+        if(!instr->HasTypeCheckBailOut() && propertyOpnd->MayHaveImplicitCall() && canDisableImplicitCalls)
+        {
+            if(instr->HasBailOutInfo())
+                instr->SetBailOutKind(instr->GetBailOutKind() | bailOutKind);
+            else
+                GenerateBailAtOperation(&instr, bailOutKind);
+        }
+    }
+
+    if(!specialize)
+        return false;
+
+    if(IsLoopPrePass())
+    {
+        do
+        {
+            StackSym *const symStore =
+                srcValue->GetValueInfo()->GetSymStore() && srcValue->GetValueInfo()->GetSymStore()->IsStackSym()
+                    ? srcValue->GetValueInfo()->GetSymStore()->AsStackSym()
+                    : nullptr;
+            if(!symStore || symStore == instr->GetDst()->AsRegOpnd()->m_sym)
+                break;
+
+            PropertySym *const copyProppedPropertySym = CopyPropPropertySymObj(propertyOpnd, instr);
+            Value *const initialFieldValue = rootLoopPrePass->initialValueFieldMap.Lookup(copyProppedPropertySym, nullptr);
+            if(!initialFieldValue || initialFieldValue->GetValueInfo()->GetSymStore() != symStore)
+                break;
+
+            Value *const symStoreValue = FindValue(symStore);
+            if(!symStoreValue || symStoreValue->GetValueNumber() != srcValue->GetValueNumber())
+                break;
+
+            // The sym store is a fake, created by SetLoopFieldInitialValue in the loop prepass for field PRE hoisting. The sym
+            // store is not assigned to even though it has the same value as the field, and since it's not assigned, it will not
+            // be specialized in the loop prepass. Specialize it here so that if field PRE uses the sym store to hoist the field
+            // load, its specialization info will be more accurate on the loop's back-edge.
+            Assert(!symStore->IsTypeSpec());
+            if(slotType.IsInt())
+            {
+                if(!blockData.liveInt32Syms->Test(symStore->m_id))
+                {
+                    Assert(blockData.liveVarSyms->Test(symStore->m_id));
+                    symStore->GetInt32EquivSym(func);
+                    ToInt32StackSym(symStore, false, currentBlock);
+                }
+            }
+            else if(!blockData.liveFloat64Syms->Test(symStore->m_id))
+            {
+                Assert(blockData.liveVarSyms->Test(symStore->m_id));
+                symStore->GetFloat64EquivSym(func);
+                ToFloat64StackSym(symStore, currentBlock);
+            }
+        } while(false);
+    }
+
+    if(slotType.IsInt())
+    {
+        TypeSpecializeIntDst(
+            instr,
+            instr->m_opcode,
+            srcValue,
+            srcValue,
+            nullptr,
+            bailOutKind,
+            ValueType::GetInt(true),
+            &dstValue);
+    }
+    else
+    {
+        ValueType defaultValueType = ValueType::Float; // only relevant when we don't have a src value
+        if(!srcValue && instr->IsProfiledInstr())
+            defaultValueType = instr->AsProfiledInstr()->u.FldInfo().valueType.ToDefiniteNumber_PreferFloatForNonLikelyInt();
+        TypeSpecializeFloatDst(instr, srcValue, srcValue, nullptr, &dstValue, defaultValueType);
+    }
+
+    if(!IsLoopPrePass() && currentBlock->IsLandingPad())
+    {
+        Assert(currentBlock->GetNext()->isLoopHeader);
+
+        // The field load was hoisted by field PRE. Now that the value has been specialized, update the used-before-defined info
+        // in the loop for the dst.
+        Loop *const loop = currentBlock->GetNext()->loop;
+        const SymID dstVarSymId = instr->GetDst()->AsRegOpnd()->m_sym->GetVarEquivSym(nullptr)->m_id;
+        Assert(dstValue);
+        const ValueType dstValueType = dstValue->GetValueInfo()->Type();
+        loop->symsUsedBeforeDefined->Set(dstVarSymId);
+        if(dstValueType.IsLikelyNumber())
+        {
+            loop->likelyNumberSymsUsedBeforeDefined->Set(dstVarSymId);
+            if(DoAggressiveIntTypeSpec() ? dstValueType.IsLikelyInt() : dstValueType.IsInt())
+            {
+                // Can only force int conversions in the landing pad based on likely-int values if aggressive int type
+                // specialization is enabled
+                loop->likelyIntSymsUsedBeforeDefined->Set(dstVarSymId);
+            }
+        }
+    }
+
+    return true;
+}
+
+bool GlobOpt::TypeSpecializeStFld(IR::Instr * *const instrRef, Value *const srcValue, bool *const determinedTypeCheckBailoutRef)
+{
+    Assert(instrRef);
+    IR::Instr *&instr = *instrRef;
+    Assert(instr);
+    Assert(OpCodeAttr::MayStoreIntoNativeField(instr->m_opcode));
+    Assert(determinedTypeCheckBailoutRef);
+    Assert(!*determinedTypeCheckBailoutRef);
+
+    IR::PropertySymOpnd *const propertyOpnd = instr->GetDst()->AsPropertySymOpnd();
+    const Js::ObjectSlotType slotType = instr->GetSlotType(propertyOpnd);
+    if(slotType.IsVar())
+        return false;
+    Assert(slotType.IsInt() || slotType.IsFloat());
+
+    if((instr->m_opcode == Js::OpCode::StFld || instr->m_opcode == Js::OpCode::StFldStrict) &&
+        propertyOpnd->GetPropertySym()->m_propertyId == Js::PropertyIds::lastIndex &&
+        propertyOpnd->GetPropertyOwnerValueType().IsLikelyRegExp())
+    {
+        return false;
+    }
+
+    bool specialize = false;
+    if(srcValue && !IsTypeSpecPhaseOff(func))
+    {
+        const ValueType srcValueType = srcValue->GetValueInfo()->Type();
+        if(slotType.IsInt())
+        {
+            if(DoAggressiveIntTypeSpec() ? srcValueType.IsLikelyInt() : srcValueType.IsInt())
+            {
+                specialize = true;
+                ToInt32(instr, instr->GetSrc1(), currentBlock, srcValue, nullptr, false);
+            }
+        }
+        else if(DoFloatTypeSpec() ? srcValueType.IsLikelyNumber() : srcValueType.IsNumber())
+        {
+            specialize = true;
+            ToFloat64(instr, instr->GetSrc1(), currentBlock, srcValue, nullptr, IR::BailOutNumberOnly);
+        }
+    }
+
+    // Setting the type check bailout needs to happen after the src is specialized, as the src specialization affects the
+    // bailout info that will be used for the type check bailout. The src specialization logically occurs before the type check
+    // at runtime, so the type check bailout info should reflect that the src is specialized.
+    *determinedTypeCheckBailoutRef = true;
+    instr = SetTypeCheckBailOut(propertyOpnd, instr, nullptr);
+    UpdateObjPtrValueType(propertyOpnd, instr);
+
+    const IR::BailOutKind bailOutKind = IR::BailOutOnFieldSlotTypeMismatch;
+    if(!IsLoopPrePass())
+    {
+        const bool canDisableImplicitCalls =
+            (currentBlock->loop ? ImplicitCallFlagsAllowOpts(currentBlock->loop) : ImplicitCallFlagsAllowOpts(func)) &&
+            !instr->CallsAccessor();
+        if(!instr->HasTypeCheckBailOut() && (!specialize || propertyOpnd->MayHaveImplicitCall()) && canDisableImplicitCalls)
+        {
+            if(instr->HasBailOutInfo())
+                instr->SetBailOutKind(instr->GetBailOutKind() | bailOutKind);
+            else
+                GenerateBailAtOperation(&instr, bailOutKind);
+        }
+
+        // This IR type doesn't matter, it's set even when not specializing just to show in the dump output what slot type is
+        // expected
+        propertyOpnd->SetType(slotType.IsInt() ? TyInt32 : TyFloat64);
+    }
+
+    // The dst value is not set, let ValueNumberDst transfer the src value
+    return specialize;
+}
+
+void GlobOpt::DeterminePotentialFieldSlotTypeChanges(IR::Instr *const instr)
+{
+    Assert(instr);
+
+    if(IsLoopPrePass() || !objectTypeSyms || !func->GetScriptContext()->DoNativeFields())
+        return;
+
+    IR::PropertySymOpnd *const propertyOpnd =
+        instr->GetSrc1() && instr->GetSrc1()->IsSymOpnd() && instr->GetSrc1()->AsSymOpnd()->IsPropertySymOpnd()
+            ? instr->GetSrc1()->AsPropertySymOpnd()
+            : instr->GetDst() && instr->GetDst()->IsSymOpnd() && instr->GetDst()->AsSymOpnd()->IsPropertySymOpnd()
+                ? instr->GetDst()->AsPropertySymOpnd()
+                : nullptr;
+    if(!propertyOpnd || !propertyOpnd->MayHaveImplicitCall() || instr->HasBailOutKind(IR::BailOutOnFieldSlotTypeMismatch))
+        return;
+
+    const bool doRemoveDeadTypeCheckBailouts = BackwardPass::DoRemoveDeadTypeCheckBailouts();
+    if(instr->HasTypeCheckBailOut())
+    {
+        if(!doRemoveDeadTypeCheckBailouts)
+            return;
+
+        const bool canDisableImplicitCalls =
+            (
+                currentBlock->loop
+                    ? GlobOpt::ImplicitCallFlagsAllowOpts(currentBlock->loop)
+                    : GlobOpt::ImplicitCallFlagsAllowOpts(func)
+            ) &&
+            !instr->CallsAccessor();
+        if(!canDisableImplicitCalls)
+            return; // the type check bailout is not going to be removed because it cannot install an implicit call bailout
+
+        if((OpCodeAttr::MayLoadNativeField(instr->m_opcode) || OpCodeAttr::MayStoreIntoNativeField(instr->m_opcode)) &&
+            !instr->GetSlotType(propertyOpnd).IsVar())
+        {
+            return; // if the type check bailout is removed, BailOutOnFieldSlotTypeMismatch will be added
+        }
+    }
+
+    // This instruction may cause the field's slot type to change as part of its helper call. Any downstream
+    // obj-type-specializable native slot type accesses to this property ID require a type check. Note that this applies to any
+    // native accesses to this property ID and not just to this field, due to aliasing. Also, this is only a problem for types
+    // already checked upstream, as those objects' slot types may change from underneath them. In all currently live type
+    // values, blacklist this property ID for native slot type accesses.
+    const SymID safeTypeSymId =
+        doRemoveDeadTypeCheckBailouts && instr->HasTypeCheckBailOut() && propertyOpnd->HasObjectTypeSym()
+            ? propertyOpnd->GetObjectTypeSym()->m_id
+            : 0;
+    const Js::PropertyId propertyId = propertyOpnd->GetPropertyId();
+    GlobHashTable *const symToValueMap = blockData.symToValueMap;
+    JitArenaAllocator *const alloc = this->alloc;
+    Assert(tempBv->IsEmpty());
+    tempBv->And(objectTypeSyms, blockData.liveFields);
+    FOREACH_BITSET_IN_SPARSEBV(typeSymId, tempBv)
+    {
+        if(doRemoveDeadTypeCheckBailouts && typeSymId == safeTypeSymId)
+            continue;
+
+        Value *const typeValue = FindValueFromHashTable(symToValueMap, typeSymId);
+        if(!typeValue)
+            continue;
+
+        JsTypeValueInfo *const newTypeValueInfo = typeValue->GetValueInfo()->AsJsType()->Copy(alloc);
+        BVSparse<JitArenaAllocator> *const nativeFieldAccessesRequiringTypeCheck =
+            newTypeValueInfo->GetNativeFieldAccessesRequiringTypeCheck()
+                ? newTypeValueInfo->GetNativeFieldAccessesRequiringTypeCheck()->CopyNew()
+                : JitAnew(alloc, BVSparse<JitArenaAllocator>, alloc);
+        nativeFieldAccessesRequiringTypeCheck->Set(propertyId);
+        newTypeValueInfo->SetNativeFieldAccessesRequiringTypeCheck(nativeFieldAccessesRequiringTypeCheck);
+        typeValue->SetValueInfo(newTypeValueInfo);
+    } NEXT_BITSET_IN_SPARSEBV;
+    tempBv->ClearAll();
 }
 
 bool
@@ -13860,7 +14215,7 @@ GlobOpt::ToTypeSpecUse(IR::Instr *instr, IR::Opnd *opnd, BasicBlock *block, Valu
                 if(!lossy)
                 {
                     Assert(bailOutKind == IR::BailOutIntOnly || bailOutKind == IR::BailOutExpectingInteger);
-                    valueInfo = valueInfo->SpecializeToInt32(alloc, isPerformingLoopBackEdgeCompensation);
+                    valueInfo = valueInfo->SpecializeToInt32(alloc);
                     ChangeValueInfo(nullptr, val, valueInfo);
 
                     int32 intConstantValue;
@@ -14224,6 +14579,41 @@ GlobOpt::ToVarStackSym(StackSym *varSym, BasicBlock *block)
 
 }
 
+void GlobOpt::ToInt32StackSym(StackSym *const varSym, const bool lossy, BasicBlock *const block)
+{
+    Assert(varSym);
+    Assert(!varSym->IsTypeSpec());
+    Assert(block);
+
+    block->globOptData.liveInt32Syms->Set(varSym->m_id);
+    if(lossy)
+        block->globOptData.liveLossyInt32Syms->Set(varSym->m_id);
+    else
+        block->globOptData.liveLossyInt32Syms->Clear(varSym->m_id);
+    block->globOptData.liveVarSyms->Clear(varSym->m_id);
+    block->globOptData.liveFloat64Syms->Clear(varSym->m_id);
+
+    // SIMD_JS
+    block->globOptData.liveSimd128F4Syms->Clear(varSym->m_id);
+    block->globOptData.liveSimd128I4Syms->Clear(varSym->m_id);    
+}
+
+void GlobOpt::ToFloat64StackSym(StackSym *const varSym, BasicBlock *const block)
+{
+    Assert(varSym);
+    Assert(!varSym->IsTypeSpec());
+    Assert(block);
+
+    block->globOptData.liveFloat64Syms->Set(varSym->m_id);
+    block->globOptData.liveVarSyms->Clear(varSym->m_id);
+    block->globOptData.liveInt32Syms->Clear(varSym->m_id);
+    block->globOptData.liveLossyInt32Syms->Clear(varSym->m_id);
+
+    // SIMD_JS
+    block->globOptData.liveSimd128F4Syms->Clear(varSym->m_id);
+    block->globOptData.liveSimd128I4Syms->Clear(varSym->m_id);    
+}
+
 void
 GlobOpt::ToInt32Dst(IR::Instr *instr, IR::RegOpnd *dst, BasicBlock *block)
 {
@@ -14242,14 +14632,7 @@ GlobOpt::ToInt32Dst(IR::Instr *instr, IR::RegOpnd *dst, BasicBlock *block)
         instr->SetDst(dst);
     }
 
-    block->globOptData.liveInt32Syms->Set(varSym->m_id);
-    block->globOptData.liveLossyInt32Syms->Clear(varSym->m_id); // The store makes it lossless
-    block->globOptData.liveVarSyms->Clear(varSym->m_id);
-    block->globOptData.liveFloat64Syms->Clear(varSym->m_id);
-
-    // SIMD_JS
-    block->globOptData.liveSimd128F4Syms->Clear(varSym->m_id);
-    block->globOptData.liveSimd128I4Syms->Clear(varSym->m_id);
+    ToInt32StackSym(varSym, false /* lossy - the store makes it lossless */, block);
 }
 
 void
@@ -14259,14 +14642,7 @@ GlobOpt::ToUInt32Dst(IR::Instr *instr, IR::RegOpnd *dst, BasicBlock *block)
     Assert(GetIsAsmJSFunc());
     StackSym *varSym = dst->m_sym;
     Assert(!varSym->IsTypeSpec());
-    block->globOptData.liveInt32Syms->Set(varSym->m_id);
-    block->globOptData.liveLossyInt32Syms->Clear(varSym->m_id); // The store makes it lossless
-    block->globOptData.liveVarSyms->Clear(varSym->m_id);
-    block->globOptData.liveFloat64Syms->Clear(varSym->m_id);
-
-    // SIMD_JS
-    block->globOptData.liveSimd128F4Syms->Clear(varSym->m_id);
-    block->globOptData.liveSimd128I4Syms->Clear(varSym->m_id);
+    ToInt32StackSym(varSym, false /* lossy - the store makes it lossless */, block);
 }
 
 void
@@ -14287,14 +14663,7 @@ GlobOpt::ToFloat64Dst(IR::Instr *instr, IR::RegOpnd *dst, BasicBlock *block)
         instr->SetDst(dst);
     }
 
-    block->globOptData.liveFloat64Syms->Set(varSym->m_id);
-    block->globOptData.liveVarSyms->Clear(varSym->m_id);
-    block->globOptData.liveInt32Syms->Clear(varSym->m_id);
-    block->globOptData.liveLossyInt32Syms->Clear(varSym->m_id);
-
-    // SIMD_JS
-    block->globOptData.liveSimd128F4Syms->Clear(varSym->m_id);
-    block->globOptData.liveSimd128I4Syms->Clear(varSym->m_id);
+    ToFloat64StackSym(varSym, block);
 }
 
 // SIMD_JS
@@ -14714,6 +15083,11 @@ GlobOpt::ChangeValueInfo(BasicBlock *const block, Value *const value, ValueInfo 
     Assert(value);
     Assert(newValueInfo);
 
+    if(value->GetValueInfo() == newValueInfo)
+    {
+        return;
+    }
+
     // The value type must be changed to something more specific or something more generic. For instance, it would be changed to
     // something more specific if the current value type is LikelyArray and checks have been done to ensure that it's an array,
     // and it would be changed to something more generic if a call kills the Array value type and it must be treated as
@@ -14747,8 +15121,8 @@ GlobOpt::AreValueInfosCompatible(const ValueInfo *const v0, const ValueInfo *con
     {
         return true;
     }
-
-    const bool doAggressiveIntTypeSpec = DoAggressiveIntTypeSpec();
+    
+    const bool doAggressiveIntTypeSpec = DoAggressiveIntTypeSpec() || func->GetScriptContext()->DoNativeFields();
     if(doAggressiveIntTypeSpec && (v0->IsInt() || v1->IsInt()))
     {
         // Int specialization in some uncommon loop cases involving dependencies, needs to allow specializing values of
@@ -14760,7 +15134,7 @@ GlobOpt::AreValueInfosCompatible(const ValueInfo *const v0, const ValueInfo *con
     {
         return true;
     }
-    const bool doFloatTypeSpec = DoFloatTypeSpec();
+    const bool doFloatTypeSpec = DoFloatTypeSpec() || func->GetScriptContext()->DoNativeFields();
     if(doFloatTypeSpec && (v0->IsFloat() || v1->IsFloat()))
     {
         // Float specialization allows specializing values of arbitrary types, even values that are definitely not float
@@ -19909,13 +20283,8 @@ ValueInfo::AsArrayValueInfo()
 }
 
 ValueInfo *
-ValueInfo::SpecializeToInt32(JitArenaAllocator *const allocator, const bool isForLoopBackEdgeCompensation)
+ValueInfo::SpecializeToInt32(JitArenaAllocator *const allocator)
 {
-    // Int specialization in some uncommon loop cases involving dependencies, needs to allow specializing values of arbitrary
-    // types, even values that are definitely not int, to compensate for aggressive assumptions made by a loop prepass. In all
-    // other cases, only values that are likely int may be int-specialized.
-    Assert(IsUninitialized() || IsLikelyInt() || isForLoopBackEdgeCompensation);
-
     if(IsInt())
     {
         return this;
@@ -19955,11 +20324,7 @@ ValueInfo::SpecializeToFloat64(JitArenaAllocator *const allocator)
     }
 
     ValueInfo *const newValueInfo = CopyWithGenericStructureKind(allocator);
-
-    // If the value type was likely int, after float-specializing, it's preferable to use Int_Number rather than Float, as the
-    // former is also likely int and allows int specialization later.
-    newValueInfo->Type() = IsLikelyInt() ? Type().ToDefiniteAnyNumber() : Type().ToDefiniteAnyFloat();
-
+    newValueInfo->Type() = Type().ToDefiniteNumber_PreferFloatForNonLikelyInt();
     return newValueInfo;
 }
 
@@ -20378,10 +20743,10 @@ GlobOpt::TrackMarkTempObject(IR::Instr * instrStart, IR::Instr * instrLast)
     GlobOptBlockData& globOptData = this->currentBlock->globOptData;
     do
     {
-        bool mayNeedBailOnImplicitCallsPreOp = !this->IsLoopPrePass()
+        bool needToTrackMarkTemp = !this->IsLoopPrePass()
             && instr->HasAnyImplicitCalls()
             && globOptData.maybeTempObjectSyms != nullptr;
-        if (mayNeedBailOnImplicitCallsPreOp)
+        if (needToTrackMarkTemp)
         {
             IR::Opnd * src1 = instr->GetSrc1();
             if (src1)
@@ -20402,9 +20767,42 @@ GlobOpt::TrackMarkTempObject(IR::Instr * instrStart, IR::Instr * instrLast)
             {
                 TrackTempObjectSyms(instr, dst->AsRegOpnd());
             }
-            else if (mayNeedBailOnImplicitCallsPreOp)
+            else if (needToTrackMarkTemp)
             {
                 instr = GenerateBailOutMarkTempObjectIfNeeded(instr, dst, true);
+            }
+        }
+
+        if(needToTrackMarkTemp && instr->HasBailOutKind(IR::BailOutMarkTempObject))
+        {
+            IR::PropertySymOpnd *propertyOpnd = nullptr;
+            if(instr->GetDst() && instr->GetDst()->IsSymOpnd() && instr->GetDst()->AsSymOpnd()->IsPropertySymOpnd())
+            {
+                propertyOpnd = instr->GetDst()->AsPropertySymOpnd();
+            }
+            else if(instr->GetSrc1() && instr->GetSrc1()->IsSymOpnd() && instr->GetSrc1()->AsSymOpnd()->IsPropertySymOpnd())
+            {
+                propertyOpnd = instr->GetSrc1()->AsPropertySymOpnd();
+            }
+
+            if(propertyOpnd)
+            {
+                const bool mayNeedBailOnImplicitCalls =
+                    BackwardPass::DoRemoveDeadTypeCheckBailouts() && instr->HasTypeCheckBailOut() || // type check bailout may be removed in the dead-store phase if the type is dead
+                    propertyOpnd->MayHaveImplicitCall() ||
+                    instr->HasBailOutKind(IR::BailOutOnFieldSlotTypeMismatch);
+                if(!mayNeedBailOnImplicitCalls)
+                {
+                    // TODO: Need to clean this up a bit. GenerateBailOutMarkTempObjectIfNeeded() needs to be called even if
+                    // an implicit call bailout is not needed based on ObjTypeSpec info, because it also makes some necessary
+                    // state changes. Refactor the state changes from the bailout installation so that we don't have to install
+                    // the bailout and remove it here.
+                    const IR::BailOutKind instrBailOutKind = instr->GetBailOutKind() ^ IR::BailOutMarkTempObject;
+                    if(instrBailOutKind == IR::BailOutInvalid)
+                        instr->ClearBailOutInfo();
+                    else
+                        instr->SetBailOutKind(instrBailOutKind);
+                }
             }
         }
 

@@ -191,6 +191,8 @@ public:
     void            SetIsCloned(bool isCloned) { this->isCloned = isCloned; }
     bool            HasBailOutInfo() const { return hasBailOutInfo; }
     bool            HasAuxBailOut() const { return hasAuxBailOut; }
+    bool            HasBailOutKind(const IR::BailOutKind bailOutKind) const;
+    void            RemoveBailOutKind(const IR::BailOutKind bailOutKind);
     bool            HasTypeCheckBailOut() const;
     bool            HasEquivalentTypeCheckBailOut() const;
     void            ClearBailOutInfo();
@@ -424,6 +426,10 @@ public:
     bool       UsesAllFields();
     void       MoveArgs(bool generateByteCodeCapture = false);
     void       Move(IR::Instr* insertInstr);
+
+public:
+    Js::ObjectSlotType GetSlotType(const IR::PropertySymOpnd *const propertyOpnd) const;
+
 private:
     void            ClearNumber() { this->m_number = 0; }
     void            SetNumber(uint32 number);

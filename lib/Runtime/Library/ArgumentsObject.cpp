@@ -207,7 +207,7 @@ namespace Js
         // If not, report this fact to the caller, which will defer to the normal get-value-by-index means.
         if (HasItemAt(index))
         {
-            *value = this->frameObject->GetSlot(index);
+            *value = this->frameObject->GetSlot(index, ObjectSlotType::GetVar());
             return true;
         }
 
@@ -220,7 +220,7 @@ namespace Js
         // If not, report this fact to the caller, which will defer to the normal set-value-by-index means.
         if (HasItemAt(index))
         {
-            this->frameObject->SetSlot(SetSlotArguments(Constants::NoProperty, index, value));
+            this->frameObject->SetSlot(SetSlotArguments(Constants::NoProperty, index, ObjectSlotType::GetVar(), value));
             return true;
         }
 
@@ -307,7 +307,7 @@ namespace Js
                 if (!this->IsArgumentDeleted(i))
                 {
                     // At this time the value doesn't matter, use one from slots.
-                    this->SetObjectArrayItem(i, this->frameObject->GetSlot(i), PropertyOperation_None);
+                    this->SetObjectArrayItem(i, this->frameObject->GetSlot(i, ObjectSlotType::GetVar()), PropertyOperation_None);
                 }
             }
         }
@@ -756,7 +756,7 @@ namespace Js
             // Settings writable to false causes disconnect.
             // It will be too late to copy the value after setting writable = false, as we would not be able to.
             // Since we are connected, it does not matter the value is, so it's safe (no matter if SetWritable fails) to copy it here.
-            this->SetObjectArrayItem(index, this->frameObject->GetSlot(index), PropertyOperation_None);
+            this->SetObjectArrayItem(index, this->frameObject->GetSlot(index, ObjectSlotType::GetVar()), PropertyOperation_None);
         }
 
         BOOL result = this->DynamicObject::SetWritable(propertyId, value); // Note: this will convert objectArray to ES5Array.
@@ -820,7 +820,7 @@ namespace Js
 
         if (!args->HasObjectArrayItem(index))
         {
-            m_isReleaseItemNeeded = args->SetObjectArrayItem(index, args->frameObject->GetSlot(index), PropertyOperation_None) != FALSE;
+            m_isReleaseItemNeeded = args->SetObjectArrayItem(index, args->frameObject->GetSlot(index, ObjectSlotType::GetVar()), PropertyOperation_None) != FALSE;
         }
     }
 

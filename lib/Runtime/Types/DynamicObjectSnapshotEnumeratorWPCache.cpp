@@ -125,6 +125,7 @@ namespace Js
             *attributes = propertyAttributes;
         }
 
+        objectPropertyId = propertyId;
         return propertyStringName;
     }
 
@@ -147,6 +148,7 @@ namespace Js
         // If we are reusing the enumerator the object type should be the same
         Assert(object->GetDynamicType() == initialType);
         Assert(initialPropertyCount == object->GetPropertyCount());
+        Assert(initialSlotCount == object->GetDynamicType()->GetTypeHandler()->GetSlotCount());
 
         __super::Reset();
 

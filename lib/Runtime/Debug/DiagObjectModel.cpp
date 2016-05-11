@@ -824,23 +824,23 @@ namespace Js
             Js::RecyclableObject* object = Js::RecyclableObject::FromVar(instance);
             Assert(JavascriptOperators::IsObject(object));
 
-            int count = object->GetPropertyCount();
-            pMembersList = JsUtil::List<DebuggerPropertyDisplayInfo *, ArenaAllocator>::New(arena, count);
+            ObjectSlotIterator it(object);
+            pMembersList = JsUtil::List<DebuggerPropertyDisplayInfo *, ArenaAllocator>::New(arena, it.GetPropertyCount());
 
-            AddObjectProperties(count, object);
+            AddObjectProperties(it, object);
         }
     }
 
-    void ObjectVariablesWalker::AddObjectProperties(int count, Js::RecyclableObject* object)
+    void ObjectVariablesWalker::AddObjectProperties(ObjectSlotIterator &it, Js::RecyclableObject* object)
     {
         ScriptContext * scriptContext = pFrame->GetScriptContext();
 
         DebuggerScope *formalScope = GetScopeWhenHaltAtFormals();
 
         // For the scopes and locals only enumerable properties will be shown.
-        for (int i = 0; i < count; i++)
+        for (; it.IsValid(); it.MoveNext())
         {
-            Js::PropertyId propertyId = object->GetPropertyId((PropertyIndex)i);
+            Js::PropertyId propertyId = it.CurrentPropertyId(scriptContext);
 
             bool isConst = false;
             bool isPropertyInDebuggerScope = false;
@@ -897,8 +897,8 @@ namespace Js
             Assert(Js::RootObjectBase::Is(instance));
             Js::RootObjectBase* object = Js::RootObjectBase::FromVar(instance);
 
-            int count = object->GetPropertyCount();
-            pMembersList = JsUtil::List<DebuggerPropertyDisplayInfo *, ArenaAllocator>::New(arena, count);
+            ObjectSlotIterator it(object);
+            pMembersList = JsUtil::List<DebuggerPropertyDisplayInfo *, ArenaAllocator>::New(arena, it.GetPropertyCount());
 
             // Add let/const globals first so that they take precedence over the global properties.  Then
             // VariableWalkerBase::FindPropertyAddress will correctly find let/const globals that shadow
@@ -912,7 +912,7 @@ namespace Js
                 }
             });
 
-            AddObjectProperties(count, object);
+            AddObjectProperties(it, object);
         }
     }
 
@@ -2373,11 +2373,9 @@ namespace Js
                             object = object->GetThisObjectOrUnWrap();
                         }
 
-                        int count = object->GetPropertyCount();
-
-                        for (int i = 0; i < count; i++)
+                        for (ObjectSlotIterator it(object); it.IsValid(); it.MoveNext())
                         {
-                            Js::PropertyId propertyId = object->GetPropertyId((PropertyIndex)i);
+                            Js::PropertyId propertyId = it.CurrentPropertyId(object->GetScriptContext());
                             bool isUnscoped = false;
                             if (wrapperObject && JavascriptOperators::IsPropertyUnscopable(object, propertyId))
                             {
@@ -2391,7 +2389,7 @@ namespace Js
 
                         if (CONFIG_FLAG(EnumerateSpecialPropertiesInDebugger))
                         {
-                            count = object->GetSpecialPropertyCount();
+                            int count = object->GetSpecialPropertyCount();
                             PropertyId const * specialPropertyIds = object->GetSpecialPropertyIds();
                             for (int i = 0; i < count; i++)
                             {

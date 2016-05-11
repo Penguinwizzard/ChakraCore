@@ -31,7 +31,7 @@ public:
     uint        UnAllocatableRegCount(Func *func) const { return 2; /* RSP, RBP */ }
     void        LegalizeDef(IR::Instr * instr) { /* This is a nop for amd64 */ }
     void        LegalizeUse(IR::Instr * instr, IR::Opnd * opnd) { /* A nop for amd64 */ }
-    void        LegalizeConstantUse(IR::Instr * instr, IR::Opnd * opnd);
+    void        LegalizeConstantUse(IR::Instr * instr, IR::Opnd * opnd) { /* A nop for amd64 */ }
     void        InsertOpHelperSpillAndRestores(SList<OpHelperBlock> *opHelperBlockList);
     void        EndOfHelperBlock(uint32 helperSpilledLiveranges);
     void        GenerateBailOut(IR::Instr * instr,

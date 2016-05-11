@@ -468,6 +468,7 @@ GlobOpt::ProcessFieldKills(IR::Instr *instr, BVSparse<JitArenaAllocator> *bv, bo
     {
     case Js::OpCode::StElemI_A:
     case Js::OpCode::StElemI_A_Strict:
+    case Js::OpCode::InitComputedProperty:
         Assert(dstOpnd != nullptr);
         KillLiveFields(this->lengthEquivBv, bv);
         KillLiveElems(dstOpnd->AsIndirOpnd(), bv, inGlobOpt, instr->m_func);
@@ -570,6 +571,11 @@ GlobOpt::ProcessFieldKills(IR::Instr *instr, BVSparse<JitArenaAllocator> *bv, bo
             this->KillAllFields(bv);
         }
         break;
+    }
+
+    if(OpCodeAttr::MayStoreIntoNativeField(instr->m_opcode) && instr->HasBailOutKind(IR::BailOutOnFieldSlotTypeMismatch))
+    {
+        KillLiveFields(instr->GetDst()->AsPropertySymOpnd()->m_sym->AsPropertySym(), bv);
     }
 }
 
@@ -1634,7 +1640,9 @@ GlobOpt::CreateFieldSrcValue(PropertySym * sym, PropertySym * originalSym, IR::O
         Assert(!this->IsHoistablePropertySym(sym->m_id));
     }
 
-    return this->NewGenericValue(ValueType::Uninitialized, *ppOpnd);
+    const ValueType valueType =
+        instr->IsProfiledInstr() ? instr->AsProfiledInstr()->u.FldInfo().valueType : ValueType::Uninitialized;
+    return this->NewGenericValue(valueType, *ppOpnd);
 }
 
 bool
@@ -1938,17 +1946,12 @@ GlobOpt::CopyStoreFieldHoistStackSym(IR::Instr * storeFldInstr, PropertySym * sy
 }
 
 bool
-GlobOpt::NeedBailOnImplicitCallWithFieldOpts(Loop *loop, bool hasLiveFields) const
+GlobOpt::NeedBailOnImplicitCallWithFieldOpts(IR::Instr *const instr, Loop *loop, bool hasLiveFields) const
 {
-    if (!((this->DoFieldHoisting(loop) && loop->hasHoistedFields) ||
-          ((this->DoFieldRefOpts(loop) ||
-            this->DoFieldCopyProp(loop)) &&
-           hasLiveFields)))
-    {
-        return false;
-    }
-
-    return true;
+    return
+        this->DoFieldHoisting(loop) && loop->hasHoistedFields ||
+        hasLiveFields && (this->DoFieldRefOpts(loop) || this->DoFieldCopyProp(loop)) ||
+        instr->HasBailOutKind(IR::BailOutOnFieldSlotTypeMismatch);
 }
 
 IR::Instr *
@@ -2339,7 +2342,15 @@ GlobOpt::ProcessPropOpInTypeCheckSeq(IR::Instr* instr, IR::PropertySymOpnd *opnd
 
     if (consumeType && valueInfo != nullptr)
     {
-        opnd->SetTypeAvailable(true);
+        if(!opnd->GetSlotType().IsVar() &&
+            valueInfo->GetNativeFieldAccessesRequiringTypeCheck() &&
+            valueInfo->GetNativeFieldAccessesRequiringTypeCheck()->Test(opnd->GetPropertyId()))
+        {
+            // See DeterminePotentialFieldSlotTypeChanges()
+            consumeType = false;
+        }
+        else
+            opnd->SetTypeAvailable(true);
     }
 
     bool doEquivTypeCheck = opnd->HasEquivalentTypeSet() && !opnd->NeedsMonoCheck();
@@ -2666,12 +2677,13 @@ GlobOpt::OptNewScObject(IR::Instr** instrPtr, Value* srcVal)
     const Js::JitTimeConstructorCache* ctorCache = instr->IsProfiledInstr() ?
         instr->m_func->GetConstructorCache(static_cast<Js::ProfileId>(instr->AsProfiledInstr()->u.profileId)) : nullptr;
 
+    Assert(!ctorCache || ctorCache->IsPopulated());
     Assert(ctorCache == nullptr || srcVal->GetValueInfo()->IsVarConstant() && Js::JavascriptFunction::Is(srcVal->GetValueInfo()->AsVarConstant()->VarValue()));
     Assert(ctorCache == nullptr || !ctorCache->typeIsFinal || ctorCache->ctorHasNoExplicitReturnValue);
 
     if (ctorCache != nullptr && !ctorCache->skipNewScObject && (isCtorInlined || ctorCache->typeIsFinal))
     {
-        GenerateBailAtOperation(instrPtr, IR::BailOutFailedCtorGuardCheck);
+        GenerateBailAtOperation(instrPtr, IR::BailOutOnConstructorCacheTypeMismatch);
     }
 
     return instr;
@@ -2700,11 +2712,13 @@ GlobOpt::ValueNumberObjectType(IR::Opnd *dstOpnd, IR::Instr *instr)
         if (instr->HasBailOutInfo())
         {
             Assert(instr->IsProfiledInstr());
-            Assert(instr->GetBailOutKind() == IR::BailOutFailedCtorGuardCheck);
+            Assert(instr->GetBailOutKind() == IR::BailOutOnConstructorCacheTypeMismatch);
 
             bool isCtorInlined = instr->m_opcode == Js::OpCode::NewScObjectNoCtor;
             const Js::JitTimeConstructorCache* ctorCache = instr->m_func->GetConstructorCache(static_cast<Js::ProfileId>(instr->AsProfiledInstr()->u.profileId));
-            Assert(ctorCache != nullptr && (isCtorInlined || ctorCache->typeIsFinal));
+            Assert(ctorCache != nullptr);
+            Assert(ctorCache->IsPopulated());
+            Assert(isCtorInlined || ctorCache->typeIsFinal);
 
             StackSym* objSym = dstOpnd->AsRegOpnd()->m_sym;
             StackSym* dstTypeSym = EnsureObjectTypeSym(objSym);
@@ -2773,6 +2787,24 @@ GlobOpt::SetTypeCheckBailOut(IR::Opnd *opnd, IR::Instr *instr, BailOutInfo *bail
         // At this point, we have a cached type that is live downstream or the type check is required
         // for a fixed field load. If we can't do away with the type check, then we're going to need bailout,
         // so lets add bailout info if we don't already have it.
+
+        if(propertySymOpnd->HasObjectTypeSym())
+        {
+            // Since a type check is going to be done here, the type value no longer needs to blacklist native field accesses
+            // (see DeterminePotentialFieldSlotTypeChanges())
+            Value *const typeValue = FindObjectTypeValue(propertySymOpnd->GetObjectTypeSym());
+            if(typeValue)
+            {
+                JsTypeValueInfo *const typeValueInfo = typeValue->GetValueInfo()->AsJsType();
+                if(typeValueInfo->GetNativeFieldAccessesRequiringTypeCheck())
+                {
+                    JsTypeValueInfo *const newTypeValueInfo = typeValueInfo->Copy(alloc);
+                    newTypeValueInfo->SetNativeFieldAccessesRequiringTypeCheck(nullptr);
+                    typeValue->SetValueInfo(newTypeValueInfo);
+                }
+            }
+        }
+
         if (!instr->HasBailOutInfo())
         {
             if (bailOutInfo)
@@ -2788,13 +2820,6 @@ GlobOpt::SetTypeCheckBailOut(IR::Opnd *opnd, IR::Instr *instr, BailOutInfo *bail
                 // due to a fixed field turning non-fixed. Consider distinguishing between the two.
                 bailOutInfo->polymorphicCacheIndex = propertySymOpnd->m_inlineCacheIndex;
             }
-        }
-        else if (instr->GetBailOutKind() == IR::BailOutMarkTempObject)
-        {
-            Assert(!bailOutInfo);
-            Assert(instr->GetBailOutInfo()->polymorphicCacheIndex == -1);
-            instr->SetBailOutKind(bailOutKind | IR::BailOutMarkTempObject);
-            instr->GetBailOutInfo()->polymorphicCacheIndex = propertySymOpnd->m_inlineCacheIndex;
         }
         else
         {
@@ -2828,13 +2853,6 @@ GlobOpt::SetTypeCheckBailOut(IR::Opnd *opnd, IR::Instr *instr, BailOutInfo *bail
                 Assert(isTypeCheckProtected);
                 AssertMsg(instr->GetBailOutKind() == IR::BailOutFailedFixedFieldTypeCheck || instr->GetBailOutKind() == IR::BailOutFailedEquivalentFixedFieldTypeCheck,
                     "Only BailOutFailed[Equivalent]FixedFieldTypeCheck can be safely removed.  Why does CheckFixedFld carry a different bailout kind?.");
-                instr->ClearBailOutInfo();
-            }
-            else if (propertySymOpnd->MayNeedTypeCheckProtection() && propertySymOpnd->IsTypeCheckProtected())
-            {
-                // Both the type and (if necessary) the proto object have been checked.
-                // We're doing a direct slot access. No possibility of bailout here (not even implicit call).
-                Assert(instr->GetBailOutKind() == IR::BailOutMarkTempObject);
                 instr->ClearBailOutInfo();
             }
         }
@@ -2931,9 +2949,18 @@ GlobOpt::SetObjectTypeFromTypeSym(StackSym *typeSym, const Js::Type *type, Js::E
     }
     else
     {
-        JsTypeValueInfo* valueInfo = JsTypeValueInfo::New(this->alloc, type, typeSet);
+        Value* value = FindObjectTypeValue(typeSym, blockData->symToValueMap);
+        JsTypeValueInfo* valueInfo;
+        if(value)
+        {
+            valueInfo = value->GetValueInfo()->AsJsType()->Copy(alloc);
+            valueInfo->SetJsType(type);
+            valueInfo->SetJsTypeSet(typeSet);
+        }
+        else
+            valueInfo = JsTypeValueInfo::New(this->alloc, type, typeSet);
         valueInfo->SetSymStore(typeSym);
-        Value* value = NewValue(valueInfo);
+        value = NewValue(valueInfo);
         SetValue(blockData, value, typeSym);
     }
 
@@ -2995,6 +3022,7 @@ GlobOpt::CopyPropPropertySymObj(IR::SymOpnd *symOpnd, IR::Instr *instr)
     StackSym *objSym = propertySym->m_stackSym;
 
     Value * val = this->FindValue(objSym);
+    symOpnd->SetPropertyOwnerValueType(val ? val->GetValueInfo()->Type() : ValueType::Uninitialized);
 
     if (val && !PHASE_OFF(Js::ObjPtrCopyPropPhase, this->func))
     {

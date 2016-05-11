@@ -163,9 +163,7 @@ namespace Js
         }
         for (uint i = 0; i < functionBody->GetProfiledFldCount(); ++i)
         {
-            fldInfo[i].flags = FldInfo_NoInfo;
-            fldInfo[i].valueType = ValueType::Uninitialized;
-            fldInfo[i].polymorphicInlineCacheUtilization = PolymorphicInlineCacheUtilizationThreshold;
+            fldInfo[i] = FldInfo();
         }
         for (ProfileId i = 0; i < functionBody->GetProfiledDivOrRemCount(); ++i)
         {
@@ -838,17 +836,31 @@ namespace Js
         return &arrayCallSiteInfo[index];
     }
 
-    __inline void DynamicProfileInfo::RecordFieldAccess(FunctionBody* functionBody, uint fieldAccessId, Var object, FldInfoFlags flags)
+    __inline
+    void
+    DynamicProfileInfo::RecordFieldAccess(
+        FunctionBody* functionBody,
+        uint fieldAccessId,
+        Var object,
+        FldInfoFlags flags,
+        const bool isSlotTypePrecise,
+        const ObjectSlotType slotType)
     {
         Assert(fieldAccessId < functionBody->GetProfiledFldCount());
-        FldInfoFlags oldFlags = fldInfo[fieldAccessId].flags;
-        if (object) // if not provided, the saved value type is not changed
+        fldInfo[fieldAccessId].wasProfiled = true;
+        if(object) // If not provided, the saved value type is not changed.
         {
-            fldInfo[fieldAccessId].valueType = fldInfo[fieldAccessId].valueType.Merge(object);
+            fldInfo[fieldAccessId].valueType =
+                fldInfo[fieldAccessId].valueType.Merge(object, isSlotTypePrecise ? slotType : ObjectSlotType::GetVar());
         }
+        if(isSlotTypePrecise)
+        {
+            fldInfo[fieldAccessId].slotType = fldInfo[fieldAccessId].slotType.MergeValueType(slotType);
+        }
+        FldInfoFlags oldFlags = fldInfo[fieldAccessId].flags;
         const auto mergedFlags = MergeFldInfoFlags(oldFlags, flags);
         fldInfo[fieldAccessId].flags = mergedFlags;
-        if (flags & FldInfo_Polymorphic)
+        if(flags & FldInfo_Polymorphic)
         {
             bits.hasPolymorphicFldAccess = true;
             if (!(oldFlags & FldInfo_Polymorphic))
@@ -942,7 +954,7 @@ namespace Js
 
     __inline void DynamicProfileInfo::RecordPolymorphicFieldAccess(FunctionBody* functionBody, uint fieldAccessId)
     {
-        this->RecordFieldAccess(functionBody, fieldAccessId, nullptr, FldInfo_Polymorphic);
+        this->RecordFieldAccess(functionBody, fieldAccessId, nullptr, FldInfo_Polymorphic, false);
     }
 
     __inline void DynamicProfileInfo::RecordSlotLoad(FunctionBody* functionBody, ProfileId slotLoadId, Var object)
@@ -1148,14 +1160,14 @@ namespace Js
         }
     }
 
-    FldInfoFlags DynamicProfileInfo::FldInfoFlagsFromSlotType(SlotType slotType)
+    FldInfoFlags DynamicProfileInfo::FldInfoFlagsFromSlotLocation(SlotLocation slotLocation)
     {
-        switch (slotType)
+        switch(slotLocation)
         {
-        case SlotType_Inline:
+        case SlotLocation_Inline:
             return FldInfo_FromInlineSlots;
 
-        case SlotType_Aux:
+        case SlotLocation_Aux:
             return FldInfo_FromAuxSlots;
 
         default:
@@ -1728,6 +1740,15 @@ namespace Js
         writer->Log(this);
 #endif
 
+        if (fldInfo)
+        {
+            const InlineCacheIndex inlineCacheCount = functionBody->GetInlineCacheCount();
+            for(InlineCacheIndex i = 0; i < inlineCacheCount; ++i)
+            {
+                fldInfo[i].slotType = fldInfo[i].slotType.MergeValueType(functionBody->GetInlineCache(i)->GetSlotType());
+            }
+        }
+
         FunctionBody * functionBody = this->GetFunctionBody();
         Js::ArgSlot paramInfoCount = functionBody->GetProfiledInParamsCount();
         if (!writer->Write(functionBody->GetLocalFunctionId())
@@ -2162,7 +2183,7 @@ namespace Js
         const Js::Var var = nullptr;
 
         DynamicProfileInfo *const p = nullptr;
-        p->RecordFieldAccess(functionBody, 0, var, FldInfo_NoInfo);
+        p->RecordFieldAccess(functionBody, 0, var, FldInfo_NoInfo, false);
         p->RecordDivideResultType(functionBody, 0, var);
         p->RecordModulusOpType(functionBody, 0, false);
         p->RecordSwitchType(functionBody, 0, var);
@@ -2401,7 +2422,15 @@ const char* GetBailOutKindName(IR::BailOutKind kind)
         kind ^= BailOutMarkTempObject;
         position += ConcatBailOutKindBits(name, sizeof(name), position, offset);
     }
-
+    ++offset;
+    if(kind & BailOutOnFieldSlotTypeMismatch)
+    {
+        kind ^= BailOutOnFieldSlotTypeMismatch;
+        position += ConcatBailOutKindBits(name, sizeof(name), position, offset);
+    }
+    ++offset;
+    // BailOutOnMiscellaneousConditions
+    
     ++offset;
     // BailOutKindBits
 

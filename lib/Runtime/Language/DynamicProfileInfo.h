@@ -27,7 +27,6 @@ namespace IR
     #define BAIL_OUT_KIND_VALUE(n, v)           BAIL_OUT_KIND_VALUE_LAST(n, v),
     #include "BailOutKind.h"
     };
-    ENUM_CLASS_HELPERS(BailOutKind, uint);
 
     CompileAssert(BailOutKind::BailOutKindEnd < BailOutKind::BailOutKindBitsStart);
 
@@ -35,6 +34,7 @@ namespace IR
     bool IsEquivalentTypeCheckBailOutKind(BailOutKind kind);
     BailOutKind EquivalentToMonoTypeCheckBailOutKind(BailOutKind kind);
 }
+ENUM_CLASS_HELPERS(IR::BailOutKind, uint);
 
 #if ENABLE_DEBUG_CONFIG_OPTIONS
 const char *GetBailOutKindName(IR::BailOutKind kind);
@@ -44,7 +44,7 @@ bool IsValidBailOutKindAndBits(IR::BailOutKind bailOutKind);
 namespace Js
 {
     enum CacheType : byte;
-    enum SlotType : byte;
+    enum SlotLocation : byte;
 
     struct PolymorphicCallSiteInfo;
     // Information about dynamic profile information loaded from cache.
@@ -129,11 +129,22 @@ namespace Js
 
     struct FldInfo
     {
-        typedef struct { ValueType::TSize f1; byte f2; byte f3; } TSize;
+        typedef struct { ValueType::TSize f1; byte f2; byte f3; ObjectSlotType::TSize f4; bool f5; } TSize;
 
         ValueType valueType;
         FldInfoFlags flags;
         byte polymorphicInlineCacheUtilization;
+        ObjectSlotType slotType;
+        bool wasProfiled;
+
+        FldInfo()
+            : valueType(ValueType::Uninitialized),
+            flags(FldInfo_NoInfo),
+            polymorphicInlineCacheUtilization(PolymorphicInlineCacheUtilizationThreshold),
+            slotType(ObjectSlotType::GetInt()),
+            wasProfiled(false)
+        {
+        }
 
         bool ShouldUsePolymorphicInlineCache()
         {
@@ -146,9 +157,9 @@ namespace Js
             return polymorphicInlineCacheUtilization > PolymorphicInlineCacheUtilizationThreshold;
         }
 
-        bool WasLdFldProfiled() const
+        bool WasProfiled() const
         {
-            return !valueType.IsUninitialized();
+            return wasProfiled;
         }
 
         uint32 GetOffsetOfFlags() { return offsetof(FldInfo, flags); }
@@ -336,7 +347,7 @@ namespace Js
 
         ArrayCallSiteInfo *GetArrayCallSiteInfo(FunctionBody *functionBody, ProfileId index) const;
 
-        void RecordFieldAccess(FunctionBody* functionBody, uint fieldAccessId, Var object, FldInfoFlags flags);
+        void RecordFieldAccess(FunctionBody* functionBody, uint fieldAccessId, Var object, FldInfoFlags flags, const bool isSlotTypePrecise, const ObjectSlotType slotType = ObjectSlotType::GetInt());
         void RecordPolymorphicFieldAccess(FunctionBody *functionBody, uint fieldAccessid);
         bool HasPolymorphicFldAccess() const { return bits.hasPolymorphicFldAccess; }
         FldInfo * GetFldInfo(FunctionBody* functionBody, uint fieldAccessId) const;
@@ -398,7 +409,7 @@ namespace Js
         static bool IsProfiledReturnTypeOp(OpCode op);
 
         static FldInfoFlags FldInfoFlagsFromCacheType(CacheType cacheType);
-        static FldInfoFlags FldInfoFlagsFromSlotType(SlotType slotType);
+        static FldInfoFlags FldInfoFlagsFromSlotLocation(SlotLocation slotLocation);
         static FldInfoFlags MergeFldInfoFlags(FldInfoFlags oldFlags, FldInfoFlags newFlags);
 
         const static uint maxPolymorphicInliningSize = 4;

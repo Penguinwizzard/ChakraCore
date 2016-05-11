@@ -173,7 +173,6 @@ namespace Js
         functionBody->CreateConstantTable();
         functionBody->CheckAndSetVarCount(varCount);
         functionBody->SetIsAsmjsMode(true);
-        functionBody->NewObjectLiteral(); // allocate one object literal for the export object
 
         AsmJSByteCodeGenerator::EmitEmptyByteCode(funcInfo, GetByteCodeGenerator(), GetModuleFunctionNode());
 

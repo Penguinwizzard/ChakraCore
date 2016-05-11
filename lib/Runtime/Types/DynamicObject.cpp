@@ -47,38 +47,22 @@ namespace Js
 
         // TODO: stack allocate aux Slots
         Assert(typeHandler->IsObjectHeaderInlinedTypeHandler() || !ThreadContext::IsOnStack(this->auxSlots));
-        int propertyCount = typeHandler->GetPropertyCount();
-        int inlineSlotCapacity = GetTypeHandler()->GetInlineSlotCapacity();
-        int inlineSlotCount = min(inlineSlotCapacity, propertyCount);
-        Var * srcSlots = reinterpret_cast<Var*>(reinterpret_cast<size_t>(instance) + typeHandler->GetOffsetOfInlineSlots());
-        Var * dstSlots = reinterpret_cast<Var*>(reinterpret_cast<size_t>(this) + typeHandler->GetOffsetOfInlineSlots());
-#if !FLOATVAR
+    #if !FLOATVAR
         ScriptContext * scriptContext = this->GetScriptContext();
-#endif
-        for (int i = 0; i < inlineSlotCount; i++)
+    #endif
+
+        for(ObjectSlotIterator it(instance); it.IsValid(); it.MoveNext())
         {
-#if !FLOATVAR
-            // Currently we only support temp numbers assigned to stack objects
-            dstSlots[i] = JavascriptNumber::BoxStackNumber(srcSlots[i], scriptContext);
-#else
-            dstSlots[i] = srcSlots[i];
-#endif
+            Var slotValue = it.GetTypeHandler()->GetSlot(instance, it.CurrentSlotIndex(), it.CurrentSlotType());
 
-        }
-
-        if (propertyCount > inlineSlotCapacity)
-        {
-            uint auxSlotCount = propertyCount - inlineSlotCapacity;
-
-            for (uint i = 0; i < auxSlotCount; i++)
+        #if !FLOATVAR
+            if(it.CurrentSlotType().IsVar())
             {
-#if !FLOATVAR
-                // Currently we only support temp numbers assigned to stack objects
-                auxSlots[i] = JavascriptNumber::BoxStackNumber(instance->auxSlots[i], scriptContext);
-#else
-                auxSlots[i] = instance->auxSlots[i];
-#endif
+                slotValue = JavascriptNumber::BoxStackNumber(slotValue, scriptContext);
             }
+        #endif
+
+            it.GetTypeHandler()->SetSlotUnchecked(this, it.CurrentSlotIndex(), it.CurrentSlotType(), slotValue);
         }
     }
 
@@ -134,9 +118,9 @@ namespace Js
         }
     }
 
-    bool DynamicObject::HasNonEmptyObjectArray() const
-    {
-        return HasObjectArray() && GetObjectArrayOrFlagsAsArray()->GetLength() > 0;
+    bool DynamicObject::HasNonEmptyObjectArray() const 
+    { 
+        return HasObjectArray() && GetObjectArrayOrFlagsAsArray()->GetLength() > 0; 
     }
 
     // Check if a typeId is of any array type (JavascriptArray or ES5Array).
@@ -158,7 +142,7 @@ namespace Js
 
     BOOL DynamicObject::DeleteObjectArrayItem(uint32 index, PropertyOperationFlags flags)
     {
-        if (HasObjectArray())
+        if(HasObjectArray())
         {
             return GetObjectArrayOrFlagsAsArray()->DeleteItem(index, flags);
         }
@@ -198,7 +182,7 @@ namespace Js
         //    SetHasNoEnumerableProperties(false);
         //}
 
-        if (!(attributes & PropertyWritable) && result)
+        if(!(attributes & PropertyWritable) && result)
         {
             InvalidateHasOnlyWritableDataPropertiesInPrototypeChainCacheIfPrototype();
         }
@@ -216,7 +200,7 @@ namespace Js
         //    SetHasNoEnumerableProperties(false);
         //}
 
-        if (!(attributes & PropertyWritable) && result)
+        if(!(attributes & PropertyWritable) && result)
         {
             InvalidateHasOnlyWritableDataPropertiesInPrototypeChainCacheIfPrototype();
         }
@@ -226,7 +210,7 @@ namespace Js
     BOOL DynamicObject::SetObjectArrayItemWritable(PropertyId propertyId, BOOL writable)
     {
         const auto result = HasObjectArray() && GetObjectArrayOrFlagsAsArray()->SetWritable(propertyId, writable);
-        if (!writable && result)
+        if(!writable && result)
         {
             InvalidateHasOnlyWritableDataPropertiesInPrototypeChainCacheIfPrototype();
         }
@@ -236,7 +220,7 @@ namespace Js
     BOOL DynamicObject::SetObjectArrayItemAccessors(uint32 index, Var getter, Var setter)
     {
         const auto result = EnsureObjectArray()->SetItemAccessors(index, getter, setter);
-        if (result)
+        if(result)
         {
             InvalidateHasOnlyWritableDataPropertiesInPrototypeChainCacheIfPrototype();
         }
@@ -245,7 +229,7 @@ namespace Js
 
     void DynamicObject::InvalidateHasOnlyWritableDataPropertiesInPrototypeChainCacheIfPrototype()
     {
-        if (GetTypeHandler()->GetFlags() & DynamicTypeHandler::IsPrototypeFlag)
+        if(GetTypeHandler()->GetFlags() & DynamicTypeHandler::IsPrototypeFlag)
         {
             // No need to invalidate store field caches for non-writable properties here.  We're dealing
             // with numeric properties only, and we never cache these in add property inline caches.
@@ -256,17 +240,17 @@ namespace Js
         }
     }
 
-    bool DynamicObject::HasLockedType() const
+    bool DynamicObject::HasLockedType() const 
     {
         return this->GetDynamicType()->GetIsLocked();
     }
 
-    bool DynamicObject::HasSharedType() const
+    bool DynamicObject::HasSharedType() const 
     {
         return this->GetDynamicType()->GetIsShared();
     }
 
-    bool DynamicObject::HasSharedTypeHandler() const
+    bool DynamicObject::HasSharedTypeHandler() const 
     {
         return this->GetTypeHandler()->GetIsShared();
     }
@@ -279,10 +263,10 @@ namespace Js
         // For now, i have added only Aux Slot -> so new inlineSlotCapacity should be 2.
         AssertMsg(DynamicObject::IsTypeHandlerCompatibleForObjectHeaderInlining(this->GetTypeHandler(), type->GetTypeHandler()),
             "Object is ObjectHeaderInlined and should have compatible TypeHandlers for proper transition");
-
+        
         this->type = type;
     }
-
+    
     DWORD DynamicObject::GetOffsetOfAuxSlots()
     {
         return offsetof(DynamicObject, auxSlots);
@@ -307,51 +291,51 @@ namespace Js
     {
         EnsureSlots(GetTypeHandler()->GetSlotCapacity(), newCount, scriptContext);
     }
-
-    Var DynamicObject::GetSlot(int index)
+    
+    Var DynamicObject::GetSlot(int index, const ObjectSlotType slotType)
     {
-        return this->GetTypeHandler()->GetSlot(this, index);
+        return this->GetTypeHandler()->GetSlot(this, index, slotType);
     }
 
-    Var DynamicObject::GetInlineSlot(int index)
+    Var DynamicObject::GetInlineSlot(int index, const ObjectSlotType slotType)
     {
-        return this->GetTypeHandler()->GetInlineSlot(this, index);
+        return this->GetTypeHandler()->GetInlineSlot(this, index, slotType);
     }
 
-    Var DynamicObject::GetAuxSlot(int index)
+    Var DynamicObject::GetAuxSlot(int index, const ObjectSlotType slotType)
     {
-        return this->GetTypeHandler()->GetAuxSlot(this, index);
+        return this->GetTypeHandler()->GetAuxSlot(this, index, slotType);
     }
 
 #if DBG
-    void DynamicObject::SetSlot(PropertyId propertyId, bool allowLetConst, int index, Var value)
+    void DynamicObject::SetSlot(PropertyId propertyId, bool allowLetConst, int index, const ObjectSlotType slotType, Var value)
     {
-        this->GetTypeHandler()->SetSlot(this, propertyId, allowLetConst, index, value);
+        this->GetTypeHandler()->SetSlot(this, propertyId, allowLetConst, index, slotType, value);
     }
 
-    void DynamicObject::SetInlineSlot(PropertyId propertyId, bool allowLetConst, int index, Var value)
+    ObjectSlotType DynamicObject::SetInlineSlot(PropertyId propertyId, bool allowLetConst, int index, const ObjectSlotType slotType, Var value)
     {
-        this->GetTypeHandler()->SetInlineSlot(this, propertyId, allowLetConst, index, value);
+        return this->GetTypeHandler()->SetInlineSlot(this, propertyId, allowLetConst, index, slotType, value);
     }
 
-    void DynamicObject::SetAuxSlot(PropertyId propertyId, bool allowLetConst, int index, Var value)
+    ObjectSlotType DynamicObject::SetAuxSlot(PropertyId propertyId, bool allowLetConst, int index, const ObjectSlotType slotType, Var value)
     {
-        this->GetTypeHandler()->SetAuxSlot(this, propertyId, allowLetConst, index, value);
+        return this->GetTypeHandler()->SetAuxSlot(this, propertyId, allowLetConst, index, slotType, value);
     }
 #else
-    void DynamicObject::SetSlot(int index, Var value)
+    void DynamicObject::SetSlot(int index, const ObjectSlotType slotType, Var value)
     {
-        this->GetTypeHandler()->SetSlot(this, index, value);
+        this->GetTypeHandler()->SetSlot(this, index, slotType, value);
     }
 
-    void DynamicObject::SetInlineSlot(int index, Var value)
+    ObjectSlotType DynamicObject::SetInlineSlot(int index, const ObjectSlotType slotType, Var value)
     {
-        this->GetTypeHandler()->SetInlineSlot(this, index, value);
+        return this->GetTypeHandler()->SetInlineSlot(this, index, slotType, value);
     }
 
-    void DynamicObject::SetAuxSlot(int index, Var value)
+    ObjectSlotType DynamicObject::SetAuxSlot(int index, const ObjectSlotType slotType, Var value)
     {
-        this->GetTypeHandler()->SetAuxSlot(this, index, value);
+        return this->GetTypeHandler()->SetAuxSlot(this, index, slotType, value);
     }
 #endif
 
@@ -381,11 +365,11 @@ namespace Js
             {
                 if (cache->isInlineSlot)
                 {
-                    return this->GetInlineSlot(cache->dataSlotIndex);
+                    return this->GetInlineSlot(cache->dataSlotIndex, cache->GetSlotType());
                 }
                 else
                 {
-                    return this->GetAuxSlot(cache->dataSlotIndex);
+                    return this->GetAuxSlot(cache->dataSlotIndex, cache->GetSlotType());
                 }
             }
         }
@@ -495,12 +479,36 @@ namespace Js
         Assert(oldTypeHandler);
         Assert(newTypeHandler);
 
+        PropertyIndex oldTypeHandlerInlineSlotCapacity, newTypeHandlerInlineSlotCapacity;
+        if(oldTypeHandler->IsPathTypeHandler())
+        {
+            PropertyIndex slotCapacity;
+            PathTypeHandler::FromTypeHandler(oldTypeHandler)->GetOriginalInlineSlotCapacityAndSlotCapacity(
+                &oldTypeHandlerInlineSlotCapacity,
+                &slotCapacity);
+        }
+        else
+        {
+            oldTypeHandlerInlineSlotCapacity = oldTypeHandler->GetInlineSlotCapacity();
+        }
+        if(newTypeHandler->IsPathTypeHandler())
+        {
+            PropertyIndex slotCapacity;
+            PathTypeHandler::FromTypeHandler(newTypeHandler)->GetOriginalInlineSlotCapacityAndSlotCapacity(
+                &newTypeHandlerInlineSlotCapacity,
+                &slotCapacity);
+        }
+        else
+        {
+            newTypeHandlerInlineSlotCapacity = newTypeHandler->GetInlineSlotCapacity();
+        }
+
         return
-            oldTypeHandler->GetInlineSlotCapacity() == newTypeHandler->GetInlineSlotCapacity() ||
+            oldTypeHandlerInlineSlotCapacity == newTypeHandlerInlineSlotCapacity ||
             (
                 oldTypeHandler->IsObjectHeaderInlinedTypeHandler() &&
-                newTypeHandler->GetInlineSlotCapacity() ==
-                    oldTypeHandler->GetInlineSlotCapacity() - DynamicTypeHandler::GetObjectHeaderInlinableSlotCapacity()
+                newTypeHandlerInlineSlotCapacity ==
+                    oldTypeHandlerInlineSlotCapacity - DynamicTypeHandler::GetObjectHeaderInlinableSlotCapacity()
             );
     }
 
@@ -527,18 +535,17 @@ namespace Js
             Output::Flush();
         }
 
-        PathTypeHandlerBase *const oldTypeHandler = PathTypeHandlerBase::FromTypeHandler(GetTypeHandler());
-        SimplePathTypeHandler *const newTypeHandler = oldTypeHandler->DeoptimizeObjectHeaderInlining(GetLibrary());
+        DynamicType *const newType = PathTypeHandler::FromTypeHandler(GetTypeHandler())->DeoptimizeObjectHeaderInlining(this);
+        Assert(newType->GetIsShared());
+        Assert(newType->GetTypeHandler()->GetIsShared());
 
+        PathTypeHandler *const newTypeHandler = PathTypeHandler::FromTypeHandler(newType->GetTypeHandler());
         const PropertyIndex newInlineSlotCapacity = newTypeHandler->GetInlineSlotCapacity();
         DynamicTypeHandler::AdjustSlots(
             this,
             newInlineSlotCapacity,
             newTypeHandler->GetSlotCapacity() - newInlineSlotCapacity);
 
-        DynamicType *const newType = DuplicateType();
-        newType->typeHandler = newTypeHandler;
-        newType->ShareType();
         type = newType;
         return true;
     }

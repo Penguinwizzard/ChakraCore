@@ -139,13 +139,13 @@ var tests = [
                 ["foo" + "bar"] : 3,
                 ["foo" + "bar"] : 4
             }
-            assert.areEqual(obj.foobar, 4, "Opt-in duplicate property handling");
+            assert.areEqual(4, obj.foobar, "Opt-in duplicate property handling");
 
             var obj2 = {
                 ["foo" + "bar"] : 1,
                 ["foo" + "bar"] : 2
             }
-            assert.areEqual(obj2.foobar, 2, "Duplicate computed property names are allowed");
+            assert.areEqual(2, obj2.foobar, "Duplicate computed property names are allowed");
 
             // Valid cases
             var a = "str";

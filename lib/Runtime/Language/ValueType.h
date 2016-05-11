@@ -264,10 +264,10 @@ public:
 public:
     ValueType ToDefinite() const;
     ValueType ToLikelyUntaggedInt() const;
-    ValueType ToDefiniteNumber_PreferFloat() const;
     ValueType ToDefiniteAnyFloat() const;
-    ValueType ToDefiniteNumber() const;
     ValueType ToDefiniteAnyNumber() const;
+    ValueType ToDefiniteNumber() const;
+    ValueType ToDefiniteNumber_PreferFloatForNonLikelyInt() const;
     ValueType ToDefinitePrimitiveSubset() const;
     ValueType ToDefiniteObject() const;
     ValueType ToLikely() const;
@@ -281,7 +281,7 @@ private:
     ValueType MergeWithObject(const ValueType other) const;
 
 public:
-    ValueType Merge(const Js::Var var) const;
+    ValueType Merge(const Js::Var var, const Js::ObjectSlotType slotType = Js::ObjectSlotType::GetVar()) const;
 private:
     static Bits TypeIdToBits[Js::TypeIds_Limit];
     static Bits VirtualTypeIdToBits[Js::TypeIds_Limit];
