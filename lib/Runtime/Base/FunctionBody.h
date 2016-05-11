@@ -1322,6 +1322,7 @@ namespace Js
         void SetCapturesThis();
         bool GetEnclosedByGlobalFunc() const;
         void SetEnclosedByGlobalFunc();
+        bool CanBeDeferred() const;
         BOOL IsDeferredDeserializeFunction() const;
         BOOL IsDeferredParseFunction() const;
         FunctionInfo::Attributes GetAttributes() const;
@@ -1435,6 +1436,7 @@ namespace Js
 
         bool m_isTopLevel : 1; // Indicates that this function is top-level function, currently being used in script profiler and debugger
         bool m_isPublicLibraryCode: 1; // Indicates this function is public boundary library code that should be visible in JS stack
+        bool m_canBeDeferred : 1;
         void CleanupFunctionProxyCounters()
         {
             PERF_COUNTER_DEC(Code, TotalFunction);
@@ -1592,6 +1594,13 @@ namespace Js
         Assert(GetFunctionInfo());
         Assert(GetFunctionInfo()->GetFunctionProxy() == this);
         return GetFunctionInfo()->IsLambda();
+    }
+
+    inline bool FunctionProxy::CanBeDeferred() const
+    {
+        Assert(GetFunctionInfo());
+        Assert(GetFunctionInfo()->GetFunctionProxy() == this);
+        return GetFunctionInfo()->CanBeDeferred();
     }
 
     inline bool FunctionProxy::IsClassConstructor() const
@@ -2377,6 +2386,8 @@ namespace Js
 
         FunctionEntryPointInfo * GetEntryPointInfo(int index) const;
         FunctionEntryPointInfo * TryGetEntryPointInfo(int index) const;
+
+        void RedeferFunction();
 
         Js::RootObjectBase * LoadRootObject() const;
         Js::RootObjectBase * GetRootObject() const;

@@ -564,6 +564,14 @@ namespace Js
         InitDisableInlineSpread();
     }
 
+    void FunctionBody::RedeferFunction()
+    {
+        Assert(this->CanBeDeferred());
+        PHASE_PRINT_TRACE(Js::RedeferralPhase, this, L"Redeferring function %d.%d: %s\n", 
+                          GetSourceContextId(), GetLocalFunctionId(),
+                          GetDisplayName() ? GetDisplayName() : L"(Anonymous function)");
+    }
+
     void FunctionBody::SetDefaultFunctionEntryPointInfo(FunctionEntryPointInfo* entryPointInfo, const JavascriptMethod originalEntryPoint)
     {
         Assert(entryPointInfo);

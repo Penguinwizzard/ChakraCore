@@ -3211,7 +3211,7 @@ Opnd::GetAddrDescription(__out_ecount(count) char16 *const description, const si
 
         case IR::AddrOpndKindDynamicFunctionInfo:
             DumpAddress(address, printToConsole, skipMaskedAddress);
-            DumpFunctionInfo(&buffer, &n, (Js::FunctionInfo *)address, printToConsole);
+            DumpFunctionInfo(&buffer, &n, ((Js::FunctionBody *)address)->GetFunctionInfo(), printToConsole);
             break;
 
         case IR::AddrOpndKindDynamicFunctionBody:

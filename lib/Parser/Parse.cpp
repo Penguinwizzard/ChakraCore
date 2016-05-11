@@ -4833,7 +4833,8 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, LPCOLESTR pNameHint, usho
         BOOL isDeferredFnc = IsDeferredFnc();
         AnalysisAssert(isDeferredFnc || pnodeFnc);
         isTopLevelDeferredFunc =
-            (!isDeferredFnc
+            (!fLambda
+             && !isDeferredFnc
              && DeferredParse(pnodeFnc->sxFnc.functionId)
              && (!pnodeFnc->sxFnc.IsNested() || CONFIG_FLAG(DeferNested))
             // Don't defer if this is a function expression not contained in a statement or other expression.
@@ -4843,6 +4844,8 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, LPCOLESTR pNameHint, usho
             // Don't defer a module function wrapper because we need to do export resolution at parse time
              && !fModule
             );
+
+        pnodeFnc->sxFnc.SetCanBeDeferred(isTopLevelDeferredFunc);
 
         if (!fLambda &&
             !isDeferredFnc &&

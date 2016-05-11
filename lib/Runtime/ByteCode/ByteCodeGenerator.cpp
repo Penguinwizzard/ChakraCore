@@ -1267,6 +1267,10 @@ FuncInfo * ByteCodeGenerator::StartBindFunction(const char16 *name, uint nameLen
         if (pnode->sxFnc.IsModule())
         {
             attributes = (Js::FunctionInfo::Attributes)(attributes | Js::FunctionInfo::Attributes::Module);
+		}
+        if (pnode->sxFnc.CanBeDeferred())
+        {
+            attributes = (Js::FunctionInfo::Attributes)(attributes | Js::FunctionInfo::Attributes::CanDefer);
         }
 
         if (createFunctionBody)
