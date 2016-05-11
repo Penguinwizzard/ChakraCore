@@ -237,6 +237,7 @@ namespace Js
     struct TickDelta;
     class ByteBlock;
     class FunctionInfo;
+    class FunctionProxy;
     class FunctionBody;
     class ParseableFunctionInfo;
     struct StatementLocation;

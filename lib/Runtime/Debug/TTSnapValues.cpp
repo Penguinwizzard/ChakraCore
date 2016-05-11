@@ -1163,7 +1163,7 @@ namespace TTD
             functionInfo->SetGrfscr(functionInfo->GetGrfscr() | fscrGlobalCode);
 
             Js::EvalMapString key(fbInfo->TopLevelBase.SourceCode.Contents, (int32)fbInfo->TopLevelBase.SourceCode.Length, moduleID, strictMode, /* isLibraryCode = */ false);
-            ctx->AddToNewFunctionMap(key, functionInfo);
+            ctx->AddToNewFunctionMap(key, functionInfo->GetFunctionInfo());
 
             Js::FunctionBody* fb = JsSupport::ForceAndGetFunctionBody(pfuncScript->GetParseableFunctionInfo());
 
