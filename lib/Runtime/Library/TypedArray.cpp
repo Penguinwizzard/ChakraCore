@@ -524,14 +524,7 @@ namespace Js
         }
         else if (GetScriptContext()->IsNumericPropertyId(propertyId, &index))
         {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
             this->DirectSetItem(index, value);
-#else
-            this->DirectSetItem(index, value, index >= GetLength());
-#endif
             return true;
         }
         else
@@ -564,15 +557,7 @@ namespace Js
 
     BOOL TypedArrayBase::SetItem(uint32 index, Var value, PropertyOperationFlags flags)
     {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
         DirectSetItem(index, value);
-#else
-        // Skip set item if index >= GetLength()
-        DirectSetItem(index, value, index >= GetLength());
-#endif
         return true;
     }
 
@@ -843,14 +828,7 @@ namespace Js
             {
                 for (uint32 i = 0; i < sourceLength; i++)
                 {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
                     DirectSetItem(offset + i, source->DirectGetItem(i));
-#else
-                    DirectSetItem(offset + i, source->DirectGetItem(i), false);
-#endif
                 }
             }
             else
@@ -864,14 +842,7 @@ namespace Js
                 }
                 for (uint32 i = 0; i < sourceLength; i++)
                 {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
                     DirectSetItem(offset + i, tmpArray->DirectGetItem(i));
-#else
-                    DirectSetItem(offset + i, tmpArray->DirectGetItem(i), false);
-#endif
                 }
             }
         }
@@ -898,14 +869,7 @@ namespace Js
             {
                 itemValue = undefinedValue;
             }
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
             DirectSetItem(offset + i, itemValue);
-#else
-            DirectSetItem(offset + i, itemValue, false);
-#endif
         }
     }
 
@@ -1514,14 +1478,7 @@ namespace Js
                     // We're likely to have constructed a new TypedArray, but the constructor could return any object
                     if (newTypedArrayBase)
                     {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
                         newTypedArrayBase->DirectSetItem(k, kValue);
-#else
-                        newTypedArrayBase->DirectSetItem(k, kValue, false);
-#endif
                     }
                     else if (newArr)
                     {
@@ -1599,14 +1556,7 @@ namespace Js
                 // If constructor built a TypedArray (likely) or Array (maybe likely) we can do a more direct set operation
                 if (newTypedArrayBase)
                 {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
                     newTypedArrayBase->DirectSetItem(k, kValue);
-#else
-                    newTypedArrayBase->DirectSetItem(k, kValue, false);
-#endif
                 }
                 else if (newArr)
                 {
@@ -1829,14 +1779,7 @@ namespace Js
 
                 for (uint32 i = 0; i < captured; i++)
                 {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
                     newArr->DirectSetItem(i, tempList->Item(i));
-#else
-                    newArr->DirectSetItem(i, tempList->Item(i), false);
-#endif
                 }
             }
             else
@@ -2606,16 +2549,9 @@ namespace Js
         // If index is not numeric, goto [[Set]] property path
         if (*isNumericIndex)
         {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
             return skipSetItem ?
                 DirectSetItemNoSet(indexToSet, value) :
                 DirectSetItem(indexToSet, value);
-#else
-            return DirectSetItem(indexToSet, value, skipSetItem);
-#endif
         }
         else
         {
@@ -3100,10 +3036,6 @@ namespace Js
         return static_cast<BoolArray*>(RecyclableObject::FromVar(aValue));
     }
 
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
     __inline BOOL Int8Array::DirectSetItem(__in uint32 index, __in Js::Var value)
     {
         return BaseTypedDirectSetItem(index, value, JavascriptConversion::ToInt8);
@@ -3419,219 +3351,6 @@ namespace Js
     {
         return BaseTypedDirectSetItemNoSet(index, value, JavascriptConversion::ToBool);
     }
-#else
-    __inline BOOL Int8Array::DirectSetItem(__in uint32 index, __in Js::Var value, __in bool skipSetElement)
-    {
-        return BaseTypedDirectSetItem(index, value, skipSetElement, JavascriptConversion::ToInt8);
-    }
-
-    __inline BOOL Int8VirtualArray::DirectSetItem(__in uint32 index, __in Js::Var value, __in bool skipSetElement)
-    {
-        return BaseTypedDirectSetItem(index, value, skipSetElement, JavascriptConversion::ToInt8);
-    }
-
-    __inline Var Int8Array::DirectGetItem(__in uint32 index)
-    {
-        return BaseTypedDirectGetItem(index);
-    }
-
-    __inline Var Int8VirtualArray::DirectGetItem(__in uint32 index)
-    {
-        return BaseTypedDirectGetItem(index);
-    }
-
-    __inline BOOL Uint8Array::DirectSetItem(__in uint32 index, __in Js::Var value, __in bool skipSetElement)
-    {
-        return BaseTypedDirectSetItem(index, value, skipSetElement, JavascriptConversion::ToUInt8);
-    }
-    __inline BOOL Uint8VirtualArray::DirectSetItem(__in uint32 index, __in Js::Var value, __in bool skipSetElement)
-    {
-        return BaseTypedDirectSetItem(index, value, skipSetElement, JavascriptConversion::ToUInt8);
-    }
-
-    __inline Var Uint8Array::DirectGetItem(__in uint32 index)
-    {
-        return BaseTypedDirectGetItem(index);
-    }
-    __inline Var Uint8VirtualArray::DirectGetItem(__in uint32 index)
-    {
-        return BaseTypedDirectGetItem(index);
-    }
-
-
-    __inline BOOL Uint8ClampedArray::DirectSetItem(__in uint32 index, __in Js::Var value, __in bool skipSetElement)
-    {
-        return BaseTypedDirectSetItem(index, value, skipSetElement, JavascriptConversion::ToUInt8Clamped);
-    }
-
-    __inline Var Uint8ClampedArray::DirectGetItem(__in uint32 index)
-    {
-        return BaseTypedDirectGetItem(index);
-    }
-
-    __inline BOOL Uint8ClampedVirtualArray::DirectSetItem(__in uint32 index, __in Js::Var value, __in bool skipSetElement)
-    {
-        return BaseTypedDirectSetItem(index, value, skipSetElement, JavascriptConversion::ToUInt8Clamped);
-    }
-
-    __inline Var Uint8ClampedVirtualArray::DirectGetItem(__in uint32 index)
-    {
-        return BaseTypedDirectGetItem(index);
-    }
-
-    __inline BOOL Int16Array::DirectSetItem(__in uint32 index, __in Js::Var value, __in bool skipSetElement)
-    {
-        return BaseTypedDirectSetItem(index, value, skipSetElement, JavascriptConversion::ToInt16);
-    }
-
-    __inline Var Int16Array::DirectGetItem(__in uint32 index)
-    {
-        return BaseTypedDirectGetItem(index);
-    }
-
-    __inline BOOL Int16VirtualArray::DirectSetItem(__in uint32 index, __in Js::Var value, __in bool skipSetElement)
-    {
-        return BaseTypedDirectSetItem(index, value, skipSetElement, JavascriptConversion::ToInt16);
-    }
-
-    __inline Var Int16VirtualArray::DirectGetItem(__in uint32 index)
-    {
-        return BaseTypedDirectGetItem(index);
-    }
-
-
-    __inline BOOL Uint16Array::DirectSetItem(__in uint32 index, __in Js::Var value, __in bool skipSetElement)
-    {
-        return BaseTypedDirectSetItem(index, value, skipSetElement, JavascriptConversion::ToUInt16);
-    }
-
-    __inline Var Uint16Array::DirectGetItem(__in uint32 index)
-    {
-        return BaseTypedDirectGetItem(index);
-    }
-
-    __inline BOOL Uint16VirtualArray::DirectSetItem(__in uint32 index, __in Js::Var value, __in bool skipSetElement)
-    {
-        return BaseTypedDirectSetItem(index, value, skipSetElement, JavascriptConversion::ToUInt16);
-    }
-
-    __inline Var Uint16VirtualArray::DirectGetItem(__in uint32 index)
-    {
-        return BaseTypedDirectGetItem(index);
-    }
-
-
-
-    __inline BOOL Int32Array::DirectSetItem(__in uint32 index, __in Js::Var value, __in bool skipSetElement)
-    {
-        return BaseTypedDirectSetItem(index, value, skipSetElement, JavascriptConversion::ToInt32);
-    }
-
-    __inline Var Int32Array::DirectGetItem(__in uint32 index)
-    {
-        return BaseTypedDirectGetItem(index);
-    }
-
-    __inline BOOL Int32VirtualArray::DirectSetItem(__in uint32 index, __in Js::Var value, __in bool skipSetElement)
-    {
-        return BaseTypedDirectSetItem(index, value, skipSetElement, JavascriptConversion::ToInt32);
-    }
-
-    __inline Var Int32VirtualArray::DirectGetItem(__in uint32 index)
-    {
-        return BaseTypedDirectGetItem(index);
-    }
-
-
-    __inline BOOL Uint32Array::DirectSetItem(__in uint32 index, __in Js::Var value, __in bool skipSetElement)
-    {
-        return BaseTypedDirectSetItem(index, value, skipSetElement, JavascriptConversion::ToUInt32);
-    }
-
-    __inline Var Uint32Array::DirectGetItem(__in uint32 index)
-    {
-        return BaseTypedDirectGetItem(index);
-    }
-
-    __inline BOOL Uint32VirtualArray::DirectSetItem(__in uint32 index, __in Js::Var value, __in bool skipSetElement)
-    {
-        return BaseTypedDirectSetItem(index, value, skipSetElement, JavascriptConversion::ToUInt32);
-    }
-
-    __inline Var Uint32VirtualArray::DirectGetItem(__in uint32 index)
-    {
-        return BaseTypedDirectGetItem(index);
-    }
-
-
-
-    __inline BOOL Float32Array::DirectSetItem(__in uint32 index, __in Js::Var value, __in bool skipSetElement)
-    {
-        return BaseTypedDirectSetItem(index, value, skipSetElement, JavascriptConversion::ToFloat);
-    }
-
-    Var Float32Array::DirectGetItem(__in uint32 index)
-    {
-        return TypedDirectGetItemWithCheck(index);
-    }
-
-    __inline BOOL Float32VirtualArray::DirectSetItem(__in uint32 index, __in Js::Var value, __in bool skipSetElement)
-    {
-        return BaseTypedDirectSetItem(index, value, skipSetElement, JavascriptConversion::ToFloat);
-    }
-
-    Var Float32VirtualArray::DirectGetItem(__in uint32 index)
-    {
-        return TypedDirectGetItemWithCheck(index);
-    }
-
-
-    __inline BOOL Float64Array::DirectSetItem(__in uint32 index, __in Js::Var value, __in bool skipSetElement)
-    {
-        return BaseTypedDirectSetItem(index, value, skipSetElement, JavascriptConversion::ToNumber);
-    }
-
-    __inline Var Float64Array::DirectGetItem(__in uint32 index)
-    {
-        return TypedDirectGetItemWithCheck(index);
-    }
-
-    __inline BOOL Float64VirtualArray::DirectSetItem(__in uint32 index, __in Js::Var value, __in bool skipSetElement)
-    {
-        return BaseTypedDirectSetItem(index, value, skipSetElement, JavascriptConversion::ToNumber);
-    }
-
-    __inline Var Float64VirtualArray::DirectGetItem(__in uint32 index)
-    {
-        return TypedDirectGetItemWithCheck(index);
-    }
-
-
-    __inline BOOL Int64Array::DirectSetItem(__in uint32 index, __in Js::Var value, __in bool skipSetElement)
-    {
-        return BaseTypedDirectSetItem(index, value, skipSetElement, JavascriptConversion::ToInt64);
-    }
-
-    __inline Var Int64Array::DirectGetItem(__in uint32 index)
-    {
-        return BaseTypedDirectGetItem(index);
-    }
-
-    __inline BOOL Uint64Array::DirectSetItem(__in uint32 index, __in Js::Var value, __in bool skipSetElement)
-    {
-        return BaseTypedDirectSetItem(index, value, skipSetElement, JavascriptConversion::ToUInt64);
-    }
-
-    __inline Var Uint64Array::DirectGetItem(__in uint32 index)
-    {
-        return BaseTypedDirectGetItem(index);
-    }
-
-    __inline BOOL BoolArray::DirectSetItem(__in uint32 index, __in Js::Var value, __in bool skipSetElement)
-    {
-        return BaseTypedDirectSetItem(index, value, skipSetElement, JavascriptConversion::ToBool);
-    }
-#endif
 
     __inline Var BoolArray::DirectGetItem(__in uint32 index)
     {
@@ -3687,14 +3406,7 @@ namespace Js
         return static_cast<CharArray*>(RecyclableObject::FromVar(aValue));
     }
 
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
     __inline BOOL CharArray::DirectSetItem(__in uint32 index, __in Js::Var value)
-#else
-    __inline BOOL CharArray::DirectSetItem(__in uint32 index, __in Js::Var value, __in bool skipSetElement)
-#endif
     {
         ScriptContext* scriptContext = GetScriptContext();
         // A typed array is Integer Indexed Exotic object, so doing a get translates to 9.4.5.9 IntegerIndexedElementSet
@@ -3705,14 +3417,7 @@ namespace Js
             JavascriptError::ThrowTypeError(scriptContext, JSERR_DetachedTypedArray);
         }
 
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
         if (index >= GetLength())
-#else
-        if (skipSetElement)
-#endif
         {
             return FALSE;
         }
@@ -3733,10 +3438,6 @@ namespace Js
         return TRUE;
     }
 
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
     __inline BOOL CharArray::DirectSetItemNoSet(__in uint32 index, __in Js::Var value)
     {
         ScriptContext* scriptContext = GetScriptContext();
@@ -3750,7 +3451,6 @@ namespace Js
 
         return FALSE;
     }
-#endif
 
     __inline Var CharArray::DirectGetItem(__in uint32 index)
     {

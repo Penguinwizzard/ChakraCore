@@ -2795,7 +2795,7 @@ namespace Js
         }
 
         ScriptContext* requestContext = type->GetScriptContext();
-        return JavascriptOperators::GetItem(this, this->GetPrototype(), index, (Var*)outVal, requestContext);
+        return JavascriptOperators::GetItem(this, this->GetPrototype(), index, outVal, requestContext);
     }
 
     //
@@ -2979,15 +2979,8 @@ namespace Js
                     {
                         if (JavascriptOperators::HasItem(itemObject, idxSubItem))
                         {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32922_BUG6908898) || defined(_CHAKRACOREBUILD)
                             subItem = JavascriptOperators::GetItem(itemObject, idxSubItem, scriptContext);
 
-#else
-                            JavascriptOperators::GetItem(itemObject, idxSubItem, &subItem, scriptContext);
-#endif
                             if (pDestArray)
                             {
                                 pDestArray->DirectSetItemAt(idxDest, subItem);
@@ -5191,16 +5184,8 @@ Case0:
                     lowerExists = typedArrayBase->HasItem(lower);
                     upperExists = typedArrayBase->HasItem(upper);
 
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
                     h.ThrowTypeErrorOnFailure(typedArrayBase->DirectSetItem(lower, upperValue));
                     h.ThrowTypeErrorOnFailure(typedArrayBase->DirectSetItem(upper, lowerValue));
-#else
-                    h.ThrowTypeErrorOnFailure(typedArrayBase->DirectSetItem(lower, upperValue, false));
-                    h.ThrowTypeErrorOnFailure(typedArrayBase->DirectSetItem(upper, lowerValue, false));
-#endif
                 }
             }
             else
@@ -5219,43 +5204,21 @@ Case0:
                     {
                         if (upperExists)
                         {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
                             h.ThrowTypeErrorOnFailure(typedArrayBase->DirectSetItem(lower, upperValue));
                             h.ThrowTypeErrorOnFailure(typedArrayBase->DirectSetItem(upper, lowerValue));
-#else
-                            h.ThrowTypeErrorOnFailure(typedArrayBase->DirectSetItem(lower, upperValue, false));
-                            h.ThrowTypeErrorOnFailure(typedArrayBase->DirectSetItem(upper, lowerValue, false));
-#endif
                         }
                         else
                         {
                             // This will always fail for a TypedArray if lower < length
                             h.ThrowTypeErrorOnFailure(typedArrayBase->DeleteItem(lower, PropertyOperation_ThrowIfNotExtensible));
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
                             h.ThrowTypeErrorOnFailure(typedArrayBase->DirectSetItem(upper, lowerValue));
-#else
-                            h.ThrowTypeErrorOnFailure(typedArrayBase->DirectSetItem(upper, lowerValue, false));
-#endif
                         }
                     }
                     else
                     {
                         if (upperExists)
                         {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
                             h.ThrowTypeErrorOnFailure(typedArrayBase->DirectSetItem(lower, upperValue));
-#else
-                            h.ThrowTypeErrorOnFailure(typedArrayBase->DirectSetItem(lower, upperValue, false));
-#endif
                             // This will always fail for a TypedArray if upper < length
                             h.ThrowTypeErrorOnFailure(typedArrayBase->DeleteItem(upper, PropertyOperation_ThrowIfNotExtensible));
                         }
@@ -5269,29 +5232,11 @@ Case0:
             {
                 T upper = length - lower - 1;
 
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32922_BUG6908898) || defined(_CHAKRACOREBUILD)
                 lowerExists = JavascriptOperators::HasItem(obj, lower) &&
                               JavascriptOperators::GetItem(obj, lower, &lowerValue, scriptContext);
 
                 upperExists = JavascriptOperators::HasItem(obj, upper) &&
                               JavascriptOperators::GetItem(obj, upper, &upperValue, scriptContext);
-#else
-                lowerExists = JavascriptOperators::HasItem(obj, lower);
-                if (lowerExists)
-                {
-                    BOOL getResult = JavascriptOperators::GetItem(obj, lower, &lowerValue, scriptContext);
-                    Assert(getResult);
-                }
-                upperExists = JavascriptOperators::HasItem(obj, upper);
-                if (upperExists)
-                {
-                    BOOL getResult = JavascriptOperators::GetItem(obj, upper, &upperValue, scriptContext);
-                    Assert(getResult);
-                }
-#endif
 
                 if (lowerExists)
                 {
@@ -5532,24 +5477,11 @@ Case0:
             uint32 lengthToUin32Max = length.IsSmallIndex() ? length.GetSmallIndex() : MaxArrayLength;
             for (uint32 i = 0u; i < lengthToUin32Max; i++)
             {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32922_BUG6908898) || defined(_CHAKRACOREBUILD)
                 if (JavascriptOperators::HasItem(dynamicObject, i + 1))
                 {
                     Var element = JavascriptOperators::GetItem(dynamicObject, i + 1, scriptContext);
                     h.ThrowTypeErrorOnFailure(JavascriptOperators::SetItem(dynamicObject, dynamicObject, i, element, scriptContext, PropertyOperation_ThrowIfNotExtensible, /*skipPrototypeCheck*/ true));
                 }
-#else
-                Var element;
-                if (JavascriptOperators::HasItem(dynamicObject, i + 1))
-                {
-                    BOOL getResult = JavascriptOperators::GetItem(dynamicObject, i + 1, &element, scriptContext);
-                    Assert(getResult);
-                    h.ThrowTypeErrorOnFailure(JavascriptOperators::SetItem(dynamicObject, dynamicObject, i, element, scriptContext, PropertyOperation_ThrowIfNotExtensible, /*skipPrototypeCheck*/ true));
-                }
-#endif
                 else
                 {
                     h.ThrowTypeErrorOnFailure(JavascriptOperators::DeleteItem(dynamicObject, i, PropertyOperation_ThrowIfNotExtensible));
@@ -5558,24 +5490,11 @@ Case0:
 
             for (uint64 i = MaxArrayLength; length > i; i++)
             {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32922_BUG6908898) || defined(_CHAKRACOREBUILD)
                 if (JavascriptOperators::HasItem(dynamicObject, i + 1))
                 {
                     Var element = JavascriptOperators::GetItem(dynamicObject, i + 1, scriptContext);
                     h.ThrowTypeErrorOnFailure(JavascriptOperators::SetItem(dynamicObject, dynamicObject, i, element, scriptContext, PropertyOperation_ThrowIfNotExtensible));
                 }
-#else
-                Var element;
-                if (JavascriptOperators::HasItem(dynamicObject, i + 1))
-                {
-                    BOOL getResult = JavascriptOperators::GetItem(dynamicObject, i + 1, &element, scriptContext);
-                    Assert(getResult);
-                    h.ThrowTypeErrorOnFailure(JavascriptOperators::SetItem(dynamicObject, dynamicObject, i, element, scriptContext, PropertyOperation_ThrowIfNotExtensible));
-                }
-#endif
                 else
                 {
                     h.ThrowTypeErrorOnFailure(JavascriptOperators::DeleteItem(dynamicObject, i, PropertyOperation_ThrowIfNotExtensible));
@@ -6011,14 +5930,7 @@ Case0:
                 // The object we got back from the constructor might not be a TypedArray. In fact, it could be any object.
                 if (newTypedArray)
                 {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
                     newTypedArray->DirectSetItem(i, element);
-#else
-                    newTypedArray->DirectSetItem(i, element, false);
-#endif
                 }
                 else if (newArr)
                 {
@@ -6032,10 +5944,6 @@ Case0:
         }
         else
         {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32922_BUG6908898) || defined(_CHAKRACOREBUILD)
             for (uint32 i = 0; i < newLen; i++)
             {
                 if (JavascriptOperators::HasItem(obj, i + start))
@@ -6051,27 +5959,6 @@ Case0:
                     }
                 }
             }
-#else
-            Var element;
-
-            for (uint32 i = 0; i < newLen; i++)
-            {
-                if (!JavascriptOperators::HasItem(obj, i+start))
-                {
-                    continue;
-                }
-                BOOL getResult = JavascriptOperators::GetItem(obj, i + start, &element, scriptContext);
-                Assert(getResult);
-                if (newArr != nullptr)
-                {
-                    newArr->DirectSetItemAt(i, element);
-                }
-                else
-                {
-                    JavascriptOperators::OP_SetElementI_UInt32(newObj, i, element, scriptContext, PropertyOperation_ThrowIfNotExtensible);
-                }
-            }
-#endif
         }
 
         if (!isTypedArrayEntryPoint)
@@ -7211,10 +7098,6 @@ Case0:
         {
             for (uint32 i = 0; i < deleteLen; i++)
             {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32922_BUG6908898) || defined(_CHAKRACOREBUILD)
                if (JavascriptOperators::HasItem(pObj, start+i))
                {
                    Var element = JavascriptOperators::GetItem(pObj, start + i, scriptContext);
@@ -7227,22 +7110,6 @@ Case0:
                        JavascriptArray::SetArrayLikeObjects(pNewObj, i, element);
                    }
                }
-#else
-               Var element;
-               if (JavascriptOperators::HasItem(pObj, start+i))
-               {
-                   BOOL getResult = JavascriptOperators::GetItem(pObj, start + i, &element, scriptContext);
-                   Assert(getResult);
-                   if (pnewArr)
-                   {
-                       pnewArr->DirectSetItemAt(i, element);
-                   }
-                   else
-                   {
-                       JavascriptArray::SetArrayLikeObjects(pNewObj, i, element);
-                   }
-               }
-#endif
             }
         }
 
@@ -7265,24 +7132,11 @@ Case0:
             uint32 j = 0;
             for (uint32 i = start + deleteLen; i < len; i++)
             {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32922_BUG6908898) || defined(_CHAKRACOREBUILD)
                 if (JavascriptOperators::HasItem(pObj, i))
                 {
                     Var element = JavascriptOperators::GetItem(pObj, i, scriptContext);
                     h.ThrowTypeErrorOnFailure(JavascriptOperators::SetItem(pObj, pObj, start + insertLen + j, element, scriptContext, PropertyOperation_ThrowIfNotExtensible));
                 }
-#else
-                Var element;
-                if (JavascriptOperators::HasItem(pObj, i))
-                {
-                    BOOL getResult = JavascriptOperators::GetItem(pObj, i, &element, scriptContext);
-                    Assert(getResult);
-                    h.ThrowTypeErrorOnFailure(JavascriptOperators::SetItem(pObj, pObj, start + insertLen + j, element, scriptContext, PropertyOperation_ThrowIfNotExtensible));
-                }
-#endif
                 else
                 {
                     h.ThrowTypeErrorOnFailure(JavascriptOperators::DeleteItem(pObj, start + insertLen + j, PropertyOperation_ThrowIfNotExtensible));
@@ -7368,24 +7222,11 @@ Case0:
                 uint64 i64 = end;
                 for (; i64 > UINT32_MAX; i64--)
                 {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32922_BUG6908898) || defined(_CHAKRACOREBUILD)
                     if (JavascriptOperators::HasItem(obj, i64 - 1))
                     {
                         Var element = JavascriptOperators::GetItem(obj, i64 - 1, scriptContext);
                         h.ThrowTypeErrorOnFailure(index_trace::SetItem(obj, dst, element, PropertyOperation_ThrowIfNotExtensible));
                     }
-#else
-                    Var element;
-                    if (JavascriptOperators::HasItem(obj, i64 - 1))
-                    {
-                        BOOL getResult = JavascriptOperators::GetItem(obj, i64 - 1, &element, scriptContext);
-                        Assert(getResult);
-                        h.ThrowTypeErrorOnFailure(index_trace::SetItem(obj, dst, element, PropertyOperation_ThrowIfNotExtensible));
-                    }
-#endif
                     else
                     {
                         h.ThrowTypeErrorOnFailure(index_trace::DeleteItem(obj, dst, PropertyOperation_ThrowIfNotExtensible));
@@ -7401,24 +7242,11 @@ Case0:
             }
             for (; i > start; i--)
             {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32922_BUG6908898) || defined(_CHAKRACOREBUILD)
                 if (JavascriptOperators::HasItem(obj, i-1))
                 {
                     Var element = JavascriptOperators::GetItem(obj, i - 1, scriptContext);
                     h.ThrowTypeErrorOnFailure(index_trace::SetItem(obj, dst, element, PropertyOperation_ThrowIfNotExtensible));
                 }
-#else
-                Var element;
-                if (JavascriptOperators::HasItem(obj, i-1))
-                {
-                    BOOL getResult = JavascriptOperators::GetItem(obj, i - 1, &element, scriptContext);
-                    Assert(getResult);
-                    h.ThrowTypeErrorOnFailure(index_trace::SetItem(obj, dst, element, PropertyOperation_ThrowIfNotExtensible));
-                }
-#endif
                 else
                 {
                     h.ThrowTypeErrorOnFailure(index_trace::DeleteItem(obj, dst, PropertyOperation_ThrowIfNotExtensible));
@@ -7945,19 +7773,10 @@ Case0:
         CallFlags flags = CallFlags_Value;
         Var element = nullptr;
         Var testResult = nullptr;
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32922_BUG6908898) || defined(_CHAKRACOREBUILD)
-        if (pArr)
-        {
-            Var undefined = scriptContext->GetLibrary()->GetUndefined();
-#else
-        Var undefined = scriptContext->GetLibrary()->GetUndefined();
 
         if (pArr)
         {
-#endif
+            Var undefined = scriptContext->GetLibrary()->GetUndefined();
             for (uint32 k = 0; k < length; k++)
             {
                 element = undefined;
@@ -7999,15 +7818,7 @@ Case0:
         {
             for (uint32 k = 0; k < length; k++)
             {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32922_BUG6908898) || defined(_CHAKRACOREBUILD)
                 element = JavascriptOperators::GetItem(obj, k, scriptContext);
-#else
-                element = undefined;
-                JavascriptOperators::GetItem(obj, k, &element, scriptContext);
-#endif
                 Var index = JavascriptNumber::ToVar(k, scriptContext);
 
                 testResult = callBackFn->GetEntryPoint()(callBackFn, CallInfo(flags, 4), thisArg,
@@ -8305,10 +8116,6 @@ Case0:
         }
         else
         {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32922_BUG6908898) || defined(_CHAKRACOREBUILD)
             for (T k = 0; k < length; k++)
             {
                 // According to es6 spec, we need to call Has first before calling Get
@@ -8327,28 +8134,6 @@ Case0:
                     }
                 }
             }
-#else
-            for (T k = 0; k < length; k++)
-            {
-                // According to es6 spec, we need to call Has first before calling Get
-                if (!JavascriptOperators::HasItem(obj, k))
-                {
-                    continue;
-                }
-                BOOL getResult = JavascriptOperators::GetItem(obj, k, &element, scriptContext);
-                Assert(getResult);
-
-                testResult = callBackFn->GetEntryPoint()(callBackFn, CallInfo(flags, 4), thisArg,
-                    element,
-                    JavascriptNumber::ToVar(k, scriptContext),
-                    obj);
-
-                if (!JavascriptConversion::ToBoolean(testResult, scriptContext))
-                {
-                    return scriptContext->GetLibrary()->GetFalse();
-                }
-            }
-#endif
         }
 
         return scriptContext->GetLibrary()->GetTrue();
@@ -8504,10 +8289,6 @@ Case0:
         }
         else
         {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32922_BUG6908898) || defined(_CHAKRACOREBUILD)
             for (T k = 0; k < length; k++)
             {
                 if (JavascriptOperators::HasItem(obj, k))
@@ -8524,26 +8305,6 @@ Case0:
                     }
                 }
             }
-#else
-            for (T k = 0; k < length; k++)
-            {
-                if (!JavascriptOperators::HasItem(obj, k))
-                {
-                    continue;
-                }
-                BOOL getResult = JavascriptOperators::GetItem(obj, k, &element, scriptContext);
-                Assert(getResult);
-                testResult = callBackFn->GetEntryPoint()(callBackFn, CallInfo(flags, 4), thisArg,
-                    element,
-                    JavascriptNumber::ToVar(k, scriptContext),
-                    obj);
-
-                if (JavascriptConversion::ToBoolean(testResult, scriptContext))
-                {
-                    return scriptContext->GetLibrary()->GetTrue();
-                }
-            }
-#endif
         }
 
         return scriptContext->GetLibrary()->GetFalse();
@@ -8805,14 +8566,7 @@ Case0:
                     {
                         Var val = typedArrayBase->DirectGetItem(fromIndex);
 
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
                         typedArrayBase->DirectSetItem(toIndex, val);
-#else
-                        typedArrayBase->DirectSetItem(toIndex, val, false);
-#endif
                     }
                     else if (pArr)
                     {
@@ -8924,14 +8678,7 @@ Case0:
             {
                 if (typedArrayBase)
                 {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
                     typedArrayBase->DirectSetItem(u32k, fillValue);
-#else
-                    typedArrayBase->DirectSetItem(u32k, fillValue, false);
-#endif
                 }
                 else if (pArr)
                 {
@@ -9186,14 +8933,7 @@ Case0:
                 // the normal Set path.
                 if (newTypedArray)
                 {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
                     newTypedArray->DirectSetItem(k, mappedValue);
-#else
-                    newTypedArray->DirectSetItem(k, mappedValue, false);
-#endif
                 }
                 else if (newArr)
                 {
@@ -9207,10 +8947,6 @@ Case0:
         }
         else
         {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32922_BUG6908898) || defined(_CHAKRACOREBUILD)
             for (uint32 k = 0; k < length; k++)
             {
                 if (JavascriptOperators::HasItem(obj, k))
@@ -9231,31 +8967,6 @@ Case0:
                     }
                 }
             }
-#else
-            for (uint32 k = 0; k < length; k++)
-            {
-                if (!JavascriptOperators::HasItem(obj, k))
-                {
-                    continue;
-                }
-
-                BOOL getResult = JavascriptOperators::GetItem(obj, k, &element, scriptContext);
-                Assert(getResult);
-                mappedValue = callBackFn->GetEntryPoint()(callBackFn, callBackFnInfo, thisArg,
-                    element,
-                    JavascriptNumber::ToVar(k, scriptContext),
-                    obj);
-
-                if (newArr)
-                {
-                    newArr->DirectSetItemAt(k, mappedValue);
-                }
-                else
-                {
-                    JavascriptArray::SetArrayLikeObjects(RecyclableObject::FromVar(newObj), k, mappedValue);
-                }
-            }
-#endif
         }
 
 #ifdef VALIDATE_ARRAY
@@ -9397,10 +9108,6 @@ Case0:
         }
         else
         {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32922_BUG6908898) || defined(_CHAKRACOREBUILD)
             for (BigIndex k = 0u; k < length; ++k)
             {
                 if (JavascriptOperators::HasItem(dynamicObject, k.IsSmallIndex() ? k.GetSmallIndex() : k.GetBigIndex()))
@@ -9425,34 +9132,6 @@ Case0:
                     }
                 }
             }
-#else
-            for (BigIndex k = 0u; k < length; ++k)
-            {
-                if (!JavascriptOperators::HasItem(dynamicObject, k.IsSmallIndex() ? k.GetSmallIndex() : k.GetBigIndex()))
-                {
-                    continue;
-                }
-                BOOL getResult = JavascriptOperators::GetItem(dynamicObject, k.IsSmallIndex() ? k.GetSmallIndex() : k.GetBigIndex(), &element, scriptContext);
-                Assert(getResult);
-                selected = callBackFn->GetEntryPoint()(callBackFn, CallInfo(flags, 4), thisArg,
-                                                                element,
-                                                                JavascriptNumber::ToVar(k.IsSmallIndex() ? k.GetSmallIndex() : k.GetBigIndex(), scriptContext),
-                                                                dynamicObject);
-
-                if (JavascriptConversion::ToBoolean(selected, scriptContext))
-                {
-                    if (newArr)
-                    {
-                        newArr->DirectSetItemAt(i, element);
-                    }
-                    else
-                    {
-                        JavascriptArray::SetArrayLikeObjects(RecyclableObject::FromVar(newObj), i, element);
-                    }
-                    ++i;
-                }
-            }
-#endif
         }
 
 #ifdef VALIDATE_ARRAY
@@ -9589,10 +9268,6 @@ Case0:
             }
             else
             {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32922_BUG6908898) || defined(_CHAKRACOREBUILD)
                 for (; k < length && bPresent == false; k++)
                 {
                     if (JavascriptOperators::HasItem(obj, k))
@@ -9601,19 +9276,6 @@ Case0:
                         bPresent = true;
                     }
                 }
-#else
-                for (; k < length && bPresent == false; k++)
-                {
-                    if (!JavascriptOperators::HasItem(obj, k))
-                    {
-                        continue;
-                    }
-
-                    BOOL getResult = JavascriptOperators::GetItem(obj, k, &accumulator, scriptContext);
-                    Assert(getResult);
-                    bPresent = true;
-                }
-#endif
             }
 
             if (bPresent == false)
@@ -9665,10 +9327,6 @@ Case0:
         }
         else
         {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32922_BUG6908898) || defined(_CHAKRACOREBUILD)
             for (; k < length; k++)
             {
                 if (JavascriptOperators::HasItem(obj, k))
@@ -9682,23 +9340,6 @@ Case0:
                         obj);
                 }
             }
-#else
-            for (; k < length; k++)
-            {
-                if (!JavascriptOperators::HasItem(obj, k))
-                {
-                    continue;
-                }
-                BOOL getResult = JavascriptOperators::GetItem(obj, k, &element, scriptContext);
-                Assert(getResult);
-
-                accumulator = callBackFn->GetEntryPoint()(callBackFn, CallInfo(flags, 5), undefinedValue,
-                    accumulator,
-                    element,
-                    JavascriptNumber::ToVar(k, scriptContext),
-                    obj);
-            }
-#endif
         }
 
         return accumulator;
@@ -9833,10 +9474,6 @@ Case0:
             }
             else
             {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32922_BUG6908898) || defined(_CHAKRACOREBUILD)
                 for (; k < length && bPresent == false; k++)
                 {
                     index = length - k - 1;
@@ -9846,19 +9483,6 @@ Case0:
                         bPresent = true;
                     }
                 }
-#else
-                for (; k < length && bPresent == false; k++)
-                {
-                    index = length - k - 1;
-                    if (!JavascriptOperators::HasItem(obj, index))
-                    {
-                        continue;
-                    }
-                    BOOL getResult = JavascriptOperators::GetItem(obj, index, &accumulator, scriptContext);
-                    Assert(getResult);
-                    bPresent = true;
-                }
-#endif
             }
             if (bPresent == false)
             {
@@ -9910,10 +9534,6 @@ Case0:
         }
         else
         {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32922_BUG6908898) || defined(_CHAKRACOREBUILD)
             for (; k < length; k++)
             {
                 index = length - k - 1;
@@ -9927,24 +9547,6 @@ Case0:
                         obj);
                 }
             }
-#else
-            for (; k < length; k++)
-            {
-                index = length - k - 1;
-                if (!JavascriptOperators::HasItem(obj, index))
-                {
-                    continue;
-                }
-
-                BOOL getResult = JavascriptOperators::GetItem(obj, index, &element, scriptContext);
-                Assert(getResult);
-                accumulator = callBackFn->GetEntryPoint()(callBackFn, CallInfo(flags, 5), undefinedValue,
-                    accumulator,
-                    element,
-                    JavascriptNumber::ToVar(index, scriptContext),
-                    obj);
-            }
-#endif
         }
 
         return accumulator;
@@ -10221,14 +9823,7 @@ Case0:
             {
                 Var kValue = args[k + 1];
 
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1605_MSRC32927_BUG6911906) || defined(_CHAKRACOREBUILD)
                 newTypedArray->DirectSetItem(k, kValue);
-#else
-                newTypedArray->DirectSetItem(k, kValue, false);
-#endif
             }
         }
         else
