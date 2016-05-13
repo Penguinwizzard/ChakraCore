@@ -3835,19 +3835,9 @@ GlobOpt::OptArguments(IR::Instr *instr)
         return;
     }
 
-    if (instr->m_opcode == Js::OpCode::LdHeapArguments || instr->m_opcode == Js::OpCode::LdLetHeapArguments)
+    if (instr->m_opcode == Js::OpCode::LdHeapArguments || instr->m_opcode == Js::OpCode::LdLetHeapArguments ||
+        instr->m_opcode == Js::OpCode::LdHeapArgsCached || instr->m_opcode == Js::OpCode::LdLetHeapArgsCached)
     {
-        // Stackargs optimization is designed to work with only when function doesn't have formals.
-        if (instr->m_func->GetJnFunction()->GetInParamsCount() != 1)
-        {
-#ifdef PERF_HINT
-            if (PHASE_TRACE1(Js::PerfHintPhase))
-            {
-                WritePerfHint(PerfHints::HeapArgumentsDueToFormals, instr->m_func->GetJnFunction(), instr->GetByteCodeOffset());
-            }
-#endif
-            CannotAllocateArgumentsObjectOnStack();
-        }
         TrackArgumentsSym(dst->AsRegOpnd());
         return;
     }
