@@ -20162,15 +20162,22 @@ GlobOpt::IsPREInstrCandidateStore(Js::OpCode opcode)
 bool
 GlobOpt::ImplicitCallFlagsAllowOpts(Loop *loop)
 {
-    return loop->GetImplicitCallFlags() != Js::ImplicitCall_HasNoInfo &&
+    return loop->GetImplicitCallFlags() != Js::ImplicitCall_HasNoInfo && //todo: add checks for IsIgnoreImplicitCallFlagAccessorDisabled
         (((loop->GetImplicitCallFlags() & ~Js::ImplicitCall_Accessor) | Js::ImplicitCall_None) == Js::ImplicitCall_None);
 }
 
 bool
 GlobOpt::ImplicitCallFlagsAllowOpts(Func *func)
 {
-    return func->m_fg->implicitCallFlags != Js::ImplicitCall_HasNoInfo &&
-        (((func->m_fg->implicitCallFlags & ~Js::ImplicitCall_Accessor) | Js::ImplicitCall_None) == Js::ImplicitCall_None);
+    if (!func->GetProfileInfo()->IsIgnoreImplicitCallFlagAccessorDisabled())
+    {
+        return func->m_fg->implicitCallFlags != Js::ImplicitCall_HasNoInfo && ((func->m_fg->implicitCallFlags & ~Js::ImplicitCall_Accessor) | Js::ImplicitCall_None) == Js::ImplicitCall_None;
+    }
+    else
+    {
+        return func->m_fg->implicitCallFlags != Js::ImplicitCall_HasNoInfo && func->m_fg->implicitCallFlags == Js::ImplicitCall_None;
+
+    }
 }
 
 #if DBG_DUMP
