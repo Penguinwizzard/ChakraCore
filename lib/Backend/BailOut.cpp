@@ -523,8 +523,8 @@ uint32 BailOutRecord::GetArgumentsObjectOffset()
 
 Js::Var BailOutRecord::EnsureArguments(Js::InterpreterStackFrame * newInstance, Js::JavascriptCallStackLayout * layout, Js::ScriptContext* scriptContext, Js::Var* pArgumentsObject) const
 {
-    Js::Var nullObj = scriptContext->GetLibrary()->GetNull();
-    newInstance->OP_LdHeapArguments(nullObj, scriptContext);
+    //newInstance->OP_LdHeapArguments(scriptContext->GetLibrary()->GetNull(), scriptContext);
+    newInstance->OP_LdHeapArgsCached(scriptContext);
     Assert(newInstance->m_arguments);
     *pArgumentsObject = (Js::ArgumentsObject*)newInstance->m_arguments;
     return newInstance->m_arguments;
@@ -540,7 +540,7 @@ Js::JavascriptCallStackLayout *BailOutRecord::GetStackLayout() const
 void
 BailOutRecord::RestoreValues(IR::BailOutKind bailOutKind, Js::JavascriptCallStackLayout * layout, Js::InterpreterStackFrame * newInstance,
     Js::ScriptContext * scriptContext, bool fromLoopBody, Js::Var * registerSaves, BailOutReturnValue * bailOutReturnValue, Js::Var* pArgumentsObject,
-    Js::Var branchValue, void * returnAddress, bool useStartCall /* = true */, void * argoutRestoreAddress) const
+    Js::Var branchValue, void * returnAddress, bool useStartCall /* = true */, void * argoutRestoreAddress, Js::RegSlot * pHeapArgObjRegSlot) const
 {
     Js::AutoPushReturnAddressForStackWalker saveReturnAddress(scriptContext, returnAddress);
 
@@ -608,7 +608,7 @@ BailOutRecord::RestoreValues(IR::BailOutKind bailOutKind, Js::JavascriptCallStac
         }
 
         this->RestoreValues(bailOutKind, layout, this->localOffsetsCount,
-            nullptr, 0, newInstance->m_localSlots, scriptContext, fromLoopBody, registerSaves, newInstance, pArgumentsObject);
+            nullptr, 0, newInstance->m_localSlots, scriptContext, fromLoopBody, registerSaves, newInstance, pArgumentsObject, nullptr, pHeapArgObjRegSlot);
     }
 
     if (useStartCall && this->argOutOffsetInfo)
@@ -627,7 +627,7 @@ BailOutRecord::RestoreValues(IR::BailOutKind bailOutKind, Js::JavascriptCallStac
             newInstance->OP_StartCall(startCallOutParamCount);
             this->RestoreValues(bailOutKind, layout, startCallOutParamCount, &this->argOutOffsetInfo->outParamOffsets[outParamSlot],
                 this->argOutOffsetInfo->argOutSymStart + outParamSlot, newInstance->m_outParams,
-                scriptContext, fromLoopBody, registerSaves, newInstance, pArgumentsObject, argRestoreAddr);
+                scriptContext, fromLoopBody, registerSaves, newInstance, pArgumentsObject, argRestoreAddr, pHeapArgObjRegSlot);
             outParamSlot += startCallOutParamCount;
         }
     }
@@ -749,7 +749,7 @@ BailOutRecord::IsOffsetNativeIntOrFloat(uint offsetIndex, int argOutSlotStart, b
 
 void
 BailOutRecord::RestoreValue(IR::BailOutKind bailOutKind, Js::JavascriptCallStackLayout * layout, Js::Var * values, Js::ScriptContext * scriptContext,
-    bool fromLoopBody, Js::Var * registerSaves, Js::InterpreterStackFrame * newInstance, Js::Var* pArgumentsObject, void * argoutRestoreAddress,
+    bool fromLoopBody, Js::Var * registerSaves, Js::InterpreterStackFrame * newInstance, Js::Var* pArgumentsObject, void * argoutRestoreAddress, Js::RegSlot * pHeapArgObjRegSlot,
     uint regSlot, int offset, bool isLocal, bool isFloat64, bool isInt32, 
     bool isSimd128F4, bool isSimd128I4, bool isSimd128I8, bool isSimd128I16, 
     bool isSimd128U4, bool isSimd128U8, bool isSimd128U16, bool isSimd128B4, bool isSimd128B8, bool isSimd128B16) const
@@ -875,9 +875,10 @@ BailOutRecord::RestoreValue(IR::BailOutKind bailOutKind, Js::JavascriptCallStack
             value = *pArgumentsObject;
             if (value == nullptr)
             {
-                value = EnsureArguments(newInstance, layout, scriptContext, pArgumentsObject);
+                Assert(pHeapArgObjRegSlot != nullptr);
+                *pHeapArgObjRegSlot = regSlot;
             }
-            Assert(value);
+            //Assert(value);
             BAILOUT_VERBOSE_TRACE(newInstance->function->GetFunctionBody(), bailOutKind, _u("Arguments object"));
             boxStackInstance = false;
         }
@@ -989,7 +990,7 @@ BailOutRecord::RestoreValue(IR::BailOutKind bailOutKind, Js::JavascriptCallStack
 void
 BailOutRecord::RestoreValues(IR::BailOutKind bailOutKind, Js::JavascriptCallStackLayout * layout, uint count, __in_ecount_opt(count) int * offsets, int argOutSlotStart,
     __out_ecount(count) Js::Var * values, Js::ScriptContext * scriptContext,
-    bool fromLoopBody, Js::Var * registerSaves, Js::InterpreterStackFrame * newInstance, Js::Var* pArgumentsObject, void * argoutRestoreAddress) const
+    bool fromLoopBody, Js::Var * registerSaves, Js::InterpreterStackFrame * newInstance, Js::Var* pArgumentsObject, void * argoutRestoreAddress, Js::RegSlot * pHeapArgObjRegSlot) const
 {
     bool isLocal = offsets == nullptr;
     if (isLocal == true)
@@ -997,7 +998,7 @@ BailOutRecord::RestoreValues(IR::BailOutKind bailOutKind, Js::JavascriptCallStac
         globalBailOutRecordTable->IterateGlobalBailOutRecordTableRows(m_bailOutRecordId, [=](GlobalBailOutRecordDataRow *row) {
             Assert(row->offset != 0);
             RestoreValue(bailOutKind, layout, values, scriptContext, fromLoopBody, registerSaves, newInstance, pArgumentsObject,
-                argoutRestoreAddress, row->regSlot, row->offset, true, row->isFloat, row->isInt, row->isSimd128F4, 
+                argoutRestoreAddress, pHeapArgObjRegSlot, row->regSlot, row->offset, true, row->isFloat, row->isInt, row->isSimd128F4, 
                 row->isSimd128I4, row->isSimd128I8, row->isSimd128I16, row->isSimd128U4, row->isSimd128U8, row->isSimd128U16, 
                 row->isSimd128B4, row->isSimd128B8, row->isSimd128B16);
         });
@@ -1028,7 +1029,7 @@ BailOutRecord::RestoreValues(IR::BailOutKind bailOutKind, Js::JavascriptCallStac
                                            &isSimd128U4, &isSimd128U8, &isSimd128U16, &isSimd128B4, &isSimd128B8, &isSimd128B16);
 
             RestoreValue(bailOutKind, layout, values, scriptContext, fromLoopBody, registerSaves, newInstance, pArgumentsObject,
-                         argoutRestoreAddress, i, offset, false, isFloat64, isInt32, isSimd128F4, isSimd128I4, isSimd128I8, 
+                         argoutRestoreAddress, pHeapArgObjRegSlot, i, offset, false, isFloat64, isInt32, isSimd128F4, isSimd128I4, isSimd128I8, 
                          isSimd128I16, isSimd128U4, isSimd128U8, isSimd128U16, isSimd128B4, isSimd128B8, isSimd128B16);
         }
     }
@@ -1579,8 +1580,9 @@ BailOutRecord::BailOutHelper(Js::JavascriptCallStackLayout * layout, Js::ScriptF
         }
     }
 
+    Js::RegSlot heapArgumentsObjectRegSlot = Js::Constants::NoRegister;
     // Restore bailout values
-    bailOutRecord->RestoreValues(bailOutKind, layout, newInstance, functionScriptContext, false, registerSaves, bailOutReturnValue, pArgumentsObject, branchValue, returnAddress, useStartCall, argoutRestoreAddress);
+    bailOutRecord->RestoreValues(bailOutKind, layout, newInstance, functionScriptContext, false, registerSaves, bailOutReturnValue, pArgumentsObject, branchValue, returnAddress, useStartCall, argoutRestoreAddress, &heapArgumentsObjectRegSlot);
 
     // For functions that don't get the scope slot and frame display pointers back from the known stack locations
     // (see above), get them back from the designated registers.
@@ -1605,6 +1607,12 @@ BailOutRecord::BailOutHelper(Js::JavascriptCallStackLayout * layout, Js::ScriptF
             newInstance->SetLocalClosure(closure);
             newInstance->SetNonVarReg(localClosureReg, nullptr);
         }
+    }
+
+    if (heapArgumentsObjectRegSlot != Js::Constants::NoRegister)
+    {
+        Js::Var heapArgObj = bailOutRecord->EnsureArguments(newInstance, layout, functionScriptContext, pArgumentsObject);
+        newInstance->m_localSlots[heapArgumentsObjectRegSlot] = heapArgObj;
     }
 
     if (paramClosureReg != Js::Constants::NoRegister)
