@@ -8322,6 +8322,19 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
         return args;
     }
 
+    void InterpreterStackFrame::TrySetFrameObjectInHeapArgObj(ScriptContext * scriptContext)
+    {
+        ActivationObject * frameObject = (ActivationObject*)GetLocalClosure();
+        if (m_arguments != nullptr &&
+            ((Js::HeapArgumentsObject*)(m_arguments))->GetFrameObject() == scriptContext->GetLibrary()->GetNull() &&
+            frameObject != nullptr &&
+            frameObject != scriptContext->GetLibrary()->GetNull()
+            )
+        {
+            ((Js::HeapArgumentsObject*)(m_arguments))->SetFrameObject(frameObject);
+        }
+    }
+
     Var InterpreterStackFrame::OP_LdArgumentsFromFrame()
     {
         return this->m_arguments;
