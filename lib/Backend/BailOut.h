@@ -239,12 +239,12 @@ protected:
     static void ScheduleLoopBodyCodeGen(Js::ScriptFunction * function, Js::ScriptFunction * innerMostInlinee, BailOutRecord const * bailOutRecord, IR::BailOutKind bailOutKind);
 
     void RestoreValues(IR::BailOutKind bailOutKind, Js::JavascriptCallStackLayout * layout, Js::InterpreterStackFrame * newInstance, Js::ScriptContext * scriptContext,
-        bool fromLoopBody, Js::Var * registerSaves, BailOutReturnValue * returnValue, Js::Var* pArgumentsObject, Js::Var branchValue = nullptr, void* returnAddress = nullptr, bool useStartCall = true, void * argoutRestoreAddress = nullptr, Js::RegSlot * pHeapArgObjRegSlot = nullptr) const;
+        bool fromLoopBody, Js::Var * registerSaves, BailOutReturnValue * returnValue, Js::Var* pArgumentsObject, Js::Var branchValue = nullptr, void* returnAddress = nullptr, bool useStartCall = true, void * argoutRestoreAddress = nullptr) const;
     void RestoreValues(IR::BailOutKind bailOutKind, Js::JavascriptCallStackLayout * layout, uint count, __in_ecount_opt(count) int * offsets, int argOutSlotId,
         __out_ecount(count)Js::Var * values, Js::ScriptContext * scriptContext, bool fromLoopBody, Js::Var * registerSaves, Js::InterpreterStackFrame * newInstance, Js::Var* pArgumentsObject,
-        void * argoutRestoreAddress = nullptr, Js::RegSlot * pHeapArgObjRegSlot = nullptr) const;
+        void * argoutRestoreAddress = nullptr) const;
     void RestoreValue(IR::BailOutKind bailOutKind, Js::JavascriptCallStackLayout * layout, Js::Var * values, Js::ScriptContext * scriptContext,
-        bool fromLoopBody, Js::Var * registerSaves, Js::InterpreterStackFrame * newInstance, Js::Var* pArgumentsObject, void * argoutRestoreAddress, Js::RegSlot * pHeapArgObjRegSlot,
+        bool fromLoopBody, Js::Var * registerSaves, Js::InterpreterStackFrame * newInstance, Js::Var* pArgumentsObject, void * argoutRestoreAddress,
         uint regSlot, int offset, bool isLocal, bool isFloat64, bool isInt32, 
         bool isSimd128F4, bool isSimd128I4, bool isSimd128I8, bool isSimd128I16, 
         bool isSimd128U4, bool isSimd128U8, bool isSimd128U16, bool isSimd128B4, bool isSimd128B8, bool isSimd128B16 ) const;
