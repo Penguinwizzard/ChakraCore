@@ -6763,7 +6763,9 @@ CommonNumber:
     {
         HeapArgumentsObject *argsObj = nullptr;
 
-        if (!isStackArgsOpt || nonSimpleParamList || funcCallee->IsStrictMode())
+        bool disableStackArgsOpt = !isStackArgsOpt || nonSimpleParamList || funcCallee->IsStrictMode();
+
+        if (disableStackArgsOpt)
         {
             argsObj = JavascriptOperators::CreateHeapArguments(funcCallee, actualsCount, formalsCount, frameObj, scriptContext);
         }
@@ -6820,7 +6822,7 @@ CommonNumber:
             }
         }
 
-        if (!isStackArgsOpt)
+        if (disableStackArgsOpt)
         {
             Assert(argsObj);
             // Transfer the unnamed actual arguments, if any, to the Arguments object itself.
