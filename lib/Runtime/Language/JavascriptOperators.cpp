@@ -6762,6 +6762,7 @@ CommonNumber:
     Var JavascriptOperators::CreateHeapArgumentsObjAndFillScopeObject(JavascriptFunction *funcCallee, uint32 actualsCount, uint32 formalsCount, Var frameObj, Var * paramAddr, Js::PropertyIdArray *propIds, ScriptContext * scriptContext, bool nonSimpleParamList, bool useCachedScope, bool isStackArgsOpt)
     {
         HeapArgumentsObject *argsObj = nullptr;
+        Assert(frameObj);
 
         bool disableStackArgsOpt = !isStackArgsOpt || nonSimpleParamList || funcCallee->IsStrictMode();
 
