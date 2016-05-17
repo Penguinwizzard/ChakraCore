@@ -8325,7 +8325,11 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
     void InterpreterStackFrame::TrySetFrameObjectInHeapArgObj(ScriptContext * scriptContext)
     {
         ActivationObject * frameObject = (ActivationObject*)GetLocalClosure();
-        if (m_arguments != nullptr &&
+        uint32 formalsCount = this->m_functionBody->GetInParamsCount() - 1;
+
+        if (formalsCount != 0 &&
+            this->m_functionBody->HasScopeObject() &&
+            m_arguments != nullptr &&
             ((Js::HeapArgumentsObject*)(m_arguments))->GetFrameObject() == scriptContext->GetLibrary()->GetNull() &&
             frameObject != nullptr &&
             frameObject != scriptContext->GetLibrary()->GetNull()
@@ -8333,7 +8337,6 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
         {
             Js::HeapArgumentsObject* heapArgObj = (Js::HeapArgumentsObject*)m_arguments;
             heapArgObj->SetFrameObject(frameObject);
-            uint32 formalsCount = this->m_functionBody->GetInParamsCount() - 1;
             heapArgObj->SetFormalCount(formalsCount);
         }
     }

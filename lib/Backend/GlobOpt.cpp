@@ -3838,6 +3838,10 @@ GlobOpt::OptArguments(IR::Instr *instr)
     if (instr->m_opcode == Js::OpCode::LdHeapArguments || instr->m_opcode == Js::OpCode::LdLetHeapArguments ||
         instr->m_opcode == Js::OpCode::LdHeapArgsCached || instr->m_opcode == Js::OpCode::LdLetHeapArgsCached)
     {
+        if (instr->m_func->GetJnFunction()->GetInParamsCount() != 1 && PHASE_OFF1(Js::StackArgFormalsOptPhase))
+        {
+            CannotAllocateArgumentsObjectOnStack();
+        }
         TrackArgumentsSym(dst->AsRegOpnd());
         return;
     }
