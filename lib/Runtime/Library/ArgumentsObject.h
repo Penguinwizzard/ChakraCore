@@ -112,6 +112,11 @@ namespace Js
             return this->formalCount;
         }
 
+        void SetFormalCount(uint32 value)
+        {
+            this->formalCount = value;
+        }
+
         ES5HeapArgumentsObject* ConvertToUnmappedArgumentsObject(bool overwriteArgsUsingFrameObject = true);
 
     private:

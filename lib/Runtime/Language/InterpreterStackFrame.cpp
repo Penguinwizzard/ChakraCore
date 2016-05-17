@@ -8331,7 +8331,10 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
             frameObject != scriptContext->GetLibrary()->GetNull()
             )
         {
-            ((Js::HeapArgumentsObject*)(m_arguments))->SetFrameObject(frameObject);
+            Js::HeapArgumentsObject* heapArgObj = (Js::HeapArgumentsObject*)m_arguments;
+            heapArgObj->SetFrameObject(frameObject);
+            uint32 formalsCount = this->m_functionBody->GetInParamsCount() - 1;
+            heapArgObj->SetFormalCount(formalsCount);
         }
     }
 
