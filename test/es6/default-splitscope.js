@@ -681,6 +681,200 @@ var tests = [
         assert.areEqual(1, f6()(), "Symbol capture at the param scope is unaffected by other references in the body and param");
     }
   },
+  {
+    name : "Split scope and arguments symbol",
+    body : function () {
+        assert.throws(function () { eval("function f(a = arguments, b = () => a) { }"); }, SyntaxError, "Use of arguments symbol is not allowed in non-simple parameter list with split scope", "Use of 'arguments' in non-simple parameter list is not supported when one of the formals is captured");
+        assert.throws(function () { eval("function f1() { function f2(a = arguments, b = () => a) { } }"); }, SyntaxError, "Use of arguments symbol is not allowed in non-simple parameter list with split scope inside another function", "Use of 'arguments' in non-simple parameter list is not supported when one of the formals is captured");
+        assert.throws(function () { eval("function f(a = arguments, b = () => a, c = eval('')) { }"); }, SyntaxError, "Use of arguments symbol is not allowed in non-simple parameter list with eval", "Use of 'arguments' in non-simple parameter list is not supported when one of the formals is captured");
+        assert.throws(function () { eval("function f(a = arguments = [1, 2], b = () => a) { }"); }, SyntaxError, "Use of arguments symbol is not allowed in non-simple parameter list with split scope", "Use of 'arguments' in non-simple parameter list is not supported when one of the formals is captured");
+        assert.throws(function () { eval("function f(a = 10, b = () => a, c = arguments) { }"); }, SyntaxError, "Use of arguments symbol is not allowed in non-simple parameter list with split scope", "Use of 'arguments' in non-simple parameter list is not supported when one of the formals is captured");
+        assert.throws(function () { eval("function f(a = 10, b = () => a, c = a = arguments) { }"); }, SyntaxError, "Use of arguments symbol is not allowed in non-simple parameter list with split scope", "Use of 'arguments' in non-simple parameter list is not supported when one of the formals is captured");
+        assert.throws(function () { eval("function f(a, b = () => { a; arguments}) { }"); }, SyntaxError, "Use of arguments symbol is not allowed in non-simple parameter list when captured in lambda method", "Use of 'arguments' in non-simple parameter list is not supported when one of the formals is captured");
+        assert.throws(function () { eval("function f(a = 10, b = (c = arguments) => a) { }"); }, SyntaxError, "Use of arguments symbol is not allowed in non-simple parameter list when captured in a lambda in split scope", "Use of 'arguments' in non-simple parameter list is not supported when one of the formals is captured");
+        assert.throws(function () { eval("function f(a, b = () => a, c = () => { return arguments; }) { }"); }, SyntaxError, "Use of arguments symbol is not allowed in non-simple parameter list in split scope when captured by a lambda method", "Use of 'arguments' in non-simple parameter list is not supported when one of the formals is captured");
+        assert.throws(function () { eval("function f(a = 10, b = () => a, c = () => () => arguments) { }"); }, SyntaxError, "Use of arguments symbol is not allowed in non-simple parameter list in split scope when captured by nested lambda", "Use of 'arguments' in non-simple parameter list is not supported when one of the formals is captured");
+        assert.throws(function () { eval("function f3(a, arguments = function () { return a; } ) { }"); }, SyntaxError, "Use of arguments as a parameter name is not allowed in non-simple parameter list in split scope when captured by nested lambda", "Use of 'arguments' in non-simple parameter list is not supported when one of the formals is captured");
+        assert.throws(function () { eval("function f3({a, arguments = function () { return a; }}) { }"); }, SyntaxError, "Use of arguments as a parameter name is not allowed in destructuring parameter list in split scope when captured by nested lambda", "Use of 'arguments' in non-simple parameter list is not supported when one of the formals is captured");
+        assert.throws(function () { eval("function f3({a = arguments}, b = function () { return a; } ) { }"); }, SyntaxError, "Use of arguments is not allowed in destructuring parameter list in split scope when captured by nested lambda", "Use of 'arguments' in non-simple parameter list is not supported when one of the formals is captured");
+        
+        function f1(a, b = () => a) {
+            eval("");
+            b = () => { return arguments; };
+            assert.areEqual(1, arguments[0], "Arguments object receives the first parameter properly");
+            assert.areEqual(1, b()[0], "First argument receives the right value passed in");
+            assert.areEqual(undefined, b()[1], "Second argument receives the right value passed in");
+            assert.areEqual(2, arguments.length, "Arguments should have only two elements in it");
+        }
+        f1(1, undefined);
+        
+        function f2(a, b = () => { return a; }) {
+            a = 10;
+            assert.areEqual(1, arguments[0], "First argument is properly received");
+            assert.areEqual(2, arguments[2], "Third argument is properly received");
+            assert.areEqual(3, arguments.length, "Only three arguments are passed in");
+            (() => { arguments = [3, 4]; a; })();
+            assert.areEqual(3, arguments[0], "Arguments symbol is updated with the new value when the lambda is executed");
+            assert.areEqual(4, arguments[1], "New array is properly assigned to arguments symbol");
+            assert.areEqual(2, arguments.length, "New array has only elements");
+            
+            return b;
+        }
+        assert.areEqual(1, f2(1, undefined, 2)(), "Param scope method properly captures the first parameter");
+        
+        function f3(a, b = () => { return a; }) {
+            eval("");
+            a = 10;
+            assert.areEqual(1, arguments[0], "First argument is properly received");
+            assert.areEqual(2, arguments[2], "Third argument is properly received");
+            assert.areEqual(3, arguments.length, "Only three arguments are passed in");
+            (() => { arguments = [3, 4]; a; })();
+            assert.areEqual(3, arguments[0], "Arguments symbol is updated with the new value when the lambda is executed");
+            assert.areEqual(4, arguments[1], "New array is properly assigned to arguments symbol");
+            assert.areEqual(2, arguments.length, "New array has only elements");
+            
+            return b;
+        }
+        assert.areEqual(1, f3(1, undefined, 2)(), "Param scope method properly captures the first parameter, with eval in the body");
+        
+        function f4(a, b = function () { a; } ) {
+            var c = 10;
+            assert.areEqual(1, arguments[0], "Arguments symbol properly receives the passed in values");
+            eval("");
+        }
+        f4(1);
+        
+        function f5(a, b = function () { a; } ) {
+            var c = 10;
+            assert.areEqual(1, arguments[0], "Arguments symbol properly receives the passed in values");
+            arguments = 100;
+            assert.areEqual(100, arguments, "Arguments is updated after the assignment");
+            eval("");
+        }
+        f5(1);
+        
+        function f6(a, b = function () { a; } ) {
+            assert.areEqual(1, arguments[0], "Arguments symbol properly receives the passed in values");
+            arguments = 100;
+            assert.areEqual(100, arguments, "Arguments is updated after the assignment");
+        }
+        f6(1);
+        
+        function f7(a, b = function () { a; } ) {
+            assert.areEqual(5, arguments(), "Function definition is hoisted");
+            function arguments() { return 5; }
+        }
+        f7(1);
+        
+        function f8(a, b = function () { a; } ) {
+            assert.areEqual(5, arguments(), "Function definition is hoisted");
+            function arguments() { return 5; }
+            eval("");
+        }
+        f8(1);
+        
+        function f9(a, b = function () { a; } ) {
+            assert.areEqual(1, eval("a"), "Eval should be able to access the first argument properly");
+            assert.areEqual(1, eval("arguments[0]"), "Eval should be able to access the first argument properly from arguments object");
+            assert.areEqual(1, arguments[0], "Arguments symbol properly receives the passed in values");
+            arguments = 100;
+            assert.areEqual(100, arguments, "Arguments is updated after the assignment");
+            assert.areEqual(100, eval("arguments"), "Updated value of arguments is visible in eval");
+            assert.areEqual(1, eval("a"), "First argument remains unchanged after the arguments are updated");
+        }
+        f9(1);
+        
+        function f10(a, b = function () { a; } ) {
+            assert.areEqual(1, arguments[0], "Arguments symbol properly receives the passed in values");
+            var arguments = 100;
+            assert.areEqual(100, arguments, "Arguments is updated after the assignment");
+        }
+        f10(1);
+        
+        function f11(a, b = function () { a; } ) {
+            assert.areEqual(1, arguments[0], "Arguments symbol properly receives the passed in values");
+            var arguments = 100;
+            assert.areEqual(100, arguments, "Arguments is updated after the assignment");
+            eval("");
+        }
+        f11(1);
+        
+        function f12(a, b = function () { a; } ) {
+            assert.areEqual(1, arguments[0], "Arguments symbol properly receives the passed in values");
+            b = () => arguments;
+            assert.areEqual(1, b()[0], "Lambda captures the right arguments symbol");
+            var arguments = 100;
+            assert.areEqual(100, arguments, "Arguments is updated after the assignment");
+            assert.areEqual(100, b(), "Lambda now gives the updated value");
+            eval("");
+        }
+        f12(1);
+        
+        function f13(a, b = () => { return a; }) {
+            a = 10;
+            assert.areEqual(1, arguments[0], "First argument is properly received");
+            assert.areEqual(2, arguments[2], "Third argument is properly received");
+            assert.areEqual(3, arguments.length, "Only three arguments are passed in");
+            ((c = arguments = [3, 4]) => { a; })();
+            assert.areEqual(3, arguments[0], "Arguments symbol is updated with the new value when the lambda is executed");
+            assert.areEqual(4, arguments[1], "New array is properly assigned to arguments symbol");
+            assert.areEqual(2, arguments.length, "New array has only elements");
+            
+            return b;
+        }
+        assert.areEqual(1, f13(1, undefined, 2)(), "Param scope method properly captures the first parameter");
+        
+        function f14(a, b = () => { return a; }) {
+            eval("");
+            a = 10;
+            assert.areEqual(1, arguments[0], "First argument is properly received");
+            assert.areEqual(2, arguments[2], "Third argument is properly received");
+            assert.areEqual(3, arguments.length, "Only three arguments are passed in");
+            ((c = arguments = [3, 4]) => { a; })();
+            assert.areEqual(3, arguments[0], "Arguments symbol is updated with the new value when the lambda is executed");
+            assert.areEqual(4, arguments[1], "New array is properly assigned to arguments symbol");
+            assert.areEqual(2, arguments.length, "New array has only elements");
+            
+            return b;
+        }
+        assert.areEqual(1, f14(1, undefined, 2)(), "Param scope method properly captures the first parameter, with eval in the body");
+        
+        function f15(a, b = function () { a; }, ...c) {
+            assert.areEqual(1, arguments[0], "Checking first argument");
+            assert.areEqual(undefined, arguments[1], "Checking second argument");
+            assert.areEqual(2, arguments[2], "Checking third argument");
+            assert.areEqual(3, arguments[3], "Checking fourth argument");
+            assert.areEqual([2, 3], c, "Rest argument should get the trailing parameters properly");
+            var arguments = 100;
+            assert.areEqual(100, arguments, "Arguments is updated after the assignment");
+            assert.areEqual([2, 3], c, "Rest should remain unaffected when arguments is updated");
+            eval("");
+        }
+        f15(1, undefined, 2, 3);
+        
+        var f16 = function f17(a, b = function () { a; }, ...c) {
+            if (a === 1) {
+                assert.areEqual(1, arguments[0], "Checking first argument");
+                assert.areEqual(undefined, arguments[1], "Checking second argument");
+                assert.areEqual(2, arguments[2], "Checking third argument");
+                assert.areEqual(3, arguments[3], "Checking fourth argument");
+                assert.areEqual([2, 3], c, "Rest argument should get the trailing parameters properly");
+                return f17(undefined, undefined, ...c);
+            } else {
+                assert.areEqual(undefined, arguments[0], "Checking first argument on the recursive call");
+                assert.areEqual(undefined, arguments[1], "Checking second argument on the recursive call");
+                assert.areEqual(2, arguments[2], "Checking third argument on the recursive call");
+                assert.areEqual(3, arguments[3], "Checking fourth argument on the recursive call");
+                assert.areEqual([2, 3], c, "Rest argument should get the trailing parameters properly");
+                var arguments = 100;
+                assert.areEqual(100, arguments, "Arguments is updated after the assignment");
+                assert.areEqual([2, 3], c, "Rest should remain unaffected when arguments is updated");
+                return eval("c");
+            }
+        }
+        assert.areEqual([2, 3], f16(1, undefined, 2, 3), "Rest should remain unaffected when arguments is updated");
+    }  
+  }, 
   { 
     name: "Split parameter scope and eval", 
     body: function () { 

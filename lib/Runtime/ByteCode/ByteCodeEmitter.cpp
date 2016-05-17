@@ -1402,21 +1402,37 @@ void ByteCodeGenerator::DefineUserVars(FuncInfo *funcInfo)
                     if ((!sym->GetHasInit() && !sym->IsInSlot(funcInfo)) ||
                         (funcInfo->bodyScope->GetIsObject() && !funcInfo->GetHasCachedScope()))
                     {
-                        Js::RegSlot reg = sym->GetLocation();
-                        if (reg == Js::Constants::NoRegister)
+                        bool isBodyArgSym = false;
+                        if (funcInfo->paramScope != nullptr && !funcInfo->paramScope->GetCanMergeWithBodyScope())
                         {
-                            Assert(sym->IsInSlot(funcInfo));
-                            reg = funcInfo->AcquireTmpRegister();
+                            Symbol* paramScopeArgSym = funcInfo->GetArgumentsSymbol();
+                            if (paramScopeArgSym != nullptr)
+                            {
+                                // If the  current symbol is the duplicate symbol created in the body for the split
+                                // scope then load undef only if the arguments symbol is used in the body.
+                                Symbol* bodyScopeArgsSym = funcInfo->bodyScope->FindLocalSymbol(paramScopeArgSym->GetName());
+                                isBodyArgSym = sym == bodyScopeArgsSym;
+                            }
                         }
-                        this->m_writer.Reg1(Js::OpCode::LdUndef, reg);
-                        this->EmitLocalPropInit(reg, sym, funcInfo);
 
-                        if (ShouldTrackDebuggerMetadata() && !sym->GetHasInit() && !sym->IsInSlot(funcInfo))
+                        if (!isBodyArgSym || funcInfo->GetHasArguments())
                         {
-                            byteCodeFunction->InsertSymbolToRegSlotList(sym->GetName(), reg, funcInfo->varRegsCount);
-                        }
+                            Js::RegSlot reg = sym->GetLocation();
+                            if (reg == Js::Constants::NoRegister)
+                            {
+                                Assert(sym->IsInSlot(funcInfo));
+                                reg = funcInfo->AcquireTmpRegister();
+                            }
+                            this->m_writer.Reg1(Js::OpCode::LdUndef, reg);
+                            this->EmitLocalPropInit(reg, sym, funcInfo);
 
-                        funcInfo->ReleaseTmpRegister(reg);
+                            if (ShouldTrackDebuggerMetadata() && !sym->GetHasInit() && !sym->IsInSlot(funcInfo))
+                            {
+                                byteCodeFunction->InsertSymbolToRegSlotList(sym->GetName(), reg, funcInfo->varRegsCount);
+                            }
+
+                            funcInfo->ReleaseTmpRegister(reg);
+                        }
                     }
                 }
                 else if (ShouldTrackDebuggerMetadata())
@@ -3282,9 +3298,13 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
             // We have to do this after the rest param is marked as false for need declaration.
             paramScope->ForEachSymbol([&](Symbol* param) {
                 Symbol* varSym = funcInfo->GetBodyScope()->FindLocalSymbol(param->GetName());
-                Assert(varSym || param->GetIsArguments() || pnode->sxFnc.pnodeName->sxVar.sym == param);
+                Assert(varSym || pnode->sxFnc.pnodeName->sxVar.sym == param);
                 Assert(param->GetIsArguments() || param->IsInSlot(funcInfo));
-                if (varSym && varSym->GetSymbolType() == STVariable && (varSym->IsInSlot(funcInfo) || varSym->GetLocation() != Js::Constants::NoRegister))
+                if (param->GetIsArguments() && !funcInfo->GetHasArguments())
+                {
+                    // Do not copy the arguments to the body if it is not used
+                }
+                else if (varSym && varSym->GetSymbolType() == STVariable && (varSym->IsInSlot(funcInfo) || varSym->GetLocation() != Js::Constants::NoRegister))
                 {
                     // Simulating EmitPropLoad here. We can't directly call the method as we have to use the param scope specifically.
                     // Walking the scope chain is not possible at this time.
@@ -3994,6 +4014,17 @@ void ByteCodeGenerator::StartEmitFunction(ParseNode *pnodeFnc)
             // Process function's formal parameters
             MapFormals(pnodeFnc, ensureScopeSlot);
             MapFormalsFromPattern(pnodeFnc, ensureScopeSlot);
+
+            if (!paramScope->GetCanMergeWithBodyScope())
+            {
+                sym = funcInfo->GetArgumentsSymbol();
+                if (sym && funcInfo->GetHasArguments())
+                {
+                    // There is no eval so the arguments may be captured in a lambda. In split scope case
+                    // we have to make sure the param arguments is also put in a slot.
+                    sym->EnsureScopeSlot(funcInfo);
+                }
+            }
 
             if (pnodeFnc->sxFnc.pnodeBody)
             {
