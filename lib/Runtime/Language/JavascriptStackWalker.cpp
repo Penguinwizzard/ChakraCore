@@ -518,6 +518,15 @@ namespace Js
             bool isCurrentPhysicalFrameForLoopBody = this->IsCurrentPhysicalFrameForLoopBody();
             if (this->interpreterFrame)
             {
+                if (lastInternalFrameInfo.codeAddress != nullptr)
+                {
+                    this->previousInterpreterFrameIsForLoopBody = true;
+                }
+                else
+                {
+                    this->previousInterpreterFrameIsForLoopBody = false;
+                }
+
                 // We might've bailed out of an inlinee, so check if there were any inlinees.
                 if (this->interpreterFrame->GetFlags() & InterpreterStackFrameFlags_FromBailOut)
                 {
@@ -584,7 +593,7 @@ namespace Js
     __declspec(noinline)
     JavascriptStackWalker::JavascriptStackWalker(ScriptContext * scriptContext, bool useEERContext, PVOID returnAddress, bool _forceFullWalk /*=false*/) :
         inlinedFrameCallInfo(CallFlags_None, 0), shouldDetectPartiallyInitializedInterpreterFrame(true), forceFullWalk(_forceFullWalk),
-        previousInterpreterFrameIsFromBailout(false), ehFramesBeingWalkedFromBailout(false)
+        previousInterpreterFrameIsFromBailout(false), previousInterpreterFrameIsForLoopBody(false)
     {
         if (scriptContext == NULL)
         {
@@ -633,15 +642,19 @@ namespace Js
     {
         // Walk one frame up the call stack.
         this->interpreterFrame = NULL;
+        if (lastInternalFrameInfo.codeAddress != nullptr && this->previousInterpreterFrameIsForLoopBody)
+        {
+            ClearCachedInternalFrameInfo();
+        }
 
 #if ENABLE_NATIVE_CODEGEN
         if (inlinedFramesBeingWalked)
         {
             Assert(includeInlineFrames);
-            if (this->lastInternalFrameInfo.frameConsumed)
+            /*if (this->lastInternalFrameInfo.frameConsumed)
             {
                 ClearCachedInternalFrameInfo();
-            }
+            }*/
 
             inlinedFramesBeingWalked = inlinedFrameWalker.Next(inlinedFrameCallInfo);
             if (!inlinedFramesBeingWalked)
@@ -814,12 +827,12 @@ namespace Js
 
     bool JavascriptStackWalker::CheckJavascriptFrame(bool includeInlineFrames)
     {
-#if ENABLE_NATIVE_CODEGEN
-        if (this->lastInternalFrameInfo.frameConsumed)
-        {
-            ClearCachedInternalFrameInfo();
-        }
-#endif
+//#if ENABLE_NATIVE_CODEGEN
+//        if (this->lastInternalFrameInfo.frameConsumed)
+//        {
+//            ClearCachedInternalFrameInfo();
+//        }
+//#endif
 
         this->isNativeLibraryFrame = false; // Clear previous result
 
@@ -874,7 +887,7 @@ namespace Js
             }
 #endif //DBG
 
-            if (!this->interpreterFrame->IsCurrentLoopNativeAddr(this->lastInternalFrameInfo.codeAddress))
+           /* if (!this->interpreterFrame->IsCurrentLoopNativeAddr(this->lastInternalFrameInfo.codeAddress))
             {
                 ClearCachedInternalFrameInfo();
             }
@@ -882,7 +895,7 @@ namespace Js
             {
                 Assert(this->lastInternalFrameInfo.codeAddress);
                 this->lastInternalFrameInfo.frameConsumed = true;
-            }
+            }*/
 #endif //ENABLE_NATIVE_CODEGEN
 
             return true;
@@ -949,10 +962,10 @@ namespace Js
                 return false;
             }
 
-            if (this->lastInternalFrameInfo.codeAddress)
+            /*if (this->lastInternalFrameInfo.codeAddress)
             {
                 this->lastInternalFrameInfo.frameConsumed = true;
-            }
+            }*/
 
             if (includeInlineFrames &&
                 InlinedFrameWalker::FromPhysicalFrame(inlinedFrameWalker, currentFrame, Js::ScriptFunction::FromVar(argv[JavascriptFunctionArgIndex_Function])))
@@ -1447,7 +1460,7 @@ namespace Js
         this->stackCheckCodeHeight = stackCheckCodeHeight;
         this->frameType = frameType;
         this->loopBodyFrameType = loopBodyFrameType;
-        this->frameConsumed = false;
+        //this->frameConsumed = false;
     }
 
     void InternalFrameInfo::Clear()
@@ -1457,7 +1470,7 @@ namespace Js
         this->stackCheckCodeHeight = (uint)-1;
         this->frameType = InternalFrameType_None;
         this->loopBodyFrameType = InternalFrameType_None;
-        this->frameConsumed = false;
+        //this->frameConsumed = false;
     }
 #endif
 
