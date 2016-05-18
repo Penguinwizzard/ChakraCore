@@ -8324,6 +8324,11 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
 
     void InterpreterStackFrame::TrySetFrameObjectInHeapArgObj(ScriptContext * scriptContext)
     {
+        if (PHASE_OFF1(Js::StackArgFormalsOptPhase))
+        {
+            return;
+        }
+
         ActivationObject * frameObject = (ActivationObject*)GetLocalClosure();
         uint32 formalsCount = this->m_functionBody->GetInParamsCount() - 1;
 
