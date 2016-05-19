@@ -3279,6 +3279,12 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
                 Symbol* varSym = funcInfo->GetBodyScope()->FindLocalSymbol(param->GetName());
                 Assert(varSym || param->GetIsArguments() || pnode->sxFnc.pnodeName->sxVar.sym == param);
                 Assert(param->GetIsArguments() || param->IsInSlot(funcInfo));
+
+                if (varSym == nullptr)
+                {
+                    varSym = param;
+                }
+
                 if (varSym && varSym->GetSymbolType() == STVariable && (varSym->IsInSlot(funcInfo) || varSym->GetLocation() != Js::Constants::NoRegister))
                 {
                     // Simulating EmitPropLoad here. We can't directly call the method as we have to use the param scope specifically.
