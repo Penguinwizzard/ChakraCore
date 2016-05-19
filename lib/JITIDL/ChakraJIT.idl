@@ -276,6 +276,7 @@ typedef struct CodeGenWorkItemJITData
 {
     EntryPointInfoJITReadData readOnlyEPData;
     FunctionBodyJITData bodyData;
+    __int3264 nativeDataAddr;
     unsigned int interpretedCount;
     unsigned int loopNumber;
     unsigned int nameLength;
@@ -285,17 +286,39 @@ typedef struct CodeGenWorkItemJITData
     boolean isJitInDebugMode;  // Whether JIT is in debug mode for this work item.
 } CodeGenWorkItemJITData;
 
+typedef struct NativeDataFixupEntry
+{
+    __int3264 addressToUpdate;
+    __int3264 srcAddr;
+} NativeDataFixupEntry;
+
+typedef struct NativeDataFixupTable
+{
+    unsigned int len;
+    [size_is(len)] NativeDataFixupEntry entries[*];
+} NativeDataFixupTable;
+
+typedef struct NativeData
+{
+    unsigned int len;
+    struct NativeData* next;
+    __int64 originalDataAddr;
+    [size_is(len)] byte data[*];
+    
+} NativeData;
+
 // Fields that JIT modifies
 typedef struct JITOutputData
 {
     EntryPointInfoJITWriteData writeableEPData;
     FunctionBodyJITWriteData writeableBodyData;
-    __int3264 codeAddress;
-    __int3264 xdataAddr;
+    __int64 codeAddress;
+    __int64 xdataAddr;
     unsigned int codeSize;
     unsigned short pdataCount;
     unsigned short xdataSize;
     boolean isInPrereservedRegion;
+    NativeData* nativeData;
 } JITOutputData;
 
 [

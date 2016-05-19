@@ -13,11 +13,18 @@ extrn ?BailOut@BailOutRecord@@SAPEAXPEBV1@@Z : PROC
 ;; BranchBailOutRecord::BailOut(BranchBailOutRecord const * bailOutRecord, BOOL cond)
 extrn ?BailOut@BranchBailOutRecord@@SAPEAXPEBV1@H@Z : PROC
 
+extrn ?GetBailOutRecord@BailOutRecord@@SAPEAV1@PEAXPEAPEAVNativeCodeData@@@Z : PROC
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; LinearScanMD::SaveAllRegisters(BailOutRecord *const bailOutRecord)
 
 align 16
 ?SaveAllRegisters@LinearScanMD@@CAXQEAVBailOutRecord@@@Z PROC
+    
+    sub rsp, 10h
+    call ?GetBailOutRecord@BailOutRecord@@SAPEAV1@PEAXPEAPEAVNativeCodeData@@@Z
+    mov rcx, rax
+    add rsp, 10h
 
     ;; [rsp + 7 * 8] == saved rax
     ;; [rsp + 8 * 8] == saved rcx

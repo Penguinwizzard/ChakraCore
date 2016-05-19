@@ -270,6 +270,12 @@ LinearScanMD::GenerateBailOut(IR::Instr * instr, __in_ecount(registerSaveSymsCou
         IR::AddrOpnd::New(bailOutInfo->bailOutRecord, IR::AddrOpndKindDynamicBailOutRecord, func, true),
         instr);
 
+
+    Lowerer::InsertMove(
+        IR::RegOpnd::New(nullptr, bailOutInfo->branchConditionOpnd?RegR8:RegRDX, TyMachPtr, func),
+        IR::AddrOpnd::New(func->GetWorkItem()->GetWorkItemData()->nativeDataAddr, IR::AddrOpndKindDynamicMisc, func, true),
+        instr);
+
     firstInstr = firstInstr->m_next;
     for(uint i = 0; i < registerSaveSymsCount; i++)
     {

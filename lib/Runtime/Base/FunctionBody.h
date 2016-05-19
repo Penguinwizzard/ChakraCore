@@ -477,6 +477,8 @@ namespace Js
         };
         uint frameHeight;
 
+        NativeCodeData** GetNativeDataAddr() { return &data; }
+
     private:
 #if ENABLE_NATIVE_CODEGEN
         typedef SListCounted<ConstructorCache*, Recycler> ConstructorCacheList;

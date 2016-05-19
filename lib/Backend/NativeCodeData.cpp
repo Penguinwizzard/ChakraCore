@@ -26,7 +26,7 @@ NativeCodeData::DeleteChunkList(DataChunk * chunkList)
     {
         DataChunk * current = next;
         next = next->next;
-        delete current;
+        midl_user_free(current);
     }
 }
 
@@ -43,7 +43,7 @@ NativeCodeData::Allocator::Allocator() : chunkList(nullptr)
 NativeCodeData::Allocator::~Allocator()
 {
     Assert(!finalized || this->chunkList == nullptr);
-    NativeCodeData::DeleteChunkList(this->chunkList);
+    //NativeCodeData::DeleteChunkList(this->chunkList);
     PERF_COUNTER_SUB(Code, DynamicNativeCodeDataSize, this->size);
     PERF_COUNTER_SUB(Code, TotalNativeCodeDataSize, this->size);
 }
@@ -53,8 +53,12 @@ NativeCodeData::Allocator::Alloc(size_t requestSize)
 {
     char * data = nullptr;
     Assert(!finalized);
-    DataChunk * newChunk = HeapNewStructPlus(requestSize, DataChunk);
+    //DataChunk * newChunk = HeapNewStructPlus(requestSize, DataChunk);
+
+    DataChunk * newChunk = (DataChunk *)midl_user_allocate(requestSize + sizeof(DataChunk));
     newChunk->next = this->chunkList;
+    newChunk->len = (unsigned int)requestSize;
+    newChunk->originalDataAddr = (__int64)&newChunk->data;
     this->chunkList = newChunk;
     data = newChunk->data;
 

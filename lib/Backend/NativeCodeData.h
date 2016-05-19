@@ -14,11 +14,13 @@ struct CodeGenAllocators;
 class NativeCodeData
 {
 
-private:
+public:
     struct DataChunk
     {
+        unsigned int len;
         DataChunk * next;
-        char data[0];
+        __int64 originalDataAddr;
+        char data[1];
     };
     NativeCodeData(DataChunk * chunkList);
     DataChunk * chunkList;
@@ -26,6 +28,7 @@ private:
 #ifdef PERF_COUNTERS
     size_t size;
 #endif
+public:
     static void DeleteChunkList(DataChunk * chunkList);
 public:
     class Allocator
@@ -41,13 +44,15 @@ public:
         NativeCodeData * Finalize();
         void Free(void * buffer, size_t byteSize);
 
+        DataChunk * chunkList;
+
 #ifdef TRACK_ALLOC
         // Doesn't support tracking information, dummy implementation
         Allocator * TrackAllocInfo(TrackAllocData const& data) { return this; }
         void ClearTrackAllocInfo(TrackAllocData* data = NULL) {}
 #endif
     private:
-        DataChunk * chunkList;
+
 #if DBG
         bool finalized;
 #endif

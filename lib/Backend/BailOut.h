@@ -152,6 +152,7 @@ class BailOutRecord
 public:
     BailOutRecord(uint32 bailOutOffset, uint bailOutCacheIndex, IR::BailOutKind kind, Func *bailOutFunc);
     static Js::Var BailOut(BailOutRecord const * bailOutRecord);
+    static BailOutRecord* GetBailOutRecord(void* originalBailOutRecord, NativeCodeData** data);
     static Js::Var BailOutFromFunction(Js::JavascriptCallStackLayout * layout, BailOutRecord const * bailOutRecord, void * returnAddress, void * argoutRestoreAddress);
     static uint32 BailOutFromLoopBody(Js::JavascriptCallStackLayout * layout, BailOutRecord const * bailOutRecord);
 

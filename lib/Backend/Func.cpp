@@ -140,7 +140,7 @@ Func::Func(JitArenaAllocator *alloc, JITTimeWorkItem * workItem,
 
     m_jnFunction = nullptr;
     bool doStackNestedFunc = GetJITFunctionBody()->DoStackNestedFunc();
-    
+
     bool doStackClosure = GetJITFunctionBody()->DoStackClosure() && !PHASE_OFF(Js::FrameDisplayFastPathPhase, this) && !PHASE_OFF(Js::StackClosurePhase, this);
     Assert(!doStackClosure || doStackNestedFunc);
     this->stackClosure = doStackClosure && this->IsTopFunc();
@@ -426,6 +426,8 @@ Func::Codegen()
         }
     }
 #endif
+    JITOutputData* jitOutputData = m_output.GetOutputData();
+    jitOutputData->nativeData = (NativeData*)this->GetNativeCodeDataAllocator()->chunkList;
 }
 
 ///----------------------------------------------------------------------------

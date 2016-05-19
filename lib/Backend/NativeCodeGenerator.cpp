@@ -993,7 +993,11 @@ NativeCodeGenerator::CodeGen(PageAllocator * pageAllocator, CodeGenWorkItem* wor
             auto funcEPInfo = (Js::FunctionEntryPointInfo*)workItem->GetEntryPoint();
             workItem->GetJITData()->readOnlyEPData.callsCountAddress = (uintptr_t)&funcEPInfo->callsCount;
 
+            *workItem->GetEntryPoint()->GetNativeDataAddr() = HeapNew(NativeCodeData, nullptr);
+            workItem->GetJITData()->nativeDataAddr = (__int3264)workItem->GetEntryPoint()->GetNativeDataAddr();
+
             JITOutputData jitWriteData;
+            memset(&jitWriteData, 0, sizeof(JITOutputData));
             ProfileData profileData;
             JITTimeProfileInfo::InitializeJITProfileData(body->HasDynamicProfileInfo() ? body->GetAnyDynamicProfileInfo() : nullptr, body, &profileData);
             HRESULT hr = scriptContext->GetThreadContext()->m_codeGenManager.RemoteCodeGenCall(
@@ -1006,6 +1010,38 @@ NativeCodeGenerator::CodeGen(PageAllocator * pageAllocator, CodeGenWorkItem* wor
             {
                 __fastfail((uint)-1);
             }
+
+
+            // fixup with memory scan, TODO: use a fixup table
+            NativeCodeData::DataChunk *chunk = (NativeCodeData::DataChunk *)jitWriteData.nativeData;
+            NativeCodeData::DataChunk *next1 = chunk;
+            size_t len1 = 0;
+            while (next1)
+            {
+                size_t len2 = 0;
+                NativeCodeData::DataChunk *next2 = chunk;
+                while (next2)
+                {
+
+                    for (int i = 0; i < next1->len / sizeof(void*); i++)
+                    {
+                        if (((void**)next1->data)[i] == (void*)next2->originalDataAddr)
+                        {
+                            ((void**)next1->data)[i] = (void*)(next2->data);
+                        }
+                    }
+                    len2 += next2->len;
+                    next2 = next2->next;
+                }
+
+                len1 += next1->len;
+                next1 = next1->next;
+            }
+
+            (*workItem->GetEntryPoint()->GetNativeDataAddr())->chunkList = chunk;
+
+
+
 #if defined(_M_X64) || defined(_M_ARM32_OR_ARM64)
             XDataInfo * xdataInfo = XDataAllocator::Register(jitWriteData.xdataAddr, jitWriteData.codeAddress, jitWriteData.codeSize);
             funcEPInfo->SetXDataInfo(xdataInfo);
@@ -1013,7 +1049,7 @@ NativeCodeGenerator::CodeGen(PageAllocator * pageAllocator, CodeGenWorkItem* wor
             scriptContext->GetThreadContext()->SetValidCallTargetForCFG((PVOID)jitWriteData.codeAddress);
             workItem->SetCodeAddress(jitWriteData.codeAddress);
 
-            workItem->GetEntryPoint()->SetCodeGenRecorded((PVOID)jitWriteData.codeAddress, jitWriteData.codeSize, nullptr, nullptr, nullptr);
+            workItem->GetEntryPoint()->SetCodeGenRecorded((PVOID)jitWriteData.codeAddress, jitWriteData.codeSize, (*workItem->GetEntryPoint()->GetNativeDataAddr()), nullptr, nullptr);
 
             if (jitWriteData.writeableBodyData.hasBailoutInstr != FALSE)
             {

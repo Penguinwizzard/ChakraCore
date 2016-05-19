@@ -928,6 +928,20 @@ BailOutRecord::RestoreValues(IR::BailOutKind bailOutKind, Js::JavascriptCallStac
     }
 }
 
+BailOutRecord* BailOutRecord::GetBailOutRecord(void* originalBailOutRecord, NativeCodeData** data)
+{
+    auto next = (*data)->chunkList;
+    while (next) 
+    {
+        if (next->originalDataAddr == (__int64)originalBailOutRecord)
+        {
+            return (BailOutRecord*)next->data;
+        }
+        next = next->next;
+    }
+    return nullptr;
+}
+
 Js::Var BailOutRecord::BailOut(BailOutRecord const * bailOutRecord)
 {
     Assert(bailOutRecord);
