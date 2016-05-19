@@ -118,17 +118,6 @@ GlobOpt::TrackByteCodeSymUsed(IR::Instr * instr, BVSparse<JitArenaAllocator> * i
         }
     }
 
-    /*if (instr->m_func->GetHasStackArgs() && instr->m_func->GetTopFunc()->GetHasStackArgs())
-    {
-        if (instr->m_opcode == Js::OpCode::LdElemI_A || instr->m_opcode == Js::OpCode::LdLen_A)
-        {
-            if (instr->usesStackArgumentsObject && instr->m_func->m_scopeObjOpnd != nullptr)
-            {
-                TrackByteCodeSymUsed(instr->m_func->m_scopeObjOpnd, instrByteCodeStackSymUsed, pPropertySym);
-            }
-        }
-    }*/
-
 #if DBG
     AssertMsg(propertySymFromSrc == NULL || propertySymFromSrc == *pPropertySym,
               "Lost a property sym use?");

@@ -3835,11 +3835,6 @@ GlobOpt::OptArguments(IR::Instr *instr)
         return;
     }
 
-    if (instr->m_opcode == Js::OpCode::LdHeapArguments || instr->m_opcode == Js::OpCode::LdLetHeapArguments)
-    {
-        instr->m_func->m_scopeObjOpnd = instr->GetSrc1();
-    }
-
     if (instr->m_opcode == Js::OpCode::LdHeapArguments || instr->m_opcode == Js::OpCode::LdLetHeapArguments ||
         instr->m_opcode == Js::OpCode::LdHeapArgsCached || instr->m_opcode == Js::OpCode::LdLetHeapArgsCached)
     {
@@ -3847,7 +3842,6 @@ GlobOpt::OptArguments(IR::Instr *instr)
         {
             CannotAllocateArgumentsObjectOnStack();
         }
-        
         TrackArgumentsSym(dst->AsRegOpnd());
         return;
     }
@@ -3900,15 +3894,6 @@ GlobOpt::OptArguments(IR::Instr *instr)
         if (IsArgumentsSymID(id, this->blockData))
         {
             instr->usesStackArgumentsObject = true;
-            if (instr->m_func->GetHasStackArgs() && this->func->GetHasStackArgs() && instr->m_func->m_scopeObjOpnd)
-            {
-                if (instr->m_func->m_scopeObjOpnd->IsRegOpnd())
-                {
-                    SymID symId = instr->m_func->m_scopeObjOpnd->AsRegOpnd()->GetStackSym()->m_id;
-                    IR::ByteCodeUsesInstr *bytecodeUseInstr = IR::ByteCodeUsesInstr::New(instr, symId);
-                    instr->InsertAfter(bytecodeUseInstr);
-                }
-            }
         }
         break;
     }
@@ -3918,15 +3903,6 @@ GlobOpt::OptArguments(IR::Instr *instr)
         if(IsArgumentsOpnd(src1))
         {
             instr->usesStackArgumentsObject = true;
-            if (instr->m_func->GetHasStackArgs() && this->func->GetHasStackArgs() && instr->m_func->m_scopeObjOpnd)
-            {
-                if (instr->m_func->m_scopeObjOpnd->IsRegOpnd())
-                {
-                    SymID symId = instr->m_func->m_scopeObjOpnd->AsRegOpnd()->GetStackSym()->m_id;
-                    IR::ByteCodeUsesInstr *bytecodeUseInstr = IR::ByteCodeUsesInstr::New(instr, symId);
-                    instr->InsertAfter(bytecodeUseInstr);
-                }
-            }
         }
         break;
     }
@@ -19670,22 +19646,6 @@ GlobOpt::RemoveCodeAfterNoFallthroughInstr(IR::Instr *instr)
         for (; instrDead != this->currentBlock->GetLastInstr(); instrDead = instrNext)
         {
             instrNext = instrDead->m_next;
-
-            //Insert ByteCodeUses here
-            if (instrNext->m_opcode == Js::OpCode::LdElemI_A || instrNext->m_opcode == Js::OpCode::LdLen_A ||
-                instrNext->m_opcode == Js::OpCode::StElemI_A) //TODO: Store length on bail out?
-            {
-                if ((IsArgumentsOpnd(instrNext->GetDst()) || IsArgumentsOpnd(instrNext->GetSrc1())) && instrNext->m_func->GetHasStackArgs() && this->func->GetHasStackArgs() && instrNext->m_func->m_scopeObjOpnd)
-                {
-                    if (instrNext->m_func->m_scopeObjOpnd->IsRegOpnd())
-                    {
-                        SymID symId = instrNext->m_func->m_scopeObjOpnd->AsRegOpnd()->GetStackSym()->m_id;
-                        IR::ByteCodeUsesInstr *bytecodeUse = IR::ByteCodeUsesInstr::New(instrNext, symId);
-
-                        instrNext->InsertAfter(bytecodeUse);
-                    }
-                }
-            }
             if (instrNext->m_opcode == Js::OpCode::FunctionExit)
             {
                 break;
