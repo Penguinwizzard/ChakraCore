@@ -1915,6 +1915,16 @@ BackwardPass::ProcessBailOutInfo(IR::Instr * instr)
                 preOpBailOutInstrToProcess = instr;
             }
         }
+
+        if (bailOutInfo->byteCodeUpwardExposedUsed && instr->m_func->m_scopeObjOpnd && instr->m_func->m_scopeObjOpnd->IsRegOpnd())
+        {
+            bailOutInfo->byteCodeUpwardExposedUsed->Set(instr->m_func->m_scopeObjOpnd->GetStackSym()->m_id);
+        }
+        
+        if (bailOutInfo->byteCodeUpwardExposedUsed && this->func->m_scopeObjOpnd && this->func->m_scopeObjOpnd->IsRegOpnd())
+        {
+            bailOutInfo->byteCodeUpwardExposedUsed->Set(this->func->m_scopeObjOpnd->GetStackSym()->m_id);
+        }
     }
 
     return false;
@@ -2129,6 +2139,16 @@ BackwardPass::ProcessPendingPreOpBailOutInfo(IR::Instr *const currentInstr)
     Assert(bailOutInfo->bailOutOffset == preOpBailOutInstrToProcess->GetByteCodeOffset());
     ProcessBailOutInfo(preOpBailOutInstrToProcess, bailOutInfo);
     preOpBailOutInstrToProcess = nullptr;
+    
+    if (bailOutInfo->byteCodeUpwardExposedUsed && currentInstr->m_func->m_scopeObjOpnd && currentInstr->m_func->m_scopeObjOpnd->IsRegOpnd())
+    {
+        bailOutInfo->byteCodeUpwardExposedUsed->Set(currentInstr->m_func->m_scopeObjOpnd->GetStackSym()->m_id);
+    }
+    
+    if (bailOutInfo->byteCodeUpwardExposedUsed && this->func->m_scopeObjOpnd && this->func->m_scopeObjOpnd->IsRegOpnd())
+    {
+        bailOutInfo->byteCodeUpwardExposedUsed->Set(this->func->m_scopeObjOpnd->GetStackSym()->m_id);
+    }
 }
 
 void
