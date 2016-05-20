@@ -5086,7 +5086,7 @@ Inline::GetInlineeHasArgumentObject(Func * inlinee)
         {
             if (instr->IsInlined() && inlinee->GetJnFunction()->GetInParamsCount() - 1 != 0)
             {
-                instr->m_func->DisableCanDoInlineArgOpt();
+                instr->m_func->SetHasStackArgs(false);
             }
         }
 

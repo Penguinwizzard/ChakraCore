@@ -3835,7 +3835,7 @@ GlobOpt::OptArguments(IR::Instr *instr)
         return;
     }
 
-    if (instr->m_opcode == Js::OpCode::LdHeapArguments || instr->m_opcode == Js::OpCode::LdLetHeapArguments)
+    if ((instr->m_opcode == Js::OpCode::LdHeapArguments || instr->m_opcode == Js::OpCode::LdLetHeapArguments) && instr->m_func->GetHasStackArgs() && func->GetHasStackArgs())
     {
         instr->m_func->m_scopeObjOpnd = instr->GetSrc1();
     }

@@ -1916,15 +1916,7 @@ BackwardPass::ProcessBailOutInfo(IR::Instr * instr)
             }
         }
 
-        if (bailOutInfo->byteCodeUpwardExposedUsed && instr->m_func->m_scopeObjOpnd && instr->m_func->m_scopeObjOpnd->IsRegOpnd())
-        {
-            bailOutInfo->byteCodeUpwardExposedUsed->Set(instr->m_func->m_scopeObjOpnd->GetStackSym()->m_id);
-        }
-        
-        if (bailOutInfo->byteCodeUpwardExposedUsed && this->func->m_scopeObjOpnd && this->func->m_scopeObjOpnd->IsRegOpnd())
-        {
-            bailOutInfo->byteCodeUpwardExposedUsed->Set(this->func->m_scopeObjOpnd->GetStackSym()->m_id);
-        }
+        MarkScopeObjectSymAsByteCodeSymUse(bailOutInfo, instr->m_func, this->func);
     }
 
     return false;
@@ -2140,14 +2132,26 @@ BackwardPass::ProcessPendingPreOpBailOutInfo(IR::Instr *const currentInstr)
     ProcessBailOutInfo(preOpBailOutInstrToProcess, bailOutInfo);
     preOpBailOutInstrToProcess = nullptr;
     
-    if (bailOutInfo->byteCodeUpwardExposedUsed && currentInstr->m_func->m_scopeObjOpnd && currentInstr->m_func->m_scopeObjOpnd->IsRegOpnd())
+    MarkScopeObjectSymAsByteCodeSymUse(bailOutInfo, currentInstr->m_func, this->func);
+}
+
+void 
+BackwardPass::MarkScopeObjectSymAsByteCodeSymUse(BailOutInfo * bailOutInfo, Func * func, Func * topFunc)
+{
+    if (bailOutInfo->byteCodeUpwardExposedUsed && !PHASE_OFF1(Js::StackArgFormalsOptPhase) && !this->IsPrePass())
     {
-        bailOutInfo->byteCodeUpwardExposedUsed->Set(currentInstr->m_func->m_scopeObjOpnd->GetStackSym()->m_id);
-    }
-    
-    if (bailOutInfo->byteCodeUpwardExposedUsed && this->func->m_scopeObjOpnd && this->func->m_scopeObjOpnd->IsRegOpnd())
-    {
-        bailOutInfo->byteCodeUpwardExposedUsed->Set(this->func->m_scopeObjOpnd->GetStackSym()->m_id);
+        if (func && bailOutInfo->bailOutFunc == func && func->m_scopeObjOpnd && func->m_scopeObjOpnd->IsRegOpnd())
+        {
+            bailOutInfo->byteCodeUpwardExposedUsed->Set(func->m_scopeObjOpnd->GetStackSym()->m_id);
+        }
+
+        if (func != topFunc)
+        {
+            if (topFunc && topFunc->m_scopeObjOpnd && topFunc->m_scopeObjOpnd->IsRegOpnd())
+            {
+                bailOutInfo->byteCodeUpwardExposedUsed->Set(topFunc->m_scopeObjOpnd->GetStackSym()->m_id);
+            }
+        }
     }
 }
 
