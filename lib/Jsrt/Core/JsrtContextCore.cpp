@@ -60,6 +60,7 @@ Js::ScriptContext* JsrtContextCore::EnsureScriptContext()
     newScriptContext->SetHostScriptContext(hostContext);
 
     this->SetJavascriptLibrary(newScriptContext.Detach()->GetLibrary());
+    localThreadContext->GetRecycler()->RootRelease(newScriptContext->GetGlobalObject());
 
     Js::JavascriptLibrary *library = this->GetScriptContext()->GetLibrary();
     Assert(library != nullptr);
