@@ -21,9 +21,16 @@ namespace JSON
             ::Js::ScriptContext* sc, const char16* current, ArenaAllocator* allocator);
 
         void Finalizer();
-        char16* GetCurrentString(){return currentString;}
-        uint GetCurrentStringLen(){return currentIndex;}
+        char16* GetCurrentString() { return currentString; } 
+        uint GetCurrentStringLen() { return currentIndex; }
+        uint GetScanPos() { return uint(currentChar - inputText); }
 
+        void ThrowSyntaxError(int wErr)
+        {
+            char16 scanPos[16];
+            ::_itow_s(GetScanPos(), scanPos, sizeof(scanPos) / sizeof(char16), 10);
+            Js::JavascriptError::ThrowSyntaxError(scriptContext, wErr, scanPos);
+        }
 
     private:
 
