@@ -2718,7 +2718,7 @@ void ByteCodeGenerator::EmitProgram(ParseNode *pnodeProg)
     this->trackEnvDepth = true;
     AssignPropertyIds(pnodeProg->sxFnc.funcInfo->byteCodeFunction);
 
-    long initSize = this->maxAstSize / AstBytecodeRatioEstimate;
+    int32 initSize = this->maxAstSize / AstBytecodeRatioEstimate;
 
     // Use the temp allocator in bytecode write temp buffer.
     m_writer.InitData(this->alloc, initSize);
@@ -6166,9 +6166,10 @@ void EmitDestructuredArray(
             elem = list;
         }
 
-        if (elem->nop == knopEllipsis)
+        if (elem->nop == knopEllipsis
+            || (elem->nop == knopEmpty && list->nop == knopEmpty))
         {
-            // Rest must be the last argument - no need to continue.
+            // Rest and last empty slot do not require any more processing.
             break;
         }
 
@@ -6189,6 +6190,7 @@ void EmitDestructuredArray(
         default:
             break;
         }
+
 
         byteCodeGenerator->StartStatement(elem);
 
@@ -7270,9 +7272,8 @@ void EmitCallTarget(
         }
 
         Emit(pnodeTarget->sxBin.pnode1, byteCodeGenerator, funcInfo, false);
-        Js::PropertyId propertyId = pnodeTarget->sxBin.pnode2->sxPid.PropertyIdFromNameNode();
-        Js::RegSlot callObjLocation = pnodeTarget->sxBin.pnode1->location;
-        Js::RegSlot protoLocation = callObjLocation;
+        Js::PropertyId propertyId = pnodeTarget->sxBin.pnode2->sxPid.PropertyIdFromNameNode();        
+        Js::RegSlot protoLocation = pnodeTarget->sxBin.pnode1->location;
         EmitSuperMethodBegin(pnodeTarget, byteCodeGenerator, funcInfo);
         EmitMethodFld(pnodeTarget, protoLocation, propertyId, byteCodeGenerator, funcInfo);
 
@@ -7295,9 +7296,8 @@ void EmitCallTarget(
         Emit(pnodeTarget->sxBin.pnode1, byteCodeGenerator, funcInfo, false);
         Emit(pnodeTarget->sxBin.pnode2, byteCodeGenerator, funcInfo, false);
 
-        Js::RegSlot indexLocation = pnodeTarget->sxBin.pnode2->location;
-        Js::RegSlot callObjLocation = pnodeTarget->sxBin.pnode1->location;
-        Js::RegSlot protoLocation = callObjLocation;
+        Js::RegSlot indexLocation = pnodeTarget->sxBin.pnode2->location;        
+        Js::RegSlot protoLocation = pnodeTarget->sxBin.pnode1->location;
         EmitSuperMethodBegin(pnodeTarget, byteCodeGenerator, funcInfo);
         EmitMethodElem(pnodeTarget, protoLocation, indexLocation, byteCodeGenerator);
 
@@ -9521,7 +9521,7 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
         funcInfo->AcquireLoc(pnode);
         if (pnode->sxUni.pnode1->nop == knopInt)
         {
-            long value = pnode->sxUni.pnode1->sxInt.lw;
+            int32 value = pnode->sxUni.pnode1->sxInt.lw;
             Js::OpCode op = value ? Js::OpCode::LdFalse : Js::OpCode::LdTrue;
             byteCodeGenerator->Writer()->Reg1(op, pnode->location);
         }
