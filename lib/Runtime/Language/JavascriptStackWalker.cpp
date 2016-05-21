@@ -379,26 +379,15 @@ namespace Js
         JavascriptFunction *function = nullptr;
         FunctionBody *inlinee = nullptr;
 
-        if (this->interpreterFrame == nullptr) //Inlining is disabled in Jit Loopbody. Don't attempt to get the statement map from the inlined frame.
-        {
-            function = this->GetCurrentFunctionFromPhysicalFrame();
+        function = this->GetCurrentFunctionFromPhysicalFrame();
 
-            // If there are inlined frames on the stack, we have to be able to return the byte code offsets of those inlined calls
-            // from their respective callers. But, we can use the current native address as IP for only the topmost inlined frame.
-            // TryGetByteCodeOffsetOfInlinee takes care of these conditions and sets up the offset of an inlinee in 'offset', if the
-            // current inlinee frame is not the topmost of the inlinee frames.
-            if (InlinedFramesOnStack() && TryGetByteCodeOffsetOfInlinee(function, loopNum, pCodeAddr, &inlinee, offset))
-            {
-                return true;
-            }
-        }
-        else
+        // If there are inlined frames on the stack, we have to be able to return the byte code offsets of those inlined calls
+        // from their respective callers. But, we can use the current native address as IP for only the topmost inlined frame.
+        // TryGetByteCodeOffsetOfInlinee takes care of these conditions and sets up the offset of an inlinee in 'offset', if the
+        // current inlinee frame is not the topmost of the inlinee frames.
+        if (InlinedFramesOnStack() && TryGetByteCodeOffsetOfInlinee(function, loopNum, pCodeAddr, &inlinee, offset))
         {
-            //Get the function from the interpreterFrame in jit loop body case
-            //This is exactly same as this->GetCurrentFunctionFromPhysicalFrame() if the interpreterFrame is not
-            //called from bailout path.
-            Assert(this->lastInternalFrameInfo.codeAddress);
-            function = this->interpreterFrame->GetJavascriptFunction();
+            return true;
         }
 
         StatementData data;
