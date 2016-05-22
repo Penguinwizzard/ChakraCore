@@ -60,10 +60,10 @@ Js::ScriptContext* JsrtContextCore::EnsureScriptContext()
     newScriptContext->SetHostScriptContext(hostContext);
 
     this->SetJavascriptLibrary(newScriptContext.Detach()->GetLibrary());
-    localThreadContext->GetRecycler()->RootRelease(newScriptContext->GetGlobalObject());
 
     Js::JavascriptLibrary *library = this->GetScriptContext()->GetLibrary();
     Assert(library != nullptr);
+    localThreadContext->GetRecycler()->RootRelease(library->GetGlobalObject());
 
     library->GetEvalFunctionObject()->SetEntryPoint(&Js::GlobalObject::EntryEval);
     library->GetFunctionConstructor()->SetEntryPoint(&Js::JavascriptFunction::NewInstance);
