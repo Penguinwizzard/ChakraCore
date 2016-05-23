@@ -5086,7 +5086,8 @@ Inline::GetInlineeHasArgumentObject(Func * inlinee)
         {
             if (instr->IsInlined() && inlinee->GetJnFunction()->GetInParamsCount() - 1 != 0 && !PHASE_OFF1(Js::StackArgFormalsOptPhase))
             {
-                instr->m_func->DisableCanDoInlineArgOpt();
+                instr->m_func->SetHasStackArgs(false);
+                instr->m_func->GetTopFunc()->SetHasStackArgs(false);
             }
         }
 

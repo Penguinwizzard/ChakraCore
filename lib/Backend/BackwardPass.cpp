@@ -2145,7 +2145,7 @@ BackwardPass::MarkScopeObjectSymAsByteCodeSymUse(BailOutInfo * bailOutInfo, Func
             bailOutInfo->byteCodeUpwardExposedUsed->Set(func->m_scopeObjOpnd->GetStackSym()->m_id);
             if (PHASE_VERBOSE_TRACE1(Js::StackArgFormalsOptPhase))
             {
-                Output::Print(L"STACK ARGS WITH FORMALS: Setting bit {0} in byteCodeUpwardExposedUsed of current func: {1}", func->m_scopeObjOpnd->GetStackSym()->m_id, func->GetFunctionNumber());
+                Output::Print(_u("STACK ARGS WITH FORMALS: Setting bit %d in byteCodeUpwardExposedUsed of current func: %d \n"), func->m_scopeObjOpnd->GetStackSym()->m_id, func->GetFunctionNumber());
                 Output::Flush();
             }
         }
@@ -2157,7 +2157,7 @@ BackwardPass::MarkScopeObjectSymAsByteCodeSymUse(BailOutInfo * bailOutInfo, Func
                 bailOutInfo->byteCodeUpwardExposedUsed->Set(topFunc->m_scopeObjOpnd->GetStackSym()->m_id);
                 if (PHASE_VERBOSE_TRACE1(Js::StackArgFormalsOptPhase))
                 {
-                    Output::Print(L"STACK ARGS WITH FORMALS: Setting bit {0} in byteCodeUpwardExposedUsed of the topFunc: {1}", func->m_scopeObjOpnd->GetStackSym()->m_id, topFunc->GetFunctionNumber());
+                    Output::Print(_u("STACK ARGS WITH FORMALS: Setting bit %d in byteCodeUpwardExposedUsed of the topFunc: %d\n"), func->m_scopeObjOpnd->GetStackSym()->m_id, topFunc->GetFunctionNumber());
                     Output::Flush();
                 }
             }

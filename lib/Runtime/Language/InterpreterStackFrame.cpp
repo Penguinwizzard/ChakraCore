@@ -8346,7 +8346,7 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
 
             if (PHASE_TRACE1(Js::StackArgFormalsOptPhase))
             {
-                Output::Print(L"STACK ARGS WITH FORMALS: Bailing Out - Setting frameObject pointer in the heap arguments object");
+                Output::Print(_u("STACK ARGS WITH FORMALS: Bailing Out - Setting frameObject pointer in the heap arguments object\n"));
                 Output::Flush();
             }
         }

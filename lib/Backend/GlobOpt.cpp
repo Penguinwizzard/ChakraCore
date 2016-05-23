@@ -3841,7 +3841,7 @@ GlobOpt::OptArguments(IR::Instr *instr)
         instr->m_func->m_scopeObjOpnd = instr->GetSrc1();
         if (PHASE_TRACE1(Js::StackArgFormalsOptPhase))
         {
-            Output::Print(L"STACK ARGS WITH FORMALS: Setting frameObject on m_func");
+            Output::Print(_u("STACK ARGS WITH FORMALS: Setting frameObject on m_func\n"));
             Output::Flush();
         }
     }
