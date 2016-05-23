@@ -2921,6 +2921,8 @@ ThreadContext::RegisterUniquePropertyGuard(Js::PropertyId propertyId, RecyclerWe
     const Js::PropertyRecord * propertyRecord = GetPropertyName(propertyId);
 
     bool foundExistingGuard;
+
+    
     PropertyGuardEntry* entry = EnsurePropertyGuardEntry(propertyRecord, foundExistingGuard);
 
     entry->uniqueGuards.Item(guardWeakRef);
@@ -2949,9 +2951,10 @@ ThreadContext::RegisterConstructorCache(Js::PropertyId propertyId, Js::Construct
 }
 
 void
-ThreadContext::InvalidatePropertyGuardEntry(const Js::PropertyRecord* propertyRecord, PropertyGuardEntry* entry)
+ThreadContext::InvalidatePropertyGuardEntry(const Js::PropertyRecord* propertyRecord, PropertyGuardEntry* entry, const bool performCleanupOfUniquePropertyGuards)
 {
     Assert(entry != nullptr);
+    PropertyGuardDictionary &guards = this->recyclableData->propertyGuards;
 
     if (entry->sharedGuard != nullptr)
     {
@@ -2973,7 +2976,7 @@ ThreadContext::InvalidatePropertyGuardEntry(const Js::PropertyRecord* propertyRe
         guard->Invalidate();
     }
 
-    entry->uniqueGuards.Map([propertyRecord](RecyclerWeakReference<Js::PropertyGuard>* guardWeakRef)
+    entry->uniqueGuards.Map([&guards, propertyRecord, performCleanupOfUniquePropertyGuards](RecyclerWeakReference<Js::PropertyGuard>* guardWeakRef)
     {
         Js::PropertyGuard* guard = guardWeakRef->Get();
         if (guard != nullptr)
@@ -2993,6 +2996,29 @@ ThreadContext::InvalidatePropertyGuardEntry(const Js::PropertyRecord* propertyRe
             }
 
             guard->Invalidate();
+
+            // If a propertyGuard is invalidated, make sure to also remove it's entry from other unique property guard table of other property records.
+            if (performCleanupOfUniquePropertyGuards)
+            {
+                guards.Map([=](const Js::PropertyRecord* otherPropertyRecord, PropertyGuardEntry* guardEntry, const Memory::RecyclerWeakReference<const Js::PropertyRecord >* otherPropertyRecordWeakRef)
+                {
+                    if (guardEntry->uniqueGuards.Remove(guardWeakRef))
+                    {
+                        if (PHASE_TRACE1(Js::TracePropertyGuardsPhase) || PHASE_VERBOSE_TRACE1(Js::FixedMethodsPhase))
+                        {
+                            Output::Print(_u("FixedFields: invalidating guard: name: %s, address: 0x%p, value: 0x%p, value address: 0x%p\n"),
+                                otherPropertyRecord->GetBuffer(), guard, guard->GetValue(), guard->GetAddressOfValue());
+                            Output::Flush();
+                        }
+                        if (PHASE_TESTTRACE1(Js::TracePropertyGuardsPhase) || PHASE_VERBOSE_TESTTRACE1(Js::FixedMethodsPhase))
+                        {
+                            Output::Print(_u("FixedFields: invalidating guard: name: %s, value: 0x%p\n"),
+                                otherPropertyRecord->GetBuffer(), guard->GetValue());
+                            Output::Flush();
+                        }
+                    }
+                });
+            }
         }
     });
 
@@ -3036,7 +3062,7 @@ ThreadContext::InvalidatePropertyGuards(Js::PropertyId propertyId)
     PropertyGuardEntry* entry;
     if (guards.TryGetValueAndRemove(propertyRecord, &entry))
     {
-        InvalidatePropertyGuardEntry(propertyRecord, entry);
+        InvalidatePropertyGuardEntry(propertyRecord, entry, true);
     }
 }
 
@@ -3048,7 +3074,7 @@ ThreadContext::InvalidateAllPropertyGuards()
     {
         guards.Map([this](Js::PropertyRecord const * propertyRecord, PropertyGuardEntry* entry, const RecyclerWeakReference<const Js::PropertyRecord>* weakRef)
         {
-            InvalidatePropertyGuardEntry(propertyRecord, entry);
+            InvalidatePropertyGuardEntry(propertyRecord, entry, false);
         });
 
         guards.Clear();
