@@ -95,7 +95,8 @@ namespace Js
             Assert(currentIndex == -1);
         }
 
-        static bool             FromPhysicalFrame(InlinedFrameWalker& self, StackFrame& physicalFrame, Js::ScriptFunction *parent, bool fromBailout = false, int loopNum = -1, const JavascriptStackWalker * const walker = nullptr, bool noAlloc = false);
+        static bool             FromPhysicalFrame(InlinedFrameWalker& self, StackFrame& physicalFrame, Js::ScriptFunction *parent, bool fromBailout = false, 
+                                                  int loopNum = -1, const JavascriptStackWalker * const walker = nullptr, bool useInternalFrameInfo = false, bool noAlloc = false);
         void                    Close();
         bool                    Next(CallInfo& callInfo);
         size_t                  GetArgc() const;
@@ -129,7 +130,7 @@ namespace Js
                 return (InlinedFrame*)next;
             }
 
-            static InlinedFrame *FromPhysicalFrame(StackFrame& currentFrame, const JavascriptStackWalker * const stackWalker, void *entry, EntryPointInfo* entryPointInfo);
+            static InlinedFrame *FromPhysicalFrame(StackFrame& currentFrame, const JavascriptStackWalker * const stackWalker, void *entry, EntryPointInfo* entryPointInfo, bool useInternalFrameInfo);
 
         };
 
@@ -153,6 +154,7 @@ namespace Js
         size_t stackCheckCodeHeight;
         InternalFrameType frameType;
         InternalFrameType loopBodyFrameType;
+        JavascriptFunction* function;
         //bool frameConsumed;
         bool inlinedFramesOnStack;
 
@@ -162,13 +164,14 @@ namespace Js
             stackCheckCodeHeight((uint)-1),
             frameType(InternalFrameType_None),
             loopBodyFrameType(InternalFrameType_None),
+            function(nullptr),
             //frameConsumed(false)
             inlinedFramesOnStack(false)
         {
         }
 
         void Clear();
-        void Set(void *codeAddress, void *framePointer, size_t stackCheckCodeHeight, InternalFrameType frameType, InternalFrameType loopBodyFrameType, bool inlinedFramesOnStack);
+        void Set(void *codeAddress, void *framePointer, size_t stackCheckCodeHeight, InternalFrameType frameType, InternalFrameType loopBodyFrameType, JavascriptFunction* function, bool inlinedFramesOnStack);
     };
 #endif
 
@@ -230,7 +233,7 @@ namespace Js
 
 #if ENABLE_NATIVE_CODEGEN
         void ClearCachedInternalFrameInfo();
-        void SetCachedInternalFrameInfo(InternalFrameType frameType, InternalFrameType loopBodyFrameType, bool inlinedFramesOnStack);
+        void SetCachedInternalFrameInfo(InternalFrameType frameType, InternalFrameType loopBodyFrameType, JavascriptFunction* function, bool inlinedFramesOnStack);
         InternalFrameInfo GetCachedInternalFrameInfo() const { return this->lastInternalFrameInfo; }
 #endif
         bool IsCurrentPhysicalFrameForLoopBody() const;
@@ -245,7 +248,7 @@ namespace Js
         bool GetDisplayCaller(JavascriptFunction ** ppFunc);
         PCWSTR GetCurrentNativeLibraryEntryName() const;
         static bool IsLibraryStackFrameEnabled(Js::ScriptContext * scriptContext);
-
+        
         // Walk frames (until walkFrame returns true)
         template <class WalkFrame>
         ushort WalkUntil(ushort stackTraceLimit, WalkFrame walkFrame, bool onlyOnDebugMode = false, bool filterDiagnosticsOM = false)
@@ -302,7 +305,6 @@ namespace Js
         {
             return previousInterpreterFrameIsFromBailout;
         }
-
 #if DBG
         static bool ValidateTopJitFrame(Js::ScriptContext* scriptContext);
 #endif
@@ -339,8 +341,8 @@ namespace Js
         bool InlinedFramesOnStack() const;
 #if ENABLE_NATIVE_CODEGEN
         bool TryGetByteCodeOffsetFromNativeFrame(uint32& offset) const;
-        bool TryGetByteCodeOffsetOfInlinee(Js::JavascriptFunction* function, uint loopNum, DWORD_PTR pCodeAddr, Js::FunctionBody** inlinee, uint32& offset) const;
-        uint GetLoopNumber() const;
+        bool TryGetByteCodeOffsetOfInlinee(Js::JavascriptFunction* function, uint loopNum, DWORD_PTR pCodeAddr, Js::FunctionBody** inlinee, uint32& offset, bool useInternalFrameInfo) const;
+        uint GetLoopNumber(bool& usedInternalFrameInfo) const;
         bool HasInlinedFramesOnStack() const;
         InternalFrameInfo lastInternalFrameInfo;
 #endif
