@@ -1361,7 +1361,14 @@ namespace Js
 
             Js::Var constructorArgs[] = { constructor, buffer, JavascriptNumber::ToVar(beginByteOffset, scriptContext), JavascriptNumber::ToVar(newLength, scriptContext) };
             Js::CallInfo constructorCallInfo(Js::CallFlags_New, _countof(constructorArgs));
+#ifdef _NTBUILD
+#include <VerifyGlobalMSRCSettings.inl>
+#endif
+#if defined(PRERELEASE_REL1606_MSRC33058_BUG7115643) || defined(_CHAKRACOREBUILD)
+            newTypedArray = RecyclableObject::FromVar(TypedArrayBase::TypedArrayCreate(constructor, &Js::Arguments(constructorCallInfo, constructorArgs), newLength, scriptContext));
+#else
             newTypedArray = JavascriptOperators::NewScObject(constructor, Js::Arguments(constructorCallInfo, constructorArgs), scriptContext);
+#endif
         }
         else
         {
@@ -1447,7 +1454,14 @@ namespace Js
 
                 Js::Var constructorArgs[] = { constructor, JavascriptNumber::ToVar(len, scriptContext) };
                 Js::CallInfo constructorCallInfo(Js::CallFlags_New, _countof(constructorArgs));
+#ifdef _NTBUILD
+#include <VerifyGlobalMSRCSettings.inl>
+#endif
+#if defined(PRERELEASE_REL1606_MSRC33058_BUG7115643) || defined(_CHAKRACOREBUILD)
+                newObj = TypedArrayBase::TypedArrayCreate(constructor, &Js::Arguments(constructorCallInfo, constructorArgs), len, scriptContext);
+#else
                 newObj = JavascriptOperators::NewScObject(constructor, Js::Arguments(constructorCallInfo, constructorArgs), scriptContext);
+#endif
 
                 TypedArrayBase* newTypedArrayBase = nullptr;
                 JavascriptArray* newArr = nullptr;
@@ -1511,7 +1525,14 @@ namespace Js
 
             Js::Var constructorArgs[] = { constructor, JavascriptNumber::ToVar(len, scriptContext) };
             Js::CallInfo constructorCallInfo(Js::CallFlags_New, _countof(constructorArgs));
+#ifdef _NTBUILD
+#include <VerifyGlobalMSRCSettings.inl>
+#endif
+#if defined(PRERELEASE_REL1606_MSRC33058_BUG7115643) || defined(_CHAKRACOREBUILD)
+            newObj = TypedArrayBase::TypedArrayCreate(constructor, &Js::Arguments(constructorCallInfo, constructorArgs), len, scriptContext);
+#else
             newObj = JavascriptOperators::NewScObject(constructor, Js::Arguments(constructorCallInfo, constructorArgs), scriptContext);
+#endif
 
             TypedArrayBase* newTypedArrayBase = nullptr;
             JavascriptArray* newArr = nullptr;
@@ -1770,7 +1791,14 @@ namespace Js
 
             Js::Var constructorArgs[] = { constructor, JavascriptNumber::ToVar(captured, scriptContext) };
             Js::CallInfo constructorCallInfo(Js::CallFlags_New, _countof(constructorArgs));
+#ifdef _NTBUILD
+#include <VerifyGlobalMSRCSettings.inl>
+#endif
+#if defined(PRERELEASE_REL1606_MSRC33058_BUG7115643) || defined(_CHAKRACOREBUILD)
+            newObj = RecyclableObject::FromVar(TypedArrayBase::TypedArrayCreate(constructor, &Js::Arguments(constructorCallInfo, constructorArgs), captured, scriptContext));
+#else
             newObj = RecyclableObject::FromVar(JavascriptOperators::NewScObject(constructor, Js::Arguments(constructorCallInfo, constructorArgs), scriptContext));
+#endif
 
             if (TypedArrayBase::Is(newObj))
             {
@@ -2732,6 +2760,45 @@ namespace Js
         }
         return Js::JavascriptNumber::ToVarNoCheck(currentRes, scriptContext);
     }
+
+#ifdef _NTBUILD
+#include <VerifyGlobalMSRCSettings.inl>
+#endif
+#if defined(PRERELEASE_REL1606_MSRC33058_BUG7115643) || defined(_CHAKRACOREBUILD)
+    // static
+    Var TypedArrayBase::ValidateTypedArray(Var aValue, ScriptContext *scriptContext)
+    {
+        if (!TypedArrayBase::Is(aValue))
+        {
+            JavascriptError::ThrowTypeError(scriptContext, JSERR_This_NeedTypedArray);
+        }
+
+        TypedArrayBase *typedArrayBase = TypedArrayBase::FromVar(aValue);
+        ArrayBuffer *arrayBuffer = typedArrayBase->GetArrayBuffer();
+        if (arrayBuffer->IsDetached())
+        {
+            JavascriptError::ThrowTypeError(scriptContext, JSERR_DetachedTypedArray);
+        }
+
+        return arrayBuffer;
+    }
+
+    // static
+    Var TypedArrayBase::TypedArrayCreate(Var constructor, Arguments *args, uint32 length, ScriptContext *scriptContext)
+    {
+        Var newObj = JavascriptOperators::NewScObject(constructor, *args, scriptContext);
+
+        TypedArrayBase::ValidateTypedArray(newObj, scriptContext);
+
+        // ECMA262 22.2.4.6 TypedArrayCreate line 3. "If argumentList is a List of a single Number" (args[0] == constructor)
+        if (args->Info.Count == 2 && TypedArrayBase::FromVar(newObj)->GetLength() < length)
+        {
+            JavascriptError::ThrowTypeError(scriptContext, JSERR_InvalidTypedArrayLength);
+        }
+
+        return newObj;
+    }
+#endif
 
     template<> BOOL Uint8ClampedArray::Is(Var aValue)
     {

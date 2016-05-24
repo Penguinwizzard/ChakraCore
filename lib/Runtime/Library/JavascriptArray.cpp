@@ -3307,9 +3307,61 @@ namespace Js
         pDestObj = ArraySpeciesCreate(args[0], 0, scriptContext);
         if (pDestObj)
         {
+#ifdef _NTBUILD
+#include <VerifyGlobalMSRCSettings.inl>
+#endif
+#if defined(PRERELEASE_REL1606_MSRC33310_BUG7387155) || defined(_CHAKRACOREBUILD)
+            // Check the thing that species create made. If it's a native array that can't handle the source
+            // data, convert it. If it's a more conservative kind of array than the source data, indicate that
+            // so that the data will be converted on copy.
+            if (isInt)
+            {
+                if (JavascriptNativeIntArray::Is(pDestObj))
+                {
+                    isArray = true;
+                }
+                else
+                {
+                    isInt = false;
+                    isFloat = JavascriptNativeFloatArray::Is(pDestObj);
+                    isArray = JavascriptArray::Is(pDestObj);
+                }
+            }
+            else if (isFloat)
+            {
+                if (JavascriptNativeIntArray::Is(pDestObj))
+                {
+                    JavascriptNativeIntArray::ToNativeFloatArray(JavascriptNativeIntArray::FromVar(pDestObj));
+                    isArray = true;
+                }
+                else
+                {
+                    isFloat = JavascriptNativeFloatArray::Is(pDestObj);
+                    isArray = JavascriptArray::Is(pDestObj);
+                }
+            }
+            else
+            {
+                if (JavascriptNativeIntArray::Is(pDestObj))
+                {
+                    JavascriptNativeIntArray::ToVarArray(JavascriptNativeIntArray::FromVar(pDestObj));
+                    isArray = true;
+                }
+                else if (JavascriptNativeFloatArray::Is(pDestObj))
+                {
+                    JavascriptNativeFloatArray::ToVarArray(JavascriptNativeFloatArray::FromVar(pDestObj));
+                    isArray = true;
+                }
+                else
+                {
+                    isArray = JavascriptArray::Is(pDestObj);
+                }
+            }
+#else
             isInt = JavascriptNativeIntArray::Is(pDestObj);
             isFloat = !isInt && JavascriptNativeFloatArray::Is(pDestObj); // if we know it is an int short the condition to avoid a function call
             isArray = isInt || isFloat || JavascriptArray::Is(pDestObj);
+#endif
         }
 
         if (pDestObj == nullptr || isArray)
@@ -5767,7 +5819,14 @@ Case0:
                 newArr = CreateNewArrayHelper(static_cast<uint32>(newLenT), isIntArray, isFloatArray, pArr, scriptContext);
                 newObj = newArr;
             }
+#ifdef _NTBUILD
+#include <VerifyGlobalMSRCSettings.inl>
+#endif
+#if defined(PRERELEASE_REL1606_MSRC33058_BUG7115643) || defined(_CHAKRACOREBUILD)
+            else if (JavascriptOperators::IsConstructor(constructor))
+#else
             else if (JavascriptOperators::IsConstructor(constructor) && JavascriptLibrary::IsTypedArrayConstructor(constructor, scriptContext))
+#endif
             {
                 if (pArr)
                 {
@@ -5778,7 +5837,14 @@ Case0:
 
                 Js::Var constructorArgs[] = { constructor, JavascriptNumber::ToVar(newLenT, scriptContext) };
                 Js::CallInfo constructorCallInfo(Js::CallFlags_New, _countof(constructorArgs));
+#ifdef _NTBUILD
+#include <VerifyGlobalMSRCSettings.inl>
+#endif
+#if defined(PRERELEASE_REL1606_MSRC33058_BUG7115643) || defined(_CHAKRACOREBUILD)
+                newObj = RecyclableObject::FromVar(TypedArrayBase::TypedArrayCreate(constructor, &Js::Arguments(constructorCallInfo, constructorArgs), (uint32)newLenT, scriptContext));
+#else
                 newObj = RecyclableObject::FromVar(JavascriptOperators::NewScObject(constructor, Js::Arguments(constructorCallInfo, constructorArgs), scriptContext));
+#endif
             }
             else
             {
@@ -8831,7 +8897,14 @@ Case0:
             {
                 Js::Var constructorArgs[] = { constructor, JavascriptNumber::ToVar(length, scriptContext) };
                 Js::CallInfo constructorCallInfo(Js::CallFlags_New, _countof(constructorArgs));
+#ifdef _NTBUILD
+#include <VerifyGlobalMSRCSettings.inl>
+#endif
+#if defined(PRERELEASE_REL1606_MSRC33058_BUG7115643) || defined(_CHAKRACOREBUILD)
+                newObj = RecyclableObject::FromVar(TypedArrayBase::TypedArrayCreate(constructor, &Js::Arguments(constructorCallInfo, constructorArgs), (uint32)length, scriptContext));
+#else
                 newObj = RecyclableObject::FromVar(JavascriptOperators::NewScObject(constructor, Js::Arguments(constructorCallInfo, constructorArgs), scriptContext));
+#endif
             }
             else if (isTypedArrayEntryPoint)
             {
@@ -9780,7 +9853,16 @@ Case0:
 
             Js::Var constructorArgs[] = { constructor, JavascriptNumber::ToVar(len, scriptContext) };
             Js::CallInfo constructorCallInfo(Js::CallFlags_New, _countof(constructorArgs));
+#ifdef _NTBUILD
+#include <VerifyGlobalMSRCSettings.inl>
+#endif
+#if defined(PRERELEASE_REL1606_MSRC33058_BUG7115643) || defined(_CHAKRACOREBUILD)
+            newObj = isTypedArrayEntryPoint ?
+                TypedArrayBase::TypedArrayCreate(constructor, &Js::Arguments(constructorCallInfo, constructorArgs), len, scriptContext) :
+                JavascriptOperators::NewScObject(constructor, Js::Arguments(constructorCallInfo, constructorArgs), scriptContext);
+#else
             newObj = JavascriptOperators::NewScObject(constructor, Js::Arguments(constructorCallInfo, constructorArgs), scriptContext);
+#endif
 
             // If the new object we created is an array, remember that as it will save us time setting properties in the object below
             if (JavascriptArray::Is(newObj))

@@ -1339,14 +1339,7 @@ namespace Js
         Var getPrototypeOfResult;
         if (nullptr == getPrototypeOfMethod || GetScriptContext()->IsHeapEnumInProgress())
         {
-#if _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1604_MSRC32399_BUG6363150) || defined(_CHAKRACOREBUILD)
             return RecyclableObject::FromVar(JavascriptObject::GetPrototypeOf(target, scriptContext));
-#else
-            return target->GetPrototype();
-#endif
         }
         CallInfo callInfo(CallFlags_Value, 2);
         Var varArgs[2];

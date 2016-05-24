@@ -83,6 +83,13 @@ namespace Js
 
         static Var NewAsyncFunctionInstance(RecyclableObject* function, CallInfo callInfo, ...);
 
+#ifdef _NTBUILD
+#include <VerifyGlobalMSRCSettings.inl>
+#endif
+#if defined(PRERELEASE_REL1606_MSRC33121_BUG7230605) || defined(_CHAKRACOREBUILD)
+        static Var NewAsyncFunctionInstanceRestrictedMode(RecyclableObject* function, CallInfo callInfo, ...);
+#endif
+
         static bool Is(Var aValue);
         static JavascriptFunction* FromVar(Var aValue);
         Var CallFunction(Arguments args);
