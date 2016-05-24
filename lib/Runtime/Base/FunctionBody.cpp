@@ -3244,7 +3244,7 @@ namespace Js
 #endif
         Assert(((LoopEntryPointInfo*) entryPointInfo)->loopHeader == loopHeader);
         Assert(entryPointInfo->jsMethod == nullptr);
-        entryPointInfo->jsMethod = (void*)entryPoint;
+        entryPointInfo->jsMethod = entryPoint;
 
         ((Js::LoopEntryPointInfo*)entryPointInfo)->totalJittedLoopIterations = 
             static_cast<uint8>(
