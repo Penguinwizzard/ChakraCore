@@ -3835,7 +3835,15 @@ GlobOpt::OptArguments(IR::Instr *instr)
         return;
     }
 
-    if ((instr->m_opcode == Js::OpCode::LdHeapArguments || instr->m_opcode == Js::OpCode::LdLetHeapArguments) && instr->m_func->GetHasStackArgs() && func->GetHasStackArgs() &&
+    //TODO: saravind: Fix the fact that even though just inlinee needs to disable stack args, we disable for the inliner itself!
+    if ((instr->m_opcode == Js::OpCode::LdLetHeapArguments || instr->m_opcode == Js::OpCode::LdLetHeapArgsCached) && instr->m_func->GetJnFunction()->GetInParamsCount() != 1)
+    {
+        CannotAllocateArgumentsObjectOnStack();
+        return;
+    }
+
+    //No need to track LdHeapArguemntsCached as the CommitScope instr will anyways extend its lifetime till the end of the function.
+    if ((instr->m_opcode == Js::OpCode::LdHeapArguments) && instr->m_func->GetHasStackArgs() && func->GetHasStackArgs() &&
         !PHASE_OFF1(Js::StackArgFormalsOptPhase))
     {
         instr->m_func->m_scopeObjOpnd = instr->GetSrc1();
@@ -3846,14 +3854,17 @@ GlobOpt::OptArguments(IR::Instr *instr)
         }
     }
 
-    if (instr->m_opcode == Js::OpCode::LdHeapArguments || instr->m_opcode == Js::OpCode::LdLetHeapArguments ||
-        instr->m_opcode == Js::OpCode::LdHeapArgsCached || instr->m_opcode == Js::OpCode::LdLetHeapArgsCached)
+    if (instr->m_opcode == Js::OpCode::LdHeapArguments || instr->m_opcode == Js::OpCode::LdHeapArgsCached ||
+        instr->m_opcode == Js::OpCode::LdLetHeapArguments || instr->m_opcode == Js::OpCode::LdLetHeapArgsCached)
     {
         if (instr->m_func->GetJnFunction()->GetInParamsCount() != 1 && PHASE_OFF1(Js::StackArgFormalsOptPhase))
         {
             CannotAllocateArgumentsObjectOnStack();
         }
-        TrackArgumentsSym(dst->AsRegOpnd());
+        else
+        {
+            TrackArgumentsSym(dst->AsRegOpnd());
+        }
         return;
     }
     // Keep track of arguments objects and its aliases

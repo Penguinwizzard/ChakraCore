@@ -6746,8 +6746,17 @@ CommonNumber:
             formalsCount = propIds->count;
             Assert(formalsCount != 0 && propIds != nullptr);
         }
+        
+        HeapArgumentsObject *argsObj = nullptr;
 
-        return CreateHeapArgumentsObjAndFillScopeObject(funcCallee, actualsCount, formalsCount, frameObj, paramAddr, propIds, scriptContext, nonSimpleParamList, false, isStackArgsOpt);
+        bool disableStackArgsOpt = !isStackArgsOpt || nonSimpleParamList || funcCallee->IsStrictMode();
+
+        if (disableStackArgsOpt)
+        {
+            argsObj = JavascriptOperators::CreateHeapArguments(funcCallee, actualsCount, formalsCount, frameObj, scriptContext);
+        }
+        
+        return FillScopeObject(funcCallee, actualsCount, formalsCount, frameObj, paramAddr, propIds, argsObj, scriptContext, nonSimpleParamList, false);
     }
 
     Var JavascriptOperators::LoadHeapArgsCached(JavascriptFunction *funcCallee, uint32 actualsCount, uint32 formalsCount, Var *paramAddr, Var frameObj, ScriptContext* scriptContext, bool nonSimpleParamList, bool isStackArgsOpt)
@@ -6756,13 +6765,7 @@ CommonNumber:
         AssertMsg(actualsCount != (uint32)-1 && formalsCount != (uint32)-1,
                   "Loading the arguments object in the global function?");
 
-        return CreateHeapArgumentsObjAndFillScopeObject(funcCallee, actualsCount, formalsCount, frameObj, paramAddr, nullptr, scriptContext, nonSimpleParamList, true, isStackArgsOpt);
-    }
-
-    Var JavascriptOperators::CreateHeapArgumentsObjAndFillScopeObject(JavascriptFunction *funcCallee, uint32 actualsCount, uint32 formalsCount, Var frameObj, Var * paramAddr, Js::PropertyIdArray *propIds, ScriptContext * scriptContext, bool nonSimpleParamList, bool useCachedScope, bool isStackArgsOpt)
-    {
         HeapArgumentsObject *argsObj = nullptr;
-        Assert(frameObj);
 
         bool disableStackArgsOpt = !isStackArgsOpt || nonSimpleParamList || funcCallee->IsStrictMode();
 
@@ -6770,6 +6773,12 @@ CommonNumber:
         {
             argsObj = JavascriptOperators::CreateHeapArguments(funcCallee, actualsCount, formalsCount, frameObj, scriptContext);
         }
+        return FillScopeObject(funcCallee, actualsCount, formalsCount, frameObj, paramAddr, nullptr, argsObj, scriptContext, nonSimpleParamList, true);
+    }
+
+    Var JavascriptOperators::FillScopeObject(JavascriptFunction *funcCallee, uint32 actualsCount, uint32 formalsCount, Var frameObj, Var * paramAddr, Js::PropertyIdArray *propIds, HeapArgumentsObject * argsObj, ScriptContext * scriptContext, bool nonSimpleParamList, bool useCachedScope)
+    {
+        Assert(frameObj);
 
         // Transfer formal arguments (that were actually passed) from their ArgIn slots to the local frame object.
         uint32 i;
@@ -6823,9 +6832,8 @@ CommonNumber:
             }
         }
 
-        if (disableStackArgsOpt)
+        if (argsObj != nullptr)
         {
-            Assert(argsObj);
             // Transfer the unnamed actual arguments, if any, to the Arguments object itself.
             for (i = formalsCount, tmpAddr = paramAddr + i; i < actualsCount; i++, tmpAddr++)
             {

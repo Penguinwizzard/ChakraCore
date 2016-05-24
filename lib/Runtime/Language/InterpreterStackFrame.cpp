@@ -8322,6 +8322,13 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
         return args;
     }
 
+    HeapArgumentsObject * InterpreterStackFrame::CreateEmptyHeapArgumentsObject(ScriptContext* scriptContext)
+    {
+        HeapArgumentsObject * args = JavascriptOperators::CreateHeapArguments(this->function->GetRealFunctionObject(), this->m_inSlotsCount - 1, 0, nullptr, scriptContext);
+        this->m_arguments = args;
+        return args;
+    }
+
     void InterpreterStackFrame::TrySetFrameObjectInHeapArgObj(ScriptContext * scriptContext)
     {
         if (PHASE_OFF1(Js::StackArgFormalsOptPhase))
@@ -8332,23 +8339,25 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
         ActivationObject * frameObject = (ActivationObject*)GetLocalClosure();
         uint32 formalsCount = this->m_functionBody->GetInParamsCount() - 1;
 
-        if (formalsCount != 0 &&
-            this->m_functionBody->HasScopeObject() &&
-            m_arguments != nullptr &&
-            ((Js::HeapArgumentsObject*)(m_arguments))->GetFrameObject() == scriptContext->GetLibrary()->GetNull() &&
-            frameObject != nullptr &&
-            frameObject != scriptContext->GetLibrary()->GetNull()
-            )
+        if (m_arguments != nullptr && ((Js::HeapArgumentsObject*)(m_arguments))->GetFrameObject() == nullptr)
         {
             Js::HeapArgumentsObject* heapArgObj = (Js::HeapArgumentsObject*)m_arguments;
-            heapArgObj->SetFrameObject(frameObject);
-            heapArgObj->SetFormalCount(formalsCount);
 
-            if (PHASE_TRACE1(Js::StackArgFormalsOptPhase))
+            if (formalsCount != 0 &&
+                this->m_functionBody->HasScopeObject() &&
+                frameObject != nullptr &&
+                frameObject != scriptContext->GetLibrary()->GetNull()
+                )
             {
-                Output::Print(_u("STACK ARGS WITH FORMALS: Bailing Out - Setting frameObject pointer in the heap arguments object\n"));
-                Output::Flush();
+                heapArgObj->SetFrameObject(frameObject);
+                heapArgObj->SetFormalCount(formalsCount);
+
+            else
+            {
+				frameObject = (ActivationObject*)scriptContext->GetLibrary()->GetNull();
+                heapArgObj->SetFrameObject(frameObject);
             }
+            JavascriptOperators::FillScopeObject(this->function->GetRealFunctionObject(), this->m_inSlotsCount - 1, formalsCount, frameObject, &this->m_inParams[1], nullptr, heapArgObj, scriptContext, false, true);
         }
     }
 

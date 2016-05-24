@@ -523,8 +523,16 @@ uint32 BailOutRecord::GetArgumentsObjectOffset()
 
 Js::Var BailOutRecord::EnsureArguments(Js::InterpreterStackFrame * newInstance, Js::JavascriptCallStackLayout * layout, Js::ScriptContext* scriptContext, Js::Var* pArgumentsObject) const
 {
-    Js::Var nullObj = scriptContext->GetLibrary()->GetNull();
-    newInstance->OP_LdHeapArguments(nullObj, scriptContext);
+    if (PHASE_OFF1(Js::StackArgFormalsOptPhase))
+    {
+        Js::Var nullObj = scriptContext->GetLibrary()->GetNull();
+        newInstance->OP_LdHeapArguments(nullObj, scriptContext);
+    }
+    else
+    {
+        newInstance->CreateEmptyHeapArgumentsObject(scriptContext);
+    }
+
     Assert(newInstance->m_arguments);
     *pArgumentsObject = (Js::ArgumentsObject*)newInstance->m_arguments;
     return newInstance->m_arguments;
