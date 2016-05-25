@@ -404,7 +404,7 @@ CHAKRA_API JsSetObjectBeforeCollectCallback(_In_ JsRef ref, _In_opt_ void *callb
         {
             ThreadContext* threadContext = static_cast<JsrtContext *>(ref)->GetRuntime()->GetThreadContext();
             Recycler * recycler = threadContext->GetRecycler();
-            recycler->SetObjectBeforeCollectCallback(ref, reinterpret_cast<Recycler::ObjectBeforeCollectCallback>(objectBeforeCollectCallback), callbackState, 
+            recycler->SetObjectBeforeCollectCallback(ref, reinterpret_cast<Recycler::ObjectBeforeCollectCallback>(objectBeforeCollectCallback), callbackState,
                 reinterpret_cast<Recycler::ObjectBeforeCollectCallbackWrapper>(JsrtCallbackState::ObjectBeforeCallectCallbackWrapper), threadContext);
             return JsNoError;
         });
@@ -424,7 +424,7 @@ CHAKRA_API JsSetObjectBeforeCollectCallback(_In_ JsRef ref, _In_opt_ void *callb
                 return JsErrorInvalidArgument;
             }
 
-            recycler->SetObjectBeforeCollectCallback(ref, reinterpret_cast<Recycler::ObjectBeforeCollectCallback>(objectBeforeCollectCallback), callbackState, 
+            recycler->SetObjectBeforeCollectCallback(ref, reinterpret_cast<Recycler::ObjectBeforeCollectCallback>(objectBeforeCollectCallback), callbackState,
                 reinterpret_cast<Recycler::ObjectBeforeCollectCallbackWrapper>(JsrtCallbackState::ObjectBeforeCallectCallbackWrapper), threadContext);
             return JsNoError;
         });
@@ -2611,9 +2611,12 @@ CHAKRA_API JsSerializeScript(_In_z_ const wchar_t *script, _Out_writes_to_opt_(*
 }
 
 template <typename TLoadCallback, typename TUnloadCallback>
-JsErrorCode RunSerializedScriptCore(const wchar_t *script, TLoadCallback scriptLoadCallback,
-    TUnloadCallback scriptUnloadCallback, unsigned char *buffer, JsSourceContext sourceContext,
-    const wchar_t *sourceUrl, bool parseOnly, JsValueRef *result)
+JsErrorCode RunSerializedScriptCore(
+    LPCUTF8 script,
+    TLoadCallback scriptLoadCallback, TUnloadCallback scriptUnloadCallback,
+    unsigned char *buffer,
+    JsSourceContext sourceContext, const wchar_t *sourceUrl,
+    bool parseOnly, JsValueRef *result)
 {
     Js::JavascriptFunction *function;
     JsErrorCode errorCode = ContextAPINoScriptWrapper([&](Js::ScriptContext *scriptContext) -> JsErrorCode {
@@ -2626,15 +2629,10 @@ JsErrorCode RunSerializedScriptCore(const wchar_t *script, TLoadCallback scriptL
         PARAM_NOT_NULL(sourceUrl);
 
         Js::ISourceHolder *sourceHolder = nullptr;
-        LPUTF8 utf8Source = nullptr;
-        size_t utf8Length = 0;
-        size_t length = 0;
-
         if (script != nullptr)
         {
             Assert(scriptLoadCallback == nullptr);
             Assert(scriptUnloadCallback == nullptr);
-            Js::JsrtSourceHolder<TLoadCallback, TUnloadCallback>::ScriptToUtf8(scriptContext, script, &utf8Source, &utf8Length, &length);
         }
         else
         {
@@ -2663,7 +2661,7 @@ JsErrorCode RunSerializedScriptCore(const wchar_t *script, TLoadCallback scriptL
             /* ulColumnHost        */ 0,
             /* lnMinHost           */ 0,
             /* ichMinHost          */ 0,
-            /* ichLimHost          */ static_cast<ULONG>(length), // OK to truncate since this is used to limit sourceText in debugDocument/compilation errors.
+            /* ichLimHost          */ 0,
             /* ulCharOffset        */ 0,
             /* mod                 */ kmodGlobal,
             /* grfsi               */ 0
@@ -2678,9 +2676,9 @@ JsErrorCode RunSerializedScriptCore(const wchar_t *script, TLoadCallback scriptL
 
         hsi = scriptContext->AddHostSrcInfo(&si);
 
-        if (utf8Source != nullptr)
+        if (script != nullptr)
         {
-            hr = Js::ByteCodeSerializer::DeserializeFromBuffer(scriptContext, flags, utf8Source, hsi, buffer, nullptr, &functionBody);
+            hr = Js::ByteCodeSerializer::DeserializeFromBuffer(scriptContext, flags, script, hsi, buffer, nullptr, &functionBody);
         }
         else
         {
@@ -2721,6 +2719,19 @@ JsErrorCode RunSerializedScriptCore(const wchar_t *script, TLoadCallback scriptL
         }
         return JsNoError;
     });
+}
+
+CHAKRA_API JsRunSerializedScriptUtf8(
+    _In_ JsSerializedScriptLoadUtf8SourceCallback scriptLoadCallback,
+    _In_ JsSerializedScriptUnloadCallback scriptUnloadCallback,
+    _In_ ChakraBytePtr buffer,
+    _In_ JsSourceContext sourceContext,
+    _In_z_ const char *sourceUrl,
+    _Out_opt_ JsValueRef * result)
+{
+    return RunSerializedScriptCore(
+        nullptr, scriptLoadCallback, scriptUnloadCallback,
+        buffer, sourceContext, _u("")/*sourceUrl*/, false, result);
 }
 
 #ifdef _WIN32

@@ -35,7 +35,7 @@ namespace Js
             Js::JavascriptError::ThrowOutOfMemoryError(nullptr);
         }
 
-        // `length` should not be bigger than MAXLONG 
+        // `length` should not be bigger than MAXLONG
         // UINT_MAX / 3 < MAXLONG
         size_t cbUtf8Buffer = ((UINT_MAX / 3) - 1 > length) ? (length + 1) * 3 : UINT_MAX;
         if (cbUtf8Buffer >= UINT_MAX)
@@ -79,13 +79,13 @@ namespace Js
         size_t utf8Length = 0;
         size_t utf8AllocLength = 0;
 
-        if (!scriptLoadCallback(sourceContext, &source))
-        {
-            // Assume out of memory
-            Js::JavascriptError::ThrowOutOfMemoryError(nullptr);
-        }
+        // if (!scriptLoadCallback(sourceContext, &source))
+        // {
+        //     // Assume out of memory
+        //     Js::JavascriptError::ThrowOutOfMemoryError(nullptr);
+        // }
 
-        JsrtSourceHolder<TLoadCallback, TUnloadCallback>::ScriptToUtf8(nullptr, source, &utf8Source, &utf8Length, &sourceLength, &utf8AllocLength, true);
+        // JsrtSourceHolder<TLoadCallback, TUnloadCallback>::ScriptToUtf8(nullptr, source, &utf8Source, &utf8Length, &sourceLength, &utf8AllocLength, true);
 
         this->mappedSource = utf8Source;
         this->mappedSourceByteLength = utf8Length;
@@ -124,4 +124,6 @@ namespace Js
 #ifdef _WIN32
 template class JsrtSourceHolder<JsSerializedScriptLoadSourceCallback, JsSerializedScriptUnloadCallback>;
 #endif // _WIN32
+
+template class JsrtSourceHolder<JsSerializedScriptLoadUtf8SourceCallback, JsSerializedScriptUnloadCallback>;
 };
