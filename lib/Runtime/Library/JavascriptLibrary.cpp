@@ -1117,6 +1117,9 @@ namespace Js
         globalObject->SetPrototype(globalObjectPrototype);
         Recycler * recycler = this->GetRecycler();
 
+#ifdef ENABLE_WASM
+        experimentalVersion = JavascriptNumber::New(WasmLibrary::experimentalVersion, scriptContext);
+#endif
         pi = JavascriptNumber::New(Math::PI, scriptContext);
         nan = JavascriptNumber::New(JavascriptNumber::NaN, scriptContext);
         negativeInfinite = JavascriptNumber::New(JavascriptNumber::NEGATIVE_INFINITY, scriptContext);
@@ -2674,6 +2677,7 @@ namespace Js
         typeHandler->Convert(WasmObject, mode, 1);
         JavascriptLibrary* library = WasmObject->GetLibrary();
         library->AddFunctionToLibraryObject(WasmObject, PropertyIds::instantiateModule, &WasmLibrary::EntryInfo::instantiateModule, 2);
+        library->AddMember(WasmObject, PropertyIds::experimentalVersion, library->experimentalVersion, PropertyNone);
     }
 #endif
 

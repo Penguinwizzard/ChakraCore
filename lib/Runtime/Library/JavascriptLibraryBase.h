@@ -269,6 +269,7 @@ namespace Js
         Var minValue;
         Var maxValue;
         Var negativeZero;
+        Var experimentalVersion; // Wasm.experimentalVersion
         RecyclableObject* undefinedValue;
         RecyclableObject* nullValue;
 
