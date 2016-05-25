@@ -319,6 +319,39 @@ var tests = [
             return f10.call(this);
         }
         assert.areEqual(thisObj, f9.call(thisObj)()(), "This object is returned properly from the inner lambda defnied inside a double nested split scoped function");
+        
+        function f11(a = this.x * 10, b = () => { a; return this; }) {
+            assert.areEqual(10, a, "this should be accessible in the parameter scope");
+            assert.areEqual(thisObj, this, "Body scope should get the right value for this object");
+            assert.isTrue(eval("thisObj == this"), "Eval should be able to access the this object properly");
+            return b;
+        }
+        assert.areEqual(thisObj, f11.call(thisObj)(), "Lambda defined in the param scope returns the right this object"); 
+
+        function f12(a = this.x * 10, b = () => { a; return this; }) {
+            var c = 100;
+            assert.areEqual(10, a, "this should be accessible in the parameter scope");
+            assert.areEqual(thisObj, this, "Body scope should get the right value for this object");
+            assert.isTrue(eval("thisObj == this"), "Eval should be able to access the this object properly");
+            assert.areEqual(thisObj, (() => this)(), "Lambda should capture the this object from body properly");
+            assert.areEqual(100, c, "Body variable should be unaffected by the slot allocation of this object");
+            return b;
+        }
+        assert.areEqual(thisObj, f12.call(thisObj)(), "Lambda defined in the param scope returns the right this object");
+
+        function f13(a = 10, b = () => { a; return this; }) {
+            var c = 100;
+            assert.areEqual(thisObj, this, "Body scope should get the right value for this object");
+            var d = () => this;
+            this.x = 5;
+            assert.isTrue(eval("this.x == 5"), "Eval should be able to access the this object properly after the field is updated");
+            assert.isTrue(eval("d().x == 5"), "Lambda should capture the this symbol from the body properly");
+            assert.isTrue(eval("a == 10"), "Eval should be able to access the first parameter properly");
+            assert.isTrue(eval("b().x == 5"), "Lambda from the param scope should capture the this symbol properly");
+            assert.isTrue(eval("d().x == 5"), "Lambda should capture the this symbol from the body properly");
+            return b;
+        }
+        assert.areEqual(5, f13.call(thisObj)().x, "Lambda defined in the param scope returns the same this object as the one in body"); 
     } 
   },
   { 
@@ -881,7 +914,157 @@ var tests = [
         }
         assert.areEqual([2, 3], f16(1, undefined, 2, 3), "Rest should remain unaffected when arguments is updated");
     }  
-  }, 
+  },
+  {
+    name: "Split scope and super call",
+    body: function () {
+        class c1 {
+            constructor() {
+                return { x : 1 };
+            }
+        };
+
+        class c2 extends c1 {
+            constructor(a = 1, b = () => { assert.areEqual(1, super().x, "Super is accessible in the param scope"); return a; }) {
+                var c = 10;
+                a = 20;
+                (() => assert.areEqual(10, c, "Allocation of scope slot for super property shouldn't affect the body variables"))();
+                assert.areEqual(1, b(), "Function defined in the param scope should capture the formal");
+                return {};
+            }
+        }
+        new c2();
+
+        class c3 extends c1 {
+            constructor(a = 1, b = () => { return a; }) {
+                (() => assert.areEqual(1, super().x, "Lambda should be able to access the super method properly in the body"))();
+                a = 10;
+                assert.areEqual(1, b(), "Function defined in the param scope should capture the formal");
+            }
+        }
+        new c3();
+
+        class c4 extends c1 {
+            constructor(a = 1, b = () => { return a; }) {
+                var c = 10;
+                (() => assert.areEqual(10, c, "Allocation of scope slot for super property shouldn't affect the body variables"))();
+                assert.areEqual(1, b(), "Function defined in the param scope should capture the formal");
+                assert.areEqual(1, eval("super().x"), "Eval should be able to access the super property properly");
+            }
+        }
+        new c4();
+
+        class c5 extends c1 {
+            constructor(a = super().x, b = () => { return a; }) {
+                assert.areEqual(1, a, "First formal calls the super from the param scope");
+                var c = 10;
+                (() => assert.areEqual(10, c, "Allocation of scope slot for super property shouldn't affect the body variables"))();
+                assert.areEqual(1, b(), "Function defined in the param scope should capture the formal");
+            }
+        }
+        new c5();
+    }
+  },
+  {
+    name: "Split scope and super property",
+    body: function () {
+        class c1 {
+            foo () {
+                return 1;
+            }
+        };
+
+        class c2 extends c1 {
+            foo(a = 1, b = () => { assert.areEqual(1, super.foo(), "Super property access works fine from a lambda defined in the param scope"); return a; }) {
+                a = 20;
+                var c = 10;
+                (() => assert.areEqual(10, c, "Allocation of scope slot for super property shouldn't affect the body variables"))();
+                assert.areEqual(1, b(), "Function defined in the param scope should capture the formal");
+            }
+        }
+        (new c2()).foo();
+
+        class c3 extends c1 {
+            foo(a = 1, b = () => { return a; }) {
+                var c = 10;
+                a = 20;
+                (() => assert.areEqual(1, super.foo(), "Super property access works fine from a lambda defined in the body scope"))();
+                assert.areEqual(1, b(), "Function defined in the param scope should capture the formal");
+            }
+        }
+        (new c3()).foo();
+
+        class c4 extends c1 {
+            foo(a = 1, b = () => { return a; }) {
+                var c = 10;
+                a = 20;
+                (() => assert.areEqual(10, c, "Allocation of scope slot for super property shouldn't affect the body variables"))();
+                assert.areEqual(1, b(), "Function defined in the param scope should capture the formal");
+                assert.areEqual(1, eval("super.foo()"), "Eval should be able to access the super property properly from the body scope");
+            }
+        }
+        (new c4()).foo();
+
+        class c5 extends c1 {
+            foo(a = super.foo(), b = () => { return a; }) {
+                assert.areEqual(1, a, "First formal uses the super property from the param scope");
+                var c = 10;
+                (() => assert.areEqual(10, c, "Allocation of scope slot for super property shouldn't affect the body variables"))();
+                a = 20;
+                assert.areEqual(1, b(), "Function defined in the param scope should capture the formal");
+            }
+        }
+        (new c5()).foo();
+    }
+  },
+  {
+    name: "Split scope and new.target",
+    body: function () {
+        class c1 {
+            constructor(newTarget) {
+                assert.isTrue(newTarget == new.target, "Base class should receive the right value for new.target"); 
+            }
+        };
+
+        class c2 extends c1 {
+            constructor(a = 1, b = () => { assert.isTrue(new.target == c2, "new.target should have the derived class value in the param scope"); return a; }) {
+                super(c2);
+                var c = 10;
+                a = 20;
+                (() => assert.areEqual(10, c, "Allocation of scope slot for super property shouldn't affect the body variables"))();
+                assert.areEqual(1, b(), "Function defined in the param scope should capture the formal");
+            }
+        }
+        new c2();
+
+        class c3 extends c1 {
+            constructor(a = 1, b = () => { return a; }) {
+                super(c3);
+                var c = 10;
+                (() => assert.isTrue(new.target == c3, "new.target should be the derived class in the body scope when captured by lambda"))();
+                assert.isTrue(new.target == c3, "new.target should be the derived class in the body scope");
+            }
+        }
+        new c3();
+
+        class c4 extends c1 {
+            constructor(a = 1, b = () => { return a; }) {
+                super(c4);
+                assert.isTrue(eval("new.target == c4"), "new.target should be the derived class inside eval");
+                assert.isTrue(new.target == c4, "new.target should be the derived class in the body scope");
+            }
+        }
+        new c4();
+
+        class c5 extends c1 {
+            constructor(a = new.target, b = () => { return a; }) {
+                super(c5);
+                assert.isTrue(a == c5, "new.target accessed from the param scope should work fine");
+            }
+        }
+        new c5();
+    }
+  },
   { 
     name: "Split parameter scope and eval", 
     body: function () { 

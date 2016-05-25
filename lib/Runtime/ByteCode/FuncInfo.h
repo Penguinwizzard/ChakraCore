@@ -172,9 +172,13 @@ public:
     typedef JsUtil::BaseDictionary<SlotKey, Js::ProfileId, ArenaAllocator, PowerOf2SizePolicy, SlotKeyComparer> SlotProfileIdMap;
     SlotProfileIdMap slotProfileIdMap;
     Js::PropertyId thisScopeSlot;
+    Js::PropertyId innerThisScopeSlot; // Used in case of split scope
     Js::PropertyId superScopeSlot;
+    Js::PropertyId innerSuperScopeSlot; // Used in case of split scope
     Js::PropertyId superCtorScopeSlot;
+    Js::PropertyId innerSuperCtorScopeSlot; // Used in case of split scope
     Js::PropertyId newTargetScopeSlot;
+    Js::PropertyId innerNewTargetScopeSlot; // Used in case of split scope
     bool isThisLexicallyCaptured;
     bool isSuperLexicallyCaptured;
     bool isSuperCtorLexicallyCaptured;
@@ -743,10 +747,11 @@ public:
         return profileId;
     }
 
-    void EnsureThisScopeSlot(Scope* scope);
-    void EnsureSuperScopeSlot(Scope* scope);
-    void EnsureSuperCtorScopeSlot(Scope* scope);
-    void EnsureNewTargetScopeSlot(Scope* scope);
+    void EnsureThisScopeSlot();
+    void EnsureSuperScopeSlot();
+    void EnsureSuperCtorScopeSlot();
+    void EnsureNewTargetScopeSlot();
+    void UseInnerSpecialScopeSlots();
 
     void SetIsThisLexicallyCaptured()
     {
