@@ -6759,7 +6759,7 @@ CommonNumber:
         {
             if (PHASE_TRACE1(Js::StackArgFormalsOptPhase))
             {
-                Output::Print(_u("StackArgsWithFormals : Func local id : %d, Func number : %d \n"), funcCallee->GetFunctionInfo()->GetLocalFunctionId(), funcCallee->GetFunctionBody()->GetFunctionNumber());
+                Output::Print(_u("StackArgsWithFormals : Not creating heap arguments object for Func number : %d \n"), funcCallee->GetFunctionBody()->GetFunctionNumber());
                 Output::Flush();
             }
         }
@@ -6785,7 +6785,7 @@ CommonNumber:
         {
             if (PHASE_TRACE1(Js::StackArgFormalsOptPhase))
             {
-                Output::Print(_u("StackArgsWithFormals : Func local id : %d, Func number : %d \n"), funcCallee->GetFunctionInfo()->GetLocalFunctionId(), funcCallee->GetFunctionBody()->GetFunctionNumber());
+                Output::Print(_u("StackArgsWithFormals : Not creating heap arguments object for Func number : %d \n"), funcCallee->GetFunctionBody()->GetFunctionNumber());
                 Output::Flush();
             }
         }

@@ -8351,13 +8351,19 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
             {
                 heapArgObj->SetFrameObject(frameObject);
                 heapArgObj->SetFormalCount(formalsCount);
-
+            }
             else
             {
 				frameObject = (ActivationObject*)scriptContext->GetLibrary()->GetNull();
                 heapArgObj->SetFrameObject(frameObject);
             }
             JavascriptOperators::FillScopeObject(this->function->GetRealFunctionObject(), this->m_inSlotsCount - 1, formalsCount, frameObject, &this->m_inParams[1], nullptr, heapArgObj, scriptContext, false, true);
+            
+            if (PHASE_TRACE1(Js::StackArgFormalsOptPhase))
+            {
+                Output::Print(_u("StackArgFormals : Restoring frame object in HeapArgs Object in the bail out path \n"));
+                Output::Flush();
+            }
         }
     }
 

@@ -2450,6 +2450,12 @@ FuncInfo* PreVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerato
             if (pnode->sxFnc.HasHeapArguments())
             {
                 bool doStackArgsOpt = !pnode->sxFnc.HasAnyWriteToFormals();
+#ifdef PERF_HINT
+                if (PHASE_TRACE1(Js::PerfHintPhase) && !doStackArgsOpt)
+                {
+                    WritePerfHint(PerfHints::HeapArgumentsDueToWriteToFormals, funcInfo->GetParsedFunctionBody(), 0);
+                }
+#endif
                 funcInfo->SetHasHeapArguments(true, !pnode->sxFnc.IsGenerator() && doStackArgsOpt /*= Optimize arguments in backend*/);
                 if (funcInfo->inArgsCount == 0)
                 {
