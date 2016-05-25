@@ -6755,6 +6755,14 @@ CommonNumber:
         {
             argsObj = JavascriptOperators::CreateHeapArguments(funcCallee, actualsCount, formalsCount, frameObj, scriptContext);
         }
+        else
+        {
+            if (PHASE_TRACE1(Js::StackArgFormalsOptPhase))
+            {
+                Output::Print(_u("StackArgsWithFormals : Func local id : %d, Func number : %d \n"), funcCallee->GetFunctionInfo()->GetLocalFunctionId(), funcCallee->GetFunctionBody()->GetFunctionNumber());
+                Output::Flush();
+            }
+        }
         
         return FillScopeObject(funcCallee, actualsCount, formalsCount, frameObj, paramAddr, propIds, argsObj, scriptContext, nonSimpleParamList, false);
     }
@@ -6772,6 +6780,14 @@ CommonNumber:
         if (disableStackArgsOpt)
         {
             argsObj = JavascriptOperators::CreateHeapArguments(funcCallee, actualsCount, formalsCount, frameObj, scriptContext);
+        }
+        else
+        {
+            if (PHASE_TRACE1(Js::StackArgFormalsOptPhase))
+            {
+                Output::Print(_u("StackArgsWithFormals : Func local id : %d, Func number : %d \n"), funcCallee->GetFunctionInfo()->GetLocalFunctionId(), funcCallee->GetFunctionBody()->GetFunctionNumber());
+                Output::Flush();
+            }
         }
         return FillScopeObject(funcCallee, actualsCount, formalsCount, frameObj, paramAddr, nullptr, argsObj, scriptContext, nonSimpleParamList, true);
     }
