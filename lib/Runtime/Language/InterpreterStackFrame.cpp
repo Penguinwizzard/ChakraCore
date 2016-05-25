@@ -8354,10 +8354,13 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
             }
             else
             {
+                Assert(formalsCount == 0 || (m_functionBody->GetIsStrictMode() || m_functionBody->HasNonSimpleParam()));
 				frameObject = (ActivationObject*)scriptContext->GetLibrary()->GetNull();
                 heapArgObj->SetFrameObject(frameObject);
+                formalsCount = 0;
             }
-            JavascriptOperators::FillScopeObject(this->function->GetRealFunctionObject(), this->m_inSlotsCount - 1, formalsCount, frameObject, &this->m_inParams[1], nullptr, heapArgObj, scriptContext, false, true);
+            
+            JavascriptOperators::FillScopeObject(this->function->GetRealFunctionObject(), this->m_inSlotsCount - 1, formalsCount, frameObject, &this->m_inParams[1], nullptr, heapArgObj, scriptContext, m_functionBody->HasNonSimpleParam(), true);
             
             if (PHASE_TRACE1(Js::StackArgFormalsOptPhase))
             {

@@ -182,6 +182,7 @@ struct StringIndexRecord
 
 typedef JsUtil::BaseDictionary<ByteBuffer*, IndexEntry, ArenaAllocator, PrimeSizePolicy, DefaultComparer> TString16ToId;
 
+//TODO: saravind: Should isNonSimpleParam be added here ?
 // Boolean flags on the FunctionBody
 enum FunctionFlags
 {

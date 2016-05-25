@@ -1425,6 +1425,8 @@ namespace Js
         void SetIsGlobalFunc(bool is) { m_isGlobalFunc = is; }
         bool GetIsStrictMode() const { return m_isStrictMode; }
         void SetIsStrictMode() { m_isStrictMode = true; }
+        bool HasNonSimpleParam() const { return m_hasNonSimpleParam; }
+        void SetHasNonSimpleParam() { m_hasNonSimpleParam = true; }
         bool GetIsAsmjsMode() const { return m_isAsmjsMode; }
         void SetIsAsmjsMode(bool value)
         {
@@ -1591,6 +1593,7 @@ namespace Js
         bool m_isNameIdentifierRef  : 1;
         bool m_isClassMember : 1;
         bool m_isStrictMode : 1;
+        bool m_hasNonSimpleParam : 1;
         bool m_isAsmjsMode : 1;
         bool m_isAsmJsFunction : 1;
         bool m_isGlobalFunc : 1;

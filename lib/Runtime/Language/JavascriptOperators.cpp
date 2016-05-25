@@ -6749,9 +6749,7 @@ CommonNumber:
         
         HeapArgumentsObject *argsObj = nullptr;
 
-        bool disableStackArgsOpt = !isStackArgsOpt || nonSimpleParamList || funcCallee->IsStrictMode();
-
-        if (disableStackArgsOpt)
+        if (!isStackArgsOpt)
         {
             argsObj = JavascriptOperators::CreateHeapArguments(funcCallee, actualsCount, formalsCount, frameObj, scriptContext);
         }
@@ -6775,9 +6773,7 @@ CommonNumber:
 
         HeapArgumentsObject *argsObj = nullptr;
 
-        bool disableStackArgsOpt = !isStackArgsOpt || nonSimpleParamList || funcCallee->IsStrictMode();
-
-        if (disableStackArgsOpt)
+        if (!isStackArgsOpt)
         {
             argsObj = JavascriptOperators::CreateHeapArguments(funcCallee, actualsCount, formalsCount, frameObj, scriptContext);
         }
@@ -6827,7 +6823,7 @@ CommonNumber:
                 frameObject->ReplaceType(newType);
             }
 
-            if (nonSimpleParamList)
+            if (argsObj && nonSimpleParamList)
             {
                 return ConvertToUnmappedArguments(argsObj, actualsCount, paramAddr, frameObject, propIds, formalsCount, scriptContext);
             }
@@ -6858,15 +6854,14 @@ CommonNumber:
                 // ES3 semantics is same.
                 JavascriptOperators::SetItem(argsObj, argsObj, i, *tmpAddr, scriptContext, PropertyOperation_None, /* skipPrototypeCheck = */ TRUE);
             }
-        }
 
-        if (funcCallee->IsStrictMode())
-        {
-            // If the formals are let decls, then we just overwrote the frame object slots with
-            // Undecl sentinels, and we can use the original arguments that were passed to the HeapArgumentsObject.
-            return argsObj->ConvertToUnmappedArgumentsObject(!nonSimpleParamList);
+            if (funcCallee->IsStrictMode())
+            {
+                // If the formals are let decls, then we just overwrote the frame object slots with
+                // Undecl sentinels, and we can use the original arguments that were passed to the HeapArgumentsObject.
+                return argsObj->ConvertToUnmappedArgumentsObject(!nonSimpleParamList);
+            }
         }
-
         return argsObj;
     }
 

@@ -2427,6 +2427,11 @@ FuncInfo* PreVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerato
         return funcInfo;
     }
 
+    if (pnode->sxFnc.HasNonSimpleParameterList())
+    {
+        funcInfo->byteCodeFunction->SetHasNonSimpleParam();
+    }
+
     if (pnode->sxFnc.HasReferenceableBuiltInArguments())
     {
         // The parser identified that there is a way to reference the built-in 'arguments' variable from this function. So, we
