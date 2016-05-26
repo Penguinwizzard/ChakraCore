@@ -1402,20 +1402,9 @@ void ByteCodeGenerator::DefineUserVars(FuncInfo *funcInfo)
                     if ((!sym->GetHasInit() && !sym->IsInSlot(funcInfo)) ||
                         (funcInfo->bodyScope->GetIsObject() && !funcInfo->GetHasCachedScope()))
                     {
-                        bool isBodyArgSym = false;
-                        if (funcInfo->paramScope != nullptr && !funcInfo->paramScope->GetCanMergeWithBodyScope())
-                        {
-                            Symbol* paramScopeArgSym = funcInfo->GetArgumentsSymbol();
-                            if (paramScopeArgSym != nullptr)
-                            {
-                                // If the  current symbol is the duplicate symbol created in the body for the split
-                                // scope then load undef only if the arguments symbol is used in the body.
-                                Symbol* bodyScopeArgsSym = funcInfo->bodyScope->FindLocalSymbol(paramScopeArgSym->GetName());
-                                isBodyArgSym = sym == bodyScopeArgsSym;
-                            }
-                        }
-
-                        if (!isBodyArgSym || funcInfo->GetHasArguments())
+                        // If the  current symbol is the duplicate arguments symbol created in the body for split
+                        // scope then load undef only if the arguments symbol is used in the body.
+                        if (!funcInfo->IsInnerArgumentsSymbol(sym) || funcInfo->GetHasArguments())
                         {
                             Js::RegSlot reg = sym->GetLocation();
                             if (reg == Js::Constants::NoRegister)
@@ -1843,17 +1832,26 @@ void ByteCodeGenerator::InitScopeSlotArray(FuncInfo * funcInfo)
         {
             if (sym->NeedsSlotAlloc(funcInfo))
             {
-                // All properties should get correct propertyId here.
-                Assert(sym->HasScopeSlot()); // We can't allocate scope slot now. Any symbol needing scope slot must have allocated it before this point.
+                if (funcInfo->IsInnerArgumentsSymbol(sym) && !funcInfo->GetHasArguments())
+                {
+                    // In split scope case we have a duplicate symbol for arguments in the body (innerArgumentsSymbol).
+                    // But if arguments is not referenced in the body we don't have to allocate scope slot for it.
+                    // If we allocate one, then the debugger will assume that the arguments symbol is there and skip creating the fake one.
+                }
+                else
+                {
+                    // All properties should get correct propertyId here.
+                    Assert(sym->HasScopeSlot()); // We can't allocate scope slot now. Any symbol needing scope slot must have allocated it before this point.
 
 #ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>
 #endif
 #if defined(PRERELEASE_REL1606_MSRC33164_BUG7230595) || defined(_CHAKRACOREBUILD)
-                setPropertyIdForScopeSlotArray(sym->GetScopeSlot(), sym->EnsurePosition(funcInfo));
+                    setPropertyIdForScopeSlotArray(sym->GetScopeSlot(), sym->EnsurePosition(funcInfo));
 #else
-                propertyIdsForScopeSlotArray[sym->GetScopeSlot()] = sym->EnsurePosition(funcInfo);
+                    propertyIdsForScopeSlotArray[sym->GetScopeSlot()] = sym->EnsurePosition(funcInfo);
 #endif
+                }
             }
         };
 
@@ -4065,7 +4063,8 @@ void ByteCodeGenerator::StartEmitFunction(ParseNode *pnodeFnc)
                     {
                         sym = funcInfo->bodyScope->FindLocalSymbol(sym->GetName());
                     }
-                    if (sym->GetSymbolType() == STVariable && !sym->GetIsArguments())
+                    if (sym->GetSymbolType() == STVariable && !sym->GetIsArguments()
+                        && (!funcInfo->IsInnerArgumentsSymbol(sym) || funcInfo->GetHasArguments()))
                     {
                         sym->EnsureScopeSlot(funcInfo);
                     }
@@ -4096,7 +4095,8 @@ void ByteCodeGenerator::StartEmitFunction(ParseNode *pnodeFnc)
                     {
                         sym = funcInfo->bodyScope->FindLocalSymbol(sym->GetName());
                     }
-                    if (sym->GetSymbolType() == STVariable && sym->NeedsSlotAlloc(funcInfo) && !sym->GetIsArguments())
+                    if (sym->GetSymbolType() == STVariable && sym->NeedsSlotAlloc(funcInfo) && !sym->GetIsArguments()
+                        && (!funcInfo->IsInnerArgumentsSymbol(sym) || funcInfo->GetHasArguments()))
                     {
                         sym->EnsureScopeSlot(funcInfo);
                     }

@@ -1122,7 +1122,111 @@ var tests = [
         };
         f4.call(1, 2);
     }  
-  }, 
+  },
+  {
+    name: "Split scope and with",
+    body: function () {
+          function f1(a, b, c = function () { a; }) {
+            with ({}) {
+                var d = function () {
+                    return 10;
+                };
+                assert.areEqual(10, d(), "With inside a split scope function should work fine");
+            }
+          }
+          f1();
+          
+          function f2(a, b, c = function () { a; }) {
+            var d = function () {
+                return 10;
+            };
+            with ({}) {
+                assert.areEqual(10, d(), "With inside a split scope function should be able to access the function definition from the body");
+            }
+          }
+          f2();
+          
+          function f3(a, b = function () { return 10; }, c = function () { a; }) {
+            with ({}) {
+                assert.areEqual(10, b(), "With inside a split scope function should be able to access the function definition from the param scope");
+            }
+          }
+          f3();
+
+          function f4(a, b = function () { return 10; }, c = function () { a; }) {
+            var d = {
+                e : function () { return 10; }
+            };
+            e = function () { return 100; };
+            with (d) {
+                assert.areEqual(10, e(), "With should use the function definition inside the object not the one from body");
+            }
+          }
+          f4();
+
+          function f5(a, b = { d : function () { return 10; } }, c = function () { a; }) {
+            var d = { };
+            with (b) {
+                assert.areEqual(10, d(), "With should use the function definition inside the object from the param scope not the one from body");
+            }
+          }
+          f5();
+          
+          var v6 = 100
+          function f6(a, b, c = function () { a; }, e = function () { with({}) { assert.areEqual(100, v6, "With inside param scope should be able to access var from outside"); } }, f = e()) {
+            var v6 = { };
+          }
+          f6();
+
+          function f7(a, b, c = function () { a; }) {
+            with ({}) {
+                assert.areEqual(100, v6, "With inside body scope should be able to access var from outside");
+            }
+          }
+          f7();
+          
+          function f8() {
+            function f9() {
+                return 1;
+            }
+            var v1 = 10;
+            function f10(a = 10, b = function f11() {
+                a;
+                assert.areEqual(10, v1, "Function in the param scope should be able to access the outside variable");
+                with ({}) {
+                    assert.areEqual(1, f9(), "With construct inside a param scoped function should be able to execute functions from outside");
+                }
+            }) {
+                b();
+            };
+            f10();
+          }
+          f8();
+          f8();
+          
+          function f12() {
+            function f13() {
+                return 1;
+            }
+            var v2 = 100;
+            function f14(a = 10, b = function () {
+                assert.areEqual(10, a, "Function in the param scope should be able to access the formal from parent");
+                return function () {
+                    assert.areEqual(10, a, "Function nested in the param scope should be able to access the formal from the split scoped function");
+                    assert.areEqual(100, v2, "Function in the param scope should be able to access the outside variable");
+                    with ({}) {
+                        assert.areEqual(1, f13(), "With construct inside a param scoped function should be able to execute functions from outside");
+                    }
+                };
+            }) {
+                b()();
+            };
+            f14();
+          }
+          f12();
+          f12();
+    }  
+  },
   { 
     name: "Basic eval in parameter scope", 
     body: function () { 

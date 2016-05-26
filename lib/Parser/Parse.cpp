@@ -4563,11 +4563,13 @@ ParseNodePtr Parser::ParseFncDecl(ushort flags, LPCOLESTR pNameHint, const bool 
             m_currentNodeNonLambdaDeferredFunc = pnodeFncSaveNonLambda;
         }
         m_currentNodeDeferredFunc = pnodeFncSave;
-        if (m_currentNodeFunc && pnodeFnc->sxFnc.HasWithStmt())
-        {
-            GetCurrentFunctionNode()->sxFnc.SetHasWithStmt(true);
-        }
     }
+
+    if (m_currentNodeFunc && pnodeFnc->sxFnc.HasWithStmt())
+    {
+        GetCurrentFunctionNode()->sxFnc.SetHasWithStmt(true);
+    }
+
     if (m_currentNodeFunc && (pnodeFnc->sxFnc.CallsEval() || pnodeFnc->sxFnc.ChildCallsEval()))
     {
         GetCurrentFunctionNode()->sxFnc.SetChildCallsEval(true);
