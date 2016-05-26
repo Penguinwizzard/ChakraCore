@@ -63,7 +63,7 @@ void __stdcall PrintUsage()
 
 // On success the param byteCodeBuffer will be allocated in the function.
 // The caller of this function should de-allocate the memory.
-HRESULT GetSerializedBuffer(LPCOLESTR fileContents, __out BYTE **byteCodeBuffer, __out DWORD *byteCodeBufferSize)
+HRESULT GetSerializedBuffer(LPCSTR fileContents, __out BYTE **byteCodeBuffer, __out DWORD *byteCodeBufferSize)
 {
     HRESULT hr = S_OK;
     *byteCodeBuffer = nullptr;
@@ -72,7 +72,7 @@ HRESULT GetSerializedBuffer(LPCOLESTR fileContents, __out BYTE **byteCodeBuffer,
 
     unsigned int bcBufferSize = 0;
     unsigned int newBcBufferSize = 0;
-    IfJsErrorFailLog(ChakraRTInterface::JsSerializeScript(fileContents, bcBuffer, &bcBufferSize));
+    IfJsErrorFailLog(ChakraRTInterface::JsSerializeScriptUtf8(fileContents, bcBuffer, &bcBufferSize));
     // Above call will return the size of the buffer only, once succeed we need to allocate memory of that much and call it again.
     if (bcBufferSize == 0)
     {
@@ -81,7 +81,7 @@ HRESULT GetSerializedBuffer(LPCOLESTR fileContents, __out BYTE **byteCodeBuffer,
     }
     bcBuffer = new BYTE[bcBufferSize];
     newBcBufferSize = bcBufferSize;
-    IfJsErrorFailLog(ChakraRTInterface::JsSerializeScript(fileContents, bcBuffer, &newBcBufferSize));
+    IfJsErrorFailLog(ChakraRTInterface::JsSerializeScriptUtf8(fileContents, bcBuffer, &newBcBufferSize));
     Assert(bcBufferSize == newBcBufferSize);
 
 Error:
@@ -102,12 +102,12 @@ Error:
     return hr;
 }
 
-HRESULT CreateLibraryByteCodeHeader(LPCOLESTR fileContents, BYTE * contentsRaw, DWORD lengthBytes, LPCWSTR bcFullPath, LPCSTR libraryNameNarrow)
+HRESULT CreateLibraryByteCodeHeader(LPCSTR contentsRaw, DWORD lengthBytes, LPCWSTR bcFullPath, LPCSTR libraryNameNarrow)
 {
     HANDLE bcFileHandle = nullptr;
     BYTE *bcBuffer = nullptr;
     DWORD bcBufferSize = 0;
-    HRESULT hr = GetSerializedBuffer(fileContents, &bcBuffer, &bcBufferSize);
+    HRESULT hr = GetSerializedBuffer(contentsRaw, &bcBuffer, &bcBufferSize);
 
     if (FAILED(hr)) return hr;
 
@@ -199,30 +199,25 @@ static void CALLBACK PromiseContinuationCallback(JsValueRef task, void *callback
     messageQueue->InsertSorted(msg);
 }
 
-HRESULT RunScript(const char* fileName, LPCWSTR fileContents, BYTE *bcBuffer, char *fullPath)
+HRESULT RunScript(const char* fileName, LPCSTR fileContents, BYTE *bcBuffer, char *fullPath)
 {
     HRESULT hr = S_OK;
     MessageQueue * messageQueue = new MessageQueue();
     WScriptJsrt::AddMessageQueue(messageQueue);
-    LPWSTR fullPathWide = nullptr;
 
     IfJsErrorFailLog(ChakraRTInterface::JsSetPromiseContinuationCallback(PromiseContinuationCallback, (void*)messageQueue));
 
     Assert(fileContents != nullptr || bcBuffer != nullptr);
-    // TODO: Remove this code in a future iteration once Utf8 versions of the Jsrt API is implemented
-    IfFailGo(Helpers::NarrowStringToWideDynamic(fullPath, &fullPathWide));
 
     JsErrorCode runScript;
     if (bcBuffer != nullptr)
     {
-        runScript = ChakraRTInterface::JsRunSerializedScript(fileContents, bcBuffer, WScriptJsrt::GetNextSourceContext(), fullPathWide, nullptr /*result*/);
+        runScript = ChakraRTInterface::JsRunSerializedScriptUtf8(nullptr, nullptr, bcBuffer, WScriptJsrt::GetNextSourceContext(), fullPath, nullptr /*result*/);
     }
     else
     {
-        runScript = ChakraRTInterface::JsRunScript(fileContents, WScriptJsrt::GetNextSourceContext(), fullPathWide, nullptr /*result*/);
+        runScript = ChakraRTInterface::JsRunScriptUtf8(fileContents, WScriptJsrt::GetNextSourceContext(), fullPath, nullptr /*result*/);
     }
-
-    free(fullPathWide);
 
     if (runScript != JsNoError)
     {
@@ -246,7 +241,7 @@ Error:
     return hr;
 }
 
-HRESULT CreateAndRunSerializedScript(const char* fileName, LPCWSTR fileContents, char *fullPath)
+HRESULT CreateAndRunSerializedScript(const char* fileName, LPCSTR fileContents, char *fullPath)
 {
     HRESULT hr = S_OK;
     JsRuntimeHandle runtime = JS_INVALID_RUNTIME_HANDLE;
@@ -292,10 +287,9 @@ Error:
 HRESULT ExecuteTest(const char* fileName)
 {
     HRESULT hr = S_OK;
-    LPCWSTR fileContents = nullptr;
+    LPCSTR fileContents = nullptr;
     JsRuntimeHandle runtime = JS_INVALID_RUNTIME_HANDLE;
     bool isUtf8 = false;
-    LPCOLESTR contentsRaw = nullptr;
     UINT lengthBytes = 0;
 
     JsContextRef context = JS_INVALID_REFERENCE;
@@ -303,8 +297,7 @@ HRESULT ExecuteTest(const char* fileName)
     char fullPath[_MAX_PATH];
     size_t len = 0;
 
-    hr = Helpers::LoadScriptFromFile(fileName, fileContents, &isUtf8, &contentsRaw, &lengthBytes);
-    contentsRaw; lengthBytes; // Unused for now.
+    hr = Helpers::LoadScriptFromFile(fileName, fileContents, &isUtf8, &lengthBytes);
 
     IfFailGo(hr);
     if (HostConfigFlags::flags.GenerateLibraryByteCodeHeaderIsEnabled)
@@ -354,7 +347,7 @@ HRESULT ExecuteTest(const char* fileName)
                 CHAR ext[_MAX_EXT];
                 _splitpath_s(fullPath, NULL, 0, NULL, 0, libraryName, _countof(libraryName), ext, _countof(ext));
 
-                IfFailGo(CreateLibraryByteCodeHeader(fileContents, (BYTE*)contentsRaw, lengthBytes, HostConfigFlags::flags.GenerateLibraryByteCodeHeader, libraryName));
+                IfFailGo(CreateLibraryByteCodeHeader(fileContents, lengthBytes, HostConfigFlags::flags.GenerateLibraryByteCodeHeader, libraryName));
             }
             else
             {

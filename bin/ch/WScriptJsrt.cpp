@@ -116,7 +116,7 @@ JsValueRef WScriptJsrt::LoadScriptFileHelper(JsValueRef callee, JsValueRef *argu
     }
     else
     {
-        const wchar_t *fileContent;
+        LPCSTR fileContent;
         const wchar_t *fileName;
         const wchar_t *scriptInjectType = _u("self");
         size_t fileNameLength;
@@ -211,7 +211,8 @@ JsValueRef WScriptJsrt::LoadScriptHelper(JsValueRef callee, bool isConstructCall
             }
         }
 
-        returnValue = LoadScript(callee, fileName, fileContent, scriptInjectType, isSourceModule);
+        //TODO
+        //returnValue = LoadScript(callee, fileName, fileContent, scriptInjectType, isSourceModule);
 
         if (freeFileName)
         {
@@ -237,7 +238,7 @@ Error:
     return returnValue;
 }
 
-JsValueRef WScriptJsrt::LoadScript(JsValueRef callee, LPCSTR fileName, LPCWSTR fileContent, LPCWSTR scriptInjectType, bool isSourceModule)
+JsValueRef WScriptJsrt::LoadScript(JsValueRef callee, LPCSTR fileName, LPCSTR fileContent, LPCWSTR scriptInjectType, bool isSourceModule)
 {
     HRESULT hr = E_FAIL;
     JsErrorCode errorCode = JsNoError;
@@ -278,11 +279,11 @@ JsValueRef WScriptJsrt::LoadScript(JsValueRef callee, LPCSTR fileName, LPCWSTR f
 
         if (isSourceModule)
         {
-            errorCode = ChakraRTInterface::JsRunModule(fileContent, GetNextSourceContext(), fullPath, &returnValue);
+            //errorCode = ChakraRTInterface::JsRunModule(fileContent, GetNextSourceContext(), fullPath, &returnValue);
         }
         else
         {
-            errorCode = ChakraRTInterface::JsRunScript(fileContent, GetNextSourceContext(), fullPath, &returnValue);
+            errorCode = ChakraRTInterface::JsRunScriptUtf8(fileContent, GetNextSourceContext(), fullPathNarrow, &returnValue);
         }
 
         if (errorCode == JsNoError)
@@ -306,11 +307,11 @@ JsValueRef WScriptJsrt::LoadScript(JsValueRef callee, LPCSTR fileName, LPCWSTR f
 
         if (isSourceModule)
         {
-            errorCode = ChakraRTInterface::JsRunModule(fileContent, GetNextSourceContext(), fullPath, &returnValue);
+            //errorCode = ChakraRTInterface::JsRunModule(fileContent, GetNextSourceContext(), fullPath, &returnValue);
         }
         else
         {
-            errorCode = ChakraRTInterface::JsRunScript(fileContent, GetNextSourceContext(), fullPath, &returnValue);
+            errorCode = ChakraRTInterface::JsRunScriptUtf8(fileContent, GetNextSourceContext(), fullPathNarrow, &returnValue);
         }
 
         if (errorCode == JsNoError)

@@ -104,3 +104,5 @@
     JsGetRuntime
     JsIdle
     JsSetPromiseContinuationCallback
+    JsRunScriptUtf8
+    JsRunSerializedScriptUtf8

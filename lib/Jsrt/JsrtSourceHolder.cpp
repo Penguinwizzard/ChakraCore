@@ -73,8 +73,8 @@ namespace Js
         Assert(scriptLoadCallback != nullptr);
         Assert(this->mappedSource == nullptr);
 
-        const wchar_t *source = nullptr;
-        size_t sourceLength = 0;
+        //const wchar_t *source = nullptr;
+        //size_t sourceLength = 0;
         utf8char_t *utf8Source = nullptr;
         size_t utf8Length = 0;
         size_t utf8AllocLength = 0;

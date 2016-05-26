@@ -2382,7 +2382,7 @@ CHAKRA_API JsSetPromiseContinuationCallback(_In_ JsPromiseContinuationCallback p
     /*allowInObjectBeforeCollectCallback*/true);
 }
 
-JsErrorCode RunScriptCore(const wchar_t *script, JsSourceContext sourceContext, const wchar_t *sourceUrl, bool parseOnly, JsParseScriptAttributes parseAttributes, bool isSourceModule, JsValueRef *result)
+JsErrorCode RunScriptCore(const byte *script, size_t cb, LoadScriptFlag loadScriptFlag, JsSourceContext sourceContext, const wchar_t *sourceUrl, bool parseOnly, JsParseScriptAttributes parseAttributes, bool isSourceModule, JsValueRef *result)
 {
     Js::JavascriptFunction *scriptFunction;
     CompileScriptException se;
@@ -2406,14 +2406,13 @@ JsErrorCode RunScriptCore(const wchar_t *script, JsSourceContext sourceContext, 
             /* ulColumnHost        */ 0,
             /* lnMinHost           */ 0,
             /* ichMinHost          */ 0,
-            /* ichLimHost          */ static_cast<ULONG>(wcslen(script)), // OK to truncate since this is used to limit sourceText in debugDocument/compilation errors.
+            /* ichLimHost          */ static_cast<ULONG>(cb), // OK to truncate since this is used to limit sourceText in debugDocument/compilation errors.
             /* ulCharOffset        */ 0,
             /* mod                 */ kmodGlobal,
             /* grfsi               */ 0
         };
 
         Js::Utf8SourceInfo* utf8SourceInfo = nullptr;
-        LoadScriptFlag loadScriptFlag = LoadScriptFlag_None;
         if (result != nullptr)
         {
             loadScriptFlag = (LoadScriptFlag)(loadScriptFlag | LoadScriptFlag_Expression);
@@ -2427,7 +2426,7 @@ JsErrorCode RunScriptCore(const wchar_t *script, JsSourceContext sourceContext, 
         {
             loadScriptFlag = (LoadScriptFlag)(loadScriptFlag | LoadScriptFlag_Module);
         }
-        scriptFunction = scriptContext->LoadScript((const byte*)script, wcslen(script)* sizeof(wchar_t), &si, &se, &utf8SourceInfo, Js::Constants::GlobalCode, loadScriptFlag);
+        scriptFunction = scriptContext->LoadScript(script, cb, &si, &se, &utf8SourceInfo, Js::Constants::GlobalCode, loadScriptFlag);
 
         JsrtContext * context = JsrtContext::GetCurrent();
         context->OnScriptLoad(scriptFunction, utf8SourceInfo, &se);
@@ -2473,6 +2472,16 @@ JsErrorCode RunScriptCore(const wchar_t *script, JsSourceContext sourceContext, 
         }
         return JsNoError;
     });
+}
+
+JsErrorCode RunScriptCore(const char *script, JsSourceContext sourceContext, const char *sourceUrl, bool parseOnly, JsParseScriptAttributes parseAttributes, bool isSourceModule, JsValueRef *result)
+{
+    return RunScriptCore(reinterpret_cast<const byte*>(script), /*TODO: needed?*/0, LoadScriptFlag_Utf8Source, sourceContext, _u("")/*TODO:sourceUrl*/, parseOnly, parseAttributes, isSourceModule, result);
+}
+
+JsErrorCode RunScriptCore(const wchar_t *script, JsSourceContext sourceContext, const wchar_t *sourceUrl, bool parseOnly, JsParseScriptAttributes parseAttributes, bool isSourceModule, JsValueRef *result)
+{
+    return RunScriptCore(reinterpret_cast<const byte*>(script), wcslen(script), LoadScriptFlag_None, sourceContext, sourceUrl, parseOnly, parseAttributes, isSourceModule, result);
 }
 
 CHAKRA_API JsParseScript(_In_z_ const wchar_t * script, _In_ JsSourceContext sourceContext, _In_z_ const wchar_t *sourceUrl, _Out_ JsValueRef * result)
@@ -2721,30 +2730,17 @@ JsErrorCode RunSerializedScriptCore(
     });
 }
 
-CHAKRA_API JsRunSerializedScriptUtf8(
-    _In_ JsSerializedScriptLoadUtf8SourceCallback scriptLoadCallback,
-    _In_ JsSerializedScriptUnloadCallback scriptUnloadCallback,
-    _In_ ChakraBytePtr buffer,
-    _In_ JsSourceContext sourceContext,
-    _In_z_ const char *sourceUrl,
-    _Out_opt_ JsValueRef * result)
-{
-    return RunSerializedScriptCore(
-        nullptr, scriptLoadCallback, scriptUnloadCallback,
-        buffer, sourceContext, _u("")/*sourceUrl*/, false, result);
-}
-
 #ifdef _WIN32
 CHAKRA_API JsParseSerializedScript(_In_z_ const wchar_t * script, _In_ unsigned char *buffer, _In_ JsSourceContext sourceContext,
     _In_z_ const wchar_t *sourceUrl, _Out_ JsValueRef * result)
 {
-    return RunSerializedScriptCore<JsSerializedScriptLoadSourceCallback, JsSerializedScriptUnloadCallback>(script, nullptr, nullptr, buffer, sourceContext, sourceUrl, true, result);
+    return RunSerializedScriptCore<JsSerializedScriptLoadSourceCallback, JsSerializedScriptUnloadCallback>(nullptr/*script*/, nullptr, nullptr, buffer, sourceContext, sourceUrl, true, result);
 }
 
 CHAKRA_API JsRunSerializedScript(_In_z_ const wchar_t * script, _In_ unsigned char *buffer, _In_ JsSourceContext sourceContext,
     _In_z_ const wchar_t *sourceUrl, _Out_ JsValueRef * result)
 {
-    return RunSerializedScriptCore<JsSerializedScriptLoadSourceCallback, JsSerializedScriptUnloadCallback>(script, nullptr, nullptr, buffer, sourceContext, sourceUrl, false, result);
+    return RunSerializedScriptCore<JsSerializedScriptLoadSourceCallback, JsSerializedScriptUnloadCallback>(nullptr/*script*/, nullptr, nullptr, buffer, sourceContext, sourceUrl, false, result);
 }
 
 CHAKRA_API JsParseSerializedScriptWithCallback(_In_ JsSerializedScriptLoadSourceCallback scriptLoadCallback, _In_ JsSerializedScriptUnloadCallback scriptUnloadCallback, _In_ unsigned char *buffer, _In_ JsSourceContext sourceContext, _In_z_ const wchar_t *sourceUrl, _Out_ JsValueRef * result)
@@ -2757,3 +2753,26 @@ CHAKRA_API JsRunSerializedScriptWithCallback(_In_ JsSerializedScriptLoadSourceCa
     return RunSerializedScriptCore<JsSerializedScriptLoadSourceCallback, JsSerializedScriptUnloadCallback>(nullptr, scriptLoadCallback, scriptUnloadCallback, buffer, sourceContext, sourceUrl, false, result);
 }
 #endif // _WIN32
+
+
+CHAKRA_API JsRunScriptUtf8(
+    _In_z_ const char *script,
+    _In_ JsSourceContext sourceContext,
+    _In_z_ const char *sourceUrl,
+    _Out_ JsValueRef *result)
+{
+    return RunScriptCore(script, sourceContext, sourceUrl, false, JsParseScriptAttributeNone, false, result);
+}
+
+CHAKRA_API JsRunSerializedScriptUtf8(
+    _In_ JsSerializedScriptLoadUtf8SourceCallback scriptLoadCallback,
+    _In_ JsSerializedScriptUnloadCallback scriptUnloadCallback,
+    _In_ ChakraBytePtr buffer,
+    _In_ JsSourceContext sourceContext,
+    _In_z_ const char *sourceUrl,
+    _Out_opt_ JsValueRef * result)
+{
+    return RunSerializedScriptCore(
+      nullptr, scriptLoadCallback, scriptUnloadCallback,
+      buffer, sourceContext, _u("")/*sourceUrl*/, false, result);
+}

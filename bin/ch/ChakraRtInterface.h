@@ -67,6 +67,11 @@ struct JsAPIHooks
     typedef JsErrorCode(WINAPI *JsrtDiagGetProperties)(unsigned int objectHandle, unsigned int fromCount, unsigned int totalCount, JsValueRef * propertiesObject);
     typedef JsErrorCode(WINAPI *JsrtDiagGetObjectFromHandle)(unsigned int handle, JsValueRef * handleObject);
     typedef JsErrorCode(WINAPI *JsrtDiagEvaluate)(const wchar_t * expression, unsigned int stackFrameIndex, JsValueRef * evalResult);
+
+    typedef JsErrorCode(WINAPI *JsrtRunScriptUtf8)(const char *script, JsSourceContext sourceContext, const char *sourceUrl, JsValueRef *result);
+    typedef JsErrorCode(WINAPI *JsrtSerializeScriptUtf8)(const char *script, ChakraBytePtr buffer, unsigned int *bufferSize);
+    typedef JsErrorCode(WINAPI *JsrtRunSerializedScriptUtf8)(JsSerializedScriptLoadUtf8SourceCallback scriptLoadCallback, JsSerializedScriptUnloadCallback scriptUnloadCallback, ChakraBytePtr buffer, JsSourceContext sourceContext, const char *sourceUrl, JsValueRef * result);
+
     JsrtCreateRuntimePtr pfJsrtCreateRuntime;
     JsrtCreateContextPtr pfJsrtCreateContext;
     JsrtSetCurrentContextPtr pfJsrtSetCurrentContext;
@@ -129,6 +134,10 @@ struct JsAPIHooks
     JsrtDiagGetProperties pfJsrtDiagGetProperties;
     JsrtDiagGetObjectFromHandle pfJsrtDiagGetObjectFromHandle;
     JsrtDiagEvaluate pfJsrtDiagEvaluate;
+
+    JsrtRunScriptUtf8 pfJsrtRunScriptUtf8;
+    JsrtSerializeScriptUtf8 pfJsrtSerializeScriptUtf8;
+    JsrtRunSerializedScriptUtf8 pfJsrtRunSerializedScriptUtf8;
 };
 
 class ChakraRTInterface
@@ -272,6 +281,10 @@ public:
         IfJsrtErrorFailLogAndRetErrorCode(ChakraRTInterface::JsStringToPointer(strValue, stringValue, length));
         return JsNoError;
     }
+
+    static JsErrorCode WINAPI JsRunScriptUtf8(const char *script, JsSourceContext sourceContext, const char *sourceUrl, JsValueRef *result) { return m_jsApiHooks.pfJsrtRunScriptUtf8(script, sourceContext, sourceUrl, result); }
+    static JsErrorCode WINAPI JsSerializeScriptUtf8(const char *script, ChakraBytePtr buffer, unsigned int *bufferSize) { return m_jsApiHooks.pfJsrtSerializeScriptUtf8(script, buffer, bufferSize); }
+    static JsErrorCode WINAPI JsRunSerializedScriptUtf8(JsSerializedScriptLoadUtf8SourceCallback scriptLoadCallback, JsSerializedScriptUnloadCallback scriptUnloadCallback, ChakraBytePtr buffer, JsSourceContext sourceContext, const char *sourceUrl, JsValueRef * result) { return m_jsApiHooks.pfJsrtRunSerializedScriptUtf8(scriptLoadCallback, scriptUnloadCallback, buffer, sourceContext, sourceUrl, result); }
 };
 
 class AutoRestoreContext

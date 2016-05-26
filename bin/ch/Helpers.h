@@ -7,7 +7,7 @@
 class Helpers
 {
 public :
-    static HRESULT LoadScriptFromFile(LPCSTR filename, LPCWSTR& contents, bool* isUtf8Out = nullptr, LPCWSTR* contentsRawOut = nullptr, UINT* lengthBytesOut = nullptr, bool printFileOpenError = true);
+    static HRESULT LoadScriptFromFile(LPCSTR filename, LPCSTR& contents, bool* isUtf8Out = nullptr, UINT* lengthBytesOut = nullptr);
 
     static HRESULT WideStringToNarrowDynamic(LPCWSTR sourceString, LPSTR* destStringPtr);
     static HRESULT NarrowStringToWideDynamic(LPCSTR sourceString, LPWSTR* destStringPtr);
