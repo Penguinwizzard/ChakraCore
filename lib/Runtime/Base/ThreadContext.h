@@ -596,6 +596,8 @@ private:
         // Just holding the reference to the returnedValueList of the stepController. This way that list will not get recycled prematurely.
         Js::ReturnedValueList *returnedValueList;
 
+        uint constructorCacheInvalidationCount;
+
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
         // use for autoProxy called from Debug.setAutoProxyName. we need to keep the buffer from GetSz() alive.
         LPCWSTR autoProxyName;
@@ -1225,7 +1227,7 @@ private:
 #if ENABLE_NATIVE_CODEGEN
     void InvalidateFixedFieldGuard(Js::PropertyGuard* guard);
     PropertyGuardEntry* EnsurePropertyGuardEntry(const Js::PropertyRecord* propertyRecord, bool& foundExistingEntry);
-    void InvalidatePropertyGuardEntry(const Js::PropertyRecord* propertyRecord, PropertyGuardEntry* entry, const bool performCleanupOfUniquePropertyGuards);
+    void InvalidatePropertyGuardEntry(const Js::PropertyRecord* propertyRecord, PropertyGuardEntry* entry, bool isAllPropertyGuardsInvalidation);
 #endif
 
 public:
@@ -1276,6 +1278,7 @@ public:
 #ifdef PERSISTENT_INLINE_CACHES
     void ClearInlineCachesWithDeadWeakRefs();
 #endif
+    void ClearInvalidatedUniqueGuards();
     void ClearInlineCaches();
     void ClearIsInstInlineCaches();
     void ClearEquivalentTypeCaches();
