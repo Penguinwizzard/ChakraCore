@@ -26,7 +26,8 @@ namespace Js
 
         void Fixup(NativeCodeData::DataChunk* chunkList)
         {
-            Assert(false); // not implemented yet
+            FixupNativeDataPointer(parent, chunkList);
+            FixupNativeDataPointer(child, chunkList);
         }
     };
 }

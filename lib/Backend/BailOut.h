@@ -167,7 +167,15 @@ public:
     static uint32 GetArgumentsObjectOffset();
     static const uint BailOutRegisterSaveSlotCount = LinearScanMD::RegisterSaveSlotCount;
 
-    void Fixup(NativeCodeData::DataChunk* chunkList);
+    void Fixup(NativeCodeData::DataChunk* chunkList)
+    {
+        FixupNativeDataPointer(globalBailOutRecordTable, chunkList);
+        FixupNativeDataPointer(argOutOffsetInfo, chunkList);
+        FixupNativeDataPointer(parent, chunkList);
+        FixupNativeDataPointer(constants, chunkList);
+        FixupNativeDataPointer(ehBailoutData, chunkList);
+        FixupNativeDataPointer(stackLiteralBailOutRecord, chunkList);
+    }
 
 public:
     template <size_t N>

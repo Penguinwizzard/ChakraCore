@@ -115,7 +115,9 @@ struct InlineeFrameRecord
 
     void Fixup(NativeCodeData::DataChunk* chunkList)
     {
-        Assert(false); // not implemented yet
+        FixupNativeDataPointer(argOffsets, chunkList);
+        FixupNativeDataPointer(constants, chunkList);
+        FixupNativeDataPointer(parent, chunkList);
     }
 
 private:

@@ -135,6 +135,29 @@ namespace Js
         JitIndexedPropertyGuard* guards[0];
 
         TypeGuardTransferEntry(): propertyId(Js::Constants::NoProperty) {}
+
+        void Fixup(NativeCodeData::DataChunk* chunkList)
+        {
+            NativeCodeData::DataChunk* chunk = (NativeCodeData::DataChunk*)((char*)this - offsetof(NativeCodeData::DataChunk, data));
+            unsigned int pointerCount = chunk->len / sizeof(void*);
+            void** pointers = (void**)chunk;
+            bool isPropertyId = true;
+            for (unsigned int i = 0; i < pointerCount; i++)
+            {
+                if (isPropertyId) 
+                {
+                    continue;
+                }
+
+                if (pointers[i] == nullptr) // end of one entry
+                {
+                    isPropertyId = true;
+                    continue;
+                }
+
+                NativeCodeData::AddFixupEntry(pointers[i], &pointers[i], pointers, chunkList);
+            }
+        }
     };
 
     class FakePropertyGuardWeakReference: public RecyclerWeakReference<Js::PropertyGuard>

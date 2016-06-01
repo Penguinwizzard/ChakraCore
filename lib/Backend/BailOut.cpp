@@ -895,21 +895,6 @@ BailOutRecord::RestoreValue(IR::BailOutKind bailOutKind, Js::JavascriptCallStack
     BAILOUT_VERBOSE_TRACE(newInstance->function->GetFunctionBody(), bailOutKind, L"\n");
 }
 
-void 
-BailOutRecord::Fixup(NativeCodeData::DataChunk* chunkList)
-{
-
-    FixupNativeDataPointer(globalBailOutRecordTable, chunkList);
-    FixupNativeDataPointer(argOutOffsetInfo, chunkList);
-    FixupNativeDataPointer(parent, chunkList);
-    FixupNativeDataPointer(constants, chunkList);
-    FixupNativeDataPointer(ehBailoutData, chunkList);
-    FixupNativeDataPointer(stackLiteralBailOutRecord, chunkList);
-    
-    //.... add all(or only native data allocator allocated) pointer fields on this structure
-    
-}
-
 void
 BailOutRecord::RestoreValues(IR::BailOutKind bailOutKind, Js::JavascriptCallStackLayout * layout, uint count, __in_ecount_opt(count) int * offsets, int argOutSlotStart,
     __out_ecount(count) Js::Var * values, Js::ScriptContext * scriptContext,
