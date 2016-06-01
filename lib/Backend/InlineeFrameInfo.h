@@ -113,6 +113,11 @@ struct InlineeFrameRecord
     void DumpOffset(int offset) const;
 #endif
 
+    void Fixup(NativeCodeData::DataChunk* chunkList)
+    {
+        Assert(false); // not implemented yet
+    }
+
 private:
     void Restore(Js::FunctionBody* functionBody, InlinedFrameLayout *outerMostFrame, Js::JavascriptCallStackLayout * layout) const;
     Js::Var Restore(int offset, bool isFloat64, bool isInt32, Js::JavascriptCallStackLayout * layout, Js::FunctionBody* functionBody) const;

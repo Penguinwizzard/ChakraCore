@@ -23,5 +23,10 @@ namespace Js
             this->parent = parent;
             this->child = nullptr;
         }
+
+        void Fixup(NativeCodeData::DataChunk* chunkList)
+        {
+            Assert(false); // not implemented yet
+        }
     };
 }
