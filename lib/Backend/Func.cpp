@@ -141,14 +141,20 @@ Func::Func(JitArenaAllocator *alloc, CodeGenWorkItem* workItem, const Js::Functi
     }
 
     
-    if (m_jnFunction->GetDoBackendArgumentsOptimization() && !m_jnFunction->GetHasTry())
-    {
-        // doBackendArgumentsOptimization bit is set when there is no eval inside a function
-        // as determined by the bytecode generator.
-        SetHasStackArgs(true);
-    }
+    //if (m_jnFunction->GetDoBackendArgumentsOptimization() && !m_jnFunction->GetHasTry())
+    //{
+    //    // doBackendArgumentsOptimization bit is set when there is no eval inside a function
+    //    // as determined by the bytecode generator.
+    //    SetHasStackArgs(true);
+    //}
     if (m_workItem->Type() == JsFunctionType)
     {
+        if (m_jnFunction->GetDoBackendArgumentsOptimization() && !m_jnFunction->GetHasTry())
+        {
+            // doBackendArgumentsOptimization bit is set when there is no eval inside a function
+            // as determined by the bytecode generator.
+            SetHasStackArgs(true);
+        }
         if (doStackNestedFunc && m_jnFunction->GetNestedCount() != 0 &&
             this->GetTopFunc()->m_workItem->Type() != JsLoopBodyWorkItemType)
         {
