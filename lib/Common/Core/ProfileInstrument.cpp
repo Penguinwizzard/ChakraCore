@@ -69,7 +69,7 @@ namespace Js
     ///
     ///----------------------------------------------------------------------------
 
-    Profiler::Profiler(ArenaAllocator * allocator) :
+    Profiler::Profiler(ArenaAllocator* allocator) :
         alloc(allocator),
         rootNode(NULL)
     {
@@ -80,7 +80,6 @@ namespace Js
             this->inclSumAtLevel[i] = 0;
         }
     }
-
 
     ///----------------------------------------------------------------------------
     ///
@@ -166,6 +165,7 @@ namespace Js
         this->timeStack.Push(entry);
         if(!curNode->ChildExistsAt(entry.tag))
         {
+            
             TypeNode * node = AnewNoThrow(this->alloc, TypeNode, curNode);
             // We crash if we run out of memory here and we don't care
             curNode->SetChildAt(entry.tag, node);
