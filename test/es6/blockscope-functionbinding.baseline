@@ -12,7 +12,7 @@ Test 2: Block-scoped function shadows outer let binding, but leaks into function
 
 undefined
 let f
-function f() { }
+function f( { }
 let f
 function f() { }
 
