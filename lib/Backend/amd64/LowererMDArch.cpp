@@ -284,7 +284,7 @@ LowererMDArch::LoadHeapArguments(IR::Instr *instrArgs, bool force /* = false */,
     Func *func = instrArgs->m_func;
 
     IR::Instr *instrPrev = instrArgs->m_prev;
-    if (!force && func->GetHasStackArgs() && this->m_func->GetHasStackArgs())
+    if (!force && func->GetHasStackArgs())
     {
         // The initial args slot value is zero. (TODO: it should be possible to dead-store the LdHeapArgs in this case.)
         instrArgs->m_opcode = Js::OpCode::MOV;

@@ -1074,6 +1074,8 @@ typedef JsUtil::BaseDictionary<IntConstType, Value *, JitArenaAllocator> IntCons
 typedef JsUtil::BaseDictionary<Js::Var, Value *, JitArenaAllocator> AddrConstantToValueMap;
 typedef JsUtil::BaseDictionary<Js::InternalString, Value *, JitArenaAllocator> StringConstantToValueMap;
 
+typedef JsUtil::BaseDictionary<SymID, Func *, JitArenaAllocator> ArgObjSymToFuncMap;
+
 class JsArrayKills
 {
 private:
@@ -1192,6 +1194,7 @@ private:
     IntConstantToValueMap*      intConstantToValueMap;
     AddrConstantToValueMap *    addrConstantToValueMap;
     StringConstantToValueMap *  stringConstantToValueMap;
+    ArgObjSymToFuncMap *        argObjSymToFuncMap;
 #if DBG
     // We can still track the finished stack literal InitFld lexically.
     BVSparse<JitArenaAllocator> * finishedStackLiteralInitFld;
@@ -1316,9 +1319,9 @@ private:
     void                    FinishOptHoistedPropOps(Loop * loop);
     IR::Instr *             SetTypeCheckBailOut(IR::Opnd *opnd, IR::Instr *instr, BailOutInfo *bailOutInfo);
     void                    OptArguments(IR::Instr *Instr);
-    BOOLEAN                 IsArgumentsOpnd(IR::Opnd* opnd);
+    BOOLEAN                 IsArgumentsOpnd(IR::Opnd* opnd, SymID& symId);
     bool                    AreFromSameBytecodeFunc(IR::RegOpnd* src1, IR::RegOpnd* dst);
-    void                    TrackArgumentsSym(IR::RegOpnd* opnd);
+    void                    TrackArgumentsSym(IR::RegOpnd* opnd, Func* argumentsFunc);
     void                    ClearArgumentsSym(IR::RegOpnd* opnd);
     BOOLEAN                 TestAnyArgumentsSym();
     BOOLEAN                 IsArgumentsSymID(SymID id, const GlobOptBlockData& blockData);
@@ -1711,7 +1714,7 @@ private:
     void                    UpdateObjPtrValueType(IR::Opnd * opnd, IR::Instr * instr);
 
     bool                    TrackArgumentsObject();
-    void                    CannotAllocateArgumentsObjectOnStack();
+    void                    CannotAllocateArgumentsObjectOnStack(Func * argumentsFunc);
 
 #if DBG
     bool                    IsPropertySymId(SymID symId) const;

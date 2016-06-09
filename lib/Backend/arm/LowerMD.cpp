@@ -2179,7 +2179,7 @@ LowererMD::LoadHeapArguments(IR::Instr * instrArgs, bool force /* = false */, IR
 
     IR::Instr * instrPrev = instrArgs->m_prev;
 
-    if (!force && func->GetHasStackArgs() && this->m_func->GetHasStackArgs())
+    if (!force && func->GetHasStackArgs())
     {
         // The initial args slot value is zero.
         instrArgs->m_opcode = Js::OpCode::MOV;
