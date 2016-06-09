@@ -148,7 +148,8 @@ Func::Func(JitArenaAllocator *alloc, CodeGenWorkItem* workItem, const Js::Functi
             // as determined by the bytecode generator.
             SetHasStackArgs(true);
         }
-        if (doStackNestedFunc && m_jnFunction->GetNestedCount() != 0)
+        if (doStackNestedFunc && m_jnFunction->GetNestedCount() != 0 &&
+            this->GetTopFunc()->m_workItem->Type() != JsLoopBodyWorkItemType)
         {
             Assert(!(this->IsJitInDebugMode() && !m_jnFunction->GetUtf8SourceInfo()->GetIsLibraryCode()));
             stackNestedFunc = true;
