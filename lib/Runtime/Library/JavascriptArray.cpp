@@ -9195,7 +9195,7 @@ Case0:
                 {
                     element = JavascriptOperators::GetItem(obj, k, scriptContext);
                     selected = callBackFn->GetEntryPoint()(callBackFn, CallInfo(CallFlags_Value, 4), thisArg,
-                        element,
+                                                                    element,
                         JavascriptNumber::ToVar(k, scriptContext),
                         obj);
 
