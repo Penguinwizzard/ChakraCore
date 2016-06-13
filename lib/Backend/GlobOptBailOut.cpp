@@ -330,6 +330,12 @@ GlobOpt::TrackCalls(IR::Instr * instr)
         Assert(instr->m_func->GetParentFunc());
         this->blockData.curFunc = instr->m_func;
         this->currentBlock->globOptData.curFunc = instr->m_func;
+        
+        if (!PHASE_OFF(Js::StackArgOptPhase, instr->m_func))
+        {
+            this->func->GetTopFunc()->EnsureArgumentsObjTrackingFuncsSet();
+            this->func->GetTopFunc()->argumentsObjTrackingFuncsSet->AddNew(instr->m_func);
+        }
 
         this->func->UpdateMaxInlineeArgOutCount(this->currentBlock->globOptData.inlinedArgOutCount);
         this->EndTrackCall(instr);
@@ -618,7 +624,7 @@ void GlobOpt::RecordInlineeFrameInfo(IR::Instr* inlineeEnd)
 void GlobOpt::EndTrackingOfArgObjSymsForInlinee()
 {
     Assert(this->blockData.curFunc->GetParentFunc());
-    if (this->blockData.curFunc->argObjSyms && TrackArgumentsObject())
+    if (this->blockData.curFunc->argObjSyms && TrackArgumentsObject(/*this->blockData.curFunc*/))
     {
         BVSparse<JitArenaAllocator> * tempBv = JitAnew(this->tempAlloc, BVSparse<JitArenaAllocator>, this->tempAlloc);
         tempBv->Minus(this->blockData.curFunc->argObjSyms, this->blockData.argObjSyms);
@@ -635,6 +641,10 @@ void GlobOpt::EndTrackingOfArgObjSymsForInlinee()
             this->blockData.argObjSyms->Minus(this->blockData.curFunc->argObjSyms);
         }
         JitAdelete(this->tempAlloc, tempBv);
+    }
+    if (this->func->argumentsObjTrackingFuncsSet)
+    {
+        this->func->argumentsObjTrackingFuncsSet->Remove(this->blockData.curFunc);
     }
     this->blockData.curFunc = this->blockData.curFunc->GetParentFunc();
     this->currentBlock->globOptData.curFunc = this->blockData.curFunc;
@@ -726,7 +736,7 @@ GlobOpt::FillBailOutInfo(BasicBlock *block, BailOutInfo * bailOutInfo)
     // This allows us to dead store the constant value assign.
     this->CaptureValues(block, bailOutInfo);
 
-    if (TrackArgumentsObject())
+    if (TrackArgumentsObject(/*bailOutInfo->bailOutFunc*/))
     {
         this->CaptureArguments(block, bailOutInfo, this->func->m_alloc);
     }

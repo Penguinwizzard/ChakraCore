@@ -296,6 +296,7 @@ static const unsigned __int64 c_debugFillPattern8 = 0xcececececececece;
     void EnsurePropertiesWrittenTo();
 
     void EnsureCallSiteToArgumentsOffsetFixupMap();
+    void EnsureArgumentsObjTrackingFuncsSet();
 
     IR::LabelInstr * EnsureFuncStartLabel();
     IR::LabelInstr * GetFuncStartLabel();
@@ -451,6 +452,9 @@ public:
     PropertyIdSet* propertiesWrittenTo;
     PropertyIdSet lazyBailoutProperties;
     bool anyPropertyMayBeWrittenTo;
+
+    typedef JsUtil::BaseHashSet<Func*, JitArenaAllocator, PowerOf2SizePolicy> ArgumentsObjTrackingFuncsSet;
+    ArgumentsObjTrackingFuncsSet * argumentsObjTrackingFuncsSet;
 
     SlotArrayCheckTable *slotArrayCheckTable;
     FrameDisplayCheckTable *frameDisplayCheckTable;

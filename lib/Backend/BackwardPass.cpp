@@ -1499,7 +1499,7 @@ BackwardPass::ProcessBailOutArgObj(BailOutInfo * bailOutInfo, BVSparse<JitArenaA
 {
     Assert(this->tag != Js::BackwardPhase);
 
-    if (this->globOpt->TrackArgumentsObject() && bailOutInfo->capturedValues.argObjSyms)
+    if (this->globOpt->TrackArgumentsObject(/*bailOutInfo->bailOutFunc*/) && bailOutInfo->capturedValues.argObjSyms)
     {
         FOREACH_BITSET_IN_SPARSEBV(symId, bailOutInfo->capturedValues.argObjSyms)
         {

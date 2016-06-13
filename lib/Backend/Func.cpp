@@ -29,6 +29,7 @@ Func::Func(JitArenaAllocator *alloc, CodeGenWorkItem* workItem, const Js::Functi
     propertiesWrittenTo(nullptr),
     lazyBailoutProperties(alloc),
     anyPropertyMayBeWrittenTo(false),
+    argumentsObjTrackingFuncsSet(nullptr),
 #ifdef PROFILE_EXEC
     m_codeGenProfiler(codeGenProfiler),
 #endif
@@ -76,6 +77,7 @@ Func::Func(JitArenaAllocator *alloc, CodeGenWorkItem* workItem, const Js::Functi
     hasInlinee(false),
     thisOrParentInlinerHasArguments(false),
     hasStackArgs(false),
+    //trackStackArgs(false),
     hasArgumentObject(false),
     hasUnoptimizedArgumentsAcccess(false),
     hasApplyTargetInlining(false),
@@ -147,6 +149,11 @@ Func::Func(JitArenaAllocator *alloc, CodeGenWorkItem* workItem, const Js::Functi
             // doBackendArgumentsOptimization bit is set when there is no eval inside a function
             // as determined by the bytecode generator.
             SetHasStackArgs(true);
+            if (this->IsTopFunc() && !PHASE_OFF(Js::StackArgOptPhase, this))
+            {
+                EnsureArgumentsObjTrackingFuncsSet();
+                this->argumentsObjTrackingFuncsSet->AddNew(this);
+            }
         }
         if (doStackNestedFunc && m_jnFunction->GetNestedCount() != 0)
         {
@@ -1517,6 +1524,15 @@ void Func::EnsureCallSiteToArgumentsOffsetFixupMap()
     if (this->callSiteToArgumentsOffsetFixupMap == nullptr)
     {
         this->callSiteToArgumentsOffsetFixupMap = JitAnew(this->m_alloc, CallSiteToArgumentsOffsetFixupMap, this->m_alloc);
+    }
+}
+
+void Func::EnsureArgumentsObjTrackingFuncsSet()
+{
+    Assert(this->IsTopFunc());
+    if (this->argumentsObjTrackingFuncsSet == nullptr)
+    {
+        this->argumentsObjTrackingFuncsSet = JitAnew(this->m_alloc, ArgumentsObjTrackingFuncsSet, this->m_alloc);
     }
 }
 

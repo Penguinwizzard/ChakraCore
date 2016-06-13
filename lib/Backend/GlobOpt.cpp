@@ -1585,7 +1585,7 @@ GlobOpt::ReuseBlockData(GlobOptBlockData *toData, GlobOptBlockData *fromData)
         toData->hoistableFields = fromData->hoistableFields;
     }
 
-    if (TrackArgumentsObject())
+    if (TrackArgumentsObject(/*fromData->curFunc*/))
     {
         toData->argObjSyms = fromData->argObjSyms;
     }
@@ -1710,7 +1710,7 @@ void GlobOpt::CloneBlockData(BasicBlock *const toBlock, GlobOptBlockData *const 
         }
     }
 
-    if (TrackArgumentsObject() && fromData->argObjSyms)
+    if (TrackArgumentsObject(/*fromData->curFunc*/) && fromData->argObjSyms)
     {
         toData->argObjSyms = fromData->argObjSyms->CopyNew(alloc);
     }
@@ -2119,13 +2119,11 @@ GlobOpt::MergeBlockData(
         }
     }
 
-    if (TrackArgumentsObject())
+    if (TrackArgumentsObject(/*fromData->curFunc*/))
     {
         if (!toData->argObjSyms->Equal(fromData->argObjSyms))
         {
-            BVSparse<JitArenaAllocator> tempBv(this->tempAlloc);
-            tempBv.Minus()
-            CannotAllocateArgumentsObjectOnStack();
+            CannotAllocateArgumentsObjectOnStack(fromData->curFunc, true);
         }
     }
 
@@ -3749,8 +3747,7 @@ GlobOpt::IsArgumentsSymID(SymID id, const GlobOptBlockData& blockData)
 BOOLEAN
 GlobOpt::IsArgumentsOpnd(IR::Opnd* opnd, SymID& symId)
 {
-    SymID id = 0;
-    bool isArgumentsObj = false;
+    BOOLEAN isArgumentsObj = false;
     if (opnd->IsRegOpnd())
     {
         isArgumentsObj = IsArgumentsSymID(opnd->AsRegOpnd()->m_sym->m_id, this->blockData);
@@ -3826,6 +3823,7 @@ GlobOpt::ClearArgumentsSym(IR::RegOpnd* opnd)
         blockData.curFunc->argObjSyms->Clear(opnd->m_sym->m_id);
     }
     blockData.argObjSyms->Clear(opnd->m_sym->m_id);
+    this->argObjSymToFuncMap->Remove(opnd->m_sym->m_id);
 }
 
 bool
@@ -3843,7 +3841,17 @@ GlobOpt::AreFromSameBytecodeFunc(IR::RegOpnd* src1, IR::RegOpnd* dst)
 BOOLEAN
 GlobOpt::TestAnyArgumentsSym()
 {
-    return blockData.argObjSyms->TestEmpty();
+    return blockData.argObjSyms && blockData.argObjSyms->TestEmpty();
+}
+
+void
+GlobOpt::EnsureArgObjSymsBv()
+{
+    if (!this->currentBlock->globOptData.argObjSyms)
+    {
+        this->currentBlock->globOptData.argObjSyms = JitAnew(this->alloc, BVSparse<JitArenaAllocator>, this->alloc);
+        this->blockData.argObjSyms = this->currentBlock->globOptData.argObjSyms;
+    }
 }
 
 void
@@ -3853,10 +3861,12 @@ GlobOpt::OptArguments(IR::Instr *instr)
     IR::Opnd* src1 = instr->GetSrc1();
     IR::Opnd* src2 = instr->GetSrc2();
 
-    if (!TrackArgumentsObject())
+    if (!TrackArgumentsObject(/*instr->m_func*/))
     {
         return;
     }
+    
+    this->EnsureArgObjSymsBv();
 
     if (instr->m_opcode == Js::OpCode::LdHeapArguments || instr->m_opcode == Js::OpCode::LdLetHeapArguments)
     {
@@ -3907,7 +3917,7 @@ GlobOpt::OptArguments(IR::Instr *instr)
         return;
     }
 
-    SymID id = 0;
+    SymID id = (SymID)-1;
 
     switch(instr->m_opcode)
     {
@@ -3933,7 +3943,7 @@ GlobOpt::OptArguments(IR::Instr *instr)
     case Js::OpCode::LdLen_A:
     {
         Assert(src1->IsRegOpnd());
-        if(IsArgumentsOpnd(src1))
+        if(IsArgumentsOpnd(src1, id))
         {
             instr->usesStackArgumentsObject = true;
         }
@@ -3941,7 +3951,7 @@ GlobOpt::OptArguments(IR::Instr *instr)
     }
     case Js::OpCode::ArgOut_A_InlineBuiltIn:
     {
-        if (IsArgumentsOpnd(src1) &&
+        if (IsArgumentsOpnd(src1, id) &&
             src1->AsRegOpnd()->m_sym->GetInstrDef()->m_opcode == Js::OpCode::BytecodeArgOutCapture)
         {
             // Apply inlining results in such usage - this is to ignore this sym that is def'd by ByteCodeArgOutCapture
@@ -3983,13 +3993,12 @@ GlobOpt::OptArguments(IR::Instr *instr)
             // other opcode just don't do this optimization. Revisit this to optimize further if we see any common
             // case is missed.
 
-            SymID symId;
             if (src1)
             {
                 if (src1->IsRegOpnd() || src1->IsSymOpnd() || src1->IsIndirOpnd())
                 {
-                    symId = 0;
-                    if (IsArgumentsOpnd(src1, symId))
+                    id = 0;
+                    if (IsArgumentsOpnd(src1, id))
                     {
 #ifdef PERF_HINT
                         if (PHASE_TRACE1(Js::PerfHintPhase))
@@ -3997,8 +4006,8 @@ GlobOpt::OptArguments(IR::Instr *instr)
                             WritePerfHint(PerfHints::HeapArgumentsCreated, instr->m_func->GetJnFunction(), instr->GetByteCodeOffset());
                         }
 #endif
-                        Assert(symId != 0);
-                        CannotAllocateArgumentsObjectOnStack(this->argObjSymToFuncMap->Lookup(symId, nullptr));
+                        Assert(id != -1);
+                        CannotAllocateArgumentsObjectOnStack(this->argObjSymToFuncMap->Lookup(id, nullptr));
                         return;
                     }
                 }
@@ -4008,8 +4017,8 @@ GlobOpt::OptArguments(IR::Instr *instr)
             {
                 if (src2->IsRegOpnd() || src2->IsSymOpnd() || src2->IsIndirOpnd())
                 {
-                    symId = 0;
-                    if (IsArgumentsOpnd(src2, symId))
+                    id = 0;
+                    if (IsArgumentsOpnd(src2, id))
                     {
 #ifdef PERF_HINT
                         if (PHASE_TRACE1(Js::PerfHintPhase))
@@ -4017,8 +4026,8 @@ GlobOpt::OptArguments(IR::Instr *instr)
                             WritePerfHint(PerfHints::HeapArgumentsCreated, instr->m_func->GetJnFunction(), instr->GetByteCodeOffset());
                         }
 #endif
-                        Assert(symId != 0);
-                        CannotAllocateArgumentsObjectOnStack(this->argObjSymToFuncMap->Lookup(symId, nullptr));
+                        Assert(id != -1);
+                        CannotAllocateArgumentsObjectOnStack(this->argObjSymToFuncMap->Lookup(id, nullptr));
                         return;
                     }
                 }
@@ -4029,8 +4038,8 @@ GlobOpt::OptArguments(IR::Instr *instr)
             {
                 if (dst->IsIndirOpnd() || dst->IsSymOpnd())
                 {
-                    symId = 0;
-                    if (IsArgumentsOpnd(dst))
+                    id = 0;
+                    if (IsArgumentsOpnd(dst, id))
                     {
 #ifdef PERF_HINT
                         if (PHASE_TRACE1(Js::PerfHintPhase))
@@ -4038,15 +4047,15 @@ GlobOpt::OptArguments(IR::Instr *instr)
                             WritePerfHint(PerfHints::HeapArgumentsModification, instr->m_func->GetJnFunction(), instr->GetByteCodeOffset());
                         }
 #endif
-                        Assert(symId != 0);
-                        CannotAllocateArgumentsObjectOnStack(this->argObjSymToFuncMap->Lookup(symId, nullptr));
+                        Assert(id != -1);
+                        CannotAllocateArgumentsObjectOnStack(this->argObjSymToFuncMap->Lookup(id, nullptr));
                         return;
                     }
                 }
                 else if (dst->IsRegOpnd())
                 {
-                    symId = 0;
-                    if (this->currentBlock->loop && IsArgumentsOpnd(dst, symId))
+                    id = 0;
+                    if (this->currentBlock->loop && IsArgumentsOpnd(dst, id))
                     {
 #ifdef PERF_HINT
                         if (PHASE_TRACE1(Js::PerfHintPhase))
@@ -4054,7 +4063,8 @@ GlobOpt::OptArguments(IR::Instr *instr)
                             WritePerfHint(PerfHints::HeapArgumentsModification, instr->m_func->GetJnFunction(), instr->GetByteCodeOffset());
                         }
 #endif
-                        CannotAllocateArgumentsObjectOnStack(this->argObjSymToFuncMap->Lookup(symId, nullptr));
+                        Assert(id != -1);
+                        CannotAllocateArgumentsObjectOnStack(this->argObjSymToFuncMap->Lookup(id, nullptr));
                         return;
                     }
                     ClearArgumentsSym(dst->AsRegOpnd());
@@ -19593,31 +19603,57 @@ GlobOpt::DoPowIntIntTypeSpec() const
 }
 
 bool
-GlobOpt::TrackArgumentsObject()
+GlobOpt::TrackArgumentsObject(/*Func * func*/)
 {
-    if (PHASE_OFF(Js::StackArgOptPhase, this->func))
-    {
-        this->CannotAllocateArgumentsObjectOnStack(this->func);
-        return false;
-    }
+    // return true if we're tracking arguments object for any function in the inlining chain.
+    return this->func->argumentsObjTrackingFuncsSet && this->func->argumentsObjTrackingFuncsSet->Count() != 0;
+    //// return true if we're tracking arguments object for any function in the inlining chain.
+    //Func * curFunc = func;
+    //while (curFunc)
+    //{
+    //    if (!curFunc->GetHasStackArgs())
+    //    {
+    //        curFunc = curFunc->GetParentFunc();
+    //        continue;
+    //    }
 
-    return func->GetHasStackArgs();
+    //    if (PHASE_OFF(Js::StackArgOptPhase, curFunc))
+    //    {
+    //        this->CannotAllocateArgumentsObjectOnStack(curFunc);
+    //        curFunc = curFunc->GetParentFunc();
+    //        continue;
+    //    }
+
+    //    return true;
+    //}
+    //return false;
 }
 
 void
-GlobOpt::CannotAllocateArgumentsObjectOnStack(Func * argumentsFunc)
+GlobOpt::CannotAllocateArgumentsObjectOnStack(Func * argumentsFunc, bool cannotDoOptForParentInliners)
 {
     Assert(argumentsFunc);
-    argumentsFunc->SetHasStackArgs(false);
+    Func* currentFunc = argumentsFunc;
+
+    do
+    {
+        currentFunc->SetHasStackArgs(false);
+        if (this->func->argumentsObjTrackingFuncsSet)
+        {
+            this->func->argumentsObjTrackingFuncsSet->Remove(currentFunc);
+        }
 
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
-    if (PHASE_TESTTRACE(Js::StackArgOptPhase, argumentsFunc))
-    {
-        char16 debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
-        Output::Print(_u("Stack args disabled for function %s(%s)\n"), argumentsFunc->GetJnFunction()->GetDisplayName(), argumentsFunc->GetJnFunction()->GetDebugNumberSet(debugStringBuffer));
-        Output::Flush();
-    }
+        if (PHASE_TESTTRACE(Js::StackArgOptPhase, currentFunc))
+        {
+            char16 debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
+            Output::Print(_u("Stack args disabled for function %s(%s)\n"), currentFunc->GetJnFunction()->GetDisplayName(), currentFunc->GetJnFunction()->GetDebugNumberSet(debugStringBuffer));
+            Output::Flush();
+        }
 #endif
+        currentFunc = currentFunc->GetParentFunc();
+    }
+    while (cannotDoOptForParentInliners && currentFunc);
 }
 
 IR::Instr *

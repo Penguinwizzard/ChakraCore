@@ -69,7 +69,7 @@ Instr::IsPlainInstr() const
 bool
 Instr::DoStackArgsOpt(Func *topFunc) const
 {
-    return this->usesStackArgumentsObject && this->m_func->GetHasStackArgs() && topFunc->GetHasStackArgs();
+    return this->usesStackArgumentsObject && this->m_func->GetHasStackArgs() /*&& topFunc->GetHasStackArgs()*/;
 }
 
 bool

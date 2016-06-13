@@ -1324,6 +1324,7 @@ private:
     void                    TrackArgumentsSym(IR::RegOpnd* opnd, Func* argumentsFunc);
     void                    ClearArgumentsSym(IR::RegOpnd* opnd);
     BOOLEAN                 TestAnyArgumentsSym();
+    void                    EnsureArgObjSymsBv();
     BOOLEAN                 IsArgumentsSymID(SymID id, const GlobOptBlockData& blockData);
     Value *                 ValueNumberDst(IR::Instr **pInstr, Value *src1Val, Value *src2Val);
     Value *                 ValueNumberLdElemDst(IR::Instr **pInstr, Value *srcVal);
@@ -1713,8 +1714,8 @@ private:
     IR::Instr *             EnsureDisableImplicitCallRegion(Loop * loop);
     void                    UpdateObjPtrValueType(IR::Opnd * opnd, IR::Instr * instr);
 
-    bool                    TrackArgumentsObject();
-    void                    CannotAllocateArgumentsObjectOnStack(Func * argumentsFunc);
+    bool                    TrackArgumentsObject(/*Func * func*/);
+    void                    CannotAllocateArgumentsObjectOnStack(Func * argumentsFunc, bool cannotDoOptForParentInliners = false);
 
 #if DBG
     bool                    IsPropertySymId(SymID symId) const;
