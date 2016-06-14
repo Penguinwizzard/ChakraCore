@@ -33,6 +33,7 @@ git diff --name-only `git merge-base origin/master HEAD` HEAD |
     grep -v -E '\.nuspec$' |
     grep -v -E '\.def$' |
     grep -v -E '\.inc$' |
+    grep -v -E 'test/WasmSpec/testsuite/.*$' |
     grep -v -E 'test/benchmarks/.*\.js$' |
     grep -v -E 'bin/External/.*$' |
     grep -v -E 'bin/NativeTests/Scripts/splay.js$' |
