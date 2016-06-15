@@ -1641,31 +1641,34 @@ void ByteCodeGenerator::EmitScopeObjectInit(FuncInfo *funcInfo)
     };
     MapContainerScopeFunctions(pnodeFnc, saveFunctionVarsToPropIdArray);
 
-    for (pnode = pnodeFnc->sxFnc.pnodeVars; pnode; pnode = pnode->sxVar.pnodeNext)
+    if (currentScope->GetScopeType() != ScopeType_Parameter)
     {
-        sym = pnode->sxVar.sym;
-        if (!(pnode->sxVar.isBlockScopeFncDeclVar && sym->GetIsBlockVar()))
+        for (pnode = pnodeFnc->sxFnc.pnodeVars; pnode; pnode = pnode->sxVar.pnodeNext)
         {
-            if (sym->GetIsCatch() || (pnode->nop == knopVarDecl && sym->GetIsBlockVar()))
+            sym = pnode->sxVar.sym;
+            if (!(pnode->sxVar.isBlockScopeFncDeclVar && sym->GetIsBlockVar()))
             {
-                sym = currentScope->FindLocalSymbol(sym->GetName());
+                if (sym->GetIsCatch() || (pnode->nop == knopVarDecl && sym->GetIsBlockVar()))
+                {
+                    sym = currentScope->FindLocalSymbol(sym->GetName());
+                }
+                Symbol::SaveToPropIdArray(sym, propIds, this, &firstVarSlot);
             }
+        }
+
+        ParseNode *pnodeBlock = pnodeFnc->sxFnc.pnodeScopes;
+        for (pnode = pnodeBlock->sxBlock.pnodeLexVars; pnode; pnode = pnode->sxVar.pnodeNext)
+        {
+            sym = pnode->sxVar.sym;
             Symbol::SaveToPropIdArray(sym, propIds, this, &firstVarSlot);
         }
-    }
 
-    ParseNode *pnodeBlock = pnodeFnc->sxFnc.pnodeScopes;
-    for (pnode = pnodeBlock->sxBlock.pnodeLexVars; pnode; pnode = pnode->sxVar.pnodeNext)
-    {
-        sym = pnode->sxVar.sym;
-        Symbol::SaveToPropIdArray(sym, propIds, this, &firstVarSlot);
-    }
-
-    pnodeBlock = currentScope->GetScopeType() == ScopeType_Parameter ? pnodeFnc->sxFnc.pnodeScopes : pnodeFnc->sxFnc.pnodeBodyScope;
-    for (pnode = pnodeBlock->sxBlock.pnodeLexVars; pnode; pnode = pnode->sxVar.pnodeNext)
-    {
-        sym = pnode->sxVar.sym;
-        Symbol::SaveToPropIdArray(sym, propIds, this, &firstVarSlot);
+        pnodeBlock = currentScope->GetScopeType() == ScopeType_Parameter ? pnodeFnc->sxFnc.pnodeScopes : pnodeFnc->sxFnc.pnodeBodyScope;
+        for (pnode = pnodeBlock->sxBlock.pnodeLexVars; pnode; pnode = pnode->sxVar.pnodeNext)
+        {
+            sym = pnode->sxVar.sym;
+            Symbol::SaveToPropIdArray(sym, propIds, this, &firstVarSlot);
+        }
     }
 
     if (funcInfo->thisScopeSlot != Js::Constants::NoRegister)
