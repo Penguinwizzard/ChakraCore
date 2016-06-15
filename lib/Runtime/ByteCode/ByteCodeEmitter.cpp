@@ -1537,7 +1537,8 @@ void ByteCodeGenerator::EmitScopeObjectInit(FuncInfo *funcInfo)
         return;
     }
 
-    uint slotCount = funcInfo->bodyScope->GetScopeSlotCount();
+    Scope* currentScope = funcInfo->GetCurrentChildScope();
+    uint slotCount = currentScope->GetScopeSlotCount();
     uint cachedFuncCount = 0;
     Js::PropertyId firstFuncSlot = Js::Constants::NoProperty;
     Js::PropertyId firstVarSlot = Js::Constants::NoProperty;
@@ -1647,7 +1648,7 @@ void ByteCodeGenerator::EmitScopeObjectInit(FuncInfo *funcInfo)
         {
             if (sym->GetIsCatch() || (pnode->nop == knopVarDecl && sym->GetIsBlockVar()))
             {
-                sym = funcInfo->bodyScope->FindLocalSymbol(sym->GetName());
+                sym = currentScope->FindLocalSymbol(sym->GetName());
             }
             Symbol::SaveToPropIdArray(sym, propIds, this, &firstVarSlot);
         }
@@ -1660,7 +1661,7 @@ void ByteCodeGenerator::EmitScopeObjectInit(FuncInfo *funcInfo)
         Symbol::SaveToPropIdArray(sym, propIds, this, &firstVarSlot);
     }
 
-    pnodeBlock = pnodeFnc->sxFnc.pnodeBodyScope;
+    pnodeBlock = currentScope->GetScopeType() == ScopeType_Parameter ? pnodeFnc->sxFnc.pnodeScopes : pnodeFnc->sxFnc.pnodeBodyScope;
     for (pnode = pnodeBlock->sxBlock.pnodeLexVars; pnode; pnode = pnode->sxVar.pnodeNext)
     {
         sym = pnode->sxVar.sym;
@@ -3086,9 +3087,19 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
             m_writer.Empty(Js::OpCode::ChkNewCallFlag);
         }
 
+        Scope* paramScope = funcInfo->GetParamScope();
+        Scope* bodyScope = funcInfo->GetBodyScope();
+        if (paramScope && !paramScope->GetCanMergeWithBodyScope())
+        {
+            funcInfo->SetCurrentChildScope(paramScope);
+        }
+        else
+        {
+            funcInfo->SetCurrentChildScope(bodyScope);
+        }
         // For now, emit all constant loads at top of function (should instead put in closest dominator of uses).
         LoadAllConstants(funcInfo);
-        Scope* paramScope = funcInfo->GetParamScope();
+        
         if (!pnode->sxFnc.HasNonSimpleParameterList() || paramScope->GetCanMergeWithBodyScope())
         {
             HomeArguments(funcInfo);
@@ -3214,7 +3225,6 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
         {
             this->InitBlockScopedNonTemps(funcInfo->root->sxFnc.pnodeScopes, funcInfo);
 
-            Scope* bodyScope = funcInfo->GetBodyScope();
             if (!paramScope->GetCanMergeWithBodyScope())
             {
                 byteCodeFunction->SetParamAndBodyScopeNotMerged();
@@ -3243,6 +3253,10 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
             }
         }
 
+        if (paramScope && !paramScope->GetCanMergeWithBodyScope())
+        {
+            funcInfo->SetCurrentChildScope(bodyScope);
+        }
         // Emit all scope-wide function definitions before emitting function bodies
         // so that calls may reference functions they precede lexically.
         // Note, global eval scope is a fake local scope and is handled as if it were
@@ -3328,6 +3342,8 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
             ::EndEmitBlock(pnode->sxFnc.pnodeBodyScope, this, funcInfo);
         }
         ::EndEmitBlock(pnode->sxFnc.pnodeScopes, this, funcInfo);
+
+        funcInfo->SetCurrentChildScope(nullptr);
 
         if (!this->IsInDebugMode())
         {
@@ -3542,6 +3558,11 @@ void ByteCodeGenerator::EmitScopeList(ParseNode *pnode, ParseNode *breakOnBodySc
 {
     while (pnode)
     {
+        if (breakOnBodyScopeNode != nullptr && breakOnBodyScopeNode == pnode)
+        {
+            break;
+        }
+
         switch (pnode->nop)
         {
             case knopFncDecl:
@@ -3619,11 +3640,6 @@ void ByteCodeGenerator::EmitScopeList(ParseNode *pnode, ParseNode *breakOnBodySc
 
         default:
             AssertMsg(false, "Unexpected opcode in tree of scopes");
-            break;
-        }
-
-        if (breakOnBodyScopeNode != nullptr && breakOnBodyScopeNode == pnode)
-        {
             break;
         }
     }

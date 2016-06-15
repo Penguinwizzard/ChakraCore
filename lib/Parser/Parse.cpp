@@ -6156,10 +6156,16 @@ void Parser::ParseFncFormals(ParseNodePtr pnodeFnc, ushort flags)
             Error(ERRnoRparen);
         }
 
-        if ((this->GetCurrentFunctionNode()->sxFnc.CallsEval() || this->GetCurrentFunctionNode()->sxFnc.ChildCallsEval())
-            && !m_scriptContext->GetConfig()->IsES6DefaultArgsSplitScopeEnabled())
+        if (this->GetCurrentFunctionNode()->sxFnc.CallsEval() || this->GetCurrentFunctionNode()->sxFnc.ChildCallsEval())
         {
-            Error(ERREvalNotSupportedInParamScope);
+            if (!m_scriptContext->GetConfig()->IsES6DefaultArgsSplitScopeEnabled())
+            {
+                Error(ERREvalNotSupportedInParamScope);
+            }
+            else if (pnodeFnc->sxFnc.HasNonSimpleParameterList())
+            {
+                pnodeFnc->sxFnc.pnodeScopes->sxBlock.scope->SetCannotMergeWithBodyScope();
+            }
         }
     }
     Assert(m_token.tk == tkRParen);

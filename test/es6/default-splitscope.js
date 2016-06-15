@@ -3,7 +3,7 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 
-WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
+WScript.LoadScriptFile("E:\\SrcGit\\Src\\core\\test\\UnitTestFramework\\UnitTestFramework.js");
 
 var tests = [
   { 
@@ -696,14 +696,14 @@ var tests = [
         } 
 
         function f(h = () => eval("g()")) { // cannot combine scopes 
+            assert.areEqual(6, g(), "Right method is called inside the function");
             function g() { 
                 return 2 * 3; 
-            } 
+            }
             return h(); // 9 
         } 
 
-        // TODO(tcare): Re-enable when split scope support is implemented 
-        //assert.areEqual(9, f(), "Paramater scope remains split"); 
+        assert.areEqual(9, f(), "Paramater scope remains split"); 
     }
   },
   {  
