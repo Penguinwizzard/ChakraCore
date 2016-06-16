@@ -836,48 +836,40 @@ var tests = [
         assert.doesNotThrow(function (a, b = eval("const a = 1")) { return [a, b]; }, 
                             "Attempting to redeclare a previous formal using const inside an eval does not leak"); 
 
-        // // Conditional declarations 
-        // function test(x = eval("var a1 = 1; let b1 = 2; const c1 = 3;")) { 
-        //     if (x === undefined) { 
-        //         // only a should be visible 
-        //         assert.areEqual(1, a1, "Var declarations leak out of eval into parameter scope"); 
-        //     } else { 
-        //         // none should be visible 
-        //         assert.throws(function () { a1 }, ReferenceError, "Ignoring the default value does not result in an eval declaration leaking", "'a1' is undefined"); 
-        //     } 
-
-        //     assert.throws(function () { b1 }, ReferenceError, "Let declarations do not leak out of eval to parameter scope",   "'b1' is undefined"); 
-        //     assert.throws(function () { c1 }, ReferenceError, "Const declarations do not leak out of eval to parameter scope when x is ", "'c1' is undefined"); 
-        // } 
-        // test(); 
-        // test(123); 
+        // Conditional declarations 
+        function test(x = eval("var a1 = 1; let b1 = 2; const c1 = 3;")) { 
+            // none should be visible 
+            assert.throws(function () { a1 }, ReferenceError, "Ignoring the default value does not result in an eval declaration leaking", "'a1' is undefined"); 
+            assert.throws(function () { b1 }, ReferenceError, "Let declarations do not leak out of eval to parameter scope",   "'b1' is undefined"); 
+            assert.throws(function () { c1 }, ReferenceError, "Const declarations do not leak out of eval to parameter scope when x is ", "'c1' is undefined"); 
+        } 
+        test(); 
 
         // Redefining locals 
-        // function foo(a = eval("var x = 1;")) { 
-        //     assert.areEqual(1, x, "Shadowed parameter scope var declaration retains its original value before the body declaration"); 
-        //     var x = 10; 
-        //     assert.areEqual(10, x, "Shadowed parameter scope var declaration uses its new value in the body declaration"); 
-        // } 
-        // assert.doesNotThrow(function() { foo(); }, "Redefining a local var with an eval var does not throw"); 
+        function foo(a = eval("var x = 1; assert.areEqual(1, x, 'Variable declared inside eval is accessible within eval');")) { 
+            assert.areEqual(undefined, x, "Shadowed var declaration from eval is not visible in the body"); 
+            var x = 10; 
+            assert.areEqual(10, x, "Shadowed var declaration from eval uses its new value in the body declaration"); 
+        } 
+        assert.doesNotThrow(function() { foo(); }, "Redefining a local var with an eval var does not throw"); 
 
-        // // TODO(aneeshdk): Will revisit this when enabling the eval cases
-        // // assert.throws(function() { return function(a = eval("var x = 1;")) { let x = 2; }; },   ReferenceError, "Redefining a local let declaration with a parameter scope eval var declaration leak throws",   "Let/Const redeclaration"); 
-        // // assert.throws(function() { return (function(a = eval("var x = 1;")) { const x = 2; })(); }, ReferenceError, "Redefining a local const declaration with a parameter scope eval var declaration leak throws", "Let/Const redeclaration"); 
+        assert.throws(function() { return function(a = eval("let a = 1;")) { }; },   ReferenceError, "Redefining a param with a parameter scope eval let declaration throws",   "Let/Const redeclaration"); 
+        assert.throws(function() { return (function(a = eval("const a = 1;")) { })(); }, ReferenceError, "Redefining a param with a parameter scope eval const declaration throws", "Let/Const redeclaration"); 
 
         // Function bodies defined in eval 
         function funcArrow(a = eval("() => 1"), b = a()) { return [a(), b]; } 
         assert.areEqual([1,1], funcArrow(), "Defining an arrow function body inside an eval works at default parameter scope"); 
 
-        // function funcDecl(a = eval("function foo() { return 1; }"), b = foo()) { return [a, b, foo()]; } 
-        // assert.areEqual([undefined, 1, 1], funcDecl(), "Declaring a function inside an eval works at default parameter scope"); 
+        function funcDecl(a = eval("function () { return 1; }"), b = a()) { return [a(), b]; } 
+        assert.areEqual([1, 1], funcDecl(), "Defining a function inside an eval works at default parameter scope"); 
 
-        // function genFuncDecl(a = eval("function * foo() { return 1; }"), b = foo().next().value) { return [a, b, foo().next().value]; } 
-        // assert.areEqual([undefined, 1, 1], genFuncDecl(), "Declaring a generator function inside an eval works at default parameter scope"); 
+        function genFuncDecl(a = eval("function *() { yield 1; return 2; }"), b = a().next()) { return [b, a().next().value]; } 
+        assert.areEqual([{value : 1, done : false}, {value : 2, done : true}], genFuncDecl(), "Declaring a generator function inside an eval works at default parameter scope"); 
 
-        // function funcExpr(a = eval("var f = function () { return 1; }"), b = f()) { return [a, b, f()]; } 
-        // assert.areEqual([undefined, 1, 1], funcExpr(), "Declaring a function inside an eval works at default parameter scope"); 
+        function funcExpr(a = eval("f = function () { return 1; }"), b = f()) { return [a, b, f()]; } 
+        assert.areEqual([undefined, 1, 1], funcExpr(), "Declaring a function inside an eval works at default parameter scope"); 
          
-        // assert.throws(function () { eval("function foo(a = eval('b'), b) {}; foo();"); }, ReferenceError, "Future default references using eval are not allowed", "Use before declaration"); 
+        assert.throws(function () { eval("function foo(a = eval('b'), b) {}; foo();"); }, ReferenceError, "Future default references using eval are not allowed", "Use before declaration"); 
     } 
   }, 
 ]; 
