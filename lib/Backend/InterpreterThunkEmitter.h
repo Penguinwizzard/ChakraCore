@@ -61,7 +61,14 @@ private:
     EmitBufferAllocation *allocation;
     SListBase<ThunkBlock> thunkBlocks;
     SListBase<ThunkBlock> freeListedThunkBlocks;
+#ifdef _NTBUILD
+#include <VerifyGlobalMSRCSettings.inl>
+#endif
+#if defined(PRERELEASE_REL1607_MSRC33480_BUG7558512) || defined(_CHAKRACOREBUILD)
+    bool isAsmInterpreterThunk; // To emit address of InterpreterAsmThunk or InterpreterThunk
+#else
     void * interpreterThunk; // the static interpreter thunk invoked by the dynamic emitted thunk
+#endif
     BYTE*                thunkBuffer;
     ArenaAllocator*      allocator;
     DWORD thunkCount;                      // Count of thunks available in the current thunk block
@@ -94,7 +101,14 @@ private:
 
     /* ------private helpers -----------*/
     void NewThunkBlock();
+#ifdef _NTBUILD
+#include <VerifyGlobalMSRCSettings.inl>
+#endif
+#if defined(PRERELEASE_REL1607_MSRC33480_BUG7558512) || defined(_CHAKRACOREBUILD)
+    void EncodeInterpreterThunk(__in_bcount(thunkSize) BYTE* thunkBuffer, __in_bcount(thunkSize) BYTE* thunkBufferStartAddress, __in const DWORD thunkSize, __in_bcount(epilogSize) BYTE* epilogStart, __in const DWORD epilogSize, __in void * const interpreterThunk);
+#else
     void EncodeInterpreterThunk(__in_bcount(thunkSize) BYTE* thunkBuffer, __in_bcount(thunkSize) BYTE* thunkBufferStartAddress, __in const DWORD thunkSize, __in_bcount(epilogSize) BYTE* epilogStart, __in const DWORD epilogSize);
+#endif
 #if defined(_M_ARM32_OR_ARM64)
     DWORD EncodeMove(DWORD opCode, int reg, DWORD imm16);
     void GeneratePdata(_In_ const BYTE* entryPoint, _In_ const DWORD functionSize, _Out_ RUNTIME_FUNCTION* function);
@@ -116,7 +130,14 @@ public:
     static const uint BlockSize;
     static void* ConvertToEntryPoint(PVOID dynamicInterpreterThunk);
 
+#ifdef _NTBUILD
+#include <VerifyGlobalMSRCSettings.inl>
+#endif
+#if defined(PRERELEASE_REL1607_MSRC33480_BUG7558512) || defined(_CHAKRACOREBUILD)
+    InterpreterThunkEmitter(ArenaAllocator* allocator, CustomHeap::CodePageAllocators * codePageAllocators, bool isAsmInterpreterThunk = false);
+#else
     InterpreterThunkEmitter(ArenaAllocator* allocator, CustomHeap::CodePageAllocators * codePageAllocators, void * interpreterThunk);
+#endif
 
     BYTE* GetNextThunk(PVOID* ppDynamicInterpreterThunk);
 

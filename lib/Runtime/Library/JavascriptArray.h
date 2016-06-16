@@ -767,7 +767,14 @@ namespace Js
         static void ConcatFloatArgs(JavascriptNativeFloatArray* pDestArray, TypeId* remoteTypeIds, Js::Arguments& args, ScriptContext* scriptContext);
     private:
         template<typename T=uint32>
+#ifdef _NTBUILD
+#include <VerifyGlobalMSRCSettings.inl>
+#endif
+#if defined(PRERELEASE_REL1607_MSRC33302_BUG7387150) || defined(_CHAKRACOREBUILD)
+        static RecyclableObject* ArraySpeciesCreate(Var pThisArray, T length, ScriptContext* scriptContext, bool *pIsIntArray = nullptr, bool *pIsFloatArray = nullptr, bool *pIsBuiltinArrayCtor = nullptr);
+#else
         static RecyclableObject* ArraySpeciesCreate(Var pThisArray, T length, ScriptContext* scriptContext, bool* pIsIntArray = nullptr, bool* pIsFloatArray = nullptr);
+#endif
         template <typename T, typename R> static R ConvertToIndex(T idxDest, ScriptContext* scriptContext) { Throw::InternalError(); return 0; }
         template <> static Var ConvertToIndex<uint32, Var>(uint32 idxDest, ScriptContext* scriptContext);
         template <> static uint32 ConvertToIndex<uint32, uint32>(uint32 idxDest, ScriptContext* scriptContext) { return idxDest; }
