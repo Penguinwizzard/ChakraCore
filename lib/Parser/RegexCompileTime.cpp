@@ -570,7 +570,7 @@ namespace UnifiedRegex
 
     bool SimpleNode::BuildCharTrie(Compiler& compiler, CharTrie* trie, Node* cont, bool isAcceptFirst) const
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         Assert(tag == Empty);
         if (cont == 0)
@@ -1088,7 +1088,7 @@ namespace UnifiedRegex
 
     bool MatchLiteralNode::BuildCharTrie(Compiler& compiler, CharTrie* trie, Node* cont, bool isAcceptFirst) const
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         Assert(!isEquivClass);
         CharTrie* tail = trie;
@@ -1255,7 +1255,7 @@ namespace UnifiedRegex
 
     void MatchCharNode::BestSyncronizingNode(Compiler& compiler, Node*& bestNode)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         if (IsBetterSyncronizingNode(compiler, bestNode, this))
         {
@@ -1404,7 +1404,7 @@ namespace UnifiedRegex
 
     bool MatchCharNode::BuildCharTrie(Compiler& compiler, CharTrie* trie, Node* cont, bool isAcceptFirst) const
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         for (int i = 0; i < (isEquivClass ? CaseInsensitive::EquivClassSize : 1); i++)
         {
@@ -1677,7 +1677,7 @@ namespace UnifiedRegex
 
     bool MatchSetNode::BuildCharTrie(Compiler& compiler, CharTrie* trie, Node* cont, bool isAcceptFirst) const
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         Assert(!isNegation && set.IsCompact());
         Char entries[CharSet<Char>::MaxCompact];
@@ -1738,7 +1738,7 @@ namespace UnifiedRegex
 
     CharCount ConcatNode::TransferPass0(Compiler& compiler, const Char* litbuf)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         Assert(tail != 0);
         CharCount n = 0;
@@ -1759,7 +1759,7 @@ namespace UnifiedRegex
 
     void ConcatNode::TransferPass1(Compiler& compiler, const Char* litbuf)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         for (ConcatNode *curr = this; curr != 0; curr = curr->tail)
             curr->head->TransferPass1(compiler, litbuf);
@@ -1772,7 +1772,7 @@ namespace UnifiedRegex
 
     void ConcatNode::AnnotatePass0(Compiler& compiler)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         Node* prev = 0;
         for (ConcatNode* curr = this; curr != 0; curr = curr->tail)
@@ -1797,7 +1797,7 @@ namespace UnifiedRegex
 
     void ConcatNode::AnnotatePass1(Compiler& compiler, bool parentNotInLoop, bool parentAtLeastOnce, bool parentNotSpeculative, bool parentNotNegated)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         features = HasConcat;
         isNotInLoop = parentNotInLoop;
@@ -1856,7 +1856,7 @@ namespace UnifiedRegex
 
     void ConcatNode::AnnotatePass2(Compiler& compiler, CountDomain accumConsumes, bool accumPrevWillNotProgress, bool accumPrevWillNotRegress)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         prevConsumes = accumConsumes;
         isPrevWillNotProgress = accumPrevWillNotProgress;
@@ -1874,7 +1874,7 @@ namespace UnifiedRegex
 
     void ConcatNode::AnnotatePass3(Compiler& compiler, CountDomain accumConsumes, CharSet<Char>* accumFollow, bool accumFollowIrrefutable, bool accumFollowEOL)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         followConsumes = accumConsumes;
         followSet = accumFollow;
@@ -1922,7 +1922,7 @@ namespace UnifiedRegex
 
     void ConcatNode::AnnotatePass4(Compiler& compiler)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         isDeterministic = true;
         for (ConcatNode* curr = this; curr != 0; curr = curr->tail)
@@ -1935,7 +1935,7 @@ namespace UnifiedRegex
 
     bool ConcatNode::SupportsPrefixSkipping(Compiler& compiler) const
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         int prefix = 0;
         for (const ConcatNode* curr = this; curr != 0; curr = curr->tail)
@@ -1950,14 +1950,14 @@ namespace UnifiedRegex
 
     Node* ConcatNode::HeadSyncronizingNode(Compiler& compiler)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         return head->HeadSyncronizingNode(compiler);
     }
 
     void ConcatNode::AccumDefineGroups(Js::ScriptContext* scriptContext, int& minGroup, int& maxGroup)
     {
-        PROBE_STACK(scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(scriptContext, Js::Constants::MinStackRegex);
 
         for (ConcatNode *curr = this; curr != 0; curr = curr->tail)
             curr->head->AccumDefineGroups(scriptContext, minGroup, maxGroup);
@@ -1975,7 +1975,7 @@ namespace UnifiedRegex
 
     void ConcatNode::BestSyncronizingNode(Compiler& compiler, Node*& bestNode)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         for (ConcatNode* curr = this; curr != 0; curr = curr->tail)
             curr->head->BestSyncronizingNode(compiler, bestNode);
@@ -1983,7 +1983,7 @@ namespace UnifiedRegex
 
     void ConcatNode::Emit(Compiler& compiler, CharCount& skipped)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         //
         // Compilation scheme:
@@ -2006,7 +2006,7 @@ namespace UnifiedRegex
 
     bool ConcatNode::IsOctoquad(Compiler& compiler, OctoquadIdentifier* oi)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         for (ConcatNode* curr = this; curr != 0; curr = curr->tail)
         {
@@ -2018,7 +2018,7 @@ namespace UnifiedRegex
 
     bool ConcatNode::IsCharTrieArm(Compiler& compiler, uint& accNumAlts) const
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         for (const ConcatNode* curr = this; curr != 0; curr = curr->tail)
         {
@@ -2030,7 +2030,7 @@ namespace UnifiedRegex
 
     bool ConcatNode::BuildCharTrie(Compiler& compiler, CharTrie* trie, Node* cont, bool isAcceptFirst) const
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         if (cont != 0)
             // We don't want to manage a stack of continuations
@@ -2069,7 +2069,7 @@ namespace UnifiedRegex
 
     CharCount AltNode::TransferPass0(Compiler& compiler, const Char* litbuf)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         Assert(tail != 0);
         CharCount n = 0;
@@ -2090,7 +2090,7 @@ namespace UnifiedRegex
 
     void AltNode::TransferPass1(Compiler& compiler, const Char* litbuf)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         for (AltNode *curr = this; curr != 0; curr = curr->tail)
             curr->head->TransferPass1(compiler, litbuf);
@@ -2103,7 +2103,7 @@ namespace UnifiedRegex
 
     void AltNode::AnnotatePass0(Compiler& compiler)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         isWord = true;
         for (AltNode* curr = this; curr != 0; curr = curr->tail)
@@ -2116,7 +2116,7 @@ namespace UnifiedRegex
 
     void AltNode::AnnotatePass1(Compiler& compiler, bool parentNotInLoop, bool parentAtLeastOnce, bool parentNotSpeculative, bool parentNotNegated)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         features = HasAlt;
         isNotInLoop = parentNotInLoop;
@@ -2165,7 +2165,7 @@ namespace UnifiedRegex
 
     void AltNode::AnnotatePass2(Compiler& compiler, CountDomain accumConsumes, bool accumPrevWillNotProgress, bool accumPrevWillNotRegress)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         prevConsumes = accumConsumes;
         isPrevWillNotProgress = accumPrevWillNotProgress;
@@ -2176,7 +2176,7 @@ namespace UnifiedRegex
 
     void AltNode::AnnotatePass3(Compiler& compiler, CountDomain accumConsumes, CharSet<Char>* accumFollow, bool accumFollowIrrefutable, bool accumFollowEOL)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         followConsumes = accumConsumes;
         followSet = accumFollow;
@@ -2193,7 +2193,7 @@ namespace UnifiedRegex
 
     void AltNode::AnnotatePass4(Compiler& compiler)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         //
         // Simplification rule
@@ -2486,7 +2486,7 @@ namespace UnifiedRegex
 
     CharCount AltNode::MinSyncronizingLiteralLength(Compiler& compiler, int& numLiterals) const
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         // Here, we ignore nodes with length 1, which are Char nodes. The way the Alt node synchronization
         // is currently implemented, it expects all nodes to be Literal nodes. It requires quite a bit of
@@ -2516,7 +2516,7 @@ namespace UnifiedRegex
 
     void AltNode::CollectSyncronizingLiterals(Compiler& compiler, ScannersMixin& scanners) const
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         for (const AltNode* curr = this; curr != 0; curr = curr->tail)
             curr->head->CollectSyncronizingLiterals(compiler, scanners);
@@ -2524,7 +2524,7 @@ namespace UnifiedRegex
 
     void AltNode::BestSyncronizingNode(Compiler& compiler, Node*& bestNode)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         if (IsBetterSyncronizingNode(compiler, bestNode, this))
             bestNode = this;
@@ -2532,7 +2532,7 @@ namespace UnifiedRegex
 
     void AltNode::AccumDefineGroups(Js::ScriptContext* scriptContext, int& minGroup, int& maxGroup)
     {
-        PROBE_STACK(scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(scriptContext, Js::Constants::MinStackRegex);
 
         for (AltNode *curr = this; curr != 0; curr = curr->tail)
             curr->head->AccumDefineGroups(scriptContext, minGroup, maxGroup);
@@ -2540,7 +2540,7 @@ namespace UnifiedRegex
 
     void AltNode::Emit(Compiler& compiler, CharCount& skipped)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         Assert(skipped == 0);
         switch (scheme)
@@ -2862,7 +2862,7 @@ namespace UnifiedRegex
 
     CharCount AltNode::EmitScan(Compiler& compiler, bool isHeadSyncronizingNode)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         Assert(!isHeadSyncronizingNode);
 
@@ -2884,7 +2884,7 @@ namespace UnifiedRegex
 
     bool AltNode::IsOctoquad(Compiler& compiler, OctoquadIdentifier* oi)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         if (tail == 0 || tail->tail != 0)
             // Must be exactly two alts
@@ -2940,7 +2940,7 @@ namespace UnifiedRegex
 
     CharCount DefineGroupNode::TransferPass0(Compiler& compiler, const Char* litbuf)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         Assert(groupId > 0 && groupId < compiler.program->numGroups);
         return body->TransferPass0(compiler, litbuf);
@@ -2948,7 +2948,7 @@ namespace UnifiedRegex
 
     void DefineGroupNode::TransferPass1(Compiler& compiler, const Char* litbuf)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         body->TransferPass1(compiler, litbuf);
     }
@@ -2960,7 +2960,7 @@ namespace UnifiedRegex
 
     void DefineGroupNode::AnnotatePass0(Compiler& compiler)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         body->AnnotatePass0(compiler);
         isWord = body->isWord;
@@ -2968,7 +2968,7 @@ namespace UnifiedRegex
 
     void DefineGroupNode::AnnotatePass1(Compiler& compiler, bool parentNotInLoop, bool parentAtLeastOnce, bool parentNotSpeculative, bool parentNotNegated)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         features = HasDefineGroup;
         body->AnnotatePass1(compiler, parentNotInLoop, parentAtLeastOnce, parentNotSpeculative, parentNotNegated);
@@ -2987,7 +2987,7 @@ namespace UnifiedRegex
 
     void DefineGroupNode::AnnotatePass2(Compiler& compiler, CountDomain accumConsumes, bool accumPrevWillNotProgress, bool accumPrevWillNotRegress)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         prevConsumes = accumConsumes;
         isPrevWillNotProgress = accumPrevWillNotProgress;
@@ -2997,7 +2997,7 @@ namespace UnifiedRegex
 
     void DefineGroupNode::AnnotatePass3(Compiler& compiler, CountDomain accumConsumes, CharSet<Char>* accumFollow, bool accumFollowIrrefutable, bool accumFollowEOL)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         followConsumes = accumConsumes;
         followSet = accumFollow;
@@ -3010,7 +3010,7 @@ namespace UnifiedRegex
 
     void DefineGroupNode::AnnotatePass4(Compiler& compiler)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         body->AnnotatePass4(compiler);
         isDeterministic = body->isDeterministic;
@@ -3056,7 +3056,7 @@ namespace UnifiedRegex
 
     bool DefineGroupNode::SupportsPrefixSkipping(Compiler& compiler) const
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         if (scheme != Fixed)
             // We can't skip over part of the match if the BeginDefineGroup must capture it's start
@@ -3066,7 +3066,7 @@ namespace UnifiedRegex
 
     Node* DefineGroupNode::HeadSyncronizingNode(Compiler& compiler)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         if (scheme != Fixed)
             // Can't skip BeginDefineGroup
@@ -3076,28 +3076,28 @@ namespace UnifiedRegex
 
     CharCount DefineGroupNode::MinSyncronizingLiteralLength(Compiler& compiler, int& numLiterals) const
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         return body->MinSyncronizingLiteralLength(compiler, numLiterals);
     }
 
     void DefineGroupNode::CollectSyncronizingLiterals(Compiler& compiler, ScannersMixin& scanners) const
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         body->CollectSyncronizingLiterals(compiler, scanners);
     }
 
     void DefineGroupNode::BestSyncronizingNode(Compiler& compiler, Node*& bestNode)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         body->BestSyncronizingNode(compiler, bestNode);
     }
 
     void DefineGroupNode::AccumDefineGroups(Js::ScriptContext* scriptContext, int& minGroup, int& maxGroup)
     {
-        PROBE_STACK(scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(scriptContext, Js::Constants::MinStackRegex);
 
         if (groupId < minGroup)
             minGroup = groupId;
@@ -3108,7 +3108,7 @@ namespace UnifiedRegex
 
     void DefineGroupNode::Emit(Compiler& compiler, CharCount& skipped)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         switch (scheme)
         {
@@ -3361,7 +3361,7 @@ namespace UnifiedRegex
 
     CharCount LoopNode::TransferPass0(Compiler& compiler, const Char* litbuf)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         Assert(repeats.upper == CharCountFlag || repeats.upper > 0);
         Assert(repeats.upper == CharCountFlag || repeats.upper >= repeats.lower);
@@ -3371,7 +3371,7 @@ namespace UnifiedRegex
 
     void LoopNode::TransferPass1(Compiler& compiler, const Char* litbuf)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         body->TransferPass1(compiler, litbuf);
     }
@@ -3383,7 +3383,7 @@ namespace UnifiedRegex
 
     void LoopNode::AnnotatePass0(Compiler& compiler)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         body->AnnotatePass0(compiler);
         isWord = !repeats.CouldMatchEmpty() && body->isWord;
@@ -3391,7 +3391,7 @@ namespace UnifiedRegex
 
     void LoopNode::AnnotatePass1(Compiler& compiler, bool parentNotInLoop, bool parentAtLeastOnce, bool parentNotSpeculative, bool parentNotNegated)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         features = HasLoop;
         isNotInLoop = parentNotInLoop;
@@ -3416,7 +3416,7 @@ namespace UnifiedRegex
 
     void LoopNode::AnnotatePass2(Compiler& compiler, CountDomain accumConsumes, bool accumPrevWillNotProgress, bool accumPrevWillNotRegress)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         prevConsumes = accumConsumes;
         isPrevWillNotProgress = accumPrevWillNotProgress;
@@ -3434,7 +3434,7 @@ namespace UnifiedRegex
 
     void LoopNode::AnnotatePass3(Compiler& compiler, CountDomain accumConsumes, CharSet<Char>* accumFollow, bool accumFollowIrrefutable, bool accumFollowEOL)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         followConsumes = accumConsumes;
         followSet = accumFollow;
@@ -3486,7 +3486,7 @@ namespace UnifiedRegex
 
     void LoopNode::AnnotatePass4(Compiler& compiler)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         body->AnnotatePass4(compiler);
         isDeterministic = body->isDeterministic;
@@ -3717,7 +3717,7 @@ namespace UnifiedRegex
 
     void LoopNode::BestSyncronizingNode(Compiler& compiler, Node*& bestNode)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         if (repeats.lower > 0)
             body->BestSyncronizingNode(compiler, bestNode);
@@ -3726,14 +3726,14 @@ namespace UnifiedRegex
 
     void LoopNode::AccumDefineGroups(Js::ScriptContext* scriptContext, int& minGroup, int& maxGroup)
     {
-        PROBE_STACK(scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(scriptContext, Js::Constants::MinStackRegex);
 
         body->AccumDefineGroups(scriptContext, minGroup, maxGroup);
     }
 
     void LoopNode::Emit(Compiler& compiler, CharCount& skipped)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         Assert(skipped == 0);
 
@@ -4089,14 +4089,14 @@ namespace UnifiedRegex
 
     CharCount AssertionNode::TransferPass0(Compiler& compiler, const Char* litbuf)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         return body->TransferPass0(compiler, litbuf);
     }
 
     void AssertionNode::TransferPass1(Compiler& compiler, const Char* litbuf)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         body->TransferPass1(compiler, litbuf);
     }
@@ -4108,7 +4108,7 @@ namespace UnifiedRegex
 
     void AssertionNode::AnnotatePass0(Compiler& compiler)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         isWord = false;
         body->AnnotatePass0(compiler);
@@ -4116,7 +4116,7 @@ namespace UnifiedRegex
 
     void AssertionNode::AnnotatePass1(Compiler& compiler, bool parentNotInLoop, bool parentAtLeastOnce, bool parentNotSpeculative, bool parentNotNegated)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         features = HasAssertion;
         body->AnnotatePass1(compiler, parentNotInLoop, parentAtLeastOnce, false, parentNotNegated && !isNegation);
@@ -4143,7 +4143,7 @@ namespace UnifiedRegex
 
     void AssertionNode::AnnotatePass2(Compiler& compiler, CountDomain accumConsumes, bool accumPrevWillNotProgress, bool accumPrevWillNotRegress)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         prevConsumes = accumConsumes;
         isPrevWillNotProgress = accumPrevWillNotProgress;
@@ -4153,7 +4153,7 @@ namespace UnifiedRegex
 
     void AssertionNode::AnnotatePass3(Compiler& compiler, CountDomain accumConsumes, CharSet<Char>* accumFollow, bool accumFollowIrrefutable, bool accumFollowEOL)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         followConsumes = accumConsumes;
         followSet = accumFollow;
@@ -4171,7 +4171,7 @@ namespace UnifiedRegex
 
     void AssertionNode::AnnotatePass4(Compiler& compiler)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         body->AnnotatePass4(compiler);
         // Even if body is non-deterministic we cut the choicepoints on exit from the assertion,
@@ -4235,14 +4235,14 @@ namespace UnifiedRegex
 
     void AssertionNode::AccumDefineGroups(Js::ScriptContext* scriptContext, int& minGroup, int& maxGroup)
     {
-        PROBE_STACK(scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(scriptContext, Js::Constants::MinStackRegex);
 
         body->AccumDefineGroups(scriptContext, minGroup, maxGroup);
     }
 
     void AssertionNode::Emit(Compiler& compiler, CharCount& skipped)
     {
-        PROBE_STACK(compiler.scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(compiler.scriptContext, Js::Constants::MinStackRegex);
 
         Assert(skipped == 0);
 

@@ -228,14 +228,7 @@ HRESULT Parser::ValidateSyntax(LPCUTF8 pszSrc, size_t encodedCharCount, bool isG
     AssertPsz(pszSrc);
     AssertMemN(pse);
 
-    if (this->IsBackgroundParser())
-    {
-        PROBE_STACK_NO_DISPOSE(m_scriptContext, Js::Constants::MinStackDefault);
-    }
-    else
-    {
-        PROBE_STACK(m_scriptContext, Js::Constants::MinStackDefault);
-    }
+    PROBE_STACK_NO_DISPOSE(m_scriptContext, Js::Constants::MinStackDefault);
 
     HRESULT hr;
     SmartFPUControl smartFpuControl;
@@ -329,14 +322,7 @@ HRESULT Parser::ParseSourceInternal(
 
     double startTime = m_scriptContext->GetThreadContext()->ParserTelemetry.Now();
 
-    if (this->IsBackgroundParser())
-    {
-        PROBE_STACK_NO_DISPOSE(m_scriptContext, Js::Constants::MinStackDefault);
-    }
-    else
-    {
-        PROBE_STACK(m_scriptContext, Js::Constants::MinStackDefault);
-    }
+    PROBE_STACK_NO_DISPOSE(m_scriptContext, Js::Constants::MinStackDefault);
 
 #ifdef PROFILE_EXEC
     m_scriptContext->ProfileBegin(Js::ParsePhase);
@@ -2804,14 +2790,7 @@ ParseNodePtr Parser::ParseTerm(BOOL fAllowCall,
     bool isLambdaExpr = false;
     Assert(pToken == nullptr || pToken->tk == tkNone); // Must be empty initially
 
-    if (this->IsBackgroundParser())
-    {
-        PROBE_STACK_NO_DISPOSE(m_scriptContext, Js::Constants::MinStackParseOneTerm);
-    }
-    else
-    {
-        PROBE_STACK(m_scriptContext, Js::Constants::MinStackParseOneTerm);
-    }
+    PROBE_STACK_NO_DISPOSE(m_scriptContext, Js::Constants::MinStackParseOneTerm);
 
     switch (m_token.tk)
     {
@@ -10565,14 +10544,7 @@ void Parser::RestoreScopeInfo(Js::FunctionBody* functionBody)
         return;
     }
 
-    if (this->IsBackgroundParser())
-    {
-        PROBE_STACK_NO_DISPOSE(m_scriptContext, Js::Constants::MinStackByteCodeVisitor);
-    }
-    else
-    {
-        PROBE_STACK(m_scriptContext, Js::Constants::MinStackByteCodeVisitor);
-    }
+    PROBE_STACK_NO_DISPOSE(m_scriptContext, Js::Constants::MinStackByteCodeVisitor);
 
     RestoreScopeInfo(scopeInfo->GetParent()); // Recursively restore outer func scope info
 
@@ -10621,14 +10593,7 @@ void Parser::FinishScopeInfo(Js::FunctionBody *functionBody)
         return;
     }
 
-    if (this->IsBackgroundParser())
-    {
-        PROBE_STACK_NO_DISPOSE(m_scriptContext, Js::Constants::MinStackByteCodeVisitor);
-    }
-    else
-    {
-        PROBE_STACK(m_scriptContext, Js::Constants::MinStackByteCodeVisitor);
-    }
+    PROBE_STACK_NO_DISPOSE(m_scriptContext, Js::Constants::MinStackByteCodeVisitor);
 
     int scopeId = scopeInfo->GetScopeId();
 
