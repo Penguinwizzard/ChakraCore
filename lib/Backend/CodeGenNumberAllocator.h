@@ -4,6 +4,18 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
+
+namespace Js
+{
+    class StaticType;
+}
+
+struct XProcNumberPageSegmentImpl : public XProcNumberPageSegment
+{
+    XProcNumberPageSegmentImpl();
+    Js::JavascriptNumber* AllocateNumber(HANDLE hProcess, double value, Js::StaticType* numberTypeStatic, void* javascriptNumberVtbl);
+};
+
 /****************************************************************************
  * CodeGenNumberThreadAllocator
  *
@@ -60,6 +72,29 @@ struct CodeGenNumberChunk
 CompileAssert(
     sizeof(CodeGenNumberChunk) == HeapConstants::ObjectGranularity ||
     sizeof(CodeGenNumberChunk) == HeapConstants::ObjectGranularity * 2);
+
+
+class CodeGenNumberThreadAllocator;
+
+struct XProcNumberPageSegmentManager
+{
+    CriticalSection cs;
+    XProcNumberPageSegment* segmentsList;
+    CodeGenNumberThreadAllocator* threadNumberAlloc;
+    XProcNumberPageSegmentManager(CodeGenNumberThreadAllocator* threadNumberAlloc)
+        :segmentsList(nullptr), threadNumberAlloc(threadNumberAlloc)
+    {
+    }
+
+    void GetFreeSegment(XProcNumberPageSegment& seg);
+    CodeGenNumberChunk* RegisterSegments(XProcNumberPageSegment* segments);
+
+    void Integrate()
+    {
+        AutoCriticalSection autoCS(&cs);
+        //...
+    }
+};
 
 class CodeGenNumberThreadAllocator
 {
@@ -122,6 +157,10 @@ private:
     // to be flushed before the number page can be flushed. Otherwise, we might have number
     // integrated back to the GC, but the chunk hasn't yet, thus GC won't see the reference.
     SListBase<BlockRecord> pendingReferenceNumberBlock;
+
+public:
+    XProcNumberPageSegmentManager xProcNumberPageMgr;
+
 };
 
 class CodeGenNumberAllocator
@@ -145,75 +184,3 @@ private:
 #endif
 };
 
-namespace Js
-{
-    class StaticType;
-}
-
-struct XProcNumberPageSegmentImpl : public XProcNumberPageSegment
-{
-    
-    Js::JavascriptNumber* AllocateNumber(HANDLE hProcess, double value, Js::StaticType* numberTypeStatic, void* javascriptNumberVtbl);
-    void GenerateChunks() // chunks allocate from main process
-    {
-
-    }
-};
-
-struct XProcNumberPageSegmentManager
-{
-    CriticalSection cs;
-    XProcNumberPageSegment* segmentsList;
-
-    XProcNumberPageSegment* GetFreeSegment()
-    {
-        AutoCriticalSection autoCS(&cs);
-
-        if (segmentsList == nullptr)
-        {
-            return nullptr;
-        }
-
-        auto temp = segmentsList;
-        auto newTail = temp;
-        while (temp->nextSegment) 
-        {
-            newTail = temp;
-            temp = temp->nextSegment;
-        }
-
-        if (temp->allocEndAddress == temp->pageAddress + (int)(temp->pageCount*AutoSystemInfo::PageSize)) // full
-        {
-            return nullptr;
-        }
-        else
-        {
-            newTail->nextSegment = nullptr;
-            return temp;
-        }
-    }
-
-    void RegisterSegments(XProcNumberPageSegment* segments)
-    {
-        AutoCriticalSection autoCS(&cs);
-        if (segmentsList == nullptr) 
-        {
-            segmentsList = segments;
-        }
-        else
-        {
-            auto temp = segmentsList;
-            while (temp->nextSegment)
-            {
-                temp = temp->nextSegment;
-            }
-            temp->nextSegment = segments;
-        }
-    }
-
-    void Integrate()
-    {
-        AutoCriticalSection autoCS(&cs);
-        //...
-    }
-};

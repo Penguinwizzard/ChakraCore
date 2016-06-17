@@ -360,7 +360,8 @@ typedef struct XProcNumberPageSegment
     __int3264 allocStartAddress;
     __int3264 allocEndAddress;
     struct XProcNumberPageSegment* nextSegment;
-    unsigned int pageCount; // alawys 2
+    unsigned int pageCount; // REVIEW: don't actually need these two fields, they are constant
+    unsigned int sizeCat;
 } XProcNumberPageSegment;
 
 // CodeGenWorkItem fields, read only in JIT

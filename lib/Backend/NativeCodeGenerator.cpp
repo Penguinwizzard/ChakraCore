@@ -884,12 +884,10 @@ NativeCodeGenerator::CodeGen(PageAllocator * pageAllocator, CodeGenWorkItem* wor
             }
             JITOutputData jitWriteData = {0};
 
-            // TODO: get the non-full segment to fill following info
-            workItem->GetJITData()->xProcNumberPageSegment.pageAddress = 0;
-            workItem->GetJITData()->xProcNumberPageSegment.allocEndAddress = 0;
-            workItem->GetJITData()->xProcNumberPageSegment.allocStartAddress = 0;
-            workItem->GetJITData()->xProcNumberPageSegment.nextSegment = nullptr;
-            workItem->GetJITData()->xProcNumberPageSegment.pageCount = 2;
+            
+            auto& xProcNumberPageMgr = threadContext->GetCodeGenNumberThreadAllocator()->xProcNumberPageMgr;
+
+            xProcNumberPageMgr.GetFreeSegment(workItem->GetJITData()->xProcNumberPageSegment);
 
             HRESULT hr = scriptContext->GetThreadContext()->m_codeGenManager.RemoteCodeGenCall(
                 workItem->GetJITData(),
@@ -902,6 +900,19 @@ NativeCodeGenerator::CodeGen(PageAllocator * pageAllocator, CodeGenWorkItem* wor
             }
 
             workItem->GetFunctionBody()->SetFrameHeight(workItem->GetEntryPoint(), jitWriteData.writeableEPData.frameHeight);
+
+            if (jitWriteData.numberPageSegments)
+            {
+                if (jitWriteData.numberPageSegments->pageAddress == 0)
+                {
+                    midl_user_free(jitWriteData.numberPageSegments);
+                    jitWriteData.numberPageSegments = nullptr;
+                }
+                else
+                {
+                    epInfo->SetNumberChunks(xProcNumberPageMgr.RegisterSegments(jitWriteData.numberPageSegments));
+                }
+            }
 
             if (jitWriteData.nativeDataFixupTable)
             {

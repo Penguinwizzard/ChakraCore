@@ -10,7 +10,8 @@ CodeGenNumberThreadAllocator::CodeGenNumberThreadAllocator(Recycler * recycler)
     numberSegmentEnd(nullptr), currentNumberBlockEnd(nullptr), nextNumber(nullptr), chunkSegmentEnd(nullptr),
     currentChunkBlockEnd(nullptr), nextChunk(nullptr), hasNewNumberBlock(nullptr), hasNewChunkBlock(nullptr),
     pendingIntegrationNumberSegmentCount(0), pendingIntegrationChunkSegmentCount(0),
-    pendingIntegrationNumberSegmentPageCount(0), pendingIntegrationChunkSegmentPageCount(0)
+    pendingIntegrationNumberSegmentPageCount(0), pendingIntegrationChunkSegmentPageCount(0),
+    xProcNumberPageMgr(this)
 {
 }
 
@@ -291,7 +292,6 @@ CodeGenNumberAllocator::Finalize()
 
 Js::JavascriptNumber* XProcNumberPageSegmentImpl::AllocateNumber(HANDLE hProcess, double value, Js::StaticType* numberTypeStatic, void* javascriptNumberVtbl)
 {
-    size_t sizeCat = HeapInfo::GetAlignedSizeNoCheck(sizeof(Js::JavascriptNumber));
     XProcNumberPageSegmentImpl* tail = this;
 
     if (this->pageAddress != 0)
@@ -323,22 +323,100 @@ Js::JavascriptNumber* XProcNumberPageSegmentImpl::AllocateNumber(HANDLE hProcess
     void* pages = ::VirtualAllocEx(hProcess, nullptr, 2 * AutoSystemInfo::PageSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
     if (pages == nullptr)
     {
-        // throw
+        // TODO: throw
     }
 
     if (tail->pageAddress == 0)
     {
+        tail = new (tail) XProcNumberPageSegmentImpl();
         tail->pageAddress = (int)pages;
         tail->allocStartAddress = this->pageAddress;
         tail->allocEndAddress = this->pageAddress;
         tail->nextSegment = nullptr;
-        tail->pageCount = 2;
         return AllocateNumber(hProcess, value, numberTypeStatic, javascriptNumberVtbl);
     }
     else
     {
-        XProcNumberPageSegmentImpl* seg = (XProcNumberPageSegmentImpl*)midl_user_allocate(sizeof(XProcNumberPageSegment));
+        XProcNumberPageSegmentImpl* seg = new (midl_user_allocate(sizeof(XProcNumberPageSegment))) XProcNumberPageSegmentImpl();
         tail->nextSegment = seg;
         return seg->AllocateNumber(hProcess, value, numberTypeStatic, javascriptNumberVtbl);
+    }
+}
+
+
+XProcNumberPageSegmentImpl::XProcNumberPageSegmentImpl()
+{
+    this->pageCount = SmallAllocationBlockAttributes::PageCount; // 2
+    this->sizeCat = HeapInfo::GetAlignedSizeNoCheck(sizeof(Js::JavascriptNumber));
+}
+
+CodeGenNumberChunk* XProcNumberPageSegmentManager::RegisterSegments(XProcNumberPageSegment* segments)
+{
+    Assert(segments->pageAddress && segments->allocStartAddress && segments->allocEndAddress);
+
+    auto temp = segments;
+    CodeGenNumberChunk* chunk = nullptr;
+    int numberCount = CodeGenNumberChunk::MaxNumberCount;
+    while (temp)
+    {
+        auto start = temp->allocStartAddress;
+        while (start < temp->allocEndAddress)
+        {
+            if (numberCount == CodeGenNumberChunk::MaxNumberCount)
+            {
+                auto newChunk = threadNumberAlloc->AllocChunk();
+                newChunk->next = chunk;
+                chunk = newChunk;
+                numberCount = 0;
+            }
+            chunk->numbers[numberCount++] = (Js::JavascriptNumber*)start;
+            start += temp->sizeCat;
+        }
+        temp = temp->nextSegment;
+    }
+
+    AutoCriticalSection autoCS(&cs);
+    if (segmentsList == nullptr)
+    {
+        segmentsList = segments;
+    }
+    else
+    {
+        auto temp = segmentsList;
+        while (temp->nextSegment)
+        {
+            temp = temp->nextSegment;
+        }
+        temp->nextSegment = segments;
+    }
+
+    return chunk;
+}
+
+void XProcNumberPageSegmentManager::GetFreeSegment(XProcNumberPageSegment& seg)
+{
+    AutoCriticalSection autoCS(&cs);
+
+    memset(&seg, 0, sizeof(seg));
+
+    if (segmentsList == nullptr)
+    {
+        return;
+    }
+
+    auto temp = segmentsList;
+    auto newTail = temp;
+    while (temp->nextSegment)
+    {
+        newTail = temp;
+        temp = temp->nextSegment;
+    }
+
+    if (temp->allocEndAddress != temp->pageAddress + (int)(temp->pageCount*AutoSystemInfo::PageSize)) // not full
+    {
+        newTail->nextSegment = nullptr;
+        memcpy(&seg, temp, sizeof(seg));
+        midl_user_free(temp);
+        return;
     }
 }
