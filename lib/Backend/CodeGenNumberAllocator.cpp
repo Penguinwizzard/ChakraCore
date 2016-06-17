@@ -287,3 +287,58 @@ CodeGenNumberAllocator::Finalize()
     this->currentChunkNumberCount = 0;
     return finalizedChunk;
 }
+
+
+Js::JavascriptNumber* XProcNumberPageSegmentImpl::AllocateNumber(HANDLE hProcess, double value, Js::StaticType* numberTypeStatic, void* javascriptNumberVtbl)
+{
+    size_t sizeCat = HeapInfo::GetAlignedSizeNoCheck(sizeof(Js::JavascriptNumber));
+    XProcNumberPageSegmentImpl* tail = this;
+
+    if (this->pageAddress != 0)
+    {
+        while (tail->nextSegment)
+        {
+            tail = (XProcNumberPageSegmentImpl*)tail->nextSegment;
+        }
+
+        if (tail->pageAddress + tail->pageCount*AutoSystemInfo::PageSize - tail->allocEndAddress >= sizeCat)
+        {
+            auto number = tail->allocEndAddress;
+            tail->allocEndAddress += sizeCat;
+
+            Js::JavascriptNumber localNumber(value, numberTypeStatic);
+
+            // change vtable to the remote one
+            *(void**)&localNumber = javascriptNumberVtbl;
+
+            // initialize number by WriteProcessMemory
+            SIZE_T bytesWritten;
+            WriteProcessMemory(hProcess, (void*)number, &localNumber, sizeof(localNumber), &bytesWritten);
+            
+            return (Js::JavascriptNumber*) number;
+        }
+    }
+
+    // alloc pages
+    void* pages = ::VirtualAllocEx(hProcess, nullptr, 2 * AutoSystemInfo::PageSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    if (pages == nullptr)
+    {
+        // throw
+    }
+
+    if (tail->pageAddress == 0)
+    {
+        tail->pageAddress = (int)pages;
+        tail->allocStartAddress = this->pageAddress;
+        tail->allocEndAddress = this->pageAddress;
+        tail->nextSegment = nullptr;
+        tail->pageCount = 2;
+        return AllocateNumber(hProcess, value, numberTypeStatic, javascriptNumberVtbl);
+    }
+    else
+    {
+        XProcNumberPageSegmentImpl* seg = (XProcNumberPageSegmentImpl*)midl_user_allocate(sizeof(XProcNumberPageSegment));
+        tail->nextSegment = seg;
+        return seg->AllocateNumber(hProcess, value, numberTypeStatic, javascriptNumberVtbl);
+    }
+}

@@ -632,6 +632,8 @@ protected:
     friend class PageSegmentBase<TVirtualAlloc>;
     friend class IdleDecommit;
 
+    void SetProcessHandle(HANDLE hProcess) { processHandle = hProcess; }
+
 protected:
     virtual bool CreateSecondaryAllocator(SegmentBase<TVirtualAlloc>* segment, SecondaryAllocator** allocator)
     {

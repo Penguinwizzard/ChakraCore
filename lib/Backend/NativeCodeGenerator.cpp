@@ -884,6 +884,13 @@ NativeCodeGenerator::CodeGen(PageAllocator * pageAllocator, CodeGenWorkItem* wor
             }
             JITOutputData jitWriteData = {0};
 
+            // TODO: get the non-full segment to fill following info
+            workItem->GetJITData()->xProcNumberPageSegment.pageAddress = 0;
+            workItem->GetJITData()->xProcNumberPageSegment.allocEndAddress = 0;
+            workItem->GetJITData()->xProcNumberPageSegment.allocStartAddress = 0;
+            workItem->GetJITData()->xProcNumberPageSegment.nextSegment = nullptr;
+            workItem->GetJITData()->xProcNumberPageSegment.pageCount = 2;
+
             HRESULT hr = scriptContext->GetThreadContext()->m_codeGenManager.RemoteCodeGenCall(
                 workItem->GetJITData(),
                 scriptContext->GetThreadContext()->GetRemoteThreadContextAddr(),

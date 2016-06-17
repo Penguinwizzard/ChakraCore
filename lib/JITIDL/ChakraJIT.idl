@@ -354,6 +354,15 @@ typedef struct FunctionJITTimeData
     struct FunctionJITTimeData * next;
 } FunctionJITTimeData;
 
+typedef struct XProcNumberPageSegment
+{
+    __int3264 pageAddress;
+    __int3264 allocStartAddress;
+    __int3264 allocEndAddress;
+    struct XProcNumberPageSegment* nextSegment;
+    unsigned int pageCount; // alawys 2
+} XProcNumberPageSegment;
+
 // CodeGenWorkItem fields, read only in JIT
 typedef struct CodeGenWorkItemJITData
 {
@@ -362,6 +371,7 @@ typedef struct CodeGenWorkItemJITData
     char jitMode;
 
     unsigned int loopNumber;
+    XProcNumberPageSegment xProcNumberPageSegment;
 
     FunctionJITTimeData * jitData;
     __int3264 nativeDataAddr;
@@ -414,6 +424,8 @@ typedef struct JITOutputData
 
     __int64 codeAddress;
     __int64 xdataAddr;
+
+    XProcNumberPageSegment* numberPageSegments;
     
     unsigned int inlineeFrameOffsetArrayOffset;
     unsigned int inlineeFrameOffsetArrayCount;

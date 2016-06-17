@@ -100,6 +100,10 @@ public:
     {
         return &this->m_codeGenAllocators->emitBufferManager;
     }
+    XProcNumberPageSegmentImpl* GetXProcNumberAllocator()
+    {
+        return (XProcNumberPageSegmentImpl*)this->GetJITOutput()->GetOutputData()->numberPageSegments;
+    }
 
     Js::ScriptContextProfiler *GetCodeGenProfiler() const
     {

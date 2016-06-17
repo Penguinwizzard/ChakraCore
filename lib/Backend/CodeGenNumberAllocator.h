@@ -144,3 +144,76 @@ private:
     bool finalized;
 #endif
 };
+
+namespace Js
+{
+    class StaticType;
+}
+
+struct XProcNumberPageSegmentImpl : public XProcNumberPageSegment
+{
+    
+    Js::JavascriptNumber* AllocateNumber(HANDLE hProcess, double value, Js::StaticType* numberTypeStatic, void* javascriptNumberVtbl);
+    void GenerateChunks() // chunks allocate from main process
+    {
+
+    }
+};
+
+struct XProcNumberPageSegmentManager
+{
+    CriticalSection cs;
+    XProcNumberPageSegment* segmentsList;
+
+    XProcNumberPageSegment* GetFreeSegment()
+    {
+        AutoCriticalSection autoCS(&cs);
+
+        if (segmentsList == nullptr)
+        {
+            return nullptr;
+        }
+
+        auto temp = segmentsList;
+        auto newTail = temp;
+        while (temp->nextSegment) 
+        {
+            newTail = temp;
+            temp = temp->nextSegment;
+        }
+
+        if (temp->allocEndAddress == temp->pageAddress + (int)(temp->pageCount*AutoSystemInfo::PageSize)) // full
+        {
+            return nullptr;
+        }
+        else
+        {
+            newTail->nextSegment = nullptr;
+            return temp;
+        }
+    }
+
+    void RegisterSegments(XProcNumberPageSegment* segments)
+    {
+        AutoCriticalSection autoCS(&cs);
+        if (segmentsList == nullptr) 
+        {
+            segmentsList = segments;
+        }
+        else
+        {
+            auto temp = segmentsList;
+            while (temp->nextSegment)
+            {
+                temp = temp->nextSegment;
+            }
+            temp->nextSegment = segments;
+        }
+    }
+
+    void Integrate()
+    {
+        AutoCriticalSection autoCS(&cs);
+        //...
+    }
+};
