@@ -21,13 +21,13 @@ operator new[](__declspec(guard(overflow)) size_t byteSize)
 }
 
 void __cdecl
-operator delete(void * obj)
+operator delete(void * obj) _NOEXCEPT_
 {
     HeapAllocator::Instance.Free(obj, (size_t)-1);
 }
 
 void __cdecl
-operator delete[](void * obj)
+operator delete[](void * obj) _NOEXCEPT_
 {
     HeapAllocator::Instance.Free(obj, (size_t)-1);
 }

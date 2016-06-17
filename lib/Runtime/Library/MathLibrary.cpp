@@ -6,6 +6,8 @@
 #include "Language/JavascriptMathOperators.h"
 #include "Math/CrtSSE2Math.h"
 
+#include <math.h>
+
 #if defined(_M_IX86) || defined(_M_X64)
 #pragma intrinsic(_mm_round_sd)
 #endif
@@ -334,14 +336,14 @@ namespace Js
 
         if (args.Info.Count >= 2)
         {
-            Var input = args[1];
+            Var inputArg = args[1];
 
-            if (TaggedInt::Is(input))
+            if (TaggedInt::Is(inputArg))
             {
-                return input;
+                return inputArg;
             }
 
-            double x = JavascriptConversion::ToNumber(args[1], scriptContext);
+            double x = JavascriptConversion::ToNumber(inputArg, scriptContext);
 #if defined(_M_ARM32_OR_ARM64)
             if (Js::JavascriptNumber::IsNan(x))
             {
@@ -349,6 +351,8 @@ namespace Js
             }
 #endif
 
+            // xplat-todo: use intrinsics here on linux
+#ifdef _MSC_VER
 #if defined(_M_IX86) || defined(_M_X64)
             if (AutoSystemInfo::Data.SSE4_1Available())
             {
@@ -378,6 +382,7 @@ namespace Js
                 }
             }
             else
+#endif
 #endif
             {
                 double result = ::ceil(x);
@@ -544,8 +549,10 @@ namespace Js
 
 #pragma warning(push)
 #pragma warning(disable:4700)  // // uninitialized local variable 'output' used, for call to _mm_floor_sd
-    Var __inline Math::FloorDouble(double d, ScriptContext *scriptContext)
+    Var inline Math::FloorDouble(double d, ScriptContext *scriptContext)
     {
+            // xplat-todo: use intrinsics here on linux
+#ifdef _MSC_VER
 #if defined(_M_IX86) || defined(_M_X64)
         if (AutoSystemInfo::Data.SSE4_1Available())
         {
@@ -585,6 +592,7 @@ namespace Js
             }
         }
         else
+#endif
 #endif
         {
             intptr_t intResult;

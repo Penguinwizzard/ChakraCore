@@ -164,8 +164,8 @@ namespace Js
         virtual BOOL GetDiagTypeString(StringBuilder<ArenaAllocator>* stringBuilder, ScriptContext* requestContext) override;
 
         static bool TryGetLengthForOptimizedTypedArray(const Var var, uint32 *const lengthRef, TypeId *const typeIdRef);
-        BOOL ValidateIndexAndDirectSetItem(__in Js::Var index, __in Js::Var value, __in bool * isNumericIndex);
-        uint32 ValidateAndReturnIndex(__in Js::Var index, __in bool * skipOperation, __in bool * isNumericIndex);
+        BOOL ValidateIndexAndDirectSetItem(__in Js::Var index, __in Js::Var value, __out bool * isNumericIndex);
+        uint32 ValidateAndReturnIndex(__in Js::Var index, __out bool * skipOperation, __out bool * isNumericIndex);
 
         // objectArray support
         virtual BOOL SetItemWithAttributes(uint32 index, Var value, PropertyAttributes attributes) override;
@@ -180,7 +180,8 @@ namespace Js
         static int32 ToLengthChecked(Var lengthVar, uint32 elementSize, ScriptContext* scriptContext);
         static bool ArrayIteratorPrototypeHasUserDefinedNext(ScriptContext *scriptContext);
 
-        virtual void* GetCompareElementsFunction() = 0;
+        typedef int(__cdecl* CompareElementsFunction)(void*, const void*, const void*);
+        virtual CompareElementsFunction GetCompareElementsFunction() = 0;
 
         virtual Var Subarray(uint32 begin, uint32 end) = 0;
         int32 BYTES_PER_ELEMENT;
@@ -233,7 +234,7 @@ namespace Js
         static BOOL Is(Var aValue);
         static TypedArray<TypeName, clamped, virtualAllocated>* FromVar(Var aValue);
 
-        __inline Var BaseTypedDirectGetItem(__in uint32 index)
+        inline Var BaseTypedDirectGetItem(__in uint32 index)
         {
             if (this->IsDetachedBuffer()) // 9.4.5.8 IntegerIndexedElementGet
             {
@@ -249,7 +250,7 @@ namespace Js
             return GetLibrary()->GetUndefined();
         }
 
-        __inline Var TypedDirectGetItemWithCheck(__in uint32 index)
+        inline Var TypedDirectGetItemWithCheck(__in uint32 index)
         {
             if (this->IsDetachedBuffer()) // 9.4.5.8 IntegerIndexedElementGet
             {
@@ -265,7 +266,7 @@ namespace Js
             return GetLibrary()->GetUndefined();
         }
 
-        __inline BOOL DirectSetItemAtRange(TypedArray *fromArray, __in int32 iSrcStart, __in int32 iDstStart, __in uint32 length, TypeName(*convFunc)(Var value, ScriptContext* scriptContext))
+        inline BOOL DirectSetItemAtRange(TypedArray *fromArray, __in int32 iSrcStart, __in int32 iDstStart, __in uint32 length, TypeName(*convFunc)(Var value, ScriptContext* scriptContext))
         {
             TypeName* dstBuffer = (TypeName*)buffer;
             TypeName* srcBuffer = (TypeName*)fromArray->buffer;
@@ -315,7 +316,7 @@ namespace Js
             return true;
         }
 
-        __inline BOOL DirectSetItemAtRange(__in int32 start, __in uint32 length, __in Js::Var value, TypeName(*convFunc)(Var value, ScriptContext* scriptContext))
+        inline BOOL DirectSetItemAtRange(__in int32 start, __in uint32 length, __in Js::Var value, TypeName(*convFunc)(Var value, ScriptContext* scriptContext))
         {
             if (CrossSite::IsCrossSiteObjectTyped(this))
             {
@@ -369,7 +370,7 @@ namespace Js
             return TRUE;
         }
 
-        __inline BOOL BaseTypedDirectSetItem(__in uint32 index, __in Js::Var value, TypeName (*convFunc)(Var value, ScriptContext* scriptContext))
+        inline BOOL BaseTypedDirectSetItem(__in uint32 index, __in Js::Var value, TypeName (*convFunc)(Var value, ScriptContext* scriptContext))
         {
             // This call can potentially invoke user code, and may end up detaching the underlying array (this).
             // Therefore it was brought out and above the IsDetached check
@@ -394,7 +395,7 @@ namespace Js
             return TRUE;
         }
 
-        __inline BOOL BaseTypedDirectSetItemNoSet(__in uint32 index, __in Js::Var value, TypeName (*convFunc)(Var value, ScriptContext* scriptContext))
+        inline BOOL BaseTypedDirectSetItemNoSet(__in uint32 index, __in Js::Var value, TypeName (*convFunc)(Var value, ScriptContext* scriptContext))
         {
             // This call can potentially invoke user code, and may end up detaching the underlying array (this).
             // Therefore it was brought out and above the IsDetached check
@@ -421,7 +422,7 @@ namespace Js
         }
 
     protected:
-        void* GetCompareElementsFunction()
+        CompareElementsFunction GetCompareElementsFunction()
         {
             return &TypedArrayCompareElementsHelper<TypeName>;
         }
@@ -467,7 +468,7 @@ namespace Js
         virtual Var  DirectGetItem(__in uint32 index) override;
 
     protected:
-        void* GetCompareElementsFunction()
+        CompareElementsFunction GetCompareElementsFunction()
         {
             return &TypedArrayCompareElementsHelper<char16>;
         }

@@ -1839,7 +1839,7 @@ namespace Js
                 // Allocate invalidVar on GC instead of stack since this InterpreterStackFrame will out live the current real frame
                 Js::RecyclableObject* invalidVar = (Js::RecyclableObject*)RecyclerNewPlusLeaf(functionScriptContext->GetRecycler(), sizeof(Js::RecyclableObject), Var);
                 AnalysisAssert(invalidVar);
-                memset(invalidVar, 0xFE, sizeof(Js::RecyclableObject));
+                memset(reinterpret_cast<void*>(invalidVar), 0xFE, sizeof(Js::RecyclableObject));
                 newInstance = setup.InitializeAllocation(allocation, executeFunction->GetHasImplicitArgIns(), doProfile, loopHeaderArray, stackAddr, invalidVar);
 #else
                 newInstance = setup.InitializeAllocation(allocation, executeFunction->GetHasImplicitArgIns(), doProfile, loopHeaderArray, stackAddr);
@@ -1900,7 +1900,7 @@ namespace Js
 
 #if DBG
             Js::RecyclableObject * invalidStackVar = (Js::RecyclableObject*)_alloca(sizeof(Js::RecyclableObject));
-            memset(invalidStackVar, 0xFE, sizeof(Js::RecyclableObject));
+            memset(reinterpret_cast<void*>(invalidStackVar), 0xFE, sizeof(Js::RecyclableObject));
             newInstance = setup.InitializeAllocation(allocation, executeFunction->GetHasImplicitArgIns() && !isAsmJs, doProfile, loopHeaderArray, stackAddr, invalidStackVar);
 #else
             newInstance = setup.InitializeAllocation(allocation, executeFunction->GetHasImplicitArgIns() && !isAsmJs, doProfile, loopHeaderArray, stackAddr);
@@ -2591,7 +2591,7 @@ namespace Js
 #if DYNAMIC_INTERPRETER_THUNK
                 if (!PHASE_ON1(AsmJsJITTemplatePhase))
                 {
-                    entrypointInfo->address = AsmJsDefaultEntryThunk;
+                    entrypointInfo->jsMethod = AsmJsDefaultEntryThunk;
                 }
 #endif
             }
@@ -2775,7 +2775,7 @@ namespace Js
         Output::Print(_u("\n"));
     }
 
-#ifndef TEMP_DISABLE_ASMJS 
+#ifndef TEMP_DISABLE_ASMJS
     // Function memory allocation should be done the same way as
     // T AsmJsCommunEntryPoint(Js::ScriptFunction* func, ...)  (AsmJSJitTemplate.cpp)
     // update any changes there
@@ -3513,13 +3513,13 @@ namespace Js
         {
         case AsmJsRetType::Void:
         case AsmJsRetType::Signed:
-            m_localIntSlots[0] = JavascriptFunction::CallAsmJsFunction<int>(function, entrypointInfo->address, asmInfo->GetArgCount(), m_outParams);
+            m_localIntSlots[0] = JavascriptFunction::CallAsmJsFunction<int>(function, entrypointInfo->jsMethod, asmInfo->GetArgCount(), m_outParams);
             break;
         case AsmJsRetType::Double:
-            m_localDoubleSlots[0] = JavascriptFunction::CallAsmJsFunction<double>(function, entrypointInfo->address, asmInfo->GetArgCount(), m_outParams);
+            m_localDoubleSlots[0] = JavascriptFunction::CallAsmJsFunction<double>(function, entrypointInfo->jsMethod, asmInfo->GetArgCount(), m_outParams);
             break;
         case AsmJsRetType::Float:
-            m_localFloatSlots[0] = JavascriptFunction::CallAsmJsFunction<float>(function, entrypointInfo->address, asmInfo->GetArgCount(), m_outParams);
+            m_localFloatSlots[0] = JavascriptFunction::CallAsmJsFunction<float>(function, entrypointInfo->jsMethod, asmInfo->GetArgCount(), m_outParams);
             break;
         case AsmJsRetType::Float32x4:
         case AsmJsRetType::Int32x4:
@@ -3533,7 +3533,7 @@ namespace Js
         case AsmJsRetType::Uint16x8:
         case AsmJsRetType::Uint8x16:
             X86SIMDValue simdVal;
-            simdVal.m128_value = JavascriptFunction::CallAsmJsFunction<__m128>(function, entrypointInfo->address, asmInfo->GetArgCount(), m_outParams);
+            simdVal.m128_value = JavascriptFunction::CallAsmJsFunction<__m128>(function, entrypointInfo->jsMethod, asmInfo->GetArgCount(), m_outParams);
             m_localSimdSlots[0] = X86SIMDValue::ToSIMDValue(simdVal);
             break;
         }
@@ -3590,7 +3590,7 @@ namespace Js
         AsmJsRetType::Which retType = (AsmJsRetType::Which) GetRetType(scriptFunc);
 
         void *data = nullptr;
-        JavascriptMethod entryPoint = (JavascriptMethod)entrypointInfo->address;
+        JavascriptMethod entryPoint = entrypointInfo->jsMethod;
         void *savedEsp = nullptr;
         __asm
         {
@@ -3724,7 +3724,7 @@ namespace Js
         {
             flags |= CallFlags_NotUsed;
             Arguments args(CallInfo((CallFlags)flags, playout->ArgCount), m_outParams);
-            AssertMsg(args.Info.Flags == flags, "Flags don't fit into the CallInfo field?");
+            AssertMsg(static_cast<unsigned>(args.Info.Flags) == flags, "Flags don't fit into the CallInfo field?");
             if (spreadIndices != nullptr)
             {
                 JavascriptFunction::CallSpreadFunction(function, function->GetEntryPoint(), args, spreadIndices);
@@ -3738,7 +3738,7 @@ namespace Js
         {
             flags |= CallFlags_Value;
             Arguments args(CallInfo((CallFlags)flags, playout->ArgCount), m_outParams);
-            AssertMsg(args.Info.Flags == flags, "Flags don't fit into the CallInfo field?");
+            AssertMsg(static_cast<unsigned>(args.Info.Flags) == flags, "Flags don't fit into the CallInfo field?");
             if (spreadIndices != nullptr)
             {
                 SetReg((RegSlot)playout->Return, JavascriptFunction::CallSpreadFunction(function, function->GetEntryPoint(), args, spreadIndices));
@@ -4315,7 +4315,7 @@ namespace Js
     }
 
     template <class T>
-    __inline bool InterpreterStackFrame::TrySetPropertyLocalFastPath(unaligned T* playout, PropertyId pid, Var instance, InlineCache*& inlineCache, PropertyOperationFlags flags)
+    inline bool InterpreterStackFrame::TrySetPropertyLocalFastPath(unaligned T* playout, PropertyId pid, Var instance, InlineCache*& inlineCache, PropertyOperationFlags flags)
     {
         Assert(!TaggedNumber::Is(instance));
 
@@ -4337,7 +4337,7 @@ namespace Js
     }
 
     template <class T>
-    __inline void InterpreterStackFrame::DoSetProperty(unaligned T* playout, Var instance, PropertyOperationFlags flags)
+    inline void InterpreterStackFrame::DoSetProperty(unaligned T* playout, Var instance, PropertyOperationFlags flags)
     {
         // Same fast path as in the backend.
 
@@ -4364,7 +4364,7 @@ namespace Js
 
 
     template <class T>
-    __inline void InterpreterStackFrame::DoSetSuperProperty(unaligned T* playout, Var instance, PropertyOperationFlags flags)
+    inline void InterpreterStackFrame::DoSetSuperProperty(unaligned T* playout, Var instance, PropertyOperationFlags flags)
     {
         DoSetSuperProperty_NoFastPath(playout, instance, flags);
     }
@@ -5305,21 +5305,17 @@ namespace Js
 
         Assert(VirtualTableInfo<JavascriptArray>::HasVirtualTable(array));
         SparseArraySegment<Var>* lastUsedSeg = (SparseArraySegment<Var>*)array->GetLastUsedSegment();
-        if (index < lastUsedSeg->left)
+        if (index >= lastUsedSeg->left)
         {
-            goto helper;
+            uint32 index2 = index - lastUsedSeg->left;
+            if (index2 < lastUsedSeg->size)
+            {
+                // Successful fastpath
+                array->DirectSetItemInLastUsedSegmentAt(index2, value);
+                return;
+            }
         }
 
-        uint32 index2 = index - lastUsedSeg->left;
-
-        if (index2 < lastUsedSeg->size)
-        {
-            // Successful fastpath
-            array->DirectSetItemInLastUsedSegmentAt(index2, value);
-            return;
-        }
-
-    helper:
         ScriptContext* scriptContext = array->GetScriptContext();
         JavascriptOperators::SetItem(array, array, index, value, scriptContext);
     }
@@ -5815,12 +5811,12 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
             if (fn->GetIsAsmJsFunction())
             {
                 AutoRestoreLoopNumbers autoRestore(this, loopNumber, doProfileLoopCheck);
-                newOffset = this->CallAsmJsLoopBody((JavascriptMethod)entryPointInfo->address);
+                newOffset = this->CallAsmJsLoopBody(entryPointInfo->jsMethod);
             }
             else
             {
                 AutoRestoreLoopNumbers autoRestore(this, loopNumber, doProfileLoopCheck);
-                newOffset = this->CallLoopBody((JavascriptMethod)entryPointInfo->address);
+                newOffset = this->CallLoopBody(entryPointInfo->jsMethod);
             }
 
             if (envReg != Constants::NoRegister)
@@ -5879,6 +5875,18 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
                 if (!entryPointInfo->GetIsAsmJSFunction())
                 {
                     this->CheckIfLoopIsHot(loopHeader->profiledLoopCounter);
+                }
+
+                if (newOffset >= loopHeader->endOffset)
+                {
+                    // Reset the totalJittedLoopIterations for the next invocation of this loop entry point
+                    entryPointInfo->totalJittedLoopIterations =
+                        static_cast<uint8>(
+                            min(
+                                static_cast<uint>(static_cast<uint8>(CONFIG_FLAG(MinBailOutsBeforeRejit))) *
+                                (Js::LoopEntryPointInfo::GetDecrLoopCountPerBailout() - 1),
+                                entryPointInfo->totalJittedLoopIterations));
+                    entryPointInfo->jittedLoopIterationsSinceLastBailout = 0;
                 }
                 m_reader.SetCurrentOffset(newOffset);
             }
@@ -7487,7 +7495,7 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
         AsmJsSIMDValue *data = (AsmJsSIMDValue*)(buffer + index);
         AsmJsSIMDValue value;
 
-        value = SIMDLdData(data, dataWidth);
+        value = SIMDUtils::SIMDLdData(data, dataWidth);
         SetRegRawSimd(dstReg, value);
     }
 
@@ -7508,7 +7516,7 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
         AsmJsSIMDValue *data = (AsmJsSIMDValue*)(buffer + index);
         AsmJsSIMDValue value;
 
-        value = SIMDLdData(data, dataWidth);
+        value = SIMDUtils::SIMDLdData(data, dataWidth);
         SetRegRawSimd(dstReg, value);
     }
 
@@ -7528,7 +7536,7 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
         }
         AsmJsSIMDValue *data = (AsmJsSIMDValue*)(buffer + index);
         AsmJsSIMDValue value = GetRegRawSimd(srcReg);
-        SIMDStData(data, value, dataWidth);
+        SIMDUtils::SIMDStData(data, value, dataWidth);
     }
 
     template <class T>
@@ -7547,7 +7555,7 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
         }
         AsmJsSIMDValue *data = (AsmJsSIMDValue*)(buffer + index);
         AsmJsSIMDValue value = GetRegRawSimd(srcReg);
-        SIMDStData(data, value, dataWidth);
+        SIMDUtils::SIMDStData(data, value, dataWidth);
 
     }
 
@@ -7594,7 +7602,7 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
         values[5] = (int16) GetRegRawInt(playout->I6);
         values[6] = (int16) GetRegRawInt(playout->I7);
         values[7] = (int16) GetRegRawInt(playout->I8);
-        
+
         AsmJsSIMDValue result = SIMDInt16x8Operation::OpInt16x8(values);
         SetRegRawSimd(playout->I8_0, result);
     }
@@ -7627,7 +7635,7 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
     template <class T>
     void InterpreterStackFrame::OP_SimdUint16x8(const unaligned T* playout)
     {
-        
+
         uint16 values[8];
         values[0] = (uint16) GetRegRawInt(playout->I1);
         values[1] = (uint16) GetRegRawInt(playout->I2);
@@ -7637,7 +7645,7 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
         values[5] = (uint16) GetRegRawInt(playout->I6);
         values[6] = (uint16) GetRegRawInt(playout->I7);
         values[7] = (uint16) GetRegRawInt(playout->I8);
-        
+
         AsmJsSIMDValue result = SIMDUint16x8Operation::OpUint16x8(values);
         SetRegRawSimd(playout->U8_0, result);
     }
@@ -7692,7 +7700,7 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
         values[5] = GetRegRawInt(playout->I6) ? true : false;
         values[6] = GetRegRawInt(playout->I7) ? true : false;
         values[7] = GetRegRawInt(playout->I8) ? true : false;
-        
+
         AsmJsSIMDValue result = SIMDBool16x8Operation::OpBool16x8(values);
         SetRegRawSimd(playout->B8_0, result);
     }
@@ -7717,7 +7725,7 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
         values[13] = GetRegRawInt(playout->I14) ? true : false;
         values[14] = GetRegRawInt(playout->I15) ? true : false;
         values[15] = GetRegRawInt(playout->I16) ? true : false;
-        
+
         AsmJsSIMDValue result = SIMDBool8x16Operation::OpBool8x16(values);
         SetRegRawSimd(playout->B16_0, result);
     }
@@ -8340,7 +8348,7 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
         return JavascriptOperators::OP_ResumeYield(yieldData, iterator);
     }
 
-    void* InterpreterStackFrame::operator new(size_t byteSize, void* previousAllocation)
+    void* InterpreterStackFrame::operator new(size_t byteSize, void* previousAllocation) throw()
     {
         //
         // Placement 'new' is used by InterpreterStackFrame to initialize the C++ object on the RcInterpreter's
@@ -8356,11 +8364,14 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
         return previousAllocation;
     }
 
-    void __cdecl InterpreterStackFrame::operator delete(void * allocationToFree, void * previousAllocation)
+    void __cdecl InterpreterStackFrame::operator delete(void * allocationToFree, void * previousAllocation) throw()
     {
         AssertMsg(allocationToFree == previousAllocation, "Memory locations should match");
         AssertMsg(false, "This function should never actually be called");
     }
+
+    template void* Js::InterpreterStackFrame::GetReg<unsigned int>(unsigned int) const;
+    template void Js::InterpreterStackFrame::SetReg<unsigned int>(unsigned int, void*);
 } // namespace Js
 
 // Make sure the macro and the layout for the op is consistent

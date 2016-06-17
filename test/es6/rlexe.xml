@@ -708,6 +708,11 @@
   </test>
   <test>
     <default>
+      <files>nullPropertyDescriptor.js</files>
+    </default>
+  </test>
+  <test>
+    <default>
       <files>object-is.js</files>
       <compile-flags>-args summary -endargs</compile-flags>
     </default>
@@ -954,7 +959,7 @@
   <test>
     <default>
       <files>regex-prototype-properties.js</files>
-      <compile-flags>-ES6RegExPrototypeProperties -args summary -endargs</compile-flags>
+      <compile-flags>-ES6RegExPrototypeProperties -ES6PrototypeChain -args summary -endargs</compile-flags>
     </default>
   </test>
   <test>
@@ -1180,8 +1185,7 @@
 <test>
     <default>
         <files>ES6HasInstance.js</files>
-        <compile-flags>-es6HasInstance</compile-flags>
-        <baseline>ES6HasInstance.baseline</baseline>
+        <compile-flags>-es6HasInstance -args summary -endargs</compile-flags>
     </default>
 </test>
 <test>
