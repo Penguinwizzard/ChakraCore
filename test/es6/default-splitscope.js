@@ -624,7 +624,7 @@ var tests = [
     }   
   }, 
   {
-    name: "Split scope with symbol overriding",
+    name: "Split scope with symbol shadowing",
     body: function () {
           function f1(a = 10, b = function () { return a; }) {
               assert.areEqual(100, a(), "Function definition inside the body is hoisted");
@@ -695,12 +695,12 @@ var tests = [
             return 3 * 3; 
         } 
 
-        function f(h = () => eval("g()")) { // cannot combine scopes 
-            assert.areEqual(6, g(), "Right method is called inside the function");
+        function f(h = () => eval("g()")) {
+            assert.areEqual(6, g(), "Right method is called in the body scope");
             function g() { 
                 return 2 * 3; 
             }
-            return h(); // 9 
+            return h();
         } 
 
         assert.areEqual(9, f(), "Paramater scope remains split"); 
@@ -777,7 +777,7 @@ var tests = [
         { 
             let a = 1, b = 2, c = 3; 
             function testEvalRef(a = eval("a"), b = eval("b"), c = eval("c")) { 
-            return [a, b, c]; 
+                return [a, b, c]; 
             } 
             assert.throws(function () { testEvalRef(); }, 
                         ReferenceError, 
@@ -785,10 +785,40 @@ var tests = [
                         "Use before declaration"); 
 
             function testEvalRef2(x = eval("a"), y = eval("b"), z = eval("c")) { 
-            return [x, y, z]; 
+                return [x, y, z]; 
             } 
             assert.areEqual([1, 2, 3], testEvalRef2(), "Eval with references works in parameter scope"); 
-        } 
+        }
+
+        function f1(a = 10, b = () => eval("a")) {
+            assert.areEqual(10, eval("a"), "In the body initial value of the symbol should be same as the final value from param scope");
+            a = 20;
+            assert.areEqual(20, eval("a"), "In the body after assignment the symbol value is updated");
+            assert.areEqual(10, b(), "Eval in the param scope captures the symbol from the param scope");
+        }
+        f1();
+
+        // function f2(a = 10, b = () => eval("a")) {
+        //     a = 20;
+        //     assert.areEqual(10, b(), "Eval in the param scope captures the symbol from the param scope evan when there is no eval in the body");
+        // }
+        // f2();
+
+        function f3(a = 10, b = () => eval("a"), c = a = 30) {
+            assert.areEqual(30, eval("a"), "In the body initial value of the symbol should be same as the final value from param scope");
+            a = 20;
+            assert.areEqual(20, eval("a"), "In the body after assignment the symbol value is updated");
+            assert.areEqual(30, b(), "Eval in the param scope captures the symbol from the param scope");
+        }
+        f3();
+
+        function f4(a = 10, b = () => eval("a")) {
+            assert.areEqual(30, eval("a"), "In the body initial value of the symbol should be same as the final value from param scope");
+            a = 20;
+            assert.areEqual(20, eval("a"), "In the body after assignment the symbol value is updated");
+            assert.areEqual(30, b(), "Eval in the param scope captures the symbol from the param scope");
+        }
+        f4(30);
     } 
   }, 
   { 
@@ -815,7 +845,6 @@ var tests = [
                         "Let/Const redeclaration"); 
 
         // Let and const do not leak outside of an eval, so the test cases below should never throw. 
-
         // Redeclarations of formals - let 
         assert.doesNotThrow(function (a = eval("let a")) { return a; }, 
                             "Attempting to redeclare the current formal using let inside an eval does not leak"); 
@@ -853,23 +882,20 @@ var tests = [
         } 
         assert.doesNotThrow(function() { foo(); }, "Redefining a local var with an eval var does not throw"); 
 
-        assert.throws(function() { return function(a = eval("let a = 1;")) { }; },   ReferenceError, "Redefining a param with a parameter scope eval let declaration throws",   "Let/Const redeclaration"); 
-        assert.throws(function() { return (function(a = eval("const a = 1;")) { })(); }, ReferenceError, "Redefining a param with a parameter scope eval const declaration throws", "Let/Const redeclaration"); 
-
         // Function bodies defined in eval 
         function funcArrow(a = eval("() => 1"), b = a()) { return [a(), b]; } 
         assert.areEqual([1,1], funcArrow(), "Defining an arrow function body inside an eval works at default parameter scope"); 
 
-        function funcDecl(a = eval("function () { return 1; }"), b = a()) { return [a(), b]; } 
+        function funcDecl(a = eval("(function foo() { return 1; })"), b = a()) { return [a(), b]; } 
         assert.areEqual([1, 1], funcDecl(), "Defining a function inside an eval works at default parameter scope"); 
 
-        function genFuncDecl(a = eval("function *() { yield 1; return 2; }"), b = a().next()) { return [b, a().next().value]; } 
-        assert.areEqual([{value : 1, done : false}, {value : 2, done : true}], genFuncDecl(), "Declaring a generator function inside an eval works at default parameter scope"); 
+        function genFuncDecl(a = eval("(function *foo() { yield 1; return 2; })"), b = a(), c = b.next()) { return [c, b.next()]; }
+        assert.areEqual([{value : 1, done : false}, {value : 2, done : true}], genFuncDecl(), "Declaring a generator function inside an eval works at default parameter scope");
 
-        function funcExpr(a = eval("f = function () { return 1; }"), b = f()) { return [a, b, f()]; } 
-        assert.areEqual([undefined, 1, 1], funcExpr(), "Declaring a function inside an eval works at default parameter scope"); 
-         
-        assert.throws(function () { eval("function foo(a = eval('b'), b) {}; foo();"); }, ReferenceError, "Future default references using eval are not allowed", "Use before declaration"); 
+        function funcExpr(a = eval("f = function foo() { return 1; }"), b = f()) { return [a(), b, f()]; }
+        assert.areEqual([1, 1, 1], funcExpr(), "Declaring a function inside an eval works at default parameter scope");
+
+        assert.throws(function () { eval("function foo(a = eval('b'), b) {}; foo();"); }, ReferenceError, "Future default references using eval are not allowed", "Use before declaration");
     } 
   }, 
 ]; 

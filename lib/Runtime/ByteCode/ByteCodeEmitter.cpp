@@ -3818,6 +3818,7 @@ void ByteCodeGenerator::StartEmitFunction(ParseNode *pnodeFnc)
                 !funcInfo->Escapes() &&
                 funcInfo->frameObjRegister != Js::Constants::NoRegister &&
                 !ApplyEnclosesArgs(pnodeFnc, this) &&
+                funcInfo->paramScope->GetCanMergeWithBodyScope() && // There is eval in the param scope
                 (PHASE_FORCE(Js::CachedScopePhase, funcInfo->byteCodeFunction) || !IsInDebugMode()));
 
             if (funcInfo->GetHasCachedScope())
