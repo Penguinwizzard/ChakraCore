@@ -359,9 +359,13 @@ typedef struct XProcNumberPageSegment
     __int3264 pageAddress;
     __int3264 allocStartAddress;
     __int3264 allocEndAddress;
+    __int3264 pageSegment;
     struct XProcNumberPageSegment* nextSegment;
+    unsigned int blockSize; // 2 pages
+    unsigned int committedEnd;
     unsigned int pageCount; // REVIEW: don't actually need these two fields, they are constant
     unsigned int sizeCat;
+    unsigned int blockIntegratedSize;
 } XProcNumberPageSegment;
 
 // CodeGenWorkItem fields, read only in JIT

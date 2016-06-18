@@ -301,7 +301,7 @@ Js::JavascriptNumber* XProcNumberPageSegmentImpl::AllocateNumber(HANDLE hProcess
             tail = (XProcNumberPageSegmentImpl*)tail->nextSegment;
         }
 
-        if (tail->pageAddress + tail->pageCount*AutoSystemInfo::PageSize - tail->allocEndAddress >= sizeCat)
+        if (tail->pageAddress + tail->committedEnd - tail->allocEndAddress >= sizeCat)
         {
             auto number = tail->allocEndAddress;
             tail->allocEndAddress += sizeCat;
@@ -317,10 +317,23 @@ Js::JavascriptNumber* XProcNumberPageSegmentImpl::AllocateNumber(HANDLE hProcess
             
             return (Js::JavascriptNumber*) number;
         }
+
+        // alloc blocks
+        if ((void*)tail->committedEnd < tail->GetEndAddress())
+        {
+            Assert((unsigned int)((char*)tail->GetEndAddress() - (char*)tail->committedEnd) >= tail->blockSize);
+            auto ret = ::VirtualAllocEx(hProcess, (void*)tail->committedEnd, tail->blockSize, MEM_COMMIT, PAGE_READWRITE);
+            if (!ret)
+            {
+                // TODO: throw OOM
+            }
+            tail->committedEnd += tail->blockSize;
+            return AllocateNumber(hProcess, value, numberTypeStatic, javascriptNumberVtbl);
+        }
     }
 
-    // alloc pages
-    void* pages = ::VirtualAllocEx(hProcess, nullptr, 2 * AutoSystemInfo::PageSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    // alloc new segment
+    void* pages = ::VirtualAllocEx(hProcess, nullptr, this->pageCount * AutoSystemInfo::PageSize, MEM_RESERVE, PAGE_READWRITE);
     if (pages == nullptr)
     {
         // TODO: throw
@@ -346,11 +359,14 @@ Js::JavascriptNumber* XProcNumberPageSegmentImpl::AllocateNumber(HANDLE hProcess
 
 XProcNumberPageSegmentImpl::XProcNumberPageSegmentImpl()
 {
-    this->pageCount = SmallAllocationBlockAttributes::PageCount; // 2
+    this->pageCount = Memory::IdleDecommitPageAllocator::DefaultMaxAllocPageCount;
     this->sizeCat = HeapInfo::GetAlignedSizeNoCheck(sizeof(Js::JavascriptNumber));
+    this->blockSize = SmallAllocationBlockAttributes::PageCount*AutoSystemInfo::PageSize;
+    this->blockSize = 0;
+    this->pageSegment = 0;
 }
 
-CodeGenNumberChunk* XProcNumberPageSegmentManager::RegisterSegments(XProcNumberPageSegment* segments)
+CodeGenNumberChunk* ::XProcNumberPageSegmentManager::RegisterSegments(XProcNumberPageSegment* segments)
 {
     Assert(segments->pageAddress && segments->allocStartAddress && segments->allocEndAddress);
 
@@ -401,6 +417,7 @@ void XProcNumberPageSegmentManager::GetFreeSegment(XProcNumberPageSegment& seg)
 
     if (segmentsList == nullptr)
     {
+        new (&seg) XProcNumberPageSegmentImpl();
         return;
     }
 
@@ -419,4 +436,43 @@ void XProcNumberPageSegmentManager::GetFreeSegment(XProcNumberPageSegment& seg)
         midl_user_free(temp);
         return;
     }
+}
+
+void XProcNumberPageSegmentManager::Integrate(Recycler* recycler)
+{
+    AutoCriticalSection autoCS(&cs);
+
+    auto temp = this->segmentsList;
+    while (temp) 
+    {
+        if (temp->pageSegment == 0)
+        {
+            // TODO: create new PageSegment with allocated pages, and integrate
+
+            PageAllocator * leafPageAllocator = recycler->GetRecyclerLeafPageAllocator();
+
+            //temp->pageSegment = leafPageAllocator
+
+            DListBase<PageSegment> pendingIntegrationNumberSegment;
+            
+            //pendingIntegrationNumberSegment.PrependNode(leafPageAllocator);
+            
+            temp->pageSegment = (intptr_t)&pendingIntegrationNumberSegment.Head();
+            
+            leafPageAllocator->IntegrateSegments(pendingIntegrationNumberSegment, 1, temp->pageCount);
+            
+        }
+
+        for (; temp->blockIntegratedSize + temp->blockSize < (unsigned int)temp->allocEndAddress; temp->blockIntegratedSize += temp->blockSize)
+        {
+            // TODO: integrate full block to heapBlock
+
+            if (!recycler->IntegrateBlock<LeafBit>((char*)temp->pageAddress+temp->blockIntegratedSize, (PageSegment*)temp->pageSegment, temp->sizeCat, sizeof(Js::JavascriptNumber)))
+            {
+                Js::Throw::OutOfMemory();
+            }
+        }
+
+    }
+
 }

@@ -14,6 +14,8 @@ struct XProcNumberPageSegmentImpl : public XProcNumberPageSegment
 {
     XProcNumberPageSegmentImpl();
     Js::JavascriptNumber* AllocateNumber(HANDLE hProcess, double value, Js::StaticType* numberTypeStatic, void* javascriptNumberVtbl);
+    unsigned int GetTotalSize() { return this->pageCount * AutoSystemInfo::PageSize; }
+    void* GetEndAddress() { return (void*)(this->pageAddress + this->pageCount * AutoSystemInfo::PageSize); }
 };
 
 /****************************************************************************
@@ -73,9 +75,6 @@ CompileAssert(
     sizeof(CodeGenNumberChunk) == HeapConstants::ObjectGranularity ||
     sizeof(CodeGenNumberChunk) == HeapConstants::ObjectGranularity * 2);
 
-
-class CodeGenNumberThreadAllocator;
-
 struct XProcNumberPageSegmentManager
 {
     CriticalSection cs;
@@ -89,11 +88,7 @@ struct XProcNumberPageSegmentManager
     void GetFreeSegment(XProcNumberPageSegment& seg);
     CodeGenNumberChunk* RegisterSegments(XProcNumberPageSegment* segments);
 
-    void Integrate()
-    {
-        AutoCriticalSection autoCS(&cs);
-        //...
-    }
+    void Integrate(Recycler* recycler);
 };
 
 class CodeGenNumberThreadAllocator

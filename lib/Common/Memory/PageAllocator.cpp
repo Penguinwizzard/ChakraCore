@@ -176,6 +176,13 @@ PageSegmentBase<T>::PageSegmentBase(PageAllocatorBase<T> * allocator, bool exter
     }
 }
 
+template<typename T>
+PageSegmentBase<T>::PageSegmentBase(PageAllocatorBase<T> * allocator, bool external, void* address, uint pageCount, uint committedCount) :
+    SegmentBase(allocator, allocator->maxAllocPageCount), decommitPageCount(0)
+{
+
+}
+
 #ifdef PAGEALLOCATOR_PROTECT_FREEPAGE
 template<typename T>
 bool
