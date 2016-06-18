@@ -1975,7 +1975,7 @@ void ByteCodeGenerator::LoadAllConstants(FuncInfo *funcInfo)
         this->LoadNewTargetObject(funcInfo);
     }
 
-    if (funcInfo->thisPointerRegister != Js::Constants::NoRegister)
+    if (funcInfo->thisPointerRegister != Js::Constants::NoRegister && funcInfo->paramScope->GetCanMergeWithBodyScope())
     {
         this->LoadThisObject(funcInfo, thisLoadedFromParams);
     }
@@ -3103,9 +3103,27 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
         // For now, emit all constant loads at top of function (should instead put in closest dominator of uses).
         LoadAllConstants(funcInfo);
         
-        if (!pnode->sxFnc.HasNonSimpleParameterList() || paramScope->GetCanMergeWithBodyScope())
+        if (paramScope && !paramScope->GetCanMergeWithBodyScope())
         {
-            HomeArguments(funcInfo);
+            byteCodeFunction->SetParamAndBodyScopeNotMerged();
+        }
+
+        HomeArguments(funcInfo);
+        
+        if (paramScope && !paramScope->GetCanMergeWithBodyScope())
+        {
+            byteCodeFunction->SetParamAndBodyScopeNotMerged();
+
+            if (funcInfo->thisPointerRegister != Js::Constants::NoRegister)
+            {
+                this->LoadThisObject(funcInfo, false);
+            }
+
+            // Pop the body scope before emitting the default args
+            PopScope();
+            Assert(this->GetCurrentScope() == paramScope);
+
+            funcInfo->SetCurrentChildScope(paramScope);
         }
 
         if (funcInfo->root->sxFnc.pnodeRest != nullptr)
@@ -3227,19 +3245,6 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
         if (pnode->sxFnc.HasNonSimpleParameterList())
         {
             this->InitBlockScopedNonTemps(funcInfo->root->sxFnc.pnodeScopes, funcInfo);
-
-            if (!paramScope->GetCanMergeWithBodyScope())
-            {
-                byteCodeFunction->SetParamAndBodyScopeNotMerged();
-
-                HomeArguments(funcInfo);
-
-                // Pop the body scope before emitting the default args
-                PopScope();
-                Assert(this->GetCurrentScope() == paramScope);
-
-                funcInfo->SetCurrentChildScope(paramScope);
-            }
 
             EmitDefaultArgs(funcInfo, pnode);
 

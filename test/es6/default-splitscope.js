@@ -798,27 +798,33 @@ var tests = [
         }
         f1();
 
-        // function f2(a = 10, b = () => eval("a")) {
-        //     a = 20;
-        //     assert.areEqual(10, b(), "Eval in the param scope captures the symbol from the param scope evan when there is no eval in the body");
-        // }
-        // f2();
-
-        function f3(a = 10, b = () => eval("a"), c = a = 30) {
-            assert.areEqual(30, eval("a"), "In the body initial value of the symbol should be same as the final value from param scope");
+        function f2(a = 10, b = () => eval("a")) {
             a = 20;
-            assert.areEqual(20, eval("a"), "In the body after assignment the symbol value is updated");
-            assert.areEqual(30, b(), "Eval in the param scope captures the symbol from the param scope");
+            assert.areEqual(10, b(), "Eval in the param scope captures the symbol from the param scope evan when there is no eval in the body");
+        }
+        f2();
+
+        function f3(a = 10, b = function () { return eval("a"); }) {
+            a = 20;
+            assert.areEqual(10, b(), "Eval in the param scope captures the symbol from the param scope evan when there is no eval in the body");
         }
         f3();
 
-        function f4(a = 10, b = () => eval("a")) {
+        function f4(a = 10, b = () => eval("a"), c = a = 30) {
             assert.areEqual(30, eval("a"), "In the body initial value of the symbol should be same as the final value from param scope");
             a = 20;
             assert.areEqual(20, eval("a"), "In the body after assignment the symbol value is updated");
             assert.areEqual(30, b(), "Eval in the param scope captures the symbol from the param scope");
         }
-        f4(30);
+        f4();
+
+        function f5(a = 10, b = () => eval("a")) {
+            assert.areEqual(30, eval("a"), "In the body initial value of the symbol should be same as the final value from param scope");
+            a = 20;
+            assert.areEqual(20, eval("a"), "In the body after assignment the symbol value is updated");
+            assert.areEqual(30, b(), "Eval in the param scope captures the symbol from the param scope");
+        }
+        f5(30);
     } 
   }, 
   { 
