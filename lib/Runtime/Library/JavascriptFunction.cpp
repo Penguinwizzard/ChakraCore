@@ -292,10 +292,6 @@ namespace Js
         return JavascriptFunction::NewInstanceHelper(function->GetScriptContext(), function, callInfo, args, JavascriptFunction::FunctionKind::Async);
     }
 
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1606_MSRC33121_BUG7230605) || defined(_CHAKRACOREBUILD)
     Var JavascriptFunction::NewAsyncFunctionInstanceRestrictedMode(RecyclableObject* function, CallInfo callInfo, ...)
     {
         ScriptContext* scriptContext = function->GetScriptContext();
@@ -308,7 +304,6 @@ namespace Js
 
         return JavascriptFunction::NewInstanceHelper(scriptContext, function, callInfo, args, JavascriptFunction::FunctionKind::Async);
     }
-#endif
 
     //
     // Dummy EntryPoint for Function.prototype
