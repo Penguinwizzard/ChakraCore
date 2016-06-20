@@ -16,6 +16,7 @@ struct XProcNumberPageSegmentImpl : public XProcNumberPageSegment
     Js::JavascriptNumber* AllocateNumber(HANDLE hProcess, double value, Js::StaticType* numberTypeStatic, void* javascriptNumberVtbl);
     unsigned int GetTotalSize() { return this->pageCount * AutoSystemInfo::PageSize; }
     void* GetEndAddress() { return (void*)(this->pageAddress + this->pageCount * AutoSystemInfo::PageSize); }
+    void* GetCommitEndAddress() { return (void*)(this->pageAddress + this->committedEnd); }
 };
 
 /****************************************************************************

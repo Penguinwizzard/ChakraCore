@@ -184,6 +184,9 @@ void
 CodeGenNumberThreadAllocator::Integrate()
 {
     AutoCriticalSection autocs(&cs);
+
+    this->xProcNumberPageMgr.Integrate(this->recycler);
+
     PageAllocator * leafPageAllocator = this->recycler->GetRecyclerLeafPageAllocator();
     leafPageAllocator->IntegrateSegments(pendingIntegrationNumberSegment, pendingIntegrationNumberSegmentCount, pendingIntegrationNumberSegmentPageCount);
     PageAllocator * recyclerPageAllocator = this->recycler->GetRecyclerPageAllocator();
@@ -322,7 +325,8 @@ Js::JavascriptNumber* XProcNumberPageSegmentImpl::AllocateNumber(HANDLE hProcess
         if ((void*)tail->committedEnd < tail->GetEndAddress())
         {
             Assert((unsigned int)((char*)tail->GetEndAddress() - (char*)tail->committedEnd) >= tail->blockSize);
-            auto ret = ::VirtualAllocEx(hProcess, (void*)tail->committedEnd, tail->blockSize, MEM_COMMIT, PAGE_READWRITE);
+            // TODO: implement guard pages (still necessary for OOP JIT?)
+            auto ret = ::VirtualAllocEx(hProcess, tail->GetCommitEndAddress(), tail->blockSize, MEM_COMMIT, PAGE_READWRITE);
             if (!ret)
             {
                 // TODO: throw OOM
@@ -362,7 +366,7 @@ XProcNumberPageSegmentImpl::XProcNumberPageSegmentImpl()
     this->pageCount = Memory::IdleDecommitPageAllocator::DefaultMaxAllocPageCount;
     this->sizeCat = HeapInfo::GetAlignedSizeNoCheck(sizeof(Js::JavascriptNumber));
     this->blockSize = SmallAllocationBlockAttributes::PageCount*AutoSystemInfo::PageSize;
-    this->blockSize = 0;
+    this->blockIntegratedSize = 0;
     this->pageSegment = 0;
 }
 
@@ -447,23 +451,16 @@ void XProcNumberPageSegmentManager::Integrate(Recycler* recycler)
     {
         if (temp->pageSegment == 0)
         {
-            // TODO: create new PageSegment with allocated pages, and integrate
-
-            PageAllocator * leafPageAllocator = recycler->GetRecyclerLeafPageAllocator();
-
-            //temp->pageSegment = leafPageAllocator
-
-            DListBase<PageSegment> pendingIntegrationNumberSegment;
-            
-            //pendingIntegrationNumberSegment.PrependNode(leafPageAllocator);
-            
-            temp->pageSegment = (intptr_t)&pendingIntegrationNumberSegment.Head();
-            
-            leafPageAllocator->IntegrateSegments(pendingIntegrationNumberSegment, 1, temp->pageCount);
+            auto leafPageAllocator = recycler->GetRecyclerLeafPageAllocator();
+            DListBase<PageSegment> segmentList;            
+            temp->pageSegment = (intptr_t)leafPageAllocator->AllocPageSegment(segmentList, leafPageAllocator,
+                (void*)temp->pageAddress, temp->pageCount, temp->committedEnd / AutoSystemInfo::PageSize);
+            leafPageAllocator->IntegrateSegments(segmentList, 1, temp->pageCount);
             
         }
 
-        for (; temp->blockIntegratedSize + temp->blockSize < (unsigned int)temp->allocEndAddress; temp->blockIntegratedSize += temp->blockSize)
+        for (; temp->pageAddress + temp->blockIntegratedSize + temp->blockSize < (unsigned int)temp->allocEndAddress; 
+            temp->blockIntegratedSize += temp->blockSize)
         {
             // TODO: integrate full block to heapBlock
 
@@ -473,6 +470,7 @@ void XProcNumberPageSegmentManager::Integrate(Recycler* recycler)
             }
         }
 
+        temp = temp->nextSegment;
     }
 
 }
