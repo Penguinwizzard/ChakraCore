@@ -439,6 +439,8 @@ static const unsigned __int64 c_debugFillPattern8 = 0xcececececececece;
         return this->isTJLoopBody;
     }
 
+    Js::JavascriptNumber* AllocateOOPNumber(double value);
+
     Js::ObjTypeSpecFldInfo* GetObjTypeSpecFldInfo(const uint index) const;
     Js::ObjTypeSpecFldInfo* GetGlobalObjTypeSpecFldInfo(uint propertyInfoId) const;
     void SetGlobalObjTypeSpecFldInfo(uint propertyInfoId, Js::ObjTypeSpecFldInfo* info);
