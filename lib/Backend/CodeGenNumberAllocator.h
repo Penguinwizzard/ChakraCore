@@ -86,6 +86,17 @@ struct XProcNumberPageSegmentManager
     {
     }
 
+    ~XProcNumberPageSegmentManager()
+    {
+        auto temp = segmentsList;
+        while (temp) 
+        {
+            auto next = temp->nextSegment;
+            midl_user_free(temp);
+            temp = next;
+        }
+    }
+
     void GetFreeSegment(XProcNumberPageSegment& seg);
     CodeGenNumberChunk* RegisterSegments(XProcNumberPageSegment* segments);
 
