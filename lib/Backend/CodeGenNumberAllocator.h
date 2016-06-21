@@ -160,13 +160,15 @@ struct XProcNumberPageSegmentImpl : public XProcNumberPageSegment
     void* GetEndAddress() { return (void*)(this->pageAddress + this->pageCount * AutoSystemInfo::PageSize); }
     void* GetCommitEndAddress() { return (void*)(this->pageAddress + this->committedEnd); }
     // TODO: using CodeGenNumberThreadAllocator to allocate the chunks only, abstract chunk alloc code out of CodeGenNumberThreadAllocator
-    CodeGenNumberThreadAllocator* GetChunkAllocator() { return (CodeGenNumberThreadAllocator*) this->chunkAllocator; }
+    CodeGenNumberThreadAllocator* GetChunkAllocator() { return (CodeGenNumberThreadAllocator*) this->chunkAllocator; }    
 };
+
+static_assert(sizeof(XProcNumberPageSegmentImpl) == sizeof(XProcNumberPageSegment), "should not have data member in XProcNumberPageSegmentImpl");
 
 struct XProcNumberPageSegmentManager
 {
     CriticalSection cs;
-    XProcNumberPageSegment* segmentsList;
+    XProcNumberPageSegmentImpl* segmentsList;
     Recycler* recycler;
     unsigned int integratedSegmentCount;
     XProcNumberPageSegmentManager(Recycler* recycler)
