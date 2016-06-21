@@ -185,8 +185,6 @@ CodeGenNumberThreadAllocator::Integrate()
 {
     AutoCriticalSection autocs(&cs);
 
-    this->xProcNumberPageMgr.Integrate(this->recycler);
-
     PageAllocator * leafPageAllocator = this->recycler->GetRecyclerLeafPageAllocator();
     leafPageAllocator->IntegrateSegments(pendingIntegrationNumberSegment, pendingIntegrationNumberSegmentCount, pendingIntegrationNumberSegmentPageCount);
     PageAllocator * recyclerPageAllocator = this->recycler->GetRecyclerPageAllocator();
@@ -210,11 +208,20 @@ CodeGenNumberThreadAllocator::Integrate()
             Js::Throw::OutOfMemory();
         }
         pendingIntegrationNumberBlock.RemoveHead(&NoThrowHeapAllocator::Instance);
+
     }
 
+    if (!pendingIntegrationChunkBlock.Empty())
+    {
+        // REVIEW: assuming we don't do mixed (in-proc-bg and OOP) jit.
+        // so integrate the number blocks only when chunk block is full and about to be integrated to recycler
+        this->xProcNumberPageMgr.Integrate(this->recycler);
+    }
 
     while (!pendingIntegrationChunkBlock.Empty())
     {
+        // REVIEW: the above number block integration can be moved into this loop
+
         TRACK_ALLOC_INFO(recycler, CodeGenNumberChunk, Recycler, 0, (size_t)-1);
 
         BlockRecord& record = pendingIntegrationChunkBlock.Head();
@@ -309,7 +316,7 @@ Js::JavascriptNumber* XProcNumberPageSegmentImpl::AllocateNumber(HANDLE hProcess
             auto number = tail->allocEndAddress;
             tail->allocEndAddress += sizeCat;
 
-            Js::JavascriptNumber localNumber(value, numberTypeStatic);
+            Js::JavascriptNumber localNumber(value, numberTypeStatic, true);
 
             // change vtable to the remote one
             *(void**)&localNumber = javascriptNumberVtbl;
@@ -457,20 +464,24 @@ void XProcNumberPageSegmentManager::Integrate(Recycler* recycler)
                 (void*)temp->pageAddress, temp->pageCount, temp->committedEnd / AutoSystemInfo::PageSize);
             leafPageAllocator->IntegrateSegments(segmentList, 1, temp->pageCount);
             
+            this->integratedSegmentCount++;            
         }
 
-        for (; temp->pageAddress + temp->blockIntegratedSize + temp->blockSize < (unsigned int)temp->allocEndAddress; 
-            temp->blockIntegratedSize += temp->blockSize)
+        Assert(sizeof(CodeGenNumberChunk) == sizeof(Js::JavascriptNumber));
+        size_t minIntegrateSize = temp->blockSize*CodeGenNumberChunk::MaxNumberCount;
+        for (; temp->pageAddress + temp->blockIntegratedSize + minIntegrateSize < (unsigned int)temp->allocEndAddress;
+            temp->blockIntegratedSize += minIntegrateSize)
         {
-            // TODO: integrate full block to heapBlock
+            // REVIEW: assuming we don't do mixed (in-proc-bg and OOP) jit. 
+            // when chunk block is full, number block should at least 3 times of chunk block
 
-            if (!recycler->IntegrateBlock<LeafBit>((char*)temp->pageAddress+temp->blockIntegratedSize, (PageSegment*)temp->pageSegment, temp->sizeCat, sizeof(Js::JavascriptNumber)))
+            TRACK_ALLOC_INFO(recycler, Js::JavascriptNumber, Recycler, 0, (size_t)-1);
+
+            if (!recycler->IntegrateBlock<LeafBit>((char*)temp->pageAddress + temp->blockIntegratedSize, (PageSegment*)temp->pageSegment, temp->sizeCat, sizeof(Js::JavascriptNumber)))
             {
                 Js::Throw::OutOfMemory();
             }
         }
-
         temp = temp->nextSegment;
     }
-
 }

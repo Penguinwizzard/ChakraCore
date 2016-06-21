@@ -114,6 +114,8 @@ public:
 #endif
     }
 
+    bool IsOOPJIT() { return true; }
+
     void InitLocalClosureSyms();
 
     bool HasAnyStackNestedFunc() const { return this->hasAnyStackNestedFunc; }

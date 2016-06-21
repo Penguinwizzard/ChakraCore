@@ -23,7 +23,8 @@ Recycler::IntegrateBlock(char * blockAddress, PageSegment * segment, size_t allo
 #ifdef PROFILE_RECYCLER_ALLOC
     if (success)
     {
-        TrackAllocData trackAllocData = TrackAllocData::CreateTrackAllocData(typeid(Js::JavascriptNumber), 0, (size_t)-1, __FILE__, __LINE__);
+        TrackAllocData trackAllocData;
+        ClearTrackAllocInfo(&trackAllocData);
         TrackIntegrate(blockAddress, SmallAllocationBlockAttributes::PageCount * AutoSystemInfo::PageSize, allocSize, objectSize, trackAllocData);
     }
 #endif

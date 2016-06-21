@@ -42,7 +42,7 @@ Js::Var BailoutConstantValue::ToVar(Func* func, Js::ScriptContext* scriptContext
     }
     else if (this->type == TyFloat64)
     {
-        if (false) // in-proc jit
+        if (!func->IsOOPJIT()) // in-proc jit
         {
             varValue = Js::JavascriptNumber::NewCodeGenInstance(func->GetNumberAllocator(), (double)this->u.floatConst.value, scriptContext);
         }
@@ -57,7 +57,7 @@ Js::Var BailoutConstantValue::ToVar(Func* func, Js::ScriptContext* scriptContext
     }
     else
     {       
-        if (false) // in-proc jit
+        if (!func->IsOOPJIT()) // in-proc jit
         {
             varValue = Js::JavascriptNumber::NewCodeGenInstance(func->GetNumberAllocator(), (double)this->u.intConst.value, scriptContext);
         }

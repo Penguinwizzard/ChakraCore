@@ -1589,7 +1589,7 @@ FloatConstOpnd::GetAddrOpnd(Func *func, bool dontEncode)
 #if !FLOATVAR
     if (this->m_number)
     {
-        if (false) // in-proc JIT
+        if (!func->IsOOPJIT()) // in-proc JIT
         {
             return AddrOpnd::New(this->m_number, (Js::TaggedNumber::Is(this->m_number) ? AddrOpndKindConstantVar : AddrOpndKindDynamicVar), func, dontEncode);
         }
@@ -1933,7 +1933,7 @@ AddrOpnd::NewFromNumber(int32 value, Func *func, bool dontEncode /* = false */)
     else
     {
         Js::Var number = nullptr;
-        if (false) // in-proc jit
+        if (!func->IsOOPJIT()) // in-proc jit
         {
             number = Js::JavascriptNumber::NewCodeGenInstance(func->GetNumberAllocator(), (double)value, func->GetScriptContext());
         }
@@ -1956,7 +1956,7 @@ AddrOpnd::NewFromNumber(int64 value, Func *func, bool dontEncode /* = false */)
     else
     {
         Js::Var number = nullptr;
-        if (false) // in-proc jit
+        if (!func->IsOOPJIT()) // in-proc jit
         {
             number = Js::JavascriptNumber::NewCodeGenInstance(func->GetNumberAllocator(), (double)value, func->GetScriptContext());
         }
@@ -2003,7 +2003,7 @@ AddrOpnd::NewFromNumber(double value, Func *func, bool dontEncode /* = false */)
     }
 
     Js::Var number = nullptr;
-    if (false) // in-proc jit
+    if (!func->IsOOPJIT()) // in-proc jit
     {
         number = Js::JavascriptNumber::NewCodeGenInstance(func->GetNumberAllocator(), (double)value, func->GetScriptContext());
     }

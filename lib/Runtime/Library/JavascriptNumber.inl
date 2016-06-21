@@ -16,10 +16,11 @@ namespace Js
 #else
     __inline JavascriptNumber::JavascriptNumber(double value, StaticType * type) : RecyclableObject(type), m_value(value)
     {
-        if (false) // in-proc JIT
-        {
-            Assert(type->GetTypeId() == TypeIds_Number);
-        }
+        Assert(type->GetTypeId() == TypeIds_Number);
+    }
+
+    __inline JavascriptNumber::JavascriptNumber(double value, StaticType * type, bool oopJIT) : RecyclableObject(type), m_value(value)
+    {
     }
 #endif
 

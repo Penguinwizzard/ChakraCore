@@ -81,8 +81,9 @@ struct XProcNumberPageSegmentManager
     CriticalSection cs;
     XProcNumberPageSegment* segmentsList;
     CodeGenNumberThreadAllocator* threadNumberAlloc;
+    unsigned int integratedSegmentCount;
     XProcNumberPageSegmentManager(CodeGenNumberThreadAllocator* threadNumberAlloc)
-        :segmentsList(nullptr), threadNumberAlloc(threadNumberAlloc)
+        :segmentsList(nullptr), threadNumberAlloc(threadNumberAlloc), integratedSegmentCount(0)
     {
     }
 
