@@ -360,6 +360,7 @@ typedef struct XProcNumberPageSegment
     __int3264 allocStartAddress;
     __int3264 allocEndAddress;
     __int3264 pageSegment;
+    __int3264 chunkAllocator;
     struct XProcNumberPageSegment* nextSegment;
     unsigned int blockSize; // 2 pages
     unsigned int committedEnd;

@@ -884,10 +884,7 @@ NativeCodeGenerator::CodeGen(PageAllocator * pageAllocator, CodeGenWorkItem* wor
             }
             JITOutputData jitWriteData = {0};
 
-            
-            auto& xProcNumberPageMgr = threadContext->GetCodeGenNumberThreadAllocator()->xProcNumberPageMgr;
-
-            xProcNumberPageMgr.GetFreeSegment(workItem->GetJITData()->xProcNumberPageSegment);
+            threadContext->GetXProcNumberPageSegmentManager()->GetFreeSegment(workItem->GetJITData()->xProcNumberPageSegment);
 
             HRESULT hr = scriptContext->GetThreadContext()->m_codeGenManager.RemoteCodeGenCall(
                 workItem->GetJITData(),
@@ -911,7 +908,8 @@ NativeCodeGenerator::CodeGen(PageAllocator * pageAllocator, CodeGenWorkItem* wor
                 else
                 {
                     // TODO: when codegen fail, need to return the segment as well
-                    epInfo->SetNumberChunks(xProcNumberPageMgr.RegisterSegments(jitWriteData.numberPageSegments));
+                    auto numberChunks = threadContext->GetXProcNumberPageSegmentManager()->RegisterSegments(jitWriteData.numberPageSegments);
+                    epInfo->SetNumberChunks(numberChunks);
                 }
             }
 
