@@ -5054,9 +5054,23 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
             {
                 OUTPUT_TRACE_DEBUGONLY(Js::ParsePhase, _u("The param and body scope of the function %s cannot be merged\n"), pnodeFnc->sxFnc.pnodeName ? pnodeFnc->sxFnc.pnodeName->sxVar.pid->Psz() : _u("Anonymous function"));
                 // Add a new symbol reference for each formal in the param scope to the body scope.
-                paramScope->ForEachSymbol([this](Symbol* param) {
+                // Retain the same position of formals in the body variables too.
+                paramScope->ForEachSymbol([this, pnodeFnc](Symbol* param) {
                     OUTPUT_TRACE_DEBUGONLY(Js::ParsePhase, _u("Creating a duplicate symbol for the parameter %s in the body scope\n"), param->GetPid()->Psz());
-                    ParseNodePtr paramNode = this->CreateVarDeclNode(param->GetPid(), STVariable, false, nullptr, false);
+
+                    ParseNodePtr paramNode = nullptr;
+                    if (this->m_ppnodeVar != &pnodeFnc->sxFnc.pnodeVars)
+                    {
+                        ParseNodePtr *const ppnodeVarSave = m_ppnodeVar;
+                        m_ppnodeVar = &pnodeFnc->sxFnc.pnodeVars;
+                        paramNode = this->CreateVarDeclNode(param->GetPid(), STVariable, false, nullptr, false);
+                        m_ppnodeVar = ppnodeVarSave;
+                    }
+                    else
+                    {
+                        paramNode = this->CreateVarDeclNode(param->GetPid(), STVariable, false, nullptr, false);
+                    }
+
                     Assert(paramNode && paramNode->sxVar.sym->GetScope()->GetScopeType() == ScopeType_FunctionBody);
                     paramNode->sxVar.sym->SetHasInit(true);
                 });
@@ -6156,10 +6170,17 @@ void Parser::ParseFncFormals(ParseNodePtr pnodeFnc, ushort flags)
             Error(ERRnoRparen);
         }
 
-        if ((this->GetCurrentFunctionNode()->sxFnc.CallsEval() || this->GetCurrentFunctionNode()->sxFnc.ChildCallsEval())
-            && !m_scriptContext->GetConfig()->IsES6DefaultArgsSplitScopeEnabled())
+        if (this->GetCurrentFunctionNode()->sxFnc.CallsEval() || this->GetCurrentFunctionNode()->sxFnc.ChildCallsEval())
         {
-            Error(ERREvalNotSupportedInParamScope);
+            if (!m_scriptContext->GetConfig()->IsES6DefaultArgsSplitScopeEnabled())
+            {
+                Error(ERREvalNotSupportedInParamScope);
+            }
+            else
+            {
+                Assert(pnodeFnc->sxFnc.HasNonSimpleParameterList());
+                pnodeFnc->sxFnc.pnodeScopes->sxBlock.scope->SetCannotMergeWithBodyScope();
+            }
         }
     }
     Assert(m_token.tk == tkRParen);
