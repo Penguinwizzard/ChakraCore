@@ -51,8 +51,8 @@ public:
         bytecodeInlinedCount = 0;
         numberOfInlineesWithLoop = 0;
     }
-    uint32 getNumberOfInlineesWithLoop() { return numberOfInlineesWithLoop; }
-    void incrementNumberOfInlineesWithLoop() { numberOfInlineesWithLoop++; }
+    uint32 GetNumberOfInlineesWithLoop() { return numberOfInlineesWithLoop; }
+    void IncrementNumberOfInlineesWithLoop() { numberOfInlineesWithLoop++; }
 
 
     static bool GetBuiltInInfo(
@@ -63,7 +63,7 @@ public:
 
 #if defined(ENABLE_DEBUG_CONFIG_OPTIONS)
     static void TraceInlining(Js::FunctionBody *const inliner, const char16* inlineeName, const char16* inlineeFunctionIdandNumberString, uint inlineeByteCodeCount,
-        Js::FunctionBody* topFunc, uint inlinedByteCodeCount, Js::FunctionBody *const inlinee, uint callSiteId, uint builtIn = -1);
+        Js::FunctionBody* topFunc, uint inlinedByteCodeCount, Js::FunctionBody *const inlinee, uint callSiteId, bool isLoopBody, uint builtIn = -1);
 #endif
 
     PREVENT_COPY(InliningDecider)
@@ -77,6 +77,11 @@ public:
     }
 #define INLINE_TRACE(...) \
     if (Js::Configuration::Global.flags.Trace.IsEnabled(Js::InlinePhase, topFunc->GetSourceContextId(), topFunc->GetLocalFunctionId())) \
+    { \
+    Output::Print(__VA_ARGS__); \
+    }
+#define INLINEINLOOPS_TRACE(...) \
+    if (Js::Configuration::Global.flags.Trace.IsEnabled(Js::InlineInJitLoopBodyPhase, topFunc->GetSourceContextId(), topFunc->GetLocalFunctionId())) \
     { \
     Output::Print(__VA_ARGS__); \
     }
