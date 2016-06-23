@@ -158,6 +158,7 @@ namespace Js
             CrossSite::ForceCrossSiteThunkOnPrototypeChain(newPrototype);
             return proxy->SetPrototypeTrap(newPrototype, shouldThrow);
         }
+        
         // 2.   Let extensible be the value of the [[Extensible]] internal data property of O.
         // 3.   Let current be the value of the [[Prototype]] internal data property of O.
         // 4.   If SameValue(V, current), then return true.
@@ -222,13 +223,10 @@ namespace Js
         if (isInvalidationOfInlineCacheNeeded)
         {
             // Notify old prototypes that they are being removed from a prototype chain. This triggers invalidating protocache, etc.
-            if (!JavascriptProxy::Is(object))
+            JavascriptOperators::MapObjectAndPrototypes<true>(object->GetPrototype(), [=](RecyclableObject* obj)
             {
-                JavascriptOperators::MapObjectAndPrototypes<true>(object->GetPrototype(), [=](RecyclableObject* obj)
-                {
-                    obj->RemoveFromPrototype(scriptContext);
-                });
-            }
+                obj->RemoveFromPrototype(scriptContext);
+            });
 
             // Examine new prototype chain. If it brings in any non-WritableData property, we need to invalidate related caches.
             bool objectAndPrototypeChainHasOnlyWritableDataProperties =
