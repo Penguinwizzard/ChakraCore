@@ -3226,6 +3226,53 @@ ThreadContext::InvalidateAllProtoInlineCaches()
     protoInlineCacheByPropId.ResetNoDelete();
 }
 
+#if DBG
+bool
+ThreadContext::IsObjectRegisteredInProtoInlineCaches(Js::DynamicObject * object)
+{
+    return protoInlineCacheByPropId.MapUntil([object](Js::PropertyId propertyId, InlineCacheList* inlineCacheList)
+    {
+        FOREACH_SLISTBASE_ENTRY(Js::InlineCache*, inlineCache, inlineCacheList)
+        {
+            if (inlineCache != nullptr)
+            {
+                // if this is proto inlineCache, check the prototypeObject
+                // or if this is accessor inlineCache on proto, check the accessor object
+                if ((inlineCache->IsProto() && inlineCache->GetPrototypeObject() == object) ||
+                    (inlineCache->IsAccessorOnProto() && inlineCache->GetAccessorObject() == object))
+                {
+                    return true;
+                }
+            }
+        }
+        NEXT_SLISTBASE_ENTRY;
+        return false;
+    });
+}
+
+bool
+ThreadContext::IsObjectRegisteredInStoreFieldInlineCaches(Js::DynamicObject * object)
+{
+    // returns true if prototypeObject is present. Otherwise returns false
+    return storeFieldInlineCacheByPropId.MapUntil([object](Js::PropertyId propertyId, InlineCacheList* inlineCacheList)
+    {
+        FOREACH_SLISTBASE_ENTRY(Js::InlineCache*, inlineCache, inlineCacheList)
+        {
+            if (inlineCache != nullptr)
+            {
+                if (inlineCache->IsAccessor() && inlineCache->GetAccessorObject() == object)
+                {
+                    return true;
+                }
+            }
+        }
+        NEXT_SLISTBASE_ENTRY;
+        return false;
+    });
+}
+
+#endif
+
 bool
 ThreadContext::AreAllProtoInlineCachesInvalidated()
 {

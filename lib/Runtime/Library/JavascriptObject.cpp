@@ -205,45 +205,62 @@ namespace Js
         // 7.   Set the value of the [[Prototype]] internal data property of O to V.
         // 8.   Return true.
 
-        // Notify old prototypes that they are being removed from a prototype chain. This triggers invalidating protocache, etc.
-        if (!JavascriptProxy::Is(object))
+        bool isInvalidationOfInlineCacheNeeded = true;
+        DynamicObject * obj = DynamicObject::FromVar(object);
+
+        // If this object was not prototype object, then no need to invalidate inline caches.
+        // Simply assign it a new type so if this object used protoInlineCache in past, it will
+        // be invalidated because of type mismatch and subsequently we will update its protoInlineCache
+        if (!(obj->GetDynamicType()->GetTypeHandler()->GetFlags() & DynamicTypeHandler::IsPrototypeFlag))
         {
-            JavascriptOperators::MapObjectAndPrototypes<true>(object->GetPrototype(), [=](RecyclableObject* obj)
-            {
-                obj->RemoveFromPrototype(scriptContext);
-            });
+            obj->ChangeType();
+            Assert(!obj->GetScriptContext()->GetThreadContext()->IsObjectRegisteredInProtoInlineCaches(obj));
+            Assert(!obj->GetScriptContext()->GetThreadContext()->IsObjectRegisteredInStoreFieldInlineCaches(obj));
+            isInvalidationOfInlineCacheNeeded = false;
         }
 
-        // Examine new prototype chain. If it brings in any non-WritableData property, we need to invalidate related caches.
-        bool objectAndPrototypeChainHasOnlyWritableDataProperties =
-            JavascriptOperators::CheckIfObjectAndPrototypeChainHasOnlyWritableDataProperties(newPrototype);
-
-        if (!objectAndPrototypeChainHasOnlyWritableDataProperties
-            || object->GetScriptContext() != newPrototype->GetScriptContext())
+        if (isInvalidationOfInlineCacheNeeded)
         {
-            // The HaveOnlyWritableDataProperties cache is cleared when a property is added or changed,
-            // but only for types in the same script context. Therefore, if the prototype is in another
-            // context, the object's cache won't be cleared when a property is added or changed on the prototype.
-            // Moreover, an object is added to the cache only when its whole prototype chain is in the same
-            // context.
-            //
-            // Since we don't have a way to find out which objects have a certain object as their prototype,
-            // we clear the cache here instead.
-
-            // Invalidate fast prototype chain writable data test flag
-            object->GetLibrary()->NoPrototypeChainsAreEnsuredToHaveOnlyWritableDataProperties();
-        }
-
-        if (!objectAndPrototypeChainHasOnlyWritableDataProperties)
-        {
-            // Invalidate StoreField/PropertyGuards for any non-WritableData property in the new chain
-            JavascriptOperators::MapObjectAndPrototypes<true>(newPrototype, [=](RecyclableObject* obj)
+            // Notify old prototypes that they are being removed from a prototype chain. This triggers invalidating protocache, etc.
+            if (!JavascriptProxy::Is(object))
             {
-                if (!obj->HasOnlyWritableDataProperties())
+                JavascriptOperators::MapObjectAndPrototypes<true>(object->GetPrototype(), [=](RecyclableObject* obj)
                 {
-                    obj->AddToPrototype(scriptContext);
-                }
-            });
+                    obj->RemoveFromPrototype(scriptContext);
+                });
+            }
+
+            // Examine new prototype chain. If it brings in any non-WritableData property, we need to invalidate related caches.
+            bool objectAndPrototypeChainHasOnlyWritableDataProperties =
+                JavascriptOperators::CheckIfObjectAndPrototypeChainHasOnlyWritableDataProperties(newPrototype);
+
+            if (!objectAndPrototypeChainHasOnlyWritableDataProperties
+                || object->GetScriptContext() != newPrototype->GetScriptContext())
+            {
+                // The HaveOnlyWritableDataProperties cache is cleared when a property is added or changed,
+                // but only for types in the same script context. Therefore, if the prototype is in another
+                // context, the object's cache won't be cleared when a property is added or changed on the prototype.
+                // Moreover, an object is added to the cache only when its whole prototype chain is in the same
+                // context.
+                //
+                // Since we don't have a way to find out which objects have a certain object as their prototype,
+                // we clear the cache here instead.
+
+                // Invalidate fast prototype chain writable data test flag
+                object->GetLibrary()->NoPrototypeChainsAreEnsuredToHaveOnlyWritableDataProperties();
+            }
+
+            if (!objectAndPrototypeChainHasOnlyWritableDataProperties)
+            {
+                // Invalidate StoreField/PropertyGuards for any non-WritableData property in the new chain
+                JavascriptOperators::MapObjectAndPrototypes<true>(newPrototype, [=](RecyclableObject* obj)
+                {
+                    if (!obj->HasOnlyWritableDataProperties())
+                    {
+                        obj->AddToPrototype(scriptContext);
+                    }
+                });
+            }
         }
 
         // Set to new prototype
