@@ -1664,14 +1664,7 @@ namespace Js
 
             Js::Var constructorArgs[] = { constructor, buffer, JavascriptNumber::ToVar(beginByteOffset, scriptContext), JavascriptNumber::ToVar(newLength, scriptContext) };
             Js::CallInfo constructorCallInfo(Js::CallFlags_New, _countof(constructorArgs));
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1606_MSRC33058_BUG7115643) || defined(_CHAKRACOREBUILD)
             newTypedArray = RecyclableObject::FromVar(TypedArrayBase::TypedArrayCreate(constructor, &Js::Arguments(constructorCallInfo, constructorArgs), newLength, scriptContext));
-#else
-            newTypedArray = JavascriptOperators::NewScObject(constructor, Js::Arguments(constructorCallInfo, constructorArgs), scriptContext);
-#endif
         }
         else
         {
@@ -1757,14 +1750,7 @@ namespace Js
 
                 Js::Var constructorArgs[] = { constructor, JavascriptNumber::ToVar(len, scriptContext) };
                 Js::CallInfo constructorCallInfo(Js::CallFlags_New, _countof(constructorArgs));
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1606_MSRC33058_BUG7115643) || defined(_CHAKRACOREBUILD)
                 newObj = TypedArrayBase::TypedArrayCreate(constructor, &Js::Arguments(constructorCallInfo, constructorArgs), len, scriptContext);
-#else
-                newObj = JavascriptOperators::NewScObject(constructor, Js::Arguments(constructorCallInfo, constructorArgs), scriptContext);
-#endif
 
                 TypedArrayBase* newTypedArrayBase = nullptr;
                 JavascriptArray* newArr = nullptr;
@@ -1828,14 +1814,7 @@ namespace Js
 
             Js::Var constructorArgs[] = { constructor, JavascriptNumber::ToVar(len, scriptContext) };
             Js::CallInfo constructorCallInfo(Js::CallFlags_New, _countof(constructorArgs));
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1606_MSRC33058_BUG7115643) || defined(_CHAKRACOREBUILD)
             newObj = TypedArrayBase::TypedArrayCreate(constructor, &Js::Arguments(constructorCallInfo, constructorArgs), len, scriptContext);
-#else
-            newObj = JavascriptOperators::NewScObject(constructor, Js::Arguments(constructorCallInfo, constructorArgs), scriptContext);
-#endif
 
             TypedArrayBase* newTypedArrayBase = nullptr;
             JavascriptArray* newArr = nullptr;
@@ -2094,14 +2073,7 @@ namespace Js
 
             Js::Var constructorArgs[] = { constructor, JavascriptNumber::ToVar(captured, scriptContext) };
             Js::CallInfo constructorCallInfo(Js::CallFlags_New, _countof(constructorArgs));
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1606_MSRC33058_BUG7115643) || defined(_CHAKRACOREBUILD)
             newObj = RecyclableObject::FromVar(TypedArrayBase::TypedArrayCreate(constructor, &Js::Arguments(constructorCallInfo, constructorArgs), captured, scriptContext));
-#else
-            newObj = RecyclableObject::FromVar(JavascriptOperators::NewScObject(constructor, Js::Arguments(constructorCallInfo, constructorArgs), scriptContext));
-#endif
 
             if (TypedArrayBase::Is(newObj))
             {
@@ -3064,10 +3036,6 @@ namespace Js
         return Js::JavascriptNumber::ToVarNoCheck(currentRes, scriptContext);
     }
 
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1606_MSRC33058_BUG7115643) || defined(_CHAKRACOREBUILD)
     // static
     Var TypedArrayBase::ValidateTypedArray(Var aValue, ScriptContext *scriptContext)
     {
@@ -3101,7 +3069,6 @@ namespace Js
 
         return newObj;
     }
-#endif
 
     template<>
     inline BOOL Int8Array::DirectSetItem(__in uint32 index, __in Js::Var value)
