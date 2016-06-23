@@ -1907,7 +1907,7 @@ Inline::InlineBuiltInFunction(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, 
 
 #if defined(ENABLE_DEBUG_CONFIG_OPTIONS)
     InliningDecider::TraceInlining(inlinerData->GetFunctionBody(), Js::JavascriptLibrary::GetNameForBuiltIn(builtInId),
-        nullptr, 0, this->topFunc->m_workItem->GetFunctionBody(), 0, nullptr, profileId, builtInId);
+        nullptr, 0, this->topFunc->m_workItem->GetFunctionBody(), 0, nullptr, profileId, callInstr->m_func->GetTopFunc()->IsLoopBody(), builtInId);
 #endif
 
     // From now on we are committed to inlining.
@@ -2255,7 +2255,7 @@ IR::Instr* Inline::InlineApply(IR::Instr *callInstr, Js::FunctionInfo *funcInfo,
 
 #if defined(ENABLE_DEBUG_CONFIG_OPTIONS)
     InliningDecider::TraceInlining(inlinerData->GetFunctionBody(), Js::JavascriptLibrary::GetNameForBuiltIn(builtInId),
-        nullptr, 0, this->topFunc->m_workItem->GetFunctionBody(), 0, nullptr, callSiteId, builtInId);
+        nullptr, 0, this->topFunc->m_workItem->GetFunctionBody(), 0, nullptr, callSiteId, callInstr->m_func->GetTopFunc()->IsLoopBody(), builtInId);
     char16 debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
 #endif
 
@@ -2718,7 +2718,7 @@ Inline::InlineCall(IR::Instr *callInstr, Js::FunctionInfo *funcInfo, const Js::F
 
 #if defined(ENABLE_DEBUG_CONFIG_OPTIONS)
     InliningDecider::TraceInlining(inlinerData->GetFunctionBody(), Js::JavascriptLibrary::GetNameForBuiltIn(builtInId),
-        nullptr, 0, this->topFunc->m_workItem->GetFunctionBody(), 0, nullptr, callSiteId, builtInId);
+        nullptr, 0, this->topFunc->m_workItem->GetFunctionBody(), 0, nullptr, callSiteId, callInstr->m_func->GetTopFunc()->IsLoopBody(), builtInId);
 #endif
 
     uint actualCount = 0;
