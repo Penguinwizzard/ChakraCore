@@ -1720,7 +1720,7 @@ NativeCodeGenerator::GatherCodeGenData(
     Assert(functionBody);
     Assert(jitTimeData);
     Assert(IsInlinee == !!runtimeData);
-    Assert(!IsInlinee || (!inliningDecider.GetIsLoopBody() || !PHASE_OFF(Js::InlineInJitLoopBodyPhase, topFunctionBody)));
+    Assert(!IsInlinee || (!inliningDecider.GetIsLoopBody() || PHASE_ON(Js::InlineInJitLoopBodyPhase, topFunctionBody)));
     Assert(topFunctionBody != nullptr && (!entryPoint->GetWorkItem() || entryPoint->GetWorkItem()->GetFunctionBody() == topFunctionBody));
     Assert(objTypeSpecFldInfoList != nullptr);
 

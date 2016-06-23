@@ -6092,7 +6092,7 @@ IRBuilder::BuildProfiledCallI(Js::OpCode opcode, uint32 offset, Js::RegSlot retu
                 if(this->m_func->m_jitTimeData)
                 {
                     const Js::FunctionCodeGenJitTimeData *inlinerData = this->m_func->m_jitTimeData;
-                    if((!this->IsLoopBody() || !PHASE_OFF(Js::InlineInJitLoopBodyPhase, this->m_func)) && 
+                    if((!this->IsLoopBody() || PHASE_ON(Js::InlineInJitLoopBodyPhase, this->m_func)) && 
                         inlinerData && inlinerData->inlineesBv && (!inlinerData->inlineesBv->Test(profileId)
 #if DBG
                         || (PHASE_STRESS(Js::BailOnNoProfilePhase, this->m_func->GetTopFunc()) &&
