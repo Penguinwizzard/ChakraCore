@@ -376,7 +376,7 @@ Func::Codegen()
 
         BEGIN_CODEGEN_PHASE(this, Js::InlinePhase);
 
-        InliningHeuristics heuristics(this->GetJnFunction());
+        InliningHeuristics heuristics(this->GetJnFunction(), this->IsLoopBody());
         Inline inliner(this, heuristics);
         inliner.Optimize();
 
