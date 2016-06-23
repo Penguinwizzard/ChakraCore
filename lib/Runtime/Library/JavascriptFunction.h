@@ -82,6 +82,7 @@ namespace Js
         static Var EntrySymbolHasInstance(RecyclableObject* function, CallInfo callInfo, ...);
 
         static Var NewAsyncFunctionInstance(RecyclableObject* function, CallInfo callInfo, ...);
+        static Var NewAsyncFunctionInstanceRestrictedMode(RecyclableObject* function, CallInfo callInfo, ...);
 
 #ifdef _NTBUILD
 #include <VerifyGlobalMSRCSettings.inl>

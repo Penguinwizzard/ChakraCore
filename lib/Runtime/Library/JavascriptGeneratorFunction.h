@@ -70,13 +70,7 @@ namespace Js
         };
 
         static Var NewInstance(RecyclableObject* function, CallInfo callInfo, ...);
-
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1606_MSRC33121_BUG7230605) || defined(_CHAKRACOREBUILD)
         static Var NewInstanceRestrictedMode(RecyclableObject* function, CallInfo callInfo, ...);
-#endif
     };
 
     class GeneratorVirtualScriptFunction : public ScriptFunction
