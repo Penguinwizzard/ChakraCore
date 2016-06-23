@@ -3618,6 +3618,11 @@ Inline::InlineScriptFunction(IR::Instr *callInstr, const Js::FunctionCodeGenJitT
     Js::FunctionBody *funcCaller = callInstr->m_func->GetJnFunction();
     Js::FunctionBody *funcBody = inlineeData->GetFunctionBody();
 
+    if (callInstr->m_func->IsLoopBody() && funcBody->GetUsesArgumentsObject())
+    {
+        return instrNext;
+    }
+
     if (callInstr->GetSrc2() &&
         callInstr->GetSrc2()->IsSymOpnd() &&
         callInstr->GetSrc2()->AsSymOpnd()->m_sym->AsStackSym()->GetArgSlotNum() > Js::InlineeCallInfo::MaxInlineeArgoutCount)
@@ -5054,7 +5059,7 @@ Inline::HasArgumentsAccess(IR::Instr * instr, SymID argumentsSymId)
 bool
 Inline::GetInlineeHasArgumentObject(Func * inlinee)
 {
-    if (!inlinee->GetHasArgumentObject())
+    if (!inlinee->GetJnFunction()->GetUsesArgumentsObject())
     {
         // If inlinee has no arguments access return false
         return false;
