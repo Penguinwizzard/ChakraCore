@@ -1804,11 +1804,6 @@ void ByteCodeGenerator::InitScopeSlotArray(FuncInfo * funcInfo)
             propertyIdsForScopeSlotArray[i] = Js::Constants::NoProperty;
         }
 #endif
-
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1606_MSRC33164_BUG7230595) || defined(_CHAKRACOREBUILD)
         auto setPropertyIdForScopeSlotArray =
             [scopeSlotCount, propertyIdsForScopeSlotArray]
             (Js::PropertyId slot, Js::PropertyId propId)
@@ -1819,39 +1814,14 @@ void ByteCodeGenerator::InitScopeSlotArray(FuncInfo * funcInfo)
             }
             propertyIdsForScopeSlotArray[slot] = propId;
         };
-#endif
 
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1606_MSRC33164_BUG7230595) || defined(_CHAKRACOREBUILD)
         auto setPropIdsForScopeSlotArray = [funcInfo, setPropertyIdForScopeSlotArray](Symbol *const sym)
-#else
-        auto setPropIdsForScopeSlotArray = [funcInfo, propertyIdsForScopeSlotArray](Symbol *const sym)
-#endif
         {
             if (sym->NeedsSlotAlloc(funcInfo))
             {
-                if (funcInfo->IsInnerArgumentsSymbol(sym) && !funcInfo->GetHasArguments())
-                {
-                    // In split scope case we have a duplicate symbol for arguments in the body (innerArgumentsSymbol).
-                    // But if arguments is not referenced in the body we don't have to allocate scope slot for it.
-                    // If we allocate one, then the debugger will assume that the arguments symbol is there and skip creating the fake one.
-                }
-                else
-                {
-                    // All properties should get correct propertyId here.
-                    Assert(sym->HasScopeSlot()); // We can't allocate scope slot now. Any symbol needing scope slot must have allocated it before this point.
-
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1606_MSRC33164_BUG7230595) || defined(_CHAKRACOREBUILD)
-                    setPropertyIdForScopeSlotArray(sym->GetScopeSlot(), sym->EnsurePosition(funcInfo));
-#else
-                    propertyIdsForScopeSlotArray[sym->GetScopeSlot()] = sym->EnsurePosition(funcInfo);
-#endif
-                }
+                // All properties should get correct propertyId here.
+                Assert(sym->HasScopeSlot()); // We can't allocate scope slot now. Any symbol needing scope slot must have allocated it before this point.
+                setPropertyIdForScopeSlotArray(sym->GetScopeSlot(), sym->EnsurePosition(funcInfo));
             }
         };
 
@@ -1859,50 +1829,22 @@ void ByteCodeGenerator::InitScopeSlotArray(FuncInfo * funcInfo)
 
         if (funcInfo->thisScopeSlot != Js::Constants::NoRegister)
         {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1606_MSRC33164_BUG7230595) || defined(_CHAKRACOREBUILD)
             setPropertyIdForScopeSlotArray(funcInfo->thisScopeSlot, Js::PropertyIds::_lexicalThisSlotSymbol);
-#else
-            propertyIdsForScopeSlotArray[funcInfo->thisScopeSlot] = Js::PropertyIds::_lexicalThisSlotSymbol;
-#endif
         }
 
         if (funcInfo->newTargetScopeSlot != Js::Constants::NoRegister)
         {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1606_MSRC33164_BUG7230595) || defined(_CHAKRACOREBUILD)
             setPropertyIdForScopeSlotArray(funcInfo->newTargetScopeSlot, Js::PropertyIds::_lexicalNewTargetSymbol);
-#else
-            propertyIdsForScopeSlotArray[funcInfo->newTargetScopeSlot] = Js::PropertyIds::_lexicalNewTargetSymbol;
-#endif
         }
 
         if (funcInfo->superScopeSlot != Js::Constants::NoRegister)
         {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1606_MSRC33164_BUG7230595) || defined(_CHAKRACOREBUILD)
             setPropertyIdForScopeSlotArray(funcInfo->superScopeSlot, Js::PropertyIds::_superReferenceSymbol);
-#else
-            propertyIdsForScopeSlotArray[funcInfo->superScopeSlot] = Js::PropertyIds::_superReferenceSymbol;
-#endif
         }
 
         if (funcInfo->superCtorScopeSlot != Js::Constants::NoRegister)
         {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1606_MSRC33164_BUG7230595) || defined(_CHAKRACOREBUILD)
             setPropertyIdForScopeSlotArray(funcInfo->superCtorScopeSlot, Js::PropertyIds::_superCtorReferenceSymbol);
-#else
-            propertyIdsForScopeSlotArray[funcInfo->superCtorScopeSlot] = Js::PropertyIds::_superCtorReferenceSymbol;
-#endif
         }
 
 #if DEBUG
