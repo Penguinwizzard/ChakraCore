@@ -1819,9 +1819,18 @@ void ByteCodeGenerator::InitScopeSlotArray(FuncInfo * funcInfo)
         {
             if (sym->NeedsSlotAlloc(funcInfo))
             {
-                // All properties should get correct propertyId here.
-                Assert(sym->HasScopeSlot()); // We can't allocate scope slot now. Any symbol needing scope slot must have allocated it before this point.
-                setPropertyIdForScopeSlotArray(sym->GetScopeSlot(), sym->EnsurePosition(funcInfo));
+                if (funcInfo->IsInnerArgumentsSymbol(sym) && !funcInfo->GetHasArguments())
+                {
+                    // In split scope case we have a duplicate symbol for arguments in the body (innerArgumentsSymbol).
+                    // But if arguments is not referenced in the body we don't have to allocate scope slot for it.
+                    // If we allocate one, then the debugger will assume that the arguments symbol is there and skip creating the fake one.
+                }
+                else
+                {
+                    // All properties should get correct propertyId here.
+                    Assert(sym->HasScopeSlot()); // We can't allocate scope slot now. Any symbol needing scope slot must have allocated it before this point.
+                    setPropertyIdForScopeSlotArray(sym->GetScopeSlot(), sym->EnsurePosition(funcInfo));
+                }
             }
         };
 
