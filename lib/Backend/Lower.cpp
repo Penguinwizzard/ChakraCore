@@ -6768,12 +6768,37 @@ Lowerer::GenerateCachedTypeCheck(IR::Instr *instrChk, IR::PropertySymOpnd *prope
     if (typeCheckGuard == nullptr)
     {
         Assert(type != nullptr);
-        expectedTypeOpnd = IR::AddrOpnd::New(type, IR::AddrOpndKindDynamicType, func, true);
+        expectedTypeOpnd = IR::AddrOpnd::New(type->GetAddr(), IR::AddrOpndKindDynamicType, func, true);
     }
     else
     {
         Assert(Js::PropertyGuard::GetSizeOfValue() == static_cast<size_t>(TySize[TyMachPtr]));
-        expectedTypeOpnd = IR::MemRefOpnd::New((void*)(typeCheckGuard->GetAddressOfValue()), TyMachPtr, func, IR::AddrOpndKindDynamicGuardValueRef);
+
+        if (this->m_func->IsOOPJIT())
+        {
+            int typeCheckGuardOffset = NativeCodeData::GetDataTotalOffset(typeCheckGuard);
+
+            // TODO: use virtual register
+
+            // move rcx, dataAddr
+            Lowerer::InsertMove(
+                IR::RegOpnd::New(nullptr, RegRCX, TyMachPtr, func),
+                IR::AddrOpnd::New(func->GetWorkItem()->GetWorkItemData()->nativeDataAddr, IR::AddrOpndKindDynamicMisc, func, true),
+                instrChk);
+
+            // mov rcx, [rcx]
+            Lowerer::InsertMove(
+                IR::RegOpnd::New(nullptr, RegRCX, TyMachPtr, func),
+                IR::IndirOpnd::New(IR::RegOpnd::New(nullptr, RegRCX, TyVar, func), 0, TyMachPtr, func, true),
+                instrChk);
+
+            expectedTypeOpnd = IR::IndirOpnd::New(IR::RegOpnd::New(nullptr, RegRCX, TyVar, func), typeCheckGuardOffset, TyMachPtr, func);
+
+        }
+        else
+        {
+            expectedTypeOpnd = IR::MemRefOpnd::New((void*)(typeCheckGuard->GetAddressOfValue()), TyMachPtr, func, IR::AddrOpndKindDynamicGuardValueRef);
+        }
         emitDirectCheck = false;
     }
 
