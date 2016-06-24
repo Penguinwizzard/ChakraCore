@@ -1844,27 +1844,24 @@ void ByteCodeGenerator::InitScopeSlotArray(FuncInfo * funcInfo)
 
         funcInfo->GetBodyScope()->ForEachSymbol(setPropIdsForScopeSlotArray);
 
-        if (!funcInfo->paramScope || funcInfo->paramScope->GetCanMergeWithBodyScope())
+        if (funcInfo->thisScopeSlot != Js::Constants::NoRegister)
         {
-            if (funcInfo->thisScopeSlot != Js::Constants::NoRegister)
-            {
-                setPropertyIdForScopeSlotArray(funcInfo->thisScopeSlot, Js::PropertyIds::_lexicalThisSlotSymbol);
-            }
+            setPropertyIdForScopeSlotArray(funcInfo->thisScopeSlot, Js::PropertyIds::_lexicalThisSlotSymbol);
+        }
 
-            if (funcInfo->newTargetScopeSlot != Js::Constants::NoRegister)
-            {
-                setPropertyIdForScopeSlotArray(funcInfo->newTargetScopeSlot, Js::PropertyIds::_lexicalNewTargetSymbol);
-            }
+        if (funcInfo->newTargetScopeSlot != Js::Constants::NoRegister)
+        {
+            setPropertyIdForScopeSlotArray(funcInfo->newTargetScopeSlot, Js::PropertyIds::_lexicalNewTargetSymbol);
+        }
 
-            if (funcInfo->superScopeSlot != Js::Constants::NoRegister)
-            {
-                setPropertyIdForScopeSlotArray(funcInfo->superScopeSlot, Js::PropertyIds::_superReferenceSymbol);
-            }
+        if (funcInfo->superScopeSlot != Js::Constants::NoRegister)
+        {
+            setPropertyIdForScopeSlotArray(funcInfo->superScopeSlot, Js::PropertyIds::_superReferenceSymbol);
+        }
 
-            if (funcInfo->superCtorScopeSlot != Js::Constants::NoRegister)
-            {
-                setPropertyIdForScopeSlotArray(funcInfo->superCtorScopeSlot, Js::PropertyIds::_superCtorReferenceSymbol);
-            }
+        if (funcInfo->superCtorScopeSlot != Js::Constants::NoRegister)
+        {
+            setPropertyIdForScopeSlotArray(funcInfo->superCtorScopeSlot, Js::PropertyIds::_superCtorReferenceSymbol);
         }
 
 #if DEBUG
@@ -3278,6 +3275,8 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
             }
         }
 
+        InitSpecialScopeSlots(funcInfo);
+
         // Emit all scope-wide function definitions before emitting function bodies
         // so that calls may reference functions they precede lexically.
         // Note, global eval scope is a fake local scope and is handled as if it were
@@ -3288,8 +3287,6 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
             // This only handles function declarations, which param scope cannot have any.
             DefineFunctions(funcInfo);
         }
-
-        InitSpecialScopeSlots(funcInfo);
 
         DefineUserVars(funcInfo);
 

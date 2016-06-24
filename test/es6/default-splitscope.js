@@ -1314,8 +1314,54 @@ var tests = [
             assert.areEqual(30, b(), "Eval in the param scope captures the symbol from the param scope");
         }
         f5(30);
+
+        var f6 = function f7(a = 10, b = () => eval("a")) {
+            a = 20;
+            assert.areEqual(10, b(), "Eval in the param scope captures the symbol from the param scope for a function expression with name");
+        }
+        f6();
+
+        var f8 = function f9(a = 10, b = () => eval("a"), c = b) {
+            a = 20;
+            function b() {
+                return a;
+            }
+            assert.areEqual(20, eval("b()"), "Eval in the body uses the function definition from body");
+            assert.areEqual(10, c(), "Eval in the param scope captures the symbol from the param scope for a function expression with name even with eval in the body");
+        }
+        f8();
     } 
-  }, 
+  },
+  {
+      name: "Split scoped functions inside eval",
+      body: function () {
+            var c = 10;
+            var result = eval(`(function (a = 1, b = () => a + c) {
+                a = 2 + c;
+                return [a, b()];
+            })()`);
+            assert.areEqual([12, 11].toString(), result.toString(), "Split scope function defined inside an eval should work fine");
+
+            result = eval(`(function (a = 1, b = () => eval('a + c')) {
+                a = 2 + c;
+                return [a, b()];
+            })()`);
+            assert.areEqual([12, 11].toString(), result.toString(), "Split scope function with eval defined inside an eval should work fine");
+
+            result = (function (b = eval(`((a = 1, b = () => a + c) => {
+                a = 2 + c;
+                return [a, b()];
+            })()`)) {
+                a = c;
+                result = eval(`((a1 = 1, b1 = () => a1 + a + c) => {
+                    a = 2 + a1 + c;
+                    return [a, b1()];
+                })()`);
+                return [a, result, b];
+            })();
+            assert.areEqual([13, 13, 24, 12, 11].toString(), result.toString(), "Split scope functions defined in both body and the param scope should work fine with eval");
+      }
+  },
   { 
     name: "Eval declarations in parameter scope", 
     body: function() { 
@@ -1381,19 +1427,22 @@ var tests = [
         function funcArrow(a = eval("() => 1"), b = a) { function a() { return 10; }; return [a(), b()]; }
         assert.areEqual([10,1], funcArrow(), "Defining an arrow function body inside an eval works at default parameter scope");
 
-        function funcDecl(a = eval("(function foo() { return 1; })"), b = a()) { return [a(), b]; }
-        assert.areEqual([1, 1], funcDecl(), "Defining a function inside an eval works at default parameter scope");
+        function f1(a = eval("(function f11() { return 1; })"), b = a()) { return [a(), b]; }
+        assert.areEqual([1, 1], f1(), "Defining a function inside an eval works at default parameter scope");
 
-        function funcDecl(a = eval("function foo() { return 1; }; foo"), b = a()) { return [a(), b]; }
-        assert.areEqual([1, 1], funcDecl(), "Defining a function inside an eval works at default parameter scope");
+        function f2(a = eval("function f21() { return 1; }; f21"), b = a()) { return [a(), b]; }
+        assert.areEqual([1, 1], f2(), "Defining a function inside an eval works at default parameter scope");
 
-        function genFuncDecl(a = eval("(function *foo() { yield 1; return 2; })"), b = a(), c = b.next()) { return [c, b.next()]; }
-        assert.areEqual([{value : 1, done : false}, {value : 2, done : true}], genFuncDecl(), "Declaring a generator function inside an eval works at default parameter scope");
+        function f3(a = eval("(f31 = function () { return 1; }, f31())")) { return a; }
+        assert.areEqual(1, f3(), "Defining a function inside an eval works at default parameter scope");
 
-        function funcExpr(a = eval("f = function foo() { return 1; }"), b = f()) { return [a(), b, f()]; }
-        assert.areEqual([1, 1, 1], funcExpr(), "Declaring a function inside an eval works at default parameter scope");
+        function f4(a = eval("(function *f41() { yield 1; return 2; })"), b = a(), c = b.next()) { return [c, b.next()]; }
+        assert.areEqual([{value : 1, done : false}, {value : 2, done : true}], f4(), "Declaring a generator function inside an eval works at default parameter scope");
 
-        assert.throws(function () { eval("function foo(a = eval('b'), b) {}; foo();"); }, ReferenceError, "Future default references using eval are not allowed", "Use before declaration");
+        function f5(a = eval("f = function f51() { return 1; }"), b = f()) { return [a(), b, f()]; }
+        assert.areEqual([1, 1, 1], f5(), "Declaring a function inside an eval works at default parameter scope");
+
+        assert.throws(function () { eval("function f6(a = eval('b'), b) {}; f6();"); }, ReferenceError, "Future default references using eval are not allowed", "Use before declaration");
     } 
   }, 
 ]; 
