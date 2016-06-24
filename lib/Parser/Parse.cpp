@@ -12240,11 +12240,6 @@ ParseNodePtr Parser::ParseDestructuredArrayLiteral(tokens declarationType, bool 
     {
         while (true)
         {
-            if (seenRest) // Rest must be in the last position.
-            {
-                Error(ERRDestructRestLast);
-            }
-
             ParseNodePtr pnodeElem = ParseDestructuredVarDecl<buildAST>(declarationType, isDecl, &seenRest, topLevel);
             if (buildAST)
             {
@@ -12265,6 +12260,11 @@ ParseNodePtr Parser::ParseDestructuredArrayLiteral(tokens declarationType, bool 
             if (m_token.tk != tkComma)
             {
                 Error(ERRDestructNoOper);
+            }
+
+            if (seenRest) // Rest must be in the last position.
+            {
+                Error(ERRDestructRestLast);
             }
 
             m_pscan->Scan();
