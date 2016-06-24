@@ -32,6 +32,7 @@ Func::Func(JitArenaAllocator *alloc, CodeGenWorkItem* workItem, const Js::Functi
     propertiesWrittenTo(nullptr),
     lazyBailoutProperties(alloc),
     anyPropertyMayBeWrittenTo(false),
+    argumentsObjSymToFuncMap(nullptr),
 #ifdef PROFILE_EXEC
     m_codeGenProfiler(codeGenProfiler),
 #endif
@@ -80,6 +81,7 @@ Func::Func(JitArenaAllocator *alloc, CodeGenWorkItem* workItem, const Js::Functi
     thisOrParentInlinerHasArguments(false),
     hasStackArgs(false),
     hasNonSimpleParams(false),
+	inlineesHaveStackArgs(false),
     hasUnoptimizedArgumentsAcccess(false),
     hasApplyTargetInlining(false),
     hasImplicitCalls(false),
@@ -151,10 +153,19 @@ Func::Func(JitArenaAllocator *alloc, CodeGenWorkItem* workItem, const Js::Functi
         {
             // doBackendArgumentsOptimization bit is set when there is no eval inside a function
             // as determined by the bytecode generator.
-            SetHasStackArgs(true);
+            if (!PHASE_OFF(Js::StackArgOptPhase, this))
+            {
+                SetHasStackArgs(true);
+            }
+            /*if (this->IsTopFunc() && !PHASE_OFF(Js::StackArgOptPhase, this))
+            {
+                EnsureArgumentsObjTrackingFuncsSet();
+                this->argumentsObjTrackingFuncsSet->AddNew(this);
+            }*/
         }
         if (doStackNestedFunc && m_jnFunction->GetNestedCount() != 0 &&
             this->GetTopFunc()->m_workItem->Type() != JsLoopBodyWorkItemType) // make sure none of the functions inlined in a jitted loop body allocate nested functions on the stack
+)
         {
             Assert(!(this->IsJitInDebugMode() && !m_jnFunction->GetUtf8SourceInfo()->GetIsLibraryCode()));
             stackNestedFunc = true;
@@ -174,6 +185,7 @@ Func::Func(JitArenaAllocator *alloc, CodeGenWorkItem* workItem, const Js::Functi
     if (parentFunc == nullptr)
     {
         inlineDepth = 0;
+        maxInlineeDepth = 0;
         m_symTable = JitAnew(alloc, SymTable);
         m_symTable->Init(this);
         Assert(Js::Constants::NoByteCodeOffset == postCallByteCodeOffset);
@@ -191,6 +203,7 @@ Func::Func(JitArenaAllocator *alloc, CodeGenWorkItem* workItem, const Js::Functi
     else
     {
         inlineDepth = parentFunc->inlineDepth + 1;
+        this->GetTopFunc()->maxInlineeDepth = this->GetTopFunc()->maxInlineeDepth > inlineDepth ? this->GetTopFunc()->maxInlineeDepth : inlineDepth;
         Assert(Js::Constants::NoByteCodeOffset != postCallByteCodeOffset);
     }
 
@@ -1523,6 +1536,15 @@ void Func::EnsureCallSiteToArgumentsOffsetFixupMap()
     if (this->callSiteToArgumentsOffsetFixupMap == nullptr)
     {
         this->callSiteToArgumentsOffsetFixupMap = JitAnew(this->m_alloc, CallSiteToArgumentsOffsetFixupMap, this->m_alloc);
+    }
+}
+
+void Func::EnsureArgumentsObjSymToFuncMap()
+{
+    Assert(this->IsTopFunc());
+    if (!this->argumentsObjSymToFuncMap)
+    {
+        this->argumentsObjSymToFuncMap = JitAnew(this->m_alloc, ArgObjSymToFuncMap, this->m_alloc);
     }
 }
 

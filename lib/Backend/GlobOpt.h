@@ -1078,6 +1078,8 @@ typedef JsUtil::BaseDictionary<IntConstType, Value *, JitArenaAllocator> IntCons
 typedef JsUtil::BaseDictionary<Js::Var, Value *, JitArenaAllocator> AddrConstantToValueMap;
 typedef JsUtil::BaseDictionary<Js::InternalString, Value *, JitArenaAllocator> StringConstantToValueMap;
 
+typedef JsUtil::BaseHashSet<Func*, JitArenaAllocator, PowerOf2SizePolicy> ArgumentsObjTrackingFuncsSet;
+
 class JsArrayKills
 {
 private:
@@ -1196,6 +1198,7 @@ private:
     IntConstantToValueMap*      intConstantToValueMap;
     AddrConstantToValueMap *    addrConstantToValueMap;
     StringConstantToValueMap *  stringConstantToValueMap;
+    BVFixed *                   argumentsObjTrackingFuncBv;
 #if DBG
     // We can still track the finished stack literal InitFld lexically.
     BVSparse<JitArenaAllocator> * finishedStackLiteralInitFld;
@@ -1321,11 +1324,12 @@ private:
     IR::Instr *             SetTypeCheckBailOut(IR::Opnd *opnd, IR::Instr *instr, BailOutInfo *bailOutInfo);
     void                    OptArguments(IR::Instr *Instr);
     void                    TrackInstrsForScopeObjectRemoval(IR::Instr * instr);
-    BOOLEAN                 IsArgumentsOpnd(IR::Opnd* opnd);
+    BOOLEAN                 IsArgumentsOpnd(IR::Opnd* opnd, SymID& symId);
     bool                    AreFromSameBytecodeFunc(IR::RegOpnd* src1, IR::RegOpnd* dst);
-    void                    TrackArgumentsSym(IR::RegOpnd* opnd);
+    void                    TrackArgumentsSym(IR::RegOpnd* opnd, Func* argumentsFunc);
     void                    ClearArgumentsSym(IR::RegOpnd* opnd);
     BOOLEAN                 TestAnyArgumentsSym();
+    void                    EnsureArgObjSymsBv();
     BOOLEAN                 IsArgumentsSymID(SymID id, const GlobOptBlockData& blockData);
     Value *                 ValueNumberDst(IR::Instr **pInstr, Value *src1Val, Value *src2Val);
     Value *                 ValueNumberLdElemDst(IR::Instr **pInstr, Value *srcVal);
@@ -1717,8 +1721,8 @@ private:
     IR::Instr *             EnsureDisableImplicitCallRegion(Loop * loop);
     void                    UpdateObjPtrValueType(IR::Opnd * opnd, IR::Instr * instr);
 
-    bool                    TrackArgumentsObject();
-    void                    CannotAllocateArgumentsObjectOnStack();
+    bool                    TrackArgumentsObject(/*Func * func*/);
+    void                    CannotAllocateArgumentsObjectOnStack(Func * argumentsFunc, bool cannotDoOptForParentInliners = false);
 
 #if DBG
     bool                    IsPropertySymId(SymID symId) const;

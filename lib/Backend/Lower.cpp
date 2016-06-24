@@ -10672,7 +10672,7 @@ Lowerer::LoadCallInfo(IR::Instr * instrInsert)
 IR::Instr *
 Lowerer::LowerBailOnNotStackArgs(IR::Instr * instr)
 {
-    if (!this->m_func->GetHasStackArgs())
+    if (!instr->m_func->GetHasStackArgs())
     {
         throw Js::RejitException(RejitReason::InlineApplyDisabled);
     }
@@ -17834,7 +17834,7 @@ Lowerer::LowerCallIDynamicSpread(IR::Instr *callInstr, ushort callFlags)
 IR::Instr *
 Lowerer::LowerCallIDynamic(IR::Instr * callInstr, ushort callFlags)
 {
-    if (!this->m_func->GetHasStackArgs())
+    if (!callInstr->m_func->GetHasStackArgs())
     {
         throw Js::RejitException(RejitReason::InlineApplyDisabled);
     }

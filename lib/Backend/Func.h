@@ -326,6 +326,7 @@ static const unsigned __int64 c_debugFillPattern8 = 0xcececececececece;
     void EnsurePropertiesWrittenTo();
 
     void EnsureCallSiteToArgumentsOffsetFixupMap();
+    void EnsureArgumentsObjSymToFuncMap();
 
     IR::LabelInstr * EnsureFuncStartLabel();
     IR::LabelInstr * GetFuncStartLabel();
@@ -482,6 +483,9 @@ public:
     PropertyIdSet lazyBailoutProperties;
     bool anyPropertyMayBeWrittenTo;
 
+    typedef JsUtil::BaseDictionary<SymID, Func *, JitArenaAllocator> ArgObjSymToFuncMap;
+    ArgObjSymToFuncMap * argumentsObjSymToFuncMap;
+
     SlotArrayCheckTable *slotArrayCheckTable;
     FrameDisplayCheckTable *frameDisplayCheckTable;
 
@@ -510,6 +514,7 @@ public:
     int32               m_localStackHeight;
     uint                frameSize;
     uint32              inlineDepth;
+    uint32              maxInlineeDepth;
     uint32              postCallByteCodeOffset;
     Js::RegSlot         returnValueRegSlot;
     Js::ArgSlot         actualCount;
@@ -546,6 +551,7 @@ public:
     bool                hasBailout: 1;
     bool                hasBailoutInEHRegion : 1;
     bool                hasStackArgs: 1;
+    bool                inlineesHaveStackArgs : 1;
     bool                hasUnoptimizedArgumentsAcccess : 1; // True if there are any arguments access beyond the simple case of this.apply pattern
     bool                m_canDoInlineArgsOpt : 1;
     bool                hasApplyTargetInlining:1;
@@ -629,21 +635,31 @@ public:
                         return isStackArgsEnabled;
     }
 
+	bool                GetInlineesHaveStackArgs() const { return this->inlineesHaveStackArgs; }
+    void                SetInlineesHaveStackArgs(bool arg) 
+    { 
+                        // Once set to 'true' make sure this does not become false
+                        if (!this->inlineesHaveStackArgs)
+                        {
+                            this->inlineesHaveStackArgs = arg;
+                        }
+    }
+    
     bool                GetHasUnoptimizedArgumentsAcccess() const { return this->hasUnoptimizedArgumentsAcccess; }
-    void                SetHasUnoptimizedArgumentsAccess(bool args)
+    void                SetHasUnoptimizedArgumentsAccess(bool arg)
     {
                         // Once set to 'true' make sure this does not become false
                         if (!this->hasUnoptimizedArgumentsAcccess)
                         {
-                            this->hasUnoptimizedArgumentsAcccess = args;
+                            this->hasUnoptimizedArgumentsAcccess = arg;
                         }
 
-                        if (args)
+                        if (arg)
                         {
                             Func *curFunc = this->GetParentFunc();
                             while (curFunc)
                             {
-                                curFunc->hasUnoptimizedArgumentsAcccess = args;
+                                curFunc->hasUnoptimizedArgumentsAcccess = arg;
                                 curFunc = curFunc->GetParentFunc();
                             }
                         }

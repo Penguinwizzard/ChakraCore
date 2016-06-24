@@ -1589,18 +1589,23 @@ BackwardPass::ProcessBailOutArgObj(BailOutInfo * bailOutInfo, BVSparse<JitArenaA
 {
     Assert(this->tag != Js::BackwardPhase);
 
-    if (this->globOpt->TrackArgumentsObject() && bailOutInfo->capturedValues.argObjSyms)
+    if ((this->func->GetHasStackArgs() || this->func->GetInlineesHaveStackArgs()) && bailOutInfo->capturedValues.argObjSyms)
     {
         FOREACH_BITSET_IN_SPARSEBV(symId, bailOutInfo->capturedValues.argObjSyms)
         {
-            if (byteCodeUpwardExposedUsed->TestAndClear(symId))
+            Func* argumentsFunc = this->func->argumentsObjSymToFuncMap->Lookup(symId, nullptr);
+            Assert(argumentsFunc);
+            if (argumentsFunc->GetHasStackArgs())
             {
-                if (bailOutInfo->usedCapturedValues.argObjSyms == nullptr)
+                if (byteCodeUpwardExposedUsed->TestAndClear(symId))
                 {
-                    bailOutInfo->usedCapturedValues.argObjSyms = JitAnew(this->func->m_alloc,
-                        BVSparse<JitArenaAllocator>, this->func->m_alloc);
+                    if (bailOutInfo->usedCapturedValues.argObjSyms == nullptr)
+                    {
+                        bailOutInfo->usedCapturedValues.argObjSyms = JitAnew(this->func->m_alloc,
+                            BVSparse<JitArenaAllocator>, this->func->m_alloc);
+                    }
+                    bailOutInfo->usedCapturedValues.argObjSyms->Set(symId);
                 }
-                bailOutInfo->usedCapturedValues.argObjSyms->Set(symId);
             }
         }
         NEXT_BITSET_IN_SPARSEBV;

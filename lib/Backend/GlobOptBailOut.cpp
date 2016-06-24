@@ -515,6 +515,12 @@ GlobOpt::TrackCalls(IR::Instr * instr)
         Assert(instr->m_func->GetParentFunc());
         this->blockData.curFunc = instr->m_func;
         this->currentBlock->globOptData.curFunc = instr->m_func;
+        
+        if (!PHASE_OFF(Js::StackArgOptPhase, instr->m_func))
+        {
+            Assert(this->argumentsObjTrackingFuncBv);
+            this->argumentsObjTrackingFuncBv->Set(instr->m_func->inlineDepth);
+        }
 
         this->func->UpdateMaxInlineeArgOutCount(this->currentBlock->globOptData.inlinedArgOutCount);
         this->EndTrackCall(instr);
@@ -803,7 +809,7 @@ void GlobOpt::RecordInlineeFrameInfo(IR::Instr* inlineeEnd)
 void GlobOpt::EndTrackingOfArgObjSymsForInlinee()
 {
     Assert(this->blockData.curFunc->GetParentFunc());
-    if (this->blockData.curFunc->argObjSyms && TrackArgumentsObject())
+    if (this->blockData.curFunc->argObjSyms && TrackArgumentsObject(/*this->blockData.curFunc*/))
     {
         BVSparse<JitArenaAllocator> * tempBv = JitAnew(this->tempAlloc, BVSparse<JitArenaAllocator>, this->tempAlloc);
         tempBv->Minus(this->blockData.curFunc->argObjSyms, this->blockData.argObjSyms);
@@ -812,7 +818,7 @@ void GlobOpt::EndTrackingOfArgObjSymsForInlinee()
             // This means there are arguments object symbols in the current function which are not in the current block.
             // This could happen when one of the blocks has a throw and arguments object aliased in it and other blocks don't see it.
             // Rare case, abort stack arguments optimization in this case.
-            CannotAllocateArgumentsObjectOnStack();
+            CannotAllocateArgumentsObjectOnStack(this->blockData.curFunc);
         }
         else
         {
@@ -821,6 +827,8 @@ void GlobOpt::EndTrackingOfArgObjSymsForInlinee()
         }
         JitAdelete(this->tempAlloc, tempBv);
     }
+
+    this->func->SetInlineesHaveStackArgs(this->blockData.curFunc->GetHasStackArgs());
     this->blockData.curFunc = this->blockData.curFunc->GetParentFunc();
     this->currentBlock->globOptData.curFunc = this->blockData.curFunc;
 }
