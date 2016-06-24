@@ -6924,7 +6924,23 @@ Lowerer::GenerateCachedTypeWithoutPropertyCheck(IR::Instr *instrInsert, IR::Prop
 
         Assert(typePropertyGuard != nullptr);
         Assert(Js::PropertyGuard::GetSizeOfValue() == static_cast<size_t>(TySize[TyMachPtr]));
-        expectedTypeOpnd = IR::MemRefOpnd::New((void*)(typePropertyGuard->GetAddressOfValue()), TyMachPtr, this->m_func, IR::AddrOpndKindDynamicGuardValueRef);
+
+        if (this->m_func->IsOOPJIT())
+        {
+            auto regNativeCodeData = IR::RegOpnd::New(TyMachPtr, this->m_func);
+            Lowerer::InsertMove(
+                regNativeCodeData,
+                IR::MemRefOpnd::New((void*)this->m_func->GetWorkItem()->GetWorkItemData()->nativeDataAddr, TyMachPtr, this->m_func, IR::AddrOpndKindDynamicNativeCodeDataRef),
+                instrInsert);
+
+            int typeCheckGuardOffset = NativeCodeData::GetDataTotalOffset(typePropertyGuard);
+            expectedTypeOpnd = IR::IndirOpnd::New(regNativeCodeData, typeCheckGuardOffset, TyMachPtr, this->m_func);
+        }
+        else
+        {
+            expectedTypeOpnd = IR::MemRefOpnd::New((void*)(typePropertyGuard->GetAddressOfValue()), TyMachPtr, this->m_func, IR::AddrOpndKindDynamicGuardValueRef);
+        }
+
         emitDirectCheck = false;
 
         OUTPUT_VERBOSE_TRACE_FUNC(Js::ObjTypeSpecPhase, this->m_func, L"Emitted %s type check for type 0x%p.\n",
