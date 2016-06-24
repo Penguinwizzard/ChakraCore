@@ -6776,24 +6776,14 @@ Lowerer::GenerateCachedTypeCheck(IR::Instr *instrChk, IR::PropertySymOpnd *prope
 
         if (this->m_func->IsOOPJIT())
         {
+            auto regNativeCodeData = IR::RegOpnd::New(TyMachPtr, func);
+            Lowerer::InsertMove(
+                regNativeCodeData,
+                IR::MemRefOpnd::New((void*)func->GetWorkItem()->GetWorkItemData()->nativeDataAddr, TyMachPtr, func, IR::AddrOpndKindDynamicNativeCodeDataRef),
+                instrChk);
+
             int typeCheckGuardOffset = NativeCodeData::GetDataTotalOffset(typeCheckGuard);
-
-            // TODO: use virtual register
-
-            // move rcx, dataAddr
-            Lowerer::InsertMove(
-                IR::RegOpnd::New(nullptr, RegRCX, TyMachPtr, func),
-                IR::AddrOpnd::New(func->GetWorkItem()->GetWorkItemData()->nativeDataAddr, IR::AddrOpndKindDynamicNativeCodeDataRef, func, true),
-                instrChk);
-
-            // mov rcx, [rcx]
-            Lowerer::InsertMove(
-                IR::RegOpnd::New(nullptr, RegRCX, TyMachPtr, func),
-                IR::IndirOpnd::New(IR::RegOpnd::New(nullptr, RegRCX, TyVar, func), 0, TyMachPtr, func, true),
-                instrChk);
-
-            expectedTypeOpnd = IR::IndirOpnd::New(IR::RegOpnd::New(nullptr, RegRCX, TyVar, func), typeCheckGuardOffset, TyMachPtr, func);
-
+            expectedTypeOpnd = IR::IndirOpnd::New(regNativeCodeData, typeCheckGuardOffset, TyMachPtr, func);
         }
         else
         {
