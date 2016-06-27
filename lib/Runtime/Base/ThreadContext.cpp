@@ -3227,6 +3227,8 @@ ThreadContext::InvalidateAllProtoInlineCaches()
 }
 
 #if DBG
+
+// Verifies if object is registered in any proto InlineCache
 bool
 ThreadContext::IsObjectRegisteredInProtoInlineCaches(Js::DynamicObject * object)
 {
@@ -3236,12 +3238,25 @@ ThreadContext::IsObjectRegisteredInProtoInlineCaches(Js::DynamicObject * object)
         {
             if (inlineCache != nullptr)
             {
-                // if this is proto inlineCache, check the prototypeObject
-                // or if this is accessor inlineCache on proto, check the accessor object
-                if ((inlineCache->IsProto() && inlineCache->GetPrototypeObject() == object) ||
-                    (inlineCache->IsAccessorOnProto() && inlineCache->GetAccessorObject() == object))
+                if (inlineCache->IsProto() || inlineCache->IsAccessorOnProto())
                 {
-                    return true;
+                    // Check if object is registered as prototypeObject of inlineCache
+                    if (inlineCache->IsProto() && inlineCache->GetPrototypeObject() == object)
+                    {
+                        return true;
+                    }
+                    // Check if object is registered as prototypeObject of accessor inlineCache
+                    else if (inlineCache->IsAccessorOnProto() && inlineCache->GetAccessorObject() == object)
+                    {
+                        return true;
+                    }
+
+                    // Check for typePrototypeCaches as well
+                    Js::TypePropertyCache* typePropertyCache = inlineCache->GetType()->GetPropertyCache();
+                    if (typePropertyCache && typePropertyCache->IsPrototypeObjectUsedForAnyProperties(object))
+                    {
+                        return true;
+                    }
                 }
             }
         }
@@ -3250,10 +3265,10 @@ ThreadContext::IsObjectRegisteredInProtoInlineCaches(Js::DynamicObject * object)
     });
 }
 
+// Verifies if object is registered in any storeField InlineCache
 bool
 ThreadContext::IsObjectRegisteredInStoreFieldInlineCaches(Js::DynamicObject * object)
 {
-    // returns true if prototypeObject is present. Otherwise returns false
     return storeFieldInlineCacheByPropId.MapUntil([object](Js::PropertyId propertyId, InlineCacheList* inlineCacheList)
     {
         FOREACH_SLISTBASE_ENTRY(Js::InlineCache*, inlineCache, inlineCacheList)
@@ -3270,7 +3285,6 @@ ThreadContext::IsObjectRegisteredInStoreFieldInlineCaches(Js::DynamicObject * ob
         return false;
     });
 }
-
 #endif
 
 bool

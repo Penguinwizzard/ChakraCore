@@ -214,7 +214,12 @@ namespace Js
         // be invalidated because of type mismatch and subsequently we will update its protoInlineCache
         if (!(obj->GetDynamicType()->GetTypeHandler()->GetFlags() & DynamicTypeHandler::IsPrototypeFlag))
         {
-            obj->ChangeType();
+            // If object has locked type, skip changing its type here as it will be changed anyway below
+            // when object gets newPrototype object.
+            if (!obj->HasLockedType())
+            {
+                obj->ChangeType();
+            }
             Assert(!obj->GetScriptContext()->GetThreadContext()->IsObjectRegisteredInProtoInlineCaches(obj));
             Assert(!obj->GetScriptContext()->GetThreadContext()->IsObjectRegisteredInStoreFieldInlineCaches(obj));
             isInvalidationOfInlineCacheNeeded = false;

@@ -445,4 +445,23 @@ namespace Js
         if(element.Id() == id)
             element.Clear();
     }
+
+#if DBG
+    bool TypePropertyCache::IsPrototypeObjectUsedForAnyProperties(const DynamicObject* prototypeObject)
+    {
+        for (int32 elementIndex = 0; elementIndex < TypePropertyCache_NumElements; elementIndex++)
+        {
+            TypePropertyCacheElement element = elements[elementIndex];
+            if (element.Id() != Constants::NoProperty)
+            {
+                if (element.PrototypeObjectWithProperty() == prototypeObject)
+                {
+                    // propertyId at elementIndex uses prototypeObject as its prototype
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+#endif
 }
