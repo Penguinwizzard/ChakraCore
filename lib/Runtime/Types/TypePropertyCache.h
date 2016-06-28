@@ -63,8 +63,5 @@ namespace Js
         void Cache(const PropertyId id, const PropertyIndex index, const bool isInlineSlot, const bool isSetPropertyAllowed, const bool isMissing, DynamicObject *const prototypeObjectWithProperty, Type *const myParentType);
         void ClearIfPropertyIsOnAPrototype(const PropertyId id);
         void Clear(const PropertyId id);
-#if DBG
-        bool IsPrototypeObjectUsedForAnyProperties(const DynamicObject* prototypeObject);
-#endif
     };
 }

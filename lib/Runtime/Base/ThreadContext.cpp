@@ -3236,27 +3236,16 @@ ThreadContext::IsObjectRegisteredInProtoInlineCaches(Js::DynamicObject * object)
     {
         FOREACH_SLISTBASE_ENTRY(Js::InlineCache*, inlineCache, inlineCacheList)
         {
-            if (inlineCache != nullptr)
+            if (inlineCache != nullptr && !inlineCache->IsEmpty())
             {
-                if (inlineCache->IsProto() || inlineCache->IsAccessorOnProto())
+                // Verify this object is not present in prototype chain of inlineCache's type
+                bool isObjectPresentOnPrototypeChain =
+                    Js::JavascriptOperators::MapObjectAndPrototypesUntil<true>(inlineCache->GetType()->GetPrototype(), [=](Js::RecyclableObject* prototype)
                 {
-                    // Check if object is registered as prototypeObject of inlineCache
-                    if (inlineCache->IsProto() && inlineCache->GetPrototypeObject() == object)
-                    {
-                        return true;
-                    }
-                    // Check if object is registered as prototypeObject of accessor inlineCache
-                    else if (inlineCache->IsAccessorOnProto() && inlineCache->GetAccessorObject() == object)
-                    {
-                        return true;
-                    }
-
-                    // Check for typePrototypeCaches as well
-                    Js::TypePropertyCache* typePropertyCache = inlineCache->GetType()->GetPropertyCache();
-                    if (typePropertyCache && typePropertyCache->IsPrototypeObjectUsedForAnyProperties(object))
-                    {
-                        return true;
-                    }
+                    return prototype == object;
+                });
+                if (isObjectPresentOnPrototypeChain) {
+                    return true;
                 }
             }
         }
@@ -3273,10 +3262,15 @@ ThreadContext::IsObjectRegisteredInStoreFieldInlineCaches(Js::DynamicObject * ob
     {
         FOREACH_SLISTBASE_ENTRY(Js::InlineCache*, inlineCache, inlineCacheList)
         {
-            if (inlineCache != nullptr)
+            if (inlineCache != nullptr && !inlineCache->IsEmpty())
             {
-                if (inlineCache->IsAccessor() && inlineCache->GetAccessorObject() == object)
+                // Verify this object is not present in prototype chain of inlineCache's type
+                bool isObjectPresentOnPrototypeChain =
+                    Js::JavascriptOperators::MapObjectAndPrototypesUntil<true>(inlineCache->GetType()->GetPrototype(), [=](Js::RecyclableObject* prototype)
                 {
+                    return prototype == object;
+                });
+                if (isObjectPresentOnPrototypeChain) {
                     return true;
                 }
             }
