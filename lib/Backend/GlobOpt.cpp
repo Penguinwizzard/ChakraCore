@@ -4180,7 +4180,6 @@ GlobOpt::OptArguments(IR::Instr *instr)
     }
     case Js::OpCode::BailOnNotStackArgs:
     case Js::OpCode::ArgOut_A_FromStackArgs:
-    case Js::OpCode::LdArgumentsFromStack:
     case Js::OpCode::BytecodeArgOutUse:
         break;
 
