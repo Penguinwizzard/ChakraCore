@@ -2980,6 +2980,11 @@ namespace Js
                         return;
                     }
 
+                    if (length + idxDest > FiftyThirdPowerOfTwoMinusOne) // 2^53-1: from ECMA 22.1.3.1 Array.prototype.concat(...arguments)
+                    {
+                        JavascriptError::ThrowTypeError(scriptContext, JSERR_IllegalArraySizeAndLength);
+                    }
+
                     RecyclableObject* itemObject = RecyclableObject::FromVar(aItem);
                     Var subItem;
                     uint32 lengthToUin32Max = length.IsSmallIndex() ? length.GetSmallIndex() : MaxArrayLength;
@@ -3052,7 +3057,7 @@ namespace Js
         return true;
     }
 
-    void JavascriptArray::ConcatIntArgs(JavascriptNativeIntArray* pDestArray, TypeId *remoteTypeIds, Js::Arguments& args, ScriptContext* scriptContext)
+    JavascriptArray* JavascriptArray::ConcatIntArgs(JavascriptNativeIntArray* pDestArray, TypeId *remoteTypeIds, Js::Arguments& args, ScriptContext* scriptContext)
     {
         uint idxDest = 0u;
         for (uint idxArg = 0; idxArg < args.Info.Count; idxArg++)
@@ -3066,7 +3071,7 @@ namespace Js
                 if (!JavascriptNativeIntArray::Is(pDestArray)) // SetItem could convert pDestArray to a var array if aItem is not an integer if so fall back
                 {
                     ConcatArgs<uint>(pDestArray, remoteTypeIds, args, scriptContext, idxArg + 1, idxDest);
-                    return;
+                    return pDestArray;
                 }
                 continue;
             }
@@ -3081,13 +3086,11 @@ namespace Js
                     // Copying the last array forced a conversion, so switch over to the var version
                     // to finish.
                     ConcatArgs<uint>(pDestArray, remoteTypeIds, args, scriptContext, idxArg + 1, idxDest);
-                    return;
+                    return pDestArray;
                 }
             }
-            else
+            else if (!JavascriptArray::IsAnyArray(aItem) && remoteTypeIds[idxArg] != TypeIds_Array)
             {
-                Assert(!JavascriptArray::IsAnyArray(aItem) && remoteTypeIds[idxArg] != TypeIds_Array);
-
                 if (TaggedInt::Is(aItem))
                 {
                     pDestArray->DirectSetItemAt(idxDest, TaggedInt::ToInt32(aItem));
@@ -3104,14 +3107,21 @@ namespace Js
                 }
                 ++idxDest;
             }
+            else
+            {
+                JavascriptArray *pVarDestArray = JavascriptNativeIntArray::ConvertToVarArray(pDestArray);
+                ConcatArgs<uint>(pVarDestArray, remoteTypeIds, args, scriptContext, idxArg, idxDest);
+                return pVarDestArray;
+            }
         }
         if (pDestArray->GetLength() != idxDest)
         {
             pDestArray->SetLength(idxDest);
         }
+        return pDestArray;
     }
 
-    void JavascriptArray::ConcatFloatArgs(JavascriptNativeFloatArray* pDestArray, TypeId *remoteTypeIds, Js::Arguments& args, ScriptContext* scriptContext)
+    JavascriptArray* JavascriptArray::ConcatFloatArgs(JavascriptNativeFloatArray* pDestArray, TypeId *remoteTypeIds, Js::Arguments& args, ScriptContext* scriptContext)
     {
         uint idxDest = 0u;
         for (uint idxArg = 0; idxArg < args.Info.Count; idxArg++)
@@ -3127,7 +3137,7 @@ namespace Js
                 if (!JavascriptNativeFloatArray::Is(pDestArray)) // SetItem could convert pDestArray to a var array if aItem is not an integer if so fall back
                 {
                     ConcatArgs<uint>(pDestArray, remoteTypeIds, args, scriptContext, idxArg + 1, idxDest);
-                    return;
+                    return pDestArray;
                 }
                 continue;
             }
@@ -3141,18 +3151,25 @@ namespace Js
                     converted = CopyNativeIntArrayElementsToFloat(pDestArray, idxDest, pIntArray);
                     idxDest = idxDest + pIntArray->length;
                 }
-                else
+                else if (JavascriptNativeFloatArray::Is(aItem))
                 {
                     JavascriptNativeFloatArray* pItemArray = JavascriptNativeFloatArray::FromVar(aItem);
                     converted = CopyNativeFloatArrayElements(pDestArray, idxDest, pItemArray);
                     idxDest = idxDest + pItemArray->length;
                 }
+                else
+                {
+                    JavascriptArray *pVarDestArray = JavascriptNativeFloatArray::ConvertToVarArray(pDestArray);
+                    ConcatArgs<uint>(pVarDestArray, remoteTypeIds, args, scriptContext, idxArg, idxDest);
+                    return pVarDestArray;
+                }
+
                 if (converted)
                 {
                     // Copying the last array forced a conversion, so switch over to the var version
                     // to finish.
                     ConcatArgs<uint>(pDestArray, remoteTypeIds, args, scriptContext, idxArg + 1, idxDest);
-                    return;
+                    return pDestArray;
                 }
             }
             else
@@ -3175,6 +3192,8 @@ namespace Js
         {
             pDestArray->SetLength(idxDest);
         }
+
+        return pDestArray;
     }
 
     bool JavascriptArray::BoxConcatItem(Var aItem, uint idxArg, ScriptContext *scriptContext)
@@ -3378,15 +3397,13 @@ namespace Js
             {
                 JavascriptNativeIntArray *pIntArray = isArray ? JavascriptNativeIntArray::FromVar(pDestObj) : scriptContext->GetLibrary()->CreateNativeIntArray(cDestLength);
                 pIntArray->EnsureHead<int32>();
-                ConcatIntArgs(pIntArray, remoteTypeIds, args, scriptContext);
-                pDestArray = pIntArray;
+                pDestArray = ConcatIntArgs(pIntArray, remoteTypeIds, args, scriptContext);
             }
             else if (isFloat)
             {
                 JavascriptNativeFloatArray *pFArray = isArray ? JavascriptNativeFloatArray::FromVar(pDestObj) : scriptContext->GetLibrary()->CreateNativeFloatArray(cDestLength);
                 pFArray->EnsureHead<double>();
-                ConcatFloatArgs(pFArray, remoteTypeIds, args, scriptContext);
-                pDestArray = pFArray;
+                pDestArray = ConcatFloatArgs(pFArray, remoteTypeIds, args, scriptContext);
             }
             else
             {
