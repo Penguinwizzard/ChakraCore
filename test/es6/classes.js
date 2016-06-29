@@ -1147,34 +1147,34 @@ var tests = [
             var errorText = "Use before declaration";
 
             // Directly using the `x` identifier in extends clause
-            assert.throws(function() { eval('var x = class x extends x {};'); }, ReferenceError, reason, errorText);
-            assert.throws(function() { eval('let x = class x extends x {};'); }, ReferenceError, reason, errorText);
-            assert.throws(function() { eval('class x extends x {};'); }, ReferenceError, reason, errorText);
+            assert.throws(function() { var x = class x extends x {}; }, ReferenceError, reason, errorText);
+            assert.throws(function() { let x = class x extends x {}; }, ReferenceError, reason, errorText);
+            assert.throws(function() { class x extends x {}; }, ReferenceError, reason, errorText);
             // ... with assignment to a different identifier
-            assert.throws(function() { eval('var y = class x extends x {};'); }, ReferenceError, reason, errorText);
-            assert.throws(function() { eval('let y = class x extends x {};'); }, ReferenceError, reason, errorText);
+            assert.throws(function() { var y = class x extends x {}; }, ReferenceError, reason, errorText);
+            assert.throws(function() { let y = class x extends x {}; }, ReferenceError, reason, errorText);
 
             // Test262 seems to insist that grouping the RHS of the assignment matters in this case -- see test262/test/language/statements/class/name-binding/in-extends-expression-assigned.js
-            assert.throws(function() { eval('var x = (class x extends x {});'); }, ReferenceError, reason, errorText);
-            assert.throws(function() { eval('let x = (class x extends x {});'); }, ReferenceError, reason, errorText);
+            assert.throws(function() { var x = (class x extends x {}); }, ReferenceError, reason, errorText);
+            assert.throws(function() { let x = (class x extends x {}); }, ReferenceError, reason, errorText);
 
             // Using expressions containing the `x` identifier for the extends clause
-            assert.throws(function() { eval('var x = class x extends (x) {};'); }, ReferenceError, reason, errorText);
-            assert.throws(function() { eval('let x = class x extends (x) {};'); }, ReferenceError, reason, errorText);
-            assert.throws(function() { eval('\
-                var foo = function() {};\
-                var x = class x extends foo(x) {};\
-                '); }, ReferenceError, reason, errorText);
+            assert.throws(function() { var x = class x extends (x) {}; }, ReferenceError, reason, errorText);
+            assert.throws(function() { let x = class x extends (x) {}; }, ReferenceError, reason, errorText);
+            assert.throws(function() {
+                var foo = function() {};
+                var x = class x extends foo(x) {};
+            }, ReferenceError, reason, errorText);
 
             // Using eval expressions with a term that evals to the `x` identifier
-            assert.throws(function() { eval('var x = class x extends eval("x") {};'); }, ReferenceError, reason, errorText);
-            assert.throws(function() { eval('let x = class x extends eval("x") {};'); }, ReferenceError, reason, errorText);
-            assert.throws(function() { eval('var x = class x extends eval("(x)") {};'); }, ReferenceError, reason, errorText);
-            assert.throws(function() { eval('let x = class x extends eval("(x)") {};'); }, ReferenceError, reason, errorText);
-            assert.throws(function() { eval('\
-                var foo = function() {};\
-                var x = class x extends eval("foo(x)") {};\
-                '); }, ReferenceError, reason, errorText);
+            assert.throws(function() { var x = class x extends eval("x") {}; }, ReferenceError, reason, errorText);
+            assert.throws(function() { let x = class x extends eval("x") {}; }, ReferenceError, reason, errorText);
+            assert.throws(function() { var x = class x extends eval("(x)") {}; }, ReferenceError, reason, errorText);
+            assert.throws(function() { let x = class x extends eval("(x)") {}; }, ReferenceError, reason, errorText);
+            assert.throws(function() {
+                var foo = function() {};
+                var x = class x extends eval("foo(x)") {};
+            }, ReferenceError, reason, errorText);
         }
     },
 ];
