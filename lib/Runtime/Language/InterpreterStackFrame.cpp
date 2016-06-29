@@ -1401,23 +1401,23 @@ namespace Js
             environment = this->LdEnv();
         }
 
-        RegSlot closureReg = executeFunction->GetLocalClosureRegister();
         Var funcExprScope = nullptr;
+        Js::RegSlot funcExprScopeReg = executeFunction->GetFuncExprScopeRegister();
+        if (funcExprScopeReg != Constants::NoRegister && this->paramClosure == nullptr)
+        {
+            // t0 = NewPseudoScope
+            // t1 = LdFrameDisplay t0 env
+
+            funcExprScope = JavascriptOperators::OP_NewPseudoScope(GetScriptContext());
+            SetReg(funcExprScopeReg, funcExprScope);
+        }
+
+        RegSlot closureReg = executeFunction->GetLocalClosureRegister();
         if (closureReg != Js::Constants::NoRegister)
         {
             Assert(closureReg >= executeFunction->GetConstantCount());
             if (executeFunction->HasScopeObject())
             {
-                Js::RegSlot funcExprScopeReg = executeFunction->GetFuncExprScopeRegister();
-                if (funcExprScopeReg != Constants::NoRegister && this->paramClosure == nullptr)
-                {
-                    // t0 = NewPseudoScope
-                    // t1 = LdFrameDisplay t0 env
-
-                    funcExprScope = JavascriptOperators::OP_NewPseudoScope(GetScriptContext());
-                    SetReg(funcExprScopeReg, funcExprScope);
-                }
-
                 this->NewScopeObject();
             }
             else
@@ -1428,7 +1428,7 @@ namespace Js
         }
 
         Js::RegSlot frameDisplayReg = executeFunction->GetLocalFrameDisplayRegister();
-        if (frameDisplayReg != Js::Constants::NoRegister && closureReg != Js::Constants::NoRegister)
+        if (frameDisplayReg != Js::Constants::NoRegister)
         {
             Assert(frameDisplayReg >= executeFunction->GetConstantCount());
 
@@ -1437,9 +1437,13 @@ namespace Js
                 environment = OP_LdFrameDisplay(funcExprScope, environment, GetScriptContext());
             }
 
-            void *argHead = this->GetLocalClosure();
-            this->SetLocalFrameDisplay(this->NewFrameDisplay(argHead, environment));
+            if (closureReg != Js::Constants::NoRegister)
+            {
+                void *argHead = this->GetLocalClosure();
+                environment = this->NewFrameDisplay(argHead, environment);
+            }
 
+            this->SetLocalFrameDisplay((Js::FrameDisplay*)environment);
             this->SetNonVarReg(frameDisplayReg, nullptr);
         }
 
