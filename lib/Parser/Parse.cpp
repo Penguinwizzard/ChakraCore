@@ -4496,9 +4496,6 @@ ParseNodePtr Parser::ParseFncDecl(ushort flags, LPCOLESTR pNameHint, const bool 
     *m_ppnodeVar = nullptr;
     m_ppnodeVar = ppnodeVarSave;
 
-    }
-
-
     if (m_currentNodeFunc && (pnodeFnc->sxFnc.CallsEval() || pnodeFnc->sxFnc.ChildCallsEval()))
     {
         GetCurrentFunctionNode()->sxFnc.SetChildCallsEval(true);
