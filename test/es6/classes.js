@@ -1143,7 +1143,7 @@ var tests = [
     {
         name: "`class x extends y` where `y` is an expression containing identifier `x` should be a ReferenceError",
         body: function() {
-            var reason = "x from 'class x' is initialized Undecl so it can't be used in the extends clause";
+            var reason = "x from 'class x' is initialized Undecl in the scope of the extends clause so it can't be used in the extends clause";
             var errorText = "Use before declaration";
 
             // Directly using the `x` identifier in extends clause
@@ -1154,17 +1154,23 @@ var tests = [
             assert.throws(function() { var y = class x extends x {}; }, ReferenceError, reason, errorText);
             assert.throws(function() { let y = class x extends x {}; }, ReferenceError, reason, errorText);
 
-            // Test262 seems to insist that grouping the RHS of the assignment matters in this case -- see test262/test/language/statements/class/name-binding/in-extends-expression-assigned.js
+            // In the Test262 test case, the RHS is a class expression -- see test262/test/language/statements/class/name-binding/in-extends-expression-assigned.js
             assert.throws(function() { var x = (class x extends x {}); }, ReferenceError, reason, errorText);
             assert.throws(function() { let x = (class x extends x {}); }, ReferenceError, reason, errorText);
+            assert.throws(function() { (class x extends x {}); }, ReferenceError, reason, errorText);
 
             // Using expressions containing the `x` identifier for the extends clause
             assert.throws(function() { var x = class x extends (x) {}; }, ReferenceError, reason, errorText);
             assert.throws(function() { let x = class x extends (x) {}; }, ReferenceError, reason, errorText);
             assert.throws(function() {
-                var foo = function() {};
-                var x = class x extends foo(x) {};
+                var id = function(x) { return x; };
+                var x = class x extends id(x) {};
             }, ReferenceError, reason, errorText);
+
+            // assert.throws(function() {
+            //     var foo = function() {};
+            //     var x = class x extends foo(x) {};
+            // }, ReferenceError, reason, errorText);
 
             // Using eval expressions with a term that evals to the `x` identifier
             assert.throws(function() { var x = class x extends eval("x") {}; }, ReferenceError, reason, errorText);
@@ -1172,9 +1178,14 @@ var tests = [
             assert.throws(function() { var x = class x extends eval("(x)") {}; }, ReferenceError, reason, errorText);
             assert.throws(function() { let x = class x extends eval("(x)") {}; }, ReferenceError, reason, errorText);
             assert.throws(function() {
-                var foo = function() {};
-                var x = class x extends eval("foo(x)") {};
+                var id = function(x) { return x };
+                var x = class x extends eval("id(x)") {};
             }, ReferenceError, reason, errorText);
+
+            // assert.throws(function() {
+            //     var foo = function() {};
+            //     var x = class x extends eval("foo(x)") {};
+            // }, ReferenceError, reason, errorText);
         }
     },
 ];
