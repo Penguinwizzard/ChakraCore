@@ -1140,6 +1140,40 @@ var tests = [
             assert.throws(function() { (new (class A { set x(_) { A = 0; } })).x = 15; }, TypeError, "Assignment to class identifier in setter");
         }
     },
+    {
+        name: "`class x extends y` where `y` is an expression containing identifier `x` should be a ReferenceError",
+        body: function() {
+            // Directly using the `x` identifier in extends clause
+            assert.throws(function() { eval('var x = class x extends x {};'); }, ReferenceError, "x from 'class x' is initialized Undecl so it can't be used in 'extends x'", "Use before declaration");
+            assert.throws(function() { eval('let x = class x extends x {};'); }, ReferenceError, "x from 'class x' is initialized Undecl so it can't be used in 'extends x'", "Use before declaration");
+            assert.throws(function() { eval('class x extends x {};'); }, ReferenceError, "x from 'class x' is initialized Undecl so it can't be used in 'extends x'", "Use before declaration");
+            // ... with assignment to a different identifier
+            assert.throws(function() { eval('var y = class x extends x {};'); }, ReferenceError, "x from 'class x' is initialized Undecl so it can't be used in 'extends x'", "Use before declaration");
+            assert.throws(function() { eval('let y = class x extends x {};'); }, ReferenceError, "x from 'class x' is initialized Undecl so it can't be used in 'extends x'", "Use before declaration");
+
+            // Test262 seems to insist that grouping the RHS of the assignment matters in this case -- see test262/test/language/statements/class/name-binding/in-extends-expression-assigned.js
+            assert.throws(function() { eval('var x = (class x extends x {});'); }, ReferenceError, "x from 'class x' is initialized Undecl so it can't be used in 'extends x'", "Use before declaration");
+            assert.throws(function() { eval('let x = (class x extends x {});'); }, ReferenceError, "x from 'class x' is initialized Undecl so it can't be used in 'extends x'", "Use before declaration");
+
+            // Using expressions containing the `x` identifier for the extends clause
+            assert.throws(function() { eval('var x = class x extends (x) {};'); }, ReferenceError, "x from 'class x' is initialized Undecl so it can't be used in the extends clause", "Use before declaration");
+            assert.throws(function() { eval('let x = class x extends (x) {};'); }, ReferenceError, "x from 'class x' is initialized Undecl so it can't be used in the extends clause", "Use before declaration");
+            assert.throws(function() { eval('\
+                var foo = function() {};\
+                var x = class x extends foo(x) {};\
+                '); }, ReferenceError, "x from 'class x' is initialized Undecl so it can't be used in the extends clause", "Use before declaration");
+
+            // Using eval expressions with a term that evals to the `x` identifier
+            assert.throws(function() { eval('var x = class x extends eval("x") {};'); }, ReferenceError, "x from 'class x' is initialized Undecl so it can't be used in the extends clause", "Use before declaration");
+            assert.throws(function() { eval('let x = class x extends eval("x") {};'); }, ReferenceError, "x from 'class x' is initialized Undecl so it can't be used in the extends clause", "Use before declaration");
+            assert.throws(function() { eval('var x = class x extends eval("(x)") {};'); }, ReferenceError, "x from 'class x' is initialized Undecl so it can't be used in the extends clause", "Use before declaration");
+            assert.throws(function() { eval('let x = class x extends eval("(x)") {};'); }, ReferenceError, "x from 'class x' is initialized Undecl so it can't be used in the extends clause", "Use before declaration");
+            assert.throws(function() { eval('\
+                var foo = function() {};\
+                var x = class x extends eval("foo(x)") {};\
+                '); }, ReferenceError, "x from 'class x' is initialized Undecl so it can't be used in the extends clause", "Use before declaration");
+        }
+    },
 ];
 
 testRunner.runTests(tests, { verbose: WScript.Arguments[0] != "summary" });
