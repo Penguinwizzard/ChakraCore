@@ -263,6 +263,12 @@ static const unsigned __int64 c_debugFillPattern8 = 0xcececececececece;
         Assert(this->m_jnFunction);     // For now we always have a function body
         return this->m_jnFunction->GetHasFinally();
     }
+    bool HasThis() const
+    {
+        Assert(this->IsTopFunc());
+        Assert(this->m_jnFunction);     // For now we always have a function body
+        return this->m_jnFunction->GetHasThis();
+    }
     Js::ArgSlot GetInParamsCount() const
     {
         Assert(this->IsTopFunc());

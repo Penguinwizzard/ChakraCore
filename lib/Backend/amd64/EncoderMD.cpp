@@ -1534,6 +1534,11 @@ void
 EncoderMD::ApplyRelocs(size_t codeBufferAddress_)
 {
 
+    if (m_relocList == nullptr)
+    {
+        return;
+    }
+
     for (int32 i = 0; i < m_relocList->Count(); i++)
     {
         EncodeRelocAndLabels *reloc = &m_relocList->Item(i);
@@ -1600,6 +1605,11 @@ void
 EncoderMD::VerifyRelocList(BYTE *buffStart, BYTE *buffEnd)
 {
     BYTE *last_pc = 0, *pc;
+
+    if (m_relocList == nullptr)
+    {
+        return;
+    }
 
     for (int32 i = 0; i < m_relocList->Count(); i ++)
     {

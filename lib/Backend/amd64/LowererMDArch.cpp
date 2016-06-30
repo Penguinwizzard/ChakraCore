@@ -11,6 +11,13 @@ const Js::OpCode LowererMD::MDExtend32Opcode = Js::OpCode::MOVSXD;
 
 extern const IRType RegTypes[RegNumCount];
 
+bool
+LowererMDArch::IsArgSaveRequired(Func *func) {
+    return (func->IsJitInDebugMode() || func->GetHasImplicitCalls() ||
+        func->GetHasArgumentObject() || func->HasThis() ||
+        func->GetInParamsCount() > 1);
+}
+
 BYTE
 LowererMDArch::GetDefaultIndirScale()
 {
@@ -1379,8 +1386,11 @@ LowererMDArch::LowerEntryInstr(IR::EntryInstr * entryInstr)
     //
     uint32 argSlotsForFunctionsCalled = this->m_func->m_argSlotsForFunctionsCalled;
     // Stack is always reserved for at least 4 parameters.
-    if (argSlotsForFunctionsCalled < 4)
+
+    if (argSlotsForFunctionsCalled < 4 && IsArgSaveRequired(this->m_func))
+    {
         argSlotsForFunctionsCalled = 4;
+    }
 
     uint32 stackArgsSize    = MachPtr * (argSlotsForFunctionsCalled + 1);
 
@@ -1511,87 +1521,89 @@ LowererMDArch::LowerEntryInstr(IR::EntryInstr * entryInstr)
     firstPrologInstr->InsertBefore(IR::PragmaInstr::New(Js::OpCode::PrologStart, 0, m_func));
     lastPrologInstr->InsertAfter(IR::PragmaInstr::New(Js::OpCode::PrologEnd, 0, m_func));
 
-    //
-    // Now store all the arguments in the register in the stack slots
-    //
-    this->MovArgFromReg2Stack(entryInstr, RegRCX, 1);
-    Js::AsmJsFunctionInfo* asmJsFuncInfo = m_func->GetJnFunction()->GetAsmJsFunctionInfoWithLock();
-    if (m_func->GetJnFunction()->GetIsAsmjsMode() && !m_func->IsLoopBody())
+    if (argSlotsForFunctionsCalled)
     {
-        uint16 offset = 2;
-        for (uint16 i = 0; i < asmJsFuncInfo->GetArgCount() && i < 3; i++)
+        //
+        // Now store all the arguments in the register in the stack slots
+        //
+        this->MovArgFromReg2Stack(entryInstr, RegRCX, 1);
+        Js::AsmJsFunctionInfo* asmJsFuncInfo = m_func->GetJnFunction()->GetAsmJsFunctionInfoWithLock();
+        if (m_func->GetJnFunction()->GetIsAsmjsMode() && !m_func->IsLoopBody())
         {
-            switch (asmJsFuncInfo->GetArgType(i).which())
+            uint16 offset = 2;
+            for (uint16 i = 0; i < asmJsFuncInfo->GetArgCount() && i < 3; i++)
             {
-            case Js::AsmJsVarType::Int:
-                this->MovArgFromReg2Stack(entryInstr, i == 0 ? RegRDX : i == 1 ? RegR8 : RegR9, offset, TyInt32);
-                offset++;
-                break;
-            case Js::AsmJsVarType::Float:
-                // registers we need are contiguous, so calculate it from XMM1
-                this->MovArgFromReg2Stack(entryInstr, (RegNum)(RegXMM1 + i), offset, TyFloat32);
-                offset++;
-                break;
-            case Js::AsmJsVarType::Double:
-                this->MovArgFromReg2Stack(entryInstr, (RegNum)(RegXMM1 + i), offset, TyFloat64);
-                offset++;
-                break;
-            case Js::AsmJsVarType::Float32x4:
-                this->MovArgFromReg2Stack(entryInstr, (RegNum)(RegXMM1 + i), offset, TySimd128F4);
-                offset += 2;
-                break;
-            case Js::AsmJsVarType::Int32x4:
-                this->MovArgFromReg2Stack(entryInstr, (RegNum)(RegXMM1 + i), offset, TySimd128I4);
-                offset += 2;
-                break;
-            case Js::AsmJsVarType::Int16x8:
-                this->MovArgFromReg2Stack(entryInstr, (RegNum)(RegXMM1 + i), offset, TySimd128I8);
-                offset += 2;
-                break;
-            case Js::AsmJsVarType::Int8x16:
-                this->MovArgFromReg2Stack(entryInstr, (RegNum)(RegXMM1 + i), offset, TySimd128I16);
-                offset += 2;
-                break;
-            case Js::AsmJsVarType::Uint32x4:
-                this->MovArgFromReg2Stack(entryInstr, (RegNum)(RegXMM1 + i), offset, TySimd128U4);
-                offset += 2;
-                break;
-            case Js::AsmJsVarType::Uint16x8:
-                this->MovArgFromReg2Stack(entryInstr, (RegNum)(RegXMM1 + i), offset, TySimd128U8);
-                offset += 2;
-                break;
-            case Js::AsmJsVarType::Uint8x16:
-                this->MovArgFromReg2Stack(entryInstr, (RegNum)(RegXMM1 + i), offset, TySimd128U16);
-                offset += 2;
-                break;
-            case Js::AsmJsVarType::Bool32x4:
-                this->MovArgFromReg2Stack(entryInstr, (RegNum)(RegXMM1 + i), offset, TySimd128B4);
-                offset += 2;
-                break;
-            case Js::AsmJsVarType::Bool16x8:
-                this->MovArgFromReg2Stack(entryInstr, (RegNum)(RegXMM1 + i), offset, TySimd128B8);
-                offset += 2;
-                break;
-            case Js::AsmJsVarType::Bool8x16:
-                this->MovArgFromReg2Stack(entryInstr, (RegNum)(RegXMM1 + i), offset, TySimd128B16);
-                offset += 2;
-                break;
-            case Js::AsmJsVarType::Float64x2:
-                this->MovArgFromReg2Stack(entryInstr, (RegNum)(RegXMM1 + i), offset, TySimd128D2);
-                offset += 2;
-                break;
-            default:
-                Assume(UNREACHED);
+                switch (asmJsFuncInfo->GetArgType(i).which())
+                {
+                case Js::AsmJsVarType::Int:
+                    this->MovArgFromReg2Stack(entryInstr, i == 0 ? RegRDX : i == 1 ? RegR8 : RegR9, offset, TyInt32);
+                    offset++;
+                    break;
+                case Js::AsmJsVarType::Float:
+                    // registers we need are contiguous, so calculate it from XMM1
+                    this->MovArgFromReg2Stack(entryInstr, (RegNum)(RegXMM1 + i), offset, TyFloat32);
+                    offset++;
+                    break;
+                case Js::AsmJsVarType::Double:
+                    this->MovArgFromReg2Stack(entryInstr, (RegNum)(RegXMM1 + i), offset, TyFloat64);
+                    offset++;
+                    break;
+                case Js::AsmJsVarType::Float32x4:
+                    this->MovArgFromReg2Stack(entryInstr, (RegNum)(RegXMM1 + i), offset, TySimd128F4);
+                    offset += 2;
+                    break;
+                case Js::AsmJsVarType::Int32x4:
+                    this->MovArgFromReg2Stack(entryInstr, (RegNum)(RegXMM1 + i), offset, TySimd128I4);
+                    offset += 2;
+                    break;
+                case Js::AsmJsVarType::Int16x8:
+                    this->MovArgFromReg2Stack(entryInstr, (RegNum)(RegXMM1 + i), offset, TySimd128I8);
+                    offset += 2;
+                    break;
+                case Js::AsmJsVarType::Int8x16:
+                    this->MovArgFromReg2Stack(entryInstr, (RegNum)(RegXMM1 + i), offset, TySimd128I16);
+                    offset += 2;
+                    break;
+                case Js::AsmJsVarType::Uint32x4:
+                    this->MovArgFromReg2Stack(entryInstr, (RegNum)(RegXMM1 + i), offset, TySimd128U4);
+                    offset += 2;
+                    break;
+                case Js::AsmJsVarType::Uint16x8:
+                    this->MovArgFromReg2Stack(entryInstr, (RegNum)(RegXMM1 + i), offset, TySimd128U8);
+                    offset += 2;
+                    break;
+                case Js::AsmJsVarType::Uint8x16:
+                    this->MovArgFromReg2Stack(entryInstr, (RegNum)(RegXMM1 + i), offset, TySimd128U16);
+                    offset += 2;
+                    break;
+                case Js::AsmJsVarType::Bool32x4:
+                    this->MovArgFromReg2Stack(entryInstr, (RegNum)(RegXMM1 + i), offset, TySimd128B4);
+                    offset += 2;
+                    break;
+                case Js::AsmJsVarType::Bool16x8:
+                    this->MovArgFromReg2Stack(entryInstr, (RegNum)(RegXMM1 + i), offset, TySimd128B8);
+                    offset += 2;
+                    break;
+                case Js::AsmJsVarType::Bool8x16:
+                    this->MovArgFromReg2Stack(entryInstr, (RegNum)(RegXMM1 + i), offset, TySimd128B16);
+                    offset += 2;
+                    break;
+                case Js::AsmJsVarType::Float64x2:
+                    this->MovArgFromReg2Stack(entryInstr, (RegNum)(RegXMM1 + i), offset, TySimd128D2);
+                    offset += 2;
+                    break;
+                default:
+                    Assume(UNREACHED);
+                }
             }
         }
+        else
+        {
+            this->MovArgFromReg2Stack(entryInstr, RegRDX, 2);
+            this->MovArgFromReg2Stack(entryInstr, RegR8, 3);
+            this->MovArgFromReg2Stack(entryInstr, RegR9, 4);
+        }
     }
-    else
-    {
-        this->MovArgFromReg2Stack(entryInstr, RegRDX, 2);
-        this->MovArgFromReg2Stack(entryInstr, RegR8, 3);
-        this->MovArgFromReg2Stack(entryInstr, RegR9, 4);
-    }
-
     IntConstType frameSize = Js::Constants::MinStackJIT + stackArgsSize + stackLocalsSize + savedRegSize;
     this->GeneratePrologueStackProbe(entryInstr, frameSize);
 
@@ -1642,6 +1654,12 @@ LowererMDArch::GeneratePrologueStackProbe(IR::Instr *entryInstr, IntConstType fr
     //    JMP  rax
     // $done:
     //
+
+    if (this->m_func->m_isLeaf && !this->m_func->GetHasImplicitCalls() &&
+        frameSize - Js::Constants::MinStackJIT < Js::Constants::MaxStackForNoProbe)
+    {
+        return;
+    }
 
     IR::LabelInstr *helperLabel = IR::LabelInstr::New(Js::OpCode::Label, this->m_func, true);
     IR::Instr *insertInstr = entryInstr->m_next;
