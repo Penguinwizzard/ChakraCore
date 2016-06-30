@@ -6231,15 +6231,8 @@ void Parser::ParseFncFormals(ParseNodePtr pnodeFnc, ushort flags)
 
         if (this->GetCurrentFunctionNode()->sxFnc.CallsEval() || this->GetCurrentFunctionNode()->sxFnc.ChildCallsEval())
         {
-            if (!m_scriptContext->GetConfig()->IsES6DefaultArgsSplitScopeEnabled())
-            {
-                Error(ERREvalNotSupportedInParamScope);
-            }
-            else
-            {
-                Assert(pnodeFnc->sxFnc.HasNonSimpleParameterList());
-                pnodeFnc->sxFnc.pnodeScopes->sxBlock.scope->SetCannotMergeWithBodyScope();
-            }
+            Assert(pnodeFnc->sxFnc.HasNonSimpleParameterList());
+            pnodeFnc->sxFnc.pnodeScopes->sxBlock.scope->SetCannotMergeWithBodyScope();
         }
     }
     Assert(m_token.tk == tkRParen);

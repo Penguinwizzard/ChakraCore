@@ -756,19 +756,19 @@
   <test>
     <default>
       <files>default-splitscope.js</files>
-      <compile-flags>-off:deferparse -ES6DefaultArgsSplitScope -ES6Generators -args summary -endargs</compile-flags>
+      <compile-flags>-off:deferparse -ES6Generators -args summary -endargs</compile-flags>
     </default>
   </test>
   <test>
     <default>
       <files>default-splitscope.js</files>
-      <compile-flags>-force:deferparse -ES6DefaultArgsSplitScope -ES6Generators -args summary -endargs</compile-flags>
+      <compile-flags>-force:deferparse -ES6Generators -args summary -endargs</compile-flags>
     </default>
   </test>
   <test>
     <default>
       <files>default-splitscope-undodeferparse.js</files>
-      <compile-flags>-forceundodefer -ES6DefaultArgsSplitScope</compile-flags>
+      <compile-flags>-forceundodefer</compile-flags>
     </default>
   </test>
   <test>
