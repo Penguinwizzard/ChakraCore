@@ -67,8 +67,8 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)RuntimeBasePch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="jitprofiling.cpp" />
-    <ClCompile Include="VTuneChakraProfile.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)jitprofiling.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)VTuneChakraProfile.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CompactCounters.h" />
