@@ -1643,6 +1643,12 @@ LowererMDArch::GeneratePrologueStackProbe(IR::Instr *entryInstr, IntConstType fr
     // $done:
     //
 
+    if (this->m_func->m_isLeaf && !this->m_func->GetHasImplicitCalls() &&
+        frameSize - Js::Constants::MinStackJIT < Js::Constants::MaxStackForNoProbe)
+    {
+        return;
+    }
+
     IR::LabelInstr *helperLabel = IR::LabelInstr::New(Js::OpCode::Label, this->m_func, true);
     IR::Instr *insertInstr = entryInstr->m_next;
     IR::Instr *instr;
