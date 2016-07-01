@@ -11,6 +11,15 @@ const Js::OpCode LowererMD::MDExtend32Opcode = Js::OpCode::MOVSXD;
 
 extern const IRType RegTypes[RegNumCount];
 
+bool
+LowererMDArch::IsArgSaveRequired(Func *func) {
+    return (func->IsJitInDebugMode() || func->IsGeneratorFunc() ||
+        func->GetJnFunction()->GetIsAsmjsMode() || func->IsLambda() ||
+        func->GetJnFunction()->HasReferenceableBuiltInArguments() ||
+        func->GetHasImplicitCalls() || func->GetHasArgumentObject() ||
+        func->HasThis() || func->GetInParamsCount() > 1);
+}
+
 BYTE
 LowererMDArch::GetDefaultIndirScale()
 {
@@ -1379,7 +1388,7 @@ LowererMDArch::LowerEntryInstr(IR::EntryInstr * entryInstr)
     //
     uint32 argSlotsForFunctionsCalled = this->m_func->m_argSlotsForFunctionsCalled;
     // Stack is always reserved for at least 4 parameters.
-    if (argSlotsForFunctionsCalled < 4)
+    if (argSlotsForFunctionsCalled < 4 && IsArgSaveRequired(this->m_func))
         argSlotsForFunctionsCalled = 4;
 
     uint32 stackArgsSize    = MachPtr * (argSlotsForFunctionsCalled + 1);
@@ -1514,11 +1523,11 @@ LowererMDArch::LowerEntryInstr(IR::EntryInstr * entryInstr)
     //
     // Now store all the arguments in the register in the stack slots
     //
-    this->MovArgFromReg2Stack(entryInstr, RegRCX, 1);
     Js::AsmJsFunctionInfo* asmJsFuncInfo = m_func->GetJnFunction()->GetAsmJsFunctionInfoWithLock();
     if (m_func->GetJnFunction()->GetIsAsmjsMode() && !m_func->IsLoopBody())
     {
         uint16 offset = 2;
+        this->MovArgFromReg2Stack(entryInstr, RegRCX, 1);
         for (uint16 i = 0; i < asmJsFuncInfo->GetArgCount() && i < 3; i++)
         {
             switch (asmJsFuncInfo->GetArgType(i).which())
@@ -1585,8 +1594,9 @@ LowererMDArch::LowerEntryInstr(IR::EntryInstr * entryInstr)
             }
         }
     }
-    else
+    else if (argSlotsForFunctionsCalled)
     {
+        this->MovArgFromReg2Stack(entryInstr, RegRCX, 1);
         this->MovArgFromReg2Stack(entryInstr, RegRDX, 2);
         this->MovArgFromReg2Stack(entryInstr, RegR8, 3);
         this->MovArgFromReg2Stack(entryInstr, RegR9, 4);
@@ -1642,6 +1652,12 @@ LowererMDArch::GeneratePrologueStackProbe(IR::Instr *entryInstr, IntConstType fr
     //    JMP  rax
     // $done:
     //
+
+    if (this->m_func->m_isLeaf && !this->m_func->GetHasImplicitCalls() &&
+        frameSize - Js::Constants::MinStackJIT < Js::Constants::MaxStackForNoProbe)
+    {
+        return;
+    }
 
     IR::LabelInstr *helperLabel = IR::LabelInstr::New(Js::OpCode::Label, this->m_func, true);
     IR::Instr *insertInstr = entryInstr->m_next;
