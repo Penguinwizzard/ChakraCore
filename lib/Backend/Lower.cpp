@@ -21119,6 +21119,11 @@ void Lowerer::LowerFunctionBodyCallCountChange(IR::Instr *const insertBeforeInst
         return;
     }
 
+    if (!func->hasBailout)
+    {
+        return;
+    }
+
     // mov countAddress, <countAddress>
     IR::RegOpnd *const countAddressOpnd = IR::RegOpnd::New(StackSym::New(TyMachPtr, func), TyMachPtr, func);
     const IR::AutoReuseOpnd autoReuseCountAddressOpnd(countAddressOpnd, func);
