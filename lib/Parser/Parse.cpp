@@ -6894,20 +6894,6 @@ ParseNodePtr Parser::ParseClassDecl(BOOL isDeclaration, LPCOLESTR pNameHint, uin
     BOOL strictSave = m_fUseStrictMode;
     m_fUseStrictMode = TRUE;
 
-    if (m_token.tk == tkEXTENDS)
-    {
-        m_pscan->Scan();
-        pnodeExtends = ParseExpr<buildAST>();
-        hasExtends = true;
-    }
-
-    if (m_token.tk != tkLCurly)
-    {
-        Error(ERRnoLcurly);
-    }
-
-    OUTPUT_TRACE_DEBUGONLY(Js::ES6VerboseFlag, _u("Parsing class (%s) : %s\n"), GetParseType(), name ? name->Psz() : _u("anonymous class"));
-
     ParseNodePtr pnodeDeclName = nullptr;
     if (isDeclaration)
     {
@@ -6928,6 +6914,20 @@ ParseNodePtr Parser::ParseClassDecl(BOOL isDeclaration, LPCOLESTR pNameHint, uin
     {
         pnodeName = CreateBlockScopedDeclNode(name, knopConstDecl);
     }
+
+    if (m_token.tk == tkEXTENDS)
+    {
+        m_pscan->Scan();
+        pnodeExtends = ParseExpr<buildAST>();
+        hasExtends = true;
+    }
+
+    if (m_token.tk != tkLCurly)
+    {
+        Error(ERRnoLcurly);
+    }
+
+    OUTPUT_TRACE_DEBUGONLY(Js::ES6VerboseFlag, _u("Parsing class (%s) : %s\n"), GetParseType(), name ? name->Psz() : _u("anonymous class"));
 
     RestorePoint beginClass;
     m_pscan->Capture(&beginClass);

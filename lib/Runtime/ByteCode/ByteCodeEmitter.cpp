@@ -10886,6 +10886,11 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
     {
         funcInfo->AcquireLoc(pnode);
 
+        Assert(pnode->sxClass.pnodeConstructor);
+        pnode->sxClass.pnodeConstructor->location = pnode->location;
+
+        BeginEmitBlock(pnode->sxClass.pnodeBlock, byteCodeGenerator, funcInfo);
+
         // Extends
         if (pnode->sxClass.pnodeExtends)
         {
@@ -10893,11 +10898,6 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
             // defer and nondefer parse modes.
             Emit(pnode->sxClass.pnodeExtends, byteCodeGenerator, funcInfo, false);
         }
-
-        Assert(pnode->sxClass.pnodeConstructor);
-        pnode->sxClass.pnodeConstructor->location = pnode->location;
-
-        BeginEmitBlock(pnode->sxClass.pnodeBlock, byteCodeGenerator, funcInfo);
 
         // Constructor
         Emit(pnode->sxClass.pnodeConstructor, byteCodeGenerator, funcInfo, false);
