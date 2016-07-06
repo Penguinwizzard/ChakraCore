@@ -450,3 +450,25 @@ RegNum LinearScanMD::GetRegisterFromSaveIndex(uint offset)
 {
     return (RegNum)(offset >= RegXMM0 ? (offset - RegXMM0) / (sizeof(SIMDValue) / sizeof(Js::Var)) + RegXMM0 : offset);
 }
+
+RegNum LinearScanMD::GetParamReg(IR::SymOpnd *symOpnd)
+{
+	RegNum reg = RegNOREG;
+	switch (symOpnd->m_sym->AsStackSym()->m_offset)
+	{
+	case 16:
+		reg = RegRCX;
+		break;
+	case 24:
+		reg = RegRDX;
+		break;
+	case 32:
+		reg = RegR8;
+		break;
+	case 40:
+		reg = RegR9;
+		break;
+	}
+
+	return reg;
+}

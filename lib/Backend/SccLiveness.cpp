@@ -374,6 +374,27 @@ SCCLiveness::ProcessSrc(IR::Opnd *src, IR::Instr *instr)
             }
         }
     }
+    else if (src->IsSymOpnd() && src->AsSymOpnd()->m_sym->AsStackSym()->IsParamSlotSym())
+    {
+		IR::SymOpnd *symOpnd = src->AsSymOpnd();
+		RegNum reg = LinearScanMD::GetParamReg(symOpnd);
+
+		if (reg != RegNOREG)
+		{
+			StackSym *stackSym = symOpnd->m_sym->AsStackSym();
+			Lifetime *lifetime = stackSym->scratch.linearScan.lifetime;
+
+			if (lifetime == nullptr)
+			{
+				lifetime = this->InsertLifetime(stackSym, reg, this->func->m_headInstr);
+				lifetime->region = this->curRegion;
+			}
+
+			IR::RegOpnd * newRegOpnd = IR::RegOpnd::New(stackSym, reg, symOpnd->GetType(), this->func);
+			instr->ReplaceSrc(symOpnd, newRegOpnd);
+			this->ProcessRegUse(newRegOpnd, instr);
+		}
+    }
 }
 
 // SCCLiveness::ProcessDst
