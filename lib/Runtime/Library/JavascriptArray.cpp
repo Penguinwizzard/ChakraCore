@@ -9321,7 +9321,8 @@ Case0:
                     continue;
                 }
 
-                selected = callBackFn->GetEntryPoint()(callBackFn, CallInfo(CallFlags_Value, 4), thisArg,
+                selected = CALL_ENTRYPOINT(callBackFn->GetEntryPoint(), callBackFn, CallInfo(CallFlags_Value, 4),
+                    thisArg,
                     element,
                     JavascriptNumber::ToVar(k, scriptContext),
                     pArr);
@@ -9350,7 +9351,8 @@ Case0:
                 if (JavascriptOperators::HasItem(obj, k))
                 {
                     element = JavascriptOperators::GetItem(obj, k, scriptContext);
-                    selected = callBackFn->GetEntryPoint()(callBackFn, CallInfo(CallFlags_Value, 4), thisArg,
+                    selected = CALL_ENTRYPOINT(callBackFn->GetEntryPoint(), callBackFn, CallInfo(CallFlags_Value, 4),
+                        thisArg,
                         element,
                         JavascriptNumber::ToVar(k, scriptContext),
                         obj);

@@ -2228,7 +2228,7 @@ namespace Js
         m_outSp        = m_outParams;
     }
 
-    __declspec(noinline)
+    _NOINLINE
     Var InterpreterStackFrame::DebugProcessThunk(void* returnAddress, void* addressOfReturnAddress)
     {
         PushPopFrameHelper pushPopFrameHelper(this, returnAddress, addressOfReturnAddress);
@@ -2359,7 +2359,7 @@ namespace Js
     }
 #endif
 
-    __declspec(noinline)
+    _NOINLINE
     Var InterpreterStackFrame::ProcessThunk(void* address, void* addressOfReturnAddress)
     {
         PushPopFrameHelper pushPopFrameHelper(this, address, addressOfReturnAddress);
@@ -3353,7 +3353,7 @@ namespace Js
     }
 
     template <class T>
-    __declspec(noinline) void InterpreterStackFrame::OP_GetMethodProperty_NoFastPath(Var instance, unaligned T *playout)
+    _NOINLINE void InterpreterStackFrame::OP_GetMethodProperty_NoFastPath(Var instance, unaligned T *playout)
     {
         PropertyId propertyId = GetPropertyIdFromCacheId(playout->inlineCacheIndex);
 
@@ -3399,7 +3399,7 @@ namespace Js
     }
 
     template <class T>
-    __declspec(noinline) void InterpreterStackFrame::OP_GetRootMethodProperty_NoFastPath(unaligned T *playout)
+    _NOINLINE void InterpreterStackFrame::OP_GetRootMethodProperty_NoFastPath(unaligned T *playout)
     {
         PropertyId propertyId = GetPropertyIdFromCacheId(playout->inlineCacheIndex);
 
@@ -3463,7 +3463,7 @@ namespace Js
     }
 
     template <class T>
-    __declspec(noinline) void InterpreterStackFrame::OP_GetMethodPropertyScoped_NoFastPath(unaligned T *playout)
+    _NOINLINE void InterpreterStackFrame::OP_GetMethodPropertyScoped_NoFastPath(unaligned T *playout)
     {
         PropertyId propertyId = GetPropertyIdFromCacheId(playout->inlineCacheIndex);
         Js::Var instance = GetReg(playout->Instance);
@@ -3562,6 +3562,7 @@ namespace Js
         case AsmJsRetType::Float:
             m_localFloatSlots[0] = JavascriptFunction::CallAsmJsFunction<float>(function, entrypointInfo->jsMethod, asmInfo->GetArgCount(), m_outParams);
             break;
+#ifdef ENABLE_SIMDJS
         case AsmJsRetType::Float32x4:
         case AsmJsRetType::Int32x4:
         case AsmJsRetType::Bool32x4:
@@ -3577,6 +3578,7 @@ namespace Js
             simdVal.m128_value = JavascriptFunction::CallAsmJsFunction<__m128>(function, entrypointInfo->jsMethod, asmInfo->GetArgCount(), m_outParams);
             m_localSimdSlots[0] = X86SIMDValue::ToSIMDValue(simdVal);
             break;
+#endif
         }
         Assert((uint)((ArgSlot)asmInfo->GetArgCount() + 1) == (uint)(asmInfo->GetArgCount() + 1));
         if (scriptContext->GetConfig()->IsSimdjsEnabled())
@@ -3895,7 +3897,7 @@ namespace Js
     }
 
     template <class T>
-    __declspec(noinline) void InterpreterStackFrame::OP_GetRootProperty_NoFastPath(unaligned T* playout)
+    _NOINLINE void InterpreterStackFrame::OP_GetRootProperty_NoFastPath(unaligned T* playout)
     {
         PropertyId propertyId = GetPropertyIdFromCacheId(playout->inlineCacheIndex);
         Var rootInstance = this->GetRootObject();
@@ -4105,7 +4107,7 @@ namespace Js
     }
 
     template <class T>
-    __declspec(noinline) void InterpreterStackFrame::OP_GetProperty_NoFastPath(Var instance, unaligned T* playout)
+    _NOINLINE void InterpreterStackFrame::OP_GetProperty_NoFastPath(Var instance, unaligned T* playout)
     {
         PropertyId propertyId = GetPropertyIdFromCacheId(playout->inlineCacheIndex);
 
@@ -4271,7 +4273,7 @@ namespace Js
 
 
     template <typename T>
-    __declspec(noinline) void InterpreterStackFrame::OP_GetPropertyScoped_NoFastPath(const unaligned OpLayoutT_ElementP<T>* playout)
+    _NOINLINE void InterpreterStackFrame::OP_GetPropertyScoped_NoFastPath(const unaligned OpLayoutT_ElementP<T>* playout)
     {
         // Implicit root object as default instance
         Var defaultInstance = GetReg(Js::FunctionBody::RootObjectRegSlot);
@@ -4326,7 +4328,7 @@ namespace Js
     }
 
     template <class T>
-    __declspec(noinline) void InterpreterStackFrame::OP_SetPropertyScoped_NoFastPath(unaligned T* playout, PropertyOperationFlags flags)
+    _NOINLINE void InterpreterStackFrame::OP_SetPropertyScoped_NoFastPath(unaligned T* playout, PropertyOperationFlags flags)
     {
         // Implicit root object as default instance
         Var defaultInstance = GetReg(Js::FunctionBody::RootObjectRegSlot);
@@ -4411,7 +4413,7 @@ namespace Js
     }
 
     template <class T>
-    __declspec(noinline) void InterpreterStackFrame::DoSetProperty_NoFastPath(unaligned T* playout, Var instance, PropertyOperationFlags flags)
+    _NOINLINE void InterpreterStackFrame::DoSetProperty_NoFastPath(unaligned T* playout, Var instance, PropertyOperationFlags flags)
     {
 #if ENABLE_COPYONACCESS_ARRAY
         JavascriptLibrary::CheckAndConvertCopyOnAccessNativeIntArray<Var>(instance);
@@ -4442,7 +4444,7 @@ namespace Js
     }
 
     template <class T>
-    __declspec(noinline) void InterpreterStackFrame::DoSetSuperProperty_NoFastPath(unaligned T* playout, Var instance, PropertyOperationFlags flags)
+    _NOINLINE void InterpreterStackFrame::DoSetSuperProperty_NoFastPath(unaligned T* playout, Var instance, PropertyOperationFlags flags)
     {
 #if ENABLE_COPYONACCESS_ARRAY
         JavascriptLibrary::CheckAndConvertCopyOnAccessNativeIntArray<Var>(instance);
@@ -4670,7 +4672,7 @@ namespace Js
     }
 
     template <class T>
-    __declspec(noinline) void InterpreterStackFrame::DoInitProperty_NoFastPath(unaligned T* playout, Var instance)
+    _NOINLINE void InterpreterStackFrame::DoInitProperty_NoFastPath(unaligned T* playout, Var instance)
     {
         JavascriptOperators::PatchInitValue<false>(
             GetFunctionBody(),
