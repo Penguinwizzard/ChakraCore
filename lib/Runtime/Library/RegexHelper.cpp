@@ -149,7 +149,7 @@ namespace Js
 
     UnifiedRegex::RegexPattern* RegexHelper::PrimCompileDynamic(ScriptContext *scriptContext, const char16* psz, CharCount csz, const char16* pszOpts, CharCount cszOpts, bool isLiteralSource)
     {
-        PROBE_STACK(scriptContext, Js::Constants::MinStackRegex);
+        PROBE_STACK_NO_DISPOSE(scriptContext, Js::Constants::MinStackRegex);
 
         // SEE ALSO: Scanner<EncodingPolicy>::ScanRegExpConstant()
 #ifdef PROFILE_EXEC
@@ -896,7 +896,7 @@ namespace Js
             // Number of captures can be at most 99, so we won't overflow.
             ushort argCount = (ushort) numberOfCaptures + 4;
 
-            PROBE_STACK(scriptContext, argCount * sizeof(Var));
+            PROBE_STACK_NO_DISPOSE(scriptContext, argCount * sizeof(Var));
             Var* args = (Var*) _alloca(argCount * sizeof(Var));
 
             args[0] = scriptContext->GetLibrary()->GetUndefined();
@@ -1223,7 +1223,7 @@ namespace Js
         // Replace function must be called with arguments (<function's this>, group0, ..., groupn, offset, input)
         // The garbage collector must know about this array since it is being passed back into script land
         Var* replaceArgs;
-        PROBE_STACK(scriptContext, (numGroups + 3) * sizeof(Var));
+        PROBE_STACK_NO_DISPOSE(scriptContext, (numGroups + 3) * sizeof(Var));
         replaceArgs = (Var*)_alloca((numGroups + 3) * sizeof(Var));
         replaceArgs[0] = scriptContext->GetLibrary()->GetUndefined();
         replaceArgs[numGroups + 2] = input;

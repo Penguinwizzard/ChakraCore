@@ -1822,7 +1822,15 @@ void ByteCodeGenerator::InitScopeSlotArray(FuncInfo * funcInfo)
                 {
                     // All properties should get correct propertyId here.
                     Assert(sym->HasScopeSlot()); // We can't allocate scope slot now. Any symbol needing scope slot must have allocated it before this point.
+
+#ifdef _NTBUILD
+#include <VerifyGlobalMSRCSettings.inl>
+#endif
+#if defined(PRERELEASE_REL1606_MSRC33164_BUG7230595) || defined(_CHAKRACOREBUILD)
                     setPropertyIdForScopeSlotArray(sym->GetScopeSlot(), sym->EnsurePosition(funcInfo));
+#else
+                    propertyIdsForScopeSlotArray[sym->GetScopeSlot()] = sym->EnsurePosition(funcInfo);
+#endif
                 }
             }
         };

@@ -89,8 +89,9 @@ namespace Js
             this->isStackArgOptDisabled = profileInfo->IsStackArgOptDisabled();
             this->isEquivalentObjTypeSpecDisabled = profileInfo->IsEquivalentObjTypeSpecDisabled();
             this->isObjTypeSpecDisabled_jitLoopBody = profileInfo->IsObjTypeSpecDisabledInJitLoopBody();
+            this->isLoopImplicitCallInfoDisabled = profileInfo->IsLoopImplicitCallInfoDisabled();
             this->isPowIntIntTypeSpecDisabled = profileInfo->IsPowIntIntTypeSpecDisabled();
-			this->isLoopImplicitCallInfoDisabled = profileInfo->IsLoopImplicitCallInfoDisabled();
+            this->isLoopImplicitCallInfoDisabled = profileInfo->IsLoopImplicitCallInfoDisabled();
         }
 
         void OnBackgroundAllocatorReset()
