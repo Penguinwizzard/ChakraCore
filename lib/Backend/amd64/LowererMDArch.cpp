@@ -16,8 +16,7 @@ LowererMDArch::IsArgSaveRequired(Func *func) {
     return (func->IsJitInDebugMode() ||
         func->GetJnFunction()->GetIsAsmjsMode() ||
         func->IsGeneratorFunc() || func->IsLambda() ||
-        func->GetHasFunctionObjectLoad() ||
-        !func->IsTrueLeaf() || func->GetHasArgumentObject() ||
+        func->GetHasFunctionObjectLoad() || !func->IsTrueLeaf() ||
         func->HasThis() || func->argInsCount > 0);
 }
 

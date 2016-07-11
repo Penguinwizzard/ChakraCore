@@ -295,8 +295,7 @@ static const unsigned __int64 c_debugFillPattern8 = 0xcececececececece;
     }
     bool IsTrueLeaf() const
     {
-        if (m_isLeaf && !GetHasImplicitCalls()) return true;
-        return false;
+        return m_isLeaf && !GetHasImplicitCalls();
     }
     RecyclerWeakReference<Js::FunctionBody> *GetWeakFuncRef() const;
     Js::FunctionBody * GetJnFunction() const { return m_jnFunction; }
