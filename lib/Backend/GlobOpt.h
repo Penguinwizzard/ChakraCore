@@ -11,6 +11,7 @@ enum class ValueStructureKind
     IntRange,
     IntBounded,
     FloatConstant,
+    StringConstant,
     VarConstant,
     JsType,
     Array
@@ -20,6 +21,7 @@ class IntConstantValueInfo;
 class IntRangeValueInfo;
 class IntBoundedValueInfo;
 class FloatConstantValueInfo;
+class StringConstantValueInfo;
 class VarConstantValueInfo;
 class JsTypeValueInfo;
 class EquivalentTypeSetValueInfo;
@@ -197,6 +199,9 @@ public:
     bool                            IsFloatConstant() const;
     FloatConstantValueInfo *        AsFloatConstant();
     const FloatConstantValueInfo *  AsFloatConstant() const;
+    bool                            IsStringConstant() const;
+    StringConstantValueInfo *       AsStringConstant();
+    const StringConstantValueInfo * AsStringConstant() const;
     bool                            IsVarConstant() const;
     VarConstantValueInfo *          AsVarConstant();
     bool                            IsJsType() const;
@@ -219,6 +224,7 @@ public:
     bool TryGetIntConstantUpperBound(int32 *const intConstantBoundRef, const bool includeLikelyInt = false) const;
     bool TryGetIntConstantBounds(IntConstantBounds *const intConstantBoundsRef, const bool includeLikelyInt = false) const;
     bool WasNegativeZeroPreventedByBailout() const;
+    bool TryGetStringConstantValue(/*const */Js::JavascriptString ** internalStringRef) const;
 
 public:
     static bool IsEqualTo(const Value *const src1Value, const int32 min1, const int32 max1, const Value *const src2Value, const int32 min2, const int32 max2);
@@ -434,6 +440,36 @@ public:
     }
 };
 
+class StringConstantValueInfo : public ValueInfo
+{
+private:
+    /*const */Js::JavascriptString* stringValue;
+
+public:
+    StringConstantValueInfo(/*const */Js::JavascriptString* string)
+        : ValueInfo(String, ValueStructureKind::StringConstant), stringValue(string)
+    {
+    }
+
+    static StringConstantValueInfo *New(
+        JitArenaAllocator *const allocator,
+        /*const */Js::JavascriptString* string)
+    {
+        return JitAnew(allocator, StringConstantValueInfo, string);
+    }
+
+    StringConstantValueInfo *Copy(JitArenaAllocator *const allocator) const
+    {
+        return JitAnew(allocator, StringConstantValueInfo, *this);
+    }
+
+public:
+    /*const */Js::JavascriptString* StringValue() const
+    {
+        return stringValue;
+    }
+
+};
 class VarConstantValueInfo : public ValueInfo
 {
 private:
@@ -1074,9 +1110,9 @@ public:
 
 typedef JsUtil::BaseDictionary<IntConstType, StackSym *, JitArenaAllocator> IntConstantToStackSymMap;
 typedef JsUtil::BaseDictionary<IntConstType, Value *, JitArenaAllocator> IntConstantToValueMap;
-
+typedef JsUtil::BaseDictionary<FloatConstType, Value *, JitArenaAllocator> FloatConstantToValueMap;
 typedef JsUtil::BaseDictionary<Js::Var, Value *, JitArenaAllocator> AddrConstantToValueMap;
-typedef JsUtil::BaseDictionary<Js::InternalString, Value *, JitArenaAllocator> StringConstantToValueMap;
+typedef JsUtil::BaseDictionary<Js::JavascriptString*, Value *, JitArenaAllocator> StringConstantToValueMap;
 
 class JsArrayKills
 {
@@ -1193,7 +1229,8 @@ private:
    
     // Global bitvectors
     IntConstantToStackSymMap *  intConstantToStackSymMap;
-    IntConstantToValueMap*      intConstantToValueMap;
+    IntConstantToValueMap *     intConstantToValueMap;
+    FloatConstantToValueMap *   floatConstantToValueMap;
     AddrConstantToValueMap *    addrConstantToValueMap;
     StringConstantToValueMap *  stringConstantToValueMap;
 #if DBG
@@ -1372,9 +1409,12 @@ private:
     Value *                 NewIntRangeValue(const int32 min, const int32 max, const bool wasNegativeZeroPreventedByBailout, IR::Opnd *const opnd = nullptr);
     IntBoundedValueInfo *   NewIntBoundedValueInfo(const ValueInfo *const originalValueInfo, const IntBounds *const bounds) const;
     Value *                 NewIntBoundedValue(const ValueType valueType, const IntBounds *const bounds, const bool wasNegativeZeroPreventedByBailout, IR::Opnd *const opnd = nullptr);
+    Value *                 GetFloatConstantValue(const FloatConstType floatValue, IR::Opnd *const opnd = nullptr);
     Value *                 NewFloatConstantValue(const FloatConstType floatValue, IR::Opnd *const opnd = nullptr);
+    Value *                 GetStringConstantValue(IR::AddrOpnd *addrOpnd);
+    Value *                 NewStringConstantValue(Js::JavascriptString *internalString);
     Value *                 GetVarConstantValue(IR::AddrOpnd *addrOpnd);
-    Value *                 NewVarConstantValue(IR::AddrOpnd *addrOpnd, bool isString);
+    Value *                 NewVarConstantValue(IR::AddrOpnd *addrOpnd);
     Value *                 HoistConstantLoadAndPropagateValueBackward(Js::Var varConst, IR::Instr * origInstr, Value * value);
     Value *                 NewFixedFunctionValue(Js::JavascriptFunction *functionValue, IR::AddrOpnd *addrOpnd);
 
@@ -1407,7 +1447,9 @@ private:
     int                     GetBoundCheckOffsetForSimd(ValueType arrValueType, const IR::Instr *instr, const int oldOffset = -1);
 
     IR::Instr *             OptNewScObject(IR::Instr** instrPtr, Value* srcVal);
-    bool                    OptConstFoldBinary(IR::Instr * *pInstr, const IntConstantBounds &src1IntConstantBounds, const IntConstantBounds &src2IntConstantBounds, Value **pDstVal);
+    bool                    OptConstFoldBinary(IR::Instr * *pInstr, Value * src1Val, Value * src2Val, Value **pDstVal);
+    bool                    OptConstFoldBinary_Int(IR::Instr **pInstr, const IntConstantBounds &src1IntConstantBounds, const IntConstantBounds &src2IntConstantBounds, Value **pDstVal);
+    bool                    OptConstFoldBinary_String(IR::Instr **pInstr, /*const */Js::JavascriptString * src1JsString, /*const */Js::JavascriptString * src2JsString, Value **pDstVal);
     bool                    OptConstFoldUnary(IR::Instr * *pInstr, const int32 intConstantValue, const bool isUsingOriginalSrc1Value, Value **pDstVal);
     bool                    OptConstPeep(IR::Instr *instr, IR::Opnd *constSrc, Value **pDstVal, ValueInfo *vInfo);
     bool                    OptConstFoldBranch(IR::Instr *instr, Value *src1Val, Value*src2Val, Value **pDstVal);

@@ -199,6 +199,17 @@ bool ValueInfo::TryGetIntConstantValue(int32 *const intValueRef, const bool incl
     return false;
 }
 
+bool ValueInfo::TryGetStringConstantValue(/*const */Js::JavascriptString ** jsStringRef) const
+{
+    if (structureKind == ValueStructureKind::StringConstant)
+    {
+        *jsStringRef = AsStringConstant()->StringValue();
+        return true;
+    }
+
+    return false;
+}
+
 bool ValueInfo::TryGetIntConstantLowerBound(int32 *const intConstantBoundRef, const bool includeLikelyInt) const
 {
     Assert(intConstantBoundRef);

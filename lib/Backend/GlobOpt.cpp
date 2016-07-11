@@ -467,6 +467,8 @@ GlobOpt::ForwardPass()
     this->intConstantToStackSymMap = &localIntConstantToStackSymMap;
     IntConstantToValueMap localIntConstantToValueMap(alloc);
     this->intConstantToValueMap = &localIntConstantToValueMap;
+    FloatConstantToValueMap localFloatConstantToValueMap(alloc);
+    this->floatConstantToValueMap = &localFloatConstantToValueMap;
     AddrConstantToValueMap localAddrConstantToValueMap(alloc);
     this->addrConstantToValueMap = &localAddrConstantToValueMap;
     StringConstantToValueMap localStringConstantToValueMap(alloc);
@@ -496,6 +498,7 @@ GlobOpt::ForwardPass()
     this->noImplicitCallUsesToInsert = nullptr;
     this->intConstantToStackSymMap = nullptr;
     this->intConstantToValueMap = nullptr;
+    this->floatConstantToValueMap = nullptr;
     this->addrConstantToValueMap = nullptr;
     this->stringConstantToValueMap = nullptr;
 #if DBG
@@ -5536,7 +5539,7 @@ GlobOpt::OptSrc(IR::Opnd *opnd, IR::Instr * *pInstr, Value **indirIndexValRef, I
         }
         else
         {
-            val = NewFloatConstantValue(floatValue);
+            val = GetFloatConstantValue(floatValue);
         }
         opnd->SetValueType(val->GetValueInfo()->Type());
         return val;
@@ -5549,16 +5552,20 @@ GlobOpt::OptSrc(IR::Opnd *opnd, IR::Instr * *pInstr, Value **indirIndexValRef, I
             {
                 AssertMsg(!PHASE_OFF(Js::FixedMethodsPhase, instr->m_func->GetJnFunction()), "Fixed function address operand with fixed method calls phase disabled?");
                 val = NewFixedFunctionValue((Js::JavascriptFunction *)addrOpnd->m_address, addrOpnd);
-                opnd->SetValueType(val->GetValueInfo()->Type());
-                return val;
             }
             else if (addrOpnd->IsVar() && Js::TaggedInt::Is(addrOpnd->m_address))
             {
                 val = this->GetIntConstantValue(Js::TaggedInt::ToInt32(addrOpnd->m_address), instr);
-                opnd->SetValueType(val->GetValueInfo()->Type());
-                return val;
             }
-            val = this->GetVarConstantValue(addrOpnd);
+            else if (Js::JavascriptString::Is(addrOpnd->m_address))
+            {
+                val = this->GetStringConstantValue(addrOpnd);
+            }
+            else
+            {
+                val = this->GetVarConstantValue(addrOpnd);
+            }
+            opnd->SetValueType(val->GetValueInfo()->Type());
             return val;
         }
 
@@ -6217,6 +6224,7 @@ GlobOpt::CopyProp(IR::Opnd *opnd, IR::Instr *instr, Value *val, IR::IndirOpnd *p
 
     // Constant prop?
     int32 intConstantValue;
+    Js::JavascriptString * jsString = nullptr;
     if (valueInfo->TryGetIntConstantValue(&intConstantValue))
     {
         if (PHASE_OFF(Js::ConstPropPhase, this->func))
@@ -6371,6 +6379,22 @@ GlobOpt::CopyProp(IR::Opnd *opnd, IR::Instr *instr, Value *val, IR::IndirOpnd *p
             break;
         }
         return opnd;
+    }
+    else if (valueInfo->TryGetStringConstantValue(&jsString))
+    {
+        Assert(jsString);
+        IR::Opnd * constOpnd;
+        switch (instr->m_opcode)
+        {
+        case Js::OpCode::Add_A:
+            constOpnd = IR::AddrOpnd::New(jsString, IR::AddrOpndKindDynamicVar, instr->m_func);
+            this->CaptureByteCodeSymUses(instr);
+            opnd = instr->ReplaceSrc(opnd, constOpnd);
+            return opnd;
+
+        default:
+            break;
+        }
     }
 
     Sym *opndSym = nullptr;
@@ -6839,20 +6863,91 @@ Value *GlobOpt::NewIntBoundedValue(
 }
 
 Value *
+GlobOpt::GetFloatConstantValue(const FloatConstType floatValue, IR::Opnd *const opnd)
+{
+    Value * val = nullptr;
+    Value * const cachedValue = this->floatConstantToValueMap->Lookup(floatValue, nullptr);
+    if (cachedValue)
+    {
+        Sym * symStore = cachedValue->GetValueInfo()->GetSymStore();
+        if (symStore && IsLive(symStore, &blockData))
+        {
+            Value *const symStoreValue = FindValue(symStore);
+            if (symStoreValue &&
+                symStoreValue->GetValueNumber() == cachedValue->GetValueNumber() &&
+                symStoreValue->GetValueInfo()->IsFloatConstant() &&
+                symStoreValue->GetValueInfo()->AsFloatConstant()->FloatValue() == floatValue)
+            {
+                val = symStoreValue;
+            }
+        }
+    }
+
+    if (!val)
+    {
+        val = NewFloatConstantValue(floatValue, opnd);
+    }
+
+    return val;
+}
+
+Value *
 GlobOpt::NewFloatConstantValue(const FloatConstType floatValue, IR::Opnd *const opnd)
 {
     FloatConstantValueInfo *valueInfo = FloatConstantValueInfo::New(this->alloc, floatValue);
     Value *val = NewValue(valueInfo);
+    this->floatConstantToValueMap->Item(floatValue, val);
 
     this->InsertNewValue(val, opnd);
     return val;
 }
 
 Value *
+GlobOpt::GetStringConstantValue(IR::AddrOpnd * addrOpnd)
+{
+    Value * val = nullptr;
+    Js::JavascriptString* jsString = Js::JavascriptString::FromVar(addrOpnd->m_address);
+    Value * cachedValue = this->stringConstantToValueMap->Lookup(jsString, nullptr);
+    if (cachedValue)
+    {
+        Sym *symStore = cachedValue->GetValueInfo()->GetSymStore();
+        if (symStore && IsLive(symStore, &blockData))
+        {
+            Value *const symStoreValue = FindValue(symStore);
+            if (symStoreValue &&
+                symStoreValue->GetValueNumber() == cachedValue->GetValueNumber() &&
+                symStoreValue->GetValueInfo()->IsStringConstant())
+            {
+                /*const */Js::JavascriptString* cachedString = symStoreValue->GetValueInfo()->AsStringConstant()->StringValue();
+                if (Js::JavascriptString::Equals(jsString, cachedString))
+                {
+                    val = symStoreValue;
+                }
+            }
+        }
+    }
+
+    if (!val)
+    {
+        val = NewStringConstantValue(jsString);
+    }
+
+    return val;
+}
+
+Value *
+GlobOpt::NewStringConstantValue(Js::JavascriptString *jsString)
+{
+    StringConstantValueInfo * valueInfo = StringConstantValueInfo::New(this->alloc, jsString);
+    Value * val = NewValue(valueInfo);
+    this->stringConstantToValueMap->Item(jsString, val);
+
+    return val;
+}
+
+Value *
 GlobOpt::GetVarConstantValue(IR::AddrOpnd *addrOpnd)
 {
-    bool isVar = addrOpnd->IsVar();
-    bool isString = isVar && Js::JavascriptString::Is(addrOpnd->m_address);
     Value *val = nullptr;
     Value *cachedValue;
     if(this->addrConstantToValueMap->TryGetValue(addrOpnd->m_address, &cachedValue))
@@ -6877,36 +6972,10 @@ GlobOpt::GetVarConstantValue(IR::AddrOpnd *addrOpnd)
             }
         }
     }
-    else if (isString)
-    {
-        Js::JavascriptString* jsString = Js::JavascriptString::FromVar(addrOpnd->m_address);
-        Js::InternalString internalString(jsString->GetString(), jsString->GetLength());
-        if (this->stringConstantToValueMap->TryGetValue(internalString, &cachedValue))
-        {
-            Sym *symStore = cachedValue->GetValueInfo()->GetSymStore();
-            if (symStore && IsLive(symStore, &blockData))
-            {
-                Value *const symStoreValue = FindValue(symStore);
-                if (symStoreValue && symStoreValue->GetValueNumber() == cachedValue->GetValueNumber())
-                {
-                    ValueInfo *const symStoreValueInfo = symStoreValue->GetValueInfo();
-                    if (symStoreValueInfo->IsVarConstant())
-                    {
-                        Js::JavascriptString * cachedString = Js::JavascriptString::FromVar(symStoreValue->GetValueInfo()->AsVarConstant()->VarValue());
-                        Js::InternalString cachedInternalString(cachedString->GetString(), cachedString->GetLength());
-                        if (Js::InternalStringComparer::Equals(internalString, cachedInternalString))
-                        {
-                            val = symStoreValue;
-                        }
-                    }
-                }
-            }
-        }
-    }
 
     if(!val)
     {
-        val = NewVarConstantValue(addrOpnd, isString);
+        val = NewVarConstantValue(addrOpnd);
     }
 
     addrOpnd->SetValueType(val->GetValueInfo()->Type());
@@ -6914,17 +6983,12 @@ GlobOpt::GetVarConstantValue(IR::AddrOpnd *addrOpnd)
 }
 
 Value *
-GlobOpt::NewVarConstantValue(IR::AddrOpnd *addrOpnd, bool isString)
+GlobOpt::NewVarConstantValue(IR::AddrOpnd *addrOpnd)
 {
     VarConstantValueInfo *valueInfo = VarConstantValueInfo::New(this->alloc, addrOpnd->m_address, addrOpnd->GetValueType());
     Value * value = NewValue(valueInfo);
     this->addrConstantToValueMap->Item(addrOpnd->m_address, value);
-    if (isString)
-    {
-        Js::JavascriptString* jsString = Js::JavascriptString::FromVar(addrOpnd->m_address);
-        Js::InternalString internalString(jsString->GetString(), jsString->GetLength());
-        this->stringConstantToValueMap->Item(internalString, value);
-    }
+    
     return value;
 }
 
@@ -8692,17 +8756,11 @@ GlobOpt::TypeSpecialization(
         // Binary
         if (!this->IsLoopPrePass())
         {
-            // OptConstFoldBinary doesn't do type spec, so only deal with things we are sure are int (IntConstant and IntRange)
-            // and not just likely ints  TypeSpecializeBinary will deal with type specializing them and fold them again
-            IntConstantBounds src1IntConstantBounds, src2IntConstantBounds;
-            if (src1Val && src1Val->GetValueInfo()->TryGetIntConstantBounds(&src1IntConstantBounds))
+            if (src1Val && src2Val)
             {
-                if (src2Val && src2Val->GetValueInfo()->TryGetIntConstantBounds(&src2IntConstantBounds))
+                if (this->OptConstFoldBinary(&instr, src1Val, src2Val, pDstVal))
                 {
-                    if (this->OptConstFoldBinary(&instr, src1IntConstantBounds, src2IntConstantBounds, pDstVal))
-                    {
-                        return instr;
-                    }
+                    return instr;
                 }
             }
         }
@@ -9432,7 +9490,7 @@ GlobOpt::OptConstFoldUnary(
     }
     else
     {
-        *pDstVal = NewFloatConstantValue(fValue, dst);
+        *pDstVal = GetFloatConstantValue(fValue, dst);
 
         if (IsTypeSpecPhaseOff(this->func))
         {
@@ -14750,18 +14808,46 @@ GlobOpt::MakeLive(StackSym *const sym, GlobOptBlockData *const blockData, const 
 bool
 GlobOpt::OptConstFoldBinary(
     IR::Instr * *pInstr,
+    Value * src1Val,
+    Value * src2Val,
+    Value **pDstVal)
+{
+    if (!DoConstFold())
+    {
+        return false;
+    }
+
+    // OptConstFoldBinary doesn't do type spec, so only deal with things we have a definite value type and not 'likely'
+    // TypeSpecializeBinary will deal with type specializing them and fold them again.
+    // Int (IntConstant and IntRange) and String (for concats) constant folding is allowed for now.
+    Js::JavascriptString* src1JsString = nullptr;
+    Js::JavascriptString* src2JsString = nullptr;;
+    IntConstantBounds src1IntConstantBounds, src2IntConstantBounds;
+    if (src1Val->GetValueInfo()->TryGetIntConstantBounds(&src1IntConstantBounds) &&
+        src2Val->GetValueInfo()->TryGetIntConstantBounds(&src1IntConstantBounds))
+    {
+        return this->OptConstFoldBinary_Int(pInstr, src1IntConstantBounds, src2IntConstantBounds, pDstVal);
+        
+    }
+    else if (src1Val->GetValueInfo()->TryGetStringConstantValue(&src1JsString) &&
+        src2Val->GetValueInfo()->TryGetStringConstantValue(&src2JsString))
+    {
+        return this->OptConstFoldBinary_String(pInstr, src1JsString, src2JsString, pDstVal); 
+    }
+
+    return false;
+}
+
+bool
+GlobOpt::OptConstFoldBinary_Int(
+    IR::Instr **pInstr,
     const IntConstantBounds &src1IntConstantBounds,
     const IntConstantBounds &src2IntConstantBounds,
     Value **pDstVal)
 {
     IR::Instr * &instr = *pInstr;
     int32 value;
-    IR::IntConstOpnd *constOpnd;
-
-    if (!DoConstFold())
-    {
-        return false;
-    }
+    IR::Opnd *constOpnd;
 
     int32 src1IntConstantValue = -1;
     int32 src2IntConstantValue = -1;
@@ -14828,6 +14914,48 @@ GlobOpt::OptConstFoldBinary(
         instr->m_opcode = Js::OpCode::Ld_I4;
         this->ToInt32Dst(instr, dst->AsRegOpnd(), this->currentBlock);
     }
+
+    return true;
+}
+
+bool
+GlobOpt::OptConstFoldBinary_String(
+    IR::Instr **pInstr,
+    /*const */Js::JavascriptString * src1JsString,
+    /*const */Js::JavascriptString * src2JsString,
+    Value **pDstVal)
+{
+    IR::Instr * &instr = *pInstr;
+    Js::JavascriptString * result = nullptr;
+    IR::Opnd *constOpnd;
+    
+    if (!instr->BinaryCalculator(src1JsString, src2JsString, &result, this->func))
+    {
+        return false;
+    }
+    Assert(result);
+    
+    this->CaptureByteCodeSymUses(instr);
+    constOpnd = IR::AddrOpnd::New((Js::Var)result, IR::AddrOpndKindDynamicVar, this->func);
+    instr->ReplaceSrc1(constOpnd);
+    instr->FreeSrc2();
+
+    this->OptSrc(constOpnd, &instr);
+
+    IR::Opnd *dst = instr->GetDst();
+    Assert(dst->IsRegOpnd());
+
+    StackSym *dstSym = dst->AsRegOpnd()->m_sym;
+
+    if (dstSym->IsSingleDef())
+    {
+        dstSym->m_isConst = true;
+        dstSym->m_isStrConst = true;
+    }
+
+    *pDstVal = GetStringConstantValue(constOpnd->AsAddrOpnd());
+    //GOPT_TRACE_INSTR(instr, _u("Constant folding to %s: \n"), result.GetBuffer());
+    instr->m_opcode = Js::OpCode::LdStr;
 
     return true;
 }
@@ -20092,6 +20220,26 @@ ValueInfo::AsFloatConstant() const
 {
     Assert(IsFloatConstant());
     return static_cast<const FloatConstantValueInfo *>(this);
+}
+
+bool
+ValueInfo::IsStringConstant() const
+{
+    return IsString() && structureKind == ValueStructureKind::StringConstant;
+}
+
+StringConstantValueInfo *
+ValueInfo::AsStringConstant()
+{
+    Assert(IsStringConstant());
+    return static_cast<StringConstantValueInfo *>(this);
+}
+
+const StringConstantValueInfo *
+ValueInfo::AsStringConstant() const
+{
+    Assert(IsStringConstant());
+    return static_cast<const StringConstantValueInfo *>(this);
 }
 
 bool

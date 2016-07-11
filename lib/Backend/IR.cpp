@@ -3722,6 +3722,28 @@ bool Instr::BinaryCalculator(IntConstType src1Const, IntConstType src2Const, Int
     return true;
 }
 
+bool Instr::BinaryCalculator(/*const */Js::JavascriptString * string1, /*const */Js::JavascriptString * string2, Js::JavascriptString **pResult, Func* func)
+{
+    switch (this->m_opcode)
+    {
+    case Js::OpCode::Add_A:
+    {   
+        const charcount_t charLength = string1->GetLength() + string2->GetLength();
+        const charcount_t bufLength = charLength + 1; // +1 for '/0'
+
+        char16* content = NativeCodeDataNewArrayZ(func->GetNativeCodeDataAllocator(), char16, bufLength);
+        js_memcpy_s(content, string1->GetLength()*sizeof(charcount_t), string1->GetSz(), string1->GetLength()*sizeof(charcount_t));
+        js_memcpy_s(content + string1->GetLength(), string2->GetLength()*sizeof(charcount_t), string2->GetSz(), string2->GetLength()*sizeof(charcount_t));
+        //*pResult = NativeCodeDataNew(func->GetNativeCodeDataAllocator(), Js::LiteralString, func->GetJnFunction()->GetScriptContext()->GetLibrary()->GetStringTypeStatic(), content, charLength);
+        //Js::LiteralString::New(content, charLength)
+        return true;
+    }
+
+    default:
+        return false;
+    }
+}
+
 bool Instr::UnaryCalculator(IntConstType src1Const, IntConstType *pResult)
 {
     IntConstType value = 0;

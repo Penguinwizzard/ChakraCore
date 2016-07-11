@@ -1842,6 +1842,11 @@ AddrOpnd::New(Js::Var address, AddrOpndKind addrOpndKind, Func *func, bool dontE
                     : ValueType::Float;
             addrOpnd->SetValueTypeFixed();
         }
+        else if (Js::JavascriptString::Is(address))
+        {
+            addrOpnd->m_valueType = ValueType::String;
+            addrOpnd->SetValueTypeFixed();
+        }
     }
 
 #if DBG_DUMP || defined(ENABLE_IR_VIEWER)
@@ -1917,6 +1922,14 @@ AddrOpnd::NewFromNumber(double value, Func *func, bool dontEncode /* = false */)
 
     Js::Var number = Js::JavascriptNumber::NewCodeGenInstance(func->GetNumberAllocator(), (double)value, func->GetScriptContext());
     return New(number, AddrOpndKindDynamicVar, func, dontEncode);
+}
+
+AddrOpnd *
+AddrOpnd::NewFromString(Js::InternalString internalString, bool dontEncode)
+{
+    /*Js::Var jsString = Js::JavascriptString::new
+        return New(jsString, AddrOpndKindDynamicVar, func, dontEncode);*/
+    return nullptr;
 }
 
 AddrOpnd *

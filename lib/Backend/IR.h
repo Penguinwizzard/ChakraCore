@@ -320,6 +320,7 @@ public:
     bool            IsCmCC_R8();
     bool            IsCmCC_I4();
     bool            BinaryCalculator(IntConstType src1Const, IntConstType src2Const, IntConstType *pResult);
+    bool            BinaryCalculator(/*const */Js::JavascriptString *string1, /*const */Js::JavascriptString *string2, Js::JavascriptString **pResult, Func* func);
     bool            UnaryCalculator(IntConstType src1Const, IntConstType *pResult);
     IR::Instr*      GetNextArg();
 
