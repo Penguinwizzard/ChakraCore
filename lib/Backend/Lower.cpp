@@ -10665,6 +10665,7 @@ Lowerer::LoadCallInfo(IR::Instr * instrInsert)
         StackSym * srcSym = LowererMD::GetImplicitParamSlotSym(1, func);
         srcOpnd = IR::SymOpnd::New(srcSym, TyMachReg, func);
     }
+    func->SetHasImplicitParamLoad();
 
     return srcOpnd;
 }

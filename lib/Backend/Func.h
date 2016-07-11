@@ -567,7 +567,7 @@ public:
     bool                hasBailout: 1;
     bool                hasBailoutInEHRegion : 1;
     bool                hasStackArgs: 1;
-    bool                hasFunctionObjectLoad : 1;
+    bool                hasImplicitParamLoad : 1;
     bool                hasUnoptimizedArgumentsAcccess : 1; // True if there are any arguments access beyond the simple case of this.apply pattern
     bool                m_canDoInlineArgsOpt : 1;
     bool                hasApplyTargetInlining:1;
@@ -651,8 +651,8 @@ public:
                         return isStackArgsEnabled;
     }
 
-    bool                GetHasFunctionObjectLoad() const { return this->hasFunctionObjectLoad; }
-    void                SetHasFunctionObjectLoad() { this->hasFunctionObjectLoad = true; }
+    bool                GetHasImplicitParamLoad() const { return this->hasImplicitParamLoad; }
+    void                SetHasImplicitParamLoad() { this->hasImplicitParamLoad = true; }
 
     bool                GetHasUnoptimizedArgumentsAcccess() const { return this->hasUnoptimizedArgumentsAcccess; }
     void                SetHasUnoptimizedArgumentsAccess(bool args)

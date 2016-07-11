@@ -2060,7 +2060,7 @@ LowererMD::LoadFunctionObjectOpnd(IR::Instr *instr, IR::Opnd *&functionObjOpnd)
         instr->InsertBefore(mov1);
         functionObjOpnd = mov1->GetDst()->AsRegOpnd();
         instrPrev = mov1;
-        instr->m_func->SetHasFunctionObjectLoad();
+        instr->m_func->SetHasImplicitParamLoad();
     }
     else
     {
