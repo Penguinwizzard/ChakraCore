@@ -7144,6 +7144,7 @@ IRBuilder::GenerateLoopBodySlotAccesses(uint offset)
 
     IR::Instr *instrArgIn = IR::Instr::New(Js::OpCode::ArgIn_A, loopParamOpnd, srcOpnd, m_func);
     m_func->m_headInstr->InsertAfter(instrArgIn);
+    m_func->SetHasImplicitParamLoad();
 
     GenerateLoopBodyStSlots(loopParamSym->m_id, offset);
 }

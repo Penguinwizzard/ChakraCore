@@ -1389,7 +1389,9 @@ LowererMDArch::LowerEntryInstr(IR::EntryInstr * entryInstr)
     uint32 argSlotsForFunctionsCalled = this->m_func->m_argSlotsForFunctionsCalled;
     // Stack is always reserved for at least 4 parameters.
     if (argSlotsForFunctionsCalled < 4 && IsArgSaveRequired(this->m_func))
+    {
         argSlotsForFunctionsCalled = 4;
+    }
 
     uint32 stackArgsSize    = MachPtr * (argSlotsForFunctionsCalled + 1);
 
