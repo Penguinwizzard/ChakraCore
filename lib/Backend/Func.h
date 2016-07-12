@@ -619,20 +619,13 @@ public:
                         {
                             isStackArgOptDisabled = GetProfileInfo()->IsStackArgOptDisabled();
                         }
-                        return this->hasStackArgs && !isStackArgOptDisabled && !PHASE_OFF1(Js::StackArgOptPhase);
+                        return this->hasStackArgs && !isStackArgOptDisabled && !PHASE_OFF(Js::StackArgOptPhase, this);
     }
     void                SetHasStackArgs(bool has) { this->hasStackArgs = has;}
 
     bool                IsStackArgsEnabled()
     {
-                        Func* curFunc = this;
-                        bool isStackArgsEnabled = this->m_jnFunction->GetUsesArgumentsObject() && curFunc->GetHasStackArgs();
-                        Func * topFunc = curFunc->GetTopFunc();
-                        if (topFunc != nullptr)
-                        {
-                            isStackArgsEnabled = isStackArgsEnabled && topFunc->GetHasStackArgs();
-                        }
-                        return isStackArgsEnabled;
+                        return this->m_jnFunction->GetUsesArgumentsObject() && this->GetHasStackArgs();
     }
 
 	bool                GetInlineesHaveStackArgs() const { return this->inlineesHaveStackArgs; }

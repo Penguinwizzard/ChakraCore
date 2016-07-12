@@ -8202,7 +8202,7 @@ Lowerer::LowerLdElemI(IR::Instr * instr, IR::JnHelperMethod helperMethod, bool i
         return instrPrev;
     }
 
-    if (!isHelper && instr->DoStackArgsOpt(this->m_func))
+    if (!isHelper && instr->DoStackArgsOpt())
     {
         IR::LabelInstr * labelLdElem = IR::LabelInstr::New(Js::OpCode::Label, instr->m_func);
         // Pass in null for labelFallThru to only generate the LdHeapArgument call
@@ -9674,7 +9674,7 @@ Lowerer::LowerArgIn(IR::Instr *instrArgIn)
         }
         else
         {
-            IR::Instr * instrCount = m_lowererMD.LoadInputParamCount(instrArgIn, -this->m_func->GetInParamsCount());
+            IR::Instr * instrCount = m_lowererMD.LoadInputParamCount(instrArgIn, instrArgIn->m_func, -this->m_func->GetInParamsCount());
             IR::Opnd * excessOpnd = instrCount->GetDst();
 
             IR::LabelInstr *createRestArrayLabel = IR::LabelInstr::New(Js::OpCode::Label, this->m_func);
@@ -9767,7 +9767,7 @@ Lowerer::LowerArgIn(IR::Instr *instrArgIn)
     }
 
     // excessOpnd = (load from param area) - formalCounts
-    IR::Instr * instrCount = this->m_lowererMD.LoadInputParamCount(instrInsert, -formalsCount, true);
+    IR::Instr * instrCount = this->m_lowererMD.LoadInputParamCount(instrInsert, instrArgIn->m_func, -formalsCount, true);
     IR::Opnd * excessOpnd = instrCount->GetDst();
 
     labelUndef = IR::LabelInstr::New(Js::OpCode::Label, this->m_func, /*helperLabel*/ true);
@@ -10625,10 +10625,10 @@ Lowerer::LoadArgumentsFromStack(IR::Instr * instr)
 }
 
 IR::SymOpnd *
-Lowerer::LoadCallInfo(IR::Instr * instrInsert)
+Lowerer::LoadCallInfo(IR::Instr * instrInsert, Func* func)
 {
+    Assert(func->IsTopFunc());
     IR::SymOpnd * srcOpnd;
-    Func * func = instrInsert->m_func;
 
     if (func->GetJnFunction()->IsGenerator())
     {
@@ -15070,12 +15070,12 @@ Lowerer::GenerateFastLdElemI(IR::Instr *& ldElem, bool *instrIsInHelperBlockRef)
     labelFallThru = ldElem->GetOrCreateContinueLabel();
     labelHelper = IR::LabelInstr::New(Js::OpCode::Label, this->m_func, true);
     // If we know for sure (based on flow graph) we're loading from the arguments object, then ignore the (path-based) profile info.
-    bool isNativeArrayLoad = !ldElem->DoStackArgsOpt(this->m_func) && indirOpnd->GetBaseOpnd()->GetValueType().IsLikelyNativeArray();
+    bool isNativeArrayLoad = !ldElem->DoStackArgsOpt() && indirOpnd->GetBaseOpnd()->GetValueType().IsLikelyNativeArray();
     bool needMissingValueCheck = true;
     bool emittedFastPath = false;
     bool emitBailout = false;
 
-    if (ldElem->DoStackArgsOpt(this->m_func))
+    if (ldElem->DoStackArgsOpt())
     {
         emittedFastPath = GenerateFastArgumentsLdElemI(ldElem, labelFallThru);
         emitBailout = true;
@@ -16124,7 +16124,7 @@ Lowerer::GenerateFastLdLen(IR::Instr *ldLen, bool *instrIsInHelperBlockRef)
 
     IR::LabelInstr *const labelHelper = IR::LabelInstr::New(Js::OpCode::Label, this->m_func, true);
 
-    if (ldLen->DoStackArgsOpt(this->m_func))
+    if (ldLen->DoStackArgsOpt())
     {
         GenerateFastArgumentsLdLen(ldLen, ldLen->GetOrCreateContinueLabel());
         ldLen->Remove();
@@ -18136,7 +18136,7 @@ Lowerer::GenerateFastArgumentsLdElemI(IR::Instr* ldElem, IR::LabelInstr *labelFa
     //labelCreateHeapArgs:
     //  ---Bail out to create Heap Arguments object
 
-    Assert(ldElem->DoStackArgsOpt(this->m_func));
+    Assert(ldElem->DoStackArgsOpt());
 
     IR::IndirOpnd *indirOpnd = ldElem->GetSrc1()->AsIndirOpnd();
     bool isInlinee = ldElem->m_func->IsInlinee();
@@ -18238,16 +18238,19 @@ Lowerer::GenerateFastArgumentsLdElemI(IR::Instr* ldElem, IR::LabelInstr *labelFa
 bool
 Lowerer::GenerateFastRealStackArgumentsLdLen(IR::Instr *ldLen)
 {
+    Func* argumentsFunc = this->m_func->argumentsObjSymToFuncMap->Lookup(ldLen->GetSrc1()->AsRegOpnd()->GetStackSym()->m_id, nullptr);
+    Assert(argumentsFunc);
+
     if(ldLen->m_func->IsInlinee())
     {
         //Get the length of the arguments
         LowererMD::CreateAssign(ldLen->GetDst(),
-                               IR::IntConstOpnd::New(ldLen->m_func->actualCount - 1, TyUint32, ldLen->m_func),
+                               IR::IntConstOpnd::New(argumentsFunc->actualCount - 1, TyUint32, ldLen->m_func),
                                ldLen);
     }
     else
     {
-        IR::Instr *loadInputParamCountInstr = this->m_lowererMD.LoadInputParamCount(ldLen, -1);
+        IR::Instr *loadInputParamCountInstr = this->m_lowererMD.LoadInputParamCount(ldLen, argumentsFunc, -1);
         IR::RegOpnd *actualCountOpnd          = loadInputParamCountInstr->GetDst()->AsRegOpnd();
         LowererMD::CreateAssign(ldLen->GetDst(), actualCountOpnd, ldLen);
     }
@@ -18267,18 +18270,20 @@ Lowerer::GenerateFastArgumentsLdLen(IR::Instr *ldLen, IR::LabelInstr* labelFallT
     // JMP $fallthrough
     //$helper:
 
-    Assert(ldLen->DoStackArgsOpt(this->m_func));
+    Assert(ldLen->DoStackArgsOpt());
+    Func* argumentsFunc = this->m_func->argumentsObjSymToFuncMap->Lookup(ldLen->GetSrc1()->AsRegOpnd()->GetStackSym()->m_id, nullptr);
+    Assert(argumentsFunc);
 
-    if(ldLen->m_func->IsInlinee())
+    if(argumentsFunc->IsInlinee())
     {
         //Get the length of the arguments
         LowererMD::CreateAssign(ldLen->GetDst(),
-                                IR::AddrOpnd::New(Js::TaggedInt::ToVarUnchecked(ldLen->m_func->actualCount - 1), IR::AddrOpndKindConstantVar, ldLen->m_func), // -1 to exclude this pointer
+                                IR::AddrOpnd::New(Js::TaggedInt::ToVarUnchecked(argumentsFunc->actualCount - 1), IR::AddrOpndKindConstantVar, ldLen->m_func), // -1 to exclude this pointer
                                 ldLen);
     }
     else
     {
-        IR::Instr      *loadInputParamCountInstr = this->m_lowererMD.LoadInputParamCount(ldLen, -1);
+        IR::Instr      *loadInputParamCountInstr = this->m_lowererMD.LoadInputParamCount(ldLen, argumentsFunc, -1);
         IR::RegOpnd    *actualCountOpnd          = loadInputParamCountInstr->GetDst()->AsRegOpnd();
 
         this->m_lowererMD.GenerateInt32ToVarConversion(actualCountOpnd, ldLen);
@@ -18449,7 +18454,7 @@ Lowerer::GenerateFastLdFld(IR::Instr * const instrLdFld, IR::JnHelperMethod help
     IR::Opnd * opndSrc = instrLdFld->GetSrc1();
     AssertMsg(opndSrc->IsSymOpnd() && opndSrc->AsSymOpnd()->IsPropertySymOpnd() && opndSrc->AsSymOpnd()->m_sym->IsPropertySym(), "Expected PropertySym as src of LdFld");
 
-    Assert(!instrLdFld->DoStackArgsOpt(this->m_func));
+    Assert(!instrLdFld->DoStackArgsOpt());
 
     IR::PropertySymOpnd * propertySymOpnd = opndSrc->AsPropertySymOpnd();
     PropertySym * propertySym = propertySymOpnd->m_sym->AsPropertySym();
@@ -20047,7 +20052,7 @@ Lowerer::GenerateCheckForCallFlagNew(IR::Instr* instrInsert)
     // CALL RuntimeTypeError
     // $Done
 
-    IR::SymOpnd* callInfoOpnd = Lowerer::LoadCallInfo(instrInsert);
+    IR::SymOpnd* callInfoOpnd = Lowerer::LoadCallInfo(instrInsert, func);
     Assert(Js::CallInfo::ksizeofCount == 24);
 
     IR::RegOpnd* isNewFlagSetRegOpnd = IR::RegOpnd::New(TyUint32, func);
@@ -20348,7 +20353,7 @@ Lowerer::GenerateLoadNewTarget(IR::Instr* instrInsert)
     Assert(dstOpnd->IsRegOpnd());
     LowererMD::CreateAssign(dstOpnd, opndUndefAddress, instrInsert);
 
-    IR::SymOpnd *callInfoOpnd = Lowerer::LoadCallInfo(instrInsert);
+    IR::SymOpnd *callInfoOpnd = Lowerer::LoadCallInfo(instrInsert, func);
     Assert(Js::CallInfo::ksizeofCount == 24);
 
     IR::RegOpnd *s1 = IR::RegOpnd::New(TyUint32, func);

@@ -165,7 +165,6 @@ Func::Func(JitArenaAllocator *alloc, CodeGenWorkItem* workItem, const Js::Functi
         }
         if (doStackNestedFunc && m_jnFunction->GetNestedCount() != 0 &&
             this->GetTopFunc()->m_workItem->Type() != JsLoopBodyWorkItemType) // make sure none of the functions inlined in a jitted loop body allocate nested functions on the stack
-)
         {
             Assert(!(this->IsJitInDebugMode() && !m_jnFunction->GetUtf8SourceInfo()->GetIsLibraryCode()));
             stackNestedFunc = true;

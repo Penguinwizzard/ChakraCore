@@ -3799,6 +3799,8 @@ GlobOpt::IsArgumentsOpnd(IR::Opnd* opnd, SymID& symId)
     {
         AssertMsg(false, "Unknown type");
     }
+
+    Assert(!isArgumentsObj || symId != (SymID)-1);
     return isArgumentsObj;
 }
 
@@ -3992,8 +3994,8 @@ GlobOpt::OptArguments(IR::Instr *instr)
     {
         return;
     }  
-	
-	this->func->EnsureArgumentsObjSymToFuncMap();
+
+    this->func->EnsureArgumentsObjSymToFuncMap();
     this->EnsureArgObjSymsBv(); 
     
     if (instr->HasAnyLoadHeapArgsOpCode())
@@ -4138,7 +4140,7 @@ GlobOpt::OptArguments(IR::Instr *instr)
             {
                 if (src1->IsRegOpnd() || src1->IsSymOpnd() || src1->IsIndirOpnd())
                 {
-                    id = 0;
+                    id = (SymID)-1;
                     if (IsArgumentsOpnd(src1, id))
                     {
 #ifdef PERF_HINT
@@ -4147,7 +4149,6 @@ GlobOpt::OptArguments(IR::Instr *instr)
                             WritePerfHint(PerfHints::HeapArgumentsCreated, instr->m_func->GetJnFunction(), instr->GetByteCodeOffset());
                         }
 #endif
-                        Assert(id != -1);
                         CannotAllocateArgumentsObjectOnStack(this->func->argumentsObjSymToFuncMap->Lookup(id, nullptr));
                         return;
                     }
@@ -4158,7 +4159,7 @@ GlobOpt::OptArguments(IR::Instr *instr)
             {
                 if (src2->IsRegOpnd() || src2->IsSymOpnd() || src2->IsIndirOpnd())
                 {
-                    id = 0;
+                    id = (SymID)-1;
                     if (IsArgumentsOpnd(src2, id))
                     {
 #ifdef PERF_HINT
@@ -4167,7 +4168,6 @@ GlobOpt::OptArguments(IR::Instr *instr)
                             WritePerfHint(PerfHints::HeapArgumentsCreated, instr->m_func->GetJnFunction(), instr->GetByteCodeOffset());
                         }
 #endif
-                        Assert(id != -1);
                         CannotAllocateArgumentsObjectOnStack(this->func->argumentsObjSymToFuncMap->Lookup(id, nullptr));
                         return;
                     }
@@ -4179,7 +4179,7 @@ GlobOpt::OptArguments(IR::Instr *instr)
             {
                 if (dst->IsIndirOpnd() || dst->IsSymOpnd())
                 {
-                    id = 0;
+                    id = (SymID)-1;
                     if (IsArgumentsOpnd(dst, id))
                     {
 #ifdef PERF_HINT
@@ -4188,14 +4188,13 @@ GlobOpt::OptArguments(IR::Instr *instr)
                             WritePerfHint(PerfHints::HeapArgumentsModification, instr->m_func->GetJnFunction(), instr->GetByteCodeOffset());
                         }
 #endif
-                        Assert(id != -1);
                         CannotAllocateArgumentsObjectOnStack(this->func->argumentsObjSymToFuncMap->Lookup(id, nullptr));
                         return;
                     }
                 }
                 else if (dst->IsRegOpnd())
                 {
-                    id = 0;
+                    id = (SymID)-1;
                     if (this->currentBlock->loop && IsArgumentsOpnd(dst, id))
                     {
 #ifdef PERF_HINT
@@ -4204,7 +4203,6 @@ GlobOpt::OptArguments(IR::Instr *instr)
                             WritePerfHint(PerfHints::HeapArgumentsModification, instr->m_func->GetJnFunction(), instr->GetByteCodeOffset());
                         }
 #endif
-                        Assert(id != -1);
                         CannotAllocateArgumentsObjectOnStack(this->func->argumentsObjSymToFuncMap->Lookup(id, nullptr));
                         return;
                     }
@@ -4848,7 +4846,7 @@ GlobOpt::OptInstr(IR::Instr *&instr, bool* isInstrRemoved)
     this->OptArguments(instr);
 
     //StackArguments Optimization - We bail out if the index is out of range of actuals.
-    if (instr->m_opcode == Js::OpCode::LdElemI_A && instr->DoStackArgsOpt(this->func) && !this->IsLoopPrePass())
+    if (instr->m_opcode == Js::OpCode::LdElemI_A && instr->DoStackArgsOpt() && !this->IsLoopPrePass())
     {
         GenerateBailAtOperation(&instr, IR::BailOnStackArgsOutOfActualsRange);
     }
@@ -7873,7 +7871,7 @@ GlobOpt::ValueNumberLdElemDst(IR::Instr **pInstr, Value *srcVal)
 
     IR::IndirOpnd *src = instr->GetSrc1()->AsIndirOpnd();
     const ValueType baseValueType(src->GetBaseOpnd()->GetValueType());
-    if (instr->DoStackArgsOpt(this->func) ||
+    if (instr->DoStackArgsOpt() ||
         !(
             baseValueType.IsLikelyOptimizedTypedArray() ||
             baseValueType.IsLikelyNativeArray() && instr->IsProfiledInstr() // Specialized native array lowering for LdElem requires that it is profiled.
@@ -7897,7 +7895,7 @@ GlobOpt::ValueNumberLdElemDst(IR::Instr **pInstr, Value *srcVal)
                     this->func->GetJnFunction()->GetDebugNumberSet(debugStringBuffer),
                     Js::OpCodeUtil::GetOpCodeName(instr->m_opcode),
                     baseValueTypeStr,
-                    instr->DoStackArgsOpt(this->func) ? _u("instruction uses the arguments object") :
+                    instr->DoStackArgsOpt() ? _u("instruction uses the arguments object") :
                     baseValueType.IsLikelyOptimizedTypedArray() ? _u("index is negative or likely not int") : _u("of array type"));
                 Output::Flush();
             }
@@ -12946,7 +12944,7 @@ GlobOpt::TypeSpecializeStElem(IR::Instr ** pInstr, Value *src1Val, Value **pDstV
 
     IR::RegOpnd *baseOpnd = instr->GetDst()->AsIndirOpnd()->GetBaseOpnd();
     ValueType baseValueType(baseOpnd->GetValueType());
-    if (instr->DoStackArgsOpt(this->func) ||
+    if (instr->DoStackArgsOpt() ||
         (!this->DoTypedArrayTypeSpec() && baseValueType.IsLikelyOptimizedTypedArray()) ||
         (!this->DoNativeArrayTypeSpec() && baseValueType.IsLikelyNativeArray()) ||
         !(baseValueType.IsLikelyOptimizedTypedArray() || baseValueType.IsLikelyNativeArray()))
@@ -12962,7 +12960,7 @@ GlobOpt::TypeSpecializeStElem(IR::Instr ** pInstr, Value *src1Val, Value **pDstV
                 this->func->GetJnFunction()->GetDebugNumberSet(debugStringBuffer),
                 Js::OpCodeUtil::GetOpCodeName(instr->m_opcode),
                 baseValueTypeStr,
-                instr->DoStackArgsOpt(this->func) ?
+                instr->DoStackArgsOpt() ?
                     _u("instruction uses the arguments object") :
                     _u("typed array type specialization is disabled, or base is not an optimized typed array"));
             Output::Flush();
@@ -19601,7 +19599,7 @@ GlobOpt::DoArrayCheckHoist() const
 bool
 GlobOpt::DoArrayCheckHoist(const ValueType baseValueType, Loop* loop, IR::Instr *const instr) const
 {
-    if(!DoArrayCheckHoist() || instr && !IsLoopPrePass() && instr->DoStackArgsOpt(func))
+    if(!DoArrayCheckHoist() || instr && !IsLoopPrePass() && instr->DoStackArgsOpt())
     {
         return false;
     }
@@ -19727,7 +19725,7 @@ GlobOpt::DoLdLenIntSpec(IR::Instr *const instr, const ValueType baseValueType) c
     if(PHASE_OFF(Js::LdLenIntSpecPhase, func) ||
         IsTypeSpecPhaseOff(func) ||
         func->GetProfileInfo()->IsLdLenIntSpecDisabled() ||
-        instr && !IsLoopPrePass() && instr->DoStackArgsOpt(func))
+        instr && !IsLoopPrePass() && instr->DoStackArgsOpt())
     {
         return false;
     }

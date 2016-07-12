@@ -2017,7 +2017,7 @@ LowererMD::LoadInputParamPtr(IR::Instr * instrInsert, IR::RegOpnd * optionalDstO
 ///----------------------------------------------------------------------------
 
 IR::Instr *
-LowererMD::LoadInputParamCount(IR::Instr * instrInsert, int adjust, bool needFlags)
+LowererMD::LoadInputParamCount(IR::Instr * instrInsert, Func* paramFunc, int adjust, bool needFlags)
 {
     IR::Instr *   instr;
     IR::RegOpnd * dstOpnd;
@@ -2240,7 +2240,7 @@ LowererMD::LoadHeapArguments(IR::Instr * instrArgs, bool force /* = false */, IR
             // s2 = actual argument count (without counting "this")
             if (opndInputParamCount == nullptr)
             {
-                instr = this->LoadInputParamCount(instrArgs, -1);
+                instr = this->LoadInputParamCount(instrArgs, func, -1);
                 opndInputParamCount = instr->GetDst();
             }
             this->LoadHelperArgument(instrArgs, opndInputParamCount);
@@ -2276,7 +2276,7 @@ LowererMD::LoadHeapArgsCached(IR::Instr * instrArgs)
     Func *func = instrArgs->m_func;
     IR::Instr * instrPrev = instrArgs->m_prev;
 
-    if (instrArgs->m_func->IsStackArgsEnabled())
+    if (func->IsStackArgsEnabled())
     {
         instrArgs->m_opcode = Js::OpCode::MOV;
         instrArgs->ReplaceSrc1(IR::AddrOpnd::NewNull(func));
@@ -2345,7 +2345,7 @@ LowererMD::LoadHeapArgsCached(IR::Instr * instrArgs)
             this->LoadHelperArgument(instrArgs, IR::IntConstOpnd::New(formalsCount, TyMachReg, func));
 
             // s2 = actual argument count (without counting "this")
-            instr = this->LoadInputParamCount(instrArgs, -1);
+            instr = this->LoadInputParamCount(instrArgs, func, -1);
             this->LoadHelperArgument(instrArgs, instr->GetDst());
 
             // s1 = current function
@@ -5106,7 +5106,7 @@ LowererMD::GenerateFastLdMethodFromFlags(IR::Instr * instrLdFld)
 
     Assert(propertySymOpnd->m_runtimeInlineCache);
 
-    Assert(!instrLdFld->DoStackArgsOpt(this->m_func));
+    Assert(!instrLdFld->DoStackArgsOpt());
 
     // TODO: LdMethodFromFlags doesn't participate in object type specialization.  We should be using a temporary
     // register without a type sym here.

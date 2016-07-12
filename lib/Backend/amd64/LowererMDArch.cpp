@@ -259,7 +259,7 @@ LowererMDArch::LoadHeapArgsCached(IR::Instr *instrArgs)
             this->LoadHelperArgument(instrArgs, IR::IntConstOpnd::New(formalsCount, TyInt32, func));
 
             // s2 = actual argument count (without counting "this")
-            instr = this->lowererMD->LoadInputParamCount(instrArgs);
+            instr = this->lowererMD->LoadInputParamCount(instrArgs, func);
             instr = IR::Instr::New(Js::OpCode::DEC, instr->GetDst(), instr->GetDst(), func);
             instrArgs->InsertBefore(instr);
             this->LoadHelperArgument(instrArgs, instr->GetDst());
@@ -370,7 +370,7 @@ LowererMDArch::LoadHeapArguments(IR::Instr *instrArgs, bool force /* = false */,
             // s2 = actual argument count (without counting "this")
             if (opndInputParamCount == nullptr)
             {
-                instr = this->lowererMD->LoadInputParamCount(instrArgs, -1);
+                instr = this->lowererMD->LoadInputParamCount(instrArgs, func, -1);
                 opndInputParamCount = instr->GetDst();
             }
             this->LoadHelperArgument(instrArgs, opndInputParamCount);

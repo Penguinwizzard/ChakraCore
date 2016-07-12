@@ -424,7 +424,7 @@ private:
     IR::Instr*      LoadArgumentsFromStack(IR::Instr * instr);
 
     static
-    IR::SymOpnd*    LoadCallInfo(IR::Instr * instrInsert);
+    IR::SymOpnd*    LoadCallInfo(IR::Instr * instrInsert, Func* func);
 
     IR::Instr *     LowerCallIDynamic(IR::Instr * callInstr, ushort callFlags);
     IR::Opnd*       GenerateArgOutForInlineeStackArgs(IR::Instr* callInstr, IR::Instr* stackArgsInstr);

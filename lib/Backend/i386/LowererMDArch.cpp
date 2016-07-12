@@ -176,7 +176,7 @@ LowererMDArch::LoadStackArgPtr(IR::Instr * instrArgPtr)
     // Only need to check the number of actuals if there's at least 1 formal (plus "this")
     if (formalsCount > 1)
     {
-        instrPrev = this->lowererMD->LoadInputParamCount(instrArgPtr);
+        instrPrev = this->lowererMD->LoadInputParamCount(instrArgPtr, instrArgPtr->m_func);
         IR::Opnd * opndActuals = instrPrev->GetDst();
         IR::Opnd * opndFormals =
             IR::IntConstOpnd::New(formalsCount, TyMachReg, this->m_func);
@@ -324,7 +324,7 @@ LowererMDArch::LoadHeapArguments(IR::Instr *instrArgs, bool force, IR::Opnd* opn
             // s2 = actual argument count (without counting "this")
             if (opndInputParamCount == nullptr)
             {
-                instr = this->lowererMD->LoadInputParamCount(instrArgs, -1);
+                instr = this->lowererMD->LoadInputParamCount(instrArgs, func, -1);
                 opndInputParamCount = instr->GetDst();
             }
             this->LoadHelperArgument(instrArgs, opndInputParamCount);
@@ -450,7 +450,7 @@ LowererMDArch::LoadHeapArgsCached(IR::Instr *instrArgs)
             this->LoadHelperArgument(instrArgs, IR::IntConstOpnd::New(formalsCount, TyMachReg, func));
 
             // s2 = actual argument count (without counting "this")
-            instr = this->lowererMD->LoadInputParamCount(instrArgs);
+            instr = this->lowererMD->LoadInputParamCount(instrArgs, func);
             instr = IR::Instr::New(Js::OpCode::DEC, instr->GetDst(), instr->GetDst(), func);
             instrArgs->InsertBefore(instr);
             this->LoadHelperArgument(instrArgs, instr->GetDst());

@@ -302,7 +302,7 @@ BackwardPass::ProcessBailOnStackArgsOutOfActualsRange()
 
     if (tag == Js::DeadStorePhase && instr->m_opcode == Js::OpCode::LdElemI_A && instr->HasBailOutInfo() && !IsPrePass())
     {
-        if (instr->DoStackArgsOpt(this->func))
+        if (instr->DoStackArgsOpt())
         {
             AssertMsg(instr->GetBailOutKind() & IR::BailOnStackArgsOutOfActualsRange, "Stack args bail out is not set when the optimization is turned on? ");
             if (instr->GetBailOutKind() & ~IR::BailOnStackArgsOutOfActualsRange)

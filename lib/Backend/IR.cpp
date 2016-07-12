@@ -67,7 +67,7 @@ Instr::IsPlainInstr() const
 }
 
 bool
-Instr::DoStackArgsOpt(Func *topFunc) const
+Instr::DoStackArgsOpt() const
 {
     return this->usesStackArgumentsObject && m_func->IsStackArgsEnabled();
 }

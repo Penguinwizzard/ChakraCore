@@ -515,13 +515,13 @@ LowererMD::Init(Lowerer *lowerer)
 ///----------------------------------------------------------------------------
 
 IR::Instr *
-LowererMD::LoadInputParamCount(IR::Instr * instrInsert, int adjust, bool needFlags)
+LowererMD::LoadInputParamCount(IR::Instr * instrInsert, Func* paramFunc, int adjust, bool needFlags)
 {
     IR::Instr *   instr;
     IR::RegOpnd * dstOpnd;
     IR::SymOpnd * srcOpnd;
 
-    srcOpnd = Lowerer::LoadCallInfo(instrInsert);
+    srcOpnd = Lowerer::LoadCallInfo(instrInsert, paramFunc);
     dstOpnd = IR::RegOpnd::New(StackSym::New(TyMachReg, this->m_func), TyMachReg, this->m_func);
     instr = IR::Instr::New(Js::OpCode::MOV, dstOpnd, srcOpnd, this->m_func);
     instrInsert->InsertBefore(instr);
@@ -4362,7 +4362,7 @@ LowererMD::GenerateFastLdMethodFromFlags(IR::Instr * instrLdFld)
 
     IR::PropertySymOpnd * propertySymOpnd = opndSrc->AsPropertySymOpnd();
 
-    Assert(!instrLdFld->DoStackArgsOpt(this->m_func));
+    Assert(!instrLdFld->DoStackArgsOpt());
 
     if (propertySymOpnd->IsTypeCheckSeqCandidate())
     {

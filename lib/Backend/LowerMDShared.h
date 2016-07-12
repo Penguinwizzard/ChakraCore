@@ -89,7 +89,7 @@ public:
     static  IR::Instr *     ChangeToLea(IR::Instr *const instr);
     static  void            ImmedSrcToReg(IR::Instr * instr, IR::Opnd * newOpnd, int srcNum);
 
-            IR::Instr *     LoadInputParamCount(IR::Instr * instr, int adjust = 0, bool needFlags = false);
+            IR::Instr *     LoadInputParamCount(IR::Instr * instr, Func* paramFunc, int adjust = 0, bool needFlags = false);
             IR::Instr *     LoadStackArgPtr(IR::Instr * instr);
             IR::Opnd *      CreateStackArgumentsSlotOpnd();
             IR::Instr *     LoadArgumentsFromFrame(IR::Instr * instr);
