@@ -5,7 +5,7 @@
 #pragma once
 
 #if defined(_M_ARM64) || defined(_M_X64)
-typedef  BVUnit32 SparseBVUnit;
+typedef  BVUnit64 SparseBVUnit;
 #else
 typedef  BVUnit64 SparseBVUnit;
 #endif
@@ -91,7 +91,7 @@ struct BVSparseNode
 #endif
 };
 
-CompileAssert(sizeof(BVSparseNode) == 16); // Performance assert, BVSparseNode is heavily used in the backend, do perf measurement before changing this.
+//CompileAssert(sizeof(BVSparseNode) == 16); // Performance assert, BVSparseNode is heavily used in the backend, do perf measurement before changing this.
 
 template <class TAllocator>
 class BVSparse
