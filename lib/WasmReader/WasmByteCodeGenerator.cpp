@@ -430,13 +430,13 @@ WasmBytecodeGenerator::GenerateFunction()
     const int32 intByteOffset = ReservedRegisterCount * sizeof(Js::Var);
     CompileAssert(intByteOffset >= 0);
     info->SetIntByteOffset(intByteOffset);
-    info->SetFloatByteOffset(UInt32Math::Add(info->GetIntByteOffset(), UInt32Math::Mul(m_i32RegSlots->GetRegisterCount(), sizeof(int32))));
-    info->SetDoubleByteOffset(Math::AlignOverflowCheck<int>(UInt32Math::Add(info->GetFloatByteOffset(), UInt32Math::Mul(m_f32RegSlots->GetRegisterCount(), sizeof(float))), sizeof(double)));
+    info->SetFloatByteOffset(UInt32Math::Add(info->GetIntByteOffset(), UInt32Math::Mul(m_i32RegSlots.GetRegisterCount(), sizeof(int32))));
+    info->SetDoubleByteOffset(Math::AlignOverflowCheck<int>(UInt32Math::Add(info->GetFloatByteOffset(), UInt32Math::Mul(m_f32RegSlots.GetRegisterCount(), sizeof(float))), sizeof(double)));
 
     m_body->SetOutParamMaxDepth(m_maxArgOutDepth);
     m_body->SetVarCount(UInt32Math::Add(
-        UInt32Math::Add(m_f32RegSlots->GetRegisterCount(), m_f64RegSlots->GetRegisterCount()),
-        m_i32RegSlots->GetRegisterCount()
+        UInt32Math::Add(m_f32RegSlots.GetRegisterCount(), m_f64RegSlots.GetRegisterCount()),
+        m_i32RegSlots.GetRegisterCount()
     ));
 }
 
