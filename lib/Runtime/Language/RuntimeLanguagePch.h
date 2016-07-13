@@ -14,7 +14,6 @@
 #include "Language/AsmJsLink.h"
 #include "Language/AsmJsModule.h"
 #include "Language/AsmJs.h"
-#include "Language/WAsmJsConstants.h"
 #ifdef ASMJS_PLAT
 #include "Language/AsmJsJitTemplate.h"
 #include "Language/AsmJsEncoder.h"

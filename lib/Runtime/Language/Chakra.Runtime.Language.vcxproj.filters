@@ -76,6 +76,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)SimdBool8x16OperationX86X64.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ModuleNamespace.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)SourceTextModuleRecord.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)WAsmjsUtils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AsmJs.h" />
@@ -148,6 +149,8 @@
     <ClInclude Include="SimdBool8x16Operation.h" />
     <ClInclude Include="ModuleNamespace.h" />
     <ClInclude Include="WAsmJsConstants.h" />
+    <ClInclude Include="WAsmjsUtils.h" />
+    <ClInclude Include="WasmAsmJsCommon.h" />
   </ItemGroup>
   <ItemGroup>
     <MASM Include="$(MSBuildThisFileDirectory)amd64\amd64_Thunks.asm">

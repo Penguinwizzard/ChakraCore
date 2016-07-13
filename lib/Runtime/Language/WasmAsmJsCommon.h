@@ -1,19 +1,10 @@
 //-------------------------------------------------------------------------------------------------------
 // Copyright (C) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
+// Portions of this file are copyright 2014 Mozilla Foundation, available under the Apache 2.0 license.
 //-------------------------------------------------------------------------------------------------------
 
 #pragma once
 
-#include <intsafe.h>
-
-// Parser Includes
-#include "WasmReader.h"
-
-#ifdef ENABLE_WASM
-// AsmJsFunctionMemory::RequiredVarConstants
-#include "../Language/AsmJsModule.h"
-#endif
-
-// Runtime includes
-#include "../Runtime/runtime.h"
+#include "WAsmJsConstants.h"
+#include "WAsmJsUtils.h"
