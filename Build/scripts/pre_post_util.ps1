@@ -4,7 +4,6 @@
 #-------------------------------------------------------------------------------------------------------
 
 . "$PSScriptRoot\util.ps1"
-. "$PSScriptRoot\locate_msbuild.ps1"
 
 function WriteCommonArguments() {
     WriteMessage "  Source Path: $srcpath"
@@ -21,7 +20,7 @@ function GetBuildInfo($oauth, $commitHash) {
     # Get the pushId and push date time to use that for build number and build date time
     $uri = ("{0}/commits/{1}?api-version=1.0" -f $remote, $commitHash)
     $oauthToken = Get-Content $oauth
-    $header = @{Authorization=("Basic {0}" -f $oauthToken) }
+    $header = @{ Authorization=("Basic {0}" -f $oauthToken) }
     $info = Invoke-RestMethod -Headers $header -Uri $uri -Method GET
 
     return $info
