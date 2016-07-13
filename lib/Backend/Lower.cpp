@@ -7616,6 +7616,7 @@ Lowerer::LowerUnaryHelperMem(IR::Instr *instr, IR::JnHelperMethod helperMethod, 
     IR::Instr *instrPrev;
 
     instrPrev = LoadScriptContext(instr);
+    instr->m_func->SetHasThrow();
 
     return this->LowerUnaryHelper(instr, helperMethod, opndBailoutArg);
 }

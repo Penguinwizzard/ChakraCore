@@ -567,7 +567,9 @@ public:
     bool                hasBailout: 1;
     bool                hasBailoutInEHRegion : 1;
     bool                hasStackArgs: 1;
-    bool                hasImplicitParamLoad : 1;
+    bool                hasImplicitParamLoad : 1; // True if there is a load of CallInfo, FunctionObject
+    bool                hasThrow : 1;
+    bool                hasJitCalls : 1;
     bool                hasUnoptimizedArgumentsAcccess : 1; // True if there are any arguments access beyond the simple case of this.apply pattern
     bool                m_canDoInlineArgsOpt : 1;
     bool                hasApplyTargetInlining:1;
@@ -653,6 +655,12 @@ public:
 
     bool                GetHasImplicitParamLoad() const { return this->hasImplicitParamLoad; }
     void                SetHasImplicitParamLoad() { this->hasImplicitParamLoad = true; }
+
+    bool                GetHasThrow() const { return this->hasThrow; }
+    void                SetHasThrow() { this->hasThrow = true; }
+
+    bool                GetHasJitCalls() const { return this->hasJitCalls; }
+    void                SetHasJitCalls() { this->hasJitCalls = true; }
 
     bool                GetHasUnoptimizedArgumentsAcccess() const { return this->hasUnoptimizedArgumentsAcccess; }
     void                SetHasUnoptimizedArgumentsAccess(bool args)

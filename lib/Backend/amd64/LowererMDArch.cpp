@@ -13,11 +13,10 @@ extern const IRType RegTypes[RegNumCount];
 
 bool
 LowererMDArch::IsArgSaveRequired(Func *func) {
-    return (func->IsJitInDebugMode() ||
-        func->GetJnFunction()->GetIsAsmjsMode() ||
-        func->IsGeneratorFunc() || func->IsLambda() ||
-        func->GetHasImplicitParamLoad() || !func->IsTrueLeaf() ||
-        func->HasThis() || func->argInsCount > 0);
+    return (!func->IsTrueLeaf() || func->GetHasJitCalls() ||
+        func->IsJitInDebugMode() || func->IsSimpleJit() ||
+        func->GetJnFunction()->GetIsAsmjsMode() || func->IsGeneratorFunc() || func->IsLambda() ||
+        func->GetHasThrow() || func->GetHasImplicitParamLoad() || func->HasThis() || func->argInsCount > 0);
 }
 
 BYTE
@@ -831,6 +830,7 @@ LowererMDArch::LowerCall(IR::Instr * callInstr, uint32 argCount)
 
         if (callInstr->GetSrc1()->IsHelperCallOpnd())
         {
+            callInstr->m_func->SetHasJitCalls();
             // Truncate the result of a conversion to 32-bit int, because the C++ code doesn't.
             IR::HelperCallOpnd *helperOpnd = callInstr->GetSrc1()->AsHelperCallOpnd();
             if (helperOpnd->m_fnHelper == IR::HelperConv_ToInt32 ||
@@ -1387,10 +1387,15 @@ LowererMDArch::LowerEntryInstr(IR::EntryInstr * entryInstr)
     // should always be 16 byte aligned.
     //
     uint32 argSlotsForFunctionsCalled = this->m_func->m_argSlotsForFunctionsCalled;
-    // Stack is always reserved for at least 4 parameters.
-    if (argSlotsForFunctionsCalled < 4 && IsArgSaveRequired(this->m_func))
+
+    if (IsArgSaveRequired(this->m_func))
     {
-        argSlotsForFunctionsCalled = 4;
+        if (argSlotsForFunctionsCalled < 4)
+            argSlotsForFunctionsCalled = 4;
+    }
+    else
+    {
+        argSlotsForFunctionsCalled = 0;
     }
 
     uint32 stackArgsSize    = MachPtr * (argSlotsForFunctionsCalled + 1);
