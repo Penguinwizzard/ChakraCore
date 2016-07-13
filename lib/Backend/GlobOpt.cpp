@@ -18759,9 +18759,14 @@ GlobOpt::OptIsInvariant(
 
     switch(instr->m_opcode)
     {
-
         // Can't legally hoist these
     case Js::OpCode::LdLen_A:
+        return false;
+
+        //Review: saravind/radua : After fixing IsStackArgsEnabled to look at func level granularity,
+        // check if this is required here.
+        //Hoisting BailOnNotStackArgs is currently causing issues with cases, where we want to throw RejitException.
+    case Js::OpCode::BailOnNotStackArgs:
         return false;
 
         // Usually not worth hoisting these
