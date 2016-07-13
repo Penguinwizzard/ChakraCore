@@ -20,6 +20,11 @@ param (
 $outputJsonFile = Join-Path $rootPath "build.json"
 $buildInfo = New-Object System.Object
 
+# TODO (doilij): because this is for compose_build which could be repeated on failure
+# need to make sure not to include these files at the location they will end up at
+# because trying to copy a file to the same location causes an error. If there are other files,
+# delete the files in the root first and then copy one. If there are no other files, take no action.
+
 $changeJson = (Get-ChildItem -Path $rootPath "change.json" -Recurse)[0].FullName
 $changeText = (Get-ChildItem -Path $rootPath "change.txt"  -Recurse)[0].FullName
 Copy-Item -Verbose -Force -Path $changeJson -Destination $rootPath
@@ -56,4 +61,4 @@ $buildInfo | Add-Member -type NoteProperty -name change -value $changeInfo
 $buildInfo | Add-Member -type NoteProperty -name builds -value $builds
 
 $buildInfo | ConvertTo-Json | Write-Output
-$buildInfo | ConvertTo-Json | Out-File $outputJsonFile -Encoding Ascii
+$buildInfo | ConvertTo-Json | Out-File $outputJsonFile -Encoding utf8
