@@ -9,12 +9,10 @@ param (
     [ValidateSet("x86", "x64", "arm")]
     [Parameter(Mandatory=$True)]
     [string]$arch,
-
     # We do not use ValidateSet here because this $flavor param is used to name the BuildConfuration
     # from the solution file. MsBuild will determine whether it is valid.
     [Parameter(Mandatory=$True)]
     [string]$flavor,
-
     [ValidateSet("default", "codecoverage", "pogo")]
     [string]$subtype = "pogo",
 

@@ -4,12 +4,14 @@
 #-------------------------------------------------------------------------------------------------------
 
 function UseValueOrDefault($value, $defaultvalue, $defaultvalue2) {
-    if ($value -ne "") {
+    if ($value -and ($value -ne "")) {
         return $value
-    } elseif ($defaultvalue -ne "") {
+    } elseif ($defaultvalue -and ($defaultvalue -ne "")) {
         return $defaultvalue
-    } else {
+    } elseif ($defaultvalue2 -and ($defaultvalue2 -ne "")) {
         return $defaultvalue2
+    } else {
+        return ""
     }
 }
 
@@ -24,6 +26,11 @@ function GetGitPath() {
     }
 
     return $gitExe
+}
+
+function GetRepoRoot() {
+    $gitExe = GetGitPath
+    return iex "$gitExe rev-parse --show-toplevel"
 }
 
 function WriteMessage($str) {

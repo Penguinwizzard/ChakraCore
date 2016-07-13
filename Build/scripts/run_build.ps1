@@ -3,23 +3,21 @@
 # Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 #-------------------------------------------------------------------------------------------------------
 
-# Use this script to run a build command for the given BuildType (arch, flavor, subtype)
+# Use this script to run a build for the given BuildType (arch, flavor, subtype)
 
 param (
     [ValidateSet("x86", "x64", "arm")]
     [Parameter(Mandatory=$True)]
     [string]$arch,
-
     # We do not use ValidateSet here because this $flavor param is used to name the BuildConfuration
     # from the solution file. MsBuild will determine whether it is valid.
     [Parameter(Mandatory=$True)]
     [string]$flavor,
-
     [ValidateSet("default", "codecoverage", "pogo")]
     [string]$subtype = "default",
 
     [Parameter(Mandatory=$True)]
-    [string]$solutionFile = "",
+    [string]$solutionFile,
 
     [switch]$clean,
 
@@ -64,7 +62,7 @@ $buildlogsPath = Join-Path $binDir $buildlogsSubdir
 
 $defaultParams = "$solutionFile /nologo /m /nr:false /p:platform=`"${arch}`" /p:configuration=`"${flavor}`""
 $loggingParams = @(
-    "/fl1 `"/flp1:logfile=${buildlogsPath}\build.${Env:BuildName}.log;verbosity=normal`"",
+    "/fl1 `"/flp1:logfile=${buildlogsPath}\build.${Env:BuildName}.log;verbosity=diagnostic`"",
     "/fl2 `"/flp2:logfile=${buildlogsPath}\build.${Env:BuildName}.err;errorsonly`"",
     "/fl3 `"/flp3:logfile=${buildlogsPath}\build.${Env:BuildName}.wrn;warningsonly`"",
     "/verbosity:normal"
