@@ -13,8 +13,7 @@ extern const IRType RegTypes[RegNumCount];
 
 bool
 LowererMDArch::IsArgSaveRequired(Func *func) {
-    return (!func->IsTrueLeaf() || func->GetHasJitCalls() ||
-        func->IsJitInDebugMode() || func->IsSimpleJit() ||
+    return (!func->IsTrueLeaf() || func->IsJitInDebugMode() ||
         func->GetJnFunction()->GetIsAsmjsMode() || func->IsGeneratorFunc() || func->IsLambda() ||
         func->GetHasThrow() || func->GetHasImplicitParamLoad() || func->HasThis() || func->argInsCount > 0);
 }
@@ -819,6 +818,11 @@ LowererMDArch::LowerCall(IR::Instr * callInstr, uint32 argCount)
     IR::Instr *retInstr = callInstr;
     callInstr->m_opcode = Js::OpCode::CALL;
 
+    if (callInstr->GetSrc1()->IsHelperCallOpnd())
+    {
+        callInstr->m_func->SetHasJitCalls();
+    }
+
     if (callInstr->GetDst())
     {
         IR::Opnd *       dstOpnd;
@@ -830,7 +834,6 @@ LowererMDArch::LowerCall(IR::Instr * callInstr, uint32 argCount)
 
         if (callInstr->GetSrc1()->IsHelperCallOpnd())
         {
-            callInstr->m_func->SetHasJitCalls();
             // Truncate the result of a conversion to 32-bit int, because the C++ code doesn't.
             IR::HelperCallOpnd *helperOpnd = callInstr->GetSrc1()->AsHelperCallOpnd();
             if (helperOpnd->m_fnHelper == IR::HelperConv_ToInt32 ||
@@ -1292,6 +1295,7 @@ LowererMDArch::GenerateStackAllocation(IR::Instr *instr, uint32 size)
                 this->m_func);
 
             instr->InsertAfter(movHelperAddrInstr);
+            instr->m_func->m_isLeaf = false;
         }
 
         LowererMD::CreateAssign(raxOpnd, stackSizeOpnd, instr->m_next);

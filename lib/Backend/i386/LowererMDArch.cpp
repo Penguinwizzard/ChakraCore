@@ -1137,6 +1137,11 @@ LowererMDArch::LowerCall(IR::Instr * callInstr, uint32 argCount, RegNum regNum)
     IR::Instr *retInstr = callInstr;
     callInstr->m_opcode = Js::OpCode::CALL;
 
+    if (callInstr->GetSrc1()->IsHelperCallOpnd())
+    {
+        callInstr->m_func->SetHasJitCalls();
+    }
+
     if (callInstr->GetDst())
     {
         IR::Opnd *       dstOpnd = callInstr->GetDst();

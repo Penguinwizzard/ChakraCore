@@ -2570,6 +2570,7 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
         case Js::OpCode::Throw:
         case Js::OpCode::InlineThrow:
         case Js::OpCode::EHThrow:
+            instr->m_func->SetHasThrow();
             this->LowerUnaryHelperMem(instr, IR::HelperOp_Throw);
             break;
 
@@ -7616,7 +7617,6 @@ Lowerer::LowerUnaryHelperMem(IR::Instr *instr, IR::JnHelperMethod helperMethod, 
     IR::Instr *instrPrev;
 
     instrPrev = LoadScriptContext(instr);
-    instr->m_func->SetHasThrow();
 
     return this->LowerUnaryHelper(instr, helperMethod, opndBailoutArg);
 }

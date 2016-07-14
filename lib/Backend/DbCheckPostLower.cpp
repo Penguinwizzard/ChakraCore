@@ -176,9 +176,12 @@ DbCheckPostLower::Check()
                     Assert(instr->GetDst()->AsRegOpnd()->GetReg() != RegNOREG);
                 }
                 break;
+            case Js::OpCode::CALL:
+                Assert(!instr->m_func->IsTrueLeaf());
+                break;
             }
-#endif
             break;
+#endif
         }
     } NEXT_INSTR_IN_FUNC_EDITING;
 }

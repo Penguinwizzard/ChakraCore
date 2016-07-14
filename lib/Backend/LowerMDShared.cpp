@@ -8784,6 +8784,7 @@ void LowererMD::GenerateFastInlineBuiltInCall(IR::Instr* instr, IR::JnHelperMeth
             IR::Instr *floatCall = IR::Instr::New(Js::OpCode::CALL, floatCallDst, s1, this->m_func);
             instr->InsertBefore(floatCall);
 #endif
+            instr->m_func->m_isLeaf = false;
             // Save the result.
             instr->m_opcode = Js::OpCode::MOVSD;
             instr->SetSrc1(floatCall->GetDst());

@@ -243,6 +243,11 @@ LowererMD::LowerCall(IR::Instr * callInstr, Js::ArgSlot argCount)
     IR::Opnd *targetOpnd = callInstr->GetSrc1();
     AssertMsg(targetOpnd, "Call without a target?");
 
+    if (callInstr->GetSrc1()->IsHelperCallOpnd())
+    {
+        callInstr->m_func->SetHasJitCalls();
+    }
+
     if (targetOpnd->IsRegOpnd())
     {
         // Indirect call
@@ -2933,6 +2938,7 @@ LowererMD::LoadFunctionObjectOpnd(IR::Instr *instr, IR::Opnd *&functionObjOpnd)
 
         instrPrev = LowererMD::CreateAssign(regOpnd, paramOpnd, instr);
         functionObjOpnd = instrPrev->GetDst();
+        instr->m_func->SetHasImplicitParamLoad();
     }
     else
     {
