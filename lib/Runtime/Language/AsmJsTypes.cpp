@@ -809,23 +809,15 @@ namespace Js
         , mVarMap(allocator)
         , mBodyNode(nullptr)
         , mFncNode(pnodeFnc)
-        , mIntRegisterSpace(allocator)
-        , mFloatRegisterSpace(allocator)
-        , mDoubleRegisterSpace( allocator )
         , mFuncInfo(pnodeFnc->sxFnc.funcInfo)
         , mFuncBody(nullptr)
-        , mSimdRegisterSpace(allocator)
         , mSimdVarsList(allocator)
         , mArgOutDepth(0)
         , mMaxArgOutDepth(0)
-        , mDefined( false )
+        , mDefined(false)
     {
-#if DBG_DUMP
-        mIntRegisterSpace.mType = WAsmJs::RegisterSpace::INT32;
-        mFloatRegisterSpace.mType = WAsmJs::RegisterSpace::FLOAT32;
-        mDoubleRegisterSpace.mType = WAsmJs::RegisterSpace::FLOAT64;
-        mSimdRegisterSpace.mType = WAsmJs::RegisterSpace::SIMD;
-#endif
+        // 1 is the return register
+        mTypedMemory = Anew(allocator, WAsmJs::TypedRegisterAllocator, allocator, 1, true);
     }
 
     /// AsmJsFunc
@@ -870,21 +862,27 @@ namespace Js
     {
         if (pnode)
         {
+            WAsmJs::RegisterSpace::Types type = WAsmJs::RegisterSpace::LIMIT;
             if (pnode->type.isIntish())
             {
-                ReleaseLocation<int>(pnode);
+                type = WAsmJs::RegisterSpace::INT32;
             }
             else if (pnode->type.isMaybeDouble())
             {
-                ReleaseLocation<double>(pnode);
+                type = WAsmJs::RegisterSpace::FLOAT64;
             }
             else if (pnode->type.isFloatish())
             {
-                ReleaseLocation<float>(pnode);
+                type = WAsmJs::RegisterSpace::FLOAT32;
             }
             else if (pnode->type.isSIMDType())
             {
-                ReleaseLocation<AsmJsSIMDValue>(pnode);
+                type = WAsmJs::RegisterSpace::SIMD;
+            }
+
+            if (type != WAsmJs::RegisterSpace::LIMIT)
+            {
+                mTypedMemory->ReleaseLocation(type, pnode);
             }
         }
     }
@@ -914,20 +912,7 @@ namespace Js
 
     bool AsmJsFunctionInfo::Init(AsmJsFunc* func)
     {
-        const auto& intRegisterSpace = func->GetRegisterSpace<int>();
-        const auto& doubleRegisterSpace = func->GetRegisterSpace<double>();
-        const auto& floatRegisterSpace = func->GetRegisterSpace<float>();
-        const auto& simdRegisterSpace = func->GetRegisterSpace<AsmJsSIMDValue>();
-
-        mIntConstCount = (intRegisterSpace.GetConstCount());
-        mDoubleConstCount = (doubleRegisterSpace.GetConstCount());
-        mFloatConstCount = (floatRegisterSpace.GetConstCount());
-
-        bool isSimdjsEnabled = func->GetFuncBody()->GetScriptContext()->GetConfig()->IsSimdjsEnabled();
-        if (isSimdjsEnabled)
-        {
-            mSimdConstCount = (simdRegisterSpace.GetConstCount());
-        }
+        func->CommitRegistersToFunctionInfo(this);
 
         Recycler* recycler = func->GetFuncBody()->GetScriptContext()->GetRecycler();
 
@@ -949,66 +934,8 @@ namespace Js
             AsmJsType varType = func->GetArgType(i);
             SetArgType(AsmJsVarType::FromCheckedType(varType), i);
         }
-        mIntVarCount = intRegisterSpace.GetVarCount();
-        mDoubleVarCount = doubleRegisterSpace.GetVarCount();
-        mFloatVarCount = floatRegisterSpace.GetVarCount();
-        if (isSimdjsEnabled)
-        {
-            mSimdVarCount = simdRegisterSpace.GetVarCount();
-        }
-
-        mIntTmpCount = intRegisterSpace.GetTmpCount();
-        mDoubleTmpCount = doubleRegisterSpace.GetTmpCount();
-        mFloatTmpCount = floatRegisterSpace.GetTmpCount();
-
-        if (isSimdjsEnabled)
-        {
-            mSimdTmpCount = simdRegisterSpace.GetTmpCount();
-        }
 
         mReturnType = func->GetReturnType();
-
-        mIntByteOffset = AsmJsFunctionMemory::RequiredVarConstants * sizeof(Var);
-
-        const int totalIntCount = mIntConstCount + mIntVarCount + mIntTmpCount;
-        const int count32bitsVarConst = (AsmJsFunctionMemory::RequiredVarConstants*sizeof(Var)) / sizeof(int);
-        const int total32bitsBeforeFloat = count32bitsVarConst + totalIntCount;
-        const int floatOffset32bitsFix = total32bitsBeforeFloat;
-        // Offset of floats from (float*)m_localSlot
-        mFloatByteOffset = (floatOffset32bitsFix *sizeof(int));
-
-
-        const int totalFloatCount = mFloatConstCount + mFloatVarCount + mFloatTmpCount;
-        const int total32bitsBeforeDoubles = total32bitsBeforeFloat + totalFloatCount;
-        // if its an odd number, add 1
-        const int doubleOffset32bitsFix = total32bitsBeforeDoubles + (total32bitsBeforeDoubles & 1);
-        // Offset of doubles from (double*)m_localSlot
-        mDoubleByteOffset = (doubleOffset32bitsFix *sizeof(int));
-
-        // SIMD_JS
-        const int totalDoubleCount = mDoubleConstCount + mDoubleVarCount + mDoubleTmpCount;
-        mSimdByteOffset = mDoubleByteOffset + totalDoubleCount * sizeof(double);
-        // Alignment
-        mSimdByteOffset = ::Math::Align<int>((int)mSimdByteOffset, sizeof(AsmJsSIMDValue));
-        
-
-
-        if (PHASE_TRACE1(AsmjsInterpreterStackPhase))
-        {
-            Output::Print(_u("ASMFunctionInfo Stack Data\n"));
-            Output::Print(_u("==========================\n"));
-            Output::Print(_u("RequiredVarConstants:%d\n"), AsmJsFunctionMemory::RequiredVarConstants);
-            Output::Print(_u("IntOffset:%d  IntConstCount:%d  IntVarCount:%d  IntTmpCount:%d\n"), mIntByteOffset, mIntConstCount, mIntVarCount, mIntTmpCount);
-            Output::Print(_u("FloatOffset:%d  FloatConstCount:%d  FloatVarCount:%d FloatTmpCount:%d\n"), mFloatByteOffset, mFloatConstCount, mFloatVarCount, mFloatTmpCount);
-            Output::Print(_u("DoubleOffset:%d  DoubleConstCount:%d  DoubleVarCount:%d  DoubleTmpCount:%d\n"), mDoubleByteOffset, mDoubleConstCount, mDoubleVarCount, mDoubleTmpCount);
-
-            if (isSimdjsEnabled)
-            {
-                Output::Print(_u("SimdOffset:%d  SimdConstCount:%d  SimdVarCount:%d  SimdTmpCount:%d\n"), mSimdByteOffset, mSimdConstCount, mSimdVarCount, mSimdTmpCount);
-            }
-            Output::Print(_u("\n"));
-        }
-
 
         return true;
     }
@@ -1018,8 +945,8 @@ namespace Js
         int size;
 
         // SIMD values are aligned
-        Assert(mSimdByteOffset % sizeof(AsmJsSIMDValue) == 0);
-        size = mSimdByteOffset + GetSimdAllCount()* sizeof(AsmJsSIMDValue);
+        Assert(GetSimdByteOffset() % sizeof(AsmJsSIMDValue) == 0);
+        size = GetSimdByteOffset() + GetSimdAllCount()* sizeof(AsmJsSIMDValue);
         
         return size;
     }

@@ -8,7 +8,7 @@
 
 #ifndef TEMP_DISABLE_ASMJS
 
-namespace WAsmJs 
+namespace WAsmJs
 {
     typedef Js::RegSlot RegSlot;
 
@@ -58,7 +58,7 @@ namespace WAsmJs
         // Get number of local variables
         RegSlot GetVarCount() const        { return mFirstTmpReg - mNbConst; }
         // Get the total number of variable allocated ( including temporaries )
-        RegSlot GetTotalVarCount() const   { return mRegisterCount - mNbConst; }
+        RegSlot GetTotalVariablesCount() const   { return mRegisterCount - mNbConst; }
         RegSlot GetRegisterCount() const   { return mRegisterCount; }
 
         // Acquire a location for a register. Use only for arguments and Variables
@@ -185,21 +185,151 @@ namespace WAsmJs
             return false;
         }
 
-#if DBG_DUMP
-        // Used for debugging
         enum Types
         {
-            NONE,
             INT32,
             INT64,
             FLOAT32,
             FLOAT64,
-            SIMD
+            SIMD,
+            LIMIT
         };
+        template<typename T> static RegisterSpace::Types GetRegisterSpaceType(){return RegisterSpace::LIMIT;}
+        template<> static RegisterSpace::Types GetRegisterSpaceType<int32>(){return RegisterSpace::INT32;}
+        template<> static RegisterSpace::Types GetRegisterSpaceType<int64>(){return RegisterSpace::INT64;}
+        template<> static RegisterSpace::Types GetRegisterSpaceType<float>(){return RegisterSpace::FLOAT32;}
+        template<> static RegisterSpace::Types GetRegisterSpaceType<double>(){return RegisterSpace::FLOAT64;}
+        template<> static RegisterSpace::Types GetRegisterSpaceType<AsmJsSIMDValue>(){return RegisterSpace::SIMD;}
+        static uint32 GetTypeByteSize(RegisterSpace::Types type);
+#if DBG_DUMP
+        // Used for debugging
         Types mType;
         void PrintTmpRegisterAllocation(RegSlot loc);
         void PrintTmpRegisterDeAllocation(RegSlot loc);
 #endif
+    };
+
+    template<typename T>
+    class ConstRegisterSpace
+    {
+        template <typename T>
+        struct Comparer : public DefaultComparer<T> {};
+
+        template <>
+        struct Comparer<float>
+        {
+            inline static bool Equals(float x, float y)
+            {
+                int32 i32x = *(int32*)&x;
+                int32 i32y = *(int32*)&y;
+                return i32x == i32y;
+            }
+
+            inline static hash_t GetHashCode(float i)
+            {
+                return (hash_t)i;
+            }
+        };
+
+        template <>
+        struct Comparer<double>
+        {
+            inline static bool Equals(double x, double y)
+            {
+                int64 i64x = *(int64*)&x;
+                int64 i64y = *(int64*)&y;
+                return i64x == i64y;
+            }
+
+            inline static hash_t GetHashCode(double d)
+            {
+                int64 i64 = *(int64*)&d;
+                return (uint)((i64 >> 32) ^ (uint)i64);
+            }
+        };
+        typedef JsUtil::BaseDictionary<T, RegSlot, ArenaAllocator, PowerOf2SizePolicy, Comparer> ConstMap;
+        ConstMap mConstMap;
+    public:
+        ConstRegisterSpace( ArenaAllocator* allocator ) : mConstMap( allocator ) {}
+
+        void AddConst( T val, RegSlot loc )
+        {
+            if( !mConstMap.ContainsKey( val ) )
+            {
+                mConstMap.Add( val, loc );
+            }
+        }
+
+        RegSlot GetConstRegister( T val ) const
+        {
+            return mConstMap.LookupWithKey( val, Js::Constants::NoRegister );
+        }
+        const ConstMap GetConstMap()
+        {
+            return mConstMap;
+        }
+    };
+
+    struct TypedSlotInfo
+    {
+        uint32 constCount;
+        uint32 varCount;
+        uint32 tmpCount;
+        uint32 offset;
+    };
+
+    class TypedRegisterAllocator
+    {
+        RegisterSpace* mTypeSpaces[RegisterSpace::LIMIT];
+        void* mConstRegisterSpaces[RegisterSpace::LIMIT];
+    public:
+        // allocator is needed only if it needs ConstRegisterSpaces
+        TypedRegisterAllocator(ArenaAllocator* allocator, uint32 reservedSpace, bool allocateConstSpace);
+        RegSlot AcquireRegister     (RegisterSpace::Types type)                             { return GetRegisterSpace(type)->AcquireRegister();}
+        RegSlot AcquireConstRegister(RegisterSpace::Types type)                             { return GetRegisterSpace(type)->AcquireConstRegister();}
+        RegSlot AcquireTmpRegister  (RegisterSpace::Types type)                             { return GetRegisterSpace(type)->AcquireTmpRegister();}
+        void ReleaseTmpRegister     (RegisterSpace::Types type, RegSlot tmpReg )            { GetRegisterSpace(type)->ReleaseTmpRegister( tmpReg );}
+        void ReleaseLocation        (RegisterSpace::Types type, const EmitInfoBase* pnode ) { GetRegisterSpace(type)->ReleaseLocation(pnode); }
+        bool IsTmpLocation          (RegisterSpace::Types type, const EmitInfoBase* pnode ) { return GetRegisterSpace(type)->IsTmpLocation( pnode );}
+        bool IsConstLocation        (RegisterSpace::Types type, const EmitInfoBase* pnode ) { return GetRegisterSpace(type)->IsConstLocation( pnode );}
+        bool IsVarLocation          (RegisterSpace::Types type, const EmitInfoBase* pnode ) { return GetRegisterSpace(type)->IsVarLocation( pnode );}
+        bool IsValidLocation        (RegisterSpace::Types type, const EmitInfoBase* pnode ) { return GetRegisterSpace(type)->IsValidLocation( pnode );}
+
+        uint32 GetJsVarCount(bool constOnly = false) const;
+        void CommitToFunctionInfo(Js::AsmJsFunctionInfo* funcInfo);
+
+        // Template version for ease of use with current code
+        template<typename T>RegSlot AcquireRegister     ()                           { return AcquireRegister(RegisterSpace::GetRegisterSpaceType<T>());}
+        template<typename T>RegSlot AcquireConstRegister()                           { return AcquireConstRegister(RegisterSpace::GetRegisterSpaceType<T>());}
+        template<typename T>RegSlot AcquireTmpRegister  ()                           { return AcquireTmpRegister(RegisterSpace::GetRegisterSpaceType<T>());}
+        template<typename T>void ReleaseTmpRegister     (RegSlot tmpReg )            { ReleaseTmpRegister(RegisterSpace::GetRegisterSpaceType<T>(), tmpReg);}
+        template<typename T>void ReleaseLocation        (const EmitInfoBase* pnode ) { ReleaseLocation(RegisterSpace::GetRegisterSpaceType<T>(), pnode); }
+        template<typename T>bool IsTmpLocation          (const EmitInfoBase* pnode ) { return IsTmpLocation(RegisterSpace::GetRegisterSpaceType<T>(), pnode);}
+        template<typename T>bool IsConstLocation        (const EmitInfoBase* pnode ) { return IsConstLocation(RegisterSpace::GetRegisterSpaceType<T>(), pnode);}
+        template<typename T>bool IsVarLocation          (const EmitInfoBase* pnode ) { return IsVarLocation(RegisterSpace::GetRegisterSpaceType<T>(), pnode);}
+        template<typename T>bool IsValidLocation        (const EmitInfoBase* pnode ) { return IsValidLocation(RegisterSpace::GetRegisterSpaceType<T>(), pnode);}
+
+        // ConstRegisterSpace methods
+        template<typename T> void AddConst(T val)
+        {
+            RegisterSpace::Types type = RegisterSpace::GetRegisterSpaceType<T>();
+            ConstRegisterSpace<T>* constSpace = (ConstRegisterSpace<T>*)GetConstSpace(type);
+            RegSlot loc = GetRegisterSpace(type).AcquireConstRegister();
+            constSpace->AddConst(val, loc);
+        }
+
+        template<typename T> RegSlot GetConstRegister(T val)
+        {
+            RegisterSpace::Types type = RegisterSpace::GetRegisterSpaceType<T>();
+            ConstRegisterSpace<T>* constSpace = (ConstRegisterSpace<T>*)GetConstSpace(type);
+            return constSpace->GetConstRegister(val);
+        }
+        void WriteConstToTable(void* table);
+    private:
+        bool IsValidType(RegisterSpace::Types type) const;
+        bool IsTypeUsed(RegisterSpace::Types type) const;
+        void* GetConstSpace(RegisterSpace::Types type) const;
+        RegisterSpace* GetRegisterSpace(RegisterSpace::Types type) const;
     };
 };
 

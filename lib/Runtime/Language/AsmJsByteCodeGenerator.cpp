@@ -120,82 +120,13 @@ namespace Js
         funcBody->CreateConstantTable();
         Var* table = funcBody->GetConstTable();
         table += AsmJsFunctionMemory::RequiredVarConstants - 1; // we do -1 here as the VarConstant count is zero-based calculation
-
-        int* intTable = (int*)table;
-        // int Return Register
-        *intTable = 0;
-        intTable++;
-
-        JsUtil::BaseDictionary<int, RegSlot, ArenaAllocator, PowerOf2SizePolicy, AsmJsComparer> intMap = mFunction->GetRegisterSpace<int>().GetConstMap();
-
-        for (auto it = intMap.GetIterator(); it.IsValid(); it.MoveNext())
-        {
-            JsUtil::BaseDictionary<int, RegSlot, ArenaAllocator, PowerOf2SizePolicy, AsmJsComparer>::EntryType &entry = it.Current();
-            *intTable = entry.Key();
-            intTable++;
-        }
-
-        float* floatTable = (float*)intTable;
-        // float Return Register
-        *floatTable = 0;
-        floatTable++;
-
-        JsUtil::BaseDictionary<float, RegSlot, ArenaAllocator, PowerOf2SizePolicy, AsmJsComparer> floatMap = mFunction->GetRegisterSpace<float>().GetConstMap();
-
-        for (auto it = floatMap.GetIterator(); it.IsValid(); it.MoveNext())
-        {
-            JsUtil::BaseDictionary<float, RegSlot, ArenaAllocator, PowerOf2SizePolicy, AsmJsComparer>::EntryType &entry = it.Current();
-            *floatTable = entry.Key();
-            floatTable++;
-        }
-
-        double* doubleTable = (double*)floatTable;
-        // double Return Register
-        *doubleTable = 0;
-        doubleTable++;
-
-        JsUtil::BaseDictionary<double, RegSlot, ArenaAllocator, PowerOf2SizePolicy, AsmJsComparer> doubleMap = mFunction->GetRegisterSpace<double>().GetConstMap();
-
-        for (auto it = doubleMap.GetIterator(); it.IsValid(); it.MoveNext())
-        {
-            JsUtil::BaseDictionary<double, RegSlot, ArenaAllocator, PowerOf2SizePolicy, AsmJsComparer>::EntryType &entry = it.Current();
-            *doubleTable = entry.Key();
-            doubleTable++;
-        }
-
-        // SIMD_JS
-        if (IsSimdjsEnabled())
-        {
-            AsmJsSIMDValue* simdTable = (AsmJsSIMDValue*)doubleTable;
-            // SIMD return register
-            simdTable->f64[0] = 0; simdTable->f64[1] = 0;
-
-            JsUtil::BaseDictionary<AsmJsSIMDValue, RegSlot, ArenaAllocator, PowerOf2SizePolicy, AsmJsComparer> simdMap = mFunction->GetRegisterSpace<AsmJsSIMDValue>().GetConstMap();
-            for (auto it = simdMap.GetIterator(); it.IsValid(); it.MoveNext())
-            {
-                JsUtil::BaseDictionary<AsmJsSIMDValue, RegSlot, ArenaAllocator, PowerOf2SizePolicy, AsmJsComparer>::EntryType &entry = it.Current();
-                RegSlot regSlot = entry.Value();
-                Assert((Var*)simdTable + regSlot < funcBody->GetConstTable() + funcBody->GetConstantCount());
-                // we cannot do sequential copy since registers are assigned to constants in the order they appear in the code, not per dictionary order.
-                simdTable[entry.Value()] = entry.Key();
-            }
-        }
+        mFunction->WriteConstToTable(table);
     }
 
     void AsmJSByteCodeGenerator::FinalizeRegisters( FunctionBody* byteCodeFunction )
     {
         // this value is the number of Var slots needed to allocate all the const
-        int nbConst =
-            ((mFunction->GetRegisterSpace<double>().GetConstCount() + 1) * WAsmJs::DOUBLE_SLOTS_SPACE) // space required for all double constants + 1 return register reserved
-            + (int)((mFunction->GetRegisterSpace<float>().GetConstCount() + 1) * WAsmJs::FLOAT_SLOTS_SPACE + 0.5 /*ceil*/) // space required for all float constants + 1 return register reserved
-            + (int)((mFunction->GetRegisterSpace<int>().GetConstCount() + 1) * WAsmJs::INT_SLOTS_SPACE + 0.5/*ceil*/) // space required for all int constants + 1 return register reserved
-            + AsmJsFunctionMemory::RequiredVarConstants;
-
-        if (IsSimdjsEnabled())
-        {
-            nbConst += (int)((mFunction->GetRegisterSpace<AsmJsSIMDValue>().GetConstCount() + 1) * WAsmJs::SIMD_SLOTS_SPACE); // Return register is already reserved in the register space.
-        }
-
+        int nbConst = mFunction->GetConstVarCount() + AsmJsFunctionMemory::RequiredVarConstants;
         byteCodeFunction->CheckAndSetConstantCount(nbConst);
 
         // add 3 for each of I0, F0, and D0
@@ -260,11 +191,6 @@ namespace Js
             // Set that the function is asmjsFunction in functionBody here so that Initialize ExecutionMode call later will check for that and not profile in asmjsMode
             functionBody->SetIsAsmJsFunction(true);
             functionBody->SetIsAsmjsMode(true);
-
-            // Do a uint32 add just to verify that we haven't overflowed the reg slot type.
-            UInt32Math::Add( mFunction->GetRegisterSpace<int>().GetTotalVarCount(), mFunction->GetRegisterSpace<int>().GetConstCount());
-            UInt32Math::Add( mFunction->GetRegisterSpace<double>().GetTotalVarCount(), mFunction->GetRegisterSpace<double>().GetConstCount());
-            UInt32Math::Add( mFunction->GetRegisterSpace<float>().GetTotalVarCount(), mFunction->GetRegisterSpace<float>().GetConstCount());
 
             byteCodeGen->MapCacheIdsToPropertyIds( mInfo );
             byteCodeGen->MapReferencedPropertyIds( mInfo );

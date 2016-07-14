@@ -76,9 +76,6 @@ namespace Js
             {
                 continue;
             }
-            const auto& intRegisterSpace = func->GetRegisterSpace<int>();
-            const auto& doubleRegisterSpace = func->GetRegisterSpace<double>();
-            const auto& floatRegisterSpace = func->GetRegisterSpace<float>();
 
             if (!asmInfo->Init(func))
             {
@@ -86,18 +83,7 @@ namespace Js
             }
             asmInfo->SetIsHeapBufferConst(!mUsesChangeHeap);
             asmInfo->SetUsesHeapBuffer(mUsesHeapBuffer);
-            int varCount = 0;
-            varCount += (int)((intRegisterSpace.GetTotalVarCount() * WAsmJs::INT_SLOTS_SPACE) + 0.5);
-            varCount += (int)(floatRegisterSpace.GetTotalVarCount() * WAsmJs::FLOAT_SLOTS_SPACE + 0.5);
-            varCount += doubleRegisterSpace.GetTotalVarCount() * WAsmJs::DOUBLE_SLOTS_SPACE;
-
-            if (IsSimdjsEnabled())
-            {
-                const auto& simdRegisterSpace = func->GetRegisterSpace<AsmJsSIMDValue>();
-                varCount += (int)((simdRegisterSpace.GetTotalVarCount() + 1) * WAsmJs::SIMD_SLOTS_SPACE); /* + 1 to make room for possible alignment of SIMD values*/
-                // Aligned SIMD values.
-                Assert(asmInfo->GetSimdByteOffset() % sizeof(AsmJsSIMDValue) == 0);
-            }
+            RegSlot varCount = func->GetTotalJsVarCount();
 
             functionBody->CheckAndSetOutParamMaxDepth(func->GetMaxArgOutDepth());
             functionBody->CheckAndSetVarCount(varCount);
@@ -159,7 +145,7 @@ namespace Js
 
         const int functionCount = mFunctionArray.Count();
         const int functionTableCount = mFunctionTableArray.Count();
-        const int importFunctionCount = mImportFunctions.GetTotalVarCount();
+        const int importFunctionCount = mImportFunctions.GetTotalVariablesCount();
         asmInfo->SetFunctionCount(functionCount);
         asmInfo->SetFunctionTableCount(functionTableCount);
         asmInfo->SetFunctionImportCount(importFunctionCount);
@@ -175,7 +161,7 @@ namespace Js
         if (IsSimdjsEnabled())
         {
             asmInfo->SetAsmSimdBuiltinUsed(mAsmSimdBuiltinUsedBV);
-            asmInfo->SetSimdRegCount(mSimdVarSpace.GetTotalVarCount());
+            asmInfo->SetSimdRegCount(mSimdVarSpace.GetTotalVariablesCount());
         }
 
         int varCount = 3; // 3 possible arguments
