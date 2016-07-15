@@ -929,6 +929,11 @@ NativeCodeGenerator::CodeGen(PageAllocator * pageAllocator, CodeGenWorkItem* wor
         Js::Throw::InternalError();
     }
 
+    if (workItem->GetJitMode() != ExecutionMode::SimpleJit)
+    {
+        workItem->GetEntryPoint()->GetJitTransferData()->SetIsReady();
+    }
+
     workItem->GetFunctionBody()->SetFrameHeight(workItem->GetEntryPoint(), jitWriteData.writeableEPData.frameHeight);
 
     if (jitWriteData.writeableEPData.hasJittedStackClosure != FALSE)
@@ -997,7 +1002,10 @@ NativeCodeGenerator::CodeGen(PageAllocator * pageAllocator, CodeGenWorkItem* wor
     epInfo->RecordInlineeFrameOffsetsInfo(jitWriteData.inlineeFrameOffsetArrayOffset, jitWriteData.inlineeFrameOffsetArrayCount);
                         
     epInfo->GetJitTransferData()->SetEquivalentTypeGuardOffsets(jitWriteData.equivalentTypeGuardOffsets);
-
+    epInfo->RecordTypeGuards(
+        jitWriteData.typeGuardTransferRecord.typeGuardCount,
+        (Js::TypeGuardTransferEntry*)(jitWriteData.buffer->data + jitWriteData.typeGuardTransferRecord.typeGuardTransferRecordOffset),
+        jitWriteData.typeGuardTransferRecord.typeGuardTransferPlusSize);
 
 #if defined(_M_X64) || defined(_M_ARM32_OR_ARM64)
     XDataInfo * xdataInfo = XDataAllocator::Register(jitWriteData.xdataAddr, jitWriteData.codeAddress, jitWriteData.codeSize);

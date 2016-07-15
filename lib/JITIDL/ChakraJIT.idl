@@ -607,6 +607,12 @@ typedef struct NativeDataBuffer
 
 } NativeDataBuffer;
 
+typedef struct TypeGuardTransferRecordIDL
+{
+    int typeGuardCount;
+    unsigned int typeGuardTransferRecordOffset;
+    __int3264 typeGuardTransferPlusSize;
+} TypeGuardTransferRecordIDL;
 // Fields that JIT modifies
 typedef struct JITOutputIDL
 {
@@ -629,6 +635,7 @@ typedef struct JITOutputIDL
     NativeDataFixupTable* nativeDataFixupTable;
     NativeDataBuffer* buffer;
     EquivalentTypeGuardOffsets* equivalentTypeGuardOffsets;
+    TypeGuardTransferRecordIDL typeGuardTransferRecord;
 
     __int64 codeAddress;
     __int64 xdataAddr;

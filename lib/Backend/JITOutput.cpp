@@ -52,6 +52,14 @@ JITOutput::SetFrameHeight(uint val)
     m_outputData->writeableEPData.frameHeight = val;
 }
 
+void
+JITOutput::RecordTypeGuards(int typeGuardCount, Js::TypeGuardTransferEntry* typeGuardTransferRecord, size_t typeGuardTransferPlusSize)
+{
+    m_outputData->typeGuardTransferRecord.typeGuardCount = typeGuardCount;
+    m_outputData->typeGuardTransferRecord.typeGuardTransferRecordOffset = NativeCodeData::GetDataTotalOffset(typeGuardTransferRecord);
+    m_outputData->typeGuardTransferRecord.typeGuardTransferPlusSize = typeGuardTransferPlusSize;
+}
+
 uint16
 JITOutput::GetArgUsedForBranch() const
 {

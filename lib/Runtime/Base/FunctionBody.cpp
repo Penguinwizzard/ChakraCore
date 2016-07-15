@@ -8270,6 +8270,7 @@ namespace Js
 
         ScriptContext* scriptContext = GetScriptContext();
 
+        /*
         if (jitTransferData->equivalentTypeGuardOffsets)
         {
             // OOP JIT
@@ -8327,7 +8328,7 @@ namespace Js
 
             FreeJitTransferData();
         }
-
+        */
 
         if (jitTransferData->GetIsReady())
         {
@@ -8432,12 +8433,48 @@ namespace Js
             }
         }
 
-        if (this->jitTransferData->equivalentTypeGuardCount > 0)
+        if (this->jitTransferData->GetRuntimeTypeRefs() != nullptr)
         {
             Assert(this->jitTransferData->equivalentTypeGuards != nullptr);
 
             Recycler* recycler = scriptContext->GetRecycler();
 
+            // InstallGuards
+            int guardCount = jitTransferData->equivalentTypeGuardOffsets->count;
+
+            // Create an array of equivalent type caches on the entry point info to ensure they are kept
+            // alive for the lifetime of the entry point.
+            this->equivalentTypeCacheCount = guardCount;
+
+            // No need to zero-initialize, since we will populate all data slots.
+            // We used to let the recycler scan the types in the cache, but we no longer do. See
+            // ThreadContext::ClearEquivalentTypeCaches for an explanation.
+            this->equivalentTypeCaches = RecyclerNewArrayLeafZ(recycler, EquivalentTypeCache, guardCount);
+
+            this->RegisterEquivalentTypeCaches();
+            EquivalentTypeCache* cache = this->equivalentTypeCaches;
+
+            for (int i = 0; i < guardCount; i++)
+            {
+                auto& cacheIDL = jitTransferData->equivalentTypeGuardOffsets->guards[i].cache;
+                auto guardOffset = jitTransferData->equivalentTypeGuardOffsets->guards[i].offset;
+                JitEquivalentTypeGuard* guard = (JitEquivalentTypeGuard*)(this->GetNativeDataBuffer() + guardOffset);
+                cache[i].guard = guard;
+                cache[i].hasFixedValue = cacheIDL.hasFixedValue != 0;
+                cache[i].isLoadedFromProto = cacheIDL.isLoadedFromProto != 0;
+                cache[i].nextEvictionVictim = cacheIDL.nextEvictionVictim;
+                cache[i].record.propertyCount = cacheIDL.record.propertyCount;
+                cache[i].record.properties = (EquivalentPropertyEntry*)(this->GetNativeDataBuffer() + cacheIDL.record.propertyOffset);
+                for (int j = 0; j < EQUIVALENT_TYPE_CACHE_SIZE; j++)
+                {
+                    cache[i].types[j] = (Js::Type*)cacheIDL.types[j];
+                }
+                guard->SetCache(&cache[i]);
+            }
+        }
+#if 0 // TODO: in proc JIT transfer data
+        if (this->jitTransferData->equivalentTypeGuardCount > 0)
+        {
             int guardCount = this->jitTransferData->equivalentTypeGuardCount;
             JitEquivalentTypeGuard** guards = this->jitTransferData->equivalentTypeGuards;
 
@@ -8466,9 +8503,11 @@ namespace Js
                 cache++;
             }
         }
+#endif
 
         // The propertyGuardsByPropertyId structure is temporary and serves only to register the type guards for the correct
         // properties.  If we've done code gen for this EntryPointInfo, typePropertyGuardsByPropertyId will have been used and nulled out.
+
         if (this->jitTransferData->propertyGuardsByPropertyId != nullptr)
         {
             this->propertyGuardCount = this->jitTransferData->propertyGuardCount;

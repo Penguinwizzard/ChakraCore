@@ -17,6 +17,7 @@ public:
     void SetHasBailoutInstr(bool val);
     void SetArgUsedForBranch(uint8 param);
     void SetFrameHeight(uint val);
+    void RecordTypeGuards(int typeGuardCount, Js::TypeGuardTransferEntry* typeGuardTransferRecord, size_t typeGuardTransferPlusSize);
 
     uint16 GetArgUsedForBranch() const;
     intptr_t GetCodeAddress() const;
