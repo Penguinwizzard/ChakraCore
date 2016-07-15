@@ -243,10 +243,8 @@ LowererMD::LowerCall(IR::Instr * callInstr, Js::ArgSlot argCount)
     IR::Opnd *targetOpnd = callInstr->GetSrc1();
     AssertMsg(targetOpnd, "Call without a target?");
 
-    if (callInstr->GetSrc1()->IsHelperCallOpnd())
-    {
-        callInstr->m_func->SetHasJitCalls();
-    }
+    // This is required here due to calls created during lowering
+    callInstr->m_func->SetHasCalls();
 
     if (targetOpnd->IsRegOpnd())
     {

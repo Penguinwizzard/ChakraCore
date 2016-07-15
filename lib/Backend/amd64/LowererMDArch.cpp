@@ -818,10 +818,8 @@ LowererMDArch::LowerCall(IR::Instr * callInstr, uint32 argCount)
     IR::Instr *retInstr = callInstr;
     callInstr->m_opcode = Js::OpCode::CALL;
 
-    if (callInstr->GetSrc1()->IsHelperCallOpnd())
-    {
-        callInstr->m_func->SetHasJitCalls();
-    }
+    // This is required here due to calls create during lowering
+    callInstr->m_func->SetHasCalls();
 
     if (callInstr->GetDst())
     {
@@ -1295,7 +1293,7 @@ LowererMDArch::GenerateStackAllocation(IR::Instr *instr, uint32 size)
                 this->m_func);
 
             instr->InsertAfter(movHelperAddrInstr);
-            instr->m_func->m_isLeaf = false;
+            instr->m_func->SetHasCalls();
         }
 
         LowererMD::CreateAssign(raxOpnd, stackSizeOpnd, instr->m_next);

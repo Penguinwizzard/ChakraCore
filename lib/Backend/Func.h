@@ -295,7 +295,7 @@ static const unsigned __int64 c_debugFillPattern8 = 0xcececececececece;
     }
     bool IsTrueLeaf() const
     {
-        return m_isLeaf && !GetHasImplicitCalls() && !GetHasJitCalls();
+        return !GetHasCalls() && !GetHasImplicitCalls();
     }
     RecyclerWeakReference<Js::FunctionBody> *GetWeakFuncRef() const;
     Js::FunctionBody * GetJnFunction() const { return m_jnFunction; }
@@ -569,7 +569,6 @@ public:
     bool                hasStackArgs: 1;
     bool                hasImplicitParamLoad : 1; // True if there is a load of CallInfo, FunctionObject
     bool                hasThrow : 1;
-    bool                hasJitCalls : 1;
     bool                hasUnoptimizedArgumentsAcccess : 1; // True if there are any arguments access beyond the simple case of this.apply pattern
     bool                m_canDoInlineArgsOpt : 1;
     bool                hasApplyTargetInlining:1;
@@ -658,9 +657,6 @@ public:
 
     bool                GetHasThrow() const { return this->hasThrow; }
     void                SetHasThrow() { this->hasThrow = true; }
-
-    bool                GetHasJitCalls() const { return this->hasJitCalls; }
-    void                SetHasJitCalls() { this->hasJitCalls = true; }
 
     bool                GetHasUnoptimizedArgumentsAcccess() const { return this->hasUnoptimizedArgumentsAcccess; }
     void                SetHasUnoptimizedArgumentsAccess(bool args)
