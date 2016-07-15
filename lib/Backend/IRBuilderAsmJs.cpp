@@ -349,10 +349,10 @@ IR::RegOpnd *
 IRBuilderAsmJs::BuildIntConstOpnd(Js::RegSlot regSlot)
 {
     Js::Var * constTable = m_func->GetJnFunction()->GetConstTable();
-    int * intConstTable = reinterpret_cast<int *>(constTable + Js::AsmJsFunctionMemory::RequiredVarConstants - 1);
-    uint32 intConstCount = m_func->GetJnFunction()->GetAsmJsFunctionInfoWithLock()->GetIntConstCount();
+    const auto& info = m_func->GetJnFunction()->GetAsmJsFunctionInfoWithLock()->GetTypedConstsInfo()[WAsmJs::RegisterSpace::INT32];
+    int* intConstTable = reinterpret_cast<int*>(((byte*)constTable) + info.byteOffset);
 
-    Assert(regSlot >= Js::FunctionBody::FirstRegSlot && regSlot < intConstCount);
+    Assert(regSlot >= Js::FunctionBody::FirstRegSlot && regSlot < info.count);
     const int32 value = intConstTable[regSlot];
     IR::IntConstOpnd *opnd = IR::IntConstOpnd::New(value, TyInt32, m_func);
 
@@ -698,7 +698,7 @@ IRBuilderAsmJs::BuildHeapBufferReload(uint32 offset)
 
     // ArrayBuffer
     IR::RegOpnd * dstOpnd = BuildDstOpnd(AsmJsRegSlots::ArrayReg, TyVar);
-    IR::Opnd * srcOpnd = IR::IndirOpnd::New(BuildSrcOpnd(AsmJsRegSlots::ModuleMemReg, TyVar), Js::AsmJsModuleMemory::MemoryTableBeginOffset, TyVar, m_func);
+    IR::Opnd * srcOpnd = IR::IndirOpnd::New(BuildSrcOpnd(AsmJsRegSlots::ModuleMemReg, TyVar), (int32)Js::AsmJsModuleMemory::MemoryTableBeginOffset, TyVar, m_func);
     IR::Instr * instr = IR::Instr::New(Js::OpCode::Ld_A, dstOpnd, srcOpnd, m_func);
     AddInstr(instr, offset);
 
@@ -715,13 +715,42 @@ IRBuilderAsmJs::BuildHeapBufferReload(uint32 offset)
     AddInstr(instr, offset);
 }
 
+template<typename T, typename ConstOpnd, typename F>
+void IRBuilderAsmJs::CreateLoadConstInstrForType(
+    Js::Var table,
+    Js::RegSlot& regAllocated,
+    uint32 reservedCount,
+    uint32 constCount,
+    uint32 offset,
+    IRType irType,
+    ValueType valueType,
+    Js::OpCode opcode,
+    F extraProcess
+)
+{
+    T* typedTable = (T*)(((byte*)table) + offset);
+    typedTable += reservedCount;
+    regAllocated += reservedCount;
+    for (uint32 i = reservedCount; i < constCount; ++i)
+    {
+        uint32 reg = regAllocated++;
+        T constVal = *typedTable++;
+        IR::RegOpnd * dstOpnd = BuildDstOpnd(reg, irType);
+        Assert(RegIsConstant(reg));
+        dstOpnd->m_sym->SetIsFromByteCodeConstantTable();
+        dstOpnd->SetValueType(valueType);
+
+        IR::Instr *instr = IR::Instr::New(opcode, dstOpnd, ConstOpnd::New(constVal, irType, m_func), m_func);
+
+        extraProcess(instr, constVal);
+        AddInstr(instr, Js::Constants::NoByteCodeOffset);
+    }
+}
+
 void
 IRBuilderAsmJs::BuildConstantLoads()
 {
     Js::AsmJsFunctionInfo* asmJsFuncInfo = m_func->GetJnFunction()->GetAsmJsFunctionInfoWithLock();
-    uint32 intConstCount = asmJsFuncInfo->GetIntConstCount();
-    uint32 floatConstCount = asmJsFuncInfo->GetFloatConstCount();
-    uint32 doubleConstCount = asmJsFuncInfo->GetDoubleConstCount();
     Js::Var * constTable = m_func->GetJnFunction()->GetConstTable();
 
     // Load FrameDisplay
@@ -739,120 +768,106 @@ IRBuilderAsmJs::BuildConstantLoads()
         return;
     }
 
+    const WAsmJs::TypedConstsInfo& infos = asmJsFuncInfo->GetTypedConstsInfo();
     uint32 regAllocated = AsmJsRegSlots::RegCount;
-
-    // build int const loads
-
-    int * intConstTable = reinterpret_cast<int *>(constTable + Js::AsmJsFunctionMemory::RequiredVarConstants - 1);
-
-    for (Js::RegSlot reg = Js::FunctionBody::FirstRegSlot; reg < intConstCount; ++reg)
+    Js::Var table = constTable;
+    for (int i = 0; i < WAsmJs::RegisterSpace::LIMIT; ++i)
     {
-        int32 intConst = intConstTable[reg];
-
-        IR::RegOpnd * dstOpnd = BuildDstOpnd(regAllocated + Js::FunctionBody::FirstRegSlot, TyInt32);
-        Assert(RegIsConstant(reg));
-        dstOpnd->m_sym->SetIsFromByteCodeConstantTable();
-        dstOpnd->SetValueType(ValueType::GetInt(false));
-
-        IR::Instr *instr = IR::Instr::New(Js::OpCode::Ld_I4, dstOpnd, IR::IntConstOpnd::New(intConst, TyInt32, m_func), m_func);
-
-        if (dstOpnd->m_sym->IsSingleDef())
+        WAsmJs::RegisterSpace::Types type = (WAsmJs::RegisterSpace::Types)i;
+        const WAsmJs::TypedConstsInfo::TypedConstInfo& info = infos[type];
+        switch(type)
         {
-            dstOpnd->m_sym->SetIsIntConst(intConst);
-        }
-
-        AddInstr(instr, Js::Constants::NoByteCodeOffset);
-
-        ++regAllocated;
-    }
-
-    // do the same for float constants
-
-    // Space for F0
-    ++regAllocated;
-
-    float * floatConstTable = reinterpret_cast<float *>(intConstTable + intConstCount);
-
-    for (Js::RegSlot reg = Js::FunctionBody::FirstRegSlot; reg < floatConstCount; ++reg)
-    {
-        float floatConst = floatConstTable[reg];
-
-        IR::RegOpnd * dstOpnd = BuildDstOpnd(regAllocated + Js::FunctionBody::FirstRegSlot, TyFloat32);
-        Assert(RegIsConstant(reg));
-        dstOpnd->m_sym->SetIsFromByteCodeConstantTable();
-        dstOpnd->SetValueType(ValueType::Float);
-
-        IR::Instr *instr = IR::Instr::New(Js::OpCode::LdC_F8_R8, dstOpnd, IR::FloatConstOpnd::New(floatConst, TyFloat32, m_func), m_func);
-
+        case WAsmJs::RegisterSpace::INT64: break;
+        case WAsmJs::RegisterSpace::INT32:
+            CreateLoadConstInstrForType<int32, IR::IntConstOpnd>(
+                table,
+                regAllocated,
+                info.reserved,
+                info.count,
+                info.byteOffset,
+                TyInt32,
+                ValueType::GetInt(false),
+                Js::OpCode::Ld_I4,
+                [](IR::Instr* instr, int32 val)
+                {
+                    IR::RegOpnd* dstOpnd = instr->GetDst()->AsRegOpnd();
+                    if (dstOpnd->m_sym->IsSingleDef())
+                    {
+                        dstOpnd->m_sym->SetIsIntConst(val);
+                    }
+                }
+            );
+            break;
+        case WAsmJs::RegisterSpace::FLOAT32:
+            CreateLoadConstInstrForType<float, IR::FloatConstOpnd>(
+                table,
+                regAllocated,
+                info.reserved,
+                info.count,
+                info.byteOffset,
+                TyFloat32,
+                ValueType::Float,
+                Js::OpCode::LdC_F8_R8,
+                [](IR::Instr* instr, float val)
+            {
 #if _M_IX86
-        if (dstOpnd->m_sym->IsSingleDef())
-        {
-            dstOpnd->m_sym->SetIsFloatConst();
-        }
+                IR::RegOpnd* dstOpnd = instr->GetDst()->AsRegOpnd();
+                if (dstOpnd->m_sym->IsSingleDef())
+                {
+                    dstOpnd->m_sym->SetIsFloatConst();
+                }
 #endif
-
-        AddInstr(instr, Js::Constants::NoByteCodeOffset);
-
-        ++regAllocated;
-    }
-
-    // ... and doubles
-
-    // Space for D0
-    ++regAllocated;
-    double * doubleConstTable = reinterpret_cast<double *>(floatConstTable + floatConstCount);
-
-    for (Js::RegSlot reg = Js::FunctionBody::FirstRegSlot; reg < doubleConstCount; ++reg)
-    {
-        double doubleConst = doubleConstTable[reg];
-
-        IR::RegOpnd * dstOpnd = BuildDstOpnd(regAllocated + Js::FunctionBody::FirstRegSlot, TyFloat64);
-        Assert(RegIsConstant(reg));
-        dstOpnd->m_sym->SetIsFromByteCodeConstantTable();
-        dstOpnd->SetValueType(ValueType::Float);
-
-        IR::Instr *instr = IR::Instr::New(Js::OpCode::LdC_F8_R8, dstOpnd, IR::FloatConstOpnd::New(doubleConst, TyFloat64, m_func), m_func);
-
+            }
+            );
+            break;
+        case WAsmJs::RegisterSpace::FLOAT64:
+            CreateLoadConstInstrForType<double, IR::FloatConstOpnd>(
+                table,
+                regAllocated,
+                info.reserved,
+                info.count,
+                info.byteOffset,
+                TyFloat64,
+                ValueType::Float,
+                Js::OpCode::LdC_F8_R8,
+                [](IR::Instr* instr, double val)
+                {
 #if _M_IX86
-        if (dstOpnd->m_sym->IsSingleDef())
-        {
-            dstOpnd->m_sym->SetIsFloatConst();
-        }
+                    IR::RegOpnd* dstOpnd = instr->GetDst()->AsRegOpnd();
+                    if (dstOpnd->m_sym->IsSingleDef())
+                    {
+                        dstOpnd->m_sym->SetIsFloatConst();
+                    }
 #endif
-
-        AddInstr(instr, Js::Constants::NoByteCodeOffset);
-
-        ++regAllocated;
-    }
-
-    uint32 simdConstCount = asmJsFuncInfo->GetSimdConstCount();
-    // Space for SIMD0
-    ++regAllocated;
-    AsmJsSIMDValue *simdConstTable = reinterpret_cast<AsmJsSIMDValue *>(doubleConstTable + doubleConstCount);
-
-    for (Js::RegSlot reg = Js::FunctionBody::FirstRegSlot; reg < simdConstCount; ++reg)
-    {
-        AsmJsSIMDValue simdConst = simdConstTable[reg];
-
-        // Simd constants are not sub-typed, we pick any IR type for now, when the constant is actually used (Ld_A to a variable), we type the variable from the opcode.
-        IR::RegOpnd * dstOpnd = BuildDstOpnd(regAllocated + Js::FunctionBody::FirstRegSlot, TySimd128F4);
-        Assert(RegIsConstant(reg));
-        dstOpnd->m_sym->SetIsFromByteCodeConstantTable();
-        // Constants vars are generic SIMD128 values, no sub-type. We currently don't have top SIMD128 type in ValueType, since it is not needed by globOpt.
-        // However, for ASMJS, the IR type is enough to tell us it is a Simd128 value.
-        dstOpnd->SetValueType(ValueType::UninitializedObject);
-
-        IR::Instr *instrLdC = IR::Instr::New(Js::OpCode::Simd128_LdC, dstOpnd, IR::Simd128ConstOpnd::New(simdConst, TySimd128F4, m_func), m_func);
-
+                }
+            );
+            break;
+        case WAsmJs::RegisterSpace::SIMD:
+            CreateLoadConstInstrForType<AsmJsSIMDValue, IR::Simd128ConstOpnd>(
+                table,
+                regAllocated,
+                info.reserved,
+                info.count,
+                info.byteOffset,
+                TySimd128F4,
+                ValueType::UninitializedObject,
+                Js::OpCode::Simd128_LdC,
+                [](IR::Instr* instr, AsmJsSIMDValue val)
+                {
 #if _M_IX86
-        if (dstOpnd->m_sym->IsSingleDef())
-        {
-            dstOpnd->m_sym->SetIsSimd128Const();
-        }
+                    IR::RegOpnd* dstOpnd = instr->GetDst()->AsRegOpnd();
+                    if (dstOpnd->m_sym->IsSingleDef())
+                    {
+                        dstOpnd->m_sym->SetIsSimd128Const();
+                    }
 #endif
-
-        AddInstr(instrLdC, Js::Constants::NoByteCodeOffset);
-        ++regAllocated;
+                }
+            );
+            break;
+        default:
+            Assert(false);
+            break;
+        }
     }
 }
 
@@ -923,7 +938,7 @@ IRBuilderAsmJs::BuildImplicitArgIns()
             ++simd128ArgInCount;
             break;
         }
-        
+
         }
 
         AddInstr(instr, Js::Constants::NoByteCodeOffset);
@@ -4049,7 +4064,7 @@ IRBuilderAsmJs::BuildInt32x4_2(Js::OpCodeAsmJs newOpcode, uint32 offset)
 
     Js::RegSlot dstRegSlot = GetRegSlotFromSimd128Reg(layout->I4_0);
     Js::RegSlot src1RegSlot = GetRegSlotFromSimd128Reg(layout->I4_1);
-    
+
     BuildSimd_2(newOpcode, offset, dstRegSlot, src1RegSlot, TySimd128I4);
 }
 
@@ -4136,7 +4151,7 @@ void IRBuilderAsmJs::BuildInt32x4_1Int4(Js::OpCodeAsmJs newOpcode, uint32 offset
     srcRegSlot[1] = GetRegSlotFromIntReg(layout->I2);
     srcRegSlot[2] = GetRegSlotFromIntReg(layout->I3);
     srcRegSlot[3] = GetRegSlotFromIntReg(layout->I4);
-    
+
     BuildSimd_1Ints(newOpcode, offset, TySimd128I4, srcRegSlot, dstRegSlot, LANES);
 }
 
@@ -4714,7 +4729,7 @@ void IRBuilderAsmJs::BuildInt8x16_3Int16(Js::OpCodeAsmJs newOpcode, uint32 offse
 
     instr = AddExtendedArg(src1Opnd, nullptr, offset);
     instr = AddExtendedArg(src2Opnd, instr->GetDst()->AsRegOpnd(), offset);
-    
+
     for (int i = 0; i < 16; ++i)
     {
         instr = AddExtendedArg(srcOpnds[i], instr->GetDst()->AsRegOpnd(), offset);
@@ -4760,7 +4775,7 @@ void IRBuilderAsmJs::BuildInt8x16_2Int16(Js::OpCodeAsmJs newOpcode, uint32 offse
     IR::Instr * instr = nullptr;
     dstOpnd->SetValueType(ValueType::GetSimd128(ObjectType::Simd128Int8x16));
     src1Opnd->SetValueType(ValueType::GetSimd128(ObjectType::Simd128Int8x16));
-    
+
     instr = AddExtendedArg(src1Opnd, nullptr, offset);
 
     for (int i = 0; i < 16; ++i)
@@ -7475,7 +7490,7 @@ IRBuilderAsmJs::BuildBool32x4_1Int1(Js::OpCodeAsmJs newOpcode, uint32 offset)
     Js::RegSlot src1RegSlot = GetRegSlotFromIntReg(layout->I1);
     Assert(newOpcode == Js::OpCodeAsmJs::Simd128_Splat_B4);
     BuildSimd_1Int1(newOpcode, offset, dstRegSlot, src1RegSlot, TySimd128B4);
- 
+
 }
 
 // bool16x8
@@ -7552,7 +7567,7 @@ ValueType IRBuilderAsmJs::GetSimdValueTypeFromIRType(IRType type)
         Assert(UNREACHED);
     }
     return ValueType::GetObject(ObjectType::UninitializedObject);
-    
+
 }
 
 void IRBuilderAsmJs::BuildSimd_1Ints(Js::OpCodeAsmJs newOpcode, uint32 offset, IRType dstSimdType, Js::RegSlot* srcRegSlots, Js::RegSlot dstRegSlot, uint LANES)

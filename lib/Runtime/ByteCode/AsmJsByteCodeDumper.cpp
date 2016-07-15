@@ -239,8 +239,7 @@ namespace Js
 
     void AsmJsByteCodeDumper::DumpConstants(AsmJsFunc* func, FunctionBody* body)
     {
-        void* constTable = ((Var*)body->GetConstTable() + (AsmJsFunctionMemory::RequiredVarConstants - 1));
-        func->DumpConstants(constTable);
+        func->DumpConstants(body->GetConstTable());
     }
 
     void AsmJsByteCodeDumper::DumpOp(OpCodeAsmJs op, LayoutSize layoutSize, ByteCodeReader& reader, FunctionBody* dumpFunction)

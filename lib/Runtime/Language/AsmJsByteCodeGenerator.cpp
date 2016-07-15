@@ -119,7 +119,6 @@ namespace Js
         FunctionBody *funcBody = mFunction->GetFuncBody();
         funcBody->CreateConstantTable();
         Var* table = funcBody->GetConstTable();
-        table += AsmJsFunctionMemory::RequiredVarConstants - 1; // we do -1 here as the VarConstant count is zero-based calculation
         mFunction->WriteConstToTable(table);
     }
 
@@ -128,7 +127,9 @@ namespace Js
         // this value is the number of Var slots needed to allocate all the const
         int nbConst = mFunction->GetConstVarCount() + AsmJsFunctionMemory::RequiredVarConstants;
         byteCodeFunction->CheckAndSetConstantCount(nbConst);
-
+#if !DBG_DUMP
+        todo micfer check if this needs to be updated since we might not have a return register for every type
+#endif
         // add 3 for each of I0, F0, and D0
         RegSlot regCount = mInfo->RegCount() + 3 + AsmJsFunctionMemory::RequiredVarConstants;
 

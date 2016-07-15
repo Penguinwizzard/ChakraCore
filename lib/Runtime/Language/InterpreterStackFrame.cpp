@@ -2862,7 +2862,7 @@ namespace Js
             if (doSchedule && !functionBody->GetIsAsmJsFullJitScheduled())
             {
 #if ENABLE_NATIVE_CODEGEN
-                if (PHASE_TRACE1(AsmjsEntryPointInfoPhase))
+                if (PHASE_TRACE(AsmjsEntryPointInfoPhase, functionBody))
                 {
                     Output::Print(_u("Scheduling For Full JIT from Interpreter at callcount:%d\n"), callCount);
                 }
@@ -2871,52 +2871,6 @@ namespace Js
                 functionBody->SetIsAsmJsFullJitScheduled(true);
             }
         }
-        AsmJsFunctionInfo* info = functionBody->GetAsmJsFunctionInfo();
-        const int intConstCount = info->GetIntConstCount();
-        const int doubleConstCount = info->GetDoubleConstCount();
-        const int floatConstCount = info->GetFloatConstCount();
-
-        const int simdConstCount = info->GetSimdConstCount();
-
-        // Offset of doubles from (double*)m_localSlot
-        const int intOffset = info->GetIntByteOffset() / sizeof(int);
-        const int doubleOffset = info->GetDoubleByteOffset() / sizeof(double);
-        const int floatOffset = info->GetFloatByteOffset() / sizeof(float);
-
-        const int simdByteOffset = info->GetSimdByteOffset();// in bytes;
-
-
-        int* intSrc = (int*)(m_localSlots + AsmJsFunctionMemory::RequiredVarConstants);
-
-        // Where all int value starts
-        m_localIntSlots = ((int*)m_localSlots) + intOffset;
-        // where int arguments starts
-        // int* intArgDst = m_localIntSlots + intConstCount;
-
-        // Where float constants currently are
-        float* floatSrc = (float*)(intSrc + intConstCount);
-        // where all float value starts with the new layout
-        m_localFloatSlots = ((float*)m_localSlots) + floatOffset;
-
-        // Where double arguments starts
-        // float* floatArgDst = m_localFloatSlots + floatConstCount;
-
-        // Where double constants currently are
-        double* doubleSrc = (double*)(floatSrc + floatConstCount);
-
-        // where all double value starts
-        m_localDoubleSlots = ((double*)m_localSlots) + doubleOffset;
-        // Where double arguments starts
-        // double* doubleArgDst = m_localDoubleSlots + doubleConstCount;
-
-
-        AsmJsSIMDValue* simdSrc = nullptr;
-        if (scriptContext->GetConfig()->IsSimdjsEnabled())
-        {
-            simdSrc = (AsmJsSIMDValue*)(doubleSrc + doubleConstCount);
-            m_localSimdSlots = (AsmJsSIMDValue*)((char*)m_localSlots + simdByteOffset);
-        }
-
         // Load module environment
         FrameDisplay* frame = this->function->GetEnvironment();
         m_localSlots[AsmJsFunctionMemory::ModuleEnvRegister] = frame->GetItem(0);
@@ -2924,35 +2878,43 @@ namespace Js
         m_localSlots[AsmJsFunctionMemory::ArraySizeRegister] = 0; // do not cache ArraySize in the interpreter
         m_localSlots[AsmJsFunctionMemory::ScriptContextBufferRegister] = functionBody->GetScriptContext();
 
-        if (PHASE_TRACE1(AsmjsInterpreterStackPhase))
+        AsmJsFunctionInfo* info = functionBody->GetAsmJsFunctionInfo();
+        const WAsmJs::TypedConstsInfo& constInfo = info->GetTypedConstsInfo();
+        struct AsmJsStackType
         {
-            PrintStack(intSrc, floatSrc, doubleSrc, intConstCount, floatConstCount, doubleConstCount, _u("Before Shuffling"));
-        }
+            WAsmJs::RegisterSpace::Types type;
+            void** destination;
+        };
+        AsmJsStackType stackTypes[] = {
+            {WAsmJs::RegisterSpace::INT32, (void**)&m_localIntSlots},
+            {WAsmJs::RegisterSpace::FLOAT32, (void**)&m_localFloatSlots},
+            {WAsmJs::RegisterSpace::FLOAT64, (void**)&m_localDoubleSlots},
+            {WAsmJs::RegisterSpace::SIMD, (void**)&m_localSimdSlots},
+        };
+        const int len = ARRAYSIZE(stackTypes);
 
-        // Copying has to happen in that order in order not to overwrite constants
-        if (scriptContext->GetConfig()->IsSimdjsEnabled())
+        for (int i = 0; i < len; ++i)
         {
-            memcpy_s(m_localSimdSlots, simdConstCount*sizeof(AsmJsSIMDValue), simdSrc, simdConstCount*sizeof(AsmJsSIMDValue));
-        }
-
-        // Moving the double and floats  to their slot position. We must move the doubles first so that we do not overwrite the doubles stack with floats
-        memcpy_s(m_localDoubleSlots, doubleConstCount*sizeof(double), doubleSrc, doubleConstCount*sizeof(double));
-        memcpy_s(m_localFloatSlots, floatConstCount*sizeof(float), floatSrc, floatConstCount*sizeof(float));
-
-        if (PHASE_TRACE1(AsmjsInterpreterStackPhase))
-        {
-            PrintStack(m_localIntSlots, m_localFloatSlots, m_localDoubleSlots, intConstCount, floatConstCount, doubleConstCount, _u("After Shuffling"));
+            const AsmJsStackType& stackType = stackTypes[i];
+            void** destination = (void**)((byte*)m_localSlots) + info->GetTypedSlotInfo(stackType.type).byteOffset;
+            void** source = (void**)((byte*)m_localSlots) + constInfo[stackType.type].byteOffset;
+            *stackType.destination = destination;
+            if (source != destination && constInfo[stackType.type].count)
+            {
+                const int copyByteSize = constInfo[stackType.type].count * WAsmJs::RegisterSpace::GetTypeByteSize(stackType.type);
+                memcpy_s(destination, copyByteSize, source, copyByteSize);
+            }
         }
 
         int* intArg;
         double* doubleArg;
         float* floatArg;
 
-        intArg = m_localIntSlots + intConstCount;
-        doubleArg = m_localDoubleSlots + doubleConstCount;
-        floatArg = m_localFloatSlots + floatConstCount;
+        intArg = m_localIntSlots + constInfo[WAsmJs::RegisterSpace::INT32].count;
+        doubleArg = m_localDoubleSlots + constInfo[WAsmJs::RegisterSpace::FLOAT64].count;
+        floatArg = m_localFloatSlots + constInfo[WAsmJs::RegisterSpace::FLOAT32].count;
 
-        AsmJsSIMDValue* simdArg = m_localSimdSlots + simdConstCount;
+        AsmJsSIMDValue* simdArg = m_localSimdSlots + constInfo[WAsmJs::RegisterSpace::SIMD].count;
         // Move the arguments to the right location
         ArgSlot argCount = info->GetArgCount();
 

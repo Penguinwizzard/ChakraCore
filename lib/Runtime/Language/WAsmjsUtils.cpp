@@ -101,8 +101,10 @@ namespace WAsmJs
         return total;
     }
 
-    void TypedRegisterAllocator::CommitToFunctionInfo(Js::AsmJsFunctionInfo* funcInfo)
+    void TypedRegisterAllocator::CommitToFunctionInfo(Js::AsmJsFunctionInfo* funcInfo) const
     {
+        funcInfo->SetTypedConstsInfo(GetTypedConstsInfo());
+
         uint32 offset = Js::AsmJsFunctionMemory::RequiredVarConstants * sizeof(Js::Var);
 #if DBG_DUMP
         if (PHASE_TRACE1(Js::AsmjsInterpreterStackPhase))
@@ -127,7 +129,7 @@ namespace WAsmJs
                 slotInfo.varCount = registerSpace->GetVarCount();
                 slotInfo.tmpCount = registerSpace->GetTmpCount();
                 offset = Math::AlignOverflowCheck(offset, RegisterSpace::GetTypeByteSize(type));
-                slotInfo.offset = offset;
+                slotInfo.byteOffset = offset;
 
                 funcInfo->SetTypedSlotInfo(type, slotInfo);
 #if DBG_DUMP
@@ -137,7 +139,7 @@ namespace WAsmJs
                     RegisterSpace::GetTypeDebugName(type, buf, 16);
                     Output::Print(_u("%s Offset:%d  ConstCount:%d  VarCount:%d  TmpCount:%d\n"),
                                   buf,
-                                  slotInfo.offset,
+                                  slotInfo.byteOffset,
                                   slotInfo.constCount,
                                   slotInfo.varCount,
                                   slotInfo.tmpCount);
@@ -161,26 +163,27 @@ namespace WAsmJs
 #endif
     }
 
-    template<typename T> void WriteConstToTableForType(void** table, RegisterSpace* registerSpace, void* constSpace, T zero)
+    template<typename T> void WriteConstToTableForType(void* table, RegisterSpace* registerSpace, void* constSpace, uint32 offset, T zero)
     {
-        T* tmpTable = (T*)*table;
+        T* typedTable = (T*)(((byte*)table) + offset);
         auto map = ((ConstRegisterSpace<T>*)constSpace)->GetConstMap();
         for (int j = registerSpace->GetReservedCount(); j > 0; --j)
         {
-            *tmpTable = zero;
-            ++tmpTable;
+            *typedTable = zero;
+            ++typedTable;
         }
+        Assert((uint32)map.Count() == (uint32)(registerSpace->GetConstCount() - registerSpace->GetReservedCount()));
         for (auto it = map.GetIterator(); it.IsValid(); it.MoveNext())
         {
             auto &entry = it.Current();
-            *tmpTable = entry.Key();
-            tmpTable++;
+            *typedTable = entry.Key();
+            typedTable++;
         }
-        *table = (void*)tmpTable;
     }
 
     void TypedRegisterAllocator::WriteConstToTable(void* table)
     {
+        TypedConstsInfo info = GetTypedConstsInfo();
         for (int i = 0; i < RegisterSpace::LIMIT; ++i)
         {
             RegisterSpace::Types type = (RegisterSpace::Types)i;
@@ -193,21 +196,21 @@ namespace WAsmJs
                 switch(type)
                 {
                 case RegisterSpace::INT32:
-                    WriteConstToTableForType<int>(&table, registerSpace, constSpace, 0);
+                    WriteConstToTableForType<int>(table, registerSpace, constSpace, info[type].byteOffset, 0);
                     break;
                 case RegisterSpace::INT64:
-                    WriteConstToTableForType<int64>(&table, registerSpace, constSpace, 0);
+                    WriteConstToTableForType<int64>(table, registerSpace, constSpace, info[type].byteOffset, 0);
                     break;
                 case RegisterSpace::FLOAT32:
-                    WriteConstToTableForType<float>(&table, registerSpace, constSpace, 0.f);
+                    WriteConstToTableForType<float>(table, registerSpace, constSpace, info[type].byteOffset, 0.f);
                     break;
                 case RegisterSpace::FLOAT64:
-                    WriteConstToTableForType<double>(&table, registerSpace, constSpace, 0.0);
+                    WriteConstToTableForType<double>(table, registerSpace, constSpace, info[type].byteOffset, 0.0);
                     break;
                 case RegisterSpace::SIMD:
                     AsmJsSIMDValue zero;
                     zero.Zero();
-                    WriteConstToTableForType<AsmJsSIMDValue>(&table, registerSpace, constSpace, zero);
+                    WriteConstToTableForType<AsmJsSIMDValue>(table, registerSpace, constSpace, info[type].byteOffset, zero);
                     break;
                 case RegisterSpace::LIMIT:
                 default:
@@ -227,10 +230,41 @@ namespace WAsmJs
         return GetRegisterSpace(type)->GetTotalVariablesCount() > 0;
     }
 
-#if DBG_DUMP
-    template<typename T, typename F> void DumpConstantsForType(void** table, char16* typeName, char16* shortTypeName, uint32 start, uint32 constCount, F printFn)
+    WAsmJs::TypedConstsInfo TypedRegisterAllocator::GetTypedConstsInfo() const
     {
-        T* typedTable = (T*)*table;
+        WAsmJs::TypedConstsInfo infos;
+        // offset is in Js::Var size
+        uint32 offset = Js::AsmJsFunctionMemory::RequiredVarConstants * sizeof(Js::Var);
+        for (int i = 0; i < RegisterSpace::LIMIT; ++i)
+        {
+            RegisterSpace::Types type = (RegisterSpace::Types)i;
+            WAsmJs::TypedConstsInfo::TypedConstInfo& info = infos[type];
+
+            // Check if we don't want to commit this type
+            if (IsTypeUsed(type))
+            {
+                RegisterSpace* registerSpace = GetRegisterSpace(type);
+                uint32 typeSize = RegisterSpace::GetTypeByteSize(type);
+                info.count = registerSpace->GetConstCount();
+                info.reserved = registerSpace->GetReservedCount();
+                offset = Math::AlignOverflowCheck(offset, typeSize);
+                info.byteOffset = offset;
+                offset = UInt32Math::Add(offset, UInt32Math::Mul(info.count, RegisterSpace::GetTypeByteSize(type)));
+            }
+            else
+            {
+                info.count = 0;
+                info.byteOffset = 0;
+                info.reserved = 0;
+            }
+        }
+        return infos;
+    }
+
+#if DBG_DUMP
+    template<typename T, typename F> void DumpConstantsForType(void* table, char16* typeName, char16* shortTypeName, uint32 start, uint32 constCount, uint32 offset, F printFn)
+    {
+        T* typedTable = (T*)(((byte*)table) + offset);
         if (constCount > 0) 
         {
             Output::Print(_u("    Constant %s:\n    ======== =======\n    "));
@@ -245,10 +279,11 @@ namespace WAsmJs
                 ++typedTable;
             }
         }
-        *table = (void*)typedTable;
     }
+
     void TypedRegisterAllocator::DumpConstants(void* table) const
     {
+        TypedConstsInfo info = GetTypedConstsInfo();
         for (int i = 0; i < RegisterSpace::LIMIT; ++i)
         {
             RegisterSpace::Types type = (RegisterSpace::Types)i;
@@ -270,27 +305,27 @@ namespace WAsmJs
                 switch(type)
                 {
                 case RegisterSpace::INT32:
-                    DumpConstantsForType<int>(&table, typeName, shortTypeName, start, constCount, [](int i, int val) -> void {
+                    DumpConstantsForType<int>(table, typeName, shortTypeName, start, constCount, info[type].byteOffset, [](int i, int val) -> void {
                         Output::Print(_u("%d  %d\n    "), i, val);
                     });
                     break;
                 case RegisterSpace::INT64:
-                    DumpConstantsForType<int64>(&table, typeName, shortTypeName, start, constCount, [](int i, int64 val) {
+                    DumpConstantsForType<int64>(table, typeName, shortTypeName, start, constCount, info[type].byteOffset, [](int i, int64 val) {
                         Output::Print(_u("%d  %lld\n    "), i, val);
                     });
                     break;
                 case RegisterSpace::FLOAT32:
-                    DumpConstantsForType<float>(&table, typeName, shortTypeName, start, constCount, [](int i, float val) {
+                    DumpConstantsForType<float>(table, typeName, shortTypeName, start, constCount, info[type].byteOffset, [](int i, float val) {
                         Output::Print(_u("%d  %.4f\n    "), i, val);
                     });
                     break;
                 case RegisterSpace::FLOAT64:
-                    DumpConstantsForType<double>(&table, typeName, shortTypeName, start, constCount, [](int i, double val) {
+                    DumpConstantsForType<double>(table, typeName, shortTypeName, start, constCount, info[type].byteOffset, [](int i, double val) {
                         Output::Print(_u("%d  %.4f\n    "), i, val);
                     });
                     break;
                 case RegisterSpace::SIMD:
-                    DumpConstantsForType<SIMDValue>(&table, typeName, shortTypeName, start, constCount, [](int i, SIMDValue val) {
+                    DumpConstantsForType<SIMDValue>(table, typeName, shortTypeName, start, constCount, info[type].byteOffset, [](int i, SIMDValue val) {
                         SIMDValue* value = &val;
                         Output::Print(_u("%d\n"), i);
                         Output::Print(_u("    I4(%d, %d, %d, %d),\n"), value->i32[SIMD_X], value->i32[SIMD_Y], value->i32[SIMD_Z], value->i32[SIMD_W]);

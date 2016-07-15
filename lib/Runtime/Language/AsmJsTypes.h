@@ -766,6 +766,7 @@ namespace Js
     class AsmJsFunctionInfo
     {
         WAsmJs::TypedSlotInfo mTypedSlotInfos[WAsmJs::RegisterSpace::LIMIT];
+        WAsmJs::TypedConstsInfo mTypedConstsInfo;
         ArgSlot mArgCount;
         AsmJsVarType::Which * mArgType;
         ArgSlot mArgSizesLength;
@@ -794,6 +795,15 @@ namespace Js
         typedef JsUtil::BaseDictionary<int, ptrdiff_t, Recycler> ByteCodeToTJMap;
         ByteCodeToTJMap* mbyteCodeTJMap;
         BYTE* mTJBeginAddress;
+
+        void SetTypedConstsInfo(const WAsmJs::TypedConstsInfo& info)
+        {
+            mTypedConstsInfo = info;
+        }
+        const WAsmJs::TypedConstsInfo& GetTypedConstsInfo() const
+        {
+            return mTypedConstsInfo;
+        }
         void SetTypedSlotInfo(WAsmJs::RegisterSpace::Types type, const WAsmJs::TypedSlotInfo& info)
         {
             Assert((uint)type < WAsmJs::RegisterSpace::LIMIT);
@@ -812,11 +822,11 @@ namespace Js
             Js::Throw::InternalError();
         }
 #define TYPED_SLOT_INFO_GETTER_SETTER(name, type) \
-        int Get##name##ByteOffset() const   { return mTypedSlotInfos[WAsmJs::RegisterSpace::##type].offset; }\
+        int Get##name##ByteOffset() const   { return mTypedSlotInfos[WAsmJs::RegisterSpace::##type].byteOffset; }\
         int Get##name##ConstCount() const   { return mTypedSlotInfos[WAsmJs::RegisterSpace::##type].constCount; }\
         int Get##name##TmpCount() const     { return mTypedSlotInfos[WAsmJs::RegisterSpace::##type].tmpCount; }\
         int Get##name##VarCount() const     { return mTypedSlotInfos[WAsmJs::RegisterSpace::##type].varCount; }\
-        void Set##name##ByteOffset(int val) { mTypedSlotInfos[WAsmJs::RegisterSpace::##type].offset = val; }\
+        void Set##name##ByteOffset(int val) { mTypedSlotInfos[WAsmJs::RegisterSpace::##type].byteOffset = val; }\
         void Set##name##ConstCount(int val) { mTypedSlotInfos[WAsmJs::RegisterSpace::##type].constCount = val; }\
         void Set##name##TmpCount(int val)   { mTypedSlotInfos[WAsmJs::RegisterSpace::##type].tmpCount = val; }\
         void Set##name##VarCount(int val)   { mTypedSlotInfos[WAsmJs::RegisterSpace::##type].varCount = val; }

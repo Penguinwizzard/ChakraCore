@@ -21,7 +21,7 @@ namespace WAsmJs
         uint64 tmp = ptr * fromSize;
         tmp = Math::Align<uint64>(tmp, sizeof(ToType));
         tmp /= sizeof(ToType);
-        if (tmp > (uint64)UINT32_MAX) 
+        if (tmp > (uint64)UINT32_MAX)
         {
             Math::DefaultOverflowPolicy();
         }
@@ -57,7 +57,7 @@ namespace WAsmJs
     {
         // number of const, includes the reserved slots
         RegSlot    mNbConst;
-        
+
         // Total number of register allocated
         RegSlot   mRegisterCount;
 
@@ -317,7 +317,19 @@ namespace WAsmJs
         uint32 constCount;
         uint32 varCount;
         uint32 tmpCount;
-        uint32 offset;
+        uint32 byteOffset;
+    };
+
+    struct TypedConstsInfo
+    {
+        struct TypedConstInfo
+        {
+            uint32 byteOffset;
+            uint32 reserved;
+            uint32 count;
+        } infos[RegisterSpace::LIMIT];
+        TypedConstInfo& operator[](int i) {return infos[i];}
+        const TypedConstInfo& operator[](int i) const {return infos[i];}
     };
 
     class TypedRegisterAllocator
@@ -342,10 +354,10 @@ namespace WAsmJs
 
         // Whole allocator methods
         uint32 GetTotalJsVarCount(bool constOnly = false) const;
-        void CommitToFunctionInfo(Js::AsmJsFunctionInfo* funcInfo);
+        void CommitToFunctionInfo(Js::AsmJsFunctionInfo* funcInfo) const;
         void WriteConstToTable(void* table);
         bool IsTypeUsed(RegisterSpace::Types type) const;
-
+        TypedConstsInfo GetTypedConstsInfo() const;
 #if DBG_DUMP
         // Dumpers
         void DumpConstants(void* table) const;
