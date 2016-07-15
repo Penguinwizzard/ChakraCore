@@ -10329,6 +10329,13 @@ Lowerer::HasSideEffects(IR::Instr *instr)
     return instr->HasAnySideEffects();
 }
 
+
+bool Lowerer::IsArgSaveRequired(Func *func) {
+    return (!func->IsTrueLeaf() || func->IsJitInDebugMode() ||
+        func->GetJnFunction()->GetIsAsmjsMode() || func->IsGeneratorFunc() || func->IsLambda() ||
+        func->GetHasThrow() || func->GetHasImplicitParamLoad() || func->HasThis() || func->argInsCount > 0);
+}
+
 IR::Instr*
 Lowerer::GenerateFastInlineBuiltInMathRandom(IR::Instr* instr)
 {

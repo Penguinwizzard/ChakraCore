@@ -1140,7 +1140,6 @@ LowererMDArch::LowerCall(IR::Instr * callInstr, uint32 argCount, RegNum regNum)
     // This is required here due to calls created during lowering
     callInstr->m_func->SetHasCalls();
 
-
     if (callInstr->GetDst())
     {
         IR::Opnd *       dstOpnd = callInstr->GetDst();

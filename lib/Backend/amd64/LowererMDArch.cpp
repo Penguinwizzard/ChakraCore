@@ -11,13 +11,6 @@ const Js::OpCode LowererMD::MDExtend32Opcode = Js::OpCode::MOVSXD;
 
 extern const IRType RegTypes[RegNumCount];
 
-bool
-LowererMDArch::IsArgSaveRequired(Func *func) {
-    return (!func->IsTrueLeaf() || func->IsJitInDebugMode() ||
-        func->GetJnFunction()->GetIsAsmjsMode() || func->IsGeneratorFunc() || func->IsLambda() ||
-        func->GetHasThrow() || func->GetHasImplicitParamLoad() || func->HasThis() || func->argInsCount > 0);
-}
-
 BYTE
 LowererMDArch::GetDefaultIndirScale()
 {
@@ -1293,7 +1286,6 @@ LowererMDArch::GenerateStackAllocation(IR::Instr *instr, uint32 size)
                 this->m_func);
 
             instr->InsertAfter(movHelperAddrInstr);
-            instr->m_func->SetHasCalls();
         }
 
         LowererMD::CreateAssign(raxOpnd, stackSizeOpnd, instr->m_next);
@@ -1390,7 +1382,7 @@ LowererMDArch::LowerEntryInstr(IR::EntryInstr * entryInstr)
     //
     uint32 argSlotsForFunctionsCalled = this->m_func->m_argSlotsForFunctionsCalled;
 
-    if (IsArgSaveRequired(this->m_func))
+    if (Lowerer::IsArgSaveRequired(this->m_func))
     {
         if (argSlotsForFunctionsCalled < 4)
             argSlotsForFunctionsCalled = 4;

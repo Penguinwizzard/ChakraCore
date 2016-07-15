@@ -96,7 +96,6 @@ public:
 
     IR::Instr *         LoadCheckedFloat(IR::RegOpnd *opndOrig, IR::RegOpnd *opndFloat, IR::LabelInstr *labelInline, IR::LabelInstr *labelHelper, IR::Instr *instrInsert, const bool checkForNullInLoopBody = false);
 
-    static bool         IsArgSaveRequired(Func *func);
     static BYTE         GetDefaultIndirScale();
     static RegNum       GetRegShiftCount();
     static RegNum       GetRegReturn(IRType type);

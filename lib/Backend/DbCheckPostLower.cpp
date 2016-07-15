@@ -180,7 +180,6 @@ DbCheckPostLower::Check()
                 Assert(!instr->m_func->IsTrueLeaf());
                 break;
             }
-            break;
 #endif
         }
     } NEXT_INSTR_IN_FUNC_EDITING;
