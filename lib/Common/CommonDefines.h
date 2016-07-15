@@ -101,9 +101,13 @@
 #define SUPPORT_FIXED_FIELDS_ON_PATH_TYPES          // *** TODO: Won't build if disabled currently
 
 // xplat-todo: revisit these features
-#ifdef _WIN32
 // dep: TIME_ZONE_INFORMATION, DaylightTimeHelper, Windows.Globalization
 #define ENABLE_GLOBALIZATION
+
+#ifdef _WIN32
+// dep: FindResource/LoadResource
+#define ENABLE_MODULE_RESOURCES
+
 // dep: IDebugDocumentContext
 #define ENABLE_SCRIPT_DEBUGGING
 // dep: IActiveScriptProfilerCallback, IActiveScriptProfilerHeapEnum

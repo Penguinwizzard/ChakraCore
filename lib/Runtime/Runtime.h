@@ -366,7 +366,7 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "Base/SourceHolder.h"
 #include "Base/Utf8SourceInfo.h"
 #include "Base/PropertyRecord.h"
-#ifdef ENABLE_GLOBALIZATION
+#if defined(ENABLE_GLOBALIZATION) && defined(_WIN32)
 #include "Base/DelayLoadLibrary.h"
 #endif
 #include "Base/CallInfo.h"

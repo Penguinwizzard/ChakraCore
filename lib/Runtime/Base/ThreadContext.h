@@ -746,7 +746,7 @@ private:
     // If all try/catch blocks in the current stack marked as non-user code then this member will remain false.
     bool hasCatchHandlerToUserCode;
 
-#ifdef ENABLE_GLOBALIZATION
+#if defined(ENABLE_GLOBALIZATION) && defined(_WIN32)
     Js::DelayLoadWinRtString delayLoadWinRtString;
 #ifdef ENABLE_PROJECTION
     Js::DelayLoadWinRtError delayLoadWinRtError;
@@ -846,7 +846,7 @@ public:
 
     Js::IsConcatSpreadableCache* GetIsConcatSpreadableCache() { return &isConcatSpreadableCache; }
 
-#ifdef ENABLE_GLOBALIZATION
+#if defined(ENABLE_GLOBALIZATION) && defined(_WIN32)
     Js::DelayLoadWinRtString *GetWinRTStringLibrary();
 #ifdef ENABLE_PROJECTION
     Js::DelayLoadWinRtError *GetWinRTErrorLibrary();

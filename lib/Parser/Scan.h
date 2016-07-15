@@ -4,7 +4,7 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
-#ifdef ENABLE_GLOBALIZATION
+#if defined(ENABLE_GLOBALIZATION) && defined(_WIN32)
 namespace Js
 {
     class DelayLoadWindowsGlobalization;
