@@ -817,7 +817,7 @@ namespace Js
         , mDefined(false)
     {
         // 1 is the return register
-        mTypedMemory = Anew(allocator, WAsmJs::TypedRegisterAllocator, allocator, 1, true);
+        mTypedRegisterAllocator = Anew(allocator, WAsmJs::TypedRegisterAllocator, allocator, 1, true);
     }
 
     /// AsmJsFunc
@@ -882,7 +882,7 @@ namespace Js
 
             if (type != WAsmJs::RegisterSpace::LIMIT)
             {
-                mTypedMemory->ReleaseLocation(type, pnode);
+                mTypedRegisterAllocator->ReleaseLocation(type, pnode);
             }
         }
     }

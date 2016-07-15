@@ -11,8 +11,6 @@
 
 namespace WAsmJs
 {
-#if DBG_DUMP
-
     uint32 RegisterSpace::GetTypeByteSize(RegisterSpace::Types type)
     {
         // Since this needs to be done manually for each type, this assert will make sure to not forget to update this if a new type is added
@@ -29,39 +27,30 @@ namespace WAsmJs
         Js::Throw::InternalError();
     }
 
-    void RegisterSpace::PrintTmpRegisterAllocation(RegSlot loc)
+#if DBG_DUMP
+    void RegisterSpace::GetTypeDebugName(Types type, char16* buf, uint bufsize, bool shortName)
     {
-        if (PHASE_ON1(Js::AsmjsTmpRegisterAllocationPhase))
+        // Since this needs to be done manually for each type, this assert will make sure to not forget to update this if a new type is added
+        CompileAssert(LIMIT == 5);
+
+        switch (type)
         {
-            // Since this needs to be done manually for each type, this assert will make sure to not forget to update this if a new type is added
-            CompileAssert(RegisterSpace::LIMIT == 5);
-            switch (mType)
-            {
-            case INT32  : Output::Print(_u("+I32 %d\n"), loc); break;
-            case INT64  : Output::Print(_u("+I64 %d\n"), loc); break;
-            case FLOAT32: Output::Print(_u("+F32 %d\n"), loc); break;
-            case FLOAT64: Output::Print(_u("+F64 %d\n"), loc); break;
-            case SIMD   : Output::Print(_u("+SIMD %d\n"), loc); break;
-            default     : break;
-            }
+        case INT32: wcscpy_s(buf, bufsize  , shortName ? _u("I32"): _u("INT32")); break;
+        case INT64: wcscpy_s(buf, bufsize  , shortName ? _u("I64"): _u("INT64")); break;
+        case FLOAT32: wcscpy_s(buf, bufsize, shortName ? _u("F32"): _u("FLOAT32")); break;
+        case FLOAT64: wcscpy_s(buf, bufsize, shortName ? _u("F64"): _u("FLOAT64")); break;
+        case SIMD: wcscpy_s(buf, bufsize   , _u("SIMD")); break;
+        default: wcscpy_s(buf, bufsize     , _u("UNKNOWN")); break;
         }
     }
 
-    void RegisterSpace::PrintTmpRegisterDeAllocation(RegSlot loc)
+    void RegisterSpace::PrintTmpRegisterAllocation(RegSlot loc, bool deallocation)
     {
-        if (PHASE_ON1(Js::AsmjsTmpRegisterAllocationPhase))
+        if (PHASE_TRACE1(Js::AsmjsTmpRegisterAllocationPhase))
         {
-            // Since this needs to be done manually for each type, this assert will make sure to not forget to update this if a new type is added
-            CompileAssert(RegisterSpace::LIMIT == 5);
-            switch (mType)
-            {
-            case INT32  : Output::Print(_u("-I32 %d\n"), loc); break;
-            case INT64  : Output::Print(_u("-I64 %d\n"), loc); break;
-            case FLOAT32: Output::Print(_u("-F32 %d\n"), loc); break;
-            case FLOAT64: Output::Print(_u("-F64 %d\n"), loc); break;
-            case SIMD   : Output::Print(_u("-SIMD %d\n"), loc); break;
-            default     : break;
-            }
+            char16 buf[16];
+            GetTypeDebugName(mType, buf, 16, true);
+            Output::Print(_u("%s%s %d\n"), deallocation ? _u("-") : _u("+"), buf, loc);
         }
     }
 #endif
@@ -89,21 +78,25 @@ namespace WAsmJs
         }
     }
 
-    uint32 TypedRegisterAllocator::GetJsVarCount(bool constOnly) const
+    uint32 TypedRegisterAllocator::GetJsVarCount(RegisterSpace::Types type, bool constOnly /*= false*/) const
+    {
+        if (IsTypeUsed(type))
+        {
+            RegisterSpace* registerSpace = GetRegisterSpace(type);
+            uint32 typeSize = RegisterSpace::GetTypeByteSize(type);
+            uint32 count = constOnly ? registerSpace->GetConstCount() : registerSpace->GetTotalVariablesCount();
+            return ConvertOffset<Js::Var>(count, typeSize);
+        }
+        return 0;
+    }
+
+    uint32 TypedRegisterAllocator::GetTotalJsVarCount(bool constOnly) const
     {
         uint32 total = 0;
         for (int i = 0; i < RegisterSpace::LIMIT; ++i)
         {
             RegisterSpace::Types type = (RegisterSpace::Types)i;
-            if (IsTypeUsed(type))
-            {
-                RegisterSpace* registerSpace = GetRegisterSpace(type);
-                uint32 typeSize = RegisterSpace::GetTypeByteSize(type);
-                uint32 count = constOnly ? registerSpace->GetConstCount() : registerSpace->GetTotalVariablesCount();
-                uint32 totalVar = UInt32Math::Mul(count, typeSize);
-                totalVar = Math::AlignOverflowCheck<uint32>(totalVar, Js::AsmJsMath::Max<uint32>(sizeof(Js::Var), typeSize));
-                total = UInt32Math::Add(total, totalVar / sizeof(Js::Var));
-            }
+            total = UInt32Math::Add(total, GetJsVarCount(type, constOnly));
         }
         return total;
     }
@@ -111,7 +104,7 @@ namespace WAsmJs
     void TypedRegisterAllocator::CommitToFunctionInfo(Js::AsmJsFunctionInfo* funcInfo)
     {
         uint32 offset = Js::AsmJsFunctionMemory::RequiredVarConstants * sizeof(Js::Var);
-#if ENABLE_DEBUG_CONFIG_OPTIONS
+#if DBG_DUMP
         if (PHASE_TRACE1(Js::AsmjsInterpreterStackPhase))
         {
             Output::Print(_u("ASMFunctionInfo Stack Data\n"));
@@ -119,6 +112,7 @@ namespace WAsmJs
             Output::Print(_u("RequiredVarConstants:%d\n"), Js::AsmJsFunctionMemory::RequiredVarConstants);
         }
 #endif
+
         for (int i = 0; i < RegisterSpace::LIMIT; ++i)
         {
             RegisterSpace::Types type = (RegisterSpace::Types)i;
@@ -128,25 +122,21 @@ namespace WAsmJs
             {
                 RegisterSpace* registerSpace = GetRegisterSpace(type);
                 TypedSlotInfo slotInfo;
+                slotInfo.reservedCount = registerSpace->GetReservedCount();
                 slotInfo.constCount = registerSpace->GetConstCount();
                 slotInfo.varCount = registerSpace->GetVarCount();
                 slotInfo.tmpCount = registerSpace->GetTmpCount();
                 offset = Math::AlignOverflowCheck(offset, RegisterSpace::GetTypeByteSize(type));
                 slotInfo.offset = offset;
 
-#if ENABLE_DEBUG_CONFIG_OPTIONS
+                funcInfo->SetTypedSlotInfo(type, slotInfo);
+#if DBG_DUMP
                 if (PHASE_TRACE1(Js::AsmjsInterpreterStackPhase))
                 {
-                    switch(type)
-                    {
-                    case RegisterSpace::INT32: Output::Print(_u("INT32 ")); break;
-                    case RegisterSpace::INT64: Output::Print(_u("INT64 ")); break;
-                    case RegisterSpace::FLOAT32: Output::Print(_u("FLOAT32 ")); break;
-                    case RegisterSpace::FLOAT64: Output::Print(_u("FLOAT64 ")); break;
-                    case RegisterSpace::SIMD: Output::Print(_u("SIMD ")); break;
-                    default: Output::Print(_u("Unknown ")); break;
-                    }
-                    Output::Print(_u("Offset:%d  ConstCount:%d  VarCount:%d  TmpCount:%d\n"),
+                    char16 buf[16];
+                    RegisterSpace::GetTypeDebugName(type, buf, 16);
+                    Output::Print(_u("%s Offset:%d  ConstCount:%d  VarCount:%d  TmpCount:%d\n"),
+                                  buf,
                                   slotInfo.offset,
                                   slotInfo.constCount,
                                   slotInfo.varCount,
@@ -163,7 +153,7 @@ namespace WAsmJs
                 offset = UInt32Math::Add(offset, UInt32Math::Mul(totalTypeCount, RegisterSpace::GetTypeByteSize(type)));
             }
         }
-#if ENABLE_DEBUG_CONFIG_OPTIONS
+#if DBG_DUMP
         if (PHASE_TRACE1(Js::AsmjsInterpreterStackPhase))
         {
             Output::Print(_u("\n"));
@@ -171,26 +161,26 @@ namespace WAsmJs
 #endif
     }
 
-    void TypedRegisterAllocator::WriteConstToTable(void* table)
+    template<typename T> void WriteConstToTableForType(void** table, RegisterSpace* registerSpace, void* constSpace, T zero)
     {
-#define IterateConstMapForType(primitiveType, zero) {\
-        primitiveType* tmpTable = (primitiveType*)table;\
-        RegisterSpace* registerSpace = GetRegisterSpace(type);\
-        auto map = ((ConstRegisterSpace<primitiveType>*)GetConstSpace(type))->GetConstMap();\
-        for (int j = map.Count() - registerSpace->GetConstCount(); j >= 0; --j)\
-        {\
-            *tmpTable = zero;\
-            ++tmpTable;\
-        }\
-        for (auto it = map.GetIterator(); it.IsValid(); it.MoveNext())\
-        {\
-            auto &entry = it.Current();\
-            *tmpTable = entry.Key();\
-            tmpTable++;\
-        }\
-        table = (void*)tmpTable;\
+        T* tmpTable = (T*)*table;
+        auto map = ((ConstRegisterSpace<T>*)constSpace)->GetConstMap();
+        for (int j = registerSpace->GetReservedCount(); j > 0; --j)
+        {
+            *tmpTable = zero;
+            ++tmpTable;
+        }
+        for (auto it = map.GetIterator(); it.IsValid(); it.MoveNext())
+        {
+            auto &entry = it.Current();
+            *tmpTable = entry.Key();
+            tmpTable++;
+        }
+        *table = (void*)tmpTable;
     }
 
+    void TypedRegisterAllocator::WriteConstToTable(void* table)
+    {
         for (int i = 0; i < RegisterSpace::LIMIT; ++i)
         {
             RegisterSpace::Types type = (RegisterSpace::Types)i;
@@ -198,24 +188,26 @@ namespace WAsmJs
             // Check if we don't want to commit this type
             if (IsTypeUsed(type))
             {
+                RegisterSpace* registerSpace = GetRegisterSpace(type);
+                void* constSpace = GetConstSpace(type);
                 switch(type)
                 {
                 case RegisterSpace::INT32:
-                    IterateConstMapForType(int, 0);
+                    WriteConstToTableForType<int>(&table, registerSpace, constSpace, 0);
                     break;
                 case RegisterSpace::INT64:
-                    IterateConstMapForType(int64, 0);
+                    WriteConstToTableForType<int64>(&table, registerSpace, constSpace, 0);
                     break;
                 case RegisterSpace::FLOAT32:
-                    IterateConstMapForType(float, 0.0f);
+                    WriteConstToTableForType<float>(&table, registerSpace, constSpace, 0.f);
                     break;
                 case RegisterSpace::FLOAT64:
-                    IterateConstMapForType(double, 0.0);
+                    WriteConstToTableForType<double>(&table, registerSpace, constSpace, 0.0);
                     break;
                 case RegisterSpace::SIMD:
                     AsmJsSIMDValue zero;
                     zero.Zero();
-                    IterateConstMapForType(AsmJsSIMDValue, zero);
+                    WriteConstToTableForType<AsmJsSIMDValue>(&table, registerSpace, constSpace, zero);
                     break;
                 case RegisterSpace::LIMIT:
                 default:
@@ -223,7 +215,6 @@ namespace WAsmJs
                 }
             }
         }
-#undef IterateConstMapForType
     }
 
     bool TypedRegisterAllocator::IsValidType(RegisterSpace::Types type) const
@@ -236,10 +227,127 @@ namespace WAsmJs
         return GetRegisterSpace(type)->GetTotalVariablesCount() > 0;
     }
 
+#if DBG_DUMP
+    template<typename T, typename F> void DumpConstantsForType(void** table, char16* typeName, char16* shortTypeName, uint32 start, uint32 constCount, F printFn)
+    {
+        T* typedTable = (T*)*table;
+        if (constCount > 0) 
+        {
+            Output::Print(_u("    Constant %s:\n    ======== =======\n    "));
+            for (uint32 i = 0; i < constCount; i++)
+            {
+                // Do not print reserved slots
+                if (i >= start)
+                {
+                    Output::Print(_u(" %s "), shortTypeName);
+                    printFn(i, *typedTable);
+                }
+                ++typedTable;
+            }
+        }
+        *table = (void*)typedTable;
+    }
+    void TypedRegisterAllocator::DumpConstants(void* table) const
+    {
+        for (int i = 0; i < RegisterSpace::LIMIT; ++i)
+        {
+            RegisterSpace::Types type = (RegisterSpace::Types)i;
+
+            if (IsTypeUsed(type))
+            {
+                RegisterSpace* registerSpace = GetRegisterSpace(type);
+                uint32 start = registerSpace->GetReservedCount();
+                uint32 constCount = registerSpace->GetConstCount();
+                if (start >= constCount)
+                {
+                    // No constants to print
+                    continue;
+                }
+                char16 typeName[16];
+                char16 shortTypeName[16];
+                RegisterSpace::GetTypeDebugName(type, typeName, 16);
+                RegisterSpace::GetTypeDebugName(type, shortTypeName, 16, true);
+                switch(type)
+                {
+                case RegisterSpace::INT32:
+                    DumpConstantsForType<int>(&table, typeName, shortTypeName, start, constCount, [](int i, int val) -> void {
+                        Output::Print(_u("%d  %d\n    "), i, val);
+                    });
+                    break;
+                case RegisterSpace::INT64:
+                    DumpConstantsForType<int64>(&table, typeName, shortTypeName, start, constCount, [](int i, int64 val) {
+                        Output::Print(_u("%d  %lld\n    "), i, val);
+                    });
+                    break;
+                case RegisterSpace::FLOAT32:
+                    DumpConstantsForType<float>(&table, typeName, shortTypeName, start, constCount, [](int i, float val) {
+                        Output::Print(_u("%d  %.4f\n    "), i, val);
+                    });
+                    break;
+                case RegisterSpace::FLOAT64:
+                    DumpConstantsForType<double>(&table, typeName, shortTypeName, start, constCount, [](int i, double val) {
+                        Output::Print(_u("%d  %.4f\n    "), i, val);
+                    });
+                    break;
+                case RegisterSpace::SIMD:
+                    DumpConstantsForType<SIMDValue>(&table, typeName, shortTypeName, start, constCount, [](int i, SIMDValue val) {
+                        SIMDValue* value = &val;
+                        Output::Print(_u("%d\n"), i);
+                        Output::Print(_u("    I4(%d, %d, %d, %d),\n"), value->i32[SIMD_X], value->i32[SIMD_Y], value->i32[SIMD_Z], value->i32[SIMD_W]);
+                        Output::Print(_u("    F4(%.4f, %.4f, %.4f, %.4f),\n"), value->f32[SIMD_X], value->f32[SIMD_Y], value->f32[SIMD_Z], value->f32[SIMD_W]);
+                        Output::Print(_u("    D2(%.4f, %.4f)\n"), value->f64[SIMD_X], value->f64[SIMD_Y]);
+                        Output::Print(_u("    I8(%d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d )\n"), 
+                                      value->i8[0], value->i8[1], value->i8[2], value->i8[3], value->i8[4], value->i8[5], value->i8[6], value->i8[7],
+                                      value->i8[8], value->i8[9], value->i8[10], value->i8[11], value->i8[12], value->i8[13], value->i8[14], value->i8[15]);
+                    });
+                    break;
+                case RegisterSpace::LIMIT:
+                default:
+                    break;
+                }
+                Output::Print(_u("\n"));
+            }
+        }
+    }
+
+    void TypedRegisterAllocator::DumpLocalsInfo() const
+    {
+        for (int i = 0; i < RegisterSpace::LIMIT; ++i)
+        {
+            RegisterSpace::Types type = (RegisterSpace::Types)i;
+            if (IsTypeUsed(type))
+            {
+                char16 typeName[16];
+                char16 shortTypeName[16];
+                RegisterSpace::GetTypeDebugName(type, typeName, 16);
+                RegisterSpace::GetTypeDebugName(type, shortTypeName, 16, true);
+                RegisterSpace* registerSpace = GetRegisterSpace(type);
+                Output::Print(
+                    _u("     %-10s : %u locals (%u temps from %s %u)\n"),
+                    typeName,
+                    registerSpace->GetVarCount(),
+                    registerSpace->GetTmpCount(),
+                    shortTypeName,
+                    registerSpace->GetFirstTmpRegister());
+            }
+        }
+    }
+
+    void TypedRegisterAllocator::GetArgumentStartIndex(uint32* indexes) const
+    {
+        for (int i = 0; i < RegisterSpace::LIMIT; ++i)
+        {
+            RegisterSpace::Types type = (RegisterSpace::Types)i;
+            // Arguments starts right after the consts
+            indexes[i] = GetRegisterSpace(type)->GetConstCount();
+        }
+    }
+#endif
+
     void* TypedRegisterAllocator::GetConstSpace(RegisterSpace::Types type) const
     {
         AssertMsg(mConstRegisterSpaces[type], "Did you forget to allocate const space in TypedRegisterAllocator constructor?");
-        if (IsValidType(type) || !mConstRegisterSpaces[type])
+        if (!IsValidType(type) || !mConstRegisterSpaces[type])
         {
             Assert("Invalid type for RegisterSpace in TypedMemoryStructure");
             Js::Throw::InternalError();
@@ -250,7 +358,7 @@ namespace WAsmJs
 
     RegisterSpace* TypedRegisterAllocator::GetRegisterSpace(RegisterSpace::Types type) const
     {
-        if (IsValidType(type))
+        if (!IsValidType(type))
         {
             Assert("Invalid type for RegisterSpace in TypedMemoryStructure");
             Js::Throw::InternalError();

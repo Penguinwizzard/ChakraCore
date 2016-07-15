@@ -161,7 +161,7 @@ namespace Js
         if (IsSimdjsEnabled())
         {
             asmInfo->SetAsmSimdBuiltinUsed(mAsmSimdBuiltinUsedBV);
-            asmInfo->SetSimdRegCount(mSimdVarSpace.GetTotalVariablesCount());
+            asmInfo->SetSimdRegCount(mTypedRegisterAllocator.GetTotalVariablesCount(WAsmJs::RegisterSpace::SIMD));
         }
 
         int varCount = 3; // 3 possible arguments
@@ -1923,9 +1923,8 @@ namespace Js
         , mFunctionArray( &mAllocator )
         , mModuleEnvironment( &mAllocator )
         , mFunctionTableArray( &mAllocator )
+        , mTypedRegisterAllocator(&mAllocator, 0, false)
         , mInitialised(false)
-        , mIntVarSpace( )
-        , mDoubleVarSpace( )
         , mExports(&mAllocator)
         , mExportFuncIndex(Js::Constants::NoRegister)
         , mVarImportCount(0)
@@ -1954,7 +1953,6 @@ namespace Js
         , mStdLibSIMDBool8x16Map(&mAllocator)
         , mStdLibSIMDFloat32x4Map(&mAllocator)
         , mStdLibSIMDFloat64x2Map(&mAllocator)
-        
     {
         InitModuleNode( parser );
     }
@@ -2085,7 +2083,7 @@ namespace Js
         if (isFloat)
         {
             var->SetVarType(AsmJsVarType::Float);
-            var->SetLocation(mFloatVarSpace.AcquireRegister());
+            var->SetLocation(AcquireRegister<float>());
             if (pnode->nop == knopInt)
             {
                 var->SetConstInitialiser((float)pnode->sxInt.lw);
@@ -2102,7 +2100,7 @@ namespace Js
         else if (pnode->nop == knopInt)
         {
             var->SetVarType(AsmJsVarType::Int);
-            var->SetLocation(mIntVarSpace.AcquireRegister());
+            var->SetLocation(AcquireRegister<int32>());
             var->SetConstInitialiser(pnode->sxInt.lw);
         }
         else
@@ -2110,13 +2108,13 @@ namespace Js
             if (ParserWrapper::IsMinInt(pnode))
             {
                 var->SetVarType(AsmJsVarType::Int);
-                var->SetLocation(mIntVarSpace.AcquireRegister());
+                var->SetLocation(AcquireRegister<int32>());
                 var->SetConstInitialiser(MININT);
             }
             else if (ParserWrapper::IsUnsigned(pnode))
             {
                 var->SetVarType(AsmJsVarType::Int);
-                var->SetLocation(mIntVarSpace.AcquireRegister());
+                var->SetLocation(AcquireRegister<int32>());
                 var->SetConstInitialiser((int)((uint32)pnode->sxFlt.dbl));
             }
             else if (pnode->sxFlt.maybeInt)
@@ -2127,7 +2125,7 @@ namespace Js
             else
             {
                 var->SetVarType(AsmJsVarType::Double);
-                var->SetLocation(mDoubleVarSpace.AcquireRegister());
+                var->SetLocation(AcquireRegister<double>());
                 var->SetConstInitialiser(pnode->sxFlt.dbl);
             }
         }
@@ -2151,21 +2149,21 @@ namespace Js
         {
         case Js::AsmJS_ToInt32:
             var->SetVarType( AsmJsVarType::Int );
-            var->SetLocation( mIntVarSpace.AcquireRegister() );
+            var->SetLocation(AcquireRegister<int32>());
             break;
         case Js::AsmJS_ToNumber:
             var->SetVarType( AsmJsVarType::Double );
-            var->SetLocation( mDoubleVarSpace.AcquireRegister() );
+            var->SetLocation(AcquireRegister<double>());
             break;
         case Js::AsmJS_FRound:
             var->SetVarType( AsmJsVarType::Float );
-            var->SetLocation(mFloatVarSpace.AcquireRegister());
+            var->SetLocation(AcquireRegister<float>());
             break;
         case Js::AsmJS_Int32x4:
             if (IsSimdjsEnabled())
             {
                 var->SetVarType(AsmJsVarType::Int32x4);
-                var->SetLocation(mSimdVarSpace.AcquireRegister());
+                var->SetLocation(AcquireRegister<AsmJsSIMDValue>());
                 break;
             }
             Assert(UNREACHED);
@@ -2173,7 +2171,7 @@ namespace Js
             if (IsSimdjsEnabled())
             {
                 var->SetVarType(AsmJsVarType::Bool32x4);
-                var->SetLocation(mSimdVarSpace.AcquireRegister());
+                var->SetLocation(AcquireRegister<AsmJsSIMDValue>());
                 break;
             }
             Assert(UNREACHED);
@@ -2181,7 +2179,7 @@ namespace Js
             if (IsSimdjsEnabled())
             {
                 var->SetVarType(AsmJsVarType::Bool16x8);
-                var->SetLocation(mSimdVarSpace.AcquireRegister());
+                var->SetLocation(AcquireRegister<AsmJsSIMDValue>());
                 break;
             }
             Assert(UNREACHED);
@@ -2189,7 +2187,7 @@ namespace Js
             if (IsSimdjsEnabled())
             {
                 var->SetVarType(AsmJsVarType::Bool8x16);
-                var->SetLocation(mSimdVarSpace.AcquireRegister());
+                var->SetLocation(AcquireRegister<AsmJsSIMDValue>());
                 break;
             }
             Assert(UNREACHED);
@@ -2197,7 +2195,7 @@ namespace Js
             if (IsSimdjsEnabled())
             {
                 var->SetVarType(AsmJsVarType::Float32x4);
-                var->SetLocation(mSimdVarSpace.AcquireRegister());
+                var->SetLocation(AcquireRegister<AsmJsSIMDValue>());
                 break;
             }
             Assert(UNREACHED);
@@ -2205,7 +2203,7 @@ namespace Js
             if (IsSimdjsEnabled())
             {
                 var->SetVarType(AsmJsVarType::Float64x2);
-                var->SetLocation(mSimdVarSpace.AcquireRegister());
+                var->SetLocation(AcquireRegister<AsmJsSIMDValue>());
                 break;
             }
             Assert(UNREACHED);
@@ -2213,7 +2211,7 @@ namespace Js
             if (IsSimdjsEnabled())
             {
                 var->SetVarType(AsmJsVarType::Int16x8);
-                var->SetLocation(mSimdVarSpace.AcquireRegister());
+                var->SetLocation(AcquireRegister<AsmJsSIMDValue>());
                 break;
             }
             Assert(UNREACHED);
@@ -2221,7 +2219,7 @@ namespace Js
             if (IsSimdjsEnabled())
             {
                 var->SetVarType(AsmJsVarType::Int8x16);
-                var->SetLocation(mSimdVarSpace.AcquireRegister());
+                var->SetLocation(AcquireRegister<AsmJsSIMDValue>());
                 break;
             }
             Assert(UNREACHED);
@@ -2229,7 +2227,7 @@ namespace Js
             if (IsSimdjsEnabled())
             {
                 var->SetVarType(AsmJsVarType::Uint32x4);
-                var->SetLocation(mSimdVarSpace.AcquireRegister());
+                var->SetLocation(AcquireRegister<AsmJsSIMDValue>());
                 break;
             }
             Assert(UNREACHED);
@@ -2237,7 +2235,7 @@ namespace Js
             if (IsSimdjsEnabled())
             {
                 var->SetVarType(AsmJsVarType::Uint16x8);
-                var->SetLocation(mSimdVarSpace.AcquireRegister());
+                var->SetLocation(AcquireRegister<AsmJsSIMDValue>());
                 break;
             }
             Assert(UNREACHED);
@@ -2245,7 +2243,7 @@ namespace Js
             if (IsSimdjsEnabled())
             {
                 var->SetVarType(AsmJsVarType::Uint8x16);
-                var->SetLocation(mSimdVarSpace.AcquireRegister());
+                var->SetLocation(AcquireRegister<AsmJsSIMDValue>());
                 break;
             }
             Assert(UNREACHED);
@@ -2385,29 +2383,49 @@ namespace Js
         }
     }
 
+    typedef uint32(*OffsetConverter)(uint32);
+    uint32 UInt32Identity(uint32 val) {return val;}
     void AsmJsModuleCompiler::InitMemoryOffsets()
     {
-        mModuleMemory.mArrayBufferOffset = AsmJsModuleMemory::MemoryTableBeginOffset;
-        mModuleMemory.mStdLibOffset = mModuleMemory.mArrayBufferOffset + 1;
-        mModuleMemory.mDoubleOffset = mModuleMemory.mStdLibOffset + 1;
-        mModuleMemory.mFuncOffset = mModuleMemory.mDoubleOffset + (mDoubleVarSpace.GetTotalVarCount() * WAsmJs::DOUBLE_SLOTS_SPACE);
-        mModuleMemory.mFFIOffset = mModuleMemory.mFuncOffset + mFunctionArray.Count();
-        mModuleMemory.mFuncPtrOffset = mModuleMemory.mFFIOffset + mImportFunctions.GetTotalVarCount();
-        mModuleMemory.mFloatOffset = mModuleMemory.mFuncPtrOffset + GetFuncPtrTableCount();
-        mModuleMemory.mIntOffset = mModuleMemory.mFloatOffset + (int32)(mFloatVarSpace.GetTotalVarCount() * WAsmJs::FLOAT_SLOTS_SPACE + 0.5);
-        mModuleMemory.mMemorySize    = mModuleMemory.mIntOffset + (int32)(mIntVarSpace.GetTotalVarCount() * WAsmJs::INT_SLOTS_SPACE + 0.5);
+        uint32 totalJsVarCount = 0;
 
-        if (IsSimdjsEnabled())
-        {
-            // mSimdOffset is in SIMDValues, hence aligned
-            // mMemorySize is in Vars
-            mModuleMemory.mSimdOffset = (int) ::ceil(mModuleMemory.mMemorySize / WAsmJs::SIMD_SLOTS_SPACE);
-            if (mSimdVarSpace.GetTotalVarCount())
+        auto SetMemoryOffset = [&totalJsVarCount](uint32 count, OffsetConverter ToType = UInt32Identity, OffsetConverter FromType = UInt32Identity) {
+            uint32 curOffset = ToType(AsmJsModuleMemory::MemoryTableBeginOffset + totalJsVarCount);
+            // If this type doesn't have any items, do not update the number of JsVar used since alignment might have happened for nothing
+            if (count > 0)
             {
-                mModuleMemory.mMemorySize = (int)((mModuleMemory.mSimdOffset + mSimdVarSpace.GetTotalVarCount()) * WAsmJs::SIMD_SLOTS_SPACE);
+                totalJsVarCount = UInt32Math::Add(FromType(curOffset), count);
             }
-            
-        }
+            return curOffset;
+        };
+        mModuleMemory.mArrayBufferOffset = SetMemoryOffset(1);
+        mModuleMemory.mStdLibOffset = SetMemoryOffset(1);
+
+        // Because there are only 2 vars before the double offset, it is always 8 bytes aligned if sizeof(Var) == 4 || sizeof(Var) == 8
+        mModuleMemory.mDoubleOffset = SetMemoryOffset(
+            mTypedRegisterAllocator.GetJsVarCount(WAsmJs::RegisterSpace::FLOAT64),
+            WAsmJs::ConvertFromJsVarOffset<double>,
+            WAsmJs::ConvertToJsVarOffset<double>
+        );
+        mModuleMemory.mFuncOffset = SetMemoryOffset(mFunctionArray.Count());
+        mModuleMemory.mFFIOffset = SetMemoryOffset(mImportFunctions.GetTotalVariablesCount());
+        mModuleMemory.mFuncPtrOffset = SetMemoryOffset(GetFuncPtrTableCount());
+        mModuleMemory.mFloatOffset = SetMemoryOffset(
+            mTypedRegisterAllocator.GetJsVarCount(WAsmJs::RegisterSpace::FLOAT32),
+            WAsmJs::ConvertFromJsVarOffset<float>,
+            WAsmJs::ConvertToJsVarOffset<float>
+        );
+        mModuleMemory.mIntOffset = SetMemoryOffset(
+            mTypedRegisterAllocator.GetJsVarCount(WAsmJs::RegisterSpace::INT32),
+            WAsmJs::ConvertFromJsVarOffset<int32>,
+            WAsmJs::ConvertToJsVarOffset<int32>
+        );
+        mModuleMemory.mSimdOffset = SetMemoryOffset(
+            mTypedRegisterAllocator.GetJsVarCount(WAsmJs::RegisterSpace::SIMD),
+            WAsmJs::ConvertFromJsVarOffset<SIMDValue>,
+            WAsmJs::ConvertToJsVarOffset<SIMDValue>
+        );
+        mModuleMemory.mMemorySize = totalJsVarCount;
     }
 
     void AsmJsModuleCompiler::AccumulateCompileTime()
@@ -2575,12 +2593,10 @@ namespace Js
         Var * asmFuncs = asmJsEnvironment + asmModuleInfo->GetModuleMemory().mFuncOffset;
         Var ** asmFuncPtrs = reinterpret_cast<Var**>(asmJsEnvironment + asmModuleInfo->GetModuleMemory().mFuncPtrOffset);
 
-        double * asmDoubleVars = reinterpret_cast<double*>(asmJsEnvironment + asmModuleInfo->GetModuleMemory().mDoubleOffset);
-        int * asmIntVars = reinterpret_cast<int*>(asmJsEnvironment + asmModuleInfo->GetModuleMemory().mIntOffset);
-        float * asmFloatVars = reinterpret_cast<float*>(asmJsEnvironment + asmModuleInfo->GetModuleMemory().mFloatOffset);
-
-        AsmJsSIMDValue * asmSIMDVars = reinterpret_cast<AsmJsSIMDValue*>(asmJsEnvironment + asmModuleInfo->GetModuleMemory().mSimdOffset);
-
+        double * asmDoubleVars = reinterpret_cast<double*>(asmJsEnvironment) + asmModuleInfo->GetModuleMemory().mDoubleOffset;
+        int * asmIntVars = reinterpret_cast<int*>(asmJsEnvironment) + asmModuleInfo->GetModuleMemory().mIntOffset;
+        float * asmFloatVars = reinterpret_cast<float*>(asmJsEnvironment) + asmModuleInfo->GetModuleMemory().mFloatOffset;
+        AsmJsSIMDValue * asmSIMDVars = reinterpret_cast<AsmJsSIMDValue*>(asmJsEnvironment) + asmModuleInfo->GetModuleMemory().mSimdOffset;
 
 #if DEBUG
         Var * slotArray = RecyclerNewArrayZ(scriptContext->GetRecycler(), Var, moduleBody->scopeSlotArraySize + ScopeSlots::FirstSlotIndex);
@@ -2972,7 +2988,7 @@ namespace Js
         var->SetVarType(type);
         var->SetConstInitialiser(value);
         // acquire register
-        var->SetLocation(mSimdVarSpace.AcquireRegister());
+        var->SetLocation(AcquireRegister<AsmJsSIMDValue>());
         return true;
     }
 

@@ -3099,8 +3099,8 @@ namespace Js
         {
             mWriter.AsmReg2( Js::OpCodeAsmJs::Ld_Int, intReg, trueInfo.location );
             mFunction->ReleaseLocation<int>( &trueInfo );
-            mFunction->ReleaseTmpRegister<double>(doubleReg);
-            mFunction->ReleaseTmpRegister<float>(floatReg);
+            mFunction->ReleaseTmpRegister<double>(doubleReg, true);
+            mFunction->ReleaseTmpRegister<float>(floatReg, true);
             emitInfo.location = intReg;
             emitInfo.type = AsmJsType::Int;
         }
@@ -3108,8 +3108,8 @@ namespace Js
         {
             mWriter.AsmReg2( Js::OpCodeAsmJs::Ld_Db, doubleReg, trueInfo.location );
             mFunction->ReleaseLocation<double>( &trueInfo );
-            mFunction->ReleaseTmpRegister<int>( intReg );
-            mFunction->ReleaseTmpRegister<float>(floatReg);
+            mFunction->ReleaseTmpRegister<int>(intReg, true);
+            mFunction->ReleaseTmpRegister<float>(floatReg, true);
             emitInfo.location = doubleReg;
             emitInfo.type = AsmJsType::Double;
         }
@@ -3117,8 +3117,8 @@ namespace Js
         {
             mWriter.AsmReg2(Js::OpCodeAsmJs::Ld_Flt, floatReg, trueInfo.location);
             mFunction->ReleaseLocation<float>(&trueInfo);
-            mFunction->ReleaseTmpRegister<int>(intReg);
-            mFunction->ReleaseTmpRegister<double>(doubleReg);
+            mFunction->ReleaseTmpRegister<int>(intReg, true);
+            mFunction->ReleaseTmpRegister<double>(doubleReg, true);
             emitInfo.location = floatReg;
             emitInfo.type = AsmJsType::Float;
         }
@@ -3299,15 +3299,15 @@ namespace Js
    // int tab = 0;
     void AsmJSByteCodeGenerator::LoadModuleInt( RegSlot dst, RegSlot index )
     {
-        mWriter.AsmSlot(OpCodeAsmJs::LdSlot_Int, dst, AsmJsFunctionMemory::ModuleEnvRegister, index + (int32)(mCompiler->GetIntOffset() / WAsmJs::INT_SLOTS_SPACE + 0.5));
+        mWriter.AsmSlot(OpCodeAsmJs::LdSlot_Int, dst, AsmJsFunctionMemory::ModuleEnvRegister, index + mCompiler->GetIntOffset());
     }
     void AsmJSByteCodeGenerator::LoadModuleFloat(RegSlot dst, RegSlot index)
     {
-        mWriter.AsmSlot(OpCodeAsmJs::LdSlot_Flt, dst, AsmJsFunctionMemory::ModuleEnvRegister, index + (int32)(mCompiler->GetFloatOffset() / WAsmJs::FLOAT_SLOTS_SPACE + 0.5));
+        mWriter.AsmSlot(OpCodeAsmJs::LdSlot_Flt, dst, AsmJsFunctionMemory::ModuleEnvRegister, index + mCompiler->GetFloatOffset());
     }
     void AsmJSByteCodeGenerator::LoadModuleDouble( RegSlot dst, RegSlot index )
     {
-        mWriter.AsmSlot(OpCodeAsmJs::LdSlot_Db, dst, AsmJsFunctionMemory::ModuleEnvRegister, index + mCompiler->GetDoubleOffset() / WAsmJs::DOUBLE_SLOTS_SPACE);
+        mWriter.AsmSlot(OpCodeAsmJs::LdSlot_Db, dst, AsmJsFunctionMemory::ModuleEnvRegister, index + mCompiler->GetDoubleOffset());
     }
 
     void AsmJSByteCodeGenerator::LoadModuleFFI( RegSlot dst, RegSlot index )
@@ -3328,17 +3328,17 @@ namespace Js
 
     void AsmJSByteCodeGenerator::SetModuleInt( Js::RegSlot dst, RegSlot src )
     {
-        mWriter.AsmSlot(OpCodeAsmJs::StSlot_Int, src, AsmJsFunctionMemory::ModuleEnvRegister, dst + (int32)(mCompiler->GetIntOffset() / WAsmJs::INT_SLOTS_SPACE + 0.5));
+        mWriter.AsmSlot(OpCodeAsmJs::StSlot_Int, src, AsmJsFunctionMemory::ModuleEnvRegister, dst + mCompiler->GetIntOffset());
     }
 
     void AsmJSByteCodeGenerator::SetModuleFloat(Js::RegSlot dst, RegSlot src)
     {
-        mWriter.AsmSlot(OpCodeAsmJs::StSlot_Flt, src, AsmJsFunctionMemory::ModuleEnvRegister, dst + (int32)(mCompiler->GetFloatOffset() / WAsmJs::FLOAT_SLOTS_SPACE + 0.5));
+        mWriter.AsmSlot(OpCodeAsmJs::StSlot_Flt, src, AsmJsFunctionMemory::ModuleEnvRegister, dst + mCompiler->GetFloatOffset());
     }
 
     void AsmJSByteCodeGenerator::SetModuleDouble( Js::RegSlot dst, RegSlot src )
     {
-        mWriter.AsmSlot(OpCodeAsmJs::StSlot_Db, src, AsmJsFunctionMemory::ModuleEnvRegister, dst + mCompiler->GetDoubleOffset() / WAsmJs::DOUBLE_SLOTS_SPACE);
+        mWriter.AsmSlot(OpCodeAsmJs::StSlot_Db, src, AsmJsFunctionMemory::ModuleEnvRegister, dst + mCompiler->GetDoubleOffset());
     }
 
     void AsmJSByteCodeGenerator::LoadModuleSimd(RegSlot dst, RegSlot index, AsmJsVarType type)

@@ -637,7 +637,7 @@ namespace Js
         ParseNode*      mBodyNode;
         ParseNode*      mFncNode;
         typedef JsUtil::List<AsmJsVarBase*, ArenaAllocator> SIMDVarsList;
-        WAsmJs::TypedRegisterAllocator* mTypedMemory;
+        WAsmJs::TypedRegisterAllocator* mTypedRegisterAllocator;
         SIMDVarsList    mSimdVarsList;
 
         FuncInfo*       mFuncInfo;
@@ -671,23 +671,28 @@ namespace Js
         SIMDVarsList& GetSimdVarsList()    { return mSimdVarsList;  }
 
         /// Wrapper for RegisterSpace methods
-        template<typename T> void AddConst             ( T val ){mTypedMemory->AddConst<T>( val );}
-        template<typename T> RegSlot GetConstRegister  ( T val ){return mTypedMemory->GetConstRegister<T>( val );}
+        template<typename T> void AddConst             ( T val ){mTypedRegisterAllocator->AddConst<T>( val );}
+        template<typename T> RegSlot GetConstRegister  ( T val ){return mTypedRegisterAllocator->GetConstRegister<T>( val );}
 
-        template<typename T> RegSlot AcquireRegister   (){return mTypedMemory->AcquireRegister<T>();}
-        template<typename T> RegSlot AcquireTmpRegister(){return mTypedMemory->AcquireTmpRegister<T>();}
-        template<typename T> void ReleaseTmpRegister   ( Js::RegSlot tmpReg ){mTypedMemory->ReleaseTmpRegister<T>(tmpReg);}
-        template<typename T> void ReleaseLocation      ( const EmitExpressionInfo* pnode ){mTypedMemory->ReleaseLocation<T>(pnode);}
-        template<typename T> bool IsTmpLocation        ( const EmitExpressionInfo* pnode ){return mTypedMemory->IsTmpLocation<T>(pnode);}
-        template<typename T> bool IsConstLocation      ( const EmitExpressionInfo* pnode ){return mTypedMemory->IsConstLocation<T>(pnode);}
-        template<typename T> bool IsVarLocation        ( const EmitExpressionInfo* pnode ){return mTypedMemory->IsVarLocation<T>(pnode);}
-        template<typename T> bool IsValidLocation      ( const EmitExpressionInfo* pnode ){return mTypedMemory->IsValidLocation<T>(pnode);}
+        template<typename T> RegSlot AcquireRegister   (){return mTypedRegisterAllocator->AcquireRegister<T>();}
+        template<typename T> RegSlot AcquireTmpRegister(){return mTypedRegisterAllocator->AcquireTmpRegister<T>();}
+        template<typename T> void ReleaseTmpRegister   ( Js::RegSlot tmpReg, bool unused = false ){mTypedRegisterAllocator->ReleaseTmpRegister<T>(tmpReg, unused);}
+        template<typename T> void ReleaseLocation      ( const EmitExpressionInfo* pnode ){mTypedRegisterAllocator->ReleaseLocation<T>(pnode);}
+        template<typename T> bool IsTmpLocation        ( const EmitExpressionInfo* pnode ){return mTypedRegisterAllocator->IsTmpLocation<T>(pnode);}
+        template<typename T> bool IsConstLocation      ( const EmitExpressionInfo* pnode ){return mTypedRegisterAllocator->IsConstLocation<T>(pnode);}
+        template<typename T> bool IsVarLocation        ( const EmitExpressionInfo* pnode ){return mTypedRegisterAllocator->IsVarLocation<T>(pnode);}
+        template<typename T> bool IsValidLocation      ( const EmitExpressionInfo* pnode ){return mTypedRegisterAllocator->IsValidLocation<T>(pnode);}
         void ReleaseLocationGeneric( const EmitExpressionInfo* pnode );
-        void CommitRegistersToFunctionInfo(Js::AsmJsFunctionInfo* funcInfo) {mTypedMemory->CommitToFunctionInfo(funcInfo);}
-        uint32 GetTotalJsVarCount() const {return mTypedMemory->GetJsVarCount(false);}
-        uint32 GetConstVarCount() const {return mTypedMemory->GetJsVarCount(true);}
-        void WriteConstToTable(void* table) {mTypedMemory->WriteConstToTable(table);}
-
+        void CommitRegistersToFunctionInfo(Js::AsmJsFunctionInfo* funcInfo) {mTypedRegisterAllocator->CommitToFunctionInfo(funcInfo);}
+        uint32 GetTotalJsVarCount() const {return mTypedRegisterAllocator->GetTotalJsVarCount(false);}
+        uint32 GetConstVarCount() const {return mTypedRegisterAllocator->GetTotalJsVarCount(true);}
+        void WriteConstToTable(void* table) {mTypedRegisterAllocator->WriteConstToTable(table);}
+#if DBG_DUMP
+        void DumpConstants(void* table) const {mTypedRegisterAllocator->DumpConstants(table);};
+        void DumpLocalsInfo() const {mTypedRegisterAllocator->DumpLocalsInfo();};
+        // indexes' array size must be WAsmJs::RegisterSpace::LIMIT
+        void GetArgumentStartIndex(uint32* indexes) const {mTypedRegisterAllocator->GetArgumentStartIndex(indexes);};
+#endif
         // Search for a var in the varMap of the function, return nullptr if not found
         AsmJsVarBase* FindVar( const PropertyName name ) const;
         // Defines a new variable int the function, return nullptr if already exists or theres an error
@@ -796,6 +801,15 @@ namespace Js
             {
                 mTypedSlotInfos[type] = info;
             }
+        }
+        const WAsmJs::TypedSlotInfo& GetTypedSlotInfo(WAsmJs::RegisterSpace::Types type)
+        {
+            Assert((uint)type < WAsmJs::RegisterSpace::LIMIT);
+            if ((uint)type < WAsmJs::RegisterSpace::LIMIT)
+            {
+                return mTypedSlotInfos[type];
+            }
+            Js::Throw::InternalError();
         }
 #define TYPED_SLOT_INFO_GETTER_SETTER(name, type) \
         int Get##name##ByteOffset() const   { return mTypedSlotInfos[WAsmJs::RegisterSpace::##type].offset; }\

@@ -66,39 +66,19 @@ namespace Js
 
         Output::Print(_u(") "));
         Output::Print(_u("(size: %d [%d])\n"), body->GetByteCodeCount(), body->GetByteCodeWithoutLDACount());
-        const auto& intRegisters = func->GetRegisterSpace<int>();
-        const auto& doubleRegisters = func->GetRegisterSpace<double>();
-        const auto& floatRegisters = func->GetRegisterSpace<float>();
-        Output::Print(
-            _u("      Integer : %u locals (%u temps from I%u)\n"),
-            intRegisters.GetVarCount(),
-            intRegisters.GetTmpCount(),
-            intRegisters.GetFirstTmpRegister());
-        Output::Print(
-            _u("      Doubles : %u locals (%u temps from D%u)\n"),
-            doubleRegisters.GetVarCount(),
-            doubleRegisters.GetTmpCount(),
-            doubleRegisters.GetFirstTmpRegister());
-
-        Output::Print(
-            _u("      Floats : %u locals (%u temps from F%u)\n"),
-            floatRegisters.GetVarCount(),
-            floatRegisters.GetTmpCount(),
-            floatRegisters.GetFirstTmpRegister());
-
-        const auto& simdRegisters = func->GetRegisterSpace<AsmJsSIMDValue>();
-        Output::Print(
-            _u("      SIMDs : %u locals (%u temps from SIMD%u)\n"),
-            simdRegisters.GetVarCount(),
-            simdRegisters.GetTmpCount(),
-            simdRegisters.GetFirstTmpRegister());
+        func->DumpLocalsInfo();
 
         uint32 statementIndex = 0;
         DumpConstants(func, body);
 
         Output::Print(_u("    Implicit Arg Ins:\n    ======== =====\n    "));
-        int iArg = intRegisters.GetConstCount(), dArg = doubleRegisters.GetConstCount(), fArg = floatRegisters.GetConstCount();
-        int simdArg = simdRegisters.GetConstCount();
+        uint32 argIndexes[WAsmJs::RegisterSpace::LIMIT];
+        func->GetArgumentStartIndex(argIndexes);
+
+        uint32 iArg = argIndexes[WAsmJs::RegisterSpace::INT32];
+        uint32 fArg = argIndexes[WAsmJs::RegisterSpace::FLOAT32];
+        uint32 dArg = argIndexes[WAsmJs::RegisterSpace::FLOAT64];
+        uint32 simdArg = argIndexes[WAsmJs::RegisterSpace::SIMD];
         for (ArgSlot i = 0; i < argCount; i++)
         {
             const AsmJsType& var = func->GetArgType(i);
@@ -259,74 +239,8 @@ namespace Js
 
     void AsmJsByteCodeDumper::DumpConstants(AsmJsFunc* func, FunctionBody* body)
     {
-        const auto& intRegisters = func->GetRegisterSpace<int>();
-        const auto& doubleRegisters = func->GetRegisterSpace<double>();
-        const auto& floatRegisters = func->GetRegisterSpace<float>();
-
-        int nbIntConst = intRegisters.GetConstCount();
-        int nbDoubleConst = doubleRegisters.GetConstCount();
-        int nbFloatConst = floatRegisters.GetConstCount();
-
-        int* constTable = (int*)((Var*)body->GetConstTable() + (AsmJsFunctionMemory::RequiredVarConstants - 1));
-        if (nbIntConst > 0)
-        {
-            Output::Print(_u("    Constant Integer:\n    ======== =======\n    "));
-            for (int i = 0; i < nbIntConst; i++)
-            {
-                Output::Print(_u(" I%d  %d\n    "), i, *constTable);
-                ++constTable;
-            }
-        }
-
-        float* floatTable = (float*)constTable;
-        Output::Print(_u("\n"));
-        if (nbFloatConst > 0)
-        {
-
-            Output::Print(_u("    Constant Floats:\n    ======== ======\n    "));
-            for (int i = 0; i < nbFloatConst; i++)
-            {
-                Output::Print(_u(" F%d  %.4f\n    "), i, *floatTable);
-                ++floatTable;
-                ++constTable;
-            }
-        }
-
-        double* doubleTable = (double*)constTable;
-        Output::Print(_u("\n"));
-        if (nbDoubleConst > 0)
-        {
-
-            Output::Print(_u("    Constant Doubles:\n    ======== ======\n    "));
-            for (int i = 0; i < nbDoubleConst; i++)
-            {
-                Output::Print(_u(" D%d  %.4f\n    "), i, *doubleTable);
-                ++doubleTable;
-            }
-        }
-        // SIMD reg space is un-typed.
-        // We print each register in its 3 possible types to ease debugging.
-        const auto& simdRegisters = func->GetRegisterSpace<AsmJsSIMDValue>();
-        int nbSimdConst = simdRegisters.GetConstCount();
-
-        Output::Print(_u("\n"));
-        if (nbSimdConst > 0)
-        {
-            AsmJsSIMDValue* simdTable = (AsmJsSIMDValue*)doubleTable;
-            Output::Print(_u("    Constant SIMD values:\n    ======== ======\n    "));
-            for (int i = 0; i < nbSimdConst; i++)
-            {
-                Output::Print(_u("SIMD%d "), i);
-                Output::Print(_u("\tI4(%d, %d, %d, %d),"), simdTable->i32[SIMD_X], simdTable->i32[SIMD_Y], simdTable->i32[SIMD_Z], simdTable->i32[SIMD_W]);
-                Output::Print(_u("\tF4(%.4f, %.4f, %.4f, %.4f),"), simdTable->f32[SIMD_X], simdTable->f32[SIMD_Y], simdTable->f32[SIMD_Z], simdTable->f32[SIMD_W]);
-                Output::Print(_u("\tD2(%.4f, %.4f)\n    "), simdTable->f64[SIMD_X], simdTable->f64[SIMD_Y]);
-                Output::Print(_u("\tI8(%d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d )\n    "), 
-                    simdTable->i8[0], simdTable->i8[1], simdTable->i8[2], simdTable->i8[3], simdTable->i8[4], simdTable->i8[5], simdTable->i8[6], simdTable->i8[7],
-                    simdTable->i8[8], simdTable->i8[9], simdTable->i8[10], simdTable->i8[11], simdTable->i8[12], simdTable->i8[13], simdTable->i8[14], simdTable->i8[15]);
-                ++simdTable;
-            }
-        }
-        Output::Print(_u("\n"));
+        void* constTable = ((Var*)body->GetConstTable() + (AsmJsFunctionMemory::RequiredVarConstants - 1));
+        func->DumpConstants(constTable);
     }
 
     void AsmJsByteCodeDumper::DumpOp(OpCodeAsmJs op, LayoutSize layoutSize, ByteCodeReader& reader, FunctionBody* dumpFunction)

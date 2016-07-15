@@ -80,19 +80,18 @@ namespace Js {
 
     struct AsmJsModuleMemory
     {
-        static const int32   MemoryTableBeginOffset = 0;
+        static const uint32   MemoryTableBeginOffset = 0;
         // Memory is allocated in this order
-        int32 mArrayBufferOffset
+        uint32 mArrayBufferOffset
             , mStdLibOffset
-            , mDoubleOffset
+            , mDoubleOffset // double* offset from table begin
             , mFuncOffset
             , mFFIOffset
             , mFuncPtrOffset
-            , mIntOffset
-            , mFloatOffset
-            , mSimdOffset // in SIMDValues
-            ;
-        int32   mMemorySize;
+            , mIntOffset // int32* offset from table begin
+            , mFloatOffset // float* offset from table begin
+            , mSimdOffset; // SIMDValue* offset from table begin
+        uint32   mMemorySize;
     };
 
     struct AsmJsFunctionMemory
@@ -137,12 +136,7 @@ namespace Js {
         typedef JsUtil::List<AsmJsFunctionTable*, ArenaAllocator> ModuleFunctionTableArray;
         typedef JsUtil::List<AsmJsModuleExport, ArenaAllocator> ModuleExportArray;
         typedef JsUtil::Queue<AsmJsArrayView *, ArenaAllocator> ModuleArrayViewList;
-        typedef WAsmJs::RegisterSpace ModuleIntVars;
-        typedef WAsmJs::RegisterSpace ModuleDoubleVars;
-        typedef WAsmJs::RegisterSpace ModuleFloatVars;
         typedef WAsmJs::RegisterSpace ModuleImportFunctions;
-
-        typedef WAsmJs::RegisterSpace ModuleSIMDVars;
         typedef JsUtil::BaseDictionary<PropertyId, AsmJsSIMDFunction*, ArenaAllocator> SIMDNameMap;
 
         inline bool LookupStdLibSIMDNameInMap   (PropertyName name, AsmJsSIMDFunction **simdFunc, SIMDNameMap* map) const;
@@ -159,10 +153,9 @@ namespace Js {
         ModuleEnvironment               mModuleEnvironment;
         PropertyName                    mStdLibArgName, mForeignArgName, mBufferArgName;
         ModuleFunctionArray             mFunctionArray;
-        ModuleIntVars                   mIntVarSpace;
-        ModuleDoubleVars                mDoubleVarSpace;
-        ModuleFloatVars                 mFloatVarSpace;
         ModuleImportFunctions           mImportFunctions;
+        WAsmJs::TypedRegisterAllocator mTypedRegisterAllocator;
+        template<typename T> RegSlot AcquireRegister() {return mTypedRegisterAllocator.AcquireRegister<T>();}
 
         // Maps functions names to func symbols. Three maps since names are not unique across SIMD types (e.g. SIMD.{float32x4|int32x4}.add)
         // Also used to find if an operation is supported on a SIMD type.
@@ -177,8 +170,6 @@ namespace Js {
         SIMDNameMap                         mStdLibSIMDUint32x4Map;
         SIMDNameMap                         mStdLibSIMDUint16x8Map;
         SIMDNameMap                         mStdLibSIMDUint8x16Map;
-        // global SIMD values space.
-        ModuleSIMDVars                  mSimdVarSpace;
         BVStatic<ASMSIMD_BUILTIN_SIZE>  mAsmSimdBuiltinUsedBV;
 
         ModuleExportArray               mExports;
@@ -297,12 +288,12 @@ namespace Js {
 
         void InitMemoryOffsets           ();
         inline int32 GetIntOffset        () const{return mModuleMemory.mIntOffset;}
-        inline int32 GetFloatOffset        () const{return mModuleMemory.mFloatOffset;}
+        inline int32 GetFloatOffset      () const{return mModuleMemory.mFloatOffset;}
         inline int32 GetFuncPtrOffset    () const{return mModuleMemory.mFuncPtrOffset;}
         inline int32 GetFFIOffset        () const{return mModuleMemory.mFFIOffset;}
         inline int32 GetFuncOffset       () const{return mModuleMemory.mFuncOffset;}
         inline int32 GetDoubleOffset     () const{return mModuleMemory.mDoubleOffset; }
-        inline int32 GetSimdOffset       () const{ return mModuleMemory.mSimdOffset;  }
+        inline int32 GetSimdOffset       () const{ return mModuleMemory.mSimdOffset;}
 
         inline int32 GetFuncPtrTableCount() const{return mFuncPtrTableCount;}
         inline void SetFuncPtrTableCount ( int32 val ){mFuncPtrTableCount = val;}

@@ -2403,18 +2403,13 @@ namespace Js
         Var* arrayBufferPtr = moduleMemoryPtr + moduleMemory.mArrayBufferOffset;
         Assert(moduleMemory.mArrayBufferOffset == AsmJsModuleMemory::MemoryTableBeginOffset);
         Var* stdLibPtr = moduleMemoryPtr + moduleMemory.mStdLibOffset;
-        int* localIntSlots        = (int*)(moduleMemoryPtr + moduleMemory.mIntOffset);
-        float* localFloatSlots = (float*)(moduleMemoryPtr + moduleMemory.mFloatOffset);
-        double* localDoubleSlots = (double*)(moduleMemoryPtr + moduleMemory.mDoubleOffset);
-        Var* localFunctionImports = moduleMemoryPtr + moduleMemory.mFFIOffset ;
-        Var* localModuleFunctions = moduleMemoryPtr + moduleMemory.mFuncOffset ;
-        Var** localFunctionTables = (Var**)(moduleMemoryPtr + moduleMemory.mFuncPtrOffset) ;
-
-        AsmJsSIMDValue* localSimdSlots = nullptr;
-        if (scriptContext->GetConfig()->IsSimdjsEnabled())
-        {
-            localSimdSlots = ((AsmJsSIMDValue*)moduleMemoryPtr) + moduleMemory.mSimdOffset; // simdOffset is in SIMDValues
-        }
+        int* localIntSlots = (int*)(moduleMemoryPtr) + moduleMemory.mIntOffset;
+        float* localFloatSlots = (float*)(moduleMemoryPtr) + moduleMemory.mFloatOffset;
+        double* localDoubleSlots = (double*)(moduleMemoryPtr) + moduleMemory.mDoubleOffset;
+        AsmJsSIMDValue* localSimdSlots = (AsmJsSIMDValue*)(moduleMemoryPtr) + moduleMemory.mSimdOffset;
+        Var* localFunctionImports = moduleMemoryPtr + moduleMemory.mFFIOffset;
+        Var* localModuleFunctions = moduleMemoryPtr + moduleMemory.mFuncOffset;
+        Var** localFunctionTables = (Var**)(moduleMemoryPtr + moduleMemory.mFuncPtrOffset);
 
         ThreadContext* threadContext = this->scriptContext->GetThreadContext();
         *stdLibPtr = (m_inSlotsCount > 1) ? m_inParams[1] : nullptr;
