@@ -3824,6 +3824,160 @@ Lowerer::GenerateArrayAlloc(IR::Instr *instr, uint32 * psize, Js::ArrayCallSiteI
     return headOpnd;
 }
 
+template <typename ArrayType>
+IR::RegOpnd *
+Lowerer::GenerateArrayAlloc(IR::Instr *instr, IR::Opnd * arrayLenOpnd, Js::ArrayCallSiteInfo * arrayInfo, bool * pIsHeadSegmentZeroed, IR::Opnd ** alignedHeadSegSizeOpnd)
+{
+    Func * func = this->m_func;
+    IR::RegOpnd * dstOpnd = instr->GetDst()->AsRegOpnd();
+
+    IR::RegOpnd * headOpnd = IR::RegOpnd::New(TyMachPtr, func);
+    const IR::AutoReuseOpnd autoReuseHeadOpnd(headOpnd, func, false);
+    IR::Instr * leaHeadInstr = nullptr;
+
+    //TODO: Assume count will always in InlineHeadSegment because it will always be less than 64.
+    /*
+        ; ***** size = (arrayLen == 0) ? Js::SparseArraySegmentBase::SMALL_CHUNK_SIZE ? arrayLen *****
+        MOV sizeOpnd, arrayLenOpnd  ; Make copy so it doesn't get overwritten by SMALL_CHUNK_SIZE
+        CMP sizeOpnd, 0
+        LGE $L1
+        MOV sizeOpnd, Js::SparseArraySegmentBase::SMALL_CHUNK_SIZE;
+    $L1:
+        ; ***** calculate alignedArrayAllocationSize and alignedHeadSegSize *****
+        MOV objectSizeOpnd, objectSize               ; objectSize = sizeof(ArrayType) + sizeof(SparseArraySegment<typename ArrayType::TElement>)
+        arraySize     = MUL sizeOpnd, elementSize          ; elementSize = sizeof(T::TElement) //TODO: Update this comment once get approver that SHL is ok todo.
+        SHL sizeOpnd, N ; where 2^N = elementSize
+        arrayObjSize = ADD objectSizeOpnd, arraySizeOpnd
+        alignedArrayObjSize = ADD arrayObjSize, (HeapConstants::ObjectGranularity - 1)
+        alignedArrayAllocSize = AND alignedTotalArrayObjSizeOpnd, ~(HeapConstants::ObjectGranularity - 1)
+        temp = SUB alignedArrayAllocSize, objectSizeOpnd
+        alignedHeadSegSize = DIV temp, N          ; 2^N = sizeof(typename T::TElement)
+
+        ; ***** Call to allocation helper *****
+        PUSH recycler
+        PUSH alignedArrayAllocSize
+        s10 = CALL AllocMemForJavascriptIntArray
+
+        ; ***** Load headSeg/initialize it *****
+        dstOpnd = s10               ; s11 holds JavascriptNativeIntArray
+        headOpnd = LEA [s11+36]      ; s12 holds HeadSegment
+
+        ; ***** Evaluate arrayFlags *****
+        CMP sizeOpnd, 0
+        JE  $noMissingValues
+        MOV arrayFlagsOpnd, Js::DynamicObjectFlags::ObjectArrayFlagsTag
+        JMP $skip
+$noMissingValues:
+        MOV arrayFlagsOpnd, Js::DynamicObjectFlags::InitialArrayValue
+$skip:
+        ; ***** Array object initialization *****
+        ...
+        ...
+        MOV [dstOpnd+12], arrayFlagsOpnd       ; set arrayFlags
+        MOV [dstOpnd+16], arrayLenOpnd        ; set length field of JavascriptNativeIntArray
+        ...
+        MOV [headOpnd+4], arrayLenOpnd         ; set length field of HeadSegment
+        MOV [headOpnd+4], alignedHeadSegSize         ; set size field of HeadSegment
+
+    */
+
+    IR::Opnd * sizeOpnd = IR::RegOpnd::New(TyUint32, func);
+    IR::Opnd * arraySizeOpnd = IR::RegOpnd::New(TyUint32, func); // max value could be 8 (optimization limit for array) * sizeof(element)
+    IR::Opnd * alignedTotalArrayObjSizeOpnd = IR::RegOpnd::New(TyUint32, func); // max value could be arraySizeOpnd + 0x52(object size) + 0xF (HeapConstants::ObjectGranularity - 1)
+    IR::Opnd * alignedArrayAllocSizeOpnd = IR::RegOpnd::New(TyUint32, func); // max value less than alignedTotalArrayObjSizeOpnd AND (~(HeapConstants::ObjectGranularity - 1)
+    IR::Opnd * tempOpnd = IR::RegOpnd::New(TyUint32, func);
+    *alignedHeadSegSizeOpnd = IR::RegOpnd::New(TyUint32, func);
+
+    // ***** size = (arrayLen == 0) ? Js::SparseArraySegmentBase::SMALL_CHUNK_SIZE ? arrayLen *****
+    Lowerer::InsertMove(sizeOpnd, arrayLenOpnd, instr);
+    Lowerer::InsertCompare(sizeOpnd, IR::IntConstOpnd::New(0, TyUint32, func), instr);
+
+    IR::LabelInstr * notSmallChunkSizeLabel = IR::LabelInstr::New(Js::OpCode::Label, func);
+    Lowerer::InsertBranch(Js::OpCode::JGT, notSmallChunkSizeLabel, instr);
+    Lowerer::InsertMove(sizeOpnd, IR::IntConstOpnd::New(Js::SparseArraySegmentBase::SMALL_CHUNK_SIZE, TyUint32, func), instr);
+    instr->InsertBefore(notSmallChunkSizeLabel);
+
+    // ***** calculate alignedArrayAllocationSize and alignedHeadSegSize *****
+    IR::Opnd * objectSizeOpnd = IR::IntConstOpnd::New(Js::JavascriptArray::DetermineObjectSize<ArrayType, 0>(), TyUint32, func);
+
+    // Instead of performing (arraySize * sizeof(TElement), we would use shift operation instead.
+    // The multiplier operand calculates by how much we should shift arraySize to left to achieve the same result.
+    IR::Opnd * sizeOfMultiplierOpnd = IR::IntConstOpnd::New(Math::Log2(sizeof(typename ArrayType::TElement)), TyUint32, func);
+    Lowerer::InsertShift(Js::OpCode::Shl_A, false, arraySizeOpnd, sizeOpnd, sizeOfMultiplierOpnd, instr);
+    Lowerer::InsertAdd(false, tempOpnd, objectSizeOpnd, arraySizeOpnd, instr);
+
+//TODO: What about ARM ??
+#if defined(_M_IX86_OR_ARM32)
+    Lowerer::InsertAdd(false, alignedTotalArrayObjSizeOpnd, tempOpnd, IR::IntConstOpnd::New(HeapConstants::ObjectGranularity - 1, TyUint32, func), instr);
+    Lowerer::InsertAnd(alignedArrayAllocSizeOpnd, alignedTotalArrayObjSizeOpnd, IR::IntConstOpnd::New((int32)~(HeapConstants::ObjectGranularity - 1), TyInt32, func), instr);
+#else
+    Lowerer::InsertAdd(false, alignedTotalArrayObjSizeOpnd, tempOpnd, IR::IntConstOpnd::New(HeapConstants::ObjectGranularity - 1, TyUint64, func), instr);
+    Lowerer::InsertAnd(alignedArrayAllocSizeOpnd, alignedTotalArrayObjSizeOpnd, IR::IntConstOpnd::New((int64)~(HeapConstants::ObjectGranularity - 1), TyInt64, func), instr);
+#endif
+    Lowerer::InsertSub(false, tempOpnd, alignedArrayAllocSizeOpnd, objectSizeOpnd, instr);
+    Lowerer::InsertShift(Js::OpCode::ShrU_A, false, *alignedHeadSegSizeOpnd, tempOpnd, sizeOfMultiplierOpnd, instr);
+
+    // ***** Call to allocation helper *****
+    this->m_lowererMD.LoadHelperArgument(instr, this->LoadScriptContextValueOpnd(instr, ScriptContextValue::ScriptContextRecycler));
+    this->m_lowererMD.LoadHelperArgument(instr, alignedArrayAllocSizeOpnd);
+    IR::Instr *newObjCall = IR::Instr::New(Js::OpCode::Call, dstOpnd, IR::HelperCallOpnd::New(IR::HelperAllocMemForJavascriptNativeIntArray, func), func);
+    instr->InsertBefore(newObjCall);
+    this->m_lowererMD.LowerCall(newObjCall, 0);
+
+    // ***** Load headSeg/initialize it *****
+    leaHeadInstr = IR::Instr::New(Js::OpCode::LEA, headOpnd,
+                                  IR::IndirOpnd::New(dstOpnd, sizeof(ArrayType), TyMachPtr, func), func);
+    GenerateMemInit(dstOpnd, 0, this->LoadVTableValueOpnd(instr, ArrayType::VtableHelper()), instr, true);
+    GenerateMemInit(dstOpnd, ArrayType::GetOffsetOfType(), this->LoadLibraryValueOpnd(instr, ArrayType::InitialTypeHelper()), instr, true);
+    GenerateMemInitNull(dstOpnd, ArrayType::GetOffsetOfAuxSlots(), instr, true);
+
+    Js::ProfileId arrayCallSiteIndex = (Js::ProfileId)instr->AsProfiledInstr()->u.profileId;
+#if DBG
+    if (instr->AsProfiledInstr()->u.profileId < Js::Constants::NoProfileId)
+    {
+        Js::FunctionBody * functionBody = instr->m_func->GetJnFunction();
+        Assert((uint32)(arrayInfo - functionBody->GetAnyDynamicProfileInfo()->GetArrayCallSiteInfo(functionBody, 0)) == arrayCallSiteIndex);
+    }
+    else
+    {
+        Assert(arrayInfo == nullptr);
+    }
+#endif
+
+    IR::LabelInstr * noMissingValuesLabel = IR::LabelInstr::New(Js::OpCode::Label, func);
+    IR::LabelInstr * skipMissingValuesLabel = IR::LabelInstr::New(Js::OpCode::Label, func);
+
+    // ***** Evaluate arrayFlags *****
+    InsertCompare(sizeOpnd, IR::IntConstOpnd::New(0, TyUint16, func), instr);
+    InsertBranch(Js::OpCode::JEQ, noMissingValuesLabel, instr);
+    InsertMove(tempOpnd, IR::IntConstOpnd::New((uint16)Js::DynamicObjectFlags::ObjectArrayFlagsTag, TyUint16, func), instr);
+    InsertBranch(Js::OpCode::JMP, skipMissingValuesLabel, instr);
+    instr->InsertBefore(noMissingValuesLabel);
+    InsertMove(tempOpnd, IR::IntConstOpnd::New((uint16)Js::DynamicObjectFlags::InitialArrayValue, TyUint16, func), instr);
+    instr->InsertBefore(skipMissingValuesLabel);
+
+    // ***** Array object initialization *****
+    GenerateMemInit(dstOpnd, ArrayType::GetOffsetOfArrayFlags(), tempOpnd, instr, true);
+    GenerateMemInit(dstOpnd, ArrayType::GetOffsetOfLength(), sizeOpnd, instr, true);
+
+    if (leaHeadInstr != nullptr)
+    {
+        instr->InsertBefore(leaHeadInstr);
+        LowererMD::ChangeToLea(leaHeadInstr);
+    }
+
+    GenerateMemInit(dstOpnd, ArrayType::GetOffsetOfHead(), headOpnd, instr, true);
+    GenerateMemInit(dstOpnd, ArrayType::GetOffsetOfLastUsedSegmentOrSegmentMap(), headOpnd, instr, true);
+    GenerateMemInit(headOpnd, Js::SparseArraySegmentBase::GetOffsetOfLeft(), 0, instr, true);
+    GenerateMemInit(headOpnd, Js::SparseArraySegmentBase::GetOffsetOfLength(), sizeOpnd, instr, true);
+    GenerateMemInit(headOpnd, Js::SparseArraySegmentBase::GetOffsetOfSize(), *alignedHeadSegSizeOpnd, instr, true);
+    GenerateMemInitNull(headOpnd, Js::SparseArraySegmentBase::GetOffsetOfNext(), instr, true);
+
+    *pIsHeadSegmentZeroed = true;
+    return headOpnd;
+}
+
+
 void
 Lowerer::GenerateProfiledNewScObjArrayFastPath(IR::Instr *instr, Js::ArrayCallSiteInfo * arrayInfo, RecyclerWeakReference<Js::FunctionBody> * weakFuncRef, uint32 length, IR::LabelInstr* labelDone)
 {
@@ -3890,6 +4044,91 @@ Lowerer::GenerateProfiledNewScObjArrayFastPath(IR::Instr *instr, Js::ArrayCallSi
 
     // Skip pass the helper call
     InsertBranch(Js::OpCode::Br, labelDone, instr);
+    instr->InsertBefore(helperLabel);
+}
+
+void
+Lowerer::GenerateProfiledNewScObjArrayFastPath(IR::Instr *instr, Js::ArrayCallSiteInfo * arrayInfo, RecyclerWeakReference<Js::FunctionBody> * weakFuncRef, IR::LabelInstr* helperLabel, IR::LabelInstr* labelDone, IR::Opnd* lengthOpnd)
+{
+    if (PHASE_OFF(Js::ArrayCtorFastPathPhase, m_func))
+    {
+        return;
+    }
+
+    Func * func = this->m_func;
+
+    bool isZeroed;
+    IR::Opnd * alignedHeadSegSizeOpnd = nullptr;
+    IR::RegOpnd *dstOpnd = instr->GetDst()->AsRegOpnd();
+    IR::RegOpnd *headOpnd;
+    Js::ProfileId profileId = static_cast<Js::ProfileId>(instr->AsProfiledInstr()->u.profileId);
+    IR::Opnd * elementSizeOpnd = nullptr;
+    if (arrayInfo && arrayInfo->IsNativeIntArray())
+    {
+        elementSizeOpnd = IR::IntConstOpnd::New(sizeof(Js::JavascriptNativeIntArray::TElement), TyUint8, func);
+        GenerateArrayInfoIsNativeIntArrayTest(instr, arrayInfo, helperLabel);
+        Assert(Js::JavascriptNativeIntArray::GetOffsetOfArrayFlags() + sizeof(uint16) == Js::JavascriptNativeIntArray::GetOffsetOfArrayCallSiteIndex());
+        headOpnd = GenerateArrayAlloc<Js::JavascriptNativeIntArray>(instr, lengthOpnd, arrayInfo, &isZeroed, &alignedHeadSegSizeOpnd);
+
+        GenerateMemInit(dstOpnd, Js::JavascriptNativeIntArray::GetOffsetOfArrayCallSiteIndex(), IR::IntConstOpnd::New(profileId, TyUint16, func, true), instr, isZeroed);
+        GenerateMemInit(dstOpnd, Js::JavascriptNativeIntArray::GetOffsetOfWeakFuncRef(), IR::AddrOpnd::New(weakFuncRef, IR::AddrOpndKindDynamicFunctionBodyWeakRef, m_func), instr, isZeroed);
+    }
+    else if (arrayInfo && arrayInfo->IsNativeFloatArray())
+    {
+        elementSizeOpnd = IR::IntConstOpnd::New(sizeof(Js::JavascriptNativeFloatArray::TElement), TyUint8, func);
+        GenerateArrayInfoIsNativeFloatAndNotIntArrayTest(instr, arrayInfo, helperLabel);
+        Assert(Js::JavascriptNativeFloatArray::GetOffsetOfArrayFlags() + sizeof(uint16) == Js::JavascriptNativeFloatArray::GetOffsetOfArrayCallSiteIndex());
+        headOpnd = GenerateArrayAlloc<Js::JavascriptNativeFloatArray>(instr, lengthOpnd, arrayInfo, &isZeroed, &alignedHeadSegSizeOpnd);
+
+        GenerateMemInit(dstOpnd, Js::JavascriptNativeFloatArray::GetOffsetOfArrayCallSiteIndex(), IR::IntConstOpnd::New(profileId, TyUint16, func, true), instr, isZeroed);
+        GenerateMemInit(dstOpnd, Js::JavascriptNativeFloatArray::GetOffsetOfWeakFuncRef(), IR::AddrOpnd::New(weakFuncRef, IR::AddrOpndKindDynamicFunctionBodyWeakRef, m_func), instr, isZeroed);
+    }
+    else
+    {
+        elementSizeOpnd = IR::IntConstOpnd::New(sizeof(Js::JavascriptArray::TElement), TyUint8, func);
+        GenerateArrayInfoIsNativeIntArrayTest(instr, arrayInfo, helperLabel);
+        headOpnd = GenerateArrayAlloc<Js::JavascriptArray>(instr, lengthOpnd, arrayInfo, &isZeroed, &alignedHeadSegSizeOpnd);
+    }
+
+    //        MOV s13, 0                    ; index
+    //        MOV s14, 16                   ; headSegmentIndex
+    //$LoopTop:
+    //        CMP s13, alignedHeadSegSizeOpnd
+    //        JGE $done
+    //        MOV [s12+s14], 0x80000002     ; Save missing element
+    //        s14 = ADD s14, 4              ; headSegmentIndex += 4. NOTE: value 4 could be different for different type of arrays
+    //        s13 = ADD s13, 1              ; index ++
+    //        JMP $LoopTop
+    //
+    //$done
+
+    //        MOV s13, 0              ; index
+    IR::RegOpnd * indexOpnd = IR::RegOpnd::New(TyUint32, func);
+    IR::RegOpnd * headSegIndexOpnd = IR::RegOpnd::New(TyUint32, func); //REVIEW: Should this be TyUint64 for x64?
+
+    InsertMove(indexOpnd, IR::IntConstOpnd::New(0, TyUint8, func, true), instr);
+    InsertMove(headSegIndexOpnd, IR::IntConstOpnd::New(sizeof(Js::SparseArraySegmentBase), TyUint16, func, true), instr);
+
+    IR::Opnd * missingValueOpnd = GetMissingItemOpnd(IRType::TyInt32, func); // TODO: This is TyVar for float and var array
+
+    IR::LabelInstr * loopTopInstr = IR::LabelInstr::New(Js::OpCode::Label, func);
+    instr->InsertBefore(loopTopInstr);
+
+    InsertCompareBranch(indexOpnd, alignedHeadSegSizeOpnd, Js::OpCode::JGE, labelDone, instr);
+    GenerateMemInit(headOpnd, headSegIndexOpnd, missingValueOpnd, instr, true);
+    InsertAdd(false, headSegIndexOpnd, headSegIndexOpnd, elementSizeOpnd, instr);
+    InsertAdd(false, indexOpnd, indexOpnd, IR::IntConstOpnd::New(1, TyUint8, func), instr);
+    InsertBranch(Js::OpCode::JMP, loopTopInstr, instr);
+
+    loopTopInstr->m_isLoopTop = true;
+    Loop *loop = JitAnew(func->m_alloc, Loop, func->m_alloc, this->m_func);
+    loopTopInstr->SetLoop(loop);
+    loop->SetLoopTopInstr(loopTopInstr);
+    loop->regAlloc.liveOnBackEdgeSyms = JitAnew(func->m_alloc, BVSparse<JitArenaAllocator>, func->m_alloc);
+    loop->regAlloc.liveOnBackEdgeSyms->Set(headOpnd->m_sym->m_id);
+    loop->regAlloc.liveOnBackEdgeSyms->Set(indexOpnd->m_sym->m_id);
+    loop->regAlloc.liveOnBackEdgeSyms->Set(headSegIndexOpnd->m_sym->m_id);
+
     instr->InsertBefore(helperLabel);
 }
 
@@ -4934,6 +5173,7 @@ Lowerer::LowerNewScObjArray(IR::Instr *newObjInstr)
         Assert(weakFuncRef);
     }
 
+    IR::LabelInstr * helperLabel = IR::LabelInstr::New(Js::OpCode::Label, func, true);
     IR::LabelInstr *labelDone = IR::LabelInstr::New(Js::OpCode::Label, func);
     IR::Opnd *linkOpnd = newObjInstr->GetSrc2();
 
@@ -4942,30 +5182,65 @@ Lowerer::LowerNewScObjArray(IR::Instr *newObjInstr)
     Assert(linkSym->IsSingleDef());
     IR::Instr* argInstr = linkSym->GetInstrDef();
     IR::Opnd *opndOfArrayCtor = argInstr->GetSrc1();
+    const uint16 upperBoundValue = 8;
     // Generate fast path only if it meets all the conditions:
-    // 1. 1st paramter is a constant
-    // 2. It is the only parameter.
-    // 3. It is in range 0 <= parameter <= 8
-    if (opndOfArrayCtor->IsAddrOpnd()) // #1
-    {
-        int32 length = linkSym->GetIntConstValue();
+    // 1. It is the only parameter
+    // 2a. If 1st paramter is a variable, emit fast path with checks
+    // 2b. If 1st paramter is a constant, it is in range 0 and upperBoundValue (inclusive)
+    if (opndOfArrayCtor->IsAddrOpnd() || opndOfArrayCtor->IsRegOpnd()) // #1
 
-        if ((linkSym->GetArgSlotNum() == 2) && (length >= 0 && length <= 8)) // #2 and #3
+    {
+        if ((linkSym->GetArgSlotNum() == 2)) // 1. It is the only parameter
         {
             AssertMsg(linkSym->IsArgSlotSym(), "Not an argSlot symbol...");
             linkOpnd = argInstr->GetSrc2();
 
-            linkSym = linkOpnd->AsRegOpnd()->m_sym->AsStackSym();
-            AssertMsg(!linkSym->IsArgSlotSym() && linkSym->m_isSingleDef, "Arg tree not single def...");
+            bool emittedFastPath = true;
+            // 2a. If 1st paramter is a variable, emit fast path with checks
+            if (opndOfArrayCtor->IsRegOpnd())
+            {
+                // 1. emit int check
+                IR::RegOpnd *const regSrc = opndOfArrayCtor->AsRegOpnd();
 
-            startCallInstr = linkSym->m_instrDef;
-            AssertMsg(startCallInstr->GetArgOutCount(false) == 2, "Generating ArrayFastPath for more than 1 parameter not allowed.");
+                // FromVar reg, Src
+                IR::RegOpnd *const opndValue = IR::RegOpnd::New(TyInt32, this->m_func);
+                const IR::AutoReuseOpnd autoReuseReg(opndValue, m_func);
+                IR::Instr *const instr = IR::Instr::New(Js::OpCode::FromVar, opndValue, regSrc, newObjInstr->m_func);
+                newObjInstr->InsertBefore(instr);
+                m_lowererMD.EmitLoadInt32(instr, true /*conversionFromObjectAllowed*/);
 
-            GenerateProfiledNewScObjArrayFastPath(newObjInstr, arrayInfo, weakFuncRef, (uint32)length, labelDone);
+                // 2. emit bound check
+                IR::Opnd* upperBound = IR::IntConstOpnd::New(upperBoundValue, TyUint8, func, true);
+                InsertCompareBranch(opndValue, upperBound, Js::OpCode::JA, helperLabel, newObjInstr);
 
+                // 3. GenerateFastPath
+                GenerateProfiledNewScObjArrayFastPath(newObjInstr, arrayInfo, weakFuncRef, helperLabel, labelDone, opndValue);
+            }
+            // 2b. If 1st paramter is a constant, it is in range 0 and upperBoundValue (inclusive)
+            else
+            {
+                int32 length = linkSym->GetIntConstValue();
+                if (length >= 0 && length <= upperBoundValue)
+                {
+                    GenerateProfiledNewScObjArrayFastPath(newObjInstr, arrayInfo, weakFuncRef, (uint32)length, labelDone);
+                }
+                else
+                {
+                    emittedFastPath = false;
+                }
+            }
             // Since we emitted fast path above, move the startCall/argOut instruction right before helper
-            startCallInstr->Move(newObjInstr);
-            argInstr->Move(newObjInstr);
+            if (emittedFastPath)
+            {
+                linkSym = linkOpnd->AsRegOpnd()->m_sym->AsStackSym();
+                AssertMsg(!linkSym->IsArgSlotSym() && linkSym->m_isSingleDef, "Arg tree not single def...");
+
+                startCallInstr = linkSym->m_instrDef;
+                AssertMsg(startCallInstr->GetArgOutCount(false) == 2, "Generating ArrayFastPath for more than 1 parameter not allowed.");
+
+                startCallInstr->Move(newObjInstr);
+                argInstr->Move(newObjInstr);
+            }
         }
     }
     newObjInstr->UnlinkSrc1();
@@ -5063,7 +5338,7 @@ Lowerer::LowerNewScObjArrayNoArg(IR::Instr *newObjInstr)
     }
 
     IR::LabelInstr *labelDone = IR::LabelInstr::New(Js::OpCode::Label, func);
-    GenerateProfiledNewScObjArrayFastPath(newObjInstr, arrayInfo, weakFuncRef, 0, labelDone);
+    GenerateProfiledNewScObjArrayFastPath(newObjInstr, arrayInfo, weakFuncRef, (uint32)0, labelDone);
     newObjInstr->InsertAfter(labelDone);
 
     m_lowererMD.LoadHelperArgument(newObjInstr, IR::AddrOpnd::New(weakFuncRef, IR::AddrOpndKindDynamicFunctionBodyWeakRef, func));
@@ -20862,6 +21137,15 @@ Lowerer::GenerateMemInitNull(IR::RegOpnd * opnd, int32 offset, IR::Instr * inser
 
 void
 Lowerer::GenerateMemInit(IR::RegOpnd * opnd, int32 offset, IR::Opnd * value, IR::Instr * insertBeforeInstr, bool isZeroed)
+{
+    IRType type = value->GetType();
+
+    Func * func = this->m_func;
+    InsertMove(IR::IndirOpnd::New(opnd, offset, type, func), value, insertBeforeInstr);
+}
+
+void
+Lowerer::GenerateMemInit(IR::RegOpnd * opnd, IR::RegOpnd * offset, IR::Opnd * value, IR::Instr * insertBeforeInstr, bool isZeroed)
 {
     IRType type = value->GetType();
 
