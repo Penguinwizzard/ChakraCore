@@ -4932,15 +4932,20 @@ Lowerer::LowerNewScObjArray(IR::Instr *newObjInstr)
         Assert(weakFuncRef);
     }
 
-    IR::Opnd *opndSrc1 = newObjInstr->UnlinkSrc1();
-    if (opndSrc1->IsImmediateOpnd())
+    IR::Opnd *opndSrc = newObjInstr->GetSrc2();
+    Assert(opndSrc->IsSymOpnd());
+    StackSym *linkSym = opndSrc->AsSymOpnd()->m_sym->AsStackSym();
+    Assert(linkSym->IsSingleDef());
+    opndSrc = linkSym->GetInstrDef()->GetSrc1();
+    if (opndSrc->IsIntConstOpnd() || opndSrc->IsAddrOpnd())
     {
-        intptr_t length = opndSrc1->GetImmediateValue();
+        int32 length = linkSym->GetIntConstValue();
         if (length >= 0 && length <= 8)
         {
             GenerateProfiledNewScObjArrayFastPath(newObjInstr, arrayInfo, weakFuncRef, (uint32)length);
         }
     }
+    newObjInstr->UnlinkSrc1();
 
     IR::Opnd *profileOpnd = IR::AddrOpnd::New(arrayInfo, IR::AddrOpndKindDynamicArrayCallSiteInfo, func);
     this->m_lowererMD.LoadNewScObjFirstArg(newObjInstr, profileOpnd);
