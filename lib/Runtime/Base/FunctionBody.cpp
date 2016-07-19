@@ -5192,7 +5192,7 @@ namespace Js
     }
 
     PropertyIdOnRegSlotsContainer::PropertyIdOnRegSlotsContainer()
-        :  propertyIdsForRegSlots(nullptr), length(0), propertyIdsForFormalArgs(nullptr)
+        :  propertyIdsForRegSlots(nullptr), length(0), propertyIdsForFormalArgs(nullptr), formalsUpperBound(Js::Constants::NoRegister)
     {
     }
 

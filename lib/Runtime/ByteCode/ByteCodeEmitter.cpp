@@ -2801,7 +2801,11 @@ void ByteCodeGenerator::PopulateFormalsScope(uint beginOffset, FuncInfo *funcInf
                 debuggerScope->SetBegin(beginOffset);
             }
 
-            debuggerScope->AddProperty(pnodeArg->sxVar.sym->GetLocation(), pnodeArg->sxVar.sym->EnsurePosition(funcInfo), Js::DebuggerScopePropertyFlags_None);
+            if (funcInfo->paramScope->GetCanMergeWithBodyScope() || pnodeArg->sxVar.sym->IsInSlot(funcInfo))
+            {
+                // In split scope case do not add the property if it is not in slot. PropertyIdOnRegSlotContainer has the register allocated properties.
+                debuggerScope->AddProperty(pnodeArg->sxVar.sym->GetLocation(), pnodeArg->sxVar.sym->EnsurePosition(funcInfo), Js::DebuggerScopePropertyFlags_None);
+            }
         }
     };
 
@@ -3297,6 +3301,7 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
             pnode->sxFnc.pnodeRest->sxVar.sym->SetNeedDeclaration(false);
         }
 
+        Js::RegSlot formalsUpperBound = Js::Constants::NoRegister; // Needed for tracking the last RegSlot in the param scope
         if (paramScope && !paramScope->GetCanMergeWithBodyScope())
         {
             // Emit bytecode to copy the initial values from param names to their corresponding body bindings.
@@ -3332,6 +3337,14 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
                 {
                     Assert(param->GetIsArguments() || pnode->sxFnc.pnodeName->sxVar.sym == param);
                 }
+
+                if (ShouldTrackDebuggerMetadata() && param->GetLocation() != Js::Constants::NoRegister)
+                {
+                    if (formalsUpperBound == Js::Constants::NoRegister || formalsUpperBound < param->GetLocation())
+                    {
+                        formalsUpperBound = param->GetLocation();
+                    }
+                }
             });
 
             // In split scope as the body has a separate closure we have to copy the value of this and other special slots
@@ -3358,6 +3371,10 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
             copySpecialSymbolsToBody(funcInfo->innerSuperScopeSlot, funcInfo->superScopeSlot);
             copySpecialSymbolsToBody(funcInfo->innerSuperCtorScopeSlot, funcInfo->superCtorScopeSlot);
             copySpecialSymbolsToBody(funcInfo->innerNewTargetScopeSlot, funcInfo->newTargetScopeSlot);
+        }
+        if (ShouldTrackDebuggerMetadata() && byteCodeFunction->GetPropertyIdOnRegSlotsContainer())
+        {
+            byteCodeFunction->GetPropertyIdOnRegSlotsContainer()->formalsUpperBound = formalsUpperBound;
         }
 
         if (pnode->sxFnc.pnodeBodyScope != nullptr)

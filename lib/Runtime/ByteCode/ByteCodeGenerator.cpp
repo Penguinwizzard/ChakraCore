@@ -4056,8 +4056,8 @@ ParseNode* InvertLoop(ParseNode* outerLoop, ByteCodeGenerator* byteCodeGenerator
                     if (InvertableBlock(block, outerVar, innerLoop, outerLoop, byteCodeGenerator, &symCheck))
                     {
                         return ConstructInvertedLoop(innerLoop, outerLoop, byteCodeGenerator, funcInfo);
-                        }
                     }
+                }
             }
         }
     }
