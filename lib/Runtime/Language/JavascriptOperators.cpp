@@ -5128,7 +5128,7 @@ CommonNumber:
             {
                 return false;
             }
-        }       
+        }
         return true;
     }
 
@@ -5157,59 +5157,59 @@ CommonNumber:
         }
     }
 
-     BOOL JavascriptOperators::OP_BrFncEqApply(Var instance, ScriptContext *scriptContext)
-     {
-         // JavascriptFunction && !HostDispatch
-         if (JavascriptOperators::GetTypeId(instance) == TypeIds_Function)
-         {
-             FunctionProxy *bod= ((JavascriptFunction*)instance)->GetFunctionProxy();
-             if (bod != nullptr)
-             {
-                 return bod->GetDirectEntryPoint(bod->GetDefaultEntryPointInfo()) == &Js::JavascriptFunction::EntryApply;
-             }
-             else
-             {
-                 FunctionInfo* info = ((JavascriptFunction *)instance)->GetFunctionInfo();
-                 if (info != nullptr)
-                 {
-                     return &Js::JavascriptFunction::EntryApply == info->GetOriginalEntryPoint();
-                 }
-                 else
-                 {
-                     return false;
-                 }
-             }
-         }
+    BOOL JavascriptOperators::OP_BrFncEqApply(Var instance, ScriptContext *scriptContext)
+    {
+        // JavascriptFunction && !HostDispatch
+        if (JavascriptOperators::GetTypeId(instance) == TypeIds_Function)
+        {
+            FunctionProxy *bod = ((JavascriptFunction*)instance)->GetFunctionProxy();
+            if (bod != nullptr)
+            {
+                return bod->GetDirectEntryPoint(bod->GetDefaultEntryPointInfo()) == &Js::JavascriptFunction::EntryApply;
+            }
+            else
+            {
+                FunctionInfo* info = ((JavascriptFunction *)instance)->GetFunctionInfo();
+                if (info != nullptr)
+                {
+                    return &Js::JavascriptFunction::EntryApply == info->GetOriginalEntryPoint();
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
 
-         return false;
-     }
+        return false;
+    }
 
-     BOOL JavascriptOperators::OP_BrFncNeqApply(Var instance, ScriptContext *scriptContext)
-     {
-         // JavascriptFunction and !HostDispatch
-         if (JavascriptOperators::GetTypeId(instance) == TypeIds_Function)
-         {
-             FunctionProxy *bod = ((JavascriptFunction *)instance)->GetFunctionProxy();
-             if (bod != nullptr)
-             {
-                 return bod->GetDirectEntryPoint(bod->GetDefaultEntryPointInfo()) != &Js::JavascriptFunction::EntryApply;
-             }
-             else
-             {
-                 FunctionInfo* info = ((JavascriptFunction *)instance)->GetFunctionInfo();
-                 if (info != nullptr)
-                 {
-                     return &Js::JavascriptFunction::EntryApply != info->GetOriginalEntryPoint();
-                 }
-                 else
-                 {
-                     return true;
-                 }
-             }
-         }
+    BOOL JavascriptOperators::OP_BrFncNeqApply(Var instance, ScriptContext *scriptContext)
+    {
+        // JavascriptFunction and !HostDispatch
+        if (JavascriptOperators::GetTypeId(instance) == TypeIds_Function)
+        {
+            FunctionProxy *bod = ((JavascriptFunction *)instance)->GetFunctionProxy();
+            if (bod != nullptr)
+            {
+                return bod->GetDirectEntryPoint(bod->GetDefaultEntryPointInfo()) != &Js::JavascriptFunction::EntryApply;
+            }
+            else
+            {
+                FunctionInfo* info = ((JavascriptFunction *)instance)->GetFunctionInfo();
+                if (info != nullptr)
+                {
+                    return &Js::JavascriptFunction::EntryApply != info->GetOriginalEntryPoint();
+                }
+                else
+                {
+                    return true;
+                }
+            }
+        }
 
-         return true;
-     }
+        return true;
+    }
 
     BOOL JavascriptOperators::OP_BrHasSideEffects(int se, ScriptContext* scriptContext)
     {
