@@ -2918,15 +2918,8 @@ namespace Js
                 }
             }
 
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1607_MSRC33319_BUG7424216) || defined(_CHAKRACOREBUILD)
             if (pDestArray && JavascriptArray::IsDirectAccessArray(aItem) && JavascriptArray::IsDirectAccessArray(pDestArray)
                 && BigIndex(idxDest + JavascriptArray::FromVar(aItem)->length).IsSmallIndex()) // Fast path
-#else
-            if (pDestArray && JavascriptArray::IsDirectAccessArray(aItem) && JavascriptArray::IsDirectAccessArray(pDestArray)) // Fast path
-#endif
             {
                 if (JavascriptNativeIntArray::Is(aItem))
                 {
@@ -3315,61 +3308,9 @@ namespace Js
         pDestObj = ArraySpeciesCreate(args[0], 0, scriptContext);
         if (pDestObj)
         {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1606_MSRC33310_BUG7387155) || defined(_CHAKRACOREBUILD)
-            // Check the thing that species create made. If it's a native array that can't handle the source
-            // data, convert it. If it's a more conservative kind of array than the source data, indicate that
-            // so that the data will be converted on copy.
-            if (isInt)
-            {
-                if (JavascriptNativeIntArray::Is(pDestObj))
-                {
-                    isArray = true;
-                }
-                else
-                {
-                    isInt = false;
-                    isFloat = JavascriptNativeFloatArray::Is(pDestObj);
-                    isArray = JavascriptArray::Is(pDestObj);
-                }
-            }
-            else if (isFloat)
-            {
-                if (JavascriptNativeIntArray::Is(pDestObj))
-                {
-                    JavascriptNativeIntArray::ToNativeFloatArray(JavascriptNativeIntArray::FromVar(pDestObj));
-                    isArray = true;
-                }
-                else
-                {
-                    isFloat = JavascriptNativeFloatArray::Is(pDestObj);
-                    isArray = JavascriptArray::Is(pDestObj);
-                }
-            }
-            else
-            {
-                if (JavascriptNativeIntArray::Is(pDestObj))
-                {
-                    JavascriptNativeIntArray::ToVarArray(JavascriptNativeIntArray::FromVar(pDestObj));
-                    isArray = true;
-                }
-                else if (JavascriptNativeFloatArray::Is(pDestObj))
-                {
-                    JavascriptNativeFloatArray::ToVarArray(JavascriptNativeFloatArray::FromVar(pDestObj));
-                    isArray = true;
-                }
-                else
-                {
-                    isArray = JavascriptArray::Is(pDestObj);
-                }
-            }
-#else
             isInt = JavascriptNativeIntArray::Is(pDestObj);
             isFloat = !isInt && JavascriptNativeFloatArray::Is(pDestObj); // if we know it is an int short the condition to avoid a function call
             isArray = isInt || isFloat || JavascriptArray::Is(pDestObj);
-#endif
         }
 
         if (pDestObj == nullptr || isArray)
@@ -5760,12 +5701,7 @@ Case0:
         bool isIntArray = false;
         bool isFloatArray = false;
         bool isTypedArrayEntryPoint = typedArrayBase != nullptr;
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1607_MSRC33302_BUG7387150) || defined(_CHAKRACOREBUILD)
         bool isBuiltinArrayCtor = true;
-#endif
         T startT = 0;
         T newLenT = length;
         T endT = length;
@@ -5818,23 +5754,11 @@ Case0:
         if (isTypedArrayEntryPoint)
         {
             Var constructor = JavascriptOperators::SpeciesConstructor(typedArrayBase, TypedArrayBase::GetDefaultConstructor(args[0], scriptContext), scriptContext);
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1607_MSRC33302_BUG7387150) || defined(_CHAKRACOREBUILD)
             isBuiltinArrayCtor = (constructor == library->GetArrayConstructor());
-#endif
 
             // If we have an array source object, we need to make sure to do the right thing if it's a native array.
             // The helpers below which do the element copying require the source and destination arrays to have the same native type.
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1607_MSRC33302_BUG7387150) || defined(_CHAKRACOREBUILD)
             if (pArr && isBuiltinArrayCtor)
-#else
-            if (pArr && constructor == library->GetArrayConstructor())
-#endif
             {
                 if (newLenT > JavascriptArray::MaxArrayLength)
                 {
@@ -5868,27 +5792,13 @@ Case0:
 
         else if (pArr != nullptr)
         {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1607_MSRC33302_BUG7387150) || defined(_CHAKRACOREBUILD)
             newObj = ArraySpeciesCreate(pArr, newLenT, scriptContext, &isIntArray, &isFloatArray, &isBuiltinArrayCtor);
-#else
-            newObj = ArraySpeciesCreate(pArr, newLenT, scriptContext, &isIntArray, &isFloatArray);
-#endif
         }
 
         // skip the typed array and "pure" array case, we still need to handle special arrays like es5array, remote array, and proxy of array.
         else
         {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1607_MSRC33302_BUG7387150) || defined(_CHAKRACOREBUILD)
             newObj = ArraySpeciesCreate(obj, newLenT, scriptContext, nullptr, nullptr, &isBuiltinArrayCtor);
-#else
-            newObj = ArraySpeciesCreate(obj, newLenT, scriptContext);
-#endif
         }
 
         // If we didn't create a new object above we will create a new array here.
@@ -5932,14 +5842,7 @@ Case0:
         if (pArr)
         {
             // If we constructed a new Array object, we have some nice helpers here
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1607_MSRC33302_BUG7387150) || defined(_CHAKRACOREBUILD)
             if (newArr && isBuiltinArrayCtor)
-#else
-            if (newArr)
-#endif
             {
                 if (JavascriptArray::IsDirectAccessArray(newArr))
                 {
@@ -5985,14 +5888,7 @@ Case0:
                             continue;
                         }
 
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1607_MSRC33302_BUG7387150) || defined(_CHAKRACOREBUILD)
                         newArr->SetItem(i, element, PropertyOperation_None);
-#else
-                        newArr->DirectSetItemAt(i, element);
-#endif
                     }
                 }
             }
@@ -6058,14 +5954,7 @@ Case0:
                     Var element = JavascriptOperators::GetItem(obj, i + start, scriptContext);
                     if (newArr != nullptr)
                     {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1607_MSRC33302_BUG7387150) || defined(_CHAKRACOREBUILD)
                         newArr->SetItem(i, element, PropertyOperation_None);
-#else
-                        newArr->DirectSetItemAt(i, element);
-#endif
                     }
                     else
                     {
@@ -6352,17 +6241,9 @@ Case0:
                 {
                     countUndefined++;
                 }
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1607_MSRC33332_BUG7424474) || defined(_CHAKRACOREBUILD)
-#else
-                orig[i] = SparseArraySegment<Var>::GetMissingItem();
-#endif
             }
         }
 
-#if defined(PRERELEASE_REL1607_MSRC33332_BUG7424474) || defined(_CHAKRACOREBUILD)
         if (count > 0)
         {
             SortElements(elements, 0, count - 1);
@@ -6377,20 +6258,6 @@ Case0:
         {
             orig[i] = SparseArraySegment<Var>::GetMissingItem();
         }
-#else
-        if (count == 0)
-        {
-            *len = 0; // set the length to zero
-            return countUndefined;
-        }
-
-        SortElements(elements, 0, count - 1);
-
-        for (uint32 i = 0; i < count; ++i)
-        {
-            orig[i] = elements[i].Value;
-        }
-#endif
 
         *len = count; // set the correct length
         return countUndefined;
@@ -6720,12 +6587,7 @@ Case0:
 
             bool isIntArray = false;
             bool isFloatArray = false;
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1607_MSRC33301_BUG7387145) || defined(_CHAKRACOREBUILD)
             bool isBuiltinArrayCtor = true;
-#endif
             JavascriptArray *newArr = nullptr;
 
             // Just dump the segment map on splice (before any possible allocation and throw)
@@ -6733,14 +6595,7 @@ Case0:
 
             // If the source object is an Array exotic object (Array.isArray) we should try to load the constructor property
             // and use it to construct the return object.
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1607_MSRC33301_BUG7387145) || defined(_CHAKRACOREBUILD)
             newObj = ArraySpeciesCreate(pArr, deleteLen, scriptContext, nullptr, nullptr, &isBuiltinArrayCtor);
-#else
-            newObj = ArraySpeciesCreate(pArr, deleteLen, scriptContext);
-#endif
             if (newObj != nullptr)
             {
                 pArr = EnsureNonNativeArray(pArr);
@@ -6758,14 +6613,7 @@ Case0:
             }
 
             // If return object is a JavascriptArray, we can use all the array splice helpers
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1607_MSRC33301_BUG7387145) || defined(_CHAKRACOREBUILD)
             if (newArr && isBuiltinArrayCtor)
-#else
-            if (newArr)
-#endif
             {
 
                 // Array has a single segment (need not start at 0) and splice start lies in the range
@@ -6844,10 +6692,6 @@ Case0:
                     pArr->length = newLen;
                 }
 
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1607_MSRC33301_BUG7387145) || defined(_CHAKRACOREBUILD)
                 if (newArr->length != deleteLen)
                 {
                     newArr->SetLength(deleteLen);
@@ -6856,7 +6700,6 @@ Case0:
                 {
                     newArr->length = deleteLen;
                 }
-#endif
 
                 newArr->InvalidateLastUsedSegment();
 
@@ -7274,14 +7117,7 @@ Case0:
                    Var element = JavascriptOperators::GetItem(pObj, start + i, scriptContext);
                    if (pnewArr)
                    {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1607_MSRC33301_BUG7387145) || defined(_CHAKRACOREBUILD)
                        pnewArr->SetItem(i, element, PropertyOperation_None);
-#else
-                       pnewArr->DirectSetItemAt(i, element);
-#endif
                    }
                    else
                    {
@@ -7342,12 +7178,7 @@ Case0:
         // Set up new length
         indexT newLen = indexT(len - deleteLen) + insertLen;
         h.ThrowTypeErrorOnFailure(JavascriptOperators::SetProperty(pObj, pObj, PropertyIds::length, IndexTrace<indexT>::ToNumber(newLen, scriptContext), scriptContext, PropertyOperation_ThrowIfNotExtensible));
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1607_MSRC33301_BUG7387145) || defined(_CHAKRACOREBUILD)
         h.ThrowTypeErrorOnFailure(JavascriptOperators::SetProperty(pNewObj, pNewObj, PropertyIds::length, IndexTrace<indexT>::ToNumber(deleteLen, scriptContext), scriptContext, PropertyOperation_ThrowIfNotExtensible));
-#endif
 #ifdef VALIDATE_ARRAY
         if (pnewArr)
         {
@@ -8318,6 +8149,7 @@ Case0:
                     }
                 }
             }
+
         }
 
         return scriptContext->GetLibrary()->GetTrue();
@@ -8973,12 +8805,7 @@ Case0:
         RecyclableObject* newObj = nullptr;
         JavascriptArray* newArr = nullptr;
         bool isTypedArrayEntryPoint = typedArrayBase != nullptr;
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1607_MSRC33300_BUG7387136) || defined(_CHAKRACOREBUILD)
         bool isBuiltinArrayCtor = true;
-#endif
 
         if (args.Info.Count < 2 || !JavascriptConversion::IsCallable(args[1]))
         {
@@ -9016,12 +8843,7 @@ Case0:
         {
             Var constructor = JavascriptOperators::SpeciesConstructor(
                 typedArrayBase, TypedArrayBase::GetDefaultConstructor(args[0], scriptContext), scriptContext);
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1607_MSRC33300_BUG7387136) || defined(_CHAKRACOREBUILD)
             isBuiltinArrayCtor = (constructor == scriptContext->GetLibrary()->GetArrayConstructor());
-#endif
 
             if (JavascriptOperators::IsConstructor(constructor))
             {
@@ -9038,14 +8860,7 @@ Case0:
         // skip the typed array and "pure" array case, we still need to handle special arrays like es5array, remote array, and proxy of array.
         else if (pArr == nullptr || scriptContext->GetConfig()->IsES6SpeciesEnabled())
         {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1607_MSRC33300_BUG7387136) || defined(_CHAKRACOREBUILD)
             newObj = ArraySpeciesCreate(obj, length, scriptContext, nullptr, nullptr, &isBuiltinArrayCtor);
-#else
-            newObj = ArraySpeciesCreate(obj, length, scriptContext);
-#endif
         }
 
         if (newObj == nullptr)
@@ -9093,14 +8908,7 @@ Case0:
                     pArr);
 
                 // If newArr is a valid pointer, then we constructed an array to return. Otherwise we need to do generic object operations
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1607_MSRC33300_BUG7387136) || defined(_CHAKRACOREBUILD)
                 if (newArr && isBuiltinArrayCtor)
-#else
-                if (newArr)
-#endif
                 {
                     newArr->DirectSetItemAt(k, mappedValue);
                 }
@@ -9871,14 +9679,7 @@ Case0:
 
                 if (newArr)
                 {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1607_MSRC33299_BUG7387131) || defined(_CHAKRACOREBUILD)
                     newArr->SetItem(k, nextValue, PropertyOperation_None);
-#else
-                    newArr->DirectSetItemAt(k, nextValue);
-#endif
                 }
                 else
                 {
@@ -9947,14 +9748,7 @@ Case0:
 
                 if (newArr)
                 {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1607_MSRC33299_BUG7387131) || defined(_CHAKRACOREBUILD)
                     newArr->SetItem(k, kValue, PropertyOperation_None);
-#else
-                    newArr->DirectSetItemAt(k, kValue);
-#endif
                 }
                 else
                 {
@@ -10004,22 +9798,12 @@ Case0:
         Var newObj = nullptr;
         JavascriptArray* newArr = nullptr;
         TypedArrayBase* newTypedArray = nullptr;
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1607_MSRC33298_BUG7387125) || defined(_CHAKRACOREBUILD)
         bool isBuiltinArrayCtor = true;
-#endif
 
         if (JavascriptOperators::IsConstructor(args[0]))
         {
             RecyclableObject* constructor = RecyclableObject::FromVar(args[0]);
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1607_MSRC33298_BUG7387125) || defined(_CHAKRACOREBUILD)
             isBuiltinArrayCtor = (constructor == scriptContext->GetLibrary()->GetArrayConstructor());
-#endif
 
             Js::Var constructorArgs[] = { constructor, JavascriptNumber::ToVar(len, scriptContext) };
             Js::CallInfo constructorCallInfo(Js::CallFlags_New, _countof(constructorArgs));
@@ -10053,14 +9837,7 @@ Case0:
         // At least we have a new object of some kind
         Assert(newObj);
 
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1607_MSRC33298_BUG7387125) || defined(_CHAKRACOREBUILD)
         if (isBuiltinArrayCtor)
-#else
-        if (newArr)
-#endif
         {
             for (uint32 k = 0; k < len; k++)
             {
@@ -10241,22 +10018,11 @@ Case0:
                     if (index < startIndex) continue;
                     else if (index >= limitIndex) break;
 
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1607_MSRC33383_BUG7527933) || defined(_CHAKRACOREBUILD)
                     Var value = nullptr;
                     if (JavascriptOperators::GetOwnItem(es5Array, index, &value, scriptContext))
                     {
                         fn(index, value);
                     }
-#else
-                    Var value;
-                    BOOL success = JavascriptOperators::GetOwnItem(es5Array, index, &value, scriptContext);
-                    Assert(success);
-
-                    fn(index, value);
-#endif
                 }
             }
         }
@@ -10319,22 +10085,11 @@ Case0:
                         T n = destIndex + (index - startIndex);
                         if (destArray == nullptr || !destArray->DirectGetItemAt(n, &oldValue))
                         {
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1607_MSRC33383_BUG7527933) || defined(_CHAKRACOREBUILD)
                             Var value = nullptr;
                             if (JavascriptOperators::GetOwnItem(es5Array, index, &value, scriptContext))
                             {
                                 fn(index, value);
                             }
-#else
-                            Var value;
-                            BOOL success = JavascriptOperators::GetOwnItem(es5Array, index, &value, scriptContext);
-                            Assert(success);
-
-                            fn(index, value);
-#endif
                         }
                     }
                 }
@@ -11617,14 +11372,7 @@ Case0:
 
     template<typename T>
     RecyclableObject*
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1607_MSRC33302_BUG7387150) || defined(_CHAKRACOREBUILD)
     JavascriptArray::ArraySpeciesCreate(Var originalArray, T length, ScriptContext* scriptContext, bool *pIsIntArray, bool *pIsFloatArray, bool *pIsBuiltinArrayCtor)
-#else
-    JavascriptArray::ArraySpeciesCreate(Var originalArray, T length, ScriptContext* scriptContext, bool* pIsIntArray, bool* pIsFloatArray)
-#endif
     {
         if (originalArray == nullptr || !scriptContext->GetConfig()->IsES6SpeciesEnabled())
         {
@@ -11698,15 +11446,10 @@ Case0:
             JavascriptError::ThrowTypeError(scriptContext, JSERR_NotAConstructor, _u("constructor[Symbol.species]"));
         }
 
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1607_MSRC33302_BUG7387150) || defined(_CHAKRACOREBUILD)
         if (pIsBuiltinArrayCtor != nullptr)
         {
             *pIsBuiltinArrayCtor = false;
         }
-#endif
 
         Js::Var constructorArgs[] = { constructor, JavascriptNumber::ToVar(length, scriptContext) };
         Js::CallInfo constructorCallInfo(Js::CallFlags_New, _countof(constructorArgs));
