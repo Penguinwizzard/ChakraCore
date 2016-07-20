@@ -654,6 +654,15 @@ Realloc(void* buffer, size_t existingBytes, size_t requestedBytes)
     return replacementBuf;
 }
 
+#if DBG
+template <class TFreeListPolicy, size_t ObjectAlignmentBitShiftArg, bool RequireObjectAlignment, size_t MaxObjectSize>
+void
+ArenaAllocatorBase<TFreeListPolicy, ObjectAlignmentBitShiftArg, RequireObjectAlignment, MaxObjectSize>::MergeDelayFreeList()
+{
+    TFreeListPolicy::MergeDelayFreeList(freeList);
+}
+#endif
+
 #ifdef PROFILE_MEM
 template <class TFreeListPolicy, size_t ObjectAlignmentBitShiftArg, bool RequireObjectAlignment, size_t MaxObjectSize>
 void
@@ -736,7 +745,12 @@ LogReuse(size_t size)
 
 void * InPlaceFreeListPolicy::New(ArenaAllocatorBase<InPlaceFreeListPolicy> * allocator)
 {
+#if DBG
+    // Allocate freeList followed by delayFreeList
+    return AllocatorNewNoThrowNoRecoveryArrayZ(ArenaAllocator, allocator, FreeObject *, 2 * buckets);
+#else
     return AllocatorNewNoThrowNoRecoveryArrayZ(ArenaAllocator, allocator, FreeObject *, buckets);
+#endif
 }
 
 void * InPlaceFreeListPolicy::Allocate(void * policy, size_t size)
@@ -766,11 +780,16 @@ void * InPlaceFreeListPolicy::Allocate(void * policy, size_t size)
 
     return freeObject;
 }
+
 void * InPlaceFreeListPolicy::Free(void * policy, void * object, size_t size)
 {
     Assert(policy);
-
-    FreeObject ** freeObjectLists = reinterpret_cast<FreeObject **>(policy);
+#if DBG
+    void * freeList = reinterpret_cast<FreeObject **>(policy) + buckets;
+#else
+    void * freeList = policy;
+#endif
+    FreeObject ** freeObjectLists = reinterpret_cast<FreeObject **>(freeList);
     FreeObject * freeObject = reinterpret_cast<FreeObject *>(object);
     size_t index = (size >> ArenaAllocator::ObjectAlignmentBitShift) - 1;
 
@@ -783,6 +802,47 @@ void * InPlaceFreeListPolicy::Reset(void * policy)
 {
     return NULL;
 }
+
+#if DBG
+void InPlaceFreeListPolicy::MergeDelayFreeList(void * freeList)
+{
+    Assert(freeList);    
+    
+    FreeObject ** freeObjectLists = reinterpret_cast<FreeObject **>(freeList);
+    FreeObject ** delayFreeObjectLists = freeObjectLists + buckets;
+    
+    for (int i = 0; i < buckets; i++)
+    {
+        int size = (i + 1) << ArenaAllocator::ObjectAlignmentBitShift;
+        FreeObject *delayObject = delayFreeObjectLists[i];
+        
+        while (delayObject != nullptr)
+        {
+            FreeObject *nextDelayObject = delayObject->next;
+            // DebugPatterFill is required here, because we set isDeleted bit on freed Opnd
+            PrepareFreeObject(delayObject, size);
+            delayObject->next = nextDelayObject;
+            delayObject = nextDelayObject;
+        }
+
+        if (freeObjectLists[i] == nullptr)
+        {
+            freeObjectLists[i] = delayFreeObjectLists[i];
+            delayFreeObjectLists[i] = nullptr;
+        }
+        else
+        {
+            FreeObject * lastFreeObject = freeObjectLists[i];
+            while (lastFreeObject->next != nullptr)
+            {
+                lastFreeObject = lastFreeObject->next;
+            }
+            lastFreeObject->next = delayFreeObjectLists[i];
+            delayFreeObjectLists[i] = nullptr;
+        }        
+    }
+}
+#endif
 
 #ifdef ARENA_MEMORY_VERIFY
 void InPlaceFreeListPolicy::VerifyFreeObjectIsFreeMemFilled(void * object, size_t size)
@@ -863,6 +923,13 @@ void * StandAloneFreeListPolicy::Reset(void * policy)
 
     return NULL;
 }
+
+#if DBG
+void StandAloneFreeListPolicy::MergeDelayFreeList(void * freeList)
+{
+    AssertMsg(0, "StandAlone Policy, mergelists not supported");
+}
+#endif
 
 #ifdef ARENA_MEMORY_VERIFY
 void StandAloneFreeListPolicy::VerifyFreeObjectIsFreeMemFilled(void * object, size_t size)
@@ -1009,6 +1076,13 @@ void * InlineCacheFreeListPolicy::Reset(void * policy)
 
     return NULL;
 }
+
+#if DBG
+void InlineCacheFreeListPolicy::MergeDelayFreeList(void * freeList)
+{
+    AssertMsg(0, "Inline policy, merge lists not supported");
+}
+#endif
 
 #ifdef ARENA_MEMORY_VERIFY
 void InlineCacheFreeListPolicy::VerifyFreeObjectIsFreeMemFilled(void * object, size_t size)

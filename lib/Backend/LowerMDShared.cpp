@@ -8899,6 +8899,8 @@ void LowererMD::GenerateFastInlineBuiltInCall(IR::Instr* instr, IR::JnHelperMeth
                 zero = IR::MemRefOpnd::New((float*)&Js::JavascriptNumber::k_Float32Zero, TyFloat32, this->m_func, IR::AddrOpndKindDynamicFloatRef);
             }
 
+            IR::AutoReuseOpnd autoReUseZero(zero, this->m_func);
+
             IR::LabelInstr * skipRoundSd = IR::LabelInstr::New(Js::OpCode::Label, this->m_func);
 
             if(instr->m_opcode == Js::OpCode::InlineMathRound)

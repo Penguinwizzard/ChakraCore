@@ -228,6 +228,9 @@ public:
 
     char* Realloc(void* buffer, DECLSPEC_GUARD_OVERFLOW size_t existingBytes, DECLSPEC_GUARD_OVERFLOW size_t requestedBytes);
     void Free(void * buffer, size_t byteSize);
+#if DBG
+    void MergeDelayFreeList();
+#endif
 #ifdef TRACK_ALLOC
     // Doesn't support tracking information, dummy implementation
     ArenaAllocatorBase * TrackAllocInfo(TrackAllocData const& data) { return this; }
@@ -292,6 +295,9 @@ public:
     static void * Allocate(void * policy, DECLSPEC_GUARD_OVERFLOW size_t size);
     static void * Free(void * policy, void * object, size_t size);
     static void * Reset(void * policy);
+#if DBG
+    static void MergeDelayFreeList(void * freeList);
+#endif
     static void PrepareFreeObject(__out_bcount(size) void * object, _In_ size_t size)
     {
 #ifdef ARENA_MEMORY_VERIFY
@@ -352,6 +358,9 @@ public:
     }
 #ifdef ARENA_MEMORY_VERIFY
     static void VerifyFreeObjectIsFreeMemFilled(void * object, size_t size);
+#endif
+#if DBG
+    static void MergeDelayFreeList(void * freeList);
 #endif
     static void Release(void * policy);
 };
@@ -523,6 +532,12 @@ public:
         bvFreeList = nullptr;
         ArenaAllocator::Clear();
     }
+#if DBG
+    void MergeDelayFreeList()
+    {
+        ArenaAllocator::MergeDelayFreeList();
+    }
+#endif
 };
 
 // This allocator by default on OOM does not attempt to recover memory from Recycler, just throws OOM.
@@ -614,6 +629,9 @@ public:
         memset(object, NULL, size);
 #endif
     }
+#if DBG
+    static void MergeDelayFreeList(void * freeList);
+#endif
 #ifdef ARENA_MEMORY_VERIFY
     static void VerifyFreeObjectIsFreeMemFilled(void * object, size_t size);
 #endif

@@ -1176,6 +1176,7 @@ Func::EndPhase(Js::Phase tag, bool dump)
 
         dbCheck.Check();
 #endif
+        this->m_alloc->MergeDelayFreeList();
     }
 #endif
 }

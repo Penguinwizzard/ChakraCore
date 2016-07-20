@@ -19,6 +19,7 @@ Opnd::Use(Func *func)
 {
     if (!m_inUse)
     {
+        AssertMsg(!isDeleted, "Using deleted operand");
         m_inUse = true;
         return this;
     }
