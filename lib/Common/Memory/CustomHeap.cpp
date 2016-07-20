@@ -729,6 +729,8 @@ bool Heap::FreeAllocation(Allocation* object)
     unsigned int length = GetChunkSizeForBytes(object->size);
     BVIndex index = GetIndexInPage(page, object->address);
 
+    uint freeBitsCount = page->freeBitVector.Count();
+
     // Make sure that the section under interest or the whole page has not already been freed
     if (page->IsEmpty() || page->freeBitVector.TestRange(index, length))
     {
@@ -739,7 +741,7 @@ bool Heap::FreeAllocation(Allocation* object)
     if (page->inFullList)
     {
         VerboseHeapTrace(_u("Recycling page 0x%p because address 0x%p of size %d was freed\n"), page->address, object->address, object->size);
-
+       
         // If the object being freed is equal to the page size, we're
         // going to remove it anyway so don't add it to a bucket
         if (object->size != pageSize)
@@ -776,7 +778,7 @@ bool Heap::FreeAllocation(Allocation* object)
     // If the page is about to become empty then we should not need
     // to set it to executable and we don't expect to restore the
     // previous protection settings.
-    if (page->freeBitVector.Count() == BVUnit::BitsPerWord - length)
+    if (freeBitsCount == BVUnit::BitsPerWord - length)
     {
         EnsureAllocationWriteable(object);
         FreeAllocationHelper(object, index, length);
