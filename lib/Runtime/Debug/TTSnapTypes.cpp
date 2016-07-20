@@ -45,7 +45,8 @@ namespace TTD
             }
             else
             {
-                const Js::PropertyRecord* foundProperty = threadContext->FindPropertyRecord(pname, plen);
+                const Js::PropertyRecord* foundProperty;
+                threadContext->FindPropertyRecord(pname, plen, &foundProperty);
 
                 if(foundProperty != nullptr)
                 {

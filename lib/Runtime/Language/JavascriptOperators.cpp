@@ -4851,12 +4851,17 @@ CommonNumber:
 
         uint32 indexVal;
         PropertyRecord const * propertyRecord;
+        JavascriptString * propertyNameString;
         BOOL result = TRUE;
-        IndexType indexType = GetIndexType(index, scriptContext, &indexVal, &propertyRecord, false);
+        IndexType indexType = GetIndexType(index, scriptContext, &indexVal, &propertyRecord, &propertyNameString, false, true);
 
         if (indexType == IndexType_Number)
         {
             result = JavascriptOperators::DeleteItem(object, indexVal, propertyOperationFlags);
+        }
+        else if (indexType == IndexType_JavascriptString)
+        {
+            result = object->DeleteProperty(propertyNameString, propertyOperationFlags);
         }
         else
         {
@@ -8260,6 +8265,8 @@ CommonNumber:
             return false;
         }
 
+       
+
         // Review : This is quite slow.  We could make it somewhat faster, by keeping slot indexes instead
         // of property IDs, but that would mean we would need to look up property IDs from slot indexes when installing
         // property guards, or maintain a whole separate list of equivalent slot indexes.
@@ -8275,6 +8282,10 @@ CommonNumber:
         if (DynamicType::Is(type->GetTypeId()))
         {
             Js::DynamicTypeHandler* typeHandler = (static_cast<DynamicType*>(type))->GetTypeHandler();
+            if (!static_cast<DynamicType*>(type)->GetIsShared())
+            {
+                return false;
+            }
             isEquivalent = typeHandler->IsObjTypeSpecEquivalent(type, cache->record, failedPropertyIndex);
         }
         else

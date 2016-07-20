@@ -133,6 +133,7 @@ namespace Js
         virtual DescriptorFlags GetSetter(DynamicObject* instance, PropertyId propertyId, Var* setterValue, PropertyValueInfo* info, ScriptContext* requestContext) override;
         virtual DescriptorFlags GetSetter(DynamicObject* instance, JavascriptString* propertyNameString, Var* setterValue, PropertyValueInfo* info, ScriptContext* requestContext) override;
         virtual BOOL DeleteProperty(DynamicObject* instance, PropertyId propertyId, PropertyOperationFlags flags) override sealed;
+        virtual BOOL DeleteProperty(DynamicObject* instance, JavascriptString* propertyNameString, PropertyOperationFlags flags) override sealed;
 
         virtual PropertyIndex GetRootPropertyIndex(const PropertyRecord* propertyRecord) override;
 
@@ -274,6 +275,7 @@ namespace Js
         inline DescriptorFlags GetSetter_Internal(DynamicObject* instance, PropertyId propertyId, Var* setterValue, PropertyValueInfo* info, ScriptContext* requestContext);
         template <bool allowLetConstGlobal>
         inline BOOL DeleteProperty_Internal(DynamicObject* instance, PropertyId propertyId, PropertyOperationFlags flags);
+
 
         template <bool allowLetConstGlobal>
         inline BOOL GetPropertyFromDescriptor(DynamicObject* instance, SimpleDictionaryPropertyDescriptor<TPropertyIndex>* descriptor, Var* value, PropertyValueInfo* info);

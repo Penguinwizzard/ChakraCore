@@ -101,9 +101,8 @@ namespace Js
     BOOL NullTypeHandlerBase::GetProperty(DynamicObject* instance, Var originalInstance, PropertyId propertyId, Var* value, PropertyValueInfo* info, ScriptContext* requestContext)
     {
         // Check numeric propertyId only if objectArray is available
-        uint32 indexVal;
-        ScriptContext* scriptContext = instance->GetScriptContext();
-        if (instance->HasObjectArray() && scriptContext->IsNumericPropertyId(propertyId, &indexVal))
+        uint32 indexVal;        
+        if (instance->HasObjectArray() && requestContext->IsNumericPropertyId(propertyId, &indexVal))
         {
             return DynamicTypeHandler::GetItem(instance, originalInstance, indexVal, value, requestContext);
         }
@@ -114,10 +113,21 @@ namespace Js
 
 
     BOOL NullTypeHandlerBase::GetProperty(DynamicObject* instance, Var originalInstance, JavascriptString* propertyNameString, Var* value, PropertyValueInfo* info, ScriptContext* requestContext)
-    {
-        PropertyRecord const* propertyRecord;
-        instance->GetScriptContext()->GetOrAddPropertyRecord(propertyNameString->GetString(), propertyNameString->GetLength(), &propertyRecord);
-        return NullTypeHandlerBase::GetProperty(instance, originalInstance, propertyRecord->GetPropertyId(), value, info, requestContext);
+    {        
+        // Check numeric propertyId only if objectArray is available        
+        if (instance->HasObjectArray())
+        {
+            uint32 indexVal;
+            PropertyRecord const* propertyRecord;
+            instance->GetScriptContext()->GetOrAddPropertyRecord(propertyNameString->GetString(), propertyNameString->GetLength(), &propertyRecord);
+            if (requestContext->IsNumericPropertyId(propertyRecord->GetPropertyId(), &indexVal))
+            {
+                return DynamicTypeHandler::GetItem(instance, originalInstance, indexVal, value, requestContext);
+            }
+        }        
+
+        *value = requestContext->GetMissingPropertyResult();
+        return false;
     }
 
 

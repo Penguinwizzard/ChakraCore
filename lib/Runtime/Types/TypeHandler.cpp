@@ -547,13 +547,6 @@ namespace Js
             {
                 scriptContext->optimizationOverrides.SetSideEffects((SideEffects)(SideEffects_ToString & possibleSideEffects));
             }
-            else if (IsMathLibraryId(propertyId))
-            {
-                if (instance == scriptContext->GetLibrary()->GetMathObject())
-                {
-                    scriptContext->optimizationOverrides.SetSideEffects((SideEffects)(SideEffects_MathFunc & possibleSideEffects));
-                }
-            }
             else if (propertyId == PropertyIds::Math)
             {
                 if (instance == scriptContext->GetLibrary()->GetGlobalObject())
@@ -561,6 +554,47 @@ namespace Js
                     scriptContext->optimizationOverrides.SetSideEffects((SideEffects)(SideEffects_MathFunc & possibleSideEffects));
                 }
             }
+            else if (IsMathLibraryId(propertyId))
+            {
+                if (instance == scriptContext->GetLibrary()->GetMathObject())
+                {
+                    scriptContext->optimizationOverrides.SetSideEffects((SideEffects)(SideEffects_MathFunc & possibleSideEffects));
+                }
+            }
+        }
+    }
+
+    void DynamicTypeHandler::SetPropertyUpdateSideEffect(DynamicObject* instance, JsUtil::CharacterBuffer<WCHAR> const& propertyName, Var value, SideEffects possibleSideEffects)
+    {
+        if (possibleSideEffects)
+        {            
+            ScriptContext* scriptContext = instance->GetScriptContext();
+            if (BuiltInPropertyRecords::valueOf.Equals(propertyName))
+            {
+                scriptContext->optimizationOverrides.SetSideEffects((SideEffects)(SideEffects_ValueOf & possibleSideEffects));
+            }
+            else if (BuiltInPropertyRecords::toString.Equals(propertyName))
+            {
+                scriptContext->optimizationOverrides.SetSideEffects((SideEffects)(SideEffects_ToString & possibleSideEffects));
+            }
+            else if (BuiltInPropertyRecords::Math.Equals(propertyName))
+            {
+                if (instance == scriptContext->GetLibrary()->GetGlobalObject())
+                {
+                    scriptContext->optimizationOverrides.SetSideEffects((SideEffects)(SideEffects_MathFunc & possibleSideEffects));
+                }
+            }
+            else if (instance == scriptContext->GetLibrary()->GetMathObject())
+            {
+                PropertyRecord const* propertyRecord;
+                scriptContext->FindPropertyRecord(propertyName.GetBuffer(), propertyName.GetLength(), &propertyRecord);
+
+                if (propertyRecord && IsMathLibraryId(propertyRecord->GetPropertyId()))
+                {
+                    scriptContext->optimizationOverrides.SetSideEffects((SideEffects)(SideEffects_MathFunc & possibleSideEffects));
+                }
+            }
+
         }
     }
 
@@ -745,4 +779,11 @@ namespace Js
         }
     }
 #endif
+
+    BOOL DynamicTypeHandler::DeleteProperty(DynamicObject* instance, JavascriptString* propertyNameString, PropertyOperationFlags flags)
+    {
+        PropertyRecord const* propertyRecord;
+        instance->GetScriptContext()->GetOrAddPropertyRecord(propertyNameString->GetString(), propertyNameString->GetLength(), &propertyRecord);
+        return DeleteProperty(instance, propertyRecord->GetPropertyId(), flags);
+    }
 }
