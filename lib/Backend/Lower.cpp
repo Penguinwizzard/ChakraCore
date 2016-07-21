@@ -3835,7 +3835,7 @@ Lowerer::GenerateProfiledNewScObjArrayFastPath(IR::Instr *instr, Js::ArrayCallSi
     Func * func = this->m_func;
     IR::LabelInstr * helperLabel = IR::LabelInstr::New(Js::OpCode::Label, func, true);
     uint32 size = length;
-    bool containMissingItems = size != 0;
+    bool containMissingItems = (size != 0);
     bool isZeroed;
     IR::RegOpnd *dstOpnd = instr->GetDst()->AsRegOpnd();
     IR::RegOpnd *headOpnd;
@@ -3861,7 +3861,7 @@ Lowerer::GenerateProfiledNewScObjArrayFastPath(IR::Instr *instr, Js::ArrayCallSi
         Assert(Js::JavascriptNativeFloatArray::GetOffsetOfArrayFlags() + sizeof(uint16) == Js::JavascriptNativeFloatArray::GetOffsetOfArrayCallSiteIndex());
         headOpnd = GenerateArrayAlloc<Js::JavascriptNativeFloatArray>(instr, &size, arrayInfo, &isZeroed, containMissingItems);
 
-        GenerateMemInit(dstOpnd, Js::JavascriptNativeIntArray::GetOffsetOfArrayCallSiteIndex(), IR::IntConstOpnd::New(profileId, TyUint16, func, true), instr, isZeroed);
+        GenerateMemInit(dstOpnd, Js::JavascriptNativeFloatArray::GetOffsetOfArrayCallSiteIndex(), IR::IntConstOpnd::New(profileId, TyUint16, func, true), instr, isZeroed);
         GenerateMemInit(dstOpnd, Js::JavascriptNativeFloatArray::GetOffsetOfWeakFuncRef(), IR::AddrOpnd::New(weakFuncRef, IR::AddrOpndKindDynamicFunctionBodyWeakRef, m_func), instr, isZeroed);
 
         // Js::JavascriptArray::MissingItem is a Var, so it may be 32-bit or 64 bit.
@@ -4935,43 +4935,37 @@ Lowerer::LowerNewScObjArray(IR::Instr *newObjInstr)
     }
 
     IR::LabelInstr *labelDone = IR::LabelInstr::New(Js::OpCode::Label, func);
-    IR::Opnd *opndSrc = newObjInstr->GetSrc2();
+    IR::Opnd *linkOpnd = newObjInstr->GetSrc2();
 
-    Assert(opndSrc->IsSymOpnd());
-    StackSym *linkSym = opndSrc->AsSymOpnd()->m_sym->AsStackSym();
+    Assert(linkOpnd->IsSymOpnd());
+    StackSym *linkSym = linkOpnd->AsSymOpnd()->m_sym->AsStackSym();
     Assert(linkSym->IsSingleDef());
     IR::Instr* argInstr = linkSym->GetInstrDef();
     IR::Opnd *opndOfArrayCtor = argInstr->GetSrc1();
     // Generate fast path only if it meets all the conditions:
     // 1. 1st paramter is a constant
-    // 2. It is in range 0 <= parameter <= 8
-    // 3. It is the only parameter.
-    if (opndOfArrayCtor->IsIntConstOpnd() || opndOfArrayCtor->IsAddrOpnd()) // #1
+    // 2. It is the only parameter.
+    // 3. It is in range 0 <= parameter <= 8
+    if (opndOfArrayCtor->IsAddrOpnd()) // #1
     {
         int32 length = linkSym->GetIntConstValue();
 
-        if (length >= 0 && length <= 8) // #2
+        if ((linkSym->GetArgSlotNum() == 2) && (length >= 0 && length <= 8)) // #2 and #3
         {
             AssertMsg(linkSym->IsArgSlotSym(), "Not an argSlot symbol...");
-            opndSrc = argInstr->GetSrc2();
+            linkOpnd = argInstr->GetSrc2();
 
-            // If more than 1 args, then opndSrc would be symOpnd
-            bool emitFastPath = !opndSrc->IsSymOpnd(); // #3
+            linkSym = linkOpnd->AsRegOpnd()->m_sym->AsStackSym();
+            AssertMsg(!linkSym->IsArgSlotSym() && linkSym->m_isSingleDef, "Arg tree not single def...");
 
-            if (emitFastPath)
-            {
-                linkSym = opndSrc->AsRegOpnd()->m_sym->AsStackSym();
-                AssertMsg(!linkSym->IsArgSlotSym() && linkSym->m_isSingleDef, "Arg tree not single def...");
+            startCallInstr = linkSym->m_instrDef;
+            AssertMsg(startCallInstr->GetArgOutCount(false) == 2, "Generating ArrayFastPath for more than 1 parameter not allowed.");
 
-                startCallInstr = linkSym->m_instrDef;
-                AssertMsg(startCallInstr->GetArgOutCount(false) == 2, "Generating ArrayFastPath for more than 1 parameter not allowed.");
+            GenerateProfiledNewScObjArrayFastPath(newObjInstr, arrayInfo, weakFuncRef, (uint32)length, labelDone);
 
-                GenerateProfiledNewScObjArrayFastPath(newObjInstr, arrayInfo, weakFuncRef, (uint32)length, labelDone);
-
-                // Since we emitted fast path above, move the startCall/argOut instruction right before helper
-                startCallInstr->Move(newObjInstr);
-                argInstr->Move(newObjInstr);
-            }
+            // Since we emitted fast path above, move the startCall/argOut instruction right before helper
+            startCallInstr->Move(newObjInstr);
+            argInstr->Move(newObjInstr);
         }
     }
     newObjInstr->UnlinkSrc1();
