@@ -5033,6 +5033,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
 
                     if (wellKnownPropertyPids.arguments->GetTopRef() && wellKnownPropertyPids.arguments->GetTopRef()->GetScopeId() > pnodeFnc->sxFnc.pnodeScopes->sxBlock.blockId)
                     {
+                        Assert(pnodeFnc->sxFnc.UsesArguments());
                         // Arguments symbol is captured in the param scope
                         paramScope->SetCannotMergeWithBodyScope();
                     }
