@@ -813,6 +813,7 @@ Symbol* Parser::AddDeclForPid(ParseNodePtr pnode, IdentPtr pid, SymbolType symbo
     // into the parameter scope.
     if (pid == wellKnownPropertyPids.arguments
         && pnode->nop == knopVarDecl
+        && symbolType != STFunction
         && blockInfo->pnodeBlock->sxBlock.blockType == PnodeBlockType::Function
         && blockInfo->pBlockInfoOuter != nullptr
         && blockInfo->pBlockInfoOuter->pnodeBlock->sxBlock.blockType == PnodeBlockType::Parameter
@@ -5029,6 +5030,12 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncPare
                         }
                         return false;
                     });
+
+                    if (wellKnownPropertyPids.arguments->GetTopRef() && wellKnownPropertyPids.arguments->GetTopRef()->GetScopeId() > pnodeFnc->sxFnc.pnodeScopes->sxBlock.blockId)
+                    {
+                        // Arguments symbol is captured in the param scope
+                        paramScope->SetCannotMergeWithBodyScope();
+                    }
                 }
             }
         }
@@ -5900,7 +5907,7 @@ bool Parser::ParseFncNames(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncParent, u
         {
             // This function declaration (or function expression in compat modes) overrides the built-in arguments object of the
             // parent function
-            pnodeFncParent->grfpn |= PNodeFlags::fpnArguments_overriddenByDecl;
+            // pnodeFncParent->grfpn |= PNodeFlags::fpnArguments_overriddenByDecl;
         }
     }
 
