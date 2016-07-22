@@ -8889,6 +8889,7 @@ void LowererMD::GenerateFastInlineBuiltInCall(IR::Instr* instr, IR::JnHelperMeth
             }
 
             IR::Opnd * zero;
+
             if (src->IsFloat64())
             {
                 zero = IR::MemRefOpnd::New((double*)&(Js::JavascriptNumber::k_Zero), TyFloat64, this->m_func, IR::AddrOpndKindDynamicDoubleRef);
@@ -8898,6 +8899,8 @@ void LowererMD::GenerateFastInlineBuiltInCall(IR::Instr* instr, IR::JnHelperMeth
                 Assert(src->IsFloat32());
                 zero = IR::MemRefOpnd::New((float*)&Js::JavascriptNumber::k_Float32Zero, TyFloat32, this->m_func, IR::AddrOpndKindDynamicFloatRef);
             }
+
+            IR::AutoReuseOpnd autoReUseZero(zero, this->m_func);
 
             IR::LabelInstr * skipRoundSd = IR::LabelInstr::New(Js::OpCode::Label, this->m_func);
 
