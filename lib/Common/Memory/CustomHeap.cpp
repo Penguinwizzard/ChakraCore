@@ -745,7 +745,7 @@ bool Heap::FreeAllocation(Allocation* object)
     uint freeBitsCount = page->freeBitVector.Count();
 
     // Make sure that the section under interest or the whole page has not already been freed
-    if (page->IsEmpty() || page->freeBitVector.TestRange(index, length))
+    if (page->IsEmpty() || page->freeBitVector.TestAnyInRange(index, length))
     {
         CustomHeap_BadPageState_fatal_error((ULONG_PTR)this);
         return false;
