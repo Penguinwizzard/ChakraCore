@@ -519,7 +519,13 @@ bool Heap::AllocInPage(Page* page, size_t bytes, ushort pdataCount, ushort xdata
 
     uint length = GetChunkSizeForBytes(bytes);
     BVIndex index = GetFreeIndexForPage(page, bytes);
-    Assert(index != BVInvalidIndex);
+    
+    if (index == BVInvalidIndex)
+    {
+        CustomHeap_BadPageState_fatal_error((ULONG_PTR)this);
+        return false;
+    }
+
     char* address = page->address + Page::Alignment * index;
 
 #if PDATA_ENABLED
@@ -561,6 +567,13 @@ bool Heap::AllocInPage(Page* page, size_t bytes, ushort pdataCount, ushort xdata
     this->allocationsSinceLastCompact += bytes;
     this->freeObjectSize -= bytes;
 #endif
+
+    //Section of the Page should already be freed.
+    if (!page->freeBitVector.TestRange(index, length))
+    {
+        CustomHeap_BadPageState_fatal_error((ULONG_PTR)this);
+        return false;
+    }
 
     page->freeBitVector.ClearRange(index, length);
     VerboseHeapTrace(_u("ChunkSize: %d, Index: %d, Free bit vector in page: "), length, index);
