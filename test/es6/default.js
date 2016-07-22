@@ -380,6 +380,34 @@ var tests = [
     body: function () {
         assert.doesNotThrow(function () { eval("[ (a = function () { }) => {} ];"); }, "Lambda defined, inside an array literal, has a default as a function should not assert");
     }
+  },
+  {
+    name: "Shadowing arguments symbol",
+    body: function () {
+        function f1(a, b = arguments[0]) {
+            assert.areEqual(1, arguments[0], "Initial value of arguments symbol in the body should be same as the arguments from the param scope");
+            var arguments = [10, 20];
+            assert.areEqual(1, b, "Arguments value is the initial value in the param scope too");
+            assert.areEqual(10, arguments[0], "Arguments value is updated in the body");
+        }
+        f1(1);
+
+        function f2(a = 1, arguments) {
+            assert.areEqual(2, arguments, "Initial value of arguments symbol in the body should be same as the arguments from the param scope");
+            var arguments = [10, 20];
+            assert.areEqual(10, arguments[0], "Arguments value is updated in the body");
+        }
+        f2(undefined, 2);
+
+        function f3(a, b = arguments[0]) {
+            assert.areEqual(10, arguments(), "Arguments symbol is overwritten by the the function definition");
+            function arguments() {
+                return 10;
+            }
+            assert.areEqual(1, b, "Arguments value is the initial value in the param scope too");
+        }
+        f3(1);
+    }
   }
 ];
 
