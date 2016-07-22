@@ -2936,7 +2936,6 @@ LowererMD::LoadFunctionObjectOpnd(IR::Instr *instr, IR::Opnd *&functionObjOpnd)
 
         instrPrev = LowererMD::CreateAssign(regOpnd, paramOpnd, instr);
         functionObjOpnd = instrPrev->GetDst();
-        instr->m_func->SetHasImplicitParamLoad();
     }
     else
     {
@@ -7792,6 +7791,7 @@ LowererMD::GetImplicitParamSlotSym(Js::ArgSlot argSlot, Func * func)
     // be confused with arg slot number from javascript
     StackSym * stackSym = StackSym::NewParamSlotSym(argSlot, func);
     func->SetArgOffset(stackSym, argSlot * MachPtr);
+    func->SetHasImplicitParamLoad();
     return stackSym;
 }
 

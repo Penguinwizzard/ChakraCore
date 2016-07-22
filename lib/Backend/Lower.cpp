@@ -2570,7 +2570,6 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
         case Js::OpCode::Throw:
         case Js::OpCode::InlineThrow:
         case Js::OpCode::EHThrow:
-            instr->m_func->SetHasThrow();
             this->LowerUnaryHelperMem(instr, IR::HelperOp_Throw);
             break;
 
@@ -10332,7 +10331,6 @@ Lowerer::HasSideEffects(IR::Instr *instr)
 
 bool Lowerer::IsArgSaveRequired(Func *func) {
     return (!func->IsTrueLeaf() || func->IsJitInDebugMode() ||
-        func->GetJnFunction()->GetIsAsmjsMode() || func->IsGeneratorFunc() || func->IsLambda() ||
         func->GetHasThrow() || func->GetHasImplicitParamLoad() || func->HasThis() || func->argInsCount > 0);
 }
 
@@ -10647,6 +10645,7 @@ Lowerer::LoadCallInfo(IR::Instr * instrInsert)
         IR::SymOpnd * generatorSymOpnd = IR::SymOpnd::New(generatorSym, TyMachPtr, func);
         IR::RegOpnd * generatorRegOpnd = IR::RegOpnd::New(TyMachPtr, func);
         LowererMD::CreateAssign(generatorRegOpnd, generatorSymOpnd, instrInsert);
+        func->SetHasImplicitParamLoad();
 
         IR::IndirOpnd * indirOpnd = IR::IndirOpnd::New(generatorRegOpnd, Js::JavascriptGenerator::GetCallInfoOffset(), TyMachPtr, func);
         IR::Instr * instr = LowererMD::CreateAssign(IR::RegOpnd::New(TyMachPtr, func), indirOpnd, instrInsert);
@@ -10673,7 +10672,6 @@ Lowerer::LoadCallInfo(IR::Instr * instrInsert)
         StackSym * srcSym = LowererMD::GetImplicitParamSlotSym(1, func);
         srcOpnd = IR::SymOpnd::New(srcSym, TyMachReg, func);
     }
-    func->SetHasImplicitParamLoad();
 
     return srcOpnd;
 }

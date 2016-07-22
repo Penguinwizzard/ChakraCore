@@ -8051,6 +8051,7 @@ LowererMD::GetImplicitParamSlotSym(Js::ArgSlot argSlot, Func * func)
 
     StackSym * stackSym = StackSym::NewParamSlotSym(argSlot, func);
     func->SetArgOffset(stackSym, (2 + argSlot) * MachPtr);
+    func->SetHasImplicitParamLoad();
     return stackSym;
 }
 
