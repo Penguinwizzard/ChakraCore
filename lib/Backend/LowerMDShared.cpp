@@ -8907,6 +8907,10 @@ void LowererMD::GenerateFastInlineBuiltInCall(IR::Instr* instr, IR::JnHelperMeth
     case Js::OpCode::InlineMathFloor:
     case Js::OpCode::InlineMathCeil:
     case Js::OpCode::InlineMathRound:
+#ifdef ENABLE_WASM
+    case Js::OpCode::Trunc_A:
+    case Js::OpCode::Nearest_A:
+#endif //ENABLE_WASM
         {
             Assert(AutoSystemInfo::Data.SSE4_1Available());
             Assert(instr->GetDst()->IsInt32() || instr->GetDst()->IsFloat());
@@ -9139,6 +9143,7 @@ void LowererMD::GenerateFastInlineBuiltInCall(IR::Instr* instr, IR::JnHelperMeth
 
             // ROUNDSD srcCopy, srcCopy, round_mode
             IR::Opnd * roundMode;
+#ifdef ENABLE_WASM
             if (instr->m_opcode == Js::OpCode::Trunc_A)
             {
                 roundMode = IR::IntConstOpnd::New(0x03, TyInt32, this->m_func);
@@ -9147,17 +9152,21 @@ void LowererMD::GenerateFastInlineBuiltInCall(IR::Instr* instr, IR::JnHelperMeth
             {
                 roundMode = IR::IntConstOpnd::New(0x00, TyInt32, this->m_func);
             }
-            else if(isNotCeil)
-            {
-                roundMode = IR::IntConstOpnd::New(0x01, TyInt32, this->m_func);
-            }
-            else if (instr->GetDst()->IsInt32() || instr->m_opcode != Js::OpCode::InlineMathFloor)
-            {
-                roundMode = IR::IntConstOpnd::New(0x02, TyInt32, this->m_func);
-            }
             else
+#endif //ENABLE_WASM
             {
-                roundMode = IR::IntConstOpnd::New(0x03, TyInt32, this->m_func);
+                if (isNotCeil)
+                {
+                    roundMode = IR::IntConstOpnd::New(0x01, TyInt32, this->m_func);
+                }
+                else if (instr->GetDst()->IsInt32() || instr->m_opcode != Js::OpCode::InlineMathFloor)
+                {
+                    roundMode = IR::IntConstOpnd::New(0x02, TyInt32, this->m_func);
+                }
+                else
+                {
+                    roundMode = IR::IntConstOpnd::New(0x03, TyInt32, this->m_func);
+                }
             }
             IR::Instr* roundInstr = IR::Instr::New(src->IsFloat64() ? Js::OpCode::ROUNDSD : Js::OpCode::ROUNDSS, roundedFloat, roundedFloat, roundMode, this->m_func);
 
