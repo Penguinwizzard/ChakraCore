@@ -148,7 +148,7 @@ Disabled -testtrace cases to eliminate maintenance headache
       </override>
     </condition>
     <condition order="2" type="include">
-      <target>amd64</target>
+      <target>x64</target>
       <override>
          <baseline>intBailOut.amd64.baseline</baseline>
       </override>

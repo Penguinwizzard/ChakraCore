@@ -67,7 +67,6 @@ if arch == None:
     arch = os.environ.get('_BuildArch', 'x86')
 if sys.platform != 'win32':
     arch = 'x64'    # xplat: hard code arch == x64
-arch_alias = 'amd64' if arch == 'x64' else None
 
 # flavor: debug, test, release
 type_flavor = {'chk':'Debug', 'test':'Test', 'fre':'Release'}
@@ -76,7 +75,6 @@ if flavor == None:
     print("ERROR: Test build target wasn't defined.")
     print("Try '-t' (test build) or '-d' (debug build).")
     sys.exit(1)
-flavor_alias = 'chk' if flavor == 'Debug' else 'fre'
 
 # binary: full ch path
 binary = args.binary
@@ -92,12 +90,8 @@ if not os.path.isfile(binary):
 
 # global tags/not_tags
 tags = set(args.tag or [])
-not_tags = set(args.not_tag or []).union(['fail', 'exclude_' + arch])
+not_tags = set(args.not_tag or []).union(['fail', 'exclude_' + arch, 'exclude_' + flavor])
 
-if arch_alias:
-    not_tags.add('exclude_' + arch_alias)
-if flavor_alias:
-    not_tags.add('exclude_' + flavor_alias)
 if args.only_slow:
     tags.add('Slow')
 elif not args.include_slow:
@@ -512,7 +506,7 @@ def load_tests(folder, file):
 
         condition = testXml.find('condition')
         if condition != None:
-            test_override(condition, 'target', arch_alias, test)
+            test_override(condition, 'target', arch, test)
 
         return test
 
