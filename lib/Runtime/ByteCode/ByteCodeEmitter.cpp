@@ -3693,7 +3693,9 @@ void EnsureFncDeclScopeSlot(ParseNode *pnodeFnc, FuncInfo *funcInfo)
     {
         Assert(pnodeFnc->sxFnc.pnodeName->nop == knopVarDecl);
         Symbol *sym = pnodeFnc->sxFnc.pnodeName->sxVar.sym;
-        if (sym)
+        // If this is funciton is shadowing the arguments symbol in body then we will be allocating scope
+        // slot for the arguments symbol during EmitLocalPropInit
+        if (sym && !(sym->GetIsArguments() && funcInfo->GetHasArguments()))
         {
             sym->EnsureScopeSlot(funcInfo);
         }

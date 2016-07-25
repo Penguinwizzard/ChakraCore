@@ -557,14 +557,14 @@ var tests = [
         }
         f4(undefined, 2);
 
-        // function f5(a, b, c = arguments) {
-        //     function arguments(c) {
-        //         return eval("arguments");
-        //     }
-        //     assert.areEqual(30, arguments(10, 20, 30)[2], "Inside the arguments function the arguments symbol should work fine");
-        //     assert.areEqual(2, c[1], "In the param scope arguments symbol referes to the passed in values");
-        // }
-        // f5(1, 2, undefined, 4);
+        function f5(a, b, c = arguments) {
+            function arguments(c) {
+                return eval("arguments");
+            }
+            assert.areEqual(30, arguments(10, 20, 30)[2], "Inside the arguments function the arguments symbol should work fine");
+            assert.areEqual(2, c[1], "In the param scope arguments symbol referes to the passed in values");
+        }
+        f5(1, 2, undefined, 4);
 
         // function f6(a, b = function arguments(c) {
         //     if (!c) {
