@@ -4,6 +4,18 @@
 //-------------------------------------------------------------------------------------------------------
 #include "Backend.h"
 
+
+const char NativeCodeData::DataDesc_None[] = "";
+const char NativeCodeData::DataDesc_InlineeFrameRecord_ArgOffsets[] = "";
+const char NativeCodeData::DataDesc_InlineeFrameRecord_Constants[] = "";
+const char NativeCodeData::DataDesc_BailoutInfo_CotalOutParamCount[] = "";
+const char NativeCodeData::DataDesc_ArgOutOffsetInfo_StartCallOutParamCounts[] = "";
+const char NativeCodeData::DataDesc_ArgOutOffsetInfo_StartCallArgRestoreAdjustCounts[] = "";
+const char NativeCodeData::DataDesc_LowererMD_LoadFloatValue_Float[] = "";
+const char NativeCodeData::DataDesc_LowererMD_LoadFloatValue_Double[] = "";
+const char NativeCodeData::DataDesc_LowererMD_EmitLoadFloatCommon_Double[] = "";
+const char NativeCodeData::DataDesc_LowererMD_Simd128LoadConst[] = "";
+
 NativeCodeData::NativeCodeData(DataChunk * chunkList) : chunkList(chunkList)
 {
 #ifdef PERF_COUNTERS

@@ -189,9 +189,12 @@ JITTimeFunctionBody::InitializeJITFunctionData(
     jitBody->scriptIdAddr = (intptr_t)functionBody->GetAddressOfScriptId();
     jitBody->flagsAddr = (intptr_t)functionBody->GetAddressOfFlags();
     jitBody->probeCountAddr = (intptr_t)&functionBody->GetSourceInfo()->m_probeCount;
+
+#if ENABLE_DEBUG_CONFIG_OPTIONS
     jitBody->regAllocLoadCountAddr = (intptr_t)&functionBody->regAllocLoadCount;
     jitBody->regAllocStoreCountAddr = (intptr_t)&functionBody->regAllocStoreCount;
     jitBody->callCountStatsAddr = (intptr_t)&functionBody->callCountStats;
+#endif
 
     jitBody->referencedPropertyIdCount = functionBody->GetReferencedPropertyIdCount();
     jitBody->referencedPropertyIdMap = functionBody->GetReferencedPropertyIdMap();

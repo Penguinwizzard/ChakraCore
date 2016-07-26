@@ -1676,9 +1676,9 @@ LinearScan::FillBailOutRecord(IR::Instr * instr)
     {
         Assert(startCallCount != 0);
         uint argOutSlot = 0;
-        uint * startCallOutParamCounts = (uint*)NativeCodeDataNewArrayNoFixup(allocator, UIntType<DataDesc_ArgOutOffsetInfo_StartCallOutParamCounts>, startCallCount);
+        uint * startCallOutParamCounts = (uint*)NativeCodeDataNewArrayNoFixup(allocator, UIntType<NativeCodeData::DataDesc_ArgOutOffsetInfo_StartCallOutParamCounts>, startCallCount);
 #ifdef _M_IX86
-        uint * startCallArgRestoreAdjustCounts = (uint*)NativeCodeDataNewArrayNoFixup(allocator, UIntType<DataDesc_ArgOutOffsetInfo_StartCallOutParamCounts>, startCallCount);
+        uint * startCallArgRestoreAdjustCounts = (uint*)NativeCodeDataNewArrayNoFixup(allocator, UIntType<NativeCodeData::DataDesc_ArgOutOffsetInfo_StartCallOutParamCounts>, startCallCount);
 #endif
         NativeCodeData::AllocatorNoFixup<BVFixed>* allocatorT = (NativeCodeData::AllocatorNoFixup<BVFixed>*)allocator;
         BVFixed * argOutFloat64Syms = BVFixed::New(bailOutInfo->totalOutParamCount, allocatorT);
@@ -1695,7 +1695,7 @@ LinearScan::FillBailOutRecord(IR::Instr * instr)
         BVFixed * argOutSimd128B8Syms = BVFixed::New(bailOutInfo->totalOutParamCount, allocatorT);
         BVFixed * argOutSimd128B16Syms = BVFixed::New(bailOutInfo->totalOutParamCount, allocatorT);
 
-        int* outParamOffsets = bailOutInfo->outParamOffsets = (int*)NativeCodeDataNewArrayZNoFixup(allocator, IntType<DataDesc_BailoutInfo_CotalOutParamCount>, bailOutInfo->totalOutParamCount);
+        int* outParamOffsets = bailOutInfo->outParamOffsets = (int*)NativeCodeDataNewArrayZNoFixup(allocator, IntType<NativeCodeData::DataDesc_BailoutInfo_CotalOutParamCount>, bailOutInfo->totalOutParamCount);
 #ifdef _M_IX86
         int currentStackOffset = 0;
         bailOutInfo->outParamFrameAdjustArgSlot = JitAnew(this->func->m_alloc, BVSparse<JitArenaAllocator>, this->func->m_alloc);

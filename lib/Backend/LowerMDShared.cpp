@@ -6262,7 +6262,7 @@ LowererMD::EmitLoadFloatCommon(IR::Opnd *dst, IR::Opnd *src, IR::Instr *insertIn
         Assert(regOpnd->m_sym->m_isSingleDef);
         Js::Var value = regOpnd->m_sym->GetFloatConstValueAsVar_PostGlobOpt();
 #if FLOATVAR
-        void *pDouble = (double*)NativeCodeDataNewNoFixup(this->m_func->GetNativeCodeDataAllocator(), DoubleType<DataDesc_LowererMD_EmitLoadFloatCommon_Double>, Js::JavascriptNumber::GetValue(value));
+        void *pDouble = (double*)NativeCodeDataNewNoFixup(this->m_func->GetNativeCodeDataAllocator(), DoubleType<NativeCodeData::DataDesc_LowererMD_EmitLoadFloatCommon_Double>, Js::JavascriptNumber::GetValue(value));
         IR::Opnd * doubleRef;
         if (!m_func->IsOOPJIT())
         {
@@ -7072,12 +7072,12 @@ LowererMD::LoadFloatValue(IR::Opnd * opndDst, double value, IR::Instr * instrIns
     bool isFloat64 = opndDst->IsFloat64();
     if (isFloat64)
     {
-        pValue = NativeCodeDataNewNoFixup(instrInsert->m_func->GetNativeCodeDataAllocator(), DoubleType<DataDesc_LowererMD_LoadFloatValue_Double>, value);
+        pValue = NativeCodeDataNewNoFixup(instrInsert->m_func->GetNativeCodeDataAllocator(), DoubleType<NativeCodeData::DataDesc_LowererMD_LoadFloatValue_Double>, value);
     }
     else
     {
         Assert(opndDst->IsFloat32());
-        pValue = (float*)NativeCodeDataNewNoFixup(instrInsert->m_func->GetNativeCodeDataAllocator(), FloatType<DataDesc_LowererMD_LoadFloatValue_Float>, (float)value);
+        pValue = (float*)NativeCodeDataNewNoFixup(instrInsert->m_func->GetNativeCodeDataAllocator(), FloatType<NativeCodeData::DataDesc_LowererMD_LoadFloatValue_Float>, (float)value);
     }
 
     if (!instrInsert->m_func->IsOOPJIT())

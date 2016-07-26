@@ -101,8 +101,8 @@ struct InlineeFrameRecord
     static InlineeFrameRecord* New(NativeCodeData::Allocator* alloc, uint argCount, uint constantCount, intptr_t functionBodyAddr, InlineeFrameInfo* frameInfo)
     {
         InlineeFrameRecord* record = NativeCodeDataNewZ(alloc, InlineeFrameRecord, argCount, (Js::FunctionBody*)functionBodyAddr, frameInfo);
-        record->argOffsets = (int*)NativeCodeDataNewArrayNoFixup(alloc, IntType<DataDesc_InlineeFrameRecord_ArgOffsets>, argCount);
-        record->constants = (Js::Var*)NativeCodeDataNewArrayNoFixup(alloc, VarType<DataDesc_InlineeFrameRecord_Constants>, constantCount);
+        record->argOffsets = (int*)NativeCodeDataNewArrayNoFixup(alloc, IntType<NativeCodeData::DataDesc_InlineeFrameRecord_ArgOffsets>, argCount);
+        record->constants = (Js::Var*)NativeCodeDataNewArrayNoFixup(alloc, VarType<NativeCodeData::DataDesc_InlineeFrameRecord_Constants>, constantCount);
         DebugOnly(record->constantCount = constantCount);
         return record;
     }

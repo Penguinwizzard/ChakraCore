@@ -191,39 +191,41 @@ public:
     };
 
     ~NativeCodeData();
+
+
+    static const char DataDesc_None[];
+    static const char DataDesc_InlineeFrameRecord_ArgOffsets[];
+    static const char DataDesc_InlineeFrameRecord_Constants[];
+    static const char DataDesc_BailoutInfo_CotalOutParamCount[];
+    static const char DataDesc_ArgOutOffsetInfo_StartCallOutParamCounts[];
+    static const char DataDesc_ArgOutOffsetInfo_StartCallArgRestoreAdjustCounts[];
+    static const char DataDesc_LowererMD_LoadFloatValue_Float[];
+    static const char DataDesc_LowererMD_LoadFloatValue_Double[];
+    static const char DataDesc_LowererMD_EmitLoadFloatCommon_Double[];
+    static const char DataDesc_LowererMD_Simd128LoadConst[];
+
 };
 
-char DataDesc_None[]                                        = "";
-char DataDesc_InlineeFrameRecord_ArgOffsets[]               = "";
-char DataDesc_InlineeFrameRecord_Constants[]                = "";
-char DataDesc_BailoutInfo_CotalOutParamCount[]              = "";
-char DataDesc_ArgOutOffsetInfo_StartCallOutParamCounts[]    = "";
-char DataDesc_ArgOutOffsetInfo_StartCallArgRestoreAdjustCounts[] = "";
-char DataDesc_LowererMD_LoadFloatValue_Float[]              = "";
-char DataDesc_LowererMD_LoadFloatValue_Double[]             = "";
-char DataDesc_LowererMD_EmitLoadFloatCommon_Double[] = "";
-char DataDesc_LowererMD_Simd128LoadConst[]        = "";
-
-template<char const *desc = DataDesc_None>
+template<char const *desc = NativeCodeData::DataDesc_None>
 struct IntType 
 { 
     int data; 
 };
 
-template<char const *desc = DataDesc_None>
+template<char const *desc = NativeCodeData::DataDesc_None>
 struct UIntType
 {
     uint data;
 };
 
-template<char const *desc = DataDesc_None>
+template<char const *desc = NativeCodeData::DataDesc_None>
 struct FloatType
 {
     FloatType(float val) :data(val) {}
     float data;
 };
 
-template<char const *desc = DataDesc_None>
+template<char const *desc = NativeCodeData::DataDesc_None>
 struct DoubleType
 {
     DoubleType() {}
@@ -231,7 +233,7 @@ struct DoubleType
     double data;
 };
 
-template<char const *desc = DataDesc_None>
+template<char const *desc = NativeCodeData::DataDesc_None>
 struct SIMDType
 {
     SIMDType() {}
@@ -239,7 +241,7 @@ struct SIMDType
     AsmJsSIMDValue data;
 };
 
-template<char const *desc = DataDesc_None>
+template<char const *desc = NativeCodeData::DataDesc_None>
 struct VarType
 {
     Js::Var data;
@@ -249,7 +251,7 @@ struct VarType
     }
 };
 template<>
-void VarType<DataDesc_InlineeFrameRecord_Constants>::Fixup(NativeCodeData::DataChunk* chunkList) 
+void VarType<NativeCodeData::DataDesc_InlineeFrameRecord_Constants>::Fixup(NativeCodeData::DataChunk* chunkList)
 {
     AssertMsg(false, "InlineeFrameRecord::constants contains Var from main process, should not fixup");
 }
