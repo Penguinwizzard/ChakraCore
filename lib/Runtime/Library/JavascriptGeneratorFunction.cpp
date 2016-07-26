@@ -86,6 +86,43 @@ namespace Js
         return generator;
     }
 
+    Var JavascriptGeneratorFunction::EntryAsyncFunctionImplementation(RecyclableObject* function, CallInfo callInfo, ...)
+    {
+        PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
+        ARGUMENTS(stackArgs, callInfo);
+
+        ScriptContext* scriptContext = function->GetScriptContext();
+        JavascriptLibrary* library = scriptContext->GetLibrary();
+
+        JavascriptExceptionObject* e = nullptr;
+        JavascriptPromiseResolveOrRejectFunction* resolve;
+        JavascriptPromiseResolveOrRejectFunction* reject;
+        JavascriptPromiseAsyncSpawnExecutorFunction* executor =
+            library->CreatePromiseAsyncSpawnExecutorFunction(
+                JavascriptPromise::EntryJavascriptPromiseAsyncSpawnExecutorFunction,
+                JavascriptGeneratorFunction::FromVar(function),
+                stackArgs[0]);
+        JavascriptPromise* promise = library->CreatePromise();
+
+        JavascriptPromise::InitializePromise(promise, &resolve, &reject, scriptContext);
+
+        try
+        {
+            CALL_FUNCTION(executor, CallInfo(CallFlags_Value, 3), library->GetUndefined(), resolve, reject);
+        }
+        catch (JavascriptExceptionObject* ex)
+        {
+            e = ex;
+        }
+
+        if (e != nullptr)
+        {
+            JavascriptPromise::TryRejectWithExceptionObject(e, reject, scriptContext);
+        }
+
+        return promise;
+    }
+
     Var JavascriptGeneratorFunction::NewInstance(RecyclableObject* function, CallInfo callInfo, ...)
     {
         // Get called when creating a new generator function through the constructor (e.g. gf.__proto__.constructor) and sets EntryGeneratorFunctionImplementation as the entrypoint

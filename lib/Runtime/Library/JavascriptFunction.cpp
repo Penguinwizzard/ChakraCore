@@ -243,7 +243,7 @@ namespace Js
         {
             // Get the latest proxy
             FunctionProxy * proxy = pfuncBodyCache->GetFunctionProxy();
-            if (proxy->IsGenerator())
+            if (proxy->IsGenerator() || proxy->IsAsync())
             {
                 pfuncScript = scriptContext->GetLibrary()->CreateGeneratorVirtualScriptFunction(proxy);
             }
@@ -292,11 +292,13 @@ namespace Js
 
         JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_FUNCTION(pfuncScript, EtwTrace::GetFunctionId(pfuncScript->GetFunctionProxy())));
 
-        if (functionKind == FunctionKind::Generator)
+        if (functionKind == FunctionKind::Generator || functionKind == FunctionKind::Async)
         {
-            Assert(pfuncScript->GetFunctionInfo()->IsGenerator());
+            Assert(pfuncScript->GetFunctionInfo()->IsGenerator() || pfuncScript->GetFunctionInfo()->IsAsync());
             auto pfuncVirt = static_cast<GeneratorVirtualScriptFunction*>(pfuncScript);
-            auto pfuncGen = scriptContext->GetLibrary()->CreateGeneratorFunction(JavascriptGeneratorFunction::EntryGeneratorFunctionImplementation, pfuncVirt);
+            auto pfuncGen = functionKind == FunctionKind::Generator ?
+                scriptContext->GetLibrary()->CreateGeneratorFunction(JavascriptGeneratorFunction::EntryGeneratorFunctionImplementation, pfuncVirt) :
+                scriptContext->GetLibrary()->CreateAsyncFunction(JavascriptGeneratorFunction::EntryAsyncFunctionImplementation, pfuncVirt);
             pfuncVirt->SetRealGeneratorFunction(pfuncGen);
             pfuncScript = pfuncGen;
         }
