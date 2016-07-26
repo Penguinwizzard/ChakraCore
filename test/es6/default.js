@@ -438,16 +438,16 @@ var tests = [
         }
         f6(1, undefined, 3, 4);
 
-        // function f7(a, b = function arguments(c) {
-        //     if (!c) {
-        //         return arguments.callee(10, 20);
-        //     }
-        //     return c + arguments[1];
-        // }) {
-        //     asert.areEqual(30, b(), "Function defined in the param scope works fine when called recursively");
-        //     assert.areEqual(1, arguments[0], "Arguments symbol is unaffected by the function expression");
-        // }
-        // f7(1);
+        function f7(a, b = function arguments(c) {
+            if (!c) {
+                return arguments.callee(10, 20);
+            }
+            return c + arguments[1];
+        }) {
+            assert.areEqual(30, b(), "Function defined in the param scope works fine when called recursively");
+            assert.areEqual(1, arguments[0], "Arguments symbol is unaffected by the function expression");
+        }
+        f7(1);
 
         function f8(a, b = arguments) {
             var c = function arguments(c) {
@@ -566,16 +566,16 @@ var tests = [
         }
         f5(1, 2, undefined, 4);
 
-        // function f6(a, b = function arguments(c) {
-        //     if (!c) {
-        //         return arguments.callee(10, 20);
-        //     }
-        //     return c + arguments[1];
-        // }) {
-        //     asert.areEqual(30, eval("b()"), "Function defined in the param scope works fine when called recursively");
-        //     assert.areEqual(1, arguments[0], "Arguments symbol is unaffected by the function expression");
-        // }
-        // f6(1);
+        function f6(a, b = function arguments(c) {
+            if (!c) {
+                return arguments.callee(10, 20);
+            }
+            return c + arguments[1];
+        }) {
+            assert.areEqual(30, eval("b()"), "Function defined in the param scope works fine when called recursively");
+            assert.areEqual(1, arguments[0], "Arguments symbol is unaffected by the function expression");
+        }
+        f6(1);
 
         function f7(a, b = arguments) {
             var c = function arguments(c) {
