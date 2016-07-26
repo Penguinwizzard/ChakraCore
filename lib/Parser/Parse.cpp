@@ -13274,6 +13274,12 @@ void PrintPnodeWIndent(ParseNode *pnode,int indentAmt) {
       Output::Print(_u("export default\n"));
       PrintPnodeListWIndent(pnode->sxExportDefault.pnodeExpr, indentAmt + INDENT_SIZE);
       break;
+  case knopAsyncSpawn:
+      Indent(indentAmt);
+      Output::Print(_u("async spawn\n"));
+      PrintPnodeWIndent(pnode->sxBin.pnode1,indentAmt+INDENT_SIZE);
+      PrintPnodeWIndent(pnode->sxBin.pnode2,indentAmt+INDENT_SIZE);
+      break;
   default:
       Output::Print(_u("unhandled pnode op %d\n"),pnode->nop);
       break;

@@ -946,7 +946,7 @@ namespace Js
 
         Assert(JavascriptPromiseAsyncSpawnExecutorFunction::Is(function));
         JavascriptPromiseAsyncSpawnExecutorFunction* asyncSpawnExecutorFunction = JavascriptPromiseAsyncSpawnExecutorFunction::FromVar(function);
-        JavascriptGenerator* genF = asyncSpawnExecutorFunction->GetGeneratorFunction();
+        JavascriptGeneratorFunction* genF = asyncSpawnExecutorFunction->GetGeneratorFunction();
         Var self = asyncSpawnExecutorFunction->GetTarget();
 
         JavascriptGenerator* gen = JavascriptGenerator::FromVar(CALL_FUNCTION(genF, CallInfo(CallFlags_Value, 2), undefinedVar, self));
@@ -1323,7 +1323,7 @@ namespace Js
     }
 #endif
 
-    JavascriptPromiseAsyncSpawnExecutorFunction::JavascriptPromiseAsyncSpawnExecutorFunction(DynamicType* type, FunctionInfo* functionInfo, JavascriptGenerator* generatorFunction, Var target)
+    JavascriptPromiseAsyncSpawnExecutorFunction::JavascriptPromiseAsyncSpawnExecutorFunction(DynamicType* type, FunctionInfo* functionInfo, JavascriptGeneratorFunction* generatorFunction, Var target)
         : RuntimeFunction(type, functionInfo), generatorFunction(generatorFunction), target(target)
     { }
 
@@ -1347,7 +1347,7 @@ namespace Js
         return static_cast<JavascriptPromiseAsyncSpawnExecutorFunction*>(var);
     }
 
-    JavascriptGenerator* JavascriptPromiseAsyncSpawnExecutorFunction::GetGeneratorFunction()
+    JavascriptGeneratorFunction* JavascriptPromiseAsyncSpawnExecutorFunction::GetGeneratorFunction()
     {
         return this->generatorFunction;
     }
