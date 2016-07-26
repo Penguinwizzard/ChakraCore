@@ -5903,13 +5903,6 @@ bool Parser::ParseFncNames(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncParent, u
             pnodeFnc->sxFnc.pid = m_phtbl->PidHashNameLen(
                 m_pscan->PchBase() + ichMinNames, ichLimNames - ichMinNames);
         }
-
-        if(pnodeFnc->sxFnc.pid == wellKnownPropertyPids.arguments && fDeclaration && pnodeFncParent)
-        {
-            // This function declaration (or function expression in compat modes) overrides the built-in arguments object of the
-            // parent function
-            // pnodeFncParent->grfpn |= PNodeFlags::fpnArguments_overriddenByDecl;
-        }
     }
 
     return true;
@@ -6697,7 +6690,7 @@ void Parser::AddArgumentsNodeToVars(ParseNodePtr pnodeFnc)
             m_ppnodeVar = ppnodeVarSave;
         }
 
-        Assert(argNode && argNode->nop == knopVarDecl);
+        Assert(argNode);
         argNode->grfpn |= PNodeFlags::fpnArguments;
 
         // When a function definition with the name arguments occurs in the body the declaration of the arguments symbol will
