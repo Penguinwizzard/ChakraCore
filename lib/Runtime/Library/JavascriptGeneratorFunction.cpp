@@ -7,6 +7,7 @@
 namespace Js
 {
     FunctionInfo JavascriptGeneratorFunction::functionInfo(&JavascriptGeneratorFunction::EntryGeneratorFunctionImplementation, (FunctionInfo::Attributes)(FunctionInfo::DoNotProfile | FunctionInfo::ErrorOnNew));
+    FunctionInfo JavascriptAsyncFunction::functionInfo(&JavascriptGeneratorFunction::EntryAsyncFunctionImplementation, (FunctionInfo::Attributes)(FunctionInfo::DoNotProfile | FunctionInfo::ErrorOnNew));
 
     JavascriptGeneratorFunction::JavascriptGeneratorFunction(DynamicType* type)
         : ScriptFunctionBase(type, &functionInfo),
@@ -21,6 +22,31 @@ namespace Js
         scriptFunction(scriptFunction)
     {
         DebugOnly(VerifyEntryPoint());
+    }
+
+    JavascriptGeneratorFunction::JavascriptGeneratorFunction(DynamicType* type, FunctionInfo* functionInfo, GeneratorVirtualScriptFunction* scriptFunction)
+        : ScriptFunctionBase(type, functionInfo),
+        scriptFunction(scriptFunction)
+    {
+        DebugOnly(VerifyEntryPoint());
+    }
+
+    JavascriptAsyncFunction::JavascriptAsyncFunction(DynamicType* type)
+        : JavascriptGeneratorFunction(type, &functionInfo, nullptr)
+    {
+        // Constructor used during copy on write.
+        DebugOnly(VerifyEntryPoint());
+    }
+
+    JavascriptAsyncFunction::JavascriptAsyncFunction(DynamicType* type, GeneratorVirtualScriptFunction* scriptFunction)
+        : JavascriptGeneratorFunction(type, &functionInfo, scriptFunction)
+    {
+        DebugOnly(VerifyEntryPoint());
+    }
+
+    JavascriptAsyncFunction* JavascriptAsyncFunction::New(ScriptContext* scriptContext, GeneratorVirtualScriptFunction* scriptFunction)
+    {
+        return scriptContext->GetLibrary()->CreateAsyncFunction(functionInfo.GetOriginalEntryPoint(), scriptFunction);
     }
 
     bool JavascriptGeneratorFunction::Is(Var var)
@@ -56,7 +82,11 @@ namespace Js
 
         JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_FUNCTION(scriptFunction, EtwTrace::GetFunctionId(functionProxy)));
 
-        JavascriptGeneratorFunction* genFunc = scriptContext->GetLibrary()->CreateGeneratorFunction(functionInfo.GetOriginalEntryPoint(), scriptFunction);
+        JavascriptGeneratorFunction* genFunc =
+            functionProxy->IsAsync()
+            ? JavascriptAsyncFunction::New(scriptContext, scriptFunction)
+            : scriptContext->GetLibrary()->CreateGeneratorFunction(functionInfo.GetOriginalEntryPoint(), scriptFunction);
+
         scriptFunction->SetRealGeneratorFunction(genFunc);
 
         return genFunc;
