@@ -927,51 +927,51 @@ var tests = [
   {
     name: "Arguments symbol shadowing",
     body: function () {
-        // function f1(a, b = function arguments(c) {
-        //     if (!c) {
-        //         return arguments.callee(a, 10, 20);
-        //     }
-        //     return arguments;
-        // }) {
-        //     asert.areEqual("1,10,20", b().toString(), "Function defined in the param scope works fine when called recursively");
-        //     assert.areEqual(1, arguments[0], "Arguments symbol is unaffected by the function expression");
-        // }
-        // f1(1);
+        function f1(a, b = function arguments(c) {
+            if (!c) {
+                return arguments.callee(a, 10, 20);
+            }
+            return arguments;
+        }) {
+            assert.areEqual(10, b()[1], "Function defined in the param scope works fine when called recursively");
+            assert.areEqual(1, arguments[0], "Arguments symbol is unaffected by the function expression");
+        }
+        f1(1);
 
-        // function f2(a, b = arguments) {
-        //     var c = function arguments(c) {
-        //         if (!arguments.length) {
-        //             return arguments.callee(a, 10, 20, 30);
-        //         }
-        //         return arguments;
-        //     }
-        //     assert.areEqual("1, 10,20,30", c().toString(), "Inside the arguments function the arguments symbol should work fine");
-        //     assert.areEqual("1,undefined,2,3,4", b.toString(), "In the param scope arguments symbol referes to the passed in values");
-        // }
-        // f2(1, undefined, 2, 3, 4);
+        function f2(a, b = arguments) {
+            var c = function arguments(c) {
+                if (!arguments.length) {
+                    return arguments.callee(a, 10, 20, 30);
+                }
+                return arguments;
+            }
+            assert.areEqual(30, c()[3], "Inside the arguments function the arguments symbol should work fine");
+            assert.areEqual(1, b[0], "In the param scope arguments symbol referes to the passed in values");
+        }
+        f2(1, undefined, 2, 3, 4);
 
-        // function f3(a, b = function arguments(c) {
-        //     if (!c) {
-        //         return arguments.callee(a, 10, 20);
-        //     }
-        //     return eval("arguments");
-        // }) {
-        //     asert.areEqual("1,10,20", b().toString(), "Function defined in the param scope works fine when called recursively");
-        //     assert.areEqual(1, arguments[0], "Arguments symbol is unaffected by the function expression");
-        // }
-        // f3(1);
+        function f3(a, b = function arguments(c) {
+            if (!c) {
+                return arguments.callee(a, 10, 20);
+            }
+            return eval("arguments");
+        }) {
+            assert.areEqual(1, b()[0], "Function defined in the param scope works fine when called recursively");
+            assert.areEqual(1, arguments[0], "Arguments symbol is unaffected by the function expression");
+        }
+        f3(1);
 
-        // function f4(a, b = arguments) {
-        //     var c = function arguments(c) {
-        //         if (!arguments.length) {
-        //             return arguments.callee(a, 10, 20, 30);
-        //         }
-        //         return arguments;
-        //     }
-        //     assert.areEqual("1, 10,20,30", c().toString(), "Inside the arguments function the arguments symbol should work fine");
-        //     assert.areEqual("1,undefined,2,3,4", eval("b.toString()"), "In the param scope arguments symbol referes to the passed in values");
-        // }
-        // f4(1, undefined, 2, 3, 4);
+        function f4(a, b = arguments) {
+            var c = function arguments(c) {
+                if (!arguments.length) {
+                    return arguments.callee(a, 10, 20, 30);
+                }
+                return arguments;
+            }
+            assert.areEqual(30, c()[3], "Inside the arguments function the arguments symbol should work fine");
+            assert.areEqual(3, eval("b[3]"), "In the param scope arguments symbol referes to the passed in values");
+        }
+        f4(1, undefined, 2, 3, 4);
 
         // function f5( a = 0, b = () => {
         //     with (obj) {
