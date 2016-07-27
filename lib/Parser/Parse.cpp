@@ -8716,7 +8716,7 @@ ParseNodePtr Parser::ParseVariableDeclaration(
                 {
                     Error(ERRUnexpectedDefault);
                 }
-                if (pfForInOk && (declarationType == tkLET || declarationType == tkCONST))
+                if (pfForInOk && (declarationType == tkLET || declarationType == tkCONST || IsStrictMode()))
                 {
                     *pfForInOk = FALSE;
                 }
