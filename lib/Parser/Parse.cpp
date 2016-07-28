@@ -2786,6 +2786,15 @@ ParseNodePtr Parser::ParseTerm(BOOL fAllowCall,
 
     switch (m_token.tk)
     {
+    case tkTHIS:
+        if (GetCurrentFunctionNode()->sxFnc.IsLambda())
+        {
+            GetCurrentNonLamdaFunctionNode()->sxFnc.SetHasThisStmt(true);
+        }
+        else
+        {
+            GetCurrentFunctionNode()->sxFnc.SetHasThisStmt(true);
+        }
     case tkID:
     {
         PidRefStack *ref = nullptr;
@@ -2835,15 +2844,6 @@ ParseNodePtr Parser::ParseTerm(BOOL fAllowCall,
         CheckArgumentsUse(pid, GetCurrentFunctionNode());
         break;
     }
-
-    case tkTHIS:
-        if (buildAST)
-        {
-            pnode = CreateNodeWithScanner<knopThis>();
-        }
-        fCanAssign = FALSE;
-        m_pscan->Scan();
-        break;
 
     case tkLParen:
         ichMin = m_pscan->IchMinTok();
@@ -5130,6 +5130,12 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, LPCOLESTR pNameHint, usho
             this->AddArgumentsNodeToVars(pnodeFnc);
         }
 
+        if (pnodeFnc->sxFnc.HasThisStmt() || pnodeFnc->sxFnc.CallsEval() || pnodeFnc->sxFnc.ChildCallsEval())
+        {
+            // Insert the this symbol
+            this->InsertVarAtBeginning(pnodeFnc, wellKnownPropertyPids._this)->grfpn |= fpnThis;
+        }
+
         // Restore the lists of scopes that contain function expressions.
 
         Assert(m_ppnodeExprScope == nullptr || *m_ppnodeExprScope == nullptr);
@@ -6696,26 +6702,37 @@ void Parser::AddArgumentsNodeToVars(ParseNodePtr pnodeFnc)
     }
     else
     {
-        if(m_ppnodeVar == &pnodeFnc->sxFnc.pnodeVars)
-        {
-            // There were no var declarations in the function
-            CreateVarDeclNode(wellKnownPropertyPids.arguments, STVariable, true, pnodeFnc)->grfpn |= PNodeFlags::fpnArguments;
-        }
-        else
-        {
-            // There were var declarations in the function, so insert an 'arguments' local at the beginning of the var list.
-            // This is done because the built-in 'arguments' variable overrides an 'arguments' var declaration until the
-            // 'arguments' variable is assigned. By putting our built-in var declaration at the beginning, an 'arguments'
-            // identifier will resolve to this symbol, which has the fpnArguments flag set, and will be the built-in arguments
-            // object until it is replaced with something else.
-            ParseNodePtr *const ppnodeVarSave = m_ppnodeVar;
-            m_ppnodeVar = &pnodeFnc->sxFnc.pnodeVars;
-            CreateVarDeclNode(wellKnownPropertyPids.arguments, STVariable, true, pnodeFnc)->grfpn |= PNodeFlags::fpnArguments;
-            m_ppnodeVar = ppnodeVarSave;
-        }
+        ParseNodePtr pnode = InsertVarAtBeginning(pnodeFnc, wellKnownPropertyPids.arguments);
+        pnode->grfpn |= PNodeFlags::fpnArguments;
 
         pnodeFnc->sxFnc.SetHasReferenceableBuiltInArguments(true);
     }
+}
+
+ParseNodePtr Parser::InsertVarAtBeginning(ParseNodePtr pnodeFnc, IdentPtr pid)
+{
+    ParseNodePtr pnode = nullptr;
+
+    if (m_ppnodeVar == &pnodeFnc->sxFnc.pnodeVars)
+    {
+        // There were no var declarations in the function
+        pnode = CreateVarDeclNode(pid, STVariable, true, pnodeFnc);
+    }
+    else
+    {
+        // There were var declarations in the function, so insert an 'arguments' local at the beginning of the var list.
+        // This is done because the built-in 'arguments' variable overrides an 'arguments' var declaration until the
+        // 'arguments' variable is assigned. By putting our built-in var declaration at the beginning, an 'arguments'
+        // identifier will resolve to this symbol, which has the fpnArguments flag set, and will be the built-in arguments
+        // object until it is replaced with something else.
+        ParseNodePtr *const ppnodeVarSave = m_ppnodeVar;
+        m_ppnodeVar = &pnodeFnc->sxFnc.pnodeVars;
+        pnode = CreateVarDeclNode(pid, STVariable, true, pnodeFnc);
+        m_ppnodeVar = ppnodeVarSave;
+    }
+    Assert(pnode);
+
+    return pnode;
 }
 
 LPCOLESTR Parser::GetFunctionName(ParseNodePtr pnodeFnc, LPCOLESTR pNameHint)
@@ -10618,6 +10635,7 @@ void Parser::InitPids()
 {
     AssertMemN(m_phtbl);
     wellKnownPropertyPids.arguments = m_phtbl->PidHashNameLen(g_ssym_arguments.sz, g_ssym_arguments.cch);
+    wellKnownPropertyPids._this = m_phtbl->PidHashNameLen(g_ssym_this.sz, g_ssym_this.cch);
     wellKnownPropertyPids.async = m_phtbl->PidHashNameLen(g_ssym_async.sz, g_ssym_async.cch);
     wellKnownPropertyPids.eval = m_phtbl->PidHashNameLen(g_ssym_eval.sz, g_ssym_eval.cch);
     wellKnownPropertyPids.get = m_phtbl->PidHashNameLen(g_ssym_get.sz, g_ssym_get.cch);
@@ -11474,6 +11492,7 @@ ParseNode* Parser::CopyPnode(ParseNode *pnode) {
         return NULL;
     switch (pnode->nop) {
         //PTNODE(knopName       , "name"        ,None    ,Pid  ,fnopLeaf)
+    case knopThis:
     case knopName: {
       ParseNode* nameNode=CreateNameNode(pnode->sxPid.pid,pnode->ichMin,pnode->ichLim);
       nameNode->sxPid.sym=pnode->sxPid.sym;
@@ -11493,9 +11512,9 @@ ParseNode* Parser::CopyPnode(ParseNode *pnode) {
     return pnode;
     break;
       //PTNODE(knopThis       , "this"        ,None    ,None ,fnopLeaf)
-  case knopThis:
-    return CreateNodeT<knopThis>(pnode->ichMin,pnode->ichLim);
-      //PTNODE(knopNull       , "null"        ,Null    ,None ,fnopLeaf)
+  //case knopThis:
+  //  return CreateNodeT<knopThis>(pnode->ichMin,pnode->ichLim);
+  //    //PTNODE(knopNull       , "null"        ,Null    ,None ,fnopLeaf)
   case knopNull:
     return pnode;
       //PTNODE(knopFalse      , "false"        ,False   ,None ,fnopLeaf)

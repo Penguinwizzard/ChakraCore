@@ -334,7 +334,11 @@ public:
         isNonSimpleParameter = is;
     }
 
-    bool GetIsArguments() const;
+    bool IsArguments() const;
+
+    bool IsThis() const;
+
+    bool IsSpecialSymbol() const;
 
     void SetPosition(Js::PropertyId pos)
     {

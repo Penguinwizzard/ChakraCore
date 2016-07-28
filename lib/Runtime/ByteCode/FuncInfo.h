@@ -183,6 +183,7 @@ public:
     bool isSuperCtorLexicallyCaptured;
     bool isNewTargetLexicallyCaptured;
     Symbol *argumentsSymbol;
+    Symbol *thisSymbol;
     JsUtil::List<Js::RegSlot, ArenaAllocator> nonUserNonTempRegistersToInitialize;
 
     // constRegsCount is set to 2 because R0 is the return register, and R1 is the root object.
@@ -290,6 +291,17 @@ public:
     {
         Assert(argumentsSymbol == nullptr || argumentsSymbol == sym);
         argumentsSymbol = sym;
+    }
+
+    void SetThisSymbol(Symbol *sym)
+    {
+        Assert(thisSymbol == nullptr || thisSymbol == sym);
+        thisSymbol = sym;
+    }
+
+    Symbol* GetThisSymbol() const
+    {
+        return thisSymbol;
     }
 
     bool GetCallsEval() const {
@@ -480,11 +492,12 @@ public:
 
     Js::RegSlot AssignThisRegister()
     {
-        if (this->thisPointerRegister == Js::Constants::NoRegister)
+        Assert(this->thisSymbol);
+        if (this->thisSymbol->GetLocation() == Js::Constants::NoRegister)
         {
-            this->thisPointerRegister = NextVarRegister();
+            this->thisSymbol->SetLocation(NextVarRegister());
         }
-        return this->thisPointerRegister;
+        return this->thisSymbol->GetLocation();
     }
 
     Js::RegSlot AssignSuperRegister()

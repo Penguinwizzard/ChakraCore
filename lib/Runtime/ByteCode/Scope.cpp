@@ -28,7 +28,7 @@ void Scope::ForceAllSymbolNonLocalReference(ByteCodeGenerator *byteCodeGenerator
 {
     this->ForEachSymbol([this, byteCodeGenerator](Symbol *const sym)
     {
-        if (!sym->GetIsArguments())
+        if (!sym->IsArguments())
         {
             sym->SetHasNonLocalReference();
             byteCodeGenerator->ProcessCapturedSym(sym);

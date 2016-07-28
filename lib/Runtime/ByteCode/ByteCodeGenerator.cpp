@@ -2190,7 +2190,7 @@ void AddVarsToScope(ParseNode *vars, ByteCodeGenerator *byteCodeGenerator)
         }
 #endif
 
-        if (sym->GetIsArguments() || vars->sxVar.pnodeInit == nullptr)
+        if (sym->IsSpecialSymbol() || vars->sxVar.pnodeInit == nullptr)
         {
             // LHS's of var decls are usually bound to symbols later, during the Visit/Bind pass,
             // so that things like catch scopes can be taken into account.
@@ -2198,10 +2198,21 @@ void AddVarsToScope(ParseNode *vars, ByteCodeGenerator *byteCodeGenerator)
             // We can also bind to the function scope symbol now if there's no init value
             // to assign.
             vars->sxVar.sym = sym;
-            if (sym->GetIsArguments())
+            if (sym->IsSpecialSymbol())
             {
                 FuncInfo* funcInfo = byteCodeGenerator->TopFuncInfo();
-                funcInfo->SetArgumentsSymbol(sym);
+                if (sym->IsArguments())
+                {
+                    funcInfo->SetArgumentsSymbol(sym);
+                }
+                else if (sym->IsThis())
+                {
+                    funcInfo->SetThisSymbol(sym);
+                }
+                else
+                {
+                    Assert(false);
+                }
             }
 
         }
@@ -4096,7 +4107,7 @@ void SetAdditionalBindInfoForVariables(ParseNode *pnode, ByteCodeGenerator *byte
         func->SetHasGlobalRef(true);
     }
 
-    if (!sym->GetIsGlobal() && !sym->GetIsArguments() &&
+    if (!sym->GetIsGlobal() && !sym->IsArguments() &&
         (sym->GetScope() == func->GetBodyScope() || sym->GetScope() == func->GetParamScope() || sym->GetScope()->GetCanMerge()))
     {
         if (func->GetChildCallsEval())
@@ -4790,30 +4801,30 @@ void AssignRegisters(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
     case knopNull:
         pnode->location = byteCodeGenerator->AssignNullConstRegister();
         break;
-    case knopThis:
-        {
-            FuncInfo* func = byteCodeGenerator->TopFuncInfo();
-            pnode->location = func->AssignThisRegister();
-            if (func->IsLambda())
-            {
-                func = byteCodeGenerator->FindEnclosingNonLambda();
-                func->AssignThisRegister();
+    //case knopThis:
+    //    {
+    //        FuncInfo* func = byteCodeGenerator->TopFuncInfo();
+    //        pnode->location = func->AssignThisRegister();
+    //        if (func->IsLambda())
+    //        {
+    //            func = byteCodeGenerator->FindEnclosingNonLambda();
+    //            func->AssignThisRegister();
 
-                if (func->IsGlobalFunction() && !(byteCodeGenerator->GetFlags() & fscrEval))
-                {
-                    byteCodeGenerator->AssignNullConstRegister();
-                }
-            }
-            // "this" should be loaded for both global and non global functions
-            if (func->IsGlobalFunction() && !(byteCodeGenerator->GetFlags() & fscrEval))
-            {
-                // We'll pass "null" to LdThis, to simulate "null" passed as "this" to the
-                // global function.
-                func->AssignNullConstRegister();
-            }
+    //            if (func->IsGlobalFunction() && !(byteCodeGenerator->GetFlags() & fscrEval))
+    //            {
+    //                byteCodeGenerator->AssignNullConstRegister();
+    //            }
+    //        }
+    //        // "this" should be loaded for both global and non global functions
+    //        if (func->IsGlobalFunction() && !(byteCodeGenerator->GetFlags() & fscrEval))
+    //        {
+    //            // We'll pass "null" to LdThis, to simulate "null" passed as "this" to the
+    //            // global function.
+    //            func->AssignNullConstRegister();
+    //        }
 
-            break;
-        }
+    //        break;
+    //    }
     case knopNewTarget:
     {
         FuncInfo* func = byteCodeGenerator->TopFuncInfo();
@@ -5089,6 +5100,10 @@ void AssignRegisters(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
                     }
                     byteCodeGenerator->AssignRegister(sym);
                 }
+                else if (sym->IsThis() && sym->IsInSlot(funcInfo))
+                {
+                    byteCodeGenerator->AssignRegister(sym);
+                }
                 if (sym->GetScope() == funcInfo->paramScope && !funcInfo->paramScope->GetCanMergeWithBodyScope())
                 {
                     // We created an equivalent symbol in the body, let us allocate a register for it if necessary,
@@ -5162,6 +5177,14 @@ void AssignRegisters(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
                     // don't have to do dynamic binding. Just use the home location for this reference.
                     pnode->location = sym->GetLocation();
                 }
+            }
+            if (sym->IsThis() && sym->IsInSlot(byteCodeGenerator->TopFuncInfo()))
+            {
+                // This is captured in lambda. We have to allocate a register for this symbol here.
+                // In the parent function's body we always use the this register. As this cannot be overwritten both
+                // the slot and register can maintain the same value.
+                byteCodeGenerator->AssignRegister(sym);
+
             }
         }
         if (pnode->IsInList() && !pnode->IsNotEscapedUse())

@@ -59,6 +59,7 @@ enum PNodeFlags : ushort
     fpnMemberReference                       = 0x1000, // The node is a member reference symbol
     fpnCapturesSyms                          = 0x2000, // The node is a statement (or contains a sub-statement)
                                                        // that captures symbols.
+    fpnThis                                  = 0x4000, // This symbol
 };
 
 /***************************************************************************

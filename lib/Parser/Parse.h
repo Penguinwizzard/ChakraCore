@@ -390,6 +390,7 @@ private:
         IdentPtr _default;
         IdentPtr _star; // Special '*' identifier for modules
         IdentPtr _starDefaultStar; // Special '*default*' identifier for modules
+        IdentPtr _this;
     };
 
     WellKnownPropertyPids wellKnownPropertyPids;
@@ -768,6 +769,7 @@ private:
     void ParseNestedDeferredFunc(ParseNodePtr pnodeFnc, bool fLambda, bool *pNeedScanRCurly, bool *pStrictModeTurnedOn);
     void CheckStrictFormalParameters();
     void AddArgumentsNodeToVars(ParseNodePtr pnodeFnc);
+    ParseNodePtr InsertVarAtBeginning(ParseNodePtr pnodeFnc, IdentPtr pid);
     void UpdateOrCheckForDuplicateInFormals(IdentPtr pid, SList<IdentPtr> *formals);
     void TransformAsyncFncDeclAST(ParseNodePtr *pnodeBody, bool fLambda);
     ParseNodePtr CreateAsyncSpawnGenerator();
