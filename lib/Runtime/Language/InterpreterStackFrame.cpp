@@ -2336,10 +2336,13 @@ namespace Js
     void InterpreterStackFrame::TraceJsOpCode(InterpreterStackFrame* that, Js::OpCode op)
     {
 #if DBG_DUMP
-        that->scriptContext->byteCodeHistogram[(int)op]++;
-        if (PHASE_TRACE(Js::InterpreterPhase, that->m_functionBody))
+        if (!OpCodeUtil::IsPrefixOpcode(op))
         {
-            Output::Print(_u("%d.%d:Executing %s at offset 0x%X\n"), that->m_functionBody->GetSourceContextId(), that->m_functionBody->GetLocalFunctionId(), Js::OpCodeUtil::GetOpCodeName(op), that->DEBUG_currentByteOffset);
+            that->scriptContext->byteCodeHistogram[(int)op]++;
+            if (PHASE_TRACE(Js::InterpreterPhase, that->m_functionBody))
+            {
+                Output::Print(_u("%d.%d:Executing %s at offset 0x%X\n"), that->m_functionBody->GetSourceContextId(), that->m_functionBody->GetLocalFunctionId(), Js::OpCodeUtil::GetOpCodeName(op), that->DEBUG_currentByteOffset);
+            }
         }
 #endif
     }
@@ -2347,9 +2350,13 @@ namespace Js
     void InterpreterStackFrame::TraceAsmJsOpCode(InterpreterStackFrame* that, Js::OpCodeAsmJs op)
     {
 #if DBG_DUMP
-        if (PHASE_TRACE(Js::AsmjsInterpreterPhase, that->m_functionBody))
+        if (!OpCodeUtil::IsPrefixOpcode((Js::OpCode)op))
         {
-            Output::Print(_u("%d.%d:Executing %s at offset 0x%X\n"), that->m_functionBody->GetSourceContextId(), that->m_functionBody->GetLocalFunctionId(), Js::OpCodeUtilAsmJs::GetOpCodeName(op), that->DEBUG_currentByteOffset);
+            that->scriptContext->byteCodeAsmJsHistogram[(int)op]++;
+            if (PHASE_TRACE(Js::AsmjsInterpreterPhase, that->m_functionBody))
+            {
+                Output::Print(_u("%d.%d:Executing %s at offset 0x%X\n"), that->m_functionBody->GetSourceContextId(), that->m_functionBody->GetLocalFunctionId(), Js::OpCodeUtilAsmJs::GetOpCodeName(op), that->DEBUG_currentByteOffset);
+            }
         }
 #endif
     }
