@@ -283,6 +283,7 @@ namespace Js
             {
                 AsmJsByteCodeDumper::Dump( mFunction, functionBody );
             }
+            functionBody->GetScriptContext()->CaptureEncodedByteCodesForHistogram(functionBody, true);
 #endif
         }
         catch( AsmJsCompilationException& e )

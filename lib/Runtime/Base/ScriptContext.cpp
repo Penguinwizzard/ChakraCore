@@ -30,6 +30,11 @@
 #include "Language/AsmJsCodeGenerator.h"
 #endif
 
+#if DBG_DUMP
+#include "ByteCode/OpCodeUtilAsmJs.h"
+#include "DataStructures/quicksort.h"
+#endif
+
 #ifdef ENABLE_BASIC_TELEMETRY
 #include "ScriptContextTelemetry.h"
 #endif
@@ -245,6 +250,9 @@ namespace Js
         byteCodeAuxiliaryDataSize = 0;
         byteCodeAuxiliaryContextDataSize = 0;
         memset(byteCodeHistogram, 0, sizeof(byteCodeHistogram));
+        memset(byteCodeAsmJsHistogram, 0, sizeof(byteCodeAsmJsHistogram));
+        memset(byteCodeEncodedHistogram, 0, sizeof(byteCodeEncodedHistogram));
+        memset(byteCodeEncodedAsmJsHistogram, 0, sizeof(byteCodeEncodedAsmJsHistogram));
 #endif
 
         memset(propertyStrings, 0, sizeof(PropertyStringMap*)* 80);
@@ -4607,6 +4615,62 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
         dest.hash = TAGHASH((hash_t)dest.str);
     }
 
+#if DBG_DUMP
+    void ScriptContext::CaptureEncodedByteCodesForHistogram(FunctionBody* functionBody, bool isAsmJs /*= false*/)
+    {
+        ByteCodeReader reader;
+        reader.Create(functionBody);
+        if (isAsmJs && (Configuration::Global.flags.BytecodeEncHistAsmJs || Configuration::Global.flags.BytecodeHistAll))
+        {
+#ifndef TEMP_DISABLE_ASMJS
+            OpCodeAsmJs op;
+            do
+            {
+                LayoutSize layoutSize;
+                op = (OpCodeAsmJs)reader.ReadOp(layoutSize);
+                byteCodeEncodedAsmJsHistogram[(int)op]++;
+                // Read the layout to get to the next opcode
+                OpLayoutTypeAsmJs nType = OpCodeUtilAsmJs::GetOpCodeLayout(op);
+                switch (layoutSize * OpLayoutTypeAsmJs::Count + nType)
+                {
+#define LAYOUT_TYPE(layout) \
+                case OpLayoutTypeAsmJs::layout: reader.layout(); break;
+#define LAYOUT_TYPE_WMS(layout) \
+                case SmallLayout * OpLayoutTypeAsmJs::Count + OpLayoutTypeAsmJs::layout: reader.layout##_Small(); break;\
+                case MediumLayout * OpLayoutTypeAsmJs::Count + OpLayoutTypeAsmJs::layout: reader.layout##_Medium(); break; \
+                case LargeLayout * OpLayoutTypeAsmJs::Count + OpLayoutTypeAsmJs::layout: reader.layout##_Large(); break;
+#include "LayoutTypesAsmJs.h"
+                default: { AssertMsg(false, "Unknown OpLayout"); break; }
+                }
+            } while (op != Js::OpCodeAsmJs::EndOfBlock);
+#endif
+        }
+        else if (Configuration::Global.flags.BytecodeEncHist || Configuration::Global.flags.BytecodeHistAll)
+        {
+            OpCode op;
+            do
+            {
+                LayoutSize layoutSize;
+                op = reader.ReadOp(layoutSize);
+                byteCodeEncodedHistogram[(int)op]++;
+                // Read the layout to get to the next opcode
+                OpLayoutType nType = OpCodeUtil::GetOpCodeLayout(op);
+                switch (layoutSize * OpLayoutType::Count + nType)
+                {
+    #define LAYOUT_TYPE(layout) \
+                case OpLayoutType::layout: reader.layout(); break;
+    #define LAYOUT_TYPE_WMS(layout) \
+                case SmallLayout * OpLayoutType::Count + OpLayoutType::layout: reader.layout##_Small(); break;\
+                case MediumLayout * OpLayoutType::Count + OpLayoutType::layout: reader.layout##_Medium(); break; \
+                case LargeLayout * OpLayoutType::Count + OpLayoutType::layout: reader.layout##_Large(); break;
+    #include "LayoutTypes.h"
+                default: { AssertMsg(false, "Unknown OpLayout"); break; }
+                }
+            } while (op != Js::OpCode::EndOfBlock);
+        }
+    }
+#endif
+
     void ScriptContext::PrintStats()
     {
 #if ENABLE_PROFILE_INFO
@@ -4670,62 +4734,114 @@ void ScriptContext::RegisterPrototypeChainEnsuredToHaveOnlyWritableDataPropertie
                 byteCodeDataSize + byteCodeAuxiliaryDataSize + byteCodeAuxiliaryContextDataSize);
         }
 
-        if (Configuration::Global.flags.BytecodeHist)
+        struct HistogramData
         {
-            Output::Print(_u("ByteCode Histogram\n"));
-            Output::Print(_u("\n"));
+            uint* histogram = nullptr;
+            const uint histogramLength = 0;
+            const char16* header;
+            const char16* tableTitle;
+            typedef bool(*IsValidOpcodeFunc)(uint);
+            IsValidOpcodeFunc IsValidOpcode = nullptr;
+            typedef const char16*(*GetOpCodeNameFunc)(uint);
+            GetOpCodeNameFunc GetOpCodeName = nullptr;
+            HistogramData(uint* histogram, uint histogramLength, const char16* header, const char16* tableTitle, IsValidOpcodeFunc IsValidOpcode, GetOpCodeNameFunc GetOpCodeName) :
+                histogram(histogram), histogramLength(histogramLength), header(header), tableTitle(tableTitle), IsValidOpcode(IsValidOpcode), GetOpCodeName(GetOpCodeName) { }
+        };
 
-            uint total = 0;
-            uint unique = 0;
-            for (int j = 0; j < (int)OpCode::ByteCodeLast; j++)
+        HistogramData histogramDatas[] =
+        {
             {
-                total += byteCodeHistogram[j];
-                if (byteCodeHistogram[j] > 0)
-                {
-                    unique++;
-                }
+                Configuration::Global.flags.BytecodeHist || Configuration::Global.flags.BytecodeHistAll ? byteCodeHistogram : nullptr,
+                (uint)OpCode::ByteCodeLast,
+                Configuration::Global.flags.NoNative ? _u("ByteCode Histogram\n") : _u("ByteCode Histogram\nWarning: Should use -NoNative with -ByteCodeHist\n"),
+                _u("Total executed ops\n"),
+                [](uint opcode) { return OpCodeUtil::IsValidOpcode((OpCode)opcode); },
+                [](uint opcode) { return OpCodeUtil::GetOpCodeName((OpCode)opcode); }
+            },
+            {
+                Configuration::Global.flags.BytecodeEncHist || Configuration::Global.flags.BytecodeHistAll ? byteCodeEncodedHistogram : nullptr,
+                (uint)OpCode::ByteCodeLast,
+                Configuration::Global.flags.NoDeferParse ? _u("ByteCode Encoded Histogram\n") : _u("ByteCode Encoded Histogram\nWarning: Should use -NoDeferParse with -BytecodeEncHist\n"),
+                _u("Total encoded ops\n"),
+                [](uint opcode) { return OpCodeUtil::IsValidOpcode((OpCode)opcode); },
+                [](uint opcode) { return OpCodeUtil::GetOpCodeName((OpCode)opcode); }
+            },
+#ifndef TEMP_DISABLE_ASMJS
+            {
+                Configuration::Global.flags.BytecodeHistAsmJs || Configuration::Global.flags.BytecodeHistAll ? byteCodeAsmJsHistogram : nullptr,
+                (uint)OpCodeAsmJs::ByteCodeLast,
+                Configuration::Global.flags.NoNative ? _u("Asm.Js ByteCode Histogram\n") : _u("Asm.Js ByteCode Histogram\nWarning: Should use -NoNative with -ByteCodeHist\n"),
+                _u("Total executed ops\n"),
+                [](uint opcode) { return OpCodeUtilAsmJs::IsValidOpcode((OpCodeAsmJs)opcode); },
+                [](uint opcode) { return OpCodeUtilAsmJs::GetOpCodeName((OpCodeAsmJs)opcode); }
+            },
+            {
+                Configuration::Global.flags.BytecodeEncHistAsmJs || Configuration::Global.flags.BytecodeHistAll ? byteCodeEncodedAsmJsHistogram : nullptr,
+                (uint)OpCodeAsmJs::ByteCodeLast,
+                Configuration::Global.flags.NoDeferParse ? _u("Asm.Js ByteCode Encoded Histogram\n") : _u("Asm.Js ByteCode Encoded Histogram\nWarning: Should use -NoDeferParse with -BytecodeEncHistAsmJs\n"),
+                _u("Total encoded ops\n"),
+                [](uint opcode) { return OpCodeUtilAsmJs::IsValidOpcode((OpCodeAsmJs)opcode); },
+                [](uint opcode) { return OpCodeUtilAsmJs::GetOpCodeName((OpCodeAsmJs)opcode); }
             }
-            Output::Print(_u("%9u                     Total executed ops\n"), total);
-            Output::Print(_u("\n"));
+#endif
+        };
 
-            uint max = UINT_MAX;
-            double pctcume = 0.0;
-
-            while (true)
+        const uint nHistograms = sizeof(histogramDatas) / sizeof(HistogramData);
+        for (uint iHistogram = 0; iHistogram < nHistograms; ++iHistogram)
+        {
+            const HistogramData& hData = histogramDatas[iHistogram];
+            if (hData.histogram)
             {
-                uint upper = 0;
-                int index = -1;
-                for (int j = 0; j < (int)OpCode::ByteCodeLast; j++)
+                
+                struct OpCodeHistElement
                 {
-                    if (OpCodeUtil::IsValidOpcode((OpCode)j) && byteCodeHistogram[j] > upper && byteCodeHistogram[j] < max)
+                    uint opcode;
+                    uint count;
+                    const char16* str;
+                    static int Compare(OpCodeHistElement& a, OpCodeHistElement& b) { return b.count - a.count; }
+                };
+                const uint nBytecodes = (uint)OpCode::ByteCodeLast;
+#ifndef TEMP_DISABLE_ASMJS
+                const uint nAsmJsBytecodes = (uint)OpCodeAsmJs::ByteCodeLast;
+#else
+                const uint nAsmJsBytecodes = 0;
+#endif
+                constexpr uint nElements = nBytecodes < nAsmJsBytecodes ? nAsmJsBytecodes : nBytecodes;
+                OpCodeHistElement elements[nElements];
+                memset(elements, 0, sizeof(elements));
+                uint total = 0;
+                uint unique = 0;
+                for (uint j = 0; j < hData.histogramLength; j++)
+                {
+                    total += hData.histogram[j];
+                    if (hData.histogram[j] > 0 && hData.IsValidOpcode(j))
                     {
-                        index = j;
-                        upper = byteCodeHistogram[j];
+                        elements[unique++] = {j, hData.histogram[j], hData.GetOpCodeName(j)};
                     }
                 }
-
-                if (index == -1)
+                if (total > 0)
                 {
-                    break;
-                }
+                    JsUtil::QuickSort<OpCodeHistElement, OpCodeHistElement>::Sort(elements, elements + (unique - 1));
+                    Output::Print(hData.header);
+                    Output::Print(_u("\n"));
+                    Output::Print(_u("%9u                     "), total);
+                    Output::Print(hData.tableTitle);
+                    Output::Print(_u("\n"));
 
-                max = byteCodeHistogram[index];
-
-                for (OpCode j = (OpCode)0; j < OpCode::ByteCodeLast; j++)
-                {
-                    if (OpCodeUtil::IsValidOpcode(j) && max == byteCodeHistogram[(int)j])
+                    double pctcume = 0.0;
+                    for (uint i = 0; i < unique; ++i)
                     {
-                        double pct = ((double)max) / total;
+                        const OpCodeHistElement& elem = elements[i];
+                        double pct = ((double)elem.count) / total;
                         pctcume += pct;
-
-                        Output::Print(_u("%9u  %5.1lf  %5.1lf  %04x %s\n"), max, pct * 100, pctcume * 100, j, OpCodeUtil::GetOpCodeName(j));
+                        Output::Print(_u("%9u  %5.1lf  %5.1lf  %04x %s\n"), elem.count, pct * 100, pctcume * 100, elem.opcode, elem.str);
                     }
+
+                    Output::Print(_u("\n"));
+                    Output::Print(_u("Unique opcodes: %d\n"), unique);
                 }
             }
-            Output::Print(_u("\n"));
-            Output::Print(_u("Unique opcodes: %d\n"), unique);
         }
-
 #endif
 
 #if ENABLE_NATIVE_CODEGEN

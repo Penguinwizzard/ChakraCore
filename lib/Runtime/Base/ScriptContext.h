@@ -619,6 +619,12 @@ public:
         uint byteCodeAuxiliaryDataSize;
         uint byteCodeAuxiliaryContextDataSize;
         uint byteCodeHistogram[static_cast<uint>(OpCode::ByteCodeLast)];
+        uint byteCodeEncodedHistogram[static_cast<uint>(OpCode::ByteCodeLast)];
+#ifndef TEMP_DISABLE_ASMJS
+        uint byteCodeAsmJsHistogram[static_cast<uint>(OpCodeAsmJs::ByteCodeLast)];
+        uint byteCodeEncodedAsmJsHistogram[static_cast<uint>(OpCodeAsmJs::ByteCodeLast)];
+#endif
+        void CaptureEncodedByteCodesForHistogram(FunctionBody* functionBody, bool isAsmJs = false);
         uint32 forinCache;
         uint32 forinNoCache;
 #endif

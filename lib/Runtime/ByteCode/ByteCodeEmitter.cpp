@@ -3484,6 +3484,7 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
     {
         Js::ByteCodeDumper::Dump(byteCodeFunction);
     }
+    scriptContext->CaptureEncodedByteCodesForHistogram(byteCodeFunction);
     if (PHASE_DUMP(Js::DebuggerScopePhase, funcInfo->byteCodeFunction))
     {
         byteCodeFunction->DumpScopes();
