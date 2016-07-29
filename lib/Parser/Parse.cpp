@@ -4782,8 +4782,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, LPCOLESTR pNameHint, usho
     bool parallelJobStarted = false;
     if (buildAST)
     {
-        bool isLikelyModulePattern =
-            !fDeclaration && pnodeFnc && pnodeFnc->sxFnc.pnodeName == nullptr && fUnaryOrParen;
+        bool isLikelyIIFE = !fDeclaration && pnodeFnc && fUnaryOrParen;
 
         BOOL isDeferredFnc = IsDeferredFnc();
         AnalysisAssert(isDeferredFnc || pnodeFnc);
@@ -4793,7 +4792,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, LPCOLESTR pNameHint, usho
              && (!pnodeFnc->sxFnc.IsNested() || CONFIG_FLAG(DeferNested))
             // Don't defer if this is a function expression not contained in a statement or other expression.
             // Assume it will be called as part of this expression.
-             && (!isLikelyModulePattern || !topLevelStmt || PHASE_FORCE_RAW(Js::DeferParsePhase, m_sourceContextInfo->sourceContextId, pnodeFnc->sxFnc.functionId))
+             && (!isLikelyIIFE || !topLevelStmt || PHASE_FORCE_RAW(Js::DeferParsePhase, m_sourceContextInfo->sourceContextId, pnodeFnc->sxFnc.functionId))
              && !m_InAsmMode
             // Don't defer a module function wrapper because we need to do export resolution at parse time
              && !fModule
@@ -4801,7 +4800,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, LPCOLESTR pNameHint, usho
 
         if (!fLambda &&
             !isDeferredFnc &&
-            !isLikelyModulePattern &&
+            !isLikelyIIFE &&
             !this->IsBackgroundParser() &&
             !this->m_doingFastScan &&
             !(pnodeFncSave && m_currDeferredStub) &&
