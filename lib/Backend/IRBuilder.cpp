@@ -4739,25 +4739,6 @@ IRBuilder::BuildAuxiliary(Js::OpCode newOpcode, uint32 offset)
             break;
         }
 
-    case Js::OpCode::LdPropIds:
-        {
-            IR::RegOpnd *   dstOpnd;
-            IR::Opnd*       srcOpnd;
-
-            Js::RegSlot     dstRegSlot = auxInsn->R0;
-
-            srcOpnd = this->BuildAuxArrayOpnd(AuxArrayValue::AuxPropertyIdArray, offset, auxInsn->Offset);
-            dstOpnd = this->BuildDstOpnd(dstRegSlot);
-            instr = IR::Instr::New(newOpcode, dstOpnd, srcOpnd, m_func);
-
-            if (dstOpnd->m_sym->m_isSingleDef)
-            {
-                dstOpnd->m_sym->m_isNotInt = true;
-            }
-
-            break;
-        }
-
     case Js::OpCode::NewScIntArray:
         {
             IR::RegOpnd*   dstOpnd;

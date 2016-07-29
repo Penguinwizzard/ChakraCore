@@ -1218,14 +1218,6 @@ public:
                             saveBlock();
                             break;
                         }
-                        case OpCode::LdPropIds:
-                        {
-                            auto layout = reader.Auxiliary();
-                            AuxRecord record = { sakPropertyIdArray, layout->Offset };
-                            auxRecords.Prepend(record);
-                            saveBlock();
-                            break;
-                        }
                         case OpCode::StArrSegItem_A:
                         {
                             auto layout = reader.Auxiliary();

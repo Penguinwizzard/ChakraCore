@@ -5521,12 +5521,6 @@ namespace Js
         target = Js::Constants::NoRegister;
     }
 
-    void InterpreterStackFrame::OP_LdPropIds(const unaligned OpLayoutAuxiliary * playout)
-    {
-        const Js::PropertyIdArray *propIds = Js::ByteCodeReader::ReadPropertyIdArray(playout->Offset, this->GetFunctionBody());
-        SetNonVarReg(playout->R0, (Var)propIds);
-    }
-
     bool InterpreterStackFrame::IsCurrentLoopNativeAddr(void * codeAddr) const
     {
         if (this->GetCurrentLoopNum() == LoopHeader::NoLoop)
