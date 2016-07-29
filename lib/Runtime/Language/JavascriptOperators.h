@@ -119,8 +119,6 @@ namespace Js
         static Var TypeofElem_UInt32(Var instance, uint32 index, ScriptContext* scriptContext);
         static Var TypeofElem_Int32(Var instance, int32 index, ScriptContext* scriptContext);
 
-        static Var Delete(Var var, ScriptContext* scriptContext);
-
         static JavascriptString * Concat3(Var aLeft, Var aCenter, Var aRight, ScriptContext * scriptContext);
         static JavascriptString * NewConcatStrMulti(Var a1, Var a2, uint count, ScriptContext * scriptContext);
         static void SetConcatStrMultiItem(Var concatStr, Var str, uint index, ScriptContext * scriptContext);

@@ -507,14 +507,6 @@ namespace Js
         }
     }
 
-    //
-    // Delete the given Var
-    //
-    Var JavascriptOperators::Delete(Var var, ScriptContext* scriptContext)
-    {
-        return scriptContext->GetLibrary()->GetTrue();
-    }
-
     BOOL JavascriptOperators::Equal_Full(Var aLeft, Var aRight, ScriptContext* requestContext)
     {
         //
