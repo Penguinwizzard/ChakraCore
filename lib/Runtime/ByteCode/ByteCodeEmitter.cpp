@@ -10424,8 +10424,8 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
         {
             Emit(pexpr, byteCodeGenerator, funcInfo, false);
             funcInfo->ReleaseLoc(pexpr);
-            byteCodeGenerator->Writer()->Reg2(
-                Js::OpCode::Delete_A, funcInfo->AcquireLoc(pnode), pexpr->location);
+            byteCodeGenerator->Writer()->Reg1(
+                Js::OpCode::LdTrue, funcInfo->AcquireLoc(pnode));
             break;
         }
         }

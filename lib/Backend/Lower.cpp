@@ -1655,10 +1655,6 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             instrPrev = this->LowerStElemI(instr, Js::PropertyOperation_None, false, IR::HelperOP_InitComputedProperty);
             break;
 
-        case Js::OpCode::Delete_A:
-            this->LowerUnaryHelperMem(instr, IR::HelperOp_Delete);
-            break;
-
         case Js::OpCode::DeleteElemI_A:
             this->LowerDeleteElemI(instr, false);
             break;

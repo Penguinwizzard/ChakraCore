@@ -276,7 +276,7 @@ MACRO_EXTEND_WMS(       SetComputedNameVar, Reg2,           OpSideEffect)
 MACRO_WMS(              Ld_A,               Reg2,           OpTempNumberTransfer|OpTempObjectTransfer|OpNonIntTransfer|OpCanCSE) // Copy Var register
 MACRO_WMS(              LdLocalObj,         Reg1,           OpCanCSE) // Load non-stack frame object
 MACRO_WMS(              LdInnerScope,       Reg1Unsigned1,  OpCanCSE) // Load non-stack inner scope
-MACRO_WMS(              LdC_A_Null,         Reg1,           OpByteCodeOnly|OpCanCSE)   // Load from 'null' as Var
+MACRO_EXTEND_WMS(       LdC_A_Null,         Reg1,           OpByteCodeOnly|OpCanCSE)   // Load from 'null' as Var
 MACRO_BACKEND_ONLY(     Ld_I4,              Empty,          OpCanCSE)                  // Copy I4 register
 MACRO_BACKEND_ONLY(     LdC_A_I4,           Empty,          OpCanCSE)                  // Load from 'int32' as Var(C)
 MACRO_BACKEND_ONLY(     LdC_A_R8,           Empty,          OpCanCSE)                  // Load from 'double' constant
@@ -332,7 +332,6 @@ MACRO_BACKEND_ONLY(     ArgOut_A_FixupForStackArgs, Empty,          OpSideEffect
 MACRO_BACKEND_ONLY(     ArgOut_A_SpreadArg,         Empty,          OpSideEffect)
 MACRO_BACKEND_ONLY(     ArgOutAsmJsI_A,             Empty,          OpSideEffect)
 MACRO_BACKEND_ONLY(     ArgOutAsmJsE_A,             Empty,          OpSideEffect)
-MACRO_WMS(              Delete_A,                   Reg2,           OpSideEffect|OpPostOpDbgBailOut)        // Delete Var
 
 // Object operations
 MACRO_WMS_PROFILED_OP(  LdFld,                ElementCP,      OpSideEffect|OpOpndHasImplicitCall|OpFastFldInstr|OpPostOpDbgBailOut|OpCanLoadFixedFields)    // Load from ScriptObject instance's direct field
@@ -437,8 +436,8 @@ MACRO_BACKEND_ONLY(     LdUInt32ArrViewElem,    ElementI,       OpCanCSE        
 MACRO_BACKEND_ONLY(     Memset,                 ElementI,       OpSideEffect)
 MACRO_BACKEND_ONLY(     Memcopy,                ElementI,       OpSideEffect)
 MACRO_BACKEND_ONLY(     ArrayDetachedCheck,     Reg1,           None)   // ensures that an ArrayBuffer has not been detached
-MACRO_WMS(              StArrItemI_CI4,         ElementUnsigned1,      OpSideEffect)
-MACRO_WMS(              StArrItemC_CI4,         ElementUnsigned1,      OpSideEffect)
+MACRO_EXTEND_WMS(       StArrItemI_CI4,         ElementUnsigned1,      OpSideEffect)
+MACRO_EXTEND_WMS(       StArrItemC_CI4,         ElementUnsigned1,      OpSideEffect)
 MACRO_WMS(              LdArrHead,              Reg2,           OpTempObjectSources)
 MACRO_BACKEND_ONLY(     BoundCheck,             Empty,          OpTempNumberSources|OpTempObjectSources)
 MACRO_BACKEND_ONLY(     UnsignedBoundCheck,     Empty,          OpTempNumberSources|OpTempObjectSources)
@@ -532,7 +531,7 @@ MACRO_BACKEND_ONLY(     NewScopeObject,     Reg1,           None)               
 MACRO_BACKEND_ONLY(     InitCachedScope,    Reg2Aux,        None)                   // Retrieve cached scope; create if not cached
 MACRO_BACKEND_ONLY(     InitLetCachedScope, Reg2Aux,        OpSideEffect)                   // Retrieve cached scope; create if not cached (formals are let-like instead of var-like)
 MACRO(                  InitCachedFuncs,    AuxNoReg,       OpSideEffect)
-MACRO_WMS(              GetCachedFunc,      Reg1Unsigned1,  None)
+MACRO_EXTEND_WMS(       GetCachedFunc,      Reg1Unsigned1,  None)
 MACRO(                  CommitScope,        Empty,       OpSideEffect)   // Mark the cached scope object as committed on exit from the function
 MACRO_WMS(              InvalCachedScope,   Unsigned1,      OpSideEffect)
 MACRO_WMS(              NewPseudoScope,     Unsigned1,      None)           // Create new scope that can't take normal var inits
