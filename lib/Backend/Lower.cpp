@@ -4085,7 +4085,6 @@ Lowerer::GenerateProfiledNewScObjArrayFastPath(IR::Instr *instr, Js::ArrayCallSi
     else
     {
         elementSizeOpnd = IR::IntConstOpnd::New(sizeof(Js::JavascriptArray::TElement), TyUint8, func);
-        GenerateArrayInfoIsNativeIntArrayTest(instr, arrayInfo, helperLabel);
         headOpnd = GenerateArrayAlloc<Js::JavascriptArray>(instr, lengthOpnd, arrayInfo, &isZeroed, &alignedHeadSegSizeOpnd);
     }
 
@@ -5202,17 +5201,6 @@ Lowerer::LowerNewScObjArray(IR::Instr *newObjInstr)
                 IR::RegOpnd *const regSrc = opndOfArrayCtor->AsRegOpnd();
 
                 IR::RegOpnd *const opndValue = GenerateUntagVar(regSrc, helperLabel, newObjInstr);
-
-
-                //printf("%d", regSrc->IsNotInt());
-                //m_lowererMD.GenerateObjectTest(regSrc, newObjInstr, helperLabel, false);
-
-                //// FromVar reg, Src
-                //IR::RegOpnd *const opndValue = IR::RegOpnd::New(TyInt32, this->m_func);
-                //const IR::AutoReuseOpnd autoReuseReg(opndValue, m_func);
-                //IR::Instr *const instr = IR::Instr::New(Js::OpCode::FromVar, opndValue, regSrc, newObjInstr->m_func);
-                //newObjInstr->InsertBefore(instr);
-                //m_lowererMD.EmitLoadInt32(instr, false /*conversionFromObjectAllowed*/);
 
                 // 2. emit bound check
                 IR::Opnd* upperBound = IR::IntConstOpnd::New(upperBoundValue, TyUint8, func, true);
