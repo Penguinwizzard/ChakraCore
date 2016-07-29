@@ -536,10 +536,6 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             this->LowerNewScObjectLiteral(instr);
             break;
 
-        case Js::OpCode::LdPropIds:
-            m_lowererMD.ChangeToAssign(instr);
-            break;
-
         case Js::OpCode::StArrSegItem_A:
             instrPrev = this->LowerArraySegmentVars(instr);
             break;
