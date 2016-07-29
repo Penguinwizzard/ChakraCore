@@ -3386,7 +3386,7 @@ namespace Js
         }
 
         // Make sure Break opcode only need one byte
-        Assert(OpCodeUtil::IsSmallEncodedOpcode(OpCode::Break));
+        CompileAssert(OpCodeUtil::IsSmallEncodedOpcode(OpCode::Break));
 #if ENABLE_NATIVE_CODEGEN
         Assert(!OpCodeAttr::HasMultiSizeLayout(OpCode::Break));
 #endif

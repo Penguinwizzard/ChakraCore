@@ -250,7 +250,6 @@ HELPERCALL(Op_ScopedGetMethodPolymorphic, ((Js::Var (*)(Js::FunctionBody *const,
 
 HELPERCALL(CheckIfTypeIsEquivalent, Js::JavascriptOperators::CheckIfTypeIsEquivalent, 0)
 
-HELPERCALL(Op_Delete, Js::JavascriptOperators::Delete, AttrCanThrow)
 HELPERCALL(OP_InitSetter, Js::JavascriptOperators::OP_InitSetter, AttrCanThrow)
 HELPERCALL(OP_InitElemSetter, Js::JavascriptOperators::OP_InitElemSetter, AttrCanThrow)
 HELPERCALL(OP_InitGetter, Js::JavascriptOperators::OP_InitGetter, AttrCanThrow)

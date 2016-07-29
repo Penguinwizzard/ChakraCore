@@ -1805,9 +1805,6 @@ IRBuilder::BuildReg2(Js::OpCode newOpcode, uint32 offset, Js::RegSlot R0, Js::Re
             dstSym->m_isNotInt = true;
         }
         break;
-    case Js::OpCode::Delete_A:
-        dstOpnd->SetValueType(ValueType::Boolean);
-        break;
     case Js::OpCode::BeginSwitch:
         m_switchBuilder.BeginSwitch();
         newOpcode = Js::OpCode::Ld_A;
