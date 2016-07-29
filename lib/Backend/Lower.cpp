@@ -3838,20 +3838,20 @@ Lowerer::GenerateArrayAlloc(IR::Instr *instr, IR::Opnd * arrayLenOpnd, Js::Array
     //TODO: Assume count will always in InlineHeadSegment because it will always be less than 64.
     /*
         ; ***** size = (arrayLen == 0) ? Js::SparseArraySegmentBase::SMALL_CHUNK_SIZE ? arrayLen *****
-        MOV sizeOpnd, arrayLenOpnd  ; Make copy so it doesn't get overwritten by SMALL_CHUNK_SIZE
-        CMP sizeOpnd, 0
+        MOV sizeOpnd,           arrayLenOpnd                  ; Make copy so it doesn't get overwritten by SMALL_CHUNK_SIZE
+        CMP sizeOpnd,           0
         LGE $L1
-        MOV sizeOpnd, Js::SparseArraySegmentBase::SMALL_CHUNK_SIZE;
+        MOV sizeOpnd,           SMALL_CHUNK_SIZE;
     $L1:
         ; ***** calculate alignedArrayAllocationSize and alignedHeadSegSize *****
-        MOV objectSizeOpnd, objectSize               ; objectSize = sizeof(ArrayType) + sizeof(SparseArraySegment<typename ArrayType::TElement>)
-        arraySize     = MUL sizeOpnd, elementSize          ; elementSize = sizeof(T::TElement) //TODO: Update this comment once get approver that SHL is ok todo.
-        SHL sizeOpnd, N ; where 2^N = elementSize
-        arrayObjSize = ADD objectSizeOpnd, arraySizeOpnd
-        alignedArrayObjSize = ADD arrayObjSize, (HeapConstants::ObjectGranularity - 1)
-        alignedArrayAllocSize = AND alignedTotalArrayObjSizeOpnd, ~(HeapConstants::ObjectGranularity - 1)
-        temp = SUB alignedArrayAllocSize, objectSizeOpnd
-        alignedHeadSegSize = DIV temp, N          ; 2^N = sizeof(typename T::TElement)
+        MOV objectSizeOpnd,     objectSize              ; objectSize = sizeof(ArrayType) + sizeof(SparseArraySegment<typename ArrayType::TElement>)
+        arraySize               = MUL sizeOpnd, elementSize     ; elementSize = sizeof(T::TElement) //TODO: Update this comment once get approver that SHL is ok todo.
+        SHL sizeOpnd,           N                               ; where 2^N = elementSize
+        arrayObjSize            = ADD objectSizeOpnd, arraySizeOpnd
+        alignedArrayObjSize     = ADD arrayObjSize, (HeapConstants::ObjectGranularity - 1)
+        alignedArrayAllocSize   = AND alignedTotalArrayObjSizeOpnd, ~(HeapConstants::ObjectGranularity - 1)
+        temp                    = SUB alignedArrayAllocSize, objectSizeOpnd
+        alignedHeadSegSize      = DIV temp, N                   ; 2^N = sizeof(typename T::TElement)
 
         ; ***** Call to allocation helper *****
         PUSH recycler
@@ -3859,32 +3859,31 @@ Lowerer::GenerateArrayAlloc(IR::Instr *instr, IR::Opnd * arrayLenOpnd, Js::Array
         s10 = CALL AllocMemForJavascriptIntArray
 
         ; ***** Load headSeg/initialize it *****
-        dstOpnd = s10               ; s11 holds JavascriptNativeIntArray
-        headOpnd = LEA [s11+36]      ; s12 holds HeadSegment
+        dstOpnd                 = s10
+        headOpnd                = LEA [s11+36]
 
         ; ***** Evaluate arrayFlags *****
-        CMP sizeOpnd, 0
+        CMP sizeOpnd,           0
         JE  $noMissingValues
-        MOV arrayFlagsOpnd, Js::DynamicObjectFlags::ObjectArrayFlagsTag
+        MOV arrayFlagsOpnd,     Js::DynamicObjectFlags::ObjectArrayFlagsTag
         JMP $skip
 $noMissingValues:
-        MOV arrayFlagsOpnd, Js::DynamicObjectFlags::InitialArrayValue
+        MOV arrayFlagsOpnd,     Js::DynamicObjectFlags::InitialArrayValue
 $skip:
         ; ***** Array object initialization *****
         ...
         ...
-        MOV [dstOpnd+12], arrayFlagsOpnd       ; set arrayFlags
-        MOV [dstOpnd+16], arrayLenOpnd        ; set length field of JavascriptNativeIntArray
+        MOV [dstOpnd+12],       arrayFlagsOpnd                  ; set arrayFlags
+        MOV [dstOpnd+16],       arrayLenOpnd                    ; set length field of JavascriptNativeIntArray
         ...
-        MOV [headOpnd+4], arrayLenOpnd         ; set length field of HeadSegment
-        MOV [headOpnd+4], alignedHeadSegSize         ; set size field of HeadSegment
-
+        MOV [headOpnd+4],       arrayLenOpnd                    ; set length field of HeadSegment
+        MOV [headOpnd+4],       alignedHeadSegSize              ; set size field of HeadSegment
     */
 
     IR::Opnd * sizeOpnd = IR::RegOpnd::New(TyUint32, func);
-    IR::Opnd * arraySizeOpnd = IR::RegOpnd::New(TyUint32, func); // max value could be 8 (optimization limit for array) * sizeof(element)
-    IR::Opnd * alignedTotalArrayObjSizeOpnd = IR::RegOpnd::New(TyUint32, func); // max value could be arraySizeOpnd + 0x52(object size) + 0xF (HeapConstants::ObjectGranularity - 1)
-    IR::Opnd * alignedArrayAllocSizeOpnd = IR::RegOpnd::New(TyUint32, func); // max value less than alignedTotalArrayObjSizeOpnd AND (~(HeapConstants::ObjectGranularity - 1)
+    IR::Opnd * arraySizeOpnd = IR::RegOpnd::New(TyUint32, func);
+    IR::Opnd * alignedTotalArrayObjSizeOpnd = IR::RegOpnd::New(TyUint32, func);
+    IR::Opnd * alignedArrayAllocSizeOpnd = IR::RegOpnd::New(TyUint32, func);
     IR::Opnd * tempOpnd = IR::RegOpnd::New(TyUint32, func);
     *alignedHeadSegSizeOpnd = IR::RegOpnd::New(TyUint32, func);
 
@@ -5202,12 +5201,18 @@ Lowerer::LowerNewScObjArray(IR::Instr *newObjInstr)
                 // 1. emit int check
                 IR::RegOpnd *const regSrc = opndOfArrayCtor->AsRegOpnd();
 
-                // FromVar reg, Src
-                IR::RegOpnd *const opndValue = IR::RegOpnd::New(TyInt32, this->m_func);
-                const IR::AutoReuseOpnd autoReuseReg(opndValue, m_func);
-                IR::Instr *const instr = IR::Instr::New(Js::OpCode::FromVar, opndValue, regSrc, newObjInstr->m_func);
-                newObjInstr->InsertBefore(instr);
-                m_lowererMD.EmitLoadInt32(instr, true /*conversionFromObjectAllowed*/);
+                IR::RegOpnd *const opndValue = GenerateUntagVar(regSrc, helperLabel, newObjInstr);
+
+
+                //printf("%d", regSrc->IsNotInt());
+                //m_lowererMD.GenerateObjectTest(regSrc, newObjInstr, helperLabel, false);
+
+                //// FromVar reg, Src
+                //IR::RegOpnd *const opndValue = IR::RegOpnd::New(TyInt32, this->m_func);
+                //const IR::AutoReuseOpnd autoReuseReg(opndValue, m_func);
+                //IR::Instr *const instr = IR::Instr::New(Js::OpCode::FromVar, opndValue, regSrc, newObjInstr->m_func);
+                //newObjInstr->InsertBefore(instr);
+                //m_lowererMD.EmitLoadInt32(instr, false /*conversionFromObjectAllowed*/);
 
                 // 2. emit bound check
                 IR::Opnd* upperBound = IR::IntConstOpnd::New(upperBoundValue, TyUint8, func, true);
@@ -5338,7 +5343,7 @@ Lowerer::LowerNewScObjArrayNoArg(IR::Instr *newObjInstr)
     }
 
     IR::LabelInstr *labelDone = IR::LabelInstr::New(Js::OpCode::Label, func);
-    GenerateProfiledNewScObjArrayFastPath(newObjInstr, arrayInfo, weakFuncRef, (uint32)0, labelDone);
+    GenerateProfiledNewScObjArrayFastPath(newObjInstr, arrayInfo, weakFuncRef, 0, labelDone);
     newObjInstr->InsertAfter(labelDone);
 
     m_lowererMD.LoadHelperArgument(newObjInstr, IR::AddrOpnd::New(weakFuncRef, IR::AddrOpndKindDynamicFunctionBodyWeakRef, func));
@@ -15360,7 +15365,7 @@ Lowerer::GenerateFastLdElemI(IR::Instr *& ldElem, bool *instrIsInHelperBlockRef)
     //  TEST index, 1                       -- index tagged int
     //  JEQ $helper
     //  MOV r2, index
-    //  SAR r2, Js::VarTag_Shift            -- remote atom tag
+    //  SAR r2, Js::VarTag_Shift            -- remoe atom tag
     //  JS $helper                          -- exclude negative index
     //  MOV r4, [base + offset(head)]
     //  CMP r2, [r4 + offset(length)]       -- bounds check
