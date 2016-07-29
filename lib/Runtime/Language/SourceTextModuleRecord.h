@@ -33,6 +33,8 @@ namespace Js
         bool ResolveImport(PropertyId localName, ModuleNameRecord** importRecord);
         void ModuleDeclarationInstantiation() override;
         Var ModuleEvaluation() override;
+        virtual ModuleNamespace* GetNamespace();
+        virtual void SetNamespace(ModuleNamespace* moduleNamespace);
 
         void Finalize(bool isShutdown) override;
         void Dispose(bool isShutdown) override { return; }
@@ -89,6 +91,8 @@ namespace Js
         uint GetLocalExportCount() const { return localSlotCount; }
         uint GetModuleId() const { return moduleId; }
 
+        ModuleNameRecord* GetNamespaceNameRecord() { return &namespaceRecord; }
+
         SourceTextModuleRecord* GetChildModuleRecord(LPCOLESTR specifier) const;
 #if DBG
         void AddParent(SourceTextModuleRecord* parentRecord, LPCWSTR specifier, uint32 specifierLength);
@@ -133,6 +137,8 @@ namespace Js
 
         uint localSlotCount;
         uint moduleId;
+
+        ModuleNameRecord namespaceRecord;
 
         HRESULT PostParseProcess();
         HRESULT PrepareForModuleDeclarationInitialization();

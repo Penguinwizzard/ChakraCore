@@ -5,6 +5,7 @@
 
 #include "RuntimeLanguagePch.h"
 #include "ModuleNamespace.h"
+#include "ModuleNamespaceEnumerator.h"
 #include "Types\PropertyIndexRanges.h"
 #include "Types\SimpleDictionaryPropertyDescriptor.h"
 #include "Types\SimpleDictionaryTypeHandler.h"
@@ -30,14 +31,6 @@ namespace Js
         RecyclableObject* nullValue = scriptContext->GetLibrary()->GetNull();
         Recycler* recycler = scriptContext->GetRecycler();
 
-        ResolvedExportMap* resolvedExportMap = moduleRecord->GetExportedNamesMap();
-        if (resolvedExportMap == nullptr)
-        {
-            Assert(moduleRecord->GetLocalExportCount() == 0);
-            Assert(moduleRecord->GetIndirectExportEntryList() == nullptr);
-            Assert(moduleRecord->GetStarExportRecordList() == nullptr);
-        }
-
         // First, the storage for local exports are stored in the ModuleRecord object itself, and we can build up a simpleDictionaryTypeHanlder to
         // look them up locally.
         SimpleDictionaryTypeHandlerNotExtensible* typeHandler = SimpleDictionaryTypeHandlerNotExtensible::New(recycler, moduleRecord->GetLocalExportCount(), 0, 0);
@@ -50,11 +43,9 @@ namespace Js
             for (uint i = 0; i < (uint)localExportIndexList->Count(); i++)
             {
 #if DBG
-                ModuleNameRecord tempNameRecord;
                 Assert(moduleRecord->GetLocalExportSlotIndexByLocalName(localExportIndexList->Item(i)) == i);
-                Assert(resolvedExportMap->TryGetValue(localExportIndexList->Item(i), &tempNameRecord) && tempNameRecord.module == moduleRecord);
 #endif
-                nsObject->SetPropertyWithAttributes(localExportIndexList->Item(i), nullValue, PropertyModuleNamespaceDefault, nullptr);
+                nsObject->DynamicObject::SetPropertyWithAttributes(localExportIndexList->Item(i), nullValue, PropertyModuleNamespaceDefault, nullptr);
             }
         }
         // update the local slot to use the storage for local exports.
@@ -65,40 +56,46 @@ namespace Js
         ModuleNameRecord* moduleNameRecord = nullptr;
 #if DBG
         uint unresolvableExportsCount = 0;
+        uint localExportCount = 0;
 #endif
-        exportedName->Map([&](PropertyId propertyId) {
-            if (!moduleRecord->ResolveExport(propertyId, nullptr, nullptr, &moduleNameRecord))
-            {
-                // ignore ambigious resolution.
+        if (exportedName != nullptr)
+        {
+            exportedName->Map([&](PropertyId propertyId) {
+                if (!moduleRecord->ResolveExport(propertyId, nullptr, nullptr, &moduleNameRecord))
+                {
+                    // ignore ambigious resolution.
 #if DBG
-                unresolvableExportsCount++;
+                    unresolvableExportsCount++;
 #endif
-                return;
-            }
-            // non-ambiguous resolution.
-            if (moduleNameRecord == nullptr)
-            {
-                JavascriptError::ThrowSyntaxError(scriptContext, JSERR_ResolveExportFailed, scriptContext->GetPropertyName(propertyId)->GetBuffer());
-            }
-            if (moduleNameRecord->module == requestModule)
-            {
-                // skip local exports as they are covered in the localExportSlots.
-                return;
-            }
-            Assert(moduleNameRecord->module != moduleRecord);
-            nsObject->AddUnambiguousNonLocalExport(propertyId, moduleNameRecord);
-        });
+                    return;
+                }
+                // non-ambiguous resolution.
+                if (moduleNameRecord == nullptr)
+                {
+                    JavascriptError::ThrowSyntaxError(scriptContext, JSERR_ResolveExportFailed, scriptContext->GetPropertyName(propertyId)->GetBuffer());
+                }
+                if (moduleNameRecord->module == requestModule)
+                {
+                    // skip local exports as they are covered in the localExportSlots.
 #if DBG
-        uint totalExportCount = (moduleRecord->GetExportedNames(nullptr) != nullptr) ? moduleRecord->GetExportedNames(nullptr)->Count() : 0;
-        uint localExportCount = moduleRecord->GetLocalExportCount();
+                    localExportCount++;
+#endif
+                    return;
+                }
+                Assert(moduleNameRecord->module != moduleRecord);
+                nsObject->AddUnambiguousNonLocalExport(propertyId, moduleNameRecord);
+            });
+        }
+#if DBG
+        uint totalExportCount = exportedName != nullptr ? exportedName->Count() : 0;
         uint unambiguousNonLocalCount = (nsObject->GetUnambiguousNonLocalExports() != nullptr) ? nsObject->GetUnambiguousNonLocalExports()->Count() : 0;
         Assert(totalExportCount == localExportCount + unambiguousNonLocalCount + unresolvableExportsCount);
 #endif
         BOOL result = nsObject->PreventExtensions();
+        moduleRecord->SetNamespace(nsObject);
+
         Assert(result);
-        return nullptr;
-        // TODO: enable after actual namespace object implementation.
-        //return nsObject;
+        return nsObject;
     }
 
     void ModuleNamespace::AddUnambiguousNonLocalExport(PropertyId propertyId, ModuleNameRecord* nonLocalExportNameRecord)
@@ -110,5 +107,69 @@ namespace Js
         }
         // keep a local copy of the module/
         unambiguousNonLocalExports->AddNew(propertyId, *nonLocalExportNameRecord);
+    }
+
+    BOOL ModuleNamespace::HasProperty(PropertyId propertyId)
+    {
+        if (GetTypeHandler()->HasProperty(this, propertyId))
+        {
+            return TRUE;
+        }
+        if (unambiguousNonLocalExports != nullptr)
+        {
+            return unambiguousNonLocalExports->ContainsKey(propertyId);
+        }
+        return FALSE;
+    }
+
+    BOOL ModuleNamespace::HasOwnProperty(PropertyId propertyId)
+    {
+        return HasProperty(propertyId);
+    }
+
+    BOOL ModuleNamespace::GetProperty(Var originalInstance, PropertyId propertyId, Var* value, PropertyValueInfo* info, ScriptContext* requestContext)
+    {
+        if (DynamicObject::GetProperty(originalInstance, propertyId, value, info, requestContext))
+        {
+            return TRUE;
+        }
+        if (unambiguousNonLocalExports != nullptr)
+        {
+            ModuleNameRecord moduleNameRecord;
+            // TODO: maybe we can cache the slot address & offset, instead of looking up everytime? We do need to look up the reference everytime.
+            if (unambiguousNonLocalExports->TryGetValue(propertyId, &moduleNameRecord))
+            {
+                return moduleNameRecord.module->GetNamespace()->GetProperty(originalInstance, propertyId, value, info, requestContext);
+            }
+        }
+        return FALSE;
+    }
+
+    BOOL ModuleNamespace::GetProperty(Var originalInstance, JavascriptString* propertyNameString, Var* value, PropertyValueInfo* info, ScriptContext* requestContext)
+    {
+        Assert(false);
+        return FALSE;
+    }
+
+    BOOL ModuleNamespace::GetInternalProperty(Var instance, PropertyId internalPropertyId, Var* value, PropertyValueInfo* info, ScriptContext* requestContext)
+    {
+        // TODO: @@toStringTag, @@Iterator: Iterator should be added explicitly.
+        return FALSE;
+    }
+
+    BOOL ModuleNamespace::GetPropertyReference(Var originalInstance, PropertyId propertyId, Var* value, PropertyValueInfo* info, ScriptContext* requestContext)
+    {
+        return GetProperty(originalInstance, propertyId, value, info, requestContext);
+    }
+
+    BOOL ModuleNamespace::GetEnumerator(BOOL enumNonEnumerable, Var* enumerator, ScriptContext* scriptContext, bool preferSnapshotSemantics, bool enumSymbols)
+    {
+        ModuleNamespaceEnumerator* moduleEnumerator = ModuleNamespaceEnumerator::New(this, scriptContext, preferSnapshotSemantics, enumSymbols);
+        if (moduleEnumerator == nullptr)
+        {
+            return FALSE;
+        }
+        *enumerator = moduleEnumerator;
+        return TRUE;
     }
 }
