@@ -3892,7 +3892,7 @@ $skip:
     Lowerer::InsertCompare(sizeOpnd, IR::IntConstOpnd::New(0, TyUint32, func), instr);
 
     IR::LabelInstr * notSmallChunkSizeLabel = IR::LabelInstr::New(Js::OpCode::Label, func);
-    Lowerer::InsertBranch(Js::OpCode::JGT, notSmallChunkSizeLabel, instr);
+    Lowerer::InsertBranch(Js::OpCode::BrGt_A, notSmallChunkSizeLabel, instr);
     Lowerer::InsertMove(sizeOpnd, IR::IntConstOpnd::New(Js::SparseArraySegmentBase::SMALL_CHUNK_SIZE, TyUint32, func), instr);
     instr->InsertBefore(notSmallChunkSizeLabel);
 
@@ -3910,8 +3910,8 @@ $skip:
     Lowerer::InsertAdd(false, alignedTotalArrayObjSizeOpnd, tempOpnd, IR::IntConstOpnd::New(HeapConstants::ObjectGranularity - 1, TyUint32, func), instr);
     Lowerer::InsertAnd(alignedArrayAllocSizeOpnd, alignedTotalArrayObjSizeOpnd, IR::IntConstOpnd::New((int32)~(HeapConstants::ObjectGranularity - 1), TyInt32, func), instr);
 #else
-    Lowerer::InsertAdd(false, alignedTotalArrayObjSizeOpnd, tempOpnd, IR::IntConstOpnd::New(HeapConstants::ObjectGranularity - 1, TyUint64, func), instr);
-    Lowerer::InsertAnd(alignedArrayAllocSizeOpnd, alignedTotalArrayObjSizeOpnd, IR::IntConstOpnd::New((int64)~(HeapConstants::ObjectGranularity - 1), TyInt64, func), instr);
+    Lowerer::InsertAdd(false, alignedTotalArrayObjSizeOpnd, tempOpnd, IR::IntConstOpnd::New((int64)(HeapConstants::ObjectGranularity - 1), TyUint64, func), instr);
+    Lowerer::InsertAnd(alignedArrayAllocSizeOpnd, alignedTotalArrayObjSizeOpnd, IR::IntConstOpnd::New(~((int64)(HeapConstants::ObjectGranularity - 1)), TyInt64, func), instr);
 #endif
     Lowerer::InsertSub(false, tempOpnd, alignedArrayAllocSizeOpnd, objectSizeOpnd, instr);
     Lowerer::InsertShift(Js::OpCode::ShrU_A, false, *alignedHeadSegSizeOpnd, tempOpnd, sizeOfMultiplierOpnd, instr);
@@ -3948,9 +3948,9 @@ $skip:
 
     // ***** Evaluate arrayFlags *****
     InsertCompare(sizeOpnd, IR::IntConstOpnd::New(0, TyUint16, func), instr);
-    InsertBranch(Js::OpCode::JEQ, noMissingValuesLabel, instr);
+    InsertBranch(Js::OpCode::BrEq_A, noMissingValuesLabel, instr);
     InsertMove(tempOpnd, IR::IntConstOpnd::New((uint16)Js::DynamicObjectFlags::ObjectArrayFlagsTag, TyUint16, func), instr);
-    InsertBranch(Js::OpCode::JMP, skipMissingValuesLabel, instr);
+    InsertBranch(Js::OpCode::Br, skipMissingValuesLabel, instr);
     instr->InsertBefore(noMissingValuesLabel);
     InsertMove(tempOpnd, IR::IntConstOpnd::New((uint16)Js::DynamicObjectFlags::InitialArrayValue, TyUint16, func), instr);
     instr->InsertBefore(skipMissingValuesLabel);
@@ -4113,11 +4113,11 @@ Lowerer::GenerateProfiledNewScObjArrayFastPath(IR::Instr *instr, Js::ArrayCallSi
     IR::LabelInstr * loopTopInstr = IR::LabelInstr::New(Js::OpCode::Label, func);
     instr->InsertBefore(loopTopInstr);
 
-    InsertCompareBranch(indexOpnd, alignedHeadSegSizeOpnd, Js::OpCode::JGE, labelDone, instr);
+    InsertCompareBranch(indexOpnd, alignedHeadSegSizeOpnd, Js::OpCode::BrGe_A, labelDone, instr);
     GenerateMemInit(headOpnd, headSegIndexOpnd, missingValueOpnd, instr, true);
     InsertAdd(false, headSegIndexOpnd, headSegIndexOpnd, elementSizeOpnd, instr);
     InsertAdd(false, indexOpnd, indexOpnd, IR::IntConstOpnd::New(1, TyUint8, func), instr);
-    InsertBranch(Js::OpCode::JMP, loopTopInstr, instr);
+    InsertBranch(Js::OpCode::Br, loopTopInstr, instr);
 
     loopTopInstr->m_isLoopTop = true;
     Loop *loop = JitAnew(func->m_alloc, Loop, func->m_alloc, this->m_func);
@@ -5216,7 +5216,7 @@ Lowerer::LowerNewScObjArray(IR::Instr *newObjInstr)
 
                 // 2. emit bound check
                 IR::Opnd* upperBound = IR::IntConstOpnd::New(upperBoundValue, TyUint8, func, true);
-                InsertCompareBranch(opndValue, upperBound, Js::OpCode::JA, helperLabel, newObjInstr);
+                InsertCompareBranch(opndValue, upperBound, Js::OpCode::BrGt_A, helperLabel, newObjInstr);
 
                 // 3. GenerateFastPath
                 GenerateProfiledNewScObjArrayFastPath(newObjInstr, arrayInfo, weakFuncRef, helperLabel, labelDone, opndValue);
