@@ -349,7 +349,6 @@ EXDEF3_WMS(CUSTOM,                  LdLocalElemUndef,           OP_LdLocalElemen
   DEF2_WMS(XXtoA1,                  NewScObjectSimple,          OP_NewScObjectSimple)
   DEF3    (CUSTOM,                  NewScObject_A,              OP_NewScObject_A, Auxiliary)
   DEF3    (CUSTOM,                  NewScObjectLiteral,         OP_NewScObjectLiteral, Auxiliary)
-  DEF3    (CUSTOM_L_R0,             LdPropIds,                  OP_LdPropIds, Auxiliary)
   DEF3    (CUSTOM,                  InitCachedFuncs,            OP_InitCachedFuncs, AuxNoReg)
 EXDEF2_WMS(LOCALI1toA1,             GetCachedFunc,              OP_GetCachedFunc)
   DEF2_WMS(EnvU1toXX,               InvalCachedScope,           JavascriptOperators::OP_InvalidateCachedScope)

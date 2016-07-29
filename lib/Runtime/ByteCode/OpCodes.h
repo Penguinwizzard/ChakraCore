@@ -490,13 +490,12 @@ MACRO_WMS(              LdIndexedFrameDisplay,Reg2Int1,         None)        // 
 MACRO_WMS(              LdIndexedFrameDisplayNoParent,Reg1Unsigned1, None)        // Set up a frame display for this function and its parent frames -- this is for an inner scope, not the function-level scope
 MACRO_WMS(              LdFuncExprFrameDisplay,Reg2,        None)
 MACRO_BACKEND_ONLY(     NewStackFrameDisplay,Reg3,          None)           // Set up a frame display allocated on the stack
-    MACRO_WMS(              IsIn,               Reg3,           OpSideEffect|OpOpndHasImplicitCall|OpPostOpDbgBailOut)        // "x in y"  (NOTE: calls valueOf for the index
+MACRO_WMS(              IsIn,               Reg3,           OpSideEffect|OpOpndHasImplicitCall|OpPostOpDbgBailOut)        // "x in y"  (NOTE: calls valueOf for the index
 MACRO_WMS(              LdArgumentsFromFrame,Reg1,          None)           // Load the argument object from frame
 MACRO_WMS(              LdElemUndef,        ElementU,       OpSideEffect)   // Load 'undefined' to instance.property if not already present
 MACRO_EXTEND_WMS(       LdLocalElemUndef,   ElementRootU,   OpSideEffect)   // Load 'undefined' to instance.property if not already present
 MACRO_WMS(              LdElemUndefScoped,  ElementScopedU, OpSideEffect)   // Load 'undefined' to [env].property if not already present in the scope
 MACRO_WMS(              LdFuncExpr,         Reg1,           None)           // Load the function expression to its location
-MACRO(                  LdPropIds,          Auxiliary,      None)           // Load the property id array
 MACRO_WMS(              StFuncExpr,         ElementC,       OpSideEffect)   // Store the function expression to an activation object with attributes
 MACRO_WMS(              StLocalFuncExpr,    ElementU,       OpSideEffect)   // Store the function expression to the local activation object with attributes
 MACRO_EXTEND_WMS(       LdNewTarget,        Reg1,           None)           // Load new.target in an ordinary function call or construct call

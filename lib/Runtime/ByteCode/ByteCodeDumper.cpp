@@ -1303,7 +1303,6 @@ namespace Js
         switch (op)
         {
             case OpCode::NewScObjectLiteral:
-            case OpCode::LdPropIds:
             {
                 const Js::PropertyIdArray *propIds = reader.ReadPropertyIdArray(playout->Offset, dumpFunction);
                 ScriptContext* scriptContext = dumpFunction->GetScriptContext();

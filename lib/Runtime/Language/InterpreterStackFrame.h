@@ -621,7 +621,6 @@ namespace Js
         Var OP_NewScObjectSimple();
         void OP_NewScObjectLiteral(const unaligned OpLayoutAuxiliary * playout);
         void OP_NewScObjectLiteral_LS(const unaligned OpLayoutAuxiliary * playout, RegSlot& target);
-        void OP_LdPropIds(const unaligned OpLayoutAuxiliary * playout);
         template <bool Profile, bool JITLoopBody> void LoopBodyStart(uint32 loopNumber, LayoutSize layoutSize, bool isFirstIteration);
         LoopHeader const * DoLoopBodyStart(uint32 loopNumber, LayoutSize layoutSize, const bool doProfileLoopCheck, bool isFirstIteration);
         template <bool Profile, bool JITLoopBody> void ProfiledLoopBodyStart(uint32 loopNumber, LayoutSize layoutSize, bool isFirstIteration);
