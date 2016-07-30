@@ -3,6 +3,10 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 #include "RuntimeLanguagePch.h"
+#include "Types\PropertyIndexRanges.h"
+#include "Types\SimpleDictionaryPropertyDescriptor.h"
+#include "Types\SimpleDictionaryTypeHandler.h"
+#include "ModuleNamespace.h"
 
 namespace Js
 {
@@ -272,35 +276,32 @@ namespace Js
             return nullptr;
         }
         exportStarSet->Prepend(this);
-        ExportedNames* localNames = nullptr;
+        ExportedNames* tempExportedNames = nullptr;
         if (this->localExportRecordList != nullptr)
         {
-            localNames = (ExportedNames*)AllocatorNew(ArenaAllocator, allocator, ExportedNames, allocator);
+            tempExportedNames = (ExportedNames*)AllocatorNew(ArenaAllocator, allocator, ExportedNames, allocator);
             this->localExportRecordList->Map([=](ModuleImportOrExportEntry exportEntry) {
                 PropertyId exportNameId = EnsurePropertyIdForIdentifier(exportEntry.exportName);
-                localNames->Prepend(exportNameId);
+                tempExportedNames->Prepend(exportNameId);
             });
         }
         if (this->indirectExportRecordList != nullptr)
         {
-            if (localNames == nullptr)
+            if (tempExportedNames == nullptr)
             {
-                localNames = (ExportedNames*)AllocatorNew(ArenaAllocator, allocator, ExportedNames, allocator);
+                tempExportedNames = (ExportedNames*)AllocatorNew(ArenaAllocator, allocator, ExportedNames, allocator);
             }
             this->indirectExportRecordList->Map([=](ModuleImportOrExportEntry exportEntry) {
                 PropertyId exportedNameId = EnsurePropertyIdForIdentifier(exportEntry.exportName);
-                localNames->Prepend(exportedNameId);
+                tempExportedNames->Prepend(exportedNameId);
             });
         }
         if (this->starExportRecordList != nullptr)
         {
-            if (localNames == nullptr)
+            if (tempExportedNames == nullptr)
             {
-                localNames = (ExportedNames*)AllocatorNew(ArenaAllocator, allocator, ExportedNames, allocator);
+                tempExportedNames = (ExportedNames*)AllocatorNew(ArenaAllocator, allocator, ExportedNames, allocator);
             }
-            const PropertyRecord* defaultRecord;
-            scriptContext->GetOrAddPropertyRecord(_u("default"), &defaultRecord);
-            PropertyId defaultPropertyId = defaultRecord->GetPropertyId();
             this->starExportRecordList->Map([=](ModuleImportOrExportEntry exportEntry) {
                 Assert(exportEntry.moduleRequest != nullptr);
                 SourceTextModuleRecord* moduleRecord;
@@ -314,9 +315,9 @@ namespace Js
                     if (starExportedNames != nullptr)
                     {
                         starExportedNames->Map([&](PropertyId propertyId) {
-                            if (propertyId != defaultPropertyId && !localNames->Has(propertyId))
+                            if (propertyId != PropertyIds::default_ && !tempExportedNames->Has(propertyId))
                             {
-                                localNames->Prepend(propertyId);
+                                tempExportedNames->Prepend(propertyId);
                             }
                         });
                     }
@@ -329,8 +330,8 @@ namespace Js
 #endif
             });
         }
-        exportedNames = localNames;
-        return localNames;
+        exportedNames = tempExportedNames;
+        return tempExportedNames;
     }
 
     bool SourceTextModuleRecord::ResolveImport(PropertyId localName, ModuleNameRecord** importRecord)
@@ -751,11 +752,6 @@ namespace Js
                         this->errorObject = errorObj;
                         return;
                     }
-                }
-                else
-                {
-                    // GetModuleNamespace also set the namespace object in the modulerecord.
-                    ModuleNamespace::GetModuleNamespace(childModule);
                 }
             });
         }

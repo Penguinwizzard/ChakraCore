@@ -2,6 +2,7 @@
 // Copyright (C) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
+WScript.LoadScriptFile("..\\UnitTestFramework\\UnitTestFramework.js");
 
 function foo() { }
 class bar { }
@@ -48,3 +49,35 @@ export var var3 = 5, var4
 export var var5, var6, var7
 
 export default 'default';
+
+function verifyNamespace(ns)
+{
+    for (var i in ns) helpers.writeln(i + " = " + ns[i]);
+    assert.areEqual(ns.var7, var7, "var7 is the same");
+    assert.areEqual(ns.var6, var6, "var6 is the same");
+    assert.areEqual(ns.var5, var5, "var5 is the same");
+    assert.areEqual(ns.var4, var4, "var4 is the same");
+    assert.areEqual(ns.var3, var3, "var3 is the same");
+    assert.areEqual(ns.var2, var2, "var2 is the same");
+    assert.areEqual(ns.var1, var1, "var1 is the same");
+    assert.areEqual(ns.foobar, foobar, "foobar is the same");
+    assert.areEqual(ns.foo4, foo4, "foo4 is the same");
+    assert.areEqual(ns.baz2, baz2, "baz2 is the same");
+    assert.areEqual(ns.foo3, foo3, "foo3 is the same");
+    assert.areEqual(ns.baz2, baz2, "baz2 is the same");
+    assert.areEqual(ns.baz, baz, "baz is the same");
+    assert.areEqual(ns.foo2, foo2, "foo2 is the same");
+    assert.areEqual(ns.foo, foo, "foo is the same");
+    assert.areEqual(ns.bar, bar, "bar is the same");
+    assert.areEqual(ns.const6, const6, "const6 is the same");
+    assert.areEqual(ns.const5, const5, "const5 is the same");
+    assert.areEqual(ns.const4, const4, "const4 is the same");
+    assert.areEqual(ns.const3, const3, "const3 is the same");
+    assert.areEqual(ns.const2, const2, "const2 is the same");
+    assert.areEqual(ns.let7, let7, "let7 is the same");
+    assert.areEqual(ns.let6, let6, "let6 is the same");
+    assert.areEqual(ns.let5, let5, "let5 is the same");
+    assert.areEqual(ns.let4, let4, "let4 is the same");
+    assert.areEqual(ns.let3, let3, "let3 is the same");
+    
+}

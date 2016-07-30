@@ -11,7 +11,9 @@ namespace Js
     public:
         friend class ModuleNamespaceEnumerator;
         typedef JsUtil::BaseDictionary<PropertyId, ModuleNameRecord, RecyclerLeafAllocator, PowerOf2SizePolicy> UnambiguousExportMap;
-
+        typedef JsUtil::BaseDictionary<const PropertyRecord*, SimpleDictionaryPropertyDescriptor<BigPropertyIndex>, RecyclerNonLeafAllocator,
+            DictionarySizePolicy<PowerOf2Policy, 1>, PropertyRecordStringHashComparer, PropertyMapKeyTraits<const PropertyRecord*>::template Entry>
+            SimplePropertyDescriptorMap;
     protected:
         DEFINE_VTABLE_CTOR(ModuleNamespace, DynamicObject);
         DEFINE_MARSHAL_OBJECT_TO_SCRIPT_CONTEXT(ModuleNamespace);
@@ -21,6 +23,7 @@ namespace Js
         static ModuleNamespace* New(ModuleRecordBase* moduleRecord);
     public:
         static ModuleNamespace* GetModuleNamespace(ModuleRecordBase* moduleRecord);
+        void Initialize();
 
         //virtual int GetPropertyCount() override;
         //virtual PropertyId GetPropertyId(PropertyIndex index) override;
@@ -76,6 +79,7 @@ namespace Js
     private:
         ModuleRecordBase* moduleRecord;
         UnambiguousExportMap* unambiguousNonLocalExports;
+        SimplePropertyDescriptorMap* propertyMap;
         // this is a special case where we can override the slot to the "export slots". 
         void SetAuxSlotsForModuleNS(Var* auxSlot) { this->auxSlots = auxSlot; }
         void AddUnambiguousNonLocalExport(PropertyId exportId, ModuleNameRecord* nonLocalExportNameRecord);
