@@ -387,7 +387,7 @@ MACRO_EXTEND_WMS_AND_PROFILED(LdParamSlot,          ElementSlotI1,  OpTempNumber
 MACRO_BACKEND_ONLY(     LdSlotArr,                  ElementSlot,    OpTempNumberSources)
 MACRO_EXTEND_WMS_AND_PROFILED(LdInnerObjSlot,       ElementSlotI2,  OpTempNumberSources)
 MACRO_EXTEND_WMS_AND_PROFILED(LdObjSlot,            ElementSlot,    None)
-MACRO_EXTEND_WMS_AND_PROFILED(LdLocalObjSlot,       ElementSlotI1,  None)
+MACRO_WMS_PROFILED(           LdLocalObjSlot,       ElementSlotI1,  None)
 MACRO_EXTEND_WMS_AND_PROFILED(LdParamObjSlot,       ElementSlotI1,  None)
 MACRO_EXTEND_WMS_AND_PROFILED(LdEnvObjSlot,         ElementSlotI2,  None)
 MACRO_EXTEND_WMS_AND_PROFILED(LdModuleSlot,         ElementSlotI2,  None)
@@ -401,7 +401,7 @@ MACRO_EXTEND_WMS(       StInnerSlotChkUndecl,       ElementSlotI2,  OpSideEffect
 MACRO_EXTEND_WMS(       StLocalSlotChkUndecl,       ElementSlotI1,  OpSideEffect)
 MACRO_EXTEND_WMS(       StObjSlot,                  ElementSlot,    OpSideEffect)
 MACRO_EXTEND_WMS(       StInnerObjSlot,             ElementSlotI2,  OpSideEffect)
-MACRO_EXTEND_WMS(       StLocalObjSlot,             ElementSlotI1,  OpSideEffect)
+MACRO_WMS(              StLocalObjSlot,             ElementSlotI1,  OpSideEffect)
 MACRO_EXTEND_WMS(       StLocalObjSlotChkUndecl,    ElementSlotI1,  OpSideEffect)
 MACRO_EXTEND_WMS(       StEnvObjSlot,               ElementSlotI2,  OpSideEffect)
 MACRO_EXTEND_WMS(       StObjSlotChkUndecl,         ElementSlot,    OpSideEffect)
@@ -474,7 +474,7 @@ MACRO_WMS(              LdLetHeapArguments, Reg1,           OpSideEffect)   // L
 MACRO_BACKEND_ONLY(     LdArgumentsFromStack,Reg1,          None)           // Load the heap-based "arguments" object even if it is null (Loads from meta arguments location for inlinee as well).
 MACRO_WMS(              LdHeapArgsCached,   Reg1,           OpSideEffect)   // Load the heap-based "arguments" object in a cached scope
 MACRO_EXTEND_WMS(       LdLetHeapArgsCached,Reg1,           OpSideEffect)   // Load the heap-based "arguments" object in a cached scope (formals are let-like instead of var-like)
-MACRO_EXTEND_WMS(       LdStackArgPtr,      Reg1,           OpSideEffect)   // Load the address of the base of the input parameter area
+MACRO_WMS(              LdStackArgPtr,      Reg1,           OpSideEffect)   // Load the address of the base of the input parameter area
 MACRO_WMS_PROFILED_OP(  LdThis,       Reg2Int1,       OpOpndHasImplicitCall|OpTempNumberTransfer)        // Load this object     (NOTE: TryLoadRoot exit scripts on host dispatch, but otherwise, no side effect)
 MACRO_WMS_PROFILED_OP(  StrictLdThis, Reg2,           OpOpndHasImplicitCall|OpTempNumberTransfer)        // Load this object in strict mode
 MACRO_BACKEND_ONLY(     CheckThis,          Reg1,           OpCanCSE|OpBailOutRec)
@@ -730,7 +730,7 @@ MACRO_EXTEND_WMS(       LdSuper,            Reg1,           OpSideEffect)
 MACRO_EXTEND_WMS(       LdSuperCtor,        Reg1,           OpSideEffect)
 MACRO_EXTEND_WMS(       ScopedLdSuper,      Reg1,           OpSideEffect)
 MACRO_EXTEND_WMS(       ScopedLdSuperCtor,  Reg1,           OpSideEffect)
-MACRO_EXTEND_WMS(       SetHomeObj,         Reg2,           OpSideEffect)
+MACRO_WMS(              SetHomeObj,         Reg2,           OpSideEffect)
 
 MACRO_BACKEND_ONLY(     BrFncCachedScopeEq, Reg2,           None)
 MACRO_BACKEND_ONLY(     BrFncCachedScopeNeq,Reg2,           None)
