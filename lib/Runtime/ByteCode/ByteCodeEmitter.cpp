@@ -2116,7 +2116,7 @@ void ByteCodeGenerator::LoadThisObject(FuncInfo *funcInfo, bool thisLoadedFromPa
         }
         else
         {
-            this->m_writer.Reg1(Js::OpCode::InitUndecl, funcInfo->thisPointerRegister);
+            this->m_writer.Reg1(Js::OpCode::InitUndecl, funcInfo->GetThisSymbol()->GetLocation());
         }
     }
     else if (!funcInfo->IsGlobalFunction() || (this->flags & fscrEval))
@@ -2150,12 +2150,11 @@ void ByteCodeGenerator::LoadThisObject(FuncInfo *funcInfo, bool thisLoadedFromPa
     {
         if (funcInfo->GetBodyScope()->GetIsObject())
         {
-            Assert(false);
+            uint cacheId = funcInfo->FindOrAddInlineCacheId(funcInfo->bodyScope->GetLocation(), Js::PropertyIds::_lexicalThisSlotSymbol, false, true);
+            m_writer.ElementP(Js::OpCode::InitLocalFld, thisSym->GetLocation(), cacheId);
         }
-        else
-        {
-            EmitPropStore(thisSym->GetLocation(), thisSym, thisSym->GetPid(), funcInfo);
-        }
+        
+        EmitPropStore(thisSym->GetLocation(), thisSym, thisSym->GetPid(), funcInfo);
     }
 }
 
@@ -3751,10 +3750,10 @@ void ByteCodeGenerator::EnsureSpecialScopeSlots(FuncInfo* funcInfo, Scope* scope
 {
     if (scope->GetIsObject())
     {
-        if (funcInfo->isThisLexicallyCaptured)
-        {
-            // funcInfo->EnsureThisScopeSlot();
-        }
+        //if (funcInfo->isThisLexicallyCaptured)
+        //{
+        //    // funcInfo->EnsureThisScopeSlot();
+        //}
 
         if (((!funcInfo->IsLambda() && funcInfo->GetCallsEval())
             || funcInfo->isSuperLexicallyCaptured))
@@ -3783,10 +3782,10 @@ void ByteCodeGenerator::EnsureSpecialScopeSlots(FuncInfo* funcInfo, Scope* scope
         // TODO: Investigate moving detection of non-local references to Emit() so we don't assign
         // slots to symbols that are never referenced in emitted code.
 
-        if (funcInfo->isThisLexicallyCaptured)
-        {
-            // funcInfo->EnsureThisScopeSlot();
-        }
+        //if (funcInfo->isThisLexicallyCaptured)
+        //{
+        //    // funcInfo->EnsureThisScopeSlot();
+        //}
 
         if (funcInfo->isSuperLexicallyCaptured)
         {
@@ -3812,8 +3811,8 @@ void ByteCodeGenerator::InitSpecialScopeSlots(FuncInfo* funcInfo)
         // In split scope make sure to do init fld for the duplicate special scope slots
         if (funcInfo->innerThisScopeSlot != Js::Constants::NoProperty)
         {
-            uint cacheId = funcInfo->FindOrAddInlineCacheId(funcInfo->bodyScope->GetLocation(), Js::PropertyIds::_lexicalThisSlotSymbol, false, true);
-            m_writer.ElementP(Js::OpCode::InitLocalFld, funcInfo->thisPointerRegister, cacheId);
+            /*uint cacheId = funcInfo->FindOrAddInlineCacheId(funcInfo->bodyScope->GetLocation(), Js::PropertyIds::_lexicalThisSlotSymbol, false, true);
+            m_writer.ElementP(Js::OpCode::InitLocalFld, funcInfo->thisPointerRegister, cacheId);*/
         }
         if (funcInfo->innerSuperScopeSlot != Js::Constants::NoProperty)
         {
@@ -4390,10 +4389,10 @@ void ByteCodeGenerator::StartEmitBlock(ParseNode *pnodeBlock)
     if (scope->GetMustInstantiate())
     {
         FuncInfo *funcInfo = scope->GetFunc();
-        if (scope->IsGlobalEvalBlockScope() && funcInfo->isThisLexicallyCaptured)
+        /*if (scope->IsGlobalEvalBlockScope() && funcInfo->isThisLexicallyCaptured)
         {
             funcInfo->EnsureThisScopeSlot();
-        }
+        }*/
         this->EnsureFncScopeSlots(pnodeBlock->sxBlock.pnodeScopes, funcInfo);
         this->EnsureLetConstScopeSlots(pnodeBlock, funcInfo);
         PushScope(scope);
@@ -10074,10 +10073,10 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
         byteCodeGenerator->Writer()->Reg1Unsigned1(Js::OpCode::NewRegEx, funcInfo->AcquireLoc(pnode), pnode->sxPid.regexPatternIndex);
         break;
         // PTNODE(knopThis       , "this"        ,None    ,None ,fnopLeaf)
-    case knopThis:
-        // enregistered
-        // Try to load 'this' from a scope slot if we are in a derived class constructor with scope slots. Otherwise, this is a nop.
-        byteCodeGenerator->EmitScopeSlotLoadThis(funcInfo, funcInfo->thisPointerRegister);
+    //case knopThis:
+    //    // enregistered
+    //    // Try to load 'this' from a scope slot if we are in a derived class constructor with scope slots. Otherwise, this is a nop.
+    //    byteCodeGenerator->EmitScopeSlotLoadThis(funcInfo, funcInfo->thisPointerRegister);
         break;
         // PTNODE(knopNewTarget      , "new.target"       ,None    , None        , fnopLeaf)
     case knopNewTarget:
@@ -10532,8 +10531,16 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
         {
         case knopName:
         {
-            funcInfo->AcquireLoc(pnode);
-            byteCodeGenerator->EmitPropDelete(pnode->location, pexpr->sxPid.sym, pexpr->sxPid.pid, funcInfo);
+            if (pnode->sxVar.sym->IsThis())
+            {
+                funcInfo->AcquireLoc(pnode);
+                byteCodeGenerator->Writer()->Reg1(Js::OpCode::LdTrue, pnode->location);
+            }
+            else
+            {
+                funcInfo->AcquireLoc(pnode);
+                byteCodeGenerator->EmitPropDelete(pnode->location, pexpr->sxPid.sym, pexpr->sxPid.pid, funcInfo);
+            }
             break;
         }
         case knopDot:
@@ -10555,12 +10562,12 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
             byteCodeGenerator->Writer()->Element(Js::OpCode::DeleteElemI_A, pnode->location, pexpr->sxBin.pnode1->location, pexpr->sxBin.pnode2->location);
             break;
         }
-        case knopThis:
+        /*case knopThis:
         {
             funcInfo->AcquireLoc(pnode);
             byteCodeGenerator->Writer()->Reg1(Js::OpCode::LdTrue, pnode->location);
             break;
-        }
+        }*/
         default:
         {
             Emit(pexpr, byteCodeGenerator, funcInfo, false);

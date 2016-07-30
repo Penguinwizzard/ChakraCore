@@ -7587,7 +7587,7 @@ void Parser::TransformAsyncFncDeclAST(ParseNodePtr *pnodeBody, bool fLambda)
     this->m_tryCatchOrFinallyDepth = tryCatchOrFinallyDepthSave;
 
     // Create the call : spawn(function*() {}, this)
-    pnodeAsyncSpawn = CreateBinNode(knopAsyncSpawn, pnodeFncGenerator, CreateNodeWithScanner<knopThis>());
+    pnodeAsyncSpawn = CreateBinNode(knopAsyncSpawn, pnodeFncGenerator, CreateNameNode(wellKnownPropertyPids._this));
 
     // Create the return : return spawn(function*() {}, this)
     pnodeReturn = CreateNodeWithScanner<knopReturn>();
@@ -8325,7 +8325,8 @@ ParseNodePtr Parser::ParseExpr(int oplMin,
                     }
 
                     // Assignment stmt of the form "this.<id> = <expr>"
-                    if (nop == knopAsg && pnode->nop == knopDot && pnode->sxBin.pnode1->nop == knopThis && pnode->sxBin.pnode2->nop == knopName)
+                    if (nop == knopAsg && pnode->nop == knopDot && pnode->sxBin.pnode1->nop == knopName
+                        && pnode->sxBin.pnode1->sxVar.pid == wellKnownPropertyPids._this && pnode->sxBin.pnode2->nop == knopName)
                     {
                         if (pnode->sxBin.pnode2->sxPid.pid != wellKnownPropertyPids.__proto__)
                         {
@@ -11492,7 +11493,7 @@ ParseNode* Parser::CopyPnode(ParseNode *pnode) {
         return NULL;
     switch (pnode->nop) {
         //PTNODE(knopName       , "name"        ,None    ,Pid  ,fnopLeaf)
-    case knopThis:
+    // case knopThis:
     case knopName: {
       ParseNode* nameNode=CreateNameNode(pnode->sxPid.pid,pnode->ichMin,pnode->ichLim);
       nameNode->sxPid.sym=pnode->sxPid.sym;
@@ -12553,10 +12554,10 @@ void PrintPnodeWIndent(ParseNode *pnode,int indentAmt) {
       Output::Print(_u("/%x/\n"),pnode->sxPid.regexPattern);
       break;
       //PTNODE(knopThis       , "this"        ,None    ,None ,fnopLeaf)
-  case knopThis:
-      Indent(indentAmt);
-      Output::Print(_u("this\n"));
-      break;
+  //case knopThis:
+  //    Indent(indentAmt);
+  //    Output::Print(_u("this\n"));
+  //    break;
       //PTNODE(knopSuper      , "super"       ,None    ,None ,fnopLeaf)
   case knopSuper:
       Indent(indentAmt);

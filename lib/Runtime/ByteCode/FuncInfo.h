@@ -178,7 +178,7 @@ public:
     Js::PropertyId innerSuperCtorScopeSlot; // Used in case of split scope
     Js::PropertyId newTargetScopeSlot;
     Js::PropertyId innerNewTargetScopeSlot; // Used in case of split scope
-    bool isThisLexicallyCaptured;
+    // bool isThisLexicallyCaptured;
     bool isSuperLexicallyCaptured;
     bool isSuperCtorLexicallyCaptured;
     bool isNewTargetLexicallyCaptured;
@@ -765,10 +765,10 @@ public:
     void EnsureNewTargetScopeSlot();
     void UseInnerSpecialScopeSlots();
 
-    void SetIsThisLexicallyCaptured()
+    /*void SetIsThisLexicallyCaptured()
     {
         this->isThisLexicallyCaptured = true;
-    }
+    }*/
 
     void SetIsSuperLexicallyCaptured()
     {

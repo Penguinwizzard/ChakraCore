@@ -39,9 +39,10 @@ void Scope::ForceAllSymbolNonLocalReference(ByteCodeGenerator *byteCodeGenerator
 
 bool Scope::IsEmpty() const
 {
-    if (GetFunc()->bodyScope == this || (GetFunc()->IsGlobalFunction() && this->IsGlobalEvalBlockScope()))
+    FuncInfo* func = GetFunc();
+    if (func->bodyScope == this || (func->IsGlobalFunction() && this->IsGlobalEvalBlockScope()))
     {
-        return Count() == 0 && !GetFunc()->isThisLexicallyCaptured;
+        return Count() == 0 && !(func->GetThisSymbol() && func->GetThisSymbol()->IsInSlot(func));
     }
     else
     {

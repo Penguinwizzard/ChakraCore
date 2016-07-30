@@ -2481,9 +2481,7 @@ FuncInfo* PostVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerat
 
     if (top->IsLambda())
     {
-        FuncInfo *enclosingNonLambda = byteCodeGenerator->FindEnclosingNonLambda();
-
-        if (enclosingNonLambda->isThisLexicallyCaptured)
+        if (enclosingNonLambda->GetThisSymbol())
         {
             top->byteCodeFunction->SetCapturesThis();
         }
@@ -2846,6 +2844,15 @@ FuncInfo* PostVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerat
         }
     }
 
+    if (top->GetCallsEval())
+    {
+        top->SetHasCapturedThis();
+        if (top->IsLambda())
+        {
+            byteCodeGenerator->FindEnclosingNonLambda()->GetParsedFunctionBody()->SetHasThis(true);
+        }
+    }
+
     if (top->GetCallsEval() || top->GetChildCallsEval())
     {
         parentFunc->SetChildCallsEval(true);
@@ -2912,13 +2919,13 @@ FuncInfo* PostVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerat
             if (top->GetCallsEval() || top->GetChildCallsEval())
             {
                 top->AssignThisRegister();
-                top->SetIsThisLexicallyCaptured();
+                // top->SetIsThisLexicallyCaptured();
                 top->SetIsNewTargetLexicallyCaptured();
                 top->SetIsSuperLexicallyCaptured();
                 top->SetIsSuperCtorLexicallyCaptured();
                 top->SetHasLocalInClosure(true);
                 top->SetHasClosureReference(true);
-                top->SetHasCapturedThis();
+                // top->SetHasCapturedThis();
             }
         }
     }
@@ -4208,7 +4215,7 @@ void Bind(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
             }
         }
         break;
-    case knopThis:
+    // case knopThis:
     case knopSuper:
     {
         FuncInfo *top = byteCodeGenerator->TopFuncInfo();
@@ -4216,10 +4223,10 @@ void Bind(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
         {
             top->SetHasGlobalRef(true);
         }
-        else if (top->IsLambda())
+        /*else if (top->IsLambda())
         {
             byteCodeGenerator->MarkThisUsedInLambda();
-        }
+        }*/
 
         // "this" should be loaded for both global and non-global functions
         byteCodeGenerator->TopFuncInfo()->GetParsedFunctionBody()->SetHasThis(true);
@@ -4325,10 +4332,10 @@ void Bind(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
         SetAdditionalBindInfoForVariables(pnode, byteCodeGenerator);
         break;
     case knopCall:
-        if (pnode->sxCall.isEvalCall && byteCodeGenerator->TopFuncInfo()->IsLambda())
+        /*if (pnode->sxCall.isEvalCall && byteCodeGenerator->TopFuncInfo()->IsLambda())
         {
             byteCodeGenerator->MarkThisUsedInLambda();
-        }
+        }*/
         // fallthrough
     case knopTypeof:
     case knopDelete:
@@ -4412,22 +4419,22 @@ void ByteCodeGenerator::MarkThisUsedInLambda()
 {
     // This is a lambda that refers to "this".
     // Find the enclosing "normal" function and indicate that the lambda captures the enclosing function's "this".
-    FuncInfo *parent = this->FindEnclosingNonLambda();
-    parent->GetParsedFunctionBody()->SetHasThis(true);
-    if (!parent->IsGlobalFunction() || this->GetFlags() & fscrEval)
-    {
-        // If the enclosing function is non-global or eval global, it will put "this" in a closure slot.
-        parent->SetIsThisLexicallyCaptured();
-        Scope* scope = parent->IsGlobalFunction() ? parent->GetGlobalEvalBlockScope() : 
-            (parent->GetParamScope() && !parent->GetParamScope()->GetCanMergeWithBodyScope()) ? parent->GetParamScope() :
-            parent->GetBodyScope();
-        scope->SetHasOwnLocalInClosure(true);
-        this->ProcessScopeWithCapturedSym(scope);
+    /*FuncInfo *parent = this->FindEnclosingNonLambda();
+    parent->GetParsedFunctionBody()->SetHasThis(true);*/
+    //if (!parent->IsGlobalFunction() || this->GetFlags() & fscrEval)
+    //{
+    //    // If the enclosing function is non-global or eval global, it will put "this" in a closure slot.
+    //    parent->SetIsThisLexicallyCaptured();
+    //    Scope* scope = parent->IsGlobalFunction() ? parent->GetGlobalEvalBlockScope() : 
+    //        (parent->GetParamScope() && !parent->GetParamScope()->GetCanMergeWithBodyScope()) ? parent->GetParamScope() :
+    //        parent->GetBodyScope();
+    //    scope->SetHasOwnLocalInClosure(true);
+    //    this->ProcessScopeWithCapturedSym(scope);
 
-        this->TopFuncInfo()->SetHasClosureReference(true);
-    }
+    //    this->TopFuncInfo()->SetHasClosureReference(true);
+    //}
 
-    this->TopFuncInfo()->SetHasCapturedThis();
+    // this->TopFuncInfo()->SetHasCapturedThis();
 }
 
 void ByteCodeGenerator::FuncEscapes(Scope *scope)
