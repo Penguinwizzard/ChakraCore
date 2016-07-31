@@ -88,8 +88,9 @@ namespace Js
         uint GetLocalExportSlotIndexByExportName(PropertyId exportNameId);
         uint GetLocalExportSlotIndexByLocalName(PropertyId localNameId);
         Var* GetLocalExportSlots() const { return localExportSlots; }
-        uint GetLocalExportCount() const { return localSlotCount; }
+        uint GetLocalExportSlotCount() const { return localSlotCount; }
         uint GetModuleId() const { return moduleId; }
+        uint GetLocalExportCount() const { return localExportCount; }
 
         ModuleNameRecord* GetNamespaceNameRecord() { return &namespaceRecord; }
 
@@ -134,8 +135,10 @@ namespace Js
         Var normalizedSpecifier;
         Var errorObject;
         Var* localExportSlots;
-
         uint localSlotCount;
+
+        // module export allows aliasing, like export {foo as foo1, foo2, foo3}.
+        uint localExportCount;
         uint moduleId;
 
         ModuleNameRecord namespaceRecord;

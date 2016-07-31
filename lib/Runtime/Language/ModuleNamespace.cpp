@@ -34,7 +34,6 @@ namespace Js
 
         // First, the storage for local exports are stored in the ModuleRecord object itself, and we can build up a simpleDictionaryTypeHanlder to
         // look them up locally.
-//        SimpleDictionaryTypeHandlerNotExtensible* typeHandler = SimpleDictionaryTypeHandlerNotExtensible::New(recycler, moduleRecord->GetLocalExportCount(), 0, 0);
         DynamicType* dynamicType = DynamicType::New(scriptContext, TypeIds_ModuleNamespace, nullValue, nullptr, NullTypeHandler<false>::GetDefaultInstance());
         nsObject = RecyclerNew(recycler, ModuleNamespace, moduleRecord, dynamicType);
         nsObject->Initialize();
@@ -47,20 +46,9 @@ namespace Js
     {
         ScriptContext* scriptContext = moduleRecord->GetRealm()->GetScriptContext();
         Recycler* recycler = scriptContext->GetRecycler();
-//        LocalExportIndexList* localExportIndexList = moduleRecord->GetLocalExportIndexList();
-//        if (localExportIndexList != nullptr)
-//        {
-//            for (uint i = 0; i < (uint)localExportIndexList->Count(); i++)
-//            {
-//#if DBG
-//                Assert(moduleRecord->GetLocalExportSlotIndexByLocalName(localExportIndexList->Item(i)) == i);
-//#endif
-//                nsObject->DynamicObject::SetPropertyWithAttributes(localExportIndexList->Item(i), nullValue, PropertyModuleNamespaceDefault, nullptr);
-//            }
-//        }
         SourceTextModuleRecord* sourceTextModuleRecord = static_cast<SourceTextModuleRecord*>(moduleRecord);
         ModuleImportOrExportEntryList* localExportList = sourceTextModuleRecord->GetLocalExportEntryList();
-        propertyMap = RecyclerNew(recycler, SimplePropertyDescriptorMap, recycler, localExportList->Count());
+        propertyMap = RecyclerNew(recycler, SimplePropertyDescriptorMap, recycler, sourceTextModuleRecord->GetLocalExportCount());
         if (localExportList != nullptr)
         {
             localExportList->Map([=](ModuleImportOrExportEntry exportEntry) {
@@ -68,6 +56,7 @@ namespace Js
                 const Js::PropertyRecord* exportNameRecord = scriptContext->GetThreadContext()->GetPropertyName(exportNameId);
                 AssertMsg(exportNameId != Js::Constants::NoProperty, "should have been initialized already");
                 BigPropertyIndex index = sourceTextModuleRecord->GetLocalExportSlotIndexByExportName(exportNameId);
+                Assert((uint)index < sourceTextModuleRecord->GetLocalExportCount());
                 SimpleDictionaryPropertyDescriptor<BigPropertyIndex> propertyDescriptor = { index, PropertyModuleNamespaceDefault };
                 propertyMap->Add(exportNameRecord, propertyDescriptor);
             });

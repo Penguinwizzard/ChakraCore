@@ -41,7 +41,8 @@ namespace Js
         localExportSlots(nullptr),
         numUnParsedChildrenModule(0),
         moduleId(InvalidModuleIndex),
-        localSlotCount(InvalidSlotCount)
+        localSlotCount(InvalidSlotCount),
+        localExportCount(0)
     {
         namespaceRecord.module = this;
         namespaceRecord.bindingName = PropertyIds::star;
@@ -252,15 +253,15 @@ namespace Js
     ModuleNamespace* SourceTextModuleRecord::GetNamespace()
     {
         Assert(localExportSlots != nullptr);
-        Assert(static_cast<ModuleNamespace*>(localExportSlots[GetLocalExportCount()]) == __super::GetNamespace());
-        return static_cast<ModuleNamespace*>(localExportSlots[GetLocalExportCount()]);
+        Assert(static_cast<ModuleNamespace*>(localExportSlots[GetLocalExportSlotCount()]) == __super::GetNamespace());
+        return static_cast<ModuleNamespace*>(localExportSlots[GetLocalExportSlotCount()]);
     }
 
     void SourceTextModuleRecord::SetNamespace(ModuleNamespace* moduleNamespace)
     {
         Assert(localExportSlots != nullptr);
         __super::SetNamespace(moduleNamespace);
-        localExportSlots[GetLocalExportCount()] = moduleNamespace;
+        localExportSlots[GetLocalExportSlotCount()] = moduleNamespace;
     }
 
 
@@ -786,6 +787,12 @@ namespace Js
                         return;
                     }
 
+                    // 2G is too big already.
+                    if (localExportCount >= INT_MAX)
+                    {
+                        JavascriptError::ThrowRangeError(scriptContext, JSERR_TooManyImportExports);
+                    }
+                    localExportCount++;
                     uint exportSlot = UINT_MAX;
 
                     for (uint i = 0; i < (uint)localExportIndexList->Count(); i++)
@@ -804,7 +811,7 @@ namespace Js
                         localExportIndexList->Add(localNameId);
                         Assert(localExportIndexList->Item(currentSlotCount) == localNameId);
                         currentSlotCount++;
-                        if (currentSlotCount >= UINT_MAX)
+                        if (currentSlotCount >= INT_MAX)
                         {
                             JavascriptError::ThrowRangeError(scriptContext, JSERR_TooManyImportExports);
                         }
