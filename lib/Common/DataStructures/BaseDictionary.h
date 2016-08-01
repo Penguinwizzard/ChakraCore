@@ -1265,6 +1265,24 @@ namespace JsUtil
                     ++(this->entryIndex);
                 } while(IsValid() && IsFreeEntry(this->entries[this->entryIndex]));
             }
+
+            bool HasNext()
+            {
+                Assert(IsValid());
+
+                auto index = this->entryIndex;
+
+                do
+                {
+                    ++(this->entryIndex);
+                } while (IsValid() && IsFreeEntry(this->entries[this->entryIndex]));
+
+                bool hasNext = IsValid();
+                // reset 
+                this->entryIndex = index;
+
+                return hasNext;
+            }
         };
 
     public:

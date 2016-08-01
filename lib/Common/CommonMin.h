@@ -63,16 +63,18 @@ using namespace Memory;
 #include "Memory/Allocator.h"
 #include "Memory/HeapAllocator.h"
 
+// MGTO : find appropriate place for this
+#include <typeinfo.h>
 // === Data structures Header Files ===
 #include "DataStructures/DefaultContainerLockPolicy.h"
 #include "DataStructures/Comparer.h"
 #include "DataStructures/SizePolicy.h"
-#include "DataStructures/BitVector.h"
 #include "DataStructures/SList.h"
 #include "DataStructures/DList.h"
 #include "DataStructures/KeyValuePair.h"
 #include "DataStructures/BaseDictionary.h"
 #include "DataStructures/DictionaryEntry.h"
+#include "DataStructures/BitVector.h"
 
 // === Configurations Header ===
 #include "Core/ConfigFlagsTable.h"
