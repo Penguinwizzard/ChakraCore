@@ -1467,9 +1467,9 @@ CommonNumber:
 
     BOOL JavascriptOperators::HasRootProperty(RecyclableObject* instance, PropertyId propertyId)
     {
-        Assert(RootObjectBase::Is(instance));
+        Assert(GlobalObject::Is(instance));
 
-        RootObjectBase* rootObject = static_cast<RootObjectBase*>(instance);
+        GlobalObject* rootObject = static_cast<GlobalObject*>(instance);
         if (rootObject->HasRootProperty(propertyId))
         {
             return true;
@@ -1516,15 +1516,6 @@ CommonNumber:
         return result;
     }
 
-    BOOL JavascriptOperators::OP_HasOwnProperty(Var instance, PropertyId propertyId, ScriptContext* scriptContext)
-    {
-        RecyclableObject* object = TaggedNumber::Is(instance) ?
-            scriptContext->GetLibrary()->GetNumberPrototype() :
-            RecyclableObject::FromVar(instance);
-        BOOL result = HasOwnProperty(object, propertyId, scriptContext);
-        return result;
-    }
-
     // CONSIDER: Have logic similar to HasOwnPropertyNoHostObjectForHeapEnum
     BOOL JavascriptOperators::HasOwnPropertyNoHostObject(Var instance, PropertyId propertyId)
     {
@@ -1554,7 +1545,7 @@ CommonNumber:
             {
                 Var value;
                 if (!dynamicObject->DynamicObject::GetProperty(instance, propertyId, &value, NULL, requestContext) ||
-                    (requestContext->IsUndeclBlockVar(value) && (ActivationObject::Is(instance) || RootObjectBase::Is(instance))))
+                    (requestContext->IsUndeclBlockVar(value) && (ActivationObject::Is(instance) || GlobalObject::Is(instance))))
                 {
                     return FALSE;
                 }
@@ -1566,7 +1557,7 @@ CommonNumber:
             {
                 Var value;
                 if (!object->GetProperty(instance, propertyId, &value, NULL, requestContext) ||
-                    (requestContext->IsUndeclBlockVar(value) && (ActivationObject::Is(instance) || RootObjectBase::Is(instance))))
+                    (requestContext->IsUndeclBlockVar(value) && (ActivationObject::Is(instance) || GlobalObject::Is(instance))))
                 {
                     return FALSE;
                 }
@@ -1609,20 +1600,6 @@ CommonNumber:
         return requestContext->GetLibrary()->GetUndefined();
     }
 
-
-    BOOL JavascriptOperators::OP_HasOwnPropScoped(Var scope, PropertyId propertyId, Var defaultInstance, ScriptContext* scriptContext)
-    {
-        AssertMsg(scope == scriptContext->GetLibrary()->GetNull() || JavascriptArray::Is(scope),
-                  "Invalid scope chain pointer passed - should be null or an array");
-        if (JavascriptArray::Is(scope))
-        {
-            JavascriptArray* arrScope = JavascriptArray::FromVar(scope);
-            Var instance = arrScope->DirectGetItem(0);
-            return JavascriptOperators::OP_HasOwnProperty(instance, propertyId, scriptContext);
-        }
-        return JavascriptOperators::OP_HasOwnProperty(defaultInstance, propertyId, scriptContext);
-    }
-
     BOOL JavascriptOperators::GetPropertyUnscopable(Var instance, RecyclableObject* propertyObject, PropertyId propertyId, Var* value, ScriptContext* requestContext, PropertyValueInfo* info)
     {
         return GetProperty_Internal<true>(instance, propertyObject, false, propertyId, value, requestContext, info);
@@ -1649,9 +1626,9 @@ CommonNumber:
         BOOL foundProperty = FALSE;
         if (isRoot)
         {
-            Assert(RootObjectBase::Is(object));
+            Assert(GlobalObject::Is(object));
 
-            RootObjectBase* rootObject = static_cast<RootObjectBase*>(object);
+            GlobalObject* rootObject = static_cast<GlobalObject*>(object);
             foundProperty = rootObject->GetRootProperty(instance, propertyId, value, info, requestContext);
         }
         while (!foundProperty && JavascriptOperators::GetTypeId(object) != TypeIds_Null)
@@ -1841,7 +1818,7 @@ CommonNumber:
 
     Var JavascriptOperators::OP_GetRootProperty(Var instance, PropertyId propertyId, PropertyValueInfo * info, ScriptContext* scriptContext)
     {
-        AssertMsg(RootObjectBase::Is(instance), "Root must be an object!");
+        AssertMsg(GlobalObject::Is(instance), "Root must be an object!");
 
         Var value;
         if (JavascriptOperators::GetRootProperty(RecyclableObject::FromVar(instance), propertyId, &value, scriptContext, info))
@@ -2006,7 +1983,7 @@ CommonNumber:
 
         if (isRoot)
         {
-            foundProperty = RootObjectBase::FromVar(object)->GetRootPropertyReference(instance, propertyId, value, info, requestContext);
+            foundProperty = GlobalObject::FromVar(object)->GetRootPropertyReference(instance, propertyId, value, info, requestContext);
         }
         if (!foundProperty)
         {
@@ -2457,7 +2434,7 @@ CommonNumber:
                     || JavascriptOperators::GetTypeId(receiver) == TypeIds_ModuleRoot,
                     "Root must be a global object!");
 
-                RootObjectBase* rootObject = static_cast<RootObjectBase*>(receiver);
+                GlobalObject* rootObject = static_cast<GlobalObject*>(receiver);
                 didSetProperty = rootObject->SetRootProperty(propertyId, newValue, propertyOperationFlags, info);
             }
             else
@@ -2617,7 +2594,7 @@ CommonNumber:
         PropertyOperationFlags flags = instance->GetScriptContext()->IsUndeclBlockVar(newValue) ? PropertyOperation_SpecialValue : PropertyOperation_None;
         PropertyAttributes attributes = PropertyLetDefaults;
 
-        if (RootObjectBase::Is(instance))
+        if (GlobalObject::Is(instance))
         {
             attributes |= PropertyLetConstGlobal;
         }
@@ -2634,7 +2611,7 @@ CommonNumber:
         PropertyOperationFlags flags = instance->GetScriptContext()->IsUndeclBlockVar(newValue) ? PropertyOperation_SpecialValue : PropertyOperation_None;
         PropertyAttributes attributes = PropertyConstDefaults;
 
-        if (RootObjectBase::Is(instance))
+        if (GlobalObject::Is(instance))
         {
             attributes |= PropertyLetConstGlobal;
         }
@@ -2751,8 +2728,8 @@ CommonNumber:
 
     Var JavascriptOperators::OP_DeleteRootProperty(Var instance, PropertyId propertyId, ScriptContext* scriptContext, PropertyOperationFlags propertyOperationFlags)
     {
-        AssertMsg(RootObjectBase::Is(instance), "Root must be a global object!");
-        RootObjectBase* rootObject = static_cast<RootObjectBase*>(instance);
+        AssertMsg(GlobalObject::Is(instance), "Root must be a global object!");
+        GlobalObject* rootObject = static_cast<GlobalObject*>(instance);
 
         return scriptContext->GetLibrary()->CreateBoolean(
             rootObject->DeleteRootProperty(propertyId, propertyOperationFlags));
@@ -4892,21 +4869,6 @@ CommonNumber:
         return JavascriptOperators::OP_GetProperty(instance, PropertyIds::length, scriptContext);
     }
 
-    inline Var JavascriptOperators::GetThisFromModuleRoot(Var thisVar)
-    {
-        RootObjectBase * rootObject = static_cast<RootObjectBase*>(thisVar);
-        RecyclableObject* hostObject = rootObject->GetHostObject();
-
-        //
-        // if the module root has the host object, use that as "this"
-        //
-        if (hostObject)
-        {
-            thisVar = hostObject->GetHostDispatchVar();
-        }
-        return thisVar;
-    }
-
     inline void JavascriptOperators::TryLoadRoot(Var& thisVar, TypeId typeId, int moduleID, ScriptContext* scriptContext)
     {
         bool loadRoot = false;
@@ -4934,16 +4896,8 @@ CommonNumber:
             }
             else
             {
-                Js::ModuleRoot * moduleRoot = JavascriptOperators::GetModuleRoot(moduleID, scriptContext);
-                if (moduleRoot == nullptr)
-                {
-                    Assert(false);
-                    thisVar = scriptContext->GetLibrary()->GetUndefined();
-                }
-                else
-                {
-                    thisVar = GetThisFromModuleRoot(moduleRoot);
-                }
+                AssertMsg(UNREACHED, "ModuleRoot is not supported");
+                Throw::FatalInternalError();
             }
         }
     }
@@ -4970,7 +4924,7 @@ CommonNumber:
         if (JavascriptOperators::IsThisSelf(typeId))
         {
             Assert(typeId != TypeIds_GlobalObject || ((Js::GlobalObject*)thisVar)->ToThis() == thisVar);
-            Assert(typeId != TypeIds_ModuleRoot || JavascriptOperators::GetThisFromModuleRoot(thisVar) == thisVar);
+            Assert(typeId != TypeIds_ModuleRoot);
 
             return thisVar;
         }
@@ -6353,37 +6307,10 @@ CommonNumber:
         return scriptContext->GetGlobalObject();
     }
 
-    Js::ModuleRoot * JavascriptOperators::GetModuleRoot(int moduleID, ScriptContext* scriptContext)
-    {
-        Assert(moduleID != kmodGlobal);
-        JavascriptLibrary* library = scriptContext->GetLibrary();
-        HostObjectBase *hostObject = library->GetGlobalObject()->GetHostObject();
-        if (hostObject)
-        {
-            Js::ModuleRoot * moduleRoot = hostObject->GetModuleRoot(moduleID);
-            Assert(!CrossSite::NeedMarshalVar(moduleRoot, scriptContext));
-            return moduleRoot;
-        }
-        HostScriptContext *hostScriptContext = scriptContext->GetHostScriptContext();
-        if (hostScriptContext)
-        {
-            Js::ModuleRoot * moduleRoot = hostScriptContext->GetModuleRoot(moduleID);
-            Assert(!CrossSite::NeedMarshalVar(moduleRoot, scriptContext));
-            return moduleRoot;
-        }
-        Assert(FALSE);
-        return nullptr;
-    }
-
     Var JavascriptOperators::OP_LoadModuleRoot(int moduleID, ScriptContext* scriptContext)
     {
-        Js::ModuleRoot * moduleRoot = GetModuleRoot(moduleID, scriptContext);
-        if (moduleRoot)
-        {
-            return moduleRoot;
-        }
-        Assert(false);
-        return scriptContext->GetLibrary()->GetUndefined();
+        AssertMsg(UNREACHED, "ModuleRoot is not supported");
+        Throw::FatalInternalError();
     }
 
     Var JavascriptOperators::OP_LdNull(ScriptContext* scriptContext)
@@ -6454,11 +6381,7 @@ CommonNumber:
         // Put the implicit "this"
         if (argThis != NULL)
         {
-            RecyclableObject* hostObject = scriptContext->GetGlobalObject()->GetHostObject();
-            if (hostObject == nullptr)
-            {
-                hostObject = scriptContext->GetGlobalObject()->GetDirectHostObject();
-            }
+            RecyclableObject* hostObject = scriptContext->GetGlobalObject()->GetDirectHostObject();
             if (hostObject != nullptr)
             {
                 uint16 length = 7;
@@ -7119,14 +7042,14 @@ CommonNumber:
 
     void JavascriptOperators::OP_EnsureNoRootProperty(Var instance, PropertyId propertyId)
     {
-        Assert(RootObjectBase::Is(instance));
-        RootObjectBase *obj = RootObjectBase::FromVar(instance);
+        Assert(GlobalObject::Is(instance));
+        GlobalObject *obj = GlobalObject::FromVar(instance);
         obj->EnsureNoProperty(propertyId);
     }
 
     void JavascriptOperators::OP_EnsureNoRootRedeclProperty(Var instance, PropertyId propertyId)
     {
-        Assert(RootObjectBase::Is(instance));
+        Assert(GlobalObject::Is(instance));
         RecyclableObject *obj = RecyclableObject::FromVar(instance);
         obj->EnsureNoRedeclProperty(propertyId);
     }
@@ -7348,7 +7271,7 @@ CommonNumber:
     template <bool IsFromFullJit, class TInlineCache>
     inline Var JavascriptOperators::PatchGetRootValue(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, DynamicObject * object, PropertyId propertyId)
     {
-        AssertMsg(RootObjectBase::Is(object), "Root must be a global object!");
+        AssertMsg(GlobalObject::Is(object), "Root must be a global object!");
 
         ScriptContext *const scriptContext = functionBody->GetScriptContext();
 
@@ -7378,7 +7301,7 @@ CommonNumber:
     template <bool IsFromFullJit, class TInlineCache>
     Var JavascriptOperators::PatchGetRootValueForTypeOf(FunctionBody *const functionBody, TInlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, DynamicObject * object, PropertyId propertyId)
     {
-        AssertMsg(RootObjectBase::Is(object), "Root must be a global object!");
+        AssertMsg(GlobalObject::Is(object), "Root must be a global object!");
 
         ScriptContext *const scriptContext = functionBody->GetScriptContext();
 
@@ -7431,7 +7354,7 @@ CommonNumber:
 
     Var JavascriptOperators::PatchGetRootValueNoFastPath(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, DynamicObject* object, PropertyId propertyId)
     {
-        AssertMsg(RootObjectBase::Is(object), "Root must be a global object!");
+        AssertMsg(GlobalObject::Is(object), "Root must be a global object!");
 
         ScriptContext *const scriptContext = functionBody->GetScriptContext();
 
@@ -7576,7 +7499,7 @@ CommonNumber:
     {
         Assert(inlineCache != nullptr);
 
-        AssertMsg(RootObjectBase::Is(object), "Root must be a global object!");
+        AssertMsg(GlobalObject::Is(object), "Root must be a global object!");
 
         ScriptContext *const scriptContext = functionBody->GetScriptContext();
 
@@ -7635,7 +7558,7 @@ CommonNumber:
 
         PropertyValueInfo info;
         PropertyValueInfo::SetCacheInfo(&info, functionBody, inlineCache, inlineCacheIndex, !IsFromFullJit);
-        const bool isRoot = RootObjectBase::Is(object);
+        const bool isRoot = GlobalObject::Is(object);
         Var value;
         if (CacheOperators::TryGetProperty<true, true, true, false, true, false, !TInlineCache::IsPolymorphic, TInlineCache::IsPolymorphic, false>(
                 instance, isRoot, object, propertyId, &value, scriptContext, nullptr, &info))
@@ -7694,7 +7617,7 @@ CommonNumber:
 
     Var JavascriptOperators::PatchGetRootMethodNoFastPath(FunctionBody *const functionBody, InlineCache *const inlineCache, const InlineCacheIndex inlineCacheIndex, DynamicObject* object, PropertyId propertyId)
     {
-        AssertMsg(RootObjectBase::Is(object), "Root must be a global object!");
+        AssertMsg(GlobalObject::Is(object), "Root must be a global object!");
 
         PropertyValueInfo info;
         PropertyValueInfo::SetCacheInfo(&info, functionBody, inlineCache, inlineCacheIndex, true);
@@ -7710,7 +7633,7 @@ CommonNumber:
 
         if (isRootLd)
         {
-            RootObjectBase* rootObject = RootObjectBase::FromVar(instance);
+            GlobalObject* rootObject = GlobalObject::FromVar(instance);
             foundValue = JavascriptOperators::GetRootPropertyReference(rootObject, propertyId, &value, scriptContext, info);
         }
         else
@@ -9219,7 +9142,8 @@ CommonNumber:
             return ((Js::GlobalObject*)thisVar)->ToThis();
 
         case Js::TypeIds_ModuleRoot:
-            return Js::JavascriptOperators::GetThisFromModuleRoot(thisVar);
+            AssertMsg(UNREACHED, "ModuleRoot is not supported");
+            Throw::FatalInternalError();
 
         default:
             if (typeId == scriptContext->GetDirectHostTypeId())
@@ -10698,7 +10622,7 @@ CommonNumber:
             || JavascriptOperators::GetTypeId(instance) == TypeIds_ModuleRoot,
             "Root must be a global object!");
 
-        RootObjectBase* rootObject = static_cast<RootObjectBase*>(instance);
+        GlobalObject* rootObject = static_cast<GlobalObject*>(instance);
         return rootObject->GetRootSetter(propertyId, setterValue, info, requestContext);
     }
 

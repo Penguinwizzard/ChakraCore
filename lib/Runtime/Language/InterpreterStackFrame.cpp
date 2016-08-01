@@ -5372,7 +5372,7 @@ namespace Js
         if (JavascriptOperators::IsThisSelf(typeId))
         {
             Assert(typeId != TypeIds_GlobalObject || ((Js::GlobalObject*)thisVar)->ToThis() == thisVar);
-            Assert(typeId != TypeIds_ModuleRoot || JavascriptOperators::GetThisFromModuleRoot(thisVar) == thisVar);
+            Assert(typeId != TypeIds_ModuleRoot);
 
             // Record the fact that we saw a trivial LdThis.
             dynamicProfileInfo->RecordThisInfo(thisVar, ThisType_Simple);

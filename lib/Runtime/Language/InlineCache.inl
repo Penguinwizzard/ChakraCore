@@ -37,7 +37,7 @@ namespace Js
             Assert(propertyObject->GetScriptContext() == requestContext); // we never cache a type from another script context
             *propertyValue = DynamicObject::FromVar(propertyObject)->GetInlineSlot(u.local.slotIndex);
             Assert(*propertyValue == JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext) ||
-                (RootObjectBase::Is(propertyObject) && *propertyValue == JavascriptOperators::GetRootProperty(propertyObject, propertyId, requestContext)));
+                (GlobalObject::Is(propertyObject) && *propertyValue == JavascriptOperators::GetRootProperty(propertyObject, propertyId, requestContext)));
             if (ReturnOperationInfo)
             {
                 operationInfo->cacheType = CacheType_Local;
@@ -51,7 +51,7 @@ namespace Js
             Assert(propertyObject->GetScriptContext() == requestContext); // we never cache a type from another script context
             *propertyValue = DynamicObject::FromVar(propertyObject)->GetAuxSlot(u.local.slotIndex);
             Assert(*propertyValue == JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext) ||
-                (RootObjectBase::Is(propertyObject) && *propertyValue == JavascriptOperators::GetRootProperty(propertyObject, propertyId, requestContext)));
+                (GlobalObject::Is(propertyObject) && *propertyValue == JavascriptOperators::GetRootProperty(propertyObject, propertyId, requestContext)));
             if (ReturnOperationInfo)
             {
                 operationInfo->cacheType = CacheType_Local;
@@ -65,7 +65,7 @@ namespace Js
             Assert(u.proto.prototypeObject->GetScriptContext() == requestContext); // we never cache a type from another script context
             *propertyValue = u.proto.prototypeObject->GetInlineSlot(u.proto.slotIndex);
             Assert(*propertyValue == JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext) ||
-                (RootObjectBase::Is(propertyObject) && *propertyValue == JavascriptOperators::GetRootProperty(propertyObject, propertyId, requestContext)));
+                (GlobalObject::Is(propertyObject) && *propertyValue == JavascriptOperators::GetRootProperty(propertyObject, propertyId, requestContext)));
             if (ReturnOperationInfo)
             {
                 operationInfo->cacheType = CacheType_Proto;
@@ -79,7 +79,7 @@ namespace Js
             Assert(u.proto.prototypeObject->GetScriptContext() == requestContext); // we never cache a type from another script context
             *propertyValue = u.proto.prototypeObject->GetAuxSlot(u.proto.slotIndex);
             Assert(*propertyValue == JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext) ||
-                (RootObjectBase::Is(propertyObject) && *propertyValue == JavascriptOperators::GetRootProperty(propertyObject, propertyId, requestContext)));
+                (GlobalObject::Is(propertyObject) && *propertyValue == JavascriptOperators::GetRootProperty(propertyObject, propertyId, requestContext)));
             if (ReturnOperationInfo)
             {
                 operationInfo->cacheType = CacheType_Proto;
@@ -135,7 +135,7 @@ namespace Js
             Assert(u.proto.prototypeObject->GetScriptContext() == requestContext); // we never cache a type from another script context
             *propertyValue = u.proto.prototypeObject->GetInlineSlot(u.proto.slotIndex);
             Assert(*propertyValue == JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext) ||
-                (RootObjectBase::Is(propertyObject) && *propertyValue == JavascriptOperators::GetRootProperty(propertyObject, propertyId, requestContext)));
+                (GlobalObject::Is(propertyObject) && *propertyValue == JavascriptOperators::GetRootProperty(propertyObject, propertyId, requestContext)));
 
 #ifdef MISSING_PROPERTY_STATS
             if (PHASE_STATS1(MissingPropertyCachePhase))
@@ -157,7 +157,7 @@ namespace Js
             Assert(u.proto.prototypeObject->GetScriptContext() == requestContext); // we never cache a type from another script context
             *propertyValue = u.proto.prototypeObject->GetAuxSlot(u.proto.slotIndex);
             Assert(*propertyValue == JavascriptOperators::GetProperty(propertyObject, propertyId, requestContext) ||
-                (RootObjectBase::Is(propertyObject) && *propertyValue == JavascriptOperators::GetRootProperty(propertyObject, propertyId, requestContext)));
+                (GlobalObject::Is(propertyObject) && *propertyValue == JavascriptOperators::GetRootProperty(propertyObject, propertyId, requestContext)));
 
 #ifdef MISSING_PROPERTY_STATS
             if (PHASE_STATS1(MissingPropertyCachePhase))
@@ -237,7 +237,7 @@ namespace Js
         {
             Assert(object->GetScriptContext() == requestContext); // we never cache a type from another script context
             Assert(isRoot || object->GetPropertyIndex(propertyId) == DynamicObject::FromVar(object)->GetTypeHandler()->InlineOrAuxSlotIndexToPropertyIndex(u.local.slotIndex, true));
-            Assert(!isRoot || RootObjectBase::FromVar(object)->GetRootPropertyIndex(propertyId) == DynamicObject::FromVar(object)->GetTypeHandler()->InlineOrAuxSlotIndexToPropertyIndex(u.local.slotIndex, true));
+            Assert(!isRoot || GlobalObject::FromVar(object)->GetRootPropertyIndex(propertyId) == DynamicObject::FromVar(object)->GetTypeHandler()->InlineOrAuxSlotIndexToPropertyIndex(u.local.slotIndex, true));
             Assert(object->CanStorePropertyValueDirectly(propertyId, isRoot));
             DynamicObject::FromVar(object)->SetInlineSlot(SetSlotArgumentsRoot(propertyId, isRoot, u.local.slotIndex, propertyValue));
             if (ReturnOperationInfo)
@@ -253,7 +253,7 @@ namespace Js
         {
             Assert(object->GetScriptContext() == requestContext); // we never cache a type from another script context
             Assert(isRoot || object->GetPropertyIndex(propertyId) == DynamicObject::FromVar(object)->GetTypeHandler()->InlineOrAuxSlotIndexToPropertyIndex(u.local.slotIndex, false));
-            Assert(!isRoot || RootObjectBase::FromVar(object)->GetRootPropertyIndex(propertyId) == DynamicObject::FromVar(object)->GetTypeHandler()->InlineOrAuxSlotIndexToPropertyIndex(u.local.slotIndex, false));
+            Assert(!isRoot || GlobalObject::FromVar(object)->GetRootPropertyIndex(propertyId) == DynamicObject::FromVar(object)->GetTypeHandler()->InlineOrAuxSlotIndexToPropertyIndex(u.local.slotIndex, false));
             Assert(object->CanStorePropertyValueDirectly(propertyId, isRoot));
             DynamicObject::FromVar(object)->SetAuxSlot(SetSlotArgumentsRoot(propertyId, isRoot, u.local.slotIndex, propertyValue));
             if (ReturnOperationInfo)
@@ -291,7 +291,7 @@ namespace Js
             dynamicObject->type = typeWithProperty;
 
             Assert(isRoot || object->GetPropertyIndex(propertyId) == DynamicObject::FromVar(object)->GetTypeHandler()->InlineOrAuxSlotIndexToPropertyIndex(propertyIndex, true));
-            Assert(!isRoot || RootObjectBase::FromVar(object)->GetRootPropertyIndex(propertyId) == DynamicObject::FromVar(object)->GetTypeHandler()->InlineOrAuxSlotIndexToPropertyIndex(propertyIndex, true));
+            Assert(!isRoot || GlobalObject::FromVar(object)->GetRootPropertyIndex(propertyId) == DynamicObject::FromVar(object)->GetTypeHandler()->InlineOrAuxSlotIndexToPropertyIndex(propertyIndex, true));
 
             dynamicObject->SetInlineSlot(SetSlotArgumentsRoot(propertyId, isRoot, propertyIndex, propertyValue));
 
@@ -333,7 +333,7 @@ namespace Js
             dynamicObject->type = typeWithProperty;
 
             Assert(isRoot || object->GetPropertyIndex(propertyId) == DynamicObject::FromVar(object)->GetTypeHandler()->InlineOrAuxSlotIndexToPropertyIndex(propertyIndex, false));
-            Assert(!isRoot || RootObjectBase::FromVar(object)->GetRootPropertyIndex(propertyId) == DynamicObject::FromVar(object)->GetTypeHandler()->InlineOrAuxSlotIndexToPropertyIndex(propertyIndex, false));
+            Assert(!isRoot || GlobalObject::FromVar(object)->GetRootPropertyIndex(propertyId) == DynamicObject::FromVar(object)->GetTypeHandler()->InlineOrAuxSlotIndexToPropertyIndex(propertyIndex, false));
 
             dynamicObject->SetAuxSlot(SetSlotArgumentsRoot(propertyId, isRoot, propertyIndex, propertyValue));
 

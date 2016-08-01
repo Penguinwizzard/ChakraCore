@@ -5914,7 +5914,7 @@ Lowerer::GenerateNonConfigurableLdRootFld(IR::Instr * instrLdFld)
     Assert(!PHASE_OFF(Js::RootObjectFldFastPathPhase, this->m_func->GetJnFunction()));
     Assert(!instrLdFld->HasBailOutInfo());
     IR::Opnd * srcOpnd;
-    Js::RootObjectBase * rootObject = this->m_func->GetJnFunction()->GetRootObject();
+    Js::GlobalObject * rootObject = this->m_func->GetJnFunction()->GetRootObject();
     if (propertySymOpnd->UsesAuxSlot())
     {
         IR::RegOpnd * auxSlotOpnd = IR::RegOpnd::New(TyMachPtr, this->m_func);
@@ -6270,7 +6270,7 @@ Lowerer::LowerScopedLdInst(IR::Instr *instr, IR::JnHelperMethod helperMethod)
     // now 3rd last argument is the rootObject of the function. Need to add addrOpnd to
     // pass in the address of the roobObject.
     IR::Opnd * srcOpnd;
-    Js::RootObjectBase * rootObject = this->m_func->GetJnFunction()->GetRootObject();
+    Js::GlobalObject * rootObject = this->m_func->GetJnFunction()->GetRootObject();
     srcOpnd = IR::AddrOpnd::New(rootObject, IR::AddrOpndKindDynamicVar, instr->m_func, true);
     instrPrev = m_lowererMD.LoadHelperArgument(instr, srcOpnd);
 

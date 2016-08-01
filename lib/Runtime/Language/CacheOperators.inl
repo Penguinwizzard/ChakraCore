@@ -358,7 +358,7 @@ namespace Js
             // Built-in Function.prototype properties 'length', 'arguments', and 'caller' are special cases.
             Assert(
                 objectWithProperty->IsWritable(propertyId) ||
-                (isRoot && RootObjectBase::FromVar(objectWithProperty)->IsLetConstGlobal(propertyId)) ||
+                (isRoot && GlobalObject::FromVar(objectWithProperty)->IsLetConstGlobal(propertyId)) ||
                 JavascriptFunction::IsBuiltinProperty(objectWithProperty, propertyId));
         }
 

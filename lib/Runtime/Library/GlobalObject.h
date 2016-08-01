@@ -6,13 +6,25 @@
 
 namespace Js
 {
+    class RootObjectInlineCache
+    {
+    public:
+        RootObjectInlineCache(InlineCacheAllocator * allocator);
+        uint AddRef() { return ++refCount; }
+        uint Release() { Assert(refCount != 0); return --refCount; }
+        Js::InlineCache * GetInlineCache() const { return inlineCache; }
+        uint GetRefCount() { return refCount; }
+    private:
+        uint refCount;
+        Js::InlineCache * inlineCache;
+    };
 
-    class GlobalObject : public RootObjectBase
+    class GlobalObject : public DynamicObject
     {
     public:
         JavascriptLibrary* library;
     private:
-        DEFINE_VTABLE_CTOR(GlobalObject, RootObjectBase);
+        DEFINE_VTABLE_CTOR(GlobalObject, DynamicObject);
         DEFINE_MARSHAL_OBJECT_TO_SCRIPT_CONTEXT(GlobalObject);
         GlobalObject(DynamicType * type, ScriptContext* scriptContext);
 
@@ -34,6 +46,29 @@ namespace Js
         BOOL IsReservedGlobalProperty(PropertyId propertyId);
 
         Var ExecuteEvalParsedFunction(ScriptFunction *pfuncScript, FrameDisplay* environment, Var &varThis);
+
+        Js::InlineCache * GetInlineCache(Js::PropertyRecord const* propertyRecord, bool isLoadMethod, bool isStore);
+        Js::RootObjectInlineCache * GetRootInlineCache(Js::PropertyRecord const* propertyRecord, bool isLoadMethod, bool isStore);
+        void ReleaseInlineCache(PropertyId propertyId, bool isLoadMethod, bool isStore, bool isShutdown);
+        PropertyIndex GetRootPropertyIndex(PropertyId propertyId);
+        void EnsureNoProperty(PropertyId propertyId);
+#if DBG
+        bool IsLetConstGlobal(PropertyId propertyId);
+#endif
+        template <typename Fn>
+        void
+            GlobalObject::MapLetConstGlobals(Fn fn)
+        {
+            int index = 0;
+            const PropertyRecord* propertyRecord;
+            Var value;
+            bool isConst;
+
+            while (GetTypeHandler()->NextLetConstGlobal(index, this, &propertyRecord, &value, &isConst))
+            {
+                fn(propertyRecord, value, isConst);
+            }
+        }
 
         class EntryInfo
         {
@@ -147,12 +182,12 @@ namespace Js
         virtual BOOL GetDiagValueString(StringBuilder<ArenaAllocator>* stringBuilder, ScriptContext* requestContext) override;
         virtual BOOL GetDiagTypeString(StringBuilder<ArenaAllocator>* stringBuilder, ScriptContext* requestContext) override;
 
-        virtual BOOL HasRootProperty(PropertyId propertyId) override;
-        virtual BOOL GetRootProperty(Var originalInstance, PropertyId propertyId, Var* value, PropertyValueInfo* info, ScriptContext* requestContext) override;
-        virtual BOOL GetRootPropertyReference(Var originalInstance, PropertyId propertyId, Var* value, PropertyValueInfo* info, ScriptContext* requestContext) override;
-        virtual BOOL SetRootProperty(PropertyId propertyId, Var value, PropertyOperationFlags flags, PropertyValueInfo* info) override;
-        virtual DescriptorFlags GetRootSetter(PropertyId propertyId, Var *setterValue, PropertyValueInfo* info, ScriptContext* requestContext) override;
-        virtual BOOL DeleteRootProperty(PropertyId propertyId, PropertyOperationFlags flags) override;
+        virtual BOOL HasRootProperty(PropertyId propertyId);
+        virtual BOOL GetRootProperty(Var originalInstance, PropertyId propertyId, Var* value, PropertyValueInfo* info, ScriptContext* requestContext);
+        virtual BOOL GetRootPropertyReference(Var originalInstance, PropertyId propertyId, Var* value, PropertyValueInfo* info, ScriptContext* requestContext);
+        virtual BOOL SetRootProperty(PropertyId propertyId, Var value, PropertyOperationFlags flags, PropertyValueInfo* info);
+        virtual DescriptorFlags GetRootSetter(PropertyId propertyId, Var *setterValue, PropertyValueInfo* info, ScriptContext* requestContext);
+        virtual BOOL DeleteRootProperty(PropertyId propertyId, PropertyOperationFlags flags);
 
         BOOL SetExistingProperty(PropertyId propertyId, Var value, PropertyValueInfo* info, BOOL *setAttempted);
         BOOL SetExistingRootProperty(PropertyId propertyId, Var value, PropertyValueInfo* info, BOOL *setAttempted);
@@ -165,6 +200,10 @@ namespace Js
 
         typedef JsUtil::BaseHashSet<PropertyId, Recycler, PowerOf2SizePolicy> ReservedPropertiesHashSet;
         ReservedPropertiesHashSet * reservedProperties;
+        typedef JsUtil::BaseDictionary<PropertyRecord const *, RootObjectInlineCache *, Recycler> RootObjectInlineCacheMap;
+        RootObjectInlineCacheMap * loadInlineCacheMap;
+        RootObjectInlineCacheMap * loadMethodInlineCacheMap;
+        RootObjectInlineCacheMap * storeInlineCacheMap;
 
 #if ENABLE_TTD
     public:

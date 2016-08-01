@@ -145,7 +145,8 @@ namespace Js
                 }
                 else
                 {
-                    varThis = (Var)Js::JavascriptOperators::GetModuleRoot(moduleId, scriptContext);
+                    AssertMsg(UNREACHED, "ModuleRoot is not supported");
+                    Throw::FatalInternalError();
                 }
             }
         }

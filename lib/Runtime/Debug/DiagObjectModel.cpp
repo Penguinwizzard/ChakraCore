@@ -839,7 +839,7 @@ namespace Js
                         itemObj = scriptContext->GetLibrary()->GetUndefined();
                     }
 
-                    AssertMsg(!RootObjectBase::Is(object) || !isConst, "root object shouldn't produce const properties through IsPropertyValid");
+                    AssertMsg(!GlobalObject::Is(object) || !isConst, "root object shouldn't produce const properties through IsPropertyValid");
 
                     DebuggerPropertyDisplayInfo *info = AllocateNewPropertyDisplayInfo(
                         propertyId,
@@ -871,8 +871,8 @@ namespace Js
             ScriptContext * scriptContext = pFrame->GetScriptContext();
             ArenaAllocator *arena = GetArenaFromContext(scriptContext);
 
-            Assert(Js::RootObjectBase::Is(instance));
-            Js::RootObjectBase* object = Js::RootObjectBase::FromVar(instance);
+            Assert(Js::GlobalObject::Is(instance));
+            Js::GlobalObject* object = Js::GlobalObject::FromVar(instance);
 
             int count = object->GetPropertyCount();
             pMembersList = JsUtil::List<DebuggerPropertyDisplayInfo *, ArenaAllocator>::New(arena, count);

@@ -3,7 +3,7 @@
 // Licensed under the MIT license. See LICENSE.txt file in the project root for full license information.
 //-------------------------------------------------------------------------------------------------------
 #pragma once
-
+#if 0
 namespace Js
 {
     // A wrapper corresponds to a named item coming from the host.
@@ -57,3 +57,4 @@ namespace Js
         ModuleID moduleID;
     };
 }
+#endif 

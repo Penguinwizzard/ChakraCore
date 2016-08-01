@@ -447,7 +447,7 @@ namespace Js
         // Would be nicer to simply pass in lambda callbacks to a Map function here, but virtual methods
         // cannot be templatized and we do not have std::function<> so cannot specify a parameter that will
         // accept lambdas.
-        virtual bool NextLetConstGlobal(int& index, RootObjectBase* instance, const PropertyRecord** propertyRecord, Var* value, bool* isConst) { Throw::FatalInternalError(); }
+        virtual bool NextLetConstGlobal(int& index, GlobalObject* instance, const PropertyRecord** propertyRecord, Var* value, bool* isConst) { Throw::FatalInternalError(); }
         // ===================================================================================================================
 
         virtual BOOL IsFixedProperty(const DynamicObject* instance, PropertyId propertyId) { return false; };

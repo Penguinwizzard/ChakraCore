@@ -32,7 +32,7 @@ namespace Js
     }
 
     GlobalObject::GlobalObject(DynamicType * type, ScriptContext* scriptContext) :
-        RootObjectBase(type, scriptContext),
+        DynamicObject(type, scriptContext),
         directHostObject(nullptr),
         secureDirectHostObject(nullptr),
         EvalHelper(&GlobalObject::DefaultEvalHelper),
@@ -99,12 +99,6 @@ namespace Js
         if (secureDirectHostObject)
         {
             ret = secureDirectHostObject;
-        }
-        else if (hostObject)
-        {
-            // If the global object has the host object, use that as "this"
-            ret = hostObject->GetHostDispatchVar();
-            Assert(ret);
         }
         else
         {
@@ -514,8 +508,8 @@ namespace Js
 
                 if (args.Info.Count >= 3 && JavascriptOperators::GetTypeId(args[args.Info.Count - 2]) == TypeIds_ModuleRoot)
                 {
-                    moduleID = ((Js::ModuleRoot*)(RecyclableObject::FromVar(args[args.Info.Count - 2])))->GetModuleID();
-                    args.Info.Count--;
+                    AssertMsg(UNREACHED, "ModuleRoot is not supported");
+                    Throw::FatalInternalError();
                 }
                 args.Info.Count--;
             }
@@ -684,7 +678,8 @@ namespace Js
                 FunctionInfo* functionInfo = pfuncCaller->GetFunctionInfo();
                 if (functionInfo != nullptr && (functionInfo->IsLambda() || functionInfo->IsClassConstructor()))
                 {
-                    Var defaultInstance = (moduleID == kmodGlobal) ? JavascriptOperators::OP_LdRoot(scriptContext)->ToThis() : (Var)JavascriptOperators::GetModuleRoot(moduleID, scriptContext);
+                    Assert(moduleID == kmodGlobal);
+                    Var defaultInstance = JavascriptOperators::OP_LdRoot(scriptContext)->ToThis();
                     varThis = JavascriptOperators::OP_GetThisScoped(environment, defaultInstance, scriptContext);
                     UpdateThisForEval(varThis, moduleID, scriptContext, strictMode);
                 }
@@ -1721,15 +1716,13 @@ LHexError:
     BOOL GlobalObject::HasProperty(PropertyId propertyId)
     {
         return DynamicObject::HasProperty(propertyId) ||
-            (this->directHostObject && JavascriptOperators::HasProperty(this->directHostObject, propertyId)) ||
-            (this->hostObject && JavascriptOperators::HasProperty(this->hostObject, propertyId));
+            (this->directHostObject && JavascriptOperators::HasProperty(this->directHostObject, propertyId));
     }
 
     BOOL GlobalObject::HasRootProperty(PropertyId propertyId)
     {
         return __super::HasRootProperty(propertyId) ||
-            (this->directHostObject && JavascriptOperators::HasProperty(this->directHostObject, propertyId)) ||
-            (this->hostObject && JavascriptOperators::HasProperty(this->hostObject, propertyId));
+            (this->directHostObject && JavascriptOperators::HasProperty(this->directHostObject, propertyId)));
     }
 
     BOOL GlobalObject::HasOwnProperty(PropertyId propertyId)
@@ -1749,8 +1742,7 @@ LHexError:
         {
             return TRUE;
         }
-        return (this->directHostObject && JavascriptOperators::GetProperty(this->directHostObject, propertyId, value, requestContext, info)) ||
-            (this->hostObject && JavascriptOperators::GetProperty(this->hostObject, propertyId, value, requestContext, info));
+        return (this->directHostObject && JavascriptOperators::GetProperty(this->directHostObject, propertyId, value, requestContext, info)));
     }
 
     BOOL GlobalObject::GetProperty(Var originalInstance, JavascriptString* propertyNameString, Var* value, PropertyValueInfo* info, ScriptContext* requestContext)
@@ -1762,12 +1754,13 @@ LHexError:
 
     BOOL GlobalObject::GetRootProperty(Var originalInstance, PropertyId propertyId, Var* value, PropertyValueInfo* info, ScriptContext* requestContext)
     {
-        if (__super::GetRootProperty(originalInstance, propertyId, value, info, requestContext))
+        Assert(!Js::IsInternalPropertyId(propertyId));
+
+        if (GetTypeHandler()->GetRootProperty(this, originalInstance, propertyId, value, info, requestContext))
         {
             return TRUE;
         }
-        return (this->directHostObject && JavascriptOperators::GetProperty(this->directHostObject, propertyId, value, requestContext, info)) ||
-            (this->hostObject && JavascriptOperators::GetProperty(this->hostObject, propertyId, value, requestContext, info));
+        return (this->directHostObject && JavascriptOperators::GetProperty(this->directHostObject, propertyId, value, requestContext, info));
     }
 
     BOOL GlobalObject::GetAccessors(PropertyId propertyId, Var* getter, Var* setter, ScriptContext * requestContext)
@@ -1780,10 +1773,6 @@ LHexError:
         {
             return this->directHostObject->GetAccessors(propertyId, getter, setter, requestContext);
         }
-        else if (this->hostObject)
-        {
-            return this->hostObject->GetAccessors(propertyId, getter, setter, requestContext);
-        }
         return FALSE;
     }
 
@@ -1794,8 +1783,7 @@ LHexError:
         {
             return true;
         }
-        return (this->directHostObject && JavascriptOperators::GetPropertyReference(this->directHostObject, propertyId, value, requestContext, info)) ||
-            (this->hostObject && JavascriptOperators::GetPropertyReference(this->hostObject, propertyId, value, requestContext, info));
+        return (this->directHostObject && JavascriptOperators::GetPropertyReference(this->directHostObject, propertyId, value, requestContext, info));
     }
 
     BOOL GlobalObject::GetRootPropertyReference(Var originalInstance, PropertyId propertyId, Var* value, PropertyValueInfo* info,
@@ -1805,8 +1793,7 @@ LHexError:
         {
             return true;
         }
-        return (this->directHostObject && JavascriptOperators::GetPropertyReference(this->directHostObject, propertyId, value, requestContext, info)) ||
-            (this->hostObject && JavascriptOperators::GetPropertyReference(this->hostObject, propertyId, value, requestContext, info));
+        return (this->directHostObject && JavascriptOperators::GetPropertyReference(this->directHostObject, propertyId, value, requestContext, info)));
     }
 
     BOOL GlobalObject::InitProperty(PropertyId propertyId, Var value, PropertyOperationFlags flags, PropertyValueInfo* info)
@@ -1869,16 +1856,6 @@ LHexError:
                 return TRUE;
             }
         }
-        else
-            if (this->hostObject &&
-                // Consider to revert to the commented line and ignore the prototype chain when direct host is on by default in IE9 mode
-                !hasOwnProperty &&
-                !hasProperty &&
-                this->hostObject->HasProperty(propertyId))
-            {
-                return this->hostObject->SetProperty(propertyId, value, PropertyOperation_None, NULL);
-            }
-
         if (hasOwnProperty || hasProperty)
         {
             return DynamicObject::SetProperty(propertyId, value, PropertyOperation_None, info);
@@ -1907,15 +1884,6 @@ LHexError:
                 return TRUE;
             }
         }
-        else
-            if (this->hostObject &&
-                // Consider to revert to the commented line and ignore the prototype chain when direct host is on by default in IE9 mode
-                !hasOwnProperty &&
-                !hasProperty &&
-                this->hostObject->HasProperty(propertyId))
-            {
-                return this->hostObject->SetProperty(propertyId, value, PropertyOperation_None, NULL);
-            }
 
         if (hasOwnProperty || hasProperty)
         {
@@ -1952,7 +1920,6 @@ LHexError:
         // If this blind invalidation is expensive in any scenario then we need to revisit this.
         // Another solution proposed was not to cache any of the properties of window->directHostObject->prototype.
         // if ((this->directHostObject && JavascriptOperators::HasProperty(this->directHostObject->GetPrototype(), propertyId)) ||
-        //    (this->hostObject && JavascriptOperators::HasProperty(this->hostObject->GetPrototype(), propertyId)))
 
         this->GetScriptContext()->InvalidateProtoCaches(propertyId);
 
@@ -2006,8 +1973,7 @@ LHexError:
         // chain is expensive (call to DOM) compared to just invalidating the cache.
         // If this blind invalidation is expensive in any scenario then we need to revisit this.
         // Another solution proposed was not to cache any of the properties of window->directHostObject->prototype.
-        // if ((this->directHostObject && JavascriptOperators::HasProperty(this->directHostObject->GetPrototype(), propertyId)) ||
-        //    (this->hostObject && JavascriptOperators::HasProperty(this->hostObject->GetPrototype(), propertyId)))
+        // if ((this->directHostObject && JavascriptOperators::HasProperty(this->directHostObject->GetPrototype(), propertyId))
 
         this->GetScriptContext()->InvalidateProtoCaches(propertyId);
 
@@ -2024,10 +1990,6 @@ LHexError:
         {
             return this->directHostObject->SetAccessors(propertyId, getter, setter, flags);
         }
-        if (this->hostObject)
-        {
-            return this->hostObject->SetAccessors(propertyId, getter, setter, flags);
-        }
         return TRUE;
     }
 
@@ -2040,10 +2002,6 @@ LHexError:
             {
                 // We need to look up the prototype chain here.
                 JavascriptOperators::CheckPrototypesForAccessorOrNonWritableProperty(this->directHostObject, propertyId, setterValue, &flags, info, requestContext);
-            }
-            else if (this->hostObject)
-            {
-                JavascriptOperators::CheckPrototypesForAccessorOrNonWritableProperty(this->hostObject, propertyId, setterValue, &flags, info, requestContext);
             }
         }
 
@@ -2067,10 +2025,6 @@ LHexError:
                 // We need to look up the prototype chain here.
                 JavascriptOperators::CheckPrototypesForAccessorOrNonWritableProperty(this->directHostObject, propertyId, setterValue, &flags, info, requestContext);
             }
-            else if (this->hostObject)
-            {
-                JavascriptOperators::CheckPrototypesForAccessorOrNonWritableProperty(this->hostObject, propertyId, setterValue, &flags, info, requestContext);
-            }
         }
 
         return flags;
@@ -2085,10 +2039,6 @@ LHexError:
             {
                 // We need to look up the prototype chain here.
                 JavascriptOperators::CheckPrototypesForAccessorOrNonWritableItem(this->directHostObject, index, setterValue, &flags, requestContext);
-            }
-            else if (this->hostObject)
-            {
-                JavascriptOperators::CheckPrototypesForAccessorOrNonWritableItem(this->hostObject, index, setterValue, &flags, requestContext);
             }
         }
 
@@ -2105,10 +2055,6 @@ LHexError:
         {
             return this->directHostObject->DeleteProperty(propertyId, flags);
         }
-        else if (this->hostObject && this->hostObject->HasProperty(propertyId))
-        {
-            return this->hostObject->DeleteProperty(propertyId, flags);
-        }
 
         // Non-existent property
         return TRUE;
@@ -2124,10 +2070,6 @@ LHexError:
         {
             return this->directHostObject->DeleteProperty(propertyId, flags);
         }
-        else if (this->hostObject && this->hostObject->HasProperty(propertyId))
-        {
-            return this->hostObject->DeleteProperty(propertyId, flags);
-        }
 
         // Non-existent property
         return TRUE;
@@ -2136,8 +2078,7 @@ LHexError:
     BOOL GlobalObject::HasItem(uint32 index)
     {
         return DynamicObject::HasItem(index)
-            || (this->directHostObject && JavascriptOperators::HasItem(this->directHostObject, index))
-            || (this->hostObject && JavascriptOperators::HasItem(this->hostObject, index));
+            || (this->directHostObject && JavascriptOperators::HasItem(this->directHostObject, index)));
     }
 
     BOOL GlobalObject::HasOwnItem(uint32 index)
@@ -2152,8 +2093,7 @@ LHexError:
         {
             return TRUE;
         }
-        return (this->directHostObject && this->directHostObject->GetItemReference(originalInstance, index, value, requestContext)) ||
-            (this->hostObject && this->hostObject->GetItemReference(originalInstance, index, value, requestContext));
+        return (this->directHostObject && this->directHostObject->GetItemReference(originalInstance, index, value, requestContext)));
     }
 
     BOOL GlobalObject::SetItem(uint32 index, Var value, PropertyOperationFlags flags)
@@ -2169,8 +2109,7 @@ LHexError:
             return TRUE;
         }
 
-        return (this->directHostObject && this->directHostObject->GetItem(originalInstance, index, value, requestContext)) ||
-            (this->hostObject && this->hostObject->GetItem(originalInstance, index, value, requestContext));
+        return (this->directHostObject && this->directHostObject->GetItem(originalInstance, index, value, requestContext)));
     }
 
     BOOL GlobalObject::DeleteItem(uint32 index, PropertyOperationFlags flags)
@@ -2185,10 +2124,6 @@ LHexError:
             return this->directHostObject->DeleteItem(index, flags);
         }
 
-        if (this->hostObject)
-        {
-            return this->hostObject->DeleteItem(index, flags);
-        }
         return FALSE;
     }
 
@@ -2215,10 +2150,6 @@ LHexError:
         {
             return this->directHostObject->StrictEquals(other, value, requestContext);
         }
-        else if (this->hostObject)
-        {
-            return this->hostObject->StrictEquals(other, value, requestContext);
-        }
         return FALSE;
     }
 
@@ -2233,13 +2164,22 @@ LHexError:
         {
             return this->directHostObject->Equals(other, value, requestContext);
         }
-        else if (this->hostObject)
-        {
-            return this->hostObject->Equals(other, value, requestContext);
-        }
 
         *value = false;
         return TRUE;
+    }
+
+    void
+        GlobalObject::EnsureNoProperty(PropertyId propertyId)
+    {
+        Assert(!Js::IsInternalPropertyId(propertyId));
+        bool isDeclared = false;
+        bool isNonconfigurable = false;
+        if (GetTypeHandler()->HasRootProperty(this, propertyId, nullptr, &isDeclared, &isNonconfigurable) &&
+            (isDeclared || isNonconfigurable))
+        {
+            JavascriptError::ThrowReferenceError(this->GetScriptContext(), ERRRedeclaration);
+        }
     }
 
 #if ENABLE_TTD

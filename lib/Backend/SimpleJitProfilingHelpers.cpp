@@ -127,7 +127,7 @@ namespace Js
         if (JavascriptOperators::IsThisSelf(typeId))
         {
             Assert(typeId != TypeIds_GlobalObject || ((GlobalObject*)thisVar)->ToThis() == thisVar);
-            Assert(typeId != TypeIds_ModuleRoot || JavascriptOperators::GetThisFromModuleRoot(thisVar) == thisVar);
+            Assert(typeId != TypeIds_ModuleRoot);
 
             dynamicProfileInfo->RecordThisInfo(thisVar, ThisType_Simple);
 

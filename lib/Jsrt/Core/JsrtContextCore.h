@@ -78,12 +78,6 @@ public:
         return;
     }
 
-    Js::ModuleRoot * GetModuleRoot(int moduleID)
-    {
-        Assert(false);
-        return nullptr;
-    }
-
     HRESULT CheckCrossDomainScriptContext(__in Js::ScriptContext* scriptContext) override
     {
         // no cross domain for jsrt. Return S_OK

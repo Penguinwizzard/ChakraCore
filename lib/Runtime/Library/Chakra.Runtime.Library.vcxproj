@@ -102,7 +102,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)JSONScanner.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JSONString.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ProfileString.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)RootObjectBase.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)RuntimeFunction.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ScriptFunction.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)SingleCharString.cpp" />
@@ -143,7 +142,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)LiteralString.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptStringObject.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)MathLibrary.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)ModuleRoot.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)NullEnumerator.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)ObjectPrototypeObject.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)PropertyString.cpp" />
@@ -277,7 +275,6 @@
     <ClInclude Include="JSON.h" />
     <ClInclude Include="LiteralString.h" />
     <ClInclude Include="MathLibrary.h" />
-    <ClInclude Include="ModuleRoot.h" />
     <ClInclude Include="NullEnumerator.h" />
     <ClInclude Include="ObjectPrototypeObject.h" />
     <ClInclude Include="PropertyString.h" />

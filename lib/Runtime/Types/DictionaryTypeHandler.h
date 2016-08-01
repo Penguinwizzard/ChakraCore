@@ -105,7 +105,7 @@ namespace Js
 #if DBG
         virtual bool IsLetConstGlobal(DynamicObject* instance, PropertyId propertyId) override;
 #endif
-        virtual bool NextLetConstGlobal(int& index, RootObjectBase* instance, const PropertyRecord** propertyRecord, Var* value, bool* isConst) override;
+        virtual bool NextLetConstGlobal(int& index, GlobalObject* instance, const PropertyRecord** propertyRecord, Var* value, bool* isConst) override;
 
         virtual BOOL IsFixedProperty(const DynamicObject* instance, PropertyId propertyId) override;
         virtual BOOL IsEnumerable(DynamicObject* instance, PropertyId propertyId) override;

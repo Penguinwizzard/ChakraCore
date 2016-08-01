@@ -98,7 +98,6 @@ public:
     virtual HRESULT SetCaller(IUnknown *punkNew, IUnknown **ppunkPrev) = 0;
     virtual HRESULT GetDispatchExCaller(__deref_out void** dispatchExCaller) = 0;
     virtual void ReleaseDispatchExCaller(__in void* dispatchExCaler) = 0;
-    virtual Js::ModuleRoot * GetModuleRoot(int moduleID) = 0;
     virtual HRESULT CheckCrossDomainScriptContext(__in Js::ScriptContext* scriptContext) = 0;
 
     virtual HRESULT GetHostContextUrl(__in DWORD_PTR hostSourceContext, __out BSTR& pUrl) = 0;

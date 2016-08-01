@@ -35,7 +35,7 @@ namespace Js
         PropertyIndex propertyIndex = info->GetPropertyIndex();
 
         Assert(propertyIndex == objectWithProperty->GetPropertyIndex(propertyId) ||
-            (RootObjectBase::Is(objectWithProperty) && propertyIndex == RootObjectBase::FromVar(objectWithProperty)->GetRootPropertyIndex(propertyId)));
+            (GlobalObject::Is(objectWithProperty) && propertyIndex == GlobalObject::FromVar(objectWithProperty)->GetRootPropertyIndex(propertyId)));
         Assert(DynamicType::Is(objectWithProperty->GetTypeId()));
 
         // We are populating a cache guarded by the instance's type (not the type of the object with property somewhere in the prototype chain),
@@ -197,7 +197,7 @@ namespace Js
         }
 
         Assert((!isRoot && propertyIndex == object->GetPropertyIndex(propertyId)) || isSetter ||
-            (isRoot && propertyIndex == RootObjectBase::FromVar(object)->GetRootPropertyIndex(propertyId)));
+            (isRoot && propertyIndex == GlobalObject::FromVar(object)->GetRootPropertyIndex(propertyId)));
         Assert(DynamicType::Is(object->GetTypeId()));
         AssertMsg((info->GetFlags() & InlineCacheGetterFlag) == 0, "invalid getter for CachePropertyWrite");
 

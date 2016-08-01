@@ -2668,20 +2668,21 @@ namespace Js
         SetObjectRegister(slot);
     }
 
-    Js::RootObjectBase * FunctionBody::GetRootObject() const
+    Js::GlobalObject * FunctionBody::GetRootObject() const
     {
         // Safe to be used by the JIT thread
         Assert(this->GetConstTable() != nullptr);
-        return (Js::RootObjectBase *)this->GetConstTable()[Js::FunctionBody::RootObjectRegSlot - FunctionBody::FirstRegSlot];
+        return (Js::GlobalObject *)this->GetConstTable()[Js::FunctionBody::RootObjectRegSlot - FunctionBody::FirstRegSlot];
     }
 
-    Js::RootObjectBase * FunctionBody::LoadRootObject() const
+    Js::GlobalObject * FunctionBody::LoadRootObject() const
     {
         if ((this->GetGrfscr() & fscrIsModuleCode) == fscrIsModuleCode || this->GetModuleID() == kmodGlobal)
         {
             return JavascriptOperators::OP_LdRoot(this->GetScriptContext());
         }
-        return JavascriptOperators::GetModuleRoot(this->GetModuleID(), this->GetScriptContext());
+        AssertMsg(UNREACHED, "ModuleRoot is not supported");
+        Throw::FatalInternalError();
     }
 
 #if ENABLE_NATIVE_CODEGEN
@@ -3956,7 +3957,7 @@ namespace Js
         this->SetConstTable(RecyclerNewArrayZ(this->m_scriptContext->GetRecycler(), Var, GetConstantCount()));
 
         // Initialize with the root object, which will always be recorded here.
-        Js::RootObjectBase * rootObject = this->LoadRootObject();
+        Js::GlobalObject * rootObject = this->LoadRootObject();
         if (rootObject)
         {
             this->RecordConstant(RootObjectRegSlot, rootObject);
@@ -5798,7 +5799,7 @@ namespace Js
                 inlineCaches[i] = AllocatorNewZ(InlineCacheAllocator,
                     this->m_scriptContext->GetInlineCacheAllocator(), InlineCache);
             }
-            Js::RootObjectBase * rootObject = this->GetRootObject();
+            Js::GlobalObject * rootObject = this->GetRootObject();
             ThreadContext * threadContext = this->GetScriptContext()->GetThreadContext();
             uint rootObjectLoadInlineCacheEnd = GetRootObjectLoadMethodInlineCacheStart();
             __analysis_assume(rootObjectLoadInlineCacheEnd <= totalCacheCount);

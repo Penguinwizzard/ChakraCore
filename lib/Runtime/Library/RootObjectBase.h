@@ -6,18 +6,6 @@
 
 namespace Js
 {
-    class RootObjectInlineCache
-    {
-    public:
-        RootObjectInlineCache(InlineCacheAllocator * allocator);
-        uint AddRef() { return ++refCount; }
-        uint Release() { Assert(refCount != 0); return --refCount; }
-        Js::InlineCache * GetInlineCache() const { return inlineCache; }
-        uint GetRefCount() { return refCount; }
-    private:
-        uint refCount;
-        Js::InlineCache * inlineCache;
-    };
 
     class RootObjectBase: public DynamicObject
     {
@@ -62,8 +50,8 @@ namespace Js
         DEFINE_VTABLE_CTOR(RootObjectBase, DynamicObject);
 
         // We shouldn't create an instance of this object, only derive from it, hide the constructor
-        RootObjectBase(DynamicType * type);
-        RootObjectBase(DynamicType * type, ScriptContext* scriptContext);
+        GlobalObject(DynamicType * type);
+        GlobalObject(DynamicType * type, ScriptContext* scriptContext);
 
         HostObjectBase * hostObject;
 
@@ -75,7 +63,7 @@ namespace Js
 
     template <typename Fn>
     void
-    RootObjectBase::MapLetConstGlobals(Fn fn)
+    GlobalObject::MapLetConstGlobals(Fn fn)
     {
         int index = 0;
         const PropertyRecord* propertyRecord;

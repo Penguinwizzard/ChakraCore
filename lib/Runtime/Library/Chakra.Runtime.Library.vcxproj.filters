@@ -40,7 +40,6 @@
     <ClCompile Include="$(MsBuildThisFileDirectory)JSONScanner.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JSONString.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)ProfileString.cpp" />
-    <ClCompile Include="$(MsBuildThisFileDirectory)RootObjectBase.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)RuntimeFunction.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)ScriptFunction.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)SingleCharString.cpp" />
@@ -80,7 +79,6 @@
     <ClCompile Include="$(MsBuildThisFileDirectory)JSONStack.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)JSON.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)LiteralString.cpp" />
-    <ClCompile Include="$(MsBuildThisFileDirectory)moduleroot.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)ObjectPrototypeObject.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)PropertyString.cpp" />
     <ClCompile Include="$(MsBuildThisFileDirectory)RegexHelper.cpp" />
@@ -96,6 +94,21 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)ExternalLibraryBase.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)IntlEngineInterfaceExtensionObject.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptErrorDebug.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSimdType.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSimdInt16x8.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)SimdInt16x8Lib.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSimdUint32x4.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)SimdUint32x4Lib.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSimdUint16x8.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)SimdUint16x8Lib.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSimdUint8x16.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)SimdUint8x16Lib.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSimdBool32x4.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)SimdBool32x4Lib.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSimdBool16x8.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)SimdBool16x8Lib.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)JavascriptSimdBool8x16.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)SimdBool8x16Lib.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\InternalPropertyList.h" />
@@ -193,7 +206,6 @@
     <ClInclude Include="JSON.h" />
     <ClInclude Include="LiteralString.h" />
     <ClInclude Include="MathLibrary.h" />
-    <ClInclude Include="ModuleRoot.h" />
     <ClInclude Include="ObjectPrototypeObject.h" />
     <ClInclude Include="PropertyString.h" />
     <ClInclude Include="RegexHelper.h" />
@@ -208,9 +220,23 @@
     <ClInclude Include="ExternalLibraryBase.h" />
     <ClInclude Include="IntlEngineInterfaceExtensionObject.h" />
     <ClInclude Include="JavascriptErrorDebug.h" />
-    <ClInclude Include="SimdLib.h" />
     <ClInclude Include="JavascriptStringObject.h" />
     <ClInclude Include="NullEnumerator.h" />
+    <ClInclude Include="JavascriptSimdType.h" />
+    <ClInclude Include="JavascriptSimdInt16x8.h" />
+    <ClInclude Include="JavascriptSimdUint32x4.h" />
+    <ClInclude Include="JavascriptSimdUint16x8.h" />
+    <ClInclude Include="JavascriptSimdUint8x16.h" />
+    <ClInclude Include="JavascriptSimdBool32x4.h" />
+    <ClInclude Include="JavascriptSimdBool16x8.h" />
+    <ClInclude Include="JavascriptSimdBool8x16.h" />
+    <ClInclude Include="SimdInt16x8Lib.h" />
+    <ClInclude Include="SimdUint32x4Lib.h" />
+    <ClInclude Include="SimdUint16x8Lib.h" />
+    <ClInclude Include="SimdUint8x16Lib.h" />
+    <ClInclude Include="SimdBool32x4Lib.h" />
+    <ClInclude Include="SimdBool16x8Lib.h" />
+    <ClInclude Include="SimdBool8x16Lib.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ConcatString.inl" />

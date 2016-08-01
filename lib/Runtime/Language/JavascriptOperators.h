@@ -256,11 +256,9 @@ namespace Js
         static RecyclableObject* OP_GetPrototype(Var instance, ScriptContext* scriptContext);
 
         static BOOL OP_HasProperty(Var instance, PropertyId propertyId, ScriptContext* scriptContext);
-        static BOOL OP_HasOwnProperty(Var instance, PropertyId propertyId, ScriptContext* scriptContext);
         static BOOL HasOwnPropertyNoHostObject(Var instance, PropertyId propertyId);
         static BOOL HasOwnPropertyNoHostObjectForHeapEnum(Var instance, PropertyId propertyId, ScriptContext* scriptContext, Var& getter, Var& setter);
         static Var GetOwnPropertyNoHostObjectForHeapEnum(Var instance, PropertyId propertyId, ScriptContext* scriptContext, Var& getter, Var &setter);
-        static BOOL OP_HasOwnPropScoped(Var instance, PropertyId propertyId, Var defaultInstance, ScriptContext* scriptContext);
         static Var OP_GetProperty(Var instance, PropertyId propertyId, ScriptContext* scriptContext);
         static Var OP_GetRootProperty(Var instance, PropertyId propertyId, PropertyValueInfo * info, ScriptContext* scriptContext);
 
@@ -339,7 +337,6 @@ namespace Js
         static Var OP_StrictGetThis(Var thisVar, ScriptContext* scriptContext);
         static bool IsThisSelf(TypeId typeId);
         static Var GetThisHelper(Var thisVar, TypeId typeId, int moduleID, ScriptContext *scriptContext);
-        static Var GetThisFromModuleRoot(Var thisVar);
         static Var OP_GetThisScoped(FrameDisplay *pScope, Var defaultInstance, ScriptContext* scriptContext);
         static Var OP_UnwrapWithObj(Var aValue);
         static Var OP_GetInstanceScoped(FrameDisplay *pScope, PropertyId propertyId, Var rootObject, Var* result2, ScriptContext* scriptContext);
@@ -423,7 +420,6 @@ namespace Js
         static Var ConvertToUnmappedArguments(HeapArgumentsObject *argumentsObject, uint32 paramCount, Var *paramAddr, DynamicObject* frameObject, Js::PropertyIdArray *propIds, uint32 formalsCount, ScriptContext* scriptContext);
 
         static Js::GlobalObject * OP_LdRoot(ScriptContext* scriptContext);
-        static Js::ModuleRoot * GetModuleRoot(int moduleID, ScriptContext* scriptContext);
         static Js::Var OP_LoadModuleRoot(int moduleID, ScriptContext* scriptContext);
         static Var OP_LdNull(ScriptContext* scriptContext);
         static Var OP_LdUndef(ScriptContext* scriptContext);

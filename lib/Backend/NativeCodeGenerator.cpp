@@ -1977,7 +1977,7 @@ NativeCodeGenerator::GatherCodeGenData(
                     {
                         void * rawType = inlineCache->u.local.type;
                         Js::Type * type = TypeWithoutAuxSlotTag(rawType);
-                        Js::RootObjectBase * rootObject = functionBody->GetRootObject();
+                        Js::GlobalObject * rootObject = functionBody->GetRootObject();
                         if (rootObject->GetType() == type)
                         {
                             Js::BigPropertyIndex propertyIndex = inlineCache->u.local.slotIndex;

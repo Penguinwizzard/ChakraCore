@@ -191,16 +191,8 @@ namespace Js
 
         if (typeId == TypeIds_ModuleRoot)
         {
-            RootObjectBase *moduleRoot = static_cast<RootObjectBase*>(object);
-            HostObjectBase * hostObject = moduleRoot->GetHostObject();
-
-            // When marshaling module root, all we need is the host object.
-            // So, if the module root which is being marshaled has host object, marshal it.
-            if (hostObject)
-            {
-                Var hostDispatch = hostObject->GetHostDispatchVar();
-                return CrossSite::MarshalVar(scriptContext, hostDispatch);
-            }
+            AssertMsg(UNREACHED, "ModuleRoot is not supported");
+            Throw::FatalInternalError();
         }
 
         if (typeId == TypeIds_Function)

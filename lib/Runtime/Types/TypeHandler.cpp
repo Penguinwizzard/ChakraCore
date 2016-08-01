@@ -381,7 +381,7 @@ namespace Js
             if (instance->GetType()->GetTypeId() == TypeIds_GlobalObject)
             {
                 // if we have statically seen multiple stores - we should not do this optimization
-                RootObjectInlineCache* cache = (static_cast<Js::RootObjectBase*>(instance))->GetRootInlineCache(propertyRecord, /*isLoadMethod*/ false, /*isStore*/ true);
+                RootObjectInlineCache* cache = (static_cast<Js::GlobalObject*>(instance))->GetRootInlineCache(propertyRecord, /*isLoadMethod*/ false, /*isStore*/ true);
                 uint refCount = cache->Release();
                 return refCount <= 1;
             }

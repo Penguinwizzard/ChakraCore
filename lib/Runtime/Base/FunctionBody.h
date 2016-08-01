@@ -2096,8 +2096,8 @@ namespace Js
         FunctionEntryPointInfo * GetEntryPointInfo(int index) const;
         FunctionEntryPointInfo * TryGetEntryPointInfo(int index) const;
 
-        Js::RootObjectBase * LoadRootObject() const;
-        Js::RootObjectBase * GetRootObject() const;
+        Js::GlobalObject * LoadRootObject() const;
+        Js::GlobalObject * GetRootObject() const;
         ByteBlock* GetAuxiliaryData() const { return static_cast<ByteBlock*>(this->GetAuxPtr(AuxPointerType::AuxBlock)); }
         ByteBlock* GetAuxiliaryDataWithLock() const { return static_cast<ByteBlock*>(this->GetAuxPtrWithLock(AuxPointerType::AuxBlock)); }
         void SetAuxiliaryData(ByteBlock* auxBlock) { this->SetAuxPtr(AuxPointerType::AuxBlock, auxBlock); }

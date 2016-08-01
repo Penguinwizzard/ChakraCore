@@ -781,7 +781,7 @@ namespace Js
                 inlineCaches[i] = AllocatorNewZ(InlineCacheAllocator,
                     scriptContext->GetInlineCacheAllocator(), InlineCache);
             }
-            Js::RootObjectBase * rootObject = functionBody->GetRootObject();
+            Js::GlobalObject * rootObject = functionBody->GetRootObject();
             ThreadContext * threadContext = scriptContext->GetThreadContext();
             uint rootObjectLoadInlineCacheEnd = rootObjectLoadMethodInlineCacheStart;
             __analysis_assume(rootObjectLoadInlineCacheEnd <= totalCacheCount);

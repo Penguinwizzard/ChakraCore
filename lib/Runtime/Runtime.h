@@ -203,8 +203,6 @@ namespace Js
     class JavascriptWeakSet;
     class DynamicObject;
     class HostObjectBase;
-    class RootObjectBase;
-    class ModuleRoot;
     class GlobalObject;
     class Math;
     class JavascriptOperators;
@@ -482,7 +480,6 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "ByteCode/ByteCodeReader.h"
 #include "Language/TaggedInt.h"
 
-#include "Library/RootObjectBase.h"
 #include "Library/GlobalObject.h"
 
 #include "Library/LiteralString.h"
