@@ -99,7 +99,6 @@ if(CLR_CMAKE_PLATFORM_UNIX)
         -DUNICODE
         -D_SAFECRT_USE_CPP_OVERLOADS=1
         -D__STDC_WANT_LIB_EXT1__=1
-        -DDISABLE_JIT=1  # xplat-todo: enable the JIT for Linux
         )
 
     set(CMAKE_CXX_STANDARD 11)

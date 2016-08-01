@@ -130,6 +130,7 @@ inline void DebugBreak()
 // sprintf_s overloaded in safecrt.h. Not sure why palrt.h redefines sprintf_s.
 #undef sprintf_s
 // #define sprintf_s PAL_sprintf_s
+#undef swprintf_s
 
 // PAL LoadLibraryExW not supported
 #define LOAD_LIBRARY_SEARCH_SYSTEM32     0

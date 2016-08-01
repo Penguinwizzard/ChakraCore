@@ -983,7 +983,7 @@ namespace Js
     {
     public:
         LoopHeader* loopHeader;
-        uint jittedLoopIterationsSinceLastBailout; // number of times the loop iterated in the jitted code before bailing out 
+        uint jittedLoopIterationsSinceLastBailout; // number of times the loop iterated in the jitted code before bailing out
         uint totalJittedLoopIterations; // total number of times the loop has iterated in the jitted code for this entry point for a particular invocation of the loop
         LoopEntryPointInfo(LoopHeader* loopHeader, Js::JavascriptLibrary* library, void* validationCookie) :
             EntryPointInfo(nullptr, library, validationCookie, /*threadContext*/ nullptr, /*isLoopBody*/ true),
@@ -2041,7 +2041,7 @@ namespace Js
 #endif
         WriteBarrierPtr<FunctionEntryPointInfo> defaultFunctionEntryPointInfo;
 
-#if ENABLE_PROFILE_INFO 
+#if ENABLE_PROFILE_INFO
         WriteBarrierPtr<DynamicProfileInfo> dynamicProfileInfo;
 #endif
 
@@ -2060,7 +2060,7 @@ namespace Js
 #endif
             );
 
-        void SetNativeEntryPoint(FunctionEntryPointInfo* entryPointInfo, JavascriptMethod originalEntryPoint, Var directEntryPoint);
+        void SetNativeEntryPoint(FunctionEntryPointInfo* entryPointInfo, JavascriptMethod originalEntryPoint, JavascriptMethod directEntryPoint);
 #if DYNAMIC_INTERPRETER_THUNK
         void GenerateDynamicInterpreterThunk();
 #endif
@@ -2716,8 +2716,8 @@ namespace Js
                 (GetIsStrictMode() || hasNonSimpleParams)
                 // Neither of the scopes are objects
                 && !HasScopeObject();
-            
-            return 
+
+            return
                 // Regardless of the conditions above, we won't need a scope object if there aren't any formals.
                 (GetInParamsCount() > 1 || GetHasRestParameter())
                 && !dontNeedScopeObject;

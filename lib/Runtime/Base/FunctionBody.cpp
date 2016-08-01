@@ -596,7 +596,7 @@ namespace Js
         return static_cast<PropertyIdArray*>(this->GetAuxPtrWithLock(AuxPointerType::FormalsPropIdArray));
     }
 
-    void 
+    void
     FunctionBody::SetFormalsPropIdArray(PropertyIdArray * propIdArray)
     {
         AssertMsg(propIdArray == nullptr || this->GetAuxPtrWithLock(AuxPointerType::FormalsPropIdArray) == nullptr, "Already set?");
@@ -2928,7 +2928,7 @@ namespace Js
     BOOL FunctionBody::IsNativeOriginalEntryPoint() const
     {
 #if ENABLE_NATIVE_CODEGEN
-        return this->GetScriptContext()->IsNativeAddress(this->originalEntryPoint);
+        return this->GetScriptContext()->IsNativeAddress((void*)this->originalEntryPoint);
 #else
         return false;
 #endif
@@ -2997,12 +2997,11 @@ namespace Js
         return IsIntermediateCodeGenThunk(directEntryPoint) || originalEntryPoint == directEntryPoint
 #if ENABLE_PROFILE_INFO
             || (directEntryPoint == DynamicProfileInfo::EnsureDynamicProfileInfoThunk &&
-            this->IsFunctionBody() && this->GetFunctionBody()->IsNativeOriginalEntryPoint()
+            this->IsFunctionBody() && this->GetFunctionBody()->IsNativeOriginalEntryPoint())
 #ifdef ASMJS_PLAT
             || (GetFunctionBody()->GetIsAsmJsFunction() && directEntryPoint == AsmJsDefaultEntryThunk)
-            || (IsAsmJsCodeGenThunk(directEntryPoint))
+            || IsAsmJsCodeGenThunk(directEntryPoint)
 #endif
-            );
 #endif
         ;
     }
@@ -3186,7 +3185,7 @@ namespace Js
 #endif
 
 #if ENABLE_NATIVE_CODEGEN
-    void FunctionBody::SetNativeEntryPoint(FunctionEntryPointInfo* entryPointInfo, JavascriptMethod originalEntryPoint, Var directEntryPoint)
+    void FunctionBody::SetNativeEntryPoint(FunctionEntryPointInfo* entryPointInfo, JavascriptMethod originalEntryPoint, JavascriptMethod directEntryPoint)
     {
         if(entryPointInfo->nativeEntryPointProcessed)
         {
@@ -3208,7 +3207,7 @@ namespace Js
         }
         else
         {
-            entryPointInfo->jsMethod = reinterpret_cast<Js::JavascriptMethod>(directEntryPoint);
+            entryPointInfo->jsMethod = directEntryPoint;
         }
         if (isAsmJs)
         {
@@ -3290,7 +3289,7 @@ namespace Js
         Assert(reinterpret_cast<void*>(entryPointInfo->jsMethod) == nullptr);
         entryPointInfo->jsMethod = entryPoint;
 
-        ((Js::LoopEntryPointInfo*)entryPointInfo)->totalJittedLoopIterations = 
+        ((Js::LoopEntryPointInfo*)entryPointInfo)->totalJittedLoopIterations =
             static_cast<uint8>(
                 min(
                     static_cast<uint>(static_cast<uint8>(CONFIG_FLAG(MinBailOutsBeforeRejitForLoops))) *
@@ -6340,7 +6339,7 @@ namespace Js
                 // move back to the interpreter, the original entry point is going to be the dynamic interpreter thunk
                 originalEntryPoint =
                     m_dynamicInterpreterThunk
-                        ? static_cast<JavascriptMethod>(InterpreterThunkEmitter::ConvertToEntryPoint(m_dynamicInterpreterThunk))
+                        ? reinterpret_cast<JavascriptMethod>(InterpreterThunkEmitter::ConvertToEntryPoint(m_dynamicInterpreterThunk))
                         : DefaultEntryThunk;
 #else
                 originalEntryPoint = DefaultEntryThunk;
@@ -8598,7 +8597,7 @@ namespace Js
         int index = this->inlineeFrameMap->BinarySearch([=](const NativeOffsetInlineeFramePair& pair, int index) {
             if (pair.offset >= offset)
             {
-                if (index == 0 || index > 0 && this->inlineeFrameMap->Item(index - 1).offset < offset)
+                if (index == 0 || (index > 0 && this->inlineeFrameMap->Item(index - 1).offset < offset))
                 {
                     return 0;
                 }
@@ -8627,7 +8626,7 @@ namespace Js
             // find the closest entry which is greater than the current offset.
             if (record.offset >= offset)
             {
-                if (index == 0 || index > 0 && this->bailoutRecordMap->Item(index - 1).offset < offset)
+                if (index == 0 || (index > 0 && this->bailoutRecordMap->Item(index - 1).offset < offset))
                 {
                     return 0;
                 }
@@ -9343,7 +9342,7 @@ namespace Js
                 // that are using the simple JIT code, and update the original entry point as necessary as well.
                 const JavascriptMethod newOriginalEntryPoint =
                     functionBody->GetDynamicInterpreterEntryPoint()
-                        ?   static_cast<JavascriptMethod>(
+                        ?   reinterpret_cast<JavascriptMethod>(
                                 InterpreterThunkEmitter::ConvertToEntryPoint(functionBody->GetDynamicInterpreterEntryPoint()))
                         :   DefaultEntryThunk;
                 const JavascriptMethod currentThunk = functionBody->GetScriptContext()->CurrentThunk;

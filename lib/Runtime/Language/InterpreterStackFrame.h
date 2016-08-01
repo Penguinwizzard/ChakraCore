@@ -227,7 +227,7 @@ namespace Js
         UINT16 GetFlags() const { return m_flags; }
         void OrFlags(UINT16 addTo) { m_flags |= addTo; }
         bool IsInCatchOrFinallyBlock();
-        static bool IsDelayDynamicInterpreterThunk(void* entryPoint);
+        static bool IsDelayDynamicInterpreterThunk(JavascriptMethod entryPoint);
 
         Var LdEnv() const;
         void SetEnv(FrameDisplay *frameDisplay);

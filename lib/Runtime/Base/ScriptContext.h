@@ -1516,7 +1516,7 @@ private:
         static void SetEntryPointToProfileThunk(JavascriptFunction* function);
         static void RestoreEntryPointFromProfileThunk(JavascriptFunction* function);
 #endif
-        
+
         static void RecyclerEnumClassEnumeratorCallback(void *address, size_t size);
         static void RecyclerFunctionCallbackForDebugger(void *address, size_t size);
 
@@ -1592,7 +1592,7 @@ private:
 #if DYNAMIC_INTERPRETER_THUNK
         JavascriptMethod GetNextDynamicAsmJsInterpreterThunk(PVOID* ppDynamicInterpreterThunk);
         JavascriptMethod GetNextDynamicInterpreterThunk(PVOID* ppDynamicInterpreterThunk);
-        BOOL IsDynamicInterpreterThunk(void* address);
+        BOOL IsDynamicInterpreterThunk(JavascriptMethod address);
         void ReleaseDynamicInterpreterThunk(BYTE* address, bool addtoFreeList);
         void ReleaseDynamicAsmJsInterpreterThunk(BYTE* address, bool addtoFreeList);
 #endif
