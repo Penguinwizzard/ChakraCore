@@ -1,0 +1,206 @@
+16384
+Successfully compiled asm.js code
+Stores:
+Test1
+Test2
+Test3
+Test4
+Test5
+Test6
+Test7
+Test8
+Test9
+Test10
+Test12
+Test13
+Test14
+Loads
+Test1
+Test2
+Test3
+Test4
+Test5
+Test6
+Test7
+Test8
+Test9
+Test10
+Test11
+Test12
+BoundCheck
+Test1
+-----------------------------------------------------------------------------
+************   IR after Emitter (FullJit)  ************
+-----------------------------------------------------------------------------
+Function storeF32 ( (#1.2), #14)                  Instr Count:64
+
+                       FunctionEntry  
+    (rax).i64       =  MOV            0xXXXXXXXX (&StackLimit).u64
+    (rax).i64       =  MOV            [(rax).i64].i64
+    (rax).i64       =  ADD            (rax).i64, 0x000000001BF0.u64
+                       JO             $L6
+                       CMP            (rsp).i64, (rax).i64
+                       JLE            $L6
+                       NOP            4 (0x4).i8
+                       NOP            4 (0x4).i8
+    arg5(s29)<32>.i32 = MOV           (r8).i32
+    arg3(s28)<16>.simd128 = MOVUPS    (xmm1).simd128
+    arg2(s27)<8>.i64 = MOV            (rcx).i64
+                       PrologStart    
+                       PUSH           (rbp).i64
+    (rbp).i64       =  MOV            (rsp).i64
+    (rsp).i64       =  SUB            (rsp).i64, 32 (0x20).i32
+    [(rsp).i64].f64 =  MOVAPS         (xmm6).f64
+                       PUSH           (rsi).i64
+                       PUSH           (rbx).i64
+    (rsp).i64       =  SUB            (rsp).i64, 48 (0x30).i32
+                       PrologEnd      
+    (rax).u32       =  XOR            (rax).u32, (rax).u32
+    s26<-8>.i64     =  MOV            (rax).i64
+
+
+ GLOBOPT INSTR:     s1.var          =  LdAsmJsEnv                                             #
+
+
+    s24(rax).u64    =  MOV            s25<16>.u64
+    s1(rax).var     =  MOV            [s24(rax).u64+88].u64
+
+
+ GLOBOPT INSTR:     s2.var          =  Ld_A           [s1.var!].var                           #
+
+
+    s2(rax).var     =  MOV            [s1(rax).var!].var
+
+
+ GLOBOPT INSTR:     s3.var          =  Ld_A           [s2.var+48].var                         #
+
+
+    s3(rbx).var     =  MOV            [s2(rax).var+48].var
+
+
+ GLOBOPT INSTR:     s4.u32          =  Ld_A           [s2.var!+56].u32                        #
+
+
+    s4(rax).u32     =  MOV            [s2(rax).var!+56].u32
+
+
+ GLOBOPT INSTR:     s11.i32         =  ArgIn_A        prm2<40>.i32!                           #
+
+
+    s12(xmm6)[UninitializedObject].simd128 = MOVUPS  prm1<24>.simd128!
+    s11(rcx).i32    =  MOV            prm2<40>.i32!
+
+
+  Line 109: idx = idx<<2;
+  Col    9: ^
+                       StatementBoundary  #0
+
+
+ GLOBOPT INSTR:     s13.i32         =  Shl_I4         s11.i32!, 2 (0x2).i32                   #0000 
+
+
+    s13(rcx).i32    =  SHL            s13(rcx).i32, 2 (0x2).u8
+
+
+ GLOBOPT INSTR:     s17.u32         =  And_I4         s13.i32!, -4 (0xFFFFFFFC).u32           #0007 
+
+
+    s17(rsi).u32    =  MOV            s13(rcx).i32!
+    s17(rsi).u32    =  AND            s17(rsi).u32, -4 (0xFFFFFFFC).u32
+
+
+ GLOBOPT INSTR:     [s3[Float32Array].var!+s17.u32!].simd128 = Simd128_StArr_F4  s12[UninitializedObject].simd128!, s4.u32! #0007 
+
+
+    s20(rcx).u32    =  MOV            s17(rsi).u32
+    s20(rcx).u32    =  ADD            s20(rcx).u32, 16 (0x10).i8
+                       CMP            s20(rcx).u32, s4(rax).u32!
+                       JA             $L3
+$L4:
+    [s3(rbx)[Float32Array].var!+s17(rsi).u32!].simd128 = MOVUPS  s12(xmm6)[UninitializedObject].simd128
+
+
+  Line 111: }
+  Col    5: ^
+                       StatementBoundary  #1
+
+
+ GLOBOPT INSTR:     s0[Undefined].var = Ld_A          0xXXXXXXXX (undefined)[Undefined].var   #0010 
+
+
+    s0(rax)[Undefined].var = MOV      0xXXXXXXXX (undefined)[Undefined].var
+    (rsp).i64       =  ADD            (rsp).i64, 48 (0x30).i32
+    (rbx).i64       =  POP            
+    (rsi).i64       =  POP            
+    (xmm6).f64      =  MOVAPS         [(rsp).i64].f64
+    (rsp).i64       =  MOV            (rbp).i64
+    (rbp).i64       =  POP            
+                       RET            0 (0x0).i32, (rax).i64
+
+
+ GLOBOPT INSTR:                        FunctionExit                                           #
+
+
+                       FunctionExit   
+
+
+  Line 109: idx = idx<<2;
+  Col    9: ^
+                       StatementBoundary  #0
+$L3: [helper]
+    arg2(s21)(rdx).u64 = MOV          0xXXXXXXXX (ScriptContext).u64
+    arg1(s22)(rcx).u32 = MOV          -2146823158 (0x800A140A).i32
+    s23(rax).u64    =  MOV            Op_RuntimeRangeError.u64
+                       CALL           s23(rax).u64
+                       JMP            $L4
+                       StatementBoundary  #-1
+$L6: [helper]
+    (rdx).i64       =  MOV            0xXXXXXXXX (ScriptContext).u64
+    (rcx).i64       =  MOV            0x000000001BF0.u64
+    (rax).i64       =  MOV            ProbeCurrentStack.u64
+                       JMP            (rax).i64
+                       StatementBoundary  #-1
+Correct
+Test2
+Correct
+Test3
+Correct
+Test4
+Correct
+Test5
+Correct
+Test6
+Correct
+Test7
+Correct
+Test8
+Correct
+Test9
+Correct
+Test10
+Correct
+Test11
+Correct
+Correct
+Correct
+Correct
+Correct
+Correct
+Correct
+Correct
+Test12
+Correct
+Test13
+Correct
+Test14
+Correct
+Test15
+Correct
+Test16
+Correct
+Test17
+Correct
+Test18
+Correct
+Test19
+Correct

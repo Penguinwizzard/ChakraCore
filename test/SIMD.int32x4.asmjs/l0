@@ -1,0 +1,133 @@
+Successfully compiled asm.js code
+-----------------------------------------------------------------------------
+************   IR after RegAlloc (FullJit)  ************
+-----------------------------------------------------------------------------
+Function func1 ( (#1.2), #11)                     Instr Count:37
+
+                       FunctionEntry  
+
+
+ GLOBOPT INSTR:     s1.var          =  LdAsmJsEnv                                             #
+
+
+    s25(rax).u64    =  MOV            0xXXXXXXXX (Unknown).u64
+    s26(rcx).u64    =  MOV            s27<16>.u64
+    s1(rbx).var     =  MOV            [s26(rcx).u64+88].u64
+
+
+ GLOBOPT INSTR:     s11[UninitializedObject].simd128 = Simd128_LdC  .simd128                  #
+
+
+    s11(xmm0)[UninitializedObject].simd128 = MOVUPS  [s25(rax).u64 < (Unknown)>].simd128
+
+
+ GLOBOPT INSTR:     s14[UninitializedObject].simd128 = ArgIn_A  prm2<40>.simd128!             #
+
+
+    s13(xmm1)[UninitializedObject].simd128 = MOVUPS  prm1<24>.simd128!
+    s14(xmm2)[UninitializedObject].simd128 = MOVUPS  prm2<40>.simd128!
+
+
+ GLOBOPT INSTR:     s15[UninitializedObject].simd128 = Ld_A  s11[UninitializedObject].simd128! #0000 
+
+
+    s15(xmm6)[UninitializedObject].simd128 = MOVUPS  s11(xmm0)[UninitializedObject].simd128!
+
+
+ GLOBOPT INSTR:     s12.i32         =  Ld_I4          0 (0x0).i32                             #0003 
+
+
+    s12(rsi).i32    =  MOV            0 (0x0).i32
+
+
+ GLOBOPT INSTR:     s17[Simd128Int32x4].simd128 = Simd128_Add_I4  s13[UninitializedObject].simd128!, s14[UninitializedObject].simd128! #0023 
+
+
+    s17(xmm7)[Simd128Int32x4].simd128 = MOVUPS  s13(xmm1)[UninitializedObject].simd128!
+    s17(xmm7)[Simd128Int32x4].simd128 = PADDD  s17(xmm7)[Simd128Int32x4].simd128, s14(xmm2)[UninitializedObject].simd128!
+$L2: >>>>>>>>>>>>>  LOOP TOP  >>>>>>>>>>>>>
+    s28(rax).u64    =  MOV            0xXXXXXXXX (&StackLimit).u64
+                       CMP            (rsp).i64, [s28(rax).u64 < (&StackLimit)>].i64
+                       JGT            $L9
+$L10: [helper]
+    s29(rax).u64    =  MOV            ScriptAbort.u64
+                       CALL           s29(rax).u64
+                       Nop            
+                       JMP            $L11
+$L9:
+
+
+  Line  88: while ( (loopIndex|0) < (loopCOUNT|0)) {
+  Col    9: ^
+                       StatementBoundary  #0
+
+
+ GLOBOPT INSTR:     s16.i32         =  LdSlot         s21(s1[68]).i32!                        #000c 
+
+
+    s16(rax).i32    =  MOV            [s1(rbx).var+68].i32
+
+
+  Line  88: loopIndex|0) < (loopCOUNT|0)) {
+  Col   18: ^
+                       StatementBoundary  #1
+
+
+ GLOBOPT INSTR:                        BrGe_I4        $L6, s12.i32, s16.i32!                  #0017 
+
+
+                       CMP            s12(rsi).i32, s16(rax).i32!
+                       JGE            $L6
+
+
+  Line  90: x = i4add(a, b);
+  Col   13: ^
+                       StatementBoundary  #2
+
+
+ GLOBOPT INSTR:     s15[Simd128Int32x4].simd128 = Ld_A  s17[Simd128Int32x4].simd128           #0027 
+
+
+    s15(xmm6)[Simd128Int32x4].simd128 = MOVUPS  s17(xmm7)[Simd128Int32x4].simd128
+
+
+  Line  92: loopIndex = (loopIndex + 1) | 0;
+  Col   13: ^
+                       StatementBoundary  #3
+
+
+ GLOBOPT INSTR:     s12.i32         =  Add_I4         s12.i32!, 1 (0x1).i32                   #002a 
+
+
+    s12(rsi).i32    =  INC            s12(rsi).i32!
+
+
+ GLOBOPT INSTR:                        Br             $L2                                     #0031 
+
+
+                       JMP            $L2
+$L6:
+
+
+  Line  95: return i4check(x);
+  Col    9: ^
+                       StatementBoundary  #4
+
+
+  Line  96: }
+  Col    5: ^
+                       StatementBoundary  #5
+
+
+ GLOBOPT INSTR:                        Ret            s15[LikelyCanBeTaggedValue_Simd128Int32x4].simd128! #0043 
+
+
+    (xmm0).simd128  =  MOVUPS         s15(xmm6)[LikelyCanBeTaggedValue_Simd128Int32x4].simd128!
+$L11:
+
+
+ GLOBOPT INSTR:                        FunctionExit                                           #
+
+
+                       FunctionExit   
+PASS

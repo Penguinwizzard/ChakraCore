@@ -1,0 +1,137 @@
+-----------------------------------------------------------------------------
+************   IR after Lowerer (FullJit)  ************
+-----------------------------------------------------------------------------
+Function sc_Pair ( (#1.76), #68)                  Instr Count:79
+
+                       FunctionEntry                                          #
+
+
+ GLOBOPT INSTR:     s3[LikelyCanBeTaggedValue_Object].var = ArgIn_A  prm3<48>[LikelyCanBeTaggedValue_Object].var! #
+
+
+    s25.u64         =  MOV            0xXXXXXXXX (Js::DynamicObject Vtable).u64 #
+    s17.u64         =  MOV            0xXXXXXXXX (&GuardValue).u64            #
+    s37.u64         =  MOV            0xXXXXXXXX (&CallCount).u64             #
+                       CMP            [s37.u64].u8, 255 (0xFF).u8             #
+                       JEQ            $L17                                    #
+    [s37.u64].u8    =  INC            [s37.u64].u8                            #
+$L17:                                                                         #
+    s35.i64         =  MOV            callInfo<24>.i64                        #
+    s35.i64         =  AND            s35.i64, 150994943 (0x8FFFFFF).u32      #
+    s35.i64         =  BTR            s35.i64, 27 (0x1B).i8                   #
+    s35.i64         =  SBB            s35.i64, 3 (0x3).i32                    #
+                       JLT            $L13                                    #
+                       JMP            $L14                                    #
+$L13: [helper]                                                                #
+    s36.u64         =  MOV            0xXXXXXXXX (undefined).var              #
+    s3[LikelyCanBeTaggedValue_Object].var = MOV  s36.u64                      #
+    s35.i64         =  INC            s35.i64                                 #
+                       JEQ            $L15                                    #
+    s2[LikelyMixed].var = MOV         s36.u64                                 #
+                       JMP            $L16                                    #
+$L14:                                                                         #
+    s3[LikelyCanBeTaggedValue_Object].var = MOV  prm3<48>[LikelyCanBeTaggedValue_Object].var! #
+$L15:                                                                         #
+    s2[LikelyMixed].var = MOV         prm2<40>[LikelyMixed].var!              #
+$L16:                                                                         #
+
+
+ GLOBOPT INSTR:     s4<s11>.var     =  ArgIn_A        prm1<32>.var!                           #0000 
+
+
+    s4<s11>.var     =  MOV            prm1<32>.var!                           #0000 
+
+
+ GLOBOPT INSTR:     s4<s11>[Object].var = LdThis      s4<s11>.var!, 0 (0x0).i32               #0002 
+
+
+    s24.i64         =  MOV            s4<s11>.var                             #
+    s24.i64         =  SHR            s24.i64, 48 (0x30).i8                   #
+                       JNE            $L10                                    #
+                       CMP            [s4<s11>.var].u64, s25.u64              #
+                       JEQ            $L12                                    #
+    s26.i64         =  MOV            [s4<s11>.var+8].i64                     #
+    s27.i32         =  MOV            [s26.i64].i32                           #
+    s27.i32         =  ADD            s27.i32, -22 (0xFFFFFFEA).i32           #
+                       CMP            s27.i32, 49 (0x31).i32                  #
+                       JA             $L10                                    #
+$L12:                                                                         #
+                       JMP            $L11                                    #
+$L10: [helper]                                                                #
+    s28.var         =  MOV            s4<s11>.var!                            #
+    arg3(s30)(r8).u64 = MOV           0xXXXXXXXX (ScriptContext).u64          #
+    arg2(s31)(rdx).i32 = MOV          0 (0x0).i32                             #
+    arg1(s32)(rcx).var = MOV          s28.var                                 #
+    s33(rax).u64    =  MOV            LdThis.u64                              #
+    s29(rax).var    =  CALL           s33(rax).u64                            #0002 
+    s4<s11>[Object].var = MOV         s29(rax).var                            #
+$L11:                                                                         #
+
+
+  Line 942: this.car = car;
+  Col    5: ^
+                       StatementBoundary  #0                                  #0009 
+
+
+ GLOBOPT INSTR:     s9(s4<s11>[Object]->car)<0,m,++,s11,s13,{car(0),cdr(1)}>[LikelyMixed].var! = StFld  s2[LikelyMixed].var! #0009  Bailout: #0009 (BailOutFailedEquivalentTypeCheck)
+
+
+    s16.i64         =  MOV            [s4<s11>[Object].var+8].i64             #
+                       CMP            s16.i64, [s17.u64 < (&GuardValue)>].u64 #
+                       JNE            $L5                                     #
+                       JMP            $L6                                     #
+$L5: [helper]                                                                 #
+    s18.i64         =  MOV            s16.i64                                 #
+    arg2(s21)(rdx).u64 = MOV          0xXXXXXXXX (TypeCheckGuard).u64         #
+    arg1(s22)(rcx).i64 = MOV          s18.i64                                 #
+    s23(rax).u64    =  MOV            CheckIfTypeIsEquivalent.u64             #
+    s20(rax).u8     =  CALL           s23(rax).u64                            #
+    s19.u8          =  MOV            s20(rax).u8                             #
+                       TEST           s19.u8, s19.u8                          #
+                       JEQ            $L4                                     #
+$L6:                                                                          #
+    [s4<s11>[Object].var+16].i64 = MOV  s2[LikelyMixed].var                   #
+                       JMP            $L7                                     #
+$L3: [helper]                                                                 #
+$L4: [helper]                                                                 #
+$L8: [helper]                                                                 #
+                       CALL           SaveAllRegistersAndBailOut.u64          #0009  Bailout: #0009 (BailOutFailedEquivalentTypeCheck)
+                       JMP            $L9                                     #
+$L7:                                                                          #
+
+
+  Line 943: this.cdr = cdr;
+  Col    5: ^
+                       StatementBoundary  #1                                  #000d 
+
+
+ GLOBOPT INSTR:     s10(s4<s11>[Object]->cdr)<1,m,++,s11+m!,s12>[LikelyCanBeTaggedValue_Object].var! = StFld  s3[LikelyCanBeTaggedValue_Object].var! #000d 
+
+
+    [s4<s11>[Object].var+24].i64 = MOV  s3[LikelyCanBeTaggedValue_Object].var #
+
+
+ GLOBOPT INSTR:     s0[Undefined].var = Ld_A          0xXXXXXXXX (undefined)[Undefined].var   #0011 
+
+
+    s0[Undefined].var = MOV           0xXXXXXXXX (undefined)[Undefined].var   #0011 
+
+
+  Line 944: }
+  Col    1: ^
+                       StatementBoundary  #2                                  #0013 
+                       StatementBoundary  #-1                                 #0013 
+
+
+ GLOBOPT INSTR:                        Ret            s0[Undefined].var!                      #0013 
+
+
+    (rax).i64       =  MOV            s0[Undefined].var!                      #0013 
+$L9:                                                                          #
+
+
+ GLOBOPT INSTR:                        FunctionExit                                           #
+
+
+                       FunctionExit                                           #
+### SCORE: 1078
