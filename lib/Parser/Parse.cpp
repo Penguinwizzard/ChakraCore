@@ -4941,6 +4941,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, LPCOLESTR pNameHint, usho
             }
         }
 
+        /*
         if (fAsync)
         {
             if (!buildAST || isTopLevelDeferredFunc)
@@ -4951,9 +4952,10 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, LPCOLESTR pNameHint, usho
             // Same than before, we increment the nestedCount because we will have a Generator inside any async function.
             pnodeFnc->sxFnc.nestedCount++;
         }
+        */
 
         Scope* paramScope = pnodeFnc->sxFnc.pnodeScopes ? pnodeFnc->sxFnc.pnodeScopes->sxBlock.scope : nullptr;
-        if (paramScope != nullptr && !fAsync)
+        if (paramScope != nullptr/* && !fAsync*/)
         {
             if (CONFIG_FLAG(ForceSplitScope))
             {
@@ -4984,7 +4986,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, LPCOLESTR pNameHint, usho
         // If the param scope is merged with the body scope we want to use the param scope symbols in the body scope.
         // So add a pid ref for the body using the param scope symbol. Note that in this case the same symbol will occur twice
         // in the same pid ref stack.
-        if (paramScope != nullptr && paramScope->GetCanMergeWithBodyScope() && (isTopLevelDeferredFunc || !fAsync))
+        if (paramScope != nullptr && paramScope->GetCanMergeWithBodyScope() && (isTopLevelDeferredFunc/* || !fAsync*/))
         {
             paramScope->ForEachSymbol([this](Symbol* paramSym)
             {
@@ -5108,14 +5110,15 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, LPCOLESTR pNameHint, usho
 
                 if (m_token.tk != tkLCurly && fLambda)
                 {
+                    /*
                     if (fAsync)
                     {
                         TransformAsyncFncDeclAST(&pnodeFnc, true);
                     }
                     else
-                    {
+                    {*/
                         ParseExpressionLambdaBody<true>(pnodeFnc);
-                    }
+                    //}
                     *pNeedScanRCurly = false;
                 }
                 else
@@ -6670,16 +6673,18 @@ void Parser::FinishFncDecl(ParseNodePtr pnodeFnc, LPCOLESTR pNameHint, ParseNode
     {
         ChkCurTok(tkLCurly, ERRnoLcurly);
     }
+    /*
     if (pnodeFnc->sxFnc.IsAsync())
     {
         TransformAsyncFncDeclAST(&pnodeFnc->sxFnc.pnodeBody, false);
     }
     else
     {
+    */
         ParseStmtList<true>(&pnodeFnc->sxFnc.pnodeBody, &lastNodeRef, SM_OnFunctionCode, true /* isSourceElementList */);
         // Append an EndCode node.
         AddToNodeList(&pnodeFnc->sxFnc.pnodeBody, &lastNodeRef, CreateNodeWithScanner<knopEndCode>());
-    }
+    //}
     if (!skipCurlyBraces)
     {
         ChkCurTokNoScan(tkRCurly, ERRnoRcurly);

@@ -1058,6 +1058,7 @@ void ByteCodeGenerator::DefineCachedFunctions(FuncInfo *funcInfoParent)
         if (sym != nullptr && (pnodeFnc->sxFnc.IsDeclaration()))
         {
             AssertMsg(!pnodeFnc->sxFnc.IsGenerator(), "Generator functions are not supported by InitCachedFuncs but since they always escape they should disable function caching");
+            // TODO(ianhall): what about async functions?
             Js::FuncInfoEntry *entry = &info->elements[slotCount];
             entry->nestedIndex = pnodeFnc->sxFnc.nestedIndex;
             entry->scopeSlot = sym->GetScopeSlot();
@@ -1227,11 +1228,11 @@ Js::RegSlot ByteCodeGenerator::DefineOneFunction(ParseNode *pnodeFnc, FuncInfo *
     // If we are in a parameter scope and it is not merged with body scope then we have to create the child function as an inner function
     if (regEnv == funcInfoParent->frameDisplayRegister || regEnv == funcInfoParent->GetEnvRegister())
     {
-        m_writer.NewFunction(pnodeFnc->location, pnodeFnc->sxFnc.nestedIndex, pnodeFnc->sxFnc.IsGenerator());
+        m_writer.NewFunction(pnodeFnc->location, pnodeFnc->sxFnc.nestedIndex, pnodeFnc->sxFnc.IsGenerator() || pnodeFnc->sxFnc.IsAsync());
     }
     else
     {
-        m_writer.NewInnerFunction(pnodeFnc->location, pnodeFnc->sxFnc.nestedIndex, regEnv, pnodeFnc->sxFnc.IsGenerator());
+        m_writer.NewInnerFunction(pnodeFnc->location, pnodeFnc->sxFnc.nestedIndex, regEnv, pnodeFnc->sxFnc.IsGenerator() || pnodeFnc->sxFnc.IsAsync());
     }
 
     if (funcInfoParent->IsGlobalFunction() && (this->flags & fscrEval))
@@ -1712,7 +1713,7 @@ void ByteCodeGenerator::SetClosureRegisters(FuncInfo* funcInfo, Js::FunctionBody
 
 void ByteCodeGenerator::FinalizeRegisters(FuncInfo * funcInfo, Js::FunctionBody * byteCodeFunction)
 {
-    if (byteCodeFunction->IsGenerator())
+    if (byteCodeFunction->IsCoroutine())
     {
         // EmitYield uses 'false' to create the IteratorResult object
         funcInfo->AssignFalseConstRegister();
@@ -1746,7 +1747,7 @@ void ByteCodeGenerator::FinalizeRegisters(FuncInfo * funcInfo, Js::FunctionBody 
     }
 
     // NOTE: The FB expects the yield reg to be the final non-temp.
-    if (byteCodeFunction->IsGenerator())
+    if (byteCodeFunction->IsCoroutine())
     {
         funcInfo->AssignYieldRegister();
     }
@@ -6482,7 +6483,7 @@ void EmitTopLevelCatch(Js::ByteCodeLabel catchLabel,
     byteCodeGenerator->Writer()->Reg1(Js::OpCode::Catch, catchParamLocation);
 
     ByteCodeGenerator::TryScopeRecord tryRecForCatch(Js::OpCode::ResumeCatch, catchLabel);
-    if (funcInfo->byteCodeFunction->IsGenerator())
+    if (funcInfo->byteCodeFunction->IsCoroutine())
     {
         byteCodeGenerator->tryScopeRecordsList.LinkToEnd(&tryRecForCatch);
     }
@@ -6500,7 +6501,7 @@ void EmitTopLevelCatch(Js::ByteCodeLabel catchLabel,
 
     funcInfo->ReleaseTmpRegister(catchParamLocation);
 
-    if (funcInfo->byteCodeFunction->IsGenerator())
+    if (funcInfo->byteCodeFunction->IsCoroutine())
     {
         byteCodeGenerator->tryScopeRecordsList.UnlinkFromEnd();
     }
@@ -6523,7 +6524,7 @@ void EmitTopLevelFinally(Js::ByteCodeLabel finallyLabel,
     ByteCodeGenerator *byteCodeGenerator,
     FuncInfo *funcInfo)
 {
-    bool isGenerator = funcInfo->byteCodeFunction->IsGenerator();
+    bool isGenerator = funcInfo->byteCodeFunction->IsCoroutine();
 
     Js::ByteCodeLabel afterFinallyBlockLabel = byteCodeGenerator->Writer()->DefineLabel();
     byteCodeGenerator->Writer()->Empty(Js::OpCode::Leave);
@@ -6570,7 +6571,7 @@ void EmitCatchAndFinallyBlocks(Js::ByteCodeLabel catchLabel,
     FuncInfo *funcInfo
     )
 {
-    bool isGenerator = funcInfo->byteCodeFunction->IsGenerator();
+    bool isGenerator = funcInfo->byteCodeFunction->IsCoroutine();
     if (isGenerator)
     {
         byteCodeGenerator->tryScopeRecordsList.UnlinkFromEnd();
@@ -6638,7 +6639,7 @@ void EmitDestructuredArray(
 
     Js::RegSlot regException = Js::Constants::NoRegister;
     Js::RegSlot regOffset = Js::Constants::NoRegister;
-    bool isGenerator = funcInfo->byteCodeFunction->IsGenerator();
+    bool isGenerator = funcInfo->byteCodeFunction->IsCoroutine();
 
     if (isGenerator)
     {
@@ -9120,7 +9121,7 @@ void EmitForInOrForOf(ParseNode *loopNode, ByteCodeGenerator *byteCodeGenerator,
     Js::RegSlot shouldCallReturnFunctionLocation = funcInfo->AcquireTmpRegister();
     Js::RegSlot shouldCallReturnFunctionLocationFinally = funcInfo->AcquireTmpRegister();
 
-    bool isGenerator = funcInfo->byteCodeFunction->IsGenerator();
+    bool isGenerator = funcInfo->byteCodeFunction->IsCoroutine();
 
     if (isGenerator)
     {
@@ -11253,7 +11254,7 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
         byteCodeGenerator->Writer()->Br(Js::OpCode::TryCatch, catchLabel);
 
         ByteCodeGenerator::TryScopeRecord tryRecForTry(Js::OpCode::TryCatch, catchLabel);
-        if (funcInfo->byteCodeFunction->IsGenerator())
+        if (funcInfo->byteCodeFunction->IsCoroutine())
         {
             byteCodeGenerator->tryScopeRecordsList.LinkToEnd(&tryRecForTry);
         }
@@ -11261,7 +11262,7 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
         Emit(pnodeTry->sxTry.pnodeBody, byteCodeGenerator, funcInfo, fReturnValue);
         funcInfo->ReleaseLoc(pnodeTry->sxTry.pnodeBody);
 
-        if (funcInfo->byteCodeFunction->IsGenerator())
+        if (funcInfo->byteCodeFunction->IsCoroutine())
         {
             byteCodeGenerator->tryScopeRecordsList.UnlinkFromEnd();
         }
@@ -11406,14 +11407,14 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
         }
 
         ByteCodeGenerator::TryScopeRecord tryRecForCatch(Js::OpCode::ResumeCatch, catchLabel);
-        if (funcInfo->byteCodeFunction->IsGenerator())
+        if (funcInfo->byteCodeFunction->IsCoroutine())
         {
             byteCodeGenerator->tryScopeRecordsList.LinkToEnd(&tryRecForCatch);
         }
 
         Emit(pnodeCatch->sxCatch.pnodeBody, byteCodeGenerator, funcInfo, fReturnValue);
 
-        if (funcInfo->byteCodeFunction->IsGenerator())
+        if (funcInfo->byteCodeFunction->IsCoroutine())
         {
             byteCodeGenerator->tryScopeRecordsList.UnlinkFromEnd();
         }
@@ -11456,7 +11457,7 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
         // [CONSIDER][aneeshd] Ideally the TryFinallyWithYield opcode needs to be used only if there is a yield expression.
         // For now, if the function is generator we are using the TryFinallyWithYield.
         ByteCodeGenerator::TryScopeRecord tryRecForTry(Js::OpCode::TryFinallyWithYield, finallyLabel);
-        if (funcInfo->byteCodeFunction->IsGenerator())
+        if (funcInfo->byteCodeFunction->IsCoroutine())
         {
             regException = funcInfo->AcquireTmpRegister();
             regOffset = funcInfo->AcquireTmpRegister();
@@ -11473,7 +11474,7 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
         Emit(pnodeTry->sxTry.pnodeBody, byteCodeGenerator, funcInfo, fReturnValue);
         funcInfo->ReleaseLoc(pnodeTry->sxTry.pnodeBody);
 
-        if (funcInfo->byteCodeFunction->IsGenerator())
+        if (funcInfo->byteCodeFunction->IsCoroutine())
         {
             byteCodeGenerator->tryScopeRecordsList.UnlinkFromEnd();
         }
@@ -11490,7 +11491,7 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
         byteCodeGenerator->Writer()->MarkLabel(finallyLabel);
 
         ByteCodeGenerator::TryScopeRecord tryRecForFinally(Js::OpCode::ResumeFinally, finallyLabel, regException, regOffset);
-        if (funcInfo->byteCodeFunction->IsGenerator())
+        if (funcInfo->byteCodeFunction->IsCoroutine())
         {
             byteCodeGenerator->tryScopeRecordsList.LinkToEnd(&tryRecForFinally);
         }
@@ -11498,7 +11499,7 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
         Emit(pnodeFinally->sxFinally.pnodeBody, byteCodeGenerator, funcInfo, fReturnValue);
         funcInfo->ReleaseLoc(pnodeFinally->sxFinally.pnodeBody);
 
-        if (funcInfo->byteCodeFunction->IsGenerator())
+        if (funcInfo->byteCodeFunction->IsCoroutine())
         {
             byteCodeGenerator->tryScopeRecordsList.UnlinkFromEnd();
             funcInfo->ReleaseTmpRegister(regOffset);

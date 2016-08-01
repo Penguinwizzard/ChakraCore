@@ -1704,7 +1704,7 @@ bool ByteCodeGenerator::CanStackNestedFunc(FuncInfo * funcInfo, bool trace)
     char16 debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
 #endif
     Assert(!funcInfo->IsGlobalFunction());
-    bool const doStackNestedFunc = !funcInfo->HasMaybeEscapedNestedFunc() && !IsInDebugMode() && !funcInfo->byteCodeFunction->IsGenerator() && !funcInfo->byteCodeFunction->IsModule();
+    bool const doStackNestedFunc = !funcInfo->HasMaybeEscapedNestedFunc() && !IsInDebugMode() && !funcInfo->IsCoroutine() && !funcInfo->byteCodeFunction->IsModule();
     if (!doStackNestedFunc)
     {
         return false;
@@ -2359,7 +2359,7 @@ FuncInfo* PreVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerato
                     }
 #endif
                 }
-                funcInfo->SetHasHeapArguments(true, !pnode->sxFnc.IsGenerator() && doStackArgsOpt /*= Optimize arguments in backend*/);
+                funcInfo->SetHasHeapArguments(true, !pnode->sxFnc.IsGenerator() && !pnode->sxFnc.IsAsync() && doStackArgsOpt /*= Optimize arguments in backend*/);
                 if (funcInfo->inArgsCount == 0)
                 {
                     // If no formals to function, no need to create the propertyid array
@@ -4153,6 +4153,7 @@ void Bind(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
         BindFuncSymbol(pnode, byteCodeGenerator);
         if (pnode->sxFnc.IsGenerator())
         {
+            // TODO(ianhall): what about async functions?
             // Always assume generator functions escape since tracking them requires tracking
             // the resulting generators in addition to the function.
             byteCodeGenerator->FuncEscapes(byteCodeGenerator->TopFuncInfo()->GetBodyScope());
@@ -4665,6 +4666,7 @@ void AssignRegisters(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
         {
             if (pnode->sxFnc.IsGenerator())
             {
+                // TODO(ianhall): what about async functions?
                 // Assume generators always escape; otherwise need to analyze if
                 // the return value of calls to generator function, the generator
                 // objects, escape.

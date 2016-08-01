@@ -1295,6 +1295,7 @@ namespace Js
         {
             // Consider: Allow JitLoopBody in generator functions for loops that do not yield.
             return !PHASE_OFF(JITLoopBodyPhase, this) && DoFullJit() && !this->IsGenerator();
+            // TODO(ianhall): what about async functions?
         }
 
         bool IsJitLoopBodyPhaseForced() const
@@ -3123,6 +3124,7 @@ namespace Js
         bool IsGeneratorAndJitIsDisabled()
         {
             return this->IsGenerator() && !(CONFIG_ISENABLED(Js::JitES6GeneratorsFlag) && !this->GetHasTry());
+            // TODO(ianhall): what about async functions?
         }
 
         FunctionBodyFlags * GetAddressOfFlags() { return &this->flags; }

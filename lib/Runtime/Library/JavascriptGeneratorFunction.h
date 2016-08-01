@@ -95,6 +95,11 @@ namespace Js
         JavascriptAsyncFunction(DynamicType* type, GeneratorVirtualScriptFunction* scriptFunction);
 
         static JavascriptAsyncFunction* New(ScriptContext* scriptContext, GeneratorVirtualScriptFunction* scriptFunction);
+
+        static JavascriptAsyncFunction* FromVar(Var var);
+        static bool Is(Var var);
+
+        JavascriptGenerator* CreateGenerator(Arguments& stackArgs);
     };
 
     class GeneratorVirtualScriptFunction : public ScriptFunction

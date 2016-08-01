@@ -372,6 +372,8 @@ namespace Js
         JavascriptFunction* identityFunction;
         JavascriptFunction* throwerFunction;
         JavascriptFunction* promiseResolveFunction;
+        JavascriptFunction* generatorNextFunction;
+        JavascriptFunction* generatorThrowFunction;
 
         JavascriptFunction* objectValueOfFunction;
         JavascriptFunction* objectToStringFunction;
@@ -962,7 +964,7 @@ namespace Js
         JavascriptExternalFunction* CreateExternalFunction(ExternalMethod entryPointer, Var nameId, Var signature, JavascriptTypeId prototypeTypeId, UINT64 flags);
         JavascriptExternalFunction* CreateStdCallExternalFunction(StdCallJavascriptMethod entryPointer, PropertyId nameId, void *callbackState);
         JavascriptExternalFunction* CreateStdCallExternalFunction(StdCallJavascriptMethod entryPointer, Var nameId, void *callbackState);
-        JavascriptPromiseAsyncSpawnExecutorFunction* CreatePromiseAsyncSpawnExecutorFunction(JavascriptMethod entryPoint, JavascriptGeneratorFunction* generatorFunction, Var target);
+        JavascriptPromiseAsyncSpawnExecutorFunction* CreatePromiseAsyncSpawnExecutorFunction(JavascriptMethod entryPoint, JavascriptAsyncFunction* asyncFunction, Var target);
         JavascriptPromiseAsyncSpawnStepArgumentExecutorFunction* CreatePromiseAsyncSpawnStepArgumentExecutorFunction(JavascriptMethod entryPoint, JavascriptGenerator* generator, Var argument, JavascriptFunction* resolve = NULL, JavascriptFunction* reject = NULL, bool isReject = false);
         JavascriptPromiseCapabilitiesExecutorFunction* CreatePromiseCapabilitiesExecutorFunction(JavascriptMethod entryPoint, JavascriptPromiseCapability* capability);
         JavascriptPromiseResolveOrRejectFunction* CreatePromiseResolveOrRejectFunction(JavascriptMethod entryPoint, JavascriptPromise* promise, bool isReject, JavascriptPromiseResolveOrRejectFunctionAlreadyResolvedWrapper* alreadyResolvedRecord);
@@ -1018,6 +1020,8 @@ namespace Js
         RecyclableObject* CreateThrowErrorObject(JavascriptError* error);
 
         JavascriptFunction* EnsurePromiseResolveFunction();
+        JavascriptFunction* EnsureGeneratorNextFunction();
+        JavascriptFunction* EnsureGeneratorThrowFunction();
 
         void SetCrossSiteForSharedFunctionType(JavascriptFunction * function);
 

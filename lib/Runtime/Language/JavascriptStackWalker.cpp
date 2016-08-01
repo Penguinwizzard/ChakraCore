@@ -269,8 +269,9 @@ namespace Js
         }
         else 
 #endif
-            if (this->GetCurrentFunction()->GetFunctionInfo()->IsGenerator())
+             if (this->GetCurrentFunction()->GetFunctionInfo()->IsGenerator())
         {
+            // TODO(ianhall): what about async functions?
             JavascriptGenerator* gen = JavascriptGenerator::FromVar(this->GetCurrentArgv()[JavascriptFunctionArgIndex_This]);
             return gen->GetArguments().Values;
         }
@@ -1018,6 +1019,7 @@ namespace Js
         }
         else if (this->GetCurrentFunction()->GetFunctionInfo()->IsGenerator())
         {
+            // TODO(ianhall): what about async functions?
             JavascriptGenerator* gen = JavascriptGenerator::FromVar(this->GetCurrentArgv()[JavascriptFunctionArgIndex_This]);
             return &gen->GetArguments().Info;
         }
@@ -1044,6 +1046,7 @@ namespace Js
 
         if (this->GetCurrentFunction()->GetFunctionInfo()->IsGenerator())
         {
+            // TODO(ianhall): what about async functions?
             JavascriptGenerator* gen = JavascriptGenerator::FromVar(this->GetCurrentArgv()[JavascriptFunctionArgIndex_This]);
             return gen->GetArguments()[0];
         }

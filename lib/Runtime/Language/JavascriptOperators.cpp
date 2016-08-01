@@ -9660,7 +9660,7 @@ CommonNumber:
         JavascriptPromiseAsyncSpawnExecutorFunction* executor =
             library->CreatePromiseAsyncSpawnExecutorFunction(
                 JavascriptPromise::EntryJavascriptPromiseAsyncSpawnExecutorFunction,
-                JavascriptGeneratorFunction::FromVar(aGenerator),
+                JavascriptAsyncFunction::FromVar(aGenerator),
                 aThis);
         JavascriptPromise* promise = library->CreatePromise();
 

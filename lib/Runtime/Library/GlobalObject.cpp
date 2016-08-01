@@ -606,6 +606,7 @@ namespace Js
             pfuncScript = library->GetGlobalObject()->EvalHelper(scriptContext, argString->GetSz(), argString->GetLength(), moduleID,
                 grfscr, Constants::EvalCode, doRegisterDocument, isIndirect, strictMode);
             Assert(!pfuncScript->GetFunctionInfo()->IsGenerator());
+            // TODO(ianhall): what about async functions?
 
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
             Js::Utf8SourceInfo* utf8SourceInfo = pfuncScript->GetFunctionBody()->GetUtf8SourceInfo();
@@ -992,6 +993,7 @@ namespace Js
                 funcBody = funcBody->GetParseableFunctionInfo(); // RegisterFunction may parse and update function body
             }
 
+            // TODO(ianhall): what about async functions?
             ScriptFunction* pfuncScript = funcBody->IsGenerator() ?
                 scriptContext->GetLibrary()->CreateGeneratorVirtualScriptFunction(funcBody) :
                 scriptContext->GetLibrary()->CreateScriptFunction(funcBody);

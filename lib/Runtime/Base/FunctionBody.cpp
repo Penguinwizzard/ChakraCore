@@ -5851,6 +5851,7 @@ namespace Js
     {
         if (this->DoStackNestedFunc() || this->IsGenerator())
         {
+            // TODO(ianhall): what about async functions?
             return false;
         }
 
@@ -7161,6 +7162,7 @@ namespace Js
             DoInterpreterProfile() &&
             (!IsNewSimpleJit() || DoInterpreterAutoProfile()) &&
             !IsGenerator(); // Generator JIT requires bailout which SimpleJit cannot do since it skips GlobOpt
+            // TODO(ianhall): what about async functions?
     }
 
     bool FunctionBody::DoSimpleJitWithLock() const
@@ -7172,6 +7174,7 @@ namespace Js
             DoInterpreterProfileWithLock() &&
             (!IsNewSimpleJit() || DoInterpreterAutoProfile()) &&
             !IsGenerator(); // Generator JIT requires bailout which SimpleJit cannot do since it skips GlobOpt
+            // TODO(ianhall): what about async functions?
     }
 
     bool FunctionBody::DoSimpleJitDynamicProfile() const

@@ -56,7 +56,9 @@ namespace Js
             JavascriptFunction* obj = JavascriptFunction::FromVar(var);
 
             return VirtualTableInfo<JavascriptGeneratorFunction>::HasVirtualTable(obj)
-                || VirtualTableInfo<CrossSiteObject<JavascriptGeneratorFunction>>::HasVirtualTable(obj);
+                || VirtualTableInfo<CrossSiteObject<JavascriptGeneratorFunction>>::HasVirtualTable(obj)
+                || VirtualTableInfo<JavascriptAsyncFunction>::HasVirtualTable(obj)
+                || VirtualTableInfo<CrossSiteObject<JavascriptAsyncFunction>>::HasVirtualTable(obj);
         }
 
         return false;
@@ -67,6 +69,26 @@ namespace Js
         Assert(JavascriptGeneratorFunction::Is(var));
 
         return static_cast<JavascriptGeneratorFunction*>(var);
+    }
+
+    bool JavascriptAsyncFunction::Is(Var var)
+    {
+        if (JavascriptFunction::Is(var))
+        {
+            JavascriptFunction* obj = JavascriptFunction::FromVar(var);
+
+            return VirtualTableInfo<JavascriptAsyncFunction>::HasVirtualTable(obj)
+                || VirtualTableInfo<CrossSiteObject<JavascriptAsyncFunction>>::HasVirtualTable(obj);
+        }
+
+        return false;
+    }
+
+    JavascriptAsyncFunction* JavascriptAsyncFunction::FromVar(Var var)
+    {
+        Assert(JavascriptAsyncFunction::Is(var));
+
+        return static_cast<JavascriptAsyncFunction*>(var);
     }
 
     JavascriptGeneratorFunction* JavascriptGeneratorFunction::OP_NewScGenFunc(FrameDisplay *environment, FunctionProxy** proxyRef)
@@ -116,6 +138,23 @@ namespace Js
         return generator;
     }
 
+    JavascriptGenerator* JavascriptAsyncFunction::CreateGenerator(Arguments& stackArgs)
+    {
+        ScriptContext* scriptContext = this->GetScriptContext();
+
+        // InterpreterStackFrame takes a pointer to the args, so copy them to the recycler heap
+        // and use that buffer for this InterpreterStackFrame.
+        Var* argsHeapCopy = RecyclerNewArray(scriptContext->GetRecycler(), Var, stackArgs.Info.Count);
+        js_memcpy_s(argsHeapCopy, sizeof(Var) * stackArgs.Info.Count, stackArgs.Values, sizeof(Var) * stackArgs.Info.Count);
+        Arguments heapArgs(stackArgs.Info, argsHeapCopy);
+
+        // TODO(ianhall): What should the prototype be for an async function's generator? Null?
+        RecyclableObject* prototype = scriptContext->GetLibrary()->GetNull();
+        JavascriptGenerator* generator = scriptContext->GetLibrary()->CreateGenerator(heapArgs, this->GetGeneratorVirtualScriptFunction(), prototype);
+
+        return generator;
+    }
+
     Var JavascriptGeneratorFunction::EntryAsyncFunctionImplementation(RecyclableObject* function, CallInfo callInfo, ...)
     {
         PROBE_STACK(function->GetScriptContext(), Js::Constants::MinStackDefault);
@@ -130,7 +169,7 @@ namespace Js
         JavascriptPromiseAsyncSpawnExecutorFunction* executor =
             library->CreatePromiseAsyncSpawnExecutorFunction(
                 JavascriptPromise::EntryJavascriptPromiseAsyncSpawnExecutorFunction,
-                JavascriptGeneratorFunction::FromVar(function),
+                JavascriptAsyncFunction::FromVar(function),
                 stackArgs[0]);
         JavascriptPromise* promise = library->CreatePromise();
 

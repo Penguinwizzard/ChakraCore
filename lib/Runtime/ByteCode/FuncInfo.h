@@ -436,6 +436,10 @@ public:
     BOOL IsClassConstructor() const;
     BOOL IsBaseClassConstructor() const;
 
+    bool IsCoroutine() const {
+        return byteCodeFunction->IsGenerator() || byteCodeFunction->IsAsync();
+    }
+
     void RemoveTargetStmt(ParseNode* pnodeStmt) {
         targetStatements.Remove(pnodeStmt);
     }

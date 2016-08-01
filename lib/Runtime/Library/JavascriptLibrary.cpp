@@ -1085,6 +1085,8 @@ namespace Js
         booleanTypeDisplayString = CreateStringFromCppLiteral(_u("boolean"));
         numberTypeDisplayString = CreateStringFromCppLiteral(_u("number"));
         promiseResolveFunction = nullptr;
+        generatorNextFunction = nullptr;
+        generatorThrowFunction = nullptr;
 
 #ifdef ENABLE_SIMDJS
         if (GetScriptContext()->GetConfig()->IsSimdjsEnabled())
@@ -2184,12 +2186,31 @@ namespace Js
         {
             library->AddMember(generatorPrototype, PropertyIds::_symbolToStringTag, library->CreateStringFromCppLiteral(_u("Generator")), PropertyConfigurable);
         }
-        library->AddFunctionToLibraryObject(generatorPrototype, PropertyIds::next, &JavascriptGenerator::EntryInfo::Next, 1);
         library->AddFunctionToLibraryObject(generatorPrototype, PropertyIds::return_, &JavascriptGenerator::EntryInfo::Return, 1);
-        library->AddFunctionToLibraryObject(generatorPrototype, PropertyIds::throw_, &JavascriptGenerator::EntryInfo::Throw, 1);
+        library->AddMember(generatorPrototype, PropertyIds::next, library->EnsureGeneratorNextFunction(), PropertyBuiltInMethodDefaults);
+        library->AddMember(generatorPrototype, PropertyIds::throw_, library->EnsureGeneratorThrowFunction(), PropertyBuiltInMethodDefaults);
 
         generatorPrototype->SetHasNoEnumerableProperties(true);
     }
+
+    JavascriptFunction* JavascriptLibrary::EnsureGeneratorNextFunction()
+    {
+        if (generatorNextFunction == nullptr)
+        {
+            generatorNextFunction = DefaultCreateFunction(&JavascriptGenerator::EntryInfo::Next, 1, nullptr, nullptr, PropertyIds::next);
+        }
+        return generatorNextFunction;
+    }
+
+    JavascriptFunction* JavascriptLibrary::EnsureGeneratorThrowFunction()
+    {
+        if (generatorThrowFunction == nullptr)
+        {
+            generatorThrowFunction = DefaultCreateFunction(&JavascriptGenerator::EntryInfo::Throw, 1, nullptr, nullptr, PropertyIds::throw_);
+        }
+        return generatorThrowFunction;
+    }
+
 
     void JavascriptLibrary::InitializeAsyncFunctionConstructor(DynamicObject* asyncFunctionConstructor, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
     {
@@ -5697,11 +5718,11 @@ namespace Js
         return RecyclerNew(this->GetRecycler(), JavascriptPromise, promiseType);
     }
 
-    JavascriptPromiseAsyncSpawnExecutorFunction* JavascriptLibrary::CreatePromiseAsyncSpawnExecutorFunction(JavascriptMethod entryPoint, JavascriptGeneratorFunction* generatorFunction, Var target)
+    JavascriptPromiseAsyncSpawnExecutorFunction* JavascriptLibrary::CreatePromiseAsyncSpawnExecutorFunction(JavascriptMethod entryPoint, JavascriptAsyncFunction* asyncFunction, Var target)
     {
         FunctionInfo* functionInfo = RecyclerNew(this->GetRecycler(), FunctionInfo, entryPoint);
         DynamicType* type = CreateDeferredPrototypeFunctionType(this->inDispatchProfileMode ? ProfileEntryThunk : entryPoint);
-        JavascriptPromiseAsyncSpawnExecutorFunction* function = RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptPromiseAsyncSpawnExecutorFunction, type, functionInfo, generatorFunction, target);
+        JavascriptPromiseAsyncSpawnExecutorFunction* function = RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptPromiseAsyncSpawnExecutorFunction, type, functionInfo, asyncFunction, target);
 
         return function;
     }
