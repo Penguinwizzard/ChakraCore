@@ -39,8 +39,10 @@ add_subdirectory(Core)
   
 target_include_directories (
     Chakra.Jsrt PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
+    ../Backend
     ../Runtime
     ../Runtime/Base
+    ../Runtime/ByteCode
     ../Runtime/Debug
     ../Parser
     )
