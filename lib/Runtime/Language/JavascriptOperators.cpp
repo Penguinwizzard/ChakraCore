@@ -8197,9 +8197,9 @@ CommonNumber:
             return false;
         }
 
-        if (guard->GetType()->GetScriptContext() != type->GetScriptContext())
+        if (!guard->IsInvalidatedDuringSweep() && guard->GetType()->GetScriptContext() != type->GetScriptContext())
         {
-            // Can't cache cross-context objects
+            // For valid guard value, can't cache cross-context objects
             return false;
         }
 
@@ -8215,6 +8215,17 @@ CommonNumber:
         if (type == equivTypes[0] || type == equivTypes[1] || type == equivTypes[2] || type == equivTypes[3] ||
             type == equivTypes[4] || type == equivTypes[5] || type == equivTypes[6] || type == equivTypes[7])
         {
+#if DBG
+            if (PHASE_TRACE1(Js::EquivObjTypeSpecPhase))
+            {
+                if (guard->WasReincarnated())
+                {
+                    Output::Print(_u("EquivObjTypeSpec: Guard 0x%p was reincarnated and working now \n"), guard);
+                    Output::Flush();
+                }
+            }
+#endif
+            
             guard->SetType(type);
             return true;
         }
@@ -8233,6 +8244,12 @@ CommonNumber:
         Type* refType = equivTypes[0];
         if (refType == nullptr)
         {
+#if DBG
+            for (int i = 1;i < EQUIVALENT_TYPE_CACHE_SIZE;i++)
+            {
+                AssertMsg(equivTypes[i] == nullptr, "In equiv typed caches, if first element is nullptr, all others should be nullptr");
+            }
+#endif
             return false;
         }
 
@@ -8292,38 +8309,66 @@ CommonNumber:
             return false;
         }
 
-        // CONSIDER (EquivObjTypeSpec): Invent some form of least recently used eviction scheme.
-        uintptr_t index = (reinterpret_cast<uintptr_t>(type) >> 4) & (EQUIVALENT_TYPE_CACHE_SIZE - 1);
-        if (cache->nextEvictionVictim == EQUIVALENT_TYPE_CACHE_SIZE)
+        int emptySlotIndex = -1;
+        for (int i = 0;i < EQUIVALENT_TYPE_CACHE_SIZE;i++)
         {
-            __analysis_assume(index < EQUIVALENT_TYPE_CACHE_SIZE);
-            if (equivTypes[index] != nullptr)
+            if (equivTypes[i] == nullptr)
             {
-                uintptr_t initialIndex = index;
-                index = (initialIndex + 1) & (EQUIVALENT_TYPE_CACHE_SIZE - 1);
-                for (; index != initialIndex; index = (index + 1) & (EQUIVALENT_TYPE_CACHE_SIZE - 1))
-                {
-                    if (equivTypes[index] == nullptr) break;
-                }
-            }
-            __analysis_assume(index < EQUIVALENT_TYPE_CACHE_SIZE);
-            if (equivTypes[index] != nullptr)
+                emptySlotIndex = i;
+                break;
+            };
+        }
+
+        // We have some empty slots, let us use those first
+        if (emptySlotIndex != -1)
+        {
+            if (PHASE_TRACE1(Js::EquivObjTypeSpecPhase))
             {
-                cache->nextEvictionVictim = 0;
+                Output::Print(_u("EquivObjTypeSpec: Saving type in unused slot of equiv types cache. \n"));
+                Output::Flush();
             }
+            equivTypes[emptySlotIndex] = type;
         }
         else
         {
-            Assert(cache->nextEvictionVictim < EQUIVALENT_TYPE_CACHE_SIZE);
-            __analysis_assume(cache->nextEvictionVictim < EQUIVALENT_TYPE_CACHE_SIZE);
-            equivTypes[cache->nextEvictionVictim] = equivTypes[index];
-            cache->nextEvictionVictim = (cache->nextEvictionVictim + 1) & (EQUIVALENT_TYPE_CACHE_SIZE - 1);
+            // CONSIDER (EquivObjTypeSpec): Invent some form of least recently used eviction scheme.
+            uintptr_t index = (reinterpret_cast<uintptr_t>(type) >> 4) & (EQUIVALENT_TYPE_CACHE_SIZE - 1);
+            if (cache->nextEvictionVictim == EQUIVALENT_TYPE_CACHE_SIZE)
+            {
+                __analysis_assume(index < EQUIVALENT_TYPE_CACHE_SIZE);
+                if (equivTypes[index] != nullptr)
+                {
+                    uintptr_t initialIndex = index;
+                    index = (initialIndex + 1) & (EQUIVALENT_TYPE_CACHE_SIZE - 1);
+                    for (; index != initialIndex; index = (index + 1) & (EQUIVALENT_TYPE_CACHE_SIZE - 1))
+                    {
+                        if (equivTypes[index] == nullptr) break;
+                    }
+                }
+                __analysis_assume(index < EQUIVALENT_TYPE_CACHE_SIZE);
+                if (equivTypes[index] != nullptr)
+                {
+                    cache->nextEvictionVictim = 0;
+                }
+            }
+            else
+            {
+                Assert(cache->nextEvictionVictim < EQUIVALENT_TYPE_CACHE_SIZE);
+                __analysis_assume(cache->nextEvictionVictim < EQUIVALENT_TYPE_CACHE_SIZE);
+                equivTypes[cache->nextEvictionVictim] = equivTypes[index];
+                cache->nextEvictionVictim = (cache->nextEvictionVictim + 1) & (EQUIVALENT_TYPE_CACHE_SIZE - 1);
+            }
+
+            if (PHASE_TRACE1(Js::EquivObjTypeSpecPhase))
+            {
+                Output::Print(_u("EquivObjTypeSpec: Saving type in used slot of equiv types cache at index = %d. NextEvictionVictim = %d. \n"), index, cache->nextEvictionVictim);
+                Output::Flush();
+            }
+            Assert(index < EQUIVALENT_TYPE_CACHE_SIZE);
+            __analysis_assume(index < EQUIVALENT_TYPE_CACHE_SIZE);
+            equivTypes[index] = type;
         }
-
-        Assert(index < EQUIVALENT_TYPE_CACHE_SIZE);
-        __analysis_assume(index < EQUIVALENT_TYPE_CACHE_SIZE);
-        equivTypes[index] = type;
-
+        
         // Fixed field checks allow us to assume a specific type ID, but the assumption is only
         // valid if we lock the type. Otherwise, the type ID may change out from under us without
         // evolving the type.
