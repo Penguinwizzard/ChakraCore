@@ -3199,9 +3199,9 @@ error_erange:
  * _SizeInBytes/_SizeInWords must be <= (INT_MAX / sizeof(char/WCHAR));
  * cannot be used without safecrt.lib
  */
-_SAFECRT__EXTERN_C
+EXTERN_C
 int __cdecl sprintf_s(char *_Dst, size_t _SizeInBytes, const char *_Format, ...);
-_SAFECRT__EXTERN_C
+EXTERN_C
 int __cdecl vsprintf_s(char *_Dst, size_t _SizeInBytes, const char *_Format, va_list _ArgList);
 
 #if defined(__cplusplus) && _SAFECRT_USE_CPP_OVERLOADS
@@ -3228,9 +3228,9 @@ int __cdecl vsprintf_s(char (&_Dst)[_SizeInBytes], const char *_Format, va_list 
 /* no inline version of sprintf_s, vsprintf_s */
 
 /* swprintf_s, vswprintf_s */
-_SAFECRT__EXTERN_C
+EXTERN_C
 int __cdecl swprintf_s(WCHAR *_Dst, size_t _SizeInWords, const WCHAR *_Format, ...);
-_SAFECRT__EXTERN_C
+EXTERN_C
 int __cdecl vswprintf_s(WCHAR *_Dst, size_t _SizeInWords, const WCHAR *_Format, va_list _ArgList);
 
 #if defined(__cplusplus) && _SAFECRT_USE_CPP_OVERLOADS
