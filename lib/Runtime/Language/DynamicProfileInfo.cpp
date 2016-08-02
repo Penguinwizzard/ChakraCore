@@ -338,7 +338,7 @@ namespace Js
         }
         else
         {
-            Assert(directEntryPoint == ProfileEntryThunk || functionBody->GetScriptContext()->IsNativeAddress(directEntryPoint));
+            Assert(directEntryPoint == ProfileEntryThunk || functionBody->GetScriptContext()->IsNativeAddress((void*)directEntryPoint));
             Assert(functionBody->HasExecutionDynamicProfileInfo());
         }
 

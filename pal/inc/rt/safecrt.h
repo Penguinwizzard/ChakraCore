@@ -3235,7 +3235,7 @@ int __cdecl swprintf_s(WCHAR (&_Dst)[_SizeInWords], const WCHAR *_Format, ...)
 
 template <size_t _SizeInWords>
 inline
-int __cdecl vswprintf_s(char (&_Dst)[_SizeInWords], const char *_Format, va_list _ArgList)
+int __cdecl vswprintf_s(WCHAR (&_Dst)[_SizeInWords], const WCHAR *_Format, va_list _ArgList)
 {
     return vswprintf_s(_Dst, _SizeInWords, _Format, _ArgList);
 }

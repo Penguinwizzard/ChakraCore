@@ -379,13 +379,13 @@ namespace Js
             }
         }
 
-        Assert(cache->GetSize() < MAXUINT16);
+        Assert(cache->GetSize() < UINT16_MAX);
         Js::InlineCache* inlineCaches = cache->GetInlineCaches();
         Js::DynamicObject* prototypeObject = nullptr;
         Js::DynamicObject* accessorOwnerObject = nullptr;
         Js::TypeId typeId = TypeIds_Limit;
         uint16 polyCacheSize = (uint16)cache->GetSize();
-        uint16 firstNonEmptyCacheIndex = MAXUINT16;
+        uint16 firstNonEmptyCacheIndex = UINT16_MAX;
         uint16 slotIndex = 0;
         bool areEquivalent = true;
         bool usesAuxSlot = false;
@@ -403,7 +403,7 @@ namespace Js
             InlineCache& inlineCache = inlineCaches[i];
             if (inlineCache.IsEmpty()) continue;
 
-            if (firstNonEmptyCacheIndex == MAXUINT16)
+            if (firstNonEmptyCacheIndex == UINT16_MAX)
             {
                 if (inlineCache.IsLocal())
                 {
@@ -489,7 +489,7 @@ namespace Js
             typeCount++;
         }
 
-        if (firstNonEmptyCacheIndex == MAXUINT16)
+        if (firstNonEmptyCacheIndex == UINT16_MAX)
         {
             IncInlineCacheCount(emptyPolyInlineCacheCount);
             return nullptr;

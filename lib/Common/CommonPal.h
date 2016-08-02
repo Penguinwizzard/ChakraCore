@@ -131,6 +131,7 @@ inline void DebugBreak()
 #undef sprintf_s
 // #define sprintf_s PAL_sprintf_s
 #undef swprintf_s
+#undef vswprintf_s
 
 // PAL LoadLibraryExW not supported
 #define LOAD_LIBRARY_SEARCH_SYSTEM32     0

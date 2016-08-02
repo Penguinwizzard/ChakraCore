@@ -7124,7 +7124,7 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
         if (m_functionBody->HasCachedScopePropIds())
         {
             const Js::PropertyIdArray *propIds = this->m_functionBody->GetFormalsPropIdArray();
-                
+
             Var funcExpr = this->GetFunctionExpression();
             PropertyId objectId = ActivationObjectEx::GetLiteralObjectRef(propIds);
             scopeObject = JavascriptOperators::OP_InitCachedScope(funcExpr, propIds,
@@ -7676,7 +7676,7 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
         // value is out of bound
         if (throws)
         {
-            JavascriptError::ThrowRangeError(scriptContext, JSERR_ArgumentOutOfRange, L"SIMD.Int32x4.FromFloat32x4");
+            JavascriptError::ThrowRangeError(scriptContext, JSERR_ArgumentOutOfRange, _u("SIMD.Int32x4.FromFloat32x4"));
         }
         SetRegRawSimd(playout->U4_0, result);
     }
@@ -8463,7 +8463,7 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
                 }
                 Assert(propIds != nullptr);
                 SetLocalClosure(frameObject);
-                
+
                 if (PHASE_VERBOSE_TRACE1(Js::StackArgFormalsOptPhase) && m_functionBody->GetInParamsCount() > 1)
                 {
                     Output::Print(_u("StackArgFormals : %s (%d) :Creating scope object in the bail out path. \n"), m_functionBody->GetDisplayName(), m_functionBody->GetFunctionNumber());
@@ -8483,12 +8483,12 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
                 Output::Flush();
             }
         }
-        
+
         if (heapArgObj)
         {
             heapArgObj->SetFormalCount(formalsCount);
             heapArgObj->SetFrameObject(frameObject);
-            
+
             if (PHASE_TRACE1(Js::StackArgFormalsOptPhase) && formalsCount > 0)
             {
                 Output::Print(_u("StackArgFormals : %s (%d) :Attaching the scope object with the heap arguments object in the bail out path. \n"), m_functionBody->GetDisplayName(), m_functionBody->GetFunctionNumber());

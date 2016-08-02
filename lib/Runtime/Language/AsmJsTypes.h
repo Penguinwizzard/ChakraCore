@@ -699,7 +699,7 @@ namespace Js
         {
             if( !mConstMap.ContainsKey( val ) )
             {
-                mConstMap.Add( val, AcquireConstRegister() );
+                mConstMap.Add( val, this->AcquireConstRegister() );
             }
         }
 
