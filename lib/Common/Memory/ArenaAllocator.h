@@ -472,7 +472,6 @@ public:
             return ArenaAllocatorBase::RealAllocInlined(requestedBytes);
         }
         return ArenaAllocator::Alloc(requestedBytes);
-
     }
 
     void Free(void * buffer, size_t byteSize)
