@@ -1706,6 +1706,12 @@ namespace Js
 
         friend class ByteCodeBufferBuilder;
         friend class ByteCodeBufferReader;
+#ifdef DYNAMIC_PROFILE_MUTATOR
+        friend DynamicProfileMutator;
+        friend DynamicProfileMutatorImpl;
+#endif
+        friend class RemoteFunctionBody;
+
         public:
             // same as MachDouble, used in the Func.h
             static const uint DIAGLOCALSLOTSIZE = 8;
@@ -3144,12 +3150,6 @@ namespace Js
 
         void EnsureAuxStatementData();
         StatementAdjustmentRecordList* GetStatementAdjustmentRecords();
-
-#ifdef DYNAMIC_PROFILE_MUTATOR
-        friend class DynamicProfileMutator;
-        friend class DynamicProfileMutatorImpl;
-#endif
-        friend class RemoteFunctionBody;
     };
 
     typedef SynchronizableList<FunctionBody*, JsUtil::List<FunctionBody*, ArenaAllocator, false, Js::FreeListedRemovePolicy> > FunctionBodyList;

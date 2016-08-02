@@ -1660,7 +1660,7 @@ namespace Js
     }
 #endif
 
-    bool InterpreterStackFrame::IsDelayDynamicInterpreterThunk(void * entryPoint)
+    bool InterpreterStackFrame::IsDelayDynamicInterpreterThunk(JavascriptMethod entryPoint)
     {
         return
 #if DYNAMIC_INTERPRETER_THUNK
@@ -1776,7 +1776,7 @@ namespace Js
 #if ENABLE_PROFILE_INFO
         DynamicProfileInfo * dynamicProfileInfo = nullptr;
         const bool doProfile = executeFunction->GetInterpreterExecutionMode(false) == ExecutionMode::ProfilingInterpreter ||
-                               executeFunction->IsInDebugMode() && DynamicProfileInfo::IsEnabled(executeFunction);
+                               (executeFunction->IsInDebugMode() && DynamicProfileInfo::IsEnabled(executeFunction));
         if (doProfile)
         {
 #if !DYNAMIC_INTERPRETER_THUNK
@@ -2054,18 +2054,18 @@ namespace Js
         {
         case Js::AsmJsRetType::Double:
         {
-            entryPoint = (AsmJsInterpreterDoubleEP)Js::InterpreterStackFrame::AsmJsInterpreter < double > ;
+            entryPoint = (void*)(AsmJsInterpreterDoubleEP)Js::InterpreterStackFrame::AsmJsInterpreter < double > ;
             break;
         }
         case Js::AsmJsRetType::Float:
         {
-            entryPoint = (AsmJsInterpreterFloatEP)Js::InterpreterStackFrame::AsmJsInterpreter < float > ;
+            entryPoint = (void*)(AsmJsInterpreterFloatEP)Js::InterpreterStackFrame::AsmJsInterpreter < float > ;
             break;
         }
         case Js::AsmJsRetType::Signed:
         case Js::AsmJsRetType::Void:
         {
-            entryPoint = (AsmJsInterpreterIntEP)Js::InterpreterStackFrame::AsmJsInterpreter < int > ;
+            entryPoint = (void*)(AsmJsInterpreterIntEP)Js::InterpreterStackFrame::AsmJsInterpreter < int > ;
             break;
         }
         case Js::AsmJsRetType::Int32x4:
@@ -2080,7 +2080,7 @@ namespace Js
         case Js::AsmJsRetType::Uint16x8:
         case Js::AsmJsRetType::Uint8x16:
         {
-            entryPoint = Js::InterpreterStackFrame::AsmJsInterpreterSimdJs;
+            entryPoint = (void*)Js::InterpreterStackFrame::AsmJsInterpreterSimdJs;
             break;
         }
         default:
@@ -2595,45 +2595,48 @@ namespace Js
             (*(ArrayBuffer**)arrayBufferPtr)->SetIsAsmJsBuffer();
         }
         threadContext->SetDisableImplicitFlags(prevDisableImplicitFlags);
-        threadContext->SetImplicitCallFlags(saveImplicitcallFlags);
-        FrameDisplay* pDisplay = RecyclerNewPlus(scriptContext->GetRecycler(), sizeof(void*), FrameDisplay, 1);
-        pDisplay->SetItem( 0, moduleMemoryPtr );
-        for (int i = 0; i < info->GetFunctionCount(); i++)
-        {
-            const auto& modFunc = info->GetFunction(i);
-
-            // TODO: add more runtime checks here
-            auto proxy = m_functionBody->GetNestedFuncReference(i);
-
-            AsmJsScriptFunction* scriptFuncObj = (AsmJsScriptFunction*)ScriptFunction::OP_NewScFunc(pDisplay, (FunctionProxy**)proxy);
-            localModuleFunctions[modFunc.location] = scriptFuncObj;
-            if (i == 0 && info->GetUsesChangeHeap())
+        threadContext->SetImplicitCallFlags(saveImplicitcallFlags);        
+        // scope
+        {            
+            FrameDisplay* pDisplay = RecyclerNewPlus(scriptContext->GetRecycler(), sizeof(void*), FrameDisplay, 1);
+            pDisplay->SetItem( 0, moduleMemoryPtr );
+            for (int i = 0; i < info->GetFunctionCount(); i++)
             {
-                scriptFuncObj->GetDynamicType()->SetEntryPoint(AsmJsChangeHeapBuffer);
-            }
-            else
-            {
-                if (scriptFuncObj->GetDynamicType()->GetEntryPoint() == DefaultDeferredDeserializeThunk)
+                const auto& modFunc = info->GetFunction(i);
+
+                // TODO: add more runtime checks here
+                auto proxy = m_functionBody->GetNestedFuncReference(i);
+
+                AsmJsScriptFunction* scriptFuncObj = (AsmJsScriptFunction*)ScriptFunction::OP_NewScFunc(pDisplay, (FunctionProxy**)proxy);
+                localModuleFunctions[modFunc.location] = scriptFuncObj;
+                if (i == 0 && info->GetUsesChangeHeap())
                 {
-                    JavascriptFunction::DeferredDeserialize(scriptFuncObj);
+                    scriptFuncObj->GetDynamicType()->SetEntryPoint(AsmJsChangeHeapBuffer);
                 }
-                scriptFuncObj->GetDynamicType()->SetEntryPoint(AsmJsExternalEntryPoint);
-                scriptFuncObj->GetFunctionBody()->GetAsmJsFunctionInfo()->SetModuleFunctionBody(asmJsModuleFunctionBody);
-            }
-            scriptFuncObj->SetModuleMemory(moduleMemoryPtr);
-            if (!info->IsRuntimeProcessed())
-            {
-                // don't reset entrypoint upon relinking
-                FunctionEntryPointInfo* entrypointInfo = (FunctionEntryPointInfo*)scriptFuncObj->GetEntryPointInfo();
-                entrypointInfo->SetIsAsmJSFunction(true);
-                entrypointInfo->SetModuleAddress((uintptr_t)moduleMemoryPtr);
-
-#if DYNAMIC_INTERPRETER_THUNK
-                if (!PHASE_ON1(AsmJsJITTemplatePhase))
+                else
                 {
-                    entrypointInfo->jsMethod = AsmJsDefaultEntryThunk;
+                    if (scriptFuncObj->GetDynamicType()->GetEntryPoint() == DefaultDeferredDeserializeThunk)
+                    {
+                        JavascriptFunction::DeferredDeserialize(scriptFuncObj);
+                    }
+                    scriptFuncObj->GetDynamicType()->SetEntryPoint(AsmJsExternalEntryPoint);
+                    scriptFuncObj->GetFunctionBody()->GetAsmJsFunctionInfo()->SetModuleFunctionBody(asmJsModuleFunctionBody);
                 }
-#endif
+                scriptFuncObj->SetModuleMemory(moduleMemoryPtr);
+                if (!info->IsRuntimeProcessed())
+                {
+                    // don't reset entrypoint upon relinking
+                    FunctionEntryPointInfo* entrypointInfo = (FunctionEntryPointInfo*)scriptFuncObj->GetEntryPointInfo();
+                    entrypointInfo->SetIsAsmJSFunction(true);
+                    entrypointInfo->SetModuleAddress((uintptr_t)moduleMemoryPtr);
+
+    #if DYNAMIC_INTERPRETER_THUNK
+                    if (!PHASE_ON1(AsmJsJITTemplatePhase))
+                    {
+                        entrypointInfo->jsMethod = AsmJsDefaultEntryThunk;
+                    }
+    #endif
+                }
             }
         }
 
@@ -2693,9 +2696,11 @@ namespace Js
 
 
         // export only 1 function
-        Var exportFunc = localModuleFunctions[info->GetExportFunctionIndex()];
-        SetReg((RegSlot)0, exportFunc);
-        return exportFunc;
+        {
+            Var exportFunc = localModuleFunctions[info->GetExportFunctionIndex()];
+            SetReg((RegSlot)0, exportFunc);
+            return exportFunc;
+        }
 
     linkFailure:
         threadContext->SetDisableImplicitFlags(prevDisableImplicitFlags);
@@ -2720,7 +2725,7 @@ namespace Js
         ScriptFunction::ReparseAsmJsModule(&funcObj);
         const bool doProfile =
             funcObj->GetFunctionBody()->GetInterpreterExecutionMode(false) == ExecutionMode::ProfilingInterpreter ||
-            funcObj->GetFunctionBody()->IsInDebugMode() && DynamicProfileInfo::IsEnabled(funcObj->GetFunctionBody());
+            (funcObj->GetFunctionBody()->IsInDebugMode() && DynamicProfileInfo::IsEnabled(funcObj->GetFunctionBody()));
 
         DynamicProfileInfo * dynamicProfileInfo = nullptr;
         if (doProfile)
@@ -2754,7 +2759,7 @@ namespace Js
         }
 
 #if DBG
-        Js::RecyclableObject * invalidStackVar = (Js::RecyclableObject*)_alloca(sizeof(Js::RecyclableObject));
+        Var invalidStackVar = (Js::RecyclableObject*)_alloca(sizeof(Js::RecyclableObject));
         memset(invalidStackVar, 0xFE, sizeof(Js::RecyclableObject));
         InterpreterStackFrame * newInstance = newInstance = setup.InitializeAllocation(allocation, funcObj->GetFunctionBody()->GetHasImplicitArgIns(), doProfile, nullptr, stackAddr, invalidStackVar);
 #else
