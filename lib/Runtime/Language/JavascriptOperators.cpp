@@ -8230,7 +8230,15 @@ CommonNumber:
         //    same prototype, any of the equivalent fixed properties will match. If any has been overwritten, the
         //    corresponding guard would have been invalidated and we would bail out (as above).
 
-        Type* refType = equivTypes[0];
+        Type* refType = nullptr;
+        for (uint16 equivTypeIndex = 0; equivTypeIndex < EQUIVALENT_TYPE_CACHE_SIZE; equivTypeIndex++)
+        {
+            if (equivTypes[equivTypeIndex] != nullptr)
+            {
+                refType = equivTypes[equivTypeIndex];
+                break;
+            }
+        }
         if (refType == nullptr)
         {
             return false;
