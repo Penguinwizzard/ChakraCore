@@ -614,7 +614,7 @@ public:
         Assert(allocator);
 
         return
-            copyHeadSegment && headSegmentSym || copyHeadSegmentLength && headSegmentLengthSym || copyLength && lengthSym
+            (copyHeadSegment && headSegmentSym) || (copyHeadSegmentLength && headSegmentLengthSym) || (copyLength && lengthSym)
                 ? New(
                     allocator,
                     Type(),
@@ -1131,8 +1131,8 @@ public:
 
         return
             killsAllArrays ||
-            killsArraysWithNoMissingValues && valueType.HasNoMissingValues() ||
-            killsNativeArrays && !valueType.HasVarElements();
+            (killsArraysWithNoMissingValues && valueType.HasNoMissingValues()) ||
+            (killsNativeArrays && !valueType.HasVarElements());
     }
 
     bool AreSubsetOf(const JsArrayKills &other) const

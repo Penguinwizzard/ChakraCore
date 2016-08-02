@@ -192,7 +192,9 @@ public:
 #if _M_X64
         Assert(offset == 0);
         Assert(XDATA_SIZE >= size);
+#if PDATA_ENABLED
         js_memcpy_s(GetAllocation()->allocation->xdata.address, XDATA_SIZE, unwindInfo, size);
+#endif
         return 0;
 #else
         BYTE *xdataFinal = GetAllocation()->allocation->xdata.address + offset;
@@ -273,7 +275,7 @@ public:
     void GetEntryPointAddress(void** entrypoint, ptrdiff_t *size) override
     {
          Assert(entrypoint);
-         *entrypoint = this->GetEntryPoint()->jsMethod;
+         *entrypoint = (void*)this->GetEntryPoint()->jsMethod;
          *size = this->GetEntryPoint()->GetCodeSize();
     }
 

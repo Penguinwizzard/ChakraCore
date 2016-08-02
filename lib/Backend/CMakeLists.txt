@@ -1,6 +1,7 @@
 add_library (Chakra.Backend
     AgenPeeps.cpp
     Backend.cpp
+    BackendApi.cpp
     BackendOpCodeAttrAsmJs.cpp
     BackwardPass.cpp
     BailOut.cpp
@@ -55,24 +56,31 @@ add_library (Chakra.Backend
     SymTable.cpp
     TempTracker.cpp
     ValueRelativeOffset.cpp
-    amd64\EncoderMD.cpp
-    amd64\LinearScanMD.cpp
-    amd64\LowererMDArch.cpp
-    amd64\PeepsMD.cpp
-    amd64\PrologEncoderMD.cpp
-    arm64\EncoderMD.cpp
-    arm64\LowerMD.cpp
-    arm\EncoderMD.cpp
-    arm\LegalizeMD.cpp
-    arm\LinearScanMD.cpp
-    arm\LowerMD.cpp
-    arm\PeepsMD.cpp
-    arm\UnwindInfoManager.cpp
-    i386\EncoderMD.cpp
-    i386\LinearScanMD.cpp
-    i386\LowererMDArch.cpp
-    i386\PeepsMD.cpp
+    amd64/EncoderMD.cpp
+    amd64/LinearScanMD.cpp
+    amd64/LowererMDArch.cpp
+    amd64/PeepsMD.cpp
+    amd64/PrologEncoderMD.cpp
+#    arm64/EncoderMD.cpp
+#    arm64/LowerMD.cpp
+#    arm/EncoderMD.cpp
+#    arm/LegalizeMD.cpp
+#    arm/LinearScanMD.cpp
+#    arm/LowerMD.cpp
+#    arm/PeepsMD.cpp
+#    arm/UnwindInfoManager.cpp
+#    i386/EncoderMD.cpp
+#    i386/LinearScanMD.cpp
+#    i386/LowererMDArch.cpp
+#    i386/PeepsMD.cpp
     )
 
 target_include_directories (
-    Chakra.Backend PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+    Chakra.Backend PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
+    amd64
+    ../Common
+    ../Runtime
+    ../Runtime/ByteCode
+    ../Runtime/Math
+    ../Parser    
+    )

@@ -560,7 +560,7 @@ namespace JsUtil
         template<class TMapFunction>
         void ReverseMap(TMapFunction map)
         {
-            for (int i = count - 1; i >= 0; i--)
+            for (int i = this->count - 1; i >= 0; i--)
             {
                 if (TRemovePolicyType::IsItemValid(this->buffer[i]))
                 {
