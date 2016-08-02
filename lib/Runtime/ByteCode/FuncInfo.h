@@ -490,7 +490,7 @@ public:
         return reg;
     }
 
-    Js::RegSlot AssignThisRegister()
+    /*Js::RegSlot AssignThisRegister()
     {
         Assert(this->thisSymbol);
         if (this->thisSymbol->GetLocation() == Js::Constants::NoRegister)
@@ -498,7 +498,7 @@ public:
             this->thisSymbol->SetLocation(NextVarRegister());
         }
         return this->thisSymbol->GetLocation();
-    }
+    }*/
 
     Js::RegSlot AssignSuperRegister()
     {

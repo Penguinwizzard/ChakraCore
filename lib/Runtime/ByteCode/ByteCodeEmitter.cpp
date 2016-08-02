@@ -1939,7 +1939,7 @@ void ByteCodeGenerator::LoadAllConstants(FuncInfo *funcInfo)
         byteCodeFunction->MapAndSetEnvRegister(funcInfo->GetEnvRegister());
         if (funcInfo->GetIsTopLevelEventHandler())
         {
-            byteCodeFunction->MapAndSetThisRegisterForEventHandler(funcInfo->thisPointerRegister);
+            byteCodeFunction->MapAndSetThisRegisterForEventHandler(funcInfo->GetThisSymbol()->GetLocation());
             // The environment is the namespace hierarchy starting with "this".
             Assert(!funcInfo->RegIsConst(funcInfo->GetEnvRegister()));
             thisLoadedFromParams = true;
@@ -2179,7 +2179,7 @@ void ByteCodeGenerator::LoadNewTargetObject(FuncInfo *funcInfo)
         else
         {
             Js::PropertyId slot = scope->GetFunc()->newTargetScopeSlot;
-            EmitInternalScopedSlotLoad(funcInfo, scope, envIndex, slot, funcInfo->newTargetRegister);
+            EmitInternalScopedSlotLoad(funcInfo, envIndex, slot, funcInfo->newTargetRegister, scope);
         }
     }
     else if ((funcInfo->IsGlobalFunction() || funcInfo->IsLambda()) && (this->flags & fscrEval))
@@ -2217,6 +2217,9 @@ void ByteCodeGenerator::LoadNewTargetObject(FuncInfo *funcInfo)
 void ByteCodeGenerator::EmitScopeSlotLoadThis(FuncInfo *funcInfo, Js::RegSlot regLoc, bool chkUndecl)
 {
     FuncInfo* nonLambdaFunc = funcInfo;
+    Assert(funcInfo->GetThisSymbol());
+
+    Js::RegSlot thisRegister = funcInfo->GetThisSymbol()->GetLocation();
     if (funcInfo->IsLambda())
     {
         nonLambdaFunc = FindEnclosingNonLambda();
@@ -2232,11 +2235,11 @@ void ByteCodeGenerator::EmitScopeSlotLoadThis(FuncInfo *funcInfo, Js::RegSlot re
         {
             Js::PropertyId slot = nonLambdaFunc->thisScopeSlot;
 
-            EmitInternalScopedSlotLoad(funcInfo, slot, regLoc, chkUndecl);
+            EmitPropLoad(regLoc, funcInfo->GetThisSymbol(), funcInfo->GetThisSymbol()->GetPid());
         }
-        else if (funcInfo->thisPointerRegister != Js::Constants::NoRegister && chkUndecl)
+        else if (funcInfo->GetThisSymbol() && chkUndecl)
         {
-            this->m_writer.Reg1(Js::OpCode::ChkUndecl, funcInfo->thisPointerRegister);
+            this->m_writer.Reg1(Js::OpCode::ChkUndecl, funcInfo->GetThisSymbol()->GetLocation());
         }
         else if (chkUndecl)
         {
@@ -2268,13 +2271,13 @@ void ByteCodeGenerator::EmitScopeSlotLoadThis(FuncInfo *funcInfo, Js::RegSlot re
 
         // CONSIDER [tawoll] - Should we add a ByteCodeGenerator flag (fscrEvalWithClassConstructorParent) and avoid doing this runtime check?
         Js::ByteCodeLabel skipLabel = this->Writer()->DefineLabel();
-        this->Writer()->BrReg1(Js::OpCode::BrNotUndecl_A, skipLabel, funcInfo->thisPointerRegister);
+        this->Writer()->BrReg1(Js::OpCode::BrNotUndecl_A, skipLabel, funcInfo->GetThisSymbol()->GetLocation());
 
         uint cacheId = funcInfo->FindOrAddInlineCacheId(scopeLocation, Js::PropertyIds::_lexicalThisSlotSymbol, false, false);
-        this->m_writer.ElementP(Js::OpCode::ScopedLdFld, funcInfo->thisPointerRegister, cacheId);
+        this->m_writer.ElementP(Js::OpCode::ScopedLdFld, funcInfo->GetThisSymbol()->GetLocation(), cacheId);
         if (chkUndecl)
         {
-            this->m_writer.Reg1(Js::OpCode::ChkUndecl, funcInfo->thisPointerRegister);
+            this->m_writer.Reg1(Js::OpCode::ChkUndecl, funcInfo->GetThisSymbol()->GetLocation());
         }
 
         this->Writer()->MarkLabel(skipLabel);
@@ -2297,11 +2300,11 @@ void ByteCodeGenerator::EmitScopeSlotStoreThis(FuncInfo *funcInfo, Js::RegSlot r
         }
 
         uint cacheId = funcInfo->FindOrAddInlineCacheId(scopeLocation, Js::PropertyIds::_lexicalThisSlotSymbol, false, true);
-        this->m_writer.ElementP(GetScopedStFldOpCode(funcInfo->byteCodeFunction->GetIsStrictMode()), funcInfo->thisPointerRegister, cacheId);
+        this->m_writer.ElementP(GetScopedStFldOpCode(funcInfo->byteCodeFunction->GetIsStrictMode()), funcInfo->GetThisSymbol()->GetLocation(), cacheId);
     }
     else if (regLoc != Js::Constants::NoRegister)
     {
-        EmitInternalScopedSlotStore(funcInfo, regLoc, funcInfo->thisPointerRegister);
+        EmitInternalScopedSlotStore(funcInfo, regLoc, funcInfo->GetThisSymbol()->GetLocation());
     }
 }
 
@@ -2390,18 +2393,18 @@ void ByteCodeGenerator::EmitSuperCall(FuncInfo* funcInfo, ParseNode* pnode, BOOL
 
     // The call is done and we know what we will bind to 'this' so let's check to see if 'this' is already decl.
     // We may need to load 'this' from the scope slot.
-    EmitScopeSlotLoadThis(funcInfo, funcInfo->thisPointerRegister, false);
+    EmitScopeSlotLoadThis(funcInfo, funcInfo->GetThisSymbol()->GetLocation(), false);
 
     Js::ByteCodeLabel skipLabel = this->Writer()->DefineLabel();
     Js::RegSlot tmpUndeclReg = funcInfo->AcquireTmpRegister();
     this->Writer()->Reg1(Js::OpCode::InitUndecl, tmpUndeclReg);
-    this->Writer()->BrReg2(Js::OpCode::BrSrEq_A, skipLabel, funcInfo->thisPointerRegister, tmpUndeclReg);
+    this->Writer()->BrReg2(Js::OpCode::BrSrEq_A, skipLabel, funcInfo->GetThisSymbol()->GetLocation(), tmpUndeclReg);
     funcInfo->ReleaseTmpRegister(tmpUndeclReg);
 
     this->Writer()->W1(Js::OpCode::RuntimeReferenceError, SCODE_CODE(JSERR_ClassThisAlreadyAssigned));
     this->Writer()->MarkLabel(skipLabel);
 
-    this->Writer()->Reg2(Js::OpCode::StrictLdThis, funcInfo->thisPointerRegister, valueForThis);
+    this->Writer()->Reg2(Js::OpCode::StrictLdThis, funcInfo->GetThisSymbol()->GetLocation(), valueForThis);
     funcInfo->ReleaseTmpRegister(valueForThis);
     funcInfo->ReleaseTmpRegister(thisForSuperCall);
 
@@ -2414,8 +2417,8 @@ void ByteCodeGenerator::EmitClassConstructorEndCode(FuncInfo *funcInfo)
     if (funcInfo->thisPointerRegister != Js::Constants::NoRegister)
     {
         // We need to try and load 'this' from the scope slot, if there is one.
-        EmitScopeSlotLoadThis(funcInfo, funcInfo->thisPointerRegister);
-        this->Writer()->Reg2(Js::OpCode::Ld_A, ByteCodeGenerator::ReturnRegister, funcInfo->thisPointerRegister);
+        EmitScopeSlotLoadThis(funcInfo, funcInfo->GetThisSymbol()->GetLocation());
+        this->Writer()->Reg2(Js::OpCode::Ld_A, ByteCodeGenerator::ReturnRegister, funcInfo->GetThisSymbol()->GetLocation());
     }
     else
     {
@@ -2427,29 +2430,30 @@ void ByteCodeGenerator::EmitClassConstructorEndCode(FuncInfo *funcInfo)
 
 void ByteCodeGenerator::EmitBaseClassConstructorThisObject(FuncInfo *funcInfo)
 {
-    this->Writer()->Reg2(Js::OpCode::NewScObjectNoCtorFull, funcInfo->thisPointerRegister, funcInfo->newTargetRegister);
+    this->Writer()->Reg2(Js::OpCode::NewScObjectNoCtorFull, funcInfo->GetThisSymbol()->GetLocation(), funcInfo->newTargetRegister);
 }
 
-void ByteCodeGenerator::EmitInternalScopedSlotLoad(FuncInfo *funcInfo, Js::RegSlot slot, Js::RegSlot symbolRegister, bool chkUndecl)
-{
-    Scope* scope = nullptr;
+//void ByteCodeGenerator::EmitInternalScopedSlotLoad(FuncInfo *funcInfo, Js::RegSlot slot, Js::RegSlot symbolRegister, bool chkUndecl)
+//{
+//    Scope* scope = nullptr;
+//
+//    if (funcInfo->IsLambda())
+//    {
+//        Js::PropertyId envIndex = -1;
+//        GetEnclosingNonLambdaScope(funcInfo, scope, envIndex);
+//
+//        EmitInternalScopedSlotLoad(funcInfo, scope, envIndex, slot, symbolRegister, chkUndecl);
+//    }
+//    else
+//    {
+//        scope = funcInfo->GetBodyScope();
+//
+//        EmitInternalScopedSlotLoad(funcInfo, scope, -1, slot, symbolRegister, chkUndecl);
+//    }
+//}
 
-    if (funcInfo->IsLambda())
-    {
-        Js::PropertyId envIndex = -1;
-        GetEnclosingNonLambdaScope(funcInfo, scope, envIndex);
-
-        EmitInternalScopedSlotLoad(funcInfo, scope, envIndex, slot, symbolRegister, chkUndecl);
-    }
-    else
-    {
-        scope = funcInfo->GetBodyScope();
-
-        EmitInternalScopedSlotLoad(funcInfo, scope, -1, slot, symbolRegister, chkUndecl);
-    }
-}
-
-void ByteCodeGenerator::EmitInternalScopedSlotLoad(FuncInfo *funcInfo, Scope *scope, Js::PropertyId envIndex, Js::RegSlot slot, Js::RegSlot symbolRegister, bool chkUndecl)
+// TODO: [aneesh] Used by new.target and super right now. Should be able to get rid of this method once they become symbols.
+void ByteCodeGenerator::EmitInternalScopedSlotLoad(FuncInfo *funcInfo, Js::PropertyId envIndex, Js::RegSlot slot, Js::RegSlot symbolRegister, bool chkUndecl, Scope *scope = nullptr)
 {
     Assert(slot != Js::Constants::NoProperty);
     Js::ProfileId profileId = funcInfo->FindOrAddSlotProfileId(scope, symbolRegister);

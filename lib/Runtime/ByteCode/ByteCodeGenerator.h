@@ -167,7 +167,7 @@ public:
     Js::RegSlot AssignUndefinedConstRegister();
     Js::RegSlot AssignTrueConstRegister();
     Js::RegSlot AssignFalseConstRegister();
-    Js::RegSlot AssignThisRegister();
+    // Js::RegSlot AssignThisRegister();
     Js::RegSlot AssignNewTargetRegister();
     void SetNeedEnvRegister();
     void AssignFrameObjRegister();
@@ -270,7 +270,7 @@ public:
     void LoadNewTargetObject(FuncInfo *funcInfo);
     void GetEnclosingNonLambdaScope(FuncInfo *funcInfo, Scope * &scope, Js::PropertyId &envIndex);
     void EmitInternalScopedSlotLoad(FuncInfo *funcInfo, Js::RegSlot slot, Js::RegSlot symbolRegister, bool chkUndecl = false);
-    void EmitInternalScopedSlotLoad(FuncInfo *funcInfo, Scope *scope, Js::PropertyId envIndex, Js::RegSlot slot, Js::RegSlot symbolRegister, bool chkUndecl = false);
+    void EmitInternalScopedSlotLoad(FuncInfo *funcInfo, Js::PropertyId envIndex, Js::RegSlot slot, Js::RegSlot symbolRegister, bool chkUndecl = false, Scope *scope = nullptr);
     void EmitInternalScopedSlotStore(FuncInfo *funcInfo, Js::RegSlot slot, Js::RegSlot symbolRegister);
     void EmitInternalScopeObjInit(FuncInfo *funcInfo, Scope *scope, Js::RegSlot valueLocation, Js::PropertyId propertyId);
     void EmitSuperCall(FuncInfo* funcInfo, ParseNode* pnode, BOOL fReturnValue);

@@ -852,11 +852,11 @@ Js::RegSlot ByteCodeGenerator::AssignFalseConstRegister()
     return top->AssignFalseConstRegister();
 }
 
-Js::RegSlot ByteCodeGenerator::AssignThisRegister()
-{
-    FuncInfo *top = funcInfoStack->Top();
-    return top->AssignThisRegister();
-}
+//Js::RegSlot ByteCodeGenerator::AssignThisRegister()
+//{
+//    FuncInfo *top = funcInfoStack->Top();
+//    return top->AssignThisRegister();
+//}
 
 Js::RegSlot ByteCodeGenerator::AssignNewTargetRegister()
 {
@@ -2613,7 +2613,7 @@ FuncInfo* PostVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerat
             byteCodeGenerator->SetNeedEnvRegister();
             if (top->GetIsTopLevelEventHandler())
             {
-                byteCodeGenerator->AssignThisRegister();
+                // byteCodeGenerator->AssignThisRegister();
             }
         }
 
@@ -2668,7 +2668,7 @@ FuncInfo* PostVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerat
 
                     if (top->GetIsTopLevelEventHandler())
                     {
-                        byteCodeGenerator->AssignThisRegister();
+                        // byteCodeGenerator->AssignThisRegister();
                     }
                 }
             }
@@ -2906,8 +2906,8 @@ FuncInfo* PostVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerat
         {
             // Base class constructor may not explicitly reference new.target but we always need to have it in order to construct the 'this' object.
             top->AssignNewTargetRegister();
-            // Also must have a register to slot the 'this' object into.
-            top->AssignThisRegister();
+            //// Also must have a register to slot the 'this' object into.
+            //top->AssignThisRegister();
         }
         else
         {
@@ -2918,7 +2918,7 @@ FuncInfo* PostVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerat
 
             if (top->GetCallsEval() || top->GetChildCallsEval())
             {
-                top->AssignThisRegister();
+                // top->AssignThisRegister();
                 // top->SetIsThisLexicallyCaptured();
                 top->SetIsNewTargetLexicallyCaptured();
                 top->SetIsSuperLexicallyCaptured();
@@ -4861,7 +4861,7 @@ void AssignRegisters(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
     {
         FuncInfo* func = byteCodeGenerator->TopFuncInfo();
         pnode->location = func->AssignSuperRegister();
-        func->AssignThisRegister();
+        // func->AssignThisRegister();
 
         FuncInfo* nonLambdaFunc = func;
         if (func->IsLambda())
@@ -4871,7 +4871,7 @@ void AssignRegisters(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
 
             nonLambdaFunc->root->sxFnc.SetHasSuperReference();
             nonLambdaFunc->AssignSuperRegister();
-            nonLambdaFunc->AssignThisRegister();
+            // nonLambdaFunc->AssignThisRegister();
             nonLambdaFunc->SetIsSuperLexicallyCaptured();
 
             if (nonLambdaFunc->IsClassConstructor())
@@ -4933,7 +4933,7 @@ void AssignRegisters(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
         {
             // A super call requires 'this' to be available.
             byteCodeGenerator->SetNeedEnvRegister();
-            byteCodeGenerator->AssignThisRegister();
+            // byteCodeGenerator->AssignThisRegister();
 
             FuncInfo* parent = funcInfo;
             if (funcInfo->IsLambda())
@@ -4960,7 +4960,7 @@ void AssignRegisters(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
                     funcInfo->SetHasClosureReference(true);
                 }
 
-                parent->AssignThisRegister();
+                // parent->AssignThisRegister();
                 byteCodeGenerator->MarkThisUsedInLambda();
             }
 
@@ -4988,11 +4988,11 @@ void AssignRegisters(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
 
             if (funcInfo->IsLambda() && pnode->sxCall.isEvalCall)
             {
-                FuncInfo* nonLambdaParent = byteCodeGenerator->FindEnclosingNonLambda();
+                /*FuncInfo* nonLambdaParent = byteCodeGenerator->FindEnclosingNonLambda();
                 if (!nonLambdaParent->IsGlobalFunction() || (byteCodeGenerator->GetFlags() & fscrEval))
                 {
                     nonLambdaParent->AssignThisRegister();
-                }
+                }*/
             }
 
             // An eval call in a class member needs to load super.

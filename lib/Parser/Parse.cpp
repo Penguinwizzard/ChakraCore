@@ -5130,7 +5130,10 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, LPCOLESTR pNameHint, usho
             this->AddArgumentsNodeToVars(pnodeFnc);
         }
 
-        if (pnodeFnc->sxFnc.HasThisStmt() || pnodeFnc->sxFnc.CallsEval() || pnodeFnc->sxFnc.ChildCallsEval())
+        if (pnodeFnc->sxFnc.HasThisStmt() || pnodeFnc->sxFnc.CallsEval() || pnodeFnc->sxFnc.ChildCallsEval()
+            || (pnodeFnc->sxFnc.IsClassConstructor() && pnodeFnc->sxFnc.IsBaseClassConstructor())
+            || pnodeFnc->sxFnc.HasSuperReference()) // Missing the case where a lambda is referencing the super of a parent.
+                                                    // Ideally this flag should be set on the parent in that case.
         {
             // Insert the this symbol
             this->InsertVarAtBeginning(pnodeFnc, wellKnownPropertyPids._this)->grfpn |= fpnThis;
