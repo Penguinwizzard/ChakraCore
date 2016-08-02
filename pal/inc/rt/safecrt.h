@@ -2965,7 +2965,20 @@ errno_t __cdecl _wsplitpath_s(
     WCHAR *_Ext, size_t _ExtSize
 );
 
-/* no C++ overload for _wsplitpath_s */
+#if defined(__cplusplus) && _SAFECRT_USE_CPP_OVERLOADS
+template <size_t _DriveSize, size_t _DirSize, size_t _FilenameSize, size_t _ExtSize>
+inline
+errno_t __cdecl _wsplitpath_s(
+    const WCHAR *_Path,
+    WCHAR (&_Drive)[_DriveSize],
+    WCHAR (&_Dir)[_DirSize],
+    WCHAR (&_Filename)[_FilenameSize],
+    WCHAR (&_Ext)[_ExtSize])
+{
+    return _wsplitpath_s(_Path,
+        _Drive, _DriveSize, _Dir, _DirSize, _Filename, _FilenameSize, _Ext, _ExtSize);
+}
+#endif
 
 #if _SAFECRT_USE_INLINES || _SAFECRT_IMPL
 

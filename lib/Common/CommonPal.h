@@ -129,7 +129,6 @@ inline void DebugBreak()
 #define fwprintf_s      fwprintf
 // sprintf_s overloaded in safecrt.h. Not sure why palrt.h redefines sprintf_s.
 #undef sprintf_s
-// #define sprintf_s PAL_sprintf_s
 #undef swprintf_s
 #undef vswprintf_s
 
@@ -413,6 +412,25 @@ inline char16* wmemset(char16* wcs, char16 wc, size_t n)
         wcs[--n] = wc;
     }
     return wcs;
+}
+
+inline errno_t wmemcpy_s(char16* dest, size_t destSize, const char16* src, size_t count)
+{
+    return memcpy_s(dest, sizeof(char16) * destSize, src, sizeof(char16) * count);
+}
+
+inline int _wunlink(const char16* filename)
+{
+    // WARN: does not set errno when fail 
+    return DeleteFile(filename) ? 0 : -1;
+}
+
+template <size_t size>
+inline errno_t _wcserror_s(char16 (&buffer)[size], int errnum)
+{
+    const char* str = strerror(errnum);
+    // WARN: does not return detail errno when fail
+    return MultiByteToWideChar(CP_ACP, 0, str, -1, buffer, size) ? 0 : -1;
 }
 
 DWORD __cdecl CharLowerBuffW(const char16* lpsz, DWORD  cchLength);
