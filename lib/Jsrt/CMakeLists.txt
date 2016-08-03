@@ -14,6 +14,7 @@ add_library (Chakra.Jsrt STATIC
     JsrtSourceHolder.cpp
     JsrtThreadService.cpp
     $<TARGET_OBJECTS:Chakra.Jsrt.Core>
+    $<TARGET_OBJECTS:Chakra.Backend>
 #   Do not take this in. We need to control the 
 #   linker order because of global constructors
 #   and cross dependencies among them

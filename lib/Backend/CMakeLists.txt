@@ -1,4 +1,4 @@
-add_library (Chakra.Backend
+add_library (Chakra.Backend OBJECT
     AgenPeeps.cpp
     Backend.cpp
     BackendApi.cpp
