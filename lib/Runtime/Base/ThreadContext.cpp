@@ -103,6 +103,8 @@ ThreadContext::ThreadContext(AllocationPolicyManager * allocationPolicyManager, 
     currentThreadId(::GetCurrentThreadId()),
     stackLimitForCurrentThread(0),
     stackProber(nullptr),
+    changeTypeCalls(0),
+    evictionDueToNonSharedTypePrevented(0),
     isThreadBound(false),
     hasThrownPendingException(false),
     noScriptScope(false),
@@ -1097,7 +1099,7 @@ void ThreadContext::GetOrAddPropertyId(JsUtil::CharacterBuffer<WCHAR> const& pro
 const Js::PropertyRecord *
 ThreadContext::GetOrAddPropertyRecordImpl(JsUtil::CharacterBuffer<char16> propertyName, bool bind)
 {
-    // Make sure the recyclers around so that we can take weak references to the property strings
+    // Make sure the recycler is around so that we can take weak references to the property strings
     EnsureRecycler();
 
     const Js::PropertyRecord * propertyRecord;

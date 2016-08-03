@@ -1016,6 +1016,19 @@ CommonNumber:
             }
             break;
 
+        case TypeIds_Function:
+            if (rightType == TypeIds_Function)
+            {
+                // In ES5 in certain cases (ES5 10.6.14(strict), 13.2.19(strict), 15.3.4.5.20-21) we return a function that throws type error.
+                // For different scenarios we return different instances of the function, which differ by exception/error message.
+                // According to ES5, this is the same [[ThrowTypeError]] (thrower) internal function, thus they should be equal.
+                if (JavascriptFunction::FromVar(aLeft)->IsThrowTypeErrorFunction() &&
+                    JavascriptFunction::FromVar(aRight)->IsThrowTypeErrorFunction())
+                {
+                    return true;
+                }
+            }
+            break;
 #ifdef ENABLE_SIMDJS
         case TypeIds_SIMDBool8x16:
         case TypeIds_SIMDInt8x16:
@@ -1062,9 +1075,10 @@ CommonNumber:
 
     BOOL JavascriptOperators::HasOwnProperty(Var instance, PropertyId propertyId, ScriptContext *requestContext)
     {
+        BOOL result;
         if (TaggedNumber::Is(instance))
         {
-            return FALSE;
+            result = false;
         }
         else
         {
@@ -1077,22 +1091,10 @@ CommonNumber:
             }
             else
             {
-                PropertyString *propString = requestContext->TryGetPropertyString(propertyId);
-                if (propString != nullptr)
-                {
-                    const PropertyCache *propCache = propString->GetPropertyCache();
-                    if (object->GetType() == propCache->type)
-                    {
-                        // The type cached for the property was the same as the type of this object
-                        // (i.e. obj in obj.hasOwnProperty), so we know the answer is "true".
-                        Assert(TRUE == (object && object->HasOwnProperty(propertyId))); // sanity check on the fastpath result
-                        return TRUE;
-                    }
-                }
-
                 return object && object->HasOwnProperty(propertyId);
             }
         }
+        return result;
     }
 
     BOOL JavascriptOperators::GetOwnAccessors(Var instance, PropertyId propertyId, Var* getter, Var* setter, ScriptContext * requestContext)
@@ -5428,7 +5430,7 @@ CommonNumber:
 
     Var JavascriptOperators::OP_InitCachedScope(Var varFunc, const Js::PropertyIdArray *propIds, DynamicType ** literalType, bool formalsAreLetDecls, ScriptContext *scriptContext)
     {
-        ScriptFunction *func = JavascriptGeneratorFunction::Is(varFunc) || JavascriptAsyncFunction::Is(varFunc) ?
+        ScriptFunction *func = JavascriptGeneratorFunction::Is(varFunc) ?
             JavascriptGeneratorFunction::FromVar(varFunc)->GetGeneratorVirtualScriptFunction() :
             ScriptFunction::FromVar(varFunc);
 
@@ -6891,10 +6893,11 @@ CommonNumber:
         JavascriptOperators::SetProperty(argsObj, argsObj, PropertyIds::_symbolIterator, library->GetArrayPrototypeValuesFunction(), scriptContext);
         if (funcCallee->IsStrictMode())
         {
-            JavascriptFunction* restrictedPropertyAccessor = library->GetThrowTypeErrorRestrictedPropertyAccessorFunction();
-            argsObj->SetAccessors(PropertyIds::caller, restrictedPropertyAccessor, restrictedPropertyAccessor, PropertyOperation_NonFixedValue);
+            JavascriptFunction* callerAccessor = library->GetThrowTypeErrorCallerAccessorFunction();            
+            argsObj->SetAccessors(PropertyIds::caller, callerAccessor, callerAccessor, PropertyOperation_NonFixedValue);
 
-            argsObj->SetAccessors(PropertyIds::callee, restrictedPropertyAccessor, restrictedPropertyAccessor, PropertyOperation_NonFixedValue);
+            JavascriptFunction* calleeAccessor = library->GetThrowTypeErrorCalleeAccessorFunction();
+            argsObj->SetAccessors(PropertyIds::callee, calleeAccessor, calleeAccessor, PropertyOperation_NonFixedValue);
 
         }
         else
@@ -8194,8 +8197,6 @@ CommonNumber:
             return false;
         }
 
-        AssertMsg(type && type->GetScriptContext(), "type and it's ScriptContext should be valid.");
-
         if (!guard->IsInvalidatedDuringSweep() && guard->GetType()->GetScriptContext() != type->GetScriptContext())
         {
             // For valid guard value, can't cache cross-context objects
@@ -8343,8 +8344,9 @@ CommonNumber:
                 Output::Print(_u("EquivObjTypeSpec: Saving type in unused slot of equiv types cache. \n"));
                 Output::Flush();
             }
+<<<<<<< 175425e4960de93fbd2e52d4c86e3183224a3682
             equivTypes[emptySlotIndex] = type;
-            cachedType = true;
+			cachedType = true;
         }
         else
         {
@@ -8352,6 +8354,15 @@ CommonNumber:
             uintptr_t index = (reinterpret_cast<uintptr_t>(type) >> 4) & (EQUIVALENT_TYPE_CACHE_SIZE - 1);
             
             if (cache->nextEvictionVictim == EQUIVALENT_TYPE_CACHE_SIZE)
+=======
+            type->SetHasBeenCached(true);
+
+            // Fixed field checks allow us to assume a specific type ID, but the assumption is only
+            // valid if we lock the type. Otherwise, the type ID may change out from under us without
+            // evolving the type.
+            // We also need to lock the type in case of, for instance, adding a property to a dictionary type handler.
+            if (DynamicType::Is(type->GetTypeId()))
+>>>>>>> uncomment
             {
                 __analysis_assume(index < EQUIVALENT_TYPE_CACHE_SIZE);
                 // If nextEvictionVictim was never set, set it to next element after index
@@ -8366,45 +8377,41 @@ CommonNumber:
                 cache->nextEvictionVictim = (cache->nextEvictionVictim + 1) & (EQUIVALENT_TYPE_CACHE_SIZE - 1);
             }
 
-            if(evictCachedType) // here equivTypes[index] is not empty, so only evict the type if evictCachedType is true
-            {    
-                if (PHASE_TRACE1(Js::EquivObjTypeSpecPhase))
-                {
+			if(evictCachedType)
+	        {    
+				if (PHASE_TRACE1(Js::EquivObjTypeSpecPhase))
+	            {
                     Output::Print(_u("Evicted a type from equiv type cache because of a non shared dictionary type"));
-                }
-                __analysis_assume(index < EQUIVALENT_TYPE_CACHE_SIZE);
-                equivTypes[index] = type;
-                cachedType = true;
             }
-            else
-            {
-                type->GetScriptContext()->GetThreadContext()->evictionDueToNonSharedTypePrevented++;
-            }
+	            __analysis_assume(index < EQUIVALENT_TYPE_CACHE_SIZE);
+	            equivTypes[index] = type;
+				cachedType = true;
+			}
         }
         
-        if (cachedType)
+		if (cachedType)
         {
-            if(PHASE_TRACE1(Js::TypeCachedPhase))
-            {
-                Output::Print(_u("type 0x%x cached in equiv type cache\n"), type);
-                Output::Flush();
-            }
-            type->SetHasBeenCached(true);
-            // Fixed field checks allow us to assume a specific type ID, but the assumption is only
-            // valid if we lock the type. Otherwise, the type ID may change out from under us without
-            // evolving the type.
-            // We also need to lock the type in case of, for instance, adding a property to a dictionary type handler.
-            if (DynamicType::Is(type->GetTypeId()))
-            {
-                DynamicType *dynamicType = static_cast<DynamicType*>(type);
-                if (!dynamicType->GetIsLocked())
-                {
-                    dynamicType->LockType();
-                }
-            }
+			if(PHASE_TRACE1(Js::TypeCachedPhase))
+			{
+	            Output::Print(_u("type 0x%x cached in equiv type cache\n"), type);
+	            Output::Flush();
+        	}
+	        type->SetHasBeenCached(true);
+	        // Fixed field checks allow us to assume a specific type ID, but the assumption is only
+	        // valid if we lock the type. Otherwise, the type ID may change out from under us without
+	        // evolving the type.
+	        // We also need to lock the type in case of, for instance, adding a property to a dictionary type handler.
+	        if (DynamicType::Is(type->GetTypeId()))
+	        {
+	            DynamicType *dynamicType = static_cast<DynamicType*>(type);
+	            if (!dynamicType->GetIsLocked())
+	            {
+	                dynamicType->LockType();
+	            }
+	        }
 
-            guard->SetType(type);
-        }
+	        guard->SetType(type);
+		}
         return true;
     }
 
@@ -9302,13 +9309,6 @@ CommonNumber:
 
     Var JavascriptOperators::CallGetter(RecyclableObject * const function, Var const object, ScriptContext * requestContext)
     {
-#if ENABLE_TTD_DEBUGGING
-        if(requestContext->ShouldSuppressGetterInvocationForDebuggerEvaluation())
-        {
-            return requestContext->GetLibrary()->GetUndefined();
-        }
-#endif
-
         ScriptContext * scriptContext = function->GetScriptContext();
         ThreadContext * threadContext = scriptContext->GetThreadContext();
         return threadContext->ExecuteImplicitCall(function, ImplicitCall_Accessor, [=]() -> Js::Var
@@ -9722,6 +9722,35 @@ CommonNumber:
 
         // Do not use ThrowExceptionObject for return() API exceptions since these exceptions are not real exceptions
         throw yieldData->exceptionObj;
+    }
+
+    Var JavascriptOperators::OP_AsyncSpawn(Var aGenerator, Var aThis, ScriptContext* scriptContext)
+    {
+        JavascriptLibrary* library = scriptContext->GetLibrary();
+
+        JavascriptExceptionObject* e = nullptr;
+        JavascriptPromiseResolveOrRejectFunction* resolve;
+        JavascriptPromiseResolveOrRejectFunction* reject;
+        JavascriptPromiseAsyncSpawnExecutorFunction* executor = library->CreatePromiseAsyncSpawnExecutorFunction(JavascriptPromise::EntryJavascriptPromiseAsyncSpawnExecutorFunction, (JavascriptGenerator*)aGenerator, aThis);
+        JavascriptPromise* promise = library->CreatePromise();
+
+        JavascriptPromise::InitializePromise(promise, &resolve, &reject, scriptContext);
+
+        try
+        {
+            CALL_FUNCTION(executor, CallInfo(CallFlags_Value, 3), library->GetUndefined(), resolve, reject);
+        }
+        catch (JavascriptExceptionObject* ex)
+        {
+            e = ex;
+        }
+
+        if (e != nullptr)
+        {
+            JavascriptPromise::TryRejectWithExceptionObject(e, reject, scriptContext);
+        }
+
+        return promise;
     }
 
     Js::Var

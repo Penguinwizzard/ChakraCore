@@ -536,6 +536,8 @@ namespace Js
     void ScriptContext::InternalClose()
     {
         this->PrintStats();
+        /*Output::Print(_u("evict type : %d"),this->GetThreadContext()->evictType);
+        Output::Flush();*/
 
         isScriptContextActuallyClosed = true;
 

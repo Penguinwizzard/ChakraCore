@@ -1673,7 +1673,11 @@ namespace Js
                 descriptor->Attributes = PropertyDeletedDefaults;
 
                 // Change the type so as we can invalidate the cache in fast path jit
-                instance->ChangeType();
+                if (instance->GetType()->HasBeenCached())
+                {
+                    instance->GetScriptContext()->GetThreadContext()->changeTypeCalls++;
+                    instance->ChangeType();
+                }
                 SetPropertyUpdateSideEffect(instance, propertyId, nullptr, SideEffects_Any);
                 return true;
             }

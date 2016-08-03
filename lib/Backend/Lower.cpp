@@ -7109,7 +7109,14 @@ Lowerer::CreateEquivalentTypeGuardAndLinkToGuardedProperties(Js::Type* type, IR:
     for (uint16 ti = 0; ti < cachedTypeCount; ti++)
     {
         cache->types[ti] = typeSet->GetType(ti);
+        if (PHASE_TRACE1(Js::TypeCachedPhase))
+        {
+            Output::Print(_u("type 0x%x cached in equiv type cache\n"), cache->types[ti]);
+            Output::Flush();
+        }
+        //cache->types[ti]->SetHasBeenCached(true);
     }
+    
 
     // Populate property ID and slot index arrays on the guard's cache. We iterate over the
     // bit vector of property operations protected by this guard, but some property operations

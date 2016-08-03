@@ -13,6 +13,7 @@ enum TypeFlagMask : uint8
     TypeFlagMask_External                                                          = 0x08,
     TypeFlagMask_SkipsPrototype                                                    = 0x10,
     TypeFlagMask_CanHaveInterceptors                                               = 0x20,
+    TypeFlagMask_HasBeenCached                                                     = 0x40
 };
 ENUM_CLASS_HELPERS(TypeFlagMask, uint8);
 
@@ -62,6 +63,14 @@ namespace Js
         inline BOOL SkipsPrototype() const { return (this->flags & TypeFlagMask_SkipsPrototype) != 0 ; }
         inline BOOL CanHaveInterceptors() const { return (this->flags & TypeFlagMask_CanHaveInterceptors) != 0; }
         inline BOOL IsFalsy() const { return flags & TypeFlagMask_IsFalsy; }
+        inline BOOL HasBeenCached() const { return flags & TypeFlagMask_HasBeenCached; }
+        inline void SetHasBeenCached(const bool hasBeenCached)
+        {
+            // Once set, this flag should never be reset.
+            Assert(hasBeenCached);
+            flags |= TypeFlagMask_HasBeenCached;
+        };
+
         void SetIsFalsy(const bool truth);
         void SetHasSpecialPrototype(const bool hasSpecialPrototype);
 

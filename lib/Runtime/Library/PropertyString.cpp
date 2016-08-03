@@ -59,6 +59,12 @@ namespace Js
             this->GetScriptContext()->SetHasUsedInlineCache(true);
         }
 
+        if (PHASE_TRACE1(Js::TypeCachedPhase))
+        {
+            Output::Print(_u("type 0x%x cached in property string cache\n"), type);
+            Output::Flush();
+        }
+        type->SetHasBeenCached(true);
         this->propCache->type = type;
         this->propCache->preventdataSlotIndexFalseRef = 1;
         this->propCache->dataSlotIndex = dataSlotIndex;

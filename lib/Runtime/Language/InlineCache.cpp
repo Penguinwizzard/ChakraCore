@@ -50,6 +50,23 @@ namespace Js
         u.local.slotIndex = propertyIndex;
         u.local.requiredAuxSlotCapacity = requiredAuxSlotCapacity;
 
+        if (PHASE_TRACE1(Js::TypeCachedPhase))
+        {
+            Output::Print(_u("type 0x%x cached in local inline cache\n"), type);
+            Output::Flush();
+        }
+        type->SetHasBeenCached(true);
+        if (typeWithoutProperty)
+        {
+            if (PHASE_TRACE1(Js::TypeCachedPhase))
+            {
+                Output::Print(_u("typeWithoutProperty 0x%x cached in local inline cache\n"), typeWithoutProperty);
+                Output::Flush();
+            }
+            typeWithoutProperty->SetHasBeenCached(true);
+        }
+        
+
         DebugOnly(VerifyRegistrationForInvalidation(this, requestContext, propertyId));
 
 #if DBG_DUMP
@@ -113,6 +130,14 @@ namespace Js
             u.proto.type = TypeWithAuxSlotTag(type);
         }
 
+        if (PHASE_TRACE1(Js::TypeCachedPhase))
+        {
+            Output::Print(_u("type 0x%x cached in proto inline cache\n"), type);
+            Output::Flush();
+        }
+        
+        type->SetHasBeenCached(true);
+
         DebugOnly(VerifyRegistrationForInvalidation(this, requestContext, propertyId));
         Assert(u.proto.isMissing == (uint16)(u.proto.prototypeObject == requestContext->GetLibrary()->GetMissingPropertyHolder()));
 
@@ -175,6 +200,14 @@ namespace Js
         u.accessor.type = isInlineSlot ? type : TypeWithAuxSlotTag(type);
         u.accessor.slotIndex = propertyIndex;
         u.accessor.object = object;
+
+        if (PHASE_TRACE1(Js::TypeCachedPhase))
+        {
+            Output::Print(_u("type 0x%x cached in accessor inline cache\n"), type);
+            Output::Flush();
+        }
+        
+        type->SetHasBeenCached(true);
 
         DebugOnly(VerifyRegistrationForInvalidation(this, requestContext, propertyId));
 

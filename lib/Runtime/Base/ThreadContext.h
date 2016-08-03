@@ -616,7 +616,6 @@ private:
     };
 
     static ThreadContext * globalListLast;
-
     ThreadContextFlags threadContextFlags;
     DWORD currentThreadId;
     mutable PBYTE stackLimitForCurrentThread;
@@ -774,6 +773,10 @@ private:
 
     Entropy entropy;
 
+    public:
+        uint changeTypeCalls;
+        uint evictionDueToNonSharedTypePrevented;
+        private:
     JsUtil::Stack<HostScriptContext*>* hostScriptContextStack;
 
     //
