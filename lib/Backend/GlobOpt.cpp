@@ -21379,11 +21379,11 @@ GlobOpt::EmitMemop(Loop * loop, LoopCount *loopCount, const MemOpEmitData* emitD
         char16 loopCountBuf[loopCountBufSize];
         if (loopCount->LoopCountMinusOneSym())
         {
-            _snwprintf_s(loopCountBuf, loopCountBufSize, _u("s%u"), loopCount->LoopCountMinusOneSym()->m_id);
+            swprintf_s(loopCountBuf, _u("s%u"), loopCount->LoopCountMinusOneSym()->m_id);
         }
         else
         {
-            _snwprintf_s(loopCountBuf, loopCountBufSize, _u("%u"), loopCount->LoopCountMinusOneConstantValue() + 1);
+            swprintf_s(loopCountBuf, _u("%u"), loopCount->LoopCountMinusOneConstantValue() + 1);
         }
         if (isMemset)
         {
@@ -21392,7 +21392,7 @@ GlobOpt::EmitMemop(Loop * loop, LoopCount *loopCount, const MemOpEmitData* emitD
             char16 constBuf[constBufSize];
             if (candidate->srcSym)
             {
-                _snwprintf_s(constBuf, constBufSize, _u("s%u"), candidate->srcSym->m_id);
+                swprintf_s(constBuf, _u("s%u"), candidate->srcSym->m_id);
             }
             else
             {
@@ -21402,18 +21402,18 @@ GlobOpt::EmitMemop(Loop * loop, LoopCount *loopCount, const MemOpEmitData* emitD
                 case TyInt16:
                 case TyInt32:
                 case TyInt64:
-                    _snwprintf_s(constBuf, constBufSize, sizeof(IntConstType) == 8 ? _u("lld%") : _u("%d"), candidate->constant.u.intConst.value);
+                    swprintf_s(constBuf, sizeof(IntConstType) == 8 ? _u("lld%") : _u("%d"), candidate->constant.u.intConst.value);
                     break;
                 case TyFloat32:
                 case TyFloat64:
-                    _snwprintf_s(constBuf, constBufSize, _u("%.4f"), candidate->constant.u.floatConst.value);
+                    swprintf_s(constBuf, _u("%.4f"), candidate->constant.u.floatConst.value);
                     break;
                 case TyVar:
-                    _snwprintf_s(constBuf, constBufSize, sizeof(Js::Var) == 8 ? _u("0x%.16llX") : _u("0x%.8X"), candidate->constant.u.varConst.value);
+                    swprintf_s(constBuf, sizeof(Js::Var) == 8 ? _u("0x%.16llX") : _u("0x%.8X"), candidate->constant.u.varConst.value);
                     break;
                 default:
                     AssertMsg(false, "Unsupported constant type");
-                    _snwprintf_s(constBuf, constBufSize, _u("Unknown"));
+                    swprintf_s(constBuf, _u("Unknown"));
                     break;
                 }
             }

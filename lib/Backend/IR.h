@@ -429,7 +429,7 @@ private:
     void            ClearNumber() { this->m_number = 0; }
     void            SetNumber(uint32 number);
     friend Func;
-    friend class Lowerer;
+    friend Lowerer;
 
     void            SetByteCodeOffset(uint32 number);
     friend IRBuilder;

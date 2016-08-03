@@ -1530,7 +1530,7 @@ namespace JsUtil
 
         void Copy(const BaseHashSet *const other)
         {
-            DoCopy(other);
+            this->DoCopy(other);
         }
 
         void LockResize()

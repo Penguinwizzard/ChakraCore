@@ -1132,12 +1132,12 @@ void LowererMD::ChangeToAdd(IR::Instr *const instr, const bool needFlags)
     MakeDstEquSrc1(instr);
 
     // Prefer INC for add by one
-    if(instr->GetDst()->IsEqual(instr->GetSrc1()) &&
+    if((instr->GetDst()->IsEqual(instr->GetSrc1()) &&
             instr->GetSrc2()->IsIntConstOpnd() &&
-            instr->GetSrc2()->AsIntConstOpnd()->GetValue() == 1 ||
-        instr->GetDst()->IsEqual(instr->GetSrc2()) &&
+            instr->GetSrc2()->AsIntConstOpnd()->GetValue() == 1) ||
+        (instr->GetDst()->IsEqual(instr->GetSrc2()) &&
             instr->GetSrc1()->IsIntConstOpnd() &&
-            instr->GetSrc1()->AsIntConstOpnd()->GetValue() == 1)
+            instr->GetSrc1()->AsIntConstOpnd()->GetValue() == 1))
     {
         if(instr->GetSrc1()->IsIntConstOpnd())
         {
@@ -1518,8 +1518,8 @@ LowererMD::Legalize(IR::Instr *const instr, bool fPostRegAlloc)
             break;
 
         case Js::OpCode::TEST:
-            if(instr->GetSrc1()->IsImmediateOpnd() && !instr->GetSrc2()->IsImmediateOpnd() ||
-                instr->GetSrc2()->IsMemoryOpnd() && !instr->GetSrc1()->IsMemoryOpnd())
+            if((instr->GetSrc1()->IsImmediateOpnd() && !instr->GetSrc2()->IsImmediateOpnd()) ||
+                (instr->GetSrc2()->IsMemoryOpnd() && !instr->GetSrc1()->IsMemoryOpnd()))
             {
                 if (verify)
                 {

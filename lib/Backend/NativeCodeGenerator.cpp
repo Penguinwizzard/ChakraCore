@@ -1122,15 +1122,16 @@ NativeCodeGenerator::CheckAsmJsCodeGen(Js::ScriptFunction * function)
         {
             Output::Print(_u("Codegen not done yet for function: %s, Entrypoint is CheckAsmJsCodeGenThunk\n"), function->GetFunctionBody()->GetDisplayName());
         }
-        return reinterpret_cast<Js::JavascriptMethod>(entryPoint->GetNativeAddress());
+        return reinterpret_cast<Js::Var>(entryPoint->GetNativeAddress());
     }
     if (PHASE_TRACE1(Js::AsmjsEntryPointInfoPhase))
     {
         Output::Print(_u("CodeGen Done for function: %s, Changing Entrypoint to Full JIT\n"), function->GetFunctionBody()->GetDisplayName());
     }
     // we will need to set the functionbody external and asmjs entrypoint to the fulljit entrypoint
-    return CheckCodeGenDone(functionBody, entryPoint, function);
+    return reinterpret_cast<Js::Var>(CheckCodeGenDone(functionBody, entryPoint, function));
 }
+
 Js::JavascriptMethod
 NativeCodeGenerator::CheckCodeGen(Js::ScriptFunction * function)
 {
@@ -1183,7 +1184,9 @@ NativeCodeGenerator::CheckCodeGen(Js::ScriptFunction * function)
             (
                 originalEntryPoint == DefaultEntryThunk
              || scriptContext->IsDynamicInterpreterThunk(originalEntryPoint)
+#ifdef ENABLE_SCRIPT_PROFILING             
              || originalEntryPoint == ProfileDeferredParsingThunk
+#endif             
              || originalEntryPoint == DefaultDeferredParsingThunk
              || (
                     functionBody->GetSimpleJitEntryPointInfo() &&

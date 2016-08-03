@@ -20,7 +20,7 @@ namespace IR
 
 const void * const JnHelperMethodAddresses[] =
 {
-#define HELPERCALL(Name, Address, Attributes) static_cast<void *>(Address),
+#define HELPERCALL(Name, Address, Attributes) (void*)(Address),
 // Because of order-of-initialization problems with the vtable address static field
 // and this array, we're going to have to fill these in as we go along.
 #include "JnHelperMethodList.h"
@@ -95,23 +95,23 @@ void CheckJnHelperTable(const void * const *table)
 
 
 static void const* const helperMethodWrappers[] = {
-    &Js::HelperMethodWrapper0,
-    &Js::HelperMethodWrapper1,
-    &Js::HelperMethodWrapper2,
-    &Js::HelperMethodWrapper3,
-    &Js::HelperMethodWrapper4,
-    &Js::HelperMethodWrapper5,
-    &Js::HelperMethodWrapper6,
-    &Js::HelperMethodWrapper7,
-    &Js::HelperMethodWrapper8,
-    &Js::HelperMethodWrapper9,
-    &Js::HelperMethodWrapper10,
-    &Js::HelperMethodWrapper11,
-    &Js::HelperMethodWrapper12,
-    &Js::HelperMethodWrapper13,
-    &Js::HelperMethodWrapper14,
-    &Js::HelperMethodWrapper15,
-    &Js::HelperMethodWrapper16,
+    (void const*)&Js::HelperMethodWrapper0,
+    (void const*)&Js::HelperMethodWrapper1,
+    (void const*)&Js::HelperMethodWrapper2,
+    (void const*)&Js::HelperMethodWrapper3,
+    (void const*)&Js::HelperMethodWrapper4,
+    (void const*)&Js::HelperMethodWrapper5,
+    (void const*)&Js::HelperMethodWrapper6,
+    (void const*)&Js::HelperMethodWrapper7,
+    (void const*)&Js::HelperMethodWrapper8,
+    (void const*)&Js::HelperMethodWrapper9,
+    (void const*)&Js::HelperMethodWrapper10,
+    (void const*)&Js::HelperMethodWrapper11,
+    (void const*)&Js::HelperMethodWrapper12,
+    (void const*)&Js::HelperMethodWrapper13,
+    (void const*)&Js::HelperMethodWrapper14,
+    (void const*)&Js::HelperMethodWrapper15,
+    (void const*)&Js::HelperMethodWrapper16,
 };
 
 ///----------------------------------------------------------------------------
@@ -176,31 +176,31 @@ DECLSPEC_GUARDIGNORE _NOINLINE void * const GetNonTableMethodAddress(JnHelperMet
 #if defined(_M_IX86)
 
     case HelperDirectMath_Acos:
-        return (double(*)(double))__libm_sse2_acos;
+        return (void* const)(double(*)(double))__libm_sse2_acos;
 
     case HelperDirectMath_Asin:
-        return (double(*)(double))__libm_sse2_asin;
+        return (void* const)(double(*)(double))__libm_sse2_asin;
 
     case HelperDirectMath_Atan:
-        return (double(*)(double))__libm_sse2_atan;
+        return (void* const)(double(*)(double))__libm_sse2_atan;
 
     case HelperDirectMath_Atan2:
-        return (double(*)(double, double))__libm_sse2_atan2;
+        return (void* const)(double(*)(double, double))__libm_sse2_atan2;
 
     case HelperDirectMath_Cos:
-        return (double(*)(double))__libm_sse2_cos;
+        return (void* const)(double(*)(double))__libm_sse2_cos;
 
     case HelperDirectMath_Exp:
-        return (double(*)(double))__libm_sse2_exp;
+        return (void* const)(double(*)(double))__libm_sse2_exp;
 
     case HelperDirectMath_Log:
-        return (double(*)(double))__libm_sse2_log;
+        return (void* const)(double(*)(double))__libm_sse2_log;
 
     case HelperDirectMath_Sin:
-        return (double(*)(double))__libm_sse2_sin;
+        return (void* const)(double(*)(double))__libm_sse2_sin;
 
     case HelperDirectMath_Tan:
-        return (double(*)(double))__libm_sse2_tan;
+        return (void* const)(double(*)(double))__libm_sse2_tan;
 #endif
 
 #ifdef _CONTROL_FLOW_GUARD
@@ -209,105 +209,105 @@ DECLSPEC_GUARDIGNORE _NOINLINE void * const GetNonTableMethodAddress(JnHelperMet
 #endif
 
     case HelperDirectMath_FloorDb:
-        return (double(*)(double))floor;
+        return (void* const)(double(*)(double))floor;
 
     case HelperDirectMath_FloorFlt:
-        return (float(*)(float))floor;
+        return (void* const)(float(*)(float))floor;
 
     case HelperDirectMath_CeilDb:
-        return (double(*)(double))ceil;
+        return (void* const)(double(*)(double))ceil;
 
     case HelperDirectMath_CeilFlt:
-        return (float(*)(float))ceil;
+        return (void* const)(float(*)(float))ceil;
 
     //
     // These are statically initialized to an import thunk, but let's keep them out of the table in case a new CRT changes this
     //
     case HelperMemCmp:
-        return (int(*)(void *, void *, size_t))memcmp;
+        return (void* const)(int(*)(void *, void *, size_t))memcmp;
 
     case HelperMemCpy:
-        return (int(*)(void *, void *, size_t))memcpy;
+        return (void* const)(int(*)(void *, void *, size_t))memcpy;
 
 #if defined(_M_X64)
     case HelperDirectMath_Acos:
-        return (double(*)(double))acos;
+        return (void* const)(double(*)(double))acos;
 
     case HelperDirectMath_Asin:
-        return (double(*)(double))asin;
+        return (void* const)(double(*)(double))asin;
 
     case HelperDirectMath_Atan:
-        return (double(*)(double))atan;
+        return (void* const)(double(*)(double))atan;
 
     case HelperDirectMath_Atan2:
-        return (double(*)(double, double))atan2;
+        return (void* const)(double(*)(double, double))atan2;
 
     case HelperDirectMath_Cos:
-        return (double(*)(double))cos;
+        return (void* const)(double(*)(double))cos;
 
     case HelperDirectMath_Exp:
-        return (double(*)(double))exp;
+        return (void* const)(double(*)(double))exp;
 
     case HelperDirectMath_Log:
-        return (double(*)(double))log;
+        return (void* const)(double(*)(double))log;
 
     case HelperDirectMath_Sin:
-        return (double(*)(double))sin;
+        return (void* const)(double(*)(double))sin;
 
     case HelperDirectMath_Tan:
-        return (double(*)(double))tan;
+        return (void* const)(double(*)(double))tan;
 
 #elif defined(_M_ARM32_OR_ARM64)
     case HelperDirectMath_Acos:
-        return (double(*)(double))acos;
+        return (void* const)(double(*)(double))acos;
 
     case HelperDirectMath_Asin:
-        return (double(*)(double))asin;
+        return (void* const)(double(*)(double))asin;
 
     case HelperDirectMath_Atan:
-        return (double(*)(double))atan;
+        return (void* const)(double(*)(double))atan;
 
     case HelperDirectMath_Atan2:
-        return (double(*)(double, double))atan2;
+        return (void* const)(double(*)(double, double))atan2;
 
     case HelperDirectMath_Cos:
-        return (double(*)(double))cos;
+        return (void* const)(double(*)(double))cos;
 
     case HelperDirectMath_Exp:
-        return (double(*)(double))exp;
+        return (void* const)(double(*)(double))exp;
 
     case HelperDirectMath_Log:
-        return (double(*)(double))log;
+        return (void* const)(double(*)(double))log;
 
     case HelperDirectMath_Sin:
-        return (double(*)(double))sin;
+        return (void* const)(double(*)(double))sin;
 
     case HelperDirectMath_Tan:
-        return (double(*)(double))tan;
+        return (void* const)(double(*)(double))tan;
 #endif
 
     //
     // Methods that we don't want to get marked as CFG targets as they make unprotected calls
     //
     case HelperOp_TryCatch:
-        return Js::JavascriptExceptionOperators::OP_TryCatch;
+        return (void* const)Js::JavascriptExceptionOperators::OP_TryCatch;
 
     case HelperOp_TryFinally:
-        return Js::JavascriptExceptionOperators::OP_TryFinally;
+        return (void* const)Js::JavascriptExceptionOperators::OP_TryFinally;
 
     //
     // Methods that we don't want to get marked as CFG targets as they dump all registers to a controlled address
     //
     case HelperSaveAllRegistersAndBailOut:
-        return LinearScanMD::SaveAllRegistersAndBailOut;
+        return (void* const)LinearScanMD::SaveAllRegistersAndBailOut;
     case HelperSaveAllRegistersAndBranchBailOut:
-        return LinearScanMD::SaveAllRegistersAndBranchBailOut;
+        return (void* const)LinearScanMD::SaveAllRegistersAndBranchBailOut;
 
     #ifdef _M_IX86
     case HelperSaveAllRegistersNoSse2AndBailOut:
-        return LinearScanMD::SaveAllRegistersNoSse2AndBailOut;
+        return (void* const)LinearScanMD::SaveAllRegistersNoSse2AndBailOut;
     case HelperSaveAllRegistersNoSse2AndBranchBailOut:
-        return LinearScanMD::SaveAllRegistersNoSse2AndBranchBailOut;
+        return (void* const)LinearScanMD::SaveAllRegistersNoSse2AndBranchBailOut;
     #endif
 
     }
