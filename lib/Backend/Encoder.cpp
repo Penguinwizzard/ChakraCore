@@ -71,9 +71,14 @@ Encoder::Encode()
 #endif
     bool isCallInstr = false;
 
+    uint initialCRCSeed = 0;
+    rand_s(&initialCRCSeed);
+    uint bufferCRC = initialCRCSeed;
+
     FOREACH_INSTR_IN_FUNC(instr, m_func)
     {
         Assert(Lowerer::ValidOpcodeAfterLower(instr, m_func));
+
 
         if (GetCurrentOffset() + MachMaxInstrSize < m_encodeBufferSize)
         {
@@ -192,6 +197,11 @@ Encoder::Encode()
 
             count = m_encoderMD.Encode(instr, m_pc, m_encodeBuffer);
 
+            for (int index = 0; index < count; index++)
+            {
+                bufferCRC = _mm_crc32_u32(bufferCRC, *(m_pc + index));
+            }
+
 #if DBG_DUMP
             if (PHASE_TRACE(Js::EncoderPhase, this->m_func))
             {
@@ -231,6 +241,19 @@ Encoder::Encode()
             Fatal();
         }
     } NEXT_INSTR_IN_FUNC;
+
+    uint validationCRC = initialCRCSeed;
+
+    for (int index = 0; index < (m_pc - m_encodeBuffer); index++)
+    {
+        validationCRC = _mm_crc32_u32(validationCRC, *(m_encodeBuffer + index));
+    }
+
+    if (validationCRC != bufferCRC)
+    {
+        //TODO: This throws internal error. Is this error type, Fine?
+        Fatal();
+    }
 
     ptrdiff_t codeSize = m_pc - m_encodeBuffer + totalJmpTableSizeInBytes;
 
