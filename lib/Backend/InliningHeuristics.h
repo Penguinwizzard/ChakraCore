@@ -4,6 +4,8 @@
 //-------------------------------------------------------------------------------------------------------
 #pragma once
 
+class InliningDecider;
+
 struct InliningThreshold
 {
     Js::FunctionBody * topFunc;
@@ -26,7 +28,7 @@ struct InliningThreshold
 
 class InliningHeuristics
 {
-    friend class InliningDecider;
+    friend InliningDecider;
 
     Js::FunctionBody * topFunc;
     InliningThreshold threshold;

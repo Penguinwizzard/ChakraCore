@@ -536,7 +536,7 @@ namespace JsUtil
         template<class TMapFunction>
         void MapAddress(TMapFunction map) const
         {
-            for (int i = 0; i < count; i++)
+            for (int i = 0; i < this->count; i++)
             {
                 if (TRemovePolicyType::IsItemValid(this->buffer[i]))
                 {

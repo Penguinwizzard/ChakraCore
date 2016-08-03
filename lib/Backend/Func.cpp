@@ -166,7 +166,7 @@ Func::Func(JitArenaAllocator *alloc, CodeGenWorkItem* workItem, const Js::Functi
         Assert(m_workItem->Type() == JsLoopBodyWorkItemType);
     }
 
-    if (m_jnFunction->GetHasOrParentHasArguments() || parentFunc && parentFunc->thisOrParentInlinerHasArguments)
+    if (m_jnFunction->GetHasOrParentHasArguments() || (parentFunc && parentFunc->thisOrParentInlinerHasArguments))
     {
         thisOrParentInlinerHasArguments = true;
     }

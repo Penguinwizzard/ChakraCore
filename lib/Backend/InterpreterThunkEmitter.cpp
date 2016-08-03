@@ -259,12 +259,12 @@ void InterpreterThunkEmitter::NewThunkBlock()
 #ifdef ASMJS_PLAT
     if (isAsmInterpreterThunk)
     {
-        interpreterThunk = Js::InterpreterStackFrame::InterpreterAsmThunk;
+        interpreterThunk = (void*)Js::InterpreterStackFrame::InterpreterAsmThunk;
     }
     else
 #endif
     {
-        interpreterThunk = Js::InterpreterStackFrame::InterpreterThunk;
+        interpreterThunk = (void*)Js::InterpreterStackFrame::InterpreterThunk;
     }
 
     allocation = emitBufferManager.AllocateBuffer(bufferSize, &buffer);

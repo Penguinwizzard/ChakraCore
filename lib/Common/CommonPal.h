@@ -130,6 +130,8 @@ inline void DebugBreak()
 
 // PAL LoadLibraryExW not supported
 #define LOAD_LIBRARY_SEARCH_SYSTEM32     0
+// winnt.h
+#define FAST_FAIL_INVALID_ARG            5
 // winerror.h
 #define FACILITY_JSCRIPT                 2306
 #define JSCRIPT_E_CANTEXECUTE            _HRESULT_TYPEDEF_(0x89020001L)

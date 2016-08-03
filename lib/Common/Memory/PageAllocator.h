@@ -360,7 +360,7 @@ private:
 template<typename TVirtualAlloc>
 class PageAllocatorBase
 {
-    friend class CodeGenNumberThreadAllocator;
+    friend CodeGenNumberThreadAllocator;
     // Allowing recycler to report external memory allocation.
     friend class Recycler;
 public:

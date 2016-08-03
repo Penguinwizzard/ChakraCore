@@ -32,7 +32,7 @@ namespace Js
     {
         PREVENT_COPY(InterpreterStackFrame)
 
-        friend class BailOutRecord;
+        friend BailOutRecord;
         friend class JavascriptGeneratorFunction;
         friend class JavascriptGenerator;
 
