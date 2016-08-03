@@ -611,7 +611,7 @@ namespace Js
             }
 
             pfuncScript = library->GetGlobalObject()->EvalHelper(scriptContext, argString->GetSz(), argString->GetLength(), moduleID,
-                grfscr, Constants::EvalCode, doRegisterDocument, isIndirect, strictMode);
+                grfscr, Constants::EvalCode, doRegisterDocument, strictMode);
             Assert(!pfuncScript->GetFunctionInfo()->IsGenerator());
 
 #ifdef ENABLE_DEBUG_CONFIG_OPTIONS
@@ -752,12 +752,12 @@ namespace Js
     }
 
 #ifdef ENABLE_SCRIPT_PROFILING
-    ScriptFunction* GlobalObject::ProfileModeEvalHelper(ScriptContext* scriptContext, const char16 *source, int sourceLength, ModuleID moduleID, uint32 grfscr, LPCOLESTR pszTitle, BOOL registerDocument, BOOL isIndirect, BOOL strictMode)
+    ScriptFunction* GlobalObject::ProfileModeEvalHelper(ScriptContext* scriptContext, const char16 *source, int sourceLength, ModuleID moduleID, uint32 grfscr, LPCOLESTR pszTitle, BOOL registerDocument, BOOL strictMode)
     {
 #if ENABLE_DEBUG_CONFIG_OPTIONS
         char16 debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
 #endif
-        ScriptFunction *pEvalFunction = DefaultEvalHelper(scriptContext, source, sourceLength, moduleID, grfscr, pszTitle, registerDocument, isIndirect, strictMode);
+        ScriptFunction *pEvalFunction = DefaultEvalHelper(scriptContext, source, sourceLength, moduleID, grfscr, pszTitle, registerDocument, strictMode);
         Assert(pEvalFunction);
         Js::FunctionProxy *proxy = pEvalFunction->GetFunctionProxy();
         Assert(proxy);
@@ -838,7 +838,7 @@ namespace Js
         }
     }
 
-    ScriptFunction* GlobalObject::DefaultEvalHelper(ScriptContext* scriptContext, const char16 *source, int sourceLength, ModuleID moduleID, uint32 grfscr, LPCOLESTR pszTitle, BOOL registerDocument, BOOL isIndirect, BOOL strictMode)
+    ScriptFunction* GlobalObject::DefaultEvalHelper(ScriptContext* scriptContext, const char16 *source, int sourceLength, ModuleID moduleID, uint32 grfscr, LPCOLESTR pszTitle, BOOL registerDocument, BOOL strictMode)
     {
         Assert(sourceLength >= 0);
         AnalysisAssert(scriptContext);
@@ -908,7 +908,7 @@ namespace Js
 
                 // Tell byte code gen not to attempt to interact with the caller's context if this is indirect eval.
                 // TODO: Handle strict mode.
-                if (isIndirect &&
+                if ((grfscr & fscrIndirect) != 0 &&
                     !strictMode &&
                     !parseTree->sxFnc.GetStrictMode())
                 {
@@ -970,7 +970,7 @@ namespace Js
                 // if asm.js compilation succeeded, retry with asm.js disabled
                 grfscr |= fscrNoAsmJs;
                 se.Clear();
-                return DefaultEvalHelper(scriptContext, source, sourceLength, moduleID, grfscr, pszTitle, registerDocument, isIndirect, strictMode);
+                return DefaultEvalHelper(scriptContext, source, sourceLength, moduleID, grfscr, pszTitle, registerDocument, strictMode);
             }
 
             Assert(funcBody != nullptr);

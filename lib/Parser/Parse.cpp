@@ -1818,15 +1818,16 @@ ParseNode *Parser::GetCurrentFunctionNode()
     }
 }
 
-ParseNode *Parser::GetCurrentNonLamdaFunctionNode()
+ParseNode *Parser::GetCurrentNonLambdaFunctionNode()
 {
     if (m_currentNodeNonLambdaDeferredFunc != nullptr)
     {
         return m_currentNodeNonLambdaDeferredFunc;
     }
-    return m_currentNodeNonLambdaFunc;
 
+    return m_currentNodeNonLambdaFunc;
 }
+
 void Parser::RegisterRegexPattern(UnifiedRegex::RegexPattern *const regexPattern)
 {
     Assert(regexPattern);
@@ -2020,7 +2021,7 @@ void Parser::EnsureStackAvailable()
 
 void Parser::ThrowNewTargetSyntaxErrForGlobalScope()
 {
-    if (GetCurrentNonLamdaFunctionNode() != nullptr)
+    if (GetCurrentNonLambdaFunctionNode() != nullptr)
     {
         return;
     }
@@ -2028,13 +2029,11 @@ void Parser::ThrowNewTargetSyntaxErrForGlobalScope()
     if ((this->m_grfscr & fscrEvalCode) != 0 && (this->m_grfscr & fscrIndirect) == 0)
     {
         Js::JavascriptFunction * caller = nullptr;
-        if (Js::JavascriptStackWalker::GetNonLamdaCaller(&caller, m_scriptContext))
+        if (Js::JavascriptStackWalker::GetCaller(&caller, m_scriptContext))
         {
             Js::FunctionBody * callerBody = caller->GetFunctionBody();
             Assert(callerBody);
-            bool isGlobalFunc = callerBody->GetIsGlobalFunc();
-            Assert(!callerBody->IsLambda());
-            if (!isGlobalFunc)
+            if (!callerBody->GetIsGlobalFunc() && !(callerBody->IsLambda() && callerBody->GetEnclosedByGlobalFunc()))
             {
                 return;
             }

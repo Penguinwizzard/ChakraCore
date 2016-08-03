@@ -2468,9 +2468,16 @@ FuncInfo* PostVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerat
 
     if (top->IsLambda())
     {
-        if (byteCodeGenerator->FindEnclosingNonLambda()->isThisLexicallyCaptured)
+        FuncInfo *enclosingNonLambda = byteCodeGenerator->FindEnclosingNonLambda();
+
+        if (enclosingNonLambda->isThisLexicallyCaptured)
         {
             top->byteCodeFunction->SetCapturesThis();
+        }
+
+        if (enclosingNonLambda->IsGlobalFunction())
+        {
+            top->byteCodeFunction->SetEnclosedByGlobalFunc();
         }
     }
 

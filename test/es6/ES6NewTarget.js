@@ -331,14 +331,22 @@ var tests = [
                 try {
                     func();
                 } catch (err) {
-                    assert.areEqual(errType.name, err.name, info);
-                    assert.areEqual(errMsg, err.message, info);
-                }
+                    assert.areEqual(errType.name + ':' + errMsg, err.name + ':' + err.message, info);
+               }
             }
+
             scriptThrows(()=>{ WScript.LoadScript("eval('new.target')", "samethread"); }, SyntaxError, "direct eval in global function", "Invalid use of the 'new.target' keyword");
+            scriptThrows(()=>{ WScript.LoadScript("(()=>eval('new.target'))();", "samethread"); }, SyntaxError, "direct eval in lambda in global function", "Invalid use of the 'new.target' keyword");
+            scriptThrows(()=>{ WScript.LoadScript("var f=()=>eval('new.target'); (function() { return f(); })();", "samethread"); }, SyntaxError, "direct eval in lambda in global function called by a function", "Invalid use of the 'new.target' keyword");
             assert.doesNotThrow(()=>{ WScript.LoadScript("(function() { eval('new.target;') })()", "samethread"); }, "direct eval in function");
+            assert.doesNotThrow(()=>{ WScript.LoadScript("var f =(function() { return ()=>eval('new.target;') })(); f();", "samethread"); }, "direct eval in lambda defined in function and called by global function");
+
             scriptThrows(()=>{ WScript.LoadScript("(0, eval)('new.target;')", "samethread"); }, SyntaxError, "indirect eval in global function", "Invalid use of the 'new.target' keyword");
+            scriptThrows(()=>{ WScript.LoadScript("(()=>(0, eval)('new.target'))();", "samethread"); }, SyntaxError, "indirect eval in lambda in global function", "Invalid use of the 'new.target' keyword");
+            scriptThrows(()=>{ WScript.LoadScript("var f=()=>(0, eval)('new.target'); (function() { return f(); })();", "samethread"); }, SyntaxError, "indirect eval in lambda in global function called by a function", "Invalid use of the 'new.target' keyword");
             scriptThrows(()=>{ WScript.LoadScript("(function() { (0, eval)('new.target;') })()", "samethread")}, SyntaxError, "indirect eval in function", "Invalid use of the 'new.target' keyword");
+            scriptThrows(()=>{ WScript.LoadScript("var f =(function() { return ()=>(0, eval)('new.target;') })(); f();", "samethread"); }, SyntaxError, "indirect eval in lambda defined in function and called by global function", "Invalid use of the 'new.target' keyword");
+
         }
     },
 ];

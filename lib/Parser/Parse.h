@@ -442,7 +442,7 @@ private:
     BlockInfoStack* GetCurrentBlockInfo();
     BlockInfoStack* GetCurrentFunctionBlockInfo();
     ParseNode *GetCurrentFunctionNode();
-    ParseNode *GetCurrentNonLamdaFunctionNode();
+    ParseNode *GetCurrentNonLambdaFunctionNode();
     bool IsNodeAllowedForDeferParse(OpCode op) {return !this->m_deferringAST ||
         (op == knopBlock || op == knopVarDecl || op == knopConstDecl || op == knopLetDecl || op == knopFncDecl); }
     bool NextTokenConfirmsLetDecl() const { return m_token.tk == tkID || m_token.tk == tkLBrack || m_token.tk == tkLCurly || m_token.IsReservedWord(); }

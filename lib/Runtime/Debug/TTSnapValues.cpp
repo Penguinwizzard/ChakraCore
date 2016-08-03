@@ -1153,7 +1153,7 @@ namespace TTD
             Js::ModuleID moduleID = kmodGlobal;
             BOOL strictMode = FALSE;
 
-            Js::JavascriptFunction* pfuncScript = ctx->GetGlobalObject()->EvalHelper(ctx, fbInfo->TopLevelBase.SourceCode.Contents, (int32)fbInfo->TopLevelBase.SourceCode.Length, moduleID, fscrNil, Js::Constants::FunctionCode, TRUE, TRUE, strictMode);
+            Js::JavascriptFunction* pfuncScript = ctx->GetGlobalObject()->EvalHelper(ctx, fbInfo->TopLevelBase.SourceCode.Contents, (int32)fbInfo->TopLevelBase.SourceCode.Length, moduleID, fscrIndirect, Js::Constants::FunctionCode, TRUE, strictMode);
             AssertMsg(pfuncScript != nullptr, "Something went wrong!!!");
 
             // Indicate that this is a top-level function. We don't pass the fscrGlobalCode flag to the eval helper,
@@ -1212,9 +1212,14 @@ namespace TTD
         {
             uint32 grfscr = ((uint32)fbInfo->EvalFlags) | fscrReturnExpression | fscrEval | fscrEvalCode | fscrGlobalCode;
 
+            if (fbInfo->IsIndirect)
+            {
+                grfscr |= fscrIndirect;
+            }
+
             LPCWSTR source = fbInfo->TopLevelBase.SourceCode.Contents;
             int32 sourceLen = (int32)fbInfo->TopLevelBase.SourceCode.Length;
-            Js::ScriptFunction* pfuncScript = ctx->GetLibrary()->GetGlobalObject()->EvalHelper(ctx, source, sourceLen, fbInfo->TopLevelBase.ModuleId, grfscr, Js::Constants::EvalCode, fbInfo->RegisterDocument, fbInfo->IsIndirect, fbInfo->IsStrictMode);
+            Js::ScriptFunction* pfuncScript = ctx->GetLibrary()->GetGlobalObject()->EvalHelper(ctx, source, sourceLen, fbInfo->TopLevelBase.ModuleId, grfscr, Js::Constants::EvalCode, fbInfo->RegisterDocument, fbInfo->IsStrictMode);
             Assert(!pfuncScript->GetFunctionInfo()->IsGenerator());
 
             Js::FastEvalMapString key(source, sourceLen, fbInfo->TopLevelBase.ModuleId, fbInfo->IsStrictMode, false);
