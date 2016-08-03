@@ -432,8 +432,8 @@ private:
     friend class Lowerer;
 
     void            SetByteCodeOffset(uint32 number);
-    friend class IRBuilder;
-    friend class IRBuilderAsmJs;
+    friend IRBuilder;
+    friend IRBuilderAsmJs;
     friend FlowGraph;
 
     void            SetBailOutKind_NoAssert(const IR::BailOutKind bailOutKind);

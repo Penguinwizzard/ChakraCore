@@ -1282,8 +1282,12 @@ Inline::TryOptimizeCallInstrWithFixedMethod(IR::Instr *callInstr, Js::FunctionIn
     char16 debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
     char16 debugStringBuffer2[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
     bool printFixedFieldsTrace =
-        ((PHASE_TRACE(Js::FixedMethodsPhase, callInstr->m_func->GetJnFunction()) || PHASE_TESTTRACE(Js::FixedMethodsPhase, callInstr->m_func->GetJnFunction()) ||
-        (isCtor && PHASE_TRACE(Js::FixedNewObjPhase, callInstr->m_func->GetJnFunction()) || PHASE_TESTTRACE(Js::FixedNewObjPhase, callInstr->m_func->GetJnFunction()))) && !dontOptimizeJustCheck);
+        (
+            PHASE_TRACE(Js::FixedMethodsPhase, callInstr->m_func->GetJnFunction()) ||
+            PHASE_TESTTRACE(Js::FixedMethodsPhase, callInstr->m_func->GetJnFunction()) ||
+            (isCtor && PHASE_TRACE(Js::FixedNewObjPhase, callInstr->m_func->GetJnFunction())) ||
+            PHASE_TESTTRACE(Js::FixedNewObjPhase, callInstr->m_func->GetJnFunction())
+        ) && !dontOptimizeJustCheck;
 
     if (printFixedFieldsTrace)
     {

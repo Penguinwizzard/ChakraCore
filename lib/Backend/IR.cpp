@@ -145,7 +145,7 @@ Instr::TryOptimizeInstrWithFixedDataProperty(IR::Instr **pInstr, GlobOpt * globo
 bool
 Instr::IsEqual(IR::Instr *compareInstr) const
 {
-    Assert(this && compareInstr);
+    Assert(compareInstr);
     if (this->GetKind() == compareInstr->GetKind()
         && this->m_opcode == compareInstr->m_opcode)
     {
@@ -4020,6 +4020,9 @@ Instr::Dump(IRDumpFlags flags)
         Output::SkipToColumn(38);
     };
 
+    // forward decl before goto statement
+    Opnd * dst = nullptr;
+
     if(m_opcode == Js::OpCode::BoundCheck || m_opcode == Js::OpCode::UnsignedBoundCheck)
     {
         PrintOpCodeName();
@@ -4085,7 +4088,7 @@ Instr::Dump(IRDumpFlags flags)
 
     Output::SkipToColumn(4);
 
-    Opnd * dst = this->GetDst();
+    dst = this->GetDst();
 
     if (dst)
     {
@@ -4207,23 +4210,26 @@ Instr::Dump(IRDumpFlags flags)
         Output::Print(_u("#%d"), this->AsPragmaInstr()->m_statementIndex);
     }
 
-    Opnd * src1 = this->GetSrc1();
-    if (this->m_opcode == Js::OpCode::NewScFunc || this->m_opcode == Js::OpCode::NewScGenFunc)
+    // scope
     {
-        Assert(src1->IsIntConstOpnd());
-        Js::ParseableFunctionInfo *function = this->m_func->GetJnFunction()->GetNestedFunctionForExecution((uint)src1->AsIntConstOpnd()->GetValue())->GetParseableFunctionInfo();
-        Output::Print(_u("func:%s()"), function ? function->GetDisplayName() : _u("???"));
-        Output::Print(_u(", env:"));
-        this->GetSrc2()->AsRegOpnd()->m_sym->Dump(flags);
-    }
-    else if (src1)
-    {
-        src1->Dump(flags, this->m_func);
-        Opnd * src2 = this->GetSrc2();
-        if (src2)
+        Opnd * src1 = this->GetSrc1();
+        if (this->m_opcode == Js::OpCode::NewScFunc || this->m_opcode == Js::OpCode::NewScGenFunc)
         {
-            Output::Print(_u(", "));
-            src2->Dump(flags, this->m_func);
+            Assert(src1->IsIntConstOpnd());
+            Js::ParseableFunctionInfo *function = this->m_func->GetJnFunction()->GetNestedFunctionForExecution((uint)src1->AsIntConstOpnd()->GetValue())->GetParseableFunctionInfo();
+            Output::Print(_u("func:%s()"), function ? function->GetDisplayName() : _u("???"));
+            Output::Print(_u(", env:"));
+            this->GetSrc2()->AsRegOpnd()->m_sym->Dump(flags);
+        }
+        else if (src1)
+        {
+            src1->Dump(flags, this->m_func);
+            Opnd * src2 = this->GetSrc2();
+            if (src2)
+            {
+                Output::Print(_u(", "));
+                src2->Dump(flags, this->m_func);
+            }
         }
     }
 

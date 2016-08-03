@@ -1834,8 +1834,8 @@ GlobOpt::MergeCapturedValues(
     SListBase<CapturedList> * fromList,
     CapturedItemsAreEqual itemsAreEqual)
 {
-    SListBase<CapturedList>::Iterator iterTo(toList);
-    SListBase<CapturedList>::Iterator iterFrom(fromList);
+    typename SListBase<CapturedList>::Iterator iterTo(toList);
+    typename SListBase<CapturedList>::Iterator iterFrom(fromList);
     bool hasTo = iterTo.Next();
     bool hasFrom = fromList == nullptr ? false : iterFrom.Next();
 
@@ -1870,7 +1870,7 @@ GlobOpt::MergeCapturedValues(
     bool hasRemain = hasFrom || hasTo;
     if (hasRemain)
     {
-        SListBase<CapturedList>::Iterator iterRemain(hasFrom ? iterFrom : iterTo);
+        typename SListBase<CapturedList>::Iterator iterRemain(hasFrom ? iterFrom : iterTo);
         do
         {
             Sym * symRemain = iterRemain.Data().Key();
@@ -2170,7 +2170,7 @@ GlobOpt::MergeBlockData(
                 if(value)
                 {
                     ValueInfo *const valueInfo = value->GetValueInfo();
-                    if(valueInfo->IsInt() || valueInfo->IsLikelyInt() && DoAggressiveIntTypeSpec())
+                    if(valueInfo->IsInt() || (valueInfo->IsLikelyInt() && DoAggressiveIntTypeSpec()))
                     {
                         toData->liveVarSyms->Set(id);
                     }
@@ -4379,7 +4379,7 @@ GlobOpt::IsAllowedForMemOpt(IR::Instr* instr, bool isMemset, IR::RegOpnd *baseOp
             );
         if (!hasBoundChecksRemoved)
         {
-            TRACE_MEMOP_VERBOSE(loop, instr, L"Missing bounds check optimization");
+            TRACE_MEMOP_VERBOSE(loop, instr, _u("Missing bounds check optimization"));
             return false;
         }
     }
@@ -5460,8 +5460,8 @@ GlobOpt::OptDst(
                         if(!prevDst ||
                             !src->IsEqualInternal(prevDst) ||
                             !(
-                                prevInstr->GetSrc1() && dst->IsEqual(prevInstr->GetSrc1()) ||
-                                prevInstr->GetSrc2() && dst->IsEqual(prevInstr->GetSrc2())
+                                (prevInstr->GetSrc1() && dst->IsEqual(prevInstr->GetSrc1())) ||
+                                (prevInstr->GetSrc2() && dst->IsEqual(prevInstr->GetSrc2()))
                             ))
                         {
                             break;
@@ -5927,7 +5927,7 @@ GlobOpt::OptSrc(IR::Opnd *opnd, IR::Instr * *pInstr, Value **indirIndexValRef, I
             }
             if(profiledArrayType.IsLikelyObject() &&
                 profiledArrayType.GetObjectType() == valueType.GetObjectType() &&
-                (profiledArrayType.HasVarElements() || valueType.HasIntElements() && profiledArrayType.HasFloatElements()))
+                (profiledArrayType.HasVarElements() || (valueType.HasIntElements() && profiledArrayType.HasFloatElements())))
             {
                 // Merge array type we pulled from profile with type propagated by dataflow.
                 valueType = valueType.Merge(profiledArrayType).SetHasNoMissingValues(valueType.HasNoMissingValues());
@@ -6815,7 +6815,7 @@ GlobOpt::NewIntConstantValue(const int32 intConst, IR::Instr * instr, bool isTag
         // This gets in the way of CSE.
         value = HoistConstantLoadAndPropagateValueBackward(Js::TaggedInt::ToVarUnchecked(intConst), instr, value);
         if (!value->GetValueInfo()->GetSymStore() &&
-            instr->m_opcode == Js::OpCode::LdC_A_I4 || instr->m_opcode == Js::OpCode::Ld_I4)
+            (instr->m_opcode == Js::OpCode::LdC_A_I4 || instr->m_opcode == Js::OpCode::Ld_I4))
         {
             StackSym * sym = instr->GetDst()->GetStackSym();
             Assert(sym);
@@ -7368,8 +7368,8 @@ GlobOpt::ValueNumberDst(IR::Instr **pInstr, Value *src1Val, Value *src2Val)
             if(!(
                     profiledValueType.IsLikelyInt() &&
                     (
-                        dst->IsRegOpnd() && dst->AsRegOpnd()->m_sym->m_isNotInt ||
-                        instr->GetSrc1()->IsRegOpnd() && instr->GetSrc1()->AsRegOpnd()->m_sym->m_isNotInt
+                        (dst->IsRegOpnd() && dst->AsRegOpnd()->m_sym->m_isNotInt) ||
+                        (instr->GetSrc1()->IsRegOpnd() && instr->GetSrc1()->AsRegOpnd()->m_sym->m_isNotInt)
                     )
                 ))
             {
@@ -7917,7 +7917,7 @@ GlobOpt::ValueNumberLdElemDst(IR::Instr **pInstr, Value *srcVal)
     if (instr->DoStackArgsOpt(this->func) ||
         !(
             baseValueType.IsLikelyOptimizedTypedArray() ||
-            baseValueType.IsLikelyNativeArray() && instr->IsProfiledInstr() // Specialized native array lowering for LdElem requires that it is profiled.
+            (baseValueType.IsLikelyNativeArray() && instr->IsProfiledInstr()) // Specialized native array lowering for LdElem requires that it is profiled.
         ) ||
         (!this->DoTypedArrayTypeSpec() && baseValueType.IsLikelyOptimizedTypedArray()) ||
 
@@ -8137,8 +8137,8 @@ GlobOpt::GetPrepassValueTypeForDst(
         return desiredValueType;
     }
 
-    if(instr->GetSrc1() && !IsPrepassSrcValueInfoPrecise(instr->GetSrc1(), src1Value) ||
-        instr->GetSrc2() && !IsPrepassSrcValueInfoPrecise(instr->GetSrc2(), src2Value))
+    if((instr->GetSrc1() && !IsPrepassSrcValueInfoPrecise(instr->GetSrc1(), src1Value)) ||
+       (instr->GetSrc2() && !IsPrepassSrcValueInfoPrecise(instr->GetSrc2(), src2Value)))
     {
         // If the desired value type is not precise, the value type of the destination is derived from the value types of the
         // sources. Since the value type of a source sym is not definite, the destination value type also cannot be definite.
@@ -8379,7 +8379,7 @@ GlobOpt::ValueNumberTransferDstInPrepass(IR::Instr *const instr, Value *const sr
     // In prepass we are going to copy the value but with a different value number
     // for aggressive int type spec.
     const ValueType valueType(GetPrepassValueTypeForDst(src1ValueInfo->Type(), instr, src1Val, nullptr, &isValueInfoPrecise));
-    if(isValueInfoPrecise || valueType == src1ValueInfo->Type() && src1ValueInfo->IsGeneric())
+    if(isValueInfoPrecise || (valueType == src1ValueInfo->Type() && src1ValueInfo->IsGeneric()))
     {
         Assert(valueType == src1ValueInfo->Type());
         dstVal = CopyValue(src1Val);
@@ -9560,7 +9560,7 @@ GlobOpt::IsWorthSpecializingToInt32DueToSrc(IR::Opnd *const src, Value *const va
         !src->GetIsDead() ||
         !src->IsRegOpnd() ||
         this->IsInt32TypeSpecialized(src->AsRegOpnd()->m_sym, this->currentBlock) ||
-        this->currentBlock->loop && this->IsLive(src->AsRegOpnd()->m_sym, this->currentBlock->loop->landingPad);
+        (this->currentBlock->loop && this->IsLive(src->AsRegOpnd()->m_sym, this->currentBlock->loop->landingPad));
 }
 
 bool
@@ -9571,7 +9571,7 @@ GlobOpt::IsWorthSpecializingToInt32DueToDst(IR::Opnd *const dst)
     const auto sym = dst->AsRegOpnd()->m_sym;
     return
         this->IsInt32TypeSpecialized(sym, this->currentBlock) ||
-        this->currentBlock->loop && this->IsLive(sym, this->currentBlock->loop->landingPad);
+        (this->currentBlock->loop && this->IsLive(sym, this->currentBlock->loop->landingPad));
 }
 
 bool
@@ -9585,7 +9585,7 @@ GlobOpt::IsWorthSpecializingToInt32(IR::Instr *const instr, Value *const src1Val
     // In addition to checking each operand and the destination, if for any reason we only have to do a maximum of two
     // conversions instead of the worst-case 3 conversions, it's probably worth specializing.
     if (IsWorthSpecializingToInt32DueToSrc(src1, src1Val) ||
-        src2Val && IsWorthSpecializingToInt32DueToSrc(src2, src2Val))
+        (src2Val && IsWorthSpecializingToInt32DueToSrc(src2, src2Val)))
     {
         return true;
     }
@@ -9596,7 +9596,7 @@ GlobOpt::IsWorthSpecializingToInt32(IR::Instr *const instr, Value *const src1Val
         return true;
     }
 
-    if (dst->IsEqual(src1) || src2Val && (dst->IsEqual(src2) || src1->IsEqual(src2)))
+    if (dst->IsEqual(src1) || (src2Val && (dst->IsEqual(src2) || src1->IsEqual(src2))))
     {
         return true;
     }
@@ -11270,19 +11270,19 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
     default:
         {
             const bool involesLargeInt32 =
-                src1Val && src1Val->GetValueInfo()->IsLikelyUntaggedInt() ||
-                src2Val && src2Val->GetValueInfo()->IsLikelyUntaggedInt();
+                (src1Val && src1Val->GetValueInfo()->IsLikelyUntaggedInt()) ||
+                (src2Val && src2Val->GetValueInfo()->IsLikelyUntaggedInt());
             const auto trySpecializeToFloat =
                 [&](const bool mayOverflow) -> bool
             {
                 // It has been determined that this instruction cannot be int-specialized. Need to determine whether to attempt
                 // to float-specialize the instruction, or leave it unspecialized.
-                if(involesLargeInt32
+                if((involesLargeInt32
 #if INT32VAR
                     && mayOverflow
 #endif
-                    || (instr->m_opcode == Js::OpCode::Mul_A && !this->DoAggressiveMulIntTypeSpec())
-                    )
+                   ) || (instr->m_opcode == Js::OpCode::Mul_A && !this->DoAggressiveMulIntTypeSpec())
+                  )
                 {
                     // An input range is completely outside the range of an int31 and the operation is likely to overflow.
                     // Additionally, on 32-bit platforms, the value is untaggable and will be a JavascriptNumber, which is
@@ -11316,8 +11316,8 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
                             !src2Val->GetValueInfo()->IsInt()
                         )
                     ) ||
-                    instr->GetSrc1()->IsRegOpnd() && instr->GetSrc1()->AsRegOpnd()->m_sym->m_isNotInt ||
-                    instr->GetSrc2()->IsRegOpnd() && instr->GetSrc2()->AsRegOpnd()->m_sym->m_isNotInt)
+                    (instr->GetSrc1()->IsRegOpnd() && instr->GetSrc1()->AsRegOpnd()->m_sym->m_isNotInt) ||
+                    (instr->GetSrc2()->IsRegOpnd() && instr->GetSrc2()->AsRegOpnd()->m_sym->m_isNotInt))
                 {
                     return trySpecializeToFloat(true);
                 }
@@ -11717,7 +11717,7 @@ GlobOpt::TypeSpecializeBinary(IR::Instr **pInstr, Value **pSrc1Val, Value **pSrc
                             // May result in -0
                             return trySpecializeToFloat(false);
                         }
-                        if ((min1 == 0 && max1 == 0 || min2 == 0 && max2 == 0) && (max1 < 0 || max2 < 0))
+                        if (((min1 == 0 && max1 == 0) || (min2 == 0 && max2 == 0)) && (max1 < 0 || max2 < 0))
                         {
                             // Always results in -0
                             return trySpecializeToFloat(false);
@@ -14483,7 +14483,7 @@ GlobOpt::ToTypeSpecUse(IR::Instr *instr, IR::Opnd *opnd, BasicBlock *block, Valu
                 // Src is always invariant, but check if the dst is, and then hoist.
                 if (block->loop &&
                     (
-                        newFloatSym && block->loop->CanHoistInvariants() ||
+                        (newFloatSym && block->loop->CanHoistInvariants()) ||
                         this->OptIsInvariant(floatReg, block, block->loop, val, false, false)
                     ))
                 {
@@ -15908,7 +15908,7 @@ GlobOpt::OptArraySrc(IR::Instr * *const instrRef)
     baseOpnd->SetValueType(baseValueType);
     if(!baseValueType.IsLikelyAnyOptimizedArray() ||
         !DoArrayCheckHoist(baseValueType, currentBlock->loop, instr) ||
-        baseOwnerIndir && !ShouldExpectConventionalArrayIndexValue(baseOwnerIndir))
+        (baseOwnerIndir && !ShouldExpectConventionalArrayIndexValue(baseOwnerIndir)))
     {
         return;
     }
@@ -16019,7 +16019,7 @@ GlobOpt::OptArraySrc(IR::Instr * *const instrRef)
     const bool headSegmentLengthIsAvailable = baseArrayValueInfo && baseArrayValueInfo->HeadSegmentLengthSym();
     const bool doHeadSegmentLengthLoad =
         doArraySegmentLengthHoist &&
-        (needsHeadSegmentLength || !isLikelyJsArray && needsLength) &&
+        (needsHeadSegmentLength || (!isLikelyJsArray && needsLength)) &&
         !headSegmentLengthIsAvailable;
     const bool lengthIsAvailable = baseArrayValueInfo && baseArrayValueInfo->LengthSym();
     const bool doLengthLoad =
@@ -16216,7 +16216,7 @@ GlobOpt::OptArraySrc(IR::Instr * *const instrRef)
             {
                 const JsArrayKills loopKills(loop->jsArrayKills);
                 Value *baseValueInLoopLandingPad;
-                if(isLikelyJsArray && loopKills.KillsValueType(newBaseValueType) ||
+                if((isLikelyJsArray && loopKills.KillsValueType(newBaseValueType)) ||
                     !OptIsInvariant(baseOpnd->m_sym, currentBlock, loop, baseValue, true, true, &baseValueInLoopLandingPad) ||
                     !(doArrayChecks || baseValueInLoopLandingPad->GetValueInfo()->IsObject()))
                 {
@@ -17402,7 +17402,7 @@ GlobOpt::OptArraySrc(IR::Instr * *const instrRef)
             baseArrayValueInfo->CreateOpnd(
                 baseOpnd,
                 needsHeadSegment,
-                needsHeadSegmentLength || !isLikelyJsArray && needsLength,
+                needsHeadSegmentLength || (!isLikelyJsArray && needsLength),
                 needsLength,
                 eliminatedLowerBoundCheck,
                 eliminatedUpperBoundCheck,
@@ -17656,7 +17656,7 @@ GlobOpt::CheckJsArrayKills(IR::Instr *const instr)
         case Js::OpCode::DeleteElemIStrict_A:
             Assert(instr->GetSrc1());
             if(!instr->GetSrc1()->IsIndirOpnd() ||
-                useValueTypes && instr->GetSrc1()->AsIndirOpnd()->GetBaseOpnd()->GetValueType().IsNotArrayOrObjectWithArray())
+                (useValueTypes && instr->GetSrc1()->AsIndirOpnd()->GetBaseOpnd()->GetValueType().IsNotArrayOrObjectWithArray()))
             {
                 break;
             }
@@ -17718,7 +17718,7 @@ GlobOpt::CheckJsArrayKills(IR::Instr *const instr)
 
             const ValueType arrayValueType(arrayOpnd->GetValueType());
 
-            if(!arrayOpnd->IsRegOpnd() || useValueTypes && arrayValueType.IsNotArrayOrObjectWithArray())
+            if(!arrayOpnd->IsRegOpnd() || (useValueTypes && arrayValueType.IsNotArrayOrObjectWithArray()))
             {
                 break;
             }
@@ -17740,10 +17740,12 @@ GlobOpt::CheckJsArrayKills(IR::Instr *const instr)
             }
 
             // Don't kill NativeArray, if there is no mismatch between array's type and element's type.
-            if(doNativeArrayTypeSpec && !(useValueTypes && arrayValueType.IsNativeArray() &&
-                (arrayValueType.IsLikelyNativeIntArray() && instr->GetSrc2()->IsInt32()) ||
-                (arrayValueType.IsLikelyNativeFloatArray() && instr->GetSrc2()->IsFloat()))
-                && !(useValueTypes && arrayValueType.IsNotNativeArray()))
+            if(doNativeArrayTypeSpec &&
+               !(useValueTypes && arrayValueType.IsNativeArray() &&
+                    ((arrayValueType.IsLikelyNativeIntArray() && instr->GetSrc2()->IsInt32()) ||
+                     (arrayValueType.IsLikelyNativeFloatArray() && instr->GetSrc2()->IsFloat()))
+                ) &&
+               !(useValueTypes && arrayValueType.IsNotNativeArray()))
             {
                 kills.SetKillsNativeArrays();
             }
@@ -17757,7 +17759,7 @@ GlobOpt::CheckJsArrayKills(IR::Instr *const instr)
             Assert(arrayOpnd);
 
             const ValueType arrayValueType(arrayOpnd->GetValueType());
-            if(!arrayOpnd->IsRegOpnd() || useValueTypes && arrayValueType.IsNotArrayOrObjectWithArray())
+            if(!arrayOpnd->IsRegOpnd() || (useValueTypes && arrayValueType.IsNotArrayOrObjectWithArray()))
             {
                 break;
             }
@@ -17782,7 +17784,7 @@ GlobOpt::CheckJsArrayKills(IR::Instr *const instr)
             IR::Opnd *const arrayOpnd = instr->FindCallArgumentOpnd(1);
             Assert(arrayOpnd);
             const ValueType arrayValueType(arrayOpnd->GetValueType());
-            if(!arrayOpnd->IsRegOpnd() || useValueTypes && arrayValueType.IsNotArrayOrObjectWithArray())
+            if(!arrayOpnd->IsRegOpnd() || (useValueTypes && arrayValueType.IsNotArrayOrObjectWithArray()))
             {
                 break;
             }
@@ -18139,10 +18141,10 @@ GlobOpt::VerifyIntSpecForIgnoringIntOverflow(IR::Instr *const instr)
     // doesn't generate bailouts or cause ignoring int overflow to be invalid.
     // MULs are allowed to start a region and have BailOutInfo since they will bailout on non-32 bit overflow.
     if(instr->m_opcode == Js::OpCode::Ld_A ||
-        (!instr->HasBailOutInfo() || instr->m_opcode == Js::OpCode::Mul_I4) &&
+       ((!instr->HasBailOutInfo() || instr->m_opcode == Js::OpCode::Mul_I4) &&
         (!instr->GetDst() || instr->GetDst()->IsInt32()) &&
         (!instr->GetSrc1() || instr->GetSrc1()->IsInt32()) &&
-        (!instr->GetSrc2() || instr->GetSrc2()->IsInt32()))
+        (!instr->GetSrc2() || instr->GetSrc2()->IsInt32())))
     {
         return;
     }
@@ -18569,8 +18571,8 @@ GlobOpt::OptIsInvariant(Sym *sym, BasicBlock *block, Loop *loop, Value *srcVal, 
             {
                 Assert(block->globOptData.liveInt32Syms->Test(varSym->m_id));
                 if (!loop->landingPad->globOptData.liveInt32Syms->Test(varSym->m_id) ||
-                    loop->landingPad->globOptData.liveLossyInt32Syms->Test(varSym->m_id) &&
-                    !block->globOptData.liveLossyInt32Syms->Test(varSym->m_id))
+                    (loop->landingPad->globOptData.liveLossyInt32Syms->Test(varSym->m_id) &&
+                    !block->globOptData.liveLossyInt32Syms->Test(varSym->m_id)))
                 {
                     // Either the int32 sym is not live in the landing pad, or it's lossy in the landing pad and the
                     // instruction's block is using the lossless version. In either case, the instruction cannot be hoisted
@@ -19642,7 +19644,7 @@ GlobOpt::DoArrayCheckHoist() const
 bool
 GlobOpt::DoArrayCheckHoist(const ValueType baseValueType, Loop* loop, IR::Instr *const instr) const
 {
-    if(!DoArrayCheckHoist() || instr && !IsLoopPrePass() && instr->DoStackArgsOpt(func))
+    if(!DoArrayCheckHoist() || (instr && !IsLoopPrePass() && instr->DoStackArgsOpt(func)))
     {
         return false;
     }
@@ -19768,7 +19770,7 @@ GlobOpt::DoLdLenIntSpec(IR::Instr *const instr, const ValueType baseValueType) c
     if(PHASE_OFF(Js::LdLenIntSpecPhase, func) ||
         IsTypeSpecPhaseOff(func) ||
         func->GetProfileInfo()->IsLdLenIntSpecDisabled() ||
-        instr && !IsLoopPrePass() && instr->DoStackArgsOpt(func))
+        (instr && !IsLoopPrePass() && instr->DoStackArgsOpt(func)))
     {
         return false;
     }
@@ -19786,7 +19788,7 @@ GlobOpt::DoLdLenIntSpec(IR::Instr *const instr, const ValueType baseValueType) c
     Assert(!instr || baseValueType == instr->GetSrc1()->GetValueType());
     return
         baseValueType.HasBeenString() ||
-        baseValueType.IsLikelyAnyOptimizedArray() && baseValueType.GetObjectType() != ObjectType::ObjectWithArray;
+        (baseValueType.IsLikelyAnyOptimizedArray() && baseValueType.GetObjectType() != ObjectType::ObjectWithArray);
 }
 
 bool
