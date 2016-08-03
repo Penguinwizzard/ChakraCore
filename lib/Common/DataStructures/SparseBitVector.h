@@ -103,7 +103,7 @@ public:
             BVSparseNode *      head;
             typedef JsUtil::BaseDictionary<BVIndex, BVSparseNode *, TAllocator> BVMapT;
             BVMapT *            bvMap;
-            size_t              listSize;
+            size_t              totalNodes;
 private:
             TAllocator *        alloc;
             BVSparseNode **     lastUsedNodePrevNextField;
@@ -121,7 +121,8 @@ protected:
     static  void            AssertBV(const BVSparse<TOtherAllocator> * bv);
 
             SparseBVUnit *  BitsFromIndex(BVIndex i, bool create = true);
-            BVSparseNode *  NodeFromIndex(BVIndex i, BVSparseNode *** prevNextFieldOut, bool create = true);
+            BVSparseNode *  NodeFromIndex(BVIndex i, bool create = true);
+            int             getlistsize();
             BVSparseNode *  DeleteNode(BVSparseNode *node, bool bResetLastUsed = true);
             void            DeleteMapEntry(BVIndex i, BVSparseNode * node);
             void            DeleteMap();
@@ -237,13 +238,14 @@ BVSparse<TAllocator>::BVSparse(TAllocator* allocator) :
 {
     this->lastUsedNodePrevNextField = &this->head;
     this->bvMap = nullptr;
-    this->listSize = 0;
+    this->totalNodes = 0;
 }
 
 template <class TAllocator>
 void
 BVSparse<TAllocator>::QueueInFreeList(BVSparseNode *curNode)
 {
+    this->totalNodes--;
     AllocatorDelete(TAllocator, this->alloc, curNode);
 }
 
@@ -251,6 +253,7 @@ template <class TAllocator>
 BVSparseNode *
 BVSparse<TAllocator>::AllocateNode(const BVIndex searchIndex, BVSparseNode *nextNode)
 {
+    this->totalNodes++;
     return AllocatorNew(TAllocator, this->alloc, BVSparseNode, searchIndex, nextNode);
 }
 
@@ -279,10 +282,11 @@ BVSparse<TAllocator>::~BVSparse()
 // a new node in the appropriate position.
 template <class TAllocator>
 BVSparseNode *
-BVSparse<TAllocator>::NodeFromIndex(BVIndex i, BVSparseNode *** prevNextFieldOut, bool create)
+BVSparse<TAllocator>::NodeFromIndex(BVIndex i, bool create)
 {
     const BVIndex searchIndex = SparseBVUnit::Floor(i);
-
+    int l2 = getlistsize();
+    Assert(totalNodes == l2);
     if (this->bvMap != nullptr)
     {
         if (this->bvMap->ContainsKey(searchIndex))
@@ -297,7 +301,6 @@ BVSparse<TAllocator>::NodeFromIndex(BVIndex i, BVSparseNode *** prevNextFieldOut
     {
         if (curNode->startIndex == searchIndex)
         {
-            *prevNextFieldOut = prevNextField;
             return curNode;
         }
 
@@ -313,14 +316,25 @@ BVSparse<TAllocator>::NodeFromIndex(BVIndex i, BVSparseNode *** prevNextFieldOut
         curNode = this->head;
     }
 
-    for (; curNode && searchIndex > curNode->startIndex; curNode = curNode->next)
+    while (curNode && searchIndex > curNode->startIndex)
     {
-        prevNextField = &curNode->next;
+        if (curNode->data.IsEmpty())
+        {
+            curNode = this->DeleteNode(curNode);
+            *prevNextField = curNode;
+        }
+        else
+        {
+            prevNextField = &curNode->next;
+            curNode = curNode->next;
+        }
     }
+
+    int l = getlistsize();
+    Assert(totalNodes == l);
 
     if (curNode && searchIndex == curNode->startIndex)
     {
-        *prevNextFieldOut = prevNextField;
         this->lastUsedNodePrevNextField = prevNextField;
         return curNode;
     }
@@ -332,11 +346,10 @@ BVSparse<TAllocator>::NodeFromIndex(BVIndex i, BVSparseNode *** prevNextFieldOut
     BVSparseNode * newNode = AllocateNode(searchIndex, *prevNextField);
     *prevNextField = newNode;
 
+    size_t listSize = totalNodes - (this->bvMap ? this->bvMap->Count() : 0);
     if (listSize <= BV_SPARSE_LIST_SIZE)
     {
-        *prevNextFieldOut = prevNextField;
         this->lastUsedNodePrevNextField = prevNextField;
-        this->listSize++;
     }
     else if (this->bvMap == nullptr)
     {
@@ -347,16 +360,27 @@ BVSparse<TAllocator>::NodeFromIndex(BVIndex i, BVSparseNode *** prevNextFieldOut
     {
         this->bvMap->AddNew(searchIndex, newNode);
     }
-
+    int l1 = getlistsize();
+    Assert(totalNodes == l1);
     return newNode;
+}
+
+template <class TAllocator>
+int
+BVSparse<TAllocator>::getlistsize()
+{
+    int l = 0;
+    for (auto cur = this->head; cur != nullptr; cur = cur->next) {
+        l++;
+    }
+    return l;
 }
 
 template <class TAllocator>
 SparseBVUnit *
 BVSparse<TAllocator>::BitsFromIndex(BVIndex i, bool create)
 {
-    BVSparseNode ** prevNextField;
-    BVSparseNode * node = NodeFromIndex(i, &prevNextField, create);
+    BVSparseNode * node = NodeFromIndex(i, create);
     if (node)
     {
         return &node->data;
@@ -397,12 +421,7 @@ template <class TAllocator>
 void
 BVSparse<TAllocator>::DeleteMap() {
     Assert(this->bvMap);
-#if 0
-    for (auto it = this->bvMap->GetIterator(); it.IsValid(); it.MoveNext())
-    {
-        QueueInFreeList(it.Current().Value());
-    }
-#endif
+
     this->bvMap->Reset();
     this->bvMap = nullptr;
 }
@@ -494,8 +513,7 @@ template <class TAllocator>
 void
 BVSparse<TAllocator>::Clear(BVIndex i)
 {
-    BVSparseNode ** prevNextField;
-    BVSparseNode * current = this->NodeFromIndex(i, &prevNextField, false /* create */);
+    BVSparseNode * current = this->NodeFromIndex(i, false /* create */);
     if(current)
     {
         current->data.Clear(SparseBVUnit::Offset(i));
@@ -538,8 +556,7 @@ template <class TAllocator>
 BOOLEAN
 BVSparse<TAllocator>::TestAndClear(BVIndex i)
 {
-    BVSparseNode ** prevNextField;
-    BVSparseNode * current = this->NodeFromIndex(i, &prevNextField, false /* create */);
+    BVSparseNode * current = this->NodeFromIndex(i, false /* create */);
     if (current == nullptr)
     {
         return false;
@@ -563,14 +580,14 @@ void BVSparse<TAllocator>::for_each(const BVSparse *bv2)
 {
     Assert(callback == &SparseBVUnit::And || callback == &SparseBVUnit::Or || callback == &SparseBVUnit::Xor || callback == &SparseBVUnit::Minus);
     AssertBV(bv2);
-
+    int l = getlistsize();
+    Assert(totalNodes == l);
     BVSparseNode * node1 = this->head;
     const BVSparseNode * node2 = bv2->head;
     BVSparseNode ** prevNodeNextField = &this->head;
 
     if (this->bvMap != nullptr)
     {
-        this->listSize += this->bvMap->Count();
         this->bvMap->Reset();
         this->bvMap = nullptr;
     }
@@ -633,6 +650,8 @@ void BVSparse<TAllocator>::for_each(const BVSparse *bv2)
             prevNodeNextField = &newNode->next;
         }
     }
+    int l2 = getlistsize();
+    Assert(totalNodes == l2);
 }
 
 template<class TAllocator>
@@ -810,7 +829,6 @@ BVSparse<TAllocator>::Copy(const BVSparse<TSrcAllocator> * bv2)
 
     if (this->bvMap != nullptr)
     {
-        this->listSize += this->bvMap->Count();
         this->bvMap->Reset();
         this->bvMap = nullptr;
     }
