@@ -200,6 +200,7 @@ namespace JsUtil
     {
     public:
         typedef ReadOnlyList<T, TAllocator, TComparer> ParentType;
+        typedef typename ParentType::TComparerType TComparerType;
         typedef T TElementType;         // For TRemovePolicy
         static const int DefaultIncrement = 4;
 
