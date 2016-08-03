@@ -751,7 +751,7 @@ namespace Js
         return GetCaller(ppFunc, /*includeInlineFrames*/ false);
     }
 
-    BOOL JavascriptStackWalker::GetCaller(JavascriptFunction ** ppFunc, bool includeInlineFrames)
+    BOOL JavascriptStackWalker::GetCaller(JavascriptFunction ** ppFunc, bool includeInlineFrames, bool nonLambda)
     {
         while (this->Walk(includeInlineFrames))
         {
@@ -760,7 +760,15 @@ namespace Js
                 Assert(entryExitRecord != NULL);
                 *ppFunc = this->GetCurrentFunction();
                 AssertMsg(!this->shouldDetectPartiallyInitializedInterpreterFrame, "must have skipped first frame if needed");
-                return true;
+
+                if (nonLambda && (*ppFunc)->GetFunctionBody()->IsLambda())
+                {
+                    continue;
+                }
+                else
+                {
+                    return true;
+                }
             }
         }
         *ppFunc = (JavascriptFunction*)this->scriptContext->GetLibrary()->GetNull();
@@ -1082,6 +1090,12 @@ namespace Js
     {
         JavascriptStackWalker walker(scriptContext);
         return walker.GetCaller(ppFunc);
+    }
+
+    BOOL JavascriptStackWalker::GetNonLamdaCaller(JavascriptFunction** ppFunc, ScriptContext* scriptContext)
+    {
+        JavascriptStackWalker walker(scriptContext);
+        return walker.GetCaller(ppFunc, /* includeInlineFrames */ true, /* nonLamda */ true);
     }
 
     BOOL JavascriptStackWalker::GetCaller(JavascriptFunction** ppFunc, uint32* byteCodeOffset, ScriptContext* scriptContext)

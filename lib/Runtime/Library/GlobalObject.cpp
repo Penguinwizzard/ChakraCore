@@ -599,10 +599,17 @@ namespace Js
         if (!scriptContext->IsInEvalMap(key, isIndirect, &pfuncScript))
         {
             uint32 grfscr = additionalGrfscr | fscrReturnExpression | fscrEval | fscrEvalCode | fscrGlobalCode;
+
             if (isLibraryCode)
             {
                 grfscr |= fscrIsLibraryCode;
             }
+
+            if (isIndirect)
+            {
+                grfscr |= fscrIndirect;
+            }
+
             pfuncScript = library->GetGlobalObject()->EvalHelper(scriptContext, argString->GetSz(), argString->GetLength(), moduleID,
                 grfscr, Constants::EvalCode, doRegisterDocument, isIndirect, strictMode);
             Assert(!pfuncScript->GetFunctionInfo()->IsGenerator());

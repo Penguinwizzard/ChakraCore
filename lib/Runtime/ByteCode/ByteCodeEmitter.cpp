@@ -2164,7 +2164,7 @@ void ByteCodeGenerator::LoadNewTargetObject(FuncInfo *funcInfo)
             EmitInternalScopedSlotLoad(funcInfo, scope, envIndex, slot, funcInfo->newTargetRegister);
         }
     }
-    else if (this->flags & fscrEval)
+    else if ((funcInfo->IsGlobalFunction() || funcInfo->IsLambda()) && (this->flags & fscrEval))
     {
         Js::RegSlot scopeLocation;
 

@@ -2020,14 +2020,29 @@ void Parser::EnsureStackAvailable()
 
 void Parser::ThrowNewTargetSyntaxErrForGlobalScope()
 {
-    //TODO: (falotfi) we need reliably distinguish eval in global scope vs in a function
-    // The rule for this syntax error is any time new.target is called at global scope
-    // we are excluding new.target in eval at global scope for now.
-    if(GetCurrentNonLamdaFunctionNode() == nullptr && (this->m_grfscr & fscrEvalCode) == 0)
+    if (GetCurrentNonLamdaFunctionNode() != nullptr)
     {
-        Error(ERRInvalidNewTarget);
+        return;
     }
-}
+
+    if ((this->m_grfscr & fscrEvalCode) != 0 && (this->m_grfscr & fscrIndirect) == 0)
+    {
+        Js::JavascriptFunction * caller = nullptr;
+        if (Js::JavascriptStackWalker::GetNonLamdaCaller(&caller, m_scriptContext))
+        {
+            Js::FunctionBody * callerBody = caller->GetFunctionBody();
+            Assert(callerBody);
+            bool isGlobalFunc = callerBody->GetIsGlobalFunc();
+            Assert(!callerBody->IsLambda());
+            if (!isGlobalFunc)
+            {
+                return;
+            }
+        }
+    }
+
+    Error(ERRInvalidNewTarget);
+ }
 
 template<bool buildAST>
 ParseNodePtr Parser::ParseMetaProperty(tokens metaParentKeyword, charcount_t ichMin, _Out_opt_ BOOL* pfCanAssign)
