@@ -61,6 +61,8 @@ add_library (Chakra.Backend OBJECT
     amd64/LowererMDArch.cpp
     amd64/PeepsMD.cpp
     amd64/PrologEncoderMD.cpp
+    amd64/LinearScanMdA.S
+    amd64/Thunks.S
 #    arm64/EncoderMD.cpp
 #    arm64/LowerMD.cpp
 #    arm/EncoderMD.cpp

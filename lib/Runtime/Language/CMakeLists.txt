@@ -1,5 +1,11 @@
+# TODO: if BuildJIT
+add_definitions(-D_ENABLE_DYNAMIC_THUNKS=1)
+
 if(CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64 OR CMAKE_SYSTEM_PROCESSOR STREQUAL amd64)
     set( ARCH_CHAKRA_RUNTIME_LANGUAGE
+        amd64/AsmJsJitTemplate.cpp
+        amd64/StackFrame.SystemV.cpp
+        amd64/amd64_Thunks.S
         amd64/JavascriptOperatorsA.S
         )
 endif()
@@ -61,8 +67,6 @@ add_library (Chakra.Runtime.Language OBJECT
     StackTraceArguments.cpp
     TaggedInt.cpp
     ValueType.cpp
-    amd64/AsmJsJitTemplate.cpp
-    amd64/StackFrame.SystemV.cpp
     # arm64/StackFrame.cpp
     # arm/StackFrame.cpp
     # i386/AsmJsJitTemplate.cpp
