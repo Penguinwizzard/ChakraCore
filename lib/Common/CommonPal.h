@@ -76,6 +76,7 @@ __forceinline void  __int2c()
 #define STRSAFE_INLINE   1
 
 #ifdef PAL_STDCPP_COMPAT
+#include <wchar.h>
 #include <math.h>
 #include <time.h>
 #include <smmintrin.h>
