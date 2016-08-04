@@ -1083,6 +1083,7 @@ namespace Js
         newInstance->m_callFlags    = this->callFlags;
         newInstance->m_outParams    = newInstance->m_localSlots + localCount;
         newInstance->m_outSp        = newInstance->m_outParams;
+        newInstance->m_outSpCached  = nullptr;
         newInstance->m_arguments    = NULL;
         newInstance->function       = this->function;
         newInstance->m_functionBody = this->executeFunction;
@@ -2213,6 +2214,36 @@ namespace Js
         *(AsmJsSIMDValue*)(&(m_outParams[outRegisterID])) = val;
     }
 
+    // This will be called in the beginning of the try_finally.
+    inline void InterpreterStackFrame::CacheSp()
+    {
+        // Before caching the current m_outSp, we will be storing the previous the previously stored value in the m_outSpCached.
+        *m_outSp++ = (Var)m_outSpCached;
+        *m_outSp++ = (Var)m_outParams;
+        m_outSpCached = m_outSp - 2;
+    }
+
+    inline void InterpreterStackFrame::RestoreSp()
+    {
+        // This will be called in the Finally block to restore from the previous SP cached.
+
+        // m_outSpCached can be null if the catch block is called.
+        if (m_outSpCached != nullptr)
+        {
+            Assert(m_outSpCached < m_outSp);
+            m_outSp = m_outSpCached;
+
+            m_outSpCached = (Var*)*m_outSp;
+            Assert(m_outSpCached == nullptr || m_outSpCached <= m_outSp);
+
+            m_outParams = (Var*)*(m_outSp + 1);
+        }
+        else
+        {
+            ResetOut();
+        }
+    }
+
     inline void InterpreterStackFrame::PushOut(Var aValue)
     {
         *m_outSp++ = aValue;
@@ -2236,6 +2267,7 @@ namespace Js
         m_outParams    = m_localSlots + this->m_functionBody->GetLocalsCount();
 
         m_outSp        = m_outParams;
+        m_outSpCached  = nullptr;
     }
 
     _NOINLINE
@@ -6718,6 +6750,8 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
             // mark the stackFrame as 'in try block'
             this->m_flags |= InterpreterStackFrameFlags_WithinTryBlock;
 
+            CacheSp();
+
             if (this->IsInDebugMode())
             {
                 result = this->ProcessWithDebugging();
@@ -6746,6 +6780,8 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
 
         if (skipFinallyBlock)
         {
+            RestoreSp();
+
             // A leave occurred due to a yield
             return;
         }
@@ -6779,7 +6815,7 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
         // Call into the finally by setting the IP, consuming the Finally, and letting the interpreter recurse.
         m_reader.SetCurrentRelativeOffset(ip, jumpOffset);
 
-        ResetOut();
+        RestoreSp();
 
         newOffset = this->ProcessFinally();
 
