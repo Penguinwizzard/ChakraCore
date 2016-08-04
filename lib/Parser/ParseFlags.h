@@ -51,9 +51,6 @@ enum
                                      //  let/const in global scope instead of eval scope so that they can be preserved across console inputs
     fscrNoAsmJs = 1 << 25, // Disable generation of asm.js code
     fscrIsModuleCode = 1 << 26, // Current code should be parsed as a module body
-
-    fscrIndirect = 1 << 27,
-
-    fscrAll = (1 << 28) - 1
+    fscrAll = (1 << 27) - 1
 };
 

@@ -49,8 +49,6 @@ var tests = [
             assert.areEqual('something', obj.target, "The name 'target' can be used as an identifier");
         }
     },
-
-    // Blocked by 'ReferenceError: '<_lexicalNewTargetSymbol>' is undefined' bug
     {
         name: "new.target is not valid for assignment",
         body: function() {
@@ -330,6 +328,7 @@ var tests = [
             function scriptThrows(func, errType, info, errMsg) {
                 try {
                     func();
+                    throw Error("No exception thrown");
                 } catch (err) {
                     assert.areEqual(errType.name + ':' + errMsg, err.name + ':' + err.message, info);
                }

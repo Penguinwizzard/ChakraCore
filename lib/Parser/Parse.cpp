@@ -2026,7 +2026,7 @@ void Parser::ThrowNewTargetSyntaxErrForGlobalScope()
         return;
     }
 
-    if ((this->m_grfscr & fscrEvalCode) != 0 && (this->m_grfscr & fscrIndirect) == 0)
+    if ((this->m_grfscr & fscrEval) != 0)
     {
         Js::JavascriptFunction * caller = nullptr;
         if (Js::JavascriptStackWalker::GetCaller(&caller, m_scriptContext))
