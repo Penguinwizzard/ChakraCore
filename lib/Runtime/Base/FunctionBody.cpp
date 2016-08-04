@@ -8783,6 +8783,10 @@ namespace Js
             }
         }
 
+        uint16 nonNullIndex = 0;
+#if DBG
+        bool isGuardValuePresent = false;
+#endif
         for (int i = 0; i < EQUIVALENT_TYPE_CACHE_SIZE; i++)
         {
             Type *type = this->types[i];
@@ -8794,11 +8798,24 @@ namespace Js
                 }
                 else
                 {
+                    // compact the types array by moving non-null types
+                    // at the beginning.
+                    this->types[nonNullIndex++] = type;
                     isAnyTypeLive = true;
+#if DBG
+                    isGuardValuePresent = this->guard->GetValue() == reinterpret_cast<intptr_t>(type) ? true : isGuardValuePresent;
+#endif
                 }
             }
         }
-
+        if (nonNullIndex > 0)
+        {
+            for (int i = nonNullIndex; i < EQUIVALENT_TYPE_CACHE_SIZE; i++)
+            {
+                this->types[i] = nullptr;
+            }            
+        }
+        AssertMsg(!this->guard->IsValid() || isGuardValuePresent, "After ClearUnusedTypes, valid guard value should be one of the cached equivalent types.");
         return isAnyTypeLive;
     }
 
