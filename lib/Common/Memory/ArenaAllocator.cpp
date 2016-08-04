@@ -14,7 +14,8 @@ const uint Memory::StandAloneFreeListPolicy::MaxEntriesGrowth;
 #endif
 
 // We need this function to be inlined for perf
-template _ALWAYSINLINE BVSparseNode * BVSparse<JitArenaAllocator>::NodeFromIndex(BVIndex i, bool create);
+template _ALWAYSINLINE BVSparseNode * BVSparse<JitArenaAllocator>::NodeFromIndex(BVIndex i);
+template _ALWAYSINLINE BVSparseNode * BVSparse<JitArenaAllocator>::NodeFromIndexWithEditSupport(BVIndex i);
 
 ArenaData::ArenaData(PageAllocator * pageAllocator) :
     pageAllocator(pageAllocator),

@@ -120,8 +120,10 @@ protected:
     template <class TOtherAllocator>
     static  void            AssertBV(const BVSparse<TOtherAllocator> * bv);
 
-            SparseBVUnit *  BitsFromIndex(BVIndex i, bool create = true);
-            BVSparseNode *  NodeFromIndex(BVIndex i, bool create = true);
+            SparseBVUnit *  BitsFromIndex(BVIndex i);
+            SparseBVUnit *  BitsFromIndexWithEditSupport(BVIndex i);
+            BVSparseNode *  NodeFromIndex(BVIndex i);
+            BVSparseNode *  NodeFromIndexWithEditSupport(BVIndex i);
             BVSparseNode *  DeleteNode(BVSparseNode *node, bool bResetLastUsed = true);
             void            DeleteMapEntry(BVIndex i, BVSparseNode * node);
             void            DeleteMap();
@@ -281,7 +283,7 @@ BVSparse<TAllocator>::~BVSparse()
 // a new node in the appropriate position.
 template <class TAllocator>
 BVSparseNode *
-BVSparse<TAllocator>::NodeFromIndex(BVIndex i, bool create)
+BVSparse<TAllocator>::NodeFromIndexWithEditSupport(BVIndex i)
 {
     const BVIndex searchIndex = SparseBVUnit::Floor(i);
 
@@ -333,11 +335,7 @@ BVSparse<TAllocator>::NodeFromIndex(BVIndex i, bool create)
         this->lastUsedNodePrevNextField = prevNextField;
         return curNode;
     }
-
-    if (!create) {
-        return nullptr;
-    }
-
+    
     BVSparseNode * newNode = AllocateNode(searchIndex, *prevNextField);
     *prevNextField = newNode;
 
@@ -359,11 +357,77 @@ BVSparse<TAllocator>::NodeFromIndex(BVIndex i, bool create)
     return newNode;
 }
 
+// Searches for a node which would contain the required bit. If not found, it returns nullptr
+template <class TAllocator>
+BVSparseNode *
+BVSparse<TAllocator>::NodeFromIndex(BVIndex i)
+{
+    const BVIndex searchIndex = SparseBVUnit::Floor(i);
+
+    if (this->bvMap != nullptr)
+    {
+        if (this->bvMap->ContainsKey(searchIndex))
+        {
+            return this->bvMap->Item(searchIndex);
+        }
+    }
+
+    BVSparseNode ** prevNextField = this->lastUsedNodePrevNextField;
+    BVSparseNode * curNode = (*prevNextField);
+    if (curNode != nullptr)
+    {
+        if (curNode->startIndex == searchIndex)
+        {
+            return curNode;
+        }
+
+        if (curNode->startIndex > searchIndex)
+        {
+            prevNextField = &this->head;
+            curNode = this->head;
+        }
+    }
+    else
+    {
+        prevNextField = &this->head;
+        curNode = this->head;
+    }
+
+    while (curNode && searchIndex > curNode->startIndex)
+    {
+        prevNextField = &curNode->next;
+        curNode = curNode->next;
+    }
+
+    if (curNode && searchIndex == curNode->startIndex)
+    {
+        this->lastUsedNodePrevNextField = prevNextField;
+        return curNode;
+    }
+   
+    return nullptr;
+}
+
 template <class TAllocator>
 SparseBVUnit *
-BVSparse<TAllocator>::BitsFromIndex(BVIndex i, bool create)
+BVSparse<TAllocator>::BitsFromIndex(BVIndex i)
 {
-    BVSparseNode * node = NodeFromIndex(i, create);
+    BVSparseNode * node = NodeFromIndex(i);
+    if (node)
+    {
+        return &node->data;
+    }
+    else
+    {
+        return (SparseBVUnit *)&BVSparse::s_EmptyUnit;
+    }
+}
+
+template <class TAllocator>
+SparseBVUnit *
+BVSparse<TAllocator>::BitsFromIndexWithEditSupport(BVIndex i)
+{
+    BVSparseNode * node = NodeFromIndexWithEditSupport(i);
     if (node)
     {
         return &node->data;
@@ -496,14 +560,14 @@ template <class TAllocator>
 void
 BVSparse<TAllocator>::Set(BVIndex i)
 {
-    this->BitsFromIndex(i)->Set(SparseBVUnit::Offset(i));
+    this->BitsFromIndexWithEditSupport(i)->Set(SparseBVUnit::Offset(i));
 }
 
 template <class TAllocator>
 void
 BVSparse<TAllocator>::Clear(BVIndex i)
 {
-    BVSparseNode * current = this->NodeFromIndex(i, false /* create */);
+    BVSparseNode * current = this->NodeFromIndex(i);
     if(current)
     {
         current->data.Clear(SparseBVUnit::Offset(i));
@@ -514,7 +578,7 @@ template <class TAllocator>
 void
 BVSparse<TAllocator>::Compliment(BVIndex i)
 {
-    this->BitsFromIndex(i)->Complement(SparseBVUnit::Offset(i));
+    this->BitsFromIndexWithEditSupport(i)->Complement(SparseBVUnit::Offset(i));
 }
 
 template <class TAllocator>
@@ -528,14 +592,14 @@ template <class TAllocator>
 BOOLEAN
 BVSparse<TAllocator>::Test(BVIndex i)
 {
-    return this->BitsFromIndex(i, false)->Test(SparseBVUnit::Offset(i));
+    return this->BitsFromIndex(i)->Test(SparseBVUnit::Offset(i));
 }
 
 template <class TAllocator>
 BOOLEAN
 BVSparse<TAllocator>::TestAndSet(BVIndex i)
 {
-    SparseBVUnit * bvUnit = this->BitsFromIndex(i);
+    SparseBVUnit * bvUnit = this->BitsFromIndexWithEditSupport(i);
     BVIndex bvIndex = SparseBVUnit::Offset(i);
     BOOLEAN bit = bvUnit->Test(bvIndex);
     bvUnit->Set(bvIndex);
@@ -546,7 +610,7 @@ template <class TAllocator>
 BOOLEAN
 BVSparse<TAllocator>::TestAndClear(BVIndex i)
 {
-    BVSparseNode * current = this->NodeFromIndex(i, false /* create */);
+    BVSparseNode * current = this->NodeFromIndex(i);
     if (current == nullptr)
     {
         return false;
