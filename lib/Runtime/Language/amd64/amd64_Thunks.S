@@ -18,29 +18,22 @@
 // Var InterpreterStackFrame::DelayDynamicInterpreterThunk(RecyclableObject* function, CallInfo callInfo, ...)
 .balign 16
 NESTED_ENTRY _ZN2Js21InterpreterStackFrame28DelayDynamicInterpreterThunkEPNS_16RecyclableObjectENS_8CallInfoEz, _TEXT, NoHandler
-        // save volatile registers
-        mov qword ptr [rsp + 8h],  rcx
-        mov qword ptr [rsp + 10h], rdx
-        mov qword ptr [rsp + 18h], r8
-        mov qword ptr [rsp + 20h], r9
-
-        push rbp
+        push_nonvol_reg rbp
         lea  rbp, [rsp]
 
-        sub rsp, 20h                            // allocate stack space for the callee params(min 4 slots is mandate)
-        call _ZN2Js21InterpreterStackFrame29EnsureDynamicInterpreterThunkEPNS_14ScriptFunctionE
+        // save argument registers used by custom calling convention
+        push_register rdi
+        push_register rsi
 
-        add rsp, 20h                            // de-allocate stack space for the callee params(min 4 slots is mandate)
+        //  JavascriptMethod InterpreterStackFrame::EnsureDynamicInterpreterThunk(
+        //              ScriptFunction * function)
+        //
+        //      RDI == function, setup by custom calling convention
+        call C_FUNC(_ZN2Js21InterpreterStackFrame29EnsureDynamicInterpreterThunkEPNS_14ScriptFunctionE)
 
-        //EPILOGUE starts here
-        lea rsp, [rbp]
-        pop rbp
-
-        // restore volatile registers
-        mov rcx, qword ptr [rsp + 8h]
-        mov rdx, qword ptr [rsp + 10h]
-        mov r8,  qword ptr [rsp + 18h]
-        mov r9,  qword ptr [rsp + 20h]
+        pop_register rsi
+        pop_register rdi
+        pop_nonvol_reg rbp
 
         jmp rax
 NESTED_END _ZN2Js21InterpreterStackFrame28DelayDynamicInterpreterThunkEPNS_16RecyclableObjectENS_8CallInfoEz, _TEXT
