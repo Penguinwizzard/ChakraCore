@@ -385,19 +385,31 @@ inline __int64 _abs64(__int64 n)
 }
 
 // xplat-todo: implement these for JIT and Concurrent/Partial GC
-uintptr_t _beginthreadex(
+inline uintptr_t _beginthreadex(
    void *security,
    unsigned stack_size,
    unsigned ( __stdcall *start_address )( void * ),
    void *arglist,
    unsigned initflag,
-   unsigned *thrdaddr);
+   unsigned *thrdaddr)
+{
+    return reinterpret_cast<uintptr_t>(CreateThread(
+        reinterpret_cast<LPSECURITY_ATTRIBUTES>(security),
+        stack_size,
+        start_address,
+        arglist,
+        initflag,
+        thrdaddr));    
+}
 
-BOOL WINAPI GetModuleHandleEx(
-  _In_     DWORD   dwFlags,
-  _In_opt_ LPCTSTR lpModuleName,
-  _Out_    HMODULE *phModule
-);
+inline BOOL WINAPI GetModuleHandleEx(
+    _In_     DWORD   dwFlags,
+    _In_opt_ LPCTSTR lpModuleName,
+    _Out_    HMODULE *phModule)
+{
+    *phModule = NULL;
+    return FALSE;
+}
 
 int GetCurrentThreadStackLimits(ULONG_PTR* lowLimit, ULONG_PTR* highLimit);
 bool IsAddressOnStack(ULONG_PTR address);
