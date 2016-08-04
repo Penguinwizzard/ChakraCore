@@ -649,17 +649,12 @@ void BVSparse<TAllocator>::for_each(const BVSparse *bv2)
 {
     Assert(callback == &SparseBVUnit::And || callback == &SparseBVUnit::Or || callback == &SparseBVUnit::Xor || callback == &SparseBVUnit::Minus);
     AssertBV(bv2);
-  
+
+    bool needsEdit = false;
     BVSparseNode * node1 = this->head;
     const BVSparseNode * node2 = bv2->head;
     BVSparseNode ** prevNodeNextField = &this->head;
-
-    if (this->bvMap != nullptr)
-    {
-        this->bvMap->Reset();
-        this->bvMap = nullptr;
-    }
-
+   
     while (node1 != nullptr && node2 != nullptr)
     {
         if (node2->startIndex == node1->startIndex)
@@ -676,13 +671,13 @@ void BVSparse<TAllocator>::for_each(const BVSparse *bv2)
             {
                 node1 = this->DeleteNode(node1);
                 *prevNodeNextField = node1;
+                needsEdit = true;
             }
             else
             {
                 prevNodeNextField = &node1->next;
                 node1 = node1->next;
             }
-
         }
         else
         {
@@ -692,6 +687,7 @@ void BVSparse<TAllocator>::for_each(const BVSparse *bv2)
                 (newNode->data.*callback)(node2->data);
                 *prevNodeNextField = newNode;
                 prevNodeNextField = &newNode->next;
+                needsEdit = true;
             }
             node2 = node2->next;
         }
@@ -702,6 +698,7 @@ void BVSparse<TAllocator>::for_each(const BVSparse *bv2)
         while (node1 != nullptr)
         {
             node1 = this->DeleteNode(node1);
+            needsEdit = true;
         }
         *prevNodeNextField = nullptr;
     }
@@ -716,7 +713,15 @@ void BVSparse<TAllocator>::for_each(const BVSparse *bv2)
             (newNode->data.*callback)(node2->data);
             node2 = node2->next;
             prevNodeNextField = &newNode->next;
+
+            needsEdit = true;
         }
+    }
+
+    if (needsEdit && this->bvMap != nullptr)
+    {
+        this->bvMap->Reset();
+        this->bvMap = nullptr;
     }
 }
 
