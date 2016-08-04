@@ -232,7 +232,7 @@ align 16
 
 // AsmJsInterpreterThunk (AsmJsCallStackLayout *function, ...)
 .balign 16
-NESTED_ENTRY InterpreterAsmThunk_InterpreterStackFrame_Js_SAXPEAUAsmJsCallStackLayout_2__Z, _TEXT, NoHandler
+NESTED_ENTRY _ZN2Js21InterpreterStackFrame19InterpreterAsmThunkEPNS_20AsmJsCallStackLayoutE, _TEXT, NoHandler
         // spill arguments
         mov qword ptr [rsp + 8h],  rcx
         mov qword ptr [rsp + 10h], rdx
@@ -261,7 +261,7 @@ NESTED_ENTRY InterpreterAsmThunk_InterpreterStackFrame_Js_SAXPEAUAsmJsCallStackL
         pop rbp
 
         ret
-NESTED_END InterpreterAsmThunk_InterpreterStackFrame_Js_SAXPEAUAsmJsCallStackLayout_2__Z, _TEXT
+NESTED_END _ZN2Js21InterpreterStackFrame19InterpreterAsmThunkEPNS_20AsmJsCallStackLayoutE, _TEXT
 
 //============================================================================================================
 // Js::AsmJsExternalEntryPoint
