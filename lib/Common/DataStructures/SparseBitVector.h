@@ -10,8 +10,6 @@ typedef  BVUnit32 SparseBVUnit;
 typedef  BVUnit64 SparseBVUnit;
 #endif
 
-#define BV_SPARSE_LIST_SIZE 10
-
 #define FOREACH_BITSET_IN_SPARSEBV(index, bv) \
 { \
     BVIndex index; \
@@ -353,7 +351,7 @@ BVSparse<TAllocator>::NodeFromIndexWithEditSupport(BVIndex i)
     BVSparseNode * newNode = AllocateNode(searchIndex, *prevNextField);
     *prevNextField = newNode;
 
-    if (this->bvMap == nullptr && totalNodes <= BV_SPARSE_LIST_SIZE)
+    if (this->bvMap == nullptr && totalNodes <= Js::Configuration::Global.flags.SparseBitVectorListLength)
     {
         this->lastUsedNodePrevNextField = prevNextField;
     }

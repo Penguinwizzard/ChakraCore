@@ -1162,6 +1162,7 @@ FLAGR (Number,  AutoProfilingInterpreter0Limit, "Limit after which to transition
 FLAGR (Number,  ProfilingInterpreter0Limit, "Limit after which to transition to the next execution mode", DEFAULT_CONFIG_ProfilingInterpreter0Limit)
 FLAGR (Number,  AutoProfilingInterpreter1Limit, "Limit after which to transition to the next execution mode", DEFAULT_CONFIG_AutoProfilingInterpreter1Limit)
 FLAGR (Number,  SimpleJitLimit, "Limit after which to transition to the next execution mode", DEFAULT_CONFIG_SimpleJitLimit)
+FLAGNRA(Number, SparseBitVectorListLength, spbvlist, "Maximum length of the list after which we create a dictionary", 10)
 FLAGR (Number,  ProfilingInterpreter1Limit, "Limit after which to transition to the next execution mode", DEFAULT_CONFIG_ProfilingInterpreter1Limit)
 
 FLAGNRA(String, ExecutionModeLimits,        Eml,  "Execution mode limits in th form: AutoProfilingInterpreter0.ProfilingInterpreter0.AutoProfilingInterpreter1.SimpleJit.ProfilingInterpreter1 - Example: -ExecutionModeLimits:12.4.0.132.12", _u(""))
