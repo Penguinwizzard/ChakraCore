@@ -4130,6 +4130,7 @@ Lowerer::GenerateProfiledNewScObjArrayFastPath(IR::Instr *instr, Js::ArrayCallSi
     loop->regAlloc.liveOnBackEdgeSyms->Set(indexOpnd->m_sym->m_id);
     loop->regAlloc.liveOnBackEdgeSyms->Set(headSegIndexOpnd->m_sym->m_id);
     loop->regAlloc.liveOnBackEdgeSyms->Set(missingValueOpnd->m_sym->m_id);
+    loop->regAlloc.liveOnBackEdgeSyms->Set(alignedHeadSegSizeOpnd->AsRegOpnd()->m_sym->m_id);
 
     instr->InsertBefore(helperLabel);
 }
