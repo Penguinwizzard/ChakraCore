@@ -129,7 +129,8 @@ protected:
             void            DeleteMap();
             void            QueueInFreeList(BVSparseNode* node);
             BVSparseNode *  AllocateNode(const BVIndex searchIndex, BVSparseNode *prevNode);
-            void AllocateMap();
+            void            AllocateMap();
+            void            PopulateMap();
 
     template<void (SparseBVUnit::*callback)(SparseBVUnit)>
     void for_each(const BVSparse<TAllocator> *bv2);
@@ -266,6 +267,19 @@ BVSparse<TAllocator>::AllocateMap()
 }
 
 template <class TAllocator>
+void
+BVSparse<TAllocator>::PopulateMap()
+{
+    Assert(this->bvMap);
+
+    for (auto curNode = this->head; curNode != nullptr; curNode = curNode->next)
+    {
+        this->bvMap->Add(curNode->startIndex, curNode);
+    }
+}
+
+
+template <class TAllocator>
 BVSparse<TAllocator>::~BVSparse()
 {
     BVSparseNode * curNode = this->head;
@@ -294,7 +308,7 @@ BVSparse<TAllocator>::NodeFromIndexWithEditSupport(BVIndex i)
             return this->bvMap->Item(searchIndex);
         }
     }
-
+ 
     BVSparseNode ** prevNextField = this->lastUsedNodePrevNextField;
     BVSparseNode * curNode = (*prevNextField);    
     if (curNode != nullptr)
@@ -339,19 +353,19 @@ BVSparse<TAllocator>::NodeFromIndexWithEditSupport(BVIndex i)
     BVSparseNode * newNode = AllocateNode(searchIndex, *prevNextField);
     *prevNextField = newNode;
 
-    size_t listSize = totalNodes - (this->bvMap ? this->bvMap->Count() : 0);
-    if (listSize <= BV_SPARSE_LIST_SIZE)
+    if (this->bvMap == nullptr && totalNodes <= BV_SPARSE_LIST_SIZE)
     {
         this->lastUsedNodePrevNextField = prevNextField;
     }
     else if (this->bvMap == nullptr)
     {
         AllocateMap();
+        PopulateMap();
         this->bvMap->AddNew(searchIndex, newNode);
     }
     else
     {
-        this->bvMap->AddNew(searchIndex, newNode);
+        this->bvMap->Add(searchIndex, newNode);
     }
 
     return newNode;
@@ -370,6 +384,7 @@ BVSparse<TAllocator>::NodeFromIndex(BVIndex i)
         {
             return this->bvMap->Item(searchIndex);
         }
+        return nullptr;
     }
 
     BVSparseNode ** prevNextField = this->lastUsedNodePrevNextField;
