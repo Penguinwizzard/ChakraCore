@@ -6,6 +6,7 @@
 
 #ifdef ENABLE_NATIVE_CODEGEN
 #ifdef _M_X64
+#ifdef _WIN32
 const BYTE InterpreterThunkEmitter::FunctionBodyOffset = 23;
 const BYTE InterpreterThunkEmitter::DynamicThunkAddressOffset = 27;
 const BYTE InterpreterThunkEmitter::CallBlockStartAddrOffset = 37;
@@ -52,6 +53,43 @@ const BYTE InterpreterThunkEmitter::Epilog[] = {
     0x48, 0x83, 0xC4, StackAllocSize,                              // add         rsp,28h
     0xC3                                                           // ret
 };
+#else  // !_WIN32
+const BYTE InterpreterThunkEmitter::FunctionBodyOffset = 3;
+const BYTE InterpreterThunkEmitter::DynamicThunkAddressOffset = 7;
+const BYTE InterpreterThunkEmitter::CallBlockStartAddrOffset = 17;
+const BYTE InterpreterThunkEmitter::ThunkSizeOffset = 31;
+const BYTE InterpreterThunkEmitter::ErrorOffset = 40;
+const BYTE InterpreterThunkEmitter::ThunkAddressOffset = 57;
+
+const BYTE InterpreterThunkEmitter::PrologSize = 56;
+const BYTE InterpreterThunkEmitter::StackAllocSize = 0x8;
+
+const BYTE InterpreterThunkEmitter::InterpreterThunk[] = {
+    0x48, 0x8b, 0x47, 0x00,                                     // mov    rax, qword ptr [rdi + FunctionBodyOffset]
+    0x48, 0x8b, 0x50, 0x00,                                     // mov    rdx, qword ptr [rax + DynamicThunkAddressOffset]
+                                                                // Range Check for Valid call target
+    0x48, 0x83, 0xE2, 0xF8,                                     // and    rdx, 0xfffffffffffffff8   // Force 8 byte alignment
+    0x48, 0x89, 0xd1,                                           // mov    rcx, rdx
+    0x48, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // mov    rax, CallBlockStartAddress
+    0x48, 0x29, 0xc1,                                           // sub    rcx, rax
+    0x48, 0x81, 0xf9, 0x00, 0x00, 0x00, 0x00,                   // cmp    rcx, ThunkSize
+    0x76, 0x09,                                                 // jbe    safe
+    0x48, 0xc7, 0xc1, 0x00, 0x00, 0x00, 0x00,                   // mov    rcx, errorcode
+    0xcd, 0x29,                                                 // int    29h
+
+    // safe:
+    0x48, 0x8d, 0x7c, 0x24, 0x08,                               // lea    rdi, [rsp+0x8]
+    0x48, 0x83, 0xec, StackAllocSize,                           // sub    rsp, StackAllocSize   // 16-byte alignment
+    0x48, 0xB8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // mov    rax, <thunk>
+    0xff, 0xe2,                                                 // jmp    rdx
+    0xcc, 0xcc, 0xcc, 0xcc, 0xcc                                // int    3                     // for alignment to size of 8    
+};
+
+const BYTE InterpreterThunkEmitter::Epilog[] = {
+    0x48, 0x83, 0xc4, StackAllocSize,                           // add    rsp, StackAllocSize    
+    0xc3                                                        // ret
+};
+#endif
 #elif defined(_M_ARM)
 const BYTE InterpreterThunkEmitter::ThunkAddressOffset = 8;
 const BYTE InterpreterThunkEmitter::FunctionBodyOffset = 18;
