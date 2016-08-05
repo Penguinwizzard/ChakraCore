@@ -8233,6 +8233,12 @@ CommonNumber:
         Type* refType = equivTypes[0];
         if (refType == nullptr)
         {
+#if DBG
+            for (int i = 1;i < EQUIVALENT_TYPE_CACHE_SIZE;i++)
+            {
+                AssertMsg(equivTypes[i] == nullptr, "In equiv typed caches, if first element is nullptr, all others should be nullptr");
+            }
+#endif
             return false;
         }
 
