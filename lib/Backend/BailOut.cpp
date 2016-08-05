@@ -1437,7 +1437,7 @@ BailOutRecord::BailOutHelper(Js::JavascriptCallStackLayout * layout, Js::ScriptF
     Js::InterpreterStackFrame* newInstance = nullptr;
     Js::Var* allocation = nullptr;
 
-    if (executeFunction->IsGenerator())
+    if (executeFunction->IsGenerator() || executeFunction->IsAsync())
     {
         // If the FunctionBody is a generator then this call is being made by one of the three
         // generator resuming methods: next(), throw(), or return().  They all pass the generator

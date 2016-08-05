@@ -214,7 +214,7 @@ Func::Func(JitArenaAllocator *alloc, CodeGenWorkItem* workItem, const Js::Functi
         m_nonTempLocalVars = Anew(this->m_alloc, BVSparse<JitArenaAllocator>, this->m_alloc);
     }
 
-    if (this->m_jnFunction->IsGenerator())
+    if (this->m_jnFunction->IsGenerator() || this->m_jnFunction->IsAsync())
     {
         m_yieldOffsetResumeLabelList = YieldOffsetResumeLabelList::New(this->m_alloc);
     }
@@ -846,8 +846,8 @@ Func::AjustLocalVarSlotOffset()
 bool
 Func::DoGlobOptsForGeneratorFunc()
 {
-    // Disable GlobOpt optimizations for generators initially. Will visit and enable each one by one.
-    return !m_jnFunction->IsGenerator();
+    // Disable GlobOpt optimizations for generators and asyn functions initially. Will visit and enable each one by one.
+    return !m_jnFunction->IsGenerator() && !m_jnFunction->IsAsync();
 }
 
 void

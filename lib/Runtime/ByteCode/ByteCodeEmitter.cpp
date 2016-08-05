@@ -1227,11 +1227,11 @@ Js::RegSlot ByteCodeGenerator::DefineOneFunction(ParseNode *pnodeFnc, FuncInfo *
     // If we are in a parameter scope and it is not merged with body scope then we have to create the child function as an inner function
     if (regEnv == funcInfoParent->frameDisplayRegister || regEnv == funcInfoParent->GetEnvRegister())
     {
-        m_writer.NewFunction(pnodeFnc->location, pnodeFnc->sxFnc.nestedIndex, pnodeFnc->sxFnc.IsGenerator());
+        m_writer.NewFunction(pnodeFnc->location, pnodeFnc->sxFnc.nestedIndex, pnodeFnc->sxFnc.IsGenerator() || pnodeFnc->sxFnc.IsAsync());
     }
     else
     {
-        m_writer.NewInnerFunction(pnodeFnc->location, pnodeFnc->sxFnc.nestedIndex, regEnv, pnodeFnc->sxFnc.IsGenerator());
+        m_writer.NewInnerFunction(pnodeFnc->location, pnodeFnc->sxFnc.nestedIndex, regEnv, pnodeFnc->sxFnc.IsGenerator() || pnodeFnc->sxFnc.IsAsync());
     }
 
     if (funcInfoParent->IsGlobalFunction() && (this->flags & fscrEval))
@@ -1717,7 +1717,7 @@ void ByteCodeGenerator::SetClosureRegisters(FuncInfo* funcInfo, Js::FunctionBody
 
 void ByteCodeGenerator::FinalizeRegisters(FuncInfo * funcInfo, Js::FunctionBody * byteCodeFunction)
 {
-    if (byteCodeFunction->IsGenerator())
+    if (byteCodeFunction->IsGenerator() || byteCodeFunction->IsAsync())
     {
         // EmitYield uses 'false' to create the IteratorResult object
         funcInfo->AssignFalseConstRegister();
@@ -1751,7 +1751,7 @@ void ByteCodeGenerator::FinalizeRegisters(FuncInfo * funcInfo, Js::FunctionBody 
     }
 
     // NOTE: The FB expects the yield reg to be the final non-temp.
-    if (byteCodeFunction->IsGenerator())
+    if (byteCodeFunction->IsGenerator() || byteCodeFunction->IsAsync())
     {
         funcInfo->AssignYieldRegister();
     }
@@ -6717,7 +6717,7 @@ void EmitDestructuredArray(
 
     Js::RegSlot regException = Js::Constants::NoRegister;
     Js::RegSlot regOffset = Js::Constants::NoRegister;
-    bool isGenerator = funcInfo->byteCodeFunction->IsGenerator();
+    bool isGenerator = funcInfo->byteCodeFunction->IsGenerator() || funcInfo->byteCodeFunction->IsAsync();
 
     if (isGenerator)
     {
@@ -11622,9 +11622,6 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
         byteCodeGenerator->StartStatement(pnode);
         EmitYieldStar(pnode, byteCodeGenerator, funcInfo);
         byteCodeGenerator->EndStatement(pnode);
-        break;
-    case knopAsyncSpawn:
-        EmitBinary(Js::OpCode::AsyncSpawn, pnode, byteCodeGenerator, funcInfo);
         break;
     case knopExportDefault:
         Emit(pnode->sxExportDefault.pnodeExpr, byteCodeGenerator, funcInfo, false);

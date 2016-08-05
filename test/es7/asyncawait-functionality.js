@@ -394,6 +394,7 @@ var tests = [
                     echo(`Test #${index} - Catch async function with default arguments's value overwritten #1 called with err = ${err}`);
                 });
 
+                // TODO:[aneeshd] Need to fix the default parameter evaluation order for both async functions and generators
                 asyncMethod().then(result => {
                     echo(`Test #${index} - Failed async function with default arguments's value has not been rejected as expected #2 called with result = '${result}'`);
                 }, err => {
