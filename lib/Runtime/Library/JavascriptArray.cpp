@@ -3370,6 +3370,7 @@ namespace Js
                     isArray = JavascriptArray::Is(pDestObj);
                 }
             }
+
         }
 
         if (pDestObj == nullptr || isArray)
@@ -8169,6 +8170,7 @@ Case0:
                     }
                 }
             }
+
         }
 
         return scriptContext->GetLibrary()->GetTrue();
