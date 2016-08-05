@@ -8192,14 +8192,14 @@ CommonNumber:
 
     bool JavascriptOperators::CheckIfTypeIsEquivalent(Type* type, JitEquivalentTypeGuard* guard)
     {
-        if (guard->GetValue() == 0)
+        if (!guard->IsValid())
         {
             return false;
         }
 
-        if (guard->GetType()->GetScriptContext() != type->GetScriptContext())
+        if (!guard->IsInvalidatedWhileSweeping() && guard->GetType()->GetScriptContext() != type->GetScriptContext())
         {
-            // Can't cache cross-context objects
+            // For valid guard value, can't cache cross-context objects
             return false;
         }
 
@@ -8215,6 +8215,17 @@ CommonNumber:
         if (type == equivTypes[0] || type == equivTypes[1] || type == equivTypes[2] || type == equivTypes[3] ||
             type == equivTypes[4] || type == equivTypes[5] || type == equivTypes[6] || type == equivTypes[7])
         {
+#if DBG
+            if (PHASE_TRACE1(Js::EquivObjTypeSpecPhase))
+            {
+                if (guard->WasReincarnated())
+                {
+                    Output::Print(_u("EquivObjTypeSpec: Guard 0x%p was reincarnated and working now \n"), guard);
+                    Output::Flush();
+                }
+            }
+#endif
+            
             guard->SetType(type);
             return true;
         }

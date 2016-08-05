@@ -73,20 +73,37 @@ namespace Js
     {
         friend class PropertyGuardValidator;
     private:
+        // 1 = initial value
+        // 0 = when guard is invalidated
+        // 2 = when guard is invalidated for equivTypes from preSweepCallback
         intptr_t value;
+#if DBG
+        bool wasReincarnated = false;
+#endif
     public:
         static PropertyGuard* New(Recycler* recycler) { return RecyclerNewLeaf(recycler, Js::PropertyGuard); }
         PropertyGuard() : value(1) {}
-        PropertyGuard(intptr_t value) : value(value) { Assert(this->value != 0); }
+        PropertyGuard(intptr_t value) : value(value) { Assert(this->value != 0 || this->value != 2); }
 
         inline static size_t const GetSizeOfValue() { return sizeof(((PropertyGuard*)0)->value); }
         inline static size_t const GetOffsetOfValue() { return offsetof(PropertyGuard, value); }
 
         intptr_t GetValue() const { return this->value; }
         bool IsValid() { return this->value != 0; }
-        void SetValue(intptr_t value) { Assert(value != 0); this->value = value; }
+        bool IsInvalidatedWhileSweeping() { return this->value == 2; }
+        void SetValue(intptr_t value) { Assert(value != 0 || value != 2); this->value = value; }
         intptr_t const* GetAddressOfValue() { return &this->value; }
         void Invalidate() { this->value = 0; }
+        void InvalidateWhileSweeping()
+        { 
+#if DBG
+            wasReincarnated = true;
+#endif
+            this->value = 2;
+        }
+#if DBG
+        bool WasReincarnated() { return this->wasReincarnated; }
+#endif
     };
 
     class PropertyGuardValidator

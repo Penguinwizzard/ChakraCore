@@ -8767,7 +8767,7 @@ namespace Js
 
     bool EquivalentTypeCache::ClearUnusedTypes(Recycler *recycler)
     {
-        bool isGuardValid = false;
+        bool isAnyTypeLive = false;
 
         Assert(this->guard);
         if (this->guard->IsValid())
@@ -8775,23 +8775,13 @@ namespace Js
             Type *type = reinterpret_cast<Type*>(this->guard->GetValue());
             if (!recycler->IsObjectMarked(type))
             {
-                this->guard->Invalidate();
-
+                this->guard->InvalidateWhileSweeping();
             }
             else
             {
-                isGuardValid = true;
+                isAnyTypeLive = true;
             }
         }
-
-        // If guard is not valid or has been just been invalidated,
-        // then no point in keeping types around
-        if (!isGuardValid)
-        {
-            memset((void*)this->types, 0, sizeof(Js::Type*) * 8);
-            return false;
-        }
-
         uint16 nonNullIndex = 0;
 #if DBG
         bool isGuardValuePresent = false;
@@ -8810,6 +8800,7 @@ namespace Js
                     // compact the types array by moving non-null types
                     // at the beginning.
                     this->types[nonNullIndex++] = type;
+                    isAnyTypeLive = true;
 #if DBG
                     isGuardValuePresent = this->guard->GetValue() == reinterpret_cast<intptr_t>(type) ? true : isGuardValuePresent;
 #endif
@@ -8820,8 +8811,16 @@ namespace Js
         {
             memset((void*)(this->types + nonNullIndex), 0, sizeof(Js::Type*) * (EQUIVALENT_TYPE_CACHE_SIZE - nonNullIndex));
         }
-        AssertMsg(isGuardValuePresent, "After ClearUnusedTypes, valid guard value should be one of the cached equivalent types.");
-        return true;
+        else if(guard->IsInvalidatedWhileSweeping())
+        {
+            // just mark this as actual invalidated since there are no types
+            // present
+            guard->Invalidate();
+        }
+
+        // verify if guard value is valid, it is present in one of the types
+        AssertMsg(!this->guard->IsValid() || this->guard->IsInvalidatedWhileSweeping() || isGuardValuePresent, "After ClearUnusedTypes, valid guard value should be one of the cached equivalent types.");
+        return isAnyTypeLive;
     }
 
     void EntryPointInfo::RegisterConstructorCache(Js::ConstructorCache* constructorCache, Recycler* recycler)
