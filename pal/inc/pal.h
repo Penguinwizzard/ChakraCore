@@ -5271,7 +5271,9 @@ BitScanForward(
     IN UINT qwMask)
 {
     unsigned char bRet = FALSE;
-    int iIndex = __builtin_ffsl(qwMask);
+    static_assert(sizeof(qwMask) <= sizeof(int),
+                  "use correct __builtin_ffs??? variant");
+    int iIndex = __builtin_ffs(qwMask);
     if (iIndex != 0)
     {
         // Set the Index after deducting unity
@@ -5292,7 +5294,9 @@ BitScanForward64(
     IN UINT64 qwMask)
 {
     unsigned char bRet = FALSE;
-    int iIndex = __builtin_ffsl(qwMask);
+    static_assert(sizeof(qwMask) <= sizeof(long long),
+                  "use correct __builtin_ffs??? variant");
+    int iIndex = __builtin_ffsll(qwMask);
     if (iIndex != 0)
     {
         // Set the Index after deducting unity
@@ -5316,6 +5320,8 @@ BitScanReverse(
     unsigned char bRet = FALSE;
     if (qwMask != 0)
     {
+        static_assert(sizeof(qwMask) <= sizeof(unsigned int),
+                      "use correct __builtin_clz??? variant");
         int countLeadingZero = __builtin_clz(qwMask);
         *Index = (DWORD)(sizeof(qwMask) * 8 - 1 - countLeadingZero);
         bRet = TRUE;
@@ -5337,7 +5343,9 @@ BitScanReverse64(
     unsigned char bRet = FALSE;
     if (qwMask != 0)
     {
-        int countLeadingZero = __builtin_clz(qwMask);
+        static_assert(sizeof(qwMask) <= sizeof(unsigned long long),
+                      "use correct __builtin_clz??? variant");
+        int countLeadingZero = __builtin_clzll(qwMask);
         *Index = (DWORD)(sizeof(qwMask) * 8 - 1 - countLeadingZero);
         bRet = TRUE;
     }
