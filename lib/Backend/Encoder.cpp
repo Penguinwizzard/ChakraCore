@@ -267,7 +267,7 @@ Encoder::Encode()
 
     ushort xdataSize;
     ushort pdataCount;
-#ifdef _M_X64
+#if _M_X64 && _WIN32
     pdataCount = 1;
     xdataSize = (ushort)m_func->m_prologEncoder.SizeOfUnwindInfo();
 #elif _M_ARM
@@ -297,7 +297,7 @@ Encoder::Encode()
 
     m_func->GetScriptContext()->GetThreadContext()->SetValidCallTargetForCFG((PVOID) workItem->GetCodeAddress());
 
-#ifdef _M_X64
+#if _M_X64 && _WIN32
     m_func->m_prologEncoder.FinalizeUnwindInfo();
     workItem->RecordUnwindInfo(0, m_func->m_prologEncoder.GetUnwindInfo(), m_func->m_prologEncoder.SizeOfUnwindInfo());
 #elif _M_ARM
