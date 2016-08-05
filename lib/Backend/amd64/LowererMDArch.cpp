@@ -925,7 +925,11 @@ LowererMDArch::GetArgSlotOpnd(uint16 index, StackSym * argSym)
     }
 
     IRType type = argSym ? argSym->GetType() : TyMachReg;
+#ifdef _WIN32    
     if (argPosition <= 4)
+#else
+    if (argPosition <= 6)
+#endif
     {
         RegNum reg = RegNOREG;
 
@@ -953,6 +957,7 @@ LowererMDArch::GetArgSlotOpnd(uint16 index, StackSym * argSym)
         {
             switch (argPosition)
             {
+#ifdef _WIN32                
             case 4:
                 reg = RegR9;
                 break;
@@ -965,6 +970,26 @@ LowererMDArch::GetArgSlotOpnd(uint16 index, StackSym * argSym)
             case 1:
                 reg = RegRCX;
                 break;
+#else
+            case 6:
+                reg = RegR9;
+                break;
+            case 5:
+                reg = RegR8;
+                break;
+            case 4:
+                reg = RegRCX;
+                break;
+            case 3:
+                reg = RegRDX;
+                break;
+            case 2:
+                reg = RegRSI;
+                break;
+            case 1:
+                reg = RegRDI;
+                break;
+#endif                
             default:
                 Assume(UNREACHED);
             }
