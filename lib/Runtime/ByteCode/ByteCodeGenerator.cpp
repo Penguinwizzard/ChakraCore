@@ -1704,7 +1704,9 @@ bool ByteCodeGenerator::CanStackNestedFunc(FuncInfo * funcInfo, bool trace)
     char16 debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
 #endif
     Assert(!funcInfo->IsGlobalFunction());
-    bool const doStackNestedFunc = !funcInfo->HasMaybeEscapedNestedFunc() && !IsInDebugMode() && !funcInfo->byteCodeFunction->IsGenerator() && !funcInfo->byteCodeFunction->IsModule();
+    bool const doStackNestedFunc = !funcInfo->HasMaybeEscapedNestedFunc() && !IsInDebugMode()
+        && !funcInfo->byteCodeFunction->IsGenerator() && !funcInfo->byteCodeFunction->IsAsync()
+        && !funcInfo->byteCodeFunction->IsModule();
     if (!doStackNestedFunc)
     {
         return false;
@@ -2359,7 +2361,8 @@ FuncInfo* PreVisitFunction(ParseNode* pnode, ByteCodeGenerator* byteCodeGenerato
                     }
 #endif
                 }
-                funcInfo->SetHasHeapArguments(true, !pnode->sxFnc.IsGenerator() && doStackArgsOpt /*= Optimize arguments in backend*/);
+                funcInfo->SetHasHeapArguments(true, !pnode->sxFnc.IsGenerator() && !pnode->sxFnc.IsAsync()
+                    && doStackArgsOpt /*= Optimize arguments in backend*/);
                 if (funcInfo->inArgsCount == 0)
                 {
                     // If no formals to function, no need to create the propertyid array
