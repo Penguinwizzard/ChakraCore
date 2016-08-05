@@ -8767,7 +8767,7 @@ namespace Js
 
     bool EquivalentTypeCache::ClearUnusedTypes(Recycler *recycler)
     {
-        bool isAnyTypeLive = false;
+        bool isGuardValid = false;
 
         Assert(this->guard);
         if (this->guard->IsValid())
@@ -8776,11 +8776,20 @@ namespace Js
             if (!recycler->IsObjectMarked(type))
             {
                 this->guard->Invalidate();
+
             }
             else
             {
-                isAnyTypeLive = true;
+                isGuardValid = true;
             }
+        }
+
+        // If guard is not valid or has been just been invalidated,
+        // then no point in keeping types around
+        if (!isGuardValid)
+        {
+            memset((void*)this->types, 0, sizeof(Js::Type*) * 8);
+            return false;
         }
 
         uint16 nonNullIndex = 0;
@@ -8801,7 +8810,6 @@ namespace Js
                     // compact the types array by moving non-null types
                     // at the beginning.
                     this->types[nonNullIndex++] = type;
-                    isAnyTypeLive = true;
 #if DBG
                     isGuardValuePresent = this->guard->GetValue() == reinterpret_cast<intptr_t>(type) ? true : isGuardValuePresent;
 #endif
@@ -8810,13 +8818,10 @@ namespace Js
         }
         if (nonNullIndex > 0)
         {
-            for (int i = nonNullIndex; i < EQUIVALENT_TYPE_CACHE_SIZE; i++)
-            {
-                this->types[i] = nullptr;
-            }            
+            memset((void*)(this->types + nonNullIndex), 0, sizeof(Js::Type*) * (EQUIVALENT_TYPE_CACHE_SIZE - nonNullIndex));
         }
-        AssertMsg(!this->guard->IsValid() || isGuardValuePresent, "After ClearUnusedTypes, valid guard value should be one of the cached equivalent types.");
-        return isAnyTypeLive;
+        AssertMsg(isGuardValuePresent, "After ClearUnusedTypes, valid guard value should be one of the cached equivalent types.");
+        return true;
     }
 
     void EntryPointInfo::RegisterConstructorCache(Js::ConstructorCache* constructorCache, Recycler* recycler)
