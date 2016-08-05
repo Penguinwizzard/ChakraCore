@@ -1511,6 +1511,7 @@ LowererMDArch::LowerEntryInstr(IR::EntryInstr * entryInstr)
     firstPrologInstr->InsertBefore(IR::PragmaInstr::New(Js::OpCode::PrologStart, 0, m_func));
     lastPrologInstr->InsertAfter(IR::PragmaInstr::New(Js::OpCode::PrologEnd, 0, m_func));
 
+#ifdef _WIN32 // home registers
     //
     // Now store all the arguments in the register in the stack slots
     //
@@ -1591,6 +1592,7 @@ LowererMDArch::LowerEntryInstr(IR::EntryInstr * entryInstr)
         this->MovArgFromReg2Stack(entryInstr, RegR8, 3);
         this->MovArgFromReg2Stack(entryInstr, RegR9, 4);
     }
+#endif  // _WIN32
 
     IntConstType frameSize = Js::Constants::MinStackJIT + stackArgsSize + stackLocalsSize + savedRegSize;
     this->GeneratePrologueStackProbe(entryInstr, frameSize);
