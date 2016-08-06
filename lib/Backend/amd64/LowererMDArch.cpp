@@ -756,11 +756,31 @@ LowererMDArch::LowerCallI(IR::Instr * callInstr, ushort callFlags, bool isHelper
     IR::IntConstOpnd *callInfo;
     int32 argCount = LowerCallArgs(callInstr, callFlags, 1, &callInfo);
 
+#ifndef _WIN32
+    static const RegNum s_argRegs[] = { RegRDI, RegRSI, RegRDX, RegRCX, RegR8, RegR9 };
+    const int argRegs = (min(argCount, 6) + 1) & ~1; // stack requires 16-byte aligned
+    for (int i = argRegs - 1; i >= 0; i--)
+    {
+        IR::Instr* push = IR::Instr::New(Js::OpCode::PUSH, this->m_func);
+        push->SetSrc1(IR::RegOpnd::New(nullptr, s_argRegs[i], TyMachReg, this->m_func));
+        callInstr->InsertBefore(push);
+    }
+#endif
 
     IR::Opnd *const finalDst = callInstr->GetDst();
 
     // x64 keeps track of argCount for us, so pass just an arbitrary value there
     IR::Instr* ret = this->LowerCall(callInstr, argCount);
+
+#ifndef _WIN32
+    {
+        IR::RegOpnd* rspOpnd = IR::RegOpnd::New(nullptr, RegRSP, TyMachReg, this->m_func);
+        IR::IntConstOpnd* sizeOpnd = IR::IntConstOpnd::New(sizeof(Js::Var) * argRegs, TyInt32, this->m_func); 
+        IR::Instr* subInstr = IR::Instr::New(Js::OpCode::SUB, rspOpnd, rspOpnd, sizeOpnd, this->m_func);
+        ret->InsertAfter(subInstr);
+        ret = subInstr;
+    }
+#endif
 
     IR::AutoReuseOpnd autoReuseSavedFunctionObjOpnd;
     if (callInstr->IsJitProfilingInstr())
