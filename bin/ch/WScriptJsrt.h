@@ -8,7 +8,18 @@ class WScriptJsrt
 {
 public:
     static bool Initialize();
-
+    struct ContextData
+    {
+        char* scriptFullPath = nullptr;
+        ContextData(const char* fullPath) {
+            const size_t fullPathLen = strlen(fullPath) + 1;
+            scriptFullPath = new char[fullPathLen];
+            memcpy(scriptFullPath, fullPath, fullPathLen);
+        }
+        ~ContextData() {
+            delete[] scriptFullPath;
+        }
+    };
     class CallbackMessage : public MessageBase
     {
         JsValueRef m_function;
@@ -91,6 +102,8 @@ private:
     static bool CreateNamedFunction(const char*, JsNativeFunction callback, JsValueRef* functionVar);
     static JsValueRef __stdcall EchoCallback(JsValueRef callee, bool isConstructCall, JsValueRef *arguments, unsigned short argumentCount, void *callbackState);
     static JsValueRef __stdcall QuitCallback(JsValueRef callee, bool isConstructCall, JsValueRef *arguments, unsigned short argumentCount, void *callbackState);
+    static JsValueRef __stdcall GetDirectoryCallback(JsValueRef callee, bool isConstructCall, JsValueRef *arguments, unsigned short argumentCount, void *callbackState);
+    static JsValueRef __stdcall GetFileNameCallback(JsValueRef callee, bool isConstructCall, JsValueRef *arguments, unsigned short argumentCount, void *callbackState);
     static JsValueRef __stdcall LoadScriptFileCallback(JsValueRef callee, bool isConstructCall, JsValueRef *arguments, unsigned short argumentCount, void *callbackState);
     static JsValueRef __stdcall LoadScriptCallback(JsValueRef callee, bool isConstructCall, JsValueRef *arguments, unsigned short argumentCount, void *callbackState);
     static JsValueRef __stdcall LoadModuleCallback(JsValueRef callee, bool isConstructCall, JsValueRef *arguments, unsigned short argumentCount, void *callbackState);
