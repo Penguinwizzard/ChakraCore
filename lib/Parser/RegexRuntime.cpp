@@ -2987,6 +2987,7 @@ namespace UnifiedRegex
     inline bool LoopSetInst::Exec(REGEX_INST_EXEC_PARAMETERS) const
     {
         LoopInfo* loopInfo = matcher.LoopIdToLoopInfo(loopId);
+        Assert(PHASE_OFF1(Js::RegexOptBTPhase) || !loopInfo->offsetsOfFollowFirst || loopInfo->offsetsOfFollowFirst->Empty());
 
         // If loop is contained in an outer loop, continuation stack may already have a RewindLoopFixed entry for
         // this loop. We must make sure it's state is preserved on backtrack.
@@ -3018,6 +3019,11 @@ namespace UnifiedRegex
 #if ENABLE_REGEX_CONFIG_OPTIONS
             matcher.CompStats();
 #endif
+            if (!PHASE_OFF1(Js::RegexOptBTPhase) && this->followFirst != MaxUChar && input[inputOffset] == this->followFirst)
+            {
+                loopInfo->EnsureOffsetsOfFollowFirst(matcher);
+                loopInfo->offsetsOfFollowFirst->Push(inputOffset - loopInfo->startInputOffset);
+            }
             inputOffset++;
         }
 
@@ -3879,6 +3885,14 @@ namespace UnifiedRegex
     }
 #endif
 
+    void LoopInfo::EnsureOffsetsOfFollowFirst(Matcher& matcher)
+    {
+        if (this->offsetsOfFollowFirst == nullptr)
+        {
+            this->offsetsOfFollowFirst = Anew(matcher.pattern->library->GetScriptContext()->RegexAllocator(), SList<CharCount>, matcher.pattern->library->GetScriptContext()->RegexAllocator());
+        }
+    }
+
 #if ENABLE_REGEX_CONFIG_OPTIONS
     void GroupInfo::Print(DebugWriter* w, const Char* const input) const
     {
@@ -4116,11 +4130,53 @@ namespace UnifiedRegex
 
         LoopSetInst* begin = matcher.L2I(LoopSet, beginLabel);
         LoopInfo* loopInfo = matcher.LoopIdToLoopInfo(begin->loopId);
-
+        
         // >loopInfonumber is the number of iterations completed before trying follow
         Assert(loopInfo->number > begin->repeats.lower);
         // Try follow with one fewer iteration
-        loopInfo->number--;
+        if (!PHASE_OFF1(Js::RegexOptBTPhase))
+        {
+            if (loopInfo->offsetsOfFollowFirst == nullptr)
+            {
+                if (begin->followFirst != MaxUChar)
+                {
+                    // stop backtracking
+                    loopInfo->number = begin->repeats.lower;
+                }
+                else
+                {
+                    if (PHASE_ON1(Js::RegexOptBTPrintPhase))
+                    {
+                        loopInfo->numBTs++;
+                    }
+                    loopInfo->number--;
+                }
+            }
+            else
+            {
+                if (loopInfo->offsetsOfFollowFirst->Empty())
+                {
+                    // stop backtracking
+                    loopInfo->number = begin->repeats.lower;
+                }
+                else
+                {
+                    if (PHASE_ON1(Js::RegexOptBTPrintPhase))
+                    {
+                        loopInfo->numBTs++;
+                    }
+                    loopInfo->number = loopInfo->offsetsOfFollowFirst->Pop();
+                }
+            }
+        }
+        else
+        {
+            if (PHASE_ON1(Js::RegexOptBTPrintPhase))
+            {
+                loopInfo->numBTs++;
+            }
+            loopInfo->number--;
+        }
 
         // Rewind input
         inputOffset = loopInfo->startInputOffset + loopInfo->number;
@@ -4473,7 +4529,15 @@ namespace UnifiedRegex
 #endif
 
         Run(input, inputLength, matchStart, nextSyncInputOffset, contStack, assertionStack, qcTicks, firstIteration);
-
+        if (PHASE_ON1(Js::RegexOptBTPrintPhase))
+        {
+            for (int i = 0; i < this->program->numLoops; i++)
+            {
+                Output::Print(_u("%d\n"), (this->loopInfos + i)->numBTs);
+                (this->loopInfos + i)->numBTs = 0;
+                Output::Flush();
+            }
+        }
         // Leave the continuation and assertion stack memory in place so we don't have to alloc next time
 
         return WasLastMatchSuccessful();

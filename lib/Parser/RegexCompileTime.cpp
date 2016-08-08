@@ -1904,6 +1904,15 @@ namespace UnifiedRegex
         for (item = n - 1; item >= 0; item--)
         {
             nodes[item]->AnnotatePass3(compiler, accumConsumes, innerFollow, accumFollowIrrefutable, accumFollowEOL);
+            if (nodes[item]->tag == NodeTag::Loop)
+            {
+                //Node* nextNode = nodes[item + 1];
+                if (/*nextNode->isFirstExact &&*/ nodes[item]->followSet->IsSingleton())
+                {
+                    Assert(nodes[item]->followSet->IsCompact());
+                    ((LoopNode*)nodes[item])->followFirst = nodes[item]->followSet->GetCompactChar(0);
+                }
+            }
             if (!nodes[item]->isThisIrrefutable)
                 accumFollowIrrefutable = false;
             if (!nodes[item]->IsEmptyOnly() && (compiler.program->flags & MultilineRegexFlag) == 0)
@@ -3883,7 +3892,7 @@ namespace UnifiedRegex
                 //   LoopSet
                 //
                 Assert(body->IsSimpleOneChar());
-                EMIT(compiler, LoopSetInst, compiler.NextLoopId(), repeats, !isNotInLoop)->set.CloneFrom(compiler.rtAllocator, *body->firstSet);
+                EMIT(compiler, LoopSetInst, compiler.NextLoopId(), repeats, !isNotInLoop, followFirst)->set.CloneFrom(compiler.rtAllocator, *body->firstSet);
                 break;
             }
 

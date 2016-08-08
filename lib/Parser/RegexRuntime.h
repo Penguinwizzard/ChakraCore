@@ -1224,11 +1224,12 @@ namespace UnifiedRegex
     {
         int loopId;
         const CountDomain repeats;
+        Char followFirst;
         bool hasOuterLoops;
 
         // set must always be cloned from source
-        inline LoopSetInst(int loopId, const CountDomain& repeats, bool hasOuterLoops)
-            : Inst(LoopSet), loopId(loopId), repeats(repeats), hasOuterLoops(hasOuterLoops) {}
+        inline LoopSetInst(int loopId, const CountDomain& repeats, bool hasOuterLoops, Char followFirst)
+            : Inst(LoopSet), loopId(loopId), repeats(repeats), hasOuterLoops(hasOuterLoops), followFirst(followFirst) {}
 
         INST_BODY
         INST_BODY_FREE(SetMixin)
@@ -1425,15 +1426,26 @@ namespace UnifiedRegex
     {
         CharCount number;            // current iteration number
         CharCount startInputOffset;  // input offset where the iteration started
-
+        SList<CharCount>* offsetsOfFollowFirst; // list of offsets from 
+        //CharCount firstOffsetOfFollowFirst;
+        CharCount numBTs;
+        
         inline void Reset()
         {
 #if DBG
             // So debug prints will look nice
             number = 0;
             startInputOffset = 0;
+            if (offsetsOfFollowFirst)
+            {
+                offsetsOfFollowFirst->Clear();
+            }
+            //firstOffsetOfFollowFirst = 0;
+            numBTs = 0;
 #endif
         }
+
+        inline void EnsureOffsetsOfFollowFirst(Matcher& matcher);
 
 #if ENABLE_REGEX_CONFIG_OPTIONS
         void Print(DebugWriter* w) const;
