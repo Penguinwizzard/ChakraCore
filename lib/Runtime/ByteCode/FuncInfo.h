@@ -183,6 +183,7 @@ public:
     bool isSuperCtorLexicallyCaptured;
     bool isNewTargetLexicallyCaptured;
     Symbol *argumentsSymbol;
+    Symbol *innerArgumentsSymbol;
     JsUtil::List<Js::RegSlot, ArenaAllocator> nonUserNonTempRegistersToInitialize;
 
     // constRegsCount is set to 2 because R0 is the return register, and R1 is the root object.
@@ -290,6 +291,22 @@ public:
     {
         Assert(argumentsSymbol == nullptr || argumentsSymbol == sym);
         argumentsSymbol = sym;
+    }
+
+    Symbol *GetInnerArgumentsSymbol() const
+    {
+        return innerArgumentsSymbol;
+    }
+
+    void SetInnerArgumentsSymbol(Symbol *sym)
+    {
+        Assert(innerArgumentsSymbol == nullptr || innerArgumentsSymbol == sym);
+        innerArgumentsSymbol = sym;
+    }
+
+    bool IsInnerArgumentsSymbol(Symbol* sym)
+    {
+        return innerArgumentsSymbol != nullptr && innerArgumentsSymbol == sym;
     }
 
     bool GetCallsEval() const {

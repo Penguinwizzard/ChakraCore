@@ -8170,7 +8170,6 @@ Case0:
                     }
                 }
             }
-
         }
 
         return scriptContext->GetLibrary()->GetTrue();

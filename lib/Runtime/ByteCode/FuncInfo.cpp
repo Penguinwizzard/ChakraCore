@@ -90,6 +90,7 @@ FuncInfo::FuncInfo(
     isInstInlineCacheCount(0),
     referencedPropertyIdCount(0),
     argumentsSymbol(nullptr),
+    innerArgumentsSymbol(nullptr),
     nonUserNonTempRegistersToInitialize(alloc),
     constantToRegister(alloc, 17),
     stringToRegister(alloc, 17),

@@ -4968,6 +4968,12 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, LPCOLESTR pNameHint, usho
             }
         }
 
+        if (!fLambda && paramScope != nullptr && !paramScope->GetCanMergeWithBodyScope()
+            && (pnodeFnc->sxFnc.UsesArguments() || pnodeFnc->grfpn & fpnArguments_overriddenByDecl))
+        {
+            Error(ERRNonSimpleParamListArgumentsUse);
+        }
+
         // If the param scope is merged with the body scope we want to use the param scope symbols in the body scope.
         // So add a pid ref for the body using the param scope symbol. Note that in this case the same symbol will occur twice
         // in the same pid ref stack.
@@ -5049,6 +5055,15 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, LPCOLESTR pNameHint, usho
 
                     Assert(paramNode && paramNode->sxVar.sym->GetScope()->GetScopeType() == ScopeType_FunctionBody);
                 });
+
+                if (!fLambda)
+                {
+                    // In split scope case ideally the arguments object should be in the param scope.
+                    // Right now referring to arguments in the param scope is a SyntaxError, so we have to
+                    // add a duplicate symbol in the body scope and copy over the value in BeginBodySope.
+                    ParseNodePtr argumentsNode = this->CreateVarDeclNode(wellKnownPropertyPids.arguments, STVariable, true, nullptr, false);
+                    Assert(argumentsNode && argumentsNode->sxVar.sym->GetScope()->GetScopeType() == ScopeType_FunctionBody);
+                }
             }
 
             // Keep nested function declarations and expressions in the same list at function scope.
