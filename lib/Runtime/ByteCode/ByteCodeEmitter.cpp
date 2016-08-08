@@ -11544,9 +11544,6 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
         EmitYieldStar(pnode, byteCodeGenerator, funcInfo);
         byteCodeGenerator->EndStatement(pnode);
         break;
-    case knopAsyncSpawn:
-        EmitBinary(Js::OpCode::AsyncSpawn, pnode, byteCodeGenerator, funcInfo);
-        break;
     case knopExportDefault:
         Emit(pnode->sxExportDefault.pnodeExpr, byteCodeGenerator, funcInfo, false);
         byteCodeGenerator->EmitAssignmentToDefaultModuleExport(pnode->sxExportDefault.pnodeExpr, funcInfo);

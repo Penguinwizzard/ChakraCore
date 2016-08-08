@@ -161,13 +161,17 @@ namespace Js
         ScriptContext* scriptContext = function->GetScriptContext();
         JavascriptLibrary* library = scriptContext->GetLibrary();
 
+        Var* argsHeapCopy = RecyclerNewArray(scriptContext->GetRecycler(), Var, stackArgs.Info.Count);
+        js_memcpy_s(argsHeapCopy, sizeof(Var) * stackArgs.Info.Count, stackArgs.Values, sizeof(Var) * stackArgs.Info.Count);
+        Arguments heapArgs(callInfo, argsHeapCopy);
+
         JavascriptExceptionObject* e = nullptr;
         JavascriptPromiseResolveOrRejectFunction* resolve;
         JavascriptPromiseResolveOrRejectFunction* reject;
         JavascriptPromiseAsyncSpawnExecutorFunction* executor =
             library->CreatePromiseAsyncSpawnExecutorFunction(
                 JavascriptPromise::EntryJavascriptPromiseAsyncSpawnExecutorFunction,
-                JavascriptAsyncFunction::FromVar(function),
+                JavascriptAsyncFunction::FromVar(function)->CreateGenerator(heapArgs),
                 stackArgs[0]);
         JavascriptPromise* promise = library->CreatePromise();
 
