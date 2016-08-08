@@ -2080,7 +2080,8 @@ namespace Js
                         if (object->CanHaveInterceptors())
                         {
                             Js::ForInObjectEnumerator enumerator(object, object->GetScriptContext(), /* enumSymbols */ true);
-                            if (enumerator.MoveNext())
+                            Js::PropertyId propertyId;
+                            if (enumerator.MoveAndGetNext(propertyId))
                             {
                                 enumerator.Clear();
                                 return TRUE;
@@ -2395,7 +2396,7 @@ namespace Js
                                 Js::PropertyId propertyId;
                                 Var obj;
 
-                                while ((obj = enumerator->GetCurrentAndMoveNext(propertyId)) != nullptr)
+                                while ((obj = enumerator->MoveAndGetNext(propertyId)) != nullptr)
                                 {
                                     if (!JavascriptString::Is(obj))
                                     {
@@ -2419,7 +2420,7 @@ namespace Js
                                             propertyId = propertyRecord->GetPropertyId();
                                         }
                                     }
-                                    // GetCurrentAndMoveNext shouldn't return an internal property id
+                                    // MoveAndGetNext shouldn't return an internal property id
                                     Assert(!Js::IsInternalPropertyId(propertyId));
 
                                     uint32 indexVal;
