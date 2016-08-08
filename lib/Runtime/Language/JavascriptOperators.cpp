@@ -9657,7 +9657,7 @@ CommonNumber:
         JavascriptExceptionObject* e = nullptr;
         JavascriptPromiseResolveOrRejectFunction* resolve;
         JavascriptPromiseResolveOrRejectFunction* reject;
-        JavascriptPromiseAsyncSpawnExecutorFunction* executor = library->CreatePromiseAsyncSpawnExecutorFunction(JavascriptPromise::EntryJavascriptPromiseAsyncSpawnExecutorFunction, (JavascriptGenerator*)aGenerator, aThis);
+        JavascriptPromiseAsyncSpawnExecutorFunction* executor = library->CreatePromiseAsyncSpawnExecutorFunction(JavascriptPromise::EntryJavascriptPromiseAsyncSpawnExecutorFunction, JavascriptAsyncFunction::FromVar(aGenerator), aThis);
         JavascriptPromise* promise = library->CreatePromise();
 
         JavascriptPromise::InitializePromise(promise, &resolve, &reject, scriptContext);

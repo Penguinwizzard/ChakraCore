@@ -193,6 +193,7 @@ namespace Js
     class StackScriptFunction;
     class GeneratorVirtualScriptFunction;
     class JavascriptGeneratorFunction;
+    class JavascriptAsyncFunction;
     class AsmJsScriptFunction;
     class JavascriptRegExpConstructor;
     class JavascriptRegExpEnumerator;

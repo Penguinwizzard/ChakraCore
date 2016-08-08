@@ -726,6 +726,22 @@ namespace Js
         }
     }
 
+    void JavascriptLibrary::InitializeAsyncFunction(DynamicObject *function, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
+    {
+        bool isAnonymousFunction = JavascriptGeneratorFunction::FromVar(function)->IsAnonymousFunction();
+
+        JavascriptLibrary* javascriptLibrary = function->GetType()->GetLibrary();
+        typeHandler->Convert(function, isAnonymousFunction ? javascriptLibrary->anonymousFunctionWithPrototypeTypeHandler : javascriptLibrary->functionWithPrototypeTypeHandler);
+        function->SetPropertyWithAttributes(PropertyIds::prototype, javascriptLibrary->GetAsyncFunctionPrototype(), PropertyWritable, nullptr);
+
+        if (function->GetScriptContext()->GetConfig()->IsES6FunctionNameEnabled() && !isAnonymousFunction)
+        {
+            JavascriptString * functionName = nullptr;
+            DebugOnly(bool status = ) ((Js::JavascriptFunction*)function)->GetFunctionName(&functionName);
+            Assert(status);
+            function->SetPropertyWithAttributes(PropertyIds::name, functionName, PropertyConfigurable, nullptr);
+        }
+    }
 
     template<bool addPrototype>
     void JavascriptLibrary::InitializeFunction(DynamicObject *function, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
@@ -803,9 +819,20 @@ namespace Js
         return DeferredTypeHandler<InitializeGeneratorFunction, InitializeFunctionDeferredTypeHandlerFilter<isNameAvailable, isPrototypeAvailable>>::GetDefaultInstance();
     }
 
+    template<bool isNameAvailable, bool isPrototypeAvailable>
+    DynamicTypeHandler * JavascriptLibrary::GetDeferredAsyncFunctionTypeHandlerBase()
+    {
+        return DeferredTypeHandler<InitializeAsyncFunction, InitializeFunctionDeferredTypeHandlerFilter<isNameAvailable, isPrototypeAvailable>>::GetDefaultInstance();
+    }
+
     DynamicTypeHandler * JavascriptLibrary::GetDeferredAnonymousPrototypeGeneratorFunctionTypeHandler()
     {
         return JavascriptLibrary::GetDeferredGeneratorFunctionTypeHandlerBase</*isNameAvailable*/ false>();
+    }
+
+    DynamicTypeHandler * JavascriptLibrary::GetDeferredAnonymousPrototypeAsyncFunctionTypeHandler()
+    {
+        return JavascriptLibrary::GetDeferredAsyncFunctionTypeHandlerBase</*isNameAvailable*/ false>();
     }
 
     DynamicTypeHandler * JavascriptLibrary::GetDeferredPrototypeGeneratorFunctionTypeHandler(ScriptContext* scriptContext)
@@ -817,6 +844,19 @@ namespace Js
         else
         {
             return JavascriptLibrary::GetDeferredGeneratorFunctionTypeHandlerBase</*isNameAvailable*/ false>();
+        }
+
+    }
+
+    DynamicTypeHandler * JavascriptLibrary::GetDeferredPrototypeAsyncFunctionTypeHandler(ScriptContext* scriptContext)
+    {
+        if (scriptContext->GetConfig()->IsES6FunctionNameEnabled())
+        {
+            return JavascriptLibrary::GetDeferredAsyncFunctionTypeHandlerBase</*isNameAvailable*/ true>();
+        }
+        else
+        {
+            return JavascriptLibrary::GetDeferredAsyncFunctionTypeHandlerBase</*isNameAvailable*/ false>();
         }
 
     }
@@ -875,6 +915,12 @@ namespace Js
     {
         return DynamicType::New(scriptContext, TypeIds_Function, generatorFunctionPrototype, entrypoint,
             isAnonymousFunction ? GetDeferredAnonymousPrototypeGeneratorFunctionTypeHandler() : GetDeferredPrototypeGeneratorFunctionTypeHandler(scriptContext), isShared, isShared);
+    }
+
+    DynamicType * JavascriptLibrary::CreateDeferredPrototypeAsyncFunctionType(JavascriptMethod entrypoint, bool isAnonymousFunction, bool isShared)
+    {
+        return DynamicType::New(scriptContext, TypeIds_Function, asyncFunctionPrototype, entrypoint,
+            isAnonymousFunction ? GetDeferredAnonymousPrototypeAsyncFunctionTypeHandler() : GetDeferredPrototypeAsyncFunctionTypeHandler(scriptContext), isShared, isShared);
     }
 
     DynamicType * JavascriptLibrary::CreateDeferredPrototypeFunctionType(JavascriptMethod entrypoint)
@@ -1038,6 +1084,8 @@ namespace Js
         booleanTypeDisplayString = CreateStringFromCppLiteral(_u("boolean"));
         numberTypeDisplayString = CreateStringFromCppLiteral(_u("number"));
         promiseResolveFunction = nullptr;
+        generatorNextFunction = nullptr;
+        generatorThrowFunction = nullptr;
 
 #ifdef ENABLE_SIMDJS
         if (GetScriptContext()->GetConfig()->IsSimdjsEnabled())
@@ -2137,11 +2185,29 @@ namespace Js
         {
             library->AddMember(generatorPrototype, PropertyIds::_symbolToStringTag, library->CreateStringFromCppLiteral(_u("Generator")), PropertyConfigurable);
         }
-        library->AddFunctionToLibraryObject(generatorPrototype, PropertyIds::next, &JavascriptGenerator::EntryInfo::Next, 1);
         library->AddFunctionToLibraryObject(generatorPrototype, PropertyIds::return_, &JavascriptGenerator::EntryInfo::Return, 1);
-        library->AddFunctionToLibraryObject(generatorPrototype, PropertyIds::throw_, &JavascriptGenerator::EntryInfo::Throw, 1);
+        library->AddMember(generatorPrototype, PropertyIds::next, library->EnsureGeneratorNextFunction(), PropertyBuiltInMethodDefaults);
+        library->AddMember(generatorPrototype, PropertyIds::throw_, library->EnsureGeneratorThrowFunction(), PropertyBuiltInMethodDefaults);
 
         generatorPrototype->SetHasNoEnumerableProperties(true);
+    }
+
+    JavascriptFunction* JavascriptLibrary::EnsureGeneratorNextFunction()
+    {
+        if (generatorNextFunction == nullptr)
+        {
+            generatorNextFunction = DefaultCreateFunction(&JavascriptGenerator::EntryInfo::Next, 1, nullptr, nullptr, PropertyIds::next);
+        }
+        return generatorNextFunction;
+    }
+
+    JavascriptFunction* JavascriptLibrary::EnsureGeneratorThrowFunction()
+    {
+        if (generatorThrowFunction == nullptr)
+        {
+            generatorThrowFunction = DefaultCreateFunction(&JavascriptGenerator::EntryInfo::Throw, 1, nullptr, nullptr, PropertyIds::throw_);
+        }
+        return generatorThrowFunction;
     }
 
     void JavascriptLibrary::InitializeAsyncFunctionConstructor(DynamicObject* asyncFunctionConstructor, DeferredTypeHandlerBase * typeHandler, DeferredInitializeMode mode)
@@ -5650,11 +5716,11 @@ namespace Js
         return RecyclerNew(this->GetRecycler(), JavascriptPromise, promiseType);
     }
 
-    JavascriptPromiseAsyncSpawnExecutorFunction* JavascriptLibrary::CreatePromiseAsyncSpawnExecutorFunction(JavascriptMethod entryPoint, JavascriptGenerator* generatorFunction, Var target)
+    JavascriptPromiseAsyncSpawnExecutorFunction* JavascriptLibrary::CreatePromiseAsyncSpawnExecutorFunction(JavascriptMethod entryPoint, JavascriptAsyncFunction* asyncFunction, Var target)
     {
         FunctionInfo* functionInfo = RecyclerNew(this->GetRecycler(), FunctionInfo, entryPoint);
         DynamicType* type = CreateDeferredPrototypeFunctionType(this->inDispatchProfileMode ? ProfileEntryThunk : entryPoint);
-        JavascriptPromiseAsyncSpawnExecutorFunction* function = RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptPromiseAsyncSpawnExecutorFunction, type, functionInfo, generatorFunction, target);
+        JavascriptPromiseAsyncSpawnExecutorFunction* function = RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptPromiseAsyncSpawnExecutorFunction, type, functionInfo, asyncFunction, target);
 
         return function;
     }
@@ -5853,6 +5919,15 @@ namespace Js
         DynamicType* type = CreateDeferredPrototypeGeneratorFunctionType(entryPoint, scriptFunction->IsAnonymousFunction());
 
         return RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptGeneratorFunction, type, scriptFunction);
+    }
+
+    JavascriptAsyncFunction* JavascriptLibrary::CreateAsyncFunction(JavascriptMethod entryPoint, GeneratorVirtualScriptFunction* scriptFunction)
+    {
+        Assert(scriptContext->GetConfig()->IsES6GeneratorsEnabled());
+
+        DynamicType* type = CreateDeferredPrototypeAsyncFunctionType(entryPoint, scriptFunction->IsAnonymousFunction());
+
+        return RecyclerNewEnumClass(this->GetRecycler(), EnumFunctionClass, JavascriptAsyncFunction, type, scriptFunction);
     }
 
     JavascriptExternalFunction* JavascriptLibrary::CreateStdCallExternalFunction(StdCallJavascriptMethod entryPoint, PropertyId nameId, void *callbackState)

@@ -1746,7 +1746,7 @@ void ByteCodeGenerator::FinalizeRegisters(FuncInfo * funcInfo, Js::FunctionBody 
     }
 
     // NOTE: The FB expects the yield reg to be the final non-temp.
-    if (byteCodeFunction->IsGenerator())
+    if (byteCodeFunction->IsGenerator() || byteCodeFunction->IsAsync())
     {
         funcInfo->AssignYieldRegister();
     }
