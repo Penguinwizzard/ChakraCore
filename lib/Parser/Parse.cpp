@@ -1361,15 +1361,6 @@ ParseNodePtr Parser::CreateModuleImportDeclNode(IdentPtr localName)
     return declNode;
 }
 
-void Parser::MarkIdentifierReferenceIsModuleExport(IdentPtr localName)
-{
-    PidRefStack* pidRef = this->PushPidRef(localName);
-
-    Assert(pidRef != nullptr);
-
-    pidRef->SetModuleExport();
-}
-
 ParseNodePtr Parser::CreateVarDeclNode(IdentPtr pid, SymbolType symbolType, bool autoArgumentsObject, ParseNodePtr pnodeFnc, bool errorOnRedecl)
 {
     ParseNodePtr pnode = CreateDeclNode(knopVarDecl, pid, symbolType, errorOnRedecl);
@@ -1672,6 +1663,11 @@ void Parser::BindPidRefsInScope(IdentPtr pid, Symbol *sym, int blockId, uint max
     Js::LocalFunctionId funcId = GetCurrentFunctionNode()->sxFnc.functionId;
     Assert(sym);
 
+    if (pid->GetIsModuleExport())
+    {
+        sym->SetIsModuleExportStorage(true);
+    }
+
     for (ref = pid->GetTopRef(); ref && ref->GetScopeId() >= blockId; ref = nextRef)
     {
         // Fix up sym* on PID ref.
@@ -1693,11 +1689,6 @@ void Parser::BindPidRefsInScope(IdentPtr pid, Symbol *sym, int blockId, uint max
             {
                 m_currentNodeFunc->sxFnc.SetHasAnyWriteToFormals(true);                
             }
-        }
-
-        if (ref->IsModuleExport())
-        {
-            sym->SetIsModuleExportStorage(true);
         }
 
         if (ref->GetFuncScopeId() != funcId && !sym->GetIsGlobal() && !sym->GetIsModuleExportStorage())
@@ -2135,7 +2126,7 @@ void Parser::ParseNamedImportOrExportClause(ModuleImportOrExportEntryList* impor
             }
             else
             {
-                MarkIdentifierReferenceIsModuleExport(identifierName);
+                identifierName->SetIsModuleExport();
                 AddModuleImportOrExportEntry(importOrExportEntryList, nullptr, identifierName, identifierAs, nullptr);
             }
         }
