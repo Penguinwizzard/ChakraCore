@@ -64,7 +64,7 @@ namespace Js
 
     JavascriptGeneratorFunction* JavascriptGeneratorFunction::FromVar(Var var)
     {
-        Assert(JavascriptGeneratorFunction::Is(var));
+        Assert(JavascriptGeneratorFunction::Is(var) || JavascriptAsyncFunction::Is(var));
 
         return static_cast<JavascriptGeneratorFunction*>(var);
     }
