@@ -28,14 +28,13 @@ public:
     void *              m_ptr;          // points to encoded buffer byte or LabelInstr if RelocTypeLabel
     void *              m_origPtr;      // copy of m_ptr to be used to get offset in the source buffer during BR shortening
 
+private:
     union
     {
         IR::LabelInstr* m_labelInstr;        // ptr to Br Label
+        BYTE            m_nopCount;
         uint64          m_origInlineeOffset;
     };
-private:
-    
-    BYTE                m_nopCount;
     bool                m_isShortBr;
 
 public:
@@ -46,10 +45,8 @@ public:
         if (type == RelocTypeLabel)
         {
             // preserve original PC for labels
-            Assert(labelInstr);
-            m_origPtr   = (void*)(labelInstr->GetPC());
+            m_origPtr   = (void*)((IR::LabelInstr*)ptr)->GetPC();
             m_nopCount  = 0;
-            m_labelInstr = labelInstr;
         }
         else
         {

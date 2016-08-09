@@ -506,8 +506,8 @@ intConst:
         break;
 
     case IR::OpndKindLabel:
-        value = 0;
-        AppendRelocEntry(RelocTypeLabelUse, (void*) m_pc, opnd->AsLabelOpnd()->GetLabel());
+        value = (size_t)opnd->AsLabelOpnd()->GetLabel();
+        AppendRelocEntry(RelocTypeLabelUse, (void*) m_pc, nullptr);
         break;
 
     default:
@@ -1578,9 +1578,8 @@ EncoderMD::ApplyRelocs(size_t codeBufferAddress_)
 
         case RelocTypeLabelUse:
             {
-                IR::LabelInstr *labelInstr =reloc->m_labelInstr;
+                IR::LabelInstr *labelInstr = *(IR::LabelInstr**)relocAddress;
                 AssertMsg(labelInstr->GetPC() != nullptr, "Branch to unemitted label?");
-                Assert(*(size_t *)relocAddress == 0);
                 *(size_t *)relocAddress = (size_t)(labelInstr->GetPC() - m_encoder->m_encodeBuffer + codeBufferAddress_);
                 break;
             }

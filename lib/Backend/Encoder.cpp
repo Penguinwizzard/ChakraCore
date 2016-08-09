@@ -251,7 +251,7 @@ Encoder::Encode()
 
     if (validationCRC != bufferCRC)
     {
-        //Review: This throws internal error. Is this error type, Fine?
+        //TODO: This throws internal error. Is this error type, Fine?
         Fatal();
     }
 
