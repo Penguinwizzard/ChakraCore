@@ -4145,7 +4145,7 @@ namespace UnifiedRegex
                 }
                 else
                 {
-                    if (PHASE_ON1(Js::RegexOptBTPrintPhase))
+                    if (PHASE_ON1(Js::RegexOptBTPrintPhase) && matcher.program->numLoops == 2)
                     {
                         loopInfo->numBTs++;
                     }
@@ -4161,7 +4161,7 @@ namespace UnifiedRegex
                 }
                 else
                 {
-                    if (PHASE_ON1(Js::RegexOptBTPrintPhase))
+                    if (PHASE_ON1(Js::RegexOptBTPrintPhase) && matcher.program->numLoops == 2)
                     {
                         loopInfo->numBTs++;
                     }
@@ -4171,7 +4171,7 @@ namespace UnifiedRegex
         }
         else
         {
-            if (PHASE_ON1(Js::RegexOptBTPrintPhase))
+            if (PHASE_ON1(Js::RegexOptBTPrintPhase) && matcher.program->numLoops == 2)
             {
                 loopInfo->numBTs++;
             }
@@ -4531,10 +4531,15 @@ namespace UnifiedRegex
         Run(input, inputLength, matchStart, nextSyncInputOffset, contStack, assertionStack, qcTicks, firstIteration);
         if (PHASE_ON1(Js::RegexOptBTPrintPhase))
         {
-            for (int i = 0; i < this->program->numLoops; i++)
+            if (this->program->numLoops == 2)
             {
-                Output::Print(_u("%d\n"), (this->loopInfos + i)->numBTs);
-                (this->loopInfos + i)->numBTs = 0;
+                for (int i = 0; i < this->program->numLoops; i++)
+                {
+                    Output::Print(_u("%d\n"), (this->loopInfos + i)->numBTs);
+                    (this->loopInfos + i)->numBTs = 0;
+                    Output::Flush();
+                }
+                Output::Print(_u("\n"));
                 Output::Flush();
             }
         }
