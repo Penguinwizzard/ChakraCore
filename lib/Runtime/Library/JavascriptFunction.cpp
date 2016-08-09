@@ -292,9 +292,9 @@ namespace Js
 
         JS_ETW(EventWriteJSCRIPT_RECYCLER_ALLOCATE_FUNCTION(pfuncScript, EtwTrace::GetFunctionId(pfuncScript->GetFunctionProxy())));
 
-        if (functionKind == FunctionKind::Generator)
+        if (functionKind == FunctionKind::Generator || functionKind == FunctionKind::Async)
         {
-            Assert(pfuncScript->GetFunctionInfo()->IsGenerator());
+            Assert(pfuncScript->GetFunctionInfo()->IsGenerator() || pfuncScript->GetFunctionInfo()->IsAsync());
             auto pfuncVirt = static_cast<GeneratorVirtualScriptFunction*>(pfuncScript);
             auto pfuncGen = scriptContext->GetLibrary()->CreateGeneratorFunction(JavascriptGeneratorFunction::EntryGeneratorFunctionImplementation, pfuncVirt);
             pfuncVirt->SetRealGeneratorFunction(pfuncGen);
