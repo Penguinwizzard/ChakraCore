@@ -24,13 +24,16 @@
 //          (        |                  ,     |        ,       |         )
 //          (        V                  ,     V        ,       V         )
 
-MACRO       ( EndOfBlock                , Empty        , None            ) // End-of-buffer
+MACRO       ( EndOfBlock                    , Empty        , None            ) // End-of-buffer
 // Prefix, order must be maintained to be the same as in OpCodes.h
-MACRO       ( ExtendedOpcodePrefix      , Empty        , None            )
-MACRO       ( MediumLayoutPrefix        , Empty        , None            )
-MACRO       ( ExtendedMediumLayoutPrefix, Empty        , None            )
-MACRO       ( LargeLayoutPrefix         , Empty        , None            )
-MACRO       ( ExtendedLargeLayoutPrefix , Empty        , None            )
+MACRO       ( ExtendedOpcodePrefix          , Empty        , None            )
+MACRO       ( WordExtendedOpcodePrefix      , Empty        , None            )
+MACRO       ( MediumLayoutPrefix            , Empty        , None            )
+MACRO       ( ExtendedMediumLayoutPrefix    , Empty        , None            )
+MACRO       ( WordExtendedMediumLayoutPrefix, Empty        , None            )
+MACRO       ( LargeLayoutPrefix             , Empty        , None            )
+MACRO       ( ExtendedLargeLayoutPrefix     , Empty        , None            )
+MACRO       ( WordExtendedLargeLayoutPrefix , Empty        , None            )
 
 MACRO       ( Nop                       , Empty        , None            ) // No operation (Default value = 0)
 MACRO_EXTEND( InvalidOpCode             , Empty        , None            ) // No operation (Default value = 0)

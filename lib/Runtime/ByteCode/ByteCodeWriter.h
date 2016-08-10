@@ -95,7 +95,6 @@ namespace Js
             void Encode(const void * rawData, int byteSize);
 
             template <LayoutSize layoutSize> void EncodeOpCode(uint16 op, ByteCodeWriter* writer);
-            template <> void EncodeOpCode<SmallLayout>(uint16 op, ByteCodeWriter* writer);
             template <LayoutSize layoutSize> void EncodeT(OpCode op, ByteCodeWriter* writer);
             template <LayoutSize layoutSize> void EncodeT(OpCode op, const void * rawData, int byteSize, ByteCodeWriter* writer);
             // asm.js encoding

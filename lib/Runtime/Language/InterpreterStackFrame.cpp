@@ -2346,26 +2346,6 @@ namespace Js
         return op;
     }
 
-    Js::OpCode InterpreterStackFrame::ReadJsOpCode(const byte *& ip)
-    {
-        return ReadOp<Js::OpCode, ByteCodeReader::ReadSmallOp, &InterpreterStackFrame::TraceJsOpCode>(ip);
-    }
-
-    Js::OpCode InterpreterStackFrame::ReadExtendedJsOpCode(const byte *& ip)
-    {
-        return ReadOp<Js::OpCode, ByteCodeReader::ReadExtendedOp, &InterpreterStackFrame::TraceJsOpCode>(ip);
-    }
-
-    Js::OpCodeAsmJs InterpreterStackFrame::ReadJsOpCodeAsmJs(const byte *& ip)
-    {
-        return ReadOp<Js::OpCodeAsmJs, ByteCodeReader::ReadSmallOp, &InterpreterStackFrame::TraceAsmJsOpCode>(ip);
-    }
-
-    Js::OpCodeAsmJs InterpreterStackFrame::ReadExtendedJsOpCodeAsmJs(const byte *& ip)
-    {
-        return ReadOp<Js::OpCodeAsmJs, ByteCodeReader::ReadExtendedOp, &InterpreterStackFrame::TraceAsmJsOpCode>(ip);
-    }
-
     void InterpreterStackFrame::TraceJsOpCode(InterpreterStackFrame* that, Js::OpCode op)
     {
 #if DBG_DUMP
