@@ -2315,22 +2315,22 @@ namespace Js
 
     Js::OpCode InterpreterStackFrame::ReadJsOpCode(const byte *& ip)
     {
-        return ReadOp<Js::OpCode, ByteCodeReader::ReadSmallOp, &InterpreterStackFrame::TraceJsOpCode>(ip);
+        return ReadOp<Js::OpCode, ByteCodeReader::ReadByteOp, &InterpreterStackFrame::TraceJsOpCode>(ip);
     }
 
-    Js::OpCode InterpreterStackFrame::ReadExtendedJsOpCode(const byte *& ip)
+    Js::OpCode InterpreterStackFrame::ReadWordJsOpCode(const byte *& ip)
     {
-        return ReadOp<Js::OpCode, ByteCodeReader::ReadExtendedOp, &InterpreterStackFrame::TraceJsOpCode>(ip);
+        return ReadOp<Js::OpCode, ByteCodeReader::ReadWordOp, &InterpreterStackFrame::TraceJsOpCode>(ip);
     }
 
     Js::OpCodeAsmJs InterpreterStackFrame::ReadJsOpCodeAsmJs(const byte *& ip)
     {
-        return ReadOp<Js::OpCodeAsmJs, ByteCodeReader::ReadSmallOp, &InterpreterStackFrame::TraceAsmJsOpCode>(ip);
+        return ReadOp<Js::OpCodeAsmJs, ByteCodeReader::ReadByteOp, &InterpreterStackFrame::TraceAsmJsOpCode>(ip);
     }
 
-    Js::OpCodeAsmJs InterpreterStackFrame::ReadExtendedJsOpCodeAsmJs(const byte *& ip)
+    Js::OpCodeAsmJs InterpreterStackFrame::ReadWordJsOpCodeAsmJs(const byte *& ip)
     {
-        return ReadOp<Js::OpCodeAsmJs, ByteCodeReader::ReadExtendedOp, &InterpreterStackFrame::TraceAsmJsOpCode>(ip);
+        return ReadOp<Js::OpCodeAsmJs, ByteCodeReader::ReadWordOp, &InterpreterStackFrame::TraceAsmJsOpCode>(ip);
     }
 
     void InterpreterStackFrame::TraceJsOpCode(InterpreterStackFrame* that, Js::OpCode op)

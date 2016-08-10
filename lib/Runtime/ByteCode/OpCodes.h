@@ -53,12 +53,16 @@
     MACRO_EXTEND_WMS(opcode, layout, OpHasProfiled|attr) \
     MACRO_EXTEND_WMS(Profiled##opcode, Profiled##layout, OpByteCodeOnly|OpProfiled|attr) \
 
-MACRO(                  EndOfBlock,         Empty,          OpByteCodeOnly)     // End-of-buffer
-MACRO(                  ExtendedOpcodePrefix,Empty,         OpByteCodeOnly)
-MACRO(                  MediumLayoutPrefix,  Empty,         OpByteCodeOnly)
-MACRO(                  ExtendedMediumLayoutPrefix,Empty,   OpByteCodeOnly)
-MACRO(                  LargeLayoutPrefix,  Empty,          OpByteCodeOnly)
-MACRO(                  ExtendedLargeLayoutPrefix,Empty,    OpByteCodeOnly)
+MACRO(                  EndOfBlock                    , Empty, OpByteCodeOnly) // End-of-buffer
+MACRO(                  ExtendedOpcodePrefix          , Empty, OpByteCodeOnly) // byte op + 0x100
+MACRO(                  WordExtendedOpcodePrefix      , Empty, OpByteCodeOnly) // word op
+MACRO(                  MediumLayoutPrefix            , Empty, OpByteCodeOnly)
+MACRO(                  ExtendedMediumLayoutPrefix    , Empty, OpByteCodeOnly)
+MACRO(                  WordExtendedMediumLayoutPrefix, Empty, OpByteCodeOnly)
+MACRO(                  LargeLayoutPrefix             , Empty, OpByteCodeOnly)
+MACRO(                  ExtendedLargeLayoutPrefix     , Empty, OpByteCodeOnly)
+MACRO(                  WordExtendedLargeLayoutPrefix , Empty, OpByteCodeOnly)
+
 
 MACRO(                  Nop,                        Empty,          None)       // No operation (Default value = 0)
 MACRO(                  StartCall,          StartCall,      OpSideEffect)
@@ -387,7 +391,7 @@ MACRO_EXTEND_WMS_AND_PROFILED(LdParamSlot,          ElementSlotI1,  OpTempNumber
 MACRO_BACKEND_ONLY(     LdSlotArr,                  ElementSlot,    OpTempNumberSources)
 MACRO_EXTEND_WMS_AND_PROFILED(LdInnerObjSlot,       ElementSlotI2,  OpTempNumberSources)
 MACRO_EXTEND_WMS_AND_PROFILED(LdObjSlot,            ElementSlot,    None)
-MACRO_WMS_PROFILED(           LdLocalObjSlot,       ElementSlotI1,  None)
+MACRO_EXTEND_WMS_AND_PROFILED(LdLocalObjSlot,       ElementSlotI1,  None)
 MACRO_EXTEND_WMS_AND_PROFILED(LdParamObjSlot,       ElementSlotI1,  None)
 MACRO_EXTEND_WMS_AND_PROFILED(LdEnvObjSlot,         ElementSlotI2,  None)
 MACRO_EXTEND_WMS_AND_PROFILED(LdModuleSlot,         ElementSlotI2,  None)
@@ -474,7 +478,7 @@ MACRO_WMS(              LdLetHeapArguments, Reg1,           OpSideEffect)   // L
 MACRO_BACKEND_ONLY(     LdArgumentsFromStack,Reg1,          None)           // Load the heap-based "arguments" object even if it is null (Loads from meta arguments location for inlinee as well).
 MACRO_WMS(              LdHeapArgsCached,   Reg1,           OpSideEffect)   // Load the heap-based "arguments" object in a cached scope
 MACRO_EXTEND_WMS(       LdLetHeapArgsCached,Reg1,           OpSideEffect)   // Load the heap-based "arguments" object in a cached scope (formals are let-like instead of var-like)
-MACRO_WMS(              LdStackArgPtr,      Reg1,           OpSideEffect)   // Load the address of the base of the input parameter area
+MACRO_EXTEND_WMS(       LdStackArgPtr,      Reg1,           OpSideEffect)   // Load the address of the base of the input parameter area
 MACRO_WMS_PROFILED_OP(  LdThis,       Reg2Int1,       OpOpndHasImplicitCall|OpTempNumberTransfer)        // Load this object     (NOTE: TryLoadRoot exit scripts on host dispatch, but otherwise, no side effect)
 MACRO_WMS_PROFILED_OP(  StrictLdThis, Reg2,           OpOpndHasImplicitCall|OpTempNumberTransfer)        // Load this object in strict mode
 MACRO_BACKEND_ONLY(     CheckThis,          Reg1,           OpCanCSE|OpBailOutRec)

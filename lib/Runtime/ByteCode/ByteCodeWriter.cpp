@@ -3204,41 +3204,22 @@ StoreCommon:
         }
     }
 
-    template <>
-    inline void ByteCodeWriter::Data::EncodeOpCode<SmallLayout>(uint16 op, ByteCodeWriter* writer)
-    {
-        DebugOnly(const uint offset = currentOffset);
-        if (op <= (uint16)Js::OpCode::MaxByteSizedOpcodes)
-        {
-            byte byteop = (byte)op;
-            Write(&byteop, sizeof(byte));
-        }
-        else
-        {
-            byte byteop = (byte)Js::OpCode::ExtendedOpcodePrefix;
-            Write(&byteop, sizeof(byte));
-            Write(&op, sizeof(uint16));
-        }
-        Assert(OpCodeUtil::EncodedSize((Js::OpCode)op, SmallLayout) == (currentOffset - offset));
-    }
-
     template <LayoutSize layoutSize>
     inline void ByteCodeWriter::Data::EncodeOpCode(uint16 op, ByteCodeWriter* writer)
     {
-        CompileAssert(layoutSize != SmallLayout);
         DebugOnly(const uint offset = currentOffset);
-
-        if (op <= (uint16)Js::OpCode::MaxByteSizedOpcodes)
+        const byte exop = (byte)OpCodeUtil::GetOpCodePrefix((OpCode)op, layoutSize);
+        if (exop > 0)
         {
-            const byte exop = (byte)(layoutSize == LargeLayout ? Js::OpCode::LargeLayoutPrefix : Js::OpCode::MediumLayoutPrefix);
             Write(&exop, sizeof(byte));
+        }
+        if (op <= OpCodeUtil::MaxExtendedByteSizedOpcodes)
+        {
             byte byteop = (byte)op;
             Write(&byteop, sizeof(byte));
         }
         else
         {
-            const byte exop = (byte)(layoutSize == LargeLayout ? Js::OpCode::ExtendedLargeLayoutPrefix : Js::OpCode::ExtendedMediumLayoutPrefix);
-            Write(&exop, sizeof(byte));
             Write(&op, sizeof(uint16));
         }
         Assert(OpCodeUtil::EncodedSize((Js::OpCode)op, layoutSize) == (currentOffset - offset));

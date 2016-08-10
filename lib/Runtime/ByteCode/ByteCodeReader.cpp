@@ -95,27 +95,19 @@ namespace Js
     OpCode ByteCodeReader::ReadPrefixedOp(const byte *&ip, LayoutSize& layoutSize, OpCode prefix) const
     {
         Assert(ip < m_endLocation);
+        CompileAssert((uint16)Js::OpCode::MediumLayoutPrefix / 3 == MediumLayout);
+        CompileAssert((uint16)Js::OpCode::LargeLayoutPrefix / 3 == LargeLayout);
 
+        layoutSize = (LayoutSize)((byte)prefix / 3);
         switch (prefix)
         {
-        case Js::OpCode::MediumLayoutPrefix:
-            layoutSize = MediumLayout;
-            return ReadSmallOp(ip);
-        case Js::OpCode::LargeLayoutPrefix:
-            layoutSize = LargeLayout;
-            return ReadSmallOp(ip);
-        case Js::OpCode::ExtendedOpcodePrefix:
-            layoutSize = SmallLayout;
-            break;
-        case Js::OpCode::ExtendedMediumLayoutPrefix:
-            layoutSize = MediumLayout;
-            break;
+        case Js::OpCode::WordExtendedOpcodePrefix:
+        case Js::OpCode::WordExtendedMediumLayoutPrefix:
+        case Js::OpCode::WordExtendedLargeLayoutPrefix:
+            return ReadWordOp(ip);
         default:
-            Assert(prefix == Js::OpCode::ExtendedLargeLayoutPrefix);
-            layoutSize = LargeLayout;
+            return ReadByteOp(ip);
         }
-
-        return ReadExtendedOp(ip);
     }
 
     OpCode ByteCodeReader::ReadOp(LayoutSize& layoutSize)
@@ -150,23 +142,23 @@ namespace Js
         return ReadOp(ip, layoutSize);
     }
 
-    OpCode ByteCodeReader::ReadSmallOp(const byte*& ip)
+    OpCode ByteCodeReader::ReadByteOp(const byte*& ip)
     {
         return (OpCode)*ip++;
     }
 
-    OpCode ByteCodeReader::PeekSmallOp(const byte * ip)
+    OpCode ByteCodeReader::PeekByteOp(const byte * ip)
     {
         return (OpCode)*ip;
     }
 
-    OpCode ByteCodeReader::ReadExtendedOp(const byte*& ip)
+    OpCode ByteCodeReader::ReadWordOp(const byte*& ip)
     {
         uint16*& extIp = (uint16*&)ip;
         return (OpCode)*extIp++;
     }
 
-    OpCode ByteCodeReader::PeekExtendedOp(const byte * ip)
+    OpCode ByteCodeReader::PeekWordOp(const byte * ip)
     {
         uint16* extIp = (uint16*)ip;
         return (OpCode)*extIp;
