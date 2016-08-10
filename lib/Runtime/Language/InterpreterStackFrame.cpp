@@ -2382,7 +2382,7 @@ namespace Js
 
     void InterpreterStackFrame::TraceAsmJsOpCode(InterpreterStackFrame* that, Js::OpCodeAsmJs op)
     {
-#if DBG_DUMP
+#if DBG_DUMP && !defined(TEMP_DISABLE_ASMJS)
         if (!OpCodeUtil::IsPrefixOpcode((Js::OpCode)op))
         {
             that->scriptContext->byteCodeAsmJsHistogram[(int)op]++;
