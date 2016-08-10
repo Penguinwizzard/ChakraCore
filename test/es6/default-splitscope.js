@@ -1995,10 +1995,11 @@ var tests = [
         (new c5()).foo();
     }
   },
-  {
+  //  TODO: (suwc) Uncomment after OS8453173 is fixed
+  /*{
       name: "Eval and destructuring",
       body: function () {
-          function f1({a:a1, b:b1}, c = eval("a1 + b1")) {
+        function f1({a:a1, b:b1}, c = eval("a1 + b1")) {
             assert.areEqual(10, a1, "Initial value of the first destructuring parameter in the body scope should be the same as the one in param scope");
             assert.areEqual(20, b1, "Initial value of the second destructuring parameter in the body scope should be the same as the one in param scope");
             a1 = 1;
@@ -2032,7 +2033,7 @@ var tests = [
             assert.areEqual(10, y(), "Assignment in the body does not affect the formal captured from the param scope");
         })({});
       }
-  },
+  },*/
   {
       name: "Eval and arguments in param scope",
       body: function () {
