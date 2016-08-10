@@ -62,6 +62,11 @@ public:
                 m_labelInstr = labelInstr;
                 m_isShortBr = false;
             }
+            else if (type == RelocTypeLabelUse)
+            {
+                Assert(labelInstr);
+                m_labelInstr = labelInstr;
+            }
         }
     }
 
@@ -99,7 +104,7 @@ public:
 
     IR::LabelInstr *    getBrTargetLabel()  const
     {
-        Assert(m_type == RelocTypeBranch && m_labelInstr);
+        Assert((m_type == RelocTypeBranch || m_type == RelocTypeLabelUse) && m_labelInstr);
         return m_labelInstr;
     }
     IR::LabelInstr *    getLabel()  const

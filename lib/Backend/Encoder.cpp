@@ -145,7 +145,7 @@ Encoder::Encode()
 #if defined(_M_ARM32_OR_ARM64)
                         encoderMD->AddLabelReloc((byte*) offset);
 #else
-                        encoderMD->AppendRelocEntry(RelocTypeLabelUse, (void*) (offset));
+                        encoderMD->AppendRelocEntry(RelocTypeLabelUse, (void*) (offset), *(IR::LabelInstr**)(offset));
 #endif
                     });
                 }
@@ -598,7 +598,7 @@ void Encoder::TryCopyAndAddRelocRecordsForSwitchJumpTableEntries(BYTE *codeStart
 #if defined(_M_ARM32_OR_ARM64)
             encoderMD->AddLabelReloc((byte*) addressOfJmpTableEntry);
 #else
-            encoderMD->AppendRelocEntry(RelocTypeLabelUse, addressOfJmpTableEntry);
+            encoderMD->AppendRelocEntry(RelocTypeLabelUse, addressOfJmpTableEntry, *(IR::LabelInstr**)addressOfJmpTableEntry);
 #endif
         }
 
