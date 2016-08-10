@@ -250,9 +250,12 @@ namespace Js
         byteCodeAuxiliaryDataSize = 0;
         byteCodeAuxiliaryContextDataSize = 0;
         memset(byteCodeHistogram, 0, sizeof(byteCodeHistogram));
-        memset(byteCodeAsmJsHistogram, 0, sizeof(byteCodeAsmJsHistogram));
         memset(byteCodeEncodedHistogram, 0, sizeof(byteCodeEncodedHistogram));
+
+#ifndef TEMP_DISABLE_ASMJS
+        memset(byteCodeAsmJsHistogram, 0, sizeof(byteCodeAsmJsHistogram));
         memset(byteCodeEncodedAsmJsHistogram, 0, sizeof(byteCodeEncodedAsmJsHistogram));
+#endif
 #endif
 
         memset(propertyStrings, 0, sizeof(PropertyStringMap*)* 80);

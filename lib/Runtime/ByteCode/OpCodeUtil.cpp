@@ -6,15 +6,15 @@
 
 namespace Js
 {
-    CompileAssert((uint16)OpCodeUtil::GetOpCodePrefix(Js::OpCode::Nop, SmallLayout) == 0);
-    CompileAssert(OpCodeUtil::GetOpCodePrefix(Js::OpCode::Nop, MediumLayout) == Js::OpCode::MediumLayoutPrefix);
-    CompileAssert(OpCodeUtil::GetOpCodePrefix(Js::OpCode::Nop, LargeLayout) == Js::OpCode::LargeLayoutPrefix);
-    CompileAssert(OpCodeUtil::GetOpCodePrefix(Js::OpCode::InvalidOpCode, SmallLayout) == Js::OpCode::ExtendedOpcodePrefix);
-    CompileAssert(OpCodeUtil::GetOpCodePrefix(Js::OpCode::InvalidOpCode, MediumLayout) == Js::OpCode::ExtendedMediumLayoutPrefix);
-    CompileAssert(OpCodeUtil::GetOpCodePrefix(Js::OpCode::InvalidOpCode, LargeLayout) == Js::OpCode::ExtendedLargeLayoutPrefix);
-    CompileAssert(OpCodeUtil::GetOpCodePrefix(Js::OpCode::Count, SmallLayout) == Js::OpCode::WordExtendedOpcodePrefix);
-    CompileAssert(OpCodeUtil::GetOpCodePrefix(Js::OpCode::Count, MediumLayout) == Js::OpCode::WordExtendedMediumLayoutPrefix);
-    CompileAssert(OpCodeUtil::GetOpCodePrefix(Js::OpCode::Count, LargeLayout) == Js::OpCode::WordExtendedLargeLayoutPrefix);
+    CompileAssert((uint16)OpCodeUtil::GetOpCodePrefix(Js::OpCode::MaxByteSizedOpcodes, SmallLayout) == 0);
+    CompileAssert(OpCodeUtil::GetOpCodePrefix(Js::OpCode::MaxByteSizedOpcodes, MediumLayout) == Js::OpCode::MediumLayoutPrefix);
+    CompileAssert(OpCodeUtil::GetOpCodePrefix(Js::OpCode::MaxByteSizedOpcodes, LargeLayout) == Js::OpCode::LargeLayoutPrefix);
+    CompileAssert(OpCodeUtil::GetOpCodePrefix((Js::OpCode)(OpCodeUtil::MaxExtendedByteSizedOpcodes), SmallLayout) == Js::OpCode::ExtendedOpcodePrefix);
+    CompileAssert(OpCodeUtil::GetOpCodePrefix((Js::OpCode)(OpCodeUtil::MaxExtendedByteSizedOpcodes), MediumLayout) == Js::OpCode::ExtendedMediumLayoutPrefix);
+    CompileAssert(OpCodeUtil::GetOpCodePrefix((Js::OpCode)(OpCodeUtil::MaxExtendedByteSizedOpcodes), LargeLayout) == Js::OpCode::ExtendedLargeLayoutPrefix);
+    CompileAssert(OpCodeUtil::GetOpCodePrefix((Js::OpCode)(OpCodeUtil::MaxExtendedByteSizedOpcodes + 1), SmallLayout) == Js::OpCode::WordExtendedOpcodePrefix);
+    CompileAssert(OpCodeUtil::GetOpCodePrefix((Js::OpCode)(OpCodeUtil::MaxExtendedByteSizedOpcodes + 1), MediumLayout) == Js::OpCode::WordExtendedMediumLayoutPrefix);
+    CompileAssert(OpCodeUtil::GetOpCodePrefix((Js::OpCode)(OpCodeUtil::MaxExtendedByteSizedOpcodes + 1), LargeLayout) == Js::OpCode::WordExtendedLargeLayoutPrefix);
 
     bool OpCodeUtil::IsPrefixOpcode(OpCode op)
     {
