@@ -8207,11 +8207,29 @@ CommonNumber:
         // the efficacy is too low.
 
         EquivalentTypeCache* cache = guard->GetCache();
-
         // CONSIDER : Consider emitting o.type == equivTypes[hash(o.type)] in machine code before calling
         // this helper, particularly if we want to handle polymorphism with frequently changing types.
         Assert(EQUIVALENT_TYPE_CACHE_SIZE == 8);
         Type** equivTypes = cache->types;
+
+        Type* refType = equivTypes[0];
+        if (refType == nullptr || refType->GetScriptContext() != type->GetScriptContext())
+        {
+            // We could have guard that was invalidated while sweeping and now we have type coming from
+            // different scriptContext. Make sure that it matches the scriptContext in cachedTypes.
+            // If not, return false because as mentioned above, we don't cache cross-context objects.
+#if DBG
+            if (refType == nullptr)
+            {
+                for (int i = 1;i < EQUIVALENT_TYPE_CACHE_SIZE;i++)
+                {
+                    AssertMsg(equivTypes[i] == nullptr, "In equiv typed caches, if first element is nullptr, all others should be nullptr");
+                }
+            }
+#endif
+            return false;
+        }
+
         if (type == equivTypes[0] || type == equivTypes[1] || type == equivTypes[2] || type == equivTypes[3] ||
             type == equivTypes[4] || type == equivTypes[5] || type == equivTypes[6] || type == equivTypes[7])
         {
@@ -8225,7 +8243,6 @@ CommonNumber:
                 }
             }
 #endif
-            
             guard->SetType(type);
             return true;
         }
@@ -8240,18 +8257,6 @@ CommonNumber:
         // 2. For polymorphic field loads fixed fields are only supported on prototypes.  Hence, if two types have the
         //    same prototype, any of the equivalent fixed properties will match. If any has been overwritten, the
         //    corresponding guard would have been invalidated and we would bail out (as above).
-
-        Type* refType = equivTypes[0];
-        if (refType == nullptr)
-        {
-#if DBG
-            for (int i = 1;i < EQUIVALENT_TYPE_CACHE_SIZE;i++)
-            {
-                AssertMsg(equivTypes[i] == nullptr, "In equiv typed caches, if first element is nullptr, all others should be nullptr");
-            }
-#endif
-            return false;
-        }
 
         if (cache->IsLoadedFromProto() && type->GetPrototype() != refType->GetPrototype())
         {
@@ -8333,29 +8338,19 @@ CommonNumber:
         {
             // CONSIDER (EquivObjTypeSpec): Invent some form of least recently used eviction scheme.
             uintptr_t index = (reinterpret_cast<uintptr_t>(type) >> 4) & (EQUIVALENT_TYPE_CACHE_SIZE - 1);
+            
             if (cache->nextEvictionVictim == EQUIVALENT_TYPE_CACHE_SIZE)
             {
                 __analysis_assume(index < EQUIVALENT_TYPE_CACHE_SIZE);
-                if (equivTypes[index] != nullptr)
-                {
-                    uintptr_t initialIndex = index;
-                    index = (initialIndex + 1) & (EQUIVALENT_TYPE_CACHE_SIZE - 1);
-                    for (; index != initialIndex; index = (index + 1) & (EQUIVALENT_TYPE_CACHE_SIZE - 1))
-                    {
-                        if (equivTypes[index] == nullptr) break;
-                    }
-                }
-                __analysis_assume(index < EQUIVALENT_TYPE_CACHE_SIZE);
-                if (equivTypes[index] != nullptr)
-                {
-                    cache->nextEvictionVictim = 0;
-                }
+                // If nextEvictionVictim was never set, set it to next element after index
+                cache->nextEvictionVictim = (index + 1) & (EQUIVALENT_TYPE_CACHE_SIZE - 1);
             }
             else
             {
                 Assert(cache->nextEvictionVictim < EQUIVALENT_TYPE_CACHE_SIZE);
                 __analysis_assume(cache->nextEvictionVictim < EQUIVALENT_TYPE_CACHE_SIZE);
                 equivTypes[cache->nextEvictionVictim] = equivTypes[index];
+                // Else, set it to next element after current nextEvictionVictim index
                 cache->nextEvictionVictim = (cache->nextEvictionVictim + 1) & (EQUIVALENT_TYPE_CACHE_SIZE - 1);
             }
 

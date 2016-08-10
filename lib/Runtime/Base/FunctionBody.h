@@ -214,15 +214,34 @@ namespace Js
         // so as to keep the cached types alive.
         EquivalentTypeCache* cache;
         uint32 objTypeSpecFldId;
+#if DBG
+        // Intentionally have as intptr_t so this guard doesn't hold scriptContext
+        intptr_t originalScriptContextValue = 0;
+#endif
 
     public:
         JitEquivalentTypeGuard(Type* type, int index, uint32 objTypeSpecFldId):
-            JitIndexedPropertyGuard(reinterpret_cast<intptr_t>(type), index), cache(nullptr), objTypeSpecFldId(objTypeSpecFldId) {}
+            JitIndexedPropertyGuard(reinterpret_cast<intptr_t>(type), index), cache(nullptr), objTypeSpecFldId(objTypeSpecFldId)
+        {
+#if DBG
+            originalScriptContextValue = reinterpret_cast<intptr_t>(type->GetScriptContext());
+#endif
+        }
 
         Js::Type* GetType() const { return reinterpret_cast<Js::Type*>(this->GetValue()); }
 
         void SetType(const Js::Type* type)
         {
+#if DBG
+            if (originalScriptContextValue == 0)
+            {
+                originalScriptContextValue = reinterpret_cast<intptr_t>(type->GetScriptContext());
+            }
+            else
+            {
+                AssertMsg(originalScriptContextValue == reinterpret_cast<intptr_t>(type->GetScriptContext()), "Trying to set guard type from different script context.");
+            }
+#endif
             this->SetValue(reinterpret_cast<intptr_t>(type));
         }
 
