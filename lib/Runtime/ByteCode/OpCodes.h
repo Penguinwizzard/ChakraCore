@@ -55,10 +55,13 @@
 
 MACRO(                  EndOfBlock,         Empty,          OpByteCodeOnly)     // End-of-buffer
 MACRO(                  ExtendedOpcodePrefix,Empty,         OpByteCodeOnly)
+MACRO(                  WordExtendedOpcodePrefix,Empty,         OpByteCodeOnly)
 MACRO(                  MediumLayoutPrefix,  Empty,         OpByteCodeOnly)
 MACRO(                  ExtendedMediumLayoutPrefix,Empty,   OpByteCodeOnly)
+MACRO(                  WordExtendedMediumLayoutPrefix,Empty,   OpByteCodeOnly)
 MACRO(                  LargeLayoutPrefix,  Empty,          OpByteCodeOnly)
 MACRO(                  ExtendedLargeLayoutPrefix,Empty,    OpByteCodeOnly)
+MACRO(                  WordExtendedLargeLayoutPrefix,Empty,    OpByteCodeOnly)
 
 MACRO(                  Nop,                        Empty,          None)       // No operation (Default value = 0)
 MACRO(                  StartCall,          StartCall,      OpSideEffect)
@@ -436,8 +439,8 @@ MACRO_BACKEND_ONLY(     LdUInt32ArrViewElem,    ElementI,       OpCanCSE        
 MACRO_BACKEND_ONLY(     Memset,                 ElementI,       OpSideEffect)
 MACRO_BACKEND_ONLY(     Memcopy,                ElementI,       OpSideEffect)
 MACRO_BACKEND_ONLY(     ArrayDetachedCheck,     Reg1,           None)   // ensures that an ArrayBuffer has not been detached
-MACRO_EXTEND_WMS(       StArrItemI_CI4,         ElementUnsigned1,      OpSideEffect)
-MACRO_EXTEND_WMS(       StArrItemC_CI4,         ElementUnsigned1,      OpSideEffect)
+MACRO_WMS(              StArrItemI_CI4,         ElementUnsigned1,      OpSideEffect)
+MACRO_WMS(              StArrItemC_CI4,         ElementUnsigned1,      OpSideEffect)
 MACRO_WMS(              LdArrHead,              Reg2,           OpTempObjectSources)
 MACRO_BACKEND_ONLY(     BoundCheck,             Empty,          OpTempNumberSources|OpTempObjectSources)
 MACRO_BACKEND_ONLY(     UnsignedBoundCheck,     Empty,          OpTempNumberSources|OpTempObjectSources)
@@ -490,7 +493,7 @@ MACRO_WMS(              LdIndexedFrameDisplay,Reg2Int1,         None)        // 
 MACRO_WMS(              LdIndexedFrameDisplayNoParent,Reg1Unsigned1, None)        // Set up a frame display for this function and its parent frames -- this is for an inner scope, not the function-level scope
 MACRO_WMS(              LdFuncExprFrameDisplay,Reg2,        None)
 MACRO_BACKEND_ONLY(     NewStackFrameDisplay,Reg3,          None)           // Set up a frame display allocated on the stack
-MACRO_WMS(              IsIn,               Reg3,           OpSideEffect|OpOpndHasImplicitCall|OpPostOpDbgBailOut)        // "x in y"  (NOTE: calls valueOf for the index
+    MACRO_WMS(              IsIn,               Reg3,           OpSideEffect|OpOpndHasImplicitCall|OpPostOpDbgBailOut)        // "x in y"  (NOTE: calls valueOf for the index
 MACRO_WMS(              LdArgumentsFromFrame,Reg1,          None)           // Load the argument object from frame
 MACRO_WMS(              LdElemUndef,        ElementU,       OpSideEffect)   // Load 'undefined' to instance.property if not already present
 MACRO_EXTEND_WMS(       LdLocalElemUndef,   ElementRootU,   OpSideEffect)   // Load 'undefined' to instance.property if not already present
@@ -530,7 +533,7 @@ MACRO_BACKEND_ONLY(     NewScopeObject,     Reg1,           None)               
 MACRO_BACKEND_ONLY(     InitCachedScope,    Reg2Aux,        None)                   // Retrieve cached scope; create if not cached
 MACRO_BACKEND_ONLY(     InitLetCachedScope, Reg2Aux,        OpSideEffect)                   // Retrieve cached scope; create if not cached (formals are let-like instead of var-like)
 MACRO(                  InitCachedFuncs,    AuxNoReg,       OpSideEffect)
-MACRO_EXTEND_WMS(       GetCachedFunc,      Reg1Unsigned1,  None)
+MACRO_WMS(              GetCachedFunc,      Reg1Unsigned1,  None)
 MACRO(                  CommitScope,        Empty,       OpSideEffect)   // Mark the cached scope object as committed on exit from the function
 MACRO_WMS(              InvalCachedScope,   Unsigned1,      OpSideEffect)
 MACRO_WMS(              NewPseudoScope,     Unsigned1,      None)           // Create new scope that can't take normal var inits

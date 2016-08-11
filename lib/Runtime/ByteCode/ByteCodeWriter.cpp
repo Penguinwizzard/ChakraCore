@@ -3215,12 +3215,18 @@ StoreCommon:
             byte byteop = (byte)op;
             offset = Write(&byteop, sizeof(byte));
         }
-        else
+        else if (op <= Js::OpCode::MaxByteSizedExtendedOpcodes)
         {
             byte byteop = (byte)Js::OpCode::ExtendedOpcodePrefix;
             offset = Write(&byteop, sizeof(byte));
             byteop = (byte)op;
             Write(&byteop, sizeof(byte));
+        }
+        else
+        {
+            byte byteop = (byte)Js::OpCode::WordExtendedOpcodePrefix;
+            offset = Write(&byteop, sizeof(byte));
+            Write(&op, sizeof(uint16));
         }
         if (op != Js::OpCode::Ld_A)
         {
@@ -3240,17 +3246,27 @@ StoreCommon:
             writer->EnsureLongBranch(op);
         }
 #endif
-
+        uint offset = 0;
         Assert(op < Js::OpCode::ByteCodeLast);
         Assert(!OpCodeAttr::BackEndOnly(op));
         Assert(OpCodeAttr::HasMultiSizeLayout(op));
         CompileAssert(layoutSize != SmallLayout);
-        const byte exop = (byte)((op <= Js::OpCode::MaxByteSizedOpcodes) ?
-            (layoutSize == LargeLayout ? Js::OpCode::LargeLayoutPrefix : Js::OpCode::MediumLayoutPrefix) :
-            (layoutSize == LargeLayout ? Js::OpCode::ExtendedLargeLayoutPrefix : Js::OpCode::ExtendedMediumLayoutPrefix));
+        if (op <= Js::OpCode::MaxByteSizedExtendedOpcodes)
+        {
+            const byte exop = (byte)((op <= Js::OpCode::MaxByteSizedOpcodes) ?
+                (layoutSize == LargeLayout ? Js::OpCode::LargeLayoutPrefix : Js::OpCode::MediumLayoutPrefix) :
+                (layoutSize == LargeLayout ? Js::OpCode::ExtendedLargeLayoutPrefix : Js::OpCode::ExtendedMediumLayoutPrefix));
 
-        uint offset = Write(&exop, sizeof(byte));
-        Write(&op, sizeof(byte));
+            offset = Write(&exop, sizeof(byte));
+            Write(&op, sizeof(byte));
+        }
+        else
+        {
+            const byte exop = (byte)(layoutSize == LargeLayout ? Js::OpCode::WordExtendedLargeLayoutPrefix : Js::OpCode::WordExtendedMediumLayoutPrefix);
+
+            offset = Write(&exop, sizeof(byte));
+            Write(&op, sizeof(uint16));
+        }
 
         if (op != Js::OpCode::Ld_A)
         {

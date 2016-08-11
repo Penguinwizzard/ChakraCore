@@ -302,12 +302,11 @@ namespace Js
 #if DYNAMIC_INTERPRETER_THUNK
         static JavascriptMethod EnsureDynamicInterpreterThunk(Js::ScriptFunction * function);
 #endif
-        template<typename T>
-        T ReadByteOp( const byte *& ip
-#if DBG_DUMP
-                           , bool isExtended = false
-#endif
-                           );
+        template<typename OpCodeType, Js::OpCode (ReadOpFunc)(const byte*&), void (TracingFunc)(InterpreterStackFrame*, OpCodeType)>
+        OpCodeType ReadOp(const byte *& ip);
+
+        static void TraceOpCode(InterpreterStackFrame* that, Js::OpCode op);
+        static void TraceAsmJsOpCode(InterpreterStackFrame* that, Js::OpCodeAsmJs op);
 
         void* __cdecl operator new(size_t byteSize, void* previousAllocation) throw();
         void __cdecl operator delete(void* allocationToFree, void* previousAllocation) throw();
@@ -325,30 +324,30 @@ namespace Js
         Var ProcessProfiled();
         Var ProcessUnprofiled();
 
-        const byte* ProcessProfiledExtendedOpCodePrefix(const byte* ip);
-        const byte* ProcessUnprofiledExtendedOpCodePrefix(const byte* ip);
-        const byte* ProcessWithDebuggingExtendedOpCodePrefix(const byte* ip);
-        const byte* ProcessAsmJsExtendedOpCodePrefix(const byte* ip);
+        const byte* ProcessProfiledExtendedOpCodePrefix(const byte* ip, OpCode op);
+        const byte* ProcessUnprofiledExtendedOpCodePrefix(const byte* ip, OpCode op);
+        const byte* ProcessWithDebuggingExtendedOpCodePrefix(const byte* ip, OpCode op);
+        const byte* ProcessAsmJsExtendedOpCodePrefix(const byte* ip, OpCodeAsmJs op);
 
         const byte* ProcessProfiledMediumLayoutPrefix(const byte* ip, Var&);
         const byte* ProcessUnprofiledMediumLayoutPrefix(const byte* ip, Var&);
         const byte* ProcessWithDebuggingMediumLayoutPrefix(const byte* ip, Var&);
         const byte* ProcessAsmJsMediumLayoutPrefix(const byte* ip, Var&);
 
-        const byte* ProcessProfiledExtendedMediumLayoutPrefix(const byte* ip);
-        const byte* ProcessUnprofiledExtendedMediumLayoutPrefix(const byte* ip);
-        const byte* ProcessWithDebuggingExtendedMediumLayoutPrefix(const byte* ip);
-        const byte* ProcessAsmJsExtendedMediumLayoutPrefix(const byte* ip);
+        const byte* ProcessProfiledExtendedMediumLayoutPrefix(const byte* ip, OpCode op);
+        const byte* ProcessUnprofiledExtendedMediumLayoutPrefix(const byte* ip, OpCode op);
+        const byte* ProcessWithDebuggingExtendedMediumLayoutPrefix(const byte* ip, OpCode op);
+        const byte* ProcessAsmJsExtendedMediumLayoutPrefix(const byte* ip, OpCodeAsmJs op);
 
         const byte* ProcessProfiledLargeLayoutPrefix(const byte* ip, Var&);
         const byte* ProcessUnprofiledLargeLayoutPrefix(const byte* ip, Var&);
         const byte* ProcessWithDebuggingLargeLayoutPrefix(const byte* ip, Var&);
         const byte* ProcessAsmJsLargeLayoutPrefix(const byte* ip, Var&);
 
-        const byte* ProcessProfiledExtendedLargeLayoutPrefix(const byte* ip);
-        const byte* ProcessUnprofiledExtendedLargeLayoutPrefix(const byte* ip);
-        const byte* ProcessWithDebuggingExtendedLargeLayoutPrefix(const byte* ip);
-        const byte* ProcessAsmJsExtendedLargeLayoutPrefix(const byte* ip);
+        const byte* ProcessProfiledExtendedLargeLayoutPrefix(const byte* ip, OpCode op);
+        const byte* ProcessUnprofiledExtendedLargeLayoutPrefix(const byte* ip, OpCode op);
+        const byte* ProcessWithDebuggingExtendedLargeLayoutPrefix(const byte* ip, OpCode op);
+        const byte* ProcessAsmJsExtendedLargeLayoutPrefix(const byte* ip, OpCodeAsmJs op);
 
         Var ProcessWithDebugging();
         Var DebugProcess();

@@ -8,16 +8,22 @@ namespace Js
 {
     bool OpCodeUtil::IsPrefixOpcode(OpCode op)
     {
-        return op <= OpCode::ExtendedLargeLayoutPrefix && op != OpCode::EndOfBlock;
+        return op <= OpCode::WordExtendedLargeLayoutPrefix && op != OpCode::EndOfBlock;
     }
 
     bool OpCodeUtil::IsSmallEncodedOpcode(OpCode op)
     {
         return op <= Js::OpCode::MaxByteSizedOpcodes;
     }
+
+    bool OpCodeUtil::IsByteSizedEncodedOpcode(OpCode op)
+    {
+        return op <= Js::OpCode::MaxByteSizedExtendedOpcodes;
+    }
+
     uint OpCodeUtil::EncodedSize(OpCode op, LayoutSize layoutSize)
     {
-        return (layoutSize == SmallLayout && IsSmallEncodedOpcode(op)) ? sizeof(BYTE) : sizeof(OpCode);
+        return (layoutSize == SmallLayout && IsSmallEncodedOpcode(op)) ? sizeof(BYTE) : IsByteSizedEncodedOpcode(op) ? 2 : 3;
     }
 
     void OpCodeUtil::ConvertOpToNonProfiled(OpCode& op)

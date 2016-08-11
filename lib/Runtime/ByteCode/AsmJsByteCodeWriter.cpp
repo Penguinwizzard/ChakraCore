@@ -21,12 +21,18 @@ namespace Js
             byte byteop = (byte)op;
             offset = Write(&byteop, sizeof(byte));
         }
-        else
+        else if (op <= Js::OpCode::MaxByteSizedExtendedOpcodes)
         {
             byte byteop = (byte)Js::OpCodeAsmJs::ExtendedOpcodePrefix;
             offset = Write(&byteop, sizeof(byte));
             byteop = (byte)op;
             Write(&byteop, sizeof(byte));
+        }
+        else
+        {
+            byte byteop = (byte)Js::OpCodeAsmJs::WordExtendedOpcodePrefix;
+            offset = Write(&byteop, sizeof(byte));
+            Write(&op, sizeof(uint16));
         }
 
         if (!isPatching)
@@ -40,15 +46,26 @@ namespace Js
     inline uint ByteCodeWriter::Data::EncodeT(OpCodeAsmJs op, ByteCodeWriter* writer, bool isPatching)
     {
         Assert(op < Js::OpCodeAsmJs::ByteCodeLast);
-
+        
+        uint offset = 0;
         CompileAssert(layoutSize != SmallLayout);
-        const byte exop = (byte)((op <= Js::OpCodeAsmJs::MaxByteSizedOpcodes) ?
-            (layoutSize == LargeLayout ? Js::OpCodeAsmJs::LargeLayoutPrefix : Js::OpCodeAsmJs::MediumLayoutPrefix) :
-            (layoutSize == LargeLayout ? Js::OpCodeAsmJs::ExtendedLargeLayoutPrefix : Js::OpCodeAsmJs::ExtendedMediumLayoutPrefix));
+        if (op <= Js::OpCode::MaxByteSizedExtendedOpcodes)
+        {
+            const byte exop = (byte)((op <= Js::OpCodeAsmJs::MaxByteSizedOpcodes) ?
+                (layoutSize == LargeLayout ? Js::OpCodeAsmJs::LargeLayoutPrefix : Js::OpCodeAsmJs::MediumLayoutPrefix) :
+                (layoutSize == LargeLayout ? Js::OpCodeAsmJs::ExtendedLargeLayoutPrefix : Js::OpCodeAsmJs::ExtendedMediumLayoutPrefix));
 
-        uint offset = Write(&exop, sizeof(byte));
-        byte byteop = (byte)op;
-        Write(&byteop, sizeof(byte));
+            offset = Write(&exop, sizeof(byte));
+            byte byteop = (byte)op;
+            Write(&byteop, sizeof(byte));
+        }
+        else
+        {
+            const byte exop = (byte)(layoutSize == LargeLayout ? Js::OpCodeAsmJs::WordExtendedLargeLayoutPrefix : Js::OpCodeAsmJs::WordExtendedMediumLayoutPrefix);
+
+            offset = Write(&exop, sizeof(byte));
+            Write(&op, sizeof(uint16));
+        }
 
         if (!isPatching)
         {

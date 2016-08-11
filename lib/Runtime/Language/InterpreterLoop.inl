@@ -10,9 +10,15 @@
 // check a bit without concern for impacting the nondebug mode.)
 #if defined(INTERPRETER_ASMJS) && !defined(TEMP_DISABLE_ASMJS)
 #define INTERPRETER_OPCODE OpCodeAsmJs
+#define TRACING_FUNC &InterpreterStackFrame::TraceAsmJsOpCode
 #else
 #define INTERPRETER_OPCODE OpCode
+#define TRACING_FUNC &InterpreterStackFrame::TraceOpCode
 #endif
+#define READ_BYTE_OP ReadOp<INTERPRETER_OPCODE, ByteCodeReader::ReadByteOp, TRACING_FUNC>
+#define READ_EXT__OP ReadOp<INTERPRETER_OPCODE, ByteCodeReader::ReadExtOp, TRACING_FUNC>
+#define READ_WORD_OP ReadOp<INTERPRETER_OPCODE, ByteCodeReader::ReadWordOp, TRACING_FUNC>
+
 #ifdef PROVIDE_DEBUGGING
 #define DEBUGGING_LOOP 1
 #else
@@ -30,13 +36,8 @@
 #define CONCAT_TOKENS_AGAIN(loopName, fnSuffix) loopName ## fnSuffix
 #define CONCAT_TOKENS(loopName, fnSuffix) CONCAT_TOKENS_AGAIN(loopName, fnSuffix)
 
-const byte* Js::InterpreterStackFrame::CONCAT_TOKENS(INTERPRETERLOOPNAME, ExtendedOpCodePrefix)(const byte* ip)
+const byte* Js::InterpreterStackFrame::CONCAT_TOKENS(INTERPRETERLOOPNAME, ExtendedOpCodePrefix)(const byte* ip, INTERPRETER_OPCODE op)
 {
-        INTERPRETER_OPCODE op = (INTERPRETER_OPCODE)(ReadByteOp<INTERPRETER_OPCODE>(ip
-#if DBG_DUMP
-        , true
-#endif
-            ) + (INTERPRETER_OPCODE::ExtendedOpcodePrefix << 8));
     switch (op)
     {
 #define EXDEF2(x, op, func) PROCESS_##x(op, func)
@@ -56,7 +57,7 @@ const byte* Js::InterpreterStackFrame::CONCAT_TOKENS(INTERPRETERLOOPNAME, Extend
 
 const byte* Js::InterpreterStackFrame::CONCAT_TOKENS(INTERPRETERLOOPNAME, MediumLayoutPrefix)(const byte* ip, Var& yieldValue)
 {
-        INTERPRETER_OPCODE op = ReadByteOp<INTERPRETER_OPCODE>(ip);
+    INTERPRETER_OPCODE op = READ_BYTE_OP(ip);
     switch (op)
     {
     case INTERPRETER_OPCODE::Yield:
@@ -77,13 +78,8 @@ const byte* Js::InterpreterStackFrame::CONCAT_TOKENS(INTERPRETERLOOPNAME, Medium
     return ip;
 }
 
-const byte* Js::InterpreterStackFrame::CONCAT_TOKENS(INTERPRETERLOOPNAME, ExtendedMediumLayoutPrefix)(const byte* ip)
+const byte* Js::InterpreterStackFrame::CONCAT_TOKENS(INTERPRETERLOOPNAME, ExtendedMediumLayoutPrefix)(const byte* ip, INTERPRETER_OPCODE op)
 {
-    INTERPRETER_OPCODE op = (INTERPRETER_OPCODE)(ReadByteOp<INTERPRETER_OPCODE>(ip
-#if DBG_DUMP
-        , true
-#endif
-        ) + (INTERPRETER_OPCODE::ExtendedOpcodePrefix << 8));
     switch (op)
     {
 #define EXDEF2_WMS(x, op, func) PROCESS_##x##_COMMON(op, func, _Medium)
@@ -101,7 +97,7 @@ const byte* Js::InterpreterStackFrame::CONCAT_TOKENS(INTERPRETERLOOPNAME, Extend
 
 const byte* Js::InterpreterStackFrame::CONCAT_TOKENS(INTERPRETERLOOPNAME, LargeLayoutPrefix)(const byte* ip, Var& yieldValue)
 {
-    INTERPRETER_OPCODE op = ReadByteOp<INTERPRETER_OPCODE>(ip);
+    INTERPRETER_OPCODE op = READ_BYTE_OP(ip);
     switch (op)
     {
     case INTERPRETER_OPCODE::Yield:
@@ -122,13 +118,8 @@ const byte* Js::InterpreterStackFrame::CONCAT_TOKENS(INTERPRETERLOOPNAME, LargeL
     return ip;
 }
 
-const byte* Js::InterpreterStackFrame::CONCAT_TOKENS(INTERPRETERLOOPNAME, ExtendedLargeLayoutPrefix)(const byte* ip)
+const byte* Js::InterpreterStackFrame::CONCAT_TOKENS(INTERPRETERLOOPNAME, ExtendedLargeLayoutPrefix)(const byte* ip, INTERPRETER_OPCODE op)
 {
-    INTERPRETER_OPCODE op = (INTERPRETER_OPCODE)(ReadByteOp<INTERPRETER_OPCODE>(ip
-#if DBG_DUMP
-        , true
-#endif
-        ) + (INTERPRETER_OPCODE::ExtendedOpcodePrefix << 8));
     switch (op)
     {
 #define EXDEF2_WMS(x, op, func) PROCESS_##x##_COMMON(op, func, _Large)
@@ -181,7 +172,7 @@ Var Js::InterpreterStackFrame::INTERPRETERLOOPNAME()
     const byte* ip = m_reader.GetIP();
     while (true)
     {
-        INTERPRETER_OPCODE op = ReadByteOp<INTERPRETER_OPCODE>(ip);
+        INTERPRETER_OPCODE op = READ_BYTE_OP(ip);
 
 #ifdef ENABLE_BASIC_TELEMETRY
         if( TELEMETRY_OPCODE_OFFSET_ENABLED )
@@ -315,7 +306,8 @@ SWAP_BP_FOR_OPCODE:
 
             case INTERPRETER_OPCODE::ExtendedOpcodePrefix:
             {
-                ip = CONCAT_TOKENS(INTERPRETERLOOPNAME, ExtendedOpCodePrefix)(ip);
+                op = READ_EXT__OP(ip);
+                ip = CONCAT_TOKENS(INTERPRETERLOOPNAME, ExtendedOpCodePrefix)(ip, op);
 
 #if ENABLE_PROFILE_INFO
                 if (switchProfileMode)
@@ -347,7 +339,8 @@ SWAP_BP_FOR_OPCODE:
             }
             case INTERPRETER_OPCODE::ExtendedMediumLayoutPrefix:
             {
-                ip = CONCAT_TOKENS(INTERPRETERLOOPNAME, ExtendedMediumLayoutPrefix)(ip);
+                op = READ_EXT__OP(ip);
+                ip = CONCAT_TOKENS(INTERPRETERLOOPNAME, ExtendedMediumLayoutPrefix)(ip, op);
 
 #if ENABLE_PROFILE_INFO
                 if (switchProfileMode)
@@ -379,7 +372,50 @@ SWAP_BP_FOR_OPCODE:
             }
             case INTERPRETER_OPCODE::ExtendedLargeLayoutPrefix:
             {
-                ip = CONCAT_TOKENS(INTERPRETERLOOPNAME, ExtendedLargeLayoutPrefix)(ip);
+                op = READ_EXT__OP(ip);
+                ip = CONCAT_TOKENS(INTERPRETERLOOPNAME, ExtendedLargeLayoutPrefix)(ip, op);
+
+#if ENABLE_PROFILE_INFO
+                if(switchProfileMode)
+                {
+                    // Aborting the current interpreter loop to switch the profile mode
+                    return nullptr;
+                }
+#endif
+                break;
+            }
+            case INTERPRETER_OPCODE::WordExtendedOpcodePrefix:
+            {
+                op = READ_WORD_OP(ip);
+                ip = CONCAT_TOKENS(INTERPRETERLOOPNAME, ExtendedOpCodePrefix)(ip, op);
+
+#if ENABLE_PROFILE_INFO
+                if (switchProfileMode)
+                {
+                    // Aborting the current interpreter loop to switch the profile mode
+                    return nullptr;
+                }
+#endif
+                break;
+            }
+            case INTERPRETER_OPCODE::WordExtendedMediumLayoutPrefix:
+            {
+                op = READ_WORD_OP(ip);
+                ip = CONCAT_TOKENS(INTERPRETERLOOPNAME, ExtendedMediumLayoutPrefix)(ip, op);
+
+#if ENABLE_PROFILE_INFO
+                if (switchProfileMode)
+                {
+                    // Aborting the current interpreter loop to switch the profile mode
+                    return nullptr;
+                }
+#endif
+                break;
+            }
+            case INTERPRETER_OPCODE::WordExtendedLargeLayoutPrefix:
+            {
+                op = READ_WORD_OP(ip);
+                ip = CONCAT_TOKENS(INTERPRETERLOOPNAME, ExtendedLargeLayoutPrefix)(ip, op);
 
 #if ENABLE_PROFILE_INFO
                 if(switchProfileMode)
@@ -511,3 +547,7 @@ SWAP_BP_FOR_OPCODE:
 #undef INTERPRETERPROFILE
 #undef PROFILEDOP
 #undef INTERPRETER_OPCODE
+#undef TRACING_FUNC
+#undef READ_BYTE_OP
+#undef READ_EXT__OP
+#undef READ_WORD_OP

@@ -32,6 +32,7 @@ public:
     static bool IsValidOpcode(OpCode op);
     static bool IsPrefixOpcode(OpCode op);
     static bool IsSmallEncodedOpcode(OpCode op);
+    static bool IsByteSizedEncodedOpcode(OpCode op);
     static uint EncodedSize(OpCode op, LayoutSize layoutSize);
 
     static OpLayoutType GetOpCodeLayout(OpCode op);

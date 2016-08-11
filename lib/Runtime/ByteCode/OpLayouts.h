@@ -25,7 +25,8 @@ namespace Js {
 #include "BackendOpCodeList.h"
 #endif
 #undef DEF_OP
-        Count  // Number of operations
+        Count,  // Number of operations
+        MaxByteSizedExtendedOpcodes = 0x1FF
     };
 
     inline OpCode operator+(OpCode o1, OpCode o2) { return (OpCode)((uint)o1 + (uint)o2); }

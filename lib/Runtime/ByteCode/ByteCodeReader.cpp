@@ -95,27 +95,24 @@ namespace Js
     OpCode ByteCodeReader::ReadPrefixedOp(const byte *&ip, LayoutSize& layoutSize, OpCode prefix) const
     {
         Assert(ip < m_endLocation);
-        OpCode op = (OpCode)*ip++;
+        layoutSize = (LayoutSize)((uint16)prefix / 3);
         switch (prefix)
         {
         case Js::OpCode::MediumLayoutPrefix:
-            layoutSize = MediumLayout;
-            return op;
         case Js::OpCode::LargeLayoutPrefix:
-            layoutSize = LargeLayout;
-            return op;
+            return ReadByteOp(ip);
         case Js::OpCode::ExtendedOpcodePrefix:
-            layoutSize = SmallLayout;
-            break;
         case Js::OpCode::ExtendedMediumLayoutPrefix:
-            layoutSize = MediumLayout;
-            break;
+        case Js::OpCode::ExtendedLargeLayoutPrefix:
+            return ReadExtOp(ip);
+        case Js::OpCode::WordExtendedOpcodePrefix:
+        case Js::OpCode::WordExtendedMediumLayoutPrefix:
+        case Js::OpCode::WordExtendedLargeLayoutPrefix:
+            return ReadWordOp(ip);
         default:
-            Assert(prefix == Js::OpCode::ExtendedLargeLayoutPrefix);
-            layoutSize = LargeLayout;
+            AssertMsg(false, "Invalid prefix");
         }
-
-        return (OpCode)(op + (Js::OpCode::ExtendedOpcodePrefix << 8));
+        return Js::OpCode::InvalidOpCode;
     }
 
     OpCode ByteCodeReader::ReadOp(LayoutSize& layoutSize)
@@ -157,7 +154,27 @@ namespace Js
 
     OpCode ByteCodeReader::PeekByteOp(const byte * ip)
     {
-        return (OpCode)*ip;
+        return ReadByteOp(ip);
+    }
+
+    OpCode ByteCodeReader::ReadExtOp(const byte*& ip)
+    {
+        return (OpCode)((uint16)(*ip++) + 0x100);
+    }
+
+    OpCode ByteCodeReader::PeekExtOp(const byte * ip)
+    {
+        return ReadExtOp(ip);
+    }
+
+    OpCode ByteCodeReader::ReadWordOp(const byte*& ip)
+    {
+        return (OpCode)*((uint16*&)ip)++;
+    }
+
+    OpCode ByteCodeReader::PeekWordOp(const byte * ip)
+    {
+        return ReadWordOp(ip);;
     }
 
     const byte* ByteCodeReader::GetIP()

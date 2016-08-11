@@ -47,6 +47,10 @@ namespace Js
 
         static OpCode ReadByteOp(const byte*& ip);
         static OpCode PeekByteOp(const byte * ip);
+        static OpCode ReadExtOp(const byte*& ip);
+        static OpCode PeekExtOp(const byte * ip);
+        static OpCode ReadWordOp(const byte*& ip);
+        static OpCode PeekWordOp(const byte * ip);
 
         // Declare reading functions
 #define LAYOUT_TYPE(layout) \
