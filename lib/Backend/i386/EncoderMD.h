@@ -35,8 +35,14 @@ private:
         BYTE                m_nopCount;         // for AlignedLabel, how many nops do we need to be 16-byte aligned
     };
 
+    union
+    {
+        IR::LabelInstr       *    m_labelInstr;
+        const void           *    m_fnAddress;
+    };
+
 public:
-    void                init(RelocType type, void* ptr)
+    void                init(RelocType type, void* ptr, IR::LabelInstr* labelInstr, const void * fnAddress)
     {
         m_type = type;
         m_ptr = ptr;
@@ -58,8 +64,18 @@ public:
             else if (type == RelocTypeBranch)
             {
                 m_shortBrLabel = NULL;
+                m_labelInstr = labelInstr;
             }
-
+            else if (type == RelocTypeLabelUse)
+            {
+                Assert(labelInstr);
+                m_labelInstr = labelInstr;
+            }
+            else if (type == RelocTypeCallPcrel)
+            {
+                Assert(fnAddress);
+                m_fnAddress = fnAddress;
+            }
         }
     }
 
@@ -104,14 +120,25 @@ public:
     IR::LabelInstr *    getBrTargetLabel()  const
     {
         Assert(m_type == RelocTypeBranch);
-        return m_shortBrLabel == NULL ? *(IR::LabelInstr**)m_origPtr : m_shortBrLabel;
+        return m_shortBrLabel == NULL ? m_labelInstr : m_shortBrLabel;
     }
-
 
     IR::LabelInstr *    getLabel()  const
     {
         Assert(isLabel());
         return (IR::LabelInstr*) m_ptr;
+    }
+
+    IR::LabelInstr * GetLabelInstrForRelocTypeLabelUse()
+    {
+        Assert(m_type == RelocTypeLabelUse && m_labelInstr);
+        return m_labelInstr;
+    }
+
+    const void * GetFnAddress()
+    {
+        Assert(m_type == RelocTypeCallPcrel && m_fnAddress);
+        return m_fnAddress;
     }
 
     // get label original PC without shortening/alignment
@@ -190,7 +217,7 @@ public:
     static bool     UsesConditionCode(IR::Instr *instr);
     static bool     IsOPEQ(IR::Instr *instr);
     RelocList*      GetRelocList() const { return m_relocList; }
-    int             AppendRelocEntry(RelocType type, void *ptr);
+    int             AppendRelocEntry(RelocType type, void *ptr, IR::LabelInstr * labelInstr = nullptr, const void * fnAddress = nullptr);
     int             FixRelocListEntry(uint32 index, int32 totalBytesSaved, BYTE *buffStart, BYTE* buffEnd);
     void            FixMaps(uint32 brOffset, int32 bytesSaved, uint32 *inlineeFrameRecordsIndex, uint32 *inlineeFrameMapIndex,  uint32 *pragmaInstToRecordOffsetIndex, uint32 *offsetBuffIndex);
     void            UpdateRelocListWithNewBuffer(RelocList * relocList, BYTE * newBuffer, BYTE * oldBufferStart, BYTE * oldBufferEnd);

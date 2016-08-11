@@ -481,7 +481,6 @@ void
 EncoderMD::EmitCondBranch(IR::BranchInstr * branchInstr)
 {
     IR::LabelInstr * labelInstr;
-
     // TODO: Make this more table-driven by mapping opcodes to condcodes.
     // (Will become more useful when we're emitting short branches as well.)
 
@@ -556,12 +555,10 @@ EncoderMD::EmitCondBranch(IR::BranchInstr * branchInstr)
         break;
     }
 
-    AppendRelocEntry(RelocTypeBranch, (void*) m_pc);
-
-    // Save the target LabelInstr's address in the encoder buffer itself, using the 4-byte
-    // pcrel field of the branch instruction. This only works for long branches, obviously.
     labelInstr = branchInstr->GetTarget();
-    this->EmitConst((uint32)labelInstr, MachInt);
+    AppendRelocEntry(RelocTypeBranch, (void*) m_pc, labelInstr);
+
+    this->EmitConst(0, MachInt);
 }
 
 ///----------------------------------------------------------------------------
@@ -764,8 +761,8 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
             this->EmitModRM(instr, opr1, this->GetOpcodeByte2(instr) >> 3);
             if (opr2->IsLabelOpnd())
             {
-                AppendRelocEntry( RelocTypeLabelUse, (void*) m_pc);
-                this->EmitConst((uint32)opr2->AsLabelOpnd()->GetLabel(), 4);
+                AppendRelocEntry( RelocTypeLabelUse, (void*) m_pc, opr2->AsLabelOpnd()->GetLabel());
+                this->EmitConst(0, 4);
             }
             else
             {
@@ -874,8 +871,8 @@ modrm:
                 {
                     continue;
                 }
-                AppendRelocEntry(RelocTypeLabelUse, (void*) m_pc);
-                this->EmitConst((uint32)opr1->AsLabelOpnd()->GetLabel(), 4);
+                AppendRelocEntry(RelocTypeLabelUse, (void*) m_pc, opr1->AsLabelOpnd()->GetLabel());
+                this->EmitConst(0, 4);
             }
             else
             {
@@ -917,24 +914,24 @@ modrm:
                 // Unconditional branch
                 AssertMsg(instr->IsBranchInstr(), "Invalid LABREL2 form");
 
-                AppendRelocEntry(RelocTypeBranch, (void*)m_pc);
+                AppendRelocEntry(RelocTypeBranch, (void*)m_pc, instr->AsBranchInstr()->GetTarget());
 
                 // Save the target LabelInstr's address in the encoder buffer itself, using the 4-byte
                 // pcrel field of the branch instruction. This only works for long branches, obviously.
-                this->EmitConst((uint32)instr->AsBranchInstr()->GetTarget(), 4);
+                this->EmitConst(0, 4);
             }
             else if (opr1->IsIntConstOpnd())
             {
-                AppendRelocEntry(RelocTypeCallPcrel, (void*)m_pc);
-                this->EmitConst(opr1->AsIntConstOpnd()->GetValue(), 4);
+                AppendRelocEntry(RelocTypeCallPcrel, (void*)m_pc, nullptr, (void*)opr1->AsIntConstOpnd()->GetValue());
+                this->EmitConst(0, 4);
                 AssertMsg( ( ((BYTE*)opr1->AsIntConstOpnd()->GetValue()) < m_encoder->m_encodeBuffer || ((BYTE *)opr1->AsIntConstOpnd()->GetValue()) >= m_encoder->m_encodeBuffer + m_encoder->m_encodeBufferSize), "Call Target within buffer.");
             }
             else if (opr1->IsHelperCallOpnd())
             {
-                AppendRelocEntry(RelocTypeCallPcrel, (void*)m_pc);
                 const void* fnAddress = IR::GetMethodAddress(opr1->AsHelperCallOpnd());
+                AppendRelocEntry(RelocTypeCallPcrel, (void*)m_pc, nullptr, fnAddress);
                 AssertMsg(sizeof(uint32) == sizeof(void*), "Sizes of void* assumed to be 32-bits");
-                this->EmitConst((uint32)fnAddress, 4);
+                this->EmitConst(0, 4);
                 AssertMsg( (((BYTE*)fnAddress) < m_encoder->m_encodeBuffer || ((BYTE *)fnAddress) >= m_encoder->m_encodeBuffer + m_encoder->m_encodeBufferSize), "Call Target within buffer.");
             }
             else
@@ -1280,13 +1277,13 @@ modrm:
 }
 
 int
-EncoderMD::AppendRelocEntry(RelocType type, void *ptr)
+EncoderMD::AppendRelocEntry(RelocType type, void *ptr, IR::LabelInstr* labelInstr, const void * fnAddress)
 {
     if (m_relocList == nullptr)
         m_relocList = Anew(m_encoder->m_tempAlloc, RelocList, m_encoder->m_tempAlloc);
 
     EncodeRelocAndLabels reloc;
-    reloc.init(type, ptr);
+    reloc.init(type, ptr, labelInstr, fnAddress);
 
     return m_relocList->Add(reloc);
 }
@@ -1408,7 +1405,7 @@ EncoderMD::ApplyRelocs(uint32 codeBufferAddress)
         case RelocTypeCallPcrel:
             {
                 pcrel = (uint32)(codeBufferAddress + (BYTE*)reloc->m_ptr - m_encoder->m_encodeBuffer + 4);
-                *(uint32 *)relocAddress -= pcrel;
+                *(uint32 *)relocAddress = (uint32)reloc->GetFnAddress() - pcrel;
                 break;
             }
         case RelocTypeBranch:
@@ -1431,7 +1428,7 @@ EncoderMD::ApplyRelocs(uint32 codeBufferAddress)
             }
         case RelocTypeLabelUse:
             {
-                IR::LabelInstr * labelInstr = *(IR::LabelInstr**)relocAddress;
+                IR::LabelInstr * labelInstr = reloc->GetLabelInstrForRelocTypeLabelUse();
                 AssertMsg(labelInstr->GetPC() != nullptr, "Branch to unemitted label?");
                 *(uint32 *)relocAddress = (uint32)(labelInstr->GetPC() - m_encoder->m_encodeBuffer + codeBufferAddress);
                 break;
