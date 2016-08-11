@@ -242,19 +242,8 @@ Encoder::Encode()
         }
     } NEXT_INSTR_IN_FUNC;
 
-    uint validationCRC = initialCRCSeed;
-
-    for (int index = 0; index < (m_pc - m_encodeBuffer); index++)
-    {
-        validationCRC = _mm_crc32_u32(validationCRC, *(m_encodeBuffer + index));
-    }
-
-    if (validationCRC != bufferCRC)
-    {
-        //TODO: This throws internal error. Is this error type, Fine?
-        Fatal();
-    }
-
+    ValidateCRC(bufferCRC, initialCRCSeed, m_encodeBuffer, m_pc - m_encodeBuffer);
+    
     ptrdiff_t codeSize = m_pc - m_encodeBuffer + totalJmpTableSizeInBytes;
 
 #if defined(_M_IX86) || defined(_M_X64)
@@ -262,7 +251,14 @@ Encoder::Encode()
     // Shorten branches. ON by default
     if (!PHASE_OFF(Js::BrShortenPhase, m_func))
     {
-        isSuccessBrShortAndLoopAlign = ShortenBranchesAndLabelAlign(&m_encodeBuffer, &codeSize);
+        uint brShortenedbufferCRC = initialCRCSeed;
+        isSuccessBrShortAndLoopAlign = ShortenBranchesAndLabelAlign(&m_encodeBuffer, &codeSize, &brShortenedbufferCRC);
+        if (isSuccessBrShortAndLoopAlign)
+        {
+            bufferCRC = brShortenedbufferCRC;
+        }
+
+        ValidateCRC(bufferCRC, initialCRCSeed, m_encodeBuffer, codeSize);
     }
 #endif
 #if DBG_DUMP | defined(VTUNE_PROFILING)
@@ -651,7 +647,7 @@ void Encoder::RecordInlineeFrame(Func* inlinee, uint32 currentOffset)
 /// Also align LoopTop Label and TryCatchLabel
 ///----------------------------------------------------------------------------
 BOOL
-Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize)
+Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize, uint * pBufferCRC)
 {
 #ifdef  ENABLE_DEBUG_CONFIG_OPTIONS
     static uint32 globalTotalBytesSaved = 0, globalTotalBytesWithoutShortening = 0;
@@ -876,6 +872,8 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize)
             AnalysisAssert(dst_size >= src_size);
 
             memcpy_s(dst_p, dst_size, from, src_size);
+            *pBufferCRC = CalculateCRC(*pBufferCRC, src_size, dst_p);
+
             dst_p += src_size;
             dst_size -= src_size;
 
@@ -883,6 +881,7 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize)
             // write new opcode
             AnalysisAssert(dst_p < tmpBuffer + newCodeSize);
             *dst_p = (*opcodeByte == 0xe9) ? (BYTE)0xeb : (BYTE)(*opcodeByte - 0x10);
+            *pBufferCRC = CalculateCRC(*pBufferCRC, 2, dst_p);
             dst_p += 2; // 1 byte for opcode + 1 byte for imm8
             dst_size -= 2;
             from = (BYTE*)reloc.m_origPtr + 4;
@@ -897,7 +896,7 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize)
             AssertMsg((((uint32)(label->GetPC() - buffStart)) & 0xf) == 0, "Misaligned Label");
 
             to = reloc.getLabelOrigPC() - 1;
-            CopyPartialBuffer(&dst_p, dst_size, from, to);
+            CopyPartialBuffer(&dst_p, dst_size, from, to, pBufferCRC);
 
 #ifdef  ENABLE_DEBUG_CONFIG_OPTIONS
             if (PHASE_TRACE(Js::LoopAlignPhase, this->m_func))
@@ -910,13 +909,14 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize)
             }
 #endif
             InsertNopsForLabelAlignment(nop_count, &dst_p);
+            *pBufferCRC = CalculateCRC(*pBufferCRC, nop_count, dst_p);
 
             dst_size -= nop_count;
             from = to + 1;
         }
     }
     // copy last chunk
-    CopyPartialBuffer(&dst_p, dst_size, from, buffStart + *codeSize - 1);
+    CopyPartialBuffer(&dst_p, dst_size, from, buffStart + *codeSize - 1, pBufferCRC);
 
     m_encoderMD.UpdateRelocListWithNewBuffer(relocList, tmpBuffer, buffStart, buffEnd);
 
@@ -927,18 +927,46 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize)
     return true;
 }
 
+uint Encoder::CalculateCRC(uint bufferCRC, size_t count, void * buffer)
+{
+    for (int index = 0; index < count; index++)
+    {
+        bufferCRC = _mm_crc32_u32(bufferCRC, *((BYTE*)buffer + index));
+    }
+    return bufferCRC;
+}
+
+void Encoder::ValidateCRC(uint bufferCRC, uint initialCRCSeed, void* buffer, size_t count)
+{
+    uint validationCRC = initialCRCSeed;
+
+    for (int index = 0; index < count; index++)
+    {
+        validationCRC = _mm_crc32_u32(validationCRC, *((BYTE*)buffer + index));
+    }
+
+    if (validationCRC != bufferCRC)
+    {
+        //TODO: This throws internal error. Is this error type, Fine?
+        Fatal();
+    }
+}
+
 BYTE Encoder::FindNopCountFor16byteAlignment(size_t address)
 {
     return (16 - (BYTE) (address & 0xf)) % 16;
 }
 
-void Encoder::CopyPartialBuffer(BYTE ** ptrDstBuffer, size_t &dstSize, BYTE * srcStart, BYTE * srcEnd)
+void Encoder::CopyPartialBuffer(BYTE ** ptrDstBuffer, size_t &dstSize, BYTE * srcStart, BYTE * srcEnd, uint* pBufferCRC)
 {
     BYTE * destBuffer = *ptrDstBuffer;
 
     size_t srcSize = srcEnd - srcStart + 1;
     Assert(dstSize >= srcSize);
     memcpy_s(destBuffer, dstSize, srcStart, srcSize);
+
+    *pBufferCRC = CalculateCRC(*pBufferCRC, srcSize, destBuffer);
+
     *ptrDstBuffer += srcSize;
     dstSize -= srcSize;
 }
