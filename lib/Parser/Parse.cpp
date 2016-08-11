@@ -4973,7 +4973,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, LPCOLESTR pNameHint, usho
         // If the param scope is merged with the body scope we want to use the param scope symbols in the body scope.
         // So add a pid ref for the body using the param scope symbol. Note that in this case the same symbol will occur twice
         // in the same pid ref stack.
-        if (paramScope != nullptr && paramScope->GetCanMergeWithBodyScope() && isTopLevelDeferredFunc)
+        if (paramScope != nullptr && paramScope->GetCanMergeWithBodyScope())
         {
             paramScope->ForEachSymbol([this](Symbol* paramSym)
             {
