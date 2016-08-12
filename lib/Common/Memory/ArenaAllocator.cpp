@@ -785,6 +785,7 @@ void * InPlaceFreeListPolicy::Free(void * policy, void * object, size_t size)
 {
     Assert(policy);
 #if DBG
+    // delay free list is used in debug mode
     void * freeList = reinterpret_cast<FreeObject **>(policy) + buckets;
 #else
     void * freeList = policy;
@@ -815,13 +816,15 @@ void InPlaceFreeListPolicy::MergeDelayFreeList(void * freeList)
     {
         int size = (i + 1) << ArenaAllocator::ObjectAlignmentBitShift;
         FreeObject *delayObject = delayFreeObjectLists[i];
-        
+        FreeObject *lastDelayObject = nullptr;
+
         while (delayObject != nullptr)
         {
             FreeObject *nextDelayObject = delayObject->next;
-            // DebugPatterFill is required here, because we set isDeleted bit on freed Opnd
+            // DebugPatternFill is required here, because we set isDeleted bit on freed Opnd
             PrepareFreeObject(delayObject, size);
             delayObject->next = nextDelayObject;
+            lastDelayObject = delayObject;
             delayObject = nextDelayObject;
         }
 
@@ -830,16 +833,12 @@ void InPlaceFreeListPolicy::MergeDelayFreeList(void * freeList)
             freeObjectLists[i] = delayFreeObjectLists[i];
             delayFreeObjectLists[i] = nullptr;
         }
-        else
-        {
-            FreeObject * lastFreeObject = freeObjectLists[i];
-            while (lastFreeObject->next != nullptr)
-            {
-                lastFreeObject = lastFreeObject->next;
-            }
-            lastFreeObject->next = delayFreeObjectLists[i];
+        else if (lastDelayObject != nullptr) {
+            FreeObject * firstFreeObject = freeObjectLists[i];
+            freeObjectLists[i] = delayFreeObjectLists[i];
+            lastDelayObject->next = firstFreeObject;
             delayFreeObjectLists[i] = nullptr;
-        }        
+        }
     }
 }
 #endif
