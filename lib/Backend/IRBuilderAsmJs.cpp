@@ -1930,7 +1930,6 @@ IRBuilderAsmJs::BuildAsmReg1(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::RegSl
 
         AddInstr(instr, offset);
     }
-
 }
 
 template <typename SizePolicy>
@@ -2597,6 +2596,12 @@ IRBuilderAsmJs::BuildInt2(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::RegSlot 
 
     case Js::OpCodeAsmJs::Eqz_Int:
         instr = IR::Instr::New(Js::OpCode::CmEq_I4, dstOpnd, srcOpnd, IR::IntConstOpnd::New(0, TyInt32, m_func), m_func);
+        break;
+
+    case Js::OpCodeAsmJs::CurrentMemory_Int:
+        Assume(m_asmFuncInfo->UsesHeapBuffer()); 
+        instr = IR::Instr::New(Js::OpCode::ShrU_I4, dstOpnd, BuildSrcOpnd(AsmJsRegSlots::LengthReg, TyUint32), 
+            IR::IntConstOpnd::New(16, TyUint8, m_func), m_func);
         break;
 
     default:
