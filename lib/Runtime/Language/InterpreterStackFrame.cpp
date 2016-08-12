@@ -2345,7 +2345,7 @@ namespace Js
         this->DEBUG_currentByteOffset = (void *) m_reader.GetCurrentOffset();
 #endif
 
-#if ENABLE_TTD_STACK_STMTS
+#if ENABLE_TTD_STACK_STMTS && TTD_DEBUGGING_PERFORMANCE_WORK_AROUNDS
         if(this->scriptContext->ShouldPerformDebugAction() | this->scriptContext->ShouldPerformRecordAction())
         {
             this->scriptContext->GetThreadContext()->TTDLog->UpdateCurrentStatementInfo(m_reader.GetCurrentOffset());
@@ -2382,7 +2382,7 @@ namespace Js
         this->DEBUG_currentByteOffset = (void *) m_reader.GetCurrentOffset();
 #endif
 
-#if ENABLE_TTD_STACK_STMTS
+#if ENABLE_TTD_STACK_STMTS && TTD_DEBUGGING_PERFORMANCE_WORK_AROUNDS
         if(this->scriptContext->ShouldPerformDebugAction() | this->scriptContext->ShouldPerformRecordAction())
         {
             this->scriptContext->GetThreadContext()->TTDLog->UpdateCurrentStatementInfo(m_reader.GetCurrentOffset());
@@ -5217,12 +5217,16 @@ namespace Js
         Assert(arrayInfo);
 
         JavascriptArray *arr;
-        JavascriptLibrary *lib = scriptContext->GetLibrary();
-
         if (arrayInfo && arrayInfo->IsNativeIntArray())
         {
 #if ENABLE_COPYONACCESS_ARRAY
+            JavascriptLibrary *lib = scriptContext->GetLibrary();
+
+#if TTD_DISABLE_COPYONACCESS_ARRAY_WORK_AROUNDS
+            if(JavascriptLibrary::IsCopyOnAccessArrayCallSite(lib, arrayInfo, ints->count) && Js::Configuration::Global.flags.TestTrace.IsEnabled(Js::CopyOnAccessArrayPhase))
+#else
             if (JavascriptLibrary::IsCopyOnAccessArrayCallSite(lib, arrayInfo, ints->count))
+#endif
             {
                 Assert(lib->cacheForCopyOnAccessArraySegments);
                 arr = scriptContext->GetLibrary()->CreateCopyOnAccessNativeIntArrayLiteral(arrayInfo, functionBody, ints);
@@ -6526,7 +6530,7 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
         //Clear any previous Exception Info
         if(this->scriptContext->ShouldPerformDebugAction())
         {
-            this->scriptContext->GetThreadContext()->TTDLog->ClearExceptionFrame();
+            this->scriptContext->GetThreadContext()->TTDLog->ClearExceptionFrames();
         }
 #endif
 
@@ -7471,6 +7475,13 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
             static_cast<DynamicObject*>(value)->SetDiagOriginInfoAsNeeded();
         }
 #endif
+
+#if ENABLE_VALUE_TRACE
+        if(this->function->GetScriptContext()->ShouldPerformRecordAction() | this->function->GetScriptContext()->ShouldPerformDebugAction())
+        {
+            this->function->GetScriptContext()->GetThreadContext()->TTDLog->GetTraceLogger()->WriteTraceValue(value);
+        }
+#endif
     }
 
     template <typename T>
@@ -7566,6 +7577,13 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
             static_cast<DynamicObject*>(value)->SetDiagOriginInfoAsNeeded();
         }
 #endif
+
+#if ENABLE_VALUE_TRACE
+        if(this->function->GetScriptContext()->ShouldPerformRecordAction() | this->function->GetScriptContext()->ShouldPerformDebugAction())
+        {
+            this->function->GetScriptContext()->GetThreadContext()->TTDLog->GetTraceLogger()->WriteTraceValue(value);
+        }
+#endif
     }
 
     template <typename RegSlotType>
@@ -7587,6 +7605,13 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
         if(value != nullptr && DynamicType::Is(Js::JavascriptOperators::GetTypeId(value)))
         {
             static_cast<DynamicObject*>(value)->SetDiagOriginInfoAsNeeded();
+        }
+#endif
+
+#if ENABLE_VALUE_TRACE
+        if(this->function->GetScriptContext()->ShouldPerformRecordAction() | this->function->GetScriptContext()->ShouldPerformDebugAction())
+        {
+            this->function->GetScriptContext()->GetThreadContext()->TTDLog->GetTraceLogger()->WriteTraceValue(value);
         }
 #endif
     }
