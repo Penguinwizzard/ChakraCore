@@ -54,13 +54,13 @@ private:
     template <bool restore> void  CopyMaps(OffsetList **m_origInlineeFrameRecords, OffsetList **m_origInlineeFrameMap, OffsetList **m_origPragmaInstrToRecordOffset, OffsetList **m_origOffsetBuffer);
 #endif
     void            InsertNopsForLabelAlignment(int nopCount, BYTE ** pDstBuffer);
-    void            CopyPartialBuffer(BYTE ** ptrDstBuffer, size_t &dstSize, BYTE * srcStart, BYTE * srcEnd, uint* pBufferCRC);
+    void            CopyPartialBuffer(BYTE ** ptrDstBuffer, size_t &dstSize, BYTE * srcStart, BYTE * srcEnd, uint* pBufferCRC, BYTE** pCrcRawBuffer, uint* crcBytes, uint initialCRCSeed);
     BYTE            FindNopCountFor16byteAlignment(size_t address);
 
     uint32          GetCurrentOffset() const;
     void            TryCopyAndAddRelocRecordsForSwitchJumpTableEntries(BYTE *codeStart, size_t codeSize, JmpTableList * jumpTableListForSwitchStatement, size_t totalJmpTableSizeInBytes);
 
     void            ValidateCRC(uint bufferCRC, uint initialCRCSeed, void* buffer, size_t count);
-    uint            CalculateCRC(uint bufferCRC, size_t count, void * buffer);
+    uint            CalculateCRC(uint bufferCRC, size_t count, void * buffer, BYTE** pCrcRawBuffer, uint* crcBytes, uint initialCRCSeed);
 };
 

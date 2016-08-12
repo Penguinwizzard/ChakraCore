@@ -815,6 +815,12 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize, uin
     // We also write NOPs for aligned loops.
     BYTE* tmpBuffer = AnewArray(m_tempAlloc, BYTE, newCodeSize);
 
+    //BYTE* crcRawBuffer = AnewArrayZ(m_tempAlloc, BYTE, newCodeSize);
+    BYTE* crcRawBuffer = tmpBuffer;
+    uint crcBytes = 0;
+    uint initialCRCseed = *pBufferCRC;
+
+
     // start copying to new buffer
     // this can possibly be done during fixing, but there is no evidence it is an overhead to justify the complexity.
     BYTE *from = buffStart, *to = nullptr;
@@ -872,7 +878,7 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize, uin
             AnalysisAssert(dst_size >= src_size);
 
             memcpy_s(dst_p, dst_size, from, src_size);
-            *pBufferCRC = CalculateCRC(*pBufferCRC, src_size, dst_p);
+            *pBufferCRC = CalculateCRC(*pBufferCRC, src_size, dst_p, &crcRawBuffer, &crcBytes, initialCRCseed);
 
             dst_p += src_size;
             dst_size -= src_size;
@@ -881,7 +887,7 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize, uin
             // write new opcode
             AnalysisAssert(dst_p < tmpBuffer + newCodeSize);
             *dst_p = (*opcodeByte == 0xe9) ? (BYTE)0xeb : (BYTE)(*opcodeByte - 0x10);
-            *pBufferCRC = CalculateCRC(*pBufferCRC, 2, dst_p);
+            *pBufferCRC = CalculateCRC(*pBufferCRC, 2, dst_p, &crcRawBuffer, &crcBytes, initialCRCseed);
             dst_p += 2; // 1 byte for opcode + 1 byte for imm8
             dst_size -= 2;
             from = (BYTE*)reloc.m_origPtr + 4;
@@ -896,7 +902,7 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize, uin
             AssertMsg((((uint32)(label->GetPC() - buffStart)) & 0xf) == 0, "Misaligned Label");
 
             to = reloc.getLabelOrigPC() - 1;
-            CopyPartialBuffer(&dst_p, dst_size, from, to, pBufferCRC);
+            CopyPartialBuffer(&dst_p, dst_size, from, to, pBufferCRC, &crcRawBuffer, &crcBytes, initialCRCseed);
 
 #ifdef  ENABLE_DEBUG_CONFIG_OPTIONS
             if (PHASE_TRACE(Js::LoopAlignPhase, this->m_func))
@@ -909,14 +915,14 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize, uin
             }
 #endif
             InsertNopsForLabelAlignment(nop_count, &dst_p);
-            *pBufferCRC = CalculateCRC(*pBufferCRC, nop_count, dst_p);
+            *pBufferCRC = CalculateCRC(*pBufferCRC, nop_count, dst_p, &crcRawBuffer, &crcBytes, initialCRCseed);
 
             dst_size -= nop_count;
             from = to + 1;
         }
     }
     // copy last chunk
-    CopyPartialBuffer(&dst_p, dst_size, from, buffStart + *codeSize - 1, pBufferCRC);
+    CopyPartialBuffer(&dst_p, dst_size, from, buffStart + *codeSize - 1, pBufferCRC, &crcRawBuffer, &crcBytes, initialCRCseed);
 
     m_encoderMD.UpdateRelocListWithNewBuffer(relocList, tmpBuffer, buffStart, buffEnd);
 
@@ -927,12 +933,14 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize, uin
     return true;
 }
 
-uint Encoder::CalculateCRC(uint bufferCRC, size_t count, void * buffer)
+uint Encoder::CalculateCRC(uint bufferCRC, size_t count, void * buffer, BYTE** pCrcRawBuffer, uint* crcBytes, uint initialCRCSeed)
 {
     for (int index = 0; index < count; index++)
     {
         bufferCRC = _mm_crc32_u32(bufferCRC, *((BYTE*)buffer + index));
+        *crcBytes = *crcBytes + 1;
     }
+    ValidateCRC(bufferCRC, initialCRCSeed, (void*)*pCrcRawBuffer, *crcBytes);
     return bufferCRC;
 }
 
@@ -957,7 +965,7 @@ BYTE Encoder::FindNopCountFor16byteAlignment(size_t address)
     return (16 - (BYTE) (address & 0xf)) % 16;
 }
 
-void Encoder::CopyPartialBuffer(BYTE ** ptrDstBuffer, size_t &dstSize, BYTE * srcStart, BYTE * srcEnd, uint* pBufferCRC)
+void Encoder::CopyPartialBuffer(BYTE ** ptrDstBuffer, size_t &dstSize, BYTE * srcStart, BYTE * srcEnd, uint* pBufferCRC, BYTE** pCrcRawBuffer, uint* crcBytes, uint initialCRCSeed)
 {
     BYTE * destBuffer = *ptrDstBuffer;
 
@@ -965,7 +973,7 @@ void Encoder::CopyPartialBuffer(BYTE ** ptrDstBuffer, size_t &dstSize, BYTE * sr
     Assert(dstSize >= srcSize);
     memcpy_s(destBuffer, dstSize, srcStart, srcSize);
 
-    *pBufferCRC = CalculateCRC(*pBufferCRC, srcSize, destBuffer);
+    *pBufferCRC = CalculateCRC(*pBufferCRC, srcSize, destBuffer, pCrcRawBuffer, crcBytes, initialCRCSeed);
 
     *ptrDstBuffer += srcSize;
     dstSize -= srcSize;
