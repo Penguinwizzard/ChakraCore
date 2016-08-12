@@ -914,8 +914,9 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize, uin
                 Output::Flush();
             }
 #endif
+            BYTE * tmpDst_p = dst_p;
             InsertNopsForLabelAlignment(nop_count, &dst_p);
-            *pBufferCRC = CalculateCRC(*pBufferCRC, nop_count, dst_p, &crcRawBuffer, &crcBytes, initialCRCseed);
+            *pBufferCRC = CalculateCRC(*pBufferCRC, nop_count, tmpDst_p, &crcRawBuffer, &crcBytes, initialCRCseed);
 
             dst_size -= nop_count;
             from = to + 1;
