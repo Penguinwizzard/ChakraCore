@@ -1995,8 +1995,7 @@ var tests = [
         (new c5()).foo();
     }
   },
-  //  TODO: (suwc) Uncomment after OS8453173 is fixed
-  /*{
+  {
       name: "Eval and destructuring",
       body: function () {
         function f1({a:a1, b:b1}, c = eval("a1 + b1")) {
@@ -2033,7 +2032,7 @@ var tests = [
             assert.areEqual(10, y(), "Assignment in the body does not affect the formal captured from the param scope");
         })({});
       }
-  },*/
+  },
   {
       name: "Eval and arguments in param scope",
       body: function () {

@@ -3128,6 +3128,13 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
             byteCodeFunction->SetHasRestParameter();
         }
 
+        if (funcInfo->IsGlobalFunction())
+        {
+            EnsureNoRedeclarations(pnode->sxFnc.pnodeScopes, funcInfo);
+        }
+
+        ::BeginEmitBlock(pnode->sxFnc.pnodeScopes, this, funcInfo);
+
         if (funcInfo->thisScopeSlot != Js::Constants::NoRegister && !(funcInfo->IsLambda() || (funcInfo->IsGlobalFunction() && this->flags & fscrEval)))
         {
             EmitInitCapturedThis(funcInfo, funcInfo->bodyScope);
@@ -3229,13 +3236,6 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
                 }
             }
         }
-
-        if (funcInfo->IsGlobalFunction())
-        {
-            EnsureNoRedeclarations(pnode->sxFnc.pnodeScopes, funcInfo);
-        }
-
-        ::BeginEmitBlock(pnode->sxFnc.pnodeScopes, this, funcInfo);
 
         DefineLabels(funcInfo);
 
