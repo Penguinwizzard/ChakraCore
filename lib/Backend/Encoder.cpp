@@ -314,6 +314,10 @@ Encoder::Encode()
 
     workItem->RecordNativeCode(m_func, m_encodeBuffer);
 
+    //TODO: Clean up the math calculation in the arguments. - clean up the arguments
+    //TODO: Remove all debug related information.
+    ValidateCRCOnFinalBuffer((BYTE*)workItem->GetCodeAddress(), codeSize - totalJmpTableSizeInBytes, m_encodeBuffer, m_encodeBuffer + codeSize - totalJmpTableSizeInBytes, initialCRCSeed, nullptr, nullptr, bufferCRC);
+
     m_func->GetScriptContext()->GetThreadContext()->SetValidCallTargetForCFG((PVOID) workItem->GetCodeAddress());
 
 #ifdef _M_X64
@@ -934,14 +938,54 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize, uin
     return true;
 }
 
+void Encoder::ValidateCRCOnFinalBuffer(BYTE * finalCodeBufferStart, size_t finalCodeSize, BYTE * oldCodeBufferStart, BYTE * oldCodeBufferEnd, uint initialCrcSeed, BYTE ** pCrcRawBuffer, uint * crcBytes, uint bufferCRC)
+{
+    RelocList * relocList = m_encoderMD.GetRelocList();
+
+    BYTE * currentStartAddress = finalCodeBufferStart;
+    BYTE * currentEndAddress = nullptr;
+    size_t crcSizeToCompute = 0;
+
+    uint finalBufferCRC = initialCrcSeed;
+
+    for (int index = 0; index < relocList->Count(); index++)
+    {
+        EncodeRelocAndLabels * relocTuple = &relocList->Item(index);
+
+        BYTE* finalBufferRelocTuplePtr = (BYTE*)relocTuple->m_ptr - oldCodeBufferStart + finalCodeBufferStart;
+
+        uint relocDataSize = m_encoderMD.GetRelocDataSize(relocTuple);
+        if (relocDataSize != 0 && finalBufferRelocTuplePtr >= finalCodeBufferStart && finalBufferRelocTuplePtr < (finalCodeBufferStart + finalCodeSize))
+        {
+            currentEndAddress = finalBufferRelocTuplePtr;
+            crcSizeToCompute = currentEndAddress - currentStartAddress;
+            finalBufferCRC = CalculateCRC(finalBufferCRC, crcSizeToCompute, currentStartAddress, pCrcRawBuffer, crcBytes, initialCrcSeed);
+            //TODO: Clean up this for loop and move to a function CRC.
+            for (uint i = 0; i < relocDataSize; i++)
+            {
+                finalBufferCRC = _mm_crc32_u32(finalBufferCRC, 0);
+            }
+            currentStartAddress = currentEndAddress + relocDataSize;
+        }
+    }
+
+    currentEndAddress = finalCodeBufferStart + finalCodeSize;
+    crcSizeToCompute = currentEndAddress - currentStartAddress;
+
+    finalBufferCRC = CalculateCRC(finalBufferCRC, crcSizeToCompute, currentStartAddress, pCrcRawBuffer, crcBytes, initialCrcSeed);
+
+    if (finalBufferCRC != bufferCRC)
+    {
+        Fatal();
+    }
+}
+
 uint Encoder::CalculateCRC(uint bufferCRC, size_t count, void * buffer, BYTE** pCrcRawBuffer, uint* crcBytes, uint initialCRCSeed)
 {
     for (int index = 0; index < count; index++)
     {
         bufferCRC = _mm_crc32_u32(bufferCRC, *((BYTE*)buffer + index));
-        *crcBytes = *crcBytes + 1;
     }
-    ValidateCRC(bufferCRC, initialCRCSeed, (void*)*pCrcRawBuffer, *crcBytes);
     return bufferCRC;
 }
 
@@ -949,10 +993,7 @@ void Encoder::ValidateCRC(uint bufferCRC, uint initialCRCSeed, void* buffer, siz
 {
     uint validationCRC = initialCRCSeed;
 
-    for (int index = 0; index < count; index++)
-    {
-        validationCRC = _mm_crc32_u32(validationCRC, *((BYTE*)buffer + index));
-    }
+    validationCRC = CalculateCRC(validationCRC, count, buffer, nullptr, nullptr, initialCRCSeed);
 
     if (validationCRC != bufferCRC)
     {

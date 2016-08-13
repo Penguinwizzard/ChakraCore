@@ -62,5 +62,6 @@ private:
 
     void            ValidateCRC(uint bufferCRC, uint initialCRCSeed, void* buffer, size_t count);
     uint            CalculateCRC(uint bufferCRC, size_t count, void * buffer, BYTE** pCrcRawBuffer, uint* crcBytes, uint initialCRCSeed);
+    void            ValidateCRCOnFinalBuffer(BYTE * finalCodeBufferStart, size_t finalCodeSize, BYTE * oldCodeBufferStart, BYTE * oldCodeBufferEnd, uint initialCrcSeed, BYTE ** pCrcRawBuffer, uint * crcBytes, uint bufferCRC);
 };
 

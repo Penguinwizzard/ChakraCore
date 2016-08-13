@@ -1593,6 +1593,31 @@ EncoderMD::ApplyRelocs(size_t codeBufferAddress_)
     }
 }
 
+uint 
+EncoderMD::GetRelocDataSize(EncodeRelocAndLabels *reloc)
+{
+    switch (reloc->m_type)
+    {
+        case RelocTypeBranch:
+        {
+            if (reloc->isShortBr())
+            {
+                return sizeof(BYTE);
+            }
+            else
+            {
+                return sizeof(uint);
+            }
+        }
+        case RelocTypeLabelUse:
+        {
+            return sizeof(size_t);
+        }
+        default:
+            return 0;
+    }
+}
+
 #ifdef DBG
 ///----------------------------------------------------------------------------
 ///
