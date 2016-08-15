@@ -1112,13 +1112,7 @@ WasmBytecodeGenerator::EmitMemStore()
     ReleaseLocation(&rhsInfo);
     ReleaseLocation(&exprInfo);
 
-    Js::RegSlot retLoc = GetRegisterSpace(type)->AcquireTmpRegister();
-    if (retLoc != rhsInfo.location)
-    {
-        m_writer.AsmReg2(GetLoadOp(type), retLoc, rhsInfo.location);
-    }
-
-    return EmitInfo(retLoc, type);
+    return EmitInfo();
 }
 
 EmitInfo
