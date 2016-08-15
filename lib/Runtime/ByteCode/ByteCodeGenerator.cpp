@@ -5076,7 +5076,7 @@ void AssignRegisters(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
                     // We created an equivalent symbol in the body, let us allocate a register for it if necessary,
                     // because it may not be referenced in the body at all.
                     Symbol* bodySym = funcInfo->bodyScope->FindLocalSymbol(sym->GetName());
-                    if (!bodySym->IsInSlot(funcInfo))
+                    if (bodySym && !bodySym->IsInSlot(funcInfo))
                     {
                         byteCodeGenerator->AssignRegister(bodySym);
                     }

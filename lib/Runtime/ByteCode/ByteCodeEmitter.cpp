@@ -250,6 +250,9 @@ Js::OpCode ByteCodeGenerator::ToChkUndeclOp(Js::OpCode op) const
     case Js::OpCode::StLocalSlot:
         return Js::OpCode::StLocalSlotChkUndecl;
 
+    case Js::OpCode::StParamSlot:
+        return Js::OpCode::StParamSlotChkUndecl;
+
     case Js::OpCode::StInnerSlot:
         return Js::OpCode::StInnerSlotChkUndecl;
 
@@ -261,6 +264,9 @@ Js::OpCode ByteCodeGenerator::ToChkUndeclOp(Js::OpCode op) const
 
     case Js::OpCode::StLocalObjSlot:
         return Js::OpCode::StLocalObjSlotChkUndecl;
+
+    case Js::OpCode::StParamObjSlot:
+        return Js::OpCode::StParamObjSlotChkUndecl;
 
     case Js::OpCode::StInnerObjSlot:
         return Js::OpCode::StInnerObjSlotChkUndecl;
@@ -3327,10 +3333,10 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
                         }
                     }
                 }
-                else
+                /*else
                 {
                     Assert(param->GetIsArguments() || pnode->sxFnc.pnodeName->sxVar.sym == param);
-                }
+                }*/
 
                 if (ShouldTrackDebuggerMetadata() && param->GetLocation() != Js::Constants::NoRegister)
                 {

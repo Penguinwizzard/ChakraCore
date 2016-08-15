@@ -5100,7 +5100,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, LPCOLESTR pNameHint, usho
                 // for scope slots allocation for the corresponding symbol in both param and body scope. Inserting them in the opposite order will help us
                 // have the same sequence for scope slots allocation in both scopes. This makes it easy to read the bytecode and may help in some optimization
                 // later.
-                paramScope->ForEachSymbol([this, pnodeFnc](Symbol* param) {
+                /*paramScope->ForEachSymbol([this, pnodeFnc](Symbol* param) {
                     OUTPUT_TRACE_DEBUGONLY(Js::ParsePhase, _u("Creating a duplicate symbol for the parameter %s in the body scope\n"), param->GetPid()->Psz());
 
                     ParseNodePtr paramNode = nullptr;
@@ -5117,7 +5117,7 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, LPCOLESTR pNameHint, usho
                     }
 
                     Assert(paramNode && paramNode->sxVar.sym->GetScope()->GetScopeType() == ScopeType_FunctionBody);
-                });
+                });*/
             }
 
             // Keep nested function declarations and expressions in the same list at function scope.
