@@ -208,8 +208,8 @@ public:
 
     ptrdiff_t       Encode(IR::Instr * instr, BYTE *pc, BYTE* beginCodeAddress = nullptr);
     void            Init(Encoder *encoder);
-    void            ApplyRelocs(uint32 codeBufferAddress);
-
+    void            ApplyRelocs(uint32 codeBufferAddress, uint * bufferCRC, bool isCalcOnlyCRC = false);
+    uint            GetRelocDataSize(EncodeRelocAndLabels *reloc);
     void            EncodeInlineeCallInfo(IR::Instr *instr, uint32 offset);
     static bool     TryConstFold(IR::Instr *instr, IR::RegOpnd *regOpnd);
     static bool     TryFold(IR::Instr *instr, IR::RegOpnd *regOpnd);

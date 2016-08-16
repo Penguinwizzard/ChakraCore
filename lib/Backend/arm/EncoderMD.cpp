@@ -1064,7 +1064,7 @@ EncoderMD::GenerateEncoding(IR::Instr* instr, IFORM iform, BYTE *pc, int32 size,
 
                 case STEP_T2_BRANCH20:
                     // Constant encoded with 20bits.
-                    EncodeReloc::Neaw(&m_relocList, RelocTypeBranch20, m_pc, instr->AsBranchInstr()->GetTarget(), m_encoder->m_tempAlloc);
+                    EncodeReloc::New(&m_relocList, RelocTypeBranch20, m_pc, instr->AsBranchInstr()->GetTarget(), m_encoder->m_tempAlloc);
                     continue;
 
                 case STEP_REG:
@@ -2263,7 +2263,7 @@ EncoderMD::BaseAndOffsetFromSym(IR::SymOpnd *symOpnd, RegNum *pBaseReg, int32 *p
 /// before we copy the contents of the temporary buffer to the target buffer.
 ///----------------------------------------------------------------------------
 void
-EncoderMD::ApplyRelocs(uint32 codeBufferAddress)
+EncoderMD::ApplyRelocs(uint32 codeBufferAddress, uint * bufferCRC, bool isCalcOnlyCRC)
 {
     for (EncodeReloc *reloc = m_relocList; reloc; reloc = reloc->m_next)
     {
@@ -2278,8 +2278,13 @@ EncoderMD::ApplyRelocs(uint32 codeBufferAddress)
                 Assert(!labelInstr->isInlineeEntryInstr);
                 AssertMsg(labelInstr->GetPC() != nullptr, "Branch to unemitted label?");
                 pcrel = (uint32)(labelInstr->GetPC() - reloc->m_consumerOffset);
-                encode |= BranchOffset_T2_20(pcrel);
-                *(uint32 *)relocAddress = encode;
+                if (!isCalcOnlyCRC)
+                {
+                    encode |= BranchOffset_T2_20(pcrel);
+                    Assert(*(uint32 *)relocAddress == 0);
+                    *(uint32 *)relocAddress = encode;
+                }
+                *bufferCRC = Encoder::CalculateCRC(*bufferCRC, pcrel);
                 break;
             }
 
@@ -2289,8 +2294,13 @@ EncoderMD::ApplyRelocs(uint32 codeBufferAddress)
                 Assert(!labelInstr->isInlineeEntryInstr);
                 AssertMsg(labelInstr->GetPC() != nullptr, "Branch to unemitted label?");
                 pcrel = (uint32)(labelInstr->GetPC() - reloc->m_consumerOffset);
-                encode |= BranchOffset_T2_24(pcrel);
-                *(ENCODE_32 *)relocAddress = encode;
+                if (!isCalcOnlyCRC)
+                {
+                    encode |= BranchOffset_T2_24(pcrel);
+                    Assert(*(ENCODE_32 *)relocAddress == 0);
+                    *(ENCODE_32 *)relocAddress = encode;
+                }
+                *bufferCRC = Encoder::CalculateCRC(*bufferCRC, pcrel);
                 break;
             }
 
@@ -2301,13 +2311,20 @@ EncoderMD::ApplyRelocs(uint32 codeBufferAddress)
 
                 AssertMsg(labelInstr->GetPC() != nullptr, "Branch to unemitted label?");
 
-                pcrel = ((labelInstr->GetPC() - m_encoder->m_encodeBuffer + codeBufferAddress) & 0xFFFF);
+                uint32 offset = labelInstr->GetPC() - m_encoder->m_encodeBuffer;
+                *bufferCRC = Encoder::CalculateCRC(*bufferCRC, offset);
+
+                pcrel = ((offset + codeBufferAddress) & 0xFFFF);
 
                 if (!EncodeImmediate16(pcrel, (DWORD*) &encode))
                 {
                     Assert(UNREACHED);
                 }
-                *(ENCODE_32 *) relocAddress = encode;
+                if (!isCalcOnlyCRC)
+                {
+                    Assert(*(ENCODE_32 *)relocAddress == 0);
+                    *(ENCODE_32 *)relocAddress = encode;
+                }
                 break;
             }
 
@@ -2318,19 +2335,26 @@ EncoderMD::ApplyRelocs(uint32 codeBufferAddress)
                 if (!labelInstr->isInlineeEntryInstr)
                 {
                     AssertMsg(labelInstr->GetPC() != nullptr, "Branch to unemitted label?");
+                    uint32 offset = labelInstr->GetPC() - m_encoder->m_encodeBuffer;
+                    *bufferCRC = Encoder::CalculateCRC(*bufferCRC, offset);
                     // Note that the bottom bit must be set, since this is a Thumb code address.
-                    pcrel = ((labelInstr->GetPC() - m_encoder->m_encodeBuffer + codeBufferAddress) & 0xFFFF) | 1;
+                    pcrel = ((offset + codeBufferAddress) & 0xFFFF) | 1;
                 }
                 else
                 {
                     //This is a encoded low 16 bits.
                     pcrel = labelInstr->GetOffset() & 0xFFFF;
+                    *bufferCRC = Encoder::CalculateCRC(*bufferCRC, pcrel);
                 }
                 if (!EncodeImmediate16(pcrel, (DWORD*) &encode))
                 {
                     Assert(UNREACHED);
                 }
-                *(ENCODE_32 *) relocAddress = encode;
+                if (!isCalcOnlyCRC)
+                {
+                    Assert(*(ENCODE_32 *)relocAddress);
+                    *(ENCODE_32 *)relocAddress = encode;
+                }
                 break;
             }
 
@@ -2341,19 +2365,27 @@ EncoderMD::ApplyRelocs(uint32 codeBufferAddress)
                 if (!labelInstr->isInlineeEntryInstr)
                 {
                     AssertMsg(labelInstr->GetPC() != nullptr, "Branch to unemitted label?");
-                    pcrel = (labelInstr->GetPC() - m_encoder->m_encodeBuffer + codeBufferAddress) >> 16;
+                    uint32 offset = labelInstr->GetPC() - m_encoder->m_encodeBuffer;
+                    *bufferCRC = Encoder::CalculateCRC(*bufferCRC, offset);
+                    pcrel = (offset + codeBufferAddress) >> 16;
                     // We only record the relocation on the low byte of the pair
                 }
                 else
                 {
                     //This is a encoded high 16 bits.
                     pcrel = labelInstr->GetOffset() >> 16;
+                    *bufferCRC = Encoder::CalculateCRC(*bufferCRC, pcrel);
                 }
                 if (!EncodeImmediate16(pcrel, (DWORD*) &encode))
                 {
                     Assert(UNREACHED);
                 }
-                *(ENCODE_32 *) relocAddress = encode;
+                if (!isCalcOnlyCRC)
+                {
+                    Assert(*(ENCODE_32 *)relocAddress);
+                    *(ENCODE_32 *)relocAddress = encode;
+                }
+                
                 break;
             }
 
@@ -2361,12 +2393,41 @@ EncoderMD::ApplyRelocs(uint32 codeBufferAddress)
             {
                 IR::LabelInstr * labelInstr = reloc->m_relocInstr->AsLabelInstr();
                 AssertMsg(labelInstr->GetPC() != nullptr, "Branch to unemitted label?");
-                /* For Thumb instruction set -> OR 1 with the address*/
-                *(uint32 *)relocAddress = (uint32)(labelInstr->GetPC() - m_encoder->m_encodeBuffer + codeBufferAddress)  | 1;
+
+                uint32 offset = (uint32)(labelInstr->GetPC() - m_encoder->m_encodeBuffer);
+                if (!isCalcOnlyCRC)
+                {
+                    Assert(*(uint32 *)relocAddress == 0);
+                    /* For Thumb instruction set -> OR 1 with the address*/
+                    *(uint32 *)relocAddress = (uint32)(offset + codeBufferAddress) | 1;
+                }
+                *bufferCRC = Encoder::CalculateCRC(*bufferCRC, offset);
                 break;
             }
         default:
             AssertMsg(UNREACHED, "Unknown reloc type");
+        }
+    }
+}
+
+uint
+EncoderMD::GetRelocDataSize(EncodeReloc *reloc)
+{
+    switch (reloc->m_relocType)
+    {
+        case RelocTypeBranch20:
+        case RelocTypeLabel:
+        case RelocTypeBranch24:
+        case RelocTypeDataLabelLow:
+        case RelocTypeLabelHigh:
+        case RelocTypeLabelLow:
+        {
+            return sizeof(ENCODE_32);
+        }
+        default:
+        {
+            AssertMsg(UNREACHED, "Unknown reloc type");
+            return 0;
         }
     }
 }

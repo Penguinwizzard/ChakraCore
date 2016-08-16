@@ -1629,7 +1629,9 @@ EncoderMD::GetRelocDataSize(EncodeRelocAndLabels *reloc)
             return sizeof(size_t);
         }
         default:
+        {
             return 0;
+        }
     }
 }
 
