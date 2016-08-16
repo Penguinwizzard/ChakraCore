@@ -132,11 +132,8 @@ namespace Wasm
         template<WasmOp wasmOp>
         EmitInfo EmitBr();
 
-        template<WasmOp wasmOp, typename Signature>
-        EmitInfo EmitMemRead();
-
-        template<WasmOp wasmOp, typename Signature>
-        EmitInfo EmitMemStore();
+        EmitInfo EmitMemRead(WasmTypes::WasmType retType, Js::ArrayBufferView::ViewType viewType);
+        EmitInfo EmitMemStore(WasmTypes::WasmType valType, Js::ArrayBufferView::ViewType viewType);
 
         template<Js::OpCodeAsmJs op, typename Signature>
         EmitInfo EmitBinExpr();
@@ -156,7 +153,6 @@ namespace Wasm
         BlockInfo GetBlockInfo(uint relativeDepth);
         Js::ByteCodeLabel GetLabel(uint relativeDepth);
 
-        static Js::ArrayBufferView::ViewType GetViewType(WasmOp op);
         static Js::OpCodeAsmJs GetLoadOp(WasmTypes::WasmType type);
         WasmRegisterSpace* GetRegisterSpace(WasmTypes::WasmType type);
 
