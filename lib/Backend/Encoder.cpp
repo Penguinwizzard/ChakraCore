@@ -313,7 +313,7 @@ Encoder::Encode()
     });
 
     // Relocs
-    m_encoderMD.ApplyRelocs((size_t) workItem->GetCodeAddress());
+    m_encoderMD.ApplyRelocs((size_t) workItem->GetCodeAddress(), &bufferCRC);
 
     workItem->RecordNativeCode(m_func, m_encodeBuffer);
 
@@ -996,7 +996,8 @@ void Encoder::ValidateCRCOnFinalBuffer(BYTE * finalCodeBufferStart, size_t final
     }
 
     finalBufferCRC = CalculateCRC(finalBufferCRC, crcSizeToCompute, currentStartAddress, pCrcRawBuffer, crcBytes, initialCrcSeed, true);
-    
+    m_encoderMD.ApplyRelocs(0, &finalBufferCRC, true);
+
     Assert(*crcBytes == finalCodeSize);
 
     if (finalBufferCRC != bufferCRC)
@@ -1004,6 +1005,11 @@ void Encoder::ValidateCRCOnFinalBuffer(BYTE * finalCodeBufferStart, size_t final
         Assert(false); //Remove
         Fatal();
     }
+}
+
+uint Encoder::CalculateCRC(uint bufferCRC, uint data)
+{
+    return _mm_crc32_u32(bufferCRC, data);
 }
 
 uint Encoder::CalculateCRC(uint bufferCRC, size_t count, void * buffer, BYTE** pCrcRawBuffer, uint* crcBytes, uint initialCRCSeed, bool isFinalBuffer)
