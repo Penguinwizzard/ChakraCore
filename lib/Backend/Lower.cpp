@@ -12349,7 +12349,11 @@ Lowerer::GenerateBailOut(IR::Instr * instr, IR::BranchInstr * branchInstr, IR::L
     }
 
 #if DBG
-    if (bailOutInstr->m_opcode == Js::OpCode::BailOnNoSimdTypeSpec || bailOutInstr->m_opcode == Js::OpCode::BailOnNoProfile || bailOutInstr->m_opcode == Js::OpCode::BailOnException || bailOutInstr->m_opcode == Js::OpCode::Yield)
+    if (bailOutInstr->m_opcode == Js::OpCode::BailOnNoSimdTypeSpec ||
+        bailOutInstr->m_opcode == Js::OpCode::BailOnNoProfile ||
+        bailOutInstr->m_opcode == Js::OpCode::BailOnException ||
+        bailOutInstr->m_opcode == Js::OpCode::Yield ||
+        bailOutInstr->GetBailOutKind() == IR::BailOutConventionalTypedArrayAccessOnly)
     {
         bailOutLabel->m_noHelperAssert = true;
     }
@@ -14093,7 +14097,8 @@ Lowerer::GenerateFastElemICommon(
     bool checkArrayLengthOverflow /*= true*/,
     bool forceGenerateFastPath /* = false */,
     bool returnLength,
-    IR::LabelInstr *bailOutLabelInstr /* = nullptr*/)
+    IR::LabelInstr *bailOutLabelInstr /* = nullptr*/,
+    bool * indirOpndOverflowed /* = nullptr*/)
 {
     *pIsTypedArrayElement = false;
     *pIsStringIndex = false;
@@ -14146,7 +14151,8 @@ Lowerer::GenerateFastElemICommon(
             checkArrayLengthOverflow,
             false,
             returnLength,
-            bailOutLabelInstr);
+            bailOutLabelInstr,
+            indirOpndOverflowed);
 }
 
 IR::IndirOpnd *
@@ -14163,11 +14169,17 @@ Lowerer::GenerateFastElemIIntIndexCommon(
     bool checkArrayLengthOverflow /*= true*/,
     bool forceGenerateFastPath /* = false */,
     bool returnLength,
-    IR::LabelInstr *bailOutLabelInstr /* = nullptr*/)
+    IR::LabelInstr *bailOutLabelInstr /* = nullptr*/,
+    bool * indirOpndOverflowed /* = nullptr */)
 {
     IR::RegOpnd *indexOpnd = indirOpnd->GetIndexOpnd();
     IR::RegOpnd *baseOpnd = indirOpnd->GetBaseOpnd();
     Assert(!baseOpnd->IsTaggedInt() || (indexOpnd && indexOpnd->IsNotInt()));
+
+    if (indirOpndOverflowed != nullptr)
+    {
+        *indirOpndOverflowed = false;
+    }
 
     BYTE indirScale = this->m_lowererMD.GetDefaultIndirScale();
     IRType indirType = TyVar;
@@ -14224,6 +14236,7 @@ Lowerer::GenerateFastElemIIntIndexCommon(
     IntConstType value = 0;
     IR::Opnd * indexValueOpnd = nullptr;
     bool invertBoundCheckComparison = false;
+    bool checkIndexConstOverflowed = false;
 
     if (indirOpnd->TryGetIntConstIndexValue(true, &value, &isIndexNotInt))
     {
@@ -14231,6 +14244,7 @@ Lowerer::GenerateFastElemIIntIndexCommon(
         {
             indexValueOpnd = IR::IntConstOpnd::New(value, TyUint32, this->m_func);
             invertBoundCheckComparison = true; // facilitate folding the constant index into the compare instruction
+            checkIndexConstOverflowed = true;
         }
         else
         {
@@ -14257,6 +14271,13 @@ Lowerer::GenerateFastElemIIntIndexCommon(
     {
         indirScale = GetArrayIndirScale(baseValueType);
         indirType = GetArrayIndirType(baseValueType);
+    }
+
+    if (checkIndexConstOverflowed && (static_cast<uint64>(value) << indirScale) > INT32_MAX &&
+        indirOpndOverflowed != nullptr)
+    {
+        *indirOpndOverflowed = true;
+        return nullptr;
     }
 
     IRType elementType = TyIllegal;
@@ -15141,7 +15162,8 @@ Lowerer::GenerateFastLdElemI(IR::Instr *& ldElem, bool *instrIsInHelperBlockRef)
             labelBailOut = IR::LabelInstr::New(Js::OpCode::Label, this->m_func, true);
             labelCantUseArray = labelBailOut;
         }
-        bool isTypedArrayElement, isStringIndex;
+
+        bool isTypedArrayElement, isStringIndex, indirOpndOverflowed = false;
         indirOpnd =
             GenerateFastElemICommon(
                 ldElem,
@@ -15152,7 +15174,13 @@ Lowerer::GenerateFastLdElemI(IR::Instr *& ldElem, bool *instrIsInHelperBlockRef)
                 labelFallThru,
                 &isTypedArrayElement,
                 &isStringIndex,
-                &emitBailout);
+                &emitBailout,
+                nullptr,    /* pLabelSegmentLengthIncreased */
+                true,       /* checkArrayLengthOverflow */
+                false,      /* forceGenerateFastPath */
+                false,      /* returnLength */
+                nullptr,    /* bailOutLabelInstr */
+                &indirOpndOverflowed);
 
         IR::Opnd *dst = ldElem->GetDst();
         IRType dstType = dst->AsRegOpnd()->GetType();
@@ -15162,9 +15190,35 @@ Lowerer::GenerateFastLdElemI(IR::Instr *& ldElem, bool *instrIsInHelperBlockRef)
         {
             Assert(!(ldElem->HasBailOutInfo() && ldElem->GetBailOutKind() & IR::BailOutOnArrayAccessHelperCall));
 
+            if (indirOpndOverflowed)
+            {
+                if (dst->IsVar())
+                {
+                    // returns undefined in case of indirOpnd overflow which is consistent with behavior of interpreter
+                    IR::Opnd * undefinedOpnd = this->LoadLibraryValueOpnd(ldElem, LibraryValue::ValueUndefined);
+                    InsertMove(dst, undefinedOpnd, ldElem);
+
+                    ldElem->UnlinkSrc1();
+                    ldElem->UnlinkDst();
+                    ldElem->Remove();
+                }
+                else
+                {
+                    Assert(ldElem->HasBailOutInfo());
+
+                    IR::IntConstOpnd *constOpnd = IR::IntConstOpnd::New(0, TyInt32, this->m_func, true);
+                    InsertMove(dst, constOpnd, ldElem);
+
+                    ldElem->UnlinkSrc1();
+                    ldElem->UnlinkDst();
+                    GenerateBailOut(ldElem, nullptr, nullptr);
+                }
+                emittedFastPath = true;
+                return false;
+            }
             // The global optimizer should never type specialize a LdElem for which the index is not int or an integer constant
             // with a negative value. This would force an unconditional bail out on the main code path.
-            if (dst->IsVar())
+            else if (dst->IsVar())
             {
                 if (PHASE_TRACE(Js::TypedArrayTypeSpecPhase, this->m_func) && PHASE_TRACE(Js::LowererPhase, this->m_func))
                 {
@@ -15603,7 +15657,7 @@ Lowerer::GenerateFastStElemI(IR::Instr *& stElem, bool *instrIsInHelperBlockRef)
         }
     }
 
-    bool isTypedArrayElement, isStringIndex;
+    bool isTypedArrayElement, isStringIndex, indirOpndOverflowed = false;
     indirOpnd =
         GenerateFastElemICommon(
             stElem,
@@ -15615,7 +15669,12 @@ Lowerer::GenerateFastStElemI(IR::Instr *& stElem, bool *instrIsInHelperBlockRef)
             &isTypedArrayElement,
             &isStringIndex,
             &emitBailout,
-            &labelSegmentLengthIncreased);
+            &labelSegmentLengthIncreased,
+            true,       /* checkArrayLengthOverflow */
+            false,      /* forceGenerateFastPath */
+            false,      /* returnLength */
+            nullptr,    /* bailOutLabelInstr */
+            &indirOpndOverflowed);
 
     IR::Opnd *src = stElem->GetSrc1();
     const IR::AutoReuseOpnd autoReuseSrc(src, m_func);
@@ -15640,6 +15699,14 @@ Lowerer::GenerateFastStElemI(IR::Instr *& stElem, bool *instrIsInHelperBlockRef)
             }
             // We must be dealing with some atypical index value.  Don't emit fast path, but go directly to helper.
             return true;
+        }
+        else if (indirOpndOverflowed)
+        {
+            // ignore StElemI in case of indirOpnd overflow which is consistent with behavior of interpreter
+            stElem->UnlinkSrc1();
+            stElem->UnlinkDst();
+            stElem->Remove();
+            return false;
         }
         else
         {
