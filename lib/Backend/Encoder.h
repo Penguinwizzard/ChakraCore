@@ -49,19 +49,19 @@ private:
 #if defined(_M_IX86) || defined(_M_X64)
     InlineeFrameRecords *m_inlineeFrameRecords;
 
-    BOOL            ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize, uint * bufferCRC);
+    BOOL            ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize, uint * bufferCRC, BYTE ** pRawBuffer, size_t jumpTableSize);
     void            revertRelocList();
     template <bool restore> void  CopyMaps(OffsetList **m_origInlineeFrameRecords, OffsetList **m_origInlineeFrameMap, OffsetList **m_origPragmaInstrToRecordOffset, OffsetList **m_origOffsetBuffer);
 #endif
     void            InsertNopsForLabelAlignment(int nopCount, BYTE ** pDstBuffer);
-    void            CopyPartialBuffer(BYTE ** ptrDstBuffer, size_t &dstSize, BYTE * srcStart, BYTE * srcEnd, uint* pBufferCRC, BYTE** pCrcRawBuffer, uint* crcBytes, uint initialCRCSeed);
+    void            CopyPartialBufferAndCalculateCRC(BYTE ** ptrDstBuffer, size_t &dstSize, BYTE * srcStart, BYTE * srcEnd, uint* pBufferCRC, BYTE** pCrcRawBuffer, uint* crcBytes, uint initialCRCSeed, size_t jumpTableSize = 0);
     BYTE            FindNopCountFor16byteAlignment(size_t address);
 
     uint32          GetCurrentOffset() const;
     void            TryCopyAndAddRelocRecordsForSwitchJumpTableEntries(BYTE *codeStart, size_t codeSize, JmpTableList * jumpTableListForSwitchStatement, size_t totalJmpTableSizeInBytes);
 
     void            ValidateCRC(uint bufferCRC, uint initialCRCSeed, void* buffer, size_t count);
-    uint            CalculateCRC(uint bufferCRC, size_t count, void * buffer, BYTE** pCrcRawBuffer, uint* crcBytes, uint initialCRCSeed);
+    uint            CalculateCRC(uint bufferCRC, size_t count, void * buffer, BYTE** pCrcRawBuffer, uint* crcBytes, uint initialCRCSeed, bool isFinalBuffer = false);
     void            ValidateCRCOnFinalBuffer(BYTE * finalCodeBufferStart, size_t finalCodeSize, BYTE * oldCodeBufferStart, BYTE * oldCodeBufferEnd, uint initialCrcSeed, BYTE ** pCrcRawBuffer, uint * crcBytes, uint bufferCRC);
 };
 

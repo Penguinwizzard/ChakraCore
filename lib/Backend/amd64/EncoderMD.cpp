@@ -1565,21 +1565,23 @@ EncoderMD::ApplyRelocs(size_t codeBufferAddress_)
                     // short branch
                     pcrel = (uint32)(labelInstr->GetPC() - ((BYTE*)reloc->m_ptr + 1));
                     AssertMsg((int32)pcrel >= -128 && (int32)pcrel <= 127, "Offset doesn't fit in imm8.");
+                    Assert(*(BYTE*)relocAddress == 0);
                     *(BYTE*)relocAddress = (BYTE)pcrel;
                 }
                 else
                 {
                     pcrel = (uint32)(labelInstr->GetPC() - ((BYTE*)reloc->m_ptr + 4));
+                    Assert(*(uint32*)relocAddress == 0);
                     *(uint32 *)relocAddress = pcrel;
                 }
                 break;
-
             }
 
         case RelocTypeLabelUse:
             {
                 IR::LabelInstr *labelInstr = reloc->getBrTargetLabel();
                 AssertMsg(labelInstr->GetPC() != nullptr, "Branch to unemitted label?");
+                Assert(*(size_t *)relocAddress == 0);
                 *(size_t *)relocAddress = (size_t)(labelInstr->GetPC() - m_encoder->m_encodeBuffer + codeBufferAddress_);
                 break;
             }

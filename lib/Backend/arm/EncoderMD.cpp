@@ -1064,7 +1064,7 @@ EncoderMD::GenerateEncoding(IR::Instr* instr, IFORM iform, BYTE *pc, int32 size,
 
                 case STEP_T2_BRANCH20:
                     // Constant encoded with 20bits.
-                    EncodeReloc::New(&m_relocList, RelocTypeBranch20, m_pc, instr->AsBranchInstr()->GetTarget(), m_encoder->m_tempAlloc);
+                    EncodeReloc::Neaw(&m_relocList, RelocTypeBranch20, m_pc, instr->AsBranchInstr()->GetTarget(), m_encoder->m_tempAlloc);
                     continue;
 
                 case STEP_REG:
