@@ -56,6 +56,9 @@ ArenaAllocatorBase(__in LPCWSTR name, PageAllocator * pageAllocator, void(*outOf
     this->name = name;
     LogBegin();
 #endif
+#if DBG
+    needsDelayFreeList = false;
+#endif
     ArenaMemoryTracking::ArenaCreated(this, name);
 }
 
@@ -578,8 +581,16 @@ Free(void * buffer, size_t byteSize)
                 return;
             }
         }
-
-        this->freeList = TFreeListPolicy::Free(this->freeList, buffer, size);
+ 
+        void **policy = &this->freeList;
+#if DBG
+        if (needsDelayFreeList)
+        {
+            void *delayFreeList = reinterpret_cast<FreeObject **>(this->freeList) + (MaxSmallObjectSize >> ObjectAlignmentBitShift);
+            policy = &delayFreeList;
+        }
+#endif
+        *policy = TFreeListPolicy::Free(*policy, buffer, size);
 
 #ifdef ARENA_ALLOCATOR_FREE_LIST_SIZE
         this->freeListSize += size;
@@ -659,6 +670,7 @@ template <class TFreeListPolicy, size_t ObjectAlignmentBitShiftArg, bool Require
 void
 ArenaAllocatorBase<TFreeListPolicy, ObjectAlignmentBitShiftArg, RequireObjectAlignment, MaxObjectSize>::MergeDelayFreeList()
 {
+    Assert(needsDelayFreeList);
     TFreeListPolicy::MergeDelayFreeList(freeList);
 }
 #endif
@@ -747,10 +759,10 @@ void * InPlaceFreeListPolicy::New(ArenaAllocatorBase<InPlaceFreeListPolicy> * al
 {
 #if DBG
     // Allocate freeList followed by delayFreeList
-    return AllocatorNewNoThrowNoRecoveryArrayZ(ArenaAllocator, allocator, FreeObject *, 2 * buckets);
-#else
-    return AllocatorNewNoThrowNoRecoveryArrayZ(ArenaAllocator, allocator, FreeObject *, buckets);
+    if (allocator->HasDelayFreeList())
+        return AllocatorNewNoThrowNoRecoveryArrayZ(ArenaAllocator, allocator, FreeObject *, 2 * buckets);
 #endif
+    return AllocatorNewNoThrowNoRecoveryArrayZ(ArenaAllocator, allocator, FreeObject *, buckets);
 }
 
 void * InPlaceFreeListPolicy::Allocate(void * policy, size_t size)
@@ -784,12 +796,7 @@ void * InPlaceFreeListPolicy::Allocate(void * policy, size_t size)
 void * InPlaceFreeListPolicy::Free(void * policy, void * object, size_t size)
 {
     Assert(policy);
-#if DBG
-    // delay free list is used in debug mode
-    void * freeList = reinterpret_cast<FreeObject **>(policy) + buckets;
-#else
     void * freeList = policy;
-#endif
     FreeObject ** freeObjectLists = reinterpret_cast<FreeObject **>(freeList);
     FreeObject * freeObject = reinterpret_cast<FreeObject *>(object);
     size_t index = (size >> ArenaAllocator::ObjectAlignmentBitShift) - 1;
@@ -807,7 +814,7 @@ void * InPlaceFreeListPolicy::Reset(void * policy)
 #if DBG
 void InPlaceFreeListPolicy::MergeDelayFreeList(void * freeList)
 {
-    Assert(freeList);    
+    if (!freeList) return;
     
     FreeObject ** freeObjectLists = reinterpret_cast<FreeObject **>(freeList);
     FreeObject ** delayFreeObjectLists = freeObjectLists + buckets;
@@ -909,7 +916,6 @@ void * StandAloneFreeListPolicy::Free(void * policy, void * object, size_t size)
         entry->object = object;
         entry->next = oldFreeObjectList;
     }
-
     return _this;
 }
 

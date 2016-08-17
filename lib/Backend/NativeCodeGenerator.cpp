@@ -862,6 +862,9 @@ NativeCodeGenerator::CodeGen(PageAllocator * pageAllocator, CodeGenWorkItem* wor
 #endif
 
     NoRecoverMemoryJitArenaAllocator funcAlloc(_u("BE-FuncAlloc"), pageAllocator, Js::Throw::OutOfMemory);
+#if DBG
+    funcAlloc.SetNeedsDelayFreeList();
+#endif
     Js::ReadOnlyDynamicProfileInfo profileInfo(
         body->HasDynamicProfileInfo() ? body->GetAnyDynamicProfileInfo() : nullptr,
         foreground ? nullptr : &funcAlloc);

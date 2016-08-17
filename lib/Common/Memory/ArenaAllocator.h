@@ -150,6 +150,9 @@ private:
 #ifdef PROFILE_MEM
     struct ArenaMemoryData * memoryData;
 #endif
+#if DBG
+    bool needsDelayFreeList;
+#endif
 
 public:
     static const size_t ObjectAlignmentBitShift = ObjectAlignmentBitShiftArg;
@@ -229,6 +232,14 @@ public:
     char* Realloc(void* buffer, DECLSPEC_GUARD_OVERFLOW size_t existingBytes, DECLSPEC_GUARD_OVERFLOW size_t requestedBytes);
     void Free(void * buffer, size_t byteSize);
 #if DBG
+    bool HasDelayFreeList() const
+    {
+        return needsDelayFreeList;
+    }
+    void SetNeedsDelayFreeList()
+    {
+        needsDelayFreeList = true;
+    }
     void MergeDelayFreeList();
 #endif
 #ifdef TRACK_ALLOC
@@ -532,12 +543,6 @@ public:
         bvFreeList = nullptr;
         ArenaAllocator::Clear();
     }
-#if DBG
-    void MergeDelayFreeList()
-    {
-        ArenaAllocator::MergeDelayFreeList();
-    }
-#endif
 };
 
 // This allocator by default on OOM does not attempt to recover memory from Recycler, just throws OOM.

@@ -229,7 +229,10 @@ void Opnd::Free(Func *func)
 
     };
 #if DBG
-    this->isDeleted = true;
+    if (func->m_alloc->HasDelayFreeList())
+    {
+        this->isDeleted = true;
+    }
 #endif
 }
 
