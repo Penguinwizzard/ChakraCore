@@ -31,7 +31,7 @@ private:
     union
     {
         IR::LabelInstr *    m_shortBrLabel;     // NULL if not a short branch
-        uint32              m_origInlineeOffset;
+        uint32              m_InlineeOffset;
         BYTE                m_nopCount;         // for AlignedLabel, how many nops do we need to be 16-byte aligned
     };
 
@@ -179,12 +179,12 @@ public:
 
     uint32 GetInlineOffset()
     {
-        return m_origInlineeOffset;
+        return m_InlineeOffset;
     }
 
     void SetInlineOffset(uint32 offset)
     {
-        m_origInlineeOffset = offset;
+        m_InlineeOffset = offset;
     }
 };
 

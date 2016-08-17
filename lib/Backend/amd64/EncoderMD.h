@@ -33,7 +33,7 @@ private:
     {
         IR::LabelInstr* m_labelInstr;        // ptr to Br Label
         BYTE            m_nopCount;
-        uint64          m_origInlineeOffset;
+        uint64          m_InlineeOffset;
     };
     bool                m_isShortBr;
 
@@ -154,12 +154,12 @@ public:
 
     uint64 GetInlineOffset()
     {
-        return m_origInlineeOffset;
+        return m_InlineeOffset;
     }
 
     void SetInlineOffset(uint64 offset)
     {
-        m_origInlineeOffset = offset;
+        m_InlineeOffset = offset;
     }
 };
 
