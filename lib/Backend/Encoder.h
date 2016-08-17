@@ -49,7 +49,7 @@ private:
 #if defined(_M_IX86) || defined(_M_X64)
     InlineeFrameRecords *m_inlineeFrameRecords;
 
-    BOOL            ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize, uint * bufferCRC, BYTE ** pRawBuffer, size_t jumpTableSize);
+    BOOL            ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize, uint * brShortenedBufferCRC, BYTE ** pRawBuffer, uint bufferCrcToValidate, size_t jumpTableSize);
     void            revertRelocList();
     template <bool restore> void  CopyMaps(OffsetList **m_origInlineeFrameRecords, OffsetList **m_origInlineeFrameMap, OffsetList **m_origPragmaInstrToRecordOffset, OffsetList **m_origOffsetBuffer);
 #endif

@@ -1580,6 +1580,7 @@ EncoderMD::ApplyRelocs(size_t codeBufferAddress_, uint * bufferCRC, bool isCalcO
                         *(uint32 *)relocAddress = pcrel;
                     }
                 }
+
                 *bufferCRC = Encoder::CalculateCRC(*bufferCRC, pcrel);
                 break;
             }

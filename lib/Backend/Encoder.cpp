@@ -254,7 +254,7 @@ Encoder::Encode()
     {
         uint brShortenedbufferCRC = initialCRCSeed;
         BYTE * rawBufferForShorten = AnewArrayZ(m_tempAlloc, BYTE, codeSize);
-        isSuccessBrShortAndLoopAlign = ShortenBranchesAndLabelAlign(&m_encodeBuffer, &codeSize, &brShortenedbufferCRC, &rawBufferForShorten, totalJmpTableSizeInBytes);
+        isSuccessBrShortAndLoopAlign = ShortenBranchesAndLabelAlign(&m_encodeBuffer, &codeSize, &brShortenedbufferCRC, &rawBufferForShorten, bufferCRC, totalJmpTableSizeInBytes);
         if (isSuccessBrShortAndLoopAlign)
         {
             bufferCRC = brShortenedbufferCRC;
@@ -701,7 +701,7 @@ void Encoder::ValidateCRCOnFinalBuffer(BYTE * finalCodeBufferStart, size_t final
     }
 
     finalBufferCRC = CalculateCRC(finalBufferCRC, crcSizeToCompute, currentStartAddress, pCrcRawBuffer, crcBytes, initialCrcSeed, true);
-    m_encoderMD.ApplyRelocs((uint32)finalCodeBufferStart, &finalBufferCRC, true);
+    m_encoderMD.ApplyRelocs((size_t)finalCodeBufferStart, &finalBufferCRC, true);
 
     Assert(*crcBytes == finalCodeSize);
 
@@ -722,10 +722,16 @@ uint Encoder::CalculateCRC(uint bufferCRC, size_t count, void * buffer, BYTE** p
     for (uint index = 0; index < count; index++)
     {
         bufferCRC = _mm_crc32_u32(bufferCRC, *((BYTE*)buffer + index));
-        if (pCrcRawBuffer != nullptr && crcBytes != nullptr && !isFinalBuffer)
+        if (!isFinalBuffer)
         {
-            *((*pCrcRawBuffer) + *crcBytes) = *((BYTE*)buffer + index);
-            *crcBytes = *crcBytes + 1;
+            if (pCrcRawBuffer != nullptr)
+            {
+                *((*pCrcRawBuffer) + *crcBytes) = *((BYTE*)buffer + index);
+            }
+            if (crcBytes != nullptr)
+            {
+                *crcBytes = *crcBytes + 1;
+            }
         }
     }
     return bufferCRC;
@@ -753,7 +759,7 @@ void Encoder::ValidateCRC(uint bufferCRC, uint initialCRCSeed, void* buffer, siz
 /// Also align LoopTop Label and TryCatchLabel
 ///----------------------------------------------------------------------------
 BOOL
-Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize, uint * pBufferCRC, BYTE ** pRawBuffer, size_t jumpTableSize)
+Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize, uint * pShortenedBufferCRC, BYTE ** pRawBuffer, uint bufferCrcToValidate, size_t jumpTableSize)
 {
 #ifdef  ENABLE_DEBUG_CONFIG_OPTIONS
     static uint32 globalTotalBytesSaved = 0, globalTotalBytesWithoutShortening = 0;
@@ -922,8 +928,9 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize, uin
     BYTE* tmpBuffer = AnewArray(m_tempAlloc, BYTE, newCodeSize);
     
     uint crcBytes = 0;
-    uint initialCRCseed = *pBufferCRC;
-
+    uint crcBytes1 = 0;
+    uint initialCRCseed = *pShortenedBufferCRC;
+    uint srcBufferCrc = *pShortenedBufferCRC;   //This has the intial Random CRC seed to start with.
 
     // start copying to new buffer
     // this can possibly be done during fixing, but there is no evidence it is an overhead to justify the complexity.
@@ -982,7 +989,11 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize, uin
             AnalysisAssert(dst_size >= src_size);
 
             memcpy_s(dst_p, dst_size, from, src_size);
-            *pBufferCRC = CalculateCRC(*pBufferCRC, src_size, dst_p, pRawBuffer, &crcBytes, initialCRCseed);
+
+            srcBufferCrc = CalculateCRC(srcBufferCrc, (BYTE*)reloc.m_origPtr - from + 4, from, nullptr, &crcBytes1, initialCRCseed);
+            *pShortenedBufferCRC = CalculateCRC(*pShortenedBufferCRC, src_size, dst_p, pRawBuffer, &crcBytes, initialCRCseed);
+
+            ValidateCRC(srcBufferCrc, initialCRCseed, buffStart, crcBytes1);
 
             dst_p += src_size;
             dst_size -= src_size;
@@ -992,7 +1003,20 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize, uin
             AnalysisAssert(dst_p < tmpBuffer + newCodeSize);
             *dst_p = (*opcodeByte == 0xe9) ? (BYTE)0xeb : (BYTE)(*opcodeByte - 0x10);
             *(dst_p + 1) = 0;   // imm8
-            *pBufferCRC = CalculateCRC(*pBufferCRC, 2, dst_p, pRawBuffer, &crcBytes, initialCRCseed);
+
+            ////REVIEW : Add a loop count to the Calculate CRC api.
+            //srcBufferCrc = CalculateCRC(srcBufferCrc, 0);
+            //srcBufferCrc = CalculateCRC(srcBufferCrc, 0);
+            
+/*
+            *((BYTE*)(pRawBuffer + crcBytes1)) = 0;
+            crcBytes1++;
+            *((BYTE*)(pRawBuffer + crcBytes1)) = 0;
+            crcBytes1++;*/
+
+            //ValidateCRC(srcBufferCrc, initialCRCseed, buffStart, crcBytes1);
+
+            *pShortenedBufferCRC = CalculateCRC(*pShortenedBufferCRC, 2, dst_p, pRawBuffer, &crcBytes, initialCRCseed);
             dst_p += 2; // 1 byte for opcode + 1 byte for imm8
             dst_size -= 2;
             from = (BYTE*)reloc.m_origPtr + 4;
@@ -1007,7 +1031,10 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize, uin
             AssertMsg((((uint32)(label->GetPC() - buffStart)) & 0xf) == 0, "Misaligned Label");
 
             to = reloc.getLabelOrigPC() - 1;
-            CopyPartialBufferAndCalculateCRC(&dst_p, dst_size, from, to, pBufferCRC, pRawBuffer, &crcBytes, initialCRCseed);
+            
+            CopyPartialBufferAndCalculateCRC(&dst_p, dst_size, from, to, pShortenedBufferCRC, pRawBuffer, &crcBytes, initialCRCseed);
+            srcBufferCrc = CalculateCRC(srcBufferCrc, to - from + 1, from, nullptr, &crcBytes1, initialCRCseed);
+            ValidateCRC(srcBufferCrc, initialCRCseed, buffStart, crcBytes1);
 
 #ifdef  ENABLE_DEBUG_CONFIG_OPTIONS
             if (PHASE_TRACE(Js::LoopAlignPhase, this->m_func))
@@ -1021,7 +1048,7 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize, uin
 #endif
             BYTE * tmpDst_p = dst_p;
             InsertNopsForLabelAlignment(nop_count, &dst_p);
-            *pBufferCRC = CalculateCRC(*pBufferCRC, nop_count, tmpDst_p, pRawBuffer, &crcBytes, initialCRCseed);
+            *pShortenedBufferCRC = CalculateCRC(*pShortenedBufferCRC, nop_count, tmpDst_p, pRawBuffer, &crcBytes, initialCRCseed);
 
             dst_size -= nop_count;
             from = to + 1;
@@ -1029,9 +1056,19 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize, uin
     }
     // copy last chunk
     //Exclude jumpTable content from CRC calculation
-    CopyPartialBufferAndCalculateCRC(&dst_p, dst_size, from, buffStart + *codeSize - 1, pBufferCRC, pRawBuffer, &crcBytes, initialCRCseed, jumpTableSize);
+    CopyPartialBufferAndCalculateCRC(&dst_p, dst_size, from, buffStart + *codeSize - 1, pShortenedBufferCRC, pRawBuffer, &crcBytes, initialCRCseed, jumpTableSize);
+    srcBufferCrc = CalculateCRC(srcBufferCrc, buffStart + *codeSize - from - jumpTableSize, from, nullptr, &crcBytes1, initialCRCseed);
+    ValidateCRC(srcBufferCrc, initialCRCseed, buffStart, crcBytes1);
 
     m_encoderMD.UpdateRelocListWithNewBuffer(relocList, tmpBuffer, buffStart, buffEnd);
+
+    Assert(crcBytes1 == *codeSize - jumpTableSize);
+
+    if (srcBufferCrc != bufferCrcToValidate)
+    {
+        Assert(false);
+        Fatal();
+    }
 
     // switch buffers
     *codeStart = tmpBuffer;
