@@ -3607,6 +3607,10 @@ namespace Js
         PCWSTR GetDebuggerScopeTypeString(DiagExtraScopesType scopeType);
 #endif
 
+#if ENABLE_TTD
+        Js::PropertyId GetPropertyIdForSlotIndex_TTD(uint32 slotIndex) const;
+#endif
+
     public:
         // The list of scope properties in this scope object.
         // For with scope:  Has 1 property that represents the scoped object.
