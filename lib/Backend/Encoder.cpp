@@ -247,8 +247,9 @@ Encoder::Encode()
     
     ptrdiff_t codeSize = m_pc - m_encodeBuffer + totalJmpTableSizeInBytes;
 
-#if defined(_M_IX86) || defined(_M_X64)
     BOOL isSuccessBrShortAndLoopAlign = false;
+
+#if defined(_M_IX86) || defined(_M_X64)
     // Shorten branches. ON by default
     if (!PHASE_OFF(Js::BrShortenPhase, m_func))
     {
@@ -313,14 +314,14 @@ Encoder::Encode()
     });
 
     // Relocs
-    m_encoderMD.ApplyRelocs((size_t) workItem->GetCodeAddress(), &bufferCRC);
+    m_encoderMD.ApplyRelocs((size_t) workItem->GetCodeAddress(), &bufferCRC, isSuccessBrShortAndLoopAlign);
 
     workItem->RecordNativeCode(m_func, m_encodeBuffer);
 
     //TODO: Clean up the math calculation in the arguments. - clean up the arguments
     //TODO: Remove all debug related information.
     uint crcBytes = 0;
-    ValidateCRCOnFinalBuffer((BYTE*)workItem->GetCodeAddress(), codeSize - totalJmpTableSizeInBytes, m_encodeBuffer, m_encodeBuffer + codeSize - totalJmpTableSizeInBytes, initialCRCSeed, &rawBuffer, &crcBytes, bufferCRC);
+    ValidateCRCOnFinalBuffer((BYTE*)workItem->GetCodeAddress(), codeSize - totalJmpTableSizeInBytes, m_encodeBuffer, m_encodeBuffer + codeSize - totalJmpTableSizeInBytes, initialCRCSeed, &rawBuffer, &crcBytes, bufferCRC, isSuccessBrShortAndLoopAlign);
 
     m_func->GetScriptContext()->GetThreadContext()->SetValidCallTargetForCFG((PVOID) workItem->GetCodeAddress());
 
@@ -648,7 +649,7 @@ void Encoder::RecordInlineeFrame(Func* inlinee, uint32 currentOffset)
 }
 
 
-void Encoder::ValidateCRCOnFinalBuffer(BYTE * finalCodeBufferStart, size_t finalCodeSize, BYTE * oldCodeBufferStart, BYTE * oldCodeBufferEnd, uint initialCrcSeed, BYTE ** pCrcRawBuffer, uint * crcBytes, uint bufferCRC)
+void Encoder::ValidateCRCOnFinalBuffer(BYTE * finalCodeBufferStart, size_t finalCodeSize, BYTE * oldCodeBufferStart, BYTE * oldCodeBufferEnd, uint initialCrcSeed, BYTE ** pCrcRawBuffer, uint * crcBytes, uint bufferCRC, BOOL isSuccessBrShortAndLoopAlign)
 {
     RelocList * relocList = m_encoderMD.GetRelocList();
 
@@ -701,7 +702,7 @@ void Encoder::ValidateCRCOnFinalBuffer(BYTE * finalCodeBufferStart, size_t final
     }
 
     finalBufferCRC = CalculateCRC(finalBufferCRC, crcSizeToCompute, currentStartAddress, pCrcRawBuffer, crcBytes, initialCrcSeed, true);
-    m_encoderMD.ApplyRelocs((size_t)finalCodeBufferStart, &finalBufferCRC, true);
+    m_encoderMD.ApplyRelocs((size_t)finalCodeBufferStart, &finalBufferCRC, isSuccessBrShortAndLoopAlign, true);
 
     Assert(*crcBytes == finalCodeSize);
 

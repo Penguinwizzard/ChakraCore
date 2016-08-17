@@ -1337,7 +1337,7 @@ EncoderMD::FixRelocListEntry(uint32 index, int32 totalBytesSaved, BYTE *buffStar
                 uint32 count = field & 0xf;
 
                 AssertMsg(offset < (uint32)(buffEnd - buffStart), "Inlinee entry offset out of range");
-                *((uint32*) relocRecord.m_origPtr) = ((offset - totalBytesSaved) << 4) | count;
+                relocRecord.SetInlineOffset(((offset - totalBytesSaved) << 4) | count);
             }
             // adjust the ptr to the buffer itself
             relocRecord.m_ptr = (BYTE*) relocRecord.m_ptr - totalBytesSaved;
@@ -1392,7 +1392,7 @@ EncoderMD::FixMaps(uint32 brOffset, int32 bytesSaved, uint32 *inlineeFrameRecord
 /// before we copy the contents of the temporary buffer to the target buffer.
 ///----------------------------------------------------------------------------
 void
-EncoderMD::ApplyRelocs(uint32 codeBufferAddress, uint * bufferCRC, bool isCalcOnlyCRC)
+EncoderMD::ApplyRelocs(uint32 codeBufferAddress, uint * bufferCRC, BOOL isBrShorteningSucceeded, bool isCalcOnlyCRC)
 {
     for (int32 i = 0; i < m_relocList->Count(); i++)
     {
@@ -1455,9 +1455,16 @@ EncoderMD::ApplyRelocs(uint32 codeBufferAddress, uint * bufferCRC, bool isCalcOn
                 *bufferCRC = Encoder::CalculateCRC(*bufferCRC, offset);
                 break;
             }
+        case RelocTypeInlineeEntryOffset:
+            {
+                if (isBrShorteningSucceeded)
+                {
+                    *((size_t*)reloc->m_origPtr) = reloc->GetInlineOffset();
+                }
+                break;
+            }
         case RelocTypeLabel:
         case RelocTypeAlignedLabel:
-        case RelocTypeInlineeEntryOffset:
             break;
         default:
             AssertMsg(UNREACHED, "Unknown reloc type");

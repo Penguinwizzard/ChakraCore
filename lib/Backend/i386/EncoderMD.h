@@ -56,12 +56,7 @@ public:
         else
         {
             m_origPtr = ptr;
-            // in case we have to revert, we need to store original offset in code buffer
-            if (type == RelocTypeInlineeEntryOffset)
-            {
-                m_origInlineeOffset = *((uint32*)m_origPtr);
-            }
-            else if (type == RelocTypeBranch)
+            if (type == RelocTypeBranch)
             {
                 m_shortBrLabel = NULL;
                 m_labelInstr = labelInstr;
@@ -90,12 +85,6 @@ public:
             m_nopCount = 0;
 
             return;
-        }
-
-        // re-write original inlinee offset to code buffer
-        if (m_type == RelocTypeInlineeEntryOffset)
-        {
-            *((uint32*)m_origPtr) = m_origInlineeOffset;
         }
 
         if (m_type == RelocTypeBranch)
@@ -187,6 +176,16 @@ public:
             m_shortBrLabel->GetPC() - ((BYTE*)m_ptr + 1) >= -128 &&
             m_shortBrLabel->GetPC() - ((BYTE*)m_ptr + 1) <= 127;
     }
+
+    uint32 GetInlineOffset()
+    {
+        return m_origInlineeOffset;
+    }
+
+    void SetInlineOffset(uint32 offset)
+    {
+        m_origInlineeOffset = offset;
+    }
 };
 
 
@@ -208,7 +207,7 @@ public:
 
     ptrdiff_t       Encode(IR::Instr * instr, BYTE *pc, BYTE* beginCodeAddress = nullptr);
     void            Init(Encoder *encoder);
-    void            ApplyRelocs(uint32 codeBufferAddress, uint * bufferCRC, bool isCalcOnlyCRC = false);
+    void            ApplyRelocs(uint32 codeBufferAddress, uint * bufferCRC, BOOL isBrShorteningSucceeded, bool isCalcOnlyCRC = false);
     uint            GetRelocDataSize(EncodeRelocAndLabels *reloc);
     void            EncodeInlineeCallInfo(IR::Instr *instr, uint32 offset);
     static bool     TryConstFold(IR::Instr *instr, IR::RegOpnd *regOpnd);

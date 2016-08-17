@@ -42,6 +42,9 @@ public:
     {
         m_type = type;
         m_ptr = ptr;
+
+        //TODO: Initialize other variables here.
+
         if (type == RelocTypeLabel)
         {
             // preserve original PC for labels
@@ -51,12 +54,8 @@ public:
         else
         {
             m_origPtr = ptr;
-            // in case we have to revert, we need to store original offset in code buffer
-            if (type == RelocTypeInlineeEntryOffset)
-            {
-                m_origInlineeOffset = *((uint64*)m_origPtr);
-            }
-            else if (type == RelocTypeBranch)
+            
+            if (type == RelocTypeBranch)
             {
                 Assert(labelInstr);
                 m_labelInstr = labelInstr;
@@ -80,12 +79,6 @@ public:
             setLabelCurrPC(getLabelOrigPC());
             m_nopCount = 0;
             return;
-        }
-
-        // re-write original inlinee offset to code buffer
-        if (m_type == RelocTypeInlineeEntryOffset)
-        {
-            *(uint64*) m_origPtr = m_origInlineeOffset;
         }
 
         if (m_type == RelocTypeBranch)
@@ -158,6 +151,16 @@ public:
             getBrTargetLabel()->GetPC() - ((BYTE*)m_ptr + 1) >= -128 &&
             getBrTargetLabel()->GetPC() - ((BYTE*)m_ptr + 1) <= 127;
     }
+
+    uint64 GetInlineOffset()
+    {
+        return m_origInlineeOffset;
+    }
+
+    void SetInlineOffset(uint64 offset)
+    {
+        m_origInlineeOffset = offset;
+    }
 };
 
 
@@ -178,7 +181,7 @@ public:
     EncoderMD(Func * func) : m_func(func) {}
     ptrdiff_t       Encode(IR::Instr * instr, BYTE *pc, BYTE* beginCodeAddress = nullptr);
     void            Init(Encoder *encoder);
-    void            ApplyRelocs(size_t codeBufferAddress, uint* bufferCRC, bool isCalcOnlyCRC = false);
+    void            ApplyRelocs(size_t codeBufferAddress, uint* bufferCRC, BOOL isBrShorteningSucceeded, bool isCalcOnlyCRC = false);
     uint            GetRelocDataSize(EncodeRelocAndLabels *reloc);
     void            EncodeInlineeCallInfo(IR::Instr *instr, uint32 offset);
     static bool     TryConstFold(IR::Instr *instr, IR::RegOpnd *regOpnd);
