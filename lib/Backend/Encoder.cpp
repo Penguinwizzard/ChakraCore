@@ -310,14 +310,14 @@ Encoder::Encode()
     });
 
     // Relocs
-    m_encoderMD.ApplyRelocs((size_t) workItem->GetCodeAddress(), &bufferCRC, isSuccessBrShortAndLoopAlign);
+    m_encoderMD.ApplyRelocs((size_t) workItem->GetCodeAddress(), codeSize, &bufferCRC, isSuccessBrShortAndLoopAlign);
 
     workItem->RecordNativeCode(m_func, m_encodeBuffer);
 
     //TODO: Clean up the math calculation in the arguments. - clean up the arguments
     //TODO: Remove all debug related information.
     uint crcBytes = 0;
-    ValidateCRCOnFinalBuffer((BYTE*)workItem->GetCodeAddress(), codeSize - totalJmpTableSizeInBytes, m_encodeBuffer, m_encodeBuffer + codeSize - totalJmpTableSizeInBytes, initialCRCSeed, &rawBuffer, &crcBytes, bufferCRC, isSuccessBrShortAndLoopAlign);
+    ValidateCRCOnFinalBuffer((BYTE*)workItem->GetCodeAddress(), codeSize, totalJmpTableSizeInBytes, m_encodeBuffer, m_encodeBuffer + codeSize - totalJmpTableSizeInBytes, initialCRCSeed, &rawBuffer, &crcBytes, bufferCRC, isSuccessBrShortAndLoopAlign);
 
     m_func->GetScriptContext()->GetThreadContext()->SetValidCallTargetForCFG((PVOID) workItem->GetCodeAddress());
 
@@ -645,7 +645,7 @@ void Encoder::RecordInlineeFrame(Func* inlinee, uint32 currentOffset)
 }
 
 
-void Encoder::ValidateCRCOnFinalBuffer(BYTE * finalCodeBufferStart, size_t finalCodeSize, BYTE * oldCodeBufferStart, BYTE * oldCodeBufferEnd, uint initialCrcSeed, BYTE ** pCrcRawBuffer, uint * crcBytes, uint bufferCRC, BOOL isSuccessBrShortAndLoopAlign)
+void Encoder::ValidateCRCOnFinalBuffer(BYTE * finalCodeBufferStart, size_t finalCodeSize, size_t jumpTableSize, BYTE * oldCodeBufferStart, BYTE * oldCodeBufferEnd, uint initialCrcSeed, BYTE ** pCrcRawBuffer, uint * crcBytes, uint bufferCRC, BOOL isSuccessBrShortAndLoopAlign)
 {
     RelocList * relocList = m_encoderMD.GetRelocList();
 
@@ -653,46 +653,51 @@ void Encoder::ValidateCRCOnFinalBuffer(BYTE * finalCodeBufferStart, size_t final
     BYTE * currentEndAddress = nullptr;
     size_t crcSizeToCompute = 0;
 
+    size_t finalCodeSizeWithoutJumpTable = finalCodeSize - jumpTableSize;
+
     uint finalBufferCRC = initialCrcSeed;
 
     BYTE * oldPtr = nullptr;
 
-    for (int index = 0; index < relocList->Count(); index++)
+    if (relocList != nullptr)
     {
-        EncodeRelocAndLabels * relocTuple = &relocList->Item(index);
-
-        BYTE* finalBufferRelocTuplePtr = (BYTE*)relocTuple->m_ptr - oldCodeBufferStart + finalCodeBufferStart;
-
-        uint relocDataSize = m_encoderMD.GetRelocDataSize(relocTuple);
-        if (relocDataSize != 0 && finalBufferRelocTuplePtr >= finalCodeBufferStart && finalBufferRelocTuplePtr < (finalCodeBufferStart + finalCodeSize))
+        for (int index = 0; index < relocList->Count(); index++)
         {
-            Assert(oldPtr == nullptr || oldPtr < finalBufferRelocTuplePtr);
-            oldPtr = finalBufferRelocTuplePtr;
+            EncodeRelocAndLabels * relocTuple = &relocList->Item(index);
 
-            currentEndAddress = finalBufferRelocTuplePtr;
-            crcSizeToCompute = currentEndAddress - currentStartAddress;
-#if DBG
-            for (uint i = 0; i < crcSizeToCompute; i++)
+            BYTE* finalBufferRelocTuplePtr = (BYTE*)relocTuple->m_ptr - oldCodeBufferStart + finalCodeBufferStart;
+
+            uint relocDataSize = m_encoderMD.GetRelocDataSize(relocTuple);
+            if (relocDataSize != 0 && finalBufferRelocTuplePtr >= finalCodeBufferStart && finalBufferRelocTuplePtr < (finalCodeBufferStart + finalCodeSizeWithoutJumpTable))
             {
-                Assert(*(currentStartAddress + i) == *(*pCrcRawBuffer + *crcBytes));
-                *crcBytes = *crcBytes + 1;
-            }
-#endif
-            finalBufferCRC = CalculateCRC(finalBufferCRC, crcSizeToCompute, currentStartAddress, pCrcRawBuffer, crcBytes, initialCrcSeed, true);
-            //TODO: Clean up this for loop and move to a function CRC.
-            for (uint i = 0; i < relocDataSize; i++)
-            {
-                finalBufferCRC = _mm_crc32_u32(finalBufferCRC, 0);
+                Assert(oldPtr == nullptr || oldPtr < finalBufferRelocTuplePtr);
+                oldPtr = finalBufferRelocTuplePtr;
+
+                currentEndAddress = finalBufferRelocTuplePtr;
+                crcSizeToCompute = currentEndAddress - currentStartAddress;
 #if DBG
-                Assert(*(*pCrcRawBuffer + *crcBytes) == 0);
-                *crcBytes = *crcBytes + 1;
+                for (uint i = 0; i < crcSizeToCompute; i++)
+                {
+                    Assert(*(currentStartAddress + i) == *(*pCrcRawBuffer + *crcBytes));
+                    *crcBytes = *crcBytes + 1;
+                }
 #endif
+                finalBufferCRC = CalculateCRC(finalBufferCRC, crcSizeToCompute, currentStartAddress, pCrcRawBuffer, crcBytes, initialCrcSeed, true);
+                //TODO: Clean up this for loop and move to a function CRC.
+                for (uint i = 0; i < relocDataSize; i++)
+                {
+                    finalBufferCRC = _mm_crc32_u32(finalBufferCRC, 0);
+#if DBG
+                    Assert(*(*pCrcRawBuffer + *crcBytes) == 0);
+                    *crcBytes = *crcBytes + 1;
+#endif
+                }
+                currentStartAddress = currentEndAddress + relocDataSize;
             }
-            currentStartAddress = currentEndAddress + relocDataSize;
         }
     }
 
-    currentEndAddress = finalCodeBufferStart + finalCodeSize;
+    currentEndAddress = finalCodeBufferStart + finalCodeSizeWithoutJumpTable;
     crcSizeToCompute = currentEndAddress - currentStartAddress;
 
 #if DBG
@@ -704,13 +709,37 @@ void Encoder::ValidateCRCOnFinalBuffer(BYTE * finalCodeBufferStart, size_t final
 #endif
 
     finalBufferCRC = CalculateCRC(finalBufferCRC, crcSizeToCompute, currentStartAddress, pCrcRawBuffer, crcBytes, initialCrcSeed, true);
-    m_encoderMD.ApplyRelocs((size_t)finalCodeBufferStart, &finalBufferCRC, isSuccessBrShortAndLoopAlign, true);
+    m_encoderMD.ApplyRelocs((size_t)finalCodeBufferStart, finalCodeSize, &finalBufferCRC, isSuccessBrShortAndLoopAlign, true);
 
-    Assert(*crcBytes == finalCodeSize);
+    Assert(*crcBytes + jumpTableSize == finalCodeSize);
 
     if (finalBufferCRC != bufferCRC)
     {
         Assert(false); //Remove
+        Fatal();
+    }
+}
+
+void Encoder::EnsureRelocEntryIntegrity(size_t newBufferStartAddress, size_t codeSize, size_t oldBufferAddress, size_t relocAddress, uint offsetBytes, ptrdiff_t opndData, bool isRelativeAddr)
+{
+    size_t targetBrAddress = 0;
+    
+    Assert(relocAddress >= oldBufferAddress);
+
+    size_t newBufferRelocAddr = relocAddress - oldBufferAddress + newBufferStartAddress;
+
+    if (isRelativeAddr)
+    {
+        targetBrAddress = (size_t)newBufferRelocAddr + offsetBytes + opndData;
+    }
+    else
+    {
+        targetBrAddress = (size_t)opndData;
+    }
+
+    if (targetBrAddress < newBufferStartAddress || targetBrAddress >= (newBufferStartAddress + codeSize))
+    {
+        Assert(false);
         Fatal();
     }
 }
@@ -1025,6 +1054,24 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize, uin
             dst_p += 2; // 1 byte for opcode + 1 byte for imm8
             dst_size -= 2;
             from = (BYTE*)reloc.m_origPtr + 4;
+        }
+        else if (reloc.m_type == RelocTypeInlineeEntryOffset)
+        {
+            to = (BYTE*)reloc.m_origPtr - 1;
+            CopyPartialBufferAndCalculateCRC(&dst_p, dst_size, from, to, pShortenedBufferCRC, pRawBuffer, &crcBytes, initialCRCseed);
+
+            *(size_t*)dst_p = reloc.GetInlineOffset();
+
+            *pShortenedBufferCRC = CalculateCRC(*pShortenedBufferCRC, sizeof(size_t), dst_p, pRawBuffer, &crcBytes, initialCRCseed);
+
+            dst_p += sizeof(size_t);
+            dst_size -= sizeof(size_t);
+
+            srcBufferCrc = CalculateCRC(srcBufferCrc, (BYTE*)reloc.m_origPtr + sizeof(size_t) - from , from, nullptr, &crcBytes1, initialCRCseed);
+#if DBG
+            ValidateCRC(srcBufferCrc, initialCRCseed, buffStart, crcBytes1);
+#endif
+            from = (BYTE*)reloc.m_origPtr + sizeof(size_t);
         }
         // insert NOPs for aligned labels
         else if ((!PHASE_OFF(Js::LoopAlignPhase, m_func) && reloc.isAlignedLabel()) && reloc.getLabelNopCount() > 0)

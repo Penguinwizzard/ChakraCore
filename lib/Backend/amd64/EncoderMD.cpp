@@ -1531,7 +1531,7 @@ EncoderMD::FixMaps(uint32 brOffset, uint32 bytesSaved, uint32 *inlineeFrameRecor
 ///----------------------------------------------------------------------------
 
 void
-EncoderMD::ApplyRelocs(size_t codeBufferAddress_, uint * bufferCRC, BOOL isBrShorteningSucceeded, bool isCalcOnlyCRC)
+EncoderMD::ApplyRelocs(size_t codeBufferAddress_, size_t codeSize, uint * bufferCRC, BOOL isBrShorteningSucceeded, bool isCalcOnlyCRC)
 {
     if (m_relocList == nullptr)
     {
@@ -1570,6 +1570,10 @@ EncoderMD::ApplyRelocs(size_t codeBufferAddress_, uint * bufferCRC, BOOL isBrSho
                         Assert(*(BYTE*)relocAddress == 0);
                         *(BYTE*)relocAddress = (BYTE)pcrel;
                     }
+                    else
+                    {
+                        Encoder::EnsureRelocEntryIntegrity(codeBufferAddress_, codeSize, (size_t)m_encoder->m_encodeBuffer, (size_t)relocAddress, sizeof(BYTE), (ptrdiff_t)labelInstr->GetPC() - ((ptrdiff_t)reloc->m_ptr + 1));
+                    }
                 }
                 else
                 {
@@ -1579,9 +1583,14 @@ EncoderMD::ApplyRelocs(size_t codeBufferAddress_, uint * bufferCRC, BOOL isBrSho
                         Assert(*(uint32*)relocAddress == 0);
                         *(uint32 *)relocAddress = pcrel;
                     }
+                    else
+                    {
+                        Encoder::EnsureRelocEntryIntegrity(codeBufferAddress_, codeSize, (size_t)m_encoder->m_encodeBuffer, (size_t)relocAddress, sizeof(uint32), (ptrdiff_t)labelInstr->GetPC() - ((ptrdiff_t)reloc->m_ptr + 4));
+                    }
                 }
 
                 *bufferCRC = Encoder::CalculateCRC(*bufferCRC, pcrel);
+
                 break;
             }
 
@@ -1591,24 +1600,22 @@ EncoderMD::ApplyRelocs(size_t codeBufferAddress_, uint * bufferCRC, BOOL isBrSho
                 AssertMsg(labelInstr->GetPC() != nullptr, "Branch to unemitted label?");
                 //Review: Is this casting, fine?
                 uint32 offset = (uint32)(labelInstr->GetPC() - m_encoder->m_encodeBuffer);
+                size_t targetAddress = (size_t)(offset + codeBufferAddress_);
                 if (!isCalcOnlyCRC)
                 {
                     Assert(*(size_t *)relocAddress == 0);
-                    *(size_t *)relocAddress = (size_t)(offset + codeBufferAddress_);
+                    *(size_t *)relocAddress = targetAddress;
+                }
+                else
+                {
+                    Encoder::EnsureRelocEntryIntegrity(codeBufferAddress_, codeSize, (size_t)m_encoder->m_encodeBuffer, (size_t)relocAddress, sizeof(size_t), targetAddress, false);
                 }
                 *bufferCRC = Encoder::CalculateCRC(*bufferCRC, offset);
                 break;
             }
-        case RelocTypeInlineeEntryOffset:
-            {
-                if (isBrShorteningSucceeded)
-                {
-                    *((size_t*)reloc->m_origPtr) = reloc->GetInlineOffset();
-                }
-                break;
-            }
         case RelocTypeLabel:
         case RelocTypeAlignedLabel:
+        case RelocTypeInlineeEntryOffset:
             break;
         default:
             AssertMsg(UNREACHED, "Unknown reloc type");
