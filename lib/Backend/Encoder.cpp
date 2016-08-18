@@ -644,10 +644,13 @@ void Encoder::RecordInlineeFrame(Func* inlinee, uint32 currentOffset)
     }
 }
 
-
 void Encoder::ValidateCRCOnFinalBuffer(BYTE * finalCodeBufferStart, size_t finalCodeSize, size_t jumpTableSize, BYTE * oldCodeBufferStart, BYTE * oldCodeBufferEnd, uint initialCrcSeed, BYTE ** pCrcRawBuffer, uint * crcBytes, uint bufferCRC, BOOL isSuccessBrShortAndLoopAlign)
 {
+#if defined(_M_IX86) || defined(_M_X64)
     RelocList * relocList = m_encoderMD.GetRelocList();
+#else
+    EncodeReloc * relocList = m_encoderMD.GetRelocList();
+#endif
 
     BYTE * currentStartAddress = finalCodeBufferStart;
     BYTE * currentEndAddress = nullptr;
@@ -661,11 +664,15 @@ void Encoder::ValidateCRCOnFinalBuffer(BYTE * finalCodeBufferStart, size_t final
 
     if (relocList != nullptr)
     {
+#if defined(_M_IX86) || defined(_M_X64)
         for (int index = 0; index < relocList->Count(); index++)
         {
             EncodeRelocAndLabels * relocTuple = &relocList->Item(index);
-
-            BYTE* finalBufferRelocTuplePtr = (BYTE*)relocTuple->m_ptr - oldCodeBufferStart + finalCodeBufferStart;
+#else
+        for (EncodeReloc *relocTuple = relocList; relocTuple; relocTuple = relocTuple->m_next)
+        {
+#endif
+            BYTE* finalBufferRelocTuplePtr = (BYTE*)m_encoderMD.GetRelocBufferAddress(relocTuple) - oldCodeBufferStart + finalCodeBufferStart;
 
             uint relocDataSize = m_encoderMD.GetRelocDataSize(relocTuple);
             if (relocDataSize != 0 && finalBufferRelocTuplePtr >= finalCodeBufferStart && finalBufferRelocTuplePtr < (finalCodeBufferStart + finalCodeSizeWithoutJumpTable))
@@ -686,7 +693,7 @@ void Encoder::ValidateCRCOnFinalBuffer(BYTE * finalCodeBufferStart, size_t final
                 //TODO: Clean up this for loop and move to a function CRC.
                 for (uint i = 0; i < relocDataSize; i++)
                 {
-                    finalBufferCRC = _mm_crc32_u32(finalBufferCRC, 0);
+                    finalBufferCRC = CalculateCRC(finalBufferCRC, 0);
 #if DBG
                     Assert(*(*pCrcRawBuffer + *crcBytes) == 0);
                     *crcBytes = *crcBytes + 1;
@@ -727,6 +734,8 @@ void Encoder::EnsureRelocEntryIntegrity(size_t newBufferStartAddress, size_t cod
     Assert(relocAddress >= oldBufferAddress);
 
     size_t newBufferRelocAddr = relocAddress - oldBufferAddress + newBufferStartAddress;
+    size_t newBufferEndAddress = newBufferStartAddress + codeSize;
+
 
     if (isRelativeAddr)
     {
@@ -734,10 +743,10 @@ void Encoder::EnsureRelocEntryIntegrity(size_t newBufferStartAddress, size_t cod
     }
     else
     {
-        targetBrAddress = (size_t)opndData;
+        targetBrAddress = (size_t)opndData;   
     }
 
-    if (targetBrAddress < newBufferStartAddress || targetBrAddress >= (newBufferStartAddress + codeSize))
+    if (targetBrAddress < newBufferStartAddress || targetBrAddress >= newBufferEndAddress)
     {
         Assert(false);
         Fatal();
@@ -746,14 +755,20 @@ void Encoder::EnsureRelocEntryIntegrity(size_t newBufferStartAddress, size_t cod
 
 uint Encoder::CalculateCRC(uint bufferCRC, uint data)
 {
-    return _mm_crc32_u32(bufferCRC, data);
+#if defined(_M_IX86) || defined(_M_X64)
+    if (AutoSystemInfo::Data.SSE4_1Available())
+    {
+        return _mm_crc32_u32(bufferCRC, data);
+    }
+#endif
+    return 0;
 }
 
 uint Encoder::CalculateCRC(uint bufferCRC, size_t count, void * buffer, BYTE** pCrcRawBuffer, uint* crcBytes, uint initialCRCSeed, bool isFinalBuffer)
 {
     for (uint index = 0; index < count; index++)
     {
-        bufferCRC = _mm_crc32_u32(bufferCRC, *((BYTE*)buffer + index));
+        bufferCRC = CalculateCRC(bufferCRC, *((BYTE*)buffer + index));
         if (!isFinalBuffer)
         {
             if (pCrcRawBuffer != nullptr)

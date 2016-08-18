@@ -207,7 +207,7 @@ public:
 
     ptrdiff_t       Encode(IR::Instr * instr, BYTE *pc, BYTE* beginCodeAddress = nullptr);
     void            Init(Encoder *encoder);
-    void            ApplyRelocs(uint32 codeBufferAddress, uint * bufferCRC, BOOL isBrShorteningSucceeded, bool isCalcOnlyCRC = false);
+    void            ApplyRelocs(uint32 codeBufferAddress, size_t codeSize, uint * bufferCRC, BOOL isBrShorteningSucceeded, bool isCalcOnlyCRC = false);
     uint            GetRelocDataSize(EncodeRelocAndLabels *reloc);
     void            EncodeInlineeCallInfo(IR::Instr *instr, uint32 offset);
     static bool     TryConstFold(IR::Instr *instr, IR::RegOpnd *regOpnd);
@@ -224,6 +224,7 @@ public:
     void            VerifyRelocList(BYTE *buffStart, BYTE *buffEnd);
 #endif
     void            AddLabelReloc(BYTE* relocAddress);
+    BYTE *          GetRelocBufferAddress(EncodeRelocAndLabels * reloc);
 
 private:
     const BYTE      GetOpcodeByte2(IR::Instr *instr);

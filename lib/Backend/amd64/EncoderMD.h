@@ -199,6 +199,7 @@ public:
     void            VerifyRelocList(BYTE *buffStart, BYTE *buffEnd);
 #endif
     void            AddLabelReloc(BYTE* relocAddress);
+    BYTE *          GetRelocBufferAddress(EncodeRelocAndLabels * reloc);
 
 private:
     const BYTE      GetOpcodeByte2(IR::Instr *instr);

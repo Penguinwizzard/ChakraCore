@@ -2263,7 +2263,7 @@ EncoderMD::BaseAndOffsetFromSym(IR::SymOpnd *symOpnd, RegNum *pBaseReg, int32 *p
 /// before we copy the contents of the temporary buffer to the target buffer.
 ///----------------------------------------------------------------------------
 void
-EncoderMD::ApplyRelocs(uint32 codeBufferAddress, uint * bufferCRC, bool isCalcOnlyCRC)
+EncoderMD::ApplyRelocs(uint32 codeBufferAddress, size_t codeSize, uint * bufferCRC, BOOL isBrShorteningSucceeded, bool isCalcOnlyCRC)
 {
     for (EncodeReloc *reloc = m_relocList; reloc; reloc = reloc->m_next)
     {
@@ -2284,6 +2284,10 @@ EncoderMD::ApplyRelocs(uint32 codeBufferAddress, uint * bufferCRC, bool isCalcOn
                     Assert(*(uint32 *)relocAddress == 0);
                     *(uint32 *)relocAddress = encode;
                 }
+                else
+                {
+                    Encoder::EnsureRelocEntryIntegrity(codeBufferAddress, codeSize, (size_t)m_encoder->m_encodeBuffer, (size_t)relocAddress, sizeof(ENCODE_32), (ptrdiff_t)labelInstr->GetPC() - ((ptrdiff_t)reloc->m_consumerOffset));
+                }
                 *bufferCRC = Encoder::CalculateCRC(*bufferCRC, pcrel);
                 break;
             }
@@ -2300,6 +2304,11 @@ EncoderMD::ApplyRelocs(uint32 codeBufferAddress, uint * bufferCRC, bool isCalcOn
                     Assert(*(ENCODE_32 *)relocAddress == 0);
                     *(ENCODE_32 *)relocAddress = encode;
                 }
+                else
+                {
+                    Encoder::EnsureRelocEntryIntegrity(codeBufferAddress, codeSize, (size_t)m_encoder->m_encodeBuffer, (size_t)relocAddress, sizeof(ENCODE_32), (ptrdiff_t)labelInstr->GetPC() - ((ptrdiff_t)reloc->m_consumerOffset));
+                }
+
                 *bufferCRC = Encoder::CalculateCRC(*bufferCRC, pcrel);
                 break;
             }
@@ -2352,7 +2361,7 @@ EncoderMD::ApplyRelocs(uint32 codeBufferAddress, uint * bufferCRC, bool isCalcOn
                 }
                 if (!isCalcOnlyCRC)
                 {
-                    Assert(*(ENCODE_32 *)relocAddress);
+                    Assert(*(ENCODE_32 *)relocAddress == 0);
                     *(ENCODE_32 *)relocAddress = encode;
                 }
                 break;
@@ -2372,9 +2381,9 @@ EncoderMD::ApplyRelocs(uint32 codeBufferAddress, uint * bufferCRC, bool isCalcOn
                 }
                 else
                 {
+                    *bufferCRC = Encoder::CalculateCRC(*bufferCRC, labelInstr->GetOffset());
                     //This is a encoded high 16 bits.
                     pcrel = labelInstr->GetOffset() >> 16;
-                    *bufferCRC = Encoder::CalculateCRC(*bufferCRC, pcrel);
                 }
                 if (!EncodeImmediate16(pcrel, (DWORD*) &encode))
                 {
@@ -2382,10 +2391,9 @@ EncoderMD::ApplyRelocs(uint32 codeBufferAddress, uint * bufferCRC, bool isCalcOn
                 }
                 if (!isCalcOnlyCRC)
                 {
-                    Assert(*(ENCODE_32 *)relocAddress);
+                    Assert(*(ENCODE_32 *)relocAddress == 0);
                     *(ENCODE_32 *)relocAddress = encode;
-                }
-                
+                }                
                 break;
             }
 
@@ -2395,11 +2403,16 @@ EncoderMD::ApplyRelocs(uint32 codeBufferAddress, uint * bufferCRC, bool isCalcOn
                 AssertMsg(labelInstr->GetPC() != nullptr, "Branch to unemitted label?");
 
                 uint32 offset = (uint32)(labelInstr->GetPC() - m_encoder->m_encodeBuffer);
+                uint32 targetAddr = (uint32)(offset + codeBufferAddress);
                 if (!isCalcOnlyCRC)
                 {
                     Assert(*(uint32 *)relocAddress == 0);
                     /* For Thumb instruction set -> OR 1 with the address*/
-                    *(uint32 *)relocAddress = (uint32)(offset + codeBufferAddress) | 1;
+                    *(uint32 *)relocAddress = targetAddr | 1;
+                }
+                else
+                {
+                    Encoder::EnsureRelocEntryIntegrity(codeBufferAddress, codeSize, (size_t)m_encoder->m_encodeBuffer, (size_t)relocAddress, sizeof(ENCODE_32), targetAddr, false);
                 }
                 *bufferCRC = Encoder::CalculateCRC(*bufferCRC, offset);
                 break;
@@ -2430,6 +2443,18 @@ EncoderMD::GetRelocDataSize(EncodeReloc *reloc)
             return 0;
         }
     }
+}
+
+BYTE *          
+EncoderMD::GetRelocBufferAddress(EncodeReloc * reloc)
+{
+    return reloc->m_consumerOffset;
+}
+
+EncodeReloc *   
+EncoderMD::GetRelocList()
+{
+    return m_relocList;
 }
 
 void

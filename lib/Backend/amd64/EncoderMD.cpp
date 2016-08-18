@@ -1650,6 +1650,11 @@ EncoderMD::GetRelocDataSize(EncodeRelocAndLabels *reloc)
     }
 }
 
+BYTE * GetRelocBufferAddress(EncodeRelocAndLabels * reloc)
+{
+    return m_ptr;
+}
+
 #ifdef DBG
 ///----------------------------------------------------------------------------
 ///

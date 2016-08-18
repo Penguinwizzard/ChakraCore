@@ -55,7 +55,7 @@ public:
     EncoderMD(Func * func) : m_func(func), consecutiveThumbInstrCount(0) { }
     ptrdiff_t       Encode(IR::Instr * instr, BYTE *pc, BYTE* beginCodeAddress = nullptr);
     void            Init(Encoder *encoder);
-    void            ApplyRelocs(uint32 codeBufferAddress, uint * bufferCRC, bool isCalcOnlyCRC = false);
+    void            ApplyRelocs(uint32 codeBufferAddress, size_t codeSize, uint * bufferCRC, BOOL isBrShorteningSucceeded, bool isCalcOnlyCRC = false);
     uint            GetRelocDataSize(EncodeReloc *reloc);
     static bool     TryConstFold(IR::Instr *instr, IR::RegOpnd *regOpnd);
     static bool     TryFold(IR::Instr *instr, IR::RegOpnd *regOpnd);
@@ -103,6 +103,9 @@ public:
     static bool     EncodeImmediate16(int32 constant, DWORD * result);
     static ENCODE_32  BranchOffset_T2_24(int x);
     void            EncodeInlineeCallInfo(IR::Instr *instr, uint32 offset);
+    BYTE *          GetRelocBufferAddress(EncodeReloc * reloc);
+    EncodeReloc *   GetRelocList();
+
 private:
     Func *          m_func;
     Encoder *       m_encoder;
