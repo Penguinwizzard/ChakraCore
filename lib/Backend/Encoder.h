@@ -49,21 +49,21 @@ private:
 #if defined(_M_IX86) || defined(_M_X64)
     InlineeFrameRecords *m_inlineeFrameRecords;
 
-    BOOL            ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize, uint * brShortenedBufferCRC, BYTE ** pRawBuffer, uint bufferCrcToValidate, size_t jumpTableSize);
+    BOOL            ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize, uint * brShortenedBufferCRC, uint bufferCrcToValidate, size_t jumpTableSize);
     void            revertRelocList();
     template <bool restore> void  CopyMaps(OffsetList **m_origInlineeFrameRecords, OffsetList **m_origInlineeFrameMap, OffsetList **m_origPragmaInstrToRecordOffset, OffsetList **m_origOffsetBuffer);
 #endif
     void            InsertNopsForLabelAlignment(int nopCount, BYTE ** pDstBuffer);
-    void            CopyPartialBufferAndCalculateCRC(BYTE ** ptrDstBuffer, size_t &dstSize, BYTE * srcStart, BYTE * srcEnd, uint* pBufferCRC, BYTE** pCrcRawBuffer, uint* crcBytes, uint initialCRCSeed, size_t jumpTableSize = 0);
+    void            CopyPartialBufferAndCalculateCRC(BYTE ** ptrDstBuffer, size_t &dstSize, BYTE * srcStart, BYTE * srcEnd, uint* pBufferCRC, size_t jumpTableSize = 0);
     BYTE            FindNopCountFor16byteAlignment(size_t address);
 
     uint32          GetCurrentOffset() const;
     void            TryCopyAndAddRelocRecordsForSwitchJumpTableEntries(BYTE *codeStart, size_t codeSize, JmpTableList * jumpTableListForSwitchStatement, size_t totalJmpTableSizeInBytes);
 
     void            ValidateCRC(uint bufferCRC, uint initialCRCSeed, void* buffer, size_t count);
-    static uint     CalculateCRC(uint bufferCRC, size_t count, void * buffer, BYTE** pCrcRawBuffer, uint* crcBytes, uint initialCRCSeed, bool isFinalBuffer = false);
+    static uint     CalculateCRC(uint bufferCRC, size_t count, void * buffer);
     static uint     CalculateCRC(uint bufferCRC, uint data);
-    void            ValidateCRCOnFinalBuffer(BYTE * finalCodeBufferStart, size_t finalCodeSize, size_t jumpTableSize, BYTE * oldCodeBufferStart, BYTE * oldCodeBufferEnd, uint initialCrcSeed, BYTE ** pCrcRawBuffer, uint * crcBytes, uint bufferCRC, BOOL isSuccessBrShortAndLoopAlign);
+    void            ValidateCRCOnFinalBuffer(BYTE * finalCodeBufferStart, size_t finalCodeSize, size_t jumpTableSize, BYTE * oldCodeBufferStart, uint initialCrcSeed, uint bufferCRC, BOOL isSuccessBrShortAndLoopAlign);
     static void     EnsureRelocEntryIntegrity(size_t newBufferStartAddress, size_t codeSize, size_t oldBufferAddress, size_t relocAddress, uint offsetBytes, ptrdiff_t opndData, bool isRelativeAddr = true);
 };
 

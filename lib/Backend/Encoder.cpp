@@ -73,10 +73,7 @@ Encoder::Encode()
 
     uint initialCRCSeed = 0;
     rand_s(&initialCRCSeed);
-    uint bufferCRC = initialCRCSeed;
-
-    BYTE * rawBuffer = AnewArrayZ(m_tempAlloc, BYTE, m_encodeBufferSize);
-    uint tmpCrcBytes = 0;
+    uint bufferCRC = initialCRCSeed;  
 
     FOREACH_INSTR_IN_FUNC(instr, m_func)
     {
@@ -201,7 +198,7 @@ Encoder::Encode()
 
             count = m_encoderMD.Encode(instr, m_pc, m_encodeBuffer);
 
-            bufferCRC = CalculateCRC(bufferCRC, count, m_pc, &rawBuffer, &tmpCrcBytes, initialCRCSeed);
+            bufferCRC = CalculateCRC(bufferCRC, count, m_pc);
 
 #if DBG_DUMP
             if (PHASE_TRACE(Js::EncoderPhase, this->m_func))
@@ -252,12 +249,10 @@ Encoder::Encode()
     if (!PHASE_OFF(Js::BrShortenPhase, m_func))
     {
         uint brShortenedbufferCRC = initialCRCSeed;
-        BYTE * rawBufferForShorten = AnewArrayZ(m_tempAlloc, BYTE, codeSize);
-        isSuccessBrShortAndLoopAlign = ShortenBranchesAndLabelAlign(&m_encodeBuffer, &codeSize, &brShortenedbufferCRC, &rawBufferForShorten, bufferCRC, totalJmpTableSizeInBytes);
+        isSuccessBrShortAndLoopAlign = ShortenBranchesAndLabelAlign(&m_encodeBuffer, &codeSize, &brShortenedbufferCRC, bufferCRC, totalJmpTableSizeInBytes);
         if (isSuccessBrShortAndLoopAlign)
         {
             bufferCRC = brShortenedbufferCRC;
-            rawBuffer = rawBufferForShorten;
         }
     }
 #endif
@@ -314,10 +309,7 @@ Encoder::Encode()
 
     workItem->RecordNativeCode(m_func, m_encodeBuffer);
 
-    //TODO: Clean up the math calculation in the arguments. - clean up the arguments
-    //TODO: Remove all debug related information.
-    uint crcBytes = 0;
-    ValidateCRCOnFinalBuffer((BYTE*)workItem->GetCodeAddress(), codeSize, totalJmpTableSizeInBytes, m_encodeBuffer, m_encodeBuffer + codeSize - totalJmpTableSizeInBytes, initialCRCSeed, &rawBuffer, &crcBytes, bufferCRC, isSuccessBrShortAndLoopAlign);
+    ValidateCRCOnFinalBuffer((BYTE*)workItem->GetCodeAddress(), codeSize, totalJmpTableSizeInBytes, m_encodeBuffer, initialCRCSeed, bufferCRC, isSuccessBrShortAndLoopAlign);
 
     m_func->GetScriptContext()->GetThreadContext()->SetValidCallTargetForCFG((PVOID) workItem->GetCodeAddress());
 
@@ -644,7 +636,7 @@ void Encoder::RecordInlineeFrame(Func* inlinee, uint32 currentOffset)
     }
 }
 
-void Encoder::ValidateCRCOnFinalBuffer(BYTE * finalCodeBufferStart, size_t finalCodeSize, size_t jumpTableSize, BYTE * oldCodeBufferStart, BYTE * oldCodeBufferEnd, uint initialCrcSeed, BYTE ** pCrcRawBuffer, uint * crcBytes, uint bufferCRC, BOOL isSuccessBrShortAndLoopAlign)
+void Encoder::ValidateCRCOnFinalBuffer(BYTE * finalCodeBufferStart, size_t finalCodeSize, size_t jumpTableSize, BYTE * oldCodeBufferStart, uint initialCrcSeed, uint bufferCRC, BOOL isSuccessBrShortAndLoopAlign)
 {
 #if defined(_M_IX86) || defined(_M_X64)
     RelocList * relocList = m_encoderMD.GetRelocList();
@@ -682,22 +674,11 @@ void Encoder::ValidateCRCOnFinalBuffer(BYTE * finalCodeBufferStart, size_t final
 
                 currentEndAddress = finalBufferRelocTuplePtr;
                 crcSizeToCompute = currentEndAddress - currentStartAddress;
-#if DBG
-                for (uint i = 0; i < crcSizeToCompute; i++)
-                {
-                    Assert(*(currentStartAddress + i) == *(*pCrcRawBuffer + *crcBytes));
-                    *crcBytes = *crcBytes + 1;
-                }
-#endif
-                finalBufferCRC = CalculateCRC(finalBufferCRC, crcSizeToCompute, currentStartAddress, pCrcRawBuffer, crcBytes, initialCrcSeed, true);
+                finalBufferCRC = CalculateCRC(finalBufferCRC, crcSizeToCompute, currentStartAddress);
                 //TODO: Clean up this for loop and move to a function CRC.
                 for (uint i = 0; i < relocDataSize; i++)
                 {
                     finalBufferCRC = CalculateCRC(finalBufferCRC, 0);
-#if DBG
-                    Assert(*(*pCrcRawBuffer + *crcBytes) == 0);
-                    *crcBytes = *crcBytes + 1;
-#endif
                 }
                 currentStartAddress = currentEndAddress + relocDataSize;
             }
@@ -707,18 +688,8 @@ void Encoder::ValidateCRCOnFinalBuffer(BYTE * finalCodeBufferStart, size_t final
     currentEndAddress = finalCodeBufferStart + finalCodeSizeWithoutJumpTable;
     crcSizeToCompute = currentEndAddress - currentStartAddress;
 
-#if DBG
-    for (uint i = 0; i < crcSizeToCompute; i++)
-    {
-        Assert(*(currentStartAddress + i) == *(*pCrcRawBuffer + *crcBytes));
-        *crcBytes = *crcBytes + 1;
-    }
-#endif
-
-    finalBufferCRC = CalculateCRC(finalBufferCRC, crcSizeToCompute, currentStartAddress, pCrcRawBuffer, crcBytes, initialCrcSeed, true);
+    finalBufferCRC = CalculateCRC(finalBufferCRC, crcSizeToCompute, currentStartAddress);
     m_encoderMD.ApplyRelocs((size_t)finalCodeBufferStart, finalCodeSize, &finalBufferCRC, isSuccessBrShortAndLoopAlign, true);
-
-    Assert(*crcBytes + jumpTableSize == finalCodeSize);
 
     if (finalBufferCRC != bufferCRC)
     {
@@ -818,22 +789,11 @@ uint Encoder::CalculateCRC(uint bufferCRC, uint data)
     return (bufferCRC ^ 0xffffffffL);
 }
 
-uint Encoder::CalculateCRC(uint bufferCRC, size_t count, void * buffer, BYTE** pCrcRawBuffer, uint* crcBytes, uint initialCRCSeed, bool isFinalBuffer)
+uint Encoder::CalculateCRC(uint bufferCRC, size_t count, void * buffer)
 {
     for (uint index = 0; index < count; index++)
     {
         bufferCRC = CalculateCRC(bufferCRC, *((BYTE*)buffer + index));
-        if (!isFinalBuffer)
-        {
-            if (pCrcRawBuffer != nullptr)
-            {
-                *((*pCrcRawBuffer) + *crcBytes) = *((BYTE*)buffer + index);
-            }
-            if (crcBytes != nullptr)
-            {
-                *crcBytes = *crcBytes + 1;
-            }
-        }
     }
     return bufferCRC;
 }
@@ -842,7 +802,7 @@ void Encoder::ValidateCRC(uint bufferCRC, uint initialCRCSeed, void* buffer, siz
 {
     uint validationCRC = initialCRCSeed;
 
-    validationCRC = CalculateCRC(validationCRC, count, buffer, nullptr, nullptr, initialCRCSeed);
+    validationCRC = CalculateCRC(validationCRC, count, buffer);
 
     if (validationCRC != bufferCRC)
     {
@@ -860,7 +820,7 @@ void Encoder::ValidateCRC(uint bufferCRC, uint initialCRCSeed, void* buffer, siz
 /// Also align LoopTop Label and TryCatchLabel
 ///----------------------------------------------------------------------------
 BOOL
-Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize, uint * pShortenedBufferCRC, BYTE ** pRawBuffer, uint bufferCrcToValidate, size_t jumpTableSize)
+Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize, uint * pShortenedBufferCRC, uint bufferCrcToValidate, size_t jumpTableSize)
 {
 #ifdef  ENABLE_DEBUG_CONFIG_OPTIONS
     static uint32 globalTotalBytesSaved = 0, globalTotalBytesWithoutShortening = 0;
@@ -1028,9 +988,6 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize, uin
     // We also write NOPs for aligned loops.
     BYTE* tmpBuffer = AnewArray(m_tempAlloc, BYTE, newCodeSize);
     
-    uint crcBytes = 0;
-    uint crcBytes1 = 0;
-    uint initialCRCseed = *pShortenedBufferCRC;
     uint srcBufferCrc = *pShortenedBufferCRC;   //This has the intial Random CRC seed to start with.
 
     // start copying to new buffer
@@ -1091,12 +1048,8 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize, uin
 
             memcpy_s(dst_p, dst_size, from, src_size);
 
-            srcBufferCrc = CalculateCRC(srcBufferCrc, (BYTE*)reloc.m_origPtr - from + 4, from, nullptr, &crcBytes1, initialCRCseed);
-            *pShortenedBufferCRC = CalculateCRC(*pShortenedBufferCRC, src_size, dst_p, pRawBuffer, &crcBytes, initialCRCseed);
-
-#if DBG
-            ValidateCRC(srcBufferCrc, initialCRCseed, buffStart, crcBytes1);
-#endif
+            srcBufferCrc = CalculateCRC(srcBufferCrc, (BYTE*)reloc.m_origPtr - from + 4, from);
+            *pShortenedBufferCRC = CalculateCRC(*pShortenedBufferCRC, src_size, dst_p);
 
             dst_p += src_size;
             dst_size -= src_size;
@@ -1107,19 +1060,7 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize, uin
             *dst_p = (*opcodeByte == 0xe9) ? (BYTE)0xeb : (BYTE)(*opcodeByte - 0x10);
             *(dst_p + 1) = 0;   // imm8
 
-            ////REVIEW : Add a loop count to the Calculate CRC api.
-            //srcBufferCrc = CalculateCRC(srcBufferCrc, 0);
-            //srcBufferCrc = CalculateCRC(srcBufferCrc, 0);
-            
-/*
-            *((BYTE*)(pRawBuffer + crcBytes1)) = 0;
-            crcBytes1++;
-            *((BYTE*)(pRawBuffer + crcBytes1)) = 0;
-            crcBytes1++;*/
-
-            //ValidateCRC(srcBufferCrc, initialCRCseed, buffStart, crcBytes1);
-
-            *pShortenedBufferCRC = CalculateCRC(*pShortenedBufferCRC, 2, dst_p, pRawBuffer, &crcBytes, initialCRCseed);
+            *pShortenedBufferCRC = CalculateCRC(*pShortenedBufferCRC, 2, dst_p);
             dst_p += 2; // 1 byte for opcode + 1 byte for imm8
             dst_size -= 2;
             from = (BYTE*)reloc.m_origPtr + 4;
@@ -1127,19 +1068,17 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize, uin
         else if (reloc.m_type == RelocTypeInlineeEntryOffset)
         {
             to = (BYTE*)reloc.m_origPtr - 1;
-            CopyPartialBufferAndCalculateCRC(&dst_p, dst_size, from, to, pShortenedBufferCRC, pRawBuffer, &crcBytes, initialCRCseed);
+            CopyPartialBufferAndCalculateCRC(&dst_p, dst_size, from, to, pShortenedBufferCRC);
 
             *(size_t*)dst_p = reloc.GetInlineOffset();
 
-            *pShortenedBufferCRC = CalculateCRC(*pShortenedBufferCRC, sizeof(size_t), dst_p, pRawBuffer, &crcBytes, initialCRCseed);
+            *pShortenedBufferCRC = CalculateCRC(*pShortenedBufferCRC, sizeof(size_t), dst_p);
 
             dst_p += sizeof(size_t);
             dst_size -= sizeof(size_t);
 
-            srcBufferCrc = CalculateCRC(srcBufferCrc, (BYTE*)reloc.m_origPtr + sizeof(size_t) - from , from, nullptr, &crcBytes1, initialCRCseed);
-#if DBG
-            ValidateCRC(srcBufferCrc, initialCRCseed, buffStart, crcBytes1);
-#endif
+            srcBufferCrc = CalculateCRC(srcBufferCrc, (BYTE*)reloc.m_origPtr + sizeof(size_t) - from , from);
+
             from = (BYTE*)reloc.m_origPtr + sizeof(size_t);
         }
         // insert NOPs for aligned labels
@@ -1153,11 +1092,8 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize, uin
 
             to = reloc.getLabelOrigPC() - 1;
             
-            CopyPartialBufferAndCalculateCRC(&dst_p, dst_size, from, to, pShortenedBufferCRC, pRawBuffer, &crcBytes, initialCRCseed);
-            srcBufferCrc = CalculateCRC(srcBufferCrc, to - from + 1, from, nullptr, &crcBytes1, initialCRCseed);
-#if DBG
-            ValidateCRC(srcBufferCrc, initialCRCseed, buffStart, crcBytes1);
-#endif
+            CopyPartialBufferAndCalculateCRC(&dst_p, dst_size, from, to, pShortenedBufferCRC);
+            srcBufferCrc = CalculateCRC(srcBufferCrc, to - from + 1, from);
 
 #ifdef  ENABLE_DEBUG_CONFIG_OPTIONS
             if (PHASE_TRACE(Js::LoopAlignPhase, this->m_func))
@@ -1171,7 +1107,7 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize, uin
 #endif
             BYTE * tmpDst_p = dst_p;
             InsertNopsForLabelAlignment(nop_count, &dst_p);
-            *pShortenedBufferCRC = CalculateCRC(*pShortenedBufferCRC, nop_count, tmpDst_p, pRawBuffer, &crcBytes, initialCRCseed);
+            *pShortenedBufferCRC = CalculateCRC(*pShortenedBufferCRC, nop_count, tmpDst_p);
 
             dst_size -= nop_count;
             from = to + 1;
@@ -1179,15 +1115,10 @@ Encoder::ShortenBranchesAndLabelAlign(BYTE **codeStart, ptrdiff_t *codeSize, uin
     }
     // copy last chunk
     //Exclude jumpTable content from CRC calculation
-    CopyPartialBufferAndCalculateCRC(&dst_p, dst_size, from, buffStart + *codeSize - 1, pShortenedBufferCRC, pRawBuffer, &crcBytes, initialCRCseed, jumpTableSize);
-    srcBufferCrc = CalculateCRC(srcBufferCrc, buffStart + *codeSize - from - jumpTableSize, from, nullptr, &crcBytes1, initialCRCseed);
-#if DBG
-    ValidateCRC(srcBufferCrc, initialCRCseed, buffStart, crcBytes1);
-#endif
+    CopyPartialBufferAndCalculateCRC(&dst_p, dst_size, from, buffStart + *codeSize - 1, pShortenedBufferCRC, jumpTableSize);
+    srcBufferCrc = CalculateCRC(srcBufferCrc, buffStart + *codeSize - from - jumpTableSize, from);
 
     m_encoderMD.UpdateRelocListWithNewBuffer(relocList, tmpBuffer, buffStart, buffEnd);
-
-    Assert(crcBytes1 == *codeSize - jumpTableSize);
 
     if (srcBufferCrc != bufferCrcToValidate)
     {
@@ -1207,7 +1138,7 @@ BYTE Encoder::FindNopCountFor16byteAlignment(size_t address)
     return (16 - (BYTE) (address & 0xf)) % 16;
 }
 
-void Encoder::CopyPartialBufferAndCalculateCRC(BYTE ** ptrDstBuffer, size_t &dstSize, BYTE * srcStart, BYTE * srcEnd, uint* pBufferCRC, BYTE** pCrcRawBuffer, uint* crcBytes, uint initialCRCSeed, size_t jumpTableSize)
+void Encoder::CopyPartialBufferAndCalculateCRC(BYTE ** ptrDstBuffer, size_t &dstSize, BYTE * srcStart, BYTE * srcEnd, uint* pBufferCRC, size_t jumpTableSize)
 {
     BYTE * destBuffer = *ptrDstBuffer;
 
@@ -1218,7 +1149,7 @@ void Encoder::CopyPartialBufferAndCalculateCRC(BYTE ** ptrDstBuffer, size_t &dst
     Assert(srcSize >= jumpTableSize);
 
     //Exclude the jump table content (which is at the end of the buffer) for calculating CRC - at this point.
-    *pBufferCRC = CalculateCRC(*pBufferCRC, srcSize - jumpTableSize, destBuffer, pCrcRawBuffer, crcBytes, initialCRCSeed);
+    *pBufferCRC = CalculateCRC(*pBufferCRC, srcSize - jumpTableSize, destBuffer);
 
     *ptrDstBuffer += srcSize;
     dstSize -= srcSize;
