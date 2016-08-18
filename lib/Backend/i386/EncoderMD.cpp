@@ -1508,9 +1508,10 @@ EncoderMD::GetRelocDataSize(EncodeRelocAndLabels *reloc)
     }
 }
 
-BYTE * GetRelocBufferAddress(EncodeRelocAndLabels * reloc)
+BYTE * 
+EncoderMD::GetRelocBufferAddress(EncodeRelocAndLabels * reloc)
 {
-    return m_ptr;
+    return (BYTE*)reloc->m_ptr;
 }
 
 ///----------------------------------------------------------------------------
