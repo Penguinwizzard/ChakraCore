@@ -1376,7 +1376,72 @@ namespace Js
 
     void PathTypeHandlerBase::SetPrototype(DynamicObject* instance, RecyclableObject* newPrototype)
     {
-        ConvertToSimpleDictionaryType(instance, GetPathLength())->SetPrototype(instance, newPrototype);
+        AssertMsg(instance->GetScriptContext() == newPrototype->GetScriptContext(), "Trying to setPrototype from different script context.");
+
+        uint16 requestedInlineSlotCapacity = this->GetInlineSlotCapacity();
+        const bool useObjectHeaderInlining = FunctionBody::DoObjectHeaderInliningForConstructor(requestedInlineSlotCapacity);
+        ScriptContext* scriptContext = newPrototype->GetScriptContext();
+        DynamicType* dynamicType = nullptr;
+        const char16 * cacheType = nullptr;
+        bool usingZeroSlotCache = (this->GetInlineSlotCapacity() == 0 && this->GetOffsetOfInlineSlots() == 0);
+
+        Js::InternalPropertyIds propertyIdHoldingCache = usingZeroSlotCache ? 
+            Js::InternalPropertyIds::ZTypeOfPrototypeObject : Js::InternalPropertyIds::NZTypeOfPrototypeObject;
+
+        if (newPrototype->GetInternalProperty(newPrototype, propertyIdHoldingCache, (Js::Var*)&dynamicType, nullptr, scriptContext))
+        {
+            // Verify if existing dynamicType meets requirements of this typeHandler. If not, reset it
+            DynamicTypeHandler *const dynamicTypeHandler = dynamicType->GetTypeHandler();
+            if (dynamicType == nullptr
+                // dynamicType not found
+                || (Js::Var)dynamicType == newPrototype->GetLibrary()->GetUndefined()
+                // dynamicTypeHandler's offset of inlineSlots doesn't match
+                || dynamicTypeHandler->GetOffsetOfInlineSlots() != GetOffsetOfInlineSlots()
+                // dynamicTypeHandler's inlineSlotCapacity is not same as that of current typeHandler.
+                || dynamicTypeHandler->GetInlineSlotCapacity() !=
+                (
+                    useObjectHeaderInlining
+                    ? DynamicTypeHandler::RoundUpObjectHeaderInlinedInlineSlotCapacity(requestedInlineSlotCapacity)
+                    : DynamicTypeHandler::RoundUpInlineSlotCapacity(requestedInlineSlotCapacity)
+                    )
+                )
+            {
+                dynamicType = nullptr;
+            }
+        }
+        else
+        {
+            Assert(!dynamicType || (Js::Var)dynamicType == scriptContext->GetLibrary()->GetUndefined());
+            dynamicType = nullptr;
+        }
+
+
+        if (dynamicType == nullptr)
+        {
+            SimplePathTypeHandler* newTypeHandler = SimplePathTypeHandler::New(scriptContext, scriptContext->GetLibrary()->GetRootPath(), 0, this->GetInlineSlotCapacity(), this->GetOffsetOfInlineSlots(), true, true);
+            dynamicType = DynamicType::New(scriptContext, instance->GetDynamicType()->GetTypeId(), newPrototype, RecyclableObject::DefaultEntryPoint, newTypeHandler, true, true);
+            dynamicType->flags = instance->GetDynamicType()->flags;
+            
+
+            newPrototype->SetInternalProperty(propertyIdHoldingCache, (Var)dynamicType, PropertyOperationFlags::PropertyOperation_Force, nullptr);
+        }
+        else
+        {
+            Assert(dynamicType->GetIsShared());
+        }
+
+        for (PropertyIndex i = 0; i < GetPropertyCount(); i++)
+        {
+            PathTypeHandlerBase * pathTypeHandler = (PathTypeHandlerBase*)dynamicType->GetTypeHandler();
+            Js::PropertyId propertyId = GetPropertyId(scriptContext, i);
+
+            PropertyIndex propertyIndex = GetPropertyIndex(propertyId);
+            dynamicType = pathTypeHandler->PromoteType<true>(dynamicType, scriptContext->GetPropertyName(propertyId), true, scriptContext, nullptr, &propertyIndex);
+        }
+
+
+        dynamicType->SetPrototype(newPrototype);
+        instance->ReplaceType(dynamicType);
     }
 
     void PathTypeHandlerBase::SetIsPrototype(DynamicObject* instance)

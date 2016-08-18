@@ -22,7 +22,7 @@ JsrtExternalType::JsrtExternalType(Js::ScriptContext* scriptContext, JsFinalizeC
 
 JsrtExternalObject::JsrtExternalObject(JsrtExternalType * type, void *data) :
     slot(data),
-    Js::DynamicObject(type)
+    Js::DynamicObject(type, false/* initSlots*/)
 {
 }
 
