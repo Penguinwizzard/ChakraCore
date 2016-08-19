@@ -1982,7 +1982,11 @@ LowererMDArch::EmitInt4Instr(IR::Instr *instr, bool signExtend /* = false */)
     IR::RegOpnd *regEDX;
 
     bool legalize = false;
-    if (!(dst && dst->IsInt64()) && !src1->IsInt64() && !(src2 && src2->IsInt64()))
+    int dstInstrSize = dst ? TySize[dst->GetType()] : 0;
+    int src1InstrSize = src1 ? TySize[src1->GetType()] : 0;
+    int src2InstrSize = src2 ? TySize[src2->GetType()] : 0;
+    bool isInt64Instr = ((dstInstrSize | src1InstrSize | src2InstrSize) & 8) != 0;
+    if (!isInt64Instr)
     {
         if (dst && !dst->IsUInt32())
         {
@@ -1999,8 +2003,8 @@ LowererMDArch::EmitInt4Instr(IR::Instr *instr, bool signExtend /* = false */)
     }
     else
     {
-        Assert(!dst || src1->GetType() == dst->GetType());
-        Assert(!src2 || src1->GetType() == src2->GetType());
+        Assert(!dstInstrSize || dstInstrSize == src1InstrSize);
+        Assert(!src2InstrSize || src2InstrSize == src1InstrSize);
         legalize = true;
     }
 
@@ -2025,7 +2029,7 @@ LowererMDArch::EmitInt4Instr(IR::Instr *instr, bool signExtend /* = false */)
         break;
 
     case Js::OpCode::Mul_I4:
-        instr->m_opcode = Js::OpCode::IMUL2;
+        instr->m_opcode = src1InstrSize == 4 ? Js::OpCode::IMUL2 : Js::OpCode::IMUL;
         break;
 
     case Js::OpCode::Div_I4:
@@ -2034,40 +2038,42 @@ LowererMDArch::EmitInt4Instr(IR::Instr *instr, bool signExtend /* = false */)
     case Js::OpCode::Rem_I4:
         instr->SinkDst(Js::OpCode::MOV, RegRDX);
 idiv_common:
-        if (instr->GetSrc1()->GetType() == TyUint32)
         {
-            Assert(instr->GetSrc2()->GetType() == TyUint32);
-            instr->m_opcode = Js::OpCode::DIV;
-        }
-        else
-        {
-            instr->m_opcode = Js::OpCode::IDIV;
-        }
-        instr->HoistSrc1(Js::OpCode::MOV, RegRAX);
-
-        regEDX = IR::RegOpnd::New(TyInt32, instr->m_func);
-        regEDX->SetReg(RegRDX);
-        if (instr->GetSrc1()->GetType() == TyUint32)
-        {
-            // we need to ensure that register allocator doesn't muck about with rdx
-            instr->HoistSrc2(Js::OpCode::MOV, RegRCX);
-
-            newInstr = IR::Instr::New(Js::OpCode::Ld_I4, regEDX, IR::IntConstOpnd::New(0, TyInt32, instr->m_func), instr->m_func);
-            instr->InsertBefore(newInstr);
-            LowererMD::ChangeToAssign(newInstr);
-            // NOP ensures that the EDX = Ld_I4 0 doesn't get deadstored, will be removed in peeps
-            instr->InsertBefore(IR::Instr::New(Js::OpCode::NOP, regEDX, regEDX, instr->m_func));
-        }
-        else
-        {
-            if (instr->GetSrc2()->IsImmediateOpnd())
+            bool isUnsigned = instr->GetSrc1()->IsUnsigned();
+            if (isUnsigned)
             {
-                instr->HoistSrc2(Js::OpCode::MOV);
+                Assert(instr->GetSrc2()->IsUnsigned());
+                instr->m_opcode = Js::OpCode::DIV;
             }
-            instr->InsertBefore(IR::Instr::New(Js::OpCode::CDQ, regEDX, instr->m_func));
-        }
-        return;
+            else
+            {
+                instr->m_opcode = Js::OpCode::IDIV;
+            }
+            instr->HoistSrc1(Js::OpCode::MOV, RegRAX);
 
+            regEDX = IR::RegOpnd::New(src1->GetType(), instr->m_func);
+            regEDX->SetReg(RegRDX);
+            if (isUnsigned)
+            {
+                // we need to ensure that register allocator doesn't muck about with rdx
+                instr->HoistSrc2(Js::OpCode::MOV, RegRCX);
+
+                newInstr = IR::Instr::New(Js::OpCode::Ld_I4, regEDX, IR::IntConstOpnd::New(0, src1->GetType(), instr->m_func), instr->m_func);
+                instr->InsertBefore(newInstr);
+                LowererMD::ChangeToAssign(newInstr);
+                // NOP ensures that the EDX = Ld_I4 0 doesn't get deadstored, will be removed in peeps
+                instr->InsertBefore(IR::Instr::New(Js::OpCode::NOP, regEDX, regEDX, instr->m_func));
+            }
+            else
+            {
+                if (instr->GetSrc2()->IsImmediateOpnd())
+                {
+                    instr->HoistSrc2(Js::OpCode::MOV);
+                }
+                instr->InsertBefore(IR::Instr::New(isInt64Instr ? Js::OpCode::CQO : Js::OpCode::CDQ, regEDX, instr->m_func));
+            }
+            return;
+        }
     case Js::OpCode::Or_I4:
         instr->m_opcode = Js::OpCode::OR;
         break;
