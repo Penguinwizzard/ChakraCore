@@ -828,6 +828,7 @@ void
 IRBuilderAsmJs::BuildImplicitArgIns()
 {
     int32 intArgInCount = 0;
+    int32 int64ArgInCount = 0;
     int32 floatArgInCount = 0;
     int32 doubleArgInCount = 0;
     int32 simd128ArgInCount = 0;
@@ -875,7 +876,15 @@ IRBuilderAsmJs::BuildImplicitArgIns()
             ++doubleArgInCount;
             break;
         case Js::AsmJsVarType::Which::Int64:
-            Assert(false);
+            symSrc = StackSym::NewParamSlotSym(i, m_func, TyInt64);
+            m_func->SetArgOffset(symSrc, offset);
+            srcOpnd = IR::SymOpnd::New(symSrc, TyInt64, m_func);
+            dstOpnd = BuildDstOpnd(GetFirstVar(WAsmJs::INT64) + int64ArgInCount, TyInt64);
+            dstOpnd->SetValueType(ValueType::GetInt(false));
+            instr = IR::Instr::New(Js::OpCode::ArgIn_A, dstOpnd, srcOpnd, m_func);
+            offset += 8;
+            ++int64ArgInCount;
+            break;
         default:
         {
             // SIMD_JS
@@ -2892,7 +2901,7 @@ IRBuilderAsmJs::BuildLong3(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::RegSlot
     switch (newOpcode)
     {
     case Js::OpCodeAsmJs::Add_Long:
-        instr = IR::Instr::New(Js::OpCode::Add_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        instr = IR::Instr::New(Js::OpCode::Add_I4, dstOpnd, src1Opnd, src2Opnd, m_func);
         break;
 
     case Js::OpCodeAsmJs::Sub_Long:

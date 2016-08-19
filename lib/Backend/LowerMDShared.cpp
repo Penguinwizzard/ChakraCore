@@ -812,6 +812,10 @@ LowererMD::LowerRet(IR::Instr * retInstr)
 
             regType = TyInt32;
         }
+        else if (asmType.which() == Js::AsmJsRetType::Int64)
+        {
+            regType = TyInt64;
+        }
         else if (asmType.which() == Js::AsmJsRetType::Float32x4)
         {
             regType = TySimd128F4;

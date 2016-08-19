@@ -1554,6 +1554,10 @@ LowererMDArch::LowerEntryInstr(IR::EntryInstr * entryInstr)
                 this->MovArgFromReg2Stack(entryInstr, i == 0 ? RegRDX : i == 1 ? RegR8 : RegR9, offset, TyInt32);
                 offset++;
                 break;
+            case Js::AsmJsVarType::Int64:
+                this->MovArgFromReg2Stack(entryInstr, i == 0 ? RegRDX : i == 1 ? RegR8 : RegR9, offset, TyInt64);
+                offset++;
+                break;
             case Js::AsmJsVarType::Float:
                 // registers we need are contiguous, so calculate it from XMM1
                 this->MovArgFromReg2Stack(entryInstr, (RegNum)(RegXMM1 + i), offset, TyFloat32);
@@ -1905,6 +1909,7 @@ LowererMDArch::LowerExitInstr(IR::ExitInstr * exitInstr)
         case Js::AsmJsRetType::Float64x2:
             retReg = IR::RegOpnd::New(nullptr, this->GetRegReturnAsmJs(TySimd128D2), TySimd128D2, this->m_func);
             break;
+        case Js::AsmJsRetType::Int64:
         case Js::AsmJsRetType::Signed:
         case Js::AsmJsRetType::Void:
             retReg = IR::RegOpnd::New(nullptr, this->GetRegReturn(TyMachReg), TyMachReg, this->m_func);
@@ -1976,17 +1981,20 @@ LowererMDArch::EmitInt4Instr(IR::Instr *instr, bool signExtend /* = false */)
     IR::Instr *newInstr = nullptr;
     IR::RegOpnd *regEDX;
 
-    if (dst && !dst->IsUInt32())
+    if (!(dst && dst->IsInt64()) && !src1->IsInt64() && !(src2 && src2->IsInt64()))
     {
-        dst->SetType(TyInt32);
-    }
-    if (!src1->IsUInt32())
-    {
-        src1->SetType(TyInt32);
-    }
-    if (src2 && !src2->IsUInt32())
-    {
-        src2->SetType(TyInt32);
+        if (dst && !dst->IsUInt32())
+        {
+            dst->SetType(TyInt32);
+        }
+        if (!src1->IsUInt32())
+        {
+            src1->SetType(TyInt32);
+        }
+        if (src2 && !src2->IsUInt32())
+        {
+            src2->SetType(TyInt32);
+        }
     }
 
     bool legalize = false;
