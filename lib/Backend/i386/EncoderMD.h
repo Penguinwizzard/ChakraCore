@@ -46,6 +46,8 @@ public:
     {
         m_type = type;
         m_ptr = ptr;
+        m_InlineeOffset = 0;
+        m_labelInstr = nullptr;
 
         if (type == RelocTypeLabel)
         {

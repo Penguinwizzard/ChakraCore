@@ -43,8 +43,7 @@ public:
         m_type = type;
         m_ptr = ptr;
         m_InlineeOffset = 0;
-
-        //TODO: Initialize other variables here.
+        m_isShortBr = false;
 
         if (type == RelocTypeLabel)
         {

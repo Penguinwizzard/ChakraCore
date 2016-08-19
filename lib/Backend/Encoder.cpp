@@ -644,6 +644,7 @@ void Encoder::RecordInlineeFrame(Func* inlinee, uint32 currentOffset)
 *   ValidateCRCOnFinalBuffer
 *       - Validates the CRC that is last computed (could be either the one after BranchShortening or after encoding itself)
 *       - We calculate the CRC for jump table and dictionary after computing the code section.
+*       - Also, all reloc data are computed towards the end - after computing the code section - because we don't have to deal with the changes relocs while operating on the code section.
 *       - The version of CRC that we are validating with, doesn't have Relocs applied but the final buffer does - So we have to make adjustments while calculating the final buffer's CRC.
 */
 void Encoder::ValidateCRCOnFinalBuffer(BYTE * finalCodeBufferStart, size_t finalCodeSize, size_t jumpTableSize, BYTE * oldCodeBufferStart, uint initialCrcSeed, uint bufferCrcToValidate, BOOL isSuccessBrShortAndLoopAlign)
