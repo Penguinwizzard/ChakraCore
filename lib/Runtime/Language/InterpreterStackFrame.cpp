@@ -4532,7 +4532,8 @@ namespace Js
             GetInlineCache(playout->PropertyIdIndex),
             playout->PropertyIdIndex,
             GetReg(playout->Value),
-            flags,
+            m_functionBody->GetIsStrictMode() ?
+                (PropertyOperationFlags)(flags | PropertyOperation_StrictMode ) : flags,
             GetJavascriptFunction(),
             thisInstance);
     }
@@ -7409,24 +7410,24 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
         this->scriptContext->GetDebugContext()->GetProbeContainer()->SetCurrentTmpRegCount(playout->C1);
     }
 
-    Var InterpreterStackFrame::OP_LdSuper(ScriptContext * scriptContext)
+    Var InterpreterStackFrame::OP_LdHomeObj(ScriptContext * scriptContext)
     {
-        return JavascriptOperators::OP_LdSuper(function, scriptContext);
+        return JavascriptOperators::OP_LdHomeObj(function, scriptContext);
     }
 
-    Var InterpreterStackFrame::OP_LdSuperCtor(ScriptContext * scriptContext)
+    Var InterpreterStackFrame::OP_LdFuncObj(ScriptContext * scriptContext)
     {
-        return JavascriptOperators::OP_LdSuperCtor(function, scriptContext);
+        return JavascriptOperators::OP_LdFuncObj(function, scriptContext);
     }
 
-    Var InterpreterStackFrame::OP_ScopedLdSuper(ScriptContext * scriptContext)
+    Var InterpreterStackFrame::OP_ScopedLdHomeObj(ScriptContext * scriptContext)
     {
-        return JavascriptOperators::OP_ScopedLdSuper(function, scriptContext);
+        return JavascriptOperators::OP_ScopedLdHomeObj(function, scriptContext);
     }
 
-    Var InterpreterStackFrame::OP_ScopedLdSuperCtor(ScriptContext * scriptContext)
+    Var InterpreterStackFrame::OP_ScopedLdFuncObj(ScriptContext * scriptContext)
     {
-        return JavascriptOperators::OP_ScopedLdSuperCtor(function, scriptContext);
+        return JavascriptOperators::OP_ScopedLdFuncObj(function, scriptContext);
     }
 
     void InterpreterStackFrame::ValidateRegValue(Var value, bool allowStackVar, bool allowStackVarOnDisabledStackNestedFunc) const
