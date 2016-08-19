@@ -3132,7 +3132,6 @@ LFunction :
     }
 
     case tkCLASS:
-        fAllowCall = FALSE;
         if (m_scriptContext->GetConfig()->IsES6ClassAndExtendsEnabled())
         {
             pnode = ParseClassDecl<buildAST>(FALSE, pNameHint, pHintLength, pShortNameOffset);
