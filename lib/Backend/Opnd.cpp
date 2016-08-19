@@ -467,13 +467,19 @@ void Opnd::DumpValueType()
         switch(this->GetKind())
         {
         case OpndKindIntConst:
+        case OpndKindInt64Const:
         case OpndKindFloatConst:
             return;
 
         case OpndKindReg:
             {
                 StackSym *const sym = this->AsRegOpnd()->m_sym;
-                if(sym && (sym->IsInt32() || sym->IsFloat64()))
+                if(sym && (
+                    sym->IsInt32() ||
+                    sym->IsFloat32() ||
+                    sym->IsFloat64() ||
+                    sym->IsInt64()
+                    ))
                 {
                     return;
                 }
@@ -2892,6 +2898,13 @@ Opnd::Dump(IRDumpFlags flags, Func *func)
         }
         break;
 
+    case OpndKindInt64Const:
+    {
+        Int64ConstOpnd * intConstOpnd = this->AsInt64ConstOpnd();
+        int64 intValue = intConstOpnd->GetValue();
+        Output::Print(_u("%lld (0x%llX)"), intValue, intValue);
+        break;
+    }
     case OpndKindIntConst:
     {
         IntConstOpnd * intConstOpnd = this->AsIntConstOpnd();

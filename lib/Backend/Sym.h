@@ -147,9 +147,11 @@ public:
 
     StackSym *      GetFloat64EquivSym(Func *func);
     bool            IsFloat64() const { return this->GetType() == TyFloat64; }
+    bool            IsFloat32() const { return this->GetType() == TyFloat32; }
     StackSym *      GetInt32EquivSym(Func *func);
     bool            IsInt32() const { return this->GetType() == TyInt32; }
     bool            IsUInt32() const { return this->GetType() == TyUint32; }
+    bool            IsInt64() const { return this->GetType() == TyInt64; }
 
     StackSym *      GetVarEquivSym(Func *func);
     bool            IsVar() const { return this->GetType() == TyVar; }

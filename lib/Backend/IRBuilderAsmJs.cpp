@@ -2905,49 +2905,49 @@ IRBuilderAsmJs::BuildLong3(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::RegSlot
         break;
 
     case Js::OpCodeAsmJs::Sub_Long:
-        instr = IR::Instr::New(Js::OpCode::Sub_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        instr = IR::Instr::New(Js::OpCode::Sub_I4, dstOpnd, src1Opnd, src2Opnd, m_func);
         break;
 
     case Js::OpCodeAsmJs::Mul_Long:
-        instr = IR::Instr::New(Js::OpCode::Mul_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        instr = IR::Instr::New(Js::OpCode::Mul_I4, dstOpnd, src1Opnd, src2Opnd, m_func);
         break;
 
     case Js::OpCodeAsmJs::Div_ULong:
         src1Opnd->SetType(TyUint64);
         src2Opnd->SetType(TyUint64);
     case Js::OpCodeAsmJs::Div_Long:
-        instr = IR::Instr::New(Js::OpCode::Div_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        instr = IR::Instr::New(Js::OpCode::Div_I4, dstOpnd, src1Opnd, src2Opnd, m_func);
         break;
 
     case Js::OpCodeAsmJs::Rem_ULong:
         src1Opnd->SetType(TyUint64);
         src2Opnd->SetType(TyUint64);
     case Js::OpCodeAsmJs::Rem_Long:
-        instr = IR::Instr::New(Js::OpCode::Rem_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        instr = IR::Instr::New(Js::OpCode::Rem_I4, dstOpnd, src1Opnd, src2Opnd, m_func);
         break;
     case Js::OpCodeAsmJs::And_Long:
-        instr = IR::Instr::New(Js::OpCode::And_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        instr = IR::Instr::New(Js::OpCode::And_I4, dstOpnd, src1Opnd, src2Opnd, m_func);
         break;
     case Js::OpCodeAsmJs::Or_Long:
-        instr = IR::Instr::New(Js::OpCode::Or_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        instr = IR::Instr::New(Js::OpCode::Or_I4, dstOpnd, src1Opnd, src2Opnd, m_func);
         break;
     case Js::OpCodeAsmJs::Xor_Long:
-        instr = IR::Instr::New(Js::OpCode::Xor_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        instr = IR::Instr::New(Js::OpCode::Xor_I4, dstOpnd, src1Opnd, src2Opnd, m_func);
         break;
     case Js::OpCodeAsmJs::Shl_Long:
-        instr = IR::Instr::New(Js::OpCode::Shl_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        instr = IR::Instr::New(Js::OpCode::Shl_I4, dstOpnd, src1Opnd, src2Opnd, m_func);
         break;
     case Js::OpCodeAsmJs::Shr_Long:
-        instr = IR::Instr::New(Js::OpCode::Shr_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        instr = IR::Instr::New(Js::OpCode::Shr_I4, dstOpnd, src1Opnd, src2Opnd, m_func);
         break;
     case Js::OpCodeAsmJs::Shr_ULong:
-        instr = IR::Instr::New(Js::OpCode::ShrU_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        instr = IR::Instr::New(Js::OpCode::ShrU_I4, dstOpnd, src1Opnd, src2Opnd, m_func);
         break;
     case Js::OpCodeAsmJs::Rol_Long:
-        instr = IR::Instr::New(Js::OpCode::Rol_I8, dstOpnd, src1Opnd, src2Opnd, m_func);
+        instr = IR::Instr::New(Js::OpCode::Rol_I4, dstOpnd, src1Opnd, src2Opnd, m_func);
         break;
     case Js::OpCodeAsmJs::Ror_Long:
-        instr = IR::Instr::New(Js::OpCode::Ror_I8, dstOpnd, src1Opnd, src2Opnd, m_func);
+        instr = IR::Instr::New(Js::OpCode::Ror_I4, dstOpnd, src1Opnd, src2Opnd, m_func);
         break;
     default:
         Assume(UNREACHED);
@@ -2971,34 +2971,34 @@ IRBuilderAsmJs::BuildInt1Long2(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::Reg
     switch (newOpcode)
     {
     case Js::OpCodeAsmJs::CmLt_Long:
-        instr = IR::Instr::New(Js::OpCode::CmLt_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        instr = IR::Instr::New(Js::OpCode::CmLt_I4, dstOpnd, src1Opnd, src2Opnd, m_func);
         break;
     case Js::OpCodeAsmJs::CmLe_Long:
-        instr = IR::Instr::New(Js::OpCode::CmLe_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        instr = IR::Instr::New(Js::OpCode::CmLe_I4, dstOpnd, src1Opnd, src2Opnd, m_func);
         break;
     case Js::OpCodeAsmJs::CmGt_Long:
-        instr = IR::Instr::New(Js::OpCode::CmGt_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        instr = IR::Instr::New(Js::OpCode::CmGt_I4, dstOpnd, src1Opnd, src2Opnd, m_func);
         break;
     case Js::OpCodeAsmJs::CmGe_Long:
-        instr = IR::Instr::New(Js::OpCode::CmGe_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        instr = IR::Instr::New(Js::OpCode::CmGe_I4, dstOpnd, src1Opnd, src2Opnd, m_func);
         break;
     case Js::OpCodeAsmJs::CmEq_Long:
-        instr = IR::Instr::New(Js::OpCode::CmEq_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        instr = IR::Instr::New(Js::OpCode::CmEq_I4, dstOpnd, src1Opnd, src2Opnd, m_func);
         break;
     case Js::OpCodeAsmJs::CmNe_Long:
-        instr = IR::Instr::New(Js::OpCode::CmNeq_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        instr = IR::Instr::New(Js::OpCode::CmNeq_I4, dstOpnd, src1Opnd, src2Opnd, m_func);
         break;
     case Js::OpCodeAsmJs::CmLt_ULong:
-        instr = IR::Instr::New(Js::OpCode::CmUnLt_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        instr = IR::Instr::New(Js::OpCode::CmUnLt_I4, dstOpnd, src1Opnd, src2Opnd, m_func);
         break;
     case Js::OpCodeAsmJs::CmLe_ULong:
-        instr = IR::Instr::New(Js::OpCode::CmUnLe_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        instr = IR::Instr::New(Js::OpCode::CmUnLe_I4, dstOpnd, src1Opnd, src2Opnd, m_func);
         break;
     case Js::OpCodeAsmJs::CmGt_ULong:
-        instr = IR::Instr::New(Js::OpCode::CmUnGt_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        instr = IR::Instr::New(Js::OpCode::CmUnGt_I4, dstOpnd, src1Opnd, src2Opnd, m_func);
         break;
     case Js::OpCodeAsmJs::CmGe_ULong:
-        instr = IR::Instr::New(Js::OpCode::CmUnGe_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        instr = IR::Instr::New(Js::OpCode::CmUnGe_I4, dstOpnd, src1Opnd, src2Opnd, m_func);
         break;
     default:
         Assume(UNREACHED);

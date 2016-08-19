@@ -1822,6 +1822,10 @@ LowererMD::Legalize(IR::Instr *const instr, bool fPostRegAlloc)
         // All memref address need to fit in a dword
         Assert(Math::FitsInDWord((size_t)instr->GetSrc2()->AsMemRefOpnd()->GetMemLoc()));
     }
+
+    // Non-MOV (second operand) immediate need to fit in DWORD for AMD64
+    Assert(!instr->GetSrc2() || !instr->GetSrc2()->IsImmediateOpnd()
+           || (TySize[instr->GetSrc2()->GetType()] != 8) || Math::FitsInDWord(instr->GetSrc2()->GetImmediateValue()));
 #endif
 }
 
@@ -1963,7 +1967,6 @@ void LowererMD::LegalizeSrc(IR::Instr *const instr, IR::Opnd *src, const uint fo
             Assert(forms & L_Reg);
             return;
 
-        case IR::OpndKindInt64Const:
         case IR::OpndKindIntConst:
             Assert(!instr->isInlineeEntryInstr);
             if(forms & L_Imm32)
@@ -1975,6 +1978,34 @@ void LowererMD::LegalizeSrc(IR::Instr *const instr, IR::Opnd *src, const uint fo
         case IR::OpndKindFloatConst:
             break; // assume for now that it always needs to be hoisted
 
+        case IR::OpndKindInt64Const:
+            if (forms & L_Ptr)
+            {
+                return;
+            }
+#ifdef _M_X64
+            {
+                IR::Int64ConstOpnd * int64Opnd = src->AsInt64ConstOpnd();
+                if ((forms & L_Imm32) && ((TySize[src->GetType()] != 8) ||
+                    (!instr->isInlineeEntryInstr && Math::FitsInDWord(int64Opnd->GetValue()))))
+                {
+                    // the immediate fits in 32-bit, no need to hoist
+                    return;
+                }
+                if (verify)
+                {
+                    AssertMsg(false, "Missing legalization");
+                    return;
+                }
+
+                IR::Opnd* regOpnd = IR::RegOpnd::New(src->GetType(), instr->m_func);
+                IR::Instr* moveToReg = IR::Instr::New(Js::OpCode::MOV, regOpnd, src, instr->m_func);
+                instr->InsertBefore(moveToReg);
+                instr->ReplaceSrc(src, regOpnd);
+                return;
+            }
+#endif
+            break;
         case IR::OpndKindAddr:
             if (forms & L_Ptr)
             {
@@ -2858,8 +2889,11 @@ void LowererMD::GenerateFastCmXx(IR::Instr *instr)
     IR::Opnd * tmp = dst;
     bool isIntDst = dst->AsRegOpnd()->m_sym->IsInt32();
     bool isFloatSrc = src1->IsFloat();
+    bool isInt64Src = src1->IsInt64();
     Assert(!isFloatSrc || src2->IsFloat());
     Assert(!isFloatSrc || isIntDst);
+    Assert(!isInt64Src || src2->IsInt64());
+    Assert(!isInt64Src || isIntDst);
     Assert(!isFloatSrc || AutoSystemInfo::Data.SSE2Available());
     IR::Opnd *opnd;
     IR::Instr *newInstr;
@@ -2919,6 +2953,10 @@ void LowererMD::GenerateFastCmXx(IR::Instr *instr)
     newInstr->SetSrc1(src1);
     newInstr->SetSrc2(src2);
     done->InsertBefore(newInstr);
+    if (isInt64Src)
+    {
+        Legalize(newInstr);
+    }
 
     if (isFloatSrc)
     {

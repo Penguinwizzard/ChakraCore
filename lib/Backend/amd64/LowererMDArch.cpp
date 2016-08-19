@@ -1981,6 +1981,7 @@ LowererMDArch::EmitInt4Instr(IR::Instr *instr, bool signExtend /* = false */)
     IR::Instr *newInstr = nullptr;
     IR::RegOpnd *regEDX;
 
+    bool legalize = false;
     if (!(dst && dst->IsInt64()) && !src1->IsInt64() && !(src2 && src2->IsInt64()))
     {
         if (dst && !dst->IsUInt32())
@@ -1996,8 +1997,13 @@ LowererMDArch::EmitInt4Instr(IR::Instr *instr, bool signExtend /* = false */)
             src2->SetType(TyInt32);
         }
     }
+    else
+    {
+        Assert(!dst || src1->GetType() == dst->GetType());
+        Assert(!src2 || src1->GetType() == src2->GetType());
+        legalize = true;
+    }
 
-    bool legalize = false;
     switch (instr->m_opcode)
     {
     case Js::OpCode::Neg_I4:
