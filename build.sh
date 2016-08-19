@@ -29,6 +29,8 @@ PRINT_USAGE() {
     echo "  -j [N], --jobs[=N]   Multicore build, allow N jobs at once"
     echo "  -n, --ninja          Build with ninja instead of make"
     echo "      --xcode          Generate XCode project"
+    echo "      --gen[=Gen]      Give a custom generator to cmake"
+    echo "      --make[=cmd]     Give a custom make command"
     echo "  -t, --test-build     Test build (by default Release build)"
     echo "      --static         Build as static library (by default shared library)"
     echo "  -v, --verbose        Display verbose output including all options"
@@ -41,6 +43,8 @@ PRINT_USAGE() {
     echo "  ./build.sh --cxx=/path/to/clang++ --cc=/path/to/clang -j"
     echo "with icu:"
     echo "  ./build.sh --icu=/usr/local/Cellar/icu4c/version/include/"
+    echo "with custom generator:"
+    echo "  ./build.sh --gen=\"CodeBlocks - Unix Makefiles\""
     echo ""
 }
 
@@ -50,6 +54,7 @@ _CC=""
 VERBOSE=""
 BUILD_TYPE="Release"
 CMAKE_GEN=
+CMAKE_GEN_NAME=
 MAKE=make
 MULTICORE_BUILD=""
 ICU_PATH=""
@@ -114,8 +119,21 @@ while [[ $# -gt 0 ]]; do
         MAKE=ninja
         ;;
 
+    --make=*)
+        CUSTOM_MAKE=$1
+        CUSTOM_MAKE="${CUSTOM_MAKE:7}"
+        ;;
+
     --xcode)
         CMAKE_GEN="-G Xcode -DCC_XCODE_PROJECT=1"
+        CMAKE_GEN_NAME=Xcode
+        MAKE=0
+        ;;
+
+    --gen=*)
+        CMAKE_GEN_NAME=$1
+        CMAKE_GEN_NAME="${CMAKE_GEN_NAME:6}"
+        CMAKE_GEN="-G \"${CMAKE_GEN_NAME}\""
         MAKE=0
         ;;
 
@@ -151,6 +169,13 @@ while [[ $# -gt 0 ]]; do
 
     shift
 done
+
+if [ -z ${CUSTOM_MAKE+x} ]; then
+    CUSTOM_MAKE=
+else
+    echo "Updating make command ${CUSTOM_MAKE}"
+    MAKE=$CUSTOM_MAKE
+fi
 
 if [[ ${#_VERBOSE} > 0 ]]; then
     # echo options back to the user
@@ -222,7 +247,12 @@ fi
 pushd $build_directory > /dev/null
 
 echo Generating $BUILD_TYPE makefiles
-cmake $CMAKE_GEN $CC_PREFIX $ICU_PATH $STATIC_LIBRARY -DCMAKE_BUILD_TYPE=$BUILD_TYPE $WITHOUT_FEATURES ../..
+CMAKE_CMD="cmake ${CMAKE_GEN} ${CC_PREFIX} ${ICU_PATH} ${STATIC_LIBRARY} -DCMAKE_BUILD_TYPE=${BUILD_TYPE} ${WITHOUT_FEATURES} ../.."
+if [[ ${#_VERBOSE} > 0 ]]; then
+    echo "Running from ${build_directory}"
+    echo "${CMAKE_CMD}"
+fi
+eval $CMAKE_CMD
 
 _RET=$?
 if [[ $? == 0 ]]; then
@@ -230,7 +260,7 @@ if [[ $? == 0 ]]; then
         $MAKE $MULTICORE_BUILD 2>&1 | tee build.log
         _RET=${PIPESTATUS[0]}
     else
-        echo "Visit given folder above for xcode project file ----^"
+        echo "Visit ${build_directory} for ${CMAKE_GEN_NAME} project file ----^"
     fi
 fi
 
