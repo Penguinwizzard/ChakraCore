@@ -146,9 +146,8 @@ Encoder::Encode()
                         encoderMD->AddLabelReloc((byte*) offset);
 #else
                         encoderMD->AppendRelocEntry(RelocTypeLabelUse, (void*) (offset), *(IR::LabelInstr**)(offset));
-#endif
-                        //Review: Do not do the following for ARM, if we are not doing crc for arm.
                         *((size_t*)offset) = 0;
+#endif
                     });
                 }
             }
@@ -198,8 +197,9 @@ Encoder::Encode()
             }
 
             count = m_encoderMD.Encode(instr, m_pc, m_encodeBuffer);
-
+#if defined(_M_IX86) || defined(_M_X64)
             bufferCRC = CalculateCRC(bufferCRC, count, m_pc);
+#endif
 
 #if DBG_DUMP
             if (PHASE_TRACE(Js::EncoderPhase, this->m_func))
@@ -310,7 +310,9 @@ Encoder::Encode()
 
     workItem->RecordNativeCode(m_func, m_encodeBuffer);
 
+#if defined(_M_IX86) || defined(_M_X64)
     ValidateCRCOnFinalBuffer((BYTE*)workItem->GetCodeAddress(), codeSize, totalJmpTableSizeInBytes, m_encodeBuffer, initialCRCSeed, bufferCRC, isSuccessBrShortAndLoopAlign);
+#endif
 
     m_func->GetScriptContext()->GetThreadContext()->SetValidCallTargetForCFG((PVOID) workItem->GetCodeAddress());
 
@@ -593,9 +595,8 @@ void Encoder::TryCopyAndAddRelocRecordsForSwitchJumpTableEntries(BYTE *codeStart
             encoderMD->AddLabelReloc((byte*) addressOfJmpTableEntry);
 #else
             encoderMD->AppendRelocEntry(RelocTypeLabelUse, addressOfJmpTableEntry, *(IR::LabelInstr**)addressOfJmpTableEntry);
-#endif
-            //Review: Do not do the following for ARM, if we are not doing crc for arm.
             *((size_t*)addressOfJmpTableEntry) = 0;
+#endif
         }
 
         jmpTableStartAddress += (jmpTableSizeInBytes);
@@ -638,6 +639,7 @@ void Encoder::RecordInlineeFrame(Func* inlinee, uint32 currentOffset)
     }
 }
 
+#if defined(_M_IX86) || defined(_M_X64)
 /*
 *   ValidateCRCOnFinalBuffer
 *       - Validates the CRC that is last computed (could be either the one after BranchShortening or after encoding itself)
@@ -646,11 +648,7 @@ void Encoder::RecordInlineeFrame(Func* inlinee, uint32 currentOffset)
 */
 void Encoder::ValidateCRCOnFinalBuffer(BYTE * finalCodeBufferStart, size_t finalCodeSize, size_t jumpTableSize, BYTE * oldCodeBufferStart, uint initialCrcSeed, uint bufferCrcToValidate, BOOL isSuccessBrShortAndLoopAlign)
 {
-#if defined(_M_IX86) || defined(_M_X64)
     RelocList * relocList = m_encoderMD.GetRelocList();
-#else
-    EncodeReloc * relocList = m_encoderMD.GetRelocList();
-#endif
 
     BYTE * currentStartAddress = finalCodeBufferStart;
     BYTE * currentEndAddress = nullptr;
@@ -664,14 +662,10 @@ void Encoder::ValidateCRCOnFinalBuffer(BYTE * finalCodeBufferStart, size_t final
 
     if (relocList != nullptr)
     {
-#if defined(_M_IX86) || defined(_M_X64)
         for (int index = 0; index < relocList->Count(); index++)
         {
             EncodeRelocAndLabels * relocTuple = &relocList->Item(index);
-#else
-        for (EncodeReloc *relocTuple = relocList; relocTuple; relocTuple = relocTuple->m_next)
-        {
-#endif
+
             //We will deal with the jump table and dictionary entries along with other reloc records in ApplyRelocs()
             if ((BYTE*)m_encoderMD.GetRelocBufferAddress(relocTuple) >= oldCodeBufferStart && (BYTE*)m_encoderMD.GetRelocBufferAddress(relocTuple) < (oldCodeBufferStart + finalCodeSizeWithoutJumpTable))
             {
@@ -711,6 +705,7 @@ void Encoder::ValidateCRCOnFinalBuffer(BYTE * finalCodeBufferStart, size_t final
         Fatal();
     }
 }
+#endif
 
 /*
 *   EnsureRelocEntryIntegrity
