@@ -116,7 +116,7 @@ public:
     bool            IsSimd128Const() const;
 
     void            SetIsConst();
-    void            SetIsIntConst(IntConstType value);
+    void            SetIsIntConst(int64 value);
     void            SetIsFloatConst();
 // SIMD_JS
     void            SetIsSimd128Const();

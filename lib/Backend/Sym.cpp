@@ -279,7 +279,7 @@ StackSym::SetIsConst()
 }
 
 void
-StackSym::SetIsIntConst(IntConstType value)
+StackSym::SetIsIntConst(int64 value)
 {
     Assert(this->m_isSingleDef);
     Assert(this->m_instrDef);

@@ -1349,7 +1349,7 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             break;
 
         case Js::OpCode::CmEq_A:
-            if (instr->GetSrc1()->IsFloat())
+            if (instr->GetSrc1()->IsPrimitive())
             {
                 Assert(instr->GetSrc1()->GetType() == instr->GetSrc2()->GetType());
                 this->m_lowererMD.GenerateFastCmXxR8(instr);
@@ -1368,7 +1368,7 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             break;
 
         case Js::OpCode::CmNeq_A:
-            if (instr->GetSrc1()->IsFloat())
+            if (instr->GetSrc1()->IsPrimitive())
             {
                 Assert(instr->GetSrc1()->GetType() == instr->GetSrc2()->GetType());
                 this->m_lowererMD.GenerateFastCmXxR8(instr);
@@ -1418,7 +1418,7 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             break;
 
         case Js::OpCode::CmGt_A:
-            if (instr->GetSrc1()->IsFloat())
+            if (instr->GetSrc1()->IsPrimitive())
             {
                 Assert(instr->GetSrc1()->GetType() == instr->GetSrc2()->GetType());
                 this->m_lowererMD.GenerateFastCmXxR8(instr);
@@ -1430,7 +1430,7 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             break;
 
         case Js::OpCode::CmGe_A:
-            if (instr->GetSrc1()->IsFloat())
+            if (instr->GetSrc1()->IsPrimitive())
             {
                 Assert(instr->GetSrc1()->GetType() == instr->GetSrc2()->GetType());
                 this->m_lowererMD.GenerateFastCmXxR8(instr);
@@ -1442,7 +1442,7 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             break;
 
         case Js::OpCode::CmLt_A:
-            if (instr->GetSrc1()->IsFloat())
+            if (instr->GetSrc1()->IsPrimitive())
             {
                 Assert(instr->GetSrc1()->GetType() == instr->GetSrc2()->GetType());
                 this->m_lowererMD.GenerateFastCmXxR8(instr);
@@ -1454,7 +1454,7 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             break;
 
         case Js::OpCode::CmLe_A:
-            if (instr->GetSrc1()->IsFloat())
+            if (instr->GetSrc1()->IsPrimitive())
             {
                 Assert(instr->GetSrc1()->GetType() == instr->GetSrc2()->GetType());
                 this->m_lowererMD.GenerateFastCmXxR8(instr);

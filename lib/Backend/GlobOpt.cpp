@@ -5642,6 +5642,11 @@ GlobOpt::OptSrc(IR::Opnd *opnd, IR::Instr * *pInstr, Value **indirIndexValRef, I
         opnd->SetValueType(val->GetValueInfo()->Type());
         return val;
 
+    case IR::OpndKindInt64Const:
+        val = this->NewInt64ConstantValue(opnd->AsInt64ConstOpnd()->GetValue(), instr);
+        opnd->SetValueType(val->GetValueInfo()->Type());
+        return val;
+
     case IR::OpndKindFloatConst:
     {
         const FloatConstType floatValue = opnd->AsFloatConstOpnd()->m_value;
@@ -6332,93 +6337,112 @@ GlobOpt::CopyProp(IR::Opnd *opnd, IR::Instr *instr, Value *val, IR::IndirOpnd *p
     ValueInfo *valueInfo = val->GetValueInfo();
 
     // Constant prop?
-    int32 intConstantValue;
-    if (valueInfo->TryGetIntConstantValue(&intConstantValue))
+    union
+    {
+        int32 i4;
+        int64 i8;
+    } intConstantValue;
+    intConstantValue.i8 = 0;
+    bool isIntConstantValue = !opnd->IsInt64() && valueInfo->TryGetIntConstantValue(&intConstantValue.i4);
+    bool isInt64ConstantValue = !isIntConstantValue && valueInfo->TryGetInt64ConstantValue(&intConstantValue.i8);
+    if (isIntConstantValue || isInt64ConstantValue)
     {
         if (PHASE_OFF(Js::ConstPropPhase, this->func))
         {
             return opnd;
         }
 
-        if ((
-                instr->m_opcode == Js::OpCode::StElemI_A ||
-                instr->m_opcode == Js::OpCode::StElemI_A_Strict ||
-                instr->m_opcode == Js::OpCode::StElemC
-            ) && instr->GetSrc1() == opnd)
+        if (isIntConstantValue)
         {
-            // Disabling prop to src of native array store, because we were losing the chance to type specialize.
-            // Is it possible to type specialize this src if we allow constants, etc., to be prop'd here?
-            if (instr->GetDst()->AsIndirOpnd()->GetBaseOpnd()->GetValueType().IsLikelyNativeArray())
+            if ((
+                    instr->m_opcode == Js::OpCode::StElemI_A ||
+                    instr->m_opcode == Js::OpCode::StElemI_A_Strict ||
+                    instr->m_opcode == Js::OpCode::StElemC
+                ) && instr->GetSrc1() == opnd)
             {
-                return opnd;
-            }
-        }
-
-        if(opnd != instr->GetSrc1() && opnd != instr->GetSrc2())
-        {
-            if(PHASE_OFF(Js::IndirCopyPropPhase, instr->m_func->GetJnFunction()))
-            {
-                return opnd;
-            }
-
-            // Const-prop an indir opnd's constant index into its offset
-            IR::Opnd *srcs[] = { instr->GetSrc1(), instr->GetSrc2(), instr->GetDst() };
-            for(int i = 0; i < sizeof(srcs) / sizeof(srcs[0]); ++i)
-            {
-                const auto src = srcs[i];
-                if(!src || !src->IsIndirOpnd())
+                // Disabling prop to src of native array store, because we were losing the chance to type specialize.
+                // Is it possible to type specialize this src if we allow constants, etc., to be prop'd here?
+                if (instr->GetDst()->AsIndirOpnd()->GetBaseOpnd()->GetValueType().IsLikelyNativeArray())
                 {
-                    continue;
-                }
-
-                const auto indir = src->AsIndirOpnd();
-                if(opnd == indir->GetIndexOpnd())
-                {
-                    GOPT_TRACE_OPND(opnd, _u("Constant prop indir index into offset (value: %d)\n"), intConstantValue);
-                    this->CaptureByteCodeSymUses(instr);
-                    indir->SetOffset(intConstantValue);
-                    indir->SetIndexOpnd(nullptr);
+                    return opnd;
                 }
             }
 
-            return opnd;
-        }
+            if(opnd != instr->GetSrc1() && opnd != instr->GetSrc2())
+            {
+                if(PHASE_OFF(Js::IndirCopyPropPhase, instr->m_func->GetJnFunction()))
+                {
+                    return opnd;
+                }
 
-        if (Js::TaggedInt::IsOverflow(intConstantValue))
-        {
-            return opnd;
+                // Const-prop an indir opnd's constant index into its offset
+                IR::Opnd *srcs[] = { instr->GetSrc1(), instr->GetSrc2(), instr->GetDst() };
+                for(int i = 0; i < sizeof(srcs) / sizeof(srcs[0]); ++i)
+                {
+                    const auto src = srcs[i];
+                    if(!src || !src->IsIndirOpnd())
+                    {
+                        continue;
+                    }
+
+                    const auto indir = src->AsIndirOpnd();
+                    if(opnd == indir->GetIndexOpnd())
+                    {
+                        GOPT_TRACE_OPND(opnd, _u("Constant prop indir index into offset (value: %d)\n"), intConstantValue);
+                        this->CaptureByteCodeSymUses(instr);
+                        indir->SetOffset(intConstantValue.i4);
+                        indir->SetIndexOpnd(nullptr);
+                    }
+                }
+
+                return opnd;
+            }
+
+            if (Js::TaggedInt::IsOverflow(intConstantValue.i4))
+            {
+                return opnd;
+            }
         }
 
         IR::Opnd *constOpnd;
 
-        if (opnd->IsVar())
-        {
-            IR::AddrOpnd *addrOpnd = IR::AddrOpnd::New(Js::TaggedInt::ToVarUnchecked((int)intConstantValue), IR::AddrOpndKindConstantVar, instr->m_func);
 
-            GOPT_TRACE_OPND(opnd, _u("Constant prop %d (value:%d)\n"), addrOpnd->m_address, intConstantValue);
+        if (isIntConstantValue && opnd->IsVar())
+        {
+            IR::AddrOpnd *addrOpnd = IR::AddrOpnd::New(Js::TaggedInt::ToVarUnchecked(intConstantValue.i4), IR::AddrOpndKindConstantVar, instr->m_func);
+
+            GOPT_TRACE_OPND(opnd, _u("Constant prop %d (value:%d)\n"), addrOpnd->m_address, intConstantValue.i4);
             constOpnd = addrOpnd;
         }
         else
         {
             // Note: Jit loop body generates some i32 operands...
             Assert(opnd->IsInt32() || opnd->IsInt64() || opnd->IsUInt32());
-            IRType opndType;
-            IntConstType constVal;
-            if (opnd->IsUInt32())
+            if (isInt64ConstantValue || opnd->IsInt64())
             {
-                // avoid sign extension
-                constVal = (uint32)intConstantValue;
-                opndType = TyUint32;
+                IR::Int64ConstOpnd *intOpnd = IR::Int64ConstOpnd::New(intConstantValue.i8, TyInt64, instr->m_func);
+                GOPT_TRACE_OPND(opnd, _u("Constant prop %d (value:%lld)\n"), intOpnd->GetImmediateValue(), intConstantValue.i8);
+                constOpnd = intOpnd;
             }
             else
             {
-                constVal = intConstantValue;
-                opndType = TyInt32;
+                IRType opndType;
+                IntConstType constVal;
+                if (opnd->IsUInt32())
+                {
+                    // avoid sign extension
+                    constVal = (uint32)intConstantValue.i4;
+                    opndType = TyUint32;
+                }
+                else
+                {
+                    constVal = intConstantValue.i4;
+                    opndType = TyInt32;
+                }
+                IR::IntConstOpnd *intOpnd = IR::IntConstOpnd::New(constVal, opndType, instr->m_func);
+                GOPT_TRACE_OPND(opnd, _u("Constant prop %d (value:%d)\n"), intOpnd->GetImmediateValue(), constVal);
+                constOpnd = intOpnd;
             }
-            IR::IntConstOpnd *intOpnd = IR::IntConstOpnd::New(constVal, opndType, instr->m_func);
-
-            GOPT_TRACE_OPND(opnd, _u("Constant prop %d (value:%d)\n"), intOpnd->GetImmediateValue(), intConstantValue);
-            constOpnd = intOpnd;
         }
 
 #if ENABLE_DEBUG_CONFIG_OPTIONS
@@ -6451,7 +6475,7 @@ GlobOpt::CopyProp(IR::Opnd *opnd, IR::Instr *instr, Value *val, IR::IndirOpnd *p
                 IR::Opnd * dst = instr->GetDst();
                 if (dst->IsRegOpnd() && dst->AsRegOpnd()->m_sym->IsSingleDef())
                 {
-                    dst->AsRegOpnd()->m_sym->SetIsIntConst((int)intConstantValue);
+                    dst->AsRegOpnd()->m_sym->SetIsIntConst(intConstantValue.i8);
                 }
                 break;
             }
@@ -6463,11 +6487,11 @@ GlobOpt::CopyProp(IR::Opnd *opnd, IR::Instr *instr, Value *val, IR::IndirOpnd *p
             if (instr->GetDst()->IsRegOpnd())
             {
                 Assert(instr->GetDst()->AsRegOpnd()->m_sym->m_isSingleDef);
-                instr->GetDst()->AsRegOpnd()->m_sym->AsStackSym()->SetIsIntConst((int)intConstantValue);
+                instr->GetDst()->AsRegOpnd()->m_sym->AsStackSym()->SetIsIntConst(intConstantValue.i8);
             }
             else
             {
-                instr->GetDst()->AsSymOpnd()->m_sym->AsStackSym()->SetIsIntConst((int)intConstantValue);
+                instr->GetDst()->AsSymOpnd()->m_sym->AsStackSym()->SetIsIntConst(intConstantValue.i8);
             }
             break;
 
@@ -6861,6 +6885,12 @@ GlobOpt::NewIntConstantValue(const int32 intConst, IR::Instr * instr, bool isTag
             }
         }
     }
+    return value;
+}
+
+Value * GlobOpt::NewInt64ConstantValue(const int64 intConst, IR::Instr * instr)
+{
+    Value * value = NewValue(Int64ConstantValueInfo::New(this->alloc, intConst));
     return value;
 }
 
@@ -20189,6 +20219,17 @@ ValueInfo::AsIntConstant() const
 {
     Assert(IsIntConstant());
     return static_cast<const IntConstantValueInfo *>(this);
+}
+
+bool ValueInfo::IsInt64Constant() const
+{
+    return IsInt() && structureKind == ValueStructureKind::Int64Constant;
+}
+
+const Int64ConstantValueInfo * ValueInfo::AsInt64Constant() const
+{
+    Assert(IsInt64Constant());
+    return static_cast<const Int64ConstantValueInfo *>(this);
 }
 
 bool

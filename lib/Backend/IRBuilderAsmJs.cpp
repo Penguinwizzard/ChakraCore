@@ -1055,7 +1055,7 @@ IRBuilderAsmJs::BuildElementSlot(Js::OpCodeAsmJs newOpcode, uint32 offset)
 {
     Assert(OpCodeAttrAsmJs::HasMultiSizeLayout(newOpcode));
     auto layout = m_jnReader.GetLayout<Js::OpLayoutT_ElementSlot<SizePolicy>>();
-    TraceIrBuilder(newOpcode, ElementSlot, layout);
+    //TraceIrBuilder(newOpcode, ElementSlot, layout);
     BuildElementSlot(newOpcode, offset, layout->SlotIndex, layout->Value, layout->Instance);
 }
 
@@ -2820,7 +2820,7 @@ IRBuilderAsmJs::BuildLong1Const1(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::R
     IR::RegOpnd * dstOpnd = BuildDstOpnd(dstRegSlot, TyInt64);
     dstOpnd->SetValueType(ValueType::GetInt(false));
 
-    IR::Instr * instr = IR::Instr::New(Js::OpCode::Ld_I8, dstOpnd, IR::Int64ConstOpnd::New(constInt64, TyInt64, m_func), m_func);
+    IR::Instr * instr = IR::Instr::New(Js::OpCode::Ld_A, dstOpnd, IR::Int64ConstOpnd::New(constInt64, TyInt64, m_func), m_func);
 
     if (dstOpnd->m_sym->IsSingleDef())
     {
@@ -2835,28 +2835,217 @@ IRBuilderAsmJs::BuildLong1Const1(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::R
 }
 
 void
-IRBuilderAsmJs::BuildLong2(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::RegSlot dstRegSlot, Js::RegSlot src1RegSlot)
+IRBuilderAsmJs::BuildLong2(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::RegSlot dstRegSlot, Js::RegSlot srcRegSlot)
 {
+    IR::RegOpnd * srcOpnd = BuildSrcOpnd(srcRegSlot, TyInt64);
+    srcOpnd->SetValueType(ValueType::GetInt(false));
+
+    IR::RegOpnd * dstOpnd = BuildDstOpnd(dstRegSlot, TyInt64);
+    dstOpnd->SetValueType(ValueType::GetInt(false));
+
+    IR::Instr * instr = nullptr;
+    switch (newOpcode)
+    {
+    case Js::OpCodeAsmJs::Ld_Long:
+        instr = IR::Instr::New(Js::OpCode::Ld_A, dstOpnd, srcOpnd, m_func);
+        break;
+
+    case Js::OpCodeAsmJs::Clz_Long:
+        instr = IR::Instr::New(Js::OpCode::InlineMathClz32, dstOpnd, srcOpnd, m_func);
+        break;
+
+    case Js::OpCodeAsmJs::Ctz_Long:
+        instr = IR::Instr::New(Js::OpCode::Ctz, dstOpnd, srcOpnd, m_func);
+        break;
+
+    case Js::OpCodeAsmJs::PopCnt_Long:
+        Assert(false);
+        break;
+
+    case Js::OpCodeAsmJs::Return_Long:
+        instr = IR::Instr::New(Js::OpCode::Ld_A, dstOpnd, srcOpnd, m_func);
+        if (m_func->IsLoopBody())
+        {
+            IR::Instr* slotInstr = GenerateStSlotForReturn(srcOpnd, IRType::TyInt64);
+            AddInstr(slotInstr, offset);
+        }
+        break;
+    default:
+        Assume(UNREACHED);
+    }
+    AddInstr(instr, offset);
 }
 
 void
 IRBuilderAsmJs::BuildLong3(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::RegSlot dstRegSlot, Js::RegSlot src1RegSlot, Js::RegSlot src2RegSlot)
 {
+    IR::RegOpnd * src1Opnd = BuildSrcOpnd(src1RegSlot, TyInt64);
+    src1Opnd->SetValueType(ValueType::GetInt(false));
+
+    IR::RegOpnd * src2Opnd = BuildSrcOpnd(src2RegSlot, TyInt64);
+    src2Opnd->SetValueType(ValueType::GetInt(false));
+
+    IR::RegOpnd * dstOpnd = BuildDstOpnd(dstRegSlot, TyInt64);
+    dstOpnd->SetValueType(ValueType::GetInt(false));
+
+    IR::Instr * instr = nullptr;
+    switch (newOpcode)
+    {
+    case Js::OpCodeAsmJs::Add_Long:
+        instr = IR::Instr::New(Js::OpCode::Add_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        break;
+
+    case Js::OpCodeAsmJs::Sub_Long:
+        instr = IR::Instr::New(Js::OpCode::Sub_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        break;
+
+    case Js::OpCodeAsmJs::Mul_Long:
+        instr = IR::Instr::New(Js::OpCode::Mul_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        break;
+
+    case Js::OpCodeAsmJs::Div_ULong:
+        src1Opnd->SetType(TyUint64);
+        src2Opnd->SetType(TyUint64);
+    case Js::OpCodeAsmJs::Div_Long:
+        instr = IR::Instr::New(Js::OpCode::Div_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        break;
+
+    case Js::OpCodeAsmJs::Rem_ULong:
+        src1Opnd->SetType(TyUint64);
+        src2Opnd->SetType(TyUint64);
+    case Js::OpCodeAsmJs::Rem_Long:
+        instr = IR::Instr::New(Js::OpCode::Rem_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        break;
+    case Js::OpCodeAsmJs::And_Long:
+        instr = IR::Instr::New(Js::OpCode::And_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        break;
+    case Js::OpCodeAsmJs::Or_Long:
+        instr = IR::Instr::New(Js::OpCode::Or_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        break;
+    case Js::OpCodeAsmJs::Xor_Long:
+        instr = IR::Instr::New(Js::OpCode::Xor_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        break;
+    case Js::OpCodeAsmJs::Shl_Long:
+        instr = IR::Instr::New(Js::OpCode::Shl_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        break;
+    case Js::OpCodeAsmJs::Shr_Long:
+        instr = IR::Instr::New(Js::OpCode::Shr_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        break;
+    case Js::OpCodeAsmJs::Shr_ULong:
+        instr = IR::Instr::New(Js::OpCode::ShrU_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        break;
+    case Js::OpCodeAsmJs::Rol_Long:
+        instr = IR::Instr::New(Js::OpCode::Rol_I8, dstOpnd, src1Opnd, src2Opnd, m_func);
+        break;
+    case Js::OpCodeAsmJs::Ror_Long:
+        instr = IR::Instr::New(Js::OpCode::Ror_I8, dstOpnd, src1Opnd, src2Opnd, m_func);
+        break;
+    default:
+        Assume(UNREACHED);
+    }
+    AddInstr(instr, offset);
 }
 
 void
 IRBuilderAsmJs::BuildInt1Long2(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::RegSlot dstRegSlot, Js::RegSlot src1RegSlot, Js::RegSlot src2RegSlot)
 {
+    IR::RegOpnd * src1Opnd = BuildSrcOpnd(src1RegSlot, TyInt64);
+    src1Opnd->SetValueType(ValueType::GetInt(false));
+
+    IR::RegOpnd * src2Opnd = BuildSrcOpnd(src2RegSlot, TyInt64);
+    src2Opnd->SetValueType(ValueType::GetInt(false));
+
+    IR::RegOpnd * dstOpnd = BuildDstOpnd(dstRegSlot, TyInt32);
+    dstOpnd->SetValueType(ValueType::GetInt(false));
+
+    IR::Instr * instr = nullptr;
+    switch (newOpcode)
+    {
+    case Js::OpCodeAsmJs::CmLt_Long:
+        instr = IR::Instr::New(Js::OpCode::CmLt_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        break;
+    case Js::OpCodeAsmJs::CmLe_Long:
+        instr = IR::Instr::New(Js::OpCode::CmLe_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        break;
+    case Js::OpCodeAsmJs::CmGt_Long:
+        instr = IR::Instr::New(Js::OpCode::CmGt_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        break;
+    case Js::OpCodeAsmJs::CmGe_Long:
+        instr = IR::Instr::New(Js::OpCode::CmGe_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        break;
+    case Js::OpCodeAsmJs::CmEq_Long:
+        instr = IR::Instr::New(Js::OpCode::CmEq_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        break;
+    case Js::OpCodeAsmJs::CmNe_Long:
+        instr = IR::Instr::New(Js::OpCode::CmNeq_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        break;
+    case Js::OpCodeAsmJs::CmLt_ULong:
+        instr = IR::Instr::New(Js::OpCode::CmUnLt_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        break;
+    case Js::OpCodeAsmJs::CmLe_ULong:
+        instr = IR::Instr::New(Js::OpCode::CmUnLe_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        break;
+    case Js::OpCodeAsmJs::CmGt_ULong:
+        instr = IR::Instr::New(Js::OpCode::CmUnGt_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        break;
+    case Js::OpCodeAsmJs::CmGe_ULong:
+        instr = IR::Instr::New(Js::OpCode::CmUnGe_A, dstOpnd, src1Opnd, src2Opnd, m_func);
+        break;
+    default:
+        Assume(UNREACHED);
+    }
+    AddInstr(instr, offset);
 }
 
 void
-IRBuilderAsmJs::BuildLong1Int1(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::RegSlot dstRegSlot, Js::RegSlot src1RegSlot)
+IRBuilderAsmJs::BuildLong1Int1(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::RegSlot dstRegSlot, Js::RegSlot srcRegSlot)
 {
+    IR::RegOpnd * srcOpnd = nullptr;
+    switch (newOpcode)
+    {
+    case Js::OpCodeAsmJs::Conv_ITD:
+        srcOpnd = BuildSrcOpnd(srcRegSlot, TyInt32);
+        break;
+
+    case Js::OpCodeAsmJs::Conv_UTD:
+        srcOpnd = BuildSrcOpnd(srcRegSlot, TyUint32);
+        break;
+
+    default:
+        Assume(UNREACHED);
+    }
+    srcOpnd->SetValueType(ValueType::GetInt(false));
+
+    IR::RegOpnd * dstOpnd = BuildDstOpnd(dstRegSlot, TyInt64);
+    dstOpnd->SetValueType(ValueType::Float);
+
+    IR::Instr * instr = IR::Instr::New(Js::OpCode::Conv_Prim, dstOpnd, srcOpnd, m_func);
+    AddInstr(instr, offset);
 }
 
 void
 IRBuilderAsmJs::BuildInt1Long1(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::RegSlot dstRegSlot, Js::RegSlot src1RegSlot)
 {
+    IR::RegOpnd * src1Opnd = BuildSrcOpnd(src1RegSlot, TyInt64);
+    src1Opnd->SetValueType(ValueType::GetInt(false));
+
+    IR::RegOpnd * dstOpnd = BuildDstOpnd(dstRegSlot, TyInt32);
+    dstOpnd->SetValueType(ValueType::GetInt(false));
+
+    IR::Instr * instr = nullptr;
+    switch (newOpcode)
+    {
+    case Js::OpCodeAsmJs::Eqz_Long:
+        // todo eqz
+        instr = IR::Instr::New(Js::OpCode::CmLt_A, dstOpnd, src1Opnd, m_func);
+        break;
+    case Js::OpCodeAsmJs::Conv_LTI:
+        instr = IR::Instr::New(Js::OpCode::Conv_Prim, dstOpnd, src1Opnd, m_func);
+        break;
+    default:
+        Assume(UNREACHED);
+    }
+    AddInstr(instr, offset);
 }
 
 void

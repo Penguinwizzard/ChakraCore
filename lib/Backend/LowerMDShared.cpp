@@ -1818,10 +1818,6 @@ LowererMD::Legalize(IR::Instr *const instr, bool fPostRegAlloc)
         // All memref address need to fit in a dword
         Assert(Math::FitsInDWord((size_t)instr->GetSrc2()->AsMemRefOpnd()->GetMemLoc()));
     }
-
-    // Non-MOV (second operand) immediate need to fit in DWORD for AMD64
-    Assert(!instr->GetSrc2() || !instr->GetSrc2()->IsImmediateOpnd()
-        || (TySize[instr->GetSrc2()->GetType()] != 8) || Math::FitsInDWord(instr->GetSrc2()->GetImmediateValue()));
 #endif
 }
 
@@ -1963,6 +1959,7 @@ void LowererMD::LegalizeSrc(IR::Instr *const instr, IR::Opnd *src, const uint fo
             Assert(forms & L_Reg);
             return;
 
+        case IR::OpndKindInt64Const:
         case IR::OpndKindIntConst:
             Assert(!instr->isInlineeEntryInstr);
             if(forms & L_Imm32)

@@ -472,6 +472,10 @@ EncoderMD::EmitImmed(IR::Opnd * opnd, int opSize, int sbit, bool allow64Immediat
 
     switch (opnd->GetKind())
     {
+    case IR::OpndKindInt64Const:
+        value = (size_t)opnd->AsInt64ConstOpnd()->GetValue();
+        goto intConst;
+
     case IR::OpndKindAddr:
         value = (size_t)opnd->AsAddrOpnd()->m_address;
         goto intConst;

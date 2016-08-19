@@ -178,6 +178,9 @@ void Opnd::Free(Func *func)
         //NOTE: use to be Sealed do not do sub class checks like in CloneUse
         return static_cast<IntConstOpnd*>(this)->FreeInternal(func);
 
+    case OpndKindInt64Const:
+        return static_cast<Int64ConstOpnd*>(this)->FreeInternal(func);
+
     case OpndKindSimd128Const:
         return static_cast<Simd128ConstOpnd*>(this)->FreeInternal(func);
 
@@ -229,6 +232,9 @@ bool Opnd::IsEqual(Opnd *opnd)
     case OpndKindIntConst:
         return static_cast<IntConstOpnd*>(this)->IsEqualInternal(opnd);
 
+    case OpndKindInt64Const:
+        return static_cast<Int64ConstOpnd*>(this)->IsEqualInternal(opnd);
+
     case OpndKindFloatConst:
         return static_cast<FloatConstOpnd*>(this)->IsEqualInternal(opnd);
 
@@ -279,6 +285,9 @@ Opnd * Opnd::Copy(Func *func)
     {
     case OpndKindIntConst:
         return static_cast<IntConstOpnd*>(this)->CopyInternal(func);
+
+    case OpndKindInt64Const:
+        return static_cast<Int64ConstOpnd*>(this)->CopyInternal(func);
 
     case OpndKindFloatConst:
         return static_cast<FloatConstOpnd*>(this)->CopyInternal(func);
@@ -339,13 +348,16 @@ Opnd::GetStackSym() const
     }
 }
 
-intptr_t
+int64
 Opnd::GetImmediateValue()
 {
     switch (this->GetKind())
     {
     case OpndKindIntConst:
         return this->AsIntConstOpnd()->GetValue();
+
+    case OpndKindInt64Const:
+        return this->AsInt64ConstOpnd()->GetValue();
 
     case OpndKindAddr:
         return (intptr_t)this->AsAddrOpnd()->m_address;
@@ -1429,35 +1441,59 @@ IntConstOpnd::AsUint32()
     Assert(m_value >= 0 && m_value <= UINT32_MAX);
     return (uint32)m_value;
 }
-#if TARGET_64
-///----------------------------------------------------------------------------
-///
-/// IntConstOpnd::AsInt64
-///
-///     Retrieves the value of the int const opnd as an signed 64-bit integer.
-///
-///----------------------------------------------------------------------------
 
-int64 IntConstOpnd::AsInt64()
+///----------------------------------------------------------------------------
+///
+/// Int64ConstOpnd Methods
+///
+///----------------------------------------------------------------------------
+IR::Int64ConstOpnd* Int64ConstOpnd::New(int64 value, IRType type, Func *func)
 {
-    Assert(m_type == TyInt64);
-    return (int64)m_value;
+    Int64ConstOpnd * intConstOpnd;
+
+    Assert(TySize[type] == sizeof(int64));
+
+    intConstOpnd = JitAnew(func->m_alloc, IR::Int64ConstOpnd);
+
+    intConstOpnd->m_type = type;
+    intConstOpnd->m_kind = OpndKindInt64Const;
+    intConstOpnd->m_value = value;
+
+    return intConstOpnd;
 }
 
-///----------------------------------------------------------------------------
-///
-/// IntConstOpnd::AsUint64
-///
-///     Retrieves the value of the int const opnd as an unsigned 64-bit integer.
-///
-///----------------------------------------------------------------------------
+IR::Int64ConstOpnd* Int64ConstOpnd::CopyInternal(Func *func)
+{
+    Assert(m_kind == OpndKindInt64Const);
+    Int64ConstOpnd * newOpnd;
+    newOpnd = Int64ConstOpnd::New(m_value, m_type, func);
+    newOpnd->m_valueType = m_valueType;
 
-uint64 IntConstOpnd::AsUint64()
+    return newOpnd;
+}
+
+bool Int64ConstOpnd::IsEqualInternal(Opnd *opnd)
+{
+    Assert(m_kind == OpndKindInt64Const);
+    if (!opnd->IsInt64ConstOpnd() || this->GetType() != opnd->GetType())
+    {
+        return false;
+    }
+
+    return m_value == opnd->AsInt64ConstOpnd()->m_value;
+}
+
+void Int64ConstOpnd::FreeInternal(Func * func)
+{
+    Assert(m_kind == OpndKindInt64Const);
+    JitAdelete(func->m_alloc, this);
+}
+
+int64 Int64ConstOpnd::GetValue()
 {
     Assert(m_type == TyInt64);
-    return (uint64)m_value;
+    return m_value;
 }
-#endif
 
 ///----------------------------------------------------------------------------
 ///
