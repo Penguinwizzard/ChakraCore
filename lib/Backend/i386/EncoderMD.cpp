@@ -1392,7 +1392,7 @@ EncoderMD::FixMaps(uint32 brOffset, int32 bytesSaved, uint32 *inlineeFrameRecord
 /// before we copy the contents of the temporary buffer to the target buffer.
 ///----------------------------------------------------------------------------
 void
-EncoderMD::ApplyRelocs(uint32 codeBufferAddress, size_t codeSize, uint * bufferCRC, BOOL isBrShorteningSucceeded, bool isCalcOnlyCRC)
+EncoderMD::ApplyRelocs(uint32 codeBufferAddress, size_t codeSize, uint * bufferCRC, BOOL isBrShorteningSucceeded, bool isFinalBufferValidation)
 {
     for (int32 i = 0; i < m_relocList->Count(); i++)
     {
@@ -1406,7 +1406,7 @@ EncoderMD::ApplyRelocs(uint32 codeBufferAddress, size_t codeSize, uint * bufferC
             {
                 pcrel = (uint32)(codeBufferAddress + (BYTE*)reloc->m_ptr - m_encoder->m_encodeBuffer + 4);
                 uint32 offset = (uint32)reloc->GetFnAddress() - pcrel;
-                if (!isCalcOnlyCRC)
+                if (!isFinalBufferValidation)
                 {
                     Assert(*(uint32 *)relocAddress == 0);
                     *(uint32 *)relocAddress = offset;
@@ -1423,7 +1423,7 @@ EncoderMD::ApplyRelocs(uint32 codeBufferAddress, size_t codeSize, uint * bufferC
                     // short branch
                     pcrel = (uint32)(labelInstr->GetPC() - ((BYTE*)reloc->m_ptr + 1));
                     AssertMsg((int32)pcrel >= -128 && (int32)pcrel <= 127, "Offset doesn't fit in imm8.");
-                    if (!isCalcOnlyCRC)
+                    if (!isFinalBufferValidation)
                     {
                         Assert(*(BYTE*)relocAddress == 0);
                         *(BYTE*)relocAddress = (BYTE)pcrel;
@@ -1436,7 +1436,7 @@ EncoderMD::ApplyRelocs(uint32 codeBufferAddress, size_t codeSize, uint * bufferC
                 else
                 {
                     pcrel = (uint32)(labelInstr->GetPC() - ((BYTE*)reloc->m_ptr + 4));
-                    if (!isCalcOnlyCRC)
+                    if (!isFinalBufferValidation)
                     {
                         Assert(*(uint32 *)relocAddress == 0);
                         *(uint32 *)relocAddress = pcrel;
@@ -1455,7 +1455,7 @@ EncoderMD::ApplyRelocs(uint32 codeBufferAddress, size_t codeSize, uint * bufferC
                 AssertMsg(labelInstr->GetPC() != nullptr, "Branch to unemitted label?");
                 uint32 offset = uint32(labelInstr->GetPC() - m_encoder->m_encodeBuffer);
                 size_t targetAddress = (uint32)(offset + codeBufferAddress);
-                if (!isCalcOnlyCRC)
+                if (!isFinalBufferValidation)
                 {
                     Assert(*(uint32 *)relocAddress == 0);
                     *(uint32 *)relocAddress = targetAddress;

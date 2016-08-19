@@ -2263,7 +2263,7 @@ EncoderMD::BaseAndOffsetFromSym(IR::SymOpnd *symOpnd, RegNum *pBaseReg, int32 *p
 /// before we copy the contents of the temporary buffer to the target buffer.
 ///----------------------------------------------------------------------------
 void
-EncoderMD::ApplyRelocs(uint32 codeBufferAddress, size_t codeSize, uint * bufferCRC, BOOL isBrShorteningSucceeded, bool isCalcOnlyCRC)
+EncoderMD::ApplyRelocs(uint32 codeBufferAddress, size_t codeSize, uint * bufferCRC, BOOL isBrShorteningSucceeded, bool isFinalBufferValidation)
 {
     for (EncodeReloc *reloc = m_relocList; reloc; reloc = reloc->m_next)
     {
@@ -2278,7 +2278,7 @@ EncoderMD::ApplyRelocs(uint32 codeBufferAddress, size_t codeSize, uint * bufferC
                 Assert(!labelInstr->isInlineeEntryInstr);
                 AssertMsg(labelInstr->GetPC() != nullptr, "Branch to unemitted label?");
                 pcrel = (uint32)(labelInstr->GetPC() - reloc->m_consumerOffset);
-                if (!isCalcOnlyCRC)
+                if (!isFinalBufferValidation)
                 {
                     encode |= BranchOffset_T2_20(pcrel);
                     Assert(*(uint32 *)relocAddress == 0);
@@ -2298,7 +2298,7 @@ EncoderMD::ApplyRelocs(uint32 codeBufferAddress, size_t codeSize, uint * bufferC
                 Assert(!labelInstr->isInlineeEntryInstr);
                 AssertMsg(labelInstr->GetPC() != nullptr, "Branch to unemitted label?");
                 pcrel = (uint32)(labelInstr->GetPC() - reloc->m_consumerOffset);
-                if (!isCalcOnlyCRC)
+                if (!isFinalBufferValidation)
                 {
                     encode |= BranchOffset_T2_24(pcrel);
                     Assert(*(ENCODE_32 *)relocAddress == 0);
@@ -2329,7 +2329,7 @@ EncoderMD::ApplyRelocs(uint32 codeBufferAddress, size_t codeSize, uint * bufferC
                 {
                     Assert(UNREACHED);
                 }
-                if (!isCalcOnlyCRC)
+                if (!isFinalBufferValidation)
                 {
                     Assert(*(ENCODE_32 *)relocAddress == 0);
                     *(ENCODE_32 *)relocAddress = encode;
@@ -2359,7 +2359,7 @@ EncoderMD::ApplyRelocs(uint32 codeBufferAddress, size_t codeSize, uint * bufferC
                 {
                     Assert(UNREACHED);
                 }
-                if (!isCalcOnlyCRC)
+                if (!isFinalBufferValidation)
                 {
                     Assert(*(ENCODE_32 *)relocAddress == 0);
                     *(ENCODE_32 *)relocAddress = encode;
@@ -2389,7 +2389,7 @@ EncoderMD::ApplyRelocs(uint32 codeBufferAddress, size_t codeSize, uint * bufferC
                 {
                     Assert(UNREACHED);
                 }
-                if (!isCalcOnlyCRC)
+                if (!isFinalBufferValidation)
                 {
                     Assert(*(ENCODE_32 *)relocAddress == 0);
                     *(ENCODE_32 *)relocAddress = encode;
@@ -2404,7 +2404,7 @@ EncoderMD::ApplyRelocs(uint32 codeBufferAddress, size_t codeSize, uint * bufferC
 
                 uint32 offset = (uint32)(labelInstr->GetPC() - m_encoder->m_encodeBuffer);
                 uint32 targetAddr = (uint32)(offset + codeBufferAddress);
-                if (!isCalcOnlyCRC)
+                if (!isFinalBufferValidation)
                 {
                     Assert(*(uint32 *)relocAddress == 0);
                     /* For Thumb instruction set -> OR 1 with the address*/

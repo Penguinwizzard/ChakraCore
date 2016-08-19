@@ -1531,7 +1531,7 @@ EncoderMD::FixMaps(uint32 brOffset, uint32 bytesSaved, uint32 *inlineeFrameRecor
 ///----------------------------------------------------------------------------
 
 void
-EncoderMD::ApplyRelocs(size_t codeBufferAddress_, size_t codeSize, uint * bufferCRC, BOOL isBrShorteningSucceeded, bool isCalcOnlyCRC)
+EncoderMD::ApplyRelocs(size_t codeBufferAddress_, size_t codeSize, uint * bufferCRC, BOOL isBrShorteningSucceeded, bool isFinalBufferValidation)
 {
     if (m_relocList == nullptr)
     {
@@ -1565,7 +1565,7 @@ EncoderMD::ApplyRelocs(size_t codeBufferAddress_, size_t codeSize, uint * buffer
                     // short branch
                     pcrel = (uint32)(labelInstr->GetPC() - ((BYTE*)reloc->m_ptr + 1));
                     AssertMsg((int32)pcrel >= -128 && (int32)pcrel <= 127, "Offset doesn't fit in imm8.");
-                    if (!isCalcOnlyCRC)
+                    if (!isFinalBufferValidation)
                     {
                         Assert(*(BYTE*)relocAddress == 0);
                         *(BYTE*)relocAddress = (BYTE)pcrel;
@@ -1578,7 +1578,7 @@ EncoderMD::ApplyRelocs(size_t codeBufferAddress_, size_t codeSize, uint * buffer
                 else
                 {
                     pcrel = (uint32)(labelInstr->GetPC() - ((BYTE*)reloc->m_ptr + 4));
-                    if (!isCalcOnlyCRC)
+                    if (!isFinalBufferValidation)
                     {
                         Assert(*(uint32*)relocAddress == 0);
                         *(uint32 *)relocAddress = pcrel;
@@ -1601,7 +1601,7 @@ EncoderMD::ApplyRelocs(size_t codeBufferAddress_, size_t codeSize, uint * buffer
                 //Review: Is this casting, fine?
                 uint32 offset = (uint32)(labelInstr->GetPC() - m_encoder->m_encodeBuffer);
                 size_t targetAddress = (size_t)(offset + codeBufferAddress_);
-                if (!isCalcOnlyCRC)
+                if (!isFinalBufferValidation)
                 {
                     Assert(*(size_t *)relocAddress == 0);
                     *(size_t *)relocAddress = targetAddress;

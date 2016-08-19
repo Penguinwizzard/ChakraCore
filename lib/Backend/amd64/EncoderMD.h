@@ -181,7 +181,7 @@ public:
     EncoderMD(Func * func) : m_func(func) {}
     ptrdiff_t       Encode(IR::Instr * instr, BYTE *pc, BYTE* beginCodeAddress = nullptr);
     void            Init(Encoder *encoder);
-    void            ApplyRelocs(size_t codeBufferAddress, size_t codeSize, uint* bufferCRC, BOOL isBrShorteningSucceeded, bool isCalcOnlyCRC = false);
+    void            ApplyRelocs(size_t codeBufferAddress, size_t codeSize, uint* bufferCRC, BOOL isBrShorteningSucceeded, bool isFinalBufferValidation = false);
     uint            GetRelocDataSize(EncodeRelocAndLabels *reloc);
     void            EncodeInlineeCallInfo(IR::Instr *instr, uint32 offset);
     static bool     TryConstFold(IR::Instr *instr, IR::RegOpnd *regOpnd);
