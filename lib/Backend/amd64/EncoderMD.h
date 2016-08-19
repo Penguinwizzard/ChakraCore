@@ -42,6 +42,7 @@ public:
     {
         m_type = type;
         m_ptr = ptr;
+        m_InlineeOffset = 0;
 
         //TODO: Initialize other variables here.
 
@@ -183,6 +184,7 @@ public:
     void            Init(Encoder *encoder);
     void            ApplyRelocs(size_t codeBufferAddress, size_t codeSize, uint* bufferCRC, BOOL isBrShorteningSucceeded, bool isFinalBufferValidation = false);
     uint            GetRelocDataSize(EncodeRelocAndLabels *reloc);
+    BYTE *          GetRelocBufferAddress(EncodeRelocAndLabels * reloc);
     void            EncodeInlineeCallInfo(IR::Instr *instr, uint32 offset);
     static bool     TryConstFold(IR::Instr *instr, IR::RegOpnd *regOpnd);
     static bool     TryFold(IR::Instr *instr, IR::RegOpnd *regOpnd);
@@ -199,7 +201,6 @@ public:
     void            VerifyRelocList(BYTE *buffStart, BYTE *buffEnd);
 #endif
     void            AddLabelReloc(BYTE* relocAddress);
-    BYTE *          GetRelocBufferAddress(EncodeRelocAndLabels * reloc);
 
 private:
     const BYTE      GetOpcodeByte2(IR::Instr *instr);

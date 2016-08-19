@@ -62,7 +62,7 @@ private:
 
     void            ValidateCRC(uint bufferCRC, uint initialCRCSeed, void* buffer, size_t count);
     static uint     CalculateCRC(uint bufferCRC, size_t count, void * buffer);
-    static uint     CalculateCRC(uint bufferCRC, uint data);
+    static uint     CalculateCRC(uint bufferCRC, size_t data);
     void            ValidateCRCOnFinalBuffer(BYTE * finalCodeBufferStart, size_t finalCodeSize, size_t jumpTableSize, BYTE * oldCodeBufferStart, uint initialCrcSeed, uint bufferCrcToValidate, BOOL isSuccessBrShortAndLoopAlign);
     static void     EnsureRelocEntryIntegrity(size_t newBufferStartAddress, size_t codeSize, size_t oldBufferAddress, size_t relocAddress, uint offsetBytes, ptrdiff_t opndData, bool isRelativeAddr = true);
 };

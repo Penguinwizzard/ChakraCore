@@ -749,12 +749,18 @@ void Encoder::EnsureRelocEntryIntegrity(size_t newBufferStartAddress, size_t cod
     }
 }
 
-uint Encoder::CalculateCRC(uint bufferCRC, uint data)
+uint Encoder::CalculateCRC(uint bufferCRC, size_t data)
 {
-#if defined(_M_IX86) || defined(_M_X64)
+#if defined(_M_IX86)
     if (AutoSystemInfo::Data.SSE3Available())
     {
         return _mm_crc32_u32(bufferCRC, data);
+    }
+#elif defined(_M_X64)
+    if (AutoSystemInfo::Data.SSE3Available())
+    {
+        //CRC32 always returns a 32-bit result
+        return (uint)_mm_crc32_u64(bufferCRC, data);
     }
 #endif
     

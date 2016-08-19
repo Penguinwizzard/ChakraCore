@@ -1598,8 +1598,8 @@ EncoderMD::ApplyRelocs(size_t codeBufferAddress_, size_t codeSize, uint * buffer
             {
                 IR::LabelInstr *labelInstr = reloc->getBrTargetLabel();
                 AssertMsg(labelInstr->GetPC() != nullptr, "Branch to unemitted label?");
-                //Review: Is this casting, fine?
-                uint32 offset = (uint32)(labelInstr->GetPC() - m_encoder->m_encodeBuffer);
+
+                size_t offset = (size_t)(labelInstr->GetPC() - m_encoder->m_encodeBuffer);
                 size_t targetAddress = (size_t)(offset + codeBufferAddress_);
                 if (!isFinalBufferValidation)
                 {

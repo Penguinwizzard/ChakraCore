@@ -1483,6 +1483,7 @@ EncoderMD::GetRelocDataSize(EncodeRelocAndLabels *reloc)
     switch (reloc->m_type)
     {
         case RelocTypeCallPcrel:
+        case RelocTypeLabelUse:
         {
             return sizeof(uint32);
         }
@@ -1496,10 +1497,6 @@ EncoderMD::GetRelocDataSize(EncodeRelocAndLabels *reloc)
             {
                 return sizeof(uint32);
             }
-        }
-        case RelocTypeLabelUse:
-        {
-            return sizeof(uint32);
         }
         default:
         {
