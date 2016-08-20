@@ -647,7 +647,7 @@ void Encoder::RecordInlineeFrame(Func* inlinee, uint32 currentOffset)
 *       - Also, all reloc data are computed towards the end - after computing the code section - because we don't have to deal with the changes relocs while operating on the code section.
 *       - The version of CRC that we are validating with, doesn't have Relocs applied but the final buffer does - So we have to make adjustments while calculating the final buffer's CRC.
 */
-void Encoder::ValidateCRCOnFinalBuffer(BYTE * finalCodeBufferStart, size_t finalCodeSize, size_t jumpTableSize, BYTE * oldCodeBufferStart, uint initialCrcSeed, uint bufferCrcToValidate, BOOL isSuccessBrShortAndLoopAlign)
+void Encoder::ValidateCRCOnFinalBuffer(_In_reads_bytes_(finalCodeSize) BYTE * finalCodeBufferStart, size_t finalCodeSize, size_t jumpTableSize, _In_reads_bytes_(finalCodeSize) BYTE * oldCodeBufferStart, uint initialCrcSeed, uint bufferCrcToValidate, BOOL isSuccessBrShortAndLoopAlign)
 {
     RelocList * relocList = m_encoderMD.GetRelocList();
 
@@ -811,7 +811,7 @@ uint Encoder::CalculateCRC(uint bufferCRC, size_t data)
     return (bufferCRC ^ 0xffffffffL);
 }
 
-uint Encoder::CalculateCRC(uint bufferCRC, size_t count, void * buffer)
+uint Encoder::CalculateCRC(uint bufferCRC, size_t count, _In_reads_bytes_(count) void * buffer)
 {
     for (uint index = 0; index < count; index++)
     {
@@ -820,7 +820,7 @@ uint Encoder::CalculateCRC(uint bufferCRC, size_t count, void * buffer)
     return bufferCRC;
 }
 
-void Encoder::ValidateCRC(uint bufferCRC, uint initialCRCSeed, void* buffer, size_t count)
+void Encoder::ValidateCRC(uint bufferCRC, uint initialCRCSeed, _In_reads_bytes_(count) void* buffer, size_t count)
 {
     uint validationCRC = initialCRCSeed;
 
