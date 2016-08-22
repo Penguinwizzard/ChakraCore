@@ -1323,6 +1323,25 @@ IntConstOpnd::New(IntConstType value, IRType type, const char16 * name, Func *fu
 
 ///----------------------------------------------------------------------------
 ///
+/// IntConstOpnd::CreateIntConstOpndFromType
+///
+///     Create an IntConstOpnd or Int64ConstOpnd depending on the IRType.
+///
+///----------------------------------------------------------------------------
+
+IR::Opnd* IntConstOpnd::NewFromType(int64 value, IRType type, Func* func)
+{
+    bool isInt64Type = type == TyInt64 || type == TyUint64;
+    if (isInt64Type)
+    {
+        return Int64ConstOpnd::New(value, type, func);
+    }
+    Assert(value < (int64)UINT_MAX);
+    return IntConstOpnd::New((IntConstType)value, type, func);
+}
+
+///----------------------------------------------------------------------------
+///
 /// IntConstOpnd::Copy
 ///
 ///     Returns a copy of this opnd.

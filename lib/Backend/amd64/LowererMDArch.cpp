@@ -2029,7 +2029,7 @@ LowererMDArch::EmitInt4Instr(IR::Instr *instr, bool signExtend /* = false */)
         break;
 
     case Js::OpCode::Mul_I4:
-        instr->m_opcode = src1InstrSize == 4 ? Js::OpCode::IMUL2 : Js::OpCode::IMUL;
+        instr->m_opcode = Js::OpCode::IMUL2;
         break;
 
     case Js::OpCode::Div_I4:

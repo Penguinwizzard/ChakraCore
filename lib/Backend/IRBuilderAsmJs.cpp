@@ -2829,15 +2829,11 @@ IRBuilderAsmJs::BuildLong1Const1(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::R
     IR::RegOpnd * dstOpnd = BuildDstOpnd(dstRegSlot, TyInt64);
     dstOpnd->SetValueType(ValueType::GetInt(false));
 
-    IR::Instr * instr = IR::Instr::New(Js::OpCode::Ld_A, dstOpnd, IR::Int64ConstOpnd::New(constInt64, TyInt64, m_func), m_func);
+    IR::Instr * instr = IR::Instr::New(Js::OpCode::Ld_I4, dstOpnd, IR::Int64ConstOpnd::New(constInt64, TyInt64, m_func), m_func);
 
     if (dstOpnd->m_sym->IsSingleDef())
     {
-#if TARGET_64
         dstOpnd->m_sym->SetIsIntConst(constInt64);
-#else
-        dstOpnd->m_sym->SetIsIntConst(INT_MAX);
-#endif
     }
 
     AddInstr(instr, offset);
@@ -2856,7 +2852,7 @@ IRBuilderAsmJs::BuildLong2(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::RegSlot
     switch (newOpcode)
     {
     case Js::OpCodeAsmJs::Ld_Long:
-        instr = IR::Instr::New(Js::OpCode::Ld_A, dstOpnd, srcOpnd, m_func);
+        instr = IR::Instr::New(Js::OpCode::Ld_I4, dstOpnd, srcOpnd, m_func);
         break;
 
     case Js::OpCodeAsmJs::Clz_Long:
@@ -2872,7 +2868,7 @@ IRBuilderAsmJs::BuildLong2(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::RegSlot
         break;
 
     case Js::OpCodeAsmJs::Return_Long:
-        instr = IR::Instr::New(Js::OpCode::Ld_A, dstOpnd, srcOpnd, m_func);
+        instr = IR::Instr::New(Js::OpCode::Ld_I4, dstOpnd, srcOpnd, m_func);
         if (m_func->IsLoopBody())
         {
             IR::Instr* slotInstr = GenerateStSlotForReturn(srcOpnd, IRType::TyInt64);

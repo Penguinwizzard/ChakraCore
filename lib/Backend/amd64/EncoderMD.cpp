@@ -1022,11 +1022,11 @@ EncoderMD::Encode(IR::Instr *instr, BYTE *pc, BYTE* beginCodeAddress)
 
             case Js::OpCode::IMUL2:
                 AssertMsg(opr1->IsRegOpnd() && instrSize != 1, "Illegal IMUL2");
-                Assert(instrSize < 8);
                 if (!opr2->IsImmediateOpnd())
                 {
                     continue;
                 }
+                Assert(instrSize < 8);
 
                 // turn an 'imul2 reg, immed' into an 'imul3 reg, reg, immed'.
 

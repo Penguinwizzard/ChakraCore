@@ -6337,17 +6337,14 @@ GlobOpt::CopyProp(IR::Opnd *opnd, IR::Instr *instr, Value *val, IR::IndirOpnd *p
     ValueInfo *valueInfo = val->GetValueInfo();
 
     // Constant prop?
-    union
-    {
-        int32 i4;
-        int64 i8;
-    } intConstantValue;
-    intConstantValue.i8 = 0;
-    bool isIntConstantValue = !opnd->IsInt64() && valueInfo->TryGetIntConstantValue(&intConstantValue.i4);
-    bool isInt64ConstantValue = !isIntConstantValue && valueInfo->TryGetInt64ConstantValue(&intConstantValue.i8);
+    int32 intConstantValue = 0;
+    int64 int64ConstantValue = 0;
+    bool isIntConstantValue = opnd->GetSize() != 8 && valueInfo->TryGetIntConstantValue(&intConstantValue);
+    bool isInt64ConstantValue = !isIntConstantValue && valueInfo->TryGetInt64ConstantValue(&int64ConstantValue);
     if (isIntConstantValue || isInt64ConstantValue)
     {
-        if (PHASE_OFF(Js::ConstPropPhase, this->func))
+        // Temporarly turn off const folding for int64
+        if (PHASE_OFF(Js::ConstPropPhase, this->func) || isInt64ConstantValue)
         {
             return opnd;
         }
@@ -6390,7 +6387,7 @@ GlobOpt::CopyProp(IR::Opnd *opnd, IR::Instr *instr, Value *val, IR::IndirOpnd *p
                     {
                         GOPT_TRACE_OPND(opnd, _u("Constant prop indir index into offset (value: %d)\n"), intConstantValue);
                         this->CaptureByteCodeSymUses(instr);
-                        indir->SetOffset(intConstantValue.i4);
+                        indir->SetOffset(intConstantValue);
                         indir->SetIndexOpnd(nullptr);
                     }
                 }
@@ -6398,7 +6395,7 @@ GlobOpt::CopyProp(IR::Opnd *opnd, IR::Instr *instr, Value *val, IR::IndirOpnd *p
                 return opnd;
             }
 
-            if (Js::TaggedInt::IsOverflow(intConstantValue.i4))
+            if (Js::TaggedInt::IsOverflow(intConstantValue))
             {
                 return opnd;
             }
@@ -6409,19 +6406,19 @@ GlobOpt::CopyProp(IR::Opnd *opnd, IR::Instr *instr, Value *val, IR::IndirOpnd *p
 
         if (isIntConstantValue && opnd->IsVar())
         {
-            IR::AddrOpnd *addrOpnd = IR::AddrOpnd::New(Js::TaggedInt::ToVarUnchecked(intConstantValue.i4), IR::AddrOpndKindConstantVar, instr->m_func);
+            IR::AddrOpnd *addrOpnd = IR::AddrOpnd::New(Js::TaggedInt::ToVarUnchecked(intConstantValue), IR::AddrOpndKindConstantVar, instr->m_func);
 
-            GOPT_TRACE_OPND(opnd, _u("Constant prop %d (value:%d)\n"), addrOpnd->m_address, intConstantValue.i4);
+            GOPT_TRACE_OPND(opnd, _u("Constant prop %d (value:%d)\n"), addrOpnd->m_address, intConstantValue);
             constOpnd = addrOpnd;
         }
         else
         {
             // Note: Jit loop body generates some i32 operands...
             Assert(opnd->IsInt32() || opnd->IsInt64() || opnd->IsUInt32());
-            if (isInt64ConstantValue || opnd->IsInt64())
+            if (isInt64ConstantValue)
             {
-                IR::Int64ConstOpnd *intOpnd = IR::Int64ConstOpnd::New(intConstantValue.i8, TyInt64, instr->m_func);
-                GOPT_TRACE_OPND(opnd, _u("Constant prop %d (value:%lld)\n"), intOpnd->GetImmediateValue(), intConstantValue.i8);
+                IR::Int64ConstOpnd *intOpnd = IR::Int64ConstOpnd::New(int64ConstantValue, TyInt64, instr->m_func);
+                GOPT_TRACE_OPND(opnd, _u("Constant prop %d (value:%lld)\n"), intOpnd->GetImmediateValue(), int64ConstantValue);
                 constOpnd = intOpnd;
             }
             else
@@ -6431,12 +6428,12 @@ GlobOpt::CopyProp(IR::Opnd *opnd, IR::Instr *instr, Value *val, IR::IndirOpnd *p
                 if (opnd->IsUInt32())
                 {
                     // avoid sign extension
-                    constVal = (uint32)intConstantValue.i4;
+                    constVal = (uint32)intConstantValue;
                     opndType = TyUint32;
                 }
                 else
                 {
-                    constVal = intConstantValue.i4;
+                    constVal = intConstantValue;
                     opndType = TyInt32;
                 }
                 IR::IntConstOpnd *intOpnd = IR::IntConstOpnd::New(constVal, opndType, instr->m_func);
@@ -6475,7 +6472,7 @@ GlobOpt::CopyProp(IR::Opnd *opnd, IR::Instr *instr, Value *val, IR::IndirOpnd *p
                 IR::Opnd * dst = instr->GetDst();
                 if (dst->IsRegOpnd() && dst->AsRegOpnd()->m_sym->IsSingleDef())
                 {
-                    dst->AsRegOpnd()->m_sym->SetIsIntConst(intConstantValue.i8);
+                    dst->AsRegOpnd()->m_sym->SetIsIntConst(int64ConstantValue);
                 }
                 break;
             }
@@ -6487,11 +6484,11 @@ GlobOpt::CopyProp(IR::Opnd *opnd, IR::Instr *instr, Value *val, IR::IndirOpnd *p
             if (instr->GetDst()->IsRegOpnd())
             {
                 Assert(instr->GetDst()->AsRegOpnd()->m_sym->m_isSingleDef);
-                instr->GetDst()->AsRegOpnd()->m_sym->AsStackSym()->SetIsIntConst(intConstantValue.i8);
+                instr->GetDst()->AsRegOpnd()->m_sym->AsStackSym()->SetIsIntConst(int64ConstantValue);
             }
             else
             {
-                instr->GetDst()->AsSymOpnd()->m_sym->AsStackSym()->SetIsIntConst(intConstantValue.i8);
+                instr->GetDst()->AsSymOpnd()->m_sym->AsStackSym()->SetIsIntConst(int64ConstantValue);
             }
             break;
 
@@ -18565,6 +18562,10 @@ swap_srcs:
     {
         IR::Instr *newInstr = instr->HoistSrc1(Js::OpCode::Ld_I4);
         ToInt32Dst(newInstr, newInstr->GetDst()->AsRegOpnd(), this->currentBlock);
+    }
+    else if (src1->IsInt64ConstOpnd())
+    {
+        instr->HoistSrc1(Js::OpCode::Ld_I4);
     }
     else
     {

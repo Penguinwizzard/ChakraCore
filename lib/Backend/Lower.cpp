@@ -21360,20 +21360,25 @@ Lowerer::LowerDivI4Common(IR::Instr * instr)
     IR::LabelInstr * div0Label = InsertLabel(true, instr);
     IR::LabelInstr * divLabel = InsertLabel(false, instr);
     IR::LabelInstr * doneLabel = InsertLabel(false, instr->m_next);
+    IR::Opnd * dst = instr->GetDst();
+    IR::Opnd * src1 = instr->GetSrc1();
+    IR::Opnd * src2 = instr->GetSrc2();
 
-    InsertTestBranch(instr->GetSrc2(), instr->GetSrc2(), Js::OpCode::BrEq_A, div0Label, div0Label);
+    InsertTestBranch(src2, src2, Js::OpCode::BrEq_A, div0Label, div0Label);
 
-    InsertMove(instr->GetDst(), IR::IntConstOpnd::New(0, TyInt32, m_func), divLabel);
+    InsertMove(dst, IR::IntConstOpnd::NewFromType(0, dst->GetType(), m_func), divLabel);
     InsertBranch(Js::OpCode::Br, doneLabel, divLabel);
 
-    if (instr->GetSrc1()->GetType() == TyInt32)
+    if (instr->GetSrc1()->IsSigned())
     {
         IR::LabelInstr * minIntLabel = nullptr;
         // we need to check for INT_MIN/-1 if divisor is either -1 or variable, and dividend is either INT_MIN or variable
-        bool needsMinOverNeg1Check = !(instr->GetSrc2()->IsIntConstOpnd() && instr->GetSrc2()->AsIntConstOpnd()->GetValue() != -1);
-        if (instr->GetSrc1()->IsIntConstOpnd())
+        
+        bool needsMinOverNeg1Check = !(src2->IsImmediateOpnd() && src2->GetImmediateValue() != -1);
+        int64 intMin = TySize[src1->GetType()] == 4 ? INT_MIN : LONGLONG_MIN;
+        if (src1->IsImmediateOpnd())
         {
-            if (needsMinOverNeg1Check && instr->GetSrc1()->AsIntConstOpnd()->GetValue() == INT_MIN)
+            if (needsMinOverNeg1Check && src1->GetImmediateValue() == intMin)
             {
                 minIntLabel = InsertLabel(true, divLabel);
                 InsertBranch(Js::OpCode::Br, minIntLabel, div0Label);
@@ -21386,17 +21391,17 @@ Lowerer::LowerDivI4Common(IR::Instr * instr)
         else if(needsMinOverNeg1Check)
         {
             minIntLabel = InsertLabel(true, divLabel);
-            InsertCompareBranch(instr->GetSrc1(), IR::IntConstOpnd::New(INT_MIN, TyInt32, m_func), Js::OpCode::BrEq_A, minIntLabel, div0Label);
+            InsertCompareBranch(src1, IR::IntConstOpnd::NewFromType(intMin, src1->GetType(), m_func), Js::OpCode::BrEq_A, minIntLabel, div0Label);
         }
         if (needsMinOverNeg1Check)
         {
             Assert(minIntLabel);
-            Assert(!instr->GetSrc2()->IsIntConstOpnd() || instr->GetSrc2()->AsIntConstOpnd()->GetValue() == -1);
-            if (!instr->GetSrc2()->IsIntConstOpnd())
+            Assert(!src2->IsIntConstOpnd() || src2->AsIntConstOpnd()->GetValue() == -1);
+            if (!src2->IsIntConstOpnd())
             {
-                InsertCompareBranch(instr->GetSrc2(), IR::IntConstOpnd::New(-1, TyInt32, m_func), Js::OpCode::BrNeq_A, divLabel, divLabel);
+                InsertCompareBranch(src2, IR::IntConstOpnd::NewFromType(-1, src2->GetType(), m_func), Js::OpCode::BrNeq_A, divLabel, divLabel);
             }
-            InsertMove(instr->GetDst(), instr->m_opcode == Js::OpCode::Div_I4 ? instr->GetSrc1() : IR::IntConstOpnd::New(0, TyInt32, m_func), divLabel);
+            InsertMove(dst, instr->m_opcode == Js::OpCode::Div_I4 ? src1 : IR::IntConstOpnd::NewFromType(0, dst->GetType(), m_func), divLabel);
             InsertBranch(Js::OpCode::Br, doneLabel, divLabel);
         }
     }

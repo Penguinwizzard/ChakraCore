@@ -300,6 +300,7 @@ public:
 #if DBG_DUMP || defined(ENABLE_IR_VIEWER)
     static IntConstOpnd *   New(IntConstType value, IRType type, const char16 * name, Func *func, bool dontEncode = false);
 #endif
+    static IR::Opnd*        NewFromType(int64 value, IRType type, Func* func);
 
 public:
     //Note: type OpndKindIntConst

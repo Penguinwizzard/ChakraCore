@@ -247,6 +247,12 @@ StackSym::SetIsConst()
         Assert(this->m_instrDef->m_opcode == Js::OpCode::Ld_I4 ||  this->m_instrDef->m_opcode == Js::OpCode::LdC_A_I4 || LowererMD::IsAssign(this->m_instrDef));
         this->SetIsIntConst(src->AsIntConstOpnd()->GetValue());
     }
+    else if (src->IsInt64ConstOpnd())
+    {
+        Assert(this->m_instrDef->m_opcode == Js::OpCode::Ld_I4 || LowererMD::IsAssign(this->m_instrDef));
+        int64 value = src->AsInt64ConstOpnd()->GetValue();
+        this->SetIsIntConst(value);
+    }
     else if (src->IsFloatConstOpnd())
     {
         Assert(this->m_instrDef->m_opcode == Js::OpCode::LdC_A_R8);
