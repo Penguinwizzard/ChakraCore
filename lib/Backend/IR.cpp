@@ -3799,7 +3799,7 @@ bool Instr::UnaryCalculator(IntConstType src1Const, IntConstType *pResult)
         }
         break;
 
-    case Js::OpCode::InlineMathClz32:
+    case Js::OpCode::InlineMathClz:
         DWORD clz;
         DWORD src1Const32;
         src1Const32 = (DWORD)src1Const;

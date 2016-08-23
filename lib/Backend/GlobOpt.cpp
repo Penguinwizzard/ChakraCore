@@ -9466,7 +9466,7 @@ GlobOpt::OptConstFoldUnary(
         }
         break;
 
-    case Js::OpCode::InlineMathClz32:
+    case Js::OpCode::InlineMathClz:
         DWORD clz;
         if (_BitScanReverse(&clz, intConstantValue))
         {
@@ -9933,7 +9933,7 @@ GlobOpt::TypeSpecializeInlineBuiltInUnary(IR::Instr **pInstr, Value **pSrc1Val, 
             }
         }
     }
-    else if (instr->m_opcode == Js::OpCode::InlineMathClz32)
+    else if (instr->m_opcode == Js::OpCode::InlineMathClz)
     {
         Assert(this->DoAggressiveIntTypeSpec());
         Assert(this->DoLossyIntTypeSpec());

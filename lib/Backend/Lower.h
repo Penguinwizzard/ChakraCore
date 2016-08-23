@@ -360,7 +360,7 @@ private:
     void            GenerateFastInlineArrayPop(IR::Instr * instr);
     void            GenerateFastInlineStringSplitMatch(IR::Instr * instr);
     void            GenerateFastInlineMathImul(IR::Instr* instr);
-    void            GenerateFastInlineMathClz32(IR::Instr* instr);
+    void            GenerateFastInlineMathClz(IR::Instr* instr);
     void            GenerateCtz(IR::Instr* instr);
     void            GeneratePopCnt32(IR::Instr* instr);
     void            GenerateFastInlineMathFround(IR::Instr* instr);

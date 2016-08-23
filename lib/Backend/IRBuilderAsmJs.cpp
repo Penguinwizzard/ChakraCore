@@ -2250,7 +2250,7 @@ IRBuilderAsmJs::BuildInt2(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::RegSlot 
         break;
 
     case Js::OpCodeAsmJs::Clz32_Int:
-        instr = IR::Instr::New(Js::OpCode::InlineMathClz32, dstOpnd, srcOpnd, m_func);
+        instr = IR::Instr::New(Js::OpCode::InlineMathClz, dstOpnd, srcOpnd, m_func);
         break;
 
     case Js::OpCodeAsmJs::Ctz_Int:
@@ -2856,7 +2856,7 @@ IRBuilderAsmJs::BuildLong2(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::RegSlot
         break;
 
     case Js::OpCodeAsmJs::Clz_Long:
-        instr = IR::Instr::New(Js::OpCode::InlineMathClz32, dstOpnd, srcOpnd, m_func);
+        instr = IR::Instr::New(Js::OpCode::InlineMathClz, dstOpnd, srcOpnd, m_func);
         break;
 
     case Js::OpCodeAsmJs::Ctz_Long:

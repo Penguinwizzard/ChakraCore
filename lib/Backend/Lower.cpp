@@ -628,8 +628,8 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             GeneratePopCnt32(instr);
             break;
 
-        case Js::OpCode::InlineMathClz32:
-            GenerateFastInlineMathClz32(instr);
+        case Js::OpCode::InlineMathClz:
+            GenerateFastInlineMathClz(instr);
             break;
 
         case Js::OpCode::InlineMathFround:
@@ -17360,8 +17360,8 @@ Lowerer::GenerateFastInlineStringCharCodeAt(IR::Instr * instr, Js::BuiltinFuncti
 void
 Lowerer::GenerateCtz(IR::Instr* instr)
 {
-    Assert(instr->GetDst()->IsInt32());
-    Assert(instr->GetSrc1()->IsInt32());
+    Assert(instr->GetDst()->IsInt32() || instr->GetDst()->IsInt64());
+    Assert(instr->GetSrc1()->IsInt32() || instr->GetSrc1()->IsInt64());
     m_lowererMD.GenerateCtz(instr);
 }
 
@@ -17374,10 +17374,10 @@ Lowerer::GeneratePopCnt32(IR::Instr* instr)
 }
 
 void
-Lowerer::GenerateFastInlineMathClz32(IR::Instr* instr)
+Lowerer::GenerateFastInlineMathClz(IR::Instr* instr)
 {
-    Assert(instr->GetDst()->IsInt32());
-    Assert(instr->GetSrc1()->IsInt32());
+    Assert(instr->GetDst()->IsInt32() || instr->GetDst()->IsInt64());
+    Assert(instr->GetSrc1()->IsInt32() || instr->GetSrc1()->IsInt64());
     m_lowererMD.GenerateClz(instr);
 }
 

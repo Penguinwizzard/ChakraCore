@@ -5864,7 +5864,7 @@ bool LowererMD::GenerateFastCharAt(Js::BuiltinFunction index, IR::Opnd *dst, IR:
 void
 LowererMD::GenerateCtz(IR::Instr * instr)
 {
-    Assert(instr->GetSrc1()->IsInt32() || instr->GetSrc1()->IsUInt32());
+    Assert(instr->GetSrc1()->IsInt32() || instr->GetSrc1()->IsUInt32() || instr->GetSrc1()->IsInt64());
     Assert(IRType_IsNativeInt(instr->GetDst()->GetType()));
     if (AutoSystemInfo::Data.TZCntAvailable())
     {
@@ -5907,7 +5907,7 @@ LowererMD::GeneratePopCnt32(IR::Instr * instr)
 void
 LowererMD::GenerateClz(IR::Instr * instr)
 {
-    Assert(instr->GetSrc1()->IsInt32() || instr->GetSrc1()->IsUInt32());
+    Assert(instr->GetSrc1()->IsInt32() || instr->GetSrc1()->IsUInt32() || instr->GetSrc1()->IsInt64());
     Assert(IRType_IsNativeInt(instr->GetDst()->GetType()));
     if (AutoSystemInfo::Data.LZCntAvailable())
     {
