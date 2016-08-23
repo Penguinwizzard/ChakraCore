@@ -5875,10 +5875,12 @@ LowererMD::GenerateCtz(IR::Instr * instr)
     {
         // dst = BSF src
         // dst = CMOVE dst, 32 // dst is src1 to help reg alloc
+        int instrSize = instr->GetSrc1()->GetSize();
+        IRType type = instrSize == 8 ? TyInt64 : TyInt8;
         instr->m_opcode = Js::OpCode::BSF;
         Legalize(instr);
 
-        IR::IntConstOpnd * const32 = IR::IntConstOpnd::New(32, TyInt8, m_func);
+        IR::IntConstOpnd * const32 = IR::IntConstOpnd::New(instrSize * 8, type, m_func);
         IR::Instr* cmove = IR::Instr::New(Js::OpCode::CMOVE, instr->GetDst(), instr->GetDst(), const32, this->m_func);
         instr->InsertAfter(cmove);
         Legalize(cmove);
@@ -5917,25 +5919,30 @@ LowererMD::GenerateClz(IR::Instr * instr)
     }
     else
     {
+
         // tmp = BSR src
         // JE $label32
         // dst = SUB 31, tmp
+            // dst = SUB 63, tmp; for int64
         // JMP $done
         // label32:
         // dst = mov 32;
+            // dst = mov 64; for int64
         // $done
+        int instrSize = instr->GetSrc1()->GetSize();
+        IRType type = instrSize == 8 ? TyInt64 : TyInt8;
         IR::LabelInstr * doneLabel = Lowerer::InsertLabel(false, instr->m_next);
         IR::Opnd * dst = instr->UnlinkDst();
-        IR::Opnd * tmpOpnd = IR::RegOpnd::New(TyInt8, m_func);
+        IR::Opnd * tmpOpnd = IR::RegOpnd::New(type, m_func);
         instr->SetDst(tmpOpnd);
         instr->m_opcode = Js::OpCode::BSR;
         Legalize(instr);
         IR::LabelInstr * label32 = Lowerer::InsertLabel(false, doneLabel);
         instr = IR::BranchInstr::New(Js::OpCode::JEQ, label32, m_func);
         label32->InsertBefore(instr);
-        Lowerer::InsertSub(false, dst, IR::IntConstOpnd::New(31, TyInt8, m_func), tmpOpnd, label32);
+        Lowerer::InsertSub(false, dst, IR::IntConstOpnd::New(instrSize == 8 ? 63 : 31, type, m_func), tmpOpnd, label32);
         Lowerer::InsertBranch(Js::OpCode::Br, doneLabel, label32);
-        Lowerer::InsertMove(dst, IR::IntConstOpnd::New(32, TyInt8, m_func), doneLabel);
+        Lowerer::InsertMove(dst, IR::IntConstOpnd::New(instrSize == 8 ? 64 : 32, type, m_func), doneLabel);
     }
 }
 

@@ -3041,8 +3041,7 @@ IRBuilderAsmJs::BuildInt1Long1(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::Reg
     switch (newOpcode)
     {
     case Js::OpCodeAsmJs::Eqz_Long:
-        // todo eqz
-        instr = IR::Instr::New(Js::OpCode::CmLt_A, dstOpnd, src1Opnd, m_func);
+        instr = IR::Instr::New(Js::OpCode::CmEq_I4, dstOpnd, src1Opnd, IR::Int64ConstOpnd::New(0, TyInt64, m_func), m_func);
         break;
     case Js::OpCodeAsmJs::Conv_LTI:
         instr = IR::Instr::New(Js::OpCode::Conv_Prim, dstOpnd, src1Opnd, m_func);
