@@ -105,33 +105,12 @@ inline int64 WasmMath::Clz(int64 value)
 template<> 
 inline int WasmMath::PopCnt(int value)
 {
-#if defined(_M_IX86) || defined(_M_X64)
-    if (AutoSystemInfo::Data.PopCntAvailable())
-    {
-        return __popcnt(value);
-    }
-#endif
-    uint v = (uint)value;
-    // https://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetParallel
-    v = v - ((v >> 1) & 0x55555555);
-    v = (v & 0x33333333) + ((v >> 2) & 0x33333333);
-    v = ((v + (v >> 4) & 0xF0F0F0F) * 0x1010101) >> 24;
-    return (int)v;
+    return ::Math::PopCnt32(value);
 }
 
 template<> 
 inline int64 WasmMath::PopCnt(int64 value)
 {
-#if defined(_M_IX86) || defined(_M_X64)
-    if (AutoSystemInfo::Data.PopCntAvailable())
-    {
-#if _M_X64
-        return __popcnt64(value);
-#elif _M_IX86
-        return int64(__popcnt((uint)value) + __popcnt((uint)(value >> 32)));
-#endif
-    }
-#endif
     uint64 v = (uint64)value;
     // https://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetParallel
     v = v - ((v >> 1) & 0x5555555555555555LL);

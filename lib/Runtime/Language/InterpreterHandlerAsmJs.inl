@@ -98,7 +98,7 @@ EXDEF2(NOPASMJS          , NopEx        , Empty                                 
   DEF2_WMS( I2toI1Mem        , Shr_UInt     , AsmJsMath::ShrU<uint>                              )
   DEF2_WMS( I2toI1Mem        , Rol_Int      , Wasm::WasmMath::Rol                                )
   DEF2_WMS( I2toI1Mem        , Ror_Int      , Wasm::WasmMath::Ror                                )
-  DEF2_WMS( I1toI1Mem        , PopCnt_Int   , Wasm::WasmMath::PopCnt<int>)
+  DEF2_WMS( I1toI1Mem        , PopCnt_Int   , ::Math::PopCnt32                                   )
 
   DEF2_WMS( I2toI1Mem        , Mul_UInt     , AsmJsMath::Mul<uint>                               )
   DEF2_WMS( I2toI1Mem        , Div_UInt     , AsmJsMath::Div<uint>                               )
@@ -215,7 +215,6 @@ EXDEF2_WMS( F1toF1Mem      , Trunc_Flt    , Wasm::WasmMath::Trunc<float>        
 EXDEF2_WMS( F1toF1Mem      , Nearest_Flt  , Wasm::WasmMath::Nearest<float>                     )
 EXDEF2_WMS( D1toD1Mem      , Trunc_Db     , Wasm::WasmMath::Trunc<double>                      )
 EXDEF2_WMS( D1toD1Mem      , Nearest_Db   , Wasm::WasmMath::Nearest<double>                    )
-EXDEF2_WMS( I1toI1Mem      , PopCnt_Int       , ::Math::PopCnt32                                   )
 
   DEF2_WMS( IP_TARG_ASM      , AsmJsLoopBodyStart, OP_ProfiledLoopBodyStart                      )
 
