@@ -2262,7 +2262,7 @@ IRBuilderAsmJs::BuildInt2(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::RegSlot 
         break;
 
     case Js::OpCodeAsmJs::PopCnt_Int:
-        instr = IR::Instr::New(Js::OpCode::PopCnt32, dstOpnd, srcOpnd, m_func);
+        instr = IR::Instr::New(Js::OpCode::PopCnt, dstOpnd, srcOpnd, m_func);
         break;
 
     case Js::OpCodeAsmJs::Return_Int:
@@ -2864,7 +2864,7 @@ IRBuilderAsmJs::BuildLong2(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::RegSlot
         break;
 
     case Js::OpCodeAsmJs::PopCnt_Long:
-        Assert(false);
+        instr = IR::Instr::New(Js::OpCode::PopCnt, dstOpnd, srcOpnd, m_func);
         break;
 
     case Js::OpCodeAsmJs::Return_Long:

@@ -5886,10 +5886,10 @@ LowererMD::GenerateCtz(IR::Instr * instr)
 }
 
 void
-LowererMD::GeneratePopCnt32(IR::Instr * instr)
+LowererMD::GeneratePopCnt(IR::Instr * instr)
 {
-    Assert(instr->GetSrc1()->IsInt32() || instr->GetSrc1()->IsUInt32());
-    Assert(instr->GetDst()->IsInt32() || instr->GetSrc1()->IsUInt32());
+    Assert(instr->GetSrc1()->IsInt32() || instr->GetSrc1()->IsUInt32() || instr->GetSrc1()->IsInt64());
+    Assert(instr->GetDst()->IsInt32() || instr->GetDst()->IsUInt32() || instr->GetDst()->IsInt64());
 
     if (AutoSystemInfo::Data.PopCntAvailable())
     {
@@ -5898,9 +5898,10 @@ LowererMD::GeneratePopCnt32(IR::Instr * instr)
     }
     else
     {
+        int instrSize = instr->GetSrc1()->GetSize();
         LoadHelperArgument(instr, instr->GetSrc1());
         instr->UnlinkSrc1();
-        this->ChangeToHelperCall(instr, IR::HelperPopCnt32);
+        this->ChangeToHelperCall(instr, instrSize == 8 ? IR::HelperPopCnt64 : IR::HelperPopCnt32);
     }
 }
 

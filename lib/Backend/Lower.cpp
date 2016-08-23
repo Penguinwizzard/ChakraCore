@@ -624,8 +624,8 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             GenerateCtz(instr);
             break;
 
-        case Js::OpCode::PopCnt32:
-            GeneratePopCnt32(instr);
+        case Js::OpCode::PopCnt:
+            GeneratePopCnt(instr);
             break;
 
         case Js::OpCode::InlineMathClz:
@@ -17366,11 +17366,11 @@ Lowerer::GenerateCtz(IR::Instr* instr)
 }
 
 void
-Lowerer::GeneratePopCnt32(IR::Instr* instr)
+Lowerer::GeneratePopCnt(IR::Instr* instr)
 {
-    Assert(instr->GetSrc1()->IsInt32() || instr->GetSrc1()->IsUInt32());
-    Assert(instr->GetDst()->IsInt32() || instr->GetDst()->IsUInt32());
-    m_lowererMD.GeneratePopCnt32(instr);
+    Assert(instr->GetSrc1()->IsInt32() || instr->GetSrc1()->IsUInt32() || instr->GetSrc1()->IsInt64());
+    Assert(instr->GetDst()->IsInt32() || instr->GetDst()->IsUInt32() || instr->GetDst()->IsInt64());
+    m_lowererMD.GeneratePopCnt(instr);
 }
 
 void
