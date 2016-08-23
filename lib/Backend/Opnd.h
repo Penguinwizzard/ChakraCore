@@ -192,7 +192,6 @@ public:
     bool                IsFloat32() const { return this->m_type == TyFloat32; }
     bool                IsFloat64() const { return this->m_type == TyFloat64; }
     bool                IsFloat() const { return this->IsFloat32() || this->IsFloat64(); }
-    bool                IsPrimitive() const { return this->IsInt32() || this->IsInt64() || this->IsFloat32() || this->IsFloat64(); }
     bool                IsSimd128() const { return IRType_IsSimd128(this->m_type);  }
     bool                IsSimd128F4()  const { return this->m_type == TySimd128F4;  }
     bool                IsSimd128I4()  const { return this->m_type == TySimd128I4;  }

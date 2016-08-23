@@ -181,18 +181,6 @@ bool ValueInfo::TryGetIntConstantValue(int32 *const intValueRef, const bool incl
             }
             break;
 
-        case ValueStructureKind::Int64Constant:
-            if(IsInt())
-            {
-                int64 val = AsInt64Constant()->IntValue();
-                if (val < INT_MAX)
-                {
-                    *intValueRef = (int32)val;
-                    return true;
-                }
-            }
-            break;
-
         case ValueStructureKind::IntRange:
             Assert(includeLikelyInt && !IsInt() || !AsIntRange()->IsConstant());
             break;
@@ -210,18 +198,6 @@ bool ValueInfo::TryGetIntConstantValue(int32 *const intValueRef, const bool incl
     }
     return false;
 }
-
-bool ValueInfo::TryGetInt64ConstantValue(int64 *const intValueRef) const
-{
-    Assert(intValueRef);
-    if (structureKind == ValueStructureKind::Int64Constant && IsInt())
-    {
-        *intValueRef = AsInt64Constant()->IntValue();
-        return true;
-    }
-    return false;
-}
-
 
 bool ValueInfo::TryGetIntConstantLowerBound(int32 *const intConstantBoundRef, const bool includeLikelyInt) const
 {

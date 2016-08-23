@@ -478,7 +478,8 @@ void Opnd::DumpValueType()
                     sym->IsInt32() ||
                     sym->IsFloat32() ||
                     sym->IsFloat64() ||
-                    sym->IsInt64()
+                    sym->IsInt64() ||
+                    sym->IsUint64()
                     ))
                 {
                     return;

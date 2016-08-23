@@ -1825,7 +1825,7 @@ LowererMD::Legalize(IR::Instr *const instr, bool fPostRegAlloc)
 
     // Non-MOV (second operand) immediate need to fit in DWORD for AMD64
     Assert(!instr->GetSrc2() || !instr->GetSrc2()->IsImmediateOpnd()
-           || (TySize[instr->GetSrc2()->GetType()] != 8) || Math::FitsInDWord(instr->GetSrc2()->GetImmediateValue()));
+        || (TySize[instr->GetSrc2()->GetType()] != 8) || Math::FitsInDWord(instr->GetSrc2()->GetImmediateValue()));
 #endif
 }
 
@@ -2953,10 +2953,6 @@ void LowererMD::GenerateFastCmXx(IR::Instr *instr)
     newInstr->SetSrc1(src1);
     newInstr->SetSrc2(src2);
     done->InsertBefore(newInstr);
-    if (isInt64Src)
-    {
-        Legalize(newInstr);
-    }
 
     if (isFloatSrc)
     {

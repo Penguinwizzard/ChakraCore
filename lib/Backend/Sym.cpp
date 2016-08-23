@@ -41,6 +41,7 @@ StackSym::New(SymID id, IRType type, Js::RegSlot byteCodeRegSlot, Func *func)
     stackSym->m_isSingleDef = true;
     stackSym->m_isEncodedConstant = false;
     stackSym->m_isFltConst = false;
+    stackSym->m_isInt64Const = false;
     stackSym->m_isStrConst = false;
     stackSym->m_isStrEmpty = false;
     stackSym->m_allocated = false;
@@ -250,8 +251,7 @@ StackSym::SetIsConst()
     else if (src->IsInt64ConstOpnd())
     {
         Assert(this->m_instrDef->m_opcode == Js::OpCode::Ld_I4 || LowererMD::IsAssign(this->m_instrDef));
-        int64 value = src->AsInt64ConstOpnd()->GetValue();
-        this->SetIsIntConst(value);
+        this->SetIsInt64Const();
     }
     else if (src->IsFloatConstOpnd())
     {
@@ -285,13 +285,24 @@ StackSym::SetIsConst()
 }
 
 void
-StackSym::SetIsIntConst(int64 value)
+StackSym::SetIsIntConst(IntConstType value)
 {
     Assert(this->m_isSingleDef);
     Assert(this->m_instrDef);
     this->m_isConst = true;
     this->m_isIntConst = true;
     this->m_isTaggableIntConst = !Js::TaggedInt::IsOverflow(value);
+    this->m_isFltConst = false;
+}
+
+void StackSym::SetIsInt64Const()
+{
+    Assert(this->m_isSingleDef);
+    Assert(this->m_instrDef);
+    this->m_isConst = true;
+    this->m_isInt64Const = true;
+    this->m_isIntConst = false;
+    this->m_isTaggableIntConst = false;
     this->m_isFltConst = false;
 }
 

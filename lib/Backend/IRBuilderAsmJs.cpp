@@ -2833,7 +2833,7 @@ IRBuilderAsmJs::BuildLong1Const1(Js::OpCodeAsmJs newOpcode, uint32 offset, Js::R
 
     if (dstOpnd->m_sym->IsSingleDef())
     {
-        dstOpnd->m_sym->SetIsIntConst(constInt64);
+        dstOpnd->m_sym->SetIsInt64Const();
     }
 
     AddInstr(instr, offset);

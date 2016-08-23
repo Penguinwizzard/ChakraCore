@@ -8,7 +8,6 @@ enum class ValueStructureKind
 {
     Generic,
     IntConstant,
-    Int64Constant,
     IntRange,
     IntBounded,
     FloatConstant,
@@ -17,7 +16,6 @@ enum class ValueStructureKind
     Array
 };
 
-class Int64ConstantValueInfo;
 class IntConstantValueInfo;
 class IntRangeValueInfo;
 class IntBoundedValueInfo;
@@ -190,8 +188,6 @@ public:
 private:
     bool                            IsIntConstant() const;
     const IntConstantValueInfo *    AsIntConstant() const;
-    bool                            IsInt64Constant() const;
-    const Int64ConstantValueInfo *  AsInt64Constant() const;
     bool                            IsIntRange() const;
     const IntRangeValueInfo *       AsIntRange() const;
 
@@ -219,7 +215,6 @@ public:
 public:
     bool HasIntConstantValue(const bool includeLikelyInt = false) const;
     bool TryGetIntConstantValue(int32 *const intValueRef, const bool includeLikelyInt = false) const;
-    bool TryGetInt64ConstantValue(int64 *const intValueRef) const;
     bool TryGetIntConstantLowerBound(int32 *const intConstantBoundRef, const bool includeLikelyInt = false) const;
     bool TryGetIntConstantUpperBound(int32 *const intConstantBoundRef, const bool includeLikelyInt = false) const;
     bool TryGetIntConstantBounds(IntConstantBounds *const intConstantBoundsRef, const bool includeLikelyInt = false) const;
@@ -358,36 +353,6 @@ private:
 #else
         return i >= Js::Constants::Int31MinValue && i <= Js::Constants::Int31MaxValue;
 #endif
-    }
-};
-
-class Int64ConstantValueInfo : public ValueInfo
-{
-private:
-    const int64 intValue;
-
-protected:
-    Int64ConstantValueInfo(const int64 intValue)
-        : ValueInfo(GetInt(false), ValueStructureKind::Int64Constant),
-        intValue(intValue)
-    {
-    }
-
-public:
-    static Int64ConstantValueInfo *New(JitArenaAllocator *const allocator, const int64 intValue)
-    {
-        return JitAnew(allocator, Int64ConstantValueInfo, intValue);
-    }
-
-    Int64ConstantValueInfo *Copy(JitArenaAllocator *const allocator) const
-    {
-        return JitAnew(allocator, Int64ConstantValueInfo, *this);
-    }
-
-public:
-    int64 IntValue() const
-    {
-        return intValue;
     }
 };
 
@@ -1406,7 +1371,6 @@ private:
     Value *                 NewGenericValue(const ValueType valueType, Sym *const sym);
     Value *                 GetIntConstantValue(const int32 intConst, IR::Instr * instr, IR::Opnd *const opnd = nullptr);
     Value *                 NewIntConstantValue(const int32 intConst, IR::Instr * instr, bool isTaggable);
-    Value *                 NewInt64ConstantValue(const int64 intConst, IR::Instr * instr);
     ValueInfo *             NewIntRangeValueInfo(const int32 min, const int32 max, const bool wasNegativeZeroPreventedByBailout);
     ValueInfo *             NewIntRangeValueInfo(const ValueInfo *const originalValueInfo, const int32 min, const int32 max) const;
     Value *                 NewIntRangeValue(const int32 min, const int32 max, const bool wasNegativeZeroPreventedByBailout, IR::Opnd *const opnd = nullptr);

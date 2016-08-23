@@ -201,7 +201,6 @@ inline Int64ConstOpnd *
 Opnd::AsInt64ConstOpnd()
 {
     AssertMsg(this->IsInt64ConstOpnd(), "Bad call to AsInt64ConstOpnd()");
-
     return reinterpret_cast<Int64ConstOpnd *>(this);
 }
 

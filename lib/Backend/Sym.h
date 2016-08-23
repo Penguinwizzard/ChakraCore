@@ -116,7 +116,8 @@ public:
     bool            IsSimd128Const() const;
 
     void            SetIsConst();
-    void            SetIsIntConst(int64 value);
+    void            SetIsIntConst(IntConstType value);
+    void            SetIsInt64Const();
     void            SetIsFloatConst();
 // SIMD_JS
     void            SetIsSimd128Const();
@@ -152,6 +153,7 @@ public:
     bool            IsInt32() const { return this->GetType() == TyInt32; }
     bool            IsUInt32() const { return this->GetType() == TyUint32; }
     bool            IsInt64() const { return this->GetType() == TyInt64; }
+    bool            IsUint64() const { return this->GetType() == TyUint64; }
 
     StackSym *      GetVarEquivSym(Func *func);
     bool            IsVar() const { return this->GetType() == TyVar; }
@@ -198,6 +200,7 @@ public:
     uint8           m_isIntConst : 1;           // a constant and it's value is an Int32
     uint8           m_isTaggableIntConst : 1;   // a constant and it's value is taggable (Int31 in 32-bit, Int32 in x64)
     uint8           m_isEncodedConstant : 1;    // the constant has
+    uint8           m_isInt64Const: 1;
     uint8           m_isFltConst: 1;
     uint8           m_isSimd128Const : 1;
     uint8           m_isStrConst:1;
