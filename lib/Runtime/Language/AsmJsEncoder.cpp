@@ -30,16 +30,9 @@ namespace Js
     {
         switch( op )
         {
-#define DEF2(x, op, func) PROCESS_ENCODE_##x(op, func)
 #define DEF3(x, op, func, y) PROCESS_ENCODE_##x(op, func, y)
-#define DEF2_WMS(x, op, func) PROCESS_ENCODE_##x##_COMMON(op, func, _Small)
 #define DEF3_WMS(x, op, func, y) PROCESS_ENCODE_##x##_COMMON(op, func, y, _Small)
-#define DEF4_WMS(x, op, func, y, t) PROCESS_ENCODE_##x##_COMMON(op, func, y, _Small, t)
-#define EXDEF2(x, op, func) PROCESS_ENCODE_##x(op, func)
 #define EXDEF3(x, op, func, y) PROCESS_ENCODE_##x(op, func, y)
-#define EXDEF2_WMS(x, op, func) PROCESS_ENCODE_##x##_COMMON(op, func, _Small)
-#define EXDEF3_WMS(x, op, func, y) PROCESS_ENCODE_##x##_COMMON(op, func, y, _Small)
-#define EXDEF4_WMS(x, op, func, y, t) PROCESS_ENCODE_##x##_COMMON(op, func, y, _Small, t)
 #include "AsmJsEncoderHandler.inl"
         default:
             // Help the C++ optimizer by declaring that the cases we

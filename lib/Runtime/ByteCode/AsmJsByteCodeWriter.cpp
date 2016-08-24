@@ -395,11 +395,6 @@ namespace Js
         m_byteCodeData.Encode(op, this);
     }
 
-    void AsmJsByteCodeWriter::Conv(OpCodeAsmJs op, RegSlot R0, RegSlot R1)
-    {
-        MULTISIZE_LAYOUT_WRITE(AsmReg2, op, R0, R1);
-    }
-
     void AsmJsByteCodeWriter::AsmInt1Const1(OpCodeAsmJs op, RegSlot R0, int C1)
     {
         MULTISIZE_LAYOUT_WRITE(Int1Const1, op, R0, C1);

@@ -67,6 +67,7 @@ namespace Wasm
 
 #include "WasmBinaryReader.h"
 #include "WasmBytecodeGenerator.h"
+#include "WasmEncoder.h"
 
 // TODO (michhol): cleanup includes
 #include "Bytecode/AsmJsByteCodeWriter.h"

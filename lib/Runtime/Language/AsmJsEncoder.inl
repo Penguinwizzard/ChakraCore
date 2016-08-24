@@ -441,7 +441,7 @@ namespace Js
 
     template <class T> void Js::AsmJsEncoder::OP_I_Conv_VTF(const unaligned T* playout)
     {
-        AsmJsJitTemplate::I_Conv_VTF::ApplyTemplate(this, mPc, CalculateOffset<float>(playout->F0), CalculateOffset<float>(playout->F1));
+            AsmJsJitTemplate::I_Conv_VTF::ApplyTemplate(this, mPc, CalculateOffset<float>(playout->F0), CalculateOffset<float>(playout->F1));
     }
 
     template <class T> void Js::AsmJsEncoder::OP_I_Conv_VTI( const unaligned T* playout )
