@@ -1116,16 +1116,10 @@ IRBuilderAsmJs::BuildElementSlot(Js::OpCodeAsmJs newOpcode, uint32 offset, int32
     {
         IR::RegOpnd * baseOpnd = BuildSrcOpnd(GetRegSlotFromVarReg(instance), TyVar);
         IR::RegOpnd * indexOpnd = BuildSrcOpnd(GetRegSlotFromIntReg(slotIndex), TyUint32);
-        // we multiply indexOpnd by 2^scale for the actual location
-#if TARGET_32
-        byte scale = 2;
-#elif TARGET_64
-        byte scale = 3;
-#endif
-        IR::IndirOpnd * indirOpnd = IR::IndirOpnd::New(baseOpnd, indexOpnd, scale, TyVar, m_func);
+        IR::IndirOpnd * indirOpnd = IR::IndirOpnd::New(baseOpnd, indexOpnd, TyVar, m_func);
 
         regOpnd = BuildDstOpnd(GetRegSlotFromVarReg(value), TyVar);
-        instr = IR::Instr::New(Js::OpCode::Ld_A, regOpnd, indirOpnd, m_func);
+        instr = IR::Instr::New(Js::OpCode::LdAsmJsFunc, regOpnd, indirOpnd, m_func);
         break;
     }
 

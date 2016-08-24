@@ -1687,6 +1687,29 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             this->LowerUnaryHelper(instr, IR::HelperOp_UnwrapWithObj);
             break;
 
+        case Js::OpCode::LdAsmJsFunc:
+            if (instr->GetSrc1()->IsIndirOpnd())
+            {
+                IR::IndirOpnd* indir = instr->GetSrc1()->AsIndirOpnd();
+                byte scale = m_lowererMD.GetDefaultIndirScale();
+                if (!indir->GetIndexOpnd())
+                {
+                    // If we have a constant offset, we need to apply the scale now
+                    int32 offset;
+                    if (Int32Math::Shl(1, scale, &offset) || Int32Math::Mul(offset, indir->GetOffset(), &offset))
+                    {
+                        // The constant is too big to offset this array. Throw out of range.
+                        // Todo:: throw a better error message for this scenario
+                        GenerateRuntimeError(instr, JSERR_ArgumentOutOfRange, IR::HelperOp_RuntimeRangeError);
+                    }
+                    indir->SetOffset(offset);
+                }
+                else
+                {
+                    indir->SetScale(scale);
+                }
+            }
+            // Fallthrough
         case Js::OpCode::Ld_A:
         case Js::OpCode::Ld_I4:
         case Js::OpCode::InitConst:
@@ -2448,14 +2471,6 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             }
             break;
         }
-
-        case Js::OpCode::LdAsmJsSlot:
-            this->LowerLdSlot(instr);
-            break;
-
-        case Js::OpCode::StAsmJsSlot:
-            this->LowerStSlot(instr);
-            break;
 
         case Js::OpCode::ChkUndecl:
             instrPrev = this->LowerChkUndecl(instr);

@@ -409,8 +409,7 @@ MACRO_EXTEND_WMS(       StObjSlotChkUndecl,         ElementSlot,    OpSideEffect
 MACRO_EXTEND_WMS(       StInnerObjSlotChkUndecl,    ElementSlotI2,  OpSideEffect)
 MACRO_EXTEND_WMS(       StEnvObjSlotChkUndecl,      ElementSlotI2,  OpSideEffect)
 MACRO_EXTEND_WMS(       StModuleSlot,               ElementSlotI2,  OpSideEffect)
-MACRO_BACKEND_ONLY(     LdAsmJsSlot,                ElementSlot,    OpTempNumberSources|OpCanCSE)
-MACRO_BACKEND_ONLY(     StAsmJsSlot,                ElementSlot,    None)
+MACRO_BACKEND_ONLY(     LdAsmJsFunc,                ElementSlot,    OpTempNumberSources|OpCanCSE)
 #ifndef FLOAT_VAR
 MACRO_BACKEND_ONLY(     StSlotBoxTemp,              Empty,          OpSideEffect|OpTempNumberSources)
 #endif

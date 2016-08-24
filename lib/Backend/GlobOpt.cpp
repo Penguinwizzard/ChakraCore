@@ -6377,6 +6377,7 @@ GlobOpt::CopyProp(IR::Opnd *opnd, IR::Instr *instr, Value *val, IR::IndirOpnd *p
                 const auto indir = src->AsIndirOpnd();
                 if(opnd == indir->GetIndexOpnd())
                 {
+                    Assert(indir->GetScale() == 0);
                     GOPT_TRACE_OPND(opnd, _u("Constant prop indir index into offset (value: %d)\n"), intConstantValue);
                     this->CaptureByteCodeSymUses(instr);
                     indir->SetOffset(intConstantValue);
@@ -7399,6 +7400,7 @@ GlobOpt::ValueNumberDst(IR::Instr **pInstr, Value *src1Val, Value *src2Val)
 
     case Js::OpCode::BytecodeArgOutCapture:
     case Js::OpCode::InitConst:
+    case Js::OpCode::LdAsmJsFunc:
     case Js::OpCode::Ld_A:
     case Js::OpCode::Ld_I4:
 
@@ -14238,6 +14240,7 @@ GlobOpt::ToTypeSpecUse(IR::Instr *instr, IR::Opnd *opnd, BasicBlock *block, Valu
                         // the sym has been proven to be an int, the likely-int value, after specialization, will be constant.
                         // Replace the index opnd in the indir with an offset.
                         Assert(opnd == indir->GetIndexOpnd());
+                        Assert(indir->GetScale() == 0);
                         indir->UnlinkIndexOpnd()->Free(instr->m_func);
                         opnd = nullptr;
                         indir->SetOffset(intConstantValue);
@@ -14455,6 +14458,7 @@ GlobOpt::ToTypeSpecUse(IR::Instr *instr, IR::Opnd *opnd, BasicBlock *block, Valu
                 if(indir)
                 {
                     Assert(opnd == indir->GetIndexOpnd());
+                    Assert(indir->GetScale() == 0);
                     indir->UnlinkIndexOpnd()->Free(instr->m_func);
                     indir->SetOffset(constOpnd->AsIntConstOpnd()->AsInt32());
                 }
