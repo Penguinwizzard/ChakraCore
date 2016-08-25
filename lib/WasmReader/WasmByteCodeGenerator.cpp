@@ -398,7 +398,8 @@ WasmBytecodeGenerator::EnregisterLocals()
                 m_writer.AsmInt1Const1(Js::OpCodeAsmJs::Ld_IntConst, m_locals[i].location, 0);
                 break;
             case WasmTypes::I64:
-                throw WasmCompilationException(_u("I64 locals NYI"));
+                m_writer.AsmLong1Const1(Js::OpCodeAsmJs::Ld_LongConst, m_locals[i].location, 0);
+                break;
             default:
                 Assume(UNREACHED);
             }
