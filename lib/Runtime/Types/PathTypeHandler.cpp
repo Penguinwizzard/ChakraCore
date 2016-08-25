@@ -1392,7 +1392,7 @@ namespace Js
 
         bool usingZeroSlotCache = (this->GetInlineSlotCapacity() == 0 && this->GetOffsetOfInlineSlots() == 0);
 
-        if (PHASE_TRACE1(TypeSharePhase) || PHASE_VERBOSE_TRACE1(TypeSharePhase))
+        if (PHASE_TRACE1(TypeShareForChangePrototypePhase) || PHASE_VERBOSE_TRACE1(TypeShareForChangePrototypePhase))
         {
             cacheType = usingZeroSlotCache ? _u("ZeroSlots") : _u("NonZeroSlots");
         }
@@ -1419,7 +1419,7 @@ namespace Js
                 )
             {
 #if DBG
-                if (PHASE_VERBOSE_TRACE1(TypeSharePhase))
+                if (PHASE_VERBOSE_TRACE1(TypeShareForChangePrototypePhase))
                 {
                     oldCachedType = dynamicType;
 
@@ -1462,10 +1462,10 @@ namespace Js
             dynamicType = DynamicType::New(scriptContext, instance->GetDynamicType()->GetTypeId(), newPrototype, RecyclableObject::DefaultEntryPoint, newTypeHandler, true, true);
             dynamicType->flags = instance->GetDynamicType()->flags;
             
-            if (PHASE_TRACE1(TypeSharePhase))
+            if (PHASE_TRACE1(TypeShareForChangePrototypePhase))
             {
 #if DBG
-                if (PHASE_VERBOSE_TRACE1(TypeSharePhase))
+                if (PHASE_VERBOSE_TRACE1(TypeShareForChangePrototypePhase))
                 {
                     Output::Print(_u("TypeSharing: Updating prototype [0x%p] object's %s cache from 0x%p to 0x%p in __proto__. Reason = %s\n"), newPrototype, cacheType, oldCachedType, dynamicType, reason);
                 }
@@ -1495,10 +1495,10 @@ namespace Js
             dynamicType = pathTypeHandler->PromoteType<true>(dynamicType, scriptContext->GetPropertyName(propertyId), true, scriptContext, nullptr, &propertyIndex);
         }
 
-        if (PHASE_TRACE1(TypeSharePhase) && !wasCacheOutdated)
+        if (PHASE_TRACE1(TypeShareForChangePrototypePhase) && !wasCacheOutdated)
         {
 #if DBG
-            if (PHASE_VERBOSE_TRACE1(TypeSharePhase))
+            if (PHASE_VERBOSE_TRACE1(TypeShareForChangePrototypePhase))
             {
                 Output::Print(_u("TypeSharing: Reusing prototype [0x%p] object's %s cache 0x%p in __proto__.\n"), newPrototype, cacheType, dynamicType);
             }

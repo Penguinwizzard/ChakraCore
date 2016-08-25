@@ -6081,7 +6081,7 @@ namespace Js
 
         DynamicType* dynamicType = nullptr;
         const bool useCache = prototype->GetScriptContext() == this->scriptContext;
-        char16 * cacheType = nullptr;
+        const char16 * cacheType = nullptr;
 
 #if DBG
         DynamicType* oldCachedType = nullptr;
@@ -6091,7 +6091,7 @@ namespace Js
         Js::InternalPropertyIds propertyIdHoldingCache = useObjectHeaderInlining ?
             Js::InternalPropertyIds::NZTypeOfPrototypeObject : Js::InternalPropertyIds::ZTypeOfPrototypeObject;
 
-        if ((PHASE_TRACE1(TypeSharePhase) || PHASE_VERBOSE_TRACE1(TypeSharePhase)) && useCache)
+        if ((PHASE_TRACE1(TypeShareForChangePrototypePhase) || PHASE_VERBOSE_TRACE1(TypeShareForChangePrototypePhase)) && useCache)
         {
             cacheType = useObjectHeaderInlining ? _u("NonZeroSlots") : _u("ZeroSlots");
         }
@@ -6117,10 +6117,10 @@ namespace Js
                 {
                     Assert(dynamicType->GetIsShared());
 
-                    if (PHASE_TRACE1(TypeSharePhase))
+                    if (PHASE_TRACE1(TypeShareForChangePrototypePhase))
                     {
 #if DBG
-                        if (PHASE_VERBOSE_TRACE1(TypeSharePhase))
+                        if (PHASE_VERBOSE_TRACE1(TypeShareForChangePrototypePhase))
                         {
                             Output::Print(_u("TypeSharing: Reusing prototype [0x%p] object's %s cache 0x%p in CreateObject.\n"), prototype, cacheType, dynamicType);
                         }
@@ -6137,7 +6137,7 @@ namespace Js
                     return dynamicType;
                 }
 #if DBG
-                if (PHASE_VERBOSE_TRACE1(TypeSharePhase))
+                if (PHASE_VERBOSE_TRACE1(TypeShareForChangePrototypePhase))
                 {
                     if (dynamicTypeHandler->IsObjectHeaderInlinedTypeHandler() != useObjectHeaderInlining)
                     {
@@ -6159,7 +6159,7 @@ namespace Js
         }
 
 #if DBG
-        if (PHASE_VERBOSE_TRACE1(TypeSharePhase))
+        if (PHASE_VERBOSE_TRACE1(TypeShareForChangePrototypePhase))
         {
             if (dynamicType == nullptr)
             {
@@ -6178,10 +6178,10 @@ namespace Js
         if (useCache)
         {
             prototype->SetInternalProperty(propertyIdHoldingCache, (Var)dynamicType, PropertyOperationFlags::PropertyOperation_Force, nullptr);
-            if (PHASE_TRACE1(TypeSharePhase))
+            if (PHASE_TRACE1(TypeShareForChangePrototypePhase))
             {
 #if DBG
-                if (PHASE_VERBOSE_TRACE1(TypeSharePhase))
+                if (PHASE_VERBOSE_TRACE1(TypeShareForChangePrototypePhase))
                 {
                     Output::Print(_u("TypeSharing: Updating prototype [0x%p] object's %s cache from 0x%p to 0x%p in CreateObject. Reason = %s\n"), prototype, cacheType, oldCachedType, dynamicType, reason);
                 }
