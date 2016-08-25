@@ -1383,7 +1383,19 @@ namespace Js
         ScriptContext* scriptContext = newPrototype->GetScriptContext();
         DynamicType* dynamicType = nullptr;
         const char16 * cacheType = nullptr;
+
+#if DBG
+        DynamicType* oldCachedType = nullptr;
+        char16 reason[1024];
+        swprintf_s(reason, 1024, _u("Cache not populated."));
+#endif
+
         bool usingZeroSlotCache = (this->GetInlineSlotCapacity() == 0 && this->GetOffsetOfInlineSlots() == 0);
+
+        if (PHASE_TRACE1(TypeSharePhase) || PHASE_VERBOSE_TRACE1(TypeSharePhase))
+        {
+            cacheType = usingZeroSlotCache ? _u("ZeroSlots") : _u("NonZeroSlots");
+        }
 
         Js::InternalPropertyIds propertyIdHoldingCache = usingZeroSlotCache ? 
             Js::InternalPropertyIds::ZTypeOfPrototypeObject : Js::InternalPropertyIds::NZTypeOfPrototypeObject;
@@ -1406,6 +1418,33 @@ namespace Js
                     )
                 )
             {
+#if DBG
+                if (PHASE_VERBOSE_TRACE1(TypeSharePhase))
+                {
+                    oldCachedType = dynamicType;
+
+                    if (dynamicType == nullptr)
+                    {
+                        swprintf_s(reason, 1024, _u("cachedType was null"));
+                    }
+                    else if ((Js::Var)dynamicType == newPrototype->GetLibrary()->GetUndefined())
+                    {
+                        swprintf_s(reason, 1024, _u("cachedType was undefined"));
+                    }
+                    else if (dynamicTypeHandler->GetOffsetOfInlineSlots() != GetOffsetOfInlineSlots())
+                    {
+                        swprintf_s(reason, 1024, _u("offsetOfInlineSlot mismatch. Required = %d, Cached = %d"), this->GetOffsetOfInlineSlots(), dynamicTypeHandler->GetOffsetOfInlineSlots());
+                    }
+                    else
+                    {
+                        uint16 cachedCapacity = dynamicTypeHandler->GetInlineSlotCapacity();
+                        uint16 requiredCapacity = useObjectHeaderInlining
+                            ? DynamicTypeHandler::RoundUpObjectHeaderInlinedInlineSlotCapacity(requestedInlineSlotCapacity)
+                            : DynamicTypeHandler::RoundUpInlineSlotCapacity(requestedInlineSlotCapacity);
+                        swprintf_s(reason, 1024, _u("inlineSlotCapacity mismatch. Required = %d, Cached = %d"), requiredCapacity, cachedCapacity);
+                    }
+                }
+#endif
                 dynamicType = nullptr;
             }
         }
@@ -1415,6 +1454,7 @@ namespace Js
             dynamicType = nullptr;
         }
 
+        bool wasCacheOutdated = (dynamicType == nullptr);
 
         if (dynamicType == nullptr)
         {
@@ -1422,6 +1462,22 @@ namespace Js
             dynamicType = DynamicType::New(scriptContext, instance->GetDynamicType()->GetTypeId(), newPrototype, RecyclableObject::DefaultEntryPoint, newTypeHandler, true, true);
             dynamicType->flags = instance->GetDynamicType()->flags;
             
+            if (PHASE_TRACE1(TypeSharePhase))
+            {
+#if DBG
+                if (PHASE_VERBOSE_TRACE1(TypeSharePhase))
+                {
+                    Output::Print(_u("TypeSharing: Updating prototype [0x%p] object's %s cache from 0x%p to 0x%p in __proto__. Reason = %s\n"), newPrototype, cacheType, oldCachedType, dynamicType, reason);
+                }
+                else
+                {
+#endif
+                    Output::Print(_u("TypeSharing: Updating prototype object's %s cache in __proto__.\n"), cacheType);
+#if DBG
+                }
+#endif 
+                Output::Flush();
+            }
 
             newPrototype->SetInternalProperty(propertyIdHoldingCache, (Var)dynamicType, PropertyOperationFlags::PropertyOperation_Force, nullptr);
         }
@@ -1439,6 +1495,22 @@ namespace Js
             dynamicType = pathTypeHandler->PromoteType<true>(dynamicType, scriptContext->GetPropertyName(propertyId), true, scriptContext, nullptr, &propertyIndex);
         }
 
+        if (PHASE_TRACE1(TypeSharePhase) && !wasCacheOutdated)
+        {
+#if DBG
+            if (PHASE_VERBOSE_TRACE1(TypeSharePhase))
+            {
+                Output::Print(_u("TypeSharing: Reusing prototype [0x%p] object's %s cache 0x%p in __proto__.\n"), newPrototype, cacheType, dynamicType);
+            }
+            else
+            {
+#endif
+                Output::Print(_u("TypeSharing: Reusing prototype object's %s cache in __proto__.\n"), cacheType);
+#if DBG
+            }
+#endif
+            Output::Flush();
+        }
 
         dynamicType->SetPrototype(newPrototype);
         instance->ReplaceType(dynamicType);

@@ -344,6 +344,7 @@ PHASE(All)
         PHASE(StackFramesEvent)
 #endif
         PHASE(PerfHint)
+        PHASE(TypeShare)
         PHASE(DeferSourceLoad)
         PHASE(ObjectMutationBreakpoint)
 #undef PHASE
