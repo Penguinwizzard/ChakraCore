@@ -110,6 +110,7 @@ public:
     bool            IsSingleDef() const { return this->m_isSingleDef && this->m_instrDef; }
     bool            IsConst() const;
     bool            IsIntConst() const;
+    bool            IsInt64Const() const;
     bool            IsTaggableIntConst() const;
     bool            IsFloatConst() const;
 // SIMD_JS

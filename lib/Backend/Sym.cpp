@@ -207,6 +207,15 @@ StackSym::IsIntConst() const
 }
 
 bool
+StackSym::IsInt64Const() const
+{
+#if DBG
+    VerifyConstFlags();
+#endif
+    return m_isInt64Const;
+}
+
+bool
 StackSym::IsTaggableIntConst() const
 {
 #if DBG
@@ -711,6 +720,11 @@ StackSym::GetConstOpnd() const
         {
             Assert(defInstr->m_opcode == Js::OpCode::Ld_I4 || LowererMD::IsAssign(defInstr) || defInstr->m_opcode == Js::OpCode::ArgOut_A_InlineBuiltIn);
         }
+    }
+    else if (src1->IsInt64ConstOpnd())
+    {
+        Assert(this->m_isInt64Const);
+        Assert(defInstr->m_opcode == Js::OpCode::Ld_I4 || LowererMD::IsAssign(defInstr));
     }
     else if (src1->IsFloatConstOpnd())
     {

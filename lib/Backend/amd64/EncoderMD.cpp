@@ -1678,7 +1678,7 @@ bool EncoderMD::TryConstFold(IR::Instr *instr, IR::RegOpnd *regOpnd)
 {
     Assert(regOpnd->m_sym->IsConst());
 
-    if (regOpnd->m_sym->IsFloatConst())
+    if (regOpnd->m_sym->IsFloatConst() || regOpnd->m_sym->IsInt64Const())
     {
         return false;
     }

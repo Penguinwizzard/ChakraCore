@@ -1997,6 +1997,7 @@ Instr::SetDst(Opnd * newDst)
             stackSym->m_instrDef    = nullptr;
             stackSym->m_isConst     = false;
             stackSym->m_isIntConst  = false;
+            stackSym->m_isInt64Const= false;
             stackSym->m_isTaggableIntConst  = false;
             stackSym->m_isNotInt    = false;
             stackSym->m_isStrConst  = false;
