@@ -1365,6 +1365,7 @@ IRBuilderAsmJs::BuildAsmTypedArr(Js::OpCodeAsmJs newOpcode, uint32 offset, uint3
     IR::RegOpnd * regOpnd = nullptr;
     IR::IndirOpnd * indirOpnd = nullptr;
 
+    // Get the index
     if (newOpcode == Js::OpCodeAsmJs::LdArr || newOpcode == Js::OpCodeAsmJs::StArr)
     {
         uint32 mask = Js::ArrayBufferView::ViewMask[viewType];
@@ -1374,6 +1375,7 @@ IRBuilderAsmJs::BuildAsmTypedArr(Js::OpCodeAsmJs newOpcode, uint32 offset, uint3
         {
             maskedOpnd = IR::RegOpnd::New(TyUint32, m_func);
             maskInstr = IR::Instr::New(Js::OpCode::And_I4, maskedOpnd, BuildSrcOpnd(indexRegSlot, TyInt32), IR::IntConstOpnd::New(mask, TyUint32, m_func), m_func);
+            AddInstr(maskInstr, offset);
         }
         else
         {
@@ -1381,50 +1383,45 @@ IRBuilderAsmJs::BuildAsmTypedArr(Js::OpCodeAsmJs newOpcode, uint32 offset, uint3
         }
         indirOpnd = IR::IndirOpnd::New(BuildSrcOpnd(AsmJsRegSlots::BufferReg, TyVar), maskedOpnd, type, m_func);
         indirOpnd->GetBaseOpnd()->SetValueType(arrayType);
-
     }
-    if (IRType_IsFloat(type))
+    else
     {
+        Assert(newOpcode == Js::OpCodeAsmJs::LdArrConst || newOpcode == Js::OpCodeAsmJs::StArrConst);
+        indirOpnd = IR::IndirOpnd::New(BuildSrcOpnd(AsmJsRegSlots::BufferReg, TyVar), slotIndex, type, m_func);
+        indirOpnd->GetBaseOpnd()->SetValueType(arrayType);
+    }
+
+    // Setup the value/destination
+    if (valueRegType == WAsmJs::FLOAT32 || valueRegType == WAsmJs::FLOAT64)
+    {
+        Assert(IRType_IsFloat(type));
         regOpnd = BuildDstOpnd(valueRegSlot, type);
         regOpnd->SetValueType(ValueType::Float);
+    }
+    else if (valueRegType == WAsmJs::INT64)
+    {
+        Assert(IRType_IsNativeInt(type));
+        regOpnd = BuildDstOpnd(valueRegSlot, TyInt64);
+        regOpnd->SetValueType(ValueType::GetInt(false));
     }
     else
     {
         Assert(IRType_IsNativeInt(type));
-        regOpnd = BuildDstOpnd(valueRegSlot, TySize[type] == 8 ? TyInt64 : TyInt32);
+        Assert(valueRegType == WAsmJs::INT32);
+        regOpnd = BuildDstOpnd(valueRegSlot, TyInt32);
         regOpnd->SetValueType(ValueType::GetInt(false));
     }
 
-    switch (newOpcode)
+    // Create the instruction
+    if (isLd)
     {
-    case Js::OpCodeAsmJs::LdArr:
         instr = IR::Instr::New(op, regOpnd, indirOpnd, m_func);
-        break;
-
-    case Js::OpCodeAsmJs::LdArrConst:
-        indirOpnd = IR::IndirOpnd::New(BuildSrcOpnd(AsmJsRegSlots::BufferReg, TyVar), slotIndex, type, m_func);
-        indirOpnd->GetBaseOpnd()->SetValueType(arrayType);
-        instr = IR::Instr::New(op, regOpnd, indirOpnd, m_func);
-        break;
-
-    case Js::OpCodeAsmJs::StArr:
-        instr = IR::Instr::New(op, indirOpnd, regOpnd, m_func);
-        break;
-
-    case Js::OpCodeAsmJs::StArrConst:
-        indirOpnd = IR::IndirOpnd::New(BuildSrcOpnd(AsmJsRegSlots::BufferReg, TyVar), slotIndex, type, m_func);
-        indirOpnd->GetBaseOpnd()->SetValueType(arrayType);
-        instr = IR::Instr::New(op, indirOpnd, regOpnd, m_func);
-        break;
-
-    default:
-        Assume(UNREACHED);
     }
-    // constant loads won't have mask instr
-    if (maskInstr)
+    else
     {
-        AddInstr(maskInstr, offset);
+        instr = IR::Instr::New(op, indirOpnd, regOpnd, m_func);
     }
+
 #if TARGET_32
     instr->SetSrc2(BuildSrcOpnd(AsmJsRegSlots::LengthReg, TyUint32));
 #endif
