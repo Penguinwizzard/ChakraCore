@@ -1298,7 +1298,7 @@ IRBuilderAsmJs::BuildAsmTypedArr(Js::OpCodeAsmJs newOpcode, uint32 offset, uint3
 {
     IRType type = TyInt32;
     bool isLd = newOpcode == Js::OpCodeAsmJs::LdArr || newOpcode == Js::OpCodeAsmJs::LdArrConst;
-    Js::OpCode op = Js::OpCode::InvalidOpCode;
+    Js::OpCode op = isLd ? Js::OpCode::LdArrViewElem : Js::OpCode::StArrViewElem;
     ValueType arrayType;
     WAsmJs::Types valueRegType = WAsmJs::INT32;
 
@@ -1309,61 +1309,51 @@ IRBuilderAsmJs::BuildAsmTypedArr(Js::OpCodeAsmJs newOpcode, uint32 offset, uint3
     case Js::ArrayBufferView::TYPE_INT8:
         arrayType = ValueType::GetObject(ObjectType::Int8Array);
         type = TyInt8;
-        op = isLd ? Js::OpCode::LdInt8ArrViewElem : Js::OpCode::StInt8ArrViewElem;
         break;
     case Js::ArrayBufferView::TYPE_UINT8_TO_INT64:
         valueRegType = WAsmJs::INT64;
     case Js::ArrayBufferView::TYPE_UINT8:
         arrayType = ValueType::GetObject(ObjectType::Uint8Array);
         type = TyUint8;
-        op = isLd ? Js::OpCode::LdUInt8ArrViewElem : Js::OpCode::StUInt8ArrViewElem;
         break;
     case Js::ArrayBufferView::TYPE_INT16_TO_INT64:
         valueRegType = WAsmJs::INT64;
     case Js::ArrayBufferView::TYPE_INT16:
         arrayType = ValueType::GetObject(ObjectType::Int16Array);
         type = TyInt16;
-        op = isLd ? Js::OpCode::LdInt16ArrViewElem : Js::OpCode::StInt16ArrViewElem;
         break;
     case Js::ArrayBufferView::TYPE_UINT16_TO_INT64:
         valueRegType = WAsmJs::INT64;
     case Js::ArrayBufferView::TYPE_UINT16:
         arrayType = ValueType::GetObject(ObjectType::Uint16Array);
         type = TyUint16;
-        op = isLd ? Js::OpCode::LdUInt16ArrViewElem : Js::OpCode::StUInt16ArrViewElem;
         break;
     case Js::ArrayBufferView::TYPE_INT32_TO_INT64:
         valueRegType = WAsmJs::INT64;
     case Js::ArrayBufferView::TYPE_INT32:
         arrayType = ValueType::GetObject(ObjectType::Int32Array);
         type = TyInt32;
-        op = isLd ? Js::OpCode::LdInt32ArrViewElem : Js::OpCode::StInt32ArrViewElem;
         break;
     case Js::ArrayBufferView::TYPE_UINT32_TO_INT64:
         valueRegType = WAsmJs::INT64;
     case Js::ArrayBufferView::TYPE_UINT32:
         arrayType = ValueType::GetObject(ObjectType::Uint32Array);
         type = TyUint32;
-        op = isLd ? Js::OpCode::LdUInt32ArrViewElem : Js::OpCode::StUInt32ArrViewElem;
         break;
     case Js::ArrayBufferView::TYPE_FLOAT32:
         valueRegType = WAsmJs::FLOAT32;
         arrayType = ValueType::GetObject(ObjectType::Float32Array);
         type = TyFloat32;
-        op = isLd ? Js::OpCode::LdFloat32ArrViewElem : Js::OpCode::StFloat32ArrViewElem;
         break;
     case Js::ArrayBufferView::TYPE_FLOAT64:
         valueRegType = WAsmJs::FLOAT64;
         arrayType = ValueType::GetObject(ObjectType::Float64Array);
         type = TyFloat64;
-        op = isLd ? Js::OpCode::LdFloat64ArrViewElem : Js::OpCode::StFloat64ArrViewElem;
         break;
     case Js::ArrayBufferView::TYPE_INT64:
         valueRegType = WAsmJs::INT64;
         arrayType = ValueType::GetObject(ObjectType::Int64Array);
         type = TyInt64;
-        Assert(false); // Todo:: create opcode for int64
-        //op = isLd ? Js::OpCode::LdFloat64ArrViewElem : Js::OpCode::StFloat64ArrViewElem;
         break;
     default:
         Assume(UNREACHED);
@@ -1393,66 +1383,35 @@ IRBuilderAsmJs::BuildAsmTypedArr(Js::OpCodeAsmJs newOpcode, uint32 offset, uint3
         indirOpnd->GetBaseOpnd()->SetValueType(arrayType);
 
     }
+    if (IRType_IsFloat(type))
+    {
+        regOpnd = BuildDstOpnd(valueRegSlot, type);
+        regOpnd->SetValueType(ValueType::Float);
+    }
+    else
+    {
+        Assert(IRType_IsNativeInt(type));
+        regOpnd = BuildDstOpnd(valueRegSlot, TySize[type] == 8 ? TyInt64 : TyInt32);
+        regOpnd->SetValueType(ValueType::GetInt(false));
+    }
+
     switch (newOpcode)
     {
     case Js::OpCodeAsmJs::LdArr:
-        if (IRType_IsFloat(type))
-        {
-            regOpnd = BuildDstOpnd(valueRegSlot, type);
-            regOpnd->SetValueType(ValueType::Float);
-        }
-        else
-        {
-            regOpnd = BuildDstOpnd(valueRegSlot, TyInt32);
-            regOpnd->SetValueType(ValueType::GetInt(false));
-        }
         instr = IR::Instr::New(op, regOpnd, indirOpnd, m_func);
         break;
 
     case Js::OpCodeAsmJs::LdArrConst:
-        if (IRType_IsFloat(type))
-        {
-            regOpnd = BuildDstOpnd(valueRegSlot, type);
-            regOpnd->SetValueType(ValueType::Float);
-        }
-        else
-        {
-            regOpnd = BuildDstOpnd(valueRegSlot, TyInt32);
-            regOpnd->SetValueType(ValueType::GetInt(false));
-        }
-
         indirOpnd = IR::IndirOpnd::New(BuildSrcOpnd(AsmJsRegSlots::BufferReg, TyVar), slotIndex, type, m_func);
         indirOpnd->GetBaseOpnd()->SetValueType(arrayType);
         instr = IR::Instr::New(op, regOpnd, indirOpnd, m_func);
         break;
 
     case Js::OpCodeAsmJs::StArr:
-
-        if (IRType_IsFloat(type))
-        {
-            regOpnd = BuildSrcOpnd(valueRegSlot, type);
-            regOpnd->SetValueType(ValueType::Float);
-        }
-        else
-        {
-            regOpnd = BuildSrcOpnd(valueRegSlot, TyInt32);
-            regOpnd->SetValueType(ValueType::GetInt(false));
-        }
         instr = IR::Instr::New(op, indirOpnd, regOpnd, m_func);
         break;
 
     case Js::OpCodeAsmJs::StArrConst:
-        if (IRType_IsFloat(type))
-        {
-            regOpnd = BuildSrcOpnd(valueRegSlot, type);
-            regOpnd->SetValueType(ValueType::Float);
-        }
-        else
-        {
-            regOpnd = BuildSrcOpnd(valueRegSlot, TyInt32);
-            regOpnd->SetValueType(ValueType::GetInt(false));
-        }
-
         indirOpnd = IR::IndirOpnd::New(BuildSrcOpnd(AsmJsRegSlots::BufferReg, TyVar), slotIndex, type, m_func);
         indirOpnd->GetBaseOpnd()->SetValueType(arrayType);
         instr = IR::Instr::New(op, indirOpnd, regOpnd, m_func);
@@ -1466,7 +1425,7 @@ IRBuilderAsmJs::BuildAsmTypedArr(Js::OpCodeAsmJs newOpcode, uint32 offset, uint3
     {
         AddInstr(maskInstr, offset);
     }
-#if _M_IX86
+#if TARGET_32
     instr->SetSrc2(BuildSrcOpnd(AsmJsRegSlots::LengthReg, TyUint32));
 #endif
     AddInstr(instr, offset);

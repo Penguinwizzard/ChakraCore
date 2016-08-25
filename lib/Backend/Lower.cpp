@@ -1491,25 +1491,11 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
             this->LowerBinaryHelperMem(instr, IR::HelperOp_IsIn);
             break;
 
-        case Js::OpCode::LdInt8ArrViewElem:
-        case Js::OpCode::LdUInt8ArrViewElem:
-        case Js::OpCode::LdInt16ArrViewElem:
-        case Js::OpCode::LdUInt16ArrViewElem:
-        case Js::OpCode::LdInt32ArrViewElem:
-        case Js::OpCode::LdUInt32ArrViewElem:
-        case Js::OpCode::LdFloat32ArrViewElem:
-        case Js::OpCode::LdFloat64ArrViewElem:
+        case Js::OpCode::LdArrViewElem:
             instrPrev = LowerLdArrViewElem(instr);
             break;
 
-        case Js::OpCode::StInt8ArrViewElem:
-        case Js::OpCode::StUInt8ArrViewElem:
-        case Js::OpCode::StInt16ArrViewElem:
-        case Js::OpCode::StUInt16ArrViewElem:
-        case Js::OpCode::StInt32ArrViewElem:
-        case Js::OpCode::StUInt32ArrViewElem:
-        case Js::OpCode::StFloat32ArrViewElem:
-        case Js::OpCode::StFloat64ArrViewElem:
+        case Js::OpCode::StArrViewElem:
             instrPrev = LowerStArrViewElem(instr);
             break;
 
@@ -8432,14 +8418,7 @@ Lowerer::LowerLdArrViewElem(IR::Instr * instr)
 {
     Assert(m_func->GetJnFunction()->GetIsAsmjsMode());
     Assert(instr);
-    Assert(instr->m_opcode == Js::OpCode::LdInt8ArrViewElem ||
-        instr->m_opcode == Js::OpCode::LdUInt8ArrViewElem   ||
-        instr->m_opcode == Js::OpCode::LdInt16ArrViewElem   ||
-        instr->m_opcode == Js::OpCode::LdUInt16ArrViewElem  ||
-        instr->m_opcode == Js::OpCode::LdInt32ArrViewElem   ||
-        instr->m_opcode == Js::OpCode::LdUInt32ArrViewElem  ||
-        instr->m_opcode == Js::OpCode::LdFloat32ArrViewElem ||
-        instr->m_opcode == Js::OpCode::LdFloat64ArrViewElem);
+    Assert(instr->m_opcode == Js::OpCode::LdArrViewElem);
 
     IR::Instr * instrPrev = instr->m_prev;
 
@@ -8642,14 +8621,7 @@ Lowerer::LowerStArrViewElem(IR::Instr * instr)
 {
     Assert(m_func->GetJnFunction()->GetIsAsmjsMode());
     Assert(instr);
-    Assert(instr->m_opcode == Js::OpCode::StInt8ArrViewElem    ||
-           instr->m_opcode == Js::OpCode::StUInt8ArrViewElem   ||
-           instr->m_opcode == Js::OpCode::StInt16ArrViewElem   ||
-           instr->m_opcode == Js::OpCode::StUInt16ArrViewElem  ||
-           instr->m_opcode == Js::OpCode::StInt32ArrViewElem   ||
-           instr->m_opcode == Js::OpCode::StUInt32ArrViewElem  ||
-           instr->m_opcode == Js::OpCode::StFloat32ArrViewElem ||
-           instr->m_opcode == Js::OpCode::StFloat64ArrViewElem);
+    Assert(instr->m_opcode == Js::OpCode::StArrViewElem);
 
     IR::Instr * instrPrev = instr->m_prev;
 

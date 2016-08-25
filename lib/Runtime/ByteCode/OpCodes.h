@@ -417,22 +417,8 @@ MACRO_WMS_PROFILED(     LdElemI_A,              ElementI,       OpHasImplicitCal
 MACRO_WMS(              LdMethodElem,           ElementI,       OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)      // Load call target from instance's indirect element / field, checked
 MACRO_WMS_PROFILED(     StElemI_A,              ElementI,       OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)      // Store into instance's indirect element / field, checked
 MACRO_WMS_PROFILED(     StElemI_A_Strict,       ElementI,       OpSideEffect|OpHasImplicitCall|OpPostOpDbgBailOut)      // Store into instance's indirect element / field, checked
-MACRO_BACKEND_ONLY(     StInt8ArrViewElem,      ElementI,       OpSideEffect        )       // Store Int8 into typed array view
-MACRO_BACKEND_ONLY(     StUInt8ArrViewElem,     ElementI,       OpSideEffect        )       // Store UInt8 into typed array view
-MACRO_BACKEND_ONLY(     StInt16ArrViewElem,     ElementI,       OpSideEffect        )       // Store Int16 into typed array view
-MACRO_BACKEND_ONLY(     StUInt16ArrViewElem,    ElementI,       OpSideEffect        )       // Store UInt16 into typed array view
-MACRO_BACKEND_ONLY(     StInt32ArrViewElem,     ElementI,       OpSideEffect        )       // Store Int32 into typed array view
-MACRO_BACKEND_ONLY(     StUInt32ArrViewElem,    ElementI,       OpSideEffect        )       // Store UInt32 into typed array view
-MACRO_BACKEND_ONLY(     StFloat32ArrViewElem,   ElementI,       OpSideEffect        )       // Store Float32 into typed array view
-MACRO_BACKEND_ONLY(     StFloat64ArrViewElem,   ElementI,       OpSideEffect        )       // Store Float64 into typed array view
-MACRO_BACKEND_ONLY(     LdFloat32ArrViewElem,   ElementI,       OpCanCSE            )       // load Float32 typed array view
-MACRO_BACKEND_ONLY(     LdFloat64ArrViewElem,   ElementI,       OpCanCSE            )       // load Float64 typed array view
-MACRO_BACKEND_ONLY(     LdInt8ArrViewElem,      ElementI,       OpCanCSE            )       // load Int8 from typed array view
-MACRO_BACKEND_ONLY(     LdInt16ArrViewElem,     ElementI,       OpCanCSE            )       // load Int16 from typed array view
-MACRO_BACKEND_ONLY(     LdUInt8ArrViewElem,     ElementI,       OpCanCSE            )       // load UInt8 from typed array view
-MACRO_BACKEND_ONLY(     LdUInt16ArrViewElem,    ElementI,       OpCanCSE            )       // load UInt16 from typed array view
-MACRO_BACKEND_ONLY(     LdInt32ArrViewElem,     ElementI,       OpCanCSE            )       // load Int32 from typed array view
-MACRO_BACKEND_ONLY(     LdUInt32ArrViewElem,    ElementI,       OpCanCSE            )       // load UInt32 from typed array view
+MACRO_BACKEND_ONLY(     StArrViewElem,          ElementI,       OpSideEffect        )       // Store into typed array view
+MACRO_BACKEND_ONLY(     LdArrViewElem,          ElementI,       OpCanCSE            )       // Load from typed array view
 MACRO_BACKEND_ONLY(     Memset,                 ElementI,       OpSideEffect)
 MACRO_BACKEND_ONLY(     Memcopy,                ElementI,       OpSideEffect)
 MACRO_BACKEND_ONLY(     ArrayDetachedCheck,     Reg1,           None)   // ensures that an ArrayBuffer has not been detached
