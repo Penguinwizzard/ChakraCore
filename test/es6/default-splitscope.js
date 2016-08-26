@@ -16,7 +16,7 @@ var tests = [
             assert.areEqual(20, a, "New assignment in the body scope updates the variable's value in body scope"); 
             return b; 
         } 
-        assert.areEqual(10, f1()(), "Function defined in the param scope captures the formals from the param scope not body scope"); 
+        assert.areEqual(10, f1()(), "Function defined in the param scope captures the formals from the param scope not body scope");
 
         function f2(a = 10, b = function () { return a; }, c = b() + a) { 
             assert.areEqual(10, a, "Initial value of parameter in the body scope should be the same as the one in param scope"); 
@@ -45,39 +45,40 @@ var tests = [
         (function (a = 10, b = function () { assert.areEqual(10, a, "Function defined in the param scope captures the formals from the param scope when executed from the param scope"); }, c = b()) { 
         })(); 
 
-        function f4(a = 10, b = function () { return a; }) { 
-            a = 20; 
-            return b; 
-        } 
-        assert.areEqual(10, f4()(), "Even if the formals are not redeclared in the function body the symbol in the param scope and body scope are different"); 
-
-        function f5(a = 10, b = function () { return function () { return a; }; }) { 
+        function f4(a = 10, b = function () { return function () { return a; }; }) { 
             var a = 20; 
             return b; 
         } 
-        assert.areEqual(10, f5()()(), "Parameter scope works fine with nested functions"); 
+        assert.areEqual(10, f4()()(), "Parameter scope works fine with nested functions"); 
 
         var a1 = 10; 
-        function f6(a, b = function () { a; return a1; }) { 
+        function f5(a, b = function () { a; return a1; }) { 
             assert.areEqual(undefined, a1, "Inside the function body the assignment hasn't happened yet"); 
             var a1 = 20; 
             assert.areEqual(20, a1, "Assignment to the symbol inside the function changes the value"); 
             return b; 
         } 
-        assert.areEqual(10, f6()(), "Function in the param scope correctly binds to the outer variable"); 
+        assert.areEqual(10, f5()(), "Function in the param scope correctly binds to the outer variable"); 
          
-        function f7(a = 10, b = { iFnc () { return a; } }) { 
-            a = 20; 
+        function f6(a = 10, b = { iFnc () { return a; } }) { 
+            var a = 20; 
             return b; 
         } 
-        assert.areEqual(10, f7().iFnc(), "Function definition inside the object literal should capture the formal from the param scope");
+        assert.areEqual(10, f6().iFnc(), "Function definition inside the object literal should capture the formal from the param scope");
         
+        function f7(a = 10, b = function () { return a; }) { 
+            assert.areEqual(10, a, "Initial value of parameter in the body scope should be the same as the one in param scope"); 
+            a = 100; 
+            assert.areEqual(100, a, "New assignment in the body scope updates the value of the formal scope"); 
+            return b; 
+        } 
+        assert.areEqual(100, f7()(), "Chnage in the value of the formal is reflected in the param scoped function's capture"); 
+
         var f8 = function (a, b = ((function() { assert.areEqual('string1', a, "First argument receives the right value"); })(), 1), c) {
             var d = 'string3';
             (function () { assert.areEqual('string3', d, "Var declaration in the body is initialized properly"); })();
             return c;
         };
-
         assert.areEqual('string2', f8('string1', undefined, 'string2'), "Function returns the third argument properly");
         
         function f9() {
@@ -91,14 +92,36 @@ var tests = [
         f9();
         f9();
         
-        function f12() {
+        function f10() {
             var result = ((a = (w = a => a * a) => w) => a)()()(10); 
             
             assert.areEqual(100, result, "The inner lambda function properly maps to the right symbol for a");
         };
-        f12();
+        f10();
+
+        function f11(a = 10, b = 20, c = () => [a, b]) { 
+            assert.areEqual(10, c()[0], "Before the assignment in the body the value of the symbol is the body is same as the formal formal");
+            assert.areEqual(200, c()[1], "Before the assignment in the body updates the value of the formal is retained");
+            var a = 20;
+            b = 200; 
+            assert.areEqual(20, a, "New assignment in the body scope updates the variable's value in body scope"); 
+            return b; 
+        } 
+        assert.areEqual(10, f11()()[0], "Assignment in the body does not affect the value of the formal");
+        assert.areEqual(200, f11()()[1], "Assignment in the body updates the value of the formal");
+
+        function f12(a = 10, b = 20, c = () => [a, b]) { 
+            assert.areEqual(10, c()[0], "Before the assignment in the body the value of the symbol is the body is same as the formal formal with eval in the body");
+            assert.areEqual(200, eval("c()[1]"), "Before the assignment in the body updates the value of the formal is retained with eval in the body");
+            var a = 20;
+            b = 200; 
+            assert.areEqual(20, a, "New assignment in the body scope updates the variable's value in body scope with eval in the body"); 
+            return b; 
+        } 
+        assert.areEqual(10, f12()()[0], "Assignment in the body does not affect the value of the formal with eval in the body");
+        assert.areEqual(200, f12()()[1], "Assignment in the body updates the value of the formal with eval in the body");
     } 
- }, 
+ },
  { 
     name: "Split parameter scope and function expressions with name", 
     body: function () { 
@@ -113,8 +136,6 @@ var tests = [
         function f2(a = 10, b = function c(recurse = true) { return recurse ? c(false) : a; }) { 
             return b; 
         } 
-        assert.areEqual(10, f2()(), "Recursive function expression defined in the param scope captures the formals from the param scope not body scope");
-        
         assert.areEqual(10, f2()(), "Recursive function expression defined in the param scope captures the formals from the param scope not body scope");
 
         var f3 = function f4 (a = function ( ) { b; return f4(20); }, b) {
@@ -184,7 +205,17 @@ var tests = [
         } 
         var result = o2.f1(); 
         assert.areEqual(10, result[0]().f2(), "Short hand method defined in the param scope of the object method captures the formals from the param scope not body scope"); 
-        assert.areEqual(20, result[1]().f2(), "Short hand method defined in the param scope of the object method captures the formals from the param scope not body scope"); 
+        assert.areEqual(20, result[1]().f2(), "Short hand method defined in the param scope of the object method captures the formals from the param scope not body scope");
+
+        var o3 = { 
+           f(a = 10, b = function () { return a; }) { 
+               assert.areEqual(10, a, "Initial value of the formal in the method should be the same as the one in param scope"); 
+               a = 20; 
+               assert.areEqual(20, a, "New assignment in the body of the method updates the formal's value in body scope"); 
+                return b; 
+            } 
+        } 
+        assert.areEqual(o3.f()(), 20, "Update to the value of the formal in the method's body is reflected in the capture");  
     } 
   },
   { 
@@ -219,14 +250,22 @@ var tests = [
         })(); 
 
         function f4(a = 10, b = () => { return () => a; }) { 
-            a = 20; 
+            var a = 20; 
             return b; 
         } 
         assert.areEqual(10, f4()()(), "Nested lambda should capture the formal param value from the param scope"); 
 
         assert.throws(function f4(a = () => x) { var x = 1; a(); }, ReferenceError, "Lambdas in param scope shouldn't be able to access the variables from body", "'x' is undefined"); 
         assert.throws(function f5() { (function (a = () => x) { var x = 1; return a; })()(); }, ReferenceError, "Lambdas in param scope shouldn't be able to access the variables from body", "'x' is undefined"); 
-        assert.throws((a = () => 10, b = a() + c, c = 10) => {}, ReferenceError, "Formals defined to the right shouldn't be usable in lambdas", "Use before declaration"); 
+        assert.throws((a = () => 10, b = a() + c, c = 10) => {}, ReferenceError, "Formals defined to the right shouldn't be usable in lambdas", "Use before declaration");
+
+        function f6(a = 10, b = () => { return a; }) { 
+            assert.areEqual(10, a, "Initial value of parameter in the body scope should be the same as the one in param scope"); 
+            a = 20; 
+            assert.areEqual(20, a, "New assignment in the body scope updates the formal's value in body scope"); 
+            return b; 
+        } 
+        assert.areEqual(10, f6()(), "Assignment in the function body is reflected in the arrow function's capture"); 
     } 
   },
   { 
@@ -256,7 +295,7 @@ var tests = [
     body: function () { 
         function f1(a = this.x, b = function() { assert.areEqual(100, this.x, "this object for the function in param scope is passed from the final call site"); return a; }) { 
             assert.areEqual(10, this.x, "this objects property retains the value from param scope"); 
-            a = 20; 
+            var a = 20; 
             return b; 
         } 
         assert.areEqual(10, f1.call({x : 10}).call({x : 100}), "Arrow functions defined in the param scope captures the formals from the param scope not body scope"); 
@@ -352,13 +391,20 @@ var tests = [
             assert.isTrue(eval("d().x == 5"), "Lambda should capture the this symbol from the body properly");
             return b;
         }
-        assert.areEqual(5, f13.call(thisObj)().x, "Lambda defined in the param scope returns the same this object as the one in body"); 
+        assert.areEqual(5, f13.call(thisObj)().x, "Lambda defined in the param scope returns the same this object as the one in body");
+
+        function f14(a = this.x, b = function() { assert.areEqual(100, this.x, "this object for the function in param scope is passed from the final call site"); return a; }) { 
+            assert.areEqual(10, this.x, "this objects property retains the value from param scope when body does not have any duplicate formals"); 
+            a = 20; 
+            return b; 
+        } 
+        assert.areEqual(20, f14.call({x : 10}).call({x : 100}), "Update to the value of the formal in the body scope is reflected in the param scope function's capture");  
     } 
   },
   { 
     name: "Split parameter scope and class", 
     body: function () { 
-        class c { 
+        class c1 { 
             f(a = 10, d, b = function () { return a; }, c) { 
                 assert.areEqual(10, a, "Initial value of parameter in the body scope in class method should be the same as the one in param scope"); 
                 var a = 20; 
@@ -366,7 +412,7 @@ var tests = [
                 return b; 
             } 
         } 
-        assert.areEqual(10, (new c()).f()(), "Method defined in the param scope of the class should capture the formal from the param scope itself"); 
+        assert.areEqual(10, (new c1()).f()(), "Method defined in the param scope of the class should capture the formal from the param scope itself"); 
 
         function f1(a = 10, d, b = class { method1() { return a; } }, c) { 
             var a = 20; 
@@ -389,7 +435,7 @@ var tests = [
         assert.areEqual(100, f2Obj.f1().call({f2() { return 100; }}), "Method defined in the param uses its own this object while updating the formal"); 
 
         function f2(a = 10, d, b = class { method1() { return class { method2() { return a; }} } }, c) { 
-            a = 20; 
+            var a = 20; 
             return b; 
         } 
         var obj1 = f2(); 
@@ -403,7 +449,7 @@ var tests = [
                 for (var i = 0; i < c.length; i++) { 
                     assert.areEqual(actualArray[i], c[i], "Rest parameter should have the same value as the actual array"); 
                 } 
-                c = []; 
+                var c = []; 
                 return b; 
             } 
         } 
@@ -468,6 +514,29 @@ var tests = [
         result = f8(); 
         assert.areEqual(10, (new result()).method1(), "Methods defined in a class extending another class defined, after another function definition, in the param scope should capture the formals form that param scope itself");
         assert.areEqual(100, (new result()).method2(), "Method in the derived class returns the right value");
+
+        class c5 { 
+            f(a = 10, d, b = function () { return a; }, c) { 
+                assert.areEqual(10, a, "Initial value of parameter in the body scope in class method should be the same as the one in param scope"); 
+                a = 20; 
+                assert.areEqual(20, a, "Assignment in the class method body updates the value of the variable"); 
+                return b; 
+            } 
+        } 
+        assert.areEqual(20, (new c5()).f()(), "Update to the value of the formal in the body is reflected in the param function's capture");
+
+        class c6 { 
+            f(a = 10, b = () => { return c; }, ...c) { 
+                assert.areEqual(actualArray.length, c.length, "Rest param and the actual array should have the same length"); 
+                for (var i = 0; i < c.length; i++) { 
+                    assert.areEqual(actualArray[i], c[i], "Rest parameter should have the same value as the actual array"); 
+                } 
+                c = []; 
+                return b; 
+            } 
+        } 
+        result = (new c6()).f(undefined, undefined, ...[2, 3, 4])(); 
+        assert.areEqual(0, result.length, "Assignment to the rest formal in the body is reflected in the param scoped function's capture"); 
     } 
   },
   { 
@@ -493,10 +562,10 @@ var tests = [
         var f2Obj = f2(); 
         assert.areEqual(10, f2Obj.next().value, "Initial value of the parameter in the body scope should be the same as the final value of the parameter in param scope"); 
         assert.areEqual(20, f2Obj.next().value, "Assignment in the body scope updates the variable's value"); 
-        assert.areEqual(10, f2Obj.next().value(), "Function defined in the param scope captures the formal from the param scope itself even if it is not redeclared in the body"); 
+        assert.areEqual(20, f2Obj.next().value(), "Function defined in the param scope captures the formal from the param scope which gets updated by the assignment in the body"); 
 
         function *f3(a = 10, d, b = function *() { yield a + c; }, c = 100) { 
-            a = 20; 
+            var a = 20; 
             yield a; 
             yield b; 
         } 
@@ -520,8 +589,8 @@ var tests = [
         function f1( {a:a1, b:b1}, c = function() { return a1 + b1; } ) { 
             assert.areEqual(10, a1, "Initial value of the first destructuring parameter in the body scope should be the same as the one in param scope"); 
             assert.areEqual(20, b1, "Initial value of the second destructuring parameter in the body scope should be the same as the one in param scope"); 
-            a1 = 1; 
-            b1 = 2; 
+            var a1 = 1; 
+            var b1 = 2; 
             assert.areEqual(1, a1, "New assignment in the body scope updates the first formal's value in body scope"); 
             assert.areEqual(2, b1, "New assignment in the body scope updates the second formal's value in body scope"); 
             assert.areEqual(30, c(), "The param scope method should return the sum of the destructured formals from the param scope"); 
@@ -531,7 +600,7 @@ var tests = [
 
         function f2({x:x = 10, y:y = function () { return x; }}) { 
             assert.areEqual(10, x, "Initial value of the first destructuring parameter in the body scope should be the same as the one in param scope"); 
-            x = 20; 
+            var x = 20; 
             assert.areEqual(20, x, "Assignment in the body updates the formal's value"); 
             return y; 
         } 
@@ -539,7 +608,7 @@ var tests = [
          
         function f3({y:y = function () { return x; }, x:x = 10}) { 
             assert.areEqual(10, x, "Initial value of the first destructuring parameter in the body scope should be the same as the one in param scope"); 
-            x = 20; 
+            var x = 20; 
             assert.areEqual(20, x, "Assignment in the body updates the formal's value"); 
             return y; 
         } 
@@ -547,9 +616,21 @@ var tests = [
          
         (({x:x = 10, y:y = function () { return x; }}) => { 
             assert.areEqual(10, x, "Initial value of the first destructuring parameter in the body scope should be the same as the one in param scope"); 
-            x = 20; 
+            var x = 20; 
             assert.areEqual(10, y(), "Assignment in the body does not affect the formal captured from the param scope"); 
-        })({}); 
+        })({});
+
+        function f4( {a:a1, b:b1}, c = function() { return a1 + b1; } ) { 
+            assert.areEqual(10, a1, "Initial value of the first destructuring parameter in the body scope should be the same as the one in param scope"); 
+            assert.areEqual(20, b1, "Initial value of the second destructuring parameter in the body scope should be the same as the one in param scope"); 
+            a1 = 1; 
+            b1 = 2; 
+            assert.areEqual(1, a1, "New assignment in the body scope updates the first formal's value in body scope"); 
+            assert.areEqual(2, b1, "New assignment in the body scope updates the second formal's value in body scope"); 
+            assert.areEqual(30, c(), "The param scope method should return the sum of the destructured formals from the param scope"); 
+            return c; 
+        } 
+        assert.areEqual(3, f4({ a : 10, b : 20 })(), "Returned method should return the sum of the destructured formals which are updated in the body"); 
     } 
   },
   { 
