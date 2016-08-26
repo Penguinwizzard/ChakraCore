@@ -1745,14 +1745,14 @@ var tests = [
 
         function f1(a = 10, b = () => eval("a")) {
             assert.areEqual(10, eval("a"), "In the body initial value of the symbol should be same as the final value from param scope");
-            a = 20;
+            var a = 20;
             assert.areEqual(20, eval("a"), "In the body after assignment the symbol value is updated");
             assert.areEqual(10, b(), "Eval in the param scope captures the symbol from the param scope");
         }
         f1();
 
         function f2(a = 10, b = () => eval("a")) {
-            a = 20;
+            var a = 20;
             assert.areEqual(10, b(), "Eval in the param scope captures the symbol from the param scope even when there is no eval in the body");
         }
         f2();
@@ -1765,7 +1765,7 @@ var tests = [
 
         function f4(a = 10, b = () => eval("a"), c = a = 30) {
             assert.areEqual(30, eval("a"), "In the body initial value of the symbol should be same as the final value from param scope");
-            a = 20;
+            var a = 20;
             assert.areEqual(20, eval("a"), "In the body after assignment the symbol value is updated");
             assert.areEqual(30, b(), "Eval in the param scope captures the symbol from the param scope");
         }
@@ -1780,13 +1780,13 @@ var tests = [
         f5(30);
 
         var f6 = function f7(a = 10, b = () => eval("a")) {
-            a = 20;
+            var a = 20;
             assert.areEqual(10, b(), "Eval in the param scope captures the symbol from the param scope for a function expression with name");
         }
         f6();
 
         var f8 = function f9(a = 10, b = () => eval("a"), c = b) {
-            a = 20;
+            var a = 20;
             function b() {
                 return a;
             }
@@ -1796,20 +1796,20 @@ var tests = [
         f8();
 
         function f9(a = 10, b = () => () => eval("a")) {
-            a = 20;
+            var a = 20;
             assert.areEqual(10, b()(), "Eval in a nested function in the param scope captures the symbol from the param scope even when there is no eval in the body");
         }
         f9();
 
         function f10(a = 10, b = () => () => eval("a")) {
-            a = 20;
+            var a = 20;
             assert.areEqual(10, eval("b()()"), "Eval in a nested function in the param scope captures the symbol from the param scope even when there is no eval in the body");
         }
         f10();
 
         var obj = {
             mf1(a = 10, b = () => () => eval("a")) {
-                a = 20;
+                var a = 20;
                 assert.areEqual(10, eval("b()()"), "Eval in a nested function in the param scope of a method definition captures the symbol from the param scope");
             }
         }
@@ -1837,7 +1837,7 @@ var tests = [
         function f13(x = 1) {
             (function () {
                 function f14 (a = () => eval("x"), b = a) {
-                    a = 20;
+                    var a = 20;
                     assert.areEqual(1, b(), "Eval in param scope should be able to access formals from an outer function");
                 };
                 f14();
@@ -1849,6 +1849,20 @@ var tests = [
             assert.areEqual(1, a("v15"), "Indirect eval should be able to access the global variables properly");
         }
         f15();
+
+        function f16(a = 10, b = () => eval("a")) {
+            assert.areEqual(10, eval("a"), "In the body initial value of the symbol should be same as the final value from param scope");
+            a = 20;
+            assert.areEqual(20, eval("a"), "In the body after assignment the symbol value is updated");
+            assert.areEqual(20, b(), "Eval in the param scope captures the symbol from the param scope which is updated in the body");
+        }
+        f16();
+
+        function f17(a = 10, b = () => eval("a")) {
+            a = 20;
+            assert.areEqual(10, b(), "Eval in the param scope captures the symbol from the param scope even when there is no eval in the body");
+        }
+        f17();
     } 
   },
   {
@@ -1856,13 +1870,19 @@ var tests = [
       body: function () {
             var c = 10;
             var result = eval(`(function (a = 1, b = () => a + c) {
-                a = 2 + c;
+                var a = 2 + c;
                 return [a, b()];
             })()`);
             assert.areEqual([12, 11].toString(), result.toString(), "Split scope function defined inside an eval should work fine");
 
-            result = eval(`(function (a = 1, b = () => eval('a + c')) {
+            result = eval(`(function (a = 1, b = () => a + c) {
                 a = 2 + c;
+                return [a, b()];
+            })()`);
+            assert.areEqual([12, 22].toString(), result.toString(), "Split scope function defined inside an eval captures the formal whose value is updated in the body");
+
+            result = eval(`(function (a = 1, b = () => eval('a + c')) {
+                var a = 2 + c;
                 return [a, b()];
             })()`);
             assert.areEqual([12, 11].toString(), result.toString(), "Split scope function with eval defined inside an eval should work fine");
@@ -1968,7 +1988,7 @@ var tests = [
     name: "Eval and with",
     body: function () {
         function f1(a = { x : 10 }, b = () => eval("a")) {
-            a = 20
+            var a = 20
             with (b()) {
                 return b().x + a;
             }
@@ -1976,7 +1996,7 @@ var tests = [
         assert.areEqual(30, f1(), "With in the body of a eval split scoped function should not affect the usage of eval in the param scope");
 
         function f2(a = { x : 10 }, b = function () { return eval("a.x"); }) {
-            a = 20;
+            var a = 20;
             with ({}) {
                 return b() + a;
             }
@@ -1984,7 +2004,7 @@ var tests = [
         assert.areEqual(30, f2(), "With in the param scope of a eval split scoped function should not affect the parameter capture");
 
         function f3(a = { x : 10 }, b = function () { return eval("a.x"); }, c = b) {
-            a = 20;
+            var a = 20;
             with ({}) {
                 return c() + b();
             }
@@ -1993,6 +2013,14 @@ var tests = [
             }
         }
         assert.areEqual(30, f3(), "With in the param scope of a eval split scoped function should work fine even with shadowing in body");
+
+        function f4(a = { x : 10 }, b = () => eval("a")) {
+             a = 20
+            with (b()) {
+                return b() + a;
+            }
+        }
+        assert.areEqual(40, f4(), "With eval in the param scope capturing should reflect the update to the formal's value from the body");
     }
   },
   {
@@ -2056,7 +2084,7 @@ var tests = [
             constructor(a = 1, b = () => { assert.isTrue(eval("new.target") == c2, "new.target should have the derived class value in the param scope"); return a; }) {
                 super(c2);
                 var c = 10;
-                a = 20;
+                var a = 20;
                 (() => assert.areEqual(10, c, "Allocation of scope slot for super property shouldn't affect the body variables"))();
                 assert.areEqual(1, b(), "Function with eval defined in the param scope should be abel to access new.target properly");
             }
@@ -2067,7 +2095,7 @@ var tests = [
             constructor(a = 1, b = () => { assert.isTrue(eval("new.target") == c3, "new.target should have the derived class value in the param scope"); return a; }) {
                 super(c3);
                 var c = 10;
-                a = 20;
+                var a = 20;
                 (() => assert.areEqual(10, c, "Allocation of scope slot for super property shouldn't affect the body variables"))();
                 assert.areEqual(1, eval("b()"), "Function defined in the param scope should capture the formal");
             }
@@ -2089,6 +2117,17 @@ var tests = [
             }
         }
         new c5();
+
+        class c6 extends c1 {
+            constructor(a = 1, b = () => { assert.isTrue(eval("new.target") == c2, "new.target should have the derived class value in the param scope"); return a; }) {
+                super(c2);
+                var c = 10;
+                a = 20;
+                (() => assert.areEqual(10, c, "Allocation of scope slot for super property shouldn't affect the body variables"))();
+                assert.areEqual(20, b(), "The value of the formal is updated by the assignment in the body");
+            }
+        }
+        new c6();
     }
   },
   {
@@ -2103,7 +2142,7 @@ var tests = [
         class c2 extends c1 {
             constructor(a = 1, b = () => { assert.areEqual(1, eval("super().x"), "Super is accessible in eval in the param scope"); return a; }) {
                 var c = 10;
-                a = 20;
+                var a = 20;
                 (() => assert.areEqual(10, c, "Allocation of scope slot for super property shouldn't affect the body variables with eval in the param scope"))();
                 assert.areEqual(1, b(), "Function with eval defined in the param scope should capture the formal");
                 return {};
@@ -2137,6 +2176,17 @@ var tests = [
             }
         }
         new c5();
+
+        class c6 extends c1 {
+            constructor(a = 1, b = () => { assert.areEqual(1, eval("super().x"), "Super is accessible in eval in the param scope"); return a; }) {
+                var c = 10;
+                a = 20;
+                (() => assert.areEqual(10, c, "Allocation of scope slot for super property shouldn't affect the body variables with eval in the param scope"))();
+                assert.areEqual(20, b(), "Function with eval defined in the param scope should capture the formal which is updated in the body");
+                return {};
+            }
+        }
+        new c6();
     }
   },
   {
@@ -2150,7 +2200,7 @@ var tests = [
 
         class c2 extends c1 {
             foo(a = 1, b = () => { assert.areEqual(1, eval(super.foo()), "Super property access works fine inside eval in a lambda defined in the param scope"); return a; }) {
-                a = 20;
+                var a = 20;
                 var c = 10;
                 (() => assert.areEqual(10, c, "Allocation of scope slot for super property shouldn't affect the body variables"))();
                 assert.areEqual(1, b(), "Function with eval defined in the param scope should capture the formal");
@@ -2183,6 +2233,16 @@ var tests = [
             }
         }
         (new c5()).foo();
+
+        class c6 extends c1 {
+            foo(a = 1, b = () => { assert.areEqual(1, eval(super.foo()), "Super property access works fine inside eval in a lambda defined in the param scope"); return a; }) {
+                a = 20;
+                var c = 10;
+                (() => assert.areEqual(10, c, "Allocation of scope slot for super property shouldn't affect the body variables"))();
+                assert.areEqual(20, b(), "Function with eval defined in the param scope should capture the formal and reflect the assignment from the body");
+            }
+        }
+        (new c6()).foo();
     }
   },
   {
@@ -2191,8 +2251,8 @@ var tests = [
         function f1({a:a1, b:b1}, c = eval("a1 + b1")) {
             assert.areEqual(10, a1, "Initial value of the first destructuring parameter in the body scope should be the same as the one in param scope");
             assert.areEqual(20, b1, "Initial value of the second destructuring parameter in the body scope should be the same as the one in param scope");
-            a1 = 1;
-            b1 = 2;
+            var a1 = 1;
+            var b1 = 2;
             assert.areEqual(1, a1, "New assignment in the body scope updates the first formal's value in body scope");
             assert.areEqual(2, b1, "New assignment in the body scope updates the second formal's value in body scope");
             assert.areEqual(30, c, "The param scope method should return the sum of the destructured formals from the param scope");
@@ -2201,8 +2261,8 @@ var tests = [
         assert.areEqual(30, f1({ a : 10, b : 20 }), "Method should return the sum of the destructured formals from the param scope");
 
         function f2( {a:a1, b:b1}, c = function () { return eval("a1 + b1"); }) {
-            a1 = 1;
-            b1 = 2;
+            var a1 = 1;
+            var b1 = 2;
             eval("");
             return c;
         } 
@@ -2210,7 +2270,7 @@ var tests = [
  
         function f3({x:x = 10, y:y = eval("x")}) {
             assert.areEqual(10, x, "Initial value of the first destructuring parameter in the body scope should be the same as the one in param scope");
-            x = 20;
+            var x = 20;
             assert.areEqual(20, x, "Assignment in the body updates the formal's value");
             return y;
         }
@@ -2218,9 +2278,21 @@ var tests = [
          
         (({x:x = 10, y:y = () => { return eval("x"); }}) => {
             assert.areEqual(10, x, "Initial value of the first destructuring parameter in the body scope should be the same as the one in param scope");
-            x = 20;
+            var x = 20;
             assert.areEqual(10, y(), "Assignment in the body does not affect the formal captured from the param scope");
         })({});
+
+        function f4({a:a1, b:b1}, c = () => eval("a1 + b1")) {
+            assert.areEqual(10, a1, "Initial value of the first destructuring parameter in the body scope should be the same as the one in param scope");
+            assert.areEqual(20, b1, "Initial value of the second destructuring parameter in the body scope should be the same as the one in param scope");
+            a1 = 1;
+            b1 = 2;
+            assert.areEqual(1, a1, "New assignment in the body scope updates the first formal's value in body scope");
+            assert.areEqual(2, b1, "New assignment in the body scope updates the second formal's value in body scope");
+            assert.areEqual(3, c(), "The param scope method should return the sum of the destructured formals from the param scope");
+            return c;
+        }
+        assert.areEqual(3, f4({ a : 10, b : 20 })(), "Method should return the sum of the destructured formals which are updated in the body");
       }
   },
   {

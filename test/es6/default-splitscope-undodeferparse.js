@@ -49,7 +49,7 @@ function foo3(a = 10, b = function () { return a; }) {
     } else {
         print("PASSED");
     }
-    if (eval('b()') != 10) {
+    if (a != 10) {
         print("FAILED")
     } else {
         print("PASSED");
@@ -63,7 +63,72 @@ function foo3(a = 10, b = function () { return a; }) {
 }
 foo3();
 
-function foo4(a, b = function () { a; }) {
+function foo4(a = 10, b = function () { return a; }) {
+    if (b() != 10) {
+        print("FAILED")
+    } else {
+        print("PASSED");
+    }
+    if (a != 10) {
+        print("FAILED")
+    } else {
+        print("PASSED");
+    }
+    a = 1;
+    if (b() != 1) {
+        print("FAILED")
+    } else {
+        print("PASSED");
+    }
+}
+foo4();
+
+function foo5(a = 10, b = function () { return a; }) {
+    if (b() != 10) {
+        print("FAILED")
+    } else {
+        print("PASSED");
+    }
+    if (eval('b()') != 10) {
+        print("FAILED")
+    } else {
+        print("PASSED");
+    }
+    var a = 1;
+    if (b() != 10) {
+        print("FAILED")
+    } else {
+        print("PASSED");
+    }
+}
+foo5();
+
+function foo6(a = 10, b = function () { return a; }) {
+    if (b() != 10) {
+        print("FAILED")
+    } else {
+        print("PASSED");
+    }
+    if (eval('b()') != 10) {
+        print("FAILED")
+    } else {
+        print("PASSED");
+    }
+    a = 1;
+    if (b() != 1) {
+        print("FAILED")
+    } else {
+        print("PASSED");
+    }
+    if (eval('a') != 1) {
+        print("FAILED")
+    } else {
+        print("PASSED");
+    }
+}
+foo6();
+
+function foo7(a, b = function () { a; }) {
     if (eval("a") !== 1) {
         print("FAILED")
     } else {
@@ -96,9 +161,9 @@ function foo4(a, b = function () { a; }) {
         print("PASSED");
     }
 }
-foo4(1);
+foo7(1);
 
-function foo5(a = 10, b = eval("a")) {
+function foo8(a = 10, b = eval("a")) {
     if (b != 10) {
         print("FAILED")
     } else {
@@ -116,7 +181,27 @@ function foo5(a = 10, b = eval("a")) {
         print("PASSED");
     }
 }
-foo5();
+foo8();
+
+function foo9(a = 10, b = () => eval("a")) {
+    if (b != 10) {
+        print("FAILED")
+    } else {
+        print("PASSED");
+    }
+    if (eval('b()') != 10) {
+        print("FAILED")
+    } else {
+        print("PASSED");
+    }
+    a = 1;
+    if (b() != 1) {
+        print("FAILED")
+    } else {
+        print("PASSED");
+    }
+}
+foo9();
 
 function foo6(a, b = () => eval("a")) {
     if (eval("a") !== 1) {
