@@ -15206,7 +15206,15 @@ Lowerer::GenerateFastLdElemI(IR::Instr *& ldElem, bool *instrIsInHelperBlockRef)
                 {
                     Assert(ldElem->HasBailOutInfo());
 
-                    IR::IntConstOpnd *constOpnd = IR::IntConstOpnd::New(0, TyInt32, this->m_func, true);
+                    IR::Opnd * constOpnd = nullptr;
+                    if (dst->IsFloat())
+                    {
+                        constOpnd = IR::FloatConstOpnd::New(Js::JavascriptNumber::NaN, TyFloat64, m_func);
+                    }
+                    else
+                    {
+                        constOpnd = IR::IntConstOpnd::New(0, TyInt32, this->m_func, true);
+                    }
                     InsertMove(dst, constOpnd, ldElem);
 
                     ldElem->UnlinkSrc1();
