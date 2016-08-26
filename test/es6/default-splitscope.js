@@ -109,17 +109,6 @@ var tests = [
         } 
         assert.areEqual(10, f11()()[0], "Assignment in the body does not affect the value of the formal");
         assert.areEqual(200, f11()()[1], "Assignment in the body updates the value of the formal");
-
-        function f12(a = 10, b = 20, c = () => [a, b]) { 
-            assert.areEqual(10, c()[0], "Before the assignment in the body the value of the symbol is the body is same as the formal formal with eval in the body");
-            assert.areEqual(200, eval("c()[1]"), "Before the assignment in the body updates the value of the formal is retained with eval in the body");
-            var a = 20;
-            b = 200; 
-            assert.areEqual(20, a, "New assignment in the body scope updates the variable's value in body scope with eval in the body"); 
-            return b; 
-        } 
-        assert.areEqual(10, f12()()[0], "Assignment in the body does not affect the value of the formal with eval in the body");
-        assert.areEqual(200, f12()()[1], "Assignment in the body updates the value of the formal with eval in the body");
     } 
  },
  { 
@@ -800,12 +789,12 @@ var tests = [
   {
     name: "Split scope with symbol shadowing",
     body: function () {
-          function f1(a = 10, b = function () { return a; }) {
-              assert.areEqual(100, a(), "Function definition inside the body is hoisted");
-              function a () {
-                  return 100;
-              }
-              return b;
+        function f1(a = 10, b = function () { return a; }) {
+            assert.areEqual(100, a(), "Function definition inside the body is hoisted");
+            function a () {
+                return 100;
+            }
+            return b;
         }
         assert.areEqual(10, f1()(), "Function definition in the param scope captures the symbol from the param scope");
 
@@ -860,6 +849,28 @@ var tests = [
             return b;
         }
         assert.areEqual(1, f6()(), "Symbol capture at the param scope is unaffected by other references in the body and param");
+
+        function f7(a = 10, b = function () { return a; }, c) {
+            assert.areEqual(100, a(), "Function definition inside the body is hoisted");
+            function a () {
+                return c;
+            }
+            return [b, c];
+        }
+        result = f7(undefined, undefined, 100);
+        assert.areEqual(10, result[0](), "Function definition in the param scope captures the symbol from the param scope");
+        assert.areEqual(100, result[1](), "Function defined in the body overriding the formal should be able to capture another formal");
+
+        function f8(a = 10, b = function () { return a; }, c) {
+            assert.areEqual(100, a(), "Function definition inside the body is hoisted");
+            var a = function a () {
+                return c;
+            }
+            return b;
+        }
+        result = f8(undefined, undefined, 100);
+        assert.areEqual(10, result[0](), "Function definition in the param scope captures the symbol from the param scope");
+        assert.areEqual(100, result[1](), "Function expression with name defined in the body overriding the formal should be able to capture another formal");
     }
   },
   {
@@ -978,7 +989,7 @@ var tests = [
         f12(1);
         
         function f13(a, b = () => { return a; }) {
-            a = 10;
+            var a = 10;
             assert.areEqual(1, arguments[0], "First argument is properly received");
             assert.areEqual(2, arguments[2], "Third argument is properly received");
             assert.areEqual(3, arguments.length, "Only three arguments are passed in");
@@ -993,7 +1004,7 @@ var tests = [
         
         function f14(a, b = () => { return a; }) {
             eval("");
-            a = 10;
+            var a = 10;
             assert.areEqual(1, arguments[0], "First argument is properly received");
             assert.areEqual(2, arguments[2], "Third argument is properly received");
             assert.areEqual(3, arguments.length, "Only three arguments are passed in");
@@ -1040,6 +1051,34 @@ var tests = [
             }
         }
         assert.areEqual([2, 3], f16(1, undefined, 2, 3), "Rest should remain unaffected when arguments is updated");
+
+        function f18(a, b = () => { return a; }) {
+            assert.areEqual(1, arguments[0], "First argument is properly received");
+            assert.areEqual(2, arguments[2], "Third argument is properly received");
+            assert.areEqual(3, arguments.length, "Only three arguments are passed in");
+            assert.areEqual(1, ((c = arguments = [3, 4]) => { return a; })(), "Function defined in the body is able to capture a formal from the param scope");
+            assert.areEqual(3, arguments[0], "Arguments symbol is updated with the new value when the lambda is executed");
+            assert.areEqual(4, arguments[1], "New array is properly assigned to arguments symbol");
+            assert.areEqual(2, arguments.length, "New array has only elements");
+            
+            return b;
+        }
+        assert.areEqual(1, f18(1, undefined, 2)(), "Param scope method properly captures the first parameter");
+        
+        function f14(a, b = () => { return a; }) {
+            eval("");
+            a = 10;
+            assert.areEqual(1, arguments[0], "First argument is properly received");
+            assert.areEqual(2, arguments[2], "Third argument is properly received");
+            assert.areEqual(3, arguments.length, "Only three arguments are passed in");
+            assert.areEqual(10, ((c = arguments = [3, 4]) => { return a; })(), "Function defined in the body is able to capture a formal from the param scope");
+            assert.areEqual(3, arguments[0], "Arguments symbol is updated with the new value when the lambda is executed");
+            assert.areEqual(4, arguments[1], "New array is properly assigned to arguments symbol");
+            assert.areEqual(2, arguments.length, "New array has only elements");
+            
+            return b;
+        }
+        assert.areEqual(1, f14(1, undefined, 2)(), "Param scope method properly captures the first parameter, with eval in the body");
     }  
   },
   {
@@ -1299,7 +1338,7 @@ var tests = [
         class c2 extends c1 {
             constructor(a = 1, b = () => { assert.areEqual(1, super().x, "Super is accessible in the param scope"); return a; }) {
                 var c = 10;
-                a = 20;
+                var a = 20;
                 (() => assert.areEqual(10, c, "Allocation of scope slot for super property shouldn't affect the body variables"))();
                 assert.areEqual(1, b(), "Function defined in the param scope should capture the formal");
                 return {};
@@ -1310,7 +1349,7 @@ var tests = [
         class c3 extends c1 {
             constructor(a = 1, b = () => { return a; }) {
                 (() => assert.areEqual(1, super().x, "Lambda should be able to access the super method properly in the body"))();
-                a = 10;
+                var a = 10;
                 assert.areEqual(1, b(), "Function defined in the param scope should capture the formal");
             }
         }
@@ -1335,6 +1374,17 @@ var tests = [
             }
         }
         new c5();
+
+        class c6 extends c1 {
+            constructor(a = 1, b = () => { assert.areEqual(1, super().x, "Super is accessible in the param scope"); return a; }) {
+                var c = 10;
+                a = 20;
+                (() => assert.areEqual(10, c, "Allocation of scope slot for super property shouldn't affect the body variables"))();
+                assert.areEqual(10, b(), "Assignment in the body updates the value of the formal");
+                return {};
+            }
+        }
+        new c6();
     }
   },
   {
@@ -1348,7 +1398,7 @@ var tests = [
 
         class c2 extends c1 {
             foo(a = 1, b = () => { assert.areEqual(1, super.foo(), "Super property access works fine from a lambda defined in the param scope"); return a; }) {
-                a = 20;
+                var a = 20;
                 var c = 10;
                 (() => assert.areEqual(10, c, "Allocation of scope slot for super property shouldn't affect the body variables"))();
                 assert.areEqual(1, b(), "Function defined in the param scope should capture the formal");
@@ -1359,7 +1409,7 @@ var tests = [
         class c3 extends c1 {
             foo(a = 1, b = () => { return a; }) {
                 var c = 10;
-                a = 20;
+                var a = 20;
                 (() => assert.areEqual(1, super.foo(), "Super property access works fine from a lambda defined in the body scope"))();
                 assert.areEqual(1, b(), "Function defined in the param scope should capture the formal");
             }
@@ -1369,7 +1419,7 @@ var tests = [
         class c4 extends c1 {
             foo(a = 1, b = () => { return a; }) {
                 var c = 10;
-                a = 20;
+                var a = 20;
                 (() => assert.areEqual(10, c, "Allocation of scope slot for super property shouldn't affect the body variables"))();
                 assert.areEqual(1, b(), "Function defined in the param scope should capture the formal");
                 assert.areEqual(1, eval("super.foo()"), "Eval should be able to access the super property properly from the body scope");
@@ -1382,11 +1432,21 @@ var tests = [
                 assert.areEqual(1, a, "First formal uses the super property from the param scope");
                 var c = 10;
                 (() => assert.areEqual(10, c, "Allocation of scope slot for super property shouldn't affect the body variables"))();
-                a = 20;
+                var a = 20;
                 assert.areEqual(1, b(), "Function defined in the param scope should capture the formal");
             }
         }
         (new c5()).foo();
+
+        class c6 extends c1 {
+            foo(a = 1, b = () => { assert.areEqual(1, super.foo(), "Super property access works fine from a lambda defined in the param scope"); return a; }) {
+                a = 20;
+                var c = 10;
+                (() => assert.areEqual(10, c, "Allocation of scope slot for super property shouldn't affect the body variables"))();
+                assert.areEqual(20, b(), "Assignment in the body updates the value of the formal");
+            }
+        }
+        (new c6()).foo();
     }
   },
   {
@@ -1402,7 +1462,7 @@ var tests = [
             constructor(a = 1, b = () => { assert.isTrue(new.target == c2, "new.target should have the derived class value in the param scope"); return a; }) {
                 super(c2);
                 var c = 10;
-                a = 20;
+                var a = 20;
                 (() => assert.areEqual(10, c, "Allocation of scope slot for super property shouldn't affect the body variables"))();
                 assert.areEqual(1, b(), "Function defined in the param scope should capture the formal");
             }
@@ -1435,6 +1495,17 @@ var tests = [
             }
         }
         new c5();
+
+        class c6 extends c1 {
+            constructor(a = 1, b = () => { assert.isTrue(new.target == c2, "new.target should have the derived class value in the param scope"); return a; }) {
+                super(c2);
+                var c = 10;
+                a = 20;
+                (() => assert.areEqual(10, c, "Allocation of scope slot for super property shouldn't affect the body variables"))();
+                assert.areEqual(20, b(), "Assignment in the body updates the value of the captured formal");
+            }
+        }
+        new c6();
     }
   },
   { 
@@ -1473,7 +1544,7 @@ var tests = [
             assert.areEqual(20, a, "New assignment in the body scope updates the variable's value in body scope");  
             assert.areEqual(20, eval('a'), "New assignment in the body scope updates the variable's value when evaluated through eval in body scope");  
             return b;   
-        }   
+        }
         assert.areEqual(10, f1()(), "Function defined in the param scope captures the formals from the param scope not body scope with eval");  
           
         function f2(a = 10, b = function () { return a; }) {   
@@ -1501,6 +1572,27 @@ var tests = [
             }());
         };
         f4.call(1, 2);
+
+        function f5(a = 10, b = 20, c = () => [a, b]) { 
+            assert.areEqual(10, c()[0], "Before the assignment in the body the value of the symbol is the body is same as the formal formal with eval in the body");
+            assert.areEqual(200, eval("c()[1]"), "Before the assignment in the body updates the value of the formal is retained with eval in the body");
+            var a = 20;
+            b = 200; 
+            assert.areEqual(20, a, "New assignment in the body scope updates the variable's value in body scope with eval in the body"); 
+            return b; 
+        } 
+        assert.areEqual(10, f5()()[0], "Assignment in the body does not affect the value of the formal with eval in the body");
+        assert.areEqual(200, f5()()[1], "Assignment in the body updates the value of the formal with eval in the body");
+
+        function f6(a = 10, b = function () { return a; }) {
+            assert.areEqual(10, a, "Initial value of parameter in the body scope should be the same as the one in param scope");
+            assert.areEqual(10, eval('a'), "Initial value of parameter in the body scope in eval should be the same as the one in param scope");
+            a = 20;
+            assert.areEqual(20, a, "New assignment in the body scope updates the variable's value in body scope");
+            assert.areEqual(20, eval('a'), "New assignment in the body scope updates the variable's value when evaluated through eval in body scope");
+            return b;
+        }
+        assert.areEqual(20, f6()(), "Function defined in the param scope captures the formals from the param scope which is updated in the body");
     }  
   },
   {
