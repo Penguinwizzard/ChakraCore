@@ -638,8 +638,8 @@ var tests = [
     body: function () { 
           function f1(a = 10, b = function () { return a; }, c) {
               function iFnc(d = 100, e = 200, pf1 = function () { return d + e; }) {
-                  d = 1000;
-                  e = 2000;
+                  var d = 1000;
+                  var e = 2000;
                   pf2 = function () { return d + e; };
                   return [pf1, pf2];
               }
@@ -651,11 +651,11 @@ var tests = [
           assert.areEqual(3000, result[2](), "Function defined in the body scope of the inner function should capture the symbols from its body scope");
 
           function f2(a = 10, b = function () { return a; }, c) { 
-              a = 1000; 
-              c = 2000; 
+              var a = 1000; 
+              var c = 2000; 
               function iFnc(a = 100, b = function () { return a + c; }, c = 200) { 
-                  a = 1000; 
-                  c = 2000; 
+                  var a = 1000; 
+                  var c = 2000; 
                   return b; 
               } 
               return [b, iFnc()]; 
@@ -674,13 +674,15 @@ var tests = [
               } 
               return [b, iFnc]; 
           } 
-          assert.areEqual(300, f3()[1]()(), "Function defined in the param scope of the inner function should capture the right formals even if the inner function is executed outside"); 
+          result = f3(); 
+          assert.areEqual(3000, result[0](), "Assignments in the body of the outer function updates the formal values"); 
+          assert.areEqual(3000, result[1](), "Assignments in the body of the inner function updates the formal values"); 
 
           function f4(a = 10, b = function () { return a; }, c) { 
-              a = 1000; 
+              var a = 1000; 
               function iFnc(a = 100, b = function () { return a + c; }, c = 200) { 
-                  a = 1000; 
-                  c = 2000; 
+                  var a = 1000; 
+                  var c = 2000; 
                   return b; 
               } 
               return [b, iFnc(undefined, b, c)]; 
@@ -691,8 +693,8 @@ var tests = [
 
           function f5(a = 10, b = function () { return a; }, c) { 
               function iFnc(a = 100, b = function () { return a + c; }, c = 200) { 
-                  a = 1000; 
-                  c = 2000; 
+                  var a = 1000; 
+                  var c = 2000; 
                   return b; 
               } 
               return [b, iFnc(a, undefined, c)]; 
@@ -703,8 +705,8 @@ var tests = [
 
           function f6(a , b, c) { 
               function iFnc(a = 1, b = function () { return a + c; }, c = 2) { 
-                  a = 10; 
-                  c = 20; 
+                  var a = 10;
+                  var c = 20;
                   return b; 
               } 
               return iFnc; 
@@ -714,8 +716,8 @@ var tests = [
           function f7(a = 10 , b = 20, c = function () { return a + b; }) { 
               return (function () { 
                   function iFnc(a = 100, b = function () { return a + c; }, c = 200) { 
-                      a = 1000; 
-                      c = 2000; 
+                      var a = 1000; 
+                      var c = 2000; 
                       return b; 
                   } 
                   return [c, iFnc]; 
@@ -726,13 +728,13 @@ var tests = [
           assert.areEqual(300, result[1]()(), "Function defined in the param scope of the inner function should capture the symbols from its own param scope even when nested inside a normal method and a split scope"); 
 
           function f8(a = 1, b = function (d = 10, e = function () { return a + d; }) { assert.areEqual(d, 10, "Split scope function defined in param scope should capture the right formal value"); d = 20; return e; }, c) { 
-              a = 2; 
+              var a = 2; 
               return b; 
           } 
           assert.areEqual(11, f8()()(), "Split scope function defined within the param scope should capture the formals from the corresponding param scopes"); 
 
           function f9(a = 1, b = function () { return function (d = 10, e = function () { return a + d; }) { d = 20; return e; } }, c) { 
-              a = 2; 
+              var a = 2;
               return b; 
           } 
           assert.areEqual(11, f9()()()(), "Split scope function defined within the param scope should capture the formals from the corresponding param scope in nested scope");
@@ -753,8 +755,8 @@ var tests = [
 
           function f11(a = 10, b = () => eval("a"), c) {
               function iFnc(d = 100, e = 200, pf1 = eval("d + e")) {
-                  d = 1000;
-                  e = 2000;
+                  var d = 1000;
+                  var e = 2000;
                   pf2 = function () { return d + e; };
                   return [pf1, pf2];
               }
@@ -767,8 +769,8 @@ var tests = [
 
           function f12(a = 10, b = function () { return a; }, c) {
               function iFnc(d = 100, e = 200, pf1 = () => { return eval("d + e"); }) {
-                  d = 1000;
-                  e = 2000;
+                  var d = 1000;
+                  var e = 2000;
                   pf2 = function () { return d + e; };
                   return [pf1, pf2];
               }
@@ -777,7 +779,22 @@ var tests = [
           var result = f12();
           assert.areEqual(10, result[0](), "Function with eval defined in the param scope of the outer function should capture the symbols from its own param scope");
           assert.areEqual(300, result[1](), "Function with eval in the param defined in the param scope of the inner function should capture the symbols from its own param scope");
-          assert.areEqual(3000, result[2](), "Function with eval in the param defined in the body scope of the inner function should capture the symbols from its body scope");
+          assert.areEqual(3000, result[2](), "Function with eval in the param defined in the body scope of the inner function should capture the symbols from its body scope");-
+
+          function f13(a = 10, b = function () { return a; }, c) {
+              function iFnc(d = 100, e = 200, pf1 = () => { return eval("d + e"); }) {
+                  d = 1000;
+                  var e = 2000;
+                  pf2 = function () { return d + e; };
+                  a = 100;
+                  return [pf1, pf2];
+              }
+              return [b].concat(iFnc());
+          }
+          var result = f13();
+          assert.areEqual(100, result[0](), "Function with eval defined in the param scope of the outer function should capture the symbols from its own param scope");
+          assert.areEqual(1200, result[1](), "The first formal is updated in the function body but the second formal is duplicated");
+          assert.areEqual(3000, result[2](), "Function with eval in the param defined in the body scope of the inner function should capture the symbols from its body scope and the param scope");
     }   
   }, 
   {
