@@ -1376,13 +1376,12 @@ namespace Js
 
     void PathTypeHandlerBase::SetPrototype(DynamicObject* instance, RecyclableObject* newPrototype)
     {
-        AssertMsg(instance->GetScriptContext() == newPrototype->GetScriptContext(), "Trying to setPrototype from different script context.");
-
         uint16 requestedInlineSlotCapacity = this->GetInlineSlotCapacity();
         const bool useObjectHeaderInlining = FunctionBody::DoObjectHeaderInliningForConstructor(requestedInlineSlotCapacity);
-        ScriptContext* scriptContext = newPrototype->GetScriptContext();
+        ScriptContext* scriptContext = instance->GetScriptContext();
         DynamicType* dynamicType = nullptr;
         const char16 * cacheType = nullptr;
+        bool useCache = instance->GetScriptContext() == newPrototype->GetScriptContext();
 
 #if DBG
         DynamicType* oldCachedType = nullptr;
@@ -1400,7 +1399,7 @@ namespace Js
         Js::InternalPropertyIds propertyIdHoldingCache = usingZeroSlotCache ? 
             Js::InternalPropertyIds::ZTypeOfPrototypeObject : Js::InternalPropertyIds::NZTypeOfPrototypeObject;
 
-        if (newPrototype->GetInternalProperty(newPrototype, propertyIdHoldingCache, (Js::Var*)&dynamicType, nullptr, scriptContext))
+        if (useCache && newPrototype->GetInternalProperty(newPrototype, propertyIdHoldingCache, (Js::Var*)&dynamicType, nullptr, scriptContext))
         {
             // Verify if existing dynamicType meets requirements of this typeHandler. If not, reset it
             DynamicTypeHandler *const dynamicTypeHandler = dynamicType->GetTypeHandler();
@@ -1462,24 +1461,27 @@ namespace Js
             dynamicType = DynamicType::New(scriptContext, instance->GetDynamicType()->GetTypeId(), newPrototype, RecyclableObject::DefaultEntryPoint, newTypeHandler, true, true);
             dynamicType->flags = instance->GetDynamicType()->flags;
             
-            if (PHASE_TRACE1(TypeShareForChangePrototypePhase))
+            if (useCache)
             {
+                if (PHASE_TRACE1(TypeShareForChangePrototypePhase))
+                {
 #if DBG
-                if (PHASE_VERBOSE_TRACE1(TypeShareForChangePrototypePhase))
-                {
-                    Output::Print(_u("TypeSharing: Updating prototype [0x%p] object's %s cache from 0x%p to 0x%p in __proto__. Reason = %s\n"), newPrototype, cacheType, oldCachedType, dynamicType, reason);
-                }
-                else
-                {
+                    if (PHASE_VERBOSE_TRACE1(TypeShareForChangePrototypePhase))
+                    {
+                        Output::Print(_u("TypeSharing: Updating prototype [0x%p] object's %s cache from 0x%p to 0x%p in __proto__. Reason = %s\n"), newPrototype, cacheType, oldCachedType, dynamicType, reason);
+                    }
+                    else
+                    {
 #endif
-                    Output::Print(_u("TypeSharing: Updating prototype object's %s cache in __proto__.\n"), cacheType);
+                        Output::Print(_u("TypeSharing: Updating prototype object's %s cache in __proto__.\n"), cacheType);
 #if DBG
-                }
+                    }
 #endif 
-                Output::Flush();
-            }
+                    Output::Flush();
+                }
 
-            newPrototype->SetInternalProperty(propertyIdHoldingCache, (Var)dynamicType, PropertyOperationFlags::PropertyOperation_Force, nullptr);
+                newPrototype->SetInternalProperty(propertyIdHoldingCache, (Var)dynamicType, PropertyOperationFlags::PropertyOperation_Force, nullptr);
+            }
         }
         else
         {
