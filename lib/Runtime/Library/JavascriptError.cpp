@@ -351,7 +351,7 @@ namespace Js
     }
 
     THROW_ERROR_IMPL(ThrowError, CreateError, GetErrorType, kjstError)
-    //THROW_ERROR_IMPL(ThrowEvalError, CreateEvalError, GetEvalErrorType, kjstEvalError)
+    THROW_ERROR_IMPL(ThrowEvalError, CreateEvalError, GetEvalErrorType, kjstEvalError)
     THROW_ERROR_IMPL(ThrowRangeError, CreateRangeError, GetRangeErrorType, kjstRangeError)
     THROW_ERROR_IMPL(ThrowReferenceError, CreateReferenceError, GetReferenceErrorType, kjstReferenceError)
     THROW_ERROR_IMPL(ThrowSyntaxError, CreateSyntaxError, GetSyntaxErrorType, kjstSyntaxError)
