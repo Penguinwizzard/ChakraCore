@@ -136,7 +136,7 @@ namespace Js
             Output::Flush();
         }
         
-        type->SetHasBeenCached(true);
+        //type->SetHasBeenCached(true);
 
         DebugOnly(VerifyRegistrationForInvalidation(this, requestContext, propertyId));
         Assert(u.proto.isMissing == (uint16)(u.proto.prototypeObject == requestContext->GetLibrary()->GetMissingPropertyHolder()));
