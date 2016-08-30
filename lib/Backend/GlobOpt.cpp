@@ -18763,9 +18763,8 @@ GlobOpt::OptIsInvariant(
     case Js::OpCode::LdLen_A:
         return false;
 
-        //Review: saravind/radua : After fixing IsStackArgsEnabled to look at func level granularity,
-        // check if this is required here.
-        //Hoisting BailOnNotStackArgs is currently causing issues with cases, where we want to throw RejitException.
+        //Can't Hoist BailOnNotStackArgs, as it is necessary as InlineArgsOptimization relies on this opcode 
+        //to decide whether to throw rejit exception or not.
     case Js::OpCode::BailOnNotStackArgs:
         return false;
 

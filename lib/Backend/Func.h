@@ -415,6 +415,7 @@ static const unsigned __int64 c_debugFillPattern8 = 0xcececececececece;
 
     IR::SymOpnd *GetInlineeArgvSlotOpnd()
     {
+        Assert(!this->m_hasInlineArgsOpt);
         return GetInlineeOpndAtOffset(Js::Constants::InlineeMetaArgIndex_Argv * MachPtr);
     }
 
