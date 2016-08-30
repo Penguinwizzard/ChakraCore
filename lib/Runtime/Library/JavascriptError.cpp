@@ -291,10 +291,10 @@ namespace Js
     void __declspec(noreturn) JavascriptError::MapAndThrowError(ScriptContext* scriptContext, HRESULT hr, ErrorTypeEnum errorType, EXCEPINFO* pei)
     {
         JavascriptError* pError = MapError(scriptContext, errorType);
-        MapAndThrowError(scriptContext, pError, hr, pei);
+        SetMessageAndThrowError(scriptContext, pError, hr, pei);
     }
 
-    void __declspec(noreturn) JavascriptError::MapAndThrowError(ScriptContext* scriptContext, JavascriptError *pError, int32 hCode, EXCEPINFO* pei)
+    void __declspec(noreturn) JavascriptError::SetMessageAndThrowError(ScriptContext* scriptContext, JavascriptError *pError, int32 hCode, EXCEPINFO* pei)
     {
         Assert(pError != nullptr);
 
@@ -320,7 +320,7 @@ namespace Js
     void __declspec(noreturn) JavascriptError::err_method(ScriptContext* scriptContext, int32 hCode, EXCEPINFO* pei) \
     { \
         JavascriptError *pError = create_method(scriptContext); \
-        MapAndThrowError(scriptContext, pError, hCode, pei); \
+        SetMessageAndThrowError(scriptContext, pError, hCode, pei); \
     } \
     \
     void __declspec(noreturn) JavascriptError::err_method(ScriptContext* scriptContext, int32 hCode, PCWSTR varName) \
@@ -648,7 +648,7 @@ namespace Js
         se->GetError(&hrParser, &ei);
 
         JavascriptError* pError = MapParseError(scriptContext, ei.scode);
-        JavascriptError::MapAndThrowError(scriptContext, pError, ei.scode, &ei);
+        JavascriptError::SetMessageAndThrowError(scriptContext, pError, ei.scode, &ei);
     }
 
     ErrorTypeEnum JavascriptError::MapParseError(int32 hCode)
