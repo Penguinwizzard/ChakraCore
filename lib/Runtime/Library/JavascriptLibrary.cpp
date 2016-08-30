@@ -15,11 +15,7 @@
 #include "Types/SimpleDictionaryPropertyDescriptor.h"
 #include "Types/SimpleDictionaryTypeHandler.h"
 
-#include "Types/DynamicObjectEnumerator.h"
-#include "Types/DynamicObjectSnapshotEnumerator.h"
-#include "Types/DynamicObjectSnapshotEnumeratorWPCache.h"
 #include "Library/ForInObjectEnumerator.h"
-#include "Library/NullEnumerator.h"
 #include "Library/EngineInterfaceObject.h"
 #include "Library/IntlEngineInterfaceExtensionObject.h"
 #include "Library/ThrowErrorObject.h"
@@ -1044,11 +1040,6 @@ namespace Js
         }
     }
 
-    JavascriptEnumerator * JavascriptLibrary::GetNullEnumerator() const
-    {
-        return nullEnumerator;
-    }
-
     void JavascriptLibrary::InitializeGlobal(GlobalObject * globalObject)
     {
         RecyclableObject* globalObjectPrototype = GetObjectPrototype();
@@ -1462,8 +1453,6 @@ namespace Js
             DeferredTypeHandler<InitializeURIErrorConstructor>::GetDefaultInstance(),
             nativeErrorPrototype);
         AddFunction(globalObject, PropertyIds::URIError, uriErrorConstructor);
-
-        nullEnumerator = RecyclerNew(this->recycler, NullEnumerator, scriptContext);
     }
 
     void JavascriptLibrary::EnsureDebugObject(DynamicObject* newDebugObject)
@@ -3059,8 +3048,6 @@ namespace Js
             library->AddFunctionToLibraryObject(reflectObject, PropertyIds::defineProperty, &JavascriptReflect::EntryInfo::DefineProperty, 3));
         scriptContext->SetBuiltInLibraryFunction(JavascriptReflect::EntryInfo::DeleteProperty.GetOriginalEntryPoint(),
             library->AddFunctionToLibraryObject(reflectObject, PropertyIds::deleteProperty, &JavascriptReflect::EntryInfo::DeleteProperty, 2));
-        scriptContext->SetBuiltInLibraryFunction(JavascriptReflect::EntryInfo::Enumerate.GetOriginalEntryPoint(),
-            library->AddFunctionToLibraryObject(reflectObject, PropertyIds::enumerate, &JavascriptReflect::EntryInfo::Enumerate, 1));
         scriptContext->SetBuiltInLibraryFunction(JavascriptReflect::EntryInfo::Get.GetOriginalEntryPoint(),
             library->AddFunctionToLibraryObject(reflectObject, PropertyIds::get, &JavascriptReflect::EntryInfo::Get, 2));
         scriptContext->SetBuiltInLibraryFunction(JavascriptReflect::EntryInfo::GetOwnPropertyDescriptor.GetOriginalEntryPoint(),
@@ -3105,7 +3092,6 @@ namespace Js
         vtableAddresses[VTableValue::VtableInvalid] = Js::ScriptContextOptimizationOverrideInfo::InvalidVtable;
         vtableAddresses[VTableValue::VtablePropertyString] = VirtualTableInfo<Js::PropertyString>::Address;
         vtableAddresses[VTableValue::VtableJavascriptBoolean] = VirtualTableInfo<Js::JavascriptBoolean>::Address;
-        vtableAddresses[VTableValue::VtableSmallDynamicObjectSnapshotEnumeratorWPCache] = VirtualTableInfo<Js::DynamicObjectSnapshotEnumeratorWPCache<true,false>>::Address;
         vtableAddresses[VTableValue::VtableJavascriptArray] = VirtualTableInfo<Js::JavascriptArray>::Address;
         vtableAddresses[VTableValue::VtableInt8Array] = VirtualTableInfo<Js::Int8Array>::Address;
         vtableAddresses[VTableValue::VtableUint8Array] = VirtualTableInfo<Js::Uint8Array>::Address;
@@ -7338,7 +7324,6 @@ namespace Js
 
         REG_OBJECTS_LIB_FUNC(defineProperty, JavascriptReflect::EntryDefineProperty);
         REG_OBJECTS_LIB_FUNC(deleteProperty, JavascriptReflect::EntryDeleteProperty);
-        REG_OBJECTS_LIB_FUNC(enumerate, JavascriptReflect::EntryEnumerate);
         REG_OBJECTS_LIB_FUNC(get, JavascriptReflect::EntryGet);
         REG_OBJECTS_LIB_FUNC(getOwnPropertyDescriptor, JavascriptReflect::EntryGetOwnPropertyDescriptor);
         REG_OBJECTS_LIB_FUNC(getPrototypeOf, JavascriptReflect::EntryGetPrototypeOf);

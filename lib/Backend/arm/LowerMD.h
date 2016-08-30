@@ -94,7 +94,8 @@ public:
             void            GenerateTaggedZeroTest( IR::Opnd * opndSrc, IR::Instr * instrInsert, IR::LabelInstr * labelHelper = nullptr);
             void            GenerateObjectPairTest(IR::Opnd * opndSrc1, IR::Opnd * opndSrc2, IR::Instr * insertInstr, IR::LabelInstr * labelTarget);
             bool            GenerateObjectTest(IR::Opnd * opndSrc, IR::Instr * insertInstr, IR::LabelInstr * labelTarget, bool fContinueLabel = false);
-            bool            GenerateFastBrString(IR::BranchInstr* instr);
+            bool            GenerateFastBrOrCmString(IR::Instr* instr);
+            bool            GenerateFastStringCheck(IR::Instr* instr, IR::RegOpnd *regSrc1, IR::RegOpnd *regSrc2, bool isEqual, bool isStrict, IR::LabelInstr *labelHelper, IR::LabelInstr *labelTarget, IR::LabelInstr *labelFail);
             bool            GenerateFastCmSrEqConst(IR::Instr *instr);
             bool            GenerateFastCmXxI4(IR::Instr *instr);
             bool            GenerateFastCmXxR8(IR::Instr *instr) { Assert(UNREACHED); return nullptr; }
@@ -126,7 +127,6 @@ public:
             IR::Instr *     GenerateFastScopedLdFld(IR::Instr * instrLdFld);
             IR::Instr *     GenerateFastScopedStFld(IR::Instr * instrStFld);
             bool            GenerateJSBooleanTest(IR::RegOpnd * regSrc, IR::Instr * insertInstr, IR::LabelInstr * labelTarget, bool fContinueLabel = false);
-            void            GenerateFastBrBReturn(IR::Instr *instr);
             void            GenerateFastAbs(IR::Opnd *dst, IR::Opnd *src, IR::Instr *callInstr, IR::Instr *insertInstr, IR::LabelInstr *labelHelper, IR::LabelInstr *doneLabel);
             bool            GenerateFastCharAt(Js::BuiltinFunction index, IR::Opnd *dst, IR::Opnd *srcStr, IR::Opnd *srcIndex, IR::Instr *callInstr, IR::Instr *insertInstr,
                 IR::LabelInstr *labelHelper, IR::LabelInstr *doneLabel);

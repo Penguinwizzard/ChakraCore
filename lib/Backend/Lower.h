@@ -247,6 +247,8 @@ private:
     IR::BranchInstr* GenerateFastBrConst(IR::BranchInstr *branchInstr, IR::Opnd * constOpnd, bool isEqual);
     bool            GenerateFastCondBranch(IR::BranchInstr * instrBranch, bool *pIsHelper);
     bool            GenerateFastBrEqLikely(IR::BranchInstr * instrBranch, bool *pNeedHelper);
+    bool            GenerateFastBooleanAndObjectEqLikely(IR::Instr * instr, IR::Opnd *src1, IR::Opnd *src2, IR::LabelInstr * labelHelper, IR::LabelInstr * labelEqualLikely, bool *pNeedHelper);
+    bool            GenerateFastCmEqLikely(IR::Instr * instr, bool *pNeedHelper);
     bool            GenerateFastBrBool(IR::BranchInstr *const instr);
     static IR::Instr *LoadFloatFromNonReg(IR::Opnd * opndOrig, IR::Opnd * regOpnd, IR::Instr * instrInsert);
     void            LoadInt32FromUntaggedVar(IR::Instr *const instrLoad);
@@ -295,6 +297,7 @@ private:
 
     void            InsertBitTestBranch(IR::Opnd * bitMaskOpnd, IR::Opnd * bitIndex, bool jumpIfBitOn, IR::LabelInstr * targetLabel, IR::Instr * insertBeforeInstr);
     void            GenerateGetSingleCharString(IR::RegOpnd * charCodeOpnd, IR::Opnd * resultOpnd, IR::LabelInstr * labelHelper, IR::LabelInstr * doneLabel, IR::Instr * instr, bool isCodePoint);
+    void            GenerateFastBrBReturn(IR::Instr * instr);
 public:
     static IR::LabelInstr *     InsertLabel(const bool isHelper, IR::Instr *const insertBeforeInstr);
 
