@@ -6081,23 +6081,16 @@ namespace Js
 
         DynamicType* dynamicType = nullptr;
         const bool useCache = prototype->GetScriptContext() == this->scriptContext;
-        const char16 * cacheType = nullptr;
-
 #if DBG
         DynamicType* oldCachedType = nullptr;
         char16 reason[1024];
         swprintf_s(reason, 1024, _u("Cache not populated."));
 #endif
-        Js::InternalPropertyIds propertyIdHoldingCache = useObjectHeaderInlining ?
-            Js::InternalPropertyIds::NZTypeOfPrototypeObject : Js::InternalPropertyIds::ZTypeOfPrototypeObject;
-
-        if ((PHASE_TRACE1(TypeShareForChangePrototypePhase) || PHASE_VERBOSE_TRACE1(TypeShareForChangePrototypePhase)) && useCache)
-        {
-            cacheType = useObjectHeaderInlining ? _u("NonZeroSlots") : _u("ZeroSlots");
-        }
+        // Always use `TypeOfPrototypeObjectInlined` because we are creating DynamicType of TypeIds_Object
+        AssertMsg(typeId == TypeIds_Object, "CreateObjectType() is used to create other objects. Please update cacheSlot for protoObjectCache first.");
 
         if (useCache &&
-            prototype->GetInternalProperty(prototype, propertyIdHoldingCache, (Js::Var*) &dynamicType, nullptr, this->scriptContext))
+            prototype->GetInternalProperty(prototype, Js::InternalPropertyIds::TypeOfPrototypeObjectInlined, (Js::Var*) &dynamicType, nullptr, this->scriptContext))
         {
             //If the prototype is externalObject, then ExternalObject::Reinitialize can set all the properties to undefined in navigation scenario.
             //Check to make sure dynamicType which is stored as a Js::Var is not undefined.
@@ -6122,12 +6115,12 @@ namespace Js
 #if DBG
                         if (PHASE_VERBOSE_TRACE1(TypeShareForChangePrototypePhase))
                         {
-                            Output::Print(_u("TypeSharing: Reusing prototype [0x%p] object's %s cache 0x%p in CreateObject.\n"), prototype, cacheType, dynamicType);
+                            Output::Print(_u("TypeSharing: Reusing prototype [0x%p] object's InlineSlot cache 0x%p in CreateObject.\n"), prototype, dynamicType);
                         }
                         else
                         {
 #endif
-                            Output::Print(_u("TypeSharing: Reusing prototype object's %s cache in __proto__.\n"), cacheType);
+                            Output::Print(_u("TypeSharing: Reusing prototype object's InlineSlot cache in __proto__.\n"));
 #if DBG
                         }
 #endif
@@ -6177,18 +6170,18 @@ namespace Js
 
         if (useCache)
         {
-            prototype->SetInternalProperty(propertyIdHoldingCache, (Var)dynamicType, PropertyOperationFlags::PropertyOperation_Force, nullptr);
+            prototype->SetInternalProperty(Js::InternalPropertyIds::TypeOfPrototypeObjectInlined, (Var)dynamicType, PropertyOperationFlags::PropertyOperation_Force, nullptr);
             if (PHASE_TRACE1(TypeShareForChangePrototypePhase))
             {
 #if DBG
                 if (PHASE_VERBOSE_TRACE1(TypeShareForChangePrototypePhase))
                 {
-                    Output::Print(_u("TypeSharing: Updating prototype [0x%p] object's %s cache from 0x%p to 0x%p in CreateObject. Reason = %s\n"), prototype, cacheType, oldCachedType, dynamicType, reason);
+                    Output::Print(_u("TypeSharing: Updating prototype [0x%p] object's InlineSlot cache from 0x%p to 0x%p in CreateObject. Reason = %s\n"), prototype, oldCachedType, dynamicType, reason);
                 }
                 else
                 {
 #endif
-                    Output::Print(_u("TypeSharing: Updating prototype object's %s cache in CreateObject.\n"), cacheType);
+                    Output::Print(_u("TypeSharing: Updating prototype object's InlineSlot cache in CreateObject.\n"));
 #if DBG
                 }
 #endif
