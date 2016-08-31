@@ -1496,9 +1496,10 @@ namespace Js
         if (dynamicType == nullptr)
         {
             SimplePathTypeHandler* newTypeHandler = SimplePathTypeHandler::New(scriptContext, scriptContext->GetLibrary()->GetRootPath(), 0, this->GetInlineSlotCapacity(), this->GetOffsetOfInlineSlots(), true, true);
-            // TODO: Should we use DuplicateType() here?
-            dynamicType = DynamicType::New(scriptContext, instance->GetDynamicType()->GetTypeId(), newPrototype, RecyclableObject::DefaultEntryPoint, newTypeHandler, true, true);
-            dynamicType->flags = instance->GetDynamicType()->flags;
+            dynamicType = instance->DuplicateType();
+            dynamicType->isLocked = true;
+            dynamicType->isShared = true;
+            dynamicType->typeHandler = newTypeHandler;
 
             if (useCache)
             {
@@ -1529,12 +1530,18 @@ namespace Js
                         {
                             Output::Print(_u("TypeSharing: Updating prototype [0x%p] object's %s cache from 0x%p to 0x%p in __proto__. Reason = %s\n"), newPrototype, cacheType, oldCachedType, dynamicType, reason);
                         }
-
                     }
                     else
                     {
 #endif
-                        Output::Print(_u("TypeSharing: Updating prototype object's %s cache in __proto__.\n"), cacheType);
+                        if (propertyIdHoldingCache == Js::InternalPropertyIds::TypeOfPrototypeObjectDictionary)
+                        {
+                            Output::Print(_u("TypeSharing: Updating prototype object's %s (slot = %u) cache in __proto__.\n"), cacheType, typeIdKeyToLookup);
+                        }
+                        else
+                        {
+                            Output::Print(_u("TypeSharing: Updating prototype object's %s cache in __proto__.\n"), cacheType);
+                        }
 #if DBG
                     }
 #endif 
@@ -1583,7 +1590,14 @@ namespace Js
             else
             {
 #endif
-                Output::Print(_u("TypeSharing: Reusing prototype object's %s cache in __proto__.\n"), cacheType);
+                if (propertyIdHoldingCache == Js::InternalPropertyIds::TypeOfPrototypeObjectDictionary)
+                {
+                    Output::Print(_u("TypeSharing: Reusing prototype object's %s (slot = %u) cache in __proto__.\n"), cacheType, typeIdKeyToLookup);
+                }
+                else
+                {
+                    Output::Print(_u("TypeSharing: Reusing prototype object's %s cache in __proto__.\n"), cacheType);
+                }
 #if DBG
             }
 #endif
