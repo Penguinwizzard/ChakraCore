@@ -1576,9 +1576,9 @@ LHexError:
         Assert(!(callInfo.Flags & CallFlags_New));
 
         ScriptContext* scriptContext = function->GetScriptContext();
-        Output::Print(_u("ChangeType calls: %d\n"), scriptContext->GetThreadContext()->changeTypeCalls);
-        Output::Print(_u("Evictions due to non-shared types prevented: %d\n"), scriptContext->GetThreadContext()->evictionDueToNonSharedTypePrevented);
-        Output::Flush();
+        //Output::Print(_u("ChangeType calls: %d\n"), scriptContext->GetThreadContext()->changeTypeCalls);
+        //Output::Print(_u("Evictions due to non-shared types prevented: %d\n"), scriptContext->GetThreadContext()->evictionDueToNonSharedTypePrevented);
+        //Output::Flush();
         scriptContext->GetThreadContext()->changeTypeCalls = 0;
         if (!scriptContext->GetConfig()->IsCollectGarbageEnabled()
 #ifdef ENABLE_PROJECTION

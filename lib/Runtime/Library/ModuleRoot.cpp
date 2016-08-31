@@ -380,6 +380,17 @@ namespace Js
         return this->GetLibrary()->GetGlobalObject()->GlobalObject::DeleteProperty(propertyId, flags);
     }
 
+    BOOL ModuleRoot::DeleteProperty(JavascriptString *propertyNameString, PropertyOperationFlags flags)
+    {
+        PropertyRecord const *propertyRecord;
+        this->GetScriptContext()->FindPropertyRecord(propertyNameString, &propertyRecord);
+        if (propertyRecord == nullptr)
+        {
+            return TRUE;
+        }
+        return DeleteProperty(propertyRecord->GetPropertyId(), flags);
+    }
+
     BOOL ModuleRoot::DeleteRootProperty(PropertyId propertyId, PropertyOperationFlags flags)
     {
         int index = GetRootPropertyIndex(propertyId);

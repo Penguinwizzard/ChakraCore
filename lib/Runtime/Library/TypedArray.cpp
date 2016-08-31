@@ -652,7 +652,17 @@ namespace Js
             return false;
         }
         return DynamicObject::DeleteProperty(propertyId, flags);
+    }
 
+    BOOL TypedArrayBase::DeleteProperty(JavascriptString *propertyNameString, PropertyOperationFlags flags)
+    {
+        PropertyRecord const * propertyRecord = nullptr;
+        this->GetScriptContext()->FindPropertyRecord(propertyNameString, &propertyRecord);
+        if (propertyRecord == nullptr)
+        {
+            return TRUE;
+        }
+        return DeleteProperty(propertyRecord->GetPropertyId(), flags);
     }
 
     BOOL TypedArrayBase::GetPropertyReference(Var originalInstance, PropertyId propertyId, Var* value, PropertyValueInfo* info, ScriptContext* requestContext)

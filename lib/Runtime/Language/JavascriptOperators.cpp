@@ -2703,6 +2703,21 @@ CommonNumber:
     {
         return DeleteProperty_Impl<false>(instance, propertyId, propertyOperationFlags);
     }
+    BOOL JavascriptOperators::DeleteProperty(RecyclableObject* instance, JavascriptString *propertyNameString, PropertyOperationFlags propertyOperationFlags)
+    {
+#ifdef ENABLE_MUTATION_BREAKPOINT
+        ScriptContext *scriptContext = instance->GetScriptContext();
+        PropertyRecord * propertyRecord = nullptr;
+        scriptContext->GetOrAddPropertyRecord(propertyNameString->GetString(), propertyNameString->GetLength(), propertyRecord);
+        if (MutationBreakpoint::IsFeatureEnabled(scriptContext)
+            && scriptContext->HasMutationBreakpoints())
+        {
+            MutationBreakpoint::HandleDeleteProperty(scriptContext, instance, propertyRecord->GetPropertyId());
+        }
+#endif
+        return instance->DeleteProperty(propertyNameString, propertyOperationFlags);
+    }
+
     BOOL JavascriptOperators::DeletePropertyUnscopables(RecyclableObject* instance, PropertyId propertyId, PropertyOperationFlags propertyOperationFlags)
     {
         return DeleteProperty_Impl<true>(instance, propertyId, propertyOperationFlags);
@@ -2710,7 +2725,6 @@ CommonNumber:
     template<bool unscopables>
     BOOL JavascriptOperators::DeleteProperty_Impl(RecyclableObject* instance, PropertyId propertyId, PropertyOperationFlags propertyOperationFlags)
     {
-
         if (unscopables && JavascriptOperators::IsPropertyUnscopable(instance, propertyId))
         {
             return false;
@@ -4849,12 +4863,17 @@ CommonNumber:
 
         uint32 indexVal;
         PropertyRecord const * propertyRecord;
+        JavascriptString * propertyNameString = nullptr;
         BOOL result = TRUE;
-        IndexType indexType = GetIndexType(index, scriptContext, &indexVal, &propertyRecord, false);
+        IndexType indexType = GetIndexType(index, scriptContext, &indexVal, &propertyRecord, &propertyNameString, false, true);
 
         if (indexType == IndexType_Number)
         {
             result = JavascriptOperators::DeleteItem(object, indexVal, propertyOperationFlags);
+        }
+        else if (indexType == IndexType_JavascriptString)
+        {
+            result = JavascriptOperators::DeleteProperty(object, propertyNameString, propertyOperationFlags);
         }
         else
         {
@@ -8378,7 +8397,7 @@ CommonNumber:
             }
             else
             {
-                type->GetScriptContext()->GetThreadContext()->evictionDueToNonSharedTypePrevented++;
+                //type->GetScriptContext()->GetThreadContext()->evictionDueToNonSharedTypePrevented++;
             }
         }
         
