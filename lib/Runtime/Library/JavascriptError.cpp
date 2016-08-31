@@ -280,6 +280,11 @@ namespace Js
         return outputStr;
     }
 
+    void JavascriptError::SetErrorMessage(int32 hCode, PCWSTR varName, ScriptContext* scriptContext)
+    {
+        JavascriptError::SetErrorMessage(this, hCode, varName, scriptContext);
+    }
+
     void __declspec(noreturn) JavascriptError::MapAndThrowError(ScriptContext* scriptContext, HRESULT hr)
     {
         ErrorTypeEnum errorType;
@@ -296,10 +301,9 @@ namespace Js
 
     void __declspec(noreturn) JavascriptError::SetMessageAndThrowError(ScriptContext* scriptContext, JavascriptError *pError, int32 hCode, EXCEPINFO* pei)
     {
-        Assert(pError != nullptr);
-
         PCWSTR varName = (pei ? pei->bstrDescription : nullptr);
-        JavascriptError::SetErrorMessage(pError, hCode, varName, scriptContext);
+
+        pError->SetErrorMessage(hCode, varName, scriptContext);
 
         if (pei)
         {
