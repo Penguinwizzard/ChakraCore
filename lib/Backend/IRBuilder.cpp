@@ -489,6 +489,8 @@ IRBuilder::Build()
         this->BuildArgInRest();
     }
 
+    this->LoadNativeCodeData();
+
     if (m_func->IsJitInDebugMode())
     {
         // This is first bailout in the function, the locals at stack have not initialized to undefined, so do not restore them.
@@ -1423,6 +1425,18 @@ IRBuilder::BuildGeneratorPreamble()
     this->AddInstr(instr, Js::Constants::NoByteCodeOffset);
 
     this->AddInstr(labelInstr, Js::Constants::NoByteCodeOffset);
+}
+
+void
+IRBuilder::LoadNativeCodeData()
+{
+    if (m_func->IsOOPJIT() && m_func->IsTopFunc())
+    {
+        IR::RegOpnd * nativeDataOpnd = IR::RegOpnd::New(TyVar, m_func);
+        IR::Instr * instr = IR::Instr::New(Js::OpCode::LdNativeCodeData, nativeDataOpnd, m_func);
+        this->AddInstr(instr, Js::Constants::NoByteCodeOffset);
+        m_func->SetNativeCodeDataSym(nativeDataOpnd->GetStackSym());
+    }
 }
 
 void

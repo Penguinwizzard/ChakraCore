@@ -208,6 +208,18 @@ IRBuilderAsmJs::Build()
 }
 
 void
+IRBuilderAsmJs::LoadNativeCodeData()
+{
+    if (m_func->IsOOPJIT())
+    {
+        IR::RegOpnd * nativeDataOpnd = IR::RegOpnd::New(TyVar, m_func);
+        IR::Instr * instr = IR::Instr::New(Js::OpCode::LdNativeCodeData, nativeDataOpnd, m_func);
+        this->AddInstr(instr, Js::Constants::NoByteCodeOffset);
+        m_func->SetNativeCodeDataSym(nativeDataOpnd->GetStackSym());
+    }
+}
+
+void
 IRBuilderAsmJs::AddInstr(IR::Instr * instr, uint32 offset)
 {
     m_lastInstr->InsertAfter(instr);
