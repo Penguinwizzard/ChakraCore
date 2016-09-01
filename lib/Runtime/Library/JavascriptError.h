@@ -152,8 +152,6 @@ namespace Js
         char16 const * originalRuntimeErrorMessage;
         JavascriptExceptionObject *exceptionObject;
 
-        virtual void SetErrorMessage(int32 hCode, PCWSTR varName, ScriptContext* scriptContext);
-
 #ifdef ERROR_TRACE
         static void Trace(const char16 *form, ...) // const
         {
