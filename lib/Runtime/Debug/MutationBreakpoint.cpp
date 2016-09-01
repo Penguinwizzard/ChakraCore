@@ -104,6 +104,16 @@ void Js::MutationBreakpoint::HandleDeleteProperty(ScriptContext *scriptContext, 
     }
 }
 
+void Js::MutationBreakpoint::HandleDeleteProperty(ScriptContext *scriptContext, Var instance, Js::JavascriptString *propertyNameString)
+{
+    PropertyRecord const *propertyRecord = nullptr;
+    scriptContext->FindPropertyRecord(propertyNameString, &propertyRecord);
+    if (propertyRecord != nullptr)
+    {
+        HandleDeleteProperty(scriptContext, instance, propertyRecord->GetPropertyId());
+    }
+}
+
 bool Js::MutationBreakpoint::DeleteProperty(PropertyRecord *pr)
 {
     Assert(pr != nullptr);

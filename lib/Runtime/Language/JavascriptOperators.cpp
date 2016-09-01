@@ -2707,12 +2707,10 @@ CommonNumber:
     {
 #ifdef ENABLE_MUTATION_BREAKPOINT
         ScriptContext *scriptContext = instance->GetScriptContext();
-        PropertyRecord * propertyRecord = nullptr;
-        scriptContext->GetOrAddPropertyRecord(propertyNameString->GetString(), propertyNameString->GetLength(), propertyRecord);
         if (MutationBreakpoint::IsFeatureEnabled(scriptContext)
             && scriptContext->HasMutationBreakpoints())
         {
-            MutationBreakpoint::HandleDeleteProperty(scriptContext, instance, propertyRecord->GetPropertyId());
+            MutationBreakpoint::HandleDeleteProperty(scriptContext, instance, propertyNameString);
         }
 #endif
         return instance->DeleteProperty(propertyNameString, propertyOperationFlags);
