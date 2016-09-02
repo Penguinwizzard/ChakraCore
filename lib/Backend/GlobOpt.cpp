@@ -7483,7 +7483,7 @@ GlobOpt::ValueNumberDst(IR::Instr **pInstr, Value *src1Val, Value *src2Val)
         if (instr->IsProfiledInstr())
         {
             ValueType profiledValueType(instr->AsProfiledInstr()->u.FldInfo().valueType);
-            if(!(profiledValueType.IsLikelyInt() && dst->IsRegOpnd() && dst->AsRegOpnd()->m_sym->m_isNotInt))
+            if (profiledValueType.IsInt() && dst->IsRegOpnd() && !dst->AsRegOpnd()->m_sym->m_isNotInt)
             {
                 if(!src1ValueInfo)
                 {
@@ -20504,7 +20504,7 @@ void ValueInfo::Dump()
     }
 
     IntConstantBounds intConstantBounds;
-    if(TryGetIntConstantBounds(&intConstantBounds))
+    if(TryGetIntConstantBounds(&intConstantBounds, true))
     {
         if(intConstantBounds.IsConstant())
         {
