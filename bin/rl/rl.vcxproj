@@ -22,8 +22,8 @@
       <SubSystem>Console</SubSystem>
       <AdditionalDependencies>
         %(AdditionalDependencies);
+        $(RLCommonLinkDependencies);
         oleaut32.lib;
-        onecore_downlevel.lib;
         xmllite.lib;
         $(NoThrowNewLib)
       </AdditionalDependencies>
