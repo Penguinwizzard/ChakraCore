@@ -2865,6 +2865,7 @@ ThreadContext::InvalidateAndDeleteInlineCacheList(InlineCacheList* inlineCacheLi
     Assert(inlineCacheList != nullptr);
 
     uint cacheCount = 0;
+    uint nullCacheCount = 0;
     FOREACH_SLISTBASE_ENTRY(Js::InlineCache*, inlineCache, inlineCacheList)
     {
         cacheCount++;
@@ -2878,10 +2879,15 @@ ThreadContext::InvalidateAndDeleteInlineCacheList(InlineCacheList* inlineCacheLi
 
             memset(inlineCache, 0, sizeof(Js::InlineCache));
         }
+        else
+        {
+            nullCacheCount++;
+        }
     }
     NEXT_SLISTBASE_ENTRY;
     Adelete(&this->inlineCacheThreadInfoAllocator, inlineCacheList);
     this->registeredInlineCacheCount = this->registeredInlineCacheCount > cacheCount ? this->registeredInlineCacheCount - cacheCount : 0;
+    this->unregisteredInlineCacheCount = this->unregisteredInlineCacheCount > nullCacheCount ? this->unregisteredInlineCacheCount - nullCacheCount : 0;
 }
 
 void
@@ -2935,6 +2941,8 @@ ThreadContext::CompactInlineCacheList(InlineCacheList* inlineCacheList)
     {
         this->unregisteredInlineCacheCount = this->unregisteredInlineCacheCount > cacheCount ?
             this->unregisteredInlineCacheCount - cacheCount : 0;
+        this->registeredInlineCacheCount = this->registeredInlineCacheCount > cacheCount ?
+            this->registeredInlineCacheCount - cacheCount : 0;
     }
 }
 
