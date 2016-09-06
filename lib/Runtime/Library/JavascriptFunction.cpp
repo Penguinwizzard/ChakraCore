@@ -239,7 +239,7 @@ namespace Js
 
             scriptContext->AddToNewFunctionMap(key, functionInfo->GetFunctionInfo());
         }
-        else if (pfuncInfoCache->IsGenerator())
+        else if (pfuncInfoCache->IsCoroutine())
         {
             pfuncScript = scriptContext->GetLibrary()->CreateGeneratorVirtualScriptFunction(pfuncInfoCache->GetFunctionProxy());
         }

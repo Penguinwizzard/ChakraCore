@@ -1319,6 +1319,7 @@ namespace Js
         bool IsClassMethod() const;
         bool IsModule() const;
         bool HasSuperReference() const;
+        bool IsCoroutine() const;
         bool GetCapturesThis() const;
         void SetCapturesThis();
         bool GetEnclosedByGlobalFunc() const;
@@ -1523,6 +1524,13 @@ namespace Js
         Assert(GetFunctionInfo());
         Assert(GetFunctionInfo()->GetFunctionProxy() == this);
         return GetFunctionInfo()->HasSuperReference();
+    }
+
+    inline bool FunctionProxy::IsCoroutine() const
+    {
+        Assert(GetFunctionInfo());
+        Assert(GetFunctionInfo()->GetFunctionProxy() == this);
+        return GetFunctionInfo()->IsCoroutine();
     }
 
     inline bool FunctionProxy::GetCapturesThis() const
