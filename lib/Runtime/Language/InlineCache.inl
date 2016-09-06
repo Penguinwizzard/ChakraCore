@@ -463,49 +463,6 @@ namespace Js
         }
     }
 
-#ifdef CLONE_INLINECACHE_TO_EMPTYSLOT
-    template <typename TDelegate>
-    bool PolymorphicInlineCache::CheckClonedInlineCache(uint inlineCacheIndex, TDelegate mapper)
-    {
-        bool success = false;
-        uint tryInlineCacheIndex = GetNextInlineCacheIndex(inlineCacheIndex);
-        do
-        {
-            if (inlineCaches[tryInlineCacheIndex].IsEmpty())
-            {
-                break;
-            }
-            success = mapper(tryInlineCacheIndex);
-            if (success)
-            {
-                Assert(inlineCaches[inlineCacheIndex].invalidationListSlotPtr == nullptr || *inlineCaches[inlineCacheIndex].invalidationListSlotPtr == &inlineCaches[inlineCacheIndex]);
-                Assert(inlineCaches[tryInlineCacheIndex].invalidationListSlotPtr == nullptr || *inlineCaches[tryInlineCacheIndex].invalidationListSlotPtr == &inlineCaches[tryInlineCacheIndex]);
-
-                // Swap inline caches, including their invalidationListSlotPtrs.
-                InlineCache temp = inlineCaches[tryInlineCacheIndex];
-                inlineCaches[tryInlineCacheIndex] = inlineCaches[inlineCacheIndex];
-                inlineCaches[inlineCacheIndex] = temp;
-
-                // Fix up invalidationListSlotPtrs to point to their owners.
-                if (inlineCaches[inlineCacheIndex].invalidationListSlotPtr != nullptr)
-                {
-                    *inlineCaches[inlineCacheIndex].invalidationListSlotPtr = &inlineCaches[inlineCacheIndex];
-                }
-                if (inlineCaches[tryInlineCacheIndex].invalidationListSlotPtr != nullptr)
-                {
-                    *inlineCaches[tryInlineCacheIndex].invalidationListSlotPtr = &inlineCaches[tryInlineCacheIndex];
-                }
-
-                break;
-            }
-            tryInlineCacheIndex = GetNextInlineCacheIndex(tryInlineCacheIndex);
-
-        } while (tryInlineCacheIndex != inlineCacheIndex);
-
-        return success;
-    }
-#endif
-
     template<
         bool CheckLocal,
         bool CheckProto,
@@ -538,18 +495,6 @@ namespace Js
 #endif
         bool result = cache->TryGetProperty<CheckLocal, CheckProto, CheckAccessor, CheckMissing, ReturnOperationInfo>(
             instance, propertyObject, propertyId, propertyValue, requestContext, operationInfo);
-
-#ifdef CLONE_INLINECACHE_TO_EMPTYSLOT
-        if (!result && !cache->IsEmpty())
-        {
-            result = CheckClonedInlineCache(inlineCacheIndex, [&](uint tryInlineCacheIndex) -> bool
-            {
-                cache = &inlineCaches[tryInlineCacheIndex];
-                return cache->TryGetProperty<CheckLocal, CheckProto, CheckAccessor, CheckMissing, ReturnOperationInfo>(
-                    instance, propertyObject, propertyId, propertyValue, requestContext, operationInfo);
-            });
-        }
-#endif
 
         if (IsInlineCacheAvailable && result)
         {
@@ -598,18 +543,6 @@ namespace Js
 #endif
         bool result = cache->TrySetProperty<CheckLocal, CheckLocalTypeWithoutProperty, CheckAccessor, ReturnOperationInfo>(
             object, propertyId, propertyValue, requestContext, operationInfo, propertyOperationFlags);
-
-#ifdef CLONE_INLINECACHE_TO_EMPTYSLOT
-        if (!result && !cache->IsEmpty())
-        {
-            result = CheckClonedInlineCache(inlineCacheIndex, [&](uint tryInlineCacheIndex) -> bool
-            {
-                cache = &inlineCaches[tryInlineCacheIndex];
-                return cache->TrySetProperty<CheckLocal, CheckLocalTypeWithoutProperty, CheckAccessor, ReturnOperationInfo>(
-                    object, propertyId, propertyValue, requestContext, operationInfo, propertyOperationFlags);
-            });
-        }
-#endif
 
         if (IsInlineCacheAvailable && result)
         {

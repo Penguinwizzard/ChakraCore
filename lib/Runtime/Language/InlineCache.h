@@ -513,10 +513,6 @@ namespace Js
         template<bool CheckLocal, bool CheckProto, bool CheckAccessor>
         void CloneInlineCacheToEmptySlotInCollision(Type *const type, uint index);
 
-#ifdef CLONE_INLINECACHE_TO_EMPTYSLOT
-        template <typename TDelegate>
-        bool CheckClonedInlineCache(uint inlineCacheIndex, TDelegate mapper);
-#endif
 #if INTRUSIVE_TESTTRACE_PolymorphicInlineCache
         uint GetEntryCount()
         {

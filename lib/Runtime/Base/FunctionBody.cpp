@@ -7170,13 +7170,10 @@ namespace Js
             }
         }
 
-        if (!IsScriptContextShutdown)
+        if (unregisteredInlineCacheCount > 0)
         {
             ThreadContext* threadContext = this->m_scriptContext->GetThreadContext();
-            if (unregisteredInlineCacheCount > 0)
-            {
-                threadContext->NotifyInlineCacheBatchUnregistered(unregisteredInlineCacheCount);
-            }
+            threadContext->NotifyInlineCacheBatchUnregistered(unregisteredInlineCacheCount);
         }
 
         while (this->GetPolymorphicInlineCachesHead())

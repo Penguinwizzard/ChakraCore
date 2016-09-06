@@ -753,7 +753,7 @@ namespace Js
                 }
             }
 
-            if (!isShutdown && unregisteredInlineCacheCount > 0 && !scriptContext->IsClosed())
+            if (unregisteredInlineCacheCount > 0)
             {
                 scriptContext->GetThreadContext()->NotifyInlineCacheBatchUnregistered(unregisteredInlineCacheCount);
             }
