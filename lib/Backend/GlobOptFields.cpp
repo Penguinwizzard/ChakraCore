@@ -2200,14 +2200,7 @@ GlobOpt::FinishOptPropOp(IR::Instr *instr, IR::PropertySymOpnd *opnd, BasicBlock
         isObjTypeSpecialized = ProcessPropOpInTypeCheckSeq<true>(instr, opnd, block, updateExistingValue, emitsTypeCheckOut, changesTypeValueOut, &isObjTypeChecked);
     }
 
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-#if defined(PRERELEASE_REL1608_MSRC33914_BUG8008396)
     if (opnd == instr->GetDst() && this->objectTypeSyms)
-#else
-    if (opnd == instr->GetDst() && this->objectTypeSyms && !isObjTypeChecked)
-#endif
     {
         if (block == nullptr)
         {

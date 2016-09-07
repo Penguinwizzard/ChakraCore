@@ -834,6 +834,7 @@ bool
 PropertySymOpnd::ChangesObjectLayout() const
 {
     Js::Type *cachedType = this->IsMono() ? this->GetType() : this->GetFirstEquivalentType();
+
     Js::Type *finalType = this->GetFinalType();
 
     if (finalType && Js::DynamicType::Is(finalType->GetTypeId()))
@@ -848,12 +849,6 @@ PropertySymOpnd::ChangesObjectLayout() const
         return cachedTypeHandler->GetInlineSlotCapacity() != finalTypeHandler->GetInlineSlotCapacity() ||
             cachedTypeHandler->GetOffsetOfInlineSlots() != finalTypeHandler->GetOffsetOfInlineSlots();
     }
-
-#ifdef _NTBUILD
-#include <VerifyGlobalMSRCSettings.inl>
-#endif
-
-#if defined(PRERELEASE_REL1608_MSRC33914_BUG8008396)
 
     if (!this->HasInitialType())
     {
@@ -874,8 +869,6 @@ PropertySymOpnd::ChangesObjectLayout() const
         return cachedTypeHandler->GetInlineSlotCapacity() != initialTypeHandler->GetInlineSlotCapacity() ||
             cachedTypeHandler->GetOffsetOfInlineSlots() != initialTypeHandler->GetOffsetOfInlineSlots();
     }
-
-#endif
 
     return false;
 }
