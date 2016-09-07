@@ -12566,14 +12566,19 @@ GlobOpt::UpdatePathDependentInfo(PathDependentInfo *const info)
 
     ValueInfo *leftValueInfo = info->LeftValue()->GetValueInfo();
     IntConstantBounds leftConstantBounds;
-    AssertVerify(leftValueInfo->TryGetIntConstantBounds(&leftConstantBounds, true));
+    if (!leftValueInfo->TryGetIntConstantBounds(&leftConstantBounds))
+    {
+        return PathDependentInfoToRestore(nullptr, nullptr);
+    }
 
     ValueInfo *rightValueInfo;
     IntConstantBounds rightConstantBounds;
     if(info->RightValue())
     {
         rightValueInfo = info->RightValue()->GetValueInfo();
-        AssertVerify(rightValueInfo->TryGetIntConstantBounds(&rightConstantBounds, true));
+        if (!rightValueInfo->TryGetIntConstantBounds(&rightConstantBounds)) {
+            return PathDependentInfoToRestore(nullptr, nullptr);
+        }
     }
     else
     {
@@ -12591,7 +12596,7 @@ GlobOpt::UpdatePathDependentInfo(PathDependentInfo *const info)
     if(newLeftValueInfo)
     {
         ChangeValueInfo(nullptr, info->LeftValue(), newLeftValueInfo);
-        AssertVerify(newLeftValueInfo->TryGetIntConstantBounds(&leftConstantBounds, true));
+        AssertVerify(newLeftValueInfo->TryGetIntConstantBounds(&leftConstantBounds));
     }
     else
     {
