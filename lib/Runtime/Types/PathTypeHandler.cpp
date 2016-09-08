@@ -1393,55 +1393,39 @@ namespace Js
 
         bool useCache = instance->GetScriptContext() == newPrototype->GetScriptContext();
 
-        TypeIdToTypeMap * map = nullptr;
+        TypeTransitionMap * oldTypeToPromotedTypeMap = nullptr;
 #if DBG
         DynamicType * oldCachedType = nullptr;
 #endif
-
-        //uint typeIdKeyToLookup = (uint)instance->GetTypeId();
-
-        //// Just a way to distinguish TypeIds_Object from DynamicType and that from JsrtExternalType
-        //typeIdKeyToLookup += isJsrtExternalType ? 1000 : 0;
-
         AssertMsg(isJsrtExternalType || typeid(DynamicType) == typeid(*oldType), "PathTypeHandler is used either by JsrtExternalType or DynamicType");
 
-        //TODO: rename dynamicType to something interesting because it will always be map
-        if (useCache && newPrototype->GetInternalProperty(newPrototype, Js::InternalPropertyIds::TypeOfPrototypeObjectDictionary, (Js::Var*)&dynamicType, nullptr, scriptContext))
+        if (useCache && newPrototype->GetInternalProperty(newPrototype, Js::InternalPropertyIds::TypeOfPrototypeObjectDictionary, (Js::Var*)&oldTypeToPromotedTypeMap, nullptr, scriptContext))
         {
-            /*if (dynamicType == nullptr || (Js::Var)dynamicType == newPrototype->GetLibrary()->GetUndefined())
+            Assert(oldTypeToPromotedTypeMap && (Js::Var)oldTypeToPromotedTypeMap != scriptContext->GetLibrary()->GetUndefined());
+            oldTypeToPromotedTypeMap = reinterpret_cast<TypeTransitionMap*>(oldTypeToPromotedTypeMap);
+            if (oldTypeToPromotedTypeMap->TryGetValue(oldType, &dynamicType))
             {
-                dynamicType = nullptr;
-            }
-            else
-            {*/
-            Assert(dynamicType && (Js::Var)dynamicType != scriptContext->GetLibrary()->GetUndefined());
-                map = reinterpret_cast<TypeIdToTypeMap*>(dynamicType);
-                dynamicType = nullptr;
-                if (map->TryGetValue(oldType, &dynamicType))
-                {
 #if DBG
-                    oldCachedType = dynamicType;
-                    // Verify if existing dynamicType meets requirements of this typeHandler.
-                    DynamicTypeHandler *const dynamicTypeHandler = dynamicType->GetTypeHandler();
-                    Assert(dynamicTypeHandler->GetOffsetOfInlineSlots() == GetOffsetOfInlineSlots());
-                    Assert(dynamicTypeHandler->GetInlineSlotCapacity() ==
-                           (
-                               useObjectHeaderInlining
-                               ? DynamicTypeHandler::RoundUpObjectHeaderInlinedInlineSlotCapacity(requestedInlineSlotCapacity)
-                               : DynamicTypeHandler::RoundUpInlineSlotCapacity(requestedInlineSlotCapacity)
-                               )
-                           );
+                oldCachedType = dynamicType;
+                Assert(instance->GetScriptContext() == dynamicType->GetScriptContext());
+                // Verify if existing dynamicType meets requirements of this typeHandler.
+                DynamicTypeHandler *const dynamicTypeHandler = dynamicType->GetTypeHandler();
+                Assert(dynamicTypeHandler->GetOffsetOfInlineSlots() == GetOffsetOfInlineSlots());
+                Assert(dynamicTypeHandler->GetInlineSlotCapacity() ==
+                       (
+                           useObjectHeaderInlining
+                           ? DynamicTypeHandler::RoundUpObjectHeaderInlinedInlineSlotCapacity(requestedInlineSlotCapacity)
+                           : DynamicTypeHandler::RoundUpInlineSlotCapacity(requestedInlineSlotCapacity)
+                           )
+                       );
 #endif
-                }
-            //}
+            }
         }
         else
         {
-            Assert(!dynamicType || (Js::Var)dynamicType == scriptContext->GetLibrary()->GetUndefined());
-            dynamicType = nullptr;
+            Assert(!oldTypeToPromotedTypeMap || (Js::Var)oldTypeToPromotedTypeMap == scriptContext->GetLibrary()->GetUndefined());
+            oldTypeToPromotedTypeMap = nullptr;
         }
-
-        bool logCacheReuse = PHASE_TRACE1(TypeShareForChangePrototypePhase) && (dynamicType != nullptr);
 
         if (dynamicType == nullptr)
         {
@@ -1469,19 +1453,19 @@ namespace Js
 
             if (useCache)
             {
-                if (map == nullptr)
+                if (oldTypeToPromotedTypeMap == nullptr)
                 {
-                    map = RecyclerNew(instance->GetRecycler(), TypeIdToTypeMap, instance->GetRecycler(), 2);
-                    newPrototype->SetInternalProperty(Js::InternalPropertyIds::TypeOfPrototypeObjectDictionary, (Var)map, PropertyOperationFlags::PropertyOperation_Force, nullptr);
+                    oldTypeToPromotedTypeMap = RecyclerNew(instance->GetRecycler(), TypeTransitionMap, instance->GetRecycler(), 2);
+                    newPrototype->SetInternalProperty(Js::InternalPropertyIds::TypeOfPrototypeObjectDictionary, (Var)oldTypeToPromotedTypeMap, PropertyOperationFlags::PropertyOperation_Force, nullptr);
                 }
-                map->Item(oldType, dynamicType);
+                oldTypeToPromotedTypeMap->Item(oldType, dynamicType);
 
                 if (PHASE_TRACE1(TypeShareForChangePrototypePhase))
                 {
 #if DBG
                     if (PHASE_VERBOSE_TRACE1(TypeShareForChangePrototypePhase))
                     {
-                        Output::Print(_u("TypeSharing: Updating prototype [0x%p] object's DictionarySlot in __proto__. Adding (key = 0x%p, value = 0x%p) in map = 0x%p.\n"), newPrototype, oldType, dynamicType, map);
+                        Output::Print(_u("TypeSharing: Updating prototype [0x%p] object's DictionarySlot in __proto__. Adding (key = 0x%p, value = 0x%p) in map = 0x%p.\n"), newPrototype, oldType, dynamicType, oldTypeToPromotedTypeMap);
                     }
                     else
                     {
@@ -1506,25 +1490,23 @@ namespace Js
         else
         {
             Assert(dynamicType->GetIsShared());
-        }
-
-
-        if (logCacheReuse)
-        {
-#if DBG
-            if (PHASE_VERBOSE_TRACE1(TypeShareForChangePrototypePhase))
+            if (PHASE_TRACE1(TypeShareForChangePrototypePhase))
             {
-
-                Output::Print(_u("TypeSharing: Reusing prototype [0x%p] object's DictionarySlot (key = 0x%p, value = 0x%p) from map = 0x%p in __proto__.\n"), newPrototype, oldType, dynamicType, map);
-            }
-            else
-            {
-#endif
-                Output::Print(_u("TypeSharing: Reusing prototype object's DictionarySlot cache in __proto__.\n"), cacheType, oldType);
 #if DBG
-            }
+                if (PHASE_VERBOSE_TRACE1(TypeShareForChangePrototypePhase))
+                {
+
+                    Output::Print(_u("TypeSharing: Reusing prototype [0x%p] object's DictionarySlot (key = 0x%p, value = 0x%p) from map = 0x%p in __proto__.\n"), newPrototype, oldType, dynamicType, oldTypeToPromotedTypeMap);
+                }
+                else
+                {
 #endif
-            Output::Flush();
+                    Output::Print(_u("TypeSharing: Reusing prototype object's DictionarySlot cache in __proto__.\n"), cacheType, oldType);
+#if DBG
+                }
+#endif
+                Output::Flush();
+            }
         }
 
         dynamicType->SetPrototype(newPrototype);
