@@ -19,7 +19,7 @@ namespace Js
 
     public:
         DEFINE_GETCPPNAME();
-        typedef JsUtil::BaseDictionary<uint, DynamicType *, Recycler, PowerOf2SizePolicy> TypeIdToTypeMap;
+        typedef JsUtil::BaseDictionary<DynamicType *, DynamicType *, Recycler, PowerOf2SizePolicy> TypeIdToTypeMap;
 
     protected:
         PathTypeHandlerBase(TypePath* typePath, uint16 pathLength, const PropertyIndex slotCapacity, uint16 inlineSlotCapacity, uint16 offsetOfInlineSlots, bool isLocked = false, bool isShared = false, DynamicType* predecessorType = nullptr);
