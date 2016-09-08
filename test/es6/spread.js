@@ -248,6 +248,24 @@ var tests = [
     }
   },
   {
+    name: "MSRC 34309: Guard against getter in prototype",
+    body: function () {
+        var x = [0x40];
+        x.length = 0x9;
+        
+        Object.defineProperty(Array.prototype, 1, {
+            get: function() {
+                x.length = 0;
+            }
+        });
+
+        var f = function(){
+            assert.areEqual(arguments.length, 2, "Changing length of x during spreading should truncate the spread.");
+        }
+        f(...x);
+    }
+  },
+  {
     name: "BLUE 611774: Spread with a prefix operator is allowed anywhere",
     body: function () {
       assert.throws(function () { eval('++...window, z;'); }, SyntaxError, "Invalid use of the ... operator");
