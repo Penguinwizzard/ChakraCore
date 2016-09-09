@@ -15362,7 +15362,8 @@ Lowerer::GenerateFastLdElemI(IR::Instr *& ldElem, bool *instrIsInHelperBlockRef)
         // The index is negative or not int.
         if (indirOpnd == nullptr)
         {
-            Assert(!(ldElem->HasBailOutInfo() && ldElem->GetBailOutKind() & IR::BailOutOnArrayAccessHelperCall));
+            // could have bailout kind BailOutOnArrayAccessHelperCall if indirOpnd overflows
+            Assert(!(ldElem->HasBailOutInfo() && ldElem->GetBailOutKind() & IR::BailOutOnArrayAccessHelperCall) || indirOpndOverflowed);
 
             // don't check fast path without bailout because it might not be TypedArray
             if (indirOpndOverflowed && ldElem->HasBailOutInfo())
