@@ -1403,7 +1403,8 @@ namespace Js
         {
             Assert(oldTypeToPromotedTypeMap && (Js::Var)oldTypeToPromotedTypeMap != scriptContext->GetLibrary()->GetUndefined());
             oldTypeToPromotedTypeMap = reinterpret_cast<TypeTransitionMap*>(oldTypeToPromotedTypeMap);
-            if (oldTypeToPromotedTypeMap->TryGetValue(oldType, &dynamicType))
+
+            if (oldTypeToPromotedTypeMap->TryGetValue(reinterpret_cast<uintptr_t>(oldType), &dynamicType))
             {
 #if DBG
                 oldCachedType = dynamicType;
@@ -1458,7 +1459,9 @@ namespace Js
                     oldTypeToPromotedTypeMap = RecyclerNew(instance->GetRecycler(), TypeTransitionMap, instance->GetRecycler(), 2);
                     newPrototype->SetInternalProperty(Js::InternalPropertyIds::TypeOfPrototypeObjectDictionary, (Var)oldTypeToPromotedTypeMap, PropertyOperationFlags::PropertyOperation_Force, nullptr);
                 }
-                oldTypeToPromotedTypeMap->Item(oldType, dynamicType);
+                
+                // oldType is kind of weakReference here
+                oldTypeToPromotedTypeMap->Add(reinterpret_cast<uintptr_t>(oldType), dynamicType);
 
                 if (PHASE_TRACE1(TypeShareForChangePrototypePhase))
                 {
