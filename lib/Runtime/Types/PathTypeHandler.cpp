@@ -1452,6 +1452,16 @@ namespace Js
                 dynamicType = pathTypeHandler->PromoteType<true>(dynamicType, scriptContext->GetPropertyName(propertyId), true, scriptContext, nullptr, &propertyIndex);
             }
 
+            // After promotion, make sure the slot capacity match with the existing
+            Assert(dynamicType->typeHandler->GetOffsetOfInlineSlots() == GetOffsetOfInlineSlots());
+            Assert(dynamicType->typeHandler->GetInlineSlotCapacity() ==
+                   (
+                       useObjectHeaderInlining
+                       ? DynamicTypeHandler::RoundUpObjectHeaderInlinedInlineSlotCapacity(requestedInlineSlotCapacity)
+                       : DynamicTypeHandler::RoundUpInlineSlotCapacity(requestedInlineSlotCapacity)
+                       )
+                   );
+
             if (useCache)
             {
                 if (oldTypeToPromotedTypeMap == nullptr)
