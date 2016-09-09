@@ -4984,7 +4984,7 @@ void AssignRegisters(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
             {
                 // If this is a lambda inside a class member, the class member will need to load super.
                 FuncInfo *parent = byteCodeGenerator->FindEnclosingNonLambda();
-                if (parent->root->sxFnc.IsClassMember())
+                if (parent->root->sxFnc.IsMethod() || parent->root->sxFnc.IsConstructor())
                 {
                     parent->root->sxFnc.SetHasSuperReference();
                     parent->AssignSuperRegister();
