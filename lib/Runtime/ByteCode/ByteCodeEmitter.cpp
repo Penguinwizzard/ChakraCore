@@ -3333,10 +3333,6 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
                         }
                     }
                 }
-                /*else
-                {
-                    Assert(param->GetIsArguments() || pnode->sxFnc.pnodeName->sxVar.sym == param);
-                }*/
 
                 if (ShouldTrackDebuggerMetadata() && param->GetLocation() != Js::Constants::NoRegister)
                 {
@@ -4667,7 +4663,7 @@ void ByteCodeGenerator::EmitLoadInstance(Symbol *sym, IdentPtr pid, Js::RegSlot 
         }
         else if (symScope == funcInfo->GetParamScope())
         {
-            Assert(funcInfo->frameObjRegister != Js::Constants::NoRegister);
+            Assert(funcInfo->frameObjRegister != Js::Constants::NoRegister && !funcInfo->GetParamScope()->GetCanMergeWithBodyScope());
             this->m_writer.Reg1(Js::OpCode::LdParamObj, instLocation);
         }
         else if (symScope != funcInfo->GetBodyScope())

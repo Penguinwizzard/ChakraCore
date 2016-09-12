@@ -3498,6 +3498,7 @@ IRBuilder::BuildElementSlotI1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot r
             scopeSlotSize = m_func->GetJnFunction()->paramScopeSlotArraySize;
             closureSym = m_func->GetParamClosureSym();
             symID = m_func->GetJnFunction()->GetParamClosureRegister();
+            newOpcode = newOpcode == Js::OpCode::StParamSlot ? Js::OpCode::StLocalSlot : Js::OpCode::StLocalSlotChkUndecl;
             // Fall through
 
         case Js::OpCode::StLocalSlot:

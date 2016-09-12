@@ -5094,30 +5094,6 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, LPCOLESTR pNameHint, usho
             if (paramScope != nullptr && !paramScope->GetCanMergeWithBodyScope())
             {
                 OUTPUT_TRACE_DEBUGONLY(Js::ParsePhase, _u("The param and body scope of the function %s cannot be merged\n"), pnodeFnc->sxFnc.pnodeName ? pnodeFnc->sxFnc.pnodeName->sxVar.pid->Psz() : _u("Anonymous function"));
-                // Add a new symbol reference for each formal in the param scope to the body scope.
-                // While inserting symbols into the symbol list we always insert at the front, so while traversing the list we will be visiting the last added
-                // formals first. Normal insertion of those into the body will reverse the order of symbols, which will eventually result in different order
-                // for scope slots allocation for the corresponding symbol in both param and body scope. Inserting them in the opposite order will help us
-                // have the same sequence for scope slots allocation in both scopes. This makes it easy to read the bytecode and may help in some optimization
-                // later.
-                /*paramScope->ForEachSymbol([this, pnodeFnc](Symbol* param) {
-                    OUTPUT_TRACE_DEBUGONLY(Js::ParsePhase, _u("Creating a duplicate symbol for the parameter %s in the body scope\n"), param->GetPid()->Psz());
-
-                    ParseNodePtr paramNode = nullptr;
-                    if (this->m_ppnodeVar != &pnodeFnc->sxFnc.pnodeVars)
-                    {
-                        ParseNodePtr *const ppnodeVarSave = m_ppnodeVar;
-                        m_ppnodeVar = &pnodeFnc->sxFnc.pnodeVars;
-                        paramNode = this->CreateVarDeclNode(param->GetPid(), STVariable, false, nullptr, false);
-                        m_ppnodeVar = ppnodeVarSave;
-                    }
-                    else
-                    {
-                        paramNode = this->CreateVarDeclNode(param->GetPid(), STVariable, false, nullptr, false);
-                    }
-
-                    Assert(paramNode && paramNode->sxVar.sym->GetScope()->GetScopeType() == ScopeType_FunctionBody);
-                });*/
             }
 
             // Keep nested function declarations and expressions in the same list at function scope.
