@@ -4253,7 +4253,7 @@ namespace Js
         [&](bool/*hasException*/)
         {
             Var top = scriptContext->PopObject();
-            if (JavascriptProxy::Is(thisArg))
+            if (isProxy)
             {
                 AssertMsg(top == target, "Unmatched operation stack");
             }
