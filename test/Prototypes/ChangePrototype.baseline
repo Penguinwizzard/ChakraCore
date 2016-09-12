@@ -21,3 +21,8 @@ i16.protoProp = 1
 TypeSharing: Updating prototype object's DictionarySlot cache in __proto__.
 i8_custom.protoProp = 1
 done
+TypeSharing: Updating prototype object's InlineSlot cache in CreateObject.
+Changing __proto__
+TypeSharing: Updating prototype object's DictionarySlot cache in __proto__.
+Changing __proto__
+TypeSharing: Updating prototype object's DictionarySlot cache in __proto__.

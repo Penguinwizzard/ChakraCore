@@ -4,7 +4,7 @@
 //-------------------------------------------------------------------------------------------------------
 
 // Use -trace:TypeShareForChangePrototype  -verbose to debug if this test case fails
-function test() {
+function test1() {
     function bar() {
         this.a = 1;
         this.b = 2;
@@ -61,4 +61,24 @@ function test() {
     print("done");
 }
 
-test();
+function test2() {
+    function ctor() {
+        this.a = 1;
+        this.b = 2;
+    }
+
+    var obj = { _a: 1 };
+
+    var x1 = new ctor();    // x1's type = T1
+    print('Changing __proto__');
+    x1.__proto__ = obj;     // cached T2 corresponding to T1 on obj
+    var x2 = new ctor();
+    var x3 = new ctor();    // shrink the inlineSlotCapacity of T1
+
+    var y = new ctor();
+    print('Changing __proto__');
+    y.__proto__ = obj;      // cached T2's inlineSlotCapacity doesn't match y's T1
+}
+
+test1();
+test2();
