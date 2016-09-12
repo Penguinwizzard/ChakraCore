@@ -1537,6 +1537,16 @@ IRBuilder::BuildReg1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot R0)
         newOpcode = Js::OpCode::Ld_A;
         break;
 
+    case Js::OpCode::LdParamObj:
+        if (!m_func->GetJnFunction()->HasScopeObject())
+        {
+            Js::Throw::FatalInternalError();
+        }
+        srcOpnd = BuildSrcOpnd(m_func->GetJnFunction()->GetParamClosureRegister());
+        isNotInt = true;
+        newOpcode = Js::OpCode::Ld_A;
+        break;
+
     case Js::OpCode::Throw:
         {
             srcOpnd = this->BuildSrcOpnd(srcRegOpnd);

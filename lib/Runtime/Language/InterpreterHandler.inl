@@ -135,6 +135,7 @@ EXDEF2_WMS(A1toA1Mem,               NewWithObject,              JavascriptOperat
   DEF2_WMS(A1toA1_ALLOW_STACK,      Ld_A,                       OP_Ld_A)
   DEF2_WMS(INNERtoA1,               LdInnerScope,               OP_Ld_A)
   DEF2_WMS(XXtoA1,                  LdLocalObj,                 OP_LdLocalObj)
+EXDEF2_WMS(XXtoA1,                  LdParamObj,                 OP_LdParamObj)
 EXDEF2_WMS(A1toA1_ALLOW_STACK,      UnwrapWithObj,              JavascriptOperators::OP_UnwrapWithObj)
 EXDEF2_WMS(A2toXX,                  SetComputedNameVar,         JavascriptOperators::OP_SetComputedNameVar)
   DEF2_WMS(A1toXX_ALLOW_STACK,      ChkUndecl,                  OP_ChkUndecl)

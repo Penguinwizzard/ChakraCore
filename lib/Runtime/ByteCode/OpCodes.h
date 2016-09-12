@@ -275,6 +275,7 @@ MACRO_EXTEND_WMS(       UnwrapWithObj,      Reg2,           OpSideEffect) // Cop
 MACRO_EXTEND_WMS(       SetComputedNameVar, Reg2,           OpSideEffect)
 MACRO_WMS(              Ld_A,               Reg2,           OpTempNumberTransfer|OpTempObjectTransfer|OpNonIntTransfer|OpCanCSE) // Copy Var register
 MACRO_WMS(              LdLocalObj,         Reg1,           OpCanCSE) // Load non-stack frame object
+MACRO_EXTEND_WMS(       LdParamObj,         Reg1,           OpCanCSE) // Load non-stack param scope frame object
 MACRO_WMS(              LdInnerScope,       Reg1Unsigned1,  OpCanCSE) // Load non-stack inner scope
 MACRO_WMS(              LdC_A_Null,         Reg1,           OpByteCodeOnly|OpCanCSE)   // Load from 'null' as Var
 MACRO_BACKEND_ONLY(     Ld_I4,              Empty,          OpCanCSE)                  // Copy I4 register

@@ -4665,6 +4665,11 @@ void ByteCodeGenerator::EmitLoadInstance(Symbol *sym, IdentPtr pid, Js::RegSlot 
         {
             this->m_writer.Reg1Unsigned1(Js::OpCode::LdInnerScope, instLocation, scope->GetInnerScopeIndex());
         }
+        else if (symScope == funcInfo->GetParamScope())
+        {
+            Assert(funcInfo->frameObjRegister != Js::Constants::NoRegister);
+            this->m_writer.Reg1(Js::OpCode::LdParamObj, instLocation);
+        }
         else if (symScope != funcInfo->GetBodyScope())
         {
             this->m_writer.Reg2(Js::OpCode::Ld_A, instLocation, scopeLocation);
