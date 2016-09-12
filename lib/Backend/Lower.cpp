@@ -15864,7 +15864,7 @@ Lowerer::GenerateFastStElemI(IR::Instr *& stElem, bool *instrIsInHelperBlockRef)
     // The index is negative or not int.
     if (indirOpnd == nullptr)
     {
-        Assert(!(stElem->HasBailOutInfo() && stElem->GetBailOutKind() & IR::BailOutOnArrayAccessHelperCall));
+        Assert(!(stElem->HasBailOutInfo() && stElem->GetBailOutKind() & IR::BailOutOnArrayAccessHelperCall) || indirOpndOverflowed);
 
         // The global optimizer should never type specialize a StElem for which we know the index is not int or is a negative
         // int constant.  This would result in an unconditional bailout on the main code path.
