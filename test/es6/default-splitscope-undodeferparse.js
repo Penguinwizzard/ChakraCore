@@ -184,7 +184,7 @@ function foo8(a = 10, b = eval("a")) {
 foo8();
 
 function foo9(a = 10, b = () => eval("a")) {
-    if (b != 10) {
+    if (b() != 10) {
         print("FAILED")
     } else {
         print("PASSED");
@@ -203,7 +203,7 @@ function foo9(a = 10, b = () => eval("a")) {
 }
 foo9();
 
-function foo6(a, b = () => eval("a")) {
+function foo10(a, b = () => eval("a")) {
     if (eval("a") !== 1) {
         print("FAILED")
     } else {
@@ -236,4 +236,4 @@ function foo6(a, b = () => eval("a")) {
         print("PASSED");
     }
 }
-foo6(1);
+foo10(1);
