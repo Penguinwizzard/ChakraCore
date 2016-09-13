@@ -2700,7 +2700,7 @@ GlobOpt::OptNewScObject(IR::Instr** instrPtr, Value* srcVal)
         instr->m_func->GetConstructorCache(static_cast<Js::ProfileId>(instr->AsProfiledInstr()->u.profileId)) : nullptr;
 
     Assert(ctorCache == nullptr || srcVal->GetValueInfo()->IsVarConstant() && Js::JavascriptFunction::Is(srcVal->GetValueInfo()->AsVarConstant()->VarValue()));
-    Assert(ctorCache == nullptr || !ctorCache->typeIsFinal || ctorCache->ctorHasNoExplicitReturnValue);
+    Assert(ctorCache == nullptr || !ctorCache->typeIsFinal || ctorCache->ctorHasNoExplicitReturnValue || isCtorInlined);
 
     if (ctorCache != nullptr && !ctorCache->skipNewScObject && (isCtorInlined || ctorCache->typeIsFinal))
     {

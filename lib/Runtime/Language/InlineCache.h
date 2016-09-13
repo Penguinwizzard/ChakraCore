@@ -717,7 +717,6 @@ namespace Js
             Assert(this->content.isPopulated);
             Assert(this->content.scriptContext == scriptContext);
             Assert(!this->content.typeUpdatePending);
-            Assert(this->content.ctorHasNoExplicitReturnValue);
 
             if (type->GetTypeHandler()->GetSlotCapacity() > MaxCachedSlotCount)
             {

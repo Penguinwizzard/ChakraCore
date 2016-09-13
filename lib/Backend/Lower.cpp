@@ -4577,7 +4577,7 @@ bool Lowerer::TryLowerNewScObjectWithFixedCtorCache(IR::Instr* newObjInstr, IR::
         ctorCache = newObjInstr->m_func->GetConstructorCache(static_cast<Js::ProfileId>(newObjInstr->AsProfiledInstr()->u.profileId));
         Assert(ctorCache != nullptr);
         Assert(!ctorCache->skipNewScObject);
-        Assert(!ctorCache->typeIsFinal || ctorCache->ctorHasNoExplicitReturnValue);
+        Assert(!ctorCache->typeIsFinal || ctorCache->ctorHasNoExplicitReturnValue || newObjInstr->m_opcode == Js::OpCode::NewScObjectNoCtor);
 
         LinkCtorCacheToGuardedProperties(ctorCache);
     }

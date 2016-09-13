@@ -2727,6 +2727,11 @@ void ByteCodeGenerator::EmitFunctionBody(FuncInfo *funcInfo)
     }
     Assert(!pnode->CapturesSyms());
     EmitTopLevelStatement(pnode, funcInfo, false);
+
+    if (funcInfo->IsClassConstructor())
+    {
+        funcInfo->GetParsedFunctionBody()->SetHasNoExplicitReturnValue(false);
+    }
 }
 
 void ByteCodeGenerator::EmitProgram(ParseNode *pnodeProg)
