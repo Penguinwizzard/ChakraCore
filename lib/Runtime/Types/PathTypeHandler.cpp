@@ -1383,8 +1383,11 @@ namespace Js
             return;
         }
 
-        uint16 requestedInlineSlotCapacity = this->GetInlineSlotCapacity();
         const bool useObjectHeaderInlining = IsObjectHeaderInlined(this->GetOffsetOfInlineSlots());
+        uint16 requestedInlineSlotCapacity = this->GetInlineSlotCapacity();
+        uint16 roundedInlineSlotCapacity = (useObjectHeaderInlining ?
+                                            DynamicTypeHandler::RoundUpObjectHeaderInlinedInlineSlotCapacity(requestedInlineSlotCapacity) :
+                                            DynamicTypeHandler::RoundUpInlineSlotCapacity(requestedInlineSlotCapacity));
         ScriptContext* scriptContext = instance->GetScriptContext();
         DynamicType* cachedDynamicType = nullptr;
         BOOL isJsrtExternalType = instance->GetType()->IsJsrtExternal();
@@ -1418,18 +1421,10 @@ namespace Js
                     swprintf_s(reason, 1024, _u("OffsetOfInlineSlot mismatch. Required = %d, Cached = %d"), this->GetOffsetOfInlineSlots(), cachedDynamicTypeHandler->GetOffsetOfInlineSlots());
 #endif
                 }
-                else if (cachedDynamicTypeHandler->GetInlineSlotCapacity() !=
-                         (useObjectHeaderInlining ?
-                         DynamicTypeHandler::RoundUpObjectHeaderInlinedInlineSlotCapacity(requestedInlineSlotCapacity) :
-                         DynamicTypeHandler::RoundUpInlineSlotCapacity(requestedInlineSlotCapacity)))
+                else if (cachedDynamicTypeHandler->GetInlineSlotCapacity() != roundedInlineSlotCapacity)
                 {
-                    cachedDynamicType = nullptr;
-#if DBG
-                    uint16 requiredCapacity = useObjectHeaderInlining
-                        ? DynamicTypeHandler::RoundUpObjectHeaderInlinedInlineSlotCapacity(requestedInlineSlotCapacity)
-                        : DynamicTypeHandler::RoundUpInlineSlotCapacity(requestedInlineSlotCapacity);
-                    swprintf_s(reason, 1024, _u("InlineSlotCapacity mismatch. Required = %d, Cached = %d"), requiredCapacity, cachedDynamicTypeHandler->GetInlineSlotCapacity());
-#endif
+                    Assert(cachedDynamicTypeHandler->GetInlineSlotCapacity() >= roundedInlineSlotCapacity);
+                    cachedDynamicTypeHandler->ShrinkSlotAndInlineSlotCapacity();
                 }
             }
         }
@@ -1462,16 +1457,6 @@ namespace Js
                 PropertyIndex propertyIndex = GetPropertyIndex(propertyId);
                 cachedDynamicType = pathTypeHandler->PromoteType<true>(cachedDynamicType, scriptContext->GetPropertyName(propertyId), true, scriptContext, nullptr, &propertyIndex);
             }
-
-            // After promotion, make sure the slot capacity match with the existing
-            Assert(cachedDynamicType->typeHandler->GetOffsetOfInlineSlots() == GetOffsetOfInlineSlots());
-            Assert(cachedDynamicType->typeHandler->GetInlineSlotCapacity() ==
-                   (
-                       useObjectHeaderInlining
-                       ? DynamicTypeHandler::RoundUpObjectHeaderInlinedInlineSlotCapacity(requestedInlineSlotCapacity)
-                       : DynamicTypeHandler::RoundUpInlineSlotCapacity(requestedInlineSlotCapacity)
-                       )
-                   );
 
             if (useCache)
             {
@@ -1532,6 +1517,11 @@ namespace Js
                 Output::Flush();
             }
         }
+
+
+        // Make sure the offsetOfInlineSlots and inlineSlotCapacity matches with currentTypeHandler
+        Assert(cachedDynamicType->typeHandler->GetOffsetOfInlineSlots() == GetOffsetOfInlineSlots());
+        Assert(cachedDynamicType->typeHandler->GetInlineSlotCapacity() == roundedInlineSlotCapacity);
 
         cachedDynamicType->SetPrototype(newPrototype);
         instance->ReplaceType(cachedDynamicType);

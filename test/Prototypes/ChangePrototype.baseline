@@ -25,4 +25,4 @@ TypeSharing: Updating prototype object's InlineSlot cache in CreateObject.
 Changing __proto__
 TypeSharing: Updating prototype object's DictionarySlot cache in __proto__.
 Changing __proto__
-TypeSharing: Updating prototype object's DictionarySlot cache in __proto__.
+TypeSharing: Reusing prototype object's DictionarySlot cache in __proto__.
