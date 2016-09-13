@@ -192,12 +192,12 @@ bool InliningHeuristics::DeciderInlineIntoInliner(Js::FunctionBody* inlinee, Js:
             isConstructorCall ||                                                     // If the function is constructor with loops, don't inline.
             PHASE_OFF(Js::InlineFunctionsWithLoopsPhase,this->topFunc))
         {
-            INLINE_TESTTRACE(_u("INLINING: Skip Inline: Has loops \tBytecode size: %d \tgetNumberOfInlineesWithLoop: %d\tloopCount: %d\thasNestedLoop: %B\tisConstructorCall:%B\tInlinee: %s (%s)\tCaller: %s (%s) \tRoot: %s (%s)\n"),
+            INLINE_TESTTRACE(_u("INLINING: Skip Inline: Has loops \tBytecode size: %d \tgetNumberOfInlineesWithLoop: %d\tloopCount: %d\thasNestedLoop: %c\tisConstructorCall:%c\tInlinee: %s (%s)\tCaller: %s (%s) \tRoot: %s (%s)\n"),
                 inlinee->GetByteCodeCount(),
                 inliningDecider->GetNumberOfInlineesWithLoop(),
                 inlinee->GetLoopCount(),
-                inlinee->GetHasNestedLoop(),
-                isConstructorCall,
+                inlinee->GetHasNestedLoop() ? 'y' : 'n',
+                isConstructorCall ? 'y' : 'n',
                 inlinee->GetDisplayName(), inlinee->GetDebugNumberSet(debugStringBuffer),
                 inliner->GetDisplayName(), inliner->GetDebugNumberSet(debugStringBuffer2),
                 topFunc->GetDisplayName(), topFunc->GetDebugNumberSet(debugStringBuffer3));
