@@ -14609,7 +14609,8 @@ Lowerer::GenerateFastElemIIntIndexCommon(
 
     const IR::BailOutKind bailOutKind = instr->HasBailOutInfo() ? instr->GetBailOutKind() : IR::BailOutInvalid;
     const bool needBailOutOnInvalidLength = !!(bailOutKind & (IR::BailOutOnInvalidatedArrayHeadSegment));
-    const bool needBailOutToHelper = !!(bailOutKind & (IR::BailOutOnArrayAccessHelperCall | IR::BailOutOnInvalidatedArrayLength));
+    // If you have issues with this being overzealous, try adding | IR::BailOutOnInvalidatedArrayLength to the innermost parenthetical here - it was removed because it was being too conservative
+    const bool needBailOutToHelper = !!(bailOutKind & (IR::BailOutOnArrayAccessHelperCall));
     const bool needBailOutOnSegmentLengthCompare = needBailOutToHelper || needBailOutOnInvalidLength;
     
     if(indexIsLessThanHeadSegmentLength || needBailOutOnSegmentLengthCompare)
