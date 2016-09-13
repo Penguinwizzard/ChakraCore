@@ -206,7 +206,7 @@ void ChakraBinaryAutoSystemInfoInit(AutoSystemInfo * autoSystemInfo)
 
 #if !ENABLE_NATIVE_CODEGEN
 EXPORT_FUNC
-HRESULT JsInitializeJITServer(
+HRESULT JsInitializeRpcServer(
     __in GUID* connectionUuid,
     __in_opt void* securityDescriptor,
     __in_opt void* alpcSecurityDescriptor)

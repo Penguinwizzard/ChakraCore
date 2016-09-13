@@ -697,7 +697,7 @@ int _cdecl RunJITServer(int argc, __in_ecount(argc) LPWSTR argv[])
         return status;
     }
 
-    JsInitializeJITServerPtr initRpcServer = (JsInitializeJITServerPtr)GetProcAddress(chakraLibrary, "JsInitializeJITServer");
+    JsInitializeJITServerPtr initRpcServer = (JsInitializeJITServerPtr)GetProcAddress(chakraLibrary, "JsInitializeRpcServer");
     HRESULT hr = initRpcServer(&connectionUuid, nullptr, nullptr);
     if (FAILED(hr))
     {
