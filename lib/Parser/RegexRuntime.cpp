@@ -3019,7 +3019,7 @@ namespace UnifiedRegex
 #if ENABLE_REGEX_CONFIG_OPTIONS
             matcher.CompStats();
 #endif
-            if (!PHASE_OFF1(Js::RegexOptBTPhase) && this->followFirst != MaxUChar && input[inputOffset] == this->followFirst)
+            if (!PHASE_OFF1(Js::RegexOptBTPhase) && this->followFirst != MaxChar && input[inputOffset] == this->followFirst)
             {
                 loopInfo->EnsureOffsetsOfFollowFirst(matcher);
                 loopInfo->offsetsOfFollowFirst->Push(inputOffset - loopInfo->startInputOffset);
@@ -4131,20 +4131,24 @@ namespace UnifiedRegex
         LoopSetInst* begin = matcher.L2I(LoopSet, beginLabel);
         LoopInfo* loopInfo = matcher.LoopIdToLoopInfo(begin->loopId);
         
-        // >loopInfonumber is the number of iterations completed before trying follow
+        // loopInfo->number is the number of iterations completed before trying follow
         Assert(loopInfo->number > begin->repeats.lower);
-        // Try follow with one fewer iteration
+        // Try follow with fewer iterations
         if (!PHASE_OFF1(Js::RegexOptBTPhase))
         {
             if (loopInfo->offsetsOfFollowFirst == nullptr)
             {
                 if (begin->followFirst != MaxUChar)
                 {
-                    // stop backtracking
-                    loopInfo->number = begin->repeats.lower;
+                    // We determined the first character in the follow set at compile time,
+                    // but didn't find a single match for it in the last iteration of the loop.
+                    // So, there is no benefit in backtracking.
+                    loopInfo->number = begin->repeats.lower; // stop backtracking
                 }
                 else
                 {
+                    // We couldn't determine the first character in the follow set at compile time;
+                    // fall back to backtracking by one character at a time.
                     if (PHASE_ON1(Js::RegexOptBTPrintPhase) && matcher.program->numLoops == 2)
                     {
                         loopInfo->numBTs++;
@@ -4156,8 +4160,9 @@ namespace UnifiedRegex
             {
                 if (loopInfo->offsetsOfFollowFirst->Empty())
                 {
-                    // stop backtracking
-                    loopInfo->number = begin->repeats.lower;
+                    // We have already backtracked to the first offset where we matched the LoopSet's followFirst;
+                    // no point in backtracking more.
+                    loopInfo->number = begin->repeats.lower; // stop backtracking
                 }
                 else
                 {
@@ -4165,6 +4170,7 @@ namespace UnifiedRegex
                     {
                         loopInfo->numBTs++;
                     }
+                    // Backtrack to the previous offset where we matched the LoopSet's followFirst
                     loopInfo->number = loopInfo->offsetsOfFollowFirst->Pop();
                 }
             }

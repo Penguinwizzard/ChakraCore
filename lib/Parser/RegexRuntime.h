@@ -1426,8 +1426,7 @@ namespace UnifiedRegex
     {
         CharCount number;            // current iteration number
         CharCount startInputOffset;  // input offset where the iteration started
-        SList<CharCount>* offsetsOfFollowFirst; // list of offsets from 
-        //CharCount firstOffsetOfFollowFirst;
+        SList<CharCount>* offsetsOfFollowFirst; // list of offsets from startInputOffset where we matched with followFirst
         CharCount numBTs;
         
         inline void Reset()
@@ -1440,7 +1439,6 @@ namespace UnifiedRegex
             {
                 offsetsOfFollowFirst->Clear();
             }
-            //firstOffsetOfFollowFirst = 0;
             numBTs = 0;
 #endif
         }
