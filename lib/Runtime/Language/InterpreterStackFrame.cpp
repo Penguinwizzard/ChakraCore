@@ -1801,6 +1801,8 @@ namespace Js
         AssertMsg(!executeFunction->IsDeferredParseFunction(),
             "Non-intrinsic functions must provide byte-code to execute");
 
+        executeFunction->BeginExecution();
+
         bool fReleaseAlloc = false;
         InterpreterStackFrame* newInstance = nullptr;
         Var* allocation = nullptr;
@@ -1929,8 +1931,6 @@ namespace Js
             exceptionFramePopper.PushInfo(threadContext->TTDLog, function);
         }
 #endif
-
-        executeFunction->BeginExecution();
 
         Var aReturn = nullptr;
 

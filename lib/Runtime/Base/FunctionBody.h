@@ -1687,6 +1687,8 @@ namespace Js
     protected:
         ParseableFunctionInfo(JavascriptMethod method, int nestedFunctionCount, LocalFunctionId functionId, Utf8SourceInfo* sourceInfo, ScriptContext* scriptContext, uint functionNumber, const char16* displayName, uint m_displayNameLength, uint displayShortNameOffset, FunctionInfo::Attributes attributes, Js::PropertyRecordList* propertyRecordList);
 
+        ParseableFunctionInfo(ParseableFunctionInfo * proxy);
+
     public:
         struct NestedArray
         {
@@ -1715,6 +1717,7 @@ namespace Js
 
     public:
         static ParseableFunctionInfo* New(ScriptContext* scriptContext, int nestedFunctionCount, LocalFunctionId functionId, Utf8SourceInfo* utf8SourceInfo, const char16* displayName, uint m_displayNameLength, uint displayShortNameOffset, Js::PropertyRecordList* propertyRecordList, FunctionInfo::Attributes attributes);
+        static ParseableFunctionInfo* NewDeferredFunctionFromFunctionBody(FunctionBody *functionBody);
 
         DEFINE_VTABLE_CTOR_NO_REGISTER(ParseableFunctionInfo, FunctionProxy);
         FunctionBody* Parse(ScriptFunction ** functionRef = nullptr, bool isByteCodeDeserialization = false);
@@ -1864,6 +1867,7 @@ namespace Js
         }
 
         void SetSourceInfo(uint sourceIndex, ParseNodePtr node, bool isEval, bool isDynamicFunction);
+        void Copy(ParseableFunctionInfo * proxy);
         void Copy(FunctionBody* other);
 
         const char16* GetExternalDisplayName() const;
@@ -2767,6 +2771,7 @@ namespace Js
         // Field accessors
         bool GetHasBailoutInstrInJittedCode() const { return this->m_hasBailoutInstrInJittedCode; }
         void SetHasBailoutInstrInJittedCode(bool hasBailout) { this->m_hasBailoutInstrInJittedCode = hasBailout; }
+        bool GetCanDefer() const { return this->functionInfo->CanBeDeferred() && this->m_depth == 0; }
         bool GetCanReleaseLoopHeaders() const { return (this->m_depth == 0); }
         void SetPendingLoopHeaderRelease(bool pendingLoopHeaderRelease) { this->m_pendingLoopHeaderRelease = pendingLoopHeaderRelease; }
 

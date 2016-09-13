@@ -1023,7 +1023,7 @@ namespace Js
         Assert(!this->IsClosed());
 
         auto fn = [&](FunctionBody *functionBody) {
-            if (functionBody->CanBeDeferred() && !pActiveFuncs->Test(functionBody->GetFunctionNumber()))
+            if (functionBody->GetFunctionInfo()->GetFunctionProxy() == functionBody && functionBody->CanBeDeferred() && !pActiveFuncs->Test(functionBody->GetFunctionNumber()) && functionBody->GetByteCode() != nullptr && functionBody->GetCanDefer())
             {
                 functionBody->RedeferFunction();
             }

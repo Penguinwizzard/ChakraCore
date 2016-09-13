@@ -1040,7 +1040,7 @@ void ByteCodeGenerator::RestoreScopeInfo(Js::FunctionBody* functionBody)
 
 FuncInfo * ByteCodeGenerator::StartBindGlobalStatements(ParseNode *pnode)
 {
-    if (parentScopeInfo)
+    if (parentScopeInfo && parentScopeInfo->GetParent() && !parentScopeInfo->GetParent()->GetIsGlobalFunc())
     {
         Assert(CONFIG_FLAG(DeferNested));
         trackEnvDepth = true;
@@ -1894,7 +1894,7 @@ void ByteCodeGenerator::Generate(__in ParseNode *pnode, uint32 grfscr, __in Byte
 
 void ByteCodeGenerator::CheckDeferParseHasMaybeEscapedNestedFunc()
 {
-    if (!this->parentScopeInfo)
+    if (!this->parentScopeInfo || this->parentScopeInfo->GetParent()->GetIsGlobalFunc())
     {
         return;
     }

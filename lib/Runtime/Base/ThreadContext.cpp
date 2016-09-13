@@ -1601,6 +1601,14 @@ ThreadContext::ProbeStackNoDispose(size_t size, Js::ScriptContext *scriptContext
             this->CheckInterruptPoll();
         }
     }
+
+    if (PHASE_STRESS1(Js::RedeferralPhase))
+    {
+        if (JsUtil::ExternalApi::IsScriptActiveOnCurrentThreadContext())
+        {
+            this->RedeferFunctionBodies();
+        }
+    }
 }
 
 void
@@ -2335,7 +2343,12 @@ ThreadContext::PreCollectionCallBack(CollectionFlags flags)
 #endif
 
     // Do redeferral here, before collecting, so we get the benefit right away.
-    this->RedeferFunctionBodies();
+    HRESULT hr = S_OK;
+    BEGIN_TRANSLATE_OOM_TO_HRESULT
+    {
+        this->RedeferFunctionBodies();
+    }
+    END_TRANSLATE_OOM_TO_HRESULT(hr);
 
     // This needs to be done before ClearInlineCaches since that method can empty the list of
     // script contexts with inline caches
@@ -2436,12 +2449,12 @@ ThreadContext::RedeferFunctionBodies()
     ActiveFunctionSet *pActiveFuncs = nullptr;
     {
         HRESULT hr = S_OK;
-        BEGIN_TRANSLATE_TO_HRESULT(ExceptionType_OutOfMemory)
+//        BEGIN_TRANSLATE_OOM_TO_HRESULT_NESTED
         {
             pActiveFuncs = Anew(this->GetThreadAlloc(), ActiveFunctionSet, this->GetThreadAlloc());
             this->GetActiveFunctions(pActiveFuncs);
         }
-        END_TRANSLATE_OOM_TO_HRESULT(hr);
+//        END_TRANSLATE_OOM_TO_HRESULT(hr);
         if (hr != S_OK)
         {
             return;
