@@ -3430,9 +3430,9 @@ IRBuilder::BuildElementSlotI1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot r
     IR::ByteCodeUsesInstr *byteCodeUse;
     PropertySym *fieldSym = nullptr;
     StackSym *   stackFuncPtrSym = nullptr;
-    SymID        symID = m_func->GetJnFunction()->GetLocalClosureRegister();
+    SymID        symID = m_func->GetJITFunctionBody()->GetLocalClosureReg();
     bool isLdSlotThatWasNotProfiled = false;
-    uint scopeSlotSize = m_func->GetJnFunction()->scopeSlotArraySize;
+    uint scopeSlotSize = m_func->GetJITFunctionBody()->GetScopeSlotArraySize();
     StackSym* closureSym = m_func->GetLocalClosureSym();
 
     switch (newOpcode)
@@ -3444,8 +3444,6 @@ IRBuilder::BuildElementSlotI1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot r
             // Fall through
 
         case Js::OpCode::LdLocalSlot:
-            scopeSlotSize = m_func->GetJnFunction()->scopeSlotArraySize;
-            symID = m_func->GetJnFunction()->GetLocalClosureRegister();
             if (PHASE_ON(Js::ClosureRangeCheckPhase, m_func))
             {
                 if ((uint32)slotId >= scopeSlotSize + Js::ScopeSlots::FirstSlotIndex)
@@ -3545,9 +3543,9 @@ IRBuilder::BuildElementSlotI1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot r
             break;
 
         case Js::OpCode::StParamSlot:
-            scopeSlotSize = m_func->GetJnFunction()->paramScopeSlotArraySize;
+            scopeSlotSize = m_func->GetJITFunctionBody()->GetParamScopeSlotArraySize();
             closureSym = m_func->GetParamClosureSym();
-            symID = m_func->GetJnFunction()->GetParamClosureRegister();
+            symID = m_func->GetJITFunctionBody()->GetParamClosureReg();
             // Fall through
 
         case Js::OpCode::StLocalSlot:
@@ -3612,7 +3610,7 @@ IRBuilder::BuildElementSlotI1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot r
 
         case Js::OpCode::StParamObjSlot:
             closureSym = m_func->GetParamClosureSym();
-            symID = m_func->GetJnFunction()->GetParamClosureRegister();
+            symID = m_func->GetJITFunctionBody()->GetParamClosureReg();
             newOpcode = Js::OpCode::StLocalObjSlot;
             // Fall through
 
