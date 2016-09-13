@@ -2107,6 +2107,16 @@ BackwardPass::DeadStoreTypeCheckBailOut(IR::Instr * instr)
         return;
     }
 
+    // If oldBailoutKind is equivTypeCheck and appropriate opnd doesn't have initial/final type
+    // then leave alone the bailout
+    if (oldBailOutKind == IR::BailOutFailedEquivalentTypeCheck || oldBailOutKind == IR::BailOutFailedEquivalentFixedFieldTypeCheck)
+    {
+        if (!(propertySymOpnd->HasInitialType() || propertySymOpnd->HasFinalType()))
+        {
+            return;
+        }
+    }
+
     // We're not checking for polymorphism, so don't let the bailout indicate that we
     // detected polymorphism.
     instr->GetBailOutInfo()->polymorphicCacheIndex = (uint)-1;
