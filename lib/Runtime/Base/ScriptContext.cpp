@@ -656,7 +656,7 @@ namespace Js
         // Stop profiling if present
         DeRegisterProfileProbe(S_OK, nullptr);
 #endif
-
+        
         if (this->diagnosticArena != nullptr)
         {
             HeapDelete(this->diagnosticArena);
@@ -3373,11 +3373,11 @@ if (!sourceList)
                     || entryPoint == DefaultDeferredDeserializeThunk || entryPoint == ProfileDeferredDeserializeThunk
                     || entryPoint == CrossSite::DefaultThunk || entryPoint == CrossSite::ProfileThunk);
 #else
-                Assert(entryPoint == DefaultDeferredParsingThunk
+                Assert(entryPoint == DefaultDeferredParsingThunk 
                     || entryPoint == DefaultDeferredDeserializeThunk
                     || entryPoint == CrossSite::DefaultThunk);
 #endif
-
+                
                 Assert(!proxy->IsDeferred());
                 Assert(proxy->GetFunctionBody()->GetProfileSession() == proxy->GetScriptContext()->GetProfileSession());
 

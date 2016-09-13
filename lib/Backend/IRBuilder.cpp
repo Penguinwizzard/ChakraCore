@@ -3430,9 +3430,9 @@ IRBuilder::BuildElementSlotI1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot r
     IR::ByteCodeUsesInstr *byteCodeUse;
     PropertySym *fieldSym = nullptr;
     StackSym *   stackFuncPtrSym = nullptr;
-    SymID        symID;
+    SymID        symID = m_func->GetJnFunction()->GetLocalClosureRegister();
     bool isLdSlotThatWasNotProfiled = false;
-    uint scopeSlotSize = 0;
+    uint scopeSlotSize = m_func->GetJnFunction()->scopeSlotArraySize;
     StackSym* closureSym = m_func->GetLocalClosureSym();
 
     switch (newOpcode)
@@ -3441,14 +3441,11 @@ IRBuilder::BuildElementSlotI1(Js::OpCode newOpcode, uint32 offset, Js::RegSlot r
             scopeSlotSize = m_func->GetJITFunctionBody()->GetParamScopeSlotArraySize();
             closureSym = m_func->GetParamClosureSym();
             symID = m_func->GetJITFunctionBody()->GetParamClosureReg();
-            fieldSym = PropertySym::New(closureSym, slotId, (uint32)-1, (uint)-1, PropertyKindSlots, m_func);
-            goto LdLocalSlot;
+            // Fall through
 
         case Js::OpCode::LdLocalSlot:
-            scopeSlotSize = m_func->GetJITFunctionBody()->GetScopeSlotArraySize();
-            symID = m_func->GetJITFunctionBody()->GetLocalClosureReg();
-
-LdLocalSlot:
+            scopeSlotSize = m_func->GetJnFunction()->scopeSlotArraySize;
+            symID = m_func->GetJnFunction()->GetLocalClosureRegister();
             if (PHASE_ON(Js::ClosureRangeCheckPhase, m_func))
             {
                 if ((uint32)slotId >= scopeSlotSize + Js::ScopeSlots::FirstSlotIndex)
@@ -3489,7 +3486,7 @@ LdLocalSlot:
                 this->EnsureLoopBodyLoadSlot(symID);
             }
 
-            fieldSym = fieldSym ? fieldSym : PropertySym::FindOrCreate(symID, slotId, (uint32)-1, (uint)-1, PropertyKindSlots, m_func);
+            fieldSym = PropertySym::FindOrCreate(symID, slotId, (uint32)-1, (uint)-1, PropertyKindSlots, m_func);
             fieldOpnd = IR::SymOpnd::New(fieldSym, TyVar, m_func);
             regOpnd = this->BuildDstOpnd(regSlot);
             instr = nullptr;
@@ -3514,12 +3511,9 @@ LdLocalSlot:
             closureSym = m_func->GetParamClosureSym();
             symID = m_func->GetJITFunctionBody()->GetParamClosureReg();
             newOpcode = Js::OpCode::LdLocalObjSlot;
-            goto LdLocalObjSlot;
+            // Fall through
 
         case Js::OpCode::LdLocalObjSlot:
-            symID = m_func->GetJITFunctionBody()->GetLocalClosureReg();
-
-LdLocalObjSlot:
             if (closureSym->HasByteCodeRegSlot())
             {
                 byteCodeUse = IR::ByteCodeUsesInstr::New(m_func);
@@ -3550,12 +3544,17 @@ LdLocalObjSlot:
             this->AddInstr(instr, offset);
             break;
 
+        case Js::OpCode::StParamSlot:
+            scopeSlotSize = m_func->GetJnFunction()->paramScopeSlotArraySize;
+            closureSym = m_func->GetParamClosureSym();
+            symID = m_func->GetJnFunction()->GetParamClosureRegister();
+            // Fall through
+
         case Js::OpCode::StLocalSlot:
         case Js::OpCode::StLocalSlotChkUndecl:
-
             if (PHASE_ON(Js::ClosureRangeCheckPhase, m_func))
             {
-                if ((uint32)slotId >= m_func->GetJITFunctionBody()->GetScopeSlotArraySize() + Js::ScopeSlots::FirstSlotIndex)
+                if ((uint32)slotId >= scopeSlotSize + Js::ScopeSlots::FirstSlotIndex)
                 {
                     Js::Throw::FatalInternalError();
                 }
@@ -3589,7 +3588,6 @@ LdLocalObjSlot:
             }
             else
             {
-                symID = m_func->GetJITFunctionBody()->GetLocalClosureReg();
                 if (IsLoopBody())
                 {
                     this->EnsureLoopBodyLoadSlot(symID);
@@ -3612,9 +3610,14 @@ LdLocalObjSlot:
             }
             break;
 
+        case Js::OpCode::StParamObjSlot:
+            closureSym = m_func->GetParamClosureSym();
+            symID = m_func->GetJnFunction()->GetParamClosureRegister();
+            newOpcode = Js::OpCode::StLocalObjSlot;
+            // Fall through
+
         case Js::OpCode::StLocalObjSlot:
         case Js::OpCode::StLocalObjSlotChkUndecl:
-
             if (closureSym->HasByteCodeRegSlot())
             {
                 byteCodeUse = IR::ByteCodeUsesInstr::New(m_func);
@@ -3624,7 +3627,7 @@ LdLocalObjSlot:
             }
 
             regOpnd = IR::RegOpnd::New(TyVar, m_func);
-            fieldOpnd = this->BuildFieldOpnd(Js::OpCode::LdSlotArr, m_func->GetJITFunctionBody()->GetLocalClosureReg(), (Js::DynamicObject::GetOffsetOfAuxSlots())/sizeof(Js::Var), (Js::PropertyIdIndexType)-1, PropertyKindSlotArray);
+            fieldOpnd = this->BuildFieldOpnd(Js::OpCode::LdSlotArr, symID, (Js::DynamicObject::GetOffsetOfAuxSlots())/sizeof(Js::Var), (Js::PropertyIdIndexType)-1, PropertyKindSlotArray);
             instr = IR::Instr::New(Js::OpCode::LdSlotArr, regOpnd, fieldOpnd, m_func);
             this->AddInstr(instr, offset);
 

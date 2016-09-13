@@ -3547,6 +3547,9 @@ namespace Js
     {
         PropertyId * propertyIdsForRegSlots;
         uint length;
+        // This keeps the upper bound of register slots for the formals. While emitting locals in the body we skip
+        // the properties that are below this limit.
+        RegSlot formalsUpperBound;
 
         PropertyIdArray * propertyIdsForFormalArgs;
 

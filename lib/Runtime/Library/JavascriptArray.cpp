@@ -3375,6 +3375,7 @@ namespace Js
                     isArray = JavascriptArray::Is(pDestObj);
                 }
             }
+
         }
 
         if (pDestObj == nullptr || isArray)

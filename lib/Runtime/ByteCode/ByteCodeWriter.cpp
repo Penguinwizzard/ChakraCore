@@ -1597,7 +1597,9 @@ StoreCommon:
         {
             case OpCode::LdEnvObj:
             case OpCode::StLocalSlot:
+            case OpCode::StParamSlot:
             case OpCode::StLocalObjSlot:
+            case OpCode::StParamObjSlot:
             case OpCode::StLocalSlotChkUndecl:
             case OpCode::StLocalObjSlotChkUndecl:
             {

@@ -1811,9 +1811,9 @@
     "this": "Object {...}",
     "arguments": "Object {...}",
     "locals": {
-      "a": "undefined undefined",
       "b": "undefined undefined",
-      "c": "undefined undefined"
+      "c": "undefined undefined",
+      "a": "undefined undefined"
     },
     "scopes0": "undefined undefined"
   },
@@ -1969,9 +1969,9 @@
     "this": "Object {...}",
     "arguments": "Object {...}",
     "locals": {
-      "a": "number 1",
       "b": "function <large string>",
-      "c": "undefined undefined"
+      "c": "undefined undefined",
+      "a": "number 1"
     },
     "scopes0": "undefined undefined"
   },
@@ -2289,9 +2289,9 @@
     "this": "Object {...}",
     "arguments": "Object {...}",
     "locals": {
-      "a": "undefined undefined",
       "b": "undefined undefined",
-      "c": "undefined undefined"
+      "c": "undefined undefined",
+      "a": "undefined undefined"
     },
     "scopes0": "undefined undefined"
   },
@@ -2767,11 +2767,11 @@
   },
   {
     "this": "Object {...}",
+    "arguments": "Object {...}",
     "locals": {
       "a": "number 1",
       "b": "function <large string>",
       "c": "undefined undefined",
-      "arguments": "Object {...}",
       "m": "undefined undefined"
     },
     "scopes0": "undefined undefined",
@@ -5061,9 +5061,9 @@
     "this": "Object {...}",
     "arguments": "Object {...}",
     "locals": {
-      "a": "undefined undefined",
       "b": "undefined undefined",
-      "c": "undefined undefined"
+      "c": "undefined undefined",
+      "a": "undefined undefined"
     },
     "scopes0": "undefined undefined"
   },
@@ -5219,9 +5219,9 @@
     "this": "Object {...}",
     "arguments": "Object {...}",
     "locals": {
-      "a": "number 1",
       "b": "function <large string>",
-      "c": "undefined undefined"
+      "c": "undefined undefined",
+      "a": "number 1"
     },
     "scopes0": "undefined undefined"
   },
@@ -5539,9 +5539,9 @@
     "this": "Object {...}",
     "arguments": "Object {...}",
     "locals": {
-      "a": "undefined undefined",
       "b": "undefined undefined",
-      "c": "undefined undefined"
+      "c": "undefined undefined",
+      "a": "undefined undefined"
     },
     "scopes0": "undefined undefined"
   },
@@ -6017,11 +6017,11 @@
   },
   {
     "this": "Object {...}",
+    "arguments": "Object {...}",
     "locals": {
       "a": "number 1",
       "b": "function <large string>",
       "c": "undefined undefined",
-      "arguments": "Object {...}",
       "m": "undefined undefined"
     },
     "scopes0": "undefined undefined",

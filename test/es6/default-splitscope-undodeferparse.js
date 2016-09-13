@@ -63,7 +63,7 @@ function foo3(a = 10, b = function () { return a; }) {
 }
 foo3();
 
-function f9(a, b = function () { a; } ) {
+function foo4(a, b = function () { a; }) {
     if (eval("a") !== 1) {
         print("FAILED")
     } else {
@@ -96,4 +96,59 @@ function f9(a, b = function () { a; } ) {
         print("PASSED");
     }
 }
-f9(1);
+foo4(1);
+
+function foo5(a = 10, b = eval("a")) {
+    if (b != 10) {
+        print("FAILED")
+    } else {
+        print("PASSED");
+    }
+    if (eval('b') != 10) {
+        print("FAILED")
+    } else {
+        print("PASSED");
+    }
+    var a = 1;
+    if (b != 10) {
+        print("FAILED")
+    } else {
+        print("PASSED");
+    }
+}
+foo5();
+
+function foo6(a, b = () => eval("a")) {
+    if (eval("a") !== 1) {
+        print("FAILED")
+    } else {
+        print("PASSED");
+    }
+    if (arguments[0] !== 1) {
+        print("FAILED")
+    } else {
+        print("PASSED");
+    }
+    if (eval("arguments[0]") !== 1) {
+        print("FAILED")
+    } else {
+        print("PASSED");
+    }
+    arguments = 100;
+    if (eval("a") !== 1) {
+        print("FAILED")
+    } else {
+        print("PASSED");
+    }
+    if (eval("arguments") !== 100) {
+        print("FAILED")
+    } else {
+        print("PASSED");
+    }
+    if (arguments !== 100) {
+        print("FAILED")
+    } else {
+        print("PASSED");
+    }
+}
+foo6(1);

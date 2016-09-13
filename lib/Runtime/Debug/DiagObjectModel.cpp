@@ -686,6 +686,8 @@ namespace Js
             // this container can be nullptr if there is no locals in current function.
             if (propIdContainer != nullptr)
             {
+                RegSlot limit = propIdContainer->formalsUpperBound == Js::Constants::NoRegister ? Js::Constants::NoRegister : pFBody->MapRegSlot(propIdContainer->formalsUpperBound);
+
                 pMembersList = JsUtil::List<DebuggerPropertyDisplayInfo *, ArenaAllocator>::New(arena);
                 for (uint i = 0; i < propIdContainer->length; i++)
                 {
@@ -711,9 +713,23 @@ namespace Js
                         shouldInsert = IsPropertyValid(propertyId, reg, &isPropertyInDebuggerScope, &isConst, &isInDeadZone) && !isPropertyInDebuggerScope;
                     }
 
-                    if (shouldInsert && formalScope != nullptr)
+                    if (shouldInsert)
                     {
-                        shouldInsert = formalScope->HasProperty(propertyId);
+                        if (limit != Js::Constants::NoRegister)
+                        {
+                            if (formalScope != nullptr && reg > limit)
+                            {
+                                shouldInsert = false;
+                            }
+                            else if (formalScope == nullptr && reg <= limit)
+                            {
+                                shouldInsert = false;
+                            }
+                        }
+                        else if (formalScope != nullptr)
+                        {
+                            shouldInsert = formalScope->HasProperty(propertyId);
+                        }
                     }
 
                     if (shouldInsert)
@@ -1071,44 +1087,45 @@ namespace Js
 
             DebuggerScope *formalScope = GetScopeWhenHaltAtFormals(pFrame);
 
-            // If we are halted at formal place, and param and body scopes are splitted we need to make use of formal debugger scope to walk those variables.
+            DWORD localsType = FramesLocalType::LocalType_None;
+
+            // If we are halted at formal place, and param and body scopes are splitted we need to make use of formal debugger scope to to determine the locals type.
             if (!pFBody->IsParamAndBodyScopeMerged() && formalScope != nullptr)
             {
-                Assert(scopeCount > 0);
-                if (formalScope->scopeType == Js::DiagParamScopeInObject)
+                if (pFBody->GetPropertyIdOnRegSlotsContainer() && pFBody->GetPropertyIdOnRegSlotsContainer()->formalsUpperBound != Js::Constants::NoRegister)
                 {
-                    pVarWalker = Anew(arena, ObjectVariablesWalker, pFrame, (Js::Var *)pDisplay->GetItem(nextStartIndex++), UIGroupType_None, !!(frameWalkerFlags & FrameWalkerFlags::FW_AllowLexicalThis), !!(frameWalkerFlags & FrameWalkerFlags::FW_AllowSuperReference));
+                    localsType |= FramesLocalType::LocalType_Reg;
                 }
-                else
-                {
-                    Assert(pFBody->paramScopeSlotArraySize > 0);
-                    pVarWalker = Anew(arena, SlotArrayVariablesWalker, pFrame, (Js::Var *)pDisplay->GetItem(nextStartIndex++), UIGroupType_None, !!(frameWalkerFlags & FrameWalkerFlags::FW_AllowLexicalThis), !!(frameWalkerFlags & FrameWalkerFlags::FW_AllowSuperReference));
-                }
+
+                localsType |= formalScope->scopeType == Js::DiagParamScopeInObject ?
+                    FramesLocalType::LocalType_InObject
+                    : FramesLocalType::LocalType_InSlot;
             }
             else
             {
-                DWORD localsType = GetCurrentFramesLocalsType(pFrame);
-                if (localsType & FramesLocalType::LocalType_Reg)
-                {
-                    pVarWalkers->Add(Anew(arena, RegSlotVariablesWalker, pFrame, nullptr /*not debugger scope*/, UIGroupType_None, !!(frameWalkerFlags & FrameWalkerFlags::FW_AllowSuperReference)));
-                }
-                if (localsType & FramesLocalType::LocalType_InObject)
-                {
-                    Assert(scopeCount > 0);
-                    pVarWalker = Anew(arena, ObjectVariablesWalker, pFrame, pDisplay->GetItem(nextStartIndex++), UIGroupType_None, !!(frameWalkerFlags & FrameWalkerFlags::FW_AllowLexicalThis), !!(frameWalkerFlags & FrameWalkerFlags::FW_AllowSuperReference));
-                }
-                else if (localsType & FramesLocalType::LocalType_InSlot)
-                {
-                    Assert(scopeCount > 0);
-                    pVarWalker = Anew(arena, SlotArrayVariablesWalker, pFrame, (Js::Var *)pDisplay->GetItem(nextStartIndex++), UIGroupType_None, !!(frameWalkerFlags & FrameWalkerFlags::FW_AllowLexicalThis), !!(frameWalkerFlags & FrameWalkerFlags::FW_AllowSuperReference));
-                }
-                else if (scopeCount > 0 && pFBody->GetFrameDisplayRegister() != 0 )
-                {
-                    Assert((Var)pDisplay->GetItem(0) == pFrame->GetScriptContext()->GetLibrary()->GetNull() || !pFBody->IsParamAndBodyScopeMerged());
+                localsType = GetCurrentFramesLocalsType(pFrame);
+            }
 
-                    // A dummy scope with nullptr register is created. Skip this.
-                    nextStartIndex++;
-                }
+            if (localsType & FramesLocalType::LocalType_Reg)
+            {
+                pVarWalkers->Add(Anew(arena, RegSlotVariablesWalker, pFrame, nullptr /*not debugger scope*/, UIGroupType_None, !!(frameWalkerFlags & FrameWalkerFlags::FW_AllowSuperReference)));
+            }
+            if (localsType & FramesLocalType::LocalType_InObject)
+            {
+                Assert(scopeCount > 0);
+                pVarWalker = Anew(arena, ObjectVariablesWalker, pFrame, pDisplay->GetItem(nextStartIndex++), UIGroupType_None, !!(frameWalkerFlags & FrameWalkerFlags::FW_AllowLexicalThis), !!(frameWalkerFlags & FrameWalkerFlags::FW_AllowSuperReference));
+            }
+            else if (localsType & FramesLocalType::LocalType_InSlot)
+            {
+                Assert(scopeCount > 0);
+                pVarWalker = Anew(arena, SlotArrayVariablesWalker, pFrame, (Js::Var *)pDisplay->GetItem(nextStartIndex++), UIGroupType_None, !!(frameWalkerFlags & FrameWalkerFlags::FW_AllowLexicalThis), !!(frameWalkerFlags & FrameWalkerFlags::FW_AllowSuperReference));
+            }
+            else if (scopeCount > 0 && pFBody->GetFrameDisplayRegister() != 0 )
+            {
+                Assert((Var)pDisplay->GetItem(0) == pFrame->GetScriptContext()->GetLibrary()->GetNull() || !pFBody->IsParamAndBodyScopeMerged());
+
+                // A dummy scope with nullptr register is created. Skip this.
+                nextStartIndex++;
             }
 
             if (pVarWalker)

@@ -971,7 +971,7 @@ void ByteCodeGenerator::RestoreScopeInfo(Js::FunctionBody* functionBody)
 {
     if (functionBody && functionBody->GetScopeInfo())
     {
-        PROBE_STACK(scriptContext, Js::Constants::MinStackByteCodeVisitor);
+        PROBE_STACK_NO_DISPOSE(scriptContext, Js::Constants::MinStackByteCodeVisitor);
 
         Js::ScopeInfo* scopeInfo = functionBody->GetScopeInfo();
         RestoreScopeInfo(scopeInfo->GetParent()); // Recursively restore outer func scope info
@@ -2197,13 +2197,6 @@ void AddVarsToScope(ParseNode *vars, ByteCodeGenerator *byteCodeGenerator)
             {
                 FuncInfo* funcInfo = byteCodeGenerator->TopFuncInfo();
                 funcInfo->SetArgumentsSymbol(sym);
-
-                if (funcInfo->paramScope && !funcInfo->paramScope->GetCanMergeWithBodyScope())
-                {
-                    Symbol* innerArgSym = funcInfo->bodyScope->FindLocalSymbol(sym->GetName());
-                    funcInfo->SetInnerArgumentsSymbol(innerArgSym);
-                    byteCodeGenerator->AssignRegister(innerArgSym);
-                }
             }
 
         }
@@ -4074,8 +4067,8 @@ ParseNode* InvertLoop(ParseNode* outerLoop, ByteCodeGenerator* byteCodeGenerator
                     if (InvertableBlock(block, outerVar, innerLoop, outerLoop, byteCodeGenerator, &symCheck))
                     {
                         return ConstructInvertedLoop(innerLoop, outerLoop, byteCodeGenerator, funcInfo);
-                        }
                     }
+                }
             }
         }
     }
@@ -4991,7 +4984,7 @@ void AssignRegisters(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator)
             {
                 // If this is a lambda inside a class member, the class member will need to load super.
                 FuncInfo *parent = byteCodeGenerator->FindEnclosingNonLambda();
-                if (parent->root->sxFnc.IsClassMember())
+                if (parent->root->sxFnc.IsMethod() || parent->root->sxFnc.IsConstructor())
                 {
                     parent->root->sxFnc.SetHasSuperReference();
                     parent->AssignSuperRegister();

@@ -80,7 +80,7 @@ glob; /**bp:logJson("Stepping on default params - one formal has function as def
 glob; /**bp:logJson("Stepping on default params - break at function at formals and do setframe")**/
 (function() {
     function f1(a = 1, b = function () { 
-    return 2; /**bp:setFrame(1);locals()**/  
+        return 2; /**bp:setFrame(1);locals()**/  
     }, c = b()) {
         var m = 3;
     }
@@ -93,6 +93,81 @@ glob; /**bp:logJson("Stepping on default params - split scope due to function at
         var m = 3;
     }
     f1(); /**bp:resume('step_into');locals();dumpBreak();resume('step_into');resume('step_into');locals();dumpBreak();resume('step_into');locals();dumpBreak();**/
+})();
+
+glob; /**bp:logJson("Stepping on default params - Breakpoint at the function defined in param scope when called from param scope")**/
+(function() {
+    function f1(a = 1, b = function () { 
+        return a; /**bp:setFrame(1);locals()**/  
+    }, c = b()) {
+        var m = 3;
+        m; /**bp:locals()**/
+    }
+    f1();
+})();
+
+glob; /**bp:logJson("Stepping on default params - Breakpoint at the function defined in param scope when called from body scope")**/
+(function() {
+    function f1(a = 1, b = function () { 
+        return a; /**bp:setFrame(1);locals()**/  
+    }) {
+        var m = 3;
+        var c = b();
+    }
+    f1();
+})();
+
+glob; /**bp:logJson("Stepping on default params - Breakpoint at the function defined in param scope to print the default frame")**/
+(function() {
+    function f1(a = 1, b = function () { 
+        return a; /**bp:locals()**/  
+    }) {
+        var m = 3;
+        var c = b();
+    }
+    f1();
+})();
+
+glob; /**bp:logJson("Stepping on default params - Split scope function with zero reg slots in param")**/
+(function() {
+    function f1(a = 1, b = function () { 
+        return a + c(); /**bp:setFrame(1);locals()**/  
+    }, c = () => {
+        return b.length + a; /**bp:setFrame(1);locals()**/
+    }) {
+        var m = 3; /**bp:locals()**/
+        var n = c();
+        var o = b();
+        o; /**bp:locals()**/
+    }
+    f1();
+})();
+
+glob; /**bp:logJson("Stepping on default params - Split scope function with zero reg slots in param and eval in both scopes")**/
+(function() {
+    function f1(a = 1, b = function () { 
+        return a + c(); /**bp:setFrame(1);locals()**/  
+    }, c = () => {
+        return eval("b.length + a"); /**bp:setFrame(1);locals()**/
+    }) {
+        var m = 3; /**bp:locals()**/
+        var n = c();
+        var o = eval("b()");
+        o; /**bp:locals()**/
+    }
+    f1();
+})();
+
+glob; /**bp:logJson("Stepping on default params - Split scope function with zero reg slots in param and print the body scope")**/
+(function() {
+    function f1(a = 1, b = function () { 
+        return a + c();
+    }, c = () => {
+        return eval("b.length + a"); /**bp:stack();setFrame(3);locals()**/
+    }) {
+        var m = eval("b()");
+    }
+    f1(10);
 })();
 
 glob; /**bp:logJson("Stepping on default params - split scope due to function at formals and few var captured in inner function")**/
@@ -127,6 +202,17 @@ glob; /**bp:logJson("Stepping on default params - split scope and body has eval 
         })();
     }
     f1(); /**bp:resume('step_into');locals();dumpBreak();resume('step_into');resume('step_into');locals();dumpBreak();**/
+})();
+
+glob; /**bp:logJson("Stepping on default params - Split scope with eval in param")**/
+(function() {
+    function f1(a = 1, b = function () { 
+        return eval("a"); /**bp:setFrame(1);locals()**/  
+    }, c = b()) {
+        var m = b();
+        m; /**bp:locals()**/
+    }
+    f1();
 })();
 
 print("Pass");

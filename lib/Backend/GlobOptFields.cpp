@@ -2215,7 +2215,13 @@ GlobOpt::FinishOptPropOp(IR::Instr *instr, IR::PropertySymOpnd *opnd, BasicBlock
         //   changed by the addition of a property.
 
         SymID opndId = opnd->HasObjectTypeSym() ? opnd->GetObjectTypeSym()->m_id : -1;
+
+#ifdef _NTBUILD
+#include <VerifyGlobalMSRCSettings.inl>
+#endif
+#if defined(PRERELEASE_REL1608_MSRC33914_BUG8008396)
         if (!isObjTypeChecked)
+#endif
         {
             if (block->globOptData.maybeWrittenTypeSyms == nullptr)
             {
