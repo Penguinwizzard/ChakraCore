@@ -1311,7 +1311,7 @@ namespace Js
 
     bool DynamicProfileInfo::IsProfiledCallOp(OpCode op)
     {
-        return Js::OpCodeUtil::IsProfiledCallOp(op) || Js::OpCodeUtil::IsProfiledCallOpWithICIndex(op);
+        return Js::OpCodeUtil::IsProfiledCallOp(op) || Js::OpCodeUtil::IsProfiledCallOpWithICIndex(op) || Js::OpCodeUtil::IsProfiledConstructorCall(op);
     }
 
     bool DynamicProfileInfo::IsProfiledReturnTypeOp(OpCode op)
