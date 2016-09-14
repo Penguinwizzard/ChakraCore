@@ -25,6 +25,7 @@ ComputedEnvironment.cmd
 packages/
 *.tlog/
 .*.swp
+*.orig
 sd.ini
 *.vcxproj.user
 test/*/*.baseline.rebase
