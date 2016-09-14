@@ -1424,6 +1424,7 @@ namespace Js
                 else if (cachedDynamicTypeHandler->GetInlineSlotCapacity() != roundedInlineSlotCapacity)
                 {
                     Assert(cachedDynamicTypeHandler->GetInlineSlotCapacity() >= roundedInlineSlotCapacity);
+                    Assert(cachedDynamicTypeHandler->GetInlineSlotCapacity() >= GetPropertyCount());
                     cachedDynamicTypeHandler->ShrinkSlotAndInlineSlotCapacity();
                 }
             }
@@ -1444,8 +1445,8 @@ namespace Js
             // Make type locked, shared only if we are using cache
             if (useCache)
             {
-                cachedDynamicType->isLocked = true;
-                cachedDynamicType->isShared = true;
+                cachedDynamicType->LockType();
+                cachedDynamicType->ShareType();
             }
 
             // Promote type based on existing properties to get new type which will be cached and shared
