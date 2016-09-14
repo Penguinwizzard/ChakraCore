@@ -140,26 +140,6 @@ ServerCleanupThreadContext(
 }
 
 HRESULT
-ServerAddPropertyRecord(
-    /* [in] */ handle_t binding,
-    /* [in] */ intptr_t threadContextRoot,
-    /* [in] */ __RPC__in PropertyRecordIDL * propertyRecord)
-{
-    AUTO_NESTED_HANDLED_EXCEPTION_TYPE(static_cast<ExceptionType>(ExceptionType_OutOfMemory | ExceptionType_StackOverflow));
-
-    ServerThreadContext * threadContextInfo = (ServerThreadContext*)DecodePointer((void*)threadContextRoot);
-
-    if (threadContextInfo == nullptr) 
-    {
-        return RPC_S_INVALID_ARG;
-    }
-
-    threadContextInfo->AddToPropertyMap((Js::PropertyRecord *)propertyRecord);
-
-    return S_OK;
-}
-
-HRESULT
 ServerAddPropertyRecordArray(
     /* [in] */ handle_t binding,
     /* [in] */ intptr_t threadContextRoot,
@@ -373,12 +353,13 @@ ServerRemoteCodeGen(
     {
         QueryPerformanceCounter(&start_time);
     }
+    memset(jitData, 0, sizeof(JITOutputIDL));
+
     ServerThreadContext * threadContextInfo = (ServerThreadContext*)DecodePointer((void*)threadContextInfoAddress);
     ServerScriptContext * scriptContextInfo = (ServerScriptContext*)DecodePointer((void*)scriptContextInfoAddress);
 
     if (threadContextInfo == nullptr || scriptContextInfo == nullptr)
     {
-        memset(jitData, 0, sizeof(JITOutputIDL));
         return RPC_S_INVALID_ARG;
     }
 
@@ -442,17 +423,14 @@ ServerRemoteCodeGen(
     }
     catch (Js::OutOfMemoryException)
     {
-        memset(jitData, 0, sizeof(JITOutputIDL));
         hr = E_OUTOFMEMORY;
     }
     catch (Js::StackOverflowException)
     {
-        memset(jitData, 0, sizeof(JITOutputIDL));
         hr = VBSERR_OutOfStack;
     }
     catch (Js::OperationAbortedException)
     {
-        memset(jitData, 0, sizeof(JITOutputIDL));
         hr = E_ABORT;
     }
     scriptContextInfo->EndJIT();
