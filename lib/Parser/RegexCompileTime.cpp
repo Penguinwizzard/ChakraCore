@@ -1904,15 +1904,14 @@ namespace UnifiedRegex
         for (item = n - 1; item >= 0; item--)
         {
             nodes[item]->AnnotatePass3(compiler, accumConsumes, innerFollow, accumFollowIrrefutable, accumFollowEOL);
-            if (nodes[item]->tag == NodeTag::Loop)
+            /*if (nodes[item]->tag == NodeTag::Loop)
             {
-                //Node* nextNode = nodes[item + 1];
-                if (/*nextNode->isFirstExact &&*/ nodes[item]->followSet->IsSingleton())
+                if (nodes[item]->followSet->IsSingleton())
                 {
                     Assert(nodes[item]->followSet->IsCompact());
                     ((LoopNode*)nodes[item])->followFirst = nodes[item]->followSet->GetCompactChar(0);
                 }
-            }
+            }*/
             if (!nodes[item]->isThisIrrefutable)
                 accumFollowIrrefutable = false;
             if (!nodes[item]->IsEmptyOnly() && (compiler.program->flags & MultilineRegexFlag) == 0)
@@ -3468,6 +3467,12 @@ namespace UnifiedRegex
         CharSet<Char>* innerFollow = Anew(compiler.ctAllocator, UnicodeCharSet);
         innerFollow->UnionInPlace(compiler.ctAllocator, *accumFollow);
         innerFollow->UnionInPlace(compiler.ctAllocator, *body->firstSet);
+
+        if (followSet->IsSingleton())
+        {
+            Assert(followSet->IsCompact());
+            followFirst = followSet->GetCompactChar(0);
+        }
 
         /*
         All of the following must be true for the loop body's follow to be irrefutable:
