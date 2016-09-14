@@ -537,7 +537,14 @@ protected:
 #if DBG_DUMP
     virtual void DumpStats() const;
 #endif
+#ifdef _NTBUILD
+#include <VerifyGlobalMSRCSettings.inl>
+#endif
+#if defined(PRERELEASE_REL1609_MSRC33921_BUG8044719) || defined(_CHAKRACOREBUILD)
+    PageSegmentBase<TVirtualAlloc> * AddPageSegment(DListBase<PageSegmentBase<TVirtualAlloc>>& segmentList);
+#else
     virtual PageSegmentBase<TVirtualAlloc> * AddPageSegment(DListBase<PageSegmentBase<TVirtualAlloc>>& segmentList);
+#endif
     static PageSegmentBase<TVirtualAlloc> * AllocPageSegment(DListBase<PageSegmentBase<TVirtualAlloc>>& segmentList, 
         PageAllocatorBase<TVirtualAlloc> * pageAllocator, bool committed, bool allocated);
 

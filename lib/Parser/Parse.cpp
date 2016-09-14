@@ -803,6 +803,12 @@ Symbol* Parser::AddDeclForPid(ParseNodePtr pnode, IdentPtr pid, SymbolType symbo
         && blockInfo->pnodeBlock->sxBlock.blockType == PnodeBlockType::Function
         && blockInfo->pBlockInfoOuter != nullptr
         && blockInfo->pBlockInfoOuter->pnodeBlock->sxBlock.blockType == PnodeBlockType::Parameter
+#ifdef _NTBUILD
+#include <VerifyGlobalMSRCSettings.inl>
+#endif
+#if defined(PRERELEASE_REL1609_MSRC34138_BUG8210949) || defined(_CHAKRACOREBUILD)
+        && blockInfo->pnodeBlock->sxBlock.scope->GetScopeType() != ScopeType_FuncExpr
+#endif
         && blockInfo->pBlockInfoOuter->pnodeBlock->sxBlock.scope->GetCanMergeWithBodyScope())
     {
         blockInfo = blockInfo->pBlockInfoOuter;
@@ -5033,6 +5039,18 @@ bool Parser::ParseFncDeclHelper(ParseNodePtr pnodeFnc, LPCOLESTR pNameHint, usho
                         }
                         return false;
                     });
+
+#ifdef _NTBUILD
+#include <VerifyGlobalMSRCSettings.inl>
+#endif
+#if defined(PRERELEASE_REL1609_MSRC34138_BUG8210949) || defined(_CHAKRACOREBUILD)
+                    if (wellKnownPropertyPids.arguments->GetTopRef() && wellKnownPropertyPids.arguments->GetTopRef()->GetScopeId() > pnodeFnc->sxFnc.pnodeScopes->sxBlock.blockId)
+                    {
+                        Assert(pnodeFnc->sxFnc.UsesArguments());
+                        // Arguments symbol is captured in the param scope
+                        paramScope->SetCannotMergeWithBodyScope();
+                    }
+#endif
                 }
             }
         }
@@ -5953,6 +5971,11 @@ bool Parser::ParseFncNames(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncParent, u
             pnodeFnc->sxFnc.pid = m_phtbl->PidHashNameLen(
                 m_pscan->PchBase() + ichMinNames, ichLimNames - ichMinNames);
         }
+#ifdef _NTBUILD
+#include <VerifyGlobalMSRCSettings.inl>
+#endif
+#if defined(PRERELEASE_REL1609_MSRC34138_BUG8210949) || defined(_CHAKRACOREBUILD)
+#else
 
         if(pnodeFnc->sxFnc.pid == wellKnownPropertyPids.arguments && fDeclaration && pnodeFncParent)
         {
@@ -5960,6 +5983,7 @@ bool Parser::ParseFncNames(ParseNodePtr pnodeFnc, ParseNodePtr pnodeFncParent, u
             // parent function
             pnodeFncParent->grfpn |= PNodeFlags::fpnArguments_overriddenByDecl;
         }
+#endif
     }
 
     return true;
@@ -6751,10 +6775,23 @@ void Parser::AddArgumentsNodeToVars(ParseNodePtr pnodeFnc)
     }
     else
     {
+#ifdef _NTBUILD
+#include <VerifyGlobalMSRCSettings.inl>
+#endif
+#if defined(PRERELEASE_REL1609_MSRC34138_BUG8210949) || defined(_CHAKRACOREBUILD)
+        ParseNodePtr argNode = nullptr;
+#endif
         if(m_ppnodeVar == &pnodeFnc->sxFnc.pnodeVars)
         {
             // There were no var declarations in the function
+#ifdef _NTBUILD
+#include <VerifyGlobalMSRCSettings.inl>
+#endif
+#if defined(PRERELEASE_REL1609_MSRC34138_BUG8210949) || defined(_CHAKRACOREBUILD)
+            argNode = CreateVarDeclNode(wellKnownPropertyPids.arguments, STVariable, true, pnodeFnc);
+#else
             CreateVarDeclNode(wellKnownPropertyPids.arguments, STVariable, true, pnodeFnc)->grfpn |= PNodeFlags::fpnArguments;
+#endif
         }
         else
         {
@@ -6765,10 +6802,29 @@ void Parser::AddArgumentsNodeToVars(ParseNodePtr pnodeFnc)
             // object until it is replaced with something else.
             ParseNodePtr *const ppnodeVarSave = m_ppnodeVar;
             m_ppnodeVar = &pnodeFnc->sxFnc.pnodeVars;
+#ifdef _NTBUILD
+#include <VerifyGlobalMSRCSettings.inl>
+#endif
+#if defined(PRERELEASE_REL1609_MSRC34138_BUG8210949) || defined(_CHAKRACOREBUILD)
+            argNode = CreateVarDeclNode(wellKnownPropertyPids.arguments, STVariable, true, pnodeFnc);
+#else
             CreateVarDeclNode(wellKnownPropertyPids.arguments, STVariable, true, pnodeFnc)->grfpn |= PNodeFlags::fpnArguments;
+#endif
             m_ppnodeVar = ppnodeVarSave;
         }
 
+#ifdef _NTBUILD
+#include <VerifyGlobalMSRCSettings.inl>
+#endif
+#if defined(PRERELEASE_REL1609_MSRC34138_BUG8210949) || defined(_CHAKRACOREBUILD)
+        Assert(argNode);
+        argNode->grfpn |= PNodeFlags::fpnArguments;
+
+        // When a function definition with the name arguments occurs in the body the declaration of the arguments symbol will
+        // be set to that function decalration. We should change it to arguments declaration from the param scope as it may be
+        // used in the param scope and we have to load the arguments.
+        argNode->sxVar.sym->SetDecl(argNode);
+#endif
         pnodeFnc->sxFnc.SetHasReferenceableBuiltInArguments(true);
     }
 }

@@ -9030,7 +9030,14 @@ Case0:
 
                     if (newArr)
                     {
+#ifdef _NTBUILD
+#include <VerifyGlobalMSRCSettings.inl>
+#endif
+#if defined(PRERELEASE_REL1609_MSRC34310_BUG8396546) || defined(_CHAKRACOREBUILD)
+                        newArr->SetItem(k, mappedValue, PropertyOperation_None);
+#else
                         newArr->DirectSetItemAt(k, mappedValue);
+#endif
                     }
                     else
                     {

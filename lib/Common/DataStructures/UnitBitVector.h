@@ -287,6 +287,16 @@ public:
         T mask = ((T)AllOnesMask) >> (BitsPerWord - length) << index;
         return (this->word & mask) == mask;
     }
+#ifdef _NTBUILD
+#include <VerifyGlobalMSRCSettings.inl>
+#endif
+#if defined(PRERELEASE_REL1609_MSRC33921_BUG8044719) || defined(_CHAKRACOREBUILD)
+    BOOLEAN TestAnyInRange(const BVIndex index, uint length) const
+    {
+        T mask = ((T)AllOnesMask) >> (BitsPerWord - length) << index;
+        return (this->word & mask) != 0;
+    }
+#endif
     void SetRange(const BVIndex index, uint length)
     {
         T mask = ((T)AllOnesMask) >> (BitsPerWord - length) << index;

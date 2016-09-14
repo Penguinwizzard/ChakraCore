@@ -504,6 +504,12 @@ private:
     void FreeBucket(DListBase<Page>* bucket, bool freeOnlyEmptyPages);
     void FreePage(Page* page);
     bool FreeAllocation(Allocation* allocation);
+#ifdef _NTBUILD
+#include <VerifyGlobalMSRCSettings.inl>
+#endif
+#if defined(PRERELEASE_REL1609_MSRC33921_BUG8044719) || defined(_CHAKRACOREBUILD)
+    void FreeAllocationHelper(Allocation * allocation, BVIndex index, uint length);
+#endif
 
 #if PDATA_ENABLED
     void FreeXdata(XDataAllocation* xdata, void* segment);
