@@ -3892,7 +3892,14 @@ namespace UnifiedRegex
                 //   LoopSet
                 //
                 Assert(body->IsSimpleOneChar());
-                EMIT(compiler, LoopSetInst, compiler.NextLoopId(), repeats, !isNotInLoop, followFirst)->set.CloneFrom(compiler.rtAllocator, *body->firstSet);
+                if (followFirst == MaxChar)
+                {
+                    EMIT(compiler, LoopSetInst, compiler.NextLoopId(), repeats, !isNotInLoop)->set.CloneFrom(compiler.rtAllocator, *body->firstSet);
+                }
+                else
+                {
+                    EMIT(compiler, LoopSetWithFollowFirstInst, compiler.NextLoopId(), repeats, !isNotInLoop, followFirst)->set.CloneFrom(compiler.rtAllocator, *body->firstSet);
+                }
                 break;
             }
 

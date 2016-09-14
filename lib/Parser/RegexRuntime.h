@@ -1224,15 +1224,28 @@ namespace UnifiedRegex
     {
         int loopId;
         const CountDomain repeats;
-        Char followFirst;
         bool hasOuterLoops;
 
         // set must always be cloned from source
-        inline LoopSetInst(int loopId, const CountDomain& repeats, bool hasOuterLoops, Char followFirst)
-            : Inst(LoopSet), loopId(loopId), repeats(repeats), hasOuterLoops(hasOuterLoops), followFirst(followFirst) {}
+        inline LoopSetInst(int loopId, const CountDomain& repeats, bool hasOuterLoops)
+            : Inst(LoopSet), loopId(loopId), repeats(repeats), hasOuterLoops(hasOuterLoops) {}
 
+        inline LoopSetInst(InstTag tag, int loopId, const CountDomain& repeats, bool hasOuterLoops)
+            : Inst(tag), loopId(loopId), repeats(repeats), hasOuterLoops(hasOuterLoops) {}
+        
         INST_BODY
         INST_BODY_FREE(SetMixin)
+    };
+
+    // Loop is greedy, contains a MatchSet only, first character in its follow set is known
+    struct LoopSetWithFollowFirstInst : LoopSetInst
+    {
+        Char followFirst;
+
+        inline LoopSetWithFollowFirstInst(int loopId, const CountDomain& repeats, bool hasOuterLoops, Char followFirst)
+            : LoopSetInst(InstTag::LoopSetWithFollowFirst, loopId, repeats, hasOuterLoops), followFirst(followFirst) {}
+
+        INST_BODY
     };
 
     // Loop is greedy, fixed width, deterministic body, one outermost group
@@ -1614,6 +1627,14 @@ namespace UnifiedRegex
         CONT_BODY
     };
 
+    struct RewindLoopSetWithFollowFirstCont : Cont
+    {
+        Label beginLabel;   // label of LoopSet instruction
+
+        inline RewindLoopSetWithFollowFirstCont(Label beginLabel) : Cont(RewindLoopSetWithFollowFirst), beginLabel(beginLabel) {}
+
+        CONT_BODY
+    };
 
     struct RewindLoopFixedGroupLastIterationCont : Cont
     {

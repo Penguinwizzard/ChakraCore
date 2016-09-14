@@ -2987,7 +2987,6 @@ namespace UnifiedRegex
     inline bool LoopSetInst::Exec(REGEX_INST_EXEC_PARAMETERS) const
     {
         LoopInfo* loopInfo = matcher.LoopIdToLoopInfo(loopId);
-        Assert(PHASE_OFF1(Js::RegexOptBTPhase) || !loopInfo->offsetsOfFollowFirst || loopInfo->offsetsOfFollowFirst->Empty());
 
         // If loop is contained in an outer loop, continuation stack may already have a RewindLoopFixed entry for
         // this loop. We must make sure it's state is preserved on backtrack.
@@ -3019,11 +3018,6 @@ namespace UnifiedRegex
 #if ENABLE_REGEX_CONFIG_OPTIONS
             matcher.CompStats();
 #endif
-            if (!PHASE_OFF1(Js::RegexOptBTPhase) && this->followFirst != MaxChar && input[inputOffset] == this->followFirst)
-            {
-                loopInfo->EnsureOffsetsOfFollowFirst(matcher);
-                loopInfo->offsetsOfFollowFirst->Push(inputOffset - loopInfo->startInputOffset);
-            }
             inputOffset++;
         }
 
@@ -3050,6 +3044,80 @@ namespace UnifiedRegex
     int LoopSetInst::Print(DebugWriter* w, Label label, const Char* litbuf) const
     {
         w->Print(_u("L%04x: LoopSet(loopId: %d, "), label, loopId);
+        repeats.Print(w);
+        w->Print(_u(", hasOuterLoops: %s, "), hasOuterLoops ? _u("true") : _u("false"));
+        SetMixin::Print(w, litbuf);
+        w->PrintEOL(_u(")"));
+        return sizeof(*this);
+    }
+#endif
+
+    inline bool LoopSetWithFollowFirstInst::Exec(REGEX_INST_EXEC_PARAMETERS) const
+    {
+        LoopInfo* loopInfo = matcher.LoopIdToLoopInfo(loopId);
+        Assert(PHASE_OFF1(Js::RegexOptBTPhase) || !loopInfo->offsetsOfFollowFirst || loopInfo->offsetsOfFollowFirst->Empty());
+
+        // If loop is contained in an outer loop, continuation stack may already have a RewindLoopFixed entry for
+        // this loop. We must make sure it's state is preserved on backtrack.
+        if (hasOuterLoops)
+        {
+            PUSH(contStack, RestoreLoopCont, loopId, *loopInfo);
+#if ENABLE_REGEX_CONFIG_OPTIONS
+            matcher.PushStats(contStack, input);
+#endif
+        }
+
+        // startInputOffset will stay here for all iterations, and we'll use number of length to figure out
+        // where in the input to rewind to
+        loopInfo->startInputOffset = inputOffset;
+
+        // Consume as many elements of set as possible
+        const RuntimeCharSet<Char>& matchSet = this->set;
+        const CharCount loopMatchStart = inputOffset;
+        const CharCountOrFlag repeatsUpper = repeats.upper;
+        const CharCount inputEndOffset =
+            static_cast<CharCount>(repeatsUpper) >= inputLength - inputOffset
+            ? inputLength
+            : inputOffset + static_cast<CharCount>(repeatsUpper);
+#if ENABLE_REGEX_CONFIG_OPTIONS
+        matcher.CompStats();
+#endif
+        while (inputOffset < inputEndOffset && matchSet.Get(input[inputOffset]))
+        {
+#if ENABLE_REGEX_CONFIG_OPTIONS
+            matcher.CompStats();
+#endif
+            if (!PHASE_OFF1(Js::RegexOptBTPhase) && input[inputOffset] == this->followFirst)
+            {
+                loopInfo->EnsureOffsetsOfFollowFirst(matcher);
+                loopInfo->offsetsOfFollowFirst->Push(inputOffset - loopInfo->startInputOffset);
+            }
+            inputOffset++;
+        }
+
+        loopInfo->number = inputOffset - loopMatchStart;
+        if (loopInfo->number < repeats.lower)
+            return matcher.Fail(FAIL_PARAMETERS);
+        if (loopInfo->number > repeats.lower)
+        {
+            // CHOICEPOINT: If follow fails, try consuming one fewer characters
+            Assert(instPointer == (uint8*)this);
+            PUSH(contStack, RewindLoopSetWithFollowFirstCont, matcher.InstPointerToLabel(instPointer));
+#if ENABLE_REGEX_CONFIG_OPTIONS
+            matcher.PushStats(contStack, input);
+#endif
+        }
+        // else: failure of follow signals failure of entire loop
+
+        // Continue with follow
+        instPointer += sizeof(*this);
+        return false;
+    }
+
+#if ENABLE_REGEX_CONFIG_OPTIONS
+    int LoopSetWithFollowFirstInst::Print(DebugWriter* w, Label label, const Char* litbuf) const
+    {
+        w->Print(_u("L%04x: LoopSet(loopId: %d, followFirst: %c, "), label, loopId, followFirst);
         repeats.Print(w);
         w->Print(_u(", hasOuterLoops: %s, "), hasOuterLoops ? _u("true") : _u("false"));
         SetMixin::Print(w, litbuf);
@@ -4134,6 +4202,47 @@ namespace UnifiedRegex
         // loopInfo->number is the number of iterations completed before trying follow
         Assert(loopInfo->number > begin->repeats.lower);
         // Try follow with fewer iterations
+        loopInfo->number--;
+        
+        // Rewind input
+        inputOffset = loopInfo->startInputOffset + loopInfo->number;
+
+        if (loopInfo->number > begin->repeats.lower)
+        {
+            // Un-pop the continuation ready for next time
+            contStack.UnPop<RewindLoopSetCont>();
+#if ENABLE_REGEX_CONFIG_OPTIONS
+            matcher.UnPopStats(contStack, input);
+#endif
+        }
+        // else: Can't try any fewer iterations if follow fails, so leave continuation as popped and let failure propagate
+
+        instPointer = matcher.LabelToInstPointer(beginLabel + sizeof(LoopSetInst));
+        return true; // STOP BACKTRACKING
+    }
+
+#if ENABLE_REGEX_CONFIG_OPTIONS
+    int RewindLoopSetCont::Print(DebugWriter* w, const Char* const input) const
+    {
+        w->PrintEOL(_u("RewindLoopSet(beginLabel: L%04x)"), beginLabel);
+        return sizeof(*this);
+    }
+#endif
+
+    // ----------------------------------------------------------------------
+    // RewindLoopSetWithFollowFirstCont
+    // ----------------------------------------------------------------------
+
+    inline bool RewindLoopSetWithFollowFirstCont::Exec(REGEX_CONT_EXEC_PARAMETERS)
+    {
+        matcher.QueryContinue(qcTicks);
+
+        LoopSetWithFollowFirstInst* begin = matcher.L2I(LoopSetWithFollowFirst, beginLabel);
+        LoopInfo* loopInfo = matcher.LoopIdToLoopInfo(begin->loopId);
+
+        // loopInfo->number is the number of iterations completed before trying follow
+        Assert(loopInfo->number > begin->repeats.lower);
+        // Try follow with fewer iterations
         if (!PHASE_OFF1(Js::RegexOptBTPhase))
         {
             if (loopInfo->offsetsOfFollowFirst == nullptr)
@@ -4190,21 +4299,21 @@ namespace UnifiedRegex
         if (loopInfo->number > begin->repeats.lower)
         {
             // Un-pop the continuation ready for next time
-            contStack.UnPop<RewindLoopSetCont>();
+            contStack.UnPop<RewindLoopSetWithFollowFirstCont>();
 #if ENABLE_REGEX_CONFIG_OPTIONS
             matcher.UnPopStats(contStack, input);
 #endif
         }
         // else: Can't try any fewer iterations if follow fails, so leave continuation as popped and let failure propagate
 
-        instPointer = matcher.LabelToInstPointer(beginLabel + sizeof(LoopSetInst));
+        instPointer = matcher.LabelToInstPointer(beginLabel + sizeof(LoopSetWithFollowFirstInst));
         return true; // STOP BACKTRACKING
     }
 
 #if ENABLE_REGEX_CONFIG_OPTIONS
-    int RewindLoopSetCont::Print(DebugWriter* w, const Char* const input) const
+    int RewindLoopSetWithFollowFirstCont::Print(DebugWriter* w, const Char* const input) const
     {
-        w->PrintEOL(_u("RewindLoopSet(beginLabel: L%04x)"), beginLabel);
+        w->PrintEOL(_u("RewindLoopSetWithFollowFirst(beginLabel: L%04x)"), beginLabel);
         return sizeof(*this);
     }
 #endif
