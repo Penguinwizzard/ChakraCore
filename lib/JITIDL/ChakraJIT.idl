@@ -11,7 +11,7 @@
 ]
 interface IChakraJIT
 {
-    HRESULT Shutdown([in] handle_t binding);
+    HRESULT Shutdown();
 
     HRESULT InitializeThreadContext(
         [in] handle_t binding,
