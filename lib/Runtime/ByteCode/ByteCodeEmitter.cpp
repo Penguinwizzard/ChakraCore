@@ -10595,28 +10595,21 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
         Js::RegSlot protoLocation = callObjLocation;
         EmitSuperMethodBegin(pnode, byteCodeGenerator, funcInfo);
 
-        if (propertyId == Js::PropertyIds::length)
+        uint cacheId = funcInfo->FindOrAddInlineCacheId(callObjLocation, propertyId, false, false);
+        if (pnode->IsCallApplyTargetLoad())
         {
-            byteCodeGenerator->Writer()->Reg2(Js::OpCode::LdLen_A, pnode->location, protoLocation);
+            byteCodeGenerator->Writer()->PatchableProperty(Js::OpCode::LdFldForCallApplyTarget, pnode->location, protoLocation, cacheId);
         }
         else
         {
-            uint cacheId = funcInfo->FindOrAddInlineCacheId(callObjLocation, propertyId, false, false);
-            if (pnode->IsCallApplyTargetLoad())
+            if (pnode->sxBin.pnode1->nop == knopSuper)
             {
-                byteCodeGenerator->Writer()->PatchableProperty(Js::OpCode::LdFldForCallApplyTarget, pnode->location, protoLocation, cacheId);
+                Js::RegSlot tmpReg = byteCodeGenerator->EmitLdObjProto(Js::OpCode::LdHomeObjProto, funcInfo->superRegister, funcInfo);
+                byteCodeGenerator->Writer()->PatchablePropertyWithThisPtr(Js::OpCode::LdSuperFld, pnode->location, tmpReg, funcInfo->thisPointerRegister, cacheId, isConstructorCall);
             }
             else
             {
-                if (pnode->sxBin.pnode1->nop == knopSuper)
-                {
-                    Js::RegSlot tmpReg = byteCodeGenerator->EmitLdObjProto(Js::OpCode::LdHomeObjProto, funcInfo->superRegister, funcInfo);
-                    byteCodeGenerator->Writer()->PatchablePropertyWithThisPtr(Js::OpCode::LdSuperFld, pnode->location, tmpReg, funcInfo->thisPointerRegister, cacheId, isConstructorCall);
-                }
-                else
-                {
-                    byteCodeGenerator->Writer()->PatchableProperty(Js::OpCode::LdFld, pnode->location, callObjLocation, cacheId, isConstructorCall);
-                }
+                byteCodeGenerator->Writer()->PatchableProperty(Js::OpCode::LdFld, pnode->location, callObjLocation, cacheId, isConstructorCall);
             }
         }
 
