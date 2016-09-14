@@ -7,7 +7,7 @@
 
 __declspec(dllexport)
 HRESULT JsInitializeRpcServer(
-    __in UUID* connectionUuid,
+    __in UUID connectionUuid,
     __in_opt void* securityDescriptor,
     __in_opt void* alpcSecurityDescriptor)
 {
@@ -16,7 +16,7 @@ HRESULT JsInitializeRpcServer(
     UUID_VECTOR uuidVector;
 
     uuidVector.Count = 1;
-    uuidVector.Uuid[0] = connectionUuid;
+    uuidVector.Uuid[0] = &connectionUuid;
 
     status = RpcServerUseProtseqW(
         (RPC_WSTR)L"ncalrpc",

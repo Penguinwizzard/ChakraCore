@@ -698,7 +698,7 @@ int _cdecl RunJITServer(int argc, __in_ecount(argc) LPWSTR argv[])
     }
 
     JsInitializeJITServerPtr initRpcServer = (JsInitializeJITServerPtr)GetProcAddress(chakraLibrary, "JsInitializeRpcServer");
-    HRESULT hr = initRpcServer(&connectionUuid, nullptr, nullptr);
+    HRESULT hr = initRpcServer(connectionUuid, nullptr, nullptr);
     if (FAILED(hr))
     {
         wprintf(L"InitializeJITServer failed by 0x%x\n", hr);
