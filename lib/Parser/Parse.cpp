@@ -10563,7 +10563,7 @@ void Parser::InitPids()
     wellKnownPropertyPids._star = m_phtbl->PidHashNameLen(_u("*"), sizeof("*") - 1);
 }
 
-void Parser::RestoreScopeInfo(Js::FunctionBody* functionBody)
+void Parser::RestoreScopeInfo(Js::ParseableFunctionInfo* functionBody)
 {
     if (!functionBody)
     {
@@ -10619,7 +10619,7 @@ void Parser::RestoreScopeInfo(Js::FunctionBody* functionBody)
     scopeInfo->GetScopeInfo(this, nullptr, nullptr, scope);
 }
 
-void Parser::FinishScopeInfo(Js::FunctionBody *functionBody)
+void Parser::FinishScopeInfo(Js::ParseableFunctionInfo *functionBody)
 {
     if (!functionBody)
     {

@@ -443,7 +443,6 @@ namespace Js
         loopInterpreterLimit(CONFIG_FLAG(LoopInterpretCount)),
         savedPolymorphicCacheState(0),
         debuggerScopeIndex(0),
-        flags(Flags_HasNoExplicitReturnValue),
         m_hasFinally(false),
 #if ENABLE_PROFILE_INFO
         dynamicProfileInfo(nullptr),
@@ -1059,6 +1058,7 @@ namespace Js
     void ParseableFunctionInfo::Copy(ParseableFunctionInfo * other)
     {
 #define CopyDeferParseField(field) other->field = this->field;
+        CopyDeferParseField(flags);
         CopyDeferParseField(m_isDeclaration);
         CopyDeferParseField(m_isAccessor);
         CopyDeferParseField(m_isStrictMode);
@@ -1166,6 +1166,7 @@ namespace Js
 #if DYNAMIC_INTERPRETER_THUNK
       m_dynamicInterpreterThunk(nullptr),
 #endif
+      flags(Flags_HasNoExplicitReturnValue),
       m_hasBeenParsed(false),
       m_isGlobalFunc(false),
       m_isDeclaration(false),
@@ -1830,6 +1831,14 @@ namespace Js
             this->Copy(funcBody);
             PERF_COUNTER_DEC(Code, DeferredFunction);
 
+            // Restore if the function has nameIdentifier reference, as that name on the left side will not be parsed again while deferparse.
+            funcBody->SetIsNameIdentifierRef(this->GetIsNameIdentifierRef());
+
+            this->UpdateFunctionBodyImpl(funcBody);
+//            FunctionInfo * functionInfo = this->GetFunctionInfo();
+//            funcBody->SetFunctionInfo(functionInfo);
+//            functionInfo->SetFunctionProxy(funcBody);
+
             if (!this->GetSourceContextInfo()->IsDynamic())
             {
                 PHASE_PRINT_TESTTRACE1(Js::DeferParsePhase, _u("TestTrace: Deferred function parsed - ID: %d; Display Name: %s; Length: %d; Nested Function Count: %d; Utf8SourceInfo: %d; Source Length: %d; Is Top Level: %s; Source Url: %s\n"), m_functionNumber, m_displayName, this->m_cchLength, this->GetNestedCount(), this->m_utf8SourceInfo->GetSourceInfoId(), this->m_utf8SourceInfo->GetCchLength(), this->GetIsTopLevel() ? _u("True") : _u("False"), this->GetSourceContextInfo()->url);
@@ -2050,9 +2059,9 @@ namespace Js
         if (fParsed == TRUE)
         {
             // Restore if the function has nameIdentifier reference, as that name on the left side will not be parsed again while deferparse.
-            funcBody->SetIsNameIdentifierRef(this->GetIsNameIdentifierRef());
+//            funcBody->SetIsNameIdentifierRef(this->GetIsNameIdentifierRef());
 
-            this->UpdateFunctionBodyImpl(funcBody);
+//            this->UpdateFunctionBodyImpl(funcBody);
             this->m_hasBeenParsed = true;
             returnFunctionBody = funcBody;
         }
@@ -3516,33 +3525,34 @@ namespace Js
         }
     }
 
-    void FunctionBody::SetStackNestedFuncParent(FunctionBody * parentFunctionBody)
+    void FunctionBody::SetStackNestedFuncParent(FunctionInfo * parentFunctionInfo)
     {
+        FunctionBody * parentFunctionBody = parentFunctionInfo->GetFunctionBody();
         Assert(this->GetStackNestedFuncParent() == nullptr);
         Assert(CanDoStackNestedFunc());
         Assert(parentFunctionBody->DoStackNestedFunc());
 
-        this->SetAuxPtr(AuxPointerType::StackNestedFuncParent, this->GetScriptContext()->GetRecycler()->CreateWeakReferenceHandle(parentFunctionBody));
+        this->SetAuxPtr(AuxPointerType::StackNestedFuncParent, this->GetScriptContext()->GetRecycler()->CreateWeakReferenceHandle(parentFunctionInfo));
     }
 
-    FunctionBody * FunctionBody::GetStackNestedFuncParentStrongRef()
+    FunctionInfo * FunctionBody::GetStackNestedFuncParentStrongRef()
     {
         Assert(this->GetStackNestedFuncParent() != nullptr);
         return this->GetStackNestedFuncParent()->Get();
     }
 
-    RecyclerWeakReference<FunctionBody> * FunctionBody::GetStackNestedFuncParent()
+    RecyclerWeakReference<FunctionInfo> * FunctionBody::GetStackNestedFuncParent()
     {
-        return static_cast<RecyclerWeakReference<FunctionBody>*>(this->GetAuxPtr(AuxPointerType::StackNestedFuncParent));
+        return static_cast<RecyclerWeakReference<FunctionInfo>*>(this->GetAuxPtr(AuxPointerType::StackNestedFuncParent));
     }
 
-    FunctionBody * FunctionBody::GetAndClearStackNestedFuncParent()
+    FunctionInfo * FunctionBody::GetAndClearStackNestedFuncParent()
     {
         if (this->GetAuxPtr(AuxPointerType::StackNestedFuncParent))
         {
-            FunctionBody * parentFunctionBody = GetStackNestedFuncParentStrongRef();
+            FunctionInfo * parentFunctionInfo = GetStackNestedFuncParentStrongRef();
             ClearStackNestedFuncParent();
-            return parentFunctionBody;
+            return parentFunctionInfo;
         }
         return nullptr;
     }
@@ -4194,7 +4204,7 @@ namespace Js
     }
 #endif
 
-    void FunctionBody::SetIsNonUserCode(bool set)
+    void ParseableFunctionInfo::SetIsNonUserCode(bool set)
     {
         // Mark current function as a non-user code, so that we can distinguish cases where exceptions are
         // caught in non-user code (see ProbeContainer::HasAllowedForException).
@@ -4203,7 +4213,7 @@ namespace Js
         // Propagate setting for all functions in this scope (nested).
         this->ForEachNestedFunc([&](FunctionProxy* proxy, uint32 index)
         {
-            Js::FunctionBody * pBody = proxy->GetFunctionBody();
+            ParseableFunctionInfo * pBody = proxy->GetParseableFunctionInfo();
             if (pBody != nullptr)
             {
                 pBody->SetIsNonUserCode(set);

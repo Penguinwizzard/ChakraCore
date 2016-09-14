@@ -1724,6 +1724,44 @@ namespace Js
 #ifndef TEMP_DISABLE_ASMJS
         FunctionBody* ParseAsmJs(Parser * p, __out CompileScriptException * se, __out ParseNodePtr * ptree);
 #endif
+
+        enum FunctionBodyFlags : byte
+        {
+            Flags_None                     = 0x00,
+            Flags_StackNestedFunc          = 0x01,
+            Flags_HasOrParentHasArguments  = 0x02,
+            Flags_HasTry                   = 0x04,
+            Flags_HasThis                  = 0x08,
+            Flags_NonUserCode              = 0x10,
+            Flags_HasOnlyThisStatements    = 0x20,
+            Flags_HasNoExplicitReturnValue = 0x40,   // Returns undefined, i.e. has no return statements or return with no expression
+            Flags_HasRestParameter         = 0x80
+        };
+
+        bool GetHasThis() const { return (flags & Flags_HasThis) != 0; }
+        void SetHasThis(bool has) { SetFlags(has, Flags_HasThis); }
+
+        bool GetHasTry() const { return (flags & Flags_HasTry) != 0; }
+        void SetHasTry(bool has) { SetFlags(has, Flags_HasTry); }
+
+        bool GetHasOrParentHasArguments() const { return (flags & Flags_HasOrParentHasArguments) != 0; }
+        void SetHasOrParentHasArguments(bool has) { SetFlags(has, Flags_HasOrParentHasArguments); }
+
+        bool DoStackNestedFunc() const { return (flags & Flags_StackNestedFunc) != 0; }
+        void SetStackNestedFunc(bool does) { SetFlags(does, Flags_StackNestedFunc); }
+
+        bool IsNonUserCode() const { return (flags & Flags_NonUserCode) != 0; }
+        void SetIsNonUserCode(bool set);
+
+        bool GetHasNoExplicitReturnValue() { return (flags & Flags_HasNoExplicitReturnValue) != 0; }
+        void SetHasNoExplicitReturnValue(bool has) { SetFlags(has, Flags_HasNoExplicitReturnValue); }
+
+        bool GetHasOnlyThisStmts() const { return (flags & Flags_HasOnlyThisStatements) != 0; }
+        void SetHasOnlyThisStmts(bool has) { SetFlags(has, Flags_HasOnlyThisStatements); }
+
+        bool GetHasRestParameter() const { return (flags & Flags_HasRestParameter) != 0; }
+        void SetHasRestParameter() { SetFlags(true, Flags_HasRestParameter); }
+
         virtual uint GetDisplayNameLength() const { return m_displayNameLength; }
         virtual uint GetShortDisplayNameOffset() const { return m_displayShortNameOffset; }
         bool GetIsDeclaration() const { return m_isDeclaration; }
@@ -1910,6 +1948,18 @@ namespace Js
         void RegisterFuncToDiag(ScriptContext * scriptContext, char16 const * pszTitle);
     protected:
         static HRESULT MapDeferredReparseError(HRESULT& hrParse, const CompileScriptException& se);
+
+        void SetFlags(bool does, FunctionBodyFlags newFlags)
+        {
+            if (does)
+            {
+                flags = (FunctionBodyFlags)(flags | newFlags);
+            }
+            else
+            {
+                flags = (FunctionBodyFlags)(flags & ~newFlags);
+            }
+        }
 
         bool m_hasBeenParsed : 1;       // Has function body been parsed- true for actual function bodies, false for deferparse
         bool m_isDeclaration : 1;
@@ -2216,19 +2266,6 @@ namespace Js
         static const RegSlot FirstRegSlot = 1;
         // This value be set on the stack (on a particular offset), when the frame value got changed.
         static const int LocalsChangeDirtyValue = 1;
-
-        enum FunctionBodyFlags : byte
-        {
-            Flags_None                     = 0x00,
-            Flags_StackNestedFunc          = 0x01,
-            Flags_HasOrParentHasArguments  = 0x02,
-            Flags_HasTry                   = 0x04,
-            Flags_HasThis                  = 0x08,
-            Flags_NonUserCode              = 0x10,
-            Flags_HasOnlyThisStatements    = 0x20,
-            Flags_HasNoExplicitReturnValue = 0x40,   // Returns undefined, i.e. has no return statements or return with no expression
-            Flags_HasRestParameter         = 0x80
-        };
 
 #define DEFINE_FUNCTION_BODY_FIELDS 1
 #define CURRENT_ACCESS_MODIFIER public:
@@ -2938,44 +2975,22 @@ namespace Js
     private:
         void ResetProfileIds();
 
-        void SetFlags(bool does, FunctionBodyFlags newFlags)
-        {
-            if (does)
-            {
-                flags = (FunctionBodyFlags)(flags | newFlags);
-            }
-            else
-            {
-                flags = (FunctionBodyFlags)(flags & ~newFlags);
-            }
-        }
     public:
-        bool GetHasThis() const { return (flags & Flags_HasThis) != 0; }
-        void SetHasThis(bool has) { SetFlags(has, Flags_HasThis); }
-
-        bool GetHasTry() const { return (flags & Flags_HasTry) != 0; }
-        void SetHasTry(bool has) { SetFlags(has, Flags_HasTry); }
-
         bool GetHasFinally() const { return m_hasFinally; }
         void SetHasFinally(bool has){ m_hasFinally = has; }
 
         bool GetFuncEscapes() const { return funcEscapes; }
         void SetFuncEscapes(bool does) { funcEscapes = does; }
 
-        bool GetHasOrParentHasArguments() const { return (flags & Flags_HasOrParentHasArguments) != 0; }
-        void SetHasOrParentHasArguments(bool has) { SetFlags(has, Flags_HasOrParentHasArguments); }
-
-        bool DoStackNestedFunc() const { return (flags & Flags_StackNestedFunc) != 0; }
-        void SetStackNestedFunc(bool does) { SetFlags(does, Flags_StackNestedFunc); }
 #if DBG
         bool CanDoStackNestedFunc() const { return m_canDoStackNestedFunc; }
         void SetCanDoStackNestedFunc() { m_canDoStackNestedFunc = true; }
 #endif
-        RecyclerWeakReference<FunctionBody> * GetStackNestedFuncParent();
-        FunctionBody * GetStackNestedFuncParentStrongRef();
-        FunctionBody * GetAndClearStackNestedFuncParent();
+        RecyclerWeakReference<FunctionInfo> * GetStackNestedFuncParent();
+        FunctionInfo * GetStackNestedFuncParentStrongRef();
+        FunctionInfo * GetAndClearStackNestedFuncParent();
         void ClearStackNestedFuncParent();
-        void SetStackNestedFuncParent(FunctionBody * parentFunctionBody);
+        void SetStackNestedFuncParent(FunctionInfo * parentFunctionInfo);
 #if defined(_M_IX86) || defined(_M_X64)
         bool DoStackClosure() const
         {
@@ -2990,23 +3005,11 @@ namespace Js
         bool DoStackFrameDisplay() const { return DoStackClosure(); }
         bool DoStackScopeSlots() const { return DoStackClosure(); }
 
-        bool IsNonUserCode() const { return (flags & Flags_NonUserCode) != 0; }
-        void SetIsNonUserCode(bool set);
-
-        bool GetHasNoExplicitReturnValue() { return (flags & Flags_HasNoExplicitReturnValue) != 0; }
-        void SetHasNoExplicitReturnValue(bool has) { SetFlags(has, Flags_HasNoExplicitReturnValue); }
-
-        bool GetHasOnlyThisStmts() const { return (flags & Flags_HasOnlyThisStatements) != 0; }
-        void SetHasOnlyThisStmts(bool has) { SetFlags(has, Flags_HasOnlyThisStatements); }
-
         bool GetIsFirstFunctionObject() const { return m_firstFunctionObject; }
         void SetIsNotFirstFunctionObject() { m_firstFunctionObject = false; }
 
         bool GetInlineCachesOnFunctionObject() { return m_inlineCachesOnFunctionObject; }
         void SetInlineCachesOnFunctionObject(bool has) { m_inlineCachesOnFunctionObject = has; }
-
-        bool GetHasRestParameter() const { return (flags & Flags_HasRestParameter) != 0; }
-        void SetHasRestParameter() { SetFlags(true, Flags_HasRestParameter); }
 
         bool NeedScopeObjectForArguments(bool hasNonSimpleParams)
         {
