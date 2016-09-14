@@ -2073,8 +2073,8 @@ BackwardPass::DeadStoreTypeCheckBailOut(IR::Instr * instr)
             preOpBailOutInstrToProcess = nullptr;
         }
         return;
-    }
-
+    } 
+   
     Assert(!propertySymOpnd->IsTypeCheckProtected());
 
     // If all we're doing here is checking the type (e.g. because we've hoisted a field load or store out of the loop, but needed
@@ -2107,14 +2107,11 @@ BackwardPass::DeadStoreTypeCheckBailOut(IR::Instr * instr)
         return;
     }
 
-    // If oldBailoutKind is equivTypeCheck and appropriate opnd doesn't have initial/final type
-    // then leave alone the bailout
-    if (oldBailOutKind == IR::BailOutFailedEquivalentTypeCheck || oldBailOutKind == IR::BailOutFailedEquivalentFixedFieldTypeCheck)
+    // If bailOutKind is equivTypeCheck then leave alone the bailout
+    if (bailOutKind == IR::BailOutFailedEquivalentTypeCheck ||
+        bailOutKind == IR::BailOutFailedEquivalentFixedFieldTypeCheck)
     {
-        if (!(propertySymOpnd->HasInitialType() || propertySymOpnd->HasFinalType()))
-        {
-            return;
-        }
+        return;
     }
 
     // We're not checking for polymorphism, so don't let the bailout indicate that we

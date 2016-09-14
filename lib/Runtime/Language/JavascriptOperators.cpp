@@ -8245,11 +8245,11 @@ CommonNumber:
 
         // Since the equivTypes cache is always compacted, if last entry is non-nullptr, it means
         // the cache is full.
-        DynamicType * dynamicType = DynamicType::Is(type->GetTypeId()) ? static_cast<DynamicType*>(type) : nullptr;
-        bool isEquivTypesCacheIsFull = equivTypes[EQUIVALENT_TYPE_CACHE_SIZE - 1] != nullptr;
+        DynamicType * dynamicType = (type && DynamicType::Is(type->GetTypeId())) ? static_cast<DynamicType*>(type) : nullptr;
+        bool isEquivTypesCacheFull = equivTypes[EQUIVALENT_TYPE_CACHE_SIZE - 1] != nullptr;
         if (dynamicType != nullptr)
         {
-            if (!dynamicType->GetIsShared() && isEquivTypesCacheIsFull)
+            if (!dynamicType->GetIsShared() && isEquivTypesCacheFull)
             {
                 // If this is non-shared type and we don't have space to cache it, just consider
                 // it as non-equivalent so we will eventually bailout
@@ -8336,7 +8336,7 @@ CommonNumber:
 
             // If equivTypes cache is full, also look for
             // non-shared type to evict
-            if (isEquivTypesCacheIsFull && 
+            if (isEquivTypesCacheFull &&
                 DynamicType::Is(equivTypes[i]->GetTypeId()) &&
                 !(static_cast<DynamicType*>(equivTypes[i]))->GetIsShared())
             {
@@ -8344,11 +8344,11 @@ CommonNumber:
             }
         }
 
-        AssertMsg(!isEquivTypesCacheIsFull || !dynamicType || dynamicType->GetIsShared(), "If equiv cache is full, then this should be sharedType.");
+        AssertMsg(!isEquivTypesCacheFull || !dynamicType || dynamicType->GetIsShared(), "If equiv cache is full, then this should be sharedType.");
         
         // If cache is full, then this is definitely a sharedType, so evict non-shared type.
         // Else evict next empty slot (only applicable for DynamicTypes)
-        emptySlotIndex = (isEquivTypesCacheIsFull && dynamicType) ? nonSharedTypeSlotIndex : emptySlotIndex;
+        emptySlotIndex = (isEquivTypesCacheFull && dynamicType) ? nonSharedTypeSlotIndex : emptySlotIndex;
 
         // We have some empty slots, let us use those first
         if (emptySlotIndex != -1)
