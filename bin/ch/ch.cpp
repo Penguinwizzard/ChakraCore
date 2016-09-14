@@ -676,7 +676,7 @@ bool HandleJITServerFlag(int& argc, _Inout_updates_to_(argc, argc) LPWSTR argv[]
     return true;
 }
 
-typedef HRESULT(WINAPI *JsInitializeJITServerPtr)(UUID* connectionUuid, void* securityDescriptor, void* alpcSecurityDescriptor);
+typedef HRESULT(WINAPI *JsInitializeJITServerPtr)(UUID connectionUuid, void* securityDescriptor, void* alpcSecurityDescriptor);
 
 int _cdecl RunJITServer(int argc, __in_ecount(argc) LPWSTR argv[])
 {
