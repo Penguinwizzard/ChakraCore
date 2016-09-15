@@ -1040,7 +1040,7 @@ void ByteCodeGenerator::RestoreScopeInfo(Js::ParseableFunctionInfo* functionBody
 
 FuncInfo * ByteCodeGenerator::StartBindGlobalStatements(ParseNode *pnode)
 {
-    if (parentScopeInfo && parentScopeInfo->GetParent() && !parentScopeInfo->GetParent()->GetIsGlobalFunc())
+    if (parentScopeInfo && parentScopeInfo->GetParent() && (!parentScopeInfo->GetParent()->GetIsGlobalFunc() || parentScopeInfo->GetParent()->IsEval()))
     {
         Assert(CONFIG_FLAG(DeferNested));
         trackEnvDepth = true;
