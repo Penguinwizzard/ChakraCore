@@ -8280,6 +8280,7 @@ CommonNumber:
             return false;
         }
 
+#pragma prefast(suppress:6011) // If type is nullptr, we would AV at the beginning of this method
         if (type->GetTypeId() != refType->GetTypeId())
         {
             if (PHASE_TRACE1(Js::EquivObjTypeSpecPhase))
