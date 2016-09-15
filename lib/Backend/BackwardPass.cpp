@@ -2073,8 +2073,8 @@ BackwardPass::DeadStoreTypeCheckBailOut(IR::Instr * instr)
             preOpBailOutInstrToProcess = nullptr;
         }
         return;
-    } 
-   
+    }
+
     Assert(!propertySymOpnd->IsTypeCheckProtected());
 
     // If all we're doing here is checking the type (e.g. because we've hoisted a field load or store out of the loop, but needed

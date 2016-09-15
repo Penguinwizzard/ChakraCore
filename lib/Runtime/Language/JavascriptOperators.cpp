@@ -8243,8 +8243,7 @@ CommonNumber:
             return true;
         }
 
-        // Since the equivTypes cache is always compacted, if last entry is non-nullptr, it means
-        // the cache is full.
+        // Since the equivTypes cache is always compacted, if last entry is non-nullptr, it means the cache is full.
         DynamicType * dynamicType = (type && DynamicType::Is(type->GetTypeId())) ? static_cast<DynamicType*>(type) : nullptr;
         bool isEquivTypesCacheFull = equivTypes[EQUIVALENT_TYPE_CACHE_SIZE - 1] != nullptr;
         if (dynamicType != nullptr)
