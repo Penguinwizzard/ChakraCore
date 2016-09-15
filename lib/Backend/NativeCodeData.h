@@ -152,6 +152,10 @@ public:
 
             return dataBlock;
         }
+        char * AllocLeaf(DECLSPEC_GUARD_OVERFLOW size_t requestedBytes)
+        {
+            return Alloc(requestedBytes);
+        }
     };
 
     template<typename T>
@@ -185,7 +189,10 @@ public:
         {
             return AddFixup(__super::AllocZero(requestedBytes));
         }
-
+        char * AllocLeaf(DECLSPEC_GUARD_OVERFLOW size_t requestedBytes)
+        {
+            return Alloc(requestedBytes);
+        }
         static void Fixup(void* pThis, NativeCodeData::DataChunk* chunkList)
         {
             ((T*)pThis)->Fixup(chunkList);
