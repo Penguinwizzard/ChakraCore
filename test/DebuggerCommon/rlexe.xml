@@ -1424,12 +1424,13 @@
       <compile-flags>-ES6RegExSymbols -ES6RegExPrototypeProperties -debuglaunch -dbgbaseline:regex-symbols.js.dbg.baseline</compile-flags>
     </default>
   </test>
-  <test>
+  <!--[aneeshd] Reenable this test case once the debugger update is done-->
+  <!--<test>
     <default>
       <files>default.js</files>
       <compile-flags>-debugLaunch -dbgbaseline:default.js.dbg.baseline</compile-flags>
     </default>
-  </test>
+  </test>-->
   <test>
     <default>
       <files>default_attach.js</files>

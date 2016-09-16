@@ -8133,6 +8133,16 @@ const byte * InterpreterStackFrame::OP_ProfiledLoopBodyStart(const byte * ip)
         return this->localClosure;
     }
 
+    Var InterpreterStackFrame::OP_LdParamObj()
+    {
+        if (!VirtualTableInfo<ActivationObject>::HasVirtualTable(this->paramClosure) &&
+            !VirtualTableInfo<ActivationObjectEx>::HasVirtualTable(this->paramClosure))
+        {
+            Js::Throw::FatalInternalError();
+        }
+        return this->paramClosure;
+    }
+
 #ifndef TEMP_DISABLE_ASMJS
     template <typename T2>
     void InterpreterStackFrame::OP_StArr(uint32 index, RegSlot value)

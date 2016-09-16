@@ -1601,7 +1601,9 @@ StoreCommon:
             case OpCode::StLocalObjSlot:
             case OpCode::StParamObjSlot:
             case OpCode::StLocalSlotChkUndecl:
+            case OpCode::StParamSlotChkUndecl:
             case OpCode::StLocalObjSlotChkUndecl:
+            case OpCode::StParamObjSlotChkUndecl:
             {
                 break;
             }
