@@ -215,7 +215,7 @@ GlobOpt::DoObjTypeSpec(Loop *loop) const
     {
         return false;
     }
-    if (this->func->IsLoopBody() && this->func->GetProfileInfo()->IsObjTypeSpecDisabledInJitLoopBody())
+    if (this->func->IsLoopBody() && this->func->HasProfileInfo() && this->func->GetReadOnlyProfileInfo()->IsObjTypeSpecDisabledInJitLoopBody())
     {
         return false;
     }
@@ -611,7 +611,7 @@ GlobOpt::PreparePrepassFieldHoisting(Loop * loop)
     if (Js::Configuration::Global.flags.TestTrace.IsEnabled(Js::FieldHoistPhase, this->func->GetSourceContextId(), this->func->GetLocalFunctionId()))
     {
         char16 debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
-        Output::Print(_u("FieldHoist: START LOOP function %s (%s)\n"), this->func->GetJnFunction()->GetDisplayName(), this->func->GetJnFunction()->GetDebugNumberSet(debugStringBuffer));
+        Output::Print(_u("FieldHoist: START LOOP function %s (%s)\n"), this->func->GetJITFunctionBody()->GetDisplayName(), this->func->GetDebugNumberSet(debugStringBuffer));
     }
 #endif
 
@@ -1565,7 +1565,7 @@ GlobOpt::GenerateHoistFieldLoad(PropertySym * sym, Loop * loop, IR::Instr * inst
     if (Js::Configuration::Global.flags.TestTrace.IsEnabled(Js::FieldHoistPhase, this->func->GetSourceContextId(), this->func->GetLocalFunctionId()))
     {
         char16 debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
-        Output::Print(_u("    FieldHoist: function %s (%s) "), this->func->GetJnFunction()->GetDisplayName(), this->func->GetJnFunction()->GetDebugNumberSet(debugStringBuffer));
+        Output::Print(_u("    FieldHoist: function %s (%s) "), this->func->GetJITFunctionBody()->GetDisplayName(), this->func->GetDebugNumberSet(debugStringBuffer));
         newInstr->DumpTestTrace();
     }
 #endif
@@ -1967,7 +1967,7 @@ GlobOpt::EnsureDisableImplicitCallRegion(Loop * loop)
     Func * bailOutFunc = loop->GetFunc();
     Assert(loop->bailOutInfo->bailOutFunc == bailOutFunc);
 
-    IR::MemRefOpnd * disableImplicitCallAddress = IR::MemRefOpnd::New(this->func->GetScriptContext()->GetThreadContext()->GetAddressOfDisableImplicitFlags(), TyInt8, bailOutFunc);
+    IR::MemRefOpnd * disableImplicitCallAddress = IR::MemRefOpnd::New(this->func->GetThreadContextInfo()->GetDisableImplicitFlagsAddr(), TyInt8, bailOutFunc);
     IR::IntConstOpnd * disableImplicitCallAndExceptionValue = IR::IntConstOpnd::New(DisableImplicitCallAndExceptionFlag, TyInt8, bailOutFunc, true);
     IR::IntConstOpnd * enableImplicitCallAndExceptionValue = IR::IntConstOpnd::New(DisableImplicitNoFlag, TyInt8, bailOutFunc, true);
 
@@ -2117,7 +2117,7 @@ GlobOpt::PreparePropertySymOpndForTypeCheckSeq(IR::PropertySymOpnd * propertySym
         return false;
     }
 
-    Js::ObjTypeSpecFldInfo* info = propertySymOpnd->GetObjTypeSpecInfo();
+    JITObjTypeSpecFldInfo* info = propertySymOpnd->GetObjTypeSpecInfo();
 
     if (info->UsesAccessor() || info->IsRootObjectNonConfigurableFieldLoad())
     {
@@ -2271,13 +2271,12 @@ GlobOpt::KillObjectHeaderInlinedTypeSyms(BasicBlock *block, bool isObjTypeSpecia
         {
             JsTypeValueInfo *valueInfo = value->GetValueInfo()->AsJsType();
             Assert(valueInfo);
-            if (valueInfo->GetJsType())
+            if (valueInfo->GetJsType() != nullptr)
             {
-                const Js::Type *type = valueInfo->GetJsType();
+                JITTypeHolder type(valueInfo->GetJsType());
                 if (Js::DynamicType::Is(type->GetTypeId()))
                 {
-                    const Js::DynamicType *dynamicType = static_cast<const Js::DynamicType*>(type);
-                    if (dynamicType->GetTypeHandler()->IsObjectHeaderInlinedTypeHandler())
+                    if (type->GetTypeHandler()->IsObjectHeaderInlinedTypeHandler())
                     {
                         this->blockData.liveFields->Clear(symId);
                     }
@@ -2288,11 +2287,10 @@ GlobOpt::KillObjectHeaderInlinedTypeSyms(BasicBlock *block, bool isObjTypeSpecia
                 Js::EquivalentTypeSet *typeSet = valueInfo->GetJsTypeSet();
                 for (uint16 i = 0; i < typeSet->GetCount(); i++)
                 {
-                    const Js::Type *type = typeSet->GetType(i);
-                    if (type && Js::DynamicType::Is(type->GetTypeId()))
+                    JITTypeHolder type = typeSet->GetType(i);
+                    if (type != nullptr && Js::DynamicType::Is(type->GetTypeId()))
                     {
-                        const Js::DynamicType *dynamicType = static_cast<const Js::DynamicType*>(type);
-                        if (dynamicType->GetTypeHandler()->IsObjectHeaderInlinedTypeHandler())
+                        if (type->GetTypeHandler()->IsObjectHeaderInlinedTypeHandler())
                         {
                             this->blockData.liveFields->Clear(symId);
                             break;
@@ -2385,7 +2383,7 @@ GlobOpt::ProcessPropOpInTypeCheckSeq(IR::Instr* instr, IR::PropertySymOpnd *opnd
     if (!doEquivTypeCheck)
     {
         // We need a monomorphic type check here (e.g., final type opt, fixed field check on non-proto property).
-        Js::Type *opndType = opnd->GetType();
+        JITTypeHolder opndType = opnd->GetType();
 
         if (valueInfo == nullptr || (valueInfo->GetJsType() == nullptr && valueInfo->GetJsTypeSet() == nullptr))
         {
@@ -2399,10 +2397,10 @@ GlobOpt::ProcessPropOpInTypeCheckSeq(IR::Instr* instr, IR::PropertySymOpnd *opnd
                 SetObjectTypeFromTypeSym(typeSym, opndType, nullptr, block, updateExistingValue);
             }
         }
-        else if (valueInfo->GetJsType())
+        else if (valueInfo->GetJsType() != nullptr)
         {
             // We have a monomorphic type check upstream. Check against initial/final type.
-            const Js::Type *valueType = valueInfo->GetJsType();
+            const JITTypeHolder valueType(valueInfo->GetJsType());
             if (valueType == opndType)
             {
                 // The type on this instruction matches the live value in the value table, so there is no need to
@@ -2522,7 +2520,7 @@ GlobOpt::ProcessPropOpInTypeCheckSeq(IR::Instr* instr, IR::PropertySymOpnd *opnd
             isSpecialized = !isTypeDead;
             emitsTypeCheck = isSpecialized;
         }
-        else if (valueInfo->GetJsType() ?
+        else if (valueInfo->GetJsType() != nullptr ?
                  opndTypeSet->Contains(valueInfo->GetJsType(), &checkedTypeSetIndex) :
                  IsSubsetOf(valueInfo->GetJsTypeSet(), opndTypeSet))
         {
@@ -2702,13 +2700,14 @@ GlobOpt::OptNewScObject(IR::Instr** instrPtr, Value* srcVal)
     }
 
     bool isCtorInlined = instr->m_opcode == Js::OpCode::NewScObjectNoCtor;
-    const Js::JitTimeConstructorCache* ctorCache = instr->IsProfiledInstr() ?
+    const JITTimeConstructorCache * ctorCache = instr->IsProfiledInstr() ?
         instr->m_func->GetConstructorCache(static_cast<Js::ProfileId>(instr->AsProfiledInstr()->u.profileId)) : nullptr;
 
-    Assert(ctorCache == nullptr || srcVal->GetValueInfo()->IsVarConstant() && Js::JavascriptFunction::Is(srcVal->GetValueInfo()->AsVarConstant()->VarValue()));
-    Assert(ctorCache == nullptr || !ctorCache->typeIsFinal || ctorCache->ctorHasNoExplicitReturnValue);
+    // TODO: OOP JIT, enable assert
+    //Assert(ctorCache == nullptr || srcVal->GetValueInfo()->IsVarConstant() && Js::JavascriptFunction::Is(srcVal->GetValueInfo()->AsVarConstant()->VarValue()));
+    Assert(ctorCache == nullptr || !ctorCache->IsTypeFinal() || ctorCache->CtorHasNoExplicitReturnValue());
 
-    if (ctorCache != nullptr && !ctorCache->skipNewScObject && (isCtorInlined || ctorCache->typeIsFinal))
+    if (ctorCache != nullptr && !ctorCache->SkipNewScObject() && (isCtorInlined || ctorCache->IsTypeFinal()))
     {
         GenerateBailAtOperation(instrPtr, IR::BailOutFailedCtorGuardCheck);
     }
@@ -2742,14 +2741,14 @@ GlobOpt::ValueNumberObjectType(IR::Opnd *dstOpnd, IR::Instr *instr)
             Assert(instr->GetBailOutKind() == IR::BailOutFailedCtorGuardCheck);
 
             bool isCtorInlined = instr->m_opcode == Js::OpCode::NewScObjectNoCtor;
-            const Js::JitTimeConstructorCache* ctorCache = instr->m_func->GetConstructorCache(static_cast<Js::ProfileId>(instr->AsProfiledInstr()->u.profileId));
-            Assert(ctorCache != nullptr && (isCtorInlined || ctorCache->typeIsFinal));
+            JITTimeConstructorCache * ctorCache = instr->m_func->GetConstructorCache(static_cast<Js::ProfileId>(instr->AsProfiledInstr()->u.profileId));
+            Assert(ctorCache != nullptr && (isCtorInlined || ctorCache->IsTypeFinal()));
 
             StackSym* objSym = dstOpnd->AsRegOpnd()->m_sym;
             StackSym* dstTypeSym = EnsureObjectTypeSym(objSym);
             Assert(this->FindValue(dstTypeSym) == nullptr);
 
-            SetObjectTypeFromTypeSym(dstTypeSym, ctorCache->type, nullptr);
+            SetObjectTypeFromTypeSym(dstTypeSym, ctorCache->GetType(), nullptr);
         }
     }
     else
@@ -2862,8 +2861,8 @@ GlobOpt::SetTypeCheckBailOut(IR::Opnd *opnd, IR::Instr *instr, BailOutInfo *bail
             // been checked upstream and no bailout is necessary here.
             if (instr->m_opcode == Js::OpCode::CheckFixedFld)
             {
-                AssertMsg(!PHASE_OFF(Js::FixedMethodsPhase, instr->m_func->GetJnFunction()) ||
-                    !PHASE_OFF(Js::UseFixedDataPropsPhase, instr->m_func->GetJnFunction()), "CheckFixedFld with fixed method/data phase disabled?");
+                AssertMsg(!PHASE_OFF(Js::FixedMethodsPhase, instr->m_func) ||
+                    !PHASE_OFF(Js::UseFixedDataPropsPhase, instr->m_func), "CheckFixedFld with fixed method/data phase disabled?");
                 Assert(isTypeCheckProtected);
                 AssertMsg(instr->GetBailOutKind() == IR::BailOutFailedFixedFieldTypeCheck || instr->GetBailOutKind() == IR::BailOutFailedEquivalentFixedFieldTypeCheck,
                     "Only BailOutFailed[Equivalent]FixedFieldTypeCheck can be safely removed.  Why does CheckFixedFld carry a different bailout kind?.");
@@ -2883,7 +2882,7 @@ GlobOpt::SetTypeCheckBailOut(IR::Opnd *opnd, IR::Instr *instr, BailOutInfo *bail
 }
 
 void
-GlobOpt::SetSingleTypeOnObjectTypeValue(Value* value, const Js::Type* type)
+GlobOpt::SetSingleTypeOnObjectTypeValue(Value* value, const JITTypeHolder type)
 {
     UpdateObjectTypeValue(value, type, true, nullptr, false);
 }
@@ -2895,7 +2894,7 @@ GlobOpt::SetTypeSetOnObjectTypeValue(Value* value, Js::EquivalentTypeSet* typeSe
 }
 
 void
-GlobOpt::UpdateObjectTypeValue(Value* value, const Js::Type* type, bool setType, Js::EquivalentTypeSet* typeSet, bool setTypeSet)
+GlobOpt::UpdateObjectTypeValue(Value* value, const JITTypeHolder type, bool setType, Js::EquivalentTypeSet* typeSet, bool setTypeSet)
 {
     Assert(value->GetValueInfo() != nullptr && value->GetValueInfo()->IsJsType());
     JsTypeValueInfo* valueInfo = value->GetValueInfo()->AsJsType();
@@ -2935,7 +2934,7 @@ GlobOpt::SetObjectTypeFromTypeSym(StackSym *typeSym, Value* value, BasicBlock* b
 }
 
 void
-GlobOpt::SetObjectTypeFromTypeSym(StackSym *typeSym, const Js::Type *type, Js::EquivalentTypeSet * typeSet, BasicBlock* block, bool updateExistingValue)
+GlobOpt::SetObjectTypeFromTypeSym(StackSym *typeSym, const JITTypeHolder type, Js::EquivalentTypeSet * typeSet, BasicBlock* block, bool updateExistingValue)
 {
     if (block == nullptr)
     {
@@ -2946,7 +2945,7 @@ GlobOpt::SetObjectTypeFromTypeSym(StackSym *typeSym, const Js::Type *type, Js::E
 }
 
 void
-GlobOpt::SetObjectTypeFromTypeSym(StackSym *typeSym, const Js::Type *type, Js::EquivalentTypeSet * typeSet, GlobOptBlockData *blockData, bool updateExistingValue)
+GlobOpt::SetObjectTypeFromTypeSym(StackSym *typeSym, const JITTypeHolder type, Js::EquivalentTypeSet * typeSet, GlobOptBlockData *blockData, bool updateExistingValue)
 {
     Assert(typeSym != nullptr);
 
@@ -3150,11 +3149,11 @@ GlobOpt::UpdateObjPtrValueType(IR::Opnd * opnd, IR::Instr * instr)
         return;
     }
     JsTypeValueInfo * typeValueInfo = typeValue->GetValueInfo()->AsJsType();
-    const Js::Type * type = typeValueInfo->GetJsType();
-    if (type)
+    JITTypeHolder type = typeValueInfo->GetJsType();
+    if (type != nullptr)
     {
         if (Js::DynamicType::Is(type->GetTypeId()) &&
-            !static_cast<const Js::DynamicType*>(type)->GetTypeHandler()->GetIsLocked())
+            !type->GetTypeHandler()->IsLocked())
         {
             return;
         }
@@ -3167,14 +3166,14 @@ GlobOpt::UpdateObjPtrValueType(IR::Opnd * opnd, IR::Instr * instr)
         {
             type = typeSet->GetType(i);
             if (Js::DynamicType::Is(type->GetTypeId()) &&
-                !static_cast<const Js::DynamicType*>(type)->GetTypeHandler()->GetIsLocked())
+                !type->GetTypeHandler()->IsLocked())
             {
                 return;
             }
         }
     }
 
-    AnalysisAssert(type);
+    AnalysisAssert(type != nullptr);
     Js::TypeId typeId = type->GetTypeId();
 
     // Passing false for useVirtual as we would never have a virtual typed array hitting this code path
