@@ -250,6 +250,9 @@ Js::OpCode ByteCodeGenerator::ToChkUndeclOp(Js::OpCode op) const
     case Js::OpCode::StLocalSlot:
         return Js::OpCode::StLocalSlotChkUndecl;
 
+    case Js::OpCode::StParamSlot:
+        return Js::OpCode::StParamSlotChkUndecl;
+
     case Js::OpCode::StInnerSlot:
         return Js::OpCode::StInnerSlotChkUndecl;
 
@@ -261,6 +264,9 @@ Js::OpCode ByteCodeGenerator::ToChkUndeclOp(Js::OpCode op) const
 
     case Js::OpCode::StLocalObjSlot:
         return Js::OpCode::StLocalObjSlotChkUndecl;
+
+    case Js::OpCode::StParamObjSlot:
+        return Js::OpCode::StParamObjSlotChkUndecl;
 
     case Js::OpCode::StInnerObjSlot:
         return Js::OpCode::StInnerObjSlotChkUndecl;
@@ -3327,10 +3333,6 @@ void ByteCodeGenerator::EmitOneFunction(ParseNode *pnode)
                         }
                     }
                 }
-                else
-                {
-                    Assert(param->GetIsArguments() || pnode->sxFnc.pnodeName->sxVar.sym == param);
-                }
 
                 if (ShouldTrackDebuggerMetadata() && param->GetLocation() != Js::Constants::NoRegister)
                 {
@@ -4658,6 +4660,11 @@ void ByteCodeGenerator::EmitLoadInstance(Symbol *sym, IdentPtr pid, Js::RegSlot 
         else if (scope->HasInnerScopeIndex())
         {
             this->m_writer.Reg1Unsigned1(Js::OpCode::LdInnerScope, instLocation, scope->GetInnerScopeIndex());
+        }
+        else if (symScope == funcInfo->GetParamScope())
+        {
+            Assert(funcInfo->frameObjRegister != Js::Constants::NoRegister && !funcInfo->GetParamScope()->GetCanMergeWithBodyScope());
+            this->m_writer.Reg1(Js::OpCode::LdParamObj, instLocation);
         }
         else if (symScope != funcInfo->GetBodyScope())
         {
