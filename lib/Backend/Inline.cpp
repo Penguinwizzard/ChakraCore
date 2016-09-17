@@ -68,6 +68,7 @@ Inline::Optimize(Func *func, __in_ecount_opt(callerArgOutCount) IR::Instr *calle
 
             case Js::OpCode::StFld:
             case Js::OpCode::LdFld:
+            case Js::OpCode::LdFldForCallApplyTarget:
                 {
                     // Try inlining of getter setter
                     if (!inlinerData->IsLdFldInlineePresent())
@@ -85,7 +86,7 @@ Inline::Optimize(Func *func, __in_ecount_opt(callerArgOutCount) IR::Instr *calle
                         break;
                     }
 
-                    bool getter = instr->m_opcode == Js::OpCode::LdFld;
+                    bool getter = instr->m_opcode != Js::OpCode::StFld;
 
                     IR::Opnd *opnd = getter ? instr->GetSrc1() : instr->GetDst();
                     if (!(opnd && opnd->IsSymOpnd()))
@@ -2496,7 +2497,7 @@ bool Inline::InlineApplyTarget(IR::Instr *callInstr, const Js::FunctionCodeGenJi
     IR::Instr* applyLdInstr = applySym->GetInstrDef();
     IR::Instr* applyTargetLdInstr = applyLdInstr->m_prev;
 
-    if(applyTargetLdInstr->m_opcode != Js::OpCode::LdFldForCallApplyTarget)
+    /*if(applyTargetLdInstr->m_opcode != Js::OpCode::LdFldForCallApplyTarget)
     {
         return false;
     }
@@ -2508,9 +2509,12 @@ bool Inline::InlineApplyTarget(IR::Instr *callInstr, const Js::FunctionCodeGenJi
     }
 
     const auto inlineCacheIndex = applyTargetLdOpnd->AsPropertySymOpnd()->m_inlineCacheIndex;
-    const auto inlineeData = inlinerData->GetLdFldInlinee(inlineCacheIndex);
+    const auto inlineeData = inlinerData->GetLdFldInlinee(inlineCacheIndex);*/
 
-    if (!isArrayOpndArgumentsObject || SkipCallApplyTargetInlining_Shared(callInstr, inlinerData, inlineeData, /*isApplyTarget*/ true, /*isCallTarget*/ false))
+    Js::InlineCacheIndex inlineCacheIndex = Js::Constants::NoInlineCacheIndex;
+    const Js::FunctionCodeGenJitTimeData* inlineeData = nullptr;
+
+    if (!isArrayOpndArgumentsObject || SkipCallApplyTargetInlining_Shared(callInstr, applyTargetLdInstr, inlinerData, &inlineeData, inlineCacheIndex, /*isApplyTarget*/ true, /*isCallTarget*/ false))
     {
         *pInlineeData = inlineeData;
         return false;
@@ -2812,7 +2816,8 @@ Inline::InlineCallTarget(IR::Instr *callInstr, const Js::FunctionCodeGenJitTimeD
     Assert(callLdInstr);
 
     IR::Instr* callTargetLdInstr = callLdInstr->m_prev;
-    if (callTargetLdInstr->m_opcode != Js::OpCode::LdFldForCallApplyTarget)
+    /*if (callTargetLdInstr->m_opcode != Js::OpCode::LdFldForCallApplyTarget ||
+        (callTargetLdInstr->AsProfiledInstr()->u.FldInfo().flags & Js::FldInfoFlags::FldInfo_FromAccessor))
     {
         return false;
     }
@@ -2824,9 +2829,12 @@ Inline::InlineCallTarget(IR::Instr *callInstr, const Js::FunctionCodeGenJitTimeD
     }
 
     const auto inlineCacheIndex = callTargetLdOpnd->AsPropertySymOpnd()->m_inlineCacheIndex;
-    const auto inlineeData = inlinerData->GetLdFldInlinee(inlineCacheIndex);
+    const auto inlineeData = inlinerData->GetLdFldInlinee(inlineCacheIndex);*/
 
-    if (SkipCallApplyTargetInlining_Shared(callInstr, inlinerData, inlineeData, /*isApplyTarget*/ false, /*isCallTarget*/ true))
+    Js::InlineCacheIndex inlineCacheIndex = Js::Constants::NoInlineCacheIndex;
+    const Js::FunctionCodeGenJitTimeData* inlineeData = nullptr;
+
+    if (SkipCallApplyTargetInlining_Shared(callInstr, callTargetLdInstr, inlinerData, &inlineeData, inlineCacheIndex, /*isApplyTarget*/ false, /*isCallTarget*/ true))
     {
         *pInlineeData = inlineeData;
         return false;
@@ -2889,7 +2897,7 @@ Inline::InlineCallTarget(IR::Instr *callInstr, const Js::FunctionCodeGenJitTimeD
 }
 
 bool
-Inline::SkipCallApplyTargetInlining_Shared(IR::Instr *callInstr, const Js::FunctionCodeGenJitTimeData* inlinerData, const Js::FunctionCodeGenJitTimeData* inlineeData, bool isApplyTarget, bool isCallTarget)
+Inline::SkipCallApplyTargetInlining_Shared(IR::Instr *callInstr, IR::Instr *targetLdInstr, const Js::FunctionCodeGenJitTimeData* inlinerData, const Js::FunctionCodeGenJitTimeData** inlineeData, Js::InlineCacheIndex& inlineCacheIndex, bool isApplyTarget, bool isCallTarget)
 {
 #if ENABLE_DEBUG_CONFIG_OPTIONS
     char16 debugStringBuffer[MAX_FUNCTION_BODY_DEBUG_STRING_SIZE];
@@ -2899,6 +2907,21 @@ Inline::SkipCallApplyTargetInlining_Shared(IR::Instr *callInstr, const Js::Funct
 
     Assert(isApplyTarget ^ isCallTarget);
 
+    if (targetLdInstr->m_opcode != Js::OpCode::LdFldForCallApplyTarget ||
+        (targetLdInstr->AsProfiledInstr()->u.FldInfo().flags & Js::FldInfo_FromAccessor))
+    {
+        return true;
+    }
+
+    IR::Opnd *targetLdOpnd = targetLdInstr->GetSrc1();
+    if (!targetLdOpnd->IsSymOpnd() || !targetLdOpnd->AsSymOpnd()->IsPropertySymOpnd())
+    {
+        return true;
+    }
+
+    inlineCacheIndex = targetLdOpnd->AsPropertySymOpnd()->m_inlineCacheIndex;
+    *inlineeData = inlinerData->GetLdFldInlinee(inlineCacheIndex);
+
     if (PHASE_OFF(Js::FixedMethodsPhase, callInstr->m_func->GetJnFunction()))
     {
         INLINE_TESTTRACE(_u("INLINING: Skip Inline: Skipping %s target inlining, Fixed Methods turned off\tCaller: %s\t(#%d) \tTop Func:%s\t(#%d)\n"), isApplyTarget ? _u("apply") : _u("call") ,
@@ -2907,7 +2930,7 @@ Inline::SkipCallApplyTargetInlining_Shared(IR::Instr *callInstr, const Js::Funct
         return true;
     }
 
-    if (!inlineeData)
+    if (!(*inlineeData))
     {
         INLINE_TESTTRACE(_u("INLINING: Skip Inline: Skipping %s target inlining, inlineeData not present\tCaller: %s\t(#%d) \tTop Func:%s\t(#%d)\n"), isApplyTarget ? _u("apply") : _u("call"),
             inlinerData->GetFunctionBody()->GetDisplayName(), inlinerData->GetFunctionBody()->GetDebugNumberSet(debugStringBuffer),
@@ -2915,7 +2938,7 @@ Inline::SkipCallApplyTargetInlining_Shared(IR::Instr *callInstr, const Js::Funct
         return true;
     }
 
-    if (!inlineeData->GetFunctionBody())
+    if (!(*inlineeData)->GetFunctionBody())
     {
         if (isCallTarget)
         {
@@ -2929,7 +2952,7 @@ Inline::SkipCallApplyTargetInlining_Shared(IR::Instr *callInstr, const Js::Funct
     if (!inlinerData->IsLdFldInlineePresent())
     {
         INLINE_TESTTRACE(_u("INLINING: Skip Inline: Skipping %s target inlining, not registered as a LdFld inlinee \tInlinee: %s (#%d)\tCaller: %s\t(#%d) \tTop Func:%s\t(#%d)\n"), isApplyTarget ? _u("apply") : _u("call"),
-            inlineeData->GetFunctionBody()->GetDisplayName(), inlineeData->GetFunctionBody()->GetDebugNumberSet(debugStringBuffer),
+            (*inlineeData)->GetFunctionBody()->GetDisplayName(), (*inlineeData)->GetFunctionBody()->GetDebugNumberSet(debugStringBuffer),
             inlinerData->GetFunctionBody()->GetDisplayName(), inlinerData->GetFunctionBody()->GetDebugNumberSet(debugStringBuffer2),
             this->topFunc->GetJnFunction()->GetDisplayName(), this->topFunc->GetJnFunction()->GetDebugNumberSet(debugStringBuffer3));
         return true;

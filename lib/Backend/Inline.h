@@ -60,7 +60,7 @@ private:
 
     IR::Instr * InlineCallApplyTarget_Shared(IR::Instr *callInstr, StackSym* originalCallTargetStackSym, Js::FunctionInfo *funcInfo, const Js::FunctionCodeGenJitTimeData *const inlineeData,
                     uint inlineCacheIndex, bool safeThis, bool isApplyTarget, bool isCallTarget, uint recursiveInlineDepth);
-    bool        SkipCallApplyTargetInlining_Shared(IR::Instr *callInstr, const Js::FunctionCodeGenJitTimeData* inlinerData, const Js::FunctionCodeGenJitTimeData* inlineeData, bool isApplyTarget, bool isCallTarget);
+    bool        SkipCallApplyTargetInlining_Shared(IR::Instr *callInstr, IR::Instr *targetLdInstr, const Js::FunctionCodeGenJitTimeData* inlinerData, const Js::FunctionCodeGenJitTimeData** inlineeData, Js::InlineCacheIndex& inlineCacheIndex, bool isApplyTarget, bool isCallTarget);
     bool        TryGetFixedMethodsForBuiltInAndTarget(IR::Instr *callInstr, const Js::FunctionCodeGenJitTimeData* inlinerData, const Js::FunctionCodeGenJitTimeData* inlineeData, Js::FunctionInfo *builtInFuncInfo,
                                 IR::Instr* builtInLdInstr, IR::Instr* targetLdInstr, bool& safeThis, bool isApplyTarget);
 
