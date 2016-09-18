@@ -68,6 +68,7 @@ Inline::Optimize(Func *func, __in_ecount_opt(callerArgOutCount) IR::Instr *calle
 
             case Js::OpCode::StFld:
             case Js::OpCode::LdFld:
+            case Js::OpCode::LdFldForCallApplyTarget:
                 {
                     // Try inlining of getter setter
                     if (!inlinerData->IsLdFldInlineePresent())
@@ -85,7 +86,7 @@ Inline::Optimize(Func *func, __in_ecount_opt(callerArgOutCount) IR::Instr *calle
                         break;
                     }
 
-                    bool getter = instr->m_opcode == Js::OpCode::LdFld;
+                    bool getter = instr->m_opcode != Js::OpCode::StFld;
 
                     IR::Opnd *opnd = getter ? instr->GetSrc1() : instr->GetDst();
                     if (!(opnd && opnd->IsSymOpnd()))
@@ -2496,7 +2497,8 @@ bool Inline::InlineApplyTarget(IR::Instr *callInstr, const Js::FunctionCodeGenJi
     IR::Instr* applyLdInstr = applySym->GetInstrDef();
     IR::Instr* applyTargetLdInstr = applyLdInstr->m_prev;
 
-    if(applyTargetLdInstr->m_opcode != Js::OpCode::LdFldForCallApplyTarget)
+    if(applyTargetLdInstr->m_opcode != Js::OpCode::LdFldForCallApplyTarget ||
+        ((applyTargetLdInstr->AsProfiledInstr()->u.FldInfo().flags & Js::FldInfo_FromAccessor) != 0))
     {
         return false;
     }
@@ -2812,7 +2814,8 @@ Inline::InlineCallTarget(IR::Instr *callInstr, const Js::FunctionCodeGenJitTimeD
     Assert(callLdInstr);
 
     IR::Instr* callTargetLdInstr = callLdInstr->m_prev;
-    if (callTargetLdInstr->m_opcode != Js::OpCode::LdFldForCallApplyTarget)
+    if (callTargetLdInstr->m_opcode != Js::OpCode::LdFldForCallApplyTarget ||
+        ((callTargetLdInstr->AsProfiledInstr()->u.FldInfo().flags & Js::FldInfoFlags::FldInfo_FromAccessor) != 0))
     {
         return false;
     }
@@ -2823,8 +2826,8 @@ Inline::InlineCallTarget(IR::Instr *callInstr, const Js::FunctionCodeGenJitTimeD
         return false;
     }
 
-    const auto inlineCacheIndex = callTargetLdOpnd->AsPropertySymOpnd()->m_inlineCacheIndex;
-    const auto inlineeData = inlinerData->GetLdFldInlinee(inlineCacheIndex);
+    Js::InlineCacheIndex inlineCacheIndex = Js::Constants::NoInlineCacheIndex;
+    const Js::FunctionCodeGenJitTimeData* inlineeData = nullptr;
 
     if (SkipCallApplyTargetInlining_Shared(callInstr, inlinerData, inlineeData, /*isApplyTarget*/ false, /*isCallTarget*/ true))
     {
