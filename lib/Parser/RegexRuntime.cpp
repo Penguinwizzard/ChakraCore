@@ -3055,7 +3055,9 @@ namespace UnifiedRegex
     inline bool LoopSetWithFollowFirstInst::Exec(REGEX_INST_EXEC_PARAMETERS) const
     {
         LoopInfo* loopInfo = matcher.LoopIdToLoopInfo(loopId);
-        Assert(PHASE_OFF1(Js::RegexOptBTPhase) || !loopInfo->offsetsOfFollowFirst || loopInfo->offsetsOfFollowFirst->Empty());
+        //Assert(PHASE_OFF1(Js::RegexOptBTPhase) || !loopInfo->offsetsOfFollowFirst || loopInfo->offsetsOfFollowFirst->Empty());
+        if (loopInfo->offsetsOfFollowFirst)
+            loopInfo->offsetsOfFollowFirst->Clear();
 
         // If loop is contained in an outer loop, continuation stack may already have a RewindLoopFixed entry for
         // this loop. We must make sure it's state is preserved on backtrack.
