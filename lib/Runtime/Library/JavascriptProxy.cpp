@@ -875,7 +875,7 @@ namespace Js
     }
 
     // No change to foreign enumerator, just forward
-    BOOL JavascriptProxy::GetEnumerator(JavascriptStaticEnumerator * enumerator, EnumeratorFlags flags, ScriptContext* requestContext)
+    BOOL JavascriptProxy::GetEnumerator(JavascriptStaticEnumerator * enumerator, EnumeratorFlags flags, ScriptContext* requestContext, ForInCache * forInCache)
     {
         // Reject implicit call
         ThreadContext* threadContext = requestContext->GetThreadContext();
@@ -943,7 +943,7 @@ namespace Js
         }
 
         return enumerator->Initialize(IteratorObjectEnumerator::Create(requestContext,
-            JavascriptOperators::GetIterator(RecyclableObject::FromVar(arrResult), requestContext)), nullptr, nullptr, flags, requestContext);
+            JavascriptOperators::GetIterator(RecyclableObject::FromVar(arrResult), requestContext)), nullptr, nullptr, flags, requestContext, nullptr);
 
     }
 
