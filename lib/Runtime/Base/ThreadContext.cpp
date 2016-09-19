@@ -2553,6 +2553,8 @@ ThreadContext::PreSweepCallback()
 
     ClearEquivalentTypeCaches();
 
+    ClearForInCaches();
+
     this->dynamicObjectEnumeratorCacheMap.Clear();
 }
 
@@ -2894,6 +2896,7 @@ ThreadContext::ClearInlineCaches()
     registeredInlineCacheCount = 0;
     unregisteredInlineCacheCount = 0;
 }
+#endif //PERSISTENT_INLINE_CACHES
 
 void
 ThreadContext::ClearIsInstInlineCaches()
@@ -2908,7 +2911,17 @@ ThreadContext::ClearIsInstInlineCaches()
     isInstInlineCacheThreadInfoAllocator.Reset();
     isInstInlineCacheByFunction.ResetNoDelete();
 }
-#endif //PERSISTENT_INLINE_CACHES
+
+void
+ThreadContext::ClearForInCaches()
+{
+    Js::ScriptContext *scriptContext = this->scriptContextList;
+    while (scriptContext != nullptr)
+    {
+        scriptContext->ClearForInCaches();
+        scriptContext = scriptContext->next;
+    }
+}
 
 void
 ThreadContext::ClearEquivalentTypeCaches()

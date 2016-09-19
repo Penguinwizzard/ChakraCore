@@ -366,6 +366,9 @@ static const unsigned __int64 c_debugFillPattern8 = 0xcececececececece;
 
     StackSym *EnsureLoopParamSym();
 
+    void UpdateForInLoopMaxDepth(uint forInLoopMaxDepth);
+    int GetForInEnumeratorArrayOffset() const;
+
     StackSym *GetFuncObjSym() const { return m_funcObjSym; }
     void SetFuncObjSym(StackSym *sym) { m_funcObjSym = sym; }
 
@@ -598,6 +601,9 @@ public:
     StackSym *          m_localFrameDisplaySym;
     StackSym *          m_bailoutReturnValueSym;
     StackSym *          m_hasBailedOutSym;
+    uint                m_forInLoopMaxDepth;
+    uint                m_forInLoopBaseDepth;
+    int32               m_forInEnumeratorArrayOffset;
 
     int32               m_localStackHeight;
     uint                frameSize;
