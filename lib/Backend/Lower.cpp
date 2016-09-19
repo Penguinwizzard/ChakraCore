@@ -12605,11 +12605,13 @@ Lowerer::GenerateBailOut(IR::Instr * instr, IR::BranchInstr * branchInstr, IR::L
     }
 
 #if DBG
+    const IR::BailOutKind bailOutKind = bailOutInstr->GetBailOutKind();
+
     if (bailOutInstr->m_opcode == Js::OpCode::BailOnNoSimdTypeSpec ||
         bailOutInstr->m_opcode == Js::OpCode::BailOnNoProfile ||
         bailOutInstr->m_opcode == Js::OpCode::BailOnException ||
         bailOutInstr->m_opcode == Js::OpCode::Yield ||
-        bailOutInstr->GetBailOutKind() == IR::BailOutConventionalTypedArrayAccessOnly)
+        bailOutKind & (IR::BailOutConventionalTypedArrayAccessOnly | IR::BailOutConventionalNativeArrayAccessOnly))
     {
         bailOutLabel->m_noHelperAssert = true;
     }
@@ -15967,10 +15969,18 @@ Lowerer::GenerateFastStElemI(IR::Instr *& stElem, bool *instrIsInHelperBlockRef)
         }
         else if (indirOpndOverflowed)
         {
-            // ignore StElemI in case of indirOpnd overflow which is consistent with behavior of interpreter
+            // ignore StElemI in case of indirOpnd overflow only for typed array which is consistent with behavior of interpreter
             stElem->UnlinkSrc1();
             stElem->UnlinkDst();
-            stElem->Remove();
+            if ((stElem->GetBailOutKind() & ~IR::BailOutKindBits) == IR::BailOutConventionalTypedArrayAccessOnly)
+            {
+                stElem->Remove();
+            }
+            else
+            {
+                GenerateBailOut(stElem, nullptr, nullptr);
+            }
+
             return false;
         }
         else
