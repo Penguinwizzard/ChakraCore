@@ -556,7 +556,6 @@ protected:
     virtual void DumpStats() const;
 #endif
     PageSegmentBase<TVirtualAlloc> * AddPageSegment(DListBase<PageSegmentBase<TVirtualAlloc>>& segmentList);
-    static PageSegmentBase<TVirtualAlloc> * AllocPageSegment(DListBase<PageSegmentBase<TVirtualAlloc>>& segmentList, PageAllocatorBase<TVirtualAlloc> * pageAllocator, void* address, uint pageCount, uint committedCount);
     static PageSegmentBase<TVirtualAlloc> * AllocPageSegment(DListBase<PageSegmentBase<TVirtualAlloc>>& segmentList,
         PageAllocatorBase<TVirtualAlloc> * pageAllocator, bool committed, bool allocated);
 

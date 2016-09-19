@@ -1347,7 +1347,6 @@ FLAGR (Number,  Version               , "Version in which to run the jscript eng
 #ifdef ENABLE_PROJECTION
 FLAGR (Number,  HostType              , "Host type in which to run the jscript engine. [one of 1,2]. Default is 1 = Browser.", 1)
 #endif
-FLAGR (Boolean, WERExceptionSupport   , "WER feature for extended exception support. Enabled when WinRT is enabled", false )
 #ifdef ENABLE_PROJECTION
 FLAGR (Boolean, WinRTConstructorAllowed, "Whether WinRT constructors is allowed in WebView host type. Constructor is always allowed in other host type ", false)
 #endif

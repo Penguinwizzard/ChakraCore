@@ -5,8 +5,8 @@
 
 //Configuration: es6.xml
 //Testcase Number: 2407
-//Switches: -PrintSystemException   -maxinterpretcount:3 -maxsimplejitruncount:6 -werexceptionsupport  -forcejitloopbody -force:rejit -force:ScriptFunctionWithInlineCache -force:fixdataprops -force:atom -ForceArrayBTree -off:lossyinttypespec -off:trackintusage -off:ParallelParse -off:fefixedmethods -off:LoopCountBasedBoundCheckHoist
-//Baseline Switches: -nonative -werexceptionsupport  -PrintSystemException
+//Switches: -PrintSystemException   -maxinterpretcount:3 -maxsimplejitruncount:6 -forcejitloopbody -force:rejit -force:ScriptFunctionWithInlineCache -force:fixdataprops -force:atom -ForceArrayBTree -off:lossyinttypespec -off:trackintusage -off:ParallelParse -off:fefixedmethods -off:LoopCountBasedBoundCheckHoist
+//Baseline Switches: -nonative -PrintSystemException
 //Arch: X86
 //Flavor: chk
 //Branch: fbl_ie_stage_dev3
