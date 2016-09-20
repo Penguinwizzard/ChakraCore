@@ -8983,6 +8983,112 @@ void EmitBooleanExpression(ParseNode *expr, Js::ByteCodeLabel trueLabel, Js::Byt
     }
 }
 
+void EmitGeneratingBooleanExpression(ParseNode *expr, Js::ByteCodeLabel trueLabel, Js::ByteCodeLabel falseLabel, Js::RegSlot writeto,
+    ByteCodeGenerator *byteCodeGenerator, FuncInfo *funcInfo)
+{
+    switch (expr->nop)
+    {
+
+    case knopLogOr:
+    {
+        byteCodeGenerator->StartStatement(expr);
+        Js::ByteCodeLabel leftFalse = byteCodeGenerator->Writer()->DefineLabel();
+        EmitGeneratingBooleanExpression(expr->sxBin.pnode1, trueLabel, leftFalse, writeto, byteCodeGenerator, funcInfo);
+        funcInfo->ReleaseLoc(expr->sxBin.pnode1);
+        byteCodeGenerator->Writer()->MarkLabel(leftFalse);
+        EmitGeneratingBooleanExpression(expr->sxBin.pnode2, trueLabel, falseLabel, writeto, byteCodeGenerator, funcInfo);
+        funcInfo->ReleaseLoc(expr->sxBin.pnode2);
+        byteCodeGenerator->EndStatement(expr);
+        break;
+    }
+
+    case knopLogAnd:
+    {
+        byteCodeGenerator->StartStatement(expr);
+        Js::ByteCodeLabel leftTrue = byteCodeGenerator->Writer()->DefineLabel();
+        EmitGeneratingBooleanExpression(expr->sxBin.pnode1, leftTrue, falseLabel, writeto, byteCodeGenerator, funcInfo);
+        funcInfo->ReleaseLoc(expr->sxBin.pnode1);
+        byteCodeGenerator->Writer()->MarkLabel(leftTrue);
+        EmitGeneratingBooleanExpression(expr->sxBin.pnode2, trueLabel, falseLabel, writeto, byteCodeGenerator, funcInfo);
+        funcInfo->ReleaseLoc(expr->sxBin.pnode2);
+        byteCodeGenerator->EndStatement(expr);
+        break;
+    }
+
+    case knopLogNot:
+    {
+        byteCodeGenerator->StartStatement(expr);
+        // this time we want a boolean expression, since Logical Not is nice and only returns true or false
+        Js::ByteCodeLabel emitTrue = byteCodeGenerator->Writer()->DefineLabel();
+        Js::ByteCodeLabel emitFalse = byteCodeGenerator->Writer()->DefineLabel();
+        EmitBooleanExpression(expr->sxUni.pnode1, emitFalse, emitTrue, byteCodeGenerator, funcInfo);
+        byteCodeGenerator->Writer()->MarkLabel(emitTrue);
+        byteCodeGenerator->Writer()->Reg1(Js::OpCode::LdTrue, writeto);
+        byteCodeGenerator->Writer()->Br(trueLabel);
+        byteCodeGenerator->Writer()->MarkLabel(emitFalse);
+        byteCodeGenerator->Writer()->Reg1(Js::OpCode::LdFalse, writeto);
+        byteCodeGenerator->Writer()->Br(falseLabel);
+        funcInfo->ReleaseLoc(expr->sxUni.pnode1);
+        byteCodeGenerator->EndStatement(expr);
+        break;
+    }
+    case knopEq:
+    case knopEqv:
+    case knopNEqv:
+    case knopNe:
+    case knopLt:
+    case knopLe:
+    case knopGe:
+    case knopGt:
+        byteCodeGenerator->StartStatement(expr);
+        EmitBinaryOpnds(expr->sxBin.pnode1, expr->sxBin.pnode2, byteCodeGenerator, funcInfo);
+        funcInfo->ReleaseLoc(expr->sxBin.pnode2);
+        funcInfo->ReleaseLoc(expr->sxBin.pnode1);
+        byteCodeGenerator->Writer()->Reg1(Js::OpCode::LdTrue, writeto);
+        byteCodeGenerator->Writer()->BrReg2(nopToOp[expr->nop], trueLabel, expr->sxBin.pnode1->location,
+            expr->sxBin.pnode2->location);
+        byteCodeGenerator->Writer()->Reg1(Js::OpCode::LdFalse, writeto);
+        byteCodeGenerator->Writer()->Br(falseLabel);
+        byteCodeGenerator->EndStatement(expr);
+        break;
+    case knopTrue:
+        byteCodeGenerator->StartStatement(expr);
+        byteCodeGenerator->Writer()->Reg1(Js::OpCode::LdTrue, writeto);
+        byteCodeGenerator->Writer()->Br(trueLabel);
+        byteCodeGenerator->EndStatement(expr);
+        break;
+    case knopFalse:
+        byteCodeGenerator->StartStatement(expr);
+        byteCodeGenerator->Writer()->Reg1(Js::OpCode::LdFalse, writeto);
+        byteCodeGenerator->Writer()->Br(falseLabel);
+        byteCodeGenerator->EndStatement(expr);
+        break;
+    default:
+        // Note: we usually release the temp assigned to a node after we Emit it.
+        // But in this case, EmitBooleanExpression is just a wrapper around a normal Emit call,
+        // and the caller of EmitBooleanExpression expects to be able to release this register.
+
+        // For diagnostics purposes, register the name and dot to the statement list.
+        if (expr->nop == knopName || expr->nop == knopDot)
+        {
+            byteCodeGenerator->StartStatement(expr);
+            Emit(expr, byteCodeGenerator, funcInfo, false);
+            byteCodeGenerator->Writer()->Reg2(Js::OpCode::Ld_A, writeto, expr->location);
+            byteCodeGenerator->Writer()->BrReg1(Js::OpCode::BrTrue_A, trueLabel, expr->location);
+            byteCodeGenerator->Writer()->Br(falseLabel);
+            byteCodeGenerator->EndStatement(expr);
+        }
+        else
+        {
+            Emit(expr, byteCodeGenerator, funcInfo, false);
+            byteCodeGenerator->Writer()->Reg2(Js::OpCode::Ld_A, writeto, expr->location);
+            byteCodeGenerator->Writer()->BrReg1(Js::OpCode::BrTrue_A, trueLabel, expr->location);
+            byteCodeGenerator->Writer()->Br(falseLabel);
+        }
+        break;
+    }
+}
+
 // used by while and for loops
 void EmitLoop(
     ParseNode *loopNode,
@@ -10735,19 +10841,10 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
     {
         STARTSTATEMENET_IFTOPLEVEL(isTopLevel, pnode);
         Js::ByteCodeLabel doneLabel = byteCodeGenerator->Writer()->DefineLabel();
-        // For boolean expressions that compute a result, we have to burn a register for the result
-        // so that the back end can identify it cheaply as a single temp lifetime. Revisit this if we do
-        // full-on renaming in the back end.
+        // We use a single dest here for the whole generating boolean expr, because we were poorly
+        // optimizing the previous version where we had a dest for each level
         funcInfo->AcquireLoc(pnode);
-
-        Emit(pnode->sxBin.pnode1, byteCodeGenerator, funcInfo, false);
-        byteCodeGenerator->Writer()->Reg2(Js::OpCode::Ld_A, pnode->location, pnode->sxBin.pnode1->location);
-        byteCodeGenerator->Writer()->BrReg1(Js::OpCode::BrTrue_A, doneLabel, pnode->sxBin.pnode1->location);
-        funcInfo->ReleaseLoc(pnode->sxBin.pnode1);
-
-        Emit(pnode->sxBin.pnode2, byteCodeGenerator, funcInfo, false);
-        byteCodeGenerator->Writer()->Reg2(Js::OpCode::Ld_A, pnode->location, pnode->sxBin.pnode2->location);
-        funcInfo->ReleaseLoc(pnode->sxBin.pnode2);
+        EmitGeneratingBooleanExpression(pnode, doneLabel, doneLabel, pnode->location, byteCodeGenerator, funcInfo);
         byteCodeGenerator->Writer()->MarkLabel(doneLabel);
         ENDSTATEMENET_IFTOPLEVEL(isTopLevel, pnode);
         break;
@@ -10757,19 +10854,10 @@ void Emit(ParseNode *pnode, ByteCodeGenerator *byteCodeGenerator, FuncInfo *func
     {
         STARTSTATEMENET_IFTOPLEVEL(isTopLevel, pnode);
         Js::ByteCodeLabel doneLabel = byteCodeGenerator->Writer()->DefineLabel();
-        // For boolean expressions that compute a result, we have to burn a register for the result
-        // so that the back end can identify it cheaply as a single temp lifetime. Revisit this if we do
-        // full-on renaming in the back end.
+        // We use a single dest here for the whole generating boolean expr, because we were poorly
+        // optimizing the previous version where we had a dest for each level
         funcInfo->AcquireLoc(pnode);
-
-        Emit(pnode->sxBin.pnode1, byteCodeGenerator, funcInfo, false);
-        byteCodeGenerator->Writer()->Reg2(Js::OpCode::Ld_A, pnode->location, pnode->sxBin.pnode1->location);
-        byteCodeGenerator->Writer()->BrReg1(Js::OpCode::BrFalse_A, doneLabel, pnode->sxBin.pnode1->location);
-        funcInfo->ReleaseLoc(pnode->sxBin.pnode1);
-
-        Emit(pnode->sxBin.pnode2, byteCodeGenerator, funcInfo, false);
-        byteCodeGenerator->Writer()->Reg2(Js::OpCode::Ld_A, pnode->location, pnode->sxBin.pnode2->location);
-        funcInfo->ReleaseLoc(pnode->sxBin.pnode2);
+        EmitGeneratingBooleanExpression(pnode, doneLabel, doneLabel, pnode->location, byteCodeGenerator, funcInfo);
         byteCodeGenerator->Writer()->MarkLabel(doneLabel);
         ENDSTATEMENET_IFTOPLEVEL(isTopLevel, pnode);
         break;
