@@ -1710,7 +1710,7 @@ LowererMDArch::GeneratePrologueStackProbe(IR::Instr *entryInstr, size_t frameSiz
         this->lowererMD->CreateAssign(stackLimitOpnd, memOpnd, insertInstr);
 
         instr = IR::Instr::New(Js::OpCode::ADD, stackLimitOpnd, stackLimitOpnd,
-                               IR::AddrOpnd::New((void*)frameSize, IR::AddrOpndKindConstant, this->m_func), this->m_func);
+                               IR::IntConstOpnd::New(frameSize, TyMachReg, this->m_func), this->m_func);
         insertInstr->InsertBefore(instr);
 
         if (doInterruptProbe)
@@ -1748,7 +1748,7 @@ LowererMDArch::GeneratePrologueStackProbe(IR::Instr *entryInstr, size_t frameSiz
     // Load the arguments to the probe helper and do the call.
     lowererMD->m_lowerer->LoadScriptContext(insertInstr);
     this->lowererMD->LoadHelperArgument(
-        insertInstr, IR::AddrOpnd::New((void*)frameSize, IR::AddrOpndKindConstant, this->m_func));
+        insertInstr, IR::IntConstOpnd::New(frameSize, TyMachReg, this->m_func));
 
     instr = IR::Instr::New(Js::OpCode::Call, this->m_func);
     instr->SetSrc1(IR::HelperCallOpnd::New(IR::HelperProbeCurrentStack2, this->m_func));
