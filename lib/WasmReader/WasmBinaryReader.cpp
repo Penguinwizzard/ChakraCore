@@ -555,6 +555,7 @@ void WasmBinaryReader::ConstNode()
 bool
 WasmBinaryReader::EndOfFunc()
 {
+    // EndOfFunc() is checked before the trailing END opcode is read
     return m_funcState.count + 1 >= m_funcState.size;
 }
 
