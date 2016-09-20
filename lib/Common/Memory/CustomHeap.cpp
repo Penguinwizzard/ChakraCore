@@ -859,34 +859,6 @@ void Heap::FreeAllocationHelper(Allocation* object, BVIndex index, uint length)
     this->auxiliaryAllocator->Free(object, sizeof(Allocation));
 }
 
-void Heap::FreeAllocationHelper(Allocation* object, BVIndex index, uint length)
-{
-    Page* page = object->page;
-
-    // Fill the old buffer with debug breaks
-    CustomHeap::FillDebugBreak((BYTE *)object->address, object->size);
-
-    VerboseHeapTrace(_u("Setting %d bits starting at bit %d, Free bit vector in page was "), length, index);
-#if VERBOSE_HEAP
-    page->freeBitVector.DumpWord();
-#endif
-    VerboseHeapTrace(_u("\n"));
-
-    page->freeBitVector.SetRange(index, length);
-    VerboseHeapTrace(_u("Free bit vector in page: "), length, index);
-#if VERBOSE_HEAP
-    page->freeBitVector.DumpWord();
-#endif
-    VerboseHeapTrace(_u("\n"));
-
-#if DBG_DUMP
-    this->freeObjectSize += object->size;
-    this->freesSinceLastCompact += object->size;
-#endif
-
-    this->auxiliaryAllocator->Free(object, sizeof(Allocation));
-}
-
 void Heap::FreeDecommittedBuckets()
 {
     // CodePageAllocators is locked in FreeAll
