@@ -3299,13 +3299,13 @@ BackwardPass::ProcessNoImplicitCallDef(IR::Instr *const instr)
     else if(
         !(
             // LdFld or similar
-            dst->IsRegOpnd() && src->IsSymOpnd() && src->AsSymOpnd()->m_sym->IsPropertySym() ||
+            (dst->IsRegOpnd() && src->IsSymOpnd() && src->AsSymOpnd()->m_sym->IsPropertySym()) ||
 
             // StFld or similar. Don't transfer a field opnd from StFld into the reg opnd src unless the field's value type is
             // definitely array or object with array, because only those value types require implicit calls to be disabled as
             // long as they are live. Other definite value types only require implicit calls to be disabled as long as a live
             // field holds the value, which is up to the StFld when going backwards.
-            src->IsRegOpnd() && dst->GetValueType().IsArrayOrObjectWithArray()
+            (src->IsRegOpnd() && dst->GetValueType().IsArrayOrObjectWithArray())
         ) ||
         !GlobOpt::TransferSrcValue(instr))
     {
@@ -3960,8 +3960,8 @@ BackwardPass::UpdateArrayBailOutKind(IR::Instr *const instr)
     Assert(instr);
     Assert(instr->HasBailOutInfo());
 
-    if (instr->m_opcode != Js::OpCode::StElemI_A && instr->m_opcode != Js::OpCode::StElemI_A_Strict &&
-        instr->m_opcode != Js::OpCode::Memcopy && instr->m_opcode != Js::OpCode::Memset ||
+    if ((instr->m_opcode != Js::OpCode::StElemI_A && instr->m_opcode != Js::OpCode::StElemI_A_Strict &&
+        instr->m_opcode != Js::OpCode::Memcopy && instr->m_opcode != Js::OpCode::Memset) ||
         !instr->GetDst()->IsIndirOpnd())
     {
         return;
@@ -5499,7 +5499,7 @@ BackwardPass::TrackIntUsage(IR::Instr *const instr)
 
                 if (instr->ignoreNegativeZero ||
                     (instr->GetSrc1()->IsIntConstOpnd() && instr->GetSrc1()->AsIntConstOpnd()->GetValue() != 0) ||
-                    instr->GetSrc2()->IsIntConstOpnd() && instr->GetSrc2()->AsIntConstOpnd()->GetValue() != 0)
+                    (instr->GetSrc2()->IsIntConstOpnd() && instr->GetSrc2()->AsIntConstOpnd()->GetValue() != 0))
                 {
                     SetNegativeZeroDoesNotMatterIfLastUse(instr->GetSrc1());
                     SetNegativeZeroDoesNotMatterIfLastUse(instr->GetSrc2());
@@ -5555,7 +5555,7 @@ BackwardPass::TrackIntUsage(IR::Instr *const instr)
 
                 if (instr->ignoreNegativeZero ||
                     (instr->GetSrc1()->IsIntConstOpnd() && instr->GetSrc1()->AsIntConstOpnd()->GetValue() != 0) ||
-                    instr->GetSrc2()->IsIntConstOpnd() && instr->GetSrc2()->AsIntConstOpnd()->GetValue() != 0)
+                    (instr->GetSrc2()->IsIntConstOpnd() && instr->GetSrc2()->AsIntConstOpnd()->GetValue() != 0))
                 {
                     SetNegativeZeroDoesNotMatterIfLastUse(instr->GetSrc1());
                     SetNegativeZeroDoesNotMatterIfLastUse(instr->GetSrc2());
@@ -5878,7 +5878,7 @@ BackwardPass::TrackIntUsage(IR::Instr *const instr)
                 !!candidateSymsRequiredToBeLossyInt->Test(srcSymId);
             const bool srcNeedsToBeLossless =
                 !currentBlock->intOverflowDoesNotMatterRange->SymsRequiredToBeLossyInt()->Test(dstSym->m_id) ||
-                srcIncluded && !srcIncludedAsLossy;
+                (srcIncluded && !srcIncludedAsLossy);
             if(srcIncluded)
             {
                 if(srcIncludedAsLossy && srcNeedsToBeLossless)
@@ -6350,7 +6350,7 @@ BackwardPass::TrackFloatSymEquivalence(IR::Instr *const instr)
     // throughout the function and checking just the sym's non-number bailout bit is insufficient.
     FloatSymEquivalenceClass *dstEquivalenceClass;
     if(dst->m_requiresBailOnNotNumber ||
-        floatSymEquivalenceMap->TryGetValue(dst->m_id, &dstEquivalenceClass) && dstEquivalenceClass->RequiresBailOnNotNumber())
+        (floatSymEquivalenceMap->TryGetValue(dst->m_id, &dstEquivalenceClass) && dstEquivalenceClass->RequiresBailOnNotNumber()))
     {
         instr->SetBailOutKind(IR::BailOutNumberOnly);
     }

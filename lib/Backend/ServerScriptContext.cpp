@@ -280,13 +280,13 @@ ServerScriptContext::Close()
 void
 ServerScriptContext::BeginJIT()
 {
-    InterlockedExchangeAdd(&m_activeJITCount, 1);
+    InterlockedExchangeAdd(&m_activeJITCount, 1u);
 }
 
 void
 ServerScriptContext::EndJIT()
 {
-    InterlockedExchangeSubtract(&m_activeJITCount, 1);
+    InterlockedExchangeSubtract(&m_activeJITCount, 1u);
 }
 
 bool
@@ -295,8 +295,8 @@ ServerScriptContext::IsJITActive()
     return m_activeJITCount != 0;
 }
 
-Js::Var* 
-ServerScriptContext::GetModuleExportSlotArrayAddress(uint moduleIndex, uint slotIndex) 
+Js::Var*
+ServerScriptContext::GetModuleExportSlotArrayAddress(uint moduleIndex, uint slotIndex)
 {
     Assert(m_moduleRecords.ContainsKey(moduleIndex));
     auto record = m_moduleRecords.Item(moduleIndex);
@@ -309,7 +309,7 @@ ServerScriptContext::SetIsPRNGSeeded(bool value)
     m_isPRNGSeeded = value;
 }
 
-void 
+void
 ServerScriptContext::AddModuleRecordInfo(unsigned int moduleId, __int64 localExportSlotsAddr)
 {
     Js::ServerSourceTextModuleRecord* record = HeapNewStructZ(Js::ServerSourceTextModuleRecord);

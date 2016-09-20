@@ -146,12 +146,12 @@ namespace Js
     class ActivationObject;
     class JavascriptNumber;
     class JavascriptNumberObject;
-    
+
     class ScriptContextProfiler;
 
     struct RestrictedErrorStrings;
     class JavascriptError;
-    
+
 //SIMD_JS
     // SIMD
     class JavascriptSIMDObject;
@@ -371,6 +371,7 @@ enum tagDEBUG_EVENT_INFO_TYPE
 #include "JITClient.h"
 #else
 #include "JITTypes.h"
+#include "../JITClient/JITManager.h"
 #endif
 
 #include "Base/SourceHolder.h"
@@ -452,7 +453,7 @@ enum tagDEBUG_EVENT_INFO_TYPE
 
 #include "Library/MathLibrary.h"
 
-// xplat-todo: We should get rid of this altogether and move the functionality it 
+// xplat-todo: We should get rid of this altogether and move the functionality it
 // encapsulates to the Platform Agnostic Interface
 #ifdef _WIN32
 #if defined(ENABLE_GLOBALIZATION) || ENABLE_UNICODE_API
