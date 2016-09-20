@@ -183,6 +183,12 @@
 #endif
 #endif
 
+#if ENABLE_NATIVE_CODEGEN
+#ifdef _WIN32
+#define ENABLE_OOP_NATIVE_CODEGEN 1     // Out of process JIT
+#endif
+#endif
+
 // Other features
 // #define CHAKRA_CORE_DOWN_COMPAT 1
 
@@ -566,7 +572,6 @@
 #endif
 #endif
 
-#if _WIN32 || _WIN64
 #if _M_IX86
 #define I386_ASM 1
 #endif //_M_IX86
@@ -580,7 +585,6 @@
 #define ALLOC_XDATA (false)
 #endif
 #endif
-#endif // _WIN32 || _WIN64
 
 #ifndef _WIN32
 #define DISABLE_SEH 1
