@@ -1066,7 +1066,6 @@ NativeCodeGenerator::CodeGen(PageAllocator * pageAllocator, CodeGenWorkItem* wor
     XDataAllocator::Register(xdataInfo, jitWriteData.codeAddress, jitWriteData.codeSize);
     epInfo->SetXDataInfo(xdataInfo);
 #endif
-    scriptContext->GetThreadContext()->SetValidCallTargetForCFG((PVOID)jitWriteData.codeAddress);
     workItem->SetCodeAddress((size_t)jitWriteData.codeAddress);
 
     workItem->GetEntryPoint()->SetCodeGenRecorded((Js::JavascriptMethod)jitWriteData.codeAddress, jitWriteData.codeSize);
@@ -3131,8 +3130,11 @@ NativeCodeGenerator::QueueFreeNativeCodeGenAllocation(void* address)
         return;
     }
 
-    //DeRegister Entry Point for CFG
-    ThreadContext::GetContextForCurrentThread()->SetValidCallTargetForCFG(address, false);
+    if (!JITManager::GetJITManager()->IsOOPJITEnabled())
+    {
+        //DeRegister Entry Point for CFG
+        ThreadContext::GetContextForCurrentThread()->SetValidCallTargetForCFG(address, false);
+    }
 
     // The foreground allocators may have been used
     ThreadContext * context = this->scriptContext->GetThreadContext();

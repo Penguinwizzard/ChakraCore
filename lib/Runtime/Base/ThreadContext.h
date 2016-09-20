@@ -789,9 +789,6 @@ private:
     Js::DelayLoadWinRtFoundation delayLoadWinRtFoundationLibrary;
     Js::WindowsFoundationAdapter windowsFoundationAdapter;
 #endif
-#ifdef _CONTROL_FLOW_GUARD
-    Js::DelayLoadWinCoreMemory delayLoadWinCoreMemoryLibrary;
-#endif
 #endif
 
     // Number of script context attached with probe manager.
@@ -885,9 +882,6 @@ public:
     Js::DelayLoadWinRtFoundation *GetWinRtFoundationLibrary();
     Js::WindowsFoundationAdapter *GetWindowsFoundationAdapter();
 #endif
-#ifdef _CONTROL_FLOW_GUARD
-    Js::DelayLoadWinCoreMemory * GetWinCoreMemoryLibrary();
-#endif
 #endif
 
 #ifdef ENABLE_BASIC_TELEMETRY
@@ -938,8 +932,6 @@ public:
         return res;
     }
 
-    bool IsCFGEnabled();
-    void SetValidCallTargetForCFG(PVOID callTargetAddress, bool isSetValid = true);
     BOOL HasPreviousHostScriptContext();
     HostScriptContext* GetPreviousHostScriptContext() ;
     void PushHostScriptContext(HostScriptContext* topProvider);
