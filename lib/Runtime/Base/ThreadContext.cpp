@@ -920,7 +920,7 @@ void ThreadContext::InitializePropertyMaps()
     {
         this->propertyMap = HeapNew(PropertyMap, &HeapAllocator::Instance, TotalNumberOfBuiltInProperties + 700);
 #if ENABLE_NATIVE_CODEGEN
-        this->m_pendingJITProperties = HeapNew(PropertyList, &HeapAllocator::Instance);
+        this->m_pendingJITProperties = HeapNew(PropertyMap, &HeapAllocator::Instance, TotalNumberOfBuiltInProperties + 700);
 #endif
         this->recyclableData->boundPropertyStrings = RecyclerNew(this->recycler, JsUtil::List<Js::PropertyRecord const*>, this->recycler);
 
@@ -1278,8 +1278,8 @@ void ThreadContext::InvalidatePropertyRecord(const Js::PropertyRecord * property
 {
     InternalInvalidateProtoTypePropertyCaches(propertyRecord->GetPropertyId());     // use the internal version so we don't check for active property id
 
+    m_pendingJITProperties->Remove(propertyRecord);
     this->propertyMap->Remove(propertyRecord);
-
     PropertyRecordTrace(_u("Reclaimed property '%s' at 0x%08x, pid = %d\n"),
         propertyRecord->GetBuffer(), propertyRecord, propertyRecord->GetPropertyId());
 }
