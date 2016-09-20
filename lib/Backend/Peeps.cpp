@@ -730,6 +730,73 @@ Peeps::HoistSameInstructionAboveSplit(IR::BranchInstr *branchInstr, IR::Instr *i
 }
 #endif
 
+// For equivalence checking of symbols, it turns out that a lot of symbols are single-def, in
+// a way that makes them just a copy of an existing single-def symbol. Because these are just
+// the same thing effectively, we should be able to handle equivalence comparisons by walking
+// up the tree to the root node for each, and comparing the ids of those.
+StackSym* GetHeadOfSingleDefChain(StackSym* base)
+{
+    Assert(base && base->IsStackSym() && base->IsSingleDef());
+    StackSym* original = base;
+    // TODO: make it respect backedge liveness
+    while (
+        base->GetInstrDef() &&
+        base->GetInstrDef()->m_opcode == Js::OpCode::Ld_A &&
+        base->GetInstrDef()->GetSrc1()->GetStackSym() &&
+        base->GetInstrDef()->GetSrc1()->GetStackSym()->m_id != original->m_id &&
+        base->GetInstrDef()->GetSrc1()->GetStackSym()->IsSingleDef()
+        )
+    {
+        base = base->GetInstrDef()->GetSrc1()->GetStackSym();
+    }
+    return base;
+}
+
+bool IsOperandEquivalent(IR::Opnd* headOpnd, IR::Opnd* otherOpnd) {
+    // "both operands are null" is normally hit when we compare the Src2 of two instructions but
+    // both are one-src instructions (or for zero-src instructions and Src1 or Src2).
+    if (headOpnd == nullptr && otherOpnd == nullptr)
+    {
+        return true;
+    }
+    // If the first xor the second operand to be compared is null, they're not equal.
+    if (headOpnd == nullptr || otherOpnd == nullptr)
+    {
+        return false;
+    }
+    Assert(headOpnd);
+    Assert(otherOpnd);
+    if (headOpnd->GetStackSym() && otherOpnd->GetStackSym())
+    {
+        StackSym *headSym = headOpnd->GetStackSym();
+        StackSym *otherSym = otherOpnd->GetStackSym();
+        // we need to check for single-def-ness, so that we don't break loops
+        //if (!headSym->IsSingleDef() || !otherSym->IsSingleDef())
+        //{
+        //    return false;
+        //}
+        // Try it once, in case we get lucky
+        //if (headSym->m_id == otherSym->m_id)
+        //{
+        //    return true;
+        //}
+        // What we can still do here, instead of just returning false, is following the construction
+        // of the single-def symbols up the chain. Since a lot of them are, for various reasons, set
+        // as copies of existing single-def symbols through Ld_A-ing from them, we can track this to
+        // the root definition of each. Since they're single-def, this should show equivalence.
+        //headSym = GetHeadOfSingleDefChain(headSym);
+        //otherSym = GetHeadOfSingleDefChain(otherSym);
+
+        // If they're not equivalent at this point, give up and say that they're not equivalent.
+        return headSym->m_id == otherSym->m_id;
+    }
+    else if (headOpnd->IsConstOpnd() && otherOpnd->IsConstOpnd())
+    {
+        return headOpnd->GetConstValue().IsEqual(otherOpnd->GetConstValue());
+    }
+    return false;
+}
+
 IR::LabelInstr *
 Peeps::RetargetBrToBr(IR::BranchInstr *branchInstr, IR::LabelInstr * targetInstr)
 {
@@ -752,9 +819,58 @@ Peeps::RetargetBrToBr(IR::BranchInstr *branchInstr, IR::LabelInstr * targetInstr
 
     IR::LabelInstr *lastLoopTop = NULL;
 
-    while (targetInstrNext->IsBranchInstr() && targetInstrNext->AsBranchInstr()->IsUnconditional())
+    while (true)
     {
-        IR::BranchInstr *branchAtTarget = targetInstrNext->AsBranchInstr();
+        // There's very few cases where we can safely follow a branch chain with intervening instrs.
+        // One of them, which comes up occasionally, is where there is a copy of a single-def symbol
+        // to another single-def symbol which is only used for the branch instruction (i.e. one dead
+        // after the branch). Another is where a single-def symbol is declared of a constant (e.g. a
+        // symbol created to store "True"
+        // Unfortuantely, to properly do this, we'd need to do it somewhere else (i.e. not in peeps)
+        // and make use of the additional information that we'd have there. Having the flow graph or
+        // just any more information about variable liveness is necessary to determine that the load
+        // instructions between jumps can be safely skipped.
+        // The general case where this would be useful, on a higher level, is where a long statement
+        // containing many branches returns a value; the branching here can put the result into some
+        // different register at each level, meaning that there'd be a load between each branch. The
+        // result is that we don't currently optimize it.
+        IR::BranchInstr *branchAtTarget = nullptr;
+        if (targetInstrNext->IsBranchInstr())
+        {
+            branchAtTarget = targetInstrNext->AsBranchInstr();
+        }
+        else
+        {
+            // Since it's not a situation that we should and can optimize, break the chain.
+            break;
+        }
+        // This used to just be a targetInstrNext->AsBranchInstr()->IsUnconditional(), but, in order
+        // to optimize further, it became necessary to handle more than just unconditional jumps. In
+        // order to keep the code relatively clean, the "is it an inherently-taken jump chain" check
+        // code now follows here:
+        if (!targetInstrNext->AsBranchInstr()->IsUnconditional())
+        {
+            bool safetofollow = false;
+            if(targetInstrNext->m_opcode == branchInstr->m_opcode)
+            {
+                // If it's the same branch instruction, it should have the same result, iff the arguments to
+                // it are either the same or singledef copies of one another. If not, we can't say that this
+                // chain is safe to follow any further.
+                if (
+                    IsOperandEquivalent(branchInstr->GetSrc1(), targetInstrNext->GetSrc1()) &&
+                    IsOperandEquivalent(branchInstr->GetSrc2(), targetInstrNext->GetSrc2())
+                   )
+                {
+                    safetofollow = true;
+                }
+            }
+            if (!safetofollow)
+            {
+                // We can't say safely that this branch is something that we can implicitly take, so instead
+                // cut off the branch chain optimization here.
+                break;
+            }
+        }
 
         // We don't want to skip the loop entry, unless we're right before the encoder
         if (targetInstr->m_isLoopTop && !branchAtTarget->IsLowered())
