@@ -4126,6 +4126,7 @@ Lowerer::GenerateProfiledNewScObjArrayFastPath(IR::Instr *instr, Js::ArrayCallSi
     uint const offsetStart = sizeof(Js::SparseArraySegmentBase);
     uint missingItemCount = 0;
     uint missingItemInitializedSoFar = 0;
+    uint missingItemIndex = 0;
 
     for (uint8 i = 0;i < allocationBucketsCount;i++)
     {
@@ -4140,7 +4141,8 @@ Lowerer::GenerateProfiledNewScObjArrayFastPath(IR::Instr *instr, Js::ArrayCallSi
         // Generate array initialization with MissingItem
         for (uint j = 0;j < missingItemCount;j++)
         {
-            GenerateMemInit(headOpnd, offsetStart + j * multiplier, GetMissingItemOpnd(missingItemType, func), instr, isZeroed);
+            GenerateMemInit(headOpnd, offsetStart + missingItemIndex * multiplier, GetMissingItemOpnd(missingItemType, func), instr, isZeroed);
+            missingItemIndex++;
         }
 
         //  CMP  arrayLen, currentBucket
