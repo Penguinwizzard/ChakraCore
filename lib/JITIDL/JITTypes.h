@@ -783,8 +783,12 @@ typedef struct JITOutputIDL
     unsigned int propertyGuardCount;
     unsigned int ctorCachesCount;
 
-    CHAKRA_PTR codeAddress;
+#if defined(_M_X64)
     CHAKRA_PTR xdataAddr;
+#elif defined(_M_ARM) || defined(_M_ARM64)
+    unsigned int xdataOffset;
+#endif
+    CHAKRA_PTR codeAddress;
     TypeGuardTransferEntryIDL* typeGuardEntries;
 
     IDL_DEF([size_is(ctorCachesCount)]) CtorCacheTransferEntryIDL ** ctorCacheEntries;
@@ -797,3 +801,11 @@ typedef struct JITOutputIDL
     X86_PAD4(1)
     __int64 startTime;
 } JITOutputIDL;
+
+typedef struct UpdatedPropertysIDL
+{
+    unsigned int reclaimedPropertyCount;
+    unsigned int newRecordCount;
+    [size_is(reclaimedPropertyCount)] int * reclaimedPropertyIdArray;
+    [size_is(newRecordCount)] PropertyRecordIDL ** newRecordArray;
+} UpdatedPropertysIDL;

@@ -60,10 +60,10 @@ namespace Js
         m_threadContext->SetIsUserCode(m_previousCatchHandlerToUserCodeStatus);
     }
 
-    bool JavascriptExceptionOperators::CrawlStackForWER(Js::ScriptContext& scriptContext)
-    {
-        return Js::Configuration::Global.flags.WERExceptionSupport && !scriptContext.GetThreadContext()->HasCatchHandler();
-    }
+    bool JavascriptExceptionOperators::CrawlStackForWER(Js::ScriptContext& scriptContext)  
+    {  
+        return !scriptContext.GetThreadContext()->HasCatchHandler();  
+    }  
 
     uint64 JavascriptExceptionOperators::StackCrawlLimitOnThrow(Var thrownObject, ScriptContext& scriptContext)
     {

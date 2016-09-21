@@ -520,13 +520,11 @@ bool Heap::AllocInPage(Page* page, size_t bytes, ushort pdataCount, ushort xdata
 
     uint length = GetChunkSizeForBytes(bytes);
     BVIndex index = GetFreeIndexForPage(page, bytes);
-    
     if (index == BVInvalidIndex)
     {
         CustomHeap_BadPageState_fatal_error((ULONG_PTR)this);
         return false;
     }
-
     char* address = page->address + Page::Alignment * index;
 
 #if PDATA_ENABLED
@@ -568,6 +566,13 @@ bool Heap::AllocInPage(Page* page, size_t bytes, ushort pdataCount, ushort xdata
     this->allocationsSinceLastCompact += bytes;
     this->freeObjectSize -= bytes;
 #endif
+
+    //Section of the Page should already be freed.
+    if (!page->freeBitVector.TestRange(index, length))
+    {
+        CustomHeap_BadPageState_fatal_error((ULONG_PTR)this);
+        return false;
+    }
 
     //Section of the Page should already be freed.
     if (!page->freeBitVector.TestRange(index, length))
@@ -804,7 +809,6 @@ bool Heap::FreeAllocation(Allocation* object)
     else
     {
         EnsureAllocationExecuteWriteable(object);
-
         FreeAllocationHelper(object, index, length);
 
         // after freeing part of the page, the page should be in PAGE_EXECUTE_READWRITE protection, and turning to PAGE_EXECUTE (always with TARGETS_NO_UPDATE state)
@@ -821,7 +825,7 @@ bool Heap::FreeAllocation(Allocation* object)
         }
 
         this->codePageAllocators->ProtectPages(page->address, 1, segment, protectFlags, PAGE_EXECUTE_READWRITE);
-        
+
         return true;
     }
 }

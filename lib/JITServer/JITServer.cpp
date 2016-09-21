@@ -158,23 +158,28 @@ ServerCleanupThreadContext(
 }
 
 HRESULT
-ServerAddPropertyRecordArray(
+ServerUpdatePropertyRecordMap(
     /* [in] */ handle_t binding,
-    /* [in] */ intptr_t threadContextRoot,
-    /* [in] */ uint count,
-    /* [in] */ __RPC__in_ecount_full(count) PropertyRecordIDL ** propertyRecordArray)
+    /* [in] */ intptr_t threadContextInfoAddress,
+    /* [in] */ __RPC__in UpdatedPropertysIDL * updatedProps)
 {
     AUTO_NESTED_HANDLED_EXCEPTION_TYPE(static_cast<ExceptionType>(ExceptionType_OutOfMemory | ExceptionType_StackOverflow));
 
-    ServerThreadContext * threadContextInfo = (ServerThreadContext*)DecodePointer((void*)threadContextRoot);
+    ServerThreadContext * threadContextInfo = (ServerThreadContext*)DecodePointer((void*)threadContextInfoAddress);
 
     if (threadContextInfo == nullptr)
     {
         return RPC_S_INVALID_ARG;
     }
-    for (uint i = 0; i < count; ++i)
+
+    for (uint i = 0; i < updatedProps->reclaimedPropertyCount; ++i)
     {
-        threadContextInfo->AddToPropertyMap((Js::PropertyRecord *)propertyRecordArray[i]);
+        threadContextInfo->RemoveFromPropertyMap((Js::PropertyId)updatedProps->reclaimedPropertyIdArray[i]);
+    }
+
+    for (uint i = 0; i < updatedProps->newRecordCount; ++i)
+    {
+        threadContextInfo->AddToPropertyMap((Js::PropertyRecord *)updatedProps->newRecordArray[i]);
     }
 
     return S_OK;
@@ -388,7 +393,7 @@ ServerRemoteCodeGen(
 
     JITTimeWorkItem * jitWorkItem = Anew(&jitArena, JITTimeWorkItem, workItemData);
 
-    if (PHASE_TRACE1(Js::BackEndPhase))
+    if (PHASE_VERBOSE_TRACE_RAW(Js::BackEndPhase, jitWorkItem->GetJITTimeInfo()->GetSourceContextId(), jitWorkItem->GetJITTimeInfo()->GetLocalFunctionId()))
     {
         LARGE_INTEGER freq;
         LARGE_INTEGER end_time;
@@ -461,7 +466,7 @@ ServerRemoteCodeGen(
     }
 #endif
 
-    if (PHASE_TRACE1(Js::BackEndPhase))
+    if (PHASE_VERBOSE_TRACE_RAW(Js::BackEndPhase, jitWorkItem->GetJITTimeInfo()->GetSourceContextId(), jitWorkItem->GetJITTimeInfo()->GetLocalFunctionId()))
     {
         LARGE_INTEGER freq;
         LARGE_INTEGER end_time;
@@ -469,7 +474,7 @@ ServerRemoteCodeGen(
         QueryPerformanceFrequency(&freq);
 
         Output::Print(
-            L"EndBackEnd - function: %s time:%8.6f mSec\r\n",
+            L"EndBackEndInner - function: %s time:%8.6f mSec\r\n",
             jitWorkItem->GetJITFunctionBody()->GetDisplayName(),
             (((double)((end_time.QuadPart - start_time.QuadPart)* (double)1000.0 / (double)freq.QuadPart))) / (1));
         Output::Flush();
