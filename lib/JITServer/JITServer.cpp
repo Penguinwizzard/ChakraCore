@@ -298,6 +298,144 @@ ServerCleanupScriptContext(
 }
 
 HRESULT
+ServerNewInterpreterThunkBlock(
+    /* [in] */ handle_t binding,
+    /* [in] */ intptr_t scriptContextInfo,
+    /* [in] */ intptr_t threadContextInfo,
+    /* [in] */ boolean asmJsThunk,
+    /* [out] */ __RPC__out InterpreterThunkInfoIDL * thunkInfo)
+{
+    AUTO_NESTED_HANDLED_EXCEPTION_TYPE(static_cast<ExceptionType>(ExceptionType_OutOfMemory | ExceptionType_StackOverflow));
+    ServerThreadContext * threadContext = (ServerThreadContext*)DecodePointer((void*)threadContextInfo);
+    ServerScriptContext * Scriptcontext = (ServerScriptContext *)DecodePointer((void*)scriptContextInfo);
+
+
+    BYTE* buffer;
+    BYTE* currentBuffer;
+    DWORD bufferSize = InterpreterThunkEmitter::BlockSize;
+    DWORD thunkCount = 0;
+
+    intptr_t interpreterThunk = 0;
+    EmitBufferManager<> * emitBufferManager = threadContext->GetEmitBufferManager(asmJsThunk);
+    // the static interpreter thunk invoked by the dynamic emitted thunk
+#ifdef ASMJS_PLAT
+    if (asmJsThunk)
+    {
+        interpreterThunk = SHIFT_ADDR(threadContext, Js::InterpreterStackFrame::InterpreterAsmThunk);
+    }
+    else
+#endif
+    {
+        interpreterThunk = SHIFT_ADDR(threadContext, Js::InterpreterStackFrame::InterpreterThunk);
+    }
+
+    EmitBufferAllocation * allocation = emitBufferManager->AllocateBuffer(bufferSize, &buffer);
+    if (!emitBufferManager->ProtectBufferWithExecuteReadWriteForInterpreter(allocation))
+    {
+        Js::Throw::OutOfMemory();
+    }
+
+    currentBuffer = buffer;
+
+#ifdef _M_X64
+    PrologEncoder prologEncoder(threadContext->GetForegroundArenaAllocator());
+    prologEncoder.EncodeSmallProlog(InterpreterThunkEmitter::PrologSize, InterpreterThunkEmitter::StackAllocSize);
+    DWORD pdataSize = prologEncoder.SizeOfPData();
+#elif defined(_M_ARM32_OR_ARM64)
+    DWORD pdataSize = sizeof(RUNTIME_FUNCTION);
+#else
+    DWORD pdataSize = 0;
+#endif
+    DWORD bytesRemaining = bufferSize;
+    DWORD bytesWritten = 0;
+    DWORD epilogSize = sizeof(InterpreterThunkEmitter::Epilog);
+
+    // Ensure there is space for PDATA at the end
+    BYTE* pdataStart = currentBuffer + (bufferSize - Math::Align(pdataSize, EMIT_BUFFER_ALIGNMENT));
+    BYTE* epilogStart = pdataStart - Math::Align(epilogSize, EMIT_BUFFER_ALIGNMENT);
+
+    // Copy the thunk buffer and modify it.
+    js_memcpy_s(currentBuffer, bytesRemaining, InterpreterThunk, HeaderSize);
+    EncodeInterpreterThunk(currentBuffer, buffer, HeaderSize, epilogStart, epilogSize, interpreterThunk);
+    currentBuffer += HeaderSize;
+    bytesRemaining -= HeaderSize;
+
+    // Copy call buffer
+    DWORD callSize = sizeof(Call);
+    while (currentBuffer < epilogStart - callSize)
+    {
+        js_memcpy_s(currentBuffer, bytesRemaining, Call, callSize);
+#if _M_ARM
+        int offset = (epilogStart - (currentBuffer + JmpOffset));
+        Assert(offset >= 0);
+        DWORD encodedOffset = EncoderMD::BranchOffset_T2_24(offset);
+        DWORD encodedBranch = /*opcode=*/ 0x9000F000 | encodedOffset;
+        Emit(currentBuffer, JmpOffset, encodedBranch);
+#elif _M_ARM64
+        int64 offset = (epilogStart - (currentBuffer + JmpOffset));
+        Assert(offset >= 0);
+        DWORD encodedOffset = EncoderMD::BranchOffset_26(offset);
+        DWORD encodedBranch = /*opcode=*/ 0x14000000 | encodedOffset;
+        Emit(currentBuffer, JmpOffset, encodedBranch);
+#else
+        // jump requires an offset from the end of the jump instruction.
+        int offset = (int)(epilogStart - (currentBuffer + JmpOffset + sizeof(int)));
+        Assert(offset >= 0);
+        Emit(currentBuffer, JmpOffset, offset);
+#endif
+        currentBuffer += callSize;
+        bytesRemaining -= callSize;
+        thunkCount++;
+    }
+
+    // Fill any gap till start of epilog
+    bytesWritten = FillDebugBreak(currentBuffer, (DWORD)(epilogStart - currentBuffer));
+    bytesRemaining -= bytesWritten;
+    currentBuffer += bytesWritten;
+
+    // Copy epilog
+    bytesWritten = CopyWithAlignment(currentBuffer, bytesRemaining, Epilog, epilogSize, EMIT_BUFFER_ALIGNMENT);
+    currentBuffer += bytesWritten;
+    bytesRemaining -= bytesWritten;
+
+    // Generate and register PDATA
+#if PDATA_ENABLED
+    BYTE* epilogEnd = epilogStart + epilogSize;
+    DWORD functionSize = (DWORD)(epilogEnd - buffer);
+    Assert(pdataStart == currentBuffer);
+#ifdef _M_X64
+    Assert(bytesRemaining >= pdataSize);
+    BYTE* pdata = prologEncoder.Finalize(buffer, functionSize, pdataStart);
+    bytesWritten = CopyWithAlignment(pdataStart, bytesRemaining, pdata, pdataSize, EMIT_BUFFER_ALIGNMENT);
+#elif defined(_M_ARM32_OR_ARM64)
+    RUNTIME_FUNCTION pdata;
+    GeneratePdata(buffer, functionSize, &pdata);
+    bytesWritten = CopyWithAlignment(pdataStart, bytesRemaining, (const BYTE*)&pdata, pdataSize, EMIT_BUFFER_ALIGNMENT);
+#endif
+    void* pdataTable;
+    PDataManager::RegisterPdata((PRUNTIME_FUNCTION)pdataStart, (ULONG_PTR)buffer, (ULONG_PTR)epilogEnd, &pdataTable);
+#endif
+    if (!emitBufferManager->CommitReadWriteBufferForInterpreter(allocation, buffer, bufferSize))
+    {
+        Js::Throw::OutOfMemory();
+    }
+
+    // Call to set VALID flag for CFG check
+    ThreadContext::GetContextForCurrentThread()->SetValidCallTargetForCFG(buffer);
+
+    // Update object state only at the end when everything has succeeded - and no exceptions can be thrown.
+    ThunkBlock* block = this->thunkBlocks.PrependNode(allocator, buffer);
+    UNREFERENCED_PARAMETER(block);
+#if PDATA_ENABLED
+    block->SetPdata(pdataTable);
+#endif
+    this->thunkCount = thunkCount;
+    this->thunkBuffer = buffer;
+
+    return S_OK;
+}
+
+HRESULT
 ServerFreeAllocation(
     /* [in] */ handle_t binding,
     /* [in] */ intptr_t threadContextInfo,

@@ -373,6 +373,28 @@ JITManager::SetIsPRNGSeeded(
 
 }
 
+HRESULT
+JITManager::NewInterpreterThunkBlock(
+    __in intptr_t threadContextInfoAddress,
+    __in boolean asmJsThunk,
+    __out InterpreterThunkInfoIDL * thunkInfo)
+{
+    Assert(IsOOPJITEnabled());
+
+    HRESULT hr = E_FAIL;
+    RpcTryExcept
+    {
+        hr = ClientNewInterpreterThunkBlock(m_rpcBindingHandle, threadContextInfoAddress, asmJsThunk, thunkInfo);
+    }
+        RpcExcept(RpcExceptionFilter(RpcExceptionCode()))
+    {
+        hr = HRESULT_FROM_WIN32(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return hr;
+}
+
 HRESULT 
 JITManager::AddModuleRecordInfo(
     /* [in] */ intptr_t scriptContextInfoAddress,

@@ -30,6 +30,12 @@ public:
         __in intptr_t threadContextInfoAddress,
         __in UpdatedPropertysIDL * updatedProps);
 
+    HRESULT NewInterpreterThunkBlock(
+        __in intptr_t scriptContextInfoAddress,
+        __in intptr_t threadContextInfoAddress,
+        __in boolean asmJsThunk,
+        __out InterpreterThunkInfoIDL * thunkInfo);
+
     HRESULT AddDOMFastPathHelper(
         __in intptr_t scriptContextInfoAddress,
         __in intptr_t funcInfoAddr,

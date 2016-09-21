@@ -45,6 +45,9 @@ public:
     void RemoveFromPropertyMap(Js::PropertyId reclaimedId);
     void AddToPropertyMap(const Js::PropertyRecord * propertyRecord);
     void SetWellKnownHostTypeId(Js::TypeId typeId) { this->wellKnownHostTypeHTMLAllCollectionTypeId = typeId; }
+
+    ArenaAllocator * GetForegroundArenaAllocator();
+    EmitBufferManager<> * GetEmitBufferManager(bool asmJsManager);
 private:
     intptr_t GetRuntimeChakraBaseAddress() const;
     intptr_t GetRuntimeCRTBaseAddress() const;
@@ -58,6 +61,12 @@ private:
     PreReservedVirtualAllocWrapper m_preReservedVirtualAllocator;
     CustomHeap::CodePageAllocators m_codePageAllocators;
     CodeGenAllocators m_codeGenAlloc;
+    // only allocate with this from foreground calls (never from CodeGen calls)
+    PageAllocator m_pageAlloc;
+    // only allocate with this from foreground calls (never from CodeGen calls)
+    ArenaAllocator m_arena;
+    EmitBufferManager<> m_interpreterThunkBufferManager;
+    EmitBufferManager<> m_asmJsInterpreterThunkBufferManager;
 
     ThreadContextDataIDL m_threadContextData;
 

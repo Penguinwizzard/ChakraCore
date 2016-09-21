@@ -190,14 +190,17 @@ const BYTE InterpreterThunkEmitter::ThunkSize = sizeof(Call);
 const uint InterpreterThunkEmitter::ThunksPerBlock = (BlockSize - HeaderSize) / ThunkSize;
 
 InterpreterThunkEmitter::InterpreterThunkEmitter(ArenaAllocator* allocator, CustomHeap::CodePageAllocators * codePageAllocators, bool isAsmInterpreterThunk) :
-    // TODO: michhol oop JIT move interpreter thunk emitter out of process
-    emitBufferManager(allocator, codePageAllocators, /*scriptContext*/ nullptr, _u("Interpreter thunk buffer"), GetCurrentProcess()),
     allocation(nullptr),
+    emitBufferManager(nullptr),
     allocator(allocator),
     thunkCount(0),
     thunkBuffer(nullptr),
     isAsmInterpreterThunk(isAsmInterpreterThunk)
 {
+    if (!JITManager::GetJITManager()->IsOOPJITEnabled())
+    {
+        emitBufferManager = Anew(allocator, EmitBufferManager<>, allocator, codePageAllocators, /*scriptContext*/ nullptr, _u("Interpreter thunk buffer"), GetCurrentProcess());
+    }
 }
 
 //
@@ -268,8 +271,8 @@ void InterpreterThunkEmitter::NewThunkBlock()
         interpreterThunk = Js::InterpreterStackFrame::InterpreterThunk;
     }
 
-    allocation = emitBufferManager.AllocateBuffer(bufferSize, &buffer);
-    if (!emitBufferManager.ProtectBufferWithExecuteReadWriteForInterpreter(allocation))
+    allocation = emitBufferManager->AllocateBuffer(bufferSize, &buffer);
+    if (!emitBufferManager->ProtectBufferWithExecuteReadWriteForInterpreter(allocation))
     {
         Js::Throw::OutOfMemory();
     }
@@ -354,7 +357,7 @@ void InterpreterThunkEmitter::NewThunkBlock()
     void* pdataTable;
     PDataManager::RegisterPdata((PRUNTIME_FUNCTION) pdataStart, (ULONG_PTR) buffer, (ULONG_PTR) epilogEnd, &pdataTable);
 #endif
-    if (!emitBufferManager.CommitReadWriteBufferForInterpreter(allocation, buffer, bufferSize))
+    if (!emitBufferManager->CommitReadWriteBufferForInterpreter(allocation, buffer, bufferSize))
     {
         Js::Throw::OutOfMemory();
     }
@@ -579,7 +582,10 @@ void InterpreterThunkEmitter::Close()
 #endif
     this->thunkBlocks.Clear(allocator);
     this->freeListedThunkBlocks.Clear(allocator);
-    emitBufferManager.Decommit();
+    if (!JITManager::GetJITManager()->IsOOPJITEnabled())
+    {
+        emitBufferManager->Decommit();
+    }
     this->thunkBuffer = nullptr;
     this->thunkCount = 0;
 }

@@ -57,8 +57,7 @@ class InterpreterThunkEmitter
 {
 private:
     /* ------- instance methods --------*/
-    EmitBufferManager<> emitBufferManager;
-    EmitBufferAllocation *allocation;
+    EmitBufferManager<> * emitBufferManager;
     SListBase<ThunkBlock> thunkBlocks;
     SListBase<ThunkBlock> freeListedThunkBlocks;
     bool isAsmInterpreterThunk; // To emit address of InterpreterAsmThunk or InterpreterThunk
@@ -84,17 +83,11 @@ private:
     static const BYTE JmpOffset;
     static const BYTE Call[];
 
-    static const BYTE Epilog[];
-
     static const BYTE PageCount;
-#if defined(_M_X64)
-    static const BYTE PrologSize;
-    static const BYTE StackAllocSize;
-#endif
 
     /* ------private helpers -----------*/
     void NewThunkBlock();
-    void EncodeInterpreterThunk(__in_bcount(thunkSize) BYTE* thunkBuffer, __in_bcount(thunkSize) BYTE* thunkBufferStartAddress, __in const DWORD thunkSize, __in_bcount(epilogSize) BYTE* epilogStart, __in const DWORD epilogSize, __in void * const interpreterThunk);
+    static void EncodeInterpreterThunk(__in_bcount(thunkSize) BYTE* thunkBuffer, __in_bcount(thunkSize) BYTE* thunkBufferStartAddress, __in const DWORD thunkSize, __in_bcount(epilogSize) BYTE* epilogStart, __in const DWORD epilogSize, __in void * const interpreterThunk);
 #if defined(_M_ARM32_OR_ARM64)
     DWORD EncodeMove(DWORD opCode, int reg, DWORD imm16);
     void GeneratePdata(_In_ const BYTE* entryPoint, _In_ const DWORD functionSize, _Out_ RUNTIME_FUNCTION* function);
@@ -109,7 +102,14 @@ private:
         AssertMsg(*(T*) (dest + offset) == 0, "Overwriting an already existing opcode?");
         *(T*)(dest + offset) = value;
     };
+
+    BYTE* AllocateFromFreeList(PVOID* ppDynamicInterpreterThunk);
 public:
+#if defined(_M_X64)
+    static const BYTE PrologSize;
+    static const BYTE StackAllocSize;
+#endif
+    static const BYTE Epilog[];
     static const BYTE HeaderSize;
     static const BYTE ThunkSize;
     static const uint ThunksPerBlock;
@@ -120,20 +120,16 @@ public:
 
     BYTE* GetNextThunk(PVOID* ppDynamicInterpreterThunk);
 
-    BYTE* AllocateFromFreeList(PVOID* ppDynamicInterpreterThunk);
-
     void Close();
     void Release(BYTE* thunkAddress, bool addtoFreeList);
-
     // Returns true if the argument falls within the range managed by this buffer.
-    inline bool IsInHeap(void* address)
+    bool IsInHeap(void* address)
     {
-        return emitBufferManager.IsInHeap(address);
+        return emitBufferManager->IsInHeap(address);
     }
     const EmitBufferManager<>* GetEmitBufferManager() const
     {
-        return &emitBufferManager;
+        return emitBufferManager;
     }
-
 };
 #endif

@@ -13,6 +13,14 @@ ServerThreadContext::ServerThreadContext(ThreadContextDataIDL * data) :
     m_preReservedVirtualAllocator((HANDLE)data->processHandle),
     m_codePageAllocators(&m_policyManager, ALLOC_XDATA, &m_preReservedVirtualAllocator, (HANDLE)data->processHandle),
     m_codeGenAlloc(&m_policyManager, nullptr, &m_codePageAllocators, (HANDLE)data->processHandle),
+    m_pageAlloc(&m_policyManager, Js::Configuration::Global.flags, PageAllocatorType_BGJIT,
+        AutoSystemInfo::Data.IsLowMemoryProcess() ?
+            PageAllocator::DefaultLowMaxFreePageCount :
+            PageAllocator::DefaultMaxFreePageCount
+    ),
+    m_arena(L"JITThreadContextArena", &m_pageAlloc, Js::Throw::OutOfMemory),
+    m_interpreterThunkBufferManager(&m_arena, &m_codePageAllocators, nullptr, _u("Interpreter thunk buffer"), (HANDLE)data->processHandle),
+    m_asmJsInterpreterThunkBufferManager(&m_arena, &m_codePageAllocators, nullptr, _u("Asm.js interpreter thunk buffer"), (HANDLE)data->processHandle),
     // TODO: OOP JIT, don't hardcode name
 #ifdef NTBUILD
     m_jitChakraBaseAddress((intptr_t)GetModuleHandle(L"Chakra.dll")),
@@ -187,6 +195,26 @@ intptr_t
 ServerThreadContext::GetRuntimeCRTBaseAddress() const
 {
     return static_cast<intptr_t>(m_threadContextData.crtBaseAddress);
+}
+
+ArenaAllocator *
+ServerThreadContext::GetForegroundArenaAllocator()
+{
+    return &m_arena;
+}
+
+
+EmitBufferManager<> *
+ServerThreadContext::GetEmitBufferManager(bool asmJsManager)
+{
+    if (asmJsManager)
+    {
+        return &m_asmJsInterpreterThunkBufferManager;
+    }
+    else
+    {
+        return &m_interpreterThunkBufferManager;
+    }
 }
 
 Js::PropertyRecord const *
