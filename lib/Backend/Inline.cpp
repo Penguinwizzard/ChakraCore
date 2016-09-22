@@ -2954,6 +2954,8 @@ Inline::TryGetFixedMethodsForBuiltInAndTarget(IR::Instr *callInstr, const Functi
         return false;
     }
 
+    Assert((targetLdInstr->AsProfiledInstr()->u.FldInfo().flags & Js::FldInfo_FromAccessor) == 0);
+
     if (isApplyTarget)
     {
         callInstr->m_func->SetHasApplyTargetInlining();
