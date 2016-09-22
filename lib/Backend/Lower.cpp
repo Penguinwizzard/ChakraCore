@@ -2009,6 +2009,13 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
                         this->LowerBrCMem(instr, IR::HelperOp_Equal, false);
                     }
                 }
+                else if (this->GenerateFastBrEqBoolInt(instr->AsBranchInstr(), &needHelper))
+                {
+                    if (needHelper)
+                    {
+                        this->LowerBrCMem(instr, IR::HelperOp_Equal, false);
+                    }
+                }
                 else
                 {
                     if (needHelper)
@@ -2118,6 +2125,17 @@ Lowerer::LowerRange(IR::Instr *instrStart, IR::Instr *instrEnd, bool defaultDoFa
                 else if (m_lowererMD.GenerateFastBrOrCmString(instr) || this->GenerateFastBrEqLikely(instr->AsBranchInstr(), &needHelper))
                 {
                     this->LowerBrCMem(instr, IR::HelperOp_NotEqual, false);
+                }
+                else if (this->GenerateFastBrEqBoolInt(instr->AsBranchInstr(), &needHelper))
+                {
+                    if (needHelper)
+                    {
+                        this->LowerBrCMem(instr, IR::HelperOp_NotEqual, false);
+                    }
+                    else
+                    {
+                        instr->Remove();
+                    }
                 }
                 else
                 {
@@ -19341,6 +19359,178 @@ Lowerer::GenerateIsBuiltinRecyclableObject(IR::RegOpnd *regOpnd, IR::Instr *inse
     insertInstr->InsertBefore(labelFallthrough);
 
     return typeRegOpnd;
+}
+
+bool Lowerer::GenerateFastBrEqBoolInt(IR::BranchInstr * instrBranch, bool *pNeedHelper)
+{
+    IR::Opnd *src1 = instrBranch->GetSrc1();
+    IR::Opnd *src2 = instrBranch->GetSrc2();
+    IR::LabelInstr *targetInstr = instrBranch->GetTarget();
+
+    IR::LabelInstr *labelFalse = instrBranch->GetOrCreateContinueLabel();
+    IR::LabelInstr *labelHelper = nullptr;
+
+    *pNeedHelper = true;
+
+    if (!(src1 && src2))
+    {
+        return false;
+    }
+    // Normallize for orderings
+    IR::Opnd *srcbool = nullptr;
+    IR::Opnd *srcint = nullptr;
+    if (src1->GetValueType().IsLikelyBoolean() && src2->GetValueType().IsLikelyTaggedInt())
+    {
+        srcbool = src1;
+        srcint = src2;
+    }
+    else if (src1->GetValueType().IsLikelyTaggedInt() && src2->GetValueType().IsLikelyBoolean())
+    {
+        srcint = src1;
+        srcbool = src2;
+    }
+    else
+    {
+        return false;
+    }
+    Assert(srcbool && srcint);
+
+    // If either instruction is constant, we can simplify the check. If both are constant, we can eliminate it
+    bool srcintconst = false;
+    bool srcintconstval = false;
+    bool srcboolconst = false;
+    bool srcboolconstval = false;
+    if (srcint->IsIntConstOpnd())
+    {
+        IR::IntConstOpnd * constsrcint = srcint->AsIntConstOpnd();
+        IntConstType constintval = constsrcint->GetValue();
+        srcintconst = true;
+        srcintconstval = constintval != 0;
+    }
+    else if (srcint->IsAddrOpnd())
+    {
+        IR::AddrOpnd * addrsrcint = srcint->AsAddrOpnd();
+        if (!(addrsrcint && addrsrcint->IsVar() && Js::TaggedInt::Is(addrsrcint->m_address)))
+        {
+            return false;
+        }
+        int32 value = Js::TaggedInt::ToInt32(addrsrcint->m_address);
+        srcintconst = true;
+        srcintconstval = value != 0;
+    }
+    else if (srcint->IsConstOpnd())
+    {
+        // Not handled yet
+        return false;
+    }
+    if (srcbool->IsIntConstOpnd())
+    {
+        Assert(srcbool->IsIntConstOpnd());
+        IR::IntConstOpnd * constsrcbool = srcbool->AsIntConstOpnd();
+        IntConstType constintval = constsrcbool->GetValue();
+        srcboolconst = true;
+        srcboolconstval = constintval != 0;
+    }
+    else if (srcbool->IsAddrOpnd())
+    {
+        IR::AddrOpnd * addrsrcbool = srcint->AsAddrOpnd();
+        if (!(addrsrcbool && addrsrcbool->IsVar() && Js::TaggedInt::Is(addrsrcbool->m_address)))
+        {
+            return false;
+        }
+        int32 value = Js::TaggedInt::ToInt32(addrsrcbool->m_address);
+        srcintconst = true;
+        srcintconstval = value != 0;
+    }
+    else if (srcbool->IsConstOpnd())
+    {
+        // Not handled yet
+        return false;
+    }
+
+    // Do these checks here, since that way we avoid emitting instructions before exiting earlier
+    if (srcint->GetValueType().IsTaggedInt() && srcbool->GetValueType().IsBoolean()) {
+        // ok, we know the types, so no helper needed
+        *pNeedHelper = false;
+    }
+    else
+    {
+        labelHelper = IR::LabelInstr::New(Js::OpCode::Label, this->m_func, true);
+        // check the types and jump to the helper if incorrect
+        if (!srcint->IsConstOpnd() && !srcint->GetValueType().IsTaggedInt())
+        {
+            this->m_lowererMD.GenerateObjectTest(srcint->AsRegOpnd(), instrBranch, labelHelper, false);
+            this->m_lowererMD.GenerateSmIntTest(srcint->AsRegOpnd(), instrBranch, labelHelper, nullptr, true);
+            // figure out how to check that it's an int efficiently at runtime
+        }
+        if (!srcbool->IsConstOpnd() && !srcbool->GetValueType().IsBoolean())
+        {
+            this->m_lowererMD.GenerateObjectTest(srcbool->AsRegOpnd(), instrBranch, labelHelper, false);
+            this->m_lowererMD.GenerateJSBooleanTest(srcbool->AsRegOpnd(), instrBranch, labelHelper, false);
+        }
+    }
+
+    // Now that we've checked the types, we can lower some instructions to quickly do the check
+    if (srcintconst && srcboolconst)
+    {
+        IR::LabelInstr * target = (instrBranch->m_opcode == Js::OpCode::BrEq_A || instrBranch->m_opcode == Js::OpCode::BrNotNeq_A) == (srcintconstval == srcboolconstval) ? targetInstr : labelFalse;
+        instrBranch->InsertBefore(IR::BranchInstr::New(LowererMD::MDUncondBranchOpcode, target, this->m_func));
+        // we don't need to emit the helper label
+        return true;
+    }
+    else if (!srcintconst && !srcboolconst)
+    {
+        IR::LabelInstr * firstTrue = IR::LabelInstr::New(Js::OpCode::Label, this->m_func);
+        IR::LabelInstr * firstFalse = IR::LabelInstr::New(Js::OpCode::Label, this->m_func);
+        this->m_lowererMD.GenerateTaggedZeroTest(srcint->AsRegOpnd(), instrBranch, firstFalse);
+        instrBranch->InsertBefore(firstTrue);
+        InsertCompareBranch(
+            srcbool,
+            LoadLibraryValueOpnd(instrBranch, LibraryValue::ValueTrue),
+            instrBranch->m_opcode,
+            targetInstr,
+            instrBranch);
+        instrBranch->InsertBefore(IR::BranchInstr::New(LowererMD::MDUncondBranchOpcode, labelFalse, this->m_func));
+        instrBranch->InsertBefore(firstFalse);
+        InsertCompareBranch(
+            srcbool,
+            LoadLibraryValueOpnd(instrBranch, LibraryValue::ValueFalse),
+            instrBranch->m_opcode,
+            targetInstr,
+            instrBranch);
+        instrBranch->InsertBefore(IR::BranchInstr::New(LowererMD::MDUncondBranchOpcode, labelFalse, this->m_func));
+    }
+    else if (srcintconst)
+    {
+        LibraryValue intval = srcintconstval ? LibraryValue::ValueTrue : LibraryValue::ValueFalse;
+        InsertCompareBranch(
+            srcbool,
+            LoadLibraryValueOpnd(instrBranch, intval),
+            instrBranch->m_opcode,
+            targetInstr,
+            instrBranch);
+        instrBranch->InsertBefore(IR::BranchInstr::New(LowererMD::MDUncondBranchOpcode, labelFalse, this->m_func));
+    }
+    else if (srcboolconst)
+    {
+        bool iseq = instrBranch->m_opcode == Js::OpCode::BrEq_A || instrBranch->m_opcode == Js::OpCode::BrNotNeq_A;
+        bool followbranchontrue = (iseq == srcboolconstval);
+        if (followbranchontrue)
+        {
+            this->m_lowererMD.GenerateTaggedZeroTest(srcint->AsRegOpnd(), instrBranch, labelFalse);
+            instrBranch->InsertBefore(IR::BranchInstr::New(LowererMD::MDUncondBranchOpcode, targetInstr, this->m_func));
+        }
+        else
+        {
+            this->m_lowererMD.GenerateTaggedZeroTest(srcint->AsRegOpnd(), instrBranch, targetInstr);
+            instrBranch->InsertBefore(IR::BranchInstr::New(LowererMD::MDUncondBranchOpcode, labelFalse, this->m_func));
+        }
+    }
+    if (*pNeedHelper)
+    {
+        instrBranch->InsertBefore(labelHelper);
+    }
+    return true;
 }
 
 bool Lowerer::GenerateFastBrEqLikely(IR::BranchInstr * instrBranch, bool *pNeedHelper)
