@@ -7201,6 +7201,7 @@ Lowerer::CreateEquivalentTypeGuardAndLinkToGuardedProperties(JITTypeHolder type,
     for (uint16 ti = 0; ti < cachedTypeCount; ti++)
     {
         cache->types[ti] = (Js::Type*)typeSet->GetType(ti)->GetAddr();
+        cache->types[ti]->SetHasBeenCached();
     }
 
     // Populate property ID and slot index arrays on the guard's cache. We iterate over the
@@ -10206,7 +10207,7 @@ Lowerer::LowerArgIn(IR::Instr *instrArgIn)
         this->m_lowererMD.ChangeToAssign(instrArgIn);
     }
 
-	JitAdelete(this->m_alloc, formalsBv);
+    JitAdelete(this->m_alloc, formalsBv);
 
     return instrResume;
 }
@@ -10248,8 +10249,8 @@ Lowerer::LoadGeneratorObject(IR::Instr * instrInsert)
     instrInsert->m_func->SetArgOffset(generatorSym, LowererMD::GetFormalParamOffset() * MachPtr);
     IR::SymOpnd * generatorSymOpnd = IR::SymOpnd::New(generatorSym, TyMachPtr, instrInsert->m_func);
     IR::RegOpnd * generatorRegOpnd = IR::RegOpnd::New(TyMachPtr, instrInsert->m_func);
-	instrInsert->m_func->SetHasImplicitParamLoad();
-	return LowererMD::CreateAssign(generatorRegOpnd, generatorSymOpnd, instrInsert);
+    instrInsert->m_func->SetHasImplicitParamLoad();
+    return LowererMD::CreateAssign(generatorRegOpnd, generatorSymOpnd, instrInsert);
 }
 
 IR::Instr *
@@ -10904,7 +10905,7 @@ Lowerer::LoadCallInfo(IR::Instr * instrInsert)
     {
         // Generator function arguments and ArgumentsInfo are not on the stack.  Instead they
         // are accessed off the generator object (which is prm1).
-		IR::Instr *genLoadInstr = LoadGeneratorObject(instrInsert);
+        IR::Instr *genLoadInstr = LoadGeneratorObject(instrInsert);
         IR::RegOpnd * generatorRegOpnd = genLoadInstr->GetDst()->AsRegOpnd();
 
         IR::IndirOpnd * indirOpnd = IR::IndirOpnd::New(generatorRegOpnd, Js::JavascriptGenerator::GetCallInfoOffset(), TyMachPtr, func);
