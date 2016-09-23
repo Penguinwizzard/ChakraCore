@@ -18,7 +18,8 @@
         %(PreprocessorDefinitions);
         _WIN32_WINNT=$(Win32_WinNTVersion);
         WINVER=$(Win32_WinNTVersion);
-        WIN32_LEAN_AND_MEAN=1
+        WIN32_LEAN_AND_MEAN=1;
+		COMPILE_DISABLE_Simdjs=1
       </PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(BuildJIT)'=='false'">
         %(PreprocessorDefinitions);
