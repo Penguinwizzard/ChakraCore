@@ -7972,6 +7972,11 @@ namespace Js
                 (*cache) = (*oldCache);
                 // Set the recycler-allocated cache on the (heap-allocated) guard.
                 (*guard)->SetCache(cache);
+
+                for (uint i = 0; i < EQUIVALENT_TYPE_CACHE_SIZE; i++)
+                {
+                    (*cache).types[i]->SetHasBeenCached();
+                }
                 cache++;
             }
         }

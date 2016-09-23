@@ -7201,7 +7201,7 @@ Lowerer::CreateEquivalentTypeGuardAndLinkToGuardedProperties(JITTypeHolder type,
     for (uint16 ti = 0; ti < cachedTypeCount; ti++)
     {
         cache->types[ti] = (Js::Type*)typeSet->GetType(ti)->GetAddr();
-        cache->types[ti]->SetHasBeenCached();
+        //cache->types[ti]->SetHasBeenCached();
     }
 
     // Populate property ID and slot index arrays on the guard's cache. We iterate over the
