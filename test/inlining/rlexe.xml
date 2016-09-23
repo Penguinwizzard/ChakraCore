@@ -107,7 +107,7 @@
       <files>bug515849.js</files>
       <baseline>bug515849.baseline</baseline>
       <compile-flags>-minInterpretCount:1 -maxInterpretCount:1 -msjrc:0 -force:inline</compile-flags>
-      <tags>exclude_ship</tags>
+      <tags>exclude_ship,exclude_dynapogo_oopjit</tags>
     </default>
   </test>
   <test>

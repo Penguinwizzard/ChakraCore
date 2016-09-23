@@ -299,7 +299,7 @@ goto :main
   set path=%_binDir%\%_BuildArch%_%_BuildType%;%path%
 
   :: If the user didn't specify explicit variants then do the defaults
-  if "%_Variants%"=="" set _Variants=interpreted,dynapogo
+  if "%_Variants%"=="" set _Variants=interpreted,dynapogo,dynapogo_oopjit
 
   :: If the user specified extra variants to run (i.e. in addition to the defaults), include them.
   if not "%_ExtraVariants%" == "" set _Variants=%_Variants%,%_ExtraVariants%
@@ -409,7 +409,11 @@ goto :main
     set EXTRA_RL_FLAGS=-nottags:exclude_interpreted -nottags:fails_interpreted -nottags:require_backend
   )
   if "%_TESTCONFIG%"=="dynapogo"    (
-    set EXTRA_CC_FLAGS=%EXTRA_CC_FLAGS% -forceNative -off:simpleJit -bgJitDelay:0 %_dynamicprofileinput%
+    set EXTRA_CC_FLAGS=%EXTRA_CC_FLAGS% -EnableOutOfProcJIT- -forceNative -off:simpleJit -bgJitDelay:0 %_dynamicprofileinput%
+  )
+  if "%_TESTCONFIG%"=="dynapogo_oopjit"    (
+    set EXTRA_CC_FLAGS=%EXTRA_CC_FLAGS% -EnableOutOfProcJIT -EnsureCloseJITServer -forceNative -off:simpleJit -bgJitDelay:0 %_dynamicprofileinput%
+    set EXTRA_RL_FLAGS=-nottags:exclude_dynapogo
   )
 
   :: Variants after here are user supplied variants (not run by default).
