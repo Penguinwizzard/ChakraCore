@@ -120,6 +120,7 @@ namespace Js
         inlineCacheAllocator(_u("SC-InlineCache"), threadContext->GetPageAllocator(), Throw::OutOfMemory),
         isInstInlineCacheAllocator(_u("SC-IsInstInlineCache"), threadContext->GetPageAllocator(), Throw::OutOfMemory),
         hasUsedInlineCache(false),
+        m_domFastPathHelperMap(nullptr),
         hasProtoOrStoreFieldInlineCache(false),
         hasIsInstInlineCache(false),
         registeredPrototypeChainEnsuredToHaveOnlyWritableDataPropertiesScriptContext(nullptr),
