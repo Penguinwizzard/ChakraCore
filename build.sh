@@ -42,6 +42,8 @@ PRINT_USAGE() {
     echo "      --xcode          Generate XCode project"
     echo "  -t, --test-build     Test build (by default Release build)"
     echo "      --static         Build as static library (by default shared library)"
+    echo "      --sanitize=CHECKS Build with clang -fsanitize checks,"
+    echo "                       e.g. undefined,signed-integer-overflow"
     echo "  -v, --verbose        Display verbose output including all options"
     echo "      --create-deb=V   Create .deb package with given V version"
     echo "      --without=FEATURE,FEATURE,..."
@@ -66,6 +68,7 @@ MULTICORE_BUILD=""
 NO_JIT=
 ICU_PATH="-DICU_SETTINGS_RESET=1"
 STATIC_LIBRARY="-DSHARED_LIBRARY_SH=1"
+SANITIZE=
 WITHOUT_FEATURES=""
 CREATE_DEB=0
 ARCH="-DCC_TARGETS_AMD64_SH=1"
@@ -211,6 +214,12 @@ while [[ $# -gt 0 ]]; do
         STATIC_LIBRARY="-DSTATIC_LIBRARY_SH=1"
         ;;
 
+    --sanitize=*)
+        SANITIZE=$1
+        SANITIZE=${SANITIZE:11}    # value after --sanitize=
+        SANITIZE="-DCLANG_SANITIZE=${SANITIZE}"
+        ;;
+
     --without=*)
         FEATURES=$1
         FEATURES=${FEATURES:10}    # value after --without=
@@ -312,7 +321,8 @@ else
 fi
 
 echo Generating $BUILD_TYPE makefiles
-cmake $CMAKE_GEN $CC_PREFIX $ICU_PATH $STATIC_LIBRARY $ARCH -DCMAKE_BUILD_TYPE=$BUILD_TYPE $NO_JIT $WITHOUT_FEATURES ../..
+cmake $CMAKE_GEN $CC_PREFIX $ICU_PATH $STATIC_LIBRARY $ARCH \
+    -DCMAKE_BUILD_TYPE=$BUILD_TYPE $SANITIZE $NO_JIT $WITHOUT_FEATURES ../..
 
 _RET=$?
 if [[ $? == 0 ]]; then
