@@ -7973,10 +7973,12 @@ namespace Js
                 // Set the recycler-allocated cache on the (heap-allocated) guard.
                 (*guard)->SetCache(cache);
 
-                for (uint i = 0; i < EQUIVALENT_TYPE_CACHE_SIZE; i++)
+                uint i = 0;
+                while((*cache).types[i] != nullptr)
                 {
                     (*cache).types[i]->SetHasBeenCached();
                 }
+                Assert(i < EQUIVALENT_TYPE_CACHE_SIZE);
                 cache++;
             }
         }
