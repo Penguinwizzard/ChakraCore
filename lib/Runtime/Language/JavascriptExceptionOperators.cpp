@@ -715,7 +715,7 @@ namespace Js
 
                 do
                 {
-                    JavascriptExceptionContext::StackFrame stackFrame(jsFunc, walker, crawlStackForWER);
+                    JavascriptExceptionContext::StackFrame stackFrame(jsFunc, walker, true);
                     stackTrace->Add(stackFrame);
                 } while (walker.GetDisplayCaller(&jsFunc) && i++ < stackCrawlLimit);
             }
