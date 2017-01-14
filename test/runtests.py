@@ -128,16 +128,13 @@ if sys.platform != 'win32':
 
 if sys.platform == 'darwin':
     not_tags.add('exclude_mac')
-not_compile_flags = set(['-simdjs']) \
-    if sys.platform != 'win32' else None
 
-# use tags/not_tags/not_compile_flags as case-insensitive
+# use tags/not_tags as case-insensitive
 def lower_set(s):
     return set([x.lower() for x in s] if s else [])
 
 tags = lower_set(tags)
 not_tags = lower_set(not_tags)
-not_compile_flags = lower_set(not_compile_flags)
 
 # split tags text into tags set
 _empty_set = set()
@@ -288,11 +285,6 @@ class TestVariant(object):
             return False
         if self.tags and not self.tags.issubset(tags):
             return False
-        if not_compile_flags: # exclude unsupported compile-flags if any
-            flags = test.get('compile-flags')
-            if flags and \
-                    not not_compile_flags.isdisjoint(flags.lower().split()):
-                return False
         return True
 
     # print output from multi-process run, to be sent with result message

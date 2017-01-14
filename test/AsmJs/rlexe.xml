@@ -91,6 +91,7 @@
       <files>FunctionCalls.js</files>
       <baseline>FunctionCalls.baseline</baseline>
       <compile-flags>-testtrace:asmjs -simdjs</compile-flags>
+      <tags>exclude_xplat</tags>
     </default>
   </test>
   <test>
@@ -98,6 +99,7 @@
       <files>functiontablecalls.js</files>
       <baseline>functiontablecalls.baseline</baseline>
       <compile-flags>-testtrace:asmjs -simdjs</compile-flags>
+      <tags>exclude_xplat</tags>
     </default>
   </test>
   <test>
@@ -605,6 +607,7 @@
       <files>fstpbug.js</files>
       <baseline>fstpbug.baseline</baseline>
       <compile-flags>-testtrace:asmjs -simdjs</compile-flags>
+      <tags>exclude_xplat</tags>
     </default>
   </test>
   <test>
@@ -654,6 +657,7 @@
       <files>JitToLoopBody.js</files>
       <baseline>JitToLoopBody.baseline</baseline>
       <compile-flags>-testtrace:asmjs -simdjs -bgjit- -lic:1 -maic:1</compile-flags>
+      <tags>exclude_xplat</tags>
     </default>
   </test>
   <test>
@@ -661,6 +665,7 @@
       <files>LoopBodyToJit.js</files>
       <baseline>LoopBodyToJit.baseline</baseline>
       <compile-flags>-testtrace:asmjs -simdjs -bgjit- -lic:1 -maic:1</compile-flags>
+      <tags>exclude_xplat</tags>
     </default>
   </test>
   <test>
@@ -672,29 +677,29 @@
   </test>
   <test>
     <default>
-      <files>returnfloat.js</files>
-      <baseline>returnfloat.baseline</baseline>
+      <files>returnFloat.js</files>
+      <baseline>returnFloat.baseline</baseline>
       <compile-flags>-testtrace:asmjs -simdjs -bgjit- -lic:1 </compile-flags>
     </default>
   </test>
   <test>
     <default>
-      <files>unityBug.js</files>
-      <baseline>unityBug.baseline</baseline>
+      <files>unitybug.js</files>
+      <baseline>unitybug.baseline</baseline>
       <compile-flags>-testtrace:asmjs -simdjs</compile-flags>
     </default>
   </test>
   <test>
     <default>
-      <files>unityBug.js</files>
-      <baseline>unityBug.baseline</baseline>
+      <files>unitybug.js</files>
+      <baseline>unitybug.baseline</baseline>
       <compile-flags>-testtrace:asmjs -simdjs -nonative</compile-flags>
     </default>
   </test>
   <test>
     <default>
-      <files>unityBug.js</files>
-      <baseline>unityBug.baseline</baseline>
+      <files>unitybug.js</files>
+      <baseline>unitybug.baseline</baseline>
       <tags>exclude_amd64</tags>
       <compile-flags>-testtrace:asmjs -simdjs -oopjit- -on:asmjsjittemplate -off:fulljit</compile-flags>
     </default>
@@ -738,8 +743,8 @@
   </test>
   <test>
     <default>
-      <files>negzero.js</files>
-      <baseline>negzero.baseline</baseline>
+      <files>negZero.js</files>
+      <baseline>negZero.baseline</baseline>
       <tags></tags>
       <compile-flags>-testtrace:asmjs -simdjs</compile-flags>
     </default>
