@@ -34,9 +34,13 @@ enum _IntArgRegs {
 
 // XmmArgRegsCount
 enum _XmmArgRegs {
+#ifdef _WIN32
 #define REG_XMM_ARG(Index, Name)  _RegXmmArg ## Index,
 #include "RegList.h"
     XmmArgRegsCount
+#else
+    XmmArgRegsCount = 0
+#endif
 };
 
 #define REGNUM_ISXMMXREG(r) ((r) >= RegXMM0 && (r) <= RegXMM15)
