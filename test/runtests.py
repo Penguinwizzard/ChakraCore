@@ -125,11 +125,12 @@ not_tags.add('exclude_nightly' if args.nightly else 'nightly')
 if sys.platform != 'win32':
     not_tags.add('exclude_xplat')
     not_tags.add('Intl')
+    not_tags.add('require_simd')
+    not_tags.add('require_asmwasm')
 
 if sys.platform == 'darwin':
     not_tags.add('exclude_mac')
-not_compile_flags = set(['-simdjs']) \
-    if sys.platform != 'win32' else None
+not_compile_flags = None
 
 # use tags/not_tags/not_compile_flags as case-insensitive
 def lower_set(s):
