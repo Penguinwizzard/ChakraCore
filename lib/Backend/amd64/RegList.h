@@ -10,6 +10,10 @@
 #define REGDAT(Name, Listing,    Encode,    Type,    BitVec)
 #endif
 
+#ifndef REG_ARG_PAIRED
+#define REG_ARG_PAIRED(reg1, reg2)
+#endif
+
 // Illegal registers - must be first and have a value of 0
 
 //            Internal Name
@@ -74,22 +78,22 @@ REGDAT(R13,   r13,      5,      TyInt64,      RA_CALLEESAVE | RA_BYTEABLE)
 REGDAT(R14,   r14,      6,      TyInt64,      RA_CALLEESAVE | RA_BYTEABLE)
 REGDAT(R15,   r15,      7,      TyInt64,      RA_CALLEESAVE | RA_BYTEABLE)
 
-REGDAT(XMM0,  xmm0,     0,      TyFloat64,    0)
-REGDAT(XMM1,  xmm1,     1,      TyFloat64,    0)
-REGDAT(XMM2,  xmm2,     2,      TyFloat64,    0)
-REGDAT(XMM3,  xmm3,     3,      TyFloat64,    0)
-REGDAT(XMM4,  xmm4,     4,      TyFloat64,    0)
-REGDAT(XMM5,  xmm5,     5,      TyFloat64,    0)
-REGDAT(XMM6,  xmm6,     6,      TyFloat64,    0)
-REGDAT(XMM7,  xmm7,     7,      TyFloat64,    0)
-REGDAT(XMM8,  xmm8,     0,      TyFloat64,    0)
-REGDAT(XMM9,  xmm9,     1,      TyFloat64,    0)
-REGDAT(XMM10, xmm10,    2,      TyFloat64,    0)
-REGDAT(XMM11, xmm11,    3,      TyFloat64,    0)
-REGDAT(XMM12, xmm12,    4,      TyFloat64,    0)
-REGDAT(XMM13, xmm13,    5,      TyFloat64,    0)
-REGDAT(XMM14, xmm14,    6,      TyFloat64,    0)
-REGDAT(XMM15, xmm15,    7,      TyFloat64,    0)
+REGDAT(XMM0,  xmm0,     0,      TyFloat64,    RA_CALLERSAVE)
+REGDAT(XMM1,  xmm1,     1,      TyFloat64,    RA_CALLERSAVE)
+REGDAT(XMM2,  xmm2,     2,      TyFloat64,    RA_CALLERSAVE)
+REGDAT(XMM3,  xmm3,     3,      TyFloat64,    RA_CALLERSAVE)
+REGDAT(XMM4,  xmm4,     4,      TyFloat64,    RA_CALLERSAVE)
+REGDAT(XMM5,  xmm5,     5,      TyFloat64,    RA_CALLERSAVE)
+REGDAT(XMM6,  xmm6,     6,      TyFloat64,    RA_CALLERSAVE)
+REGDAT(XMM7,  xmm7,     7,      TyFloat64,    RA_CALLERSAVE)
+REGDAT(XMM8,  xmm8,     0,      TyFloat64,    RA_CALLERSAVE)
+REGDAT(XMM9,  xmm9,     1,      TyFloat64,    RA_CALLERSAVE)
+REGDAT(XMM10, xmm10,    2,      TyFloat64,    RA_CALLERSAVE)
+REGDAT(XMM11, xmm11,    3,      TyFloat64,    RA_CALLERSAVE)
+REGDAT(XMM12, xmm12,    4,      TyFloat64,    RA_CALLERSAVE)
+REGDAT(XMM13, xmm13,    5,      TyFloat64,    RA_CALLERSAVE)
+REGDAT(XMM14, xmm14,    6,      TyFloat64,    RA_CALLERSAVE)
+REGDAT(XMM15, xmm15,    7,      TyFloat64,    RA_CALLERSAVE)
 #endif  // !_WIN32
 
 #ifndef REG_INT_ARG
@@ -111,6 +115,11 @@ REG_XMM_ARG(1, XMM1)
 REG_XMM_ARG(2, XMM2)
 REG_XMM_ARG(3, XMM3)
 
+REG_ARG_PAIRED(RCX, XMM0)
+REG_ARG_PAIRED(RDX, XMM1)
+REG_ARG_PAIRED(R8,  XMM2)
+REG_ARG_PAIRED(R9,  XMM3)
+
 #else  // System V x64
 REG_INT_ARG(0, RDI)
 REG_INT_ARG(1, RSI)
@@ -129,6 +138,7 @@ REG_XMM_ARG(6, XMM6)
 REG_XMM_ARG(7, XMM7)
 #endif  // !_WIN32
 
+#undef REG_ARG_PAIRED
 #undef REGDAT
 #undef REG_INT_ARG
 #undef REG_XMM_ARG

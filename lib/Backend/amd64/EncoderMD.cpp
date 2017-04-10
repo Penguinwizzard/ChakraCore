@@ -44,7 +44,6 @@ static const BYTE OpEncoding[] =
 {
 #define REGDAT(name,  dispName, encoding, ...) encoding ,
 #include "RegList.h"
-#undef MACRO
 };
 
 static const uint32 OpcodeLeadIn[] =

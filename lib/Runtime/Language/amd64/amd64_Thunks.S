@@ -375,9 +375,33 @@ NESTED_ENTRY _ZN2Js11WasmLibrary30WasmDeferredParseExternalThunkEPNS_16Recyclabl
         push r8
         push r9
 
+        sub rsp, 80h
+
+        // spill potential floating point arguments to stack
+        movaps xmmword ptr [rsp + 00h], xmm0
+        movaps xmmword ptr [rsp + 10h], xmm1
+        movaps xmmword ptr [rsp + 20h], xmm2
+        movaps xmmword ptr [rsp + 30h], xmm3
+        movaps xmmword ptr [rsp + 40h], xmm4
+        movaps xmmword ptr [rsp + 50h], xmm5
+        movaps xmmword ptr [rsp + 60h], xmm6
+        movaps xmmword ptr [rsp + 70h], xmm7
+
         lea rdi, [rbp + 10h]
         mov rsi, 0
         call C_FUNC(_ZN2Js11WasmLibrary27WasmDeferredParseEntryPointEPPNS_19AsmJsScriptFunctionEi)
+
+        // restore potential floating point arguments from stack
+        movaps xmm0, xmmword ptr [rsp + 00h]
+        movaps xmm1, xmmword ptr [rsp + 10h]
+        movaps xmm2, xmmword ptr [rsp + 20h]
+        movaps xmm3, xmmword ptr [rsp + 30h]
+        movaps xmm4, xmmword ptr [rsp + 40h]
+        movaps xmm5, xmmword ptr [rsp + 50h]
+        movaps xmm6, xmmword ptr [rsp + 60h]
+        movaps xmm7, xmmword ptr [rsp + 70h]
+
+        add rsp, 80h
 
         pop r9
         pop r8
@@ -411,9 +435,33 @@ NESTED_ENTRY _ZN2Js11WasmLibrary30WasmDeferredParseInternalThunkEPNS_16Recyclabl
         push r9
 
 
+        sub rsp, 40h
+
+        // spill potential floating point arguments to stack
+        movaps xmmword ptr [rsp + 00h], xmm0
+        movaps xmmword ptr [rsp + 10h], xmm1
+        movaps xmmword ptr [rsp + 20h], xmm2
+        movaps xmmword ptr [rsp + 30h], xmm3
+        movaps xmmword ptr [rsp + 40h], xmm4
+        movaps xmmword ptr [rsp + 50h], xmm5
+        movaps xmmword ptr [rsp + 60h], xmm6
+        movaps xmmword ptr [rsp + 70h], xmm7
+
         lea rdi, [rbp + 10h]
         mov rsi, 1
         call C_FUNC(_ZN2Js11WasmLibrary27WasmDeferredParseEntryPointEPPNS_19AsmJsScriptFunctionEi)
+
+        // restore potential floating point arguments from stack
+        movaps xmm0, xmmword ptr [rsp + 00h]
+        movaps xmm1, xmmword ptr [rsp + 10h]
+        movaps xmm2, xmmword ptr [rsp + 20h]
+        movaps xmm3, xmmword ptr [rsp + 30h]
+        movaps xmm4, xmmword ptr [rsp + 40h]
+        movaps xmm5, xmmword ptr [rsp + 50h]
+        movaps xmm6, xmmword ptr [rsp + 60h]
+        movaps xmm7, xmmword ptr [rsp + 70h]
+
+        add rsp, 40h
 
 
         pop r9
